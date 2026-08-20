@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:moodiary_files/moodiary_files.dart';
-import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 

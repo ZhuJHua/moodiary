@@ -1,5 +1,5 @@
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';

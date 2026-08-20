@@ -1,5 +1,5 @@
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
-import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:mui/mui.dart';
 
 ({IconData icon, String title, String description}) assistantToolDisplay(

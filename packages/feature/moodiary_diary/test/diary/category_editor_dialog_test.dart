@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_diary/src/presentation/category/category_manager_page.dart';
-import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:mui/mui.dart';
 
 final _mui = buildMuiTheme(brightness: Brightness.light);
@@ -11,29 +11,28 @@ void main() {
     CategoryDraft? result;
     await t.pumpWidget(
       TranslationProvider(
-        child: MuiTranslationScope(
-          child: MuiTheme(
-            data: _mui,
-            child: MaterialApp(
-              locale: const Locale('zh'),
-              localizationsDelegates: const [
-                // material_ui 的 widget 要它自己那份 MaterialLocalizations。
-                ...GlobalMaterialLocalizations.delegates,
-              ],
-              supportedLocales: AppLocaleUtils.supportedLocales,
-              home: Builder(
-                builder: (context) => Scaffold(
-                  body: Center(
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        result = await showCategoryEditor(
-                          context,
-                          initialName: '',
-                          initialColor: null,
-                        );
-                      },
-                      child: const Text('open'),
-                    ),
+        child: MuiTheme(
+          data: _mui,
+          child: MaterialApp(
+            locale: const Locale('zh'),
+            localizationsDelegates: const [
+              // material_ui 的 widget 要它自己那份 MaterialLocalizations。
+              ...GlobalMaterialLocalizations.delegates,
+              GlobalMuiLocalizations.delegate,
+            ],
+            supportedLocales: AppLocaleUtils.supportedLocales,
+            home: Builder(
+              builder: (context) => Scaffold(
+                body: Center(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      result = await showCategoryEditor(
+                        context,
+                        initialName: '',
+                        initialColor: null,
+                      );
+                    },
+                    child: const Text('open'),
                   ),
                 ),
               ),

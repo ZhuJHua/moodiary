@@ -18,7 +18,7 @@ import 'dart:io';
 
 /// 层级表：index 越小越底层。每层可含多个「模块」（同层不同模块之间禁止互引）。
 const List<List<String>> _layers = [
-  ['gen', 'l10n'], // 0 生成产物（叶子）
+  ['gen'], // 0 生成产物（叶子）
   ['core'], // 1 基础设施
   ['data'], // 2 model + repository
   ['component'], // 3 业务无关 UI

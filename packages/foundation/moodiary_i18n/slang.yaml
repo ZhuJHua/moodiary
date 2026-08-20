@@ -1,4 +1,4 @@
-# App 文案。生成命令：dart tool/task.dart l10n（或本目录下 dart run slang）。
+# App 文案。生成命令：dart tool/task.dart i18n（或本目录下 dart run slang）。
 #
 # base_locale 选 zh：与旧 gen-l10n 的 template=intl_zh.arb 同构，中文仍是写作源，
 # 英文缺键回落中文而不是报错。启动时总会显式 setLocale，所以 base 不承担兜底职责。

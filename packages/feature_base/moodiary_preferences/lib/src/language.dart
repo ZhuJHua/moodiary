@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
 
 enum Language {
   system('system'),
@@ -12,7 +12,7 @@ enum Language {
 }
 
 extension LanguageExtension on Language {
-  String l10nText(BuildContext context) {
+  String label(BuildContext context) {
     switch (this) {
       case .system:
         return context.l10n.app.languageSystem;

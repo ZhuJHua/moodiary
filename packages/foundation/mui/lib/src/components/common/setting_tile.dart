@@ -1,7 +1,5 @@
 import 'package:mui/mui.dart';
 
-import '../../l10n/mui_l10n.dart';
-
 /// 行的最小高度。与 M3 的 [ListTile] 对齐：单行 56、带副标题 72。
 const double _kOneLineHeight = 56;
 const double _kTwoLineHeight = 72;

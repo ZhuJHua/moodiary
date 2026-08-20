@@ -4,7 +4,7 @@ import 'package:moodiary/app/router/router.dart';
 import 'package:moodiary_assistant/moodiary_assistant.dart';
 import 'package:moodiary_editor/moodiary_editor.dart'
     show EditorMigrationService;
-import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:mui/mui.dart';
 

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
 
 /// 复数是这套 i18n 里唯一有分支逻辑的部分，且中文那条要靠手动注册解析器才对
 /// （slang 内置表里没有 zh，漏了只打日志不报错）。

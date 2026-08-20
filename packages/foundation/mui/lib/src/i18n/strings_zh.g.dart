@@ -5,34 +5,28 @@
 // ignore_for_file: type=lint, unused_import
 // dart format off
 
-part of 'mui_strings.g.dart';
+part of 'strings.g.dart';
 
 // Path: <root>
-typedef MuiTranslationsZh = MuiTranslations; // ignore: unused_element
-class MuiTranslations with BaseTranslations<MuiAppLocale, MuiTranslations> {
-	/// Returns the current translations of the given [context].
-	///
-	/// Usage:
-	/// final muiL10n = MuiTranslations.of(context);
-	static MuiTranslations of(BuildContext context) => InheritedLocaleData.of<MuiAppLocale, MuiTranslations>(context).translations;
-
+typedef MuiLocalizationsDataZh = MuiLocalizationsData; // ignore: unused_element
+class MuiLocalizationsData with BaseTranslations<MuiLocale, MuiLocalizationsData> {
 	/// You can call this constructor and build your own translation instance of this locale.
-	/// Constructing via the enum [MuiAppLocale.build] is preferred.
-	MuiTranslations({Map<String, Node>? overrides, PluralResolver? cardinalResolver, PluralResolver? ordinalResolver, TranslationMetadata<MuiAppLocale, MuiTranslations>? meta})
+	/// Constructing via the enum [MuiLocale.build] is preferred.
+	MuiLocalizationsData({Map<String, Node>? overrides, PluralResolver? cardinalResolver, PluralResolver? ordinalResolver, TranslationMetadata<MuiLocale, MuiLocalizationsData>? meta})
 		: assert(overrides == null, 'Set "translation_overrides: true" in order to enable this feature.'),
 		  $meta = meta ?? TranslationMetadata(
-		    locale: MuiAppLocale.zh,
+		    locale: MuiLocale.zh,
 		    overrides: overrides ?? {},
 		    cardinalResolver: cardinalResolver,
 		    ordinalResolver: ordinalResolver,
 		  );
 
 	/// Metadata for the translations of <zh>.
-	@override final TranslationMetadata<MuiAppLocale, MuiTranslations> $meta;
+	@override final TranslationMetadata<MuiLocale, MuiLocalizationsData> $meta;
 
-	late final MuiTranslations _root = this; // ignore: unused_field
+	late final MuiLocalizationsData _root = this; // ignore: unused_field
 
-	MuiTranslations $copyWith({TranslationMetadata<MuiAppLocale, MuiTranslations>? meta}) => MuiTranslations(meta: meta ?? this.$meta);
+	MuiLocalizationsData $copyWith({TranslationMetadata<MuiLocale, MuiLocalizationsData>? meta}) => MuiLocalizationsData(meta: meta ?? this.$meta);
 
 	// Translations
 

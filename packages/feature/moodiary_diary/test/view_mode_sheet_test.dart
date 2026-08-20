@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/src/presentation/widget/view_mode_sheet.dart';
-import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
@@ -47,23 +47,22 @@ void main() {
 
   Widget host() {
     return TranslationProvider(
-      child: MuiTranslationScope(
-        child: MuiTheme(
-          data: _mui,
-          child: MaterialApp(
-            locale: const Locale('zh'),
-            localizationsDelegates: const [
-              // material_ui 的 widget 要它自己那份 MaterialLocalizations。
-              ...GlobalMaterialLocalizations.delegates,
-            ],
-            supportedLocales: AppLocaleUtils.supportedLocales,
-            home: Scaffold(
-              body: Builder(
-                builder: (context) => Center(
-                  child: TextButton(
-                    onPressed: () => ViewModeSheet.show(context),
-                    child: const Text('open'),
-                  ),
+      child: MuiTheme(
+        data: _mui,
+        child: MaterialApp(
+          locale: const Locale('zh'),
+          localizationsDelegates: const [
+            // material_ui 的 widget 要它自己那份 MaterialLocalizations。
+            ...GlobalMaterialLocalizations.delegates,
+            GlobalMuiLocalizations.delegate,
+          ],
+          supportedLocales: AppLocaleUtils.supportedLocales,
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => Center(
+                child: TextButton(
+                  onPressed: () => ViewModeSheet.show(context),
+                  child: const Text('open'),
                 ),
               ),
             ),

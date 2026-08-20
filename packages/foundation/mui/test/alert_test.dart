@@ -8,7 +8,7 @@ final _mui = buildMuiTheme(brightness: Brightness.light);
 
 void main() {
   /// 弹窗内部取 `context.muiL10n` 的默认「取消 / 确认」，所以宿主必须挂
-  /// [MuiTranslationScope]。
+  /// [GlobalMuiLocalizations.delegate]。
   Widget host(void Function(BuildContext context) onReady) {
     final body = Builder(
       builder: (context) => Center(
@@ -18,21 +18,20 @@ void main() {
         ),
       ),
     );
-    return MuiTranslationScope(
-      child: MuiTheme(
-        data: _mui,
-        child: MaterialApp(
-          theme: _mui,
-          locale: const Locale('zh'),
-          localizationsDelegates: const [
-            // material_ui 自带的那份（不是 flutter_localizations 的），
-            // 它给出的才是 material_ui 的 MaterialLocalizations 类型。
-            // mui 自己的通用词走 slang，不再有 delegate。
-            ...GlobalMaterialLocalizations.delegates,
-          ],
-          supportedLocales: const [Locale('zh'), Locale('en')],
-          home: Scaffold(body: body),
-        ),
+    return MuiTheme(
+      data: _mui,
+      child: MaterialApp(
+        theme: _mui,
+        locale: const Locale('zh'),
+        localizationsDelegates: const [
+          // material_ui 自带的那份（不是 flutter_localizations 的），
+          // 它给出的才是 material_ui 的 MaterialLocalizations 类型。
+          ...GlobalMaterialLocalizations.delegates,
+          // mui 自己那十来个通用词。漏了它 MuiLocalizations.of 会断言。
+          GlobalMuiLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('zh'), Locale('en')],
+        home: Scaffold(body: body),
       ),
     );
   }

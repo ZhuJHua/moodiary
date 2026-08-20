@@ -10,7 +10,7 @@
 //   dart tool/task.dart check-layers     # 仅分层依赖检查
 //   dart tool/task.dart deps             # 工作区依赖图（Mermaid；--pub 看第三方声明分布）
 //   dart tool/task.dart build-runner     # 代码生成
-//   dart tool/task.dart l10n             # slang 文案生成（moodiary_l10n + mui）
+//   dart tool/task.dart i18n             # slang 文案生成（moodiary_i18n + mui）
 //   dart tool/task.dart clean            # 删除 editor 构建产物
 //
 // 用 `dart`（非 `dart run`）调用本脚本可跳过 flutter_rust_bridge 的原生构建钩子。
@@ -181,14 +181,14 @@ Future<void> _genRust() async {
 
 Future<void> _checkLayers() => _run('fvm', ['dart', 'tool/check_layers.dart']);
 
-/// slang 的两处文案：App 的在 moodiary_l10n，mui 组件自己那十来个通用词在 mui。
+/// slang 的两处文案：App 的在 moodiary_i18n，mui 组件自己那十来个通用词在 mui。
 /// 不走 build_runner —— slang 的 CLI 是毫秒级的，塞进 build_runner 只会拖慢每次代码生成。
 const _slangPkgDirs = [
-  'packages/foundation/moodiary_l10n',
+  'packages/foundation/moodiary_i18n',
   'packages/foundation/mui',
 ];
 
-Future<void> _l10n() async {
+Future<void> _i18n() async {
   for (final dir in _slangPkgDirs) {
     await _run('fvm', ['dart', 'run', 'slang'], cwd: dir);
   }
@@ -233,10 +233,10 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
   'build-runner': (_) => _dartApp(['run', 'build_runner', 'build']),
   // 代码生成：Rust FFI 绑定 / slang 文案；`gen` = 三者 + 编辑器资源（melos bootstrap 的 post hook）。
   'gen-rust': (_) => _genRust(),
-  'l10n': (_) => _l10n(),
+  'i18n': (_) => _i18n(),
   'gen': (_) async {
     await _genRust();
-    await _l10n();
+    await _i18n();
     await _editor();
   },
   'clean': (_) async {

@@ -10,9 +10,10 @@ import 'package:mui/mui.dart';
 /// `Size(availableWidth, double.infinity)`。
 ///
 /// **只有 [InheritedTheme] 会被带过去**（`Theme` / `DefaultTextStyle` / `IconTheme`
-/// 这些），加上 [Directionality] 与 [MediaQuery]。普通的 `InheritedWidget` 带不过去
-/// —— 比如 slang 的 `TranslationProvider`。子树里要是有谁读 `context.l10n`，
-/// **调用方得自己在 [widget] 外面补上那一层**，否则这里会抛。
+/// 这些），加上 [Directionality] 与 [MediaQuery]。别的都带不过去 —— `Localizations`
+/// 与 slang 的 `TranslationProvider` 都不是 [InheritedTheme]。子树里要是有谁取串，
+/// **调用方得自己在 [widget] 外面补上那一层**：`context.l10n` 缺了会抛，
+/// `context.muiL10n` 缺了是 debug 断言、release 回落 base 语种（量出来的宽度会不准）。
 ///
 /// 代价是一次完整的 build + layout。别放进每帧都会走的路径。
 Size getWidgetSizeOffScreen({

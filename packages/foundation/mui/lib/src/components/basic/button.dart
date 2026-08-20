@@ -1,7 +1,5 @@
 import 'package:mui/mui.dart';
 
-import '../../l10n/mui_l10n.dart';
-
 class FrostedGlassButton extends StatelessWidget {
   final Widget child;
   final double size;

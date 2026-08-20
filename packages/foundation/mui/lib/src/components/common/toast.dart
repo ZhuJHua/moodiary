@@ -1,7 +1,5 @@
 import 'package:mui/mui.dart';
 
-import '../../l10n/mui_l10n.dart';
-
 /// 轻量提示工具，所有方法 fire-and-forget。[bindPage] 固定 false 让 toast 全局生效，
 /// 避免页面 pop 时被强制收起。
 class Toast {

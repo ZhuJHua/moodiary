@@ -8,7 +8,7 @@ import 'package:moodiary/app/picker/moodiary_camera_picker_state.dart';
 import 'package:moodiary/app/picker/moodiary_picker_delegate.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_files/moodiary_files.dart';
-import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_utils/moodiary_utils.dart' show uuidV7;
 import 'package:moodiary_utils/moodiary_utils.dart';

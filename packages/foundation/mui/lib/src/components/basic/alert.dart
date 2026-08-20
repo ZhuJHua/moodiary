@@ -1,8 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:mui/mui.dart';
 
-import '../../l10n/mui_l10n.dart';
-
 const double _kAlertMaxWidth = 340;
 const double _kAlertScreenPadding = 28;
 const double _kActionHeight = 44;

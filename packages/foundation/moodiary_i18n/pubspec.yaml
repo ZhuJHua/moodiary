@@ -1,5 +1,5 @@
-name: moodiary_l10n
-description: "Moodiary localization (foundation) — slang 生成的 Translations + BuildContext.l10n。"
+name: moodiary_i18n
+description: "Moodiary 国际化（foundation）：slang 生成的 Translations，取串走 l10n / context.l10n。"
 version: 0.0.1
 publish_to: none
 

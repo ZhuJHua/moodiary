@@ -1,5 +1,5 @@
 import 'package:moodiary_editor/src/data/editor_migration_service.dart';
-import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart' show logger;
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:mui/mui.dart';

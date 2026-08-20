@@ -6,7 +6,7 @@ import 'package:moodiary_assistant/moodiary_assistant.dart'
 import 'package:moodiary_diary/moodiary_diary.dart'
     show CategoryDrawer, diarySelectionProvider, homeDiaryFilterProvider;
 import 'package:moodiary_editor/moodiary_editor.dart' show openNewDiaryEditor;
-import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:mui/mui.dart';
 

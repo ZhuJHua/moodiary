@@ -21,7 +21,7 @@ export 'package:lucide_icons_flutter/lucide_icons.dart';
 
 export 'src/components.dart';
 export 'src/foundation/offscreen_size.dart';
-export 'src/l10n/mui_translation_scope.dart';
+export 'src/i18n/localizations.dart';
 export 'src/themes/build.dart';
 export 'src/themes/color_scheme.dart';
 export 'src/themes/mui_tokens.dart';

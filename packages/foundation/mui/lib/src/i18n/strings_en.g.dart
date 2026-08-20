@@ -5,19 +5,19 @@
 // ignore_for_file: type=lint, unused_import
 // dart format off
 
-import 'mui_strings.g.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:slang/generated.dart';
+import 'strings.g.dart';
 
 // Path: <root>
-class MuiTranslationsEn extends MuiTranslations with BaseTranslations<MuiAppLocale, MuiTranslations> {
+class MuiLocalizationsDataEn extends MuiLocalizationsData with BaseTranslations<MuiLocale, MuiLocalizationsData> {
 	/// You can call this constructor and build your own translation instance of this locale.
-	/// Constructing via the enum [MuiAppLocale.build] is preferred.
-	MuiTranslationsEn({Map<String, Node>? overrides, PluralResolver? cardinalResolver, PluralResolver? ordinalResolver, TranslationMetadata<MuiAppLocale, MuiTranslations>? meta})
+	/// Constructing via the enum [MuiLocale.build] is preferred.
+	MuiLocalizationsDataEn({Map<String, Node>? overrides, PluralResolver? cardinalResolver, PluralResolver? ordinalResolver, TranslationMetadata<MuiLocale, MuiLocalizationsData>? meta})
 		: assert(overrides == null, 'Set "translation_overrides: true" in order to enable this feature.'),
 		  $meta = meta ?? TranslationMetadata(
-		    locale: MuiAppLocale.en,
+		    locale: MuiLocale.en,
 		    overrides: overrides ?? {},
 		    cardinalResolver: cardinalResolver,
 		    ordinalResolver: ordinalResolver,
@@ -25,12 +25,12 @@ class MuiTranslationsEn extends MuiTranslations with BaseTranslations<MuiAppLoca
 		  super(cardinalResolver: cardinalResolver, ordinalResolver: ordinalResolver);
 
 	/// Metadata for the translations of <en>.
-	@override final TranslationMetadata<MuiAppLocale, MuiTranslations> $meta;
+	@override final TranslationMetadata<MuiLocale, MuiLocalizationsData> $meta;
 
-	late final MuiTranslationsEn _root = this; // ignore: unused_field
+	late final MuiLocalizationsDataEn _root = this; // ignore: unused_field
 
 	@override 
-	MuiTranslationsEn $copyWith({TranslationMetadata<MuiAppLocale, MuiTranslations>? meta}) => MuiTranslationsEn(meta: meta ?? this.$meta);
+	MuiLocalizationsDataEn $copyWith({TranslationMetadata<MuiLocale, MuiLocalizationsData>? meta}) => MuiLocalizationsDataEn(meta: meta ?? this.$meta);
 
 	// Translations
 	@override String get ok => 'OK';

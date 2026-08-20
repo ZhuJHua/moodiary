@@ -17,7 +17,7 @@ dependencies:
   moodiary_rust: 0.0.1
   moodiary_utils: 0.0.1
   moodiary_models: 0.0.1
-  moodiary_l10n: 0.0.1
+  moodiary_i18n: 0.0.1
   moodiary_di: 0.0.1
   moodiary_files: 0.0.1
   moodiary_http: 0.0.1

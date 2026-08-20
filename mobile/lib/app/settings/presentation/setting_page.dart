@@ -8,7 +8,7 @@ import 'package:moodiary/app/settings/presentation/widget/theme_mode_dialog.dart
 import 'package:moodiary_assistant/moodiary_assistant.dart'
     show AssistantSettingRoute;
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_lock/moodiary_lock.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_router/moodiary_router.dart';
@@ -233,7 +233,7 @@ class _MoreSection extends ConsumerWidget {
         SettingListTile(
           title: context.l10n.app.language,
           leading: _lead(context, LucideIcons.languages),
-          trailing: _value(context, lang.l10nText(context)),
+          trailing: _value(context, lang.label(context)),
           onTap: () => showDialog(
             context: context,
             builder: (_) => const LanguageDialog(),

@@ -1,4 +1,6 @@
-/// Moodiary 本地化包（foundation）：slang 生成的 [Translations]。
+/// Moodiary 国际化包（foundation）：slang 生成的 [Translations]。
+///
+/// 包与目录叫 i18n（能力），取串的入口叫 l10n（当前语种的具体文案）。
 ///
 /// 取串两种写法，按有没有 `BuildContext` 分：
 /// - widget 里用 `context.l10n.xxx` —— 依赖 `TranslationProvider`，切语言自动重建；

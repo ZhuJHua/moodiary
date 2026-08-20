@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
 
 import 'export_doc.dart';
 

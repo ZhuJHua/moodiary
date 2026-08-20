@@ -26,8 +26,8 @@ dart tool/task.dart build-apk / build-ios  # 只有 android/ios 两个目标
 # Code Gen (after model/router/provider changes)
 dart tool/task.dart build-runner   # build_runner build（2.16.0 起 --delete-conflicting-outputs 已移除）
 dart tool/task.dart gen-rust       # regenerate Rust FFI bindings
-dart tool/task.dart l10n           # slang 文案生成（改了 i18n/*.json 必跑）
-dart tool/task.dart gen            # gen-rust + l10n + rebuild editor asset
+dart tool/task.dart i18n           # slang 文案生成（改了 i18n/*.json 必跑）
+dart tool/task.dart gen            # gen-rust + i18n + rebuild editor asset
 dart tool/task.dart editor         # rebuild editor asset only (needs corepack on PATH)
 
 # Lint & Test
@@ -62,7 +62,7 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
       moodiary_lint/         #   shared analyzer options
       moodiary_di/           #   get_it 容器的唯一实例（全仓最底层）
       moodiary_logging/      #   日志；落盘路径由组合根注入，故不认识文件布局
-      moodiary_l10n/         #   localization (slang，见下)
+      moodiary_i18n/         #   i18n：slang 文案与取串入口（见下）
       moodiary_router/       #   typed route primitives over go_router
       moodiary_rust/         #   Rust FFI package (cargo workspace in rust/, built by hook/build.dart)
       moodiary_utils/        #   pure utils + content converters (tiptap/markdown/quill)
@@ -103,6 +103,13 @@ Cross-package DAG is strictly upper → lower: `foundation → core → feature_
 
 **core 一个领域词都不认识**：`Diary` / `Category` / `Font` 都不在它的依赖图里。四个曾经的耦合点分别靠注入或上移解决了 —— schema 表进了 `moodiary_models`（`moodiarySchemas`），孤儿媒体清理进了 `moodiary_migration`，`FontManager` 只吐原始描述、装配成 `Font` 在 `moodiary_data`（`scanDiskFonts` / `themeDescriptor`）。
 
+> 由此有一条会被反复重问的：**`moodiary_i18n` 的 namespace 带着 `diary` / `assistant` / `sync`
+> 这些 feature 名，但它该留在 foundation，不是 core。** 那些领域知识是**数据**（json 的键），
+> 不是**代码** —— 包本身零 `moodiary_*` 依赖，`Translations` 对 `Diary` 一无所知，删掉
+> `diary_*.i18n.json` 照样编译；而 core 里被禁的那种耦合是**类型**依赖，会把编译期的边拽出来。
+> 分层的维度是依赖方向，不是词汇纯度。反过来搬进 core 还会亏两头：破坏上面那句「一个领域词都
+> 不认识」，且 core 同 tier 禁止互引，core 自己反而再也够不着它（今天够得着，只是没人用）。
+
 In-app layering within `mobile/lib` (same script): `gen → core → data → component → feature/<x> → app → main.dart`. Baseline is **zero violations**.
 
 ### mui —— material 的补充，不是替代
@@ -140,10 +147,11 @@ foundation 叶子包，所以它自带一份 slang 文案（十来个通用词�
    platform / visualDensity / colorScheme / textTheme 四项，**25 个组件子主题不过桥** ——
    第三方 widget 保留我们的配色与排版，但组件级样式回落 Material 默认。它出厂即
    `@Deprecated`，依赖全部迁移后摘掉。
-2. `localizationsDelegates` 里**只剩 material_ui 自带的 `GlobalMaterialLocalizations.delegates`**
-   （已含 cupertino/widgets）。不能用 `flutter_localizations` 的同名类：那份给出 **legacy**
-   类型，material_ui 的 widget 认不得，中文下会退化并让日期选择器一类直接抛。
-   我们自己的文案走 slang，不再有 delegate。
+2. `localizationsDelegates` 里的 material 那份**必须是 material_ui 自带的
+   `GlobalMaterialLocalizations.delegates`**（已含 cupertino/widgets）。不能用
+   `flutter_localizations` 的同名类：那份给出 **legacy** 类型，material_ui 的 widget
+   认不得，中文下会退化并让日期选择器一类直接抛。App 自己的文案走 slang 的
+   `TranslationProvider`，不在这条链上；mui 的通用词在（`GlobalMuiLocalizations.delegate`）。
 3. **路由一律用 `MoodiaryGoRoute`，不用裸 `GoRoute`**（moodiary_router/src/route_page.dart）。
    go_router 靠 `findAncestorWidgetOfExactType<MaterialApp>()` 猜宿主类型来决定 `builder:`
    路由包成哪种 Page，它认的是 legacy `MaterialApp`；我们挂的是 material_ui 的同名新类，
@@ -171,32 +179,60 @@ foundation 叶子包，所以它自带一份 slang 文案（十来个通用词�
 文案由 **slang 4.19** 生成，`flutter_localizations` 退回只服务 material 组件自己的字串
 （且它不会从依赖图消失：material_ui 与 slang_flutter 都依赖它）。
 
-全仓有**两份**互不相干的 slang 产物，各自 `slang.yaml`：
+**三个词各指一样东西，全仓按这个分**：
 
-| | 源文件 | 产物 | 符号 |
-|---|---|---|---|
-| App | `moodiary_l10n/lib/i18n/<ns>_{zh,en}.i18n.json` | `strings.g.dart` | `Translations` / `AppLocale` / `l10n` |
-| mui | `mui/lib/src/l10n/i18n/{zh,en}.i18n.json` | `mui_strings.g.dart` | `MuiTranslations` / `MuiAppLocale` / `muiL10n` |
+| 词 | 指什么 | 用在哪 |
+|---|---|---|
+| **i18n** | 让程序**有能力**适配任意语种的那套机制：文案外部化、语种解析、复数规则、代码生成 | 包名 `moodiary_i18n`、目录 `i18n/`、`slang.yaml`、`dart tool/task.dart i18n`、`i18n_test.dart` |
+| **l10n** | 某个语种下的**具体文案**，也就是取串拿到的那个对象 | `context.l10n` / 顶层 `l10n` / `context.muiL10n` / 局部 `final l10n = …` |
+| **Localizations** | Flutter `Localizations` widget 那条链（delegate + `.of(context)`） | 只给真走那条链的：`GlobalMuiLocalizations` / `MuiLocalizations` / `MuiLocalizationsData` |
+
+按这个分，**App 那份不该叫 `MoodiaryLocalizations`**：它走 slang 自己的 `TranslationProvider`，
+压根不经过 Flutter 的 `Localizations`，叫那个名字是指错实现。走那条链的全仓只有 mui。
+反过来，**枚举转显示名一类的方法也不该叫 `l10nText`**（已改名 `Language.label`）——
+返回的是一句 label，「它是本地化的」是所有 UI 文案的共性，不构成名字的一部分。
+
+全仓有**两份**互不相干的 slang 产物，各自 `slang.yaml`，**而且用的是 slang 的两种模式**：
+
+| | 源文件 | 产物 | 模式 | 符号 |
+|---|---|---|---|---|
+| App | `moodiary_i18n/lib/i18n/<ns>_{zh,en}.i18n.json` | `strings.g.dart` | 默认（全局 `LocaleSettings` + `TranslationProvider`） | `Translations` / `AppLocale` / `l10n` |
+| mui | `mui/lib/src/i18n/{zh,en}.i18n.json` | `strings.g.dart` | `locale_handling: false` + 手写 delegate | `MuiLocalizationsData` / `MuiLocale` / `context.muiL10n` |
+
+**两种模式对应两种角色，别互相看齐**：
+
+- **App 是根**：类名冲突由它说了算，而且 service / 导出 / 回调里大量用顶层 `l10n`（那里
+  拿不到 context），所以走默认模式 —— `runApp` 里挂 `TranslationProvider`，
+  `applyStoredLanguage()` 调一次 `LocaleSettings.setLocale`。语种真源是 slang 的
+  `GlobalLocaleState` 单例，KV 里只存偏好枚举，`MaterialApp.locale` 从
+  `TranslationProvider.of(context).flutterLocale` 取。
+- **mui 是被别人 import 的包**：它关掉了 `locale_handling`，产物里**没有 `LocaleSettings`、
+  没有 `TranslationProvider`、没有顶层 `muiL10n` 变量**，只剩 `MuiLocale` 枚举与
+  `MuiLocalizationsData` 类，外面套一层手写的 `GlobalMuiLocalizations`
+  （`LocalizationsDelegate`，同 `GlobalMaterialLocalizations`、shadcn_ui 的
+  `GlobalShadLocalizations`）。宿主把它加进 `MaterialApp.localizationsDelegates` 即可，
+  **不需要知道 mui 内部用了 slang**；当前语种就是 `MaterialApp.locale` 解析出来的那个。
+  组件里照旧写 `context.muiL10n.ok`（extension 是手写的，不是生成的）。
+
+  换来三件事：①两份产物不再撞名，生成物 `show MuiLocalizationsData` 出去就够，不必再包一层
+  scope；②宿主漏挂 delegate 只是回落 base 语种（debug 下 `MuiLocalizations.of` 断言），
+  不像 provider 缺失那样在每个组件里直接抛；③语种真源只剩 `Localizations` 一处，与「谁先调
+  `setLocale`」的启动顺序脱钩 —— 旧实现里 `runApp` 之前切语种那一轮通知是落空的。
+  闸门在 `mui/test/i18n_test.dart`。
 
 App 那份按 **namespace 一个 feature 一份文件**：`common`（无领域含义的基础词）+
 `app` / `diary` / `assistant` / `export` / `sync` / `media` / `editor` / `ui` / `lock` /
 `onboarding` / `share`。取串写成 `l10n.diary.searchResult`；**删 feature 就删它那两个文件**。
 
 **feature 包不各自装 slang**（只有 mui 例外，因为它是零 `moodiary_*` 依赖的对外叶子包）：
-每份 slang 都会生成自己的 `TranslationProvider`，得在 `main.dart` 手工逐个嵌套，
-漏挂是**运行时抛**而不是编译错。namespace 已经给到分域的全部好处，不必付这个代价。
+namespace 已经给到分域的全部好处，不必为每个 feature 再付一份产物、一次挂载。
 
 - **取串按有没有 context 分**：widget 里用 `context.l10n.xxx`（依赖 `TranslationProvider`，
   切语言自动重建）；service / 导出 / 回调里用顶层的 `l10n.xxx`（**不会重建**）。
 - **参数是具名的**：`l10n.diarySearchResult(count: n)`。gen-l10n 时代的位置参数已全部改完。
-- **语种真源是 slang 的 `GlobalLocaleState` 单例**，跨包共享 —— `applyStoredLanguage()`
-  调一次 App 那份 `LocaleSettings.setLocale`，App 与 mui 两棵树一起刷新（slang_flutter
-  的 `_GlobalKeyHandler` 也是进程级单例，会遍历所有已注册 provider 逐个 `updateState`）。
-  **但这一条挂在 mui 的 `lazy: false` 上**，见下面第 3 点。KV 里只存偏好枚举。
-  `MaterialApp.locale` 从 `TranslationProvider.of(context).flutterLocale` 取。
-- 改了 `*.i18n.json` **必须跑 `dart tool/task.dart l10n`**（产物是提交的，且没有闸门兜底）。
+- 改了 `*.i18n.json` **必须跑 `dart tool/task.dart i18n`**（产物是提交的，且没有闸门兜底）。
 - 查死键要开 `--full`（不开只比对语种间差集），并把源码目录指回仓库 —— 默认只扫当前包的
-  `lib/`，那里一个调用点都没有。在 `moodiary_l10n` 下跑，约 9 秒：
+  `lib/`，那里一个调用点都没有。在 `moodiary_i18n` 下跑，约 9 秒：
 
   ```bash
   dart run slang analyze --full --source-dirs=../../../packages,../../../mobile
@@ -208,23 +244,24 @@ App 那份按 **namespace 一个 feature 一份文件**：`common`（无领域�
 四个不报错的坑：
 
 1. **`TranslationProvider` / `LocaleSettings` / `AppLocaleUtils` 三个类名在生成器里是硬编码的**，
-   只有 `class_name` / `enum_name` / `translate_var` 可配。所以 mui 的生成物**不进 barrel**，
-   对外只露 `MuiTranslationScope`（裸导出会和 App 那份撞成 ambiguous import）。
+   只有 `class_name` / `enum_name` / `translate_var` 可配。mui 关掉 `locale_handling` 之后
+   只剩 `AppLocaleUtils` 还会生成，所以它的产物**仍然不整个进 barrel**，只
+   `show MuiLocalizationsData`；生成物顶部还有一句 `export 'package:slang_flutter/…'`，
+   裸导出会把整个 slang_flutter 一起带出去。
 2. **复数是英文的需求，中文被顺带拖进来**：slang 要求同一个键在所有语种里节点形状一致，
    所以 `1 entry / 2 entries` 这类键的中文侧也是复数节点（只有 `other`）。而 slang 的内置
    复数规则表里没有 zh（只有 ar cs de en es fr he it ja pl ru sv uk vi），渲染中文时**每次
    都走一遍 `print`** 再用兜底（`log.error` 就是裸 print，release 也打）。`setupPluralResolvers()`
    就是来说「zh 一律取 other」的，在 `runApp` 之前登记即可（与 `setLocale` 先后无关，
-   但它不会通知已挂载的 provider）。
+   但它不会通知已挂载的 provider）。mui 那份没有 `LocaleSettings`，将来真加了复数键得从
+   delegate 的 `buildSync(cardinalResolver: …)` 传进去。
 3. **非 base 语种的翻译类默认是 deferred import**（`lazy: true`），所以 App 那份一律用
    异步的 `setLocale`，别用 `setLocaleSync`（它绕开 `loadLibrary()`）。
-   **mui 那份必须 `lazy: false`**，因为**我们在 `runApp` 之前就切语种**：那时一个
-   `TranslationProvider` 都还没构造（GlobalKey 在 `BaseTranslationProvider` 的构造器里
-   才注册），`updateProviderState` 遍历的是空集合。App 那棵没事——它自己那份 `setLocale`
-   会 `await loadLocale`；mui 那棵没人替它调，`translationMap` 里只有 base(zh)，
-   `map[current] ?? map[base]` 一路回落，英文用户在每个 mui 组件里看到中文，冷启动必现、
-   进设置改一次语言才好（那时 provider 已挂载，`updateState` 会补上 `loadLocale`）。
-   闸门在 `mui/test/l10n_test.dart`。
+   **mui 那份钉 `lazy: false`**：delegate 的 `load()` 用 `buildSync` 直接返回
+   `SynchronousFuture`（`Localizations` 因此不多等一帧，widget 测试也不用多 pump 一次），
+   而 `buildSync` 恰恰绕开 `loadLibrary()` —— 把 lazy 打开就得同时把 delegate 改成异步的
+   `build()`，否则 web 上直接抛。闸门在 `mui/test/i18n_test.dart`（比对生成物里没有
+   `deferred as`）。
 4. `timestamp` 与 `flat_map` 默认都是 `true`：前者让提交的产物每次生成都有噪声 diff，
    后者多生成一份全量 `Map<String, String>`。两个都在 `slang.yaml` 里关掉了。
 5. **`analyze` 是按 `l10n.` 前缀做子串匹配的，存成局部别名它就瞎了**：写

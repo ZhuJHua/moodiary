@@ -14,7 +14,7 @@ import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_editor/moodiary_editor.dart'
     show EditorMigrationService;
-import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -102,13 +102,10 @@ void main() async {
     return true;
   };
 
-  // 两棵翻译树各要一个 provider：App 的字串在 moodiary_l10n，mui 组件自己那十来个
-  // 通用词在 mui。两者共享 slang 的 `GlobalLocaleState` 单例，所以只需在一处切语言。
-  runApp(
-    TranslationProvider(
-      child: const MuiTranslationScope(child: ProviderScope(child: Moodiary())),
-    ),
-  );
+  // App 的字串走 slang 的 `TranslationProvider`（切语言自动重建整棵树）。mui 自己那
+  // 十来个通用词不在这里——它是被 import 的包，走 `Localizations`，挂在下面的
+  // `localizationsDelegates` 里。
+  runApp(TranslationProvider(child: const ProviderScope(child: Moodiary())));
 }
 
 class Moodiary extends ConsumerWidget {
@@ -167,13 +164,19 @@ class Moodiary extends ConsumerWidget {
       darkTheme: settings.darkTheme,
       locale: TranslationProvider.of(context).flutterLocale,
       themeMode: settings.themeMode,
-      // App 与 mui 的文案都走 slang，不再需要 delegate；这里只剩 material 组件自己的
-      // 那份。**必须用 material_ui 自带的 GlobalMaterialLocalizations**（`delegates`
+      // **必须用 material_ui 自带的 GlobalMaterialLocalizations**（`delegates`
       // 里已含 cupertino/widgets 两条）：flutter_localizations 的同名类给出的是
       // **legacy** MaterialLocalizations 类型，material_ui 的 widget 认不得它，
       // 中文下会退化成「locale zh is not supported」并让日期选择器一类直接抛。
       // legacy 子树的那份由根部的 MaterialUiCompatibilityBridge 自己注入。
-      localizationsDelegates: const [...GlobalMaterialLocalizations.delegates],
+      //
+      // mui 的通用词也在这条链上——它是被 import 的包，不该要求宿主知道它内部用了
+      // slang。漏了这一条不会崩，只会让那十来个词回落到 base 语种，debug 下
+      // `MuiLocalizations.of` 会断言。App 自己的字串走 runApp 里的 TranslationProvider。
+      localizationsDelegates: const [
+        ...GlobalMaterialLocalizations.delegates,
+        GlobalMuiLocalizations.delegate,
+      ],
       supportedLocales: AppLocaleUtils.supportedLocales,
     );
   }

@@ -83,9 +83,7 @@ void main() {
   // 真实树里已经挂着同类型 widget 时再离屏建一份，不能互相干扰。
   // 唯一会炸的情况是被量的子树里带了 GlobalKey —— 那种 key 全进程唯一，
   // 同时挂两处就是「Multiple widgets used the same GlobalKey」。
-  testWidgets('被量的子树里带 GlobalKey 会撞车（这就是不能包 TranslationProvider 的原因）', (
-    tester,
-  ) async {
+  testWidgets('被量的子树里带 GlobalKey 会撞车（带 GlobalKey 的祖先包不进来）', (tester) async {
     final shared = GlobalKey();
     await tester.pumpWidget(
       MaterialApp(

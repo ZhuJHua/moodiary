@@ -12,7 +12,7 @@
 library;
 
 import 'package:moodiary_assistant/src/presentation/chat_list.dart';
-import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:mui/mui.dart';
 
 /// 展开动画。与滚动补偿共用一条曲线 —— 两者不同步的话，块的顶边会在动画期间飘。
