@@ -170,7 +170,7 @@ void main() {
         for (final brightness in Brightness.values) {
           expect(
             resolveColorScheme(brightness, const MuiAccent.seeded(seed)),
-            resolveColorScheme(brightness, MuiAccent.seeded(seed)),
+            resolveColorScheme(brightness, const MuiAccent.seeded(seed)),
           );
         }
       });

@@ -120,13 +120,13 @@ void main() {
 
   testWidgets('占位不参与撑大尺寸', (tester) async {
     await tester.pumpWidget(
-      Directionality(
+      const Directionality(
         textDirection: TextDirection.ltr,
         child: Align(
           alignment: Alignment.topLeft,
           child: MLazyIndexedStack(
             index: 0,
-            children: const [
+            children: [
               SizedBox(width: 50, height: 50),
               SizedBox(width: 400, height: 400),
             ],

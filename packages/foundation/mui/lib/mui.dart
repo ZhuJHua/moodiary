@@ -11,13 +11,13 @@
 /// 组件层面同理：material 够用的直接用，不够用的才在本包里补，命名一律 `M` 开头。
 library;
 
-// material 本体由 mui 转发：业务代码只 import mui，不再直接碰
-// package:flutter/material.dart（它将于 2026-11 弃用）。
-export 'package:material_ui/material_ui.dart';
-
 // owner 包转发：toast/浮层宿主与图标库由 mui 出，调用方不必各自 import。
 export 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 export 'package:lucide_icons_flutter/lucide_icons.dart';
+
+// material 本体由 mui 转发：业务代码只 import mui，不再直接碰
+// package:flutter/material.dart（它将于 2026-11 弃用）。
+export 'package:material_ui/material_ui.dart';
 
 export 'src/components.dart';
 export 'src/foundation/offscreen_size.dart';
