@@ -13,9 +13,7 @@ dependencies:
   flutter:
     sdk: flutter
   go_router: 17.5.0
-  # MaterialPage：go_router 认不出 material_ui 的 MaterialApp，Page 得路由自己给，
-  # 详见 src/route_page.dart。
-  material_ui: 1.0.0
+  material_ui: 1.0.1
 
 dev_dependencies:
   flutter_test:
