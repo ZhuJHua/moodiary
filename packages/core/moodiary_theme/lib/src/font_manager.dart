@@ -8,10 +8,6 @@ import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_rust/foundation.dart' as rust;
 import 'package:path/path.dart';
 
-/// 当前激活的自定义字体，喂给 [ThemeManager.buildTheme] 的原始描述。
-///
-/// core 是无领域层，够不着 `Font`；由 moodiary_data 的 `FontRepository` 从 `Font`
-/// 转出来（`font.themeDescriptor`）。
 typedef ActiveFontDescriptor = ({
   String family,
   String fileName,
@@ -71,10 +67,6 @@ class FontManager {
     return res?.xFile;
   }
 
-  /// 扫 font 目录，读出每个字体文件的落库名与可变字重轴。
-  ///
-  /// 刻意**不返回 `Font`**：那是领域类型，core 不认识它。装配成 `Font` 由
-  /// `FontRepository.scanDiskFonts()`（moodiary_data）做。
   static Future<List<({String fileName, Map<String, dynamic> wghtAxis})>>
   scanFontFiles() async {
     final fontFileList = await AppFiles.getDirFilePath('font');

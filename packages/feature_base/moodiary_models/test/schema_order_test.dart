@@ -1,11 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
-/// isar_plus 按位置下标寻址 collection。重排 [moodiarySchemas] 或往中间插一条，
-/// 已有数据就会被读写到错误的表里——**不报错**，只是数据错位。
-///
-/// 断言用恒等比较而不是名字：`IsarGeneratedSchema` 没有公开的名字成员，
-/// 它的 `schema` 字段是 `@protected`，测试里碰它是 invalid_use_of_protected_member。
 void main() {
   group('moodiarySchemas 的位置是数据契约', () {
     test('顺序与长度都被钉死（只许在末尾追加）', () {

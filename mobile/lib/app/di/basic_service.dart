@@ -11,8 +11,6 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 /// applicationSupportPath），故先串行就位，再并发三条独立存储。
 /// 不在此调用 RustLib.init / ThemeManager / registerService——那些含业务/UI 决策，
 /// 由 main.dart 显式调用以便启动期定制。
-/// [schemas] 由 app 组合根传入（`moodiary_models` 的 `moodiarySchemas`）——core 是
-/// 无领域层，不认识 collection 类型。顺序即地址，见 IsarDatabase.init 的说明。
 Future<void> injectBasicService({
   required List<IsarGeneratedSchema> schemas,
 }) async {
@@ -21,8 +19,6 @@ Future<void> injectBasicService({
 
   await PlatformService.get().init();
   await AppFiles.initCreateDir();
-
-  // 日志的落盘路径由这里给：moodiary_logging 是 foundation 叶子，不认识文件布局。
   AppLogger.configure(logFilePath: AppFiles.getErrorLogPath());
 
   // SecureKV 必须先就位：KV 的 init 里那次 2.8.0 搬迁会把三个机密写进它。

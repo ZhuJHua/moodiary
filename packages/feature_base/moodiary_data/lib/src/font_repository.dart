@@ -16,10 +16,6 @@ class FontRepository {
     return _isar.fonts.where().findAllAsync();
   }
 
-  /// 扫磁盘上的字体文件并装配成 [Font]。
-  ///
-  /// core 的 [FontManager.scanFontFiles] 只吐原始描述（它够不着 `Font`），
-  /// 领域装配在这一层做。
   Future<List<Font>> scanDiskFonts() async {
     final scanned = await FontManager.scanFontFiles();
     return [
@@ -53,7 +49,6 @@ class FontRepository {
 }
 
 extension FontThemeDescriptor on Font {
-  /// 喂给 `ThemeManager.buildTheme` 的原始描述。core 不认识 `Font`，转换在这里。
   ActiveFontDescriptor get themeDescriptor =>
       (family: fontFamily, fileName: fontFileName, wghtAxis: fontWghtAxisMap);
 }

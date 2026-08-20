@@ -93,9 +93,6 @@ class ThemeManager {
   }
 
   /// [customFont] 为当前激活的自定义字体，由调用方（FontRepository.getActiveFont）解析注入。
-  ///
-  /// 收的是**原始描述而不是 `Font`**：那是领域类型，core 不认识它。调用方用
-  /// `font.themeDescriptor` 转一下即可。
   Future<void> buildTheme({ActiveFontDescriptor? customFont}) async {
     await findDynamicColor();
 
@@ -112,7 +109,9 @@ class ThemeManager {
       );
       fontFamily = customFont.family;
       _activeFontFileName = customFont.fileName;
-      wghtAxisMap = _unifyFontWeights(customFont.wghtAxis.cast<String, double>());
+      wghtAxisMap = _unifyFontWeights(
+        customFont.wghtAxis.cast<String, double>(),
+      );
     }
 
     final accent = resolveAccent();

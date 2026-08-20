@@ -11,7 +11,6 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:pub_semver/pub_semver.dart';
 
-// 前缀真源在 moodiary_models/schemas.dart，别在这里写字面量（见那里的说明）。
 final _schemas = legacyMigrationSchemas;
 
 class VersionMigrator {
