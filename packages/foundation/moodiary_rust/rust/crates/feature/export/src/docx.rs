@@ -150,7 +150,7 @@ pub fn write_docx(
         }
 
         if style.include_meta {
-            let meta = meta_line(doc);
+            let meta = doc.meta_line();
             if !meta.is_empty() {
                 docx = docx.add_paragraph(
                     Paragraph::new().add_run(
@@ -282,24 +282,6 @@ fn content_width_emu(style: &DocxStyle) -> u32 {
 /// 书签名不能有连字符、不能以数字开头，长度也有限制。
 fn anchor_of(id: &str) -> String {
     format!("d_{}", id.replace('-', ""))
-}
-
-fn meta_line(doc: &IrDoc) -> String {
-    let mut parts: Vec<&str> = Vec::new();
-    if !doc.time.is_empty() {
-        parts.push(&doc.time);
-    }
-    let weather = doc.weather.join(" ");
-    if !weather.is_empty() {
-        parts.push(&weather);
-    }
-    if let Some(last) = doc.position.last() {
-        parts.push(last);
-    }
-    if let Some(category) = doc.category_name.as_deref() {
-        parts.push(category);
-    }
-    parts.join(" · ")
 }
 
 fn blocks(mut docx: Docx, blocks: &[IrBlock], ctx: &Ctx, depth: usize) -> Docx {
@@ -513,7 +495,7 @@ fn table(docx: Docx, rows: &[IrRow], ctx: &Ctx) -> Docx {
                                     })
                                     .collect()
                             } else {
-                                spans.to_vec()
+                                spans.clone()
                             };
                             tc = tc.add_paragraph(inline(Paragraph::new(), &spans, ctx));
                         }

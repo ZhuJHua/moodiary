@@ -13,7 +13,6 @@ members = ["crates/*/*"]
 anyhow = "=1.0.104"
 bytes = "=1.12.1"
 futures = { version = "=0.3.33", default-features = false, features = ["std", "async-await"] }
-serde = { version = "=1.0.229", default-features = false, features = ["std", "derive"] }
 serde_json = "=1.0.151"
 url = "=2.5.8"
 
@@ -34,28 +33,26 @@ reqwest = { version = "=0.13.4", default-features = false, features = [
     "deflate",
     "stream",
 ] }
-rustls = { version = "=0.23.43", default-features = false, features = ["ring", "std", "tls12", "logging"] }
+rustls = { version = "=0.23.43", default-features = false, features = ["ring", "std", "tls12"] }
 webpki-roots = "=1.0.9"
 reqwest_dav = { version = "=0.3.3", default-features = false, features = ["rustls-tls-no-provider"] }
 rusty-s3 = { version = "=0.10.2", default-features = false, features = ["rustcrypto"] }
 
 ring = "=0.17.14"
-argon2 = { version = "=0.6.0-rc.8", features = ["default", "rand_core"] }
-zip = { version = "=8.6.0", default-features = false, features = ["aes-crypto", "deflate", "zstd", "time"] }
-walkdir = "=2.5.0"
+argon2 = { version = "=0.6.0-rc.8", features = ["default"] }
+zip = { version = "=8.6.0", default-features = false, features = ["aes-crypto", "deflate"] }
 
 image = { version = "=0.25.10", default-features = false, features = [
     "bmp",
     "gif",
-    "ico",
     "jpeg",
     "png",
     "tiff",
     "webp",
 ] }
-webp = "=0.3.1"
+webp = { version = "=0.3.1", default-features = false }
 fast_image_resize = { version = "=6.1.0", default-features = false, features = ["image"] }
-ttf-parser = { git = "https://github.com/ZhuJHua/ttf-parser", rev = "4a0ddfee643e4a25a3d1363241fa94b9c5f113c3" }
+ttf-parser = { git = "https://github.com/ZhuJHua/ttf-parser", rev = "4a0ddfee643e4a25a3d1363241fa94b9c5f113c3", default-features = false, features = ["std", "variable-fonts"] }
 
 jieba-rs = { version = "=0.10.3", default-features = false, features = ["default-dict"] }
 unicode-segmentation = "=1.13.3"
@@ -72,7 +69,7 @@ syntect = { version = "=5.3.0", default-features = false, features = [
 ] }
 two-face = { version = "=0.4.5", default-features = false, features = ["syntect-fancy"] }
 
-rig = { package = "rig-core", version = "=0.42.0", default-features = false, features = ["reqwest", "derive"] }
+rig = { package = "rig-core", version = "=0.42.0", default-features = false, features = ["reqwest"] }
 # 0.42 把 agent 运行时从 rig-core 拆了出来（AgentBuilder / 多轮工具循环都在这里）。
 rig-agent = { version = "=0.42.0", default-features = false }
 
@@ -81,9 +78,9 @@ moodiary-crypto = { path = "crates/foundation/crypto" }
 moodiary-font = { path = "crates/foundation/font" }
 moodiary-http = { path = "crates/foundation/http" }
 moodiary-js = { path = "crates/foundation/js" }
-moodiary-media = { path = "crates/foundation/media" }
+moodiary-image = { path = "crates/foundation/image" }
 moodiary-text = { path = "crates/foundation/text" }
-moodiary-doc = { path = "crates/core/doc" }
+moodiary-doc = { path = "crates/feature_base/doc" }
 moodiary-assistant = { path = "crates/feature/assistant" }
 moodiary-export = { path = "crates/feature/export" }
 moodiary-graph = { path = "crates/feature/graph" }
@@ -92,7 +89,6 @@ moodiary-sync = { path = "crates/feature/sync" }
 [dependencies]
 flutter_rust_bridge = "=2.13.0-beta.6"
 anyhow = { workspace = true }
-serde_json = { workspace = true }
 
 moodiary-archive = { workspace = true }
 moodiary-assistant = { workspace = true }
@@ -103,7 +99,7 @@ moodiary-font = { workspace = true }
 moodiary-graph = { workspace = true }
 moodiary-http = { workspace = true }
 moodiary-js = { workspace = true }
-moodiary-media = { workspace = true }
+moodiary-image = { workspace = true }
 moodiary-sync = { workspace = true }
 moodiary-text = { workspace = true }
 

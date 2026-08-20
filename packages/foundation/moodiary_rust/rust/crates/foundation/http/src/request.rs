@@ -4,6 +4,7 @@ use std::time::Duration;
 
 use futures::StreamExt;
 
+use crate::KeyValue;
 use crate::client::builder as http_client_builder;
 
 #[derive(Clone, Copy)]
@@ -31,13 +32,6 @@ impl From<HttpMethod> for reqwest::Method {
     }
 }
 
-/// 有序键值对，用于 query / 请求头 / 响应头。用结构体而非 map 以保留顺序与重复键
-/// （响应头如 set-cookie 可重复）。
-#[derive(Clone)]
-pub struct KeyValue {
-    pub key: String,
-    pub value: String,
-}
 
 pub struct ClientSettings {
     /// 相对 url 的基准；为 None 时所有请求都必须传绝对 url。

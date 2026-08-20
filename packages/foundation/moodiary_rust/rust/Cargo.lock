@@ -2592,21 +2592,21 @@ dependencies = [
 ]
 
 [[package]]
-name = "moodiary-js"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "rquickjs",
-]
-
-[[package]]
-name = "moodiary-media"
+name = "moodiary-image"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "fast_image_resize",
  "image",
  "webp",
+]
+
+[[package]]
+name = "moodiary-js"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "rquickjs",
 ]
 
 [[package]]
@@ -2628,7 +2628,6 @@ dependencies = [
  "anyhow",
  "jieba-rs",
  "rust-stemmers",
- "tokio",
  "unicode-segmentation",
 ]
 
@@ -2646,11 +2645,10 @@ dependencies = [
  "moodiary-font",
  "moodiary-graph",
  "moodiary-http",
+ "moodiary-image",
  "moodiary-js",
- "moodiary-media",
  "moodiary-sync",
  "moodiary-text",
- "serde_json",
 ]
 
 [[package]]
@@ -2846,7 +2844,6 @@ checksum = "aab41826031698d6ffcd9cff78ef56ef998e39dc7e5067cdfebe373842d4723b"
 dependencies = [
  "getrandom 0.4.3",
  "phc",
- "rand_core 0.10.1",
 ]
 
 [[package]]
@@ -2905,7 +2902,6 @@ dependencies = [
  "base64ct",
  "ctutils",
  "getrandom 0.4.3",
- "rand_core 0.10.1",
 ]
 
 [[package]]
@@ -3216,7 +3212,7 @@ checksum = "22f6172bdec972074665ed81ed53b71da00bfc44b65a753cfde883ec4c702a1a"
 dependencies = [
  "libc",
  "rand_chacha",
- "rand_core 0.6.4",
+ "rand_core",
 ]
 
 [[package]]
@@ -3226,7 +3222,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e6c10a63a0fa32252be49d21e7709d4d4baf8d231c2dbce1eaa8141b9b127d88"
 dependencies = [
  "ppv-lite86",
- "rand_core 0.6.4",
+ "rand_core",
 ]
 
 [[package]]
@@ -3237,12 +3233,6 @@ checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 dependencies = [
  "getrandom 0.2.17",
 ]
-
-[[package]]
-name = "rand_core"
-version = "0.10.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "63b8176103e19a2643978565ca18b50549f6101881c443590420e4dc998a3c69"
 
 [[package]]
 name = "rayon"
@@ -3474,7 +3464,6 @@ dependencies = [
  "ordered-float",
  "pin-project-lite",
  "reqwest",
- "rig-derive",
  "schemars",
  "serde",
  "serde_json",
@@ -3484,19 +3473,6 @@ dependencies = [
  "tracing",
  "tracing-futures",
  "url",
-]
-
-[[package]]
-name = "rig-derive"
-version = "0.42.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "de0a33f1bac45f16e50146c248bcbbfaa44518c7252d274e972c7f4ad71aaba7"
-dependencies = [
- "convert_case",
- "proc-macro-crate",
- "proc-macro2",
- "quote",
- "syn 2.0.119",
 ]
 
 [[package]]
@@ -3635,7 +3611,6 @@ version = "0.23.43"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0283386ce02abc0151e1761d08802dfe86c173b0b494af5cbc086574e453da06"
 dependencies = [
- "log",
  "once_cell",
  "ring",
  "rustls-pki-types",
@@ -4308,7 +4283,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cdb87b95ec50ddfa440816d227a17b2ccbdda963a316a727fda0fc4334f7d134"
 dependencies = [
  "deranged",
- "js-sys",
  "num-conv",
  "powerfmt",
  "serde_core",
@@ -5350,7 +5324,6 @@ version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c071456adef4aca59bf6a583c46b90ff5eb0b4f758fc347cea81290288f37ce1"
 dependencies = [
- "image",
  "libwebp-sys",
 ]
 
@@ -5732,11 +5705,9 @@ dependencies = [
  "memchr",
  "pbkdf2",
  "sha1",
- "time",
  "typed-path",
  "zeroize",
  "zopfli",
- "zstd",
 ]
 
 [[package]]

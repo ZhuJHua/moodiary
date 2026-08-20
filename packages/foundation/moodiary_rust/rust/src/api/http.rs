@@ -4,8 +4,9 @@ use flutter_rust_bridge::frb;
 use crate::api::cancel::CancelToken;
 use crate::frb_generated::StreamSink;
 
+pub use moodiary_http::KeyValue;
 pub use moodiary_http::request::{
-    ClientSettings, HttpMethod, HttpResponse, KeyValue, RequestOptions, UploadEvent,
+    ClientSettings, HttpMethod, HttpResponse, RequestOptions, UploadEvent,
 };
 
 #[frb(mirror(HttpMethod))]

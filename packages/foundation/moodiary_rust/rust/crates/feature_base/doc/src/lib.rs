@@ -1,10 +1,6 @@
 //! 导出中间表示。三条导出链（Dart 的 Markdown、Rust 的 PDF / DOCX）共用这一份文档模型。
 //! 用 IR 而不是 tiptap 文档，是因为 tiptap 的 schema 随上游升级会变。
 
-// 个别字段当前 docx / pdf 两条链都还用不到（tags、media.path），但删掉会让契约与 Dart
-// 漂移，将来加功能时又得补回来。
-#![allow(dead_code)]
-
 pub struct IrDoc {
     pub id: String,
     pub title: String,

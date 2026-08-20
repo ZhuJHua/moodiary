@@ -65,10 +65,6 @@ const Map<String, int> _pkgLayers = {
 };
 
 /// feature_base 层内部次序（同层允许依赖，但只能单向；同 tier 之间禁止互引）。
-///
-/// 五个包不是随便堆在一层：models 是领域类型，data 是它们的仓库与控制器，
-/// 上面三个各自消费 data。tier 2 的三个之间没有任何一条边，所以严格比较
-/// （d < s）不花钱——同 tier 互引一律红。
 const Map<String, int> _featureBaseOrder = {
   'moodiary_models': 0,
   'moodiary_data': 1,
@@ -78,10 +74,6 @@ const Map<String, int> _featureBaseOrder = {
 };
 
 /// core 层内部次序（同层允许依赖，但只能单向；同 tier 之间禁止互引）。
-///
-/// storage 在 files **之下**是两次注入换来的：Isar 的目录与 schema 列表都由组合根传入，
-/// 所以存储层不认识文件布局。反过来 files 在 storage 之上，是因为 MediaManager 要读
-/// `MoodiaryKVs.imageOptimize`。
 const Map<String, int> _coreOrder = {
   'moodiary_platform': 0,
   'moodiary_http': 0,
@@ -93,8 +85,6 @@ const Map<String, int> _coreOrder = {
 /// 同层例外白名单：feature 之间唯一保留的边（diary 内嵌编辑器）。
 const Set<String> _sameLayerAllowed = {'moodiary_diary -> moodiary_editor'};
 
-/// 匹配 pubspec 里的内部依赖行。两处易错：`[a-z_]` 不含数字会漏掉 `moodiary_l10n`，
-/// 而 `mui` 根本不带 `moodiary_` 前缀——两者都曾长期不受检查。
 final RegExp _pkgDepRe = RegExp(
   r'^\s{2}((?:moodiary_[a-z0-9_]+|mui)):',
   multiLine: true,
@@ -165,7 +155,11 @@ List<String> _checkPackageLayers() {
 }
 
 /// Rust crate 层级：index 越小越底层。bridge（moodiary_rust 本体）是顶层聚合。
-const Map<String, int> _rustLayers = {'foundation': 0, 'core': 1, 'feature': 2};
+const Map<String, int> _rustLayers = {
+  'foundation': 0,
+  'feature_base': 1,
+  'feature': 2,
+};
 
 const String _rustRoot = 'packages/foundation/moodiary_rust/rust';
 final RegExp _cargoDepRe = RegExp(
@@ -230,20 +224,12 @@ List<String> _checkRustLayers() {
 }
 
 /// moodiary_rust 的门面归属。
-///
-/// 原生库是**一个** .so（拆成多个只会更大：Rust 没有稳定 ABI，cdylib 会把每个依赖
-/// 静态各复制一份），所以「rig 归 assistant」这件事没法用包边界表达，只能用门面 +
-/// 这张表表达：谁能推开哪扇门。无 baseline，名单外出现一处就红。
-///
-/// `foundation.dart` 不在表里 —— 它是对全仓开放的那扇门。
 const Map<String, Set<String>> _rustFacadeOwners = {
   'assistant': {'moodiary_assistant'},
   'export': {'moodiary_export'},
   'sync': {'moodiary_sync'},
   'graph': {'moodiary_diary'},
-  // 桥本体只该由组合根初始化一次。
   'rust': {'moodiary'},
-  // 宿主测试的分词替身。
   'testing': {'moodiary_data'},
 };
 
@@ -266,11 +252,9 @@ List<String> _checkRustFacades() {
     for (final entity in dir.listSync(recursive: true)) {
       if (entity is! File || !entity.path.endsWith('.dart')) continue;
       final rel = entity.path.replaceAll('\\', '/');
-      // moodiary_rust 自己的门面文件当然要碰 src/。
       if (rel.contains('packages/foundation/moodiary_rust/')) continue;
       if (rel.endsWith('.g.dart') || rel.endsWith('.freezed.dart')) continue;
 
-      // 归属包：mobile/ 下是 app（pub 名 moodiary），否则取 packages/<层>/<包>。
       final String owner;
       if (rel.startsWith('mobile/')) {
         owner = 'moodiary';
@@ -364,8 +348,10 @@ const Map<String, String> _themeAllowlist = {
       '开发环境角标，固定红',
   'packages/foundation/mui/lib/src/components/common/video/':
       '播放器暗房：控件叠在任意画面上，白色前景是对的',
-  'packages/feature_base/moodiary_components/lib/src/common/video/': '播放器暗房，同上（页面本体够不着 mui）',
-  'packages/feature_base/moodiary_components/lib/src/common/image_browser.dart': '图片浏览暗房，同上',
+  'packages/feature_base/moodiary_components/lib/src/common/video/':
+      '播放器暗房，同上（页面本体够不着 mui）',
+  'packages/feature_base/moodiary_components/lib/src/common/image_browser.dart':
+      '图片浏览暗房，同上',
   'packages/feature_base/moodiary_components/lib/src/mood_colors.dart':
       '心情色带：业务语义色，全 App 唯一刻意不跟主题走的一组',
   'packages/foundation/mui/lib/src/components/common/category_color.dart':

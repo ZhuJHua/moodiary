@@ -1,7 +1,7 @@
 use anyhow::Result;
 use flutter_rust_bridge::frb;
 
-pub use moodiary_media::image::{CompressFormat, CompressSpec};
+pub use moodiary_image::{CompressFormat, CompressSpec};
 
 #[frb(mirror(CompressFormat))]
 pub enum _CompressFormat {
@@ -32,7 +32,7 @@ impl ImageCompressor {
         output_path: String,
         quality: Option<u8>,
     ) -> Result<()> {
-        moodiary_media::image::optimize_to_file(file_path, output_path, quality)
+        moodiary_image::optimize_to_file(file_path, output_path, quality)
     }
 
     pub fn contain_to_file(
@@ -40,6 +40,6 @@ impl ImageCompressor {
         output_path: String,
         spec: CompressSpec,
     ) -> Result<()> {
-        moodiary_media::image::contain_to_file(file_path, output_path, spec)
+        moodiary_image::contain_to_file(file_path, output_path, spec)
     }
 }

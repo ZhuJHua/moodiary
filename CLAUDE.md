@@ -335,14 +335,21 @@ SecureKV），由 `main.dart` 里的 `AppLockPin.load()` 装载，不落盘所�
 rust/
   src/api/            # bridge = app layer: the ONLY place that knows about FRB
   crates/
-    foundation/       # http (reqwest client + hyper server) / crypto / archive / media / text / font
+    foundation/       # http (reqwest 客户端 + hyper 服务端) / crypto / archive / image / text / font
                       #   js —— QuickJS 沙箱（rquickjs）。三道闸门在 JsSandbox::new 一次装齐；
                       #   **别开 rust-alloc**：那会让 set_memory_limit 静默变成 no-op
-    core/             # doc (导出 IR，Dart export_doc.dart 的镜像)
+                      #   image 叫 image 不叫 media：本仓库的 media 指图/音/视三类，这里只做图片
+    feature_base/     # doc (导出 IR，Dart export_doc.dart 的镜像)
     feature/          # sync (s3+webdav) / export (pdf+docx) / assistant (rig) / graph
 ```
 
-Same direction rule as Dart, enforced by the same script: `foundation → core → feature → bridge`, features never import each other, zero violations.
+Same direction rule as Dart, enforced by the same script: `foundation → feature_base → feature → bridge`, features never import each other, zero violations.
+
+**层名与 Dart 侧同名同义**：`feature_base` 装跨 feature 共享的领域类型。刻意不叫 `core` ——
+Dart 的 core 现在特指「一个领域词都不认识的基建」，而 `doc` 恰恰是全 workspace 唯一带领域
+的 crate（导出 IR 带 weather / position / tags / category_name），两边同名不同义比不同名更
+难查。内部依赖边只有三条，全部跨层：`assistant → http`、`sync → http`、`export → doc`；
+foundation 七个 crate 之间零边。
 
 ### moodiary_rust —— 一个 .so，六扇门
 
@@ -380,6 +387,21 @@ rustc 在 `lto="thin"` 下直接拒绝，强行关掉 LTO 是 +170%。**拆库�
 Two invariants worth keeping:
 - **Sub-crates never mention `StreamSink` / `DartFnFuture`.** They take plain closures (`impl FnMut(T) -> bool`, `Arc<dyn Fn(..) -> BoxFuture<..>>`); `src/api/` adapts those to FRB.
 - **FFI-visible types are declared in the sub-crate and re-exposed via `#[frb(mirror(T))]` in `src/api/`.** Mirror emits identical Dart to a local declaration, so no DTO is duplicated and no `From` conversion is needed. Opaque handles (`S3Client`, `Zip`, …) are thin newtypes in `src/api/` that delegate.
+
+**依赖收窄的四条实测结论**（2026-08-20，别再重新推导）：
+
+- **`zip` 不开 `zstd`**：值 396,784 字节，是这类收窄里唯一有分量的一条。代价是第三方
+  工具重压成 Zstd 的备份导不进来（zip 8.6.0 的 `compression.rs:123` 会给出
+  `Unsupported(93)`，报错不好懂）。我们自己写的档只有 Deflated / Stored。
+- **`image` 的七个 feature 里只有 `ico` 是「只有我们开」的**，其余六个 docx-rs 与
+  typst-library 已经各自开着，收窄零差异 —— 别浪费时间去收它们。
+- **`ttf-parser` 收窄只值 16 字节**：fork 与 registry 版确实是两个独立编译单元、feature
+  不并集（这部分推理是对的），但没被调用的那几张表本来就被 thin LTO + `--gc-sections`
+  剥干净了。写在 Cargo.toml 里只为说清依赖面，别拿它当体积手段。
+- **`syntect` 的四个 feature 全与 typst-library 重合**，收窄一个字节都省不到。
+
+**`cargo fmt --all -- --check` 在当前 HEAD 上本来就是脏的（33 处）**，与任何近期改动无关。
+做清理时顺手跑它会带出一大片无关 diff，要做请单独一次提交。
 
 All third-party versions are exact-pinned (`=x.y.z`) in `[workspace.dependencies]`; sub-crates use `{ workspace = true }` and add only the features they need.
 

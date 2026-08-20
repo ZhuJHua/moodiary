@@ -92,7 +92,7 @@ impl JsSandbox {
                 .catch(&ctx)
                 .map_err(|e| anyhow!("{e}"))?;
 
-            let rendered = render(&ctx, &value)?;
+            let rendered = render(&ctx, &value);
             let (value, value_cut) = clamp(rendered, limits.max_output_bytes);
             let (logs, logs_cut) = clamp_logs(logs.borrow().clone(), limits.max_output_bytes);
             Ok(JsOutcome {
@@ -127,9 +127,9 @@ fn install_console(ctx: &rquickjs::Ctx<'_>, logs: &Rc<RefCell<Vec<String>>>) -> 
 }
 
 /// 结果值 → 文本。对象走 `JSON.stringify`，别的走它自己的字符串化。
-fn render<'js>(ctx: &rquickjs::Ctx<'js>, value: &Value<'js>) -> Result<String> {
+fn render<'js>(ctx: &rquickjs::Ctx<'js>, value: &Value<'js>) -> String {
     if value.is_undefined() {
-        return Ok(String::new());
+        return String::new();
     }
     if value.is_object() || value.is_array() {
         // 循环引用会让 stringify 抛，此时退回普通字符串化而不是整个失败 ——
@@ -137,10 +137,10 @@ fn render<'js>(ctx: &rquickjs::Ctx<'js>, value: &Value<'js>) -> Result<String> {
         if let Ok(Some(s)) = ctx.json_stringify(value.clone())
             && let Ok(s) = s.to_string()
         {
-            return Ok(s);
+            return s;
         }
     }
-    Ok(plain(value))
+    plain(value)
 }
 
 fn plain(value: &Value<'_>) -> String {

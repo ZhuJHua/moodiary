@@ -123,8 +123,7 @@ impl Tokenizer {
         }
 
         let workers = std::thread::available_parallelism()
-            .map(|n| n.get())
-            .unwrap_or(1)
+            .map_or(1, |n| n.get())
             .min(texts.len());
 
         if workers <= 1 {

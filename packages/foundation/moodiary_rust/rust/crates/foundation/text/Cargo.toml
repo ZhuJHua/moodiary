@@ -8,4 +8,3 @@ anyhow = { workspace = true }
 jieba-rs = { workspace = true }
 unicode-segmentation = { workspace = true }
 rust-stemmers = { workspace = true }
-tokio = { workspace = true, features = ["sync", "rt"] }

@@ -17,7 +17,7 @@ use tokio::io::{AsyncReadExt, AsyncSeekExt, AsyncWriteExt};
 use tokio::net::TcpListener;
 use tokio::sync::oneshot;
 
-use crate::request::KeyValue;
+use crate::KeyValue;
 
 pub struct HttpServerRequest {
     pub method: String,
