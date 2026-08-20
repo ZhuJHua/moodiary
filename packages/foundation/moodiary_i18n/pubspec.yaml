@@ -12,7 +12,13 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  # slang_flutter 自带 slang，并提供 TranslationProvider / flutterLocale / supportedLocales。
+  # 两个都是**运行时**依赖，不是构建期工具：生成的 strings.g.dart 就在 lib/ 里，
+  # 它 import 'package:slang/generated.dart'（BaseTranslations / TranslationMetadata /
+  # PluralResolver 都在那儿）并 import + export slang_flutter（TranslationProvider /
+  # InheritedLocaleData）。slang 同时还是 `dart run slang` 的 CLI 入口，但那是它的第二个
+  # 身份，不影响这里的归属。放 dev_dependencies 也能跑（slang_flutter 传递带了它，且生成物
+  # 顶部的 ignore_for_file 把 depend_on_referenced_packages 压掉了），但那是碰巧。
+  slang: 4.19.0
   slang_flutter: 4.19.0
   intl: 0.20.3
 
@@ -20,5 +26,3 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
-  # `dart run slang` 的 CLI 入口（生成、analyze、migrate 都在这里）。
-  slang: 4.19.0

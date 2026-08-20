@@ -23,6 +23,8 @@ dependencies:
   material_color_utilities: 0.13.0
   # mui 自己那十来个通用词走 slang，但用的是 locale_handling: false + 自己的
   # LocalizationsDelegate，不是 App 那种全局模式。见 slang.yaml 与 src/i18n/。
+  # 两个都是运行时依赖（生成物在 lib/ 里 import 它们），slang 兼任 CLI 入口只是第二身份。
+  slang: 4.19.0
   slang_flutter: 4.19.0
 
   # 迁入的组件带来的依赖：toast 走 smart_dialog、下拉刷新走 expressive_refresh、
@@ -37,7 +39,6 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
-  slang: 4.19.0
 
 flutter:
   # 和风天气图标字体。跟着 qweather_icon.dart 走：谁用图标谁带字体，
