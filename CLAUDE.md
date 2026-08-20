@@ -400,8 +400,19 @@ Two invariants worth keeping:
   剥干净了。写在 Cargo.toml 里只为说清依赖面，别拿它当体积手段。
 - **`syntect` 的四个 feature 全与 typst-library 重合**，收窄一个字节都省不到。
 
-**`cargo fmt --all -- --check` 在当前 HEAD 上本来就是脏的（33 处）**，与任何近期改动无关。
-做清理时顺手跑它会带出一大片无关 diff，要做请单独一次提交。
+**两侧 formatter 现在都是干净的**（2026-08-20 统一跑过一次并单独提交）：
+`cargo fmt --all -- --check` 与 `dart format --set-exit-if-changed` 都是零差异，
+提交前保持这个状态。
+
+**依赖树 2026-08-20 核过一遍，基本已是最新**，别再花时间找可升的：32 条精确钉版本里
+升不动的四条各有硬理由 —— `two-face` 0.5 被 `typst-library 0.15.1` 的
+`two-face = "0.4.3"` 挡住（升上去依赖图里会有两份，是体积倒退）；`generic-array`
+0.14.9 要比钉的 Rust 1.95.0 更新的编译器；`zip` 9.0 与 `argon2` 0.6 都只有预发布版。
+
+**`argon2` 的 `parallel` feature 对我们无效，别开。** 我们用 `Argon2::default()`，
+参数是 `m=19456,t=2,p=1` —— 只有一条 lane，rayon 没有并行度可铺。实测两轮结果互相
+矛盾（−12% / +4%）即噪声。网上/工具报的 3.2x 是在 `p>1` 下测的，不适用。
+注：`argon2` 钉在预发布版 `=0.6.0-rc.8`，正式版尚未发布。
 
 All third-party versions are exact-pinned (`=x.y.z`) in `[workspace.dependencies]`; sub-crates use `{ workspace = true }` and add only the features they need.
 
