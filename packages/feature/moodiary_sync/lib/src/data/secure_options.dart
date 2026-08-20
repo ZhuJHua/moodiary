@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 
 /// 含密钥的连接配置（S3 的 secretKey、WebDAV 的密码）存 SecureKV。
 ///

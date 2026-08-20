@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart'
     show ValueListenable, ValueNotifier, visibleForTesting;
-import 'package:moodiary_core/src/app_logger.dart';
-import 'package:moodiary_core/src/values/kv.dart';
-import 'package:moodiary_rust/moodiary_rust.dart' as rust;
+import 'package:moodiary_logging/moodiary_logging.dart';
+import 'package:moodiary_rust/foundation.dart' as rust;
+import 'package:moodiary_storage/moodiary_storage.dart';
 
 /// 应用锁 PIN 的编解码。存进 [MoodiarySecureKVs.password] 的是 **Argon2id 的 PHC
 /// 字符串**（`$argon2id$v=19$m=...`，盐由 Rust 侧随机生成并写在串里），不是 PIN 原文。

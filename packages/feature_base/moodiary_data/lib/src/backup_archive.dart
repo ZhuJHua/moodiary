@@ -1,4 +1,4 @@
-import 'package:moodiary_core/src/di.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 
 /// 本地备份归档（整库 zip）的进出口。
 ///

@@ -1,10 +1,12 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_router/moodiary_router.dart';
-import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_theme/moodiary_theme.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
 /// 强调色来源选择。三行，没别的 —— 前两档点了立刻生效并留在弹窗里，

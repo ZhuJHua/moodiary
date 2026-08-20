@@ -5,23 +5,28 @@ import 'dart:ui';
 import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:moodiary/app/di/basic_service.dart';
 import 'package:moodiary/app/di/service_di.dart';
 import 'package:moodiary/app/lifecycle/app_lock_observer.dart';
 import 'package:moodiary/app/locale.dart';
 import 'package:moodiary/app/router/router.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_editor/moodiary_editor.dart'
     show EditorMigrationService;
 import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
+import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
-import 'package:moodiary_rust/moodiary_rust.dart';
-import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:moodiary_rust/rust.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_theme/moodiary_theme.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
 Future<void> _initSystem() async {
   final rustInit = RustLib.init();
-  await injectBasicService();
+  await injectBasicService(schemas: moodiarySchemas);
   // 应用锁的开关是「有没有凭据」的派生态，读一次钥匙串装进内存；
   // 路由与生命周期回调都是同步的，够不着异步的 SecureKV。
   await AppLockPin.load();
@@ -50,7 +55,7 @@ Future<void> _initSystem() async {
   await rustInit;
   await Future.wait([
     FontRepository.get().getActiveFont().then(
-      (font) => ThemeManager().buildTheme(customFont: font),
+      (font) => ThemeManager().buildTheme(customFont: font?.themeDescriptor),
     ),
     registerService(),
     localeFuture,

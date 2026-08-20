@@ -1,7 +1,8 @@
 import 'package:flutter/services.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary/app/di/basic_service.dart';
+import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
-import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:mui/mui.dart';
 
 /// 不可逆清空全部数据。因清空后内存仍残留 Riverpod / get_it 状态（见 [resetAllData]），

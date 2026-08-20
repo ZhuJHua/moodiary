@@ -1,6 +1,6 @@
+import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_sync/src/data/impl/webdav_sync.dart';
-import 'package:moodiary_ui/moodiary_ui.dart';
 
 /// WebDAV 后端配置。保存与清除都返回 true，让调用方刷新「已配置」状态；
 /// 取消 / 下拉 / 点遮罩返回 null 或 false。

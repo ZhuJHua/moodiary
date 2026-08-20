@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:moodiary_core/src/di.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 
 /// 收到的请求（body 已收集完毕才交给 handler）。
 class HttpServerRequest {

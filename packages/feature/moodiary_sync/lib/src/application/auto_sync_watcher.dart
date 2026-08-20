@@ -2,9 +2,11 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
+import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:moodiary_sync/src/data/sync.dart';

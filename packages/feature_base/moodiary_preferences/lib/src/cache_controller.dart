@@ -1,4 +1,4 @@
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_files/moodiary_files.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'cache_controller.g.dart';

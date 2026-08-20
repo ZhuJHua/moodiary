@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io' show Directory;
 
-import 'package:moodiary_core/src/network/http_server.dart';
-import 'package:moodiary_rust/moodiary_rust.dart' as rust;
+import 'package:moodiary_http/moodiary_http.dart';
+import 'package:moodiary_rust/foundation.dart' as rust;
 
 /// [IHttpServer] 的 Rust(hyper) 实现。传输层全在 Rust：监听/端口回退、大请求体
 /// 流式落盘、文件响应与 Range；本类只做类型转换，并保证跨 FFI 的 handler 回调

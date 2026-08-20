@@ -2,7 +2,7 @@
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_diary/src/application/diary_filter.dart';
 import 'package:moodiary_diary/src/application/diary_selection.dart';
@@ -10,7 +10,8 @@ import 'package:moodiary_diary/src/presentation/widget/diary_nav.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 import 'package:moodiary_diary/src/presentation/widget/feed_tile.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
-import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 
 /// 信息流视图：没有左栏、没有卡片，单图不占整行。
 ///

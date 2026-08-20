@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_sync/src/application/re_cipher.dart';
 import 'package:moodiary_sync/src/application/user_key_controller.dart';
@@ -7,7 +8,6 @@ import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/sync_registry.dart';
-import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:mui/mui.dart';
 
 /// 加密开关 / 改密码的「准备—确认—执行」编排（信封加密）：

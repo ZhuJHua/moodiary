@@ -1,7 +1,9 @@
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:moodiary_theme/moodiary_theme.dart';
 import 'package:mui/mui.dart';
 import 'package:path/path.dart' as p;
 
@@ -31,7 +33,7 @@ class _PdfFontPageState extends State<PdfFontPage> {
   }
 
   Future<void> _load() async {
-    final fonts = await FontManager.getAllFonts();
+    final fonts = await FontRepository.get().scanDiskFonts();
     if (!mounted) return;
     setState(() {
       _fonts = fonts;

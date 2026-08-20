@@ -2,12 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:mmkv/mmkv.dart';
-import 'package:moodiary_core/src/app_logger.dart';
-import 'package:moodiary_core/src/platform_service.dart';
-import 'package:moodiary_core/src/storage.dart';
-import 'package:moodiary_core/src/storage/kv/legacy_pref.dart';
-import 'package:moodiary_core/src/storage/kv/secret_migration.dart';
-import 'package:moodiary_core/src/values/kv.dart';
+import 'package:moodiary_logging/moodiary_logging.dart';
+import 'package:moodiary_platform/moodiary_platform.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:path/path.dart';
 
 /// `IKVStorage` 的 MMKV 实现（2.8.0 起）。相对 SharedPreferences 有三处实质差别：

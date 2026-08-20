@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
+import 'package:moodiary_components/moodiary_components.dart' show LucideIcons;
 import 'package:provider/provider.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 

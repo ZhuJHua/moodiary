@@ -3,9 +3,9 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show listEquals, visibleForTesting;
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
-import 'package:moodiary_rust/moodiary_rust.dart' as rust;
+import 'package:moodiary_rust/foundation.dart' as rust;
+import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';

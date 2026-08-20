@@ -1,5 +1,4 @@
-import 'package:moodiary_core/src/storage.dart';
-import 'package:moodiary_core/src/values/kv.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 
 /// 2.7.3 明文写在旧仓库里、2.8.0 起归 SecureKV 管的三个键。
 ///

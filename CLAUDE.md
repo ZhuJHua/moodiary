@@ -60,20 +60,26 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
   packages/
     foundation/              # leaf layer — no internal deps
       moodiary_lint/         #   shared analyzer options
+      moodiary_di/           #   get_it 容器的唯一实例（全仓最底层）
+      moodiary_logging/      #   日志；落盘路径由组合根注入，故不认识文件布局
       moodiary_l10n/         #   localization (slang，见下)
       moodiary_router/       #   typed route primitives over go_router
       moodiary_rust/         #   Rust FFI package (cargo workspace in rust/, built by hook/build.dart)
       moodiary_utils/        #   pure utils + content converters (tiptap/markdown/quill)
       mui/                   #   设计系统：material_ui 的**补充**（详见下）
-    core/                    # → foundation; internal order models → core → data,migration → preferences
-      moodiary_models/       #   domain: Isar @Collection + Freezed DTOs
-      moodiary_core/         #   infra: Isar/KV/SecureKV + theme + exceptions
-      moodiary_data/         #   repositories + controllers + 跨 feature 共享的进程级瞬态状态
+    core/                    # 无领域基建。内部次序 platform,http → storage → files → theme
+      moodiary_platform/     #   应用目录/缓存目录/生物识别探测
+      moodiary_http/         #   IHttpClient / IHttpServer 端口，实现走 Rust
+      moodiary_storage/      #   KV(MMKV) / SecureKV / Isar 句柄；目录与 schema 都靠注入
+      moodiary_files/        #   文件布局 + 媒体管线 + 文件选择端口
+      moodiary_theme/        #   系统取色、强调色档位、自定义字体 → ThemeData
+    feature_base/            # → core/foundation。内部次序 models → data → components,migration,preferences
+      moodiary_models/       #   domain: Isar @Collection + Freezed DTOs + schema 注册真源
+      moodiary_data/         #   repositories + controllers + 跨 feature 共享的进程级瞬态状态与端口
+      moodiary_components/   #   业务组件：features 共用、够不着 mui 的那部分 UI
       moodiary_migration/    #   one-shot legacy data migration
       moodiary_preferences/  #   preference state
-    ui/                      # → core/foundation
-      moodiary_ui/           #   只剩够不着 mui 的 7 个组件（要 core 基建或 riverpod）
-    feature/                 # → ui/core/foundation (features never import each other)
+    feature/                 # → feature_base/core/foundation (features never import each other)
       moodiary_export/       #   导出 Markdown/Word/PDF + 本地备份导入
       moodiary_editor/       #   TipTap webview editor (complete)
       moodiary_diary/        #   diary CRUD/search/category/calendar/map/recycle
@@ -88,7 +94,14 @@ Path convention: unqualified `lib/...` refers to `mobile/lib/...`; `packages/` a
 
 ### Layer Dependencies
 
-Cross-package DAG is strictly upper → lower: `foundation → core → ui → feature → apps`. Features never import each other (the one kept exception is `diary → editor`); shared logic sinks to lower layers, cross-feature composition happens in the app layer. pub only guarantees acyclicity, so **direction is enforced by `tool/check_layers.dart`**, which reads every pubspec's `moodiary_*` deps (no baseline — must stay at zero). Melos `categories:` are filter/grouping only.
+Cross-package DAG is strictly upper → lower: `foundation → core → feature_base → feature → apps`. Features never import each other (the one kept exception is `diary → editor`); shared logic sinks to lower layers, cross-feature composition happens in the app layer. pub only guarantees acyclicity, so **direction is enforced by `tool/check_layers.dart`**, which reads every pubspec's `moodiary_*`/`mui` deps (no baseline — must stay at zero). Melos `categories:` are filter/grouping only.
+
+**core 与 feature_base 各有一条层内次序**（`_coreOrder` / `_featureBaseOrder`，同 tier 之间一律禁止互引）。两条边值得单记，它们都是**靠注入换来的**，改回去就会成环：
+
+- **`storage` 在 `files` 之下**：Isar 的目录与 schema 列表都由组合根传入，所以存储层不认识文件布局。反过来 `files` 在 `storage` 之上，是因为 `MediaManager` 要读 `MoodiaryKVs.imageOptimize`。
+- **`moodiary_logging` 能待在 foundation**，是因为 release 的落盘路径由 `AppLogger.configure` 注入。它一旦回去直接读 `AppFiles`，就得整包上浮到 core 之上，而那样几乎所有人都够不着它了。
+
+**core 一个领域词都不认识**：`Diary` / `Category` / `Font` 都不在它的依赖图里。四个曾经的耦合点分别靠注入或上移解决了 —— schema 表进了 `moodiary_models`（`moodiarySchemas`），孤儿媒体清理进了 `moodiary_migration`，`FontManager` 只吐原始描述、装配成 `Font` 在 `moodiary_data`（`scanDiskFonts` / `themeDescriptor`）。
 
 In-app layering within `mobile/lib` (same script): `gen → core → data → component → feature/<x> → app → main.dart`. Baseline is **zero violations**.
 
@@ -252,7 +265,7 @@ App 那份按 **namespace 一个 feature 一份文件**：`common`（无领域�
 就收到通知（旧后端要等一个平台往返，开关类 UI 肉眼可见地滞后）。`init` 仍是异步的
 （要等平台侧给出 rootDir），`ISecureKVStorage` 也保持全异步——那边是真的钥匙串调用。
 
-后端实现在 `moodiary_core/lib/src/storage/kv/mmkv.dart`，四个不报错的点：
+后端实现在 `moodiary_storage/lib/src/kv/mmkv.dart`，四个不报错的点：
 
 1. **「没有值」得靠 `containsKey` 判**：`decodeBool` / `decodeInt` 一类不返回 null，
    取不到就给 defaultValue，直接读会把「没设过」和「设成了 false / 0」混为一谈。
@@ -263,7 +276,7 @@ App 那份按 **namespace 一个 feature 一份文件**：`common`（无领域�
    「文件」App 里看得见、还会进 iCloud 备份。
 4. **加键只能用那五种类型**（int / bool / double / String / List&lt;String&gt;）：类型分派是
    `switch (T)` 加一个抛异常的 default，多加一种不会有编译错误，只会在运行时炸。
-   `moodiary_core/test/kv_migration_test.dart` 里有条闸门守着。
+   `moodiary_storage/test/kv_migration_test.dart` 里有条闸门守着。
 
 **2.8.0 的一次性搬迁整个在 `MmkvKVStorage._migrateFromPrefsOnce` 里**，一轮四步：
 读旧仓库 → 机密进 SecureKV（`SecretKVMigration`）→ 明文进 MMKV → `clearStore()` 删掉旧仓库
@@ -330,6 +343,39 @@ rust/
 ```
 
 Same direction rule as Dart, enforced by the same script: `foundation → core → feature → bridge`, features never import each other, zero violations.
+
+### moodiary_rust —— 一个 .so，六扇门
+
+**原生库只有一个，而且必须只有一个。** 2026-08-20 实测（Android arm64、仓库真实
+profile 与 feature 集）：拆成两个 cdylib、共享 crate 走普通 cargo 依赖是 **+95.6%**
+（rustls/reqwest/tokio 在两个库里各一份，`strings | grep rustls` 各 65 次）；给共享
+crate 手写 `extern "C"` 再动态链接能收回 82%，但仍 **+17.1%**，而那点余量的 99% 是
+**每库固定地板**——一个什么都不干的 Android cdylib 就要 294 KB（std + libunwind +
+compiler-builtins 每库静态各带一份）。Rust ABI 的 `dylib` + `-C prefer-dynamic` 是死路：
+rustc 在 `lto="thin"` 下直接拒绝，强行关掉 LTO 是 +170%。**拆库是投递策略，不是省体积
+手段。** 而且真正的大头 typst 只有一个消费者，去重一个字节都省不到。
+
+所以「业务 Rust 归对应的包」这件事**不能用包边界表达**，用门面表达：
+
+| 门面 | 内容 | 谁能推 |
+|---|---|---|
+| `foundation.dart` | cancel / crypto / font / http / http_server / image / text / zip | 全仓 |
+| `assistant.dart` | rig 对话流 + QuickJS 沙箱 | 只有 `moodiary_assistant` |
+| `export.dart` | pdf(typst) / docx / 导出 IR | 只有 `moodiary_export` |
+| `sync.dart` | s3 / webdav | 只有 `moodiary_sync` |
+| `graph.dart` | 力导向布局 | 只有 `moodiary_diary` |
+| `rust.dart` | `RustLib.init()` | 只有 app 组合根 |
+| `testing.dart` | 分词替身 | 只有 `moodiary_data` 的测试 |
+
+零基线闸门在 `tool/check_layers.dart` 的 `_rustFacadeOwners`，另带一条「不许绕过门面
+深入 `package:moodiary_rust/src/`」。**没有 `moodiary_rust.dart` 这个总 barrel 了** ——
+它以前让 `moodiary_storage` 够得着 `PdfBuilder` 和 `rigChatStream`。
+
+> **content hash 只覆盖 api 函数名**（codegen 对排序后的函数名做 SHA1 取前四字节），
+> 参数类型、返回类型、结构体定义都不在里面。所以「改了签名但没改名、且只提交了一半
+> 生成物」不会被它抓到。`tool/check_generated.dart` 现在比对两侧 hash 相等来堵住
+> 「只提交一半」；要堵死签名漂移得在 CI 装 codegen 重跑 + `git diff --exit-code`，
+> 那要付一次没有缓存的 cargo install，暂时没做。
 
 Two invariants worth keeping:
 - **Sub-crates never mention `StreamSink` / `DartFnFuture`.** They take plain closures (`impl FnMut(T) -> bool`, `Arc<dyn Fn(..) -> BoxFuture<..>>`); `src/api/` adapts those to FRB.

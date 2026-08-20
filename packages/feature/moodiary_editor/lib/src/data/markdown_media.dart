@@ -1,6 +1,6 @@
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_editor/moodiary_editor.dart'
     show audioMimeOf, imageMimeOf, videoMimeOf;
+import 'package:moodiary_files/moodiary_files.dart';
 
 /// app 侧媒体解析器：把正文媒体文件名解析为磁盘路径 + MIME，注入给编辑器包的
 /// EditorLocalServer 按需读字节（支持 Range）。图片取 `image` 目录、音频取 `audio` 目录、

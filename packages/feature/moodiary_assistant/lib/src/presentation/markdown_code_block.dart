@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
-import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
 /// 助手回复里的 ``` 代码块。替代 gpt_markdown 自带的 CodeField —— 那个把复制按钮

@@ -2,10 +2,13 @@ import 'dart:async';
 
 import 'package:moodiary/app/picker/mobile_file_picker.dart';
 import 'package:moodiary_assistant/moodiary_assistant.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
+import 'package:moodiary_files/moodiary_files.dart';
+import 'package:moodiary_http/moodiary_http.dart';
+import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_sync/moodiary_sync.dart';
-import 'package:moodiary_ui/moodiary_ui.dart';
 
 Future<void> registerService() async {
   getIt.registerSingleton<IHttpClient>(

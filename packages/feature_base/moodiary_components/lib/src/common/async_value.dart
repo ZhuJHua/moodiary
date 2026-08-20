@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:mui/mui.dart';
 
 extension AsyncValueExtension<T> on AsyncValue<T> {

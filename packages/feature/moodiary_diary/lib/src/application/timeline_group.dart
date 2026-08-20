@@ -1,4 +1,3 @@
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_diary/src/application/diary_stamp.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 

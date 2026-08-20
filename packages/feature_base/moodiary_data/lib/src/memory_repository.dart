@@ -1,6 +1,6 @@
 import 'package:isar_plus/isar_plus.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 
 /// 助手长期记忆（[MemoryEntry]）的读写。仅设备本地：不进 local_archive 备份、不进 LAN 同步。
 class MemoryRepository {

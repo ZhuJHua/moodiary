@@ -1,4 +1,4 @@
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
 
 /// 后台隐私保护遮罩。**包住整个 App**，内部自建 `Overlay` 把遮罩作为独立 entry

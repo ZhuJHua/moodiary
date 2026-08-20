@@ -1,4 +1,4 @@
-import 'package:moodiary_core/src/storage.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 
 /// Moodiary 全部本地 KV 配置；业务侧只允许通过本 enum 访问。
 /// 值类型由泛型 [T] 决定；`get()` 返回 `T?`，缺值时回退 [defaultValue]。

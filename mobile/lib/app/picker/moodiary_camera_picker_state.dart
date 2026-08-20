@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
+import 'package:moodiary_components/moodiary_components.dart' show LucideIcons;
 import 'package:wechat_camera_picker/wechat_camera_picker.dart';
 
 /// 只替换相机页顶栏三颗按钮的图标（切换镜头 / 闪光灯 / 关闭），其余取景、对焦、

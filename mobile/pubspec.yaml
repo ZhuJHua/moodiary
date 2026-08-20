@@ -26,12 +26,18 @@ dependencies:
   moodiary_utils: 0.0.1
   moodiary_models: 0.0.1
   moodiary_l10n: 0.0.1
-  moodiary_core: 0.0.1
+  moodiary_di: 0.0.1
+  moodiary_files: 0.0.1
+  moodiary_http: 0.0.1
+  moodiary_logging: 0.0.1
+  moodiary_platform: 0.0.1
+  moodiary_storage: 0.0.1
+  moodiary_theme: 0.0.1
   mui: 0.0.1
   moodiary_data: 0.0.1
   moodiary_migration: 0.0.1
   moodiary_preferences: 0.0.1
-  moodiary_ui: 0.0.1
+  moodiary_components: 0.0.1
 
   flutter_riverpod: 3.4.2
 
@@ -57,6 +63,7 @@ dependencies:
   # 子集出那一个字形。
   cupertino_icons: 1.0.9
 
+  isar_plus: any
 dev_dependencies:
   flutter_test:
     sdk: flutter

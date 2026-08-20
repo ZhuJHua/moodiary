@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_di/moodiary_di.dart';
+import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:path/path.dart' as p;
 

@@ -1,6 +1,7 @@
 import 'package:isar_plus/isar_plus.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_theme/moodiary_theme.dart';
 
 class FontRepository {
   FontRepository._(this._isar);
@@ -13,6 +14,18 @@ class FontRepository {
 
   Future<List<Font>> getAllFonts() {
     return _isar.fonts.where().findAllAsync();
+  }
+
+  /// 扫磁盘上的字体文件并装配成 [Font]。
+  ///
+  /// core 的 [FontManager.scanFontFiles] 只吐原始描述（它够不着 `Font`），
+  /// 领域装配在这一层做。
+  Future<List<Font>> scanDiskFonts() async {
+    final scanned = await FontManager.scanFontFiles();
+    return [
+      for (final f in scanned)
+        Font(fontFileName: f.fileName, fontWghtAxisMap: f.wghtAxis),
+    ];
   }
 
   Future<Font?> getFontByFontFamily(String fontFamily) {
@@ -37,4 +50,10 @@ class FontRepository {
     if (family == null || family.isEmpty) return null;
     return getFontByFontFamily(family);
   }
+}
+
+extension FontThemeDescriptor on Font {
+  /// 喂给 `ThemeManager.buildTheme` 的原始描述。core 不认识 `Font`，转换在这里。
+  ActiveFontDescriptor get themeDescriptor =>
+      (family: fontFamily, fileName: fontFileName, wghtAxis: fontWghtAxisMap);
 }

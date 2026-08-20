@@ -5,11 +5,11 @@ import 'package:moodiary_assistant/src/data/agent_preset_resolver.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_tool_ui.dart';
 import 'package:moodiary_assistant/src/routes.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
 
 class AssistantSettingPage extends ConsumerWidget {

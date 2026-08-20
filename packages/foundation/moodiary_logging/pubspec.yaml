@@ -1,0 +1,21 @@
+name: moodiary_logging
+description: "应用日志。落盘路径由组合根注入，故不认识文件布局，可以待在 foundation。"
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  logger: 2.7.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1

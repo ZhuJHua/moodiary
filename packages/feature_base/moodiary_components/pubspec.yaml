@@ -1,5 +1,5 @@
-name: moodiary_ui
-description: "Moodiary UI 层：够不着 mui 的那几个组件——需要 core 基建（AppFiles / IHttpClient / MediaManager / MoodiaryKVs / logger）或 riverpod。业务无关的组件都在 package:mui。"
+name: moodiary_components
+description: "Moodiary 的业务组件：features 共用、够不着 mui 的那部分 UI。"
 version: 0.0.1
 publish_to: none
 
@@ -13,7 +13,10 @@ dependencies:
   flutter:
     sdk: flutter
 
-  moodiary_core: 0.0.1
+  moodiary_files: 0.0.1
+  moodiary_http: 0.0.1
+  moodiary_logging: 0.0.1
+  moodiary_storage: 0.0.1
   moodiary_l10n: 0.0.1
   moodiary_utils: 0.0.1
   mui: 0.0.1

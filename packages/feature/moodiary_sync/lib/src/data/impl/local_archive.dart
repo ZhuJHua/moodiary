@@ -2,10 +2,10 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_rust/moodiary_rust.dart' as rust;
+import 'package:moodiary_platform/moodiary_platform.dart';
+import 'package:moodiary_rust/foundation.dart' as rust;
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/incremental_engine.dart';
 import 'package:moodiary_sync/src/data/media_refs.dart';

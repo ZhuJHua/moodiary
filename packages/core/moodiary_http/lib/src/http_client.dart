@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:moodiary_core/src/di.dart';
-import 'package:moodiary_rust/moodiary_rust.dart' show CancelToken;
+import 'package:moodiary_di/moodiary_di.dart';
+import 'package:moodiary_rust/foundation.dart' show CancelToken;
 
 /// HTTP 方法。
 enum HttpMethod { get, post, put, delete, patch, head, options }

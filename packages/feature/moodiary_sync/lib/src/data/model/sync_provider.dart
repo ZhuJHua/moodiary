@@ -1,4 +1,4 @@
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 
 /// 同步后端类型枚举 —— 决定 DI 中注入哪个 [IRemoteSyncBackend]。
 ///

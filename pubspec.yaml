@@ -15,8 +15,8 @@ melos:
       - packages/foundation/*
     core:
       - packages/core/*
-    ui:
-      - packages/ui/*
+    feature_base:
+      - packages/feature_base/*
     feature:
       - packages/feature/*
   scripts:

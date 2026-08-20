@@ -1,4 +1,4 @@
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'secret_controller.g.dart';

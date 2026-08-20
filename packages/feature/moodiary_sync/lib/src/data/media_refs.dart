@@ -1,4 +1,4 @@
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 /// 视频文件名 `video-<uuid>.mp4` → 缩略图名 `thumbnail-<uuid>.jpeg`。

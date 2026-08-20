@@ -7,12 +7,13 @@ import 'package:moodiary/app/settings/presentation/widget/reset_data_tile.dart';
 import 'package:moodiary/app/settings/presentation/widget/theme_mode_dialog.dart';
 import 'package:moodiary_assistant/moodiary_assistant.dart'
     show AssistantSettingRoute;
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_lock/moodiary_lock.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_router/moodiary_router.dart';
-import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_theme/moodiary_theme.dart';
 import 'package:mui/mui.dart';
 
 /// 一级菜单项跳转：全屏 `push` 落 root navigator。

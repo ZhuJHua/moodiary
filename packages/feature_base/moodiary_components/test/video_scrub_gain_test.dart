@@ -1,6 +1,6 @@
 // 刮擦换算。以前是「一屏 = 全片 60%」的定比例，长视频完全落不准，这里把封顶钉住。
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_ui/src/common/video/video_fullscreen_page.dart';
+import 'package:moodiary_components/src/common/video/video_fullscreen_page.dart';
 
 /// 划满一屏能走多少秒。
 double _screenSeconds(Duration duration, double width) =>

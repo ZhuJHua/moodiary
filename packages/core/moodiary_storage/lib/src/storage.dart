@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:moodiary_core/src/di.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 
 class KVNotifier<T extends Object> extends ValueNotifier<T> {
   final IKVStorage storage;

@@ -3,7 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_http/moodiary_http.dart';
+import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_sync/src/data/impl/local_archive.dart';
 import 'package:moodiary_sync/src/data/lan/lan_protocol.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';

@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 
 /// 同步 / 备份后端的统一抽象。

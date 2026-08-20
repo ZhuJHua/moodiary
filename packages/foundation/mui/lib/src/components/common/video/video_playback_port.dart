@@ -1,6 +1,6 @@
 // 平台播放器的薄端口。状态机只认这个接口，全仓唯一 import video_player 的实现在
 // video_player_port_impl.dart —— 于是状态机可以在纯 Dart 单测里用一个 StreamController
-// 手推快照走完整张转移表，既不需要 Flutter binding，也不需要给 moodiary_ui 加
+// 手推快照走完整张转移表，既不需要 Flutter binding，也不需要给 moodiary_components 加
 // video_player_platform_interface 这个 dev 依赖。
 //
 // 用 Stream + 同步 snapshot getter 而不是 ValueListenable：快照有十个字段，

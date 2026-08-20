@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
-import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_theme/moodiary_theme.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
 /// 自定义强调色。页面主体就是**这个种子生成出来的真实色板** —— 每格底色即该角色的色、

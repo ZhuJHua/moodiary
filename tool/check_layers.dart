@@ -1,7 +1,7 @@
 // 分层依赖检查：只能上层依赖下层，同层不互相依赖。另外三段无 baseline 的主题闸门
 // （ThemeData 只在 mui 的 build.dart 里构造 / mui 零 cupertino / 业务代码零色板外颜色）
 // 也挂在这里跑。依赖检查本身分三段——
-//   1) 包级：各 pubspec 的 moodiary_* 依赖（foundation → core → ui → feature → apps）。
+//   1) 包级：各 pubspec 的 moodiary_*/mui 依赖（foundation → core → feature_base → feature → apps）。
 //      pub 只保证依赖图无环、不保证方向，这段补上方向约束。无 baseline，必须零违规。
 //   2) Rust crate 级：moodiary_rust/rust/crates 下各 Cargo.toml 的 moodiary-* 依赖
 //      （foundation → core → feature → bridge）。同样，cargo 只保证无环、不保证方向。
@@ -59,24 +59,46 @@ class Violation {
 const Map<String, int> _pkgLayers = {
   'foundation': 0,
   'core': 1,
-  'ui': 2,
+  'feature_base': 2,
   'feature': 3,
   'app': 4,
 };
 
-/// core 层内部次序（同层允许依赖，但只能单向）。见 CLAUDE.md 的依赖说明。
-const Map<String, int> _coreOrder = {
+/// feature_base 层内部次序（同层允许依赖，但只能单向；同 tier 之间禁止互引）。
+///
+/// 五个包不是随便堆在一层：models 是领域类型，data 是它们的仓库与控制器，
+/// 上面三个各自消费 data。tier 2 的三个之间没有任何一条边，所以严格比较
+/// （d < s）不花钱——同 tier 互引一律红。
+const Map<String, int> _featureBaseOrder = {
   'moodiary_models': 0,
-  'moodiary_core': 1,
-  'moodiary_data': 2,
+  'moodiary_data': 1,
+  'moodiary_components': 2,
   'moodiary_migration': 2,
-  'moodiary_preferences': 3,
+  'moodiary_preferences': 2,
+};
+
+/// core 层内部次序（同层允许依赖，但只能单向；同 tier 之间禁止互引）。
+///
+/// storage 在 files **之下**是两次注入换来的：Isar 的目录与 schema 列表都由组合根传入，
+/// 所以存储层不认识文件布局。反过来 files 在 storage 之上，是因为 MediaManager 要读
+/// `MoodiaryKVs.imageOptimize`。
+const Map<String, int> _coreOrder = {
+  'moodiary_platform': 0,
+  'moodiary_http': 0,
+  'moodiary_storage': 1,
+  'moodiary_files': 2,
+  'moodiary_theme': 3,
 };
 
 /// 同层例外白名单：feature 之间唯一保留的边（diary 内嵌编辑器）。
 const Set<String> _sameLayerAllowed = {'moodiary_diary -> moodiary_editor'};
 
-final RegExp _pkgDepRe = RegExp(r'^\s{2}(moodiary_[a-z_]+):', multiLine: true);
+/// 匹配 pubspec 里的内部依赖行。两处易错：`[a-z_]` 不含数字会漏掉 `moodiary_l10n`，
+/// 而 `mui` 根本不带 `moodiary_` 前缀——两者都曾长期不受检查。
+final RegExp _pkgDepRe = RegExp(
+  r'^\s{2}((?:moodiary_[a-z0-9_]+|mui)):',
+  multiLine: true,
+);
 
 /// 校验包级依赖方向，返回违规描述（空表示通过）。
 List<String> _checkPackageLayers() {
@@ -128,10 +150,11 @@ List<String> _checkPackageLayers() {
       }
       // 同层。
       if (_sameLayerAllowed.contains('$src -> $dst')) continue;
-      if (layerOf[src] == 'core') {
-        final s = _coreOrder[src], d = _coreOrder[dst];
+      if (layerOf[src] == 'feature_base' || layerOf[src] == 'core') {
+        final order = layerOf[src] == 'core' ? _coreOrder : _featureBaseOrder;
+        final s = order[src], d = order[dst];
         if (s != null && d != null && d < s) continue;
-        out.add('$src -> $dst：core 层内部次序违规（见 _coreOrder）');
+        out.add('$src -> $dst：${layerOf[src]} 层内部次序违规');
       } else {
         out.add('$src -> $dst：同层互引（${layerOf[src]} 层不允许）');
       }
@@ -206,6 +229,77 @@ List<String> _checkRustLayers() {
   return out;
 }
 
+/// moodiary_rust 的门面归属。
+///
+/// 原生库是**一个** .so（拆成多个只会更大：Rust 没有稳定 ABI，cdylib 会把每个依赖
+/// 静态各复制一份），所以「rig 归 assistant」这件事没法用包边界表达，只能用门面 +
+/// 这张表表达：谁能推开哪扇门。无 baseline，名单外出现一处就红。
+///
+/// `foundation.dart` 不在表里 —— 它是对全仓开放的那扇门。
+const Map<String, Set<String>> _rustFacadeOwners = {
+  'assistant': {'moodiary_assistant'},
+  'export': {'moodiary_export'},
+  'sync': {'moodiary_sync'},
+  'graph': {'moodiary_diary'},
+  // 桥本体只该由组合根初始化一次。
+  'rust': {'moodiary'},
+  // 宿主测试的分词替身。
+  'testing': {'moodiary_data'},
+};
+
+final RegExp _rustFacadeRe = RegExp(
+  r"""^\s*(?:import|export)\s+['"]package:moodiary_rust/([a-z_]+)\.dart['"]""",
+  multiLine: true,
+);
+
+/// 门面之外还有一条：不许绕过门面深入 `src/`。
+final RegExp _rustDeepRe = RegExp(
+  r"""^\s*(?:import|export)\s+['"]package:moodiary_rust/src/""",
+  multiLine: true,
+);
+
+List<String> _checkRustFacades() {
+  final out = <String>[];
+  for (final root in ['mobile/lib', 'mobile/test', 'packages']) {
+    final dir = Directory(root);
+    if (!dir.existsSync()) continue;
+    for (final entity in dir.listSync(recursive: true)) {
+      if (entity is! File || !entity.path.endsWith('.dart')) continue;
+      final rel = entity.path.replaceAll('\\', '/');
+      // moodiary_rust 自己的门面文件当然要碰 src/。
+      if (rel.contains('packages/foundation/moodiary_rust/')) continue;
+      if (rel.endsWith('.g.dart') || rel.endsWith('.freezed.dart')) continue;
+
+      // 归属包：mobile/ 下是 app（pub 名 moodiary），否则取 packages/<层>/<包>。
+      final String owner;
+      if (rel.startsWith('mobile/')) {
+        owner = 'moodiary';
+      } else {
+        final parts = rel.split('/');
+        if (parts.length < 3) continue;
+        owner = parts[2];
+      }
+
+      final content = entity.readAsStringSync();
+      if (_rustDeepRe.hasMatch(content)) {
+        out.add('$rel：绕过门面深入了 package:moodiary_rust/src/');
+      }
+      for (final m in _rustFacadeRe.allMatches(content)) {
+        final facade = m.group(1)!;
+        final owners = _rustFacadeOwners[facade];
+        if (owners == null) continue; // foundation：全仓开放
+        if (owners.contains(owner)) continue;
+        out.add(
+          '$rel（$owner）-> moodiary_rust/$facade.dart：'
+          '该门面只属于 ${owners.join('/')}',
+        );
+      }
+    }
+  }
+  out.sort();
+  return out;
+}
+
 /// Flutter 3.47 把 material 拆成独立包 `material_ui`；SDK 内的
 /// `package:flutter/material.dart` 将于 2026-11 正式弃用。
 ///
@@ -270,10 +364,10 @@ const Map<String, String> _themeAllowlist = {
       '开发环境角标，固定红',
   'packages/foundation/mui/lib/src/components/common/video/':
       '播放器暗房：控件叠在任意画面上，白色前景是对的',
-  'packages/ui/moodiary_ui/lib/src/common/video/': '播放器暗房，同上（页面本体够不着 mui）',
-  'packages/ui/moodiary_ui/lib/src/common/image_browser.dart': '图片浏览暗房，同上',
-  'packages/core/moodiary_core/lib/src/values/colors.dart':
-      '心情色带与分享卡片底色：业务语义色，全 App 唯一刻意不跟主题走的两组',
+  'packages/feature_base/moodiary_components/lib/src/common/video/': '播放器暗房，同上（页面本体够不着 mui）',
+  'packages/feature_base/moodiary_components/lib/src/common/image_browser.dart': '图片浏览暗房，同上',
+  'packages/feature_base/moodiary_components/lib/src/mood_colors.dart':
+      '心情色带：业务语义色，全 App 唯一刻意不跟主题走的一组',
   'packages/foundation/mui/lib/src/components/common/category_color.dart':
       '分类哈希色板 + 由它派生前景色的唯一算处',
   'packages/foundation/mui/lib/src/components/common/color_picker.dart':
@@ -428,6 +522,18 @@ void main(List<String> args) {
       stderr.writeln('  ✗ $v');
     }
     if (!update) exit(1);
+  }
+
+  final facadeViolations = _checkRustFacades();
+  if (facadeViolations.isEmpty) {
+    stdout.writeln('✅ moodiary_rust 门面归属检查通过。');
+  } else {
+    stderr.writeln('❌ moodiary_rust 门面归属违规 ${facadeViolations.length} 条：');
+    for (final v in facadeViolations) {
+      stderr.writeln('  ✗ $v');
+    }
+    stderr.writeln('  → 见 _rustFacadeOwners；通用能力请走 foundation.dart。');
+    exit(1);
   }
 
   final libDir = Directory('mobile/lib');

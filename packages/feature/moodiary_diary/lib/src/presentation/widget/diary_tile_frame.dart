@@ -1,5 +1,5 @@
-import 'package:moodiary_core/moodiary_core.dart';
-import 'package:mui/mui.dart';
+import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
 /// 条目的同步状态：内联进元信息行，不用会盖住内容的角标。
 enum DiaryCardSyncState { none, dirty, syncing }

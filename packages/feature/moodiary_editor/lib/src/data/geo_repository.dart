@@ -1,9 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_editor/src/data/model/geo.dart';
+import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
-import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 
 /// 和风天气「地理位置」仓储：定位 + 反查城市，返回 `[lat, lng, "adm2 name"]`。
 class GeoRepository {

@@ -3,6 +3,7 @@
 library;
 
 export 'src/agent_preset_repository.dart';
+export 'src/backup_archive.dart';
 export 'src/category_controller.dart';
 export 'src/category_repository.dart';
 export 'src/chat_repository.dart';

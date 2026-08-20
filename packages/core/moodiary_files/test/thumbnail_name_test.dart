@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_files/moodiary_files.dart';
 
 void main() {
   // 这条派生规则以前散在六处、还分两套公式（定长 substring(6,42) 与按点号定位），

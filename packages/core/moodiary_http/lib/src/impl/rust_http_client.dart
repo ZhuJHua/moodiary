@@ -1,9 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:moodiary_core/src/app_logger.dart';
-import 'package:moodiary_core/src/network/http_client.dart';
-import 'package:moodiary_rust/moodiary_rust.dart' as rust;
+import 'package:moodiary_http/moodiary_http.dart';
+import 'package:moodiary_logging/moodiary_logging.dart';
+import 'package:moodiary_rust/foundation.dart' as rust;
 
 /// [IHttpClient] 的 Rust(reqwest) 实现。opaque `HttpClient` 内含 reqwest 连接池，
 /// 作为全局单例常驻、跨请求复用连接。

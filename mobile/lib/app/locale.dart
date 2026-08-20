@@ -1,7 +1,8 @@
 import 'package:intl/find_locale.dart';
 import 'package:intl/intl.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_preferences/moodiary_preferences.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 
 /// 把 KV 里的语言偏好落到 slang。
 ///

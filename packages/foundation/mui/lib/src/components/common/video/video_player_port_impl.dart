@@ -1,5 +1,5 @@
 // 全仓**唯一** import video_player 的文件。状态机只认 VideoPlaybackPort，于是：
-//  · 纯 Dart 单测里换成假端口即可，不必给 moodiary_ui 加 video_player_platform_interface 的 dev 依赖
+//  · 纯 Dart 单测里换成假端口即可，不必给 moodiary_components 加 video_player_platform_interface 的 dev 依赖
 //  · 将来换播放引擎（media_kit 之类）只动这一个文件
 //
 // 这里刻意**不**做任何状态解读 —— isPlaying 是意图回声还是事实、isBuffering 抖不抖、

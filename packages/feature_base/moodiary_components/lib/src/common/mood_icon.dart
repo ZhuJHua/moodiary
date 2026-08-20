@@ -1,5 +1,5 @@
-import 'package:moodiary_core/moodiary_core.dart';
-import 'package:mui/mui.dart';
+import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
 class EmotionCurvePainter extends CustomPainter {
   final double value;

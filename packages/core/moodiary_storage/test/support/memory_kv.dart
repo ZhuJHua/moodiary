@@ -1,4 +1,4 @@
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 
 /// 内存 KV，把 [MoodiaryKVs] 的读写接上。
 final class MemoryKVStorage extends IKVStorage {

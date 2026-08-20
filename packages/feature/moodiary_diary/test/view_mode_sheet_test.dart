@@ -1,7 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/src/presentation/widget/view_mode_sheet.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
 
 final _mui = buildMuiTheme(brightness: Brightness.light);

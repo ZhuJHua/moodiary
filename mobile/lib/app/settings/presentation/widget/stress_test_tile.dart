@@ -4,11 +4,11 @@ import 'dart:math';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_ui/moodiary_ui.dart';
 
 /// 压测数据:批量生成 / 清除随机双链日记,用于知识图谱等极限性能测试。数量对话框内
 /// 手动输入([_minTotal]–[_maxTotal]);生成的日记标题以 [_prefix] 开头,可一键清除。

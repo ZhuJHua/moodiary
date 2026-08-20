@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_assistant/src/application/session_title_controller.dart';
 import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 /// 可编排的假服务：按脚本吐文本 / 报错 / 干脆不结束。

@@ -1,4 +1,3 @@
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 /// 一篇日记在列表里应当**展示**的时间戳（本地时区）。

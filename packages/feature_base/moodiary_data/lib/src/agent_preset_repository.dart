@@ -1,6 +1,6 @@
 import 'package:isar_plus/isar_plus.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 
 /// 用户自建助手预设（[AgentPreset]）的读写。仅设备本地：不进备份、不进同步。
 ///

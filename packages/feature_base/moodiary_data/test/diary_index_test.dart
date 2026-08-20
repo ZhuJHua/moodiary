@@ -11,11 +11,12 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_plus/isar_plus.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_rust/moodiary_rust.dart' show TokenizeResult;
+import 'package:moodiary_rust/foundation.dart' show TokenizeResult;
 import 'package:moodiary_rust/testing.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 /// 替身分词:cut = 空白切词(保留重复,词频=出现次数),cutForSearch = 同词表

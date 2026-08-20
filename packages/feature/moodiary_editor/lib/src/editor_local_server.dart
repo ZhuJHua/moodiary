@@ -6,7 +6,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_http/moodiary_http.dart';
 
 import 'media.dart';
 

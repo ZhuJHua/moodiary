@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_sync/src/application/user_key_controller.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/presentation/widget/user_key_change_flow.dart';
-import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:mui/mui.dart';
 
 /// 端到端加密设置项。**加密语义**：设置密码即开启加密（生成随机数据密钥 DEK，

@@ -1,5 +1,5 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:moodiary_core/src/storage.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 
 class FlutterSecureStorageKVStorage implements ISecureKVStorage {
   late final FlutterSecureStorage _storage;

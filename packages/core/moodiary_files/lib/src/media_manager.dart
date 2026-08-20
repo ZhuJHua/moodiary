@@ -1,16 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:cross_file/cross_file.dart';
 import 'package:fc_native_video_thumbnail/fc_native_video_thumbnail.dart';
 import 'package:gal/gal.dart';
 import 'package:heif_converter/heif_converter.dart';
 import 'package:mime/mime.dart';
-import 'package:moodiary_core/src/app_logger.dart';
-import 'package:moodiary_core/src/files/app_files.dart';
-import 'package:moodiary_core/src/values/kv.dart';
-import 'package:moodiary_core/src/values/media_type.dart';
-import 'package:moodiary_rust/moodiary_rust.dart' as rust;
+import 'package:moodiary_files/moodiary_files.dart';
+import 'package:moodiary_logging/moodiary_logging.dart';
+import 'package:moodiary_rust/foundation.dart' as rust;
+import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 import 'package:path/path.dart';
@@ -210,19 +208,6 @@ class MediaManager {
   }
 
   /// 返回 map：key=缓存路径，value=实际文件名
-  static Future<Map<String, String>> saveAudio(List<String> audioNames) async {
-    final audioNameMap = <String, String>{};
-    await Future.wait(
-      audioNames.map((name) async {
-        final file = File(AppFiles.getCachePath(name));
-        final targetPath = AppFiles.getRealPath('audio', name);
-        audioNameMap[file.path] = name;
-        await file.copy(targetPath);
-      }),
-    );
-    return audioNameMap;
-  }
-
   /// 返回 map：key=XFile 临时路径，value=实际文件名
   static Future<Map<String, String>> saveVideo({
     required List<XFile> videoFileList,
@@ -290,15 +275,6 @@ class MediaManager {
       }),
     );
     return completer.future;
-  }
-
-  static Future<int> getColorScheme(ImageProvider imageProvider) async {
-    final color = (await ColorScheme.fromImageProvider(provider: imageProvider))
-        .primary;
-    return ((color.a * 255).toInt() << 24) |
-        ((color.r * 255).toInt() << 16) |
-        ((color.g * 255).toInt() << 8) |
-        (color.b * 255).toInt();
   }
 
   /// Rust 解码+缩放后直接写 outputPath，像素不经 FFI 拷贝到 Dart 堆。
@@ -493,74 +469,4 @@ class MediaManager {
   }
 
   /// 根据日期分组文件
-  static Map<DateTime, List<String>> groupImageFileByDate(
-    List<String> filePaths,
-  ) {
-    final Map<DateTime, List<String>> groupedMap = {};
-    for (final image in filePaths) {
-      final uuid = image.split('image-')[1].split('.')[0];
-      final dateTime = MediaManager.extractDateFromUUID(uuid);
-      if (dateTime != null) {
-        final dateOnly = DateTime(dateTime.year, dateTime.month, dateTime.day);
-
-        groupedMap.putIfAbsent(dateOnly, () => []).add(image);
-      }
-    }
-    groupedMap.forEach((key, value) {
-      value.sort(
-        (a, b) =>
-            basename(b).split('.')[0].compareTo(basename(a).split('.')[0]),
-      );
-    });
-    final sortedEntries = groupedMap.entries.toList()
-      ..sort((a, b) => b.key.compareTo(a.key));
-    return .fromEntries(sortedEntries);
-  }
-
-  static Map<DateTime, List<String>> groupVideoFileByDate(
-    List<String> filePaths,
-  ) {
-    final Map<DateTime, List<String>> groupedMap = {};
-    for (final video in filePaths) {
-      if (!basename(video).startsWith('video-')) continue;
-      final uuid = video.split('video-')[1].split('.')[0];
-      final dateTime = MediaManager.extractDateFromUUID(uuid);
-      if (dateTime != null) {
-        final dateOnly = DateTime(dateTime.year, dateTime.month, dateTime.day);
-        groupedMap.putIfAbsent(dateOnly, () => []).add(video);
-      }
-    }
-    groupedMap.forEach((key, value) {
-      value.sort(
-        (a, b) =>
-            basename(b).split('.')[0].compareTo(basename(a).split('.')[0]),
-      );
-    });
-    final sortedEntries = groupedMap.entries.toList()
-      ..sort((a, b) => b.key.compareTo(a.key));
-    return .fromEntries(sortedEntries);
-  }
-
-  static Map<DateTime, List<String>> groupAudioFileByDate(
-    List<String> filePaths,
-  ) {
-    final Map<DateTime, List<String>> groupedMap = {};
-    for (final audio in filePaths) {
-      final uuid = audio.split('audio-')[1].split('.')[0];
-      final dateTime = MediaManager.extractDateFromUUID(uuid);
-      if (dateTime != null) {
-        final dateOnly = DateTime(dateTime.year, dateTime.month, dateTime.day);
-        groupedMap.putIfAbsent(dateOnly, () => []).add(audio);
-      }
-    }
-    groupedMap.forEach((key, value) {
-      value.sort(
-        (a, b) =>
-            basename(b).split('.')[0].compareTo(basename(a).split('.')[0]),
-      );
-    });
-    final sortedEntries = groupedMap.entries.toList()
-      ..sort((a, b) => b.key.compareTo(a.key));
-    return .fromEntries(sortedEntries);
-  }
 }

@@ -1,6 +1,6 @@
 import 'package:cross_file/cross_file.dart';
 import 'package:flutter/widgets.dart';
-import 'package:moodiary_core/src/di.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 
 /// 平台文件/媒体选取服务。移动端实现走应用内选择器（wechat_assets_picker /
 /// wechat_camera_picker + file_picker），桌面端实现走系统对话框；由各 app 在 DI 注册。

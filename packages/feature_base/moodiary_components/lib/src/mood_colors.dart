@@ -8,15 +8,3 @@ class AppColor {
     const Color(0xFF2EB872),
   ];
 }
-
-class ShareCardColor {
-  static List<Color> cardColorList = [
-    const Color(0xFFF8F3D4),
-    const Color(0xFFF5F5F5),
-    const Color(0xFFFFFFFF),
-    const Color(0xFF393e46),
-    const Color(0xFF252A34),
-    const Color(0xFF212121),
-    const Color(0xFF000000),
-  ];
-}

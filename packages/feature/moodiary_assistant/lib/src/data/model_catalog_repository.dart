@@ -1,4 +1,4 @@
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 /// 从端点现拉模型列表。给自定义供应商用 —— 它们不在 models.dev 里，此前只能手打模型 id。

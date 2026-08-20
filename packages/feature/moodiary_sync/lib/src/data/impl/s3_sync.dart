@@ -1,4 +1,4 @@
-/// @docImport 'package:moodiary_core/moodiary_core.dart';
+/// @docImport 'package:moodiary_http/moodiary_http.dart';
 library;
 
 import 'dart:async';
@@ -6,7 +6,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:moodiary_l10n/moodiary_l10n.dart';
-import 'package:moodiary_rust/moodiary_rust.dart' as rust;
+import 'package:moodiary_rust/sync.dart' as rust;
 import 'package:moodiary_sync/src/data/incremental_engine.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/secure_options.dart';

@@ -1,5 +1,5 @@
 import 'package:moodiary/app/router/router.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
 
 /// 「立即锁定」生命周期观察器：lock + lockNow 均开启时，退后台即压锁屏页（lockType='pause'）。

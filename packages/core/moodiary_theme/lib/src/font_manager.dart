@@ -2,13 +2,21 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
 
-import 'package:cross_file/cross_file.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
-import 'package:moodiary_core/src/files/app_files.dart';
-import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_rust/moodiary_rust.dart' as rust;
+import 'package:moodiary_files/moodiary_files.dart';
+import 'package:moodiary_rust/foundation.dart' as rust;
 import 'package:path/path.dart';
+
+/// 当前激活的自定义字体，喂给 [ThemeManager.buildTheme] 的原始描述。
+///
+/// core 是无领域层，够不着 `Font`；由 moodiary_data 的 `FontRepository` 从 `Font`
+/// 转出来（`font.themeDescriptor`）。
+typedef ActiveFontDescriptor = ({
+  String family,
+  String fileName,
+  Map<String, dynamic> wghtAxis,
+});
 
 class FontManager {
   static final HashSet<String> _loadedFonts = HashSet();
@@ -63,20 +71,22 @@ class FontManager {
     return res?.xFile;
   }
 
-  static Future<List<Font>> getAllFonts() async {
+  /// 扫 font 目录，读出每个字体文件的落库名与可变字重轴。
+  ///
+  /// 刻意**不返回 `Font`**：那是领域类型，core 不认识它。装配成 `Font` 由
+  /// `FontRepository.scanDiskFonts()`（moodiary_data）做。
+  static Future<List<({String fileName, Map<String, dynamic> wghtAxis})>>
+  scanFontFiles() async {
     final fontFileList = await AppFiles.getDirFilePath('font');
-    final fontList = <Font>[];
+    final result = <({String fileName, Map<String, dynamic> wghtAxis})>[];
     for (final fontFile in fontFileList) {
       final fontName = await getFontName(filePath: fontFile);
-      final fontFileName = '$fontName${extension(fontFile)}';
-      if (fontName != null) {
-        final font = Font(
-          fontFileName: fontFileName,
-          fontWghtAxisMap: await getFontWghtAxis(filePath: fontFile),
-        );
-        fontList.add(font);
-      }
+      if (fontName == null) continue;
+      result.add((
+        fileName: '$fontName${extension(fontFile)}',
+        wghtAxis: await getFontWghtAxis(filePath: fontFile),
+      ));
     }
-    return fontList;
+    return result;
   }
 }

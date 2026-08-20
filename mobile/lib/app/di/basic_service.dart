@@ -1,11 +1,9 @@
-import 'package:moodiary_core/src/di.dart';
-import 'package:moodiary_core/src/files/app_files.dart';
-import 'package:moodiary_core/src/platform_service.dart';
-import 'package:moodiary_core/src/storage.dart';
-import 'package:moodiary_core/src/storage/database/isar.dart';
-import 'package:moodiary_core/src/storage/kv/legacy_pref.dart';
-import 'package:moodiary_core/src/storage/kv/mmkv.dart';
-import 'package:moodiary_core/src/storage/kv/secure.dart';
+import 'package:isar_plus/isar_plus.dart';
+import 'package:moodiary_di/moodiary_di.dart';
+import 'package:moodiary_files/moodiary_files.dart';
+import 'package:moodiary_logging/moodiary_logging.dart';
+import 'package:moodiary_platform/moodiary_platform.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 
 /// 基础设施层一次性初始化入口。
 ///
@@ -13,18 +11,31 @@ import 'package:moodiary_core/src/storage/kv/secure.dart';
 /// applicationSupportPath），故先串行就位，再并发三条独立存储。
 /// 不在此调用 RustLib.init / ThemeManager / registerService——那些含业务/UI 决策，
 /// 由 main.dart 显式调用以便启动期定制。
-Future<void> injectBasicService() async {
+/// [schemas] 由 app 组合根传入（`moodiary_models` 的 `moodiarySchemas`）——core 是
+/// 无领域层，不认识 collection 类型。顺序即地址，见 IsarDatabase.init 的说明。
+Future<void> injectBasicService({
+  required List<IsarGeneratedSchema> schemas,
+}) async {
   getIt.registerSingleton<IKVStorage>(MmkvKVStorage());
   getIt.registerSingleton<ISecureKVStorage>(FlutterSecureStorageKVStorage());
 
   await PlatformService.get().init();
   await AppFiles.initCreateDir();
 
+  // 日志的落盘路径由这里给：moodiary_logging 是 foundation 叶子，不认识文件布局。
+  AppLogger.configure(logFilePath: AppFiles.getErrorLogPath());
+
   // SecureKV 必须先就位：KV 的 init 里那次 2.8.0 搬迁会把三个机密写进它。
   // 这一步只是构造 FlutterSecureStorage，没有 I/O，串行不花时间。
   await ISecureKVStorage.get().init();
 
-  await Future.wait([IKVStorage.get().init(), IsarDatabase.get().init()]);
+  await Future.wait([
+    IKVStorage.get().init(),
+    IsarDatabase.get().init(
+      schemas: schemas,
+      directory: AppFiles.getRealPath('database', ''),
+    ),
+  ]);
 }
 
 /// 重置所有应用数据，恢复到「全新安装」状态（Isar 集合 / KV / SecureKV / 媒体 / 缓存）。

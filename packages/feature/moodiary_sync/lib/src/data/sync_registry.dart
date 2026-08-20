@@ -1,4 +1,4 @@
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_sync/src/data/impl/s3_sync.dart';
 import 'package:moodiary_sync/src/data/impl/webdav_sync.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';

@@ -15,7 +15,7 @@ library;
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:moodiary_rust/moodiary_rust.dart' as rust;
+import 'package:moodiary_rust/foundation.dart' as rust;
 
 const int lanDefaultPort = 6636;
 const int lanProtoVersion = 1;

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_di/moodiary_di.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 // 迁移是包内实现细节，不进 barrel（免得 feature 包够得到 clearStore 这类一次性操作）。
-import 'package:moodiary_core/src/storage/kv/secret_migration.dart';
 
 import 'support/memory_kv.dart';
 

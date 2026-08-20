@@ -1,7 +1,7 @@
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
-import 'package:moodiary_rust/moodiary_rust.dart' as rust;
-import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:moodiary_rust/foundation.dart' as rust;
+import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
 
 import '../data/export_options.dart';

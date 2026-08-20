@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:moodiary_components/moodiary_components.dart';
 import 'package:mui/mui.dart';
 
 final _mui = buildMuiTheme(brightness: Brightness.light);

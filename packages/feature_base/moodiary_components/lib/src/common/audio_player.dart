@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_logging/moodiary_logging.dart';
 
 /// 播放进度快照（活动音轨用）。
 class AudioProgress {

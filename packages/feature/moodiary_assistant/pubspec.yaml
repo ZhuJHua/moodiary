@@ -18,9 +18,12 @@ dependencies:
   moodiary_utils: 0.0.1
   moodiary_models: 0.0.1
   moodiary_l10n: 0.0.1
-  moodiary_core: 0.0.1
+  moodiary_di: 0.0.1
+  moodiary_files: 0.0.1
+  moodiary_http: 0.0.1
+  moodiary_storage: 0.0.1
   moodiary_data: 0.0.1
-  moodiary_ui: 0.0.1
+  moodiary_components: 0.0.1
   mui: 0.0.1
 
   flutter_riverpod: 3.4.2

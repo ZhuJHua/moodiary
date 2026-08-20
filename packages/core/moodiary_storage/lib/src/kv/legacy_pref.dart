@@ -1,6 +1,4 @@
-import 'package:moodiary_core/src/storage.dart';
-import 'package:moodiary_core/src/storage/kv/secret_migration.dart';
-import 'package:moodiary_core/src/values/kv.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 2.8.0 之前的 KV 后端，现在只是那一次性搬迁的**只读**数据源（明文键进 MMKV、

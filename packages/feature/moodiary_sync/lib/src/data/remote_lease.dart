@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';

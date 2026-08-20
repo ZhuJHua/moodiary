@@ -3,12 +3,16 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:isar_plus/isar_plus.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_files/moodiary_files.dart';
+import 'package:moodiary_migration/src/orphan_media_cleaner.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:pub_semver/pub_semver.dart';
 
-final _schemas = [DiarySchema, CategorySchema, FontSchema];
+// 前缀真源在 moodiary_models/schemas.dart，别在这里写字面量（见那里的说明）。
+final _schemas = legacyMigrationSchemas;
 
 class VersionMigrator {
   /// 版本号比对触发数据迁移钩子并写回当前版本号。须在 KV / Isar 初始化后由组合根
@@ -65,14 +69,14 @@ class VersionMigrator {
     }
 
     if (below('2.6.3')) {
-      await AppFiles.cleanFile(AppFiles.getRealPath('database', ''));
+      await cleanOrphanMediaIn(AppFiles.getRealPath('database', ''));
       await MediaManager.regenerateMissingThumbnails();
       await compute(_fixV2_6_3, AppFiles.getRealPath('database', ''));
     }
 
     if (below('2.7.3')) {
       MoodiaryKVs.customFont.set('');
-      final allFont = await FontManager.getAllFonts();
+      final allFont = await FontRepository.get().scanDiskFonts();
       await compute(_mergeToV2_7_3, {
         'database': AppFiles.getRealPath('database', ''),
         'fonts': allFont,

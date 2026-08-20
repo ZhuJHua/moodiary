@@ -4,9 +4,10 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:isar_plus/isar_plus.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_rust/moodiary_rust.dart';
+import 'package:moodiary_rust/foundation.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 import 'diary_content.dart';

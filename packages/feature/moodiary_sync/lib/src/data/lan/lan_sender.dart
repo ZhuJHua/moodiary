@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io' show File;
 import 'dart:typed_data';
 
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_sync/src/data/impl/local_archive.dart';
 import 'package:moodiary_sync/src/data/lan/lan_protocol.dart';

@@ -1,5 +1,5 @@
 import 'package:flutter/services.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_files/moodiary_files.dart';
 import 'package:mui/mui.dart';
 
 String lanFmtBytes(int bytes) {

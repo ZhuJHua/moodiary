@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:isar_plus/isar_plus.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 /// 同步墓碑仓储。行由 [DiaryRepository] / [CategoryRepository] 在各自的删除 /

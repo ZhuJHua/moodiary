@@ -6,10 +6,12 @@ import 'package:file_picker/file_picker.dart' as fp;
 import 'package:flutter/material.dart' as legacy;
 import 'package:moodiary/app/picker/moodiary_camera_picker_state.dart';
 import 'package:moodiary/app/picker/moodiary_picker_delegate.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
-import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_utils/moodiary_utils.dart' show uuidV7;
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 import 'package:wechat_camera_picker/wechat_camera_picker.dart';
 

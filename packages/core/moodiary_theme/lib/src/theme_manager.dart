@@ -1,11 +1,9 @@
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/services.dart';
-import 'package:moodiary_core/src/app_logger.dart';
-import 'package:moodiary_core/src/files/app_files.dart';
-import 'package:moodiary_core/src/theme/app_color_scheme.dart';
-import 'package:moodiary_core/src/theme/font_manager.dart';
-import 'package:moodiary_core/src/values/kv.dart';
-import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_files/moodiary_files.dart';
+import 'package:moodiary_logging/moodiary_logging.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_theme/moodiary_theme.dart';
 import 'package:mui/mui.dart';
 
 /// 主题的构建入口。
@@ -95,7 +93,10 @@ class ThemeManager {
   }
 
   /// [customFont] 为当前激活的自定义字体，由调用方（FontRepository.getActiveFont）解析注入。
-  Future<void> buildTheme({Font? customFont}) async {
+  ///
+  /// 收的是**原始描述而不是 `Font`**：那是领域类型，core 不认识它。调用方用
+  /// `font.themeDescriptor` 转一下即可。
+  Future<void> buildTheme({ActiveFontDescriptor? customFont}) async {
     await findDynamicColor();
 
     // 每次重建先归零字体状态：从自定义字体切回「系统」时才能立即生效（否则残留旧家族，
@@ -106,14 +107,12 @@ class ThemeManager {
 
     if (customFont != null) {
       await FontManager.loadFont(
-        fontName: customFont.fontFamily,
-        fontPath: AppFiles.getRealPath('font', customFont.fontFileName),
+        fontName: customFont.family,
+        fontPath: AppFiles.getRealPath('font', customFont.fileName),
       );
-      fontFamily = customFont.fontFamily;
-      _activeFontFileName = customFont.fontFileName;
-      wghtAxisMap = _unifyFontWeights(
-        customFont.fontWghtAxisMap.cast<String, double>(),
-      );
+      fontFamily = customFont.family;
+      _activeFontFileName = customFont.fileName;
+      wghtAxisMap = _unifyFontWeights(customFont.wghtAxis.cast<String, double>());
     }
 
     final accent = resolveAccent();
@@ -226,15 +225,5 @@ extension ColorExt on Color {
       return .light;
     }
     return .dark;
-  }
-}
-
-extension ColorExt2 on BuildContext {
-  Color adaptiveColor(Color color) {
-    if (!MuiTheme.of(this).isDark) return color;
-
-    final hsl = HSLColor.fromColor(color);
-    final inverted = hsl.withLightness(1.0 - hsl.lightness);
-    return inverted.toColor();
   }
 }

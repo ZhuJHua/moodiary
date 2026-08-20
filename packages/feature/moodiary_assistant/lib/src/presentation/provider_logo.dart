@@ -1,4 +1,4 @@
-import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:moodiary_components/moodiary_components.dart';
 import 'package:mui/mui.dart';
 
 class ProviderLogo extends StatelessWidget {
