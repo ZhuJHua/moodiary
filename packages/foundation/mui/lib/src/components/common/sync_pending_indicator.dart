@@ -8,7 +8,7 @@ class SyncPendingSummaryCard extends StatelessWidget {
   final int updateCount;
 
   /// 文案由调用方给：mui 是零业务依赖的设计系统包，取不到 App 的文案，
-  /// 也不该把「同步」这类领域词收进自己那几个通用词里。
+  /// 也不该把「同步」这类领域词收进自己那十来个通用词里。
   final String Function(int newCount, int updateCount) label;
 
   const SyncPendingSummaryCard({

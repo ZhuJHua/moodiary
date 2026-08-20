@@ -9,17 +9,17 @@ void main() {
   const delegate = GlobalMuiLocalizations.delegate;
 
   group('delegate 解析', () {
-    ({String text, MuiLocale locale}) load(Locale locale) {
+    ({String cancel, MuiLocale locale}) load(Locale locale) {
       late MuiLocalizationsData data;
       delegate.load(locale).then((v) => data = v);
-      return (text: data.toastError, locale: data.$meta.locale);
+      return (cancel: data.cancel, locale: data.$meta.locale);
     }
 
     test('load 是同步完成的', () {
       // lazy: false 让所有语种在编译期就在，delegate 因此能返回 SynchronousFuture：
       // `Localizations` 不会为它多等一帧，测试里也不用 pump 两次。
       // 上面那个 `.then` 立刻赋值就是这条的证据——异步的话下一行读 data 会抛。
-      expect(load(const Locale('en')).text, 'Error');
+      expect(load(const Locale('en')).cancel, 'Cancel');
     });
 
     test('精确命中', () {
@@ -50,20 +50,20 @@ void main() {
         ...GlobalMaterialLocalizations.delegates,
         if (withDelegate) delegate,
       ],
-      home: Builder(builder: (context) => Text(context.muiL10n.toastError)),
+      home: Builder(builder: (context) => Text(context.muiL10n.cancel)),
     );
 
     testWidgets('跟随 MaterialApp.locale', (tester) async {
       await tester.pumpWidget(host(const Locale('zh')));
-      expect(find.text('出错了'), findsOneWidget);
+      expect(find.text('取消'), findsOneWidget);
 
       await tester.pumpWidget(host(const Locale('en')));
       await tester.pump();
-      expect(find.text('Error'), findsOneWidget);
+      expect(find.text('Cancel'), findsOneWidget);
     });
 
     testWidgets('宿主漏挂 delegate：debug 断言', (tester) async {
-      // release 里断言被剥掉，回落 base 语种而不是崩——组件库不该为几个通用词
+      // release 里断言被剥掉，回落 base 语种而不是崩——组件库不该为十来个通用词
       // 让宿主整个挂掉，但静默回落等于英文用户看到中文，所以 debug 下必须响。
       await tester.pumpWidget(host(const Locale('en'), withDelegate: false));
       expect(tester.takeException(), isA<AssertionError>());

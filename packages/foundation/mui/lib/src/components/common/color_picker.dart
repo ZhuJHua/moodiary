@@ -36,15 +36,8 @@ abstract final class MColorPicker {
       title: context.muiL10n.colorPickerTitle,
       content: _ColorPickerContent(draft: draft),
       actions: [
-        MAction(
-          label: MaterialLocalizations.of(context).cancelButtonLabel,
-          value: false,
-        ),
-        MAction(
-          label: MaterialLocalizations.of(context).okButtonLabel,
-          value: true,
-          isPrimary: true,
-        ),
+        MAction(label: context.muiL10n.cancel, value: false),
+        MAction(label: context.muiL10n.ok, value: true, isPrimary: true),
       ],
     );
     return confirmed == true ? draft.color : null;

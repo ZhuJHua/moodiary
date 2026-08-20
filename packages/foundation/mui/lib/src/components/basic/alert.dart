@@ -58,7 +58,7 @@ abstract final class MAlert {
     MActionsLayout actionsLayout = .auto,
     bool barrierDismissible = true,
   }) async {
-    final materialL10n = MaterialLocalizations.of(context);
+    final l10n = context.muiL10n;
     final result = await MAlert.show<bool>(
       context,
       title: title,
@@ -69,12 +69,9 @@ abstract final class MAlert {
       actionsLayout: actionsLayout,
       barrierDismissible: barrierDismissible,
       actions: [
+        MAction(label: cancelLabel ?? l10n.cancel, value: false),
         MAction(
-          label: cancelLabel ?? materialL10n.cancelButtonLabel,
-          value: false,
-        ),
-        MAction(
-          label: confirmLabel ?? materialL10n.okButtonLabel,
+          label: confirmLabel ?? l10n.ok,
           value: true,
           isPrimary: !isDestructive,
           isDestructive: isDestructive,
@@ -100,10 +97,7 @@ abstract final class MAlert {
       content: content,
       icon: icon,
       actions: [
-        MAction(
-          label: closeLabel ?? MaterialLocalizations.of(context).okButtonLabel,
-          isPrimary: true,
-        ),
+        MAction(label: closeLabel ?? context.muiL10n.ok, isPrimary: true),
       ],
     );
   }
@@ -553,7 +547,7 @@ class _PromptBodyState extends State<_PromptBody> {
 
   @override
   Widget build(BuildContext context) {
-    final materialL10n = MaterialLocalizations.of(context);
+    final l10n = context.muiL10n;
 
     return PopScope(
       canPop: !_busy,
@@ -581,12 +575,9 @@ class _PromptBodyState extends State<_PromptBody> {
           height: _kActionHeight,
           gap: _kActionGap,
           actions: [
+            MAction(label: widget.cancelLabel ?? l10n.cancel, enabled: !_busy),
             MAction(
-              label: widget.cancelLabel ?? materialL10n.cancelButtonLabel,
-              enabled: !_busy,
-            ),
-            MAction(
-              label: widget.confirmLabel ?? materialL10n.okButtonLabel,
+              label: widget.confirmLabel ?? l10n.ok,
               isPrimary: !widget.isDestructive,
               isDestructive: widget.isDestructive,
               busy: _busy,

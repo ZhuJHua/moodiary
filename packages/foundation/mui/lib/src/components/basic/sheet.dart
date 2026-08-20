@@ -73,13 +73,7 @@ abstract final class MSheet {
         title: title,
         subtitle: subtitle,
         icon: icon,
-        actions: [
-          MAction(
-            label:
-                cancelLabel ??
-                MaterialLocalizations.of(sheetContext).cancelButtonLabel,
-          ),
-        ],
+        actions: [MAction(label: cancelLabel ?? sheetContext.muiL10n.cancel)],
         child: Column(
           crossAxisAlignment: .stretch,
           mainAxisSize: .min,

@@ -23,7 +23,7 @@ void main() {
           // material_ui 自带的那份（不是 flutter_localizations 的），
           // 它给出的才是 material_ui 的 MaterialLocalizations 类型。
           ...GlobalMaterialLocalizations.delegates,
-          // mui 自己那几个通用词。漏了它 MuiLocalizations.of 会断言。
+          // mui 自己那十来个通用词。漏了它 MuiLocalizations.of 会断言。
           GlobalMuiLocalizations.delegate,
         ],
         supportedLocales: const [Locale('zh'), Locale('en')],
@@ -376,7 +376,7 @@ void main() {
           // material_ui 自带的那份（不是 flutter_localizations 的），
           // 它给出的才是 material_ui 的 MaterialLocalizations 类型。
           ...GlobalMaterialLocalizations.delegates,
-          // mui 自己那几个通用词。漏了它 MuiLocalizations.of 会断言。
+          // mui 自己那十来个通用词。漏了它 MuiLocalizations.of 会断言。
           GlobalMuiLocalizations.delegate,
         ],
         supportedLocales: const [Locale('zh'), Locale('en')],

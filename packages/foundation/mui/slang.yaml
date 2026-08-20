@@ -1,4 +1,4 @@
-# mui 组件自己要用的那几个通用词。生成命令：dart tool/task.dart i18n。
+# mui 组件自己要用的那十来个通用词。生成命令：dart tool/task.dart i18n。
 #
 # **与 App 那份（moodiary_i18n）用的是 slang 的两种不同模式**，别照着彼此改：
 # App 是默认模式（全局 LocaleSettings + TranslationProvider）；这份关掉了
@@ -19,7 +19,7 @@ locale_handling: false
 base_locale: zh
 fallback_strategy: base_locale
 
-# 关掉 deferred：两个语种七个词，全量编进来不值一提，换来 delegate 的 load()
+# 关掉 deferred：两个语种十来个词，全量编进来不值一提，换来 delegate 的 load()
 # 一律返回 SynchronousFuture —— 首帧之前就有串，widget 测试也不用多 pump 一帧。
 # 打开它就得改成异步 build()（buildSync 会绕过 loadLibrary），别只改这一行。
 lazy: false
