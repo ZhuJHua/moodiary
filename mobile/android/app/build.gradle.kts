@@ -42,7 +42,9 @@ android {
         applicationId = "cn.yooss.moodiary"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 26
+        // 28 起才认 DT_ANDROID_RELR；native_toolchain_rust 把 apiTarget 硬编码成 35，
+        // 出来的 .so 一定带 RELR，26/27 上会静默跳过全部重定位。
+        minSdk = 28
         targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
