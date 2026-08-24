@@ -4,6 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [lib]
+# 必须与 package.name 一致：产物名走 native_toolchain_rust 的
+# `libraryFileName(libName ?? crateName, …)`，改了名 `RustLib.init()` 就找不着 .so。
+# 不写也能构建（它会回落到 package.name），但 1.0.6 取 `lib.name` 用的是 `null as String`，
+# 缺了会先 logger.severe 把整个 Cargo.toml 和一段栈打进构建日志，看着像崩了其实没崩。
+name = "moodiary_rust"
 crate-type = ["cdylib", "staticlib"]
 
 [workspace]
