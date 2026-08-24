@@ -120,10 +120,13 @@ Future<void> _assertCodegenVersion() async {
 
 const _genRustOutDir = '$_rustPkgDir/lib/src/rust';
 
-/// ffigen 21 起会给每个结构体生成 `$allocate`，而 FRB 剥离 WireSyncRust2DartSse 的正则是
-/// 非贪婪的，会止于具名参数列表那个 `}`，把类头吃掉、留下半截函数体。codegen 照样 exit 0。
+/// ffigen 21 起会给每个结构体生成 `$allocate`，它的具名参数列表自带一层 `{}`。
+/// FRB **2.13.0 之前**剥离 WireSyncRust2DartSse 用的是非贪婪正则（`.*?\}`），会止于那层
+/// 内括号、把类头吃掉留下半截函数体，且 codegen 照样 exit 0。2.13.0 换成了按括号配对的
+/// `remove_dart_class`，并带上以此命名的回归测试，所以 21 从这版起可用。
+/// 上界留着只是因为 22 没验过 —— 不是已知坏。
 const _ffigenMin = 8;
-const _ffigenMaxExclusive = 21;
+const _ffigenMaxExclusive = 22;
 
 /// 从根 lock 读实际解析到的 ffigen 版本（workspace 下 dev 依赖记在根 lock 里）。
 String _resolvedFfigenVersion() {
@@ -140,15 +143,14 @@ String _resolvedFfigenVersion() {
   return v;
 }
 
-/// pub upgrade --major-versions 会把 ffigen 的钉版本改写成 ^21.0.0，而 21 的产出是坏的。
+/// 产出坏绑定时 codegen 不会失败，所以 ffigen 只放行验过的大版本区间。
 void _assertFfigenVersion(String version) {
   final major = int.tryParse(version.split('.').first);
   if (major == null || major < _ffigenMin || major >= _ffigenMaxExclusive) {
     stderr.writeln(
-      '✗ ffigen 版本不支持：解析到 $version，需要 >=$_ffigenMin.0.0 且 <$_ffigenMaxExclusive.0.0。\n'
-      '  21+ 生成的绑定无法解析（FRB 剥离 WireSyncRust2DartSse 的正则被 \$allocate 打断），\n'
-      '  且 codegen 仍会 exit 0。请把 $_rustPkgDir/pubspec.yaml 的 ffigen 钉回 20.1.1 后\n'
-      '  重跑 flutter pub get。',
+      '✗ ffigen 版本未验证：解析到 $version，需要 >=$_ffigenMin.0.0 且 <$_ffigenMaxExclusive.0.0。\n'
+      '  产出坏绑定时 codegen 仍会 exit 0，所以这里只放行验过的区间。\n'
+      '  请把 $_rustPkgDir/pubspec.yaml 的 ffigen 钉回区间内后重跑 flutter pub get。',
     );
     exit(1);
   }
@@ -175,6 +177,9 @@ Future<void> _genRust() async {
   _assertFfigenVersion(ffigen);
   _clearStaleFfigenSnapshot(ffigen);
   await _run('flutter_rust_bridge_codegen', ['generate'], cwd: _rustPkgDir);
+  // 2.13.0 起 codegen 自己那趟 rustfmt 不带 style_edition，产物是 2015 风格，
+  // 与 workspace 的 2024 对不上，`cargo fmt --check` 会红。补跑一次。
+  await _run('cargo', ['fmt', '--all'], cwd: '$_rustPkgDir/rust');
   // codegen 产出坏文件时依然 exit 0 并打印 Done!，只能自己验一遍。
   await _run('fvm', ['dart', 'analyze', _genRustOutDir]);
 }
