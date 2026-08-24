@@ -15,7 +15,7 @@ dependencies:
   # Flutter 3.47 把 material 拆成独立包；SDK 内的 package:flutter/material.dart
   # 将于 2026-11 正式弃用。mui 是全仓唯一 import 它的地方。
   material_ui: 1.0.1
-  lucide_icons_flutter: 3.1.15
+  lucide_icons_flutter: 3.1.17
   flutter_svg: 2.3.0
   cached_network_image_ce: 4.10.0
   # 与 Flutter SDK 的 packages/flutter/pubspec.yaml 同钉，改前先核对那边。
@@ -29,11 +29,11 @@ dependencies:
 
   # 迁入的组件带来的依赖：toast 走 smart_dialog、下拉刷新走 expressive_refresh、
   # 视频端口实现要 video_player 与两个系统能力插件。
-  flutter_smart_dialog: 5.1.1
+  flutter_smart_dialog: 5.3.0
   expressive_refresh: 0.1.2
   video_player: 2.14.0
   screen_brightness: 2.1.11
-  volume_controller: 3.6.0
+  volume_controller: 3.6.1
 
 dev_dependencies:
   flutter_test:

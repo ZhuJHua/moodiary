@@ -12,13 +12,13 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_rust_bridge: 2.13.0-beta.6
-  flutter_rust_bridge_hooks: 2.13.0-beta.6
+  flutter_rust_bridge: 2.13.0
+  flutter_rust_bridge_hooks: 2.13.0
   freezed_annotation: 3.1.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   build_runner: 2.16.0
-  ffigen: 20.1.1
-  freezed: 4.0.0-dev.3
+  ffigen: 21.0.0
+  freezed: 4.0.0

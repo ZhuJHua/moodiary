@@ -35,4 +35,4 @@ dev_dependencies:
   moodiary_lint: 0.0.1
   build_runner: 2.16.0
   riverpod_generator: 4.0.8
-  freezed: 4.0.0-dev.3
+  freezed: 4.0.0

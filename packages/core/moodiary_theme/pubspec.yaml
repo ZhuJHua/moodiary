@@ -18,7 +18,7 @@ dependencies:
   moodiary_storage: 0.0.1
   moodiary_rust: 0.0.1
   mui: 0.0.1
-  dynamic_color: 1.9.0
+  dynamic_color: 2.1.0
   cross_file: 0.3.5+4
   file_picker: 12.0.0
   path: 1.9.1

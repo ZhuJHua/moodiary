@@ -87,7 +87,7 @@ moodiary-graph = { path = "crates/feature/graph" }
 moodiary-sync = { path = "crates/feature/sync" }
 
 [dependencies]
-flutter_rust_bridge = "=2.13.0-beta.6"
+flutter_rust_bridge = "=2.13.0"
 anyhow = { workspace = true }
 
 moodiary-archive = { workspace = true }
