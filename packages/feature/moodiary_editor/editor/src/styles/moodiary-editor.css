@@ -6,7 +6,8 @@
  * daisyUI 主题（下方 light/dark）只把 --color-* 指向 var(--app-*)，故 daisyUI 组件（按钮/表面）与
  * 正文、音视频控件全部跟随同一套配色、明暗自动切换。daisyUI v5 允许主题色直接引用外部 var()
  * （color-mix 在 var()→hex 上工作、无构建期转换），前提是显式给齐所有 -content token（下方已给）。
- * 代码高亮 token（.hljs-*）另用 github / github-dark，经 [data-theme='dark'] 切换。
+ * 代码高亮 token（.hljs-*）不走 --app-*，用固定的 github / github-dark（照 hljs 11 的
+ * 同名主题生成），与助手的代码块同一张表；经 [data-theme='dark'] 切换。
  */
 
 @import 'tailwindcss';
@@ -844,55 +845,80 @@ body {
   font-size: 0.88em;
 }
 
-/* —— 代码高亮 token（lowlight / highlight.js 输出 .hljs-* span）。亮色用 github,暗色用 github-dark
-   （[data-theme='dark'] 切换）。未列出的 token 用代码块默认正文色。 —— */
-.moodiary-editor .hljs-comment,
-.moodiary-editor .hljs-quote {
-  color: #6a737d;
-  font-style: italic;
-}
-.moodiary-editor .hljs-keyword,
-.moodiary-editor .hljs-selector-tag,
-.moodiary-editor .hljs-literal,
+/* —— 代码高亮 token（lowlight / highlight.js 输出 .hljs-* span）。
+   亮色 github、暗色 github-dark，经 [data-theme='dark'] 切换 —— 与助手的代码块
+   （moodiary_assistant 的 code_theme.dart，用的是 re_highlight 自带的同名主题）同一张表。
+
+   **这段照 highlight.js 11 的 github 主题逐 scope 生成，别手改。** 上一版是 hljs 9/10
+   时代抄来的，而引擎（lowlight 3.3.0 = highlight.js 11.11.1）早就换代了：`title.class_`
+   `variable.language_` `operator` `selector-pseudo` `meta-keyword` `template-tag`
+   `meta-string` `selector-attr` `code` 这些 scope 它一个都没着色（引擎照吐，CSS 接不住，
+   落回正文色），另有十来个归色与上游不同。
+
+   点号 scope 的类名规则：hljs 只给**第一段**加 `hljs-` 前缀，其余段裸着带下划线 ——
+   `title.function_` 出来是 `class="hljs-title function_"`，所以选择器写作
+   `.hljs-title.function_`。
+
+   两处刻意不照抄上游：
+   1. `root` 不在这里 —— 代码块的面板底色与描边仍走 --app-*（见上方 .moodiary-code-block），
+      整个编辑器都跟随主题，只有 token 用固定色板；
+   2. 上游把 `subst` / `emphasis` / `strong` 的颜色写成与 root 同色，那是「用正文色」的意思，
+      这里只保留字重与斜体，颜色交给主题。
+
+   未列出的 scope（tag / params / property）上游 github 主题本来就不着色。 —— */
 .moodiary-editor .hljs-doctag,
-.moodiary-editor .hljs-formula {
+.moodiary-editor .hljs-keyword,
+.moodiary-editor .hljs-meta-keyword,
+.moodiary-editor .hljs-template-tag,
+.moodiary-editor .hljs-template-variable,
+.moodiary-editor .hljs-type,
+.moodiary-editor .hljs-variable.language_ {
   color: #d73a49;
 }
-.moodiary-editor .hljs-string,
-.moodiary-editor .hljs-regexp,
-.moodiary-editor .hljs-meta .hljs-string {
-  color: #032f62;
-}
 .moodiary-editor .hljs-title,
-.moodiary-editor .hljs-section,
+.moodiary-editor .hljs-title.class_,
+.moodiary-editor .hljs-title.class_.inherited__,
 .moodiary-editor .hljs-title.function_ {
   color: #6f42c1;
 }
-.moodiary-editor .hljs-name,
-.moodiary-editor .hljs-selector-id,
-.moodiary-editor .hljs-selector-class,
-.moodiary-editor .hljs-tag,
-.moodiary-editor .hljs-addition {
-  color: #22863a;
-}
-.moodiary-editor .hljs-type,
-.moodiary-editor .hljs-built_in,
-.moodiary-editor .hljs-builtin-name {
-  color: #e36209;
-}
 .moodiary-editor .hljs-attr,
 .moodiary-editor .hljs-attribute,
-.moodiary-editor .hljs-variable,
-.moodiary-editor .hljs-template-variable,
+.moodiary-editor .hljs-literal,
+.moodiary-editor .hljs-meta,
 .moodiary-editor .hljs-number,
-.moodiary-editor .hljs-symbol,
-.moodiary-editor .hljs-bullet,
-.moodiary-editor .hljs-link,
-.moodiary-editor .hljs-meta {
+.moodiary-editor .hljs-operator,
+.moodiary-editor .hljs-variable,
+.moodiary-editor .hljs-selector-attr,
+.moodiary-editor .hljs-selector-class,
+.moodiary-editor .hljs-selector-id {
   color: #005cc5;
 }
-.moodiary-editor .hljs-deletion {
-  color: #b31d28;
+.moodiary-editor .hljs-regexp,
+.moodiary-editor .hljs-string,
+.moodiary-editor .hljs-meta-string {
+  color: #032f62;
+}
+.moodiary-editor .hljs-built_in,
+.moodiary-editor .hljs-symbol {
+  color: #e36209;
+}
+.moodiary-editor .hljs-comment,
+.moodiary-editor .hljs-code,
+.moodiary-editor .hljs-formula {
+  color: #6a737d;
+}
+.moodiary-editor .hljs-name,
+.moodiary-editor .hljs-quote,
+.moodiary-editor .hljs-selector-tag,
+.moodiary-editor .hljs-selector-pseudo {
+  color: #22863a;
+}
+.moodiary-editor .hljs-section {
+  color: #005cc5;
+  font-weight: 600;
+}
+.moodiary-editor .hljs-bullet {
+  color: #735c0f;
 }
 .moodiary-editor .hljs-emphasis {
   font-style: italic;
@@ -900,54 +926,83 @@ body {
 .moodiary-editor .hljs-strong {
   font-weight: 600;
 }
+.moodiary-editor .hljs-addition {
+  color: #22863a;
+  background-color: #f0fff4;
+}
+.moodiary-editor .hljs-deletion {
+  color: #b31d28;
+  background-color: #ffeef0;
+}
 
 /* github-dark */
-[data-theme='dark'] .moodiary-editor .hljs-comment,
-[data-theme='dark'] .moodiary-editor .hljs-quote {
-  color: #8b949e;
-}
-[data-theme='dark'] .moodiary-editor .hljs-keyword,
-[data-theme='dark'] .moodiary-editor .hljs-selector-tag,
-[data-theme='dark'] .moodiary-editor .hljs-literal,
 [data-theme='dark'] .moodiary-editor .hljs-doctag,
-[data-theme='dark'] .moodiary-editor .hljs-formula {
+[data-theme='dark'] .moodiary-editor .hljs-keyword,
+[data-theme='dark'] .moodiary-editor .hljs-meta-keyword,
+[data-theme='dark'] .moodiary-editor .hljs-template-tag,
+[data-theme='dark'] .moodiary-editor .hljs-template-variable,
+[data-theme='dark'] .moodiary-editor .hljs-type,
+[data-theme='dark'] .moodiary-editor .hljs-variable.language_ {
   color: #ff7b72;
 }
-[data-theme='dark'] .moodiary-editor .hljs-string,
-[data-theme='dark'] .moodiary-editor .hljs-regexp,
-[data-theme='dark'] .moodiary-editor .hljs-meta .hljs-string {
-  color: #a5d6ff;
-}
 [data-theme='dark'] .moodiary-editor .hljs-title,
-[data-theme='dark'] .moodiary-editor .hljs-section,
+[data-theme='dark'] .moodiary-editor .hljs-title.class_,
+[data-theme='dark'] .moodiary-editor .hljs-title.class_.inherited__,
 [data-theme='dark'] .moodiary-editor .hljs-title.function_ {
   color: #d2a8ff;
 }
-[data-theme='dark'] .moodiary-editor .hljs-name,
-[data-theme='dark'] .moodiary-editor .hljs-selector-id,
-[data-theme='dark'] .moodiary-editor .hljs-selector-class,
-[data-theme='dark'] .moodiary-editor .hljs-tag,
-[data-theme='dark'] .moodiary-editor .hljs-addition {
-  color: #7ee787;
-}
-[data-theme='dark'] .moodiary-editor .hljs-type,
-[data-theme='dark'] .moodiary-editor .hljs-built_in,
-[data-theme='dark'] .moodiary-editor .hljs-builtin-name {
-  color: #ffa657;
-}
 [data-theme='dark'] .moodiary-editor .hljs-attr,
 [data-theme='dark'] .moodiary-editor .hljs-attribute,
-[data-theme='dark'] .moodiary-editor .hljs-variable,
-[data-theme='dark'] .moodiary-editor .hljs-template-variable,
+[data-theme='dark'] .moodiary-editor .hljs-literal,
+[data-theme='dark'] .moodiary-editor .hljs-meta,
 [data-theme='dark'] .moodiary-editor .hljs-number,
-[data-theme='dark'] .moodiary-editor .hljs-symbol,
-[data-theme='dark'] .moodiary-editor .hljs-bullet,
-[data-theme='dark'] .moodiary-editor .hljs-link,
-[data-theme='dark'] .moodiary-editor .hljs-meta {
+[data-theme='dark'] .moodiary-editor .hljs-operator,
+[data-theme='dark'] .moodiary-editor .hljs-variable,
+[data-theme='dark'] .moodiary-editor .hljs-selector-attr,
+[data-theme='dark'] .moodiary-editor .hljs-selector-class,
+[data-theme='dark'] .moodiary-editor .hljs-selector-id {
   color: #79c0ff;
 }
+[data-theme='dark'] .moodiary-editor .hljs-regexp,
+[data-theme='dark'] .moodiary-editor .hljs-string,
+[data-theme='dark'] .moodiary-editor .hljs-meta-string {
+  color: #a5d6ff;
+}
+[data-theme='dark'] .moodiary-editor .hljs-built_in,
+[data-theme='dark'] .moodiary-editor .hljs-symbol {
+  color: #ffa657;
+}
+[data-theme='dark'] .moodiary-editor .hljs-comment,
+[data-theme='dark'] .moodiary-editor .hljs-code,
+[data-theme='dark'] .moodiary-editor .hljs-formula {
+  color: #8b949e;
+}
+[data-theme='dark'] .moodiary-editor .hljs-name,
+[data-theme='dark'] .moodiary-editor .hljs-quote,
+[data-theme='dark'] .moodiary-editor .hljs-selector-tag,
+[data-theme='dark'] .moodiary-editor .hljs-selector-pseudo {
+  color: #7ee787;
+}
+[data-theme='dark'] .moodiary-editor .hljs-section {
+  color: #1f6feb;
+  font-weight: 600;
+}
+[data-theme='dark'] .moodiary-editor .hljs-bullet {
+  color: #f2cc60;
+}
+[data-theme='dark'] .moodiary-editor .hljs-emphasis {
+  font-style: italic;
+}
+[data-theme='dark'] .moodiary-editor .hljs-strong {
+  font-weight: 600;
+}
+[data-theme='dark'] .moodiary-editor .hljs-addition {
+  color: #aff5b4;
+  background-color: #033a16;
+}
 [data-theme='dark'] .moodiary-editor .hljs-deletion {
-  color: #ffa198;
+  color: #ffdcd7;
+  background-color: #67060c;
 }
 
 /*
