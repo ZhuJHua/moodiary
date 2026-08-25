@@ -1,0 +1,35 @@
+name: moodiary_picker
+description: "Moodiary 的相册选择器：photo_manager 之上的一层自建 UI。"
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  moodiary_files: 0.0.1
+  moodiary_i18n: 0.0.1
+  moodiary_logging: 0.0.1
+  moodiary_utils: 0.0.1
+  mui: 0.0.1
+
+  photo_manager: 3.12.0
+  # 相册网格的状态机（分页 / 变更通知 / iCloud / 受限授权）用它的，UI 全部覆写。
+  wechat_assets_picker: 10.1.3
+  # LocallyAvailableBuilder（iCloud 未下载资源那套状态机）从这儿出。
+  wechat_picker_library: 1.0.7
+  # 相机只调系统界面。它**不会**把成片写进系统相册，那一步仍由 PhotoManager.editor 补。
+  image_picker: 1.2.3
+  # picker 的状态容器，覆写点里要读它的 Consumer/Selector。
+  provider: 6.1.5+1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1

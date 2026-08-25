@@ -42,6 +42,7 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$lock$en lock = _Translations$lock$en._(_root);
 	@override late final _Translations$media$en media = _Translations$media$en._(_root);
 	@override late final _Translations$onboarding$en onboarding = _Translations$onboarding$en._(_root);
+	@override late final _Translations$picker$en picker = _Translations$picker$en._(_root);
 	@override late final _Translations$share$en share = _Translations$share$en._(_root);
 	@override late final _Translations$sync$en sync = _Translations$sync$en._(_root);
 	@override late final _Translations$ui$en ui = _Translations$ui$en._(_root);
@@ -66,9 +67,6 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get homeNavigatorDiary => 'Diary';
 	@override String get homeNavigatorAssistant => 'Assistant';
 	@override String get homePageAddDiaryButton => 'Create a diary';
-	@override String get noticeEnablePhotoPermission => 'Please go to settings to enable photo library permissions';
-	@override String get noticeEnableCameraPermission => 'Please go to settings to enable camera permissions';
-	@override String get pickerRecentAlbum => 'Recent';
 	@override String get categoryDeletedReset => 'Category deleted, showing all diaries';
 	@override String get homeNavigatorSetting => 'Setting';
 	@override String get languageSystem => 'Follow System';
@@ -569,12 +567,7 @@ class _Translations$editor$en extends Translations$editor$zh {
 	// Translations
 	@override String get noticeEnableLocation => 'Please enable location permission';
 	@override String get noticeEnableLocation2 => 'Please go to settings to enable location permissions';
-	@override String get pickFromGallery => 'Album';
 	@override String get audioFileError => 'Audio file error';
-	@override String get pickImage => 'Select image';
-	@override String get pickImageFromCamera => 'Taking photos';
-	@override String get pickVideo => 'Select video';
-	@override String get pickVideoFromCamera => 'Video';
 	@override String get pickAudio => 'Select audio';
 	@override String get pickAudioFromRecord => 'Recording';
 	@override String get pickAudioFromFile => 'File Audio';
@@ -773,6 +766,26 @@ class _Translations$onboarding$en extends Translations$onboarding$zh {
 	@override String get start => 'Start writing';
 	@override String get userAgreement => 'Terms of use';
 	@override String get privacyPolicy => 'Privacy policy';
+}
+
+// Path: picker
+class _Translations$picker$en extends Translations$picker$zh {
+	_Translations$picker$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get recentAlbum => 'Recent';
+	@override String get done => 'Done';
+	@override String doneCount({required Object count, required Object max}) => 'Done ${count}/${max}';
+	@override String get limitedTip => 'The app can only access selected photos';
+	@override String get limitedManage => 'Manage';
+	@override String get permissionDenied => 'Grant photo library access in Settings';
+	@override String get a11ySelect => 'Select';
+	@override String get a11yUnselect => 'Deselect';
+	@override String get capture => 'Camera';
+	@override String get record => 'Record';
+	@override String get captureFailed => 'Capture failed';
 }
 
 // Path: share

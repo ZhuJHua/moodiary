@@ -71,6 +71,9 @@ const Map<String, int> _featureBaseOrder = {
   'moodiary_components': 2,
   'moodiary_migration': 2,
   'moodiary_preferences': 2,
+  // 相册选择器。回到 wechat_assets_picker 之后已经不再依赖 components
+  // （预览页用包自带的），但留在 3 档不碍事，将来要换回自建预览也不用再动闸门。
+  'moodiary_picker': 3,
 };
 
 /// core 层内部次序（同层允许依赖，但只能单向；同 tier 之间禁止互引）。
@@ -293,10 +296,12 @@ List<String> _checkRustFacades() {
 ///
 /// 无 baseline：名单之外出现一处就红。名单只会随第三方迁移而缩短。
 const Map<String, String> _legacyMaterialAllowlist = {
-  'mobile/lib/app/picker/mobile_file_picker.dart':
-      'wechat_assets_picker/camera_picker 的 themeData 只吃 legacy ThemeData',
-  'mobile/lib/app/picker/moodiary_picker_delegate.dart': '同上，picker 的委托',
-  'mobile/lib/app/picker/moodiary_camera_picker_state.dart': '同上，相机 picker',
+  // 就这一条：wechat_assets_picker 内部（AssetPickerAppBar、权限遮罩、预览页）
+  // 只认 legacy ThemeData，我们覆写不到的那些地方靠它把 App 配色喂进去。
+  // delegate 本身是纯 mui 的 —— material_ui 的 Theme 与 legacy 的 Theme 是两个
+  // 不同的 widget 类型，picker 那句 Theme(data:) 盖不住 mui 的取用链。
+  'packages/feature_base/moodiary_picker/lib/src/picker_theme.dart':
+      'wechat_assets_picker 的 pickerTheme 只吃 legacy ThemeData',
 };
 
 final RegExp _legacyMaterialRe = RegExp(
@@ -341,7 +346,6 @@ List<String> _checkLegacyMaterial() {
 const Map<String, String> _themeAllowlist = {
   // 只放行主题层本身 —— mui 的 41 个组件跟业务代码一样要守这条闸门。
   'packages/foundation/mui/lib/src/themes/': 'mui 的主题层就是色板与 token 的定义处',
-  'mobile/lib/app/picker/': '第三方 AssetPicker/CameraPicker 自建 ThemeData，够不着 mui',
   'packages/feature/moodiary_share/lib/src/presentation/templates/':
       '分享卡片是固定设计稿（纸/墨配色），要导出成图片，不能跟随 App 主题',
   'packages/foundation/mui/lib/src/components/common/env_badge.dart':

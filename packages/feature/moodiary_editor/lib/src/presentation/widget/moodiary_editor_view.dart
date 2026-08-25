@@ -15,7 +15,7 @@ import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path/path.dart' as p;
 
 /// Markdown 编辑视图，包一层 [MoodiaryEditor]（始终嵌入式，仅渲染正文；AppBar / 阅读态
-/// 元信息由 Flutter 原生承载，见 [DiaryPage]）。图片两条路径：原生选图（[_showImageDialog]
+/// 元信息由 Flutter 原生承载，见 [DiaryPage]）。图片两条路径：原生选图（[_pickImages]
 /// → 存盘 → insertMedia）与拖拽/粘贴（[_saveDataUriImage]）。
 class MoodiaryEditorView extends StatefulWidget {
   final String initialContent;
@@ -73,45 +73,12 @@ class MoodiaryEditorView extends StatefulWidget {
 class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
   late final _controller = widget.controller ?? MoodiaryEditorController();
 
-  void _showImageDialog() {
-    showDialog<void>(
-      context: context,
-      builder: (sheetContext) {
-        return SimpleDialog(
-          title: Text(context.l10n.editor.pickImage),
-          children: [
-            SimpleDialogOption(
-              onPressed: () => _pickFromGallery(sheetContext),
-              child: _DialogRow(
-                icon: LucideIcons.images,
-                label: context.l10n.editor.pickFromGallery,
-              ),
-            ),
-            SimpleDialogOption(
-              onPressed: () => _pickFromCamera(sheetContext),
-              child: _DialogRow(
-                icon: LucideIcons.camera,
-                label: context.l10n.editor.pickImageFromCamera,
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _pickFromGallery(BuildContext sheetContext) async {
-    Navigator.of(sheetContext).pop();
+  /// 直接进选择器 —— 「相册 / 拍照」那个二选一弹窗已经去掉了：拍照是选择器
+  /// 网格的第一格，多一层弹窗只是让两条路都多一次点击。
+  Future<void> _pickImages() async {
     final files = await IFilePicker.get().pickImages(context);
     if (files.isEmpty) return;
     await _insertPicked(files);
-  }
-
-  Future<void> _pickFromCamera(BuildContext sheetContext) async {
-    Navigator.of(sheetContext).pop();
-    final file = await IFilePicker.get().takePhoto(context);
-    if (file == null) return;
-    await _insertPicked([file]);
   }
 
   /// 乐观插入：选图后立即把原图落到 image 目录并插入显示（快），压缩挪到后台就地进行、
@@ -156,42 +123,9 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
     return XFile(tmpPath);
   }
 
-  // —— 视频：选取（相册 / 拍摄）→ 存盘（含缩略图）→ insertVideo —— //
-  void _showVideoDialog() {
-    showDialog<void>(
-      context: context,
-      builder: (sheetContext) {
-        return SimpleDialog(
-          title: Text(context.l10n.editor.pickVideo),
-          children: [
-            SimpleDialogOption(
-              onPressed: () => _pickVideo(sheetContext, fromCamera: false),
-              child: _DialogRow(
-                icon: LucideIcons.images,
-                label: context.l10n.editor.pickFromGallery,
-              ),
-            ),
-            SimpleDialogOption(
-              onPressed: () => _pickVideo(sheetContext, fromCamera: true),
-              child: _DialogRow(
-                icon: LucideIcons.camera,
-                label: context.l10n.editor.pickVideoFromCamera,
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _pickVideo(
-    BuildContext sheetContext, {
-    required bool fromCamera,
-  }) async {
-    Navigator.of(sheetContext).pop();
-    final file = fromCamera
-        ? await IFilePicker.get().recordVideo(context)
-        : await IFilePicker.get().pickVideo(context);
+  // —— 视频：选取（相册网格首格就是录像）→ 存盘（含缩略图）→ insertVideo —— //
+  Future<void> _pickVideo() async {
+    final file = await IFilePicker.get().pickVideo(context);
     if (file == null) return;
     final saved = await MediaManager.saveVideo(videoFileList: [file]);
     final name = saved[file.path];
@@ -348,9 +282,9 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       onChanged: widget.onChanged,
       onTitleChanged: widget.onTitleChanged,
       onActiveHeadingChanged: widget.onActiveHeadingChanged,
-      onPickImage: _showImageDialog,
+      onPickImage: _pickImages,
       onPickAudio: _showAudioDialog,
-      onPickVideo: _showVideoDialog,
+      onPickVideo: _pickVideo,
       onSaveImage: _saveDataUriImage,
       onImageTap: _previewImages,
       onVideoFullscreen: _openVideoFullscreen,

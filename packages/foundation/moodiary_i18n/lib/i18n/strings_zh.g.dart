@@ -44,6 +44,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$lock$zh lock = Translations$lock$zh.internal(_root);
 	late final Translations$media$zh media = Translations$media$zh.internal(_root);
 	late final Translations$onboarding$zh onboarding = Translations$onboarding$zh.internal(_root);
+	late final Translations$picker$zh picker = Translations$picker$zh.internal(_root);
 	late final Translations$share$zh share = Translations$share$zh.internal(_root);
 	late final Translations$sync$zh sync = Translations$sync$zh.internal(_root);
 	late final Translations$ui$zh ui = Translations$ui$zh.internal(_root);
@@ -92,15 +93,6 @@ class Translations$app$zh {
 
 	/// zh: '新建日记'
 	String get homePageAddDiaryButton => '新建日记';
-
-	/// zh: '请前往设置中开启相册权限'
-	String get noticeEnablePhotoPermission => '请前往设置中开启相册权限';
-
-	/// zh: '请前往设置中开启相机权限'
-	String get noticeEnableCameraPermission => '请前往设置中开启相机权限';
-
-	/// zh: '最近'
-	String get pickerRecentAlbum => '最近';
 
 	/// zh: '分类已被删除，已切回全部'
 	String get categoryDeletedReset => '分类已被删除，已切回全部';
@@ -1523,23 +1515,8 @@ class Translations$editor$zh {
 	/// zh: '请前往设置中开启定位权限'
 	String get noticeEnableLocation2 => '请前往设置中开启定位权限';
 
-	/// zh: '相册'
-	String get pickFromGallery => '相册';
-
 	/// zh: '音频文件错误'
 	String get audioFileError => '音频文件错误';
-
-	/// zh: '选择图片'
-	String get pickImage => '选择图片';
-
-	/// zh: '拍照'
-	String get pickImageFromCamera => '拍照';
-
-	/// zh: '选择视频'
-	String get pickVideo => '选择视频';
-
-	/// zh: '录像'
-	String get pickVideoFromCamera => '录像';
 
 	/// zh: '选择音频'
 	String get pickAudio => '选择音频';
@@ -2041,6 +2018,48 @@ class Translations$onboarding$zh {
 
 	/// zh: '隐私政策'
 	String get privacyPolicy => '隐私政策';
+}
+
+// Path: picker
+class Translations$picker$zh {
+	Translations$picker$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: '最近'
+	String get recentAlbum => '最近';
+
+	/// zh: '完成'
+	String get done => '完成';
+
+	/// zh: '完成 {count}/{max}'
+	String doneCount({required Object count, required Object max}) => '完成 ${count}/${max}';
+
+	/// zh: '你只允许应用访问部分照片'
+	String get limitedTip => '你只允许应用访问部分照片';
+
+	/// zh: '管理'
+	String get limitedManage => '管理';
+
+	/// zh: '请前往设置中开启相册权限'
+	String get permissionDenied => '请前往设置中开启相册权限';
+
+	/// zh: '选择'
+	String get a11ySelect => '选择';
+
+	/// zh: '取消选择'
+	String get a11yUnselect => '取消选择';
+
+	/// zh: '拍摄'
+	String get capture => '拍摄';
+
+	/// zh: '录像'
+	String get record => '录像';
+
+	/// zh: '拍摄失败'
+	String get captureFailed => '拍摄失败';
 }
 
 // Path: share
