@@ -13,37 +13,37 @@ export 'package:moodiary_router/moodiary_router.dart'
     show MoodiaryRouteBase, MoodiaryRouteNav;
 
 List<RouteBase> assistantRoutes() => [
-  MoodiaryGoRoute(
+  GoRoute(
     path: AssistantSettingRoute.path,
     builder: (_, _) => const AssistantSettingPage(),
   ),
-  MoodiaryGoRoute(
+  GoRoute(
     path: AssistantPresetsRoute.path,
     builder: (_, _) => const AgentPresetListPage(),
   ),
-  MoodiaryGoRoute(
+  GoRoute(
     path: AssistantPresetEditRoute.path,
     builder: (context, state) => AgentPresetEditPage(
       id: state.uri.queryParameters['id'],
       fromId: state.uri.queryParameters['from'],
     ),
   ),
-  MoodiaryGoRoute(
+  GoRoute(
     path: AssistantProvidersRoute.path,
     builder: (_, _) => const AssistantProviderListPage(),
   ),
-  MoodiaryGoRoute(
+  GoRoute(
     path: AssistantProviderPickerRoute.path,
     builder: (_, _) => const AssistantProviderPickerPage(),
   ),
-  MoodiaryGoRoute(
+  GoRoute(
     path: AssistantProviderEditRoute.path,
     builder: (context, state) => AssistantProviderEditPage(
       id: state.uri.queryParameters['id'],
       presetId: state.uri.queryParameters['preset'],
     ),
   ),
-  MoodiaryGoRoute(
+  GoRoute(
     path: AssistantConversationRoute.path,
     builder: (context, state) =>
         AssistantConversationRoute.fromState(state).build(),

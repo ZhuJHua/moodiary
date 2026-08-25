@@ -6,9 +6,7 @@ import 'package:mui/mui.dart';
 
 /// 路由解析失败时的兜底页。
 ///
-/// go_router 自带的错误页也是按宿主类型选的，而它认不出 material_ui 的 `MaterialApp`
-/// （详见 moodiary_router 的 route_page.dart），默认落到无样式的 widgets 版
-/// `ErrorScreen`，所以这里自己给一个，走 `errorPageBuilder` 连转场一起带上。
+/// go_router 自带的 `MaterialErrorScreen` 是英文写死的，所以这里自己给一个。
 class RouteErrorPage extends StatelessWidget {
   final Uri uri;
   final Exception? error;

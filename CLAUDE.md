@@ -140,7 +140,7 @@ Flutter 3.47 把 Material 拆成独立包 `material_ui`，SDK 内的
 foundation 叶子包，所以它自带一份 slang 文案（十来个通用词），不吃 App 的文案包 —— 见下面
 「i18n」一节。
 
-**共存期的三个硬点**：
+**共存期的两个硬点**：
 
 1. `MaterialUiCompatibilityBridge` 挂在 `MaterialApp.builder`、**套在 `FlutterSmartDialog.init()`
    外面**（init 自建 Overlay，toast/loading 是与 child 平级的兄弟 entry）。它只映射
@@ -152,23 +152,15 @@ foundation 叶子包，所以它自带一份 slang 文案（十来个通用词�
    `flutter_localizations` 的同名类：那份给出 **legacy** 类型，material_ui 的 widget
    认不得，中文下会退化并让日期选择器一类直接抛。App 自己的文案走 slang 的
    `TranslationProvider`，不在这条链上；mui 的通用词在（`GlobalMuiLocalizations.delegate`）。
-3. **路由一律用 `MoodiaryGoRoute`，不用裸 `GoRoute`**（moodiary_router/src/route_page.dart）。
-   go_router 靠 `findAncestorWidgetOfExactType<MaterialApp>()` 猜宿主类型来决定 `builder:`
-   路由包成哪种 Page，它认的是 legacy `MaterialApp`；我们挂的是 material_ui 的同名新类，
-   探测于是落到 WidgetsApp 分支，**所有页面被包成 `NoTransitionPage`，切页没有动画**。
-   `MoodiaryGoRoute` 直接给出 `MaterialPage`，转场重新走
-   `ThemeData.pageTransitionsTheme`。`mobile/test/app/router/router_test.dart`
-   里有条闸门守着「每条路由都带 pageBuilder」。
-
-   同一处探测还牵着另外两样，也都自己接了回来：
-
-   - **hero 飞行**：go_router 装的是不带 `createRectTween` 的裸 `HeroController`，
-     弧线退成直线。它在自己 Navigator 之上的 `HeroControllerScope` 里，外面盖不住；
-     好在 Hero 自带的 `createRectTween` 优先级更高（heroes.dart 的
-     `_HeroFlightManifest`），所以**跨页 hero 一律用 `MHero`**，别用裸 `Hero`。
-   - **错误页**：默认会落到无样式的 widgets 版 `ErrorScreen`。`buildRouter` 里给了
-     `errorPageBuilder`（不是 `errorBuilder`——后者仍由 go_router 包 Page，一样没转场），
-     页面是 `mobile/lib/app/router/route_error_page.dart`。
+> **路由不再需要任何 workaround（go_router 18.0.0 起）。** go_router 靠
+> `findAncestorWidgetOfExactType<MaterialApp>()` 猜宿主类型，17.5.0 及以前认的是 legacy
+> `MaterialApp`，而我们挂的是 material_ui 的同名新类——类型不同，探测恒空、落到 WidgetsApp
+> 分支，于是页面被包成 `NoTransitionPage`（切页没动画）、hero 拿到不带 `createRectTween`
+> 的裸 `HeroController`（弧线退成直线）、错误页落到无样式的 widgets 版 `ErrorScreen`。
+> 18.0.0 把内部 import 换成了 `material_ui` / `cupertino_ui`，三样一起恢复正常，
+> 当年自接的 `MoodiaryGoRoute` / `MHero` / `errorPageBuilder` 已全部删除：**裸 `GoRoute`
+> 与裸 `Hero` 就是对的**。`route_error_page.dart` 留着只是因为自带那页英文写死，
+> 现在走 `errorBuilder`。
 
 > 官方的 `dart fix --code=migrate_design_widgets` **当前不生效**：转换规则在 SDK 里
 > （`fix_data/fix_material/fix_material.yaml`），但 `material.dart` 还没标 `@Deprecated`，

@@ -12,8 +12,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  go_router: 17.5.0
-  material_ui: 1.0.1
+  go_router: 18.0.0
 
 dev_dependencies:
   flutter_test:

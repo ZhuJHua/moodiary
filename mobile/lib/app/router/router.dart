@@ -38,12 +38,9 @@ GoRouter createMobileRouter({
   // 强制迁移闸门：存在旧格式日记时，除锁屏外一切目的地重定向到迁移页——首启初始
   // 路由、解锁后的 go('/')、深链全走这里，成功前进不了主界面。
   redirect: (context, state) => migrationGateRedirect(state.matchedLocation),
-  // errorPageBuilder 而不是 errorBuilder：后者交给 go_router 包 Page，会落到没有
-  // 转场的那条分支（同 MoodiaryGoRoute 的原因）。
-  errorPageBuilder: (context, state) => MaterialPage(
-    key: state.pageKey,
-    child: RouteErrorPage(uri: state.uri, error: state.error),
-  ),
+  // go_router 自带的错误页是英文写死的 MaterialErrorScreen，换成我们自己的。
+  errorBuilder: (context, state) =>
+      RouteErrorPage(uri: state.uri, error: state.error),
 );
 
 @visibleForTesting
@@ -63,7 +60,7 @@ String? migrationGateRedirect(String matchedLocation) {
 /// 各 feature 自带路由片段（`xRoutes()`）+ app 侧组合：首页 shell、以及跨 feature 的
 /// 助手→选日记页绑定（契约在 moodiary_router / moodiary_assistant，页面归 diary，故 app 绑定）。
 List<RouteBase> _mobileRoutes() => [
-  MoodiaryGoRoute(
+  GoRoute(
     path: DiaryHomeRoute.path,
     builder: (_, _) => const MobileRootShell(),
   ),
@@ -76,7 +73,7 @@ List<RouteBase> _mobileRoutes() => [
   ...shareRoutes(),
   ...editorRoutes(),
   ...assistantRoutes(),
-  MoodiaryGoRoute(
+  GoRoute(
     path: AssistantDiaryPickerRoute.path,
     builder: (_, _) => const DiarySelectPage(),
   ),

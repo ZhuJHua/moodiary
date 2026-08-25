@@ -540,7 +540,7 @@ class _ImageTile extends StatelessWidget {
         // 与网格缩略图同解码宽度 → 同缓存键，浏览器加载态直接命中缩略图。
         placeholderCacheWidth: cacheWidth,
       ),
-      child: MHero(
+      child: Hero(
         tag: '$_kImageHeroPrefix-$path',
         child: _Thumb(
           image: ResizeImage(FileImage(File(path)), width: cacheWidth),

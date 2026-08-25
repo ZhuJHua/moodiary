@@ -17,26 +17,6 @@ void main() {
       );
     });
 
-    // 裸 GoRoute 的 `builder:` 会被 go_router 包成 NoTransitionPage：它认 legacy
-    // MaterialApp，认不出我们挂的 material_ui 那个，探测落到 WidgetsApp 分支。
-    // 详见 moodiary_router 的 route_page.dart。
-    test('every route carries a pageBuilder', () {
-      final bare = <String>[];
-      void walk(List<RouteBase> routes) {
-        for (final route in routes) {
-          if (route is GoRoute &&
-              !route.redirectOnly &&
-              route.pageBuilder == null) {
-            bare.add(route.path);
-          }
-          walk(route.routes);
-        }
-      }
-
-      walk(buildMobileRoutes());
-      expect(bare, isEmpty, reason: '这些路由请改用 MoodiaryGoRoute');
-    });
-
     testWidgets('unknown location lands on our own error page', (tester) async {
       final router = createMobileRouter(
         initialLocation: '/definitely-not-a-route',
