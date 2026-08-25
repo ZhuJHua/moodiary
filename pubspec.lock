@@ -577,14 +577,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.0"
-  expressive_refresh:
-    dependency: transitive
-    description:
-      name: expressive_refresh
-      sha256: "99bb70ae1719ebdedbaf3b4a49031ef7b916da157f7843b8e83efbe6633b20ad"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.2"
   extended_image:
     dependency: transitive
     description:
@@ -1388,14 +1380,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.13.0"
-  material_new_shapes:
-    dependency: transitive
-    description:
-      name: material_new_shapes
-      sha256: e4bc375205e187e8fb232573387112dd8c0dd45b03af8aa2b3c79eb4b9e3e0dc
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.0"
   material_ui:
     dependency: transitive
     description:

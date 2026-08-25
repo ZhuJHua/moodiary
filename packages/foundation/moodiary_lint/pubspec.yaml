@@ -8,7 +8,5 @@ resolution: workspace
 environment:
   sdk: ">=3.13.0"
 
-# flutter_lints 作为**常规依赖**（非 dev）以便传递给引用方，使其 analysis_options 里的
-# `include: package:flutter_lints/flutter.yaml` 可解析。
 dependencies:
   flutter_lints: 6.0.0

@@ -1,28 +1,18 @@
-# App 文案。生成命令：dart tool/task.dart i18n（或本目录下 dart run slang）。
-#
-# base_locale 选 zh：与旧 gen-l10n 的 template=intl_zh.arb 同构，中文仍是写作源，
-# 英文缺键回落中文而不是报错。启动时总会显式 setLocale，所以 base 不承担兜底职责。
 base_locale: zh
 fallback_strategy: base_locale
 
 input_directory: lib/i18n
-# 一个 feature 一份文件（<namespace>_<locale>.i18n.json），删 feature 就删文件。
 namespaces: true
 input_file_pattern: .i18n.json
 output_directory: lib/i18n
 output_file_name: strings.g.dart
 
-# 生成 `l10n` 顶层变量与 `context.l10n`。namespaces 让键按 feature 分文件，
-# 取串写成 `l10n.diary.searchResult`；通用词在 common_*.i18n.json。
 translate_var: l10n
 class_name: Translations
 enum_name: AppLocale
 
-# 参数写法沿用 ARB 的 `{name}`（默认是 dart 风格的 `$name`）。
 string_interpolation: braces
 
-# 默认 true，会额外生成一份全量 Map<String, String>；我们不做动态取串。
 flat_map: false
-# 默认 true，会把生成时间写进产物；产物是提交的，关掉才没有噪声 diff。
 timestamp: false
 statistics: false

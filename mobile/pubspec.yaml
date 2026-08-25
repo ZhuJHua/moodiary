@@ -56,11 +56,6 @@ dependencies:
   intl: 0.20.3
   fpdart: 1.2.0
 
-  # App 自身不画 Cupertino 图标，但 go_router / webview_flutter / wechat_assets_picker
-  # 等依赖 import 了 package:flutter/cupertino.dart，kernel 常量池里就留下了
-  # CupertinoIcons.back（0xf3CF）这一个码点。不带这个包，打包时 icon tree shaker 会报
-  # 「Expected to find fonts for (…CupertinoIcons…), but found (…)」。带上后 shaker 只
-  # 子集出那一个字形。
   cupertino_icons: 1.0.9
 
   isar_plus: any
