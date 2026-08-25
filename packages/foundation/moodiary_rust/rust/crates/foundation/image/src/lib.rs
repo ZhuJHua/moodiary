@@ -8,11 +8,12 @@ use fast_image_resize::images::Image;
 use fast_image_resize::{IntoImageView, Resizer};
 
 use image::{
-    DynamicImage, GenericImageView, ImageEncoder, ImageReader,
+    DynamicImage, GenericImageView, ImageDecoder, ImageEncoder, ImageReader,
     codecs::{
         jpeg::JpegEncoder,
         png::{CompressionType, FilterType, PngEncoder},
     },
+    metadata::Orientation,
 };
 
 #[derive(PartialEq, Eq)]
@@ -112,11 +113,31 @@ fn optimize_dimensions(width: u32, height: u32) -> (u32, u32) {
     )
 }
 
-pub fn optimize_to_file(file_path: String, output_path: String, quality: Option<u8>) -> Result<()> {
-    let src_img = ImageReader::open(file_path)?
+/// 解码，并**按 EXIF 把像素转正**。
+///
+/// `ImageReader::decode()` 不看 EXIF：它吐的是传感器方向的像素，而我们重编码之后
+/// 那个方向标记也一并没了。相机成片正是这种 —— CameraX 与 AVFoundation 都只写
+/// EXIF、不转像素，所以同一张照片在系统相册里是竖的（相册认标记），进了日记就成
+/// 了横的（我们既没转像素、也没留标记）。从相册选进来的照片同理。
+///
+/// 转正必须发生在读 `dimensions()` 之前：90/270 会把宽高换过来，晚一步算出来的
+/// 目标尺寸就是错的。
+fn decode_upright(file_path: &str) -> Result<DynamicImage> {
+    let mut decoder = ImageReader::open(file_path)?
         .with_guessed_format()?
-        .decode()
-        .map_err(|e| anyhow::anyhow!("Failed to decode image: {}", e))?;
+        .into_decoder()
+        .map_err(|e| anyhow!("Failed to decode image: {}", e))?;
+    // 没有 EXIF、或解不出方向的，一律按不变换处理 —— 别让一个可选的元数据把整张图
+    // 挡在门外。
+    let orientation = decoder.orientation().unwrap_or(Orientation::NoTransforms);
+    let mut img = DynamicImage::from_decoder(decoder)
+        .map_err(|e| anyhow!("Failed to decode image: {}", e))?;
+    img.apply_orientation(orientation);
+    Ok(img)
+}
+
+pub fn optimize_to_file(file_path: String, output_path: String, quality: Option<u8>) -> Result<()> {
+    let src_img = decode_upright(&file_path)?;
     // libwebp 只吃 RGB8/RGBA8。必须用 into_ 而非 to_：后者借用再新建一份，而 shadowing
     // 不 drop 旧值，两份全分辨率缓冲会一直活到函数结束。
     let src_img = if src_img.color().has_alpha() {
@@ -171,10 +192,7 @@ fn prepare(
     file_path: String,
     spec: CompressSpec,
 ) -> Result<(DynamicImage, u32, u32, CompressFormat, u8)> {
-    let mut src_img = ImageReader::open(file_path)?
-        .with_guessed_format()?
-        .decode()
-        .map_err(|e| anyhow::anyhow!("Failed to decode image: {}", e))?;
+    let mut src_img = decode_upright(&file_path)?;
     let format = spec.compress_format.unwrap_or(CompressFormat::Jpeg);
     let quality = spec.quality.unwrap_or(80);
 
