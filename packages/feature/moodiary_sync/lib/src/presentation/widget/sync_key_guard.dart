@@ -103,7 +103,7 @@ Future<bool> ensureSyncKeyReady({
   await SyncKeyManager.markPendingUpload(configuredCloudBackendIds());
   final backendId = backend.persistentBackendId;
   if (backendId != null) await SyncKeyManager.clearPendingUpload(backendId);
-  ref.invalidate(syncDekControllerProvider);
+  if (context.mounted) ref.invalidate(syncDekControllerProvider);
   toast.success(message: l10n.sync.keyConfigured);
   return true;
 }

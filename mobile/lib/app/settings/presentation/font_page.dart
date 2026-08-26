@@ -124,7 +124,7 @@ class _FontPicker extends ConsumerWidget {
       confirmLabel: l10n.common.delete,
       isDestructive: true,
     );
-    if (!ok) return;
+    if (!ok || !context.mounted) return;
     await ref.read(fontControllerProvider.notifier).removeFont(font);
   }
 }

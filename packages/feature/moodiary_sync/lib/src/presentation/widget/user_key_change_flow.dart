@@ -107,7 +107,7 @@ Future<bool> applyUserKeyChange({
     }
     await SyncKeyManager.storeDek(newDek);
     SyncKeyManager.cacheKeyfile(keyfile);
-    ref.invalidate(syncDekControllerProvider);
+    if (context.mounted) ref.invalidate(syncDekControllerProvider);
 
     if (hasRemote) {
       if (!context.mounted) return true;
@@ -159,7 +159,7 @@ Future<bool> applyUserKeyChange({
     }
   }
   await SyncKeyManager.clearDek();
-  ref.invalidate(syncDekControllerProvider);
+  if (context.mounted) ref.invalidate(syncDekControllerProvider);
   if (context.mounted) toast.success(message: l10n.sync.keyEncryptionOff);
   return true;
 }
