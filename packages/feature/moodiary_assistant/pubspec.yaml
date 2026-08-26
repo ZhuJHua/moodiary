@@ -33,6 +33,7 @@ dependencies:
   json_schema_builder: 0.1.6
   url_launcher: 6.3.2
   meta: 1.19.0
+  injectable: 3.0.0
 
 dev_dependencies:
   flutter_test:
@@ -40,3 +41,4 @@ dev_dependencies:
   moodiary_lint: 0.0.1
   build_runner: 2.16.0
   riverpod_generator: 4.0.8
+  injectable_generator: 3.1.3

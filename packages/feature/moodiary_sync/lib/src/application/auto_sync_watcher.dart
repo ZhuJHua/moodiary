@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:injectable/injectable.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -29,12 +29,16 @@ import 'package:moodiary_sync/src/data/sync_registry.dart';
 ///   syncAll，把空转成本从 5 个往返降到 1 个 HEAD。Last-Modified 是秒级粒度，
 ///   同秒并发写理论上可漏判，故距上次成功同步超过 10 个轮询周期时强制全量兜底。
 /// - **静默失败**：出错不弹 toast，错误已落进 SyncLogger。
+///
+/// 由 DI 装配成懒单例：[SyncLogger] 与 [RemoteSyncRegistry] 走构造器注入，保证两者
+/// 就位后才构造；[start] 由组合根在版本迁移与后端装载完成后显式调用 —— 迁移写出的
+/// 行不该被 watcher 当成本地变更推给云端。
+@lazySingleton
 class AutoSyncWatcher {
-  AutoSyncWatcher._();
+  AutoSyncWatcher(this._logger, this._registry);
 
-  static AutoSyncWatcher create() => ._();
-
-  factory AutoSyncWatcher.get() => getIt<AutoSyncWatcher>();
+  final SyncLogger _logger;
+  final RemoteSyncRegistry _registry;
 
   /// 写入后到真正发起 push 的静默期。
   static const Duration _debounce = Duration(seconds: 5);
@@ -90,7 +94,7 @@ class AutoSyncWatcher {
       MoodiaryKVs.syncPendingLocal.set(true);
       _onLocalChange();
     });
-    _syncSub ??= SyncLogger.get().events.listen(_onSyncEvent);
+    _syncSub ??= _logger.events.listen(_onSyncEvent);
     // 改了轮询间隔 → 立即按新值重排（缩短间隔不必等旧定时器走完）。
     MoodiaryKVs.syncPollInterval.getNotifier().addListener(_schedulePoll);
     _schedulePoll();
@@ -174,8 +178,8 @@ class AutoSyncWatcher {
   Future<void> _pollTick() async {
     if (MoodiaryKVs.autoSync.get() != true) return;
     if (_syncing) return;
-    if (!getIt.isRegistered<IRemoteSyncBackend>()) return;
-    final backend = IRemoteSyncBackend.get();
+    if (!_registry.hasBackend) return;
+    final backend = _registry.backend;
     if (!backend.isReady) return;
 
     String? preStat;
@@ -239,8 +243,8 @@ class AutoSyncWatcher {
     void Function()? onSuccess,
   }) async {
     if (_syncing) return;
-    if (!getIt.isRegistered<IRemoteSyncBackend>()) return;
-    final backend = IRemoteSyncBackend.get();
+    if (!_registry.hasBackend) return;
+    final backend = _registry.backend;
     if (!backend.isReady) return;
 
     _syncing = true;

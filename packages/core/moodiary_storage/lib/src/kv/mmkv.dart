@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:injectable/injectable.dart';
 import 'package:mmkv/mmkv.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
@@ -13,6 +14,7 @@ import 'package:path/path.dart';
 /// - **「没有值」得靠 [MMKV.containsKey] 判**：`decodeBool` 一类不返回 null，
 ///   取不到就给 defaultValue，直接读会把「没设过」和「设成了 false」混为一谈。
 /// - **没有字符串数组类型**：`List<String>` 存成 JSON 文本。
+@Singleton(as: IKVStorage)
 final class MmkvKVStorage extends IKVStorage {
   /// mmap 文件名。改它等于弃掉全部既有配置，别动。
   static const _mmapId = 'moodiary';
@@ -29,6 +31,20 @@ final class MmkvKVStorage extends IKVStorage {
   static bool legacyMigrationPending = false;
 
   late final MMKV _mmkv;
+
+  /// [secure] 是真实依赖：[init] 里的 2.8.0 搬迁要把三个机密写进 SecureKV，
+  /// 这条参数边让生成器保证 SecureKV 先就绪——原先靠调用点注释维持的次序变成类型边。
+  /// 搬迁本身经 [MoodiarySecureKVs] 的全局访问器取实例，故这里只需要这条次序。
+  ///
+  /// preResolve 是**先构造后注册**：create 返回之前 IKVStorage 还不在容器里，
+  /// [init] / 搬迁内部不能走 `MoodiaryKVs.x.get()/set()` 访问器（会 StateError），
+  /// 写自己只能用 `this`（`copyFrom` 的 `into:` 参数就是干这个的）。
+  @FactoryMethod(preResolve: true)
+  static Future<MmkvKVStorage> create(ISecureKVStorage secure) async {
+    final storage = MmkvKVStorage();
+    await storage.init();
+    return storage;
+  }
 
   @override
   Future<void> init() async {

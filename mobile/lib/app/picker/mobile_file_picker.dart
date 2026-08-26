@@ -1,4 +1,5 @@
 import 'package:file_picker/file_picker.dart' as fp;
+import 'package:injectable/injectable.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_picker/moodiary_picker.dart';
 import 'package:mui/mui.dart';
@@ -10,6 +11,7 @@ import 'package:mui/mui.dart';
 ///
 /// 拍照与录像在编辑器里已经没有独立入口了 —— 它们是选择器网格的第一格；
 /// 这两个方法保留是因为 [IFilePicker] 是一整块端口。
+@LazySingleton(as: IFilePicker)
 class MobileFilePicker implements IFilePicker {
   @override
   Future<List<XFile>> pickImages(BuildContext context, {int maxAssets = 9}) {

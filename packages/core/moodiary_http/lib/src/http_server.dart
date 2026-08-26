@@ -92,7 +92,7 @@ typedef HttpServerHandler = Future<HttpServerResponse> Function(
 abstract class IHttpServer {
   IHttpServer();
 
-  /// 每次调用返回一个新实例（get_it registerFactory）。
+  /// 每次调用返回一个新实例（实现类上的 `@Injectable` 是工厂注册）。
   factory IHttpServer.create() => getIt.get<IHttpServer>();
 
   /// 启动服务。[preferredPort] 被占自动回退随机端口（[port] 读实际值）；

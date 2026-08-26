@@ -5,15 +5,17 @@ import 'dart:ui';
 import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:moodiary/app/di/basic_service.dart';
-import 'package:moodiary/app/di/service_di.dart';
+import 'package:moodiary/app/di/bootstrap.dart';
+import 'package:moodiary/app/di/di.dart';
 import 'package:moodiary/app/lifecycle/app_lock_observer.dart';
 import 'package:moodiary/app/locale.dart';
 import 'package:moodiary/app/router/router.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_editor/moodiary_editor.dart'
     show EditorMigrationService;
+import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
@@ -21,16 +23,34 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_rust/rust.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_sync/moodiary_sync.dart';
 import 'package:moodiary_theme/moodiary_theme.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 Future<void> _initSystem() async {
-  final rustInit = RustLib.init();
-  await injectBasicService(schemas: moodiarySchemas);
+  // Rust 桥最先就绪：dlopen 的耗时串行计入启动，换来「后面任何一步都可以打 Rust」
+  // 的零心智负担——迁移的字体重扫、维护任务的分词都不用再关心桥的时序。
+  await RustLib.init();
+
+  // ── 1. 路径与日志（一切存储的前置）→ 容器装配 ∥ Isar 打开。
+  // configureDependencies 内部的 preResolve 在这一步落定：SecureKV → KV（含 2.8.0
+  // 搬迁；这条次序不再靠调用顺序，它是 MmkvKVStorage.create 收 ISecureKVStorage
+  // 的类型边）、SyncLogger 落盘就绪。KV 与 Isar 互不依赖，并行开。
+  await bootstrapPlatform();
+  await Future.wait([
+    configureDependencies(),
+    IsarDatabase.get().init(
+      schemas: moodiarySchemas,
+      directory: AppFiles.getRealPath('database', ''),
+    ),
+  ]);
   // 应用锁的开关是「有没有凭据」的派生态，读一次钥匙串装进内存；
   // 路由与生命周期回调都是同步的，够不着异步的 SecureKV。
   await AppLockPin.load();
-  // 版本迁移钩子：在基础存储就位后、主题/服务初始化前运行（旧版内联在 KV.init）。
+
+  // ── 2. 版本迁移：基础存储就位后、任何人读业务数据之前，
+  // 也必须在 AutoSyncWatcher 醒来之前——迁移写出的行不是用户的本地变更，
+  // 被 watcher 当成变更推给云端就是一次凭空的全量上传。
   // 用 try/catch 包裹：迁移抛异常时只记日志、不阻断启动——否则 appVersion 不推进，
   // 每次启动都在同一步崩，陷入永久崩溃循环把用户锁在数据外。步骤幂等，下次启动重试。
   try {
@@ -38,29 +58,42 @@ Future<void> _initSystem() async {
   } catch (e, s) {
     logger.e('version migration failed', error: e, stackTrace: s);
   }
-  // 强制迁移闸门探测：存在旧格式日记时路由 redirect 把一切目的地引到迁移页。
-  // 探测失败按无迁移放行（读路径本就能即时转换渲染旧格式，只是不落库），别把启动卡死。
-  try {
-    await EditorMigrationService.refreshRequiresMigration();
-  } catch (e, s) {
-    logger.e('migration gate probe failed', error: e, stackTrace: s);
-  }
+
+  // ── 3. 四条互不依赖的初始化，并行发起（在阶段 4 收拢）。
   unawaited(_platFormOption());
+  // 主题：动态取色（平台通道）+ 自定义字体装载（FontLoader 读文件）。
+  final themeFuture = FontRepository.get().getActiveFont().then(
+    (font) => ThemeManager().buildTheme(customFont: font?.themeDescriptor),
+  );
   // 复数解析器只要在 runApp（第一次取串）之前登记上即可，与 setLocale 的先后无关；
   // 串行是因为两者都在改 LocaleSettings 的同一份 translationMap。
   final localeFuture = setupPluralResolvers().then(
     (_) => applyStoredLanguage(),
   );
-  // registerService 会立刻打到 Rust，必须先等桥就绪。
-  await rustInit;
-  await Future.wait([
-    FontRepository.get().getActiveFont().then(
-      (font) => ThemeManager().buildTheme(customFont: font?.themeDescriptor),
-    ),
-    registerService(),
-    localeFuture,
-  ]);
+  // 强制迁移闸门探测：存在旧格式日记时路由 redirect 把一切目的地引到迁移页，故必须
+  // 在 buildRouter 之前完成。探测失败按无迁移放行（读路径本就能即时转换渲染旧格式，
+  // 只是不落库），别把启动卡死。排在版本迁移之后：探测读的是迁移可能刚改写过的日记。
+  final migrationGateFuture = () async {
+    try {
+      await EditorMigrationService.refreshRequiresMigration();
+    } catch (e, s) {
+      logger.e('migration gate probe failed', error: e, stackTrace: s);
+    }
+  }();
+  // 同步后端装载：按 KV `syncProvider` 换持，顺带把两个后端的配置（KV / SecureKV）
+  // 读进进程内缓存。「什么时候按 KV 换持」是编排不是接线，故由组合根显式调；
+  // 排在版本迁移之后，读到的是迁移后的配置。
+  final syncBackendFuture = RemoteSyncRegistry.get().reload();
 
+  // ── 4. 唤醒长驻服务与启动期维护。
+  await syncBackendFuture;
+  // 显式 start，排在版本迁移与后端装载之后。刻意不用 @PostConstruct——那会让
+  // watcher 在容器装配当场醒来，赶在迁移之前，迁移写出的行就被回声推给云端了。
+  getIt<AutoSyncWatcher>().start();
+  runStartupMaintenance();
+  await Future.wait([themeFuture, localeFuture, migrationGateFuture]);
+
+  // ── 5. 系统 UI：沉浸式 + 透明导航栏 + 方向锁。
   SystemChrome.setEnabledSystemUIMode(.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -86,9 +119,9 @@ String _resolveInitialLocation() {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await _initSystem();
-  buildRouter(initialLocation: _resolveInitialLocation());
 
+  // 错误处理器在 _initSystem 之前装：初始化阶段的异常也要被记录，装在后面
+  // 等于启动期崩溃全体失聪（AppLogger.configure 之前只进控制台，配置后自动落盘）。
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
     logger.e(
@@ -101,6 +134,9 @@ void main() async {
     logger.f('Error', error: error, stackTrace: stack);
     return true;
   };
+
+  await _initSystem();
+  buildRouter(initialLocation: _resolveInitialLocation());
 
   // App 的字串走 slang 的 `TranslationProvider`（切语言自动重建整棵树）。mui 自己那
   // 十来个通用词不在这里——它是被 import 的包，走 `Localizations`，挂在下面的

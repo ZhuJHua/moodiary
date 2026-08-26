@@ -41,6 +41,9 @@ dependencies:
   moodiary_picker: 0.0.1
 
   flutter_riverpod: 3.4.2
+  # 生成的 *.config.dart 直接 import get_it，得在这里显式钉住，不能只靠 moodiary_di 带进来。
+  get_it: 9.2.1
+  injectable: 3.0.0
 
   gap: 3.0.1
 
@@ -61,6 +64,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   build_runner: 2.16.0
+  injectable_generator: 3.1.3
   flutter_gen_runner: 5.15.0
 
   flutter_native_splash: 2.4.8

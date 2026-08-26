@@ -16,8 +16,11 @@ dependencies:
   moodiary_di: 0.0.1
   moodiary_logging: 0.0.1
   moodiary_rust: 0.0.1
+  injectable: 3.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
+  build_runner: 2.16.0
+  injectable_generator: 3.1.3

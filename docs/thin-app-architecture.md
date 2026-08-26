@@ -7,6 +7,11 @@
 > - The `desktop/` skeleton was deleted — a desktop app will be rebuilt later. Everything below about desktop is *intent*, not current code. `moodiary_scan` no longer exists either.
 > - `XxxUtil` classes were renamed to role-based names (`FileUtil`→`AppFiles`, `MergeUtil`→`VersionMigrator`, …), so identifiers quoted below may not resolve.
 > - Package layer direction is now machine-enforced by `tool/check_layers.dart`, not just by convention.
+> - **(2026-08-26)** DI 从手写 `registerX()` barrel 迁到 get_it + **injectable**：`app/di/service_di.dart`
+>   / `basic_service.dart` 已删，绑定是实现类上的注解（storage/http/assistant/sync 四个
+>   micro-package + `mobile/lib/app/di/di.dart` 单份 config），启动引导在 `bootstrap.dart` +
+>   `main.dart`；下文 §5(b) 与所有 `registerRemoteSync()` / `AutoSyncWatcher.create()` 示例
+>   均为历史。现行参考 CLAUDE.md 的「DI —— get_it + injectable」一节。
 
 **Goal:** `mobile/lib` retains *no* `feature/` slice. It becomes a composition root plus the two app-owned presentation surfaces the vision explicitly permits (导航布局 + 设置页). Every self-contained capability sinks into a package; both apps assemble the *same* packages into their own shells.
 

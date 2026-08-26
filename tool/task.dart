@@ -36,8 +36,6 @@ Future<void> _run(String cmd, List<String> args, {String? cwd}) async {
 // editor build, the layer check and this script itself run from the repo root.
 Future<void> _flutter(List<String> args) =>
     _run('fvm', ['flutter', ...args], cwd: 'mobile');
-Future<void> _dartApp(List<String> args) =>
-    _run('fvm', ['dart', ...args], cwd: 'mobile');
 
 // Android 有 prod / beta 两个 flavor，构建 Android 必须指定 --flavor；未显式指定时默认
 // 注入给定 flavor，保持既有命令可用。（beta = 「Moodiary Beta」测试包，见 build-apk-beta。）
@@ -235,7 +233,26 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
   'deps': (rest) => _run('fvm', ['dart', 'tool/dep_graph.dart', ...rest]),
   'test': (rest) => _flutter(['test', ...rest]),
   // build_runner 2.16.0 移除了 --delete-conflicting-outputs（默认行为已内建）。
-  'build-runner': (_) => _dartApp(['run', 'build_runner', 'build']),
+  // 必须全仓扫：生成物散在各包（injectable 的 *.module.dart、freezed/riverpod 的
+  // *.g.dart），只跑 mobile 会让包侧注解改动静默不生效——旧生成物照样编译，
+  // 漂移只在运行时暴露。
+  'build-runner': (_) async {
+    await _run('melos', [
+      'exec',
+      '--depends-on=build_runner',
+      '-c',
+      '1',
+      '--',
+      'fvm',
+      'dart',
+      'run',
+      'build_runner',
+      'build',
+    ]);
+    // injectable 的 micro-package 产物（*.module.dart）出炉不带格式，
+    // 统一补一道，保住全仓 format 零差异闸门。
+    await _run('fvm', ['dart', 'format', '.']);
+  },
   // 代码生成：Rust FFI 绑定 / slang 文案；`gen` = 三者 + 编辑器资源（melos bootstrap 的 post hook）。
   'gen-rust': (_) => _genRust(),
   'i18n': (_) => _i18n(),

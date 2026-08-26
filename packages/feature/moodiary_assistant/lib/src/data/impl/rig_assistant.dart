@@ -1,12 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:injectable/injectable.dart';
 import 'package:meta/meta.dart';
 import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/assistant_tools.dart';
 import 'package:moodiary_rust/assistant.dart' as rust;
 
+@LazySingleton(as: AssistantService)
 class RigAssistantService implements AssistantService {
   @override
   Stream<AssistantStreamEvent> chat(AssistantChatRequest request) async* {

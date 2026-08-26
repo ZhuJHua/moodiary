@@ -1,7 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
-import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_registry.dart';
 
 import '../sync_test_harness.dart';
@@ -24,17 +22,25 @@ void main() {
     });
   });
 
-  group('registerRemoteSync', () {
-    test('registers the backend that matches the current provider', () async {
+  group('RemoteSyncRegistry', () {
+    test('holds the backend that matches the current provider', () async {
       SyncProviderType.setCurrent(.webdav);
-      await registerRemoteSync();
-      expect(getIt<IRemoteSyncBackend>().type, SyncProviderType.webdav);
+      await RemoteSyncRegistry.get().reload();
+      expect(RemoteSyncRegistry.get().backend.type, SyncProviderType.webdav);
 
-      // 切换 provider → 重新注册为对应后端（单注册不残留旧实例）。
+      // 切换 provider → 换持为对应后端（单持有不残留旧实例）。
       SyncProviderType.setCurrent(.s3);
-      await registerRemoteSync();
-      expect(getIt<IRemoteSyncBackend>().type, SyncProviderType.s3);
-      expect(getIt.isRegistered<IRemoteSyncBackend>(), isTrue);
+      await RemoteSyncRegistry.get().reload();
+      expect(RemoteSyncRegistry.get().backend.type, SyncProviderType.s3);
+      expect(RemoteSyncRegistry.get().hasBackend, isTrue);
+    });
+
+    test('starts empty', () {
+      expect(RemoteSyncRegistry().hasBackend, isFalse);
+    });
+
+    test('reading backend before reload throws', () {
+      expect(() => RemoteSyncRegistry().backend, throwsStateError);
     });
   });
 }

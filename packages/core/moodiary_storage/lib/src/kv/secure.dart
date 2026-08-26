@@ -1,8 +1,18 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:injectable/injectable.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 
+@Singleton(as: ISecureKVStorage)
 class FlutterSecureStorageKVStorage implements ISecureKVStorage {
   late final FlutterSecureStorage _storage;
+
+  /// [init] 只是构造 [FlutterSecureStorage]，没有 I/O，折进注册里不花时间。
+  @FactoryMethod(preResolve: true)
+  static Future<FlutterSecureStorageKVStorage> create() async {
+    final storage = FlutterSecureStorageKVStorage();
+    await storage.init();
+    return storage;
+  }
 
   @override
   Future<void> clear() {

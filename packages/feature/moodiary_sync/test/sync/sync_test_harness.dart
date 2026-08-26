@@ -15,6 +15,7 @@ import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_cancellation.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
+import 'package:moodiary_sync/src/data/sync_registry.dart';
 import 'package:moodiary_sync/src/data/sync_stores.dart';
 
 /// 同步引擎单测脚手架：把引擎对 KV / 后端 / 本地存储 / cipher 的依赖全部替换成
@@ -470,6 +471,9 @@ setUpSyncEnv() async {
   // SyncLogger.create() 内部访问 PlatformService 失败会降级为纯内存模式，测试安全。
   final logger = await SyncLogger.create();
   getIt.registerSingleton<SyncLogger>(logger);
+  // prod 由组合根在装载后显式 reload；测试注新构造的空持有者，未 reload 前
+  // hasBackend 为 false。
+  getIt.registerSingleton<RemoteSyncRegistry>(RemoteSyncRegistry());
   // 预置设备 id：RemoteLease 无此值时会调 uuidV4()（Rust），测试环境不可用。
   MoodiaryKVs.syncDeviceId.set('test-device');
   SyncCancellation.instance.reset();

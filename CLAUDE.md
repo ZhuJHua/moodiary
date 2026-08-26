@@ -24,7 +24,7 @@ dart tool/task.dart build-apk / build-ios  # 只有 android/ios 两个目标
 # Extra flutter flags go after --:  dart tool/task.dart run -- --release
 
 # Code Gen (after model/router/provider changes)
-dart tool/task.dart build-runner   # build_runner build（2.16.0 起 --delete-conflicting-outputs 已移除）
+dart tool/task.dart build-runner   # 全仓 build_runner（melos 扫所有含 build_runner 的包；只跑 mobile 会漏掉包侧注解）
 dart tool/task.dart gen-rust       # regenerate Rust FFI bindings
 dart tool/task.dart i18n           # slang 文案生成（改了 i18n/*.json 必跑）
 dart tool/task.dart gen            # gen-rust + i18n + rebuild editor asset
@@ -111,6 +111,36 @@ Cross-package DAG is strictly upper → lower: `foundation → core → feature_
 > 不认识」，且 core 同 tier 禁止互引，core 自己反而再也够不着它（今天够得着，只是没人用）。
 
 In-app layering within `mobile/lib` (same script): `gen → core → data → component → feature/<x> → app → main.dart`. Baseline is **zero violations**.
+
+### DI —— get_it + injectable
+
+**绑定的注解落在实现类上**（`@Singleton(as:)` / `@LazySingleton(as:)` / `@Injectable(as:)`）：
+storage / http / assistant / sync 四个包各自是一份 **micro-package**（`lib/injectable.dart` 里的
+`@InjectableInit.microPackage()` → 生成 `injectable.module.dart`），由 app 侧
+`mobile/lib/app/di/di.dart` 一处经 `externalPackageModulesBefore` 挂载。**全仓只有一份
+`configureDependencies`**：不指定 initializerName（默认 `init`），也没有 generateForDir
+（默认扫全包 —— 单份 config 不存在「两份互扫同一片源码、同一注解各注册一次」的问题）。
+storage 列最前，它的两个 preResolve 是别人的地基；两个存储的 `init` 已折进
+`@FactoryMethod(preResolve: true)` 的 create 工厂，**SecureKV → KV 的次序因此是类型边**
+（`MmkvKVStorage.create(ISecureKVStorage)`），不再靠调用顺序守。
+`@module` 只剩 `AppModule.httpClient` 一个方法：`IHttpClient` 的 `onError` 要接 app 的 toast，
+这种构造用类注解表达不出来。
+
+**启动阶段属于 main 的引导编排，不属于容器**：路径/日志与重置在
+`mobile/lib/app/di/bootstrap.dart`，序列在 `main.dart` 的 `_initSystem`。版本迁移跑完后由组合根
+显式调 `RemoteSyncRegistry.reload()`（装载同步后端）与 `AutoSyncWatcher.start()`。
+**`@PostConstruct` 是刻意不用的**：那会让 watcher 在容器装配当场醒来、赶在迁移之前，
+迁移写出的行就被当成本地变更回声推给云端。
+
+改了注解**必须跑 `dart tool/task.dart build-runner`**（生成物是提交的；micro-package 的
+`*.module.dart` 出炉不带格式，该任务末尾会统一 format 一遍）。业务代码不手写
+`getIt.register*`；`IRemoteSyncBackend` 的运行时切换不进容器、走 `RemoteSyncRegistry`——
+容器只管生命周期内不变的接线。
+
+> **injectable 不从 `moodiary_di` barrel 导出**（问过一次）：生成物头部是生成器写死的
+> `import 'package:injectable/...'`，各包的 pubspec 声明躲不掉，barrel 只能藏一行手写
+> import；generator 是 dev dep 本就每包一份。moodiary_di 只 own 运行时的 get_it 实例，
+> 注解是构建期契约——与 freezed/riverpod 注解各包自留同一处理。
 
 ### mui —— material 的补充，不是替代
 

@@ -63,7 +63,7 @@ class _RemoteSection extends ConsumerStatefulWidget {
 class _RemoteSectionState extends ConsumerState<_RemoteSection> {
   Future<void> _switchProvider(SyncProviderType type) async {
     SyncProviderType.setCurrent(type);
-    await registerRemoteSync();
+    await RemoteSyncRegistry.get().reload();
     if (mounted) setState(() {});
   }
 

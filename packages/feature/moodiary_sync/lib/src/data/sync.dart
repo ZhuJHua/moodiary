@@ -1,13 +1,13 @@
 import 'dart:typed_data';
 
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
+import 'package:moodiary_sync/src/data/sync_registry.dart';
 
 /// 同步 / 备份后端的统一抽象。
 ///
 /// - [SyncBackend]：基础接口（push/pull/显示名/就绪），可用于本地 JSON 文件等非远端实现。
 /// - [IRemoteSyncBackend]：云端标记接口，额外提供低层对象原语供引擎做增量同步。
-///   get_it 中**同时只注册一个**，由当前 [SyncProviderType] 决定。
+///   [RemoteSyncRegistry] 中**同时只持有一个**，由当前 [SyncProviderType] 决定。
 abstract class SyncBackend {
   String get displayName;
 
@@ -20,7 +20,7 @@ abstract class SyncBackend {
 }
 
 abstract class IRemoteSyncBackend implements SyncBackend {
-  factory IRemoteSyncBackend.get() => getIt<IRemoteSyncBackend>();
+  factory IRemoteSyncBackend.get() => RemoteSyncRegistry.get().backend;
 
   /// 与 KV `syncProvider` 对齐的 provider 类型。
   SyncProviderType get type;

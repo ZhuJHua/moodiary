@@ -74,6 +74,7 @@ class VersionMigrator {
     }
 
     if (below('2.7.3')) {
+      // scanDiskFonts 经 FontReader 打 Rust——宿主在启动第一行就 await 了桥就绪。
       MoodiaryKVs.customFont.set('');
       final allFont = await FontRepository.get().scanDiskFonts();
       await compute(_mergeToV2_7_3, {

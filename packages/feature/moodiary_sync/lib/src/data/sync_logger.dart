@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:injectable/injectable.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
@@ -9,7 +10,8 @@ import 'package:path/path.dart' as p;
 
 /// 同步引擎事件日志接收器：① 广播流（[events]）；② 内存 ring buffer（UI 进入
 /// Dashboard 即见最近事件）；③ 按天 jsonl 文件，超 [_retentionDays] 天自动清理。
-/// 单例，启动时注入 get_it。
+/// 单例，启动时由 DI 预解析（[create] 是 preResolve 工厂）。
+@singleton
 class SyncLogger {
   SyncLogger._();
 
@@ -38,6 +40,7 @@ class SyncLogger {
   /// 广播流，每个监听者从订阅之后的事件开始收。
   Stream<SyncEvent> get events => _controller.stream;
 
+  @FactoryMethod(preResolve: true)
   static Future<SyncLogger> create() async {
     final logger = SyncLogger._();
     await logger._init();
