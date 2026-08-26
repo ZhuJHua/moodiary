@@ -1,4 +1,4 @@
-import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_assistant/src/data/agent_preset_repository.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 
 import 'assistant_defs.dart';

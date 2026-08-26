@@ -2,7 +2,7 @@ import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
 import 'package:moodiary_assistant/src/application/chat_items.dart';
-import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_assistant/src/data/chat_repository.dart';
 
 /// 聊天列表的内存真源。取代了实现 flutter_chat_core `ChatController` 的
 /// `IsarChatController`（连同它那条 `ChatOperation` 广播流）。
