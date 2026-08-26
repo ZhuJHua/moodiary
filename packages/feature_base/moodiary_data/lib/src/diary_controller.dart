@@ -107,9 +107,7 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
   /// 软删除：移入回收站（`show = false`）。仅写库，各视图经事件流自动同步。
   Future<bool> softDeleteDiary(Diary diary) async {
     try {
-      final next = diary.copyWith(show: false, lastModified: .timestamp());
-      // 只动 show：索引只看内容/标题（show 过滤在查询期），免掉整篇重分词。
-      await _repository.updateADiary(newDiary: next, index: .skip);
+      await _repository.setVisibility(diary, show: false);
       return true;
     } catch (_) {
       return false;
@@ -159,9 +157,7 @@ class RecycleBinDiaries extends _$RecycleBinDiaries {
   /// 还原为 `show = true`。仅写库，回收站与目标分类列表经事件流自动同步。
   Future<bool> restore(Diary diary) async {
     try {
-      final next = diary.copyWith(show: true, lastModified: .timestamp());
-      // 只动 show：同 softDeleteDiary，索引不变。
-      await _repository.updateADiary(newDiary: next, index: .skip);
+      await _repository.setVisibility(diary, show: true);
       return true;
     } catch (_) {
       return false;

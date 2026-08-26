@@ -190,13 +190,7 @@ class EditController extends _$EditController {
   Future<DraftSaveResult> _doAutoSave() async {
     final current = _latest;
     if (current == null) return .saved;
-    final media = DiaryContent.of(current).media;
-    final next = current.copyWith(
-      lastModified: .timestamp(),
-      imageName: media.images,
-      videoName: media.videos,
-      audioName: media.audios,
-    );
+    final next = touched(withDerivedMedia(current));
     // 新建且空白：从没写过则不创建；写了又清空则硬删丢弃。既有日记清空不走此路。
     if (_wasNewDraft && _isBlank(next)) {
       try {

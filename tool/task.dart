@@ -231,7 +231,22 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
   },
   'check-layers': (_) => _checkLayers(),
   'deps': (rest) => _run('fvm', ['dart', 'tool/dep_graph.dart', ...rest]),
-  'test': (rest) => _flutter(['test', ...rest]),
+  // 全仓测试（CI 口径，与 quality.yml 的 Test 步骤逐字一致——CI 无 fvm 前缀，
+  // 本地 melos 由 fvm dart 启动、PATH 已是 FVM 的 flutter，别再套一层以免分叉）。
+  // 真库集成测试（倒排索引 / 迁移）要 ISAR_TEST_DYLIB，见 diary_index_test 文件头。
+  'test': (rest) => _run('melos', [
+    'exec',
+    '--dir-exists=test',
+    '--fail-fast',
+    '-c',
+    '1',
+    '--',
+    'flutter',
+    'test',
+    ...rest,
+  ]),
+  // 只跑 mobile/ 的测试（旧 `test` 的行为）。
+  'test-mobile': (rest) => _flutter(['test', ...rest]),
   // build_runner 2.16.0 移除了 --delete-conflicting-outputs（默认行为已内建）。
   // 必须全仓扫：生成物散在各包（injectable 的 *.module.dart、freezed/riverpod 的
   // *.g.dart），只跑 mobile 会让包侧注解改动静默不生效——旧生成物照样编译，

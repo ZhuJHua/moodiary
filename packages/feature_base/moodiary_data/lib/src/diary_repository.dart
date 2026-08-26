@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:flutter/foundation.dart' show listEquals, visibleForTesting;
 import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -415,8 +415,11 @@ class DiaryRepository {
 
   /// [fromSync] = 该写入由活跃云后端的 pull 落库（远端已持有），事件携带此标记
   /// 供 AutoSyncWatcher 免除回声推送；归档导入 / 局域网接收传 false。
-  Future<void> insertADiary(Diary diary, {bool fromSync = false}) =>
-      insertDiaries([diary], fromSync: fromSync);
+  Future<void> insertADiary(
+    Diary diary, {
+    bool fromSync = false,
+    IndexMode index = .inline,
+  }) => insertDiaries([diary], fromSync: fromSync, index: index);
 
   /// 批量插入（云 pull / JSON 导入等本地批处理入口）。posting 变更整批聚合、单事务
   /// 落库：高频词的 posting 行每批只重写一次，而逐篇 insert 会让该行随已插入篇数
@@ -424,12 +427,18 @@ class DiaryRepository {
   Future<void> insertDiaries(
     List<Diary> diaries, {
     bool fromSync = false,
+    IndexMode index = .inline,
   }) async {
     if (diaries.isEmpty) return;
+    // defer：同事务写行 + 入队，分词推迟给调用方按量出账（drainReindexQueue /
+    // rebuildAllIndexes）——云 pull 逐条落库时 inline 会让高频词 posting 行随
+    // 已插入篇数线性变长地反复整行重写（O(N²)）。崩溃自愈同 updateADiary。
     final entries = <_IndexEntry>[];
-    for (var start = 0; start < diaries.length; start += _tokenizeChunk) {
-      final end = min(start + _tokenizeChunk, diaries.length);
-      entries.addAll(await _buildEntries(diaries.sublist(start, end)));
+    if (index == .inline) {
+      for (var start = 0; start < diaries.length; start += _tokenizeChunk) {
+        final end = min(start + _tokenizeChunk, diaries.length);
+        entries.addAll(await _buildEntries(diaries.sublist(start, end)));
+      }
     }
     // 复活闸门：同 id 的同步墓碑连带清除，历史推送记录不会误判下一次删除。
     final tombstoneIds = [
@@ -437,7 +446,17 @@ class DiaryRepository {
     ];
     await _isar.writeAsync((isar) {
       isar.diarys.putAll(diaries);
-      _applyIndexesBatch(isar, entries);
+      switch (index) {
+        case .inline:
+          _applyIndexesBatch(isar, entries);
+        case .defer:
+          isar.reindexQueues.putAll([
+            for (final diary in diaries)
+              ReindexQueue(diaryIsarId: diary.isarId),
+          ]);
+        case .skip:
+          break;
+      }
       isar.syncTombstones.deleteAll(tombstoneIds);
     });
     for (final diary in diaries) {
@@ -452,6 +471,16 @@ class DiaryRepository {
     IndexMode index = .inline,
     bool fromSync = false,
   }) async {
+    // 派生一致性闸门（debug 期抓第四个写入方）：媒体三列必须等于正文引用——
+    // 改了 content 的写入方要过 withDerivedMedia（diary_derive.dart）。
+    // contentText 不在此断言内：编辑器的纯文本由 webview 侧提取，与
+    // DiaryContent 的序列化在空白字符上不保证逐字节一致。
+    assert(() {
+      final derived = DiaryContent.of(newDiary).media;
+      return listEquals(newDiary.imageName, derived.images) &&
+          listEquals(newDiary.videoName, derived.videos) &&
+          listEquals(newDiary.audioName, derived.audios);
+    }(), '媒体三列与正文引用不一致：写入方漏了 withDerivedMedia（见 diary_derive.dart）');
     if (index != .inline) {
       // 编辑期：只写日记行（defer 时一并入队），分词/倒排推迟到关闭/启动排空；skip 连
       // 入队都免（内容未变，索引仍有效）。同一次 writeAsync 落盘，少一次提交。
@@ -584,15 +613,17 @@ class DiaryRepository {
     return await _isar.diarys.getAsync(fastHash(id));
   }
 
+  /// [visibleOnly]=true 只取可见（默认，不含回收站）；false 只取回收站。
+  /// 旧参数名 `all` 的两个取值都不是「全部」，是给下一个人挖的坑，已改名。
   Future<List<Diary>> getDiariesByDateRange(
     DateTime start,
     DateTime end, {
-    bool all = true,
+    bool visibleOnly = true,
   }) async {
     return await _isar.diarys
         .where()
         .timeBetween(start, end)
-        .showEqualTo(all)
+        .showEqualTo(visibleOnly)
         .findAllAsync();
   }
 
@@ -629,8 +660,28 @@ class DiaryRepository {
         .findAllAsync();
   }
 
+  /// 地图用：只取带定位的可见日记（时间倒序）。扫描不可免（读不走索引），但过滤
+  /// 在查询层完成——不为无定位的大多数篇物化整个对象再丢弃。
+  Future<List<Diary>> getDiariesWithPosition() async {
+    return _isar.diarys
+        .where()
+        .showEqualTo(true)
+        .positionIsNotEmpty()
+        .sortByTimeDesc()
+        .findAllAsync();
+  }
+
+  /// 软删 / 还原：只翻 show 并 bump lastModified（用户操作，LWW 需要赢）；
+  /// 索引 skip——它只看内容/标题，show 过滤在查询期。软删语义此前在
+  /// 首页/回收站/助手三处各抄一遍 copyWith。
+  Future<void> setVisibility(Diary diary, {required bool show}) => updateADiary(
+    newDiary: diary.copyWith(show: show, lastModified: .timestamp()),
+    index: .skip,
+  );
+
   /// 永久删除：行硬删 + 写同步墓碑（[SyncTombstone] 表，携带删除时刻做 LWW），
   /// 清倒排索引与本地媒体。删除事实由墓碑行向同步边界传播。
+  /// 事件带业务 id（经 [_tombstoneAndDelete]），watcher 据此清脏标记。
   Future<bool> deleteADiary(int isarId) async {
     final diary = await _isar.diarys.getAsync(isarId);
     if (diary == null) return false;
@@ -658,7 +709,7 @@ class DiaryRepository {
       _clearIndexes(isar, isarId);
       isar.syncTombstones.put(tombstone);
     });
-    _events.add(DiaryDeleted(isarId, fromSync: fromSync));
+    _events.add(DiaryDeleted(isarId, id: diary.id, fromSync: fromSync));
     return tombstone;
   }
 

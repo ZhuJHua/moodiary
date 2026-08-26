@@ -18,7 +18,16 @@ abstract interface class SyncDiaryStore {
 
   /// 落库并连带清除同 id 的墓碑行（复活闸门）。[fromSync] = 来源为活跃云后端
   /// 的 pull（远端已持有），领域事件携带此标记以免除回声推送。
-  Future<void> insertADiary(Diary diary, {bool fromSync = false});
+  /// [deferIndex] = 只入重索引队列不当场分词（批量 pull 用，见 [settleIndexes]）。
+  Future<void> insertADiary(
+    Diary diary, {
+    bool fromSync = false,
+    bool deferIndex = false,
+  });
+
+  /// 把 defer 出的重索引账结清：[changed] 超过阈值走全量重建（O(N) 分块聚合），
+  /// 否则排空队列。幂等；崩溃后启动维护也会兜底排空。
+  Future<void> settleIndexes(int changed);
 
   /// pull 应用远端墓碑：行硬删 + 写墓碑（媒体由引擎媒体端口清理），返回墓碑行。
   Future<SyncTombstone> tombstoneDiary(Diary diary, {bool fromSync = false});
@@ -85,8 +94,28 @@ class RepoSyncDiaryStore implements SyncDiaryStore {
       _repo.getDiaryByBusinessId(id);
 
   @override
-  Future<void> insertADiary(Diary diary, {bool fromSync = false}) =>
-      _repo.insertADiary(diary, fromSync: fromSync);
+  Future<void> insertADiary(
+    Diary diary, {
+    bool fromSync = false,
+    bool deferIndex = false,
+  }) => _repo.insertADiary(
+    diary,
+    fromSync: fromSync,
+    index: deferIndex ? .defer : .inline,
+  );
+
+  /// 阈值取 200：以内排空队列（每篇一次分词+一次事务），以上整库重建更划算。
+  static const int _rebuildThreshold = 200;
+
+  @override
+  Future<void> settleIndexes(int changed) async {
+    if (changed <= 0) return;
+    if (changed > _rebuildThreshold) {
+      await _repo.rebuildAllIndexes();
+    } else {
+      await _repo.drainReindexQueue();
+    }
+  }
 
   @override
   Future<SyncTombstone> tombstoneDiary(Diary diary, {bool fromSync = false}) =>

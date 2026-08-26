@@ -91,8 +91,14 @@ class PickedScope extends ExportScope {
 
   @override
   Future<List<Diary>> resolve() async {
-    final all = await DiaryRepository.get().getAllDiaries();
-    return _visibleSorted(all.where((d) => diaryIds.contains(d.id)).toList());
+    // 主键 get O(1)：勾了几篇取几篇，不整库物化后再过滤。
+    final repo = DiaryRepository.get();
+    final picked = <Diary>[];
+    for (final id in diaryIds) {
+      final d = await repo.getDiaryByBusinessId(id);
+      if (d != null) picked.add(d);
+    }
+    return _visibleSorted(picked);
   }
 
   @override

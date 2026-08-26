@@ -10,7 +10,6 @@ import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 import 'package:moodiary_diary/src/presentation/widget/timeline_tile.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 /// 时间线视图：左侧一条真正的轴——圆点与线段都取心情色，滑动即读一段情绪走向。
@@ -21,7 +20,11 @@ import 'package:moodiary_utils/moodiary_utils.dart';
 class DiaryTimelineView extends ConsumerWidget {
   final DiaryFilter filter;
 
-  const DiaryTimelineView({super.key, this.filter = const .all()});
+  /// 排序是显式参数而非命令式读全局 KV——本 widget 是包的公开 API，正确性
+  /// 不能挂在「宿主会在 sort 变化时换 key 重建」这种写不进类型的契约上。
+  final DiarySort sort;
+
+  const DiaryTimelineView({super.key, this.filter = const .all(), this.sort = .timeDesc});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -47,7 +50,6 @@ class DiaryTimelineView extends ConsumerWidget {
             if (diaries.isEmpty) {
               body = Center(child: Text(context.l10n.diary.tabViewEmpty));
             } else {
-              final sort = DiarySort.getType(MoodiaryKVs.homeSortMode.get()!);
               // 篇数走独立聚合查询：列表分页加载，从中数只能数出「加载到哪儿了」。
               final monthCounts = ref
                   .watch(

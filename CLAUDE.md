@@ -32,13 +32,13 @@ dart tool/task.dart editor         # rebuild editor asset only (needs corepack o
 
 # Lint & Test
 dart tool/task.dart analyze        # layer check + flutter analyze
-dart tool/task.dart test           # mobile/ tests ONLY — not the full suite
-melos exec --dir-exists=test --fail-fast -c 1 -- flutter test   # 全仓 Dart 测试（CI 口径，自动发现）
+dart tool/task.dart test           # 全仓 Dart 测试（CI 口径；真库用例要 ISAR_TEST_DYLIB）
+dart tool/task.dart test-mobile    # 只跑 mobile/ 的测试
 cd packages/foundation/moodiary_rust/rust && cargo test --workspace && cargo clippy --workspace --all-targets -- -D warnings
 cd packages/feature/moodiary_editor/editor && corepack pnpm type-check && corepack pnpm test
 ```
 
-Full-repo verification = the four blocks above (analyze + layers, melos test sweep, Rust, editor). `flutter test` at the repo root finds nothing.
+Full-repo verification = the four blocks above (analyze + layers, `task.dart test`, Rust, editor). `flutter test` at the repo root finds nothing.
 
 **Melos**: `melos bootstrap` activates the workspace and regenerates IDE module files — pure, no codegen; run `dart tool/task.dart gen` separately. `melos list` / `melos run <script> --category <layer>` filter by layer.
 

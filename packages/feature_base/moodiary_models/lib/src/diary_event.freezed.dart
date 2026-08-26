@@ -154,12 +154,12 @@ return deleted(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( Diary diary,  bool fromSync)?  created,TResult Function( Diary diary,  bool fromSync)?  updated,TResult Function( int isarId,  bool fromSync)?  deleted,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( Diary diary,  bool fromSync)?  created,TResult Function( Diary diary,  bool fromSync)?  updated,TResult Function( int isarId,  String? id,  bool fromSync)?  deleted,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case DiaryCreated() when created != null:
 return created(_that.diary,_that.fromSync);case DiaryUpdated() when updated != null:
 return updated(_that.diary,_that.fromSync);case DiaryDeleted() when deleted != null:
-return deleted(_that.isarId,_that.fromSync);case _:
+return deleted(_that.isarId,_that.id,_that.fromSync);case _:
   return orElse();
 
 }
@@ -177,12 +177,12 @@ return deleted(_that.isarId,_that.fromSync);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( Diary diary,  bool fromSync)  created,required TResult Function( Diary diary,  bool fromSync)  updated,required TResult Function( int isarId,  bool fromSync)  deleted,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( Diary diary,  bool fromSync)  created,required TResult Function( Diary diary,  bool fromSync)  updated,required TResult Function( int isarId,  String? id,  bool fromSync)  deleted,}) {final _that = this;
 switch (_that) {
 case DiaryCreated():
 return created(_that.diary,_that.fromSync);case DiaryUpdated():
 return updated(_that.diary,_that.fromSync);case DiaryDeleted():
-return deleted(_that.isarId,_that.fromSync);}
+return deleted(_that.isarId,_that.id,_that.fromSync);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -196,12 +196,12 @@ return deleted(_that.isarId,_that.fromSync);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( Diary diary,  bool fromSync)?  created,TResult? Function( Diary diary,  bool fromSync)?  updated,TResult? Function( int isarId,  bool fromSync)?  deleted,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( Diary diary,  bool fromSync)?  created,TResult? Function( Diary diary,  bool fromSync)?  updated,TResult? Function( int isarId,  String? id,  bool fromSync)?  deleted,}) {final _that = this;
 switch (_that) {
 case DiaryCreated() when created != null:
 return created(_that.diary,_that.fromSync);case DiaryUpdated() when updated != null:
 return updated(_that.diary,_that.fromSync);case DiaryDeleted() when deleted != null:
-return deleted(_that.isarId,_that.fromSync);case _:
+return deleted(_that.isarId,_that.id,_that.fromSync);case _:
   return null;
 
 }
@@ -367,10 +367,11 @@ $DiaryCopyWith<$Res> get diary {
 
 
 class DiaryDeleted implements DiaryEvent {
-  const DiaryDeleted(this.isarId, {this.fromSync = false});
+  const DiaryDeleted(this.isarId, {this.id, this.fromSync = false});
   
 
  final  int isarId;
+ final  String? id;
 @override@JsonKey() final  bool fromSync;
 
 /// Create a copy of DiaryEvent
@@ -383,16 +384,16 @@ $DiaryDeletedCopyWith<DiaryDeleted> get copyWith => _$DiaryDeletedCopyWithImpl<D
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiaryDeleted&&(identical(other.isarId, isarId) || other.isarId == isarId)&&(identical(other.fromSync, fromSync) || other.fromSync == fromSync));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiaryDeleted&&(identical(other.isarId, isarId) || other.isarId == isarId)&&(identical(other.id, id) || other.id == id)&&(identical(other.fromSync, fromSync) || other.fromSync == fromSync));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,isarId,fromSync);
+int get hashCode => Object.hash(runtimeType,isarId,id,fromSync);
 
 @override
 String toString() {
-  return 'DiaryEvent.deleted(isarId: $isarId, fromSync: $fromSync)';
+  return 'DiaryEvent.deleted(isarId: $isarId, id: $id, fromSync: $fromSync)';
 }
 
 
@@ -403,7 +404,7 @@ abstract mixin class $DiaryDeletedCopyWith<$Res> implements $DiaryEventCopyWith<
   factory $DiaryDeletedCopyWith(DiaryDeleted value, $Res Function(DiaryDeleted) _then) = _$DiaryDeletedCopyWithImpl;
 @override @useResult
 $Res call({
- int isarId, bool fromSync
+ int isarId, String? id, bool fromSync
 });
 
 
@@ -420,10 +421,11 @@ class _$DiaryDeletedCopyWithImpl<$Res>
 
 /// Create a copy of DiaryEvent
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? isarId = null,Object? fromSync = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? isarId = null,Object? id = freezed,Object? fromSync = null,}) {
   return _then(DiaryDeleted(
 null == isarId ? _self.isarId : isarId // ignore: cast_nullable_to_non_nullable
-as int,fromSync: null == fromSync ? _self.fromSync : fromSync // ignore: cast_nullable_to_non_nullable
+as int,id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String?,fromSync: null == fromSync ? _self.fromSync : fromSync // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

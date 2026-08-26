@@ -11,7 +11,6 @@ import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 import 'package:moodiary_diary/src/presentation/widget/feed_tile.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_storage/moodiary_storage.dart';
 
 /// 信息流视图：没有左栏、没有卡片，单图不占整行。
 ///
@@ -21,7 +20,11 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 class DiaryFeedView extends ConsumerWidget {
   final DiaryFilter filter;
 
-  const DiaryFeedView({super.key, this.filter = const .all()});
+  /// 排序是显式参数而非命令式读全局 KV——本 widget 是包的公开 API，正确性
+  /// 不能挂在「宿主会在 sort 变化时换 key 重建」这种写不进类型的契约上。
+  final DiarySort sort;
+
+  const DiaryFeedView({super.key, this.filter = const .all(), this.sort = .timeDesc});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -48,7 +51,6 @@ class DiaryFeedView extends ConsumerWidget {
               body = Center(child: Text(context.l10n.diary.tabViewEmpty));
             } else {
               final selNotifier = ref.read(diarySelectionProvider.notifier);
-              final sort = DiarySort.getType(MoodiaryKVs.homeSortMode.get()!);
               body = MRefresh(
                 onLoadMore: () => ref.read(provider.notifier).loadMore(),
                 onRefresh: () => ref.read(provider.notifier).refresh(),

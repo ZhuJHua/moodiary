@@ -32,13 +32,15 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
           valueListenable: MoodiaryKVs.homeSortMode.getNotifier(),
           builder: (context, sortMode, _) {
             final viewModeType = ViewModeType.getType(viewMode);
+            final sort = DiarySort.getType(sortMode);
+            // sort 是视图的显式参数（参数变了自然重建），key 只负责视图/筛选切换动画。
             return AnimatedSwitcher(
               duration: Durations.short3,
               child: KeyedSubtree(
-                key: ValueKey('$viewMode-$sortMode-$filter'),
+                key: ValueKey('$viewMode-$filter'),
                 child: switch (viewModeType) {
-                  .timeline => DiaryTimelineView(filter: filter),
-                  .feed => DiaryFeedView(filter: filter),
+                  .timeline => DiaryTimelineView(filter: filter, sort: sort),
+                  .feed => DiaryFeedView(filter: filter, sort: sort),
                 },
               ),
             );

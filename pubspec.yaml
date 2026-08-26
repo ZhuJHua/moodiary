@@ -25,7 +25,10 @@ melos:
       description: 分层检查 + flutter analyze
     test:
       run: fvm dart tool/task.dart test
-      description: 运行全部测试
+      description: 全仓测试（CI 口径，melos 扫所有含 test 的包）
+    test-mobile:
+      run: fvm dart tool/task.dart test-mobile
+      description: 只跑 mobile/ 的测试
     gen:
       run: fvm dart tool/task.dart gen
       description: 重新生成 Rust 绑定 + 编辑器资源

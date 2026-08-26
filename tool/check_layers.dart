@@ -469,7 +469,6 @@ List<String> _checkThemeDataConstruction() {
   return out;
 }
 
-
 /// 仅移动端的插件（无 windows/linux 实现，或语义本身是移动端形态）：不许出现在
 /// foundation / core / feature_base 三层共享包的 pubspec 里——那会把未来的
 /// desktop 钉死在移动端。判定用手维护常量表而非扫 pub 缓存的 plugin.platforms

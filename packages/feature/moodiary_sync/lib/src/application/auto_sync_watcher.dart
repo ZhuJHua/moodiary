@@ -79,8 +79,10 @@ class AutoSyncWatcher {
           // 打开中的日记不触发同步（编辑期不上传半成品）。这是廉价前置闸门；权威跳过
           // 在引擎 push 快照里（poll / syncAll 绕过本闸门）。
           if (!OpenDiaryRegistry.instance.contains(diary.id)) _onLocalChange();
-        case DiaryDeleted():
-          // 只带 isarId、无业务 id：放行触发同步（永久删除的墓碑应尽快推送）。
+        case DiaryDeleted(:final id):
+          // 行已不在：脏标记里这条 id 不再有对应卡片，顺手清掉（进程内 Set，
+          // 不清也只是残留到重启）；随后放行触发同步——永久删除的墓碑应尽快推送。
+          if (id != null) SyncDirtyTracker.instance.clearDirty(id);
           _onLocalChange();
       }
     });

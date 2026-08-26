@@ -15,12 +15,15 @@ part 'map_page.g.dart';
 /// 钥匙串调用。分开 watch 会让底图先按「无 tk」建成 OSM 单层、再重建成天地图双层。
 @riverpod
 Future<({List<Diary> diaries, String tiandituKey})> mapData(Ref ref) async {
-  final all = await DiaryRepository.get().getAllDiariesSorted();
+  final withPosition = await ref
+      .watch(diaryRepositoryProvider)
+      .getDiariesWithPosition();
   final key = await ref.watch(
     secretKvProvider(MoodiarySecureKVs.tiandituKey).future,
   );
   return (
-    diaries: all.where((d) => d.position.length >= 2).toList(),
+    // 查询层只保证非空；成对经纬度（>=2）这半个校验留在这。
+    diaries: withPosition.where((d) => d.position.length >= 2).toList(),
     tiandituKey: key ?? '',
   );
 }

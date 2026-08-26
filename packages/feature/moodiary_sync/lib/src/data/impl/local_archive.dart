@@ -418,5 +418,4 @@ class LocalArchiveBackend implements RemoteObjectStore {
     if (!await file.exists()) return null;
     return (await file.lastModified()).toUtc().toIso8601String();
   }
-
 }

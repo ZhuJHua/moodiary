@@ -998,12 +998,7 @@ abstract final class AssistantToolRegistry {
         type: converted.type.value,
       );
       // 内容变更必须重算媒体引用列表，否则媒体库出现幻影条目、废弃媒体永不回收。
-      final media = DiaryContent.of(updated).media;
-      updated = updated.copyWith(
-        imageName: media.images,
-        videoName: media.videos,
-        audioName: media.audios,
-      );
+      updated = withDerivedMedia(updated);
     }
     final mood = _parseMood(input['mood']);
     if (mood != null) updated = updated.copyWith(mood: mood);
@@ -1020,7 +1015,7 @@ abstract final class AssistantToolRegistry {
         updated = updated.copyWith(categoryId: resolved);
       }
     }
-    updated = updated.copyWith(lastModified: .timestamp());
+    updated = touched(updated);
 
     // 倒排只吃标题/正文：仅改 mood/分类时跳过重索引。
     await repo.updateADiary(
@@ -1051,11 +1046,7 @@ abstract final class AssistantToolRegistry {
       return '"$title" (id=$id) is already in the recycle bin.';
     }
     // 软删=移入回收站(show=false)；勿用 deleteADiary(那是永久删除+删媒体)。
-    // 只动 show：索引只看内容/标题，跳过重索引。
-    await repo.updateADiary(
-      newDiary: existing.copyWith(show: false, lastModified: .timestamp()),
-      index: .skip,
-    );
+    await repo.setVisibility(existing, show: false);
     return 'Moved "$title" (id=$id) to the recycle bin.';
   }
 
