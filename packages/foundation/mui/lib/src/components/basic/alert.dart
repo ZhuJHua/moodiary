@@ -260,15 +260,13 @@ class _MAlertRoute<T> extends PopupRoute<T> {
     Animation<double> secondaryAnimation,
     Widget child,
   ) {
-    final curved = CurvedAnimation(
-      parent: animation,
-      curve: Curves.easeOutCubic,
-      reverseCurve: Curves.easeInCubic,
-    );
+    final curve = animation.status == AnimationStatus.reverse
+        ? Curves.easeInCubic
+        : Curves.easeOutCubic;
     return AnimatedBuilder(
-      animation: curved,
+      animation: animation,
       builder: (context, inner) {
-        final t = curved.value.clamp(0.0, 1.0);
+        final t = curve.transform(animation.value.clamp(0.0, 1.0));
         return Opacity(
           opacity: t,
           child: Transform.scale(scale: 0.92 + 0.08 * t, child: inner),

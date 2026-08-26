@@ -1,5 +1,5 @@
 // 分层依赖检查：只能上层依赖下层，同层不互相依赖。另外三段无 baseline 的主题闸门
-// （ThemeData 只在 mui 的 build.dart 里构造 / mui 零 cupertino / 业务代码零色板外颜色）
+// （ThemeData 只在 mui 的 build.dart 里构造 / 业务代码零色板外颜色）
 // 也挂在这里跑。依赖检查本身分三段——
 //   1) 包级：各 pubspec 的 moodiary_*/mui 依赖（foundation → core → feature_base → feature → apps）。
 //      pub 只保证依赖图无环、不保证方向，这段补上方向约束。无 baseline，必须零违规。

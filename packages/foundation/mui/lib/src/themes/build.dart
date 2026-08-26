@@ -1,9 +1,12 @@
+import 'package:cupertino_ui/cupertino_ui.dart'
+    show CupertinoPageTransitionsBuilder;
 import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mui/src/themes/color_scheme.dart';
 import 'package:mui/src/themes/mui_tokens.dart';
+import 'package:mui/src/themes/page_transitions.dart';
 import 'package:mui/src/themes/tokens.dart';
 import 'package:mui/src/themes/typography.dart';
 
@@ -81,6 +84,12 @@ ThemeData buildMuiTheme({
     states: states,
   );
 
+  final pageTransitions = MuiPageTransitionsBuilder(
+    motion: motion,
+    scrim: cs.scrim,
+    radius: radii.md,
+  );
+
   final smRadius = BorderRadius.circular(radii.sm);
   final mdRadius = BorderRadius.circular(radii.md);
   final lgRadius = BorderRadius.circular(radii.lg);
@@ -109,6 +118,14 @@ ThemeData buildMuiTheme({
     materialTapTargetSize: MaterialTapTargetSize.padded,
     actionIconTheme: _actionIconTheme,
     extensions: [tokens],
+
+    pageTransitionsTheme: PageTransitionsTheme(
+      builders: {
+        TargetPlatform.android: pageTransitions,
+        TargetPlatform.iOS: const CupertinoPageTransitionsBuilder(),
+        TargetPlatform.macOS: const CupertinoPageTransitionsBuilder(),
+      },
+    ),
 
     // ── 色板漏点 ────────────────────────────────────────────────────
     // 下面这几个字段的 SDK 缺省值**完全绕开 colorScheme**：
