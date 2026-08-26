@@ -211,15 +211,13 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
     String? title,
     Duration? duration,
   }) async {
-    await MediaInfoRepository.get()
-        .insertAMediaInfo(
-          MediaInfo.create(
-            fileName: fileName,
-            name: title,
-            durationMs: duration?.inMilliseconds,
-          ),
-        )
-        .run();
+    await MediaInfoRepository.get().insertAMediaInfo(
+      MediaInfo.create(
+        fileName: fileName,
+        name: title,
+        durationMs: duration?.inMilliseconds,
+      ),
+    );
   }
 
   /// 点击正文图片 → 原生全屏画廊（翻页 / 缩放 / 下拉关闭 / 保存 / 信息）。

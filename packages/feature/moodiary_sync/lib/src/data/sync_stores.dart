@@ -97,10 +97,8 @@ class RepoSyncCategoryStore implements SyncCategoryStore {
   final CategoryRepository _repo = .get();
 
   @override
-  Future<List<Category>> getAllCategoriesForSync() async {
-    final result = await _repo.getAllCategoriesForSync().run();
-    return result.getOrElse((_) => const <Category>[]);
-  }
+  Future<List<Category>> getAllCategoriesForSync() =>
+      _repo.getAllCategories();
 
   @override
   Future<Category?> getCategoryById(String id) => _repo.getCategoryById(id);
@@ -110,10 +108,8 @@ class RepoSyncCategoryStore implements SyncCategoryStore {
     Category category, {
     bool fromSync = false,
   }) async {
-    final result = await _repo
-        .insertACategory(category, fromSync: fromSync)
-        .run();
-    return result.isRight();
+    await _repo.insertACategory(category, fromSync: fromSync);
+    return true;
   }
 
   @override
@@ -125,10 +121,8 @@ class RepoSyncMediaInfoStore implements SyncMediaInfoStore {
   final MediaInfoRepository _repo = .get();
 
   @override
-  Future<List<MediaInfo>> getAllMediaInfosForSync() async {
-    final result = await _repo.getAllMediaInfosForSync().run();
-    return result.getOrElse((_) => const <MediaInfo>[]);
-  }
+  Future<List<MediaInfo>> getAllMediaInfosForSync() =>
+      _repo.getAllMediaInfos();
 
   @override
   Future<MediaInfo?> getMediaInfoByFileName(String fileName) =>
@@ -139,10 +133,8 @@ class RepoSyncMediaInfoStore implements SyncMediaInfoStore {
     MediaInfo mediaInfo, {
     bool fromSync = false,
   }) async {
-    final result = await _repo
-        .insertAMediaInfo(mediaInfo, fromSync: fromSync)
-        .run();
-    return result.isRight();
+    await _repo.insertAMediaInfo(mediaInfo, fromSync: fromSync);
+    return true;
   }
 
   @override

@@ -35,7 +35,6 @@ dependencies:
   bonsoir: 7.1.5
   path: 1.9.1
   pool: 1.5.2
-  share_plus: 13.3.0
   synchronized: 3.4.1+2
 
 dev_dependencies:

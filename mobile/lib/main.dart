@@ -143,10 +143,10 @@ Future<void> _platFormOption() async {
 /// 全仓 provider 的重试策略。riverpod 3 的默认策略会对非 Error 异常指数退避重试
 /// 10 次（约 38 秒），期间 UI 停在 loading——本仓 provider 的失败源几乎全是本地
 /// 库 / 钥匙串，重试不会让它们变好，只是把报错拖成半分钟的空白。收紧为：最多
-/// 2 次（300/600ms），Error 与 DatabaseException 不重试。
+/// 2 次（300/600ms），Error 不重试（Isar 的 IsarError 是 Error 子类，天然豁免）。
 Duration? _providerRetry(int retryCount, Object error) {
   if (retryCount >= 2) return null;
-  if (error is Error || error is DatabaseException) return null;
+  if (error is Error) return null;
   return Duration(milliseconds: 300 * (retryCount + 1));
 }
 

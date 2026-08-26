@@ -31,7 +31,3 @@ dev_dependencies:
   moodiary_lint: 0.0.1
   build_runner: 2.16.0
   injectable_generator: 3.1.3
-  moodiary_files: any
-  moodiary_http: any
-  moodiary_theme: any
-  moodiary_utils: any

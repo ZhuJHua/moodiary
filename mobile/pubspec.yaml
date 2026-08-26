@@ -55,11 +55,9 @@ dependencies:
   url_launcher: 6.3.2
 
   intl: 0.20.3
-  fpdart: 1.2.0
 
   cupertino_icons: 1.0.9
 
-  isar_plus: any
 dev_dependencies:
   flutter_test:
     sdk: flutter

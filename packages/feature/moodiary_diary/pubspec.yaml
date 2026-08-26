@@ -13,7 +13,6 @@ dependencies:
   flutter:
     sdk: flutter
 
-  moodiary_di: 0.0.1
   moodiary_files: 0.0.1
   moodiary_logging: 0.0.1
   moodiary_platform: 0.0.1
@@ -39,6 +38,7 @@ dependencies:
   substring_highlight: 1.0.33
 
 dev_dependencies:
+  moodiary_di: 0.0.1
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1

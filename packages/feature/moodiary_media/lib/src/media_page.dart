@@ -332,18 +332,16 @@ Future<void> _backfillMediaInfo(String name) async {
   if (duration == null) return;
   final existing = await MediaInfoRepository.get().getMediaInfoByFileName(name);
   if (existing?.durationMs != null) return;
-  await MediaInfoRepository.get()
-      .insertAMediaInfo(
-        MediaInfo(
-          fileName: name,
-          name: existing?.name,
-          durationMs: duration.inMilliseconds,
-          lastModified:
-              existing?.lastModified ??
-              DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
-        ),
-      )
-      .run();
+  await MediaInfoRepository.get().insertAMediaInfo(
+    MediaInfo(
+      fileName: name,
+      name: existing?.name,
+      durationMs: duration.inMilliseconds,
+      lastModified:
+          existing?.lastModified ??
+          DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+    ),
+  );
 }
 
 /// 音频导航卡片：图标 + 名称 + 时长 + 箭头，点击进全屏播放页，长按重命名。

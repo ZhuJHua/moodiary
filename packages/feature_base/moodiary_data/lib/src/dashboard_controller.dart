@@ -42,12 +42,7 @@ class DashboardController extends _$DashboardController {
 
   Future<DashboardStats> _compute() async {
     final diaries = await ref.read(diaryRepositoryProvider).getAllDiaries();
-    final cats =
-        (await ref
-                .read(categoryRepositoryProvider)
-                .getAllCategoriesForSync()
-                .run())
-            .getOrElse((_) => const <Category>[]);
+    final cats = await ref.read(categoryRepositoryProvider).getAllCategories();
 
     final visible = diaries.where((d) => d.show).toList(growable: false);
     final byDay = _aggregateByDay(visible);

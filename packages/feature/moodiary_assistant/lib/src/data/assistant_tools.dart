@@ -871,8 +871,7 @@ abstract final class AssistantToolRegistry {
     final counts = await repo.diaryCountByCategory();
     if (counts.total == 0) return 'No diaries yet.';
 
-    final cats = (await CategoryRepository.get().getAllCategories().run())
-        .getOrElse((_) => const <Category>[]);
+    final cats = await CategoryRepository.get().getAllCategories();
     final nameById = {for (final c in cats) c.id: c.categoryName};
     final newest = await repo.getDiaryByCategory(sort: .timeDesc, limit: 1);
     final oldest = await repo.getDiaryByCategory(sort: .timeAsc, limit: 1);
@@ -1061,8 +1060,7 @@ abstract final class AssistantToolRegistry {
   }
 
   static Future<String> _listCategories(Map<String, dynamic> input) async {
-    final cats = (await CategoryRepository.get().getAllCategories().run())
-        .getOrElse((_) => const <Category>[]);
+    final cats = await CategoryRepository.get().getAllCategories();
     if (cats.isEmpty) return 'No categories yet.';
     final buffer = StringBuffer();
     for (final c in cats) {
@@ -1078,11 +1076,12 @@ abstract final class AssistantToolRegistry {
     final name = (input['name'] as String?)?.trim() ?? '';
     if (name.isEmpty) return 'Failed: the category name cannot be empty.';
     final category = Category.create(categoryName: name);
-    final ok = (await CategoryRepository.get().insertACategory(category).run())
-        .isRight();
-    return ok
-        ? 'Created category "$name", id=${category.id}.'
-        : 'Failed: could not create the category.';
+    try {
+      await CategoryRepository.get().insertACategory(category);
+      return 'Created category "$name", id=${category.id}.';
+    } catch (_) {
+      return 'Failed: could not create the category.';
+    }
   }
 
   static Future<String> _updateCategory(Map<String, dynamic> input) =>
@@ -1104,10 +1103,12 @@ abstract final class AssistantToolRegistry {
       categoryName: name,
       lastModified: .timestamp(),
     );
-    final ok = (await repo.insertACategory(updated).run()).isRight();
-    return ok
-        ? 'Renamed the category to "$name" (id=$id).'
-        : 'Failed: could not rename the category.';
+    try {
+      await repo.insertACategory(updated);
+      return 'Renamed the category to "$name" (id=$id).';
+    } catch (_) {
+      return 'Failed: could not rename the category.';
+    }
   }
 
   static Future<String> _deleteCategory(Map<String, dynamic> input) =>
@@ -1116,8 +1117,12 @@ abstract final class AssistantToolRegistry {
   static Future<String> _deleteOneCategory(Map<String, dynamic> input) async {
     final id = (input['id'] as String?)?.trim() ?? '';
     if (id.isEmpty) return 'Failed: no category id given.';
-    final ok = (await CategoryRepository.get().deleteACategory(id).run())
-        .getOrElse((_) => false);
+    bool ok;
+    try {
+      ok = await CategoryRepository.get().deleteACategory(id);
+    } catch (_) {
+      ok = false;
+    }
     return ok
         ? 'Deleted the category (id=$id).'
         : 'Failed: the category does not exist, or it still holds diaries — refile them first.';
@@ -1245,8 +1250,7 @@ abstract final class AssistantToolRegistry {
 
   /// 分类 id → 名字。查不到（已删）时返回 null，调用方自行降级。
   static Future<String?> _categoryNameOf(String id) async {
-    final cats = (await CategoryRepository.get().getAllCategories().run())
-        .getOrElse((_) => const <Category>[]);
+    final cats = await CategoryRepository.get().getAllCategories();
     for (final c in cats) {
       if (c.id == id) return c.categoryName;
     }

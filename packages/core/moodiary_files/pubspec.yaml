@@ -29,7 +29,6 @@ dependencies:
   gal: 2.3.3
   fc_native_video_thumbnail: 3.0.1
   audio_metadata_reader: 1.7.1
-  file_picker: 12.1.0
 
 dev_dependencies:
   flutter_test:

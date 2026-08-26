@@ -26,8 +26,6 @@ dependencies:
   moodiary_utils: 0.0.1
   mui: 0.0.1
 
-  flutter_riverpod: 3.4.2
-  riverpod_annotation: 4.0.6
   path: 1.9.1
   share_plus: 13.3.0
 
@@ -36,4 +34,3 @@ dev_dependencies:
     sdk: flutter
   moodiary_lint: 0.0.1
   build_runner: 2.16.0
-  riverpod_generator: 4.0.8

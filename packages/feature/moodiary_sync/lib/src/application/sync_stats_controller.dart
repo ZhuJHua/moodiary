@@ -1,6 +1,5 @@
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
@@ -40,9 +39,7 @@ Future<SyncStats> syncStats(Ref ref) async {
   final diaries = await ref.read(diaryRepositoryProvider).getAllDiaries();
   final localDiaries = diaries.length;
   final localCategories =
-      (await ref.read(categoryRepositoryProvider).getAllCategories().run())
-          .getOrElse((_) => const <Category>[])
-          .length;
+      (await ref.read(categoryRepositoryProvider).getAllCategories()).length;
 
   int? remoteDiaries;
   int? remoteCategories;

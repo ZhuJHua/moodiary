@@ -120,12 +120,12 @@ class MediaCleanupController extends _$MediaCleanupController {
     // 本表是名字的唯一事实源，media_page 的懒补行防的就是同一类事故。
     final used = await DiaryRepository.get().collectReferencedMedia();
     final referenced = {...used.images, ...used.audios, ...used.videos};
-    final rows = await MediaInfoRepository.get().getAllMediaInfos().run();
-    for (final row in rows.getOrElse((_) => const [])) {
+    final rows = await MediaInfoRepository.get().getAllMediaInfos();
+    for (final row in rows) {
       if (referenced.contains(row.fileName)) continue;
       final file = File(AppFiles.getRealPath(row.mediaType, row.fileName));
       if (!await file.exists()) {
-        await MediaInfoRepository.get().deleteAMediaInfo(row.fileName).run();
+        await MediaInfoRepository.get().deleteAMediaInfo(row.fileName);
       }
     }
   }

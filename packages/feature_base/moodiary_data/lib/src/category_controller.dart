@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -40,12 +41,12 @@ class CategoryController extends _$CategoryController {
   FutureOr<List<Category>> build() async {
     final sub = _repository.categoryEvents.listen(_applyChange);
     ref.onDispose(sub.cancel);
-    var either = await _repository.getAllCategories().run();
+    var list = await _repository.getAllCategories();
     if (_missedEvent) {
       _missedEvent = false;
-      either = await _repository.getAllCategories().run();
+      list = await _repository.getAllCategories();
     }
-    return either.getOrElse((_) => <Category>[]);
+    return list;
   }
 
   void _applyChange(CategoryEvent event) {
@@ -58,14 +59,23 @@ class CategoryController extends _$CategoryController {
   }
 
   Future<bool> upsertCategory(Category category) async {
-    final either = await _repository.insertACategory(category).run();
-    return either.isRight();
+    try {
+      await _repository.insertACategory(category);
+      return true;
+    } catch (e, s) {
+      logger.e('upsert category failed', error: e, stackTrace: s);
+      return false;
+    }
   }
 
   /// 删除分类（行硬删 + 同步墓碑），仅当其下没有日记时成功。
   Future<bool> deleteCategory(String id) async {
-    final either = await _repository.deleteACategory(id).run();
-    return either.getOrElse((_) => false);
+    try {
+      return await _repository.deleteACategory(id);
+    } catch (e, s) {
+      logger.e('delete category failed', error: e, stackTrace: s);
+      return false;
+    }
   }
 }
 

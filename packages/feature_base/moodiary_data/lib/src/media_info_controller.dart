@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -35,12 +36,11 @@ class MediaInfoController extends _$MediaInfoController {
   FutureOr<Map<String, MediaInfo>> build() async {
     final sub = _repository.mediaInfoEvents.listen(_applyChange);
     ref.onDispose(sub.cancel);
-    var either = await _repository.getAllMediaInfos().run();
+    var list = await _repository.getAllMediaInfos();
     if (_missedEvent) {
       _missedEvent = false;
-      either = await _repository.getAllMediaInfos().run();
+      list = await _repository.getAllMediaInfos();
     }
-    final list = either.getOrElse((_) => <MediaInfo>[]);
     return {for (final info in list) info.fileName: info};
   }
 
@@ -54,14 +54,23 @@ class MediaInfoController extends _$MediaInfoController {
   }
 
   Future<bool> upsertMediaInfo(MediaInfo mediaInfo) async {
-    final either = await _repository.insertAMediaInfo(mediaInfo).run();
-    return either.isRight();
+    try {
+      await _repository.insertAMediaInfo(mediaInfo);
+      return true;
+    } catch (e, s) {
+      logger.e('upsert media info failed', error: e, stackTrace: s);
+      return false;
+    }
   }
 
   /// 删除元数据行（行硬删 + 同步墓碑），清理孤儿媒体时联动调用。
   Future<bool> deleteMediaInfo(String fileName) async {
-    final either = await _repository.deleteAMediaInfo(fileName).run();
-    return either.getOrElse((_) => false);
+    try {
+      return await _repository.deleteAMediaInfo(fileName);
+    } catch (e, s) {
+      logger.e('delete media info failed', error: e, stackTrace: s);
+      return false;
+    }
   }
 }
 
