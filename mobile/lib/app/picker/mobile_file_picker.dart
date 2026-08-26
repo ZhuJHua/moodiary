@@ -8,9 +8,8 @@ import 'package:mui/mui.dart';
 ///
 /// 相册与相机都走自建的 [MAssetPicker]（moodiary_picker），音频与任意文件走
 /// file_picker 的系统入口。权限被拒时由选择器/相机页自己给出提示页。
-///
-/// 拍照与录像在编辑器里已经没有独立入口了 —— 它们是选择器网格的第一格；
-/// 这两个方法保留是因为 [IFilePicker] 是一整块端口。
+/// 拍照/录像不在端口上——相机入口是选择器网格的第一格，不经 IFilePicker；
+/// 真需要独立入口时另开窄端口 ICameraCapture，桌面不实现即可。
 @LazySingleton(as: IFilePicker)
 class MobileFilePicker implements IFilePicker {
   @override
@@ -21,16 +20,6 @@ class MobileFilePicker implements IFilePicker {
   @override
   Future<XFile?> pickVideo(BuildContext context) {
     return MAssetPicker.pickVideo(context);
-  }
-
-  @override
-  Future<XFile?> takePhoto(BuildContext context) {
-    return MAssetPicker.capture(context, video: false);
-  }
-
-  @override
-  Future<XFile?> recordVideo(BuildContext context) {
-    return MAssetPicker.capture(context, video: true);
   }
 
   @override

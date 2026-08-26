@@ -3,10 +3,13 @@ import 'dart:typed_data';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/sync_registry.dart';
 
-/// 同步 / 备份后端的统一抽象。
+/// 同步 / 备份后端的统一抽象，按依赖方向拆三层：
 ///
-/// - [SyncBackend]：基础接口（push/pull/显示名/就绪），可用于本地 JSON 文件等非远端实现。
-/// - [IRemoteSyncBackend]：云端标记接口，额外提供低层对象原语供引擎做增量同步。
+/// - [RemoteObjectStore]：对象存储原语。**引擎只依赖它**——归档导入这类「只当
+///   对象源用」的实现（LocalArchiveBackend）实现到这一层为止，不必再为
+///   push/pull/syncAll 写一排 UnimplementedError。
+/// - [SyncBackend]：编排门面（push/pull/显示名/就绪）。
+/// - [IRemoteSyncBackend]：云端后端 = 编排 + 对象原语 + provider 元信息。
 ///   [RemoteSyncRegistry] 中**同时只持有一个**，由当前 [SyncProviderType] 决定。
 abstract class SyncBackend {
   String get displayName;
@@ -19,21 +22,14 @@ abstract class SyncBackend {
   Future<SyncReport> pullAll();
 }
 
-abstract class IRemoteSyncBackend implements SyncBackend {
-  factory IRemoteSyncBackend.get() => RemoteSyncRegistry.get().backend;
-
-  /// 与 KV `syncProvider` 对齐的 provider 类型。
-  SyncProviderType get type;
+/// 低层对象存储原语。引擎、租约锁、密钥文件管理只认这一层。
+abstract class RemoteObjectStore {
+  /// 日志用显示名。
+  String get displayName;
 
   /// 多后端 tombstone 跟踪用的稳定 ID（记入 `SyncTombstone.pushedBackends`）。
   /// `null` = 不参与跟踪，引擎 push tombstone 完毕即清除墓碑行。
   String? get persistentBackendId;
-
-  /// 探测连通性 / 凭据。失败返回错误信息，成功返回 `null`。
-  Future<String?> testConnection();
-
-  /// 双向同步：同一把锁内先 pull 再 push，原子完成、不与其它操作交叠。
-  Future<SyncReport> syncAll();
 
   /// 读取远端对象，[key] 为相对路径。
   /// 契约（引擎正确性依赖）：**仅**「远端不存在」返回 `null`（引擎据此走首次同步
@@ -70,6 +66,19 @@ abstract class IRemoteSyncBackend implements SyncBackend {
   Future<String?> statObject(String key);
 }
 
+abstract class IRemoteSyncBackend implements SyncBackend, RemoteObjectStore {
+  factory IRemoteSyncBackend.get() => RemoteSyncRegistry.get().backend;
+
+  /// 与 KV `syncProvider` 对齐的 provider 类型。
+  SyncProviderType get type;
+
+  /// 探测连通性 / 凭据。失败返回错误信息，成功返回 `null`。
+  Future<String?> testConnection();
+
+  /// 双向同步：同一把锁内先 pull 再 push，原子完成、不与其它操作交叠。
+  Future<SyncReport> syncAll();
+}
+
 class SyncReport {
   final int diaryCount;
   final int categoryCount;
@@ -94,6 +103,8 @@ class SyncReport {
     this.cancelled = false,
   });
 
+  /// 仅供日志 / payload，**禁止进 UI**——硬编码中文；给用户的摘要逐字段走 l10n
+  /// （范例：lan_receive_page 的 _summary、export_page 的 restoreSummary）。
   @override
   String toString() =>
       '日记 $diaryCount 条 / 分类 $categoryCount 条 / 媒体信息 $mediaInfoCount 条'

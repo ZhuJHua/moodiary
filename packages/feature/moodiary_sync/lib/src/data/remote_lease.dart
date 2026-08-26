@@ -120,7 +120,7 @@ class RemoteLease {
     return id;
   }
 
-  static Future<LeasePayload?> _read(IRemoteSyncBackend backend) async {
+  static Future<LeasePayload?> _read(RemoteObjectStore backend) async {
     final bytes = await backend.readObject(SyncKeys.lockPath);
     if (bytes == null) return null;
     return .fromBytes(bytes);
@@ -129,7 +129,7 @@ class RemoteLease {
   /// 在远端租约保护下执行 [body]。进程内互斥由调用方保证（引擎 `_lock` 在外层），
   /// 本类只负责跨设备互斥。
   static Future<T> protect<T>(
-    IRemoteSyncBackend backend,
+    RemoteObjectStore backend,
     Future<T> Function() body, {
     SyncLogger? logger,
   }) async {
@@ -180,7 +180,7 @@ class RemoteLease {
   }
 
   static Future<void> _acquire(
-    IRemoteSyncBackend backend,
+    RemoteObjectStore backend,
     String owner,
     SyncLogger log,
   ) async {
@@ -259,7 +259,7 @@ class RemoteLease {
   /// 不执行 If-None-Match。探测载荷是本机的合法租约 —— 即便被不合规服务器覆盖
   /// 写入，锁仍归本机、内容有效，无需修复。探测异常不影响本次同步（下次再试）。
   static Future<void> _probeCas(
-    IRemoteSyncBackend backend,
+    RemoteObjectStore backend,
     String backendId,
     String owner,
     SyncLogger log,

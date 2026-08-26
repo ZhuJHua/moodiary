@@ -55,7 +55,7 @@ typedef ReCipherProgress = void Function(int done, int total, String label);
 /// 下次 pull 仍能用各对象自身的 auth tag 解开未改写的部分。
 /// 与 push/pull 共享 [IncrementalSyncEngine.runExclusive] 的互斥锁。
 class CloudReCipher {
-  final IRemoteSyncBackend backend;
+  final RemoteObjectStore backend;
   final SyncLogger _logger;
 
   /// manifest writeToken 的进程内序号，保证同微秒多次写也不撞。

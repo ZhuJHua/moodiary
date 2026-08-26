@@ -11,6 +11,8 @@
   "restoreConfirmLabel": "恢复",
   "restoring": "正在恢复…",
   "restoreDone": "恢复完成：{summary}",
+  "restoreSummary": "日记 {diary} 条 / 分类 {category} 条 / 媒体信息 {media} 条",
+  "restoreSummaryFailed": "{base}，失败 {failed} 条",
   "restoreFailed": "恢复失败：{error}",
   "packingBackup": "正在打包备份…",
   "backupReady": "备份已生成",

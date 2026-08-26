@@ -605,6 +605,8 @@ class _Translations$export$en extends Translations$export$zh {
 	@override String get restoreConfirmLabel => 'Restore';
 	@override String get restoring => 'Restoring…';
 	@override String restoreDone({required Object summary}) => 'Restored: ${summary}';
+	@override String restoreSummary({required Object diary, required Object category, required Object media}) => '${diary} diaries / ${category} categories / ${media} media entries';
+	@override String restoreSummaryFailed({required Object base, required Object failed}) => '${base}, ${failed} failed';
 	@override String restoreFailed({required Object error}) => 'Restore failed: ${error}';
 	@override String get packingBackup => 'Packing backup…';
 	@override String get backupReady => 'Backup created';

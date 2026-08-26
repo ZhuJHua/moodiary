@@ -15,8 +15,13 @@ class SyncBackupArchive implements IBackupArchive {
   Future<String> export() => LocalArchive.export();
 
   @override
-  Future<String> import(String zipPath) async {
+  Future<BackupImportResult> import(String zipPath) async {
     final report = await LocalArchive.import(zipPath);
-    return report.toString();
+    return BackupImportResult(
+      diaryCount: report.diaryCount,
+      categoryCount: report.categoryCount,
+      mediaInfoCount: report.mediaInfoCount,
+      failed: report.failed,
+    );
   }
 }

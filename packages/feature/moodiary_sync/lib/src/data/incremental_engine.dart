@@ -11,7 +11,6 @@ import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/media_refs.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
-import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/remote_lease.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_cancellation.dart';
@@ -43,7 +42,9 @@ import 'package:synchronized/synchronized.dart';
 /// - 密钥正确性交给 AES-GCM auth tag：解 manifest 失败即密钥错。
 class IncrementalSyncEngine {
   /// 已被 [_GatedBackend] 套上并发限流的后端，「在飞的网络请求」全局 <= [concurrency]。
-  final IRemoteSyncBackend backend;
+  /// 类型只到 [RemoteObjectStore]——引擎不需要编排门面，归档导入的
+  /// LocalArchiveBackend 因此不必假装自己会 push/pull。
+  final RemoteObjectStore backend;
 
   /// 条目级并发度，与网络并发上限同值，来自 KV [MoodiaryKVs.syncConcurrency]。
   final int concurrency;
@@ -81,7 +82,7 @@ class IncrementalSyncEngine {
   static const int _maxConcurrency = 32;
 
   factory IncrementalSyncEngine(
-    IRemoteSyncBackend backend, {
+    RemoteObjectStore backend, {
     SyncLogger? logger,
     SyncDiaryStore? diaryStore,
     SyncCategoryStore? categoryStore,
@@ -1500,8 +1501,8 @@ class _TombstoneBatch {
 /// 限流只包真正的网络调用（read/write/delete/stat），本地 CPU 工作不占许可，
 /// 使「并发数」严格对应「在飞的 HTTP 请求数」。与 [_lock] 的操作级互斥不同：
 /// 本装饰器是**操作内限流**。
-class _GatedBackend implements IRemoteSyncBackend {
-  final IRemoteSyncBackend _inner;
+class _GatedBackend implements RemoteObjectStore {
+  final RemoteObjectStore _inner;
   final Pool _gate;
 
   _GatedBackend(this._inner, int concurrency) : _gate = Pool(concurrency);
@@ -1537,30 +1538,12 @@ class _GatedBackend implements IRemoteSyncBackend {
   Future<String?> statObject(String key) =>
       _gate.withResource(() => _inner.statObject(key));
 
-  // 入口 / 元信息方法直接透传。
+  // 元信息直接透传。
   @override
   String get displayName => _inner.displayName;
 
   @override
-  bool get isReady => _inner.isReady;
-
-  @override
-  SyncProviderType get type => _inner.type;
-
-  @override
   String? get persistentBackendId => _inner.persistentBackendId;
-
-  @override
-  Future<String?> testConnection() => _inner.testConnection();
-
-  @override
-  Future<SyncReport> pushAll() => _inner.pushAll();
-
-  @override
-  Future<SyncReport> pullAll() => _inner.pullAll();
-
-  @override
-  Future<SyncReport> syncAll() => _inner.syncAll();
 }
 
 /// 清掉上次进程被杀时残留的同步临时密文（全尺寸，且不会有人来收）。启动时调用一次。

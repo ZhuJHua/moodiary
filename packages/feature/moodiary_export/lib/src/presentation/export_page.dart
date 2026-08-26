@@ -99,8 +99,16 @@ class _ImportSection extends StatelessWidget {
 
     toast.loading(message: l10n.export.restoring);
     try {
-      final summary = await IBackupArchive.get().import(file.path);
+      final result = await IBackupArchive.get().import(file.path);
       await toast.dismiss();
+      final base = l10n.export.restoreSummary(
+        diary: result.diaryCount,
+        category: result.categoryCount,
+        media: result.mediaInfoCount,
+      );
+      final summary = result.failed > 0
+          ? l10n.export.restoreSummaryFailed(base: base, failed: result.failed)
+          : base;
       toast.success(message: l10n.export.restoreDone(summary: summary));
     } catch (e) {
       await toast.dismiss();

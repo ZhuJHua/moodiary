@@ -207,7 +207,7 @@ class SyncKeyManager {
   // ── 远端 keyfile ──
 
   static Future<SyncKeyfile?> readRemoteKeyfile(
-    IRemoteSyncBackend backend,
+    RemoteObjectStore backend,
   ) async {
     final bytes = await backend.readObject(SyncKeys.keysPath);
     if (bytes == null) return null;
@@ -215,17 +215,17 @@ class SyncKeyManager {
   }
 
   static Future<void> writeRemoteKeyfile(
-    IRemoteSyncBackend backend,
+    RemoteObjectStore backend,
     SyncKeyfile keyfile,
   ) => backend.writeObject(SyncKeys.keysPath, keyfile.toBytes());
 
-  static Future<void> deleteRemoteKeyfile(IRemoteSyncBackend backend) =>
+  static Future<void> deleteRemoteKeyfile(RemoteObjectStore backend) =>
       backend.deleteObject(SyncKeys.keysPath);
 
   /// 引擎同步前奏：本机 keyfile 缓存尚未送达当前后端（开启加密时离线 / 后端
   /// 后配 / 上次写失败）→ 补传。非 pending 时零成本。失败如实上抛（由调用方
   /// 记日志后继续同步，pending 保留下次再试）。
-  static Future<void> uploadPendingKeyfile(IRemoteSyncBackend backend) async {
+  static Future<void> uploadPendingKeyfile(RemoteObjectStore backend) async {
     final backendId = backend.persistentBackendId;
     if (backendId == null || !pendingUploadBackends().contains(backendId)) {
       return;

@@ -11,6 +11,27 @@ abstract class IBackupArchive {
   /// 打包全部日记与媒体，返回生成的 zip 路径。
   Future<String> export();
 
-  /// 从 zip 恢复，按「最后修改时间」与本地数据合并。返回一句可直接展示的结果摘要。
-  Future<String> import(String zipPath);
+  /// 从 zip 恢复，按「最后修改时间」与本地数据合并。
+  /// 返回结构化结果——端口不返回展示串（那会把文案语言钉死在实现里，
+  /// 英文界面弹中文 toast 就是这么来的），本地化由消费页自己组织。
+  Future<BackupImportResult> import(String zipPath);
+}
+
+/// [IBackupArchive.import] 的结果。刻意不复用 sync 的 SyncReport——data 是
+/// feature_base，不该认识 feature 的类型。
+class BackupImportResult {
+  final int diaryCount;
+
+  final int categoryCount;
+
+  final int mediaInfoCount;
+
+  final int failed;
+
+  const BackupImportResult({
+    required this.diaryCount,
+    required this.categoryCount,
+    required this.mediaInfoCount,
+    required this.failed,
+  });
 }

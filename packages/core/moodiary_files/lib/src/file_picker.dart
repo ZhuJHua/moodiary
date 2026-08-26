@@ -2,9 +2,11 @@ import 'package:cross_file/cross_file.dart';
 import 'package:flutter/widgets.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 
-/// 平台文件/媒体选取服务。移动端实现走应用内选择器（wechat_assets_picker /
-/// wechat_camera_picker + file_picker），桌面端实现走系统对话框；由各 app 在 DI 注册。
-/// 统一返回 [XFile] 对接 MediaManager 存盘管线；取消返回空列表 / null。
+/// 平台文件/媒体选取服务。移动端实现走应用内选择器（wechat_assets_picker +
+/// file_picker），桌面端实现走系统对话框；由各 app 在 DI 注册。
+/// 统一返回 [XFile] 对接 MediaManager 存盘管线。
+/// 契约：**用户取消返回空列表 / null；起不来（对话框失败等）抛出**——移动实现的
+/// 权限提示由选择器页自己给，桌面实现没有这个出口，错误必须能顺着端口返回。
 abstract class IFilePicker {
   static IFilePicker get() => getIt.get<IFilePicker>();
 
@@ -13,12 +15,6 @@ abstract class IFilePicker {
 
   /// 相册选单个视频。
   Future<XFile?> pickVideo(BuildContext context);
-
-  /// 拍照。
-  Future<XFile?> takePhoto(BuildContext context);
-
-  /// 录像。
-  Future<XFile?> recordVideo(BuildContext context);
 
   /// 选单个音频文件。
   Future<XFile?> pickAudio();

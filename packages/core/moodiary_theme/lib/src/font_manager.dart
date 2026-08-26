@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_rust/foundation.dart' as rust;
@@ -59,12 +58,10 @@ class FontManager {
     }
   }
 
-  static Future<XFile?> pickFont() async {
-    final res = await FilePicker.pickFile(
-      type: .custom,
-      allowedExtensions: ['ttf', 'otf'],
-    );
-    return res?.xFile;
+  static Future<XFile?> pickFont() {
+    // 走端口：全仓选文件收敛到 IFilePicker 一个入口（实现由 app 组合根注册），
+    // 桌面换实现时字体导入不会成为被漏掉的第二条路。
+    return IFilePicker.get().pickFile(allowedExtensions: ['ttf', 'otf']);
   }
 
   static Future<List<({String fileName, Map<String, dynamic> wghtAxis})>>

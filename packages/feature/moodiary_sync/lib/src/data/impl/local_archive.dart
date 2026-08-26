@@ -10,7 +10,6 @@ import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/incremental_engine.dart';
 import 'package:moodiary_sync/src/data/media_refs.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
-import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_stores.dart';
 import 'package:path/path.dart' as p;
@@ -345,7 +344,8 @@ class _RustZipSink implements ArchiveSink {
 
 /// 把解压后的备份目录当作「远端」——引擎的 pull 原样跑在本地文件上。
 /// 写操作（租约锁 `sync.lock`）落在解压目录内，导入结束随目录一起清理。
-class LocalArchiveBackend implements IRemoteSyncBackend {
+/// 只实现 [RemoteObjectStore]：它只当对象源用，不承担 push/pull 编排。
+class LocalArchiveBackend implements RemoteObjectStore {
   final String root;
 
   LocalArchiveBackend(this.root);
@@ -356,18 +356,7 @@ class LocalArchiveBackend implements IRemoteSyncBackend {
   String get displayName => '本地备份';
 
   @override
-  bool get isReady => true;
-
-  @override
   String? get persistentBackendId => null;
-
-  /// 不参与 provider 注册 / KV 配置，任何读取都是用错了地方。
-  @override
-  SyncProviderType get type =>
-      throw UnsupportedError('LocalArchiveBackend 没有 provider 类型');
-
-  @override
-  Future<String?> testConnection() async => null;
 
   @override
   Future<Uint8List?> readObject(String key) async {
@@ -430,12 +419,4 @@ class LocalArchiveBackend implements IRemoteSyncBackend {
     return (await file.lastModified()).toUtc().toIso8601String();
   }
 
-  @override
-  Future<SyncReport> pushAll() => throw UnimplementedError();
-
-  @override
-  Future<SyncReport> pullAll() => throw UnimplementedError();
-
-  @override
-  Future<SyncReport> syncAll() => throw UnimplementedError();
 }

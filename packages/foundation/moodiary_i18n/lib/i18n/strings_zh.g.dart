@@ -1611,6 +1611,12 @@ class Translations$export$zh {
 	/// zh: '恢复完成：{summary}'
 	String restoreDone({required Object summary}) => '恢复完成：${summary}';
 
+	/// zh: '日记 {diary} 条 / 分类 {category} 条 / 媒体信息 {media} 条'
+	String restoreSummary({required Object diary, required Object category, required Object media}) => '日记 ${diary} 条 / 分类 ${category} 条 / 媒体信息 ${media} 条';
+
+	/// zh: '{base}，失败 {failed} 条'
+	String restoreSummaryFailed({required Object base, required Object failed}) => '${base}，失败 ${failed} 条';
+
 	/// zh: '恢复失败：{error}'
 	String restoreFailed({required Object error}) => '恢复失败：${error}';
 

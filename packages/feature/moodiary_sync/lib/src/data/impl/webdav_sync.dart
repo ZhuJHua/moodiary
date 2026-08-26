@@ -13,10 +13,12 @@ import 'package:moodiary_sync/src/data/secure_options.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 
+import 'cloud_orchestration.dart';
+
 /// WebDAV 实现 [IRemoteSyncBackend]，经 flutter_rust_bridge 调 Rust reqwest_dav。
 /// 配置以 `[baseUrl, username, password]` 存于 [MoodiarySecureKVs.webDavOption]（含密码）。
 /// 增量逻辑交给 [IncrementalSyncEngine]。
-class WebDavSyncBackend implements IRemoteSyncBackend {
+class WebDavSyncBackend with CloudSyncOrchestration {
   WebDavSyncBackend();
 
   static final SecureOptions options = SecureOptions(.webDavOption);
@@ -152,22 +154,7 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
   }
 
   @override
-  Future<SyncReport> pushAll() async {
-    if (!isReady) throw SyncException(l10n.sync.errWebdavConfig);
-    return IncrementalSyncEngine(this).push();
-  }
-
-  @override
-  Future<SyncReport> pullAll() async {
-    if (!isReady) throw SyncException(l10n.sync.errWebdavConfig);
-    return IncrementalSyncEngine(this).pull();
-  }
-
-  @override
-  Future<SyncReport> syncAll() async {
-    if (!isReady) throw SyncException(l10n.sync.errWebdavConfig);
-    return IncrementalSyncEngine(this).sync();
-  }
+  SyncException get notReadyError => SyncException(l10n.sync.errWebdavConfig);
 
   static Future<void> configure({
     required String baseUrl,

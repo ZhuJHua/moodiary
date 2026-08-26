@@ -13,12 +13,14 @@ import 'package:moodiary_sync/src/data/secure_options.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 
+import 'cloud_orchestration.dart';
+
 /// S3 / MinIO 实现 [IRemoteSyncBackend]，经 flutter_rust_bridge 调 Rust minio SDK。
 /// 配置存于 [MoodiarySecureKVs.s3Option]（含 secretKey），按索引：0 endpoint、1 region（可空）、
 /// 2 accessKey、3 secretKey、4 bucket、5 useSSL（'1'/'0'）。
 /// 远端 key 前缀 `moodiary/`。
 /// 增量逻辑交给 [IncrementalSyncEngine]。
-class S3SyncBackend implements IRemoteSyncBackend {
+class S3SyncBackend with CloudSyncOrchestration {
   static const String _root = 'moodiary';
 
   static final SecureOptions options = SecureOptions(.s3Option);
@@ -173,22 +175,7 @@ class S3SyncBackend implements IRemoteSyncBackend {
   }
 
   @override
-  Future<SyncReport> pushAll() async {
-    if (!isReady) throw SyncException(l10n.sync.errS3Config);
-    return IncrementalSyncEngine(this).push();
-  }
-
-  @override
-  Future<SyncReport> pullAll() async {
-    if (!isReady) throw SyncException(l10n.sync.errS3Config);
-    return IncrementalSyncEngine(this).pull();
-  }
-
-  @override
-  Future<SyncReport> syncAll() async {
-    if (!isReady) throw SyncException(l10n.sync.errS3Config);
-    return IncrementalSyncEngine(this).sync();
-  }
+  SyncException get notReadyError => SyncException(l10n.sync.errS3Config);
 
   static Future<void> configure({
     required String endpoint,
