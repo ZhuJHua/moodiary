@@ -91,9 +91,9 @@ void main() {
 
     setUp(() {
       dir = Directory.systemTemp.createTempSync('moodiary_migration_test');
-      // 与 _mergeToV2_8_0 内部的开库列表一致（同列表 = 无子集前缀问题）。
+      // 与 _mergeToV2_8_0 内部的开库列表同源（legacyMigrationSchemas 是真源前缀）。
       isar = .open(
-        schemas: [DiarySchema, CategorySchema, FontSchema],
+        schemas: legacyMigrationSchemas,
         directory: dir.path,
         inspector: false,
       );
@@ -114,7 +114,7 @@ void main() {
     void runMerge() {
       VersionMigrator.debugMergeToV280(dir.path);
       isar = .open(
-        schemas: [DiarySchema, CategorySchema, FontSchema],
+        schemas: legacyMigrationSchemas,
         directory: dir.path,
         inspector: false,
       );

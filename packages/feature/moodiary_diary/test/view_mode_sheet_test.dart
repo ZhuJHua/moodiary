@@ -4,43 +4,18 @@ import 'package:moodiary_diary/src/presentation/widget/view_mode_sheet.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_storage/testing.dart';
 import 'package:mui/mui.dart';
 
 final _mui = buildMuiTheme(brightness: Brightness.light);
 
-/// 内存 KV，只为把 [MoodiaryKVs] 的读写接上。
-final class _MemoryKVStorage extends IKVStorage {
-  final Map<String, Object?> data = {};
-
-  @override
-  Future<void> init() async {}
-
-  @override
-  T? get<T extends Object>(String key) => data[key] as T?;
-
-  @override
-  void set<T extends Object>(String key, T value) {
-    data[key] = value;
-    super.set(key, value);
-  }
-
-  @override
-  void remove(String key) {
-    data.remove(key);
-    super.remove(key);
-  }
-
-  @override
-  void clear() => data.clear();
-}
-
 void main() {
-  late _MemoryKVStorage kv;
+  late MemoryKVStorage kv;
 
   // get_it scope：push 里注册的绑定遮蔽外层同类型，pop 整层撤掉——
   // 不必 isRegistered/unregister 手工对账。
   setUp(() {
-    kv = _MemoryKVStorage();
+    kv = MemoryKVStorage();
     getIt.pushNewScope(init: (gi) => gi.registerSingleton<IKVStorage>(kv));
   });
 

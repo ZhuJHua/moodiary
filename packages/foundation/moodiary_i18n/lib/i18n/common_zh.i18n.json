@@ -10,6 +10,7 @@
   "category": "分类",
   "name": "名称",
   "delete": "删除",
+  "loadFailed": "加载失败",
   "untitled": "无标题",
   "retry": "重试",
   "categoryCount": "{count} 个分类",

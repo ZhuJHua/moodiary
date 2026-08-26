@@ -1,4 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -39,14 +38,14 @@ String _moodBody(Translations l10n) => l10n.onboarding.moodBody;
 String _ownershipTitle(Translations l10n) => l10n.onboarding.ownershipTitle;
 String _ownershipBody(Translations l10n) => l10n.onboarding.ownershipBody;
 
-class StartPage extends ConsumerStatefulWidget {
+class StartPage extends StatefulWidget {
   const StartPage({super.key});
 
   @override
-  ConsumerState<StartPage> createState() => _StartPageState();
+  State<StartPage> createState() => _StartPageState();
 }
 
-class _StartPageState extends ConsumerState<StartPage> {
+class _StartPageState extends State<StartPage> {
   final _pageController = PageController();
   int _page = 0;
 

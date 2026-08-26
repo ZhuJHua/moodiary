@@ -5,6 +5,7 @@ import 'package:moodiary/app/settings/presentation/widget/data_repair_tile.dart'
 import 'package:moodiary/app/settings/presentation/widget/language_dialog.dart';
 import 'package:moodiary/app/settings/presentation/widget/reset_data_tile.dart';
 import 'package:moodiary/app/settings/presentation/widget/theme_mode_dialog.dart';
+import 'package:moodiary/app/settings/setting_routes.dart';
 import 'package:moodiary_assistant/moodiary_assistant.dart'
     show AssistantSettingRoute;
 import 'package:moodiary_components/moodiary_components.dart';

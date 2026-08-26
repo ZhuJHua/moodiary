@@ -33,11 +33,9 @@ class DiarySearchController extends _$DiarySearchController {
   DiaryRepository get _repository => ref.read(diaryRepositoryProvider);
 
   int _seq = 0;
-  bool _disposed = false;
 
   @override
   DiarySearchState build() {
-    ref.onDispose(() => _disposed = true);
     return const DiarySearchState();
   }
 
@@ -108,7 +106,7 @@ class DiarySearchController extends _$DiarySearchController {
     final trimmed = state.query;
     if (trimmed.isEmpty) {
       _seq++;
-      if (_disposed) return;
+      if (!ref.mounted) return;
       state = state.copyWith(
         results: [],
         queryList: [],
@@ -123,7 +121,7 @@ class DiarySearchController extends _$DiarySearchController {
     final tokenizeResult = await Tokenizer.tokenize(text: trimmed);
     final range = _resolveRange();
     // dispose 后 ref.read 会抛（_repository 经 provider 取），也没必要再查。
-    if (_disposed) return;
+    if (!ref.mounted) return;
     final results = await _repository.searchDiaries(
       cutTokens: tokenizeResult.cut,
       cutForSearchTokens: tokenizeResult.cutForSearch,
@@ -133,7 +131,7 @@ class DiarySearchController extends _$DiarySearchController {
       sort: state.sort,
     );
     stopwatch.stop();
-    if (_disposed || seq != _seq) return;
+    if (!ref.mounted || seq != _seq) return;
     final queryList = {
       ...tokenizeResult.cut,
       ...tokenizeResult.cutForSearch,
@@ -148,7 +146,7 @@ class DiarySearchController extends _$DiarySearchController {
 
   void clear() {
     _seq++;
-    if (_disposed) return;
+    if (!ref.mounted) return;
     state = const DiarySearchState();
   }
 

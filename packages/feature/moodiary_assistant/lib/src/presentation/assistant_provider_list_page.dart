@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_assistant/src/presentation/provider_logo.dart';
 import 'package:moodiary_assistant/src/routes.dart';
 import 'package:moodiary_components/moodiary_components.dart';
@@ -12,16 +11,16 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
-class AssistantProviderListPage extends ConsumerStatefulWidget {
+class AssistantProviderListPage extends StatefulWidget {
   const AssistantProviderListPage({super.key});
 
   @override
-  ConsumerState<AssistantProviderListPage> createState() =>
+  State<AssistantProviderListPage> createState() =>
       _AssistantProviderListPageState();
 }
 
 class _AssistantProviderListPageState
-    extends ConsumerState<AssistantProviderListPage> {
+    extends State<AssistantProviderListPage> {
   LlmProviderRepository get _repo => .get();
 
   List<LlmProvider> _providers = const [];

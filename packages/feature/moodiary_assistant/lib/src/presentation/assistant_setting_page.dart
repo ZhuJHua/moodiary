@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_assistant/src/data/agent_preset_resolver.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_tool_ui.dart';
@@ -12,11 +11,11 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
 
-class AssistantSettingPage extends ConsumerWidget {
+class AssistantSettingPage extends StatelessWidget {
   const AssistantSettingPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.assistant.settingTitle)),
       body: ListView(

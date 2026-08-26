@@ -22,12 +22,27 @@ class AppLogger {
 
   Logger? _logger;
 
-  Logger get _log => _logger ??= Logger(
-    output: kDebugMode || _logFilePath == null
+  /// 可替换的 Logger 工厂（同 AppLockPin 的 seam 风格）：427aae3a 修过「configure
+  /// 晚于首条日志时输出永久钉死在控制台」，没有这条缝那次回归无法被测试钉住。
+  @visibleForTesting
+  static Logger Function(String? logFilePath) loggerFactory = _defaultFactory;
+
+  static Logger _defaultFactory(String? logFilePath) => Logger(
+    output: kDebugMode || logFilePath == null
         ? ConsoleOutput()
-        : FileOutput(file: File(_logFilePath!)),
+        : FileOutput(file: File(logFilePath)),
     filter: kDebugMode ? DevelopmentFilter() : ProductionFilter(),
   );
+
+  /// 测试间复位：清掉已配置的路径与缓存的 Logger。
+  @visibleForTesting
+  static void debugReset() {
+    _logFilePath = null;
+    _instance._logger = null;
+    loggerFactory = _defaultFactory;
+  }
+
+  Logger get _log => _logger ??= loggerFactory(_logFilePath);
 
   void e(Object message, {required Object error, StackTrace? stackTrace}) {
     _log.e(message, error: error, stackTrace: stackTrace);

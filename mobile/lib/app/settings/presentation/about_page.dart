@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:moodiary/app/settings/setting_routes.dart';
 import 'package:moodiary/gen/assets.gen.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';

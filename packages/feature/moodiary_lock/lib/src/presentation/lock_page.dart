@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
@@ -14,16 +13,16 @@ const int _pinLength = 4;
 const int _maxAttempts = 5;
 const int _cooldownSeconds = 30;
 
-class LockPage extends ConsumerStatefulWidget {
+class LockPage extends StatefulWidget {
   final String? lockType;
 
   const LockPage({super.key, this.lockType});
 
   @override
-  ConsumerState<LockPage> createState() => _LockPageState();
+  State<LockPage> createState() => _LockPageState();
 }
 
-class _LockPageState extends ConsumerState<LockPage>
+class _LockPageState extends State<LockPage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _shakeCtrl = AnimationController(
     vsync: this,

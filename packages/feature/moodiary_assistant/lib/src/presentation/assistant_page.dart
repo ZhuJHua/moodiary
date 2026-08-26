@@ -4,7 +4,6 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gpt_markdown/gpt_markdown.dart';
 import 'package:moodiary_assistant/src/application/chat_controller.dart';
 import 'package:moodiary_assistant/src/application/chat_items.dart';
@@ -71,13 +70,13 @@ Widget _codeBlock(
   bool closed,
 ) => MarkdownCodeBlock(name: name, code: code);
 
-class AssistantPage extends ConsumerStatefulWidget {
+class AssistantPage extends StatefulWidget {
   final String? initialSessionId;
 
   const AssistantPage({super.key, this.initialSessionId});
 
   @override
-  ConsumerState<AssistantPage> createState() => _AssistantPageState();
+  State<AssistantPage> createState() => _AssistantPageState();
 }
 
 /// 会话标题：空表示还没生成出来，显示「新对话」。**别把这句存进库**——存了就等于把
@@ -87,7 +86,7 @@ String _sessionTitle(ChatSession? session, Translations l10n) {
   return title.isEmpty ? l10n.assistant.newChat : title;
 }
 
-class _AssistantPageState extends ConsumerState<AssistantPage> {
+class _AssistantPageState extends State<AssistantPage> {
   final _inputController = TextEditingController();
   final _inputFocusNode = FocusNode();
   final _chatScroll = ScrollController();

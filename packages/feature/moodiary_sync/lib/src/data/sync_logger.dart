@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:injectable/injectable.dart';
 import 'package:moodiary_di/moodiary_di.dart';
+import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:path/path.dart' as p;
@@ -53,8 +54,11 @@ class SyncLogger {
       _dir = Directory(p.join(supportPath, _dirName));
       await _dir!.create(recursive: true);
       await _cleanupOldFiles();
-    } catch (_) {
+    } catch (e, s) {
       // 目录创建失败 → 降级为纯内存模式，sink 留 null 不再写盘。
+      // 降级行为保留（测试依赖它在无 PlatformService 的宿主上安全通过），
+      // 但违约至少要有声音——否则「同步日志整场没落盘」无从察觉。
+      logger.e('SyncLogger 落盘不可用，降级为纯内存模式', error: e, stackTrace: s);
     }
   }
 

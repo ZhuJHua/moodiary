@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,6 +23,8 @@ import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
+import 'package:moodiary_router/moodiary_router.dart'
+    show DiaryHomeRoute, LockRoute, StartRoute;
 import 'package:moodiary_rust/rust.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_sync/moodiary_sync.dart';
@@ -150,11 +153,14 @@ Duration? _providerRetry(int retryCount, Object error) {
   return Duration(milliseconds: 300 * (retryCount + 1));
 }
 
-String _resolveInitialLocation() {
+/// 首帧落点：有锁先锁、首启进引导、否则主界面。路径取自路由契约常量，
+/// 不写字面量（app_lock_observer 曾因 '/edit' 字面量与真实路由脱钩）。
+@visibleForTesting
+String resolveInitialLocation() {
   // AppLockPin.load() 已在 _initSystem 里跑过，这里读的是进程内那份。
-  if (AppLockPin.enabled.value) return '/lock';
-  if (MoodiaryKVs.firstStart.get() == true) return '/start';
-  return '/';
+  if (AppLockPin.enabled.value) return LockRoute.path;
+  if (MoodiaryKVs.firstStart.get() == true) return StartRoute.path;
+  return DiaryHomeRoute.path;
 }
 
 void main() async {
@@ -179,7 +185,7 @@ void main() async {
   // 兜底页零依赖（slang / 主题 / 容器此刻可能正是坏的那一环）。
   try {
     await _initSystem();
-    buildRouter(initialLocation: _resolveInitialLocation());
+    buildRouter(initialLocation: resolveInitialLocation());
   } catch (e, s) {
     logger.f('bootstrap failed', error: e, stackTrace: s);
     runApp(BootFailurePage(error: e, stackTrace: s));

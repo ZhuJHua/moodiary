@@ -1,15 +1,14 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary/app/locale.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
 
-class LanguageDialog extends ConsumerWidget {
+class LanguageDialog extends StatelessWidget {
   const LanguageDialog({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final code = MoodiaryKVs.language.get() ?? Language.system.languageCode;
     final current = Language.values.firstWhere(
       (e) => e.languageCode == code,

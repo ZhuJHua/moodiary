@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 
-import 'support/memory_kv.dart';
+import 'package:moodiary_storage/testing.dart';
 
 void main() {
   group('MoodiaryKVs.copyFrom', () {

@@ -402,6 +402,7 @@ class _Translations$common$en extends Translations$common$zh {
 	@override String get category => 'Category';
 	@override String get name => 'Name';
 	@override String get delete => 'Delete';
+	@override String get loadFailed => 'Something went wrong';
 	@override String get untitled => 'Untitled';
 	@override String get retry => 'Retry';
 	@override String categoryCount({required Object count}) => '${count} categories';

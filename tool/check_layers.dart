@@ -242,6 +242,34 @@ final RegExp _rustFacadeRe = RegExp(
 );
 
 /// 门面之外还有一条：不许绕过门面深入 `src/`。
+
+/// 一次遍历、多段共用的 .dart 文件清单（按根缓存）。跳过生成物与两座大山——
+/// rust/target（几十 GB）与 editor/node_modules（pnpm 软链农场）；
+/// followLinks: false 兼防软链自指走不完。此前四段各自
+/// `listSync(recursive: true)` 全量扫 36 万条目，整跑 6 秒多。
+final Map<String, List<File>> _dartFileCache = {};
+
+List<File> _dartFiles(String root) {
+  return _dartFileCache.putIfAbsent(root, () {
+    final dir = Directory(root);
+    if (!dir.existsSync()) return const [];
+    const skip = {'.dart_tool', 'build', 'node_modules', 'target', '.git'};
+    final out = <File>[];
+    void walk(Directory d) {
+      for (final entity in d.listSync(followLinks: false)) {
+        final name = entity.path.replaceAll('\\', '/').split('/').last;
+        if (entity is Directory) {
+          if (!skip.contains(name)) walk(entity);
+        } else if (entity is File && entity.path.endsWith('.dart')) {
+          out.add(entity);
+        }
+      }
+    }
+    walk(dir);
+    return out;
+  });
+}
+
 final RegExp _rustDeepRe = RegExp(
   r"""^\s*(?:import|export)\s+['"]package:moodiary_rust/src/""",
   multiLine: true,
@@ -250,10 +278,7 @@ final RegExp _rustDeepRe = RegExp(
 List<String> _checkRustFacades() {
   final out = <String>[];
   for (final root in ['mobile/lib', 'mobile/test', 'packages']) {
-    final dir = Directory(root);
-    if (!dir.existsSync()) continue;
-    for (final entity in dir.listSync(recursive: true)) {
-      if (entity is! File || !entity.path.endsWith('.dart')) continue;
+    for (final entity in _dartFiles(root)) {
       final rel = entity.path.replaceAll('\\', '/');
       if (rel.contains('packages/foundation/moodiary_rust/')) continue;
       if (rel.endsWith('.g.dart') || rel.endsWith('.freezed.dart')) continue;
@@ -312,10 +337,7 @@ final RegExp _legacyMaterialRe = RegExp(
 List<String> _checkLegacyMaterial() {
   final out = <String>[];
   for (final root in ['mobile/lib', 'packages']) {
-    final dir = Directory(root);
-    if (!dir.existsSync()) continue;
-    for (final entity in dir.listSync(recursive: true)) {
-      if (entity is! File || !entity.path.endsWith('.dart')) continue;
+    for (final entity in _dartFiles(root)) {
       final rel = entity.path.replaceAll('\\', '/');
       if (!rel.contains('/lib/') && !rel.startsWith('mobile/lib')) continue;
       if (rel.endsWith('.g.dart') || rel.endsWith('.freezed.dart')) continue;
@@ -398,10 +420,7 @@ final List<(RegExp, String)> _themeBans = [
 List<String> _checkThemePurity() {
   final out = <String>[];
   for (final root in ['mobile/lib', 'packages']) {
-    final dir = Directory(root);
-    if (!dir.existsSync()) continue;
-    for (final entity in dir.listSync(recursive: true)) {
-      if (entity is! File || !entity.path.endsWith('.dart')) continue;
+    for (final entity in _dartFiles(root)) {
       final rel = entity.path.replaceAll('\\', '/');
       if (!rel.contains('/lib/')) continue;
       if (rel.endsWith('.g.dart') || rel.endsWith('.freezed.dart')) continue;
@@ -433,10 +452,7 @@ final RegExp _themeDataRe = RegExp(r'(^|[^A-Za-z0-9_])ThemeData\s*\(');
 List<String> _checkThemeDataConstruction() {
   final out = <String>[];
   for (final root in ['mobile/lib', 'packages']) {
-    final dir = Directory(root);
-    if (!dir.existsSync()) continue;
-    for (final entity in dir.listSync(recursive: true)) {
-      if (entity is! File || !entity.path.endsWith('.dart')) continue;
+    for (final entity in _dartFiles(root)) {
       final rel = entity.path.replaceAll('\\', '/');
       if (!rel.contains('/lib/') || rel == _themeDataBridge) continue;
       final content = entity.readAsStringSync();

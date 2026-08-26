@@ -21,6 +21,7 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_rust/foundation.dart' show TokenizeResult;
 import 'package:moodiary_rust/testing.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_storage/testing.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 /// 替身分词:cut = 空白切词(保留重复,词频=出现次数),cutForSearch = 同词表
@@ -28,31 +29,6 @@ import 'package:moodiary_utils/moodiary_utils.dart';
 Future<TokenizeResult> fakeTokenize(String text) async {
   final words = text.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
   return TokenizeResult(cut: words, cutForSearch: words);
-}
-
-class _MemoryKV extends IKVStorage {
-  final Map<String, Object> _store = {};
-
-  @override
-  Future<void> init() async {}
-
-  @override
-  T? get<T extends Object>(String key) => _store[key] as T?;
-
-  @override
-  void set<T extends Object>(String key, T value) {
-    _store[key] = value;
-    super.set(key, value);
-  }
-
-  @override
-  void remove(String key) {
-    _store.remove(key);
-    super.remove(key);
-  }
-
-  @override
-  void clear() => _store.clear();
 }
 
 Diary makeDiary(
@@ -119,22 +95,15 @@ void main() {
 
   setUpAll(() async {
     await Isar.initialize(dylib);
-    getIt.registerSingleton<IKVStorage>(_MemoryKV());
+    getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
   });
 
   setUp(() {
     dir = Directory.systemTemp.createTempSync('moodiary_index_test');
+    // 用生产真源开库：schema 按位置下标寻址，手抄列表顺序一分叉，测试库的
+    // 布局就与线上不是一回事（此前这里的顺序确实与真源不同）。
     isar = .open(
-      schemas: [
-        DiarySchema,
-        SearchPostingSchema,
-        SearchStatsSchema,
-        LinkPostingSchema,
-        DiaryIndexSnapshotSchema,
-        ReindexQueueSchema,
-        CategorySchema,
-        SyncTombstoneSchema,
-      ],
+      schemas: moodiarySchemas,
       directory: dir.path,
       inspector: false,
     );

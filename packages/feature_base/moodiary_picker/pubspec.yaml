@@ -1,5 +1,5 @@
 name: moodiary_picker
-description: "Moodiary 的相册选择器：photo_manager 之上的一层自建 UI。"
+description: "Moodiary 的相册选择器：骑 wechat_assets_picker 换皮 + image_picker 系统相机。"
 version: 0.0.1
 publish_to: none
 

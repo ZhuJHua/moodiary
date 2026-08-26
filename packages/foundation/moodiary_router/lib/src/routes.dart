@@ -2,8 +2,11 @@ import 'package:go_router/go_router.dart';
 
 import 'route_base.dart';
 
-/// 移动端应用的路由契约（location / path / 参数解析）。仅收发字符串，不依赖领域枚举，
-/// 故本包保持 foundation 纯叶子；页面构建（builder）留在各 feature 的 `xRoutes()` 里。
+/// **跨包共享**的路由契约（location / path / 参数解析）。仅收发字符串，不依赖领域
+/// 枚举，故本包保持 foundation 纯叶子；页面构建（builder）留在各 feature 的
+/// `xRoutes()` 里。只有多于一个包要读的路由才进这张表——app 私有的住组合根
+/// （如 mobile 的 setting_routes.dart），feature 私有的照 assistant 的写法住
+/// 各自包内 routes.dart。
 ///
 /// `type` 字段是 DiaryType 的路由查询编码（见 moodiary_models 的 `diaryTypeFromRouteQuery`）。
 
@@ -154,28 +157,6 @@ class DiaryGraphRoute extends MoodiaryRouteBase {
       DiaryGraphRoute(diaryId: state.uri.queryParameters['diary-id']);
 }
 
-class FontRoute extends MoodiaryRouteBase {
-  static const String path = '/setting/font';
-  const FontRoute();
-  @override
-  String get location => path;
-}
-
-/// 自定义强调色取色页。灰度 / 壁纸两档在弹窗里一步选完，只有自定义才进这一层。
-class AccentRoute extends MoodiaryRouteBase {
-  static const String path = '/setting/accent';
-  const AccentRoute();
-  @override
-  String get location => path;
-}
-
-class ServicesRoute extends MoodiaryRouteBase {
-  static const String path = '/setting/services';
-  const ServicesRoute();
-  @override
-  String get location => path;
-}
-
 class PrivacyRoute extends MoodiaryRouteBase {
   static const String path = '/setting/privacy';
   const PrivacyRoute();
@@ -190,24 +171,10 @@ class AgreementRoute extends MoodiaryRouteBase {
   String get location => path;
 }
 
-class AboutRoute extends MoodiaryRouteBase {
-  static const String path = '/setting/about';
-  const AboutRoute();
-  @override
-  String get location => path;
-}
-
 /// 设置列表页。底栏只剩三个 tab 之后设置不再常驻，入口在分类抽屉底部。
 class SettingRoute extends MoodiaryRouteBase {
   static const String path = '/setting';
   const SettingRoute();
-  @override
-  String get location => path;
-}
-
-class DiarySettingRoute extends MoodiaryRouteBase {
-  static const String path = '/setting/diary_setting';
-  const DiarySettingRoute();
   @override
   String get location => path;
 }
@@ -249,13 +216,6 @@ class ExportFormatRoute extends MoodiaryRouteBase {
   static ExportFormatRoute fromState(GoRouterState state) => ExportFormatRoute(
     format: state.uri.queryParameters['format'] ?? 'markdown',
   );
-}
-
-class SponsorRoute extends MoodiaryRouteBase {
-  static const String path = '/setting/sponsor';
-  const SponsorRoute();
-  @override
-  String get location => path;
 }
 
 class StartRoute extends MoodiaryRouteBase {

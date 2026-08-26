@@ -10,6 +10,7 @@
   "category": "Category",
   "name": "Name",
   "delete": "Delete",
+  "loadFailed": "Something went wrong",
   "untitled": "Untitled",
   "retry": "Retry",
   "categoryCount": "{count} categories",

@@ -6,6 +6,7 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_storage/testing.dart';
 import 'package:moodiary_sync/src/data/impl/s3_sync.dart';
 import 'package:moodiary_sync/src/data/impl/webdav_sync.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
@@ -21,53 +22,6 @@ import 'package:moodiary_sync/src/data/sync_stores.dart';
 /// 同步引擎单测脚手架：把引擎对 KV / 后端 / 本地存储 / cipher 的依赖全部替换成
 /// 内存假实现，不触碰 Isar / 文件系统 / Rust FFI / 网络，纯确定性运行。
 
-// ───────────────────────── KV ─────────────────────────
-
-/// 内存 KV，实现 [IKVStorage]。
-final class MemoryKVStorage extends IKVStorage {
-  final Map<String, Object?> data = {};
-
-  @override
-  Future<void> init() async {}
-
-  @override
-  T? get<T extends Object>(String key) => data[key] as T?;
-
-  @override
-  void set<T extends Object>(String key, T value) {
-    data[key] = value;
-    super.set(key, value);
-  }
-
-  @override
-  void remove(String key) {
-    data.remove(key);
-    super.remove(key);
-  }
-
-  @override
-  void clear() => data.clear();
-}
-
-/// 内存 SecureKV，实现 [ISecureKVStorage]。
-final class MemorySecureKVStorage implements ISecureKVStorage {
-  final Map<String, String> data = {};
-
-  @override
-  Future<void> init() async {}
-
-  @override
-  Future<String?> get(String key) async => data[key];
-
-  @override
-  Future<void> set(String key, String value) async => data[key] = value;
-
-  @override
-  Future<void> remove(String key) async => data.remove(key);
-
-  @override
-  Future<void> clear() async => data.clear();
-}
 
 // ─────────────────────── remote backend ───────────────────────
 

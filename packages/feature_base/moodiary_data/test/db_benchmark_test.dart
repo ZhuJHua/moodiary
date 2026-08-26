@@ -19,6 +19,7 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_rust/foundation.dart' show TokenizeResult;
 import 'package:moodiary_rust/testing.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_storage/testing.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 const _vocab = 6000;
@@ -43,22 +44,6 @@ Future<TokenizeResult> _fakeTokenize(String text) async {
       .toSet()
       .toList();
   return TokenizeResult(cut: words, cutForSearch: words);
-}
-
-class _MemoryKV extends IKVStorage {
-  final Map<String, Object> _store = {};
-  @override
-  Future<void> init() async {}
-  @override
-  T? get<T extends Object>(String key) => _store[key] as T?;
-  @override
-  void set<T extends Object>(String key, T value) {
-    _store[key] = value;
-    super.set(key, value);
-  }
-
-  @override
-  void clear() => _store.clear();
 }
 
 Diary _diary(int i, int scale, {String? text}) {
@@ -142,23 +127,14 @@ void main() {
 
   setUpAll(() async {
     await Isar.initialize(dylib);
-    getIt.registerSingleton<IKVStorage>(_MemoryKV());
+    getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
   });
 
   for (final scale in [1000, 5000, 20000]) {
     test('scale $scale', () async {
       final dir = Directory.systemTemp.createTempSync('moodiary_bench_$scale');
       final isar = Isar.open(
-        schemas: [
-          DiarySchema,
-          SearchPostingSchema,
-          SearchStatsSchema,
-          LinkPostingSchema,
-          DiaryIndexSnapshotSchema,
-          ReindexQueueSchema,
-          CategorySchema,
-          SyncTombstoneSchema,
-        ],
+        schemas: moodiarySchemas,
         directory: dir.path,
         maxSizeMiB: 4096,
         inspector: false,

@@ -1063,6 +1063,9 @@ class Translations$common$zh {
 	/// zh: '删除'
 	String get delete => '删除';
 
+	/// zh: '加载失败'
+	String get loadFailed => '加载失败';
+
 	/// zh: '无标题'
 	String get untitled => '无标题';
 

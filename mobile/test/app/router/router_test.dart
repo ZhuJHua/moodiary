@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary/app/router/route_error_page.dart';
 import 'package:moodiary/app/router/router.dart';
+import 'package:moodiary/app/settings/setting_routes.dart';
 import 'package:moodiary_assistant/moodiary_assistant.dart';
 import 'package:moodiary_editor/moodiary_editor.dart'
     show EditorMigrationService;

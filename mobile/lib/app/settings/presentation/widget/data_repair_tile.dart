@@ -1,21 +1,20 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 
 /// 重推导预览/媒体引用、清除失效分类引用并重建索引。幂等，可反复执行。
-class DataRepairTile extends ConsumerStatefulWidget {
+class DataRepairTile extends StatefulWidget {
   final bool isFirst;
   final bool isLast;
 
   const DataRepairTile({super.key, this.isFirst = false, this.isLast = false});
 
   @override
-  ConsumerState<DataRepairTile> createState() => _DataRepairTileState();
+  State<DataRepairTile> createState() => _DataRepairTileState();
 }
 
-class _DataRepairTileState extends ConsumerState<DataRepairTile> {
+class _DataRepairTileState extends State<DataRepairTile> {
   bool _repairing = false;
 
   @override

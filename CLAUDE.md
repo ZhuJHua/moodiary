@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Moodiary — a Flutter + Rust diary app. **Layered pub-workspace monorepo**: 20 shared packages under `packages/` across four dependency layers, consumed by the single Flutter app **`mobile/`** (Android + iOS, pub name `moodiary`). The root `pubspec.yaml` is a pure coordinator (workspace + Melos config, no app code). A desktop app will be rebuilt later — the packages are already layered for it, but no desktop target exists in the tree today.
+Moodiary — a Flutter + Rust diary app. **Layered pub-workspace monorepo**: 27 shared packages under `packages/` across four dependency layers, consumed by the single Flutter app **`mobile/`** (Android + iOS, pub name `moodiary`). The root `pubspec.yaml` is a pure coordinator (workspace + Melos config, no app code). A desktop app will be rebuilt later — the packages are already layered for it, but no desktop target exists in the tree today.
 
 ## Tech Stack
 
@@ -79,6 +79,7 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
       moodiary_components/   #   业务组件：features 共用、够不着 mui 的那部分 UI
       moodiary_migration/    #   one-shot legacy data migration
       moodiary_preferences/  #   preference state
+      moodiary_picker/       #   相册选择器：骑 wechat_assets_picker 换皮 + image_picker 系统相机（仅 mobile 依赖）
     feature/                 # → feature_base/core/foundation (features never import each other)
       moodiary_export/       #   导出 Markdown/Word/PDF + 本地备份导入
       moodiary_editor/       #   TipTap webview editor (complete)
