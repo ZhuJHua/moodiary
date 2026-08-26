@@ -100,7 +100,7 @@ void main() {
     });
 
     tearDown(() {
-      isar.close();
+      if (isar.isOpen) isar.close();
       dir.deleteSync(recursive: true);
     });
 
@@ -108,24 +108,37 @@ void main() {
       isar.write((isar) => isar.diarys.putAll(diaries));
     }
 
+    // 生产路径在 compute 子 isolate 里 open + close 同目录库；测试进程内同目录
+    // open 返回同一实例，merge 末尾的 close 会把测试自己的句柄一并关掉——
+    // 每次跑完重开一份再断言。
+    void runMerge() {
+      VersionMigrator.debugMergeToV280(dir.path);
+      isar = .open(
+        schemas: [DiarySchema, CategorySchema, FontSchema],
+        directory: dir.path,
+        inspector: false,
+      );
+    }
+
     Diary byId(String id) => isar.diarys.where().idEqualTo(id).findFirst()!;
 
     test('text 裸文本被包装成 Delta 并翻成 richText，时间戳原样保留', () {
       seed([_legacyDiary('t1', type: 'text', content: '第一篇\n随手记')]);
-      VersionMigrator.debugMergeToV280(dir.path);
+      runMerge();
 
       final d = byId('t1');
       expect(d.type, DiaryType.richText.value);
       expect(QuillDelta.isDelta(d.content), isTrue);
       expect(QuillDelta.plainText(d.content), '第一篇\n随手记\n');
-      expect(d.lastModified, DateTime.utc(2024, 6, 2));
-      expect(d.time, DateTime.utc(2024, 6, 1));
+      // isar_plus 反序列化会 toLocal（时刻守恒、isUtc 翻转），按绝对时刻比较。
+      expect(d.lastModified.toUtc(), DateTime.utc(2024, 6, 2));
+      expect(d.time.toUtc(), DateTime.utc(2024, 6, 1));
     });
 
     test('恰好是 JSON 数组的裸文本同样被包装——不得漏成"合法 Delta"静默清空', () {
       const raw = '["买菜","做饭"]';
       seed([_legacyDiary('t2', type: 'text', content: raw)]);
-      VersionMigrator.debugMergeToV280(dir.path);
+      runMerge();
 
       final d = byId('t2');
       expect(d.type, DiaryType.richText.value);
@@ -137,7 +150,7 @@ void main() {
     test('text 里已是合法 Delta 的只翻 type，内容逐字节不动', () {
       const delta = '[{"insert":"正文\\n"}]';
       seed([_legacyDiary('t3', type: 'text', content: delta)]);
-      VersionMigrator.debugMergeToV280(dir.path);
+      runMerge();
 
       final d = byId('t3');
       expect(d.type, DiaryType.richText.value);
@@ -151,7 +164,7 @@ void main() {
         _legacyDiary('r1', type: 'richText', content: delta),
         _legacyDiary('m1', type: 'markdown', content: md),
       ]);
-      VersionMigrator.debugMergeToV280(dir.path);
+      runMerge();
 
       expect(byId('r1').content, delta);
       expect(byId('r1').type, 'richText');
@@ -161,9 +174,9 @@ void main() {
 
     test('幂等：重复执行结果不变', () {
       seed([_legacyDiary('t4', type: 'text', content: '重复跑')]);
-      VersionMigrator.debugMergeToV280(dir.path);
+      runMerge();
       final first = byId('t4').content;
-      VersionMigrator.debugMergeToV280(dir.path);
+      runMerge();
       expect(byId('t4').content, first);
       expect(byId('t4').type, DiaryType.richText.value);
     });

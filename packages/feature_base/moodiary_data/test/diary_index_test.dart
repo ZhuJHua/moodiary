@@ -1,11 +1,15 @@
 // 真库集成测试:在宿主机直接开 isar_plus 原生库,验证 posting-list 倒排的正确性。
 //
-// 需要 libisar_plus 动态库(macOS 可从 GitHub release 的 isar_plus_core.xcframework.zip
-// 提取静态库后转 dylib:`lipo -thin arm64` + `clang -dynamiclib -Wl,-all_load`),然后:
+// 需要 libisar_plus 动态库:
+// - CI(quality.yml 的「Locate Isar test dylib」步骤)用 pub 包自带的
+//   isar_plus_flutter_libs-<ver>/linux/libisar_plus.so,bootstrap 后就在磁盘上。
+// - macOS 本机:从 GitHub release 的 isar_plus_core.xcframework.zip 取
+//   macos-arm64_x86_64 切片,framework 二进制本身就是 dylib,拷出改名即用
+//   (1.3.9 实测;更早版本是静态库,才需要 lipo + clang 转 dylib)。然后:
 //
 //   ISAR_TEST_DYLIB=/path/to/libisar_plus.dylib fvm flutter test test/diary_index_test.dart
 //
-// 未设置环境变量时整组跳过,不影响常规 CI。
+// 未设置环境变量时整组跳过。
 import 'dart:convert';
 import 'dart:io';
 
