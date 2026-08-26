@@ -39,8 +39,7 @@ class _BootFailurePageState extends State<BootFailurePage> {
     }
   }
 
-  String get _details =>
-      'Error: ${widget.error}\n\n${widget.stackTrace}';
+  String get _details => 'Error: ${widget.error}\n\n${widget.stackTrace}';
 
   Future<void> _copy() async {
     await Clipboard.setData(ClipboardData(text: _details));

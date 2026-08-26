@@ -68,7 +68,7 @@ final class MediaDiariesProvider
   }
 }
 
-String _$mediaDiariesHash() => r'7d247b162773311d6c6dd7eeb3b0bfe6a101e601';
+String _$mediaDiariesHash() => r'1d8839f32d6e133583fe5c68866a192ab998a4c3';
 
 /// 媒体库分页数据源：按 [MediaType] 加载含该类型媒体的在册日记（时间倒序）。
 /// 每类一个 family 实例，各自维护 offset / noMore，互不干扰。展示用的按日期分组

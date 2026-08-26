@@ -15,8 +15,14 @@ class DashboardController extends _$DashboardController {
     // 事件**只置脏、不重算**：本控制器服务的「我的」页是底栏的一格，会长期留在
     // IndexedStack 里。而这里是全表拉 + 内存聚合，isar_plus 的读查询又不走索引全靠
     // 扫描 —— 跟着每次写入重算等于每写一篇日记扫一次库。
-    final diarySub = DiaryRepository.get().diaryEvents.listen(_markStale);
-    final catSub = CategoryRepository.get().categoryEvents.listen(_markStale);
+    final diarySub = ref
+        .read(diaryRepositoryProvider)
+        .diaryEvents
+        .listen(_markStale);
+    final catSub = ref
+        .read(categoryRepositoryProvider)
+        .categoryEvents
+        .listen(_markStale);
     ref.onDispose(diarySub.cancel);
     ref.onDispose(catSub.cancel);
 
@@ -35,9 +41,12 @@ class DashboardController extends _$DashboardController {
   }
 
   Future<DashboardStats> _compute() async {
-    final diaries = await DiaryRepository.get().getAllDiaries();
+    final diaries = await ref.read(diaryRepositoryProvider).getAllDiaries();
     final cats =
-        (await CategoryRepository.get().getAllCategoriesForSync().run())
+        (await ref
+                .read(categoryRepositoryProvider)
+                .getAllCategoriesForSync()
+                .run())
             .getOrElse((_) => const <Category>[]);
 
     final visible = diaries.where((d) => d.show).toList(growable: false);

@@ -37,13 +37,14 @@ final class _MemoryKVStorage extends IKVStorage {
 void main() {
   late _MemoryKVStorage kv;
 
+  // get_it scope：push 里注册的绑定遮蔽外层同类型，pop 整层撤掉——
+  // 不必 isRegistered/unregister 手工对账。
   setUp(() {
     kv = _MemoryKVStorage();
-    if (getIt.isRegistered<IKVStorage>()) getIt.unregister<IKVStorage>();
-    getIt.registerSingleton<IKVStorage>(kv);
+    getIt.pushNewScope(init: (gi) => gi.registerSingleton<IKVStorage>(kv));
   });
 
-  tearDown(() => getIt.unregister<IKVStorage>());
+  tearDown(() => getIt.popScope());
 
   Widget host() {
     return TranslationProvider(

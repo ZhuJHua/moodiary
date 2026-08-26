@@ -5,7 +5,7 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'category_repository.dart';
-import 'diary_repository.dart';
+import 'repository_providers.dart';
 
 part 'category_controller.g.dart';
 
@@ -31,7 +31,7 @@ List<Category> _applyEvent(List<Category> list, CategoryEvent event) {
 /// 订阅 [CategoryRepository.categoryEvents]，按事件原地增量更新，无需重查库。
 @riverpod
 class CategoryController extends _$CategoryController {
-  late final CategoryRepository _repository = .get();
+  CategoryRepository get _repository => ref.read(categoryRepositoryProvider);
 
   // 首次加载期间事件无处可并，标记后补一次重查（同 LoadMoreMixin.markMissedEvent）。
   bool _missedEvent = false;
@@ -102,8 +102,9 @@ List<Category> applyCategoryOrder(
 Future<({Map<String, int> byCategory, int total})> categoryDiaryCounts(
   Ref ref,
 ) async {
+  final diaryRepo = ref.watch(diaryRepositoryProvider);
   Timer? debounce;
-  final sub = DiaryRepository.get().diaryEvents.listen((_) {
+  final sub = diaryRepo.diaryEvents.listen((_) {
     debounce?.cancel();
     debounce = Timer(const Duration(milliseconds: 200), ref.invalidateSelf);
   });
@@ -111,7 +112,7 @@ Future<({Map<String, int> byCategory, int total})> categoryDiaryCounts(
     debounce?.cancel();
     sub.cancel();
   });
-  return DiaryRepository.get().diaryCountByCategory();
+  return diaryRepo.diaryCountByCategory();
 }
 
 @riverpod

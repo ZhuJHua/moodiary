@@ -37,7 +37,7 @@ final class CategoryControllerProvider
 }
 
 String _$categoryControllerHash() =>
-    r'5379f34945973b4045dc72af8c0d8b448da65a52';
+    r'846498a35b6f7c7d0557897230d35356bfc1d2a6';
 
 /// 订阅 [CategoryRepository.categoryEvents]，按事件原地增量更新，无需重查库。
 
@@ -145,7 +145,7 @@ final class CategoryDiaryCountsProvider
 }
 
 String _$categoryDiaryCountsHash() =>
-    r'928b55e44ab6f84967d4423aeafcbb7dfa79b1a1';
+    r'067e602ed10691d5ab4bea54780350ebd9601cdd';
 
 @ProviderFor(getCategory)
 final getCategoryProvider = GetCategoryFamily._();

@@ -31,7 +31,8 @@ class EditController extends _$EditController {
 
   /// 最近一次有效 state 快照。dispose 后异步收尾时 provider 已销毁，读
   /// `state`/`ref` 会抛 "Cannot use Ref after dispose"；落库/清理统一走此缓存
-  /// （[DiaryRepository] 是 get_it 单例，可安全调用），写回 `state` 仍由
+  /// （[DiaryRepository] 是进程级静态单例，不随 provider 生命周期销毁，可安全
+  /// 调用——也因此本类刻意不走 diaryRepositoryProvider），写回 `state` 仍由
   /// `ref.mounted` 守卫。
   Diary? _latest;
 

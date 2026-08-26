@@ -17,18 +17,19 @@ part 'media_controller.g.dart';
 class MediaDiaries extends _$MediaDiaries with LoadMoreMixin<Diary> {
   @override
   FutureOr<List<Diary>> build({required MediaType type}) async {
-    final sub = DiaryRepository.get().diaryEvents.listen(_applyChange);
+    final sub = ref
+        .read(diaryRepositoryProvider)
+        .diaryEvents
+        .listen(_applyChange);
     ref.onDispose(sub.cancel);
     return init();
   }
 
   @override
   Future<Iterable<Diary>?> load({required int limit, required int offset}) {
-    return DiaryRepository.get().getMediaSourceDiaries(
-      type: type,
-      offset: offset,
-      limit: limit,
-    );
+    return ref
+        .read(diaryRepositoryProvider)
+        .getMediaSourceDiaries(type: type, offset: offset, limit: limit);
   }
 
   bool _hasMedia(Diary d) => switch (type) {
@@ -96,6 +97,8 @@ class MediaCleanupController extends _$MediaCleanupController {
   @override
   void build() {}
 
+  // 本类刻意用静态 `XxxRepository.get()` 而非 ref.read(xxxRepositoryProvider)：
+  // autoDispose 下 ref 在确认弹窗 await 期间被回收，dispose 后碰 ref 会抛。
   Future<MediaCleanupReport> scan() async {
     final used = await DiaryRepository.get().collectReferencedMedia();
     return AppFiles.scanOrphanMedia(

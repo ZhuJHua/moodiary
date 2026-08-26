@@ -16,7 +16,7 @@ Future<Map<DateTime, int>> timelineMonthCounts(
   bool uncategorized = false,
   required DiarySort sort,
 }) async {
-  final repository = DiaryRepository.get();
+  final repository = ref.watch(diaryRepositoryProvider);
   final sub = repository.diaryEvents.listen((_) => ref.invalidateSelf());
   ref.onDispose(sub.cancel);
   return repository.diaryCountByMonth(

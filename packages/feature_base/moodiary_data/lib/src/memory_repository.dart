@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -7,6 +8,9 @@ class MemoryRepository {
   MemoryRepository._(this._isar);
 
   factory MemoryRepository.get() => _instance;
+
+  @visibleForTesting
+  MemoryRepository.forTesting(this._isar);
 
   static final MemoryRepository _instance = ._(IsarDatabase.get().isar);
 

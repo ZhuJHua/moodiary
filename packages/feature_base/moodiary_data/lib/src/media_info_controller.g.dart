@@ -41,7 +41,7 @@ final class MediaInfoControllerProvider
 }
 
 String _$mediaInfoControllerHash() =>
-    r'a9066a2e0f55d037295a48b751341cdc88c29de2';
+    r'035e3d0d904b8ee5b59e924e342bf78662439017';
 
 /// 订阅 [MediaInfoRepository.mediaInfoEvents]，按事件原地增量更新，无需重查库。
 /// 以 fileName 为键——消费方（媒体库 / 播放页）都按文件名点查。

@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'diary_repository.dart';
 import 'loadmore.dart';
+import 'repository_providers.dart';
 
 part 'diary_controller.g.dart';
 
@@ -53,7 +54,7 @@ List<Diary> applyDiaryEvent(
 /// 订阅 [DiaryRepository.diaryEvents] 按事件原地增量更新，无需重查库。
 @riverpod
 class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
-  late final DiaryRepository _repository = .get();
+  DiaryRepository get _repository => ref.read(diaryRepositoryProvider);
 
   DiarySort get _sort => .getType(MoodiaryKVs.homeSortMode.get()!);
 
@@ -129,7 +130,7 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
 /// 回收站列表（按时间倒序的所有 `show == false` 的日记）。
 @riverpod
 class RecycleBinDiaries extends _$RecycleBinDiaries {
-  DiaryRepository get _repository => .get();
+  DiaryRepository get _repository => ref.read(diaryRepositoryProvider);
 
   // 首次加载期间事件无处可并，标记后补一次重查（同 LoadMoreMixin.markMissedEvent）。
   bool _missedEvent = false;
@@ -207,7 +208,7 @@ Stream<Diary?> getDiary(
         : empty.copyWith(categoryId: defaultCategoryId);
     return;
   }
-  final repository = DiaryRepository.get();
+  final repository = ref.watch(diaryRepositoryProvider);
   final initial = await repository.getDiaryByBusinessId(id);
   if (initial == null) {
     yield null;

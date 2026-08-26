@@ -1,4 +1,6 @@
+
 import 'dart:async';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 
 import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -10,6 +12,9 @@ class LlmProviderRepository {
   LlmProviderRepository._(this._isar);
 
   factory LlmProviderRepository.get() => _instance;
+
+  @visibleForTesting
+  LlmProviderRepository.forTesting(this._isar);
 
   static final LlmProviderRepository _instance = ._(IsarDatabase.get().isar);
 

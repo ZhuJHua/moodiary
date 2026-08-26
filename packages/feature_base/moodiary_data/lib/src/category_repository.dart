@@ -1,4 +1,6 @@
+
 import 'dart:async';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 
 import 'package:fpdart/fpdart.dart';
 import 'package:isar_plus/isar_plus.dart';
@@ -10,6 +12,9 @@ class CategoryRepository {
   CategoryRepository._(this._isar);
 
   factory CategoryRepository.get() => _instance;
+
+  @visibleForTesting
+  CategoryRepository.forTesting(this._isar);
 
   static final CategoryRepository _instance = ._(IsarDatabase.get().isar);
 

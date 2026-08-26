@@ -3,6 +3,15 @@
 # 需在引用方 dev_dependencies 加 `moodiary_lint`（带入 flutter_lints 传递依赖）。
 include: package:flutter_lints/flutter.yaml
 
+# riverpod_lint：已评估、暂缓接入（2026-08-26）。3.1.8 是原生 analyzer plugin，
+# 但在本 SDK（analyzer 13.3.0 / Dart 3.13）上：`plugins:` 放 workspace 根会编译
+# 加载却不给嵌套包出诊断；放包内单独 dart analyze 能出诊断、从根分析则被
+# plugins_in_inner_options 拒绝。custom_lint 老形态只到 3.0.0-dev.17（analyzer 7，
+# 装不进）。升级 Flutter 后复查：在根 analysis_options.yaml 写
+# `plugins: {riverpod_lint: {version: <钉版>}}`，若根级 flutter analyze 能报出
+# 包内 riverpod 违例（拿 scoped_providers_should_specify_dependencies 当哨兵，
+# diary 的 category_drawer_test.dart 的 override 会触发）即可接入。
+
 linter:
   rules:
     directives_ordering: true

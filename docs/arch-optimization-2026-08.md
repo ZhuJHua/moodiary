@@ -180,9 +180,10 @@ CI dylib 那条在本机先验证目标用例真跑通过。
 - [ ] **`_assertRequiredBindings()`**：configureDependencies 后对 10 个必需绑定逐个
   isRegistered，debug assert / release logger.e——同时是 desktop 组合根的可执行清单。
   （throwOnMissingDependencies 开在根上是 no-op；要开开在 sync 等 micro-package 上。）
-- [ ] **riverpod_lint 3.1.8**：已是原生 analyzer plugin（不需要 custom_lint、不改
-  analyze 命令），放 moodiary_lint 的 **dependencies**（随 include 传递），
-  analysis_options 加 plugins，跑一遍消噪、不要的规则显式 ignore。
+- [x] **riverpod_lint**：实测后**暂缓**（2026-08-26）——analyzer 13.3.0 上原生
+  plugin 在 workspace 根加载但诊断不落到嵌套包，包内放置被根分析拒绝
+  （plugins_in_inner_options），custom_lint 老形态止步 dev.17/analyzer 7。
+  复查条件与哨兵写在 moodiary_lint/lib/analysis_options.yaml 顶部注释。
 - [ ] 测试接缝用 get_it scope：`pushNewScope` / `popScope` 替掉 view_mode_sheet_test
   与 sync_test_harness 的手工 unregister 三连。
 

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -10,6 +11,9 @@ class AgentPresetRepository {
   AgentPresetRepository._(this._isar);
 
   factory AgentPresetRepository.get() => _instance;
+
+  @visibleForTesting
+  AgentPresetRepository.forTesting(this._isar);
 
   static final AgentPresetRepository _instance = ._(IsarDatabase.get().isar);
 

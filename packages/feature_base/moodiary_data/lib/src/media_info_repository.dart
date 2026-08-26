@@ -1,4 +1,6 @@
+
 import 'dart:async';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 
 import 'package:fpdart/fpdart.dart';
 import 'package:isar_plus/isar_plus.dart';
@@ -10,6 +12,9 @@ class MediaInfoRepository {
   MediaInfoRepository._(this._isar);
 
   factory MediaInfoRepository.get() => _instance;
+
+  @visibleForTesting
+  MediaInfoRepository.forTesting(this._isar);
 
   static final MediaInfoRepository _instance = ._(IsarDatabase.get().isar);
 

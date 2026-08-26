@@ -71,7 +71,11 @@ Future<void> _initSystem() async {
       final font = await FontRepository.get().getActiveFont();
       await ThemeManager().buildTheme(customFont: font?.themeDescriptor);
     } catch (e, s) {
-      logger.e('theme init failed, fallback to default', error: e, stackTrace: s);
+      logger.e(
+        'theme init failed, fallback to default',
+        error: e,
+        stackTrace: s,
+      );
       try {
         await ThemeManager().buildTheme();
       } catch (_) {}

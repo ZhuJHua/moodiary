@@ -30,7 +30,7 @@ abstract class DiarySearchState with _$DiarySearchState {
 
 @riverpod
 class DiarySearchController extends _$DiarySearchController {
-  DiaryRepository get _repository => .get();
+  DiaryRepository get _repository => ref.read(diaryRepositoryProvider);
 
   int _seq = 0;
   bool _disposed = false;
@@ -122,6 +122,8 @@ class DiarySearchController extends _$DiarySearchController {
     final stopwatch = Stopwatch()..start();
     final tokenizeResult = await Tokenizer.tokenize(text: trimmed);
     final range = _resolveRange();
+    // dispose 后 ref.read 会抛（_repository 经 provider 取），也没必要再查。
+    if (_disposed) return;
     final results = await _repository.searchDiaries(
       cutTokens: tokenizeResult.cut,
       cutForSearchTokens: tokenizeResult.cutForSearch,

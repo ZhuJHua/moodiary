@@ -1,4 +1,6 @@
+
 import 'dart:async';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 
 import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -8,6 +10,9 @@ class ChatRepository {
   ChatRepository._(this._isar);
 
   factory ChatRepository.get() => _instance;
+
+  @visibleForTesting
+  ChatRepository.forTesting(this._isar);
 
   static final ChatRepository _instance = ._(IsarDatabase.get().isar);
 

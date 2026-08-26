@@ -37,10 +37,10 @@ class SyncStats {
 /// 以 [SyncStats.remoteError] 呈现，本地数量始终可用。
 @riverpod
 Future<SyncStats> syncStats(Ref ref) async {
-  final diaries = await DiaryRepository.get().getAllDiaries();
+  final diaries = await ref.read(diaryRepositoryProvider).getAllDiaries();
   final localDiaries = diaries.length;
   final localCategories =
-      (await CategoryRepository.get().getAllCategories().run())
+      (await ref.read(categoryRepositoryProvider).getAllCategories().run())
           .getOrElse((_) => const <Category>[])
           .length;
 
