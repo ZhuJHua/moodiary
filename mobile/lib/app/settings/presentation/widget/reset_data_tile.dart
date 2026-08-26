@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/services.dart';
 import 'package:moodiary/app/di/bootstrap.dart';
 import 'package:moodiary_components/moodiary_components.dart';
@@ -48,12 +50,36 @@ class ResetDataTile extends StatelessWidget {
     try {
       await resetAllData();
       await toast.dismiss();
-      // 退出以从干净存储重新初始化
-      await SystemNavigator.pop();
+      // 内存单例已指向被清空的存储，必须立即接管界面（见 [resetAllData] 的契约），
+      // 不能让用户留在旧 UI 里继续操作。iOS 上 SystemNavigator.pop 对标准 Flutter
+      // 应用是空操作（root VC 不满足它的两条分支），所以终态页是主路径；
+      // Android 的 Activity.finish() 真能退出，pop 作为快捷路径顺带调一次。
+      runApp(const _ResetDonePage());
+      if (Platform.isAndroid) await SystemNavigator.pop();
     } catch (e, s) {
       await toast.dismiss();
       logger.e('重置数据失败', error: e, stackTrace: s);
       toast.error(message: l10n.app.resetFailed);
     }
+  }
+}
+
+/// 重置完成后的终态页：占满全屏、无返回路径，只提示手动重启。
+class _ResetDonePage extends StatelessWidget {
+  const _ResetDonePage();
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(l10n.app.resetDone, textAlign: TextAlign.center),
+          ),
+        ),
+      ),
+    );
   }
 }

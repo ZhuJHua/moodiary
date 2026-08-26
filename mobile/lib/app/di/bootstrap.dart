@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_editor/moodiary_editor.dart'
+    show EditorMigrationService;
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
@@ -40,8 +42,9 @@ void runStartupMaintenance() {
 }
 
 /// 重置所有应用数据，恢复到「全新安装」状态（Isar 集合 / KV / SecureKV / 媒体 / 缓存）。
-/// 返回后内存仍残留 Riverpod / get_it 单例状态，调用方必须紧接着退出应用，
-/// 由下次启动重走启动引导从干净存储初始化。
+/// 返回后内存仍残留 Riverpod / get_it 单例状态，调用方必须立即接管界面（终态页），
+/// 不得继续使用既有 provider / 单例；iOS 上退出进程不可依赖（SystemNavigator.pop
+/// 是空操作），由用户手动重启后从干净存储初始化。
 Future<void> resetAllData() async {
   // 先清空数据库集合（保持 Isar 句柄有效），再并发清空其余存储与文件。
   await IsarDatabase.get().clear();
@@ -54,8 +57,9 @@ Future<void> resetAllData() async {
     AppFiles.resetUserMediaDirs(),
     AppFiles.clearCache(),
     // 2.8.0 升级留下的两处日记明文档案，重置必须一并清掉：
-    // 强制迁移为每篇旧日记写的 sidecar 原文备份，与跨引擎迁移前的整库快照。
-    AppFiles.deleteDir(AppFiles.getRealPath('migration_backup', '')),
+    // 强制迁移为每篇旧日记写的 sidecar 原文备份（路径归 owner，不手抄字面量），
+    // 与跨引擎迁移前的整库快照。
+    EditorMigrationService.purgeBackups(),
     AppFiles.deleteFile(
       AppFiles.getRealPath('database', 'default.isar.v273bak'),
     ),

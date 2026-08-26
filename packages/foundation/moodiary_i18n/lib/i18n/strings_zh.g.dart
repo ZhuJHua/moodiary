@@ -472,6 +472,9 @@ class Translations$app$zh {
 	/// zh: '重置失败'
 	String get resetFailed => '重置失败';
 
+	/// zh: '数据已清空 请关闭并重新打开应用'
+	String get resetDone => '数据已清空\n请关闭并重新打开应用';
+
 	/// zh: '清理缓存'
 	String get cacheClear => '清理缓存';
 

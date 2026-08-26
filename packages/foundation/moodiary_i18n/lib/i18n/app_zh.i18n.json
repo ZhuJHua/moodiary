@@ -137,6 +137,7 @@
   "resetConfirm": "确认重置",
   "resetRunning": "正在重置...",
   "resetFailed": "重置失败",
+  "resetDone": "数据已清空\n请关闭并重新打开应用",
   "cacheClear": "清理缓存",
   "cacheCleared": "清理成功",
   "fontNameFailed": "字体名称获取失败",

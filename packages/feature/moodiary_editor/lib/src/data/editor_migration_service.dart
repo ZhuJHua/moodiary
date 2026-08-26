@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -30,12 +31,25 @@ class EditorMigrationService {
 
   static Future<void> refreshRequiresMigration() async {
     requiresMigration = await DiaryRepository.get().hasLegacyFormatDiaries();
+    // 已无旧格式日记 = 迁移已收敛：sidecar 存的是整库旧日记**正文明文**，安全网
+    // 使命结束就不能永久留在磁盘上（迁移完成的当次会话仍保留，下次启动才清）。
+    if (!requiresMigration) unawaited(purgeBackups());
   }
 
   static const String _backupType = 'migration_backup';
 
   static String _backupPath(String id) =>
       AppFiles.getRealPath(_backupType, '$id.json');
+
+  /// 删除全部 sidecar 明文备份。路径知识只在本类——重置数据等外部清理一律调它，
+  /// 不要手抄 `migration_backup` 字面量。
+  static Future<void> purgeBackups() async {
+    try {
+      await AppFiles.deleteDir(AppFiles.getRealPath(_backupType, ''));
+    } catch (e, s) {
+      logger.e('purge migration backups failed', error: e, stackTrace: s);
+    }
+  }
 
   static Future<void> _writeBackup(Diary diary) async {
     final path = _backupPath(diary.id);

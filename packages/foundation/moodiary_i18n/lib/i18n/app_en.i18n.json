@@ -137,6 +137,7 @@
   "resetConfirm": "Reset everything",
   "resetRunning": "Resetting…",
   "resetFailed": "The reset failed",
+  "resetDone": "Data cleared\nPlease close and reopen the app",
   "cacheClear": "Clear the cache",
   "cacheCleared": "Cache cleared",
   "fontNameFailed": "Could not read the font name",

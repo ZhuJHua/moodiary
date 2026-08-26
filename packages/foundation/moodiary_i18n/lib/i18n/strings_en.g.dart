@@ -193,6 +193,7 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get resetConfirm => 'Reset everything';
 	@override String get resetRunning => 'Resetting…';
 	@override String get resetFailed => 'The reset failed';
+	@override String get resetDone => 'Data cleared\nPlease close and reopen the app';
 	@override String get cacheClear => 'Clear the cache';
 	@override String get cacheCleared => 'Cache cleared';
 	@override String get fontNameFailed => 'Could not read the font name';
