@@ -46,7 +46,8 @@ Pkg _parse(File file, String layer) {
     if (m == null) continue;
     final dep = m.group(1)!;
     if (dep == 'flutter' || dep == 'flutter_localizations') continue;
-    (dep.startsWith('moodiary_') ? pkg : third).add(dep);
+    // mui 是唯一不带 moodiary_ 前缀的工作区包，漏了它整张图就没有设计系统的边。
+    (dep.startsWith('moodiary_') || dep == 'mui' ? pkg : third).add(dep);
   }
   return Pkg(name!, layer)
     ..internal.addAll(pkg)
