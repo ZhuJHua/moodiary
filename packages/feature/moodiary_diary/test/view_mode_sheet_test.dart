@@ -1,13 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/src/presentation/widget/view_mode_sheet.dart';
-import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 import 'package:mui/mui.dart';
 
-final _mui = buildMuiTheme(brightness: Brightness.light);
+import 'support/pump.dart';
 
 void main() {
   late MemoryKVStorage kv;
@@ -22,26 +21,12 @@ void main() {
   tearDown(() => getIt.popScope());
 
   Widget host() {
-    return TranslationProvider(
-      child: MuiTheme(
-        data: _mui,
-        child: MaterialApp(
-          locale: const Locale('zh'),
-          localizationsDelegates: const [
-            // material_ui 的 widget 要它自己那份 MaterialLocalizations。
-            ...GlobalMaterialLocalizations.delegates,
-            GlobalMuiLocalizations.delegate,
-          ],
-          supportedLocales: AppLocaleUtils.supportedLocales,
-          home: Scaffold(
-            body: Builder(
-              builder: (context) => Center(
-                child: TextButton(
-                  onPressed: () => ViewModeSheet.show(context),
-                  child: const Text('open'),
-                ),
-              ),
-            ),
+    return muiTestApp(
+      Builder(
+        builder: (context) => Center(
+          child: TextButton(
+            onPressed: () => ViewModeSheet.show(context),
+            child: const Text('open'),
           ),
         ),
       ),

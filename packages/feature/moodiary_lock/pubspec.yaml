@@ -23,6 +23,7 @@ dependencies:
 
 
 dev_dependencies:
+  moodiary_di: 0.0.1
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1

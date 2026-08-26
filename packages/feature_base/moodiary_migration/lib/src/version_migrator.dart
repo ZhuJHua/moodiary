@@ -102,6 +102,20 @@ class VersionMigrator {
   /// compute 子 isolate 解析不到原生库，集成测试改在主 isolate 直接驱动本步骤。
   @visibleForTesting
   static void debugMergeToV280(String dir) => _mergeToV2_8_0(dir);
+
+  /// 同 [debugMergeToV280]。2.6.0 重写全部日记正文（Delta 包装），是旧步骤里
+  /// 破坏面最大的一步，必须有回归覆盖。
+  @visibleForTesting
+  static void debugMergeToV260(String dir) => _mergeToV2_6_0(dir);
+
+  /// 同上。2.6.3 给悬挂的 categoryId 补占位分类。
+  @visibleForTesting
+  static void debugFixV263(String dir) => _fixV2_6_3(dir);
+
+  /// 同上。2.7.3 清空字体表重灌（isar.fonts.clear()）。
+  @visibleForTesting
+  static Future<void> debugMergeToV273(String dir, List<Font> fonts) =>
+      _mergeToV2_7_3({'database': dir, 'fonts': fonts});
 }
 
 /// 2.8.0 迁移前对数据库文件做一次性快照备份（`default.isar.v273bak`）：跨引擎迁移 / 写回

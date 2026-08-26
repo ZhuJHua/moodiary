@@ -123,7 +123,11 @@ List<String> _checkPackageLayers() {
       collect('${pkg.path}/pubspec.yaml', layer);
     }
   }
-  collect('mobile/pubspec.yaml', 'app');
+  for (final dir in _appDirs) {
+    if (File('$dir/pubspec.yaml').existsSync()) {
+      collect('$dir/pubspec.yaml', 'app');
+    }
+  }
 
   final out = <String>[];
   for (final entry in depsOf.entries) {
@@ -232,7 +236,8 @@ const Map<String, Set<String>> _rustFacadeOwners = {
   'export': {'moodiary_export'},
   'sync': {'moodiary_sync'},
   'graph': {'moodiary_diary'},
-  'rust': {'moodiary'},
+  // app 门面：每个组合根都够得着（desktop 进树后 _appPubNames 自动带上）。
+  'rust': {'moodiary', 'moodiary_desktop'},
   'testing': {'moodiary_data'},
 };
 
@@ -242,6 +247,21 @@ final RegExp _rustFacadeRe = RegExp(
 );
 
 /// 门面之外还有一条：不许绕过门面深入 `src/`。
+
+/// app 目录清单：desktop 落地时在这里加一行（目录不存在自动跳过），五段检查
+/// （app 层收集 / rust 门面 / legacy material / 配色纯度 / ThemeData 构造点）
+/// 一起生效——此前 mobile 写死在五处，desktop 进树当天会同时漏检与误报。
+const List<String> _appDirs = ['mobile', 'desktop'];
+
+/// app 目录 → pub 包名（读 pubspec 的 name），rust 门面归属用。
+final Map<String, String> _appPubNames = {
+  for (final dir in _appDirs)
+    if (File('$dir/pubspec.yaml').existsSync())
+      dir: RegExp(
+        r'^name:\s*(\S+)',
+        multiLine: true,
+      ).firstMatch(File('$dir/pubspec.yaml').readAsStringSync())!.group(1)!,
+};
 
 /// 一次遍历、多段共用的 .dart 文件清单（按根缓存）。跳过生成物与两座大山——
 /// rust/target（几十 GB）与 editor/node_modules（pnpm 软链农场）；
@@ -278,15 +298,21 @@ final RegExp _rustDeepRe = RegExp(
 
 List<String> _checkRustFacades() {
   final out = <String>[];
-  for (final root in ['mobile/lib', 'mobile/test', 'packages']) {
+  for (final root in [
+    for (final dir in _appDirs) ...['$dir/lib', '$dir/test'],
+    'packages',
+  ]) {
     for (final entity in _dartFiles(root)) {
       final rel = entity.path.replaceAll('\\', '/');
       if (rel.contains('packages/foundation/moodiary_rust/')) continue;
       if (rel.endsWith('.g.dart') || rel.endsWith('.freezed.dart')) continue;
 
       final String owner;
-      if (rel.startsWith('mobile/')) {
-        owner = 'moodiary';
+      final appDir = _appDirs
+          .where((d) => rel.startsWith('$d/'))
+          .firstOrNull;
+      if (appDir != null) {
+        owner = _appPubNames[appDir]!;
       } else {
         final parts = rel.split('/');
         if (parts.length < 3) continue;
@@ -337,10 +363,10 @@ final RegExp _legacyMaterialRe = RegExp(
 
 List<String> _checkLegacyMaterial() {
   final out = <String>[];
-  for (final root in ['mobile/lib', 'packages']) {
+  for (final root in [for (final dir in _appDirs) '$dir/lib', 'packages']) {
     for (final entity in _dartFiles(root)) {
       final rel = entity.path.replaceAll('\\', '/');
-      if (!rel.contains('/lib/') && !rel.startsWith('mobile/lib')) continue;
+      if (!rel.contains('/lib/')) continue;
       if (rel.endsWith('.g.dart') || rel.endsWith('.freezed.dart')) continue;
       if (_legacyMaterialAllowlist.containsKey(rel)) continue;
       if (_legacyMaterialRe.hasMatch(entity.readAsStringSync())) {
@@ -420,7 +446,7 @@ final List<(RegExp, String)> _themeBans = [
 
 List<String> _checkThemePurity() {
   final out = <String>[];
-  for (final root in ['mobile/lib', 'packages']) {
+  for (final root in [for (final dir in _appDirs) '$dir/lib', 'packages']) {
     for (final entity in _dartFiles(root)) {
       final rel = entity.path.replaceAll('\\', '/');
       if (!rel.contains('/lib/')) continue;
@@ -452,7 +478,7 @@ final RegExp _themeDataRe = RegExp(r'(^|[^A-Za-z0-9_])ThemeData\s*\(');
 
 List<String> _checkThemeDataConstruction() {
   final out = <String>[];
-  for (final root in ['mobile/lib', 'packages']) {
+  for (final root in [for (final dir in _appDirs) '$dir/lib', 'packages']) {
     for (final entity in _dartFiles(root)) {
       final rel = entity.path.replaceAll('\\', '/');
       if (!rel.contains('/lib/') || rel == _themeDataBridge) continue;
@@ -610,11 +636,15 @@ void main(List<String> args) {
     exit(1);
   }
 
-  final libDir = Directory('mobile/lib');
-  if (!libDir.existsSync()) {
-    stderr.writeln('找不到 mobile/lib/ 目录，请在仓库根目录运行。');
+  final appLibDirs = [
+    for (final dir in _appDirs)
+      if (Directory('$dir/lib').existsSync()) Directory('$dir/lib'),
+  ];
+  if (appLibDirs.isEmpty) {
+    stderr.writeln('找不到任何 app 的 lib/ 目录（${_appDirs.join('/')}），请在仓库根目录运行。');
     exit(2);
   }
+  final libDir = appLibDirs.first;
 
   final seen = <String>{};
   final violations = <Violation>[];

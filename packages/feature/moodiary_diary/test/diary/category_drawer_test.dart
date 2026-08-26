@@ -10,6 +10,9 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:mui/mui.dart';
 
+import '../support/pump.dart';
+
+// 三个定制宿主（带 drawer key / containerOf 捕获）仍手写包裹，用得到主题。
 final _mui = buildMuiTheme(brightness: Brightness.light);
 
 Category cat(String id, String name) =>
@@ -20,28 +23,14 @@ Widget wrap({
   required Map<String, int> byCategory,
   required int total,
   ProviderContainer? container,
-}) => ProviderScope(
+}) => muiTestApp(
+  const CategoryDrawer(),
   overrides: [
     orderedCategoriesProvider.overrideWithValue(.data(categories)),
     categoryDiaryCountsProvider.overrideWith(
       (ref) async => (byCategory: byCategory, total: total),
     ),
   ],
-  child: TranslationProvider(
-    child: MuiTheme(
-      data: _mui,
-      child: MaterialApp(
-        localizationsDelegates: const [
-          // material_ui 的 widget 要它自己那份 MaterialLocalizations。
-          ...GlobalMaterialLocalizations.delegates,
-          GlobalMuiLocalizations.delegate,
-        ],
-        supportedLocales: AppLocaleUtils.supportedLocales,
-        locale: const Locale('zh'),
-        home: const Scaffold(body: CategoryDrawer()),
-      ),
-    ),
-  ),
 );
 
 void main() {

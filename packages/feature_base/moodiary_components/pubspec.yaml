@@ -34,6 +34,7 @@ dependencies:
   audioplayers: 6.8.1
 
 dev_dependencies:
+  riverpod_annotation: 4.0.6
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1

@@ -181,4 +181,109 @@ void main() {
       expect(byId('t4').type, DiaryType.richText.value);
     });
   });
+
+  group('2.6.0 / 2.6.3 / 2.7.3 旧步骤（真库）', () {
+    late Directory dir;
+    late Isar isar;
+
+    setUp(() {
+      dir = Directory.systemTemp.createTempSync('moodiary_legacy_mig_test');
+      isar = .open(
+        schemas: legacyMigrationSchemas,
+        directory: dir.path,
+        inspector: false,
+      );
+    });
+
+    tearDown(() {
+      if (isar.isOpen) isar.close();
+      dir.deleteSync(recursive: true);
+    });
+
+    // 旧步骤在同 isolate 内 open + close 同目录库，跑完重开句柄（同 2.8.0 组）。
+    void reopen() {
+      isar = .open(
+        schemas: legacyMigrationSchemas,
+        directory: dir.path,
+        inspector: false,
+      );
+    }
+
+    Diary byId(String id) => isar.diarys.where().idEqualTo(id).findFirst()!;
+
+    test('2.6.0：裸文本包成 Delta、翻 richText、lastModified 对齐 time；重跑幂等', () {
+      const delta = '[{"insert":"已是 Delta\\n"}]';
+      isar.write(
+        (i) => i.diarys.putAll([
+          _legacyDiary('plain', type: 'text', content: '第一篇\n随手记'),
+          _legacyDiary('delta', type: 'text', content: delta),
+        ]),
+      );
+      VersionMigrator.debugMergeToV260(dir.path);
+      reopen();
+
+      final plain = byId('plain');
+      expect(QuillDelta.isDelta(plain.content), isTrue, reason: '裸文本被包装');
+      expect(QuillDelta.plainText(plain.content), '第一篇\n随手记\n');
+      expect(plain.type, DiaryType.richText.value);
+      // lastModified 同步为 time（该版本新增字段的回填语义）。
+      expect(plain.lastModified.toUtc(), plain.time.toUtc());
+      expect(byId('delta').content, delta, reason: '合法 Delta 逐字节不动');
+
+      final first = (plain: plain.content, delta: byId('delta').content);
+      VersionMigrator.debugMergeToV260(dir.path);
+      reopen();
+      expect(byId('plain').content, first.plain, reason: '重跑幂等');
+      expect(byId('delta').content, first.delta);
+    });
+
+    test('2.6.3：悬挂 categoryId 补占位分类；已存在的不重复建', () {
+      isar.write((i) {
+        i.categorys.put(
+          Category(id: 'ok', categoryName: '在册', lastModified: DateTime(2024)),
+        );
+        i.diarys.putAll([
+          _legacyDiary(
+            'a',
+            type: 'richText',
+            content: '[{"insert":"x\\n"}]',
+          ).copyWith(categoryId: 'dangling'),
+          _legacyDiary(
+            'b',
+            type: 'richText',
+            content: '[{"insert":"y\\n"}]',
+          ).copyWith(categoryId: 'ok'),
+        ]);
+      });
+      VersionMigrator.debugFixV263(dir.path);
+      reopen();
+
+      expect(isar.categorys.where().idEqualTo('dangling').findFirst(), isNotNull);
+      expect(isar.categorys.where().count(), 2, reason: '在册的不重复建');
+    });
+
+    test('2.7.3：字体表清空重灌；重跑幂等', () async {
+      isar.write(
+        (i) => i.fonts.put(
+          const Font(fontFileName: 'stale.ttf', fontWghtAxisMap: {}),
+        ),
+      );
+      const scanned = [
+        Font(fontFileName: 'a.ttf', fontWghtAxisMap: {'wght': 400}),
+        Font(fontFileName: 'b.otf', fontWghtAxisMap: {}),
+      ];
+      await VersionMigrator.debugMergeToV273(dir.path, scanned);
+      reopen();
+
+      expect(isar.fonts.where().count(), 2, reason: '旧行被清空、重灌磁盘扫描结果');
+      expect(
+        isar.fonts.where().findAll().map((f) => f.fontFileName).toSet(),
+        {'a.ttf', 'b.otf'},
+      );
+
+      await VersionMigrator.debugMergeToV273(dir.path, scanned);
+      reopen();
+      expect(isar.fonts.where().count(), 2, reason: '重跑幂等');
+    });
+  });
 }
