@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:moodiary/app/boot_failure_page.dart';
 import 'package:moodiary/app/di/bootstrap.dart';
 import 'package:moodiary/app/di/di.dart';
 import 'package:moodiary/app/lifecycle/app_lock_observer.dart';
@@ -60,16 +61,32 @@ Future<void> _initSystem() async {
   }
 
   // ── 3. 四条互不依赖的初始化，并行发起（在阶段 4 收拢）。
+  // 三条 future 各自兜底：它们在创建与 await 之间隔着阶段 4 的 await，不兜底的话
+  // 失败会先被当成未处理异步错误报给 PlatformDispatcher.onError、再在收拢处抛第二次。
   unawaited(_platFormOption());
   // 主题：动态取色（平台通道）+ 自定义字体装载（FontLoader 读文件）。
-  final themeFuture = FontRepository.get().getActiveFont().then(
-    (font) => ThemeManager().buildTheme(customFont: font?.themeDescriptor),
-  );
+  // 失败回落默认主题（未 buildTheme 时 lightTheme getter 自带 buildMuiTheme 兜底）。
+  final themeFuture = () async {
+    try {
+      final font = await FontRepository.get().getActiveFont();
+      await ThemeManager().buildTheme(customFont: font?.themeDescriptor);
+    } catch (e, s) {
+      logger.e('theme init failed, fallback to default', error: e, stackTrace: s);
+      try {
+        await ThemeManager().buildTheme();
+      } catch (_) {}
+    }
+  }();
   // 复数解析器只要在 runApp（第一次取串）之前登记上即可，与 setLocale 的先后无关；
-  // 串行是因为两者都在改 LocaleSettings 的同一份 translationMap。
-  final localeFuture = setupPluralResolvers().then(
-    (_) => applyStoredLanguage(),
-  );
+  // 串行是因为两者都在改 LocaleSettings 的同一份 translationMap。失败留 base 语种。
+  final localeFuture = () async {
+    try {
+      await setupPluralResolvers();
+      await applyStoredLanguage();
+    } catch (e, s) {
+      logger.e('locale init failed, staying on base', error: e, stackTrace: s);
+    }
+  }();
   // 强制迁移闸门探测：存在旧格式日记时路由 redirect 把一切目的地引到迁移页，故必须
   // 在 buildRouter 之前完成。探测失败按无迁移放行（读路径本就能即时转换渲染旧格式，
   // 只是不落库），别把启动卡死。排在版本迁移之后：探测读的是迁移可能刚改写过的日记。
@@ -83,7 +100,16 @@ Future<void> _initSystem() async {
   // 同步后端装载：按 KV `syncProvider` 换持，顺带把两个后端的配置（KV / SecureKV）
   // 读进进程内缓存。「什么时候按 KV 换持」是编排不是接线，故由组合根显式调；
   // 排在版本迁移之后，读到的是迁移后的配置。
-  final syncBackendFuture = RemoteSyncRegistry.get().reload();
+  // fail-open：SecureKV（Keystore 故障 / 设备锁定）抛出时只记日志——后端留空是
+  // 受支持状态（watcher 两处入口都有 hasBackend 守卫），同步暂不可用好过启动炸死，
+  // 与 AppLockPin._read 的取舍同口径。
+  final syncBackendFuture = () async {
+    try {
+      await RemoteSyncRegistry.get().reload();
+    } catch (e, s) {
+      logger.e('sync backend reload failed', error: e, stackTrace: s);
+    }
+  }();
 
   // ── 4. 唤醒长驻服务与启动期维护。
   await syncBackendFuture;
@@ -108,6 +134,16 @@ Future<void> _platFormOption() async {
   if (Platform.isAndroid) {
     await FlutterDisplayMode.setHighRefreshRate();
   }
+}
+
+/// 全仓 provider 的重试策略。riverpod 3 的默认策略会对非 Error 异常指数退避重试
+/// 10 次（约 38 秒），期间 UI 停在 loading——本仓 provider 的失败源几乎全是本地
+/// 库 / 钥匙串，重试不会让它们变好，只是把报错拖成半分钟的空白。收紧为：最多
+/// 2 次（300/600ms），Error 与 DatabaseException 不重试。
+Duration? _providerRetry(int retryCount, Object error) {
+  if (retryCount >= 2) return null;
+  if (error is Error || error is DatabaseException) return null;
+  return Duration(milliseconds: 300 * (retryCount + 1));
 }
 
 String _resolveInitialLocation() {
@@ -135,13 +171,25 @@ void main() async {
     return true;
   };
 
-  await _initSystem();
-  buildRouter(initialLocation: _resolveInitialLocation());
+  // 启动失败的最后防线：任何一步抛出都不能停在启动图——那对用户等于变砖。
+  // 兜底页零依赖（slang / 主题 / 容器此刻可能正是坏的那一环）。
+  try {
+    await _initSystem();
+    buildRouter(initialLocation: _resolveInitialLocation());
+  } catch (e, s) {
+    logger.f('bootstrap failed', error: e, stackTrace: s);
+    runApp(BootFailurePage(error: e, stackTrace: s));
+    return;
+  }
 
   // App 的字串走 slang 的 `TranslationProvider`（切语言自动重建整棵树）。mui 自己那
   // 十来个通用词不在这里——它是被 import 的包，走 `Localizations`，挂在下面的
   // `localizationsDelegates` 里。
-  runApp(TranslationProvider(child: const ProviderScope(child: Moodiary())));
+  runApp(
+    TranslationProvider(
+      child: const ProviderScope(retry: _providerRetry, child: Moodiary()),
+    ),
+  );
 }
 
 class Moodiary extends ConsumerWidget {

@@ -51,7 +51,9 @@ class EditController extends _$EditController {
         defaultCategoryId: defaultCategoryId,
       ).future,
     );
-    if (diary == null) throw Exception('Diary not found: $diaryId');
+    // StateError（Error 子类）不会触发 riverpod 的自动重试：这是预期内的业务
+    // 分支（同步硬删后旧路由再打开），重试只会把错误页拖慢。
+    if (diary == null) throw StateError('Diary not found: $diaryId');
     _persisted = !(diaryId == null || diaryId.isEmpty);
     _wasNewDraft = !_persisted;
     _latest = diary;

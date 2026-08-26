@@ -346,6 +346,8 @@ List<String> _checkLegacyMaterial() {
 const Map<String, String> _themeAllowlist = {
   // 只放行主题层本身 —— mui 的 41 个组件跟业务代码一样要守这条闸门。
   'packages/foundation/mui/lib/src/themes/': 'mui 的主题层就是色板与 token 的定义处',
+  'mobile/lib/app/boot_failure_page.dart':
+      '启动失败兜底页：主题系统此刻可能正是坏掉的那一环，刻意零依赖、硬编码配色',
   'packages/feature/moodiary_share/lib/src/presentation/templates/':
       '分享卡片是固定设计稿（纸/墨配色），要导出成图片，不能跟随 App 主题',
   'packages/foundation/mui/lib/src/components/common/env_badge.dart':
