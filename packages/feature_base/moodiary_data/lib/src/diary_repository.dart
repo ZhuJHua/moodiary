@@ -505,8 +505,13 @@ class DiaryRepository {
     await reindexDiary(newDiary.isarId);
   }
 
-  /// 重建单篇日记的搜索 / 链接索引（队列排空时调用），完成后在同一事务出队。幂等：可重复
-  /// 调用、可与另一次排空并发（最多多做一遍）；日记已硬删则清残留倒排后出队。
+  /// 重建单篇日记的搜索 / 链接索引（队列排空时调用）。幂等：可重复调用、可与另一次
+  /// 排空并发（最多多做一遍）；日记已硬删则清残留倒排后出队。
+  /// **出队是有条件的**：分词跨 FFI 的窗口内该行可能又被 defer 写入换了内容并重新
+  /// 记账（ReindexQueue 以 isarId 为主键，新旧账不可区分）——只有落库行的
+  /// lastModified 仍等于本次读到的版本才销账；变了就保留队列行，本次索引照写，
+  /// 下一次排空用新内容覆盖。settleIndexes 把排空搬进了编辑期，无条件出队会把
+  /// 编辑器刚记的账吞掉、该篇索引永久陈旧。
   Future<void> reindexDiary(int diaryIsarId) async {
     final diary = await _isar.diarys.getAsync(diaryIsarId);
     // 已删除（永久删除 / 同步 tombstone 后行已移除）：清残留倒排后出队。
@@ -517,12 +522,23 @@ class DiaryRepository {
       });
       return;
     }
+    final versionAtRead = diary.lastModified;
     final entry = await _buildEntry(diary);
     await _isar.writeAsync((isar) {
       _applyIndexesBatch(isar, [entry]);
-      isar.reindexQueues.delete(diaryIsarId);
+      final current = isar.diarys.get(diaryIsarId);
+      if (current == null || current.lastModified == versionAtRead) {
+        isar.reindexQueues.delete(diaryIsarId);
+      }
     });
   }
+
+  /// 待重索引队列长度（settleIndexes 据此量工作量，不靠调用方传计数）。
+  Future<int> reindexQueueLength() =>
+      _isar.reindexQueues.where().countAsync();
+
+  /// 日记行总数（settleIndexes 的相对阈值用；不物化对象）。
+  Future<int> diaryRowCount() => _isar.diarys.where().countAsync();
 
   /// 排空「待重索引」队列（关闭编辑器 / 启动恢复时调用）。返回处理篇数。
   Future<int> drainReindexQueue() async {
@@ -1201,6 +1217,14 @@ class DiaryRepository {
   /// 避免逐篇 diff 的重复读写。返回处理篇数。幂等，均由 `content` 重算、不改 `lastModified`。
   Future<int> rebuildAllIndexes() async {
     final diaries = await getAllDiaries();
+    // 重建覆盖了这一版内容的账——收尾一并出队，否则大批 pull（defer 入队 +
+    // rebuild 分流）后成千上万行残留，下次启动 / 关闭日记详情页被 drain 全量
+    // 空跑重放，还把 OpenDiaryRegistry 的关闭拖到排空之后（push 期间该篇一直
+    // 算「打开中」）。出队同样按 lastModified 版本判：重建期间编辑器新记的账
+    // 必须留着（见 reindexDiary 的注释）。
+    final versionAtRead = {
+      for (final d in diaries) d.isarId: d.lastModified,
+    };
     final postingIds = <int, List<int>>{};
     final postingTfs = <int, List<int>>{};
     final linkPostings = <int, List<int>>{};
@@ -1281,6 +1305,18 @@ class DiaryRepository {
       isar.linkPostings.putAll(linkRows);
       isar.diaryIndexSnapshots.putAll(snapshots);
       isar.searchStats.put(statsRow);
+      final settled = <int>[];
+      for (final row in isar.reindexQueues.where().findAll()) {
+        final current = isar.diarys.get(row.diaryIsarId);
+        final readVersion = versionAtRead[row.diaryIsarId];
+        // 行已删（reindexDiary 的 null 分支会清残留）或版本没变 → 本次重建
+        // 已覆盖，销账；重建窗口内被改过的保留给下一次排空。
+        if (current == null ||
+            (readVersion != null && current.lastModified == readVersion)) {
+          settled.add(row.diaryIsarId);
+        }
+      }
+      isar.reindexQueues.deleteAll(settled);
     });
     // 任何一次全量重建都完成了升级后的一次性回填（搜索页提示据此收起）。
     MoodiaryKVs.searchIndexBackfilled.set(true);

@@ -8,6 +8,7 @@ import 'package:moodiary_editor/moodiary_editor.dart';
 import 'package:moodiary_editor/src/data/markdown_media.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_theme/moodiary_theme.dart';
@@ -165,11 +166,12 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
   /// 原文件名（去扩展名）作为音频名称落 MediaInfo。
   Future<void> _pickAudioFile(BuildContext sheetContext) async {
     Navigator.of(sheetContext).pop();
+    String? name;
     try {
       final file = await IFilePicker.get().pickAudio();
       if (file == null) return;
       final ext = p.extension(file.path);
-      final name = 'audio-${uuidV7()}$ext';
+      name = 'audio-${uuidV7()}$ext';
       final path = AppFiles.getRealPath('audio', name);
       await File(file.path).copy(path);
       final duration = await probeAudioDuration(path);
@@ -185,6 +187,12 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       );
       await _controller.insertAudio(name);
     } catch (_) {
+      // 已复制的文件别留成孤儿（与时长探测失败分支同口径）。
+      if (name != null) {
+        try {
+          await AppFiles.deleteFile(AppFiles.getRealPath('audio', name));
+        } catch (_) {}
+      }
       if (mounted) toast.error(message: context.l10n.editor.audioFileError);
     }
   }
@@ -205,19 +213,24 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
   }
 
   /// 名称 + 时长落 MediaInfo 表（随同步传播）。失败不阻断插入——缺行由媒体库
-  /// 懒补行兜底。
+  /// 懒补行兜底；仓储改抛异常后这句承诺要在这里自己兜住（录音路径没有外层
+  /// catch，抛出去等于刚录好的音频不进日记且无提示）。
   Future<void> _saveMediaInfo(
     String fileName, {
     String? title,
     Duration? duration,
   }) async {
-    await MediaInfoRepository.get().insertAMediaInfo(
-      MediaInfo.create(
-        fileName: fileName,
-        name: title,
-        durationMs: duration?.inMilliseconds,
-      ),
-    );
+    try {
+      await MediaInfoRepository.get().insertAMediaInfo(
+        MediaInfo.create(
+          fileName: fileName,
+          name: title,
+          durationMs: duration?.inMilliseconds,
+        ),
+      );
+    } catch (e, s) {
+      logger.e('save media info failed: $fileName', error: e, stackTrace: s);
+    }
   }
 
   /// 点击正文图片 → 原生全屏画廊（翻页 / 缩放 / 下拉关闭 / 保存 / 信息）。

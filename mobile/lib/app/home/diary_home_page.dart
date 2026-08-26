@@ -33,11 +33,13 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
           builder: (context, sortMode, _) {
             final viewModeType = ViewModeType.getType(viewMode);
             final sort = DiarySort.getType(sortMode);
-            // sort 是视图的显式参数（参数变了自然重建），key 只负责视图/筛选切换动画。
+            // sort 既是视图的显式参数（正确性契约），也参与 key：换排序要整树
+            // 重建「从头看」——否则旧的 ScrollPosition 保留，refresh 把列表截回
+            // 一页后用户停在新排序的**末尾**，还会触发一次多余的 loadMore。
             return AnimatedSwitcher(
               duration: Durations.short3,
               child: KeyedSubtree(
-                key: ValueKey('$viewMode-$filter'),
+                key: ValueKey('$viewMode-$sortMode-$filter'),
                 child: switch (viewModeType) {
                   .timeline => DiaryTimelineView(filter: filter, sort: sort),
                   .feed => DiaryFeedView(filter: filter, sort: sort),

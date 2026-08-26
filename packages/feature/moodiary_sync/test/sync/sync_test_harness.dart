@@ -240,8 +240,8 @@ final class FakeDiaryStore implements SyncDiaryStore {
   }
 
   @override
-  Future<void> settleIndexes(int changed) async {
-    calls.add('settleIndexes $changed');
+  Future<void> settleIndexes() async {
+    calls.add('settleIndexes');
   }
 
   @override

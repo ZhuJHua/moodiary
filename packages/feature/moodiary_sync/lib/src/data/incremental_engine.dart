@@ -643,8 +643,17 @@ class IncrementalSyncEngine {
     }
 
     await tombstones.flush(_tombstoneStore);
-    // defer 出的重索引账在此结清；被取消/崩溃时队列行仍在，启动维护兜底排空。
-    await _diaryStore.settleIndexes(diaryChanged);
+    // defer 出的重索引账在此结清；失败/取消不拖垮同步结果——队列行仍在，
+    // 启动维护兜底排空（数据本身已全部正确落库）。
+    try {
+      await _diaryStore.settleIndexes();
+    } catch (e) {
+      _logger.error(
+        .error,
+        '索引结账失败（启动维护会兜底排空）：$e',
+        payload: {'detail': e.toString()},
+      );
+    }
 
     sw.stop();
     final stopped = SyncCancellation.instance.isRequested;
