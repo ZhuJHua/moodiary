@@ -84,7 +84,10 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
 
   void _applyChange(DiaryEvent event) {
     final list = state.value;
-    if (list == null) return;
+    if (list == null) {
+      markMissedEvent();
+      return;
+    }
     state = .data(
       applyDiaryEvent(
         list,
@@ -104,7 +107,8 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
   Future<bool> softDeleteDiary(Diary diary) async {
     try {
       final next = diary.copyWith(show: false, lastModified: .timestamp());
-      await _repository.updateADiary(newDiary: next);
+      // 只动 show：索引只看内容/标题（show 过滤在查询期），免掉整篇重分词。
+      await _repository.updateADiary(newDiary: next, index: .skip);
       return true;
     } catch (_) {
       return false;
@@ -127,16 +131,27 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
 class RecycleBinDiaries extends _$RecycleBinDiaries {
   DiaryRepository get _repository => .get();
 
+  // 首次加载期间事件无处可并，标记后补一次重查（同 LoadMoreMixin.markMissedEvent）。
+  bool _missedEvent = false;
+
   @override
   FutureOr<List<Diary>> build() async {
     final sub = _repository.diaryEvents.listen(_applyChange);
     ref.onDispose(sub.cancel);
-    return _repository.getRecycleBinDiaries();
+    var list = await _repository.getRecycleBinDiaries();
+    if (_missedEvent) {
+      _missedEvent = false;
+      list = await _repository.getRecycleBinDiaries();
+    }
+    return list;
   }
 
   void _applyChange(DiaryEvent event) {
     final list = state.value;
-    if (list == null) return;
+    if (list == null) {
+      _missedEvent = true;
+      return;
+    }
     state = .data(applyDiaryEvent(list, event, belongs: (d) => !d.show));
   }
 
@@ -144,7 +159,8 @@ class RecycleBinDiaries extends _$RecycleBinDiaries {
   Future<bool> restore(Diary diary) async {
     try {
       final next = diary.copyWith(show: true, lastModified: .timestamp());
-      await _repository.updateADiary(newDiary: next);
+      // 只动 show：同 softDeleteDiary，索引不变。
+      await _repository.updateADiary(newDiary: next, index: .skip);
       return true;
     } catch (_) {
       return false;

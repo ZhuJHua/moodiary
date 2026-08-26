@@ -27,18 +27,28 @@ Map<String, MediaInfo> _applyEvent(
 class MediaInfoController extends _$MediaInfoController {
   late final MediaInfoRepository _repository = .get();
 
+  // 首次加载期间事件无处可并，标记后补一次重查（同 LoadMoreMixin.markMissedEvent）。
+  bool _missedEvent = false;
+
   @override
   FutureOr<Map<String, MediaInfo>> build() async {
     final sub = _repository.mediaInfoEvents.listen(_applyChange);
     ref.onDispose(sub.cancel);
-    final either = await _repository.getAllMediaInfos().run();
+    var either = await _repository.getAllMediaInfos().run();
+    if (_missedEvent) {
+      _missedEvent = false;
+      either = await _repository.getAllMediaInfos().run();
+    }
     final list = either.getOrElse((_) => <MediaInfo>[]);
     return {for (final info in list) info.fileName: info};
   }
 
   void _applyChange(MediaInfoEvent event) {
     final map = state.value;
-    if (map == null) return;
+    if (map == null) {
+      _missedEvent = true;
+      return;
+    }
     state = .data(_applyEvent(map, event));
   }
 

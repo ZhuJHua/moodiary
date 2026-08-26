@@ -1023,7 +1023,11 @@ abstract final class AssistantToolRegistry {
     }
     updated = updated.copyWith(lastModified: .timestamp());
 
-    await repo.updateADiary(newDiary: updated);
+    // 倒排只吃标题/正文：仅改 mood/分类时跳过重索引。
+    await repo.updateADiary(
+      newDiary: updated,
+      index: (title == null && content == null) ? .skip : .inline,
+    );
     final shown = updated.title.trim().isEmpty
         ? 'Untitled'
         : updated.title.trim();
@@ -1048,8 +1052,10 @@ abstract final class AssistantToolRegistry {
       return '"$title" (id=$id) is already in the recycle bin.';
     }
     // 软删=移入回收站(show=false)；勿用 deleteADiary(那是永久删除+删媒体)。
+    // 只动 show：索引只看内容/标题，跳过重索引。
     await repo.updateADiary(
       newDiary: existing.copyWith(show: false, lastModified: .timestamp()),
+      index: .skip,
     );
     return 'Moved "$title" (id=$id) to the recycle bin.';
   }

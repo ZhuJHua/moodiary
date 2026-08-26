@@ -33,17 +33,27 @@ List<Category> _applyEvent(List<Category> list, CategoryEvent event) {
 class CategoryController extends _$CategoryController {
   late final CategoryRepository _repository = .get();
 
+  // 首次加载期间事件无处可并，标记后补一次重查（同 LoadMoreMixin.markMissedEvent）。
+  bool _missedEvent = false;
+
   @override
   FutureOr<List<Category>> build() async {
     final sub = _repository.categoryEvents.listen(_applyChange);
     ref.onDispose(sub.cancel);
-    final either = await _repository.getAllCategories().run();
+    var either = await _repository.getAllCategories().run();
+    if (_missedEvent) {
+      _missedEvent = false;
+      either = await _repository.getAllCategories().run();
+    }
     return either.getOrElse((_) => <Category>[]);
   }
 
   void _applyChange(CategoryEvent event) {
     final list = state.value;
-    if (list == null) return;
+    if (list == null) {
+      _missedEvent = true;
+      return;
+    }
     state = .data(_applyEvent(list, event));
   }
 

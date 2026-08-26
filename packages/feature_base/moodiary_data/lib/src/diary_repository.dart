@@ -464,14 +464,16 @@ class DiaryRepository {
       _events.add(DiaryUpdated(newDiary, fromSync: fromSync));
       return;
     }
+    // inline：写行与索引落库无法同事务（分词跨 FFI，不能夹在事务里），崩溃安全
+    // 靠队列行——写行时一并入队，随后同步排空（reindexDiary 在同一事务里应用索引
+    // 并出队，幂等）。崩在任何一点队列行都在，启动的 drainReindexQueue 自愈；
+    // 与 defer 的差别只是「立刻排空」而非等到关闭编辑器。
     await _isar.writeAsync((isar) {
       isar.diarys.put(newDiary);
+      isar.reindexQueues.put(ReindexQueue(diaryIsarId: newDiary.isarId));
     });
     _events.add(DiaryUpdated(newDiary, fromSync: fromSync));
-    final entry = await _buildEntry(newDiary);
-    await _isar.writeAsync((isar) {
-      _applyIndexesBatch(isar, [entry]);
-    });
+    await reindexDiary(newDiary.isarId);
   }
 
   /// 重建单篇日记的搜索 / 链接索引（队列排空时调用），完成后在同一事务出队。幂等：可重复

@@ -39,7 +39,10 @@ class MediaDiaries extends _$MediaDiaries with LoadMoreMixin<Diary> {
 
   void _applyChange(DiaryEvent event) {
     final list = state.value;
-    if (list == null) return;
+    if (list == null) {
+      markMissedEvent();
+      return;
+    }
     state = .data(
       applyDiaryEvent(
         list,

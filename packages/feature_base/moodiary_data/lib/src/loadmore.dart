@@ -6,12 +6,23 @@ mixin LoadMoreMixin<T> on AnyNotifier<AsyncValue<List<T>>, List<T>> {
 
   int _epoch = 0;
 
+  bool _missedEvent = false;
+
   int get _offset => state.value?.length ?? 0;
 
   bool get noMore => _noMore;
 
+  /// 首次加载期间到达的事件无处可并（state 还没有列表值），事件回调在丢弃处
+  /// 置此标记；[init] 发现有遗漏即补一次 [refresh]——丢事件退化成一次多余重查，
+  /// 分页 offset 天然对齐。
+  void markMissedEvent() => _missedEvent = true;
+
   Future<List<T>> init() async {
     await _load();
+    if (_missedEvent) {
+      _missedEvent = false;
+      await refresh();
+    }
     return state.value ?? <T>[];
   }
 
