@@ -28,10 +28,15 @@ class BackupImportResult {
 
   final int failed;
 
+  /// 恢复被中途停止（进程级取消标志在恢复期间为真）：只导入了半截，
+  /// 消费页不得按成功呈现。
+  final bool cancelled;
+
   const BackupImportResult({
     required this.diaryCount,
     required this.categoryCount,
     required this.mediaInfoCount,
     required this.failed,
+    this.cancelled = false,
   });
 }

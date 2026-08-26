@@ -13,6 +13,15 @@ const int _pinLength = 4;
 const int _maxAttempts = 5;
 const int _cooldownSeconds = 30;
 
+/// 时序常量对测试可见：lock_page_test 的 pump 序列按它们推进——抄死数字会在
+/// 常量漂移时以「校验没发起 / A Timer is still pending」的误导形态挂掉。
+@visibleForTesting
+const Duration kLockVerifyDelay = Duration(milliseconds: 120);
+@visibleForTesting
+const Duration kLockClearDelay = Duration(milliseconds: 280);
+@visibleForTesting
+const Duration kLockShakeDuration = Duration(milliseconds: 320);
+
 class LockPage extends StatefulWidget {
   final String? lockType;
 
@@ -26,7 +35,7 @@ class _LockPageState extends State<LockPage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _shakeCtrl = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 320),
+    duration: kLockShakeDuration,
   );
   late final Animation<double> _shake = CurvedAnimation(
     parent: _shakeCtrl,
@@ -71,7 +80,7 @@ class _LockPageState extends State<LockPage>
 
   void _unlock() {
     setState(() => _unlocked = true);
-    Future.delayed(const Duration(milliseconds: 280), () {
+    Future.delayed(kLockClearDelay, () {
       if (!mounted) return;
       if (widget.lockType == 'pause') {
         // 命令式 pop 不受 PopScope(canPop:false) 拦截，正常返回被遮挡的页面。
@@ -115,7 +124,7 @@ class _LockPageState extends State<LockPage>
     });
     if (_pin.length == _pinLength) {
       // 让最后一个圆点动画完成再校验。
-      Future.delayed(const Duration(milliseconds: 120), _verify);
+      Future.delayed(kLockVerifyDelay, _verify);
     }
   }
 
@@ -152,7 +161,7 @@ class _LockPageState extends State<LockPage>
       return;
     }
     final remaining = _maxAttempts - _failCount;
-    await Future.delayed(const Duration(milliseconds: 280));
+    await Future.delayed(kLockClearDelay);
     if (!mounted) return;
     setState(() {
       _pin = '';

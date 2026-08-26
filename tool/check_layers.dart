@@ -533,13 +533,72 @@ List<String> _checkMobileOnlyPlugins() {
       final rel = pkg.path.replaceAll('\\', '/');
       final pubspec = File('${pkg.path}/pubspec.yaml');
       if (!pubspec.existsSync()) continue;
-      final text = pubspec.readAsStringSync();
+      // 只看正式依赖（dev 依赖不进产物、不钉桌面）；匹配同时覆盖内联版本
+      // （`x: 1.0.0`）与块式声明（`x:` 换行接 git/path/hosted）。
+      final text = pubspec
+          .readAsStringSync()
+          .split(RegExp(r'^dev_dependencies:', multiLine: true))
+          .first;
       for (final plugin in _mobileOnlyPlugins) {
-        if (!RegExp('^  $plugin: ', multiLine: true).hasMatch(text)) continue;
+        if (!RegExp(
+          '^  $plugin:\\s*(\$|\\S)',
+          multiLine: true,
+        ).hasMatch(text)) {
+          continue;
+        }
         final key = '$rel -> $plugin';
         if (_mobileOnlyPluginAllowlist.containsKey(key)) continue;
         out.add(key);
       }
+    }
+  }
+  return out;
+}
+
+
+/// lib/testing.dart 是测试替身的官方出口（storage / rust），放 lib/ 只是因为
+/// `package:` 解析不到别人的 test/——**生产代码不许 import**：手滑注册
+/// MemoryKVStorage 出的包每次冷启动都丢全部设置，且只有真机跑一次才暴露。
+final RegExp _testingImportRe = RegExp(
+  r"""^\s*import\s+['"]package:moodiary_\w+/testing\.dart['"]""",
+  multiLine: true,
+);
+
+List<String> _checkTestingImports() {
+  final out = <String>[];
+  for (final root in [for (final dir in _appDirs) '$dir/lib', 'packages']) {
+    for (final entity in _dartFiles(root)) {
+      final rel = entity.path.replaceAll('\\', '/');
+      if (!rel.contains('/lib/')) continue;
+      // 定义处自身（lib/testing.dart）与 test/ 下的使用都合法。
+      if (rel.endsWith('/lib/testing.dart')) continue;
+      if (_testingImportRe.hasMatch(entity.readAsStringSync())) {
+        out.add(rel);
+      }
+    }
+  }
+  return out;
+}
+
+/// 存在 test/ 目录却没有任何 *_test.dart 的包会截断 melos 扫描：
+/// `--dir-exists=test` 把它算进来，`flutter test` 以「No tests found」非零退出，
+/// --fail-fast 当场掐掉整轮（picker 迁移时踩过一次）。
+List<String> _checkEmptyTestDirs() {
+  final out = <String>[];
+  final candidates = [
+    for (final layerDir in Directory('packages').listSync().whereType<Directory>())
+      ...layerDir.listSync().whereType<Directory>(),
+    for (final dir in _appDirs)
+      if (Directory(dir).existsSync()) Directory(dir),
+  ];
+  for (final pkg in candidates) {
+    final testDir = Directory('${pkg.path}/test');
+    if (!testDir.existsSync()) continue;
+    final hasTest = testDir
+        .listSync(recursive: true, followLinks: false)
+        .any((e) => e is File && e.path.endsWith('_test.dart'));
+    if (!hasTest) {
+      out.add('${pkg.path.replaceAll('\\', '/')}/test');
     }
   }
   return out;
@@ -584,6 +643,29 @@ void main(List<String> args) {
     stderr.writeln(
       '  → 业务代码请 import package:mui/mui.dart；确需 legacy 的加进 _legacyMaterialAllowlist 并写明理由。',
     );
+    exit(1);
+  }
+
+  final testingImports = _checkTestingImports();
+  if (testingImports.isEmpty) {
+    stdout.writeln('✅ 生产代码没有 import 任何 lib/testing.dart 替身。');
+  } else {
+    stderr.writeln('❌ 生产代码 import 测试替身 ${testingImports.length} 处：');
+    for (final v in testingImports) {
+      stderr.writeln('  ✗ $v');
+    }
+    stderr.writeln('  → testing.dart 只许出现在 test/ 下。');
+    exit(1);
+  }
+
+  final emptyTestDirs = _checkEmptyTestDirs();
+  if (emptyTestDirs.isEmpty) {
+    stdout.writeln('✅ 没有空的 test/ 目录（melos 扫描不会被截断）。');
+  } else {
+    stderr.writeln('❌ 空 test/ 目录 ${emptyTestDirs.length} 处（会截断 melos 扫描）：');
+    for (final v in emptyTestDirs) {
+      stderr.writeln('  ✗ $v');
+    }
     exit(1);
   }
 
@@ -644,17 +726,20 @@ void main(List<String> args) {
     stderr.writeln('找不到任何 app 的 lib/ 目录（${_appDirs.join('/')}），请在仓库根目录运行。');
     exit(2);
   }
-  final libDir = appLibDirs.first;
-
   final seen = <String>{};
   final violations = <Violation>[];
   var fileCount = 0;
 
+  // 逐个 app 跑（此前只取第一个：desktop 落地那天文件级检查对它不生效，
+  // 而若 mobile 被移走，硬编码的前缀又剥不掉、整仓误报）。
+  for (final libDir in appLibDirs) {
   for (final entity in libDir.listSync(recursive: true)) {
     if (entity is! File || !entity.path.endsWith('.dart')) continue;
     fileCount++;
-    final rel = entity.path.replaceFirst(RegExp(r'^mobile[/\\]lib[/\\]'), '');
-    final srcN = _classify(rel.replaceAll('\\', '/'));
+    final rel = entity.path
+        .replaceAll('\\', '/')
+        .replaceFirst('${libDir.path.replaceAll('\\', '/')}/', '');
+    final srcN = _classify(rel);
     final content = entity.readAsStringSync();
     for (final m in _importRe.allMatches(content)) {
       final target = m.group(1)!;
@@ -668,10 +753,11 @@ void main(List<String> args) {
         ok = false; // 下层依赖上层
       }
       if (!ok) {
-        final v = Violation(rel.replaceAll('\\', '/'), dstN.module);
+        final v = Violation(rel, dstN.module);
         if (seen.add(v.key)) violations.add(v);
       }
     }
+  }
   }
 
   final baseline = _readBaseline();

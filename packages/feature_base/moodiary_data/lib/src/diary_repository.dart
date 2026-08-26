@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart' show listEquals, visibleForTesting;
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -473,13 +473,16 @@ class DiaryRepository {
   }) async {
     // 派生一致性闸门（debug 期抓第四个写入方）：媒体三列必须等于正文引用——
     // 改了 content 的写入方要过 withDerivedMedia（diary_derive.dart）。
-    // contentText 不在此断言内：编辑器的纯文本由 webview 侧提取，与
-    // DiaryContent 的序列化在空白字符上不保证逐字节一致。
+    // 只审 inline/defer（真的动了内容的写入）：.skip 写入（软删/改元数据）没碰
+    // content，回灌的旧格式行会被误炸。判据用集合而非顺序（与 repairData 的
+    // _sameNameSet 同源——「仅顺序差异不算需修正」）。contentText 不在此断言内：
+    // 编辑器的纯文本由 webview 侧提取，与 DiaryContent 的序列化不保证逐字节一致。
     assert(() {
+      if (index == .skip) return true;
       final derived = DiaryContent.of(newDiary).media;
-      return listEquals(newDiary.imageName, derived.images) &&
-          listEquals(newDiary.videoName, derived.videos) &&
-          listEquals(newDiary.audioName, derived.audios);
+      return _sameNameSet(newDiary.imageName, derived.images) &&
+          _sameNameSet(newDiary.videoName, derived.videos) &&
+          _sameNameSet(newDiary.audioName, derived.audios);
     }(), '媒体三列与正文引用不一致：写入方漏了 withDerivedMedia（见 diary_derive.dart）');
     if (index != .inline) {
       // 编辑期：只写日记行（defer 时一并入队），分词/倒排推迟到关闭/启动排空；skip 连

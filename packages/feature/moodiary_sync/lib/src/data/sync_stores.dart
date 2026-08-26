@@ -42,7 +42,8 @@ abstract interface class SyncCategoryStore {
   Future<Category?> getCategoryById(String id);
 
   /// 写入成功返回 `true`；落库并连带清除同 id 的墓碑行（复活闸门）。
-  Future<bool> insertACategory(Category category, {bool fromSync = false});
+  /// 失败直接抛（与仓储一致），由引擎的条目级 catch 计 failed。
+  Future<void> insertACategory(Category category, {bool fromSync = false});
 
   /// pull 应用远端分类墓碑：行硬删 + 写墓碑，返回墓碑行。
   Future<SyncTombstone> tombstoneCategory(String id, {bool fromSync = false});
@@ -54,7 +55,8 @@ abstract interface class SyncMediaInfoStore {
   Future<MediaInfo?> getMediaInfoByFileName(String fileName);
 
   /// 写入成功返回 `true`；落库并连带清除同 key 的墓碑行（复活闸门）。
-  Future<bool> insertAMediaInfo(MediaInfo mediaInfo, {bool fromSync = false});
+  /// 失败直接抛（与仓储一致），由引擎的条目级 catch 计 failed。
+  Future<void> insertAMediaInfo(MediaInfo mediaInfo, {bool fromSync = false});
 
   /// pull 应用远端媒体元数据墓碑：行硬删 + 写墓碑，返回墓碑行。
   Future<SyncTombstone> tombstoneMediaInfo(
@@ -141,13 +143,8 @@ class RepoSyncCategoryStore implements SyncCategoryStore {
   Future<Category?> getCategoryById(String id) => _repo.getCategoryById(id);
 
   @override
-  Future<bool> insertACategory(
-    Category category, {
-    bool fromSync = false,
-  }) async {
-    await _repo.insertACategory(category, fromSync: fromSync);
-    return true;
-  }
+  Future<void> insertACategory(Category category, {bool fromSync = false}) =>
+      _repo.insertACategory(category, fromSync: fromSync);
 
   @override
   Future<SyncTombstone> tombstoneCategory(String id, {bool fromSync = false}) =>
@@ -165,13 +162,8 @@ class RepoSyncMediaInfoStore implements SyncMediaInfoStore {
       _repo.getMediaInfoByFileName(fileName);
 
   @override
-  Future<bool> insertAMediaInfo(
-    MediaInfo mediaInfo, {
-    bool fromSync = false,
-  }) async {
-    await _repo.insertAMediaInfo(mediaInfo, fromSync: fromSync);
-    return true;
-  }
+  Future<void> insertAMediaInfo(MediaInfo mediaInfo, {bool fromSync = false}) =>
+      _repo.insertAMediaInfo(mediaInfo, fromSync: fromSync);
 
   @override
   Future<SyncTombstone> tombstoneMediaInfo(

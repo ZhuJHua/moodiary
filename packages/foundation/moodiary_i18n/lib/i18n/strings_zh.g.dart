@@ -1617,6 +1617,9 @@ class Translations$export$zh {
 	/// zh: '{base}，失败 {failed} 条'
 	String restoreSummaryFailed({required Object base, required Object failed}) => '${base}，失败 ${failed} 条';
 
+	/// zh: '恢复已停止（未完成）：{summary}'
+	String restoreStopped({required Object summary}) => '恢复已停止（未完成）：${summary}';
+
 	/// zh: '恢复失败：{error}'
 	String restoreFailed({required Object error}) => '恢复失败：${error}';
 

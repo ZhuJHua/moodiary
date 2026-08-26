@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:mui/mui.dart';
 
-final _mui = buildMuiTheme(brightness: Brightness.light);
+import 'support/pump.dart';
 
 void main() {
   // T = String? with a null-valued chip mirrors the home category "全部" usage.
@@ -11,21 +11,16 @@ void main() {
     required ValueChanged<String?> onSelected,
     Widget? trailing,
   }) {
-    return MuiTheme(
-      data: _mui,
-      child: MaterialApp(
-        home: Scaffold(
-          body: MChipBar<String?>(
-            selected: selected,
-            onSelected: onSelected,
-            trailing: trailing,
-            items: const [
-              MChipData(value: null, label: 'All'),
-              MChipData(value: 'a', label: 'Work', accentColor: Colors.red),
-              MChipData(value: 'b', label: 'Life'),
-            ],
-          ),
-        ),
+    return muiTestApp(
+      MChipBar<String?>(
+        selected: selected,
+        onSelected: onSelected,
+        trailing: trailing,
+        items: const [
+          MChipData(value: null, label: 'All'),
+          MChipData(value: 'a', label: 'Work', accentColor: Colors.red),
+          MChipData(value: 'b', label: 'Life'),
+        ],
       ),
     );
   }

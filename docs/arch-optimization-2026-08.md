@@ -261,8 +261,8 @@ CI dylib 那条在本机先验证目标用例真跑通过。
 ## P2 — desktop 立项时再做（现在只记档）
 
 - **DI 结论（写进 mobile/CLAUDE.md 三行，现在就写）**：desktop 建自己的
-  `desktop/lib/app/di/di.dart`（同四个 externalPackageModulesBefore），只需补
-  IHttpClient + IFilePicker 两条绑定；**不用 @Environment 分平台**（已读
+  `desktop/lib/app/di/di.dart`（同四个 externalPackageModulesBefore），app 侧绑定以
+  _assertRequiredBindings 为准（当前 IHttpClient / IFilePicker / IHeifDecoder 三条）；**不用 @Environment 分平台**（已读
   injectable_generator 源码：两 app 两份 config 天然隔离；environment 要求两端实现
   同包，会把 wechat picker 塞给桌面）；@Environment('test') 已评估否决
   （generateForDir 只扫 lib，替身在 test/ 下扫不到）。

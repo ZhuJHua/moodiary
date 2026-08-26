@@ -29,9 +29,9 @@
 - **codegen provider 默认 autoDispose**；keepAlive 是例外、必须写理由（现存两处
   都写了）。**手写 `NotifierProvider` 默认相反**（keepAlive），所以一律用 codegen。
 - **riverpod 3 默认对非 `Error` 异常指数重试 10 次（约 38 秒）**。本仓已在
-  `mobile/lib/main.dart` 的 `ProviderScope(retry:)` 收紧为最多 2 次、
-  `Error`/`DatabaseException` 不重试。预期内的业务失败抛 `Error` 子类
-  （如 `StateError`），别抛 `Exception`。
+  `mobile/lib/main.dart` 的 `ProviderScope(retry:)` 收紧为最多 2 次；
+  `Error`（IsarError 天然属此）与 `ProviderException` 不重试。预期内的业务失败
+  抛 `Error` 子类（如 `StateError`），别抛 `Exception`。
 - provider 定义统一放各包 `application/`（或本包 src/ 顶层），不进 presentation。
 - **错误约定：仓储抛异常，调用方按需 catch 且至少 `logger.e`**——别让库故障
   伪装成空列表。（TaskEither 已废弃：Left 从来没被任何消费端读过。）

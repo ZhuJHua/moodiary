@@ -15,7 +15,7 @@ part 'font_controller.g.dart';
 class FontController extends _$FontController {
   @override
   Future<List<Font>> build() async {
-    final list = await FontRepository.get().getAllFonts();
+    final list = await ref.read(fontRepositoryProvider).getAllFonts();
     await Future.wait([
       for (final f in list)
         FontManager.loadFont(
@@ -28,6 +28,8 @@ class FontController extends _$FontController {
 
   /// 返回 `null`=用户取消、非空错误 message=失败、空字符串=成功。
   Future<String?> addFont() async {
+    // 仓储在首个 await 之前取：选文件期间页面可能退出（autoDispose 回收 ref）。
+    final repo = ref.read(fontRepositoryProvider);
     final xFile = await FontManager.pickFont();
     if (xFile == null) return null;
     final fontName = await FontManager.getFontName(filePath: xFile.path);
@@ -43,7 +45,7 @@ class FontController extends _$FontController {
       fontWghtAxisMap: await FontManager.getFontWghtAxis(filePath: xFile.path),
     );
     await xFile.saveTo(newPath);
-    await FontRepository.get().insertFont(newFont);
+    await repo.insertFont(newFont);
     await FontManager.loadFont(fontName: newFont.fontFamily, fontPath: newPath);
     state = .data([...current, newFont]);
     return '';
@@ -51,10 +53,11 @@ class FontController extends _$FontController {
 
   /// 若正在使用，先切回系统字体再删，避免引用已删除文件。
   Future<void> removeFont(Font font) async {
+    final repo = ref.read(fontRepositoryProvider);
     if (MoodiaryKVs.customFont.get() == font.fontFamily) {
       await setActive(null);
     }
-    await FontRepository.get().deleteFontById(font.id);
+    await repo.deleteFontById(font.id);
     await AppFiles.deleteFile(AppFiles.getRealPath('font', font.fontFileName));
     final next = (state.value ?? const <Font>[])
         .where((e) => e.fontFamily != font.fontFamily)

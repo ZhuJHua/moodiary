@@ -109,7 +109,12 @@ class _ImportSection extends StatelessWidget {
       final summary = result.failed > 0
           ? l10n.export.restoreSummaryFailed(base: base, failed: result.failed)
           : base;
-      toast.success(message: l10n.export.restoreDone(summary: summary));
+      if (result.cancelled) {
+        // 半截恢复不能报成功——用户可能据此认为数据已齐。
+        toast.error(message: l10n.export.restoreStopped(summary: summary));
+      } else {
+        toast.success(message: l10n.export.restoreDone(summary: summary));
+      }
     } catch (e) {
       await toast.dismiss();
       toast.error(message: l10n.export.restoreFailed(error: '$e'));

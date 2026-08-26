@@ -28,9 +28,10 @@ storage 列最前，它的两个 preResolve 是别人的地基；两个存储的
 容器只管生命周期内不变的接线。
 
 **双组合根记档（desktop 立项时照此办）**：desktop 建自己的 `desktop/lib/app/di/di.dart`
-（同样四个 externalPackageModulesBefore + 自己的 `@InjectableInit`），只需重新提供两条
-app 侧绑定 —— `IHttpClient`（照抄 AppModule.httpClient，onError 接桌面的通知方式）与
-`IFilePicker`（走系统对话框）。**不用 `@Environment` 分平台**：environment 的语义是
+（同样四个 externalPackageModulesBefore + 自己的 `@InjectableInit`），app 侧绑定以
+`_assertRequiredBindings` 里非 micro-package 的那几条为准（当前三条）：`IHttpClient`
+（照抄 AppModule.httpClient，onError 接桌面的通知方式）、`IFilePicker`（走系统对话框）、
+`IHeifDecoder`（桌面实现可直接返回 null 走既有降级）。**不用 `@Environment` 分平台**：environment 的语义是
 「同一份被扫源码按标签筛」，要求两端实现类同包，会把 moodiary_picker/wechat 系依赖
 塞给桌面；两个 app 本就是两个包、两份 config，天然互不干扰（injectable 的根 config 只
 收本包 generateForDir 下的 .injectable.json）。`@Environment('test')` 也已评估否决：

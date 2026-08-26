@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:mui/mui.dart';
 
-final _mui = buildMuiTheme(brightness: Brightness.light);
+import 'support/pump.dart';
 
 void main() {
   Widget host({
@@ -10,32 +10,27 @@ void main() {
     String? selected,
     List<MMenuEntry<String>>? entries,
   }) {
-    return MuiTheme(
-      data: _mui,
-      child: MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: MMenuButton<String>(
-              tooltip: 'more',
-              selected: selected,
-              onSelected: onSelected,
-              entries:
-                  entries ??
-                  const [
-                    MMenuEntry(value: 'a', label: 'Apple'),
-                    MMenuEntry(value: 'b', label: 'Banana'),
-                    MMenuEntry(
-                      value: 'c',
-                      label: 'Cherry',
-                      icon: LucideIcons.trash2,
-                      isDestructive: true,
-                    ),
-                  ],
-              child: const Padding(
-                padding: .all(12),
-                child: Icon(LucideIcons.ellipsisVertical),
-              ),
-            ),
+    return muiTestApp(
+      Center(
+        child: MMenuButton<String>(
+          tooltip: 'more',
+          selected: selected,
+          onSelected: onSelected,
+          entries:
+              entries ??
+              const [
+                MMenuEntry(value: 'a', label: 'Apple'),
+                MMenuEntry(value: 'b', label: 'Banana'),
+                MMenuEntry(
+                  value: 'c',
+                  label: 'Cherry',
+                  icon: LucideIcons.trash2,
+                  isDestructive: true,
+                ),
+              ],
+          child: const Padding(
+            padding: .all(12),
+            child: Icon(LucideIcons.ellipsisVertical),
           ),
         ),
       ),

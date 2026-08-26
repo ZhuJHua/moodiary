@@ -68,7 +68,7 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
       moodiary_utils/        #   pure utils + content converters (tiptap/markdown/quill)
       mui/                   #   设计系统：material_ui 的**补充**（详见下）
     core/                    # 无领域基建。内部次序 platform,http → storage → files → theme
-      moodiary_platform/     #   应用目录/缓存目录/生物识别探测
+      moodiary_platform/     #   应用目录/缓存目录/生物识别/网络状态/应用与设备信息
       moodiary_http/         #   IHttpClient / IHttpServer 端口，实现走 Rust
       moodiary_storage/      #   KV(MMKV) / SecureKV / Isar 句柄；目录与 schema 都靠注入
       moodiary_files/        #   文件布局 + 媒体管线 + 文件选择端口

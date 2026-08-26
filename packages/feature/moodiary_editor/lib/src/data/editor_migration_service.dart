@@ -41,11 +41,16 @@ class EditorMigrationService {
   static String _backupPath(String id) =>
       AppFiles.getRealPath(_backupType, '$id.json');
 
-  /// 删除全部 sidecar 明文备份。路径知识只在本类——重置数据等外部清理一律调它，
+  /// sidecar 明文备份目录。路径知识只在本类——外部清理（重置数据）用这个常量，
   /// 不要手抄 `migration_backup` 字面量。
+  static String get backupDirPath => AppFiles.getRealPath(_backupType, '');
+
+  /// 删除全部 sidecar 明文备份（启动期顺手清理用，吞错：失败下次启动再试）。
+  /// **重置数据不要走这里**——重置是用户显式的破坏性操作，删明文失败必须可见，
+  /// 走 `AppFiles.deleteDir(backupDirPath)` 让异常传播。
   static Future<void> purgeBackups() async {
     try {
-      await AppFiles.deleteDir(AppFiles.getRealPath(_backupType, ''));
+      await AppFiles.deleteDir(backupDirPath);
     } catch (e, s) {
       logger.e('purge migration backups failed', error: e, stackTrace: s);
     }

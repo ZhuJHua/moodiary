@@ -22,6 +22,7 @@ class SyncBackupArchive implements IBackupArchive {
       categoryCount: report.categoryCount,
       mediaInfoCount: report.mediaInfoCount,
       failed: report.failed,
+      cancelled: report.cancelled,
     );
   }
 }

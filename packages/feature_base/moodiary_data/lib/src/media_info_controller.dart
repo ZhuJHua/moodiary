@@ -37,7 +37,8 @@ class MediaInfoController extends _$MediaInfoController {
     final sub = _repository.mediaInfoEvents.listen(_applyChange);
     ref.onDispose(sub.cancel);
     var list = await _repository.getAllMediaInfos();
-    if (_missedEvent) {
+    // 循环补偿（上限防饥饿），同 CategoryController 的注释。
+    for (var i = 0; _missedEvent && i < 3; i++) {
       _missedEvent = false;
       list = await _repository.getAllMediaInfos();
     }

@@ -101,6 +101,10 @@ class MVideoPlayerPage extends StatefulWidget {
     double? initialAspect,
     Duration startAt = .zero,
     ValueChanged<Duration>? onExitAt,
+    // 引擎接缝要透传到入口：全仓只经 show/showByName 打开播放页，参数只挂在
+    // 构造器上等于桌面有 media_kit 实现也塞不进来。
+    VideoPlaybackPortFactory portFactory = videoPlayerPortFactory,
+    Map<VideoAmbientChannel, VideoAmbientChannelPort>? ambientPorts,
   }) {
     return Navigator.of(context, rootNavigator: true).push(
       PageRouteBuilder<void>(
@@ -114,6 +118,8 @@ class MVideoPlayerPage extends StatefulWidget {
           initialAspect: initialAspect,
           startAt: startAt,
           onExitAt: onExitAt,
+          portFactory: portFactory,
+          ambientPorts: ambientPorts,
         ),
         transitionsBuilder: (_, animation, _, child) =>
             FadeTransition(opacity: animation, child: child),
@@ -135,6 +141,8 @@ class MVideoPlayerPage extends StatefulWidget {
     required String name,
     Duration startAt = .zero,
     ValueChanged<Duration>? onExitAt,
+    VideoPlaybackPortFactory portFactory = videoPlayerPortFactory,
+    Map<VideoAmbientChannel, VideoAmbientChannelPort>? ambientPorts,
   }) async {
     if (_opening) return;
     _opening = true;
@@ -156,6 +164,8 @@ class MVideoPlayerPage extends StatefulWidget {
       initialAspect: aspect,
       startAt: startAt,
       onExitAt: onExitAt,
+      portFactory: portFactory,
+      ambientPorts: ambientPorts,
     );
   }
 

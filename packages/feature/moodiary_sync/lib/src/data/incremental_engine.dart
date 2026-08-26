@@ -506,25 +506,17 @@ class IncrementalSyncEngine {
             return;
           }
           // insertACategory 在仓储事务内连带清除同 id 墓碑行（复活闸门）。
-          final result = await categoryRepo.insertACategory(
-            category,
-            fromSync: fromSync,
+          await categoryRepo.insertACategory(category, fromSync: fromSync);
+          // 写失败直接抛（仓储 2026-08 起统一抛异常），由条目级 catch 计 failed
+          // ——否则本次同步谎报成功、推进 lastSyncTime。与日记下载失败对称。
+          tombstones.remove(key);
+          pending.completeCategory(id);
+          categoryChanged++;
+          _logger.info(
+            .categoryDownload,
+            '下载分类：$id',
+            payload: {'categoryId': id},
           );
-          if (result) {
-            tombstones.remove(key);
-            pending.completeCategory(id);
-            categoryChanged++;
-            _logger.info(
-              .categoryDownload,
-              '下载分类：$id',
-              payload: {'categoryId': id},
-            );
-          } else {
-            // 本地写入失败（仓库把异常映射成 false，不抛）→ 必须计入 failed，
-            // 否则本次同步谎报成功、推进 lastSyncTime。与日记下载失败对称。
-            failed++;
-            _logger.error(.error, '写入分类失败：$id', payload: {'categoryId': id});
-          }
         } else if (key.startsWith(SyncKeys.mediaInfoPrefix)) {
           final id = key.substring(SyncKeys.mediaInfoPrefix.length);
           if (isTombstone) {
@@ -599,26 +591,15 @@ class IncrementalSyncEngine {
             return;
           }
           // insertAMediaInfo 在仓储事务内连带清除同 key 墓碑行（复活闸门）。
-          final result = await mediaInfoRepo.insertAMediaInfo(
-            mediaInfo,
-            fromSync: fromSync,
+          await mediaInfoRepo.insertAMediaInfo(mediaInfo, fromSync: fromSync);
+          // 同上：写失败直接抛，由条目级 catch 计 failed。
+          tombstones.remove(key);
+          mediaInfoChanged++;
+          _logger.info(
+            .mediaInfoDownload,
+            '下载媒体元数据：$id',
+            payload: {'mediaFileName': id},
           );
-          if (result) {
-            tombstones.remove(key);
-            mediaInfoChanged++;
-            _logger.info(
-              .mediaInfoDownload,
-              '下载媒体元数据：$id',
-              payload: {'mediaFileName': id},
-            );
-          } else {
-            failed++;
-            _logger.error(
-              .error,
-              '写入媒体元数据失败：$id',
-              payload: {'mediaFileName': id},
-            );
-          }
         }
       } catch (e) {
         failed++;
@@ -1258,7 +1239,21 @@ class IncrementalSyncEngine {
       }
 
       final remotePath = SyncKeys.mediaObjectPath(type, filename);
-      final remoteModified = await backend.statObject(remotePath);
+      // stat 失败按「未知」处理、照常走上传：这里 stat 只是省流量的跳过优化，
+      // 部分服务端对不存在对象的 HEAD 回的不是 404（无 ListBucket 的 S3 回 403、
+      // 反代对 HEAD 回 405/429）——把一次探测失败放大成整篇推送失败，会让
+      // failed 恒 >0、syncManifestStat 永不落缓存、轮询短路永不命中。
+      // 上传本身失败仍由外层 catch 如实计 failed。
+      String? remoteModified;
+      try {
+        remoteModified = await backend.statObject(remotePath);
+      } catch (e) {
+        _logger.warn(
+          .mediaSkip,
+          '探测远端媒体失败，按未知处理、继续上传：$filename',
+          payload: {'type': type, 'filename': filename, 'detail': e.toString()},
+        );
+      }
       if (remoteModified != null) {
         _logger.info(
           .mediaSkip,

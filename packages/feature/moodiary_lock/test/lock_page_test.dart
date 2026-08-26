@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_lock/moodiary_lock.dart';
+import 'package:moodiary_lock/src/presentation/lock_page.dart'
+    show kLockClearDelay, kLockShakeDuration, kLockVerifyDelay;
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 import 'package:mui/mui.dart';
@@ -54,15 +56,15 @@ void main() {
       await t.tap(find.text(d));
       await t.pump();
     }
-    // 第四位落下后延 120ms 才发起校验。
-    await t.pump(const Duration(milliseconds: 120));
+    // 第四位落下后延一拍才发起校验（时长取自被测代码的常量，不抄数字）。
+    await t.pump(kLockVerifyDelay + const Duration(milliseconds: 1));
     await t.pump();
   }
 
-  /// 错误分支的收尾：抖动动画（320ms 往返）+ 280ms 后清 pin 写提示。
+  /// 错误分支的收尾：清 pin 延迟 + 抖动往返（时长取自被测常量，留 20ms 余量）。
   Future<void> settleFailure(WidgetTester t) async {
-    await t.pump(const Duration(milliseconds: 300));
-    await t.pump(const Duration(milliseconds: 400));
+    await t.pump(kLockClearDelay + const Duration(milliseconds: 20));
+    await t.pump(kLockShakeDuration * 2 + const Duration(milliseconds: 20));
     await t.pump();
   }
 
@@ -128,7 +130,7 @@ void main() {
     };
     await t.pumpWidget(host());
     await enterPin(t, '1234');
-    await t.pump(const Duration(milliseconds: 300));
+    await t.pump(kLockClearDelay + const Duration(milliseconds: 20));
     expect(verifyCalls, 1);
     expect(find.textContaining('还可重试'), findsNothing);
     // 已解锁态：锁形图标翻开；解锁后输入被挡住、不再发起校验。
@@ -136,7 +138,7 @@ void main() {
     await t.tap(find.text('1'), warnIfMissed: false);
     await t.pump(const Duration(milliseconds: 200));
     expect(verifyCalls, 1);
-    // 结掉 280ms 的 pop 延迟，别留 pending timer（根路由 pop 是 no-op）。
-    await t.pump(const Duration(milliseconds: 300));
+    // 结掉解锁 pop 延迟，别留 pending timer（根路由 pop 是 no-op）。
+    await t.pump(kLockClearDelay + const Duration(milliseconds: 20));
   });
 }

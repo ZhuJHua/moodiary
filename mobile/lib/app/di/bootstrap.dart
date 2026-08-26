@@ -57,9 +57,10 @@ Future<void> resetAllData() async {
     AppFiles.resetUserMediaDirs(),
     AppFiles.clearCache(),
     // 2.8.0 升级留下的两处日记明文档案，重置必须一并清掉：
-    // 强制迁移为每篇旧日记写的 sidecar 原文备份（路径归 owner，不手抄字面量），
-    // 与跨引擎迁移前的整库快照。
-    EditorMigrationService.purgeBackups(),
+    // 强制迁移为每篇旧日记写的 sidecar 原文备份（路径归 owner 的常量，不手抄
+    // 字面量；**不走吞错的 purgeBackups**——明文没删掉时重置必须报失败，
+    // 用户可能正要转手设备），与跨引擎迁移前的整库快照。
+    AppFiles.deleteDir(EditorMigrationService.backupDirPath),
     AppFiles.deleteFile(
       AppFiles.getRealPath('database', 'default.isar.v273bak'),
     ),

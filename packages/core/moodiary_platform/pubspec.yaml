@@ -1,5 +1,5 @@
 name: moodiary_platform
-description: "平台服务：应用目录、缓存目录、生物识别能力探测。"
+description: "平台服务：应用目录、缓存目录、生物识别、网络状态、应用与设备信息。"
 version: 0.0.1
 publish_to: none
 

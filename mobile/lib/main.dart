@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show ProviderException;
 import 'package:moodiary/app/boot_failure_page.dart';
 import 'package:moodiary/app/di/bootstrap.dart';
 import 'package:moodiary/app/di/di.dart';
@@ -143,10 +144,12 @@ Future<void> _platFormOption() async {
 /// 全仓 provider 的重试策略。riverpod 3 的默认策略会对非 Error 异常指数退避重试
 /// 10 次（约 38 秒），期间 UI 停在 loading——本仓 provider 的失败源几乎全是本地
 /// 库 / 钥匙串，重试不会让它们变好，只是把报错拖成半分钟的空白。收紧为：最多
-/// 2 次（300/600ms），Error 不重试（Isar 的 IsarError 是 Error 子类，天然豁免）。
+/// 2 次（300/600ms）。不重试的两类与官方默认策略对齐：Error（IsarError 天然属此）
+/// 与 ProviderException——后者表示「依赖的 provider 本身已是错误态」，重算自己
+/// 毫无意义，漏掉它会让库错误经依赖链传一级后仍被白重试。
 Duration? _providerRetry(int retryCount, Object error) {
   if (retryCount >= 2) return null;
-  if (error is Error) return null;
+  if (error is Error || error is ProviderException) return null;
   return Duration(milliseconds: 300 * (retryCount + 1));
 }
 

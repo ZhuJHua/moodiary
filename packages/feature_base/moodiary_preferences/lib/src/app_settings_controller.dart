@@ -29,7 +29,10 @@ class AppSettingsController extends _$AppSettingsController {
 
   Future<void> bumpTheme() async {
     await ThemeManager().buildTheme(
-      customFont: (await FontRepository.get().getActiveFont())?.themeDescriptor,
+      customFont: (await ref
+              .read(fontRepositoryProvider)
+              .getActiveFont())
+          ?.themeDescriptor,
     );
     final (lightTheme, darkTheme) = ThemeManager().getThemeData();
     state = state.copyWith(

@@ -13,6 +13,7 @@
   "restoreDone": "Restored: {summary}",
   "restoreSummary": "{diary} diaries / {category} categories / {media} media entries",
   "restoreSummaryFailed": "{base}, {failed} failed",
+  "restoreStopped": "Restore stopped (incomplete): {summary}",
   "restoreFailed": "Restore failed: {error}",
   "packingBackup": "Packing backup…",
   "backupReady": "Backup created",

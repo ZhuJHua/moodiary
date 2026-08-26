@@ -192,8 +192,15 @@ class AutoSyncWatcher {
         // KV syncManifestStat 的历史格式是「id|串」，不存在时串为空——保持不变，
         // 否则老用户缓存的 stat 全部失配、轮询短路永不命中。
         preStat = '$backendId|${stat ?? ''}';
-      } catch (_) {
-        // 远端不可达：完整同步同样会失败，静默等下个周期（省掉整套租约往返）。
+      } catch (e) {
+        // 远端不可达：完整同步同样会失败，等下个周期（省掉整套租约往返）。
+        // 但要留痕——鉴权失效（改密码 / token 过期）会让每一轮都停在这里，
+        // 零日志时用户只能靠「上次同步时间不动」猜。
+        _logger.warn(
+          .error,
+          '轮询探测远端失败，跳过本轮：$e',
+          payload: {'detail': e.toString()},
+        );
         return;
       }
       if (shouldSkipPoll(

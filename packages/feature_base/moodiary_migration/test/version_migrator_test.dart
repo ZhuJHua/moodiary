@@ -81,13 +81,15 @@ void main() {
     return;
   }
 
+  // 顶层初始化（不放在任一 group 里）：setUpAll 只在本 group 有用例被选中时才跑，
+  // 挂在 2.8.0 组会让单跑旧步骤组（--plain-name '2.6.0'）拿到 IsarNotReadyError。
+  setUpAll(() async {
+    await Isar.initialize(dylib);
+  });
+
   group('2.8.0 迁移步骤（真库）', () {
     late Directory dir;
     late Isar isar;
-
-    setUpAll(() async {
-      await Isar.initialize(dylib);
-    });
 
     setUp(() {
       dir = Directory.systemTemp.createTempSync('moodiary_migration_test');

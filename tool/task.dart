@@ -17,6 +17,15 @@
 import 'dart:io';
 
 /// 跑一个子进程，继承 stdio；非零退出码直接终止。Windows 下走 shell 以解析 .bat/.cmd 包装器。
+/// 本机装了 fvm 就用它钉住 SDK（.fvmrc 是仓库契约）；CI 上没有则回落裸 flutter。
+final bool _hasFvm = () {
+  try {
+    return Process.runSync('fvm', ['--version']).exitCode == 0;
+  } catch (_) {
+    return false;
+  }
+}();
+
 Future<void> _run(String cmd, List<String> args, {String? cwd}) async {
   stdout.writeln(
     '\$ ${[cmd, ...args].join(' ')}${cwd != null ? '  (cwd: $cwd)' : ''}',
@@ -231,8 +240,9 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
   },
   'check-layers': (_) => _checkLayers(),
   'deps': (rest) => _run('fvm', ['dart', 'tool/dep_graph.dart', ...rest]),
-  // 全仓测试（CI 口径，与 quality.yml 的 Test 步骤逐字一致——CI 无 fvm 前缀，
-  // 本地 melos 由 fvm dart 启动、PATH 已是 FVM 的 flutter，别再套一层以免分叉）。
+  // 全仓测试（CI 口径）。flutter 经 fvm 定位：裸 `dart tool/task.dart test` 启动时
+  // PATH 上未必是钉住的 SDK（fvm dart 启动才会前置），跑错版本还毫无提示——这条
+  // 命令的卖点恰恰是「与 CI 一致」；CI（无 fvm）回落裸 flutter，两端语义等价。
   // 真库集成测试（倒排索引 / 迁移）要 ISAR_TEST_DYLIB，见 diary_index_test 文件头。
   'test': (rest) => _run('melos', [
     'exec',
@@ -241,6 +251,7 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
     '-c',
     '1',
     '--',
+    if (_hasFvm) 'fvm',
     'flutter',
     'test',
     ...rest,

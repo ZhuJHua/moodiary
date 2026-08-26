@@ -5,10 +5,12 @@ import 'package:moodiary/app/di/bootstrap.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
+import 'package:moodiary_theme/moodiary_theme.dart';
 import 'package:mui/mui.dart';
 
-/// 不可逆清空全部数据。因清空后内存仍残留 Riverpod / get_it 状态（见 [resetAllData]），
-/// 确认后退出应用，由用户重新打开走一次干净初始化。
+/// 不可逆清空全部数据。清空后内存仍残留 Riverpod / get_it 状态（见 [resetAllData]），
+/// 成功即 runApp 终态页接管界面、由用户手动重启走干净初始化；Android 顺带
+/// SystemNavigator.pop 作为快捷退出（iOS 上 pop 是空操作，不能当契约）。
 class ResetDataTile extends StatelessWidget {
   final bool isFirst;
   final bool isLast;
@@ -70,8 +72,12 @@ class _ResetDonePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 此刻主题完好（与 BootFailurePage 不同），带上它——裸 MaterialApp 默认
+    // 浅色，深色用户点完「清空」会闪一张纯白页，观感像崩溃。
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      theme: ThemeManager().lightTheme,
+      darkTheme: ThemeManager().darkTheme,
       home: Scaffold(
         body: Center(
           child: Padding(

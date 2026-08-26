@@ -24,7 +24,11 @@ class DiaryFeedView extends ConsumerWidget {
   /// 不能挂在「宿主会在 sort 变化时换 key 重建」这种写不进类型的契约上。
   final DiarySort sort;
 
-  const DiaryFeedView({super.key, this.filter = const .all(), this.sort = .timeDesc});
+  const DiaryFeedView({
+    super.key,
+    this.filter = const .all(),
+    this.sort = .timeDesc,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

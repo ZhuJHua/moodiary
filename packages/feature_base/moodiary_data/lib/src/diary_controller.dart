@@ -148,7 +148,10 @@ class RecycleBinDiaries extends _$RecycleBinDiaries {
     final sub = _repository.diaryEvents.listen(_applyChange);
     ref.onDispose(sub.cancel);
     var list = await _repository.getRecycleBinDiaries();
-    if (_missedEvent) {
+    // 循环而非单次补偿：补查期间 state 仍是 loading，事件照样只能置标记——
+    // 单次检查过后标记就再也没人消费了。上限防饥饿（异常高频写入时交给
+    // autoDispose 重建兜底）。
+    for (var i = 0; _missedEvent && i < 3; i++) {
       _missedEvent = false;
       list = await _repository.getRecycleBinDiaries();
     }

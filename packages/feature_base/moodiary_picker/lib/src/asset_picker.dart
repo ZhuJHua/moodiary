@@ -40,19 +40,6 @@ abstract final class MAssetPicker {
     return files.isEmpty ? null : files.first;
   }
 
-  /// 直接开系统相机（不经相册网格）。成片同样先落系统相册再交出文件。
-  static Future<XFile?> capture(
-    BuildContext context, {
-    required bool video,
-  }) async {
-    final entity = video
-        ? await MoodiaryCamera.recordVideo()
-        : await MoodiaryCamera.takePhoto();
-    if (entity == null) return null;
-    final files = await _materialize([entity]);
-    return files.isEmpty ? null : files.first;
-  }
-
   static Future<List<AssetEntity>?> _push(
     BuildContext context,
     RequestType type, {

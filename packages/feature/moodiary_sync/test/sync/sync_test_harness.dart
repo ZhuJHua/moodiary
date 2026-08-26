@@ -283,14 +283,14 @@ final class FakeCategoryStore implements SyncCategoryStore {
   Future<Category?> getCategoryById(String id) async => categories[id];
 
   @override
-  Future<bool> insertACategory(
+  Future<void> insertACategory(
     Category category, {
     bool fromSync = false,
   }) async {
-    if (!insertSucceeds) return false;
+    // 与仓储一致：失败抛异常（由引擎条目级 catch 计 failed）。
+    if (!insertSucceeds) throw StateError('injected insert failure');
     categories[category.id] = category;
     tombstones.rows.remove(SyncTombstone.categoryKey(category.id));
-    return true;
   }
 
   @override
@@ -331,14 +331,14 @@ final class FakeMediaInfoStore implements SyncMediaInfoStore {
       mediaInfos[fileName];
 
   @override
-  Future<bool> insertAMediaInfo(
+  Future<void> insertAMediaInfo(
     MediaInfo mediaInfo, {
     bool fromSync = false,
   }) async {
-    if (!insertSucceeds) return false;
+    // 与仓储一致：失败抛异常（由引擎条目级 catch 计 failed）。
+    if (!insertSucceeds) throw StateError('injected insert failure');
     mediaInfos[mediaInfo.fileName] = mediaInfo;
     tombstones.rows.remove(SyncTombstone.mediaInfoKey(mediaInfo.fileName));
-    return true;
   }
 
   @override

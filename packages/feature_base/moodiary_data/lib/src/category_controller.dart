@@ -42,7 +42,9 @@ class CategoryController extends _$CategoryController {
     final sub = _repository.categoryEvents.listen(_applyChange);
     ref.onDispose(sub.cancel);
     var list = await _repository.getAllCategories();
-    if (_missedEvent) {
+    // 循环补偿（上限防饥饿）：补查期间 state 仍是 loading，事件只能置标记——
+    // 单次检查过后标记就没人消费了（LoadMoreMixin 版无此洞：refresh 时 state 已有值）。
+    for (var i = 0; _missedEvent && i < 3; i++) {
       _missedEvent = false;
       list = await _repository.getAllCategories();
     }
