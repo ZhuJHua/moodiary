@@ -165,10 +165,10 @@ final class FakeRemoteBackend implements IRemoteSyncBackend {
   }
 
   @override
-  Future<String> statObject(String key) async {
+  Future<String?> statObject(String key) async {
     ops.add('stat $key');
     beforeOp?.call('stat', key);
-    return objects.containsKey(key) ? _mtime : '';
+    return objects.containsKey(key) ? _mtime : null;
   }
 
   @override

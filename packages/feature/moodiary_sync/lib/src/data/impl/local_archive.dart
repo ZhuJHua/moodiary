@@ -424,9 +424,9 @@ class LocalArchiveBackend implements IRemoteSyncBackend {
   }
 
   @override
-  Future<String> statObject(String key) async {
+  Future<String?> statObject(String key) async {
     final file = _file(key);
-    if (!await file.exists()) return '';
+    if (!await file.exists()) return null;
     return (await file.lastModified()).toUtc().toIso8601String();
   }
 

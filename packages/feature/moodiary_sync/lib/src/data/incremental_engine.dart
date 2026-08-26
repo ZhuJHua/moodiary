@@ -1240,7 +1240,7 @@ class IncrementalSyncEngine {
 
       final remotePath = SyncKeys.mediaObjectPath(type, filename);
       final remoteModified = await backend.statObject(remotePath);
-      if (remoteModified.isNotEmpty) {
+      if (remoteModified != null) {
         _logger.info(
           .mediaSkip,
           '远端已存在，跳过：$filename',
@@ -1534,7 +1534,7 @@ class _GatedBackend implements IRemoteSyncBackend {
       _gate.withResource(() => _inner.deleteObject(key));
 
   @override
-  Future<String> statObject(String key) =>
+  Future<String?> statObject(String key) =>
       _gate.withResource(() => _inner.statObject(key));
 
   // 入口 / 元信息方法直接透传。

@@ -62,8 +62,12 @@ abstract class IRemoteSyncBackend implements SyncBackend {
   /// 引擎据此决定 tombstone 是否真的已被远端接收。
   Future<void> deleteObject(String key);
 
-  /// 查询远端对象 Last-Modified（不下载内容）。返回 ISO 8601 字符串，不存在时空字符串。
-  Future<String> statObject(String key);
+  /// 查询远端对象是否存在（HEAD，不下载内容）。返回不透明的 Last-Modified 记号
+  /// （格式因后端而异，调用方只做「存在性 + 变没变」判断，不解析）；null = 不存在。
+  /// 网络 / 认证 / 服务器错误必须抛 [SyncException]——吞错当成 null 会让 push 把
+  /// 已上传媒体判成缺失整体重传、把「远端不可达」判成「远端没有」（与 [readObject]
+  /// 同一条纪律）。
+  Future<String?> statObject(String key);
 }
 
 class SyncReport {

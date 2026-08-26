@@ -187,7 +187,9 @@ class AutoSyncWatcher {
     if (backendId != null) {
       try {
         final stat = await backend.statObject(SyncKeys.manifestPath);
-        preStat = '$backendId|$stat';
+        // KV syncManifestStat 的历史格式是「id|串」，不存在时串为空——保持不变，
+        // 否则老用户缓存的 stat 全部失配、轮询短路永不命中。
+        preStat = '$backendId|${stat ?? ''}';
       } catch (_) {
         // 远端不可达：完整同步同样会失败，静默等下个周期（省掉整套租约往返）。
         return;

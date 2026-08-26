@@ -379,9 +379,10 @@ impl S3Client {
         }
     }
 
-    /// HEAD 请求取 Last-Modified，不存在返回空字符串。调用方只判空/非空，不解析格式。
+    /// HEAD 请求取 Last-Modified：404（不存在）返回空字符串；网络与其它 HTTP 错误上抛。
+    /// 调用方只判空/非空，不解析格式。
     pub async fn stat_object(&self, key: String) -> Result<String> {
-        let Ok(resp) = self
+        let resp = self
             .send(
                 reqwest::Method::HEAD,
                 |b| b.head_object(Some(&self.creds), &key).sign(SIGN_TTL),
@@ -389,11 +390,13 @@ impl S3Client {
                 None,
             )
             .await
-        else {
+            .map_err(|e| anyhow::anyhow!("Stat request failed: {e}"))?;
+        // 同 webdav：只有 404 是「不存在」，其余错误上抛。
+        if resp.status() == reqwest::StatusCode::NOT_FOUND {
             return Ok(String::new());
-        };
+        }
         if !resp.status().is_success() {
-            return Ok(String::new());
+            anyhow::bail!("Stat failed: HTTP {}", resp.status());
         }
         Ok(resp
             .headers()

@@ -221,12 +221,17 @@ impl DavClient {
             .start_request(Method::HEAD, &path)
             .await
             .map_err(|e| anyhow::anyhow!("Failed to build request: {e}"))?;
-        let resp = match req.send().await {
-            Ok(r) => r,
-            Err(_) => return Ok(String::new()),
-        };
-        if !resp.status().is_success() {
+        let resp = req
+            .send()
+            .await
+            .map_err(|e| anyhow::anyhow!("Stat request failed: {e}"))?;
+        // 只有 404 表示「不存在」（空串）；网络错误与 401/5xx 必须上抛，
+        // 否则调用方把「远端不可达」误判成「远端没有」，已上传媒体会整体重传。
+        if resp.status() == reqwest::StatusCode::NOT_FOUND {
             return Ok(String::new());
+        }
+        if !resp.status().is_success() {
+            anyhow::bail!("Stat failed: HTTP {}", resp.status());
         }
         Ok(resp
             .headers()

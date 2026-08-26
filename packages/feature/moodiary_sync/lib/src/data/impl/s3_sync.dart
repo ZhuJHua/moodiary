@@ -161,12 +161,14 @@ class S3SyncBackend implements IRemoteSyncBackend {
   }
 
   @override
-  Future<String> statObject(String key) async {
+  Future<String?> statObject(String key) async {
     try {
       final client = await _client();
-      return await client.statObject(key: _objectName(key));
-    } catch (_) {
-      return '';
+      // Rust 侧只在 404 返回空串（网络错误与 401/5xx 都抛），这里映射成 null。
+      final stat = await client.statObject(key: _objectName(key));
+      return stat.isEmpty ? null : stat;
+    } catch (e) {
+      throw SyncException('查询远端对象失败（$key）：$e');
     }
   }
 
