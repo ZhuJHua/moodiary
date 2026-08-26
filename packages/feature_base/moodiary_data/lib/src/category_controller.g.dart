@@ -37,7 +37,7 @@ final class CategoryControllerProvider
 }
 
 String _$categoryControllerHash() =>
-    r'846498a35b6f7c7d0557897230d35356bfc1d2a6';
+    r'7da996b23655d1c57c58d9bea7b626efb6d9a6d3';
 
 /// 订阅 [CategoryRepository.categoryEvents]，按事件原地增量更新，无需重查库。
 

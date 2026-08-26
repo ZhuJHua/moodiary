@@ -20,6 +20,9 @@ dependencies:
   moodiary_i18n: 0.0.1
   moodiary_utils: 0.0.1
   mui: 0.0.1
+  screen_brightness: 2.1.11
+  video_player: 2.14.0
+  volume_controller: 3.6.1
 
   flutter_riverpod: 3.4.2
   path: 1.9.1

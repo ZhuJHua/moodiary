@@ -4,8 +4,8 @@ import 'package:moodiary/app/settings/setting_routes.dart';
 import 'package:moodiary/gen/assets.gen.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_router/moodiary_router.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 import 'package:url_launcher/url_launcher.dart';
 

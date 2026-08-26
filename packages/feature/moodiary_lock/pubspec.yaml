@@ -16,7 +16,7 @@ dependencies:
   moodiary_logging: 0.0.1
   moodiary_storage: 0.0.1
   moodiary_i18n: 0.0.1
-  moodiary_utils: 0.0.1
+  moodiary_platform: 0.0.1
   moodiary_components: 0.0.1
   moodiary_router: 0.0.1
   mui: 0.0.1

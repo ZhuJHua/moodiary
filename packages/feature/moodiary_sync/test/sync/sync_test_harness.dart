@@ -22,7 +22,6 @@ import 'package:moodiary_sync/src/data/sync_stores.dart';
 /// 同步引擎单测脚手架：把引擎对 KV / 后端 / 本地存储 / cipher 的依赖全部替换成
 /// 内存假实现，不触碰 Isar / 文件系统 / Rust FFI / 网络，纯确定性运行。
 
-
 // ─────────────────────── remote backend ───────────────────────
 
 /// 内存远端后端，实现 [IRemoteSyncBackend]。支持故障注入（[beforeOp]）与操作记录。

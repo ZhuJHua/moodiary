@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:fc_native_video_thumbnail/fc_native_video_thumbnail.dart';
 import 'package:gal/gal.dart';
-import 'package:heif_converter/heif_converter.dart';
 import 'package:mime/mime.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
@@ -107,14 +106,14 @@ class MediaManager {
     if (format == .heic) {
       final uuid = uuidV7();
       if (_optimizeEnabled) {
-        // 转 PNG 字节直接落 .webp 名（HeifConverter 按输出后缀选编码器，非 .jpg
+        // 转 PNG 字节直接落 .webp 名（移动端解码器按输出后缀选编码器，非 .jpg
         // 即 PNG；webview 按内容嗅探可显示），后台 compressInPlace 就地转真 WebP
         // （WebP 自带 alpha，无需探测）。
         final name = 'image-$uuid.webp';
         try {
-          final out = await HeifConverter.convert(
+          final out = await IHeifDecoder.get().convert(
             imageFile.path,
-            output: AppFiles.getRealPath('image', name),
+            outputPath: AppFiles.getRealPath('image', name),
             format: 'png',
           );
           return out == null ? null : name;
@@ -127,9 +126,9 @@ class MediaManager {
       final pngName = 'image-$uuid.png';
       final pngPath = AppFiles.getRealPath('image', pngName);
       try {
-        final out = await HeifConverter.convert(
+        final out = await IHeifDecoder.get().convert(
           imageFile.path,
-          output: pngPath,
+          outputPath: pngPath,
           format: 'png',
         );
         if (out == null) return null;
@@ -142,9 +141,9 @@ class MediaManager {
       // 不透明 → 转 JPEG 省体积；转换失败则退回已生成的 PNG。
       final jpgName = 'image-$uuid.jpg';
       try {
-        final out = await HeifConverter.convert(
+        final out = await IHeifDecoder.get().convert(
           imageFile.path,
-          output: AppFiles.getRealPath('image', jpgName),
+          outputPath: AppFiles.getRealPath('image', jpgName),
           format: 'jpg',
         );
         if (out == null) return pngName;
@@ -386,9 +385,9 @@ class MediaManager {
   static Future<String?> _convertHeicToPng(String heicPath) async {
     try {
       final tempPngPath = '${Directory.systemTemp.path}/heic_${uuidV7()}.png';
-      return await HeifConverter.convert(
+      return await IHeifDecoder.get().convert(
         heicPath,
-        output: tempPngPath,
+        outputPath: tempPngPath,
         format: 'png',
       );
     } catch (e) {

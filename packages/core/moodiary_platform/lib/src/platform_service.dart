@@ -1,7 +1,8 @@
 import 'dart:io';
 
-import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path_provider/path_provider.dart';
+
+import 'biometric_auth.dart';
 
 class PlatformService {
   static final PlatformService _instance = ._internal();

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:bonsoir/bonsoir.dart';
 import 'package:flutter/foundation.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:moodiary_platform/moodiary_platform.dart';
 
 /// mDNS/Bonjour 发现层（bonsoir 插件包装）。发现是纯增强：任何一步失败都静默降级，
 /// 手动「IP + 配对码」路径始终可用。iOS 需要 Info.plist 的 `NSBonjourServices`

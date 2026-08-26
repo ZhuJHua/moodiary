@@ -19,8 +19,7 @@ class AssistantProviderListPage extends StatefulWidget {
       _AssistantProviderListPageState();
 }
 
-class _AssistantProviderListPageState
-    extends State<AssistantProviderListPage> {
+class _AssistantProviderListPageState extends State<AssistantProviderListPage> {
   LlmProviderRepository get _repo => .get();
 
   List<LlmProvider> _providers = const [];

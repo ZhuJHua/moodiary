@@ -36,6 +36,9 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
+import 'video_ambient_port_impl.dart';
+import 'video_player_port_impl.dart';
+
 typedef VideoSurfaceBuilder = Widget Function(VideoPlaybackPort port);
 
 /// 全屏横拖刮擦的换算：毫秒 / 像素。
@@ -61,6 +64,8 @@ class MVideoPlayerPage extends StatefulWidget {
     this.startAt = .zero,
     this.onExitAt,
     this.surfaceBuilder = defaultVideoSurfaceBuilder,
+    this.portFactory = videoPlayerPortFactory,
+    this.ambientPorts,
   });
 
   final String videoPath;
@@ -80,6 +85,12 @@ class MVideoPlayerPage extends StatefulWidget {
   final ValueChanged<Duration>? onExitAt;
 
   final VideoSurfaceBuilder surfaceBuilder;
+
+  /// 播放引擎端口工厂。桌面换 media_kit 一类引擎时从这里注入，皮肤不动。
+  final VideoPlaybackPortFactory portFactory;
+
+  /// 亮度 / 音量端口，null 走移动端默认实现。
+  final Map<VideoAmbientChannel, VideoAmbientChannelPort>? ambientPorts;
 
   /// 打开播放页。[initialAspect] 决定锁横还是锁竖，**必须在 push 之前拿到**，
   /// 否则只能等 initialized，用户会看到一次旋转。
@@ -176,7 +187,9 @@ class _MVideoPlayerPageState extends State<MVideoPlayerPage>
     with WidgetsBindingObserver {
   late final MVideoPlaybackController _player;
   final _chrome = VideoChromeController();
-  final _ambient = VideoAmbientController(ports: defaultVideoAmbientPorts());
+  late final _ambient = VideoAmbientController(
+    ports: widget.ambientPorts ?? defaultVideoAmbientPorts(),
+  );
 
   OrientationOverrideRelease? _releaseOrientation;
   List<DeviceOrientation>? _lockedTo;
@@ -220,7 +233,7 @@ class _MVideoPlayerPageState extends State<MVideoPlayerPage>
     super.initState();
     _player = MVideoPlaybackController(
       source: .file(widget.videoPath),
-      portFactory: videoPlayerPortFactory,
+      portFactory: widget.portFactory,
       initialAspect: widget.initialAspect,
       // 不自动播：转场与旋转都结束后才开播。否则画面/声音在旋转期间就起来了，
       // 而那几帧被系统的旋转截图盖着，等于白解码，声音也先于画面出现。

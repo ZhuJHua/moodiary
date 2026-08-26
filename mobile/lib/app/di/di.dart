@@ -5,7 +5,8 @@ import 'package:moodiary_assistant/moodiary_assistant.dart'
     show AssistantService;
 import 'package:moodiary_data/moodiary_data.dart' show IBackupArchive;
 import 'package:moodiary_di/moodiary_di.dart';
-import 'package:moodiary_files/moodiary_files.dart' show IFilePicker;
+import 'package:moodiary_files/moodiary_files.dart'
+    show IFilePicker, IHeifDecoder;
 import 'package:moodiary_http/injectable.module.dart';
 import 'package:moodiary_http/moodiary_http.dart' show IHttpClient, IHttpServer;
 import 'package:moodiary_logging/moodiary_logging.dart';
@@ -50,6 +51,7 @@ void _assertRequiredBindings() {
     if (!getIt.isRegistered<IHttpClient>()) 'IHttpClient',
     if (!getIt.isRegistered<IHttpServer>()) 'IHttpServer',
     if (!getIt.isRegistered<IFilePicker>()) 'IFilePicker',
+    if (!getIt.isRegistered<IHeifDecoder>()) 'IHeifDecoder',
     if (!getIt.isRegistered<IBackupArchive>()) 'IBackupArchive',
     if (!getIt.isRegistered<AssistantService>()) 'AssistantService',
     if (!getIt.isRegistered<SyncLogger>()) 'SyncLogger',

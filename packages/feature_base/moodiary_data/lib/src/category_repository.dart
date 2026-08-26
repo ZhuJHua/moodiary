@@ -1,5 +1,5 @@
-
 import 'dart:async';
+
 import 'package:flutter/foundation.dart' show visibleForTesting;
 
 import 'package:isar_plus/isar_plus.dart';
@@ -58,7 +58,10 @@ class CategoryRepository {
   // 抛「object is unsendable」。
   /// [fromSync] = 该写入由活跃云后端的 pull 落库（远端已持有），事件携带此标记
   /// 供 AutoSyncWatcher 免除回声推送。
-  Future<void> insertACategory(Category category, {bool fromSync = false}) async {
+  Future<void> insertACategory(
+    Category category, {
+    bool fromSync = false,
+  }) async {
     // 复活闸门：同 id 的同步墓碑连带清除（同步下载 / 重建同名 id 场景）。
     final tombstoneId = fastHash(SyncTombstone.categoryKey(category.id));
     await _isar.writeAsync((isar) {

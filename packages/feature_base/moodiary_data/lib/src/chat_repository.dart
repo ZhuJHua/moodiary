@@ -1,5 +1,5 @@
-
 import 'dart:async';
+
 import 'package:flutter/foundation.dart' show visibleForTesting;
 
 import 'package:isar_plus/isar_plus.dart';

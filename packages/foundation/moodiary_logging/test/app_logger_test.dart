@@ -23,11 +23,10 @@ void main() {
 
     AppLogger.configure(logFilePath: '/tmp/moodiary-test/a.log');
     logger.i('after configure');
-    expect(
-      calls,
-      [null, '/tmp/moodiary-test/a.log'],
-      reason: 'configure 必须失效缓存，下一条日志重建',
-    );
+    expect(calls, [
+      null,
+      '/tmp/moodiary-test/a.log',
+    ], reason: 'configure 必须失效缓存，下一条日志重建');
   });
 
   test('重复 configure 换路径：再次重建生效', () {

@@ -265,6 +265,7 @@ List<File> _dartFiles(String root) {
         }
       }
     }
+
     walk(dir);
     return out;
   });
@@ -468,6 +469,57 @@ List<String> _checkThemeDataConstruction() {
   return out;
 }
 
+
+/// 仅移动端的插件（无 windows/linux 实现，或语义本身是移动端形态）：不许出现在
+/// foundation / core / feature_base 三层共享包的 pubspec 里——那会把未来的
+/// desktop 钉死在移动端。判定用手维护常量表而非扫 pub 缓存的 plugin.platforms
+/// （CI 冷跑无缓存、且要解析全部传递依赖，脆且慢）。例外进
+/// [_mobileOnlyPluginAllowlist] 并写明理由。
+/// 注：gal / fc_native_video_thumbnail 支持桌面（gal 仅缺 linux），刻意不在表里。
+const Set<String> _mobileOnlyPlugins = {
+  'photo_manager',
+  'wechat_assets_picker',
+  'wechat_picker_library',
+  'wechat_camera_picker',
+  'image_picker',
+  'heif_converter',
+  'video_player',
+  'flutter_displaymode',
+};
+
+/// 例外按「包 -> 插件」粒度放行，避免整包豁免漏掉未来的新增。
+const Map<String, String> _mobileOnlyPluginAllowlist = {
+  'packages/feature_base/moodiary_picker -> photo_manager':
+      '移动端专属实现包：全仓只有 mobile 依赖它（IFilePicker 的移动 UI）',
+  'packages/feature_base/moodiary_picker -> wechat_assets_picker': '同上',
+  'packages/feature_base/moodiary_picker -> wechat_picker_library': '同上',
+  'packages/feature_base/moodiary_picker -> image_picker': '同上（系统相机）',
+  'packages/feature_base/moodiary_components -> video_player':
+      '播放引擎的移动实现与唯一调用点同居；桌面经 MVideoPlayerPage 的 '
+      'portFactory/ambientPorts 注入自己的端口实现，皮肤与状态机（mui）零插件',
+};
+
+List<String> _checkMobileOnlyPlugins() {
+  final out = <String>[];
+  for (final layer in ['foundation', 'core', 'feature_base']) {
+    final layerDir = Directory('packages/$layer');
+    if (!layerDir.existsSync()) continue;
+    for (final pkg in layerDir.listSync().whereType<Directory>()) {
+      final rel = pkg.path.replaceAll('\\', '/');
+      final pubspec = File('${pkg.path}/pubspec.yaml');
+      if (!pubspec.existsSync()) continue;
+      final text = pubspec.readAsStringSync();
+      for (final plugin in _mobileOnlyPlugins) {
+        if (!RegExp('^  $plugin: ', multiLine: true).hasMatch(text)) continue;
+        final key = '$rel -> $plugin';
+        if (_mobileOnlyPluginAllowlist.containsKey(key)) continue;
+        out.add(key);
+      }
+    }
+  }
+  return out;
+}
+
 void main(List<String> args) {
   final update = args.contains('--update-baseline');
   final themeViolations = _checkThemeDataConstruction();
@@ -506,6 +558,21 @@ void main(List<String> args) {
     }
     stderr.writeln(
       '  → 业务代码请 import package:mui/mui.dart；确需 legacy 的加进 _legacyMaterialAllowlist 并写明理由。',
+    );
+    exit(1);
+  }
+
+  final mobileOnly = _checkMobileOnlyPlugins();
+  if (mobileOnly.isEmpty) {
+    stdout.writeln('✅ 共享层（foundation/core/feature_base）无移动端专属插件。');
+  } else {
+    stderr.writeln('❌ 共享层出现移动端专属插件 ${mobileOnly.length} 处：');
+    for (final v in mobileOnly) {
+      stderr.writeln('  ✗ $v');
+    }
+    stderr.writeln(
+      '  → 抽端口把实现挪进 app 组合根（IFilePicker/IHeifDecoder 的做法），'
+      '或确属移动专属实现包时加进 _mobileOnlyPluginAllowlist 并写明理由。',
     );
     exit(1);
   }

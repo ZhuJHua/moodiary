@@ -97,8 +97,7 @@ class RepoSyncCategoryStore implements SyncCategoryStore {
   final CategoryRepository _repo = .get();
 
   @override
-  Future<List<Category>> getAllCategoriesForSync() =>
-      _repo.getAllCategories();
+  Future<List<Category>> getAllCategoriesForSync() => _repo.getAllCategories();
 
   @override
   Future<Category?> getCategoryById(String id) => _repo.getCategoryById(id);
@@ -121,8 +120,7 @@ class RepoSyncMediaInfoStore implements SyncMediaInfoStore {
   final MediaInfoRepository _repo = .get();
 
   @override
-  Future<List<MediaInfo>> getAllMediaInfosForSync() =>
-      _repo.getAllMediaInfos();
+  Future<List<MediaInfo>> getAllMediaInfosForSync() => _repo.getAllMediaInfos();
 
   @override
   Future<MediaInfo?> getMediaInfoByFileName(String fileName) =>

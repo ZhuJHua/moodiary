@@ -3,10 +3,9 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:mui/mui.dart';
 import 'package:screen_brightness/screen_brightness.dart';
 import 'package:volume_controller/volume_controller.dart';
-
-import 'video_ambient_controller.dart';
 
 /// 播放页用的一组端口。
 Map<VideoAmbientChannel, VideoAmbientChannelPort> defaultVideoAmbientPorts() =>

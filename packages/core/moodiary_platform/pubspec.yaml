@@ -13,7 +13,11 @@ dependencies:
   flutter:
     sdk: flutter
 
-  moodiary_utils: 0.0.1
+  connectivity_plus: 7.3.1
+  device_info_plus: 13.2.0
+  local_auth: 3.0.2
+  network_info_plus: 8.2.1
+  package_info_plus: 10.2.1
   path_provider: 2.1.6
 
 dev_dependencies:

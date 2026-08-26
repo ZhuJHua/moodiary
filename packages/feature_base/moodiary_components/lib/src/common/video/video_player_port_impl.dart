@@ -7,11 +7,8 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/widgets.dart';
+import 'package:mui/mui.dart';
 import 'package:video_player/video_player.dart';
-
-import 'video_playback_port.dart';
-import 'video_playback_state.dart';
 
 class VideoPlayerPluginPort implements VideoPlaybackPort {
   VideoPlayerPluginPort(this.source) {

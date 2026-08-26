@@ -21,9 +21,6 @@ dependencies:
   slang: 4.19.0
   slang_flutter: 4.19.0
   flutter_smart_dialog: 5.3.0
-  video_player: 2.14.0
-  screen_brightness: 2.1.11
-  volume_controller: 3.6.1
 
 dev_dependencies:
   flutter_test:

@@ -180,7 +180,7 @@ final class MediaCleanupControllerProvider
 }
 
 String _$mediaCleanupControllerHash() =>
-    r'bfbbdb7b067e2fcaf82d875f3d8ecca9d474d924';
+    r'66acabaa965b5a26227ee93becb42cd755f71715';
 
 /// 媒体清理：找出 / 删除未被任何日记引用的孤儿媒体文件。[scan] 只扫描不删除；
 /// [clean] 只删文件——刷新（失效 [mediaDiariesProvider]）由调用方用自身有效 ref 触发，
