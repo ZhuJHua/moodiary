@@ -131,39 +131,39 @@ CI dylib 那条在本机先验证目标用例真跑通过。
 
 ---
 
-## P1 — 架构收敛（半天~数天，P0 后排期）
+## P1 — 架构收敛 ——✅ 已全部完成并验收（2026-08-26）
 
 ### A. 平台插件归位（真实的桌面阻塞清单，核验后只剩这些）
-- [ ] **utils↔platform 边界倒置**：biometric_auth / network_status / app_info 三文件
+- [x] **utils↔platform 边界倒置**：biometric_auth / network_status / app_info 三文件
   连 5 个插件依赖从 foundation/moodiary_utils 搬进 core/moodiary_platform（外部读者仅
   5 处：lock×2、sync×2、mobile×1、migration×1）；platform 删除对 utils 的依赖，变成
   零 moodiary 依赖的 core 叶子。根 CLAUDE.md 的职责描述随之成立。约 3h。
-- [ ] **heif_converter 是全 core 唯一 android/ios-only 插件**：抽单方法窄端口
+- [x] **heif_converter 是全 core 唯一 android/ios-only 插件**：抽单方法窄端口
   `IHeifDecoder`（media_manager.dart 四处调用点改走端口），插件依赖移 mobile。
   **别走 Rust**——image crate 无 HEIF 解码器，引 libheif 撞体积纪律。约 3-4h。
   （gal / fc_native_video_thumbnail 支持桌面，留在 core，不抽。）
-- [ ] **mui 背着 video_player**（无 windows/linux）：video_player_port_impl /
+- [x] **mui 背着 video_player**（无 windows/linux）：video_player_port_impl /
   video_ambient_port_impl 两文件 + 三条插件依赖搬到 moodiary_components（唯一调用点
   在那）；同时把 `portFactory` 提成 MVideoPlayerPage 构造参数（否则桌面有 media_kit
   实现也塞不进去）。mui 回到零插件叶子。约 2-3h。
-- [ ] check_layers 加手维护常量表 `_mobileOnlyPlugins`：foundation/core/feature_base
+- [x] check_layers 加手维护常量表 `_mobileOnlyPlugins`：foundation/core/feature_base
   三层 pubspec 出现表中插件即红（例外名单带理由）。别扫 pub 缓存（CI 无缓存，脆）。
 
 ### B. 端口质量
-- [ ] **IRemoteSyncBackend 胖接口**拆 `RemoteObjectStore`（对象原语）+ SyncBackend
+- [x] **IRemoteSyncBackend 胖接口**拆 `RemoteObjectStore`（对象原语）+ SyncBackend
   （编排门面）；engine 只依赖前者；LocalArchiveBackend 四处 Unimplemented/Unsupported
   消失；isReady+engine 样板提成 mixin（notReadyError 抽象成员，webdav/s3 文案不同）。
   Registry 字段类型保持 IRemoteSyncBackend? 不变。小时级~1 天。
-- [ ] **IBackupArchive.import 返回写死中文串直进 toast**（英文界面出中文）：改返回
+- [x] **IBackupArchive.import 返回写死中文串直进 toast**（英文界面出中文）：改返回
   `BackupImportResult` DTO（定义在 moodiary_data，别复用 SyncReport——那会让 data
   认识 sync 的类型）；export_page 照抄 lan_receive_page 的 `_summary()` 走 l10n，
   新增键后必跑 `dart tool/task.dart i18n`。SyncReport.toString() 注明「仅供日志」。
-- [ ] IFilePicker 删两个零调用死方法 takePhoto/recordVideo（相机入口走选择器网格，
+- [x] IFilePicker 删两个零调用死方法 takePhoto/recordVideo（相机入口走选择器网格，
   不经端口，删除安全）；「失败抛异常、取消返回 null」写进契约注释。
-- [ ] font_manager.pickFont() 改走 `IFilePicker.get()`（全仓选文件收敛到一个入口）。
+- [x] font_manager.pickFont() 改走 `IFilePicker.get()`（全仓选文件收敛到一个入口）。
 
 ### C. DI / riverpod（边界本身是清的，补文档和两个接缝）
-- [ ] **moodiary_data/CLAUDE.md**（全场性价比最高的一小时，排在其它代码改动之前）：
+- [x] **moodiary_data/CLAUDE.md**（全场性价比最高的一小时，排在其它代码改动之前）：
   ① get_it = 需要换实现的接线；仓储是刻意的进程级静态单例，平台差异由
   `IsarDatabase.init(directory:, schemas:)` 在组合根吸收。
   ② riverpod = 界面生命周期的读模型；仓储经薄 `xxxRepositoryProvider` 取用。
@@ -173,32 +173,32 @@ CI dylib 那条在本机先验证目标用例真跑通过。
   默认重试（写明本仓 ProviderScope 策略）/ provider 统一放 application/。
   事件通知判据：大列表走类型化事件+内存增量；小表 Stream<void> 全量重查；单对象
   watchObject。
-- [ ] **仓储薄 provider 层**：`repository_providers.dart` 13 行
+- [x] **仓储薄 provider 层**：`repository_providers.dart` 13 行
   `@Riverpod(keepAlive: true)`；controller 改 `ref.watch`（约 10 处）；测试
   `overrideWithValue(forTesting(...))`。**不进容器。** 另给其余 8 个仓储补
   `forTesting`，修 edit_controller.dart:34 错注释（「get_it 单例」→「进程级静态单例」）。
-- [ ] **`_assertRequiredBindings()`**：configureDependencies 后对 10 个必需绑定逐个
+- [x] **`_assertRequiredBindings()`**：configureDependencies 后对 10 个必需绑定逐个
   isRegistered，debug assert / release logger.e——同时是 desktop 组合根的可执行清单。
   （throwOnMissingDependencies 开在根上是 no-op；要开开在 sync 等 micro-package 上。）
 - [x] **riverpod_lint**：实测后**暂缓**（2026-08-26）——analyzer 13.3.0 上原生
   plugin 在 workspace 根加载但诊断不落到嵌套包，包内放置被根分析拒绝
   （plugins_in_inner_options），custom_lint 老形态止步 dev.17/analyzer 7。
   复查条件与哨兵写在 moodiary_lint/lib/analysis_options.yaml 顶部注释。
-- [ ] 测试接缝用 get_it scope：`pushNewScope` / `popScope` 替掉 view_mode_sheet_test
+- [x] 测试接缝用 get_it scope：`pushNewScope` / `popScope` 替掉 view_mode_sheet_test
   与 sync_test_harness 的手工 unregister 三连。
 
 ### D. 数据层
-- [ ] **错误约定统一抛异常**：category/media_info 两仓储的 6 个 TaskEither 方法改回
+- [x] **错误约定统一抛异常**：category/media_info 两仓储的 6 个 TaskEither 方法改回
   Future（DatabaseException 从未被任何消费端读过，全被 getOrElse 拍平——库故障伪装成
   空列表）；controller 补 try/catch + logger.e；fpdart 从 moodiary_data 删除。
-- [ ] **pull 逐篇 insertADiary 的 O(N²) 倒排**：insertDiaries 加 `IndexMode` 参数
+- [x] **pull 逐篇 insertADiary 的 O(N²) 倒排**：insertDiaries 加 `IndexMode` 参数
   （defer = 同事务 putAll + 入队），engine pull 传 defer，结束按本轮量分流
   （>200 → rebuildAllIndexes，否则 drainReindexQueue）。**别攒批落库**——会拉长
   LWW 重读窗口，与引擎刻意保持的不变量相反。
-- [ ] 派生一致性收敛：`withDerivedMedia` / `touched` 两个纯函数 +
+- [x] 派生一致性收敛：`withDerivedMedia` / `touched` 两个纯函数 +
   `setVisibility(Diary, bool)` 收编软删三处重复 + `updateADiary` 头部 debug assert
   抓第四个写入方。（不做四入口大改——自动保存热路径不能多付一次全文解析。）
-- [ ] 小件：`getDiariesByDateRange({all})` 改名 `visibleOnly`（语义与名字相反）；
+- [x] 小件：`getDiariesByDateRange({all})` 改名 `visibleOnly`（语义与名字相反）；
   DiaryEvent.deleted 补业务 id + watcher 补 clearDirty；timeline 事件订阅补 300ms
   去抖（pull 期每帧一次全表聚合）；timeline_view/feed_view 的 sort 改构造参数
   （命令式读 KV 靠宿主 KeyedSubtree 契约，桌面复用即静默错分桶）；
@@ -206,51 +206,51 @@ CI dylib 那条在本机先验证目标用例真跑通过。
   map 加 `getDiariesWithPosition()`。
 
 ### E. 测试基建
-- [ ] storage 出 `lib/testing.dart`：合并 5 份漂移的 InMemoryKV（以带故障注入的
+- [x] storage 出 `lib/testing.dart`：合并 5 份漂移的 InMemoryKV（以带故障注入的
   storage 版为准）。openTestIsar 别放这（storage 够不着 models）；要做放 moodiary_data
   侧 openTestDb()。
-- [ ] 4 个包各建 `test/support/pump.dart` 收 23 份手抄 widget 脚手架（delegates 漏抄
+- [x] 4 个包各建 `test/support/pump.dart` 收 23 份手抄 widget 脚手架（delegates 漏抄
   即中文日期选择器崩的那个坑）；手抄压到 4 份后再议抽 test_kit 包。
-- [ ] task.dart 加 `test-all`（与 CI 逐字一致，无 fvm 前缀）；melos script `test`
+- [x] task.dart 加 `test-all`（与 CI 逐字一致，无 fvm 前缀）；melos script `test`
   指向它并改掉「运行全部测试」的误导 description；保留 `test-mobile`。
   --coverage 单开任务，别捎带（CI 无缓存、冷跑 11.5min）。
-- [ ] 迁移旧步骤补测试入口：merge 加 `databaseDir` 参数 + 三个具名 debug 静态
+- [x] 迁移旧步骤补测试入口：merge 加 `databaseDir` 参数 + 三个具名 debug 静态
   （别做 stringly-typed debugStep）；优先 2.6.0（重写全部正文）与 2.7.3（清字体表）。
   排在 0.3 之后——CI 不跑 dylib 时新用例照样 skip。
-- [ ] 测试 schema 手抄两处改用真源（`schemas: moodiarySchemas` /
+- [x] 测试 schema 手抄两处改用真源（`schemas: moodiarySchemas` /
   `legacyMigrationSchemas`，两行）。
-- [ ] mobile/test 里 6 个包测试归回各自包（两份「同名」其实互补，合并改名别覆盖）；
+- [x] mobile/test 里 6 个包测试归回各自包（两份「同名」其实互补，合并改名别覆盖）；
   删空目录（空 test 目录截断 melos 扫描）。
-- [ ] lock 包补 lock_page 状态机 widget 测试（AppLockPin.verifier 注入 + pump 推
+- [x] lock 包补 lock_page 状态机 widget 测试（AppLockPin.verifier 注入 + pump 推
   Timer + lockType:'pause' 避路由）——:124-126 注释里那个真实缺陷该有回归测试。
   不先抽 LockAttemptPolicy（今天就能直接测）。
 
 ### F. 卫生（一次清完，约 1-2h）
-- [ ] 死依赖：moodiary_files 的 file_picker、moodiary_sync 的 share_plus、
+- [x] 死依赖：moodiary_files 的 file_picker、moodiary_sync 的 share_plus、
   moodiary_media 的 mui、mobile 的 `isar_plus: any`（唯一非精确版本）、
   moodiary_diary 的 moodiary_di 挪 dev、moodiary_export 的三条 riverpod、
   storage dev_dependencies 四条反向 `any`（分层重构残留，从未被用）。
-- [ ] 两个 `*ForSync` 纯别名删除（dashboard 拿它做 UI 统计，命名已在误导）。
-- [ ] 9 个从未用 ref 的 Consumer 降级 Stateless/Stateful；moodiary_lock 的
+- [x] 两个 `*ForSync` 纯别名删除（dashboard 拿它做 UI 统计，命名已在误导）。
+- [x] 9 个从未用 ref 的 Consumer 降级 Stateless/Stateful；moodiary_lock 的
   flutter_riverpod 依赖随之可删。
-- [ ] search_controller 手写 `_disposed` 改 `ref.mounted`。
-- [ ] 路由归位：6 条 app 私有设置路由搬进已存在的 setting_routes.dart + 改
+- [x] search_controller 手写 `_disposed` 改 `ref.mounted`。
+- [x] 路由归位：6 条 app 私有设置路由搬进已存在的 setting_routes.dart + 改
   routes.dart:5「移动端应用的」注释（2h）；6 条 feature 私有路由照 assistant 写法
   搬回各包（可选）。**跨包的 DiaryRoute/ShareRoute/MediaRoute/LockRoute 等不动。**
-- [ ] 文档漂移：根 CLAUDE.md「20 packages」→ 27、补 moodiary_picker 条目；
+- [x] 文档漂移：根 CLAUDE.md「20 packages」→ 27、补 moodiary_picker 条目；
   picker 的 pubspec description 与 barrel 注释对齐现状；agreement_page「实验室」→
   「服务」；main.dart:115-116 字面量改 `LockRoute.path` / `StartRoute.path`；
   `_resolveInitialLocation` 提 @visibleForTesting 补三例测试。
-- [ ] check_layers 性能：四趟全量递归遍历（36 万条目、followLinks:true、含 95G
+- [x] check_layers 性能：四趟全量递归遍历（36 万条目、followLinks:true、含 95G
   rust/target）收成一次遍历 + 排除表 + followLinks:false，6.3s → 毫秒级。
-- [ ] moodiary_logging 补 loggerFactory seam + debugReset，钉住 427aae3a 刚修的
+- [x] moodiary_logging 补 loggerFactory seam + debugReset，钉住 427aae3a 刚修的
   「configure 晚于首条日志」行为。
-- [ ] sync_logger 静默降级 catch 补一行 logger.w（降级行为保留，测试依赖它）。
-- [ ] AsyncValueExtension 错误态别把原始异常串怼给用户（error 参数 + l10n 占位 +
+- [x] sync_logger 静默降级 catch 补一行 logger.w（降级行为保留，测试依赖它）。
+- [x] AsyncValueExtension 错误态别把原始异常串怼给用户（error 参数 + l10n 占位 +
   重试；原始异常只进 logger）。
 
 ### G. moodiary_data 瘦身（核验后只剩这一件成立）
-- [ ] 4 个 assistant 专属仓储（agent_preset/chat/llm_provider/memory）搬进
+- [x] 4 个 assistant 专属仓储（agent_preset/chat/llm_provider/memory）搬进
   moodiary_assistant/lib/src/data/（补 isar_plus 精确版）；库注释写准入线
   「只被单个 feature 读的不进 data」。**Tombstone/CategoryController/
   MediaInfoController 不搬**（核验：搬了会更差——墓碑读写方会被切成两包，
@@ -300,3 +300,23 @@ CI dylib 那条在本机先验证目标用例真跑通过。
    0.3 最后因为要本机先验证真库用例）。每项完成勾选并跑 analyze。
 2. **P1**：C 的 CLAUDE.md 先写（防复发）→ F 卫生一把清 → A/B/D/E 按包分批。
 3. **P2**：desktop 立项触发；其中 DI 三行记档与 _appDirs 参数化可提前。
+
+---
+
+## P1 执行补记（2026-08-26）
+
+全部落地（9 个 commit），analyze 零告警、`task.dart test`（CI 口径 + dylib）全绿。与清单的偏差：
+
+- **riverpod_lint 暂缓**（analyzer 13.3.0 上 workspace 根的 plugin 加载但不给嵌套包出
+  诊断；复查条件见 moodiary_lint 的 analysis_options 注释）。
+- **dashboard 字数投影未做**：改读 DiaryIndexSnapshot.contentChars 依赖「索引已回填」，
+  升级用户（searchIndexBackfilled=false）会统计出 0——正确性风险大于收益，维持
+  getAllDiaries；map 与 PickedScope 两处投影已做。
+- **HEIF 端口比清单更进一步**：直接抽了 IHeifDecoder + heif_converter 移 mobile
+  并入 `_assertRequiredBindings` 清单。
+- pump 脚手架按「先 4 份再抽包」的第一步落地（diary/components 两份 +
+  三个 delegates 手抄文件迁移；mui/mobile 各自内聚，未强迁）。
+- 执行中发现并修复：MediaCleanupController 换 provider 取仓储会在 dispose 后炸
+  （其注释明说 ref 会被回收）——保留静态取用并写明原因；search_controller 的
+  `_repository` 在 tokenize await 后无守卫，补 `ref.mounted`。
+
