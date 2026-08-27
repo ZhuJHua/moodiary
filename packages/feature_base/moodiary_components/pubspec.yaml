@@ -27,7 +27,7 @@ dependencies:
   flutter_riverpod: 3.4.2
   path: 1.9.1
 
-  cached_network_image_ce: 4.10.0
+  cached_network_image_ce: 4.10.1
 
   photo_view: 0.15.0
   dismissible_page: 1.0.2
