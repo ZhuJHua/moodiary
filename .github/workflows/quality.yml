@@ -91,7 +91,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: packages/feature/moodiary_editor/editor
+        working-directory: packages/feature_base/moodiary_editor/editor
     steps:
       - name: Checkout
         uses: actions/checkout@v4

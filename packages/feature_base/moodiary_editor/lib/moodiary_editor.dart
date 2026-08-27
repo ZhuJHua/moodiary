@@ -21,7 +21,6 @@ export 'src/moodiary_editor.dart'
         DiaryLinkCandidate;
 export 'src/presentation/editor_migration_page.dart' show EditorMigrationPage;
 export 'src/presentation/widget/category_picker_sheet.dart';
-export 'src/presentation/widget/draft_prompt.dart';
 export 'src/presentation/widget/editor_body.dart';
 export 'src/presentation/widget/moodiary_editor_view.dart';
 export 'src/presentation/widget/record_sheet.dart';

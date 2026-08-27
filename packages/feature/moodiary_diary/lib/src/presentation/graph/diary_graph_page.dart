@@ -8,6 +8,7 @@ import 'package:moodiary_diary/src/presentation/graph/graph_canvas.dart';
 import 'package:moodiary_diary/src/presentation/graph/graph_info_card.dart';
 import 'package:moodiary_diary/src/presentation/graph/graph_scene.dart';
 import 'package:moodiary_diary/src/presentation/graph/graph_style.dart';
+import 'package:moodiary_diary/src/presentation/open_new_diary.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_nav.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -85,7 +86,7 @@ class GraphEmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           FilledButton.tonal(
-            onPressed: () => const NewDiaryRoute(type: 'tiptap').push(context),
+            onPressed: () => openNewDiaryEditor(context, .tiptap),
             child: Text(context.l10n.diary.graphEmptyAction),
           ),
         ],

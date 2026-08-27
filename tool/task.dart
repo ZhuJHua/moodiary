@@ -80,11 +80,11 @@ Future<void> _editor() async {
   await _run('corepack', [
     'pnpm',
     'install',
-  ], cwd: 'packages/feature/moodiary_editor/editor');
+  ], cwd: 'packages/feature_base/moodiary_editor/editor');
   await _run('corepack', [
     'pnpm',
     'build',
-  ], cwd: 'packages/feature/moodiary_editor/editor');
+  ], cwd: 'packages/feature_base/moodiary_editor/editor');
 }
 
 const _rustPkgDir = 'packages/foundation/moodiary_rust';
@@ -288,12 +288,12 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
     await _editor();
   },
   'clean': (_) async {
-    final dir = Directory('packages/feature/moodiary_editor/assets/editor');
+    final dir = Directory('packages/feature_base/moodiary_editor/assets/editor');
     if (dir.existsSync()) {
       dir.deleteSync(recursive: true);
-      stdout.writeln('已删除 packages/feature/moodiary_editor/assets/editor/');
+      stdout.writeln('已删除 packages/feature_base/moodiary_editor/assets/editor/');
     } else {
-      stdout.writeln('packages/feature/moodiary_editor/assets/editor/ 不存在，跳过。');
+      stdout.writeln('packages/feature_base/moodiary_editor/assets/editor/ 不存在，跳过。');
     }
   },
 };

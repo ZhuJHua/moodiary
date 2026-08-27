@@ -49,8 +49,8 @@ jobs:
       - name: Build Editor
         run: |
           corepack enable
-          corepack pnpm -C packages/feature/moodiary_editor/editor install --frozen-lockfile
-          corepack pnpm -C packages/feature/moodiary_editor/editor build
+          corepack pnpm -C packages/feature_base/moodiary_editor/editor install --frozen-lockfile
+          corepack pnpm -C packages/feature_base/moodiary_editor/editor build
 
       - name: Set Up Rust
         working-directory: packages/foundation/moodiary_rust/rust
@@ -117,8 +117,8 @@ jobs:
       - name: Build Editor
         run: |
           corepack enable
-          corepack pnpm -C packages/feature/moodiary_editor/editor install --frozen-lockfile
-          corepack pnpm -C packages/feature/moodiary_editor/editor build
+          corepack pnpm -C packages/feature_base/moodiary_editor/editor install --frozen-lockfile
+          corepack pnpm -C packages/feature_base/moodiary_editor/editor build
 
       - name: Set Up Rust
         working-directory: packages/foundation/moodiary_rust/rust

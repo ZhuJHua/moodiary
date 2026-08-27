@@ -35,7 +35,7 @@ dart tool/task.dart analyze        # layer check + flutter analyze
 dart tool/task.dart test           # 全仓 Dart 测试（CI 口径；真库用例要 ISAR_TEST_DYLIB）
 dart tool/task.dart test-mobile    # 只跑 mobile/ 的测试
 cd packages/foundation/moodiary_rust/rust && cargo test --workspace && cargo clippy --workspace --all-targets -- -D warnings
-cd packages/feature/moodiary_editor/editor && corepack pnpm type-check && corepack pnpm test
+cd packages/feature_base/moodiary_editor/editor && corepack pnpm type-check && corepack pnpm test
 ```
 
 Full-repo verification = the four blocks above (analyze + layers, `task.dart test`, Rust, editor). `flutter test` at the repo root finds nothing.
@@ -73,16 +73,16 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
       moodiary_storage/      #   KV(MMKV) / SecureKV / Isar 句柄；目录与 schema 都靠注入
       moodiary_files/        #   文件布局 + 媒体管线 + 文件选择端口
       moodiary_theme/        #   系统取色、强调色档位、自定义字体 → ThemeData
-    feature_base/            # → core/foundation。内部次序 models → data → components,migration,preferences
+    feature_base/            # → core/foundation。内部次序 models → data → components,migration,preferences → picker → editor
       moodiary_models/       #   domain: Isar @Collection + Freezed DTOs + schema 注册真源
       moodiary_data/         #   repositories + controllers + 跨 feature 共享的进程级瞬态状态与端口
       moodiary_components/   #   业务组件：features 共用、够不着 mui 的那部分 UI
       moodiary_migration/    #   one-shot legacy data migration
       moodiary_preferences/  #   preference state
       moodiary_picker/       #   相册选择器：骑 wechat_assets_picker 换皮 + image_picker 系统相机（仅 mobile 依赖）
+      moodiary_editor/       #   TipTap webview 编辑器基建（EditorBody/controller/本地回环服务），被 diary 内嵌消费
     feature/                 # → feature_base/core/foundation (features never import each other)
       moodiary_export/       #   导出 Markdown/Word/PDF + 本地备份导入
-      moodiary_editor/       #   TipTap webview editor (complete)
       moodiary_diary/        #   diary CRUD/search/category/calendar/map/recycle
       moodiary_sync/         #   sync engine + UI
       moodiary_assistant/    #   AI assistant (flutter_chat_ui + rig)
@@ -95,7 +95,7 @@ Path convention: unqualified `lib/...` refers to `mobile/lib/...`; `packages/` a
 
 ### Layer Dependencies
 
-Cross-package DAG is strictly upper → lower: `foundation → core → feature_base → feature → apps`. Features never import each other (the one kept exception is `diary → editor`); shared logic sinks to lower layers, cross-feature composition happens in the app layer. pub only guarantees acyclicity, so **direction is enforced by `tool/check_layers.dart`**, which reads every pubspec's `moodiary_*`/`mui` deps (no baseline — must stay at zero). Melos `categories:` are filter/grouping only.
+Cross-package DAG is strictly upper → lower: `foundation → core → feature_base → feature → apps`. Features never import each other (zero exceptions — `moodiary_editor` was demoted to feature_base precisely to kill the last one, `diary → editor`); shared logic sinks to lower layers, cross-feature composition happens in the app layer. pub only guarantees acyclicity, so **direction is enforced by `tool/check_layers.dart`**, which reads every pubspec's `moodiary_*`/`mui` deps (no baseline — must stay at zero). Melos `categories:` are filter/grouping only.
 
 **core 与 feature_base 各有一条层内次序**（`_coreOrder` / `_featureBaseOrder`，同 tier 之间一律禁止互引）。两条边值得单记，它们都是**靠注入换来的**，改回去就会成环：
 

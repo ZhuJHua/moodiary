@@ -4,8 +4,11 @@ import 'package:moodiary/app/me/me_page.dart' show MePage;
 import 'package:moodiary_assistant/moodiary_assistant.dart'
     show AssistantConversationRoute, AssistantSessionListPage;
 import 'package:moodiary_diary/moodiary_diary.dart'
-    show CategoryDrawer, diarySelectionProvider, homeDiaryFilterProvider;
-import 'package:moodiary_editor/moodiary_editor.dart' show openNewDiaryEditor;
+    show
+        CategoryDrawer,
+        diarySelectionProvider,
+        homeDiaryFilterProvider,
+        openNewDiaryEditor;
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:mui/mui.dart';

@@ -74,6 +74,9 @@ const Map<String, int> _featureBaseOrder = {
   // 相册选择器。回到 wechat_assets_picker 之后已经不再依赖 components
   // （预览页用包自带的），但留在 3 档不碍事，将来要换回自建预览也不用再动闸门。
   'moodiary_picker': 3,
+  // 内容编辑基建（TipTap webview），被 diary 内嵌消费；依赖 models/data/components，
+  // 故放在层尾。从 feature 层降下来后，_sameLayerAllowed 例外随之清零。
+  'moodiary_editor': 4,
 };
 
 /// core 层内部次序（同层允许依赖，但只能单向；同 tier 之间禁止互引）。
@@ -84,9 +87,6 @@ const Map<String, int> _coreOrder = {
   'moodiary_files': 2,
   'moodiary_theme': 3,
 };
-
-/// 同层例外白名单：feature 之间唯一保留的边（diary 内嵌编辑器）。
-const Set<String> _sameLayerAllowed = {'moodiary_diary -> moodiary_editor'};
 
 final RegExp _pkgDepRe = RegExp(
   r'^\s{2}((?:moodiary_[a-z0-9_]+|mui)):',
@@ -146,7 +146,6 @@ List<String> _checkPackageLayers() {
         continue;
       }
       // 同层。
-      if (_sameLayerAllowed.contains('$src -> $dst')) continue;
       if (layerOf[src] == 'feature_base' || layerOf[src] == 'core') {
         final order = layerOf[src] == 'core' ? _coreOrder : _featureBaseOrder;
         final s = order[src], d = order[dst];

@@ -11,6 +11,7 @@ export 'src/application/diary_filter.dart'
 export 'src/application/diary_selection.dart'
     show diarySelectionProvider, DiarySelectionNotifier;
 export 'src/presentation/diary_select_page.dart' show DiarySelectPage;
+export 'src/presentation/open_new_diary.dart' show openNewDiaryEditor;
 export 'src/presentation/widget/category_drawer.dart' show CategoryDrawer;
 export 'src/presentation/widget/feed_view.dart' show DiaryFeedView;
 export 'src/presentation/widget/timeline_view.dart' show DiaryTimelineView;
