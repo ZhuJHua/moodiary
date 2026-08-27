@@ -408,14 +408,7 @@ class IncrementalSyncEngine {
           }
           // insertADiary 在仓储事务内连带清除同 id 墓碑行（复活闸门）——历史推送
           // 记录随行消失，将来再次删除不会被误判为「已覆盖所有后端」。
-          // deferIndex：逐条 inline 分词会让高频词 posting 行 O(N²) 重写，
-          // 索引账在 pull 收尾由 settleIndexes 结清（LWW 重读→落库的无 await
-          // 窗口因此保持原状，不为攒批拉长）。
-          await diaryRepo.insertADiary(
-            diary,
-            fromSync: fromSync,
-            deferIndex: true,
-          );
+          await diaryRepo.insertADiary(diary, fromSync: fromSync);
           pending.completeDiary(id);
           tombstones.remove(key);
           await _pullDiaryMedia(diary);
@@ -624,17 +617,6 @@ class IncrementalSyncEngine {
     }
 
     await tombstones.flush(_tombstoneStore);
-    // defer 出的重索引账在此结清；失败/取消不拖垮同步结果——队列行仍在，
-    // 启动维护兜底排空（数据本身已全部正确落库）。
-    try {
-      await _diaryStore.settleIndexes();
-    } catch (e) {
-      _logger.error(
-        .error,
-        '索引结账失败（启动维护会兜底排空）：$e',
-        payload: {'detail': e.toString()},
-      );
-    }
 
     sw.stop();
     final stopped = SyncCancellation.instance.isRequested;

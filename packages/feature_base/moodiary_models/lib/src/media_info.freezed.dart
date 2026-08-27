@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$MediaInfo {
 
-@Id() String get fileName; String? get name; int? get durationMs;@UtcDateTimeConverter() DateTime get lastModified;
+ String get fileName; String? get name; int? get durationMs;@UtcDateTimeConverter() DateTime get lastModified;
 /// Create a copy of MediaInfo
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -49,7 +49,7 @@ abstract mixin class $MediaInfoCopyWith<$Res>  {
   factory $MediaInfoCopyWith(MediaInfo value, $Res Function(MediaInfo) _then) = _$MediaInfoCopyWithImpl;
 @useResult
 $Res call({
-@Id() String fileName, String? name, int? durationMs,@UtcDateTimeConverter() DateTime lastModified
+ String fileName, String? name, int? durationMs,@UtcDateTimeConverter() DateTime lastModified
 });
 
 
@@ -157,7 +157,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@Id()  String fileName,  String? name,  int? durationMs, @UtcDateTimeConverter()  DateTime lastModified)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String fileName,  String? name,  int? durationMs, @UtcDateTimeConverter()  DateTime lastModified)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MediaInfo() when $default != null:
 return $default(_that.fileName,_that.name,_that.durationMs,_that.lastModified);case _:
@@ -178,7 +178,7 @@ return $default(_that.fileName,_that.name,_that.durationMs,_that.lastModified);c
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@Id()  String fileName,  String? name,  int? durationMs, @UtcDateTimeConverter()  DateTime lastModified)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String fileName,  String? name,  int? durationMs, @UtcDateTimeConverter()  DateTime lastModified)  $default,) {final _that = this;
 switch (_that) {
 case _MediaInfo():
 return $default(_that.fileName,_that.name,_that.durationMs,_that.lastModified);case _:
@@ -198,7 +198,7 @@ return $default(_that.fileName,_that.name,_that.durationMs,_that.lastModified);c
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@Id()  String fileName,  String? name,  int? durationMs, @UtcDateTimeConverter()  DateTime lastModified)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String fileName,  String? name,  int? durationMs, @UtcDateTimeConverter()  DateTime lastModified)?  $default,) {final _that = this;
 switch (_that) {
 case _MediaInfo() when $default != null:
 return $default(_that.fileName,_that.name,_that.durationMs,_that.lastModified);case _:
@@ -213,10 +213,10 @@ return $default(_that.fileName,_that.name,_that.durationMs,_that.lastModified);c
 @JsonSerializable()
 
 class _MediaInfo extends MediaInfo {
-  const _MediaInfo({@Id() required this.fileName, this.name, this.durationMs, @UtcDateTimeConverter() required this.lastModified}): super._();
+  const _MediaInfo({required this.fileName, this.name, this.durationMs, @UtcDateTimeConverter() required this.lastModified}): super._();
   factory _MediaInfo.fromJson(Map<String, dynamic> json) => _$MediaInfoFromJson(json);
 
-@override@Id() final  String fileName;
+@override final  String fileName;
 @override final  String? name;
 @override final  int? durationMs;
 @override@UtcDateTimeConverter() final  DateTime lastModified;
@@ -254,7 +254,7 @@ abstract mixin class _$MediaInfoCopyWith<$Res> implements $MediaInfoCopyWith<$Re
   factory _$MediaInfoCopyWith(_MediaInfo value, $Res Function(_MediaInfo) _then) = __$MediaInfoCopyWithImpl;
 @override @useResult
 $Res call({
-@Id() String fileName, String? name, int? durationMs,@UtcDateTimeConverter() DateTime lastModified
+ String fileName, String? name, int? durationMs,@UtcDateTimeConverter() DateTime lastModified
 });
 
 

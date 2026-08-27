@@ -10,6 +10,10 @@ enum MoodiaryKVs<T extends Object> {
   /// 则所有既有日记正文搜不到、双链为空；回填一次后置位，之后靠增量索引维护。
   searchIndexBackfilled<bool>(defaultValue: false),
 
+  /// 2.8.0 引擎搬迁（旧 Isar → SQLite）是否已完成。未置位且旧 `default.isar`
+  /// 仍在时，启动强制迁移页先跑引擎搬迁；置位后旧库文件只是留底（.bak）。
+  dbEngineMigrated<bool>(defaultValue: false),
+
   /// 自动同步总开关：开启即启用「变更后 push + 定时轮询双向 sync」（见 [AutoSyncWatcher]）。
   autoSync<bool>(defaultValue: false),
 

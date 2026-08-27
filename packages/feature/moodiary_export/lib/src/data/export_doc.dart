@@ -1,3 +1,4 @@
+import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_rust/export.dart';
 
 // freezed 变体类（IrBlock_Paragraph 等）也要透出去，模式匹配要用。
@@ -27,8 +28,8 @@ class ExportDoc {
   final String title;
   final DateTime time;
   final double mood;
-  final List<String> weather;
-  final List<String> position;
+  final DiaryWeather? weather;
+  final DiaryPosition? position;
   final List<String> tags;
   final String? categoryName;
   final List<IrBlock> blocks;
@@ -43,24 +44,33 @@ class ExportDoc {
     required this.time,
     required this.blocks,
     this.mood = 0.5,
-    this.weather = const [],
-    this.position = const [],
+    this.weather,
+    this.position,
     this.tags = const [],
     this.categoryName,
     this.unsupportedNodes = const {},
   });
 
   /// 过桥形态。[displayTime] 是已本地化的展示串——Rust 侧只照抄进 meta 行。
-  IrDoc toIr(String displayTime) => IrDoc(
-    id: id,
-    title: title,
-    time: displayTime,
-    weather: weather,
-    position: position,
-    tags: tags,
-    categoryName: categoryName,
-    blocks: blocks,
-  );
+  ///
+  /// [IrDoc] 是 FRB 生成物，天气 / 定位在桥那侧仍是定长 `List<String>` 元组
+  /// （`[icon, temp, text]` / `[lat, lng, name]`）；降级只发生在这一处。
+  IrDoc toIr(String displayTime) {
+    final w = weather;
+    final p = position;
+    return IrDoc(
+      id: id,
+      title: title,
+      time: displayTime,
+      weather: w == null ? const [] : [w.icon, w.temp, w.text],
+      position: p == null
+          ? const []
+          : [p.latitude.toString(), p.longitude.toString(), p.name],
+      tags: tags,
+      categoryName: categoryName,
+      blocks: blocks,
+    );
+  }
 }
 
 /// FRB 生成的 [IrSpan] 每个 bool 都是 required，构造点会很啰嗦；这里补回默认值。

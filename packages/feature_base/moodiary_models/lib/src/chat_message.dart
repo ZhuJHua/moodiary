@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 import 'assistant_tool_call.dart';
@@ -9,12 +8,11 @@ part 'chat_message.g.dart';
 
 /// 一条会话消息（持久化）。
 @freezed
-@Collection(ignore: {'copyWith'})
 abstract class ChatMessage with _$ChatMessage {
   const factory ChatMessage({
-    @Id() required String id,
+    required String id,
 
-    @Index() required String sessionId,
+    required String sessionId,
 
     /// `"user"` 或 `"assistant"`。
     required String role,

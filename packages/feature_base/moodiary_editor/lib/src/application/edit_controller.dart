@@ -129,18 +129,18 @@ class EditController extends _$EditController {
     state = state.whenData((current) => current.copyWith(tags: tags));
   }
 
-  void changePosition(List<String> position) {
+  void changePosition(DiaryPosition? position) {
     state = state.whenData((current) => current.copyWith(position: position));
   }
 
-  void changeWeather(List<String> weather) {
+  void changeWeather(DiaryWeather? weather) {
     state = state.whenData((current) => current.copyWith(weather: weather));
   }
 
-  Future<List<String>?> fetchPosition(BuildContext context) async {
+  Future<DiaryPosition?> fetchPosition(BuildContext context) async {
     try {
       final result = await GeoRepository.get().getGeo(context);
-      if (result == null || result.length < 2) return null;
+      if (result == null) return null;
       changePosition(result);
       return result;
     } catch (_) {
@@ -148,21 +148,18 @@ class EditController extends _$EditController {
     }
   }
 
-  Future<List<String>?> fetchWeather(BuildContext context) async {
+  Future<DiaryWeather?> fetchWeather(BuildContext context) async {
     final current = state.value;
-    if (current == null || current.position.length < 2) {
+    if (current == null || current.position == null) {
       final pos = await fetchPosition(context);
       if (pos == null || !context.mounted) return null;
     }
-    final latest = state.value;
-    if (latest == null || latest.position.length < 2) return null;
-    final lat = double.tryParse(latest.position[0]);
-    final lng = double.tryParse(latest.position[1]);
-    if (lat == null || lng == null) return null;
+    final position = state.value?.position;
+    if (position == null) return null;
     try {
       final result = await WeatherRepository.get().getWeather(
         context: context,
-        position: LatLng(lat, lng),
+        position: LatLng(position.latitude, position.longitude),
       );
       if (result == null) return null;
       changeWeather(result);
@@ -195,7 +192,7 @@ class EditController extends _$EditController {
     if (_wasNewDraft && _isBlank(next)) {
       try {
         if (_persisted) {
-          await _repository.hardDeleteDiary(next.isarId);
+          await _repository.hardDeleteDiary(next.id);
           _persisted = false;
         }
         _indexedContent = next.contentText;
@@ -209,13 +206,13 @@ class EditController extends _$EditController {
         return .failed;
       }
     }
-    // 内容与标题都未变（仅元数据/媒体）→ skip：倒排索引仍有效，连入队都免；
-    // 任一变了 → defer：只写行 + 入队，分词/倒排推迟到关闭/启动排空。
-    // 新建首存走 insert（inline 立即建索引）。
+    // 内容与标题都未变（仅元数据/媒体）→ skip：FTS 与双链仍有效，免一次分词；
+    // 任一变了 → inline：分词先行、行 + 索引同事务原子落库（SQLite 时代不再有
+    // 「分词夹不进事务」的两段式与重索引队列）。
     final indexMode =
         next.contentText == _indexedContent && next.title == _indexedTitle
         ? IndexMode.skip
-        : IndexMode.defer;
+        : IndexMode.inline;
     try {
       if (_persisted) {
         await _repository.updateADiary(newDiary: next, index: indexMode);

@@ -2,4 +2,6 @@
 /// 按上次运行的版本号逐档补跑升级钩子并写回当前版本号。
 library;
 
+export 'src/engine_migration_service.dart'
+    show EngineMigrationReport, EngineMigrationService;
 export 'src/version_migrator.dart' show VersionMigrator;

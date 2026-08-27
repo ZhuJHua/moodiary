@@ -231,14 +231,13 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     _elapsed.dispose();
     final guardSub = _guardSub;
     final guardId = _guardId;
-    // 离开时 flush 自动保存 + 排空重索引队列（fire-and-forget，残留靠启动恢复兜底）。
+    // 离开时 flush 自动保存（fire-and-forget；行与索引同事务落库，无队列要排空）。
     // 「打开中」标记保持到 flush 之后再解除：否则空白丢弃的无墓碑硬删可能被并发 push
     // 抢先上传，pull 时复活。
     // ignore: discarded_futures
     () async {
       try {
         if (_dirty) await _notifier.autoSave();
-        await DiaryRepository.get().drainReindexQueue();
       } finally {
         guardSub?.close();
         if (guardId != null) OpenDiaryRegistry.instance.close(guardId);
@@ -359,8 +358,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     } else {
       toast.success(
         message: l10n.diary.weatherFetched(
-          weather: result.length >= 3 ? result[2] : '',
-          temperature: result.length >= 2 ? result[1] : '',
+          weather: result.text,
+          temperature: result.temp,
         ),
       );
       _dirty = true;
@@ -770,6 +769,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   List<Widget> _meta(BuildContext context, Diary diary) {
     final colors = context.theme.colors;
     final typo = context.theme.typography;
+    final weather = diary.weather;
     return [
       Row(
         children: [
@@ -798,19 +798,19 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
           ],
         ),
       ],
-      if (diary.weather.length >= 3) ...[
+      if (weather != null) ...[
         const SizedBox(height: 8),
         Row(
           children: [
             Icon(
               // 天气来自和风，图标跟着数据源走；未知码退回通用的云。
-              qweatherIcon(diary.weather[0]) ?? LucideIcons.cloud,
+              qweatherIcon(weather.icon) ?? LucideIcons.cloud,
               size: 16,
               color: colors.onSurfaceVariant,
             ),
             const SizedBox(width: 6),
             Text(
-              '${diary.weather[2]}  ${diary.weather[1]}°C',
+              '${weather.text}  ${weather.temp}°C',
               style: typo.bodySmall.onSurfaceVariant,
             ),
           ],
@@ -1285,7 +1285,7 @@ class _DetailSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dateLabel = TimeFormat.fullDateTime(diary.time);
-    final hasWeather = diary.weather.length >= 3;
+    final weather = diary.weather;
     final categoryAsync = ref.watch(
       getCategoryProvider(id: diary.categoryId ?? ''),
     );
@@ -1324,8 +1324,8 @@ class _DetailSheet extends ConsumerWidget {
           ),
           SettingListTile(
             title: context.l10n.diary.infoWeather,
-            subtitle: hasWeather
-                ? '${diary.weather[2]} ${diary.weather[1]}°C'
+            subtitle: weather != null
+                ? '${weather.text} ${weather.temp}°C'
                 : context.l10n.diary.weatherNotFetched,
             trailing: IconButton.filledTonal(
               onPressed: onFetchWeather,

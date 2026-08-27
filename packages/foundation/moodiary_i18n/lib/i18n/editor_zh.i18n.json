@@ -15,5 +15,6 @@
   "migrationFailedCount": "{count} 篇迁移失败，请重试",
   "migrationError": "迁移出错，请重试",
   "migrationRetry": "重试",
-  "migrationProgress": "正在迁移 {done} / {total}"
+  "migrationProgress": "正在迁移 {done} / {total}",
+  "migrationEngineStage": "正在升级数据库（不会丢失任何数据）"
 }

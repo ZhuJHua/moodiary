@@ -237,7 +237,8 @@ const Map<String, Set<String>> _rustFacadeOwners = {
   'graph': {'moodiary_diary'},
   // app 门面：每个组合根都够得着（desktop 进树后 _appPubNames 自动带上）。
   'rust': {'moodiary', 'moodiary_desktop'},
-  'testing': {'moodiary_data'},
+  // 引擎搬迁测试要给拷贝路径注入分词替身，与 moodiary_data 同一份。
+  'testing': {'moodiary_data', 'moodiary_migration'},
 };
 
 final RegExp _rustFacadeRe = RegExp(
@@ -307,9 +308,7 @@ List<String> _checkRustFacades() {
       if (rel.endsWith('.g.dart') || rel.endsWith('.freezed.dart')) continue;
 
       final String owner;
-      final appDir = _appDirs
-          .where((d) => rel.startsWith('$d/'))
-          .firstOrNull;
+      final appDir = _appDirs.where((d) => rel.startsWith('$d/')).firstOrNull;
       if (appDir != null) {
         owner = _appPubNames[appDir]!;
       } else {
@@ -554,7 +553,6 @@ List<String> _checkMobileOnlyPlugins() {
   return out;
 }
 
-
 /// lib/testing.dart 是测试替身的官方出口（storage / rust），放 lib/ 只是因为
 /// `package:` 解析不到别人的 test/——**生产代码不许 import**：手滑注册
 /// MemoryKVStorage 出的包每次冷启动都丢全部设置，且只有真机跑一次才暴露。
@@ -585,7 +583,9 @@ List<String> _checkTestingImports() {
 List<String> _checkEmptyTestDirs() {
   final out = <String>[];
   final candidates = [
-    for (final layerDir in Directory('packages').listSync().whereType<Directory>())
+    for (final layerDir in Directory(
+      'packages',
+    ).listSync().whereType<Directory>())
       ...layerDir.listSync().whereType<Directory>(),
     for (final dir in _appDirs)
       if (Directory(dir).existsSync()) Directory(dir),
@@ -732,31 +732,31 @@ void main(List<String> args) {
   // 逐个 app 跑（此前只取第一个：desktop 落地那天文件级检查对它不生效，
   // 而若 mobile 被移走，硬编码的前缀又剥不掉、整仓误报）。
   for (final libDir in appLibDirs) {
-  for (final entity in libDir.listSync(recursive: true)) {
-    if (entity is! File || !entity.path.endsWith('.dart')) continue;
-    fileCount++;
-    final rel = entity.path
-        .replaceAll('\\', '/')
-        .replaceFirst('${libDir.path.replaceAll('\\', '/')}/', '');
-    final srcN = _classify(rel);
-    final content = entity.readAsStringSync();
-    for (final m in _importRe.allMatches(content)) {
-      final target = m.group(1)!;
-      final dstN = _classify(target);
-      final bool ok;
-      if (dstN.layer < srcN.layer) {
-        ok = true; // 依赖更低层
-      } else if (dstN.layer == srcN.layer) {
-        ok = dstN.module == srcN.module; // 同层只允许同模块
-      } else {
-        ok = false; // 下层依赖上层
-      }
-      if (!ok) {
-        final v = Violation(rel, dstN.module);
-        if (seen.add(v.key)) violations.add(v);
+    for (final entity in libDir.listSync(recursive: true)) {
+      if (entity is! File || !entity.path.endsWith('.dart')) continue;
+      fileCount++;
+      final rel = entity.path
+          .replaceAll('\\', '/')
+          .replaceFirst('${libDir.path.replaceAll('\\', '/')}/', '');
+      final srcN = _classify(rel);
+      final content = entity.readAsStringSync();
+      for (final m in _importRe.allMatches(content)) {
+        final target = m.group(1)!;
+        final dstN = _classify(target);
+        final bool ok;
+        if (dstN.layer < srcN.layer) {
+          ok = true; // 依赖更低层
+        } else if (dstN.layer == srcN.layer) {
+          ok = dstN.module == srcN.module; // 同层只允许同模块
+        } else {
+          ok = false; // 下层依赖上层
+        }
+        if (!ok) {
+          final v = Violation(rel, dstN.module);
+          if (seen.add(v.key)) violations.add(v);
+        }
       }
     }
-  }
   }
 
   final baseline = _readBaseline();

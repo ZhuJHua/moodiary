@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ChatSession {
 
-@Id() String get id;/// 空串 = 还没生成过标题，界面显示「新对话」。**不存本地化后的文案**：那会把
+ String get id;/// 空串 = 还没生成过标题，界面显示「新对话」。**不存本地化后的文案**：那会把
 /// 生成当时的语种烤进库里，换语言后老会话仍是旧语种。
 ///
 /// 也正是这一位在做幂等：空才生成，生成成功就永远非空。标题在列表里是定位锚点，
@@ -72,7 +72,7 @@ abstract mixin class $ChatSessionCopyWith<$Res>  {
   factory $ChatSessionCopyWith(ChatSession value, $Res Function(ChatSession) _then) = _$ChatSessionCopyWithImpl;
 @useResult
 $Res call({
-@Id() String id, String title, String providerId, String model, DateTime createdAt, DateTime updatedAt, String reasoningEffort, String? compactedSummary, String? compactedUpToMessageId, DateTime? compactedAt, int? compactedInputTokensAtTrigger, String? agentPresetId, String? personaSnapshot, List<String>? toolsSnapshot
+ String id, String title, String providerId, String model, DateTime createdAt, DateTime updatedAt, String reasoningEffort, String? compactedSummary, String? compactedUpToMessageId, DateTime? compactedAt, int? compactedInputTokensAtTrigger, String? agentPresetId, String? personaSnapshot, List<String>? toolsSnapshot
 });
 
 
@@ -190,7 +190,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@Id()  String id,  String title,  String providerId,  String model,  DateTime createdAt,  DateTime updatedAt,  String reasoningEffort,  String? compactedSummary,  String? compactedUpToMessageId,  DateTime? compactedAt,  int? compactedInputTokensAtTrigger,  String? agentPresetId,  String? personaSnapshot,  List<String>? toolsSnapshot)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String title,  String providerId,  String model,  DateTime createdAt,  DateTime updatedAt,  String reasoningEffort,  String? compactedSummary,  String? compactedUpToMessageId,  DateTime? compactedAt,  int? compactedInputTokensAtTrigger,  String? agentPresetId,  String? personaSnapshot,  List<String>? toolsSnapshot)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ChatSession() when $default != null:
 return $default(_that.id,_that.title,_that.providerId,_that.model,_that.createdAt,_that.updatedAt,_that.reasoningEffort,_that.compactedSummary,_that.compactedUpToMessageId,_that.compactedAt,_that.compactedInputTokensAtTrigger,_that.agentPresetId,_that.personaSnapshot,_that.toolsSnapshot);case _:
@@ -211,7 +211,7 @@ return $default(_that.id,_that.title,_that.providerId,_that.model,_that.createdA
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@Id()  String id,  String title,  String providerId,  String model,  DateTime createdAt,  DateTime updatedAt,  String reasoningEffort,  String? compactedSummary,  String? compactedUpToMessageId,  DateTime? compactedAt,  int? compactedInputTokensAtTrigger,  String? agentPresetId,  String? personaSnapshot,  List<String>? toolsSnapshot)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String title,  String providerId,  String model,  DateTime createdAt,  DateTime updatedAt,  String reasoningEffort,  String? compactedSummary,  String? compactedUpToMessageId,  DateTime? compactedAt,  int? compactedInputTokensAtTrigger,  String? agentPresetId,  String? personaSnapshot,  List<String>? toolsSnapshot)  $default,) {final _that = this;
 switch (_that) {
 case _ChatSession():
 return $default(_that.id,_that.title,_that.providerId,_that.model,_that.createdAt,_that.updatedAt,_that.reasoningEffort,_that.compactedSummary,_that.compactedUpToMessageId,_that.compactedAt,_that.compactedInputTokensAtTrigger,_that.agentPresetId,_that.personaSnapshot,_that.toolsSnapshot);case _:
@@ -231,7 +231,7 @@ return $default(_that.id,_that.title,_that.providerId,_that.model,_that.createdA
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@Id()  String id,  String title,  String providerId,  String model,  DateTime createdAt,  DateTime updatedAt,  String reasoningEffort,  String? compactedSummary,  String? compactedUpToMessageId,  DateTime? compactedAt,  int? compactedInputTokensAtTrigger,  String? agentPresetId,  String? personaSnapshot,  List<String>? toolsSnapshot)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String title,  String providerId,  String model,  DateTime createdAt,  DateTime updatedAt,  String reasoningEffort,  String? compactedSummary,  String? compactedUpToMessageId,  DateTime? compactedAt,  int? compactedInputTokensAtTrigger,  String? agentPresetId,  String? personaSnapshot,  List<String>? toolsSnapshot)?  $default,) {final _that = this;
 switch (_that) {
 case _ChatSession() when $default != null:
 return $default(_that.id,_that.title,_that.providerId,_that.model,_that.createdAt,_that.updatedAt,_that.reasoningEffort,_that.compactedSummary,_that.compactedUpToMessageId,_that.compactedAt,_that.compactedInputTokensAtTrigger,_that.agentPresetId,_that.personaSnapshot,_that.toolsSnapshot);case _:
@@ -246,10 +246,10 @@ return $default(_that.id,_that.title,_that.providerId,_that.model,_that.createdA
 @JsonSerializable()
 
 class _ChatSession implements ChatSession {
-  const _ChatSession({@Id() required this.id, this.title = '', required this.providerId, required this.model, required this.createdAt, required this.updatedAt, this.reasoningEffort = '', this.compactedSummary, this.compactedUpToMessageId, this.compactedAt, this.compactedInputTokensAtTrigger, this.agentPresetId, this.personaSnapshot,  List<String>? toolsSnapshot}): _toolsSnapshot = toolsSnapshot;
+  const _ChatSession({required this.id, this.title = '', required this.providerId, required this.model, required this.createdAt, required this.updatedAt, this.reasoningEffort = '', this.compactedSummary, this.compactedUpToMessageId, this.compactedAt, this.compactedInputTokensAtTrigger, this.agentPresetId, this.personaSnapshot,  List<String>? toolsSnapshot}): _toolsSnapshot = toolsSnapshot;
   factory _ChatSession.fromJson(Map<String, dynamic> json) => _$ChatSessionFromJson(json);
 
-@override@Id() final  String id;
+@override final  String id;
 /// 空串 = 还没生成过标题，界面显示「新对话」。**不存本地化后的文案**：那会把
 /// 生成当时的语种烤进库里，换语言后老会话仍是旧语种。
 ///
@@ -330,7 +330,7 @@ abstract mixin class _$ChatSessionCopyWith<$Res> implements $ChatSessionCopyWith
   factory _$ChatSessionCopyWith(_ChatSession value, $Res Function(_ChatSession) _then) = __$ChatSessionCopyWithImpl;
 @override @useResult
 $Res call({
-@Id() String id, String title, String providerId, String model, DateTime createdAt, DateTime updatedAt, String reasoningEffort, String? compactedSummary, String? compactedUpToMessageId, DateTime? compactedAt, int? compactedInputTokensAtTrigger, String? agentPresetId, String? personaSnapshot, List<String>? toolsSnapshot
+ String id, String title, String providerId, String model, DateTime createdAt, DateTime updatedAt, String reasoningEffort, String? compactedSummary, String? compactedUpToMessageId, DateTime? compactedAt, int? compactedInputTokensAtTrigger, String? agentPresetId, String? personaSnapshot, List<String>? toolsSnapshot
 });
 
 

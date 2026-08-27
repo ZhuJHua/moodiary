@@ -2,10 +2,11 @@ import 'package:flutter/foundation.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:moodiary_editor/src/data/model/weather.dart';
 import 'package:moodiary_http/moodiary_http.dart';
+import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
 
-/// 和风天气「实时天气」仓储：按经纬度取 `[icon, temp, text]` 三元组。
+/// 和风天气「实时天气」仓储：按经纬度取 [DiaryWeather]。
 class WeatherRepository {
   WeatherRepository(this._http);
 
@@ -15,7 +16,7 @@ class WeatherRepository {
 
   final IHttpClient _http;
 
-  Future<List<String>?> getWeather({
+  Future<DiaryWeather?> getWeather({
     required BuildContext context,
     required LatLng position,
   }) async {
@@ -42,8 +43,9 @@ class WeatherRepository {
       WeatherResponse.fromJson,
       res.data as Map<String, dynamic>,
     );
-    if (weather.now != null) {
-      return [weather.now!.icon!, weather.now!.temp!, weather.now!.text!];
+    final now = weather.now;
+    if (now != null) {
+      return DiaryWeather(icon: now.icon!, temp: now.temp!, text: now.text!);
     } else {
       return null;
     }

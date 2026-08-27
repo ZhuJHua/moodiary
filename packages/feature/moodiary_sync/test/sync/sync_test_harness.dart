@@ -231,17 +231,11 @@ final class FakeDiaryStore implements SyncDiaryStore {
   Future<void> insertADiary(
     Diary diary, {
     bool fromSync = false,
-    bool deferIndex = false,
   }) async {
     calls.add('insert ${diary.id}');
     writeOrigins[diary.id] = fromSync;
     diaries[diary.id] = diary;
     tombstones.rows.remove(SyncTombstone.diaryKey(diary.id));
-  }
-
-  @override
-  Future<void> settleIndexes() async {
-    calls.add('settleIndexes');
   }
 
   @override
@@ -505,12 +499,10 @@ Diary buildDiary({
     lastModified: ts,
     show: show,
     mood: 0,
-    weather: const [],
     imageName: images,
     audioName: audios,
     videoName: videos,
     tags: const [],
-    position: const [],
     type: 'tiptap',
   );
 }

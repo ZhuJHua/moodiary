@@ -1,23 +1,34 @@
+import 'dart:convert';
+
+import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
-import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_theme/moodiary_theme.dart';
 
+import 'db/database.dart';
+
 class FontRepository {
-  FontRepository._(this._isar);
+  FontRepository._(this._db);
 
   factory FontRepository.get() => _instance;
 
   @visibleForTesting
-  FontRepository.forTesting(this._isar);
+  FontRepository.forTesting(this._db);
 
-  static final FontRepository _instance = ._(IsarDatabase.get().isar);
+  static final FontRepository _instance = ._(MoodiaryDatabase.get());
 
-  final Isar _isar;
+  final MoodiaryDatabase _db;
 
-  Future<List<Font>> getAllFonts() {
-    return _isar.fonts.where().findAllAsync();
+  static Font _toFont(FontRow r) => Font(
+    fontFileName: r.fontFileName,
+    fontWghtAxisMap: (jsonDecode(r.wghtAxisJson) as Map)
+        .cast<String, dynamic>(),
+  );
+
+  Future<List<Font>> getAllFonts() async {
+    final rows = await _db.select(_db.fonts).get();
+    return [for (final r in rows) _toFont(r)];
   }
 
   Future<List<Font>> scanDiskFonts() async {
@@ -28,20 +39,29 @@ class FontRepository {
     ];
   }
 
-  Future<Font?> getFontByFontFamily(String fontFamily) {
-    return _isar.fonts.where().fontFamilyEqualTo(fontFamily).findFirstAsync();
+  Future<Font?> getFontByFontFamily(String fontFamily) async {
+    final row = await (_db.select(
+      _db.fonts,
+    )..where((f) => f.fontFamily.equals(fontFamily))).getSingleOrNull();
+    return row == null ? null : _toFont(row);
   }
 
   Future<void> insertFont(Font font) async {
-    await _isar.writeAsync((isar) {
-      isar.fonts.put(font);
-    });
+    await _db
+        .into(_db.fonts)
+        .insertOnConflictUpdate(
+          FontsCompanion.insert(
+            fontFamily: font.fontFamily,
+            fontFileName: font.fontFileName,
+            wghtAxisJson: Value(jsonEncode(font.fontWghtAxisMap)),
+          ),
+        );
   }
 
-  Future<void> deleteFontById(int id) async {
-    await _isar.writeAsync((isar) {
-      isar.fonts.delete(id);
-    });
+  Future<void> deleteFontByFamily(String fontFamily) async {
+    await (_db.delete(
+      _db.fonts,
+    )..where((f) => f.fontFamily.equals(fontFamily))).go();
   }
 
   /// 当前激活的自定义字体（[MoodiaryKVs.customFont]）；未设置或记录缺失返回 null。

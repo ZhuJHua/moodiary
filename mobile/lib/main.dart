@@ -21,7 +21,6 @@ import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
-import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_rust/rust.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -34,16 +33,15 @@ Future<void> _initSystem() async {
   // 的零心智负担——迁移的字体重扫、维护任务的分词都不用再关心桥的时序。
   await RustLib.init();
 
-  // ── 1. 路径与日志（一切存储的前置）→ 容器装配 ∥ Isar 打开。
+  // ── 1. 路径与日志（一切存储的前置）→ 容器装配 ∥ SQLite 打开。
   // configureDependencies 内部的 preResolve 在这一步落定：SecureKV → KV（含 2.8.0
   // 搬迁；这条次序不再靠调用顺序，它是 MmkvKVStorage.create 收 ISecureKVStorage
-  // 的类型边）、SyncLogger 落盘就绪。KV 与 Isar 互不依赖，并行开。
+  // 的类型边）、SyncLogger 落盘就绪。KV 与 SQLite 互不依赖，并行开。
   await bootstrapPlatform();
   await Future.wait([
     configureDependencies(),
-    IsarDatabase.get().init(
-      schemas: moodiarySchemas,
-      directory: AppFiles.getRealPath('database', ''),
+    MoodiaryDatabase.open(
+      path: AppFiles.getRealPath('database', 'moodiary.db'),
     ),
   ]);
   // 应用锁的开关是「有没有凭据」的派生态，读一次钥匙串装进内存；
@@ -92,11 +90,13 @@ Future<void> _initSystem() async {
       logger.e('locale init failed, staying on base', error: e, stackTrace: s);
     }
   }();
-  // 强制迁移闸门探测：存在旧格式日记时路由 redirect 把一切目的地引到迁移页，故必须
-  // 在 buildRouter 之前完成。探测失败按无迁移放行（读路径本就能即时转换渲染旧格式，
-  // 只是不落库），别把启动卡死。排在版本迁移之后：探测读的是迁移可能刚改写过的日记。
+  // 强制迁移闸门探测（引擎搬迁 + 旧格式日记两道）：任一为真时路由 redirect 把一切
+  // 目的地引到迁移页，故必须在 buildRouter 之前完成。探测失败按无迁移放行（引擎
+  // 搬迁的判据是 KV + 文件存在性，探测炸了说明存储本身有问题；旧格式日记读路径
+  // 本就能即时转换渲染），别把启动卡死。排在版本迁移之后。
   final migrationGateFuture = () async {
     try {
+      await EngineMigrationService.refresh();
       await EditorMigrationService.refreshRequiresMigration();
     } catch (e, s) {
       logger.e('migration gate probe failed', error: e, stackTrace: s);

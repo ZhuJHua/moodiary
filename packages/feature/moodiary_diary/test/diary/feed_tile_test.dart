@@ -14,8 +14,8 @@ Diary diary({
   List<String> videos = const [],
   List<String> audios = const [],
   List<String> tags = const [],
-  List<String> position = const [],
-  List<String> weather = const [],
+  DiaryPosition? position,
+  DiaryWeather? weather,
 }) => Diary(
   id: 'test',
   title: title,
@@ -90,8 +90,8 @@ void main() {
       wrap(
         DiaryFeedTile(
           diary: diary(
-            weather: const ['100', '26', '晴'],
-            position: const ['1', '2', '厦门 环岛路'],
+            weather: const DiaryWeather(icon: '100', temp: '26', text: '晴'),
+            position: const DiaryPosition(latitude: 1, longitude: 2, name: '厦门 环岛路'),
           ),
           category: cat(),
         ),
@@ -206,8 +206,8 @@ void main() {
             diary: diary(
               images: images,
               tags: const [long, long],
-              weather: const ['100', '26', '晴'],
-              position: const ['1', '2', '厦门 环岛路'],
+              weather: const DiaryWeather(icon: '100', temp: '26', text: '晴'),
+              position: const DiaryPosition(latitude: 1, longitude: 2, name: '厦门 环岛路'),
             ),
             category: cat(),
           ),
@@ -261,12 +261,10 @@ void main() {
       lastModified: DateTime(2026, 8, 20, 21, 30),
       show: true,
       mood: .5,
-      weather: const [],
       imageName: const [],
       audioName: const [],
       videoName: const [],
       tags: const [],
-      position: const [],
       type: DiaryType.tiptap.value,
     );
 

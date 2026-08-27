@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:isar_plus/isar_plus.dart';
 
 import 'utc_date_time_converter.dart';
 
@@ -21,10 +20,9 @@ String mediaTypeOfFileName(String fileName) {
 /// - [name] 为 null 表示未命名，显示层回退默认名（走 l10n），默认名不落盘；
 /// - [durationMs] 创建时探测写入，缺行/缺值由懒补行回填，可重建。
 @freezed
-@Collection(ignore: {'copyWith'})
 abstract class MediaInfo with _$MediaInfo {
   const factory MediaInfo({
-    @Id() required String fileName,
+    required String fileName,
     String? name,
     int? durationMs,
     @UtcDateTimeConverter() required DateTime lastModified,

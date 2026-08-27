@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$LlmProvider {
 
-@Id() String get id; String get name;/// 仅自定义供应商：[AssistantProviderType.id]。
+ String get id; String get name;/// 仅自定义供应商：[AssistantProviderType.id]。
  String get type;/// 仅自定义供应商：端点根地址。
  String get baseUrl;/// 新会话默认选中的模型 id。
  String get defaultModel; DateTime get createdAt; int get sortOrder;/// 这一条是从哪个 models.dev 预设建出来的（`LlmProviderPreset.id`，如 `deepseek`）。
@@ -59,7 +59,7 @@ abstract mixin class $LlmProviderCopyWith<$Res>  {
   factory $LlmProviderCopyWith(LlmProvider value, $Res Function(LlmProvider) _then) = _$LlmProviderCopyWithImpl;
 @useResult
 $Res call({
-@Id() String id, String name, String type, String baseUrl, String defaultModel, DateTime createdAt, int sortOrder, String presetId, List<String> models, bool toolCall, bool reasoning, bool attachment
+ String id, String name, String type, String baseUrl, String defaultModel, DateTime createdAt, int sortOrder, String presetId, List<String> models, bool toolCall, bool reasoning, bool attachment
 });
 
 
@@ -175,7 +175,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@Id()  String id,  String name,  String type,  String baseUrl,  String defaultModel,  DateTime createdAt,  int sortOrder,  String presetId,  List<String> models,  bool toolCall,  bool reasoning,  bool attachment)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String type,  String baseUrl,  String defaultModel,  DateTime createdAt,  int sortOrder,  String presetId,  List<String> models,  bool toolCall,  bool reasoning,  bool attachment)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LlmProvider() when $default != null:
 return $default(_that.id,_that.name,_that.type,_that.baseUrl,_that.defaultModel,_that.createdAt,_that.sortOrder,_that.presetId,_that.models,_that.toolCall,_that.reasoning,_that.attachment);case _:
@@ -196,7 +196,7 @@ return $default(_that.id,_that.name,_that.type,_that.baseUrl,_that.defaultModel,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@Id()  String id,  String name,  String type,  String baseUrl,  String defaultModel,  DateTime createdAt,  int sortOrder,  String presetId,  List<String> models,  bool toolCall,  bool reasoning,  bool attachment)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String type,  String baseUrl,  String defaultModel,  DateTime createdAt,  int sortOrder,  String presetId,  List<String> models,  bool toolCall,  bool reasoning,  bool attachment)  $default,) {final _that = this;
 switch (_that) {
 case _LlmProvider():
 return $default(_that.id,_that.name,_that.type,_that.baseUrl,_that.defaultModel,_that.createdAt,_that.sortOrder,_that.presetId,_that.models,_that.toolCall,_that.reasoning,_that.attachment);case _:
@@ -216,7 +216,7 @@ return $default(_that.id,_that.name,_that.type,_that.baseUrl,_that.defaultModel,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@Id()  String id,  String name,  String type,  String baseUrl,  String defaultModel,  DateTime createdAt,  int sortOrder,  String presetId,  List<String> models,  bool toolCall,  bool reasoning,  bool attachment)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String type,  String baseUrl,  String defaultModel,  DateTime createdAt,  int sortOrder,  String presetId,  List<String> models,  bool toolCall,  bool reasoning,  bool attachment)?  $default,) {final _that = this;
 switch (_that) {
 case _LlmProvider() when $default != null:
 return $default(_that.id,_that.name,_that.type,_that.baseUrl,_that.defaultModel,_that.createdAt,_that.sortOrder,_that.presetId,_that.models,_that.toolCall,_that.reasoning,_that.attachment);case _:
@@ -231,10 +231,10 @@ return $default(_that.id,_that.name,_that.type,_that.baseUrl,_that.defaultModel,
 @JsonSerializable()
 
 class _LlmProvider extends LlmProvider {
-  const _LlmProvider({@Id() required this.id, required this.name, required this.type, required this.baseUrl, required this.defaultModel, required this.createdAt, required this.sortOrder, this.presetId = '',  List<String> models = const <String>[], this.toolCall = false, this.reasoning = false, this.attachment = false}): _models = models,super._();
+  const _LlmProvider({required this.id, required this.name, required this.type, required this.baseUrl, required this.defaultModel, required this.createdAt, required this.sortOrder, this.presetId = '',  List<String> models = const <String>[], this.toolCall = false, this.reasoning = false, this.attachment = false}): _models = models,super._();
   factory _LlmProvider.fromJson(Map<String, dynamic> json) => _$LlmProviderFromJson(json);
 
-@override@Id() final  String id;
+@override final  String id;
 @override final  String name;
 /// 仅自定义供应商：[AssistantProviderType.id]。
 @override final  String type;
@@ -298,7 +298,7 @@ abstract mixin class _$LlmProviderCopyWith<$Res> implements $LlmProviderCopyWith
   factory _$LlmProviderCopyWith(_LlmProvider value, $Res Function(_LlmProvider) _then) = __$LlmProviderCopyWithImpl;
 @override @useResult
 $Res call({
-@Id() String id, String name, String type, String baseUrl, String defaultModel, DateTime createdAt, int sortOrder, String presetId, List<String> models, bool toolCall, bool reasoning, bool attachment
+ String id, String name, String type, String baseUrl, String defaultModel, DateTime createdAt, int sortOrder, String presetId, List<String> models, bool toolCall, bool reasoning, bool attachment
 });
 
 

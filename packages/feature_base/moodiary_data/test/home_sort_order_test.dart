@@ -12,12 +12,10 @@ void main() {
     lastModified: modified ?? time,
     show: true,
     mood: 0.5,
-    weather: const [],
     imageName: const [],
     audioName: const [],
     videoName: const [],
     tags: const [],
-    position: const [],
     type: DiaryType.tiptap.value,
   );
 

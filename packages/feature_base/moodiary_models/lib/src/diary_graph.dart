@@ -6,7 +6,6 @@ import 'dart:typed_data';
 class DiaryGraphNode {
   final int index;
   final String id;
-  final int isarId;
   final String title;
   final DateTime time;
   final String? categoryId;
@@ -21,7 +20,7 @@ class DiaryGraphNode {
   const DiaryGraphNode({
     required this.index,
     required this.id,
-    required this.isarId,
+
     required this.title,
     required this.time,
     required this.categoryId,

@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 import 'utc_date_time_converter.dart';
@@ -8,10 +7,9 @@ part 'category.freezed.dart';
 part 'category.g.dart';
 
 @freezed
-@Collection(ignore: {'copyWith'})
 abstract class Category with _$Category {
   const factory Category({
-    @Id() required String id,
+    required String id,
     required String categoryName,
     @UtcDateTimeConverter() required DateTime lastModified,
     String? parentId,
@@ -35,9 +33,6 @@ abstract class Category with _$Category {
       color: color,
     );
   }
-
-  @Index()
-  String get level => parentId ?? 'root';
 
   factory Category.fromJson(Map<String, dynamic> json) =>
       _$CategoryFromJson(json);

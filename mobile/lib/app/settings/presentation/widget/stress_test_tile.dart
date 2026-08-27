@@ -172,12 +172,10 @@ class _StressTestTileState extends State<StressTestTile> {
       lastModified: time,
       show: true,
       mood: rng.nextDouble(),
-      weather: const [],
       imageName: const [],
       audioName: const [],
       videoName: const [],
       tags: const [],
-      position: const [],
       type: DiaryType.tiptap.value,
     );
   }
@@ -190,7 +188,7 @@ class _StressTestTileState extends State<StressTestTile> {
       final all = await DiaryRepository.get().getAllDiaries();
       final ids = [
         for (final d in all)
-          if (d.title.startsWith(_prefix)) d.isarId,
+          if (d.title.startsWith(_prefix)) d.id,
       ];
       count = ids.length;
       if (ids.isEmpty) {
@@ -200,9 +198,7 @@ class _StressTestTileState extends State<StressTestTile> {
       _showProgress(progress, l10n.app.stressClearing, ids.length);
       for (var start = 0; start < ids.length; start += _chunk) {
         final end = min(start + _chunk, ids.length);
-        await DiaryRepository.get().deleteDiariesByIsarIds(
-          ids.sublist(start, end),
-        );
+        await DiaryRepository.get().deleteDiariesByIds(ids.sublist(start, end));
         progress.value = end / ids.length;
         await Future<void>.delayed(.zero);
       }

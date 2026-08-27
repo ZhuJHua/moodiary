@@ -247,6 +247,7 @@ class _MetaLine extends StatelessWidget {
     final colors = context.theme.colors;
     final onVariant = colors.onSurfaceVariant;
     final style = context.theme.typography.labelSmall.onSurfaceVariant;
+    final weather = diary.weather;
 
     return Row(
       children: [
@@ -257,18 +258,18 @@ class _MetaLine extends StatelessWidget {
           child: Row(
             children: [
               Text(TimeFormat.clock(stamp), style: style),
-              if (diary.weather.length >= 3) ...[
+              if (weather != null) ...[
                 const SizedBox(width: 8),
                 Icon(
                   // 天气来自和风，图标跟着数据源走；未知码退回通用的云。
-                  qweatherIcon(diary.weather[0]) ?? LucideIcons.cloud,
+                  qweatherIcon(weather.icon) ?? LucideIcons.cloud,
                   size: 12,
                   color: onVariant,
                 ),
                 const SizedBox(width: 3),
                 Flexible(
                   child: Text(
-                    '${diary.weather[2]} ${diary.weather[1]}°',
+                    '${weather.text} ${weather.temp}°',
                     maxLines: 1,
                     overflow: .ellipsis,
                     style: style,
@@ -479,7 +480,8 @@ class _Footer extends StatelessWidget {
     if (diary.tags.length > 2) {
       chips.add(Text('+${diary.tags.length - 2}', style: style));
     }
-    if (diary.position.length >= 3 && diary.position[2].trim().isNotEmpty) {
+    final place = diary.position?.name.trim() ?? '';
+    if (place.isNotEmpty) {
       chips.add(
         Row(
           mainAxisSize: .min,
@@ -489,7 +491,7 @@ class _Footer extends StatelessWidget {
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 132),
               child: Text(
-                diary.position[2],
+                place,
                 maxLines: 1,
                 overflow: .ellipsis,
                 style: style,

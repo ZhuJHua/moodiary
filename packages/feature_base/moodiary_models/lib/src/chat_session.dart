@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 part 'chat_session.freezed.dart';
@@ -7,10 +6,9 @@ part 'chat_session.g.dart';
 
 /// 一次 AI 助手会话（持久化），消息体存于 [ChatMessage]。API Key 不存这里。
 @freezed
-@Collection(ignore: {'copyWith'})
 abstract class ChatSession with _$ChatSession {
   const factory ChatSession({
-    @Id() required String id,
+    required String id,
 
     /// 空串 = 还没生成过标题，界面显示「新对话」。**不存本地化后的文案**：那会把
     /// 生成当时的语种烤进库里，换语言后老会话仍是旧语种。

@@ -10,17 +10,19 @@ import 'repository_providers.dart';
 part 'diary_controller.g.dart';
 
 Comparator<Diary> diarySortComparator(DiarySort sort) => switch (sort) {
+  // 第二排序键 = 业务 id（uuid v7，按创建时刻有序），与 SQL 侧 ORDER BY 的
+  // `, id DESC` 逐字段一致——LoadMoreMixin 的分页 offset 依赖两侧次序对齐。
   .timeDesc => (a, b) {
     final c = b.time.compareTo(a.time);
-    return c != 0 ? c : b.isarId.compareTo(a.isarId);
+    return c != 0 ? c : b.id.compareTo(a.id);
   },
   .timeAsc => (a, b) {
     final c = a.time.compareTo(b.time);
-    return c != 0 ? c : a.isarId.compareTo(b.isarId);
+    return c != 0 ? c : a.id.compareTo(b.id);
   },
   .lastModifiedDesc => (a, b) {
     final c = b.lastModified.compareTo(a.lastModified);
-    return c != 0 ? c : b.isarId.compareTo(a.isarId);
+    return c != 0 ? c : b.id.compareTo(a.id);
   },
 };
 
@@ -37,11 +39,11 @@ List<Diary> applyDiaryEvent(
 }) {
   final cmp = compare ?? diarySortComparator(.timeDesc);
   switch (event) {
-    case DiaryDeleted(:final isarId):
-      if (!list.any((d) => d.isarId == isarId)) return list;
-      return list.where((d) => d.isarId != isarId).toList();
+    case DiaryDeleted(:final id):
+      if (!list.any((d) => d.id == id)) return list;
+      return list.where((d) => d.id != id).toList();
     case DiaryCreated(:final diary) || DiaryUpdated(:final diary):
-      final without = list.where((d) => d.isarId != diary.isarId).toList();
+      final without = list.where((d) => d.id != diary.id).toList();
       final removed = without.length != list.length;
       if (!belongs(diary)) return removed ? without : list;
       if (mayHaveMore && without.isNotEmpty && cmp(diary, without.last) > 0) {
@@ -177,9 +179,9 @@ class RecycleBinDiaries extends _$RecycleBinDiaries {
     }
   }
 
-  Future<bool> permanentDelete(int isarId) async {
+  Future<bool> permanentDelete(String id) async {
     try {
-      return await _repository.deleteADiary(isarId);
+      return await _repository.deleteADiary(id);
     } catch (_) {
       return false;
     }
@@ -195,7 +197,7 @@ class RecycleBinDiaries extends _$RecycleBinDiaries {
     int count = 0;
     for (final d in diaries) {
       try {
-        if (await repo.deleteADiary(d.isarId)) count += 1;
+        if (await repo.deleteADiary(d.id)) count += 1;
       } catch (e, s) {
         logger.e('recycle clear failed: ${d.id}', error: e, stackTrace: s);
       }
@@ -231,5 +233,16 @@ Stream<Diary?> getDiary(
     return;
   }
   yield initial;
-  yield* repository.watchDiary(initial.isarId);
+  // 单对象跟随走领域事件流（旧 Isar watchObject 的等价物）：更新即重发，删除发 null。
+  await for (final event in repository.diaryEvents) {
+    switch (event) {
+      case DiaryCreated(:final diary) || DiaryUpdated(:final diary):
+        if (diary.id == id) yield diary;
+      case DiaryDeleted(id: final deletedId):
+        if (deletedId == id) {
+          yield null;
+          return;
+        }
+    }
+  }
 }

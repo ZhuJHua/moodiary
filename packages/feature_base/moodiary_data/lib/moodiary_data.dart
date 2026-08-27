@@ -1,4 +1,4 @@
-/// Moodiary 数据层（infra）：仓储 + DiaryContent（基于 Isar，依赖 core/models），
+/// Moodiary 数据层（infra）：SQLite（drift）数据库 + 仓储 + DiaryContent，
 /// 以及跨 feature 共享的进程级瞬态状态（feature 之间不能互引，data 是它们的最低公共祖先）。
 ///
 /// 准入线：**只被单个 feature 读、又不被包内复用的东西不进 data**——那只是
@@ -9,6 +9,8 @@ export 'src/backup_archive.dart';
 export 'src/category_controller.dart';
 export 'src/category_repository.dart';
 export 'src/dashboard_controller.dart';
+export 'src/db/database.dart';
+export 'src/db/db_codec.dart';
 export 'src/diary_content.dart';
 export 'src/diary_controller.dart';
 export 'src/diary_derive.dart';

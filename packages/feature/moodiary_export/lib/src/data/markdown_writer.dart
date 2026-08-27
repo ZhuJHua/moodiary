@@ -91,11 +91,22 @@ class MarkdownWriter {
     if (doc.categoryName != null) {
       buf.writeln('category: ${_yamlString(doc.categoryName!)}');
     }
-    if (doc.weather.isNotEmpty) {
-      buf.writeln('weather: ${_yamlList(doc.weather)}');
+    final weather = doc.weather;
+    final position = doc.position;
+    // 两个键保持旧的定长数组形态（`[icon, temp, text]` / `[lat, lng, name]`），
+    // 缺失就整键不写。
+    if (weather != null) {
+      buf.writeln(
+        'weather: ${_yamlList([weather.icon, weather.temp, weather.text])}',
+      );
     }
-    if (doc.position.isNotEmpty) {
-      buf.writeln('position: ${_yamlList(doc.position)}');
+    if (position != null) {
+      final tuple = [
+        position.latitude.toString(),
+        position.longitude.toString(),
+        position.name,
+      ];
+      buf.writeln('position: ${_yamlList(tuple)}');
     }
     if (doc.tags.isNotEmpty) buf.writeln('tags: ${_yamlList(doc.tags)}');
     buf.writeln('---');
@@ -103,10 +114,11 @@ class MarkdownWriter {
   }
 
   static String _metaLine(ExportDoc doc) {
+    final weather = doc.weather;
     final parts = <String>[
       _formatTime(doc.time),
-      if (doc.weather.isNotEmpty) doc.weather.join(' '),
-      if (doc.position.isNotEmpty) doc.position.last,
+      if (weather != null) '${weather.icon} ${weather.temp} ${weather.text}',
+      ?doc.position?.name,
       ?doc.categoryName,
     ];
     return parts.join(' · ');

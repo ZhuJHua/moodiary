@@ -1,7 +1,6 @@
 use anyhow::Result;
 use jieba_rs::Jieba as JiebaInner;
 use rust_stemmers::{Algorithm, Stemmer};
-use std::collections::HashSet;
 use std::sync::OnceLock;
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -221,18 +220,11 @@ impl Tokenizer {
             all_cfs.extend(tokens);
         }
 
-        let cut: Vec<String> = {
-            let set: HashSet<String> = all_cut.into_iter().collect();
-            set.into_iter().collect()
-        };
-        let cut_for_search: Vec<String> = {
-            let set: HashSet<String> = all_cfs.into_iter().collect();
-            set.into_iter().collect()
-        };
-
+        // 保留重复与出现序：词频（BM25 的 TF）由消费方（FTS5 / 统计）从重复次数得出。
+        // 早期版本在这里做 HashSet 去重，导致全库 TF 恒为 1、词频饱和项退化成常数。
         TokenizeResult {
-            cut,
-            cut_for_search,
+            cut: all_cut,
+            cut_for_search: all_cfs,
         }
     }
 }
@@ -401,10 +393,10 @@ mod tests {
     }
 
     #[test]
-    fn tokenize_deduplication() {
+    fn tokenize_keeps_duplicates_for_tf() {
         ensure_tokenizer();
         let result = Tokenizer::tokenize("hello hello hello".into()).unwrap();
         let hello_count = result.cut.iter().filter(|t| t.as_str() == "hello").count();
-        assert_eq!(hello_count, 1);
+        assert_eq!(hello_count, 3, "重复必须保留——词频（TF）由重复次数得出");
     }
 }

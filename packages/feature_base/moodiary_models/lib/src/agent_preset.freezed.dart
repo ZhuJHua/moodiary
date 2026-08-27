@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AgentPreset {
 
-@Id() String get id; String get name; String get description;/// 人格文本（system prompt 的 order-0 段），上限由写入方截断。
+ String get id; String get name; String get description;/// 人格文本（system prompt 的 order-0 段），上限由写入方截断。
  String get persona;/// 本预设挂载的工具 id 子集（dsh：预设声明它 mount 哪些工具）。
 /// null = 全部（跟随出厂全集，含未来新增）；空列表 = 一个工具都不挂。
  List<String>? get tools; DateTime get createdAt; DateTime get updatedAt;
@@ -52,7 +52,7 @@ abstract mixin class $AgentPresetCopyWith<$Res>  {
   factory $AgentPresetCopyWith(AgentPreset value, $Res Function(AgentPreset) _then) = _$AgentPresetCopyWithImpl;
 @useResult
 $Res call({
-@Id() String id, String name, String description, String persona, List<String>? tools, DateTime createdAt, DateTime updatedAt
+ String id, String name, String description, String persona, List<String>? tools, DateTime createdAt, DateTime updatedAt
 });
 
 
@@ -163,7 +163,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@Id()  String id,  String name,  String description,  String persona,  List<String>? tools,  DateTime createdAt,  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String description,  String persona,  List<String>? tools,  DateTime createdAt,  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AgentPreset() when $default != null:
 return $default(_that.id,_that.name,_that.description,_that.persona,_that.tools,_that.createdAt,_that.updatedAt);case _:
@@ -184,7 +184,7 @@ return $default(_that.id,_that.name,_that.description,_that.persona,_that.tools,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@Id()  String id,  String name,  String description,  String persona,  List<String>? tools,  DateTime createdAt,  DateTime updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String description,  String persona,  List<String>? tools,  DateTime createdAt,  DateTime updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _AgentPreset():
 return $default(_that.id,_that.name,_that.description,_that.persona,_that.tools,_that.createdAt,_that.updatedAt);case _:
@@ -204,7 +204,7 @@ return $default(_that.id,_that.name,_that.description,_that.persona,_that.tools,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@Id()  String id,  String name,  String description,  String persona,  List<String>? tools,  DateTime createdAt,  DateTime updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String description,  String persona,  List<String>? tools,  DateTime createdAt,  DateTime updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _AgentPreset() when $default != null:
 return $default(_that.id,_that.name,_that.description,_that.persona,_that.tools,_that.createdAt,_that.updatedAt);case _:
@@ -219,10 +219,10 @@ return $default(_that.id,_that.name,_that.description,_that.persona,_that.tools,
 @JsonSerializable()
 
 class _AgentPreset implements AgentPreset {
-  const _AgentPreset({@Id() required this.id, required this.name, this.description = '', required this.persona,  List<String>? tools, required this.createdAt, required this.updatedAt}): _tools = tools;
+  const _AgentPreset({required this.id, required this.name, this.description = '', required this.persona,  List<String>? tools, required this.createdAt, required this.updatedAt}): _tools = tools;
   factory _AgentPreset.fromJson(Map<String, dynamic> json) => _$AgentPresetFromJson(json);
 
-@override@Id() final  String id;
+@override final  String id;
 @override final  String name;
 @override@JsonKey() final  String description;
 /// 人格文本（system prompt 的 order-0 段），上限由写入方截断。
@@ -276,7 +276,7 @@ abstract mixin class _$AgentPresetCopyWith<$Res> implements $AgentPresetCopyWith
   factory _$AgentPresetCopyWith(_AgentPreset value, $Res Function(_AgentPreset) _then) = __$AgentPresetCopyWithImpl;
 @override @useResult
 $Res call({
-@Id() String id, String name, String description, String persona, List<String>? tools, DateTime createdAt, DateTime updatedAt
+ String id, String name, String description, String persona, List<String>? tools, DateTime createdAt, DateTime updatedAt
 });
 
 

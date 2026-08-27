@@ -1,6 +1,8 @@
 import 'package:moodiary_editor/src/data/editor_migration_service.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart' show logger;
+import 'package:moodiary_migration/moodiary_migration.dart'
+    show EngineMigrationService;
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:mui/mui.dart';
 
@@ -19,6 +21,7 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
   int _total = 0;
   int _failed = 0;
   bool _running = true;
+  bool _engineStage = false;
 
   @override
   void initState() {
@@ -31,10 +34,35 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
       _running = true;
       _failed = 0;
       _done = 0;
+      _total = 0;
     });
     // 整段兜底：这里是强制闸门里唯一的页面，任何未捕获异常（列待迁移、逐篇落库之外的
     // I/O）都会让进度条永久停住、重试按钮渲染不出来，用户被锁死在门外。
     try {
+      // 阶段一：引擎搬迁（旧 Isar → SQLite）。可重入：标记只在对账通过后置位，
+      // 中途被杀下次启动整库重来；旧库全程只读。
+      if (EngineMigrationService.requiresMigration) {
+        setState(() => _engineStage = true);
+        await EngineMigrationService.migrate(
+          onProgress: (done, total) {
+            if (mounted) {
+              setState(() {
+                _done = done;
+                _total = total;
+              });
+            }
+          },
+        );
+        await EngineMigrationService.finalizeMigration();
+        // 阶段二的判据此刻才有意义：正文格式闸门查的是刚灌满的 SQLite。
+        await EditorMigrationService.refreshRequiresMigration();
+        if (!mounted) return;
+        setState(() {
+          _engineStage = false;
+          _done = 0;
+          _total = 0;
+        });
+      }
       final pending = await EditorMigrationService.pendingDiaries();
       if (!mounted) return;
       setState(() => _total = pending.length);
@@ -97,7 +125,9 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    l10n.migrationProgress(done: _done, total: _total),
+                    _engineStage
+                        ? l10n.migrationEngineStage
+                        : l10n.migrationProgress(done: _done, total: _total),
                     style: context.theme.typography.bodyMedium.secondary,
                   ),
                 ] else ...[

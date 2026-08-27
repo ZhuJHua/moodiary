@@ -82,7 +82,7 @@ class AutoSyncWatcher {
         case DiaryDeleted(:final id):
           // 行已不在：脏标记里这条 id 不再有对应卡片，顺手清掉（进程内 Set，
           // 不清也只是残留到重启）；随后放行触发同步——永久删除的墓碑应尽快推送。
-          if (id != null) SyncDirtyTracker.instance.clearDirty(id);
+          SyncDirtyTracker.instance.clearDirty(id);
           _onLocalChange();
       }
     });

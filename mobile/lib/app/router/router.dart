@@ -8,6 +8,8 @@ import 'package:moodiary_editor/moodiary_editor.dart'
 import 'package:moodiary_export/moodiary_export.dart' show exportRoutes;
 import 'package:moodiary_lock/moodiary_lock.dart';
 import 'package:moodiary_media/moodiary_media.dart' show mediaRoutes;
+import 'package:moodiary_migration/moodiary_migration.dart'
+    show EngineMigrationService;
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_share/moodiary_share.dart';
 import 'package:moodiary_sync/moodiary_sync.dart';
@@ -47,9 +49,13 @@ GoRouter createMobileRouter({
 List<RouteBase> buildMobileRoutes() => _mobileRoutes();
 
 /// 强制迁移闸门的重定向决策：迁移未完成时只放行锁屏与迁移页本身。
+/// 两道闸共用一页：引擎搬迁（旧 Isar → SQLite）在前，正文格式迁移在后。
 @visibleForTesting
 String? migrationGateRedirect(String matchedLocation) {
-  if (!EditorMigrationService.requiresMigration) return null;
+  if (!EngineMigrationService.requiresMigration &&
+      !EditorMigrationService.requiresMigration) {
+    return null;
+  }
   if (matchedLocation == EditorMigrationRoute.path ||
       matchedLocation == LockRoute.path) {
     return null;

@@ -4,9 +4,10 @@ import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_editor/src/data/model/geo.dart';
 import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 
-/// 和风天气「地理位置」仓储：定位 + 反查城市，返回 `[lat, lng, "adm2 name"]`。
+/// 和风天气「地理位置」仓储：定位 + 反查城市，返回 [DiaryPosition]。
 class GeoRepository {
   GeoRepository(this._http);
 
@@ -16,7 +17,7 @@ class GeoRepository {
 
   final IHttpClient _http;
 
-  Future<List<String>?> getGeo(BuildContext context) async {
+  Future<DiaryPosition?> getGeo(BuildContext context) async {
     Position? position;
     var permission = await Geolocator.checkPermission();
     if (permission == .denied) {
@@ -63,11 +64,11 @@ class GeoRepository {
       );
       if (geo.location != null && geo.location!.isNotEmpty) {
         final city = geo.location!.first;
-        return [
-          position.latitude.toString(),
-          position.longitude.toString(),
-          '${city.adm2} ${city.name}',
-        ];
+        return DiaryPosition(
+          latitude: position.latitude,
+          longitude: position.longitude,
+          name: '${city.adm2} ${city.name}',
+        );
       } else {
         return null;
       }

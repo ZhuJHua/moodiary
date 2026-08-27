@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 part 'agent_preset.freezed.dart';
@@ -13,10 +12,9 @@ part 'agent_preset.g.dart';
 ///
 /// 仅设备本地：不进备份、不进同步。
 @freezed
-@Collection(ignore: {'copyWith'}, accessor: 'agentPresets')
 abstract class AgentPreset with _$AgentPreset {
   const factory AgentPreset({
-    @Id() required String id,
+    required String id,
 
     required String name,
 

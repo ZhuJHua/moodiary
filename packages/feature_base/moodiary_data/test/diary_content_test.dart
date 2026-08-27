@@ -20,12 +20,10 @@ Diary _diary({
   lastModified: DateTime(2026, 1, 1),
   show: true,
   mood: 0.5,
-  weather: const [],
   imageName: imageName,
   audioName: audioName,
   videoName: videoName,
   tags: const [],
-  position: const [],
   type: type.value,
 );
 
@@ -161,12 +159,10 @@ void main() {
       lastModified: DateTime(2026, 1, 1),
       show: true,
       mood: 0.5,
-      weather: const [],
       imageName: const [],
       audioName: const [],
       videoName: const [],
       tags: const [],
-      position: const [],
       type: 'text',
     );
     expect(DiaryContent.of(diary).plainText, '');

@@ -15,5 +15,6 @@
   "migrationFailedCount": "{count} entries failed to migrate. Please retry.",
   "migrationError": "Migration hit an error. Please retry.",
   "migrationRetry": "Retry",
-  "migrationProgress": "Migrating {done} / {total}"
+  "migrationProgress": "Migrating {done} / {total}",
+  "migrationEngineStage": "Upgrading database (no data will be lost)"
 }

@@ -12,7 +12,9 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
-import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_migration/src/legacy/legacy_models.dart';
+import 'package:moodiary_models/moodiary_models.dart'
+    hide Category, Diary, Font;
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 Diary _legacyDiary(
@@ -260,7 +262,10 @@ void main() {
       VersionMigrator.debugFixV263(dir.path);
       reopen();
 
-      expect(isar.categorys.where().idEqualTo('dangling').findFirst(), isNotNull);
+      expect(
+        isar.categorys.where().idEqualTo('dangling').findFirst(),
+        isNotNull,
+      );
       expect(isar.categorys.where().count(), 2, reason: '在册的不重复建');
     });
 
@@ -278,10 +283,10 @@ void main() {
       reopen();
 
       expect(isar.fonts.where().count(), 2, reason: '旧行被清空、重灌磁盘扫描结果');
-      expect(
-        isar.fonts.where().findAll().map((f) => f.fontFileName).toSet(),
-        {'a.ttf', 'b.otf'},
-      );
+      expect(isar.fonts.where().findAll().map((f) => f.fontFileName).toSet(), {
+        'a.ttf',
+        'b.otf',
+      });
 
       await VersionMigrator.debugMergeToV273(dir.path, scanned);
       reopen();

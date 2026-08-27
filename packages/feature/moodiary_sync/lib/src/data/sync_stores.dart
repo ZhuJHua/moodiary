@@ -6,7 +6,6 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_sync/src/data/media_refs.dart';
-import 'package:moodiary_sync/src/data/sync_cancellation.dart';
 import 'package:path/path.dart' as p;
 
 /// 引擎对本地存储的最小依赖面，抽成端口以便单测注入内存假实现 —— 生产实现
@@ -19,18 +18,8 @@ abstract interface class SyncDiaryStore {
 
   /// 落库并连带清除同 id 的墓碑行（复活闸门）。[fromSync] = 来源为活跃云后端
   /// 的 pull（远端已持有），领域事件携带此标记以免除回声推送。
-  /// [deferIndex] = 只入重索引队列不当场分词（批量 pull 用，见 [settleIndexes]）。
-  Future<void> insertADiary(
-    Diary diary, {
-    bool fromSync = false,
-    bool deferIndex = false,
-  });
-
-  /// 把 defer 出的重索引账结清。工作量自己量（读队列长度），不靠调用方传
-  /// 计数——engine 的 diaryChanged 把墓碑删除也算在内（那条路不产生队列行），
-  /// 曾把「对端清理 300 篇」误判成要整库重建。幂等；被取消 / 崩溃后启动维护
-  /// 兜底排空。
-  Future<void> settleIndexes();
+  /// 行与搜索/双链索引同事务原子落库（SQLite/FTS5），无重索引账要结。
+  Future<void> insertADiary(Diary diary, {bool fromSync = false});
 
   /// pull 应用远端墓碑：行硬删 + 写墓碑（媒体由引擎媒体端口清理），返回墓碑行。
   Future<SyncTombstone> tombstoneDiary(Diary diary, {bool fromSync = false});
@@ -99,34 +88,8 @@ class RepoSyncDiaryStore implements SyncDiaryStore {
       _repo.getDiaryByBusinessId(id);
 
   @override
-  Future<void> insertADiary(
-    Diary diary, {
-    bool fromSync = false,
-    bool deferIndex = false,
-  }) => _repo.insertADiary(
-    diary,
-    fromSync: fromSync,
-    index: deferIndex ? .defer : .inline,
-  );
-
-  /// 绝对下限 200 + 相对阈值 30%：小账排空（每篇一次分词+一次事务）；只有
-  /// 账多到接近换机恢复量级（且占了库的三成以上）才值得整库重建——2 万篇的库
-  /// 拉到 201 篇更新不该被拖去全量重分词。
-  static const int _rebuildThreshold = 200;
-
-  @override
-  Future<void> settleIndexes() async {
-    final pending = await _repo.reindexQueueLength();
-    if (pending == 0) return;
-    // 用户点了「停止」就别再拖一轮不可中断的重建/排空——账留给启动维护兜底。
-    if (SyncCancellation.instance.isRequested) return;
-    final total = await _repo.diaryRowCount();
-    if (pending > _rebuildThreshold && pending > total * 0.3) {
-      await _repo.rebuildAllIndexes();
-    } else {
-      await _repo.drainReindexQueue();
-    }
-  }
+  Future<void> insertADiary(Diary diary, {bool fromSync = false}) =>
+      _repo.insertADiary(diary, fromSync: fromSync);
 
   @override
   Future<SyncTombstone> tombstoneDiary(Diary diary, {bool fromSync = false}) =>

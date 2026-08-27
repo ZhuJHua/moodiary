@@ -1,9 +1,12 @@
 import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_files/moodiary_files.dart';
-import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_migration/src/legacy/legacy_models.dart' as legacy;
 
 Future<void> cleanOrphanMediaIn(String dir) async {
-  final isar = Isar.open(schemas: diaryAndCategorySchemas, directory: dir);
+  final isar = Isar.open(
+    schemas: legacy.diaryAndCategorySchemas,
+    directory: dir,
+  );
   final imageFiles = (await AppFiles.getDirFileName(MediaType.image.value))
       .toSet();
   final audioFiles = (await AppFiles.getDirFileName(MediaType.audio.value))

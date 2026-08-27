@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$MemoryEntry {
 
-@Id() String get id;/// 记忆类别：`preference`（偏好）| `theme`（反复出现的主题）| `goal`（目标）| `fact`（事实）。
+ String get id;/// 记忆类别：`preference`（偏好）| `theme`（反复出现的主题）| `goal`（目标）| `fact`（事实）。
  String get category; String get text; DateTime get createdAt; DateTime get updatedAt;
 /// Create a copy of MemoryEntry
 /// with the given fields replaced by the non-null parameter values.
@@ -50,7 +50,7 @@ abstract mixin class $MemoryEntryCopyWith<$Res>  {
   factory $MemoryEntryCopyWith(MemoryEntry value, $Res Function(MemoryEntry) _then) = _$MemoryEntryCopyWithImpl;
 @useResult
 $Res call({
-@Id() String id, String category, String text, DateTime createdAt, DateTime updatedAt
+ String id, String category, String text, DateTime createdAt, DateTime updatedAt
 });
 
 
@@ -159,7 +159,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@Id()  String id,  String category,  String text,  DateTime createdAt,  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String category,  String text,  DateTime createdAt,  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MemoryEntry() when $default != null:
 return $default(_that.id,_that.category,_that.text,_that.createdAt,_that.updatedAt);case _:
@@ -180,7 +180,7 @@ return $default(_that.id,_that.category,_that.text,_that.createdAt,_that.updated
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@Id()  String id,  String category,  String text,  DateTime createdAt,  DateTime updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String category,  String text,  DateTime createdAt,  DateTime updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _MemoryEntry():
 return $default(_that.id,_that.category,_that.text,_that.createdAt,_that.updatedAt);case _:
@@ -200,7 +200,7 @@ return $default(_that.id,_that.category,_that.text,_that.createdAt,_that.updated
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@Id()  String id,  String category,  String text,  DateTime createdAt,  DateTime updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String category,  String text,  DateTime createdAt,  DateTime updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _MemoryEntry() when $default != null:
 return $default(_that.id,_that.category,_that.text,_that.createdAt,_that.updatedAt);case _:
@@ -215,10 +215,10 @@ return $default(_that.id,_that.category,_that.text,_that.createdAt,_that.updated
 @JsonSerializable()
 
 class _MemoryEntry implements MemoryEntry {
-  const _MemoryEntry({@Id() required this.id, required this.category, required this.text, required this.createdAt, required this.updatedAt});
+  const _MemoryEntry({required this.id, required this.category, required this.text, required this.createdAt, required this.updatedAt});
   factory _MemoryEntry.fromJson(Map<String, dynamic> json) => _$MemoryEntryFromJson(json);
 
-@override@Id() final  String id;
+@override final  String id;
 /// 记忆类别：`preference`（偏好）| `theme`（反复出现的主题）| `goal`（目标）| `fact`（事实）。
 @override final  String category;
 @override final  String text;
@@ -258,7 +258,7 @@ abstract mixin class _$MemoryEntryCopyWith<$Res> implements $MemoryEntryCopyWith
   factory _$MemoryEntryCopyWith(_MemoryEntry value, $Res Function(_MemoryEntry) _then) = __$MemoryEntryCopyWithImpl;
 @override @useResult
 $Res call({
-@Id() String id, String category, String text, DateTime createdAt, DateTime updatedAt
+ String id, String category, String text, DateTime createdAt, DateTime updatedAt
 });
 
 

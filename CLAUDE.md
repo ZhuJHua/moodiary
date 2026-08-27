@@ -9,7 +9,7 @@ Moodiary — a Flutter + Rust diary app. **Layered pub-workspace monorepo**: 27 
 - **Flutter 3.47.0 / Dart 3.13.0** (FVM, `.fvmrc`)
 - **Rust** (pinned in `packages/foundation/moodiary_rust/rust/rust-toolchain.toml`), `flutter_rust_bridge` 2.13.0-beta.6 — native lib built & bundled via Native Assets build hooks (`rustup` required)
 - **Android**: AGP 9.1.0 / Gradle 9.3.1 / KGP 2.4.0，内置 Kotlin（`android.builtInKotlin=true`）；daemon JVM 由 `gradle-daemon-jvm.properties` 钉在 21
-- **Riverpod** (dev) + code gen, **go_router**, **get_it**, **Isar**, **Freezed** + **json_serializable**
+- **Riverpod** (dev) + code gen, **go_router**, **get_it**, **SQLite**（drift + FTS5，schema 真源在 `moodiary_data` 的 `.drift` 文件），**Freezed** + **json_serializable**
 
 ## Commands
 
@@ -32,7 +32,7 @@ dart tool/task.dart editor         # rebuild editor asset only (needs corepack o
 
 # Lint & Test
 dart tool/task.dart analyze        # layer check + flutter analyze
-dart tool/task.dart test           # 全仓 Dart 测试（CI 口径；真库用例要 ISAR_TEST_DYLIB）
+dart tool/task.dart test           # 全仓 Dart 测试（CI 口径；SQLite 用例零门槛，仅 migration 的旧库用例要 ISAR_TEST_DYLIB）
 dart tool/task.dart test-mobile    # 只跑 mobile/ 的测试
 cd packages/foundation/moodiary_rust/rust && cargo test --workspace && cargo clippy --workspace --all-targets -- -D warnings
 cd packages/feature_base/moodiary_editor/editor && corepack pnpm type-check && corepack pnpm test
@@ -70,14 +70,14 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
     core/                    # 无领域基建。内部次序 platform,http → storage → files → theme
       moodiary_platform/     #   应用目录/缓存目录/生物识别/网络状态/应用与设备信息
       moodiary_http/         #   IHttpClient / IHttpServer 端口，实现走 Rust
-      moodiary_storage/      #   KV(MMKV) / SecureKV / Isar 句柄；目录与 schema 都靠注入
+      moodiary_storage/      #   KV(MMKV) / SecureKV；数据库不在这（SQLite/drift 归 moodiary_data）
       moodiary_files/        #   文件布局 + 媒体管线 + 文件选择端口
       moodiary_theme/        #   系统取色、强调色档位、自定义字体 → ThemeData
     feature_base/            # → core/foundation。内部次序 models → data → components,migration,preferences → picker → editor
-      moodiary_models/       #   domain: Isar @Collection + Freezed DTOs + schema 注册真源
-      moodiary_data/         #   repositories + controllers + 跨 feature 共享的进程级瞬态状态与端口
+      moodiary_models/       #   domain: 纯 Freezed 模型 + DTOs + 事件类型（零存储依赖）
+      moodiary_data/         #   SQLite（drift，src/db/*.drift 是 schema 真源）+ repositories + controllers + 共享瞬态状态
       moodiary_components/   #   业务组件：features 共用、够不着 mui 的那部分 UI
-      moodiary_migration/    #   one-shot legacy data migration
+      moodiary_migration/    #   one-shot legacy migration；legacy/ 冻结旧 Isar 模型（isar_plus 最后据点）
       moodiary_preferences/  #   preference state
       moodiary_picker/       #   相册选择器：骑 wechat_assets_picker 换皮 + image_picker 系统相机（仅 mobile 依赖）
       moodiary_editor/       #   TipTap webview 编辑器基建（EditorBody/controller/本地回环服务），被 diary 内嵌消费

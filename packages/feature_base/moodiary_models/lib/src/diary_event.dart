@@ -22,11 +22,6 @@ sealed class DiaryEvent with _$DiaryEvent {
     @Default(false) bool fromSync,
   }) = DiaryUpdated;
 
-  /// [id] 为业务 id：删除路径都握有完整 Diary 时必传；仅按 isarId 批删的兜底
-  /// 路径（草稿清理 / 压测）可缺省——消费方（脏标记清理等）按可得性降级。
-  const factory DiaryEvent.deleted(
-    int isarId, {
-    String? id,
-    @Default(false) bool fromSync,
-  }) = DiaryDeleted;
+  const factory DiaryEvent.deleted(String id, {@Default(false) bool fromSync}) =
+      DiaryDeleted;
 }

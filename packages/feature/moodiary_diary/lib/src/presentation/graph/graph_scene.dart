@@ -403,7 +403,6 @@ DiaryGraphData filterGraph(
 DiaryGraphNode _reindex(DiaryGraphNode n, int i) => DiaryGraphNode(
   index: i,
   id: n.id,
-  isarId: n.isarId,
   title: n.title,
   time: n.time,
   categoryId: n.categoryId,

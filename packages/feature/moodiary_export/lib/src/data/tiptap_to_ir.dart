@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_models/moodiary_models.dart';
 
 import 'export_doc.dart';
 
@@ -28,8 +29,8 @@ class TiptapToIr {
     required String content,
     required ResolveMediaPath resolvePath,
     double mood = 0.5,
-    List<String> weather = const [],
-    List<String> position = const [],
+    DiaryWeather? weather,
+    DiaryPosition? position,
     List<String> tags = const [],
     String? categoryName,
   }) {

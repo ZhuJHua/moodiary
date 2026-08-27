@@ -1,23 +1,23 @@
 import 'dart:async';
 
+import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
-
-import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_storage/moodiary_storage.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
+
+import 'db/database.dart';
+import 'db/db_codec.dart';
 
 class MediaInfoRepository {
-  MediaInfoRepository._(this._isar);
+  MediaInfoRepository._(this._db);
 
   factory MediaInfoRepository.get() => _instance;
 
   @visibleForTesting
-  MediaInfoRepository.forTesting(this._isar);
+  MediaInfoRepository.forTesting(this._db);
 
-  static final MediaInfoRepository _instance = ._(IsarDatabase.get().isar);
+  static final MediaInfoRepository _instance = ._(MoodiaryDatabase.get());
 
-  final Isar _isar;
+  final MoodiaryDatabase _db;
 
   /// 单例随应用整个生命周期存活，故此 controller 不主动关闭。
   final StreamController<MediaInfoEvent> _events =
@@ -25,15 +25,28 @@ class MediaInfoRepository {
 
   Stream<MediaInfoEvent> get mediaInfoEvents => _events.stream;
 
-  /// 全量媒体元数据（表内即全部活跃行，删除后行硬删、事实入 SyncTombstone 表）。
+  static MediaInfo _toMediaInfo(MediaInfoRow r) => MediaInfo(
+    fileName: r.fileName,
+    name: r.name,
+    durationMs: r.durationMs,
+    lastModified: dbToTime(r.lastModified),
+  );
+
+  /// 全量媒体元数据（表内即全部活跃行，删除后行硬删、事实入墓碑表）。
   /// 错误约定：失败直接抛（本包统一），调用方按需 catch 且至少 logger.e。
-  Future<List<MediaInfo>> getAllMediaInfos() {
-    return _isar.mediaInfos.where().sortByFileName().findAllAsync();
+  Future<List<MediaInfo>> getAllMediaInfos() async {
+    final rows = await (_db.select(
+      _db.mediaInfos,
+    )..orderBy([(m) => OrderingTerm.asc(m.fileName)])).get();
+    return [for (final r in rows) _toMediaInfo(r)];
   }
 
-  /// 按文件名（业务主键）取单行。
+  /// 按文件名（主键）取单行。
   Future<MediaInfo?> getMediaInfoByFileName(String fileName) async {
-    return await _isar.mediaInfos.getAsync(fileName);
+    final row = await (_db.select(
+      _db.mediaInfos,
+    )..where((m) => m.fileName.equals(fileName))).getSingleOrNull();
+    return row == null ? null : _toMediaInfo(row);
   }
 
   /// 同步 pull 应用远端媒体元数据墓碑：行硬删 + 写墓碑。返回写入的墓碑行。
@@ -43,30 +56,46 @@ class MediaInfoRepository {
     bool fromSync = false,
   }) async {
     final tombstone = SyncTombstone.forMediaInfo(fileName, at: .timestamp());
-    await _isar.writeAsync((isar) {
-      isar.mediaInfos.delete(fileName);
-      isar.syncTombstones.put(tombstone);
+    await _db.transaction(() async {
+      await (_db.delete(
+        _db.mediaInfos,
+      )..where((m) => m.fileName.equals(fileName))).go();
+      await _db
+          .into(_db.tombstones)
+          .insertOnConflictUpdate(
+            TombstonesCompanion.insert(
+              key: tombstone.key,
+              timeMs: tombstone.timeMs,
+              pushedBackendsJson: Value(dbStringList(tombstone.pushedBackends)),
+            ),
+          );
     });
     _events.add(MediaInfoDeleted(fileName, fromSync: fromSync));
     return tombstone;
   }
 
-  // `_isar.writeAsync` 的回调会被送进后台 isolate 执行（Isar.run）：回调里只许
-  // 引用局部数据参数，摸 `this` 的成员会连带捕获不可发送的 `_isar`，
-  // 抛「object is unsendable」。
   /// [fromSync] = 该写入由活跃云后端的 pull 落库（远端已持有），事件携带此标记
   /// 供 AutoSyncWatcher 免除回声推送。
   Future<void> insertAMediaInfo(
     MediaInfo mediaInfo, {
     bool fromSync = false,
   }) async {
-    // 复活闸门：同 key 的同步墓碑连带清除（同步下载 / 重建同名文件场景）。
-    final tombstoneId = fastHash(
-      SyncTombstone.mediaInfoKey(mediaInfo.fileName),
-    );
-    await _isar.writeAsync((isar) {
-      isar.mediaInfos.put(mediaInfo);
-      isar.syncTombstones.delete(tombstoneId);
+    await _db.transaction(() async {
+      await _db
+          .into(_db.mediaInfos)
+          .insertOnConflictUpdate(
+            MediaInfosCompanion.insert(
+              fileName: mediaInfo.fileName,
+              name: Value(mediaInfo.name),
+              durationMs: Value(mediaInfo.durationMs),
+              lastModified: dbTime(mediaInfo.lastModified),
+            ),
+          );
+      // 复活闸门：同 key 的同步墓碑连带清除（同步下载 / 重建同名文件场景）。
+      await (_db.delete(_db.tombstones)..where(
+            (t) => t.key.equals(SyncTombstone.mediaInfoKey(mediaInfo.fileName)),
+          ))
+          .go();
     });
     _events.add(MediaInfoUpserted(mediaInfo, fromSync: fromSync));
   }
@@ -74,10 +103,20 @@ class MediaInfoRepository {
   /// 本地删除（清理孤儿媒体时联动）：行硬删 + 写同步墓碑。
   Future<bool> deleteAMediaInfo(String fileName) async {
     final tombstone = SyncTombstone.forMediaInfo(fileName, at: .timestamp());
-    final deleted = await _isar.writeAsync((isar) {
-      if (isar.mediaInfos.get(fileName) == null) return false;
-      isar.mediaInfos.delete(fileName);
-      isar.syncTombstones.put(tombstone);
+    final deleted = await _db.transaction(() async {
+      final removed = await (_db.delete(
+        _db.mediaInfos,
+      )..where((m) => m.fileName.equals(fileName))).go();
+      if (removed == 0) return false;
+      await _db
+          .into(_db.tombstones)
+          .insertOnConflictUpdate(
+            TombstonesCompanion.insert(
+              key: tombstone.key,
+              timeMs: tombstone.timeMs,
+              pushedBackendsJson: Value(dbStringList(tombstone.pushedBackends)),
+            ),
+          );
       return true;
     });
     if (deleted) _events.add(MediaInfoDeleted(fileName));

@@ -1,12 +1,10 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:isar_plus/isar_plus.dart';
 
 part 'assistant_tool_call.freezed.dart';
 part 'assistant_tool_call.g.dart';
 
 /// 一次工具调用的记录，作为内嵌对象跟着 [ChatMessage] 落库。
 @freezed
-@Embedded(ignore: {'copyWith'})
 abstract class AssistantToolCall with _$AssistantToolCall {
   const factory AssistantToolCall({
     /// rig 生成的关联 id，用来把「开始」与「结果」两个事件配成一对。

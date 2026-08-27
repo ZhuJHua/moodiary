@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Category {
 
-@Id() String get id; String get categoryName;@UtcDateTimeConverter() DateTime get lastModified; String? get parentId;/// 卡片/标签用的 ARGB 颜色；null = 未设置（由 categoryColorOf 回退到派生色）。
+ String get id; String get categoryName;@UtcDateTimeConverter() DateTime get lastModified; String? get parentId;/// 卡片/标签用的 ARGB 颜色；null = 未设置（由 categoryColorOf 回退到派生色）。
  int? get color;
 /// Create a copy of Category
 /// with the given fields replaced by the non-null parameter values.
@@ -50,7 +50,7 @@ abstract mixin class $CategoryCopyWith<$Res>  {
   factory $CategoryCopyWith(Category value, $Res Function(Category) _then) = _$CategoryCopyWithImpl;
 @useResult
 $Res call({
-@Id() String id, String categoryName,@UtcDateTimeConverter() DateTime lastModified, String? parentId, int? color
+ String id, String categoryName,@UtcDateTimeConverter() DateTime lastModified, String? parentId, int? color
 });
 
 
@@ -159,7 +159,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@Id()  String id,  String categoryName, @UtcDateTimeConverter()  DateTime lastModified,  String? parentId,  int? color)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String categoryName, @UtcDateTimeConverter()  DateTime lastModified,  String? parentId,  int? color)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Category() when $default != null:
 return $default(_that.id,_that.categoryName,_that.lastModified,_that.parentId,_that.color);case _:
@@ -180,7 +180,7 @@ return $default(_that.id,_that.categoryName,_that.lastModified,_that.parentId,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@Id()  String id,  String categoryName, @UtcDateTimeConverter()  DateTime lastModified,  String? parentId,  int? color)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String categoryName, @UtcDateTimeConverter()  DateTime lastModified,  String? parentId,  int? color)  $default,) {final _that = this;
 switch (_that) {
 case _Category():
 return $default(_that.id,_that.categoryName,_that.lastModified,_that.parentId,_that.color);case _:
@@ -200,7 +200,7 @@ return $default(_that.id,_that.categoryName,_that.lastModified,_that.parentId,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@Id()  String id,  String categoryName, @UtcDateTimeConverter()  DateTime lastModified,  String? parentId,  int? color)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String categoryName, @UtcDateTimeConverter()  DateTime lastModified,  String? parentId,  int? color)?  $default,) {final _that = this;
 switch (_that) {
 case _Category() when $default != null:
 return $default(_that.id,_that.categoryName,_that.lastModified,_that.parentId,_that.color);case _:
@@ -215,10 +215,10 @@ return $default(_that.id,_that.categoryName,_that.lastModified,_that.parentId,_t
 @JsonSerializable()
 
 class _Category extends Category {
-  const _Category({@Id() required this.id, required this.categoryName, @UtcDateTimeConverter() required this.lastModified, this.parentId, this.color}): super._();
+  const _Category({required this.id, required this.categoryName, @UtcDateTimeConverter() required this.lastModified, this.parentId, this.color}): super._();
   factory _Category.fromJson(Map<String, dynamic> json) => _$CategoryFromJson(json);
 
-@override@Id() final  String id;
+@override final  String id;
 @override final  String categoryName;
 @override@UtcDateTimeConverter() final  DateTime lastModified;
 @override final  String? parentId;
@@ -258,7 +258,7 @@ abstract mixin class _$CategoryCopyWith<$Res> implements $CategoryCopyWith<$Res>
   factory _$CategoryCopyWith(_Category value, $Res Function(_Category) _then) = __$CategoryCopyWithImpl;
 @override @useResult
 $Res call({
-@Id() String id, String categoryName,@UtcDateTimeConverter() DateTime lastModified, String? parentId, int? color
+ String id, String categoryName,@UtcDateTimeConverter() DateTime lastModified, String? parentId, int? color
 });
 
 

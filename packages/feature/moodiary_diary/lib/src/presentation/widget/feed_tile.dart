@@ -569,9 +569,8 @@ class _MetaLine extends StatelessWidget {
     final colors = context.theme.colors;
     final onVariant = colors.onSurfaceVariant;
     final style = context.theme.typography.labelSmall.onSurfaceVariant;
-    final hasWeather = diary.weather.length >= 3;
-    final hasPlace =
-        diary.position.length >= 3 && diary.position[2].trim().isNotEmpty;
+    final weather = diary.weather;
+    final place = diary.position?.name.trim() ?? '';
 
     // 左半组做成**一段文本**而不是一排固定块：Row 里的固定块加起来超宽就会 overflow，
     // 而单行 Text 自带省略号，优先级天然由顺序决定（地点最先被吃掉）。
@@ -605,16 +604,16 @@ class _MetaLine extends StatelessWidget {
         if (diary.audioName.length > 1)
           TextSpan(text: '${diary.audioName.length}'),
       ],
-      if (hasWeather) ...[
+      if (weather != null) ...[
         dot,
         // 天气数据来自和风，图标就用和风自己那套天气码；码不认识才退回通用的云。
-        icon(qweatherIcon(diary.weather[0]) ?? LucideIcons.cloud),
-        TextSpan(text: '${diary.weather[1]}°'),
+        icon(qweatherIcon(weather.icon) ?? LucideIcons.cloud),
+        TextSpan(text: '${weather.temp}°'),
       ],
-      if (hasPlace) ...[
+      if (place.isNotEmpty) ...[
         dot,
         icon(LucideIcons.mapPin),
-        TextSpan(text: diary.position[2]),
+        TextSpan(text: place),
       ],
     ];
 

@@ -12,6 +12,7 @@ part of 'sync_tombstone.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
+
 /// @nodoc
 mixin _$SyncTombstone {
 
@@ -22,6 +23,8 @@ mixin _$SyncTombstone {
 @pragma('vm:prefer-inline')
 $SyncTombstoneCopyWith<SyncTombstone> get copyWith => _$SyncTombstoneCopyWithImpl<SyncTombstone>(this as SyncTombstone, _$identity);
 
+  /// Serializes this SyncTombstone to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -29,7 +32,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is SyncTombstone&&(identical(other.key, key) || other.key == key)&&(identical(other.timeMs, timeMs) || other.timeMs == timeMs)&&const DeepCollectionEquality().equals(other.pushedBackends, pushedBackends));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,key,timeMs,const DeepCollectionEquality().hash(pushedBackends));
 
@@ -206,11 +209,11 @@ return $default(_that.key,_that.timeMs,_that.pushedBackends);case _:
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _SyncTombstone extends SyncTombstone {
   const _SyncTombstone({required this.key, required this.timeMs, required  List<String> pushedBackends}): _pushedBackends = pushedBackends,super._();
-  
+  factory _SyncTombstone.fromJson(Map<String, dynamic> json) => _$SyncTombstoneFromJson(json);
 
 @override final  String key;
 @override final  int timeMs;
@@ -228,14 +231,17 @@ class _SyncTombstone extends SyncTombstone {
 @pragma('vm:prefer-inline')
 _$SyncTombstoneCopyWith<_SyncTombstone> get copyWith => __$SyncTombstoneCopyWithImpl<_SyncTombstone>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$SyncTombstoneToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is _SyncTombstone&&(identical(other.key, key) || other.key == key)&&(identical(other.timeMs, timeMs) || other.timeMs == timeMs)&&const DeepCollectionEquality().equals(other._pushedBackends, _pushedBackends));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,key,timeMs,const DeepCollectionEquality().hash(_pushedBackends));
 

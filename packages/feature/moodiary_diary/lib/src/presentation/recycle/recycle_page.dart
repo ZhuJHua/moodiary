@@ -80,7 +80,7 @@ class RecyclePage extends ConsumerWidget {
     if (!confirmed) return;
     final ok = await ref
         .read(recycleBinDiariesProvider.notifier)
-        .permanentDelete(diary.isarId);
+        .permanentDelete(diary.id);
     if (ok) {
       toast.success(message: l10n.diary.recyclePurged);
     } else {

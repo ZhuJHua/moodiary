@@ -22,8 +22,7 @@ Future<({List<Diary> diaries, String tiandituKey})> mapData(Ref ref) async {
     secretKvProvider(MoodiarySecureKVs.tiandituKey).future,
   );
   return (
-    // 查询层只保证非空；成对经纬度（>=2）这半个校验留在这。
-    diaries: withPosition.where((d) => d.position.length >= 2).toList(),
+    diaries: withPosition.where((d) => d.position != null).toList(),
     tiandituKey: key ?? '',
   );
 }
@@ -47,7 +46,7 @@ class MapPage extends ConsumerWidget {
         data: (data) {
           final (:diaries, :tiandituKey) = data;
           final initialCenter = diaries.isNotEmpty
-              ? _parseLatLng(diaries.first.position)
+              ? _latLng(diaries.first.position!)
               : const LatLng(39.9, 116.4);
           return FlutterMap(
             options: MapOptions(
@@ -62,7 +61,7 @@ class MapPage extends ConsumerWidget {
                 markers: [
                   for (final d in diaries)
                     Marker(
-                      point: _parseLatLng(d.position),
+                      point: _latLng(d.position!),
                       width: 40,
                       height: 40,
                       child: GestureDetector(
@@ -117,9 +116,6 @@ class MapPage extends ConsumerWidget {
     route.push(context);
   }
 
-  LatLng _parseLatLng(List<String> position) {
-    final lat = double.tryParse(position[0]) ?? 0;
-    final lng = double.tryParse(position[1]) ?? 0;
-    return LatLng(lat, lng);
-  }
+  LatLng _latLng(DiaryPosition position) =>
+      LatLng(position.latitude, position.longitude);
 }

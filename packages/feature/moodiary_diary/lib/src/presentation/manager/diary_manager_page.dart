@@ -14,7 +14,7 @@ class DiaryManagerPage extends ConsumerStatefulWidget {
 
 class _DiaryManagerPageState extends ConsumerState<DiaryManagerPage> {
   String? _categoryFilter;
-  final _selected = <int>{};
+  final _selected = <String>{};
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +57,7 @@ class _DiaryManagerPageState extends ConsumerState<DiaryManagerPage> {
                 return ListView.separated(
                   itemBuilder: (context, index) {
                     final d = diaries[index];
-                    final picked = _selected.contains(d.isarId);
+                    final picked = _selected.contains(d.id);
                     return CheckboxListTile(
                       value: picked,
                       title: Text(
@@ -71,9 +71,9 @@ class _DiaryManagerPageState extends ConsumerState<DiaryManagerPage> {
                       onChanged: (v) {
                         setState(() {
                           if (v == true) {
-                            _selected.add(d.isarId);
+                            _selected.add(d.id);
                           } else {
-                            _selected.remove(d.isarId);
+                            _selected.remove(d.id);
                           }
                         });
                       },
@@ -108,7 +108,7 @@ class _DiaryManagerPageState extends ConsumerState<DiaryManagerPage> {
     int ok = 0;
     for (final id in picked) {
       final d = list.firstWhere(
-        (e) => e.isarId == id,
+        (e) => e.id == id,
         // 占位，下面被 d.id.isEmpty 拦掉，type 取哪个都行。
         orElse: () => Diary.empty(type: .richText),
       );

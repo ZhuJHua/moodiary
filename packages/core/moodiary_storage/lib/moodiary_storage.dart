@@ -1,6 +1,5 @@
 library;
 
-export 'src/isar.dart';
 export 'src/kv/app_lock_pin.dart';
 export 'src/kv/legacy_pref.dart';
 export 'src/kv/mmkv.dart';

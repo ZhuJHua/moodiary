@@ -28,7 +28,6 @@ DiaryGraphData _graph({
         DiaryGraphNode(
           index: i,
           id: 'id-$i',
-          isarId: i,
           title: i.isEven ? '日记标题 $i' : '',
           time: DateTime(2026, 1, 1).add(Duration(days: i)),
           categoryId: i % 3 == 0 ? null : 'cat-${i % 3}',
@@ -242,7 +241,6 @@ void main() {
     DiaryGraphNode node({String title = '', String? preview}) => DiaryGraphNode(
       index: 0,
       id: 'x',
-      isarId: 1,
       title: title,
       time: DateTime(2026, 3, 7),
       categoryId: null,

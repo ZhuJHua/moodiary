@@ -942,12 +942,10 @@ abstract final class AssistantToolRegistry {
       content: converted.content,
       contentText: converted.contentText,
       mood: mood,
-      weather: const [],
       imageName: const [],
       audioName: const [],
       videoName: const [],
       tags: const [],
-      position: const [],
       type: converted.type,
       aspect: null,
     );

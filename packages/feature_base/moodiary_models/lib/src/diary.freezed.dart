@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Diary {
 
- String get id;@Index() String? get categoryId; String get title; String get content; String get contentText;@Index()@UtcDateTimeConverter() DateTime get time;@UtcDateTimeConverter() DateTime get lastModified;@Index() bool get show; double get mood; List<String> get weather; List<String> get imageName; List<String> get audioName; List<String> get videoName; List<String> get tags; List<String> get position; String get type; double? get aspect;
+ String get id; String? get categoryId; String get title; String get content; String get contentText;@UtcDateTimeConverter() DateTime get time;@UtcDateTimeConverter() DateTime get lastModified; bool get show; double get mood; DiaryWeather? get weather; List<String> get imageName; List<String> get audioName; List<String> get videoName; List<String> get tags; DiaryPosition? get position; String get type; double? get aspect;
 /// Create a copy of Diary
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,12 +29,12 @@ $DiaryCopyWith<Diary> get copyWith => _$DiaryCopyWithImpl<Diary>(this as Diary, 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Diary&&(identical(other.id, id) || other.id == id)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.title, title) || other.title == title)&&(identical(other.content, content) || other.content == content)&&(identical(other.contentText, contentText) || other.contentText == contentText)&&(identical(other.time, time) || other.time == time)&&(identical(other.lastModified, lastModified) || other.lastModified == lastModified)&&(identical(other.show, show) || other.show == show)&&(identical(other.mood, mood) || other.mood == mood)&&const DeepCollectionEquality().equals(other.weather, weather)&&const DeepCollectionEquality().equals(other.imageName, imageName)&&const DeepCollectionEquality().equals(other.audioName, audioName)&&const DeepCollectionEquality().equals(other.videoName, videoName)&&const DeepCollectionEquality().equals(other.tags, tags)&&const DeepCollectionEquality().equals(other.position, position)&&(identical(other.type, type) || other.type == type)&&(identical(other.aspect, aspect) || other.aspect == aspect));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Diary&&(identical(other.id, id) || other.id == id)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.title, title) || other.title == title)&&(identical(other.content, content) || other.content == content)&&(identical(other.contentText, contentText) || other.contentText == contentText)&&(identical(other.time, time) || other.time == time)&&(identical(other.lastModified, lastModified) || other.lastModified == lastModified)&&(identical(other.show, show) || other.show == show)&&(identical(other.mood, mood) || other.mood == mood)&&(identical(other.weather, weather) || other.weather == weather)&&const DeepCollectionEquality().equals(other.imageName, imageName)&&const DeepCollectionEquality().equals(other.audioName, audioName)&&const DeepCollectionEquality().equals(other.videoName, videoName)&&const DeepCollectionEquality().equals(other.tags, tags)&&(identical(other.position, position) || other.position == position)&&(identical(other.type, type) || other.type == type)&&(identical(other.aspect, aspect) || other.aspect == aspect));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,categoryId,title,content,contentText,time,lastModified,show,mood,const DeepCollectionEquality().hash(weather),const DeepCollectionEquality().hash(imageName),const DeepCollectionEquality().hash(audioName),const DeepCollectionEquality().hash(videoName),const DeepCollectionEquality().hash(tags),const DeepCollectionEquality().hash(position),type,aspect);
+int get hashCode => Object.hash(runtimeType,id,categoryId,title,content,contentText,time,lastModified,show,mood,weather,const DeepCollectionEquality().hash(imageName),const DeepCollectionEquality().hash(audioName),const DeepCollectionEquality().hash(videoName),const DeepCollectionEquality().hash(tags),position,type,aspect);
 
 @override
 String toString() {
@@ -49,11 +49,11 @@ abstract mixin class $DiaryCopyWith<$Res>  {
   factory $DiaryCopyWith(Diary value, $Res Function(Diary) _then) = _$DiaryCopyWithImpl;
 @useResult
 $Res call({
- String id,@Index() String? categoryId, String title, String content, String contentText,@Index()@UtcDateTimeConverter() DateTime time,@UtcDateTimeConverter() DateTime lastModified,@Index() bool show, double mood, List<String> weather, List<String> imageName, List<String> audioName, List<String> videoName, List<String> tags, List<String> position, String type, double? aspect
+ String id, String? categoryId, String title, String content, String contentText,@UtcDateTimeConverter() DateTime time,@UtcDateTimeConverter() DateTime lastModified, bool show, double mood, DiaryWeather? weather, List<String> imageName, List<String> audioName, List<String> videoName, List<String> tags, DiaryPosition? position, String type, double? aspect
 });
 
 
-
+$DiaryWeatherCopyWith<$Res>? get weather;$DiaryPositionCopyWith<$Res>? get position;
 
 }
 /// @nodoc
@@ -66,7 +66,7 @@ class _$DiaryCopyWithImpl<$Res>
 
 /// Create a copy of Diary
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? categoryId = freezed,Object? title = null,Object? content = null,Object? contentText = null,Object? time = null,Object? lastModified = null,Object? show = null,Object? mood = null,Object? weather = null,Object? imageName = null,Object? audioName = null,Object? videoName = null,Object? tags = null,Object? position = null,Object? type = null,Object? aspect = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? categoryId = freezed,Object? title = null,Object? content = null,Object? contentText = null,Object? time = null,Object? lastModified = null,Object? show = null,Object? mood = null,Object? weather = freezed,Object? imageName = null,Object? audioName = null,Object? videoName = null,Object? tags = null,Object? position = freezed,Object? type = null,Object? aspect = freezed,}) {
   return _then(Diary(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
@@ -77,18 +77,42 @@ as String,time: null == time ? _self.time : time // ignore: cast_nullable_to_non
 as DateTime,lastModified: null == lastModified ? _self.lastModified : lastModified // ignore: cast_nullable_to_non_nullable
 as DateTime,show: null == show ? _self.show : show // ignore: cast_nullable_to_non_nullable
 as bool,mood: null == mood ? _self.mood : mood // ignore: cast_nullable_to_non_nullable
-as double,weather: null == weather ? _self.weather : weather // ignore: cast_nullable_to_non_nullable
-as List<String>,imageName: null == imageName ? _self.imageName : imageName // ignore: cast_nullable_to_non_nullable
+as double,weather: freezed == weather ? _self.weather : weather // ignore: cast_nullable_to_non_nullable
+as DiaryWeather?,imageName: null == imageName ? _self.imageName : imageName // ignore: cast_nullable_to_non_nullable
 as List<String>,audioName: null == audioName ? _self.audioName : audioName // ignore: cast_nullable_to_non_nullable
 as List<String>,videoName: null == videoName ? _self.videoName : videoName // ignore: cast_nullable_to_non_nullable
 as List<String>,tags: null == tags ? _self.tags : tags // ignore: cast_nullable_to_non_nullable
-as List<String>,position: null == position ? _self.position : position // ignore: cast_nullable_to_non_nullable
-as List<String>,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as List<String>,position: freezed == position ? _self.position : position // ignore: cast_nullable_to_non_nullable
+as DiaryPosition?,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as String,aspect: freezed == aspect ? _self.aspect : aspect // ignore: cast_nullable_to_non_nullable
 as double?,
   ));
 }
+/// Create a copy of Diary
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$DiaryWeatherCopyWith<$Res>? get weather {
+    if (_self.weather == null) {
+    return null;
+  }
 
+  return $DiaryWeatherCopyWith<$Res>(_self.weather!, (value) {
+    return _then(_self.copyWith(weather: value));
+  });
+}/// Create a copy of Diary
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$DiaryPositionCopyWith<$Res>? get position {
+    if (_self.position == null) {
+    return null;
+  }
+
+  return $DiaryPositionCopyWith<$Res>(_self.position!, (value) {
+    return _then(_self.copyWith(position: value));
+  });
+}
 }
 
 
@@ -170,7 +194,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @Index()  String? categoryId,  String title,  String content,  String contentText, @Index()@UtcDateTimeConverter()  DateTime time, @UtcDateTimeConverter()  DateTime lastModified, @Index()  bool show,  double mood,  List<String> weather,  List<String> imageName,  List<String> audioName,  List<String> videoName,  List<String> tags,  List<String> position,  String type,  double? aspect)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String? categoryId,  String title,  String content,  String contentText, @UtcDateTimeConverter()  DateTime time, @UtcDateTimeConverter()  DateTime lastModified,  bool show,  double mood,  DiaryWeather? weather,  List<String> imageName,  List<String> audioName,  List<String> videoName,  List<String> tags,  DiaryPosition? position,  String type,  double? aspect)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Diary() when $default != null:
 return $default(_that.id,_that.categoryId,_that.title,_that.content,_that.contentText,_that.time,_that.lastModified,_that.show,_that.mood,_that.weather,_that.imageName,_that.audioName,_that.videoName,_that.tags,_that.position,_that.type,_that.aspect);case _:
@@ -191,7 +215,7 @@ return $default(_that.id,_that.categoryId,_that.title,_that.content,_that.conten
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @Index()  String? categoryId,  String title,  String content,  String contentText, @Index()@UtcDateTimeConverter()  DateTime time, @UtcDateTimeConverter()  DateTime lastModified, @Index()  bool show,  double mood,  List<String> weather,  List<String> imageName,  List<String> audioName,  List<String> videoName,  List<String> tags,  List<String> position,  String type,  double? aspect)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String? categoryId,  String title,  String content,  String contentText, @UtcDateTimeConverter()  DateTime time, @UtcDateTimeConverter()  DateTime lastModified,  bool show,  double mood,  DiaryWeather? weather,  List<String> imageName,  List<String> audioName,  List<String> videoName,  List<String> tags,  DiaryPosition? position,  String type,  double? aspect)  $default,) {final _that = this;
 switch (_that) {
 case _Diary():
 return $default(_that.id,_that.categoryId,_that.title,_that.content,_that.contentText,_that.time,_that.lastModified,_that.show,_that.mood,_that.weather,_that.imageName,_that.audioName,_that.videoName,_that.tags,_that.position,_that.type,_that.aspect);case _:
@@ -211,7 +235,7 @@ return $default(_that.id,_that.categoryId,_that.title,_that.content,_that.conten
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @Index()  String? categoryId,  String title,  String content,  String contentText, @Index()@UtcDateTimeConverter()  DateTime time, @UtcDateTimeConverter()  DateTime lastModified, @Index()  bool show,  double mood,  List<String> weather,  List<String> imageName,  List<String> audioName,  List<String> videoName,  List<String> tags,  List<String> position,  String type,  double? aspect)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String? categoryId,  String title,  String content,  String contentText, @UtcDateTimeConverter()  DateTime time, @UtcDateTimeConverter()  DateTime lastModified,  bool show,  double mood,  DiaryWeather? weather,  List<String> imageName,  List<String> audioName,  List<String> videoName,  List<String> tags,  DiaryPosition? position,  String type,  double? aspect)?  $default,) {final _that = this;
 switch (_that) {
 case _Diary() when $default != null:
 return $default(_that.id,_that.categoryId,_that.title,_that.content,_that.contentText,_that.time,_that.lastModified,_that.show,_that.mood,_that.weather,_that.imageName,_that.audioName,_that.videoName,_that.tags,_that.position,_that.type,_that.aspect);case _:
@@ -226,25 +250,19 @@ return $default(_that.id,_that.categoryId,_that.title,_that.content,_that.conten
 @JsonSerializable()
 
 class _Diary extends Diary {
-  const _Diary({required this.id, @Index() this.categoryId, required this.title, required this.content, required this.contentText, @Index()@UtcDateTimeConverter() required this.time, @UtcDateTimeConverter() required this.lastModified, @Index() required this.show, required this.mood, required  List<String> weather, required  List<String> imageName, required  List<String> audioName, required  List<String> videoName, required  List<String> tags, required  List<String> position, required this.type, this.aspect}): _weather = weather,_imageName = imageName,_audioName = audioName,_videoName = videoName,_tags = tags,_position = position,super._();
+  const _Diary({required this.id, this.categoryId, required this.title, required this.content, required this.contentText, @UtcDateTimeConverter() required this.time, @UtcDateTimeConverter() required this.lastModified, required this.show, required this.mood, this.weather, required  List<String> imageName, required  List<String> audioName, required  List<String> videoName, required  List<String> tags, this.position, required this.type, this.aspect}): _imageName = imageName,_audioName = audioName,_videoName = videoName,_tags = tags,super._();
   factory _Diary.fromJson(Map<String, dynamic> json) => _$DiaryFromJson(json);
 
 @override final  String id;
-@override@Index() final  String? categoryId;
+@override final  String? categoryId;
 @override final  String title;
 @override final  String content;
 @override final  String contentText;
-@override@Index()@UtcDateTimeConverter() final  DateTime time;
+@override@UtcDateTimeConverter() final  DateTime time;
 @override@UtcDateTimeConverter() final  DateTime lastModified;
-@override@Index() final  bool show;
+@override final  bool show;
 @override final  double mood;
- final  List<String> _weather;
-@override List<String> get weather {
-  if (_weather is EqualUnmodifiableListView) return _weather;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_weather);
-}
-
+@override final  DiaryWeather? weather;
  final  List<String> _imageName;
 @override List<String> get imageName {
   if (_imageName is EqualUnmodifiableListView) return _imageName;
@@ -273,13 +291,7 @@ class _Diary extends Diary {
   return EqualUnmodifiableListView(_tags);
 }
 
- final  List<String> _position;
-@override List<String> get position {
-  if (_position is EqualUnmodifiableListView) return _position;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_position);
-}
-
+@override final  DiaryPosition? position;
 @override final  String type;
 @override final  double? aspect;
 
@@ -296,12 +308,12 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Diary&&(identical(other.id, id) || other.id == id)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.title, title) || other.title == title)&&(identical(other.content, content) || other.content == content)&&(identical(other.contentText, contentText) || other.contentText == contentText)&&(identical(other.time, time) || other.time == time)&&(identical(other.lastModified, lastModified) || other.lastModified == lastModified)&&(identical(other.show, show) || other.show == show)&&(identical(other.mood, mood) || other.mood == mood)&&const DeepCollectionEquality().equals(other._weather, _weather)&&const DeepCollectionEquality().equals(other._imageName, _imageName)&&const DeepCollectionEquality().equals(other._audioName, _audioName)&&const DeepCollectionEquality().equals(other._videoName, _videoName)&&const DeepCollectionEquality().equals(other._tags, _tags)&&const DeepCollectionEquality().equals(other._position, _position)&&(identical(other.type, type) || other.type == type)&&(identical(other.aspect, aspect) || other.aspect == aspect));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Diary&&(identical(other.id, id) || other.id == id)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.title, title) || other.title == title)&&(identical(other.content, content) || other.content == content)&&(identical(other.contentText, contentText) || other.contentText == contentText)&&(identical(other.time, time) || other.time == time)&&(identical(other.lastModified, lastModified) || other.lastModified == lastModified)&&(identical(other.show, show) || other.show == show)&&(identical(other.mood, mood) || other.mood == mood)&&(identical(other.weather, weather) || other.weather == weather)&&const DeepCollectionEquality().equals(other._imageName, _imageName)&&const DeepCollectionEquality().equals(other._audioName, _audioName)&&const DeepCollectionEquality().equals(other._videoName, _videoName)&&const DeepCollectionEquality().equals(other._tags, _tags)&&(identical(other.position, position) || other.position == position)&&(identical(other.type, type) || other.type == type)&&(identical(other.aspect, aspect) || other.aspect == aspect));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,categoryId,title,content,contentText,time,lastModified,show,mood,const DeepCollectionEquality().hash(_weather),const DeepCollectionEquality().hash(_imageName),const DeepCollectionEquality().hash(_audioName),const DeepCollectionEquality().hash(_videoName),const DeepCollectionEquality().hash(_tags),const DeepCollectionEquality().hash(_position),type,aspect);
+int get hashCode => Object.hash(runtimeType,id,categoryId,title,content,contentText,time,lastModified,show,mood,weather,const DeepCollectionEquality().hash(_imageName),const DeepCollectionEquality().hash(_audioName),const DeepCollectionEquality().hash(_videoName),const DeepCollectionEquality().hash(_tags),position,type,aspect);
 
 @override
 String toString() {
@@ -316,11 +328,11 @@ abstract mixin class _$DiaryCopyWith<$Res> implements $DiaryCopyWith<$Res> {
   factory _$DiaryCopyWith(_Diary value, $Res Function(_Diary) _then) = __$DiaryCopyWithImpl;
 @override @useResult
 $Res call({
- String id,@Index() String? categoryId, String title, String content, String contentText,@Index()@UtcDateTimeConverter() DateTime time,@UtcDateTimeConverter() DateTime lastModified,@Index() bool show, double mood, List<String> weather, List<String> imageName, List<String> audioName, List<String> videoName, List<String> tags, List<String> position, String type, double? aspect
+ String id, String? categoryId, String title, String content, String contentText,@UtcDateTimeConverter() DateTime time,@UtcDateTimeConverter() DateTime lastModified, bool show, double mood, DiaryWeather? weather, List<String> imageName, List<String> audioName, List<String> videoName, List<String> tags, DiaryPosition? position, String type, double? aspect
 });
 
 
-
+@override $DiaryWeatherCopyWith<$Res>? get weather;@override $DiaryPositionCopyWith<$Res>? get position;
 
 }
 /// @nodoc
@@ -333,7 +345,7 @@ class __$DiaryCopyWithImpl<$Res>
 
 /// Create a copy of Diary
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? categoryId = freezed,Object? title = null,Object? content = null,Object? contentText = null,Object? time = null,Object? lastModified = null,Object? show = null,Object? mood = null,Object? weather = null,Object? imageName = null,Object? audioName = null,Object? videoName = null,Object? tags = null,Object? position = null,Object? type = null,Object? aspect = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? categoryId = freezed,Object? title = null,Object? content = null,Object? contentText = null,Object? time = null,Object? lastModified = null,Object? show = null,Object? mood = null,Object? weather = freezed,Object? imageName = null,Object? audioName = null,Object? videoName = null,Object? tags = null,Object? position = freezed,Object? type = null,Object? aspect = freezed,}) {
   return _then(_Diary(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
@@ -344,19 +356,43 @@ as String,time: null == time ? _self.time : time // ignore: cast_nullable_to_non
 as DateTime,lastModified: null == lastModified ? _self.lastModified : lastModified // ignore: cast_nullable_to_non_nullable
 as DateTime,show: null == show ? _self.show : show // ignore: cast_nullable_to_non_nullable
 as bool,mood: null == mood ? _self.mood : mood // ignore: cast_nullable_to_non_nullable
-as double,weather: null == weather ? _self._weather : weather // ignore: cast_nullable_to_non_nullable
-as List<String>,imageName: null == imageName ? _self._imageName : imageName // ignore: cast_nullable_to_non_nullable
+as double,weather: freezed == weather ? _self.weather : weather // ignore: cast_nullable_to_non_nullable
+as DiaryWeather?,imageName: null == imageName ? _self._imageName : imageName // ignore: cast_nullable_to_non_nullable
 as List<String>,audioName: null == audioName ? _self._audioName : audioName // ignore: cast_nullable_to_non_nullable
 as List<String>,videoName: null == videoName ? _self._videoName : videoName // ignore: cast_nullable_to_non_nullable
 as List<String>,tags: null == tags ? _self._tags : tags // ignore: cast_nullable_to_non_nullable
-as List<String>,position: null == position ? _self._position : position // ignore: cast_nullable_to_non_nullable
-as List<String>,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as List<String>,position: freezed == position ? _self.position : position // ignore: cast_nullable_to_non_nullable
+as DiaryPosition?,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as String,aspect: freezed == aspect ? _self.aspect : aspect // ignore: cast_nullable_to_non_nullable
 as double?,
   ));
 }
 
+/// Create a copy of Diary
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$DiaryWeatherCopyWith<$Res>? get weather {
+    if (_self.weather == null) {
+    return null;
+  }
 
+  return $DiaryWeatherCopyWith<$Res>(_self.weather!, (value) {
+    return _then(_self.copyWith(weather: value));
+  });
+}/// Create a copy of Diary
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$DiaryPositionCopyWith<$Res>? get position {
+    if (_self.position == null) {
+    return null;
+  }
+
+  return $DiaryPositionCopyWith<$Res>(_self.position!, (value) {
+    return _then(_self.copyWith(position: value));
+  });
+}
 }
 
 // dart format on

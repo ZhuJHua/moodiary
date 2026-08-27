@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' hide Category;
 import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_files/moodiary_files.dart';
+import 'package:moodiary_migration/src/legacy/legacy_models.dart' as legacy;
 import 'package:moodiary_migration/src/orphan_media_cleaner.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
@@ -12,7 +13,7 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:pub_semver/pub_semver.dart';
 
-final _schemas = legacyMigrationSchemas;
+final _schemas = legacy.legacyMigrationSchemas;
 
 class VersionMigrator {
   /// 版本号比对触发数据迁移钩子并写回当前版本号。须在 KV / Isar 初始化后由组合根
@@ -80,7 +81,13 @@ class VersionMigrator {
       final allFont = await FontRepository.get().scanDiskFonts();
       await compute(_mergeToV2_7_3, {
         'database': AppFiles.getRealPath('database', ''),
-        'fonts': allFont,
+        'fonts': [
+          for (final font in allFont)
+            legacy.Font(
+              fontFileName: font.fontFileName,
+              fontWghtAxisMap: font.fontWghtAxisMap,
+            ),
+        ],
       });
     }
 
@@ -114,7 +121,7 @@ class VersionMigrator {
 
   /// 同上。2.7.3 清空字体表重灌（isar.fonts.clear()）。
   @visibleForTesting
-  static Future<void> debugMergeToV273(String dir, List<Font> fonts) =>
+  static Future<void> debugMergeToV273(String dir, List<legacy.Font> fonts) =>
       _mergeToV2_7_3({'database': dir, 'fonts': fonts});
 }
 
@@ -189,7 +196,7 @@ void _fixV2_6_3(String dir) {
         final id = diary.categoryId;
         if (id != null && isar.categorys.where().idEqualTo(id).isEmpty()) {
           isar.categorys.put(
-            Category(
+            legacy.Category(
               id: id,
               // 只要 4 个随机 hex 字符做名字后缀；本函数在 compute isolate 内运行，
               // RustLib 未初始化，不能走 Rust 侧 uuid。

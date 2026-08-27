@@ -584,6 +584,7 @@ class _Translations$editor$en extends Translations$editor$zh {
 	@override String get migrationError => 'Migration hit an error. Please retry.';
 	@override String get migrationRetry => 'Retry';
 	@override String migrationProgress({required Object done, required Object total}) => 'Migrating ${done} / ${total}';
+	@override String get migrationEngineStage => 'Upgrading database (no data will be lost)';
 }
 
 // Path: export

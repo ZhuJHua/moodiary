@@ -1565,6 +1565,9 @@ class Translations$editor$zh {
 
 	/// zh: '正在迁移 {done} / {total}'
 	String migrationProgress({required Object done, required Object total}) => '正在迁移 ${done} / ${total}';
+
+	/// zh: '正在升级数据库（不会丢失任何数据）'
+	String get migrationEngineStage => '正在升级数据库（不会丢失任何数据）';
 }
 
 // Path: export

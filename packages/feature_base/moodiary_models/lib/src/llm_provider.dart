@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 import 'assistant_provider_type.dart';
@@ -14,10 +13,9 @@ part 'llm_provider.g.dart';
 /// 是**按模型**从目录解析的 —— 中转站底下 Claude 走 messages、GPT 走 responses，
 /// 同一家内部就分叉，存在供应商上必然发错。见 `LlmModelPreset.protocol/baseUrl`。
 @freezed
-@Collection(ignore: {'copyWith'})
 abstract class LlmProvider with _$LlmProvider {
   const factory LlmProvider({
-    @Id() required String id,
+    required String id,
 
     required String name,
 

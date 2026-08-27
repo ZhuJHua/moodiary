@@ -5,6 +5,8 @@ import 'package:moodiary_editor/moodiary_editor.dart'
     show EditorMigrationService;
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
+import 'package:moodiary_migration/moodiary_migration.dart'
+    show EngineMigrationService;
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_sync/moodiary_sync.dart';
@@ -22,32 +24,21 @@ Future<void> bootstrapPlatform() async {
   AppLogger.configure(logFilePath: AppFiles.getErrorLogPath());
 }
 
-/// 启动期维护：三条互不依赖、失败不该阻断启动的清理，发出即不等。
-/// 调用点必须在 Rust 桥就绪之后 —— drainReindexQueue 立刻要用分词器。
+/// 启动期维护：两条互不依赖、失败不该阻断启动的清理，发出即不等。
 void runStartupMaintenance() {
-  // 不能静默失败：抛错时受影响的日记会带着空索引出队，从此搜不到。
-  unawaited(
-    DiaryRepository.get().drainReindexQueue().catchError((
-      Object e,
-      StackTrace s,
-    ) {
-      logger.e('drain reindex queue failed', error: e, stackTrace: s);
-      return 0;
-    }),
-  );
   // 同步墓碑保留窗 GC（默认 90 天）：零后端用户的墓碑因此有界，不无限累积。
   unawaited(purgeExpiredTombstones());
   // 上次进程被杀时残留的同步临时密文（全尺寸，没人来收）。
   unawaited(purgeSyncMediaTemp());
 }
 
-/// 重置所有应用数据，恢复到「全新安装」状态（Isar 集合 / KV / SecureKV / 媒体 / 缓存）。
+/// 重置所有应用数据，恢复到「全新安装」状态（SQLite / KV / SecureKV / 媒体 / 缓存）。
 /// 返回后内存仍残留 Riverpod / get_it 单例状态，调用方必须立即接管界面（终态页），
 /// 不得继续使用既有 provider / 单例；iOS 上退出进程不可依赖（SystemNavigator.pop
 /// 是空操作），由用户手动重启后从干净存储初始化。
 Future<void> resetAllData() async {
-  // 先清空数据库集合（保持 Isar 句柄有效），再并发清空其余存储与文件。
-  await IsarDatabase.get().clear();
+  // 先清空数据库（保持句柄有效），再并发清空其余存储与文件。
+  await MoodiaryDatabase.get().clearAll();
   IKVStorage.get().clear();
   await Future.wait([
     ISecureKVStorage.get().clear(),
@@ -63,6 +54,14 @@ Future<void> resetAllData() async {
     AppFiles.deleteDir(EditorMigrationService.backupDirPath),
     AppFiles.deleteFile(
       AppFiles.getRealPath('database', 'default.isar.v273bak'),
+    ),
+    // 旧 Isar 主库（尚未搬迁时）与搬迁后的留底快照，一并清。
+    AppFiles.deleteFile(AppFiles.getRealPath('database', 'default.isar')),
+    AppFiles.deleteFile(
+      AppFiles.getRealPath(
+        'database',
+        EngineMigrationService.legacyBackupFileName,
+      ),
     ),
   ]);
 }

@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ChatMessage {
 
-@Id() String get id;@Index() String get sessionId;/// `"user"` 或 `"assistant"`。
+ String get id; String get sessionId;/// `"user"` 或 `"assistant"`。
  String get role; String get content; DateTime get createdAt;/// assistant 回复的思考 / 推理过程（思考模式开启时才有）。null 表示非思考回复。
  String? get reasoning;/// 思考耗时（毫秒）。null 表示无思考过程。
  int? get thinkingMillis;/// 随消息发送的图片文件名（存于 image 目录，用 AppFiles.getRealPath 解析）。null 表示无图。
@@ -61,7 +61,7 @@ abstract mixin class $ChatMessageCopyWith<$Res>  {
   factory $ChatMessageCopyWith(ChatMessage value, $Res Function(ChatMessage) _then) = _$ChatMessageCopyWithImpl;
 @useResult
 $Res call({
-@Id() String id,@Index() String sessionId, String role, String content, DateTime createdAt, String? reasoning, int? thinkingMillis, String? imageName, int? inputTokens, int? outputTokens, String? model, List<AssistantToolCall> toolCalls
+ String id, String sessionId, String role, String content, DateTime createdAt, String? reasoning, int? thinkingMillis, String? imageName, int? inputTokens, int? outputTokens, String? model, List<AssistantToolCall> toolCalls
 });
 
 
@@ -177,7 +177,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@Id()  String id, @Index()  String sessionId,  String role,  String content,  DateTime createdAt,  String? reasoning,  int? thinkingMillis,  String? imageName,  int? inputTokens,  int? outputTokens,  String? model,  List<AssistantToolCall> toolCalls)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String sessionId,  String role,  String content,  DateTime createdAt,  String? reasoning,  int? thinkingMillis,  String? imageName,  int? inputTokens,  int? outputTokens,  String? model,  List<AssistantToolCall> toolCalls)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ChatMessage() when $default != null:
 return $default(_that.id,_that.sessionId,_that.role,_that.content,_that.createdAt,_that.reasoning,_that.thinkingMillis,_that.imageName,_that.inputTokens,_that.outputTokens,_that.model,_that.toolCalls);case _:
@@ -198,7 +198,7 @@ return $default(_that.id,_that.sessionId,_that.role,_that.content,_that.createdA
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@Id()  String id, @Index()  String sessionId,  String role,  String content,  DateTime createdAt,  String? reasoning,  int? thinkingMillis,  String? imageName,  int? inputTokens,  int? outputTokens,  String? model,  List<AssistantToolCall> toolCalls)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String sessionId,  String role,  String content,  DateTime createdAt,  String? reasoning,  int? thinkingMillis,  String? imageName,  int? inputTokens,  int? outputTokens,  String? model,  List<AssistantToolCall> toolCalls)  $default,) {final _that = this;
 switch (_that) {
 case _ChatMessage():
 return $default(_that.id,_that.sessionId,_that.role,_that.content,_that.createdAt,_that.reasoning,_that.thinkingMillis,_that.imageName,_that.inputTokens,_that.outputTokens,_that.model,_that.toolCalls);case _:
@@ -218,7 +218,7 @@ return $default(_that.id,_that.sessionId,_that.role,_that.content,_that.createdA
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@Id()  String id, @Index()  String sessionId,  String role,  String content,  DateTime createdAt,  String? reasoning,  int? thinkingMillis,  String? imageName,  int? inputTokens,  int? outputTokens,  String? model,  List<AssistantToolCall> toolCalls)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String sessionId,  String role,  String content,  DateTime createdAt,  String? reasoning,  int? thinkingMillis,  String? imageName,  int? inputTokens,  int? outputTokens,  String? model,  List<AssistantToolCall> toolCalls)?  $default,) {final _that = this;
 switch (_that) {
 case _ChatMessage() when $default != null:
 return $default(_that.id,_that.sessionId,_that.role,_that.content,_that.createdAt,_that.reasoning,_that.thinkingMillis,_that.imageName,_that.inputTokens,_that.outputTokens,_that.model,_that.toolCalls);case _:
@@ -233,11 +233,11 @@ return $default(_that.id,_that.sessionId,_that.role,_that.content,_that.createdA
 @JsonSerializable()
 
 class _ChatMessage implements ChatMessage {
-  const _ChatMessage({@Id() required this.id, @Index() required this.sessionId, required this.role, required this.content, required this.createdAt, this.reasoning, this.thinkingMillis, this.imageName, this.inputTokens, this.outputTokens, this.model,  List<AssistantToolCall> toolCalls = const <AssistantToolCall>[]}): _toolCalls = toolCalls;
+  const _ChatMessage({required this.id, required this.sessionId, required this.role, required this.content, required this.createdAt, this.reasoning, this.thinkingMillis, this.imageName, this.inputTokens, this.outputTokens, this.model,  List<AssistantToolCall> toolCalls = const <AssistantToolCall>[]}): _toolCalls = toolCalls;
   factory _ChatMessage.fromJson(Map<String, dynamic> json) => _$ChatMessageFromJson(json);
 
-@override@Id() final  String id;
-@override@Index() final  String sessionId;
+@override final  String id;
+@override final  String sessionId;
 /// `"user"` 或 `"assistant"`。
 @override final  String role;
 @override final  String content;
@@ -304,7 +304,7 @@ abstract mixin class _$ChatMessageCopyWith<$Res> implements $ChatMessageCopyWith
   factory _$ChatMessageCopyWith(_ChatMessage value, $Res Function(_ChatMessage) _then) = __$ChatMessageCopyWithImpl;
 @override @useResult
 $Res call({
-@Id() String id,@Index() String sessionId, String role, String content, DateTime createdAt, String? reasoning, int? thinkingMillis, String? imageName, int? inputTokens, int? outputTokens, String? model, List<AssistantToolCall> toolCalls
+ String id, String sessionId, String role, String content, DateTime createdAt, String? reasoning, int? thinkingMillis, String? imageName, int? inputTokens, int? outputTokens, String? model, List<AssistantToolCall> toolCalls
 });
 
 

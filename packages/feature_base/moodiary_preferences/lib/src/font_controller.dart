@@ -57,7 +57,7 @@ class FontController extends _$FontController {
     if (MoodiaryKVs.customFont.get() == font.fontFamily) {
       await setActive(null);
     }
-    await repo.deleteFontById(font.id);
+    await repo.deleteFontByFamily(font.fontFamily);
     await AppFiles.deleteFile(AppFiles.getRealPath('font', font.fontFileName));
     final next = (state.value ?? const <Font>[])
         .where((e) => e.fontFamily != font.fontFamily)
