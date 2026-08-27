@@ -1445,1840 +1445,6 @@ class DiaryLinksCompanion extends UpdateCompanion<DiaryLinkRow> {
   }
 }
 
-class DiaryMedia extends Table with TableInfo<DiaryMedia, DiaryMediaRow> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  DiaryMedia(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _diaryIdMeta = const VerificationMeta(
-    'diaryId',
-  );
-  late final GeneratedColumn<String> diaryId = GeneratedColumn<String>(
-    'diary_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL REFERENCES diaries(id)ON DELETE CASCADE',
-  );
-  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
-  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
-    'kind',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  static const VerificationMeta _seqMeta = const VerificationMeta('seq');
-  late final GeneratedColumn<int> seq = GeneratedColumn<int>(
-    'seq',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  static const VerificationMeta _fileNameMeta = const VerificationMeta(
-    'fileName',
-  );
-  late final GeneratedColumn<String> fileName = GeneratedColumn<String>(
-    'file_name',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  @override
-  List<GeneratedColumn> get $columns => [diaryId, kind, seq, fileName];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'diary_media';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<DiaryMediaRow> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('diary_id')) {
-      context.handle(
-        _diaryIdMeta,
-        diaryId.isAcceptableOrUnknown(data['diary_id']!, _diaryIdMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_diaryIdMeta);
-    }
-    if (data.containsKey('kind')) {
-      context.handle(
-        _kindMeta,
-        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_kindMeta);
-    }
-    if (data.containsKey('seq')) {
-      context.handle(
-        _seqMeta,
-        seq.isAcceptableOrUnknown(data['seq']!, _seqMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_seqMeta);
-    }
-    if (data.containsKey('file_name')) {
-      context.handle(
-        _fileNameMeta,
-        fileName.isAcceptableOrUnknown(data['file_name']!, _fileNameMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_fileNameMeta);
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {diaryId, kind, seq};
-  @override
-  DiaryMediaRow map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return DiaryMediaRow(
-      diaryId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}diary_id'],
-      )!,
-      kind: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}kind'],
-      )!,
-      seq: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}seq'],
-      )!,
-      fileName: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}file_name'],
-      )!,
-    );
-  }
-
-  @override
-  DiaryMedia createAlias(String alias) {
-    return DiaryMedia(attachedDatabase, alias);
-  }
-
-  @override
-  List<String> get customConstraints => const [
-    'PRIMARY KEY(diary_id, kind, seq)',
-  ];
-  @override
-  bool get dontWriteConstraints => true;
-}
-
-class DiaryMediaRow extends DataClass implements Insertable<DiaryMediaRow> {
-  final String diaryId;
-  final String kind;
-  final int seq;
-  final String fileName;
-  const DiaryMediaRow({
-    required this.diaryId,
-    required this.kind,
-    required this.seq,
-    required this.fileName,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['diary_id'] = Variable<String>(diaryId);
-    map['kind'] = Variable<String>(kind);
-    map['seq'] = Variable<int>(seq);
-    map['file_name'] = Variable<String>(fileName);
-    return map;
-  }
-
-  DiaryMediaCompanion toCompanion(bool nullToAbsent) {
-    return DiaryMediaCompanion(
-      diaryId: Value(diaryId),
-      kind: Value(kind),
-      seq: Value(seq),
-      fileName: Value(fileName),
-    );
-  }
-
-  factory DiaryMediaRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return DiaryMediaRow(
-      diaryId: serializer.fromJson<String>(json['diary_id']),
-      kind: serializer.fromJson<String>(json['kind']),
-      seq: serializer.fromJson<int>(json['seq']),
-      fileName: serializer.fromJson<String>(json['file_name']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'diary_id': serializer.toJson<String>(diaryId),
-      'kind': serializer.toJson<String>(kind),
-      'seq': serializer.toJson<int>(seq),
-      'file_name': serializer.toJson<String>(fileName),
-    };
-  }
-
-  DiaryMediaRow copyWith({
-    String? diaryId,
-    String? kind,
-    int? seq,
-    String? fileName,
-  }) => DiaryMediaRow(
-    diaryId: diaryId ?? this.diaryId,
-    kind: kind ?? this.kind,
-    seq: seq ?? this.seq,
-    fileName: fileName ?? this.fileName,
-  );
-  DiaryMediaRow copyWithCompanion(DiaryMediaCompanion data) {
-    return DiaryMediaRow(
-      diaryId: data.diaryId.present ? data.diaryId.value : this.diaryId,
-      kind: data.kind.present ? data.kind.value : this.kind,
-      seq: data.seq.present ? data.seq.value : this.seq,
-      fileName: data.fileName.present ? data.fileName.value : this.fileName,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('DiaryMediaRow(')
-          ..write('diaryId: $diaryId, ')
-          ..write('kind: $kind, ')
-          ..write('seq: $seq, ')
-          ..write('fileName: $fileName')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(diaryId, kind, seq, fileName);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is DiaryMediaRow &&
-          other.diaryId == this.diaryId &&
-          other.kind == this.kind &&
-          other.seq == this.seq &&
-          other.fileName == this.fileName);
-}
-
-class DiaryMediaCompanion extends UpdateCompanion<DiaryMediaRow> {
-  final Value<String> diaryId;
-  final Value<String> kind;
-  final Value<int> seq;
-  final Value<String> fileName;
-  final Value<int> rowid;
-  const DiaryMediaCompanion({
-    this.diaryId = const Value.absent(),
-    this.kind = const Value.absent(),
-    this.seq = const Value.absent(),
-    this.fileName = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  DiaryMediaCompanion.insert({
-    required String diaryId,
-    required String kind,
-    required int seq,
-    required String fileName,
-    this.rowid = const Value.absent(),
-  }) : diaryId = Value(diaryId),
-       kind = Value(kind),
-       seq = Value(seq),
-       fileName = Value(fileName);
-  static Insertable<DiaryMediaRow> custom({
-    Expression<String>? diaryId,
-    Expression<String>? kind,
-    Expression<int>? seq,
-    Expression<String>? fileName,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (diaryId != null) 'diary_id': diaryId,
-      if (kind != null) 'kind': kind,
-      if (seq != null) 'seq': seq,
-      if (fileName != null) 'file_name': fileName,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  DiaryMediaCompanion copyWith({
-    Value<String>? diaryId,
-    Value<String>? kind,
-    Value<int>? seq,
-    Value<String>? fileName,
-    Value<int>? rowid,
-  }) {
-    return DiaryMediaCompanion(
-      diaryId: diaryId ?? this.diaryId,
-      kind: kind ?? this.kind,
-      seq: seq ?? this.seq,
-      fileName: fileName ?? this.fileName,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (diaryId.present) {
-      map['diary_id'] = Variable<String>(diaryId.value);
-    }
-    if (kind.present) {
-      map['kind'] = Variable<String>(kind.value);
-    }
-    if (seq.present) {
-      map['seq'] = Variable<int>(seq.value);
-    }
-    if (fileName.present) {
-      map['file_name'] = Variable<String>(fileName.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('DiaryMediaCompanion(')
-          ..write('diaryId: $diaryId, ')
-          ..write('kind: $kind, ')
-          ..write('seq: $seq, ')
-          ..write('fileName: $fileName, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class DiaryTags extends Table with TableInfo<DiaryTags, DiaryTagRow> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  DiaryTags(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _diaryIdMeta = const VerificationMeta(
-    'diaryId',
-  );
-  late final GeneratedColumn<String> diaryId = GeneratedColumn<String>(
-    'diary_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL REFERENCES diaries(id)ON DELETE CASCADE',
-  );
-  static const VerificationMeta _seqMeta = const VerificationMeta('seq');
-  late final GeneratedColumn<int> seq = GeneratedColumn<int>(
-    'seq',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  static const VerificationMeta _tagMeta = const VerificationMeta('tag');
-  late final GeneratedColumn<String> tag = GeneratedColumn<String>(
-    'tag',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  @override
-  List<GeneratedColumn> get $columns => [diaryId, seq, tag];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'diary_tags';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<DiaryTagRow> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('diary_id')) {
-      context.handle(
-        _diaryIdMeta,
-        diaryId.isAcceptableOrUnknown(data['diary_id']!, _diaryIdMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_diaryIdMeta);
-    }
-    if (data.containsKey('seq')) {
-      context.handle(
-        _seqMeta,
-        seq.isAcceptableOrUnknown(data['seq']!, _seqMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_seqMeta);
-    }
-    if (data.containsKey('tag')) {
-      context.handle(
-        _tagMeta,
-        tag.isAcceptableOrUnknown(data['tag']!, _tagMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_tagMeta);
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {diaryId, seq};
-  @override
-  DiaryTagRow map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return DiaryTagRow(
-      diaryId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}diary_id'],
-      )!,
-      seq: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}seq'],
-      )!,
-      tag: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}tag'],
-      )!,
-    );
-  }
-
-  @override
-  DiaryTags createAlias(String alias) {
-    return DiaryTags(attachedDatabase, alias);
-  }
-
-  @override
-  List<String> get customConstraints => const ['PRIMARY KEY(diary_id, seq)'];
-  @override
-  bool get dontWriteConstraints => true;
-}
-
-class DiaryTagRow extends DataClass implements Insertable<DiaryTagRow> {
-  final String diaryId;
-  final int seq;
-  final String tag;
-  const DiaryTagRow({
-    required this.diaryId,
-    required this.seq,
-    required this.tag,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['diary_id'] = Variable<String>(diaryId);
-    map['seq'] = Variable<int>(seq);
-    map['tag'] = Variable<String>(tag);
-    return map;
-  }
-
-  DiaryTagsCompanion toCompanion(bool nullToAbsent) {
-    return DiaryTagsCompanion(
-      diaryId: Value(diaryId),
-      seq: Value(seq),
-      tag: Value(tag),
-    );
-  }
-
-  factory DiaryTagRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return DiaryTagRow(
-      diaryId: serializer.fromJson<String>(json['diary_id']),
-      seq: serializer.fromJson<int>(json['seq']),
-      tag: serializer.fromJson<String>(json['tag']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'diary_id': serializer.toJson<String>(diaryId),
-      'seq': serializer.toJson<int>(seq),
-      'tag': serializer.toJson<String>(tag),
-    };
-  }
-
-  DiaryTagRow copyWith({String? diaryId, int? seq, String? tag}) => DiaryTagRow(
-    diaryId: diaryId ?? this.diaryId,
-    seq: seq ?? this.seq,
-    tag: tag ?? this.tag,
-  );
-  DiaryTagRow copyWithCompanion(DiaryTagsCompanion data) {
-    return DiaryTagRow(
-      diaryId: data.diaryId.present ? data.diaryId.value : this.diaryId,
-      seq: data.seq.present ? data.seq.value : this.seq,
-      tag: data.tag.present ? data.tag.value : this.tag,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('DiaryTagRow(')
-          ..write('diaryId: $diaryId, ')
-          ..write('seq: $seq, ')
-          ..write('tag: $tag')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(diaryId, seq, tag);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is DiaryTagRow &&
-          other.diaryId == this.diaryId &&
-          other.seq == this.seq &&
-          other.tag == this.tag);
-}
-
-class DiaryTagsCompanion extends UpdateCompanion<DiaryTagRow> {
-  final Value<String> diaryId;
-  final Value<int> seq;
-  final Value<String> tag;
-  final Value<int> rowid;
-  const DiaryTagsCompanion({
-    this.diaryId = const Value.absent(),
-    this.seq = const Value.absent(),
-    this.tag = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  DiaryTagsCompanion.insert({
-    required String diaryId,
-    required int seq,
-    required String tag,
-    this.rowid = const Value.absent(),
-  }) : diaryId = Value(diaryId),
-       seq = Value(seq),
-       tag = Value(tag);
-  static Insertable<DiaryTagRow> custom({
-    Expression<String>? diaryId,
-    Expression<int>? seq,
-    Expression<String>? tag,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (diaryId != null) 'diary_id': diaryId,
-      if (seq != null) 'seq': seq,
-      if (tag != null) 'tag': tag,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  DiaryTagsCompanion copyWith({
-    Value<String>? diaryId,
-    Value<int>? seq,
-    Value<String>? tag,
-    Value<int>? rowid,
-  }) {
-    return DiaryTagsCompanion(
-      diaryId: diaryId ?? this.diaryId,
-      seq: seq ?? this.seq,
-      tag: tag ?? this.tag,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (diaryId.present) {
-      map['diary_id'] = Variable<String>(diaryId.value);
-    }
-    if (seq.present) {
-      map['seq'] = Variable<int>(seq.value);
-    }
-    if (tag.present) {
-      map['tag'] = Variable<String>(tag.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('DiaryTagsCompanion(')
-          ..write('diaryId: $diaryId, ')
-          ..write('seq: $seq, ')
-          ..write('tag: $tag, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class Categories extends Table with TableInfo<Categories, CategoryRow> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  Categories(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  late final GeneratedColumn<String> id = GeneratedColumn<String>(
-    'id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL PRIMARY KEY',
-  );
-  static const VerificationMeta _nameMeta = const VerificationMeta('name');
-  late final GeneratedColumn<String> name = GeneratedColumn<String>(
-    'name',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  static const VerificationMeta _lastModifiedMeta = const VerificationMeta(
-    'lastModified',
-  );
-  late final GeneratedColumn<int> lastModified = GeneratedColumn<int>(
-    'last_modified',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  static const VerificationMeta _parentIdMeta = const VerificationMeta(
-    'parentId',
-  );
-  late final GeneratedColumn<String> parentId = GeneratedColumn<String>(
-    'parent_id',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    $customConstraints: '',
-  );
-  static const VerificationMeta _colorMeta = const VerificationMeta('color');
-  late final GeneratedColumn<int> color = GeneratedColumn<int>(
-    'color',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    $customConstraints: '',
-  );
-  @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    name,
-    lastModified,
-    parentId,
-    color,
-  ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'categories';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<CategoryRow> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    } else if (isInserting) {
-      context.missing(_idMeta);
-    }
-    if (data.containsKey('name')) {
-      context.handle(
-        _nameMeta,
-        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_nameMeta);
-    }
-    if (data.containsKey('last_modified')) {
-      context.handle(
-        _lastModifiedMeta,
-        lastModified.isAcceptableOrUnknown(
-          data['last_modified']!,
-          _lastModifiedMeta,
-        ),
-      );
-    } else if (isInserting) {
-      context.missing(_lastModifiedMeta);
-    }
-    if (data.containsKey('parent_id')) {
-      context.handle(
-        _parentIdMeta,
-        parentId.isAcceptableOrUnknown(data['parent_id']!, _parentIdMeta),
-      );
-    }
-    if (data.containsKey('color')) {
-      context.handle(
-        _colorMeta,
-        color.isAcceptableOrUnknown(data['color']!, _colorMeta),
-      );
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  CategoryRow map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return CategoryRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      name: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}name'],
-      )!,
-      lastModified: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}last_modified'],
-      )!,
-      parentId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}parent_id'],
-      ),
-      color: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}color'],
-      ),
-    );
-  }
-
-  @override
-  Categories createAlias(String alias) {
-    return Categories(attachedDatabase, alias);
-  }
-
-  @override
-  bool get dontWriteConstraints => true;
-}
-
-class CategoryRow extends DataClass implements Insertable<CategoryRow> {
-  final String id;
-  final String name;
-  final int lastModified;
-  final String? parentId;
-  final int? color;
-  const CategoryRow({
-    required this.id,
-    required this.name,
-    required this.lastModified,
-    this.parentId,
-    this.color,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<String>(id);
-    map['name'] = Variable<String>(name);
-    map['last_modified'] = Variable<int>(lastModified);
-    if (!nullToAbsent || parentId != null) {
-      map['parent_id'] = Variable<String>(parentId);
-    }
-    if (!nullToAbsent || color != null) {
-      map['color'] = Variable<int>(color);
-    }
-    return map;
-  }
-
-  CategoriesCompanion toCompanion(bool nullToAbsent) {
-    return CategoriesCompanion(
-      id: Value(id),
-      name: Value(name),
-      lastModified: Value(lastModified),
-      parentId: parentId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(parentId),
-      color: color == null && nullToAbsent
-          ? const Value.absent()
-          : Value(color),
-    );
-  }
-
-  factory CategoryRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return CategoryRow(
-      id: serializer.fromJson<String>(json['id']),
-      name: serializer.fromJson<String>(json['name']),
-      lastModified: serializer.fromJson<int>(json['last_modified']),
-      parentId: serializer.fromJson<String?>(json['parent_id']),
-      color: serializer.fromJson<int?>(json['color']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<String>(id),
-      'name': serializer.toJson<String>(name),
-      'last_modified': serializer.toJson<int>(lastModified),
-      'parent_id': serializer.toJson<String?>(parentId),
-      'color': serializer.toJson<int?>(color),
-    };
-  }
-
-  CategoryRow copyWith({
-    String? id,
-    String? name,
-    int? lastModified,
-    Value<String?> parentId = const Value.absent(),
-    Value<int?> color = const Value.absent(),
-  }) => CategoryRow(
-    id: id ?? this.id,
-    name: name ?? this.name,
-    lastModified: lastModified ?? this.lastModified,
-    parentId: parentId.present ? parentId.value : this.parentId,
-    color: color.present ? color.value : this.color,
-  );
-  CategoryRow copyWithCompanion(CategoriesCompanion data) {
-    return CategoryRow(
-      id: data.id.present ? data.id.value : this.id,
-      name: data.name.present ? data.name.value : this.name,
-      lastModified: data.lastModified.present
-          ? data.lastModified.value
-          : this.lastModified,
-      parentId: data.parentId.present ? data.parentId.value : this.parentId,
-      color: data.color.present ? data.color.value : this.color,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('CategoryRow(')
-          ..write('id: $id, ')
-          ..write('name: $name, ')
-          ..write('lastModified: $lastModified, ')
-          ..write('parentId: $parentId, ')
-          ..write('color: $color')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(id, name, lastModified, parentId, color);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is CategoryRow &&
-          other.id == this.id &&
-          other.name == this.name &&
-          other.lastModified == this.lastModified &&
-          other.parentId == this.parentId &&
-          other.color == this.color);
-}
-
-class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
-  final Value<String> id;
-  final Value<String> name;
-  final Value<int> lastModified;
-  final Value<String?> parentId;
-  final Value<int?> color;
-  final Value<int> rowid;
-  const CategoriesCompanion({
-    this.id = const Value.absent(),
-    this.name = const Value.absent(),
-    this.lastModified = const Value.absent(),
-    this.parentId = const Value.absent(),
-    this.color = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  CategoriesCompanion.insert({
-    required String id,
-    required String name,
-    required int lastModified,
-    this.parentId = const Value.absent(),
-    this.color = const Value.absent(),
-    this.rowid = const Value.absent(),
-  }) : id = Value(id),
-       name = Value(name),
-       lastModified = Value(lastModified);
-  static Insertable<CategoryRow> custom({
-    Expression<String>? id,
-    Expression<String>? name,
-    Expression<int>? lastModified,
-    Expression<String>? parentId,
-    Expression<int>? color,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (name != null) 'name': name,
-      if (lastModified != null) 'last_modified': lastModified,
-      if (parentId != null) 'parent_id': parentId,
-      if (color != null) 'color': color,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  CategoriesCompanion copyWith({
-    Value<String>? id,
-    Value<String>? name,
-    Value<int>? lastModified,
-    Value<String?>? parentId,
-    Value<int?>? color,
-    Value<int>? rowid,
-  }) {
-    return CategoriesCompanion(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      lastModified: lastModified ?? this.lastModified,
-      parentId: parentId ?? this.parentId,
-      color: color ?? this.color,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<String>(id.value);
-    }
-    if (name.present) {
-      map['name'] = Variable<String>(name.value);
-    }
-    if (lastModified.present) {
-      map['last_modified'] = Variable<int>(lastModified.value);
-    }
-    if (parentId.present) {
-      map['parent_id'] = Variable<String>(parentId.value);
-    }
-    if (color.present) {
-      map['color'] = Variable<int>(color.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('CategoriesCompanion(')
-          ..write('id: $id, ')
-          ..write('name: $name, ')
-          ..write('lastModified: $lastModified, ')
-          ..write('parentId: $parentId, ')
-          ..write('color: $color, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class Fonts extends Table with TableInfo<Fonts, FontRow> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  Fonts(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _fontFamilyMeta = const VerificationMeta(
-    'fontFamily',
-  );
-  late final GeneratedColumn<String> fontFamily = GeneratedColumn<String>(
-    'font_family',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL PRIMARY KEY',
-  );
-  static const VerificationMeta _fontFileNameMeta = const VerificationMeta(
-    'fontFileName',
-  );
-  late final GeneratedColumn<String> fontFileName = GeneratedColumn<String>(
-    'font_file_name',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  static const VerificationMeta _wghtAxisJsonMeta = const VerificationMeta(
-    'wghtAxisJson',
-  );
-  late final GeneratedColumn<String> wghtAxisJson = GeneratedColumn<String>(
-    'wght_axis_json',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    $customConstraints: 'NOT NULL DEFAULT \'{}\'',
-    defaultValue: const CustomExpression('\'{}\''),
-  );
-  @override
-  List<GeneratedColumn> get $columns => [
-    fontFamily,
-    fontFileName,
-    wghtAxisJson,
-  ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'fonts';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<FontRow> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('font_family')) {
-      context.handle(
-        _fontFamilyMeta,
-        fontFamily.isAcceptableOrUnknown(data['font_family']!, _fontFamilyMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_fontFamilyMeta);
-    }
-    if (data.containsKey('font_file_name')) {
-      context.handle(
-        _fontFileNameMeta,
-        fontFileName.isAcceptableOrUnknown(
-          data['font_file_name']!,
-          _fontFileNameMeta,
-        ),
-      );
-    } else if (isInserting) {
-      context.missing(_fontFileNameMeta);
-    }
-    if (data.containsKey('wght_axis_json')) {
-      context.handle(
-        _wghtAxisJsonMeta,
-        wghtAxisJson.isAcceptableOrUnknown(
-          data['wght_axis_json']!,
-          _wghtAxisJsonMeta,
-        ),
-      );
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {fontFamily};
-  @override
-  FontRow map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return FontRow(
-      fontFamily: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}font_family'],
-      )!,
-      fontFileName: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}font_file_name'],
-      )!,
-      wghtAxisJson: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}wght_axis_json'],
-      )!,
-    );
-  }
-
-  @override
-  Fonts createAlias(String alias) {
-    return Fonts(attachedDatabase, alias);
-  }
-
-  @override
-  bool get dontWriteConstraints => true;
-}
-
-class FontRow extends DataClass implements Insertable<FontRow> {
-  final String fontFamily;
-  final String fontFileName;
-  final String wghtAxisJson;
-  const FontRow({
-    required this.fontFamily,
-    required this.fontFileName,
-    required this.wghtAxisJson,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['font_family'] = Variable<String>(fontFamily);
-    map['font_file_name'] = Variable<String>(fontFileName);
-    map['wght_axis_json'] = Variable<String>(wghtAxisJson);
-    return map;
-  }
-
-  FontsCompanion toCompanion(bool nullToAbsent) {
-    return FontsCompanion(
-      fontFamily: Value(fontFamily),
-      fontFileName: Value(fontFileName),
-      wghtAxisJson: Value(wghtAxisJson),
-    );
-  }
-
-  factory FontRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return FontRow(
-      fontFamily: serializer.fromJson<String>(json['font_family']),
-      fontFileName: serializer.fromJson<String>(json['font_file_name']),
-      wghtAxisJson: serializer.fromJson<String>(json['wght_axis_json']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'font_family': serializer.toJson<String>(fontFamily),
-      'font_file_name': serializer.toJson<String>(fontFileName),
-      'wght_axis_json': serializer.toJson<String>(wghtAxisJson),
-    };
-  }
-
-  FontRow copyWith({
-    String? fontFamily,
-    String? fontFileName,
-    String? wghtAxisJson,
-  }) => FontRow(
-    fontFamily: fontFamily ?? this.fontFamily,
-    fontFileName: fontFileName ?? this.fontFileName,
-    wghtAxisJson: wghtAxisJson ?? this.wghtAxisJson,
-  );
-  FontRow copyWithCompanion(FontsCompanion data) {
-    return FontRow(
-      fontFamily: data.fontFamily.present
-          ? data.fontFamily.value
-          : this.fontFamily,
-      fontFileName: data.fontFileName.present
-          ? data.fontFileName.value
-          : this.fontFileName,
-      wghtAxisJson: data.wghtAxisJson.present
-          ? data.wghtAxisJson.value
-          : this.wghtAxisJson,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('FontRow(')
-          ..write('fontFamily: $fontFamily, ')
-          ..write('fontFileName: $fontFileName, ')
-          ..write('wghtAxisJson: $wghtAxisJson')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(fontFamily, fontFileName, wghtAxisJson);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is FontRow &&
-          other.fontFamily == this.fontFamily &&
-          other.fontFileName == this.fontFileName &&
-          other.wghtAxisJson == this.wghtAxisJson);
-}
-
-class FontsCompanion extends UpdateCompanion<FontRow> {
-  final Value<String> fontFamily;
-  final Value<String> fontFileName;
-  final Value<String> wghtAxisJson;
-  final Value<int> rowid;
-  const FontsCompanion({
-    this.fontFamily = const Value.absent(),
-    this.fontFileName = const Value.absent(),
-    this.wghtAxisJson = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  FontsCompanion.insert({
-    required String fontFamily,
-    required String fontFileName,
-    this.wghtAxisJson = const Value.absent(),
-    this.rowid = const Value.absent(),
-  }) : fontFamily = Value(fontFamily),
-       fontFileName = Value(fontFileName);
-  static Insertable<FontRow> custom({
-    Expression<String>? fontFamily,
-    Expression<String>? fontFileName,
-    Expression<String>? wghtAxisJson,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (fontFamily != null) 'font_family': fontFamily,
-      if (fontFileName != null) 'font_file_name': fontFileName,
-      if (wghtAxisJson != null) 'wght_axis_json': wghtAxisJson,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  FontsCompanion copyWith({
-    Value<String>? fontFamily,
-    Value<String>? fontFileName,
-    Value<String>? wghtAxisJson,
-    Value<int>? rowid,
-  }) {
-    return FontsCompanion(
-      fontFamily: fontFamily ?? this.fontFamily,
-      fontFileName: fontFileName ?? this.fontFileName,
-      wghtAxisJson: wghtAxisJson ?? this.wghtAxisJson,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (fontFamily.present) {
-      map['font_family'] = Variable<String>(fontFamily.value);
-    }
-    if (fontFileName.present) {
-      map['font_file_name'] = Variable<String>(fontFileName.value);
-    }
-    if (wghtAxisJson.present) {
-      map['wght_axis_json'] = Variable<String>(wghtAxisJson.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('FontsCompanion(')
-          ..write('fontFamily: $fontFamily, ')
-          ..write('fontFileName: $fontFileName, ')
-          ..write('wghtAxisJson: $wghtAxisJson, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class Tombstones extends Table with TableInfo<Tombstones, TombstoneRow> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  Tombstones(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _keyMeta = const VerificationMeta('key');
-  late final GeneratedColumn<String> key = GeneratedColumn<String>(
-    'key',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL PRIMARY KEY',
-  );
-  static const VerificationMeta _timeMsMeta = const VerificationMeta('timeMs');
-  late final GeneratedColumn<int> timeMs = GeneratedColumn<int>(
-    'time_ms',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  static const VerificationMeta _pushedBackendsJsonMeta =
-      const VerificationMeta('pushedBackendsJson');
-  late final GeneratedColumn<String> pushedBackendsJson =
-      GeneratedColumn<String>(
-        'pushed_backends_json',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: false,
-        $customConstraints: 'NOT NULL DEFAULT \'[]\'',
-        defaultValue: const CustomExpression('\'[]\''),
-      );
-  @override
-  List<GeneratedColumn> get $columns => [key, timeMs, pushedBackendsJson];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'tombstones';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<TombstoneRow> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('key')) {
-      context.handle(
-        _keyMeta,
-        key.isAcceptableOrUnknown(data['key']!, _keyMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_keyMeta);
-    }
-    if (data.containsKey('time_ms')) {
-      context.handle(
-        _timeMsMeta,
-        timeMs.isAcceptableOrUnknown(data['time_ms']!, _timeMsMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_timeMsMeta);
-    }
-    if (data.containsKey('pushed_backends_json')) {
-      context.handle(
-        _pushedBackendsJsonMeta,
-        pushedBackendsJson.isAcceptableOrUnknown(
-          data['pushed_backends_json']!,
-          _pushedBackendsJsonMeta,
-        ),
-      );
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {key};
-  @override
-  TombstoneRow map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return TombstoneRow(
-      key: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}key'],
-      )!,
-      timeMs: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}time_ms'],
-      )!,
-      pushedBackendsJson: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}pushed_backends_json'],
-      )!,
-    );
-  }
-
-  @override
-  Tombstones createAlias(String alias) {
-    return Tombstones(attachedDatabase, alias);
-  }
-
-  @override
-  bool get dontWriteConstraints => true;
-}
-
-class TombstoneRow extends DataClass implements Insertable<TombstoneRow> {
-  final String key;
-  final int timeMs;
-  final String pushedBackendsJson;
-  const TombstoneRow({
-    required this.key,
-    required this.timeMs,
-    required this.pushedBackendsJson,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['key'] = Variable<String>(key);
-    map['time_ms'] = Variable<int>(timeMs);
-    map['pushed_backends_json'] = Variable<String>(pushedBackendsJson);
-    return map;
-  }
-
-  TombstonesCompanion toCompanion(bool nullToAbsent) {
-    return TombstonesCompanion(
-      key: Value(key),
-      timeMs: Value(timeMs),
-      pushedBackendsJson: Value(pushedBackendsJson),
-    );
-  }
-
-  factory TombstoneRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return TombstoneRow(
-      key: serializer.fromJson<String>(json['key']),
-      timeMs: serializer.fromJson<int>(json['time_ms']),
-      pushedBackendsJson: serializer.fromJson<String>(
-        json['pushed_backends_json'],
-      ),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'key': serializer.toJson<String>(key),
-      'time_ms': serializer.toJson<int>(timeMs),
-      'pushed_backends_json': serializer.toJson<String>(pushedBackendsJson),
-    };
-  }
-
-  TombstoneRow copyWith({
-    String? key,
-    int? timeMs,
-    String? pushedBackendsJson,
-  }) => TombstoneRow(
-    key: key ?? this.key,
-    timeMs: timeMs ?? this.timeMs,
-    pushedBackendsJson: pushedBackendsJson ?? this.pushedBackendsJson,
-  );
-  TombstoneRow copyWithCompanion(TombstonesCompanion data) {
-    return TombstoneRow(
-      key: data.key.present ? data.key.value : this.key,
-      timeMs: data.timeMs.present ? data.timeMs.value : this.timeMs,
-      pushedBackendsJson: data.pushedBackendsJson.present
-          ? data.pushedBackendsJson.value
-          : this.pushedBackendsJson,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('TombstoneRow(')
-          ..write('key: $key, ')
-          ..write('timeMs: $timeMs, ')
-          ..write('pushedBackendsJson: $pushedBackendsJson')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(key, timeMs, pushedBackendsJson);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is TombstoneRow &&
-          other.key == this.key &&
-          other.timeMs == this.timeMs &&
-          other.pushedBackendsJson == this.pushedBackendsJson);
-}
-
-class TombstonesCompanion extends UpdateCompanion<TombstoneRow> {
-  final Value<String> key;
-  final Value<int> timeMs;
-  final Value<String> pushedBackendsJson;
-  final Value<int> rowid;
-  const TombstonesCompanion({
-    this.key = const Value.absent(),
-    this.timeMs = const Value.absent(),
-    this.pushedBackendsJson = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  TombstonesCompanion.insert({
-    required String key,
-    required int timeMs,
-    this.pushedBackendsJson = const Value.absent(),
-    this.rowid = const Value.absent(),
-  }) : key = Value(key),
-       timeMs = Value(timeMs);
-  static Insertable<TombstoneRow> custom({
-    Expression<String>? key,
-    Expression<int>? timeMs,
-    Expression<String>? pushedBackendsJson,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (key != null) 'key': key,
-      if (timeMs != null) 'time_ms': timeMs,
-      if (pushedBackendsJson != null)
-        'pushed_backends_json': pushedBackendsJson,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  TombstonesCompanion copyWith({
-    Value<String>? key,
-    Value<int>? timeMs,
-    Value<String>? pushedBackendsJson,
-    Value<int>? rowid,
-  }) {
-    return TombstonesCompanion(
-      key: key ?? this.key,
-      timeMs: timeMs ?? this.timeMs,
-      pushedBackendsJson: pushedBackendsJson ?? this.pushedBackendsJson,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (key.present) {
-      map['key'] = Variable<String>(key.value);
-    }
-    if (timeMs.present) {
-      map['time_ms'] = Variable<int>(timeMs.value);
-    }
-    if (pushedBackendsJson.present) {
-      map['pushed_backends_json'] = Variable<String>(pushedBackendsJson.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('TombstonesCompanion(')
-          ..write('key: $key, ')
-          ..write('timeMs: $timeMs, ')
-          ..write('pushedBackendsJson: $pushedBackendsJson, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class MediaInfos extends Table with TableInfo<MediaInfos, MediaInfoRow> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  MediaInfos(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _fileNameMeta = const VerificationMeta(
-    'fileName',
-  );
-  late final GeneratedColumn<String> fileName = GeneratedColumn<String>(
-    'file_name',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL PRIMARY KEY',
-  );
-  static const VerificationMeta _nameMeta = const VerificationMeta('name');
-  late final GeneratedColumn<String> name = GeneratedColumn<String>(
-    'name',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    $customConstraints: '',
-  );
-  static const VerificationMeta _durationMsMeta = const VerificationMeta(
-    'durationMs',
-  );
-  late final GeneratedColumn<int> durationMs = GeneratedColumn<int>(
-    'duration_ms',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    $customConstraints: '',
-  );
-  static const VerificationMeta _lastModifiedMeta = const VerificationMeta(
-    'lastModified',
-  );
-  late final GeneratedColumn<int> lastModified = GeneratedColumn<int>(
-    'last_modified',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  @override
-  List<GeneratedColumn> get $columns => [
-    fileName,
-    name,
-    durationMs,
-    lastModified,
-  ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'media_infos';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<MediaInfoRow> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('file_name')) {
-      context.handle(
-        _fileNameMeta,
-        fileName.isAcceptableOrUnknown(data['file_name']!, _fileNameMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_fileNameMeta);
-    }
-    if (data.containsKey('name')) {
-      context.handle(
-        _nameMeta,
-        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
-      );
-    }
-    if (data.containsKey('duration_ms')) {
-      context.handle(
-        _durationMsMeta,
-        durationMs.isAcceptableOrUnknown(data['duration_ms']!, _durationMsMeta),
-      );
-    }
-    if (data.containsKey('last_modified')) {
-      context.handle(
-        _lastModifiedMeta,
-        lastModified.isAcceptableOrUnknown(
-          data['last_modified']!,
-          _lastModifiedMeta,
-        ),
-      );
-    } else if (isInserting) {
-      context.missing(_lastModifiedMeta);
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {fileName};
-  @override
-  MediaInfoRow map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return MediaInfoRow(
-      fileName: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}file_name'],
-      )!,
-      name: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}name'],
-      ),
-      durationMs: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}duration_ms'],
-      ),
-      lastModified: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}last_modified'],
-      )!,
-    );
-  }
-
-  @override
-  MediaInfos createAlias(String alias) {
-    return MediaInfos(attachedDatabase, alias);
-  }
-
-  @override
-  bool get dontWriteConstraints => true;
-}
-
-class MediaInfoRow extends DataClass implements Insertable<MediaInfoRow> {
-  final String fileName;
-  final String? name;
-  final int? durationMs;
-  final int lastModified;
-  const MediaInfoRow({
-    required this.fileName,
-    this.name,
-    this.durationMs,
-    required this.lastModified,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['file_name'] = Variable<String>(fileName);
-    if (!nullToAbsent || name != null) {
-      map['name'] = Variable<String>(name);
-    }
-    if (!nullToAbsent || durationMs != null) {
-      map['duration_ms'] = Variable<int>(durationMs);
-    }
-    map['last_modified'] = Variable<int>(lastModified);
-    return map;
-  }
-
-  MediaInfosCompanion toCompanion(bool nullToAbsent) {
-    return MediaInfosCompanion(
-      fileName: Value(fileName),
-      name: name == null && nullToAbsent ? const Value.absent() : Value(name),
-      durationMs: durationMs == null && nullToAbsent
-          ? const Value.absent()
-          : Value(durationMs),
-      lastModified: Value(lastModified),
-    );
-  }
-
-  factory MediaInfoRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return MediaInfoRow(
-      fileName: serializer.fromJson<String>(json['file_name']),
-      name: serializer.fromJson<String?>(json['name']),
-      durationMs: serializer.fromJson<int?>(json['duration_ms']),
-      lastModified: serializer.fromJson<int>(json['last_modified']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'file_name': serializer.toJson<String>(fileName),
-      'name': serializer.toJson<String?>(name),
-      'duration_ms': serializer.toJson<int?>(durationMs),
-      'last_modified': serializer.toJson<int>(lastModified),
-    };
-  }
-
-  MediaInfoRow copyWith({
-    String? fileName,
-    Value<String?> name = const Value.absent(),
-    Value<int?> durationMs = const Value.absent(),
-    int? lastModified,
-  }) => MediaInfoRow(
-    fileName: fileName ?? this.fileName,
-    name: name.present ? name.value : this.name,
-    durationMs: durationMs.present ? durationMs.value : this.durationMs,
-    lastModified: lastModified ?? this.lastModified,
-  );
-  MediaInfoRow copyWithCompanion(MediaInfosCompanion data) {
-    return MediaInfoRow(
-      fileName: data.fileName.present ? data.fileName.value : this.fileName,
-      name: data.name.present ? data.name.value : this.name,
-      durationMs: data.durationMs.present
-          ? data.durationMs.value
-          : this.durationMs,
-      lastModified: data.lastModified.present
-          ? data.lastModified.value
-          : this.lastModified,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('MediaInfoRow(')
-          ..write('fileName: $fileName, ')
-          ..write('name: $name, ')
-          ..write('durationMs: $durationMs, ')
-          ..write('lastModified: $lastModified')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(fileName, name, durationMs, lastModified);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is MediaInfoRow &&
-          other.fileName == this.fileName &&
-          other.name == this.name &&
-          other.durationMs == this.durationMs &&
-          other.lastModified == this.lastModified);
-}
-
-class MediaInfosCompanion extends UpdateCompanion<MediaInfoRow> {
-  final Value<String> fileName;
-  final Value<String?> name;
-  final Value<int?> durationMs;
-  final Value<int> lastModified;
-  final Value<int> rowid;
-  const MediaInfosCompanion({
-    this.fileName = const Value.absent(),
-    this.name = const Value.absent(),
-    this.durationMs = const Value.absent(),
-    this.lastModified = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  MediaInfosCompanion.insert({
-    required String fileName,
-    this.name = const Value.absent(),
-    this.durationMs = const Value.absent(),
-    required int lastModified,
-    this.rowid = const Value.absent(),
-  }) : fileName = Value(fileName),
-       lastModified = Value(lastModified);
-  static Insertable<MediaInfoRow> custom({
-    Expression<String>? fileName,
-    Expression<String>? name,
-    Expression<int>? durationMs,
-    Expression<int>? lastModified,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (fileName != null) 'file_name': fileName,
-      if (name != null) 'name': name,
-      if (durationMs != null) 'duration_ms': durationMs,
-      if (lastModified != null) 'last_modified': lastModified,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  MediaInfosCompanion copyWith({
-    Value<String>? fileName,
-    Value<String?>? name,
-    Value<int?>? durationMs,
-    Value<int>? lastModified,
-    Value<int>? rowid,
-  }) {
-    return MediaInfosCompanion(
-      fileName: fileName ?? this.fileName,
-      name: name ?? this.name,
-      durationMs: durationMs ?? this.durationMs,
-      lastModified: lastModified ?? this.lastModified,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (fileName.present) {
-      map['file_name'] = Variable<String>(fileName.value);
-    }
-    if (name.present) {
-      map['name'] = Variable<String>(name.value);
-    }
-    if (durationMs.present) {
-      map['duration_ms'] = Variable<int>(durationMs.value);
-    }
-    if (lastModified.present) {
-      map['last_modified'] = Variable<int>(lastModified.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('MediaInfosCompanion(')
-          ..write('fileName: $fileName, ')
-          ..write('name: $name, ')
-          ..write('durationMs: $durationMs, ')
-          ..write('lastModified: $lastModified, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
 class LlmProviders extends Table with TableInfo<LlmProviders, LlmProviderRow> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -6828,12 +4994,1876 @@ class AgentPresetsCompanion extends UpdateCompanion<AgentPresetRow> {
   }
 }
 
+class Tombstones extends Table with TableInfo<Tombstones, TombstoneRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  Tombstones(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _keyMeta = const VerificationMeta('key');
+  late final GeneratedColumn<String> key = GeneratedColumn<String>(
+    'key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _timeMsMeta = const VerificationMeta('timeMs');
+  late final GeneratedColumn<int> timeMs = GeneratedColumn<int>(
+    'time_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _pushedBackendsJsonMeta =
+      const VerificationMeta('pushedBackendsJson');
+  late final GeneratedColumn<String> pushedBackendsJson =
+      GeneratedColumn<String>(
+        'pushed_backends_json',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        $customConstraints: 'NOT NULL DEFAULT \'[]\'',
+        defaultValue: const CustomExpression('\'[]\''),
+      );
+  @override
+  List<GeneratedColumn> get $columns => [key, timeMs, pushedBackendsJson];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'tombstones';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TombstoneRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('key')) {
+      context.handle(
+        _keyMeta,
+        key.isAcceptableOrUnknown(data['key']!, _keyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_keyMeta);
+    }
+    if (data.containsKey('time_ms')) {
+      context.handle(
+        _timeMsMeta,
+        timeMs.isAcceptableOrUnknown(data['time_ms']!, _timeMsMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_timeMsMeta);
+    }
+    if (data.containsKey('pushed_backends_json')) {
+      context.handle(
+        _pushedBackendsJsonMeta,
+        pushedBackendsJson.isAcceptableOrUnknown(
+          data['pushed_backends_json']!,
+          _pushedBackendsJsonMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {key};
+  @override
+  TombstoneRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TombstoneRow(
+      key: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}key'],
+      )!,
+      timeMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}time_ms'],
+      )!,
+      pushedBackendsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}pushed_backends_json'],
+      )!,
+    );
+  }
+
+  @override
+  Tombstones createAlias(String alias) {
+    return Tombstones(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class TombstoneRow extends DataClass implements Insertable<TombstoneRow> {
+  final String key;
+  final int timeMs;
+  final String pushedBackendsJson;
+  const TombstoneRow({
+    required this.key,
+    required this.timeMs,
+    required this.pushedBackendsJson,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['key'] = Variable<String>(key);
+    map['time_ms'] = Variable<int>(timeMs);
+    map['pushed_backends_json'] = Variable<String>(pushedBackendsJson);
+    return map;
+  }
+
+  TombstonesCompanion toCompanion(bool nullToAbsent) {
+    return TombstonesCompanion(
+      key: Value(key),
+      timeMs: Value(timeMs),
+      pushedBackendsJson: Value(pushedBackendsJson),
+    );
+  }
+
+  factory TombstoneRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TombstoneRow(
+      key: serializer.fromJson<String>(json['key']),
+      timeMs: serializer.fromJson<int>(json['time_ms']),
+      pushedBackendsJson: serializer.fromJson<String>(
+        json['pushed_backends_json'],
+      ),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'key': serializer.toJson<String>(key),
+      'time_ms': serializer.toJson<int>(timeMs),
+      'pushed_backends_json': serializer.toJson<String>(pushedBackendsJson),
+    };
+  }
+
+  TombstoneRow copyWith({
+    String? key,
+    int? timeMs,
+    String? pushedBackendsJson,
+  }) => TombstoneRow(
+    key: key ?? this.key,
+    timeMs: timeMs ?? this.timeMs,
+    pushedBackendsJson: pushedBackendsJson ?? this.pushedBackendsJson,
+  );
+  TombstoneRow copyWithCompanion(TombstonesCompanion data) {
+    return TombstoneRow(
+      key: data.key.present ? data.key.value : this.key,
+      timeMs: data.timeMs.present ? data.timeMs.value : this.timeMs,
+      pushedBackendsJson: data.pushedBackendsJson.present
+          ? data.pushedBackendsJson.value
+          : this.pushedBackendsJson,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TombstoneRow(')
+          ..write('key: $key, ')
+          ..write('timeMs: $timeMs, ')
+          ..write('pushedBackendsJson: $pushedBackendsJson')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(key, timeMs, pushedBackendsJson);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TombstoneRow &&
+          other.key == this.key &&
+          other.timeMs == this.timeMs &&
+          other.pushedBackendsJson == this.pushedBackendsJson);
+}
+
+class TombstonesCompanion extends UpdateCompanion<TombstoneRow> {
+  final Value<String> key;
+  final Value<int> timeMs;
+  final Value<String> pushedBackendsJson;
+  final Value<int> rowid;
+  const TombstonesCompanion({
+    this.key = const Value.absent(),
+    this.timeMs = const Value.absent(),
+    this.pushedBackendsJson = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TombstonesCompanion.insert({
+    required String key,
+    required int timeMs,
+    this.pushedBackendsJson = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : key = Value(key),
+       timeMs = Value(timeMs);
+  static Insertable<TombstoneRow> custom({
+    Expression<String>? key,
+    Expression<int>? timeMs,
+    Expression<String>? pushedBackendsJson,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (key != null) 'key': key,
+      if (timeMs != null) 'time_ms': timeMs,
+      if (pushedBackendsJson != null)
+        'pushed_backends_json': pushedBackendsJson,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TombstonesCompanion copyWith({
+    Value<String>? key,
+    Value<int>? timeMs,
+    Value<String>? pushedBackendsJson,
+    Value<int>? rowid,
+  }) {
+    return TombstonesCompanion(
+      key: key ?? this.key,
+      timeMs: timeMs ?? this.timeMs,
+      pushedBackendsJson: pushedBackendsJson ?? this.pushedBackendsJson,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (key.present) {
+      map['key'] = Variable<String>(key.value);
+    }
+    if (timeMs.present) {
+      map['time_ms'] = Variable<int>(timeMs.value);
+    }
+    if (pushedBackendsJson.present) {
+      map['pushed_backends_json'] = Variable<String>(pushedBackendsJson.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TombstonesCompanion(')
+          ..write('key: $key, ')
+          ..write('timeMs: $timeMs, ')
+          ..write('pushedBackendsJson: $pushedBackendsJson, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class Categories extends Table with TableInfo<Categories, CategoryRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  Categories(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _lastModifiedMeta = const VerificationMeta(
+    'lastModified',
+  );
+  late final GeneratedColumn<int> lastModified = GeneratedColumn<int>(
+    'last_modified',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _parentIdMeta = const VerificationMeta(
+    'parentId',
+  );
+  late final GeneratedColumn<String> parentId = GeneratedColumn<String>(
+    'parent_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _colorMeta = const VerificationMeta('color');
+  late final GeneratedColumn<int> color = GeneratedColumn<int>(
+    'color',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    lastModified,
+    parentId,
+    color,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'categories';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CategoryRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('last_modified')) {
+      context.handle(
+        _lastModifiedMeta,
+        lastModified.isAcceptableOrUnknown(
+          data['last_modified']!,
+          _lastModifiedMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_lastModifiedMeta);
+    }
+    if (data.containsKey('parent_id')) {
+      context.handle(
+        _parentIdMeta,
+        parentId.isAcceptableOrUnknown(data['parent_id']!, _parentIdMeta),
+      );
+    }
+    if (data.containsKey('color')) {
+      context.handle(
+        _colorMeta,
+        color.isAcceptableOrUnknown(data['color']!, _colorMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CategoryRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CategoryRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      lastModified: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_modified'],
+      )!,
+      parentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}parent_id'],
+      ),
+      color: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}color'],
+      ),
+    );
+  }
+
+  @override
+  Categories createAlias(String alias) {
+    return Categories(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class CategoryRow extends DataClass implements Insertable<CategoryRow> {
+  final String id;
+  final String name;
+  final int lastModified;
+  final String? parentId;
+  final int? color;
+  const CategoryRow({
+    required this.id,
+    required this.name,
+    required this.lastModified,
+    this.parentId,
+    this.color,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['last_modified'] = Variable<int>(lastModified);
+    if (!nullToAbsent || parentId != null) {
+      map['parent_id'] = Variable<String>(parentId);
+    }
+    if (!nullToAbsent || color != null) {
+      map['color'] = Variable<int>(color);
+    }
+    return map;
+  }
+
+  CategoriesCompanion toCompanion(bool nullToAbsent) {
+    return CategoriesCompanion(
+      id: Value(id),
+      name: Value(name),
+      lastModified: Value(lastModified),
+      parentId: parentId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(parentId),
+      color: color == null && nullToAbsent
+          ? const Value.absent()
+          : Value(color),
+    );
+  }
+
+  factory CategoryRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CategoryRow(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      lastModified: serializer.fromJson<int>(json['last_modified']),
+      parentId: serializer.fromJson<String?>(json['parent_id']),
+      color: serializer.fromJson<int?>(json['color']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'last_modified': serializer.toJson<int>(lastModified),
+      'parent_id': serializer.toJson<String?>(parentId),
+      'color': serializer.toJson<int?>(color),
+    };
+  }
+
+  CategoryRow copyWith({
+    String? id,
+    String? name,
+    int? lastModified,
+    Value<String?> parentId = const Value.absent(),
+    Value<int?> color = const Value.absent(),
+  }) => CategoryRow(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    lastModified: lastModified ?? this.lastModified,
+    parentId: parentId.present ? parentId.value : this.parentId,
+    color: color.present ? color.value : this.color,
+  );
+  CategoryRow copyWithCompanion(CategoriesCompanion data) {
+    return CategoryRow(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      lastModified: data.lastModified.present
+          ? data.lastModified.value
+          : this.lastModified,
+      parentId: data.parentId.present ? data.parentId.value : this.parentId,
+      color: data.color.present ? data.color.value : this.color,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CategoryRow(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('lastModified: $lastModified, ')
+          ..write('parentId: $parentId, ')
+          ..write('color: $color')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, lastModified, parentId, color);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CategoryRow &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.lastModified == this.lastModified &&
+          other.parentId == this.parentId &&
+          other.color == this.color);
+}
+
+class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<int> lastModified;
+  final Value<String?> parentId;
+  final Value<int?> color;
+  final Value<int> rowid;
+  const CategoriesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.lastModified = const Value.absent(),
+    this.parentId = const Value.absent(),
+    this.color = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CategoriesCompanion.insert({
+    required String id,
+    required String name,
+    required int lastModified,
+    this.parentId = const Value.absent(),
+    this.color = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       name = Value(name),
+       lastModified = Value(lastModified);
+  static Insertable<CategoryRow> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<int>? lastModified,
+    Expression<String>? parentId,
+    Expression<int>? color,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (lastModified != null) 'last_modified': lastModified,
+      if (parentId != null) 'parent_id': parentId,
+      if (color != null) 'color': color,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CategoriesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? name,
+    Value<int>? lastModified,
+    Value<String?>? parentId,
+    Value<int?>? color,
+    Value<int>? rowid,
+  }) {
+    return CategoriesCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      lastModified: lastModified ?? this.lastModified,
+      parentId: parentId ?? this.parentId,
+      color: color ?? this.color,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (lastModified.present) {
+      map['last_modified'] = Variable<int>(lastModified.value);
+    }
+    if (parentId.present) {
+      map['parent_id'] = Variable<String>(parentId.value);
+    }
+    if (color.present) {
+      map['color'] = Variable<int>(color.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CategoriesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('lastModified: $lastModified, ')
+          ..write('parentId: $parentId, ')
+          ..write('color: $color, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class Fonts extends Table with TableInfo<Fonts, FontRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  Fonts(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _fontFamilyMeta = const VerificationMeta(
+    'fontFamily',
+  );
+  late final GeneratedColumn<String> fontFamily = GeneratedColumn<String>(
+    'font_family',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _fontFileNameMeta = const VerificationMeta(
+    'fontFileName',
+  );
+  late final GeneratedColumn<String> fontFileName = GeneratedColumn<String>(
+    'font_file_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _wghtAxisJsonMeta = const VerificationMeta(
+    'wghtAxisJson',
+  );
+  late final GeneratedColumn<String> wghtAxisJson = GeneratedColumn<String>(
+    'wght_axis_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'{}\'',
+    defaultValue: const CustomExpression('\'{}\''),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    fontFamily,
+    fontFileName,
+    wghtAxisJson,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'fonts';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FontRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('font_family')) {
+      context.handle(
+        _fontFamilyMeta,
+        fontFamily.isAcceptableOrUnknown(data['font_family']!, _fontFamilyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fontFamilyMeta);
+    }
+    if (data.containsKey('font_file_name')) {
+      context.handle(
+        _fontFileNameMeta,
+        fontFileName.isAcceptableOrUnknown(
+          data['font_file_name']!,
+          _fontFileNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_fontFileNameMeta);
+    }
+    if (data.containsKey('wght_axis_json')) {
+      context.handle(
+        _wghtAxisJsonMeta,
+        wghtAxisJson.isAcceptableOrUnknown(
+          data['wght_axis_json']!,
+          _wghtAxisJsonMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {fontFamily};
+  @override
+  FontRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FontRow(
+      fontFamily: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}font_family'],
+      )!,
+      fontFileName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}font_file_name'],
+      )!,
+      wghtAxisJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}wght_axis_json'],
+      )!,
+    );
+  }
+
+  @override
+  Fonts createAlias(String alias) {
+    return Fonts(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class FontRow extends DataClass implements Insertable<FontRow> {
+  final String fontFamily;
+  final String fontFileName;
+  final String wghtAxisJson;
+  const FontRow({
+    required this.fontFamily,
+    required this.fontFileName,
+    required this.wghtAxisJson,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['font_family'] = Variable<String>(fontFamily);
+    map['font_file_name'] = Variable<String>(fontFileName);
+    map['wght_axis_json'] = Variable<String>(wghtAxisJson);
+    return map;
+  }
+
+  FontsCompanion toCompanion(bool nullToAbsent) {
+    return FontsCompanion(
+      fontFamily: Value(fontFamily),
+      fontFileName: Value(fontFileName),
+      wghtAxisJson: Value(wghtAxisJson),
+    );
+  }
+
+  factory FontRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FontRow(
+      fontFamily: serializer.fromJson<String>(json['font_family']),
+      fontFileName: serializer.fromJson<String>(json['font_file_name']),
+      wghtAxisJson: serializer.fromJson<String>(json['wght_axis_json']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'font_family': serializer.toJson<String>(fontFamily),
+      'font_file_name': serializer.toJson<String>(fontFileName),
+      'wght_axis_json': serializer.toJson<String>(wghtAxisJson),
+    };
+  }
+
+  FontRow copyWith({
+    String? fontFamily,
+    String? fontFileName,
+    String? wghtAxisJson,
+  }) => FontRow(
+    fontFamily: fontFamily ?? this.fontFamily,
+    fontFileName: fontFileName ?? this.fontFileName,
+    wghtAxisJson: wghtAxisJson ?? this.wghtAxisJson,
+  );
+  FontRow copyWithCompanion(FontsCompanion data) {
+    return FontRow(
+      fontFamily: data.fontFamily.present
+          ? data.fontFamily.value
+          : this.fontFamily,
+      fontFileName: data.fontFileName.present
+          ? data.fontFileName.value
+          : this.fontFileName,
+      wghtAxisJson: data.wghtAxisJson.present
+          ? data.wghtAxisJson.value
+          : this.wghtAxisJson,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FontRow(')
+          ..write('fontFamily: $fontFamily, ')
+          ..write('fontFileName: $fontFileName, ')
+          ..write('wghtAxisJson: $wghtAxisJson')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(fontFamily, fontFileName, wghtAxisJson);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FontRow &&
+          other.fontFamily == this.fontFamily &&
+          other.fontFileName == this.fontFileName &&
+          other.wghtAxisJson == this.wghtAxisJson);
+}
+
+class FontsCompanion extends UpdateCompanion<FontRow> {
+  final Value<String> fontFamily;
+  final Value<String> fontFileName;
+  final Value<String> wghtAxisJson;
+  final Value<int> rowid;
+  const FontsCompanion({
+    this.fontFamily = const Value.absent(),
+    this.fontFileName = const Value.absent(),
+    this.wghtAxisJson = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FontsCompanion.insert({
+    required String fontFamily,
+    required String fontFileName,
+    this.wghtAxisJson = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : fontFamily = Value(fontFamily),
+       fontFileName = Value(fontFileName);
+  static Insertable<FontRow> custom({
+    Expression<String>? fontFamily,
+    Expression<String>? fontFileName,
+    Expression<String>? wghtAxisJson,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (fontFamily != null) 'font_family': fontFamily,
+      if (fontFileName != null) 'font_file_name': fontFileName,
+      if (wghtAxisJson != null) 'wght_axis_json': wghtAxisJson,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FontsCompanion copyWith({
+    Value<String>? fontFamily,
+    Value<String>? fontFileName,
+    Value<String>? wghtAxisJson,
+    Value<int>? rowid,
+  }) {
+    return FontsCompanion(
+      fontFamily: fontFamily ?? this.fontFamily,
+      fontFileName: fontFileName ?? this.fontFileName,
+      wghtAxisJson: wghtAxisJson ?? this.wghtAxisJson,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (fontFamily.present) {
+      map['font_family'] = Variable<String>(fontFamily.value);
+    }
+    if (fontFileName.present) {
+      map['font_file_name'] = Variable<String>(fontFileName.value);
+    }
+    if (wghtAxisJson.present) {
+      map['wght_axis_json'] = Variable<String>(wghtAxisJson.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FontsCompanion(')
+          ..write('fontFamily: $fontFamily, ')
+          ..write('fontFileName: $fontFileName, ')
+          ..write('wghtAxisJson: $wghtAxisJson, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class MediaInfos extends Table with TableInfo<MediaInfos, MediaInfoRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  MediaInfos(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _fileNameMeta = const VerificationMeta(
+    'fileName',
+  );
+  late final GeneratedColumn<String> fileName = GeneratedColumn<String>(
+    'file_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _durationMsMeta = const VerificationMeta(
+    'durationMs',
+  );
+  late final GeneratedColumn<int> durationMs = GeneratedColumn<int>(
+    'duration_ms',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _lastModifiedMeta = const VerificationMeta(
+    'lastModified',
+  );
+  late final GeneratedColumn<int> lastModified = GeneratedColumn<int>(
+    'last_modified',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    fileName,
+    name,
+    durationMs,
+    lastModified,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'media_infos';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MediaInfoRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('file_name')) {
+      context.handle(
+        _fileNameMeta,
+        fileName.isAcceptableOrUnknown(data['file_name']!, _fileNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fileNameMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    }
+    if (data.containsKey('duration_ms')) {
+      context.handle(
+        _durationMsMeta,
+        durationMs.isAcceptableOrUnknown(data['duration_ms']!, _durationMsMeta),
+      );
+    }
+    if (data.containsKey('last_modified')) {
+      context.handle(
+        _lastModifiedMeta,
+        lastModified.isAcceptableOrUnknown(
+          data['last_modified']!,
+          _lastModifiedMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_lastModifiedMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {fileName};
+  @override
+  MediaInfoRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MediaInfoRow(
+      fileName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}file_name'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      ),
+      durationMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration_ms'],
+      ),
+      lastModified: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_modified'],
+      )!,
+    );
+  }
+
+  @override
+  MediaInfos createAlias(String alias) {
+    return MediaInfos(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class MediaInfoRow extends DataClass implements Insertable<MediaInfoRow> {
+  final String fileName;
+  final String? name;
+  final int? durationMs;
+  final int lastModified;
+  const MediaInfoRow({
+    required this.fileName,
+    this.name,
+    this.durationMs,
+    required this.lastModified,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['file_name'] = Variable<String>(fileName);
+    if (!nullToAbsent || name != null) {
+      map['name'] = Variable<String>(name);
+    }
+    if (!nullToAbsent || durationMs != null) {
+      map['duration_ms'] = Variable<int>(durationMs);
+    }
+    map['last_modified'] = Variable<int>(lastModified);
+    return map;
+  }
+
+  MediaInfosCompanion toCompanion(bool nullToAbsent) {
+    return MediaInfosCompanion(
+      fileName: Value(fileName),
+      name: name == null && nullToAbsent ? const Value.absent() : Value(name),
+      durationMs: durationMs == null && nullToAbsent
+          ? const Value.absent()
+          : Value(durationMs),
+      lastModified: Value(lastModified),
+    );
+  }
+
+  factory MediaInfoRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MediaInfoRow(
+      fileName: serializer.fromJson<String>(json['file_name']),
+      name: serializer.fromJson<String?>(json['name']),
+      durationMs: serializer.fromJson<int?>(json['duration_ms']),
+      lastModified: serializer.fromJson<int>(json['last_modified']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'file_name': serializer.toJson<String>(fileName),
+      'name': serializer.toJson<String?>(name),
+      'duration_ms': serializer.toJson<int?>(durationMs),
+      'last_modified': serializer.toJson<int>(lastModified),
+    };
+  }
+
+  MediaInfoRow copyWith({
+    String? fileName,
+    Value<String?> name = const Value.absent(),
+    Value<int?> durationMs = const Value.absent(),
+    int? lastModified,
+  }) => MediaInfoRow(
+    fileName: fileName ?? this.fileName,
+    name: name.present ? name.value : this.name,
+    durationMs: durationMs.present ? durationMs.value : this.durationMs,
+    lastModified: lastModified ?? this.lastModified,
+  );
+  MediaInfoRow copyWithCompanion(MediaInfosCompanion data) {
+    return MediaInfoRow(
+      fileName: data.fileName.present ? data.fileName.value : this.fileName,
+      name: data.name.present ? data.name.value : this.name,
+      durationMs: data.durationMs.present
+          ? data.durationMs.value
+          : this.durationMs,
+      lastModified: data.lastModified.present
+          ? data.lastModified.value
+          : this.lastModified,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MediaInfoRow(')
+          ..write('fileName: $fileName, ')
+          ..write('name: $name, ')
+          ..write('durationMs: $durationMs, ')
+          ..write('lastModified: $lastModified')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(fileName, name, durationMs, lastModified);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MediaInfoRow &&
+          other.fileName == this.fileName &&
+          other.name == this.name &&
+          other.durationMs == this.durationMs &&
+          other.lastModified == this.lastModified);
+}
+
+class MediaInfosCompanion extends UpdateCompanion<MediaInfoRow> {
+  final Value<String> fileName;
+  final Value<String?> name;
+  final Value<int?> durationMs;
+  final Value<int> lastModified;
+  final Value<int> rowid;
+  const MediaInfosCompanion({
+    this.fileName = const Value.absent(),
+    this.name = const Value.absent(),
+    this.durationMs = const Value.absent(),
+    this.lastModified = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MediaInfosCompanion.insert({
+    required String fileName,
+    this.name = const Value.absent(),
+    this.durationMs = const Value.absent(),
+    required int lastModified,
+    this.rowid = const Value.absent(),
+  }) : fileName = Value(fileName),
+       lastModified = Value(lastModified);
+  static Insertable<MediaInfoRow> custom({
+    Expression<String>? fileName,
+    Expression<String>? name,
+    Expression<int>? durationMs,
+    Expression<int>? lastModified,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (fileName != null) 'file_name': fileName,
+      if (name != null) 'name': name,
+      if (durationMs != null) 'duration_ms': durationMs,
+      if (lastModified != null) 'last_modified': lastModified,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MediaInfosCompanion copyWith({
+    Value<String>? fileName,
+    Value<String?>? name,
+    Value<int?>? durationMs,
+    Value<int>? lastModified,
+    Value<int>? rowid,
+  }) {
+    return MediaInfosCompanion(
+      fileName: fileName ?? this.fileName,
+      name: name ?? this.name,
+      durationMs: durationMs ?? this.durationMs,
+      lastModified: lastModified ?? this.lastModified,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (fileName.present) {
+      map['file_name'] = Variable<String>(fileName.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (durationMs.present) {
+      map['duration_ms'] = Variable<int>(durationMs.value);
+    }
+    if (lastModified.present) {
+      map['last_modified'] = Variable<int>(lastModified.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MediaInfosCompanion(')
+          ..write('fileName: $fileName, ')
+          ..write('name: $name, ')
+          ..write('durationMs: $durationMs, ')
+          ..write('lastModified: $lastModified, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class DiaryMedia extends Table with TableInfo<DiaryMedia, DiaryMediaRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  DiaryMedia(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _diaryIdMeta = const VerificationMeta(
+    'diaryId',
+  );
+  late final GeneratedColumn<String> diaryId = GeneratedColumn<String>(
+    'diary_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL REFERENCES diaries(id)ON DELETE CASCADE',
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _seqMeta = const VerificationMeta('seq');
+  late final GeneratedColumn<int> seq = GeneratedColumn<int>(
+    'seq',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _fileNameMeta = const VerificationMeta(
+    'fileName',
+  );
+  late final GeneratedColumn<String> fileName = GeneratedColumn<String>(
+    'file_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [diaryId, kind, seq, fileName];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'diary_media';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DiaryMediaRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('diary_id')) {
+      context.handle(
+        _diaryIdMeta,
+        diaryId.isAcceptableOrUnknown(data['diary_id']!, _diaryIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_diaryIdMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('seq')) {
+      context.handle(
+        _seqMeta,
+        seq.isAcceptableOrUnknown(data['seq']!, _seqMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_seqMeta);
+    }
+    if (data.containsKey('file_name')) {
+      context.handle(
+        _fileNameMeta,
+        fileName.isAcceptableOrUnknown(data['file_name']!, _fileNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fileNameMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {diaryId, kind, seq};
+  @override
+  DiaryMediaRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DiaryMediaRow(
+      diaryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}diary_id'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      seq: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}seq'],
+      )!,
+      fileName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}file_name'],
+      )!,
+    );
+  }
+
+  @override
+  DiaryMedia createAlias(String alias) {
+    return DiaryMedia(attachedDatabase, alias);
+  }
+
+  @override
+  List<String> get customConstraints => const [
+    'PRIMARY KEY(diary_id, kind, seq)',
+  ];
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class DiaryMediaRow extends DataClass implements Insertable<DiaryMediaRow> {
+  final String diaryId;
+  final String kind;
+  final int seq;
+  final String fileName;
+  const DiaryMediaRow({
+    required this.diaryId,
+    required this.kind,
+    required this.seq,
+    required this.fileName,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['diary_id'] = Variable<String>(diaryId);
+    map['kind'] = Variable<String>(kind);
+    map['seq'] = Variable<int>(seq);
+    map['file_name'] = Variable<String>(fileName);
+    return map;
+  }
+
+  DiaryMediaCompanion toCompanion(bool nullToAbsent) {
+    return DiaryMediaCompanion(
+      diaryId: Value(diaryId),
+      kind: Value(kind),
+      seq: Value(seq),
+      fileName: Value(fileName),
+    );
+  }
+
+  factory DiaryMediaRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DiaryMediaRow(
+      diaryId: serializer.fromJson<String>(json['diary_id']),
+      kind: serializer.fromJson<String>(json['kind']),
+      seq: serializer.fromJson<int>(json['seq']),
+      fileName: serializer.fromJson<String>(json['file_name']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'diary_id': serializer.toJson<String>(diaryId),
+      'kind': serializer.toJson<String>(kind),
+      'seq': serializer.toJson<int>(seq),
+      'file_name': serializer.toJson<String>(fileName),
+    };
+  }
+
+  DiaryMediaRow copyWith({
+    String? diaryId,
+    String? kind,
+    int? seq,
+    String? fileName,
+  }) => DiaryMediaRow(
+    diaryId: diaryId ?? this.diaryId,
+    kind: kind ?? this.kind,
+    seq: seq ?? this.seq,
+    fileName: fileName ?? this.fileName,
+  );
+  DiaryMediaRow copyWithCompanion(DiaryMediaCompanion data) {
+    return DiaryMediaRow(
+      diaryId: data.diaryId.present ? data.diaryId.value : this.diaryId,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      seq: data.seq.present ? data.seq.value : this.seq,
+      fileName: data.fileName.present ? data.fileName.value : this.fileName,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DiaryMediaRow(')
+          ..write('diaryId: $diaryId, ')
+          ..write('kind: $kind, ')
+          ..write('seq: $seq, ')
+          ..write('fileName: $fileName')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(diaryId, kind, seq, fileName);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DiaryMediaRow &&
+          other.diaryId == this.diaryId &&
+          other.kind == this.kind &&
+          other.seq == this.seq &&
+          other.fileName == this.fileName);
+}
+
+class DiaryMediaCompanion extends UpdateCompanion<DiaryMediaRow> {
+  final Value<String> diaryId;
+  final Value<String> kind;
+  final Value<int> seq;
+  final Value<String> fileName;
+  final Value<int> rowid;
+  const DiaryMediaCompanion({
+    this.diaryId = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.seq = const Value.absent(),
+    this.fileName = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DiaryMediaCompanion.insert({
+    required String diaryId,
+    required String kind,
+    required int seq,
+    required String fileName,
+    this.rowid = const Value.absent(),
+  }) : diaryId = Value(diaryId),
+       kind = Value(kind),
+       seq = Value(seq),
+       fileName = Value(fileName);
+  static Insertable<DiaryMediaRow> custom({
+    Expression<String>? diaryId,
+    Expression<String>? kind,
+    Expression<int>? seq,
+    Expression<String>? fileName,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (diaryId != null) 'diary_id': diaryId,
+      if (kind != null) 'kind': kind,
+      if (seq != null) 'seq': seq,
+      if (fileName != null) 'file_name': fileName,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DiaryMediaCompanion copyWith({
+    Value<String>? diaryId,
+    Value<String>? kind,
+    Value<int>? seq,
+    Value<String>? fileName,
+    Value<int>? rowid,
+  }) {
+    return DiaryMediaCompanion(
+      diaryId: diaryId ?? this.diaryId,
+      kind: kind ?? this.kind,
+      seq: seq ?? this.seq,
+      fileName: fileName ?? this.fileName,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (diaryId.present) {
+      map['diary_id'] = Variable<String>(diaryId.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (seq.present) {
+      map['seq'] = Variable<int>(seq.value);
+    }
+    if (fileName.present) {
+      map['file_name'] = Variable<String>(fileName.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DiaryMediaCompanion(')
+          ..write('diaryId: $diaryId, ')
+          ..write('kind: $kind, ')
+          ..write('seq: $seq, ')
+          ..write('fileName: $fileName, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class DiaryTags extends Table with TableInfo<DiaryTags, DiaryTagRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  DiaryTags(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _diaryIdMeta = const VerificationMeta(
+    'diaryId',
+  );
+  late final GeneratedColumn<String> diaryId = GeneratedColumn<String>(
+    'diary_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL REFERENCES diaries(id)ON DELETE CASCADE',
+  );
+  static const VerificationMeta _seqMeta = const VerificationMeta('seq');
+  late final GeneratedColumn<int> seq = GeneratedColumn<int>(
+    'seq',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _tagMeta = const VerificationMeta('tag');
+  late final GeneratedColumn<String> tag = GeneratedColumn<String>(
+    'tag',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [diaryId, seq, tag];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'diary_tags';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DiaryTagRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('diary_id')) {
+      context.handle(
+        _diaryIdMeta,
+        diaryId.isAcceptableOrUnknown(data['diary_id']!, _diaryIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_diaryIdMeta);
+    }
+    if (data.containsKey('seq')) {
+      context.handle(
+        _seqMeta,
+        seq.isAcceptableOrUnknown(data['seq']!, _seqMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_seqMeta);
+    }
+    if (data.containsKey('tag')) {
+      context.handle(
+        _tagMeta,
+        tag.isAcceptableOrUnknown(data['tag']!, _tagMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tagMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {diaryId, seq};
+  @override
+  DiaryTagRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DiaryTagRow(
+      diaryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}diary_id'],
+      )!,
+      seq: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}seq'],
+      )!,
+      tag: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tag'],
+      )!,
+    );
+  }
+
+  @override
+  DiaryTags createAlias(String alias) {
+    return DiaryTags(attachedDatabase, alias);
+  }
+
+  @override
+  List<String> get customConstraints => const ['PRIMARY KEY(diary_id, seq)'];
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class DiaryTagRow extends DataClass implements Insertable<DiaryTagRow> {
+  final String diaryId;
+  final int seq;
+  final String tag;
+  const DiaryTagRow({
+    required this.diaryId,
+    required this.seq,
+    required this.tag,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['diary_id'] = Variable<String>(diaryId);
+    map['seq'] = Variable<int>(seq);
+    map['tag'] = Variable<String>(tag);
+    return map;
+  }
+
+  DiaryTagsCompanion toCompanion(bool nullToAbsent) {
+    return DiaryTagsCompanion(
+      diaryId: Value(diaryId),
+      seq: Value(seq),
+      tag: Value(tag),
+    );
+  }
+
+  factory DiaryTagRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DiaryTagRow(
+      diaryId: serializer.fromJson<String>(json['diary_id']),
+      seq: serializer.fromJson<int>(json['seq']),
+      tag: serializer.fromJson<String>(json['tag']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'diary_id': serializer.toJson<String>(diaryId),
+      'seq': serializer.toJson<int>(seq),
+      'tag': serializer.toJson<String>(tag),
+    };
+  }
+
+  DiaryTagRow copyWith({String? diaryId, int? seq, String? tag}) => DiaryTagRow(
+    diaryId: diaryId ?? this.diaryId,
+    seq: seq ?? this.seq,
+    tag: tag ?? this.tag,
+  );
+  DiaryTagRow copyWithCompanion(DiaryTagsCompanion data) {
+    return DiaryTagRow(
+      diaryId: data.diaryId.present ? data.diaryId.value : this.diaryId,
+      seq: data.seq.present ? data.seq.value : this.seq,
+      tag: data.tag.present ? data.tag.value : this.tag,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DiaryTagRow(')
+          ..write('diaryId: $diaryId, ')
+          ..write('seq: $seq, ')
+          ..write('tag: $tag')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(diaryId, seq, tag);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DiaryTagRow &&
+          other.diaryId == this.diaryId &&
+          other.seq == this.seq &&
+          other.tag == this.tag);
+}
+
+class DiaryTagsCompanion extends UpdateCompanion<DiaryTagRow> {
+  final Value<String> diaryId;
+  final Value<int> seq;
+  final Value<String> tag;
+  final Value<int> rowid;
+  const DiaryTagsCompanion({
+    this.diaryId = const Value.absent(),
+    this.seq = const Value.absent(),
+    this.tag = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DiaryTagsCompanion.insert({
+    required String diaryId,
+    required int seq,
+    required String tag,
+    this.rowid = const Value.absent(),
+  }) : diaryId = Value(diaryId),
+       seq = Value(seq),
+       tag = Value(tag);
+  static Insertable<DiaryTagRow> custom({
+    Expression<String>? diaryId,
+    Expression<int>? seq,
+    Expression<String>? tag,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (diaryId != null) 'diary_id': diaryId,
+      if (seq != null) 'seq': seq,
+      if (tag != null) 'tag': tag,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DiaryTagsCompanion copyWith({
+    Value<String>? diaryId,
+    Value<int>? seq,
+    Value<String>? tag,
+    Value<int>? rowid,
+  }) {
+    return DiaryTagsCompanion(
+      diaryId: diaryId ?? this.diaryId,
+      seq: seq ?? this.seq,
+      tag: tag ?? this.tag,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (diaryId.present) {
+      map['diary_id'] = Variable<String>(diaryId.value);
+    }
+    if (seq.present) {
+      map['seq'] = Variable<int>(seq.value);
+    }
+    if (tag.present) {
+      map['tag'] = Variable<String>(tag.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DiaryTagsCompanion(')
+          ..write('diaryId: $diaryId, ')
+          ..write('seq: $seq, ')
+          ..write('tag: $tag, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$MoodiaryDatabase extends GeneratedDatabase {
   _$MoodiaryDatabase(QueryExecutor e) : super(e);
   $MoodiaryDatabaseManager get managers => $MoodiaryDatabaseManager(this);
   late final DiaryFts diaryFts = DiaryFts(this);
   late final Diaries diaries = Diaries(this);
   late final DiaryLinks diaryLinks = DiaryLinks(this);
+  late final LlmProviders llmProviders = LlmProviders(this);
+  late final Index idxLlmProvidersSort = Index(
+    'idx_llm_providers_sort',
+    'CREATE INDEX idx_llm_providers_sort ON llm_providers (sort_order)',
+  );
+  late final ChatSessions chatSessions = ChatSessions(this);
+  late final Index idxChatSessionsUpdated = Index(
+    'idx_chat_sessions_updated',
+    'CREATE INDEX idx_chat_sessions_updated ON chat_sessions (updated_at DESC)',
+  );
+  late final ChatMessages chatMessages = ChatMessages(this);
+  late final Index idxChatMessagesSession = Index(
+    'idx_chat_messages_session',
+    'CREATE INDEX idx_chat_messages_session ON chat_messages (session_id, created_at)',
+  );
+  late final AssistantToolCalls assistantToolCalls = AssistantToolCalls(this);
+  late final Memories memories = Memories(this);
+  late final Index idxMemoriesUpdated = Index(
+    'idx_memories_updated',
+    'CREATE INDEX idx_memories_updated ON memories (updated_at DESC)',
+  );
+  late final AgentPresets agentPresets = AgentPresets(this);
+  late final Tombstones tombstones = Tombstones(this);
+  late final Index idxTombstonesTime = Index(
+    'idx_tombstones_time',
+    'CREATE INDEX idx_tombstones_time ON tombstones (time_ms)',
+  );
+  late final Categories categories = Categories(this);
+  late final Fonts fonts = Fonts(this);
+  late final MediaInfos mediaInfos = MediaInfos(this);
   late final Index idxDiariesShowTime = Index(
     'idx_diaries_show_time',
     'CREATE INDEX idx_diaries_show_time ON diaries (show, time DESC, id DESC)',
@@ -6864,36 +6894,6 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
     'idx_diary_links_dst',
     'CREATE INDEX idx_diary_links_dst ON diary_links (dst_id)',
   );
-  late final Categories categories = Categories(this);
-  late final Fonts fonts = Fonts(this);
-  late final Tombstones tombstones = Tombstones(this);
-  late final Index idxTombstonesTime = Index(
-    'idx_tombstones_time',
-    'CREATE INDEX idx_tombstones_time ON tombstones (time_ms)',
-  );
-  late final MediaInfos mediaInfos = MediaInfos(this);
-  late final LlmProviders llmProviders = LlmProviders(this);
-  late final Index idxLlmProvidersSort = Index(
-    'idx_llm_providers_sort',
-    'CREATE INDEX idx_llm_providers_sort ON llm_providers (sort_order)',
-  );
-  late final ChatSessions chatSessions = ChatSessions(this);
-  late final Index idxChatSessionsUpdated = Index(
-    'idx_chat_sessions_updated',
-    'CREATE INDEX idx_chat_sessions_updated ON chat_sessions (updated_at DESC)',
-  );
-  late final ChatMessages chatMessages = ChatMessages(this);
-  late final Index idxChatMessagesSession = Index(
-    'idx_chat_messages_session',
-    'CREATE INDEX idx_chat_messages_session ON chat_messages (session_id, created_at)',
-  );
-  late final AssistantToolCalls assistantToolCalls = AssistantToolCalls(this);
-  late final Memories memories = Memories(this);
-  late final Index idxMemoriesUpdated = Index(
-    'idx_memories_updated',
-    'CREATE INDEX idx_memories_updated ON memories (updated_at DESC)',
-  );
-  late final AgentPresets agentPresets = AgentPresets(this);
   Future<int> ftsDelete(int rid) {
     return customUpdate(
       'DELETE FROM diary_fts WHERE "rowid" = ?1',
@@ -7068,20 +7068,6 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
     diaryFts,
     diaries,
     diaryLinks,
-    idxDiariesShowTime,
-    idxDiariesShowCatTime,
-    idxDiariesShowLastmod,
-    diaryMedia,
-    idxDiaryMediaKind,
-    idxDiaryMediaFile,
-    diaryTags,
-    idxDiaryTagsTag,
-    idxDiaryLinksDst,
-    categories,
-    fonts,
-    tombstones,
-    idxTombstonesTime,
-    mediaInfos,
     llmProviders,
     idxLlmProvidersSort,
     chatSessions,
@@ -7092,6 +7078,20 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
     memories,
     idxMemoriesUpdated,
     agentPresets,
+    tombstones,
+    idxTombstonesTime,
+    categories,
+    fonts,
+    mediaInfos,
+    idxDiariesShowTime,
+    idxDiariesShowCatTime,
+    idxDiariesShowLastmod,
+    diaryMedia,
+    idxDiaryMediaKind,
+    idxDiaryMediaFile,
+    diaryTags,
+    idxDiaryTagsTag,
+    idxDiaryLinksDst,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -7101,20 +7101,6 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('diary_links', kind: UpdateKind.delete)],
-    ),
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'diaries',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('diary_media', kind: UpdateKind.delete)],
-    ),
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'diaries',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('diary_tags', kind: UpdateKind.delete)],
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
@@ -7129,6 +7115,20 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('assistant_tool_calls', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'diaries',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('diary_media', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'diaries',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('diary_tags', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -8245,1271 +8245,6 @@ typedef $DiaryLinksProcessedTableManager =
       (DiaryLinkRow, $DiaryLinksReferences),
       DiaryLinkRow,
       PrefetchHooks Function({bool srcId})
-    >;
-typedef $DiaryMediaCreateCompanionBuilder = DiaryMediaCompanion Function({
-  required String diaryId,
-  required String kind,
-  required int seq,
-  required String fileName,
-  Value<int> rowid,
-});
-typedef $DiaryMediaUpdateCompanionBuilder = DiaryMediaCompanion Function({
-  Value<String> diaryId,
-  Value<String> kind,
-  Value<int> seq,
-  Value<String> fileName,
-  Value<int> rowid,
-});
-
-final class $DiaryMediaReferences
-    extends BaseReferences<_$MoodiaryDatabase, DiaryMedia, DiaryMediaRow> {
-  $DiaryMediaReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static Diaries _diaryIdTable(_$MoodiaryDatabase db) =>
-      db.diaries.createAlias('diary_media__diary_id__diaries__id');
-
-  $DiariesProcessedTableManager get diaryId {
-    final $_column = $_itemColumn<String>('diary_id')!;
-
-    final manager = $DiariesTableManager(
-      $_db,
-      $_db.diaries,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_diaryIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-}
-
-class $DiaryMediaFilterComposer
-    extends Composer<_$MoodiaryDatabase, DiaryMedia> {
-  $DiaryMediaFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get kind => $composableBuilder(
-    column: $table.kind,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get seq => $composableBuilder(
-    column: $table.seq,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get fileName => $composableBuilder(
-    column: $table.fileName,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  $DiariesFilterComposer get diaryId {
-    final $DiariesFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.diaryId,
-      referencedTable: $db.diaries,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $DiariesFilterComposer(
-            $db: $db,
-            $table: $db.diaries,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $DiaryMediaOrderingComposer
-    extends Composer<_$MoodiaryDatabase, DiaryMedia> {
-  $DiaryMediaOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get kind => $composableBuilder(
-    column: $table.kind,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get seq => $composableBuilder(
-    column: $table.seq,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get fileName => $composableBuilder(
-    column: $table.fileName,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  $DiariesOrderingComposer get diaryId {
-    final $DiariesOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.diaryId,
-      referencedTable: $db.diaries,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $DiariesOrderingComposer(
-            $db: $db,
-            $table: $db.diaries,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $DiaryMediaAnnotationComposer
-    extends Composer<_$MoodiaryDatabase, DiaryMedia> {
-  $DiaryMediaAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get kind =>
-      $composableBuilder(column: $table.kind, builder: (column) => column);
-
-  GeneratedColumn<int> get seq =>
-      $composableBuilder(column: $table.seq, builder: (column) => column);
-
-  GeneratedColumn<String> get fileName =>
-      $composableBuilder(column: $table.fileName, builder: (column) => column);
-
-  $DiariesAnnotationComposer get diaryId {
-    final $DiariesAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.diaryId,
-      referencedTable: $db.diaries,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $DiariesAnnotationComposer(
-            $db: $db,
-            $table: $db.diaries,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $DiaryMediaTableManager
-    extends
-        RootTableManager<
-          _$MoodiaryDatabase,
-          DiaryMedia,
-          DiaryMediaRow,
-          $DiaryMediaFilterComposer,
-          $DiaryMediaOrderingComposer,
-          $DiaryMediaAnnotationComposer,
-          $DiaryMediaCreateCompanionBuilder,
-          $DiaryMediaUpdateCompanionBuilder,
-          (DiaryMediaRow, $DiaryMediaReferences),
-          DiaryMediaRow,
-          PrefetchHooks Function({bool diaryId})
-        > {
-  $DiaryMediaTableManager(_$MoodiaryDatabase db, DiaryMedia table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $DiaryMediaFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $DiaryMediaOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $DiaryMediaAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> diaryId = const Value.absent(),
-                Value<String> kind = const Value.absent(),
-                Value<int> seq = const Value.absent(),
-                Value<String> fileName = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => DiaryMediaCompanion(
-                diaryId: diaryId,
-                kind: kind,
-                seq: seq,
-                fileName: fileName,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String diaryId,
-                required String kind,
-                required int seq,
-                required String fileName,
-                Value<int> rowid = const Value.absent(),
-              }) => DiaryMediaCompanion.insert(
-                diaryId: diaryId,
-                kind: kind,
-                seq: seq,
-                fileName: fileName,
-                rowid: rowid,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) =>
-                    (e.readTable(table), $DiaryMediaReferences(db, table, e)),
-              )
-              .toList(),
-          prefetchHooksCallback: ({diaryId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (diaryId) {
-                      state = state.withJoin(
-                        currentTable: table,
-                        currentColumn: table.diaryId,
-                        referencedTable: $DiaryMediaReferences._diaryIdTable(
-                          db,
-                        ),
-                        referencedColumn: $DiaryMediaReferences
-                            ._diaryIdTable(db)
-                            .id,
-                      ) as T;
-                    }
-
-                    return state;
-                  },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
-        ),
-      );
-}
-
-typedef $DiaryMediaProcessedTableManager =
-    ProcessedTableManager<
-      _$MoodiaryDatabase,
-      DiaryMedia,
-      DiaryMediaRow,
-      $DiaryMediaFilterComposer,
-      $DiaryMediaOrderingComposer,
-      $DiaryMediaAnnotationComposer,
-      $DiaryMediaCreateCompanionBuilder,
-      $DiaryMediaUpdateCompanionBuilder,
-      (DiaryMediaRow, $DiaryMediaReferences),
-      DiaryMediaRow,
-      PrefetchHooks Function({bool diaryId})
-    >;
-typedef $DiaryTagsCreateCompanionBuilder = DiaryTagsCompanion Function({
-  required String diaryId,
-  required int seq,
-  required String tag,
-  Value<int> rowid,
-});
-typedef $DiaryTagsUpdateCompanionBuilder = DiaryTagsCompanion Function({
-  Value<String> diaryId,
-  Value<int> seq,
-  Value<String> tag,
-  Value<int> rowid,
-});
-
-final class $DiaryTagsReferences
-    extends BaseReferences<_$MoodiaryDatabase, DiaryTags, DiaryTagRow> {
-  $DiaryTagsReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static Diaries _diaryIdTable(_$MoodiaryDatabase db) =>
-      db.diaries.createAlias('diary_tags__diary_id__diaries__id');
-
-  $DiariesProcessedTableManager get diaryId {
-    final $_column = $_itemColumn<String>('diary_id')!;
-
-    final manager = $DiariesTableManager(
-      $_db,
-      $_db.diaries,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_diaryIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-}
-
-class $DiaryTagsFilterComposer extends Composer<_$MoodiaryDatabase, DiaryTags> {
-  $DiaryTagsFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<int> get seq => $composableBuilder(
-    column: $table.seq,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get tag => $composableBuilder(
-    column: $table.tag,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  $DiariesFilterComposer get diaryId {
-    final $DiariesFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.diaryId,
-      referencedTable: $db.diaries,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $DiariesFilterComposer(
-            $db: $db,
-            $table: $db.diaries,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $DiaryTagsOrderingComposer
-    extends Composer<_$MoodiaryDatabase, DiaryTags> {
-  $DiaryTagsOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<int> get seq => $composableBuilder(
-    column: $table.seq,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get tag => $composableBuilder(
-    column: $table.tag,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  $DiariesOrderingComposer get diaryId {
-    final $DiariesOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.diaryId,
-      referencedTable: $db.diaries,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $DiariesOrderingComposer(
-            $db: $db,
-            $table: $db.diaries,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $DiaryTagsAnnotationComposer
-    extends Composer<_$MoodiaryDatabase, DiaryTags> {
-  $DiaryTagsAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<int> get seq =>
-      $composableBuilder(column: $table.seq, builder: (column) => column);
-
-  GeneratedColumn<String> get tag =>
-      $composableBuilder(column: $table.tag, builder: (column) => column);
-
-  $DiariesAnnotationComposer get diaryId {
-    final $DiariesAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.diaryId,
-      referencedTable: $db.diaries,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $DiariesAnnotationComposer(
-            $db: $db,
-            $table: $db.diaries,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $DiaryTagsTableManager
-    extends
-        RootTableManager<
-          _$MoodiaryDatabase,
-          DiaryTags,
-          DiaryTagRow,
-          $DiaryTagsFilterComposer,
-          $DiaryTagsOrderingComposer,
-          $DiaryTagsAnnotationComposer,
-          $DiaryTagsCreateCompanionBuilder,
-          $DiaryTagsUpdateCompanionBuilder,
-          (DiaryTagRow, $DiaryTagsReferences),
-          DiaryTagRow,
-          PrefetchHooks Function({bool diaryId})
-        > {
-  $DiaryTagsTableManager(_$MoodiaryDatabase db, DiaryTags table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $DiaryTagsFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $DiaryTagsOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $DiaryTagsAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> diaryId = const Value.absent(),
-                Value<int> seq = const Value.absent(),
-                Value<String> tag = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => DiaryTagsCompanion(
-                diaryId: diaryId,
-                seq: seq,
-                tag: tag,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String diaryId,
-                required int seq,
-                required String tag,
-                Value<int> rowid = const Value.absent(),
-              }) => DiaryTagsCompanion.insert(
-                diaryId: diaryId,
-                seq: seq,
-                tag: tag,
-                rowid: rowid,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (e.readTable(table), $DiaryTagsReferences(db, table, e)),
-              )
-              .toList(),
-          prefetchHooksCallback: ({diaryId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (diaryId) {
-                      state = state.withJoin(
-                        currentTable: table,
-                        currentColumn: table.diaryId,
-                        referencedTable: $DiaryTagsReferences._diaryIdTable(db),
-                        referencedColumn: $DiaryTagsReferences
-                            ._diaryIdTable(db)
-                            .id,
-                      ) as T;
-                    }
-
-                    return state;
-                  },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
-        ),
-      );
-}
-
-typedef $DiaryTagsProcessedTableManager =
-    ProcessedTableManager<
-      _$MoodiaryDatabase,
-      DiaryTags,
-      DiaryTagRow,
-      $DiaryTagsFilterComposer,
-      $DiaryTagsOrderingComposer,
-      $DiaryTagsAnnotationComposer,
-      $DiaryTagsCreateCompanionBuilder,
-      $DiaryTagsUpdateCompanionBuilder,
-      (DiaryTagRow, $DiaryTagsReferences),
-      DiaryTagRow,
-      PrefetchHooks Function({bool diaryId})
-    >;
-typedef $CategoriesCreateCompanionBuilder = CategoriesCompanion Function({
-  required String id,
-  required String name,
-  required int lastModified,
-  Value<String?> parentId,
-  Value<int?> color,
-  Value<int> rowid,
-});
-typedef $CategoriesUpdateCompanionBuilder = CategoriesCompanion Function({
-  Value<String> id,
-  Value<String> name,
-  Value<int> lastModified,
-  Value<String?> parentId,
-  Value<int?> color,
-  Value<int> rowid,
-});
-
-class $CategoriesFilterComposer
-    extends Composer<_$MoodiaryDatabase, Categories> {
-  $CategoriesFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get lastModified => $composableBuilder(
-    column: $table.lastModified,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get parentId => $composableBuilder(
-    column: $table.parentId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get color => $composableBuilder(
-    column: $table.color,
-    builder: (column) => ColumnFilters(column),
-  );
-}
-
-class $CategoriesOrderingComposer
-    extends Composer<_$MoodiaryDatabase, Categories> {
-  $CategoriesOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get lastModified => $composableBuilder(
-    column: $table.lastModified,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get parentId => $composableBuilder(
-    column: $table.parentId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get color => $composableBuilder(
-    column: $table.color,
-    builder: (column) => ColumnOrderings(column),
-  );
-}
-
-class $CategoriesAnnotationComposer
-    extends Composer<_$MoodiaryDatabase, Categories> {
-  $CategoriesAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
-
-  GeneratedColumn<int> get lastModified => $composableBuilder(
-    column: $table.lastModified,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get parentId =>
-      $composableBuilder(column: $table.parentId, builder: (column) => column);
-
-  GeneratedColumn<int> get color =>
-      $composableBuilder(column: $table.color, builder: (column) => column);
-}
-
-class $CategoriesTableManager
-    extends
-        RootTableManager<
-          _$MoodiaryDatabase,
-          Categories,
-          CategoryRow,
-          $CategoriesFilterComposer,
-          $CategoriesOrderingComposer,
-          $CategoriesAnnotationComposer,
-          $CategoriesCreateCompanionBuilder,
-          $CategoriesUpdateCompanionBuilder,
-          (
-            CategoryRow,
-            BaseReferences<_$MoodiaryDatabase, Categories, CategoryRow>,
-          ),
-          CategoryRow,
-          PrefetchHooks Function()
-        > {
-  $CategoriesTableManager(_$MoodiaryDatabase db, Categories table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $CategoriesFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $CategoriesOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $CategoriesAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> id = const Value.absent(),
-                Value<String> name = const Value.absent(),
-                Value<int> lastModified = const Value.absent(),
-                Value<String?> parentId = const Value.absent(),
-                Value<int?> color = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => CategoriesCompanion(
-                id: id,
-                name: name,
-                lastModified: lastModified,
-                parentId: parentId,
-                color: color,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String id,
-                required String name,
-                required int lastModified,
-                Value<String?> parentId = const Value.absent(),
-                Value<int?> color = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => CategoriesCompanion.insert(
-                id: id,
-                name: name,
-                lastModified: lastModified,
-                parentId: parentId,
-                color: color,
-                rowid: rowid,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ),
-      );
-}
-
-typedef $CategoriesProcessedTableManager =
-    ProcessedTableManager<
-      _$MoodiaryDatabase,
-      Categories,
-      CategoryRow,
-      $CategoriesFilterComposer,
-      $CategoriesOrderingComposer,
-      $CategoriesAnnotationComposer,
-      $CategoriesCreateCompanionBuilder,
-      $CategoriesUpdateCompanionBuilder,
-      (
-        CategoryRow,
-        BaseReferences<_$MoodiaryDatabase, Categories, CategoryRow>,
-      ),
-      CategoryRow,
-      PrefetchHooks Function()
-    >;
-typedef $FontsCreateCompanionBuilder = FontsCompanion Function({
-  required String fontFamily,
-  required String fontFileName,
-  Value<String> wghtAxisJson,
-  Value<int> rowid,
-});
-typedef $FontsUpdateCompanionBuilder = FontsCompanion Function({
-  Value<String> fontFamily,
-  Value<String> fontFileName,
-  Value<String> wghtAxisJson,
-  Value<int> rowid,
-});
-
-class $FontsFilterComposer extends Composer<_$MoodiaryDatabase, Fonts> {
-  $FontsFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get fontFamily => $composableBuilder(
-    column: $table.fontFamily,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get fontFileName => $composableBuilder(
-    column: $table.fontFileName,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get wghtAxisJson => $composableBuilder(
-    column: $table.wghtAxisJson,
-    builder: (column) => ColumnFilters(column),
-  );
-}
-
-class $FontsOrderingComposer extends Composer<_$MoodiaryDatabase, Fonts> {
-  $FontsOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get fontFamily => $composableBuilder(
-    column: $table.fontFamily,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get fontFileName => $composableBuilder(
-    column: $table.fontFileName,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get wghtAxisJson => $composableBuilder(
-    column: $table.wghtAxisJson,
-    builder: (column) => ColumnOrderings(column),
-  );
-}
-
-class $FontsAnnotationComposer extends Composer<_$MoodiaryDatabase, Fonts> {
-  $FontsAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get fontFamily => $composableBuilder(
-    column: $table.fontFamily,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get fontFileName => $composableBuilder(
-    column: $table.fontFileName,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get wghtAxisJson => $composableBuilder(
-    column: $table.wghtAxisJson,
-    builder: (column) => column,
-  );
-}
-
-class $FontsTableManager
-    extends
-        RootTableManager<
-          _$MoodiaryDatabase,
-          Fonts,
-          FontRow,
-          $FontsFilterComposer,
-          $FontsOrderingComposer,
-          $FontsAnnotationComposer,
-          $FontsCreateCompanionBuilder,
-          $FontsUpdateCompanionBuilder,
-          (FontRow, BaseReferences<_$MoodiaryDatabase, Fonts, FontRow>),
-          FontRow,
-          PrefetchHooks Function()
-        > {
-  $FontsTableManager(_$MoodiaryDatabase db, Fonts table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $FontsFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $FontsOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $FontsAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> fontFamily = const Value.absent(),
-                Value<String> fontFileName = const Value.absent(),
-                Value<String> wghtAxisJson = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => FontsCompanion(
-                fontFamily: fontFamily,
-                fontFileName: fontFileName,
-                wghtAxisJson: wghtAxisJson,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String fontFamily,
-                required String fontFileName,
-                Value<String> wghtAxisJson = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => FontsCompanion.insert(
-                fontFamily: fontFamily,
-                fontFileName: fontFileName,
-                wghtAxisJson: wghtAxisJson,
-                rowid: rowid,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ),
-      );
-}
-
-typedef $FontsProcessedTableManager =
-    ProcessedTableManager<
-      _$MoodiaryDatabase,
-      Fonts,
-      FontRow,
-      $FontsFilterComposer,
-      $FontsOrderingComposer,
-      $FontsAnnotationComposer,
-      $FontsCreateCompanionBuilder,
-      $FontsUpdateCompanionBuilder,
-      (FontRow, BaseReferences<_$MoodiaryDatabase, Fonts, FontRow>),
-      FontRow,
-      PrefetchHooks Function()
-    >;
-typedef $TombstonesCreateCompanionBuilder = TombstonesCompanion Function({
-  required String key,
-  required int timeMs,
-  Value<String> pushedBackendsJson,
-  Value<int> rowid,
-});
-typedef $TombstonesUpdateCompanionBuilder = TombstonesCompanion Function({
-  Value<String> key,
-  Value<int> timeMs,
-  Value<String> pushedBackendsJson,
-  Value<int> rowid,
-});
-
-class $TombstonesFilterComposer
-    extends Composer<_$MoodiaryDatabase, Tombstones> {
-  $TombstonesFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get key => $composableBuilder(
-    column: $table.key,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get timeMs => $composableBuilder(
-    column: $table.timeMs,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get pushedBackendsJson => $composableBuilder(
-    column: $table.pushedBackendsJson,
-    builder: (column) => ColumnFilters(column),
-  );
-}
-
-class $TombstonesOrderingComposer
-    extends Composer<_$MoodiaryDatabase, Tombstones> {
-  $TombstonesOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get key => $composableBuilder(
-    column: $table.key,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get timeMs => $composableBuilder(
-    column: $table.timeMs,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get pushedBackendsJson => $composableBuilder(
-    column: $table.pushedBackendsJson,
-    builder: (column) => ColumnOrderings(column),
-  );
-}
-
-class $TombstonesAnnotationComposer
-    extends Composer<_$MoodiaryDatabase, Tombstones> {
-  $TombstonesAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get key =>
-      $composableBuilder(column: $table.key, builder: (column) => column);
-
-  GeneratedColumn<int> get timeMs =>
-      $composableBuilder(column: $table.timeMs, builder: (column) => column);
-
-  GeneratedColumn<String> get pushedBackendsJson => $composableBuilder(
-    column: $table.pushedBackendsJson,
-    builder: (column) => column,
-  );
-}
-
-class $TombstonesTableManager
-    extends
-        RootTableManager<
-          _$MoodiaryDatabase,
-          Tombstones,
-          TombstoneRow,
-          $TombstonesFilterComposer,
-          $TombstonesOrderingComposer,
-          $TombstonesAnnotationComposer,
-          $TombstonesCreateCompanionBuilder,
-          $TombstonesUpdateCompanionBuilder,
-          (
-            TombstoneRow,
-            BaseReferences<_$MoodiaryDatabase, Tombstones, TombstoneRow>,
-          ),
-          TombstoneRow,
-          PrefetchHooks Function()
-        > {
-  $TombstonesTableManager(_$MoodiaryDatabase db, Tombstones table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $TombstonesFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $TombstonesOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $TombstonesAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> key = const Value.absent(),
-                Value<int> timeMs = const Value.absent(),
-                Value<String> pushedBackendsJson = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => TombstonesCompanion(
-                key: key,
-                timeMs: timeMs,
-                pushedBackendsJson: pushedBackendsJson,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String key,
-                required int timeMs,
-                Value<String> pushedBackendsJson = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => TombstonesCompanion.insert(
-                key: key,
-                timeMs: timeMs,
-                pushedBackendsJson: pushedBackendsJson,
-                rowid: rowid,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ),
-      );
-}
-
-typedef $TombstonesProcessedTableManager =
-    ProcessedTableManager<
-      _$MoodiaryDatabase,
-      Tombstones,
-      TombstoneRow,
-      $TombstonesFilterComposer,
-      $TombstonesOrderingComposer,
-      $TombstonesAnnotationComposer,
-      $TombstonesCreateCompanionBuilder,
-      $TombstonesUpdateCompanionBuilder,
-      (
-        TombstoneRow,
-        BaseReferences<_$MoodiaryDatabase, Tombstones, TombstoneRow>,
-      ),
-      TombstoneRow,
-      PrefetchHooks Function()
-    >;
-typedef $MediaInfosCreateCompanionBuilder = MediaInfosCompanion Function({
-  required String fileName,
-  Value<String?> name,
-  Value<int?> durationMs,
-  required int lastModified,
-  Value<int> rowid,
-});
-typedef $MediaInfosUpdateCompanionBuilder = MediaInfosCompanion Function({
-  Value<String> fileName,
-  Value<String?> name,
-  Value<int?> durationMs,
-  Value<int> lastModified,
-  Value<int> rowid,
-});
-
-class $MediaInfosFilterComposer
-    extends Composer<_$MoodiaryDatabase, MediaInfos> {
-  $MediaInfosFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get fileName => $composableBuilder(
-    column: $table.fileName,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get durationMs => $composableBuilder(
-    column: $table.durationMs,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get lastModified => $composableBuilder(
-    column: $table.lastModified,
-    builder: (column) => ColumnFilters(column),
-  );
-}
-
-class $MediaInfosOrderingComposer
-    extends Composer<_$MoodiaryDatabase, MediaInfos> {
-  $MediaInfosOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get fileName => $composableBuilder(
-    column: $table.fileName,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get durationMs => $composableBuilder(
-    column: $table.durationMs,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get lastModified => $composableBuilder(
-    column: $table.lastModified,
-    builder: (column) => ColumnOrderings(column),
-  );
-}
-
-class $MediaInfosAnnotationComposer
-    extends Composer<_$MoodiaryDatabase, MediaInfos> {
-  $MediaInfosAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get fileName =>
-      $composableBuilder(column: $table.fileName, builder: (column) => column);
-
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
-
-  GeneratedColumn<int> get durationMs => $composableBuilder(
-    column: $table.durationMs,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<int> get lastModified => $composableBuilder(
-    column: $table.lastModified,
-    builder: (column) => column,
-  );
-}
-
-class $MediaInfosTableManager
-    extends
-        RootTableManager<
-          _$MoodiaryDatabase,
-          MediaInfos,
-          MediaInfoRow,
-          $MediaInfosFilterComposer,
-          $MediaInfosOrderingComposer,
-          $MediaInfosAnnotationComposer,
-          $MediaInfosCreateCompanionBuilder,
-          $MediaInfosUpdateCompanionBuilder,
-          (
-            MediaInfoRow,
-            BaseReferences<_$MoodiaryDatabase, MediaInfos, MediaInfoRow>,
-          ),
-          MediaInfoRow,
-          PrefetchHooks Function()
-        > {
-  $MediaInfosTableManager(_$MoodiaryDatabase db, MediaInfos table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $MediaInfosFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $MediaInfosOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $MediaInfosAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> fileName = const Value.absent(),
-                Value<String?> name = const Value.absent(),
-                Value<int?> durationMs = const Value.absent(),
-                Value<int> lastModified = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => MediaInfosCompanion(
-                fileName: fileName,
-                name: name,
-                durationMs: durationMs,
-                lastModified: lastModified,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String fileName,
-                Value<String?> name = const Value.absent(),
-                Value<int?> durationMs = const Value.absent(),
-                required int lastModified,
-                Value<int> rowid = const Value.absent(),
-              }) => MediaInfosCompanion.insert(
-                fileName: fileName,
-                name: name,
-                durationMs: durationMs,
-                lastModified: lastModified,
-                rowid: rowid,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ),
-      );
-}
-
-typedef $MediaInfosProcessedTableManager =
-    ProcessedTableManager<
-      _$MoodiaryDatabase,
-      MediaInfos,
-      MediaInfoRow,
-      $MediaInfosFilterComposer,
-      $MediaInfosOrderingComposer,
-      $MediaInfosAnnotationComposer,
-      $MediaInfosCreateCompanionBuilder,
-      $MediaInfosUpdateCompanionBuilder,
-      (
-        MediaInfoRow,
-        BaseReferences<_$MoodiaryDatabase, MediaInfos, MediaInfoRow>,
-      ),
-      MediaInfoRow,
-      PrefetchHooks Function()
     >;
 typedef $LlmProvidersCreateCompanionBuilder = LlmProvidersCompanion Function({
   required String id,
@@ -11651,6 +10386,1271 @@ typedef $AgentPresetsProcessedTableManager =
       AgentPresetRow,
       PrefetchHooks Function()
     >;
+typedef $TombstonesCreateCompanionBuilder = TombstonesCompanion Function({
+  required String key,
+  required int timeMs,
+  Value<String> pushedBackendsJson,
+  Value<int> rowid,
+});
+typedef $TombstonesUpdateCompanionBuilder = TombstonesCompanion Function({
+  Value<String> key,
+  Value<int> timeMs,
+  Value<String> pushedBackendsJson,
+  Value<int> rowid,
+});
+
+class $TombstonesFilterComposer
+    extends Composer<_$MoodiaryDatabase, Tombstones> {
+  $TombstonesFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get key => $composableBuilder(
+    column: $table.key,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get timeMs => $composableBuilder(
+    column: $table.timeMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pushedBackendsJson => $composableBuilder(
+    column: $table.pushedBackendsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $TombstonesOrderingComposer
+    extends Composer<_$MoodiaryDatabase, Tombstones> {
+  $TombstonesOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get key => $composableBuilder(
+    column: $table.key,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get timeMs => $composableBuilder(
+    column: $table.timeMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get pushedBackendsJson => $composableBuilder(
+    column: $table.pushedBackendsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $TombstonesAnnotationComposer
+    extends Composer<_$MoodiaryDatabase, Tombstones> {
+  $TombstonesAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get key =>
+      $composableBuilder(column: $table.key, builder: (column) => column);
+
+  GeneratedColumn<int> get timeMs =>
+      $composableBuilder(column: $table.timeMs, builder: (column) => column);
+
+  GeneratedColumn<String> get pushedBackendsJson => $composableBuilder(
+    column: $table.pushedBackendsJson,
+    builder: (column) => column,
+  );
+}
+
+class $TombstonesTableManager
+    extends
+        RootTableManager<
+          _$MoodiaryDatabase,
+          Tombstones,
+          TombstoneRow,
+          $TombstonesFilterComposer,
+          $TombstonesOrderingComposer,
+          $TombstonesAnnotationComposer,
+          $TombstonesCreateCompanionBuilder,
+          $TombstonesUpdateCompanionBuilder,
+          (
+            TombstoneRow,
+            BaseReferences<_$MoodiaryDatabase, Tombstones, TombstoneRow>,
+          ),
+          TombstoneRow,
+          PrefetchHooks Function()
+        > {
+  $TombstonesTableManager(_$MoodiaryDatabase db, Tombstones table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $TombstonesFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $TombstonesOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $TombstonesAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> key = const Value.absent(),
+                Value<int> timeMs = const Value.absent(),
+                Value<String> pushedBackendsJson = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TombstonesCompanion(
+                key: key,
+                timeMs: timeMs,
+                pushedBackendsJson: pushedBackendsJson,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String key,
+                required int timeMs,
+                Value<String> pushedBackendsJson = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TombstonesCompanion.insert(
+                key: key,
+                timeMs: timeMs,
+                pushedBackendsJson: pushedBackendsJson,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $TombstonesProcessedTableManager =
+    ProcessedTableManager<
+      _$MoodiaryDatabase,
+      Tombstones,
+      TombstoneRow,
+      $TombstonesFilterComposer,
+      $TombstonesOrderingComposer,
+      $TombstonesAnnotationComposer,
+      $TombstonesCreateCompanionBuilder,
+      $TombstonesUpdateCompanionBuilder,
+      (
+        TombstoneRow,
+        BaseReferences<_$MoodiaryDatabase, Tombstones, TombstoneRow>,
+      ),
+      TombstoneRow,
+      PrefetchHooks Function()
+    >;
+typedef $CategoriesCreateCompanionBuilder = CategoriesCompanion Function({
+  required String id,
+  required String name,
+  required int lastModified,
+  Value<String?> parentId,
+  Value<int?> color,
+  Value<int> rowid,
+});
+typedef $CategoriesUpdateCompanionBuilder = CategoriesCompanion Function({
+  Value<String> id,
+  Value<String> name,
+  Value<int> lastModified,
+  Value<String?> parentId,
+  Value<int?> color,
+  Value<int> rowid,
+});
+
+class $CategoriesFilterComposer
+    extends Composer<_$MoodiaryDatabase, Categories> {
+  $CategoriesFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastModified => $composableBuilder(
+    column: $table.lastModified,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get parentId => $composableBuilder(
+    column: $table.parentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get color => $composableBuilder(
+    column: $table.color,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $CategoriesOrderingComposer
+    extends Composer<_$MoodiaryDatabase, Categories> {
+  $CategoriesOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lastModified => $composableBuilder(
+    column: $table.lastModified,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get parentId => $composableBuilder(
+    column: $table.parentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get color => $composableBuilder(
+    column: $table.color,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $CategoriesAnnotationComposer
+    extends Composer<_$MoodiaryDatabase, Categories> {
+  $CategoriesAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get lastModified => $composableBuilder(
+    column: $table.lastModified,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get parentId =>
+      $composableBuilder(column: $table.parentId, builder: (column) => column);
+
+  GeneratedColumn<int> get color =>
+      $composableBuilder(column: $table.color, builder: (column) => column);
+}
+
+class $CategoriesTableManager
+    extends
+        RootTableManager<
+          _$MoodiaryDatabase,
+          Categories,
+          CategoryRow,
+          $CategoriesFilterComposer,
+          $CategoriesOrderingComposer,
+          $CategoriesAnnotationComposer,
+          $CategoriesCreateCompanionBuilder,
+          $CategoriesUpdateCompanionBuilder,
+          (
+            CategoryRow,
+            BaseReferences<_$MoodiaryDatabase, Categories, CategoryRow>,
+          ),
+          CategoryRow,
+          PrefetchHooks Function()
+        > {
+  $CategoriesTableManager(_$MoodiaryDatabase db, Categories table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $CategoriesFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $CategoriesOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $CategoriesAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<int> lastModified = const Value.absent(),
+                Value<String?> parentId = const Value.absent(),
+                Value<int?> color = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CategoriesCompanion(
+                id: id,
+                name: name,
+                lastModified: lastModified,
+                parentId: parentId,
+                color: color,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String name,
+                required int lastModified,
+                Value<String?> parentId = const Value.absent(),
+                Value<int?> color = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CategoriesCompanion.insert(
+                id: id,
+                name: name,
+                lastModified: lastModified,
+                parentId: parentId,
+                color: color,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $CategoriesProcessedTableManager =
+    ProcessedTableManager<
+      _$MoodiaryDatabase,
+      Categories,
+      CategoryRow,
+      $CategoriesFilterComposer,
+      $CategoriesOrderingComposer,
+      $CategoriesAnnotationComposer,
+      $CategoriesCreateCompanionBuilder,
+      $CategoriesUpdateCompanionBuilder,
+      (
+        CategoryRow,
+        BaseReferences<_$MoodiaryDatabase, Categories, CategoryRow>,
+      ),
+      CategoryRow,
+      PrefetchHooks Function()
+    >;
+typedef $FontsCreateCompanionBuilder = FontsCompanion Function({
+  required String fontFamily,
+  required String fontFileName,
+  Value<String> wghtAxisJson,
+  Value<int> rowid,
+});
+typedef $FontsUpdateCompanionBuilder = FontsCompanion Function({
+  Value<String> fontFamily,
+  Value<String> fontFileName,
+  Value<String> wghtAxisJson,
+  Value<int> rowid,
+});
+
+class $FontsFilterComposer extends Composer<_$MoodiaryDatabase, Fonts> {
+  $FontsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get fontFamily => $composableBuilder(
+    column: $table.fontFamily,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fontFileName => $composableBuilder(
+    column: $table.fontFileName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get wghtAxisJson => $composableBuilder(
+    column: $table.wghtAxisJson,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $FontsOrderingComposer extends Composer<_$MoodiaryDatabase, Fonts> {
+  $FontsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get fontFamily => $composableBuilder(
+    column: $table.fontFamily,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fontFileName => $composableBuilder(
+    column: $table.fontFileName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get wghtAxisJson => $composableBuilder(
+    column: $table.wghtAxisJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $FontsAnnotationComposer extends Composer<_$MoodiaryDatabase, Fonts> {
+  $FontsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get fontFamily => $composableBuilder(
+    column: $table.fontFamily,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get fontFileName => $composableBuilder(
+    column: $table.fontFileName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get wghtAxisJson => $composableBuilder(
+    column: $table.wghtAxisJson,
+    builder: (column) => column,
+  );
+}
+
+class $FontsTableManager
+    extends
+        RootTableManager<
+          _$MoodiaryDatabase,
+          Fonts,
+          FontRow,
+          $FontsFilterComposer,
+          $FontsOrderingComposer,
+          $FontsAnnotationComposer,
+          $FontsCreateCompanionBuilder,
+          $FontsUpdateCompanionBuilder,
+          (FontRow, BaseReferences<_$MoodiaryDatabase, Fonts, FontRow>),
+          FontRow,
+          PrefetchHooks Function()
+        > {
+  $FontsTableManager(_$MoodiaryDatabase db, Fonts table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $FontsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $FontsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $FontsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> fontFamily = const Value.absent(),
+                Value<String> fontFileName = const Value.absent(),
+                Value<String> wghtAxisJson = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FontsCompanion(
+                fontFamily: fontFamily,
+                fontFileName: fontFileName,
+                wghtAxisJson: wghtAxisJson,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String fontFamily,
+                required String fontFileName,
+                Value<String> wghtAxisJson = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FontsCompanion.insert(
+                fontFamily: fontFamily,
+                fontFileName: fontFileName,
+                wghtAxisJson: wghtAxisJson,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $FontsProcessedTableManager =
+    ProcessedTableManager<
+      _$MoodiaryDatabase,
+      Fonts,
+      FontRow,
+      $FontsFilterComposer,
+      $FontsOrderingComposer,
+      $FontsAnnotationComposer,
+      $FontsCreateCompanionBuilder,
+      $FontsUpdateCompanionBuilder,
+      (FontRow, BaseReferences<_$MoodiaryDatabase, Fonts, FontRow>),
+      FontRow,
+      PrefetchHooks Function()
+    >;
+typedef $MediaInfosCreateCompanionBuilder = MediaInfosCompanion Function({
+  required String fileName,
+  Value<String?> name,
+  Value<int?> durationMs,
+  required int lastModified,
+  Value<int> rowid,
+});
+typedef $MediaInfosUpdateCompanionBuilder = MediaInfosCompanion Function({
+  Value<String> fileName,
+  Value<String?> name,
+  Value<int?> durationMs,
+  Value<int> lastModified,
+  Value<int> rowid,
+});
+
+class $MediaInfosFilterComposer
+    extends Composer<_$MoodiaryDatabase, MediaInfos> {
+  $MediaInfosFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get fileName => $composableBuilder(
+    column: $table.fileName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get durationMs => $composableBuilder(
+    column: $table.durationMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastModified => $composableBuilder(
+    column: $table.lastModified,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $MediaInfosOrderingComposer
+    extends Composer<_$MoodiaryDatabase, MediaInfos> {
+  $MediaInfosOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get fileName => $composableBuilder(
+    column: $table.fileName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get durationMs => $composableBuilder(
+    column: $table.durationMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lastModified => $composableBuilder(
+    column: $table.lastModified,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $MediaInfosAnnotationComposer
+    extends Composer<_$MoodiaryDatabase, MediaInfos> {
+  $MediaInfosAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get fileName =>
+      $composableBuilder(column: $table.fileName, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get durationMs => $composableBuilder(
+    column: $table.durationMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get lastModified => $composableBuilder(
+    column: $table.lastModified,
+    builder: (column) => column,
+  );
+}
+
+class $MediaInfosTableManager
+    extends
+        RootTableManager<
+          _$MoodiaryDatabase,
+          MediaInfos,
+          MediaInfoRow,
+          $MediaInfosFilterComposer,
+          $MediaInfosOrderingComposer,
+          $MediaInfosAnnotationComposer,
+          $MediaInfosCreateCompanionBuilder,
+          $MediaInfosUpdateCompanionBuilder,
+          (
+            MediaInfoRow,
+            BaseReferences<_$MoodiaryDatabase, MediaInfos, MediaInfoRow>,
+          ),
+          MediaInfoRow,
+          PrefetchHooks Function()
+        > {
+  $MediaInfosTableManager(_$MoodiaryDatabase db, MediaInfos table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $MediaInfosFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $MediaInfosOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $MediaInfosAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> fileName = const Value.absent(),
+                Value<String?> name = const Value.absent(),
+                Value<int?> durationMs = const Value.absent(),
+                Value<int> lastModified = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MediaInfosCompanion(
+                fileName: fileName,
+                name: name,
+                durationMs: durationMs,
+                lastModified: lastModified,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String fileName,
+                Value<String?> name = const Value.absent(),
+                Value<int?> durationMs = const Value.absent(),
+                required int lastModified,
+                Value<int> rowid = const Value.absent(),
+              }) => MediaInfosCompanion.insert(
+                fileName: fileName,
+                name: name,
+                durationMs: durationMs,
+                lastModified: lastModified,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $MediaInfosProcessedTableManager =
+    ProcessedTableManager<
+      _$MoodiaryDatabase,
+      MediaInfos,
+      MediaInfoRow,
+      $MediaInfosFilterComposer,
+      $MediaInfosOrderingComposer,
+      $MediaInfosAnnotationComposer,
+      $MediaInfosCreateCompanionBuilder,
+      $MediaInfosUpdateCompanionBuilder,
+      (
+        MediaInfoRow,
+        BaseReferences<_$MoodiaryDatabase, MediaInfos, MediaInfoRow>,
+      ),
+      MediaInfoRow,
+      PrefetchHooks Function()
+    >;
+typedef $DiaryMediaCreateCompanionBuilder = DiaryMediaCompanion Function({
+  required String diaryId,
+  required String kind,
+  required int seq,
+  required String fileName,
+  Value<int> rowid,
+});
+typedef $DiaryMediaUpdateCompanionBuilder = DiaryMediaCompanion Function({
+  Value<String> diaryId,
+  Value<String> kind,
+  Value<int> seq,
+  Value<String> fileName,
+  Value<int> rowid,
+});
+
+final class $DiaryMediaReferences
+    extends BaseReferences<_$MoodiaryDatabase, DiaryMedia, DiaryMediaRow> {
+  $DiaryMediaReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static Diaries _diaryIdTable(_$MoodiaryDatabase db) =>
+      db.diaries.createAlias('diary_media__diary_id__diaries__id');
+
+  $DiariesProcessedTableManager get diaryId {
+    final $_column = $_itemColumn<String>('diary_id')!;
+
+    final manager = $DiariesTableManager(
+      $_db,
+      $_db.diaries,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_diaryIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $DiaryMediaFilterComposer
+    extends Composer<_$MoodiaryDatabase, DiaryMedia> {
+  $DiaryMediaFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get seq => $composableBuilder(
+    column: $table.seq,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fileName => $composableBuilder(
+    column: $table.fileName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $DiariesFilterComposer get diaryId {
+    final $DiariesFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.diaryId,
+      referencedTable: $db.diaries,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $DiariesFilterComposer(
+            $db: $db,
+            $table: $db.diaries,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $DiaryMediaOrderingComposer
+    extends Composer<_$MoodiaryDatabase, DiaryMedia> {
+  $DiaryMediaOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get seq => $composableBuilder(
+    column: $table.seq,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fileName => $composableBuilder(
+    column: $table.fileName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $DiariesOrderingComposer get diaryId {
+    final $DiariesOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.diaryId,
+      referencedTable: $db.diaries,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $DiariesOrderingComposer(
+            $db: $db,
+            $table: $db.diaries,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $DiaryMediaAnnotationComposer
+    extends Composer<_$MoodiaryDatabase, DiaryMedia> {
+  $DiaryMediaAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<int> get seq =>
+      $composableBuilder(column: $table.seq, builder: (column) => column);
+
+  GeneratedColumn<String> get fileName =>
+      $composableBuilder(column: $table.fileName, builder: (column) => column);
+
+  $DiariesAnnotationComposer get diaryId {
+    final $DiariesAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.diaryId,
+      referencedTable: $db.diaries,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $DiariesAnnotationComposer(
+            $db: $db,
+            $table: $db.diaries,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $DiaryMediaTableManager
+    extends
+        RootTableManager<
+          _$MoodiaryDatabase,
+          DiaryMedia,
+          DiaryMediaRow,
+          $DiaryMediaFilterComposer,
+          $DiaryMediaOrderingComposer,
+          $DiaryMediaAnnotationComposer,
+          $DiaryMediaCreateCompanionBuilder,
+          $DiaryMediaUpdateCompanionBuilder,
+          (DiaryMediaRow, $DiaryMediaReferences),
+          DiaryMediaRow,
+          PrefetchHooks Function({bool diaryId})
+        > {
+  $DiaryMediaTableManager(_$MoodiaryDatabase db, DiaryMedia table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $DiaryMediaFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $DiaryMediaOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $DiaryMediaAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> diaryId = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<int> seq = const Value.absent(),
+                Value<String> fileName = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DiaryMediaCompanion(
+                diaryId: diaryId,
+                kind: kind,
+                seq: seq,
+                fileName: fileName,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String diaryId,
+                required String kind,
+                required int seq,
+                required String fileName,
+                Value<int> rowid = const Value.absent(),
+              }) => DiaryMediaCompanion.insert(
+                diaryId: diaryId,
+                kind: kind,
+                seq: seq,
+                fileName: fileName,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) =>
+                    (e.readTable(table), $DiaryMediaReferences(db, table, e)),
+              )
+              .toList(),
+          prefetchHooksCallback: ({diaryId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (diaryId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.diaryId,
+                        referencedTable: $DiaryMediaReferences._diaryIdTable(
+                          db,
+                        ),
+                        referencedColumn: $DiaryMediaReferences
+                            ._diaryIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $DiaryMediaProcessedTableManager =
+    ProcessedTableManager<
+      _$MoodiaryDatabase,
+      DiaryMedia,
+      DiaryMediaRow,
+      $DiaryMediaFilterComposer,
+      $DiaryMediaOrderingComposer,
+      $DiaryMediaAnnotationComposer,
+      $DiaryMediaCreateCompanionBuilder,
+      $DiaryMediaUpdateCompanionBuilder,
+      (DiaryMediaRow, $DiaryMediaReferences),
+      DiaryMediaRow,
+      PrefetchHooks Function({bool diaryId})
+    >;
+typedef $DiaryTagsCreateCompanionBuilder = DiaryTagsCompanion Function({
+  required String diaryId,
+  required int seq,
+  required String tag,
+  Value<int> rowid,
+});
+typedef $DiaryTagsUpdateCompanionBuilder = DiaryTagsCompanion Function({
+  Value<String> diaryId,
+  Value<int> seq,
+  Value<String> tag,
+  Value<int> rowid,
+});
+
+final class $DiaryTagsReferences
+    extends BaseReferences<_$MoodiaryDatabase, DiaryTags, DiaryTagRow> {
+  $DiaryTagsReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static Diaries _diaryIdTable(_$MoodiaryDatabase db) =>
+      db.diaries.createAlias('diary_tags__diary_id__diaries__id');
+
+  $DiariesProcessedTableManager get diaryId {
+    final $_column = $_itemColumn<String>('diary_id')!;
+
+    final manager = $DiariesTableManager(
+      $_db,
+      $_db.diaries,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_diaryIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $DiaryTagsFilterComposer extends Composer<_$MoodiaryDatabase, DiaryTags> {
+  $DiaryTagsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get seq => $composableBuilder(
+    column: $table.seq,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tag => $composableBuilder(
+    column: $table.tag,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $DiariesFilterComposer get diaryId {
+    final $DiariesFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.diaryId,
+      referencedTable: $db.diaries,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $DiariesFilterComposer(
+            $db: $db,
+            $table: $db.diaries,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $DiaryTagsOrderingComposer
+    extends Composer<_$MoodiaryDatabase, DiaryTags> {
+  $DiaryTagsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get seq => $composableBuilder(
+    column: $table.seq,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tag => $composableBuilder(
+    column: $table.tag,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $DiariesOrderingComposer get diaryId {
+    final $DiariesOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.diaryId,
+      referencedTable: $db.diaries,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $DiariesOrderingComposer(
+            $db: $db,
+            $table: $db.diaries,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $DiaryTagsAnnotationComposer
+    extends Composer<_$MoodiaryDatabase, DiaryTags> {
+  $DiaryTagsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get seq =>
+      $composableBuilder(column: $table.seq, builder: (column) => column);
+
+  GeneratedColumn<String> get tag =>
+      $composableBuilder(column: $table.tag, builder: (column) => column);
+
+  $DiariesAnnotationComposer get diaryId {
+    final $DiariesAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.diaryId,
+      referencedTable: $db.diaries,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $DiariesAnnotationComposer(
+            $db: $db,
+            $table: $db.diaries,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $DiaryTagsTableManager
+    extends
+        RootTableManager<
+          _$MoodiaryDatabase,
+          DiaryTags,
+          DiaryTagRow,
+          $DiaryTagsFilterComposer,
+          $DiaryTagsOrderingComposer,
+          $DiaryTagsAnnotationComposer,
+          $DiaryTagsCreateCompanionBuilder,
+          $DiaryTagsUpdateCompanionBuilder,
+          (DiaryTagRow, $DiaryTagsReferences),
+          DiaryTagRow,
+          PrefetchHooks Function({bool diaryId})
+        > {
+  $DiaryTagsTableManager(_$MoodiaryDatabase db, DiaryTags table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $DiaryTagsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $DiaryTagsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $DiaryTagsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> diaryId = const Value.absent(),
+                Value<int> seq = const Value.absent(),
+                Value<String> tag = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DiaryTagsCompanion(
+                diaryId: diaryId,
+                seq: seq,
+                tag: tag,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String diaryId,
+                required int seq,
+                required String tag,
+                Value<int> rowid = const Value.absent(),
+              }) => DiaryTagsCompanion.insert(
+                diaryId: diaryId,
+                seq: seq,
+                tag: tag,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (e.readTable(table), $DiaryTagsReferences(db, table, e)),
+              )
+              .toList(),
+          prefetchHooksCallback: ({diaryId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (diaryId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.diaryId,
+                        referencedTable: $DiaryTagsReferences._diaryIdTable(db),
+                        referencedColumn: $DiaryTagsReferences
+                            ._diaryIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $DiaryTagsProcessedTableManager =
+    ProcessedTableManager<
+      _$MoodiaryDatabase,
+      DiaryTags,
+      DiaryTagRow,
+      $DiaryTagsFilterComposer,
+      $DiaryTagsOrderingComposer,
+      $DiaryTagsAnnotationComposer,
+      $DiaryTagsCreateCompanionBuilder,
+      $DiaryTagsUpdateCompanionBuilder,
+      (DiaryTagRow, $DiaryTagsReferences),
+      DiaryTagRow,
+      PrefetchHooks Function({bool diaryId})
+    >;
 
 class $MoodiaryDatabaseManager {
   final _$MoodiaryDatabase _db;
@@ -11660,17 +11660,6 @@ class $MoodiaryDatabaseManager {
   $DiariesTableManager get diaries => $DiariesTableManager(_db, _db.diaries);
   $DiaryLinksTableManager get diaryLinks =>
       $DiaryLinksTableManager(_db, _db.diaryLinks);
-  $DiaryMediaTableManager get diaryMedia =>
-      $DiaryMediaTableManager(_db, _db.diaryMedia);
-  $DiaryTagsTableManager get diaryTags =>
-      $DiaryTagsTableManager(_db, _db.diaryTags);
-  $CategoriesTableManager get categories =>
-      $CategoriesTableManager(_db, _db.categories);
-  $FontsTableManager get fonts => $FontsTableManager(_db, _db.fonts);
-  $TombstonesTableManager get tombstones =>
-      $TombstonesTableManager(_db, _db.tombstones);
-  $MediaInfosTableManager get mediaInfos =>
-      $MediaInfosTableManager(_db, _db.mediaInfos);
   $LlmProvidersTableManager get llmProviders =>
       $LlmProvidersTableManager(_db, _db.llmProviders);
   $ChatSessionsTableManager get chatSessions =>
@@ -11683,6 +11672,17 @@ class $MoodiaryDatabaseManager {
       $MemoriesTableManager(_db, _db.memories);
   $AgentPresetsTableManager get agentPresets =>
       $AgentPresetsTableManager(_db, _db.agentPresets);
+  $TombstonesTableManager get tombstones =>
+      $TombstonesTableManager(_db, _db.tombstones);
+  $CategoriesTableManager get categories =>
+      $CategoriesTableManager(_db, _db.categories);
+  $FontsTableManager get fonts => $FontsTableManager(_db, _db.fonts);
+  $MediaInfosTableManager get mediaInfos =>
+      $MediaInfosTableManager(_db, _db.mediaInfos);
+  $DiaryMediaTableManager get diaryMedia =>
+      $DiaryMediaTableManager(_db, _db.diaryMedia);
+  $DiaryTagsTableManager get diaryTags =>
+      $DiaryTagsTableManager(_db, _db.diaryTags);
 }
 
 class FtsSearchByRankResult {

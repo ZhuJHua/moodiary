@@ -302,7 +302,7 @@ CREATE TABLE agent_presets (
 1. **P0 spike** ✅（2026-08-27）：§6 的 1/2/3 三项实测通过；`AppDatabase` 空壳落地（`moodiary_storage/lib/src/sqlite.dart`：openAsync 开池、注入式 `SqliteMigration` + `user_version` 逐档原子迁移、`BEGIN IMMEDIATE` 写事务、领域无关的保句柄 `clear()`——FTS 虚表走 `delete-all`、影子表跳过）；storage 包 38 用例全绿、全仓 analyze 干净。剩真机构建验证（§6.7）。
 2. **P1 核心** ✅（2026-08-27，P2 与大部分 P4 因 models 联动被一并拉入）：
    - models 去 Isar 化（纯 freezed + `DiaryPosition`/`DiaryWeather` 值对象）；旧 15 张 collection 逐字节冻结进 `moodiary_migration/lib/src/legacy/`（isar_plus 唯一据点，连 isar_plus_flutter_libs 都已随迁），带 legacy schema 顺序闸门测试
-   - `moodiary_data` 落 drift 全栈：`src/db/schema.drift`（14 表 + contentless FTS5）+ `diary.drift` 具名查询 + `MoodiaryDatabase`（createInBackground readPool=3、WAL/FK pragmas、user_version 迁移、保句柄 clearAll）；9 个仓储（5 data + 4 assistant）全部改写，公开签名不变
+   - `moodiary_data` 落 drift 全栈：`src/db/*_tables.drift`（按日记/基础/同步/助手四域拆分，14 表 + contentless FTS5）+ `diary.drift` 具名查询 + `MoodiaryDatabase`（createInBackground readPool=3、WAL/FK pragmas、user_version 迁移、保句柄 clearAll）；9 个仓储（5 data + 4 assistant）全部改写，公开签名不变
    - 搜索/双链引擎按 §2.5/2.4 重写：净删 ~800 行 diff/幂等/BM25 代码，ReindexQueue 及四个排空触发点（bootstrap/详情页 dispose/sync settleIndexes/rebuild 收尾）全部退休；IndexMode 收敛为 {inline, skip}
    - Rust 分词 HashSet 去重已删（真实 TF），text crate 11/11 + clippy 干净
    - isarId/fastHash 全仓退休；事件改业务 id；`watchDiary` 换事件流过滤；排序第二键 = id（uuid v7）

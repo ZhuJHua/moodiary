@@ -8,8 +8,8 @@
 1. **get_it = 需要换实现的接线**（端口、平台实现，如 IFilePicker）。
    **仓储刻意不进容器**：`XxxRepository.get()` 是进程级静态单例，直接持
    `MoodiaryDatabase.get()`（drift；组合根在 `MoodiaryDatabase.open(path:)` 一处
-   吸收平台差异）。schema 真源在 `src/db/schema.drift`，具名查询在 `src/db/*.drift`，
-   改动后跑 build_runner。要替身：测试用 `XxxRepository.forTesting(
+   吸收平台差异）。schema 真源按领域拆在 `src/db/*_tables.drift`（日记/基础/同步/助手），
+   具名查询只给 DSL 表达不了的 SQL（FTS5，`diary.drift`），改动后跑 build_runner。要替身：测试用 `XxxRepository.forTesting(
    MoodiaryDatabase.forTesting(NativeDatabase.memory(...)))`——记得 setup 里开
    `PRAGMA foreign_keys = ON`，级联删除靠它。消费侧真需要第二实现时在
    **消费侧**抽窄端口（只声明用到的几个方法 + 转发实现，样板见

@@ -1,4 +1,4 @@
-import 'schema.drift';
+import 'diary_tables.drift';
 
 -- FTS5 维护（contentless：按 rowid 删，无需旧词文本）。
 -- 'delete-all' / rank 配置这类命令语句在 .drift 里会报虚假 lint（drift#3322），

@@ -7,12 +7,29 @@ import 'package:sqlite3/sqlite3.dart' as sqlite3;
 
 part 'database.g.dart';
 
-/// SQLite 数据库（drift）。schema 真源在 `schema.drift`，具名查询在各 `*.drift`；
-/// 领域仓储持本类实例做查询，organizes 同旧 Isar 时代的 `XxxRepository.get()` 惯例。
+/// SQLite 数据库（drift）。schema 真源按领域拆在 `*_tables.drift`（日记 / 基础 /
+/// 同步 / 助手），具名查询只给 Dart DSL 表达不了的 SQL（FTS5，见 `diary.drift`）；
+/// 领域仓储持本类实例做查询，同旧 Isar 时代的 `XxxRepository.get()` 惯例。
+///
+/// 全库 schema 约定：
+/// - 业务主键统一 uuid v7 `TEXT PRIMARY KEY`；`diaries.rid` 是唯一的整数键残留，
+///   只做 FTS5 rowid 胶水（引擎硬约束），不出仓储层；
+/// - `DateTime` 一律 INTEGER 存 UTC 微秒（db_codec.dart）；
+/// - 「没有值」是真 NULL，没有哨兵；
+/// - 小集合字段留 JSON 文本列，NULL 与 '[]' 语义不同；
+/// - 改 schema = 追加 user_version 迁移档（onUpgrade），不改已发布档。
 ///
 /// 并发模型：WAL + 1 写 N 读，全部 SQL 在后台 isolate 执行
 /// （[NativeDatabase.createInBackground] 的 readPool），主 isolate 不碰 FFI。
-@DriftDatabase(include: {'schema.drift', 'diary.drift'})
+@DriftDatabase(
+  include: {
+    'diary_tables.drift',
+    'base_tables.drift',
+    'sync_tables.drift',
+    'assistant_tables.drift',
+    'diary.drift',
+  },
+)
 class MoodiaryDatabase extends _$MoodiaryDatabase {
   MoodiaryDatabase._(super.e);
 

@@ -1,0 +1,22 @@
+-- 基础表（分类 / 字体 / 媒体元数据），相互零引用。全库约定见 database.dart 类注释。
+
+CREATE TABLE categories (
+  id            TEXT NOT NULL PRIMARY KEY,
+  name          TEXT NOT NULL,
+  last_modified INTEGER NOT NULL,
+  parent_id     TEXT,
+  color         INTEGER
+) AS CategoryRow;
+
+CREATE TABLE fonts (
+  font_family    TEXT NOT NULL PRIMARY KEY,
+  font_file_name TEXT NOT NULL,
+  wght_axis_json TEXT NOT NULL DEFAULT '{}'
+) AS FontRow;
+
+CREATE TABLE media_infos (
+  file_name     TEXT NOT NULL PRIMARY KEY,
+  name          TEXT,
+  duration_ms   INTEGER,
+  last_modified INTEGER NOT NULL
+) AS MediaInfoRow;

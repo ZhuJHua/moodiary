@@ -75,7 +75,7 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
       moodiary_theme/        #   系统取色、强调色档位、自定义字体 → ThemeData
     feature_base/            # → core/foundation。内部次序 models → data → components,migration,preferences → picker → editor
       moodiary_models/       #   domain: 纯 Freezed 模型 + DTOs + 事件类型（零存储依赖）
-      moodiary_data/         #   SQLite（drift，src/db/*.drift 是 schema 真源）+ repositories + controllers + 共享瞬态状态
+      moodiary_data/         #   SQLite（drift，src/db/*_tables.drift 是 schema 真源）+ repositories + controllers + 共享瞬态状态
       moodiary_components/   #   业务组件：features 共用、够不着 mui 的那部分 UI
       moodiary_migration/    #   one-shot legacy migration；legacy/ 冻结旧 Isar 模型（isar_plus 最后据点）
       moodiary_preferences/  #   preference state
