@@ -322,6 +322,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  RustStreamSink<DownloadEvent> dco_decode_StreamSink_download_event_Dco(
+    dynamic raw,
+  );
+
+  @protected
   RustStreamSink<Float32List> dco_decode_StreamSink_list_prim_f_32_strict_Dco(
     dynamic raw,
   );
@@ -395,6 +400,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   DocxStyle dco_decode_docx_style(dynamic raw);
+
+  @protected
+  DownloadEvent dco_decode_download_event(dynamic raw);
 
   @protected
   double dco_decode_f_32(dynamic raw);
@@ -801,6 +809,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  RustStreamSink<DownloadEvent> sse_decode_StreamSink_download_event_Dco(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   RustStreamSink<Float32List> sse_decode_StreamSink_list_prim_f_32_strict_Dco(
     SseDeserializer deserializer,
   );
@@ -888,6 +901,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   DocxStyle sse_decode_docx_style(SseDeserializer deserializer);
+
+  @protected
+  DownloadEvent sse_decode_download_event(SseDeserializer deserializer);
 
   @protected
   double sse_decode_f_32(SseDeserializer deserializer);
@@ -1105,6 +1121,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return cst_encode_list_record_string_f_32(
       raw.entries.map((e) => (e.key, e.value)).toList(),
+    );
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_prim_u_8_strict>
+  cst_encode_StreamSink_download_event_Dco(RustStreamSink<DownloadEvent> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return cst_encode_String(
+      raw.setupAndSerialize(
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_download_event,
+          decodeErrorData: dco_decode_AnyhowException,
+        ),
+      ),
     );
   }
 
@@ -1682,6 +1712,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.page_break_between = cst_encode_bool(apiObj.pageBreakBetween);
     wireObj.video_label = cst_encode_String(apiObj.videoLabel);
     wireObj.audio_label = cst_encode_String(apiObj.audioLabel);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_download_event(
+    DownloadEvent apiObj,
+    wire_cst_download_event wireObj,
+  ) {
+    wireObj.received = cst_encode_i_64(apiObj.received);
+    wireObj.total = cst_encode_i_64(apiObj.total);
+    wireObj.done = cst_encode_bool(apiObj.done);
   }
 
   @protected
@@ -2595,6 +2635,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_StreamSink_download_event_Dco(
+    RustStreamSink<DownloadEvent> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_StreamSink_list_prim_f_32_strict_Dco(
     RustStreamSink<Float32List> self,
     SseSerializer serializer,
@@ -2704,6 +2750,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_docx_style(DocxStyle self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_download_event(DownloadEvent self, SseSerializer serializer);
 
   @protected
   void sse_encode_f_32(double self, SseSerializer serializer);
@@ -4399,6 +4448,52 @@ class RustLibWire implements BaseWire {
             )
           >();
 
+  void wire__crate__api__http__HttpClient_download_file(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> sink,
+    ffi.Pointer<wire_cst_request_options> options,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> dest_path,
+    int cancel,
+  ) {
+    return _wire__crate__api__http__HttpClient_download_file(
+      port_,
+      that,
+      sink,
+      options,
+      dest_path,
+      cancel,
+    );
+  }
+
+  late final _wire__crate__api__http__HttpClient_download_filePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_request_options>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.UintPtr,
+          )
+        >
+      >(
+        'frbgen_moodiary_rust_wire__crate__api__http__HttpClient_download_file',
+      );
+  late final _wire__crate__api__http__HttpClient_download_file =
+      _wire__crate__api__http__HttpClient_download_filePtr
+          .asFunction<
+            void Function(
+              int,
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_request_options>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              int,
+            )
+          >();
+
   void wire__crate__api__http__HttpClient_new(
     int port_,
     ffi.Pointer<wire_cst_client_settings> settings,
@@ -5920,6 +6015,27 @@ final class wire_cst_docx_style extends ffi.Struct {
     ..ref.page_break_between = page_break_between
     ..ref.video_label = video_label
     ..ref.audio_label = audio_label;
+}
+
+final class wire_cst_download_event extends ffi.Struct {
+  @ffi.Int64()
+  external int received;
+
+  @ffi.Int64()
+  external int total;
+
+  @ffi.Bool()
+  external bool done;
+
+  static ffi.Pointer<wire_cst_download_event> $allocate(
+    ffi.Allocator $allocator, {
+    required int received,
+    required int total,
+    required bool done,
+  }) => $allocator<wire_cst_download_event>()
+    ..ref.received = received
+    ..ref.total = total
+    ..ref.done = done;
 }
 
 final class wire_cst_graph_layout_params extends ffi.Struct {

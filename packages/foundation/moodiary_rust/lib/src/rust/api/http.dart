@@ -12,6 +12,14 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<HttpClient>>
 abstract class HttpClient implements RustOpaqueInterface {
+  /// 流式下载到本地文件（不整块进内存）。进度经 [sink] 回报，最后一条 `done=true`；
+  /// 取消或失败删除半成品，错误经 `sink.add_error` 下发。
+  Stream<DownloadEvent> downloadFile({
+    required RequestOptions options,
+    required String destPath,
+    required CancelToken cancel,
+  });
+
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
   static Future<HttpClient> newInstance({required ClientSettings settings}) =>
       RustLib.instance.api.crateApiHttpHttpClientNew(settings: settings);
@@ -71,6 +79,31 @@ class ClientSettings {
           userAgent == other.userAgent &&
           maxRedirects == other.maxRedirects &&
           throwOnStatus == other.throwOnStatus;
+}
+
+/// 文件下载进度；[total] 为 -1 表示服务端未给 content-length。
+class DownloadEvent {
+  final PlatformInt64 received;
+  final PlatformInt64 total;
+  final bool done;
+
+  const DownloadEvent({
+    required this.received,
+    required this.total,
+    required this.done,
+  });
+
+  @override
+  int get hashCode => received.hashCode ^ total.hashCode ^ done.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DownloadEvent &&
+          runtimeType == other.runtimeType &&
+          received == other.received &&
+          total == other.total &&
+          done == other.done;
 }
 
 class HttpError implements FrbException {

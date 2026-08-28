@@ -155,6 +155,17 @@ final class IoTestHttpClient extends IHttpClient {
   }) => throw UnimplementedError();
 
   @override
+  Future<void> downloadFile(
+    String url,
+    String destPath, {
+    Map<String, dynamic>? headers,
+    void Function(int received, int total)? onProgress,
+    Duration? timeout,
+    bool silent = false,
+    CancelToken? cancel,
+  }) => throw UnimplementedError();
+
+  @override
   Future<HttpResponse<Uint8List>> requestBytes(
     HttpMethod method,
     String url, {

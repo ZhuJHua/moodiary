@@ -129,6 +129,43 @@ class RustHttpClient extends IHttpClient {
   }
 
   @override
+  Future<void> downloadFile(
+    String url,
+    String destPath, {
+    Map<String, dynamic>? headers,
+    void Function(int received, int total)? onProgress,
+    Duration? timeout,
+    bool silent = false,
+    rust.CancelToken? cancel,
+  }) async {
+    if (_enableLogging) {
+      logger.i('Download: $url -> $destPath');
+    }
+    try {
+      final client = await _client;
+      await for (final event in client.downloadFile(
+        options: rust.RequestOptions(
+          method: _method(.get),
+          url: url,
+          query: const [],
+          headers: _pairs(headers),
+          timeoutMs: timeout?.inMilliseconds,
+          throwOnStatus: true,
+        ),
+        destPath: destPath,
+        cancel: cancel ?? rust.CancelToken(),
+      )) {
+        onProgress?.call(event.received, event.total);
+      }
+    } on rust.HttpError catch (error) {
+      throw _report(_exception(error), silent: silent);
+    } catch (error) {
+      // 传输失败经 sink 下发，编解码固定为 AnyhowException，拿不到 kind 只有文本。
+      throw _report(HttpException(.unknown, error.toString()), silent: silent);
+    }
+  }
+
+  @override
   Future<HttpResponse<Uint8List>> uploadFile(
     String url, {
     required String filePath,

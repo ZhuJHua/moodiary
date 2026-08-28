@@ -236,6 +236,72 @@ impl HttpClient {
         Ok((response, total))
     }
 
+    /// 流式下载到本地文件（不整块进内存）。`on_progress` 收 (已接收, 总长)，总长未知
+    /// 为 -1，每 512 KiB 报一次；成功返回总接收字节。取消或失败删除半成品文件，
+    /// 不留下会被误判为完整下载的残件。
+    pub async fn download_file(
+        &self,
+        options: RequestOptions,
+        dest_path: String,
+        on_progress: impl Fn(i64, i64) + Send + Sync + 'static,
+        cancelled: impl Fn() -> bool + Send + Sync + 'static,
+    ) -> Result<i64, HttpError> {
+        const PROGRESS_STEP: i64 = 512 * 1024;
+
+        let resp = self
+            .builder(&options)?
+            .send()
+            .await
+            .map_err(map_reqwest_err)?;
+        let status = resp.status();
+        if !status.is_success() {
+            return Err(HttpError {
+                kind: HttpErrorKind::Status,
+                status: Some(status.as_u16()),
+                message: format!("HTTP {}", status.as_u16()),
+            });
+        }
+        let total = resp.content_length().map(|v| v as i64).unwrap_or(-1);
+
+        let mut file = tokio::fs::File::create(&dest_path)
+            .await
+            .map_err(|e| err(HttpErrorKind::Request, format!("create file failed: {e}")))?;
+        let mut received: i64 = 0;
+        let mut last_report: i64 = 0;
+        let mut stream = resp.bytes_stream();
+
+        let result: Result<(), HttpError> = async {
+            use tokio::io::AsyncWriteExt;
+            while let Some(chunk) = stream.next().await {
+                if cancelled() {
+                    return Err(err(HttpErrorKind::Request, "cancelled"));
+                }
+                let bytes = chunk.map_err(map_reqwest_err)?;
+                file.write_all(&bytes)
+                    .await
+                    .map_err(|e| err(HttpErrorKind::Request, format!("write failed: {e}")))?;
+                received += bytes.len() as i64;
+                if received - last_report >= PROGRESS_STEP {
+                    last_report = received;
+                    on_progress(received, total);
+                }
+            }
+            file.flush()
+                .await
+                .map_err(|e| err(HttpErrorKind::Request, format!("flush failed: {e}")))
+        }
+        .await;
+
+        drop(file);
+        match result {
+            Ok(()) => Ok(received),
+            Err(e) => {
+                let _ = tokio::fs::remove_file(&dest_path).await;
+                Err(e)
+            }
+        }
+    }
+
     async fn collect_response(
         &self,
         resp: reqwest::Response,

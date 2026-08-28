@@ -143,6 +143,18 @@ abstract class IHttpClient {
     bool? throwOnStatus,
   });
 
+  /// 流式下载到本地文件（不整块进内存），[onProgress] 以 (已接收, 总字节) 回报，
+  /// 总字节未知时为 -1。取消经 [cancel]；取消或失败会删除半成品文件。
+  Future<void> downloadFile(
+    String url,
+    String destPath, {
+    Map<String, dynamic>? headers,
+    void Function(int received, int total)? onProgress,
+    Duration? timeout,
+    bool silent = false,
+    CancelToken? cancel,
+  });
+
   /// 流式上传本地文件（不整块进内存），[onProgress] 以 (已发送, 总字节) 回报。
   /// 响应体以原始字节返回。
   Future<HttpResponse<Uint8List>> uploadFile(

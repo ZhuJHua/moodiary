@@ -82,7 +82,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => -808451050;
+  int get rustContentHash => -1210196822;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -205,6 +205,13 @@ abstract class RustLibApi extends BaseApi {
 
   Future<Map<String, double>> crateApiFontFontReaderGetWghtAxisFromVfFont({
     required String ttfFilePath,
+  });
+
+  Stream<DownloadEvent> crateApiHttpHttpClientDownloadFile({
+    required HttpClient that,
+    required RequestOptions options,
+    required String destPath,
+    required CancelToken cancel,
   });
 
   Future<HttpClient> crateApiHttpHttpClientNew({
@@ -1278,6 +1285,57 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(
         debugName: "FontReader_get_wght_axis_from_vf_font",
         argNames: ["ttfFilePath"],
+      );
+
+  @override
+  Stream<DownloadEvent> crateApiHttpHttpClientDownloadFile({
+    required HttpClient that,
+    required RequestOptions options,
+    required String destPath,
+    required CancelToken cancel,
+  }) {
+    final sink = RustStreamSink<DownloadEvent>();
+    unawaited(
+      handler.executeNormal(
+        NormalTask(
+          callFfi: (port_) {
+            var arg0 =
+                cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
+                  that,
+                );
+            var arg1 = cst_encode_StreamSink_download_event_Dco(sink);
+            var arg2 = cst_encode_box_autoadd_request_options(options);
+            var arg3 = cst_encode_String(destPath);
+            var arg4 =
+                cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCancelToken(
+                  cancel,
+                );
+            return wire.wire__crate__api__http__HttpClient_download_file(
+              port_,
+              arg0,
+              arg1,
+              arg2,
+              arg3,
+              arg4,
+            );
+          },
+          codec: DcoCodec(
+            decodeSuccessData: dco_decode_unit,
+            decodeErrorData: dco_decode_http_error,
+          ),
+          constMeta: kCrateApiHttpHttpClientDownloadFileConstMeta,
+          argValues: [that, sink, options, destPath, cancel],
+          apiImpl: this,
+        ),
+      ),
+    );
+    return sink.stream;
+  }
+
+  TaskConstMeta get kCrateApiHttpHttpClientDownloadFileConstMeta =>
+      const TaskConstMeta(
+        debugName: "HttpClient_download_file",
+        argNames: ["that", "sink", "options", "destPath", "cancel"],
       );
 
   @override
@@ -3039,6 +3097,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  RustStreamSink<DownloadEvent> dco_decode_StreamSink_download_event_Dco(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError();
+  }
+
+  @protected
   RustStreamSink<Float32List> dco_decode_StreamSink_list_prim_f_32_strict_Dco(
     dynamic raw,
   ) {
@@ -3218,6 +3284,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       pageBreakBetween: dco_decode_bool(arr[10]),
       videoLabel: dco_decode_String(arr[11]),
       audioLabel: dco_decode_String(arr[12]),
+    );
+  }
+
+  @protected
+  DownloadEvent dco_decode_download_event(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return DownloadEvent(
+      received: dco_decode_i_64(arr[0]),
+      total: dco_decode_i_64(arr[1]),
+      done: dco_decode_bool(arr[2]),
     );
   }
 
@@ -4274,6 +4353,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  RustStreamSink<DownloadEvent> sse_decode_StreamSink_download_event_Dco(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    throw UnimplementedError('Unreachable ()');
+  }
+
+  @protected
   RustStreamSink<Float32List> sse_decode_StreamSink_list_prim_f_32_strict_Dco(
     SseDeserializer deserializer,
   ) {
@@ -4489,6 +4576,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       pageBreakBetween: var_pageBreakBetween,
       videoLabel: var_videoLabel,
       audioLabel: var_audioLabel,
+    );
+  }
+
+  @protected
+  DownloadEvent sse_decode_download_event(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_received = sse_decode_i_64(deserializer);
+    var var_total = sse_decode_i_64(deserializer);
+    var var_done = sse_decode_bool(deserializer);
+    return DownloadEvent(
+      received: var_received,
+      total: var_total,
+      done: var_done,
     );
   }
 
@@ -6283,6 +6383,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_StreamSink_download_event_Dco(
+    RustStreamSink<DownloadEvent> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(
+      self.setupAndSerialize(
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_download_event,
+          decodeErrorData: dco_decode_AnyhowException,
+        ),
+      ),
+      serializer,
+    );
+  }
+
+  @protected
   void sse_encode_StreamSink_list_prim_f_32_strict_Dco(
     RustStreamSink<Float32List> self,
     SseSerializer serializer,
@@ -6508,6 +6625,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_bool(self.pageBreakBetween, serializer);
     sse_encode_String(self.videoLabel, serializer);
     sse_encode_String(self.audioLabel, serializer);
+  }
+
+  @protected
+  void sse_encode_download_event(DownloadEvent self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_64(self.received, serializer);
+    sse_encode_i_64(self.total, serializer);
+    sse_encode_bool(self.done, serializer);
   }
 
   @protected
@@ -7402,6 +7527,19 @@ class HttpClientImpl extends RustOpaque implements HttpClient {
         RustLib.instance.api.rust_arc_decrement_strong_count_HttpClient,
     rustArcDecrementStrongCountPtr:
         RustLib.instance.api.rust_arc_decrement_strong_count_HttpClientPtr,
+  );
+
+  /// 流式下载到本地文件（不整块进内存）。进度经 [sink] 回报，最后一条 `done=true`；
+  /// 取消或失败删除半成品，错误经 `sink.add_error` 下发。
+  Stream<DownloadEvent> downloadFile({
+    required RequestOptions options,
+    required String destPath,
+    required CancelToken cancel,
+  }) => RustLib.instance.api.crateApiHttpHttpClientDownloadFile(
+    that: this,
+    options: options,
+    destPath: destPath,
+    cancel: cancel,
   );
 
   Future<HttpResponse> request({

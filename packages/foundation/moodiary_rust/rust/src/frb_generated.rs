@@ -51,7 +51,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -808451050;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1210196822;
 
 // Section: executor
 
@@ -942,6 +942,81 @@ fn wire__crate__api__font__FontReader_get_wght_axis_from_vf_font_impl(
                         )?;
                         std::result::Result::Ok(output_ok)
                     })(),
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__http__HttpClient_download_file_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<HttpClient>>,
+    >,
+    sink: impl CstDecode<
+        StreamSink<crate::api::http::DownloadEvent, flutter_rust_bridge::for_generated::DcoCodec>,
+    >,
+    options: impl CstDecode<crate::api::http::RequestOptions>,
+    dest_path: impl CstDecode<String>,
+    cancel: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CancelToken>>,
+    >,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "HttpClient_download_file",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            let api_sink = sink.cst_decode();
+            let api_options = options.cst_decode();
+            let api_dest_path = dest_path.cst_decode();
+            let api_cancel = cancel.cst_decode();
+            move |context| async move {
+                transform_result_dco::<_, _, crate::api::http::HttpError>(
+                    (move || async move {
+                        let mut api_that_guard = None;
+                        let mut api_cancel_guard = None;
+                        let decode_indices_ =
+                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
+                                vec![
+                                    flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                        &api_that, 0, false,
+                                    ),
+                                    flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                        &api_cancel,
+                                        1,
+                                        false,
+                                    ),
+                                ],
+                            );
+                        for i in decode_indices_ {
+                            match i {
+                                0 => {
+                                    api_that_guard =
+                                        Some(api_that.lockable_decode_async_ref().await)
+                                }
+                                1 => {
+                                    api_cancel_guard =
+                                        Some(api_cancel.lockable_decode_async_ref().await)
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        let api_that_guard = api_that_guard.unwrap();
+                        let api_cancel_guard = api_cancel_guard.unwrap();
+                        let output_ok = crate::api::http::HttpClient::download_file(
+                            &*api_that_guard,
+                            api_sink,
+                            api_options,
+                            api_dest_path,
+                            &*api_cancel_guard,
+                        )
+                        .await?;
+                        std::result::Result::Ok(output_ok)
+                    })()
+                    .await,
                 )
             }
         },
@@ -3069,6 +3144,16 @@ impl SseDecode for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpa
     }
 }
 
+impl SseDecode
+    for StreamSink<crate::api::http::DownloadEvent, flutter_rust_bridge::for_generated::DcoCodec>
+{
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <String>::sse_decode(deserializer);
+        return StreamSink::deserialize(inner);
+    }
+}
+
 impl SseDecode for StreamSink<Vec<f32>, flutter_rust_bridge::for_generated::DcoCodec> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3203,6 +3288,20 @@ impl SseDecode for crate::api::docx::DocxStyle {
             page_break_between: var_pageBreakBetween,
             video_label: var_videoLabel,
             audio_label: var_audioLabel,
+        };
+    }
+}
+
+impl SseDecode for crate::api::http::DownloadEvent {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_received = <i64>::sse_decode(deserializer);
+        let mut var_total = <i64>::sse_decode(deserializer);
+        let mut var_done = <bool>::sse_decode(deserializer);
+        return crate::api::http::DownloadEvent {
+            received: var_received,
+            total: var_total,
+            done: var_done,
         };
     }
 }
@@ -4409,6 +4508,28 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::docx::DocxStyle>>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::http::DownloadEvent {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.received.into_into_dart().into_dart(),
+            self.total.into_into_dart().into_dart(),
+            self.done.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::http::DownloadEvent
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::http::DownloadEvent>
+    for crate::api::http::DownloadEvent
+{
+    fn into_into_dart(self) -> crate::api::http::DownloadEvent {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::graph_layout::GraphLayoutParams> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -5308,6 +5429,15 @@ impl SseEncode for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpa
     }
 }
 
+impl SseEncode
+    for StreamSink<crate::api::http::DownloadEvent, flutter_rust_bridge::for_generated::DcoCodec>
+{
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        unimplemented!("")
+    }
+}
+
 impl SseEncode for StreamSink<Vec<f32>, flutter_rust_bridge::for_generated::DcoCodec> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5409,6 +5539,15 @@ impl SseEncode for crate::api::docx::DocxStyle {
         <bool>::sse_encode(self.page_break_between, serializer);
         <String>::sse_encode(self.video_label, serializer);
         <String>::sse_encode(self.audio_label, serializer);
+    }
+}
+
+impl SseEncode for crate::api::http::DownloadEvent {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i64>::sse_encode(self.received, serializer);
+        <i64>::sse_encode(self.total, serializer);
+        <bool>::sse_encode(self.done, serializer);
     }
 }
 
@@ -6446,6 +6585,23 @@ mod io {
             unsafe { decode_rust_opaque_nom(self as _) }
         }
     }
+    impl
+        CstDecode<
+            StreamSink<
+                crate::api::http::DownloadEvent,
+                flutter_rust_bridge::for_generated::DcoCodec,
+            >,
+        > for *mut wire_cst_list_prim_u_8_strict
+    {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(
+            self,
+        ) -> StreamSink<crate::api::http::DownloadEvent, flutter_rust_bridge::for_generated::DcoCodec>
+        {
+            let raw: String = self.cst_decode();
+            StreamSink::deserialize(raw)
+        }
+    }
     impl CstDecode<StreamSink<Vec<f32>, flutter_rust_bridge::for_generated::DcoCodec>>
         for *mut wire_cst_list_prim_u_8_strict
     {
@@ -6634,6 +6790,16 @@ mod io {
                 page_break_between: self.page_break_between.cst_decode(),
                 video_label: self.video_label.cst_decode(),
                 audio_label: self.audio_label.cst_decode(),
+            }
+        }
+    }
+    impl CstDecode<crate::api::http::DownloadEvent> for wire_cst_download_event {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::api::http::DownloadEvent {
+            crate::api::http::DownloadEvent {
+                received: self.received.cst_decode(),
+                total: self.total.cst_decode(),
+                done: self.done.cst_decode(),
             }
         }
     }
@@ -7218,6 +7384,20 @@ mod io {
             Self::new_with_null_ptr()
         }
     }
+    impl NewWithNullPtr for wire_cst_download_event {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                received: Default::default(),
+                total: Default::default(),
+                done: Default::default(),
+            }
+        }
+    }
+    impl Default for wire_cst_download_event {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
     impl NewWithNullPtr for wire_cst_graph_layout_params {
         fn new_with_null_ptr() -> Self {
             Self {
@@ -7781,6 +7961,20 @@ mod io {
         ttf_file_path: *mut wire_cst_list_prim_u_8_strict,
     ) {
         wire__crate__api__font__FontReader_get_wght_axis_from_vf_font_impl(port_, ttf_file_path)
+    }
+
+    #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__http__HttpClient_download_file(
+        port_: i64,
+        that: usize,
+        sink: *mut wire_cst_list_prim_u_8_strict,
+        options: *mut wire_cst_request_options,
+        dest_path: *mut wire_cst_list_prim_u_8_strict,
+        cancel: usize,
+    ) {
+        wire__crate__api__http__HttpClient_download_file_impl(
+            port_, that, sink, options, dest_path, cancel,
+        )
     }
 
     #[unsafe(no_mangle)]
@@ -8733,6 +8927,13 @@ mod io {
         page_break_between: bool,
         video_label: *mut wire_cst_list_prim_u_8_strict,
         audio_label: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_download_event {
+        received: i64,
+        total: i64,
+        done: bool,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

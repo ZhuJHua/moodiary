@@ -167,4 +167,52 @@ impl HttpClient {
         }
         Ok(())
     }
+
+    /// 流式下载到本地文件（不整块进内存）。进度经 [sink] 回报，最后一条 `done=true`；
+    /// 取消或失败删除半成品，错误经 `sink.add_error` 下发。
+    pub async fn download_file(
+        &self,
+        sink: StreamSink<DownloadEvent>,
+        options: RequestOptions,
+        dest_path: String,
+        cancel: &CancelToken,
+    ) -> Result<(), HttpError> {
+        let progress = sink.clone();
+        let downloaded = self
+            .inner
+            .download_file(
+                options,
+                dest_path,
+                move |received, total| {
+                    let _ = progress.add(DownloadEvent {
+                        received,
+                        total,
+                        done: false,
+                    });
+                },
+                cancel.checker(),
+            )
+            .await;
+        match downloaded {
+            Ok(received) => {
+                let _ = sink.add(DownloadEvent {
+                    received,
+                    total: received,
+                    done: true,
+                });
+            }
+            Err(e) => {
+                let _ = sink.add_error(anyhow!("{}", e.message));
+            }
+        }
+        Ok(())
+    }
+}
+
+/// 文件下载进度；[total] 为 -1 表示服务端未给 content-length。
+#[derive(Clone)]
+pub struct DownloadEvent {
+    pub received: i64,
+    pub total: i64,
+    pub done: bool,
 }
