@@ -5,6 +5,7 @@ pub mod docx;
 pub mod export_ir;
 pub mod font;
 pub mod graph_layout;
+pub mod hf_tokenizer;
 pub mod http;
 pub mod http_server;
 pub mod image;

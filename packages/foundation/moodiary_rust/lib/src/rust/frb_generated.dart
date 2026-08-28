@@ -10,6 +10,7 @@ import 'api/docx.dart';
 import 'api/export_ir.dart';
 import 'api/font.dart';
 import 'api/graph_layout.dart';
+import 'api/hf_tokenizer.dart';
 import 'api/http.dart';
 import 'api/http_server.dart';
 import 'api/image.dart';
@@ -82,7 +83,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => -1210196822;
+  int get rustContentHash => 810176399;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -205,6 +206,26 @@ abstract class RustLibApi extends BaseApi {
 
   Future<Map<String, double>> crateApiFontFontReaderGetWghtAxisFromVfFont({
     required String ttfFilePath,
+  });
+
+  Future<Uint32List> crateApiHfTokenizerHfTokenizerEncode({
+    required HfTokenizer that,
+    required String text,
+  });
+
+  Future<List<Uint32List>> crateApiHfTokenizerHfTokenizerEncodeBatch({
+    required HfTokenizer that,
+    required List<String> texts,
+  });
+
+  Future<HfTokenizer> crateApiHfTokenizerHfTokenizerFromFile({
+    required String path,
+    int? maxTokens,
+  });
+
+  Future<int?> crateApiHfTokenizerHfTokenizerTokenId({
+    required HfTokenizer that,
+    required String token,
   });
 
   Stream<DownloadEvent> crateApiHttpHttpClientDownloadFile({
@@ -426,6 +447,14 @@ abstract class RustLibApi extends BaseApi {
   get rust_arc_decrement_strong_count_FontReader;
 
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_FontReaderPtr;
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_HfTokenizer;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_HfTokenizer;
+
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_HfTokenizerPtr;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_HttpClient;
@@ -1285,6 +1314,148 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(
         debugName: "FontReader_get_wght_axis_from_vf_font",
         argNames: ["ttfFilePath"],
+      );
+
+  @override
+  Future<Uint32List> crateApiHfTokenizerHfTokenizerEncode({
+    required HfTokenizer that,
+    required String text,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
+                that,
+              );
+          var arg1 = cst_encode_String(text);
+          return wire.wire__crate__api__hf_tokenizer__HfTokenizer_encode(
+            port_,
+            arg0,
+            arg1,
+          );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_list_prim_u_32_strict,
+          decodeErrorData: dco_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiHfTokenizerHfTokenizerEncodeConstMeta,
+        argValues: [that, text],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiHfTokenizerHfTokenizerEncodeConstMeta =>
+      const TaskConstMeta(
+        debugName: "HfTokenizer_encode",
+        argNames: ["that", "text"],
+      );
+
+  @override
+  Future<List<Uint32List>> crateApiHfTokenizerHfTokenizerEncodeBatch({
+    required HfTokenizer that,
+    required List<String> texts,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
+                that,
+              );
+          var arg1 = cst_encode_list_String(texts);
+          return wire.wire__crate__api__hf_tokenizer__HfTokenizer_encode_batch(
+            port_,
+            arg0,
+            arg1,
+          );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_list_list_prim_u_32_strict,
+          decodeErrorData: dco_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiHfTokenizerHfTokenizerEncodeBatchConstMeta,
+        argValues: [that, texts],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiHfTokenizerHfTokenizerEncodeBatchConstMeta =>
+      const TaskConstMeta(
+        debugName: "HfTokenizer_encode_batch",
+        argNames: ["that", "texts"],
+      );
+
+  @override
+  Future<HfTokenizer> crateApiHfTokenizerHfTokenizerFromFile({
+    required String path,
+    int? maxTokens,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          var arg0 = cst_encode_String(path);
+          var arg1 = cst_encode_opt_box_autoadd_u_32(maxTokens);
+          return wire.wire__crate__api__hf_tokenizer__HfTokenizer_from_file(
+            port_,
+            arg0,
+            arg1,
+          );
+        },
+        codec: DcoCodec(
+          decodeSuccessData:
+              dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer,
+          decodeErrorData: dco_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiHfTokenizerHfTokenizerFromFileConstMeta,
+        argValues: [path, maxTokens],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiHfTokenizerHfTokenizerFromFileConstMeta =>
+      const TaskConstMeta(
+        debugName: "HfTokenizer_from_file",
+        argNames: ["path", "maxTokens"],
+      );
+
+  @override
+  Future<int?> crateApiHfTokenizerHfTokenizerTokenId({
+    required HfTokenizer that,
+    required String token,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
+                that,
+              );
+          var arg1 = cst_encode_String(token);
+          return wire.wire__crate__api__hf_tokenizer__HfTokenizer_token_id(
+            port_,
+            arg0,
+            arg1,
+          );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_opt_box_autoadd_u_32,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiHfTokenizerHfTokenizerTokenIdConstMeta,
+        argValues: [that, token],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiHfTokenizerHfTokenizerTokenIdConstMeta =>
+      const TaskConstMeta(
+        debugName: "HfTokenizer_token_id",
+        argNames: ["that", "token"],
       );
 
   @override
@@ -2681,6 +2852,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader;
 
   RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_HfTokenizer => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_HfTokenizer => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer;
+
+  RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_HttpClient => wire
       .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient;
 
@@ -2794,6 +2973,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return FontReaderImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  HfTokenizer
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return HfTokenizerImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -2914,6 +3102,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  HfTokenizer
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return HfTokenizerImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   HttpClient
   dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
     dynamic raw,
@@ -3031,6 +3228,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return FontReaderImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  HfTokenizer
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return HfTokenizerImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -3615,6 +3821,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<Uint32List> dco_decode_list_list_prim_u_32_strict(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>)
+        .map(dco_decode_list_prim_u_32_strict)
+        .toList();
+  }
+
+  @protected
   List<double> dco_decode_list_prim_f_32_loose(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as List<double>;
@@ -3636,6 +3850,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Int32List dco_decode_list_prim_i_32_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as Int32List;
+  }
+
+  @protected
+  Uint32List dco_decode_list_prim_u_32_strict(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as Uint32List;
   }
 
   @protected
@@ -3989,6 +4209,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  HfTokenizer
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return HfTokenizerImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
   HttpClient
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
     SseDeserializer deserializer,
@@ -4145,6 +4377,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  HfTokenizer
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return HfTokenizerImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
   HttpClient
   sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
     SseDeserializer deserializer,
@@ -4263,6 +4507,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return FontReaderImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  HfTokenizer
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return HfTokenizerImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -4990,6 +5246,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<Uint32List> sse_decode_list_list_prim_u_32_strict(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <Uint32List>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_list_prim_u_32_strict(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   List<double> sse_decode_list_prim_f_32_loose(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
@@ -5015,6 +5285,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
     return deserializer.buffer.getInt32List(len_);
+  }
+
+  @protected
+  Uint32List sse_decode_list_prim_u_32_strict(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var len_ = sse_decode_i_32(deserializer);
+    return deserializer.buffer.getUint32List(len_);
   }
 
   @protected
@@ -5453,6 +5730,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
+    HfTokenizer raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    // ignore: invalid_use_of_internal_member
+    return (raw as HfTokenizerImpl).frbInternalCstEncode(move: true);
+  }
+
+  @protected
+  int
   cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
     HttpClient raw,
   ) {
@@ -5579,6 +5866,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Cst (C-struct based), see doc to use other codecs
     // ignore: invalid_use_of_internal_member
     return (raw as DavClientImpl).frbInternalCstEncode(move: false);
+  }
+
+  @protected
+  int
+  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
+    HfTokenizer raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    // ignore: invalid_use_of_internal_member
+    return (raw as HfTokenizerImpl).frbInternalCstEncode(move: false);
   }
 
   @protected
@@ -5714,6 +6011,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Cst (C-struct based), see doc to use other codecs
     // ignore: invalid_use_of_internal_member
     return (raw as FontReaderImpl).frbInternalCstEncode();
+  }
+
+  @protected
+  int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
+    HfTokenizer raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    // ignore: invalid_use_of_internal_member
+    return (raw as HfTokenizerImpl).frbInternalCstEncode();
   }
 
   @protected
@@ -5941,6 +6248,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
+    HfTokenizer self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as HfTokenizerImpl).frbInternalSseEncode(move: true),
+      serializer,
+    );
+  }
+
+  @protected
+  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
     HttpClient self,
     SseSerializer serializer,
@@ -6104,6 +6424,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as DavClientImpl).frbInternalSseEncode(move: false),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
+    HfTokenizer self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as HfTokenizerImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
@@ -6287,6 +6620,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as FontReaderImpl).frbInternalSseEncode(move: null),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
+    HfTokenizer self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as HfTokenizerImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
@@ -6944,6 +7290,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_list_prim_u_32_strict(
+    List<Uint32List> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_list_prim_u_32_strict(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_prim_f_32_loose(
     List<double> self,
     SseSerializer serializer,
@@ -6985,6 +7343,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     serializer.buffer.putInt32List(self);
+  }
+
+  @protected
+  void sse_encode_list_prim_u_32_strict(
+    Uint32List self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    serializer.buffer.putUint32List(self);
   }
 
   @protected
@@ -7508,6 +7876,38 @@ class FontReaderImpl extends RustOpaque implements FontReader {
     rustArcDecrementStrongCountPtr:
         RustLib.instance.api.rust_arc_decrement_strong_count_FontReaderPtr,
   );
+}
+
+@sealed
+class HfTokenizerImpl extends RustOpaque implements HfTokenizer {
+  // Not to be used by end users
+  HfTokenizerImpl.frbInternalDcoDecode(List<dynamic> wire)
+    : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  HfTokenizerImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount:
+        RustLib.instance.api.rust_arc_increment_strong_count_HfTokenizer,
+    rustArcDecrementStrongCount:
+        RustLib.instance.api.rust_arc_decrement_strong_count_HfTokenizer,
+    rustArcDecrementStrongCountPtr:
+        RustLib.instance.api.rust_arc_decrement_strong_count_HfTokenizerPtr,
+  );
+
+  /// 含特殊 token（CLS/SEP 随 json 的 post-processor）。
+  Future<Uint32List> encode({required String text}) => RustLib.instance.api
+      .crateApiHfTokenizerHfTokenizerEncode(that: this, text: text);
+
+  Future<List<Uint32List>> encodeBatch({required List<String> texts}) => RustLib
+      .instance
+      .api
+      .crateApiHfTokenizerHfTokenizerEncodeBatch(that: this, texts: texts);
+
+  Future<int?> tokenId({required String token}) => RustLib.instance.api
+      .crateApiHfTokenizerHfTokenizerTokenId(that: this, token: token);
 }
 
 @sealed

@@ -60,6 +60,8 @@ fast_image_resize = { version = "=6.1.0", default-features = false, features = [
 ttf-parser = { git = "https://github.com/ZhuJHua/ttf-parser", rev = "4a0ddfee643e4a25a3d1363241fa94b9c5f113c3", default-features = false, features = ["std", "variable-fonts"] }
 
 jieba-rs = { version = "=0.10.3", default-features = false, features = ["default-dict"] }
+# 关默认避 onig C 依赖；unstable_wasm 只为激活 fancy-regex 引擎（getrandom/wasm_js 仅作用于 wasm 目标）
+tokenizers = { version = "=0.23.1", default-features = false, features = ["unstable_wasm"] }
 unicode-segmentation = "=1.13.3"
 rust-stemmers = "=1.2.0"
 
@@ -81,6 +83,7 @@ rig-agent = { version = "=0.42.0", default-features = false }
 moodiary-archive = { path = "crates/foundation/archive" }
 moodiary-crypto = { path = "crates/foundation/crypto" }
 moodiary-font = { path = "crates/foundation/font" }
+moodiary-hf-tokenizer = { path = "crates/foundation/hf_tokenizer" }
 moodiary-http = { path = "crates/foundation/http" }
 moodiary-js = { path = "crates/foundation/js" }
 moodiary-image = { path = "crates/foundation/image" }
@@ -102,6 +105,7 @@ moodiary-doc = { workspace = true }
 moodiary-export = { workspace = true }
 moodiary-font = { workspace = true }
 moodiary-graph = { workspace = true }
+moodiary-hf-tokenizer = { workspace = true }
 moodiary-http = { workspace = true }
 moodiary-js = { workspace = true }
 moodiary-image = { workspace = true }
