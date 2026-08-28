@@ -513,14 +513,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "8.1.0"
-  dinja:
-    dependency: transitive
-    description:
-      name: dinja
-      sha256: "34d4e569ceb3d900ab061f16cae947223968cc63d2484a8a4710d5ecfa4ae3a2"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.0"
   dismissible_page:
     dependency: transitive
     description:
@@ -1411,22 +1403,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.1"
-  llamadart:
-    dependency: transitive
-    description:
-      name: llamadart
-      sha256: "7a9a406eab1181b7e67c687e97f681abda682fa31716cc78e56e5bdd32a7e9c6"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.8.20"
-  llamadart_llama_cpp_flutter:
-    dependency: transitive
-    description:
-      name: llamadart_llama_cpp_flutter
-      sha256: bf6b6b2e2d2703a141c3e357d1bff9e135dfa7df557dc9aed7c91d918675adac
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.14"
   local_auth:
     dependency: transitive
     description:
@@ -1699,6 +1675,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.0"
+  onnxruntime_plus:
+    dependency: transitive
+    description:
+      name: onnxruntime_plus
+      sha256: "05323f4f72c701416deba8db94f5e576f6853ca6f8d97d628ed9190eee6d77d8"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.5.0"
   package_config:
     dependency: transitive
     description:

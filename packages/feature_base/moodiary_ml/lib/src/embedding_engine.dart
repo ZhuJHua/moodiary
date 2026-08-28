@@ -6,6 +6,7 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 
 import 'embedding_backend.dart';
 import 'embedding_models.dart';
+import 'onnx_embedding_backend.dart';
 
 /// 语义嵌入的消费侧窄接口（moodiary_data 的 EmbedIndexService 面向它，
 /// 测试注入确定性替身）。生产实现是 [EmbeddingEngine]。
@@ -26,7 +27,7 @@ class EmbeddingEngine implements SemanticEmbedder {
   final EmbeddingModelManager _models;
   final EmbeddingBackend _backend;
 
-  /// 串行化加载/卸载/推理——llama.cpp 上下文非并发安全。
+  /// 串行化加载/卸载/推理——保证同一时刻至多一个模型驻留内存。
   Future<void> _chain = Future.value();
   Timer? _idleTimer;
 
@@ -76,7 +77,9 @@ class EmbeddingEngine implements SemanticEmbedder {
       }
       if (!_backend.loaded) {
         await _backend.load(
-          _models.pathOf(spec),
+          _models.modelPathOf(spec),
+          tokenizerPath: _models.tokenizerPathOf(spec),
+          padToken: spec.padToken,
           contextSize: spec.contextSize,
         );
         _loadedModelId = spec.id;
@@ -106,9 +109,9 @@ class EmbeddingEngine implements SemanticEmbedder {
   }
 }
 
-/// DI 装配：默认后端 = llama.cpp。
+/// DI 装配：后端 = ONNX Runtime（全仓唯一推理运行时）。
 @module
 abstract class EmbeddingBackendModule {
   @lazySingleton
-  EmbeddingBackend backend() => LlamaEmbeddingBackend();
+  EmbeddingBackend backend() => OnnxEmbeddingBackend();
 }

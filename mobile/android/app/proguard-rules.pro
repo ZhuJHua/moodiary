@@ -31,3 +31,4 @@
 -dontwarn org.tensorflow.lite.**
 -dontwarn com.google.mediapipe.proto.CalculatorProfileProto$CalculatorProfile
 -dontwarn com.google.mediapipe.proto.GraphTemplateProto$CalculatorGraphTemplate
+

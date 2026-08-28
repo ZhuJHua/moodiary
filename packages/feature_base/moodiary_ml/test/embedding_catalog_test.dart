@@ -2,17 +2,36 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_ml/moodiary_ml.dart';
 
 void main() {
-  test('清单项字段完整且 id 唯一', () {
+  test('嵌入清单字段完整且 id 唯一', () {
     expect(embeddingModelCatalog, isNotEmpty);
     final ids = embeddingModelCatalog.map((s) => s.id).toSet();
     expect(ids.length, embeddingModelCatalog.length);
     for (final spec in embeddingModelCatalog) {
       expect(spec.dim, greaterThan(0));
-      expect(spec.fileName, endsWith('.gguf'));
+      expect(spec.modelFileName, endsWith('.onnx'));
+      expect(spec.tokenizerFileName, endsWith('.tokenizer.json'));
       // 镜像与官方共用仓内路径：不带协议与主机。
-      expect(spec.hfPath, isNot(startsWith('http')));
-      expect(spec.hfPath, contains('/resolve/'));
+      for (final path in [spec.modelHfPath, spec.tokenizerHfPath]) {
+        expect(path, isNot(startsWith('http')));
+        expect(path, contains('/resolve/'));
+      }
       expect(spec.sizeBytes, greaterThan(0));
+      expect(spec.padToken, isNotEmpty);
+    }
+  });
+
+  test('情感清单字段完整', () {
+    expect(sentimentModelCatalog, isNotEmpty);
+    for (final spec in sentimentModelCatalog) {
+      expect(spec.modelFileName, endsWith('.onnx'));
+      expect(spec.labelWeights.length, greaterThan(1));
+      for (final w in spec.labelWeights) {
+        expect(w, inInclusiveRange(0, 1));
+      }
+      for (final path in [spec.modelHfPath, spec.tokenizerHfPath]) {
+        expect(path, isNot(startsWith('http')));
+        expect(path, contains('/resolve/'));
+      }
     }
   });
 
@@ -21,5 +40,9 @@ void main() {
     expect(EmbeddingModelManager.byId(spec.id), same(spec));
     expect(EmbeddingModelManager.byId('nope'), isNull);
     expect(EmbeddingModelManager.byId(''), isNull);
+    expect(
+      SentimentModelManager.byId(sentimentModelCatalog.first.id),
+      same(sentimentModelCatalog.first),
+    );
   });
 }

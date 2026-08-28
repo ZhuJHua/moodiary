@@ -1,5 +1,5 @@
 name: moodiary_ml
-description: "本地 ML 推理：llamadart(llama.cpp) 嵌入引擎 + 模型下载/激活管理。llamadart 依赖由本包独家 own。"
+description: "本地 ML 推理：ONNX Runtime 嵌入/情感引擎 + 模型下载/激活管理。onnxruntime_plus 依赖由本包独家 own。"
 version: 0.0.1
 publish_to: none
 
@@ -13,7 +13,7 @@ dependencies:
   flutter:
     sdk: flutter
   injectable: 3.0.0
-  llamadart: 0.8.20
+  onnxruntime_plus: 1.5.0
   moodiary_files: 0.0.1
   moodiary_http: 0.0.1
   moodiary_logging: 0.0.1

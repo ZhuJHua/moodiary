@@ -130,6 +130,9 @@ enum MoodiaryKVs<T extends Object> {
   /// 模型下载是否走 hf-mirror.com 镜像（关闭则直连 huggingface.co）。
   modelDownloadMirror<bool>(defaultValue: true),
 
+  /// 激活的本地情感分析模型 id（对应 moodiary_ml 内置清单）。空 = 心情建议未启用。
+  sentimentModelId<String>(defaultValue: ''),
+
   getWeather<bool>(defaultValue: false),
   autoWeather<bool>(defaultValue: false),
   weather<List<String>>(),
