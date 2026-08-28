@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_assistant/moodiary_assistant.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
+import 'package:moodiary_ml/moodiary_ml.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
 
@@ -20,6 +24,8 @@ class ServicesPage extends ConsumerWidget {
           _Note(),
           SizedBox(height: 4),
           _AiSection(),
+          SizedBox(height: 4),
+          _SemanticSection(),
           SizedBox(height: 4),
           _QweatherSection(),
           SizedBox(height: 4),
@@ -80,6 +86,281 @@ class _AiSection extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+/// 语义检索：嵌入模型选择（下载/切换/删除）+ 停用 + 索引重建。模型运行时下载，
+/// 启用后由 EmbedIndexService 后台建索引，助手的 semanticSearchDiaries 随即可用；
+/// 切换模型 = 维度变 = 全量重建索引（激活即置 stale）。
+class _SemanticSection extends StatefulWidget {
+  const _SemanticSection();
+
+  @override
+  State<_SemanticSection> createState() => _SemanticSectionState();
+}
+
+class _SemanticSectionState extends State<_SemanticSection> {
+  final _manager = getIt<EmbeddingModelManager>();
+
+  bool _rebuilding = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.theme.colors;
+    return Column(
+      crossAxisAlignment: .stretch,
+      children: [
+        SettingTitleTile(title: context.l10n.app.semanticTitle),
+        Card.filled(
+          color: scheme.surfaceContainerLow,
+          margin: .zero,
+          child: ValueListenableBuilder<String>(
+            valueListenable: MoodiaryKVs.embeddingModelId.getNotifier(),
+            builder: (context, _, _) {
+              final active = _manager.active;
+              return Column(
+                children: [
+                  SettingListTile(
+                    isFirst: true,
+                    isLast: active == null,
+                    leading: Icon(
+                      LucideIcons.sparkles,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                    title: context.l10n.app.semanticModelTitle,
+                    subtitle:
+                        active?.displayName ??
+                        context.l10n.app.semanticStateOff,
+                    trailing: const Icon(LucideIcons.chevronRight),
+                    onTap: _openPicker,
+                  ),
+                  if (active != null)
+                    SettingListTile(
+                      isLast: true,
+                      leading: Icon(
+                        LucideIcons.refreshCw,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                      title: context.l10n.app.semanticRebuildTitle,
+                      subtitle: context.l10n.app.semanticRebuildSubtitle,
+                      trailing: _rebuilding
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(LucideIcons.chevronRight),
+                      onTap: _rebuilding ? null : _rebuild,
+                    ),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _openPicker() async {
+    await MSheet.show<void>(
+      context,
+      builder: (_) => _ModelPickerSheet(manager: _manager),
+    );
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _rebuild() async {
+    setState(() => _rebuilding = true);
+    try {
+      final count = await EmbedIndexService.get().rebuildAll();
+      toast.success(message: l10n.app.semanticRebuildDone(count: count));
+    } catch (e, s) {
+      logger.e('semantic rebuild failed', error: e, stackTrace: s);
+    } finally {
+      if (mounted) setState(() => _rebuilding = false);
+    }
+  }
+}
+
+class _ModelPickerSheet extends StatefulWidget {
+  final EmbeddingModelManager manager;
+
+  const _ModelPickerSheet({required this.manager});
+
+  @override
+  State<_ModelPickerSheet> createState() => _ModelPickerSheetState();
+}
+
+class _ModelPickerSheetState extends State<_ModelPickerSheet> {
+  /// 正在下载的模型 id 与进度（0~1；-1 = 校验中）。
+  String? _downloadingId;
+  double _progress = 0;
+
+  EmbeddingModelManager get _manager => widget.manager;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.theme.colors;
+    final active = _manager.active;
+    return SafeArea(
+      child: Column(
+        mainAxisSize: .min,
+        crossAxisAlignment: .stretch,
+        children: [
+          Padding(
+            padding: const .fromLTRB(24, 8, 24, 8),
+            child: Text(
+              context.l10n.app.semanticPickTitle,
+              style: context.theme.typography.titleMedium.onSurface,
+            ),
+          ),
+          for (final (i, spec) in embeddingModelCatalog.indexed)
+            _modelTile(
+              context,
+              spec,
+              isFirst: i == 0,
+              isLast: i == embeddingModelCatalog.length - 1 && active == null,
+              isActive: spec.id == active?.id,
+            ),
+          if (active != null)
+            SettingListTile(
+              isLast: true,
+              leading: Icon(LucideIcons.circleOff, color: scheme.error),
+              title: context.l10n.app.semanticDisableTitle,
+              onTap: _downloadingId != null ? null : _disable,
+            ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
+  Widget _modelTile(
+    BuildContext context,
+    EmbeddingModelSpec spec, {
+    required bool isFirst,
+    required bool isLast,
+    required bool isActive,
+  }) {
+    final scheme = context.theme.colors;
+    final downloading = _downloadingId == spec.id;
+    final downloaded = _manager.isDownloaded(spec);
+    final sizeMb = (spec.sizeBytes / (1024 * 1024)).round();
+    final subtitle = downloading
+        ? (_progress < 0
+              ? context.l10n.app.semanticVerifying
+              : context.l10n.app.semanticDownloading(
+                  percent: (_progress * 100).toStringAsFixed(0),
+                ))
+        : '$sizeMb MB · ${_descOf(context, spec)}';
+    return SettingListTile(
+      isFirst: isFirst,
+      isLast: isLast,
+      leading: Icon(
+        isActive ? LucideIcons.circleCheck : LucideIcons.box,
+        color: isActive ? scheme.primary : scheme.onSurfaceVariant,
+      ),
+      title: spec.displayName,
+      subtitle: subtitle,
+      trailing: downloading
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : (downloaded && !isActive)
+          ? IconButton(
+              icon: Icon(LucideIcons.trash2, color: scheme.onSurfaceVariant),
+              onPressed: () => _delete(spec),
+            )
+          : null,
+      onTap: (isActive || _downloadingId != null)
+          ? null
+          : () => _activate(spec),
+    );
+  }
+
+  String _descOf(BuildContext context, EmbeddingModelSpec spec) {
+    final l10nApp = context.l10n.app;
+    return switch (spec.id) {
+      'bge-small-zh-v1.5-q8_0' => l10nApp.semanticDescBgeSmall,
+      'bge-base-zh-v1.5-q8_0' => l10nApp.semanticDescBgeBase,
+      'bge-large-zh-v1.5-q8_0' => l10nApp.semanticDescBgeLarge,
+      'bge-m3-q8_0' => l10nApp.semanticDescBgeM3,
+      'embeddinggemma-300m-q8_0' => l10nApp.semanticDescGemma,
+      _ => '',
+    };
+  }
+
+  Future<void> _activate(EmbeddingModelSpec spec) async {
+    final downloaded = _manager.isDownloaded(spec);
+    final sizeMb = (spec.sizeBytes / (1024 * 1024)).round();
+    final confirmed = await MAlert.confirm(
+      context,
+      title: l10n.app.semanticEnableTitle,
+      message: downloaded
+          ? l10n.app.semanticActivateLocalMessage
+          : l10n.app.semanticActivateDownloadMessage(size: '$sizeMb MB'),
+      confirmLabel: l10n.app.semanticEnableConfirm,
+    );
+    if (!confirmed || !mounted) return;
+    setState(() {
+      _downloadingId = spec.id;
+      _progress = 0;
+    });
+    try {
+      if (!downloaded) {
+        await _manager.download(
+          spec,
+          onProgress: (received, total) {
+            if (!mounted) return;
+            setState(() => _progress = total > 0 ? received / total : 0);
+          },
+        );
+      }
+      if (mounted) setState(() => _progress = -1);
+      await _manager.activate(spec);
+      // 激活即置 stale，直接开建（后台跑，不等）。
+      unawaited(EmbedIndexService.get().drain());
+      toast.success(message: l10n.app.semanticEnabled);
+      if (mounted) Navigator.of(context).pop();
+    } catch (e, s) {
+      logger.e('activate embedding model failed', error: e, stackTrace: s);
+      toast.error(message: l10n.app.semanticEnableFailed);
+    } finally {
+      if (mounted) setState(() => _downloadingId = null);
+    }
+  }
+
+  Future<void> _delete(EmbeddingModelSpec spec) async {
+    final confirmed = await MAlert.confirm(
+      context,
+      title: l10n.app.semanticDeleteTitle,
+      message: l10n.app.semanticDeleteMessage,
+      confirmLabel: l10n.app.semanticDeleteConfirm,
+      isDestructive: true,
+    );
+    if (!confirmed) return;
+    await _manager.delete(spec);
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _disable() async {
+    final confirmed = await MAlert.confirm(
+      context,
+      title: l10n.app.semanticDisableTitle,
+      message: l10n.app.semanticDisableMessage,
+      confirmLabel: l10n.app.semanticDisableConfirm,
+      isDestructive: true,
+    );
+    if (!confirmed || !mounted) return;
+    try {
+      _manager.deactivate();
+      await EmbedIndexService.get().clearAll();
+      if (mounted) Navigator.of(context).pop();
+    } catch (e, s) {
+      logger.e('disable semantic search failed', error: e, stackTrace: s);
+    }
   }
 }
 

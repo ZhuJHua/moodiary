@@ -62,6 +62,8 @@
   "toolSectionNote": "助手会根据对话内容自动调用下列工具，无需你逐次确认。删除类操作请留意：日记会进回收站，记忆则是永久删除。",
   "toolQueryTitle": "查询日记",
   "toolQueryDes": "按关键词、时间范围或分类查询你的本地日记，用于回答涉及过往经历、情绪记录的问题。",
+  "toolSemanticTitle": "语义检索",
+  "toolSemanticDes": "按含义而非关键词查找日记：用一句自然语言描述要找的内容，即使措辞不同也能召回。需先在设置中启用本地语义索引。",
   "toolGetTitle": "读取日记全文",
   "toolGetDes": "按 id 读取日记的完整内容，可一次读多篇。",
   "toolOverviewTitle": "日记概览",

@@ -7,6 +7,8 @@ import 'package:moodiary_models/moodiary_models.dart';
 enum AssistantTool {
   queryDiaries('queryDiaries'),
 
+  semanticSearchDiaries('semanticSearchDiaries'),
+
   getDiary('getDiary'),
 
   diaryOverview('diaryOverview'),
@@ -269,7 +271,8 @@ description tells you what it does; the rules below are the ones that span tools
 Tool guidelines:
 - Every tool takes a batch. When several entries, categories or facts are involved, pass them all in one call — one call per entry is wasteful and slow. A batch reports one line per item, so a partial failure still tells you exactly which items went through; never re-run the ones that already did.
 - Your earlier turns may start with a "[tools already run]" block. That is a record of the tools you already ran in that turn, with their arguments and a one-line result summary — not something the user wrote. Use it to avoid repeating a lookup you already did; when you need the details again, call the tool again.
-- Always obtain an id via queryDiaries (for diaries) or listCategories (for categories) before updating or deleting.
+- Always obtain an id via queryDiaries or semanticSearchDiaries (for diaries) or listCategories (for categories) before updating or deleting.
+- queryDiaries matches exact keywords and filters; semanticSearchDiaries finds entries by meaning ("that trip where I felt lost") even when the words differ. Prefer keywords when the user quotes concrete words, semantic search for vague or feeling-based descriptions; if one comes back empty, try the other before concluding nothing exists.
 - The facts you have saved about the user are already given to you at the start of each turn, so you do not need listMemories just to recall them — only to get an id before updating or forgetting one.
 - Use rememberFact sparingly and only for things genuinely worth remembering long-term: lasting preferences, recurring themes, ongoing goals. Do not save passing details, one-off events, sensitive secrets, or anything the user asks you to keep private or not remember.
 - Never delete anything the user did not ask you to delete. "Tidy up" is not an instruction to delete — propose what you would remove and wait for a clear yes.''';

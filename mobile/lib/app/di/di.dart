@@ -10,6 +10,7 @@ import 'package:moodiary_files/moodiary_files.dart'
 import 'package:moodiary_http/injectable.module.dart';
 import 'package:moodiary_http/moodiary_http.dart' show IHttpClient, IHttpServer;
 import 'package:moodiary_logging/moodiary_logging.dart';
+import 'package:moodiary_ml/injectable.module.dart';
 import 'package:moodiary_storage/injectable.module.dart';
 import 'package:moodiary_storage/moodiary_storage.dart'
     show IKVStorage, ISecureKVStorage;
@@ -31,6 +32,8 @@ import 'package:moodiary_sync/moodiary_sync.dart'
   externalPackageModulesBefore: [
     ExternalModule(MoodiaryStoragePackageModule),
     ExternalModule(MoodiaryHttpPackageModule),
+    // ml 在 http 之后：EmbeddingModelManager 注入 IHttpClient 下载模型。
+    ExternalModule(MoodiaryMlPackageModule),
     ExternalModule(MoodiaryAssistantPackageModule),
     ExternalModule(MoodiarySyncPackageModule),
   ],

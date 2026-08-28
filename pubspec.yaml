@@ -44,3 +44,22 @@ dev_dependencies:
 
 dependency_overrides:
   cli_util: 0.5.2
+
+# Native Assets 的 hooks user_defines 只认 workspace 根的这份 pubspec
+# （flutter_tools 取 package_config.json 同级的 ../pubspec.yaml），放 mobile/ 无效。
+# llamadart 收窄：只要 llama.cpp 家族（不拉 LiteRT-LM）；后端只留 CPU 单 baseline
+# 变体——嵌入模型 24M 参数量级 GPU 无收益，full profile 的 7 个 CPU 变体 + vulkan
+# 只添体积（体积账见 docs/local-rag.md §6.8）。
+hooks:
+  user_defines:
+    llamadart:
+      llamadart_native_runtimes: llama_cpp
+      llamadart_native_backends:
+        platforms:
+          android:
+            backends: [cpu]
+            cpu_profile: full
+          windows:
+            backends: [cpu]
+          linux:
+            backends: [cpu]

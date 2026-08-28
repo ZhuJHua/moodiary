@@ -7,6 +7,7 @@ import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_migration/moodiary_migration.dart'
     show EngineMigrationService;
+import 'package:moodiary_ml/moodiary_ml.dart' show EmbeddingModelManager;
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_sync/moodiary_sync.dart';
@@ -24,12 +25,28 @@ Future<void> bootstrapPlatform() async {
   AppLogger.configure(logFilePath: AppFiles.getErrorLogPath());
 }
 
-/// 启动期维护：两条互不依赖、失败不该阻断启动的清理，发出即不等。
+/// 启动期维护：互不依赖、失败不该阻断启动的清理，发出即不等。
 void runStartupMaintenance() {
   // 同步墓碑保留窗 GC（默认 90 天）：零后端用户的墓碑因此有界，不无限累积。
   unawaited(purgeExpiredTombstones());
   // 上次进程被杀时残留的同步临时密文（全尺寸，没人来收）。
   unawaited(purgeSyncMediaTemp());
+  // 语义索引启动兜底排空 + 事件驱动补嵌（模型未激活时均为 no-op）。
+  unawaited(EmbedIndexService.get().drain());
+  _watchEmbedQueue();
+}
+
+/// 写日记（含同步落库）后去抖排空补嵌队列。10s 去抖：编辑器自动保存每次都发
+/// DiaryUpdated，停笔后才真正嵌入，避免打字期间反复重嵌同一篇。
+/// 进程级订阅，不随界面存亡（同 AutoSyncWatcher 的编排定位，归 main 不归容器）。
+void _watchEmbedQueue() {
+  Timer? debounce;
+  DiaryRepository.get().diaryEvents.listen((_) {
+    debounce?.cancel();
+    debounce = Timer(const Duration(seconds: 10), () {
+      unawaited(EmbedIndexService.get().drain());
+    });
+  });
 }
 
 /// 重置所有应用数据，恢复到「全新安装」状态（SQLite / KV / SecureKV / 媒体 / 缓存）。
@@ -52,6 +69,8 @@ Future<void> resetAllData() async {
     // 字面量；**不走吞错的 purgeBackups**——明文没删掉时重置必须报失败，
     // 用户可能正要转手设备），与跨引擎迁移前的整库快照。
     AppFiles.deleteDir(EditorMigrationService.backupDirPath),
+    // 本地嵌入模型文件（KV 的激活状态由上面的 clear 一并清）。
+    AppFiles.deleteDir(EmbeddingModelManager.modelsDirPath),
     AppFiles.deleteFile(
       AppFiles.getRealPath('database', 'default.isar.v273bak'),
     ),

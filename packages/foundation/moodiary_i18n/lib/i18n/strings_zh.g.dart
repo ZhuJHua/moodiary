@@ -304,6 +304,84 @@ class Translations$app$zh {
 	/// zh: '保存失败，请重试'
 	String get servicesSaveFailed => '保存失败，请重试';
 
+	/// zh: '语义检索'
+	String get semanticTitle => '语义检索';
+
+	/// zh: '嵌入模型'
+	String get semanticModelTitle => '嵌入模型';
+
+	/// zh: '未启用'
+	String get semanticStateOff => '未启用';
+
+	/// zh: '下载中 {percent}%'
+	String semanticDownloading({required Object percent}) => '下载中 ${percent}%';
+
+	/// zh: '校验模型中…'
+	String get semanticVerifying => '校验模型中…';
+
+	/// zh: '启用语义检索'
+	String get semanticEnableTitle => '启用语义检索';
+
+	/// zh: '下载并启用'
+	String get semanticEnableConfirm => '下载并启用';
+
+	/// zh: '已启用，索引在后台构建'
+	String get semanticEnabled => '已启用，索引在后台构建';
+
+	/// zh: '启用失败'
+	String get semanticEnableFailed => '启用失败';
+
+	/// zh: '停用语义检索'
+	String get semanticDisableTitle => '停用语义检索';
+
+	/// zh: '停用后语义索引数据将被清除，已下载的模型文件保留，可随时重新启用。'
+	String get semanticDisableMessage => '停用后语义索引数据将被清除，已下载的模型文件保留，可随时重新启用。';
+
+	/// zh: '停用'
+	String get semanticDisableConfirm => '停用';
+
+	/// zh: '重建语义索引'
+	String get semanticRebuildTitle => '重建语义索引';
+
+	/// zh: '索引异常或长期未更新时使用'
+	String get semanticRebuildSubtitle => '索引异常或长期未更新时使用';
+
+	/// zh: '已重嵌 {count} 篇日记'
+	String semanticRebuildDone({required Object count}) => '已重嵌 ${count} 篇日记';
+
+	/// zh: '选择嵌入模型'
+	String get semanticPickTitle => '选择嵌入模型';
+
+	/// zh: '将下载 {size} 的模型文件并重建语义索引，全部推理与索引都在本机完成，日记内容不会上传。'
+	String semanticActivateDownloadMessage({required Object size}) => '将下载 ${size} 的模型文件并重建语义索引，全部推理与索引都在本机完成，日记内容不会上传。';
+
+	/// zh: '启用后将重建语义索引。'
+	String get semanticActivateLocalMessage => '启用后将重建语义索引。';
+
+	/// zh: '删除模型文件'
+	String get semanticDeleteTitle => '删除模型文件';
+
+	/// zh: '删除已下载的模型文件，之后可重新下载。'
+	String get semanticDeleteMessage => '删除已下载的模型文件，之后可重新下载。';
+
+	/// zh: '删除'
+	String get semanticDeleteConfirm => '删除';
+
+	/// zh: '轻量快速，中文'
+	String get semanticDescBgeSmall => '轻量快速，中文';
+
+	/// zh: '均衡之选，中文'
+	String get semanticDescBgeBase => '均衡之选，中文';
+
+	/// zh: '效果最好，中文'
+	String get semanticDescBgeLarge => '效果最好，中文';
+
+	/// zh: '多语言旗舰，长文本'
+	String get semanticDescBgeM3 => '多语言旗舰，长文本';
+
+	/// zh: '多语言'
+	String get semanticDescGemma => '多语言';
+
 	/// zh: '使用天数'
 	String get dashUseDays => '使用天数';
 
@@ -690,6 +768,12 @@ class Translations$assistant$zh {
 
 	/// zh: '按关键词、时间范围或分类查询你的本地日记，用于回答涉及过往经历、情绪记录的问题。'
 	String get toolQueryDes => '按关键词、时间范围或分类查询你的本地日记，用于回答涉及过往经历、情绪记录的问题。';
+
+	/// zh: '语义检索'
+	String get toolSemanticTitle => '语义检索';
+
+	/// zh: '按含义而非关键词查找日记：用一句自然语言描述要找的内容，即使措辞不同也能召回。需先在设置中启用本地语义索引。'
+	String get toolSemanticDes => '按含义而非关键词查找日记：用一句自然语言描述要找的内容，即使措辞不同也能召回。需先在设置中启用本地语义索引。';
 
 	/// zh: '读取日记全文'
 	String get toolGetTitle => '读取日记全文';

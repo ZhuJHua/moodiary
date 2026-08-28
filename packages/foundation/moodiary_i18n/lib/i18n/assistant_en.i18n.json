@@ -62,6 +62,8 @@
   "toolSectionNote": "The assistant calls these tools on its own as the conversation needs them — you are not asked each time. Note what deletion does: a diary goes to the recycle bin, a saved fact is gone for good.",
   "toolQueryTitle": "Query diaries",
   "toolQueryDes": "Finds your local diaries by keyword, date range, or category to answer questions about past experiences and moods.",
+  "toolSemanticTitle": "Semantic search",
+  "toolSemanticDes": "Finds diaries by meaning rather than exact keywords: describe the entry in a sentence and it recalls it even with different wording. Requires the local semantic index enabled in settings.",
   "toolGetTitle": "Read full diary",
   "toolGetDes": "Read the full text of diaries by id, several at a time.",
   "toolOverviewTitle": "Diary overview",

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
@@ -68,6 +69,12 @@ abstract final class AssistantToolRegistry {
   /// getDiary 一次最多读几篇。再多就该先用 queryDiaries 收窄。
   static const _maxBatchRead = 10;
 
+  /// 语义检索的默认/上限条数。比关键词检索小：每条都带「最佳分块摘录」，
+  /// 且 KNN 超采样按 limit 放大，给大了徒增延迟。
+  static const _defaultSemanticLimit = 5;
+
+  static const _maxSemanticLimit = 10;
+
   /// 一次能写多少。对齐 [_maxQueryLimit]：目标 id 只能来自 queryDiaries /
   /// listCategories / listMemories，而查询一次最多给出这么多条，模型手上本就不会
   /// 有更长的合法列表。超出的不做，并在结果里说明 —— 写入有副作用，宁可让它再调
@@ -130,6 +137,54 @@ abstract final class AssistantToolRegistry {
       },
       run: _queryDiaries,
       summarize: _summarizeQuery,
+    ),
+    AssistantToolSpec(
+      tool: .semanticSearchDiaries,
+      description:
+          'Find diaries by meaning, not exact words: describe what the entry is '
+          'about in a natural sentence ("a trip where I felt lost and small") and '
+          'it returns the semantically closest entries even when their wording '
+          'differs. Complements queryDiaries — use keywords there when the user '
+          'quotes concrete words, use this for vague or feeling-based '
+          'descriptions. Results carry id, date, mood and the best-matching '
+          'excerpt, ranked by similarity (1.00 = closest). Unavailable until the '
+          'user enables the local semantic index in settings; fall back to '
+          'queryDiaries then.',
+      jsonSchema: {
+        'type': 'object',
+        'properties': {
+          'query': {
+            'type': 'string',
+            'description':
+                'A natural-language description of the entries to find. '
+                'A full sentence works better than bare keywords.',
+          },
+          'categoryId': {
+            'type': 'string',
+            'description': 'Restrict to one category (id from listCategories).',
+          },
+          'startDate': {
+            'type': 'string',
+            'description':
+                'Inclusive start, YYYY-MM-DD in the user local time.',
+          },
+          'endDate': {
+            'type': 'string',
+            'description': 'Inclusive end, YYYY-MM-DD in the user local time.',
+          },
+          'limit': {
+            'type': 'integer',
+            'description':
+                'How many entries to return. Default '
+                '$_defaultSemanticLimit, max $_maxSemanticLimit.',
+            'minimum': 1,
+            'maximum': _maxSemanticLimit,
+          },
+        },
+        'required': ['query'],
+      },
+      run: _semanticSearchDiaries,
+      summarize: _summarizeSemantic,
     ),
     AssistantToolSpec(
       tool: .getDiary,
@@ -688,6 +743,97 @@ abstract final class AssistantToolRegistry {
     // **总数必须回传**：只给前 limit 条而不说还有多少，模型会把这几条当成全部，
     // 然后对用户说「你这周只写了 8 篇」——一个由工具输出直接导致的错误结论。
     return _formatDiaryList(results.take(limit), total: results.length);
+  }
+
+  /// 语义检索：EmbedIndexService 做 KNN，这里补日记元数据与最佳分块摘录。
+  /// 模型未激活时给出明确说明，模型自然回退 queryDiaries。
+  static Future<String> _semanticSearchDiaries(
+    Map<String, dynamic> input,
+  ) async {
+    final query = ((input['query'] as String?) ?? '').trim();
+    if (query.isEmpty) {
+      return 'Failed: query must not be empty.';
+    }
+    final index = EmbedIndexService.get();
+    if (!index.enabled) {
+      return 'Semantic search is not available: the local embedding model is '
+          'not enabled on this device. Use queryDiaries with keywords instead.';
+    }
+    final categoryId = _trimToNull(input['categoryId']);
+    final limit = ((input['limit'] as num?)?.toInt() ?? _defaultSemanticLimit)
+        .clamp(1, _maxSemanticLimit);
+    final start = _parseDate(input['startDate']);
+    final endExclusive = _parseDate(input['endDate'])
+        ?.add(const Duration(days: 1));
+
+    final hits = await index.search(
+      query,
+      limit: limit,
+      categoryId: categoryId,
+      start: start,
+      endExclusive: endExclusive,
+    );
+    if (hits.isEmpty) {
+      return '0 matches. The semantic index may still be building, or nothing '
+          'is similar — try queryDiaries with keywords before concluding '
+          'nothing exists.';
+    }
+
+    final repo = DiaryRepository.get();
+    final buffer = StringBuffer()
+      ..writeln(
+        '${hits.length} semantically similar entries, best match first '
+        '(similarity 1.00 = closest):',
+      );
+    for (final hit in hits) {
+      final diary = await repo.getDiaryByBusinessId(hit.diaryId);
+      if (diary == null) continue;
+      final title = diary.title.trim().isEmpty
+          ? 'Untitled'
+          : diary.title.trim();
+      final cat = diary.categoryId;
+      final catPart = (cat != null && cat.isNotEmpty) ? ' categoryId=$cat' : '';
+      final similarity = (1 - hit.distance).clamp(-1.0, 1.0);
+      buffer.writeln(
+        'id=${diary.id} 【${TimeFormat.isoDate(diary.time)}】$title '
+        'mood=${diary.mood.toStringAsFixed(2)} '
+        'similarity=${similarity.toStringAsFixed(2)}$catPart',
+      );
+      final excerpt = _semanticExcerpt(diary, hit);
+      if (excerpt.isNotEmpty) buffer.writeln(excerpt);
+      buffer.writeln();
+    }
+    return buffer.toString().trim();
+  }
+
+  /// 命中分块的摘录：标题块（startOff=-1）直接说命中标题；正文块按偏移切原文
+  /// （偏移对当前正文防御性夹取——索引落后于编辑时宁可摘错位置也不能越界）。
+  static String _semanticExcerpt(Diary diary, SemanticHit hit) {
+    if (hit.startOff < 0) return '(matched the title)';
+    final text = diary.contentText;
+    if (text.isEmpty || hit.startOff >= text.length) return '';
+    final end = min(hit.startOff + hit.len, text.length);
+    var excerpt = text.substring(hit.startOff, end).trim();
+    if (excerpt.length > _maxExcerptLength) {
+      excerpt =
+          '${excerpt.substring(0, _maxExcerptLength)}… '
+          '(excerpt; full text via getDiary)';
+    }
+    return excerpt;
+  }
+
+  static String _summarizeSemantic(
+    AssistantTool _,
+    Map<String, dynamic> input,
+    String output,
+  ) {
+    final hit = RegExp(r'^(\d+) semantically').firstMatch(output);
+    if (hit == null) return l10n.assistant.toolNoMatch;
+    final count = int.tryParse(hit.group(1) ?? '') ?? 0;
+    return [
+      l10n.assistant.toolMatched(count: count),
+      ?_trimToNull(input['query']),
+    ].join(' · ');
   }
 
   /// 批量读全文。**一次多篇**：总结一周日记要 7 篇，逐篇调用就是 7 轮往返，

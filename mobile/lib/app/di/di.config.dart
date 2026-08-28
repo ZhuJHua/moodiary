@@ -18,6 +18,7 @@ import 'package:moodiary_assistant/injectable.module.dart' as _i578;
 import 'package:moodiary_files/moodiary_files.dart' as _i800;
 import 'package:moodiary_http/injectable.module.dart' as _i545;
 import 'package:moodiary_http/moodiary_http.dart' as _i765;
+import 'package:moodiary_ml/injectable.module.dart' as _i591;
 import 'package:moodiary_storage/injectable.module.dart' as _i295;
 import 'package:moodiary_sync/injectable.module.dart' as _i412;
 
@@ -30,6 +31,7 @@ extension GetItInjectableX on _i174.GetIt {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
     await _i295.MoodiaryStoragePackageModule().init(gh);
     await _i545.MoodiaryHttpPackageModule().init(gh);
+    await _i591.MoodiaryMlPackageModule().init(gh);
     await _i578.MoodiaryAssistantPackageModule().init(gh);
     await _i412.MoodiarySyncPackageModule().init(gh);
     final appModule = _$AppModule();

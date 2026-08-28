@@ -16,6 +16,8 @@ dependencies:
   moodiary_rust: 0.0.1
   moodiary_router: 0.0.1
   moodiary_assistant: 0.0.1
+  # llamadart 的 Apple SPM 运行时配套（iOS 侧链接 llama.cpp XCFramework）
+  llamadart_llama_cpp_flutter: 0.0.14
   moodiary_diary: 0.0.1
   moodiary_editor: 0.0.1
   moodiary_export: 0.0.1
@@ -35,6 +37,7 @@ dependencies:
   moodiary_theme: 0.0.1
   mui: 0.0.1
   moodiary_data: 0.0.1
+  moodiary_ml: 0.0.1
   moodiary_migration: 0.0.1
   moodiary_preferences: 0.0.1
   moodiary_components: 0.0.1

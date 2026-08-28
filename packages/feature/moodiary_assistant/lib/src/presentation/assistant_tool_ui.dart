@@ -18,6 +18,11 @@ import 'package:mui/mui.dart';
       title: l10n.assistant.toolQueryTitle,
       description: l10n.assistant.toolQueryDes,
     ),
+    .semanticSearchDiaries => (
+      icon: LucideIcons.sparkles,
+      title: l10n.assistant.toolSemanticTitle,
+      description: l10n.assistant.toolSemanticDes,
+    ),
     .getDiary => (
       icon: LucideIcons.fileText,
       title: l10n.assistant.toolGetTitle,
