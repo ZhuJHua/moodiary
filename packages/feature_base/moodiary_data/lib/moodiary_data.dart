@@ -15,6 +15,8 @@ export 'src/diary_content.dart';
 export 'src/diary_controller.dart';
 export 'src/diary_derive.dart';
 export 'src/diary_repository.dart';
+export 'src/embed_chunker.dart';
+export 'src/embed_index_service.dart';
 export 'src/font_repository.dart';
 export 'src/loadmore.dart';
 export 'src/media_info_controller.dart';

@@ -1445,6 +1445,629 @@ class DiaryLinksCompanion extends UpdateCompanion<DiaryLinkRow> {
   }
 }
 
+class DiaryChunks extends Table with TableInfo<DiaryChunks, DiaryChunkRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  DiaryChunks(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _ridMeta = const VerificationMeta('rid');
+  late final GeneratedColumn<int> rid = GeneratedColumn<int>(
+    'rid',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'PRIMARY KEY',
+  );
+  static const VerificationMeta _diaryIdMeta = const VerificationMeta(
+    'diaryId',
+  );
+  late final GeneratedColumn<String> diaryId = GeneratedColumn<String>(
+    'diary_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _seqMeta = const VerificationMeta('seq');
+  late final GeneratedColumn<int> seq = GeneratedColumn<int>(
+    'seq',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _startOffMeta = const VerificationMeta(
+    'startOff',
+  );
+  late final GeneratedColumn<int> startOff = GeneratedColumn<int>(
+    'start_off',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _lenMeta = const VerificationMeta('len');
+  late final GeneratedColumn<int> len = GeneratedColumn<int>(
+    'len',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _textHashMeta = const VerificationMeta(
+    'textHash',
+  );
+  late final GeneratedColumn<String> textHash = GeneratedColumn<String>(
+    'text_hash',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    rid,
+    diaryId,
+    seq,
+    startOff,
+    len,
+    textHash,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'diary_chunks';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DiaryChunkRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('rid')) {
+      context.handle(
+        _ridMeta,
+        rid.isAcceptableOrUnknown(data['rid']!, _ridMeta),
+      );
+    }
+    if (data.containsKey('diary_id')) {
+      context.handle(
+        _diaryIdMeta,
+        diaryId.isAcceptableOrUnknown(data['diary_id']!, _diaryIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_diaryIdMeta);
+    }
+    if (data.containsKey('seq')) {
+      context.handle(
+        _seqMeta,
+        seq.isAcceptableOrUnknown(data['seq']!, _seqMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_seqMeta);
+    }
+    if (data.containsKey('start_off')) {
+      context.handle(
+        _startOffMeta,
+        startOff.isAcceptableOrUnknown(data['start_off']!, _startOffMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startOffMeta);
+    }
+    if (data.containsKey('len')) {
+      context.handle(
+        _lenMeta,
+        len.isAcceptableOrUnknown(data['len']!, _lenMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_lenMeta);
+    }
+    if (data.containsKey('text_hash')) {
+      context.handle(
+        _textHashMeta,
+        textHash.isAcceptableOrUnknown(data['text_hash']!, _textHashMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_textHashMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {rid};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {diaryId, seq},
+  ];
+  @override
+  DiaryChunkRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DiaryChunkRow(
+      rid: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}rid'],
+      )!,
+      diaryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}diary_id'],
+      )!,
+      seq: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}seq'],
+      )!,
+      startOff: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}start_off'],
+      )!,
+      len: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}len'],
+      )!,
+      textHash: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}text_hash'],
+      )!,
+    );
+  }
+
+  @override
+  DiaryChunks createAlias(String alias) {
+    return DiaryChunks(attachedDatabase, alias);
+  }
+
+  @override
+  List<String> get customConstraints => const ['UNIQUE(diary_id, seq)'];
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class DiaryChunkRow extends DataClass implements Insertable<DiaryChunkRow> {
+  final int rid;
+  final String diaryId;
+  final int seq;
+  final int startOff;
+  final int len;
+  final String textHash;
+  const DiaryChunkRow({
+    required this.rid,
+    required this.diaryId,
+    required this.seq,
+    required this.startOff,
+    required this.len,
+    required this.textHash,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['rid'] = Variable<int>(rid);
+    map['diary_id'] = Variable<String>(diaryId);
+    map['seq'] = Variable<int>(seq);
+    map['start_off'] = Variable<int>(startOff);
+    map['len'] = Variable<int>(len);
+    map['text_hash'] = Variable<String>(textHash);
+    return map;
+  }
+
+  DiaryChunksCompanion toCompanion(bool nullToAbsent) {
+    return DiaryChunksCompanion(
+      rid: Value(rid),
+      diaryId: Value(diaryId),
+      seq: Value(seq),
+      startOff: Value(startOff),
+      len: Value(len),
+      textHash: Value(textHash),
+    );
+  }
+
+  factory DiaryChunkRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DiaryChunkRow(
+      rid: serializer.fromJson<int>(json['rid']),
+      diaryId: serializer.fromJson<String>(json['diary_id']),
+      seq: serializer.fromJson<int>(json['seq']),
+      startOff: serializer.fromJson<int>(json['start_off']),
+      len: serializer.fromJson<int>(json['len']),
+      textHash: serializer.fromJson<String>(json['text_hash']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'rid': serializer.toJson<int>(rid),
+      'diary_id': serializer.toJson<String>(diaryId),
+      'seq': serializer.toJson<int>(seq),
+      'start_off': serializer.toJson<int>(startOff),
+      'len': serializer.toJson<int>(len),
+      'text_hash': serializer.toJson<String>(textHash),
+    };
+  }
+
+  DiaryChunkRow copyWith({
+    int? rid,
+    String? diaryId,
+    int? seq,
+    int? startOff,
+    int? len,
+    String? textHash,
+  }) => DiaryChunkRow(
+    rid: rid ?? this.rid,
+    diaryId: diaryId ?? this.diaryId,
+    seq: seq ?? this.seq,
+    startOff: startOff ?? this.startOff,
+    len: len ?? this.len,
+    textHash: textHash ?? this.textHash,
+  );
+  DiaryChunkRow copyWithCompanion(DiaryChunksCompanion data) {
+    return DiaryChunkRow(
+      rid: data.rid.present ? data.rid.value : this.rid,
+      diaryId: data.diaryId.present ? data.diaryId.value : this.diaryId,
+      seq: data.seq.present ? data.seq.value : this.seq,
+      startOff: data.startOff.present ? data.startOff.value : this.startOff,
+      len: data.len.present ? data.len.value : this.len,
+      textHash: data.textHash.present ? data.textHash.value : this.textHash,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DiaryChunkRow(')
+          ..write('rid: $rid, ')
+          ..write('diaryId: $diaryId, ')
+          ..write('seq: $seq, ')
+          ..write('startOff: $startOff, ')
+          ..write('len: $len, ')
+          ..write('textHash: $textHash')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(rid, diaryId, seq, startOff, len, textHash);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DiaryChunkRow &&
+          other.rid == this.rid &&
+          other.diaryId == this.diaryId &&
+          other.seq == this.seq &&
+          other.startOff == this.startOff &&
+          other.len == this.len &&
+          other.textHash == this.textHash);
+}
+
+class DiaryChunksCompanion extends UpdateCompanion<DiaryChunkRow> {
+  final Value<int> rid;
+  final Value<String> diaryId;
+  final Value<int> seq;
+  final Value<int> startOff;
+  final Value<int> len;
+  final Value<String> textHash;
+  const DiaryChunksCompanion({
+    this.rid = const Value.absent(),
+    this.diaryId = const Value.absent(),
+    this.seq = const Value.absent(),
+    this.startOff = const Value.absent(),
+    this.len = const Value.absent(),
+    this.textHash = const Value.absent(),
+  });
+  DiaryChunksCompanion.insert({
+    this.rid = const Value.absent(),
+    required String diaryId,
+    required int seq,
+    required int startOff,
+    required int len,
+    required String textHash,
+  }) : diaryId = Value(diaryId),
+       seq = Value(seq),
+       startOff = Value(startOff),
+       len = Value(len),
+       textHash = Value(textHash);
+  static Insertable<DiaryChunkRow> custom({
+    Expression<int>? rid,
+    Expression<String>? diaryId,
+    Expression<int>? seq,
+    Expression<int>? startOff,
+    Expression<int>? len,
+    Expression<String>? textHash,
+  }) {
+    return RawValuesInsertable({
+      if (rid != null) 'rid': rid,
+      if (diaryId != null) 'diary_id': diaryId,
+      if (seq != null) 'seq': seq,
+      if (startOff != null) 'start_off': startOff,
+      if (len != null) 'len': len,
+      if (textHash != null) 'text_hash': textHash,
+    });
+  }
+
+  DiaryChunksCompanion copyWith({
+    Value<int>? rid,
+    Value<String>? diaryId,
+    Value<int>? seq,
+    Value<int>? startOff,
+    Value<int>? len,
+    Value<String>? textHash,
+  }) {
+    return DiaryChunksCompanion(
+      rid: rid ?? this.rid,
+      diaryId: diaryId ?? this.diaryId,
+      seq: seq ?? this.seq,
+      startOff: startOff ?? this.startOff,
+      len: len ?? this.len,
+      textHash: textHash ?? this.textHash,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (rid.present) {
+      map['rid'] = Variable<int>(rid.value);
+    }
+    if (diaryId.present) {
+      map['diary_id'] = Variable<String>(diaryId.value);
+    }
+    if (seq.present) {
+      map['seq'] = Variable<int>(seq.value);
+    }
+    if (startOff.present) {
+      map['start_off'] = Variable<int>(startOff.value);
+    }
+    if (len.present) {
+      map['len'] = Variable<int>(len.value);
+    }
+    if (textHash.present) {
+      map['text_hash'] = Variable<String>(textHash.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DiaryChunksCompanion(')
+          ..write('rid: $rid, ')
+          ..write('diaryId: $diaryId, ')
+          ..write('seq: $seq, ')
+          ..write('startOff: $startOff, ')
+          ..write('len: $len, ')
+          ..write('textHash: $textHash')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class EmbedQueue extends Table with TableInfo<EmbedQueue, EmbedQueueRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  EmbedQueue(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _diaryIdMeta = const VerificationMeta(
+    'diaryId',
+  );
+  late final GeneratedColumn<String> diaryId = GeneratedColumn<String>(
+    'diary_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _enqueuedAtMeta = const VerificationMeta(
+    'enqueuedAt',
+  );
+  late final GeneratedColumn<int> enqueuedAt = GeneratedColumn<int>(
+    'enqueued_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [diaryId, enqueuedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'embed_queue';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<EmbedQueueRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('diary_id')) {
+      context.handle(
+        _diaryIdMeta,
+        diaryId.isAcceptableOrUnknown(data['diary_id']!, _diaryIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_diaryIdMeta);
+    }
+    if (data.containsKey('enqueued_at')) {
+      context.handle(
+        _enqueuedAtMeta,
+        enqueuedAt.isAcceptableOrUnknown(data['enqueued_at']!, _enqueuedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_enqueuedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {diaryId};
+  @override
+  EmbedQueueRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return EmbedQueueRow(
+      diaryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}diary_id'],
+      )!,
+      enqueuedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}enqueued_at'],
+      )!,
+    );
+  }
+
+  @override
+  EmbedQueue createAlias(String alias) {
+    return EmbedQueue(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class EmbedQueueRow extends DataClass implements Insertable<EmbedQueueRow> {
+  final String diaryId;
+  final int enqueuedAt;
+  const EmbedQueueRow({required this.diaryId, required this.enqueuedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['diary_id'] = Variable<String>(diaryId);
+    map['enqueued_at'] = Variable<int>(enqueuedAt);
+    return map;
+  }
+
+  EmbedQueueCompanion toCompanion(bool nullToAbsent) {
+    return EmbedQueueCompanion(
+      diaryId: Value(diaryId),
+      enqueuedAt: Value(enqueuedAt),
+    );
+  }
+
+  factory EmbedQueueRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return EmbedQueueRow(
+      diaryId: serializer.fromJson<String>(json['diary_id']),
+      enqueuedAt: serializer.fromJson<int>(json['enqueued_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'diary_id': serializer.toJson<String>(diaryId),
+      'enqueued_at': serializer.toJson<int>(enqueuedAt),
+    };
+  }
+
+  EmbedQueueRow copyWith({String? diaryId, int? enqueuedAt}) => EmbedQueueRow(
+    diaryId: diaryId ?? this.diaryId,
+    enqueuedAt: enqueuedAt ?? this.enqueuedAt,
+  );
+  EmbedQueueRow copyWithCompanion(EmbedQueueCompanion data) {
+    return EmbedQueueRow(
+      diaryId: data.diaryId.present ? data.diaryId.value : this.diaryId,
+      enqueuedAt: data.enqueuedAt.present
+          ? data.enqueuedAt.value
+          : this.enqueuedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EmbedQueueRow(')
+          ..write('diaryId: $diaryId, ')
+          ..write('enqueuedAt: $enqueuedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(diaryId, enqueuedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is EmbedQueueRow &&
+          other.diaryId == this.diaryId &&
+          other.enqueuedAt == this.enqueuedAt);
+}
+
+class EmbedQueueCompanion extends UpdateCompanion<EmbedQueueRow> {
+  final Value<String> diaryId;
+  final Value<int> enqueuedAt;
+  final Value<int> rowid;
+  const EmbedQueueCompanion({
+    this.diaryId = const Value.absent(),
+    this.enqueuedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  EmbedQueueCompanion.insert({
+    required String diaryId,
+    required int enqueuedAt,
+    this.rowid = const Value.absent(),
+  }) : diaryId = Value(diaryId),
+       enqueuedAt = Value(enqueuedAt);
+  static Insertable<EmbedQueueRow> custom({
+    Expression<String>? diaryId,
+    Expression<int>? enqueuedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (diaryId != null) 'diary_id': diaryId,
+      if (enqueuedAt != null) 'enqueued_at': enqueuedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  EmbedQueueCompanion copyWith({
+    Value<String>? diaryId,
+    Value<int>? enqueuedAt,
+    Value<int>? rowid,
+  }) {
+    return EmbedQueueCompanion(
+      diaryId: diaryId ?? this.diaryId,
+      enqueuedAt: enqueuedAt ?? this.enqueuedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (diaryId.present) {
+      map['diary_id'] = Variable<String>(diaryId.value);
+    }
+    if (enqueuedAt.present) {
+      map['enqueued_at'] = Variable<int>(enqueuedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EmbedQueueCompanion(')
+          ..write('diaryId: $diaryId, ')
+          ..write('enqueuedAt: $enqueuedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class LlmProviders extends Table with TableInfo<LlmProviders, LlmProviderRow> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -6834,6 +7457,12 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
   late final DiaryFts diaryFts = DiaryFts(this);
   late final Diaries diaries = Diaries(this);
   late final DiaryLinks diaryLinks = DiaryLinks(this);
+  late final DiaryChunks diaryChunks = DiaryChunks(this);
+  late final Index idxDiaryChunksDiary = Index(
+    'idx_diary_chunks_diary',
+    'CREATE INDEX idx_diary_chunks_diary ON diary_chunks (diary_id)',
+  );
+  late final EmbedQueue embedQueue = EmbedQueue(this);
   late final LlmProviders llmProviders = LlmProviders(this);
   late final Index idxLlmProvidersSort = Index(
     'idx_llm_providers_sort',
@@ -7068,6 +7697,9 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
     diaryFts,
     diaries,
     diaryLinks,
+    diaryChunks,
+    idxDiaryChunksDiary,
+    embedQueue,
     llmProviders,
     idxLlmProvidersSort,
     chatSessions,
@@ -8245,6 +8877,360 @@ typedef $DiaryLinksProcessedTableManager =
       (DiaryLinkRow, $DiaryLinksReferences),
       DiaryLinkRow,
       PrefetchHooks Function({bool srcId})
+    >;
+typedef $DiaryChunksCreateCompanionBuilder = DiaryChunksCompanion Function({
+  Value<int> rid,
+  required String diaryId,
+  required int seq,
+  required int startOff,
+  required int len,
+  required String textHash,
+});
+typedef $DiaryChunksUpdateCompanionBuilder = DiaryChunksCompanion Function({
+  Value<int> rid,
+  Value<String> diaryId,
+  Value<int> seq,
+  Value<int> startOff,
+  Value<int> len,
+  Value<String> textHash,
+});
+
+class $DiaryChunksFilterComposer
+    extends Composer<_$MoodiaryDatabase, DiaryChunks> {
+  $DiaryChunksFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get rid => $composableBuilder(
+    column: $table.rid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get diaryId => $composableBuilder(
+    column: $table.diaryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get seq => $composableBuilder(
+    column: $table.seq,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get startOff => $composableBuilder(
+    column: $table.startOff,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get len => $composableBuilder(
+    column: $table.len,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get textHash => $composableBuilder(
+    column: $table.textHash,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $DiaryChunksOrderingComposer
+    extends Composer<_$MoodiaryDatabase, DiaryChunks> {
+  $DiaryChunksOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get rid => $composableBuilder(
+    column: $table.rid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get diaryId => $composableBuilder(
+    column: $table.diaryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get seq => $composableBuilder(
+    column: $table.seq,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get startOff => $composableBuilder(
+    column: $table.startOff,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get len => $composableBuilder(
+    column: $table.len,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get textHash => $composableBuilder(
+    column: $table.textHash,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $DiaryChunksAnnotationComposer
+    extends Composer<_$MoodiaryDatabase, DiaryChunks> {
+  $DiaryChunksAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get rid =>
+      $composableBuilder(column: $table.rid, builder: (column) => column);
+
+  GeneratedColumn<String> get diaryId =>
+      $composableBuilder(column: $table.diaryId, builder: (column) => column);
+
+  GeneratedColumn<int> get seq =>
+      $composableBuilder(column: $table.seq, builder: (column) => column);
+
+  GeneratedColumn<int> get startOff =>
+      $composableBuilder(column: $table.startOff, builder: (column) => column);
+
+  GeneratedColumn<int> get len =>
+      $composableBuilder(column: $table.len, builder: (column) => column);
+
+  GeneratedColumn<String> get textHash =>
+      $composableBuilder(column: $table.textHash, builder: (column) => column);
+}
+
+class $DiaryChunksTableManager
+    extends
+        RootTableManager<
+          _$MoodiaryDatabase,
+          DiaryChunks,
+          DiaryChunkRow,
+          $DiaryChunksFilterComposer,
+          $DiaryChunksOrderingComposer,
+          $DiaryChunksAnnotationComposer,
+          $DiaryChunksCreateCompanionBuilder,
+          $DiaryChunksUpdateCompanionBuilder,
+          (
+            DiaryChunkRow,
+            BaseReferences<_$MoodiaryDatabase, DiaryChunks, DiaryChunkRow>,
+          ),
+          DiaryChunkRow,
+          PrefetchHooks Function()
+        > {
+  $DiaryChunksTableManager(_$MoodiaryDatabase db, DiaryChunks table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $DiaryChunksFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $DiaryChunksOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $DiaryChunksAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> rid = const Value.absent(),
+                Value<String> diaryId = const Value.absent(),
+                Value<int> seq = const Value.absent(),
+                Value<int> startOff = const Value.absent(),
+                Value<int> len = const Value.absent(),
+                Value<String> textHash = const Value.absent(),
+              }) => DiaryChunksCompanion(
+                rid: rid,
+                diaryId: diaryId,
+                seq: seq,
+                startOff: startOff,
+                len: len,
+                textHash: textHash,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> rid = const Value.absent(),
+                required String diaryId,
+                required int seq,
+                required int startOff,
+                required int len,
+                required String textHash,
+              }) => DiaryChunksCompanion.insert(
+                rid: rid,
+                diaryId: diaryId,
+                seq: seq,
+                startOff: startOff,
+                len: len,
+                textHash: textHash,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $DiaryChunksProcessedTableManager =
+    ProcessedTableManager<
+      _$MoodiaryDatabase,
+      DiaryChunks,
+      DiaryChunkRow,
+      $DiaryChunksFilterComposer,
+      $DiaryChunksOrderingComposer,
+      $DiaryChunksAnnotationComposer,
+      $DiaryChunksCreateCompanionBuilder,
+      $DiaryChunksUpdateCompanionBuilder,
+      (
+        DiaryChunkRow,
+        BaseReferences<_$MoodiaryDatabase, DiaryChunks, DiaryChunkRow>,
+      ),
+      DiaryChunkRow,
+      PrefetchHooks Function()
+    >;
+typedef $EmbedQueueCreateCompanionBuilder = EmbedQueueCompanion Function({
+  required String diaryId,
+  required int enqueuedAt,
+  Value<int> rowid,
+});
+typedef $EmbedQueueUpdateCompanionBuilder = EmbedQueueCompanion Function({
+  Value<String> diaryId,
+  Value<int> enqueuedAt,
+  Value<int> rowid,
+});
+
+class $EmbedQueueFilterComposer
+    extends Composer<_$MoodiaryDatabase, EmbedQueue> {
+  $EmbedQueueFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get diaryId => $composableBuilder(
+    column: $table.diaryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get enqueuedAt => $composableBuilder(
+    column: $table.enqueuedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $EmbedQueueOrderingComposer
+    extends Composer<_$MoodiaryDatabase, EmbedQueue> {
+  $EmbedQueueOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get diaryId => $composableBuilder(
+    column: $table.diaryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get enqueuedAt => $composableBuilder(
+    column: $table.enqueuedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $EmbedQueueAnnotationComposer
+    extends Composer<_$MoodiaryDatabase, EmbedQueue> {
+  $EmbedQueueAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get diaryId =>
+      $composableBuilder(column: $table.diaryId, builder: (column) => column);
+
+  GeneratedColumn<int> get enqueuedAt => $composableBuilder(
+    column: $table.enqueuedAt,
+    builder: (column) => column,
+  );
+}
+
+class $EmbedQueueTableManager
+    extends
+        RootTableManager<
+          _$MoodiaryDatabase,
+          EmbedQueue,
+          EmbedQueueRow,
+          $EmbedQueueFilterComposer,
+          $EmbedQueueOrderingComposer,
+          $EmbedQueueAnnotationComposer,
+          $EmbedQueueCreateCompanionBuilder,
+          $EmbedQueueUpdateCompanionBuilder,
+          (
+            EmbedQueueRow,
+            BaseReferences<_$MoodiaryDatabase, EmbedQueue, EmbedQueueRow>,
+          ),
+          EmbedQueueRow,
+          PrefetchHooks Function()
+        > {
+  $EmbedQueueTableManager(_$MoodiaryDatabase db, EmbedQueue table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $EmbedQueueFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $EmbedQueueOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $EmbedQueueAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> diaryId = const Value.absent(),
+                Value<int> enqueuedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => EmbedQueueCompanion(
+                diaryId: diaryId,
+                enqueuedAt: enqueuedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String diaryId,
+                required int enqueuedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => EmbedQueueCompanion.insert(
+                diaryId: diaryId,
+                enqueuedAt: enqueuedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $EmbedQueueProcessedTableManager =
+    ProcessedTableManager<
+      _$MoodiaryDatabase,
+      EmbedQueue,
+      EmbedQueueRow,
+      $EmbedQueueFilterComposer,
+      $EmbedQueueOrderingComposer,
+      $EmbedQueueAnnotationComposer,
+      $EmbedQueueCreateCompanionBuilder,
+      $EmbedQueueUpdateCompanionBuilder,
+      (
+        EmbedQueueRow,
+        BaseReferences<_$MoodiaryDatabase, EmbedQueue, EmbedQueueRow>,
+      ),
+      EmbedQueueRow,
+      PrefetchHooks Function()
     >;
 typedef $LlmProvidersCreateCompanionBuilder = LlmProvidersCompanion Function({
   required String id,
@@ -11660,6 +12646,10 @@ class $MoodiaryDatabaseManager {
   $DiariesTableManager get diaries => $DiariesTableManager(_db, _db.diaries);
   $DiaryLinksTableManager get diaryLinks =>
       $DiaryLinksTableManager(_db, _db.diaryLinks);
+  $DiaryChunksTableManager get diaryChunks =>
+      $DiaryChunksTableManager(_db, _db.diaryChunks);
+  $EmbedQueueTableManager get embedQueue =>
+      $EmbedQueueTableManager(_db, _db.embedQueue);
   $LlmProvidersTableManager get llmProviders =>
       $LlmProvidersTableManager(_db, _db.llmProviders);
   $ChatSessionsTableManager get chatSessions =>

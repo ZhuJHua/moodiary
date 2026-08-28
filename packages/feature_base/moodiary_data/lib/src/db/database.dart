@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:moodiary_sqlite_vec/moodiary_sqlite_vec.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite3;
 
 part 'database.g.dart';
@@ -27,6 +28,7 @@ part 'database.g.dart';
     'base_tables.drift',
     'sync_tables.drift',
     'assistant_tables.drift',
+    'rag_tables.drift',
     'diary.drift',
   },
 )
@@ -50,6 +52,9 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
   /// 组合根调用一次；路径由调用方注入（本包不认识文件布局）。
   static Future<void> open({required String path}) async {
     assert(_instance == null, 'MoodiaryDatabase 已初始化');
+    // sqlite-vec 走 sqlite3_auto_extension（进程级 C 状态），必须在任何连接
+    // 打开之前注册；之后写连接与 readPool 的每个连接自动带上 vec0。
+    loadSqliteVec();
     final executor = NativeDatabase.createInBackground(
       File(path),
       readPool: 3,
@@ -70,7 +75,7 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
   }
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -81,6 +86,15 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
       await customStatement(
         "INSERT INTO diary_fts(diary_fts, rank) VALUES('rank', 'bm25(1.5, 1.0)')",
       );
+    },
+    onUpgrade: (m, from, to) async {
+      // v2：语义检索（rag_tables.drift）。vec0 虚表不在这——它随激活模型的
+      // 维度动态建删（EmbedIndexService）。
+      if (from < 2) {
+        await m.createTable(diaryChunks);
+        await m.createIndex(idxDiaryChunksDiary);
+        await m.createTable(embedQueue);
+      }
     },
   );
 
@@ -95,6 +109,14 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
       await customStatement(
         "INSERT INTO diary_fts(diary_fts) VALUES('delete-all')",
       );
+      // vec0 虚表不在 allTables（非 drift 管理），存在才清。
+      final vec = await customSelect(
+        "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",
+        variables: [const Variable('vec_diary_chunks')],
+      ).get();
+      if (vec.isNotEmpty) {
+        await customStatement('DELETE FROM vec_diary_chunks');
+      }
     });
   }
 }

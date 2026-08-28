@@ -340,6 +340,9 @@ class DiaryRepository {
             ]),
           ))
           .go();
+      if (index == .inline) {
+        await _enqueueEmbed([for (final diary in diaries) diary.id]);
+      }
     });
     for (final diary in diaries) {
       _events.add(DiaryCreated(diary, fromSync: fromSync));
@@ -370,7 +373,10 @@ class DiaryRepository {
     await _db.transaction(() async {
       final rid = await _upsertRow(newDiary);
       await _syncChildren(newDiary);
-      if (entry != null) await _applyIndex(rid, newDiary.id, entry);
+      if (entry != null) {
+        await _applyIndex(rid, newDiary.id, entry);
+        await _enqueueEmbed([newDiary.id]);
+      }
     });
     _events.add(DiaryUpdated(newDiary, fromSync: fromSync));
   }
@@ -421,6 +427,8 @@ class DiaryRepository {
       );
 
   /// 事务内：删行（子表级联）+ FTS 摘除。行不存在则为 no-op。
+  /// 语义索引不在这里清——入队后由 EmbedIndexService.drain 回收孤儿分块
+  /// （删除与排空之间的 stale 向量被 KNN 的 diaries JOIN 天然屏蔽）。
   Future<void> _deleteRowAndIndex(String id) async {
     final row = await (_db.select(
       _db.diaries,
@@ -428,6 +436,19 @@ class DiaryRepository {
     if (row == null) return;
     await _db.ftsDelete(row.rid);
     await (_db.delete(_db.diaries)..where((d) => d.rid.equals(row.rid))).go();
+    await _enqueueEmbed([id]);
+  }
+
+  /// 事务内：语义索引补嵌入队（幂等覆盖）。嵌入推理不在写路径——异步排空见
+  /// EmbedIndexService。
+  Future<void> _enqueueEmbed(Iterable<String> ids) async {
+    final at = dbTime(.timestamp());
+    await _db.batch((b) {
+      b.insertAllOnConflictUpdate(_db.embedQueue, [
+        for (final id in ids)
+          EmbedQueueCompanion.insert(diaryId: id, enqueuedAt: at),
+      ]);
+    });
   }
 
   /// 硬删除且不留墓碑（草稿丢弃等本地兜底路径）。
