@@ -47,10 +47,10 @@ dependency_overrides:
 
 # Native Assets 的 hooks user_defines 只认 workspace 根的这份 pubspec
 # （flutter_tools 取 package_config.json 同级的 ../pubspec.yaml），放 mobile/ 无效。
-# llamadart 收窄：只要 llama.cpp 家族（不拉 LiteRT-LM）。Android = Vulkan 优先
-# （引擎侧 GpuBackend.auto，GPU 能用则用）+ 全套 CPU 变体兜底（运行时按设备
-# 指令集挑最优，baseline 保底；体积账见 docs/local-rag.md §6.8）。
-# Apple 端是 CPU+Metal 合体运行时，无需在此配置。
+# llamadart 收窄：只要 llama.cpp 家族（不拉 LiteRT-LM）；后端 CPU-only + full
+# 变体（运行时按设备指令集挑最优）。Vulkan 已按真机 benchmark 卸掉：嵌入负载上
+# 它比 CPU 慢 8~10 倍且模型加大不翻盘（docs/local-rag.md §6.8），白付 57MB。
+# Apple 端是 CPU+Metal 合体运行时，引擎侧已钉 CPU。
 hooks:
   user_defines:
     llamadart:
@@ -58,9 +58,9 @@ hooks:
       llamadart_native_backends:
         platforms:
           android:
-            backends: [cpu, vulkan]
+            backends: [cpu]
             cpu_profile: full
           windows:
-            backends: [cpu, vulkan]
+            backends: [cpu]
           linux:
-            backends: [cpu, vulkan]
+            backends: [cpu]

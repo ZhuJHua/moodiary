@@ -28,7 +28,7 @@ semanticSearchDiaries 工具（与 queryDiaries 同一条 Dart 工具桥）
 
 - **API**：`LlamaEngine(LlamaBackend())` → `loadModel(path, ModelParams(...))` → `embedBatch(texts, normalize: true)`。官方自带 embedding 示例与 OpenAI 兼容 server 示例；llama.cpp 原生支持 BERT 系 embedding GGUF。
 - **原生库交付**：build hook 首次构建时从 `leehack/llamadart-native` GitHub release 下载，**每个产物的 sha256 钉死在 hook 源码里**，校验失败即重下/报错。`llamadart_native_path` user-define 支持指向本地自编产物（供应链逃生口）。
-- **体积可配**：默认 Android 打 `['cpu','vulkan']` 后端 + `cpu_profile: full`（armv8.0→armv9.2 共 7 个 CPU 变体 + 57MB 的 vulkan，arm64 完整包 37MB 压缩）。**终态（2026-08-28 拍板）：Android = Vulkan 优先 + full CPU 兜底**（vulkan 57.3MB 原始/14.8MB 压缩 + 核心 9.9MB + 7 个 CPU 变体 ~63MB 原始；引擎侧 `GpuBackend.auto` + maxGpuLayers，Vulkan 不可用运行时回落 CPU 且按设备指令集挑最优变体）。Apple 端 CPU+Metal 合体运行时天然 GPU。中途曾定过 cpu-only compact 与 cpu full，均已被 GPU 方案取代。**两个已踩实的键形坑（2026-08-28）**：
+- **体积可配**：默认 Android 打 `['cpu','vulkan']` 后端 + `cpu_profile: full`（armv8.0→armv9.2 共 7 个 CPU 变体 + 57MB 的 vulkan，arm64 完整包 37MB 压缩）。**终态（2026-08-28 benchmark 后拍板）：CPU-only + full 变体**（核心 9.9MB + 7 变体 ~63MB 原始；引擎钉 `GpuBackend.cpu`）。Vulkan 曾短暂启用，被真机 benchmark 否决（§6.8：嵌入负载上慢 8~10 倍）。**两个已踩实的键形坑（2026-08-28）**：
   1. `hooks.user_defines` 只认 **workspace 根 pubspec.yaml**（flutter_tools 取 package_config.json 同级的 `../pubspec.yaml`），放 `mobile/pubspec.yaml` 静默无效——首次打包因此带上了整套 GPU 后端；
   2. `llamadart_native_backends` 必须**按平台键**给（`platforms:` 或直接平台键），平铺 `{backends:, cpu_profile:}` 会被解析成 null 落回默认。
 
@@ -186,7 +186,14 @@ CREATE TABLE embed_queue (
 5. **P0 vec0 经 drift spike**：hook 编译四平台产物、`ensureExtensionLoaded` 后 `createInBackground`（readPool + 后台 isolate）各连接 vec0 可用、KNN JOIN 形态跑通、宿主 `flutter test` 零配置拿到扩展。
 6. **检索质量验收**（P2 后人工）：中文日记语料上 semantic vs keyword 各 10 组对比；超采样倍数（×4）与 chunk 上限（400 字符）按结果调。
 7. **llamadart 跟进策略**：升级前看 llamadart-native tag 变更（llama.cpp 版本跳变可能改 GGUF 兼容性）；`llamadart_native_path` 留作供应链逃生口。
-8. **GPU 后端体积账**（llamadart-native v0.3.0 实测，2026-08-28；当前拍板 CPU-only，GPU 留给将来的端侧 LLM）：
+8. **后端拍板：CPU-only（真机 benchmark 定论，2026-08-28）**。一加 PJZ110（Adreno）、Q8 模型、warmup 后 10 轮单条 / 3 轮 16 条批量（`mobile/integration_test/embedding_benchmark_test.dart`）：
+   | 模型 | CPU 单条/批量吞吐 | Vulkan 单条/批量吞吐 |
+   |---|---|---|
+   | bge-small (24M) | **11.2ms / 87.9 chunks·s** | 91.5ms / 12.4 |
+   | bge-m3 (568M) | **108.9ms / 8.7 chunks·s** | 1049ms / 1.0 |
+
+   嵌入是 encoder 的 prompt-processing 负载，llama.cpp 的移动 Vulkan 内核为 LLM decode 调优，慢 8~10 倍且模型加大不翻盘；CPU full 变体的 I8MM 内核正是 Q8 甜点。引擎钉 `GpuBackend.cpu`，Android 产物卸掉 vulkan（省 57MB 原始/14.8MB 压缩）。「上 GPU」只在将来做端侧 LLM 聊天（decode 负载）时再议。
+9. **GPU 后端体积账**（llamadart-native v0.3.0 实测，2026-08-28；当前拍板 CPU-only，GPU 留给将来的端侧 LLM）：
    | 平台 | GPU | 额外体积（原始 / 压缩） |
    |---|---|---|
    | iOS / macOS | Metal 编在主库里 | **0**（iOS 整包压缩 4.1MB、macOS 单 dylib 13MB，已验含 ggml_metal） |

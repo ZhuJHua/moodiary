@@ -14,8 +14,10 @@ abstract class EmbeddingBackend {
   Future<List<Float32List>> embed(List<String> texts);
 }
 
-/// llama.cpp（经 llamadart）后端。GPU 能用则用（Apple=Metal 合体运行时、
-/// Android=Vulkan 模块），运行时不可用自动回落 CPU baseline；
+/// llama.cpp（经 llamadart）后端。**恒 CPU**：2026-08-28 真机实测（一加 PJZ110，
+/// docs/local-rag.md §6.8），嵌入负载（encoder/prompt-processing）上 Vulkan 比
+/// full 变体 CPU 慢 8~10 倍——bge-small 单条 11ms vs 92ms、bge-m3 109ms vs
+/// 1049ms，模型加大也不翻盘；CPU full 变体的 I8MM 内核正是 Q8 矩阵乘的甜点。
 /// 上下文长度随模型（spec.contextSize）。
 final class LlamaEmbeddingBackend implements EmbeddingBackend {
   LlamaEngine? _engine;
@@ -32,8 +34,8 @@ final class LlamaEmbeddingBackend implements EmbeddingBackend {
         modelPath,
         modelParams: ModelParams(
           contextSize: contextSize,
-          gpuLayers: ModelParams.maxGpuLayers,
-          preferredBackend: GpuBackend.auto,
+          gpuLayers: 0,
+          preferredBackend: GpuBackend.cpu,
         ),
       );
     } catch (_) {
