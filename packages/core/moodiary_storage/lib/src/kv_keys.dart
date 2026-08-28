@@ -118,6 +118,18 @@ enum MoodiaryKVs<T extends Object> {
 
   llmPresetCacheAt<int>(defaultValue: 0),
 
+  /// 激活的本地嵌入模型 id（对应 moodiary_ml 内置清单）。空 = 语义检索未启用。
+  embeddingModelId<String>(defaultValue: ''),
+
+  /// 激活模型的向量维度；vec 表按它建。0 = 未激活。
+  embeddingDim<int>(defaultValue: 0),
+
+  /// 语义索引是否需要全量重建（切换模型 / 维度变化时置位，重建完成后清除）。
+  embeddingIndexStale<bool>(defaultValue: false),
+
+  /// 模型下载是否走 hf-mirror.com 镜像（关闭则直连 huggingface.co）。
+  modelDownloadMirror<bool>(defaultValue: true),
+
   getWeather<bool>(defaultValue: false),
   autoWeather<bool>(defaultValue: false),
   weather<List<String>>(),

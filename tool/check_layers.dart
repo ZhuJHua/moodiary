@@ -67,6 +67,8 @@ const Map<String, int> _pkgLayers = {
 /// feature_base 层内部次序（同层允许依赖，但只能单向；同 tier 之间禁止互引）。
 const Map<String, int> _featureBaseOrder = {
   'moodiary_models': 0,
+  // 嵌入引擎（llamadart owner）。与 models 平级互不引；data 靠它做语义索引。
+  'moodiary_ml': 0,
   'moodiary_data': 1,
   'moodiary_components': 2,
   'moodiary_migration': 2,
