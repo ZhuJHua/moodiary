@@ -379,8 +379,35 @@ class Translations$app$zh {
 	/// zh: '多语言旗舰，长文本'
 	String get semanticDescBgeM3 => '多语言旗舰，长文本';
 
-	/// zh: '多语言'
-	String get semanticDescGemma => '多语言';
+	/// zh: '心情建议'
+	String get sentimentTitle => '心情建议';
+
+	/// zh: '情感分析模型'
+	String get sentimentModelTitle => '情感分析模型';
+
+	/// zh: '选择情感分析模型'
+	String get sentimentPickTitle => '选择情感分析模型';
+
+	/// zh: '多语言，5 档情感'
+	String get sentimentDescMultilingual => '多语言，5 档情感';
+
+	/// zh: '启用心情建议'
+	String get sentimentEnableTitle => '启用心情建议';
+
+	/// zh: '将下载 {size} 的模型文件，写日记时在本机为你建议心情指数，日记内容不会上传。'
+	String sentimentActivateDownloadMessage({required Object size}) => '将下载 ${size} 的模型文件，写日记时在本机为你建议心情指数，日记内容不会上传。';
+
+	/// zh: '启用后写日记时将在本机为你建议心情指数。'
+	String get sentimentActivateLocalMessage => '启用后写日记时将在本机为你建议心情指数。';
+
+	/// zh: '已启用心情建议'
+	String get sentimentEnabled => '已启用心情建议';
+
+	/// zh: '停用心情建议'
+	String get sentimentDisableTitle => '停用心情建议';
+
+	/// zh: '停用后写日记不再自动建议心情，已下载的模型文件保留。'
+	String get sentimentDisableMessage => '停用后写日记不再自动建议心情，已下载的模型文件保留。';
 
 	/// zh: '使用天数'
 	String get dashUseDays => '使用天数';

@@ -26,6 +26,8 @@ dependencies:
   moodiary_router: 0.0.1
   moodiary_rust: 0.0.1
   moodiary_editor: 0.0.1
+  moodiary_di: 0.0.1
+  moodiary_ml: 0.0.1
   mui: 0.0.1
 
   flutter_riverpod: 3.4.2
@@ -38,7 +40,6 @@ dependencies:
   substring_highlight: 1.0.33
 
 dev_dependencies:
-  moodiary_di: 0.0.1
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1

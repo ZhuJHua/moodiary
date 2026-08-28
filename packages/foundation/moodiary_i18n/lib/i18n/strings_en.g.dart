@@ -162,7 +162,16 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get semanticDescBgeBase => 'Balanced, Chinese';
 	@override String get semanticDescBgeLarge => 'Best quality, Chinese';
 	@override String get semanticDescBgeM3 => 'Multilingual flagship, long context';
-	@override String get semanticDescGemma => 'Multilingual';
+	@override String get sentimentTitle => 'Mood suggestion';
+	@override String get sentimentModelTitle => 'Sentiment model';
+	@override String get sentimentPickTitle => 'Choose a sentiment model';
+	@override String get sentimentDescMultilingual => 'Multilingual, 5-level sentiment';
+	@override String get sentimentEnableTitle => 'Enable mood suggestion';
+	@override String sentimentActivateDownloadMessage({required Object size}) => 'Downloads a ${size} model file. While writing, a mood score is suggested on-device; your diary never leaves this phone.';
+	@override String get sentimentActivateLocalMessage => 'Mood scores will be suggested on-device while writing.';
+	@override String get sentimentEnabled => 'Mood suggestion enabled';
+	@override String get sentimentDisableTitle => 'Disable mood suggestion';
+	@override String get sentimentDisableMessage => 'Mood will no longer be suggested while writing. Downloaded model files are kept.';
 	@override String get dashUseDays => 'Days used';
 	@override String get dashWordCount => 'Words';
 	@override String get dashCategoryCount => 'Categories';
