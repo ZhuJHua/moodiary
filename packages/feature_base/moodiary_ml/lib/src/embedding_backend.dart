@@ -14,8 +14,9 @@ abstract class EmbeddingBackend {
   Future<List<Float32List>> embed(List<String> texts);
 }
 
-/// llama.cpp（经 llamadart）后端。嵌入模型最大也只有 0.3B 参数量级，GPU 无收益，
-/// 恒 CPU；上下文长度随模型（spec.contextSize）。
+/// llama.cpp（经 llamadart）后端。GPU 能用则用（Apple=Metal 合体运行时、
+/// Android=Vulkan 模块），运行时不可用自动回落 CPU baseline；
+/// 上下文长度随模型（spec.contextSize）。
 final class LlamaEmbeddingBackend implements EmbeddingBackend {
   LlamaEngine? _engine;
 
@@ -31,8 +32,8 @@ final class LlamaEmbeddingBackend implements EmbeddingBackend {
         modelPath,
         modelParams: ModelParams(
           contextSize: contextSize,
-          gpuLayers: 0,
-          preferredBackend: GpuBackend.cpu,
+          gpuLayers: ModelParams.maxGpuLayers,
+          preferredBackend: GpuBackend.auto,
         ),
       );
     } catch (_) {

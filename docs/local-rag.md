@@ -28,7 +28,7 @@ semanticSearchDiaries 工具（与 queryDiaries 同一条 Dart 工具桥）
 
 - **API**：`LlamaEngine(LlamaBackend())` → `loadModel(path, ModelParams(...))` → `embedBatch(texts, normalize: true)`。官方自带 embedding 示例与 OpenAI 兼容 server 示例；llama.cpp 原生支持 BERT 系 embedding GGUF。
 - **原生库交付**：build hook 首次构建时从 `leehack/llamadart-native` GitHub release 下载，**每个产物的 sha256 钉死在 hook 源码里**，校验失败即重下/报错。`llamadart_native_path` user-define 支持指向本地自编产物（供应链逃生口）。
-- **体积可配**：默认 Android 打 `['cpu','vulkan']` 后端 + `cpu_profile: full`（armv8.0→armv9.2 共 7 个 CPU 变体 + 57MB 的 vulkan，arm64 完整包 37MB 压缩）。嵌入负载 GPU 无收益，**收敛为 cpu-only；cpu_profile 用 full**（2026-08-28 用户拍板：7 个变体 ≈ 72MB 原始 / ~19MB 压缩，换新芯片的 DOTPROD/I8MM/SVE 内核——变体是同一 arm64 下按 CPU 特性分级的优化内核，运行时挑最优，baseline 兜底所有设备，无兼容性含义）。compact（单 baseline 变体）≈ 18.5MB 原始 / ~6MB 压缩，留作将来的体积杠杆。**两个已踩实的键形坑（2026-08-28）**：
+- **体积可配**：默认 Android 打 `['cpu','vulkan']` 后端 + `cpu_profile: full`（armv8.0→armv9.2 共 7 个 CPU 变体 + 57MB 的 vulkan，arm64 完整包 37MB 压缩）。**终态（2026-08-28 三改后拍板）：Android = Vulkan 优先 + CPU baseline 兜底**（vulkan 57.3MB 原始/14.8MB 压缩 + 核心 9.9MB + baseline 变体 8.6MB；引擎侧 `GpuBackend.auto` + maxGpuLayers，Vulkan 不可用运行时自动回落 CPU）。Apple 端 CPU+Metal 合体运行时天然 GPU。中途曾定过 cpu-only compact 与 cpu full，均已被 GPU 方案取代。**两个已踩实的键形坑（2026-08-28）**：
   1. `hooks.user_defines` 只认 **workspace 根 pubspec.yaml**（flutter_tools 取 package_config.json 同级的 `../pubspec.yaml`），放 `mobile/pubspec.yaml` 静默无效——首次打包因此带上了整套 GPU 后端；
   2. `llamadart_native_backends` 必须**按平台键**给（`platforms:` 或直接平台键），平铺 `{backends:, cpu_profile:}` 会被解析成 null 落回默认。
 
@@ -42,10 +42,10 @@ semanticSearchDiaries 工具（与 queryDiaries 同一条 Dart 工具桥）
         llamadart_native_backends:
           platforms:
             android:
-              backends: [cpu]
-              cpu_profile: full   # 2026-08-28 用户拍板：7 个 CPU 变体全带（+~52MB 原始），换新芯片上 DOTPROD/I8MM/SVE 内核
-            windows: { backends: [cpu] }
-            linux: { backends: [cpu] }
+              backends: [cpu, vulkan]   # 2026-08-28 终态：Vulkan 优先（引擎 GpuBackend.auto）
+              cpu_profile: compact      # CPU 只做兜底，baseline 单变体即可
+            windows: { backends: [cpu, vulkan] }
+            linux: { backends: [cpu, vulkan] }
   ```
 
   （Apple 端不走 backends 配置，Metal 编在主库里天然带着。）
