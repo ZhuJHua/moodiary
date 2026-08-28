@@ -228,10 +228,7 @@ final class FakeDiaryStore implements SyncDiaryStore {
   final Map<String, bool> writeOrigins = {};
 
   @override
-  Future<void> insertADiary(
-    Diary diary, {
-    bool fromSync = false,
-  }) async {
+  Future<void> insertADiary(Diary diary, {bool fromSync = false}) async {
     calls.add('insert ${diary.id}');
     writeOrigins[diary.id] = fromSync;
     diaries[diary.id] = diary;

@@ -91,7 +91,11 @@ void main() {
         DiaryFeedTile(
           diary: diary(
             weather: const DiaryWeather(icon: '100', temp: '26', text: '晴'),
-            position: const DiaryPosition(latitude: 1, longitude: 2, name: '厦门 环岛路'),
+            position: const DiaryPosition(
+              latitude: 1,
+              longitude: 2,
+              name: '厦门 环岛路',
+            ),
           ),
           category: cat(),
         ),
@@ -207,7 +211,11 @@ void main() {
               images: images,
               tags: const [long, long],
               weather: const DiaryWeather(icon: '100', temp: '26', text: '晴'),
-              position: const DiaryPosition(latitude: 1, longitude: 2, name: '厦门 环岛路'),
+              position: const DiaryPosition(
+                latitude: 1,
+                longitude: 2,
+                name: '厦门 环岛路',
+              ),
             ),
             category: cat(),
           ),

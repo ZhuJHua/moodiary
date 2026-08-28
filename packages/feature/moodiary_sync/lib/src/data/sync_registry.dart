@@ -66,7 +66,11 @@ class RemoteSyncRegistry {
     try {
       await load();
     } catch (e, s) {
-      logger.e('sync backend options load failed: $which', error: e, stackTrace: s);
+      logger.e(
+        'sync backend options load failed: $which',
+        error: e,
+        stackTrace: s,
+      );
     }
   }
 }

@@ -288,12 +288,18 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
     await _editor();
   },
   'clean': (_) async {
-    final dir = Directory('packages/feature_base/moodiary_editor/assets/editor');
+    final dir = Directory(
+      'packages/feature_base/moodiary_editor/assets/editor',
+    );
     if (dir.existsSync()) {
       dir.deleteSync(recursive: true);
-      stdout.writeln('已删除 packages/feature_base/moodiary_editor/assets/editor/');
+      stdout.writeln(
+        '已删除 packages/feature_base/moodiary_editor/assets/editor/',
+      );
     } else {
-      stdout.writeln('packages/feature_base/moodiary_editor/assets/editor/ 不存在，跳过。');
+      stdout.writeln(
+        'packages/feature_base/moodiary_editor/assets/editor/ 不存在，跳过。',
+      );
     }
   },
 };

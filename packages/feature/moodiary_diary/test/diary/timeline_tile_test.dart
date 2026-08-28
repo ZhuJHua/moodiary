@@ -91,7 +91,15 @@ void main() {
   });
 
   testWidgets('shows weather when weather is set', (t) async {
-    await t.pumpWidget(wrap(tile(d: diary(weather: const DiaryWeather(icon: '100', temp: '22', text: '晴')))));
+    await t.pumpWidget(
+      wrap(
+        tile(
+          d: diary(
+            weather: const DiaryWeather(icon: '100', temp: '22', text: '晴'),
+          ),
+        ),
+      ),
+    );
     expect(find.textContaining('晴'), findsOneWidget);
   });
 
@@ -119,7 +127,11 @@ void main() {
         tile(
           d: diary(
             tags: const ['旅行', '海'],
-            position: const DiaryPosition(latitude: 1, longitude: 2, name: '厦门 环岛路'),
+            position: const DiaryPosition(
+              latitude: 1,
+              longitude: 2,
+              name: '厦门 环岛路',
+            ),
             audio: const ['a.m4a'],
             video: const ['video-1.mp4'],
           ),
@@ -241,7 +253,13 @@ void main() {
     // weather[0] 存的就是和风的天气码，而天气数据本身也来自和风 —— 画通用云等于
     // 把这条信息丢了。101 = 多云。
     await tester.pumpWidget(
-      wrap(tile(d: diary(weather: const DiaryWeather(icon: '101', temp: '26', text: '多云')))),
+      wrap(
+        tile(
+          d: diary(
+            weather: const DiaryWeather(icon: '101', temp: '26', text: '多云'),
+          ),
+        ),
+      ),
     );
     expect(find.byIcon(qweatherIcon('101')!), findsOneWidget);
     expect(find.byIcon(LucideIcons.cloud), findsNothing);
@@ -250,7 +268,13 @@ void main() {
   testWidgets('认不出的天气码退回通用的云', (tester) async {
     // 和风将来加了新码、或老日记存了脏值时不能画成豆腐块。
     await tester.pumpWidget(
-      wrap(tile(d: diary(weather: const DiaryWeather(icon: 'nope', temp: '26', text: '?')))),
+      wrap(
+        tile(
+          d: diary(
+            weather: const DiaryWeather(icon: 'nope', temp: '26', text: '?'),
+          ),
+        ),
+      ),
     );
     expect(find.byIcon(LucideIcons.cloud), findsOneWidget);
   });
