@@ -9,7 +9,7 @@ final _mui = buildMuiTheme(brightness: Brightness.light);
 
 Diary diary({
   String title = 'T',
-  double mood = 0.5,
+  DiaryMood mood = .neutral,
   DiaryWeather? weather,
   List<String> tags = const [],
   DiaryPosition? position,
@@ -52,7 +52,7 @@ DiaryTimelineTile tile({
   bool selecting = false,
   bool selected = false,
   bool hasAbove = false,
-  double? moodBelow,
+  DiaryMood? moodBelow,
 }) {
   final value = d ?? diary();
   return DiaryTimelineTile(
@@ -161,13 +161,13 @@ void main() {
   ) async {
     // 每行只画自己那段轴。若两端直接取邻居原色，上一行底边会画成下一条的颜色、
     // 紧邻的下一行顶边却退回上一条的颜色 —— 接缝处整幅色差硬跳变。
-    // 这里让相邻两条的 mood 取 0（红）与 1（绿），直接采样接缝上下的像素。
+    // 这里让相邻两条取低落（红）与愉快（绿），直接采样接缝上下的像素。
     t.view.devicePixelRatio = 1.0;
     addTearDown(t.view.reset);
 
     const boundaryKey = ValueKey('axis-probe');
-    final top = diary(title: '', mood: 0);
-    final bottom = diary(title: '', mood: 1);
+    final top = diary(title: '', mood: .negative);
+    final bottom = diary(title: '', mood: .positive);
 
     await t.pumpWidget(
       MuiTheme(
@@ -242,11 +242,9 @@ void main() {
     );
   });
 
-  testWidgets('mood color maps the two ends of the palette', (t) async {
-    expect(diaryMoodColor(0), isNot(diaryMoodColor(1)));
-    // 越界值不该抛，钳到端点。
-    expect(diaryMoodColor(-1), diaryMoodColor(0));
-    expect(diaryMoodColor(2), diaryMoodColor(1));
+  testWidgets('mood colors are pairwise distinct', (t) async {
+    final colors = {for (final m in DiaryMood.values) diaryMoodColor(m)};
+    expect(colors.length, DiaryMood.values.length);
   });
 
   testWidgets('天气图标取和风天气码，不是通用的云', (tester) async {

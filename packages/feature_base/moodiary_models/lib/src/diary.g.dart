@@ -17,7 +17,7 @@ _Diary _$DiaryFromJson(Map<String, dynamic> json) => _Diary(
     json['lastModified'] as String,
   ),
   show: json['show'] as bool,
-  mood: (json['mood'] as num).toDouble(),
+  mood: $enumDecode(_$DiaryMoodEnumMap, json['mood']),
   weather: json['weather'] == null
       ? null
       : DiaryWeather.fromJson(json['weather'] as Map<String, dynamic>),
@@ -47,7 +47,7 @@ Map<String, dynamic> _$DiaryToJson(_Diary instance) => <String, dynamic>{
   'time': const UtcDateTimeConverter().toJson(instance.time),
   'lastModified': const UtcDateTimeConverter().toJson(instance.lastModified),
   'show': instance.show,
-  'mood': instance.mood,
+  'mood': _$DiaryMoodEnumMap[instance.mood]!,
   'weather': instance.weather,
   'imageName': instance.imageName,
   'audioName': instance.audioName,
@@ -56,4 +56,10 @@ Map<String, dynamic> _$DiaryToJson(_Diary instance) => <String, dynamic>{
   'position': instance.position,
   'type': instance.type,
   'aspect': instance.aspect,
+};
+
+const _$DiaryMoodEnumMap = {
+  DiaryMood.negative: 'negative',
+  DiaryMood.neutral: 'neutral',
+  DiaryMood.positive: 'positive',
 };

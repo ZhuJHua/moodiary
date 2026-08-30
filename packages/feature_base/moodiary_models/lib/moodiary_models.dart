@@ -11,6 +11,7 @@ export 'src/diary.dart';
 export 'src/diary_event.dart';
 export 'src/diary_graph.dart';
 export 'src/diary_meta.dart';
+export 'src/diary_mood.dart';
 export 'src/diary_sort.dart';
 export 'src/diary_type.dart';
 export 'src/diary_type_route.dart';

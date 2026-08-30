@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:math' as math;
 
 import 'package:injectable/injectable.dart';
 import 'package:moodiary_rust/foundation.dart' show HfTokenizer;
@@ -9,13 +8,13 @@ import 'package:onnxruntime_plus/onnxruntime_plus.dart';
 import 'onnx_embedding_backend.dart' show ensureOrtEnv, runEncoder;
 import 'sentiment_models.dart';
 
-/// 情感分类器：logits → softmax → 对逐标签效价权重加权 = 心情分 0..1。
-/// 权重随模型 spec 给（标签序是各模型自己的契约，不能假设升序）。
+/// 情感分类器：logits → argmax → 标签。标签序随模型 spec 给
+/// （各模型自己的契约，不能假设升序）。
 final class OnnxSentimentClassifier {
   OrtSession? _session;
   HfTokenizer? _tokenizer;
   int _padId = 0;
-  List<double> _labelWeights = const [0, 0.25, 0.5, 0.75, 1];
+  List<SentimentLabel> _labels = const [];
 
   bool get loaded => _session != null;
 
@@ -23,7 +22,7 @@ final class OnnxSentimentClassifier {
     String modelPath, {
     required String tokenizerPath,
     required String padToken,
-    required List<double> labelWeights,
+    required List<SentimentLabel> labels,
     int contextSize = 512,
   }) async {
     if (_session != null) return;
@@ -39,7 +38,7 @@ final class OnnxSentimentClassifier {
     _session = OrtSession.fromFile(File(modelPath), OrtSessionOptions());
     _tokenizer = tokenizer;
     _padId = padId;
-    _labelWeights = labelWeights;
+    _labels = labels;
   }
 
   Future<void> unload() async {
@@ -48,8 +47,7 @@ final class OnnxSentimentClassifier {
     _tokenizer = null;
   }
 
-  /// 心情分 0..1（0=很差，1=很好）。
-  Future<double> score(String text) async {
+  Future<SentimentLabel> classify(String text) async {
     final session = _session;
     final tokenizer = _tokenizer;
     if (session == null || tokenizer == null) {
@@ -58,21 +56,14 @@ final class OnnxSentimentClassifier {
     final ids = await tokenizer.encode(text: text);
     final rows = await runEncoder(session, [ids], padId: _padId);
     final logitsRow = rows.single;
-    if (logitsRow.length != _labelWeights.length || logitsRow.first is List) {
+    if (logitsRow.length != _labels.length || logitsRow.first is List) {
       throw StateError('unexpected logits shape [${logitsRow.length}]');
     }
-    return _expectation([for (final v in logitsRow) (v as num).toDouble()]);
-  }
-
-  double _expectation(List<double> logits) {
-    final maxLogit = logits.reduce(math.max);
-    final exps = [for (final l in logits) math.exp(l - maxLogit)];
-    final sum = exps.reduce((a, b) => a + b);
-    var expectation = 0.0;
-    for (var i = 0; i < exps.length; i++) {
-      expectation += (exps[i] / sum) * _labelWeights[i];
+    var best = 0;
+    for (var i = 1; i < logitsRow.length; i++) {
+      if ((logitsRow[i] as num) > (logitsRow[best] as num)) best = i;
     }
-    return expectation;
+    return _labels[best];
   }
 }
 
@@ -93,8 +84,8 @@ class SentimentEngine {
   /// 心情建议是否可用（有激活模型即可用；真正加载推迟到首次打分）。
   bool get ready => _models.active != null;
 
-  /// 建议心情 0..1；未启用返回 null。
-  Future<double?> suggestMood(String text) {
+  /// 建议心情标签；未启用返回 null。
+  Future<SentimentLabel?> suggestMood(String text) {
     final spec = _models.active;
     if (spec == null || text.trim().isEmpty) return Future.value();
     final task = _chain.then((_) async {
@@ -108,12 +99,12 @@ class SentimentEngine {
           _models.modelPathOf(spec),
           tokenizerPath: _models.tokenizerPathOf(spec),
           padToken: spec.padToken,
-          labelWeights: spec.labelWeights,
+          labels: spec.labels,
           contextSize: spec.contextSize,
         );
         _loadedModelId = spec.id;
       }
-      return _classifier.score(text);
+      return _classifier.classify(text);
     });
     _chain = task.then(
       (_) => _armIdleUnload(),

@@ -429,6 +429,9 @@ class _Translations$common$en extends Translations$common$zh {
 
 	// Translations
 	@override String get ok => 'OK';
+	@override String get moodNegative => 'Low';
+	@override String get moodNeutral => 'Calm';
+	@override String get moodPositive => 'Happy';
 	@override String get cancel => 'Cancel';
 	@override String get more => 'More';
 	@override String get custom => 'Custom';
@@ -589,6 +592,7 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get weatherNotFetched => 'Not fetched';
 	@override String get infoTags => 'Tags';
 	@override String get infoMood => 'Mood';
+	@override String get moodSuggested => 'Suggested from entry';
 	@override String get searchReindexHint => 'Rebuild the index after upgrading so older entries become searchable';
 	@override String get searchReindex => 'Rebuild';
 	@override String get autoSaved => 'Autosaved';
@@ -845,7 +849,6 @@ class _Translations$share$en extends Translations$share$zh {
 	@override String get copied => 'Copied to clipboard';
 	@override String get subject => 'Shared from Moodiary';
 	@override String imageSaved({required Object path}) => 'Image saved to ${path} (path copied)';
-	@override String mood({required Object value}) => 'Mood ${value}%';
 	@override String get templateMinimal => 'Minimal';
 	@override String get templateNote => 'Note';
 }

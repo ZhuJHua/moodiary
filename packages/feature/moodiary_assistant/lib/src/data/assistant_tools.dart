@@ -97,8 +97,8 @@ abstract final class AssistantToolRegistry {
           '(use getDiary for that) — and state the total number of matches, which '
           'may exceed what is returned. Never present the returned rows as the '
           'complete set when the total says otherwise. '
-          'Mood is 0.00 (low) to 1.00 (high); 0.50 is also the default for entries '
-          'whose mood was never set, so do not read emotion into it on its own. '
+          'Mood is one of negative / neutral / positive; neutral is also the default '
+          'for entries whose mood was never set, so do not over-read it. '
           'Call this whenever the user asks about what they wrote, or to locate an '
           'entry before editing or deleting it.',
       jsonSchema: {
@@ -235,12 +235,9 @@ abstract final class AssistantToolRegistry {
                 'title': {'type': 'string', 'description': 'Optional title.'},
                 'content': {'type': 'string', 'description': 'Body, Markdown.'},
                 'mood': {
-                  'type': 'number',
-                  'description':
-                      '0.00 (low) to 1.00 (high). Omit unless the user '
-                      'conveyed a mood.',
-                  'minimum': 0,
-                  'maximum': 1,
+                  'type': 'string',
+                  'enum': ['negative', 'neutral', 'positive'],
+                  'description': 'Omit unless the user conveyed a mood.',
                 },
                 'categoryId': {
                   'type': 'string',
@@ -282,10 +279,9 @@ abstract final class AssistantToolRegistry {
                   'description': 'New body, Markdown.',
                 },
                 'mood': {
-                  'type': 'number',
-                  'description': 'New mood, 0.00 to 1.00.',
-                  'minimum': 0,
-                  'maximum': 1,
+                  'type': 'string',
+                  'enum': ['negative', 'neutral', 'positive'],
+                  'description': 'New mood.',
                 },
                 'categoryId': {
                   'type': 'string',
@@ -796,7 +792,7 @@ abstract final class AssistantToolRegistry {
       final similarity = (1 - hit.distance).clamp(-1.0, 1.0);
       buffer.writeln(
         'id=${diary.id} 【${TimeFormat.isoDate(diary.time)}】$title '
-        'mood=${diary.mood.toStringAsFixed(2)} '
+        'mood=${diary.mood.name} '
         'similarity=${similarity.toStringAsFixed(2)}$catPart',
       );
       final excerpt = _semanticExcerpt(diary, hit);
@@ -881,7 +877,7 @@ abstract final class AssistantToolRegistry {
       ..writeln('id=${diary.id}')
       ..writeln('date=${TimeFormat.isoDate(diary.time)}')
       ..writeln('title=$title')
-      ..writeln('mood=${diary.mood.toStringAsFixed(2)}');
+      ..writeln('mood=${diary.mood.name}');
     if (diary.categoryId != null && diary.categoryId!.isNotEmpty) {
       buffer.writeln('categoryId=${diary.categoryId}');
     }
@@ -1048,23 +1044,20 @@ abstract final class AssistantToolRegistry {
     // 心情分布：这是日记 App 的助手最常被问到的东西，概览里没有它，模型只能
     // 去逐篇拉全文自己数 —— 那既慢又容易在 limit 上出错。
     final moods = await repo.getDiaryByCategory(sort: .timeDesc, limit: 9999);
-    final rated = [
-      for (final d in moods)
-        if (d.mood != 0.5) d.mood,
-    ];
-    if (rated.isNotEmpty) {
-      final avg = rated.reduce((a, b) => a + b) / rated.length;
-      final low = rated.where((m) => m < 0.4).length;
-      final high = rated.where((m) => m > 0.6).length;
+    if (moods.isNotEmpty) {
+      final counts = <DiaryMood, int>{};
+      for (final d in moods) {
+        counts[d.mood] = (counts[d.mood] ?? 0) + 1;
+      }
       buffer
         ..writeln(
-          'mood (0.00 low ~ 1.00 high; '
-          '${moods.length - rated.length} entries with no mood set are excluded):',
+          'mood distribution (neutral is also the default for entries whose '
+          'mood was never set):',
         )
-        ..writeln('- mean=${avg.toStringAsFixed(2)}')
         ..writeln(
-          '- low(<0.40)=$low, high(>0.60)=$high, '
-          'middle=${rated.length - low - high}',
+          '- negative=${counts[DiaryMood.negative] ?? 0}, '
+          'neutral=${counts[DiaryMood.neutral] ?? 0}, '
+          'positive=${counts[DiaryMood.positive] ?? 0}',
         );
     }
     return buffer.toString().trim();
@@ -1078,7 +1071,7 @@ abstract final class AssistantToolRegistry {
     final content = (input['content'] as String?)?.trim() ?? '';
     if (content.isEmpty) return 'Failed: the body cannot be empty.';
 
-    final mood = _parseMood(input['mood']) ?? 0.5;
+    final mood = _parseMood(input['mood']) ?? DiaryMood.neutral;
     final categoryId = await _resolveCategoryId(input['categoryId']);
 
     final converted = _toTiptap(content);
@@ -1381,8 +1374,8 @@ abstract final class AssistantToolRegistry {
     return cat == null ? null : id;
   }
 
-  static double? _parseMood(Object? raw) =>
-      raw is num ? raw.toDouble().clamp(0.0, 1.0).toDouble() : null;
+  static DiaryMood? _parseMood(Object? raw) =>
+      raw is String ? DiaryMood.values.asNameMap()[raw] : null;
 
   /// 分类 id → 名字。查不到（已删）时返回 null，调用方自行降级。
   static Future<String?> _categoryNameOf(String id) async {
@@ -1459,7 +1452,7 @@ abstract final class AssistantToolRegistry {
       final catPart = (cat != null && cat.isNotEmpty) ? ' categoryId=$cat' : '';
       buffer.writeln(
         'id=${diary.id} 【${TimeFormat.isoDate(diary.time)}】$title '
-        'mood=${diary.mood.toStringAsFixed(2)}$catPart',
+        'mood=${diary.mood.name}$catPart',
       );
       final text = diary.contentText.trim();
       if (text.isNotEmpty) {

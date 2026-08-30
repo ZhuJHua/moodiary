@@ -327,11 +327,11 @@ class Diaries extends Table with TableInfo<Diaries, DiaryRow> {
     $customConstraints: 'NOT NULL',
   );
   static const VerificationMeta _moodMeta = const VerificationMeta('mood');
-  late final GeneratedColumn<double> mood = GeneratedColumn<double>(
+  late final GeneratedColumn<String> mood = GeneratedColumn<String>(
     'mood',
     aliasedName,
     false,
-    type: DriftSqlType.double,
+    type: DriftSqlType.string,
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
@@ -636,7 +636,7 @@ class Diaries extends Table with TableInfo<Diaries, DiaryRow> {
         data['${effectivePrefix}show'],
       )!,
       mood: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
+        DriftSqlType.string,
         data['${effectivePrefix}mood'],
       )!,
       type: attachedDatabase.typeMapping.read(
@@ -693,7 +693,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
   final int time;
   final int lastModified;
   final int show;
-  final double mood;
+  final String mood;
   final String type;
   final double? aspect;
   final double? latitude;
@@ -736,7 +736,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
     map['time'] = Variable<int>(time);
     map['last_modified'] = Variable<int>(lastModified);
     map['show'] = Variable<int>(show);
-    map['mood'] = Variable<double>(mood);
+    map['mood'] = Variable<String>(mood);
     map['type'] = Variable<String>(type);
     if (!nullToAbsent || aspect != null) {
       map['aspect'] = Variable<double>(aspect);
@@ -816,7 +816,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
       time: serializer.fromJson<int>(json['time']),
       lastModified: serializer.fromJson<int>(json['last_modified']),
       show: serializer.fromJson<int>(json['show']),
-      mood: serializer.fromJson<double>(json['mood']),
+      mood: serializer.fromJson<String>(json['mood']),
       type: serializer.fromJson<String>(json['type']),
       aspect: serializer.fromJson<double?>(json['aspect']),
       latitude: serializer.fromJson<double?>(json['latitude']),
@@ -840,7 +840,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
       'time': serializer.toJson<int>(time),
       'last_modified': serializer.toJson<int>(lastModified),
       'show': serializer.toJson<int>(show),
-      'mood': serializer.toJson<double>(mood),
+      'mood': serializer.toJson<String>(mood),
       'type': serializer.toJson<String>(type),
       'aspect': serializer.toJson<double?>(aspect),
       'latitude': serializer.toJson<double?>(latitude),
@@ -862,7 +862,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
     int? time,
     int? lastModified,
     int? show,
-    double? mood,
+    String? mood,
     String? type,
     Value<double?> aspect = const Value.absent(),
     Value<double?> latitude = const Value.absent(),
@@ -1006,7 +1006,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
   final Value<int> time;
   final Value<int> lastModified;
   final Value<int> show;
-  final Value<double> mood;
+  final Value<String> mood;
   final Value<String> type;
   final Value<double?> aspect;
   final Value<double?> latitude;
@@ -1045,7 +1045,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
     required int time,
     required int lastModified,
     required int show,
-    required double mood,
+    required String mood,
     required String type,
     this.aspect = const Value.absent(),
     this.latitude = const Value.absent(),
@@ -1073,7 +1073,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
     Expression<int>? time,
     Expression<int>? lastModified,
     Expression<int>? show,
-    Expression<double>? mood,
+    Expression<String>? mood,
     Expression<String>? type,
     Expression<double>? aspect,
     Expression<double>? latitude,
@@ -1115,7 +1115,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
     Value<int>? time,
     Value<int>? lastModified,
     Value<int>? show,
-    Value<double>? mood,
+    Value<String>? mood,
     Value<String>? type,
     Value<double?>? aspect,
     Value<double?>? latitude,
@@ -1178,7 +1178,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
       map['show'] = Variable<int>(show.value);
     }
     if (mood.present) {
-      map['mood'] = Variable<double>(mood.value);
+      map['mood'] = Variable<String>(mood.value);
     }
     if (type.present) {
       map['type'] = Variable<String>(type.value);
@@ -7908,7 +7908,7 @@ typedef $DiariesCreateCompanionBuilder = DiariesCompanion Function({
   required int time,
   required int lastModified,
   required int show,
-  required double mood,
+  required String mood,
   required String type,
   Value<double?> aspect,
   Value<double?> latitude,
@@ -7928,7 +7928,7 @@ typedef $DiariesUpdateCompanionBuilder = DiariesCompanion Function({
   Value<int> time,
   Value<int> lastModified,
   Value<int> show,
-  Value<double> mood,
+  Value<String> mood,
   Value<String> type,
   Value<double?> aspect,
   Value<double?> latitude,
@@ -8052,7 +8052,7 @@ class $DiariesFilterComposer extends Composer<_$MoodiaryDatabase, Diaries> {
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<double> get mood => $composableBuilder(
+  ColumnFilters<String> get mood => $composableBuilder(
     column: $table.mood,
     builder: (column) => ColumnFilters(column),
   );
@@ -8226,7 +8226,7 @@ class $DiariesOrderingComposer extends Composer<_$MoodiaryDatabase, Diaries> {
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<double> get mood => $composableBuilder(
+  ColumnOrderings<String> get mood => $composableBuilder(
     column: $table.mood,
     builder: (column) => ColumnOrderings(column),
   );
@@ -8313,7 +8313,7 @@ class $DiariesAnnotationComposer extends Composer<_$MoodiaryDatabase, Diaries> {
   GeneratedColumn<int> get show =>
       $composableBuilder(column: $table.show, builder: (column) => column);
 
-  GeneratedColumn<double> get mood =>
+  GeneratedColumn<String> get mood =>
       $composableBuilder(column: $table.mood, builder: (column) => column);
 
   GeneratedColumn<String> get type =>
@@ -8463,7 +8463,7 @@ class $DiariesTableManager
                 Value<int> time = const Value.absent(),
                 Value<int> lastModified = const Value.absent(),
                 Value<int> show = const Value.absent(),
-                Value<double> mood = const Value.absent(),
+                Value<String> mood = const Value.absent(),
                 Value<String> type = const Value.absent(),
                 Value<double?> aspect = const Value.absent(),
                 Value<double?> latitude = const Value.absent(),
@@ -8503,7 +8503,7 @@ class $DiariesTableManager
                 required int time,
                 required int lastModified,
                 required int show,
-                required double mood,
+                required String mood,
                 required String type,
                 Value<double?> aspect = const Value.absent(),
                 Value<double?> latitude = const Value.absent(),

@@ -1,7 +1,7 @@
+import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
-import 'package:mui/mui.dart';
 
 import 'share_card_template.dart';
 
@@ -65,9 +65,7 @@ class MinimalShareCard extends StatelessWidget {
                   borderRadius: .circular(20),
                 ),
                 child: Text(
-                  context.l10n.share.mood(
-                    value: (diary.mood * 100).toStringAsFixed(0),
-                  ),
+                  diary.mood.label(context),
                   style: TextStyle(
                     fontSize: 12,
                     color: dark ? accent.withValues(alpha: 0.95) : accent,

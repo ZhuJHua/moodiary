@@ -144,7 +144,7 @@ class EngineMigrationService {
               time: d.time,
               lastModified: d.lastModified,
               show: d.show,
-              mood: d.mood,
+              mood: _mood(d.mood),
               weather: _weather(d.weather),
               imageName: d.imageName,
               audioName: d.audioName,
@@ -426,6 +426,14 @@ class EngineMigrationService {
     if (raw.length < 3) return null;
     return DiaryWeather(icon: raw[0], temp: raw[1], text: raw[2]);
   }
+
+  /// 旧滑条浮点 → 三分类。0.5 是旧默认值（从未动过滑条）= 中性；
+  /// 偏离中点即用户有意为之，按方向归到两端。
+  static DiaryMood _mood(double raw) => switch (raw) {
+    < 0.5 => .negative,
+    > 0.5 => .positive,
+    _ => .neutral,
+  };
 }
 
 class EngineMigrationReport {

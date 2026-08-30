@@ -1,5 +1,8 @@
 {
   "ok": "OK",
+  "moodNegative": "Low",
+  "moodNeutral": "Calm",
+  "moodPositive": "Happy",
   "cancel": "Cancel",
   "more": "More",
   "custom": "Custom",

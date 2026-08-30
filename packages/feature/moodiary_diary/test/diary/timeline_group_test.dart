@@ -11,7 +11,7 @@ Diary diary(DateTime time, {DateTime? modified, String id = 'x'}) => Diary(
   time: time,
   lastModified: modified ?? time,
   show: true,
-  mood: 0.5,
+  mood: .neutral,
   imageName: const [],
   audioName: const [],
   videoName: const [],

@@ -1144,6 +1144,15 @@ class Translations$common$zh {
 	/// zh: '确认'
 	String get ok => '确认';
 
+	/// zh: '低落'
+	String get moodNegative => '低落';
+
+	/// zh: '平静'
+	String get moodNeutral => '平静';
+
+	/// zh: '愉快'
+	String get moodPositive => '愉快';
+
 	/// zh: '取消'
 	String get cancel => '取消';
 
@@ -1598,6 +1607,9 @@ class Translations$diary$zh {
 
 	/// zh: '心情'
 	String get infoMood => '心情';
+
+	/// zh: '已按正文建议'
+	String get moodSuggested => '已按正文建议';
 
 	/// zh: '升级后需重建索引，旧日记正文才能被搜索到'
 	String get searchReindexHint => '升级后需重建索引，旧日记正文才能被搜索到';
@@ -2219,9 +2231,6 @@ class Translations$share$zh {
 
 	/// zh: '已生成图片：{path}（路径已复制）'
 	String imageSaved({required Object path}) => '已生成图片：${path}（路径已复制）';
-
-	/// zh: '心情 {value}%'
-	String mood({required Object value}) => '心情 ${value}%';
 
 	/// zh: '简约'
 	String get templateMinimal => '简约';

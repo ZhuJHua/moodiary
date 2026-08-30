@@ -28,7 +28,7 @@ class TiptapToIr {
     required DateTime time,
     required String content,
     required ResolveMediaPath resolvePath,
-    double mood = 0.5,
+    DiaryMood mood = .neutral,
     DiaryWeather? weather,
     DiaryPosition? position,
     List<String> tags = const [],

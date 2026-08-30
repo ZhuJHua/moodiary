@@ -1,4 +1,5 @@
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 /// 条目的同步状态：内联进元信息行，不用会盖住内容的角标。
@@ -7,13 +8,8 @@ enum DiaryCardSyncState { none, dirty, syncing }
 /// 心情值 → 颜色。与详情页的 [MoodIconComponent] 取同一对端点。
 ///
 /// 注意这条色阶是红→绿在 sRGB 里直插，**中点是浑浊的土黄**，而 0.5 恰好是
-/// [Diary.empty] 的默认值。等色阶改成发散型（两端各自朝中性色收敛 + 在 OKLab 里插值）
-/// 时，只需要改这一个函数。
-Color diaryMoodColor(double mood) => Color.lerp(
-  AppColor.emoColorList.first,
-  AppColor.emoColorList.last,
-  mood.clamp(0.0, 1.0).toDouble(),
-)!;
+/// 心情三分类的语义色（离散取色，旧红绿插值已废）。
+Color diaryMoodColor(DiaryMood mood) => mood.color;
 
 /// 首页条目的公共外壳：选中态描边 / 底色、点击与长按、按压高亮。
 ///

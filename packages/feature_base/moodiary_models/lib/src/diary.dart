@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 import 'diary_meta.dart';
+import 'diary_mood.dart';
 import 'diary_type.dart';
 import 'utc_date_time_converter.dart';
 
@@ -19,7 +20,7 @@ abstract class Diary with _$Diary {
     @UtcDateTimeConverter() required DateTime time,
     @UtcDateTimeConverter() required DateTime lastModified,
     required bool show,
-    required double mood,
+    required DiaryMood mood,
     DiaryWeather? weather,
     required List<String> imageName,
     required List<String> audioName,
@@ -37,7 +38,7 @@ abstract class Diary with _$Diary {
     required String title,
     required String content,
     required String contentText,
-    required double mood,
+    required DiaryMood mood,
     DiaryWeather? weather,
     required List<String> imageName,
     required List<String> audioName,
@@ -79,7 +80,7 @@ abstract class Diary with _$Diary {
       time: .timestamp(),
       lastModified: .timestamp(),
       show: true,
-      mood: 0.5,
+      mood: .neutral,
       imageName: [],
       audioName: [],
       videoName: [],

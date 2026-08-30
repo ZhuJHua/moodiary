@@ -24,10 +24,8 @@ void main() {
     expect(sentimentModelCatalog, isNotEmpty);
     for (final spec in sentimentModelCatalog) {
       expect(spec.modelFileName, endsWith('.onnx'));
-      expect(spec.labelWeights.length, greaterThan(1));
-      for (final w in spec.labelWeights) {
-        expect(w, inInclusiveRange(0, 1));
-      }
+      expect(spec.labels.length, greaterThan(1));
+      expect(spec.labels.toSet().length, spec.labels.length);
       for (final path in [spec.modelHfPath, spec.tokenizerHfPath]) {
         expect(path, isNot(startsWith('http')));
         expect(path, contains('/resolve/'));

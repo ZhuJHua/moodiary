@@ -43,7 +43,7 @@ class DiaryTimelineTile extends StatelessWidget {
   final bool hasAbove;
 
   /// 下一条的心情值 —— 圆点以下那段由本条的颜色渐变到它；null 表示列表末条。
-  final double? moodBelow;
+  final DiaryMood? moodBelow;
 
   final Category? category;
   final bool showCategoryLabel;

@@ -6,7 +6,6 @@
   "copied": "已复制到剪贴板",
   "subject": "来自 Moodiary 的分享",
   "imageSaved": "已生成图片：{path}（路径已复制）",
-  "mood": "心情 {value}%",
   "templateMinimal": "简约",
   "templateNote": "便签"
 }

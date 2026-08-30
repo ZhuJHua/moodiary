@@ -9,6 +9,9 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 
 import 'sentiment_engine.dart';
 
+/// 情感三分类标签（ml 包自己的词汇表；到领域 DiaryMood 的映射在消费侧做）。
+enum SentimentLabel { negative, neutral, positive }
+
 /// 本地情感分析模型清单里的一项。
 class SentimentModelSpec {
   final String id;
@@ -22,10 +25,9 @@ class SentimentModelSpec {
   /// 近似体积（字节，模型+分词器），仅供 UI 展示。
   final int sizeBytes;
 
-  /// 逐标签的效价权重（按模型 id2label 的下标序，0=最差 1=最好）；
-  /// 心情分 = softmax 概率对它的加权和。标签序是模型各自的契约——
-  /// lxyuan 是 positive/neutral/negative（与直觉相反，0 号是正面），写错整个反向。
-  final List<double> labelWeights;
+  /// 输出各下标对应的标签（按模型 id2label 的下标序）。标签序是模型各自的
+  /// 契约——lxyuan 是 positive/neutral/negative（0 号是正面），写错整个反向。
+  final List<SentimentLabel> labels;
 
   final int contextSize;
   final String padToken;
@@ -36,7 +38,7 @@ class SentimentModelSpec {
     required this.modelHfPath,
     required this.tokenizerHfPath,
     required this.sizeBytes,
-    required this.labelWeights,
+    required this.labels,
     this.contextSize = 512,
     this.padToken = '[PAD]',
   });
@@ -61,7 +63,7 @@ const sentimentModelCatalog = <SentimentModelSpec>[
         'Xenova/distilbert-base-multilingual-cased-sentiments-student/'
         'resolve/main/tokenizer.json',
     sizeBytes: 138936320, // 132.5 MB
-    labelWeights: [1.0, 0.5, 0.0], // positive / neutral / negative
+    labels: [.positive, .neutral, .negative],
   ),
 ];
 
@@ -164,13 +166,10 @@ class SentimentModelManager {
         modelPath,
         tokenizerPath: tokenizerPath,
         padToken: spec.padToken,
-        labelWeights: spec.labelWeights,
+        labels: spec.labels,
         contextSize: spec.contextSize,
       );
-      final score = await classifier.score('探测');
-      if (score.isNaN || score < 0 || score > 1) {
-        throw StateError('probe score out of range: $score');
-      }
+      await classifier.classify('探测');
     } finally {
       await classifier.unload();
     }

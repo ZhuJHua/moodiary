@@ -51,7 +51,7 @@ void main() {
               time: 0,
               lastModified: 0,
               show: 1,
-              mood: 0.5,
+              mood: 'neutral',
               type: 'tiptap',
             ),
           );

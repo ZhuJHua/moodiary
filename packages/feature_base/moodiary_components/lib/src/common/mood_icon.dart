@@ -1,77 +1,16 @@
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:moodiary_models/moodiary_models.dart';
 
-class EmotionCurvePainter extends CustomPainter {
-  final double value;
-  final double strokeWidth;
-  final Color color;
-
-  EmotionCurvePainter(
-    this.value, {
-    required this.strokeWidth,
-    required this.color,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final Paint paint = Paint()
-      ..color = color
-      ..style = .stroke
-      ..strokeCap = .round
-      ..strokeWidth = strokeWidth;
-
-    final Path path = Path();
-
-    final double centerX = size.width / 2;
-    final double centerY = size.height / 2;
-    final double controlPointY = centerY + (value - 0.5) * size.height;
-
-    path.moveTo(centerX + strokeWidth / 2 - size.width / 2, centerY);
-
-    path.quadraticBezierTo(
-      centerX,
-      controlPointY,
-      centerX - strokeWidth / 2 + size.width / 2,
-      centerY,
-    );
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return true;
-  }
-}
-
+/// 心情表情图标（lucide frown / meh / smile，取语义色）。
 class MoodIconComponent extends StatelessWidget {
-  const MoodIconComponent({super.key, this.width = 32.0, required this.value});
+  const MoodIconComponent({super.key, required this.mood, this.size = 24.0});
 
-  final double value;
+  final DiaryMood mood;
 
-  final double width;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        // 心情色带是业务语义色，不跟主题走（见 AppColor.emoColorList）。
-        color: .lerp(
-          AppColor.emoColorList.first,
-          AppColor.emoColorList.last,
-          value,
-        ),
-        borderRadius: AppBorderRadius.smallBorderRadius,
-      ),
-      padding: const .all(4.0),
-      child: CustomPaint(
-        size: Size(width - 8.0, width - 8.0),
-        painter: EmotionCurvePainter(
-          value,
-          strokeWidth: 4.0,
-          color: context.theme.onMedia,
-        ),
-      ),
-    );
+    return Icon(mood.icon, color: mood.color, size: size);
   }
 }

@@ -217,34 +217,35 @@ void main() {
         sentimentModel,
         tokenizerPath: sentimentTokenizer,
         padToken: '[PAD]',
-        labelWeights: sentimentModelCatalog.single.labelWeights,
+        labels: sentimentModelCatalog.single.labels,
       );
       debugPrint('BENCH: sentiment load=${loadWatch.elapsedMilliseconds}ms');
-      // lxyuan 学生模型这套探针本机 11/11 方向正确（含 tabularisai 翻车的
-      // 「养了八年的狗走了」句），此处抽核心五句在真机复核。
-      final samples = <String>[
-        '今天太开心了，和朋友们去爬山，山顶的风景美极了！',
-        '我很难过，太糟糕了。',
-        '中午吃了碗面，下午开了两个会。',
-        'What a wonderful day, I got promoted!',
-        '难过得不想说话，养了八年的狗今天走了。',
+      // 明确的正/负样例断言方向（含 tabularisai 翻车的「养了八年的狗走了」句）；
+      // 中性只打印观测——该模型的 neutral 类偏弱，日常流水账普遍带轻微
+      // positive 倾向（本机 int8 实测 0.49/0.33/0.19 量级），断言它必然抖。
+      final samples = <(String, SentimentLabel?)>[
+        ('今天太开心了，和朋友们去爬山，山顶的风景美极了！', .positive),
+        ('我很难过，太糟糕了。', .negative),
+        ('中午吃了碗面，下午开了两个会。', null),
+        ('What a wonderful day, I got promoted!', .positive),
+        ('难过得不想说话，养了八年的狗今天走了。', .negative),
       ];
-      final scores = <double>[];
       final scoreWatch = Stopwatch()..start();
-      for (final text in samples) {
-        scores.add(await classifier.score(text));
+      final labels = <SentimentLabel>[];
+      for (final (text, _) in samples) {
+        labels.add(await classifier.classify(text));
       }
       final avgMs = scoreWatch.elapsedMilliseconds / samples.length;
       for (var i = 0; i < samples.length; i++) {
-        debugPrint(
-          'BENCH: sentiment ${scores[i].toStringAsFixed(3)} <- ${samples[i]}',
-        );
+        debugPrint('BENCH: sentiment ${labels[i].name} <- ${samples[i].$1}');
       }
       debugPrint('BENCH: sentiment avg=${avgMs.toStringAsFixed(1)}ms/text');
-      expect(scores[0], greaterThan(0.5)); // 开心
-      expect(scores[1], lessThan(0.5)); // 直白难过
-      expect(scores[3], greaterThan(0.5)); // 升职
-      expect(scores[4], lessThan(0.5)); // 含蓄丧犬（tabularisai 曾翻车句）
+      for (var i = 0; i < samples.length; i++) {
+        final expected = samples[i].$2;
+        if (expected != null) {
+          expect(labels[i], expected, reason: samples[i].$1);
+        }
+      }
     } finally {
       await classifier.unload();
     }

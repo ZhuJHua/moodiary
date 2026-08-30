@@ -130,6 +130,7 @@
   "weatherNotFetched": "未获取",
   "infoTags": "标签",
   "infoMood": "心情",
+  "moodSuggested": "已按正文建议",
   "searchReindexHint": "升级后需重建索引，旧日记正文才能被搜索到",
   "searchReindex": "重建",
   "autoSaved": "自动保存",

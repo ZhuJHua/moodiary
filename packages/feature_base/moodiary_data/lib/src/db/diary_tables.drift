@@ -14,7 +14,7 @@ CREATE TABLE diaries (
   time          INTEGER NOT NULL,
   last_modified INTEGER NOT NULL,
   show          INTEGER NOT NULL,
-  mood          REAL NOT NULL,
+  mood          TEXT NOT NULL,
   type          TEXT NOT NULL,
   aspect        REAL,
   latitude      REAL,

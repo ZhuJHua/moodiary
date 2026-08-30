@@ -131,6 +131,7 @@
   "weatherNotFetched": "Not fetched",
   "infoTags": "Tags",
   "infoMood": "Mood",
+  "moodSuggested": "Suggested from entry",
   "searchReindexHint": "Rebuild the index after upgrading so older entries become searchable",
   "searchReindex": "Rebuild",
   "autoSaved": "Autosaved",

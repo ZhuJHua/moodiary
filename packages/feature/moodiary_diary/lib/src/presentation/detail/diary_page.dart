@@ -51,8 +51,11 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
 
   bool _dirty = false;
 
-  /// 本次编辑会话内用户是否手动动过心情滑条；动过则自动建议永久让位。
+  /// 本次编辑会话内用户是否手动动过心情选择器；动过则自动建议永久让位。
   bool _moodTouched = false;
+
+  /// 当前心情值是否来自自动建议（详情面板据此显示「已按正文建议」提示）。
+  bool _moodSuggested = false;
 
   /// 已建议过的正文快照，内容没变不重复打分。
   String? _suggestedForContent;
@@ -353,15 +356,16 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     _scheduleAutoSave();
   }
 
-  void _onChangeMood(double mood) {
+  void _onChangeMood(DiaryMood mood) {
     _moodTouched = true;
+    _moodSuggested = false;
     ref.read(_provider.notifier).changeMood(mood);
     _dirty = true;
     _scheduleAutoSave();
   }
 
-  /// 自动保存成功后的心情建议：只对本次会话新建、且用户没动过滑条的日记生效，
-  /// 用户一旦手动调整（[_moodTouched]）即永久让位。正文没变不重复打分；
+  /// 自动保存成功后的心情建议：只对本次会话新建、且用户没动过选择器的日记生效，
+  /// 用户一旦手动点选（[_moodTouched]）即永久让位。正文没变不重复打分；
   /// 建议值写回 state 后随下一轮自动保存落库。
   Future<void> _maybeSuggestMood() async {
     if (_moodTouched || widget.diaryId != null) return;
@@ -371,9 +375,15 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     if (text.isEmpty || text == _suggestedForContent) return;
     _suggestedForContent = text;
     try {
-      final score = await engine.suggestMood(text);
-      if (score == null || !mounted || _moodTouched) return;
-      ref.read(_provider.notifier).changeMood(score);
+      final label = await engine.suggestMood(text);
+      if (label == null || !mounted || _moodTouched) return;
+      final mood = switch (label) {
+        .negative => DiaryMood.negative,
+        .neutral => DiaryMood.neutral,
+        .positive => DiaryMood.positive,
+      };
+      _moodSuggested = true;
+      ref.read(_provider.notifier).changeMood(mood);
       _dirty = true;
       _scheduleAutoSave();
     } catch (e, s) {
@@ -407,6 +417,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
         diary: diary,
         provider: _provider,
         onChangeMood: _onChangeMood,
+        moodSuggested: _moodSuggested,
         onPickDate: () {
           Navigator.of(context).pop();
           _onPickDate(diary);
@@ -812,7 +823,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
             style: typo.bodySmall.onSurfaceVariant,
           ),
           const Spacer(),
-          _MoodChip(value: diary.mood),
+          _MoodChip(mood: diary.mood),
         ],
       ),
       if (diary.tags.isNotEmpty) ...[
@@ -853,29 +864,23 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
 }
 
 class _MoodChip extends StatelessWidget {
-  final double value;
-  const _MoodChip({required this.value});
+  final DiaryMood mood;
+  const _MoodChip({required this.mood});
 
   @override
   Widget build(BuildContext context) {
-    // 心情色带全仓一份，见 AppColor.emoColorList。
-    final color = Color.lerp(
-      AppColor.emoColorList.first,
-      AppColor.emoColorList.last,
-      value,
-    );
     return Container(
       padding: const .symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color?.withValues(alpha: 0.15),
-        borderRadius: .circular(8),
+        color: mood.color.withValues(alpha: 0.15),
+        borderRadius: .circular(999),
       ),
       child: Row(
         mainAxisSize: .min,
+        spacing: 4,
         children: [
-          Icon(LucideIcons.smile, size: 16, color: color),
-          const SizedBox(width: 4),
-          Text('${(value * 100).toStringAsFixed(0)}%'),
+          Icon(mood.icon, size: 16, color: mood.color),
+          Text(mood.label(context)),
         ],
       ),
     );
@@ -1294,7 +1299,10 @@ class _DetailSheet extends ConsumerWidget {
 
   /// 复用编辑页的同一 provider——另起实例会拿不到本页状态，且新建（无 id）时会抛错。
   final EditControllerProvider provider;
-  final ValueChanged<double> onChangeMood;
+  final ValueChanged<DiaryMood> onChangeMood;
+
+  /// 当前心情是否来自自动建议（打开面板那一刻的快照）。
+  final bool moodSuggested;
   final VoidCallback onPickDate;
   final VoidCallback onPickTime;
   final VoidCallback onPickCategory;
@@ -1306,6 +1314,7 @@ class _DetailSheet extends ConsumerWidget {
     required this.diary,
     required this.provider,
     required this.onChangeMood,
+    required this.moodSuggested,
     required this.onPickDate,
     required this.onPickTime,
     required this.onPickCategory,
@@ -1400,7 +1409,11 @@ class _DetailSheet extends ConsumerWidget {
           SettingListTile(
             isLast: true,
             title: context.l10n.diary.infoMood,
-            subtitle: _MoodSlider(provider: provider, onChanged: onChangeMood),
+            trailing: moodSuggested ? const _MoodSuggestedBadge() : null,
+            subtitle: _MoodSelector(
+              provider: provider,
+              onChanged: onChangeMood,
+            ),
           ),
         ],
       ),
@@ -1408,34 +1421,102 @@ class _DetailSheet extends ConsumerWidget {
   }
 }
 
-class _MoodSlider extends ConsumerWidget {
+class _MoodSelector extends ConsumerWidget {
   final EditControllerProvider provider;
-  final ValueChanged<double> onChanged;
+  final ValueChanged<DiaryMood> onChanged;
 
-  const _MoodSlider({required this.provider, required this.onChanged});
+  const _MoodSelector({required this.provider, required this.onChanged});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mood = ref.watch(
-      provider.select((value) => value.value?.mood ?? 0.5),
+      provider.select((value) => value.value?.mood ?? DiaryMood.neutral),
     );
-    return Row(
-      children: [
-        MoodIconComponent(value: mood),
-        Expanded(
-          child: Slider(
-            value: mood,
-            divisions: 10,
-            label: '${(mood * 100).toStringAsFixed(0)}%',
-            activeColor: .lerp(
-              AppColor.emoColorList.first,
-              AppColor.emoColorList.last,
-              mood,
+    final scheme = context.theme.colors;
+    return Padding(
+      padding: const .only(top: 8),
+      child: Row(
+        spacing: 12,
+        children: [
+          for (final option in DiaryMood.values)
+            Expanded(
+              child: MInkWell(
+                onTap: () => onChanged(option),
+                borderRadius: .circular(16),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  padding: const .symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: option == mood
+                        ? option.color.withValues(alpha: 0.12)
+                        : scheme.surfaceContainerHighest,
+                    borderRadius: .circular(16),
+                    border: .all(
+                      color: option == mood ? option.color : Colors.transparent,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Column(
+                    spacing: 6,
+                    children: [
+                      Icon(
+                        option.icon,
+                        size: 32,
+                        color: option == mood
+                            ? option.color
+                            : scheme.onSurfaceVariant,
+                      ),
+                      Text(
+                        option.label(context),
+                        style: option == mood
+                            ? context.theme.typography.labelSmall.emphasized
+                                  .onSurface
+                                  .copyWith(color: option.color)
+                            : context
+                                  .theme
+                                  .typography
+                                  .labelSmall
+                                  .onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
-            onChanged: onChanged,
+        ],
+      ),
+    );
+  }
+}
+
+/// 「已按正文建议」提示：本地情感模型按正文自动选中，用户点选即接管。
+class _MoodSuggestedBadge extends StatelessWidget {
+  const _MoodSuggestedBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.theme.colors;
+    return Container(
+      padding: const .symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: scheme.secondaryContainer,
+        borderRadius: .circular(999),
+      ),
+      child: Row(
+        mainAxisSize: .min,
+        spacing: 4,
+        children: [
+          Icon(
+            LucideIcons.sparkles,
+            size: 13,
+            color: scheme.onSecondaryContainer,
           ),
-        ),
-      ],
+          Text(
+            context.l10n.diary.moodSuggested,
+            style: context.theme.typography.labelSmall.onSecondaryContainer,
+          ),
+        ],
+      ),
     );
   }
 }

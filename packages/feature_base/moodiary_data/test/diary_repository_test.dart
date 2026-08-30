@@ -69,7 +69,7 @@ Diary makeDiary(
     time: time ?? DateTime.utc(2026, 1, 1),
     lastModified: time ?? DateTime.utc(2026, 1, 1),
     show: show,
-    mood: 0.5,
+    mood: .neutral,
     imageName: images,
     audioName: audios,
     videoName: videos,

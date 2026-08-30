@@ -171,7 +171,7 @@ class _StressTestTileState extends State<StressTestTile> {
       time: time,
       lastModified: time,
       show: true,
-      mood: rng.nextDouble(),
+      mood: DiaryMood.values[rng.nextInt(3)],
       imageName: const [],
       audioName: const [],
       videoName: const [],
