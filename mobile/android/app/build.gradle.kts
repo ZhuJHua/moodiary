@@ -22,8 +22,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_21
     }
 
-    // AGP 9 起 buildFeatures 默认全关；debug buildType 与 beta flavor 用 resValue 注入
-    // app_name，必须显式打开。
+    // AGP 9 起 buildFeatures 默认全关；debug buildType 用 resValue 注入 app_name，必须显式打开。
     buildFeatures {
         resValues = true
     }
@@ -78,23 +77,6 @@ android {
         }
         maybeCreate("profile").apply {
             signingConfig = signingConfigs.getByName("config")
-        }
-    }
-
-    flavorDimensions += "env"
-
-    productFlavors {
-        // 正式包：cn.yooss.moodiary / Moodiary。
-        create("prod") {
-            dimension = "env"
-            isDefault = true
-        }
-        // 测试包：cn.yooss.moodiary.beta / Moodiary Beta —— 与正式包不同包名，可并存安装。
-        create("beta") {
-            dimension = "env"
-            applicationIdSuffix = ".beta"
-            versionNameSuffix = "-beta"
-            resValue("string", "app_name", "Moodiary Beta")
         }
     }
 }

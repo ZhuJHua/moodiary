@@ -1,5 +1,5 @@
 import 'package:injectable/injectable.dart';
-import 'package:moodiary/app/di/di.config.dart';
+import 'package:moodiary_mobile/app/di/di.config.dart';
 import 'package:moodiary_assistant/injectable.module.dart';
 import 'package:moodiary_assistant/moodiary_assistant.dart'
     show AssistantService;

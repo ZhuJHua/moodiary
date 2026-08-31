@@ -1,5 +1,5 @@
 import 'package:flutter/services.dart';
-import 'package:moodiary/app/di/bootstrap.dart';
+import 'package:moodiary_mobile/app/di/bootstrap.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:mui/mui.dart';
 

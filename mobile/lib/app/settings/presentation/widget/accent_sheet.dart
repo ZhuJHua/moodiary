@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:moodiary/app/settings/setting_routes.dart';
+import 'package:moodiary_mobile/app/settings/setting_routes.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';

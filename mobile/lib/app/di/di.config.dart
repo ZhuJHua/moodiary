@@ -12,14 +12,14 @@
 
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
-import 'package:moodiary/app/di/app_module.dart' as _i980;
-import 'package:moodiary/app/media/mobile_heif_decoder.dart' as _i879;
-import 'package:moodiary/app/picker/mobile_file_picker.dart' as _i231;
 import 'package:moodiary_assistant/injectable.module.dart' as _i578;
 import 'package:moodiary_files/moodiary_files.dart' as _i800;
 import 'package:moodiary_http/injectable.module.dart' as _i545;
 import 'package:moodiary_http/moodiary_http.dart' as _i765;
 import 'package:moodiary_ml/injectable.module.dart' as _i591;
+import 'package:moodiary_mobile/app/di/app_module.dart' as _i461;
+import 'package:moodiary_mobile/app/media/mobile_heif_decoder.dart' as _i845;
+import 'package:moodiary_mobile/app/picker/mobile_file_picker.dart' as _i964;
 import 'package:moodiary_storage/injectable.module.dart' as _i295;
 import 'package:moodiary_sync/injectable.module.dart' as _i412;
 
@@ -37,10 +37,10 @@ extension GetItInjectableX on _i174.GetIt {
     await _i412.MoodiarySyncPackageModule().init(gh);
     final appModule = _$AppModule();
     gh.lazySingleton<_i765.IHttpClient>(() => appModule.httpClient());
-    gh.lazySingleton<_i800.IHeifDecoder>(() => _i879.MobileHeifDecoder());
-    gh.lazySingleton<_i800.IFilePicker>(() => _i231.MobileFilePicker());
+    gh.lazySingleton<_i800.IHeifDecoder>(() => _i845.MobileHeifDecoder());
+    gh.lazySingleton<_i800.IFilePicker>(() => _i964.MobileFilePicker());
     return this;
   }
 }
 
-class _$AppModule extends _i980.AppModule {}
+class _$AppModule extends _i461.AppModule {}

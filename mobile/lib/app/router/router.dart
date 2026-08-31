@@ -1,6 +1,6 @@
-import 'package:moodiary/app/router/route_error_page.dart';
-import 'package:moodiary/app/settings/setting_routes.dart';
-import 'package:moodiary/app/shell/root_shell.dart' show MobileRootShell;
+import 'package:moodiary_mobile/app/router/route_error_page.dart';
+import 'package:moodiary_mobile/app/settings/setting_routes.dart';
+import 'package:moodiary_mobile/app/shell/root_shell.dart' show MobileRootShell;
 import 'package:moodiary_assistant/moodiary_assistant.dart';
 import 'package:moodiary_diary/moodiary_diary.dart';
 import 'package:moodiary_editor/moodiary_editor.dart'

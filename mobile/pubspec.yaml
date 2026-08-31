@@ -1,4 +1,4 @@
-name: moodiary
+name: moodiary_mobile
 description: "A fully open source cross-platform diary app written by flutter and rust."
 publish_to: "none"
 version: 2.8.0+94
@@ -42,7 +42,6 @@ dependencies:
   moodiary_picker: 0.0.1
 
   flutter_riverpod: 3.4.2
-  # 生成的 *.config.dart 直接 import get_it，得在这里显式钉住，不能只靠 moodiary_di 带进来。
   get_it: 9.2.1
   injectable: 3.0.0
 
@@ -54,7 +53,6 @@ dependencies:
   flutter_markdown_plus: 1.0.12
 
   flutter_displaymode: 0.7.0
-  # assets.gen.dart 的 SvgGenImage 直接 import flutter_svg，须显式钉住
   flutter_svg: 2.3.0
   url_launcher: 6.3.2
 

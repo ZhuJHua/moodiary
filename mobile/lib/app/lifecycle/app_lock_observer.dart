@@ -1,4 +1,4 @@
-import 'package:moodiary/app/router/router.dart';
+import 'package:moodiary_mobile/app/router/router.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
 
