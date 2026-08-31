@@ -75,7 +75,7 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
   }
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 1;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -86,15 +86,6 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
       await customStatement(
         "INSERT INTO diary_fts(diary_fts, rank) VALUES('rank', 'bm25(1.5, 1.0)')",
       );
-    },
-    onUpgrade: (m, from, to) async {
-      // v2：语义检索（rag_tables.drift）。vec0 虚表不在这——它随激活模型的
-      // 维度动态建删（EmbedIndexService）。
-      if (from < 2) {
-        await m.createTable(diaryChunks);
-        await m.createIndex(idxDiaryChunksDiary);
-        await m.createTable(embedQueue);
-      }
     },
   );
 
