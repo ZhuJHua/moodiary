@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Diary {
 
- String get id; String? get categoryId; String get title; String get content; String get contentText;@UtcDateTimeConverter() DateTime get time;@UtcDateTimeConverter() DateTime get lastModified; bool get show; DiaryMood get mood; DiaryWeather? get weather; List<String> get imageName; List<String> get audioName; List<String> get videoName; List<String> get tags; DiaryPosition? get position; String get type; double? get aspect;
+ String get id; String? get categoryId; String get title; String get content; String get contentText;@UtcDateTimeConverter() DateTime get time;@UtcDateTimeConverter() DateTime get lastModified; bool get show;@JsonKey(unknownEnumValue: DiaryMood.neutral) DiaryMood get mood; DiaryWeather? get weather; List<String> get imageName; List<String> get audioName; List<String> get videoName; List<String> get tags; DiaryPosition? get position; String get type; double? get aspect;
 /// Create a copy of Diary
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -49,7 +49,7 @@ abstract mixin class $DiaryCopyWith<$Res>  {
   factory $DiaryCopyWith(Diary value, $Res Function(Diary) _then) = _$DiaryCopyWithImpl;
 @useResult
 $Res call({
- String id, String? categoryId, String title, String content, String contentText,@UtcDateTimeConverter() DateTime time,@UtcDateTimeConverter() DateTime lastModified, bool show, DiaryMood mood, DiaryWeather? weather, List<String> imageName, List<String> audioName, List<String> videoName, List<String> tags, DiaryPosition? position, String type, double? aspect
+ String id, String? categoryId, String title, String content, String contentText,@UtcDateTimeConverter() DateTime time,@UtcDateTimeConverter() DateTime lastModified, bool show,@JsonKey(unknownEnumValue: DiaryMood.neutral) DiaryMood mood, DiaryWeather? weather, List<String> imageName, List<String> audioName, List<String> videoName, List<String> tags, DiaryPosition? position, String type, double? aspect
 });
 
 
@@ -194,7 +194,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String? categoryId,  String title,  String content,  String contentText, @UtcDateTimeConverter()  DateTime time, @UtcDateTimeConverter()  DateTime lastModified,  bool show,  DiaryMood mood,  DiaryWeather? weather,  List<String> imageName,  List<String> audioName,  List<String> videoName,  List<String> tags,  DiaryPosition? position,  String type,  double? aspect)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String? categoryId,  String title,  String content,  String contentText, @UtcDateTimeConverter()  DateTime time, @UtcDateTimeConverter()  DateTime lastModified,  bool show, @JsonKey(unknownEnumValue: DiaryMood.neutral)  DiaryMood mood,  DiaryWeather? weather,  List<String> imageName,  List<String> audioName,  List<String> videoName,  List<String> tags,  DiaryPosition? position,  String type,  double? aspect)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Diary() when $default != null:
 return $default(_that.id,_that.categoryId,_that.title,_that.content,_that.contentText,_that.time,_that.lastModified,_that.show,_that.mood,_that.weather,_that.imageName,_that.audioName,_that.videoName,_that.tags,_that.position,_that.type,_that.aspect);case _:
@@ -215,7 +215,7 @@ return $default(_that.id,_that.categoryId,_that.title,_that.content,_that.conten
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String? categoryId,  String title,  String content,  String contentText, @UtcDateTimeConverter()  DateTime time, @UtcDateTimeConverter()  DateTime lastModified,  bool show,  DiaryMood mood,  DiaryWeather? weather,  List<String> imageName,  List<String> audioName,  List<String> videoName,  List<String> tags,  DiaryPosition? position,  String type,  double? aspect)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String? categoryId,  String title,  String content,  String contentText, @UtcDateTimeConverter()  DateTime time, @UtcDateTimeConverter()  DateTime lastModified,  bool show, @JsonKey(unknownEnumValue: DiaryMood.neutral)  DiaryMood mood,  DiaryWeather? weather,  List<String> imageName,  List<String> audioName,  List<String> videoName,  List<String> tags,  DiaryPosition? position,  String type,  double? aspect)  $default,) {final _that = this;
 switch (_that) {
 case _Diary():
 return $default(_that.id,_that.categoryId,_that.title,_that.content,_that.contentText,_that.time,_that.lastModified,_that.show,_that.mood,_that.weather,_that.imageName,_that.audioName,_that.videoName,_that.tags,_that.position,_that.type,_that.aspect);case _:
@@ -235,7 +235,7 @@ return $default(_that.id,_that.categoryId,_that.title,_that.content,_that.conten
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String? categoryId,  String title,  String content,  String contentText, @UtcDateTimeConverter()  DateTime time, @UtcDateTimeConverter()  DateTime lastModified,  bool show,  DiaryMood mood,  DiaryWeather? weather,  List<String> imageName,  List<String> audioName,  List<String> videoName,  List<String> tags,  DiaryPosition? position,  String type,  double? aspect)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String? categoryId,  String title,  String content,  String contentText, @UtcDateTimeConverter()  DateTime time, @UtcDateTimeConverter()  DateTime lastModified,  bool show, @JsonKey(unknownEnumValue: DiaryMood.neutral)  DiaryMood mood,  DiaryWeather? weather,  List<String> imageName,  List<String> audioName,  List<String> videoName,  List<String> tags,  DiaryPosition? position,  String type,  double? aspect)?  $default,) {final _that = this;
 switch (_that) {
 case _Diary() when $default != null:
 return $default(_that.id,_that.categoryId,_that.title,_that.content,_that.contentText,_that.time,_that.lastModified,_that.show,_that.mood,_that.weather,_that.imageName,_that.audioName,_that.videoName,_that.tags,_that.position,_that.type,_that.aspect);case _:
@@ -250,7 +250,7 @@ return $default(_that.id,_that.categoryId,_that.title,_that.content,_that.conten
 @JsonSerializable()
 
 class _Diary extends Diary {
-  const _Diary({required this.id, this.categoryId, required this.title, required this.content, required this.contentText, @UtcDateTimeConverter() required this.time, @UtcDateTimeConverter() required this.lastModified, required this.show, required this.mood, this.weather, required  List<String> imageName, required  List<String> audioName, required  List<String> videoName, required  List<String> tags, this.position, required this.type, this.aspect}): _imageName = imageName,_audioName = audioName,_videoName = videoName,_tags = tags,super._();
+  const _Diary({required this.id, this.categoryId, required this.title, required this.content, required this.contentText, @UtcDateTimeConverter() required this.time, @UtcDateTimeConverter() required this.lastModified, required this.show, @JsonKey(unknownEnumValue: DiaryMood.neutral) required this.mood, this.weather, required  List<String> imageName, required  List<String> audioName, required  List<String> videoName, required  List<String> tags, this.position, required this.type, this.aspect}): _imageName = imageName,_audioName = audioName,_videoName = videoName,_tags = tags,super._();
   factory _Diary.fromJson(Map<String, dynamic> json) => _$DiaryFromJson(json);
 
 @override final  String id;
@@ -261,7 +261,7 @@ class _Diary extends Diary {
 @override@UtcDateTimeConverter() final  DateTime time;
 @override@UtcDateTimeConverter() final  DateTime lastModified;
 @override final  bool show;
-@override final  DiaryMood mood;
+@override@JsonKey(unknownEnumValue: DiaryMood.neutral) final  DiaryMood mood;
 @override final  DiaryWeather? weather;
  final  List<String> _imageName;
 @override List<String> get imageName {
@@ -328,7 +328,7 @@ abstract mixin class _$DiaryCopyWith<$Res> implements $DiaryCopyWith<$Res> {
   factory _$DiaryCopyWith(_Diary value, $Res Function(_Diary) _then) = __$DiaryCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String? categoryId, String title, String content, String contentText,@UtcDateTimeConverter() DateTime time,@UtcDateTimeConverter() DateTime lastModified, bool show, DiaryMood mood, DiaryWeather? weather, List<String> imageName, List<String> audioName, List<String> videoName, List<String> tags, DiaryPosition? position, String type, double? aspect
+ String id, String? categoryId, String title, String content, String contentText,@UtcDateTimeConverter() DateTime time,@UtcDateTimeConverter() DateTime lastModified, bool show,@JsonKey(unknownEnumValue: DiaryMood.neutral) DiaryMood mood, DiaryWeather? weather, List<String> imageName, List<String> audioName, List<String> videoName, List<String> tags, DiaryPosition? position, String type, double? aspect
 });
 
 

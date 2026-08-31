@@ -20,7 +20,8 @@ abstract class Diary with _$Diary {
     @UtcDateTimeConverter() required DateTime time,
     @UtcDateTimeConverter() required DateTime lastModified,
     required bool show,
-    required DiaryMood mood,
+    // 未知值兜底中性：将来加状态时旧版本解新 JSON 不炸
+    @JsonKey(unknownEnumValue: DiaryMood.neutral) required DiaryMood mood,
     DiaryWeather? weather,
     required List<String> imageName,
     required List<String> audioName,

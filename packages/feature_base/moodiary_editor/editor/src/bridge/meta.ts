@@ -1,10 +1,16 @@
 import { ref } from 'vue'
 
-/** 心情选项（菜单 + 胶囊共用）：值为 Flutter 侧枚举名，label/color 已由宿主解析。 */
+/**
+ * 心情/状态选项（面板 + 胶囊共用）：值为 Flutter 侧枚举名，label/color/group 已由宿主解析，
+ * icon 是 lucide 图标名（web 侧据此查本地组件表）。
+ */
 export interface EditorMetaMoodOption {
   value: string
   label: string
   color: string
+  icon: string
+  /** 分组标题（情绪/状态），已本地化；面板按它分区，顺序保持下发顺序。 */
+  group: string
 }
 
 /**
@@ -18,12 +24,9 @@ export interface EditorMeta {
   subText: string
   /** 阅读态辅字（含字数，如 `周日 14:32:08 · 286 字`）。 */
   subTextRead: string
-  /** 当前心情（枚举名 negative/neutral/positive）。 */
+  /** 当前心情/状态（枚举名，如 positive/love/slacking）。 */
   mood: string
   moods: EditorMetaMoodOption[]
-  /** 当前心情是否来自模型建议（胶囊带 sparkles 角标）。 */
-  suggested?: boolean
-  suggestedTip?: string
   category?: string | null
   weather?: { icon: string; text: string } | null
   position?: string | null

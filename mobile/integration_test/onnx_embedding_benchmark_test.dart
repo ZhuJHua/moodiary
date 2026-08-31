@@ -3,7 +3,6 @@
 //      llama.cpp 时代 12.4ms/86 chunks/s，ORT+ffi int8 19.0ms/49.2，见记忆与
 //      docs/local-rag.md §6.8）
 //   2) 一致性：int8 对 fp32 的逐条余弦（量化误差水位）
-//   3) 情感模型冒烟：multilingual-sentiment int8 对正/负/中性文本的分数排序
 //
 //   fvm flutter test integration_test/onnx_embedding_benchmark_test.dart \
 //     -d <device> --flavor beta
@@ -20,8 +19,6 @@ import 'package:moodiary_rust/rust.dart';
 // 双主机回退：先 hf-mirror（不经代理也稳），失败换 huggingface.co 直连。
 const _hosts = ['https://hf-mirror.com', 'https://huggingface.co'];
 const _bgeRepo = 'Xenova/bge-small-zh-v1.5/resolve/main';
-const _sentimentRepo =
-    'Xenova/distilbert-base-multilingual-cased-sentiments-student/resolve/main';
 
 const _singleRounds = 10;
 const _batchRounds = 3;
@@ -155,7 +152,7 @@ void main() {
     await RustLib.init();
   });
 
-  testWidgets('ONNX embedding benchmark + sentiment smoke', (tester) async {
+  testWidgets('ONNX embedding benchmark', (tester) async {
     final tokenizerPath = await _ensure(
       '$_bgeRepo/tokenizer.json',
       'bench-bge-small.tokenizer.json',
@@ -198,56 +195,5 @@ void main() {
     // 量化漂移观测线：Xenova int8 对 fp32 实测 0.96~0.97（2026-08-28 PJZ110），
     // 检索是相对排序，这个水位不影响召回；跌破 0.95 才值得追查。
     expect(minCos, greaterThan(0.95));
-
-    // ---- 情感模型冒烟 ----
-    final sentimentTokenizer = await _ensure(
-      '$_sentimentRepo/tokenizer.json',
-      'bench-sentiments-student.tokenizer.json',
-      minBytes: 1024 * 1024,
-    );
-    final sentimentModel = await _ensure(
-      '$_sentimentRepo/onnx/model_int8.onnx',
-      'bench-sentiments-student-int8.onnx',
-      minBytes: 100 * 1024 * 1024,
-    );
-    final classifier = OnnxSentimentClassifier();
-    try {
-      final loadWatch = Stopwatch()..start();
-      await classifier.load(
-        sentimentModel,
-        tokenizerPath: sentimentTokenizer,
-        padToken: '[PAD]',
-        labels: sentimentModelCatalog.single.labels,
-      );
-      debugPrint('BENCH: sentiment load=${loadWatch.elapsedMilliseconds}ms');
-      // 明确的正/负样例断言方向（含 tabularisai 翻车的「养了八年的狗走了」句）；
-      // 中性只打印观测——该模型的 neutral 类偏弱，日常流水账普遍带轻微
-      // positive 倾向（本机 int8 实测 0.49/0.33/0.19 量级），断言它必然抖。
-      final samples = <(String, SentimentLabel?)>[
-        ('今天太开心了，和朋友们去爬山，山顶的风景美极了！', .positive),
-        ('我很难过，太糟糕了。', .negative),
-        ('中午吃了碗面，下午开了两个会。', null),
-        ('What a wonderful day, I got promoted!', .positive),
-        ('难过得不想说话，养了八年的狗今天走了。', .negative),
-      ];
-      final scoreWatch = Stopwatch()..start();
-      final labels = <SentimentLabel>[];
-      for (final (text, _) in samples) {
-        labels.add(await classifier.classify(text));
-      }
-      final avgMs = scoreWatch.elapsedMilliseconds / samples.length;
-      for (var i = 0; i < samples.length; i++) {
-        debugPrint('BENCH: sentiment ${labels[i].name} <- ${samples[i].$1}');
-      }
-      debugPrint('BENCH: sentiment avg=${avgMs.toStringAsFixed(1)}ms/text');
-      for (var i = 0; i < samples.length; i++) {
-        final expected = samples[i].$2;
-        if (expected != null) {
-          expect(labels[i], expected, reason: samples[i].$1);
-        }
-      }
-    } finally {
-      await classifier.unload();
-    }
   }, timeout: const Timeout(Duration(minutes: 45)));
 }

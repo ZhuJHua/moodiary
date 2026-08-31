@@ -125,7 +125,6 @@
   "saveFailed": "保存失败",
   "unknownCategory": "未知分类",
   "loading": "加载中…",
-  "moodSuggested": "已按正文建议",
   "searchReindexHint": "升级后需重建索引，旧日记正文才能被搜索到",
   "searchReindex": "重建",
   "autoSaved": "自动保存",

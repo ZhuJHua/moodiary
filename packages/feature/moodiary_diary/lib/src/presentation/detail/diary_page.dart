@@ -4,11 +4,8 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_editor/moodiary_editor.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_logging/moodiary_logging.dart';
-import 'package:moodiary_ml/moodiary_ml.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -51,15 +48,6 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   _Mode _mode = .read;
 
   bool _dirty = false;
-
-  /// 本次编辑会话内用户是否手动动过心情选择器；动过则自动建议永久让位。
-  bool _moodTouched = false;
-
-  /// 当前心情值是否来自自动建议（详情面板据此显示「已按正文建议」提示）。
-  bool _moodSuggested = false;
-
-  /// 已建议过的正文快照，内容没变不重复打分。
-  String? _suggestedForContent;
 
   Timer? _autoSaveTimer;
 
@@ -313,7 +301,6 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     if (ok) _dirty = false;
     if (!mounted) return;
     setState(() => _saveStatus = ok ? 'saved' : 'failed');
-    if (ok) unawaited(_maybeSuggestMood());
   }
 
   Future<void> _onPickDate(Diary current) async {
@@ -377,38 +364,9 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   }
 
   void _onChangeMood(DiaryMood mood) {
-    _moodTouched = true;
-    _moodSuggested = false;
     ref.read(_provider.notifier).changeMood(mood);
     _dirty = true;
     _scheduleAutoSave();
-  }
-
-  /// 自动保存成功后的心情建议：只对本次会话新建、且用户没动过选择器的日记生效，
-  /// 用户一旦手动点选（[_moodTouched]）即永久让位。正文没变不重复打分；
-  /// 建议值写回 state 后随下一轮自动保存落库。
-  Future<void> _maybeSuggestMood() async {
-    if (_moodTouched || widget.diaryId != null) return;
-    final engine = getIt<SentimentEngine>();
-    if (!engine.ready) return;
-    final text = ref.read(_provider).value?.contentText.trim() ?? '';
-    if (text.isEmpty || text == _suggestedForContent) return;
-    _suggestedForContent = text;
-    try {
-      final label = await engine.suggestMood(text);
-      if (label == null || !mounted || _moodTouched) return;
-      final mood = switch (label) {
-        .negative => DiaryMood.negative,
-        .neutral => DiaryMood.neutral,
-        .positive => DiaryMood.positive,
-      };
-      _moodSuggested = true;
-      ref.read(_provider.notifier).changeMood(mood);
-      _dirty = true;
-      _scheduleAutoSave();
-    } catch (e, s) {
-      logger.e('suggest mood failed', error: e, stackTrace: s);
-    }
   }
 
   Future<void> _onFetchWeather() async {
@@ -743,10 +701,12 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
             'value': mood.name,
             'label': mood.label(context),
             'color': _hexColor(mood.color),
+            'icon': mood.iconName,
+            'group': DiaryMoodGroups.emotions.contains(mood)
+                ? context.l10n.common.moodGroupEmotion
+                : context.l10n.common.moodGroupState,
           },
       ],
-      'suggested': _moodSuggested,
-      'suggestedTip': context.l10n.diary.moodSuggested,
       'category': categoryLabel,
       'weather': weather == null
           ? null

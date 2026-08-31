@@ -379,36 +379,6 @@ class Translations$app$zh {
 	/// zh: '多语言旗舰，长文本'
 	String get semanticDescBgeM3 => '多语言旗舰，长文本';
 
-	/// zh: '心情建议'
-	String get sentimentTitle => '心情建议';
-
-	/// zh: '情感分析模型'
-	String get sentimentModelTitle => '情感分析模型';
-
-	/// zh: '选择情感分析模型'
-	String get sentimentPickTitle => '选择情感分析模型';
-
-	/// zh: '多语言，5 档情感'
-	String get sentimentDescMultilingual => '多语言，5 档情感';
-
-	/// zh: '启用心情建议'
-	String get sentimentEnableTitle => '启用心情建议';
-
-	/// zh: '将下载 {size} 的模型文件，写日记时在本机为你建议心情指数，日记内容不会上传。'
-	String sentimentActivateDownloadMessage({required Object size}) => '将下载 ${size} 的模型文件，写日记时在本机为你建议心情指数，日记内容不会上传。';
-
-	/// zh: '启用后写日记时将在本机为你建议心情指数。'
-	String get sentimentActivateLocalMessage => '启用后写日记时将在本机为你建议心情指数。';
-
-	/// zh: '已启用心情建议'
-	String get sentimentEnabled => '已启用心情建议';
-
-	/// zh: '停用心情建议'
-	String get sentimentDisableTitle => '停用心情建议';
-
-	/// zh: '停用后写日记不再自动建议心情，已下载的模型文件保留。'
-	String get sentimentDisableMessage => '停用后写日记不再自动建议心情，已下载的模型文件保留。';
-
 	/// zh: '使用天数'
 	String get dashUseDays => '使用天数';
 
@@ -1153,6 +1123,51 @@ class Translations$common$zh {
 	/// zh: '愉快'
 	String get moodPositive => '愉快';
 
+	/// zh: '兴奋'
+	String get moodExcited => '兴奋';
+
+	/// zh: '生气'
+	String get moodAngry => '生气';
+
+	/// zh: '焦虑'
+	String get moodAnxious => '焦虑';
+
+	/// zh: '疲惫'
+	String get moodTired => '疲惫';
+
+	/// zh: '无语'
+	String get moodSpeechless => '无语';
+
+	/// zh: '恋爱'
+	String get moodLove => '恋爱';
+
+	/// zh: '学习'
+	String get moodStudy => '学习';
+
+	/// zh: '摸鱼'
+	String get moodSlacking => '摸鱼';
+
+	/// zh: '好吃'
+	String get moodFood => '好吃';
+
+	/// zh: '工作'
+	String get moodWork => '工作';
+
+	/// zh: '旅行'
+	String get moodTravel => '旅行';
+
+	/// zh: '运动'
+	String get moodSports => '运动';
+
+	/// zh: '生病'
+	String get moodSick => '生病';
+
+	/// zh: '情绪'
+	String get moodGroupEmotion => '情绪';
+
+	/// zh: '状态'
+	String get moodGroupState => '状态';
+
 	/// zh: '取消'
 	String get cancel => '取消';
 
@@ -1592,9 +1607,6 @@ class Translations$diary$zh {
 
 	/// zh: '加载中…'
 	String get loading => '加载中…';
-
-	/// zh: '已按正文建议'
-	String get moodSuggested => '已按正文建议';
 
 	/// zh: '升级后需重建索引，旧日记正文才能被搜索到'
 	String get searchReindexHint => '升级后需重建索引，旧日记正文才能被搜索到';

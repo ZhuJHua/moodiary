@@ -86,8 +86,8 @@ abstract final class AssistantToolRegistry {
   ///
   /// 结果字符串同理 —— 但结果里夹带的用户数据（标题、正文、分类名）原样保留。
   /// 给用户看的那一行由 [AssistantToolSpec.summarize] 单独产出，走 i18n。
-  static const List<AssistantToolSpec> specs = [
-    AssistantToolSpec(
+  static final List<AssistantToolSpec> specs = [
+    const AssistantToolSpec(
       tool: .queryDiaries,
       description:
           'Search or browse the diaries stored on this device. Every argument is '
@@ -97,8 +97,9 @@ abstract final class AssistantToolRegistry {
           '(use getDiary for that) — and state the total number of matches, which '
           'may exceed what is returned. Never present the returned rows as the '
           'complete set when the total says otherwise. '
-          'Mood is one of negative / neutral / positive; neutral is also the default '
-          'for entries whose mood was never set, so do not over-read it. '
+          'Mood is one of a fixed set of emotion/state values (see the mood enum '
+          'on createDiary); neutral is also the default for entries whose mood '
+          'was never set, so do not over-read it. '
           'Call this whenever the user asks about what they wrote, or to locate an '
           'entry before editing or deleting it.',
       jsonSchema: {
@@ -138,7 +139,7 @@ abstract final class AssistantToolRegistry {
       run: _queryDiaries,
       summarize: _summarizeQuery,
     ),
-    AssistantToolSpec(
+    const AssistantToolSpec(
       tool: .semanticSearchDiaries,
       description:
           'Find diaries by meaning, not exact words: describe what the entry is '
@@ -186,7 +187,7 @@ abstract final class AssistantToolRegistry {
       run: _semanticSearchDiaries,
       summarize: _summarizeSemantic,
     ),
-    AssistantToolSpec(
+    const AssistantToolSpec(
       tool: .getDiary,
       description:
           'Read the full text of diaries by id (queryDiaries returns excerpts only). '
@@ -206,7 +207,7 @@ abstract final class AssistantToolRegistry {
       run: _getDiary,
       summarize: _summarizeGet,
     ),
-    AssistantToolSpec(
+    const AssistantToolSpec(
       tool: .diaryOverview,
       description:
           'Aggregate stats: total entries, per-category counts, the date span, and '
@@ -236,8 +237,10 @@ abstract final class AssistantToolRegistry {
                 'content': {'type': 'string', 'description': 'Body, Markdown.'},
                 'mood': {
                   'type': 'string',
-                  'enum': ['negative', 'neutral', 'positive'],
-                  'description': 'Omit unless the user conveyed a mood.',
+                  'enum': [for (final m in DiaryMood.values) m.name],
+                  'description':
+                      'Mood or life-state of the entry. Omit unless the user '
+                      'conveyed one.',
                 },
                 'categoryId': {
                   'type': 'string',
@@ -280,7 +283,7 @@ abstract final class AssistantToolRegistry {
                 },
                 'mood': {
                   'type': 'string',
-                  'enum': ['negative', 'neutral', 'positive'],
+                  'enum': [for (final m in DiaryMood.values) m.name],
                   'description': 'New mood.',
                 },
                 'categoryId': {
@@ -297,7 +300,7 @@ abstract final class AssistantToolRegistry {
       run: _updateDiary,
       summarize: _summarizeWrite,
     ),
-    AssistantToolSpec(
+    const AssistantToolSpec(
       tool: .deleteDiary,
       description:
           'Move diaries to the recycle bin by id, where the user can restore '
@@ -317,7 +320,7 @@ abstract final class AssistantToolRegistry {
       run: _deleteDiary,
       summarize: _summarizeDelete,
     ),
-    AssistantToolSpec(
+    const AssistantToolSpec(
       tool: .listCategories,
       description:
           'List every diary category with its id. Call this to get an id before '
@@ -326,7 +329,7 @@ abstract final class AssistantToolRegistry {
       run: _listCategories,
       summarize: _summarizeList,
     ),
-    AssistantToolSpec(
+    const AssistantToolSpec(
       tool: .createCategory,
       description:
           'Add diary categories. Pass every name in one call. '
@@ -351,7 +354,7 @@ abstract final class AssistantToolRegistry {
       run: _createCategory,
       summarize: _summarizeWrite,
     ),
-    AssistantToolSpec(
+    const AssistantToolSpec(
       tool: .updateCategory,
       description:
           'Rename categories by id (from listCategories). Pass every rename in '
@@ -380,7 +383,7 @@ abstract final class AssistantToolRegistry {
       run: _updateCategory,
       summarize: _summarizeWrite,
     ),
-    AssistantToolSpec(
+    const AssistantToolSpec(
       tool: .deleteCategory,
       description:
           'Delete categories by id. A category only goes while it holds no '
@@ -400,7 +403,7 @@ abstract final class AssistantToolRegistry {
       run: _deleteCategory,
       summarize: _summarizeWrite,
     ),
-    AssistantToolSpec(
+    const AssistantToolSpec(
       tool: .listMemories,
       description:
           'List the long-term facts you saved about the user, each with its id. '
@@ -410,7 +413,7 @@ abstract final class AssistantToolRegistry {
       run: _listMemories,
       summarize: _summarizeList,
     ),
-    AssistantToolSpec(
+    const AssistantToolSpec(
       tool: .rememberFact,
       description:
           'Save durable facts about the user — lasting preferences, recurring '
@@ -445,7 +448,7 @@ abstract final class AssistantToolRegistry {
       run: _rememberFact,
       summarize: _summarizeWrite,
     ),
-    AssistantToolSpec(
+    const AssistantToolSpec(
       tool: .updateMemory,
       description:
           'Revise saved facts by id (from listMemories). Pass every revision in '
@@ -479,7 +482,7 @@ abstract final class AssistantToolRegistry {
       run: _updateMemory,
       summarize: _summarizeWrite,
     ),
-    AssistantToolSpec(
+    const AssistantToolSpec(
       tool: .forgetFact,
       description:
           'Delete saved facts by id (from listMemories). This is permanent — '
@@ -499,7 +502,7 @@ abstract final class AssistantToolRegistry {
       run: _forgetFact,
       summarize: _summarizeWrite,
     ),
-    AssistantToolSpec(
+    const AssistantToolSpec(
       // **不收 items**：脚本本来就该把全部逻辑写在一处。拆成多段各自求值反而更糟
       // —— 每段一个独立 runtime，变量互相看不见。
       tool: .runJavascript,
@@ -1055,9 +1058,8 @@ abstract final class AssistantToolRegistry {
           'mood was never set):',
         )
         ..writeln(
-          '- negative=${counts[DiaryMood.negative] ?? 0}, '
-          'neutral=${counts[DiaryMood.neutral] ?? 0}, '
-          'positive=${counts[DiaryMood.positive] ?? 0}',
+          '- ${[for (final m in DiaryMood.values)
+            if ((counts[m] ?? 0) > 0 || m == DiaryMood.neutral) '${m.name}=${counts[m] ?? 0}'].join(', ')}',
         );
     }
     return buffer.toString().trim();
