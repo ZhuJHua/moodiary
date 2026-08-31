@@ -200,8 +200,8 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get stressClearFailed => 'Could not remove them';
 	@override String stressCleared({required Object count}) => 'Removed ${count} stress-test entries';
 	@override String get repairTitle => 'Repair data';
-	@override String get repairSubtitle => 'Check and fix card previews, media references and dangling categories';
-	@override String get repairMessage => 'This scans every entry, regenerates card previews and media references from the body text, clears dangling category references, and rebuilds the search index.\n\nOnly derived data that can be recomputed from the body is touched — your text is never modified.';
+	@override String get repairSubtitle => 'Check and repair derived entry data';
+	@override String get repairMessage => 'Scans every entry to regenerate card previews and media references, clear dangling categories and rebuild the search index. Your text is never modified.';
 	@override String get repairStart => 'Start';
 	@override String get repairRunning => 'Repairing…';
 	@override String get repairFailed => 'The repair failed';
@@ -214,13 +214,6 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String repairReindexed({required Object count}) => 'Search index rebuilt (${count} entries).';
 	@override String get repairDoneTitle => 'Repair finished';
 	@override String get repairOk => 'Got it';
-	@override String get resetTitle => 'Reset all data';
-	@override String get resetSubtitle => 'Erase every entry, setting and media file — cannot be undone';
-	@override String get resetMessage => 'This permanently deletes every entry, category, media file and font, along with all settings — sync configuration, encryption keys, the app lock password and the rest. It cannot be undone.\n\nMake sure you have a backup. The app will close once you confirm; reopen it to finish the reset.';
-	@override String get resetConfirm => 'Reset everything';
-	@override String get resetRunning => 'Resetting…';
-	@override String get resetFailed => 'The reset failed';
-	@override String get resetDone => 'Data cleared\nPlease close and reopen the app';
 	@override String get cacheClear => 'Clear the cache';
 	@override String get cacheCleared => 'Cache cleared';
 	@override String get fontNameFailed => 'Could not read the font name';

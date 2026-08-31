@@ -493,11 +493,11 @@ class Translations$app$zh {
 	/// zh: '数据修复'
 	String get repairTitle => '数据修复';
 
-	/// zh: '检查并修正卡片预览、媒体引用与失效分类'
-	String get repairSubtitle => '检查并修正卡片预览、媒体引用与失效分类';
+	/// zh: '检查并修复日记的衍生数据'
+	String get repairSubtitle => '检查并修复日记的衍生数据';
 
-	/// zh: '将扫描全部日记，按正文重新生成卡片预览、媒体引用，并清理失效的分类引用，最后重建搜索索引。 该操作只修正可从正文重算的衍生数据，不会改动你的正文内容。'
-	String get repairMessage => '将扫描全部日记，按正文重新生成卡片预览、媒体引用，并清理失效的分类引用，最后重建搜索索引。\n\n该操作只修正可从正文重算的衍生数据，不会改动你的正文内容。';
+	/// zh: '将扫描全部日记，重新生成卡片预览与媒体引用、清理失效分类并重建搜索索引，不会改动日记正文。'
+	String get repairMessage => '将扫描全部日记，重新生成卡片预览与媒体引用、清理失效分类并重建搜索索引，不会改动日记正文。';
 
 	/// zh: '开始修复'
 	String get repairStart => '开始修复';
@@ -534,27 +534,6 @@ class Translations$app$zh {
 
 	/// zh: '好'
 	String get repairOk => '好';
-
-	/// zh: '重置所有数据'
-	String get resetTitle => '重置所有数据';
-
-	/// zh: '清空全部日记、设置与媒体，不可恢复'
-	String get resetSubtitle => '清空全部日记、设置与媒体，不可恢复';
-
-	/// zh: '此操作将永久删除全部日记、分类、媒体文件、字体，以及所有设置（包括同步配置、加密密钥、应用锁密码等），且无法恢复。 请确保已做好备份。确认后应用将自动关闭，请重新打开以完成重置。'
-	String get resetMessage => '此操作将永久删除全部日记、分类、媒体文件、字体，以及所有设置（包括同步配置、加密密钥、应用锁密码等），且无法恢复。\n\n请确保已做好备份。确认后应用将自动关闭，请重新打开以完成重置。';
-
-	/// zh: '确认重置'
-	String get resetConfirm => '确认重置';
-
-	/// zh: '正在重置...'
-	String get resetRunning => '正在重置...';
-
-	/// zh: '重置失败'
-	String get resetFailed => '重置失败';
-
-	/// zh: '数据已清空 请关闭并重新打开应用'
-	String get resetDone => '数据已清空\n请关闭并重新打开应用';
 
 	/// zh: '清理缓存'
 	String get cacheClear => '清理缓存';
