@@ -247,26 +247,11 @@ class Translations$app$zh {
 	/// zh: '首行缩进'
 	String get firstLineIndent => '首行缩进';
 
-	/// zh: '保存时自动归类'
-	String get autoCategory => '保存时自动归类';
-
-	/// zh: '根据上次写作位置 / 标签推测分类'
-	String get autoCategorySubtitle => '根据上次写作位置 / 标签推测分类';
-
 	/// zh: '展示写作时长'
 	String get showWritingTime => '展示写作时长';
 
 	/// zh: '展示字数统计'
 	String get showWordCount => '展示字数统计';
-
-	/// zh: '日记展示'
-	String get diaryPrefsDisplay => '日记展示';
-
-	/// zh: '列表卡片显示头图'
-	String get cardHeaderImage => '列表卡片显示头图';
-
-	/// zh: '基于封面动态配色'
-	String get dynamicColor => '基于封面动态配色';
 
 	/// zh: '媒体'
 	String get diaryPrefsMedia => '媒体';

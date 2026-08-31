@@ -22,30 +22,12 @@ class DiarySettingPage extends StatelessWidget {
                   title: context.l10n.app.firstLineIndent,
                 ),
                 _KvSwitchTile(
-                  kv: .autoCategory,
-                  title: context.l10n.app.autoCategory,
-                  subtitle: context.l10n.app.autoCategorySubtitle,
-                ),
-                _KvSwitchTile(
                   kv: .showWritingTime,
                   title: context.l10n.app.showWritingTime,
                 ),
                 _KvSwitchTile(
                   kv: .showWordCount,
                   title: context.l10n.app.showWordCount,
-                ),
-              ],
-            ),
-            MSliverSettingGroup(
-              title: context.l10n.app.diaryPrefsDisplay,
-              children: [
-                _KvSwitchTile(
-                  kv: .diaryHeader,
-                  title: context.l10n.app.cardHeaderImage,
-                ),
-                _KvSwitchTile(
-                  kv: .dynamicColor,
-                  title: context.l10n.app.dynamicColor,
                 ),
               ],
             ),

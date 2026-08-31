@@ -118,13 +118,8 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get diaryPrefsTitle => 'Entry preferences';
 	@override String get diaryPrefsEditor => 'Editor';
 	@override String get firstLineIndent => 'Indent the first line';
-	@override String get autoCategory => 'File automatically on save';
-	@override String get autoCategorySubtitle => 'Guess the category from where you last wrote and from tags';
 	@override String get showWritingTime => 'Show writing time';
 	@override String get showWordCount => 'Show word count';
-	@override String get diaryPrefsDisplay => 'Entry display';
-	@override String get cardHeaderImage => 'Show a header image on list cards';
-	@override String get dynamicColor => 'Take colours from the cover image';
 	@override String get diaryPrefsMedia => 'Media';
 	@override String get imageOptimize => 'Optimise images';
 	@override String get imageOptimizeSubtitle => 'Shrink and convert to WebP; off keeps the original';

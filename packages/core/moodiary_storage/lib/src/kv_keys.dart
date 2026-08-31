@@ -63,9 +63,6 @@ enum MoodiaryKVs<T extends Object> {
 
   themeMode<int>(defaultValue: 0),
 
-  /// 日记卡片是否按封面图取色。与 [themeAccentMode] 无关 —— 那个管全局强调色，
-  /// 这个只管单张卡片的配色。
-  dynamicColor<bool>(defaultValue: true),
   fontTheme<int>(defaultValue: 0),
 
   customFont<String>(defaultValue: ''),
@@ -83,9 +80,7 @@ enum MoodiaryKVs<T extends Object> {
 
   /// 日记搜索历史（最近在前、去重、截断到上限）。
   searchHistory<List<String>>(),
-  diaryHeader<bool>(defaultValue: true),
   firstLineIndent<bool>(defaultValue: false),
-  autoCategory<bool>(defaultValue: false),
   showWritingTime<bool>(defaultValue: true),
   showWordCount<bool>(defaultValue: true),
 
