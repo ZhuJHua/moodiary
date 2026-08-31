@@ -141,23 +141,43 @@ class EditorMigrationService {
     void Function(int done, int total)? onProgress,
   }) async {
     var migrated = 0;
-    var failed = 0;
+    final failures = <MigrationFailure>[];
     for (var i = 0; i < diaries.length; i++) {
       try {
         if (await migrate(diaries[i])) migrated++;
       } catch (e, s) {
         logger.e('migrate diary failed', error: e, stackTrace: s);
-        failed++;
+        failures.add(
+          MigrationFailure(
+            diaryId: diaries[i].id,
+            error: e.toString(),
+            stackTrace: s.toString(),
+          ),
+        );
       }
       onProgress?.call(i + 1, diaries.length);
     }
-    return MigrationReport(migrated: migrated, failed: failed);
+    return MigrationReport(migrated: migrated, failures: failures);
   }
 }
 
-/// 批量迁移结果。[failed] 只计 I/O / 落库异常——格式转换本身必成（逐级兜底）。
+/// 批量迁移结果。[failures] 只计 I/O / 落库异常——格式转换本身必成（逐级兜底）。
 class MigrationReport {
   final int migrated;
-  final int failed;
-  const MigrationReport({required this.migrated, required this.failed});
+  final List<MigrationFailure> failures;
+  const MigrationReport({required this.migrated, required this.failures});
+
+  int get failed => failures.length;
+}
+
+/// 单篇失败明细。只携带 id 与异常文本，供失败日志落盘——不含正文等隐私内容。
+class MigrationFailure {
+  final String diaryId;
+  final String error;
+  final String stackTrace;
+  const MigrationFailure({
+    required this.diaryId,
+    required this.error,
+    required this.stackTrace,
+  });
 }

@@ -589,6 +589,14 @@ class DiaryRepository {
     return (byCategory: byCategory, total: total);
   }
 
+  /// 全部日记行数（含回收站）。迁移完成页的摘要用。
+  Future<int> countAllDiaries() async {
+    final count = countAll();
+    final q = _db.selectOnly(_db.diaries)..addColumns([count]);
+    final row = await q.getSingle();
+    return row.read(count)!;
+  }
+
   Future<Diary?> getDiaryByBusinessId(String id) async {
     final row = await (_db.select(
       _db.diaries,

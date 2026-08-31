@@ -623,13 +623,38 @@ class _Translations$editor$en extends Translations$editor$zh {
 	@override String loadFailed({required Object error}) => 'Failed to load the editor\n${error}';
 	@override String get pickCategory => 'Pick a category';
 	@override String get noCategory => 'No category';
-	@override String get migrationTitle => 'Migrate to the new editor';
-	@override String get migrationNote => 'Originals are backed up before conversion. Quitting is safe — migration resumes on next launch.';
-	@override String migrationFailedCount({required Object count}) => '${count} entries failed to migrate. Please retry.';
-	@override String get migrationError => 'Migration hit an error. Please retry.';
+	@override String get migrationTitle => 'Upgrade data migration';
+	@override String get migrationIntro => 'Version 2.8.0 uses a new data engine and editor. A one-time migration is required before you can continue.';
+	@override String get migrationStepEngine => 'Database engine upgrade';
+	@override String get migrationStepEngineDesc => 'Moves diaries, categories, fonts and all other data into the new database';
+	@override String get migrationStepEditor => 'Diary format conversion';
+	@override String get migrationStepEditorDesc => 'Converts old-format content to the new editor format; originals are backed up first';
+	@override String get migrationStart => 'Start migration';
+	@override String get migrationExit => 'Exit app';
+	@override String get migrationLandingNote => 'Do not exit the app during migration. No old data is deleted until migration succeeds.';
+	@override String get migrationRunningTitle => 'Migrating data';
+	@override String get migrationRunningSubtitle => 'Keep the app in the foreground and do not close it';
+	@override String get migrationStageDone => 'Done';
+	@override String get migrationStagePending => 'Not started';
+	@override String get migrationStageFailed => 'Failed';
+	@override String migrationStageFailedCount({required Object count}) => '${count} failed';
+	@override String get migrationDataSafeNote => 'No old data is deleted until migration succeeds';
+	@override String get migrationFailedTitle => 'Some entries failed to migrate';
+	@override String migrationFailedSubtitle({required Object count}) => '${count} entries failed to migrate; the rest are done. Originals are backed up — retrying loses nothing.';
+	@override String get migrationErrorTitle => 'Migration hit an error';
+	@override String get migrationErrorSubtitle => 'An error occurred during migration. Originals are backed up — retrying loses nothing.';
 	@override String get migrationRetry => 'Retry';
-	@override String migrationProgress({required Object done, required Object total}) => 'Migrating ${done} / ${total}';
-	@override String get migrationEngineStage => 'Upgrading database (no data will be lost)';
+	@override String get migrationShareLog => 'Share failure log';
+	@override String get migrationFailedNote => 'The log contains only error details, never diary content. No old data is deleted until migration succeeds.';
+	@override String get migrationDoneTitle => 'Migration complete';
+	@override String get migrationDoneSubtitle => 'All data has been moved to the new engine; old data is kept as a backup';
+	@override String get migrationSummaryDiaries => 'Diaries';
+	@override String migrationSummaryDiariesCount({required Object count}) => '${count}';
+	@override String get migrationSummaryCategories => 'Categories';
+	@override String migrationSummaryCategoriesCount({required Object count}) => '${count}';
+	@override String get migrationSummaryMedia => 'Media & fonts';
+	@override String get migrationSummaryMigrated => 'Migrated';
+	@override String get migrationEnter => 'Get started';
 }
 
 // Path: export

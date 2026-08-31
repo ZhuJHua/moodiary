@@ -1683,26 +1683,101 @@ class Translations$editor$zh {
 	/// zh: '不分类'
 	String get noCategory => '不分类';
 
-	/// zh: '迁移到新编辑器'
-	String get migrationTitle => '迁移到新编辑器';
+	/// zh: '升级数据迁移'
+	String get migrationTitle => '升级数据迁移';
 
-	/// zh: '转换前会自动备份原文；中途退出不丢数据，下次启动会继续。'
-	String get migrationNote => '转换前会自动备份原文；中途退出不丢数据，下次启动会继续。';
+	/// zh: '2.8.0 更换了数据引擎与编辑器，需要完成一次数据迁移才能继续使用。'
+	String get migrationIntro => '2.8.0 更换了数据引擎与编辑器，需要完成一次数据迁移才能继续使用。';
 
-	/// zh: '{count} 篇迁移失败，请重试'
-	String migrationFailedCount({required Object count}) => '${count} 篇迁移失败，请重试';
+	/// zh: '数据库引擎升级'
+	String get migrationStepEngine => '数据库引擎升级';
 
-	/// zh: '迁移出错，请重试'
-	String get migrationError => '迁移出错，请重试';
+	/// zh: '日记、分类、字体等全部数据搬入新数据库'
+	String get migrationStepEngineDesc => '日记、分类、字体等全部数据搬入新数据库';
+
+	/// zh: '日记格式转换'
+	String get migrationStepEditor => '日记格式转换';
+
+	/// zh: '旧格式正文转换为新编辑器格式，转换前自动备份原文'
+	String get migrationStepEditorDesc => '旧格式正文转换为新编辑器格式，转换前自动备份原文';
+
+	/// zh: '开始迁移'
+	String get migrationStart => '开始迁移';
+
+	/// zh: '退出应用'
+	String get migrationExit => '退出应用';
+
+	/// zh: '迁移过程中请勿退出应用；迁移成功前不会删除任何旧数据'
+	String get migrationLandingNote => '迁移过程中请勿退出应用；迁移成功前不会删除任何旧数据';
+
+	/// zh: '正在迁移数据'
+	String get migrationRunningTitle => '正在迁移数据';
+
+	/// zh: '请保持应用在前台，不要关闭应用'
+	String get migrationRunningSubtitle => '请保持应用在前台，不要关闭应用';
+
+	/// zh: '完成'
+	String get migrationStageDone => '完成';
+
+	/// zh: '未开始'
+	String get migrationStagePending => '未开始';
+
+	/// zh: '失败'
+	String get migrationStageFailed => '失败';
+
+	/// zh: '{count} 篇失败'
+	String migrationStageFailedCount({required Object count}) => '${count} 篇失败';
+
+	/// zh: '迁移成功前不会删除任何旧数据'
+	String get migrationDataSafeNote => '迁移成功前不会删除任何旧数据';
+
+	/// zh: '部分数据迁移失败'
+	String get migrationFailedTitle => '部分数据迁移失败';
+
+	/// zh: '{count} 篇日记迁移失败，其余已完成。原文已自动备份，重试不会丢失数据。'
+	String migrationFailedSubtitle({required Object count}) => '${count} 篇日记迁移失败，其余已完成。原文已自动备份，重试不会丢失数据。';
+
+	/// zh: '迁移出错'
+	String get migrationErrorTitle => '迁移出错';
+
+	/// zh: '迁移过程中出现错误。原文已自动备份，重试不会丢失数据。'
+	String get migrationErrorSubtitle => '迁移过程中出现错误。原文已自动备份，重试不会丢失数据。';
 
 	/// zh: '重试'
 	String get migrationRetry => '重试';
 
-	/// zh: '正在迁移 {done} / {total}'
-	String migrationProgress({required Object done, required Object total}) => '正在迁移 ${done} / ${total}';
+	/// zh: '分享失败日志'
+	String get migrationShareLog => '分享失败日志';
 
-	/// zh: '正在升级数据库（不会丢失任何数据）'
-	String get migrationEngineStage => '正在升级数据库（不会丢失任何数据）';
+	/// zh: '日志仅包含错误信息，不含日记内容；迁移成功前不会删除任何旧数据'
+	String get migrationFailedNote => '日志仅包含错误信息，不含日记内容；迁移成功前不会删除任何旧数据';
+
+	/// zh: '迁移完成'
+	String get migrationDoneTitle => '迁移完成';
+
+	/// zh: '全部数据已迁入新引擎，旧数据已自动备份保留'
+	String get migrationDoneSubtitle => '全部数据已迁入新引擎，旧数据已自动备份保留';
+
+	/// zh: '日记'
+	String get migrationSummaryDiaries => '日记';
+
+	/// zh: '{count} 篇'
+	String migrationSummaryDiariesCount({required Object count}) => '${count} 篇';
+
+	/// zh: '分类'
+	String get migrationSummaryCategories => '分类';
+
+	/// zh: '{count} 个'
+	String migrationSummaryCategoriesCount({required Object count}) => '${count} 个';
+
+	/// zh: '媒体与字体'
+	String get migrationSummaryMedia => '媒体与字体';
+
+	/// zh: '已迁移'
+	String get migrationSummaryMigrated => '已迁移';
+
+	/// zh: '开始使用'
+	String get migrationEnter => '开始使用';
 }
 
 // Path: export
