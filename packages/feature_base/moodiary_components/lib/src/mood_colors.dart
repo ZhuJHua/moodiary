@@ -8,7 +8,7 @@ abstract class AppColor {
   static const Color moodPositive = Color(0xFF2EB872);
   static const Color moodNeutral = Color(0xFF8A9099);
   static const Color moodNegative = Color(0xFFFA4659);
-  static const Color moodExcited = Color(0xFFF97316);
+  static const Color moodFulfilled = Color(0xFFF97316);
   static const Color moodAngry = Color(0xFFDC2626);
   static const Color moodAnxious = Color(0xFF7C3AED);
   static const Color moodTired = Color(0xFF64748B);
@@ -23,37 +23,12 @@ abstract class AppColor {
   static const Color moodSick = Color(0xFFBA68C8);
 }
 
-/// 选择器面板的分组（仅 UI 分区，不进数据模型）。
-abstract class DiaryMoodGroups {
-  static const List<DiaryMood> emotions = [
-    .positive,
-    .neutral,
-    .negative,
-    .excited,
-    .angry,
-    .anxious,
-    .tired,
-    .speechless,
-  ];
-
-  static const List<DiaryMood> states = [
-    .love,
-    .study,
-    .slacking,
-    .food,
-    .work,
-    .travel,
-    .sports,
-    .sick,
-  ];
-}
-
 extension DiaryMoodVisuals on DiaryMood {
   Color get color => switch (this) {
     .positive => AppColor.moodPositive,
     .neutral => AppColor.moodNeutral,
     .negative => AppColor.moodNegative,
-    .excited => AppColor.moodExcited,
+    .fulfilled => AppColor.moodFulfilled,
     .angry => AppColor.moodAngry,
     .anxious => AppColor.moodAnxious,
     .tired => AppColor.moodTired,
@@ -72,7 +47,7 @@ extension DiaryMoodVisuals on DiaryMood {
     .positive => LucideIcons.smile,
     .neutral => LucideIcons.meh,
     .negative => LucideIcons.frown,
-    .excited => LucideIcons.partyPopper,
+    .fulfilled => LucideIcons.sparkles,
     .angry => LucideIcons.angry,
     .anxious => LucideIcons.tornado,
     .tired => LucideIcons.batteryLow,
@@ -92,7 +67,7 @@ extension DiaryMoodVisuals on DiaryMood {
     .positive => 'smile',
     .neutral => 'meh',
     .negative => 'frown',
-    .excited => 'party-popper',
+    .fulfilled => 'sparkles',
     .angry => 'angry',
     .anxious => 'tornado',
     .tired => 'battery-low',
@@ -111,7 +86,7 @@ extension DiaryMoodVisuals on DiaryMood {
     .positive => context.l10n.common.moodPositive,
     .neutral => context.l10n.common.moodNeutral,
     .negative => context.l10n.common.moodNegative,
-    .excited => context.l10n.common.moodExcited,
+    .fulfilled => context.l10n.common.moodFulfilled,
     .angry => context.l10n.common.moodAngry,
     .anxious => context.l10n.common.moodAnxious,
     .tired => context.l10n.common.moodTired,

@@ -735,9 +735,6 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
             'label': mood.label(context),
             'color': _hexColor(mood.color),
             'icon': mood.iconName,
-            'group': DiaryMoodGroups.emotions.contains(mood)
-                ? context.l10n.common.moodGroupEmotion
-                : context.l10n.common.moodGroupState,
           },
       ],
       'category': categoryLabel,

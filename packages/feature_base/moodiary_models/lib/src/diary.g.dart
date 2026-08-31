@@ -66,7 +66,7 @@ const _$DiaryMoodEnumMap = {
   DiaryMood.positive: 'positive',
   DiaryMood.neutral: 'neutral',
   DiaryMood.negative: 'negative',
-  DiaryMood.excited: 'excited',
+  DiaryMood.fulfilled: 'fulfilled',
   DiaryMood.angry: 'angry',
   DiaryMood.anxious: 'anxious',
   DiaryMood.tired: 'tired',

@@ -185,14 +185,30 @@ void main() {
     );
 
     const themeOptions = <MoodOption>[
-      (key: 'food', description: '美食：吃饭、做饭、餐厅、小吃'),
-      (key: 'travel', description: '旅行：出游、观光、逛景点'),
-      (key: '__emotion__', description: '以上都不沾边'),
+      (
+        key: 'food',
+        description: 'food — a meal, cooking, a restaurant, dessert, snacks',
+      ),
+      (
+        key: 'travel',
+        description: 'travel — a trip, sightseeing, being away from home',
+      ),
+      (
+        key: '__emotion__',
+        description:
+            'none of these activities — the entry is mainly about a feeling',
+      ),
     ];
     const emotionOptions = <MoodOption>[
-      (key: 'positive', description: '开心：心情好、满足、愉快'),
-      (key: 'negative', description: '难过：伤心、失落、沮丧'),
-      (key: 'anxious', description: '焦虑：担心、紧张、睡不着、压力大'),
+      (
+        key: 'positive',
+        description: 'happy — in a good mood, something worth celebrating',
+      ),
+      (key: 'negative', description: 'sad — down, upset, heartbroken'),
+      (
+        key: 'tired',
+        description: 'tired — exhausted, drained, only want to sleep',
+      ),
     ];
 
     final classifier = OnnxMoodClassifier();
@@ -201,7 +217,8 @@ void main() {
       await classifier.load(modelPath, tokenizerPath: tokenizerPath);
       debugPrint('BENCH: mood llm load=${loadWatch.elapsedMilliseconds}ms');
 
-      const themeQuestion = '这篇日记主要在记录下面哪类事情？';
+      const themeQuestion =
+          'Which option best describes what this diary entry is mainly about?';
       final watch = Stopwatch()..start();
       final (theme1, p1) = await classifier.ask(
         '中午和同事去吃了新开的川菜馆，毛血旺一绝，就是排队排了四十分钟。',
@@ -215,22 +232,23 @@ void main() {
       expect(theme1, 'food');
 
       watch.reset();
+      const emotionSample = '连续加班一周，今天下班回家倒头就睡，什么都不想干。';
       final (theme2, _) = await classifier.ask(
-        '明天就要面试了，翻来覆去睡不着，一直在想会被问到什么。',
+        emotionSample,
         question: themeQuestion,
         options: themeOptions,
       );
       expect(theme2, '__emotion__');
       final (emotion, p3) = await classifier.ask(
-        '明天就要面试了，翻来覆去睡不着，一直在想会被问到什么。',
-        question: '这篇日记里作者最主要的情绪是什么？',
+        emotionSample,
+        question: "What is the writer's dominant emotion in this diary entry?",
         options: emotionOptions,
       );
       debugPrint(
         'BENCH: mood q2+q3=${watch.elapsedMilliseconds}ms '
         '-> $emotion (${p3.toStringAsFixed(2)})',
       );
-      expect(emotion, 'anxious');
+      expect(emotion, 'tired');
     } finally {
       await classifier.unload();
     }

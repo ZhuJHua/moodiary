@@ -146,10 +146,10 @@ class MoodLlmModelManager {
       await classifier.load(modelPath, tokenizerPath: tokenizerPath);
       final (key, _) = await classifier.ask(
         '今天天气不错。',
-        question: '这篇日记是用什么语言写的？',
+        question: 'What language is this diary entry written in?',
         options: const [
-          (key: 'zh', description: '中文'),
-          (key: 'en', description: '英文'),
+          (key: 'zh', description: 'Chinese'),
+          (key: 'en', description: 'English'),
         ],
       );
       if (key != 'zh' && key != 'en') {

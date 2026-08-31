@@ -1,10 +1,10 @@
-/// 心情/状态，内建 16 种：前 8 个是情绪、后 8 个是生活状态。
-/// 分组只用于选择器面板分区，不进数据模型；JSON / 数据库均按 `name` 存字符串。
+/// 心情状态，内建 16 种，单一平铺概念（2026-08-31 拍板，不再分「情绪/状态」
+/// 两组）；JSON / 数据库均按 `name` 存字符串。
 enum DiaryMood {
   positive,
   neutral,
   negative,
-  excited,
+  fulfilled,
   angry,
   anxious,
   tired,

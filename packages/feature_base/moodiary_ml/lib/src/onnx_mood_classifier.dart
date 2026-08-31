@@ -8,8 +8,9 @@ import 'package:onnxruntime_plus/onnxruntime_plus.dart';
 import 'onnx_embedding_backend.dart' show emptyPastInputs, ensureOrtEnv;
 
 /// 单选题的候选项。key 由消费侧定义并映射回领域枚举；description 是给模型看的
-/// 释义。给模型的文本刻意用中文写死（不进 i18n）：同套样例实测英文 scaffold
-/// 3/12、中文 7/12（2026-08-31，Qwen3-0.6B int8），这是量出来的例外。
+/// 英文释义（写死不进 i18n）。2026-08-31 拍板英文作为基础提示词（状态要国际化、
+/// 日记本身可能是任意语言）；同套 22 条中文样例实测英文两段式 12/22 vs 中文
+/// 15/22，这 3 条差距是知情接受的代价。
 typedef MoodOption = ({String key, String description});
 
 /// 小型 LLM（Qwen3 decoder ONNX）受限单 token 分类器，不是生成——把候选项列成
@@ -116,17 +117,17 @@ final class OnnxMoodClassifier {
       ..writeln('<|im_start|>user')
       ..writeln(question)
       ..writeln()
-      ..writeln('日记：')
+      ..writeln('Diary entry:')
       ..writeln('「$content」')
       ..writeln()
-      ..writeln('选项：');
+      ..writeln('Options:');
     for (var i = 0; i < options.length; i++) {
       final letter = String.fromCharCode(65 + i);
       buffer.writeln('$letter. ${options[i].description}');
     }
     buffer
       ..writeln()
-      ..writeln('只回答选项字母。<|im_end|>')
+      ..writeln('Reply with the option letter only.<|im_end|>')
       ..writeln('<|im_start|>assistant')
       ..writeln('<think>')
       ..writeln()

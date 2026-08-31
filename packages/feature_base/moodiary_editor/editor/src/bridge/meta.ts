@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 
 /**
- * 心情/状态选项（面板 + 胶囊共用）：值为 Flutter 侧枚举名，label/color/group 已由宿主解析，
+ * 心情状态选项（面板 + 胶囊共用）：值为 Flutter 侧枚举名，label/color 已由宿主解析，
  * icon 是 lucide 图标名（web 侧据此查本地组件表）。
  */
 export interface EditorMetaMoodOption {
@@ -9,8 +9,6 @@ export interface EditorMetaMoodOption {
   label: string
   color: string
   icon: string
-  /** 分组标题（情绪/状态），已本地化；面板按它分区，顺序保持下发顺序。 */
-  group: string
 }
 
 /**

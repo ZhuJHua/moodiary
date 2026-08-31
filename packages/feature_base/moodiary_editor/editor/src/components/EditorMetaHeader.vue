@@ -2,16 +2,16 @@
 // 日记属性头（原 Flutter 侧渲染，整体搬进 webview 以随正文一起滚动）。
 // 三行分层，强度四级递减：日期(粗) > 心情(彩色胶囊) > 功能(灰字图标) > 标签(浅灰 #)。
 // 编辑态各项可点：原生选择器（日期/时间/分类/加标签/天气/定位）经事件回跳 Flutter，
-// 心情面板（分组网格）与标签删除用页内 PopupMenu，不回跳。
+// 心情状态面板（平铺网格）与标签删除用页内 PopupMenu，不回跳。
 import { computed, ref, type Component } from 'vue'
 import { post } from '../bridge/post'
-import type { EditorMeta, EditorMetaMoodOption } from '../bridge/meta'
+import type { EditorMeta } from '../bridge/meta'
 import PopupMenu, { type PopupMenuItem } from './PopupMenu.vue'
 import IconChevronDown from '~icons/lucide/chevron-down'
 import IconSmile from '~icons/lucide/smile'
 import IconMeh from '~icons/lucide/meh'
 import IconFrown from '~icons/lucide/frown'
-import IconPartyPopper from '~icons/lucide/party-popper'
+import IconSparkles from '~icons/lucide/sparkles'
 import IconAngry from '~icons/lucide/angry'
 import IconTornado from '~icons/lucide/tornado'
 import IconBatteryLow from '~icons/lucide/battery-low'
@@ -44,7 +44,7 @@ const MOOD_ICONS: Record<string, Component> = {
   smile: IconSmile,
   meh: IconMeh,
   frown: IconFrown,
-  'party-popper': IconPartyPopper,
+  sparkles: IconSparkles,
   angry: IconAngry,
   tornado: IconTornado,
   'battery-low': IconBatteryLow,
@@ -63,22 +63,6 @@ const currentMood = computed(
   () => props.meta.moods.find((m) => m.value === props.meta.mood) ?? props.meta.moods[0],
 )
 const moodIcon = computed(() => MOOD_ICONS[currentMood.value?.icon ?? ''] ?? IconMeh)
-
-interface MoodGroup {
-  label: string
-  options: EditorMetaMoodOption[]
-}
-
-// 按 group 分区，顺序保持下发顺序。
-const moodGroups = computed<MoodGroup[]>(() => {
-  const groups: MoodGroup[] = []
-  for (const m of props.meta.moods) {
-    const g = groups.find((x) => x.label === m.group)
-    if (g) g.options.push(m)
-    else groups.push({ label: m.group, options: [m] })
-  }
-  return groups
-})
 
 const moodMenuOpen = ref(false)
 function onMoodSelect(key: string): void {
@@ -164,28 +148,25 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
         </template>
         <template #panel>
           <div class="mood-panel">
-            <template v-for="group in moodGroups" :key="group.label">
-              <div class="mood-group-title">{{ group.label }}</div>
-              <div class="mood-grid">
-                <button
-                  v-for="m in group.options"
-                  :key="m.value"
-                  type="button"
-                  class="mood-cell"
-                  :class="{ 'mood-cell--active': m.value === meta.mood }"
-                  :style="
-                    m.value === meta.mood
-                      ? { color: m.color, background: `${m.color}26` }
-                      : undefined
-                  "
-                  @mousedown.prevent
-                  @click.stop="onMoodSelect(m.value)"
-                >
-                  <component :is="MOOD_ICONS[m.icon] ?? IconMeh" class="mood-cell-icon" />
-                  <span class="mood-cell-label">{{ m.label }}</span>
-                </button>
-              </div>
-            </template>
+            <div class="mood-grid">
+              <button
+                v-for="m in meta.moods"
+                :key="m.value"
+                type="button"
+                class="mood-cell"
+                :class="{ 'mood-cell--active': m.value === meta.mood }"
+                :style="
+                  m.value === meta.mood
+                    ? { color: m.color, background: `${m.color}26` }
+                    : undefined
+                "
+                @mousedown.prevent
+                @click.stop="onMoodSelect(m.value)"
+              >
+                <component :is="MOOD_ICONS[m.icon] ?? IconMeh" class="mood-cell-icon" />
+                <span class="mood-cell-label">{{ m.label }}</span>
+              </button>
+            </div>
           </div>
         </template>
       </PopupMenu>
@@ -343,16 +324,10 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
   margin-right: 10px;
 }
 
-/* 心情面板：分组网格（情绪/状态），格子 = 图标 + 标签，选中格用该态语义色高亮。 */
+/* 心情状态面板：4 列平铺网格，格子 = 图标 + 标签，选中格用该态语义色高亮。 */
 .mood-panel {
   width: 276px;
-}
-.mood-group-title {
-  padding: 6px 8px 3px;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--app-on-surface-variant);
-  opacity: 0.8;
+  padding-top: 4px;
 }
 .mood-grid {
   display: grid;

@@ -2,38 +2,79 @@ import 'package:moodiary_ml/moodiary_ml.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 /// 两段式心情建议：先问「记录哪类事情」（8 主题 + 都不沾边），路由到情绪时
-/// 再问「最主要的情绪」（8 情绪）。一次问 16 类小模型顶不住（同套 22 条样例
-/// 单问 7/12 量级、两段式 16/22，2026-08-31 本机 int8 实测）；思考模式与
-/// few-shot 均实测更差或更贵，别再重推。释义是给模型看的，中文写死不进 i18n
-/// （英文 scaffold 实测差一倍）。
+/// 再问「最主要的情绪」（8 情绪）。领域概念是单一平铺的「心情状态」，
+/// 主题/情绪的拆分只是这里的分类器实现细节——同套 22 条样例实测（2026-08-31
+/// 本机 int8）：英文两段式 12/22 > 英文统一单问 10/22 > 全英文旧版 8/22，
+/// 别照着「概念统一了」把它简化成单问。思考模式与 few-shot 均实测更差或更贵。
+/// 提示词统一英文（用户拍板：状态要国际化、英文作基础）；中文两段式实测
+/// 15/22，这 3 条差距是知情接受的代价。「日记可能是任意语言」的提示实测
+/// 更差（9/22），别加回来。
 const _emotionSentinel = '__emotion__';
 
-const _themeQuestion = '这篇日记主要在记录下面哪类事情？';
+const _themeQuestion =
+    'Which option best describes what this diary entry is mainly about?';
 
-const _emotionQuestion = '这篇日记里作者最主要的情绪是什么？';
+const _emotionQuestion =
+    "What is the writer's dominant emotion in this diary entry?";
 
 /// key 就是 [DiaryMood.name]（哨兵除外），映射靠 [DiaryMood.fromName]。
 const _themeOptions = <MoodOption>[
-  (key: 'love', description: '恋爱：爱情、心动、和恋人有关'),
-  (key: 'study', description: '学习：上课、考试、刷题、读书'),
-  (key: 'slacking', description: '摸鱼：偷懒、躺平、无所事事'),
-  (key: 'food', description: '美食：吃饭、做饭、餐厅、小吃'),
-  (key: 'work', description: '工作：上班、项目、会议、加班'),
-  (key: 'travel', description: '旅行：出游、观光、逛景点'),
-  (key: 'sports', description: '运动：健身、跑步、球赛'),
-  (key: 'sick', description: '生病：不舒服、症状、看病吃药'),
-  (key: _emotionSentinel, description: '以上都不沾边'),
+  (key: 'love', description: 'love — a partner, a date, romance'),
+  (key: 'study', description: 'study — classes, exams, homework, reading'),
+  (
+    key: 'slacking',
+    description:
+        'slacking — lazing around, scrolling the phone, doing nothing all day',
+  ),
+  (
+    key: 'food',
+    description: 'food — a meal, cooking, a restaurant, dessert, snacks',
+  ),
+  (key: 'work', description: 'work — the job, projects, meetings, overtime'),
+  (
+    key: 'travel',
+    description: 'travel — a trip, sightseeing, being away from home',
+  ),
+  (key: 'sports', description: 'sports — a workout, the gym, running, a match'),
+  (
+    key: 'sick',
+    description:
+        'sick — feeling ill, symptoms, seeing a doctor, taking medicine',
+  ),
+  (
+    key: _emotionSentinel,
+    description:
+        'none of these activities — the entry is mainly about a feeling',
+  ),
 ];
 
 const _emotionOptions = <MoodOption>[
-  (key: 'positive', description: '开心：心情好、满足、愉快'),
-  (key: 'neutral', description: '平静：没有明显情绪起伏'),
-  (key: 'negative', description: '难过：伤心、失落、沮丧'),
-  (key: 'excited', description: '兴奋：激动、庆祝、欣喜若狂'),
-  (key: 'angry', description: '生气：恼火、愤怒、不爽'),
-  (key: 'anxious', description: '焦虑：担心、紧张、睡不着、压力大'),
-  (key: 'tired', description: '疲惫：累、筋疲力尽、只想睡'),
-  (key: 'speechless', description: '无语：无奈、气到没话说、服了'),
+  (
+    key: 'positive',
+    description: 'happy — in a good mood, something worth celebrating',
+  ),
+  (key: 'neutral', description: 'calm — an ordinary day, nothing much to say'),
+  (
+    key: 'negative',
+    description: 'sad — down, upset, heartbroken, grieving',
+  ),
+  (key: 'fulfilled', description: 'fulfilled — got things done, effort paid off'),
+  (
+    key: 'angry',
+    description: 'angry — provoked by someone or something, annoyed',
+  ),
+  (
+    key: 'anxious',
+    description: "anxious — worried, nervous, can't sleep over something ahead",
+  ),
+  (
+    key: 'tired',
+    description: 'tired — exhausted, drained, only want to sleep',
+  ),
+  (
+    key: 'speechless',
+    description: 'speechless — exasperated, fed up, done with it',
+  ),
 ];
 
 Future<DiaryMood> suggestMood(MoodLlmEngine engine, String text) async {

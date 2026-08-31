@@ -429,7 +429,7 @@ class _Translations$common$en extends Translations$common$zh {
 	@override String get moodNegative => 'Low';
 	@override String get moodNeutral => 'Calm';
 	@override String get moodPositive => 'Happy';
-	@override String get moodExcited => 'Excited';
+	@override String get moodFulfilled => 'Fulfilled';
 	@override String get moodAngry => 'Angry';
 	@override String get moodAnxious => 'Anxious';
 	@override String get moodTired => 'Tired';
@@ -442,8 +442,6 @@ class _Translations$common$en extends Translations$common$zh {
 	@override String get moodTravel => 'Traveling';
 	@override String get moodSports => 'Workout';
 	@override String get moodSick => 'Sick';
-	@override String get moodGroupEmotion => 'Emotions';
-	@override String get moodGroupState => 'States';
 	@override String get cancel => 'Cancel';
 	@override String get more => 'More';
 	@override String get custom => 'Custom';

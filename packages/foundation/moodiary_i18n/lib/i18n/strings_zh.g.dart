@@ -1141,11 +1141,11 @@ class Translations$common$zh {
 	/// zh: '平静'
 	String get moodNeutral => '平静';
 
-	/// zh: '愉快'
-	String get moodPositive => '愉快';
+	/// zh: '开心'
+	String get moodPositive => '开心';
 
-	/// zh: '兴奋'
-	String get moodExcited => '兴奋';
+	/// zh: '充实'
+	String get moodFulfilled => '充实';
 
 	/// zh: '生气'
 	String get moodAngry => '生气';
@@ -1182,12 +1182,6 @@ class Translations$common$zh {
 
 	/// zh: '生病'
 	String get moodSick => '生病';
-
-	/// zh: '情绪'
-	String get moodGroupEmotion => '情绪';
-
-	/// zh: '状态'
-	String get moodGroupState => '状态';
 
 	/// zh: '取消'
 	String get cancel => '取消';
