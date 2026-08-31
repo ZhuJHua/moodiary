@@ -27,6 +27,7 @@ dependencies:
   mui: 0.0.1
 
   drift: 2.34.3
+  gap: 3.0.1
   flutter_riverpod: 3.4.2
   riverpod_annotation: 4.0.6
   gpt_markdown: 1.2.1

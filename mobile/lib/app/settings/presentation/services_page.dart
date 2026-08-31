@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gap/gap.dart';
 import 'package:moodiary_assistant/moodiary_assistant.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
@@ -18,48 +19,16 @@ class ServicesPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.app.services)),
-      body: ListView(
-        padding: const .symmetric(horizontal: 8, vertical: 8),
-        children: const [
-          _Note(),
-          SizedBox(height: 4),
-          _AiSection(),
-          SizedBox(height: 4),
-          _SemanticSection(),
-          SizedBox(height: 4),
-          _MoodSuggestSection(),
-          SizedBox(height: 4),
-          _QweatherSection(),
-          SizedBox(height: 4),
-          _TiandituSection(),
-          SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-}
-
-class _Note extends StatelessWidget {
-  const _Note();
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = context.theme.colors;
-    return Card.filled(
-      color: scheme.surfaceContainerHighest,
-      margin: const .symmetric(horizontal: 8),
-      child: Padding(
-        padding: const .all(12),
-        child: Row(
-          children: [
-            Icon(LucideIcons.waypoints, color: scheme.primary),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                context.l10n.app.servicesIntro,
-                style: context.theme.typography.bodySmall.onSurfaceVariant,
-              ),
-            ),
+      body: Padding(
+        padding: const .symmetric(horizontal: 8.0),
+        child: CustomScrollView(
+          slivers: [
+            const _AiSection(),
+            const _SemanticSection(),
+            const _MoodSuggestSection(),
+            const _QweatherSection(),
+            const _TiandituSection(),
+            SliverGap(context.safeBottom),
           ],
         ),
       ),
@@ -72,19 +41,12 @@ class _AiSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.theme.colors;
-    return Column(
-      crossAxisAlignment: .stretch,
+    return MSliverSettingGroup(
+      title: context.l10n.app.servicesAssistant,
       children: [
-        SettingTitleTile(title: context.l10n.app.servicesAssistant),
-        Card.filled(
-          color: scheme.surfaceContainerLow,
-          margin: .zero,
-          child: ValueListenableBuilder<String>(
-            valueListenable: MoodiaryKVs.assistantActiveProviderId
-                .getNotifier(),
-            builder: (context, _, _) => const AssistantSummaryTile(),
-          ),
+        ValueListenableBuilder<String>(
+          valueListenable: MoodiaryKVs.assistantActiveProviderId.getNotifier(),
+          builder: (context, _, _) => const AssistantSummaryTile(),
         ),
       ],
     );
@@ -109,57 +71,44 @@ class _SemanticSectionState extends State<_SemanticSection> {
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
-    return Column(
-      crossAxisAlignment: .stretch,
-      children: [
-        SettingTitleTile(title: context.l10n.app.semanticTitle),
-        Card.filled(
-          color: scheme.surfaceContainerLow,
-          margin: .zero,
-          child: ValueListenableBuilder<String>(
-            valueListenable: MoodiaryKVs.embeddingModelId.getNotifier(),
-            builder: (context, _, _) {
-              final active = _manager.active;
-              return Column(
-                children: [
-                  SettingListTile(
-                    isFirst: true,
-                    isLast: active == null,
-                    leading: Icon(
-                      LucideIcons.sparkles,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                    title: context.l10n.app.semanticModelTitle,
-                    subtitle:
-                        active?.displayName ??
-                        context.l10n.app.semanticStateOff,
-                    trailing: const Icon(LucideIcons.chevronRight),
-                    onTap: _openPicker,
-                  ),
-                  if (active != null)
-                    SettingListTile(
-                      isLast: true,
-                      leading: Icon(
-                        LucideIcons.refreshCw,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                      title: context.l10n.app.semanticRebuildTitle,
-                      subtitle: context.l10n.app.semanticRebuildSubtitle,
-                      trailing: _rebuilding
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(LucideIcons.chevronRight),
-                      onTap: _rebuilding ? null : _rebuild,
-                    ),
-                ],
-              );
-            },
-          ),
-        ),
-      ],
+    return ValueListenableBuilder<String>(
+      valueListenable: MoodiaryKVs.embeddingModelId.getNotifier(),
+      builder: (context, _, _) {
+        final active = _manager.active;
+        return MSliverSettingGroup(
+          title: context.l10n.app.semanticTitle,
+          children: [
+            SettingListTile(
+              leading: Icon(
+                LucideIcons.sparkles,
+                color: scheme.onSurfaceVariant,
+              ),
+              title: context.l10n.app.semanticModelTitle,
+              subtitle:
+                  active?.displayName ?? context.l10n.app.semanticStateOff,
+              trailing: const Icon(LucideIcons.chevronRight),
+              onTap: _openPicker,
+            ),
+            if (active != null)
+              SettingListTile(
+                leading: Icon(
+                  LucideIcons.refreshCw,
+                  color: scheme.onSurfaceVariant,
+                ),
+                title: context.l10n.app.semanticRebuildTitle,
+                subtitle: context.l10n.app.semanticRebuildSubtitle,
+                trailing: _rebuilding
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(LucideIcons.chevronRight),
+                onTap: _rebuilding ? null : _rebuild,
+              ),
+          ],
+        );
+      },
     );
   }
 
@@ -376,32 +325,25 @@ class _MoodSuggestSectionState extends State<_MoodSuggestSection> {
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
-    return Column(
-      crossAxisAlignment: .stretch,
+    return MSliverSettingGroup(
+      title: context.l10n.app.moodSuggestTitle,
       children: [
-        SettingTitleTile(title: context.l10n.app.moodSuggestTitle),
-        Card.filled(
-          color: scheme.surfaceContainerLow,
-          margin: .zero,
-          child: ValueListenableBuilder<String>(
-            valueListenable: MoodiaryKVs.moodLlmModelId.getNotifier(),
-            builder: (context, _, _) {
-              final active = _manager.active;
-              return SettingListTile(
-                isFirst: true,
-                isLast: true,
-                leading: Icon(
-                  LucideIcons.smilePlus,
-                  color: scheme.onSurfaceVariant,
-                ),
-                title: context.l10n.app.moodSuggestModelTitle,
-                subtitle:
-                    active?.displayName ?? context.l10n.app.semanticStateOff,
-                trailing: const Icon(LucideIcons.chevronRight),
-                onTap: _openPicker,
-              );
-            },
-          ),
+        ValueListenableBuilder<String>(
+          valueListenable: MoodiaryKVs.moodLlmModelId.getNotifier(),
+          builder: (context, _, _) {
+            final active = _manager.active;
+            return SettingListTile(
+              leading: Icon(
+                LucideIcons.smilePlus,
+                color: scheme.onSurfaceVariant,
+              ),
+              title: context.l10n.app.moodSuggestModelTitle,
+              subtitle:
+                  active?.displayName ?? context.l10n.app.semanticStateOff,
+              trailing: const Icon(LucideIcons.chevronRight),
+              onTap: _openPicker,
+            );
+          },
         ),
       ],
     );
@@ -586,33 +528,19 @@ class _QweatherSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = context.theme.colors;
-    return Column(
-      crossAxisAlignment: .stretch,
+    return MSliverSettingGroup(
+      title: context.l10n.app.servicesQweather,
       children: [
-        SettingTitleTile(title: context.l10n.app.servicesQweather),
-        Card.filled(
-          color: scheme.surfaceContainerLow,
-          margin: .zero,
-          child: Column(
-            children: [
-              _SecretKvTile(
-                kv: .qweatherKey,
-                title: 'API Key',
-                leading: Icon(LucideIcons.key, color: scheme.onSurfaceVariant),
-                isFirst: true,
-              ),
-              _KvTile(
-                kv: .qweatherApiHost,
-                title: 'API Host',
-                subtitleWhenEmpty: context.l10n.app.servicesQweatherHostHint,
-                leading: Icon(
-                  LucideIcons.server,
-                  color: scheme.onSurfaceVariant,
-                ),
-                isLast: true,
-              ),
-            ],
-          ),
+        _SecretKvTile(
+          kv: .qweatherKey,
+          title: 'API Key',
+          leading: Icon(LucideIcons.key, color: scheme.onSurfaceVariant),
+        ),
+        _KvTile(
+          kv: .qweatherApiHost,
+          title: 'API Host',
+          subtitleWhenEmpty: context.l10n.app.servicesQweatherHostHint,
+          leading: Icon(LucideIcons.server, color: scheme.onSurfaceVariant),
         ),
       ],
     );
@@ -625,24 +553,13 @@ class _TiandituSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = context.theme.colors;
-    return Column(
-      crossAxisAlignment: .stretch,
+    return MSliverSettingGroup(
+      title: context.l10n.app.servicesTianditu,
       children: [
-        SettingTitleTile(title: context.l10n.app.servicesTianditu),
-        Card.filled(
-          color: scheme.surfaceContainerLow,
-          margin: .zero,
-          child: Column(
-            children: [
-              _SecretKvTile(
-                kv: .tiandituKey,
-                title: 'API Key',
-                leading: Icon(LucideIcons.map, color: scheme.onSurfaceVariant),
-                isFirst: true,
-                isLast: true,
-              ),
-            ],
-          ),
+        _SecretKvTile(
+          kv: .tiandituKey,
+          title: 'API Key',
+          leading: Icon(LucideIcons.map, color: scheme.onSurfaceVariant),
         ),
       ],
     );
@@ -654,14 +571,12 @@ class _KvTile extends StatelessWidget {
   final String title;
   final Widget? leading;
   final String? subtitleWhenEmpty;
-  final bool isLast;
 
   const _KvTile({
     required this.kv,
     required this.title,
     this.leading,
     this.subtitleWhenEmpty,
-    this.isLast = false,
   });
 
   @override
@@ -670,7 +585,6 @@ class _KvTile extends StatelessWidget {
       valueListenable: kv.getNotifierOr(''),
       builder: (context, value, _) {
         return SettingInputTile(
-          isLast: isLast,
           title: title,
           leading: leading,
           value: value,
@@ -693,24 +607,14 @@ class _SecretKvTile extends ConsumerWidget {
   final MoodiarySecureKVs kv;
   final String title;
   final Widget? leading;
-  final bool isFirst;
-  final bool isLast;
 
-  const _SecretKvTile({
-    required this.kv,
-    required this.title,
-    this.leading,
-    this.isFirst = false,
-    this.isLast = false,
-  });
+  const _SecretKvTile({required this.kv, required this.title, this.leading});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // 钥匙串读的这一小段空窗按「未配置」渲染，与真的没配一致，不闪骨架。
     final value = ref.watch(secretKvProvider(kv)).value ?? '';
     return SettingInputTile(
-      isFirst: isFirst,
-      isLast: isLast,
       title: title,
       leading: leading,
       value: value,

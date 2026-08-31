@@ -59,8 +59,6 @@ class _AssistantSummaryTileState extends State<AssistantSummaryTile> {
         : '${active.name} · ${active.defaultModel} · '
               '${_keyConfigured ? context.l10n.assistant.summaryKeySet : context.l10n.assistant.summaryKeyUnset}';
     return SettingListTile(
-      isFirst: true,
-      isLast: true,
       title: context.l10n.assistant.summaryTitle,
       subtitle: subtitle,
       leading: const Icon(LucideIcons.bot),

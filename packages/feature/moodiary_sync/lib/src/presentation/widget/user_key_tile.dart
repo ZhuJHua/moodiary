@@ -10,10 +10,7 @@ import 'package:mui/mui.dart';
 /// 端到端加密设置项。**加密语义**：设置密码即开启加密（生成随机数据密钥 DEK，
 /// 密码只用来封装它）；清除即关闭加密。
 class UserKeyTile extends ConsumerWidget {
-  final bool isFirst;
-  final bool isLast;
-
-  const UserKeyTile({super.key, this.isFirst = false, this.isLast = false});
+  const UserKeyTile({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -23,8 +20,6 @@ class UserKeyTile extends ConsumerWidget {
     final scheme = context.theme.colors;
 
     return SettingListTile(
-      isFirst: isFirst,
-      isLast: isLast,
       title: context.l10n.sync.e2eTitle,
       leading: const Icon(LucideIcons.key),
       subtitle: hasKey ? context.l10n.sync.e2eOn : context.l10n.sync.e2eOff,

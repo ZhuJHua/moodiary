@@ -1,4 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gap/gap.dart';
+import 'package:moodiary_assistant/moodiary_assistant.dart'
+    show AssistantSettingRoute;
+import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_lock/moodiary_lock.dart';
 import 'package:moodiary_mobile/app/settings/presentation/widget/accent_sheet.dart';
 import 'package:moodiary_mobile/app/settings/presentation/widget/cache_usage_tile.dart';
 import 'package:moodiary_mobile/app/settings/presentation/widget/data_repair_tile.dart';
@@ -6,18 +12,12 @@ import 'package:moodiary_mobile/app/settings/presentation/widget/language_dialog
 import 'package:moodiary_mobile/app/settings/presentation/widget/reset_data_tile.dart';
 import 'package:moodiary_mobile/app/settings/presentation/widget/theme_mode_dialog.dart';
 import 'package:moodiary_mobile/app/settings/setting_routes.dart';
-import 'package:moodiary_assistant/moodiary_assistant.dart'
-    show AssistantSettingRoute;
-import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_lock/moodiary_lock.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_theme/moodiary_theme.dart';
 import 'package:mui/mui.dart';
 
-/// 一级菜单项跳转：全屏 `push` 落 root navigator。
 void _openSetting(BuildContext context, MoodiaryRouteBase route) {
   route.push(context);
 }
@@ -33,51 +33,30 @@ Widget _chevron(BuildContext context) => Icon(
 Widget _value(BuildContext context, String text) =>
     Text(text, style: context.theme.typography.bodySmall.primary);
 
-/// 组与组之间的间隔。
-const _gap = SliverToBoxAdapter(child: SizedBox(height: 4));
-
-/// 移动端设置子页是顶层兄弟路由（push 落 root navigator 全屏盖过 shell），故本页只
-/// 渲染 `/setting` 列表。
-class SettingListPageMobile extends StatelessWidget {
-  const SettingListPageMobile({super.key});
+class SettingPage extends StatelessWidget {
+  const SettingPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.app.settingsTitle)),
-      body: CustomScrollView(
-        slivers: [
-          SliverPadding(
-            // 本页是 push 出来的整页路由，没有 bottomNavigationBar 去吃掉底部 inset，
-            // 不补的话最后一行会压在手势条 / 三键导航底下。
-            padding: .fromLTRB(
-              8,
-              8,
-              8,
-              8 + MediaQuery.paddingOf(context).bottom,
-            ),
-            sliver: const SliverMainAxisGroup(
-              slivers: [
-                _FeatureSection(),
-                _gap,
-                _DisplaySection(),
-                _gap,
-                _PrivacySection(),
-                _gap,
-                _DataSection(),
-                _gap,
-                _MoreSection(),
-              ],
-            ),
-          ),
-        ],
+      body: Padding(
+        padding: const .symmetric(horizontal: 8.0),
+        child: CustomScrollView(
+          slivers: [
+            const _FeatureSection(),
+            const _DisplaySection(),
+            const _PrivacySection(),
+            const _DataSection(),
+            const _MoreSection(),
+            SliverGap(context.safeBottom),
+          ],
+        ),
       ),
     );
   }
 }
 
-/// 功能开关式的子页。「日记设置」与「智能助手」是同一类东西 —— 某个功能自己的偏好，
-/// 平级摆在一起。
 class _FeatureSection extends StatelessWidget {
   const _FeatureSection();
 

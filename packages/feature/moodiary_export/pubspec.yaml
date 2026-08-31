@@ -26,6 +26,7 @@ dependencies:
   moodiary_utils: 0.0.1
   mui: 0.0.1
 
+  gap: 3.0.1
   path: 1.9.1
   share_plus: 13.3.0
 

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:gap/gap.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_files/moodiary_files.dart';
@@ -21,14 +22,15 @@ class ExportPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.export.pageTitle)),
-      body: ListView(
-        // 与其它设置页一致：左右 8、上下 8，再补底部安全区。
-        padding: .fromLTRB(8, 8, 8, 8 + MediaQuery.paddingOf(context).bottom),
-        children: const [
-          _ExportSection(),
-          SizedBox(height: 4),
-          _ImportSection(),
-        ],
+      body: Padding(
+        padding: const .symmetric(horizontal: 8.0),
+        child: CustomScrollView(
+          slivers: [
+            const _ExportSection(),
+            const _ImportSection(),
+            SliverGap(context.safeBottom),
+          ],
+        ),
       ),
     );
   }
@@ -39,38 +41,26 @@ class _ExportSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.theme.colors;
-    return Column(
-      crossAxisAlignment: .stretch,
+    return MSliverSettingGroup(
+      title: context.l10n.export.sectionExport,
       children: [
-        SettingTitleTile(title: context.l10n.export.sectionExport),
-        Card.filled(
-          color: scheme.surfaceContainerLow,
-          margin: .zero,
-          child: Column(
-            children: [
-              SettingListTile(
-                isFirst: true,
-                title: 'Markdown',
-                leading: const FileTypeIcon('MD'),
-                trailing: const Icon(LucideIcons.chevronRight),
-                onTap: () => _open(context, .markdown),
-              ),
-              SettingListTile(
-                title: context.l10n.export.formatDocx,
-                leading: const FileTypeIcon('DOCX'),
-                trailing: const Icon(LucideIcons.chevronRight),
-                onTap: () => _open(context, .docx),
-              ),
-              SettingListTile(
-                isLast: true,
-                title: 'PDF',
-                leading: const FileTypeIcon('PDF'),
-                trailing: const Icon(LucideIcons.chevronRight),
-                onTap: () => _open(context, .pdf),
-              ),
-            ],
-          ),
+        SettingListTile(
+          title: 'Markdown',
+          leading: const FileTypeIcon('MD'),
+          trailing: const Icon(LucideIcons.chevronRight),
+          onTap: () => _open(context, .markdown),
+        ),
+        SettingListTile(
+          title: context.l10n.export.formatDocx,
+          leading: const FileTypeIcon('DOCX'),
+          trailing: const Icon(LucideIcons.chevronRight),
+          onTap: () => _open(context, .docx),
+        ),
+        SettingListTile(
+          title: 'PDF',
+          leading: const FileTypeIcon('PDF'),
+          trailing: const Icon(LucideIcons.chevronRight),
+          onTap: () => _open(context, .pdf),
         ),
       ],
     );
@@ -138,34 +128,22 @@ class _ImportSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.theme.colors;
-    return Column(
-      crossAxisAlignment: .stretch,
+    return MSliverSettingGroup(
+      title: context.l10n.export.sectionBackup,
       children: [
-        SettingTitleTile(title: context.l10n.export.sectionBackup),
-        Card.filled(
-          color: scheme.surfaceContainerLow,
-          margin: .zero,
-          child: Column(
-            children: [
-              SettingListTile(
-                isFirst: true,
-                title: context.l10n.export.backupExport,
-                subtitle: context.l10n.export.backupExportSubtitle,
-                leading: const Icon(LucideIcons.archive),
-                trailing: const Icon(LucideIcons.chevronRight),
-                onTap: () => _exportBackup(context),
-              ),
-              SettingListTile(
-                isLast: true,
-                title: context.l10n.export.restoreFromBackup,
-                subtitle: context.l10n.export.backupRestoreSubtitle,
-                leading: const Icon(LucideIcons.archiveRestore),
-                trailing: const Icon(LucideIcons.chevronRight),
-                onTap: () => _restoreBackup(context),
-              ),
-            ],
-          ),
+        SettingListTile(
+          title: context.l10n.export.backupExport,
+          subtitle: context.l10n.export.backupExportSubtitle,
+          leading: const Icon(LucideIcons.archive),
+          trailing: const Icon(LucideIcons.chevronRight),
+          onTap: () => _exportBackup(context),
+        ),
+        SettingListTile(
+          title: context.l10n.export.restoreFromBackup,
+          subtitle: context.l10n.export.backupRestoreSubtitle,
+          leading: const Icon(LucideIcons.archiveRestore),
+          trailing: const Icon(LucideIcons.chevronRight),
+          onTap: () => _restoreBackup(context),
         ),
       ],
     );

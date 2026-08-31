@@ -41,4 +41,6 @@ extension MuiThemeContext on BuildContext {
   /// context.theme.colors.surfaceContainerHigh
   /// ```
   MuiThemeData get theme => MuiTheme.of(this);
+
+  double get safeBottom => MediaQuery.paddingOf(this).bottom;
 }

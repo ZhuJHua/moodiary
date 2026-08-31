@@ -58,7 +58,7 @@ class SponsorRoute extends MoodiaryRouteBase {
 List<RouteBase> settingRoutes() => [
   GoRoute(
     path: SettingRoute.path,
-    builder: (_, _) => const SettingListPageMobile(),
+    builder: (_, _) => const SettingPage(),
   ),
   GoRoute(
     path: DiarySettingRoute.path,

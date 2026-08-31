@@ -31,6 +31,7 @@ dependencies:
   flutter_riverpod: 3.4.2
   riverpod_annotation: 4.0.6
   injectable: 3.0.0
+  gap: 3.0.1
   file: 7.0.1
   bonsoir: 7.1.5
   path: 1.9.1

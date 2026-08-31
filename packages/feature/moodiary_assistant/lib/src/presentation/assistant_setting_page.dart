@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:gap/gap.dart';
 import 'package:moodiary_assistant/src/data/agent_preset_repository.dart';
 import 'package:moodiary_assistant/src/data/agent_preset_resolver.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
@@ -19,44 +20,14 @@ class AssistantSettingPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.assistant.settingTitle)),
-      body: ListView(
-        padding: const .symmetric(horizontal: 8, vertical: 8),
-        children: const [
-          _Note(),
-          SizedBox(height: 4),
-          _ProviderSection(),
-          SizedBox(height: 4),
-          _PresetSection(),
-          SizedBox(height: 4),
-          _ToolSection(),
-          SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-}
-
-class _Note extends StatelessWidget {
-  const _Note();
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = context.theme.colors;
-    return Card.filled(
-      color: scheme.surfaceContainerHighest,
-      margin: const .symmetric(horizontal: 8),
-      child: Padding(
-        padding: const .all(12),
-        child: Row(
-          children: [
-            Icon(LucideIcons.bot, color: scheme.primary),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                context.l10n.assistant.settingNote,
-                style: context.theme.typography.bodySmall.onSurfaceVariant,
-              ),
-            ),
+      body: Padding(
+        padding: const .symmetric(horizontal: 8.0),
+        child: CustomScrollView(
+          slivers: [
+            const _ProviderSection(),
+            const _PresetSection(),
+            const _ToolSection(),
+            SliverGap(context.safeBottom),
           ],
         ),
       ),
@@ -69,17 +40,9 @@ class _ProviderSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.theme.colors;
-    return Column(
-      crossAxisAlignment: .stretch,
-      children: [
-        SettingTitleTile(title: context.l10n.assistant.modelProviderTitle),
-        Card.filled(
-          color: scheme.surfaceContainerLow,
-          margin: .zero,
-          child: const _ProviderEntryTile(),
-        ),
-      ],
+    return MSliverSettingGroup(
+      title: context.l10n.assistant.modelProviderTitle,
+      children: const [_ProviderEntryTile()],
     );
   }
 }
@@ -137,8 +100,6 @@ class _ProviderEntryTileState extends State<_ProviderEntryTile> {
         ? l10n.assistant.providerEntryEmpty
         : '${active.name} · ${active.defaultModel}';
     return SettingListTile(
-      isFirst: true,
-      isLast: true,
       title: l10n.assistant.modelProviderTitle,
       subtitle: subtitle,
       leading: const Icon(LucideIcons.cloud),
@@ -181,30 +142,22 @@ class _PresetSectionState extends State<_PresetSection> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.theme.colors;
     final l10n = context.l10n;
     final subtitle = !_loaded
         ? ''
         : (_defaultName ?? l10n.assistant.presetBuiltinName);
-    return Column(
-      crossAxisAlignment: .stretch,
+    return MSliverSettingGroup(
+      title: l10n.assistant.presetSectionTitle,
       children: [
-        SettingTitleTile(title: l10n.assistant.presetSectionTitle),
-        Card.filled(
-          color: scheme.surfaceContainerLow,
-          margin: .zero,
-          child: SettingListTile(
-            isFirst: true,
-            isLast: true,
-            title: l10n.assistant.presetTileTitle,
-            subtitle: subtitle,
-            leading: const Icon(LucideIcons.venetianMask),
-            trailing: const Icon(LucideIcons.chevronRight),
-            onTap: () async {
-              await const AssistantPresetsRoute().push(context);
-              await _load();
-            },
-          ),
+        SettingListTile(
+          title: l10n.assistant.presetTileTitle,
+          subtitle: subtitle,
+          leading: const Icon(LucideIcons.venetianMask),
+          trailing: const Icon(LucideIcons.chevronRight),
+          onTap: () async {
+            await const AssistantPresetsRoute().push(context);
+            await _load();
+          },
         ),
       ],
     );
@@ -221,49 +174,31 @@ class _ToolSection extends StatefulWidget {
 class _ToolSectionState extends State<_ToolSection> {
   @override
   Widget build(BuildContext context) {
-    final scheme = context.theme.colors;
     final l10n = context.l10n;
-    const tools = AssistantTool.values;
-    return Column(
-      crossAxisAlignment: .stretch,
-      children: [
-        SettingTitleTile(title: l10n.assistant.tool),
-        Card.filled(
-          color: scheme.surfaceContainerLow,
-          margin: .zero,
-          child: Column(
-            children: [
-              for (var i = 0; i < tools.length; i++)
-                _toolTile(
-                  context,
-                  tools[i],
-                  isFirst: i == 0,
-                  isLast: i == tools.length - 1,
-                ),
-            ],
-          ),
+    return SliverMainAxisGroup(
+      slivers: [
+        MSliverSettingGroup(
+          title: l10n.assistant.tool,
+          children: [
+            for (final tool in AssistantTool.values) _toolTile(context, tool),
+          ],
         ),
-        Padding(
-          padding: const .fromLTRB(16, 8, 16, 0),
-          child: Text(
-            l10n.assistant.toolSectionNote,
-            style: context.theme.typography.bodySmall.onSurfaceVariant,
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const .fromLTRB(16, 8, 16, 0),
+            child: Text(
+              l10n.assistant.toolSectionNote,
+              style: context.theme.typography.bodySmall.onSurfaceVariant,
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _toolTile(
-    BuildContext context,
-    AssistantTool tool, {
-    required bool isFirst,
-    required bool isLast,
-  }) {
+  Widget _toolTile(BuildContext context, AssistantTool tool) {
     final display = assistantToolDisplay(context, tool);
     return SettingListTile(
-      isFirst: isFirst,
-      isLast: isLast,
       leading: Icon(display.icon),
       title: display.title,
       subtitle: display.description,

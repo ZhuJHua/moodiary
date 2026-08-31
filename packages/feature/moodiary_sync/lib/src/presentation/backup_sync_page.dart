@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gap/gap.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
@@ -34,20 +35,18 @@ class BackupSyncPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.sync.pageTitle)),
-      body: ListView(
-        padding: const .symmetric(horizontal: 8, vertical: 8),
-        children: const [
-          _RemoteSection(),
-          SizedBox(height: 4),
-          _LanSection(),
-          SizedBox(height: 4),
-          _EncryptionSection(),
-          SizedBox(height: 4),
-          _AutoSyncSection(),
-          SizedBox(height: 4),
-          _NetworkSection(),
-          SizedBox(height: 16),
-        ],
+      body: Padding(
+        padding: const .symmetric(horizontal: 8.0),
+        child: CustomScrollView(
+          slivers: [
+            const _RemoteSection(),
+            const _LanSection(),
+            const _EncryptionSection(),
+            const _AutoSyncSection(),
+            const _NetworkSection(),
+            SliverGap(context.safeBottom),
+          ],
+        ),
       ),
     );
   }
@@ -85,132 +84,118 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.theme.colors;
     final current = SyncProviderType.current();
     final backend = IRemoteSyncBackend.get();
     final configured = backend.isReady;
-    return Column(
-      crossAxisAlignment: .stretch,
+    return MSliverSettingGroup(
+      title: context.l10n.sync.cloudSection,
       children: [
-        SettingTitleTile(title: context.l10n.sync.cloudSection),
-        Card.filled(
-          color: scheme.surfaceContainerLow,
-          margin: .zero,
-          child: Column(
-            children: [
-              SettingListTile(
-                isFirst: true,
-                title: context.l10n.sync.method,
-                leading: const Icon(LucideIcons.arrowRightLeft),
-                trailing: Text(
-                  current.label,
-                  style: context.theme.typography.bodySmall.primary,
-                ),
-                onTap: () => _pickProvider(context, current),
-              ),
-              SettingListTile(
-                title: context.l10n.sync.methodConfig(name: current.label),
-                leading: Icon(
-                  current == .webdav ? LucideIcons.cloud : LucideIcons.database,
-                ),
-                subtitle: configured
-                    ? context.l10n.common.configured
-                    : context.l10n.sync.notConfiguredTap,
-                trailing: const Icon(LucideIcons.chevronRight),
-                onTap: () async {
-                  final ok = current == .webdav
-                      ? await WebDavFormSheet.show(context)
-                      : await S3FormSheet.show(context);
-                  if (ok != true || !mounted) return;
-                  setState(() {});
-                  if (!context.mounted) return;
-                  // 新设备接入：远端若已加密而本地无密钥，保存配置后立即引导配置。
-                  await ensureSyncKeyReady(
-                    context: context,
-                    ref: ref,
-                    backend: .get(),
-                  );
-                },
-              ),
-              SettingListTile(
-                title: context.l10n.sync.testConnection,
-                leading: const Icon(LucideIcons.plugZap),
-                trailing: const Icon(LucideIcons.chevronRight),
-                onTap: configured ? _testConnection : null,
-              ),
-              ValueListenableBuilder(
-                valueListenable: MoodiaryKVs.lastSyncTime.getNotifier(),
-                builder: (context, millis, _) {
-                  final syncState = ref.watch(syncControllerProvider);
-                  final running = syncState is SyncRunning;
-                  if (running) {
-                    return ValueListenableBuilder(
-                      valueListenable: SyncCancellation.instance.listenable,
-                      builder: (context, stopping, _) {
-                        return SettingListTile(
-                          title: stopping
-                              ? context.l10n.sync.stopping
-                              : context.l10n.sync.stop,
-                          subtitle: stopping
-                              ? context.l10n.sync.stoppingSubtitle
-                              : context.l10n.sync.stopSubtitle,
-                          leading: const Icon(LucideIcons.circleStop),
-                          trailing: const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                          onTap: stopping
-                              ? null
-                              : () {
-                                  ref
-                                      .read(syncControllerProvider.notifier)
-                                      .stop();
-                                  toast.info(message: l10n.sync.willStop);
-                                },
-                        );
-                      },
-                    );
-                  }
-                  return SettingListTile(
-                    title: context.l10n.sync.syncNow,
-                    subtitle: millis > 0
-                        ? context.l10n.sync.lastSync(
-                            time: TimeFormat.listDateTime(
-                              .fromMillisecondsSinceEpoch(millis),
-                            ),
-                          )
-                        : context.l10n.sync.neverSynced,
-                    leading: const Icon(LucideIcons.refreshCw),
-                    trailing: const Icon(LucideIcons.chevronRight),
-                    onTap: configured
-                        ? () async {
-                            final backend = IRemoteSyncBackend.get();
-                            if (!await ensureSyncKeyReady(
-                              context: context,
-                              ref: ref,
-                              backend: backend,
-                            )) {
-                              return;
-                            }
-                            await ref
-                                .read(syncControllerProvider.notifier)
-                                .sync(backend);
-                          }
-                        : null,
-                  );
-                },
-              ),
-              SettingListTile(
-                isLast: true,
-                title: context.l10n.sync.logEntry,
-                subtitle: context.l10n.sync.logEntrySubtitle,
-                leading: const Icon(LucideIcons.history),
-                trailing: const Icon(LucideIcons.chevronRight),
-                onTap: () => const SyncLogRoute().push(context),
-              ),
-            ],
+        SettingListTile(
+          title: context.l10n.sync.method,
+          leading: const Icon(LucideIcons.arrowRightLeft),
+          trailing: Text(
+            current.label,
+            style: context.theme.typography.bodySmall.primary,
           ),
+          onTap: () => _pickProvider(context, current),
+        ),
+        SettingListTile(
+          title: context.l10n.sync.methodConfig(name: current.label),
+          leading: Icon(
+            current == .webdav ? LucideIcons.cloud : LucideIcons.database,
+          ),
+          subtitle: configured
+              ? context.l10n.common.configured
+              : context.l10n.sync.notConfiguredTap,
+          trailing: const Icon(LucideIcons.chevronRight),
+          onTap: () async {
+            final ok = current == .webdav
+                ? await WebDavFormSheet.show(context)
+                : await S3FormSheet.show(context);
+            if (ok != true || !mounted) return;
+            setState(() {});
+            if (!context.mounted) return;
+            // 新设备接入：远端若已加密而本地无密钥，保存配置后立即引导配置。
+            await ensureSyncKeyReady(
+              context: context,
+              ref: ref,
+              backend: .get(),
+            );
+          },
+        ),
+        SettingListTile(
+          title: context.l10n.sync.testConnection,
+          leading: const Icon(LucideIcons.plugZap),
+          trailing: const Icon(LucideIcons.chevronRight),
+          onTap: configured ? _testConnection : null,
+        ),
+        ValueListenableBuilder(
+          valueListenable: MoodiaryKVs.lastSyncTime.getNotifier(),
+          builder: (context, millis, _) {
+            final syncState = ref.watch(syncControllerProvider);
+            final running = syncState is SyncRunning;
+            if (running) {
+              return ValueListenableBuilder(
+                valueListenable: SyncCancellation.instance.listenable,
+                builder: (context, stopping, _) {
+                  return SettingListTile(
+                    title: stopping
+                        ? context.l10n.sync.stopping
+                        : context.l10n.sync.stop,
+                    subtitle: stopping
+                        ? context.l10n.sync.stoppingSubtitle
+                        : context.l10n.sync.stopSubtitle,
+                    leading: const Icon(LucideIcons.circleStop),
+                    trailing: const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    onTap: stopping
+                        ? null
+                        : () {
+                            ref.read(syncControllerProvider.notifier).stop();
+                            toast.info(message: l10n.sync.willStop);
+                          },
+                  );
+                },
+              );
+            }
+            return SettingListTile(
+              title: context.l10n.sync.syncNow,
+              subtitle: millis > 0
+                  ? context.l10n.sync.lastSync(
+                      time: TimeFormat.listDateTime(
+                        .fromMillisecondsSinceEpoch(millis),
+                      ),
+                    )
+                  : context.l10n.sync.neverSynced,
+              leading: const Icon(LucideIcons.refreshCw),
+              trailing: const Icon(LucideIcons.chevronRight),
+              onTap: configured
+                  ? () async {
+                      final backend = IRemoteSyncBackend.get();
+                      if (!await ensureSyncKeyReady(
+                        context: context,
+                        ref: ref,
+                        backend: backend,
+                      )) {
+                        return;
+                      }
+                      await ref
+                          .read(syncControllerProvider.notifier)
+                          .sync(backend);
+                    }
+                  : null,
+            );
+          },
+        ),
+        SettingListTile(
+          title: context.l10n.sync.logEntry,
+          subtitle: context.l10n.sync.logEntrySubtitle,
+          leading: const Icon(LucideIcons.history),
+          trailing: const Icon(LucideIcons.chevronRight),
+          onTap: () => const SyncLogRoute().push(context),
         ),
       ],
     );
@@ -240,34 +225,22 @@ class _LanSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.theme.colors;
-    return Column(
-      crossAxisAlignment: .stretch,
+    return MSliverSettingGroup(
+      title: context.l10n.sync.lanSection,
       children: [
-        SettingTitleTile(title: context.l10n.sync.lanSection),
-        Card.filled(
-          color: scheme.surfaceContainerLow,
-          margin: .zero,
-          child: Column(
-            children: [
-              SettingListTile(
-                isFirst: true,
-                title: context.l10n.sync.lanSend,
-                subtitle: context.l10n.sync.lanSendSubtitle,
-                leading: const Icon(LucideIcons.radioTower),
-                trailing: const Icon(LucideIcons.chevronRight),
-                onTap: () => const LanSendRoute().push(context),
-              ),
-              SettingListTile(
-                isLast: true,
-                title: context.l10n.sync.lanReceive,
-                subtitle: context.l10n.sync.lanReceiveSubtitle,
-                leading: const Icon(LucideIcons.wifi),
-                trailing: const Icon(LucideIcons.chevronRight),
-                onTap: () => const LanReceiveRoute().push(context),
-              ),
-            ],
-          ),
+        SettingListTile(
+          title: context.l10n.sync.lanSend,
+          subtitle: context.l10n.sync.lanSendSubtitle,
+          leading: const Icon(LucideIcons.radioTower),
+          trailing: const Icon(LucideIcons.chevronRight),
+          onTap: () => const LanSendRoute().push(context),
+        ),
+        SettingListTile(
+          title: context.l10n.sync.lanReceive,
+          subtitle: context.l10n.sync.lanReceiveSubtitle,
+          leading: const Icon(LucideIcons.wifi),
+          trailing: const Icon(LucideIcons.chevronRight),
+          onTap: () => const LanReceiveRoute().push(context),
         ),
       ],
     );
@@ -279,20 +252,10 @@ class _EncryptionSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.theme.colors;
-    return Column(
-      crossAxisAlignment: .stretch,
-      children: [
-        SettingTitleTile(title: context.l10n.sync.encryptionSection),
-        Card.filled(
-          color: scheme.surfaceContainerLow,
-          margin: .zero,
-          // 无独立加密开关：配置用户密钥即开启 AES-256 加密，清空即回到明文。
-          child: const Column(
-            children: [UserKeyTile(isFirst: true, isLast: true)],
-          ),
-        ),
-      ],
+    // 无独立加密开关：配置用户密钥即开启 AES-256 加密，清空即回到明文。
+    return MSliverSettingGroup(
+      title: context.l10n.sync.encryptionSection,
+      children: const [UserKeyTile()],
     );
   }
 }
@@ -315,57 +278,41 @@ class _AutoSyncSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.theme.colors;
-    return Column(
-      crossAxisAlignment: .stretch,
-      children: [
-        SettingTitleTile(title: context.l10n.sync.autoSection),
-        Card.filled(
-          color: scheme.surfaceContainerLow,
-          margin: .zero,
-          child: ValueListenableBuilder(
-            valueListenable: MoodiaryKVs.autoSync.getNotifier(),
-            builder: (context, enabled, _) {
-              return Column(
-                children: [
-                  SettingSwitchListTile(
-                    isFirst: true,
-                    title: context.l10n.sync.autoSync,
-                    subtitle: context.l10n.sync.autoSyncSubtitle,
-                    secondary: const Icon(LucideIcons.refreshCw),
-                    value: enabled,
-                    onChanged: (v) => MoodiaryKVs.autoSync.set(v),
+    return ValueListenableBuilder(
+      valueListenable: MoodiaryKVs.autoSync.getNotifier(),
+      builder: (context, enabled, _) {
+        return MSliverSettingGroup(
+          title: context.l10n.sync.autoSection,
+          children: [
+            SettingSwitchListTile(
+              title: context.l10n.sync.autoSync,
+              subtitle: context.l10n.sync.autoSyncSubtitle,
+              secondary: const Icon(LucideIcons.refreshCw),
+              value: enabled,
+              onChanged: (v) => MoodiaryKVs.autoSync.set(v),
+            ),
+            ValueListenableBuilder(
+              valueListenable: MoodiaryKVs.syncPollInterval.getNotifier(),
+              builder: (context, seconds, _) {
+                return SettingListTile(
+                  title: context.l10n.sync.pollInterval,
+                  subtitle: context.l10n.sync.pollIntervalSubtitle,
+                  leading: const Icon(LucideIcons.timer),
+                  trailing: Text(
+                    _fmtInterval(seconds),
+                    style: enabled
+                        ? context.theme.typography.bodyMedium.primary
+                        : context.theme.typography.bodyMedium.onSurfaceVariant,
                   ),
-                  ValueListenableBuilder(
-                    valueListenable: MoodiaryKVs.syncPollInterval.getNotifier(),
-                    builder: (context, seconds, _) {
-                      return SettingListTile(
-                        isLast: true,
-                        title: context.l10n.sync.pollInterval,
-                        subtitle: context.l10n.sync.pollIntervalSubtitle,
-                        leading: const Icon(LucideIcons.timer),
-                        trailing: Text(
-                          _fmtInterval(seconds),
-                          style: enabled
-                              ? context.theme.typography.bodyMedium.primary
-                              : context
-                                    .theme
-                                    .typography
-                                    .bodyMedium
-                                    .onSurfaceVariant,
-                        ),
-                        onTap: enabled
-                            ? () => _editPollInterval(context, seconds)
-                            : null,
-                      );
-                    },
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
-      ],
+                  onTap: enabled
+                      ? () => _editPollInterval(context, seconds)
+                      : null,
+                );
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -427,31 +374,23 @@ class _NetworkSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.theme.colors;
-    return Column(
-      crossAxisAlignment: .stretch,
+    return MSliverSettingGroup(
+      title: context.l10n.sync.networkSection,
       children: [
-        SettingTitleTile(title: context.l10n.sync.networkSection),
-        Card.filled(
-          color: scheme.surfaceContainerLow,
-          margin: .zero,
-          child: ValueListenableBuilder(
-            valueListenable: MoodiaryKVs.syncConcurrency.getNotifier(),
-            builder: (context, value, _) {
-              return SettingListTile(
-                isFirst: true,
-                isLast: true,
-                title: context.l10n.sync.concurrency,
-                subtitle: context.l10n.sync.concurrencySubtitle,
-                leading: const Icon(LucideIcons.server),
-                trailing: Text(
-                  '$value',
-                  style: context.theme.typography.bodyMedium.primary,
-                ),
-                onTap: () => _editConcurrency(context, value),
-              );
-            },
-          ),
+        ValueListenableBuilder(
+          valueListenable: MoodiaryKVs.syncConcurrency.getNotifier(),
+          builder: (context, value, _) {
+            return SettingListTile(
+              title: context.l10n.sync.concurrency,
+              subtitle: context.l10n.sync.concurrencySubtitle,
+              leading: const Icon(LucideIcons.server),
+              trailing: Text(
+                '$value',
+                style: context.theme.typography.bodyMedium.primary,
+              ),
+              onTap: () => _editConcurrency(context, value),
+            );
+          },
         ),
       ],
     );

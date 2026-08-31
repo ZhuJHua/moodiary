@@ -1,9 +1,8 @@
 import 'dart:io';
 
-import 'package:moodiary_mobile/app/settings/setting_routes.dart';
-import 'package:moodiary_mobile/gen/assets.gen.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_mobile/gen/assets.gen.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:mui/mui.dart';
@@ -67,11 +66,9 @@ class _AboutPageState extends State<AboutPage> {
       body: SingleChildScrollView(
         padding: const .all(16),
         child: Column(
+          spacing: 32,
           children: [
             _LogoTitle(appVersion: appVersion, systemVersion: _systemVersion),
-            const SizedBox(height: 32),
-            // 全仓卡片一律 filled：cardTheme 的 shape 会盖掉 `.outlined` 自带的那道边，
-            // 写 `.outlined` 只是名不副实。
             Card.filled(
               color: scheme.surfaceContainerLow,
               margin: .zero,
@@ -84,9 +81,9 @@ class _AboutPageState extends State<AboutPage> {
                       color: scheme.onSurfaceVariant,
                     ),
                     title: context.l10n.app.aboutCheckUpdate,
-                    trailing: Text(
-                      appVersion,
-                      style: context.theme.typography.bodySmall.primary,
+                    trailing: Icon(
+                      LucideIcons.chevronRight,
+                      color: scheme.onSurfaceVariant,
                     ),
                     onTap: () {
                       toast.info(message: l10n.app.aboutUpToDate);
@@ -129,6 +126,7 @@ class _AboutPageState extends State<AboutPage> {
                     onTap: () => const PrivacyRoute().push(context),
                   ),
                   SettingListTile(
+                    isLast: true,
                     leading: Icon(
                       LucideIcons.bug,
                       color: scheme.onSurfaceVariant,
@@ -140,23 +138,9 @@ class _AboutPageState extends State<AboutPage> {
                     ),
                     onTap: () => _open('https://answer.moodiary.net'),
                   ),
-                  SettingListTile(
-                    isLast: true,
-                    leading: Icon(
-                      LucideIcons.handCoins,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                    title: context.l10n.app.aboutSponsor,
-                    trailing: Icon(
-                      LucideIcons.chevronRight,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                    onTap: () => const SponsorRoute().push(context),
-                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 32),
             const _IcpFiling(),
           ],
         ),
@@ -179,9 +163,9 @@ class _LogoTitle extends StatelessWidget {
         : Assets.icons.appiconLight;
     return Column(
       mainAxisSize: .min,
+      spacing: 16,
       children: [
         icon.svg(width: 160, height: 160),
-        const SizedBox(height: 8),
         Row(
           mainAxisAlignment: .center,
           children: [
