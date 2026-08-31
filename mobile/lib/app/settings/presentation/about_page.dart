@@ -59,7 +59,6 @@ class _AboutPageState extends State<AboutPage> {
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
-    final isDark = context.theme.isDark;
     final appVersion = _packageInfo == null
         ? '...'
         : '${_packageInfo!.version}+${_packageInfo!.buildNumber}';
@@ -69,11 +68,7 @@ class _AboutPageState extends State<AboutPage> {
         padding: const .all(16),
         child: Column(
           children: [
-            _LogoTitle(
-              isDark: isDark,
-              appVersion: appVersion,
-              systemVersion: _systemVersion,
-            ),
+            _LogoTitle(appVersion: appVersion, systemVersion: _systemVersion),
             const SizedBox(height: 32),
             // 全仓卡片一律 filled：cardTheme 的 shape 会盖掉 `.outlined` 自带的那道边，
             // 写 `.outlined` 只是名不副实。
@@ -171,33 +166,21 @@ class _AboutPageState extends State<AboutPage> {
 }
 
 class _LogoTitle extends StatelessWidget {
-  final bool isDark;
   final String appVersion;
   final String systemVersion;
 
-  const _LogoTitle({
-    required this.isDark,
-    required this.appVersion,
-    required this.systemVersion,
-  });
+  const _LogoTitle({required this.appVersion, required this.systemVersion});
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    final scheme = theme.colors;
+    final icon = theme.isDark
+        ? Assets.icons.appiconDark
+        : Assets.icons.appiconLight;
     return Column(
       mainAxisSize: .min,
       children: [
-        Image.asset(
-          isDark
-              ? Assets.icon.dark.darkForeground.path
-              : Assets.icon.light.lightForeground.path,
-          color: scheme.onSurface,
-          height: 160,
-          width: 160,
-        ),
-        const SizedBox(height: 8),
-        Text('Moodiary', style: theme.typography.titleLarge.onSurface),
+        icon.svg(width: 160, height: 160),
         const SizedBox(height: 8),
         Row(
           mainAxisAlignment: .center,

@@ -54,6 +54,8 @@ dependencies:
   flutter_markdown_plus: 1.0.12
 
   flutter_displaymode: 0.7.0
+  # assets.gen.dart 的 SvgGenImage 直接 import flutter_svg，须显式钉住
+  flutter_svg: 2.3.0
   url_launcher: 6.3.2
 
   intl: 0.20.3
@@ -73,9 +75,11 @@ dev_dependencies:
 
 flutter:
   assets:
-    - assets/icon/dark/
-    - assets/icon/light/
-    - assets/lottie/
     - res/sponsor/
+    - assets/icons/
 
   uses-material-design: true
+
+flutter_gen:
+  integrations:
+    flutter_svg: true
