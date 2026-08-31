@@ -792,13 +792,11 @@ class _MVideoPlayerPageState extends State<MVideoPlayerPage>
   }
 
   Widget _buildScrubber(Translations l10n) {
-    final accent = context.theme.colors.primary;
     return Row(
       children: [
         Expanded(
           child: _ScrubBar(
             progress: _player.progress,
-            accent: accent,
             semanticLabel: l10n.ui.playbackProgress,
             onBegin: (at) {
               _unpinChrome?.call();
@@ -818,7 +816,7 @@ class _MVideoPlayerPageState extends State<MVideoPlayerPage>
           ),
         ),
         const SizedBox(width: 10),
-        _TimeCode(progress: _player.progress, accent: accent),
+        _TimeCode(progress: _player.progress),
       ],
     );
   }
@@ -970,13 +968,12 @@ class _MVideoPlayerPageState extends State<MVideoPlayerPage>
 
   /// 刮擦时间码卡。同样自成一路：跟手期间每帧都在变。
   Widget _buildScrubHud() {
-    final accent = context.theme.colors.primary;
     return IgnorePointer(
       child: ValueListenableBuilder<_ScrubHud?>(
         valueListenable: _hud,
         builder: (context, hud, _) => hud == null || _exiting
             ? const SizedBox.shrink()
-            : _ScrubHudCard(hud: hud, accent: accent),
+            : _ScrubHudCard(hud: hud),
       ),
     );
   }
@@ -984,7 +981,6 @@ class _MVideoPlayerPageState extends State<MVideoPlayerPage>
   /// 刮擦时贴底的一条 2dp 细进度。只在 **chrome 藏着** 时出现 ——
   /// 横划不再把整条控制栏叫出来，但「刮到哪了」总得有个全局参照。
   Widget _buildScrubRail() {
-    final accent = context.theme.colors.primary;
     return IgnorePointer(
       child: ValueListenableBuilder<bool>(
         valueListenable: _chrome,
@@ -1012,8 +1008,8 @@ class _MVideoPlayerPageState extends State<MVideoPlayerPage>
                                       hud.duration.inMilliseconds)
                                   .clamp(0.0, 1.0)
                             : 0.0,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(color: accent),
+                        child: const DecoratedBox(
+                          decoration: BoxDecoration(color: Colors.white),
                         ),
                       ),
                     ),
@@ -1101,7 +1097,6 @@ class _MVideoPlayerPageState extends State<MVideoPlayerPage>
 class _ScrubBar extends StatefulWidget {
   const _ScrubBar({
     required this.progress,
-    required this.accent,
     required this.semanticLabel,
     required this.onBegin,
     required this.onUpdate,
@@ -1110,7 +1105,6 @@ class _ScrubBar extends StatefulWidget {
   });
 
   final ValueListenable<VideoProgress> progress;
-  final Color accent;
   final String semanticLabel;
   final ValueChanged<Duration> onBegin;
   final ValueChanged<Duration> onUpdate;
@@ -1229,7 +1223,6 @@ class _ScrubBarState extends State<_ScrubBar>
             painter: _ScrubPainter(
               progress: widget.progress,
               press: _pressed,
-              accent: widget.accent,
               dpr: dpr,
             ),
           ),
@@ -1243,13 +1236,11 @@ class _ScrubPainter extends CustomPainter {
   _ScrubPainter({
     required this.progress,
     required this.press,
-    required this.accent,
     required this.dpr,
   }) : super(repaint: .merge([progress, press]));
 
   final ValueListenable<VideoProgress> progress;
   final Animation<double> press;
-  final Color accent;
   final double dpr;
 
   static const _kIdleTrack = 3.0;
@@ -1281,11 +1272,13 @@ class _ScrubPainter extends CustomPainter {
     );
     canvas.drawRRect(rail, Paint()..color = const Color(0x1FFFFFFF));
 
+    // 已播段与 thumb 同为纯白 —— 主题色在这间暗室里不可靠（灰度主题的 primary
+    // 亮度随明暗档翻转，浅色档下和黑背景融为一体），亮度/音量条也是同一套白。
     if (f > 0) {
       final right = math.max(size.width * f, h);
       canvas.drawRRect(
         .fromLTRBR(0, top, right, top + h, radius),
-        Paint()..color = accent,
+        Paint()..color = Colors.white,
       );
     }
 
@@ -1298,16 +1291,15 @@ class _ScrubPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_ScrubPainter old) =>
-      old.accent != accent || old.dpr != dpr || old.progress != progress;
+      old.dpr != dpr || old.progress != progress;
 }
 
 /// 时间码。等宽数字 + 固定最小宽度：不定宽的话每跳一秒轨就会被挤动一次；
 /// 超过 1 小时字串变长（1:02:33），最小宽度跟着换一档。
 class _TimeCode extends StatelessWidget {
-  const _TimeCode({required this.progress, required this.accent});
+  const _TimeCode({required this.progress});
 
   final ValueListenable<VideoProgress> progress;
-  final Color accent;
 
   static const _kShadow = [
     Shadow(color: Color(0x80000000), blurRadius: 2, offset: Offset(0, 1)),
@@ -1327,16 +1319,14 @@ class _TimeCode extends StatelessWidget {
             mainAxisSize: .min,
             mainAxisAlignment: .end,
             children: [
-              AnimatedDefaultTextStyle(
-                duration: Durations.short3,
-                // 刮擦中把已播时间染成强调色：手指在动的是它，不是总长。
+              Text(
+                TimeFormat.mediaDuration(p.position),
                 style: context.theme.typography.labelMedium.emphasized.onSurface
                     .copyWith(
-                      color: p.draft ? accent : Colors.white,
+                      color: Colors.white,
                       fontFeatures: const [.tabularFigures()],
                       shadows: _kShadow,
                     ),
-                child: Text(TimeFormat.mediaDuration(p.position)),
               ),
               if (known) ...[
                 Text(
@@ -1377,10 +1367,9 @@ class _ScrubHud {
 }
 
 class _ScrubHudCard extends StatelessWidget {
-  const _ScrubHudCard({required this.hud, required this.accent});
+  const _ScrubHudCard({required this.hud});
 
   final _ScrubHud hud;
-  final Color accent;
 
   @override
   Widget build(BuildContext context) {
@@ -1409,8 +1398,11 @@ class _ScrubHudCard extends StatelessWidget {
                         .typography
                         .labelSmall
                         .emphasized
-                        .primary
-                        .copyWith(fontFeatures: const [.tabularFigures()]),
+                        .onSurface
+                        .copyWith(
+                          color: Colors.white,
+                          fontFeatures: const [.tabularFigures()],
+                        ),
                   ),
                 const SizedBox(height: 3),
                 Row(

@@ -486,9 +486,10 @@ body {
    限高与比例不冲突的写法：把约束加在宽度上 —— 宽度取「满栏」与「限高反算出的宽度」的较小者，
    高度由 aspect-ratio 导出，两个约束下比例都精确。用 max-height 会在触顶时压扁比例。
    （360px 宽的手机上，区间内任何比例的高度都在 450px 以内，限高不会触发；它是给平板 /
-   横屏 / 将来桌面端兜的。） */
+   横屏 / 将来桌面端兜的。）
+   限高必须是固定值，不能用 vh：键盘一弹 webview 就被压矮，vh 跟着缩，视频块会当场变小。 */
 .moodiary-video__frame--boxed {
-  --video-max-h: 60vh;
+  --video-max-h: 480px;
   width: min(100%, calc(var(--video-max-h) * var(--video-ratio, 1.7778)));
   aspect-ratio: var(--video-ratio, 1.7778);
   margin-inline: auto;
@@ -579,9 +580,11 @@ body {
   background: rgba(255, 255, 255, 0.12);
   box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.55);
 }
+/* 已播段与 thumb 同为纯白（同全屏播放器）：主题色在黑画面上不可靠 ——
+   灰度主题浅色档的 primary 近黑，会和画面融为一体。 */
 .moodiary-video__fill {
   left: 0;
-  background: var(--color-primary);
+  background: #fff;
 }
 .moodiary-video__thumb {
   position: absolute;
@@ -610,7 +613,7 @@ body {
   transform: translate(-50%, calc(-50% - 2px));
 }
 
-/* 时间码：等宽数字，已播 / 分隔 / 总长三段各自配色；刮擦中已播段染成主题色。 */
+/* 时间码：等宽数字，已播 / 分隔 / 总长三段各自配色。 */
 .moodiary-video__time {
   flex: none;
   display: flex;
@@ -634,9 +637,6 @@ body {
 .moodiary-video__time-dur {
   font-weight: 500;
   color: rgba(255, 255, 255, 0.62);
-}
-.moodiary-video__bar.is-scrubbing .moodiary-video__time-pos {
-  color: var(--color-primary);
 }
 .moodiary-video__bar.is-hidden {
   opacity: 0;

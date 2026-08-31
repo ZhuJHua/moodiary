@@ -267,8 +267,11 @@ class _MAudioPlayerPageState extends State<MAudioPlayerPage>
                     onPressed: () => _controller.toggle(widget.audioPath),
                     tooltip: p.playing ? l10n.ui.pause : l10n.ui.play,
                     iconSize: 24,
+                    // 主题的 iconTheme 会经 themeStyleOf 把前景改成 onSurface，
+                    // 盖掉 filled 变体的 onPrimary 默认值 —— 图标得显式给色。
                     icon: Icon(
                       p.playing ? LucideIcons.pause : LucideIcons.play,
+                      color: scheme.onPrimary,
                     ),
                     style: IconButton.styleFrom(
                       minimumSize: const Size(52, 52),
