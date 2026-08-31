@@ -27,6 +27,8 @@ class ServicesPage extends ConsumerWidget {
           SizedBox(height: 4),
           _SemanticSection(),
           SizedBox(height: 4),
+          _MoodSuggestSection(),
+          SizedBox(height: 4),
           _QweatherSection(),
           SizedBox(height: 4),
           _TiandituSection(),
@@ -281,12 +283,8 @@ class _ModelPickerSheetState extends State<_ModelPickerSheet> {
   }
 
   String _descOf(BuildContext context, EmbeddingModelSpec spec) {
-    final l10nApp = context.l10n.app;
     return switch (spec.id) {
-      'bge-small-zh-v1.5-int8' => l10nApp.semanticDescBgeSmall,
-      'bge-base-zh-v1.5-int8' => l10nApp.semanticDescBgeBase,
-      'bge-large-zh-v1.5-int8' => l10nApp.semanticDescBgeLarge,
-      'bge-m3-int8' => l10nApp.semanticDescBgeM3,
+      'qwen3-embedding-0.6b-int8' => context.l10n.app.semanticDescQwen3,
       _ => '',
     };
   }
@@ -360,6 +358,225 @@ class _ModelPickerSheetState extends State<_ModelPickerSheet> {
     } catch (e, s) {
       logger.e('disable semantic search failed', error: e, stackTrace: s);
     }
+  }
+}
+
+/// 心情建议：小型本地 LLM 下载/启停。启用后写日记自动保存时在本机建议心情
+/// （仅本次会话新建且用户未动过选择器的日记，见 diary_page 的 _maybeSuggestMood）。
+class _MoodSuggestSection extends StatefulWidget {
+  const _MoodSuggestSection();
+
+  @override
+  State<_MoodSuggestSection> createState() => _MoodSuggestSectionState();
+}
+
+class _MoodSuggestSectionState extends State<_MoodSuggestSection> {
+  final _manager = getIt<MoodLlmModelManager>();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.theme.colors;
+    return Column(
+      crossAxisAlignment: .stretch,
+      children: [
+        SettingTitleTile(title: context.l10n.app.moodSuggestTitle),
+        Card.filled(
+          color: scheme.surfaceContainerLow,
+          margin: .zero,
+          child: ValueListenableBuilder<String>(
+            valueListenable: MoodiaryKVs.moodLlmModelId.getNotifier(),
+            builder: (context, _, _) {
+              final active = _manager.active;
+              return SettingListTile(
+                isFirst: true,
+                isLast: true,
+                leading: Icon(
+                  LucideIcons.smilePlus,
+                  color: scheme.onSurfaceVariant,
+                ),
+                title: context.l10n.app.moodSuggestModelTitle,
+                subtitle:
+                    active?.displayName ?? context.l10n.app.semanticStateOff,
+                trailing: const Icon(LucideIcons.chevronRight),
+                onTap: _openPicker,
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _openPicker() async {
+    await MSheet.show<void>(
+      context,
+      builder: (_) => _MoodLlmPickerSheet(manager: _manager),
+    );
+    if (mounted) setState(() {});
+  }
+}
+
+class _MoodLlmPickerSheet extends StatefulWidget {
+  final MoodLlmModelManager manager;
+
+  const _MoodLlmPickerSheet({required this.manager});
+
+  @override
+  State<_MoodLlmPickerSheet> createState() => _MoodLlmPickerSheetState();
+}
+
+class _MoodLlmPickerSheetState extends State<_MoodLlmPickerSheet> {
+  /// 正在下载的模型 id 与进度（0~1；-1 = 校验中）。
+  String? _downloadingId;
+  double _progress = 0;
+
+  MoodLlmModelManager get _manager => widget.manager;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.theme.colors;
+    final active = _manager.active;
+    return SafeArea(
+      child: Column(
+        mainAxisSize: .min,
+        crossAxisAlignment: .stretch,
+        children: [
+          Padding(
+            padding: const .fromLTRB(24, 8, 24, 8),
+            child: Text(
+              context.l10n.app.moodSuggestPickTitle,
+              style: context.theme.typography.titleMedium.onSurface,
+            ),
+          ),
+          for (final (i, spec) in moodLlmCatalog.indexed)
+            _modelTile(
+              context,
+              spec,
+              isFirst: i == 0,
+              isLast: i == moodLlmCatalog.length - 1 && active == null,
+              isActive: spec.id == active?.id,
+            ),
+          if (active != null)
+            SettingListTile(
+              isLast: true,
+              leading: Icon(LucideIcons.circleOff, color: scheme.error),
+              title: context.l10n.app.moodSuggestDisableTitle,
+              onTap: _downloadingId != null ? null : _disable,
+            ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
+  Widget _modelTile(
+    BuildContext context,
+    MoodLlmSpec spec, {
+    required bool isFirst,
+    required bool isLast,
+    required bool isActive,
+  }) {
+    final scheme = context.theme.colors;
+    final downloading = _downloadingId == spec.id;
+    final downloaded = _manager.isDownloaded(spec);
+    final sizeMb = (spec.sizeBytes / (1024 * 1024)).round();
+    final subtitle = downloading
+        ? (_progress < 0
+              ? context.l10n.app.semanticVerifying
+              : context.l10n.app.semanticDownloading(
+                  percent: (_progress * 100).toStringAsFixed(0),
+                ))
+        : '$sizeMb MB · ${context.l10n.app.moodSuggestDescQwen3}';
+    return SettingListTile(
+      isFirst: isFirst,
+      isLast: isLast,
+      leading: Icon(
+        isActive ? LucideIcons.circleCheck : LucideIcons.box,
+        color: isActive ? scheme.primary : scheme.onSurfaceVariant,
+      ),
+      title: spec.displayName,
+      subtitle: subtitle,
+      trailing: downloading
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : (downloaded && !isActive)
+          ? IconButton(
+              icon: Icon(LucideIcons.trash2, color: scheme.onSurfaceVariant),
+              onPressed: () => _delete(spec),
+            )
+          : null,
+      onTap: (isActive || _downloadingId != null)
+          ? null
+          : () => _activate(spec),
+    );
+  }
+
+  Future<void> _activate(MoodLlmSpec spec) async {
+    final downloaded = _manager.isDownloaded(spec);
+    final sizeMb = (spec.sizeBytes / (1024 * 1024)).round();
+    final confirmed = await MAlert.confirm(
+      context,
+      title: l10n.app.moodSuggestEnableTitle,
+      message: downloaded
+          ? l10n.app.moodSuggestActivateLocalMessage
+          : l10n.app.moodSuggestActivateDownloadMessage(size: '$sizeMb MB'),
+      confirmLabel: l10n.app.semanticEnableConfirm,
+    );
+    if (!confirmed || !mounted) return;
+    setState(() {
+      _downloadingId = spec.id;
+      _progress = 0;
+    });
+    try {
+      if (!downloaded) {
+        await _manager.download(
+          spec,
+          onProgress: (received, total) {
+            if (!mounted) return;
+            setState(() => _progress = total > 0 ? received / total : 0);
+          },
+        );
+      }
+      if (mounted) setState(() => _progress = -1);
+      _manager.activate(spec);
+      toast.success(message: l10n.app.moodSuggestEnabled);
+      if (mounted) Navigator.of(context).pop();
+    } catch (e, s) {
+      logger.e('activate mood llm failed', error: e, stackTrace: s);
+      toast.error(message: l10n.app.semanticEnableFailed);
+    } finally {
+      if (mounted) setState(() => _downloadingId = null);
+    }
+  }
+
+  Future<void> _delete(MoodLlmSpec spec) async {
+    final confirmed = await MAlert.confirm(
+      context,
+      title: l10n.app.semanticDeleteTitle,
+      message: l10n.app.semanticDeleteMessage,
+      confirmLabel: l10n.app.semanticDeleteConfirm,
+      isDestructive: true,
+    );
+    if (!confirmed) return;
+    await _manager.delete(spec);
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _disable() async {
+    final confirmed = await MAlert.confirm(
+      context,
+      title: l10n.app.moodSuggestDisableTitle,
+      message: l10n.app.moodSuggestDisableMessage,
+      confirmLabel: l10n.app.semanticDisableConfirm,
+      isDestructive: true,
+    );
+    if (!confirmed || !mounted) return;
+    _manager.deactivate();
+    await getIt<MoodLlmEngine>().dispose();
+    if (mounted) Navigator.of(context).pop();
   }
 }
 

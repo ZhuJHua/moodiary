@@ -32,10 +32,10 @@ class EmbeddingModelSpec {
 
   final String passagePrefix;
 
-  /// 推理上下文长度（bge-zh 系 512；m3 给 1024）。
+  /// 推理上下文长度。
   final int contextSize;
 
-  /// pad token 名（BERT 系 `[PAD]`，XLM-R 系 `<pad>`）。
+  /// pad token 名（Qwen 系 `<|endoftext|>`）。
   final String padToken;
 
   const EmbeddingModelSpec({
@@ -48,7 +48,7 @@ class EmbeddingModelSpec {
     required this.queryPrefix,
     this.passagePrefix = '',
     this.contextSize = 512,
-    this.padToken = '[PAD]',
+    this.padToken = '<|endoftext|>',
   });
 
   String get modelFileName => '$id.onnx';
@@ -56,51 +56,24 @@ class EmbeddingModelSpec {
   String get tokenizerFileName => '$id.tokenizer.json';
 }
 
-const _bgeZhQueryPrefix = '为这个句子生成表示以用于检索相关文章：';
-
-/// 内置清单，按体积升序，全部为 int8 单文件 ONNX（无 external data）。
-/// 换模型 = 维度变 = 全量重嵌（EmbedIndexService 的 stale 重建路径）。
-/// EmbeddingGemma 已下架：社区 ONNX 图只输出裸 hidden state，
-/// 它的 mean 池化 + 双层投影不在图里，照搬 CLS 池化是错的；要回归得自转带池化的图。
+/// 内置清单：固定 Qwen3-Embedding-0.6B（2026-08-31 拍板，bge 系整体下架——
+/// 该体积下多语言检索质量最优，含蓄中文表达召回明显好于 bge）。int8 单文件
+/// ONNX（无 external data）。换模型 = 维度变 = 全量重嵌（stale 重建路径）。
+/// EmbeddingGemma 已下架：社区图无池化且它的 mean 池化 + 双层投影没法在图外补。
+/// tokenizer 的 TemplateProcessing 自动在末尾补 `<|endoftext|>`，last-token
+/// 池化取的就是这个 EOS 位——这是模型契约，动 tokenizer 就破功。
 const embeddingModelCatalog = <EmbeddingModelSpec>[
   EmbeddingModelSpec(
-    id: 'bge-small-zh-v1.5-int8',
-    displayName: 'BGE-small 中文',
-    dim: 512,
-    modelHfPath: 'Xenova/bge-small-zh-v1.5/resolve/main/onnx/model_int8.onnx',
-    tokenizerHfPath: 'Xenova/bge-small-zh-v1.5/resolve/main/tokenizer.json',
-    sizeBytes: 24117248, // 23 MB
-    queryPrefix: _bgeZhQueryPrefix,
-  ),
-  EmbeddingModelSpec(
-    id: 'bge-base-zh-v1.5-int8',
-    displayName: 'BGE-base 中文',
-    dim: 768,
-    modelHfPath: 'Xenova/bge-base-zh-v1.5/resolve/main/onnx/model_int8.onnx',
-    tokenizerHfPath: 'Xenova/bge-base-zh-v1.5/resolve/main/tokenizer.json',
-    sizeBytes: 103809024, // 99 MB
-    queryPrefix: _bgeZhQueryPrefix,
-  ),
-  EmbeddingModelSpec(
-    id: 'bge-large-zh-v1.5-int8',
-    displayName: 'BGE-large 中文',
+    id: 'qwen3-embedding-0.6b-int8',
+    displayName: 'Qwen3-Embedding 0.6B',
     dim: 1024,
-    modelHfPath: 'Xenova/bge-large-zh-v1.5/resolve/main/onnx/model_int8.onnx',
-    tokenizerHfPath: 'Xenova/bge-large-zh-v1.5/resolve/main/tokenizer.json',
-    sizeBytes: 327155712, // 312 MB
-    queryPrefix: _bgeZhQueryPrefix,
-  ),
-  EmbeddingModelSpec(
-    id: 'bge-m3-int8',
-    displayName: 'BGE-M3 多语言',
-    dim: 1024,
-    modelHfPath: 'onnx-community/bge-m3-ONNX/resolve/main/onnx/model_int8.onnx',
-    tokenizerHfPath: 'onnx-community/bge-m3-ONNX/resolve/main/tokenizer.json',
-    sizeBytes: 585105408, // 558 MB
-    // M3 官方明确不需要指令前缀（这是它相对 bge-v1.5 系的设计变化）。
-    queryPrefix: '',
-    contextSize: 1024,
-    padToken: '<pad>',
+    modelHfPath: 'onnx-community/Qwen3-Embedding-0.6B-ONNX/resolve/main/onnx/model_int8.onnx',
+    tokenizerHfPath:
+        'onnx-community/Qwen3-Embedding-0.6B-ONNX/resolve/main/tokenizer.json',
+    sizeBytes: 624951296, // 596 MB
+    // 官方非对称检索契约：query 侧带 Instruct 前缀（Query: 后不加空格），
+    // passage 侧裸文本。
+    queryPrefix: 'Instruct: Given a diary search query, retrieve relevant diary passages\nQuery:',
   ),
 ];
 

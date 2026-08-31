@@ -1,8 +1,9 @@
 // 真机 benchmark / 冒烟：ONNX Runtime（onnxruntime_plus，FFI）统一运行时。
-//   1) 嵌入性能：bge-small-zh int8 加载 / 单条 / 批量（协议与历史数据可对照：
-//      llama.cpp 时代 12.4ms/86 chunks/s，ORT+ffi int8 19.0ms/49.2，见记忆与
-//      docs/local-rag.md §6.8）
-//   2) 一致性：int8 对 fp32 的逐条余弦（量化误差水位）
+//   1) 嵌入性能：Qwen3-Embedding-0.6B int8 加载 / 单条 / 批量（历史对照：
+//      bge-small int8 19.0ms/49.2 chunks/s，参数量 25 倍差距，见 docs/local-rag.md §6.8）
+//   2) 检索方向：5 组 query→passage 的 top-1 命中（int8 fp32 对照不可行——
+//      fp32 图带 external data，单文件架构装不下；桌面侧已验 5/5）
+//   3) 心情建议冒烟：Qwen3-0.6B int8 两段式提问的方向正确性
 //
 //   fvm flutter test integration_test/onnx_embedding_benchmark_test.dart \
 //     -d <device> --flavor beta
@@ -18,10 +19,11 @@ import 'package:moodiary_rust/rust.dart';
 
 // 双主机回退：先 hf-mirror（不经代理也稳），失败换 huggingface.co 直连。
 const _hosts = ['https://hf-mirror.com', 'https://huggingface.co'];
-const _bgeRepo = 'Xenova/bge-small-zh-v1.5/resolve/main';
+const _embRepo = 'onnx-community/Qwen3-Embedding-0.6B-ONNX/resolve/main';
+const _llmRepo = 'onnx-community/Qwen3-0.6B-ONNX/resolve/main';
 
-const _singleRounds = 10;
-const _batchRounds = 3;
+const _singleRounds = 5;
+const _batchRounds = 2;
 const _batchSize = 16;
 
 Future<String> _ensure(
@@ -71,70 +73,22 @@ List<String> _passages() => [
         '感觉最近的生活节奏慢慢稳定下来了，心情也比前段时间好了很多。',
 ];
 
-const _consistencyTexts = <String>[
-  '今天心情很好，和家人一起吃了晚饭。',
-  '工作压力太大了，整晚都睡不着，很焦虑。',
-  '去海边看了日出，浪花拍在礁石上，特别治愈。',
-  '猫生病了，跑了两趟宠物医院，又心疼又累。',
-  '读完了一本关于宇宙学的书，对时间的理解完全变了。',
-  '下雨天窝在家里听歌，煮了一锅热汤。',
-  'Today I finally finished the marathon, exhausted but proud.',
-  '面试结果出来了，没有通过，有点失落但也松了口气。',
+// 检索方向冒烟：query i 应命中 passage i（桌面侧 int8 实测 5/5）。
+const _retrievalPassages = <String>[
+  '今天部门开了一整天的会，方案改了三版还是被打回，心力交瘁。',
+  '周末去了趟青岛，海边风很大，但日落真的值。',
+  '养了八年的狗今天走了，我一直以为还有很多时间。',
+  '中午和同事去吃了新开的川菜馆，毛血旺一绝。',
+  '高数期中成绩出来了，比预期好，这个月刷题总算有回报。',
 ];
 
-typedef _BenchResult = ({
-  String label,
-  int loadMs,
-  double singleAvgMs,
-  double batchAvgMs,
-  double chunksPerSec,
-  List<Float32List> vectors,
-});
-
-Future<_BenchResult> _bench(
-  String label,
-  String modelPath,
-  String tokenizerPath,
-) async {
-  final backend = OnnxEmbeddingBackend();
-  try {
-    final loadWatch = Stopwatch()..start();
-    await backend.load(
-      modelPath,
-      tokenizerPath: tokenizerPath,
-      padToken: '[PAD]',
-    );
-    final loadMs = loadWatch.elapsedMilliseconds;
-
-    // 预热（首轮含图优化/内存分配，单独排除）。
-    await backend.embed(const ['预热文本，避免首轮开销计入统计。']);
-
-    final vectors = await backend.embed(_consistencyTexts);
-
-    final single = Stopwatch()..start();
-    for (var i = 0; i < _singleRounds; i++) {
-      await backend.embed([_passages()[i % _batchSize]]);
-    }
-    final singleAvgMs = single.elapsedMilliseconds / _singleRounds;
-
-    final batch = Stopwatch()..start();
-    for (var i = 0; i < _batchRounds; i++) {
-      await backend.embed(_passages());
-    }
-    final batchTotalMs = batch.elapsedMilliseconds;
-
-    return (
-      label: label,
-      loadMs: loadMs,
-      singleAvgMs: singleAvgMs,
-      batchAvgMs: batchTotalMs / _batchRounds,
-      chunksPerSec: _batchRounds * _batchSize / (batchTotalMs / 1000),
-      vectors: vectors,
-    );
-  } finally {
-    await backend.unload();
-  }
-}
+const _retrievalQueries = <String>[
+  '工作不顺心的日子',
+  '海边旅行',
+  '宠物离世的伤心事',
+  '好吃的川菜',
+  '考试成绩',
+];
 
 double _cosine(Float32List a, Float32List b) {
   assert(a.length == b.length, 'dim mismatch: ${a.length} vs ${b.length}');
@@ -152,48 +106,133 @@ void main() {
     await RustLib.init();
   });
 
-  testWidgets('ONNX embedding benchmark', (tester) async {
+  testWidgets('Qwen3 embedding benchmark + retrieval smoke', (tester) async {
+    final spec = embeddingModelCatalog.single;
     final tokenizerPath = await _ensure(
-      '$_bgeRepo/tokenizer.json',
-      'bench-bge-small.tokenizer.json',
-      minBytes: 100 * 1024,
+      '$_embRepo/tokenizer.json',
+      'bench-qwen3-emb.tokenizer.json',
+      minBytes: 10 * 1024 * 1024,
     );
-    final int8Path = await _ensure(
-      '$_bgeRepo/onnx/model_int8.onnx',
-      'bench-bge-small-int8.onnx',
-      minBytes: 15 * 1024 * 1024,
-    );
-    final fp32Path = await _ensure(
-      '$_bgeRepo/onnx/model.onnx',
-      'bench-bge-small-fp32.onnx',
-      minBytes: 60 * 1024 * 1024,
+    final modelPath = await _ensure(
+      '$_embRepo/onnx/model_int8.onnx',
+      'bench-qwen3-emb-int8.onnx',
+      minBytes: 500 * 1024 * 1024,
     );
 
-    final int8 = await _bench('int8', int8Path, tokenizerPath);
-    final fp32 = await _bench('fp32', fp32Path, tokenizerPath);
-
-    debugPrint('BENCH: -------- PERF (bge-small-zh) --------');
-    for (final r in [int8, fp32]) {
-      debugPrint(
-        'BENCH: ${r.label} load=${r.loadMs}ms '
-        'single=${r.singleAvgMs.toStringAsFixed(1)}ms '
-        'batch16=${r.batchAvgMs.toStringAsFixed(0)}ms '
-        'throughput=${r.chunksPerSec.toStringAsFixed(1)} chunks/s',
+    final backend = OnnxEmbeddingBackend();
+    try {
+      final loadWatch = Stopwatch()..start();
+      await backend.load(
+        modelPath,
+        tokenizerPath: tokenizerPath,
+        padToken: spec.padToken,
+        contextSize: spec.contextSize,
       );
-    }
+      debugPrint('BENCH: load=${loadWatch.elapsedMilliseconds}ms');
 
-    debugPrint('BENCH: -------- CONSISTENCY (int8 vs fp32) --------');
-    final cosines = [
-      for (var i = 0; i < _consistencyTexts.length; i++)
-        _cosine(fp32.vectors[i], int8.vectors[i]),
-    ];
-    for (var i = 0; i < cosines.length; i++) {
-      debugPrint('BENCH:   #$i cos=${cosines[i].toStringAsFixed(4)}');
+      // 预热（首轮含图优化/内存分配，单独排除）。
+      await backend.embed(const ['预热文本，避免首轮开销计入统计。']);
+
+      final single = Stopwatch()..start();
+      for (var i = 0; i < _singleRounds; i++) {
+        await backend.embed([_passages()[i % _batchSize]]);
+      }
+      final singleAvgMs = single.elapsedMilliseconds / _singleRounds;
+
+      final batch = Stopwatch()..start();
+      for (var i = 0; i < _batchRounds; i++) {
+        await backend.embed(_passages());
+      }
+      final batchTotalMs = batch.elapsedMilliseconds;
+      debugPrint(
+        'BENCH: single=${singleAvgMs.toStringAsFixed(1)}ms '
+        'batch16=${(batchTotalMs / _batchRounds).toStringAsFixed(0)}ms '
+        'throughput=${(_batchRounds * _batchSize / (batchTotalMs / 1000)).toStringAsFixed(1)} chunks/s',
+      );
+
+      final docs = await backend.embed(_retrievalPassages);
+      final queries = await backend.embed([
+        for (final q in _retrievalQueries) '${spec.queryPrefix}$q',
+      ]);
+      var hit = 0;
+      for (var i = 0; i < queries.length; i++) {
+        var best = 0;
+        for (var j = 1; j < docs.length; j++) {
+          if (_cosine(queries[i], docs[j]) > _cosine(queries[i], docs[best])) {
+            best = j;
+          }
+        }
+        debugPrint('BENCH: retrieval "${_retrievalQueries[i]}" -> $best');
+        if (best == i) hit++;
+      }
+      expect(hit, _retrievalQueries.length);
+      expect(queries.first.length, spec.dim);
+    } finally {
+      await backend.unload();
     }
-    final minCos = cosines.reduce((a, b) => a < b ? a : b);
-    debugPrint('BENCH: min cos=${minCos.toStringAsFixed(4)}');
-    // 量化漂移观测线：Xenova int8 对 fp32 实测 0.96~0.97（2026-08-28 PJZ110），
-    // 检索是相对排序，这个水位不影响召回；跌破 0.95 才值得追查。
-    expect(minCos, greaterThan(0.95));
-  }, timeout: const Timeout(Duration(minutes: 45)));
+  }, timeout: const Timeout(Duration(minutes: 60)));
+
+  testWidgets('Qwen3 mood llm two-stage smoke', (tester) async {
+    final tokenizerPath = await _ensure(
+      '$_llmRepo/tokenizer.json',
+      'bench-qwen3-llm.tokenizer.json',
+      minBytes: 8 * 1024 * 1024,
+    );
+    final modelPath = await _ensure(
+      '$_llmRepo/onnx/model_int8.onnx',
+      'bench-qwen3-llm-int8.onnx',
+      minBytes: 500 * 1024 * 1024,
+    );
+
+    const themeOptions = <MoodOption>[
+      (key: 'food', description: '美食：吃饭、做饭、餐厅、小吃'),
+      (key: 'travel', description: '旅行：出游、观光、逛景点'),
+      (key: '__emotion__', description: '以上都不沾边'),
+    ];
+    const emotionOptions = <MoodOption>[
+      (key: 'positive', description: '开心：心情好、满足、愉快'),
+      (key: 'negative', description: '难过：伤心、失落、沮丧'),
+      (key: 'anxious', description: '焦虑：担心、紧张、睡不着、压力大'),
+    ];
+
+    final classifier = OnnxMoodClassifier();
+    try {
+      final loadWatch = Stopwatch()..start();
+      await classifier.load(modelPath, tokenizerPath: tokenizerPath);
+      debugPrint('BENCH: mood llm load=${loadWatch.elapsedMilliseconds}ms');
+
+      const themeQuestion = '这篇日记主要在记录下面哪类事情？';
+      final watch = Stopwatch()..start();
+      final (theme1, p1) = await classifier.ask(
+        '中午和同事去吃了新开的川菜馆，毛血旺一绝，就是排队排了四十分钟。',
+        question: themeQuestion,
+        options: themeOptions,
+      );
+      debugPrint(
+        'BENCH: mood q1=${watch.elapsedMilliseconds}ms '
+        '-> $theme1 (${p1.toStringAsFixed(2)})',
+      );
+      expect(theme1, 'food');
+
+      watch.reset();
+      final (theme2, _) = await classifier.ask(
+        '明天就要面试了，翻来覆去睡不着，一直在想会被问到什么。',
+        question: themeQuestion,
+        options: themeOptions,
+      );
+      expect(theme2, '__emotion__');
+      final (emotion, p3) = await classifier.ask(
+        '明天就要面试了，翻来覆去睡不着，一直在想会被问到什么。',
+        question: '这篇日记里作者最主要的情绪是什么？',
+        options: emotionOptions,
+      );
+      debugPrint(
+        'BENCH: mood q2+q3=${watch.elapsedMilliseconds}ms '
+        '-> $emotion (${p3.toStringAsFixed(2)})',
+      );
+      expect(emotion, 'anxious');
+    } finally {
+      await classifier.unload();
+    }
+  }, timeout: const Timeout(Duration(minutes: 60)));
 }

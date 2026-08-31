@@ -1,6 +1,6 @@
 /// 正文分块：按空行切段、相邻段合并到 [maxChars]，超长单段硬切。
 /// 返回在原文中的字符偏移（不复制文本——摘录回显按偏移切原文）。
-/// 400 字符是 bge 系 512 token 上限的保守 proxy。
+/// 400 字符是 512 token 推理上限的保守 proxy（Qwen3 BPE 中文约 1 token/字）。
 library;
 
 typedef ChunkSpan = ({int start, int len});

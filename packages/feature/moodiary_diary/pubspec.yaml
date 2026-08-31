@@ -19,6 +19,7 @@ dependencies:
   moodiary_storage: 0.0.1
   moodiary_theme: 0.0.1
   moodiary_models: 0.0.1
+  moodiary_ml: 0.0.1
   moodiary_data: 0.0.1
   moodiary_components: 0.0.1
   moodiary_utils: 0.0.1

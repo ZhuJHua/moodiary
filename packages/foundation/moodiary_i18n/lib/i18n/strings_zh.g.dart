@@ -367,17 +367,38 @@ class Translations$app$zh {
 	/// zh: '删除'
 	String get semanticDeleteConfirm => '删除';
 
-	/// zh: '轻量快速，中文'
-	String get semanticDescBgeSmall => '轻量快速，中文';
+	/// zh: '多语言，含蓄表达也能召回'
+	String get semanticDescQwen3 => '多语言，含蓄表达也能召回';
 
-	/// zh: '均衡之选，中文'
-	String get semanticDescBgeBase => '均衡之选，中文';
+	/// zh: '心情建议'
+	String get moodSuggestTitle => '心情建议';
 
-	/// zh: '效果最好，中文'
-	String get semanticDescBgeLarge => '效果最好，中文';
+	/// zh: '本地模型'
+	String get moodSuggestModelTitle => '本地模型';
 
-	/// zh: '多语言旗舰，长文本'
-	String get semanticDescBgeM3 => '多语言旗舰，长文本';
+	/// zh: '选择模型'
+	String get moodSuggestPickTitle => '选择模型';
+
+	/// zh: '小型本地 LLM，理解 16 类心情与状态'
+	String get moodSuggestDescQwen3 => '小型本地 LLM，理解 16 类心情与状态';
+
+	/// zh: '启用心情建议'
+	String get moodSuggestEnableTitle => '启用心情建议';
+
+	/// zh: '将下载 {size} 的模型文件，写日记时在本机为你建议心情，日记内容不会上传。'
+	String moodSuggestActivateDownloadMessage({required Object size}) => '将下载 ${size} 的模型文件，写日记时在本机为你建议心情，日记内容不会上传。';
+
+	/// zh: '启用后写日记时将在本机为你建议心情。'
+	String get moodSuggestActivateLocalMessage => '启用后写日记时将在本机为你建议心情。';
+
+	/// zh: '已启用心情建议'
+	String get moodSuggestEnabled => '已启用心情建议';
+
+	/// zh: '停用心情建议'
+	String get moodSuggestDisableTitle => '停用心情建议';
+
+	/// zh: '停用后写日记不再自动建议心情，已下载的模型文件保留。'
+	String get moodSuggestDisableMessage => '停用后写日记不再自动建议心情，已下载的模型文件保留。';
 
 	/// zh: '使用天数'
 	String get dashUseDays => '使用天数';
