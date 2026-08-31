@@ -54,11 +54,11 @@ const _emotionOptions = <MoodOption>[
     description: 'happy — in a good mood, something worth celebrating',
   ),
   (key: 'neutral', description: 'calm — an ordinary day, nothing much to say'),
+  (key: 'negative', description: 'sad — down, upset, heartbroken, grieving'),
   (
-    key: 'negative',
-    description: 'sad — down, upset, heartbroken, grieving',
+    key: 'fulfilled',
+    description: 'fulfilled — got things done, effort paid off',
   ),
-  (key: 'fulfilled', description: 'fulfilled — got things done, effort paid off'),
   (
     key: 'angry',
     description: 'angry — provoked by someone or something, annoyed',
@@ -67,10 +67,7 @@ const _emotionOptions = <MoodOption>[
     key: 'anxious',
     description: "anxious — worried, nervous, can't sleep over something ahead",
   ),
-  (
-    key: 'tired',
-    description: 'tired — exhausted, drained, only want to sleep',
-  ),
+  (key: 'tired', description: 'tired — exhausted, drained, only want to sleep'),
   (
     key: 'speechless',
     description: 'speechless — exasperated, fed up, done with it',
