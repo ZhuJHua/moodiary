@@ -1,5 +1,4 @@
 import 'package:injectable/injectable.dart';
-import 'package:moodiary_mobile/app/di/di.config.dart';
 import 'package:moodiary_assistant/injectable.module.dart';
 import 'package:moodiary_assistant/moodiary_assistant.dart'
     show AssistantService;
@@ -11,6 +10,7 @@ import 'package:moodiary_http/injectable.module.dart';
 import 'package:moodiary_http/moodiary_http.dart' show IHttpClient, IHttpServer;
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_ml/injectable.module.dart';
+import 'package:moodiary_mobile/app/di/di.config.dart';
 import 'package:moodiary_storage/injectable.module.dart';
 import 'package:moodiary_storage/moodiary_storage.dart'
     show IKVStorage, ISecureKVStorage;

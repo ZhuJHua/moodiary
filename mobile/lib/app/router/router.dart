@@ -1,6 +1,3 @@
-import 'package:moodiary_mobile/app/router/route_error_page.dart';
-import 'package:moodiary_mobile/app/settings/setting_routes.dart';
-import 'package:moodiary_mobile/app/shell/root_shell.dart' show MobileRootShell;
 import 'package:moodiary_assistant/moodiary_assistant.dart';
 import 'package:moodiary_diary/moodiary_diary.dart';
 import 'package:moodiary_editor/moodiary_editor.dart'
@@ -10,6 +7,9 @@ import 'package:moodiary_lock/moodiary_lock.dart';
 import 'package:moodiary_media/moodiary_media.dart' show mediaRoutes;
 import 'package:moodiary_migration/moodiary_migration.dart'
     show EngineMigrationService;
+import 'package:moodiary_mobile/app/router/route_error_page.dart';
+import 'package:moodiary_mobile/app/settings/setting_routes.dart';
+import 'package:moodiary_mobile/app/shell/root_shell.dart' show MobileRootShell;
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_share/moodiary_share.dart';
 import 'package:moodiary_sync/moodiary_sync.dart';

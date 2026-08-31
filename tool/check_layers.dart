@@ -238,7 +238,7 @@ const Map<String, Set<String>> _rustFacadeOwners = {
   'sync': {'moodiary_sync'},
   'graph': {'moodiary_diary'},
   // app 门面：每个组合根都够得着（desktop 进树后 _appPubNames 自动带上）。
-  'rust': {'moodiary', 'moodiary_desktop'},
+  'rust': {'moodiary_mobile', 'moodiary_desktop'},
   // 引擎搬迁测试要给拷贝路径注入分词替身，与 moodiary_data 同一份。
   'testing': {'moodiary_data', 'moodiary_migration'},
 };

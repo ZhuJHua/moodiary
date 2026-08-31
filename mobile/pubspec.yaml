@@ -60,6 +60,8 @@ dependencies:
 
   cupertino_icons: 1.0.9
 
+  vector_graphics: 1.2.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

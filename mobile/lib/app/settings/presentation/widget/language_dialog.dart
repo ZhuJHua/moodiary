@@ -1,5 +1,5 @@
-import 'package:moodiary_mobile/app/locale.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_mobile/app/locale.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';

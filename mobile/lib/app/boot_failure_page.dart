@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
-import 'package:moodiary_mobile/app/di/bootstrap.dart';
 import 'package:moodiary_files/moodiary_files.dart';
+import 'package:moodiary_mobile/app/di/bootstrap.dart';
 import 'package:mui/mui.dart';
 
 /// 启动失败兜底页。此刻 slang / 主题 / 容器可能正是坏掉的那一环，所以刻意零依赖：
