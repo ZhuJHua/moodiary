@@ -29,16 +29,21 @@ $LlmProviderPresetCopyWith<LlmProviderPreset> get copyWith => _$LlmProviderPrese
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LlmProviderPreset&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other.models, models)&&(identical(other.docUrl, docUrl) || other.docUrl == docUrl)&&const DeepCollectionEquality().equals(other.env, env)&&(identical(other.logoUrl, logoUrl) || other.logoUrl == logoUrl));
+  final _this = this as LlmProviderPreset;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LlmProviderPreset&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&const DeepCollectionEquality().equals(other.models, _this.models)&&(identical(other.docUrl, _this.docUrl) || other.docUrl == _this.docUrl)&&const DeepCollectionEquality().equals(other.env, _this.env)&&(identical(other.logoUrl, _this.logoUrl) || other.logoUrl == _this.logoUrl));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,const DeepCollectionEquality().hash(models),docUrl,const DeepCollectionEquality().hash(env),logoUrl);
+int get hashCode {
+  final _this = this as LlmProviderPreset;
+  return Object.hash(runtimeType,_this.id,_this.name,const DeepCollectionEquality().hash(_this.models),_this.docUrl,const DeepCollectionEquality().hash(_this.env),_this.logoUrl);
+}
 
 @override
 String toString() {
-  return 'LlmProviderPreset(id: $id, name: $name, models: $models, docUrl: $docUrl, env: $env, logoUrl: $logoUrl)';
+  final _this = this as LlmProviderPreset;
+  return 'LlmProviderPreset(id: ${_this.id}, name: ${_this.name}, models: ${_this.models}, docUrl: ${_this.docUrl}, env: ${_this.env}, logoUrl: ${_this.logoUrl})';
 }
 
 
@@ -250,16 +255,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmProviderPreset&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other._models, _models)&&(identical(other.docUrl, docUrl) || other.docUrl == docUrl)&&const DeepCollectionEquality().equals(other._env, _env)&&(identical(other.logoUrl, logoUrl) || other.logoUrl == logoUrl));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmProviderPreset&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other.models, _models)&&(identical(other.docUrl, docUrl) || other.docUrl == docUrl)&&const DeepCollectionEquality().equals(other.env, _env)&&(identical(other.logoUrl, logoUrl) || other.logoUrl == logoUrl));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,const DeepCollectionEquality().hash(_models),docUrl,const DeepCollectionEquality().hash(_env),logoUrl);
+int get hashCode {
+    return Object.hash(runtimeType,id,name,const DeepCollectionEquality().hash(_models),docUrl,const DeepCollectionEquality().hash(_env),logoUrl);
+}
 
 @override
 String toString() {
-  return 'LlmProviderPreset(id: $id, name: $name, models: $models, docUrl: $docUrl, env: $env, logoUrl: $logoUrl)';
+    return 'LlmProviderPreset(id: $id, name: $name, models: $models, docUrl: $docUrl, env: $env, logoUrl: $logoUrl)';
 }
 
 

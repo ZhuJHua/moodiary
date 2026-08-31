@@ -26,16 +26,21 @@ $SearchStatsCopyWith<SearchStats> get copyWith => _$SearchStatsCopyWithImpl<Sear
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchStats&&(identical(other.id, id) || other.id == id)&&(identical(other.docCount, docCount) || other.docCount == docCount)&&(identical(other.contentDocCount, contentDocCount) || other.contentDocCount == contentDocCount)&&(identical(other.totalContentChars, totalContentChars) || other.totalContentChars == totalContentChars));
+  final _this = this as SearchStats;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchStats&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.docCount, _this.docCount) || other.docCount == _this.docCount)&&(identical(other.contentDocCount, _this.contentDocCount) || other.contentDocCount == _this.contentDocCount)&&(identical(other.totalContentChars, _this.totalContentChars) || other.totalContentChars == _this.totalContentChars));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,docCount,contentDocCount,totalContentChars);
+int get hashCode {
+  final _this = this as SearchStats;
+  return Object.hash(runtimeType,_this.id,_this.docCount,_this.contentDocCount,_this.totalContentChars);
+}
 
 @override
 String toString() {
-  return 'SearchStats(id: $id, docCount: $docCount, contentDocCount: $contentDocCount, totalContentChars: $totalContentChars)';
+  final _this = this as SearchStats;
+  return 'SearchStats(id: ${_this.id}, docCount: ${_this.docCount}, contentDocCount: ${_this.contentDocCount}, totalContentChars: ${_this.totalContentChars})';
 }
 
 
@@ -228,16 +233,18 @@ _$SearchStatsCopyWith<_SearchStats> get copyWith => __$SearchStatsCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchStats&&(identical(other.id, id) || other.id == id)&&(identical(other.docCount, docCount) || other.docCount == docCount)&&(identical(other.contentDocCount, contentDocCount) || other.contentDocCount == contentDocCount)&&(identical(other.totalContentChars, totalContentChars) || other.totalContentChars == totalContentChars));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchStats&&(identical(other.id, id) || other.id == id)&&(identical(other.docCount, docCount) || other.docCount == docCount)&&(identical(other.contentDocCount, contentDocCount) || other.contentDocCount == contentDocCount)&&(identical(other.totalContentChars, totalContentChars) || other.totalContentChars == totalContentChars));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,docCount,contentDocCount,totalContentChars);
+int get hashCode {
+    return Object.hash(runtimeType,id,docCount,contentDocCount,totalContentChars);
+}
 
 @override
 String toString() {
-  return 'SearchStats(id: $id, docCount: $docCount, contentDocCount: $contentDocCount, totalContentChars: $totalContentChars)';
+    return 'SearchStats(id: $id, docCount: $docCount, contentDocCount: $contentDocCount, totalContentChars: $totalContentChars)';
 }
 
 

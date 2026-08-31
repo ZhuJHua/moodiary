@@ -39,16 +39,21 @@ $LlmProviderCopyWith<LlmProvider> get copyWith => _$LlmProviderCopyWithImpl<LlmP
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LlmProvider&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.type, type) || other.type == type)&&(identical(other.baseUrl, baseUrl) || other.baseUrl == baseUrl)&&(identical(other.defaultModel, defaultModel) || other.defaultModel == defaultModel)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.presetId, presetId) || other.presetId == presetId)&&const DeepCollectionEquality().equals(other.models, models)&&(identical(other.toolCall, toolCall) || other.toolCall == toolCall)&&(identical(other.reasoning, reasoning) || other.reasoning == reasoning)&&(identical(other.attachment, attachment) || other.attachment == attachment));
+  final _this = this as LlmProvider;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LlmProvider&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.baseUrl, _this.baseUrl) || other.baseUrl == _this.baseUrl)&&(identical(other.defaultModel, _this.defaultModel) || other.defaultModel == _this.defaultModel)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&(identical(other.sortOrder, _this.sortOrder) || other.sortOrder == _this.sortOrder)&&(identical(other.presetId, _this.presetId) || other.presetId == _this.presetId)&&const DeepCollectionEquality().equals(other.models, _this.models)&&(identical(other.toolCall, _this.toolCall) || other.toolCall == _this.toolCall)&&(identical(other.reasoning, _this.reasoning) || other.reasoning == _this.reasoning)&&(identical(other.attachment, _this.attachment) || other.attachment == _this.attachment));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,type,baseUrl,defaultModel,createdAt,sortOrder,presetId,const DeepCollectionEquality().hash(models),toolCall,reasoning,attachment);
+int get hashCode {
+  final _this = this as LlmProvider;
+  return Object.hash(runtimeType,_this.id,_this.name,_this.type,_this.baseUrl,_this.defaultModel,_this.createdAt,_this.sortOrder,_this.presetId,const DeepCollectionEquality().hash(_this.models),_this.toolCall,_this.reasoning,_this.attachment);
+}
 
 @override
 String toString() {
-  return 'LlmProvider(id: $id, name: $name, type: $type, baseUrl: $baseUrl, defaultModel: $defaultModel, createdAt: $createdAt, sortOrder: $sortOrder, presetId: $presetId, models: $models, toolCall: $toolCall, reasoning: $reasoning, attachment: $attachment)';
+  final _this = this as LlmProvider;
+  return 'LlmProvider(id: ${_this.id}, name: ${_this.name}, type: ${_this.type}, baseUrl: ${_this.baseUrl}, defaultModel: ${_this.defaultModel}, createdAt: ${_this.createdAt}, sortOrder: ${_this.sortOrder}, presetId: ${_this.presetId}, models: ${_this.models}, toolCall: ${_this.toolCall}, reasoning: ${_this.reasoning}, attachment: ${_this.attachment})';
 }
 
 
@@ -278,16 +283,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmProvider&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.type, type) || other.type == type)&&(identical(other.baseUrl, baseUrl) || other.baseUrl == baseUrl)&&(identical(other.defaultModel, defaultModel) || other.defaultModel == defaultModel)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.presetId, presetId) || other.presetId == presetId)&&const DeepCollectionEquality().equals(other._models, _models)&&(identical(other.toolCall, toolCall) || other.toolCall == toolCall)&&(identical(other.reasoning, reasoning) || other.reasoning == reasoning)&&(identical(other.attachment, attachment) || other.attachment == attachment));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmProvider&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.type, type) || other.type == type)&&(identical(other.baseUrl, baseUrl) || other.baseUrl == baseUrl)&&(identical(other.defaultModel, defaultModel) || other.defaultModel == defaultModel)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.presetId, presetId) || other.presetId == presetId)&&const DeepCollectionEquality().equals(other.models, _models)&&(identical(other.toolCall, toolCall) || other.toolCall == toolCall)&&(identical(other.reasoning, reasoning) || other.reasoning == reasoning)&&(identical(other.attachment, attachment) || other.attachment == attachment));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,type,baseUrl,defaultModel,createdAt,sortOrder,presetId,const DeepCollectionEquality().hash(_models),toolCall,reasoning,attachment);
+int get hashCode {
+    return Object.hash(runtimeType,id,name,type,baseUrl,defaultModel,createdAt,sortOrder,presetId,const DeepCollectionEquality().hash(_models),toolCall,reasoning,attachment);
+}
 
 @override
 String toString() {
-  return 'LlmProvider(id: $id, name: $name, type: $type, baseUrl: $baseUrl, defaultModel: $defaultModel, createdAt: $createdAt, sortOrder: $sortOrder, presetId: $presetId, models: $models, toolCall: $toolCall, reasoning: $reasoning, attachment: $attachment)';
+    return 'LlmProvider(id: $id, name: $name, type: $type, baseUrl: $baseUrl, defaultModel: $defaultModel, createdAt: $createdAt, sortOrder: $sortOrder, presetId: $presetId, models: $models, toolCall: $toolCall, reasoning: $reasoning, attachment: $attachment)';
 }
 
 

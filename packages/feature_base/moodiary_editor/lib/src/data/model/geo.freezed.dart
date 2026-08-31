@@ -29,16 +29,21 @@ $GeoResponseCopyWith<GeoResponse> get copyWith => _$GeoResponseCopyWithImpl<GeoR
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GeoResponse&&(identical(other.code, code) || other.code == code)&&const DeepCollectionEquality().equals(other.location, location)&&(identical(other.refer, refer) || other.refer == refer));
+  final _this = this as GeoResponse;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GeoResponse&&(identical(other.code, _this.code) || other.code == _this.code)&&const DeepCollectionEquality().equals(other.location, _this.location)&&(identical(other.refer, _this.refer) || other.refer == _this.refer));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,code,const DeepCollectionEquality().hash(location),refer);
+int get hashCode {
+  final _this = this as GeoResponse;
+  return Object.hash(runtimeType,_this.code,const DeepCollectionEquality().hash(_this.location),_this.refer);
+}
 
 @override
 String toString() {
-  return 'GeoResponse(code: $code, location: $location, refer: $refer)';
+  final _this = this as GeoResponse;
+  return 'GeoResponse(code: ${_this.code}, location: ${_this.location}, refer: ${_this.refer})';
 }
 
 
@@ -252,16 +257,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GeoResponse&&(identical(other.code, code) || other.code == code)&&const DeepCollectionEquality().equals(other._location, _location)&&(identical(other.refer, refer) || other.refer == refer));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _GeoResponse&&(identical(other.code, code) || other.code == code)&&const DeepCollectionEquality().equals(other.location, _location)&&(identical(other.refer, refer) || other.refer == refer));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,code,const DeepCollectionEquality().hash(_location),refer);
+int get hashCode {
+    return Object.hash(runtimeType,code,const DeepCollectionEquality().hash(_location),refer);
+}
 
 @override
 String toString() {
-  return 'GeoResponse(code: $code, location: $location, refer: $refer)';
+    return 'GeoResponse(code: $code, location: $location, refer: $refer)';
 }
 
 
@@ -330,16 +337,21 @@ $ReferCopyWith<Refer> get copyWith => _$ReferCopyWithImpl<Refer>(this as Refer, 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Refer&&const DeepCollectionEquality().equals(other.sources, sources)&&const DeepCollectionEquality().equals(other.license, license));
+  final _this = this as Refer;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Refer&&const DeepCollectionEquality().equals(other.sources, _this.sources)&&const DeepCollectionEquality().equals(other.license, _this.license));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(sources),const DeepCollectionEquality().hash(license));
+int get hashCode {
+  final _this = this as Refer;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.sources),const DeepCollectionEquality().hash(_this.license));
+}
 
 @override
 String toString() {
-  return 'Refer(sources: $sources, license: $license)';
+  final _this = this as Refer;
+  return 'Refer(sources: ${_this.sources}, license: ${_this.license})';
 }
 
 
@@ -547,16 +559,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Refer&&const DeepCollectionEquality().equals(other._sources, _sources)&&const DeepCollectionEquality().equals(other._license, _license));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Refer&&const DeepCollectionEquality().equals(other.sources, _sources)&&const DeepCollectionEquality().equals(other.license, _license));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_sources),const DeepCollectionEquality().hash(_license));
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_sources),const DeepCollectionEquality().hash(_license));
+}
 
 @override
 String toString() {
-  return 'Refer(sources: $sources, license: $license)';
+    return 'Refer(sources: $sources, license: $license)';
 }
 
 
@@ -612,16 +626,21 @@ $LocationCopyWith<Location> get copyWith => _$LocationCopyWithImpl<Location>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Location&&(identical(other.name, name) || other.name == name)&&(identical(other.id, id) || other.id == id)&&(identical(other.lat, lat) || other.lat == lat)&&(identical(other.lon, lon) || other.lon == lon)&&(identical(other.adm2, adm2) || other.adm2 == adm2)&&(identical(other.adm1, adm1) || other.adm1 == adm1)&&(identical(other.country, country) || other.country == country)&&(identical(other.tz, tz) || other.tz == tz)&&(identical(other.utcOffset, utcOffset) || other.utcOffset == utcOffset)&&(identical(other.isDst, isDst) || other.isDst == isDst)&&(identical(other.type, type) || other.type == type)&&(identical(other.rank, rank) || other.rank == rank)&&(identical(other.fxLink, fxLink) || other.fxLink == fxLink));
+  final _this = this as Location;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Location&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.lat, _this.lat) || other.lat == _this.lat)&&(identical(other.lon, _this.lon) || other.lon == _this.lon)&&(identical(other.adm2, _this.adm2) || other.adm2 == _this.adm2)&&(identical(other.adm1, _this.adm1) || other.adm1 == _this.adm1)&&(identical(other.country, _this.country) || other.country == _this.country)&&(identical(other.tz, _this.tz) || other.tz == _this.tz)&&(identical(other.utcOffset, _this.utcOffset) || other.utcOffset == _this.utcOffset)&&(identical(other.isDst, _this.isDst) || other.isDst == _this.isDst)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.rank, _this.rank) || other.rank == _this.rank)&&(identical(other.fxLink, _this.fxLink) || other.fxLink == _this.fxLink));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,id,lat,lon,adm2,adm1,country,tz,utcOffset,isDst,type,rank,fxLink);
+int get hashCode {
+  final _this = this as Location;
+  return Object.hash(runtimeType,_this.name,_this.id,_this.lat,_this.lon,_this.adm2,_this.adm1,_this.country,_this.tz,_this.utcOffset,_this.isDst,_this.type,_this.rank,_this.fxLink);
+}
 
 @override
 String toString() {
-  return 'Location(name: $name, id: $id, lat: $lat, lon: $lon, adm2: $adm2, adm1: $adm1, country: $country, tz: $tz, utcOffset: $utcOffset, isDst: $isDst, type: $type, rank: $rank, fxLink: $fxLink)';
+  final _this = this as Location;
+  return 'Location(name: ${_this.name}, id: ${_this.id}, lat: ${_this.lat}, lon: ${_this.lon}, adm2: ${_this.adm2}, adm1: ${_this.adm1}, country: ${_this.country}, tz: ${_this.tz}, utcOffset: ${_this.utcOffset}, isDst: ${_this.isDst}, type: ${_this.type}, rank: ${_this.rank}, fxLink: ${_this.fxLink})';
 }
 
 
@@ -835,16 +854,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Location&&(identical(other.name, name) || other.name == name)&&(identical(other.id, id) || other.id == id)&&(identical(other.lat, lat) || other.lat == lat)&&(identical(other.lon, lon) || other.lon == lon)&&(identical(other.adm2, adm2) || other.adm2 == adm2)&&(identical(other.adm1, adm1) || other.adm1 == adm1)&&(identical(other.country, country) || other.country == country)&&(identical(other.tz, tz) || other.tz == tz)&&(identical(other.utcOffset, utcOffset) || other.utcOffset == utcOffset)&&(identical(other.isDst, isDst) || other.isDst == isDst)&&(identical(other.type, type) || other.type == type)&&(identical(other.rank, rank) || other.rank == rank)&&(identical(other.fxLink, fxLink) || other.fxLink == fxLink));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Location&&(identical(other.name, name) || other.name == name)&&(identical(other.id, id) || other.id == id)&&(identical(other.lat, lat) || other.lat == lat)&&(identical(other.lon, lon) || other.lon == lon)&&(identical(other.adm2, adm2) || other.adm2 == adm2)&&(identical(other.adm1, adm1) || other.adm1 == adm1)&&(identical(other.country, country) || other.country == country)&&(identical(other.tz, tz) || other.tz == tz)&&(identical(other.utcOffset, utcOffset) || other.utcOffset == utcOffset)&&(identical(other.isDst, isDst) || other.isDst == isDst)&&(identical(other.type, type) || other.type == type)&&(identical(other.rank, rank) || other.rank == rank)&&(identical(other.fxLink, fxLink) || other.fxLink == fxLink));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,id,lat,lon,adm2,adm1,country,tz,utcOffset,isDst,type,rank,fxLink);
+int get hashCode {
+    return Object.hash(runtimeType,name,id,lat,lon,adm2,adm1,country,tz,utcOffset,isDst,type,rank,fxLink);
+}
 
 @override
 String toString() {
-  return 'Location(name: $name, id: $id, lat: $lat, lon: $lon, adm2: $adm2, adm1: $adm1, country: $country, tz: $tz, utcOffset: $utcOffset, isDst: $isDst, type: $type, rank: $rank, fxLink: $fxLink)';
+    return 'Location(name: $name, id: $id, lat: $lat, lon: $lon, adm2: $adm2, adm1: $adm1, country: $country, tz: $tz, utcOffset: $utcOffset, isDst: $isDst, type: $type, rank: $rank, fxLink: $fxLink)';
 }
 
 

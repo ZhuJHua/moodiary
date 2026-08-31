@@ -34,16 +34,21 @@ $AssistantToolCallCopyWith<AssistantToolCall> get copyWith => _$AssistantToolCal
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AssistantToolCall&&(identical(other.callId, callId) || other.callId == callId)&&(identical(other.name, name) || other.name == name)&&(identical(other.argsJson, argsJson) || other.argsJson == argsJson)&&(identical(other.result, result) || other.result == result)&&(identical(other.done, done) || other.done == done));
+  final _this = this as AssistantToolCall;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AssistantToolCall&&(identical(other.callId, _this.callId) || other.callId == _this.callId)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.argsJson, _this.argsJson) || other.argsJson == _this.argsJson)&&(identical(other.result, _this.result) || other.result == _this.result)&&(identical(other.done, _this.done) || other.done == _this.done));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,callId,name,argsJson,result,done);
+int get hashCode {
+  final _this = this as AssistantToolCall;
+  return Object.hash(runtimeType,_this.callId,_this.name,_this.argsJson,_this.result,_this.done);
+}
 
 @override
 String toString() {
-  return 'AssistantToolCall(callId: $callId, name: $name, argsJson: $argsJson, result: $result, done: $done)';
+  final _this = this as AssistantToolCall;
+  return 'AssistantToolCall(callId: ${_this.callId}, name: ${_this.name}, argsJson: ${_this.argsJson}, result: ${_this.result}, done: ${_this.done})';
 }
 
 
@@ -246,16 +251,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AssistantToolCall&&(identical(other.callId, callId) || other.callId == callId)&&(identical(other.name, name) || other.name == name)&&(identical(other.argsJson, argsJson) || other.argsJson == argsJson)&&(identical(other.result, result) || other.result == result)&&(identical(other.done, done) || other.done == done));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AssistantToolCall&&(identical(other.callId, callId) || other.callId == callId)&&(identical(other.name, name) || other.name == name)&&(identical(other.argsJson, argsJson) || other.argsJson == argsJson)&&(identical(other.result, result) || other.result == result)&&(identical(other.done, done) || other.done == done));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,callId,name,argsJson,result,done);
+int get hashCode {
+    return Object.hash(runtimeType,callId,name,argsJson,result,done);
+}
 
 @override
 String toString() {
-  return 'AssistantToolCall(callId: $callId, name: $name, argsJson: $argsJson, result: $result, done: $done)';
+    return 'AssistantToolCall(callId: $callId, name: $name, argsJson: $argsJson, result: $result, done: $done)';
 }
 
 

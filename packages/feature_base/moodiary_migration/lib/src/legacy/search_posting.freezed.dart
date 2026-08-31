@@ -26,16 +26,21 @@ $SearchPostingCopyWith<SearchPosting> get copyWith => _$SearchPostingCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchPosting&&(identical(other.key, key) || other.key == key)&&const DeepCollectionEquality().equals(other.diaryIsarIds, diaryIsarIds)&&const DeepCollectionEquality().equals(other.termFreqs, termFreqs));
+  final _this = this as SearchPosting;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchPosting&&(identical(other.key, _this.key) || other.key == _this.key)&&const DeepCollectionEquality().equals(other.diaryIsarIds, _this.diaryIsarIds)&&const DeepCollectionEquality().equals(other.termFreqs, _this.termFreqs));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,key,const DeepCollectionEquality().hash(diaryIsarIds),const DeepCollectionEquality().hash(termFreqs));
+int get hashCode {
+  final _this = this as SearchPosting;
+  return Object.hash(runtimeType,_this.key,const DeepCollectionEquality().hash(_this.diaryIsarIds),const DeepCollectionEquality().hash(_this.termFreqs));
+}
 
 @override
 String toString() {
-  return 'SearchPosting(key: $key, diaryIsarIds: $diaryIsarIds, termFreqs: $termFreqs)';
+  final _this = this as SearchPosting;
+  return 'SearchPosting(key: ${_this.key}, diaryIsarIds: ${_this.diaryIsarIds}, termFreqs: ${_this.termFreqs})';
 }
 
 
@@ -238,16 +243,18 @@ _$SearchPostingCopyWith<_SearchPosting> get copyWith => __$SearchPostingCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchPosting&&(identical(other.key, key) || other.key == key)&&const DeepCollectionEquality().equals(other._diaryIsarIds, _diaryIsarIds)&&const DeepCollectionEquality().equals(other._termFreqs, _termFreqs));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchPosting&&(identical(other.key, key) || other.key == key)&&const DeepCollectionEquality().equals(other.diaryIsarIds, _diaryIsarIds)&&const DeepCollectionEquality().equals(other.termFreqs, _termFreqs));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,key,const DeepCollectionEquality().hash(_diaryIsarIds),const DeepCollectionEquality().hash(_termFreqs));
+int get hashCode {
+    return Object.hash(runtimeType,key,const DeepCollectionEquality().hash(_diaryIsarIds),const DeepCollectionEquality().hash(_termFreqs));
+}
 
 @override
 String toString() {
-  return 'SearchPosting(key: $key, diaryIsarIds: $diaryIsarIds, termFreqs: $termFreqs)';
+    return 'SearchPosting(key: $key, diaryIsarIds: $diaryIsarIds, termFreqs: $termFreqs)';
 }
 
 

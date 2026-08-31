@@ -32,16 +32,21 @@ $ReasoningControlCopyWith<ReasoningControl> get copyWith => _$ReasoningControlCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReasoningControl&&(identical(other.type, type) || other.type == type)&&const DeepCollectionEquality().equals(other.values, values)&&(identical(other.min, min) || other.min == min)&&(identical(other.max, max) || other.max == max));
+  final _this = this as ReasoningControl;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReasoningControl&&(identical(other.type, _this.type) || other.type == _this.type)&&const DeepCollectionEquality().equals(other.values, _this.values)&&(identical(other.min, _this.min) || other.min == _this.min)&&(identical(other.max, _this.max) || other.max == _this.max));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,type,const DeepCollectionEquality().hash(values),min,max);
+int get hashCode {
+  final _this = this as ReasoningControl;
+  return Object.hash(runtimeType,_this.type,const DeepCollectionEquality().hash(_this.values),_this.min,_this.max);
+}
 
 @override
 String toString() {
-  return 'ReasoningControl(type: $type, values: $values, min: $min, max: $max)';
+  final _this = this as ReasoningControl;
+  return 'ReasoningControl(type: ${_this.type}, values: ${_this.values}, min: ${_this.min}, max: ${_this.max})';
 }
 
 
@@ -248,16 +253,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReasoningControl&&(identical(other.type, type) || other.type == type)&&const DeepCollectionEquality().equals(other._values, _values)&&(identical(other.min, min) || other.min == min)&&(identical(other.max, max) || other.max == max));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReasoningControl&&(identical(other.type, type) || other.type == type)&&const DeepCollectionEquality().equals(other.values, _values)&&(identical(other.min, min) || other.min == min)&&(identical(other.max, max) || other.max == max));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,type,const DeepCollectionEquality().hash(_values),min,max);
+int get hashCode {
+    return Object.hash(runtimeType,type,const DeepCollectionEquality().hash(_values),min,max);
+}
 
 @override
 String toString() {
-  return 'ReasoningControl(type: $type, values: $values, min: $min, max: $max)';
+    return 'ReasoningControl(type: $type, values: $values, min: $min, max: $max)';
 }
 
 

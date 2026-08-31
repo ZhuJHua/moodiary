@@ -26,16 +26,21 @@ $DiaryIndexSnapshotCopyWith<DiaryIndexSnapshot> get copyWith => _$DiaryIndexSnap
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiaryIndexSnapshot&&(identical(other.diaryIsarId, diaryIsarId) || other.diaryIsarId == diaryIsarId)&&const DeepCollectionEquality().equals(other.cutTokens, cutTokens)&&const DeepCollectionEquality().equals(other.cutFreqs, cutFreqs)&&const DeepCollectionEquality().equals(other.cutForSearchTokens, cutForSearchTokens)&&const DeepCollectionEquality().equals(other.cutForSearchFreqs, cutForSearchFreqs)&&const DeepCollectionEquality().equals(other.titleTokens, titleTokens)&&const DeepCollectionEquality().equals(other.titleFreqs, titleFreqs)&&const DeepCollectionEquality().equals(other.linkToIds, linkToIds)&&(identical(other.contentChars, contentChars) || other.contentChars == contentChars));
+  final _this = this as DiaryIndexSnapshot;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiaryIndexSnapshot&&(identical(other.diaryIsarId, _this.diaryIsarId) || other.diaryIsarId == _this.diaryIsarId)&&const DeepCollectionEquality().equals(other.cutTokens, _this.cutTokens)&&const DeepCollectionEquality().equals(other.cutFreqs, _this.cutFreqs)&&const DeepCollectionEquality().equals(other.cutForSearchTokens, _this.cutForSearchTokens)&&const DeepCollectionEquality().equals(other.cutForSearchFreqs, _this.cutForSearchFreqs)&&const DeepCollectionEquality().equals(other.titleTokens, _this.titleTokens)&&const DeepCollectionEquality().equals(other.titleFreqs, _this.titleFreqs)&&const DeepCollectionEquality().equals(other.linkToIds, _this.linkToIds)&&(identical(other.contentChars, _this.contentChars) || other.contentChars == _this.contentChars));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,diaryIsarId,const DeepCollectionEquality().hash(cutTokens),const DeepCollectionEquality().hash(cutFreqs),const DeepCollectionEquality().hash(cutForSearchTokens),const DeepCollectionEquality().hash(cutForSearchFreqs),const DeepCollectionEquality().hash(titleTokens),const DeepCollectionEquality().hash(titleFreqs),const DeepCollectionEquality().hash(linkToIds),contentChars);
+int get hashCode {
+  final _this = this as DiaryIndexSnapshot;
+  return Object.hash(runtimeType,_this.diaryIsarId,const DeepCollectionEquality().hash(_this.cutTokens),const DeepCollectionEquality().hash(_this.cutFreqs),const DeepCollectionEquality().hash(_this.cutForSearchTokens),const DeepCollectionEquality().hash(_this.cutForSearchFreqs),const DeepCollectionEquality().hash(_this.titleTokens),const DeepCollectionEquality().hash(_this.titleFreqs),const DeepCollectionEquality().hash(_this.linkToIds),_this.contentChars);
+}
 
 @override
 String toString() {
-  return 'DiaryIndexSnapshot(diaryIsarId: $diaryIsarId, cutTokens: $cutTokens, cutFreqs: $cutFreqs, cutForSearchTokens: $cutForSearchTokens, cutForSearchFreqs: $cutForSearchFreqs, titleTokens: $titleTokens, titleFreqs: $titleFreqs, linkToIds: $linkToIds, contentChars: $contentChars)';
+  final _this = this as DiaryIndexSnapshot;
+  return 'DiaryIndexSnapshot(diaryIsarId: ${_this.diaryIsarId}, cutTokens: ${_this.cutTokens}, cutFreqs: ${_this.cutFreqs}, cutForSearchTokens: ${_this.cutForSearchTokens}, cutForSearchFreqs: ${_this.cutForSearchFreqs}, titleTokens: ${_this.titleTokens}, titleFreqs: ${_this.titleFreqs}, linkToIds: ${_this.linkToIds}, contentChars: ${_this.contentChars})';
 }
 
 
@@ -280,16 +285,18 @@ _$DiaryIndexSnapshotCopyWith<_DiaryIndexSnapshot> get copyWith => __$DiaryIndexS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DiaryIndexSnapshot&&(identical(other.diaryIsarId, diaryIsarId) || other.diaryIsarId == diaryIsarId)&&const DeepCollectionEquality().equals(other._cutTokens, _cutTokens)&&const DeepCollectionEquality().equals(other._cutFreqs, _cutFreqs)&&const DeepCollectionEquality().equals(other._cutForSearchTokens, _cutForSearchTokens)&&const DeepCollectionEquality().equals(other._cutForSearchFreqs, _cutForSearchFreqs)&&const DeepCollectionEquality().equals(other._titleTokens, _titleTokens)&&const DeepCollectionEquality().equals(other._titleFreqs, _titleFreqs)&&const DeepCollectionEquality().equals(other._linkToIds, _linkToIds)&&(identical(other.contentChars, contentChars) || other.contentChars == contentChars));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DiaryIndexSnapshot&&(identical(other.diaryIsarId, diaryIsarId) || other.diaryIsarId == diaryIsarId)&&const DeepCollectionEquality().equals(other.cutTokens, _cutTokens)&&const DeepCollectionEquality().equals(other.cutFreqs, _cutFreqs)&&const DeepCollectionEquality().equals(other.cutForSearchTokens, _cutForSearchTokens)&&const DeepCollectionEquality().equals(other.cutForSearchFreqs, _cutForSearchFreqs)&&const DeepCollectionEquality().equals(other.titleTokens, _titleTokens)&&const DeepCollectionEquality().equals(other.titleFreqs, _titleFreqs)&&const DeepCollectionEquality().equals(other.linkToIds, _linkToIds)&&(identical(other.contentChars, contentChars) || other.contentChars == contentChars));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,diaryIsarId,const DeepCollectionEquality().hash(_cutTokens),const DeepCollectionEquality().hash(_cutFreqs),const DeepCollectionEquality().hash(_cutForSearchTokens),const DeepCollectionEquality().hash(_cutForSearchFreqs),const DeepCollectionEquality().hash(_titleTokens),const DeepCollectionEquality().hash(_titleFreqs),const DeepCollectionEquality().hash(_linkToIds),contentChars);
+int get hashCode {
+    return Object.hash(runtimeType,diaryIsarId,const DeepCollectionEquality().hash(_cutTokens),const DeepCollectionEquality().hash(_cutFreqs),const DeepCollectionEquality().hash(_cutForSearchTokens),const DeepCollectionEquality().hash(_cutForSearchFreqs),const DeepCollectionEquality().hash(_titleTokens),const DeepCollectionEquality().hash(_titleFreqs),const DeepCollectionEquality().hash(_linkToIds),contentChars);
+}
 
 @override
 String toString() {
-  return 'DiaryIndexSnapshot(diaryIsarId: $diaryIsarId, cutTokens: $cutTokens, cutFreqs: $cutFreqs, cutForSearchTokens: $cutForSearchTokens, cutForSearchFreqs: $cutForSearchFreqs, titleTokens: $titleTokens, titleFreqs: $titleFreqs, linkToIds: $linkToIds, contentChars: $contentChars)';
+    return 'DiaryIndexSnapshot(diaryIsarId: $diaryIsarId, cutTokens: $cutTokens, cutFreqs: $cutFreqs, cutForSearchTokens: $cutForSearchTokens, cutForSearchFreqs: $cutForSearchFreqs, titleTokens: $titleTokens, titleFreqs: $titleFreqs, linkToIds: $linkToIds, contentChars: $contentChars)';
 }
 
 

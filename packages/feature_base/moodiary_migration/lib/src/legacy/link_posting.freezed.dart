@@ -26,16 +26,21 @@ $LinkPostingCopyWith<LinkPosting> get copyWith => _$LinkPostingCopyWithImpl<Link
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LinkPosting&&(identical(other.key, key) || other.key == key)&&const DeepCollectionEquality().equals(other.fromIsarIds, fromIsarIds));
+  final _this = this as LinkPosting;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LinkPosting&&(identical(other.key, _this.key) || other.key == _this.key)&&const DeepCollectionEquality().equals(other.fromIsarIds, _this.fromIsarIds));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,key,const DeepCollectionEquality().hash(fromIsarIds));
+int get hashCode {
+  final _this = this as LinkPosting;
+  return Object.hash(runtimeType,_this.key,const DeepCollectionEquality().hash(_this.fromIsarIds));
+}
 
 @override
 String toString() {
-  return 'LinkPosting(key: $key, fromIsarIds: $fromIsarIds)';
+  final _this = this as LinkPosting;
+  return 'LinkPosting(key: ${_this.key}, fromIsarIds: ${_this.fromIsarIds})';
 }
 
 
@@ -230,16 +235,18 @@ _$LinkPostingCopyWith<_LinkPosting> get copyWith => __$LinkPostingCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LinkPosting&&(identical(other.key, key) || other.key == key)&&const DeepCollectionEquality().equals(other._fromIsarIds, _fromIsarIds));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LinkPosting&&(identical(other.key, key) || other.key == key)&&const DeepCollectionEquality().equals(other.fromIsarIds, _fromIsarIds));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,key,const DeepCollectionEquality().hash(_fromIsarIds));
+int get hashCode {
+    return Object.hash(runtimeType,key,const DeepCollectionEquality().hash(_fromIsarIds));
+}
 
 @override
 String toString() {
-  return 'LinkPosting(key: $key, fromIsarIds: $fromIsarIds)';
+    return 'LinkPosting(key: $key, fromIsarIds: $fromIsarIds)';
 }
 
 

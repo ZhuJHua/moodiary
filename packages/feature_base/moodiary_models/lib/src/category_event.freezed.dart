@@ -26,16 +26,21 @@ $CategoryEventCopyWith<CategoryEvent> get copyWith => _$CategoryEventCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CategoryEvent&&(identical(other.fromSync, fromSync) || other.fromSync == fromSync));
+  final _this = this as CategoryEvent;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CategoryEvent&&(identical(other.fromSync, _this.fromSync) || other.fromSync == _this.fromSync));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,fromSync);
+int get hashCode {
+  final _this = this as CategoryEvent;
+  return Object.hash(runtimeType,_this.fromSync);
+}
 
 @override
 String toString() {
-  return 'CategoryEvent(fromSync: $fromSync)';
+  final _this = this as CategoryEvent;
+  return 'CategoryEvent(fromSync: ${_this.fromSync})';
 }
 
 
@@ -223,16 +228,18 @@ $CategoryUpsertedCopyWith<CategoryUpserted> get copyWith => _$CategoryUpsertedCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CategoryUpserted&&(identical(other.category, category) || other.category == category)&&(identical(other.fromSync, fromSync) || other.fromSync == fromSync));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is CategoryUpserted&&(identical(other.category, category) || other.category == category)&&(identical(other.fromSync, fromSync) || other.fromSync == fromSync));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,category,fromSync);
+int get hashCode {
+    return Object.hash(runtimeType,category,fromSync);
+}
 
 @override
 String toString() {
-  return 'CategoryEvent.upserted(category: $category, fromSync: $fromSync)';
+    return 'CategoryEvent.upserted(category: $category, fromSync: $fromSync)';
 }
 
 
@@ -300,16 +307,18 @@ $CategoryDeletedCopyWith<CategoryDeleted> get copyWith => _$CategoryDeletedCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CategoryDeleted&&(identical(other.id, id) || other.id == id)&&(identical(other.fromSync, fromSync) || other.fromSync == fromSync));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is CategoryDeleted&&(identical(other.id, id) || other.id == id)&&(identical(other.fromSync, fromSync) || other.fromSync == fromSync));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,fromSync);
+int get hashCode {
+    return Object.hash(runtimeType,id,fromSync);
+}
 
 @override
 String toString() {
-  return 'CategoryEvent.deleted(id: $id, fromSync: $fromSync)';
+    return 'CategoryEvent.deleted(id: $id, fromSync: $fromSync)';
 }
 
 

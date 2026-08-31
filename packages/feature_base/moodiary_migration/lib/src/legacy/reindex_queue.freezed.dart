@@ -26,16 +26,21 @@ $ReindexQueueCopyWith<ReindexQueue> get copyWith => _$ReindexQueueCopyWithImpl<R
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReindexQueue&&(identical(other.diaryIsarId, diaryIsarId) || other.diaryIsarId == diaryIsarId));
+  final _this = this as ReindexQueue;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReindexQueue&&(identical(other.diaryIsarId, _this.diaryIsarId) || other.diaryIsarId == _this.diaryIsarId));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,diaryIsarId);
+int get hashCode {
+  final _this = this as ReindexQueue;
+  return Object.hash(runtimeType,_this.diaryIsarId);
+}
 
 @override
 String toString() {
-  return 'ReindexQueue(diaryIsarId: $diaryIsarId)';
+  final _this = this as ReindexQueue;
+  return 'ReindexQueue(diaryIsarId: ${_this.diaryIsarId})';
 }
 
 
@@ -222,16 +227,18 @@ _$ReindexQueueCopyWith<_ReindexQueue> get copyWith => __$ReindexQueueCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReindexQueue&&(identical(other.diaryIsarId, diaryIsarId) || other.diaryIsarId == diaryIsarId));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReindexQueue&&(identical(other.diaryIsarId, diaryIsarId) || other.diaryIsarId == diaryIsarId));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,diaryIsarId);
+int get hashCode {
+    return Object.hash(runtimeType,diaryIsarId);
+}
 
 @override
 String toString() {
-  return 'ReindexQueue(diaryIsarId: $diaryIsarId)';
+    return 'ReindexQueue(diaryIsarId: $diaryIsarId)';
 }
 
 

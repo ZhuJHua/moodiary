@@ -29,16 +29,21 @@ $WeatherResponseCopyWith<WeatherResponse> get copyWith => _$WeatherResponseCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WeatherResponse&&(identical(other.code, code) || other.code == code)&&(identical(other.updateTime, updateTime) || other.updateTime == updateTime)&&(identical(other.fxLink, fxLink) || other.fxLink == fxLink)&&(identical(other.now, now) || other.now == now)&&(identical(other.refer, refer) || other.refer == refer));
+  final _this = this as WeatherResponse;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WeatherResponse&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.updateTime, _this.updateTime) || other.updateTime == _this.updateTime)&&(identical(other.fxLink, _this.fxLink) || other.fxLink == _this.fxLink)&&(identical(other.now, _this.now) || other.now == _this.now)&&(identical(other.refer, _this.refer) || other.refer == _this.refer));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,code,updateTime,fxLink,now,refer);
+int get hashCode {
+  final _this = this as WeatherResponse;
+  return Object.hash(runtimeType,_this.code,_this.updateTime,_this.fxLink,_this.now,_this.refer);
+}
 
 @override
 String toString() {
-  return 'WeatherResponse(code: $code, updateTime: $updateTime, fxLink: $fxLink, now: $now, refer: $refer)';
+  final _this = this as WeatherResponse;
+  return 'WeatherResponse(code: ${_this.code}, updateTime: ${_this.updateTime}, fxLink: ${_this.fxLink}, now: ${_this.now}, refer: ${_this.refer})';
 }
 
 
@@ -260,16 +265,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _WeatherResponse&&(identical(other.code, code) || other.code == code)&&(identical(other.updateTime, updateTime) || other.updateTime == updateTime)&&(identical(other.fxLink, fxLink) || other.fxLink == fxLink)&&(identical(other.now, now) || other.now == now)&&(identical(other.refer, refer) || other.refer == refer));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _WeatherResponse&&(identical(other.code, code) || other.code == code)&&(identical(other.updateTime, updateTime) || other.updateTime == updateTime)&&(identical(other.fxLink, fxLink) || other.fxLink == fxLink)&&(identical(other.now, now) || other.now == now)&&(identical(other.refer, refer) || other.refer == refer));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,code,updateTime,fxLink,now,refer);
+int get hashCode {
+    return Object.hash(runtimeType,code,updateTime,fxLink,now,refer);
+}
 
 @override
 String toString() {
-  return 'WeatherResponse(code: $code, updateTime: $updateTime, fxLink: $fxLink, now: $now, refer: $refer)';
+    return 'WeatherResponse(code: $code, updateTime: $updateTime, fxLink: $fxLink, now: $now, refer: $refer)';
 }
 
 
@@ -352,16 +359,21 @@ $ReferCopyWith<Refer> get copyWith => _$ReferCopyWithImpl<Refer>(this as Refer, 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Refer&&const DeepCollectionEquality().equals(other.sources, sources)&&const DeepCollectionEquality().equals(other.license, license));
+  final _this = this as Refer;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Refer&&const DeepCollectionEquality().equals(other.sources, _this.sources)&&const DeepCollectionEquality().equals(other.license, _this.license));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(sources),const DeepCollectionEquality().hash(license));
+int get hashCode {
+  final _this = this as Refer;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.sources),const DeepCollectionEquality().hash(_this.license));
+}
 
 @override
 String toString() {
-  return 'Refer(sources: $sources, license: $license)';
+  final _this = this as Refer;
+  return 'Refer(sources: ${_this.sources}, license: ${_this.license})';
 }
 
 
@@ -569,16 +581,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Refer&&const DeepCollectionEquality().equals(other._sources, _sources)&&const DeepCollectionEquality().equals(other._license, _license));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Refer&&const DeepCollectionEquality().equals(other.sources, _sources)&&const DeepCollectionEquality().equals(other.license, _license));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_sources),const DeepCollectionEquality().hash(_license));
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_sources),const DeepCollectionEquality().hash(_license));
+}
 
 @override
 String toString() {
-  return 'Refer(sources: $sources, license: $license)';
+    return 'Refer(sources: $sources, license: $license)';
 }
 
 
@@ -634,16 +648,21 @@ $NowCopyWith<Now> get copyWith => _$NowCopyWithImpl<Now>(this as Now, _$identity
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Now&&(identical(other.obsTime, obsTime) || other.obsTime == obsTime)&&(identical(other.temp, temp) || other.temp == temp)&&(identical(other.feelsLike, feelsLike) || other.feelsLike == feelsLike)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.text, text) || other.text == text)&&(identical(other.wind360, wind360) || other.wind360 == wind360)&&(identical(other.windDir, windDir) || other.windDir == windDir)&&(identical(other.windScale, windScale) || other.windScale == windScale)&&(identical(other.windSpeed, windSpeed) || other.windSpeed == windSpeed)&&(identical(other.humidity, humidity) || other.humidity == humidity)&&(identical(other.precip, precip) || other.precip == precip)&&(identical(other.pressure, pressure) || other.pressure == pressure)&&(identical(other.vis, vis) || other.vis == vis)&&(identical(other.cloud, cloud) || other.cloud == cloud)&&(identical(other.dew, dew) || other.dew == dew));
+  final _this = this as Now;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Now&&(identical(other.obsTime, _this.obsTime) || other.obsTime == _this.obsTime)&&(identical(other.temp, _this.temp) || other.temp == _this.temp)&&(identical(other.feelsLike, _this.feelsLike) || other.feelsLike == _this.feelsLike)&&(identical(other.icon, _this.icon) || other.icon == _this.icon)&&(identical(other.text, _this.text) || other.text == _this.text)&&(identical(other.wind360, _this.wind360) || other.wind360 == _this.wind360)&&(identical(other.windDir, _this.windDir) || other.windDir == _this.windDir)&&(identical(other.windScale, _this.windScale) || other.windScale == _this.windScale)&&(identical(other.windSpeed, _this.windSpeed) || other.windSpeed == _this.windSpeed)&&(identical(other.humidity, _this.humidity) || other.humidity == _this.humidity)&&(identical(other.precip, _this.precip) || other.precip == _this.precip)&&(identical(other.pressure, _this.pressure) || other.pressure == _this.pressure)&&(identical(other.vis, _this.vis) || other.vis == _this.vis)&&(identical(other.cloud, _this.cloud) || other.cloud == _this.cloud)&&(identical(other.dew, _this.dew) || other.dew == _this.dew));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,obsTime,temp,feelsLike,icon,text,wind360,windDir,windScale,windSpeed,humidity,precip,pressure,vis,cloud,dew);
+int get hashCode {
+  final _this = this as Now;
+  return Object.hash(runtimeType,_this.obsTime,_this.temp,_this.feelsLike,_this.icon,_this.text,_this.wind360,_this.windDir,_this.windScale,_this.windSpeed,_this.humidity,_this.precip,_this.pressure,_this.vis,_this.cloud,_this.dew);
+}
 
 @override
 String toString() {
-  return 'Now(obsTime: $obsTime, temp: $temp, feelsLike: $feelsLike, icon: $icon, text: $text, wind360: $wind360, windDir: $windDir, windScale: $windScale, windSpeed: $windSpeed, humidity: $humidity, precip: $precip, pressure: $pressure, vis: $vis, cloud: $cloud, dew: $dew)';
+  final _this = this as Now;
+  return 'Now(obsTime: ${_this.obsTime}, temp: ${_this.temp}, feelsLike: ${_this.feelsLike}, icon: ${_this.icon}, text: ${_this.text}, wind360: ${_this.wind360}, windDir: ${_this.windDir}, windScale: ${_this.windScale}, windSpeed: ${_this.windSpeed}, humidity: ${_this.humidity}, precip: ${_this.precip}, pressure: ${_this.pressure}, vis: ${_this.vis}, cloud: ${_this.cloud}, dew: ${_this.dew})';
 }
 
 
@@ -861,16 +880,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Now&&(identical(other.obsTime, obsTime) || other.obsTime == obsTime)&&(identical(other.temp, temp) || other.temp == temp)&&(identical(other.feelsLike, feelsLike) || other.feelsLike == feelsLike)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.text, text) || other.text == text)&&(identical(other.wind360, wind360) || other.wind360 == wind360)&&(identical(other.windDir, windDir) || other.windDir == windDir)&&(identical(other.windScale, windScale) || other.windScale == windScale)&&(identical(other.windSpeed, windSpeed) || other.windSpeed == windSpeed)&&(identical(other.humidity, humidity) || other.humidity == humidity)&&(identical(other.precip, precip) || other.precip == precip)&&(identical(other.pressure, pressure) || other.pressure == pressure)&&(identical(other.vis, vis) || other.vis == vis)&&(identical(other.cloud, cloud) || other.cloud == cloud)&&(identical(other.dew, dew) || other.dew == dew));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Now&&(identical(other.obsTime, obsTime) || other.obsTime == obsTime)&&(identical(other.temp, temp) || other.temp == temp)&&(identical(other.feelsLike, feelsLike) || other.feelsLike == feelsLike)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.text, text) || other.text == text)&&(identical(other.wind360, wind360) || other.wind360 == wind360)&&(identical(other.windDir, windDir) || other.windDir == windDir)&&(identical(other.windScale, windScale) || other.windScale == windScale)&&(identical(other.windSpeed, windSpeed) || other.windSpeed == windSpeed)&&(identical(other.humidity, humidity) || other.humidity == humidity)&&(identical(other.precip, precip) || other.precip == precip)&&(identical(other.pressure, pressure) || other.pressure == pressure)&&(identical(other.vis, vis) || other.vis == vis)&&(identical(other.cloud, cloud) || other.cloud == cloud)&&(identical(other.dew, dew) || other.dew == dew));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,obsTime,temp,feelsLike,icon,text,wind360,windDir,windScale,windSpeed,humidity,precip,pressure,vis,cloud,dew);
+int get hashCode {
+    return Object.hash(runtimeType,obsTime,temp,feelsLike,icon,text,wind360,windDir,windScale,windSpeed,humidity,precip,pressure,vis,cloud,dew);
+}
 
 @override
 String toString() {
-  return 'Now(obsTime: $obsTime, temp: $temp, feelsLike: $feelsLike, icon: $icon, text: $text, wind360: $wind360, windDir: $windDir, windScale: $windScale, windSpeed: $windSpeed, humidity: $humidity, precip: $precip, pressure: $pressure, vis: $vis, cloud: $cloud, dew: $dew)';
+    return 'Now(obsTime: $obsTime, temp: $temp, feelsLike: $feelsLike, icon: $icon, text: $text, wind360: $wind360, windDir: $windDir, windScale: $windScale, windSpeed: $windSpeed, humidity: $humidity, precip: $precip, pressure: $pressure, vis: $vis, cloud: $cloud, dew: $dew)';
 }
 
 

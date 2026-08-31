@@ -41,16 +41,21 @@ $ChatMessageCopyWith<ChatMessage> get copyWith => _$ChatMessageCopyWithImpl<Chat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatMessage&&(identical(other.id, id) || other.id == id)&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId)&&(identical(other.role, role) || other.role == role)&&(identical(other.content, content) || other.content == content)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.reasoning, reasoning) || other.reasoning == reasoning)&&(identical(other.thinkingMillis, thinkingMillis) || other.thinkingMillis == thinkingMillis)&&(identical(other.imageName, imageName) || other.imageName == imageName)&&(identical(other.inputTokens, inputTokens) || other.inputTokens == inputTokens)&&(identical(other.outputTokens, outputTokens) || other.outputTokens == outputTokens)&&(identical(other.model, model) || other.model == model)&&const DeepCollectionEquality().equals(other.toolCalls, toolCalls));
+  final _this = this as ChatMessage;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatMessage&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.sessionId, _this.sessionId) || other.sessionId == _this.sessionId)&&(identical(other.role, _this.role) || other.role == _this.role)&&(identical(other.content, _this.content) || other.content == _this.content)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&(identical(other.reasoning, _this.reasoning) || other.reasoning == _this.reasoning)&&(identical(other.thinkingMillis, _this.thinkingMillis) || other.thinkingMillis == _this.thinkingMillis)&&(identical(other.imageName, _this.imageName) || other.imageName == _this.imageName)&&(identical(other.inputTokens, _this.inputTokens) || other.inputTokens == _this.inputTokens)&&(identical(other.outputTokens, _this.outputTokens) || other.outputTokens == _this.outputTokens)&&(identical(other.model, _this.model) || other.model == _this.model)&&const DeepCollectionEquality().equals(other.toolCalls, _this.toolCalls));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,sessionId,role,content,createdAt,reasoning,thinkingMillis,imageName,inputTokens,outputTokens,model,const DeepCollectionEquality().hash(toolCalls));
+int get hashCode {
+  final _this = this as ChatMessage;
+  return Object.hash(runtimeType,_this.id,_this.sessionId,_this.role,_this.content,_this.createdAt,_this.reasoning,_this.thinkingMillis,_this.imageName,_this.inputTokens,_this.outputTokens,_this.model,const DeepCollectionEquality().hash(_this.toolCalls));
+}
 
 @override
 String toString() {
-  return 'ChatMessage(id: $id, sessionId: $sessionId, role: $role, content: $content, createdAt: $createdAt, reasoning: $reasoning, thinkingMillis: $thinkingMillis, imageName: $imageName, inputTokens: $inputTokens, outputTokens: $outputTokens, model: $model, toolCalls: $toolCalls)';
+  final _this = this as ChatMessage;
+  return 'ChatMessage(id: ${_this.id}, sessionId: ${_this.sessionId}, role: ${_this.role}, content: ${_this.content}, createdAt: ${_this.createdAt}, reasoning: ${_this.reasoning}, thinkingMillis: ${_this.thinkingMillis}, imageName: ${_this.imageName}, inputTokens: ${_this.inputTokens}, outputTokens: ${_this.outputTokens}, model: ${_this.model}, toolCalls: ${_this.toolCalls})';
 }
 
 
@@ -284,16 +289,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatMessage&&(identical(other.id, id) || other.id == id)&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId)&&(identical(other.role, role) || other.role == role)&&(identical(other.content, content) || other.content == content)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.reasoning, reasoning) || other.reasoning == reasoning)&&(identical(other.thinkingMillis, thinkingMillis) || other.thinkingMillis == thinkingMillis)&&(identical(other.imageName, imageName) || other.imageName == imageName)&&(identical(other.inputTokens, inputTokens) || other.inputTokens == inputTokens)&&(identical(other.outputTokens, outputTokens) || other.outputTokens == outputTokens)&&(identical(other.model, model) || other.model == model)&&const DeepCollectionEquality().equals(other._toolCalls, _toolCalls));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatMessage&&(identical(other.id, id) || other.id == id)&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId)&&(identical(other.role, role) || other.role == role)&&(identical(other.content, content) || other.content == content)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.reasoning, reasoning) || other.reasoning == reasoning)&&(identical(other.thinkingMillis, thinkingMillis) || other.thinkingMillis == thinkingMillis)&&(identical(other.imageName, imageName) || other.imageName == imageName)&&(identical(other.inputTokens, inputTokens) || other.inputTokens == inputTokens)&&(identical(other.outputTokens, outputTokens) || other.outputTokens == outputTokens)&&(identical(other.model, model) || other.model == model)&&const DeepCollectionEquality().equals(other.toolCalls, _toolCalls));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,sessionId,role,content,createdAt,reasoning,thinkingMillis,imageName,inputTokens,outputTokens,model,const DeepCollectionEquality().hash(_toolCalls));
+int get hashCode {
+    return Object.hash(runtimeType,id,sessionId,role,content,createdAt,reasoning,thinkingMillis,imageName,inputTokens,outputTokens,model,const DeepCollectionEquality().hash(_toolCalls));
+}
 
 @override
 String toString() {
-  return 'ChatMessage(id: $id, sessionId: $sessionId, role: $role, content: $content, createdAt: $createdAt, reasoning: $reasoning, thinkingMillis: $thinkingMillis, imageName: $imageName, inputTokens: $inputTokens, outputTokens: $outputTokens, model: $model, toolCalls: $toolCalls)';
+    return 'ChatMessage(id: $id, sessionId: $sessionId, role: $role, content: $content, createdAt: $createdAt, reasoning: $reasoning, thinkingMillis: $thinkingMillis, imageName: $imageName, inputTokens: $inputTokens, outputTokens: $outputTokens, model: $model, toolCalls: $toolCalls)';
 }
 
 

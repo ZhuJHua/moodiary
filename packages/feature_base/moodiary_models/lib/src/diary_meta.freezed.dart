@@ -30,16 +30,21 @@ $DiaryPositionCopyWith<DiaryPosition> get copyWith => _$DiaryPositionCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiaryPosition&&(identical(other.latitude, latitude) || other.latitude == latitude)&&(identical(other.longitude, longitude) || other.longitude == longitude)&&(identical(other.name, name) || other.name == name));
+  final _this = this as DiaryPosition;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiaryPosition&&(identical(other.latitude, _this.latitude) || other.latitude == _this.latitude)&&(identical(other.longitude, _this.longitude) || other.longitude == _this.longitude)&&(identical(other.name, _this.name) || other.name == _this.name));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,latitude,longitude,name);
+int get hashCode {
+  final _this = this as DiaryPosition;
+  return Object.hash(runtimeType,_this.latitude,_this.longitude,_this.name);
+}
 
 @override
 String toString() {
-  return 'DiaryPosition(latitude: $latitude, longitude: $longitude, name: $name)';
+  final _this = this as DiaryPosition;
+  return 'DiaryPosition(latitude: ${_this.latitude}, longitude: ${_this.longitude}, name: ${_this.name})';
 }
 
 
@@ -234,16 +239,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DiaryPosition&&(identical(other.latitude, latitude) || other.latitude == latitude)&&(identical(other.longitude, longitude) || other.longitude == longitude)&&(identical(other.name, name) || other.name == name));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DiaryPosition&&(identical(other.latitude, latitude) || other.latitude == latitude)&&(identical(other.longitude, longitude) || other.longitude == longitude)&&(identical(other.name, name) || other.name == name));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,latitude,longitude,name);
+int get hashCode {
+    return Object.hash(runtimeType,latitude,longitude,name);
+}
 
 @override
 String toString() {
-  return 'DiaryPosition(latitude: $latitude, longitude: $longitude, name: $name)';
+    return 'DiaryPosition(latitude: $latitude, longitude: $longitude, name: $name)';
 }
 
 
@@ -302,16 +309,21 @@ $DiaryWeatherCopyWith<DiaryWeather> get copyWith => _$DiaryWeatherCopyWithImpl<D
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiaryWeather&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.temp, temp) || other.temp == temp)&&(identical(other.text, text) || other.text == text));
+  final _this = this as DiaryWeather;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiaryWeather&&(identical(other.icon, _this.icon) || other.icon == _this.icon)&&(identical(other.temp, _this.temp) || other.temp == _this.temp)&&(identical(other.text, _this.text) || other.text == _this.text));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,icon,temp,text);
+int get hashCode {
+  final _this = this as DiaryWeather;
+  return Object.hash(runtimeType,_this.icon,_this.temp,_this.text);
+}
 
 @override
 String toString() {
-  return 'DiaryWeather(icon: $icon, temp: $temp, text: $text)';
+  final _this = this as DiaryWeather;
+  return 'DiaryWeather(icon: ${_this.icon}, temp: ${_this.temp}, text: ${_this.text})';
 }
 
 
@@ -507,16 +519,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DiaryWeather&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.temp, temp) || other.temp == temp)&&(identical(other.text, text) || other.text == text));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DiaryWeather&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.temp, temp) || other.temp == temp)&&(identical(other.text, text) || other.text == text));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,icon,temp,text);
+int get hashCode {
+    return Object.hash(runtimeType,icon,temp,text);
+}
 
 @override
 String toString() {
-  return 'DiaryWeather(icon: $icon, temp: $temp, text: $text)';
+    return 'DiaryWeather(icon: $icon, temp: $temp, text: $text)';
 }
 
 

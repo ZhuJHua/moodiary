@@ -48,7 +48,7 @@ dependencies:
 
   gap: 3.0.1
 
-  file_picker: 12.1.1
+  file_picker: 12.1.2
   heif_converter: 1.0.7
 
   flutter_markdown_plus: 1.0.12

@@ -32,16 +32,21 @@ $AgentPresetCopyWith<AgentPreset> get copyWith => _$AgentPresetCopyWithImpl<Agen
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AgentPreset&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.persona, persona) || other.persona == persona)&&const DeepCollectionEquality().equals(other.tools, tools)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  final _this = this as AgentPreset;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AgentPreset&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.description, _this.description) || other.description == _this.description)&&(identical(other.persona, _this.persona) || other.persona == _this.persona)&&const DeepCollectionEquality().equals(other.tools, _this.tools)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&(identical(other.updatedAt, _this.updatedAt) || other.updatedAt == _this.updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,description,persona,const DeepCollectionEquality().hash(tools),createdAt,updatedAt);
+int get hashCode {
+  final _this = this as AgentPreset;
+  return Object.hash(runtimeType,_this.id,_this.name,_this.description,_this.persona,const DeepCollectionEquality().hash(_this.tools),_this.createdAt,_this.updatedAt);
+}
 
 @override
 String toString() {
-  return 'AgentPreset(id: $id, name: $name, description: $description, persona: $persona, tools: $tools, createdAt: $createdAt, updatedAt: $updatedAt)';
+  final _this = this as AgentPreset;
+  return 'AgentPreset(id: ${_this.id}, name: ${_this.name}, description: ${_this.description}, persona: ${_this.persona}, tools: ${_this.tools}, createdAt: ${_this.createdAt}, updatedAt: ${_this.updatedAt})';
 }
 
 
@@ -256,16 +261,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AgentPreset&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.persona, persona) || other.persona == persona)&&const DeepCollectionEquality().equals(other._tools, _tools)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AgentPreset&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.persona, persona) || other.persona == persona)&&const DeepCollectionEquality().equals(other.tools, _tools)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,description,persona,const DeepCollectionEquality().hash(_tools),createdAt,updatedAt);
+int get hashCode {
+    return Object.hash(runtimeType,id,name,description,persona,const DeepCollectionEquality().hash(_tools),createdAt,updatedAt);
+}
 
 @override
 String toString() {
-  return 'AgentPreset(id: $id, name: $name, description: $description, persona: $persona, tools: $tools, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'AgentPreset(id: $id, name: $name, description: $description, persona: $persona, tools: $tools, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 

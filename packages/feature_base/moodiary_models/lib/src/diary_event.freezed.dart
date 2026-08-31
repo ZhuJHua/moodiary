@@ -26,16 +26,21 @@ $DiaryEventCopyWith<DiaryEvent> get copyWith => _$DiaryEventCopyWithImpl<DiaryEv
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiaryEvent&&(identical(other.fromSync, fromSync) || other.fromSync == fromSync));
+  final _this = this as DiaryEvent;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiaryEvent&&(identical(other.fromSync, _this.fromSync) || other.fromSync == _this.fromSync));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,fromSync);
+int get hashCode {
+  final _this = this as DiaryEvent;
+  return Object.hash(runtimeType,_this.fromSync);
+}
 
 @override
 String toString() {
-  return 'DiaryEvent(fromSync: $fromSync)';
+  final _this = this as DiaryEvent;
+  return 'DiaryEvent(fromSync: ${_this.fromSync})';
 }
 
 
@@ -229,16 +234,18 @@ $DiaryCreatedCopyWith<DiaryCreated> get copyWith => _$DiaryCreatedCopyWithImpl<D
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiaryCreated&&(identical(other.diary, diary) || other.diary == diary)&&(identical(other.fromSync, fromSync) || other.fromSync == fromSync));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is DiaryCreated&&(identical(other.diary, diary) || other.diary == diary)&&(identical(other.fromSync, fromSync) || other.fromSync == fromSync));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,diary,fromSync);
+int get hashCode {
+    return Object.hash(runtimeType,diary,fromSync);
+}
 
 @override
 String toString() {
-  return 'DiaryEvent.created(diary: $diary, fromSync: $fromSync)';
+    return 'DiaryEvent.created(diary: $diary, fromSync: $fromSync)';
 }
 
 
@@ -306,16 +313,18 @@ $DiaryUpdatedCopyWith<DiaryUpdated> get copyWith => _$DiaryUpdatedCopyWithImpl<D
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiaryUpdated&&(identical(other.diary, diary) || other.diary == diary)&&(identical(other.fromSync, fromSync) || other.fromSync == fromSync));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is DiaryUpdated&&(identical(other.diary, diary) || other.diary == diary)&&(identical(other.fromSync, fromSync) || other.fromSync == fromSync));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,diary,fromSync);
+int get hashCode {
+    return Object.hash(runtimeType,diary,fromSync);
+}
 
 @override
 String toString() {
-  return 'DiaryEvent.updated(diary: $diary, fromSync: $fromSync)';
+    return 'DiaryEvent.updated(diary: $diary, fromSync: $fromSync)';
 }
 
 
@@ -383,16 +392,18 @@ $DiaryDeletedCopyWith<DiaryDeleted> get copyWith => _$DiaryDeletedCopyWithImpl<D
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiaryDeleted&&(identical(other.id, id) || other.id == id)&&(identical(other.fromSync, fromSync) || other.fromSync == fromSync));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is DiaryDeleted&&(identical(other.id, id) || other.id == id)&&(identical(other.fromSync, fromSync) || other.fromSync == fromSync));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,fromSync);
+int get hashCode {
+    return Object.hash(runtimeType,id,fromSync);
+}
 
 @override
 String toString() {
-  return 'DiaryEvent.deleted(id: $id, fromSync: $fromSync)';
+    return 'DiaryEvent.deleted(id: $id, fromSync: $fromSync)';
 }
 
 

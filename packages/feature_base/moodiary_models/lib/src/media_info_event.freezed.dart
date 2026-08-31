@@ -26,16 +26,21 @@ $MediaInfoEventCopyWith<MediaInfoEvent> get copyWith => _$MediaInfoEventCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MediaInfoEvent&&(identical(other.fromSync, fromSync) || other.fromSync == fromSync));
+  final _this = this as MediaInfoEvent;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MediaInfoEvent&&(identical(other.fromSync, _this.fromSync) || other.fromSync == _this.fromSync));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,fromSync);
+int get hashCode {
+  final _this = this as MediaInfoEvent;
+  return Object.hash(runtimeType,_this.fromSync);
+}
 
 @override
 String toString() {
-  return 'MediaInfoEvent(fromSync: $fromSync)';
+  final _this = this as MediaInfoEvent;
+  return 'MediaInfoEvent(fromSync: ${_this.fromSync})';
 }
 
 
@@ -223,16 +228,18 @@ $MediaInfoUpsertedCopyWith<MediaInfoUpserted> get copyWith => _$MediaInfoUpserte
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MediaInfoUpserted&&(identical(other.mediaInfo, mediaInfo) || other.mediaInfo == mediaInfo)&&(identical(other.fromSync, fromSync) || other.fromSync == fromSync));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is MediaInfoUpserted&&(identical(other.mediaInfo, mediaInfo) || other.mediaInfo == mediaInfo)&&(identical(other.fromSync, fromSync) || other.fromSync == fromSync));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,mediaInfo,fromSync);
+int get hashCode {
+    return Object.hash(runtimeType,mediaInfo,fromSync);
+}
 
 @override
 String toString() {
-  return 'MediaInfoEvent.upserted(mediaInfo: $mediaInfo, fromSync: $fromSync)';
+    return 'MediaInfoEvent.upserted(mediaInfo: $mediaInfo, fromSync: $fromSync)';
 }
 
 
@@ -300,16 +307,18 @@ $MediaInfoDeletedCopyWith<MediaInfoDeleted> get copyWith => _$MediaInfoDeletedCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MediaInfoDeleted&&(identical(other.fileName, fileName) || other.fileName == fileName)&&(identical(other.fromSync, fromSync) || other.fromSync == fromSync));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is MediaInfoDeleted&&(identical(other.fileName, fileName) || other.fileName == fileName)&&(identical(other.fromSync, fromSync) || other.fromSync == fromSync));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,fileName,fromSync);
+int get hashCode {
+    return Object.hash(runtimeType,fileName,fromSync);
+}
 
 @override
 String toString() {
-  return 'MediaInfoEvent.deleted(fileName: $fileName, fromSync: $fromSync)';
+    return 'MediaInfoEvent.deleted(fileName: $fileName, fromSync: $fromSync)';
 }
 
 

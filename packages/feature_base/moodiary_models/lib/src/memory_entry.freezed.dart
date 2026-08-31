@@ -30,16 +30,21 @@ $MemoryEntryCopyWith<MemoryEntry> get copyWith => _$MemoryEntryCopyWithImpl<Memo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MemoryEntry&&(identical(other.id, id) || other.id == id)&&(identical(other.category, category) || other.category == category)&&(identical(other.text, text) || other.text == text)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  final _this = this as MemoryEntry;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MemoryEntry&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.category, _this.category) || other.category == _this.category)&&(identical(other.text, _this.text) || other.text == _this.text)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&(identical(other.updatedAt, _this.updatedAt) || other.updatedAt == _this.updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,category,text,createdAt,updatedAt);
+int get hashCode {
+  final _this = this as MemoryEntry;
+  return Object.hash(runtimeType,_this.id,_this.category,_this.text,_this.createdAt,_this.updatedAt);
+}
 
 @override
 String toString() {
-  return 'MemoryEntry(id: $id, category: $category, text: $text, createdAt: $createdAt, updatedAt: $updatedAt)';
+  final _this = this as MemoryEntry;
+  return 'MemoryEntry(id: ${_this.id}, category: ${_this.category}, text: ${_this.text}, createdAt: ${_this.createdAt}, updatedAt: ${_this.updatedAt})';
 }
 
 
@@ -238,16 +243,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MemoryEntry&&(identical(other.id, id) || other.id == id)&&(identical(other.category, category) || other.category == category)&&(identical(other.text, text) || other.text == text)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MemoryEntry&&(identical(other.id, id) || other.id == id)&&(identical(other.category, category) || other.category == category)&&(identical(other.text, text) || other.text == text)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,category,text,createdAt,updatedAt);
+int get hashCode {
+    return Object.hash(runtimeType,id,category,text,createdAt,updatedAt);
+}
 
 @override
 String toString() {
-  return 'MemoryEntry(id: $id, category: $category, text: $text, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'MemoryEntry(id: $id, category: $category, text: $text, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 

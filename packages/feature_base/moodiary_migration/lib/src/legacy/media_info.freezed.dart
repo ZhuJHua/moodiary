@@ -29,16 +29,21 @@ $MediaInfoCopyWith<MediaInfo> get copyWith => _$MediaInfoCopyWithImpl<MediaInfo>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MediaInfo&&(identical(other.fileName, fileName) || other.fileName == fileName)&&(identical(other.name, name) || other.name == name)&&(identical(other.durationMs, durationMs) || other.durationMs == durationMs)&&(identical(other.lastModified, lastModified) || other.lastModified == lastModified));
+  final _this = this as MediaInfo;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MediaInfo&&(identical(other.fileName, _this.fileName) || other.fileName == _this.fileName)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.durationMs, _this.durationMs) || other.durationMs == _this.durationMs)&&(identical(other.lastModified, _this.lastModified) || other.lastModified == _this.lastModified));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,fileName,name,durationMs,lastModified);
+int get hashCode {
+  final _this = this as MediaInfo;
+  return Object.hash(runtimeType,_this.fileName,_this.name,_this.durationMs,_this.lastModified);
+}
 
 @override
 String toString() {
-  return 'MediaInfo(fileName: $fileName, name: $name, durationMs: $durationMs, lastModified: $lastModified)';
+  final _this = this as MediaInfo;
+  return 'MediaInfo(fileName: ${_this.fileName}, name: ${_this.name}, durationMs: ${_this.durationMs}, lastModified: ${_this.lastModified})';
 }
 
 
@@ -234,16 +239,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MediaInfo&&(identical(other.fileName, fileName) || other.fileName == fileName)&&(identical(other.name, name) || other.name == name)&&(identical(other.durationMs, durationMs) || other.durationMs == durationMs)&&(identical(other.lastModified, lastModified) || other.lastModified == lastModified));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MediaInfo&&(identical(other.fileName, fileName) || other.fileName == fileName)&&(identical(other.name, name) || other.name == name)&&(identical(other.durationMs, durationMs) || other.durationMs == durationMs)&&(identical(other.lastModified, lastModified) || other.lastModified == lastModified));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,fileName,name,durationMs,lastModified);
+int get hashCode {
+    return Object.hash(runtimeType,fileName,name,durationMs,lastModified);
+}
 
 @override
 String toString() {
-  return 'MediaInfo(fileName: $fileName, name: $name, durationMs: $durationMs, lastModified: $lastModified)';
+    return 'MediaInfo(fileName: $fileName, name: $name, durationMs: $durationMs, lastModified: $lastModified)';
 }
 
 

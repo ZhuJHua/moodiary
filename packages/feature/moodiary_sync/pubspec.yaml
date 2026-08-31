@@ -34,7 +34,7 @@ dependencies:
   file: 7.0.1
   bonsoir: 7.1.5
   path: 1.9.1
-  pool: 1.5.2
+  pool: 1.5.3
   synchronized: 3.4.1+2
 
 dev_dependencies:

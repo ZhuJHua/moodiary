@@ -40,7 +40,7 @@ melos:
       description: 构建编辑器单文件资源
 
 dev_dependencies:
-  melos: 8.5.0
+  melos: 8.6.0
 
 dependency_overrides:
   cli_util: 0.5.2

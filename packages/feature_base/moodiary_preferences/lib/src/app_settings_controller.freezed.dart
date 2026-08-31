@@ -26,16 +26,21 @@ $AppSettingsCopyWith<AppSettings> get copyWith => _$AppSettingsCopyWithImpl<AppS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppSettings&&(identical(other.lightTheme, lightTheme) || other.lightTheme == lightTheme)&&(identical(other.darkTheme, darkTheme) || other.darkTheme == darkTheme)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode));
+  final _this = this as AppSettings;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppSettings&&(identical(other.lightTheme, _this.lightTheme) || other.lightTheme == _this.lightTheme)&&(identical(other.darkTheme, _this.darkTheme) || other.darkTheme == _this.darkTheme)&&(identical(other.themeMode, _this.themeMode) || other.themeMode == _this.themeMode));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,lightTheme,darkTheme,themeMode);
+int get hashCode {
+  final _this = this as AppSettings;
+  return Object.hash(runtimeType,_this.lightTheme,_this.darkTheme,_this.themeMode);
+}
 
 @override
 String toString() {
-  return 'AppSettings(lightTheme: $lightTheme, darkTheme: $darkTheme, themeMode: $themeMode)';
+  final _this = this as AppSettings;
+  return 'AppSettings(lightTheme: ${_this.lightTheme}, darkTheme: ${_this.darkTheme}, themeMode: ${_this.themeMode})';
 }
 
 
@@ -226,16 +231,18 @@ _$AppSettingsCopyWith<_AppSettings> get copyWith => __$AppSettingsCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppSettings&&(identical(other.lightTheme, lightTheme) || other.lightTheme == lightTheme)&&(identical(other.darkTheme, darkTheme) || other.darkTheme == darkTheme)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppSettings&&(identical(other.lightTheme, lightTheme) || other.lightTheme == lightTheme)&&(identical(other.darkTheme, darkTheme) || other.darkTheme == darkTheme)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,lightTheme,darkTheme,themeMode);
+int get hashCode {
+    return Object.hash(runtimeType,lightTheme,darkTheme,themeMode);
+}
 
 @override
 String toString() {
-  return 'AppSettings(lightTheme: $lightTheme, darkTheme: $darkTheme, themeMode: $themeMode)';
+    return 'AppSettings(lightTheme: $lightTheme, darkTheme: $darkTheme, themeMode: $themeMode)';
 }
 
 

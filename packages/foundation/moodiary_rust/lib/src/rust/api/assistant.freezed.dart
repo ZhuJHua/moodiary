@@ -21,7 +21,7 @@ mixin _$RigStreamEvent {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RigStreamEvent);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is RigStreamEvent);
 }
 
 
@@ -30,7 +30,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'RigStreamEvent()';
+    return 'RigStreamEvent()';
 }
 
 
@@ -215,16 +215,18 @@ $RigStreamEvent_TextDeltaCopyWith<RigStreamEvent_TextDelta> get copyWith => _$Ri
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RigStreamEvent_TextDelta&&(identical(other.field0, field0) || other.field0 == field0));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is RigStreamEvent_TextDelta&&(identical(other.field0, field0) || other.field0 == field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,field0);
+int get hashCode {
+    return Object.hash(runtimeType,field0);
+}
 
 @override
 String toString() {
-  return 'RigStreamEvent.textDelta(field0: $field0)';
+    return 'RigStreamEvent.textDelta(field0: $field0)';
 }
 
 
@@ -281,16 +283,18 @@ $RigStreamEvent_ReasoningDeltaCopyWith<RigStreamEvent_ReasoningDelta> get copyWi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RigStreamEvent_ReasoningDelta&&(identical(other.field0, field0) || other.field0 == field0));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is RigStreamEvent_ReasoningDelta&&(identical(other.field0, field0) || other.field0 == field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,field0);
+int get hashCode {
+    return Object.hash(runtimeType,field0);
+}
 
 @override
 String toString() {
-  return 'RigStreamEvent.reasoningDelta(field0: $field0)';
+    return 'RigStreamEvent.reasoningDelta(field0: $field0)';
 }
 
 
@@ -347,16 +351,18 @@ $RigStreamEvent_ToolCallCopyWith<RigStreamEvent_ToolCall> get copyWith => _$RigS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RigStreamEvent_ToolCall&&(identical(other.field0, field0) || other.field0 == field0));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is RigStreamEvent_ToolCall&&(identical(other.field0, field0) || other.field0 == field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,field0);
+int get hashCode {
+    return Object.hash(runtimeType,field0);
+}
 
 @override
 String toString() {
-  return 'RigStreamEvent.toolCall(field0: $field0)';
+    return 'RigStreamEvent.toolCall(field0: $field0)';
 }
 
 
@@ -415,16 +421,18 @@ $RigStreamEvent_ToolStartedCopyWith<RigStreamEvent_ToolStarted> get copyWith => 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RigStreamEvent_ToolStarted&&(identical(other.callId, callId) || other.callId == callId)&&(identical(other.name, name) || other.name == name)&&(identical(other.argsJson, argsJson) || other.argsJson == argsJson));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is RigStreamEvent_ToolStarted&&(identical(other.callId, callId) || other.callId == callId)&&(identical(other.name, name) || other.name == name)&&(identical(other.argsJson, argsJson) || other.argsJson == argsJson));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,callId,name,argsJson);
+int get hashCode {
+    return Object.hash(runtimeType,callId,name,argsJson);
+}
 
 @override
 String toString() {
-  return 'RigStreamEvent.toolStarted(callId: $callId, name: $name, argsJson: $argsJson)';
+    return 'RigStreamEvent.toolStarted(callId: $callId, name: $name, argsJson: $argsJson)';
 }
 
 
@@ -484,16 +492,18 @@ $RigStreamEvent_ToolFinishedCopyWith<RigStreamEvent_ToolFinished> get copyWith =
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RigStreamEvent_ToolFinished&&(identical(other.callId, callId) || other.callId == callId)&&(identical(other.result, result) || other.result == result));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is RigStreamEvent_ToolFinished&&(identical(other.callId, callId) || other.callId == callId)&&(identical(other.result, result) || other.result == result));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,callId,result);
+int get hashCode {
+    return Object.hash(runtimeType,callId,result);
+}
 
 @override
 String toString() {
-  return 'RigStreamEvent.toolFinished(callId: $callId, result: $result)';
+    return 'RigStreamEvent.toolFinished(callId: $callId, result: $result)';
 }
 
 
@@ -554,16 +564,18 @@ $RigStreamEvent_UsageCopyWith<RigStreamEvent_Usage> get copyWith => _$RigStreamE
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RigStreamEvent_Usage&&(identical(other.inputTokens, inputTokens) || other.inputTokens == inputTokens)&&(identical(other.outputTokens, outputTokens) || other.outputTokens == outputTokens)&&(identical(other.cachedInputTokens, cachedInputTokens) || other.cachedInputTokens == cachedInputTokens)&&(identical(other.cacheWriteTokens, cacheWriteTokens) || other.cacheWriteTokens == cacheWriteTokens));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is RigStreamEvent_Usage&&(identical(other.inputTokens, inputTokens) || other.inputTokens == inputTokens)&&(identical(other.outputTokens, outputTokens) || other.outputTokens == outputTokens)&&(identical(other.cachedInputTokens, cachedInputTokens) || other.cachedInputTokens == cachedInputTokens)&&(identical(other.cacheWriteTokens, cacheWriteTokens) || other.cacheWriteTokens == cacheWriteTokens));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,inputTokens,outputTokens,cachedInputTokens,cacheWriteTokens);
+int get hashCode {
+    return Object.hash(runtimeType,inputTokens,outputTokens,cachedInputTokens,cacheWriteTokens);
+}
 
 @override
 String toString() {
-  return 'RigStreamEvent.usage(inputTokens: $inputTokens, outputTokens: $outputTokens, cachedInputTokens: $cachedInputTokens, cacheWriteTokens: $cacheWriteTokens)';
+    return 'RigStreamEvent.usage(inputTokens: $inputTokens, outputTokens: $outputTokens, cachedInputTokens: $cachedInputTokens, cacheWriteTokens: $cacheWriteTokens)';
 }
 
 

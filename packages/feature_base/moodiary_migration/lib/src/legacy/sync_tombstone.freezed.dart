@@ -26,16 +26,21 @@ $SyncTombstoneCopyWith<SyncTombstone> get copyWith => _$SyncTombstoneCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SyncTombstone&&(identical(other.key, key) || other.key == key)&&(identical(other.timeMs, timeMs) || other.timeMs == timeMs)&&const DeepCollectionEquality().equals(other.pushedBackends, pushedBackends));
+  final _this = this as SyncTombstone;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SyncTombstone&&(identical(other.key, _this.key) || other.key == _this.key)&&(identical(other.timeMs, _this.timeMs) || other.timeMs == _this.timeMs)&&const DeepCollectionEquality().equals(other.pushedBackends, _this.pushedBackends));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,key,timeMs,const DeepCollectionEquality().hash(pushedBackends));
+int get hashCode {
+  final _this = this as SyncTombstone;
+  return Object.hash(runtimeType,_this.key,_this.timeMs,const DeepCollectionEquality().hash(_this.pushedBackends));
+}
 
 @override
 String toString() {
-  return 'SyncTombstone(key: $key, timeMs: $timeMs, pushedBackends: $pushedBackends)';
+  final _this = this as SyncTombstone;
+  return 'SyncTombstone(key: ${_this.key}, timeMs: ${_this.timeMs}, pushedBackends: ${_this.pushedBackends})';
 }
 
 
@@ -232,16 +237,18 @@ _$SyncTombstoneCopyWith<_SyncTombstone> get copyWith => __$SyncTombstoneCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SyncTombstone&&(identical(other.key, key) || other.key == key)&&(identical(other.timeMs, timeMs) || other.timeMs == timeMs)&&const DeepCollectionEquality().equals(other._pushedBackends, _pushedBackends));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SyncTombstone&&(identical(other.key, key) || other.key == key)&&(identical(other.timeMs, timeMs) || other.timeMs == timeMs)&&const DeepCollectionEquality().equals(other.pushedBackends, _pushedBackends));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,key,timeMs,const DeepCollectionEquality().hash(_pushedBackends));
+int get hashCode {
+    return Object.hash(runtimeType,key,timeMs,const DeepCollectionEquality().hash(_pushedBackends));
+}
 
 @override
 String toString() {
-  return 'SyncTombstone(key: $key, timeMs: $timeMs, pushedBackends: $pushedBackends)';
+    return 'SyncTombstone(key: $key, timeMs: $timeMs, pushedBackends: $pushedBackends)';
 }
 
 

@@ -52,7 +52,7 @@ dev_dependencies:
     sdk: flutter
   moodiary_lint: 0.0.1
   build_runner: 2.16.0
-  freezed: 4.0.0
+  freezed: 4.0.1
   json_serializable: 6.14.1
   riverpod_generator: 4.0.8
 

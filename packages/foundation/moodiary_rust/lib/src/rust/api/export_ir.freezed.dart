@@ -21,7 +21,7 @@ mixin _$IrBlock {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IrBlock);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is IrBlock);
 }
 
 
@@ -30,7 +30,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'IrBlock()';
+    return 'IrBlock()';
 }
 
 
@@ -239,16 +239,18 @@ $IrBlock_ParagraphCopyWith<IrBlock_Paragraph> get copyWith => _$IrBlock_Paragrap
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IrBlock_Paragraph&&const DeepCollectionEquality().equals(other._spans, _spans));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is IrBlock_Paragraph&&const DeepCollectionEquality().equals(other.spans, _spans));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_spans));
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_spans));
+}
 
 @override
 String toString() {
-  return 'IrBlock.paragraph(spans: $spans)';
+    return 'IrBlock.paragraph(spans: $spans)';
 }
 
 
@@ -312,16 +314,18 @@ $IrBlock_HeadingCopyWith<IrBlock_Heading> get copyWith => _$IrBlock_HeadingCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IrBlock_Heading&&(identical(other.level, level) || other.level == level)&&const DeepCollectionEquality().equals(other._spans, _spans));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is IrBlock_Heading&&(identical(other.level, level) || other.level == level)&&const DeepCollectionEquality().equals(other.spans, _spans));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,level,const DeepCollectionEquality().hash(_spans));
+int get hashCode {
+    return Object.hash(runtimeType,level,const DeepCollectionEquality().hash(_spans));
+}
 
 @override
 String toString() {
-  return 'IrBlock.heading(level: $level, spans: $spans)';
+    return 'IrBlock.heading(level: $level, spans: $spans)';
 }
 
 
@@ -387,16 +391,18 @@ $IrBlock_ListCopyWith<IrBlock_List> get copyWith => _$IrBlock_ListCopyWithImpl<I
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IrBlock_List&&(identical(other.ordered, ordered) || other.ordered == ordered)&&(identical(other.start, start) || other.start == start)&&const DeepCollectionEquality().equals(other._items, _items));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is IrBlock_List&&(identical(other.ordered, ordered) || other.ordered == ordered)&&(identical(other.start, start) || other.start == start)&&const DeepCollectionEquality().equals(other.items, _items));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,ordered,start,const DeepCollectionEquality().hash(_items));
+int get hashCode {
+    return Object.hash(runtimeType,ordered,start,const DeepCollectionEquality().hash(_items));
+}
 
 @override
 String toString() {
-  return 'IrBlock.list(ordered: $ordered, start: $start, items: $items)';
+    return 'IrBlock.list(ordered: $ordered, start: $start, items: $items)';
 }
 
 
@@ -461,16 +467,18 @@ $IrBlock_QuoteCopyWith<IrBlock_Quote> get copyWith => _$IrBlock_QuoteCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IrBlock_Quote&&const DeepCollectionEquality().equals(other._children, _children));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is IrBlock_Quote&&const DeepCollectionEquality().equals(other.children, _children));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_children));
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_children));
+}
 
 @override
 String toString() {
-  return 'IrBlock.quote(children: $children)';
+    return 'IrBlock.quote(children: $children)';
 }
 
 
@@ -528,16 +536,18 @@ $IrBlock_CodeCopyWith<IrBlock_Code> get copyWith => _$IrBlock_CodeCopyWithImpl<I
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IrBlock_Code&&(identical(other.language, language) || other.language == language)&&(identical(other.text, text) || other.text == text));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is IrBlock_Code&&(identical(other.language, language) || other.language == language)&&(identical(other.text, text) || other.text == text));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,language,text);
+int get hashCode {
+    return Object.hash(runtimeType,language,text);
+}
 
 @override
 String toString() {
-  return 'IrBlock.code(language: $language, text: $text)';
+    return 'IrBlock.code(language: $language, text: $text)';
 }
 
 
@@ -590,7 +600,7 @@ class IrBlock_Divider extends IrBlock {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IrBlock_Divider);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is IrBlock_Divider);
 }
 
 
@@ -599,7 +609,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'IrBlock.divider()';
+    return 'IrBlock.divider()';
 }
 
 
@@ -632,16 +642,18 @@ $IrBlock_ImageCopyWith<IrBlock_Image> get copyWith => _$IrBlock_ImageCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IrBlock_Image&&(identical(other.path, path) || other.path == path)&&(identical(other.alt, alt) || other.alt == alt)&&(identical(other.widthPercent, widthPercent) || other.widthPercent == widthPercent)&&(identical(other.isExternal, isExternal) || other.isExternal == isExternal));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is IrBlock_Image&&(identical(other.path, path) || other.path == path)&&(identical(other.alt, alt) || other.alt == alt)&&(identical(other.widthPercent, widthPercent) || other.widthPercent == widthPercent)&&(identical(other.isExternal, isExternal) || other.isExternal == isExternal));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,path,alt,widthPercent,isExternal);
+int get hashCode {
+    return Object.hash(runtimeType,path,alt,widthPercent,isExternal);
+}
 
 @override
 String toString() {
-  return 'IrBlock.image(path: $path, alt: $alt, widthPercent: $widthPercent, isExternal: $isExternal)';
+    return 'IrBlock.image(path: $path, alt: $alt, widthPercent: $widthPercent, isExternal: $isExternal)';
 }
 
 
@@ -704,16 +716,18 @@ $IrBlock_MediaCopyWith<IrBlock_Media> get copyWith => _$IrBlock_MediaCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IrBlock_Media&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.filename, filename) || other.filename == filename)&&(identical(other.path, path) || other.path == path)&&(identical(other.coverPath, coverPath) || other.coverPath == coverPath));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is IrBlock_Media&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.filename, filename) || other.filename == filename)&&(identical(other.path, path) || other.path == path)&&(identical(other.coverPath, coverPath) || other.coverPath == coverPath));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,kind,filename,path,coverPath);
+int get hashCode {
+    return Object.hash(runtimeType,kind,filename,path,coverPath);
+}
 
 @override
 String toString() {
-  return 'IrBlock.media(kind: $kind, filename: $filename, path: $path, coverPath: $coverPath)';
+    return 'IrBlock.media(kind: $kind, filename: $filename, path: $path, coverPath: $coverPath)';
 }
 
 
@@ -779,16 +793,18 @@ $IrBlock_TableCopyWith<IrBlock_Table> get copyWith => _$IrBlock_TableCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IrBlock_Table&&const DeepCollectionEquality().equals(other._rows, _rows));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is IrBlock_Table&&const DeepCollectionEquality().equals(other.rows, _rows));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_rows));
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_rows));
+}
 
 @override
 String toString() {
-  return 'IrBlock.table(rows: $rows)';
+    return 'IrBlock.table(rows: $rows)';
 }
 
 

@@ -26,16 +26,21 @@ $DiarySearchStateCopyWith<DiarySearchState> get copyWith => _$DiarySearchStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiarySearchState&&const DeepCollectionEquality().equals(other.results, results)&&const DeepCollectionEquality().equals(other.queryList, queryList)&&(identical(other.isSearching, isSearching) || other.isSearching == isSearching)&&(identical(other.elapsed, elapsed) || other.elapsed == elapsed)&&(identical(other.query, query) || other.query == query)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.datePreset, datePreset) || other.datePreset == datePreset)&&(identical(other.customStart, customStart) || other.customStart == customStart)&&(identical(other.customEnd, customEnd) || other.customEnd == customEnd)&&(identical(other.sort, sort) || other.sort == sort));
+  final _this = this as DiarySearchState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiarySearchState&&const DeepCollectionEquality().equals(other.results, _this.results)&&const DeepCollectionEquality().equals(other.queryList, _this.queryList)&&(identical(other.isSearching, _this.isSearching) || other.isSearching == _this.isSearching)&&(identical(other.elapsed, _this.elapsed) || other.elapsed == _this.elapsed)&&(identical(other.query, _this.query) || other.query == _this.query)&&(identical(other.categoryId, _this.categoryId) || other.categoryId == _this.categoryId)&&(identical(other.datePreset, _this.datePreset) || other.datePreset == _this.datePreset)&&(identical(other.customStart, _this.customStart) || other.customStart == _this.customStart)&&(identical(other.customEnd, _this.customEnd) || other.customEnd == _this.customEnd)&&(identical(other.sort, _this.sort) || other.sort == _this.sort));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(results),const DeepCollectionEquality().hash(queryList),isSearching,elapsed,query,categoryId,datePreset,customStart,customEnd,sort);
+int get hashCode {
+  final _this = this as DiarySearchState;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.results),const DeepCollectionEquality().hash(_this.queryList),_this.isSearching,_this.elapsed,_this.query,_this.categoryId,_this.datePreset,_this.customStart,_this.customEnd,_this.sort);
+}
 
 @override
 String toString() {
-  return 'DiarySearchState(results: $results, queryList: $queryList, isSearching: $isSearching, elapsed: $elapsed, query: $query, categoryId: $categoryId, datePreset: $datePreset, customStart: $customStart, customEnd: $customEnd, sort: $sort)';
+  final _this = this as DiarySearchState;
+  return 'DiarySearchState(results: ${_this.results}, queryList: ${_this.queryList}, isSearching: ${_this.isSearching}, elapsed: ${_this.elapsed}, query: ${_this.query}, categoryId: ${_this.categoryId}, datePreset: ${_this.datePreset}, customStart: ${_this.customStart}, customEnd: ${_this.customEnd}, sort: ${_this.sort})';
 }
 
 
@@ -252,16 +257,18 @@ _$DiarySearchStateCopyWith<_DiarySearchState> get copyWith => __$DiarySearchStat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DiarySearchState&&const DeepCollectionEquality().equals(other._results, _results)&&const DeepCollectionEquality().equals(other._queryList, _queryList)&&(identical(other.isSearching, isSearching) || other.isSearching == isSearching)&&(identical(other.elapsed, elapsed) || other.elapsed == elapsed)&&(identical(other.query, query) || other.query == query)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.datePreset, datePreset) || other.datePreset == datePreset)&&(identical(other.customStart, customStart) || other.customStart == customStart)&&(identical(other.customEnd, customEnd) || other.customEnd == customEnd)&&(identical(other.sort, sort) || other.sort == sort));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DiarySearchState&&const DeepCollectionEquality().equals(other.results, _results)&&const DeepCollectionEquality().equals(other.queryList, _queryList)&&(identical(other.isSearching, isSearching) || other.isSearching == isSearching)&&(identical(other.elapsed, elapsed) || other.elapsed == elapsed)&&(identical(other.query, query) || other.query == query)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.datePreset, datePreset) || other.datePreset == datePreset)&&(identical(other.customStart, customStart) || other.customStart == customStart)&&(identical(other.customEnd, customEnd) || other.customEnd == customEnd)&&(identical(other.sort, sort) || other.sort == sort));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_results),const DeepCollectionEquality().hash(_queryList),isSearching,elapsed,query,categoryId,datePreset,customStart,customEnd,sort);
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_results),const DeepCollectionEquality().hash(_queryList),isSearching,elapsed,query,categoryId,datePreset,customStart,customEnd,sort);
+}
 
 @override
 String toString() {
-  return 'DiarySearchState(results: $results, queryList: $queryList, isSearching: $isSearching, elapsed: $elapsed, query: $query, categoryId: $categoryId, datePreset: $datePreset, customStart: $customStart, customEnd: $customEnd, sort: $sort)';
+    return 'DiarySearchState(results: $results, queryList: $queryList, isSearching: $isSearching, elapsed: $elapsed, query: $query, categoryId: $categoryId, datePreset: $datePreset, customStart: $customStart, customEnd: $customEnd, sort: $sort)';
 }
 
 

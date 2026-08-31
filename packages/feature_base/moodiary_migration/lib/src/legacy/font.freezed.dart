@@ -26,16 +26,21 @@ $FontCopyWith<Font> get copyWith => _$FontCopyWithImpl<Font>(this as Font, _$ide
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Font&&(identical(other.fontFileName, fontFileName) || other.fontFileName == fontFileName)&&const DeepCollectionEquality().equals(other.fontWghtAxisMap, fontWghtAxisMap));
+  final _this = this as Font;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Font&&(identical(other.fontFileName, _this.fontFileName) || other.fontFileName == _this.fontFileName)&&const DeepCollectionEquality().equals(other.fontWghtAxisMap, _this.fontWghtAxisMap));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,fontFileName,const DeepCollectionEquality().hash(fontWghtAxisMap));
+int get hashCode {
+  final _this = this as Font;
+  return Object.hash(runtimeType,_this.fontFileName,const DeepCollectionEquality().hash(_this.fontWghtAxisMap));
+}
 
 @override
 String toString() {
-  return 'Font(fontFileName: $fontFileName, fontWghtAxisMap: $fontWghtAxisMap)';
+  final _this = this as Font;
+  return 'Font(fontFileName: ${_this.fontFileName}, fontWghtAxisMap: ${_this.fontWghtAxisMap})';
 }
 
 
@@ -230,16 +235,18 @@ _$FontCopyWith<_Font> get copyWith => __$FontCopyWithImpl<_Font>(this, _$identit
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Font&&(identical(other.fontFileName, fontFileName) || other.fontFileName == fontFileName)&&const DeepCollectionEquality().equals(other._fontWghtAxisMap, _fontWghtAxisMap));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Font&&(identical(other.fontFileName, fontFileName) || other.fontFileName == fontFileName)&&const DeepCollectionEquality().equals(other.fontWghtAxisMap, _fontWghtAxisMap));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,fontFileName,const DeepCollectionEquality().hash(_fontWghtAxisMap));
+int get hashCode {
+    return Object.hash(runtimeType,fontFileName,const DeepCollectionEquality().hash(_fontWghtAxisMap));
+}
 
 @override
 String toString() {
-  return 'Font(fontFileName: $fontFileName, fontWghtAxisMap: $fontWghtAxisMap)';
+    return 'Font(fontFileName: $fontFileName, fontWghtAxisMap: $fontWghtAxisMap)';
 }
 
 

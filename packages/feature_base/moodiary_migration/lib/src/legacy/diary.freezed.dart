@@ -29,16 +29,21 @@ $DiaryCopyWith<Diary> get copyWith => _$DiaryCopyWithImpl<Diary>(this as Diary, 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Diary&&(identical(other.id, id) || other.id == id)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.title, title) || other.title == title)&&(identical(other.content, content) || other.content == content)&&(identical(other.contentText, contentText) || other.contentText == contentText)&&(identical(other.time, time) || other.time == time)&&(identical(other.lastModified, lastModified) || other.lastModified == lastModified)&&(identical(other.show, show) || other.show == show)&&(identical(other.mood, mood) || other.mood == mood)&&const DeepCollectionEquality().equals(other.weather, weather)&&const DeepCollectionEquality().equals(other.imageName, imageName)&&const DeepCollectionEquality().equals(other.audioName, audioName)&&const DeepCollectionEquality().equals(other.videoName, videoName)&&const DeepCollectionEquality().equals(other.tags, tags)&&const DeepCollectionEquality().equals(other.position, position)&&(identical(other.type, type) || other.type == type)&&(identical(other.aspect, aspect) || other.aspect == aspect));
+  final _this = this as Diary;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Diary&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.categoryId, _this.categoryId) || other.categoryId == _this.categoryId)&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.content, _this.content) || other.content == _this.content)&&(identical(other.contentText, _this.contentText) || other.contentText == _this.contentText)&&(identical(other.time, _this.time) || other.time == _this.time)&&(identical(other.lastModified, _this.lastModified) || other.lastModified == _this.lastModified)&&(identical(other.show, _this.show) || other.show == _this.show)&&(identical(other.mood, _this.mood) || other.mood == _this.mood)&&const DeepCollectionEquality().equals(other.weather, _this.weather)&&const DeepCollectionEquality().equals(other.imageName, _this.imageName)&&const DeepCollectionEquality().equals(other.audioName, _this.audioName)&&const DeepCollectionEquality().equals(other.videoName, _this.videoName)&&const DeepCollectionEquality().equals(other.tags, _this.tags)&&const DeepCollectionEquality().equals(other.position, _this.position)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.aspect, _this.aspect) || other.aspect == _this.aspect));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,categoryId,title,content,contentText,time,lastModified,show,mood,const DeepCollectionEquality().hash(weather),const DeepCollectionEquality().hash(imageName),const DeepCollectionEquality().hash(audioName),const DeepCollectionEquality().hash(videoName),const DeepCollectionEquality().hash(tags),const DeepCollectionEquality().hash(position),type,aspect);
+int get hashCode {
+  final _this = this as Diary;
+  return Object.hash(runtimeType,_this.id,_this.categoryId,_this.title,_this.content,_this.contentText,_this.time,_this.lastModified,_this.show,_this.mood,const DeepCollectionEquality().hash(_this.weather),const DeepCollectionEquality().hash(_this.imageName),const DeepCollectionEquality().hash(_this.audioName),const DeepCollectionEquality().hash(_this.videoName),const DeepCollectionEquality().hash(_this.tags),const DeepCollectionEquality().hash(_this.position),_this.type,_this.aspect);
+}
 
 @override
 String toString() {
-  return 'Diary(id: $id, categoryId: $categoryId, title: $title, content: $content, contentText: $contentText, time: $time, lastModified: $lastModified, show: $show, mood: $mood, weather: $weather, imageName: $imageName, audioName: $audioName, videoName: $videoName, tags: $tags, position: $position, type: $type, aspect: $aspect)';
+  final _this = this as Diary;
+  return 'Diary(id: ${_this.id}, categoryId: ${_this.categoryId}, title: ${_this.title}, content: ${_this.content}, contentText: ${_this.contentText}, time: ${_this.time}, lastModified: ${_this.lastModified}, show: ${_this.show}, mood: ${_this.mood}, weather: ${_this.weather}, imageName: ${_this.imageName}, audioName: ${_this.audioName}, videoName: ${_this.videoName}, tags: ${_this.tags}, position: ${_this.position}, type: ${_this.type}, aspect: ${_this.aspect})';
 }
 
 
@@ -296,16 +301,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Diary&&(identical(other.id, id) || other.id == id)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.title, title) || other.title == title)&&(identical(other.content, content) || other.content == content)&&(identical(other.contentText, contentText) || other.contentText == contentText)&&(identical(other.time, time) || other.time == time)&&(identical(other.lastModified, lastModified) || other.lastModified == lastModified)&&(identical(other.show, show) || other.show == show)&&(identical(other.mood, mood) || other.mood == mood)&&const DeepCollectionEquality().equals(other._weather, _weather)&&const DeepCollectionEquality().equals(other._imageName, _imageName)&&const DeepCollectionEquality().equals(other._audioName, _audioName)&&const DeepCollectionEquality().equals(other._videoName, _videoName)&&const DeepCollectionEquality().equals(other._tags, _tags)&&const DeepCollectionEquality().equals(other._position, _position)&&(identical(other.type, type) || other.type == type)&&(identical(other.aspect, aspect) || other.aspect == aspect));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Diary&&(identical(other.id, id) || other.id == id)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.title, title) || other.title == title)&&(identical(other.content, content) || other.content == content)&&(identical(other.contentText, contentText) || other.contentText == contentText)&&(identical(other.time, time) || other.time == time)&&(identical(other.lastModified, lastModified) || other.lastModified == lastModified)&&(identical(other.show, show) || other.show == show)&&(identical(other.mood, mood) || other.mood == mood)&&const DeepCollectionEquality().equals(other.weather, _weather)&&const DeepCollectionEquality().equals(other.imageName, _imageName)&&const DeepCollectionEquality().equals(other.audioName, _audioName)&&const DeepCollectionEquality().equals(other.videoName, _videoName)&&const DeepCollectionEquality().equals(other.tags, _tags)&&const DeepCollectionEquality().equals(other.position, _position)&&(identical(other.type, type) || other.type == type)&&(identical(other.aspect, aspect) || other.aspect == aspect));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,categoryId,title,content,contentText,time,lastModified,show,mood,const DeepCollectionEquality().hash(_weather),const DeepCollectionEquality().hash(_imageName),const DeepCollectionEquality().hash(_audioName),const DeepCollectionEquality().hash(_videoName),const DeepCollectionEquality().hash(_tags),const DeepCollectionEquality().hash(_position),type,aspect);
+int get hashCode {
+    return Object.hash(runtimeType,id,categoryId,title,content,contentText,time,lastModified,show,mood,const DeepCollectionEquality().hash(_weather),const DeepCollectionEquality().hash(_imageName),const DeepCollectionEquality().hash(_audioName),const DeepCollectionEquality().hash(_videoName),const DeepCollectionEquality().hash(_tags),const DeepCollectionEquality().hash(_position),type,aspect);
+}
 
 @override
 String toString() {
-  return 'Diary(id: $id, categoryId: $categoryId, title: $title, content: $content, contentText: $contentText, time: $time, lastModified: $lastModified, show: $show, mood: $mood, weather: $weather, imageName: $imageName, audioName: $audioName, videoName: $videoName, tags: $tags, position: $position, type: $type, aspect: $aspect)';
+    return 'Diary(id: $id, categoryId: $categoryId, title: $title, content: $content, contentText: $contentText, time: $time, lastModified: $lastModified, show: $show, mood: $mood, weather: $weather, imageName: $imageName, audioName: $audioName, videoName: $videoName, tags: $tags, position: $position, type: $type, aspect: $aspect)';
 }
 
 

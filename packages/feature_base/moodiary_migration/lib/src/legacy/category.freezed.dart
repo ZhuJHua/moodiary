@@ -30,16 +30,21 @@ $CategoryCopyWith<Category> get copyWith => _$CategoryCopyWithImpl<Category>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Category&&(identical(other.id, id) || other.id == id)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.lastModified, lastModified) || other.lastModified == lastModified)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.color, color) || other.color == color));
+  final _this = this as Category;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Category&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.categoryName, _this.categoryName) || other.categoryName == _this.categoryName)&&(identical(other.lastModified, _this.lastModified) || other.lastModified == _this.lastModified)&&(identical(other.parentId, _this.parentId) || other.parentId == _this.parentId)&&(identical(other.color, _this.color) || other.color == _this.color));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,categoryName,lastModified,parentId,color);
+int get hashCode {
+  final _this = this as Category;
+  return Object.hash(runtimeType,_this.id,_this.categoryName,_this.lastModified,_this.parentId,_this.color);
+}
 
 @override
 String toString() {
-  return 'Category(id: $id, categoryName: $categoryName, lastModified: $lastModified, parentId: $parentId, color: $color)';
+  final _this = this as Category;
+  return 'Category(id: ${_this.id}, categoryName: ${_this.categoryName}, lastModified: ${_this.lastModified}, parentId: ${_this.parentId}, color: ${_this.color})';
 }
 
 
@@ -238,16 +243,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Category&&(identical(other.id, id) || other.id == id)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.lastModified, lastModified) || other.lastModified == lastModified)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.color, color) || other.color == color));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Category&&(identical(other.id, id) || other.id == id)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.lastModified, lastModified) || other.lastModified == lastModified)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.color, color) || other.color == color));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,categoryName,lastModified,parentId,color);
+int get hashCode {
+    return Object.hash(runtimeType,id,categoryName,lastModified,parentId,color);
+}
 
 @override
 String toString() {
-  return 'Category(id: $id, categoryName: $categoryName, lastModified: $lastModified, parentId: $parentId, color: $color)';
+    return 'Category(id: $id, categoryName: $categoryName, lastModified: $lastModified, parentId: $parentId, color: $color)';
 }
 
 
