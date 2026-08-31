@@ -29,14 +29,25 @@ class EditorBody extends StatefulWidget {
   /// `(content, contentText)`：TipTap 文档 JSON + 纯文本镜像。
   final void Function(String content, String contentText) onChanged;
 
-  /// 「详情」回调：编辑器工具栏首位按钮用它打开元信息面板。
-  final VoidCallback? onShowDetails;
-
   /// 点击双链 chip 的回调，上层导航到目标日记。
   final ValueChanged<String>? onOpenDiaryLink;
 
   /// 本篇自动保存状态，驱动编辑器右下角气泡：saving / saved / failed。
   final String saveStatus;
+
+  /// 属性头 / 文末双链面板数据与交互回调（web 渲染，原生兑现），
+  /// 原样透传到 [MoodiaryEditor]（见其字段注释）。
+  final String? metaJson;
+  final String? linksJson;
+  final VoidCallback? onPickDate;
+  final VoidCallback? onPickTime;
+  final VoidCallback? onPickCategory;
+  final VoidCallback? onAddTag;
+  final ValueChanged<int>? onRemoveTag;
+  final ValueChanged<String>? onChangeMood;
+  final VoidCallback? onFetchWeather;
+  final VoidCallback? onFetchPosition;
+  final VoidCallback? onOpenGraph;
 
   const EditorBody({
     super.key,
@@ -48,9 +59,19 @@ class EditorBody extends StatefulWidget {
     this.editorController,
     this.onActiveHeadingChanged,
     this.editable = true,
-    this.onShowDetails,
     this.onOpenDiaryLink,
     this.saveStatus = 'idle',
+    this.metaJson,
+    this.linksJson,
+    this.onPickDate,
+    this.onPickTime,
+    this.onPickCategory,
+    this.onAddTag,
+    this.onRemoveTag,
+    this.onChangeMood,
+    this.onFetchWeather,
+    this.onFetchPosition,
+    this.onOpenGraph,
   });
 
   @override
@@ -106,7 +127,17 @@ class _EditorBodyState extends State<EditorBody> {
         onChanged: (content) =>
             widget.onChanged(content, TiptapContent.parse(content).plainText),
         onOpenDiaryLink: widget.onOpenDiaryLink,
-        onOpenDetails: widget.onShowDetails,
+        metaJson: widget.metaJson,
+        linksJson: widget.linksJson,
+        onPickDate: widget.onPickDate,
+        onPickTime: widget.onPickTime,
+        onPickCategory: widget.onPickCategory,
+        onAddTag: widget.onAddTag,
+        onRemoveTag: widget.onRemoveTag,
+        onChangeMood: widget.onChangeMood,
+        onFetchWeather: widget.onFetchWeather,
+        onFetchPosition: widget.onFetchPosition,
+        onOpenGraph: widget.onOpenGraph,
       ),
     );
   }

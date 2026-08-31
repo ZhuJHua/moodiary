@@ -30,6 +30,7 @@
     "@tiptap/vue-3": "3.26.1",
     "lowlight": "3.3.0",
     "prosemirror-search": "1.1.1",
+    "qweather-icons": "1.8.0",
     "tiptap-markdown": "0.9.0",
     "vue": "3.5.38"
   },

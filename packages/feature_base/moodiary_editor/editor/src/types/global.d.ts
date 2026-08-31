@@ -21,6 +21,12 @@ declare global {
       setSaveStatus: (status: string) => void
       /** 日记标题初值（打开日记时推入；用户改动经 titleChange 事件回传）。 */
       setTitle: (title: string) => void
+      /** 属性头数据（JSON 串，见 bridge/meta.ts EditorMeta）；交互经 pickDate/pickTime/
+       *  pickCategory/addTag/removeTag/changeMood/fetchWeather/fetchPosition 事件回传。 */
+      setMeta: (json: string) => void
+      /** 文末双链面板数据（JSON 串，见 bridge/meta.ts EditorLinks）；条目点击复用 linkTap，
+       *  图谱入口经 openGraph 事件回传。 */
+      setLinks: (json: string) => void
       focus: () => void
       /** 取消 webview 内一切焦点（正文 + 标题），软键盘随之收起。 */
       blur: () => void

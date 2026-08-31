@@ -24,7 +24,6 @@ import IconChecklist from '~icons/lucide/list-checks'
 import IconTable from '~icons/lucide/table'
 import IconLink from '~icons/lucide/link'
 import IconSearch from '~icons/lucide/search'
-import IconTune from '~icons/lucide/sliders-horizontal'
 import IconParagraph from '~icons/lucide/pilcrow'
 import IconH1 from '~icons/lucide/heading-1'
 import IconH2 from '~icons/lucide/heading-2'
@@ -44,7 +43,6 @@ const emit = defineEmits<{
   (e: 'pick-image'): void
   (e: 'pick-audio'): void
   (e: 'pick-video'): void
-  (e: 'open-details'): void
 }>()
 
 // 移动端触控目标更大（btn-md）,桌面紧凑（btn-sm）。
@@ -200,12 +198,6 @@ function onHeadingSelect(key: string): void {
       @click="chain().redo().run()"
     >
       <IconRedo class="size-5" />
-    </button>
-    <span class="mx-1 h-5 w-px shrink-0 bg-base-300" />
-
-    <!-- 详情：打开日记元信息面板（原生实现，宿主接管） -->
-    <button :class="[btnClass, 'btn-square']" type="button" title="详情" @mousedown.prevent @click="emit('open-details')">
-      <IconTune class="size-5" />
     </button>
     <span class="mx-1 h-5 w-px shrink-0 bg-base-300" />
 

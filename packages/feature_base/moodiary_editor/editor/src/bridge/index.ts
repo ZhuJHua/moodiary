@@ -3,6 +3,7 @@
 
 import { applyTheme, type EditorTheme } from './theme'
 import { post } from './post'
+import { setLinks, setMeta } from './meta'
 import { setSaveStatus } from './save-status'
 import { getScrollY, setScrollY } from './scroll'
 import { focusTitle, setTitle } from './title'
@@ -32,6 +33,9 @@ export function installBridge(): void {
     setTheme: (theme: EditorTheme) => applyTheme(theme),
     setSaveStatus: (status: string) => setSaveStatus(status),
     setTitle: (t: string) => setTitle(t ?? ''),
+    // 属性头 / 文末双链面板数据（JSON 串，显示文案已由 Flutter 解析好）。
+    setMeta: (json: string) => setMeta(json ?? ''),
+    setLinks: (json: string) => setLinks(json ?? ''),
     focus: () => api?.focus(),
     // 取消 webview 内一切焦点（正文 + 标题），软键盘随之收起。
     blur: () => {

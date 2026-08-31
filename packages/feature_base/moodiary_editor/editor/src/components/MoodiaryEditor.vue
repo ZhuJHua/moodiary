@@ -12,10 +12,13 @@ import { EditorContent, useEditor } from '@tiptap/vue-3'
 import { createEditorKit } from '../editor/tiptap'
 import { bindApi, emitChange, markReady } from '../bridge'
 import { post } from '../bridge/post'
+import { links, meta } from '../bridge/meta'
 import { bindScrollViewport } from '../bridge/scroll'
 import { registerTitleFocus, title } from '../bridge/title'
 import EditorToolbar from './EditorToolbar.vue'
 import EditorSearchBar from './EditorSearchBar.vue'
+import EditorMetaHeader from './EditorMetaHeader.vue'
+import EditorLinksPanel from './EditorLinksPanel.vue'
 import { openSearch } from '../editor/search'
 
 const props = defineProps<{
@@ -47,6 +50,14 @@ const editor = useEditor({
 })
 
 const showToolbar = computed(() => editable.value)
+
+// 文末双链面板：仅阅读态且有链接时渲染（编辑态不占文末空间）。
+const showLinks = computed(
+  () =>
+    !editable.value &&
+    links.value != null &&
+    links.value.outgoing.length + links.value.incoming.length > 0,
+)
 
 // —— 顶部标题区（不进正文文档，单独映射 Diary.title），随正文一起滚动 ——
 // title 为 bridge 共享 ref（Flutter setTitle 推入）。非受控写法：程序化推入经下方 watch 同步进 DOM
@@ -135,10 +146,6 @@ function onPickAudio(): void {
 function onPickVideo(): void {
   post('pickVideo')
 }
-// 工具栏首位「详情」→ 通知 Flutter 打开元信息面板（原生实现）。
-function onOpenDetails(): void {
-  post('details')
-}
 
 // 移动端：点击聚焦后软键盘弹出 → webview 高度被 Flutter（Scaffold.resizeToAvoidBottomInset）压缩 →
 // window resize。ProseMirror 不会因 resize 自动重滚、点击也不触发滚动,故这里把光标重新滚进视口,
@@ -186,12 +193,13 @@ onBeforeUnmount(() => {
       @pick-image="onPickImage"
       @pick-audio="onPickAudio"
       @pick-video="onPickVideo"
-      @open-details="onOpenDetails"
     />
     <!-- 桌面：查找条置于工具栏下方 -->
     <EditorSearchBar v-if="platform === 'desktop'" :platform="platform" />
     <div class="moodiary-editor-scroll">
       <div ref="viewportEl" class="moodiary-editor-viewport">
+        <!-- 属性头随正文一起滚动；数据经 bridge setMeta 推入（未推入前不占位）。 -->
+        <EditorMetaHeader v-if="meta" :meta="meta" :editable="editable" />
         <textarea
           ref="titleEl"
           v-show="editable || title.trim().length > 0"
@@ -207,6 +215,8 @@ onBeforeUnmount(() => {
           @blur="onTitleBlur"
         ></textarea>
         <EditorContent :editor="editor" class="moodiary-editor" />
+        <!-- 文末双链面板：在文档流末尾，滚到底自然出现。 -->
+        <EditorLinksPanel v-if="showLinks && links" :links="links" />
       </div>
     </div>
     <!-- 移动：查找条置于工具栏上方 -->
@@ -218,7 +228,6 @@ onBeforeUnmount(() => {
       @pick-image="onPickImage"
       @pick-audio="onPickAudio"
       @pick-video="onPickVideo"
-      @open-details="onOpenDetails"
     />
   </div>
 </template>

@@ -15,9 +15,9 @@ import 'package:moodiary_theme/moodiary_theme.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path/path.dart' as p;
 
-/// Markdown 编辑视图，包一层 [MoodiaryEditor]（始终嵌入式，仅渲染正文；AppBar / 阅读态
-/// 元信息由 Flutter 原生承载，见 [DiaryPage]）。图片两条路径：原生选图（[_pickImages]
-/// → 存盘 → insertMedia）与拖拽/粘贴（[_saveDataUriImage]）。
+/// Markdown 编辑视图，包一层 [MoodiaryEditor]（始终嵌入式；AppBar 由 Flutter 承载，
+/// 属性头 / 正文 / 文末双链面板在 webview 内随正文滚动，见 [DiaryPage]）。图片两条路径：
+/// 原生选图（[_pickImages] → 存盘 → insertMedia）与拖拽/粘贴（[_saveDataUriImage]）。
 class MoodiaryEditorView extends StatefulWidget {
   final String initialContent;
   final ValueChanged<String> onChanged;
@@ -48,8 +48,18 @@ class MoodiaryEditorView extends StatefulWidget {
   /// 点击双链 chip：入参为目标日记业务 id。导航由上层（[DiaryPage]）实现（本层不依赖路由）。
   final ValueChanged<String>? onOpenDiaryLink;
 
-  /// 编辑器工具栏首位「详情」按钮回调（打开元信息面板）。
-  final VoidCallback? onOpenDetails;
+  /// 属性头 / 文末双链面板数据与交互回调，原样透传给 [MoodiaryEditor]（见其字段注释）。
+  final String? metaJson;
+  final String? linksJson;
+  final VoidCallback? onPickDate;
+  final VoidCallback? onPickTime;
+  final VoidCallback? onPickCategory;
+  final VoidCallback? onAddTag;
+  final ValueChanged<int>? onRemoveTag;
+  final ValueChanged<String>? onChangeMood;
+  final VoidCallback? onFetchWeather;
+  final VoidCallback? onFetchPosition;
+  final VoidCallback? onOpenGraph;
 
   const MoodiaryEditorView({
     super.key,
@@ -64,7 +74,17 @@ class MoodiaryEditorView extends StatefulWidget {
     this.fontScale = 1.0,
     this.saveStatus = 'idle',
     this.onOpenDiaryLink,
-    this.onOpenDetails,
+    this.metaJson,
+    this.linksJson,
+    this.onPickDate,
+    this.onPickTime,
+    this.onPickCategory,
+    this.onAddTag,
+    this.onRemoveTag,
+    this.onChangeMood,
+    this.onFetchWeather,
+    this.onFetchPosition,
+    this.onOpenGraph,
   });
 
   @override
@@ -303,7 +323,17 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       // 音视频在 webview 内用原生元素内联播放；双链候选/跳转见下。
       onRequestLinkCandidates: _linkCandidates,
       onOpenDiaryLink: widget.onOpenDiaryLink,
-      onOpenDetails: widget.onOpenDetails,
+      metaJson: widget.metaJson,
+      linksJson: widget.linksJson,
+      onPickDate: widget.onPickDate,
+      onPickTime: widget.onPickTime,
+      onPickCategory: widget.onPickCategory,
+      onAddTag: widget.onAddTag,
+      onRemoveTag: widget.onRemoveTag,
+      onChangeMood: widget.onChangeMood,
+      onFetchWeather: widget.onFetchWeather,
+      onFetchPosition: widget.onFetchPosition,
+      onOpenGraph: widget.onOpenGraph,
       saveStatus: widget.saveStatus,
       firstLineIndent: widget.firstLineIndent,
       fontScale: widget.fontScale,

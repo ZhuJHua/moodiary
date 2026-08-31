@@ -42,6 +42,14 @@ class TimeFormat {
   static String listDateTime(DateTime time) =>
       DateFormat.yMd().add_Hm().format(time.toLocal());
 
+  /// 短年月日——日记页属性头的日期锚点（zh 下为 `2026/8/30`）。
+  static String anchorDate(DateTime time) =>
+      DateFormat.yMd().format(time.toLocal());
+
+  /// 短星期+时分秒——日期锚点的辅字（zh 下为 `周日 14:32:08`）。
+  static String weekdayTimeHms(DateTime time) =>
+      DateFormat.E().add_Hms().format(time.toLocal());
+
   /// 无年份短日期+星期——首页卡片。
   static String cardDate(DateTime time) =>
       DateFormat.MMMEd().format(time.toLocal());

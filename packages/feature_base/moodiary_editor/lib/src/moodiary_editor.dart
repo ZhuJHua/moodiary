@@ -34,7 +34,8 @@ void _log(String msg, {Object? error, StackTrace? stack, int level = 0}) {
   );
 }
 
-/// 基于 TipTap 的编辑器（嵌入式，仅渲染正文；AppBar / 阅读态元信息由 Flutter 原生承载）。
+/// 基于 TipTap 的编辑器（嵌入式；AppBar 由 Flutter 承载，属性头 / 标题 / 正文 /
+/// 文末双链面板都在 webview 文档流里随正文滚动）。
 /// webview 经 [EditorTransport] 抽象：Android/iOS/macOS 走 webview_flutter，Windows 走
 /// flutter_inappwebview（WebView2，中文输入法候选窗定位正确）；Linux 暂不支持。
 /// 页面（assets/editor/ 多文件产物）与正文媒体统一由 [EditorLocalServer]（静态服务，基于
@@ -102,8 +103,28 @@ class MoodiaryEditor extends StatefulWidget {
   /// 点击双链 chip：入参为目标日记业务 id，上层据此导航。
   final ValueChanged<String>? onOpenDiaryLink;
 
-  /// 工具栏首位「详情」按钮回调（打开元信息面板，宿主实现）。
-  final VoidCallback? onOpenDetails;
+  /// 属性头数据（JSON 串，字段见 web 侧 bridge/meta.ts EditorMeta）。显示文案由宿主
+  /// 用 intl / l10n 解析好再下发——web 侧零本地化。null 不渲染属性头。
+  /// 变更经 didUpdateWidget 串比较后实时推送（同 saveStatus 通道模式）。
+  final String? metaJson;
+
+  /// 文末双链面板数据（JSON 串，见 web 侧 EditorLinks）；仅阅读态渲染，null / 空列表不渲染。
+  final String? linksJson;
+
+  // —— 属性头交互回调（web 侧点按经事件回跳，原生弹对应选择器）——
+  final VoidCallback? onPickDate;
+  final VoidCallback? onPickTime;
+  final VoidCallback? onPickCategory;
+  final VoidCallback? onAddTag;
+  final ValueChanged<int>? onRemoveTag;
+
+  /// 心情三选（web 侧页内菜单选定）：入参为枚举名 negative/neutral/positive。
+  final ValueChanged<String>? onChangeMood;
+  final VoidCallback? onFetchWeather;
+  final VoidCallback? onFetchPosition;
+
+  /// 文末双链面板的图谱入口。
+  final VoidCallback? onOpenGraph;
 
   /// 自动保存状态，透传给编辑器右下角气泡：'saving' / 'saved' / 'failed' / 其它（不显示）。
   final String saveStatus;
@@ -157,7 +178,17 @@ class MoodiaryEditor extends StatefulWidget {
     this.onSaveImage,
     this.onRequestLinkCandidates,
     this.onOpenDiaryLink,
-    this.onOpenDetails,
+    this.metaJson,
+    this.linksJson,
+    this.onPickDate,
+    this.onPickTime,
+    this.onPickCategory,
+    this.onAddTag,
+    this.onRemoveTag,
+    this.onChangeMood,
+    this.onFetchWeather,
+    this.onFetchPosition,
+    this.onOpenGraph,
     this.saveStatus = 'idle',
     this.firstLineIndent = false,
     this.fontScale = 1.0,
@@ -212,6 +243,12 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     }
     if (oldWidget.saveStatus != widget.saveStatus && _activated) {
       _setSaveStatus();
+    }
+    if (oldWidget.metaJson != widget.metaJson && _activated) {
+      _setMeta();
+    }
+    if (oldWidget.linksJson != widget.linksJson && _activated) {
+      _setLinks();
     }
     // 首行缩进 / 字号变化：随主题通道即时下发（复用 setTheme，不重建 webview）。
     if ((oldWidget.firstLineIndent != widget.firstLineIndent ||
@@ -381,9 +418,6 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
       case 'pickVideo':
         widget.onPickVideo?.call();
         return;
-      case 'details':
-        widget.onOpenDetails?.call();
-        return;
       case 'saveImage':
         if (payload is Map) {
           _handleSaveImage(Map<String, dynamic>.from(payload));
@@ -428,6 +462,42 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
           final id = payload['id'];
           if (id is String && id.isNotEmpty) widget.onOpenDiaryLink?.call(id);
         }
+        return;
+      // —— 属性头 / 双链面板交互（web 渲染，原生兑现）——
+      case 'pickDate':
+        widget.onPickDate?.call();
+        return;
+      case 'pickTime':
+        widget.onPickTime?.call();
+        return;
+      case 'pickCategory':
+        widget.onPickCategory?.call();
+        return;
+      case 'addTag':
+        widget.onAddTag?.call();
+        return;
+      case 'removeTag':
+        if (payload is Map) {
+          final index = payload['index'];
+          if (index is num) widget.onRemoveTag?.call(index.toInt());
+        }
+        return;
+      case 'changeMood':
+        if (payload is Map) {
+          final mood = payload['mood'];
+          if (mood is String && mood.isNotEmpty) {
+            widget.onChangeMood?.call(mood);
+          }
+        }
+        return;
+      case 'fetchWeather':
+        widget.onFetchWeather?.call();
+        return;
+      case 'fetchPosition':
+        widget.onFetchPosition?.call();
+        return;
+      case 'openGraph':
+        widget.onOpenGraph?.call();
         return;
     }
   }
@@ -499,6 +569,8 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     await _setEditable(!widget.readOnly);
     await _setTheme();
     await _setSaveStatus();
+    await _setMeta();
+    await _setLinks();
     // 有自定义字体时等 web 侧 fontReady（boot 即开始加载）再撤遮罩，字体换脸发生在遮罩后面；
     // 超时兜底防坏字体文件卡死。仅正常 ready 路径等（ready 超时兜底进来的 webview 已经不健康）。
     if (_jsReady &&
@@ -514,6 +586,8 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
       await _setEditable(!widget.readOnly);
       await _setTheme();
       await _setSaveStatus();
+      await _setMeta();
+      await _setLinks();
     }
     if (!mounted) return;
     setState(() => _activated = true);
@@ -583,6 +657,18 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
   Future<void> _setSaveStatus() async {
     await _run(
       'window.MoodiaryBridge.setSaveStatus(${jsonEncode(widget.saveStatus)})',
+    );
+  }
+
+  Future<void> _setMeta() async {
+    await _run(
+      'window.MoodiaryBridge.setMeta(${jsonEncode(widget.metaJson ?? '')})',
+    );
+  }
+
+  Future<void> _setLinks() async {
+    await _run(
+      'window.MoodiaryBridge.setLinks(${jsonEncode(widget.linksJson ?? '')})',
     );
   }
 

@@ -50,6 +50,9 @@ importers:
       prosemirror-search:
         specifier: 1.1.1
         version: 1.1.1
+      qweather-icons:
+        specifier: 1.8.0
+        version: 1.8.0
       tiptap-markdown:
         specifier: 0.9.0
         version: 0.9.0(@tiptap/core@3.26.1(@tiptap/pm@3.26.1))
@@ -1369,6 +1372,10 @@ packages:
 
   quansync@0.2.11:
     resolution: {integrity: sha512-AifT7QEbW9Nri4tAwR5M/uzpBuqfZf+zwaEM/QkzEjj7NBuFD2rBuy0K3dE+8wltbezDV7JMA0WfnCPYRSYbXA==}
+
+  qweather-icons@1.8.0:
+    resolution: {integrity: sha512-Ti7KGrWXSV7e5HMpjPhDYua8hwC3t0nScNOSQ3kLPehsOja5cioZw8bcKi7jeAGBlVLrgAkLla5xVEYlH1s5Jw==}
+    engines: {node: '>=10'}
 
   require-from-string@2.0.2:
     resolution: {integrity: sha512-Xf0nWe6RseziFMu+Ap9biiUbmplq6S9/p+7w7YXP/JBHhrUDDUhwa+vANyubuqfZWTveU//DYVGsDG7RKL/vEw==}
@@ -2859,6 +2866,8 @@ snapshots:
   punycode@2.3.1: {}
 
   quansync@0.2.11: {}
+
+  qweather-icons@1.8.0: {}
 
   require-from-string@2.0.2: {}
 

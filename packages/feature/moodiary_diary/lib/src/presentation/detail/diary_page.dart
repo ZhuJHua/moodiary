@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
@@ -91,6 +92,18 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   /// 避免 body 短暂塌空导致 webview 被卸载重建。
   Diary? _hopTarget;
 
+  // —— 文末双链面板数据（web 渲染，此处只负责取数与推送）——
+  List<Diary> _outLinks = const [];
+  List<Diary> _inLinks = const [];
+  StreamSubscription<DiaryEvent>? _linksSub;
+  Timer? _linksDebounce;
+
+  /// 自增序号：只有最新一次加载的结果才允许写回，防日记间快速跳转时旧请求后到覆盖。
+  int _linksToken = 0;
+
+  /// 已加载链接的日记业务 id（build 中比对，换日记即重取）。
+  String? _linksFor;
+
   // —— 目录（TOC）——
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -147,6 +160,11 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
         }
       });
     }
+    // 任意日记增删改都可能改双链关系；合并突发（如同步批量写）后再刷。
+    _linksSub = DiaryRepository.get().diaryEvents.listen((_) {
+      _linksDebounce?.cancel();
+      _linksDebounce = Timer(const Duration(milliseconds: 400), _loadLinks);
+    });
   }
 
   @override
@@ -241,6 +259,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     _autoSaveTimer?.cancel();
     _writingTimer?.cancel();
     _elapsed.dispose();
+    _linksDebounce?.cancel();
+    _linksSub?.cancel();
     final guardSub = _guardSub;
     final guardId = _guardId;
     // 离开时 flush 自动保存（fire-and-forget；行与索引同事务落库，无队列要排空）。
@@ -409,38 +429,15 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     }
   }
 
-  Future<void> _showDetails(Diary diary) async {
-    FocusManager.instance.primaryFocus?.unfocus();
-    await MSheet.show<void>(
-      context,
-      builder: (_) => _DetailSheet(
-        diary: diary,
-        provider: _provider,
-        onChangeMood: _onChangeMood,
-        moodSuggested: _moodSuggested,
-        onPickDate: () {
-          Navigator.of(context).pop();
-          _onPickDate(diary);
-        },
-        onPickTime: () {
-          Navigator.of(context).pop();
-          _onPickTime(diary);
-        },
-        onPickCategory: () {
-          Navigator.of(context).pop();
-          _onPickCategory(diary);
-        },
-        onAddTag: () {
-          Navigator.of(context).pop();
-          _onAddTag(diary);
-        },
-        onRemoveTag: (i) => _onRemoveTag(diary, i),
-        onFetchWeather: () {
-          Navigator.of(context).pop();
-          _onFetchWeather();
-        },
-      ),
-    );
+  Future<void> _onFetchPosition() async {
+    final result = await ref.read(_provider.notifier).fetchPosition(context);
+    if (!mounted) return;
+    if (result == null) {
+      toast.error(message: l10n.diary.positionFailed);
+      return;
+    }
+    _dirty = true;
+    _scheduleAutoSave();
   }
 
   @override
@@ -677,43 +674,143 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     setState(() => _mode = .read);
   }
 
-  /// [EditorBody] 务必保持 Column 同一位置且 key 稳定，否则切换模式时编辑器实例
-  /// （及其 webview）会被重建。
+  /// 页面 body 即编辑器整体：属性头 / 标题 / 正文 / 文末双链面板全在 webview 文档流里，
+  /// 随正文一起滚动。此处只打包数据（metaJson / linksJson）与接线交互回调，
+  /// 键与树位置恒定，切换阅读 / 编辑不重建 webview。
   Widget _buildBody(Diary diary) {
-    final isEdit = _mode == .edit;
-    return Column(
-      crossAxisAlignment: .stretch,
-      children: [
-        if (!isEdit)
-          Padding(
-            padding: const .fromLTRB(16, 12, 16, 8),
-            child: Column(
-              crossAxisAlignment: .start,
-              children: _meta(context, diary),
-            ),
-          ),
-        Expanded(
-          child: EditorBody(
-            key: const ValueKey('diary-editor'),
-            type: .fromValue(diary.type),
-            initialContent: diary.content,
-            // 标题在 webview 编辑器顶部（映射 Diary.title，不进正文）。
-            initialTitle: diary.title,
-            editable: isEdit,
-            // 自动保存状态推给编辑器右下角气泡；_flushAutoSave 的 setState 重建即透传
-            //（同 key，webview 不重建）。
-            saveStatus: _saveStatus,
-            onChanged: _onContentChanged,
-            onTitleChanged: _onTitleChanged,
-            editorController: _editorController,
-            onActiveHeadingChanged: (i) => _activeHeading.value = i,
-            onShowDetails: () => _showDetails(diary),
-            onOpenDiaryLink: _openLinkedDiary,
-          ),
-        ),
-        if (!isEdit) _LinksPanel(diaryId: diary.id, onOpen: _openLinkedDiary),
-      ],
+    _ensureLinksLoaded(diary.id);
+    return EditorBody(
+      key: const ValueKey('diary-editor'),
+      type: .fromValue(diary.type),
+      initialContent: diary.content,
+      // 标题在 webview 编辑器顶部（映射 Diary.title，不进正文）。
+      initialTitle: diary.title,
+      editable: _mode == .edit,
+      // 自动保存状态推给编辑器右下角气泡；_flushAutoSave 的 setState 重建即透传
+      //（同 key，webview 不重建）。
+      saveStatus: _saveStatus,
+      onChanged: _onContentChanged,
+      onTitleChanged: _onTitleChanged,
+      editorController: _editorController,
+      onActiveHeadingChanged: (i) => _activeHeading.value = i,
+      onOpenDiaryLink: _openLinkedDiary,
+      metaJson: _metaJson(diary),
+      linksJson: _linksJson(),
+      onPickDate: () => _onPickDate(diary),
+      onPickTime: () => _onPickTime(diary),
+      onPickCategory: () => _onPickCategory(diary),
+      onAddTag: () => _onAddTag(diary),
+      onRemoveTag: (i) => _onRemoveTag(diary, i),
+      onChangeMood: _onChangeMoodName,
+      onFetchWeather: _onFetchWeather,
+      onFetchPosition: _onFetchPosition,
+      onOpenGraph: () => DiaryGraphRoute(diaryId: diary.id).push(context),
     );
+  }
+
+  /// web 侧心情菜单选定（入参为枚举名）。
+  void _onChangeMoodName(String name) {
+    final mood = DiaryMood.values.where((m) => m.name == name).firstOrNull;
+    if (mood == null) return;
+    _onChangeMood(mood);
+  }
+
+  /// 属性头数据：显示串（日期 / 分类名 / 字数 / 菜单文案）全部在此解析好，web 侧零本地化。
+  String _metaJson(Diary diary) {
+    final weather = diary.weather;
+    final position = diary.position;
+    final categoryAsync = ref.watch(
+      getCategoryProvider(id: diary.categoryId ?? ''),
+    );
+    final categoryLabel = diary.categoryId == null
+        ? null
+        : categoryAsync.maybeWhen(
+            data: (c) => c?.categoryName ?? context.l10n.diary.unknownCategory,
+            orElse: () => context.l10n.diary.loading,
+          );
+    final sub = TimeFormat.weekdayTimeHms(diary.time);
+    final words = context.l10n.diary.wordCount(
+      count: diary.contentText.runes.length,
+    );
+    return jsonEncode({
+      'dateText': TimeFormat.anchorDate(diary.time),
+      'subText': sub,
+      'subTextRead': '$sub · $words',
+      'mood': diary.mood.name,
+      'moods': [
+        for (final mood in DiaryMood.values)
+          {
+            'value': mood.name,
+            'label': mood.label(context),
+            'color': _hexColor(mood.color),
+          },
+      ],
+      'suggested': _moodSuggested,
+      'suggestedTip': context.l10n.diary.moodSuggested,
+      'category': categoryLabel,
+      'weather': weather == null
+          ? null
+          : {'icon': weather.icon, 'text': '${weather.text} ${weather.temp}°C'},
+      'position': (position == null || position.name.isEmpty)
+          ? null
+          : position.name,
+      'tags': diary.tags,
+      'deleteLabel': context.l10n.common.delete,
+    });
+  }
+
+  static String _hexColor(Color c) =>
+      '#${(c.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}';
+
+  /// 文末双链面板数据。片段截短再上桥——长日记的 contentText 不该整篇跨进 webview。
+  String _linksJson() {
+    Map<String, dynamic> item(Diary d) {
+      final hasTitle = d.title.trim().isNotEmpty;
+      final title = hasTitle ? d.title.trim() : TimeFormat.longDate(d.time);
+      var snippet = d.contentText.trim().replaceAll(RegExp(r'\s+'), ' ');
+      if (snippet.length > 80) snippet = snippet.substring(0, 80);
+      // 有标题时副标题给「日期 · 片段」；无标题时标题已是日期，副标题只放片段。
+      final subtitle = hasTitle && snippet.isNotEmpty
+          ? '${TimeFormat.longDate(d.time)} · $snippet'
+          : snippet;
+      return {
+        'id': d.id,
+        'title': title,
+        if (subtitle.isNotEmpty) 'subtitle': subtitle,
+      };
+    }
+
+    return jsonEncode({
+      'title': context.l10n.diary.graphLinks,
+      'outgoingLabel': context.l10n.diary.graphOutgoing,
+      'incomingLabel': context.l10n.diary.graphIncoming,
+      'graphTip': context.l10n.diary.graphLocal,
+      'outgoing': [for (final d in _outLinks) item(d)],
+      'incoming': [for (final d in _inLinks) item(d)],
+    });
+  }
+
+  /// build 中比对目标日记，换日记即重取双链（结果异步 setState 推给 webview）。
+  void _ensureLinksLoaded(String id) {
+    if (_linksFor == id) return;
+    _linksFor = id;
+    unawaited(_loadLinks());
+  }
+
+  Future<void> _loadLinks() async {
+    final id = _linksFor;
+    if (id == null) return;
+    final token = ++_linksToken;
+    final repo = DiaryRepository.get();
+    final results = await Future.wait([
+      repo.getForwardLinks(id),
+      repo.getBacklinks(id),
+    ]);
+    if (!mounted || token != _linksToken) return; // 过期响应丢弃
+    setState(() {
+      _outLinks = results[0];
+      _inLinks = results[1];
+    });
   }
 
   /// 点击双链 chip / 反链条目：按业务 id 解析目标日记，页内原地跳转（不存在则提示）。
@@ -807,83 +904,6 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       type: DiaryType.fromValue(target.type).routeQuery,
       diaryId: target.id,
     ).replace(context);
-  }
-
-  List<Widget> _meta(BuildContext context, Diary diary) {
-    final colors = context.theme.colors;
-    final typo = context.theme.typography;
-    final weather = diary.weather;
-    return [
-      Row(
-        children: [
-          Icon(LucideIcons.clock, size: 16, color: colors.onSurfaceVariant),
-          const SizedBox(width: 6),
-          Text(
-            TimeFormat.fullDateTime(diary.time),
-            style: typo.bodySmall.onSurfaceVariant,
-          ),
-          const Spacer(),
-          _MoodChip(mood: diary.mood),
-        ],
-      ),
-      if (diary.tags.isNotEmpty) ...[
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: [
-            for (final tag in diary.tags)
-              Chip(
-                label: Text(tag),
-                visualDensity: .compact,
-                materialTapTargetSize: .shrinkWrap,
-              ),
-          ],
-        ),
-      ],
-      if (weather != null) ...[
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Icon(
-              // 天气来自和风，图标跟着数据源走；未知码退回通用的云。
-              qweatherIcon(weather.icon) ?? LucideIcons.cloud,
-              size: 16,
-              color: colors.onSurfaceVariant,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              '${weather.text}  ${weather.temp}°C',
-              style: typo.bodySmall.onSurfaceVariant,
-            ),
-          ],
-        ),
-      ],
-    ];
-  }
-}
-
-class _MoodChip extends StatelessWidget {
-  final DiaryMood mood;
-  const _MoodChip({required this.mood});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const .symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: mood.color.withValues(alpha: 0.15),
-        borderRadius: .circular(999),
-      ),
-      child: Row(
-        mainAxisSize: .min,
-        spacing: 4,
-        children: [
-          Icon(mood.icon, size: 16, color: mood.color),
-          Text(mood.label(context)),
-        ],
-      ),
-    );
   }
 }
 
@@ -1020,502 +1040,6 @@ class _TocDrawer extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-/// 链接面板（阅读态）：分「出链 / 入链」两段列出与本篇有双链关系的日记，点击页内跳转；
-/// 头部右侧是局部关系图入口。两侧都为空时不占位——也正好等价于「有链接才露出图谱入口」。
-/// 订阅 diaryEvents，任意日记增删改后刷新。
-class _LinksPanel extends StatefulWidget {
-  final String diaryId;
-  final ValueChanged<String> onOpen;
-
-  const _LinksPanel({required this.diaryId, required this.onOpen});
-
-  @override
-  State<_LinksPanel> createState() => _LinksPanelState();
-}
-
-class _LinksPanelState extends State<_LinksPanel> {
-  List<Diary> _out = const [];
-  List<Diary> _in = const [];
-  StreamSubscription<DiaryEvent>? _sub;
-  Timer? _debounce;
-
-  /// 自增序号：只有最新一次 _load 的结果才允许写回，杜绝日记间快速跳转时旧请求
-  /// 后到覆盖成「别人的链接列表」。
-  int _loadToken = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-    // 任意日记增删改都会触发；合并突发（如同步批量写）后再刷。
-    _sub = DiaryRepository.get().diaryEvents.listen((_) {
-      _debounce?.cancel();
-      _debounce = Timer(const Duration(milliseconds: 400), _load);
-    });
-  }
-
-  @override
-  void didUpdateWidget(covariant _LinksPanel oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.diaryId != widget.diaryId) _load();
-  }
-
-  Future<void> _load() async {
-    final token = ++_loadToken;
-    final id = widget.diaryId;
-    final repo = DiaryRepository.get();
-    final results = await Future.wait([
-      repo.getForwardLinks(id),
-      repo.getBacklinks(id),
-    ]);
-    if (!mounted || token != _loadToken) return; // 过期响应丢弃
-    setState(() {
-      _out = results[0];
-      _in = results[1];
-    });
-  }
-
-  @override
-  void dispose() {
-    _debounce?.cancel();
-    _sub?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_out.isEmpty && _in.isEmpty) return const SizedBox.shrink();
-    final colors = context.theme.colors;
-    final typo = context.theme.typography;
-    return Card.filled(
-      color: colors.surfaceContainerLow,
-      margin: const .fromLTRB(16, 8, 16, 16),
-      child: Padding(
-        padding: const .fromLTRB(14, 12, 8, 8),
-        child: Column(
-          mainAxisSize: .min,
-          crossAxisAlignment: .start,
-          children: [
-            Row(
-              children: [
-                Icon(LucideIcons.link, size: 18, color: colors.primary),
-                const SizedBox(width: 8),
-                Text(
-                  context.l10n.diary.graphLinks,
-                  style: typo.titleSmall.onSurface,
-                ),
-                const SizedBox(width: 8),
-                if (_out.isNotEmpty)
-                  _CountPill(
-                    icon: LucideIcons.arrowUpRight,
-                    count: _out.length,
-                    background: colors.secondaryContainer,
-                    foreground: colors.onSecondaryContainer,
-                  ),
-                if (_in.isNotEmpty) ...[
-                  const SizedBox(width: 4),
-                  _CountPill(
-                    icon: LucideIcons.arrowDownLeft,
-                    count: _in.length,
-                    background: colors.tertiaryContainer,
-                    foreground: colors.onTertiaryContainer,
-                  ),
-                ],
-                const Spacer(),
-                IconButton(
-                  tooltip: context.l10n.diary.graphLocal,
-                  iconSize: 20,
-                  visualDensity: .compact,
-                  icon: const Icon(LucideIcons.waypoints),
-                  onPressed: () =>
-                      DiaryGraphRoute(diaryId: widget.diaryId).push(context),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 300),
-              child: _buildList(context),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// 出/入链拍平成一维「段头 + 条目」行，走 ListView.builder 懒构建 —— 重链日记下
-  /// 不再每次刷新都全量构建离屏条目。
-  Widget _buildList(BuildContext context) {
-    final typo = context.theme.typography;
-    final rows = <({String? header, Diary? diary, bool outgoing})>[
-      if (_out.isNotEmpty) ...[
-        (header: context.l10n.diary.graphOutgoing, diary: null, outgoing: true),
-        for (final d in _out) (header: null, diary: d, outgoing: true),
-      ],
-      if (_in.isNotEmpty) ...[
-        (
-          header: context.l10n.diary.graphIncoming,
-          diary: null,
-          outgoing: false,
-        ),
-        for (final d in _in) (header: null, diary: d, outgoing: false),
-      ],
-    ];
-    return ListView.builder(
-      shrinkWrap: true,
-      padding: .zero,
-      itemCount: rows.length,
-      itemBuilder: (context, i) {
-        final row = rows[i];
-        if (row.diary == null) {
-          return Padding(
-            padding: const .fromLTRB(6, 6, 0, 2),
-            child: Text(row.header!, style: typo.labelSmall.onSurfaceVariant),
-          );
-        }
-        return _LinkTile(
-          diary: row.diary!,
-          outgoing: row.outgoing,
-          onTap: () => widget.onOpen(row.diary!.id),
-        );
-      },
-    );
-  }
-}
-
-class _CountPill extends StatelessWidget {
-  final IconData icon;
-  final int count;
-  final Color background;
-  final Color foreground;
-
-  const _CountPill({
-    required this.icon,
-    required this.count,
-    required this.background,
-    required this.foreground,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const .symmetric(horizontal: 7, vertical: 1),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: .circular(999),
-      ),
-      child: Row(
-        mainAxisSize: .min,
-        children: [
-          Icon(icon, size: 11, color: foreground),
-          const SizedBox(width: 3),
-          Text(
-            '$count',
-            style: context.theme.typography.labelSmall.onSurface.copyWith(
-              color: foreground,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LinkTile extends StatelessWidget {
-  final Diary diary;
-  final bool outgoing;
-  final VoidCallback onTap;
-
-  const _LinkTile({
-    required this.diary,
-    required this.outgoing,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    final typo = context.theme.typography;
-    final hasTitle = diary.title.trim().isNotEmpty;
-    final title = hasTitle
-        ? diary.title.trim()
-        : TimeFormat.longDate(diary.time);
-    final snippet = diary.contentText.trim().replaceAll(RegExp(r'\s+'), ' ');
-    // 有标题时副标题给「日期 · 片段」；无标题时标题已是日期，副标题只放片段。
-    final subtitle = hasTitle && snippet.isNotEmpty
-        ? '${TimeFormat.longDate(diary.time)} · $snippet'
-        : snippet;
-    return ListTile(
-      onTap: onTap,
-      visualDensity: .compact,
-      contentPadding: const .symmetric(horizontal: 6),
-      shape: const RoundedRectangleBorder(
-        borderRadius: AppBorderRadius.smallBorderRadius,
-      ),
-      leading: Container(
-        width: 36,
-        height: 36,
-        alignment: .center,
-        decoration: BoxDecoration(
-          color: colors.surfaceContainerHighest,
-          borderRadius: AppBorderRadius.smallBorderRadius,
-        ),
-        child: Icon(
-          outgoing ? LucideIcons.arrowUpRight : LucideIcons.cornerDownLeft,
-          size: 18,
-          color: outgoing ? colors.primary : colors.onSurfaceVariant,
-        ),
-      ),
-      title: Text(
-        title,
-        maxLines: 1,
-        overflow: .ellipsis,
-        style: typo.bodyMedium.onSurface,
-      ),
-      subtitle: subtitle.isEmpty
-          ? null
-          : Text(
-              subtitle,
-              maxLines: 1,
-              overflow: .ellipsis,
-              style: typo.bodySmall.onSurfaceVariant,
-            ),
-      trailing: Icon(
-        LucideIcons.chevronRight,
-        size: 18,
-        color: colors.onSurfaceVariant,
-      ),
-    );
-  }
-}
-
-class _DetailSheet extends ConsumerWidget {
-  final Diary diary;
-
-  /// 复用编辑页的同一 provider——另起实例会拿不到本页状态，且新建（无 id）时会抛错。
-  final EditControllerProvider provider;
-  final ValueChanged<DiaryMood> onChangeMood;
-
-  /// 当前心情是否来自自动建议（打开面板那一刻的快照）。
-  final bool moodSuggested;
-  final VoidCallback onPickDate;
-  final VoidCallback onPickTime;
-  final VoidCallback onPickCategory;
-  final VoidCallback onAddTag;
-  final void Function(int index) onRemoveTag;
-  final VoidCallback onFetchWeather;
-
-  const _DetailSheet({
-    required this.diary,
-    required this.provider,
-    required this.onChangeMood,
-    required this.moodSuggested,
-    required this.onPickDate,
-    required this.onPickTime,
-    required this.onPickCategory,
-    required this.onAddTag,
-    required this.onRemoveTag,
-    required this.onFetchWeather,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final dateLabel = TimeFormat.fullDateTime(diary.time);
-    final weather = diary.weather;
-    final categoryAsync = ref.watch(
-      getCategoryProvider(id: diary.categoryId ?? ''),
-    );
-    final categoryLabel = diary.categoryId == null
-        ? context.l10n.editor.noCategory
-        : categoryAsync.maybeWhen(
-            data: (c) => c?.categoryName ?? context.l10n.diary.unknownCategory,
-            orElse: () => context.l10n.diary.loading,
-          );
-    return MSheetScaffold<void>(
-      title: context.l10n.diary.infoTitle,
-      icon: LucideIcons.info,
-      actions: [MAction(label: context.l10n.common.ok, isPrimary: true)],
-      child: Column(
-        mainAxisSize: .min,
-        crossAxisAlignment: .stretch,
-        children: [
-          SettingListTile(
-            isFirst: true,
-            title: context.l10n.diary.infoDateTime,
-            subtitle: dateLabel,
-            trailing: Row(
-              mainAxisSize: .min,
-              children: [
-                IconButton.filledTonal(
-                  onPressed: onPickDate,
-                  icon: const Icon(LucideIcons.calendarDays),
-                ),
-                const SizedBox(width: 8),
-                IconButton.filledTonal(
-                  onPressed: onPickTime,
-                  icon: const Icon(LucideIcons.clock),
-                ),
-              ],
-            ),
-          ),
-          SettingListTile(
-            title: context.l10n.diary.infoWeather,
-            subtitle: weather != null
-                ? '${weather.text} ${weather.temp}°C'
-                : context.l10n.diary.weatherNotFetched,
-            trailing: IconButton.filledTonal(
-              onPressed: onFetchWeather,
-              icon: const Icon(LucideIcons.mapPin),
-            ),
-          ),
-          SettingListTile(
-            title: context.l10n.common.category,
-            subtitle: categoryLabel,
-            trailing: IconButton.filledTonal(
-              onPressed: onPickCategory,
-              icon: const Icon(LucideIcons.folders),
-            ),
-          ),
-          SettingListTile(
-            title: context.l10n.diary.infoTags,
-            subtitle: diary.tags.isEmpty
-                ? null
-                : Padding(
-                    padding: const .only(top: 4),
-                    child: Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
-                      children: [
-                        for (var i = 0; i < diary.tags.length; i++)
-                          Chip(
-                            label: Text(diary.tags[i]),
-                            visualDensity: .compact,
-                            onDeleted: () => onRemoveTag(i),
-                            deleteIcon: const Icon(LucideIcons.x, size: 18),
-                          ),
-                      ],
-                    ),
-                  ),
-            trailing: IconButton.filledTonal(
-              onPressed: onAddTag,
-              icon: const Icon(LucideIcons.tagPlus),
-            ),
-          ),
-          SettingListTile(
-            isLast: true,
-            title: context.l10n.diary.infoMood,
-            trailing: moodSuggested ? const _MoodSuggestedBadge() : null,
-            subtitle: _MoodSelector(
-              provider: provider,
-              onChanged: onChangeMood,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MoodSelector extends ConsumerWidget {
-  final EditControllerProvider provider;
-  final ValueChanged<DiaryMood> onChanged;
-
-  const _MoodSelector({required this.provider, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final mood = ref.watch(
-      provider.select((value) => value.value?.mood ?? DiaryMood.neutral),
-    );
-    final scheme = context.theme.colors;
-    return Padding(
-      padding: const .only(top: 8),
-      child: Row(
-        spacing: 12,
-        children: [
-          for (final option in DiaryMood.values)
-            Expanded(
-              child: MInkWell(
-                onTap: () => onChanged(option),
-                borderRadius: .circular(16),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  padding: const .symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: option == mood
-                        ? option.color.withValues(alpha: 0.12)
-                        : scheme.surfaceContainerHighest,
-                    borderRadius: .circular(16),
-                    border: .all(
-                      color: option == mood ? option.color : Colors.transparent,
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Column(
-                    spacing: 6,
-                    children: [
-                      Icon(
-                        option.icon,
-                        size: 32,
-                        color: option == mood
-                            ? option.color
-                            : scheme.onSurfaceVariant,
-                      ),
-                      Text(
-                        option.label(context),
-                        style: option == mood
-                            ? context.theme.typography.labelSmall.emphasized
-                                  .onSurface
-                                  .copyWith(color: option.color)
-                            : context
-                                  .theme
-                                  .typography
-                                  .labelSmall
-                                  .onSurfaceVariant,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-/// 「已按正文建议」提示：本地情感模型按正文自动选中，用户点选即接管。
-class _MoodSuggestedBadge extends StatelessWidget {
-  const _MoodSuggestedBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = context.theme.colors;
-    return Container(
-      padding: const .symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: scheme.secondaryContainer,
-        borderRadius: .circular(999),
-      ),
-      child: Row(
-        mainAxisSize: .min,
-        spacing: 4,
-        children: [
-          Icon(
-            LucideIcons.sparkles,
-            size: 13,
-            color: scheme.onSecondaryContainer,
-          ),
-          Text(
-            context.l10n.diary.moodSuggested,
-            style: context.theme.typography.labelSmall.onSecondaryContainer,
-          ),
-        ],
       ),
     );
   }

@@ -1551,6 +1551,9 @@ class Translations$diary$zh {
 	/// zh: '已获取天气：{weather} {temperature}°C'
 	String weatherFetched({required Object weather, required Object temperature}) => '已获取天气：${weather} ${temperature}°C';
 
+	/// zh: '获取位置失败：请检查定位权限'
+	String get positionFailed => '获取位置失败：请检查定位权限';
+
 	/// zh: '主页'
 	String get home => '主页';
 
@@ -1589,24 +1592,6 @@ class Translations$diary$zh {
 
 	/// zh: '加载中…'
 	String get loading => '加载中…';
-
-	/// zh: '日记信息'
-	String get infoTitle => '日记信息';
-
-	/// zh: '日期与时间'
-	String get infoDateTime => '日期与时间';
-
-	/// zh: '天气'
-	String get infoWeather => '天气';
-
-	/// zh: '未获取'
-	String get weatherNotFetched => '未获取';
-
-	/// zh: '标签'
-	String get infoTags => '标签';
-
-	/// zh: '心情'
-	String get infoMood => '心情';
 
 	/// zh: '已按正文建议'
 	String get moodSuggested => '已按正文建议';

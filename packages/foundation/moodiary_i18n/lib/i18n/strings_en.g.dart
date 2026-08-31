@@ -573,6 +573,7 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get add => 'Add';
 	@override String get weatherFailed => 'Could not fetch the weather — check the QWeather settings under Lab';
 	@override String weatherFetched({required Object weather, required Object temperature}) => 'Weather: ${weather} ${temperature}°C';
+	@override String get positionFailed => 'Could not fetch the location — check location permission';
 	@override String get home => 'Home';
 	@override String get goBack => 'Back';
 	@override String get goForward => 'Forward';
@@ -586,12 +587,6 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get saveFailed => 'Could not save';
 	@override String get unknownCategory => 'Unknown category';
 	@override String get loading => 'Loading…';
-	@override String get infoTitle => 'Entry details';
-	@override String get infoDateTime => 'Date and time';
-	@override String get infoWeather => 'Weather';
-	@override String get weatherNotFetched => 'Not fetched';
-	@override String get infoTags => 'Tags';
-	@override String get infoMood => 'Mood';
 	@override String get moodSuggested => 'Suggested from entry';
 	@override String get searchReindexHint => 'Rebuild the index after upgrading so older entries become searchable';
 	@override String get searchReindex => 'Rebuild';
