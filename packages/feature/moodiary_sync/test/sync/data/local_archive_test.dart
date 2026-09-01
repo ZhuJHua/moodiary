@@ -589,11 +589,7 @@ void main() {
         mediaFiles: FakeMediaFiles(),
       );
       await pumpEventQueue();
-      expect(
-        diaryStore.diaries,
-        isEmpty,
-        reason: '锁被别的同步家族操作占着时，导入不得落库',
-      );
+      expect(diaryStore.diaries, isEmpty, reason: '锁被别的同步家族操作占着时，导入不得落库');
 
       gate.complete();
       await holder;
