@@ -104,6 +104,14 @@ impl Zip {
                 None => archive.by_index(i)?,
             };
 
+            // 传了密码就要求每个条目**确实是加密的**。`by_index_decrypt` 对未加密条目
+            // 会静默丢掉密码照常解出，于是「能解开这个包」根本不证明对方持有会话密钥
+            // ——局域网接收端据此把归档当可信来源，一个完全不加密的伪造包就能带着
+            // tombstone 进来删光本机日记。校验的是来源，不是机密性。
+            if password.is_some() && !file.encrypted() {
+                anyhow::bail!("archive entry is not encrypted, refusing: {}", file.name());
+            }
+
             let Some(name) = file.enclosed_name() else {
                 anyhow::bail!("unsafe entry path in archive: {}", file.name());
             };
@@ -174,6 +182,43 @@ mod tests {
             std::fs::read(out.join("media/image/a.png")).unwrap(),
             b"media-bytes"
         );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// 未加密的包不能因为「我们传了密码」就被当成可信来源。局域网接收端把归档的
+    /// 可解性当作对端持有会话密钥的证明，而 `by_index_decrypt` 对未加密条目会静默
+    /// 丢掉密码照常解出——不挡的话，一个明文伪造包就能带着 tombstone 删光本机日记。
+    #[test]
+    fn rejects_unencrypted_entry_when_password_given() {
+        let dir =
+            std::env::temp_dir().join(format!("moodiary-zip-forge-test-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+
+        let zip_path = dir.join("forged.zip");
+        let mut zip = Zip::new(zip_path.to_str().unwrap().to_string()).unwrap();
+        // 伪造方没有会话密钥，只能写明文条目。
+        zip.add_bytes(
+            "manifest.json".to_string(),
+            br#"{"version":1,"entries":{}}"#.to_vec(),
+            None,
+        )
+        .unwrap();
+        zip.finish().unwrap();
+
+        let out = dir.join("out");
+        let err = Zip::extract(
+            zip_path.to_str().unwrap().to_string(),
+            out.to_str().unwrap().to_string(),
+            Some("0123456789abcdef".to_string()),
+            &|| false,
+        )
+        .unwrap_err();
+        assert!(
+            err.to_string().contains("not encrypted"),
+            "unexpected error: {err}"
+        );
+        assert!(!out.join("manifest.json").exists());
 
         std::fs::remove_dir_all(&dir).ok();
     }
