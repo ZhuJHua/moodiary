@@ -6,6 +6,7 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_sync/src/data/media_refs.dart';
+import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:path/path.dart' as p;
 
 /// 引擎对本地存储的最小依赖面，抽成端口以便单测注入内存假实现 —— 生产实现
@@ -162,8 +163,23 @@ class DiskSyncMediaFiles implements SyncMediaFiles {
   final FileSystem _fs;
   final String _baseDir;
 
-  File _file(String type, String filename) =>
-      _fs.file(p.join(_baseDir, type, filename));
+  /// 归档里的媒体名是**外来数据**（别人给的备份 zip、局域网对端发来的包），直接
+  /// 拼进路径就能逃出媒体目录：`../database/moodiary.db` 这种名字落库后，哪怕只是
+  /// 后来「永久删除这篇日记」顺手清它的媒体，删掉的也是主库。zip 解压侧的 slip 已由
+  /// Rust 的 `enclosed_name` 挡住，这里是它在落盘侧的对称面——两侧都要有。
+  File _file(String type, String filename) {
+    _rejectPathEscape(type);
+    _rejectPathEscape(filename);
+    return _fs.file(p.join(_baseDir, type, filename));
+  }
+
+  static void _rejectPathEscape(String segment) {
+    if (segment.isEmpty ||
+        p.isAbsolute(segment) ||
+        p.basename(segment) != segment) {
+      throw SyncException('媒体名不合法，已跳过该条目：$segment');
+    }
+  }
 
   @override
   Future<bool> exists(String type, String filename) =>
