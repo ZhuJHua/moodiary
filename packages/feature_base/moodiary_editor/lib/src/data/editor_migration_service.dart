@@ -135,6 +135,27 @@ class EditorMigrationService {
     return true;
   }
 
+  /// 异常文本脱敏。drift / sqlite3 的异常 `toString` 会把**绑定参数原样打印**
+  /// （`… Causing statement: INSERT …, parameters: <标题>, <tiptap JSON>, <正文全文>`，
+  /// FTS 那条还带整篇分词后的正文），而失败日志是给用户分享出去的。截掉语句与参数，
+  /// 只留异常类型与错误摘要；认不出形状的异常再兜一道长度上限。
+  static String redactDbError(Object error) {
+    var text = error.toString();
+    var cut = text.length;
+    for (final marker in const [
+      'Causing statement',
+      ', parameters:',
+      'parameters:',
+    ]) {
+      final i = text.indexOf(marker);
+      if (i >= 0 && i < cut) cut = i;
+    }
+    text = text.substring(0, cut).trimRight();
+    const limit = 500;
+    if (text.length > limit) text = '${text.substring(0, limit)}…[truncated]';
+    return text;
+  }
+
   /// 批量迁移，逐篇回调进度。逐篇独立事务，抛错计 failed 继续，可整体重跑。
   static Future<MigrationReport> migrateAll(
     List<Diary> diaries, {
@@ -146,11 +167,13 @@ class EditorMigrationService {
       try {
         if (await migrate(diaries[i])) migrated++;
       } catch (e, s) {
-        logger.e('migrate diary failed', error: e, stackTrace: s);
+        final redacted = redactDbError(e);
+        // 日志同样落盘（release 走文件），一并脱敏。
+        logger.e('migrate diary failed', error: redacted, stackTrace: s);
         failures.add(
           MigrationFailure(
             diaryId: diaries[i].id,
-            error: e.toString(),
+            error: redacted,
             stackTrace: s.toString(),
           ),
         );
@@ -170,7 +193,8 @@ class MigrationReport {
   int get failed => failures.length;
 }
 
-/// 单篇失败明细。只携带 id 与异常文本，供失败日志落盘——不含正文等隐私内容。
+/// 单篇失败明细。只携带 id 与**已脱敏**的异常文本（见
+/// [EditorMigrationService.redactDbError]），供失败日志落盘——不含正文等隐私内容。
 class MigrationFailure {
   final String diaryId;
   final String error;

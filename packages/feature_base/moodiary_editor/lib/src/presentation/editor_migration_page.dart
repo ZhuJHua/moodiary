@@ -107,13 +107,15 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
         return;
       }
     } catch (e, s) {
-      logger.e('forced migration failed', error: e, stackTrace: s);
+      // 引擎阶段的异常同样可能是 drift/sqlite3 的、带着绑定参数（正文）的那种。
+      final redacted = EditorMigrationService.redactDbError(e);
+      logger.e('forced migration failed', error: redacted, stackTrace: s);
       final engineFailed = _activeStage == .engine;
       String? logPath;
       try {
         logPath = await _writeFailureLog(
           stage: engineFailed ? 'engine' : 'editor',
-          error: e,
+          error: redacted,
           stackTrace: s,
         );
       } catch (e, s) {
@@ -145,10 +147,12 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
     });
   }
 
-  /// 失败日志落盘。只写阶段、异常与失败日记的 id——不含正文、标题等任何隐私内容。
+  /// 失败日志落盘。只写阶段、**已脱敏的**异常与失败日记的 id——不含正文、标题等
+  /// 任何隐私内容（页脚文案对用户是这么承诺的，脱敏见
+  /// [EditorMigrationService.redactDbError]）。
   Future<String> _writeFailureLog({
     required String stage,
-    Object? error,
+    String? error,
     StackTrace? stackTrace,
     List<MigrationFailure> failures = const [],
   }) async {
