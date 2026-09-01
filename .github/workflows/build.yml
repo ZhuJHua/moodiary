@@ -78,74 +78,10 @@ jobs:
         with:
           name: android-apk
           path: mobile/build/app/outputs/flutter-apk/app-release.apk
-  build-windows:
-    runs-on: windows-latest
-    name: Build Windows
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Set Up Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: "temurin"
-          java-version: "21"
-
-      - name: Read Flutter Version
-        id: flutter_version
-        run: |
-          if (Test-Path .fvmrc) {
-            $FLUTTER_VERSION = (Get-Content .fvmrc | ConvertFrom-Json).flutter
-            echo "Flutter version detected: $FLUTTER_VERSION"
-            echo "flutter-version=$FLUTTER_VERSION" >> $env:GITHUB_ENV
-          } else {
-            echo ".fvmrc not found. Defaulting to latest Flutter version."
-            echo "flutter-version=stable" >> $env:GITHUB_ENV
-          }
-
-      - name: Set Up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.flutter-version }}
-
-      - name: Set Up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-
-      - name: Build Editor
-        run: |
-          corepack enable
-          corepack pnpm -C packages/feature_base/moodiary_editor/editor install --frozen-lockfile
-          corepack pnpm -C packages/feature_base/moodiary_editor/editor build
-
-      - name: Set Up Rust
-        working-directory: packages/foundation/moodiary_rust/rust
-        run: rustup show active-toolchain
-
-      - name: Install Dependencies
-        working-directory: mobile
-        run: flutter pub get
-
-      - name: Build Windows
-        working-directory: mobile
-        run: flutter build windows --release
-
-      - name: Create ZIP Archive
-        run: |
-          Compress-Archive -Path mobile\build\windows\x64\runner\Release\* -DestinationPath mobile\build\windows\moodiary-windows.zip
-
-      - name: Upload Windows Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-app
-          path: mobile\build\windows\moodiary-windows.zip
-
   release:
     runs-on: ubuntu-latest
     name: Publish Release
-    needs: [ build-apk, build-windows ]
+    needs: [ build-apk ]
 
     steps:
       - name: Checkout Repository
@@ -156,12 +92,6 @@ jobs:
         with:
           name: android-apk
           path: artifacts/android
-
-      - name: Download Windows Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: windows-app
-          path: artifacts/windows
 
       - name: Get Latest Tag
         id: latest_tag
@@ -181,7 +111,6 @@ jobs:
         run: |
           mkdir -p renamed-artifacts
           mv artifacts/android/app-release.apk renamed-artifacts/moodiary-${{ env.VERSION }}-android-arm64.apk
-          mv artifacts/windows/moodiary-windows.zip renamed-artifacts/moodiary-${{ env.VERSION }}-windows-x64.zip
 
       - name: Generate Release Notes
         id: release_notes
