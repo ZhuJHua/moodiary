@@ -57,12 +57,25 @@ class VersionMigrator {
   static Future<void> merge({required String lastAppVersion}) async {
     bool below(String version) => versionBelow(lastAppVersion, version);
 
-    if (below('2.4.8')) {
-      await compute(_mergeToV2_4_8, AppFiles.getRealPath('database', ''));
+    // 全部闸门都不成立时 merge 必须是纯 no-op（不碰 KV / 文件 / 单例），所以路径与
+    // 存在性都惰性求值、且各只算一次。
+    String? dirCache;
+    String dir() => dirCache ??= AppFiles.getRealPath('database', '');
+
+    // 旧库可能已经不在了：2.8.0 的引擎搬迁成功后会把它改名成 `.pre-sqlite.bak`，而
+    // 本迁移链可能在那之后才补跑（首启 `legacyMigrationPending` 时 appVersion 一个字
+    // 都不写，下次启动才带着旧版本号进来）。此时绝不能让 open-or-create 凭空造出一个
+    // 空库——2.6.3 的孤儿清理会据此把磁盘上每一个媒体文件判成孤儿物理删除。
+    // 纯 KV 的副作用（关 autoSync、清 customFont）与旧库无关，照常执行。
+    bool? legacyCache;
+    bool hasLegacyDb() => legacyCache ??= legacy.legacyDbExistsIn(dir());
+
+    if (below('2.4.8') && hasLegacyDb()) {
+      await compute(_mergeToV2_4_8, dir());
     }
 
-    if (below('2.6.0')) {
-      await compute(_mergeToV2_6_0, AppFiles.getRealPath('database', ''));
+    if (below('2.6.0') && hasLegacyDb()) {
+      await compute(_mergeToV2_6_0, dir());
     }
 
     if (below('2.6.2')) {
@@ -70,25 +83,28 @@ class VersionMigrator {
     }
 
     if (below('2.6.3')) {
-      await cleanOrphanMediaIn(AppFiles.getRealPath('database', ''));
+      // cleanOrphanMediaIn 自带同一道守卫（它的破坏面最大，纵深防御）。
+      await cleanOrphanMediaIn(dir());
       await MediaManager.regenerateMissingThumbnails();
-      await compute(_fixV2_6_3, AppFiles.getRealPath('database', ''));
+      if (hasLegacyDb()) await compute(_fixV2_6_3, dir());
     }
 
     if (below('2.7.3')) {
-      // scanDiskFonts 经 FontReader 打 Rust——宿主在启动第一行就 await 了桥就绪。
       MoodiaryKVs.customFont.set('');
-      final allFont = await FontRepository.get().scanDiskFonts();
-      await compute(_mergeToV2_7_3, {
-        'database': AppFiles.getRealPath('database', ''),
-        'fonts': [
-          for (final font in allFont)
-            legacy.Font(
-              fontFileName: font.fontFileName,
-              fontWghtAxisMap: font.fontWghtAxisMap,
-            ),
-        ],
-      });
+      if (hasLegacyDb()) {
+        // scanDiskFonts 经 FontReader 打 Rust——宿主在启动第一行就 await 了桥就绪。
+        final allFont = await FontRepository.get().scanDiskFonts();
+        await compute(_mergeToV2_7_3, {
+          'database': dir(),
+          'fonts': [
+            for (final font in allFont)
+              legacy.Font(
+                fontFileName: font.fontFileName,
+                fontWghtAxisMap: font.fontWghtAxisMap,
+              ),
+          ],
+        });
+      }
     }
 
     if (below('2.8.0')) {
@@ -99,9 +115,11 @@ class VersionMigrator {
       // 旧主题强调色（prefs 的 color/colorType）同样**有意不映射**：配色已重做为
       // 灰度/壁纸/自定义三态，升级后回落默认灰度，由用户重新选择。
       MoodiaryKVs.autoSync.set(false);
-      // 跨引擎（isar 4.0.0-dev → isar_plus）迁移前留一份快照，出问题可回滚。
-      await _backupDatabaseOnce();
-      await compute(_mergeToV2_8_0, AppFiles.getRealPath('database', ''));
+      if (hasLegacyDb()) {
+        // 跨引擎（isar 4.0.0-dev → isar_plus）迁移前留一份快照，出问题可回滚。
+        await _backupDatabaseOnce();
+        await compute(_mergeToV2_8_0, dir());
+      }
     }
   }
 
@@ -141,116 +159,137 @@ Future<void> _backupDatabaseOnce() async {
 
 /// 2.4.8 升级：重写日记记录，更新部分字段。
 void _mergeToV2_4_8(String dir) {
-  final isar = Isar.open(schemas: _schemas, directory: dir);
-  final countDiary = isar.diarys.where().count();
-  for (var i = 0; i < countDiary; i += 50) {
-    final diaries = isar.diarys.where().findAll(offset: i, limit: 50);
-    isar.write((isar) {
-      isar.diarys.putAll(diaries);
-    });
+  final isar = legacy.openLegacyIsar(schemas: _schemas, dir: dir);
+  if (isar == null) return;
+  try {
+    final countDiary = isar.diarys.where().count();
+    for (var i = 0; i < countDiary; i += 50) {
+      final diaries = isar.diarys.where().findAll(offset: i, limit: 50);
+      isar.write((isar) {
+        isar.diarys.putAll(diaries);
+      });
+    }
+  } finally {
+    // 抛出时不关会泄漏一个只登记 3 张表的进程级实例：同一次启动里引擎搬迁用 15 张表
+    // 打开同一个库会**拿回这个实例并忽略 schemas**，走到 isar.fonts 当场抛。
+    isar.close();
   }
-  isar.close();
 }
 
 /// 2.6.0 升级：
 /// 新增 `type`（区分纯文本/富文本）与 `lastModified`；旧 `time` 字段同步为最后修改时间。
 void _mergeToV2_6_0(String dir) {
-  final isar = Isar.open(schemas: _schemas, directory: dir);
-  final countDiary = isar.diarys.where().count();
+  final isar = legacy.openLegacyIsar(schemas: _schemas, dir: dir);
+  if (isar == null) return;
+  try {
+    final countDiary = isar.diarys.where().count();
 
-  for (var i = 0; i < countDiary; i += 50) {
-    final diaries = isar.diarys.where().findAll(offset: i, limit: 50);
+    for (var i = 0; i < countDiary; i += 50) {
+      final diaries = isar.diarys.where().findAll(offset: i, limit: 50);
 
-    isar.write((isar) {
-      for (final diary in diaries) {
-        final lastModified = diary.time;
-        // 内容本就是 Delta，原先经 QuillController 空转一次等价于原样保留；
-        // 不是合法 Delta 的（极老版本的裸文本）包成最小 Delta，避免后续读取失败。
-        final content = QuillDelta.isDelta(diary.content)
-            ? diary.content
-            : QuillDelta.wrapPlainText(diary.content);
+      isar.write((isar) {
+        for (final diary in diaries) {
+          final lastModified = diary.time;
+          // 内容本就是 Delta，原先经 QuillController 空转一次等价于原样保留；
+          // 不是合法 Delta 的（极老版本的裸文本）包成最小 Delta，避免后续读取失败。
+          final content = QuillDelta.isDelta(diary.content)
+              ? diary.content
+              : QuillDelta.wrapPlainText(diary.content);
 
-        isar.diarys.put(
-          diary.copyWith(
-            content: content,
-            type: DiaryType.richText.value,
-            lastModified: lastModified,
-            time: lastModified,
-          ),
-        );
-      }
-    });
+          isar.diarys.put(
+            diary.copyWith(
+              content: content,
+              type: DiaryType.richText.value,
+              lastModified: lastModified,
+              time: lastModified,
+            ),
+          );
+        }
+      });
+    }
+  } finally {
+    isar.close();
   }
-
-  isar.close();
 }
 
 /// 2.6.3 修复：遍历日记，缺失的分类自动建一条占位。
 void _fixV2_6_3(String dir) {
-  final isar = Isar.open(schemas: _schemas, directory: dir);
-  final countDiary = isar.diarys.where().count();
-  for (var i = 0; i < countDiary; i += 50) {
-    final diaries = isar.diarys.where().findAll(offset: i, limit: 50);
-    isar.write((isar) {
-      for (final diary in diaries) {
-        final id = diary.categoryId;
-        if (id != null && isar.categorys.where().idEqualTo(id).isEmpty()) {
-          isar.categorys.put(
-            legacy.Category(
-              id: id,
-              // 只要 4 个随机 hex 字符做名字后缀；本函数在 compute isolate 内运行，
-              // RustLib 未初始化，不能走 Rust 侧 uuid。
-              categoryName:
-                  '已修复${Random().nextInt(0x10000).toRadixString(16).padLeft(4, '0')}',
-              lastModified: diary.lastModified,
-              parentId: null,
-            ),
-          );
+  final isar = legacy.openLegacyIsar(schemas: _schemas, dir: dir);
+  if (isar == null) return;
+  try {
+    final countDiary = isar.diarys.where().count();
+    for (var i = 0; i < countDiary; i += 50) {
+      final diaries = isar.diarys.where().findAll(offset: i, limit: 50);
+      isar.write((isar) {
+        for (final diary in diaries) {
+          final id = diary.categoryId;
+          if (id != null && isar.categorys.where().idEqualTo(id).isEmpty()) {
+            isar.categorys.put(
+              legacy.Category(
+                id: id,
+                // 只要 4 个随机 hex 字符做名字后缀；本函数在 compute isolate 内运行，
+                // RustLib 未初始化，不能走 Rust 侧 uuid。
+                categoryName:
+                    '已修复${Random().nextInt(0x10000).toRadixString(16).padLeft(4, '0')}',
+                lastModified: diary.lastModified,
+                parentId: null,
+              ),
+            );
+          }
         }
-      }
-    });
+      });
+    }
+  } finally {
+    isar.close();
   }
-  isar.close();
 }
 
 /// 2.7.3 升级：把字体改为存 Isar，KV 内只保留当前选中。
 Future<void> _mergeToV2_7_3(Map<String, dynamic> parma) async {
-  final isar = Isar.open(schemas: _schemas, directory: parma['database']!);
-
-  await isar.writeAsync((isar) {
-    isar.fonts.clear();
-    isar.fonts.putAll(parma['fonts']);
-  });
-  // 兄弟步骤全都关了，唯独这里漏过。原生实例是进程级的、靠 isar_plus_close 递减，
-  // 子 isolate 退出只回收 Dart 侧缓存，不关就泄漏一个只登记 3 张表的实例。
-  isar.close();
+  final isar = legacy.openLegacyIsar(
+    schemas: _schemas,
+    dir: parma['database']!,
+  );
+  if (isar == null) return;
+  try {
+    await isar.writeAsync((isar) {
+      isar.fonts.clear();
+      isar.fonts.putAll(parma['fonts']);
+    });
+  } finally {
+    // 兄弟步骤全都关了，唯独这里曾漏过。原生实例是进程级的、靠 isar_plus_close 递减，
+    // 子 isolate 退出只回收 Dart 侧缓存，不关就泄漏一个只登记 3 张表的实例。
+    isar.close();
+  }
 }
 
 /// 2.8.0 升级：旧 `type == 'text'`（实为 Quill Delta）并入富文本，仅翻 type，
 /// 解析失败再兜底包装。不更新 lastModified，避免误触发同步层的"用户编辑"判断。
 void _mergeToV2_8_0(String dir) {
   const legacyTextType = 'text';
-  final isar = Isar.open(schemas: _schemas, directory: dir);
+  final isar = legacy.openLegacyIsar(schemas: _schemas, dir: dir);
+  if (isar == null) return;
+  try {
+    final countDiary = isar.diarys.where().count();
+    for (var i = 0; i < countDiary; i += 50) {
+      final diaries = isar.diarys.where().findAll(offset: i, limit: 50);
 
-  final countDiary = isar.diarys.where().count();
-  for (var i = 0; i < countDiary; i += 50) {
-    final diaries = isar.diarys.where().findAll(offset: i, limit: 50);
-
-    isar.write((isar) {
-      for (final diary in diaries) {
-        var content = diary.content;
-        var type = diary.type;
-        if (type == legacyTextType) {
-          if (!QuillDelta.isDelta(content)) {
-            content = QuillDelta.wrapPlainText(content);
+      isar.write((isar) {
+        for (final diary in diaries) {
+          var content = diary.content;
+          var type = diary.type;
+          if (type == legacyTextType) {
+            if (!QuillDelta.isDelta(content)) {
+              content = QuillDelta.wrapPlainText(content);
+            }
+            type = DiaryType.richText.value;
           }
-          type = DiaryType.richText.value;
+
+          isar.diarys.put(diary.copyWith(content: content, type: type));
         }
-
-        isar.diarys.put(diary.copyWith(content: content, type: type));
-      }
-    });
+      });
+    }
+  } finally {
+    isar.close();
   }
-
-  isar.close();
 }

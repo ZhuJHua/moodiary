@@ -1,20 +1,16 @@
-import 'dart:io';
-
 import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_migration/src/legacy/legacy_models.dart' as legacy;
-import 'package:path/path.dart' as p;
 
 Future<void> cleanOrphanMediaIn(String dir) async {
-  // [Isar.open] 是 open-or-create：旧库不在（2.8.0 搬迁完成后被 finalizeMigration
-  // 改名成 .pre-sqlite.bak）时它会静默新建一个空库，count 为 0 →「磁盘上全部媒体」
-  // 都算孤儿被物理删除，且不可恢复。所以先确认旧库真的在。
-  if (!await File(p.join(dir, 'default.isar')).exists()) return;
-
-  final isar = Isar.open(
+  // [openLegacyIsar] 的存在性守卫在这里是**保命**的：Isar.open 是 open-or-create，
+  // 旧库不在（2.8.0 搬迁完成后被 finalizeMigration 改名成 .pre-sqlite.bak）时它会
+  // 静默新建一个空库，count 为 0 →「磁盘上全部媒体」都算孤儿被物理删除，不可恢复。
+  final isar = legacy.openLegacyIsar(
     schemas: legacy.diaryAndCategorySchemas,
-    directory: dir,
+    dir: dir,
   );
+  if (isar == null) return;
   try {
     final imageFiles = (await AppFiles.getDirFileName(MediaType.image.value))
         .toSet();

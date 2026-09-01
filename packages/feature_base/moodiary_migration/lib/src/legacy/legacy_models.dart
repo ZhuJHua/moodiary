@@ -11,6 +11,7 @@ export 'chat_session.dart';
 export 'diary.dart';
 export 'diary_index_snapshot.dart';
 export 'font.dart';
+export 'legacy_db.dart';
 export 'link_posting.dart';
 export 'llm_provider.dart';
 export 'media_info.dart';

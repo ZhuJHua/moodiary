@@ -62,11 +62,17 @@ class EngineMigrationService {
     final tombstoneRepo = tombstoneRepository ?? TombstoneRepository.get();
 
     final dir = legacyDir ?? AppFiles.getRealPath('database', '');
-    final isar = Isar.open(
+    // Isar.open 是 open-or-create：旧库不在时它会造出一个**空库**，往下走就是拿
+    // 「零行」去 clearAll 掉一个可能已有数据的 SQLite，且逐表对账 0==0 还会通过。
+    // 唯一合法的「旧库不在」是搬迁早已完成（标记置位、闸门不再触发），走不到这里。
+    final isar = legacy.openLegacyIsar(
       schemas: legacy.moodiarySchemas,
-      directory: dir,
+      dir: dir,
       inspector: false,
     );
+    if (isar == null) {
+      throw StateError('引擎搬迁中止：旧库 ${legacy.legacyDbFileName} 不存在');
+    }
     try {
       // —— 只读盘点（索引类 collection 刻意不搬：FTS/双链在拷贝时重建）。—— //
       final diaryCount = await isar.diarys.where().countAsync();
@@ -100,6 +106,16 @@ class EngineMigrationService {
       var orphanMessagesDropped = 0;
 
       // —— 起步清空：标记未置位即整库重来，天然可重入。—— //
+      // 清空前的最后一道闸：旧库一条日记都没有、而 SQLite 里已经有行，说明打开的
+      // 根本不是用户那份旧库（典型成因是别处的 open-or-create 凭空造了个空库），
+      // 此时 clearAll 会把已搬迁好的数据全部抹掉，而 0==0 的对账还会放行。
+      final existingDiaries = await _rowCount(db, db.diaries);
+      if (diaryCount == 0 && existingDiaries > 0) {
+        throw StateError(
+          '引擎搬迁中止：旧库为空而 SQLite 已有 $existingDiaries 篇日记，'
+          '拒绝用空库覆盖',
+        );
+      }
       await db.clearAll();
 
       // 分类先于日记只是习惯（无外键约束）；日记分批走仓储：行 + 子表 + FTS +
@@ -343,12 +359,7 @@ class EngineMigrationService {
       }
 
       // —— 对账：逐表行数（消息按「跳过悬挂后应到」计）。不平即失败，标记不置位。—— //
-      Future<int> sqliteCount(TableInfo table) async {
-        final row = await (db.selectOnly(
-          table,
-        )..addColumns([countAll()])).getSingle();
-        return row.read(countAll())!;
-      }
+      Future<int> sqliteCount(TableInfo table) => _rowCount(db, table);
 
       final checks = <String, (int, int)>{
         'diaries': (diaryCount, await sqliteCount(db.diaries)),
@@ -434,6 +445,14 @@ class EngineMigrationService {
     > 0.5 => .positive,
     _ => .neutral,
   };
+}
+
+/// 单表行数。搬迁前的空库闸门与搬迁后的对账共用。
+Future<int> _rowCount(MoodiaryDatabase db, TableInfo table) async {
+  final row = await (db.selectOnly(
+    table,
+  )..addColumns([countAll()])).getSingle();
+  return row.read(countAll())!;
 }
 
 class EngineMigrationReport {
