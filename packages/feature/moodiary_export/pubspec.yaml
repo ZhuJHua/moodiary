@@ -14,6 +14,7 @@ dependencies:
     sdk: flutter
 
   moodiary_files: 0.0.1
+  moodiary_logging: 0.0.1
   moodiary_platform: 0.0.1
   moodiary_storage: 0.0.1
   moodiary_theme: 0.0.1

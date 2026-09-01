@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_files/moodiary_files.dart';
+import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_rust/export.dart' as rust;
@@ -655,7 +656,12 @@ class _MediaStage {
         // 不给 maxWidth/maxHeight：那两个字段不是夹取而是「拉到正好」，小图会被放大。
         spec: const rust.CompressSpec(compressFormat: .jpeg, quality: 85),
       );
-    } catch (_) {
+    } catch (e, st) {
+      // 别静默吞：这里曾经把「源文件缺失」和「转码失败」压成同一个结果，用户看到
+      // 的只有「N 个媒体文件找不到」，去相册一看文件还在，无从判断原因。带 alpha
+      // 的图必转码失败那条已在 Rust 侧修掉（JPEG 现在会先压平色型），留日志是为了
+      // 下一个色型坑能被认出来。
+      logger.e('导出转码失败：$source', error: e, stackTrace: st);
       _converted[source] = null;
       return null;
     }

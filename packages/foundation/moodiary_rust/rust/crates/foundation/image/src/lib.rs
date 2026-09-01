@@ -205,6 +205,32 @@ fn prepare(
         };
     }
 
+    // JPEG 同样挑色型：image 0.25 的编码器只认 L8 与 Rgb8，其余（RGBA、16 位…）
+    // 一律 Err(Unsupported)。归一化此前只对 WebP 做，于是带 alpha 的源图导出必失败
+    // ——而入库路径对有 alpha 的图存的正是 RGBA WebP，Markdown / DOCX / PDF 三种导出
+    // 又都走 JPEG，等于库里每一张带透明通道的图在导出产物里都不存在。
+    if format == CompressFormat::Jpeg {
+        src_img = match src_img {
+            // 编码器原生支持，不动（灰度保持灰度，免得白白胀成三通道）。
+            img @ (DynamicImage::ImageLuma8(_) | DynamicImage::ImageRgb8(_)) => img,
+            img if img.color().has_alpha() => {
+                // JPEG 没有 alpha 通道。直接 into_rgb8 会丢弃 alpha 而保留其下的
+                // RGB，透明区常常变成黑块；合成到白底才是用户预期的样子。
+                let rgba = img.into_rgba8();
+                let mut rgb = image::RgbImage::new(rgba.width(), rgba.height());
+                for (x, y, px) in rgba.enumerate_pixels() {
+                    let a = px[3] as u32;
+                    let over = |c: u8| {
+                        ((c as u32 * a + 255 * (255 - a)) / 255) as u8
+                    };
+                    rgb.put_pixel(x, y, image::Rgb([over(px[0]), over(px[1]), over(px[2])]));
+                }
+                DynamicImage::ImageRgb8(rgb)
+            }
+            img => DynamicImage::ImageRgb8(img.into_rgb8()),
+        };
+    }
+
     let (img_width, img_height) = src_img.dimensions();
     let (dst_width, dst_height) = calculate_target_dimensions(
         img_width,
@@ -266,7 +292,7 @@ struct ResizeOptions {
 
 #[cfg(test)]
 mod tests {
-    use super::optimize_dimensions;
+    use super::{CompressFormat, CompressSpec, contain_to_file, optimize_dimensions};
 
     #[test]
     fn optimize_dimension_rules() {
@@ -280,5 +306,63 @@ mod tests {
         assert_eq!(optimize_dimensions(3000, 9000), (1280, 3840));
         assert_eq!(optimize_dimensions(9000, 3000), (3840, 1280));
         assert_eq!(optimize_dimensions(1280, 1280), (1280, 1280));
+    }
+
+    /// 带 alpha 的源图必须能编成 JPEG。image 0.25 的 JPEG 编码器只认 L8/Rgb8，
+    /// 归一化此前只对 WebP 做，于是 RGBA 源图一律 Err(Unsupported) —— 而入库路径
+    /// 对有 alpha 的图存的正是 RGBA WebP，三种导出又都走 JPEG，等于库里每一张
+    /// 带透明通道的图在导出产物里都不存在。
+    #[test]
+    fn rgba_source_encodes_to_jpeg() {
+        let dir = std::env::temp_dir().join("moodiary_img_alpha_test");
+        std::fs::create_dir_all(&dir).unwrap();
+        let src = dir.join("src.png");
+        let dst = dir.join("out.jpg");
+
+        // 左半不透明红、右半全透明。
+        let mut img = image::RgbaImage::new(8, 4);
+        for (x, _y, px) in img.enumerate_pixels_mut() {
+            *px = if x < 4 {
+                image::Rgba([255, 0, 0, 255])
+            } else {
+                image::Rgba([0, 0, 0, 0])
+            };
+        }
+        img.save(&src).unwrap();
+
+        contain_to_file(
+            src.to_string_lossy().into_owned(),
+            dst.to_string_lossy().into_owned(),
+            CompressSpec {
+                compress_format: Some(CompressFormat::Jpeg),
+                target_width: None,
+                target_height: None,
+                min_width: None,
+                min_height: None,
+                max_width: None,
+                max_height: None,
+                quality: Some(85),
+            },
+        )
+        .expect("RGBA 源图应当能编码成 JPEG");
+
+        // 断言的重点是「能编出来」——修复前这一步就是 Err(Unsupported)。
+        // 尺寸不断言：CompressSpec 的 min_* 不是夹取而是「拉到正好」，小图会被放大，
+        // 那是既有行为，不在本次改动范围内。
+        let out = image::open(&dst).expect("产物应当是可解码的 JPEG");
+        let (w, h) = image::GenericImageView::dimensions(&out);
+        assert_eq!(w / 2, h, "宽高比应保持 2:1");
+        let rgb = out.to_rgb8();
+        // 透明区合成到白底，而不是丢弃 alpha 后留下的黑块。
+        let px = rgb.get_pixel(w - 2, 1).0;
+        assert!(
+            px[0] > 200 && px[1] > 200 && px[2] > 200,
+            "透明区应合成为白色，实际 {px:?}"
+        );
+        // 不透明区仍是红的（没被整张压白）。
+        let red = rgb.get_pixel(1, 1).0;
+        assert!(red[0] > 150 && red[1] < 100, "不透明区应保持红色，实际 {red:?}");
+
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }
