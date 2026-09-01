@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -6,7 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_sync/src/data/archive_apply.dart';
 import 'package:moodiary_sync/src/data/impl/local_archive.dart';
+import 'package:moodiary_sync/src/data/incremental_engine.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:path/path.dart' as p;
@@ -470,7 +473,7 @@ void main() {
 
       final report = await LocalArchive.importDirectory(
         dir,
-        mode: SyncPullMode.restore,
+        policy: const RestorePolicy(),
         diaryStore: diaryStore,
         categoryStore: FakeCategoryStore(),
         mediaInfoStore: FakeMediaInfoStore(),
@@ -490,7 +493,9 @@ void main() {
 
     test('E5：恢复模式下本机墓碑不否决恢复（误删能找回）', () async {
       final dir = await buildArchiveDir(
-        diaries: [buildDiary(id: 'oops', modifiedMs: 1000, title: 'from-archive')],
+        diaries: [
+          buildDiary(id: 'oops', modifiedMs: 1000, title: 'from-archive'),
+        ],
       );
       final diaryStore = FakeDiaryStore();
       // 本机在备份之后永久删除了它 —— 墓碑时间必然晚于备份里的 lastModified。
@@ -501,7 +506,7 @@ void main() {
 
       final report = await LocalArchive.importDirectory(
         dir,
-        mode: SyncPullMode.restore,
+        policy: const RestorePolicy(),
         diaryStore: diaryStore,
         categoryStore: FakeCategoryStore(),
         mediaInfoStore: FakeMediaInfoStore(),
@@ -540,7 +545,9 @@ void main() {
 
     test('恢复模式下本机更新的编辑仍然赢，并计入 skipped', () async {
       final dir = await buildArchiveDir(
-        diaries: [buildDiary(id: 'd1', modifiedMs: 1000, title: 'from-archive')],
+        diaries: [
+          buildDiary(id: 'd1', modifiedMs: 1000, title: 'from-archive'),
+        ],
       );
       final diaryStore = FakeDiaryStore([
         buildDiary(id: 'd1', modifiedMs: 3000, title: 'local-newer'),
@@ -548,7 +555,7 @@ void main() {
 
       final report = await LocalArchive.importDirectory(
         dir,
-        mode: SyncPullMode.restore,
+        policy: const RestorePolicy(),
         diaryStore: diaryStore,
         categoryStore: FakeCategoryStore(),
         mediaInfoStore: FakeMediaInfoStore(),
@@ -559,6 +566,39 @@ void main() {
       expect(diaryStore.diaries['d1']!.title, 'local-newer');
       expect(report.diaryCount, 0);
       expect(report.skipped, 1, reason: '「跳过」要能和「备份已是最新」区分开');
+    });
+
+    // 重构把恢复从 engine.pull 挪到 ArchiveApplier 时，顺手丢掉了 engine._exclusive
+    // 那把进程内互斥锁 —— 恢复能与云端 push 交错，push 会把恢复尚未插回的那批墓碑
+    // 推成远端删除，反过来把刚恢复的日记全网抹掉。这条钉住锁还在。
+    test('导入持有同步家族互斥锁（不与 push/pull 交错）', () async {
+      final dir = await buildArchiveDir(
+        diaries: [buildDiary(id: 'd1', modifiedMs: 100)],
+      );
+      // 先占住锁，再起导入：导入必须卡在锁上，不能把日记落库。
+      final gate = Completer<void>();
+      final holder = IncrementalSyncEngine.runExclusive(() => gate.future);
+
+      final diaryStore = FakeDiaryStore();
+      final importing = LocalArchive.importDirectory(
+        dir,
+        diaryStore: diaryStore,
+        categoryStore: FakeCategoryStore(),
+        mediaInfoStore: FakeMediaInfoStore(),
+        tombstoneStore: diaryStore.tombstones,
+        mediaFiles: FakeMediaFiles(),
+      );
+      await pumpEventQueue();
+      expect(
+        diaryStore.diaries,
+        isEmpty,
+        reason: '锁被别的同步家族操作占着时，导入不得落库',
+      );
+
+      gate.complete();
+      await holder;
+      await importing;
+      expect(diaryStore.diaries.containsKey('d1'), isTrue);
     });
 
     test('导入不推进 lastSyncTime', () async {

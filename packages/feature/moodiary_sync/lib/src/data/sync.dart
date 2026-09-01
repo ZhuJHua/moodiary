@@ -79,22 +79,6 @@ abstract class IRemoteSyncBackend implements SyncBackend, RemoteObjectStore {
   Future<SyncReport> syncAll();
 }
 
-/// pull 的两种语义。归档导入这条路被两个入口共用，而它们对「删除」的要求相反。
-enum SyncPullMode {
-  /// 设备间搬运（云同步 / 局域网接收）：删除必须传播，否则已删日记永远复活。
-  merge,
-
-  /// 从备份恢复：**只增不删**。归档里的墓碑不执行删除，本机墓碑也不作为 LWW 下限。
-  ///
-  /// 判据是可逆性不对称：多留数据可逆（再删一次就行），少留不可逆（行硬删 + 磁盘
-  /// 媒体真删，且没有回收站兜底）。用户点「恢复」是一次显式声明，不该被更早的、
-  /// 隐式的本机删除状态否决，也不该让一个**文件**指挥当前设备删数据 —— 备份是
-  /// 「当时存在过什么」的快照，不是「我删过什么」的命令。
-  ///
-  /// 本机更新的编辑仍然赢：恢复只补回缺的，不回滚比备份新的内容（回滚同样不可逆）。
-  restore,
-}
-
 class SyncReport {
   final int diaryCount;
   final int categoryCount;

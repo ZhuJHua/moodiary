@@ -6,6 +6,7 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_rust/foundation.dart' as rust;
+import 'package:moodiary_sync/src/data/archive_apply.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/incremental_engine.dart';
 import 'package:moodiary_sync/src/data/media_refs.dart';
@@ -255,13 +256,13 @@ class LocalArchive {
     return included.length;
   }
 
-  /// [mode] 见 [SyncPullMode]。「从备份恢复」按钮传 restore（只增不删）；
-  /// 局域网接收是设备间搬运，保持默认的 merge（删除照常传播）。
+  /// [policy] 见 [ArchiveApplyPolicy]。「从备份恢复」传 [RestorePolicy]（只增不删）；
+  /// 局域网接收是设备间搬运，保持默认的 [SyncPullPolicy]（删除照常传播）。
   static Future<SyncReport> import(
     String zipPath, {
     String? password,
     rust.CancelToken? cancel,
-    SyncPullMode mode = .merge,
+    ArchiveApplyPolicy policy = const SyncPullPolicy(),
   }) async {
     final extractDir = await Directory(
       PlatformService.get().applicationCachePath,
@@ -273,7 +274,7 @@ class LocalArchive {
         password: password,
         cancel: cancel ?? rust.CancelToken(),
       );
-      return await importDirectory(extractDir.path, mode: mode);
+      return await importDirectory(extractDir.path, policy: policy);
     } finally {
       try {
         await extractDir.delete(recursive: true);
@@ -310,7 +311,7 @@ class LocalArchive {
     SyncMediaFiles? mediaFiles,
     Future<SyncCipher> Function()? cipherProvider,
     int? concurrency,
-    SyncPullMode mode = .merge,
+    ArchiveApplyPolicy policy = const SyncPullPolicy(),
   }) async {
     if (!await File(p.join(dir, SyncKeys.manifestPath)).exists()) {
       // 2.8.0 之前的导出**有意不支持导入**（已拍板）：识别出老布局时给出明确指引，
@@ -320,17 +321,33 @@ class LocalArchive {
       }
       throw SyncException(l10n.sync.errNotBackup);
     }
-    final engine = IncrementalSyncEngine(
-      LocalArchiveBackend(dir),
-      diaryStore: diaryStore,
-      categoryStore: categoryStore,
-      mediaInfoStore: mediaInfoStore,
-      tombstoneStore: tombstoneStore,
-      mediaFiles: mediaFiles,
-      cipherProvider: cipherProvider,
-      concurrency: concurrency,
+    // 直接用 [ArchiveApplier]，不经 [IncrementalSyncEngine]：恢复不需要远端租约锁
+    // （为一个解压出来的临时目录抢锁，防的是不存在的并发设备）、不需要 keyfile 补传
+    // 前奏、也不推进「上次同步时间」。同步专属的东西留在引擎里。
+    //
+    // **但进程内互斥锁要**：它挡的是本机自己的并发。少了它，恢复能与云端 push 交错，
+    // push 会把恢复尚未插回的那批墓碑推成远端删除，反过来把刚恢复的日记全网抹掉。
+    final backend = LocalArchiveBackend(dir);
+    final cipher = cipherProvider ?? SyncCipher.current;
+    final bytes = await backend.readObject(SyncKeys.manifestPath);
+    if (bytes == null) throw SyncException(l10n.sync.errNotBackup);
+    final decoded = await (await cipher()).decode(bytes);
+    if (decoded is! Map<String, dynamic>) {
+      throw SyncException(l10n.sync.errManifestCorrupt);
+    }
+    return runSyncExclusive(
+      () => ArchiveApplier(
+        backend,
+        policy: policy,
+        diaryStore: diaryStore,
+        categoryStore: categoryStore,
+        mediaInfoStore: mediaInfoStore,
+        tombstoneStore: tombstoneStore,
+        mediaFiles: mediaFiles,
+        cipherProvider: cipher,
+        concurrency: concurrency ?? 4,
+      ).apply(SyncManifest.fromJson(decoded)),
     );
-    return engine.pull(markSynced: false, mode: mode);
   }
 }
 

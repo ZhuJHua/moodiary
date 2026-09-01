@@ -1,6 +1,7 @@
 import 'package:injectable/injectable.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 
+import '../archive_apply.dart';
 import 'local_archive.dart';
 
 /// [IBackupArchive] 的同步引擎实现。
@@ -16,8 +17,11 @@ class SyncBackupArchive implements IBackupArchive {
 
   @override
   Future<BackupImportResult> import(String zipPath) async {
-    // 「从备份恢复」是恢复不是同步：只增不删（见 [SyncPullMode.restore]）。
-    final report = await LocalArchive.import(zipPath, mode: .restore);
+    // 「从备份恢复」是恢复不是同步：只增不删（见 [RestorePolicy]）。
+    final report = await LocalArchive.import(
+      zipPath,
+      policy: const RestorePolicy(),
+    );
     return BackupImportResult(
       diaryCount: report.diaryCount,
       categoryCount: report.categoryCount,
