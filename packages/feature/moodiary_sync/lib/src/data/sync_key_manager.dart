@@ -175,7 +175,9 @@ class SyncKeyManager {
     MoodiaryKVs.syncKeyfileCache.set('');
     MoodiaryKVs.syncKeyfilePendingBackends.set(const <String>[]);
     MoodiaryKVs.syncKeyConflictBackends.set(const <String>[]);
-    MoodiaryKVs.syncForceMediaReuploadBackends.set(const <String>[]);
+    // syncForceMediaReuploadBackends **刻意不清**：它表达的是「远端那批媒体不可信、
+    // 下次 push 必须重传」，与本机有没有密钥正交。关闭加密恰恰是它最需要生效的时刻
+    // ——清掉它，那批用已销毁的 DEK 加密的媒体会被 stat 判成「远端已存在」而永不重传。
   }
 
   static Future<SyncCipher> currentCipher() async => .withKey(await loadDek());
@@ -301,10 +303,21 @@ class SyncKeyManager {
       // 网络 / 鉴权故障：判不出来就不写，留着下次再试。
       return .unknown;
     }
-    // 有信封但没有密文数据（加密开了却从没同步过 / 远端是明文）：同样孤立不了东西。
-    if (manifestBytes == null || !SyncCipher.isCipherText(manifestBytes)) {
+    // 远端信封就是本机这一份（补传 / 改密码前的重写）：写下去什么都没改，无需再验。
+    // 这条捷径也让「远端有信封但还没人 push 过 manifest」的正常两机场景不至于卡死。
+    final cached = cachedKeyfile();
+    if (cached != null &&
+        cached.saltB64 == remote.saltB64 &&
+        cached.wrappedDekB64 == remote.wrappedDekB64) {
       return .safe;
     }
+    // 判「远端信封是残留、覆盖它是安全的」必须以**读到一份完好的明文 manifest**
+    // 为条件。读不到（远端还没写过 manifest / 上次 push 传完媒体就中断）或读到
+    // 0 字节（PUT 被截断，38195007 认过的真实故障态）都只说明我们**不知道**远端
+    // 有没有密文——而信封一旦被换掉，用旧 DEK 加密的日记与媒体就永久解不开。
+    if (manifestBytes == null || manifestBytes.isEmpty) return .unknown;
+    // 远端是明文（关闭加密时删 keys.json 失败留下的残留信封）：孤立不了东西。
+    if (!SyncCipher.isCipherText(manifestBytes)) return .safe;
     final dek = await loadDek();
     if (dek == null) return .conflict;
     try {

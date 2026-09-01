@@ -100,9 +100,17 @@ Future<bool> applyUserKeyChange({
     // 有信封、但远端数据其实是明文（关闭加密时删 keys.json 失败会留下这种残留）：
     // 这份信封既没有密文要保护、也没有任何密码解得开它。当它不存在，照常走下面的
     // 「明文远端重加密」；否则用户会被引导去丢弃一份完全健康、根本不需要密钥的数据。
+    //
+    // 但「残留」这个结论只有一份**读得到且非空**的明文 manifest 能证明。manifest
+    // 读不到（远端还没写过 / 上次 push 传完媒体就中断）或读到 0 字节（PUT 被截断）
+    // 时，远端很可能正握着一批用这个信封的 DEK 加密的对象——此刻把信封判成残留、
+    // 转头生成新 DEK 覆盖它，那批密文就永久解不开。不知道就当它在，走解锁流程。
     // 判据与引擎侧 [SyncKeyManager.checkRemoteKeyfile] 保持一致。
-    if (remoteKeyfile != null &&
-        (remoteManifest == null || !SyncCipher.isCipherText(remoteManifest))) {
+    final remoteIsPlaintext =
+        remoteManifest != null &&
+        remoteManifest.isNotEmpty &&
+        !SyncCipher.isCipherText(remoteManifest);
+    if (remoteKeyfile != null && remoteIsPlaintext) {
       remoteKeyfile = null;
     }
 
@@ -223,6 +231,11 @@ Future<bool> applyUserKeyChange({
     if (report == null) {
       final stillHasRemote = await _remoteExists(backend);
       if (stillHasRemote) return false;
+      // 读不到 manifest ≠ 远端什么都没有：首次 push 是先传媒体、最后才写 manifest，
+      // 中断就正好留下「一批 DEK 密文媒体 + 没有清单」。DEK 一清，它们就成了没有任何
+      // 密钥的密文，而下次 push 的 stat 还会把它们判成「远端已存在」跳过，永不重传。
+      // 先让远端媒体失信，把不可逆的失钥降级成一次重传。
+      SyncKeyManager.markForceMediaReupload(backend.persistentBackendId);
     } else if (report.failed > 0) {
       // CloudReCipher 是逐条计数、不中断的：失败的对象原样保留 AES 密文，而
       // manifest 已按明文写出。此刻若照常删 keys.json + 清 DEK，那些对象就成了
@@ -365,8 +378,8 @@ Future<bool> _discardRemoteEnvelope(
 
 Future<bool> _remoteExists(IRemoteSyncBackend backend) async {
   try {
-    final bytes = await backend.readObject(SyncKeys.manifestPath);
-    return bytes != null && bytes.isNotEmpty;
+    // 0 字节 = 清单被截断，**存在但坏了**，不是不存在：远端多半还压着一批密文。
+    return await backend.readObject(SyncKeys.manifestPath) != null;
   } catch (_) {
     return true; // 探测失败按「有远端」保守处理
   }

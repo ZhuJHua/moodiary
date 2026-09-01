@@ -705,6 +705,18 @@ class IncrementalSyncEngine {
   /// 空远端 + 加密模式的 keyfile 兜底：有本机缓存直接补写；没有（如 DEK 经二维码
   /// 传入、从未见过 keyfile）则中止本次 push —— 宁可不同步，不产出解不开的远端。
   Future<void> _ensureKeyfileOnVirginRemote() async {
+    // 「远端没有 manifest」不等于「远端没有信封」：manifest 被截断成 0 字节、或上次
+    // push 传完媒体就中断，都会留下一份**别的 DEK** 的 keys.json。盲写会把它换掉，
+    // 远端那批密文从此没有任何密钥能解——所以这里也必须过同一道判定。
+    switch (await SyncKeyManager.checkRemoteKeyfile(backend)) {
+      case .conflict:
+        SyncKeyManager.markKeyConflict(backend.persistentBackendId);
+        throw SyncKeyConflictException(l10n.sync.errKeyConflict);
+      case .unknown:
+        throw const SyncException('无法确认云端密钥文件的归属（清单读不到或已损坏），已中止本次同步以免覆盖它');
+      case .safe:
+        break;
+    }
     final keyfile = SyncKeyManager.cachedKeyfile();
     if (keyfile == null) {
       throw const SyncException(
