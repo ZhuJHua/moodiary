@@ -665,6 +665,7 @@ class _Translations$export$en extends Translations$export$zh {
 	@override String get restoring => 'Restoring…';
 	@override String restoreDone({required Object summary}) => 'Restored: ${summary}';
 	@override String restoreSummary({required Object diary, required Object category, required Object media}) => '${diary} diaries / ${category} categories / ${media} media entries';
+	@override String restoreSummarySkipped({required Object base, required Object skipped}) => '${base}, ${skipped} skipped (this device has newer content)';
 	@override String restoreSummaryFailed({required Object base, required Object failed}) => '${base}, ${failed} failed';
 	@override String restorePartial({required Object summary}) => 'Restore did not fully succeed: ${summary}. Check storage space and connection, then retry — don\'t delete the old device\'s data yet';
 	@override String restoreStopped({required Object summary}) => 'Restore stopped (incomplete): ${summary}';

@@ -19,8 +19,12 @@ class TombstoneRepository {
 
   final MoodiaryDatabase _db;
 
-  /// 墓碑保留窗：窗内足够让云后端 / 局域网 / 备份把删除传播出去；超窗由启动 GC
-  /// 清除，接受「更陈旧的备份导入会复活该日记」的权衡（删除本身也已无从传播）。
+  /// 墓碑保留窗：窗内足够让云后端与局域网把删除传播出去；超窗由启动 GC 清除。
+  ///
+  /// **「从备份恢复」不在此列**：备份与同步不是一套逻辑。恢复只增不删 —— 归档里
+  /// 的墓碑不执行删除，本机墓碑也不作为 LWW 下限。备份是「当时存在过什么」的快照，
+  /// 不是「我删过什么」的命令，所以「更陈旧的备份会复活已删日记」是恢复的**预期
+  /// 结果**，不再是这个保留窗需要权衡的代价。局域网接收仍是设备间搬运，照常传播。
   static const Duration defaultRetention = Duration(days: 90);
 
   static SyncTombstone _toTombstone(TombstoneRow r) => SyncTombstone(

@@ -32,11 +32,16 @@ class BackupImportResult {
   /// 消费页不得按成功呈现。
   final bool cancelled;
 
+  /// 因「本机内容不旧于备份」而跳过的条目数。要能和「备份已是最新」区分开 ——
+  /// 两者此前显示的都是「恢复 0 条」。
+  final int skipped;
+
   const BackupImportResult({
     required this.diaryCount,
     required this.categoryCount,
     required this.mediaInfoCount,
     required this.failed,
     this.cancelled = false,
+    this.skipped = 0,
   });
 }

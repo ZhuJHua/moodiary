@@ -16,13 +16,15 @@ class SyncBackupArchive implements IBackupArchive {
 
   @override
   Future<BackupImportResult> import(String zipPath) async {
-    final report = await LocalArchive.import(zipPath);
+    // 「从备份恢复」是恢复不是同步：只增不删（见 [SyncPullMode.restore]）。
+    final report = await LocalArchive.import(zipPath, mode: .restore);
     return BackupImportResult(
       diaryCount: report.diaryCount,
       categoryCount: report.categoryCount,
       mediaInfoCount: report.mediaInfoCount,
       failed: report.failed,
       cancelled: report.cancelled,
+      skipped: report.skipped,
     );
   }
 }

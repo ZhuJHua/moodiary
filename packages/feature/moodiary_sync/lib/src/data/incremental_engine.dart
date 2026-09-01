@@ -189,18 +189,26 @@ class IncrementalSyncEngine {
   }
 
   /// [markSynced] 为 false 时不推进「上次同步时间」（本地备份导入等非云端场景）。
-  Future<SyncReport> pull({bool markSynced = true}) async {
-    final report = await _exclusive(_pull);
+  /// [mode] 见 [SyncPullMode]：备份恢复走 restore（只增不删）。
+  Future<SyncReport> pull({
+    bool markSynced = true,
+    SyncPullMode mode = .merge,
+  }) async {
+    final report = await _exclusive(() => _pull(mode));
     if (markSynced && report.failed == 0 && !report.cancelled) {
       _markSynced();
     }
     return report;
   }
 
-  Future<SyncReport> _pull() async => (await _pullCore()).$1;
+  Future<SyncReport> _pull(SyncPullMode mode) async =>
+      (await _pullCore(mode: mode)).$1;
 
   /// 除报告外返回本次读到的远端 manifest 快照，供 [sync] 在空转热路径上复用。
-  Future<(SyncReport, SyncManifest?)> _pullCore() async {
+  Future<(SyncReport, SyncManifest?)> _pullCore({
+    SyncPullMode mode = .merge,
+  }) async {
+    final restoring = mode == SyncPullMode.restore;
     await _uploadPendingKeyfile();
     _mediaFailed = 0;
     final sw = Stopwatch()..start();
@@ -304,6 +312,7 @@ class IncrementalSyncEngine {
     // 回声推送；归档导入 / 局域网接收（trackingId==null）仍按本地变更处理。
     final fromSync = trackingId != null;
 
+    int skipped = 0;
     int diaryChanged = 0;
     int categoryChanged = 0;
     int mediaInfoChanged = 0;
@@ -318,6 +327,8 @@ class IncrementalSyncEngine {
         if (key.startsWith(SyncKeys.diaryPrefix)) {
           final id = key.substring(SyncKeys.diaryPrefix.length);
           if (isTombstone) {
+            // 恢复模式只增不删：备份是「当时存在过什么」的快照，不是删除命令。
+            if (restoring) return;
             final tombstoneMs = entry.value.timeMs;
             // 快照可能过期（长 pull 期间用户可能编辑/删除过），写入前重读做 LWW。
             Diary? local = localDiaries[id];
@@ -373,8 +384,10 @@ class IncrementalSyncEngine {
           // 本地删除（墓碑）也参与 LWW：删除晚于远端活跃条目 → 保留删除。
           final localMs =
               localDiaries[id]?.lastModified.millisecondsSinceEpoch ??
-              tombstones[key]?.timeMs;
+              // 恢复模式下本机墓碑不作为下限，否则「误删后从备份找回」永远拿不回。
+              (restoring ? null : tombstones[key]?.timeMs);
           if (localMs != null && remoteMs <= localMs) {
+            skipped++;
             _logger.info(
               .diarySkip,
               '本地不旧于远端，跳过下载：$id',
@@ -408,7 +421,9 @@ class IncrementalSyncEngine {
           final oldDiary = await diaryRepo.getDiaryByBusinessId(id);
           final freshMs =
               oldDiary?.lastModified.millisecondsSinceEpoch ??
-              (await _tombstoneStore.getByKey(key))?.timeMs;
+              // 同上：恢复模式下墓碑不参与。这道重读原本刻意「防止复活刚被永久
+              // 删除的日记」，而恢复要的正是复活。
+              (restoring ? null : (await _tombstoneStore.getByKey(key))?.timeMs);
           if (freshMs != null && remoteMs <= freshMs) {
             pending.completeDiary(id);
             _logger.info(
@@ -439,6 +454,8 @@ class IncrementalSyncEngine {
         } else if (key.startsWith(SyncKeys.categoryPrefix)) {
           final id = key.substring(SyncKeys.categoryPrefix.length);
           if (isTombstone) {
+            // 恢复模式只增不删：备份是「当时存在过什么」的快照，不是删除命令。
+            if (restoring) return;
             final tombstoneMs = entry.value.timeMs;
             // 与日记同理：写入前重读做 LWW（快照可能过期）。
             Category? local = localCategories[id];
@@ -471,8 +488,10 @@ class IncrementalSyncEngine {
           final remoteMs = entry.value.timeMs;
           final localMs =
               localCategories[id]?.lastModified.millisecondsSinceEpoch ??
-              tombstones[key]?.timeMs;
+              // 恢复模式下本机墓碑不作为下限，否则「误删后从备份找回」永远拿不回。
+              (restoring ? null : tombstones[key]?.timeMs);
           if (localMs != null && remoteMs <= localMs) {
+            skipped++;
             _logger.info(
               .categorySkip,
               '本地分类不旧于远端，跳过：$id',
@@ -490,7 +509,9 @@ class IncrementalSyncEngine {
           final freshLocal = await categoryRepo.getCategoryById(id);
           final freshMs =
               freshLocal?.lastModified.millisecondsSinceEpoch ??
-              (await _tombstoneStore.getByKey(key))?.timeMs;
+              // 同上：恢复模式下墓碑不参与。这道重读原本刻意「防止复活刚被永久
+              // 删除的日记」，而恢复要的正是复活。
+              (restoring ? null : (await _tombstoneStore.getByKey(key))?.timeMs);
           if (freshMs != null && remoteMs <= freshMs) {
             pending.completeCategory(id);
             _logger.info(
@@ -525,6 +546,8 @@ class IncrementalSyncEngine {
         } else if (key.startsWith(SyncKeys.mediaInfoPrefix)) {
           final id = key.substring(SyncKeys.mediaInfoPrefix.length);
           if (isTombstone) {
+            // 恢复模式只增不删：备份是「当时存在过什么」的快照，不是删除命令。
+            if (restoring) return;
             final tombstoneMs = entry.value.timeMs;
             // 与分类同理：写入前重读做 LWW（快照可能过期）。
             MediaInfo? local = localMediaInfos[id];
@@ -557,8 +580,10 @@ class IncrementalSyncEngine {
           final remoteMs = entry.value.timeMs;
           final localMs =
               localMediaInfos[id]?.lastModified.millisecondsSinceEpoch ??
-              tombstones[key]?.timeMs;
+              // 恢复模式下本机墓碑不作为下限，否则「误删后从备份找回」永远拿不回。
+              (restoring ? null : tombstones[key]?.timeMs);
           if (localMs != null && remoteMs <= localMs) {
+            skipped++;
             _logger.info(
               .mediaInfoSkip,
               '本地媒体元数据不旧于远端，跳过：$id',
@@ -576,7 +601,9 @@ class IncrementalSyncEngine {
           final freshLocal = await mediaInfoRepo.getMediaInfoByFileName(id);
           final freshMs =
               freshLocal?.lastModified.millisecondsSinceEpoch ??
-              (await _tombstoneStore.getByKey(key))?.timeMs;
+              // 同上：恢复模式下墓碑不参与。这道重读原本刻意「防止复活刚被永久
+              // 删除的日记」，而恢复要的正是复活。
+              (restoring ? null : (await _tombstoneStore.getByKey(key))?.timeMs);
           if (freshMs != null && remoteMs <= freshMs) {
             _logger.info(
               .mediaInfoSkip,
@@ -664,6 +691,7 @@ class IncrementalSyncEngine {
         warning: warnings.isEmpty ? null : warnings,
         failed: totalFailed,
         cancelled: stopped,
+        skipped: skipped,
       ),
       manifest,
     );

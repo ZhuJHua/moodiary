@@ -453,6 +453,114 @@ void main() {
       );
     });
 
+    // ── 恢复语义：只增不删（SyncPullMode.restore）──
+    //
+    // 判据是可逆性不对称：多留数据可逆（再删一次就行），少留不可逆（行硬删 +
+    // 磁盘媒体真删、无回收站兜底）。下面三条把两个方向都钉住。
+
+    test('E6：恢复模式下归档 tombstone 不删本地日记，也不动磁盘媒体', () async {
+      final dir = await buildArchiveDir(
+        diaries: const [],
+        tombstones: [buildDiaryTombstone('dead', modifiedMs: 2000)],
+      );
+      final diaryStore = FakeDiaryStore([
+        buildDiary(id: 'dead', modifiedMs: 1000, images: ['img-1.png']),
+      ]);
+      final mediaFiles = FakeMediaFiles()..put('image', 'img-1.png');
+
+      final report = await LocalArchive.importDirectory(
+        dir,
+        mode: SyncPullMode.restore,
+        diaryStore: diaryStore,
+        categoryStore: FakeCategoryStore(),
+        mediaInfoStore: FakeMediaInfoStore(),
+        tombstoneStore: diaryStore.tombstones,
+        mediaFiles: mediaFiles,
+      );
+
+      expect(report.failed, 0);
+      expect(
+        diaryStore.diaries.containsKey('dead'),
+        isTrue,
+        reason: '备份是「当时存在过什么」的快照，不是删除命令',
+      );
+      expect(mediaFiles.files.containsKey('image/img-1.png'), isTrue);
+      expect(report.diaryCount, 0, reason: '没删也没恢复，不该计进 diaryCount');
+    });
+
+    test('E5：恢复模式下本机墓碑不否决恢复（误删能找回）', () async {
+      final dir = await buildArchiveDir(
+        diaries: [buildDiary(id: 'oops', modifiedMs: 1000, title: 'from-archive')],
+      );
+      final diaryStore = FakeDiaryStore();
+      // 本机在备份之后永久删除了它 —— 墓碑时间必然晚于备份里的 lastModified。
+      diaryStore.tombstones.rows['d:oops'] = buildDiaryTombstone(
+        'oops',
+        modifiedMs: 5000,
+      );
+
+      final report = await LocalArchive.importDirectory(
+        dir,
+        mode: SyncPullMode.restore,
+        diaryStore: diaryStore,
+        categoryStore: FakeCategoryStore(),
+        mediaInfoStore: FakeMediaInfoStore(),
+        tombstoneStore: diaryStore.tombstones,
+        mediaFiles: FakeMediaFiles(),
+      );
+
+      expect(report.diaryCount, 1);
+      expect(diaryStore.diaries['oops']!.title, 'from-archive');
+    });
+
+    test('合并模式（局域网接收）语义不变：墓碑照常传播', () async {
+      final dir = await buildArchiveDir(
+        diaries: const [],
+        tombstones: [buildDiaryTombstone('dead', modifiedMs: 2000)],
+      );
+      final diaryStore = FakeDiaryStore([
+        buildDiary(id: 'dead', modifiedMs: 1000),
+      ]);
+
+      await LocalArchive.importDirectory(
+        dir,
+        diaryStore: diaryStore,
+        categoryStore: FakeCategoryStore(),
+        mediaInfoStore: FakeMediaInfoStore(),
+        tombstoneStore: diaryStore.tombstones,
+        mediaFiles: FakeMediaFiles(),
+      );
+
+      expect(
+        diaryStore.diaries.containsKey('dead'),
+        isFalse,
+        reason: '设备间搬运仍须传播删除，否则已删日记永远复活',
+      );
+    });
+
+    test('恢复模式下本机更新的编辑仍然赢，并计入 skipped', () async {
+      final dir = await buildArchiveDir(
+        diaries: [buildDiary(id: 'd1', modifiedMs: 1000, title: 'from-archive')],
+      );
+      final diaryStore = FakeDiaryStore([
+        buildDiary(id: 'd1', modifiedMs: 3000, title: 'local-newer'),
+      ]);
+
+      final report = await LocalArchive.importDirectory(
+        dir,
+        mode: SyncPullMode.restore,
+        diaryStore: diaryStore,
+        categoryStore: FakeCategoryStore(),
+        mediaInfoStore: FakeMediaInfoStore(),
+        tombstoneStore: diaryStore.tombstones,
+        mediaFiles: FakeMediaFiles(),
+      );
+
+      expect(diaryStore.diaries['d1']!.title, 'local-newer');
+      expect(report.diaryCount, 0);
+      expect(report.skipped, 1, reason: '「跳过」要能和「备份已是最新」区分开');
+    });
+
     test('导入不推进 lastSyncTime', () async {
       final dir = await buildArchiveDir(
         diaries: [buildDiary(id: 'd1', modifiedMs: 100)],

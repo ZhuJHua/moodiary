@@ -96,9 +96,20 @@ class _ImportSection extends StatelessWidget {
         category: result.categoryCount,
         media: result.mediaInfoCount,
       );
-      final summary = result.failed > 0
-          ? l10n.export.restoreSummaryFailed(base: base, failed: result.failed)
+      // 「跳过 N 条」必须单独说：恢复是只增不删的，本机内容更新的条目会被跳过，
+      // 而它和「备份已是最新」此前显示的都是「恢复 0 条」，用户无从分辨。
+      final withSkipped = result.skipped > 0
+          ? l10n.export.restoreSummarySkipped(
+              base: base,
+              skipped: result.skipped,
+            )
           : base;
+      final summary = result.failed > 0
+          ? l10n.export.restoreSummaryFailed(
+              base: withSkipped,
+              failed: result.failed,
+            )
+          : withSkipped;
       if (result.cancelled) {
         // 半截恢复不能报成功——用户可能据此认为数据已齐。
         toast.error(message: l10n.export.restoreStopped(summary: summary));

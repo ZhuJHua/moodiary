@@ -255,10 +255,13 @@ class LocalArchive {
     return included.length;
   }
 
+  /// [mode] 见 [SyncPullMode]。「从备份恢复」按钮传 restore（只增不删）；
+  /// 局域网接收是设备间搬运，保持默认的 merge（删除照常传播）。
   static Future<SyncReport> import(
     String zipPath, {
     String? password,
     rust.CancelToken? cancel,
+    SyncPullMode mode = .merge,
   }) async {
     final extractDir = await Directory(
       PlatformService.get().applicationCachePath,
@@ -270,7 +273,7 @@ class LocalArchive {
         password: password,
         cancel: cancel ?? rust.CancelToken(),
       );
-      return await importDirectory(extractDir.path);
+      return await importDirectory(extractDir.path, mode: mode);
     } finally {
       try {
         await extractDir.delete(recursive: true);
@@ -307,6 +310,7 @@ class LocalArchive {
     SyncMediaFiles? mediaFiles,
     Future<SyncCipher> Function()? cipherProvider,
     int? concurrency,
+    SyncPullMode mode = .merge,
   }) async {
     if (!await File(p.join(dir, SyncKeys.manifestPath)).exists()) {
       // 2.8.0 之前的导出**有意不支持导入**（已拍板）：识别出老布局时给出明确指引，
@@ -326,7 +330,7 @@ class LocalArchive {
       cipherProvider: cipherProvider,
       concurrency: concurrency,
     );
-    return engine.pull(markSynced: false);
+    return engine.pull(markSynced: false, mode: mode);
   }
 }
 

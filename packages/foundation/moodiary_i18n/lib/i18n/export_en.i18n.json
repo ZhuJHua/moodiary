@@ -12,6 +12,7 @@
   "restoring": "Restoring…",
   "restoreDone": "Restored: {summary}",
   "restoreSummary": "{diary} diaries / {category} categories / {media} media entries",
+  "restoreSummarySkipped": "{base}, {skipped} skipped (this device has newer content)",
   "restoreSummaryFailed": "{base}, {failed} failed",
   "restorePartial": "Restore did not fully succeed: {summary}. Check storage space and connection, then retry — don't delete the old device's data yet",
   "restoreStopped": "Restore stopped (incomplete): {summary}",
