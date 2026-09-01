@@ -17,7 +17,7 @@ impl DavClient {
         self.inner.test_connection().await
     }
 
-    pub async fn read_object(&self, key: String) -> Result<Vec<u8>> {
+    pub async fn read_object(&self, key: String) -> Result<Option<Vec<u8>>> {
         self.inner.read_object(key).await
     }
 

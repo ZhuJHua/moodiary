@@ -242,6 +242,42 @@ void main() {
     });
   });
 
+  group('push — 0 字节 manifest', () {
+    // 曾经 Rust 用空 Vec 编码 404、Dart 又把空字节压成 null，「不存在」与「存在但
+    // 0 字节」不可区分：截断的 manifest.json 会让 push 认定远端为空、用本机数据
+    // 重建，远端墓碑全丢、已删日记在其它设备复活。现在 404 走 Option、0 字节如实
+    // 返回，落到损坏守卫上中止同步。
+    test('0 字节 manifest 中止 push，不当作空远端重建', () async {
+      final backend = FakeRemoteBackend();
+      backend.objects[SyncKeys.manifestPath] = Uint8List(0);
+      final store = FakeDiaryStore([buildDiary(id: 'a', modifiedMs: 100)]);
+
+      await expectLater(
+        engineOn(backend, diaries: store).push(),
+        throwsA(isA<SyncException>()),
+      );
+      // 关键：远端 manifest 没有被本机数据重建覆盖。
+      expect(backend.objects[SyncKeys.manifestPath], isEmpty);
+      expect(backend.hasObject(SyncKeys.diaryObjectPath('a')), isFalse);
+    });
+
+    test('0 字节 manifest 同样中止 pull', () async {
+      final backend = FakeRemoteBackend();
+      backend.objects[SyncKeys.manifestPath] = Uint8List(0);
+      await expectLater(
+        engineOn(backend).pull(),
+        throwsA(isA<SyncException>()),
+      );
+    });
+
+    test('真正不存在的 manifest 仍按空远端处理（不误伤首次同步）', () async {
+      final backend = FakeRemoteBackend();
+      final store = FakeDiaryStore([buildDiary(id: 'a', modifiedMs: 100)]);
+      await engineOn(backend, diaries: store).push();
+      expect(backend.hasObject(SyncKeys.diaryObjectPath('a')), isTrue);
+    });
+  });
+
   group('push — media', () {
     test(
       'uploads media BEFORE the diary JSON and records confirmed refs',

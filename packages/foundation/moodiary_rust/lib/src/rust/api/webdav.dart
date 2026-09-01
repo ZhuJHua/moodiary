@@ -27,7 +27,7 @@ abstract class DavClient implements RustOpaqueInterface {
     password: password,
   );
 
-  Future<Uint8List> readObject({required String key});
+  Future<Uint8List?> readObject({required String key});
 
   /// 落盘版读取，整份不进内存。远端不存在返回 false 且不建文件。
   Future<bool> readObjectToFile({

@@ -83,12 +83,17 @@ class WebDavSyncBackend with CloudSyncOrchestration {
 
   /// 404 → null；其它错误（网络/认证/5xx）**必须**抛 [SyncException]、不可吞错 ——
   /// 引擎据此区分「首次同步」与「读取失败」，吞错会导致 manifest 被从零重建。
+  ///
+  /// **0 字节对象不是「不存在」**：Rust 侧用 `Option` 表达 404，这里原样透传。
+  /// 曾经两边都用空 Vec 编码 404，于是被截断的 0 字节 manifest.json 会被当成
+  /// 「远端为空」，push 用本机数据重建 manifest —— 远端墓碑全丢、已删日记在其它
+  /// 设备复活。0 字节现在如实返回空 [Uint8List]，交给 manifest 的损坏守卫处理。
   @override
   Future<Uint8List?> readObject(String key) async {
     try {
       final client = await _client();
       final bytes = await client.readObject(key: key);
-      return bytes.isEmpty ? null : bytes;
+      return bytes;
     } catch (e) {
       throw SyncException(l10n.sync.errReadRemote(key: key, error: '$e'));
     }

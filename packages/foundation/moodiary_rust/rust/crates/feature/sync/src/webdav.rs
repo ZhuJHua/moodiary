@@ -92,17 +92,23 @@ impl DavClient {
         }
     }
 
-    /// 仅 404（不存在）返回空 Vec；其它错误如实上抛 —— 调用方（同步引擎）必须能区分
+    /// 不存在（404）返回 `None`；其它错误如实上抛 —— 调用方（同步引擎）必须能区分
     /// 「不存在」与「读取失败」，否则 push 会在网络抖动时把 manifest 从零重建、丢失远端独有条目。
-    pub async fn read_object(&self, key: String) -> Result<Vec<u8>> {
+    ///
+    /// **返回 `Option` 而不是空 Vec**：曾经用空 Vec 编码 404，于是「不存在」与
+    /// 「存在但 0 字节」在 Dart 那层被压成同一个 null，绕过了 manifest 的损坏守卫
+    /// ——0 字节的 manifest.json 会让 push 认定远端是空的、用本机数据重建，远端墓碑
+    /// 全部消失、已删日记在其它设备复活。
+    pub async fn read_object(&self, key: String) -> Result<Option<Vec<u8>>> {
         let path = self.full_path(&key);
         let resp = match self.client.get(&path).await {
             Ok(r) => r,
-            Err(e) if dav_is_not_found(&e) => return Ok(Vec::new()),
+            Err(e) if dav_is_not_found(&e) => return Ok(None),
             Err(e) => return Err(anyhow::anyhow!("Failed to read {key}: {e}")),
         };
         moodiary_http::client::read_body(resp)
             .await
+            .map(Some)
             .map_err(|e| anyhow::anyhow!("Failed to read {key}: {e}"))
     }
 

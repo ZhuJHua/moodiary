@@ -28,7 +28,7 @@ impl S3Client {
 
     /// 仅「不存在」（404）返回空 Vec；其它错误如实上抛 —— 调用方（同步引擎）
     /// 必须能区分「不存在」与「读取失败」，否则 push 会在网络抖动时把 manifest 从零重建。
-    pub async fn read_object(&self, key: String) -> Result<Vec<u8>> {
+    pub async fn read_object(&self, key: String) -> Result<Option<Vec<u8>>> {
         self.inner.read_object(key).await
     }
 

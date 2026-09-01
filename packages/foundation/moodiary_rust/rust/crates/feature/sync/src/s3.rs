@@ -246,9 +246,12 @@ impl S3Client {
         Ok(())
     }
 
-    /// 仅「不存在」（404）返回空 Vec；其它错误如实上抛 —— 调用方（同步引擎）
+    /// 不存在（404）返回 `None`；其它错误如实上抛 —— 调用方（同步引擎）
     /// 必须能区分「不存在」与「读取失败」，否则 push 会在网络抖动时把 manifest 从零重建。
-    pub async fn read_object(&self, key: String) -> Result<Vec<u8>> {
+    ///
+    /// **返回 `Option` 而不是空 Vec**：理由同 webdav 侧 —— 空 Vec 会让「不存在」与
+    /// 「存在但 0 字节」在 Dart 那层不可区分，0 字节 manifest 即触发远端墓碑全丢。
+    pub async fn read_object(&self, key: String) -> Result<Option<Vec<u8>>> {
         let resp = self
             .send(
                 reqwest::Method::GET,
@@ -258,13 +261,14 @@ impl S3Client {
             )
             .await?;
         if resp.status().as_u16() == 404 {
-            return Ok(Vec::new());
+            return Ok(None);
         }
         if !resp.status().is_success() {
             return Err(Self::fail(&format!("Read {key}"), resp).await);
         }
         moodiary_http::client::read_body(resp)
             .await
+            .map(Some)
             .map_err(|e| anyhow::anyhow!("Failed to read object content: {e}"))
     }
 

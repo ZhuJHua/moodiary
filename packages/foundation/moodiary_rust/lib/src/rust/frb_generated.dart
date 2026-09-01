@@ -157,7 +157,7 @@ abstract class RustLibApi extends BaseApi {
     required String password,
   });
 
-  Future<Uint8List> crateApiWebdavDavClientReadObject({
+  Future<Uint8List?> crateApiWebdavDavClientReadObject({
     required DavClient that,
     required String key,
   });
@@ -310,7 +310,7 @@ abstract class RustLibApi extends BaseApi {
     String? region,
   });
 
-  Future<Uint8List> crateApiS3S3ClientReadObject({
+  Future<Uint8List?> crateApiS3S3ClientReadObject({
     required S3Client that,
     required String key,
   });
@@ -934,7 +934,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   );
 
   @override
-  Future<Uint8List> crateApiWebdavDavClientReadObject({
+  Future<Uint8List?> crateApiWebdavDavClientReadObject({
     required DavClient that,
     required String key,
   }) {
@@ -953,7 +953,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: DcoCodec(
-          decodeSuccessData: dco_decode_list_prim_u_8_strict,
+          decodeSuccessData: dco_decode_opt_list_prim_u_8_strict,
           decodeErrorData: dco_decode_AnyhowException,
         ),
         constMeta: kCrateApiWebdavDavClientReadObjectConstMeta,
@@ -2032,7 +2032,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   );
 
   @override
-  Future<Uint8List> crateApiS3S3ClientReadObject({
+  Future<Uint8List?> crateApiS3S3ClientReadObject({
     required S3Client that,
     required String key,
   }) {
@@ -2051,7 +2051,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: DcoCodec(
-          decodeSuccessData: dco_decode_list_prim_u_8_strict,
+          decodeSuccessData: dco_decode_opt_list_prim_u_8_strict,
           decodeErrorData: dco_decode_AnyhowException,
         ),
         constMeta: kCrateApiS3S3ClientReadObjectConstMeta,
@@ -7791,7 +7791,7 @@ class DavClientImpl extends RustOpaque implements DavClient {
   Future<void> deleteObject({required String key}) => RustLib.instance.api
       .crateApiWebdavDavClientDeleteObject(that: this, key: key);
 
-  Future<Uint8List> readObject({required String key}) => RustLib.instance.api
+  Future<Uint8List?> readObject({required String key}) => RustLib.instance.api
       .crateApiWebdavDavClientReadObject(that: this, key: key);
 
   /// 落盘版读取，整份不进内存。远端不存在返回 false 且不建文件。
@@ -8078,7 +8078,7 @@ class S3ClientImpl extends RustOpaque implements S3Client {
 
   /// 仅「不存在」（404）返回空 Vec；其它错误如实上抛 —— 调用方（同步引擎）
   /// 必须能区分「不存在」与「读取失败」，否则 push 会在网络抖动时把 manifest 从零重建。
-  Future<Uint8List> readObject({required String key}) =>
+  Future<Uint8List?> readObject({required String key}) =>
       RustLib.instance.api.crateApiS3S3ClientReadObject(that: this, key: key);
 
   /// 落盘版读取，整份不进内存。远端不存在返回 false 且不建文件。
