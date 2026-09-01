@@ -151,6 +151,13 @@ class IncrementalSyncEngine {
   /// 「远端已有同名媒体」这个证据，一律重传覆盖。
   bool _distrustRemoteMedia = false;
 
+  /// 本次 pull 里下载失败的媒体数。媒体下载跑在 `Future.wait(eagerError: false)`
+  /// 里、失败只记日志不上抛，所以计数必须搭在实例上而不是 pull 的局部变量里。
+  /// 不计入的话 `SyncReport.failed` 在媒体上恒为 0，「部分成功」会被报成完全成功
+  /// —— 最现实的触发是接收方磁盘不足：日记 JSON 体积小先全部落库，媒体写到一半
+  /// ENOSPC，两端都显示「完成：日记 N 条」零警告，用户据此抹掉旧机。
+  int _mediaFailed = 0;
+
   Map<String, Object?> _backendPayload() => {
     'backend': backend.displayName,
     'backendId': backend.persistentBackendId ?? 'transient',
@@ -195,6 +202,7 @@ class IncrementalSyncEngine {
   /// 除报告外返回本次读到的远端 manifest 快照，供 [sync] 在空转热路径上复用。
   Future<(SyncReport, SyncManifest?)> _pullCore() async {
     await _uploadPendingKeyfile();
+    _mediaFailed = 0;
     final sw = Stopwatch()..start();
     _logger.info(
       .syncStart,
@@ -634,12 +642,17 @@ class IncrementalSyncEngine {
         'categoryCount': categoryChanged,
         'mediaInfoCount': mediaInfoChanged,
         'failed': failed,
+        'mediaFailed': _mediaFailed,
         'cancelled': stopped,
         'elapsedMs': sw.elapsedMilliseconds,
       },
     );
+    // 媒体失败并入 failed：条目本身可能成功落库，但它引用的图片/录音没下来，
+    // 那不是「完全成功」。
+    final totalFailed = failed + _mediaFailed;
     final warnings = [
       if (failed > 0) l10n.sync.warnFailedSkipped(count: failed),
+      if (_mediaFailed > 0) l10n.sync.warnMediaFailed(count: _mediaFailed),
       if (stopped) l10n.sync.warnStopped,
     ].join('\n');
     return (
@@ -649,7 +662,7 @@ class IncrementalSyncEngine {
         mediaInfoCount: mediaInfoChanged,
         elapsed: sw.elapsed,
         warning: warnings.isEmpty ? null : warnings,
-        failed: failed,
+        failed: totalFailed,
         cancelled: stopped,
       ),
       manifest,
@@ -1388,6 +1401,7 @@ class IncrementalSyncEngine {
         payload: {'type': type, 'filename': filename, 'bytes': bytes},
       );
     } catch (e) {
+      _mediaFailed++;
       _logger.error(
         .error,
         '下载媒体失败：$filename',

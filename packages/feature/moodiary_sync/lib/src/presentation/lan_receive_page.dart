@@ -147,7 +147,10 @@ class _StatusLine extends StatelessWidget {
   const _StatusLine({required this.state});
 
   static String _summary(SyncReport report) {
-    if (report.diaryCount == 0 && report.categoryCount == 0) {
+    // failed 也要看：媒体全失败而条目零变更时，只看两个 count 会报「已是最新」。
+    if (report.diaryCount == 0 &&
+        report.categoryCount == 0 &&
+        report.failed == 0) {
       return l10n.sync.lanUpToDate;
     }
     final base = l10n.sync.lanReceived(
@@ -209,12 +212,20 @@ class _StatusLine extends StatelessWidget {
           Text(
             _summary(report),
             textAlign: .center,
-            style: typography.bodyMedium.onSurfaceVariant,
+            // 有失败就不能和「全部收完」长一个样：接收方磁盘不足时日记先落库、
+            // 媒体半途 ENOSPC，用户会据此抹掉旧机。
+            style: report.failed > 0
+                ? typography.bodyMedium.error
+                : typography.bodyMedium.onSurfaceVariant,
           ),
           const SizedBox(height: 4),
           Text(
-            context.l10n.sync.lanDoneHint,
-            style: typography.bodySmall.outline,
+            report.failed > 0
+                ? context.l10n.sync.lanDonePartialHint
+                : context.l10n.sync.lanDoneHint,
+            style: report.failed > 0
+                ? typography.bodySmall.error
+                : typography.bodySmall.outline,
           ),
         ],
       ),

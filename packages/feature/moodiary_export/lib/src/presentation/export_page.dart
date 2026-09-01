@@ -102,6 +102,10 @@ class _ImportSection extends StatelessWidget {
       if (result.cancelled) {
         // 半截恢复不能报成功——用户可能据此认为数据已齐。
         toast.error(message: l10n.export.restoreStopped(summary: summary));
+      } else if (result.failed > 0) {
+        // 同理：有失败就不能走绿色的「恢复完成」。最现实的触发是磁盘不足——
+        // 日记 JSON 体积小先全部落库，媒体写到一半 ENOSPC，用户据此抹掉旧机。
+        toast.error(message: l10n.export.restorePartial(summary: summary));
       } else {
         toast.success(message: l10n.export.restoreDone(summary: summary));
       }

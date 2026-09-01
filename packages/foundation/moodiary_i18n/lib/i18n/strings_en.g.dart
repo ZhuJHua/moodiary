@@ -1024,6 +1024,7 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String get lanReceiving => 'Receiving';
 	@override String get lanSaving => 'Saving…';
 	@override String get lanDone => 'Received';
+	@override String get lanDonePartialHint => 'Some content did not arrive. Check storage space and receive again; don\'t delete the sender\'s data until you\'ve confirmed it\'s complete';
 	@override String get lanDoneHint => 'You can keep receiving — the pairing code stays the same';
 	@override String get lanFailed => 'Receiving failed';
 	@override String get lanFailedHint => 'The pairing code is unchanged, so the sender can just retry';
@@ -1120,6 +1121,7 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String pendingUpdate({required Object count}) => '${count} to update';
 	@override String get warnRemoteEmpty => 'The remote is empty — nothing has been uploaded yet';
 	@override String warnFailedSkipped({required Object count}) => '${count} items failed and were skipped';
+	@override String warnMediaFailed({required Object count}) => '${count} media file(s) could not be downloaded; images or audio may be missing from those entries';
 	@override String get warnStopped => 'Stopped by you — the rest will continue on the next sync';
 	@override String warnFailedCount({required Object count}) => '${count} failed';
 	@override String reCipherSummary({required Object diary, required Object category, required Object mediaInfo, required Object media, required Object ms}) => '${diary} entries + ${category} categories + ${mediaInfo} media records + ${media} files (${ms}ms)';

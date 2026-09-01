@@ -2739,6 +2739,9 @@ class Translations$sync$zh {
 	/// zh: '接收完成'
 	String get lanDone => '接收完成';
 
+	/// zh: '部分内容没有收全，请检查存储空间后重新接收；在确认齐全之前不要删除发送方的数据'
+	String get lanDonePartialHint => '部分内容没有收全，请检查存储空间后重新接收；在确认齐全之前不要删除发送方的数据';
+
 	/// zh: '可继续接收，配对码不变'
 	String get lanDoneHint => '可继续接收，配对码不变';
 
@@ -3026,6 +3029,9 @@ class Translations$sync$zh {
 
 	/// zh: '{count} 个条目同步失败已跳过'
 	String warnFailedSkipped({required Object count}) => '${count} 个条目同步失败已跳过';
+
+	/// zh: '有 {count} 个媒体文件没有下载成功，相关日记的图片/录音可能缺失'
+	String warnMediaFailed({required Object count}) => '有 ${count} 个媒体文件没有下载成功，相关日记的图片/录音可能缺失';
 
 	/// zh: '已手动停止，剩余条目将在下次同步继续'
 	String get warnStopped => '已手动停止，剩余条目将在下次同步继续';
