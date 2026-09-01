@@ -103,14 +103,11 @@ class LanSender {
         salt: handshake['salt'] as String,
         pin: pin,
       );
-      final auth = base64Encode(
-        await _crypto.encrypt(
-          key,
-          hexToBytes(handshake['challenge'] as String),
-        ),
+      // 令牌一次一造：绑定 nonce 与 path，用过即废（见 [lanBuildAuthToken]）。
+      final manifestCipher = await _get(
+        '$base$lanManifestPath',
+        auth: await lanBuildAuthToken(_crypto, key, lanManifestPath),
       );
-
-      final manifestCipher = await _get('$base$lanManifestPath', auth: auth);
       final manifest = SyncManifest.fromJson(
         jsonDecode(utf8.decode(await _crypto.decrypt(key, manifestCipher)))
             as Map<String, dynamic>,
@@ -130,7 +127,7 @@ class LanSender {
         '$base$lanArchivePath',
         filePath: zipPath,
         headers: {
-          lanAuthHeader: auth,
+          lanAuthHeader: await lanBuildAuthToken(_crypto, key, lanArchivePath),
           'content-type': 'application/octet-stream',
         },
         onProgress: (sent, total) {
@@ -191,8 +188,7 @@ class LanSender {
     }
     if (decoded is! Map<String, dynamic> ||
         decoded['app'] != 'moodiary' ||
-        decoded['salt'] is! String ||
-        decoded['challenge'] is! String) {
+        decoded['salt'] is! String) {
       throw SyncException(l10n.sync.errReceiverOffline);
     }
     if (decoded['proto'] != lanProtoVersion) {
@@ -205,7 +201,8 @@ class LanSender {
     if (statusCode == 200) return;
     final detail = body == null ? '' : utf8.decode(body, allowMalformed: true);
     throw SyncException(switch (statusCode) {
-      401 => '配对码不正确',
+      // 401 的正文可能是「配对码错误次数过多…」，别一律盖成「配对码不正确」。
+      401 => detail.isEmpty ? '配对码不正确' : detail,
       409 => '对方正忙，请稍后再试',
       _ => detail.isEmpty ? '对方处理失败（$statusCode）' : '对方处理失败：$detail',
     });

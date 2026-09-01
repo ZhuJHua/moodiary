@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:moodiary_http/moodiary_http.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_sync/src/data/impl/local_archive.dart';
 import 'package:moodiary_sync/src/data/lan/lan_protocol.dart';
@@ -39,12 +40,15 @@ class LanReceiveDone extends LanReceiveState {
 class LanReceiveFailed extends LanReceiveState {
   final String message;
 
-  const LanReceiveFailed(this.message);
+  /// 会话因认证连续失败被锁死：配对码已作废，「对方可直接重试」这类提示不适用。
+  final bool locked;
+
+  const LanReceiveFailed(this.message, {this.locked = false});
 }
 
-/// 局域网接收端：[IHttpServer] 上的一次性会话（PIN / 盐 / challenge 随 [start]
-/// 生成，[stop] 即作废）。三个端点：
-/// - `GET  handshake` → 明文 `{app, proto, salt, challenge}`；
+/// 局域网接收端：[IHttpServer] 上的一次性会话（PIN / 盐随 [start] 生成，[stop]
+/// 即作废）。三个端点：
+/// - `GET  handshake` → 明文 `{app, proto, salt}`；
 /// - `GET  manifest`  → 会话密钥加密的本机 manifest 投影（发送方据此算增量）；
 /// - `POST archive`   → 加密 zip（服务器层已流式落盘）→ 解压导入（engine.pull，
 ///   LWW 与云同步一致）→ 回加密报告。一次只处理一个归档（并发 409）。
@@ -74,9 +78,17 @@ class LanReceiverService {
   IHttpServer? _server;
   late String pin;
   String _salt = '';
-  List<int> _challenge = const [];
   List<int> _key = const [];
   bool _busy = false;
+
+  /// 已用过的令牌 nonce。只有解得开的令牌才会进来（造得出就等于持有会话密钥），
+  /// 所以外人塞不满它。
+  final Set<String> _usedNonces = {};
+
+  /// 连续认证失败计数。达到 [lanMaxAuthFailures] 即锁死本次会话——否则 6 位 PIN
+  /// 在同网段里是个不限次数的在线预言机。
+  int _authFailures = 0;
+  bool _authLocked = false;
 
   String get _tempDir =>
       _tempDirPath ?? PlatformService.get().applicationCachePath;
@@ -88,8 +100,10 @@ class LanReceiverService {
   Future<void> start() async {
     pin = lanGeneratePin();
     _salt = lanRandomHex(16);
-    _challenge = hexToBytes(lanRandomHex(16));
     _key = await _crypto.deriveKey(salt: _salt, pin: pin);
+    _usedNonces.clear();
+    _authFailures = 0;
+    _authLocked = false;
     final server = _server ??= IHttpServer.create();
     await server.start(
       handler: _handle,
@@ -117,21 +131,28 @@ class LanReceiverService {
     };
   }
 
-  HttpServerResponse _handshake() => .json({
-    'app': 'moodiary',
-    'proto': lanProtoVersion,
-    'salt': _salt,
-    'challenge': bytesToHex(_challenge),
-  });
+  HttpServerResponse _handshake() =>
+      .json({'app': 'moodiary', 'proto': lanProtoVersion, 'salt': _salt});
 
-  /// 校验请求头里的 challenge 回声；通过返回 null，否则返回 401 响应。
+  /// 校验一次性令牌：解得开（= 持有会话密钥）、绑定的 path 与本请求一致、nonce 没
+  /// 用过。通过返回 null，否则返回 401。
   Future<HttpServerResponse?> _checkAuth(HttpServerRequest request) async {
+    if (_authLocked) {
+      return .text(HttpStatus.unauthorized, l10n.sync.lanAuthLocked);
+    }
     final header = request.headers[lanAuthHeader];
-    if (header != null) {
-      try {
-        final plain = await _crypto.decrypt(_key, base64Decode(header));
-        if (listEquals(plain, _challenge)) return null;
-      } catch (_) {}
+    final nonce = header == null
+        ? null
+        : await lanReadAuthToken(_crypto, _key, header, request.path);
+    // 令牌重放（nonce 用过）与密钥不对同等处理：都不是合法发送端会做的事。
+    if (nonce != null && _usedNonces.add(nonce)) {
+      _authFailures = 0;
+      return null;
+    }
+    if (++_authFailures >= lanMaxAuthFailures) {
+      _authLocked = true;
+      state.value = LanReceiveFailed(l10n.sync.lanAuthLocked, locked: true);
+      return .text(HttpStatus.unauthorized, l10n.sync.lanAuthLocked);
     }
     return .text(HttpStatus.unauthorized, '配对码不正确');
   }

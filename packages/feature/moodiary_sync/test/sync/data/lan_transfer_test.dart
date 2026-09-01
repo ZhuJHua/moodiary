@@ -377,6 +377,102 @@ void main() {
     expect(applied, isFalse);
   });
 
+  // —— 协议 2 的三条安全性质：令牌不可重放、不可挪用端点、在线穷举会被锁死。——
+
+  test('令牌用过即废：重放同一个 auth 头 → 401', () async {
+    final receiver = buildReceiver(applier: (_, _) async => fail('不应走到导入'));
+    await receiver.start();
+    addTearDown(receiver.stop);
+
+    final crypto = FakeLanCrypto();
+    final handshake = jsonDecode(
+      utf8.decode(
+        await _rawGet('http://127.0.0.1:${receiver.port}$lanHandshakePath'),
+      ),
+    ) as Map<String, dynamic>;
+    expect(handshake['proto'], lanProtoVersion);
+    expect(
+      handshake.containsKey('challenge'),
+      isFalse,
+      reason: '协议 2 不再下发固定 challenge',
+    );
+
+    final key = await crypto.deriveKey(
+      salt: handshake['salt'] as String,
+      pin: receiver.pin,
+    );
+    final token = await lanBuildAuthToken(crypto, key, lanManifestPath);
+    final url = 'http://127.0.0.1:${receiver.port}$lanManifestPath';
+
+    expect(await _rawStatus(url, token), 200);
+    // 同一个令牌第二次就该被拒——抓包重放正是这条挡的。
+    expect(await _rawStatus(url, token), 401);
+  });
+
+  test('令牌绑定 path：清单的令牌拿不到归档端点', () async {
+    final receiver = buildReceiver(applier: (_, _) async => fail('不应走到导入'));
+    await receiver.start();
+    addTearDown(receiver.stop);
+
+    final crypto = FakeLanCrypto();
+    final handshake = jsonDecode(
+      utf8.decode(
+        await _rawGet('http://127.0.0.1:${receiver.port}$lanHandshakePath'),
+      ),
+    ) as Map<String, dynamic>;
+    final key = await crypto.deriveKey(
+      salt: handshake['salt'] as String,
+      pin: receiver.pin,
+    );
+    final token = await lanBuildAuthToken(crypto, key, lanManifestPath);
+
+    expect(
+      await _rawStatus(
+        'http://127.0.0.1:${receiver.port}$lanArchivePath',
+        token,
+        method: 'POST',
+      ),
+      401,
+    );
+  });
+
+  test('连续认证失败 $lanMaxAuthFailures 次 → 会话锁死，之后正确令牌也不放行', () async {
+    final receiver = buildReceiver(applier: (_, _) async => fail('不应走到导入'));
+    await receiver.start();
+    addTearDown(receiver.stop);
+
+    final crypto = FakeLanCrypto();
+    final handshake = jsonDecode(
+      utf8.decode(
+        await _rawGet('http://127.0.0.1:${receiver.port}$lanHandshakePath'),
+      ),
+    ) as Map<String, dynamic>;
+    final salt = handshake['salt'] as String;
+    final url = 'http://127.0.0.1:${receiver.port}$lanManifestPath';
+
+    for (var i = 0; i < lanMaxAuthFailures; i++) {
+      final wrongKey = await crypto.deriveKey(salt: salt, pin: '00000$i');
+      expect(
+        await _rawStatus(
+          url,
+          await lanBuildAuthToken(crypto, wrongKey, lanManifestPath),
+        ),
+        401,
+      );
+    }
+
+    final rightKey = await crypto.deriveKey(salt: salt, pin: receiver.pin);
+    expect(
+      await _rawStatus(
+        url,
+        await lanBuildAuthToken(crypto, rightKey, lanManifestPath),
+      ),
+      401,
+      reason: '锁死之后连正确配对码也不再放行',
+    );
+    expect(receiver.state.value, isA<LanReceiveFailed>());
+  });
+
   test('对方已是最新（条目数 0）→ 不上传', () async {
     var posted = false;
     final receiver = buildReceiver(
@@ -440,4 +536,37 @@ void main() {
     );
     expect(receiver.state.value, isA<LanReceiveFailed>());
   });
+}
+
+/// 直接发裸请求（不经 [LanSender]）：安全性质要拿手工构造的请求来验。
+Future<Uint8List> _rawGet(String url) async {
+  final client = io.HttpClient();
+  try {
+    final resp = await (await client.getUrl(.parse(url))).close();
+    final builder = BytesBuilder(copy: false);
+    await for (final chunk in resp) {
+      builder.add(chunk);
+    }
+    return builder.takeBytes();
+  } finally {
+    client.close(force: true);
+  }
+}
+
+Future<int> _rawStatus(
+  String url,
+  String token, {
+  String method = 'GET',
+}) async {
+  final client = io.HttpClient();
+  try {
+    final req = await client.openUrl(method, .parse(url));
+    req.headers.set(lanAuthHeader, token);
+    if (method == 'POST') req.add(const [1, 2, 3]);
+    final resp = await req.close();
+    await resp.drain<void>();
+    return resp.statusCode;
+  } finally {
+    client.close(force: true);
+  }
 }

@@ -3031,6 +3031,9 @@ class Translations$sync$zh {
 
 	/// zh: '日记 {diary} 条 · 分类 {category} 个'
 	String summaryCounts({required Object diary, required Object category}) => '日记 ${diary} 条 · 分类 ${category} 个';
+
+	/// zh: '配对码错误次数过多，本次接收已锁定，请重新开始接收以更换配对码'
+	String get lanAuthLocked => '配对码错误次数过多，本次接收已锁定，请重新开始接收以更换配对码';
 }
 
 // Path: ui

@@ -1115,6 +1115,7 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String get stepManifest => 'Writing the manifest';
 	@override String get statusPartial => 'Sync incomplete';
 	@override String summaryCounts({required Object diary, required Object category}) => '${diary} diaries · ${category} categories';
+	@override String get lanAuthLocked => 'Too many incorrect pairing codes. This session is locked — start receiving again to get a new code.';
 }
 
 // Path: ui

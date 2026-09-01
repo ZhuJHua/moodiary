@@ -231,7 +231,7 @@ class _StatusLine extends StatelessWidget {
           ),
         ],
       ),
-      LanReceiveFailed(:final message) => Column(
+      LanReceiveFailed(:final message, :final locked) => Column(
         key: const ValueKey('failed'),
         children: [
           Text(
@@ -240,11 +240,14 @@ class _StatusLine extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(message, textAlign: .center, style: typography.bodySmall.error),
-          const SizedBox(height: 4),
-          Text(
-            context.l10n.sync.lanFailedHint,
-            style: typography.bodySmall.outline,
-          ),
+          // 锁死时配对码已经作废，再说「配对码不变，对方可直接重试」是自相矛盾的。
+          if (!locked) ...[
+            const SizedBox(height: 4),
+            Text(
+              context.l10n.sync.lanFailedHint,
+              style: typography.bodySmall.outline,
+            ),
+          ],
         ],
       ),
     };

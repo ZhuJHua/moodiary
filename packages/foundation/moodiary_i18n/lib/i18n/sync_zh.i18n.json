@@ -254,5 +254,6 @@
   "stepMedia": "媒体 {ref}",
   "stepManifest": "写回 manifest",
   "statusPartial": "同步未完成",
-  "summaryCounts": "日记 {diary} 条 · 分类 {category} 个"
+  "summaryCounts": "日记 {diary} 条 · 分类 {category} 个",
+  "lanAuthLocked": "配对码错误次数过多，本次接收已锁定，请重新开始接收以更换配对码"
 }
