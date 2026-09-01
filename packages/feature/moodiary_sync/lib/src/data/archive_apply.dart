@@ -27,8 +27,19 @@ final _syncFamilyLock = Lock();
 /// 要这把：恢复与云端 push 并发时，push 拿到的墓碑快照里还留着恢复尚未插回的那批行，
 /// 会把它们当作删除写进远端 manifest 并真删远端对象，下一轮 pull 再把本机刚恢复的
 /// 日记连同磁盘媒体硬删 —— 用户点了「从备份恢复」，结果全网抹除。
+///
+/// 停止标志也在这一层按操作复位。它原先挂在引擎的租约 body 里，可租约抢占失败时
+/// 那个 finally 根本走不到（[RemoteLease.protect] 在 body 之前抛），标志便一直留着
+/// true —— 之后每次备份恢复 / 局域网接收（同样走这把锁，但不经引擎）都会在第一条
+/// 条目上当场空转并报「已停止」，且重试无用。
 Future<T> runSyncExclusive<T>(Future<T> Function() body) =>
-    _syncFamilyLock.synchronized(body);
+    _syncFamilyLock.synchronized(() async {
+      try {
+        return await body();
+      } finally {
+        SyncCancellation.instance.reset();
+      }
+    });
 
 /// 「把一份归档应用到本地仓储」这件事的**策略**——机制与策略之间的那条缝。
 ///
