@@ -95,10 +95,7 @@ class SyncManifest {
       // 措辞对「云同步」与「本地 zip 恢复」两条链都成立：旧文案让本地恢复的用户
       // 去「清空远端备份目录」，而他手里只有一个文件，指引指向不存在的东西。
       throw SyncException(
-        l10n.sync.errManifestVersion(
-          remote: version,
-          local: currentVersion,
-        ),
+        l10n.sync.errManifestVersion(remote: version, local: currentVersion),
       );
     }
     final entriesRaw = json['entries'];

@@ -304,52 +304,46 @@ void main() {
       },
     );
 
-    test(
-      '丢弃远端后强制重传：同名旧密文媒体被覆盖，不再被 stat 兜底确认进 manifest',
-      () async {
-        final backend = FakeRemoteBackend();
-        // 远端残留一份旧 DEK 的同名密文（丢弃信封后 manifest 已删，只剩它）。
-        backend.objects['media/image/img-1.jpg'] = Uint8List.fromList(
-          utf8.encode('OLD-DEK-CIPHERTEXT'),
-        );
-        final media = FakeMediaFiles()..put('image', 'img-1.jpg');
-        final store = FakeDiaryStore([
-          buildDiary(id: 'a', modifiedMs: 100, images: ['img-1.jpg']),
-        ]);
+    test('丢弃远端后强制重传：同名旧密文媒体被覆盖，不再被 stat 兜底确认进 manifest', () async {
+      final backend = FakeRemoteBackend();
+      // 远端残留一份旧 DEK 的同名密文（丢弃信封后 manifest 已删，只剩它）。
+      backend.objects['media/image/img-1.jpg'] = Uint8List.fromList(
+        utf8.encode('OLD-DEK-CIPHERTEXT'),
+      );
+      final media = FakeMediaFiles()..put('image', 'img-1.jpg');
+      final store = FakeDiaryStore([
+        buildDiary(id: 'a', modifiedMs: 100, images: ['img-1.jpg']),
+      ]);
 
-        SyncKeyManager.markForceMediaReupload('webdav');
-        await engineOn(backend, diaries: store, media: media).push();
+      SyncKeyManager.markForceMediaReupload('webdav');
+      await engineOn(backend, diaries: store, media: media).push();
 
-        expect(
-          backend.objects['media/image/img-1.jpg'],
-          isNot(equals(Uint8List.fromList(utf8.encode('OLD-DEK-CIPHERTEXT')))),
-          reason: '必须用本机内容覆盖，而不是跳过上传',
-        );
-        expect(backend.manifest()!.entries['d:a']!.media, ['image/img-1.jpg']);
-        expect(
-          SyncKeyManager.hasForceMediaReupload('webdav'),
-          isFalse,
-          reason: '整轮无失败无中断 → 标记清除',
-        );
-      },
-    );
+      expect(
+        backend.objects['media/image/img-1.jpg'],
+        isNot(equals(Uint8List.fromList(utf8.encode('OLD-DEK-CIPHERTEXT')))),
+        reason: '必须用本机内容覆盖，而不是跳过上传',
+      );
+      expect(backend.manifest()!.entries['d:a']!.media, ['image/img-1.jpg']);
+      expect(
+        SyncKeyManager.hasForceMediaReupload('webdav'),
+        isFalse,
+        reason: '整轮无失败无中断 → 标记清除',
+      );
+    });
 
-    test(
-      '没有强制重传标记时，同名远端媒体仍按 stat 兜底跳过（省流量的既有行为）',
-      () async {
-        final backend = FakeRemoteBackend();
-        final stale = Uint8List.fromList(utf8.encode('OLD-DEK-CIPHERTEXT'));
-        backend.objects['media/image/img-1.jpg'] = stale;
-        final media = FakeMediaFiles()..put('image', 'img-1.jpg');
-        final store = FakeDiaryStore([
-          buildDiary(id: 'a', modifiedMs: 100, images: ['img-1.jpg']),
-        ]);
+    test('没有强制重传标记时，同名远端媒体仍按 stat 兜底跳过（省流量的既有行为）', () async {
+      final backend = FakeRemoteBackend();
+      final stale = Uint8List.fromList(utf8.encode('OLD-DEK-CIPHERTEXT'));
+      backend.objects['media/image/img-1.jpg'] = stale;
+      final media = FakeMediaFiles()..put('image', 'img-1.jpg');
+      final store = FakeDiaryStore([
+        buildDiary(id: 'a', modifiedMs: 100, images: ['img-1.jpg']),
+      ]);
 
-        await engineOn(backend, diaries: store, media: media).push();
+      await engineOn(backend, diaries: store, media: media).push();
 
-        expect(backend.objects['media/image/img-1.jpg'], stale);
-      },
-    );
+      expect(backend.objects['media/image/img-1.jpg'], stale);
+    });
 
     test(
       'locally-missing media is skipped, not claimed in manifest, no failure',
