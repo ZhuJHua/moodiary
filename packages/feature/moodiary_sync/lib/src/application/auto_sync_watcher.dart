@@ -10,6 +10,7 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
+import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
 import 'package:moodiary_sync/src/data/sync_registry.dart';
 
@@ -257,6 +258,9 @@ class AutoSyncWatcher {
     if (!_registry.hasBackend) return;
     final backend = _registry.backend;
     if (!backend.isReady) return;
+    // 远端由另一把密钥加密：跑下去每个对象都解不开，还会一次次撞上 keyfile 冲突。
+    // 挂起直到用户在同步页输入密码解锁（同步页会显示待处理入口）。
+    if (SyncKeyManager.hasKeyConflict(backend.persistentBackendId)) return;
 
     _syncing = true;
     try {

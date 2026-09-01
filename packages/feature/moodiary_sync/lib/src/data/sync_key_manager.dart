@@ -11,6 +11,18 @@ import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_keyfile.dart';
 
+/// [SyncKeyManager.checkRemoteKeyfile] 的判定结果。
+enum RemoteKeyfileCheck {
+  /// 远端没有信封、或远端密文本就是本机 DEK 加密的 —— 可以写。
+  safe,
+
+  /// 远端是另一把 DEK 加密的 —— 写下去远端数据就永久解不开了。
+  conflict,
+
+  /// 远端不可达，判不出来 —— 同样不写。
+  unknown,
+}
+
 /// KDF 原语签名（可注入：宿主单测无 Rust FFI，用纯 Dart 假实现）。
 typedef DeriveKeyFn = Future<List<int>> Function({
   required String salt,
@@ -155,13 +167,15 @@ class SyncKeyManager {
     _dekLoaded = true;
   }
 
-  /// 清除 DEK 及 keyfile 缓存 / 待上传清单（关闭加密）。
+  /// 清除 DEK 及 keyfile 缓存 / 待上传清单 / 冲突标记（关闭加密）。
   static Future<void> clearDek() async {
     await MoodiarySecureKVs.syncDek.remove();
     _dekCache = null;
     _dekLoaded = true;
     MoodiaryKVs.syncKeyfileCache.set('');
     MoodiaryKVs.syncKeyfilePendingBackends.set(const <String>[]);
+    MoodiaryKVs.syncKeyConflictBackends.set(const <String>[]);
+    MoodiaryKVs.syncForceMediaReuploadBackends.set(const <String>[]);
   }
 
   static Future<SyncCipher> currentCipher() async => .withKey(await loadDek());
@@ -194,6 +208,51 @@ class SyncKeyManager {
   static List<String> pendingUploadBackends() =>
       MoodiaryKVs.syncKeyfilePendingBackends.get() ?? const <String>[];
 
+  // ── 密钥冲突标记 ──
+
+  static List<String> keyConflictBackends() =>
+      MoodiaryKVs.syncKeyConflictBackends.get() ?? const <String>[];
+
+  static bool hasKeyConflict(String? backendId) =>
+      backendId != null && keyConflictBackends().contains(backendId);
+
+  static void markKeyConflict(String? backendId) {
+    if (backendId == null) return;
+    final merged = {...keyConflictBackends(), backendId};
+    MoodiaryKVs.syncKeyConflictBackends.set(merged.toList());
+  }
+
+  static void clearKeyConflict(String? backendId) {
+    if (backendId == null) return;
+    final rest = keyConflictBackends().where((b) => b != backendId).toList();
+    MoodiaryKVs.syncKeyConflictBackends.set(rest);
+  }
+
+  // ── 丢弃远端后的媒体强制重传标记 ──
+
+  static bool hasForceMediaReupload(String? backendId) =>
+      backendId != null &&
+      (MoodiaryKVs.syncForceMediaReuploadBackends.get() ?? const <String>[])
+          .contains(backendId);
+
+  static void markForceMediaReupload(String? backendId) {
+    if (backendId == null) return;
+    final merged = {
+      ...MoodiaryKVs.syncForceMediaReuploadBackends.get() ?? const <String>[],
+      backendId,
+    };
+    MoodiaryKVs.syncForceMediaReuploadBackends.set(merged.toList());
+  }
+
+  static void clearForceMediaReupload(String? backendId) {
+    if (backendId == null) return;
+    final rest =
+        (MoodiaryKVs.syncForceMediaReuploadBackends.get() ?? const <String>[])
+            .where((b) => b != backendId)
+            .toList();
+    MoodiaryKVs.syncForceMediaReuploadBackends.set(rest);
+  }
+
   static Future<void> markPendingUpload(Iterable<String> backendIds) async {
     final merged = {...pendingUploadBackends(), ...backendIds};
     MoodiaryKVs.syncKeyfilePendingBackends.set(merged.toList());
@@ -222,9 +281,46 @@ class SyncKeyManager {
   static Future<void> deleteRemoteKeyfile(RemoteObjectStore backend) =>
       backend.deleteObject(SyncKeys.keysPath);
 
+  /// 覆盖远端 keys.json 是否安全 —— 远端唯一的信封一旦被换掉，用它加密的日记与
+  /// 媒体就永久解不开，所以任何写入前都要过这道判定。
+  ///
+  /// 判据不是「密码对不对」（没有远端密码就解不开远端信封），而是反过来：**用本机
+  /// DEK 试解远端 manifest**。解得开 = 远端数据本就是这把 DEK 加密的，写入只是换个
+  /// 密码包装（改密码 / 补传的正常场景）；解不开 = 那是别人的 DEK，必须中止。
+  static Future<RemoteKeyfileCheck> checkRemoteKeyfile(
+    RemoteObjectStore backend,
+  ) async {
+    final SyncKeyfile? remote;
+    final Uint8List? manifestBytes;
+    try {
+      remote = await readRemoteKeyfile(backend);
+      // 远端还没有信封：写入即初始化，孤立不了任何东西。
+      if (remote == null) return .safe;
+      manifestBytes = await backend.readObject(SyncKeys.manifestPath);
+    } catch (_) {
+      // 网络 / 鉴权故障：判不出来就不写，留着下次再试。
+      return .unknown;
+    }
+    // 有信封但没有密文数据（加密开了却从没同步过 / 远端是明文）：同样孤立不了东西。
+    if (manifestBytes == null || !SyncCipher.isCipherText(manifestBytes)) {
+      return .safe;
+    }
+    final dek = await loadDek();
+    if (dek == null) return .conflict;
+    try {
+      await SyncCipher.withKey(dek).decode(manifestBytes);
+      return .safe;
+    } catch (_) {
+      return .conflict;
+    }
+  }
+
   /// 引擎同步前奏：本机 keyfile 缓存尚未送达当前后端（开启加密时离线 / 后端
-  /// 后配 / 上次写失败）→ 补传。非 pending 时零成本。失败如实上抛（由调用方
-  /// 记日志后继续同步，pending 保留下次再试）。
+  /// 后配 / 上次写失败）→ 补传。非 pending 时零成本。
+  ///
+  /// **写之前必过 [checkRemoteKeyfile]**：这条路径跑在引擎里、没有 UI 能弹密码框，
+  /// 盲写会把另一台设备的信封换掉。冲突时挂上待处理标记并抛
+  /// [SyncKeyConflictException] 中止本次同步，由用户在同步页输密码解锁。
   static Future<void> uploadPendingKeyfile(RemoteObjectStore backend) async {
     final backendId = backend.persistentBackendId;
     if (backendId == null || !pendingUploadBackends().contains(backendId)) {
@@ -235,8 +331,18 @@ class SyncKeyManager {
       await clearPendingUpload(backendId);
       return;
     }
-    await writeRemoteKeyfile(backend, keyfile);
-    await clearPendingUpload(backendId);
+    switch (await checkRemoteKeyfile(backend)) {
+      case .conflict:
+        markKeyConflict(backendId);
+        throw SyncKeyConflictException(l10n.sync.errKeyConflict);
+      case .unknown:
+        // pending 原样保留，下次同步再判。
+        return;
+      case .safe:
+        await writeRemoteKeyfile(backend, keyfile);
+        await clearPendingUpload(backendId);
+        clearKeyConflict(backendId);
+    }
   }
 
   /// 校验密码：优先对着远端 keyfile（后端可达时），离线回退本机缓存；解包出的

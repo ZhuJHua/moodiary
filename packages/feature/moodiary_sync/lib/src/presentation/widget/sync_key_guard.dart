@@ -31,6 +31,9 @@ Future<bool> ensureSyncKeyReady({
     return true; // 远端不可达：交给常规同步错误流程
   }
   if (manifestBytes == null || !SyncCipher.isCipherText(manifestBytes)) {
+    // 远端为空 / 明文：先前挂的冲突已不复存在（换了远端目录、或对方关了加密），
+    // 清掉标记，否则自动同步会被永久跳过。
+    SyncKeyManager.clearKeyConflict(backend.persistentBackendId);
     return true;
   }
 
@@ -41,6 +44,8 @@ Future<bool> ensureSyncKeyReady({
     hasLocalKey = true;
     try {
       await current.decode(bytes);
+      // 本机密钥解得开远端：冲突已解除（用户在另一台设备解锁 / 补传了信封）。
+      SyncKeyManager.clearKeyConflict(backend.persistentBackendId);
       return true;
     } on SyncException {
       // DEK 不匹配 → 走引导
@@ -64,6 +69,11 @@ Future<bool> ensureSyncKeyReady({
     }
     return false;
   }
+
+  // 到这里已确认「远端密文 + 本机解不开」。先挂上冲突标记再弹框：用户取消掉这个
+  // 框是常事，而没有标记的话引擎的 keyfile 补传前奏会在下一次自动同步里把远端
+  // 信封盲写掉。解锁成功后由下面清除。
+  SyncKeyManager.markKeyConflict(backend.persistentBackendId);
 
   if (!context.mounted) return false;
   List<int>? unwrappedDek;
@@ -103,6 +113,7 @@ Future<bool> ensureSyncKeyReady({
   await SyncKeyManager.markPendingUpload(configuredCloudBackendIds());
   final backendId = backend.persistentBackendId;
   if (backendId != null) await SyncKeyManager.clearPendingUpload(backendId);
+  SyncKeyManager.clearKeyConflict(backendId);
   if (context.mounted) ref.invalidate(syncDekControllerProvider);
   toast.success(message: l10n.sync.keyConfigured);
   return true;

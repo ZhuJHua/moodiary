@@ -2865,6 +2865,45 @@ class Translations$sync$zh {
 	/// zh: '准备'
 	String get keyPreparing => '准备';
 
+	/// zh: '已用该密码解锁云端密钥'
+	String get keyUnlocked => '已用该密码解锁云端密钥';
+
+	/// zh: '本机密码已更新；云端由另一把密钥加密，解锁后会自动同步新密码'
+	String get keyChangedLocalOnly => '本机密码已更新；云端由另一把密钥加密，解锁后会自动同步新密码';
+
+	/// zh: '无法读取云端密钥文件，已取消：{error}'
+	String keyRemoteProbeFailed({required Object error}) => '无法读取云端密钥文件，已取消：${error}';
+
+	/// zh: '密码打不开云端密钥'
+	String get keyRemoteMismatchTitle => '密码打不开云端密钥';
+
+	/// zh: '云端数据是用另一个密码加密的，这个密码解不开。如果你还记得原密码，请返回重试。也可以丢弃云端的加密数据，用新密码重新上传本机数据。'
+	String get keyRemoteMismatchMessage => '云端数据是用另一个密码加密的，这个密码解不开。如果你还记得原密码，请返回重试。也可以丢弃云端的加密数据，用新密码重新上传本机数据。';
+
+	/// zh: '丢弃云端数据'
+	String get keyDiscardRemote => '丢弃云端数据';
+
+	/// zh: '确认丢弃云端加密数据'
+	String get keyDiscardTitle => '确认丢弃云端加密数据';
+
+	/// zh: '云端现有的日记、分类与媒体将无法再被解密，且此操作不可撤销。本机数据不受影响，会在下次同步时用新密码重新上传。确认继续吗？'
+	String get keyDiscardMessage => '云端现有的日记、分类与媒体将无法再被解密，且此操作不可撤销。本机数据不受影响，会在下次同步时用新密码重新上传。确认继续吗？';
+
+	/// zh: '确认丢弃'
+	String get keyDiscardConfirm => '确认丢弃';
+
+	/// zh: '清除云端密钥文件失败，已取消：{error}'
+	String keyDiscardFailed({required Object error}) => '清除云端密钥文件失败，已取消：${error}';
+
+	/// zh: '需要解锁云端密钥'
+	String get keyConflictTitle => '需要解锁云端密钥';
+
+	/// zh: '云端由另一把密钥加密，同步已暂停。点击输入密码解锁'
+	String get keyConflictSubtitle => '云端由另一把密钥加密，同步已暂停。点击输入密码解锁';
+
+	/// zh: '云端由另一把密钥加密，本机密钥解不开，已中止同步以免覆盖云端密钥文件'
+	String get errKeyConflict => '云端由另一把密钥加密，本机密钥解不开，已中止同步以免覆盖云端密钥文件';
+
 	/// zh: '发送方通常会自动发现本机，也可手动输入上方地址。接收期间请保持本页打开。'
 	String get lanReceiveHint => '发送方通常会自动发现本机，也可手动输入上方地址。接收期间请保持本页打开。';
 

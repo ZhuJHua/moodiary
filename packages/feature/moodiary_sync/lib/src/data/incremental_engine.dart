@@ -147,6 +147,10 @@ class IncrementalSyncEngine {
     }
   }
 
+  /// 见 [MoodiaryKVs.syncForceMediaReuploadBackends]：为 true 时本次 push 不信任
+  /// 「远端已有同名媒体」这个证据，一律重传覆盖。
+  bool _distrustRemoteMedia = false;
+
   Map<String, Object?> _backendPayload() => {
     'backend': backend.displayName,
     'backendId': backend.persistentBackendId ?? 'transient',
@@ -723,6 +727,11 @@ class IncrementalSyncEngine {
 
   Future<SyncReport> _push({SyncManifest? preloaded}) async {
     await _uploadPendingKeyfile();
+    // 丢弃远端信封后的第一次 push：远端残留的旧 DEK 密文媒体与本机同名，stat 兜底
+    // 会把它们当「已存在」跳过，写进新 manifest 后就永远解不开了。强制重传一轮。
+    _distrustRemoteMedia = SyncKeyManager.hasForceMediaReupload(
+      backend.persistentBackendId,
+    );
     final sw = Stopwatch()..start();
     _logger.info(
       .syncStart,
@@ -1082,6 +1091,12 @@ class IncrementalSyncEngine {
 
     sw.stop();
     final stopped = SyncCancellation.instance.isRequested;
+    // 整轮无失败无中断才算重传完成：半截清掉标记会让剩下的旧密文媒体永远留在
+    // 远端且再也不会被覆盖。
+    if (_distrustRemoteMedia && failed == 0 && !stopped) {
+      SyncKeyManager.clearForceMediaReupload(backend.persistentBackendId);
+      _distrustRemoteMedia = false;
+    }
     _logger.info(
       .syncEnd,
       stopped ? 'push 已手动停止' : 'push 结束',
@@ -1134,9 +1149,20 @@ class IncrementalSyncEngine {
 
   /// keyfile 补传前奏：开启加密 / 改密码时未送达本后端的 keys.json（离线 / 后配 /
   /// 写失败）在此补传。非 pending 时零成本；失败只记日志不阻塞同步，下次再试。
+  ///
+  /// 唯一的例外是 [SyncKeyConflictException]（远端是另一把 DEK 加密的）：必须中止
+  /// 整次同步。继续下去每一个远端对象都解不开，报错会停在「密码不正确」这类
+  /// 与真正病因无关的地方，用户无从下手。
   Future<void> _uploadPendingKeyfile() async {
     try {
       await SyncKeyManager.uploadPendingKeyfile(backend);
+    } on SyncKeyConflictException catch (e) {
+      _logger.error(
+        .error,
+        '远端由另一把密钥加密，已中止同步',
+        payload: {..._backendPayload(), 'detail': e.message},
+      );
+      rethrow;
     } catch (e) {
       _logger.warn(
         .error,
@@ -1228,7 +1254,10 @@ class IncrementalSyncEngine {
       // 上传本身失败仍由外层 catch 如实计 failed。
       String? remoteModified;
       try {
-        remoteModified = await backend.statObject(remotePath);
+        // 强制重传轮次里连 stat 都不做：远端存在与否都要用新密钥覆盖。
+        remoteModified = _distrustRemoteMedia
+            ? null
+            : await backend.statObject(remotePath);
       } catch (e) {
         _logger.warn(
           .mediaSkip,

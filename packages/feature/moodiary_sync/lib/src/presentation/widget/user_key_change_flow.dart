@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
@@ -7,6 +9,7 @@ import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
+import 'package:moodiary_sync/src/data/sync_keyfile.dart';
 import 'package:moodiary_sync/src/data/sync_registry.dart';
 import 'package:mui/mui.dart';
 
@@ -47,12 +50,24 @@ Future<bool> applyUserKeyChange({
     // 所有已配置后端都需要新信封；活跃后端立即写，其余（含写失败的）走补传清单。
     await SyncKeyManager.markPendingUpload(configuredCloudBackendIds());
     if (backendReady) {
-      try {
-        await SyncKeyManager.writeRemoteKeyfile(backend, keyfile);
-        final id = backend.persistentBackendId;
-        if (id != null) await SyncKeyManager.clearPendingUpload(id);
-      } catch (_) {
-        // 保留在待上传清单，下次同步补传。
+      // 换了后端 / 指向了别人加密过的目录时，本机 DEK 未必是这份远端数据的 DEK。
+      // 盲写会把远端信封换掉、令那些数据永久解不开——同 uploadPendingKeyfile 的判据。
+      final check = await SyncKeyManager.checkRemoteKeyfile(backend);
+      if (check == .conflict) {
+        SyncKeyManager.markKeyConflict(backend.persistentBackendId);
+        if (context.mounted) {
+          toast.error(message: l10n.sync.keyChangedLocalOnly);
+        }
+        return true; // 本机密码已改；远端等用户解锁后再补传
+      }
+      if (check == .safe) {
+        try {
+          await SyncKeyManager.writeRemoteKeyfile(backend, keyfile);
+          final id = backend.persistentBackendId;
+          if (id != null) await SyncKeyManager.clearPendingUpload(id);
+        } catch (_) {
+          // 保留在待上传清单，下次同步补传。
+        }
       }
     }
     if (context.mounted) {
@@ -63,15 +78,62 @@ Future<bool> applyUserKeyChange({
 
   // ── 开启加密 ──
   if (dek == null && target != null) {
-    bool hasRemote = false;
+    // 本机没有 DEK 只说明这台设备没配过，**不代表远端没加密**（换机 / 重装 /
+    // 钥匙串被清都会走到这里，而界面显示的正是「未开启」）。此时新建一把 DEK 并
+    // 写出去，会把远端唯一的信封换掉，用旧 DEK 加密的日记与媒体就永久解不开了。
+    // 所以先探远端信封：有信封就改走「用这个密码解锁已有密钥」。
+    SyncKeyfile? remoteKeyfile;
+    Uint8List? remoteManifest;
     if (backendReady) {
       try {
-        final bytes = await backend.readObject(SyncKeys.manifestPath);
-        hasRemote = bytes != null && bytes.isNotEmpty;
-      } catch (_) {
-        hasRemote = false;
+        remoteKeyfile = await SyncKeyManager.readRemoteKeyfile(backend);
+        remoteManifest = await backend.readObject(SyncKeys.manifestPath);
+      } catch (e) {
+        // 探不出来就不动远端 —— 按「远端没有信封」继续会正好踩中上面那颗雷。
+        if (context.mounted) {
+          toast.error(message: l10n.sync.keyRemoteProbeFailed(error: '$e'));
+        }
+        return false;
       }
     }
+
+    // 有信封、但远端数据其实是明文（关闭加密时删 keys.json 失败会留下这种残留）：
+    // 这份信封既没有密文要保护、也没有任何密码解得开它。当它不存在，照常走下面的
+    // 「明文远端重加密」；否则用户会被引导去丢弃一份完全健康、根本不需要密钥的数据。
+    // 判据与引擎侧 [SyncKeyManager.checkRemoteKeyfile] 保持一致。
+    if (remoteKeyfile != null &&
+        (remoteManifest == null || !SyncCipher.isCipherText(remoteManifest))) {
+      remoteKeyfile = null;
+    }
+
+    if (remoteKeyfile != null) {
+      if (!context.mounted) return false;
+      final outcome = await _adoptRemoteKey(
+        context: context,
+        ref: ref,
+        // remoteKeyfile 非空必然经过了 backendReady 探测。
+        backend: backend!,
+        keyfile: remoteKeyfile,
+        passphrase: target,
+      );
+      switch (outcome) {
+        case .unlocked:
+          return true;
+        case .cancelled:
+          return false;
+        case .discardRemote:
+          // 用户已二次确认放弃远端密文：清掉信封与清单，下次 push 按空远端重建。
+          if (!context.mounted) return false;
+          if (!await _discardRemoteEnvelope(context, backend)) return false;
+      }
+    }
+
+    // 刚丢弃过信封的远端按空处理：manifest 已删，重加密无对象可跑。
+    final hasRemote =
+        backendReady &&
+        remoteKeyfile == null &&
+        remoteManifest != null &&
+        remoteManifest.isNotEmpty;
 
     if (hasRemote) {
       if (!context.mounted) return false;
@@ -97,7 +159,10 @@ Future<bool> applyUserKeyChange({
       try {
         await SyncKeyManager.writeRemoteKeyfile(backend, keyfile);
         final id = backend.persistentBackendId;
-        if (id != null) await SyncKeyManager.clearPendingUpload(id);
+        if (id != null) {
+          await SyncKeyManager.clearPendingUpload(id);
+          SyncKeyManager.clearKeyConflict(id);
+        }
       } catch (e) {
         if (context.mounted) {
           toast.error(message: l10n.sync.keyWriteFailed(error: '$e'));
@@ -113,8 +178,7 @@ Future<bool> applyUserKeyChange({
       if (!context.mounted) return true;
       final report = await _runWithProgress(
         context,
-        // hasRemote 为真必然经过了 backendReady 探测。
-        backend: backend!,
+        backend: backend,
         from: .plaintext,
         to: .withKey(newDek),
       );
@@ -161,6 +225,121 @@ Future<bool> applyUserKeyChange({
   await SyncKeyManager.clearDek();
   if (context.mounted) ref.invalidate(syncDekControllerProvider);
   if (context.mounted) toast.success(message: l10n.sync.keyEncryptionOff);
+  return true;
+}
+
+/// [_adoptRemoteKey] 的去向。
+enum _AdoptOutcome {
+  /// 密码解开了远端信封，DEK 已采用并落本机 —— 整个「开启加密」到此结束。
+  unlocked,
+
+  /// 用户放弃操作，远端分毫未动。
+  cancelled,
+
+  /// 用户已二次确认「丢弃远端加密数据、用新密码重新开始」。
+  discardRemote,
+}
+
+/// 远端已有信封时的正确动作：不是新建密钥，而是**用用户输入的密码解开远端已有的
+/// DEK 并采用它**——远端数据本就是那把 DEK 加密的，换一把只会让它们全部作废。
+///
+/// 密码打不开时给用户一条明确的出路（否则忘了密码就只能自己去网盘手删目录，更容易
+/// 删错东西），但要连过两道确认。
+Future<_AdoptOutcome> _adoptRemoteKey({
+  required BuildContext context,
+  required WidgetRef ref,
+  required IRemoteSyncBackend backend,
+  required SyncKeyfile keyfile,
+  required String passphrase,
+}) async {
+  List<int>? unwrapped;
+  try {
+    unwrapped = await SyncKeyManager.unwrapDek(
+      keyfile: keyfile,
+      passphrase: passphrase,
+    );
+  } catch (_) {
+    unwrapped = null; // 密码不对
+  }
+
+  if (unwrapped != null) {
+    // 双保险：信封解得开不等于它与远端数据配套（信封被单独换过就会这样）。
+    Uint8List? manifestBytes;
+    try {
+      manifestBytes = await backend.readObject(SyncKeys.manifestPath);
+    } catch (e) {
+      // 网络故障不该把用户推向「丢弃远端数据」，原地中止。
+      if (context.mounted) {
+        toast.error(message: l10n.sync.keyRemoteProbeFailed(error: '$e'));
+      }
+      return .cancelled;
+    }
+    var usable = true;
+    if (manifestBytes != null && SyncCipher.isCipherText(manifestBytes)) {
+      try {
+        await SyncCipher.withKey(unwrapped).decode(manifestBytes);
+      } catch (_) {
+        usable = false;
+      }
+    }
+    if (usable) {
+      await SyncKeyManager.storeDek(unwrapped);
+      SyncKeyManager.cacheKeyfile(keyfile);
+      // 其余已配置后端也需要这份信封（本后端已有，出清单）。
+      await SyncKeyManager.markPendingUpload(configuredCloudBackendIds());
+      final id = backend.persistentBackendId;
+      if (id != null) {
+        await SyncKeyManager.clearPendingUpload(id);
+        SyncKeyManager.clearKeyConflict(id);
+      }
+      if (context.mounted) ref.invalidate(syncDekControllerProvider);
+      if (context.mounted) toast.success(message: l10n.sync.keyUnlocked);
+      return .unlocked;
+    }
+  }
+
+  if (!context.mounted) return .cancelled;
+  final wantsDiscard = await MAlert.confirm(
+    context,
+    title: l10n.sync.keyRemoteMismatchTitle,
+    message: l10n.sync.keyRemoteMismatchMessage,
+    confirmLabel: l10n.sync.keyDiscardRemote,
+    barrierDismissible: false,
+  );
+  if (!wantsDiscard || !context.mounted) return .cancelled;
+
+  final confirmed = await MAlert.confirm(
+    context,
+    title: l10n.sync.keyDiscardTitle,
+    message: l10n.sync.keyDiscardMessage,
+    confirmLabel: l10n.sync.keyDiscardConfirm,
+    barrierDismissible: false,
+  );
+  return confirmed ? .discardRemote : .cancelled;
+}
+
+/// 丢弃远端密文：删掉 manifest 与信封，下次 push 即按空远端重建并用新密钥加密。
+/// 旧密文 JSON 成为无人引用的垃圾（同名对象下次 push 无条件覆盖）；媒体不会被
+/// 覆盖而是走存在性跳过，所以另挂强制重传标记，否则它们会被确认进新 manifest。
+Future<bool> _discardRemoteEnvelope(
+  BuildContext context,
+  IRemoteSyncBackend backend,
+) async {
+  try {
+    // 顺序要紧：先删 manifest 再删信封。反过来一旦第二步失败，远端就成了「密文
+    // 对象 + 没有信封」——没有任何密码能再打开它，而用户看到的却是「已取消」。
+    await backend.deleteObject(SyncKeys.manifestPath);
+    await SyncKeyManager.deleteRemoteKeyfile(backend);
+  } catch (e) {
+    if (context.mounted) {
+      toast.error(message: l10n.sync.keyDiscardFailed(error: '$e'));
+    }
+    return false;
+  }
+  SyncKeyManager.clearKeyConflict(backend.persistentBackendId);
+  // 旧密文媒体还留在远端且与本机同名：不强制重传，push 的 stat 兜底会把它们当作
+  // 「远端已存在」跳过、写进新 manifest，而能解开它们的信封刚被删掉。
+  SyncKeyManager.markForceMediaReupload(backend.persistentBackendId);
   return true;
 }
 

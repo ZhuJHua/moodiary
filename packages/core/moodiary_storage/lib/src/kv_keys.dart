@@ -46,6 +46,18 @@ enum MoodiaryKVs<T extends Object> {
   /// 后配）的后端记在这里，该后端下次同步由引擎前奏补传缓存的 keyfile。
   syncKeyfilePendingBackends<List<String>>(),
 
+  /// 密钥冲突待处理的后端 id 清单：该后端的远端数据是**另一把 DEK** 加密的，
+  /// 本机密钥解不开。进了这个清单的后端一律不再写远端 keys.json（写了就会
+  /// 把远端唯一的信封换掉、令远端数据永久无法解密），自动同步也跳过它，
+  /// 直到用户在同步页输入正确密码解锁。
+  syncKeyConflictBackends<List<String>>(),
+
+  /// 丢弃远端加密数据后，需要**强制重传媒体**的后端 id 清单。远端旧密文媒体与本机
+  /// 同名（文件名是稳定 UUID），不清掉这个标记，push 的 statObject 兜底会把它们当作
+  /// 「远端已存在」跳过上传并写进新 manifest —— 旧 DEK 的信封已经删了，那些对象从此
+  /// 永远解不开。一次完整成功的 push 之后清除。
+  syncForceMediaReuploadBackends<List<String>>(),
+
   /// 本机在远端同步锁（`sync.lock`）中的身份标识。首次生成随机 UUID 后保持不变，
   /// 重启 / 崩溃后能识别并接管自己残留的锁。
   syncDeviceId<String>(defaultValue: ''),

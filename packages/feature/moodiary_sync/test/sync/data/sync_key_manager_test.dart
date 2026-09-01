@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
@@ -213,6 +215,140 @@ void main() {
       await SyncKeyManager.uploadPendingKeyfile(backend);
       expect(backend.ops, isEmpty);
       expect(SyncKeyManager.pendingUploadBackends(), isEmpty);
+    });
+  });
+
+  // 远端唯一的信封一旦被换掉，用旧 DEK 加密的日记与媒体就永久解不开。这组用例钉住
+  // 「写之前必须先证明本机 DEK 就是远端那把」。
+  //
+  // 「本机有 DEK 且解得开远端密文 manifest」那一支落在 Rust AES-GCM 上，宿主测试
+  // 跑不了（同 codec_test 的限制），故只覆盖不需要真解密的分支。
+  group('checkRemoteKeyfile', () {
+    Uint8List cipherTextBytes() =>
+        Uint8List.fromList([...utf8.encode(SyncCipher.magic), 1, 2, 3]);
+
+    test('远端没有信封 → safe（写入即初始化，孤立不了东西）', () async {
+      final backend = FakeRemoteBackend();
+      expect(
+        await SyncKeyManager.checkRemoteKeyfile(backend),
+        RemoteKeyfileCheck.safe,
+      );
+    });
+
+    test('远端有信封但 manifest 是明文 → safe（没有密文可作废）', () async {
+      final backend = FakeRemoteBackend();
+      final kf = await SyncKeyManager.wrapDek(
+        dek: SyncKeyManager.generateDek(),
+        passphrase: 'p',
+      );
+      backend.objects[SyncKeys.keysPath] = kf.toBytes();
+      backend.objects[SyncKeys.manifestPath] = Uint8List.fromList(
+        utf8.encode('{"version":4}'),
+      );
+      expect(
+        await SyncKeyManager.checkRemoteKeyfile(backend),
+        RemoteKeyfileCheck.safe,
+      );
+    });
+
+    test('远端有信封 + 密文 manifest，而本机没有 DEK → conflict', () async {
+      final backend = FakeRemoteBackend();
+      final kf = await SyncKeyManager.wrapDek(
+        dek: SyncKeyManager.generateDek(),
+        passphrase: 'p',
+      );
+      backend.objects[SyncKeys.keysPath] = kf.toBytes();
+      backend.objects[SyncKeys.manifestPath] = cipherTextBytes();
+      expect(
+        await SyncKeyManager.checkRemoteKeyfile(backend),
+        RemoteKeyfileCheck.conflict,
+      );
+    });
+
+    test('远端读失败 → unknown（判不出来就不写）', () async {
+      final backend = FakeRemoteBackend()
+        ..beforeOp = (op, key) {
+          if (op == 'read') throw const SyncException('offline');
+        };
+      expect(
+        await SyncKeyManager.checkRemoteKeyfile(backend),
+        RemoteKeyfileCheck.unknown,
+      );
+    });
+
+    test('冲突时补传不写远端、抛冲突异常、挂标记且 pending 保留', () async {
+      final backend = FakeRemoteBackend();
+      final foreign = await SyncKeyManager.wrapDek(
+        dek: SyncKeyManager.generateDek(),
+        passphrase: 'other',
+      );
+      backend.objects[SyncKeys.keysPath] = foreign.toBytes();
+      backend.objects[SyncKeys.manifestPath] = cipherTextBytes();
+
+      final mine = await SyncKeyManager.wrapDek(
+        dek: SyncKeyManager.generateDek(),
+        passphrase: 'mine',
+      );
+      SyncKeyManager.cacheKeyfile(mine);
+      await SyncKeyManager.markPendingUpload(['webdav']);
+
+      await expectLater(
+        SyncKeyManager.uploadPendingKeyfile(backend),
+        throwsA(isA<SyncKeyConflictException>()),
+      );
+      // 远端信封原封不动。
+      expect(
+        SyncKeyfile.fromBytes(backend.objects[SyncKeys.keysPath]!)
+            .wrappedDekB64,
+        foreign.wrappedDekB64,
+      );
+      expect(SyncKeyManager.hasKeyConflict('webdav'), isTrue);
+      expect(SyncKeyManager.pendingUploadBackends(), ['webdav']);
+    });
+
+    test('远端不可达时补传不写、不挂标记、pending 保留', () async {
+      final backend = FakeRemoteBackend()
+        ..beforeOp = (op, key) {
+          if (op == 'read') throw const SyncException('offline');
+        };
+      final kf = await SyncKeyManager.wrapDek(
+        dek: SyncKeyManager.generateDek(),
+        passphrase: 'p',
+      );
+      SyncKeyManager.cacheKeyfile(kf);
+      await SyncKeyManager.markPendingUpload(['webdav']);
+
+      await SyncKeyManager.uploadPendingKeyfile(backend);
+      expect(backend.hasObject(SyncKeys.keysPath), isFalse);
+      expect(SyncKeyManager.hasKeyConflict('webdav'), isFalse);
+      expect(SyncKeyManager.pendingUploadBackends(), ['webdav']);
+    });
+
+    test('补传成功清掉旧的冲突标记（问题解决后别把自动同步永久停掉）', () async {
+      final backend = FakeRemoteBackend();
+      final kf = await SyncKeyManager.wrapDek(
+        dek: SyncKeyManager.generateDek(),
+        passphrase: 'p',
+      );
+      SyncKeyManager.cacheKeyfile(kf);
+      await SyncKeyManager.markPendingUpload(['webdav']);
+      SyncKeyManager.markKeyConflict('webdav');
+
+      await SyncKeyManager.uploadPendingKeyfile(backend);
+      expect(backend.hasObject(SyncKeys.keysPath), isTrue);
+      expect(SyncKeyManager.hasKeyConflict('webdav'), isFalse);
+      expect(SyncKeyManager.pendingUploadBackends(), isEmpty);
+    });
+
+    test('冲突标记 mark / clear / clearDek 全清', () async {
+      SyncKeyManager.markKeyConflict('webdav');
+      SyncKeyManager.markKeyConflict('s3');
+      expect(SyncKeyManager.keyConflictBackends().toSet(), {'webdav', 's3'});
+      SyncKeyManager.clearKeyConflict('webdav');
+      expect(SyncKeyManager.hasKeyConflict('webdav'), isFalse);
+      expect(SyncKeyManager.hasKeyConflict('s3'), isTrue);
+      await SyncKeyManager.clearDek();
+      expect(SyncKeyManager.keyConflictBackends(), isEmpty);
     });
   });
 

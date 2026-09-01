@@ -8,6 +8,7 @@ import 'package:moodiary_sync/src/application/sync_controller.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_cancellation.dart';
+import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/sync_registry.dart';
 import 'package:moodiary_sync/src/presentation/widget/s3_form_sheet.dart';
 import 'package:moodiary_sync/src/presentation/widget/sync_key_guard.dart';
@@ -60,6 +61,32 @@ class _RemoteSection extends ConsumerStatefulWidget {
 }
 
 class _RemoteSectionState extends ConsumerState<_RemoteSection> {
+  /// 密钥冲突标记由引擎在同步途中写入（无 UI），页面得自己听着才会亮出入口。
+  late final KVNotifier<List<String>> _keyConflicts = MoodiaryKVs
+      .syncKeyConflictBackends
+      .getNotifierOr(const <String>[]);
+
+  @override
+  void initState() {
+    super.initState();
+    _keyConflicts.addListener(_onKeyConflictChanged);
+  }
+
+  @override
+  void dispose() {
+    _keyConflicts.removeListener(_onKeyConflictChanged);
+    super.dispose();
+  }
+
+  void _onKeyConflictChanged() {
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _unlockRemoteKey() async {
+    await ensureSyncKeyReady(context: context, ref: ref, backend: .get());
+    if (mounted) setState(() {});
+  }
+
   Future<void> _switchProvider(SyncProviderType type) async {
     SyncProviderType.setCurrent(type);
     await RemoteSyncRegistry.get().reload();
@@ -123,6 +150,17 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
             );
           },
         ),
+        if (SyncKeyManager.hasKeyConflict(backend.persistentBackendId))
+          SettingListTile(
+            title: context.l10n.sync.keyConflictTitle,
+            subtitle: context.l10n.sync.keyConflictSubtitle,
+            leading: Icon(
+              LucideIcons.lockKeyhole,
+              color: context.theme.colors.error,
+            ),
+            trailing: const Icon(LucideIcons.chevronRight),
+            onTap: _unlockRemoteKey,
+          ),
         SettingListTile(
           title: context.l10n.sync.testConnection,
           leading: const Icon(LucideIcons.plugZap),

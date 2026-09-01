@@ -118,3 +118,12 @@ class SyncException implements Exception {
   @override
   String toString() => 'SyncException: $message';
 }
+
+/// 远端已被**另一把 DEK** 加密，本机密钥解不开。
+///
+/// 与普通 [SyncException] 分开是因为引擎的 keyfile 补传前奏对失败的默认处理是
+/// 「记 warn 后继续同步」，而这一种必须中止：继续下去要么用错误的密钥覆盖远端
+/// 唯一的信封，要么在半路以「密码错误」这类无从下手的错误收场。
+class SyncKeyConflictException extends SyncException {
+  const SyncKeyConflictException(super.message);
+}
