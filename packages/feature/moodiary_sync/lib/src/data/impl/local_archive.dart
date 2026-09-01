@@ -278,6 +278,25 @@ class LocalArchive {
     }
   }
 
+  /// 旧版备份包的判据：**根目录下任意 `*.isar`**。
+  ///
+  /// 老包是 `<毫秒戳>.isar` + `image/ audio/ video/ font/`（v2.7.3 的 `zipFile`
+  /// 如此，2.6.0 同构），文件名按导出时刻命名、**没有固定名也没有 `database/`
+  /// 这一层**。此前按 `database/default.isar` 探测的是运行期数据目录的布局，对
+  /// 任何真实旧包都不成立，于是它们全部落到「不是备份文件」，用户以为自己选错了
+  /// 文件反复重试。为兼容手工拷数据目录打的包，那条老路径也一并认。
+  static Future<bool> _looksLikeLegacyBackup(String dir) async {
+    if (await File(p.join(dir, 'database', 'default.isar')).exists()) {
+      return true;
+    }
+    final root = Directory(dir);
+    if (!await root.exists()) return false;
+    await for (final entry in root.list(followLinks: false)) {
+      if (entry is File && p.extension(entry.path) == '.isar') return true;
+    }
+    return false;
+  }
+
   @visibleForTesting
   static Future<SyncReport> importDirectory(
     String dir, {
@@ -290,10 +309,9 @@ class LocalArchive {
     int? concurrency,
   }) async {
     if (!await File(p.join(dir, SyncKeys.manifestPath)).exists()) {
-      // 2.8.0 之前的「导出」是整个数据目录打包（database/default.isar + 媒体目录），
-      // 新引擎**有意不支持导入**（已拍板）：识别出老布局时给出明确指引，
+      // 2.8.0 之前的导出**有意不支持导入**（已拍板）：识别出老布局时给出明确指引，
       // 而不是笼统的「不是备份文件」。
-      if (await File(p.join(dir, 'database', 'default.isar')).exists()) {
+      if (await _looksLikeLegacyBackup(dir)) {
         throw SyncException(l10n.sync.errLegacyBackup);
       }
       throw SyncException(l10n.sync.errNotBackup);

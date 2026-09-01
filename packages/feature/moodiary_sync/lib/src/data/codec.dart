@@ -84,7 +84,7 @@ class SyncCipher {
         skipPrefix: BigInt.from(magicBytes.length),
       );
     } catch (_) {
-      throw const SyncException('远端文件解密失败：用户密钥可能不匹配');
+      throw SyncException(l10n.sync.errDecryptFailed);
     }
   }
 
@@ -140,7 +140,7 @@ class SyncCipher {
         encryptedData: Uint8List.sublistView(bytes, magicLen),
       );
     } catch (_) {
-      throw const SyncException('远端文件解密失败：用户密钥可能不匹配');
+      throw SyncException(l10n.sync.errDecryptFailed);
     }
   }
 }

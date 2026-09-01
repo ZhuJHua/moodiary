@@ -1073,6 +1073,9 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String errKeyfileParse({required Object error}) => 'Could not parse the remote key file: ${error}';
 	@override String get errKeyfileFields => 'The remote key file is corrupt (fields missing)';
 	@override String errKeyfileVersion({required Object version, required Object supported}) => 'The remote key file is too new (v${version}; this build supports up to v${supported}). Update the app.';
+	@override String errManifestVersion({required Object remote, required Object local}) => 'Backup format version mismatch: the data is v${remote}, this device supports v${local}. Open it with a matching version rather than letting this one overwrite it';
+	@override String get errManifestEntriesCorrupt => 'The backup manifest\'s entries field is corrupt (not an object); stopped to avoid losing entries';
+	@override String get errDecryptFailed => 'Could not decrypt the file — the key may not match';
 	@override String get errManifestCorrupt => 'The remote manifest is corrupt (not a JSON object). Sync was stopped so remote entries are not lost.';
 	@override String get errManifestReCipher => 'The remote manifest is malformed and cannot be re-encrypted';
 	@override String get errManifestRace => 'Another device overwrote the manifest while it was being written; re-encryption was stopped';

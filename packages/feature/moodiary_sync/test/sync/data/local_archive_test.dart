@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_sync/src/data/impl/local_archive.dart';
@@ -306,12 +307,57 @@ void main() {
       return dir;
     }
 
-    test('缺 manifest.json → SyncException', () async {
+    // 只断言 isA<SyncException>() 的负路径正是这个 bug 的藏身处：旧包识别写的是
+    // 运行期数据目录的布局（database/default.isar），真实旧包全部落到「不是备份
+    // 文件」，而两条都抛 SyncException，测试照样绿。所以逐条钉住 message。
+    test('缺 manifest.json 且非旧包 → errNotBackup', () async {
       final dir = p.join(tmp.path, 'empty');
       await Directory(dir).create(recursive: true);
-      expect(
+      await expectLater(
         () => LocalArchive.importDirectory(dir),
-        throwsA(isA<SyncException>()),
+        throwsA(
+          isA<SyncException>().having(
+            (e) => e.message,
+            'message',
+            l10n.sync.errNotBackup,
+          ),
+        ),
+      );
+    });
+
+    test('2.7.3 真实布局（根目录 <毫秒戳>.isar）→ errLegacyBackup', () async {
+      final dir = p.join(tmp.path, 'legacy273');
+      await Directory(dir).create(recursive: true);
+      // v2.7.3 的 zipFile：根目录一个按导出时刻命名的 .isar + 四个媒体目录。
+      await File(p.join(dir, '1699999999999.isar')).writeAsBytes([0]);
+      for (final d in ['image', 'audio', 'video', 'font']) {
+        await Directory(p.join(dir, d)).create();
+      }
+      await expectLater(
+        () => LocalArchive.importDirectory(dir),
+        throwsA(
+          isA<SyncException>().having(
+            (e) => e.message,
+            'message',
+            l10n.sync.errLegacyBackup,
+          ),
+        ),
+      );
+    });
+
+    test('手工拷数据目录打的包（database/default.isar）→ errLegacyBackup', () async {
+      final dir = p.join(tmp.path, 'legacyDataDir');
+      await Directory(p.join(dir, 'database')).create(recursive: true);
+      await File(p.join(dir, 'database', 'default.isar')).writeAsBytes([0]);
+      await expectLater(
+        () => LocalArchive.importDirectory(dir),
+        throwsA(
+          isA<SyncException>().having(
+            (e) => e.message,
+            'message',
+            l10n.sync.errLegacyBackup,
+          ),
+        ),
       );
     });
 

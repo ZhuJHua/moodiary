@@ -2886,6 +2886,15 @@ class Translations$sync$zh {
 	/// zh: '远端密钥文件版本不兼容（v{version}，本机支持 ≤ v{supported}），请升级客户端'
 	String errKeyfileVersion({required Object version, required Object supported}) => '远端密钥文件版本不兼容（v${version}，本机支持 ≤ v${supported}），请升级客户端';
 
+	/// zh: '备份格式版本不兼容：数据是 v{remote}，本机支持 v{local}。请用对应版本的客户端处理，不要用当前版本覆盖它'
+	String errManifestVersion({required Object remote, required Object local}) => '备份格式版本不兼容：数据是 v${remote}，本机支持 v${local}。请用对应版本的客户端处理，不要用当前版本覆盖它';
+
+	/// zh: '备份清单的 entries 字段已损坏（非对象），已中止以防丢失条目'
+	String get errManifestEntriesCorrupt => '备份清单的 entries 字段已损坏（非对象），已中止以防丢失条目';
+
+	/// zh: '文件解密失败：密钥可能不匹配'
+	String get errDecryptFailed => '文件解密失败：密钥可能不匹配';
+
 	/// zh: '远端 manifest 已损坏（非 JSON 对象），已中止同步以防丢失远端条目'
 	String get errManifestCorrupt => '远端 manifest 已损坏（非 JSON 对象），已中止同步以防丢失远端条目';
 

@@ -1,3 +1,4 @@
+import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 
@@ -91,9 +92,13 @@ class SyncManifest {
     // 而不是 `as int?` 抛裸 TypeError。
     final version = json['version'] is int ? json['version'] as int : 0;
     if (version != currentVersion) {
+      // 措辞对「云同步」与「本地 zip 恢复」两条链都成立：旧文案让本地恢复的用户
+      // 去「清空远端备份目录」，而他手里只有一个文件，指引指向不存在的东西。
       throw SyncException(
-        '远端备份格式版本不兼容（远端 v$version，本机 v$currentVersion）。'
-        '请用对应版本的客户端同步，或清空远端备份目录后重新上传。',
+        l10n.sync.errManifestVersion(
+          remote: version,
+          local: currentVersion,
+        ),
       );
     }
     final entriesRaw = json['entries'];
@@ -107,9 +112,7 @@ class SyncManifest {
     } else if (entriesRaw != null) {
       // entries 字段存在但不是对象（被外部覆盖成 array/字符串/数字）= manifest 损坏。
       // 绝不能静默当作空清单 —— 否则 push 用本地重建 manifest、丢掉仅远端有的条目（契约一）。
-      throw const SyncException(
-        '远端 manifest 的 entries 字段已损坏（非对象），已中止同步以防丢失远端条目',
-      );
+      throw SyncException(l10n.sync.errManifestEntriesCorrupt);
     }
     final updatedAtRaw = json['updatedAt'];
     return SyncManifest(
