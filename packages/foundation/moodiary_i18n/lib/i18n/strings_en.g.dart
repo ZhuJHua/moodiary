@@ -1045,7 +1045,7 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String get keyDecryptTitle => 'Decrypt the remote data';
 	@override String get keyDecryptMessage => 'Turning encryption off decrypts the remote entries, categories and media files back to plain text and deletes the key file. Continue?';
 	@override String keyDecryptPartial({required Object failed}) => '${failed} object(s) could not be decrypted, so encryption stays on and the remote key file was kept. Check your connection and try turning it off again.';
-	@override String keyEncryptPartial({required Object failed}) => '${failed} object(s) could not be encrypted and are still plaintext on the remote. Check your connection and turn encryption on again to finish them.';
+	@override String keyEncryptPartial({required Object failed}) => '${failed} objects could not be encrypted and are still plaintext in the cloud. To finish them, turn encryption off and back on — re-entering a password only changes it.';
 	@override String get keyEncryptionOff => 'Encryption is off';
 	@override String keyReCipherFailed({required Object error}) => 'Re-encryption failed: ${error}';
 	@override String get keyRemoteEmpty => 'The remote is empty — only the local key was saved';

@@ -2822,8 +2822,8 @@ class Translations$sync$zh {
 	/// zh: '有 {failed} 个对象没能解密回明文，已保持加密开启、云端密钥文件未删除。请检查网络后重试关闭。'
 	String keyDecryptPartial({required Object failed}) => '有 ${failed} 个对象没能解密回明文，已保持加密开启、云端密钥文件未删除。请检查网络后重试关闭。';
 
-	/// zh: '有 {failed} 个对象没能加密，它们在云端仍是明文。请检查网络后重新开启一次以补齐。'
-	String keyEncryptPartial({required Object failed}) => '有 ${failed} 个对象没能加密，它们在云端仍是明文。请检查网络后重新开启一次以补齐。';
+	/// zh: '有 {failed} 个对象没能加密，它们在云端仍是明文。补齐要先关闭加密再重新开启一次——直接重开只会换密码。'
+	String keyEncryptPartial({required Object failed}) => '有 ${failed} 个对象没能加密，它们在云端仍是明文。补齐要先关闭加密再重新开启一次——直接重开只会换密码。';
 
 	/// zh: '加密已关闭'
 	String get keyEncryptionOff => '加密已关闭';
