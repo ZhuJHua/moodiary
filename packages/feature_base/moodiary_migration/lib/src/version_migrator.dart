@@ -221,6 +221,9 @@ Future<void> _mergeToV2_7_3(Map<String, dynamic> parma) async {
     isar.fonts.clear();
     isar.fonts.putAll(parma['fonts']);
   });
+  // 兄弟步骤全都关了，唯独这里漏过。原生实例是进程级的、靠 isar_plus_close 递减，
+  // 子 isolate 退出只回收 Dart 侧缓存，不关就泄漏一个只登记 3 张表的实例。
+  isar.close();
 }
 
 /// 2.8.0 升级：旧 `type == 'text'`（实为 Quill Delta）并入富文本，仅翻 type，
