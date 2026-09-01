@@ -45,7 +45,35 @@ class DiaryContent {
   late final ({List<String> images, List<String> videos, List<String> audios})
   media = _media();
 
-  ({List<String> images, List<String> videos, List<String> audios}) _media() {
+  ({List<String> images, List<String> videos, List<String> audios}) _media() =>
+      _salvage(_parseMedia());
+
+  /// 解析器少认一个引用就会把媒体三列清空 —— 媒体随即变孤儿，被「清理无用文件」
+  /// 永久删除，还会经 LWW 扩散到所有设备。所以：**已有引用只要文件名仍原样出现在
+  /// 正文里，就一律保留**。markdown 的 `![](name)` 正则认不出 title(`![](n "t")`)、
+  /// 尖括号(`![](<n>)`)、引用式与 alt 带 `]` 四种手打语法，而这些写法里文件名都还在
+  /// 正文中；tiptap 正文解析不出 doc 时回退的也是同一条正则。
+  /// 正文里已经不存在的引用不救 —— 那是真被删掉了，该回收。
+  ({List<String> images, List<String> videos, List<String> audios}) _salvage(
+    ({List<String> images, List<String> videos, List<String> audios}) parsed,
+  ) {
+    List<String> keep(List<String> derived, List<String> existing) {
+      final seen = derived.toSet();
+      final rescued = existing.where(
+        (ref) => !seen.contains(ref) && _diary.content.contains(ref),
+      );
+      return rescued.isEmpty ? derived : [...derived, ...rescued];
+    }
+
+    return (
+      images: keep(parsed.images, _diary.imageName),
+      videos: keep(parsed.videos, _diary.videoName),
+      audios: keep(parsed.audios, _diary.audioName),
+    );
+  }
+
+  ({List<String> images, List<String> videos, List<String> audios})
+  _parseMedia() {
     switch (_type) {
       case .tiptap:
         final m = _tiptap!.media;

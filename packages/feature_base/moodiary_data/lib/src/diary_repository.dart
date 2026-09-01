@@ -687,6 +687,11 @@ class DiaryRepository {
 
   /// 汇全集引用的媒体文件名（含回收站/草稿），供孤儿清理用。
   /// 子表即引用清单：一次全表读，不物化任何日记正文。
+  ///
+  /// **助手聊天图片也必须算进来**：它经 `MediaManager.saveImages` 落在同一个
+  /// `image/` 目录、用同一套命名，却只被 `chat_messages.image_name` 引用。漏掉它
+  /// 就会被「清理无用文件」当成孤儿永久删除，而这些图从未进过日记、没有任何
+  /// 其它备份通道。
   Future<({Set<String> images, Set<String> audios, Set<String> videos})>
   collectReferencedMedia() async {
     final images = <String>{};
@@ -703,6 +708,14 @@ class DiaryRepository {
           final thumb = AppFiles.thumbnailNameOf(m.fileName);
           if (thumb != null) videos.add(thumb);
       }
+    }
+    // 只取这一列，不物化聊天正文。
+    final chatImages = _db.selectOnly(_db.chatMessages)
+      ..addColumns([_db.chatMessages.imageName])
+      ..where(_db.chatMessages.imageName.isNotNull());
+    for (final row in await chatImages.get()) {
+      final name = row.read(_db.chatMessages.imageName);
+      if (name != null && name.isNotEmpty) images.add(name);
     }
     return (images: images, audios: audios, videos: videos);
   }

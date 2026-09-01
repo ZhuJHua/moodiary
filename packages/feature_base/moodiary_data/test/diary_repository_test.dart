@@ -3,6 +3,7 @@
 // 自动构建（P0 已验证），分词走替身（moodiary_rust/testing.dart）。
 import 'dart:convert';
 
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
@@ -290,6 +291,39 @@ void main() {
       final refs = await repo.collectReferencedMedia();
       expect(refs.images, {'image-1.jpg'});
       expect(refs.audios, {'audio-1.m4a'});
+    });
+
+    // 助手聊天图片落在同一个 image/ 目录、用同一套命名，却只被 chat_messages
+    // 引用。漏算就会被「清理无用文件」当孤儿永久删除，而它从没进过日记、
+    // 没有任何其它备份通道。
+    test('collectReferencedMedia 含助手聊天图片', () async {
+      await db
+          .into(db.chatSessions)
+          .insert(
+            ChatSessionsCompanion.insert(
+              id: 's1',
+              title: const Value('会话'),
+              providerId: 'p',
+              model: 'm',
+              createdAt: 0,
+              updatedAt: 0,
+            ),
+          );
+      await db
+          .into(db.chatMessages)
+          .insert(
+            ChatMessagesCompanion.insert(
+              id: 'm1',
+              sessionId: 's1',
+              role: 'user',
+              content: '看看这张图',
+              createdAt: 0,
+              imageName: const Value('image-chat.jpg'),
+            ),
+          );
+
+      final refs = await repo.collectReferencedMedia();
+      expect(refs.images, contains('image-chat.jpg'));
     });
   });
 

@@ -89,6 +89,54 @@ void main() {
     });
   });
 
+  group('DiaryContent — 媒体守恒（正则少认时不清空已有引用）', () {
+    // 这四种手打 markdown 写法 `![](name)` 正则都认不出，但文件名仍在正文里。
+    // 少认即清空 imageName → 媒体成孤儿 → 「清理无用文件」永久删除 + LWW 扩散。
+    const cases = {
+      'title 语法': '![](image-a.png "标题")',
+      '尖括号': '![](<image-a.png>)',
+      '引用式': '![alt][r]\n\n[r]: image-a.png',
+      'alt 里带右括号': '![a]b]](image-a.png)',
+    };
+    for (final entry in cases.entries) {
+      test('${entry.key}：保留已有引用', () {
+        final d = _diary(
+          content: entry.value,
+          type: .markdown,
+          imageName: const ['image-a.png'],
+        );
+        expect(DiaryContent.of(d).media.images, ['image-a.png']);
+      });
+    }
+
+    test('正文里已经没有的引用不救（真删掉的该回收）', () {
+      final d = _diary(
+        content: '只剩文字了',
+        type: .markdown,
+        imageName: const ['image-gone.png'],
+      );
+      expect(DiaryContent.of(d).media.images, isEmpty);
+    });
+
+    test('正则认得出时不重复计入', () {
+      final d = _diary(
+        content: '![](image-a.png)',
+        type: .markdown,
+        imageName: const ['image-a.png'],
+      );
+      expect(DiaryContent.of(d).media.images, ['image-a.png']);
+    });
+
+    test('tiptap 正文解析不出 doc 时同样兜住', () {
+      final d = _diary(
+        content: '![](image-a.png "标题")',
+        type: .tiptap,
+        imageName: const ['image-a.png'],
+      );
+      expect(DiaryContent.of(d).media.images, ['image-a.png']);
+    });
+  });
+
   group('DiaryContent — richText（旧 Quill Delta）', () {
     test('plainText 拼接字符串 insert，保留行内换行、只裁尾部', () {
       final delta = jsonEncode([
