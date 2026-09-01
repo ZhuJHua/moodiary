@@ -198,8 +198,8 @@ class AutoSyncWatcher {
         // 但要留痕——鉴权失效（改密码 / token 过期）会让每一轮都停在这里，
         // 零日志时用户只能靠「上次同步时间不动」猜。
         _logger.warn(
-          .error,
-          '轮询探测远端失败，跳过本轮：$e',
+          .manifestRead,
+          reason: .probeFailed,
           payload: {'detail': e.toString()},
         );
         return;

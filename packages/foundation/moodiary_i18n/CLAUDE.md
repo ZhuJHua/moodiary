@@ -112,10 +112,14 @@ namespace 已经给到分域的全部好处，不必为每个 feature 再付一�
 工具返回文本进的是对话上下文，翻译它等于按用户语言改模型的输入；而同一次调用在界面上
 显示成什么，是 `AssistantTool.summarize` 另算的一份、走 l10n。两者**不共用字符串**。
 
+**同步事件不带文案**：`SyncEvent` 只落机器字段（kind / level / reason / payload），展示文案由
+日志页按 kind / reason 取 l10n。引擎侧不要往事件里写死中文 message——同 kind 下语义不够用时，
+加 `SyncEventReason` 枚举值或 payload 字段，别塞句子。抛给用户的 `SyncException` 同理，走
+`l10n.sync.err*`。日志页的 `_kindLabel` / `_kindIcon` 是 exhaustive switch 不是 Map：加了 kind
+忘配文案会编译报错，而不是静默漏出原始枚举名。
+
 **哪些中文字面量该留着**（扫描器会一直报它们，别每次都重新判断一遍）：
 
-- **同步引擎的日志行**：事件按天写成 jsonl 落盘，message 已烤进历史记录；翻译只影响新条目，
-  日志页会中英混排。日志页自己的标题 / 筛选 / 分组名是 UI，已翻。
 - **助手里读者是模型的那些串**（`moodiary_assistant/lib/src/data/`）：系统提示词、工具描述、
   工具入参 schema、工具返回的文本，**一律英文写死，不进 slang**（见上面「读者是谁」一节）。
   扫描器不会报它们，但别顺手「补翻译」。

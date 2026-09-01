@@ -73,16 +73,18 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
         _media = 0;
         _failed = 0;
       case .diaryUpload || .categoryUpload:
-        _uploaded++;
+        if (event.level != .error) _uploaded++;
       case .diaryDownload || .categoryDownload:
-        _downloaded++;
+        if (event.level != .error) _downloaded++;
       case .mediaUpload || .mediaDownload:
-        _media++;
-      case .error:
-        _failed++;
+        if (event.level != .error) _media++;
       default:
         break;
     }
+    // 失败看 level 而不是 kind：失败事件沿用操作 kind（红色 diaryUpload =
+    // 「上传日记失败」），不再有专门的 error kind 可数。syncEnd 除外——它是整轮的
+    // 汇总（异常中止也走 error），计进来会让「失败条目数」凭空多一。
+    if (event.level == .error && event.kind != .syncEnd) _failed++;
   }
 
   @override

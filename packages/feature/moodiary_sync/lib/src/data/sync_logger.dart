@@ -74,24 +74,25 @@ class SyncLogger {
     unawaited(_persist(event));
   }
 
+  /// [reason] 是同一 [SyncEventKind] 下的细分语义（可选）；[payload] 携带机器可读
+  /// 细节。两者都会随事件持久化，文案渲染在日志页完成。
   void info(
-    SyncEventKind kind,
-    String message, {
+    SyncEventKind kind, {
+    SyncEventReason? reason,
     Map<String, Object?>? payload,
-  }) => log(.now(level: .info, kind: kind, message: message, payload: payload));
+  }) => log(.now(level: .info, kind: kind, reason: reason, payload: payload));
 
   void warn(
-    SyncEventKind kind,
-    String message, {
+    SyncEventKind kind, {
+    SyncEventReason? reason,
     Map<String, Object?>? payload,
-  }) => log(.now(level: .warn, kind: kind, message: message, payload: payload));
+  }) => log(.now(level: .warn, kind: kind, reason: reason, payload: payload));
 
   void error(
-    SyncEventKind kind,
-    String message, {
+    SyncEventKind kind, {
+    SyncEventReason? reason,
     Map<String, Object?>? payload,
-  }) =>
-      log(.now(level: .error, kind: kind, message: message, payload: payload));
+  }) => log(.now(level: .error, kind: kind, reason: reason, payload: payload));
 
   Future<void> _persist(SyncEvent event) async {
     if (_dir == null) return;

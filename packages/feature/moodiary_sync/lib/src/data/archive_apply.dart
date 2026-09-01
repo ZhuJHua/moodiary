@@ -168,7 +168,6 @@ class ArchiveApplier {
     // 撞上一次并发同步；而结尾那记裸 syncEnd 还会把真正在飞的同步的闸门提前放开。
     _logger.info(
       .syncStart,
-      restoring ? '开始应用归档（恢复）' : '开始 pull',
       payload: {
         ..._backendPayload(),
         'direction': restoring ? 'restore' : 'pull',
@@ -279,7 +278,7 @@ class ArchiveApplier {
                 local.lastModified.millisecondsSinceEpoch > tombstoneMs) {
               _logger.info(
                 .diarySkip,
-                '本地比远端 tombstone 更新，保留本地：$id',
+                reason: .localNewer,
                 payload: {
                   'diaryId': id,
                   'localLastModified': local.lastModified.toIso8601String(),
@@ -294,7 +293,7 @@ class ArchiveApplier {
             if (local != null && OpenDiaryRegistry.instance.contains(id)) {
               _logger.info(
                 .diarySkip,
-                '日记打开中，跳过应用远端 tombstone：$id',
+                reason: .openDiary,
                 payload: {'diaryId': id},
               );
               return;
@@ -311,7 +310,6 @@ class ArchiveApplier {
               diaryChanged++;
               _logger.info(
                 .diaryTombstonePull,
-                '本地删除日记（远端 tombstone）：$id',
                 payload: {'diaryId': id},
               );
             }
@@ -329,7 +327,7 @@ class ArchiveApplier {
             skipped++;
             _logger.info(
               .diarySkip,
-              '本地不旧于远端，跳过下载：$id',
+              reason: .upToDate,
               payload: {'diaryId': id},
             );
             // 顺带补拉本地缺失的媒体：上次 pull 可能媒体下载失败而 JSON 已落库，
@@ -349,8 +347,7 @@ class ArchiveApplier {
           if (diary.id != id) {
             failed++;
             _logger.error(
-              .error,
-              '远端日记对象身份不符，已跳过：$key',
+              .diaryDownload,
               payload: {'key': key, 'objectId': diary.id},
             );
             return;
@@ -369,7 +366,7 @@ class ArchiveApplier {
             pending.completeDiary(id);
             _logger.info(
               .diarySkip,
-              '本地在 pull 期间已更新，跳过下载：$id',
+              reason: .upToDate,
               payload: {'diaryId': id},
             );
             return;
@@ -391,9 +388,9 @@ class ArchiveApplier {
           diaryChanged++;
           _logger.info(
             .diaryDownload,
-            '下载日记：${diary.title.isEmpty ? id : diary.title}',
             payload: {
               'diaryId': id,
+              if (diary.title.isNotEmpty) 'title': diary.title,
               'lastModified': diary.lastModified.toIso8601String(),
             },
           );
@@ -412,7 +409,7 @@ class ArchiveApplier {
                 local.lastModified.millisecondsSinceEpoch > tombstoneMs) {
               _logger.info(
                 .categorySkip,
-                '本地分类比远端 tombstone 更新：$id',
+                reason: .localNewer,
                 payload: {'categoryId': id},
               );
               return;
@@ -424,7 +421,6 @@ class ArchiveApplier {
               categoryChanged++;
               _logger.info(
                 .categoryTombstonePull,
-                '本地删除分类（远端 tombstone）：$id',
                 payload: {'categoryId': id},
               );
             }
@@ -440,7 +436,7 @@ class ArchiveApplier {
             skipped++;
             _logger.info(
               .categorySkip,
-              '本地分类不旧于远端，跳过：$id',
+              reason: .upToDate,
               payload: {'categoryId': id},
             );
             return;
@@ -464,7 +460,7 @@ class ArchiveApplier {
             pending.completeCategory(id);
             _logger.info(
               .categorySkip,
-              '本地分类在 pull 期间已更新，跳过：$id',
+              reason: .upToDate,
               payload: {'categoryId': id},
             );
             return;
@@ -473,8 +469,7 @@ class ArchiveApplier {
           if (category.id != id) {
             failed++;
             _logger.error(
-              .error,
-              '远端分类对象身份不符，已跳过：$key',
+              .categoryDownload,
               payload: {'key': key, 'objectId': category.id},
             );
             return;
@@ -491,11 +486,7 @@ class ArchiveApplier {
           tombstones.remove(key);
           pending.completeCategory(id);
           categoryChanged++;
-          _logger.info(
-            .categoryDownload,
-            '下载分类：$id',
-            payload: {'categoryId': id},
-          );
+          _logger.info(.categoryDownload, payload: {'categoryId': id});
         } else if (key.startsWith(SyncKeys.mediaInfoPrefix)) {
           final id = key.substring(SyncKeys.mediaInfoPrefix.length);
           if (isTombstone) {
@@ -511,7 +502,7 @@ class ArchiveApplier {
                 local.lastModified.millisecondsSinceEpoch > tombstoneMs) {
               _logger.info(
                 .mediaInfoSkip,
-                '本地媒体元数据比远端 tombstone 更新：$id',
+                reason: .localNewer,
                 payload: {'mediaFileName': id},
               );
               return;
@@ -523,7 +514,6 @@ class ArchiveApplier {
               mediaInfoChanged++;
               _logger.info(
                 .mediaInfoTombstonePull,
-                '本地删除媒体元数据（远端 tombstone）：$id',
                 payload: {'mediaFileName': id},
               );
             }
@@ -539,7 +529,7 @@ class ArchiveApplier {
             skipped++;
             _logger.info(
               .mediaInfoSkip,
-              '本地媒体元数据不旧于远端，跳过：$id',
+              reason: .upToDate,
               payload: {'mediaFileName': id},
             );
             return;
@@ -562,7 +552,7 @@ class ArchiveApplier {
           if (freshMs != null && remoteMs <= freshMs) {
             _logger.info(
               .mediaInfoSkip,
-              '本地媒体元数据在 pull 期间已更新，跳过：$id',
+              reason: .upToDate,
               payload: {'mediaFileName': id},
             );
             return;
@@ -571,8 +561,7 @@ class ArchiveApplier {
           if (mediaInfo.fileName != id) {
             failed++;
             _logger.error(
-              .error,
-              '远端媒体元数据对象身份不符，已跳过：$key',
+              .mediaInfoDownload,
               payload: {'key': key, 'objectId': mediaInfo.fileName},
             );
             return;
@@ -589,15 +578,22 @@ class ArchiveApplier {
           mediaInfoChanged++;
           _logger.info(
             .mediaInfoDownload,
-            '下载媒体元数据：$id',
             payload: {'mediaFileName': id},
           );
         }
       } catch (e) {
         failed++;
+        // 条目级兜底失败：按 key 前缀归到对应实体的下载 kind，日志页能直接看出
+        // 「哪一类东西的下载」红了；前缀无法识别时退回通用 error。
         _logger.error(
-          .error,
-          'pull 条目失败：$key',
+          switch (key) {
+            final k when k.startsWith(SyncKeys.diaryPrefix) => .diaryDownload,
+            final k when k.startsWith(SyncKeys.categoryPrefix) =>
+              .categoryDownload,
+            final k when k.startsWith(SyncKeys.mediaInfoPrefix) =>
+              .mediaInfoDownload,
+            _ => .error,
+          },
           payload: {'key': key, 'detail': e.toString()},
         );
       }
@@ -621,7 +617,7 @@ class ArchiveApplier {
     final stopped = SyncCancellation.instance.isRequested;
     _logger.info(
       .syncEnd,
-      stopped ? 'pull 已手动停止' : 'pull 结束',
+      reason: stopped ? .stopped : null,
       payload: {
         ..._backendPayload(),
         'direction': 'pull',
@@ -674,7 +670,7 @@ class ArchiveApplier {
       if (await _mediaFiles.exists(type, filename)) {
         _logger.info(
           .mediaSkip,
-          '本地已有，跳过下载：$filename',
+          reason: .localExists,
           payload: {'type': type, 'filename': filename},
         );
         return;
@@ -688,7 +684,7 @@ class ArchiveApplier {
         if (size == null) {
           _logger.warn(
             .mediaSkip,
-            '远端无此媒体，跳过：$filename',
+            reason: .remoteMissing,
             payload: {'type': type, 'filename': filename},
           );
           return;
@@ -699,7 +695,7 @@ class ArchiveApplier {
         if (encrypted == null || encrypted.isEmpty) {
           _logger.warn(
             .mediaSkip,
-            '远端无此媒体，跳过：$filename',
+            reason: .remoteMissing,
             payload: {'type': type, 'filename': filename},
           );
           return;
@@ -710,14 +706,12 @@ class ArchiveApplier {
       }
       _logger.info(
         .mediaDownload,
-        '下载媒体：$filename',
         payload: {'type': type, 'filename': filename, 'bytes': bytes},
       );
     } catch (e) {
       _mediaFailed++;
       _logger.error(
-        .error,
-        '下载媒体失败：$filename',
+        .mediaDownload,
         payload: {'type': type, 'filename': filename, 'detail': e.toString()},
       );
     }
@@ -764,7 +758,6 @@ class ArchiveApplier {
           await _mediaFiles.delete(e.$1, e.$2);
           _logger.info(
             .mediaDelete,
-            '删除本地媒体：${e.$2}',
             payload: {'type': e.$1, 'filename': e.$2},
           );
         } catch (_) {}

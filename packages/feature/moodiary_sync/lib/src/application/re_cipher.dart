@@ -95,7 +95,6 @@ class CloudReCipher {
     final sw = Stopwatch()..start();
     _logger.info(
       .syncStart,
-      '开始重新加密',
       payload: {
         ..._backendPayload(),
         'direction': 're-cipher',
@@ -109,7 +108,7 @@ class CloudReCipher {
     if (mfBytes == null) {
       _logger.info(
         .syncEnd,
-        '远端为空，跳过重新加密',
+        reason: .remoteMissing,
         payload: {..._backendPayload(), 'direction': 're-cipher'},
       );
       return null;
@@ -167,7 +166,11 @@ class CloudReCipher {
         return null;
       }
       if (decoded is! Map<String, dynamic>) {
-        _logger.warn(.error, '远端对象解码非对象，跳过重新加密：$path', payload: {'path': path});
+        _logger.warn(
+          .reCipher,
+          reason: .decodeFailed,
+          payload: {'path': path},
+        );
         return false;
       }
       await backend.writeObject(path, await to.encode(decoded));
@@ -190,8 +193,7 @@ class CloudReCipher {
       } catch (e) {
         failed++;
         _logger.error(
-          .error,
-          '重新加密日记失败：$id',
+          .reCipher,
           payload: {'diaryId': id, 'detail': e.toString()},
         );
       }
@@ -211,8 +213,7 @@ class CloudReCipher {
       } catch (e) {
         failed++;
         _logger.error(
-          .error,
-          '重新加密分类失败：$id',
+          .reCipher,
           payload: {'categoryId': id, 'detail': e.toString()},
         );
       }
@@ -232,8 +233,7 @@ class CloudReCipher {
       } catch (e) {
         failed++;
         _logger.error(
-          .error,
-          '重新加密媒体元数据失败：$id',
+          .reCipher,
           payload: {'mediaFileName': id, 'detail': e.toString()},
         );
       }
@@ -257,8 +257,7 @@ class CloudReCipher {
       } catch (e) {
         failed++;
         _logger.error(
-          .error,
-          '重新加密媒体失败：$ref',
+          .reCipher,
           payload: {'ref': ref, 'detail': e.toString()},
         );
       }
@@ -291,7 +290,6 @@ class CloudReCipher {
     sw.stop();
     _logger.info(
       .syncEnd,
-      '重新加密结束',
       payload: {
         ..._backendPayload(),
         'direction': 're-cipher',

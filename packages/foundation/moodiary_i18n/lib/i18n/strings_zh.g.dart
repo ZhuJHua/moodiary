@@ -2534,6 +2534,21 @@ class Translations$sync$zh {
 	/// zh: '同步分类删除'
 	String get kindCategoryTombstonePull => '同步分类删除';
 
+	/// zh: '上传媒体信息'
+	String get kindMediaInfoUpload => '上传媒体信息';
+
+	/// zh: '下载媒体信息'
+	String get kindMediaInfoDownload => '下载媒体信息';
+
+	/// zh: '跳过媒体信息'
+	String get kindMediaInfoSkip => '跳过媒体信息';
+
+	/// zh: '推送媒体信息删除'
+	String get kindMediaInfoTombstonePush => '推送媒体信息删除';
+
+	/// zh: '同步媒体信息删除'
+	String get kindMediaInfoTombstonePull => '同步媒体信息删除';
+
 	/// zh: '上传媒体'
 	String get kindMediaUpload => '上传媒体';
 
@@ -2552,8 +2567,86 @@ class Translations$sync$zh {
 	/// zh: '释放同步锁'
 	String get kindLockRelease => '释放同步锁';
 
+	/// zh: '上传密钥文件'
+	String get kindKeyfileUpload => '上传密钥文件';
+
+	/// zh: '云端密钥冲突'
+	String get kindKeyConflict => '云端密钥冲突';
+
+	/// zh: '重新加密'
+	String get kindReCipher => '重新加密';
+
 	/// zh: '错误'
 	String get kindError => '错误';
+
+	/// zh: '拉取'
+	String get directionPull => '拉取';
+
+	/// zh: '推送'
+	String get directionPush => '推送';
+
+	/// zh: '恢复'
+	String get directionRestore => '恢复';
+
+	/// zh: '重新加密'
+	String get directionReCipher => '重新加密';
+
+	/// zh: '已是最新'
+	String get reasonUpToDate => '已是最新';
+
+	/// zh: '远端有更新的编辑'
+	String get reasonRemoteNewer => '远端有更新的编辑';
+
+	/// zh: '本地有更新的编辑'
+	String get reasonLocalNewer => '本地有更新的编辑';
+
+	/// zh: '日记打开中'
+	String get reasonOpenDiary => '日记打开中';
+
+	/// zh: '本地文件缺失'
+	String get reasonLocalMissing => '本地文件缺失';
+
+	/// zh: '远端状态未知'
+	String get reasonProbeFailed => '远端状态未知';
+
+	/// zh: '远端已存在'
+	String get reasonRemoteExists => '远端已存在';
+
+	/// zh: '本地已存在'
+	String get reasonLocalExists => '本地已存在';
+
+	/// zh: '远端缺失'
+	String get reasonRemoteMissing => '远端缺失';
+
+	/// zh: '接管本机残留锁'
+	String get reasonTakeover => '接管本机残留锁';
+
+	/// zh: '清除过期锁'
+	String get reasonExpiredLock => '清除过期锁';
+
+	/// zh: '条件写已验证'
+	String get reasonCasVerified => '条件写已验证';
+
+	/// zh: '服务器不支持条件写'
+	String get reasonCasUnsupported => '服务器不支持条件写';
+
+	/// zh: '续租失败'
+	String get reasonRenewFailed => '续租失败';
+
+	/// zh: '释放失败'
+	String get reasonReleaseFailed => '释放失败';
+
+	/// zh: '远端对象格式异常'
+	String get reasonDecodeFailed => '远端对象格式异常';
+
+	/// zh: '无法识别的删除记录'
+	String get reasonUnknownTombstone => '无法识别的删除记录';
+
+	/// zh: '已停止'
+	String get reasonStopped => '已停止';
+
+	/// zh: '异常中止'
+	String get reasonAborted => '异常中止';
 
 	/// zh: '同步状态'
 	String get statusTitle => '同步状态';
@@ -2917,6 +3010,18 @@ class Translations$sync$zh {
 
 	/// zh: 'manifest 写入被其它设备并发覆盖，已中止重新加密'
 	String get errManifestRace => 'manifest 写入被其它设备并发覆盖，已中止重新加密';
+
+	/// zh: 'manifest 写入被其它设备并发覆盖，已中止本次推送（本地与远端数据均未被破坏，请重试）'
+	String get errManifestRacePush => 'manifest 写入被其它设备并发覆盖，已中止本次推送（本地与远端数据均未被破坏，请重试）';
+
+	/// zh: '无法确认云端密钥文件的归属（清单读不到或已损坏），已中止本次同步以免覆盖它'
+	String get errKeyfileOwnerUnknown => '无法确认云端密钥文件的归属（清单读不到或已损坏），已中止本次同步以免覆盖它';
+
+	/// zh: '本机没有密钥文件（keys.json）缓存，无法初始化加密远端。请在密钥管理里重设密码后重试。'
+	String get errKeyfileNoLocalCache => '本机没有密钥文件（keys.json）缓存，无法初始化加密远端。请在密钥管理里重设密码后重试。';
+
+	/// zh: '媒体名不合法，已跳过该条目：{name}'
+	String errMediaNameInvalid({required Object name}) => '媒体名不合法，已跳过该条目：${name}';
 
 	/// zh: '不是有效的 Moodiary 备份文件'
 	String get errNotBackup => '不是有效的 Moodiary 备份文件';

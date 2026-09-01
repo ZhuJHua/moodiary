@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:file/file.dart';
 import 'package:file/local.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_sync/src/data/media_refs.dart';
@@ -177,7 +178,7 @@ class DiskSyncMediaFiles implements SyncMediaFiles {
     if (segment.isEmpty ||
         p.isAbsolute(segment) ||
         p.basename(segment) != segment) {
-      throw SyncException('媒体名不合法，已跳过该条目：$segment');
+      throw SyncException(l10n.sync.errMediaNameInvalid(name: segment));
     }
   }
 

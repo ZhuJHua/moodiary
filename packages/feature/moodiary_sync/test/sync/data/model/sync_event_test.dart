@@ -8,24 +8,24 @@ void main() {
         at: .utc(2026, 6, 10, 12, 30),
         level: .warn,
         kind: .diaryUpload,
-        message: 'hi',
+        reason: .upToDate,
         payload: {'diaryId': 'x', 'bytes': 12},
       );
       final restored = SyncEvent.fromJson(event.toJson());
       expect(restored.at, event.at);
       expect(restored.level, SyncEventLevel.warn);
       expect(restored.kind, SyncEventKind.diaryUpload);
-      expect(restored.message, 'hi');
+      expect(restored.reason, SyncEventReason.upToDate);
       expect(restored.payload, {'diaryId': 'x', 'bytes': 12});
     });
 
-    test('omits empty payload in json', () {
+    test('omits empty payload and absent reason in json', () {
       final json = SyncEvent.now(
         level: .info,
         kind: .syncStart,
-        message: 'm',
       ).toJson();
       expect(json.containsKey('payload'), isFalse);
+      expect(json.containsKey('reason'), isFalse);
     });
 
     test('tolerant parse: unknown level/kind and bad time fall back', () {
@@ -33,17 +33,21 @@ void main() {
         'at': 'not-a-date',
         'level': 'bogus',
         'kind': 'bogus',
-        'message': 'm',
       });
       expect(restored.level, SyncEventLevel.info);
       expect(restored.kind, SyncEventKind.error);
       expect(restored.at, DateTime.fromMillisecondsSinceEpoch(0));
-      expect(restored.message, 'm');
+      expect(restored.reason, isNull);
     });
 
-    test('missing message becomes empty string', () {
-      final restored = SyncEvent.fromJson({'level': 'info', 'kind': 'syncEnd'});
-      expect(restored.message, '');
+    test('unknown reason parses to null, legacy message ignored', () {
+      final restored = SyncEvent.fromJson({
+        'level': 'info',
+        'kind': 'syncEnd',
+        'reason': 'bogus',
+        'message': 'legacy line',
+      });
+      expect(restored.reason, isNull);
     });
   });
 }

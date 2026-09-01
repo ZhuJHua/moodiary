@@ -156,7 +156,7 @@ class RemoteLease {
               // 单次续租失败可容忍（TTL >> 续租间隔）；连续失败超过 TTL 才有被抢占风险。
               log.warn(
                 .lockRelease,
-                '同步锁续租失败（将于下个周期重试）',
+                reason: .renewFailed,
                 payload: {'detail': e.toString()},
               );
             });
@@ -167,12 +167,12 @@ class RemoteLease {
       await pendingRenew; // 错误已在 catchError 消化，这里只等落定
       try {
         await backend.deleteObject(SyncKeys.lockPath);
-        log.info(.lockRelease, '释放同步锁');
+        log.info(.lockRelease);
       } catch (e) {
         // best-effort：残留锁由「本机接管」或 TTL 过期兜底。
         log.warn(
           .lockRelease,
-          '释放同步锁失败（TTL 兜底）',
+          reason: .releaseFailed,
           payload: {'detail': e.toString()},
         );
       }
@@ -200,7 +200,7 @@ class RemoteLease {
           // 条件写已验证：创建成功即严格原子，免抖动免回读。
           log.info(
             .lockAcquire,
-            '获得同步锁（条件写已验证，免回读）',
+            reason: .casVerified,
             payload: {'owner': owner, 'attempt': attempt},
           );
           return;
@@ -213,7 +213,6 @@ class RemoteLease {
         if (verify != null && verify.owner == owner) {
           log.info(
             .lockAcquire,
-            '获得同步锁',
             payload: {'owner': owner, 'attempt': attempt},
           );
           if (backendId != null && !_casVerified.containsKey(backendId)) {
@@ -232,13 +231,17 @@ class RemoteLease {
         if (existing.owner == owner) {
           // 本机残留（上次崩溃 / 释放失败）→ 刷新接管。
           await backend.writeObject(SyncKeys.lockPath, payload.toBytes());
-          log.info(.lockAcquire, '接管本机残留的同步锁', payload: {'owner': owner});
+          log.info(
+            .lockAcquire,
+            reason: .takeover,
+            payload: {'owner': owner},
+          );
           return;
         }
         if (existing.isExpired(.timestamp())) {
           log.warn(
             .lockAcquire,
-            '清除过期同步锁（holder: ${existing.owner}）',
+            reason: .expiredLock,
             payload: {
               'holder': existing.owner,
               'acquiredAt': existing.acquiredAt.toIso8601String(),
@@ -277,13 +280,13 @@ class RemoteLease {
       if (overwrote) {
         log.warn(
           .lockAcquire,
-          '服务器不执行条件写，保留锁回读校验',
+          reason: .casUnsupported,
           payload: {'backendId': backendId},
         );
       } else {
         log.info(
           .lockAcquire,
-          '条件写探测通过，本进程后续免锁回读',
+          reason: .casVerified,
           payload: {'backendId': backendId},
         );
       }

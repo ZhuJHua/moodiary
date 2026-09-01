@@ -225,54 +225,147 @@ class _EventList extends StatelessWidget {
   }
 }
 
-const _kindIcon = <SyncEventKind, IconData>{
-  .syncStart: LucideIcons.play,
-  .syncEnd: LucideIcons.flag,
-  .manifestRead: LucideIcons.list,
-  .manifestWrite: LucideIcons.filePenLine,
-  .diaryUpload: LucideIcons.upload,
-  .diaryDownload: LucideIcons.download,
-  .diarySkip: LucideIcons.skipForward,
-  .diaryTombstonePush: LucideIcons.eraser,
-  .diaryTombstonePull: LucideIcons.trash2,
-  .categoryUpload: LucideIcons.upload,
-  .categoryDownload: LucideIcons.download,
-  .categorySkip: LucideIcons.skipForward,
-  .categoryTombstonePush: LucideIcons.eraser,
-  .categoryTombstonePull: LucideIcons.trash2,
-  .mediaUpload: LucideIcons.cloudUpload,
-  .mediaDownload: LucideIcons.cloudDownload,
-  .mediaSkip: LucideIcons.skipForward,
-  .mediaDelete: LucideIcons.trash2,
-  .lockAcquire: LucideIcons.lock,
-  .lockRelease: LucideIcons.lockOpen,
-  .error: LucideIcons.circleAlert,
+/// kind → 图标 / 文案，都用 switch 而不是 Map：加了新 kind 忘了配就编译报错，
+/// Map + `?? kind.name` 只会静默漏出原始枚举名（mediaInfo 那五个就这么漏过）。
+IconData _kindIcon(SyncEventKind kind) => switch (kind) {
+  .syncStart => LucideIcons.play,
+  .syncEnd => LucideIcons.flag,
+  .manifestRead => LucideIcons.list,
+  .manifestWrite => LucideIcons.filePenLine,
+  .diaryUpload => LucideIcons.upload,
+  .diaryDownload => LucideIcons.download,
+  .diarySkip => LucideIcons.skipForward,
+  .diaryTombstonePush => LucideIcons.eraser,
+  .diaryTombstonePull => LucideIcons.trash2,
+  .categoryUpload => LucideIcons.upload,
+  .categoryDownload => LucideIcons.download,
+  .categorySkip => LucideIcons.skipForward,
+  .categoryTombstonePush => LucideIcons.eraser,
+  .categoryTombstonePull => LucideIcons.trash2,
+  .mediaInfoUpload => LucideIcons.fileUp,
+  .mediaInfoDownload => LucideIcons.fileDown,
+  .mediaInfoSkip => LucideIcons.skipForward,
+  .mediaInfoTombstonePush => LucideIcons.eraser,
+  .mediaInfoTombstonePull => LucideIcons.trash2,
+  .mediaUpload => LucideIcons.cloudUpload,
+  .mediaDownload => LucideIcons.cloudDownload,
+  .mediaSkip => LucideIcons.skipForward,
+  .mediaDelete => LucideIcons.trash2,
+  .lockAcquire => LucideIcons.lock,
+  .lockRelease => LucideIcons.lockOpen,
+  .keyfileUpload => LucideIcons.keyRound,
+  .keyConflict => LucideIcons.shieldAlert,
+  .reCipher => LucideIcons.refreshCcw,
+  .error => LucideIcons.circleAlert,
 };
 
-Map<SyncEventKind, String> _kindLabel(Translations l10n) =>
-    <SyncEventKind, String>{
-      .syncStart: l10n.sync.kindSyncStart,
-      .syncEnd: l10n.sync.kindSyncEnd,
-      .manifestRead: l10n.sync.kindManifestRead,
-      .manifestWrite: l10n.sync.kindManifestWrite,
-      .diaryUpload: l10n.sync.kindDiaryUpload,
-      .diaryDownload: l10n.sync.kindDiaryDownload,
-      .diarySkip: l10n.sync.kindDiarySkip,
-      .diaryTombstonePush: l10n.sync.kindDiaryTombstonePush,
-      .diaryTombstonePull: l10n.sync.kindDiaryTombstonePull,
-      .categoryUpload: l10n.sync.kindCategoryUpload,
-      .categoryDownload: l10n.sync.kindCategoryDownload,
-      .categorySkip: l10n.sync.kindCategorySkip,
-      .categoryTombstonePush: l10n.sync.kindCategoryTombstonePush,
-      .categoryTombstonePull: l10n.sync.kindCategoryTombstonePull,
-      .mediaUpload: l10n.sync.kindMediaUpload,
-      .mediaDownload: l10n.sync.kindMediaDownload,
-      .mediaSkip: l10n.sync.kindMediaSkip,
-      .mediaDelete: l10n.sync.kindMediaDelete,
-      .lockAcquire: l10n.sync.kindLockAcquire,
-      .lockRelease: l10n.sync.kindLockRelease,
-      .error: l10n.sync.kindError,
-    };
+String _kindLabel(Translations l10n, SyncEventKind kind) => switch (kind) {
+  .syncStart => l10n.sync.kindSyncStart,
+  .syncEnd => l10n.sync.kindSyncEnd,
+  .manifestRead => l10n.sync.kindManifestRead,
+  .manifestWrite => l10n.sync.kindManifestWrite,
+  .diaryUpload => l10n.sync.kindDiaryUpload,
+  .diaryDownload => l10n.sync.kindDiaryDownload,
+  .diarySkip => l10n.sync.kindDiarySkip,
+  .diaryTombstonePush => l10n.sync.kindDiaryTombstonePush,
+  .diaryTombstonePull => l10n.sync.kindDiaryTombstonePull,
+  .categoryUpload => l10n.sync.kindCategoryUpload,
+  .categoryDownload => l10n.sync.kindCategoryDownload,
+  .categorySkip => l10n.sync.kindCategorySkip,
+  .categoryTombstonePush => l10n.sync.kindCategoryTombstonePush,
+  .categoryTombstonePull => l10n.sync.kindCategoryTombstonePull,
+  .mediaInfoUpload => l10n.sync.kindMediaInfoUpload,
+  .mediaInfoDownload => l10n.sync.kindMediaInfoDownload,
+  .mediaInfoSkip => l10n.sync.kindMediaInfoSkip,
+  .mediaInfoTombstonePush => l10n.sync.kindMediaInfoTombstonePush,
+  .mediaInfoTombstonePull => l10n.sync.kindMediaInfoTombstonePull,
+  .mediaUpload => l10n.sync.kindMediaUpload,
+  .mediaDownload => l10n.sync.kindMediaDownload,
+  .mediaSkip => l10n.sync.kindMediaSkip,
+  .mediaDelete => l10n.sync.kindMediaDelete,
+  .lockAcquire => l10n.sync.kindLockAcquire,
+  .lockRelease => l10n.sync.kindLockRelease,
+  .keyfileUpload => l10n.sync.kindKeyfileUpload,
+  .keyConflict => l10n.sync.kindKeyConflict,
+  .reCipher => l10n.sync.kindReCipher,
+  .error => l10n.sync.kindError,
+};
+
+/// 从 payload 提取事件的一行摘要（方向 / 条数 / 标题 / 文件名…），与 kind 标签
+/// 拼成「上传日记 · 我的周末」这样的日志行。取不到返回 null。
+String? _subjectOf(Translations l10n, SyncEvent event) {
+  final payload = event.payload ?? const {};
+  String? str(String key) {
+    final v = payload[key];
+    return v is String && v.isNotEmpty ? v : null;
+  }
+
+  return switch (event.kind) {
+    .syncStart || .syncEnd => switch (str('direction')) {
+      'pull' => l10n.sync.directionPull,
+      'push' => l10n.sync.directionPush,
+      'restore' => l10n.sync.directionRestore,
+      're-cipher' => l10n.sync.directionReCipher,
+      _ => null,
+    },
+    .manifestRead || .manifestWrite => payload['entries'] is int
+        ? l10n.sync.logEventCount(count: payload['entries'] as int)
+        : null,
+    // 失败事件多半只带原始 manifest key（条目还没解析出来就炸了），兜到 key
+    // 才不会渲染成光秃秃一句「下载日记」、看不出是哪条红了。
+    .diaryUpload ||
+    .diaryDownload ||
+    .diarySkip ||
+    .diaryTombstonePush ||
+    .diaryTombstonePull => str('title') ?? str('diaryId') ?? str('key'),
+    .categoryUpload ||
+    .categoryDownload ||
+    .categorySkip ||
+    .categoryTombstonePush ||
+    .categoryTombstonePull => str('categoryId') ?? str('key'),
+    .mediaInfoUpload ||
+    .mediaInfoDownload ||
+    .mediaInfoSkip ||
+    .mediaInfoTombstonePush ||
+    .mediaInfoTombstonePull => str('mediaFileName') ?? str('key'),
+    .mediaUpload || .mediaDownload || .mediaSkip => str('filename'),
+    .mediaDelete => str('ref') ?? str('filename'),
+    .reCipher =>
+      str('diaryId') ??
+          str('categoryId') ??
+          str('mediaFileName') ??
+          str('ref') ??
+          str('path'),
+    .error => str('key') ?? str('path') ?? str('ref'),
+    .keyfileUpload || .keyConflict || .lockAcquire || .lockRelease => null,
+  };
+}
+
+/// [SyncEventReason] 的展示文案；同一 kind 下的细分语义（如各种「跳过」的原因）。
+String? _reasonLabel(Translations l10n, SyncEventReason? reason) {
+  if (reason == null) return null;
+  return switch (reason) {
+    .upToDate => l10n.sync.reasonUpToDate,
+    .remoteNewer => l10n.sync.reasonRemoteNewer,
+    .localNewer => l10n.sync.reasonLocalNewer,
+    .openDiary => l10n.sync.reasonOpenDiary,
+    .localMissing => l10n.sync.reasonLocalMissing,
+    .probeFailed => l10n.sync.reasonProbeFailed,
+    .remoteExists => l10n.sync.reasonRemoteExists,
+    .localExists => l10n.sync.reasonLocalExists,
+    .remoteMissing => l10n.sync.reasonRemoteMissing,
+    .takeover => l10n.sync.reasonTakeover,
+    .expiredLock => l10n.sync.reasonExpiredLock,
+    .casVerified => l10n.sync.reasonCasVerified,
+    .casUnsupported => l10n.sync.reasonCasUnsupported,
+    .renewFailed => l10n.sync.reasonRenewFailed,
+    .releaseFailed => l10n.sync.reasonReleaseFailed,
+    .decodeFailed => l10n.sync.reasonDecodeFailed,
+    .unknownTombstone => l10n.sync.reasonUnknownTombstone,
+    .stopped => l10n.sync.reasonStopped,
+    .aborted => l10n.sync.reasonAborted,
+  };
+}
 
 class _EventGroupTile extends StatefulWidget {
   /// 同 kind 的连续事件，最新在前。
@@ -315,7 +408,7 @@ class _EventGroupTileState extends State<_EventGroupTile> {
       childrenPadding: const .only(left: 12),
       visualDensity: .compact,
       leading: Icon(
-        _kindIcon[kind] ?? LucideIcons.circleDot,
+        _kindIcon(kind),
         size: 18,
         color: color,
       ),
@@ -327,7 +420,7 @@ class _EventGroupTileState extends State<_EventGroupTile> {
       ),
       title: Text(
         context.l10n.sync.logGroupCount(
-          kind: _kindLabel(context.l10n)[kind] ?? kind.name,
+          kind: _kindLabel(context.l10n, kind),
           count: events.length,
         ),
         style: hasError
@@ -360,8 +453,15 @@ class _EventTile extends StatelessWidget {
         : isWarn
         ? scheme.tertiary
         : scheme.onSurfaceVariant;
-    final icon = _kindIcon[event.kind] ?? LucideIcons.circleDot;
+    final icon = _kindIcon(event.kind);
     final hasPayload = event.payload != null && event.payload!.isNotEmpty;
+    // 事件本身只有机器字段：文案 = kind 标签 + payload 摘要 + reason，
+    // 例如「上传日记 · 我的周末」「跳过媒体 · a.jpg · 本地文件缺失」。
+    final line = [
+      _kindLabel(context.l10n, event.kind),
+      ?_subjectOf(context.l10n, event),
+      ?_reasonLabel(context.l10n, event.reason),
+    ].join(' · ');
 
     return MInkWell(
       borderRadius: .circular(10),
@@ -381,7 +481,7 @@ class _EventTile extends StatelessWidget {
                 crossAxisAlignment: .start,
                 children: [
                   Text(
-                    event.message,
+                    line,
                     style: isError
                         ? typography.bodyMedium.error
                         : typography.bodyMedium.onSurface,
@@ -416,7 +516,7 @@ class _EventTile extends StatelessWidget {
       'at': event.at.toIso8601String(),
       'level': event.level.name,
       'kind': event.kind.name,
-      'message': event.message,
+      if (event.reason != null) 'reason': event.reason!.name,
       'payload': ?event.payload,
     });
     MSheet.show<void>(
