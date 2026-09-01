@@ -170,10 +170,11 @@ class LocalArchive {
 
   /// 按远端布局把快照写入 [sink]，返回写入的 manifest 条目数。
   ///
-  /// [remote] 非 null 时做增量（局域网发送）：只写比对方新的条目（LWW，含
-  /// tombstone；对方从未有过的条目不发 tombstone），对方已有的媒体不进包 ——
-  /// 但仍留在条目的 media 列表里（列表描述日记引用了什么，导入端对已存在
-  /// 文件本就跳过下载）。过滤只是省带宽：导入端的 engine.pull 才是正确性闸门。
+  /// [remote] 非 null 时做增量（局域网发送）：写比对方新的条目（LWW，含 tombstone；
+  /// 对方从未有过的条目不发 tombstone），**以及时间戳相同但对方缺媒体的条目**——
+  /// 后者是重传能补回丢失媒体的唯一途径。对方已有的媒体不进包，但仍留在条目的
+  /// media 列表里（列表描述日记引用了什么，导入端对已存在文件本就跳过下载）。
+  /// 过滤只是省带宽：导入端的 engine.pull 才是正确性闸门。
   @visibleForTesting
   static Future<int> writeArchive({
     required ArchiveSink sink,
@@ -197,7 +198,13 @@ class LocalArchive {
       if (remote == null) return true;
       final remoteEntry = remote.entries[key];
       if (remoteEntry == null) return !entry.deleted;
-      return entry.timeMs > remoteEntry.timeMs;
+      if (entry.timeMs > remoteEntry.timeMs) return true;
+      if (entry.deleted || remoteEntry.deleted) return false;
+      // 时间戳相同也可能要发：对方 JSON 落库成功而媒体拷贝失败（磁盘写满等），
+      // manifest 只列磁盘上真实存在的文件，缺口在这里看得见。只比时间戳的话重传
+      // 会报「对方已是最新」，丢掉的图/音再也补不回来，而用户往往据此抹掉旧机。
+      final remoteRefs = remoteEntry.media.toSet();
+      return entry.media.any((ref) => !remoteRefs.contains(ref));
     }
 
     final included = <String, ManifestEntry>{
