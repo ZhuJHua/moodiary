@@ -1,6 +1,12 @@
 import 'package:moodiary_di/moodiary_di.dart';
 
-/// 本地备份归档（整库 zip）的进出口。
+/// 本地备份归档的进出口。
+///
+/// **不是整库备份**，范围就是日记 + 分类 + 媒体元数据 + 日记引用到的媒体文件
+/// （布局与远端归档同源，见 sync 的 LocalArchive）。助手会话 / 记忆 / 预设 /
+/// 供应商配置、聊天里的图片、自定义字体、以及全部 KV 设置（含同步后端配置）
+/// **都不在包里**，换机后需要重新配置。要改成整库，按现有 `<kind>/<id>.json`
+/// 布局补写对应表与目录即可，恢复侧共用同一套 ArchiveApplier。
 ///
 /// 实现在 moodiary_sync（复用它的增量引擎与清单），消费方在 moodiary_export 的
 /// 「导入与导出」页 —— 两者都是 feature 层、互相不能 import，故契约下沉到这里，
@@ -8,7 +14,7 @@ import 'package:moodiary_di/moodiary_di.dart';
 abstract class IBackupArchive {
   static IBackupArchive get() => getIt.get<IBackupArchive>();
 
-  /// 打包全部日记与媒体，返回生成的 zip 路径。
+  /// 打包全部日记与媒体（范围见类文档），返回生成的 zip 路径。
   Future<String> export();
 
   /// 从 zip 恢复，按「最后修改时间」与本地数据合并。
