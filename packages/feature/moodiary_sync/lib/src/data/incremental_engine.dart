@@ -138,7 +138,8 @@ class IncrementalSyncEngine {
   };
 
   /// 「进程内互斥锁 + 远端租约锁」双重保护下执行 [body]（后者挡其它设备，见
-  /// [RemoteLease]）。结束（含异常）时复位停止标志，不残留到下一次同步。
+  /// [RemoteLease]）。停止标志的复位在 [runSyncExclusive] 那一层——放这里的话
+  /// 租约抢占失败就走不到。
   Future<T> _exclusive<T>(Future<T> Function() body) {
     return runSyncExclusive(
       () => RemoteLease.protect(backend, () async {
@@ -155,8 +156,6 @@ class IncrementalSyncEngine {
             payload: {..._backendPayload(), 'error': e.toString()},
           );
           rethrow;
-        } finally {
-          SyncCancellation.instance.reset();
         }
       }, logger: _logger),
     );
@@ -688,7 +687,7 @@ class IncrementalSyncEngine {
       },
     );
     final warnings = [
-      if (failed > 0) '$failed 个条目上传失败已跳过',
+      if (failed > 0) l10n.sync.warnFailedSkipped(count: failed),
       if (stopped) l10n.sync.warnStopped,
     ].join('\n');
     return SyncReport(

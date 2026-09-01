@@ -252,5 +252,7 @@
   "stepCategory": "Category {id}",
   "stepMediaInfo": "Media record {id}",
   "stepMedia": "Media {ref}",
-  "stepManifest": "Writing the manifest"
+  "stepManifest": "Writing the manifest",
+  "statusPartial": "Sync incomplete",
+  "summaryCounts": "{diary} diaries · {category} categories"
 }

@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/sync_registry.dart';
 
@@ -107,6 +108,14 @@ class SyncReport {
     this.cancelled = false,
     this.skipped = 0,
   });
+
+  /// 面向用户的摘要：条目数 + 停止 / 失败的补充说明，逐字段走 l10n。
+  /// UI 一律用这个，别用 [toString]。
+  String userSummary() => [
+    l10n.sync.summaryCounts(diary: diaryCount, category: categoryCount),
+    if (cancelled) l10n.sync.warnStopped,
+    if (failed > 0) l10n.sync.warnFailedSkipped(count: failed),
+  ].join(' · ');
 
   /// 仅供日志 / payload，**禁止进 UI**——硬编码中文；给用户的摘要逐字段走 l10n
   /// （范例：lan_receive_page 的 _summary、export_page 的 restoreSummary）。

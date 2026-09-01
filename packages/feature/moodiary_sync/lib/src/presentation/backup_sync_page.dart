@@ -27,6 +27,9 @@ class BackupSyncPage extends ConsumerWidget {
         case SyncSuccess(:final message):
           toast.success(message: l10n.sync.doneToast(message: message));
           ref.read(syncControllerProvider.notifier).reset();
+        case SyncPartial(:final message):
+          toast.error(message: message);
+          ref.read(syncControllerProvider.notifier).reset();
         case SyncError(:final message):
           toast.error(message: l10n.sync.failedToast(message: message));
           ref.read(syncControllerProvider.notifier).reset();

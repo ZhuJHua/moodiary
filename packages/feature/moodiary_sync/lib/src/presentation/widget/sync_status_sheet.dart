@@ -88,7 +88,7 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
   @override
   Widget build(BuildContext context) {
     ref.listen<SyncState>(syncControllerProvider, (prev, next) {
-      if (next is SyncSuccess || next is SyncError) {
+      if (next is SyncSuccess || next is SyncPartial || next is SyncError) {
         ref.invalidate(syncStatsProvider);
       }
     });
@@ -269,6 +269,14 @@ class _StateCard extends StatelessWidget {
         icon: LucideIcons.circleCheck,
         title: l10n.sync.statusDone,
         detail: message,
+      ),
+      // 有失败条目 / 被停止：绝不能和「同步完成」长一个样——引擎正因为这两种情况
+      // 不推进「上次同步时间」，用户却会据此以为云端已有完整副本。
+      SyncPartial(:final message) => _Line(
+        icon: LucideIcons.triangleAlert,
+        title: l10n.sync.statusPartial,
+        detail: message,
+        warn: true,
       ),
       SyncError(:final message) => _Line(
         icon: LucideIcons.triangleAlert,

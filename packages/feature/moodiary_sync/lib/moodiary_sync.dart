@@ -14,6 +14,7 @@ export 'src/application/sync_controller.dart'
         SyncState,
         SyncIdle,
         SyncRunning,
+        SyncPartial,
         SyncSuccess,
         SyncError;
 export 'src/application/tombstone_gc.dart' show purgeExpiredTombstones;

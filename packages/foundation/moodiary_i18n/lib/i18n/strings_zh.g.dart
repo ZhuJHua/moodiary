@@ -3025,6 +3025,12 @@ class Translations$sync$zh {
 
 	/// zh: '写回 manifest'
 	String get stepManifest => '写回 manifest';
+
+	/// zh: '同步未完成'
+	String get statusPartial => '同步未完成';
+
+	/// zh: '日记 {diary} 条 · 分类 {category} 个'
+	String summaryCounts({required Object diary, required Object category}) => '日记 ${diary} 条 · 分类 ${category} 个';
 }
 
 // Path: ui

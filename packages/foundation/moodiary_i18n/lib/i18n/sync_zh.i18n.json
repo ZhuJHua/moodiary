@@ -252,5 +252,7 @@
   "stepCategory": "分类 {id}",
   "stepMediaInfo": "媒体信息 {id}",
   "stepMedia": "媒体 {ref}",
-  "stepManifest": "写回 manifest"
+  "stepManifest": "写回 manifest",
+  "statusPartial": "同步未完成",
+  "summaryCounts": "日记 {diary} 条 · 分类 {category} 个"
 }

@@ -1113,6 +1113,8 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String stepMediaInfo({required Object id}) => 'Media record ${id}';
 	@override String stepMedia({required Object ref}) => 'Media ${ref}';
 	@override String get stepManifest => 'Writing the manifest';
+	@override String get statusPartial => 'Sync incomplete';
+	@override String summaryCounts({required Object diary, required Object category}) => '${diary} diaries · ${category} categories';
 }
 
 // Path: ui
