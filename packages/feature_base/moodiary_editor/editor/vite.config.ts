@@ -3,6 +3,7 @@ import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import Icons from 'unplugin-icons/vite'
 import { compression, defineAlgorithm } from 'vite-plugin-compression2'
+import license from 'rollup-plugin-license'
 
 export default defineConfig({
   // 生产编辑器（moodiary-editor.css）与 dev harness（dev/harness.css）都 `@import 'tailwindcss'`，
@@ -16,6 +17,18 @@ export default defineConfig({
     vue(),
     Icons({ compiler: 'vue3' }),
     tailwindcss(),
+    // 第三方署名：只统计**真正进了 bundle** 的模块（不是全部 prod 依赖），连同许可证全文
+    // 写成 JSON 交给 `dart tool/task.dart licenses` 合并进 App 的开源许可页。
+    // 输出落在 gitignore 的 build/ 里，不能进 outDir —— 那里的东西会被打包并由本地服务发出去。
+    license({
+      thirdParty: {
+        includePrivate: false,
+        output: {
+          file: 'build/third-party-licenses.json',
+          template: (dependencies) => JSON.stringify(dependencies, null, 2),
+        },
+      },
+    }),
     // 每个资源 gzip 预压缩为 .gz 并删原文件；运行时 EditorLocalServer 解压后发明文。
     compression({
       algorithms: [defineAlgorithm('gzip', { level: 9 })],

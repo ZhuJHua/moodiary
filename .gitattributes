@@ -8,3 +8,6 @@
 
 # Committed editor build artifact (brotli binary) — no diff/eol munging, exclude from GitHub language stats
 packages/feature_base/moodiary_editor/assets/editor/** binary linguist-generated
+
+# Generated third-party license manifest — exclude from GitHub language stats
+mobile/assets/licenses/third_party.json linguist-generated

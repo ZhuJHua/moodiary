@@ -56,7 +56,7 @@
 
 App 那份按 **namespace 一个 feature 一份文件**：`common`（无领域含义的基础词）+
 `app` / `diary` / `assistant` / `export` / `sync` / `media` / `editor` / `ui` / `lock` /
-`onboarding` / `share`。取串写成 `l10n.diary.searchResult`；**删 feature 就删它那两个文件**。
+`share`。取串写成 `l10n.diary.searchResult`；**删 feature 就删它那两个文件**。
 
 **feature 包不各自装 slang**（只有 mui 例外，因为它是零 `moodiary_*` 依赖的对外叶子包）：
 namespace 已经给到分域的全部好处，不必为每个 feature 再付一份产物、一次挂载。
@@ -121,7 +121,6 @@ namespace 已经给到分域的全部好处，不必为每个 feature 再付一�
   扫描器不会报它们，但别顺手「补翻译」。
 - **不是文案的字符串**：`'宋体'` 是字体族名、`'『压测』'` 是压测日记的标题标记（翻了就认不出
   历史数据）、ICP 备案号是法律标识、`logger.e` / `assert` 的文字进的是日志文件。
-- **`agreement_page` / `privacy_page` 里内联的用户协议与隐私政策全文**：法律文本，机翻不算数。
 
 > slang 自带的 `dart run slang migrate arb` **不能用**：它按 camelCase 把键强行拆成嵌套路径
 > （`accentCustomTitle` → `accent.custom.title`），既改掉全部调用点，又会在

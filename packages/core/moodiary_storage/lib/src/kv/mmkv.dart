@@ -60,7 +60,9 @@ final class MmkvKVStorage extends IKVStorage {
     await _migrateFromPrefsOnce();
 
     // 搬迁被跳过时 MMKV 还是空的，这里读出来必然是 null；写死成 true 会**持久化**成
-    // 「全新安装」，把老用户送进引导页。本次什么都不写，等搬迁成功那次再定。
+    // 「全新安装」，把老用户当成新用户。本次什么都不写，等搬迁成功那次再定。
+    // 眼下没人读这个键（引导页与首启协议告知都已下架），留着是因为「是不是全新安装」
+    // 这个事实一旦丢了就再也补不回来。
     if (!legacyMigrationPending) {
       final firstStart = get<bool>(MoodiaryKVs.firstStart.name) ?? true;
       set<bool>(MoodiaryKVs.firstStart.name, firstStart);

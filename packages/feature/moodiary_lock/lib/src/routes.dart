@@ -1,7 +1,6 @@
 import 'package:moodiary_router/moodiary_router.dart';
 
 import 'presentation/lock_page.dart';
-import 'presentation/start_page.dart';
 
 List<RouteBase> lockRoutes() => [
   GoRoute(
@@ -11,5 +10,4 @@ List<RouteBase> lockRoutes() => [
       return LockPage(lockType: route.lockType);
     },
   ),
-  GoRoute(path: StartRoute.path, builder: (_, _) => const StartPage()),
 ];

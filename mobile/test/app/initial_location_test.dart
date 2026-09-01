@@ -29,11 +29,12 @@ void main() {
     expect(resolveInitialLocation(), LockRoute.path);
   });
 
-  test('首次启动（firstStart 默认即 true）：进引导页', () {
-    expect(resolveInitialLocation(), StartRoute.path);
+  test('首次启动也直接进主界面（引导页已下架，首启不再有拦截）', () {
+    expect(MoodiaryKVs.firstStart.get(), isTrue);
+    expect(resolveInitialLocation(), DiaryHomeRoute.path);
   });
 
-  test('引导已完成：进主界面', () {
+  test('非首次启动：进主界面', () {
     MoodiaryKVs.firstStart.set(false);
     expect(resolveInitialLocation(), DiaryHomeRoute.path);
   });

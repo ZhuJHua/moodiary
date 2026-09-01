@@ -43,7 +43,6 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$export$zh export = Translations$export$zh.internal(_root);
 	late final Translations$lock$zh lock = Translations$lock$zh.internal(_root);
 	late final Translations$media$zh media = Translations$media$zh.internal(_root);
-	late final Translations$onboarding$zh onboarding = Translations$onboarding$zh.internal(_root);
 	late final Translations$picker$zh picker = Translations$picker$zh.internal(_root);
 	late final Translations$share$zh share = Translations$share$zh.internal(_root);
 	late final Translations$sync$zh sync = Translations$sync$zh.internal(_root);
@@ -189,6 +188,9 @@ class Translations$app$zh {
 
 	/// zh: '源码仓库'
 	String get aboutSource => '源码仓库';
+
+	/// zh: '开源许可'
+	String get aboutLicenses => '开源许可';
 
 	/// zh: '反馈 / 答疑'
 	String get aboutFeedback => '反馈 / 答疑';
@@ -2174,48 +2176,6 @@ class Translations$media$zh {
 	String videoCount({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
 		other: '${count} 段视频',
 	);
-}
-
-// Path: onboarding
-class Translations$onboarding$zh {
-	Translations$onboarding$zh.internal(this._root);
-
-	final Translations _root; // ignore: unused_field
-
-	// Translations
-
-	/// zh: '欢迎使用 Moodiary'
-	String get welcomeTitle => '欢迎使用 Moodiary';
-
-	/// zh: '一本离线优先的私密日记，数据默认只留在你的设备上。'
-	String get welcomeBody => '一本离线优先的私密日记，数据默认只留在你的设备上。';
-
-	/// zh: '记录每一种情绪'
-	String get moodTitle => '记录每一种情绪';
-
-	/// zh: '心情、分类、标签随心组织，写作时长与字数实时可见。'
-	String get moodBody => '心情、分类、标签随心组织，写作时长与字数实时可见。';
-
-	/// zh: '数据始终归你掌控'
-	String get ownershipTitle => '数据始终归你掌控';
-
-	/// zh: '一键导出 JSON 备份，也可开启 WebDAV / S3 云同步，端到端加密可选。'
-	String get ownershipBody => '一键导出 JSON 备份，也可开启 WebDAV / S3 云同步，端到端加密可选。';
-
-	/// zh: '跳过'
-	String get skip => '跳过';
-
-	/// zh: '下一步'
-	String get next => '下一步';
-
-	/// zh: '开始记录'
-	String get start => '开始记录';
-
-	/// zh: '用户协议'
-	String get userAgreement => '用户协议';
-
-	/// zh: '隐私政策'
-	String get privacyPolicy => '隐私政策';
 }
 
 // Path: picker

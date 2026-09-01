@@ -18,6 +18,7 @@ import 'package:moodiary_migration/moodiary_migration.dart';
 import 'package:moodiary_mobile/app/boot_failure_page.dart';
 import 'package:moodiary_mobile/app/di/bootstrap.dart';
 import 'package:moodiary_mobile/app/di/di.dart';
+import 'package:moodiary_mobile/app/licenses.dart';
 import 'package:moodiary_mobile/app/lifecycle/app_lock_observer.dart';
 import 'package:moodiary_mobile/app/locale.dart';
 import 'package:moodiary_mobile/app/router/router.dart';
@@ -153,13 +154,13 @@ Duration? _providerRetry(int retryCount, Object error) {
   return Duration(milliseconds: 300 * (retryCount + 1));
 }
 
-/// 首帧落点：有锁先锁、首启进引导、否则主界面。路径取自路由契约常量，
+/// 首帧落点：有锁先锁，否则主界面。首启不再有任何拦截 —— 引导页与协议告知都已下架，
+/// 协议本身待后续专门重做。路径取自路由契约常量，
 /// 不写字面量（app_lock_observer 曾因 '/edit' 字面量与真实路由脱钩）。
 @visibleForTesting
 String resolveInitialLocation() {
   // AppLockPin.load() 已在 _initSystem 里跑过，这里读的是进程内那份。
   if (AppLockPin.enabled.value) return LockRoute.path;
-  if (MoodiaryKVs.firstStart.get() == true) return StartRoute.path;
   return DiaryHomeRoute.path;
 }
 
@@ -180,6 +181,9 @@ void main() async {
     logger.f('Error', error: error, stackTrace: stack);
     return true;
   };
+
+  // 许可证页要用的第三方清单。只登记一个惰性回调，真正读 asset 要等用户打开那一页。
+  registerThirdPartyLicenses();
 
   // 启动失败的最后防线：任何一步抛出都不能停在启动图——那对用户等于变砖。
   // 兜底页零依赖（slang / 主题 / 容器此刻可能正是坏的那一环）。

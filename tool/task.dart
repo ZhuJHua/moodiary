@@ -9,6 +9,7 @@
 //   dart tool/task.dart deps             # 工作区依赖图（Mermaid；--pub 看第三方声明分布）
 //   dart tool/task.dart build-runner     # 代码生成
 //   dart tool/task.dart i18n             # slang 文案生成（moodiary_i18n + mui）
+//   dart tool/task.dart licenses         # 第三方许可清单（Rust crates + 编辑器 npm）
 //   dart tool/task.dart clean            # 删除 editor 构建产物
 //
 // 用 `dart`（非 `dart run`）调用本脚本可跳过 flutter_rust_bridge 的原生构建钩子。
@@ -265,6 +266,12 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
   // 代码生成：Rust FFI 绑定 / slang 文案；`gen` = 三者 + 编辑器资源（melos bootstrap 的 post hook）。
   'gen-rust': (_) => _genRust(),
   'i18n': (_) => _i18n(),
+  // 第三方许可清单（Rust + npm）。pub 那份由 flutter tool 自己收，不在这里。
+  // npm 那半是编辑器构建的产物（rollup-plugin-license），所以先构建再合并。
+  'licenses': (_) async {
+    await _editor();
+    await _run('fvm', ['dart', 'run', 'tool/licenses.dart']);
+  },
   'gen': (_) async {
     await _genRust();
     await _i18n();

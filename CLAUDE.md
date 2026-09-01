@@ -28,6 +28,7 @@ dart tool/task.dart build-runner   # 全仓 build_runner（melos 扫所有含 bu
 dart tool/task.dart gen-rust       # regenerate Rust FFI bindings
 dart tool/task.dart i18n           # slang 文案生成（改了 i18n/*.json 必跑）
 dart tool/task.dart gen            # gen-rust + i18n + rebuild editor asset
+dart tool/task.dart licenses       # 第三方许可清单（Rust crates + 编辑器 npm；改了 Cargo.toml / package.json 依赖才要跑）
 dart tool/task.dart editor         # rebuild editor asset only (needs corepack on PATH)
 
 # Lint & Test

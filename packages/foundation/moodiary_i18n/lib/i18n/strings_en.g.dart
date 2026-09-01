@@ -41,7 +41,6 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$export$en export = _Translations$export$en._(_root);
 	@override late final _Translations$lock$en lock = _Translations$lock$en._(_root);
 	@override late final _Translations$media$en media = _Translations$media$en._(_root);
-	@override late final _Translations$onboarding$en onboarding = _Translations$onboarding$en._(_root);
 	@override late final _Translations$picker$en picker = _Translations$picker$en._(_root);
 	@override late final _Translations$share$en share = _Translations$share$en._(_root);
 	@override late final _Translations$sync$en sync = _Translations$sync$en._(_root);
@@ -99,6 +98,7 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get aboutCheckUpdate => 'Check for updates';
 	@override String get aboutUpToDate => 'You are on the latest version';
 	@override String get aboutSource => 'Source code';
+	@override String get aboutLicenses => 'Open source licenses';
 	@override String get aboutFeedback => 'Feedback and help';
 	@override String get aboutSponsor => 'Sponsor';
 	@override String get sponsorThanks => 'Thank you for considering it!';
@@ -812,26 +812,6 @@ class _Translations$media$en extends Translations$media$zh {
 		one: '${count} Video',
 		other: '${count} Videos',
 	);
-}
-
-// Path: onboarding
-class _Translations$onboarding$en extends Translations$onboarding$zh {
-	_Translations$onboarding$en._(TranslationsEn root) : this._root = root, super.internal(root);
-
-	final TranslationsEn _root; // ignore: unused_field
-
-	// Translations
-	@override String get welcomeTitle => 'Welcome to Moodiary';
-	@override String get welcomeBody => 'An offline-first private journal. Your entries stay on your device by default.';
-	@override String get moodTitle => 'Capture every mood';
-	@override String get moodBody => 'Organise with moods, categories and tags; writing time and word count update as you type.';
-	@override String get ownershipTitle => 'Your data stays yours';
-	@override String get ownershipBody => 'Export a JSON backup in one tap, or turn on WebDAV / S3 sync with optional end-to-end encryption.';
-	@override String get skip => 'Skip';
-	@override String get next => 'Next';
-	@override String get start => 'Start writing';
-	@override String get userAgreement => 'Terms of use';
-	@override String get privacyPolicy => 'Privacy policy';
 }
 
 // Path: picker

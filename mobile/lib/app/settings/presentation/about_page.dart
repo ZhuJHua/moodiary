@@ -4,9 +4,14 @@ import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_mobile/gen/assets.gen.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
-import 'package:moodiary_router/moodiary_router.dart';
 import 'package:mui/mui.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+/// 许可证页顶部那段。读者是用户，但内容是法律标识（GPL 的名称与工具链名），不进 i18n。
+const _legalese =
+    'Moodiary is free software licensed under the GNU General Public License '
+    'v3.0. The licenses below cover the Dart, Rust and JavaScript packages it '
+    'is built on.';
 
 class AboutPage extends StatefulWidget {
   const AboutPage({super.key});
@@ -103,27 +108,20 @@ class _AboutPageState extends State<AboutPage> {
                   ),
                   SettingListTile(
                     leading: Icon(
-                      LucideIcons.scrollText,
+                      LucideIcons.scale,
                       color: scheme.onSurfaceVariant,
                     ),
-                    title: context.l10n.onboarding.userAgreement,
+                    title: context.l10n.app.aboutLicenses,
                     trailing: Icon(
                       LucideIcons.chevronRight,
                       color: scheme.onSurfaceVariant,
                     ),
-                    onTap: () => const AgreementRoute().push(context),
-                  ),
-                  SettingListTile(
-                    leading: Icon(
-                      LucideIcons.shieldAlert,
-                      color: scheme.onSurfaceVariant,
+                    onTap: () => showLicensePage(
+                      context: context,
+                      applicationName: 'Moodiary',
+                      applicationVersion: appVersion,
+                      applicationLegalese: _legalese,
                     ),
-                    title: context.l10n.onboarding.privacyPolicy,
-                    trailing: Icon(
-                      LucideIcons.chevronRight,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                    onTap: () => const PrivacyRoute().push(context),
                   ),
                   SettingListTile(
                     isLast: true,

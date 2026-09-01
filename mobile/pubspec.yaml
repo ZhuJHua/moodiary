@@ -50,8 +50,6 @@ dependencies:
   file_picker: 12.1.2
   heif_converter: 1.0.7
 
-  flutter_markdown_plus: 1.0.12
-
   flutter_displaymode: 0.7.0
   flutter_svg: 2.3.0
   url_launcher: 6.3.2
@@ -77,6 +75,7 @@ flutter:
   assets:
     - res/sponsor/
     - assets/icons/
+    - assets/licenses/
 
   uses-material-design: true
 

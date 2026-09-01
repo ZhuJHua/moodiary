@@ -157,20 +157,6 @@ class DiaryGraphRoute extends MoodiaryRouteBase {
       DiaryGraphRoute(diaryId: state.uri.queryParameters['diary-id']);
 }
 
-class PrivacyRoute extends MoodiaryRouteBase {
-  static const String path = '/setting/privacy';
-  const PrivacyRoute();
-  @override
-  String get location => path;
-}
-
-class AgreementRoute extends MoodiaryRouteBase {
-  static const String path = '/setting/agreement';
-  const AgreementRoute();
-  @override
-  String get location => path;
-}
-
 /// 设置列表页。底栏只剩三个 tab 之后设置不再常驻，入口在分类抽屉底部。
 class SettingRoute extends MoodiaryRouteBase {
   static const String path = '/setting';
@@ -216,13 +202,6 @@ class ExportFormatRoute extends MoodiaryRouteBase {
   static ExportFormatRoute fromState(GoRouterState state) => ExportFormatRoute(
     format: state.uri.queryParameters['format'] ?? 'markdown',
   );
-}
-
-class StartRoute extends MoodiaryRouteBase {
-  static const String path = '/start';
-  const StartRoute();
-  @override
-  String get location => path;
 }
 
 class SyncLogRoute extends MoodiaryRouteBase {
