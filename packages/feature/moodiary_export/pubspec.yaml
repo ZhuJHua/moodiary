@@ -1,0 +1,38 @@
+name: moodiary_export
+description: "Moodiary 导入导出：日记导出为 Markdown / Word / PDF，以及本地备份 zip 与 Markdown 的导入。IR 与 tiptap 遍历在本包，PDF / DOCX 生成在 moodiary_rust。"
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  moodiary_files: 0.0.1
+  moodiary_logging: 0.0.1
+  moodiary_platform: 0.0.1
+  moodiary_storage: 0.0.1
+  moodiary_theme: 0.0.1
+  moodiary_models: 0.0.1
+  moodiary_data: 0.0.1
+  moodiary_i18n: 0.0.1
+  moodiary_components: 0.0.1
+  moodiary_router: 0.0.1
+  moodiary_rust: 0.0.1
+  moodiary_utils: 0.0.1
+  mui: 0.0.1
+
+  gap: 3.0.1
+  path: 1.9.1
+  share_plus: 13.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1
+  build_runner: 2.16.0

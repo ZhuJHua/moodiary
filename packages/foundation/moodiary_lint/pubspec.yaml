@@ -1,0 +1,12 @@
+name: moodiary_lint
+description: "Shared analyzer + lint configuration for the Moodiary workspace. Consumers `include: package:moodiary_lint/analysis_options.yaml`."
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.13.0"
+
+dependencies:
+  flutter_lints: 6.0.0

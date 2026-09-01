@@ -1,0 +1,12 @@
+[package]
+name = "moodiary-assistant"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = { workspace = true }
+futures = { workspace = true }
+serde_json = { workspace = true }
+rig = { workspace = true }
+rig-agent = { workspace = true }
+moodiary-http = { workspace = true }

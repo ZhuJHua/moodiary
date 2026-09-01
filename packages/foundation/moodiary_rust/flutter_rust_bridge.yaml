@@ -1,0 +1,6 @@
+rust_input: crate::api
+rust_root: rust/
+dart_output: lib/src/rust
+web: false
+stop_on_error: true
+full_dep: true

@@ -1,0 +1,214 @@
+import 'package:moodiary_storage/moodiary_storage.dart';
+
+/// Moodiary 全部本地 KV 配置；业务侧只允许通过本 enum 访问。
+/// 值类型由泛型 [T] 决定；`get()` 返回 `T?`，缺值时回退 [defaultValue]。
+enum MoodiaryKVs<T extends Object> {
+  appVersion<String>(),
+  firstStart<bool>(defaultValue: true),
+
+  /// 升级/首启后是否已一次性回填全量搜索 + 双链倒排索引。旧库从未建过倒排索引，若不回填
+  /// 则所有既有日记正文搜不到、双链为空；回填一次后置位，之后靠增量索引维护。
+  searchIndexBackfilled<bool>(defaultValue: false),
+
+  /// 2.8.0 引擎搬迁（旧 Isar → SQLite）是否已完成。未置位且旧 `default.isar`
+  /// 仍在时，启动强制迁移页先跑引擎搬迁；置位后旧库文件只是留底（.bak）。
+  dbEngineMigrated<bool>(defaultValue: false),
+
+  /// 自动同步总开关：开启即启用「变更后 push + 定时轮询双向 sync」（见 [AutoSyncWatcher]）。
+  autoSync<bool>(defaultValue: false),
+
+  /// 轮询间隔（秒）；过短会频繁抢占远端锁 / 读清单，徒增流量与耗电。
+  syncPollInterval<int>(defaultValue: 30),
+
+  /// 加密由 [MoodiarySecureKVs.syncDek] 是否配置驱动，没有独立开关。
+  syncProvider<String>(defaultValue: 'webdav'),
+
+  /// 同步时同时在飞的网络请求上限（push / pull 共用）；引擎读取时夹紧到合理范围。
+  syncConcurrency<int>(defaultValue: 8),
+
+  /// 本机上次同步成功完成的时间（毫秒时间戳）。0 表示从未同步。
+  lastSyncTime<int>(defaultValue: 0),
+
+  /// 上次成功 syncAll 前观测到的远端 manifest 指纹（`<backendId>|<Last-Modified>`）。
+  /// 轮询 HEAD 比对命中且本地无待推变更时跳过整个同步（空转短路）。
+  syncManifestStat<String>(defaultValue: ''),
+
+  /// 自上次成功同步后本地是否有待推变更（含分类 / 删除；云 pull 落库的不算）。
+  /// 缺省 true（保守：未知即视作有变更，走完整同步）。
+  syncPendingLocal<bool>(defaultValue: true),
+
+  /// 最近一次读到 / 写出的远端 keys.json 原文（明文 JSON，非机密——内容只有
+  /// 盐、KDF 参数和没有密码解不开的密文）。供密钥管理页离线校验当前密码，
+  /// 以及向尚未送达的后端补传（见 syncKeyfilePendingBackends）。
+  syncKeyfileCache<String>(defaultValue: ''),
+
+  /// keyfile 待上传的后端 id 清单：开启加密 / 改密码时写远端失败（或后端离线 /
+  /// 后配）的后端记在这里，该后端下次同步由引擎前奏补传缓存的 keyfile。
+  syncKeyfilePendingBackends<List<String>>(),
+
+  /// 密钥冲突待处理的后端 id 清单：该后端的远端数据是**另一把 DEK** 加密的，
+  /// 本机密钥解不开。进了这个清单的后端一律不再写远端 keys.json（写了就会
+  /// 把远端唯一的信封换掉、令远端数据永久无法解密），自动同步也跳过它，
+  /// 直到用户在同步页输入正确密码解锁。
+  syncKeyConflictBackends<List<String>>(),
+
+  /// 丢弃远端加密数据后，需要**强制重传媒体**的后端 id 清单。远端旧密文媒体与本机
+  /// 同名（文件名是稳定 UUID），不清掉这个标记，push 的 statObject 兜底会把它们当作
+  /// 「远端已存在」跳过上传并写进新 manifest —— 旧 DEK 的信封已经删了，那些对象从此
+  /// 永远解不开。一次完整成功的 push 之后清除。
+  syncForceMediaReuploadBackends<List<String>>(),
+
+  /// 本机在远端同步锁（`sync.lock`）中的身份标识。首次生成随机 UUID 后保持不变，
+  /// 重启 / 崩溃后能识别并接管自己残留的锁。
+  syncDeviceId<String>(defaultValue: ''),
+
+  /// 局域网发送页上次输入的目标地址（`ip` 或 `ip:端口`），便于重复发送。
+  lanSendTarget<String>(defaultValue: ''),
+
+  /// 强调色来源（[ThemeAccentMode] 的 index）。与 [themeMode] 正交：那个管明暗，
+  /// 这个管有没有颜色。缺省 0 = 无彩，也就是默认的纯灰度 UI。
+  themeAccentMode<int>(defaultValue: 0),
+
+  /// [themeAccentMode] 为 custom 时的种子色（`Color.toARGB32()`）。
+  /// 另外两档下不参与配色生成，但保留着 —— 切回自定义时沿用上次挑的颜色。
+  themeAccentColor<int>(defaultValue: 0xFF2E59A7),
+
+  themeMode<int>(defaultValue: 0),
+
+  fontTheme<int>(defaultValue: 0),
+
+  customFont<String>(defaultValue: ''),
+
+  /// 图片优化：存储时按 1280 规则压缩 + 统一转 WebP；关闭则保存原图（HEIC 仍转码）。
+  imageOptimize<bool>(defaultValue: true),
+  homeViewMode<int>(defaultValue: 3 /* ViewModeType.timeline.number */),
+  homeSortMode<int>(defaultValue: 0 /* DiarySort.timeDesc.number */),
+
+  categoryOrder<List<String>>(),
+
+  /// 导出配置（JSON，见 moodiary_export 的 ExportSettings）。按格式分别记，
+  /// 下次进导出页沿用上次的选择。
+  exportSettings<String>(defaultValue: ''),
+
+  /// 日记搜索历史（最近在前、去重、截断到上限）。
+  searchHistory<List<String>>(),
+  firstLineIndent<bool>(defaultValue: false),
+  showWritingTime<bool>(defaultValue: true),
+  showWordCount<bool>(defaultValue: true),
+
+  /// 「退到后台再回来需重新解锁」。**应用锁本身开没开不在这里** ——
+  /// 那是「有没有凭据」的派生态，见 `AppLockPin.enabled`。
+  lockNow<bool>(defaultValue: false),
+  supportBiometrics<bool>(defaultValue: false),
+  backendPrivacy<bool>(defaultValue: false),
+
+  /// 和风的 API Host 是 per-key 专属的，但它本身不是凭据（凭据是
+  /// [MoodiarySecureKVs.qweatherKey]），留在明文 KV。
+  qweatherApiHost<String>(),
+
+  /// 当前激活的 Provider id（对应 `LlmProvider.id`）。空表示未选 / 回退列表首个。
+  assistantActiveProviderId<String>(defaultValue: ''),
+
+  /// 用户是否已同意 AI 助手免责声明。未同意前助手不可用。
+  assistantDisclaimerAccepted<bool>(defaultValue: false),
+
+  /// 新建 AI 会话的默认思考强度；每个会话的实际档位存于 ChatSession.reasoningEffort。
+  /// 空串表示关闭思考。
+  assistantReasoningEffort<String>(defaultValue: ''),
+
+  /// 新建 AI 会话的默认助手预设 id。空串 = 内置「Moodiary助手」；
+  /// 指向的预设被删则回落内置。每个会话实际用的人格存于 ChatSession.personaSnapshot。
+  assistantAgentPresetId<String>(defaultValue: ''),
+
+  /// models.dev 目录的归一化缓存。
+  llmPresetCache<String>(defaultValue: ''),
+
+  llmPresetCacheAt<int>(defaultValue: 0),
+
+  /// 激活的本地嵌入模型 id（对应 moodiary_ml 内置清单）。空 = 语义检索未启用。
+  embeddingModelId<String>(defaultValue: ''),
+
+  /// 激活模型的向量维度；vec 表按它建。0 = 未激活。
+  embeddingDim<int>(defaultValue: 0),
+
+  /// 语义索引是否需要全量重建（切换模型 / 维度变化时置位，重建完成后清除）。
+  embeddingIndexStale<bool>(defaultValue: false),
+
+  /// 模型下载是否走 hf-mirror.com 镜像（关闭则直连 huggingface.co）。
+  modelDownloadMirror<bool>(defaultValue: true),
+
+  /// 激活的本地心情建议模型 id（对应 moodiary_ml 内置清单）。空 = 未启用。
+  moodLlmModelId<String>(defaultValue: ''),
+
+  getWeather<bool>(defaultValue: false),
+  autoWeather<bool>(defaultValue: false),
+  weather<List<String>>(),
+
+  startTime<int>(),
+  supportPath<String>(),
+  cachePath<String>(),
+  uuid<String>(),
+  local<bool>(defaultValue: false),
+  language<String>(defaultValue: 'system');
+
+  final T? defaultValue;
+
+  const MoodiaryKVs({this.defaultValue});
+
+  T? get() => IKVStorage.get().get<T>(name) ?? defaultValue;
+
+  void set(T value) => IKVStorage.get().set<T>(name, value);
+
+  void remove() => IKVStorage.get().remove(name);
+
+  /// 把本键的值从 [source] 搬进 [into]，类型由 [T] 决定；源里没有就跳过。
+  /// 换 KV 后端时用——泛型只有在 enum 自己的实例方法里才绑得住，
+  /// 迁移代码那边拿不到每个键的静态类型。
+  void copyFrom(IKVSource source, {required IKVStorage into}) {
+    final value = source.get<T>(name);
+    if (value != null) into.set<T>(name, value);
+  }
+
+  KVNotifier<T> getNotifier() {
+    if (defaultValue == null) {
+      throw StateError(
+        'MoodiaryKVs.$name has no defaultValue; getNotifier() requires one.',
+      );
+    }
+    return IKVStorage.get().getNotifier<T>(name, defaultValue as T);
+  }
+
+  /// 同 [getNotifier]，但就地提供 [fallback]，用于无 defaultValue 又想监听的 key。
+  KVNotifier<T> getNotifierOr(T fallback) {
+    return IKVStorage.get().getNotifier<T>(name, defaultValue ?? fallback);
+  }
+}
+
+enum MoodiarySecureKVs {
+  /// 同步数据密钥 DEK（base64 的 32 字节随机 key）。所有同步对象用它做
+  /// AES-256-GCM；用户密码只用于解包远端 keys.json 里包着的这把 key，
+  /// 密码原文不落本机。
+  syncDek,
+
+  /// WebDAV 连接配置，JSON 数组 `[baseUrl, username, password]`。含密码，故进 SecureKV。
+  webDavOption,
+
+  /// S3 连接配置，JSON 数组，索引见 `S3SyncBackend`。含 secretKey，故进 SecureKV。
+  s3Option,
+
+  /// 应用锁 PIN 的 **Argon2id PHC 串**，不是原文。
+  /// **别直接读写这个键，走 `AppLockPin`** —— 直接 `set(pin)` 会静默存进明文。
+  password,
+
+  /// 和风天气 API Key（配套的 host 不是凭据，仍在 [MoodiaryKVs.qweatherApiHost]）。
+  qweatherKey,
+
+  /// 天地图 API Key。
+  tiandituKey;
+
+  Future<String?> get() => ISecureKVStorage.get().get(name);
+
+  Future<void> set(String value) => ISecureKVStorage.get().set(name, value);
+
+  Future<void> remove() => ISecureKVStorage.get().remove(name);
+}

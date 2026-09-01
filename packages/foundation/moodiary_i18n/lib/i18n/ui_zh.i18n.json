@@ -1,0 +1,19 @@
+{
+  "imageBrowserSave": "保存到相册",
+  "imageBrowserSaved": "已保存到相册",
+  "imageBrowserSaveFailed": "保存失败",
+  "imageBrowserInfo": "图片信息",
+  "imageBrowserInfoUrl": "链接",
+  "imageBrowserInfoResolution": "分辨率",
+  "imageBrowserInfoSize": "大小",
+  "imageBrowserInfoFormat": "格式",
+  "imageBrowserInfoModified": "修改时间",
+  "videoPlayerLoadFailed": "视频加载失败",
+  "play": "播放",
+  "pause": "暂停",
+  "playbackProgress": "播放进度",
+  "videoPlayerReplay": "重播",
+  "videoPlayerBrightness": "亮度",
+  "videoPlayerVolume": "音量",
+  "videoPlayerSpeedBoost": "{speed: String}× 倍速播放中"
+}

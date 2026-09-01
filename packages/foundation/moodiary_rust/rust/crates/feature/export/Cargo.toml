@@ -1,0 +1,15 @@
+[package]
+name = "moodiary-export"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = { workspace = true }
+image = { workspace = true }
+typst = { workspace = true }
+typst-pdf = { workspace = true }
+docx-rs = { workspace = true }
+syntect = { workspace = true }
+moodiary-doc = { workspace = true }
+[dev-dependencies]
+zip = { workspace = true }

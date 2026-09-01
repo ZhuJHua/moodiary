@@ -1,0 +1,26 @@
+name: moodiary_platform
+description: "平台服务：应用目录、缓存目录、生物识别、网络状态、应用与设备信息。"
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  connectivity_plus: 7.3.1
+  device_info_plus: 13.2.0
+  local_auth: 3.0.2
+  network_info_plus: 8.2.1
+  package_info_plus: 10.2.1
+  path_provider: 2.1.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1

@@ -1,0 +1,114 @@
+name: Quality & Tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ develop ]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  dart:
+    name: Dart
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read Flutter version
+        id: fv
+        run: echo "version=$(jq -r '.flutter' .fvmrc)" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ steps.fv.outputs.version }}
+
+      - name: Set up Melos (bootstrap)
+        uses: bluefireteam/melos-action@v3
+        with:
+          melos-version: 8.2.2
+
+      - name: Check generated bindings
+        run: dart tool/check_generated.dart
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Check layer dependencies
+        run: dart tool/check_layers.dart
+
+      - name: Set up Rust toolchain
+        working-directory: packages/foundation/moodiary_rust/rust
+        run: rustup toolchain install
+
+      # 真库集成测试（倒排索引 / 2.8.0 迁移）靠这个变量解除 skip；动态库随
+      # isar_plus_flutter_libs 的 pub 包分发。路径从 bootstrap 必然生成的
+      # package_config.json 读——不猜 PUB_CACHE 落点（container/self-hosted runner
+      # 会变），版本也不再第三份手抄（跟着 pubspec.lock 走）。找不到即 exit 1，
+      # 不许静默退回「全部跳过」。
+      - name: Locate Isar test dylib
+        run: |
+          root=$(python3 -c "import json;d=json.load(open('.dart_tool/package_config.json'));print(next(p['rootUri'] for p in d['packages'] if p['name']=='isar_plus_flutter_libs'))")
+          so="${root#file://}/linux/libisar_plus.so"
+          if [ ! -f "$so" ]; then
+            echo "libisar_plus.so not found at $so" >&2
+            exit 1
+          fi
+          echo "ISAR_TEST_DYLIB=$so" >> "$GITHUB_ENV"
+
+      - name: Test
+        run: melos exec --dir-exists=test --fail-fast -c 1 -- flutter test
+
+  rust:
+    name: Rust
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/foundation/moodiary_rust/rust
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Test
+        run: cargo test --workspace
+
+  editor:
+    name: Editor
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/feature_base/moodiary_editor/editor
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install
+        run: corepack pnpm install --frozen-lockfile
+
+      - name: Type-check
+        run: corepack pnpm type-check
+
+      - name: Test
+        run: corepack pnpm test

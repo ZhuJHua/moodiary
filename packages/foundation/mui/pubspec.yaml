@@ -1,0 +1,37 @@
+name: mui
+description: "Another material design ui"
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  material_ui: 1.1.0
+  cupertino_ui: 1.0.1
+  lucide_icons_flutter: 3.1.17
+  flutter_svg: 2.3.0
+  cached_network_image_ce: 4.10.1
+  material_color_utilities: 0.13.0
+  slang: 4.19.0
+  slang_flutter: 4.19.0
+  flutter_smart_dialog: 5.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1
+
+flutter:
+  fonts:
+    - family: qweather
+      fonts:
+        - asset: assets/fonts/qweather-icons.ttf
+    - family: Dosis
+      fonts:
+        - asset: assets/fonts/Dosis.ttf

@@ -1,0 +1,18 @@
+name: moodiary_di
+description: "get_it 容器的唯一实例。全仓最底层：谁都可以依赖它，它谁都不依赖。"
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  get_it: 9.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1

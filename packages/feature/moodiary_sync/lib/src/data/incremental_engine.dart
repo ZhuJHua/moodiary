@@ -1,0 +1,989 @@
+import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_platform/moodiary_platform.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_sync/src/data/archive_apply.dart';
+import 'package:moodiary_sync/src/data/codec.dart';
+import 'package:moodiary_sync/src/data/media_refs.dart';
+import 'package:moodiary_sync/src/data/model/manifest.dart';
+import 'package:moodiary_sync/src/data/model/sync_event.dart';
+import 'package:moodiary_sync/src/data/remote_lease.dart';
+import 'package:moodiary_sync/src/data/sync.dart';
+import 'package:moodiary_sync/src/data/sync_cancellation.dart';
+import 'package:moodiary_sync/src/data/sync_key_manager.dart';
+import 'package:moodiary_sync/src/data/sync_logger.dart';
+import 'package:moodiary_sync/src/data/sync_registry.dart';
+import 'package:moodiary_sync/src/data/sync_stores.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:path/path.dart' as p;
+import 'package:pool/pool.dart';
+
+/// 增量同步引擎 —— 在 [IRemoteSyncBackend] 之上做日记 / 分类 / 媒体元数据的差异同步。
+///
+/// 关键约定：
+/// - 远端布局：`manifest.json` + `diary/<id>.json` + `category/<id>.json` +
+///   `mediainfo/<type>/<fileName>.json` + `media/<type>/<filename>`，编解码统一走 [SyncCipher]。
+/// - 差异判定：以 lastModified 毫秒戳为版本（存于 [ManifestEntry]）；本地删除的
+///   行已硬删，事实以 [SyncTombstone] 行承载，写成 tombstone 条目（`d: true`，
+///   时间戳即删除时刻，不上传 body）。pull 按时间戳做 LWW，本地更新晚于
+///   tombstone 则保留本地。
+/// - 媒体清单随 manifest 条目存储（[ManifestEntry.media]）：push 用全体条目并集
+///   判断「远端已有哪些媒体」，集合外的仍 stat 兜底（中断残留）。
+/// - 上传顺序：媒体优先，全成后才写 diary JSON 和 manifest，防止「远端 JSON
+///   引用到尚未上传的媒体」。
+/// - 多后端 tombstone 跟踪（[SyncTombstone.pushedBackends]）：tombstone 被所有
+///   已配置云后端接收后，才清除墓碑行；日记复活时行连带清除（复活闸门在仓储
+///   事务内），历史推送记录不会误判下一次删除。
+/// - 密钥正确性交给 AES-GCM auth tag：解 manifest 失败即密钥错。
+class IncrementalSyncEngine {
+  /// 已被 [_GatedBackend] 套上并发限流的后端，「在飞的网络请求」全局 <= [concurrency]。
+  /// 类型只到 [RemoteObjectStore]——引擎不需要编排门面，归档导入的
+  /// LocalArchiveBackend 因此不必假装自己会 push/pull。
+  final RemoteObjectStore backend;
+
+  /// 条目级并发度，与网络并发上限同值，来自 KV [MoodiaryKVs.syncConcurrency]。
+  final int concurrency;
+
+  final SyncLogger _logger;
+
+  /// 媒体「读文件+加解密+传输」整条流水线的并发上限。仅靠 [_GatedBackend] 的
+  /// 网络限流不够：文件读取/加解密在网络闸门之外，等待网络许可的文件会把明文+
+  /// 密文两份缓冲同时压在内存里，多视频日记并发时内存峰值无上限（移动端可能 OOM）。
+  final Pool _mediaGate;
+
+  /// 本地存储端口（生产实现转发到 repository / AppFiles；测试注入内存假实现）。
+  final SyncDiaryStore _diaryStore;
+  final SyncCategoryStore _categoryStore;
+  final SyncMediaInfoStore _mediaInfoStore;
+  final SyncTombstoneStore _tombstoneStore;
+  final SyncMediaFiles _mediaFiles;
+
+  /// cipher 来源，默认读 secure storage（[SyncCipher.current]）；测试可注入明文。
+  final Future<SyncCipher> Function() _cipherProvider;
+
+  /// 引擎实例内复用的 cipher 快照（生命周期 = 一次同步操作）。
+  /// 不缓存则每个对象编解码都要读一次 secure storage，大库会放大成数千次系统调用。
+  SyncCipher? _cipherCache;
+
+  Future<SyncCipher> _cipher() async =>
+      _cipherCache ??= await _cipherProvider();
+
+  static const int defaultConcurrency = 8;
+  static const int _minConcurrency = 1;
+  static const int _maxConcurrency = 32;
+
+  factory IncrementalSyncEngine(
+    RemoteObjectStore backend, {
+    SyncLogger? logger,
+    SyncDiaryStore? diaryStore,
+    SyncCategoryStore? categoryStore,
+    SyncMediaInfoStore? mediaInfoStore,
+    SyncTombstoneStore? tombstoneStore,
+    SyncMediaFiles? mediaFiles,
+    Future<SyncCipher> Function()? cipherProvider,
+    int? concurrency,
+  }) {
+    final n = concurrency ?? _resolveConcurrency();
+    return IncrementalSyncEngine._(
+      _GatedBackend(backend, n),
+      n,
+      logger ?? .get(),
+      diaryStore ?? RepoSyncDiaryStore(),
+      categoryStore ?? RepoSyncCategoryStore(),
+      mediaInfoStore ?? RepoSyncMediaInfoStore(),
+      tombstoneStore ?? RepoSyncTombstoneStore(),
+      mediaFiles ?? DiskSyncMediaFiles(),
+      cipherProvider ?? SyncCipher.current,
+    );
+  }
+
+  IncrementalSyncEngine._(
+    this.backend,
+    this.concurrency,
+    this._logger,
+    this._diaryStore,
+    this._categoryStore,
+    this._mediaInfoStore,
+    this._tombstoneStore,
+    this._mediaFiles,
+    this._cipherProvider,
+  ) : _mediaGate = Pool(concurrency);
+
+  static int _resolveConcurrency() {
+    final raw = MoodiaryKVs.syncConcurrency.get() ?? defaultConcurrency;
+    return raw.clamp(_minConcurrency, _maxConcurrency).toInt();
+  }
+
+  /// 同步家族扩展操作（如 [CloudReCipher]）通过此入口复用同一把操作级锁。
+  /// 锁本身在 [runSyncExclusive]（archive_apply.dart）—— 归档导入不经引擎，也要用它。
+  static Future<T> runExclusive<T>(Future<T> Function() body) =>
+      runSyncExclusive(body);
+
+  /// 以最多 [concurrency] 个并发遍历 [items] 执行 [task]。单 isolate 下 task 只在
+  /// await 点交错，故 task 内对外层共享状态（计数器/entries/tracker/清理列表）的
+  /// **同步**修改天然安全、无需加锁。
+
+  /// 见 [MoodiaryKVs.syncForceMediaReuploadBackends]：为 true 时本次 push 不信任
+  /// 「远端已有同名媒体」这个证据，一律重传覆盖。
+  bool _distrustRemoteMedia = false;
+
+  Map<String, Object?> _backendPayload() => {
+    'backend': backend.displayName,
+    'backendId': backend.persistentBackendId ?? 'transient',
+  };
+
+  /// 「进程内互斥锁 + 远端租约锁」双重保护下执行 [body]（后者挡其它设备，见
+  /// [RemoteLease]）。停止标志的复位在 [runSyncExclusive] 那一层——放这里的话
+  /// 租约抢占失败就走不到。
+  Future<T> _exclusive<T>(Future<T> Function() body) {
+    return runSyncExclusive(
+      () => RemoteLease.protect(backend, () async {
+        try {
+          return await body();
+        } catch (e) {
+          // 保证「syncStart 之后必有 syncEnd」：body（_pull/_push）发了 syncStart 后
+          // 若中途抛错（网络错误 / manifest 损坏 / 回读校验失败），其内部的 syncEnd 不会
+          // 发出，会让 AutoSyncWatcher 的 _syncing 闸门永久卡死、自动同步静默失效。
+          // 这里补发一个 syncEnd 兜底。lease 抢占失败发生在 body 之前（无 syncStart）不受影响。
+          _logger.error(
+            .syncEnd,
+            reason: .aborted,
+            payload: {..._backendPayload(), 'error': e.toString()},
+          );
+          rethrow;
+        }
+      }, logger: _logger),
+    );
+  }
+
+  /// [markSynced] 为 false 时不推进「上次同步时间」（本地备份导入等非云端场景）。
+  Future<SyncReport> pull({bool markSynced = true}) async {
+    final report = await _exclusive(_pull);
+    if (markSynced && report.failed == 0 && !report.cancelled) {
+      _markSynced();
+    }
+    return report;
+  }
+
+  Future<SyncReport> _pull() async => (await _pullCore()).$1;
+
+  /// 除报告外返回本次读到的远端 manifest 快照，供 [sync] 在空转热路径上复用。
+  Future<(SyncReport, SyncManifest?)> _pullCore() async {
+    await _uploadPendingKeyfile();
+    final sw = Stopwatch()..start();
+    // 正常路径的 syncStart 由 [ArchiveApplier.apply] 发，与它的 syncEnd 成对。
+    final manifest = await _readManifest();
+    if (manifest == null) {
+      sw.stop();
+      // 这条早退不进 applier，自己补齐 start/end 一对，别让 watcher 收到裸 syncEnd。
+      _logger.info(
+        .syncStart,
+        payload: {..._backendPayload(), 'direction': 'pull'},
+      );
+      _logger.warn(.manifestRead, reason: .remoteMissing);
+      _logger.info(
+        .syncEnd,
+        payload: {
+          ..._backendPayload(),
+          'direction': 'pull',
+          'diaryCount': 0,
+          'categoryCount': 0,
+          'failed': 0,
+          'elapsedMs': sw.elapsedMilliseconds,
+        },
+      );
+      return (
+        SyncReport(
+          diaryCount: 0,
+          categoryCount: 0,
+          elapsed: sw.elapsed,
+          warning: l10n.sync.warnRemoteEmpty,
+        ),
+        null,
+      );
+    }
+    _logger.info(
+      .manifestRead,
+      payload: {'entries': manifest.entries.length},
+    );
+    // 到这一步 manifest 已成功解码 = 本地 cipher 与远端一致（auth tag 已验密钥）。
+
+    final report = await ArchiveApplier(
+      backend,
+      policy: const SyncPullPolicy(),
+      logger: _logger,
+      diaryStore: _diaryStore,
+      categoryStore: _categoryStore,
+      mediaInfoStore: _mediaInfoStore,
+      tombstoneStore: _tombstoneStore,
+      mediaFiles: _mediaFiles,
+      cipherProvider: _cipher,
+      concurrency: concurrency,
+    ).apply(manifest);
+    return (report, manifest);
+  }
+
+  /// 本地 → 远端。先比 manifest 算 diff，逐条上传 / 改 tombstone，最后写回 manifest。
+  Future<SyncReport> push() async {
+    final report = await _exclusive(_push);
+    if (report.failed == 0 && !report.cancelled) _markSynced();
+    return report;
+  }
+
+  /// 双向同步：**同一把锁内**先 [_pull] 再 [_push]，原子完成、不与其它操作交叠。
+  /// 调私有 [_pullCore]/[_push]（不再各自抢锁），避免重入。
+  Future<SyncReport> sync() async {
+    final report = await _exclusive(() async {
+      final sw = Stopwatch()..start();
+      final (pulled, manifest) = await _pullCore();
+      // pull 阶段已被停止 → 不再进入 push。
+      if (pulled.cancelled) {
+        sw.stop();
+        return SyncReport(
+          diaryCount: pulled.diaryCount,
+          categoryCount: pulled.categoryCount,
+          mediaInfoCount: pulled.mediaInfoCount,
+          elapsed: sw.elapsed,
+          warning: pulled.warning,
+          failed: pulled.failed,
+          cancelled: true,
+        );
+      }
+      // 空转热路径：pull 零落库零失败时 manifest 快照仍新鲜（同一把租约内、pull
+      // 不写 manifest），复用给 push 省一次 GET+解密。有实际变更的 pull 可能耗时
+      // 较长，保守起见仍让 push 重读，缩小「读取→写回」的基线窗口。
+      final reuse =
+          manifest != null &&
+          pulled.diaryCount == 0 &&
+          pulled.categoryCount == 0 &&
+          pulled.mediaInfoCount == 0 &&
+          pulled.failed == 0;
+      final pushed = await _push(preloaded: reuse ? manifest : null);
+      sw.stop();
+      final warnings = [
+        pulled.warning,
+        pushed.warning,
+      ].whereType<String>().join('\n');
+      return SyncReport(
+        diaryCount: pulled.diaryCount + pushed.diaryCount,
+        categoryCount: pulled.categoryCount + pushed.categoryCount,
+        mediaInfoCount: pulled.mediaInfoCount + pushed.mediaInfoCount,
+        elapsed: sw.elapsed,
+        warning: warnings.isEmpty ? null : warnings,
+        failed: pulled.failed + pushed.failed,
+        cancelled: pushed.cancelled,
+      );
+    });
+    if (report.failed == 0 && !report.cancelled) _markSynced();
+    return report;
+  }
+
+  /// 记录一次同步成功完成的时间。仅当无异常**且无失败条目**才调用 ——
+  /// 部分失败的同步不算成功，不该推进 UI 的「上次同步」。
+  static void _markSynced() =>
+      MoodiaryKVs.lastSyncTime.set(DateTime.now().millisecondsSinceEpoch);
+
+  static int _writeSeq = 0;
+
+  /// 生成本次 manifest 写入的唯一 token（设备 id + 微秒 + 进程内序号），
+  /// 足够唯一以支撑写后回读校验。
+  String _newWriteToken() {
+    final id = MoodiaryKVs.syncDeviceId.get() ?? '';
+    return '$id:${DateTime.now().microsecondsSinceEpoch}:${_writeSeq++}';
+  }
+
+  Future<SyncReport> _push({SyncManifest? preloaded}) async {
+    await _uploadPendingKeyfile();
+    // 丢弃远端信封后的第一次 push：远端残留的旧 DEK 密文媒体与本机同名，stat 兜底
+    // 会把它们当「已存在」跳过，写进新 manifest 后就永远解不开了。强制重传一轮。
+    _distrustRemoteMedia = SyncKeyManager.hasForceMediaReupload(
+      backend.persistentBackendId,
+    );
+    final sw = Stopwatch()..start();
+    _logger.info(
+      .syncStart,
+      payload: {..._backendPayload(), 'direction': 'push'},
+    );
+    SyncManifest? read = preloaded;
+    var virginRemote = false;
+    if (read == null) {
+      read = await _readManifest();
+      virginRemote = read == null;
+    }
+    final manifest = read ?? .empty();
+    // 兜底不变量：向「空远端」推加密数据前 keys.json 必须先落地 —— 否则该后端上
+    // 只有密文没有信封，换设备后永远解不开。待上传清单是主路径，这里兜漏网。
+    if (virginRemote && (await _cipher()).encrypted) {
+      await _ensureKeyfileOnVirginRemote();
+    }
+    _logger.info(
+      .manifestRead,
+      payload: {'entries': manifest.entries.length},
+    );
+    final updated = manifest.copyForUpdate();
+
+    // 「远端已有媒体」集合（非 tombstone 条目并集）：命中即零往返跳过上传。
+    // 集合外的仍 stat 兜底（中断残留），确认/上传后加入、并发其它条目立即可见。
+    final remoteMedia = manifest.referencedMedia();
+
+    // 删远端媒体前的防御：仍被任何非 tombstone 条目引用的不删。
+    bool stillReferenced(String ref) =>
+        updated.entries.values.any((e) => !e.deleted && e.media.contains(ref));
+
+    // 权威跳过「打开中的日记」：push 前冻结一份 open-set 快照，把这些条目排除出本次
+    // 上传。仅滤 push（pull 仍按 LWW 回写）；manifest 不会因本地缺席而删条目，故被
+    // 跳过的日记远端副本原样保留，关闭后下一轮同步再收敛。
+    final openSnapshot = OpenDiaryRegistry.instance.snapshot();
+    final diaries = (await _diaryStore.getAllDiaries())
+        .where((d) => !openSnapshot.contains(d.id))
+        .toList();
+    final categories = await _categoryStore.getAllCategoriesForSync();
+    final mediaInfoRows = await _mediaInfoStore.getAllMediaInfosForSync();
+
+    int diaryChanged = 0;
+    int categoryChanged = 0;
+    int mediaInfoChanged = 0;
+    int failed = 0;
+
+    // 多后端 tombstone 跟踪：仅当墓碑的「已 push 集合」覆盖所有已配置云后端后才
+    // 清除墓碑行；trackingId 为 null 则旧行为 push 完即清。
+    final trackingId = backend.persistentBackendId;
+    final configuredBackends = configuredCloudBackendIds();
+    final tombstones = TombstoneBatch(await _tombstoneStore.getAll());
+    final coveredTombstoneKeys = <String>[];
+
+    // 已确认同步的日记 id（上传成功 / LWW 判定本地不旧于远端）→ 提交校验通过后清除
+    // 其「待同步」角标。提交前抛错则不清，留待下次 push 自愈。
+    final pushedDiaryIds = <String>[];
+
+    // 破坏性远端操作一律推迟到 manifest「写入 + 回读校验」成功之后再执行 —— 这样
+    // 一旦校验发现被并发设备覆盖（租约被绕过），本次 push 抛错中止时远端对象/媒体
+    // 都还原封不动，本地墓碑也不清，绝不丢数据（对抗式审计要求）。
+    final deferredObjectDeletes = <String>[];
+    final deferredMediaDeletes = <String>{};
+
+    void scheduleCleanup(String key) {
+      if (trackingId == null) {
+        coveredTombstoneKeys.add(key);
+        return;
+      }
+      final pushed = tombstones[key]?.pushedBackends ?? const <String>[];
+      if (pushed.toSet().containsAll(configuredBackends)) {
+        coveredTombstoneKeys.add(key);
+      }
+    }
+
+    Future<void> pushOneDiary(Diary diary) async {
+      // 协作式停止：不发起新条目，已完成条目的 manifest 照常写回（进度不丢）。
+      if (SyncCancellation.instance.isRequested) return;
+      final key = SyncKeys.diary(diary.id);
+      final remoteEntry = manifest.entries[key];
+
+      // 普通更新：用远端条目时间戳（含 tombstone 删除时间）做 LWW。
+      final remoteMs = remoteEntry?.timeMs;
+      if (remoteMs != null &&
+          diary.lastModified.millisecondsSinceEpoch <= remoteMs) {
+        _logger.info(
+          .diarySkip,
+          reason: .upToDate,
+          payload: {'diaryId': diary.id},
+        );
+        pushedDiaryIds.add(diary.id);
+        return;
+      }
+
+      try {
+        // 媒体优先、全成才写 JSON：真正失败（非本地缺失）抛 SyncException 被外层
+        // 计入 failed、manifest 不更新，下次 LWW 仍判定本地更新会重试。返回值 =
+        // 确认存在于远端的引用（本地缺失的不在其中，不能写进 manifest 谎报存在）。
+        final confirmedRefs = await _pushDiaryMedia(diary, remoteMedia);
+        final bytes = await (await _cipher()).encode(diary.toJson());
+        await backend.writeObject(SyncKeys.diaryObjectPath(diary.id), bytes);
+        updated.entries[key] = ManifestEntry(
+          timeMs: diary.lastModified.millisecondsSinceEpoch,
+          media: confirmedRefs,
+        );
+        remoteMedia.addAll(confirmedRefs);
+        // 清理远端不再被引用的旧媒体：旧清单直接取自 manifest 条目，无需回读旧 JSON。
+        // 实际删除推迟到 manifest 提交校验后（abort 时旧媒体不被误删）。
+        final newRefs = _mediaRefs(diary).toSet();
+        final staleRefs =
+            (remoteEntry?.deleted ?? true
+                    ? const <String>[]
+                    : remoteEntry!.media)
+                .where((r) => !newRefs.contains(r) && !stillReferenced(r))
+                .toList();
+        deferredMediaDeletes.addAll(staleRefs);
+        remoteMedia.removeAll(staleRefs);
+        pushedDiaryIds.add(diary.id);
+        diaryChanged++;
+        _logger.info(
+          .diaryUpload,
+          payload: {
+            'diaryId': diary.id,
+            if (diary.title.isNotEmpty) 'title': diary.title,
+            'bytes': bytes.length,
+            'lastModified': diary.lastModified.toIso8601String(),
+          },
+        );
+      } catch (e) {
+        failed++;
+        _logger.error(
+          .diaryUpload,
+          payload: {
+            'diaryId': diary.id,
+            if (diary.title.isNotEmpty) 'title': diary.title,
+            'detail': e.toString(),
+          },
+        );
+      }
+    }
+
+    await runPooled(diaries, concurrency, pushOneDiary);
+
+    Future<void> pushOneCategory(Category category) async {
+      if (SyncCancellation.instance.isRequested) return;
+      final key = SyncKeys.category(category.id);
+      final remoteEntry = manifest.entries[key];
+      final remoteMs = remoteEntry?.timeMs;
+      if (remoteMs != null &&
+          category.lastModified.millisecondsSinceEpoch <= remoteMs) {
+        _logger.info(
+          .categorySkip,
+          reason: .upToDate,
+          payload: {'categoryId': category.id},
+        );
+        return;
+      }
+      try {
+        final bytes = await (await _cipher()).encode(category.toJson());
+        await backend.writeObject(
+          SyncKeys.categoryObjectPath(category.id),
+          bytes,
+        );
+        updated.entries[key] = ManifestEntry(
+          timeMs: category.lastModified.millisecondsSinceEpoch,
+        );
+        categoryChanged++;
+        _logger.info(
+          .categoryUpload,
+          payload: {'categoryId': category.id, 'bytes': bytes.length},
+        );
+      } catch (e) {
+        failed++;
+        _logger.error(
+          .categoryUpload,
+          payload: {'categoryId': category.id, 'detail': e.toString()},
+        );
+      }
+    }
+
+    await runPooled(categories, concurrency, pushOneCategory);
+
+    Future<void> pushOneMediaInfo(MediaInfo mediaInfo) async {
+      if (SyncCancellation.instance.isRequested) return;
+      final key = SyncKeys.mediaInfo(mediaInfo.fileName);
+      final remoteEntry = manifest.entries[key];
+      final remoteMs = remoteEntry?.timeMs;
+      if (remoteMs != null &&
+          mediaInfo.lastModified.millisecondsSinceEpoch <= remoteMs) {
+        _logger.info(
+          .mediaInfoSkip,
+          reason: .upToDate,
+          payload: {'mediaFileName': mediaInfo.fileName},
+        );
+        return;
+      }
+      try {
+        final bytes = await (await _cipher()).encode(mediaInfo.toJson());
+        await backend.writeObject(
+          SyncKeys.mediaInfoObjectPath(mediaInfo.fileName),
+          bytes,
+        );
+        updated.entries[key] = ManifestEntry(
+          timeMs: mediaInfo.lastModified.millisecondsSinceEpoch,
+        );
+        mediaInfoChanged++;
+        _logger.info(
+          .mediaInfoUpload,
+          payload: {'mediaFileName': mediaInfo.fileName, 'bytes': bytes.length},
+        );
+      } catch (e) {
+        failed++;
+        _logger.error(
+          .mediaInfoUpload,
+          payload: {
+            'mediaFileName': mediaInfo.fileName,
+            'detail': e.toString(),
+          },
+        );
+      }
+    }
+
+    await runPooled(mediaInfoRows, concurrency, pushOneMediaInfo);
+
+    // 推送墓碑（日记 + 分类 + 媒体元数据）。只改 manifest 快照 / 延迟删除清单 /
+    // 内存簿记，无逐条网络 I/O，同步执行即可。
+    void pushOneTombstone(SyncTombstone t) {
+      final key = t.key;
+      final remoteEntry = manifest.entries[key];
+      final kind = t.kind;
+      // 未知前缀（损坏行 / 未来版本写入）：跳过本条而不是抛错打断整次 push——
+      // 一行脏墓碑不该让同步永久失败。行保留原样，等版本升级后自然认领。
+      if (kind == null) {
+        _logger.warn(
+          .error,
+          reason: .unknownTombstone,
+          payload: {'key': key},
+        );
+        return;
+      }
+      final (skipKind, pushKind, idKey) = switch (kind) {
+        .diary => (
+          SyncEventKind.diarySkip,
+          SyncEventKind.diaryTombstonePush,
+          'diaryId',
+        ),
+        .category => (
+          SyncEventKind.categorySkip,
+          SyncEventKind.categoryTombstonePush,
+          'categoryId',
+        ),
+        .mediaInfo => (
+          SyncEventKind.mediaInfoSkip,
+          SyncEventKind.mediaInfoTombstonePush,
+          'mediaFileName',
+        ),
+      };
+      // 已是 tombstone 或远端从未同步过 → 当前 backend 视为已覆盖此删除；
+      // remoteEntry==null 不写 tombstone（无数据可指代），已是 tombstone 不重复写。
+      if (remoteEntry == null || remoteEntry.deleted) {
+        if (trackingId != null) tombstones.markPushed(key, trackingId);
+        scheduleCleanup(key);
+        return;
+      }
+      // LWW：远端是普通条目且不旧于本地删除时间 → 远端有更新的编辑（多半来自别的
+      // 设备），本地这条过期删除不得覆盖它，否则会用旧 tombstone 抹掉远端更新内容、
+      // 造成丢数据。与普通更新路径的 LWW 对称。跳过后不标记 pushed / 不安排清墓碑；
+      // 下次 pull 会按 LWW 把更新的远端版本拉回、本地复活（复活时墓碑行连带清除）。
+      if (remoteEntry.timeMs >= t.timeMs) {
+        _logger.info(
+          skipKind,
+          reason: .remoteNewer,
+          payload: {
+            idKey: t.entityId,
+            'remoteMs': remoteEntry.timeMs,
+            'localDeleteMs': t.timeMs,
+          },
+        );
+        return;
+      }
+      // 远端是普通条目 → 该 backend 真同步过该条目，推 tombstone。
+      // 先写 tombstone 条目（让 stillReferenced 判定不含本条旧引用），删 JSON / 媒体
+      // 都推迟到 manifest 提交校验后执行（manifest 即删除事实的权威记录）。
+      updated.entries[key] = ManifestEntry(timeMs: t.timeMs, deleted: true);
+      switch (kind) {
+        case .diary:
+          deferredObjectDeletes.add(SyncKeys.diaryObjectPath(t.entityId));
+          final staleRefs = remoteEntry.media
+              .where((r) => !stillReferenced(r))
+              .toList();
+          deferredMediaDeletes.addAll(staleRefs);
+          remoteMedia.removeAll(staleRefs);
+          diaryChanged++;
+        case .category:
+          deferredObjectDeletes.add(SyncKeys.categoryObjectPath(t.entityId));
+          categoryChanged++;
+        case .mediaInfo:
+          deferredObjectDeletes.add(SyncKeys.mediaInfoObjectPath(t.entityId));
+          mediaInfoChanged++;
+      }
+      if (trackingId != null) tombstones.markPushed(key, trackingId);
+      _logger.info(
+        pushKind,
+        payload: {idKey: t.entityId, 'tombstoneMs': t.timeMs},
+      );
+      scheduleCleanup(key);
+    }
+
+    for (final t in tombstones.snapshot()) {
+      if (SyncCancellation.instance.isRequested) break;
+      pushOneTombstone(t);
+    }
+
+    if (diaryChanged > 0 || categoryChanged > 0 || mediaInfoChanged > 0) {
+      // 写入带唯一 token 的 manifest，再回读校验 token 仍是自己写的。token 不一致 =
+      // 另一台设备在我们之后又写了 manifest（租约被绕过/网络分区），本次 push 视为
+      // 失败：抛错中止，**此前未做任何破坏性远端操作、也不会硬删本地**，下次同步会
+      // 读到对方 manifest 按 LWW 收敛。不依赖服务器 HTTP 条件写，任意后端可用。
+      final token = _newWriteToken();
+      final manifestBytes = await (await _cipher()).encode(
+        updated.withWriteToken(token).toJson(),
+      );
+      await backend.writeObject(SyncKeys.manifestPath, manifestBytes);
+      final readback = await _readManifest();
+      if (readback?.writeToken != token) {
+        throw SyncException(l10n.sync.errManifestRacePush);
+      }
+      _logger.info(
+        .manifestWrite,
+        payload: {
+          'entries': updated.entries.length,
+          'bytes': manifestBytes.length,
+        },
+      );
+    }
+
+    // 提交（写入 + 回读校验）确认后，才执行不可逆 / 破坏性操作：
+    // ① 删除远端不再需要的对象与媒体（best-effort，失败仅留存储残留）。
+    //    媒体删除按**最终** manifest 再确认一次无人引用：并发期间另一条目可能在本条
+    //    把某媒体判为 stale 之后又引用/重传了它（共享媒体），终态 stillReferenced 兜底。
+    await _deleteRemoteObjects(deferredObjectDeletes);
+    final mediaToDelete = deferredMediaDeletes
+        .where((r) => !stillReferenced(r))
+        .toList();
+    await _deleteRemoteMediaRefs(mediaToDelete);
+    // ② 清除「全部已配置云后端均已覆盖」的墓碑行（行本体在删除时已硬删）。
+    for (final key in coveredTombstoneKeys) {
+      tombstones.remove(key);
+    }
+    await tombstones.flush(_tombstoneStore);
+    // 提交确认后清除已同步日记的「待同步」角标。
+    for (final id in pushedDiaryIds) {
+      SyncDirtyTracker.instance.clearDirty(id);
+    }
+
+    sw.stop();
+    final stopped = SyncCancellation.instance.isRequested;
+    // 整轮无失败无中断才算重传完成：半截清掉标记会让剩下的旧密文媒体永远留在
+    // 远端且再也不会被覆盖。
+    if (_distrustRemoteMedia && failed == 0 && !stopped) {
+      SyncKeyManager.clearForceMediaReupload(backend.persistentBackendId);
+      _distrustRemoteMedia = false;
+    }
+    _logger.info(
+      .syncEnd,
+      reason: stopped ? .stopped : null,
+      payload: {
+        ..._backendPayload(),
+        'direction': 'push',
+        'diaryCount': diaryChanged,
+        'categoryCount': categoryChanged,
+        'mediaInfoCount': mediaInfoChanged,
+        'failed': failed,
+        'cancelled': stopped,
+        'elapsedMs': sw.elapsedMilliseconds,
+      },
+    );
+    final warnings = [
+      if (failed > 0) l10n.sync.warnFailedSkipped(count: failed),
+      if (stopped) l10n.sync.warnStopped,
+    ].join('\n');
+    return SyncReport(
+      diaryCount: diaryChanged,
+      categoryCount: categoryChanged,
+      mediaInfoCount: mediaInfoChanged,
+      elapsed: sw.elapsed,
+      warning: warnings.isEmpty ? null : warnings,
+      failed: failed,
+      cancelled: stopped,
+    );
+  }
+
+  /// 空远端 + 加密模式的 keyfile 兜底：有本机缓存直接补写；没有（如 DEK 经二维码
+  /// 传入、从未见过 keyfile）则中止本次 push —— 宁可不同步，不产出解不开的远端。
+  Future<void> _ensureKeyfileOnVirginRemote() async {
+    // 「远端没有 manifest」不等于「远端没有信封」：manifest 被截断成 0 字节、或上次
+    // push 传完媒体就中断，都会留下一份**别的 DEK** 的 keys.json。盲写会把它换掉，
+    // 远端那批密文从此没有任何密钥能解——所以这里也必须过同一道判定。
+    switch (await SyncKeyManager.checkRemoteKeyfile(backend)) {
+      case .conflict:
+        SyncKeyManager.markKeyConflict(backend.persistentBackendId);
+        throw SyncKeyConflictException(l10n.sync.errKeyConflict);
+      case .unknown:
+        throw SyncException(l10n.sync.errKeyfileOwnerUnknown);
+      case .safe:
+        break;
+    }
+    final keyfile = SyncKeyManager.cachedKeyfile();
+    if (keyfile == null) {
+      throw SyncException(l10n.sync.errKeyfileNoLocalCache);
+    }
+    await SyncKeyManager.writeRemoteKeyfile(backend, keyfile);
+    final backendId = backend.persistentBackendId;
+    if (backendId != null) {
+      await SyncKeyManager.clearPendingUpload(backendId);
+    }
+    _logger.info(.keyfileUpload, payload: _backendPayload());
+  }
+
+  /// keyfile 补传前奏：开启加密 / 改密码时未送达本后端的 keys.json（离线 / 后配 /
+  /// 写失败）在此补传。非 pending 时零成本；失败只记日志不阻塞同步，下次再试。
+  ///
+  /// 唯一的例外是 [SyncKeyConflictException]（远端是另一把 DEK 加密的）：必须中止
+  /// 整次同步。继续下去每一个远端对象都解不开，报错会停在「密码不正确」这类
+  /// 与真正病因无关的地方，用户无从下手。
+  Future<void> _uploadPendingKeyfile() async {
+    try {
+      await SyncKeyManager.uploadPendingKeyfile(backend);
+    } on SyncKeyConflictException catch (e) {
+      _logger.error(
+        .keyConflict,
+        payload: {..._backendPayload(), 'detail': e.message},
+      );
+      rethrow;
+    } catch (e) {
+      _logger.warn(
+        .keyfileUpload,
+        payload: {..._backendPayload(), 'detail': e.toString()},
+      );
+    }
+  }
+
+  Future<SyncManifest?> _readManifest() async {
+    final bytes = await backend.readObject(SyncKeys.manifestPath);
+    if (bytes == null) return null;
+    final decoded = await (await _cipher()).decode(bytes);
+    // bytes 存在但解码不是对象（被外部覆盖成 array/null/字符串、或半截写入）=
+    // 远端 manifest 损坏。绝不能当作「远端为空」返回 null —— 那会让 push 用本地
+    // 重建 manifest、丢掉仅存在于远端的条目（契约一）。宁可抛错中止本次同步。
+    if (decoded is! Map<String, dynamic>) {
+      throw SyncException(l10n.sync.errManifestCorrupt);
+    }
+    return .fromJson(decoded);
+  }
+
+  List<String> _mediaRefs(Diary diary) => [
+    for (final e in collectDiaryMediaEntries(diary))
+      SyncKeys.mediaRef(e.$1, e.$2),
+  ];
+
+  /// push：并发上传远端尚不存在的媒体。返回**确认存在于远端**的引用列表（集合/
+  /// stat 命中或上传成功），供调用方写进 manifest —— 本地缺失而跳过的不在其中，
+  /// 写进去会谎报存在、让该文件永远失去补传机会。
+  /// **任一文件真正失败（非本地缺失）抛 [SyncException]**，外层据此跳过本条 JSON
+  /// 写入，避免远端 JSON 引用到尚未上传的媒体（pull 端破图）。
+  Future<List<String>> _pushDiaryMedia(
+    Diary diary,
+    Set<String> remoteMedia,
+  ) async {
+    final entries = collectDiaryMediaEntries(diary);
+    final results = await Future.wait(
+      entries.map((e) => _uploadMediaIfNeeded(e.$1, e.$2, remoteMedia)),
+      eagerError: false,
+    );
+    if (results.any((r) => r == false)) {
+      throw SyncException(l10n.sync.errMediaUpload);
+    }
+    return [
+      for (var i = 0; i < entries.length; i++)
+        if (results[i] == true) SyncKeys.mediaRef(entries[i].$1, entries[i].$2),
+    ];
+  }
+
+  /// 远端不存在则上传。三态返回：`true` 确认存在远端；`null` 本地缺失跳过（不算
+  /// 失败，但也不能声称远端存在）；`false` 上传失败，由 [_pushDiaryMedia] 汇总。
+  /// 快速路径 [remoteMedia] 命中 → 零往返跳过；集合外用 stat 兜底（覆盖上次 push
+  /// 中断、媒体已传但 manifest 未写的残留）。文件名是 UUID 不会原地改，存在性判断即可。
+  Future<bool?> _uploadMediaIfNeeded(
+    String type,
+    String filename,
+    Set<String> remoteMedia,
+  ) {
+    if (remoteMedia.contains(SyncKeys.mediaRef(type, filename))) {
+      return .value(true);
+    }
+    // 整条「stat→读文件→加密→上传」在 [_mediaGate] 许可内执行，限制内存缓冲份数。
+    return _mediaGate.withResource(
+      () => _uploadMediaNow(type, filename, remoteMedia),
+    );
+  }
+
+  Future<bool?> _uploadMediaNow(
+    String type,
+    String filename,
+    Set<String> remoteMedia,
+  ) async {
+    try {
+      if (!await _mediaFiles.exists(type, filename)) {
+        _logger.warn(
+          .mediaSkip,
+          reason: .localMissing,
+          payload: {'type': type, 'filename': filename},
+        );
+        return null;
+      }
+
+      final remotePath = SyncKeys.mediaObjectPath(type, filename);
+      // stat 失败按「未知」处理、照常走上传：这里 stat 只是省流量的跳过优化，
+      // 部分服务端对不存在对象的 HEAD 回的不是 404（无 ListBucket 的 S3 回 403、
+      // 反代对 HEAD 回 405/429）——把一次探测失败放大成整篇推送失败，会让
+      // failed 恒 >0、syncManifestStat 永不落缓存、轮询短路永不命中。
+      // 上传本身失败仍由外层 catch 如实计 failed。
+      String? remoteModified;
+      try {
+        // 强制重传轮次里连 stat 都不做：远端存在与否都要用新密钥覆盖。
+        remoteModified = _distrustRemoteMedia
+            ? null
+            : await backend.statObject(remotePath);
+      } catch (e) {
+        _logger.warn(
+          .mediaSkip,
+          reason: .probeFailed,
+          payload: {'type': type, 'filename': filename, 'detail': e.toString()},
+        );
+      }
+      if (remoteModified != null) {
+        _logger.info(
+          .mediaSkip,
+          reason: .remoteExists,
+          payload: {'type': type, 'filename': filename},
+        );
+        remoteMedia.add(SyncKeys.mediaRef(type, filename));
+        return true;
+      }
+
+      final localPath = _mediaFiles.realPath(type, filename);
+      final int bytes;
+      if (localPath != null && backend.supportsFileObjects) {
+        bytes = await _uploadMediaByFile(localPath, remotePath);
+      } else {
+        final plain = await _mediaFiles.read(type, filename);
+        final encrypted = await (await _cipher()).encryptBytes(plain);
+        await backend.writeObject(remotePath, encrypted);
+        bytes = encrypted.length;
+      }
+      _logger.info(
+        .mediaUpload,
+        payload: {'type': type, 'filename': filename, 'bytes': bytes},
+      );
+      remoteMedia.add(SyncKeys.mediaRef(type, filename));
+      return true;
+    } catch (e) {
+      _logger.error(
+        .mediaUpload,
+        payload: {'type': type, 'filename': filename, 'detail': e.toString()},
+      );
+      return false;
+    }
+  }
+
+  /// 并发删除一组远端对象路径（diary/category JSON，best-effort，吞错 —— manifest
+  /// 才是删除事实的权威记录，残留的孤儿 JSON 在 pull 端按 manifest 忽略）。
+  Future<void> _deleteRemoteObjects(Iterable<String> paths) async {
+    await Future.wait(
+      paths.map((path) async {
+        try {
+          await backend.deleteObject(path);
+        } catch (_) {}
+      }),
+      eagerError: false,
+    );
+  }
+
+  /// 并发删除一组远端媒体引用（best-effort，失败仅造成存储残留，吞错）。
+  Future<void> _deleteRemoteMediaRefs(Iterable<String> refs) async {
+    await Future.wait(
+      refs.map((ref) async {
+        try {
+          await backend.deleteObject(SyncKeys.mediaObjectPathFromRef(ref));
+          _logger.info(.mediaDelete, payload: {'ref': ref});
+        } catch (_) {}
+      }),
+      eagerError: false,
+    );
+  }
+
+  /// 返回上传字节数。
+  Future<int> _uploadMediaByFile(String localPath, String remotePath) async {
+    final temp = await _mediaTempFile('enc');
+    try {
+      await (await _cipher()).encryptFileTo(localPath, temp.path);
+      await backend.writeObjectFile(remotePath, temp.path);
+      return await temp.length();
+    } finally {
+      try {
+        await temp.delete();
+      } catch (_) {}
+    }
+  }
+
+  /// 文件名必须进程内唯一：调用方是 [_mediaGate] 放行的并发任务，取时间戳前只有本地
+  /// IO，多个任务的 `DateTime.now()` 落在同一微秒是常态（实测 8 并发下过半轮次会撞），
+  /// 撞名会让两份密文写进同一个文件、解密报「密钥不匹配」，把人引向完全错误的方向。
+  Future<File> _mediaTempFile(String tag) async {
+    final dir = Directory(
+      p.join(PlatformService.get().applicationCachePath, 'sync-media'),
+    );
+    await dir.create(recursive: true);
+    return File(p.join(dir.path, '$tag-${uuidV7()}.tmp'));
+  }
+}
+
+/// 一次同步操作内的墓碑行内存簿记：加载全量快照，push 记录 / 新增 / 移除都先改
+/// 内存，结尾 [flush] 一次性落库（与旧 KV 版 TombstoneTracker 同一批处理形态）。
+/// 单 isolate 下修改只在 await 点交错，同步方法天然无竞态。
+
+/// 给任意 [IRemoteSyncBackend] 套上「最多 N 个并发网络请求」全局上限的装饰器。
+/// 限流只包真正的网络调用（read/write/delete/stat），本地 CPU 工作不占许可，
+/// 使「并发数」严格对应「在飞的 HTTP 请求数」。与 [_lock] 的操作级互斥不同：
+/// 本装饰器是**操作内限流**。
+class _GatedBackend implements RemoteObjectStore {
+  final RemoteObjectStore _inner;
+  final Pool _gate;
+
+  _GatedBackend(this._inner, int concurrency) : _gate = Pool(concurrency);
+
+  @override
+  Future<Uint8List?> readObject(String key) =>
+      _gate.withResource(() => _inner.readObject(key));
+
+  @override
+  Future<void> writeObject(String key, Uint8List bytes) =>
+      _gate.withResource(() => _inner.writeObject(key, bytes));
+
+  @override
+  bool get supportsFileObjects => _inner.supportsFileObjects;
+
+  @override
+  Future<bool> readObjectToFile(String key, String filePath) =>
+      _gate.withResource(() => _inner.readObjectToFile(key, filePath));
+
+  @override
+  Future<void> writeObjectFile(String key, String filePath) =>
+      _gate.withResource(() => _inner.writeObjectFile(key, filePath));
+
+  @override
+  Future<bool> tryCreateExclusive(String key, Uint8List bytes) =>
+      _gate.withResource(() => _inner.tryCreateExclusive(key, bytes));
+
+  @override
+  Future<void> deleteObject(String key) =>
+      _gate.withResource(() => _inner.deleteObject(key));
+
+  @override
+  Future<String?> statObject(String key) =>
+      _gate.withResource(() => _inner.statObject(key));
+
+  // 元信息直接透传。
+  @override
+  String get displayName => _inner.displayName;
+
+  @override
+  String? get persistentBackendId => _inner.persistentBackendId;
+}
+
+/// 清掉上次进程被杀时残留的同步临时密文（全尺寸，且不会有人来收）。启动时调用一次。
+Future<void> purgeSyncMediaTemp() async {
+  final dir = Directory(
+    p.join(PlatformService.get().applicationCachePath, 'sync-media'),
+  );
+  try {
+    if (await dir.exists()) await dir.delete(recursive: true);
+  } catch (_) {}
+}

@@ -1,0 +1,40 @@
+name: moodiary_migration
+description: "Moodiary 一次性历史数据迁移（infra）：按上次运行的版本号逐档跑升级钩子。旧版 Quill Delta 正文只做合法性校验与包装，纯 Dart 无编辑器依赖。"
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  moodiary_files: 0.0.1
+  moodiary_logging: 0.0.1
+  moodiary_storage: 0.0.1
+  moodiary_data: 0.0.1
+  moodiary_models: 0.0.1
+  moodiary_platform: 0.0.1
+  moodiary_utils: 0.0.1
+
+  drift: 2.34.3
+  isar_plus: 1.3.9
+  path: 1.9.1
+  isar_plus_flutter_libs: 1.3.9
+  freezed_annotation: 3.1.0
+  json_annotation: 4.12.0
+  pub_semver: 2.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_di: 0.0.1
+  moodiary_lint: 0.0.1
+  moodiary_rust: 0.0.1
+  build_runner: 2.16.0
+  freezed: 4.0.1
+  json_serializable: 6.14.1

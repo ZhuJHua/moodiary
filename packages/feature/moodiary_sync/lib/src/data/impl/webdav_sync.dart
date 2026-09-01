@@ -1,0 +1,187 @@
+/// @docImport 'package:moodiary_http/moodiary_http.dart';
+library;
+
+import 'dart:async';
+import 'dart:typed_data';
+
+import 'package:flutter/foundation.dart' show listEquals;
+import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_rust/sync.dart' as rust;
+import 'package:moodiary_sync/src/data/incremental_engine.dart';
+import 'package:moodiary_sync/src/data/model/sync_provider.dart';
+import 'package:moodiary_sync/src/data/secure_options.dart';
+import 'package:moodiary_sync/src/data/sync.dart';
+import 'package:moodiary_sync/src/data/sync_key_manager.dart';
+
+import 'cloud_orchestration.dart';
+
+/// WebDAV 实现 [IRemoteSyncBackend]，经 flutter_rust_bridge 调 Rust reqwest_dav。
+/// 配置以 `[baseUrl, username, password]` 存于 [MoodiarySecureKVs.webDavOption]（含密码）。
+/// 增量逻辑交给 [IncrementalSyncEngine]。
+class WebDavSyncBackend with CloudSyncOrchestration {
+  WebDavSyncBackend();
+
+  static final SecureOptions options = SecureOptions(.webDavOption);
+
+  Future<rust.DavClient>? _cachedClient;
+
+  /// 构建 client 时的配置快照。每次取 client 与当前 KV 对比，配置变更后自动失效重建。
+  List<String>? _cachedOptions;
+
+  List<String> get _options => options.value;
+
+  String get _baseUrl => _options.isNotEmpty ? _options[0] : '';
+  String get _username => _options.length > 1 ? _options[1] : '';
+  String get _password => _options.length > 2 ? _options[2] : '';
+
+  @override
+  SyncProviderType get type => .webdav;
+
+  @override
+  String get persistentBackendId => SyncProviderType.webdav.value;
+
+  @override
+  String get displayName {
+    if (_baseUrl.isEmpty) return 'WebDAV (未配置)';
+    return 'WebDAV ($_baseUrl)';
+  }
+
+  @override
+  bool get isReady => _baseUrl.isNotEmpty && _username.isNotEmpty;
+
+  Future<rust.DavClient> _client() {
+    final opts = _options;
+    final cached = _cachedClient;
+    if (cached != null && listEquals(_cachedOptions, opts)) return cached;
+    final future =
+        rust.DavClient.newInstance(
+          baseUrl: _baseUrl,
+          username: _username,
+          password: _password,
+        ).onError((Object error, StackTrace stackTrace) {
+          // 构造失败的 Future 不能留缓存，否则后续操作会复用同一失败结果直到重启。
+          _cachedClient = null;
+          _cachedOptions = null;
+          Error.throwWithStackTrace(error, stackTrace);
+        });
+    _cachedClient = future;
+    _cachedOptions = opts;
+    return future;
+  }
+
+  @override
+  Future<String?> testConnection() async {
+    if (!isReady) return '尚未配置 URL / 用户名';
+    try {
+      final client = await _client();
+      final ok = await client.testConnection();
+      return ok ? null : '连接失败';
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  /// 404 → null；其它错误（网络/认证/5xx）**必须**抛 [SyncException]、不可吞错 ——
+  /// 引擎据此区分「首次同步」与「读取失败」，吞错会导致 manifest 被从零重建。
+  ///
+  /// **0 字节对象不是「不存在」**：Rust 侧用 `Option` 表达 404，这里原样透传。
+  /// 曾经两边都用空 Vec 编码 404，于是被截断的 0 字节 manifest.json 会被当成
+  /// 「远端为空」，push 用本机数据重建 manifest —— 远端墓碑全丢、已删日记在其它
+  /// 设备复活。0 字节现在如实返回空 [Uint8List]，交给 manifest 的损坏守卫处理。
+  @override
+  Future<Uint8List?> readObject(String key) async {
+    try {
+      final client = await _client();
+      final bytes = await client.readObject(key: key);
+      return bytes;
+    } catch (e) {
+      throw SyncException(l10n.sync.errReadRemote(key: key, error: '$e'));
+    }
+  }
+
+  @override
+  Future<void> writeObject(String key, Uint8List bytes) async {
+    final client = await _client();
+    await client.writeObject(key: key, data: bytes);
+  }
+
+  @override
+  bool get supportsFileObjects => true;
+
+  @override
+  Future<bool> readObjectToFile(String key, String filePath) async {
+    try {
+      final client = await _client();
+      return await client.readObjectToFile(key: key, filePath: filePath);
+    } catch (e) {
+      throw SyncException(l10n.sync.errReadRemote(key: key, error: '$e'));
+    }
+  }
+
+  @override
+  Future<void> writeObjectFile(String key, String filePath) async {
+    final client = await _client();
+    await client.writeObjectFile(key: key, filePath: filePath);
+  }
+
+  @override
+  Future<bool> tryCreateExclusive(String key, Uint8List bytes) async {
+    try {
+      final client = await _client();
+      return await client.createExclusive(key: key, data: bytes);
+    } catch (e) {
+      throw SyncException(l10n.sync.errCreateRemote(key: key, error: '$e'));
+    }
+  }
+
+  /// 404 已在 Rust 层视为成功；其它错误抛 [SyncException]，引擎据此决定
+  /// tombstone 是否真的已被远端接收。
+  @override
+  Future<void> deleteObject(String key) async {
+    try {
+      final client = await _client();
+      await client.deleteObject(key: key);
+    } catch (e) {
+      throw SyncException('删除远端对象失败（$key）：$e');
+    }
+  }
+
+  @override
+  Future<String?> statObject(String key) async {
+    try {
+      final client = await _client();
+      // Rust 侧只在 404 返回空串（网络错误与 401/5xx 都抛），这里映射成 null。
+      final stat = await client.statObject(key: key);
+      return stat.isEmpty ? null : stat;
+    } catch (e) {
+      throw SyncException('查询远端对象失败（$key）：$e');
+    }
+  }
+
+  @override
+  SyncException get notReadyError => SyncException(l10n.sync.errWebdavConfig);
+
+  static Future<void> configure({
+    required String baseUrl,
+    required String username,
+    required String password,
+  }) async {
+    await options.save([baseUrl.trim(), username.trim(), password]);
+    // 加密已开启 → 新（重）配置的后端必须拿到 keyfile，登记待上传，下次同步补传。
+    // 否则该后端会收到加密对象而无 keys.json，换设备后永远解不开。
+    if (await SyncKeyManager.loadDek() != null) {
+      await SyncKeyManager.markPendingUpload([SyncProviderType.webdav.value]);
+    }
+  }
+
+  static bool isConfigured() {
+    final opts = options.value;
+    return opts.length >= 3 &&
+        opts[0].trim().isNotEmpty &&
+        opts[1].trim().isNotEmpty;
+  }
+
+  static Future<void> clear() async {
+    await options.clear();
+  }
+}

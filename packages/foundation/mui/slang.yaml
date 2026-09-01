@@ -1,0 +1,39 @@
+# mui 组件自己要用的那十来个通用词。生成命令：dart tool/task.dart i18n。
+#
+# **与 App 那份（moodiary_i18n）用的是 slang 的两种不同模式**，别照着彼此改：
+# App 是默认模式（全局 LocaleSettings + TranslationProvider）；这份关掉了
+# `locale_handling`，产物里因此**没有 LocaleSettings、没有 TranslationProvider、
+# 没有顶层 muiL10n 变量**，只剩 MuiLocale 枚举与 MuiLocalizationsData 类。当前语种
+# 由 Flutter 的 `Localizations` 决定，接口是手写的 `GlobalMuiLocalizations`
+# （同 GlobalMaterialLocalizations、shadcn_ui 的 GlobalShadLocalizations）。
+#
+# 被别人 import 的包必须这样，换来三件事：
+# 1. slang 生成的 TranslationProvider / LocaleSettings 两个类名在生成器里是硬编码的，
+#    与 App 那份必撞；关掉之后只剩一个 AppLocaleUtils，不导出生成文件就够了。
+# 2. 宿主漏挂 delegate 只是回落 base 语种（debug 下 assert 亮出来），不像 provider
+#    缺失那样在每个组件里直接抛。
+# 3. 语种真源只剩 `Localizations` 一处，不再依赖「谁先调 setLocale」的启动顺序 ——
+#    旧实现里 runApp 之前切语种会整轮落空，只能靠 lazy: false 兜。
+locale_handling: false
+
+base_locale: zh
+fallback_strategy: base_locale
+
+# 关掉 deferred：两个语种十来个词，全量编进来不值一提，换来 delegate 的 load()
+# 一律返回 SynchronousFuture —— 首帧之前就有串，widget 测试也不用多 pump 一帧。
+# 打开它就得改成异步 build()（buildSync 会绕过 loadLibrary），别只改这一行。
+lazy: false
+
+input_directory: lib/src/i18n
+input_file_pattern: .i18n.json
+output_directory: lib/src/i18n
+output_file_name: strings.g.dart
+
+# 命名跟着 Flutter 的惯例走：进 Localizations 的那份数据叫 <X>LocalizationsData。
+# 这两项与 enum_name 是 slang 里仅有的可配类名，其余（AppLocaleUtils）改不动。
+class_name: MuiLocalizationsData
+enum_name: MuiLocale
+
+flat_map: false
+timestamp: false
+statistics: false

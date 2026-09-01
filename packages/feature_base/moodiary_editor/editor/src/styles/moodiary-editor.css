@@ -1,0 +1,1041 @@
+/*
+ * MoodiaryEditor 生产样式 = Tailwind v4 + daisyUI（编辑器外观）+ TipTap/ProseMirror 正文排版 +
+ * 由种子色生成的 --app-* token 映射。
+ *
+ * 配色单一真源：Flutter 下发种子色 → bridge/theme.ts 在 :root 重算整套 --app-* token（明暗各一套）。
+ * daisyUI 主题（下方 light/dark）只把 --color-* 指向 var(--app-*)，故 daisyUI 组件（按钮/表面）与
+ * 正文、音视频控件全部跟随同一套配色、明暗自动切换。daisyUI v5 允许主题色直接引用外部 var()
+ * （color-mix 在 var()→hex 上工作、无构建期转换），前提是显式给齐所有 -content token（下方已给）。
+ * 代码高亮 token（.hljs-*）不走 --app-*，用固定的 github / github-dark（照 hljs 11 的
+ * 同名主题生成），与助手的代码块同一张表；经 [data-theme='dark'] 切换。
+ */
+
+@import 'tailwindcss';
+
+/* 关掉 daisyUI 内置主题，只用下方两套指向 --app-* 的自定义主题。 */
+@plugin "daisyui" {
+  themes: false;
+}
+
+/* 浅色主题（默认）：所有 --color-* 指向 --app-*（运行期由 theme.ts 按种子色重算）。 */
+@plugin "daisyui/theme" {
+  name: 'light';
+  default: true;
+  color-scheme: light;
+  --color-base-100: var(--app-background);
+  --color-base-200: var(--app-surface);
+  --color-base-300: var(--app-hover);
+  --color-base-content: var(--app-on-background);
+  --color-primary: var(--app-primary);
+  --color-primary-content: var(--app-on-primary);
+  --color-secondary: var(--app-secondary);
+  --color-secondary-content: var(--app-on-secondary);
+  --color-accent: var(--app-primary);
+  --color-accent-content: var(--app-on-primary);
+  --color-neutral: var(--app-inverse);
+  --color-neutral-content: var(--app-on-inverse);
+  --color-error: var(--app-error);
+  --color-error-content: var(--app-background);
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+/* 深色主题：仅 color-scheme 不同；色值同样指向 --app-*（theme.ts 已把它们重算为暗色）。 */
+@plugin "daisyui/theme" {
+  name: 'dark';
+  prefersdark: true;
+  color-scheme: dark;
+  --color-base-100: var(--app-background);
+  --color-base-200: var(--app-surface);
+  --color-base-300: var(--app-hover);
+  --color-base-content: var(--app-on-background);
+  --color-primary: var(--app-primary);
+  --color-primary-content: var(--app-on-primary);
+  --color-secondary: var(--app-secondary);
+  --color-secondary-content: var(--app-on-secondary);
+  --color-accent: var(--app-primary);
+  --color-accent-content: var(--app-on-primary);
+  --color-neutral: var(--app-inverse);
+  --color-neutral-content: var(--app-on-inverse);
+  --color-error: var(--app-error);
+  --color-error-content: var(--app-background);
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+/* —— --app-* 兜底值：仅首帧生效，applyTheme 用 inline style 注入后即被覆盖（优先级更高） —— */
+:root {
+  --app-background: #fffdfb;
+  --app-on-background: #1f1b16;
+  --app-surface: #fff8f4;
+  --app-surface-low: #fff1e5;
+  --app-on-surface: #201b13;
+  --app-on-surface-variant: #4f4539;
+  --app-outline: #817567;
+  --app-primary: #805610;
+  --app-on-primary: #ffffff;
+  --app-secondary: #fbdebc;
+  --app-on-secondary: #271904;
+  --app-inverse: #362f27;
+  --app-on-inverse: #fcefe2;
+  --app-inline-code: #ba1a1a;
+  --app-error: #ba1a1a;
+  --app-hover: #f9ecdf;
+  --app-selected: #ede0d4;
+  --app-inline-area: #e4d8cc;
+  --app-text-selection: #8056104d; /* primary @ ~30% */
+  --app-scrollbar: #4f453966; /* on-surface-variant @ ~40% */
+  --app-scrollbar-hover: #4f453999; /* on-surface-variant @ ~60% */
+  /* 首行缩进量：默认 0（关闭）；开启时 applyTheme 用 inline style 置为 2em。 */
+  --app-text-indent: 0;
+  /* 全局字号缩放（App「字号」偏好，applyTheme 注入）：正文/标题根字号 calc 读它。 */
+  --app-font-scale: 1;
+
+  /* system-ui 领头以跟随系统当前默认字体（OEM 换字体经它生效）；与 bridge/theme.ts DEFAULT_SANS 一致。 */
+  --app-font-sans:
+    system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei UI', 'PingFang SC',
+    sans-serif;
+  --app-font-mono:
+    ui-monospace, 'Cascadia Code', 'JetBrains Mono', 'Roboto Mono', Menlo,
+    monospace;
+
+  caret-color: var(--app-primary);
+}
+
+/* —— 布局：编辑器填满 webview，正文在内部滚动 —— */
+html,
+body {
+  background: var(--app-background);
+  color: var(--app-on-background);
+}
+.editor-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.moodiary-editor-root {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.moodiary-editor-scroll {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  /* 作为字数计数浮层的定位上下文（计数固定在编辑器视口右下，不随正文滚动）。本身不滚动，
+     滚动交给内部的 .moodiary-editor-viewport（标题 + 正文一起滚）。 */
+  position: relative;
+}
+/* 滚动视口：标题区 + 正文同处一个滚动容器，故标题随内容一起滚（不吸顶）。字数浮层在其外，保持固定。 */
+.moodiary-editor-viewport {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  /* 主容器只上下滚；宽内容（表格/代码块）在各自块内横滚（.tableWrapper / pre 的 overflow-x）。 */
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+}
+/* 顶部标题输入区：不进正文文档，样式与正文同字体、加粗放大；只读态无占位、空标题隐藏。 */
+.moodiary-title {
+  flex: 0 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  border: none;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  background: transparent;
+  color: var(--app-on-background);
+  font-family: var(--app-font-sans);
+  font-size: calc(22px * var(--app-font-scale, 1));
+  font-weight: 700;
+  line-height: 1.4;
+  padding: 16px 16px 2px;
+}
+.moodiary-title::placeholder {
+  color: var(--app-on-surface-variant);
+  opacity: 0.6;
+  font-weight: 700;
+}
+/* 右下角状态条：同步气泡 + 字数小药丸，仅编辑态显示，不拦截点击。 */
+.moodiary-statusbar {
+  position: absolute;
+  right: 12px;
+  bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+  user-select: none;
+}
+.moodiary-wordcount {
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: var(--app-surface);
+  color: var(--app-on-surface-variant);
+  font-size: 11px;
+  line-height: 1.6;
+  opacity: 0.8;
+}
+/* 自动保存气泡：保存中 / 已保存 / 保存失败（idle 不显示）。与字数同款底色，文字色随状态。 */
+.moodiary-savestatus {
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: var(--app-surface);
+  font-size: 11px;
+  line-height: 1.6;
+  opacity: 0.8;
+}
+.moodiary-savestatus[data-state='saving'] {
+  color: var(--app-on-surface-variant);
+}
+.moodiary-savestatus[data-state='saved'] {
+  color: var(--app-primary);
+}
+.moodiary-savestatus[data-state='failed'] {
+  color: var(--app-error);
+}
+.moodiary-editor {
+  /* 视口内：短文时长满剩余高度（提供点击聚焦区），长文时随内容撑高、由视口滚动。 */
+  flex: 1 0 auto;
+  min-height: 0;
+  display: flex;
+}
+
+/* 工具栏（EditorToolbar，daisyUI 按钮）横向滚动条隐藏的小工具类。 */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* —— ProseMirror 基础（取自 prosemirror-view / gapcursor；TipTap headless 不自带视觉样式） —— */
+.ProseMirror {
+  position: relative;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  font-variant-ligatures: none;
+  -webkit-font-variant-ligatures: none;
+}
+.ProseMirror pre {
+  white-space: pre-wrap;
+}
+.ProseMirror li {
+  position: relative;
+}
+.ProseMirror [draggable][contenteditable='false'] {
+  user-select: none;
+}
+.ProseMirror:focus {
+  outline: none;
+}
+.ProseMirror-hideselection *::selection {
+  background: transparent;
+}
+.ProseMirror-hideselection {
+  caret-color: transparent;
+}
+.ProseMirror-gapcursor {
+  display: none;
+  pointer-events: none;
+  position: absolute;
+}
+.ProseMirror-gapcursor::after {
+  content: '';
+  display: block;
+  position: absolute;
+  top: -2px;
+  width: 20px;
+  border-top: 1px solid var(--app-on-background);
+  animation: ProseMirror-cursor-blink 1.1s steps(2, start) infinite;
+}
+@keyframes ProseMirror-cursor-blink {
+  to {
+    visibility: hidden;
+  }
+}
+.ProseMirror-focused .ProseMirror-gapcursor {
+  display: block;
+}
+
+/* —— 编辑区：填满 .moodiary-editor（本身不再滚动，滚动交给外层 viewport，标题随正文一起滚） —— */
+.moodiary-editor .ProseMirror {
+  flex: 1;
+  min-height: 0;
+  /* flex 子项必须允许收缩到视口宽，否则长连续 ASCII/宽表格把 min-content 撑大，
+     break-word 与块内横滚都不会触发，整个视口被顶出横向滚动。 */
+  min-width: 0;
+  padding: 16px;
+  background: transparent;
+  color: var(--app-on-background);
+  font-family: var(--app-font-sans);
+  /* 根字号乘全局字号偏好；标题层级 / 行内代码均为 em，自动跟随。 */
+  font-size: calc(16px * var(--app-font-scale, 1));
+  line-height: 1.7;
+}
+
+/* placeholder：Placeholder 扩展给空首段加 .is-editor-empty + data-placeholder。 */
+.moodiary-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--app-on-surface-variant);
+  /* 首行缩进开启时，占位符（左浮动，不受 text-indent 影响）跟随缩进对齐光标。 */
+  margin-left: var(--app-text-indent, 0);
+}
+
+/* —— 正文排版 —— */
+.moodiary-editor .ProseMirror > :first-child {
+  margin-top: 0;
+}
+.moodiary-editor .ProseMirror p {
+  margin: 0.6em 0;
+}
+/* 首行缩进：仅作用于顶层正文段落（`> p`），不波及列表 / 任务 / 表格 / 引用内的段落。
+   缩进量由 --app-text-indent 驱动（applyTheme 依「首行缩进」偏好置 0 或 2em）。 */
+.moodiary-editor .ProseMirror > p {
+  text-indent: var(--app-text-indent, 0);
+}
+.moodiary-editor .ProseMirror h1,
+.moodiary-editor .ProseMirror h2,
+.moodiary-editor .ProseMirror h3,
+.moodiary-editor .ProseMirror h4,
+.moodiary-editor .ProseMirror h5,
+.moodiary-editor .ProseMirror h6 {
+  margin: 1.4em 0 0.6em;
+  line-height: 1.3;
+  font-weight: 600;
+  color: var(--app-on-background);
+}
+.moodiary-editor .ProseMirror h1 {
+  font-size: 1.7em;
+}
+.moodiary-editor .ProseMirror h2 {
+  font-size: 1.45em;
+}
+.moodiary-editor .ProseMirror h3 {
+  font-size: 1.25em;
+}
+.moodiary-editor .ProseMirror h4 {
+  font-size: 1.1em;
+}
+.moodiary-editor .ProseMirror h5,
+.moodiary-editor .ProseMirror h6 {
+  font-size: 1em;
+}
+.moodiary-editor .ProseMirror a {
+  color: var(--app-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+/* 双链 chip（diaryLink 节点；App.vue 监听点击发 linkTap → Flutter 跳转目标日记）。 */
+.moodiary-editor .ProseMirror .moodiary-link {
+  color: var(--app-primary);
+  background: var(--app-selected);
+  border-radius: 4px;
+  padding: 0 4px;
+  /* 长标题允许换行（viewport 已锁横滚，nowrap 会被裁切）；clone 让每行都保留圆角底色。 */
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  cursor: pointer;
+  font-weight: 500;
+}
+@media (hover: hover) and (pointer: fine) {
+  .moodiary-editor .ProseMirror .moodiary-link:hover {
+    background: var(--app-hover);
+  }
+}
+/* 编辑器内查找匹配高亮（prosemirror-search 装饰）：全部匹配 + 当前匹配。 */
+.moodiary-editor .ProseMirror .ProseMirror-search-match {
+  background: var(--app-selected);
+  border-radius: 2px;
+}
+.moodiary-editor .ProseMirror .ProseMirror-active-search-match {
+  background: var(--app-primary);
+  color: var(--app-on-primary);
+  border-radius: 2px;
+}
+.moodiary-editor .ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0.4em 0;
+  border-radius: 8px;
+}
+
+/* —— 图片节点视图（components/nodes/ImageNodeView.vue）：外层承载宽度，<img> 撑满外层 ——
+   宽度必须落在外层：它的包含块是正文列，widthPercent 才有确定的百分比参照。未设时外层缩到
+   图片原始宽度（fit-content），角标才贴在图的角上而不是正文列的角上。 */
+.moodiary-editor .ProseMirror .moodiary-image {
+  position: relative;
+  width: -webkit-fit-content;
+  width: fit-content;
+  max-width: 100%;
+  /* 居中：外层是 fit-content，auto 左右外边距即把它摆在正文列中间。满栏图看不出差别，
+     调窄过的图和小图不再贴着左边。 */
+  margin: 0.4em auto;
+  /* 既有护栏 [draggable][contenteditable='false'] 对图片已失配（draggable 落在内层 <img>，
+     contenteditable 落在外层），iOS 长按会起选择手柄 / 「存储图像」callout 并吞掉点击。 */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.moodiary-editor .ProseMirror .moodiary-image__img {
+  width: 100%;
+  margin: 0;
+}
+/* 选中（NodeSelection）描边，复刻音视频观感；仅编辑态。 */
+.moodiary-editor
+  .ProseMirror[contenteditable='true']
+  .moodiary-image.is-selected
+  .moodiary-image__img {
+  outline: 2px solid var(--app-primary);
+  outline-offset: 2px;
+}
+/* 尺寸角标：命中区 44×44，但不超过图片的 40% —— 小图（头像 / 贴纸 / 二维码常在 100px 量级）
+   上固定 44px 会吃掉近半张图，而角标不是 <img>，那片区域点不出全屏画廊。
+   锚在顶部而非底部：长图要滚一屏多才够得着底边，且改尺寸时顶边不动，视口不会跳。
+   尺寸落在 host 上（它的包含块是 .moodiary-image，百分比才有确定参照），按钮再撑满。 */
+.moodiary-image__menu {
+  position: absolute;
+  right: 0;
+  top: 0;
+  display: grid;
+  width: min(44px, 40%);
+  height: min(44px, 40%);
+}
+.moodiary-image__badge {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.moodiary-image__chip {
+  display: grid;
+  place-items: center;
+  width: min(30px, 100%);
+  height: min(30px, 100%);
+  border-radius: 9px;
+  /* 走主题反色而非硬编码黑：压在夜景照 / 黑底截图上时按钮轮廓不会整个消失。 */
+  background: var(--app-inverse);
+  color: var(--app-on-inverse);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  transition: transform 0.14s ease;
+}
+.moodiary-image__badge:active .moodiary-image__chip {
+  transform: scale(0.9);
+}
+/* 尺寸面板里的档位标签：点即跳到该档，当前档高亮。面板 Teleport 到 body，故样式必须是全局的。 */
+.moodiary-image__stop {
+  padding: 2px 6px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--app-on-surface);
+  opacity: 0.6;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+  -webkit-tap-highlight-color: transparent;
+}
+.moodiary-image__stop.is-active {
+  color: var(--app-primary);
+  font-weight: 600;
+  opacity: 1;
+}
+
+/* —— 音频 / 视频：webview 内原生 <audio>/<video> + daisyUI 自绘控件（components/nodes/*）。
+   控件外观全部用 daisyUI（btn / range）+ Tailwind 工具类,见组件模板;这里只留外边距与选中描边。 —— */
+.moodiary-media {
+  margin: 0.8em 0;
+}
+/* 选中（NodeSelection）描边，复刻旧节点视图观感；仅编辑态（阅读态 contenteditable=false 不描边）。 */
+.moodiary-editor .ProseMirror[contenteditable='true'] .moodiary-media.is-selected {
+  outline: 2px solid var(--app-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-box, 0.75rem);
+}
+
+/* —— 视频容器：比例由 node view 夹取后经 --video-ratio 注入（见 VideoNodeView），画面
+   object-contain 居中，信箱区铺模糊封面 ——
+   改前是 `<video class="w-full">` 裸跑：宽度恒满栏、高度随片子比例，9:16 的手机竖拍在 360px
+   的正文列里会撑到 640px 高，一条视频吃掉整屏。
+   限高与比例不冲突的写法：把约束加在宽度上 —— 宽度取「满栏」与「限高反算出的宽度」的较小者，
+   高度由 aspect-ratio 导出，两个约束下比例都精确。用 max-height 会在触顶时压扁比例。
+   （360px 宽的手机上，区间内任何比例的高度都在 450px 以内，限高不会触发；它是给平板 /
+   横屏 / 将来桌面端兜的。）
+   限高必须是固定值，不能用 vh：键盘一弹 webview 就被压矮，vh 跟着缩，视频块会当场变小。 */
+.moodiary-video__frame--boxed {
+  --video-max-h: 480px;
+  width: min(100%, calc(var(--video-max-h) * var(--video-ratio, 1.7778)));
+  aspect-ratio: var(--video-ratio, 1.7778);
+  margin-inline: auto;
+}
+/* 封面缺失或未加载时的兜底也不用黑色，走主题表面色。position 也在这里定，不借 Tailwind 的
+   .relative —— 见组件模板里的说明。 */
+.moodiary-video__frame {
+  position: relative;
+  background: var(--app-hover);
+}
+.moodiary-video__el {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+/* —— 控制条 ——
+   这一整套（渐变档位、轨的粗细与上浮、thumb 尺寸、时间码的三段配色）都是照 Flutter 侧
+   全屏播放器 video_fullscreen_page.dart 的数值抄的，两个播放器必须长一样。
+   控制条自动隐藏：淡出并交出命中区，藏起来后点击直接落到画面上（点画面即把它叫回来）。 */
+.moodiary-video__bar {
+  height: 64px;
+  padding: 0 6px 0 2px;
+  color: #fff;
+  /* 五档而不是两档：档位少了在渐变上会看出色带。 */
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.58) 0%,
+    rgba(0, 0, 0, 0.4) 26%,
+    rgba(0, 0, 0, 0.2) 52%,
+    rgba(0, 0, 0, 0.07) 76%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  transition:
+    opacity 0.22s ease,
+    visibility 0.22s ease;
+}
+
+/* 圆形图标键：命中 44（与全屏播放器的水波纹同尺寸），透明底，按下才有一层极淡的白。 */
+.moodiary-video__key {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.16s ease;
+}
+.moodiary-video__key:active {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+
+/* 进度轨：视觉 3px、命中整行 28px（命中区与视觉解耦，不为了好按把轨画粗）。 */
+.moodiary-video__track {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 28px;
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.moodiary-video__rail,
+.moodiary-video__fill {
+  position: absolute;
+  top: 50%;
+  height: 3px;
+  border-radius: 999px;
+  transform: translateY(-50%);
+  transition:
+    height 0.16s cubic-bezier(0.2, 0, 0, 1),
+    transform 0.16s cubic-bezier(0.2, 0, 0, 1);
+}
+/* 0.5px 黑边压在轨下面：纯白画面上 12% 白的未播段本来会整条消失。 */
+.moodiary-video__rail {
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.55);
+}
+/* 已播段与 thumb 同为纯白（同全屏播放器）：主题色在黑画面上不可靠 ——
+   灰度主题浅色档的 primary 近黑，会和画面融为一体。 */
+.moodiary-video__fill {
+  left: 0;
+  background: #fff;
+}
+.moodiary-video__thumb {
+  position: absolute;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  transform: translate(-50%, -50%);
+  transition:
+    width 0.16s cubic-bezier(0.2, 0, 0, 1),
+    height 0.16s cubic-bezier(0.2, 0, 0, 1),
+    transform 0.16s cubic-bezier(0.2, 0, 0, 1);
+}
+/* 按下：轨加粗到 6px、整条上浮 2px，thumb 长到 14px —— **不套外环**，
+   那圈光晕是 Material overlay 的遗风，在一条 3px 细轨上只显得脏。 */
+.moodiary-video__track.is-pressed .moodiary-video__rail,
+.moodiary-video__track.is-pressed .moodiary-video__fill {
+  height: 6px;
+  transform: translateY(calc(-50% - 2px));
+}
+.moodiary-video__track.is-pressed .moodiary-video__thumb {
+  width: 14px;
+  height: 14px;
+  transform: translate(-50%, calc(-50% - 2px));
+}
+
+/* 时间码：等宽数字，已播 / 分隔 / 总长三段各自配色。 */
+.moodiary-video__time {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  margin-inline: 4px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+.moodiary-video__time-pos {
+  font-weight: 600;
+  color: #fff;
+  transition: color 0.16s ease;
+}
+.moodiary-video__time-sep {
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.3);
+}
+.moodiary-video__time-dur {
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.62);
+}
+.moodiary-video__bar.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+/* 模糊封面：scale 外扩是为了盖住 blur 在边缘的透明羽化（否则四边透出底色一圈）。 */
+.moodiary-video__backdrop {
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  filter: blur(24px) saturate(1.25);
+  transform: scale(1.15);
+}
+
+/* —— 表格（@tiptap/extension-table / prosemirror-tables）：边框/表头/选中单元格/列宽拖拽手柄，配色走 --app-* —— */
+.moodiary-editor .ProseMirror .tableWrapper {
+  margin: 0.8em 0;
+  overflow-x: auto;
+}
+.moodiary-editor .ProseMirror table {
+  border-collapse: collapse;
+  table-layout: fixed; /* prosemirror-tables 用 colgroup 控列宽 */
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+.moodiary-editor .ProseMirror td,
+.moodiary-editor .ProseMirror th {
+  position: relative;
+  min-width: 3em;
+  padding: 6px 10px;
+  border: 1px solid var(--app-outline);
+  vertical-align: top;
+  box-sizing: border-box;
+}
+.moodiary-editor .ProseMirror th {
+  background: var(--app-surface);
+  font-weight: 600;
+  text-align: left;
+}
+/* 单元格内段落不再额外撑高 */
+.moodiary-editor .ProseMirror td > *,
+.moodiary-editor .ProseMirror th > * {
+  margin: 0;
+}
+/* 选中单元格高亮（prosemirror-tables 给 .selectedCell 加叠加层） */
+.moodiary-editor .ProseMirror .selectedCell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--app-text-selection);
+  pointer-events: none;
+}
+/* 列宽拖拽手柄 */
+.moodiary-editor .ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  background: var(--app-primary);
+  pointer-events: none;
+}
+.moodiary-editor .ProseMirror.resize-cursor {
+  cursor: col-resize;
+}
+
+.moodiary-editor .ProseMirror blockquote {
+  margin: 0.8em 0;
+  padding: 0.2em 0 0.2em 1em;
+  border-left: 3px solid var(--app-outline);
+  color: var(--app-on-surface-variant);
+}
+/* Tailwind preflight 会清掉 ul/ol 的 list-style，这里显式恢复标记。 */
+.moodiary-editor .ProseMirror ul,
+.moodiary-editor .ProseMirror ol {
+  padding-left: 1.6em;
+  margin: 0.6em 0;
+}
+.moodiary-editor .ProseMirror ul {
+  list-style: disc;
+}
+.moodiary-editor .ProseMirror ol {
+  list-style: decimal;
+}
+.moodiary-editor .ProseMirror li > p {
+  margin: 0.2em 0;
+}
+/* —— 任务列表（TaskList/TaskItem）：去掉项目符号，复选框 + 内容并排，复选框配色走 --app-* —— */
+.moodiary-editor .ProseMirror ul[data-type='taskList'] {
+  list-style: none;
+  padding-left: 0;
+  margin: 0.6em 0;
+}
+.moodiary-editor .ProseMirror ul[data-type='taskList'] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
+}
+.moodiary-editor .ProseMirror ul[data-type='taskList'] li > label {
+  flex: none;
+  margin-top: 0.28em; /* 对齐首行文字 */
+  user-select: none;
+}
+.moodiary-editor .ProseMirror ul[data-type='taskList'] li > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.moodiary-editor .ProseMirror ul[data-type='taskList'] li > div > p {
+  margin: 0;
+}
+.moodiary-editor .ProseMirror ul[data-type='taskList'] input[type='checkbox'] {
+  width: 1.05em;
+  height: 1.05em;
+  accent-color: var(--app-primary);
+  cursor: pointer;
+}
+/* 已勾选项：文字弱化 + 删除线 */
+.moodiary-editor .ProseMirror ul[data-type='taskList'] li[data-checked='true'] > div {
+  color: var(--app-on-surface-variant);
+  text-decoration: line-through;
+}
+/* 嵌套子任务缩进 */
+.moodiary-editor .ProseMirror ul[data-type='taskList'] ul[data-type='taskList'] {
+  margin: 0.2em 0 0;
+  padding-left: 1.2em;
+}
+.moodiary-editor .ProseMirror hr {
+  border: none;
+  border-top: 1px solid var(--app-outline);
+  margin: 1.2em 0;
+}
+.moodiary-editor .ProseMirror strong {
+  font-weight: 600;
+}
+/* 行内代码 */
+.moodiary-editor .ProseMirror code {
+  font-family: var(--app-font-mono);
+  font-size: 0.9em;
+  color: var(--app-inline-code);
+  background: var(--app-inline-area);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+}
+/* —— 代码块（CodeBlockNodeView：头部语言选择 + 复制，下方高亮代码）。配色走 --app-*；
+   高亮 token 见下方 .hljs-* —— */
+.moodiary-editor .ProseMirror .moodiary-code-block {
+  margin: 0.8em 0;
+  border: 1px solid var(--app-outline);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--app-surface);
+}
+.moodiary-code-block__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 8px 3px 10px;
+  border-bottom: 1px solid var(--app-outline);
+  background: var(--app-surface-low);
+  user-select: none;
+}
+.moodiary-code-block__lang {
+  font-family: var(--app-font-mono);
+  font-size: 12px;
+  color: var(--app-on-surface-variant);
+  user-select: none;
+}
+.moodiary-code-block__copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--app-font-sans);
+  font-size: 12px;
+  color: var(--app-on-surface-variant);
+  background: transparent;
+  border: none;
+  padding: 2px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (hover: hover) and (pointer: fine) {
+  .moodiary-code-block__copy:hover {
+    background: var(--app-hover);
+    color: var(--app-on-surface);
+  }
+}
+.moodiary-editor .ProseMirror .moodiary-code-block pre {
+  margin: 0;
+  padding: 12px 14px;
+  background: transparent;
+  /* 长行不折行，在块内横滚（覆盖基础 .ProseMirror pre 的 pre-wrap）。 */
+  white-space: pre;
+  overflow-x: auto;
+}
+.moodiary-editor .ProseMirror .moodiary-code-block pre code {
+  font-family: var(--app-font-mono);
+  background: none;
+  color: var(--app-on-surface);
+  padding: 0;
+  font-size: 0.88em;
+}
+
+/* —— 代码高亮 token（lowlight / highlight.js 输出 .hljs-* span）。
+   亮色 github、暗色 github-dark，经 [data-theme='dark'] 切换 —— 与助手的代码块
+   （moodiary_assistant 的 code_theme.dart，用的是 re_highlight 自带的同名主题）同一张表。
+
+   **这段照 highlight.js 11 的 github 主题逐 scope 生成，别手改。** 上一版是 hljs 9/10
+   时代抄来的，而引擎（lowlight 3.3.0 = highlight.js 11.11.1）早就换代了：`title.class_`
+   `variable.language_` `operator` `selector-pseudo` `meta-keyword` `template-tag`
+   `meta-string` `selector-attr` `code` 这些 scope 它一个都没着色（引擎照吐，CSS 接不住，
+   落回正文色），另有十来个归色与上游不同。
+
+   点号 scope 的类名规则：hljs 只给**第一段**加 `hljs-` 前缀，其余段裸着带下划线 ——
+   `title.function_` 出来是 `class="hljs-title function_"`，所以选择器写作
+   `.hljs-title.function_`。
+
+   两处刻意不照抄上游：
+   1. `root` 不在这里 —— 代码块的面板底色与描边仍走 --app-*（见上方 .moodiary-code-block），
+      整个编辑器都跟随主题，只有 token 用固定色板；
+   2. 上游把 `subst` / `emphasis` / `strong` 的颜色写成与 root 同色，那是「用正文色」的意思，
+      这里只保留字重与斜体，颜色交给主题。
+
+   未列出的 scope（tag / params / property）上游 github 主题本来就不着色。 —— */
+.moodiary-editor .hljs-doctag,
+.moodiary-editor .hljs-keyword,
+.moodiary-editor .hljs-meta-keyword,
+.moodiary-editor .hljs-template-tag,
+.moodiary-editor .hljs-template-variable,
+.moodiary-editor .hljs-type,
+.moodiary-editor .hljs-variable.language_ {
+  color: #d73a49;
+}
+.moodiary-editor .hljs-title,
+.moodiary-editor .hljs-title.class_,
+.moodiary-editor .hljs-title.class_.inherited__,
+.moodiary-editor .hljs-title.function_ {
+  color: #6f42c1;
+}
+.moodiary-editor .hljs-attr,
+.moodiary-editor .hljs-attribute,
+.moodiary-editor .hljs-literal,
+.moodiary-editor .hljs-meta,
+.moodiary-editor .hljs-number,
+.moodiary-editor .hljs-operator,
+.moodiary-editor .hljs-variable,
+.moodiary-editor .hljs-selector-attr,
+.moodiary-editor .hljs-selector-class,
+.moodiary-editor .hljs-selector-id {
+  color: #005cc5;
+}
+.moodiary-editor .hljs-regexp,
+.moodiary-editor .hljs-string,
+.moodiary-editor .hljs-meta-string {
+  color: #032f62;
+}
+.moodiary-editor .hljs-built_in,
+.moodiary-editor .hljs-symbol {
+  color: #e36209;
+}
+.moodiary-editor .hljs-comment,
+.moodiary-editor .hljs-code,
+.moodiary-editor .hljs-formula {
+  color: #6a737d;
+}
+.moodiary-editor .hljs-name,
+.moodiary-editor .hljs-quote,
+.moodiary-editor .hljs-selector-tag,
+.moodiary-editor .hljs-selector-pseudo {
+  color: #22863a;
+}
+.moodiary-editor .hljs-section {
+  color: #005cc5;
+  font-weight: 600;
+}
+.moodiary-editor .hljs-bullet {
+  color: #735c0f;
+}
+.moodiary-editor .hljs-emphasis {
+  font-style: italic;
+}
+.moodiary-editor .hljs-strong {
+  font-weight: 600;
+}
+.moodiary-editor .hljs-addition {
+  color: #22863a;
+  background-color: #f0fff4;
+}
+.moodiary-editor .hljs-deletion {
+  color: #b31d28;
+  background-color: #ffeef0;
+}
+
+/* github-dark */
+[data-theme='dark'] .moodiary-editor .hljs-doctag,
+[data-theme='dark'] .moodiary-editor .hljs-keyword,
+[data-theme='dark'] .moodiary-editor .hljs-meta-keyword,
+[data-theme='dark'] .moodiary-editor .hljs-template-tag,
+[data-theme='dark'] .moodiary-editor .hljs-template-variable,
+[data-theme='dark'] .moodiary-editor .hljs-type,
+[data-theme='dark'] .moodiary-editor .hljs-variable.language_ {
+  color: #ff7b72;
+}
+[data-theme='dark'] .moodiary-editor .hljs-title,
+[data-theme='dark'] .moodiary-editor .hljs-title.class_,
+[data-theme='dark'] .moodiary-editor .hljs-title.class_.inherited__,
+[data-theme='dark'] .moodiary-editor .hljs-title.function_ {
+  color: #d2a8ff;
+}
+[data-theme='dark'] .moodiary-editor .hljs-attr,
+[data-theme='dark'] .moodiary-editor .hljs-attribute,
+[data-theme='dark'] .moodiary-editor .hljs-literal,
+[data-theme='dark'] .moodiary-editor .hljs-meta,
+[data-theme='dark'] .moodiary-editor .hljs-number,
+[data-theme='dark'] .moodiary-editor .hljs-operator,
+[data-theme='dark'] .moodiary-editor .hljs-variable,
+[data-theme='dark'] .moodiary-editor .hljs-selector-attr,
+[data-theme='dark'] .moodiary-editor .hljs-selector-class,
+[data-theme='dark'] .moodiary-editor .hljs-selector-id {
+  color: #79c0ff;
+}
+[data-theme='dark'] .moodiary-editor .hljs-regexp,
+[data-theme='dark'] .moodiary-editor .hljs-string,
+[data-theme='dark'] .moodiary-editor .hljs-meta-string {
+  color: #a5d6ff;
+}
+[data-theme='dark'] .moodiary-editor .hljs-built_in,
+[data-theme='dark'] .moodiary-editor .hljs-symbol {
+  color: #ffa657;
+}
+[data-theme='dark'] .moodiary-editor .hljs-comment,
+[data-theme='dark'] .moodiary-editor .hljs-code,
+[data-theme='dark'] .moodiary-editor .hljs-formula {
+  color: #8b949e;
+}
+[data-theme='dark'] .moodiary-editor .hljs-name,
+[data-theme='dark'] .moodiary-editor .hljs-quote,
+[data-theme='dark'] .moodiary-editor .hljs-selector-tag,
+[data-theme='dark'] .moodiary-editor .hljs-selector-pseudo {
+  color: #7ee787;
+}
+[data-theme='dark'] .moodiary-editor .hljs-section {
+  color: #1f6feb;
+  font-weight: 600;
+}
+[data-theme='dark'] .moodiary-editor .hljs-bullet {
+  color: #f2cc60;
+}
+[data-theme='dark'] .moodiary-editor .hljs-emphasis {
+  font-style: italic;
+}
+[data-theme='dark'] .moodiary-editor .hljs-strong {
+  font-weight: 600;
+}
+[data-theme='dark'] .moodiary-editor .hljs-addition {
+  color: #aff5b4;
+  background-color: #033a16;
+}
+[data-theme='dark'] .moodiary-editor .hljs-deletion {
+  color: #ffdcd7;
+  background-color: #67060c;
+}
+
+/*
+ * 选区底色 / 光标颜色，与 Flutter 的 TextSelectionTheme 观感一致。
+ * 移动端「选区拖拽手柄」（grabber）是 OS 原生控件，CSS 无法着色，需在原生层处理。
+ */
+::selection {
+  background-color: var(--app-text-selection);
+}
+
+/*
+ * Flutter 风格常驻滚动条——仅桌面（media query 限定）。移动端沿用系统自动隐藏的覆盖式滚动条。
+ */
+@media (hover: hover) and (pointer: fine) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--app-scrollbar) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--app-scrollbar);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--app-scrollbar-hover);
+  }
+}

@@ -1,0 +1,33 @@
+name: moodiary_media
+description: "Moodiary 媒体库：图片 / 音视频总览、清理与查看器（两端可复用的 feature 包）。"
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  moodiary_files: 0.0.1
+  moodiary_logging: 0.0.1
+  moodiary_models: 0.0.1
+  moodiary_data: 0.0.1
+  moodiary_components: 0.0.1
+  moodiary_i18n: 0.0.1
+  moodiary_router: 0.0.1
+  moodiary_utils: 0.0.1
+
+  flutter_riverpod: 3.4.2
+  riverpod_annotation: 4.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1
+  build_runner: 2.16.0
+  riverpod_generator: 4.0.8

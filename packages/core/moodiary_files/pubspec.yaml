@@ -1,0 +1,35 @@
+name: moodiary_files
+description: "文件布局与媒体管线：应用目录结构、媒体存取与缩略图、文件选择端口。"
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  moodiary_di: 0.0.1
+  moodiary_logging: 0.0.1
+  moodiary_platform: 0.0.1
+  moodiary_storage: 0.0.1
+  moodiary_rust: 0.0.1
+  moodiary_utils: 0.0.1
+  mui: 0.0.1
+  path: 1.9.1
+  path_provider: 2.1.6
+  pool: 1.5.3
+  cross_file: 0.3.5+5
+  mime: 2.1.0
+  gal: 2.3.3
+  fc_native_video_thumbnail: 3.0.1
+  audio_metadata_reader: 1.7.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1

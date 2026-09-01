@@ -1,0 +1,24 @@
+{
+  "title": "Media",
+  "typeImage": "Image",
+  "deleteUseLessFile": "Delete useless file",
+  "empty": "No media yet",
+  "cleanupScanning": "Scanning for unused files",
+  "cleanupEmpty": "No unused files found",
+  "cleanupConfirmTitle": "Clean up unused files",
+  "cleanupConfirmMessage": "Found {count} files not referenced by any diary ({size}). Clean them up? This cannot be undone.",
+  "cleanupDone": "Cleaned up {count} files",
+  "rename": "Rename",
+  "imageCount(plural, param=count)": {
+    "one": "{count} Photo",
+    "other": "{count} Photos"
+  },
+  "audioCount(plural, param=count)": {
+    "one": "{count} Audio",
+    "other": "{count} Audios"
+  },
+  "videoCount(plural, param=count)": {
+    "one": "{count} Video",
+    "other": "{count} Videos"
+  }
+}

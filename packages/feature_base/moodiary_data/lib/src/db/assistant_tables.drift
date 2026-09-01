@@ -1,0 +1,90 @@
+-- AI 助手域（供应商 / 会话→消息→工具调用级联链 / 记忆 / 预设）。
+-- 全库约定见 database.dart 类注释。
+
+-- AI 助手。API Key 永不入库（SecureKV，`llm_key_<id>`）。
+CREATE TABLE llm_providers (
+  id            TEXT NOT NULL PRIMARY KEY,
+  name          TEXT NOT NULL,
+  type          TEXT NOT NULL,
+  base_url      TEXT NOT NULL,
+  default_model TEXT NOT NULL,
+  created_at    INTEGER NOT NULL,
+  sort_order    INTEGER NOT NULL,
+  preset_id     TEXT NOT NULL DEFAULT '',
+  models_json   TEXT NOT NULL DEFAULT '[]',
+  tool_call     INTEGER NOT NULL DEFAULT 0,
+  reasoning     INTEGER NOT NULL DEFAULT 0,
+  attachment    INTEGER NOT NULL DEFAULT 0
+) AS LlmProviderRow;
+
+CREATE INDEX idx_llm_providers_sort ON llm_providers (sort_order);
+
+CREATE TABLE chat_sessions (
+  id                 TEXT NOT NULL PRIMARY KEY,
+  title              TEXT NOT NULL DEFAULT '',
+  provider_id        TEXT NOT NULL,
+  model              TEXT NOT NULL,
+  created_at         INTEGER NOT NULL,
+  updated_at         INTEGER NOT NULL,
+  reasoning_effort   TEXT NOT NULL DEFAULT '',
+  compacted_summary  TEXT,
+  compacted_up_to_message_id TEXT,
+  compacted_at       INTEGER,
+  compacted_input_tokens_at_trigger INTEGER,
+  agent_preset_id    TEXT,
+  persona_snapshot   TEXT,
+  tools_snapshot_json TEXT
+) AS ChatSessionRow;
+
+CREATE INDEX idx_chat_sessions_updated ON chat_sessions (updated_at DESC);
+
+CREATE TABLE chat_messages (
+  id              TEXT NOT NULL PRIMARY KEY,
+  session_id      TEXT NOT NULL
+    REFERENCES chat_sessions (id) ON DELETE CASCADE,
+  role            TEXT NOT NULL,
+  content         TEXT NOT NULL,
+  created_at      INTEGER NOT NULL,
+  reasoning       TEXT,
+  thinking_millis INTEGER,
+  image_name      TEXT,
+  input_tokens    INTEGER,
+  output_tokens   INTEGER,
+  model           TEXT
+) AS ChatMessageRow;
+
+CREATE INDEX idx_chat_messages_session
+  ON chat_messages (session_id, created_at);
+
+-- 原 Isar @Embedded List 拆子表：seq 显式记录顺序，done 流式翻转可单行 UPDATE。
+CREATE TABLE assistant_tool_calls (
+  message_id TEXT NOT NULL
+    REFERENCES chat_messages (id) ON DELETE CASCADE,
+  seq        INTEGER NOT NULL,
+  call_id    TEXT NOT NULL,
+  name       TEXT NOT NULL,
+  args_json  TEXT NOT NULL DEFAULT '',
+  result     TEXT NOT NULL DEFAULT '',
+  done       INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (message_id, seq)
+) AS AssistantToolCallRow;
+
+CREATE TABLE memories (
+  id         TEXT NOT NULL PRIMARY KEY,
+  category   TEXT NOT NULL,
+  content    TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+) AS MemoryRow;
+
+CREATE INDEX idx_memories_updated ON memories (updated_at DESC);
+
+CREATE TABLE agent_presets (
+  id          TEXT NOT NULL PRIMARY KEY,
+  name        TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  persona     TEXT NOT NULL,
+  tools_json  TEXT,
+  created_at  INTEGER NOT NULL,
+  updated_at  INTEGER NOT NULL
+) AS AgentPresetRow;

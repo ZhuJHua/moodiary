@@ -1,0 +1,25 @@
+name: moodiary_rust
+description: "Moodiary native (Rust) FFI package — self-contained (crate in rust/) exposing RustLib + generated Dart bindings; built and bundled via Native Assets build hooks."
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  code_assets: 1.2.1
+  flutter:
+    sdk: flutter
+  flutter_rust_bridge: 2.13.0
+  flutter_rust_bridge_hooks: 2.13.0
+  freezed_annotation: 3.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  build_runner: 2.16.0
+  ffigen: 21.0.0
+  freezed: 4.0.1

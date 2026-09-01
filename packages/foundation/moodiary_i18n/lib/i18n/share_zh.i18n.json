@@ -1,0 +1,11 @@
+{
+  "title": "分享",
+  "empty": "没有可分享的日记",
+  "copyText": "复制文本",
+  "exportImage": "导出图片",
+  "copied": "已复制到剪贴板",
+  "subject": "来自 Moodiary 的分享",
+  "imageSaved": "已生成图片：{path}（路径已复制）",
+  "templateMinimal": "简约",
+  "templateNote": "便签"
+}

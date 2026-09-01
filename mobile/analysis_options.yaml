@@ -1,0 +1,17 @@
+include: package:moodiary_lint/analysis_options.yaml
+
+# 平台原生目录 / 第三方等 app 特有排除（lint 规则与 errors 由 moodiary_lint 提供）。
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "**/*.gr.dart"
+    - "**/*.mocks.dart"
+    - "build/**"
+    - "third_party/**"
+    - "ios/**"
+    - "android/**"
+    - "windows/**"
+    - "macos/**"
+    - web/**
+    - linux/**

@@ -1,0 +1,103 @@
+import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_sync/src/data/sync.dart';
+import 'package:moodiary_sync/src/data/sync_cancellation.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'sync_controller.g.dart';
+
+/// 同步 controller：状态机 idle → syncing → success / partial / error。不持有具体 [SyncBackend]，
+/// 调用方在 [push]/[pull] 时显式传入，同一 controller 可服务 JSON 备份与 WebDAV。
+///
+/// keepAlive：同步是后台过程，不随页面销毁 —— 否则 autoDispose 会在页面关闭时销毁
+/// notifier，同步完成后的 state 赋值直接抛错。
+@Riverpod(keepAlive: true)
+class SyncController extends _$SyncController {
+  @override
+  SyncState build() => const .idle();
+
+  Future<void> push(SyncBackend backend) async {
+    state = .syncing(label: l10n.sync.uploading(backend: backend.displayName));
+    try {
+      _settle(await backend.pushAll());
+    } on SyncException catch (e) {
+      state = .error(message: e.message);
+    } catch (e) {
+      state = .error(message: e.toString());
+    }
+  }
+
+  Future<void> pull(SyncBackend backend) async {
+    state = .syncing(
+      label: l10n.sync.downloading(backend: backend.displayName),
+    );
+    try {
+      _settle(await backend.pullAll());
+    } on SyncException catch (e) {
+      state = .error(message: e.message);
+    } catch (e) {
+      state = .error(message: e.toString());
+    }
+  }
+
+  /// 双向同步（pull 后 push，云后端专用）。引擎侧在同一把锁内原子完成。
+  Future<void> sync(IRemoteSyncBackend backend) async {
+    state = .syncing(label: l10n.sync.syncing(backend: backend.displayName));
+    try {
+      _settle(await backend.syncAll());
+    } on SyncException catch (e) {
+      state = .error(message: e.message);
+    } catch (e) {
+      state = .error(message: e.toString());
+    }
+  }
+
+  /// 报告落地。**有失败条目或被用户停止就不是 success**：绿勾配「同步完成」会让用户
+  /// 以为云端已有完整副本，而引擎恰恰因为这两种情况不推进「上次同步时间」。
+  /// 摘要走 [SyncReport.userSummary]（`toString` 是硬编码中文的日志文本）。
+  void _settle(SyncReport report) {
+    final message = report.userSummary();
+    state = report.failed > 0 || report.cancelled
+        ? .partial(message: message)
+        : .success(message: message);
+  }
+
+  /// 请求停止当前同步（协作式：不再发起新条目，在飞的跑完后正常收尾，
+  /// 见 [SyncCancellation]）。状态仍保持 syncing，直到引擎返回报告。
+  void stop() => SyncCancellation.instance.requestStop();
+
+  void reset() => state = const .idle();
+}
+
+sealed class SyncState {
+  const SyncState();
+  const factory SyncState.idle() = SyncIdle;
+  const factory SyncState.syncing({required String label}) = SyncRunning;
+  const factory SyncState.success({required String message}) = SyncSuccess;
+  const factory SyncState.partial({required String message}) = SyncPartial;
+  const factory SyncState.error({required String message}) = SyncError;
+}
+
+class SyncIdle extends SyncState {
+  const SyncIdle();
+}
+
+class SyncRunning extends SyncState {
+  final String label;
+  const SyncRunning({required this.label});
+}
+
+class SyncSuccess extends SyncState {
+  final String message;
+  const SyncSuccess({required this.message});
+}
+
+/// 跑完了但不完整：有条目失败，或被用户停止。
+class SyncPartial extends SyncState {
+  final String message;
+  const SyncPartial({required this.message});
+}
+
+class SyncError extends SyncState {
+  final String message;
+  const SyncError({required this.message});
+}

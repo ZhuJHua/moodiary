@@ -1,0 +1,27 @@
+name: moodiary_theme
+description: "全局主题与字体：取系统色、解析强调色档位、装载自定义字体，产出 ThemeData。"
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  moodiary_files: 0.0.1
+  moodiary_logging: 0.0.1
+  moodiary_storage: 0.0.1
+  moodiary_rust: 0.0.1
+  mui: 0.0.1
+  dynamic_color: 2.1.0
+  path: 1.9.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1

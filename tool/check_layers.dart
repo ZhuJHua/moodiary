@@ -1,0 +1,820 @@
+// 分层依赖检查：只能上层依赖下层，同层不互相依赖。另外三段无 baseline 的主题闸门
+// （ThemeData 只在 mui 的 build.dart 里构造 / 业务代码零色板外颜色）
+// 也挂在这里跑。依赖检查本身分三段——
+//   1) 包级：各 pubspec 的 moodiary_*/mui 依赖（foundation → core → feature_base → feature → apps）。
+//      pub 只保证依赖图无环、不保证方向，这段补上方向约束。无 baseline，必须零违规。
+//   2) Rust crate 级：moodiary_rust/rust/crates 下各 Cargo.toml 的 moodiary-* 依赖
+//      （foundation → core → feature → bridge）。同样，cargo 只保证无环、不保证方向。
+//   3) 文件级：mobile/lib 内部的 package:moodiary import（见 _layers）。
+//
+// 运行：dart run tool/check_layers.dart            // 检查，存在新增违规则 exit(1)
+//      dart run tool/check_layers.dart --update-baseline  // 用当前文件级违规重写 baseline
+//
+// 文件级规则：每个文件按路径归入一层。一条 package:moodiary import 合法当且仅当
+//   - 目标层严格低于源层，或
+//   - 目标与源属于「同一模块」（feature 取到具体 feature 名；其余层取顶层目录名）。
+// 跨 feature、或下层引上层，都是违规。tool/layer_baseline.txt 列出的存量违规会被放行。
+import 'dart:io';
+
+/// 层级表：index 越小越底层。每层可含多个「模块」（同层不同模块之间禁止互引）。
+const List<List<String>> _layers = [
+  ['gen'], // 0 生成产物（叶子）
+  ['core'], // 1 基础设施
+  ['data'], // 2 model + repository
+  ['component'], // 3 业务无关 UI
+  ['feature'], // 4 各 feature（互为兄弟，禁止互引）
+  ['app'], // 5 聚合层：router / shell / di
+  ['main.dart'], // 6 入口
+];
+
+const String _baselinePath = 'tool/layer_baseline.txt';
+final RegExp _importRe = RegExp(
+  r'''^\s*(?:import|export)\s+['"]package:moodiary/([^'"]+)['"]''',
+  multiLine: true,
+);
+
+/// 文件相对 lib/ 的路径 -> (层 index, 模块标识)。模块标识用于同层判定。
+({int layer, String module}) _classify(String rel) {
+  final parts = rel.split('/');
+  final top = parts[0];
+  if (top == 'feature') {
+    // feature/<name> 为一个模块；feature 内部（含 presentation/application/data）算同模块。
+    final name = parts.length > 1 ? parts[1] : '?';
+    return (layer: 4, module: 'feature/$name');
+  }
+  for (var i = 0; i < _layers.length; i++) {
+    if (_layers[i].contains(top)) return (layer: i, module: top);
+  }
+  return (layer: -1, module: top); // 未归类（不应发生）
+}
+
+class Violation {
+  final String src; // 源文件，相对 lib/
+  final String dstModule; // 目标模块标识
+  Violation(this.src, this.dstModule);
+  String get key => '$src -> $dstModule';
+}
+
+/// 包层级：index 越小越底层。apps（mobile/desktop）是顶层聚合。
+const Map<String, int> _pkgLayers = {
+  'foundation': 0,
+  'core': 1,
+  'feature_base': 2,
+  'feature': 3,
+  'app': 4,
+};
+
+/// feature_base 层内部次序（同层允许依赖，但只能单向；同 tier 之间禁止互引）。
+const Map<String, int> _featureBaseOrder = {
+  'moodiary_models': 0,
+  // 嵌入引擎（llamadart owner）。与 models 平级互不引；data 靠它做语义索引。
+  'moodiary_ml': 0,
+  'moodiary_data': 1,
+  'moodiary_components': 2,
+  'moodiary_migration': 2,
+  'moodiary_preferences': 2,
+  // 相册选择器。回到 wechat_assets_picker 之后已经不再依赖 components
+  // （预览页用包自带的），但留在 3 档不碍事，将来要换回自建预览也不用再动闸门。
+  'moodiary_picker': 3,
+  // 内容编辑基建（TipTap webview），被 diary 内嵌消费；依赖 models/data/components，
+  // 故放在层尾。从 feature 层降下来后，_sameLayerAllowed 例外随之清零。
+  'moodiary_editor': 4,
+};
+
+/// core 层内部次序（同层允许依赖，但只能单向；同 tier 之间禁止互引）。
+const Map<String, int> _coreOrder = {
+  'moodiary_platform': 0,
+  'moodiary_http': 0,
+  'moodiary_storage': 1,
+  'moodiary_files': 2,
+  'moodiary_theme': 3,
+};
+
+final RegExp _pkgDepRe = RegExp(
+  r'^\s{2}((?:moodiary_[a-z0-9_]+|mui)):',
+  multiLine: true,
+);
+
+/// 校验包级依赖方向，返回违规描述（空表示通过）。
+List<String> _checkPackageLayers() {
+  // 包名 -> 所属层名。
+  final layerOf = <String, String>{};
+  final depsOf = <String, List<String>>{};
+
+  void collect(String pubspecPath, String layer) {
+    final f = File(pubspecPath);
+    if (!f.existsSync()) return;
+    final text = f.readAsStringSync();
+    final name = RegExp(
+      r'^name:\s*(\S+)',
+      multiLine: true,
+    ).firstMatch(text)?.group(1);
+    if (name == null) return;
+    layerOf[name] = layer;
+    // 只看正式依赖；dev_dependencies（lint/test 工具）不参与方向约束。
+    final main = text
+        .split(RegExp(r'^dev_dependencies:', multiLine: true))
+        .first;
+    depsOf[name] = _pkgDepRe.allMatches(main).map((m) => m.group(1)!).toList();
+  }
+
+  for (final dir in Directory('packages').listSync().whereType<Directory>()) {
+    final layer = dir.path.split(Platform.pathSeparator).last;
+    if (!_pkgLayers.containsKey(layer)) continue;
+    for (final pkg in dir.listSync().whereType<Directory>()) {
+      collect('${pkg.path}/pubspec.yaml', layer);
+    }
+  }
+  for (final dir in _appDirs) {
+    if (File('$dir/pubspec.yaml').existsSync()) {
+      collect('$dir/pubspec.yaml', 'app');
+    }
+  }
+
+  final out = <String>[];
+  for (final entry in depsOf.entries) {
+    final src = entry.key;
+    final srcLayer = _pkgLayers[layerOf[src]]!;
+    for (final dst in entry.value) {
+      final dstLayerName = layerOf[dst];
+      if (dstLayerName == null) {
+        out.add('$src -> $dst（依赖了不在 workspace 里的 moodiary_* 包）');
+        continue;
+      }
+      final dstLayer = _pkgLayers[dstLayerName]!;
+      if (dstLayer < srcLayer) continue;
+      if (dstLayer > srcLayer) {
+        out.add('$src（${layerOf[src]}）-> $dst（$dstLayerName）：下层依赖上层');
+        continue;
+      }
+      // 同层。
+      if (layerOf[src] == 'feature_base' || layerOf[src] == 'core') {
+        final order = layerOf[src] == 'core' ? _coreOrder : _featureBaseOrder;
+        final s = order[src], d = order[dst];
+        if (s != null && d != null && d < s) continue;
+        out.add('$src -> $dst：${layerOf[src]} 层内部次序违规');
+      } else {
+        out.add('$src -> $dst：同层互引（${layerOf[src]} 层不允许）');
+      }
+    }
+  }
+  out.sort();
+  return out;
+}
+
+/// Rust crate 层级：index 越小越底层。bridge（moodiary_rust 本体）是顶层聚合。
+const Map<String, int> _rustLayers = {
+  'foundation': 0,
+  'feature_base': 1,
+  'feature': 2,
+};
+
+const String _rustRoot = 'packages/foundation/moodiary_rust/rust';
+final RegExp _cargoDepRe = RegExp(
+  r'^\s*(moodiary-[a-z-]+)\s*=',
+  multiLine: true,
+);
+
+/// 校验 Rust crate 依赖方向，返回违规描述（空表示通过）。
+/// bridge crate（rust/Cargo.toml）可以依赖任何层，不参与源侧检查。
+List<String> _checkRustLayers() {
+  final crates = Directory('$_rustRoot/crates');
+  if (!crates.existsSync()) return const [];
+
+  final layerOf = <String, String>{};
+  final depsOf = <String, List<String>>{};
+
+  for (final layerDir in crates.listSync().whereType<Directory>()) {
+    final layer = layerDir.path.split(Platform.pathSeparator).last;
+    if (!_rustLayers.containsKey(layer)) continue;
+    for (final crate in layerDir.listSync().whereType<Directory>()) {
+      final f = File('${crate.path}/Cargo.toml');
+      if (!f.existsSync()) continue;
+      final text = f.readAsStringSync();
+      final name = RegExp(
+        r'^name\s*=\s*"([^"]+)"',
+        multiLine: true,
+      ).firstMatch(text)?.group(1);
+      if (name == null) continue;
+      layerOf[name] = layer;
+      // dev-dependencies（测试用）不参与方向约束。
+      final main = text
+          .split(RegExp(r'^\[dev-dependencies\]', multiLine: true))
+          .first;
+      depsOf[name] = _cargoDepRe
+          .allMatches(main)
+          .map((m) => m.group(1)!)
+          .toList();
+    }
+  }
+
+  final out = <String>[];
+  for (final entry in depsOf.entries) {
+    final src = entry.key;
+    final srcLayer = _rustLayers[layerOf[src]]!;
+    for (final dst in entry.value) {
+      final dstLayerName = layerOf[dst];
+      if (dstLayerName == null) {
+        out.add('$src -> $dst（依赖了不在 crates/ 里的 moodiary-* crate）');
+        continue;
+      }
+      final dstLayer = _rustLayers[dstLayerName]!;
+      if (dstLayer < srcLayer) continue;
+      if (dstLayer > srcLayer) {
+        out.add('$src（${layerOf[src]}）-> $dst（$dstLayerName）：下层依赖上层');
+      } else {
+        out.add('$src -> $dst：同层互引（${layerOf[src]} 层不允许）');
+      }
+    }
+  }
+  out.sort();
+  return out;
+}
+
+/// moodiary_rust 的门面归属。
+const Map<String, Set<String>> _rustFacadeOwners = {
+  'assistant': {'moodiary_assistant'},
+  'export': {'moodiary_export'},
+  'sync': {'moodiary_sync'},
+  'graph': {'moodiary_diary'},
+  // app 门面：每个组合根都够得着（desktop 进树后 _appPubNames 自动带上）。
+  'rust': {'moodiary_mobile', 'moodiary_desktop'},
+  // 引擎搬迁测试要给拷贝路径注入分词替身，与 moodiary_data 同一份。
+  'testing': {'moodiary_data', 'moodiary_migration'},
+};
+
+final RegExp _rustFacadeRe = RegExp(
+  r"""^\s*(?:import|export)\s+['"]package:moodiary_rust/([a-z_]+)\.dart['"]""",
+  multiLine: true,
+);
+
+/// 门面之外还有一条：不许绕过门面深入 `src/`。
+
+/// app 目录清单：desktop 落地时在这里加一行（目录不存在自动跳过），五段检查
+/// （app 层收集 / rust 门面 / legacy material / 配色纯度 / ThemeData 构造点）
+/// 一起生效——此前 mobile 写死在五处，desktop 进树当天会同时漏检与误报。
+const List<String> _appDirs = ['mobile', 'desktop'];
+
+/// app 目录 → pub 包名（读 pubspec 的 name），rust 门面归属用。
+final Map<String, String> _appPubNames = {
+  for (final dir in _appDirs)
+    if (File('$dir/pubspec.yaml').existsSync())
+      dir: RegExp(
+        r'^name:\s*(\S+)',
+        multiLine: true,
+      ).firstMatch(File('$dir/pubspec.yaml').readAsStringSync())!.group(1)!,
+};
+
+/// 一次遍历、多段共用的 .dart 文件清单（按根缓存）。跳过生成物与两座大山——
+/// rust/target（几十 GB）与 editor/node_modules（pnpm 软链农场）；
+/// followLinks: false 兼防软链自指走不完。此前四段各自
+/// `listSync(recursive: true)` 全量扫 36 万条目，整跑 6 秒多。
+final Map<String, List<File>> _dartFileCache = {};
+
+List<File> _dartFiles(String root) {
+  return _dartFileCache.putIfAbsent(root, () {
+    final dir = Directory(root);
+    if (!dir.existsSync()) return const [];
+    const skip = {'.dart_tool', 'build', 'node_modules', 'target', '.git'};
+    final out = <File>[];
+    void walk(Directory d) {
+      for (final entity in d.listSync(followLinks: false)) {
+        final name = entity.path.replaceAll('\\', '/').split('/').last;
+        if (entity is Directory) {
+          if (!skip.contains(name)) walk(entity);
+        } else if (entity is File && entity.path.endsWith('.dart')) {
+          out.add(entity);
+        }
+      }
+    }
+
+    walk(dir);
+    return out;
+  });
+}
+
+final RegExp _rustDeepRe = RegExp(
+  r"""^\s*(?:import|export)\s+['"]package:moodiary_rust/src/""",
+  multiLine: true,
+);
+
+List<String> _checkRustFacades() {
+  final out = <String>[];
+  for (final root in [
+    for (final dir in _appDirs) ...['$dir/lib', '$dir/test'],
+    'packages',
+  ]) {
+    for (final entity in _dartFiles(root)) {
+      final rel = entity.path.replaceAll('\\', '/');
+      if (rel.contains('packages/foundation/moodiary_rust/')) continue;
+      if (rel.endsWith('.g.dart') || rel.endsWith('.freezed.dart')) continue;
+
+      final String owner;
+      final appDir = _appDirs.where((d) => rel.startsWith('$d/')).firstOrNull;
+      if (appDir != null) {
+        owner = _appPubNames[appDir]!;
+      } else {
+        final parts = rel.split('/');
+        if (parts.length < 3) continue;
+        owner = parts[2];
+      }
+
+      final content = entity.readAsStringSync();
+      if (_rustDeepRe.hasMatch(content)) {
+        out.add('$rel：绕过门面深入了 package:moodiary_rust/src/');
+      }
+      for (final m in _rustFacadeRe.allMatches(content)) {
+        final facade = m.group(1)!;
+        final owners = _rustFacadeOwners[facade];
+        if (owners == null) continue; // foundation：全仓开放
+        if (owners.contains(owner)) continue;
+        out.add(
+          '$rel（$owner）-> moodiary_rust/$facade.dart：'
+          '该门面只属于 ${owners.join('/')}',
+        );
+      }
+    }
+  }
+  out.sort();
+  return out;
+}
+
+/// Flutter 3.47 把 material 拆成独立包 `material_ui`；SDK 内的
+/// `package:flutter/material.dart` 将于 2026-11 正式弃用。
+///
+/// 全仓的规矩：**material 只经 `package:mui/mui.dart` 出**。业务代码 import mui，
+/// mui 内部 import material_ui。直接 import legacy material 的只剩下面这几处 ——
+/// 它们要把主题喂给尚未迁移的第三方包，那些包的 API 只认 legacy 类型。
+///
+/// 无 baseline：名单之外出现一处就红。名单只会随第三方迁移而缩短。
+const Map<String, String> _legacyMaterialAllowlist = {
+  // 就这一条：wechat_assets_picker 内部（AssetPickerAppBar、权限遮罩、预览页）
+  // 只认 legacy ThemeData，我们覆写不到的那些地方靠它把 App 配色喂进去。
+  // delegate 本身是纯 mui 的 —— material_ui 的 Theme 与 legacy 的 Theme 是两个
+  // 不同的 widget 类型，picker 那句 Theme(data:) 盖不住 mui 的取用链。
+  'packages/feature_base/moodiary_picker/lib/src/picker_theme.dart':
+      'wechat_assets_picker 的 pickerTheme 只吃 legacy ThemeData',
+};
+
+final RegExp _legacyMaterialRe = RegExp(
+  r"""^\s*(?:import|export)\s+['"]package:flutter/material\.dart['"]""",
+  multiLine: true,
+);
+
+List<String> _checkLegacyMaterial() {
+  final out = <String>[];
+  for (final root in [for (final dir in _appDirs) '$dir/lib', 'packages']) {
+    for (final entity in _dartFiles(root)) {
+      final rel = entity.path.replaceAll('\\', '/');
+      if (!rel.contains('/lib/')) continue;
+      if (rel.endsWith('.g.dart') || rel.endsWith('.freezed.dart')) continue;
+      if (_legacyMaterialAllowlist.containsKey(rel)) continue;
+      if (_legacyMaterialRe.hasMatch(entity.readAsStringSync())) {
+        out.add('$rel -> package:flutter/material.dart');
+      }
+    }
+  }
+  out.sort();
+  return out;
+}
+
+/// 业务代码里的颜色与排版必须来自 mui 色板，不许有第二个来源。零 baseline。
+///
+/// 五条禁令各自堵一个真实回归：
+///   * `Colors.*` —— 色板外的绝对色，深浅色切换时不跟着走；
+///   * `Theme.of(context).colorScheme/textTheme` —— 走的是投影而不是真源，
+///     且 material 的 `TextTheme` 只带一个颜色，表达不出「弱文字」；
+///   * 裸 `TextStyle(` —— 脱离 15 级排版，用户调字号档时不跟着缩放；
+///   * `fontWeight:` —— 可变字体下 `fontVariations` 的 wght 轴会吃掉它，
+///     写了等于没写（`start_page.dart` 踩过）。字重只能走
+///     `.regular/.medium/.semiBold/.bold` 四个 getter；
+///   * `Color(0x…)` —— 同第一条。
+///
+/// 例外是**按文件**放行的，每一条都得有理由；行级 baseline 刻意不做，
+/// 那会变成一张只增不减的欠条。
+const Map<String, String> _themeAllowlist = {
+  // 只放行主题层本身 —— mui 的 41 个组件跟业务代码一样要守这条闸门。
+  'packages/foundation/mui/lib/src/themes/': 'mui 的主题层就是色板与 token 的定义处',
+  'mobile/lib/app/boot_failure_page.dart':
+      '启动失败兜底页：主题系统此刻可能正是坏掉的那一环，刻意零依赖、硬编码配色',
+  'packages/feature/moodiary_share/lib/src/presentation/templates/':
+      '分享卡片是固定设计稿（纸/墨配色），要导出成图片，不能跟随 App 主题',
+  'packages/foundation/mui/lib/src/components/common/env_badge.dart':
+      '开发环境角标，固定红',
+  'packages/foundation/mui/lib/src/components/common/video/':
+      '播放器暗房：控件叠在任意画面上，白色前景是对的',
+  'packages/feature_base/moodiary_components/lib/src/common/video/':
+      '播放器暗房，同上（页面本体够不着 mui）',
+  'packages/feature_base/moodiary_components/lib/src/common/image_browser.dart':
+      '图片浏览暗房，同上',
+  'packages/feature_base/moodiary_components/lib/src/mood_colors.dart':
+      '心情色带：业务语义色，全 App 唯一刻意不跟主题走的一组',
+  'packages/foundation/mui/lib/src/components/common/category_color.dart':
+      '分类哈希色板 + 由它派生前景色的唯一算处',
+  'packages/foundation/mui/lib/src/components/common/color_picker.dart':
+      '取色器本体展示的就是任意颜色',
+  'packages/foundation/mui/lib/src/components/common/file_type_icon.dart':
+      'Dosis 角标：字号由轮廓几何反算并钉死 noScaling，不走排版档',
+  'packages/foundation/mui/lib/src/components/basic/expand_tap_area.dart':
+      'debugPaint 的辅助色',
+  'mobile/lib/app/settings/presentation/widget/accent_sheet.dart':
+      '配色档预览：白→黑的色块本身就是要展示的内容',
+};
+final List<(RegExp, String)> _themeBans = [
+  (
+    RegExp(r'(^|[^A-Za-z0-9_.])Colors\.(?!transparent)'),
+    'Colors.* → context.theme.colors.<角色>',
+  ),
+  (
+    RegExp(r'Theme\.of\([^)]*\)\.(colorScheme|textTheme)'),
+    'Theme.of(...).colorScheme/textTheme → context.theme.colors / context.theme.typography',
+  ),
+  (
+    RegExp(r'(^|[^A-Za-z0-9_])TextStyle\s*\('),
+    '裸 TextStyle( → context.theme.typography.<级>.<角色>',
+  ),
+  (
+    RegExp(r'fontWeight\s*:'),
+    'fontWeight: → 排版角色的 .medium/.semiBold/.bold（可变字体下 fontWeight 会被 fontVariations 吃掉）',
+  ),
+  // 全透明（0x00……）放行：它不携带任何配色信息，是占位/命中区那类用法。
+  (
+    RegExp(r'(^|[^A-Za-z0-9_])Color\(0x(?!00)'),
+    'Color(0x…) → context.theme.colors.<角色>',
+  ),
+];
+
+List<String> _checkThemePurity() {
+  final out = <String>[];
+  for (final root in [for (final dir in _appDirs) '$dir/lib', 'packages']) {
+    for (final entity in _dartFiles(root)) {
+      final rel = entity.path.replaceAll('\\', '/');
+      if (!rel.contains('/lib/')) continue;
+      if (rel.endsWith('.g.dart') || rel.endsWith('.freezed.dart')) continue;
+      if (_themeAllowlist.keys.any(rel.startsWith)) continue;
+      final lines = entity.readAsStringSync().split('\n');
+      for (var i = 0; i < lines.length; i++) {
+        final line = lines[i];
+        if (line.trimLeft().startsWith('//')) continue;
+        for (final (re, hint) in _themeBans) {
+          if (re.hasMatch(line))
+            out.add('$rel:${i + 1}: $hint\n      ${line.trim()}');
+        }
+      }
+    }
+  }
+  out.sort();
+  return out;
+}
+
+/// `ThemeData` 只许在桥里构造一次。共存期 material 主题是 [MuiThemeData] 的
+/// 只读投影，多一个构造点就多一条绕过真源的路，而配色漂移是最难查的一类 bug。
+///
+/// 第三方作用域的主题不算（`AssetPicker.themeData(...).copyWith(...)` 之流走的是
+/// 那个包自己的构造器，不匹配这条正则）。
+const String _themeDataBridge =
+    'packages/foundation/mui/lib/src/themes/build.dart';
+final RegExp _themeDataRe = RegExp(r'(^|[^A-Za-z0-9_])ThemeData\s*\(');
+
+List<String> _checkThemeDataConstruction() {
+  final out = <String>[];
+  for (final root in [for (final dir in _appDirs) '$dir/lib', 'packages']) {
+    for (final entity in _dartFiles(root)) {
+      final rel = entity.path.replaceAll('\\', '/');
+      if (!rel.contains('/lib/') || rel == _themeDataBridge) continue;
+      final content = entity.readAsStringSync();
+      for (final line in content.split('\n')) {
+        // 只看构造调用，跳过类型标注与返回类型（`ThemeData foo(` 不匹配）。
+        if (_themeDataRe.hasMatch(line) && !line.contains('ThemeData(),')) {
+          out.add('$rel: ${line.trim()}');
+        }
+      }
+    }
+  }
+  out.sort();
+  return out;
+}
+
+/// 仅移动端的插件（无 windows/linux 实现，或语义本身是移动端形态）：不许出现在
+/// foundation / core / feature_base 三层共享包的 pubspec 里——那会把未来的
+/// desktop 钉死在移动端。判定用手维护常量表而非扫 pub 缓存的 plugin.platforms
+/// （CI 冷跑无缓存、且要解析全部传递依赖，脆且慢）。例外进
+/// [_mobileOnlyPluginAllowlist] 并写明理由。
+/// 注：gal / fc_native_video_thumbnail 支持桌面（gal 仅缺 linux），刻意不在表里。
+const Set<String> _mobileOnlyPlugins = {
+  'photo_manager',
+  'wechat_assets_picker',
+  'wechat_picker_library',
+  'wechat_camera_picker',
+  'image_picker',
+  'heif_converter',
+  'video_player',
+  'flutter_displaymode',
+};
+
+/// 例外按「包 -> 插件」粒度放行，避免整包豁免漏掉未来的新增。
+const Map<String, String> _mobileOnlyPluginAllowlist = {
+  'packages/feature_base/moodiary_picker -> photo_manager':
+      '移动端专属实现包：全仓只有 mobile 依赖它（IFilePicker 的移动 UI）',
+  'packages/feature_base/moodiary_picker -> wechat_assets_picker': '同上',
+  'packages/feature_base/moodiary_picker -> wechat_picker_library': '同上',
+  'packages/feature_base/moodiary_picker -> image_picker': '同上（系统相机）',
+  'packages/feature_base/moodiary_components -> video_player':
+      '播放引擎的移动实现与唯一调用点同居；桌面经 MVideoPlayerPage 的 '
+      'portFactory/ambientPorts 注入自己的端口实现，皮肤与状态机（mui）零插件',
+};
+
+List<String> _checkMobileOnlyPlugins() {
+  final out = <String>[];
+  for (final layer in ['foundation', 'core', 'feature_base']) {
+    final layerDir = Directory('packages/$layer');
+    if (!layerDir.existsSync()) continue;
+    for (final pkg in layerDir.listSync().whereType<Directory>()) {
+      final rel = pkg.path.replaceAll('\\', '/');
+      final pubspec = File('${pkg.path}/pubspec.yaml');
+      if (!pubspec.existsSync()) continue;
+      // 只看正式依赖（dev 依赖不进产物、不钉桌面）；匹配同时覆盖内联版本
+      // （`x: 1.0.0`）与块式声明（`x:` 换行接 git/path/hosted）。
+      final text = pubspec
+          .readAsStringSync()
+          .split(RegExp(r'^dev_dependencies:', multiLine: true))
+          .first;
+      for (final plugin in _mobileOnlyPlugins) {
+        if (!RegExp(
+          '^  $plugin:\\s*(\$|\\S)',
+          multiLine: true,
+        ).hasMatch(text)) {
+          continue;
+        }
+        final key = '$rel -> $plugin';
+        if (_mobileOnlyPluginAllowlist.containsKey(key)) continue;
+        out.add(key);
+      }
+    }
+  }
+  return out;
+}
+
+/// lib/testing.dart 是测试替身的官方出口（storage / rust），放 lib/ 只是因为
+/// `package:` 解析不到别人的 test/——**生产代码不许 import**：手滑注册
+/// MemoryKVStorage 出的包每次冷启动都丢全部设置，且只有真机跑一次才暴露。
+final RegExp _testingImportRe = RegExp(
+  r"""^\s*import\s+['"]package:moodiary_\w+/testing\.dart['"]""",
+  multiLine: true,
+);
+
+List<String> _checkTestingImports() {
+  final out = <String>[];
+  for (final root in [for (final dir in _appDirs) '$dir/lib', 'packages']) {
+    for (final entity in _dartFiles(root)) {
+      final rel = entity.path.replaceAll('\\', '/');
+      if (!rel.contains('/lib/')) continue;
+      // 定义处自身（lib/testing.dart）与 test/ 下的使用都合法。
+      if (rel.endsWith('/lib/testing.dart')) continue;
+      if (_testingImportRe.hasMatch(entity.readAsStringSync())) {
+        out.add(rel);
+      }
+    }
+  }
+  return out;
+}
+
+/// 存在 test/ 目录却没有任何 *_test.dart 的包会截断 melos 扫描：
+/// `--dir-exists=test` 把它算进来，`flutter test` 以「No tests found」非零退出，
+/// --fail-fast 当场掐掉整轮（picker 迁移时踩过一次）。
+List<String> _checkEmptyTestDirs() {
+  final out = <String>[];
+  final candidates = [
+    for (final layerDir in Directory(
+      'packages',
+    ).listSync().whereType<Directory>())
+      ...layerDir.listSync().whereType<Directory>(),
+    for (final dir in _appDirs)
+      if (Directory(dir).existsSync()) Directory(dir),
+  ];
+  for (final pkg in candidates) {
+    final testDir = Directory('${pkg.path}/test');
+    if (!testDir.existsSync()) continue;
+    final hasTest = testDir
+        .listSync(recursive: true, followLinks: false)
+        .any((e) => e is File && e.path.endsWith('_test.dart'));
+    if (!hasTest) {
+      out.add('${pkg.path.replaceAll('\\', '/')}/test');
+    }
+  }
+  return out;
+}
+
+void main(List<String> args) {
+  final update = args.contains('--update-baseline');
+  final themeViolations = _checkThemeDataConstruction();
+  if (themeViolations.isEmpty) {
+    stdout.writeln('✅ ThemeData 只在 mui 的 buildMuiTheme 里构造。');
+  } else {
+    stderr.writeln('❌ 桥之外出现了 ${themeViolations.length} 处 ThemeData 构造：');
+    for (final v in themeViolations) {
+      stderr.writeln('  ✗ $v');
+    }
+    stderr.writeln('  → ThemeData 只能由 mui 的 buildMuiTheme() 构造。');
+    exit(1);
+  }
+
+  final themePurity = _checkThemePurity();
+  if (themePurity.isEmpty) {
+    stdout.writeln('✅ 业务代码的颜色与排版都来自主题。');
+  } else {
+    stderr.writeln('❌ 色板外的颜色/排版 ${themePurity.length} 处：');
+    for (final v in themePurity) {
+      stderr.writeln('  ✗ $v');
+    }
+    stderr.writeln('  → 见 _themeBans；确属固定设计稿的整文件例外加进 _themeAllowlist 并写明理由。');
+    exit(1);
+  }
+
+  final muiViolations = _checkLegacyMaterial();
+  if (muiViolations.isEmpty) {
+    stdout.writeln(
+      '✅ material 只经 mui 出（legacy import 仅名单内 ${_legacyMaterialAllowlist.length} 处）。',
+    );
+  } else {
+    stderr.writeln('❌ 名单外的 legacy material import ${muiViolations.length} 处：');
+    for (final v in muiViolations) {
+      stderr.writeln('  ✗ $v');
+    }
+    stderr.writeln(
+      '  → 业务代码请 import package:mui/mui.dart；确需 legacy 的加进 _legacyMaterialAllowlist 并写明理由。',
+    );
+    exit(1);
+  }
+
+  final testingImports = _checkTestingImports();
+  if (testingImports.isEmpty) {
+    stdout.writeln('✅ 生产代码没有 import 任何 lib/testing.dart 替身。');
+  } else {
+    stderr.writeln('❌ 生产代码 import 测试替身 ${testingImports.length} 处：');
+    for (final v in testingImports) {
+      stderr.writeln('  ✗ $v');
+    }
+    stderr.writeln('  → testing.dart 只许出现在 test/ 下。');
+    exit(1);
+  }
+
+  final emptyTestDirs = _checkEmptyTestDirs();
+  if (emptyTestDirs.isEmpty) {
+    stdout.writeln('✅ 没有空的 test/ 目录（melos 扫描不会被截断）。');
+  } else {
+    stderr.writeln('❌ 空 test/ 目录 ${emptyTestDirs.length} 处（会截断 melos 扫描）：');
+    for (final v in emptyTestDirs) {
+      stderr.writeln('  ✗ $v');
+    }
+    exit(1);
+  }
+
+  final mobileOnly = _checkMobileOnlyPlugins();
+  if (mobileOnly.isEmpty) {
+    stdout.writeln('✅ 共享层（foundation/core/feature_base）无移动端专属插件。');
+  } else {
+    stderr.writeln('❌ 共享层出现移动端专属插件 ${mobileOnly.length} 处：');
+    for (final v in mobileOnly) {
+      stderr.writeln('  ✗ $v');
+    }
+    stderr.writeln(
+      '  → 抽端口把实现挪进 app 组合根（IFilePicker/IHeifDecoder 的做法），'
+      '或确属移动专属实现包时加进 _mobileOnlyPluginAllowlist 并写明理由。',
+    );
+    exit(1);
+  }
+
+  final pkgViolations = _checkPackageLayers();
+  if (pkgViolations.isEmpty) {
+    stdout.writeln('✅ 包级依赖方向检查通过。');
+  } else {
+    stderr.writeln('❌ 包级依赖方向违规 ${pkgViolations.length} 条：');
+    for (final v in pkgViolations) {
+      stderr.writeln('  ✗ $v');
+    }
+    if (!update) exit(1);
+  }
+
+  final rustViolations = _checkRustLayers();
+  if (rustViolations.isEmpty) {
+    stdout.writeln('✅ Rust crate 依赖方向检查通过。');
+  } else {
+    stderr.writeln('❌ Rust crate 依赖方向违规 ${rustViolations.length} 条：');
+    for (final v in rustViolations) {
+      stderr.writeln('  ✗ $v');
+    }
+    if (!update) exit(1);
+  }
+
+  final facadeViolations = _checkRustFacades();
+  if (facadeViolations.isEmpty) {
+    stdout.writeln('✅ moodiary_rust 门面归属检查通过。');
+  } else {
+    stderr.writeln('❌ moodiary_rust 门面归属违规 ${facadeViolations.length} 条：');
+    for (final v in facadeViolations) {
+      stderr.writeln('  ✗ $v');
+    }
+    stderr.writeln('  → 见 _rustFacadeOwners；通用能力请走 foundation.dart。');
+    exit(1);
+  }
+
+  final appLibDirs = [
+    for (final dir in _appDirs)
+      if (Directory('$dir/lib').existsSync()) Directory('$dir/lib'),
+  ];
+  if (appLibDirs.isEmpty) {
+    stderr.writeln('找不到任何 app 的 lib/ 目录（${_appDirs.join('/')}），请在仓库根目录运行。');
+    exit(2);
+  }
+  final seen = <String>{};
+  final violations = <Violation>[];
+  var fileCount = 0;
+
+  // 逐个 app 跑（此前只取第一个：desktop 落地那天文件级检查对它不生效，
+  // 而若 mobile 被移走，硬编码的前缀又剥不掉、整仓误报）。
+  for (final libDir in appLibDirs) {
+    for (final entity in libDir.listSync(recursive: true)) {
+      if (entity is! File || !entity.path.endsWith('.dart')) continue;
+      fileCount++;
+      final rel = entity.path
+          .replaceAll('\\', '/')
+          .replaceFirst('${libDir.path.replaceAll('\\', '/')}/', '');
+      final srcN = _classify(rel);
+      final content = entity.readAsStringSync();
+      for (final m in _importRe.allMatches(content)) {
+        final target = m.group(1)!;
+        final dstN = _classify(target);
+        final bool ok;
+        if (dstN.layer < srcN.layer) {
+          ok = true; // 依赖更低层
+        } else if (dstN.layer == srcN.layer) {
+          ok = dstN.module == srcN.module; // 同层只允许同模块
+        } else {
+          ok = false; // 下层依赖上层
+        }
+        if (!ok) {
+          final v = Violation(rel, dstN.module);
+          if (seen.add(v.key)) violations.add(v);
+        }
+      }
+    }
+  }
+
+  final baseline = _readBaseline();
+
+  if (update) {
+    final sorted = violations.map((v) => v.key).toList()..sort();
+    File(_baselinePath).writeAsStringSync(
+      '# 分层依赖检查 baseline（存量违规，逐步清零；只许变短不许变长）。\n'
+      '# 由 `dart run tool/check_layers.dart --update-baseline` 生成。\n'
+      '# 格式：<相对 lib/ 的源文件> -> <目标模块>\n\n'
+      '${sorted.join('\n')}\n',
+    );
+    stdout.writeln('已写入 ${sorted.length} 条 baseline -> $_baselinePath');
+    return;
+  }
+
+  final fresh = violations.where((v) => !baseline.contains(v.key)).toList();
+  final stale = baseline
+      .where((b) => !violations.any((v) => v.key == b))
+      .toList();
+
+  stdout.writeln(
+    '扫描 $fileCount 个文件；违规 ${violations.length} 条'
+    '（baseline 放行 ${violations.length - fresh.length}，新增 ${fresh.length}）。',
+  );
+
+  if (stale.isNotEmpty) {
+    stdout.writeln('\n⚠️  baseline 中已修复（可删除）的陈旧条目 ${stale.length} 条：');
+    for (final s in stale..sort()) {
+      stdout.writeln('  - $s');
+    }
+    stdout.writeln('  → 跑 `dart tool/check_layers.dart --update-baseline` 收紧。');
+  }
+
+  if (fresh.isEmpty) {
+    stdout.writeln('\n✅ 没有新增的分层违规。');
+    return;
+  }
+
+  stderr.writeln('\n❌ 发现 ${fresh.length} 条新增分层违规（上层才能依赖下层，同层不互引）：');
+  for (final v in fresh..sort((a, b) => a.key.compareTo(b.key))) {
+    stderr.writeln('  ✗ ${v.key}');
+  }
+  stderr.writeln(
+    '\n如确属合理的临时例外，运行 `dart tool/check_layers.dart --update-baseline` 加入 baseline；'
+    '否则请把依赖方向改为「上层依赖下层」。',
+  );
+  exit(1);
+}
+
+Set<String> _readBaseline() {
+  final f = File(_baselinePath);
+  if (!f.existsSync()) return {};
+  return f
+      .readAsLinesSync()
+      .map((l) => l.trim())
+      .where((l) => l.isNotEmpty && !l.startsWith('#'))
+      .toSet();
+}

@@ -1,0 +1,8 @@
+@import "tailwindcss";
+/* daisyUI 作为 Tailwind v4 插件（CSS-only）；只在 dev harness 引入,不进生产编辑器构建。
+   启用全部内置主题（浅/暗都有）,运行时由顶部「主题」下拉切换 —— 写到 root 的 data-theme
+   （见 Harness.vue 的 harnessTheme,localStorage 记忆）。dim 作默认。语义色用 bg-base-100/200/300 等。 */
+@plugin "daisyui" {
+  themes: all;
+}
+@source ".";

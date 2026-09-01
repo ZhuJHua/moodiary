@@ -1,0 +1,62 @@
+name: moodiary_editor
+description: "Moodiary diary editor — the complete editing feature: embeddable TipTap (webview) editor + EditController (autosave), editor body/toolbar/record, category picker and geo/weather."
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  moodiary_files: 0.0.1
+  moodiary_http: 0.0.1
+  moodiary_logging: 0.0.1
+  moodiary_storage: 0.0.1
+  moodiary_theme: 0.0.1
+  moodiary_models: 0.0.1
+  moodiary_data: 0.0.1
+  moodiary_migration: 0.0.1
+  moodiary_components: 0.0.1
+  moodiary_i18n: 0.0.1
+  moodiary_router: 0.0.1
+  moodiary_utils: 0.0.1
+  mui: 0.0.1
+
+  webview_flutter: 4.14.1
+  webview_flutter_android: 4.14.1
+  webview_flutter_wkwebview: 3.26.1
+  flutter_inappwebview_windows: 0.7.0-beta.3
+  flutter_inappwebview_platform_interface: 1.4.0-beta.3
+
+  flutter_riverpod: 3.4.2
+  riverpod_annotation: 4.0.6
+  freezed_annotation: 3.1.0
+  json_annotation: 4.12.0
+  record: 7.1.1
+  share_plus: 13.3.0
+  latlong2: 0.10.1
+  path: 1.9.1
+  geolocator:
+    git:
+      url: https://github.com/ZhuJHua/flutter-geolocator.git
+      path: geolocator
+      ref: 96718c1ac20e3fb3d5fd9518b74ed6613000a7e6
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1
+  build_runner: 2.16.0
+  freezed: 4.0.1
+  json_serializable: 6.14.1
+  riverpod_generator: 4.0.8
+
+flutter:
+  assets:
+    - assets/editor/

@@ -1,0 +1,26 @@
+-- 语义检索（本地 RAG）域 schema。设计稿 docs/local-rag.md。
+-- 全部是**纯派生数据**：不进备份/同步，模型切换或损坏时整体重建。
+-- 向量本体在 vec0 虚表 vec_diary_chunks（维度随激活模型变，drift 管不了虚表，
+-- 由 EmbedIndexService 经 customStatement 动态建删），rowid = diary_chunks.rid。
+
+-- 分块的关系真源：归属与幂等判据。不存分块文本，只存在 content_text 中的
+-- 偏移（摘录回显用）；text_hash 用于跳过未变化分块的重复嵌入。
+-- diary_id 不做外键：清理走 DiaryRepository 的显式删除路径（与 FTS 一致）。
+CREATE TABLE diary_chunks (
+  rid       INTEGER PRIMARY KEY,
+  diary_id  TEXT NOT NULL,
+  seq       INTEGER NOT NULL,
+  start_off INTEGER NOT NULL,
+  len       INTEGER NOT NULL,
+  text_hash TEXT NOT NULL,
+  UNIQUE (diary_id, seq)
+) AS DiaryChunkRow;
+
+CREATE INDEX idx_diary_chunks_diary ON diary_chunks (diary_id);
+
+-- 补嵌队列：写日记只入队（同事务、零成本），嵌入推理异步排空
+-- （编辑器关闭 / 启动兜底 / 语义检索前）。向量缺失只降召回，不破坏一致性。
+CREATE TABLE embed_queue (
+  diary_id    TEXT NOT NULL PRIMARY KEY,
+  enqueued_at INTEGER NOT NULL
+) AS EmbedQueueRow;

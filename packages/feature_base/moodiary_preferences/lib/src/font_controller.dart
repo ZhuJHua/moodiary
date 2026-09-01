@@ -1,0 +1,72 @@
+import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_files/moodiary_files.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_theme/moodiary_theme.dart';
+import 'package:path/path.dart' as p;
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import 'app_settings_controller.dart';
+
+part 'font_controller.g.dart';
+
+@riverpod
+class FontController extends _$FontController {
+  @override
+  Future<List<Font>> build() async {
+    final list = await ref.read(fontRepositoryProvider).getAllFonts();
+    await Future.wait([
+      for (final f in list)
+        FontManager.loadFont(
+          fontName: f.fontFamily,
+          fontPath: AppFiles.getRealPath('font', f.fontFileName),
+        ),
+    ]);
+    return list;
+  }
+
+  /// 返回 `null`=用户取消、非空错误 message=失败、空字符串=成功。
+  Future<String?> addFont() async {
+    // 仓储在首个 await 之前取：选文件期间页面可能退出（autoDispose 回收 ref）。
+    final repo = ref.read(fontRepositoryProvider);
+    final xFile = await FontManager.pickFont();
+    if (xFile == null) return null;
+    final fontName = await FontManager.getFontName(filePath: xFile.path);
+    if (fontName == null || fontName.isEmpty) return l10n.app.fontNameFailed;
+    final current = state.value ?? const <Font>[];
+    if (current.any((e) => e.fontFamily == fontName)) {
+      return l10n.app.fontExists;
+    }
+    final fontFileName = '$fontName${p.extension(xFile.path)}';
+    final newPath = AppFiles.getRealPath('font', fontFileName);
+    final newFont = Font(
+      fontFileName: fontFileName,
+      fontWghtAxisMap: await FontManager.getFontWghtAxis(filePath: xFile.path),
+    );
+    await xFile.saveTo(newPath);
+    await repo.insertFont(newFont);
+    await FontManager.loadFont(fontName: newFont.fontFamily, fontPath: newPath);
+    state = .data([...current, newFont]);
+    return '';
+  }
+
+  /// 若正在使用，先切回系统字体再删，避免引用已删除文件。
+  Future<void> removeFont(Font font) async {
+    final repo = ref.read(fontRepositoryProvider);
+    if (MoodiaryKVs.customFont.get() == font.fontFamily) {
+      await setActive(null);
+    }
+    await repo.deleteFontByFamily(font.fontFamily);
+    await AppFiles.deleteFile(AppFiles.getRealPath('font', font.fontFileName));
+    final next = (state.value ?? const <Font>[])
+        .where((e) => e.fontFamily != font.fontFamily)
+        .toList();
+    state = .data(next);
+  }
+
+  Future<void> setActive(Font? font) async {
+    MoodiaryKVs.customFont.set(font?.fontFamily ?? '');
+    await ref.read(appSettingsControllerProvider.notifier).bumpTheme();
+  }
+}

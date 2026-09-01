@@ -1,0 +1,312 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// coverage:ignore-file
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
+// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
+
+part of 'llm_provider_preset.dart';
+
+// **************************************************************************
+// FreezedGenerator
+// **************************************************************************
+
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format off
+T _$identity<T>(T value) => value;
+
+/// @nodoc
+mixin _$LlmProviderPreset {
+
+ String get id; String get name; List<LlmModelPreset> get models; String? get docUrl; List<String> get env; String? get logoUrl;
+/// Create a copy of LlmProviderPreset
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LlmProviderPresetCopyWith<LlmProviderPreset> get copyWith => _$LlmProviderPresetCopyWithImpl<LlmProviderPreset>(this as LlmProviderPreset, _$identity);
+
+  /// Serializes this LlmProviderPreset to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as LlmProviderPreset;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LlmProviderPreset&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&const DeepCollectionEquality().equals(other.models, _this.models)&&(identical(other.docUrl, _this.docUrl) || other.docUrl == _this.docUrl)&&const DeepCollectionEquality().equals(other.env, _this.env)&&(identical(other.logoUrl, _this.logoUrl) || other.logoUrl == _this.logoUrl));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as LlmProviderPreset;
+  return Object.hash(runtimeType,_this.id,_this.name,const DeepCollectionEquality().hash(_this.models),_this.docUrl,const DeepCollectionEquality().hash(_this.env),_this.logoUrl);
+}
+
+@override
+String toString() {
+  final _this = this as LlmProviderPreset;
+  return 'LlmProviderPreset(id: ${_this.id}, name: ${_this.name}, models: ${_this.models}, docUrl: ${_this.docUrl}, env: ${_this.env}, logoUrl: ${_this.logoUrl})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LlmProviderPresetCopyWith<$Res>  {
+  factory $LlmProviderPresetCopyWith(LlmProviderPreset value, $Res Function(LlmProviderPreset) _then) = _$LlmProviderPresetCopyWithImpl;
+@useResult
+$Res call({
+ String id, String name, List<LlmModelPreset> models, String? docUrl, List<String> env, String? logoUrl
+});
+
+
+
+
+}
+/// @nodoc
+class _$LlmProviderPresetCopyWithImpl<$Res>
+    implements $LlmProviderPresetCopyWith<$Res> {
+  _$LlmProviderPresetCopyWithImpl(this._self, this._then);
+
+  final LlmProviderPreset _self;
+  final $Res Function(LlmProviderPreset) _then;
+
+/// Create a copy of LlmProviderPreset
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? models = null,Object? docUrl = freezed,Object? env = null,Object? logoUrl = freezed,}) {
+  return _then(LlmProviderPreset(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,models: null == models ? _self.models : models // ignore: cast_nullable_to_non_nullable
+as List<LlmModelPreset>,docUrl: freezed == docUrl ? _self.docUrl : docUrl // ignore: cast_nullable_to_non_nullable
+as String?,env: null == env ? _self.env : env // ignore: cast_nullable_to_non_nullable
+as List<String>,logoUrl: freezed == logoUrl ? _self.logoUrl : logoUrl // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [LlmProviderPreset].
+extension LlmProviderPresetPatterns on LlmProviderPreset {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _LlmProviderPreset value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _LlmProviderPreset() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _LlmProviderPreset value)  $default,){
+final _that = this;
+switch (_that) {
+case _LlmProviderPreset():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _LlmProviderPreset value)?  $default,){
+final _that = this;
+switch (_that) {
+case _LlmProviderPreset() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  List<LlmModelPreset> models,  String? docUrl,  List<String> env,  String? logoUrl)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _LlmProviderPreset() when $default != null:
+return $default(_that.id,_that.name,_that.models,_that.docUrl,_that.env,_that.logoUrl);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  List<LlmModelPreset> models,  String? docUrl,  List<String> env,  String? logoUrl)  $default,) {final _that = this;
+switch (_that) {
+case _LlmProviderPreset():
+return $default(_that.id,_that.name,_that.models,_that.docUrl,_that.env,_that.logoUrl);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  List<LlmModelPreset> models,  String? docUrl,  List<String> env,  String? logoUrl)?  $default,) {final _that = this;
+switch (_that) {
+case _LlmProviderPreset() when $default != null:
+return $default(_that.id,_that.name,_that.models,_that.docUrl,_that.env,_that.logoUrl);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _LlmProviderPreset implements LlmProviderPreset {
+  const _LlmProviderPreset({required this.id, required this.name, required  List<LlmModelPreset> models, this.docUrl,  List<String> env = const <String>[], this.logoUrl}): _models = models,_env = env;
+  factory _LlmProviderPreset.fromJson(Map<String, dynamic> json) => _$LlmProviderPresetFromJson(json);
+
+@override final  String id;
+@override final  String name;
+ final  List<LlmModelPreset> _models;
+@override List<LlmModelPreset> get models {
+  if (_models is EqualUnmodifiableListView) return _models;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_models);
+}
+
+@override final  String? docUrl;
+ final  List<String> _env;
+@override@JsonKey() List<String> get env {
+  if (_env is EqualUnmodifiableListView) return _env;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_env);
+}
+
+@override final  String? logoUrl;
+
+/// Create a copy of LlmProviderPreset
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$LlmProviderPresetCopyWith<_LlmProviderPreset> get copyWith => __$LlmProviderPresetCopyWithImpl<_LlmProviderPreset>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$LlmProviderPresetToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmProviderPreset&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other.models, _models)&&(identical(other.docUrl, docUrl) || other.docUrl == docUrl)&&const DeepCollectionEquality().equals(other.env, _env)&&(identical(other.logoUrl, logoUrl) || other.logoUrl == logoUrl));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,id,name,const DeepCollectionEquality().hash(_models),docUrl,const DeepCollectionEquality().hash(_env),logoUrl);
+}
+
+@override
+String toString() {
+    return 'LlmProviderPreset(id: $id, name: $name, models: $models, docUrl: $docUrl, env: $env, logoUrl: $logoUrl)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$LlmProviderPresetCopyWith<$Res> implements $LlmProviderPresetCopyWith<$Res> {
+  factory _$LlmProviderPresetCopyWith(_LlmProviderPreset value, $Res Function(_LlmProviderPreset) _then) = __$LlmProviderPresetCopyWithImpl;
+@override @useResult
+$Res call({
+ String id, String name, List<LlmModelPreset> models, String? docUrl, List<String> env, String? logoUrl
+});
+
+
+
+
+}
+/// @nodoc
+class __$LlmProviderPresetCopyWithImpl<$Res>
+    implements _$LlmProviderPresetCopyWith<$Res> {
+  __$LlmProviderPresetCopyWithImpl(this._self, this._then);
+
+  final _LlmProviderPreset _self;
+  final $Res Function(_LlmProviderPreset) _then;
+
+/// Create a copy of LlmProviderPreset
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? models = null,Object? docUrl = freezed,Object? env = null,Object? logoUrl = freezed,}) {
+  return _then(_LlmProviderPreset(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,models: null == models ? _self._models : models // ignore: cast_nullable_to_non_nullable
+as List<LlmModelPreset>,docUrl: freezed == docUrl ? _self.docUrl : docUrl // ignore: cast_nullable_to_non_nullable
+as String?,env: null == env ? _self._env : env // ignore: cast_nullable_to_non_nullable
+as List<String>,logoUrl: freezed == logoUrl ? _self.logoUrl : logoUrl // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
+
+// dart format on

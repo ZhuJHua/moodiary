@@ -1,0 +1,75 @@
+/// 官方测试替身（同 moodiary_rust 的 lib/testing.dart 先例）：放 lib/ 是因为
+/// `package:` 只解析 lib/，跨包 import 不到别人的 test/——此前同一个内存 KV
+/// 在仓里被手抄了 5 份且能力分叉。纯 Dart、零 flutter_test 依赖，不污染生产
+/// 依赖图（不进 barrel，按需 `import 'package:moodiary_storage/testing.dart'`）。
+library;
+
+import 'package:moodiary_storage/moodiary_storage.dart';
+
+/// 内存 KV，把 [MoodiaryKVs] 的读写接上。
+final class MemoryKVStorage extends IKVStorage {
+  final Map<String, Object> data = {};
+
+  @override
+  Future<void> init() async {}
+
+  @override
+  T? get<T extends Object>(String key) => data[key] as T?;
+
+  @override
+  void set<T extends Object>(String key, T value) {
+    data[key] = value;
+    super.set(key, value);
+  }
+
+  @override
+  void remove(String key) {
+    data.remove(key);
+    super.remove(key);
+  }
+
+  @override
+  void clear() => data.clear();
+}
+
+/// 内存 SecureKV。[failingKeys] / [failingReads] 里的键写入 / 读取时抛，
+/// 用来模拟钥匙串不可用（设备锁定、Keystore 失效）。
+final class MemorySecureKVStorage implements ISecureKVStorage {
+  final Map<String, String> data = {};
+  final Set<String> failingKeys = {};
+  final Set<String> failingReads = {};
+
+  @override
+  Future<void> init() async {}
+
+  @override
+  Future<String?> get(String key) async {
+    if (failingReads.contains(key)) throw StateError('keychain unavailable');
+    return data[key];
+  }
+
+  @override
+  Future<void> set(String key, String value) async {
+    if (failingKeys.contains(key)) throw StateError('keychain unavailable');
+    data[key] = value;
+  }
+
+  @override
+  Future<void> remove(String key) async => data.remove(key);
+
+  @override
+  Future<void> clear() async => data.clear();
+}
+
+/// 只读 KV 数据源的替身（旧 SharedPreferences 仓库）。
+/// [throwingKeys] 里的键读取时抛 [TypeError]，模拟历史上换过类型的那一格。
+final class MemoryKVSource implements IKVSource {
+  final Map<String, Object> data = {};
+  final Set<String> throwingKeys = {};
+
+  @override
+  T? get<T extends Object>(String key) {
+    if (throwingKeys.contains(key)) throw TypeError();
+    return data[key] as T?;
+  }
+}

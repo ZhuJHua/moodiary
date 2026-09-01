@@ -1,0 +1,36 @@
+# cargo-about 的许可证清单配置 —— 产物给 `dart tool/task.dart licenses`，
+# 最终进 App 关于页的「开源许可」。只覆盖 App 真正装车的那部分：
+# 构建期与测试期依赖不进包，按目标平台过滤掉不参与链接的那些。
+accepted = [
+    "Apache-2.0",
+    "MIT",
+    "MIT-0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "MPL-2.0",
+    "BSL-1.0",
+    "CC0-1.0",
+    "Unicode-3.0",
+    "Unicode-DFS-2016",
+    "Unlicense",
+    "0BSD",
+    "NCSA",
+    "OpenSSL",
+    "CDLA-Permissive-2.0",
+]
+
+targets = [
+    "aarch64-linux-android",
+    "armv7-linux-androideabi",
+    "x86_64-linux-android",
+    "aarch64-apple-ios",
+]
+
+ignore-build-dependencies = true
+ignore-dev-dependencies = true
+
+
+# 这几个 crate 的许可证文件不在仓库根上，cargo-about 自带的采集补丁认得它们。
+workarounds = ["ring", "rustls", "chrono", "bitvec"]

@@ -1,0 +1,28 @@
+name: moodiary_models
+description: "Moodiary domain models — Isar @Collection entities, Freezed DTOs, domain events and their field-type enums (DiaryType, AssistantProviderType)."
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  moodiary_utils: 0.0.1
+
+  freezed_annotation: 3.1.0
+  json_annotation: 4.12.0
+  path: 1.9.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1
+  build_runner: 2.16.0
+  freezed: 4.0.1
+  json_serializable: 6.14.1

@@ -1,0 +1,18 @@
+base_locale: zh
+fallback_strategy: base_locale
+
+input_directory: lib/i18n
+namespaces: true
+input_file_pattern: .i18n.json
+output_directory: lib/i18n
+output_file_name: strings.g.dart
+
+translate_var: l10n
+class_name: Translations
+enum_name: AppLocale
+
+string_interpolation: braces
+
+flat_map: false
+timestamp: false
+statistics: false

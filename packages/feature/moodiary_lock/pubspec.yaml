@@ -1,0 +1,29 @@
+name: moodiary_lock
+description: "Moodiary 应用锁：PIN / 生物识别解锁、引导页与密码管理磁贴（两端可复用的 feature 包）。"
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  moodiary_logging: 0.0.1
+  moodiary_storage: 0.0.1
+  moodiary_i18n: 0.0.1
+  moodiary_platform: 0.0.1
+  moodiary_components: 0.0.1
+  moodiary_router: 0.0.1
+  mui: 0.0.1
+
+
+dev_dependencies:
+  moodiary_di: 0.0.1
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1

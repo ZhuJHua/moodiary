@@ -1,0 +1,25 @@
+name: moodiary_utils
+description: "Moodiary foundation utilities — leaf Dart/Flutter helpers, enums and text converters with no upward (data/feature/app) dependencies."
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  intl: 0.20.3
+  synchronized: 3.4.1+2
+  image_size_getter: 2.4.1
+  markdown: 7.3.1
+  uuid: 4.6.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1
