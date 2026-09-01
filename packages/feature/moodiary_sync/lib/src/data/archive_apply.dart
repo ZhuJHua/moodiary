@@ -179,6 +179,21 @@ class ArchiveApplier {
     // 本地墓碑快照：远端活跃条目 vs 本地删除做 LWW 时要用（删除更晚则不下载）。
     final tombstones = TombstoneBatch(await _tombstoneStore.getAll());
 
+    /// 恢复模式下「复活」必须表达成一次**此刻**的本地写入，否则会被下一次云同步再
+    /// 删一遍：备份里的 lastModified 是备份那一刻的（t1），比「后来把它删掉」（t2）
+    /// 更早，而远端 manifest 的 tombstone 条目永不清除 —— push 因 `t1 <= t2` 跳过，
+    /// 紧接着的 pull 读到远端 tombstone 把刚复活的行连同磁盘媒体真删。用户点「从备份
+    /// 恢复」的头号场景（误删后找回）在开了云同步时反而是净负收益。
+    ///
+    /// 判据是**本地此刻没有这一行**。不能改用「本机墓碑还在」——墓碑行在推送到全部
+    /// 已配置后端后就被清掉了（见 IncrementalSyncEngine 的 coveredTombstoneKeys），
+    /// 而那恰好就是用户来恢复时的状态，那样判会永远为假（真机实测确认）。
+    /// 反过来「本地这一行还在」时不提：远端若有更晚的 tombstone，pull 早就把它删了，
+    /// 能活到这里说明远端墓碑不比它新，照搬备份时间戳即可。
+    ///
+    /// 代价：多设备下拿一份旧备份恢复一条本机没有、而别的设备上更新的日记，会用旧
+    /// 内容压过新版本。这是修掉「恢复即销毁」必须付的账——后者是恢复功能的头号场景，
+    /// 且不可恢复。
     // 预扫描：用快照 LWW 先算出「将要新增/更新」的条目并公布，首页立即占位/打标，
     // 不必等每条真正落库（见 [SyncPendingTracker]）。
     final pending = SyncPendingTracker.instance;
@@ -350,7 +365,12 @@ class ArchiveApplier {
           }
           // insertADiary 在仓储事务内连带清除同 id 墓碑行（复活闸门）——历史推送
           // 记录随行消失，将来再次删除不会被误判为「已覆盖所有后端」。
-          await diaryRepo.insertADiary(diary, fromSync: fromSync);
+          await diaryRepo.insertADiary(
+            restoring && oldDiary == null
+                ? diary.copyWith(lastModified: DateTime.timestamp())
+                : diary,
+            fromSync: fromSync,
+          );
           pending.completeDiary(id);
           tombstones.remove(key);
           await _pullDiaryMedia(diary);
@@ -449,7 +469,12 @@ class ArchiveApplier {
             return;
           }
           // insertACategory 在仓储事务内连带清除同 id 墓碑行（复活闸门）。
-          await categoryRepo.insertACategory(category, fromSync: fromSync);
+          await categoryRepo.insertACategory(
+            restoring && freshLocal == null
+                ? category.copyWith(lastModified: DateTime.timestamp())
+                : category,
+            fromSync: fromSync,
+          );
           // 写失败直接抛（仓储 2026-08 起统一抛异常），由条目级 catch 计 failed
           // ——否则本次同步谎报成功、推进 lastSyncTime。与日记下载失败对称。
           tombstones.remove(key);
@@ -542,7 +567,12 @@ class ArchiveApplier {
             return;
           }
           // insertAMediaInfo 在仓储事务内连带清除同 key 墓碑行（复活闸门）。
-          await mediaInfoRepo.insertAMediaInfo(mediaInfo, fromSync: fromSync);
+          await mediaInfoRepo.insertAMediaInfo(
+            restoring && freshLocal == null
+                ? mediaInfo.copyWith(lastModified: DateTime.timestamp())
+                : mediaInfo,
+            fromSync: fromSync,
+          );
           // 同上：写失败直接抛，由条目级 catch 计 failed。
           tombstones.remove(key);
           mediaInfoChanged++;
