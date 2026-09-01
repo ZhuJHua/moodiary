@@ -47,7 +47,7 @@ class ManifestEntry {
 /// JSON：
 /// ```json
 /// {
-///   "version": 4,
+///   "version": 1,
 ///   "updatedAt": 1780000000000,
 ///   "entries": {
 ///     "d:<diaryId>": {"t": 1780000000000, "m": ["image/a.png"]},
@@ -56,11 +56,11 @@ class ManifestEntry {
 ///   }
 /// }
 /// ```
-/// 版本严格匹配：[fromJson] 对 `version != 4` 抛 [SyncException]，含**更高版本**
+/// 版本严格匹配：[fromJson] 对 `version != 1` 抛 [SyncException]，含**更高版本**
 /// —— 静默丢条目会诱发「push 用本地重建 manifest」的数据丢失，宁可拒绝同步。
 /// 密钥正确性由解密时的 AES-GCM auth tag 一票否决，manifest 自身不持密钥材料。
 class SyncManifest {
-  static const int currentVersion = 4;
+  static const int currentVersion = 1;
 
   final int version;
 

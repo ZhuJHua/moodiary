@@ -609,7 +609,7 @@ void main() {
       final backend = FakeRemoteBackend();
       // 远端把 a 标记删除（tombstoneMs=2000）。
       backend.objects[SyncKeys.manifestPath] = jsonBytes({
-        'version': 4,
+        'version': SyncManifest.currentVersion,
         'updatedAt': 1,
         'entries': {
           'd:a': {'t': atMs(2000).millisecondsSinceEpoch, 'd': true},
@@ -644,7 +644,7 @@ void main() {
       () async {
         final backend = FakeRemoteBackend();
         backend.objects[SyncKeys.manifestPath] = jsonBytes({
-          'version': 4,
+          'version': SyncManifest.currentVersion,
           'updatedAt': 1,
           'entries': {
             'd:a': {'t': atMs(1000).millisecondsSinceEpoch, 'd': true},
@@ -670,7 +670,7 @@ void main() {
       () async {
         final backend = FakeRemoteBackend();
         backend.objects[SyncKeys.manifestPath] = jsonBytes({
-          'version': 4,
+          'version': SyncManifest.currentVersion,
           'updatedAt': 1,
           'entries': {
             'd:a': {'t': atMs(2000).millisecondsSinceEpoch, 'd': true},
@@ -697,7 +697,7 @@ void main() {
     test('skips a remote tombstone for a diary open in the editor', () async {
       final backend = FakeRemoteBackend();
       backend.objects[SyncKeys.manifestPath] = jsonBytes({
-        'version': 4,
+        'version': SyncManifest.currentVersion,
         'updatedAt': 1,
         'entries': {
           'd:a': {'t': atMs(2000).millisecondsSinceEpoch, 'd': true},
@@ -867,7 +867,7 @@ void main() {
 
   group('regression — concurrent manifest clobber aborts cleanly (lease CAS)', () {
     Uint8List foreignManifest() => jsonBytes({
-      'version': 4,
+      'version': SyncManifest.currentVersion,
       'updatedAt': 1,
       'w': 'another-device',
       'entries': {
@@ -1024,7 +1024,7 @@ void main() {
       () async {
         final backend = FakeRemoteBackend();
         backend.objects[SyncKeys.manifestPath] = jsonBytes({
-          'version': 4,
+          'version': SyncManifest.currentVersion,
           'updatedAt': 1,
           'entries': 'corrupt-not-a-map',
         });
@@ -1106,7 +1106,7 @@ void main() {
     test('远端 JSON 的 id 与 manifest 键不符 → 计入 failed 且不落库', () async {
       final backend = FakeRemoteBackend();
       backend.objects[SyncKeys.manifestPath] = jsonBytes({
-        'version': 4,
+        'version': SyncManifest.currentVersion,
         'updatedAt': 1,
         'entries': {
           'd:a': {'t': atMs(1000).millisecondsSinceEpoch},
@@ -1143,7 +1143,7 @@ void main() {
     test('云 pull 应用远端墓碑带 fromSync=true', () async {
       final backend = FakeRemoteBackend();
       backend.objects[SyncKeys.manifestPath] = jsonBytes({
-        'version': 4,
+        'version': SyncManifest.currentVersion,
         'updatedAt': 1,
         'entries': {
           'd:a': {'t': atMs(2000).millisecondsSinceEpoch, 'd': true},
