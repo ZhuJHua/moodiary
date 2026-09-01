@@ -182,7 +182,15 @@ Future<bool> applyUserKeyChange({
         from: .plaintext,
         to: .withKey(newDek),
       );
-      if (report != null && context.mounted) {
+      if (report != null && report.failed > 0) {
+        // 失败的对象原样留明文。不致命（codec 按 magic 头自动识别，读得回来），
+        // 但用户得知道云端还有一批没加密。
+        if (context.mounted) {
+          toast.error(
+            message: l10n.sync.keyEncryptPartial(failed: report.failed),
+          );
+        }
+      } else if (report != null && context.mounted) {
         toast.success(message: l10n.sync.keyCloudEncrypted(report: report));
       }
     } else if (context.mounted) {
@@ -215,11 +223,23 @@ Future<bool> applyUserKeyChange({
     if (report == null) {
       final stillHasRemote = await _remoteExists(backend);
       if (stillHasRemote) return false;
+    } else if (report.failed > 0) {
+      // CloudReCipher 是逐条计数、不中断的：失败的对象原样保留 AES 密文，而
+      // manifest 已按明文写出。此刻若照常删 keys.json + 清 DEK，那些对象就成了
+      // **没有任何密钥的密文**，而且没有自愈路径 —— push 侧 LWW 比对走 skip 不会
+      // 重传覆盖，pull 侧解密失败又被吞掉。宁可保持加密开启，让用户重试。
+      if (context.mounted) {
+        toast.error(
+          message: l10n.sync.keyDecryptPartial(failed: report.failed),
+        );
+      }
+      return false;
     }
     try {
       await SyncKeyManager.deleteRemoteKeyfile(backend);
     } catch (_) {
-      // 删除失败只留残留文件：无数据可解，无害。
+      // 删除失败只留残留信封。开启加密那条路径已经会先判远端数据是不是密文
+      // （见 _adoptRemoteKey 的调用点），残留信封不会再把明文远端误导向丢弃。
     }
   }
   await SyncKeyManager.clearDek();

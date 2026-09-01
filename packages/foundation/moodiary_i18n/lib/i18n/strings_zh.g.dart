@@ -1794,6 +1794,9 @@ class Translations$export$zh {
 	/// zh: '{base}，失败 {failed} 条'
 	String restoreSummaryFailed({required Object base, required Object failed}) => '${base}，失败 ${failed} 条';
 
+	/// zh: '恢复未全部成功：{summary}。请检查存储空间与网络后重试，不要据此删除旧设备的数据'
+	String restorePartial({required Object summary}) => '恢复未全部成功：${summary}。请检查存储空间与网络后重试，不要据此删除旧设备的数据';
+
 	/// zh: '恢复已停止（未完成）：{summary}'
 	String restoreStopped({required Object summary}) => '恢复已停止（未完成）：${summary}';
 
@@ -2849,6 +2852,12 @@ class Translations$sync$zh {
 
 	/// zh: '关闭加密后，云端的日记、分类与媒体文件会被解密回明文，密钥文件将被删除。确认要继续吗？'
 	String get keyDecryptMessage => '关闭加密后，云端的日记、分类与媒体文件会被解密回明文，密钥文件将被删除。确认要继续吗？';
+
+	/// zh: '有 {failed} 个对象没能解密回明文，已保持加密开启、云端密钥文件未删除。请检查网络后重试关闭。'
+	String keyDecryptPartial({required Object failed}) => '有 ${failed} 个对象没能解密回明文，已保持加密开启、云端密钥文件未删除。请检查网络后重试关闭。';
+
+	/// zh: '有 {failed} 个对象没能加密，它们在云端仍是明文。请检查网络后重新开启一次以补齐。'
+	String keyEncryptPartial({required Object failed}) => '有 ${failed} 个对象没能加密，它们在云端仍是明文。请检查网络后重新开启一次以补齐。';
 
 	/// zh: '加密已关闭'
 	String get keyEncryptionOff => '加密已关闭';

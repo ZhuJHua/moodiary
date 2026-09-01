@@ -183,6 +183,8 @@
   "keyEncryptionOn": "加密已开启",
   "keyDecryptTitle": "解密云端数据",
   "keyDecryptMessage": "关闭加密后，云端的日记、分类与媒体文件会被解密回明文，密钥文件将被删除。确认要继续吗？",
+  "keyDecryptPartial": "有 {failed} 个对象没能解密回明文，已保持加密开启、云端密钥文件未删除。请检查网络后重试关闭。",
+  "keyEncryptPartial": "有 {failed} 个对象没能加密，它们在云端仍是明文。请检查网络后重新开启一次以补齐。",
   "keyEncryptionOff": "加密已关闭",
   "keyReCipherFailed": "重新加密失败：{error}",
   "keyRemoteEmpty": "远端为空，仅保存本地密钥",

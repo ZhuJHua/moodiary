@@ -183,6 +183,8 @@
   "keyEncryptionOn": "Encryption is on",
   "keyDecryptTitle": "Decrypt the remote data",
   "keyDecryptMessage": "Turning encryption off decrypts the remote entries, categories and media files back to plain text and deletes the key file. Continue?",
+  "keyDecryptPartial": "{failed} object(s) could not be decrypted, so encryption stays on and the remote key file was kept. Check your connection and try turning it off again.",
+  "keyEncryptPartial": "{failed} object(s) could not be encrypted and are still plaintext on the remote. Check your connection and turn encryption on again to finish them.",
   "keyEncryptionOff": "Encryption is off",
   "keyReCipherFailed": "Re-encryption failed: {error}",
   "keyRemoteEmpty": "The remote is empty — only the local key was saved",

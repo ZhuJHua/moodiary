@@ -13,6 +13,7 @@
   "restoreDone": "恢复完成：{summary}",
   "restoreSummary": "日记 {diary} 条 / 分类 {category} 条 / 媒体信息 {media} 条",
   "restoreSummaryFailed": "{base}，失败 {failed} 条",
+  "restorePartial": "恢复未全部成功：{summary}。请检查存储空间与网络后重试，不要据此删除旧设备的数据",
   "restoreStopped": "恢复已停止（未完成）：{summary}",
   "restoreFailed": "恢复失败：{error}",
   "packingBackup": "正在打包备份…",

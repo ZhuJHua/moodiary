@@ -666,6 +666,7 @@ class _Translations$export$en extends Translations$export$zh {
 	@override String restoreDone({required Object summary}) => 'Restored: ${summary}';
 	@override String restoreSummary({required Object diary, required Object category, required Object media}) => '${diary} diaries / ${category} categories / ${media} media entries';
 	@override String restoreSummaryFailed({required Object base, required Object failed}) => '${base}, ${failed} failed';
+	@override String restorePartial({required Object summary}) => 'Restore did not fully succeed: ${summary}. Check storage space and connection, then retry — don\'t delete the old device\'s data yet';
 	@override String restoreStopped({required Object summary}) => 'Restore stopped (incomplete): ${summary}';
 	@override String restoreFailed({required Object error}) => 'Restore failed: ${error}';
 	@override String get packingBackup => 'Packing backup…';
@@ -1061,6 +1062,8 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String get keyEncryptionOn => 'Encryption is on';
 	@override String get keyDecryptTitle => 'Decrypt the remote data';
 	@override String get keyDecryptMessage => 'Turning encryption off decrypts the remote entries, categories and media files back to plain text and deletes the key file. Continue?';
+	@override String keyDecryptPartial({required Object failed}) => '${failed} object(s) could not be decrypted, so encryption stays on and the remote key file was kept. Check your connection and try turning it off again.';
+	@override String keyEncryptPartial({required Object failed}) => '${failed} object(s) could not be encrypted and are still plaintext on the remote. Check your connection and turn encryption on again to finish them.';
 	@override String get keyEncryptionOff => 'Encryption is off';
 	@override String keyReCipherFailed({required Object error}) => 'Re-encryption failed: ${error}';
 	@override String get keyRemoteEmpty => 'The remote is empty — only the local key was saved';
