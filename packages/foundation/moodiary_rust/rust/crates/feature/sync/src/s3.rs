@@ -202,8 +202,10 @@ impl S3Client {
         let status = resp.status().as_u16();
         let body = resp.text().await.unwrap_or_default();
         let body: String = body.chars().take(512).collect();
-        let hint = if status == 403 || body.contains("AuthorizationHeaderMalformed") {
+        let hint = if body.contains("AuthorizationHeaderMalformed") {
             "（若服务端有固定区域，请在同步设置里填写正确的 region）"
+        } else if status == 403 {
+            "（检查 Access Key 的权限：至少需要对象的读、写、删）"
         } else {
             ""
         };
@@ -222,6 +224,12 @@ impl S3Client {
         match resp.status().as_u16() {
             200..=299 => Ok(true),
             404 => Ok(false),
+            // 403 = 桶在，但这把 key 没有桶级 s3:ListBucket —— 只给 `bucket/*` 配
+            // Get/Put/Delete 的最小权限 key 是最常见的配法。把它当「桶不存在」会去
+            // CreateBucket（同样 403）→ create_exclusive 抢不到同步锁 → 连只读 pull
+            // 都跑不起来，且重试永远无效。凭据真的无效时，后续每个对象操作会各自
+            // 以 403 如实报错，不会被这里掩盖。
+            403 => Ok(true),
             _ => Err(Self::fail("Connection", resp).await),
         }
     }
