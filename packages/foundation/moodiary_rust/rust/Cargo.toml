@@ -61,6 +61,8 @@ turbojpeg-sys = { version = "=1.2.0", default-features = false, features = ["cma
 # 313MB 的原图不整个读进内存：mmap 给 turbojpeg 按需翻页（fontdb 已经带着它，零增量）。
 memmap2 = "=0.9.11"
 memchr = "=2.8.3"
+png = { version = "=0.18.1", default-features = false }
+libwebp-sys = { version = "=0.14.4", default-features = false, features = ["std", "neon"] }
 fast_image_resize = { version = "=6.1.0", default-features = false, features = ["image", "rayon"] }
 ttf-parser = { git = "https://github.com/ZhuJHua/ttf-parser", rev = "4a0ddfee643e4a25a3d1363241fa94b9c5f113c3", default-features = false, features = ["std", "variable-fonts"] }
 

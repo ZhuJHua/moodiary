@@ -39,10 +39,20 @@ abstract class ImageCompressor implements RustOpaqueInterface {
       .instance
       .api
       .crateApiImageImageCompressorProbe(filePath: filePath);
+
+  /// progressive JPEG 无损转 baseline（带 restart marker）落盘，给看图页 tile 用；
+  /// 超过 64MP 的报错（要整幅系数缓冲）。先写 `.part` 再 rename。
+  static Future<void> toBaselineFile({
+    required String filePath,
+    required String outputPath,
+  }) => RustLib.instance.api.crateApiImageImageCompressorToBaselineFile(
+    filePath: filePath,
+    outputPath: outputPath,
+  );
 }
 
-// Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<JpegRegionDecoder>>
-abstract class JpegRegionDecoder implements RustOpaqueInterface {
+// Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<RegionDecoder>>
+abstract class RegionDecoder implements RustOpaqueInterface {
   /// `x/y/width/height` 是转正后源像素坐标，`denom` 是 1..=8 的缩放分母。
   /// 返回实际覆盖的矩形（对齐 iMCU 后可能比请求大）与转正后的 RGBA。
   Future<TilePixels> decodeTile({
@@ -60,10 +70,8 @@ abstract class JpegRegionDecoder implements RustOpaqueInterface {
     required int denom,
   });
 
-  static Future<JpegRegionDecoder> open({required String filePath}) => RustLib
-      .instance
-      .api
-      .crateApiImageJpegRegionDecoderOpen(filePath: filePath);
+  static Future<RegionDecoder> open({required String filePath}) =>
+      RustLib.instance.api.crateApiImageRegionDecoderOpen(filePath: filePath);
 
   ImageProbe probe();
 

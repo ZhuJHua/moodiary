@@ -1,8 +1,11 @@
 //! 图片读头 / 缩放 / 编码。JPEG 走 turbojpeg（读头、IDCT 缩放解码、编码），其余格式走 image。
 
+mod jpeg_region;
+mod png_region;
 mod region;
 mod restart;
 mod turbo;
+mod webp_region;
 
 use std::fs::{self, File};
 use std::io::{BufWriter, Cursor, Write};
@@ -20,7 +23,7 @@ use image::{
     metadata::Orientation,
 };
 
-pub use region::{JpegRegionDecoder, Rect, TilePixels};
+pub use region::{RawDecoder, Rect, RegionDecoder, TilePixels};
 pub use turbo::JpegHeader;
 
 #[derive(PartialEq, Eq)]
@@ -150,13 +153,45 @@ pub fn probe(file_path: &str) -> Result<ImageProbe> {
     let bytes = map_file(file_path)?;
     let header = read_header(&bytes)?;
     let (width, height) = header.upright();
+    let region_decodable = match header.format {
+        ImageFormat::Jpeg => header.jpeg.is_some_and(|j| j.region_decodable()),
+        ImageFormat::Png => png_region::region_decodable(&bytes),
+        ImageFormat::WebP => webp_region::region_decodable(&bytes),
+        _ => false,
+    };
     Ok(ImageProbe {
         format: header.format,
         width,
         height,
         progressive: header.jpeg.is_some_and(|j| j.progressive),
-        region_decodable: header.jpeg.is_some_and(|j| j.region_decodable()),
+        region_decodable,
     })
+}
+
+/// progressive 转 baseline 能接的像素上限：`tj3Transform` 要整幅系数缓冲，4:2:0 约 3 字节 / 像素，
+/// 64MP 就是 192MB 的瞬时峰值。
+const BASELINE_MAX_PIXELS: u64 = 64 * 1024 * 1024;
+
+/// 把 progressive JPEG **无损**转成 baseline（每行 MCU 一个 restart marker）落到 `output_path`：
+/// 看图页 tile 只吃 baseline，progressive 要整幅系数缓冲、不能区域解。先写 `.part` 再 rename。
+pub fn to_baseline_file(file_path: &str, output_path: &str) -> Result<()> {
+    let bytes = map_file(file_path)?;
+    let header = turbo::read_header(&bytes)?;
+    if header.width as u64 * header.height as u64 > BASELINE_MAX_PIXELS {
+        bail!("JPEG too large to transcode to baseline");
+    }
+    let encoded = turbo::to_baseline(&bytes, 1)?;
+    drop(bytes);
+    let out = std::path::Path::new(output_path);
+    if let Some(parent) = out.parent()
+        && !parent.as_os_str().is_empty()
+    {
+        fs::create_dir_all(parent)?;
+    }
+    let part = format!("{output_path}.part");
+    fs::write(&part, &encoded)?;
+    fs::rename(&part, out)?;
+    Ok(())
 }
 
 /// 一次解码、链式缩出多个宽度档位。
@@ -217,9 +252,15 @@ pub fn make_thumbnails(
     };
     drop(bytes);
 
-    let has_alpha = current.color().has_alpha();
+    // 带 alpha 通道但全不透明（WebP / PNG 导出常见）当不透明处理：编 JPEG 而不是 PNG。
+    let has_alpha = current.color().has_alpha()
+        && current
+            .as_rgba8()
+            .is_some_and(|img| img.pixels().any(|p| p.0[3] != 255));
     if has_alpha {
         meta.ext = "png".into();
+    } else if current.color().has_alpha() {
+        current = DynamicImage::ImageRgb8(current.into_rgb8());
     }
     let chroma_444 = header.format == ImageFormat::Png;
     let mut resizer = Resizer::new();
@@ -583,7 +624,7 @@ mod tests {
         let p = probe(&png.to_string_lossy()).unwrap();
         assert_eq!(p.format, ImageFormat::Png);
         assert_eq!((p.width, p.height), (30, 20));
-        assert!(!p.region_decodable);
+        assert!(p.region_decodable, "非隔行 PNG 走流式区域解码");
 
         let _ = std::fs::remove_dir_all(&dir);
     }

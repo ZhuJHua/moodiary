@@ -76,8 +76,9 @@ class _MImageBrowserState extends State<MImageBrowser> {
   /// 走 tile 解码的页各自一个控制器（[OriginalImageView] 靠它算可见区域），按图路径复用。
   final _controllers = <String, PhotoViewController>{};
 
-  /// 本地 JPEG 的转正后尺寸，探头一次记一次；null = 还没探 / 不是能走 tile 的图。
-  final _sizes = <String, Size?>{};
+  /// 本地图能走 tile 的话记（转正后尺寸, 交给 Rust 解的文件），探头一次记一次；
+  /// null = 还没探 / 不能走 tile。
+  final _regions = <String, ({Size size, String decodePath})?>{};
 
   static bool _isNetwork(String image) =>
       image.startsWith('http://') || image.startsWith('https://');
@@ -95,21 +96,23 @@ class _MImageBrowserState extends State<MImageBrowser> {
     super.dispose();
   }
 
-  static bool _isJpeg(String image) {
-    final ext = p.extension(image).toLowerCase();
-    return ext == '.jpg' || ext == '.jpeg';
-  }
-
-  /// 本地 JPEG 只读头拿转正后尺寸；拿到就重建成 tile 页。progressive 之类不能区域
-  /// 解码的留在整图路径上。
+  /// 本地图只读头：能区域解码（baseline JPEG、非隔行 PNG、非动图 WebP）就直接走 tile 页；
+  /// 大的 progressive JPEG 先要它的 baseline 副本（在就秒开，不在现转）；其余留在整图路径。
   Future<void> _probe(String image) async {
-    if (_sizes.containsKey(image)) return;
-    _sizes[image] = null;
+    if (_regions.containsKey(image)) return;
+    _regions[image] = null;
     try {
       final probe = await rust.ImageCompressor.probe(filePath: image);
-      if (!mounted || !probe.regionDecodable) return;
+      final size = Size(probe.width.toDouble(), probe.height.toDouble());
+      String? decodePath;
+      if (probe.regionDecodable) {
+        decodePath = image;
+      } else if (probe.format == rust.ImageFormat.jpeg && probe.progressive) {
+        decodePath = await ImageDerivatives.ensureBaseline(image);
+      }
+      if (!mounted || decodePath == null) return;
       setState(() {
-        _sizes[image] = Size(probe.width.toDouble(), probe.height.toDouble());
+        _regions[image] = (size: size, decodePath: decodePath!);
       });
     } catch (e) {
       logger.d('probe failed: $image ($e)');
@@ -244,13 +247,14 @@ class _MImageBrowserState extends State<MImageBrowser> {
     final image = widget.images[index];
     final placeholder = _placeholderOf(image);
     final local = !_isNetwork(image);
-    if (local && _isJpeg(image) && !_sizes.containsKey(image)) {
+    if (local && !_regions.containsKey(image)) {
       unawaited(_probe(image));
     }
-    final size = _sizes[image];
+    final region = _regions[image];
     final Widget page;
-    if (size != null) {
-      // 能区域解码的 JPEG：child 尺寸 = 源像素，三层叠加，原图从不整解。
+    if (region != null) {
+      final size = region.size;
+      // 能区域解码的图：child 尺寸 = 源像素，三层叠加，原图从不整解。
       final controller = _controllers.putIfAbsent(
         image,
         PhotoViewController.new,
@@ -278,6 +282,7 @@ class _MImageBrowserState extends State<MImageBrowser> {
             onTapUp: (_, _, _) => Navigator.of(context).maybePop(),
             child: OriginalImageView(
               path: image,
+              decodePath: region.decodePath,
               imageSize: size,
               controller: controller,
               viewportSize: constraints.biggest,

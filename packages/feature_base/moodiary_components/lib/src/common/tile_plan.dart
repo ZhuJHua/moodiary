@@ -15,7 +15,7 @@ class TilePlanner {
   /// 视口之外再预取几屏。
   final double cacheExtentScreens;
 
-  /// 可见 tile 上限；超过就升一档 sample。
+  /// 可见 tile 上限（超过就升一档 sample），也是可见 + 预取的总上限。
   final int maxVisibleTiles;
 
   const TilePlanner({
@@ -40,10 +40,14 @@ class TilePlanner {
       sample *= 2;
       raw = _rawPlan(visibleRect, sample);
     }
+    // 可见 + 预取一共不超过上限：上层的缓存不淘汰规划内的块，这里就是它的内存上界。
+    final shown = raw.visible.take(maxVisibleTiles).toList(growable: false);
     return TilePlan(
       sample: sample,
-      visible: raw.visible.take(maxVisibleTiles).toList(growable: false),
-      prefetch: raw.prefetch,
+      visible: shown,
+      prefetch: raw.prefetch
+          .take(maxVisibleTiles - shown.length)
+          .toList(growable: false),
     );
   }
 

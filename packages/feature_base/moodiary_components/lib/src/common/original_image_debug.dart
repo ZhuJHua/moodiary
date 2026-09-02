@@ -9,6 +9,7 @@ class _DebugSnapshot {
   final Set<String> queued;
   final double scale;
   final bool? randomAccess;
+  final String format;
   final int batches;
   final int decoded;
   final int cacheBytes;
@@ -19,6 +20,7 @@ class _DebugSnapshot {
     required this.queued,
     required this.scale,
     required this.randomAccess,
+    required this.format,
     required this.batches,
     required this.decoded,
     required this.cacheBytes,
@@ -89,17 +91,19 @@ extension _TileDebugPainting on _TilePainter {
         ..style = .stroke
         ..strokeWidth = 2 * k,
     );
-    final hud = StringBuffer()
+    final line1 = StringBuffer()
       ..write('sample ${plan?.sample ?? '-'}  ')
       ..write(
         '可见 ${plan?.visible.length ?? 0}  预取 ${plan?.prefetch.length ?? 0}  ',
       )
       ..write(
-        '缓存 ${tiles.length} 块 ${(d.cacheBytes / 1048576).toStringAsFixed(1)}MB  ',
-      )
+        '缓存 ${tiles.length} 块 ${(d.cacheBytes / 1048576).toStringAsFixed(1)}MB',
+      );
+    final line2 = StringBuffer()
       ..write('在飞 ${d.inflight.length}  排队 ${d.queued.length}  ')
       ..write('批 ${d.batches}  已解 ${d.decoded}  ')
-      ..write('scale ${d.scale.toStringAsFixed(4)}  ')
+      ..write('scale ${d.scale.toStringAsFixed(3)}  ')
+      ..write('${d.format}  ')
       ..write(switch (d.randomAccess) {
         null => 'RST ?',
         true => 'RST 随机访问',
@@ -107,8 +111,16 @@ extension _TileDebugPainting on _TilePainter {
       });
     _label(
       canvas,
-      hud.toString(),
+      line1.toString(),
       rect.topLeft + Offset(8 * k, 48 * k),
+      k,
+      const Color(0xFFFFFFFF),
+      background: const Color(0xAA000000),
+    );
+    _label(
+      canvas,
+      line2.toString(),
+      rect.topLeft + Offset(8 * k, 68 * k),
       k,
       const Color(0xFFFFFFFF),
       background: const Color(0xAA000000),

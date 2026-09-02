@@ -83,7 +83,13 @@ moodiary-image --target …` 加同一套环境变量验过。设计稿 `docs/im
 两条 API 坑：**缩放系数只认 N/8 的十六档且要约分**（1/3 直接报 Unsupported scaling factor，
 4/8 要写 1/2，`turbo::set_scale` 统一处理）；`tj3SetCroppingRegion` 的坐标是缩放后的，左边界
 须整除缩放后 iMCU 宽。baseline JPEG 跳行仍要熵解码，随机访问靠 `restart.rs` 的 RST 索引
-（带 DRI 的文件拼合成段交给 turbojpeg，分块并行），没有 DRI 就整趟。
+（带 DRI 的文件拼合成段交给 turbojpeg，分块并行），没有 DRI 就整趟。progressive 不能区域解，
+`tj3Transform` 无损转 baseline 副本再解。
+
+**libwebp-sys 0.14.4（2026-09-03 回来）**只给 WebP 区域解码（`webp_region.rs`），`cc` 编译、
+`default-features = false, features = ["std", "neon"]`；没有只编解码器的 feature，编码器靠
+`--gc-sections` 丢掉。libwebp 裁剪不省熵解析、有损解码会把裁剪起点对齐到偶数。`png` 0.18.1
+直接依赖给 PNG 流式区域解码（`png_region.rs`）。
 
 **两侧 formatter 现在都是干净的**（2026-08-20 统一跑过一次并单独提交）：
 `cargo fmt --all -- --check` 与 `dart format --set-exit-if-changed` 都是零差异，

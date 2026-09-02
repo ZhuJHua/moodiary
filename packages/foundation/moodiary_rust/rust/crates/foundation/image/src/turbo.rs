@@ -263,10 +263,11 @@ pub fn encode_jpeg(
     quality: u8,
     chroma_444: bool,
 ) -> Result<Vec<u8>> {
-    encode_jpeg_with(rgb, width, height, quality, chroma_444, 0)
+    encode_jpeg_with(rgb, width, height, quality, chroma_444, 0, false)
 }
 
-/// 同 [`encode_jpeg`]，每 `restart_rows` 行 MCU 写一个 restart marker（0 = 不写）。
+/// 同 [`encode_jpeg`]，每 `restart_rows` 行 MCU 写一个 restart marker（0 = 不写），
+/// `progressive` 出多次扫描的文件（只有测试造样张用）。
 pub fn encode_jpeg_with(
     rgb: &[u8],
     width: u32,
@@ -274,6 +275,7 @@ pub fn encode_jpeg_with(
     quality: u8,
     chroma_444: bool,
     restart_rows: u16,
+    progressive: bool,
 ) -> Result<Vec<u8>> {
     if rgb.len() != width as usize * height as usize * 3 {
         bail!("encode buffer size mismatch");
@@ -290,6 +292,9 @@ pub fn encode_jpeg_with(
     )?;
     if restart_rows > 0 {
         handle.set(tj::TJPARAM_TJPARAM_RESTARTROWS, restart_rows as c_int)?;
+    }
+    if progressive {
+        handle.set(tj::TJPARAM_TJPARAM_PROGRESSIVE, 1)?;
     }
     let mut out: *mut u8 = ptr::null_mut();
     let mut size: tj::size_t = 0;
@@ -309,6 +314,43 @@ pub fn encode_jpeg_with(
         Ok(unsafe { std::slice::from_raw_parts(out, size as usize) }.to_vec())
     } else {
         Err(anyhow::anyhow!("tj3Compress8: {}", handle.error()))
+    };
+    if !out.is_null() {
+        unsafe { tj::tj3Free(out as *mut c_void) };
+    }
+    result
+}
+
+/// 无损转码：把 progressive（或任意 Huffman 8 位）JPEG 重新熵编码成 baseline，每行 MCU 一个
+/// restart marker（`restart_rows`，0 = 不写）。系数原样搬，像素逐字节相同；`tj3Transform` 要整幅
+/// 系数缓冲（4:2:0 约 3 字节 / 像素），所以调用方按像素数把关。EXIF 等标记默认全部带过去
+/// （`TJPARAM_SAVEMARKERS` = 2）。
+pub fn to_baseline(bytes: &[u8], restart_rows: u16) -> Result<Vec<u8>> {
+    let handle = Handle::new(tj::TJINIT_TJINIT_TRANSFORM)?;
+    handle.set(tj::TJPARAM_TJPARAM_MAXPIXELS, MAX_SOURCE_PIXELS)?;
+    if restart_rows > 0 {
+        handle.set(tj::TJPARAM_TJPARAM_RESTARTROWS, restart_rows as c_int)?;
+    }
+    // SAFETY: tjtransform 是 C 的 POD，全零 = 无操作、无裁剪、无回调。
+    let mut transform: tj::tjtransform = unsafe { std::mem::zeroed() };
+    transform.op = tj::TJXOP_TJXOP_NONE as c_int;
+    let mut out: *mut u8 = ptr::null_mut();
+    let mut size: tj::size_t = 0;
+    let rc = unsafe {
+        tj::tj3Transform(
+            handle.0,
+            bytes.as_ptr(),
+            bytes.len() as tj::size_t,
+            1,
+            &mut out,
+            &mut size,
+            &transform,
+        )
+    };
+    let result = if rc == 0 && !out.is_null() {
+        Ok(unsafe { std::slice::from_raw_parts(out, size as usize) }.to_vec())
+    } else {
+        Err(anyhow::anyhow!("tj3Transform: {}", handle.error()))
     };
     if !out.is_null() {
         unsafe { tj::tj3Free(out as *mut c_void) };

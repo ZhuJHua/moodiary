@@ -77,12 +77,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressorPtr;
 
   CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_JpegRegionDecoderPtr => wire
-      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoderPtr;
-
-  CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_PdfBuilderPtr => wire
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilderPtr;
+
+  CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_RegionDecoderPtr => wire
+      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoderPtr;
 
   CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_S3ClientPtr => wire
@@ -159,14 +159,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  JpegRegionDecoder
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
+  PdfBuilder
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     dynamic raw,
   );
 
   @protected
-  PdfBuilder
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
+  RegionDecoder
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
     dynamic raw,
   );
 
@@ -243,8 +243,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  JpegRegionDecoder
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
+  RegionDecoder
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
     dynamic raw,
   );
 
@@ -337,14 +337,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  JpegRegionDecoder
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
+  PdfBuilder
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     dynamic raw,
   );
 
   @protected
-  PdfBuilder
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
+  RegionDecoder
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
     dynamic raw,
   );
 
@@ -729,14 +729,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  JpegRegionDecoder
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
+  PdfBuilder
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     SseDeserializer deserializer,
   );
 
   @protected
-  PdfBuilder
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
+  RegionDecoder
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
     SseDeserializer deserializer,
   );
 
@@ -813,8 +813,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  JpegRegionDecoder
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
+  RegionDecoder
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
     SseDeserializer deserializer,
   );
 
@@ -893,14 +893,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  JpegRegionDecoder
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
+  PdfBuilder
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     SseDeserializer deserializer,
   );
 
   @protected
-  PdfBuilder
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
+  RegionDecoder
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
     SseDeserializer deserializer,
   );
 
@@ -2417,14 +2417,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int
-  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
-    JpegRegionDecoder raw,
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
+    PdfBuilder raw,
   );
 
   @protected
   int
-  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-    PdfBuilder raw,
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
+    RegionDecoder raw,
   );
 
   @protected
@@ -2501,8 +2501,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int
-  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
-    JpegRegionDecoder raw,
+  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
+    RegionDecoder raw,
   );
 
   @protected
@@ -2594,14 +2594,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int
-  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
-    JpegRegionDecoder raw,
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
+    PdfBuilder raw,
   );
 
   @protected
   int
-  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-    PdfBuilder raw,
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
+    RegionDecoder raw,
   );
 
   @protected
@@ -2736,15 +2736,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
-    JpegRegionDecoder self,
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
+    PdfBuilder self,
     SseSerializer serializer,
   );
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-    PdfBuilder self,
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
+    RegionDecoder self,
     SseSerializer serializer,
   );
 
@@ -2834,8 +2834,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
-    JpegRegionDecoder self,
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
+    RegionDecoder self,
     SseSerializer serializer,
   );
 
@@ -2946,15 +2946,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
-    JpegRegionDecoder self,
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
+    PdfBuilder self,
     SseSerializer serializer,
   );
 
   @protected
   void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-    PdfBuilder self,
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
+    RegionDecoder self,
     SseSerializer serializer,
   );
 
@@ -4097,23 +4097,6 @@ class RustLibWire implements BaseWire {
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoderPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_moodiary_rust_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder',
-      );
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder =
-      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoderPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
   rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     ffi.Pointer<ffi.Void> ptr,
   ) {
@@ -4128,6 +4111,23 @@ class RustLibWire implements BaseWire {
       );
   late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder =
       _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilderPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoderPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+        'frbgen_moodiary_rust_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder',
+      );
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder =
+      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoderPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void
@@ -4352,23 +4352,6 @@ class RustLibWire implements BaseWire {
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoderPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder',
-      );
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder =
-      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoderPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
   rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     ffi.Pointer<ffi.Void> ptr,
   ) {
@@ -4383,6 +4366,23 @@ class RustLibWire implements BaseWire {
       );
   late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder =
       _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilderPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoderPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+        'frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder',
+      );
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder =
+      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoderPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void
@@ -5421,7 +5421,41 @@ class RustLibWire implements BaseWire {
             void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
           >();
 
-  void wire__crate__api__image__JpegRegionDecoder_decode_tile(
+  void wire__crate__api__image__ImageCompressor_to_baseline_file(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> file_path,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> output_path,
+  ) {
+    return _wire__crate__api__image__ImageCompressor_to_baseline_file(
+      port_,
+      file_path,
+      output_path,
+    );
+  }
+
+  late final _wire__crate__api__image__ImageCompressor_to_baseline_filePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+          )
+        >
+      >(
+        'frbgen_moodiary_rust_wire__crate__api__image__ImageCompressor_to_baseline_file',
+      );
+  late final _wire__crate__api__image__ImageCompressor_to_baseline_file =
+      _wire__crate__api__image__ImageCompressor_to_baseline_filePtr
+          .asFunction<
+            void Function(
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            )
+          >();
+
+  void wire__crate__api__image__RegionDecoder_decode_tile(
     int port_,
     int that,
     int x,
@@ -5430,7 +5464,7 @@ class RustLibWire implements BaseWire {
     int height,
     int denom,
   ) {
-    return _wire__crate__api__image__JpegRegionDecoder_decode_tile(
+    return _wire__crate__api__image__RegionDecoder_decode_tile(
       port_,
       that,
       x,
@@ -5441,7 +5475,7 @@ class RustLibWire implements BaseWire {
     );
   }
 
-  late final _wire__crate__api__image__JpegRegionDecoder_decode_tilePtr =
+  late final _wire__crate__api__image__RegionDecoder_decode_tilePtr =
       _lookup<
         ffi.NativeFunction<
           ffi.Void Function(
@@ -5455,19 +5489,19 @@ class RustLibWire implements BaseWire {
           )
         >
       >(
-        'frbgen_moodiary_rust_wire__crate__api__image__JpegRegionDecoder_decode_tile',
+        'frbgen_moodiary_rust_wire__crate__api__image__RegionDecoder_decode_tile',
       );
-  late final _wire__crate__api__image__JpegRegionDecoder_decode_tile =
-      _wire__crate__api__image__JpegRegionDecoder_decode_tilePtr
+  late final _wire__crate__api__image__RegionDecoder_decode_tile =
+      _wire__crate__api__image__RegionDecoder_decode_tilePtr
           .asFunction<void Function(int, int, int, int, int, int, int)>();
 
-  void wire__crate__api__image__JpegRegionDecoder_decode_tiles(
+  void wire__crate__api__image__RegionDecoder_decode_tiles(
     int port_,
     int that,
     ffi.Pointer<wire_cst_list_tile_rect> rects,
     int denom,
   ) {
-    return _wire__crate__api__image__JpegRegionDecoder_decode_tiles(
+    return _wire__crate__api__image__RegionDecoder_decode_tiles(
       port_,
       that,
       rects,
@@ -5475,7 +5509,7 @@ class RustLibWire implements BaseWire {
     );
   }
 
-  late final _wire__crate__api__image__JpegRegionDecoder_decode_tilesPtr =
+  late final _wire__crate__api__image__RegionDecoder_decode_tilesPtr =
       _lookup<
         ffi.NativeFunction<
           ffi.Void Function(
@@ -5486,22 +5520,22 @@ class RustLibWire implements BaseWire {
           )
         >
       >(
-        'frbgen_moodiary_rust_wire__crate__api__image__JpegRegionDecoder_decode_tiles',
+        'frbgen_moodiary_rust_wire__crate__api__image__RegionDecoder_decode_tiles',
       );
-  late final _wire__crate__api__image__JpegRegionDecoder_decode_tiles =
-      _wire__crate__api__image__JpegRegionDecoder_decode_tilesPtr
+  late final _wire__crate__api__image__RegionDecoder_decode_tiles =
+      _wire__crate__api__image__RegionDecoder_decode_tilesPtr
           .asFunction<
             void Function(int, int, ffi.Pointer<wire_cst_list_tile_rect>, int)
           >();
 
-  void wire__crate__api__image__JpegRegionDecoder_open(
+  void wire__crate__api__image__RegionDecoder_open(
     int port_,
     ffi.Pointer<wire_cst_list_prim_u_8_strict> file_path,
   ) {
-    return _wire__crate__api__image__JpegRegionDecoder_open(port_, file_path);
+    return _wire__crate__api__image__RegionDecoder_open(port_, file_path);
   }
 
-  late final _wire__crate__api__image__JpegRegionDecoder_openPtr =
+  late final _wire__crate__api__image__RegionDecoder_openPtr =
       _lookup<
         ffi.NativeFunction<
           ffi.Void Function(
@@ -5509,43 +5543,38 @@ class RustLibWire implements BaseWire {
             ffi.Pointer<wire_cst_list_prim_u_8_strict>,
           )
         >
-      >('frbgen_moodiary_rust_wire__crate__api__image__JpegRegionDecoder_open');
-  late final _wire__crate__api__image__JpegRegionDecoder_open =
-      _wire__crate__api__image__JpegRegionDecoder_openPtr
+      >('frbgen_moodiary_rust_wire__crate__api__image__RegionDecoder_open');
+  late final _wire__crate__api__image__RegionDecoder_open =
+      _wire__crate__api__image__RegionDecoder_openPtr
           .asFunction<
             void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
           >();
 
-  WireSyncRust2DartDco wire__crate__api__image__JpegRegionDecoder_probe(
-    int that,
-  ) {
-    return _wire__crate__api__image__JpegRegionDecoder_probe(that);
+  WireSyncRust2DartDco wire__crate__api__image__RegionDecoder_probe(int that) {
+    return _wire__crate__api__image__RegionDecoder_probe(that);
   }
 
-  late final _wire__crate__api__image__JpegRegionDecoder_probePtr =
+  late final _wire__crate__api__image__RegionDecoder_probePtr =
       _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
-        'frbgen_moodiary_rust_wire__crate__api__image__JpegRegionDecoder_probe',
+        'frbgen_moodiary_rust_wire__crate__api__image__RegionDecoder_probe',
       );
-  late final _wire__crate__api__image__JpegRegionDecoder_probe =
-      _wire__crate__api__image__JpegRegionDecoder_probePtr
+  late final _wire__crate__api__image__RegionDecoder_probe =
+      _wire__crate__api__image__RegionDecoder_probePtr
           .asFunction<WireSyncRust2DartDco Function(int)>();
 
-  void wire__crate__api__image__JpegRegionDecoder_random_access(
+  void wire__crate__api__image__RegionDecoder_random_access(
     int port_,
     int that,
   ) {
-    return _wire__crate__api__image__JpegRegionDecoder_random_access(
-      port_,
-      that,
-    );
+    return _wire__crate__api__image__RegionDecoder_random_access(port_, that);
   }
 
-  late final _wire__crate__api__image__JpegRegionDecoder_random_accessPtr =
+  late final _wire__crate__api__image__RegionDecoder_random_accessPtr =
       _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
-        'frbgen_moodiary_rust_wire__crate__api__image__JpegRegionDecoder_random_access',
+        'frbgen_moodiary_rust_wire__crate__api__image__RegionDecoder_random_access',
       );
-  late final _wire__crate__api__image__JpegRegionDecoder_random_access =
-      _wire__crate__api__image__JpegRegionDecoder_random_accessPtr
+  late final _wire__crate__api__image__RegionDecoder_random_access =
+      _wire__crate__api__image__RegionDecoder_random_accessPtr
           .asFunction<void Function(int, int)>();
 
   void wire__crate__api__js__js_eval(

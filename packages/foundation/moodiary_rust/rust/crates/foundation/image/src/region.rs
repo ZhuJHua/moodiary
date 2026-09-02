@@ -1,22 +1,24 @@
-//! 看图页的 tile 解码：一个看图会话一个 [`JpegRegionDecoder`]，文件只读一次；tile 用
-//! **转正后**的源像素坐标请求，内部按 EXIF 方向映射回原始朝向，`tj3SetCroppingRegion`
-//! 只解那一块，解完再把小块转正。
+//! 看图页的 tile 解码：一个看图会话一个 [`RegionDecoder`]，文件只读一次；tile 用**转正后**的
+//! 源像素坐标请求，内部按 EXIF 方向映射回原始朝向，只解那一块，解完再把小块转正。
 //!
-//! tile 模型参考 pixa（2 的幂 sampleSize、512 源像素 tile、按距离排序），但 baseline JPEG
-//! 跳过的行仍要熵解码：同一行的 12 个 tile 就是 12 趟熵解码。所以这里多一层 pixa 没有的
-//! **带缓存**：一次解整条带（未旋转的图是「全宽 × tile 高」，旋转过的图是「全高 × tile 宽」，
-//! 都对应上层的一行 tile），后续同一行的 tile 直接从带里切，熵解码一行一趟。
+//! 格式差异全部收在 [`RawDecoder`] 后面（JPEG 走 turbojpeg 裁剪 + restart 随机访问，PNG 流式
+//! 逐行、WebP 走 libwebp 裁剪），这层只管坐标映射与**带缓存**：tile 模型参考 pixa（2 的幂
+//! sampleSize、512 源像素 tile、按距离排序），但串行码流跳过的行照样要解，同一行的 12 个 tile
+//! 就是 12 趟；所以一次解整条带（未旋转的图是「全宽 × tile 高」，旋转过的图是「全高 × tile
+//! 宽」，都对应上层的一行 tile），后续同一行的 tile 直接从带里切，一行一趟。
 
 use std::fs::File;
-use std::sync::{Mutex, OnceLock};
+use std::sync::Mutex;
 
 use anyhow::{Result, anyhow, bail};
 use image::{DynamicImage, metadata::Orientation};
 use memmap2::Mmap;
 
-use crate::restart::{self, RestartIndex};
-use crate::turbo::{self, JpegHeader, PixelRegion};
-use crate::{ImageFormat, ImageProbe, image_header, swaps_axes};
+use crate::jpeg_region::JpegRegion;
+use crate::png_region::PngRegion;
+use crate::turbo::PixelRegion;
+use crate::webp_region::WebPRegion;
+use crate::{ImageFormat, ImageProbe, swaps_axes};
 
 /// 缓存的带最多占这么多字节。整图带（fit 比例那条）不参与淘汰：缩回去要再用，重解是一趟
 /// 全图熵解码。
@@ -134,88 +136,68 @@ impl Band {
     }
 }
 
-pub struct JpegRegionDecoder {
-    /// mmap：313MB 的原图不整个读进内存，turbojpeg 按需翻页。
-    bytes: Mmap,
-    header: JpegHeader,
-    orientation: Orientation,
-    bands: Mutex<Vec<Band>>,
-    /// restart marker 索引，第一次解码时才扫（313MB 扫一遍要几十毫秒，open 是同步的）。
-    index: OnceLock<Option<RestartIndex>>,
+/// 一种格式的区域解码：只认**原始朝向**、缩放后的坐标，返回的块要覆盖请求（对齐后可以更大）。
+pub trait RawDecoder: Send + Sync {
+    fn format(&self) -> ImageFormat;
+    /// 原始朝向的尺寸。
+    fn raw_size(&self) -> (u32, u32);
+    fn orientation(&self) -> Orientation;
+    fn progressive(&self) -> bool {
+        false
+    }
+    /// 能随机访问：解一块的代价只与块有关，不与它上方的数据量有关。
+    fn random_access(&self) -> bool {
+        false
+    }
+    /// 按 1/`denom`（1 / 2 / 4 / 8）缩放，解缩放坐标系里的 `rect`，RGBA。
+    fn decode_raw(&self, denom: u8, rect: Rect) -> Result<PixelRegion>;
 }
 
-impl JpegRegionDecoder {
+pub struct RegionDecoder {
+    backend: Box<dyn RawDecoder>,
+    bands: Mutex<Vec<Band>>,
+}
+
+impl RegionDecoder {
     pub fn open(file_path: &str) -> Result<Self> {
         let file = File::open(file_path)?;
         // 原件不可变（这是全库的约定），映射期间不会被改写。
         let bytes = unsafe { Mmap::map(&file)? };
-        if crate::sniff(&bytes) != ImageFormat::Jpeg {
-            bail!("not a JPEG");
-        }
-        let header = turbo::read_header(&bytes)?;
-        let (_, _, orientation) = image_header(&bytes)?;
+        let backend: Box<dyn RawDecoder> = match crate::sniff(&bytes) {
+            ImageFormat::Jpeg => Box::new(JpegRegion::open(bytes)?),
+            ImageFormat::Png => Box::new(PngRegion::open(bytes)?),
+            ImageFormat::WebP => Box::new(WebPRegion::open(bytes)?),
+            other => bail!("{other:?} is not region-decodable"),
+        };
         Ok(Self {
-            bytes,
-            header,
-            orientation,
+            backend,
             bands: Mutex::new(Vec::new()),
-            index: OnceLock::new(),
         })
     }
 
-    fn index(&self) -> Option<&RestartIndex> {
-        self.index
-            .get_or_init(|| RestartIndex::build(&self.bytes))
-            .as_ref()
-    }
-
-    /// 文件带对齐的 restart marker：能随机访问、并行解码。
+    /// 文件能随机访问（JPEG 带对齐的 restart marker 等）：解一块的代价只与块有关。
     pub fn random_access(&self) -> bool {
-        self.index().is_some()
-    }
-
-    /// 解缩放坐标系里的一块（原始朝向）：有 restart 索引只解覆盖它的段，否则整趟。
-    fn decode_raw(&self, denom: u8, rect: Rect) -> Result<PixelRegion> {
-        let region = match self.index() {
-            Some(index) => index.decode(
-                &self.bytes,
-                turbo::numerator(denom)?,
-                rect,
-                true,
-                restart::threads(),
-            ),
-            None => turbo::decode_region(&self.bytes, denom, rect),
-        }?;
-        // 熵解码把映射的文件页摸了一遍，解完立刻还给内核：页缓存里还在，下次再摸是软缺页，
-        // 但不再算在本进程头上。
-        let _ = unsafe {
-            self.bytes
-                .unchecked_advise(memmap2::UncheckedAdvice::DontNeed)
-        };
-        Ok(region)
+        self.backend.random_access()
     }
 
     fn swaps(&self) -> bool {
-        swaps_axes(self.orientation)
+        swaps_axes(self.backend.orientation())
     }
 
     /// 转正后的尺寸。
     pub fn upright_size(&self) -> (u32, u32) {
-        if self.swaps() {
-            (self.header.height, self.header.width)
-        } else {
-            (self.header.width, self.header.height)
-        }
+        let (w, h) = self.backend.raw_size();
+        if self.swaps() { (h, w) } else { (w, h) }
     }
 
     pub fn probe(&self) -> ImageProbe {
         let (width, height) = self.upright_size();
         ImageProbe {
-            format: ImageFormat::Jpeg,
+            format: self.backend.format(),
             width,
             height,
-            progressive: self.header.progressive,
-            region_decodable: self.header.region_decodable(),
+            progressive: self.backend.progressive(),
+            region_decodable: true,
         }
     }
 
@@ -226,8 +208,8 @@ impl JpegRegionDecoder {
         if rect.w == 0 || rect.h == 0 {
             bail!("empty tile");
         }
-        let (raw_w, raw_h) = (self.header.width, self.header.height);
-        let raw = map_rect(inverse(self.orientation), up_w, up_h, rect);
+        let (raw_w, raw_h) = self.backend.raw_size();
+        let raw = map_rect(inverse(self.backend.orientation()), up_w, up_h, rect);
         let d = denom as u32;
         Ok(Rect {
             x: raw.x / d,
@@ -240,13 +222,13 @@ impl JpegRegionDecoder {
 
     /// 切好的原始朝向小块 → 转正 + 覆盖矩形换算。
     fn finish(&self, want: Rect, slice: Vec<u8>, denom: u8) -> Result<TilePixels> {
-        let (raw_w, raw_h) = (self.header.width, self.header.height);
+        let (raw_w, raw_h) = self.backend.raw_size();
         let d = denom as u32;
         let mut img = DynamicImage::ImageRgba8(
             image::RgbaImage::from_raw(want.w, want.h, slice)
                 .ok_or_else(|| anyhow!("tile buffer size mismatch"))?,
         );
-        img.apply_orientation(self.orientation);
+        img.apply_orientation(self.backend.orientation());
         let (pixel_width, pixel_height) = (img.width(), img.height());
         let covered_raw = Rect {
             x: want.x * d,
@@ -254,7 +236,7 @@ impl JpegRegionDecoder {
             w: (want.right() * d).min(raw_w) - want.x * d,
             h: (want.bottom() * d).min(raw_h) - want.y * d,
         };
-        let covered = map_rect(self.orientation, raw_w, raw_h, covered_raw);
+        let covered = map_rect(self.backend.orientation(), raw_w, raw_h, covered_raw);
         Ok(TilePixels {
             x: covered.x,
             y: covered.y,
@@ -266,11 +248,8 @@ impl JpegRegionDecoder {
         })
     }
 
-    /// 解一块 tile。`rect` 是转正后的源像素矩形，`denom` 是 1..=8 的缩放分母。
+    /// 解一块 tile。`rect` 是转正后的源像素矩形，`denom` 是 1 / 2 / 4 / 8。
     pub fn decode_tile(&self, rect: Rect, denom: u8) -> Result<TilePixels> {
-        if !self.header.region_decodable() {
-            bail!("JPEG is not region-decodable");
-        }
         let denom = denom.clamp(1, 8);
         let want = self.want_for(rect, denom)?;
         let (scaled_w, scaled_h) = self.scaled_size(denom);
@@ -282,9 +261,6 @@ impl JpegRegionDecoder {
     /// 视口跨几行 tile 就省几趟熵解码 —— 313MB 的图一趟就是两三秒，系统相册用
     /// `BitmapRegionDecoder` 也是整个可见区域一次解。
     pub fn decode_tiles(&self, rects: &[Rect], denom: u8) -> Result<Vec<TilePixels>> {
-        if !self.header.region_decodable() {
-            bail!("JPEG is not region-decodable");
-        }
         let denom = denom.clamp(1, 8);
         let (scaled_w, scaled_h) = self.scaled_size(denom);
         let wants = rects
@@ -304,10 +280,8 @@ impl JpegRegionDecoder {
     }
 
     fn scaled_size(&self, denom: u8) -> (u32, u32) {
-        (
-            scaled_down(self.header.width, denom),
-            scaled_down(self.header.height, denom),
-        )
+        let (w, h) = self.backend.raw_size();
+        (scaled_down(w, denom), scaled_down(h, denom))
     }
 
     /// 没有覆盖 `rect` 的带、且它放得下时，把它当一条带解出来缓存。放不下就什么都不做，
@@ -328,7 +302,7 @@ impl JpegRegionDecoder {
             return Ok(());
         }
         let whole = rect.x == 0 && rect.y == 0 && rect.w == scaled_w && rect.h == scaled_h;
-        let region = self.decode_raw(denom, rect)?;
+        let region = self.backend.decode_raw(denom, rect)?;
         bands.push(Band {
             denom,
             region,
@@ -379,10 +353,10 @@ impl JpegRegionDecoder {
         };
         let band_bytes = band_rect.w as usize * band_rect.h as usize * 4;
         if band_bytes > BAND_MAX_BYTES {
-            let region = self.decode_raw(denom, want)?;
+            let region = self.backend.decode_raw(denom, want)?;
             return Ok(slice_rgba(&region, want));
         }
-        let region = self.decode_raw(denom, band_rect)?;
+        let region = self.backend.decode_raw(denom, band_rect)?;
         let out = slice_rgba(&region, want);
         bands.push(Band {
             denom,
@@ -446,7 +420,7 @@ fn slice_rgba(region: &PixelRegion, want: Rect) -> Vec<u8> {
 mod tests {
     use image::{ExtendedColorType, ImageEncoder, metadata::Orientation};
 
-    use super::{JpegRegionDecoder, Rect, inverse, map_rect};
+    use super::{Rect, RegionDecoder, inverse, map_rect};
 
     /// EXIF Orientation 1..=8 的最小 TIFF。
     fn exif(orientation: u8) -> Vec<u8> {
@@ -542,7 +516,7 @@ mod tests {
             let path = dir.join(format!("o{orientation}.jpg"));
             write_jpeg(&path, &src_img, orientation);
 
-            let decoder = JpegRegionDecoder::open(&path.to_string_lossy()).unwrap();
+            let decoder = RegionDecoder::open(&path.to_string_lossy()).unwrap();
             let (up_w, up_h) = decoder.upright_size();
             // 参照物必须转正：`image::open` 不看 EXIF。
             let reference = crate::decode_upright(&path.to_string_lossy())
@@ -592,7 +566,7 @@ mod tests {
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("src.jpg");
         write_jpeg(&path, &gradient(900, 700), 6);
-        let decoder = JpegRegionDecoder::open(&path.to_string_lossy()).unwrap();
+        let decoder = RegionDecoder::open(&path.to_string_lossy()).unwrap();
         let rects = [
             Rect {
                 x: 0,
@@ -639,7 +613,7 @@ mod tests {
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("src.jpg");
         write_jpeg(&path, &gradient(640, 400), 1);
-        let decoder = JpegRegionDecoder::open(&path.to_string_lossy()).unwrap();
+        let decoder = RegionDecoder::open(&path.to_string_lossy()).unwrap();
 
         let a = decoder
             .decode_tile(

@@ -9,4 +9,6 @@ image = { workspace = true }
 turbojpeg-sys = { workspace = true }
 memmap2 = { workspace = true }
 memchr = { workspace = true }
+png = { workspace = true }
+libwebp-sys = { workspace = true }
 fast_image_resize = { workspace = true }

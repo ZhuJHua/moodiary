@@ -53,6 +53,10 @@ class ImageDerivatives {
   /// 派生物只可能是这两种后缀；别的（开发期的 `.webp`）一律算 stale。
   static const _exts = ['.jpg', '.png'];
 
+  /// progressive JPEG 超过看图页封顶（最长边 4096）才值得转一份 baseline：不超过的话引擎
+  /// 整解就是全分辨率，用不着 tile。
+  static const baselineMinPixels = 4096 * 4096;
+
   /// JPEG 快路径：turbojpeg 缩放解码，峰值几 MB，可以并行。
   static final _jpegGate = Pool((Platform.numberOfProcessors ~/ 2).clamp(1, 4));
 
@@ -84,12 +88,21 @@ class ImageDerivatives {
       join(AppFiles.imageThumbDir, name),
   ];
 
+  /// progressive JPEG 的 baseline 副本：`image/thumb/<uuid>_base.jpg`，像素与原件逐字节相同、
+  /// 带 restart marker，看图页 tile 只吃它（progressive 要整幅系数缓冲，不能区域解）。
+  static String baselineName(String imageName) =>
+      '${basenameWithoutExtension(imageName)}_base.jpg';
+
+  static String baselinePath(String imagePath) =>
+      join(AppFiles.imageThumbDir, baselineName(imagePath));
+
   /// 一张图的全部派生物文件名（相对 thumb 目录），两种后缀都算。删图与孤儿扫描共用。
   static List<String> derivativeNamesOf(String imageName) {
     final base = basenameWithoutExtension(imageName);
     return [
       for (final tier in ImageTier.values)
         for (final ext in _exts) '${base}_${tier.width}$ext',
+      baselineName(imageName),
     ];
   }
 
@@ -135,11 +148,48 @@ class ImageDerivatives {
     return future;
   }
 
+  /// 看图页要的 baseline 副本：在就给；不在就现转（重闸门，24MP 约一秒，期间看图页先用
+  /// 打底图）；转不了（超过 64MP、非 progressive）给 null，由看图页退回整图封顶路径。
+  static Future<String?> ensureBaseline(String imagePath) async {
+    if (!_isJpeg(imagePath)) return null;
+    final path = baselinePath(imagePath);
+    if (await File(path).exists()) return path;
+    if (_absent.contains(path)) return null;
+    await _generateBaseline(imagePath);
+    return await File(path).exists() ? path : null;
+  }
+
+  static Future<void> _generateBaseline(String src) async {
+    final path = baselinePath(src);
+    try {
+      await _heavyGate.withResource(() async {
+        if (await File(path).exists() || _absent.contains(path)) return;
+        final probe = await rust.ImageCompressor.probe(filePath: src);
+        if (!probe.progressive ||
+            probe.width * probe.height <= baselineMinPixels) {
+          _absent.add(path);
+          return;
+        }
+        await rust.ImageCompressor.toBaselineFile(
+          filePath: src,
+          outputPath: path,
+        );
+      });
+    } catch (e) {
+      _absent.add(path);
+      logger.d('baseline transcode failed: $src ($e)');
+    }
+  }
+
   /// 查档、生成全在闸门里：同步一次拉几千张时它们都挤在这里，不会几千个句柄同时
   /// 打开（iOS 的软上限只有 256）。[only] 给了就只生成这一档。源图不比档位宽的档位
-  /// Rust 侧跳过不写，这里记进 [_absent]。
+  /// Rust 侧跳过不写，这里记进 [_absent]。整预热（[only] 为空）顺带给大 progressive
+  /// JPEG 转 baseline 副本。
   static Future<void> _generate(String src, {ImageTier? only}) async {
     if (_isHeif(src)) return;
+    if (only == null && _isJpeg(src)) {
+      unawaited(_generateBaseline(src));
+    }
     final gate = _isJpeg(src) ? _jpegGate : _heavyGate;
     try {
       await gate.withResource(() async {
@@ -182,6 +232,7 @@ class ImageDerivatives {
     for (final tier in ImageTier.values) {
       _absent.remove(tierStem(imageName, tier));
     }
+    _absent.remove(baselinePath(imageName));
     for (final name in derivativeNamesOf(imageName)) {
       final path = join(AppFiles.imageThumbDir, name);
       try {

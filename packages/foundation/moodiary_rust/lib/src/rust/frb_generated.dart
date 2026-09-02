@@ -83,7 +83,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => -847776746;
+  int get rustContentHash => 1075983454;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -281,31 +281,9 @@ abstract class RustLibApi extends BaseApi {
     required String filePath,
   });
 
-  Future<TilePixels> crateApiImageJpegRegionDecoderDecodeTile({
-    required JpegRegionDecoder that,
-    required int x,
-    required int y,
-    required int width,
-    required int height,
-    required int denom,
-  });
-
-  Future<List<TilePixels>> crateApiImageJpegRegionDecoderDecodeTiles({
-    required JpegRegionDecoder that,
-    required List<TileRect> rects,
-    required int denom,
-  });
-
-  Future<JpegRegionDecoder> crateApiImageJpegRegionDecoderOpen({
+  Future<void> crateApiImageImageCompressorToBaselineFile({
     required String filePath,
-  });
-
-  ImageProbe crateApiImageJpegRegionDecoderProbe({
-    required JpegRegionDecoder that,
-  });
-
-  Future<bool> crateApiImageJpegRegionDecoderRandomAccess({
-    required JpegRegionDecoder that,
+    required String outputPath,
   });
 
   Future<void> crateApiPdfPdfBuilderAdd({
@@ -320,6 +298,31 @@ abstract class RustLibApi extends BaseApi {
   });
 
   Future<PdfBuilder> crateApiPdfPdfBuilderNew({required PdfStyle style});
+
+  Future<TilePixels> crateApiImageRegionDecoderDecodeTile({
+    required RegionDecoder that,
+    required int x,
+    required int y,
+    required int width,
+    required int height,
+    required int denom,
+  });
+
+  Future<List<TilePixels>> crateApiImageRegionDecoderDecodeTiles({
+    required RegionDecoder that,
+    required List<TileRect> rects,
+    required int denom,
+  });
+
+  Future<RegionDecoder> crateApiImageRegionDecoderOpen({
+    required String filePath,
+  });
+
+  ImageProbe crateApiImageRegionDecoderProbe({required RegionDecoder that});
+
+  Future<bool> crateApiImageRegionDecoderRandomAccess({
+    required RegionDecoder that,
+  });
 
   Future<bool> crateApiS3S3ClientCreateExclusive({
     required S3Client that,
@@ -513,21 +516,21 @@ abstract class RustLibApi extends BaseApi {
   get rust_arc_decrement_strong_count_ImageCompressorPtr;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_JpegRegionDecoder;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_JpegRegionDecoder;
-
-  CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_JpegRegionDecoderPtr;
-
-  RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_PdfBuilder;
 
   RustArcDecrementStrongCountFnType
   get rust_arc_decrement_strong_count_PdfBuilder;
 
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_PdfBuilderPtr;
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_RegionDecoder;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_RegionDecoder;
+
+  CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_RegionDecoderPtr;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_S3Client;
@@ -1879,184 +1882,36 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<TilePixels> crateApiImageJpegRegionDecoderDecodeTile({
-    required JpegRegionDecoder that,
-    required int x,
-    required int y,
-    required int width,
-    required int height,
-    required int denom,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
-                that,
-              );
-          var arg1 = cst_encode_u_32(x);
-          var arg2 = cst_encode_u_32(y);
-          var arg3 = cst_encode_u_32(width);
-          var arg4 = cst_encode_u_32(height);
-          var arg5 = cst_encode_u_8(denom);
-          return wire.wire__crate__api__image__JpegRegionDecoder_decode_tile(
-            port_,
-            arg0,
-            arg1,
-            arg2,
-            arg3,
-            arg4,
-            arg5,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_tile_pixels,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiImageJpegRegionDecoderDecodeTileConstMeta,
-        argValues: [that, x, y, width, height, denom],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiImageJpegRegionDecoderDecodeTileConstMeta =>
-      const TaskConstMeta(
-        debugName: "JpegRegionDecoder_decode_tile",
-        argNames: ["that", "x", "y", "width", "height", "denom"],
-      );
-
-  @override
-  Future<List<TilePixels>> crateApiImageJpegRegionDecoderDecodeTiles({
-    required JpegRegionDecoder that,
-    required List<TileRect> rects,
-    required int denom,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
-                that,
-              );
-          var arg1 = cst_encode_list_tile_rect(rects);
-          var arg2 = cst_encode_u_8(denom);
-          return wire.wire__crate__api__image__JpegRegionDecoder_decode_tiles(
-            port_,
-            arg0,
-            arg1,
-            arg2,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_list_tile_pixels,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiImageJpegRegionDecoderDecodeTilesConstMeta,
-        argValues: [that, rects, denom],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiImageJpegRegionDecoderDecodeTilesConstMeta =>
-      const TaskConstMeta(
-        debugName: "JpegRegionDecoder_decode_tiles",
-        argNames: ["that", "rects", "denom"],
-      );
-
-  @override
-  Future<JpegRegionDecoder> crateApiImageJpegRegionDecoderOpen({
+  Future<void> crateApiImageImageCompressorToBaselineFile({
     required String filePath,
+    required String outputPath,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           var arg0 = cst_encode_String(filePath);
-          return wire.wire__crate__api__image__JpegRegionDecoder_open(
+          var arg1 = cst_encode_String(outputPath);
+          return wire.wire__crate__api__image__ImageCompressor_to_baseline_file(
             port_,
             arg0,
+            arg1,
           );
         },
         codec: DcoCodec(
-          decodeSuccessData:
-              dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder,
+          decodeSuccessData: dco_decode_unit,
           decodeErrorData: dco_decode_AnyhowException,
         ),
-        constMeta: kCrateApiImageJpegRegionDecoderOpenConstMeta,
-        argValues: [filePath],
+        constMeta: kCrateApiImageImageCompressorToBaselineFileConstMeta,
+        argValues: [filePath, outputPath],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiImageJpegRegionDecoderOpenConstMeta =>
+  TaskConstMeta get kCrateApiImageImageCompressorToBaselineFileConstMeta =>
       const TaskConstMeta(
-        debugName: "JpegRegionDecoder_open",
-        argNames: ["filePath"],
-      );
-
-  @override
-  ImageProbe crateApiImageJpegRegionDecoderProbe({
-    required JpegRegionDecoder that,
-  }) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
-                that,
-              );
-          return wire.wire__crate__api__image__JpegRegionDecoder_probe(arg0);
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_image_probe,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiImageJpegRegionDecoderProbeConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiImageJpegRegionDecoderProbeConstMeta =>
-      const TaskConstMeta(
-        debugName: "JpegRegionDecoder_probe",
-        argNames: ["that"],
-      );
-
-  @override
-  Future<bool> crateApiImageJpegRegionDecoderRandomAccess({
-    required JpegRegionDecoder that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
-                that,
-              );
-          return wire.wire__crate__api__image__JpegRegionDecoder_random_access(
-            port_,
-            arg0,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_bool,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiImageJpegRegionDecoderRandomAccessConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiImageJpegRegionDecoderRandomAccessConstMeta =>
-      const TaskConstMeta(
-        debugName: "JpegRegionDecoder_random_access",
-        argNames: ["that"],
+        debugName: "ImageCompressor_to_baseline_file",
+        argNames: ["filePath", "outputPath"],
       );
 
   @override
@@ -2154,6 +2009,179 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiPdfPdfBuilderNewConstMeta =>
       const TaskConstMeta(debugName: "PdfBuilder_new", argNames: ["style"]);
+
+  @override
+  Future<TilePixels> crateApiImageRegionDecoderDecodeTile({
+    required RegionDecoder that,
+    required int x,
+    required int y,
+    required int width,
+    required int height,
+    required int denom,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
+                that,
+              );
+          var arg1 = cst_encode_u_32(x);
+          var arg2 = cst_encode_u_32(y);
+          var arg3 = cst_encode_u_32(width);
+          var arg4 = cst_encode_u_32(height);
+          var arg5 = cst_encode_u_8(denom);
+          return wire.wire__crate__api__image__RegionDecoder_decode_tile(
+            port_,
+            arg0,
+            arg1,
+            arg2,
+            arg3,
+            arg4,
+            arg5,
+          );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_tile_pixels,
+          decodeErrorData: dco_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiImageRegionDecoderDecodeTileConstMeta,
+        argValues: [that, x, y, width, height, denom],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiImageRegionDecoderDecodeTileConstMeta =>
+      const TaskConstMeta(
+        debugName: "RegionDecoder_decode_tile",
+        argNames: ["that", "x", "y", "width", "height", "denom"],
+      );
+
+  @override
+  Future<List<TilePixels>> crateApiImageRegionDecoderDecodeTiles({
+    required RegionDecoder that,
+    required List<TileRect> rects,
+    required int denom,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
+                that,
+              );
+          var arg1 = cst_encode_list_tile_rect(rects);
+          var arg2 = cst_encode_u_8(denom);
+          return wire.wire__crate__api__image__RegionDecoder_decode_tiles(
+            port_,
+            arg0,
+            arg1,
+            arg2,
+          );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_list_tile_pixels,
+          decodeErrorData: dco_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiImageRegionDecoderDecodeTilesConstMeta,
+        argValues: [that, rects, denom],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiImageRegionDecoderDecodeTilesConstMeta =>
+      const TaskConstMeta(
+        debugName: "RegionDecoder_decode_tiles",
+        argNames: ["that", "rects", "denom"],
+      );
+
+  @override
+  Future<RegionDecoder> crateApiImageRegionDecoderOpen({
+    required String filePath,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          var arg0 = cst_encode_String(filePath);
+          return wire.wire__crate__api__image__RegionDecoder_open(port_, arg0);
+        },
+        codec: DcoCodec(
+          decodeSuccessData:
+              dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder,
+          decodeErrorData: dco_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiImageRegionDecoderOpenConstMeta,
+        argValues: [filePath],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiImageRegionDecoderOpenConstMeta =>
+      const TaskConstMeta(
+        debugName: "RegionDecoder_open",
+        argNames: ["filePath"],
+      );
+
+  @override
+  ImageProbe crateApiImageRegionDecoderProbe({required RegionDecoder that}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
+                that,
+              );
+          return wire.wire__crate__api__image__RegionDecoder_probe(arg0);
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_image_probe,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiImageRegionDecoderProbeConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiImageRegionDecoderProbeConstMeta =>
+      const TaskConstMeta(debugName: "RegionDecoder_probe", argNames: ["that"]);
+
+  @override
+  Future<bool> crateApiImageRegionDecoderRandomAccess({
+    required RegionDecoder that,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
+                that,
+              );
+          return wire.wire__crate__api__image__RegionDecoder_random_access(
+            port_,
+            arg0,
+          );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_bool,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiImageRegionDecoderRandomAccessConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiImageRegionDecoderRandomAccessConstMeta =>
+      const TaskConstMeta(
+        debugName: "RegionDecoder_random_access",
+        argNames: ["that"],
+      );
 
   @override
   Future<bool> crateApiS3S3ClientCreateExclusive({
@@ -3135,20 +3163,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_JpegRegionDecoder => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_JpegRegionDecoder => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder;
-
-  RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_PdfBuilder => wire
       .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder;
 
   RustArcDecrementStrongCountFnType
   get rust_arc_decrement_strong_count_PdfBuilder => wire
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder;
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_RegionDecoder => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_RegionDecoder => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_S3Client => wire
@@ -3271,21 +3299,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  JpegRegionDecoder
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return JpegRegionDecoderImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
   PdfBuilder
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return PdfBuilderImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  RegionDecoder
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return RegionDecoderImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -3397,12 +3425,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  JpegRegionDecoder
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
+  RegionDecoder
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return JpegRegionDecoderImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return RegionDecoderImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -3544,21 +3572,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  JpegRegionDecoder
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return JpegRegionDecoderImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
   PdfBuilder
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return PdfBuilderImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  RegionDecoder
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return RegionDecoderImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -4638,24 +4666,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  JpegRegionDecoder
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return JpegRegionDecoderImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
   PdfBuilder
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return PdfBuilderImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  RegionDecoder
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return RegionDecoderImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -4806,12 +4834,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  JpegRegionDecoder
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
+  RegionDecoder
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return JpegRegionDecoderImpl.frbInternalSseDecode(
+    return RegionDecoderImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -4966,24 +4994,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  JpegRegionDecoder
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return JpegRegionDecoderImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
   PdfBuilder
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return PdfBuilderImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  RegionDecoder
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return RegionDecoderImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -6297,22 +6325,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   int
-  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
-    JpegRegionDecoder raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as JpegRegionDecoderImpl).frbInternalCstEncode(move: true);
-  }
-
-  @protected
-  int
   cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     PdfBuilder raw,
   ) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     // ignore: invalid_use_of_internal_member
     return (raw as PdfBuilderImpl).frbInternalCstEncode(move: true);
+  }
+
+  @protected
+  int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
+    RegionDecoder raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    // ignore: invalid_use_of_internal_member
+    return (raw as RegionDecoderImpl).frbInternalCstEncode(move: true);
   }
 
   @protected
@@ -6437,12 +6465,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   int
-  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
-    JpegRegionDecoder raw,
+  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
+    RegionDecoder raw,
   ) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     // ignore: invalid_use_of_internal_member
-    return (raw as JpegRegionDecoderImpl).frbInternalCstEncode(move: false);
+    return (raw as RegionDecoderImpl).frbInternalCstEncode(move: false);
   }
 
   @protected
@@ -6602,22 +6630,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   int
-  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
-    JpegRegionDecoder raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as JpegRegionDecoderImpl).frbInternalCstEncode();
-  }
-
-  @protected
-  int
   cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     PdfBuilder raw,
   ) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     // ignore: invalid_use_of_internal_member
     return (raw as PdfBuilderImpl).frbInternalCstEncode();
+  }
+
+  @protected
+  int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
+    RegionDecoder raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    // ignore: invalid_use_of_internal_member
+    return (raw as RegionDecoderImpl).frbInternalCstEncode();
   }
 
   @protected
@@ -6863,19 +6891,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
-    JpegRegionDecoder self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as JpegRegionDecoderImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     PdfBuilder self,
     SseSerializer serializer,
@@ -6883,6 +6898,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as PdfBuilderImpl).frbInternalSseEncode(move: true),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
+    RegionDecoder self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as RegionDecoderImpl).frbInternalSseEncode(move: true),
       serializer,
     );
   }
@@ -7045,13 +7073,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
-    JpegRegionDecoder self,
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
+    RegionDecoder self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as JpegRegionDecoderImpl).frbInternalSseEncode(move: false),
+      (self as RegionDecoderImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
@@ -7267,19 +7295,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
-    JpegRegionDecoder self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as JpegRegionDecoderImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     PdfBuilder self,
     SseSerializer serializer,
@@ -7287,6 +7302,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as PdfBuilderImpl).frbInternalSseEncode(move: null),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
+    RegionDecoder self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as RegionDecoderImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
@@ -8705,65 +8733,6 @@ class ImageCompressorImpl extends RustOpaque implements ImageCompressor {
 }
 
 @sealed
-class JpegRegionDecoderImpl extends RustOpaque implements JpegRegionDecoder {
-  // Not to be used by end users
-  JpegRegionDecoderImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  JpegRegionDecoderImpl.frbInternalSseDecode(
-    BigInt ptr,
-    int externalSizeOnNative,
-  ) : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_JpegRegionDecoder,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_JpegRegionDecoder,
-    rustArcDecrementStrongCountPtr: RustLib
-        .instance
-        .api
-        .rust_arc_decrement_strong_count_JpegRegionDecoderPtr,
-  );
-
-  /// `x/y/width/height` 是转正后源像素坐标，`denom` 是 1..=8 的缩放分母。
-  /// 返回实际覆盖的矩形（对齐 iMCU 后可能比请求大）与转正后的 RGBA。
-  Future<TilePixels> decodeTile({
-    required int x,
-    required int y,
-    required int width,
-    required int height,
-    required int denom,
-  }) => RustLib.instance.api.crateApiImageJpegRegionDecoderDecodeTile(
-    that: this,
-    x: x,
-    y: y,
-    width: width,
-    height: height,
-    denom: denom,
-  );
-
-  /// 一批同 denom 的 tile：并集一次解出来当带，再逐块切。视口里的可见 tile 一次全要，
-  /// 313MB 的图就只跑一趟熵解码。
-  Future<List<TilePixels>> decodeTiles({
-    required List<TileRect> rects,
-    required int denom,
-  }) => RustLib.instance.api.crateApiImageJpegRegionDecoderDecodeTiles(
-    that: this,
-    rects: rects,
-    denom: denom,
-  );
-
-  ImageProbe probe() =>
-      RustLib.instance.api.crateApiImageJpegRegionDecoderProbe(that: this);
-
-  /// 文件带对齐的 restart marker：tile 只解覆盖它的段、还能并行。第一次调用会扫一遍文件。
-  Future<bool> randomAccess() => RustLib.instance.api
-      .crateApiImageJpegRegionDecoderRandomAccess(that: this);
-}
-
-@sealed
 class PdfBuilderImpl extends RustOpaque implements PdfBuilder {
   // Not to be used by end users
   PdfBuilderImpl.frbInternalDcoDecode(List<dynamic> wire)
@@ -8791,6 +8760,61 @@ class PdfBuilderImpl extends RustOpaque implements PdfBuilder {
         outPath: outPath,
         cancel: cancel,
       );
+}
+
+@sealed
+class RegionDecoderImpl extends RustOpaque implements RegionDecoder {
+  // Not to be used by end users
+  RegionDecoderImpl.frbInternalDcoDecode(List<dynamic> wire)
+    : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  RegionDecoderImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount:
+        RustLib.instance.api.rust_arc_increment_strong_count_RegionDecoder,
+    rustArcDecrementStrongCount:
+        RustLib.instance.api.rust_arc_decrement_strong_count_RegionDecoder,
+    rustArcDecrementStrongCountPtr:
+        RustLib.instance.api.rust_arc_decrement_strong_count_RegionDecoderPtr,
+  );
+
+  /// `x/y/width/height` 是转正后源像素坐标，`denom` 是 1..=8 的缩放分母。
+  /// 返回实际覆盖的矩形（对齐 iMCU 后可能比请求大）与转正后的 RGBA。
+  Future<TilePixels> decodeTile({
+    required int x,
+    required int y,
+    required int width,
+    required int height,
+    required int denom,
+  }) => RustLib.instance.api.crateApiImageRegionDecoderDecodeTile(
+    that: this,
+    x: x,
+    y: y,
+    width: width,
+    height: height,
+    denom: denom,
+  );
+
+  /// 一批同 denom 的 tile：并集一次解出来当带，再逐块切。视口里的可见 tile 一次全要，
+  /// 313MB 的图就只跑一趟熵解码。
+  Future<List<TilePixels>> decodeTiles({
+    required List<TileRect> rects,
+    required int denom,
+  }) => RustLib.instance.api.crateApiImageRegionDecoderDecodeTiles(
+    that: this,
+    rects: rects,
+    denom: denom,
+  );
+
+  ImageProbe probe() =>
+      RustLib.instance.api.crateApiImageRegionDecoderProbe(that: this);
+
+  /// 文件带对齐的 restart marker：tile 只解覆盖它的段、还能并行。第一次调用会扫一遍文件。
+  Future<bool> randomAccess() =>
+      RustLib.instance.api.crateApiImageRegionDecoderRandomAccess(that: this);
 }
 
 @sealed

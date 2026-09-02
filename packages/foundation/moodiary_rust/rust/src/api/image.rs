@@ -87,11 +87,11 @@ impl From<&TileRect> for moodiary_image::Rect {
 
 /// 看图页的 tile 解码器：一个看图会话一个，文件只读一次，带缓存跟着它走。
 #[frb(opaque)]
-pub struct JpegRegionDecoder(moodiary_image::JpegRegionDecoder);
+pub struct RegionDecoder(moodiary_image::RegionDecoder);
 
-impl JpegRegionDecoder {
-    pub fn open(file_path: String) -> Result<JpegRegionDecoder> {
-        Ok(JpegRegionDecoder(moodiary_image::JpegRegionDecoder::open(
+impl RegionDecoder {
+    pub fn open(file_path: String) -> Result<RegionDecoder> {
+        Ok(RegionDecoder(moodiary_image::RegionDecoder::open(
             &file_path,
         )?))
     }
@@ -142,6 +142,12 @@ impl ImageCompressor {
     /// 只读头不解像素：格式、转正后宽高、是否能走 turbojpeg 缩放 / 区域解码。
     pub fn probe(file_path: String) -> Result<ImageProbe> {
         moodiary_image::probe(&file_path)
+    }
+
+    /// progressive JPEG 无损转 baseline（带 restart marker）落盘，给看图页 tile 用；
+    /// 超过 64MP 的报错（要整幅系数缓冲）。先写 `.part` 再 rename。
+    pub fn to_baseline_file(file_path: String, output_path: String) -> Result<()> {
+        moodiary_image::to_baseline_file(&file_path, &output_path)
     }
 
     /// 导出用：整图转正、按 spec 定尺寸、编成 JPEG / PNG。

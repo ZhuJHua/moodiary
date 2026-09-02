@@ -20,12 +20,13 @@ void main() {
   group('ImageDerivatives.derivativeNamesOf', () {
     const uuid = '0192a3b4-c5d6-7e8f-9a0b-c1d2e3f4a5b6';
 
-    test('两档 × 两种后缀，名字不带源图后缀', () {
+    test('两档 × 两种后缀 + baseline 副本，名字不带源图后缀', () {
       expect(ImageDerivatives.derivativeNamesOf('image-$uuid.jpg'), [
         'image-${uuid}_512.jpg',
         'image-${uuid}_512.png',
         'image-${uuid}_1280.jpg',
         'image-${uuid}_1280.png',
+        'image-${uuid}_base.jpg',
       ]);
     });
 

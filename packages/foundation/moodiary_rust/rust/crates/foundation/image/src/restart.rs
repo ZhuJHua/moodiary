@@ -409,6 +409,7 @@ mod tests {
             90,
             chroma_444,
             restart_rows,
+            false,
         )
         .unwrap()
     }
@@ -482,6 +483,28 @@ mod tests {
                     );
                 }
             }
+        }
+    }
+
+    /// progressive → baseline 无损：像素逐字节相同、带 restart 索引、头不再是 progressive。
+    #[test]
+    fn progressive_to_baseline_is_lossless_and_indexed() {
+        let rgb = noisy(1000, 700);
+        let prog = turbo::encode_jpeg_with(&rgb, 1000, 700, 88, false, 0, true).unwrap();
+        assert!(turbo::read_header(&prog).unwrap().progressive);
+        assert!(RestartIndex::build(&prog).is_none());
+        let base = turbo::to_baseline(&prog, 1).unwrap();
+        let header = turbo::read_header(&base).unwrap();
+        assert!(!header.progressive && header.region_decodable());
+        let index = RestartIndex::build(&base).unwrap();
+        assert_eq!(index.row_step, 1);
+        for num in [8u8, 2] {
+            let a = turbo::decode_scaled(&prog, num).unwrap();
+            let b = turbo::decode_scaled(&base, num).unwrap();
+            assert!(
+                a.as_raw() == b.as_raw(),
+                "num={num}: 转码后像素应逐字节相同"
+            );
         }
     }
 

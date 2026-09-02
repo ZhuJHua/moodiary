@@ -7,7 +7,8 @@
 > （Flutter + webview）都解不了的格式才转码；**看图页与下载给的都是原图**。
 >
 > 2026-09-03：restart marker 随机访问 + 分段并行落地并真机验收；turbojpeg 缩放系数修正为
-> N/8 十六档（原先 1/3、1/6 会被拒）。分期进度见 §5。
+> N/8 十六档（原先 1/3、1/6 会被拒）。同日 tile 方案扩到 PNG、WebP 与 progressive JPEG
+> （模拟器验收）。分期进度见 §5。
 
 ## 0. 结论先行
 
@@ -136,8 +137,19 @@ EXIF 方向：先缩后转，只转小图（已落地）。`.part` 写完 rename
    跳过的行仍要熵解码，一趟到底。长按 ⓘ 的调试叠层能看到 sample、在飞 / 排队、缓存与
    `RST` 状态。
 
-非 JPEG 原图与 progressive JPEG（要整幅系数缓冲）：只有 1 + 现有的「引擎解原图、最长边
-封顶 4096」，没有 tile 层。头里能识别，不会误判。
+**格式覆盖（2026-09-03）**：tile 层是格式无关的，Rust 一个 `RawDecoder` 后端一种格式：
+
+| 格式 | 后端 | 随机访问 | 一条带的代价 |
+|---|---|---|---|
+| JPEG baseline | turbojpeg 裁剪 + 缩放；有对齐 DRI 走 restart 索引 | 有 DRI 时有 | 有 DRI：只解覆盖的段、并行；无：整趟熵解码 |
+| JPEG progressive | 不能区域解（整幅系数缓冲）。> 16.7MP 的入库预热时 `tj3Transform` **无损**转一份 baseline 副本 `<uuid>_base.jpg`（带 restart marker，≤ 64MP），看图页解副本；≤ 16.7MP 的走引擎封顶路径已是全分辨率 | 副本有 | 同 baseline 带 DRI |
+| PNG | `png` crate 流式逐行解，窗口之上的行解完就丢，窗口内按 1/denom 盒式平均累进输出；内存 = 一行 + 输出块 | 无 | 整幅 inflate 到带底（48MP 约 0.5s）|
+| WebP | libwebp `use_cropping` + `use_scaling`（RGBA 外部缓冲）；有损 1/1 时起点对齐偶数再裁；VP8L > 16MP、动图不接 | 无 | 整幅熵解析，裁剪省的是滤波与输出 |
+| GIF / BMP / 其它 | 不做 | | 引擎解原图、最长边封顶 4096 |
+
+`probe().region_decodable` 按上表判定（PNG 排除 Adam7 隔行，WebP 排除动图与超限无损）；
+看图页对 progressive JPEG 另问 `ImageDerivatives.ensureBaseline`，副本不在就现转（重闸门，
+24MP 约一秒，期间先用打底图）。
 
 ### 1.4 L4 出口
 
@@ -145,21 +157,23 @@ EXIF 方向：先缩后转，只转小图（已落地）。`.part` 写完 rename
 
 ## 2. Rust 侧（`moodiary_image` crate，foundation 门面）
 
-三个模块：`turbo.rs`（读头 / N/8 缩放 / 裁剪 / 编码的安全封装）、`region.rs`（转正坐标、
-带缓存）、`restart.rs`（RST 索引 + 分段并行）。FRB 门面在 `api/image.rs`：
+模块：`turbo.rs`（读头 / N/8 缩放 / 裁剪 / 编码 / 无损转码的安全封装）、`region.rs`
+（格式无关：`RawDecoder` trait、转正坐标、带缓存）、`jpeg_region.rs` / `png_region.rs` /
+`webp_region.rs`（三个后端）、`restart.rs`（RST 索引 + 分段并行）。FRB 门面在 `api/image.rs`：
 
 ```rust
 pub struct ImageProbe { format, width, height, progressive: bool, region_decodable: bool }
 pub fn probe(path) -> Result<ImageProbe>;                      // JPEG 走 tj3DecompressHeader，其余走 image
 pub fn make_thumbnails(path, targets, quality) -> Result<ImageMeta { width, height, ext }>;
+pub fn to_baseline_file(path, out) -> Result<()>;     // progressive → baseline 无损副本（≤ 64MP）
 pub fn contain_to_file(path, out, CompressSpec { format: Jpeg | Png, .. });   // 导出用
 
 #[frb(opaque)]
-pub struct JpegRegionDecoder;            // 一个看图会话一个：mmap 原件 + 带缓存 + 懒建的 restart 索引
-impl JpegRegionDecoder {
+pub struct RegionDecoder;                // 一个看图会话一个：按魔数挑后端（JPEG / PNG / WebP）+ 带缓存
+impl RegionDecoder {
     pub fn open(path) -> Result<Self>;
     #[frb(sync)] pub fn probe(&self) -> ImageProbe;
-    pub fn random_access(&self) -> bool;  // 带对齐 restart marker；第一次调用扫一遍文件
+    pub fn random_access(&self) -> bool;  // JPEG 带对齐 restart marker；第一次调用扫一遍文件
     /// 转正坐标系的矩形 + 分母 {1,2,4,8}；内部映回原始朝向、对齐 iMCU、解完再把小块转正。
     pub fn decode_tiles(&self, rects: Vec<TileRect>, denom: u8)
         -> Result<Vec<TilePixels { x, y, width, height, pixel_width, pixel_height, rgba }>>;
@@ -182,7 +196,15 @@ impl JpegRegionDecoder {
   DRI 的超大图仍是整趟。`FASTUPSAMPLE` / `FASTDCT` 不开：4:2:0 快 10% 上下，换色度块边。
 - turbojpeg-sys 写法：`default-features = false, features = ["cmake"]`，`TURBOJPEG_SOURCE=vendor`、
   `TURBOJPEG_STATIC=1`。不开 `require-simd`：arm64 的 NEON intrinsics 照编，x86_64 CI 无 NASM
-  只是没 SIMD 跑测试。`webp` crate 已移除；`image` 的 `webp` feature 留着解 WebP 源。
+  只是没 SIMD 跑测试。`webp` crate 已移除；`image` 的 `webp` feature 留着解 WebP 源（缩略图）。
+- **libwebp-sys 0.14.4 回来了，只为 WebP 区域解码**（libwebp 1.5，`cc` 编译，`neon` feature；
+  没有只编解码器的 feature，靠 `--gc-sections` 把编码器丢掉）。libwebp 的裁剪不省熵解析，
+  有损解码走 YUV 4:2:0 会把裁剪起点向下对齐到偶数（1/1 时自己对齐再裁一行一列）；裁剪尺寸
+  不是 d 的整倍数时面积平均有不到一个输出像素的漂移，只出现在贴右 / 下边缘的块。
+- **`png` 0.18.1 直接依赖**：`next_row` 流式，`EXPAND | STRIP_16 | ALPHA` 归一到 RGBA / 灰 + alpha
+  （灰不会扩成 RGB，自己复制）；Adam7 隔行 `next_row` 只给逐 pass 子行，要整幅缓冲，不接。
+- **`tj3Transform` 无损转 baseline**：系数原样搬、`TJPARAM_RESTARTROWS` 与 `SAVEMARKERS`（默认
+  全部带上，EXIF 方向不丢）都生效；要整幅系数缓冲（4:2:0 约 3 字节 / 像素），64MP 封顶。
 - `optimize_to_file` 已删；`contain_to_file` 目标只剩 JPEG / PNG。
 - hook 已加两样：Android 从 `cCompiler` 路径推 NDK 根，给 cmake-rs
   `CMAKE_TOOLCHAIN_FILE_<triple>` 与 `ANDROID_NDK_ROOT`；iOS 模拟器传 `SDKROOT`（cmake-rs 不
@@ -233,7 +255,8 @@ impl JpegRegionDecoder {
 | P1 | turbojpeg 进仓、派生物 JPEG / PNG、按需生成 | 已落地，真机验收（2026-09-02） |
 | P2 | 看图页三层、tile 规划、带缓存 | 已落地，真机验收（2026-09-02） |
 | P2.5 | restart marker 随机访问 + 分段并行、N/8 缩放修正 | 已落地，真机验收（2026-09-03，用户：体验很好） |
-| P3 | progressive → baseline 派生物、PNG 流式裁剪、WebP 区域解码、无 DRI 超大图金字塔、ICC | 按需，未排期 |
+| P2.6 | tile 扩到 PNG / WebP / progressive JPEG（`RawDecoder` 后端） | 已落地，模拟器验收（2026-09-03） |
+| P3 | 无 DRI 超大图金字塔、ICC、Adam7 PNG、动图 | 按需，未排期 |
 
 - **P0（已落地）**：原字节直存、两档 WebP、`MediaImage`、展示端只查不生成、看图页 4096 封顶、
   Rust 先缩后转、视频封面不走档位、「图片优化」走索引。
@@ -268,18 +291,20 @@ impl JpegRegionDecoder {
   一个真 bug：turbojpeg 只认 N/8 十六档缩放系数，原先 `scale_denominator` 给出的 1/3、1/5、
   1/6、1/7 会被 `tj3SetScalingFactor` 拒掉，4000 宽的 12MP 出 1280 档就撞上；现在一律 N/8 且
   约分后再传，缩略图目标尺寸改按源图比例算。真机（OnePlus 13 / profile）用户实测：体验好。
-- **P3 按需**（没有用户抱怨就不做；Dart 的 tile 层是格式无关的，加一种格式只是在 Rust 补一个
-  `decode_tiles`）。按性价比排序：
-  1. progressive JPEG 用 `tj3Transform` **无损**转成 baseline 派生物（jpegtran 那套），让所有
-     JPEG 都进快路径；progressive 本身不能区域解（要整幅系数缓冲）。
-  2. PNG 流式裁剪：`png` crate 逐行解、只留窗口内的行，内存有界；CPU 每条带整幅 inflate 一遍
-     （48MP 约 0.5s），体验同没有 DRI 的 JPEG。零新依赖。
-  3. WebP 区域解码：把 libwebp-sys 链回来（约 300KB），`use_cropping` + `use_scaling`，省的是
-     滤波与输出，熵解析仍整幅。
-  4. 没有 DRI 的超大 JPEG：1/4 派生物金字塔，磁盘约原件 6%。
-  5. ICC 校色。
-  HEIC / AVIF / JXL 天生分 tile 但解码器体积否决过，且 HEIC 入库即转 JPG；GIF / BMP / TIFF
-  没人存这么大的。
+- **P2.6 多格式 tile（2026-09-03 落地，模拟器验收）**：`region.rs` 抽成格式无关的 `RegionDecoder`
+  + `RawDecoder` trait，JPEG 后端搬进 `jpeg_region.rs`，新增 `png_region.rs`（流式逐行 + 盒式
+  降采样，逐字节等于整图解码后同一套平均）、`webp_region.rs`（libwebp 裁剪 + 缩放，偶数对齐
+  再裁）；progressive JPEG 走 `tj3Transform` 无损转出的 baseline 副本（`ImageDerivatives.
+  ensureBaseline`，入库预热顺带生成，删图连带删）。`probe().region_decodable` 按格式判定；看图
+  页的门从「是 JPEG」改成「探头说能」。对 pixa 的三处改进：PNG 边解边缩（pixa 全分辨率取窗
+  再缩，sample 8 一块 64MB 直接被预算拒掉）、progressive 不按 4MP 硬拒而是无损转码一次永久
+  受益、WebP 奇数起点先对齐再裁而不是把对齐后的块拉伸（pixa 的 tile 会偏一像素）。模拟器
+  （API 35，arm64）实测 6000×4500 的有损 WebP、PNG、progressive JPEG 三张：fit 9 块、双击后
+  sample 1 的 45 块 4 秒内全绿。顺带：可见 + 预取总数封顶 64（原先预取不计入预算，缓存冲到
+  109MB）、带 alpha 通道但全不透明的源改编 JPEG 派生物。
+- **P3 按需**（没有用户抱怨就不做）：没有 DRI 的超大 JPEG（1/4 派生物金字塔，磁盘约原件 6%）、
+  ICC 校色、Adam7 隔行 PNG（可把前几个 pass 当低分辨率层，要整幅缓冲）、动图 WebP / GIF。
+  HEIC / AVIF / JXL 天生分 tile 但解码器体积否决过，且 HEIC 入库即转 JPG。
 
 ## 6. 不变量（别改回去）
 
@@ -288,4 +313,7 @@ impl JpegRegionDecoder {
 - 缩略图按宽度缩；EXIF 方向先缩后转；编码按透明通道选 JPEG / PNG，不按源格式。
 - 单 .so：turbojpeg 静态链进 `moodiary_rust`，不另起原生库。
 - restart 索引只加速不改语义：分段解码必须与整图裁剪解码逐字节一致（`restart.rs` 测试钉住）。
-- 看图页的 tile 只在内存里，永远不落盘；落盘的派生物只有 `make_thumbnails` 出的两档。
+- 看图页的 tile 只在内存里，永远不落盘；落盘的派生物只有 `make_thumbnails` 出的两档加
+  progressive JPEG 的 baseline 副本（像素与原件逐字节相同）。
+- 每种格式的区域解码都要有「与整图解码同一块逐字节一致」的测试钉着（WebP 有损与贴边缩放
+  除外，那两处是 libwebp 自己的重采样，允许几个灰阶）。

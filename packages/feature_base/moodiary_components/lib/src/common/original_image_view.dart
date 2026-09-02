@@ -20,7 +20,7 @@ part 'original_image_debug.dart';
 /// 3. 兜底：不能区域解码的（progressive）用引擎解整图，最长边封顶 4096（[MediaImage]）。
 ///
 /// 内存由视口决定：可见 + 外圈预取的 tile 每块 ≤ 1MB，缓存按字节预算淘汰；文件字节和
-/// 带缓存在 Rust 侧随 [rust.JpegRegionDecoder] 活着，页面 dispose 时一起释放。
+/// 带缓存在 Rust 侧随 [rust.RegionDecoder] 活着，页面 dispose 时一起释放。
 class OriginalImageView extends StatefulWidget {
   /// 调试叠层开关（进程级）：画每块 tile 的边框与编号、按 sample 着色、在飞 / 排队状态，
   /// 左上角一行统计。看图页长按 ⓘ 切换。
@@ -28,6 +28,9 @@ class OriginalImageView extends StatefulWidget {
 
   /// JPEG 原图绝对路径。
   final String path;
+
+  /// 交给 Rust 区域解码的文件；默认就是 [path]，progressive JPEG 给它的 baseline 副本。
+  final String decodePath;
 
   /// 转正后的源图尺寸。
   final Size imageSize;
@@ -43,11 +46,12 @@ class OriginalImageView extends StatefulWidget {
   const OriginalImageView({
     super.key,
     required this.path,
+    String? decodePath,
     required this.imageSize,
     required this.controller,
     required this.viewportSize,
     required this.overview,
-  });
+  }) : decodePath = decodePath ?? path;
 
   @override
   State<OriginalImageView> createState() => _OriginalImageViewState();
@@ -82,8 +86,9 @@ class _OriginalImageViewState extends State<OriginalImageView> {
   /// 也只跑一趟熵解码（313MB 的图一趟两三秒，按行解就是行数倍）。
   static const _batchSize = 48;
 
-  rust.JpegRegionDecoder? _decoder;
+  rust.RegionDecoder? _decoder;
   bool? _randomAccess;
+  String _format = '';
   bool _fallback = false;
   bool _disposed = false;
 
@@ -118,12 +123,15 @@ class _OriginalImageViewState extends State<OriginalImageView> {
 
   Future<void> _open() async {
     try {
-      final decoder = await rust.JpegRegionDecoder.open(filePath: widget.path);
+      final decoder = await rust.RegionDecoder.open(
+        filePath: widget.decodePath,
+      );
       if (_disposed) {
         decoder.dispose();
         return;
       }
       final probe = decoder.probe();
+      _format = probe.format.name;
       if (!probe.regionDecodable) {
         decoder.dispose();
         setState(() => _fallback = true);
@@ -137,7 +145,7 @@ class _OriginalImageViewState extends State<OriginalImageView> {
         if (OriginalImageView.debugOverlay.value) _bump();
       }
     } catch (e) {
-      logger.d('region decoder open failed: ${widget.path} ($e)');
+      logger.d('region decoder open failed: ${widget.decodePath} ($e)');
       if (mounted) setState(() => _fallback = true);
     }
   }
@@ -372,6 +380,7 @@ class _OriginalImageViewState extends State<OriginalImageView> {
                         queued: {for (final t in _queue) t.key},
                         scale: widget.controller.value.scale ?? 1,
                         randomAccess: _randomAccess,
+                        format: _format,
                         batches: _batches,
                         decoded: _decoded,
                         cacheBytes: _tiles.values.fold(
