@@ -7,8 +7,11 @@ import '../frb_generated.dart';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`
+
 // Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ImageCompressor>>
 abstract class ImageCompressor implements RustOpaqueInterface {
+  /// 导出用：整图转正、按 spec 定尺寸、编成 JPEG / PNG。
   static Future<void> containToFile({
     required String filePath,
     required String outputPath,
@@ -19,8 +22,8 @@ abstract class ImageCompressor implements RustOpaqueInterface {
     spec: spec,
   );
 
-  /// 一次解码、链式缩出多个宽度档位的 WebP；不比档位宽的档位跳过不写。
-  /// 返回源图（EXIF 转正后）尺寸。
+  /// 一次解码、链式缩出多个宽度档位；不比档位宽的档位跳过不写。派生物后缀按内容定
+  /// （`jpg`，带 alpha 的源 `png`），写在返回的 `ext` 里。
   static Future<ImageMeta> makeThumbnails({
     required String filePath,
     required List<ThumbnailTarget> targets,
@@ -31,19 +34,44 @@ abstract class ImageCompressor implements RustOpaqueInterface {
     quality: quality,
   );
 
-  /// 统一图片优化：按 1280 尺寸规则缩放 + 有损 WebP 编码（默认 q80）。
-  static Future<void> optimizeToFile({
-    required String filePath,
-    required String outputPath,
-    int? quality,
-  }) => RustLib.instance.api.crateApiImageImageCompressorOptimizeToFile(
-    filePath: filePath,
-    outputPath: outputPath,
-    quality: quality,
-  );
+  /// 只读头不解像素：格式、转正后宽高、是否能走 turbojpeg 缩放 / 区域解码。
+  static Future<ImageProbe> probe({required String filePath}) => RustLib
+      .instance
+      .api
+      .crateApiImageImageCompressorProbe(filePath: filePath);
 }
 
-enum CompressFormat { jpeg, webP, png }
+// Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<JpegRegionDecoder>>
+abstract class JpegRegionDecoder implements RustOpaqueInterface {
+  /// `x/y/width/height` 是转正后源像素坐标，`denom` 是 1..=8 的缩放分母。
+  /// 返回实际覆盖的矩形（对齐 iMCU 后可能比请求大）与转正后的 RGBA。
+  Future<TilePixels> decodeTile({
+    required int x,
+    required int y,
+    required int width,
+    required int height,
+    required int denom,
+  });
+
+  /// 一批同 denom 的 tile：并集一次解出来当带，再逐块切。视口里的可见 tile 一次全要，
+  /// 313MB 的图就只跑一趟熵解码。
+  Future<List<TilePixels>> decodeTiles({
+    required List<TileRect> rects,
+    required int denom,
+  });
+
+  static Future<JpegRegionDecoder> open({required String filePath}) => RustLib
+      .instance
+      .api
+      .crateApiImageJpegRegionDecoderOpen(filePath: filePath);
+
+  ImageProbe probe();
+
+  /// 文件带对齐的 restart marker：tile 只解覆盖它的段、还能并行。第一次调用会扫一遍文件。
+  Future<bool> randomAccess();
+}
+
+enum CompressFormat { jpeg, png }
 
 class CompressSpec {
   final CompressFormat? compressFormat;
@@ -92,14 +120,21 @@ class CompressSpec {
           quality == other.quality;
 }
 
+enum ImageFormat { jpeg, png, webP, gif, bmp, other }
+
 class ImageMeta {
   final int width;
   final int height;
+  final String ext;
 
-  const ImageMeta({required this.width, required this.height});
+  const ImageMeta({
+    required this.width,
+    required this.height,
+    required this.ext,
+  });
 
   @override
-  int get hashCode => width.hashCode ^ height.hashCode;
+  int get hashCode => width.hashCode ^ height.hashCode ^ ext.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -107,17 +142,53 @@ class ImageMeta {
       other is ImageMeta &&
           runtimeType == other.runtimeType &&
           width == other.width &&
-          height == other.height;
+          height == other.height &&
+          ext == other.ext;
+}
+
+class ImageProbe {
+  final ImageFormat format;
+  final int width;
+  final int height;
+  final bool progressive;
+  final bool regionDecodable;
+
+  const ImageProbe({
+    required this.format,
+    required this.width,
+    required this.height,
+    required this.progressive,
+    required this.regionDecodable,
+  });
+
+  @override
+  int get hashCode =>
+      format.hashCode ^
+      width.hashCode ^
+      height.hashCode ^
+      progressive.hashCode ^
+      regionDecodable.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ImageProbe &&
+          runtimeType == other.runtimeType &&
+          format == other.format &&
+          width == other.width &&
+          height == other.height &&
+          progressive == other.progressive &&
+          regionDecodable == other.regionDecodable;
 }
 
 class ThumbnailTarget {
   final int width;
-  final String outputPath;
+  final String outputStem;
 
-  const ThumbnailTarget({required this.width, required this.outputPath});
+  const ThumbnailTarget({required this.width, required this.outputStem});
 
   @override
-  int get hashCode => width.hashCode ^ outputPath.hashCode;
+  int get hashCode => width.hashCode ^ outputStem.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -125,5 +196,77 @@ class ThumbnailTarget {
       other is ThumbnailTarget &&
           runtimeType == other.runtimeType &&
           width == other.width &&
-          outputPath == other.outputPath;
+          outputStem == other.outputStem;
+}
+
+class TilePixels {
+  final int x;
+  final int y;
+  final int width;
+  final int height;
+  final int pixelWidth;
+  final int pixelHeight;
+  final Uint8List rgba;
+
+  const TilePixels({
+    required this.x,
+    required this.y,
+    required this.width,
+    required this.height,
+    required this.pixelWidth,
+    required this.pixelHeight,
+    required this.rgba,
+  });
+
+  @override
+  int get hashCode =>
+      x.hashCode ^
+      y.hashCode ^
+      width.hashCode ^
+      height.hashCode ^
+      pixelWidth.hashCode ^
+      pixelHeight.hashCode ^
+      rgba.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TilePixels &&
+          runtimeType == other.runtimeType &&
+          x == other.x &&
+          y == other.y &&
+          width == other.width &&
+          height == other.height &&
+          pixelWidth == other.pixelWidth &&
+          pixelHeight == other.pixelHeight &&
+          rgba == other.rgba;
+}
+
+/// 转正后源像素坐标里的一个 tile 矩形。
+class TileRect {
+  final int x;
+  final int y;
+  final int width;
+  final int height;
+
+  const TileRect({
+    required this.x,
+    required this.y,
+    required this.width,
+    required this.height,
+  });
+
+  @override
+  int get hashCode =>
+      x.hashCode ^ y.hashCode ^ width.hashCode ^ height.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TileRect &&
+          runtimeType == other.runtimeType &&
+          x == other.x &&
+          y == other.y &&
+          width == other.width &&
+          height == other.height;
 }

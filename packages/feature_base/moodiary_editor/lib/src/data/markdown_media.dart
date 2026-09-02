@@ -21,9 +21,9 @@ Future<({String path, String mime})?> appMediaResolver(
   if (name.startsWith('audio-')) {
     return (path: AppFiles.getRealPath('audio', name), mime: audioMimeOf(name));
   }
-  // 正文只供 m 档缩略图，原图（全分辨率原件）永远不进 webview：点图后是 Flutter
-  // 的看图页在显示原图。历史 `.heic` 这里不转码（照旧破图），由用户在
-  // 「设置 → 数据 → 图片优化」一次性转成 JPG。MIME 按实际供出的文件定，不按正文里的名字。
+  // 正文供 m 档缩略图；档位还没生成的（存量图片）供原图，webview 自己解——那是唯一
+  // 一处原图会进 webview 的路，用户跑过「图片优化」就没有了。历史 `.heic` 这里不转码
+  // （照旧破图），同样由「图片优化」一次性转成 JPG。MIME 按实际供出的文件定，不按正文里的名字。
   final display = await ImageDerivatives.resolve(
     AppFiles.getRealPath('image', name),
     tier: .m,

@@ -77,6 +77,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressorPtr;
 
   CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_JpegRegionDecoderPtr => wire
+      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoderPtr;
+
+  CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_PdfBuilderPtr => wire
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilderPtr;
 
@@ -155,6 +159,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  JpegRegionDecoder
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
+    dynamic raw,
+  );
+
+  @protected
   PdfBuilder
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     dynamic raw,
@@ -229,6 +239,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   HttpServer
   dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
+    dynamic raw,
+  );
+
+  @protected
+  JpegRegionDecoder
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
     dynamic raw,
   );
 
@@ -317,6 +333,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   ImageCompressor
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor(
+    dynamic raw,
+  );
+
+  @protected
+  JpegRegionDecoder
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
     dynamic raw,
   );
 
@@ -461,7 +483,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 dco_decode_i_64(dynamic raw);
 
   @protected
+  ImageFormat dco_decode_image_format(dynamic raw);
+
+  @protected
   ImageMeta dco_decode_image_meta(dynamic raw);
+
+  @protected
+  ImageProbe dco_decode_image_probe(dynamic raw);
 
   @protected
   IrBlock dco_decode_ir_block(dynamic raw);
@@ -551,6 +579,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<ThumbnailTarget> dco_decode_list_thumbnail_target(dynamic raw);
 
   @protected
+  List<TilePixels> dco_decode_list_tile_pixels(dynamic raw);
+
+  @protected
+  List<TileRect> dco_decode_list_tile_rect(dynamic raw);
+
+  @protected
   List<TokenizeResult> dco_decode_list_tokenize_result(dynamic raw);
 
   @protected
@@ -600,6 +634,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ThumbnailTarget dco_decode_thumbnail_target(dynamic raw);
+
+  @protected
+  TilePixels dco_decode_tile_pixels(dynamic raw);
+
+  @protected
+  TileRect dco_decode_tile_rect(dynamic raw);
 
   @protected
   TokenizeResult dco_decode_tokenize_result(dynamic raw);
@@ -689,6 +729,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  JpegRegionDecoder
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   PdfBuilder
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     SseDeserializer deserializer,
@@ -767,6 +813,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  JpegRegionDecoder
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   S3Client
   sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
     SseDeserializer deserializer,
@@ -837,6 +889,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   ImageCompressor
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  JpegRegionDecoder
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
     SseDeserializer deserializer,
   );
 
@@ -1001,7 +1059,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
 
   @protected
+  ImageFormat sse_decode_image_format(SseDeserializer deserializer);
+
+  @protected
   ImageMeta sse_decode_image_meta(SseDeserializer deserializer);
+
+  @protected
+  ImageProbe sse_decode_image_probe(SseDeserializer deserializer);
 
   @protected
   IrBlock sse_decode_ir_block(SseDeserializer deserializer);
@@ -1099,6 +1163,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<TilePixels> sse_decode_list_tile_pixels(SseDeserializer deserializer);
+
+  @protected
+  List<TileRect> sse_decode_list_tile_rect(SseDeserializer deserializer);
+
+  @protected
   List<TokenizeResult> sse_decode_list_tokenize_result(
     SseDeserializer deserializer,
   );
@@ -1156,6 +1226,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ThumbnailTarget sse_decode_thumbnail_target(SseDeserializer deserializer);
+
+  @protected
+  TilePixels sse_decode_tile_pixels(SseDeserializer deserializer);
+
+  @protected
+  TileRect sse_decode_tile_rect(SseDeserializer deserializer);
 
   @protected
   TokenizeResult sse_decode_tokenize_result(SseDeserializer deserializer);
@@ -1612,6 +1688,30 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  ffi.Pointer<wire_cst_list_tile_pixels> cst_encode_list_tile_pixels(
+    List<TilePixels> raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_tile_pixels(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      cst_api_fill_to_wire_tile_pixels(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_tile_rect> cst_encode_list_tile_rect(
+    List<TileRect> raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_tile_rect(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      cst_api_fill_to_wire_tile_rect(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
+  }
+
+  @protected
   ffi.Pointer<wire_cst_list_tokenize_result> cst_encode_list_tokenize_result(
     List<TokenizeResult> raw,
   ) {
@@ -1904,6 +2004,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ) {
     wireObj.width = cst_encode_u_32(apiObj.width);
     wireObj.height = cst_encode_u_32(apiObj.height);
+    wireObj.ext = cst_encode_String(apiObj.ext);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_image_probe(
+    ImageProbe apiObj,
+    wire_cst_image_probe wireObj,
+  ) {
+    wireObj.format = cst_encode_image_format(apiObj.format);
+    wireObj.width = cst_encode_u_32(apiObj.width);
+    wireObj.height = cst_encode_u_32(apiObj.height);
+    wireObj.progressive = cst_encode_bool(apiObj.progressive);
+    wireObj.region_decodable = cst_encode_bool(apiObj.regionDecodable);
   }
 
   @protected
@@ -2193,7 +2306,32 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wire_cst_thumbnail_target wireObj,
   ) {
     wireObj.width = cst_encode_u_32(apiObj.width);
-    wireObj.output_path = cst_encode_String(apiObj.outputPath);
+    wireObj.output_stem = cst_encode_String(apiObj.outputStem);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_tile_pixels(
+    TilePixels apiObj,
+    wire_cst_tile_pixels wireObj,
+  ) {
+    wireObj.x = cst_encode_u_32(apiObj.x);
+    wireObj.y = cst_encode_u_32(apiObj.y);
+    wireObj.width = cst_encode_u_32(apiObj.width);
+    wireObj.height = cst_encode_u_32(apiObj.height);
+    wireObj.pixel_width = cst_encode_u_32(apiObj.pixelWidth);
+    wireObj.pixel_height = cst_encode_u_32(apiObj.pixelHeight);
+    wireObj.rgba = cst_encode_list_prim_u_8_strict(apiObj.rgba);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_tile_rect(
+    TileRect apiObj,
+    wire_cst_tile_rect wireObj,
+  ) {
+    wireObj.x = cst_encode_u_32(apiObj.x);
+    wireObj.y = cst_encode_u_32(apiObj.y);
+    wireObj.width = cst_encode_u_32(apiObj.width);
+    wireObj.height = cst_encode_u_32(apiObj.height);
   }
 
   @protected
@@ -2279,6 +2417,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
+    JpegRegionDecoder raw,
+  );
+
+  @protected
+  int
   cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     PdfBuilder raw,
   );
@@ -2353,6 +2497,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int
   cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
     HttpServer raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
+    JpegRegionDecoder raw,
   );
 
   @protected
@@ -2444,6 +2594,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
+    JpegRegionDecoder raw,
+  );
+
+  @protected
+  int
   cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     PdfBuilder raw,
   );
@@ -2486,6 +2642,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int cst_encode_i_32(int raw);
+
+  @protected
+  int cst_encode_image_format(ImageFormat raw);
 
   @protected
   int cst_encode_u_16(int raw);
@@ -2577,6 +2736,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
+    JpegRegionDecoder self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     PdfBuilder self,
     SseSerializer serializer,
@@ -2663,6 +2829,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
   sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
     HttpServer self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
+    JpegRegionDecoder self,
     SseSerializer serializer,
   );
 
@@ -2768,6 +2941,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor(
     ImageCompressor self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
+    JpegRegionDecoder self,
     SseSerializer serializer,
   );
 
@@ -2962,7 +3142,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
 
   @protected
+  void sse_encode_image_format(ImageFormat self, SseSerializer serializer);
+
+  @protected
   void sse_encode_image_meta(ImageMeta self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_image_probe(ImageProbe self, SseSerializer serializer);
 
   @protected
   void sse_encode_ir_block(IrBlock self, SseSerializer serializer);
@@ -3088,6 +3274,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_tile_pixels(
+    List<TilePixels> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_tile_rect(List<TileRect> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_tokenize_result(
     List<TokenizeResult> self,
     SseSerializer serializer,
@@ -3167,6 +3362,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     ThumbnailTarget self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_tile_pixels(TilePixels self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_tile_rect(TileRect self, SseSerializer serializer);
 
   @protected
   void sse_encode_tokenize_result(
@@ -3673,6 +3874,32 @@ class RustLibWire implements BaseWire {
   late final _cst_new_list_thumbnail_target = _cst_new_list_thumbnail_targetPtr
       .asFunction<ffi.Pointer<wire_cst_list_thumbnail_target> Function(int)>();
 
+  ffi.Pointer<wire_cst_list_tile_pixels> cst_new_list_tile_pixels(int len) {
+    return _cst_new_list_tile_pixels(len);
+  }
+
+  late final _cst_new_list_tile_pixelsPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_tile_pixels> Function(ffi.Int32)
+        >
+      >('frbgen_moodiary_rust_cst_new_list_tile_pixels');
+  late final _cst_new_list_tile_pixels = _cst_new_list_tile_pixelsPtr
+      .asFunction<ffi.Pointer<wire_cst_list_tile_pixels> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_tile_rect> cst_new_list_tile_rect(int len) {
+    return _cst_new_list_tile_rect(len);
+  }
+
+  late final _cst_new_list_tile_rectPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_tile_rect> Function(ffi.Int32)
+        >
+      >('frbgen_moodiary_rust_cst_new_list_tile_rect');
+  late final _cst_new_list_tile_rect = _cst_new_list_tile_rectPtr
+      .asFunction<ffi.Pointer<wire_cst_list_tile_rect> Function(int)>();
+
   ffi.Pointer<wire_cst_list_tokenize_result> cst_new_list_tokenize_result(
     int len,
   ) {
@@ -3867,6 +4094,23 @@ class RustLibWire implements BaseWire {
       );
   late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor =
       _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressorPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoderPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+        'frbgen_moodiary_rust_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder',
+      );
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder =
+      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoderPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void
@@ -4105,6 +4349,23 @@ class RustLibWire implements BaseWire {
       );
   late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor =
       _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressorPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoderPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+        'frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder',
+      );
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoder =
+      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJpegRegionDecoderPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void
@@ -5138,43 +5399,154 @@ class RustLibWire implements BaseWire {
             )
           >();
 
-  void wire__crate__api__image__ImageCompressor_optimize_to_file(
+  void wire__crate__api__image__ImageCompressor_probe(
     int port_,
     ffi.Pointer<wire_cst_list_prim_u_8_strict> file_path,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> output_path,
-    ffi.Pointer<ffi.Uint8> quality,
   ) {
-    return _wire__crate__api__image__ImageCompressor_optimize_to_file(
-      port_,
-      file_path,
-      output_path,
-      quality,
-    );
+    return _wire__crate__api__image__ImageCompressor_probe(port_, file_path);
   }
 
-  late final _wire__crate__api__image__ImageCompressor_optimize_to_filePtr =
+  late final _wire__crate__api__image__ImageCompressor_probePtr =
       _lookup<
         ffi.NativeFunction<
           ffi.Void Function(
             ffi.Int64,
             ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Pointer<ffi.Uint8>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__image__ImageCompressor_probe');
+  late final _wire__crate__api__image__ImageCompressor_probe =
+      _wire__crate__api__image__ImageCompressor_probePtr
+          .asFunction<
+            void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
+          >();
+
+  void wire__crate__api__image__JpegRegionDecoder_decode_tile(
+    int port_,
+    int that,
+    int x,
+    int y,
+    int width,
+    int height,
+    int denom,
+  ) {
+    return _wire__crate__api__image__JpegRegionDecoder_decode_tile(
+      port_,
+      that,
+      x,
+      y,
+      width,
+      height,
+      denom,
+    );
+  }
+
+  late final _wire__crate__api__image__JpegRegionDecoder_decode_tilePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.UintPtr,
+            ffi.Uint32,
+            ffi.Uint32,
+            ffi.Uint32,
+            ffi.Uint32,
+            ffi.Uint8,
           )
         >
       >(
-        'frbgen_moodiary_rust_wire__crate__api__image__ImageCompressor_optimize_to_file',
+        'frbgen_moodiary_rust_wire__crate__api__image__JpegRegionDecoder_decode_tile',
       );
-  late final _wire__crate__api__image__ImageCompressor_optimize_to_file =
-      _wire__crate__api__image__ImageCompressor_optimize_to_filePtr
+  late final _wire__crate__api__image__JpegRegionDecoder_decode_tile =
+      _wire__crate__api__image__JpegRegionDecoder_decode_tilePtr
+          .asFunction<void Function(int, int, int, int, int, int, int)>();
+
+  void wire__crate__api__image__JpegRegionDecoder_decode_tiles(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_tile_rect> rects,
+    int denom,
+  ) {
+    return _wire__crate__api__image__JpegRegionDecoder_decode_tiles(
+      port_,
+      that,
+      rects,
+      denom,
+    );
+  }
+
+  late final _wire__crate__api__image__JpegRegionDecoder_decode_tilesPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_list_tile_rect>,
+            ffi.Uint8,
+          )
+        >
+      >(
+        'frbgen_moodiary_rust_wire__crate__api__image__JpegRegionDecoder_decode_tiles',
+      );
+  late final _wire__crate__api__image__JpegRegionDecoder_decode_tiles =
+      _wire__crate__api__image__JpegRegionDecoder_decode_tilesPtr
           .asFunction<
-            void Function(
-              int,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<ffi.Uint8>,
-            )
+            void Function(int, int, ffi.Pointer<wire_cst_list_tile_rect>, int)
           >();
+
+  void wire__crate__api__image__JpegRegionDecoder_open(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> file_path,
+  ) {
+    return _wire__crate__api__image__JpegRegionDecoder_open(port_, file_path);
+  }
+
+  late final _wire__crate__api__image__JpegRegionDecoder_openPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__image__JpegRegionDecoder_open');
+  late final _wire__crate__api__image__JpegRegionDecoder_open =
+      _wire__crate__api__image__JpegRegionDecoder_openPtr
+          .asFunction<
+            void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
+          >();
+
+  WireSyncRust2DartDco wire__crate__api__image__JpegRegionDecoder_probe(
+    int that,
+  ) {
+    return _wire__crate__api__image__JpegRegionDecoder_probe(that);
+  }
+
+  late final _wire__crate__api__image__JpegRegionDecoder_probePtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_moodiary_rust_wire__crate__api__image__JpegRegionDecoder_probe',
+      );
+  late final _wire__crate__api__image__JpegRegionDecoder_probe =
+      _wire__crate__api__image__JpegRegionDecoder_probePtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  void wire__crate__api__image__JpegRegionDecoder_random_access(
+    int port_,
+    int that,
+  ) {
+    return _wire__crate__api__image__JpegRegionDecoder_random_access(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire__crate__api__image__JpegRegionDecoder_random_accessPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+        'frbgen_moodiary_rust_wire__crate__api__image__JpegRegionDecoder_random_access',
+      );
+  late final _wire__crate__api__image__JpegRegionDecoder_random_access =
+      _wire__crate__api__image__JpegRegionDecoder_random_accessPtr
+          .asFunction<void Function(int, int)>();
 
   void wire__crate__api__js__js_eval(
     int port_,
@@ -6647,13 +7019,48 @@ final class wire_cst_image_meta extends ffi.Struct {
   @ffi.Uint32()
   external int height;
 
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> ext;
+
   static ffi.Pointer<wire_cst_image_meta> $allocate(
     ffi.Allocator $allocator, {
     required int width,
     required int height,
+    required ffi.Pointer<wire_cst_list_prim_u_8_strict> ext,
   }) => $allocator<wire_cst_image_meta>()
     ..ref.width = width
-    ..ref.height = height;
+    ..ref.height = height
+    ..ref.ext = ext;
+}
+
+final class wire_cst_image_probe extends ffi.Struct {
+  @ffi.Int32()
+  external int format;
+
+  @ffi.Uint32()
+  external int width;
+
+  @ffi.Uint32()
+  external int height;
+
+  @ffi.Bool()
+  external bool progressive;
+
+  @ffi.Bool()
+  external bool region_decodable;
+
+  static ffi.Pointer<wire_cst_image_probe> $allocate(
+    ffi.Allocator $allocator, {
+    required int format,
+    required int width,
+    required int height,
+    required bool progressive,
+    required bool region_decodable,
+  }) => $allocator<wire_cst_image_probe>()
+    ..ref.format = format
+    ..ref.width = width
+    ..ref.height = height
+    ..ref.progressive = progressive
+    ..ref.region_decodable = region_decodable;
 }
 
 final class wire_cst_ir_block extends ffi.Struct {
@@ -7129,6 +7536,36 @@ final class wire_cst_list_thumbnail_target extends ffi.Struct {
     ..ref.len = len;
 }
 
+final class wire_cst_list_tile_pixels extends ffi.Struct {
+  external ffi.Pointer<wire_cst_tile_pixels> ptr;
+
+  @ffi.Int32()
+  external int len;
+
+  static ffi.Pointer<wire_cst_list_tile_pixels> $allocate(
+    ffi.Allocator $allocator, {
+    required ffi.Pointer<wire_cst_tile_pixels> ptr,
+    required int len,
+  }) => $allocator<wire_cst_list_tile_pixels>()
+    ..ref.ptr = ptr
+    ..ref.len = len;
+}
+
+final class wire_cst_list_tile_rect extends ffi.Struct {
+  external ffi.Pointer<wire_cst_tile_rect> ptr;
+
+  @ffi.Int32()
+  external int len;
+
+  static ffi.Pointer<wire_cst_list_tile_rect> $allocate(
+    ffi.Allocator $allocator, {
+    required ffi.Pointer<wire_cst_tile_rect> ptr,
+    required int len,
+  }) => $allocator<wire_cst_list_tile_rect>()
+    ..ref.ptr = ptr
+    ..ref.len = len;
+}
+
 final class wire_cst_list_tokenize_result extends ffi.Struct {
   external ffi.Pointer<wire_cst_tokenize_result> ptr;
 
@@ -7343,15 +7780,81 @@ final class wire_cst_thumbnail_target extends ffi.Struct {
   @ffi.Uint32()
   external int width;
 
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> output_path;
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> output_stem;
 
   static ffi.Pointer<wire_cst_thumbnail_target> $allocate(
     ffi.Allocator $allocator, {
     required int width,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> output_path,
+    required ffi.Pointer<wire_cst_list_prim_u_8_strict> output_stem,
   }) => $allocator<wire_cst_thumbnail_target>()
     ..ref.width = width
-    ..ref.output_path = output_path;
+    ..ref.output_stem = output_stem;
+}
+
+final class wire_cst_tile_pixels extends ffi.Struct {
+  @ffi.Uint32()
+  external int x;
+
+  @ffi.Uint32()
+  external int y;
+
+  @ffi.Uint32()
+  external int width;
+
+  @ffi.Uint32()
+  external int height;
+
+  @ffi.Uint32()
+  external int pixel_width;
+
+  @ffi.Uint32()
+  external int pixel_height;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> rgba;
+
+  static ffi.Pointer<wire_cst_tile_pixels> $allocate(
+    ffi.Allocator $allocator, {
+    required int x,
+    required int y,
+    required int width,
+    required int height,
+    required int pixel_width,
+    required int pixel_height,
+    required ffi.Pointer<wire_cst_list_prim_u_8_strict> rgba,
+  }) => $allocator<wire_cst_tile_pixels>()
+    ..ref.x = x
+    ..ref.y = y
+    ..ref.width = width
+    ..ref.height = height
+    ..ref.pixel_width = pixel_width
+    ..ref.pixel_height = pixel_height
+    ..ref.rgba = rgba;
+}
+
+final class wire_cst_tile_rect extends ffi.Struct {
+  @ffi.Uint32()
+  external int x;
+
+  @ffi.Uint32()
+  external int y;
+
+  @ffi.Uint32()
+  external int width;
+
+  @ffi.Uint32()
+  external int height;
+
+  static ffi.Pointer<wire_cst_tile_rect> $allocate(
+    ffi.Allocator $allocator, {
+    required int x,
+    required int y,
+    required int width,
+    required int height,
+  }) => $allocator<wire_cst_tile_rect>()
+    ..ref.x = x
+    ..ref.y = y
+    ..ref.width = width
+    ..ref.height = height;
 }
 
 final class wire_cst_tokenize_result extends ffi.Struct {

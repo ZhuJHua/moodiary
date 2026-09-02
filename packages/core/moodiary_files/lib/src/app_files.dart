@@ -86,7 +86,7 @@ class AppFiles {
     }
   }
 
-  /// 图片派生物目录（缩略图档位、历史 HEIC 的展示原图）。放在 image 下的子目录：
+  /// 图片派生物目录（缩略图档位）。放在 image 下的子目录：
   /// [getDirFileName] 不递归，孤儿扫描 / 归档 / LAN 同步天然看不见它；删 image 目录
   /// 连带删。
   static String get imageThumbDir => join(_filePath, 'image', 'thumb');

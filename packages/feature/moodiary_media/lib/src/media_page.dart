@@ -522,7 +522,12 @@ class _VideoTile extends StatelessWidget {
     return GestureDetector(
       onTap: () => MediaVideoViewer.show(context, name: name),
       child: _Thumb(
-        image: MediaImage(AppFiles.getRealPath('thumbnail', name), tier: .s),
+        // 海报本身就是 1280 宽的 JPEG，不走档位：派生物目录只按 image 目录的名字对账，
+        // thumbnail- 前缀的档位会被孤儿扫描当 stale 删掉。夹到 512 解即可，键仍稳定。
+        image: MediaImage(
+          AppFiles.getRealPath('thumbnail', name),
+          decodeWidth: ImageTier.s.width,
+        ),
         // 缩略图底色不可预测：用固定 scrim 压暗，前景按「暗底」配对 onInverseSurface。
         overlay: Stack(
           fit: .expand,

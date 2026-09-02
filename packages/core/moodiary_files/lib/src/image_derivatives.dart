@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_rust/foundation.dart' as rust;
-import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path/path.dart';
 import 'package:pool/pool.dart';
 
@@ -32,14 +31,16 @@ enum ImageTier {
 
 /// 图片派生物：原图一个字节不动，展示端只碰派生物。
 ///
-/// 缩略图（[resolve] / [warm]）：原图现在是全分辨率原件，网格里直接解它是「图一多就卡」
-/// 的根子（一屏十几格，每格全量熵解码），也是内存炸点（12MP 一张 48MB 位图）。按
-/// [ImageTier] 由 Rust 一次解码链式缩出 WebP 落盘。
+/// 缩略图按 [ImageTier] 由 Rust 一次解码链式缩出，落 `image/thumb/<uuid>_<w>.jpg`；带 alpha
+/// 的源（贴纸类 PNG、透明 GIF）落 `.png` 保透明。后缀由内容定，展示端不探测：源是 `.jpg`
+/// 只认 `.jpg`，其余先查 `.jpg` 再查 `.png`。
 ///
-/// 历史 `.heic`（旧版本按源格式原样落盘）这里**不做**任何转码：Rust 解不了它，展示端
-/// 拿到的就是原路径、照旧破图，直到用户在「设置 → 数据 → 图片优化」里一次性转成 JPG
-/// （`ImageOptimizer`）。曾经做过「取用时偷偷转一份展示副本」，去掉了 —— 两套并存时
-/// 正文里的名字与磁盘上的格式各说各话，只留一条用户可见的路。
+/// **生成分快慢两条路**：JPEG 源走 turbojpeg 按 1/N 缩放解码，12MP 约 20ms、48MP 峰值约
+/// 2MB，可以并行、可以在展示端按需生成；其余格式走 image 全解（48MP 144MB），只由导入 /
+/// 同步拉图的预热与「图片优化」生成，永远不在滚动路径上。
+///
+/// 历史 `.heic` 这里**不做**任何转码：Rust 解不了它，展示端拿到的就是原路径，直到用户在
+/// 「设置 → 数据 → 图片优化」里一次性转成 JPG（`ImageOptimizer`）。
 ///
 /// 全部落在 `image/thumb/`（support 目录，不是 cache）：从全分辨率原件重算一次太贵，
 /// 不能让系统清缓存清掉。**不同步、不进备份**，谁拿到原图谁自己算；删图连带删
@@ -47,113 +48,142 @@ enum ImageTier {
 class ImageDerivatives {
   ImageDerivatives._();
 
-  static const _thumbQuality = 78;
+  static const _thumbQuality = 82;
 
-  /// 生成闸门 `Pool(1)`：原图是全分辨率原件，Rust `image` 的 JPEG 解码没有 DCT
-  /// 缩放，48MP 一张解出来 144MB —— 两张并行就够低端 Android 被杀。
-  static final _gate = Pool(1);
+  /// 派生物只可能是这两种后缀；别的（开发期的 `.webp`）一律算 stale。
+  static const _exts = ['.jpg', '.png'];
 
-  /// 在飞的生成任务，按产物路径去重：同一张图的网格格子与看图页会同时开口。
-  static final _inflight = <String, Future<String>>{};
+  /// JPEG 快路径：turbojpeg 缩放解码，峰值几 MB，可以并行。
+  static final _jpegGate = Pool((Platform.numberOfProcessors ~/ 2).clamp(1, 4));
 
-  /// 生成不出来（或不值得生成：源图不比档位宽）的产物路径。命中直接回退，不重试。
-  static final _unavailable = <String>{};
+  /// 其余格式全解：48MP 一张 144MB，两张并行就够低端 Android 被杀。
+  static final _heavyGate = Pool(1);
+
+  /// 在飞的生成，按源图路径去重。
+  static final _inflight = <String, Future<void>>{};
+
+  /// 生成过一次仍不存在的档位（源图不比档位宽，Rust 跳过不写）。命中直接给原图，
+  /// 不再进 Rust 读头。
+  static final _absent = <String>{};
 
   static String _base(String imagePath) => basenameWithoutExtension(imagePath);
 
-  /// 档位文件路径：`image/thumb/<uuid>_<width>.webp`。
-  static String tierPath(String imagePath, ImageTier tier) =>
-      join(AppFiles.imageThumbDir, '${_base(imagePath)}_${tier.width}.webp');
+  /// 档位文件不带后缀的路径：`image/thumb/<uuid>_<width>`。
+  static String tierStem(String imagePath, ImageTier tier) =>
+      join(AppFiles.imageThumbDir, '${_base(imagePath)}_${tier.width}');
 
-  /// 一张图的全部派生物文件名（相对 thumb 目录）。删图与孤儿扫描共用这一份清单。
-  static List<String> derivativeNamesOf(String imageName) {
-    final base = basenameWithoutExtension(imageName);
-    return [for (final tier in ImageTier.values) '${base}_${tier.width}.webp'];
+  /// 某档位可能存在的文件名（相对 thumb 目录），按优先级。源是 JPEG 的派生物只会是 `.jpg`。
+  static List<String> candidateNames(String imageName, ImageTier tier) {
+    final stem = '${basenameWithoutExtension(imageName)}_${tier.width}';
+    if (_isJpeg(imageName)) return ['$stem.jpg'];
+    return [for (final ext in _exts) '$stem$ext'];
   }
 
-  /// 某档位的可解码路径。档位文件在就直接给；源图不比档位宽给原图（它本来就小）；
-  /// 缺则就地生成 —— 从最近的更大档位缩，不碰原图；生成失败（含 HEIC）回退原路径。
+  static List<String> candidatePaths(String imagePath, ImageTier tier) => [
+    for (final name in candidateNames(imagePath, tier))
+      join(AppFiles.imageThumbDir, name),
+  ];
+
+  /// 一张图的全部派生物文件名（相对 thumb 目录），两种后缀都算。删图与孤儿扫描共用。
+  static List<String> derivativeNamesOf(String imageName) {
+    final base = basenameWithoutExtension(imageName);
+    return [
+      for (final tier in ImageTier.values)
+        for (final ext in _exts) '${base}_${tier.width}$ext',
+    ];
+  }
+
+  /// 某档位的可解码路径。要的档位在就给它；不在就往更大档找（m 顶 s 只多解几毫秒）；
+  /// 都没有时，JPEG 源就地生成（快路径），其余给原图由 [MediaImage] 按档位宽夹住解。
+  /// 这张图的预热若还在飞先等它 —— 刚导入的图正文立刻就要 m 档。
   static Future<String> resolve(
     String imagePath, {
     required ImageTier tier,
   }) async {
-    final src = imagePath;
-    if (_isHeif(src)) return src;
-    final out = tierPath(imagePath, tier);
-    if (_unavailable.contains(out)) return src;
-    if (await File(out).exists()) return out;
-    return _once(out, () async {
-      try {
-        final (srcWidth, _) = await ImageSizeManager().getSizeAsync(src);
-        if (srcWidth <= tier.width) {
-          _unavailable.add(out);
-          return src;
-        }
-        var from = src;
-        for (final larger in ImageTier.values.reversed) {
-          if (larger.width <= tier.width) break;
-          final candidate = tierPath(imagePath, larger);
-          if (await File(candidate).exists()) {
-            from = candidate;
-            break;
-          }
-        }
-        await _gate.withResource(
-          () => rust.ImageCompressor.makeThumbnails(
-            filePath: from,
-            targets: [rust.ThumbnailTarget(width: tier.width, outputPath: out)],
-            quality: _thumbQuality,
-          ),
-        );
-        if (await File(out).exists()) return out;
-      } catch (e) {
-        logger.d('thumbnail failed: $imagePath/${tier.name} ($e)');
-      }
-      _unavailable.add(out);
-      return src;
-    });
+    final warming = _inflight[imagePath];
+    if (warming != null) await warming;
+    final hit = await _find(imagePath, tier);
+    if (hit != null) return hit;
+    if (!_isJpeg(imagePath) || _absent.contains(tierStem(imagePath, tier))) {
+      return imagePath;
+    }
+    // 按需只生成要的这一档（网格只要 s：12MP 解 1/6 再编 512，二十来毫秒）；
+    // 其余档位随后在同一闸门里排队补齐，不挡这一格。
+    await _generate(imagePath, only: tier);
+    unawaited(warm(imagePath));
+    return await _find(imagePath, tier) ?? imagePath;
   }
 
-  /// 预热：把所有还缺的档位一次解码链式生成。导入完成、同步拉图完成后 fire-and-forget；
-  /// 没跑完就被杀也没关系，[resolve] 会按需补。
-  static Future<void> warm(String imagePath) async {
-    final key = '$imagePath#warm';
-    if (_inflight.containsKey(key)) return;
-    await _once(key, () async {
-      try {
-        final src = imagePath;
-        if (_isHeif(src)) return '';
-        final (srcWidth, _) = await ImageSizeManager().getSizeAsync(src);
+  static Future<String?> _find(String imagePath, ImageTier tier) async {
+    for (final candidate in ImageTier.values) {
+      if (candidate.width < tier.width) continue;
+      for (final path in candidatePaths(imagePath, candidate)) {
+        if (await File(path).exists()) return path;
+      }
+    }
+    return null;
+  }
+
+  /// 预热：把所有还缺的档位一次解码链式生成。同一张图在飞的复用；没跑完就被杀也
+  /// 没关系，展示端会退回原图或按需补。
+  static Future<void> warm(String imagePath) {
+    final running = _inflight[imagePath];
+    if (running != null) return running;
+    final future = _generate(imagePath);
+    _inflight[imagePath] = future;
+    unawaited(future.whenComplete(() => _inflight.remove(imagePath)));
+    return future;
+  }
+
+  /// 查档、生成全在闸门里：同步一次拉几千张时它们都挤在这里，不会几千个句柄同时
+  /// 打开（iOS 的软上限只有 256）。[only] 给了就只生成这一档。源图不比档位宽的档位
+  /// Rust 侧跳过不写，这里记进 [_absent]。
+  static Future<void> _generate(String src, {ImageTier? only}) async {
+    if (_isHeif(src)) return;
+    final gate = _isJpeg(src) ? _jpegGate : _heavyGate;
+    try {
+      await gate.withResource(() async {
         final targets = <rust.ThumbnailTarget>[];
         for (final tier in ImageTier.values) {
-          final out = tierPath(imagePath, tier);
-          if (srcWidth <= tier.width) {
-            _unavailable.add(out);
-            continue;
+          if (only != null && tier != only) continue;
+          final stem = tierStem(src, tier);
+          if (_absent.contains(stem)) continue;
+          var present = false;
+          for (final path in candidatePaths(src, tier)) {
+            if (await File(path).exists()) {
+              present = true;
+              break;
+            }
           }
-          if (_unavailable.contains(out) || await File(out).exists()) continue;
-          targets.add(rust.ThumbnailTarget(width: tier.width, outputPath: out));
+          if (present) continue;
+          targets.add(
+            rust.ThumbnailTarget(width: tier.width, outputStem: stem),
+          );
         }
-        if (targets.isEmpty) return '';
-        await _gate.withResource(
-          () => rust.ImageCompressor.makeThumbnails(
-            filePath: src,
-            targets: targets,
-            quality: _thumbQuality,
-          ),
+        if (targets.isEmpty) return;
+        final meta = await rust.ImageCompressor.makeThumbnails(
+          filePath: src,
+          targets: targets,
+          quality: _thumbQuality,
         );
-      } catch (e) {
-        logger.d('thumbnail warm failed: $imagePath ($e)');
-      }
-      return '';
-    });
+        for (final target in targets) {
+          if (!await File('${target.outputStem}.${meta.ext}').exists()) {
+            _absent.add(target.outputStem);
+          }
+        }
+      });
+    } catch (e) {
+      logger.d('thumbnail generate failed: $src ($e)');
+    }
   }
 
   /// 删图连带删派生物。
   static Future<void> deleteFor(String imageName) async {
+    for (final tier in ImageTier.values) {
+      _absent.remove(tierStem(imageName, tier));
+    }
     for (final name in derivativeNamesOf(imageName)) {
       final path = join(AppFiles.imageThumbDir, name);
-      _unavailable.remove(path);
       try {
         await File(path).delete();
       } on PathNotFoundException {
@@ -165,7 +195,8 @@ class ImageDerivatives {
   }
 
   /// thumb 目录里源图已不存在的派生物（绝对路径）。[imageNames] 为 image 目录现存
-  /// 文件名。派生物名里不带源图后缀，按去后缀的 uuid 对账。
+  /// 文件名。派生物名里不带源图后缀，按去后缀的 uuid 对账；写到一半的 `.part` 与
+  /// 不认识的后缀一律算。
   static Future<List<String>> stale(Iterable<String> imageNames) async {
     final dir = Directory(AppFiles.imageThumbDir);
     if (!await dir.exists()) return const [];
@@ -174,6 +205,10 @@ class ImageDerivatives {
     await for (final entity in dir.list()) {
       if (entity is! File) continue;
       final name = basename(entity.path);
+      if (!_exts.contains(extension(name).toLowerCase())) {
+        out.add(entity.path);
+        continue;
+      }
       final sep = name.lastIndexOf('_');
       if (sep <= 0) continue;
       if (!alive.contains(name.substring(0, sep))) out.add(entity.path);
@@ -181,17 +216,13 @@ class ImageDerivatives {
     return out;
   }
 
+  static bool _isJpeg(String path) {
+    final ext = extension(path).toLowerCase();
+    return ext == '.jpg' || ext == '.jpeg';
+  }
+
   static bool _isHeif(String path) {
     final ext = extension(path).toLowerCase();
     return ext == '.heic' || ext == '.heif';
-  }
-
-  static Future<String> _once(String key, Future<String> Function() build) {
-    final running = _inflight[key];
-    if (running != null) return running;
-    final future = build();
-    _inflight[key] = future;
-    unawaited(future.whenComplete(() => _inflight.remove(key)));
-    return future;
   }
 }

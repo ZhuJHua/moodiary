@@ -1,16 +1,20 @@
+import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
-import 'dart:ui' as ui;
+import 'dart:math' as math;
 
 import 'package:cached_network_image_ce/cached_network_image.dart';
 import 'package:dismissible_page/dismissible_page.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_logging/moodiary_logging.dart';
+import 'package:moodiary_rust/foundation.dart' as rust;
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 import 'package:path/path.dart' as p;
 import 'package:photo_view/photo_view.dart';
+
+import 'original_image_view.dart';
 
 /// 全屏图片浏览器：左右翻页、双指缩放、下拉手势关闭（背景与操作钮随手势渐隐）、
 /// Hero 飞入飞出（传 [heroPrefix] 启用，缩略图侧 tag 须为 `'$heroPrefix-<image>'`）。
@@ -69,6 +73,12 @@ class _MImageBrowserState extends State<MImageBrowser> {
   /// 让横向平移完全归 PhotoView（竖直平移由 scope 的 shouldMove 抢占解决）。
   bool _zoomed = false;
 
+  /// 走 tile 解码的页各自一个控制器（[OriginalImageView] 靠它算可见区域），按图路径复用。
+  final _controllers = <String, PhotoViewController>{};
+
+  /// 本地 JPEG 的转正后尺寸，探头一次记一次；null = 还没探 / 不是能走 tile 的图。
+  final _sizes = <String, Size?>{};
+
   static bool _isNetwork(String image) =>
       image.startsWith('http://') || image.startsWith('https://');
 
@@ -79,7 +89,31 @@ class _MImageBrowserState extends State<MImageBrowser> {
   @override
   void dispose() {
     _pageController.dispose();
+    for (final c in _controllers.values) {
+      c.dispose();
+    }
     super.dispose();
+  }
+
+  static bool _isJpeg(String image) {
+    final ext = p.extension(image).toLowerCase();
+    return ext == '.jpg' || ext == '.jpeg';
+  }
+
+  /// 本地 JPEG 只读头拿转正后尺寸；拿到就重建成 tile 页。progressive 之类不能区域
+  /// 解码的留在整图路径上。
+  Future<void> _probe(String image) async {
+    if (_sizes.containsKey(image)) return;
+    _sizes[image] = null;
+    try {
+      final probe = await rust.ImageCompressor.probe(filePath: image);
+      if (!mounted || !probe.regionDecodable) return;
+      setState(() {
+        _sizes[image] = Size(probe.width.toDouble(), probe.height.toDouble());
+      });
+    } catch (e) {
+      logger.d('probe failed: $image ($e)');
+    }
   }
 
   @override
@@ -142,13 +176,20 @@ class _MImageBrowserState extends State<MImageBrowser> {
               child: Row(
                 mainAxisAlignment: .spaceBetween,
                 children: [
-                  IconButton(
-                    tooltip: context.l10n.ui.imageBrowserInfo,
-                    icon: const Icon(LucideIcons.info, color: Colors.white),
-                    style: IconButton.styleFrom(
-                      backgroundColor: Colors.black38,
+                  // 长按：切换 tile 调试叠层（看图页原图层的加载过程）。不能再给
+                  // tooltip：它自己就靠长按触发，会把手势抢走。
+                  Semantics(
+                    button: true,
+                    label: context.l10n.ui.imageBrowserInfo,
+                    child: IconButton(
+                      icon: const Icon(LucideIcons.info, color: Colors.white),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.black38,
+                      ),
+                      onPressed: _showInfo,
+                      onLongPress: () => OriginalImageView.debugOverlay.value =
+                          !OriginalImageView.debugOverlay.value,
                     ),
-                    onPressed: _showInfo,
                   ),
                   IconButton(
                     tooltip: context.l10n.ui.imageBrowserSave,
@@ -202,32 +243,81 @@ class _MImageBrowserState extends State<MImageBrowser> {
   Widget _buildPage(int index, {required bool hero}) {
     final image = widget.images[index];
     final placeholder = _placeholderOf(image);
-    final page = PhotoView(
-      imageProvider: _providerOf(image),
-      backgroundDecoration: const BoxDecoration(color: Colors.transparent),
-      initialScale: PhotoViewComputedScale.contained,
-      minScale: PhotoViewComputedScale.contained,
-      maxScale: PhotoViewComputedScale.covered * 3,
-      scaleStateChangedCallback: (state) {
-        if (index != _current) return;
-        final zoomed = state != .initial;
-        if (zoomed != _zoomed) setState(() => _zoomed = zoomed);
-      },
-      onTapUp: (_, _, _) => Navigator.of(context).maybePop(),
-      loadingBuilder: (_, _) => placeholder != null
-          ? Image(
-              image: placeholder,
-              fit: .contain,
-              width: .infinity,
-              height: .infinity,
-            )
-          : const Center(child: CircularProgressIndicator(color: Colors.white)),
-      errorBuilder: (_, _, _) => const Center(
-        child: Icon(LucideIcons.imageOff, color: Colors.white54, size: 48),
-      ),
-    );
+    final local = !_isNetwork(image);
+    if (local && _isJpeg(image) && !_sizes.containsKey(image)) {
+      unawaited(_probe(image));
+    }
+    final size = _sizes[image];
+    final Widget page;
+    if (size != null) {
+      // 能区域解码的 JPEG：child 尺寸 = 源像素，三层叠加，原图从不整解。
+      final controller = _controllers.putIfAbsent(
+        image,
+        PhotoViewController.new,
+      );
+      page = LayoutBuilder(
+        builder: (context, constraints) {
+          // 上限跟分辨率走，不跟屏幕比例走：铺满屏再放 3 倍，或者放到每个源像素占 2 个物理
+          // 像素（1:1 再放一倍，系统相册的口径），取大者。24000² 的图只按 covered×3 只能
+          // 看到原图四成的清晰度。
+          final dpr = MediaQuery.devicePixelRatioOf(context);
+          final covered = math.max(
+            constraints.maxWidth / size.width,
+            constraints.maxHeight / size.height,
+          );
+          return PhotoView.customChild(
+            childSize: size,
+            controller: controller,
+            backgroundDecoration: const BoxDecoration(
+              color: Colors.transparent,
+            ),
+            initialScale: PhotoViewComputedScale.contained,
+            minScale: PhotoViewComputedScale.contained,
+            maxScale: math.max(covered * 3, 2 / dpr),
+            scaleStateChangedCallback: (state) => _onScaleState(index, state),
+            onTapUp: (_, _, _) => Navigator.of(context).maybePop(),
+            child: OriginalImageView(
+              path: image,
+              imageSize: size,
+              controller: controller,
+              viewportSize: constraints.biggest,
+              overview: placeholder ?? MediaImage(image, tier: .m),
+            ),
+          );
+        },
+      );
+    } else {
+      page = PhotoView(
+        imageProvider: _providerOf(image),
+        backgroundDecoration: const BoxDecoration(color: Colors.transparent),
+        initialScale: PhotoViewComputedScale.contained,
+        minScale: PhotoViewComputedScale.contained,
+        maxScale: PhotoViewComputedScale.covered * 3,
+        scaleStateChangedCallback: (state) => _onScaleState(index, state),
+        onTapUp: (_, _, _) => Navigator.of(context).maybePop(),
+        loadingBuilder: (_, _) => placeholder != null
+            ? Image(
+                image: placeholder,
+                fit: .contain,
+                width: .infinity,
+                height: .infinity,
+              )
+            : const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              ),
+        errorBuilder: (_, _, _) => const Center(
+          child: Icon(LucideIcons.imageOff, color: Colors.white54, size: 48),
+        ),
+      );
+    }
     if (!hero) return page;
     return Hero(tag: '${widget.heroPrefix}-$image', child: page);
+  }
+
+  void _onScaleState(int index, PhotoViewScaleState state) {
+    if (index != _current) return;
+    final zoomed = state != .initial;
+    if (zoomed != _zoomed) setState(() => _zoomed = zoomed);
   }
 
   ImageProvider? _placeholderOf(String image) {
@@ -315,23 +405,17 @@ class _MImageBrowserState extends State<MImageBrowser> {
     final file = File(image);
     int? length;
     DateTime? modified;
-    Uint8List? bytes;
     try {
       length = await file.length();
       modified = await file.lastModified();
-      bytes = await file.readAsBytes();
     } catch (_) {}
 
+    // 只读头：转正后的宽高，不把原图整解一遍。
     String? resolution;
-    if (bytes != null) {
-      try {
-        final buffer = await ui.ImmutableBuffer.fromUint8List(bytes);
-        final descriptor = await ui.ImageDescriptor.encoded(buffer);
-        resolution = '${descriptor.width} × ${descriptor.height}';
-        descriptor.dispose();
-        buffer.dispose();
-      } catch (_) {}
-    }
+    try {
+      final probe = await rust.ImageCompressor.probe(filePath: image);
+      resolution = '${probe.width} × ${probe.height}';
+    } catch (_) {}
 
     final unit = length == null ? null : AppFiles.bytesToUnits(length);
     final ext = p.extension(image).replaceFirst('.', '').toUpperCase();

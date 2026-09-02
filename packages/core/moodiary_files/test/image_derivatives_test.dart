@@ -20,10 +20,12 @@ void main() {
   group('ImageDerivatives.derivativeNamesOf', () {
     const uuid = '0192a3b4-c5d6-7e8f-9a0b-c1d2e3f4a5b6';
 
-    test('两档缩略图，名字不带源图后缀', () {
+    test('两档 × 两种后缀，名字不带源图后缀', () {
       expect(ImageDerivatives.derivativeNamesOf('image-$uuid.jpg'), [
-        'image-${uuid}_512.webp',
-        'image-${uuid}_1280.webp',
+        'image-${uuid}_512.jpg',
+        'image-${uuid}_512.png',
+        'image-${uuid}_1280.jpg',
+        'image-${uuid}_1280.png',
       ]);
     });
 
@@ -32,6 +34,20 @@ void main() {
         ImageDerivatives.derivativeNamesOf('image-$uuid.heic'),
         ImageDerivatives.derivativeNamesOf('image-$uuid.webp'),
       );
+    });
+  });
+
+  group('ImageDerivatives.candidateNames', () {
+    const uuid = '0192a3b4-c5d6-7e8f-9a0b-c1d2e3f4a5b6';
+
+    test('JPEG 源只认 .jpg；其余先 .jpg 再 .png', () {
+      expect(ImageDerivatives.candidateNames('image-$uuid.jpg', .s), [
+        'image-${uuid}_512.jpg',
+      ]);
+      expect(ImageDerivatives.candidateNames('image-$uuid.png', .m), [
+        'image-${uuid}_1280.jpg',
+        'image-${uuid}_1280.png',
+      ]);
     });
   });
 }

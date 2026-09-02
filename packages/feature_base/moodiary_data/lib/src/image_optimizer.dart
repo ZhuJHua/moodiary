@@ -14,24 +14,39 @@ import 'diary_repository.dart';
 ///    **真实的用户编辑**（要 bump lastModified）：新名字得经同步推到其它设备，它们
 ///    拉到 jpg 后旧 heic 在那边成孤儿，由各自的「清理无用文件」回收。
 /// 2. **补齐缩略图**：全部被引用的图片过一遍 [ImageDerivatives.warm]，已有的档位
-///    直接跳过，所以反复执行是幂等的。
+///    直接跳过，所以反复执行是幂等的。展示端只查不生成，存量图片在这一步之前一直
+///    按原图解，所以这是老用户升级后该跑一次的入口。
 ///
 /// 转不动的 HEIC（文件损坏）原样留着不改正文，计入 [ImageOptimizeReport.heicFailed]。
 class ImageOptimizer {
   ImageOptimizer._();
 
+  static const _heifSuffixes = ['.heic', '.heif'];
+
   static Future<ImageOptimizeReport> run({
     void Function(int done, int total)? onProgress,
   }) async {
     final repo = DiaryRepository.get();
+    // 只装引用了 HEIC 的那几篇，不把全库正文物化。总数在开跑前就齐：转码数 + 被引用
+    // 图片数（改名不改数）。
+    final heicDiaries = await repo.getDiariesReferencingMedia(
+      kind: .image,
+      suffixes: _heifSuffixes,
+    );
+    final heicTotal = heicDiaries.fold(
+      0,
+      (n, d) => n + d.imageName.where(_isHeif).length,
+    );
+    final total =
+        heicTotal + (await repo.collectReferencedMedia()).images.length;
+    var done = 0;
+    onProgress?.call(done, total);
+
     var converted = 0;
     var failed = 0;
-
-    for (final diary in await repo.getAllDiaries()) {
-      final heics = diary.imageName.where(_isHeif).toList();
-      if (heics.isEmpty) continue;
+    for (final diary in heicDiaries) {
       final renamed = <String, String>{};
-      for (final old in heics) {
+      for (final old in diary.imageName.where(_isHeif)) {
         final next = '${old.substring(0, old.lastIndexOf('.'))}.jpg';
         if (await _convert(old, next)) {
           renamed[old] = next;
@@ -39,6 +54,7 @@ class ImageOptimizer {
         } else {
           failed++;
         }
+        onProgress?.call(++done, total);
       }
       if (renamed.isEmpty) continue;
       var content = diary.content;
@@ -51,10 +67,8 @@ class ImageOptimizer {
       }
     }
 
-    final images = (await repo.collectReferencedMedia()).images.toList();
-    final total = images.length;
-    var done = 0;
-    onProgress?.call(done, total);
+    // 转码后重收一次：名字已经是 .jpg 了。
+    final images = (await repo.collectReferencedMedia()).images;
     for (final name in images) {
       final path = AppFiles.getRealPath('image', name);
       if (await File(path).exists()) await ImageDerivatives.warm(path);
@@ -62,7 +76,7 @@ class ImageOptimizer {
     }
 
     return ImageOptimizeReport(
-      images: total,
+      images: images.length,
       heicConverted: converted,
       heicFailed: failed,
     );
@@ -97,7 +111,7 @@ class ImageOptimizer {
 
   static bool _isHeif(String name) {
     final lower = name.toLowerCase();
-    return lower.endsWith('.heic') || lower.endsWith('.heif');
+    return _heifSuffixes.any(lower.endsWith);
   }
 }
 

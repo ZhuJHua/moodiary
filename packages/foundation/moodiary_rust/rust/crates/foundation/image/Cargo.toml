@@ -6,5 +6,7 @@ edition = "2024"
 [dependencies]
 anyhow = { workspace = true }
 image = { workspace = true }
-webp = { workspace = true }
+turbojpeg-sys = { workspace = true }
+memmap2 = { workspace = true }
+memchr = { workspace = true }
 fast_image_resize = { workspace = true }

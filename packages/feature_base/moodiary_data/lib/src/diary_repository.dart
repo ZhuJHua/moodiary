@@ -626,6 +626,29 @@ class DiaryRepository {
     return _assemble(await _db.select(_db.diaries).get());
   }
 
+  /// 引用了以 [suffixes]（小写，含点）结尾的 [kind] 媒体的日记，含回收站。走
+  /// diary_media 的 file_name 索引只装命中的几篇，不像 [getAllDiaries] 把全库正文物化；
+  /// 「图片优化」找历史 HEIC 用。
+  Future<List<Diary>> getDiariesReferencingMedia({
+    required MediaType kind,
+    required List<String> suffixes,
+  }) async {
+    if (suffixes.isEmpty) return const [];
+    final m = _db.diaryMedia;
+    var match = m.fileName.lower().like('%${suffixes.first}');
+    for (final suffix in suffixes.skip(1)) {
+      match = match | m.fileName.lower().like('%$suffix');
+    }
+    final ids = _db.selectOnly(m, distinct: true)
+      ..addColumns([m.diaryId])
+      ..where(m.kind.equals(kind.value) & match);
+    final hit = [for (final r in await ids.get()) r.read(m.diaryId)!];
+    if (hit.isEmpty) return const [];
+    return _assemble(
+      await (_db.select(_db.diaries)..where((d) => d.id.isIn(hit))).get(),
+    );
+  }
+
   /// 旧编辑器格式（一切非 tiptap，含回收站）的日记——强制迁移的工作集。
   /// 用非等值而不是枚举等值：异常 type 值渲染时按 richText 兜底，迁移也必须带上。
   Future<List<Diary>> getLegacyFormatDiaries() async {

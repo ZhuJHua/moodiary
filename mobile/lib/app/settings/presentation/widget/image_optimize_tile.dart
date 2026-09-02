@@ -92,8 +92,7 @@ class _ImageOptimizeTileState extends State<ImageOptimizeTile> {
     );
   }
 
-  /// 转码那一步没有可靠的总数（每篇几张要先扫才知道），进度条只在补缩略图阶段有值，
-  /// 之前显示不定长。
+  /// 总数 = 待转码的 HEIC + 被引用的图片，开跑前就知道；total 为 0 时显示不定长。
   void _showProgress(ValueNotifier<(int, int)> progress) {
     unawaited(
       showDialog<void>(
