@@ -140,7 +140,12 @@ extension _TileDebugPainting on _TilePainter {
   }) {
     final key = '${color.toARGB32()}|$text';
     final painter = _labels.putIfAbsent(key, () {
-      if (_labels.length > 512) _labels.clear();
+      if (_labels.length > 512) {
+        for (final p in _labels.values) {
+          p.dispose();
+        }
+        _labels.clear();
+      }
       return TextPainter(
         text: TextSpan(
           text: text,

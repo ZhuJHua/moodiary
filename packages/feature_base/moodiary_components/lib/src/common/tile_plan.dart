@@ -22,7 +22,9 @@ class TilePlanner {
     required this.imageSize,
     this.tileSize = 512,
     this.cacheExtentScreens = 1.0,
-    this.maxVisibleTiles = 64,
+    // 密度带下沿（每源像素 0.575 物理像素）一块 tile 只有 295 物理像素，1440×3200 的竖屏
+    // 平移到不对齐时可见 6×12 = 72 块；上限比它高，不然平移一下就升档、整屏变糊。
+    this.maxVisibleTiles = 96,
   });
 
   /// [visible] 视口在源像素坐标里的矩形；[physicalScale] 每个源像素占多少物理像素。

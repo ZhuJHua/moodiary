@@ -41,9 +41,10 @@ void main() {
   group('ImageDerivatives.candidateNames', () {
     const uuid = '0192a3b4-c5d6-7e8f-9a0b-c1d2e3f4a5b6';
 
-    test('JPEG 源只认 .jpg；其余先 .jpg 再 .png', () {
+    test('后缀由内容定，源是什么后缀都先 .jpg 再 .png', () {
       expect(ImageDerivatives.candidateNames('image-$uuid.jpg', .s), [
         'image-${uuid}_512.jpg',
+        'image-${uuid}_512.png',
       ]);
       expect(ImageDerivatives.candidateNames('image-$uuid.png', .m), [
         'image-${uuid}_1280.jpg',

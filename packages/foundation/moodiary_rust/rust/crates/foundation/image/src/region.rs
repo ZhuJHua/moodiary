@@ -52,11 +52,11 @@ pub struct Rect {
 
 impl Rect {
     fn right(&self) -> u32 {
-        self.x + self.w
+        self.x.saturating_add(self.w)
     }
 
     fn bottom(&self) -> u32 {
-        self.y + self.h
+        self.y.saturating_add(self.h)
     }
 
     fn contains(&self, other: &Rect) -> bool {
@@ -263,10 +263,11 @@ impl RegionDecoder {
     pub fn decode_tiles(&self, rects: &[Rect], denom: u8) -> Result<Vec<TilePixels>> {
         let denom = denom.clamp(1, 8);
         let (scaled_w, scaled_h) = self.scaled_size(denom);
-        let wants = rects
+        // 落在图外的矩形跳过而不是整批报错：上层按覆盖矩形对号，少一块无妨。
+        let wants: Vec<Rect> = rects
             .iter()
-            .map(|r| self.want_for(*r, denom))
-            .collect::<Result<Vec<_>>>()?;
+            .filter_map(|r| self.want_for(*r, denom).ok())
+            .collect();
         if let Some(union) = wants.iter().copied().reduce(union_rect) {
             self.ensure_band(union, denom, scaled_w, scaled_h)?;
         }
@@ -368,11 +369,16 @@ impl RegionDecoder {
     }
 }
 
-/// 超预算时从最老的开始淘汰，整图带不动。
+/// 超预算时从最老的开始淘汰。只钉最粗那一档的整图带（fit 比例那条，缩回去要用）：
+/// 每档都钉的话一张 12MP 的图 1/1 + 1/2 + 1/4 + 1/8 四条整图带 64MB 永远不放。
 fn trim_bands(bands: &mut Vec<Band>) {
+    let pinned = bands.iter().filter(|b| b.whole).map(|b| b.denom).max();
     let mut total: usize = bands.iter().map(Band::bytes).sum();
     while total > BAND_BUDGET_BYTES {
-        let Some(i) = bands.iter().position(|b| !b.whole) else {
+        let Some(i) = bands
+            .iter()
+            .position(|b| !(b.whole && Some(b.denom) == pinned))
+        else {
             break;
         };
         total -= bands.remove(i).bytes();

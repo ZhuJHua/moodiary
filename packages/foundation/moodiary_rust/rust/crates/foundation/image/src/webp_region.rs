@@ -16,6 +16,9 @@ use crate::{ImageFormat, image_header};
 /// 无损 WebP 解码时整幅 ARGB 都在内存里（4 字节 / 像素），16MP 就是 64MB。
 const LOSSLESS_MAX_PIXELS: u64 = 16 * 1024 * 1024;
 
+/// 有损 WebP 没有随机访问，每条带都是整幅 VP8 熵解析；64MP 一趟已是秒级，再大交给引擎封顶。
+const LOSSY_MAX_PIXELS: u64 = 64 * 1024 * 1024;
+
 pub struct WebPRegion {
     bytes: Mmap,
     width: u32,
@@ -45,21 +48,27 @@ fn features(bytes: &[u8]) -> Result<Features> {
     })
 }
 
-/// 头一眼能判定的：非动图、且（有损 或 无损但不超上限）。
+fn accepts(f: &Features) -> bool {
+    let pixels = f.width as u64 * f.height as u64;
+    !f.animated
+        && pixels
+            <= if f.lossless {
+                LOSSLESS_MAX_PIXELS
+            } else {
+                LOSSY_MAX_PIXELS
+            }
+}
+
+/// 头一眼能判定的：非动图、像素数在该编码的上限内。
 pub fn region_decodable(bytes: &[u8]) -> bool {
-    features(bytes).is_ok_and(|f| {
-        !f.animated && (!f.lossless || f.width as u64 * f.height as u64 <= LOSSLESS_MAX_PIXELS)
-    })
+    features(bytes).is_ok_and(|f| accepts(&f))
 }
 
 impl WebPRegion {
     pub fn open(bytes: Mmap) -> Result<Self> {
         let f = features(&bytes)?;
-        if f.animated {
-            bail!("animated WebP is not region-decodable");
-        }
-        if f.lossless && f.width as u64 * f.height as u64 > LOSSLESS_MAX_PIXELS {
-            bail!("lossless WebP too large for region decoding");
+        if !accepts(&f) {
+            bail!("WebP is not region-decodable (animated or too large)");
         }
         let (_, _, orientation) = image_header(&bytes)?;
         Ok(Self {

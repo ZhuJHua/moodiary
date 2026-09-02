@@ -19,13 +19,15 @@ pub struct JpegHeader {
     pub lossless: bool,
     pub arithmetic: bool,
     pub precision: u32,
+    /// CMYK / YCCK：turbojpeg 不给 RGB 输出，交给引擎整解。
+    pub cmyk: bool,
 }
 
 impl JpegHeader {
-    /// 能走缩放 / 区域解码：8 位 Huffman 有损 JPEG。progressive 要整幅系数缓冲，
-    /// 无损不能缩放，算术编码没有 SIMD 路径，都不算。
+    /// 能走缩放 / 区域解码：8 位 Huffman 有损 YCbCr / 灰度 JPEG。progressive 要整幅系数缓冲，
+    /// 无损不能缩放，算术编码没有 SIMD 路径，CMYK 转不了 RGB，都不算。
     pub fn region_decodable(&self) -> bool {
-        self.precision == 8 && !self.progressive && !self.lossless && !self.arithmetic
+        self.precision == 8 && !self.progressive && !self.lossless && !self.arithmetic && !self.cmyk
     }
 }
 
@@ -85,6 +87,10 @@ impl Handle {
             lossless: self.get(tj::TJPARAM_TJPARAM_LOSSLESS) != 0,
             arithmetic: self.get(tj::TJPARAM_TJPARAM_ARITHMETIC) != 0,
             precision: self.get(tj::TJPARAM_TJPARAM_PRECISION) as u32,
+            cmyk: matches!(
+                self.get(tj::TJPARAM_TJPARAM_COLORSPACE),
+                x if x == tj::TJCS_TJCS_CMYK as c_int || x == tj::TJCS_TJCS_YCCK as c_int
+            ),
         })
     }
 

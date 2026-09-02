@@ -180,6 +180,13 @@ pub fn to_baseline_file(file_path: &str, output_path: &str) -> Result<()> {
     if header.width as u64 * header.height as u64 > BASELINE_MAX_PIXELS {
         bail!("JPEG too large to transcode to baseline");
     }
+    // 转出来的必须能区域解：12 位 / 算术 / 无损的转了也白转；已是 baseline 的没必要转。
+    if !header.progressive {
+        bail!("JPEG is already baseline");
+    }
+    if header.precision != 8 || header.arithmetic || header.lossless || header.cmyk {
+        bail!("JPEG cannot be transcoded into a region-decodable baseline");
+    }
     let encoded = turbo::to_baseline(&bytes, 1)?;
     drop(bytes);
     let out = std::path::Path::new(output_path);
@@ -188,7 +195,7 @@ pub fn to_baseline_file(file_path: &str, output_path: &str) -> Result<()> {
     {
         fs::create_dir_all(parent)?;
     }
-    let part = format!("{output_path}.part");
+    let part = part_path(output_path);
     fs::write(&part, &encoded)?;
     fs::rename(&part, out)?;
     Ok(())
@@ -217,18 +224,20 @@ pub fn make_thumbnails(
     let (src_width, src_height) = header.upright();
     let swaps = swaps_axes(header.orientation);
 
-    let mut order: Vec<&ThumbnailTarget> = targets
+    // 每档的目标尺寸（转正后坐标）；源图已经不比档位大的档位跳过不写。
+    let mut order: Vec<(&ThumbnailTarget, (u32, u32))> = targets
         .iter()
-        .filter(|t| t.width > 0 && t.width < src_width)
+        .filter(|t| t.width > 0)
+        .filter_map(|t| tier_target(src_width, src_height, t.width).map(|dims| (t, dims)))
         .collect();
-    order.sort_by_key(|t| std::cmp::Reverse(t.width));
+    order.sort_by_key(|(t, _)| std::cmp::Reverse(t.width));
 
     let mut meta = ImageMeta {
         width: src_width,
         height: src_height,
         ext: "jpg".into(),
     };
-    let Some(largest) = order.first().map(|t| t.width) else {
+    let Some(largest) = order.first().map(|(_, (w, _))| *w) else {
         return Ok(meta);
     };
 
@@ -265,14 +274,14 @@ pub fn make_thumbnails(
     let chroma_444 = header.format == ImageFormat::Png;
     let mut resizer = Resizer::new();
 
-    for target in order {
+    for (target, (up_width, up_height)) in order {
         // 目标尺寸按源图比例算，不按上一级：N/8 缩放的向上取整会把中间级的比例带偏一像素。
-        let (raw_width, raw_height) = if swaps {
-            (src_height, src_width)
+        // 缓冲仍是原始朝向，转正后的宽高换回去。
+        let (dst_width, dst_height) = if swaps {
+            (up_height, up_width)
         } else {
-            (src_width, src_height)
+            (up_width, up_height)
         };
-        let (dst_width, dst_height) = raw_target(raw_width, raw_height, swaps, target.width);
 
         let pixel_type = current
             .pixel_type()
@@ -317,12 +326,41 @@ pub fn make_thumbnails(
         {
             fs::create_dir_all(parent)?;
         }
-        let part = format!("{out_path}.part");
+        let part = part_path(&out_path);
         fs::write(&part, &encoded)?;
         fs::rename(&part, out)?;
     }
     Ok(meta)
 }
+
+/// 临时文件名带进程号与序号：同一档位两路并发生成时各写各的，rename 是原子的，谁后到谁赢，
+/// 不会出现一方 rename 另一方的半成品。
+fn part_path(out_path: &str) -> String {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static SEQ: AtomicU64 = AtomicU64::new(0);
+    format!(
+        "{out_path}.{}-{}.part",
+        std::process::id(),
+        SEQ.fetch_add(1, Ordering::Relaxed)
+    )
+}
+
+/// 档位 `width` 在**转正后**的图上的目标尺寸：按宽缩，但高不超过宽的 [`TIER_MAX_ASPECT`] 倍
+/// （长截图 1000×30000 的 512 档不能是 512×15360、一张 31MB 的位图），且永不放大；
+/// 源图两个方向都已不比目标大就返回 None（不写这一档）。
+fn tier_target(src_width: u32, src_height: u32, width: u32) -> Option<(u32, u32)> {
+    let scale = (width as f64 / src_width as f64)
+        .min(width as f64 * TIER_MAX_ASPECT / src_height as f64)
+        .min(1.0);
+    if scale >= 1.0 {
+        return None;
+    }
+    let round = |v: u32| ((v as f64 * scale).round() as u32).max(1);
+    Some((round(src_width), round(src_height)))
+}
+
+/// 派生物的高最多是档位宽的几倍。
+const TIER_MAX_ASPECT: f64 = 3.0;
 
 /// 最小的 N/8 使转正后的宽仍 ≥ `needed`。`src_width > needed` 由调用方保证。
 fn scale_numerator(src_width: u32, needed: u32) -> u8 {
@@ -395,17 +433,6 @@ fn swaps_axes(orientation: Orientation) -> bool {
             | Orientation::Rotate90FlipH
             | Orientation::Rotate270FlipH
     )
-}
-
-/// 档位宽 `width` 定义在**转正后**的图上；换算成当前（原始朝向）缓冲的目标尺寸。
-fn raw_target(cur_width: u32, cur_height: u32, swaps: bool, width: u32) -> (u32, u32) {
-    let scaled =
-        |n: u32, d: u32| ((n as f64) * (width as f64) / (d as f64)).round().max(1.0) as u32;
-    if swaps {
-        (scaled(cur_width, cur_height), width)
-    } else {
-        (width, scaled(cur_height, cur_width))
-    }
 }
 
 /// 导出用：整图转正、按 [`CompressSpec`] 定尺寸、编成 JPEG / PNG 落盘。
@@ -543,7 +570,7 @@ mod tests {
 
     use super::{
         CompressFormat, CompressSpec, ImageFormat, ThumbnailTarget, contain_to_file,
-        make_thumbnails, probe, raw_target, scale_numerator,
+        make_thumbnails, probe, scale_numerator, tier_target,
     };
 
     /// 一段最小 TIFF：Orientation(0x0112) = 6，即 Rotate90（顺时针）。
@@ -630,10 +657,16 @@ mod tests {
     }
 
     #[test]
-    fn raw_target_maps_upright_width_back() {
-        assert_eq!(raw_target(2000, 1500, false, 512), (512, 384));
-        // 交换轴：转正后宽 = 原始高；512 落到原始的高上。
-        assert_eq!(raw_target(2000, 1500, true, 512), (683, 512));
+    fn tier_target_caps_width_then_height_and_never_upscales() {
+        assert_eq!(tier_target(2000, 1500, 512), Some((512, 384)));
+        assert_eq!(tier_target(1500, 2000, 512), Some((512, 683)));
+        // 长截图：高封顶在 3 × 档位宽，宽跟着缩。
+        assert_eq!(tier_target(1000, 30000, 512), Some((51, 1536)));
+        // 比档位窄但很高：仍然值得出一档（位图小一个量级）。
+        assert_eq!(tier_target(512, 20000, 512), Some((39, 1536)));
+        // 两个方向都不比档位大：不写。
+        assert_eq!(tier_target(512, 400, 512), None);
+        assert_eq!(tier_target(300, 1536, 512), None);
     }
 
     #[test]
@@ -681,7 +714,13 @@ mod tests {
             !dir.join("t_4096.jpg").exists(),
             "不放大：比源图宽的档位不该写文件"
         );
-        assert!(!dir.join("t_512.jpg.part").exists());
+        assert!(
+            std::fs::read_dir(&dir).unwrap().all(|e| !e
+                .unwrap()
+                .file_name()
+                .to_string_lossy()
+                .ends_with(".part"))
+        );
 
         let _ = std::fs::remove_dir_all(&dir);
     }

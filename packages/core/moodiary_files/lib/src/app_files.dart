@@ -89,6 +89,9 @@ class AppFiles {
   /// 图片派生物目录（缩略图档位）。放在 image 下的子目录：
   /// [getDirFileName] 不递归，孤儿扫描 / 归档 / LAN 同步天然看不见它；删 image 目录
   /// 连带删。
+  /// 原件目录。派生物只给这里的文件算（视频封面、缓存里的临时图都不算）。
+  static String get imageDir => join(_filePath, 'image');
+
   static String get imageThumbDir => join(_filePath, 'image', 'thumb');
 
   /// 删一张图：原件 + 全部派生物。业务侧删图一律走这里，别直接 [deleteFile]。

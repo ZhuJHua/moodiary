@@ -32,8 +32,10 @@ enum ImageTier {
 /// 图片派生物：原图一个字节不动，展示端只碰派生物。
 ///
 /// 缩略图按 [ImageTier] 由 Rust 一次解码链式缩出，落 `image/thumb/<uuid>_<w>.jpg`；带 alpha
-/// 的源（贴纸类 PNG、透明 GIF）落 `.png` 保透明。后缀由内容定，展示端不探测：源是 `.jpg`
-/// 只认 `.jpg`，其余先查 `.jpg` 再查 `.png`。
+/// 的源（贴纸类 PNG、透明 GIF）落 `.png` 保透明。后缀由**内容**定（后缀名可能撒谎：改名的
+/// PNG、历史上按扩展名猜的格式），展示端两种都查。快慢路也按内容分：读三个魔数字节判
+/// JPEG，不看扩展名。只给 [AppFiles.imageDir] 里的原件算派生物：视频封面之类走这里只会被
+/// 孤儿扫描当野文件删掉，永远重算。
 ///
 /// **生成分快慢两条路**：JPEG 源走 turbojpeg 按 1/N 缩放解码，12MP 约 20ms、48MP 峰值约
 /// 2MB，可以并行、可以在展示端按需生成；其余格式走 image 全解（48MP 144MB），只由导入 /
@@ -57,11 +59,20 @@ class ImageDerivatives {
   /// 整解就是全分辨率，用不着 tile。
   static const baselineMinPixels = 4096 * 4096;
 
-  /// JPEG 快路径：turbojpeg 缩放解码，峰值几 MB，可以并行。
-  static final _jpegGate = Pool((Platform.numberOfProcessors ~/ 2).clamp(1, 4));
+  /// 展示端按需生成（JPEG 快路径）：turbojpeg 缩放解码，峰值几 MB，可以并行。与后台预热
+  /// 分开排队，同步刚拉下几千张时，正在看的那一格不用排在它们后面。
+  static final _onDemandGate = Pool(
+    (Platform.numberOfProcessors ~/ 2).clamp(1, 4),
+  );
+
+  /// 后台预热的 JPEG 快路径。
+  static final _warmGate = Pool(2);
 
   /// 其余格式全解：48MP 一张 144MB，两张并行就够低端 Android 被杀。
   static final _heavyGate = Pool(1);
+
+  /// progressive → baseline 转码：整幅系数缓冲，一次一个；看图页等它，不和预热挤。
+  static final _transcodeGate = Pool(1);
 
   /// 在飞的生成，按源图路径去重。
   static final _inflight = <String, Future<void>>{};
@@ -76,12 +87,16 @@ class ImageDerivatives {
   static String tierStem(String imagePath, ImageTier tier) =>
       join(AppFiles.imageThumbDir, '${_base(imagePath)}_${tier.width}');
 
-  /// 某档位可能存在的文件名（相对 thumb 目录），按优先级。源是 JPEG 的派生物只会是 `.jpg`。
+  /// 某档位可能存在的文件名（相对 thumb 目录），按优先级。后缀由内容定，两种都要查：
+  /// 一张叫 `.jpg` 的带 alpha PNG 写出来就是 `.png`。
   static List<String> candidateNames(String imageName, ImageTier tier) {
     final stem = '${basenameWithoutExtension(imageName)}_${tier.width}';
-    if (_isJpeg(imageName)) return ['$stem.jpg'];
     return [for (final ext in _exts) '$stem$ext'];
   }
+
+  /// 只给原件目录里的文件算派生物。
+  static bool _eligible(String imagePath) =>
+      equals(dirname(imagePath), AppFiles.imageDir) && !_isHeif(imagePath);
 
   static List<String> candidatePaths(String imagePath, ImageTier tier) => [
     for (final name in candidateNames(imagePath, tier))
@@ -113,16 +128,18 @@ class ImageDerivatives {
     String imagePath, {
     required ImageTier tier,
   }) async {
+    if (!_eligible(imagePath)) return imagePath;
     final warming = _inflight[imagePath];
     if (warming != null) await warming;
     final hit = await _find(imagePath, tier);
     if (hit != null) return hit;
-    if (!_isJpeg(imagePath) || _absent.contains(tierStem(imagePath, tier))) {
+    if (_absent.contains(tierStem(imagePath, tier)) ||
+        !await _sniffJpeg(imagePath)) {
       return imagePath;
     }
-    // 按需只生成要的这一档（网格只要 s：12MP 解 1/6 再编 512，二十来毫秒）；
-    // 其余档位随后在同一闸门里排队补齐，不挡这一格。
-    await _generate(imagePath, only: tier);
+    // 按需只生成要的这一档（网格只要 s：12MP 解 2/8 再编 512，二十来毫秒）；
+    // 其余档位随后由预热补齐，不挡这一格。同一张图在飞的生成只跑一路。
+    await _dedup(imagePath, () => _generate(imagePath, only: tier, jpeg: true));
     unawaited(warm(imagePath));
     return await _find(imagePath, tier) ?? imagePath;
   }
@@ -140,18 +157,48 @@ class ImageDerivatives {
   /// 预热：把所有还缺的档位一次解码链式生成。同一张图在飞的复用；没跑完就被杀也
   /// 没关系，展示端会退回原图或按需补。
   static Future<void> warm(String imagePath) {
+    if (!_eligible(imagePath)) return Future.value();
+    return _dedup(imagePath, () async {
+      final jpeg = await _sniffJpeg(imagePath);
+      await _generate(imagePath, jpeg: jpeg);
+    });
+  }
+
+  /// 同一张图同一时刻只跑一路生成：后来的等前一路结束再跑自己的（前一路可能只生成了
+  /// 一档）。写盘侧另有保险：Rust 的临时文件名带进程号与序号，rename 原子。
+  static Future<void> _dedup(String imagePath, Future<void> Function() job) {
     final running = _inflight[imagePath];
-    if (running != null) return running;
-    final future = _generate(imagePath);
+    if (running != null) {
+      return running.then((_) => _dedup(imagePath, job));
+    }
+    final future = job();
     _inflight[imagePath] = future;
     unawaited(future.whenComplete(() => _inflight.remove(imagePath)));
     return future;
   }
 
+  /// 读三个魔数字节判 JPEG：扩展名会撒谎，而快慢两条路的内存差一个量级。
+  static Future<bool> _sniffJpeg(String path) async {
+    try {
+      final file = await File(path).open();
+      try {
+        final head = await file.read(3);
+        return head.length == 3 &&
+            head[0] == 0xFF &&
+            head[1] == 0xD8 &&
+            head[2] == 0xFF;
+      } finally {
+        await file.close();
+      }
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// 看图页要的 baseline 副本：在就给；不在就现转（重闸门，24MP 约一秒，期间看图页先用
   /// 打底图）；转不了（超过 64MP、非 progressive）给 null，由看图页退回整图封顶路径。
   static Future<String?> ensureBaseline(String imagePath) async {
-    if (!_isJpeg(imagePath)) return null;
+    if (!_eligible(imagePath)) return null;
     final path = baselinePath(imagePath);
     if (await File(path).exists()) return path;
     if (_absent.contains(path)) return null;
@@ -159,17 +206,23 @@ class ImageDerivatives {
     return await File(path).exists() ? path : null;
   }
 
+  /// 超过看图页封顶的 progressive JPEG 至少有这么大；小于它的连头都不用读。
+  static const _baselineMinBytes = 2 * 1024 * 1024;
+
   static Future<void> _generateBaseline(String src) async {
     final path = baselinePath(src);
     try {
-      await _heavyGate.withResource(() async {
-        if (await File(path).exists() || _absent.contains(path)) return;
-        final probe = await rust.ImageCompressor.probe(filePath: src);
-        if (!probe.progressive ||
-            probe.width * probe.height <= baselineMinPixels) {
-          _absent.add(path);
-          return;
-        }
+      if (_absent.contains(path) || await File(path).exists()) return;
+      if (await File(src).length() < _baselineMinBytes) return;
+      // 读头在闸门外：便宜，别占着转码的位子。不够格的不记 [_absent]（读头就够便宜），
+      // 只记转失败的。
+      final probe = await rust.ImageCompressor.probe(filePath: src);
+      if (!probe.progressive ||
+          probe.width * probe.height <= baselineMinPixels) {
+        return;
+      }
+      await _transcodeGate.withResource(() async {
+        if (await File(path).exists()) return;
         await rust.ImageCompressor.toBaselineFile(
           filePath: src,
           outputPath: path,
@@ -185,15 +238,22 @@ class ImageDerivatives {
   /// 打开（iOS 的软上限只有 256）。[only] 给了就只生成这一档。源图不比档位宽的档位
   /// Rust 侧跳过不写，这里记进 [_absent]。整预热（[only] 为空）顺带给大 progressive
   /// JPEG 转 baseline 副本。
-  static Future<void> _generate(String src, {ImageTier? only}) async {
-    if (_isHeif(src)) return;
-    if (only == null && _isJpeg(src)) {
+  static Future<void> _generate(
+    String src, {
+    ImageTier? only,
+    required bool jpeg,
+  }) async {
+    if (only == null && jpeg) {
       unawaited(_generateBaseline(src));
     }
-    final gate = _isJpeg(src) ? _jpegGate : _heavyGate;
+    final gate = only != null
+        ? _onDemandGate
+        : jpeg
+        ? _warmGate
+        : _heavyGate;
+    final targets = <rust.ThumbnailTarget>[];
     try {
       await gate.withResource(() async {
-        final targets = <rust.ThumbnailTarget>[];
         for (final tier in ImageTier.values) {
           if (only != null && tier != only) continue;
           final stem = tierStem(src, tier);
@@ -223,6 +283,10 @@ class ImageDerivatives {
         }
       });
     } catch (e) {
+      // 解不了的文件（后缀撒谎的 AVIF、坏文件）记进 [_absent]：不然每次滚过这一格都再解一遍。
+      for (final target in targets) {
+        _absent.add(target.outputStem);
+      }
       logger.d('thumbnail generate failed: $src ($e)');
     }
   }
@@ -253,10 +317,16 @@ class ImageDerivatives {
     if (!await dir.exists()) return const [];
     final alive = {for (final n in imageNames) basenameWithoutExtension(n)};
     final out = <String>[];
+    final now = DateTime.now();
     await for (final entity in dir.list()) {
       if (entity is! File) continue;
       final name = basename(entity.path);
       if (!_exts.contains(extension(name).toLowerCase())) {
+        // 正在写的临时文件放过：扫描是用户在媒体页手动触发的，那一页自己的网格可能正在生成。
+        if (name.endsWith('.part')) {
+          final stat = await entity.stat();
+          if (now.difference(stat.modified) < _partGrace) continue;
+        }
         out.add(entity.path);
         continue;
       }
@@ -267,10 +337,8 @@ class ImageDerivatives {
     return out;
   }
 
-  static bool _isJpeg(String path) {
-    final ext = extension(path).toLowerCase();
-    return ext == '.jpg' || ext == '.jpeg';
-  }
+  /// 比这新的 `.part` 当成还在写。
+  static const _partGrace = Duration(hours: 1);
 
   static bool _isHeif(String path) {
     final ext = extension(path).toLowerCase();

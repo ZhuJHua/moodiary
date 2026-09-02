@@ -256,6 +256,7 @@ impl RegionDecoder {
 | P2 | 看图页三层、tile 规划、带缓存 | 已落地，真机验收（2026-09-02） |
 | P2.5 | restart marker 随机访问 + 分段并行、N/8 缩放修正 | 已落地，真机验收（2026-09-03，用户：体验很好） |
 | P2.6 | tile 扩到 PNG / WebP / progressive JPEG（`RawDecoder` 后端） | 已落地，模拟器验收（2026-09-03） |
+| P2.7 | 对抗式审查修复（四路代理 + 复核） | 已落地（2026-09-03） |
 | P3 | 无 DRI 超大图金字塔、ICC、Adam7 PNG、动图 | 按需，未排期 |
 
 - **P0（已落地）**：原字节直存、两档 WebP、`MediaImage`、展示端只查不生成、看图页 4096 封顶、
@@ -302,6 +303,38 @@ impl RegionDecoder {
   （API 35，arm64）实测 6000×4500 的有损 WebP、PNG、progressive JPEG 三张：fit 9 块、双击后
   sample 1 的 45 块 4 秒内全绿。顺带：可见 + 预取总数封顶 64（原先预取不计入预算，缓存冲到
   109MB）、带 alpha 通道但全不透明的源改编 JPEG 派生物。
+- **P2.7 对抗式审查（2026-09-03）**：四路代理（Rust 解码器 / 派生物逻辑 / Dart 看图页 / 构建
+  依赖）各自带复现地攻，我逐条复核后修了这些（全部有测试或代码路径可指）：
+  - 派生物：**视频封面走了派生物管线**又被孤儿扫描当野文件删，永远重算 → 派生物只给
+    `AppFiles.imageDir` 里的原件算（`_eligible`），封面不传档位；`resolve` 的按需生成没进
+    `_inflight`，两路并发同写一个 `.part` → `_dedup` 串行 + Rust 临时文件名带进程号与序号；
+    生成失败不记 `_absent` 会在滚动路径上无限重试 → 失败也记；后缀撒谎（叫 `.jpg` 的带 alpha
+    PNG）写出 `.png` 而 Dart 只找 `.jpg` → 两种后缀一律都查；快慢闸门按扩展名分 → 读三个魔数
+    字节分；同步预热堵住看图页 → 按需 / 预热 / 全解 / 转码四个闸门分开；**按宽缩的档位遇到长
+    截图是 512×15360、31MB 位图** → 高封顶 3× 档位宽（Rust `tier_target` 与 Dart `_fitWidth`
+    同口径），比档位窄但很高的图也出档；`stale()` 会删正在写的 `.part` → 一小时内的放过；
+    `ImageOptimizer` 用 `deleteImage` 删旧 HEIC 顺带删掉了新 JPG 的派生物 → 只删旧原件。
+  - 看图页：**控制器跨页元素复用**，PageView 销毁两页外的页后翻回来带着旧平移量整页白屏 →
+    控制器归 `_TilePage` 自己；**探头回来前先挂了整解原图的 PhotoView**，每张图白解一张 4096
+    封顶的位图进缓存 → 探头期间只画 m 档；邻页各开一份解码器与 tile 缓存 → 只有当前页开
+    （`active`，切页 teardown / 再开）；预算只在规划时淘汰，插入后能到两倍 → 插入后再淘汰一
+    次；`maxVisibleTiles` 64 在竖屏密度带下沿会被平移触发升档变糊（可见 6×12 = 72）→ 96；
+    `decodeImageFromPixels` 失败时回调永远不来、`_busy` 卡死 → 改走 `ImmutableBuffer` →
+    `ImageDescriptor` → `Codec` 的 Future 链；一批里一块矩形落在图外整批报错 → Rust 跳过、
+    Dart 按覆盖矩形对号；第一批就失败的文件退回引擎路径而不是一批批撞。
+  - Rust：**整图带每档都钉住**，12MP 四档 64MB 永远不放 → 只钉最粗那档；`Rect::right()` u32
+    溢出 → saturating；PNG `STRIP_16` 是截断、缩略图那路是四舍五入，16 位源两层差一灰阶 →
+    自己按 16 位读四舍五入（测试改用真 16 位样本）；PNG 上限 1000MP、有损 WebP 268MP 对没有
+    随机访问的后端太大（每条带整幅解、行带放不下就逐块重解）→ PNG 100MP、有损 WebP 64MP；
+    `to_baseline_file` 会把 12 位 / 已是 baseline 的也转 → 先查；JPEG 填充字节 `FF FF D0` 让
+    索引静默放弃；CMYK / YCCK JPEG 当成可区域解（turbojpeg 不给 RGB）。
+  - 构建：turbojpeg-sys 的许可证文本被 cargo-about 抓成了 Doxygen 的 `menudata.js` → about.toml
+    clarify 指向 README.ijg + LICENSE.md；libwebp-sys 补上 vendored libwebp 的 BSD-3 文本。
+  - 审查证伪 / 未采纳：Rust 侧所有 unsafe、restart 分段（7 种子采样 × 多种间隔 × 600 次差分
+    逐字节一致）、2700 个截断 / 翻位文件零 panic、八方向覆盖矩形 7500 次随机请求，都稳；
+    FRB opaque 在飞时 dispose 不会释放（`Arc` 在调用前就 clone）；libwebp 全编进来靠
+    gc-sections 丢编码器这句在 iOS 上不成立（cc 不给 `-ffunction-sections`），靠的是 ld64 的
+    `-dead_strip`，结论一样。
 - **P3 按需**（没有用户抱怨就不做）：没有 DRI 的超大 JPEG（1/4 派生物金字塔，磁盘约原件 6%）、
   ICC 校色、Adam7 隔行 PNG（可把前几个 pass 当低分辨率层，要整幅缓冲）、动图 WebP / GIF。
   HEIC / AVIF / JXL 天生分 tile 但解码器体积否决过，且 HEIC 入库即转 JPG。
@@ -313,6 +346,8 @@ impl RegionDecoder {
 - 缩略图按宽度缩；EXIF 方向先缩后转；编码按透明通道选 JPEG / PNG，不按源格式。
 - 单 .so：turbojpeg 静态链进 `moodiary_rust`，不另起原生库。
 - restart 索引只加速不改语义：分段解码必须与整图裁剪解码逐字节一致（`restart.rs` 测试钉住）。
+- 派生物只给 `image/` 目录里的原件算；快慢路按魔数不按扩展名；派生物高不超过档位宽的 3 倍。
+- 看图页同一时刻只有当前页持有解码器与 tile 缓存。
 - 看图页的 tile 只在内存里，永远不落盘；落盘的派生物只有 `make_thumbnails` 出的两档加
   progressive JPEG 的 baseline 副本（像素与原件逐字节相同）。
 - 每种格式的区域解码都要有「与整图解码同一块逐字节一致」的测试钉着（WebP 有损与贴边缩放

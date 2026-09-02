@@ -19,6 +19,7 @@ accepted = [
     "NCSA",
     "OpenSSL",
     "CDLA-Permissive-2.0",
+    "IJG",
 ]
 
 targets = [
@@ -34,3 +35,30 @@ ignore-dev-dependencies = true
 
 # 这几个 crate 的许可证文件不在仓库根上，cargo-about 自带的采集补丁认得它们。
 workarounds = ["ring", "rustls", "chrono", "bitvec"]
+
+# turbojpeg-sys 把 libjpeg-turbo 整棵源码 vendor 进来，cargo-about 自动扫描会把
+# doc/turbojpeg/menudata.js（Doxygen 的 MIT 头）当成许可证文本。真正的许可证：IJG 在
+# README.ijg（整份，LEGAL ISSUES 一节是许可证；cargo-about 的 start/end 切片校验对不上，索性整份），Modified BSD（含 SIMD 代码 zlib 的说明）在 LICENSE.md。
+# 键是 crate 名直接放顶层（cargo-about 0.9 的写法），不是 [crates.<name>]。
+["turbojpeg-sys".clarify]
+license = "IJG AND BSD-3-Clause"
+
+[["turbojpeg-sys".clarify.files]]
+path = "libjpeg-turbo/README.ijg"
+license = "IJG"
+checksum = "75815e3bf6484201a3c3d17a1bbf10f2e8e3237f84df10a2357ea896db2a81d6"
+
+[["turbojpeg-sys".clarify.files]]
+path = "libjpeg-turbo/LICENSE.md"
+license = "BSD-3-Clause"
+checksum = "96f5b328adbb78eeaaec6980d73fd558cb1e4d62560ed615646bc3cf5e532430"
+
+# libwebp-sys 的 vendor/COPYING 是 libwebp 的 BSD-3-Clause（装车的是 C 代码）；绑定本身 MIT
+# 没有许可证文件，用 SPDX 的通用文本。
+["libwebp-sys".clarify]
+license = "MIT AND BSD-3-Clause"
+
+[["libwebp-sys".clarify.files]]
+path = "vendor/COPYING"
+license = "BSD-3-Clause"
+checksum = "5aec868f669e384a22372a4e8a1a6cd7d44c64cd451f960ca69cc170d1e13acf"

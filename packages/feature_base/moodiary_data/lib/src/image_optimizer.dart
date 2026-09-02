@@ -62,8 +62,14 @@ class ImageOptimizer {
       await repo.updateADiary(
         newDiary: withDerivedMedia(touched(diary.copyWith(content: content))),
       );
+      // 只删旧原件：新旧同 uuid，派生物按 uuid 命名，`deleteImage` 会把刚为新文件生成的
+      // 派生物一起删掉。
       for (final old in renamed.keys) {
-        await AppFiles.deleteImage(old);
+        try {
+          await File(AppFiles.getRealPath('image', old)).delete();
+        } on PathNotFoundException {
+          // 已不在。
+        }
       }
     }
 

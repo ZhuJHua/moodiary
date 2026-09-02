@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 // material_ui 不转发 SynchronousFuture，取用得回 flutter/foundation（同 mui 自己的 delegate）。
@@ -73,14 +74,22 @@ class MediaImage extends ImageProvider<MediaImage> {
     );
   }
 
-  /// 高度夹到至少 1：细长图（4000x3 之类）按比例算出来会是 0。
-  static ui.TargetImageSize _fitWidth(int w, int h, int maxWidth) =>
-      w <= maxWidth
-      ? ui.TargetImageSize(width: w, height: h)
-      : ui.TargetImageSize(
-          width: maxWidth,
-          height: (h * maxWidth / w).round().clamp(1, h),
-        );
+  /// 派生物的高最多是宽的几倍（与 Rust 侧 `TIER_MAX_ASPECT` 一致）：档位缺失退回原图时，
+  /// 一张 1000×30000 的长截图不能解成 512×15360、31MB 的位图。
+  static const _maxAspect = 3;
+
+  /// 按宽夹、再按高夹，永不放大；边长夹到至少 1（细长图按比例算出来会是 0）。
+  static ui.TargetImageSize _fitWidth(int w, int h, int maxWidth) {
+    final scale = math.min(
+      math.min(maxWidth / w, maxWidth * _maxAspect / h),
+      1.0,
+    );
+    if (scale >= 1) return ui.TargetImageSize(width: w, height: h);
+    return ui.TargetImageSize(
+      width: (w * scale).round().clamp(1, w),
+      height: (h * scale).round().clamp(1, h),
+    );
+  }
 
   static ui.TargetImageSize _fitSide(int w, int h, int maxSide) {
     final side = w > h ? w : h;

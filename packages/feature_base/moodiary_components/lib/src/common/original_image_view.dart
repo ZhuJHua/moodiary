@@ -41,7 +41,12 @@ class OriginalImageView extends StatefulWidget {
   final Size viewportSize;
 
   /// 打底用的缩略图。
+
   final ImageProvider overview;
+
+  /// 是不是当前页。PageView 会把邻页也装着；只有当前页开解码器、解 tile，邻页只画打底图，
+  /// 切过去再开（open 是毫秒级）。不然三页各一份带缓存 + tile 缓存，内存是三倍。
+  final bool active;
 
   const OriginalImageView({
     super.key,
@@ -51,6 +56,7 @@ class OriginalImageView extends StatefulWidget {
     required this.controller,
     required this.viewportSize,
     required this.overview,
+    this.active = true,
   }) : decodePath = decodePath ?? path;
 
   @override
@@ -78,9 +84,9 @@ class _Tile {
 }
 
 class _OriginalImageViewState extends State<OriginalImageView> {
-  /// 解出来的 tile 缓存上限：64 个 512² 的 RGBA。fit 那一层（整图 ≤ 36 块）留着，缩回去
-  /// 不用再画 overview 的模糊。
-  static const _cacheBudgetBytes = 64 * 1024 * 1024;
+  /// 解出来的 tile 缓存上限（规划内的块不算，它们由 [TilePlanner.maxVisibleTiles] 封顶）。
+  /// fit 那一层（整图 ≤ 36 块）留着，缩回去不用再画 overview 的模糊。
+  static const _cacheBudgetBytes = 96 * 1024 * 1024;
 
   /// 一批最多解几块。可见 tile 一批全要：Rust 把它们的并集当一条带一次解出来，视口跨几行
   /// 也只跑一趟熵解码（313MB 的图一趟两三秒，按行解就是行数倍）。
@@ -111,32 +117,42 @@ class _OriginalImageViewState extends State<OriginalImageView> {
   int _batches = 0;
   final _repaint = ValueNotifier<int>(0);
 
+  /// 每次 [_teardown] 加一：在飞的批回来时对不上号就丢掉。
+  int _generation = 0;
+
   @override
   void initState() {
     super.initState();
     _sub = widget.controller.outputStateStream.listen((_) => _scheduleReplan());
     OriginalImageView.debugOverlay.addListener(_bump);
-    unawaited(_open());
+    if (widget.active) unawaited(_open());
+  }
+
+  @override
+  void didUpdateWidget(OriginalImageView old) {
+    super.didUpdateWidget(old);
+    if (old.active == widget.active) return;
+    if (widget.active) {
+      unawaited(_open());
+    } else {
+      _teardown();
+    }
   }
 
   void _bump() => _repaint.value++;
 
   Future<void> _open() async {
+    if (_decoder != null || _fallback) return;
+    final generation = _generation;
     try {
       final decoder = await rust.RegionDecoder.open(
         filePath: widget.decodePath,
       );
-      if (_disposed) {
+      if (_disposed || generation != _generation || !widget.active) {
         decoder.dispose();
         return;
       }
-      final probe = decoder.probe();
-      _format = probe.format.name;
-      if (!probe.regionDecodable) {
-        decoder.dispose();
-        setState(() => _fallback = true);
-        return;
-      }
+      _format = decoder.probe().format.name;
       _decoder = decoder;
       _replan();
       final randomAccess = await decoder.randomAccess();
@@ -146,11 +162,36 @@ class _OriginalImageViewState extends State<OriginalImageView> {
       }
     } catch (e) {
       logger.d('region decoder open failed: ${widget.decodePath} ($e)');
-      if (mounted) setState(() => _fallback = true);
+      if (!_disposed && generation == _generation) _fail();
     }
   }
 
-  /// 捏合 / 双击动画期间 controller 每帧都在变，等它停 100ms 再规划：中间比例的那几批
+  /// tile 这条路走不通：拆掉解码器与缓存，退回引擎整解封顶的路径。
+  void _fail() {
+    _teardown();
+    if (mounted) setState(() => _fallback = true);
+  }
+
+  /// 放掉解码器、tile 与排队；在飞的批回来时按代号丢弃。
+  void _teardown() {
+    _generation++;
+    _replanTimer?.cancel();
+    _prefetchTimer?.cancel();
+    _queue.clear();
+    _inflight.clear();
+    _busy = false;
+    for (final tile in _tiles.values) {
+      tile.image.dispose();
+    }
+    _tiles.clear();
+    _plan = null;
+    _decoder?.dispose();
+    _decoder = null;
+    _randomAccess = null;
+    if (!_disposed) _repaint.value++;
+  }
+
+  /// 捏合 / 双击动画期间 controller 每帧都在变，等它停 60ms 再规划：中间比例的那几批
   /// 解了也是白解，而每批对超大图都是一趟熵解码。
   void _scheduleReplan() {
     _replanTimer?.cancel();
@@ -164,14 +205,7 @@ class _OriginalImageViewState extends State<OriginalImageView> {
     _disposed = true;
     OriginalImageView.debugOverlay.removeListener(_bump);
     _sub?.cancel();
-    _replanTimer?.cancel();
-    _prefetchTimer?.cancel();
-    _queue.clear();
-    for (final tile in _tiles.values) {
-      tile.image.dispose();
-    }
-    _tiles.clear();
-    _decoder?.dispose();
+    _teardown();
     _repaint.dispose();
     super.dispose();
   }
@@ -279,6 +313,8 @@ class _OriginalImageViewState extends State<OriginalImageView> {
   }
 
   Future<void> _decodeBatch(List<TileSpec> batch) async {
+    final generation = _generation;
+    var failed = false;
     try {
       final decoder = _decoder;
       if (decoder == null || _disposed) return;
@@ -294,55 +330,99 @@ class _OriginalImageViewState extends State<OriginalImageView> {
         ],
         denom: batch.first.sample,
       );
-      if (_disposed) return;
-      // 一批的位图并行上传，不逐块 await。
+      if (_disposed || generation != _generation) return;
+      // 一批的位图并行上传，不逐块 await；一块失败其余的也释放。
       final images = await Future.wait([
         for (var i = 0; i < batch.length && i < results.length; i++)
           _toImage(results[i]),
-      ]);
+      ], cleanUp: (image) => image.dispose());
+      final stale = _disposed || generation != _generation;
+      // Rust 会跳过落在图外的矩形，结果按覆盖矩形对号，不按下标。
+      final pending = batch.toList();
       for (var i = 0; i < images.length; i++) {
-        final spec = batch[i];
         final pixels = results[i];
         final image = images[i];
-        if (_disposed || !_stillWanted(spec)) {
+        final covered = Rect.fromLTWH(
+          pixels.x.toDouble(),
+          pixels.y.toDouble(),
+          pixels.width.toDouble(),
+          pixels.height.toDouble(),
+        );
+        final at = pending.indexWhere(
+          (s) =>
+              covered.contains(s.sourceRect.topLeft + const Offset(0.5, 0.5)),
+        );
+        if (at < 0) {
+          image.dispose();
+          continue;
+        }
+        final spec = pending.removeAt(at);
+        if (stale || !_stillWanted(spec)) {
           image.dispose();
           continue;
         }
         _tiles[spec.key] = _Tile(
           spec: spec,
           image: image,
-          covered: Rect.fromLTWH(
-            pixels.x.toDouble(),
-            pixels.y.toDouble(),
-            pixels.width.toDouble(),
-            pixels.height.toDouble(),
-          ),
+          covered: covered,
           lastUse: _planSeq,
           order: ++_decoded,
         );
         _repaint.value++;
       }
+      // 插入后再按预算淘汰一次：规划里的块不动，动的是上一档留下的。
+      final plan = _plan;
+      if (!stale && plan != null) {
+        _evict(
+          keep: {
+            for (final t in plan.visible) t.key,
+            for (final t in plan.prefetch) t.key,
+          },
+        );
+      }
     } catch (e) {
+      failed = true;
       logger.d('tile batch decode failed: ${batch.length} tiles ($e)');
     } finally {
-      for (final spec in batch) {
-        _inflight.remove(spec.key);
+      if (generation == _generation) {
+        for (final spec in batch) {
+          _inflight.remove(spec.key);
+        }
+        _busy = false;
+        // 一块都没解出来就失败：这个文件在 Rust 那边解不动，别一批批地撞。
+        if (failed && _decoded == 0 && !_disposed) {
+          _fail();
+        } else if (!_disposed) {
+          _pump();
+        }
       }
-      _busy = false;
-      if (!_disposed) _pump();
     }
   }
 
-  static Future<ui.Image> _toImage(rust.TilePixels pixels) {
-    final completer = Completer<ui.Image>();
-    ui.decodeImageFromPixels(
-      pixels.rgba,
-      pixels.pixelWidth,
-      pixels.pixelHeight,
-      ui.PixelFormat.rgba8888,
-      completer.complete,
-    );
-    return completer.future;
+  /// RGBA 进引擎。不用 `decodeImageFromPixels`：它失败时回调永远不来，这里的批就永远
+  /// 等不到。这条链每一步都是 Future，错会抛出来。
+  static Future<ui.Image> _toImage(rust.TilePixels pixels) async {
+    final buffer = await ui.ImmutableBuffer.fromUint8List(pixels.rgba);
+    try {
+      final descriptor = ui.ImageDescriptor.raw(
+        buffer,
+        width: pixels.pixelWidth,
+        height: pixels.pixelHeight,
+        pixelFormat: ui.PixelFormat.rgba8888,
+      );
+      try {
+        final codec = await descriptor.instantiateCodec();
+        try {
+          return (await codec.getNextFrame()).image;
+        } finally {
+          codec.dispose();
+        }
+      } finally {
+        descriptor.dispose();
+      }
+    } finally {
+      buffer.dispose();
+    }
   }
 
   @override

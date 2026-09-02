@@ -69,16 +69,19 @@ class _MImageBrowserState extends State<MImageBrowser> {
   double _chrome = 1.0;
   bool _saving = false;
 
-  /// 当前页是否放大（非 initial 缩放态）。放大时禁掉 PageView 的水平滚动，
-  /// 让横向平移完全归 PhotoView（竖直平移由 scope 的 shouldMove 抢占解决）。
-  bool _zoomed = false;
+  /// 各页是否放大（非 initial 缩放态）。当前页放大时禁掉 PageView 的水平滚动，
+  /// 让横向平移完全归 PhotoView（竖直平移由 scope 的 shouldMove 抢占解决）。邻页仍装着、
+  /// 缩放态还在，翻回去要照它的态来。
+  final _zoomedPages = <int>{};
 
-  /// 走 tile 解码的页各自一个控制器（[OriginalImageView] 靠它算可见区域），按图路径复用。
-  final _controllers = <String, PhotoViewController>{};
+  bool get _zoomed => _zoomedPages.contains(_current);
 
   /// 本地图能走 tile 的话记（转正后尺寸, 交给 Rust 解的文件），探头一次记一次；
-  /// null = 还没探 / 不能走 tile。
+  /// null = 探过了，不能走 tile。
   final _regions = <String, ({Size size, String decodePath})?>{};
+
+  /// 探头还没回来的图：这期间只画 m 档打底，不解原图。
+  final _probing = <String>{};
 
   static bool _isNetwork(String image) =>
       image.startsWith('http://') || image.startsWith('https://');
@@ -90,17 +93,14 @@ class _MImageBrowserState extends State<MImageBrowser> {
   @override
   void dispose() {
     _pageController.dispose();
-    for (final c in _controllers.values) {
-      c.dispose();
-    }
     super.dispose();
   }
 
   /// 本地图只读头：能区域解码（baseline JPEG、非隔行 PNG、非动图 WebP）就直接走 tile 页；
   /// 大的 progressive JPEG 先要它的 baseline 副本（在就秒开，不在现转）；其余留在整图路径。
   Future<void> _probe(String image) async {
-    if (_regions.containsKey(image)) return;
-    _regions[image] = null;
+    if (_regions.containsKey(image) || _probing.contains(image)) return;
+    _probing.add(image);
     try {
       final probe = await rust.ImageCompressor.probe(filePath: image);
       final size = Size(probe.width.toDouble(), probe.height.toDouble());
@@ -110,12 +110,17 @@ class _MImageBrowserState extends State<MImageBrowser> {
       } else if (probe.format == rust.ImageFormat.jpeg && probe.progressive) {
         decodePath = await ImageDerivatives.ensureBaseline(image);
       }
-      if (!mounted || decodePath == null) return;
+      if (!mounted) return;
       setState(() {
-        _regions[image] = (size: size, decodePath: decodePath!);
+        _regions[image] = decodePath == null
+            ? null
+            : (size: size, decodePath: decodePath);
       });
     } catch (e) {
       logger.d('probe failed: $image ($e)');
+      if (mounted) setState(() => _regions[image] = null);
+    } finally {
+      _probing.remove(image);
     }
   }
 
@@ -223,10 +228,7 @@ class _MImageBrowserState extends State<MImageBrowser> {
       gallery = PageView.builder(
         controller: _pageController,
         physics: _zoomed ? const NeverScrollableScrollPhysics() : null,
-        onPageChanged: (i) => setState(() {
-          _current = i;
-          _zoomed = false;
-        }),
+        onPageChanged: (i) => setState(() => _current = i),
         itemCount: widget.images.length,
         // 仅当前页参与 Hero，避免离屏页与缩略图侧 tag 冲突。
         itemBuilder: (context, index) => HeroMode(
@@ -253,43 +255,27 @@ class _MImageBrowserState extends State<MImageBrowser> {
     final region = _regions[image];
     final Widget page;
     if (region != null) {
-      final size = region.size;
-      // 能区域解码的图：child 尺寸 = 源像素，三层叠加，原图从不整解。
-      final controller = _controllers.putIfAbsent(
-        image,
-        PhotoViewController.new,
+      // 能区域解码的图：child 尺寸 = 源像素，三层叠加，原图从不整解。控制器归页自己：
+      // PageView 会销毁两页开外的页，复用的控制器会带着上次的平移量回来，整页白屏。
+      page = _TilePage(
+        image: image,
+        decodePath: region.decodePath,
+        size: region.size,
+        overview: placeholder ?? MediaImage(image, tier: .m),
+        active: index == _current,
+        onScaleState: (state) => _onScaleState(index, state),
+        onTap: () => Navigator.of(context).maybePop(),
       );
-      page = LayoutBuilder(
-        builder: (context, constraints) {
-          // 上限跟分辨率走，不跟屏幕比例走：铺满屏再放 3 倍，或者放到每个源像素占 2 个物理
-          // 像素（1:1 再放一倍，系统相册的口径），取大者。24000² 的图只按 covered×3 只能
-          // 看到原图四成的清晰度。
-          final dpr = MediaQuery.devicePixelRatioOf(context);
-          final covered = math.max(
-            constraints.maxWidth / size.width,
-            constraints.maxHeight / size.height,
-          );
-          return PhotoView.customChild(
-            childSize: size,
-            controller: controller,
-            backgroundDecoration: const BoxDecoration(
-              color: Colors.transparent,
-            ),
-            initialScale: PhotoViewComputedScale.contained,
-            minScale: PhotoViewComputedScale.contained,
-            maxScale: math.max(covered * 3, 2 / dpr),
-            scaleStateChangedCallback: (state) => _onScaleState(index, state),
-            onTapUp: (_, _, _) => Navigator.of(context).maybePop(),
-            child: OriginalImageView(
-              path: image,
-              decodePath: region.decodePath,
-              imageSize: size,
-              controller: controller,
-              viewportSize: constraints.biggest,
-              overview: placeholder ?? MediaImage(image, tier: .m),
-            ),
-          );
-        },
+    } else if (local && _probing.contains(image)) {
+      // 探头还没回来：只画 m 档。直接上原图会让引擎先整解一张 4096 封顶的位图进缓存，
+      // 探头一回来它就被换掉，白解 50MB。
+      page = PhotoView(
+        imageProvider: placeholder ?? MediaImage(image, tier: .m),
+        backgroundDecoration: const BoxDecoration(color: Colors.transparent),
+        initialScale: PhotoViewComputedScale.contained,
+        minScale: PhotoViewComputedScale.contained,
+        maxScale: PhotoViewComputedScale.contained,
+        onTapUp: (_, _, _) => Navigator.of(context).maybePop(),
       );
     } else {
       page = PhotoView(
@@ -320,9 +306,15 @@ class _MImageBrowserState extends State<MImageBrowser> {
   }
 
   void _onScaleState(int index, PhotoViewScaleState state) {
-    if (index != _current) return;
     final zoomed = state != .initial;
-    if (zoomed != _zoomed) setState(() => _zoomed = zoomed);
+    if (zoomed == _zoomedPages.contains(index)) return;
+    setState(() {
+      if (zoomed) {
+        _zoomedPages.add(index);
+      } else {
+        _zoomedPages.remove(index);
+      }
+    });
   }
 
   ImageProvider? _placeholderOf(String image) {
@@ -500,6 +492,77 @@ class _ImageInfoSheet extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// 走 tile 解码的一页：自己持有 [PhotoViewController]（[OriginalImageView] 靠它算可见区域），
+/// 生命周期跟页元素一致。
+class _TilePage extends StatefulWidget {
+  final String image;
+  final String decodePath;
+  final Size size;
+  final ImageProvider overview;
+  final bool active;
+  final ValueChanged<PhotoViewScaleState> onScaleState;
+  final VoidCallback onTap;
+
+  const _TilePage({
+    required this.image,
+    required this.decodePath,
+    required this.size,
+    required this.overview,
+    required this.active,
+    required this.onScaleState,
+    required this.onTap,
+  });
+
+  @override
+  State<_TilePage> createState() => _TilePageState();
+}
+
+class _TilePageState extends State<_TilePage> {
+  final _controller = PhotoViewController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = widget.size;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 上限跟分辨率走，不跟屏幕比例走：铺满屏再放 3 倍，或者放到每个源像素占 2 个物理
+        // 像素（1:1 再放一倍，系统相册的口径），取大者。24000² 的图只按 covered×3 只能
+        // 看到原图四成的清晰度。
+        final dpr = MediaQuery.devicePixelRatioOf(context);
+        final covered = math.max(
+          constraints.maxWidth / size.width,
+          constraints.maxHeight / size.height,
+        );
+        return PhotoView.customChild(
+          childSize: size,
+          controller: _controller,
+          backgroundDecoration: const BoxDecoration(color: Colors.transparent),
+          initialScale: PhotoViewComputedScale.contained,
+          minScale: PhotoViewComputedScale.contained,
+          maxScale: math.max(covered * 3, 2 / dpr),
+          scaleStateChangedCallback: widget.onScaleState,
+          onTapUp: (_, _, _) => widget.onTap(),
+          child: OriginalImageView(
+            path: widget.image,
+            decodePath: widget.decodePath,
+            imageSize: size,
+            controller: _controller,
+            viewportSize: constraints.biggest,
+            overview: widget.overview,
+            active: widget.active,
+          ),
+        );
+      },
     );
   }
 }

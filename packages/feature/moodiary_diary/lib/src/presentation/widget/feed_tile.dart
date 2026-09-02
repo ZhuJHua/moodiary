@@ -394,7 +394,12 @@ class _Thumb extends StatelessWidget {
             // 按文件名 key：开了 gaplessPlayback，列表重排后复用同一个 Element 会
             // 先画上一篇的照片。
             key: ValueKey(cell.path),
-            image: MediaImage(cell.path, tier: .s, decodeWidth: decodeWidth),
+            // 视频封面不是原件目录里的图，不走档位（派生物只给原件算）。
+            image: MediaImage(
+              cell.path,
+              tier: cell.isVideo ? null : .s,
+              decodeWidth: decodeWidth,
+            ),
             fit: .cover,
             gaplessPlayback: true,
             // 重装后媒体文件会被清空而日记还在——没有 errorBuilder 就是一片空白。

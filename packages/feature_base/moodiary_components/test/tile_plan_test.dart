@@ -50,6 +50,19 @@ void main() {
     expect(plan.visible.length, lessThanOrEqualTo(4));
   });
 
+  test('可见 + 预取总数不超过上限', () {
+    const capped = TilePlanner(
+      imageSize: Size(8000, 6000),
+      maxVisibleTiles: 30,
+    );
+    final plan = capped.plan(
+      visible: const Rect.fromLTWH(3000, 2000, 1440, 3200),
+      physicalScale: 1,
+    );
+    expect(plan.visible.length + plan.prefetch.length, lessThanOrEqualTo(30));
+    expect(plan.prefetch, isNotEmpty);
+  });
+
   test('边缘 tile 被源图边界裁掉', () {
     final plan = planner.plan(
       visible: const Rect.fromLTWH(7000, 5000, 2000, 2000),

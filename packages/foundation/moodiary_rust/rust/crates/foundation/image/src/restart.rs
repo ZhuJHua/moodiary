@@ -144,7 +144,12 @@ impl RestartIndex {
             let at = pos + memchr(0xFF, &bytes[pos..])?;
             let next = *bytes.get(at + 1)?;
             match next {
-                0x00 | 0xFF => {}
+                0x00 => {}
+                // 填充字节：FF FF D0 里第二个 FF 才是标记的开头，只跳一个。
+                0xFF => {
+                    pos = at + 1;
+                    continue;
+                }
                 0xD0..=0xD7 => markers.push(at),
                 0xD9 => {
                     entropy_end = at;
@@ -233,9 +238,16 @@ impl RestartIndex {
             if at + 1 >= jpeg.len() {
                 break;
             }
-            if (0xD0..=0xD7).contains(&jpeg[at + 1]) {
-                jpeg[at + 1] = 0xD0 + n;
-                n = (n + 1) % 8;
+            match jpeg[at + 1] {
+                0xFF => {
+                    pos = at + 1;
+                    continue;
+                }
+                0xD0..=0xD7 => {
+                    jpeg[at + 1] = 0xD0 + n;
+                    n = (n + 1) % 8;
+                }
+                _ => {}
             }
             pos = at + 2;
         }
@@ -484,6 +496,33 @@ mod tests {
                 }
             }
         }
+    }
+
+    /// 标记前的 FF 填充字节（T.81 允许）：索引不能漏标记，重排也不能漏。
+    #[test]
+    fn fill_bytes_before_markers_are_handled() {
+        let bytes = jpeg(1000, 700, false, 1);
+        let plain = RestartIndex::build(&bytes).unwrap();
+        let mut padded = Vec::with_capacity(bytes.len() + 64);
+        let mut i = 0;
+        while i < bytes.len() {
+            if bytes[i] == 0xFF && i + 1 < bytes.len() && (0xD0..=0xD7).contains(&bytes[i + 1]) {
+                padded.push(0xFF);
+            }
+            padded.push(bytes[i]);
+            i += 1;
+        }
+        let index = RestartIndex::build(&padded).expect("填充字节不该让索引失败");
+        assert_eq!(index.markers.len(), plain.markers.len());
+        let rect = Rect {
+            x: 40,
+            y: 300,
+            w: 500,
+            h: 200,
+        };
+        let want = turbo::decode_region_n8(&padded, 8, rect, true).unwrap();
+        let got = index.decode(&padded, 8, rect, true, 3).unwrap();
+        assert!(got.pixels == want.pixels, "填充字节后分段解码应仍一致");
     }
 
     /// progressive → baseline 无损：像素逐字节相同、带 restart 索引、头不再是 progressive。
