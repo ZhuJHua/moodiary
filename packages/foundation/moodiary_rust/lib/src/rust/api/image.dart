@@ -19,6 +19,18 @@ abstract class ImageCompressor implements RustOpaqueInterface {
     spec: spec,
   );
 
+  /// 一次解码、链式缩出多个宽度档位的 WebP；不比档位宽的档位跳过不写。
+  /// 返回源图（EXIF 转正后）尺寸。
+  static Future<ImageMeta> makeThumbnails({
+    required String filePath,
+    required List<ThumbnailTarget> targets,
+    int? quality,
+  }) => RustLib.instance.api.crateApiImageImageCompressorMakeThumbnails(
+    filePath: filePath,
+    targets: targets,
+    quality: quality,
+  );
+
   /// 统一图片优化：按 1280 尺寸规则缩放 + 有损 WebP 编码（默认 q80）。
   static Future<void> optimizeToFile({
     required String filePath,
@@ -78,4 +90,40 @@ class CompressSpec {
           maxWidth == other.maxWidth &&
           maxHeight == other.maxHeight &&
           quality == other.quality;
+}
+
+class ImageMeta {
+  final int width;
+  final int height;
+
+  const ImageMeta({required this.width, required this.height});
+
+  @override
+  int get hashCode => width.hashCode ^ height.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ImageMeta &&
+          runtimeType == other.runtimeType &&
+          width == other.width &&
+          height == other.height;
+}
+
+class ThumbnailTarget {
+  final int width;
+  final String outputPath;
+
+  const ThumbnailTarget({required this.width, required this.outputPath});
+
+  @override
+  int get hashCode => width.hashCode ^ outputPath.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ThumbnailTarget &&
+          runtimeType == other.runtimeType &&
+          width == other.width &&
+          outputPath == other.outputPath;
 }

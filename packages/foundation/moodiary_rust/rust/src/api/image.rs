@@ -1,7 +1,7 @@
 use anyhow::Result;
 use flutter_rust_bridge::frb;
 
-pub use moodiary_image::{CompressFormat, CompressSpec};
+pub use moodiary_image::{CompressFormat, CompressSpec, ImageMeta, ThumbnailTarget};
 
 #[frb(mirror(CompressFormat))]
 pub enum _CompressFormat {
@@ -20,6 +20,18 @@ pub struct _CompressSpec {
     pub max_width: Option<u32>,
     pub max_height: Option<u32>,
     pub quality: Option<u8>,
+}
+
+#[frb(mirror(ThumbnailTarget))]
+pub struct _ThumbnailTarget {
+    pub width: u32,
+    pub output_path: String,
+}
+
+#[frb(mirror(ImageMeta))]
+pub struct _ImageMeta {
+    pub width: u32,
+    pub height: u32,
 }
 
 #[frb(opaque)]
@@ -41,5 +53,15 @@ impl ImageCompressor {
         spec: CompressSpec,
     ) -> Result<()> {
         moodiary_image::contain_to_file(file_path, output_path, spec)
+    }
+
+    /// 一次解码、链式缩出多个宽度档位的 WebP；不比档位宽的档位跳过不写。
+    /// 返回源图（EXIF 转正后）尺寸。
+    pub fn make_thumbnails(
+        file_path: String,
+        targets: Vec<ThumbnailTarget>,
+        quality: Option<u8>,
+    ) -> Result<ImageMeta> {
+        moodiary_image::make_thumbnails(&file_path, &targets, quality.unwrap_or(78))
     }
 }

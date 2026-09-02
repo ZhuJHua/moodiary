@@ -461,6 +461,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 dco_decode_i_64(dynamic raw);
 
   @protected
+  ImageMeta dco_decode_image_meta(dynamic raw);
+
+  @protected
   IrBlock dco_decode_ir_block(dynamic raw);
 
   @protected
@@ -545,6 +548,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<RigToolDef> dco_decode_list_rig_tool_def(dynamic raw);
 
   @protected
+  List<ThumbnailTarget> dco_decode_list_thumbnail_target(dynamic raw);
+
+  @protected
   List<TokenizeResult> dco_decode_list_tokenize_result(dynamic raw);
 
   @protected
@@ -591,6 +597,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RigToolDef dco_decode_rig_tool_def(dynamic raw);
+
+  @protected
+  ThumbnailTarget dco_decode_thumbnail_target(dynamic raw);
 
   @protected
   TokenizeResult dco_decode_tokenize_result(dynamic raw);
@@ -992,6 +1001,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
 
   @protected
+  ImageMeta sse_decode_image_meta(SseDeserializer deserializer);
+
+  @protected
   IrBlock sse_decode_ir_block(SseDeserializer deserializer);
 
   @protected
@@ -1082,6 +1094,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<RigToolDef> sse_decode_list_rig_tool_def(SseDeserializer deserializer);
 
   @protected
+  List<ThumbnailTarget> sse_decode_list_thumbnail_target(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<TokenizeResult> sse_decode_list_tokenize_result(
     SseDeserializer deserializer,
   );
@@ -1136,6 +1153,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RigToolDef sse_decode_rig_tool_def(SseDeserializer deserializer);
+
+  @protected
+  ThumbnailTarget sse_decode_thumbnail_target(SseDeserializer deserializer);
 
   @protected
   TokenizeResult sse_decode_tokenize_result(SseDeserializer deserializer);
@@ -1580,6 +1600,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  ffi.Pointer<wire_cst_list_thumbnail_target> cst_encode_list_thumbnail_target(
+    List<ThumbnailTarget> raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_thumbnail_target(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      cst_api_fill_to_wire_thumbnail_target(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
+  }
+
+  @protected
   ffi.Pointer<wire_cst_list_tokenize_result> cst_encode_list_tokenize_result(
     List<TokenizeResult> raw,
   ) {
@@ -1866,6 +1898,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_image_meta(
+    ImageMeta apiObj,
+    wire_cst_image_meta wireObj,
+  ) {
+    wireObj.width = cst_encode_u_32(apiObj.width);
+    wireObj.height = cst_encode_u_32(apiObj.height);
+  }
+
+  @protected
   void cst_api_fill_to_wire_ir_block(
     IrBlock apiObj,
     wire_cst_ir_block wireObj,
@@ -2144,6 +2185,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.name = cst_encode_String(apiObj.name);
     wireObj.description = cst_encode_String(apiObj.description);
     wireObj.parameters_json = cst_encode_String(apiObj.parametersJson);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_thumbnail_target(
+    ThumbnailTarget apiObj,
+    wire_cst_thumbnail_target wireObj,
+  ) {
+    wireObj.width = cst_encode_u_32(apiObj.width);
+    wireObj.output_path = cst_encode_String(apiObj.outputPath);
   }
 
   @protected
@@ -2912,6 +2962,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
 
   @protected
+  void sse_encode_image_meta(ImageMeta self, SseSerializer serializer);
+
+  @protected
   void sse_encode_ir_block(IrBlock self, SseSerializer serializer);
 
   @protected
@@ -3029,6 +3082,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_thumbnail_target(
+    List<ThumbnailTarget> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_tokenize_result(
     List<TokenizeResult> self,
     SseSerializer serializer,
@@ -3102,6 +3161,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_rig_tool_def(RigToolDef self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_thumbnail_target(
+    ThumbnailTarget self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_tokenize_result(
@@ -3592,6 +3657,21 @@ class RustLibWire implements BaseWire {
       >('frbgen_moodiary_rust_cst_new_list_rig_tool_def');
   late final _cst_new_list_rig_tool_def = _cst_new_list_rig_tool_defPtr
       .asFunction<ffi.Pointer<wire_cst_list_rig_tool_def> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_thumbnail_target> cst_new_list_thumbnail_target(
+    int len,
+  ) {
+    return _cst_new_list_thumbnail_target(len);
+  }
+
+  late final _cst_new_list_thumbnail_targetPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_thumbnail_target> Function(ffi.Int32)
+        >
+      >('frbgen_moodiary_rust_cst_new_list_thumbnail_target');
+  late final _cst_new_list_thumbnail_target = _cst_new_list_thumbnail_targetPtr
+      .asFunction<ffi.Pointer<wire_cst_list_thumbnail_target> Function(int)>();
 
   ffi.Pointer<wire_cst_list_tokenize_result> cst_new_list_tokenize_result(
     int len,
@@ -5017,6 +5097,44 @@ class RustLibWire implements BaseWire {
               ffi.Pointer<wire_cst_list_prim_u_8_strict>,
               ffi.Pointer<wire_cst_list_prim_u_8_strict>,
               ffi.Pointer<wire_cst_compress_spec>,
+            )
+          >();
+
+  void wire__crate__api__image__ImageCompressor_make_thumbnails(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> file_path,
+    ffi.Pointer<wire_cst_list_thumbnail_target> targets,
+    ffi.Pointer<ffi.Uint8> quality,
+  ) {
+    return _wire__crate__api__image__ImageCompressor_make_thumbnails(
+      port_,
+      file_path,
+      targets,
+      quality,
+    );
+  }
+
+  late final _wire__crate__api__image__ImageCompressor_make_thumbnailsPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_thumbnail_target>,
+            ffi.Pointer<ffi.Uint8>,
+          )
+        >
+      >(
+        'frbgen_moodiary_rust_wire__crate__api__image__ImageCompressor_make_thumbnails',
+      );
+  late final _wire__crate__api__image__ImageCompressor_make_thumbnails =
+      _wire__crate__api__image__ImageCompressor_make_thumbnailsPtr
+          .asFunction<
+            void Function(
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_thumbnail_target>,
+              ffi.Pointer<ffi.Uint8>,
             )
           >();
 
@@ -6522,6 +6640,22 @@ final class wire_cst_http_server_response extends ffi.Struct {
     ..ref.body_file_path = body_file_path;
 }
 
+final class wire_cst_image_meta extends ffi.Struct {
+  @ffi.Uint32()
+  external int width;
+
+  @ffi.Uint32()
+  external int height;
+
+  static ffi.Pointer<wire_cst_image_meta> $allocate(
+    ffi.Allocator $allocator, {
+    required int width,
+    required int height,
+  }) => $allocator<wire_cst_image_meta>()
+    ..ref.width = width
+    ..ref.height = height;
+}
+
 final class wire_cst_ir_block extends ffi.Struct {
   @ffi.Int32()
   external int tag;
@@ -6980,6 +7114,21 @@ final class wire_cst_list_rig_tool_def extends ffi.Struct {
     ..ref.len = len;
 }
 
+final class wire_cst_list_thumbnail_target extends ffi.Struct {
+  external ffi.Pointer<wire_cst_thumbnail_target> ptr;
+
+  @ffi.Int32()
+  external int len;
+
+  static ffi.Pointer<wire_cst_list_thumbnail_target> $allocate(
+    ffi.Allocator $allocator, {
+    required ffi.Pointer<wire_cst_thumbnail_target> ptr,
+    required int len,
+  }) => $allocator<wire_cst_list_thumbnail_target>()
+    ..ref.ptr = ptr
+    ..ref.len = len;
+}
+
 final class wire_cst_list_tokenize_result extends ffi.Struct {
   external ffi.Pointer<wire_cst_tokenize_result> ptr;
 
@@ -7188,6 +7337,21 @@ final class wire_cst_rig_tool_def extends ffi.Struct {
     ..ref.name = name
     ..ref.description = description
     ..ref.parameters_json = parameters_json;
+}
+
+final class wire_cst_thumbnail_target extends ffi.Struct {
+  @ffi.Uint32()
+  external int width;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> output_path;
+
+  static ffi.Pointer<wire_cst_thumbnail_target> $allocate(
+    ffi.Allocator $allocator, {
+    required int width,
+    required ffi.Pointer<wire_cst_list_prim_u_8_strict> output_path,
+  }) => $allocator<wire_cst_thumbnail_target>()
+    ..ref.width = width
+    ..ref.output_path = output_path;
 }
 
 final class wire_cst_tokenize_result extends ffi.Struct {

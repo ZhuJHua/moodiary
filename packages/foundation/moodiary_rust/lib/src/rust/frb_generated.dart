@@ -83,7 +83,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 810176399;
+  int get rustContentHash => 1580785322;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -269,6 +269,12 @@ abstract class RustLibApi extends BaseApi {
     required String filePath,
     required String outputPath,
     required CompressSpec spec,
+  });
+
+  Future<ImageMeta> crateApiImageImageCompressorMakeThumbnails({
+    required String filePath,
+    required List<ThumbnailTarget> targets,
+    int? quality,
   });
 
   Future<void> crateApiImageImageCompressorOptimizeToFile({
@@ -1770,6 +1776,42 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(
         debugName: "ImageCompressor_contain_to_file",
         argNames: ["filePath", "outputPath", "spec"],
+      );
+
+  @override
+  Future<ImageMeta> crateApiImageImageCompressorMakeThumbnails({
+    required String filePath,
+    required List<ThumbnailTarget> targets,
+    int? quality,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          var arg0 = cst_encode_String(filePath);
+          var arg1 = cst_encode_list_thumbnail_target(targets);
+          var arg2 = cst_encode_opt_box_autoadd_u_8(quality);
+          return wire.wire__crate__api__image__ImageCompressor_make_thumbnails(
+            port_,
+            arg0,
+            arg1,
+            arg2,
+          );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_image_meta,
+          decodeErrorData: dco_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiImageImageCompressorMakeThumbnailsConstMeta,
+        argValues: [filePath, targets, quality],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiImageImageCompressorMakeThumbnailsConstMeta =>
+      const TaskConstMeta(
+        debugName: "ImageCompressor_make_thumbnails",
+        argNames: ["filePath", "targets", "quality"],
       );
 
   @override
@@ -3623,6 +3665,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ImageMeta dco_decode_image_meta(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return ImageMeta(
+      width: dco_decode_u_32(arr[0]),
+      height: dco_decode_u_32(arr[1]),
+    );
+  }
+
+  @protected
   IrBlock dco_decode_ir_block(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
@@ -3889,6 +3943,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<ThumbnailTarget> dco_decode_list_thumbnail_target(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_thumbnail_target).toList();
+  }
+
+  @protected
   List<TokenizeResult> dco_decode_list_tokenize_result(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_tokenize_result).toList();
@@ -4065,6 +4125,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       name: dco_decode_String(arr[0]),
       description: dco_decode_String(arr[1]),
       parametersJson: dco_decode_String(arr[2]),
+    );
+  }
+
+  @protected
+  ThumbnailTarget dco_decode_thumbnail_target(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return ThumbnailTarget(
+      width: dco_decode_u_32(arr[0]),
+      outputPath: dco_decode_String(arr[1]),
     );
   }
 
@@ -4984,6 +5056,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ImageMeta sse_decode_image_meta(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_width = sse_decode_u_32(deserializer);
+    var var_height = sse_decode_u_32(deserializer);
+    return ImageMeta(width: var_width, height: var_height);
+  }
+
+  @protected
   IrBlock sse_decode_ir_block(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -5349,6 +5429,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<ThumbnailTarget> sse_decode_list_thumbnail_target(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <ThumbnailTarget>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_thumbnail_target(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   List<TokenizeResult> sse_decode_list_tokenize_result(
     SseDeserializer deserializer,
   ) {
@@ -5610,6 +5704,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       description: var_description,
       parametersJson: var_parametersJson,
     );
+  }
+
+  @protected
+  ThumbnailTarget sse_decode_thumbnail_target(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_width = sse_decode_u_32(deserializer);
+    var var_outputPath = sse_decode_String(deserializer);
+    return ThumbnailTarget(width: var_width, outputPath: var_outputPath);
   }
 
   @protected
@@ -7085,6 +7187,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_image_meta(ImageMeta self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_32(self.width, serializer);
+    sse_encode_u_32(self.height, serializer);
+  }
+
+  @protected
   void sse_encode_ir_block(IrBlock self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
@@ -7414,6 +7523,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_thumbnail_target(
+    List<ThumbnailTarget> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_thumbnail_target(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_tokenize_result(
     List<TokenizeResult> self,
     SseSerializer serializer,
@@ -7635,6 +7756,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.name, serializer);
     sse_encode_String(self.description, serializer);
     sse_encode_String(self.parametersJson, serializer);
+  }
+
+  @protected
+  void sse_encode_thumbnail_target(
+    ThumbnailTarget self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_32(self.width, serializer);
+    sse_encode_String(self.outputPath, serializer);
   }
 
   @protected

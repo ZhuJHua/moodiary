@@ -54,17 +54,14 @@ fn compress<W: Write>(
         // 有损 WebP（libwebp）。image crate 的 WebPEncoder 仅无损，照片会比 JPEG 还大。
         // prepare 已把 WebP 目标的源图归一为 RGB8/RGBA8，这里只需两分支。
         CompressFormat::WebP => {
-            let enc = if img.color().has_alpha() {
-                webp::Encoder::from_rgba(dst_image.buffer(), dst_width, dst_height)
-            } else {
-                webp::Encoder::from_rgb(dst_image.buffer(), dst_width, dst_height)
-            };
-            // `Encoder::encode` 内部是 `encode_simple(..).unwrap()`：任一边超过
-            // WEBP_MAX_DIMENSION(16383) 就 panic。走 encode_simple 拿回错误。
-            let mem = enc
-                .encode_simple(false, quality as f32)
-                .map_err(|e| anyhow!("webp encode failed: {e:?}"))?;
-            writer.write_all(&mem)?;
+            writer.write_all(&encode_webp(
+                dst_image.buffer(),
+                dst_width,
+                dst_height,
+                img.color().has_alpha(),
+                quality,
+                4,
+            )?)?;
         }
         CompressFormat::Png => {
             PngEncoder::new_with_quality(writer, CompressionType::Fast, FilterType::Adaptive)
@@ -86,6 +83,121 @@ fn compress<W: Write>(
     }
 
     Ok(())
+}
+
+/// `method` 是 libwebp 的速度/压缩率档（0 快 … 6 小，默认 4）。实测 12MP→1280 一张：
+/// method 4 = 59ms / 123KB，method 2 = 31ms / 131KB —— 缩略图走 2，多 6% 体积换一半
+/// 编码时间；`thread_level` 对这条路径没有收益（实测 58ms vs 59ms），不开。
+fn encode_webp(
+    buf: &[u8],
+    width: u32,
+    height: u32,
+    has_alpha: bool,
+    quality: u8,
+    method: i32,
+) -> Result<Vec<u8>> {
+    let enc = if has_alpha {
+        webp::Encoder::from_rgba(buf, width, height)
+    } else {
+        webp::Encoder::from_rgb(buf, width, height)
+    };
+    let mut config = webp::WebPConfig::new().map_err(|_| anyhow!("webp config init failed"))?;
+    config.quality = quality as f32;
+    config.method = method;
+    // `Encoder::encode` 内部是 `encode_simple(..).unwrap()`：任一边超过
+    // WEBP_MAX_DIMENSION(16383) 就 panic。走 encode_advanced 拿回错误。
+    let mem = enc
+        .encode_advanced(&config)
+        .map_err(|e| anyhow!("webp encode failed: {e:?}"))?;
+    Ok(mem.to_vec())
+}
+
+/// 一个缩略图档位：缩到 [`width`] 宽（高等比），WebP 写到 [`output_path`]。
+pub struct ThumbnailTarget {
+    pub width: u32,
+    pub output_path: String,
+}
+
+/// 源图（EXIF 转正后）的像素尺寸。
+pub struct ImageMeta {
+    pub width: u32,
+    pub height: u32,
+}
+
+/// 一次解码、链式缩出多个宽度档位的 WebP。
+///
+/// 缩放走 fast_image_resize：NEON/AVX2 由 `Resizer::new()` 按 CPU 自动选，rayon
+/// feature 已开（按行切给线程池，12MP→1280 实测 19ms→6ms；rayon 本来就在依赖树里，
+/// 体积零增）。三段里编码最贵，见 [`encode_webp`] 的 method 说明。
+///
+/// - 源图不比档位宽的档位**跳过不写**（不放大），调用方按文件存在与否判断。
+/// - 档位按宽度从大到小处理，每一级从上一级缩：Lanczos3 在这种比例下看不出差别，
+///   而重采样的像素数少一个量级；处理完一级就丢掉上一级，内存里只压着两张。
+/// - 先写 `.part` 再 rename：生成中途被杀不会留下半张图被当成有效缩略图。
+pub fn make_thumbnails(
+    file_path: &str,
+    targets: &[ThumbnailTarget],
+    quality: u8,
+) -> Result<ImageMeta> {
+    let src = decode_upright(file_path)?;
+    // libwebp 只吃 RGB8/RGBA8。
+    let has_alpha = src.color().has_alpha();
+    let mut current = if has_alpha {
+        DynamicImage::ImageRgba8(src.into_rgba8())
+    } else {
+        DynamicImage::ImageRgb8(src.into_rgb8())
+    };
+    let (src_width, src_height) = current.dimensions();
+    let meta = ImageMeta {
+        width: src_width,
+        height: src_height,
+    };
+
+    let mut order: Vec<&ThumbnailTarget> = targets.iter().collect();
+    order.sort_by_key(|t| std::cmp::Reverse(t.width));
+
+    for target in order {
+        if target.width == 0 || src_width <= target.width {
+            continue;
+        }
+        let (cur_width, cur_height) = current.dimensions();
+        let dst_width = target.width;
+        let dst_height = ((cur_height as f64) * (dst_width as f64) / (cur_width as f64))
+            .round()
+            .max(1.0) as u32;
+
+        let pixel_type = current
+            .pixel_type()
+            .ok_or_else(|| anyhow!("Failed to determine pixel type"))?;
+        let mut dst = Image::new(dst_width, dst_height, pixel_type);
+        Resizer::new().resize(&current, &mut dst, None)?;
+
+        let encoded = encode_webp(dst.buffer(), dst_width, dst_height, has_alpha, quality, 2)?;
+        let out = std::path::Path::new(&target.output_path);
+        if let Some(parent) = out.parent()
+            && !parent.as_os_str().is_empty()
+        {
+            fs::create_dir_all(parent)?;
+        }
+        let part = out.with_extension("webp.part");
+        fs::write(&part, &encoded)?;
+        fs::rename(&part, out)?;
+
+        // 下一级从这一级缩。
+        let raw = dst.into_vec();
+        current = if has_alpha {
+            DynamicImage::ImageRgba8(
+                image::RgbaImage::from_raw(dst_width, dst_height, raw)
+                    .ok_or_else(|| anyhow!("resize buffer size mismatch"))?,
+            )
+        } else {
+            DynamicImage::ImageRgb8(
+                image::RgbImage::from_raw(dst_width, dst_height, raw)
+                    .ok_or_else(|| anyhow!("resize buffer size mismatch"))?,
+            )
+        };
+    }
+    Ok(meta)
 }
 
 /// 统一压缩尺寸规则（上限 1280）：
@@ -220,9 +332,7 @@ fn prepare(
                 let mut rgb = image::RgbImage::new(rgba.width(), rgba.height());
                 for (x, y, px) in rgba.enumerate_pixels() {
                     let a = px[3] as u32;
-                    let over = |c: u8| {
-                        ((c as u32 * a + 255 * (255 - a)) / 255) as u8
-                    };
+                    let over = |c: u8| ((c as u32 * a + 255 * (255 - a)) / 255) as u8;
                     rgb.put_pixel(x, y, image::Rgb([over(px[0]), over(px[1]), over(px[2])]));
                 }
                 DynamicImage::ImageRgb8(rgb)
@@ -292,7 +402,51 @@ struct ResizeOptions {
 
 #[cfg(test)]
 mod tests {
-    use super::{CompressFormat, CompressSpec, contain_to_file, optimize_dimensions};
+    use super::{
+        CompressFormat, CompressSpec, ThumbnailTarget, contain_to_file, make_thumbnails,
+        optimize_dimensions,
+    };
+
+    /// 一次解码链式出两档；源图不比档位宽的档位不写文件（不放大）。
+    #[test]
+    fn thumbnails_chain_and_skip_upscale() {
+        let dir = std::env::temp_dir().join("moodiary_img_thumb_test");
+        std::fs::create_dir_all(&dir).unwrap();
+        let src = dir.join("src.png");
+        let img =
+            image::RgbImage::from_fn(2000, 1500, |x, _| image::Rgb([(x % 256) as u8, 40, 200]));
+        img.save(&src).unwrap();
+
+        let targets = vec![
+            ThumbnailTarget {
+                width: 512,
+                output_path: dir.join("t_512.webp").to_string_lossy().into_owned(),
+            },
+            ThumbnailTarget {
+                width: 1280,
+                output_path: dir.join("t_1280.webp").to_string_lossy().into_owned(),
+            },
+            ThumbnailTarget {
+                width: 4096,
+                output_path: dir.join("t_4096.webp").to_string_lossy().into_owned(),
+            },
+        ];
+        let meta =
+            make_thumbnails(&src.to_string_lossy(), &targets, 78).expect("should produce tiers");
+        assert_eq!((meta.width, meta.height), (2000, 1500));
+
+        let t512 = image::open(dir.join("t_512.webp")).unwrap();
+        let t1280 = image::open(dir.join("t_1280.webp")).unwrap();
+        assert_eq!(image::GenericImageView::dimensions(&t512), (512, 384));
+        assert_eq!(image::GenericImageView::dimensions(&t1280), (1280, 960));
+        assert!(
+            !dir.join("t_4096.webp").exists(),
+            "不放大：比源图宽的档位不该写文件"
+        );
+        assert!(!dir.join("t_512.webp.part").exists());
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 
     #[test]
     fn optimize_dimension_rules() {
@@ -361,7 +515,10 @@ mod tests {
         );
         // 不透明区仍是红的（没被整张压白）。
         let red = rgb.get_pixel(1, 1).0;
-        assert!(red[0] > 150 && red[1] < 100, "不透明区应保持红色，实际 {red:?}");
+        assert!(
+            red[0] > 150 && red[1] < 100,
+            "不透明区应保持红色，实际 {red:?}"
+        );
 
         let _ = std::fs::remove_dir_all(&dir);
     }
