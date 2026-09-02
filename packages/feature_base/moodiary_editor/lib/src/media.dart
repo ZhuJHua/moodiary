@@ -1,10 +1,15 @@
+import 'dart:async';
+
 /// 把正文媒体文件名解析为磁盘路径 + MIME 的注入式回调（由宿主 app 实现，注入给
 /// [EditorLocalServer]）。返回 null 表示无法解析（按 404 处理）。宿主据自身存储布局
 /// 决定目录（图片取 image 目录、音频取 audio 目录、视频取 video 目录）。
 ///
 /// [poster] 为 true 时请求的是「海报/缩略图」而非媒体本身：视频节点的 webview 内播放器
 /// 用它当封面（宿主返回 thumbnail 目录的 jpeg）；非视频忽略该标志。
-typedef MediaResolver = ({String path, String mime})? Function(
+///
+/// 返回值是 [FutureOr]：宿主可能得先落一份派生文件才有得供（历史 HEIC 正文图两端
+/// webview 都解不了，要先转码），而那是异步的。
+typedef MediaResolver = FutureOr<({String path, String mime})?> Function(
   String name, {
   bool poster,
 });

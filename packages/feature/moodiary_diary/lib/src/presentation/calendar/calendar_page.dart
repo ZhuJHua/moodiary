@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_files/moodiary_files.dart';
@@ -601,10 +599,10 @@ class _CoverCell extends StatelessWidget {
       children: [
         // 解码完成前的底色。整页从灰底逐格闪成彩色很难看。
         ColoredBox(color: colors.surfaceContainerHigh),
-        Image.file(
-          File(path),
+        Image(
+          // 格子是固定 48dp：档位 s 之上再把解码夹到格子宽，42 格进缓存才够小。
+          image: MediaImage(path, tier: .s, decodeWidth: cacheWidth),
           fit: .cover,
-          cacheWidth: cacheWidth,
           filterQuality: .low,
           gaplessPlayback: true,
           errorBuilder: (context, _, _) =>
@@ -783,13 +781,17 @@ class _EntryTile extends ConsumerWidget {
                 if (cover != null) ...[
                   ClipRRect(
                     borderRadius: .circular(9),
-                    child: Image.file(
-                      File(AppFiles.getRealPath('image', cover)),
+                    child: Image(
+                      image: MediaImage(
+                        AppFiles.getRealPath('image', cover),
+                        tier: .s,
+                        decodeWidth:
+                            (44 * MediaQuery.devicePixelRatioOf(context))
+                                .round(),
+                      ),
                       width: 44,
                       height: 44,
                       fit: .cover,
-                      cacheWidth: (44 * MediaQuery.devicePixelRatioOf(context))
-                          .round(),
                       errorBuilder: (context, _, _) => SizedBox.square(
                         dimension: 44,
                         child: ColoredBox(color: colors.surfaceContainerHigh),

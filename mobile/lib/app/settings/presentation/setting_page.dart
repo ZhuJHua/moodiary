@@ -8,6 +8,7 @@ import 'package:moodiary_lock/moodiary_lock.dart';
 import 'package:moodiary_mobile/app/settings/presentation/widget/accent_sheet.dart';
 import 'package:moodiary_mobile/app/settings/presentation/widget/cache_usage_tile.dart';
 import 'package:moodiary_mobile/app/settings/presentation/widget/data_repair_tile.dart';
+import 'package:moodiary_mobile/app/settings/presentation/widget/image_optimize_tile.dart';
 import 'package:moodiary_mobile/app/settings/presentation/widget/language_dialog.dart';
 import 'package:moodiary_mobile/app/settings/presentation/widget/theme_mode_dialog.dart';
 import 'package:moodiary_mobile/app/settings/setting_routes.dart';
@@ -181,6 +182,7 @@ class _DataSection extends StatelessWidget {
       title: context.l10n.app.sectionData,
       children: const [
         DataRepairTile(),
+        ImageOptimizeTile(),
         // 压测入口随图谱一起暂隐藏(StressTestTile,打磨期再放出)。
         CacheUsageTile(),
       ],

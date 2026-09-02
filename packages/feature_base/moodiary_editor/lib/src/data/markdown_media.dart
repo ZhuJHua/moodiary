@@ -5,10 +5,10 @@ import 'package:moodiary_files/moodiary_files.dart';
 /// app 侧媒体解析器：把正文媒体文件名解析为磁盘路径 + MIME，注入给编辑器包的
 /// EditorLocalServer 按需读字节（支持 Range）。图片取 `image` 目录、音频取 `audio` 目录、
 /// 视频取 `video` 目录的原片；视频海报（[poster] = true）取 `thumbnail`（落在 video 目录）的 jpeg。
-({String path, String mime})? appMediaResolver(
+Future<({String path, String mime})?> appMediaResolver(
   String name, {
   bool poster = false,
-}) {
+}) async {
   if (name.startsWith('video-')) {
     if (poster) {
       return (
@@ -21,5 +21,12 @@ import 'package:moodiary_files/moodiary_files.dart';
   if (name.startsWith('audio-')) {
     return (path: AppFiles.getRealPath('audio', name), mime: audioMimeOf(name));
   }
-  return (path: AppFiles.getRealPath('image', name), mime: imageMimeOf(name));
+  // 正文只供 m 档缩略图，原图（全分辨率原件）永远不进 webview：点图后是 Flutter
+  // 的看图页在显示原图。历史 `.heic` 这里不转码（照旧破图），由用户在
+  // 「设置 → 数据 → 图片优化」一次性转成 JPG。MIME 按实际供出的文件定，不按正文里的名字。
+  final display = await ImageDerivatives.resolve(
+    AppFiles.getRealPath('image', name),
+    tier: .m,
+  );
+  return (path: display, mime: imageMimeOf(display));
 }

@@ -32,16 +32,6 @@ class DiarySettingPage extends StatelessWidget {
               ],
             ),
             MSliverSettingGroup(
-              title: context.l10n.app.diaryPrefsMedia,
-              children: [
-                _KvSwitchTile(
-                  kv: .imageOptimize,
-                  title: context.l10n.app.imageOptimize,
-                  subtitle: context.l10n.app.imageOptimizeSubtitle,
-                ),
-              ],
-            ),
-            MSliverSettingGroup(
               title: context.l10n.app.diaryPrefsWeather,
               children: [
                 _KvSwitchTile(
@@ -61,9 +51,8 @@ class DiarySettingPage extends StatelessWidget {
 class _KvSwitchTile extends StatelessWidget {
   final MoodiaryKVs<bool> kv;
   final String title;
-  final String? subtitle;
 
-  const _KvSwitchTile({required this.kv, required this.title, this.subtitle});
+  const _KvSwitchTile({required this.kv, required this.title});
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +61,6 @@ class _KvSwitchTile extends StatelessWidget {
       builder: (context, value, _) {
         return SettingSwitchListTile(
           title: title,
-          subtitle: subtitle,
           value: value,
           onChanged: (v) => kv.set(v),
         );

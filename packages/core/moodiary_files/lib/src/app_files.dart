@@ -31,6 +31,7 @@ class AppFiles {
     await Future.wait([
       createDir(join(_filePath, 'database')),
       createDir(join(_filePath, 'image')),
+      createDir(imageThumbDir),
       createDir(join(_filePath, 'audio')),
       createDir(join(_filePath, 'video')),
       createDir(join(_filePath, 'font')),
@@ -83,6 +84,17 @@ class AppFiles {
     if (await cacheDir.exists()) {
       await cacheDir.delete(recursive: true);
     }
+  }
+
+  /// 图片派生物目录（缩略图档位、历史 HEIC 的展示原图）。放在 image 下的子目录：
+  /// [getDirFileName] 不递归，孤儿扫描 / 归档 / LAN 同步天然看不见它；删 image 目录
+  /// 连带删。
+  static String get imageThumbDir => join(_filePath, 'image', 'thumb');
+
+  /// 删一张图：原件 + 全部派生物。业务侧删图一律走这里，别直接 [deleteFile]。
+  static Future<void> deleteImage(String name) async {
+    await deleteFile(getRealPath('image', name));
+    await ImageDerivatives.deleteFor(name);
   }
 
   /// 删除用户媒体目录后重建为空。不动 `database` 目录——它由打开中的 Isar 句柄
@@ -153,6 +165,10 @@ class AppFiles {
     String mediaType,
   ) async {
     for (final name in files) {
+      if (mediaType == MediaType.image.value) {
+        await deleteImage(name);
+        continue;
+      }
       final filePath = getRealPath(mediaType, name);
       final file = File(filePath);
       if (await file.exists()) {
@@ -200,11 +216,26 @@ class AppFiles {
         }
       }
     }
+    // 源图已不在的派生物：删图路径漏网（旧版本、迁移）时的兜底。
+    for (final path in await ImageDerivatives.stale(
+      await getDirFileName(MediaType.image.value),
+    )) {
+      bytes += await File(path).length();
+      paths.add(path);
+    }
     return MediaCleanupReport(paths: paths, bytes: bytes);
   }
 
   static Future<void> deleteOrphanMedia(MediaCleanupReport report) async {
-    await Future.wait(report.paths.map(deleteFile));
+    final imageDir = join(_filePath, 'image');
+    await Future.wait(
+      report.paths.map((path) async {
+        await deleteFile(path);
+        if (dirname(path) == imageDir) {
+          await ImageDerivatives.deleteFor(basename(path));
+        }
+      }),
+    );
   }
 
   static String getCachePath(String fileName) {

@@ -91,7 +91,7 @@ class EditorLocalServer {
       final poster = request.query['poster'] == '1';
       try {
         final resolved = _isSafeMediaName(name)
-            ? mediaResolver?.call(name, poster: poster)
+            ? await mediaResolver?.call(name, poster: poster)
             : null;
         if (resolved == null) return .notFound();
         return .file(resolved.path, contentType: resolved.mime);

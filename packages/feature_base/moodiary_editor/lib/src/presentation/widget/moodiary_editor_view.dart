@@ -102,18 +102,17 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
     await _insertPicked(files);
   }
 
-  /// 乐观插入：选图后立即把原图落到 image 目录并插入显示（快），压缩挪到后台就地进行、
-  /// 完成后无感替换同名文件（见 [MediaManager.materializeOriginal] / [MediaManager.compressInPlace]）。
+  /// 选图后原字节直接落 image 目录并插入；正文显示走 m 档缩略图，由
+  /// [MediaManager.saveImage] 落盘后自行预热。
   Future<void> _insertPicked(List<XFile> files) async {
     for (final file in files) {
-      final name = await MediaManager.materializeOriginal(file);
+      final name = await MediaManager.saveImage(file);
       if (name == null) continue;
       await _controller.insertMedia(name);
-      unawaited(MediaManager.compressInPlace(name));
     }
   }
 
-  /// 把 web 侧 data URI 落盘，复用 [MediaManager.saveImages] 压缩 / 命名，返回存盘
+  /// 把 web 侧 data URI 落盘，复用 [MediaManager.saveImages] 命名，返回存盘
   /// 文件名（失败返回 null）。
   Future<String?> _saveDataUriImage(String dataUri, String fallbackName) async {
     final xfile = await _dataUriToTempFile(dataUri, fallbackName);

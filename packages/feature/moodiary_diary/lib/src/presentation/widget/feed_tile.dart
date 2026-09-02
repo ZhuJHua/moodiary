@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_diary/src/application/diary_stamp.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
@@ -175,7 +173,8 @@ class _SideThumbRow extends StatelessWidget {
             height: _kThumbH,
             child: _Thumb(
               cell: cell,
-              cacheWidth: (width * dpr).round(),
+              // 容器是固定 dp 尺寸，解码宽不随布局变，夹小省缓存。
+              decodeWidth: (width * dpr).round(),
               radius: const .all(.circular(10)),
             ),
           ),
@@ -336,7 +335,6 @@ class _Strip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dpr = MediaQuery.devicePixelRatioOf(context);
     final show = cells.length > _kMaxCells ? _kMaxCells : cells.length;
     final extra = cells.length - show;
 
@@ -355,7 +353,6 @@ class _Strip extends StatelessWidget {
                   width: cell,
                   child: _Thumb(
                     cell: cells[i],
-                    cacheWidth: (cell * dpr).round(),
                     radius: const .all(.circular(10)),
                     moreCount: i == show - 1 && extra > 0 ? extra : 0,
                   ),
@@ -371,13 +368,15 @@ class _Strip extends StatelessWidget {
 
 class _Thumb extends StatelessWidget {
   final _Cell cell;
-  final int cacheWidth;
+
+  /// 固定尺寸容器才传；随布局变的格子不传，缓存键只认档位（折叠屏展开不重载）。
+  final int? decodeWidth;
   final BorderRadius radius;
   final int moreCount;
 
   const _Thumb({
     required this.cell,
-    required this.cacheWidth,
+    this.decodeWidth,
     required this.radius,
     this.moreCount = 0,
   });
@@ -395,7 +394,7 @@ class _Thumb extends StatelessWidget {
             // 按文件名 key：开了 gaplessPlayback，列表重排后复用同一个 Element 会
             // 先画上一篇的照片。
             key: ValueKey(cell.path),
-            image: ResizeImage(FileImage(File(cell.path)), width: cacheWidth),
+            image: MediaImage(cell.path, tier: .s, decodeWidth: decodeWidth),
             fit: .cover,
             gaplessPlayback: true,
             // 重装后媒体文件会被清空而日记还在——没有 errorBuilder 就是一片空白。

@@ -255,15 +255,6 @@ class Translations$app$zh {
 	/// zh: '展示字数统计'
 	String get showWordCount => '展示字数统计';
 
-	/// zh: '媒体'
-	String get diaryPrefsMedia => '媒体';
-
-	/// zh: '图片优化'
-	String get imageOptimize => '图片优化';
-
-	/// zh: '压缩尺寸并统一转为 WebP；关闭则保存原图'
-	String get imageOptimizeSubtitle => '压缩尺寸并统一转为 WebP；关闭则保存原图';
-
 	/// zh: '天气'
 	String get diaryPrefsWeather => '天气';
 
@@ -536,6 +527,42 @@ class Translations$app$zh {
 
 	/// zh: '好'
 	String get repairOk => '好';
+
+	/// zh: '图片优化'
+	String get imageOptimizeTitle => '图片优化';
+
+	/// zh: '转码旧的 HEIC 图片，补齐缩略图'
+	String get imageOptimizeSubtitle => '转码旧的 HEIC 图片，补齐缩略图';
+
+	/// zh: '日记里的 HEIC 图片会转成 JPG（原文件删除，正文引用一并更新），然后为所有图片补齐缩略图。图片多时需要几分钟，期间请不要退出。'
+	String get imageOptimizeMessage => '日记里的 HEIC 图片会转成 JPG（原文件删除，正文引用一并更新），然后为所有图片补齐缩略图。图片多时需要几分钟，期间请不要退出。';
+
+	/// zh: '开始'
+	String get imageOptimizeStart => '开始';
+
+	/// zh: '正在处理图片'
+	String get imageOptimizeRunning => '正在处理图片';
+
+	/// zh: '优化完成'
+	String get imageOptimizeDoneTitle => '优化完成';
+
+	/// zh: '共检查 {count} 张图片。'
+	String imageOptimizeScanned({required Object count}) => '共检查 ${count} 张图片。';
+
+	/// zh: 'HEIC 转为 JPG {count} 张。'
+	String imageOptimizeConverted({required Object count}) => 'HEIC 转为 JPG ${count} 张。';
+
+	/// zh: '转码失败 {count} 张（文件损坏或无法读取），已保持原样。'
+	String imageOptimizeConvertFailed({required Object count}) => '转码失败 ${count} 张（文件损坏或无法读取），已保持原样。';
+
+	/// zh: '缩略图已就绪。'
+	String get imageOptimizeThumbs => '缩略图已就绪。';
+
+	/// zh: '图片优化失败'
+	String get imageOptimizeFailed => '图片优化失败';
+
+	/// zh: '好'
+	String get imageOptimizeOk => '好';
 
 	/// zh: '清理缓存'
 	String get cacheClear => '清理缓存';

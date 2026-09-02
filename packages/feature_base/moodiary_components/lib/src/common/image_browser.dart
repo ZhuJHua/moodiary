@@ -21,17 +21,17 @@ class MImageBrowser extends StatefulWidget {
   final int initialIndex;
   final String? heroPrefix;
 
-  /// 缩略图侧的 ResizeImage 解码宽度。传入后全图解码完成前先显示同缓存键的缩略图
+  /// 缩略图侧的档位。传入后全图解码完成前先显示同缓存键的缩略图
   /// （命中内存缓存，首帧即有像素）——Hero 首次打开就能起飞，全图就绪后无缝替换。
-  /// 必须与缩略图侧完全一致（同路径 FileImage + 同 width）才会命中缓存。
-  final int? placeholderCacheWidth;
+  /// 必须与缩略图侧完全一致（同路径 [MediaImage] + 同档位）才会命中缓存。
+  final ImageTier? placeholderTier;
 
   const MImageBrowser({
     super.key,
     required this.images,
     this.initialIndex = 0,
     this.heroPrefix,
-    this.placeholderCacheWidth,
+    this.placeholderTier,
   });
 
   static Future<void> show(
@@ -39,14 +39,14 @@ class MImageBrowser extends StatefulWidget {
     required List<String> images,
     int initialIndex = 0,
     String? heroPrefix,
-    int? placeholderCacheWidth,
+    ImageTier? placeholderTier,
   }) {
     return context.pushTransparentRoute(
       MImageBrowser(
         images: images,
         initialIndex: initialIndex,
         heroPrefix: heroPrefix,
-        placeholderCacheWidth: placeholderCacheWidth,
+        placeholderTier: placeholderTier,
       ),
     );
   }
@@ -74,7 +74,7 @@ class _MImageBrowserState extends State<MImageBrowser> {
 
   ImageProvider _providerOf(String image) => _isNetwork(image)
       ? CachedNetworkImageProvider(image)
-      : FileImage(File(image)) as ImageProvider;
+      : MediaImage(image) as ImageProvider;
 
   @override
   void dispose() {
@@ -231,9 +231,9 @@ class _MImageBrowserState extends State<MImageBrowser> {
   }
 
   ImageProvider? _placeholderOf(String image) {
-    final width = widget.placeholderCacheWidth;
-    if (width == null || _isNetwork(image)) return null;
-    return ResizeImage(FileImage(File(image)), width: width);
+    final tier = widget.placeholderTier;
+    if (tier == null || _isNetwork(image)) return null;
+    return MediaImage(image, tier: tier);
   }
 
   /// 保存当前图到相册。外链先经 [IHttpClient] 下载到缓存临时文件，成功与否统一 toast。

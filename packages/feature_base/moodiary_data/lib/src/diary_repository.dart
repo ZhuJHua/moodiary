@@ -12,6 +12,7 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 import 'db/database.dart';
 import 'db/db_codec.dart';
 import 'diary_content.dart';
+import 'media_item.dart';
 
 /// 搜索 / 双链索引的建立时机：[inline] 与写行同事务原子建（默认——分词先行再开
 /// 事务，SQLite 时代没有「分词夹不进事务」的两段式）；[skip] 不建（编辑期仅改
@@ -476,7 +477,7 @@ class DiaryRepository {
   static Future<void> _cleanLocalMedia(Diary diary) async {
     for (final name in diary.imageName) {
       try {
-        await AppFiles.deleteFile(AppFiles.getRealPath('image', name));
+        await AppFiles.deleteImage(name);
       } catch (_) {}
     }
     for (final name in diary.audioName) {
@@ -683,6 +684,35 @@ class DiaryRepository {
     _orderBy(q, .timeDesc);
     if (limit != null) q.limit(limit, offset: offset);
     return _assemble(await q.get());
+  }
+
+  /// 媒体库分页：按**媒体文件**翻页（一页 N 张，而不是 N 篇日记——一篇可能 0 张也可能
+  /// 几十张）。只取三列，不物化正文；排序与 [MediaItem.compare] 逐字段一致，
+  /// 第三键 seq 保正文内次序。
+  Future<List<MediaItem>> getMediaItems({
+    required MediaType type,
+    int? offset,
+    int? limit,
+  }) async {
+    final m = _db.diaryMedia;
+    final d = _db.diaries;
+    final q = _db.selectOnly(m).join([innerJoin(d, d.id.equalsExp(m.diaryId))])
+      ..addColumns([m.fileName, d.id, d.time])
+      ..where(d.show.equals(1) & m.kind.equals(type.value))
+      ..orderBy([
+        OrderingTerm.desc(d.time),
+        OrderingTerm.desc(d.id),
+        OrderingTerm.asc(m.seq),
+      ]);
+    if (limit != null) q.limit(limit, offset: offset);
+    return [
+      for (final r in await q.get())
+        MediaItem(
+          fileName: r.read(m.fileName)!,
+          diaryId: r.read(d.id)!,
+          time: dbToTime(r.read(d.time)!),
+        ),
+    ];
   }
 
   /// 汇全集引用的媒体文件名（含回收站/草稿），供孤儿清理用。

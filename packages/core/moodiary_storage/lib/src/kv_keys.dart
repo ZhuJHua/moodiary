@@ -79,8 +79,6 @@ enum MoodiaryKVs<T extends Object> {
 
   customFont<String>(defaultValue: ''),
 
-  /// 图片优化：存储时按 1280 规则压缩 + 统一转 WebP；关闭则保存原图（HEIC 仍转码）。
-  imageOptimize<bool>(defaultValue: true),
   homeViewMode<int>(defaultValue: 3 /* ViewModeType.timeline.number */),
   homeSortMode<int>(defaultValue: 0 /* DiarySort.timeDesc.number */),
 

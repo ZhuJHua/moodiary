@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 import 'package:moodiary_files/moodiary_files.dart';
@@ -354,7 +352,8 @@ class _Images extends StatelessWidget {
             height: boxWidth / ratio,
             child: _Thumb(
               name: names.first,
-              cacheWidth: (boxWidth * dpr).round(),
+              // 单图占整行，按显示宽取档（手机落 m）；只在跨档时换缓存键。
+              tier: ImageTier.fit((boxWidth * dpr).round()),
               radius: AppBorderRadius.mediumBorderRadius,
             ),
           );
@@ -371,7 +370,7 @@ class _Images extends StatelessWidget {
                 height: cell,
                 child: _Thumb(
                   name: names[i],
-                  cacheWidth: (cell * dpr).round(),
+                  tier: .s,
                   radius: AppBorderRadius.smallBorderRadius,
                   moreCount: i == show - 1 && extra > 0 ? extra : 0,
                 ),
@@ -386,13 +385,13 @@ class _Images extends StatelessWidget {
 
 class _Thumb extends StatelessWidget {
   final String name;
-  final int cacheWidth;
+  final ImageTier tier;
   final BorderRadius radius;
   final int moreCount;
 
   const _Thumb({
     required this.name,
-    required this.cacheWidth,
+    required this.tier,
     required this.radius,
     this.moreCount = 0,
   });
@@ -410,10 +409,7 @@ class _Thumb extends StatelessWidget {
             // 按文件名 key：开了 gaplessPlayback，换图期间旧帧不会清空，列表重排后
             // 复用同一个 Element 会先画上一篇日记的照片。与媒体库同一处理。
             key: ValueKey(name),
-            image: ResizeImage(
-              FileImage(File(AppFiles.getRealPath('image', name))),
-              width: cacheWidth,
-            ),
+            image: MediaImage(AppFiles.getRealPath('image', name), tier: tier),
             fit: .cover,
             gaplessPlayback: true,
             // 重装后媒体文件会被清空而日记还在——没有 errorBuilder 就是一片空白。

@@ -7,16 +7,19 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'media_controller.g.dart';
 
-/// 媒体库分页数据源：按 [MediaType] 加载含该类型媒体的在册日记（时间倒序）。
-/// 每类一个 family 实例，各自维护 offset / noMore，互不干扰。展示用的按日期分组
-/// 由纯函数 [buildMediaGroup] 派生，不落 state。
+/// 媒体库分页数据源：按 [MediaType] 分页加载**媒体条目**（一页 [pageSize] 个文件，
+/// 日记时间倒序）。每类一个 family 实例，各自维护 offset / noMore。
 ///
-/// 订阅 [DiaryRepository.diaryEvents] 按事件原地增量更新（复用 [applyDiaryEvent]），
-/// 使新增 / 编辑 / 删除日记后媒体库即时刷新，无需重查库。
+/// 订阅 [DiaryRepository.diaryEvents] 按事件原地增量更新：一篇日记的变更 = 先摘掉它
+/// 已加载的全部条目，再把新条目按序插回（只在已加载窗口内；比窗口末尾还旧且还有下一页
+/// 时不插，翻页自然带来）。
 @riverpod
-class MediaDiaries extends _$MediaDiaries with LoadMoreMixin<Diary> {
+class MediaItems extends _$MediaItems with LoadMoreMixin<MediaItem> {
   @override
-  FutureOr<List<Diary>> build({required MediaType type}) async {
+  int get pageSize => 60;
+
+  @override
+  FutureOr<List<MediaItem>> build({required MediaType type}) async {
     final sub = ref
         .read(diaryRepositoryProvider)
         .diaryEvents
@@ -26,16 +29,16 @@ class MediaDiaries extends _$MediaDiaries with LoadMoreMixin<Diary> {
   }
 
   @override
-  Future<Iterable<Diary>?> load({required int limit, required int offset}) {
+  Future<Iterable<MediaItem>?> load({required int limit, required int offset}) {
     return ref
         .read(diaryRepositoryProvider)
-        .getMediaSourceDiaries(type: type, offset: offset, limit: limit);
+        .getMediaItems(type: type, offset: offset, limit: limit);
   }
 
-  bool _hasMedia(Diary d) => switch (type) {
-    .image => d.imageName.isNotEmpty,
-    .audio => d.audioName.isNotEmpty,
-    .video => d.videoName.isNotEmpty,
+  List<String> _namesOf(Diary d) => switch (type) {
+    .image => d.imageName,
+    .audio => d.audioName,
+    .video => d.videoName,
   };
 
   void _applyChange(DiaryEvent event) {
@@ -44,53 +47,47 @@ class MediaDiaries extends _$MediaDiaries with LoadMoreMixin<Diary> {
       markMissedEvent();
       return;
     }
-    state = .data(
-      applyDiaryEvent(
-        list,
-        event,
-        belongs: (d) => d.show && _hasMedia(d),
-        compare: diarySortComparator(.timeDesc),
-        mayHaveMore: !noMore,
-      ),
-    );
+    switch (event) {
+      case DiaryDeleted(:final id):
+        final without = list.where((m) => m.diaryId != id).toList();
+        if (without.length != list.length) state = .data(without);
+      case DiaryCreated(:final diary) || DiaryUpdated(:final diary):
+        final without = list.where((m) => m.diaryId != diary.id).toList();
+        final removed = without.length != list.length;
+        final names = diary.show ? _namesOf(diary) : const <String>[];
+        if (names.isEmpty) {
+          if (removed) state = .data(without);
+          return;
+        }
+        final fresh = [
+          for (final name in names)
+            MediaItem(fileName: name, diaryId: diary.id, time: diary.time),
+        ];
+        // 比已加载窗口末尾还旧且还有下一页：不插，翻页自然带来，插了反而重复。
+        if (!noMore &&
+            without.isNotEmpty &&
+            MediaItem.compare(fresh.first, without.last) > 0) {
+          if (removed) state = .data(without);
+          return;
+        }
+        var at = without.length;
+        for (var i = 0; i < without.length; i++) {
+          if (MediaItem.compare(fresh.first, without[i]) < 0) {
+            at = i;
+            break;
+          }
+        }
+        state = .data([
+          ...without.sublist(0, at),
+          ...fresh,
+          ...without.sublist(at),
+        ]);
+    }
   }
-}
-
-/// 把日记列表（时间倒序）按「年月日」零点聚合为分组。跨分页边界的同一天会并入同
-/// 一组（putIfAbsent 只首次登记日期、后续追加），日期顺序沿用时间倒序。
-MediaGroup buildMediaGroup(List<Diary> diaries, MediaType type) {
-  final map = <DateTime, List<String>>{};
-  final order = <DateTime>[];
-  for (final d in diaries) {
-    final names = switch (type) {
-      .image => d.imageName,
-      .audio => d.audioName,
-      .video => d.videoName,
-    };
-    if (names.isEmpty) continue;
-    final t = d.time.toLocal();
-    final key = DateTime(t.year, t.month, t.day);
-    map
-        .putIfAbsent(key, () {
-          order.add(key);
-          return <String>[];
-        })
-        .addAll(names);
-  }
-  return MediaGroup(dates: order, groups: map);
-}
-
-class MediaGroup {
-  final List<DateTime> dates;
-  final Map<DateTime, List<String>> groups;
-
-  const MediaGroup({required this.dates, required this.groups});
-
-  bool get isEmpty => dates.isEmpty;
 }
 
 /// 媒体清理：找出 / 删除未被任何日记引用的孤儿媒体文件。[scan] 只扫描不删除；
-/// [clean] 只删文件——刷新（失效 [mediaDiariesProvider]）由调用方用自身有效 ref 触发，
+/// [clean] 只删文件——刷新（失效 [mediaItemsProvider]）由调用方用自身有效 ref 触发，
 /// 因本 controller 是 autoDispose，其 ref 会在确认弹窗 await 期间被回收。
 @riverpod
 class MediaCleanupController extends _$MediaCleanupController {

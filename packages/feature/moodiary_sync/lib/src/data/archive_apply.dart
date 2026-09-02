@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
@@ -308,10 +309,7 @@ class ArchiveApplier {
               );
               await _deleteLocalMedia(local);
               diaryChanged++;
-              _logger.info(
-                .diaryTombstonePull,
-                payload: {'diaryId': id},
-              );
+              _logger.info(.diaryTombstonePull, payload: {'diaryId': id});
             }
             // 远端已知该删除 → 记录当前 backend 已覆盖（本地无墓碑行则无需记录）。
             if (trackingId != null) tombstones.markPushed(key, trackingId);
@@ -419,10 +417,7 @@ class ArchiveApplier {
                 await categoryRepo.tombstoneCategory(id, fromSync: fromSync),
               );
               categoryChanged++;
-              _logger.info(
-                .categoryTombstonePull,
-                payload: {'categoryId': id},
-              );
+              _logger.info(.categoryTombstonePull, payload: {'categoryId': id});
             }
             if (trackingId != null) tombstones.markPushed(key, trackingId);
             return;
@@ -576,10 +571,7 @@ class ArchiveApplier {
           // 同上：写失败直接抛，由条目级 catch 计 failed。
           tombstones.remove(key);
           mediaInfoChanged++;
-          _logger.info(
-            .mediaInfoDownload,
-            payload: {'mediaFileName': id},
-          );
+          _logger.info(.mediaInfoDownload, payload: {'mediaFileName': id});
         }
       } catch (e) {
         failed++;
@@ -708,6 +700,10 @@ class ArchiveApplier {
         .mediaDownload,
         payload: {'type': type, 'filename': filename, 'bytes': bytes},
       );
+      // 缩略图不同步：拉到原图后本机自己算。fire-and-forget，没跑完被杀由展示端按需补。
+      if (type == MediaType.image.value && localPath != null) {
+        unawaited(ImageDerivatives.warm(localPath));
+      }
     } catch (e) {
       _mediaFailed++;
       _logger.error(
@@ -756,10 +752,7 @@ class ArchiveApplier {
       entries.map((e) async {
         try {
           await _mediaFiles.delete(e.$1, e.$2);
-          _logger.info(
-            .mediaDelete,
-            payload: {'type': e.$1, 'filename': e.$2},
-          );
+          _logger.info(.mediaDelete, payload: {'type': e.$1, 'filename': e.$2});
         } catch (_) {}
       }),
       eagerError: false,

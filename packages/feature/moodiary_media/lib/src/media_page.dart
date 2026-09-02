@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
@@ -10,11 +8,12 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 import 'media_controller.dart';
+import 'media_layout.dart';
 import 'media_video_viewer.dart';
 
 /// 媒体库页：顶部「媒体库」标题 + 圆角胶囊筛选条（图片 / 音频 / 视频），按日期倒序
-/// 分段浏览。AppBar「清理无用文件」删孤儿媒体。列表用 sliver 懒加载、缩略图按需
-/// 降采样，滚动更顺滑。
+/// 分段浏览。AppBar「清理无用文件」删孤儿媒体。整个列表一条 sliver（[GroupedGridDelegate]，
+/// 标题 + 格子同一序列，可见范围二分定位）、按媒体文件分页、格子走档位缩略图。
 class MediaPage extends StatelessWidget {
   const MediaPage({super.key});
 
@@ -140,61 +139,62 @@ Future<void> runMediaCleanup(BuildContext context, WidgetRef ref) async {
     return;
   }
   // 用调用方仍有效的 ref 刷新媒体库（controller 的 ref 此时可能已被 autoDispose 回收）。
-  if (context.mounted) ref.invalidate(mediaDiariesProvider);
+  if (context.mounted) ref.invalidate(mediaItemsProvider);
   await toast.dismiss();
   toast.success(message: l10n.media.cleanupDone(count: report.count));
 }
 
-/// 3 列网格的常量（内边距 / 间距 / 列数），用于按屏宽算出缩略图降采样宽度。
+/// 网格常量：内边距 / 间距 / 列数；音频卡片固定高。
 const double _kGridPadding = 12;
 const double _kGridSpacing = 4;
 const int _kGridColumns = 3;
+const double _kAudioTileExtent = 66;
+const double _kAudioSpacing = 8;
 
 class _MediaBody extends ConsumerWidget {
   final MediaType type;
 
   const _MediaBody({super.key, required this.type});
 
-  /// 按实际单元格宽度算出缩略图解码宽度（像素），避免整图解码——大图列表卡顿主因。
-  int _thumbCacheWidth(BuildContext context) {
-    final dpr = MediaQuery.devicePixelRatioOf(context);
-    final width = MediaQuery.sizeOf(context).width;
-    final cell =
-        (width - _kGridPadding * 2 - _kGridSpacing * (_kGridColumns - 1)) /
-        _kGridColumns;
-    return (cell * dpr).round();
-  }
+  /// 标题行固定高（内边距 10 + 8 + 一行 titleSmall），随系统字号缩放。
+  double _headerExtent(BuildContext context) =>
+      18 + MediaQuery.textScalerOf(context).scale(24);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final provider = mediaDiariesProvider(type: type);
+    final provider = mediaItemsProvider(type: type);
     final async = ref.watch(provider);
     return async.buildLoading(
-      data: (diaries) {
-        final group = buildMediaGroup(diaries, type);
-        if (group.isEmpty) return _Empty();
-        final cacheWidth = _thumbCacheWidth(context);
+      data: (items) {
+        final flat = MediaFlat.of(items);
+        if (flat.isEmpty) return _Empty();
+        final audio = type == .audio;
         return MRefresh(
           onLoadMore: () => ref.read(provider.notifier).loadMore(),
           onRefresh: () => ref.read(provider.notifier).refresh(),
           child: CustomScrollView(
             slivers: [
               const SliverToBoxAdapter(child: SizedBox(height: 4)),
-              for (final date in group.dates) ...[
-                SliverToBoxAdapter(
-                  child: _SectionHeader(
-                    date: date,
-                    count: group.groups[date]!.length,
-                    type: type,
+              // 整个列表一条 sliver：标题与格子都是它的 child，可见范围二分定位，
+              // 不再是每个日期两条 sliver、viewport 每帧顺序问一遍。
+              SliverPadding(
+                padding: const .symmetric(horizontal: _kGridPadding),
+                sliver: SliverGrid(
+                  gridDelegate: GroupedGridDelegate(
+                    entries: flat.entries,
+                    columns: audio ? 1 : _kGridColumns,
+                    spacing: audio ? _kAudioSpacing : _kGridSpacing,
+                    headerExtent: _headerExtent(context),
+                    tileMainExtent: audio ? _kAudioTileExtent : null,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, i) => _buildEntry(flat, i),
+                    childCount: flat.entries.length,
+                    // 按 key 找回已建 element：插入 / 删除后其它格子不重建、不闪图。
+                    findChildIndexCallback: flat.indexOfKey,
                   ),
                 ),
-                _MediaSliver(
-                  type: type,
-                  date: date,
-                  names: group.groups[date]!,
-                  cacheWidth: cacheWidth,
-                ),
-              ],
+              ),
               // 底栏悬浮，最后一屏得自己让出那条带 —— 根壳把带高折进了 padding.bottom。
               SliverToBoxAdapter(
                 child: SizedBox(
@@ -207,6 +207,30 @@ class _MediaBody extends ConsumerWidget {
       },
     );
   }
+
+  Widget _buildEntry(MediaFlat flat, int i) {
+    final key = flat.keys[i];
+    switch (flat.entries[i]) {
+      case MediaHeader(:final group):
+        return _SectionHeader(
+          key: key,
+          date: flat.dates[group],
+          count: flat.groups[group].length,
+          type: type,
+        );
+      case MediaCell(:final group, :final index):
+        final names = flat.groups[group];
+        return switch (type) {
+          .image => _ImageTile(key: key, names: names, index: index),
+          .video => _VideoTile(key: key, name: names[index]),
+          .audio => _AudioTile(
+            key: key,
+            name: names[index],
+            date: flat.dates[group],
+          ),
+        };
+    }
+  }
 }
 
 class _SectionHeader extends StatelessWidget {
@@ -215,6 +239,7 @@ class _SectionHeader extends StatelessWidget {
   final MediaType type;
 
   const _SectionHeader({
+    super.key,
     required this.date,
     required this.count,
     required this.type,
@@ -224,12 +249,14 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     return Padding(
-      padding: const .fromLTRB(_kGridPadding, 10, _kGridPadding, 8),
+      padding: const .only(top: 10, bottom: 8),
       child: Row(
         children: [
           Expanded(
             child: Text(
               TimeFormat.fullDate(date),
+              maxLines: 1,
+              overflow: .ellipsis,
               style: theme.typography.titleSmall.emphasized.primary,
             ),
           ),
@@ -239,63 +266,6 @@ class _SectionHeader extends StatelessWidget {
             style: theme.typography.labelSmall.onSurfaceVariant,
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// 单个日期分段的媒体：图片 / 视频用 [SliverGrid]（cell 级懒加载），音频用 [SliverList]。
-class _MediaSliver extends StatelessWidget {
-  final MediaType type;
-  final DateTime date;
-  final List<String> names;
-  final int cacheWidth;
-
-  const _MediaSliver({
-    required this.type,
-    required this.date,
-    required this.names,
-    required this.cacheWidth,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (type == .audio) {
-      return SliverPadding(
-        padding: const .symmetric(horizontal: _kGridPadding),
-        sliver: SliverList.separated(
-          itemCount: names.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 8),
-          // 按文件名 key，实时插入/重排时移动元素而非改数据（不错位）。
-          itemBuilder: (context, i) =>
-              _AudioTile(key: ValueKey(names[i]), name: names[i], date: date),
-        ),
-      );
-    }
-    return SliverPadding(
-      padding: const .symmetric(horizontal: _kGridPadding),
-      sliver: SliverGrid.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: _kGridColumns,
-          mainAxisSpacing: _kGridSpacing,
-          crossAxisSpacing: _kGridSpacing,
-        ),
-        itemCount: names.length,
-        // 按文件名 key：实时插入/重排时移动已解码的缩略图，避免闪成邻格旧图。
-        itemBuilder: (context, i) => switch (type) {
-          .image => _ImageTile(
-            key: ValueKey(names[i]),
-            names: names,
-            index: i,
-            cacheWidth: cacheWidth,
-          ),
-          .video => _VideoTile(
-            key: ValueKey(names[i]),
-            name: names[i],
-            cacheWidth: cacheWidth,
-          ),
-          .audio => const SizedBox.shrink(),
-        },
       ),
     );
   }
@@ -517,14 +487,8 @@ const String _kImageHeroPrefix = 'media';
 class _ImageTile extends StatelessWidget {
   final List<String> names;
   final int index;
-  final int cacheWidth;
 
-  const _ImageTile({
-    super.key,
-    required this.names,
-    required this.index,
-    required this.cacheWidth,
-  });
+  const _ImageTile({super.key, required this.names, required this.index});
 
   @override
   Widget build(BuildContext context) {
@@ -535,14 +499,13 @@ class _ImageTile extends StatelessWidget {
         images: [for (final name in names) AppFiles.getRealPath('image', name)],
         initialIndex: index,
         heroPrefix: _kImageHeroPrefix,
-        // 与网格缩略图同解码宽度 → 同缓存键，浏览器加载态直接命中缩略图。
-        placeholderCacheWidth: cacheWidth,
+        // 与网格缩略图同档位 → 同缓存键，看图页加载态直接命中缩略图。
+        placeholderTier: .s,
       ),
       child: Hero(
         tag: '$_kImageHeroPrefix-$path',
-        child: _Thumb(
-          image: ResizeImage(FileImage(File(path)), width: cacheWidth),
-        ),
+        // 网格格子宽随屏宽 / 折叠态变，缓存键只认档位，展开过程中不重载。
+        child: _Thumb(image: MediaImage(path, tier: .s)),
       ),
     );
   }
@@ -550,9 +513,8 @@ class _ImageTile extends StatelessWidget {
 
 class _VideoTile extends StatelessWidget {
   final String name;
-  final int cacheWidth;
 
-  const _VideoTile({super.key, required this.name, required this.cacheWidth});
+  const _VideoTile({super.key, required this.name});
 
   @override
   Widget build(BuildContext context) {
@@ -560,10 +522,7 @@ class _VideoTile extends StatelessWidget {
     return GestureDetector(
       onTap: () => MediaVideoViewer.show(context, name: name),
       child: _Thumb(
-        image: ResizeImage(
-          FileImage(File(AppFiles.getRealPath('thumbnail', name))),
-          width: cacheWidth,
-        ),
+        image: MediaImage(AppFiles.getRealPath('thumbnail', name), tier: .s),
         // 缩略图底色不可预测：用固定 scrim 压暗，前景按「暗底」配对 onInverseSurface。
         overlay: Stack(
           fit: .expand,
