@@ -2760,13 +2760,3 @@ checksum = "27bc9d5b815bc103f142aa054f561d9187d191692ec7c2d1e2b4737f8dbd7296"
 dependencies = [
  "zune-core",
 ]
-
-[[patch.unused]]
-name = "typst-html"
-version = "0.15.1"
-source = "git+https://github.com/ZhuJHua/typst.git?rev=237a52c41ac894a8e03e53a7e0b794d006b8701f#237a52c41ac894a8e03e53a7e0b794d006b8701f"
-
-[[patch.unused]]
-name = "typst-svg"
-version = "0.15.1"
-source = "git+https://github.com/ZhuJHua/typst.git?rev=237a52c41ac894a8e03e53a7e0b794d006b8701f#237a52c41ac894a8e03e53a7e0b794d006b8701f"

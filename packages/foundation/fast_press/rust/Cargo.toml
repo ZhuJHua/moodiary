@@ -12,11 +12,12 @@ crate-type = ["cdylib", "staticlib"]
 [dependencies]
 flutter_rust_bridge = "=2.13.0"
 anyhow = "=1.0.104"
-# 走自家 fork（分支 moodiary/slim，与 v0.15.1 同源，只多了几个 opt-out feature）：日记导出只要
-# PDF，参考文献 / wasm 插件 / SVG / PDF 嵌图 / HTML 导出 / 连字全部关掉，libfastpress 少约 8 MB。
-# 版本号仍是 =0.15.1，下面的 [patch.crates-io] 才是真正的来源；升级 typst 时改 rev 并 rebase fork。
-typst = { version = "=0.15.1", default-features = false }
-typst-pdf = { version = "=0.15.1", default-features = false }
+# 走自家 fork（分支 moodiary/slim，基于 v0.15.1 tag，只多了几个 opt-out feature）：日记导出只要
+# PDF，参考文献 / wasm 插件 / SVG / PDF 嵌图 / HTML 导出 / 连字全部关掉，libfastpress 33 → 19 MB。
+# fork 内部的 typst-* 都是同仓 path 依赖，cargo 会自动从同一个 git 源解析，不必逐个列。
+# version 只做校验（fork 的版本号必须还是 0.15.1，钉版本闸门也认它）；升级 typst 时 rebase fork 并改 rev。
+typst = { git = "https://github.com/ZhuJHua/typst.git", rev = "237a52c41ac894a8e03e53a7e0b794d006b8701f", version = "=0.15.1", default-features = false }
+typst-pdf = { git = "https://github.com/ZhuJHua/typst.git", rev = "237a52c41ac894a8e03e53a7e0b794d006b8701f", version = "=0.15.1", default-features = false }
 docx-rs = { version = "=0.4.22", default-features = false }
 # 代码块高亮。四个 feature 全与 typst-library 重合，收窄一个字节都省不到。
 syntect = { version = "=5.3.0", default-features = false, features = [
@@ -39,19 +40,6 @@ image = { version = "=0.25.10", default-features = false, features = [
 [dev-dependencies]
 zip = { version = "=8.6.0", default-features = false, features = ["deflate"] }
 
-[patch.crates-io]
-typst = { git = "https://github.com/ZhuJHua/typst.git", rev = "237a52c41ac894a8e03e53a7e0b794d006b8701f" }
-typst-eval = { git = "https://github.com/ZhuJHua/typst.git", rev = "237a52c41ac894a8e03e53a7e0b794d006b8701f" }
-typst-html = { git = "https://github.com/ZhuJHua/typst.git", rev = "237a52c41ac894a8e03e53a7e0b794d006b8701f" }
-typst-layout = { git = "https://github.com/ZhuJHua/typst.git", rev = "237a52c41ac894a8e03e53a7e0b794d006b8701f" }
-typst-library = { git = "https://github.com/ZhuJHua/typst.git", rev = "237a52c41ac894a8e03e53a7e0b794d006b8701f" }
-typst-macros = { git = "https://github.com/ZhuJHua/typst.git", rev = "237a52c41ac894a8e03e53a7e0b794d006b8701f" }
-typst-pdf = { git = "https://github.com/ZhuJHua/typst.git", rev = "237a52c41ac894a8e03e53a7e0b794d006b8701f" }
-typst-realize = { git = "https://github.com/ZhuJHua/typst.git", rev = "237a52c41ac894a8e03e53a7e0b794d006b8701f" }
-typst-svg = { git = "https://github.com/ZhuJHua/typst.git", rev = "237a52c41ac894a8e03e53a7e0b794d006b8701f" }
-typst-syntax = { git = "https://github.com/ZhuJHua/typst.git", rev = "237a52c41ac894a8e03e53a7e0b794d006b8701f" }
-typst-timing = { git = "https://github.com/ZhuJHua/typst.git", rev = "237a52c41ac894a8e03e53a7e0b794d006b8701f" }
-typst-utils = { git = "https://github.com/ZhuJHua/typst.git", rev = "237a52c41ac894a8e03e53a7e0b794d006b8701f" }
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
