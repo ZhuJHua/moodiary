@@ -1177,6 +1177,11 @@ class _Translations$ui$en extends Translations$ui$zh {
 	@override String get imageBrowserInfoResolution => 'Resolution';
 	@override String get imageBrowserInfoSize => 'Size';
 	@override String get imageBrowserInfoFormat => 'Format';
+	@override String get imageBrowserInfoDecode => 'Decoding';
+	@override String get imageBrowserDecodeTiled => 'Tiled (visible region on demand)';
+	@override String get imageBrowserDecodeTiledBaseline => 'Tiled (via baseline copy)';
+	@override String get imageBrowserDecodeWhole => 'Whole image (longest side capped at 4096)';
+	@override String get imageBrowserDecodeWholeProgressive => 'Whole image (progressive JPEG within 4096, no tiling needed)';
 	@override String get imageBrowserInfoModified => 'Modified';
 	@override String get videoPlayerLoadFailed => 'Couldn\'t load this video';
 	@override String get play => 'Play';

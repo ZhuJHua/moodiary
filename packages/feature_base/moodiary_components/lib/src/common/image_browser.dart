@@ -407,11 +407,20 @@ class _MImageBrowserState extends State<MImageBrowser> {
       modified = await file.lastModified();
     } catch (_) {}
 
-    // 只读头：转正后的宽高，不把原图整解一遍。
+    // 只读头：转正后的宽高，不把原图整解一遍。顺带说清这张图走的是哪条解码路。
     String? resolution;
+    String? decode;
     try {
       final probe = await rust.ImageCompressor.probe(filePath: image);
       resolution = '${probe.width} × ${probe.height}';
+      final region = _regions[image];
+      decode = region != null
+          ? (region.decodePath == image
+                ? l10n.ui.imageBrowserDecodeTiled
+                : l10n.ui.imageBrowserDecodeTiledBaseline)
+          : probe.format == rust.ImageFormat.jpeg && probe.progressive
+          ? l10n.ui.imageBrowserDecodeWholeProgressive
+          : l10n.ui.imageBrowserDecodeWhole;
     } catch (_) {}
 
     final unit = length == null ? null : AppFiles.bytesToUnits(length);
@@ -421,6 +430,7 @@ class _MImageBrowserState extends State<MImageBrowser> {
       resolution: resolution,
       size: unit == null ? null : '${unit['size']} ${unit['unit']}',
       format: ext.isEmpty ? null : ext,
+      decode: decode,
       modified: modified,
     );
   }
@@ -432,6 +442,7 @@ class _ImageInfoData {
   final String? resolution;
   final String? size;
   final String? format;
+  final String? decode;
   final DateTime? modified;
 
   const _ImageInfoData({
@@ -440,6 +451,7 @@ class _ImageInfoData {
     this.resolution,
     this.size,
     this.format,
+    this.decode,
     this.modified,
   });
 }
@@ -459,6 +471,7 @@ class _ImageInfoSheet extends StatelessWidget {
         (l10n.ui.imageBrowserInfoResolution, info.resolution!),
       if (info.size != null) (l10n.ui.imageBrowserInfoSize, info.size!),
       if (info.format != null) (l10n.ui.imageBrowserInfoFormat, info.format!),
+      if (info.decode != null) (l10n.ui.imageBrowserInfoDecode, info.decode!),
       if (info.modified != null)
         (
           l10n.ui.imageBrowserInfoModified,

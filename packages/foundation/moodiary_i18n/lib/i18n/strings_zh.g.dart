@@ -3200,6 +3200,21 @@ class Translations$ui$zh {
 	/// zh: '格式'
 	String get imageBrowserInfoFormat => '格式';
 
+	/// zh: '解码'
+	String get imageBrowserInfoDecode => '解码';
+
+	/// zh: '分块（按需解可见区域）'
+	String get imageBrowserDecodeTiled => '分块（按需解可见区域）';
+
+	/// zh: '分块（经 baseline 副本）'
+	String get imageBrowserDecodeTiledBaseline => '分块（经 baseline 副本）';
+
+	/// zh: '整图（最长边 4096 封顶）'
+	String get imageBrowserDecodeWhole => '整图（最长边 4096 封顶）';
+
+	/// zh: '整图（progressive JPEG，未超过 4096 不需要分块）'
+	String get imageBrowserDecodeWholeProgressive => '整图（progressive JPEG，未超过 4096 不需要分块）';
+
 	/// zh: '修改时间'
 	String get imageBrowserInfoModified => '修改时间';
 

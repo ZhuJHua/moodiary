@@ -84,9 +84,9 @@ class _Tile {
 }
 
 class _OriginalImageViewState extends State<OriginalImageView> {
-  /// 解出来的 tile 缓存上限（规划内的块不算，它们由 [TilePlanner.maxVisibleTiles] 封顶）。
+  /// 解出来的 tile 缓存上限（规划内的块不算，它们由 [TilePlanner.maxPlannedTiles] 封顶）。
   /// fit 那一层（整图 ≤ 36 块）留着，缩回去不用再画 overview 的模糊。
-  static const _cacheBudgetBytes = 96 * 1024 * 1024;
+  static const _cacheBudgetBytes = 64 * 1024 * 1024;
 
   /// 一批最多解几块。可见 tile 一批全要：Rust 把它们的并集当一条带一次解出来，视口跨几行
   /// 也只跑一趟熵解码（313MB 的图一趟两三秒，按行解就是行数倍）。

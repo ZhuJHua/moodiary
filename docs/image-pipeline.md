@@ -125,7 +125,7 @@ EXIF 方向：先缩后转，只转小图（已落地）。`.part` 写完 rename
 3. **tile 层**（2026-09-02 改按 pixa 的 tile 模型，用户拍板）：`TilePlanner` 按 PhotoView
    的 scale 与 position 逆变换出视口的源像素矩形，取 2 的幂 sample 使解出的密度落在屏幕
    的 0.58–1.15 倍，tile 为 512 × sample 源像素见方，可见 tile 按离中心距离排序、上限 64、
-   外圈一屏预取（> 50MP 不预取）。规划去抖 60ms；一批最多 48 块交 Rust `decode_tiles`
+   外圈半屏预取（> 50MP 不预取；可见 + 预取总数封顶 64 块 = 64MB）。规划去抖 60ms；一批最多 48 块交 Rust `decode_tiles`
    **一次解并集**（系统相册 `BitmapRegionDecoder` 也是整个可见区域一次解）→ RGBA 零拷贝到
    Dart → `decodeImageFromPixels` 并行上传 → 缓存（64MB 按字节 LRU，细档保留在粗档之上）→
    `drawImageRect` 画在 child 坐标里，粗档先画细档盖上，放大过程就是「模糊到清晰」。tile 层
@@ -218,7 +218,7 @@ impl RegionDecoder {
 | JPEG 预热 / 按需生成 | N/8 解码，48MP 出 1280 档解 2/8 ≈ 9MB | `Pool(核数/2)`；≥ 6MB 且带 DRI 的文件分段 ≤ 6 线程 |
 | 非 JPEG 预热 | 全解，48MP 144MB | `Pool(1)`，且不在滚动路径上 |
 | 看图页 fit 层 | 就是 sample 8 的整图带，≤ 48MB 时整张钉住 | 同 tile 层 |
-| 看图页 tile 层 | ≤ 1MB / 块，缓存 64MB；Rust 带 96MB（整图带钉住）；restart 块拷贝 ≤ 8MB × 6 | 一批 ≤ 48 块一次解，去抖 60ms，按距离排序，预取 90ms 后补 |
+| 看图页 tile 层 | ≤ 1MB / 块，规划内 ≤ 64 块 + 缓存 64MB；Rust 带 96MB（只钉最粗一档整图带）；restart 块拷贝 ≤ 8MB × 6 | 一批 ≤ 48 块一次解，去抖 60ms，按距离排序，半屏预取 90ms 后补 |
 | 原图封顶兜底（非 JPEG） | 最长边 4096 → ≤ 64MB | 引擎 |
 
 同步拉几千张时读头、查档、生成全在闸门里，句柄数有界（iOS 软上限 256）。
@@ -318,7 +318,7 @@ impl RegionDecoder {
     控制器归 `_TilePage` 自己；**探头回来前先挂了整解原图的 PhotoView**，每张图白解一张 4096
     封顶的位图进缓存 → 探头期间只画 m 档；邻页各开一份解码器与 tile 缓存 → 只有当前页开
     （`active`，切页 teardown / 再开）；预算只在规划时淘汰，插入后能到两倍 → 插入后再淘汰一
-    次；`maxVisibleTiles` 64 在竖屏密度带下沿会被平移触发升档变糊（可见 6×12 = 72）→ 96；
+    次；`maxVisibleTiles` 64 在竖屏密度带下沿会被平移触发升档变糊（可见 6×12 = 72）→ 升档阈值 96、可见 + 预取总数另封顶 64，预取圈从一屏改半屏（一块 1MB，整圈一屏是可见数的八倍）；
     `decodeImageFromPixels` 失败时回调永远不来、`_busy` 卡死 → 改走 `ImmutableBuffer` →
     `ImageDescriptor` → `Codec` 的 Future 链；一批里一块矩形落在图外整批报错 → Rust 跳过、
     Dart 按覆盖矩形对号；第一批就失败的文件退回引擎路径而不是一批批撞。

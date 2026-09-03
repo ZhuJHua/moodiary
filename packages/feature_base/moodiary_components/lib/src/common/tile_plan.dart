@@ -12,19 +12,24 @@ class TilePlanner {
   /// tile 边长（源像素，未缩放前）。
   final int tileSize;
 
-  /// 视口之外再预取几屏。
+  /// 视口之外再预取几屏。半屏：一块 tile 是 1MB 的 RGBA，整圈一屏要预取可见数的八倍。
   final double cacheExtentScreens;
 
-  /// 可见 tile 上限（超过就升一档 sample），也是可见 + 预取的总上限。
+  /// 可见 tile 上限（超过就升一档 sample）。密度带下沿（每源像素 0.575 物理像素）一块 tile
+  /// 只有 295 物理像素，1440×3200 的竖屏平移到不对齐时可见 6×12 = 72 块；上限比它高，
+  /// 不然平移一下就升档、整屏变糊。
   final int maxVisibleTiles;
+
+  /// 可见 + 预取的总上限：上层缓存不淘汰规划内的块，这就是它的内存上界（1MB 一块）。
+  /// 可见已经超过它时只留可见。
+  final int maxPlannedTiles;
 
   const TilePlanner({
     required this.imageSize,
     this.tileSize = 512,
-    this.cacheExtentScreens = 1.0,
-    // 密度带下沿（每源像素 0.575 物理像素）一块 tile 只有 295 物理像素，1440×3200 的竖屏
-    // 平移到不对齐时可见 6×12 = 72 块；上限比它高，不然平移一下就升档、整屏变糊。
+    this.cacheExtentScreens = 0.5,
     this.maxVisibleTiles = 96,
+    this.maxPlannedTiles = 64,
   });
 
   /// [visible] 视口在源像素坐标里的矩形；[physicalScale] 每个源像素占多少物理像素。
@@ -42,13 +47,12 @@ class TilePlanner {
       sample *= 2;
       raw = _rawPlan(visibleRect, sample);
     }
-    // 可见 + 预取一共不超过上限：上层的缓存不淘汰规划内的块，这里就是它的内存上界。
     final shown = raw.visible.take(maxVisibleTiles).toList(growable: false);
     return TilePlan(
       sample: sample,
       visible: shown,
       prefetch: raw.prefetch
-          .take(maxVisibleTiles - shown.length)
+          .take((maxPlannedTiles - shown.length).clamp(0, maxPlannedTiles))
           .toList(growable: false),
     );
   }
