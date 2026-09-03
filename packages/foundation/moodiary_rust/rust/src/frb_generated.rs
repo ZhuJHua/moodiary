@@ -28,7 +28,6 @@
 // Section: imports
 
 use crate::api::cancel::*;
-use crate::api::crypto::*;
 use crate::api::font::*;
 use crate::api::zip::*;
 use flutter_rust_bridge::for_generated::byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
@@ -43,7 +42,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1118702843;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1795552395;
 
 // Section: executor
 
@@ -51,210 +50,6 @@ flutter_rust_bridge::frb_generated_default_handler!();
 
 // Section: wire_funcs
 
-fn wire__crate__api__crypto__Aes_decrypt_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    key: impl CstDecode<Vec<u8>>,
-    encrypted_data: impl CstDecode<Vec<u8>>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "Aes_decrypt",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_key = key.cst_decode();
-            let api_encrypted_data = encrypted_data.cst_decode();
-            move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
-                    (move || {
-                        let output_ok =
-                            crate::api::crypto::Aes::decrypt(api_key, api_encrypted_data)?;
-                        std::result::Result::Ok(output_ok)
-                    })(),
-                )
-            }
-        },
-    )
-}
-fn wire__crate__api__crypto__Aes_decrypt_file_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    key: impl CstDecode<Vec<u8>>,
-    in_path: impl CstDecode<String>,
-    out_path: impl CstDecode<String>,
-    skip_prefix: impl CstDecode<u64>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "Aes_decrypt_file",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_key = key.cst_decode();
-            let api_in_path = in_path.cst_decode();
-            let api_out_path = out_path.cst_decode();
-            let api_skip_prefix = skip_prefix.cst_decode();
-            move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
-                    (move || {
-                        let output_ok = crate::api::crypto::Aes::decrypt_file(
-                            api_key,
-                            api_in_path,
-                            api_out_path,
-                            api_skip_prefix,
-                        )?;
-                        std::result::Result::Ok(output_ok)
-                    })(),
-                )
-            }
-        },
-    )
-}
-fn wire__crate__api__crypto__Aes_derive_key_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    salt: impl CstDecode<String>,
-    user_key: impl CstDecode<String>,
-    m_cost_kib: impl CstDecode<Option<u32>>,
-    t_cost: impl CstDecode<Option<u32>>,
-    p_cost: impl CstDecode<Option<u32>>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "Aes_derive_key",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_salt = salt.cst_decode();
-            let api_user_key = user_key.cst_decode();
-            let api_m_cost_kib = m_cost_kib.cst_decode();
-            let api_t_cost = t_cost.cst_decode();
-            let api_p_cost = p_cost.cst_decode();
-            move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
-                    (move || {
-                        let output_ok = crate::api::crypto::Aes::derive_key(
-                            api_salt,
-                            api_user_key,
-                            api_m_cost_kib,
-                            api_t_cost,
-                            api_p_cost,
-                        )?;
-                        std::result::Result::Ok(output_ok)
-                    })(),
-                )
-            }
-        },
-    )
-}
-fn wire__crate__api__crypto__Aes_encrypt_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    key: impl CstDecode<Vec<u8>>,
-    data: impl CstDecode<Vec<u8>>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "Aes_encrypt",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_key = key.cst_decode();
-            let api_data = data.cst_decode();
-            move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
-                    (move || {
-                        let output_ok = crate::api::crypto::Aes::encrypt(api_key, api_data)?;
-                        std::result::Result::Ok(output_ok)
-                    })(),
-                )
-            }
-        },
-    )
-}
-fn wire__crate__api__crypto__Aes_encrypt_file_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    key: impl CstDecode<Vec<u8>>,
-    in_path: impl CstDecode<String>,
-    out_path: impl CstDecode<String>,
-    prefix: impl CstDecode<Vec<u8>>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "Aes_encrypt_file",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_key = key.cst_decode();
-            let api_in_path = in_path.cst_decode();
-            let api_out_path = out_path.cst_decode();
-            let api_prefix = prefix.cst_decode();
-            move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
-                    (move || {
-                        let output_ok = crate::api::crypto::Aes::encrypt_file(
-                            api_key,
-                            api_in_path,
-                            api_out_path,
-                            api_prefix,
-                        )?;
-                        std::result::Result::Ok(output_ok)
-                    })(),
-                )
-            }
-        },
-    )
-}
-fn wire__crate__api__crypto__Argon2_hash_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    password: impl CstDecode<String>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "Argon2_hash",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_password = password.cst_decode();
-            move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
-                    (move || {
-                        let output_ok = crate::api::crypto::Argon2::hash(api_password)?;
-                        std::result::Result::Ok(output_ok)
-                    })(),
-                )
-            }
-        },
-    )
-}
-fn wire__crate__api__crypto__Argon2_verify_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    hash: impl CstDecode<String>,
-    password: impl CstDecode<String>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "Argon2_verify",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_hash = hash.cst_decode();
-            let api_password = password.cst_decode();
-            move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
-                    (move || {
-                        let output_ok = crate::api::crypto::Argon2::verify(api_hash, api_password)?;
-                        std::result::Result::Ok(output_ok)
-                    })(),
-                )
-            }
-        },
-    )
-}
 fn wire__crate__api__cancel__CancelToken_cancel_impl(
     that: impl CstDecode<
         RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CancelToken>>,
@@ -691,12 +486,6 @@ impl CstDecode<u32> for u32 {
         self
     }
 }
-impl CstDecode<u64> for u64 {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> u64 {
-        self
-    }
-}
 impl CstDecode<u8> for u8 {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> u8 {
@@ -714,24 +503,6 @@ impl SseDecode for flutter_rust_bridge::for_generated::anyhow::Error {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <String>::sse_decode(deserializer);
         return flutter_rust_bridge::for_generated::anyhow::anyhow!("{}", inner);
-    }
-}
-
-impl SseDecode for Aes {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Aes>>>::sse_decode(deserializer);
-        return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
-    }
-}
-
-impl SseDecode for Argon2 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <RustOpaqueNom<
-            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Argon2>,
-        >>::sse_decode(deserializer);
-        return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
     }
 }
 
@@ -768,22 +539,6 @@ impl SseDecode for std::collections::HashMap<String, f32> {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <Vec<(String, f32)>>::sse_decode(deserializer);
         return inner.into_iter().collect();
-    }
-}
-
-impl SseDecode for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Aes>> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <usize>::sse_decode(deserializer);
-        return unsafe { decode_rust_opaque_nom(inner) };
-    }
-}
-
-impl SseDecode for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Argon2>> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <usize>::sse_decode(deserializer);
-        return unsafe { decode_rust_opaque_nom(inner) };
     }
 }
 
@@ -958,17 +713,6 @@ impl SseDecode for Option<bool> {
     }
 }
 
-impl SseDecode for Option<u32> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        if (<bool>::sse_decode(deserializer)) {
-            return Some(<u32>::sse_decode(deserializer));
-        } else {
-            return None;
-        }
-    }
-}
-
 impl SseDecode for (String, f32) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -982,13 +726,6 @@ impl SseDecode for u32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_u32::<NativeEndian>().unwrap()
-    }
-}
-
-impl SseDecode for u64 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        deserializer.cursor.read_u64::<NativeEndian>().unwrap()
     }
 }
 
@@ -1037,36 +774,6 @@ fn pde_ffi_dispatcher_sync_impl(
 }
 
 // Section: rust2dart
-
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<Aes> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, StdArc<_>>(self.0)
-            .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<Aes> {}
-
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<Aes>> for Aes {
-    fn into_into_dart(self) -> FrbWrapper<Aes> {
-        self.into()
-    }
-}
-
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<Argon2> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, StdArc<_>>(self.0)
-            .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<Argon2> {}
-
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<Argon2>> for Argon2 {
-    fn into_into_dart(self) -> FrbWrapper<Argon2> {
-        self.into()
-    }
-}
 
 // Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<CancelToken> {
@@ -1154,23 +861,6 @@ impl SseEncode for flutter_rust_bridge::for_generated::anyhow::Error {
     }
 }
 
-impl SseEncode for Aes {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Aes>>>::sse_encode(
-            flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, StdArc<_>>(self),
-            serializer,
-        );
-    }
-}
-
-impl SseEncode for Argon2 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Argon2>>>::sse_encode(flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, StdArc<_>>(self), serializer);
-    }
-}
-
 impl SseEncode for CancelToken {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -1199,24 +889,6 @@ impl SseEncode for std::collections::HashMap<String, f32> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <Vec<(String, f32)>>::sse_encode(self.into_iter().collect(), serializer);
-    }
-}
-
-impl SseEncode for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Aes>> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        let (ptr, size) = self.sse_encode_raw();
-        <usize>::sse_encode(ptr, serializer);
-        <i32>::sse_encode(size, serializer);
-    }
-}
-
-impl SseEncode for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Argon2>> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        let (ptr, size) = self.sse_encode_raw();
-        <usize>::sse_encode(ptr, serializer);
-        <i32>::sse_encode(size, serializer);
     }
 }
 
@@ -1366,16 +1038,6 @@ impl SseEncode for Option<bool> {
     }
 }
 
-impl SseEncode for Option<u32> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <bool>::sse_encode(self.is_some(), serializer);
-        if let Some(value) = self {
-            <u32>::sse_encode(value, serializer);
-        }
-    }
-}
-
 impl SseEncode for (String, f32) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -1388,13 +1050,6 @@ impl SseEncode for u32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         serializer.cursor.write_u32::<NativeEndian>(self).unwrap();
-    }
-}
-
-impl SseEncode for u64 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        serializer.cursor.write_u64::<NativeEndian>(self).unwrap();
     }
 }
 
@@ -1429,7 +1084,6 @@ mod io {
 
     use super::*;
     use crate::api::cancel::*;
-    use crate::api::crypto::*;
     use crate::api::font::*;
     use crate::api::zip::*;
     use flutter_rust_bridge::for_generated::byteorder::{
@@ -1450,26 +1104,6 @@ mod io {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> flutter_rust_bridge::for_generated::anyhow::Error {
             unimplemented!()
-        }
-    }
-    impl CstDecode<Aes> for usize {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Aes {
-            flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(CstDecode::<
-                RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Aes>>,
-            >::cst_decode(
-                self
-            ))
-        }
-    }
-    impl CstDecode<Argon2> for usize {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Argon2 {
-            flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(CstDecode::<
-                RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Argon2>>,
-            >::cst_decode(
-                self
-            ))
         }
     }
     impl CstDecode<CancelToken> for usize {
@@ -1507,27 +1141,6 @@ mod io {
         fn cst_decode(self) -> std::collections::HashMap<String, f32> {
             let vec: Vec<(String, f32)> = self.cst_decode();
             vec.into_iter().collect()
-        }
-    }
-    impl CstDecode<RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Aes>>>
-        for usize
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(
-            self,
-        ) -> RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Aes>> {
-            unsafe { decode_rust_opaque_nom(self as _) }
-        }
-    }
-    impl CstDecode<RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Argon2>>>
-        for usize
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(
-            self,
-        ) -> RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Argon2>>
-        {
-            unsafe { decode_rust_opaque_nom(self as _) }
         }
     }
     impl
@@ -1593,12 +1206,6 @@ mod io {
         fn cst_decode(self) -> crate::api::graph_layout::GraphLayoutParams {
             let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
             CstDecode::<crate::api::graph_layout::GraphLayoutParams>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<u32> for *mut u32 {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> u32 {
-            unsafe { *flutter_rust_bridge::for_generated::box_from_leak_ptr(self) }
         }
     }
     impl CstDecode<crate::api::graph_layout::GraphLayoutParams> for wire_cst_graph_layout_params {
@@ -1732,77 +1339,6 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__crypto__Aes_decrypt(
-        port_: i64,
-        key: *mut wire_cst_list_prim_u_8_loose,
-        encrypted_data: *mut wire_cst_list_prim_u_8_loose,
-    ) {
-        wire__crate__api__crypto__Aes_decrypt_impl(port_, key, encrypted_data)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__crypto__Aes_decrypt_file(
-        port_: i64,
-        key: *mut wire_cst_list_prim_u_8_loose,
-        in_path: *mut wire_cst_list_prim_u_8_strict,
-        out_path: *mut wire_cst_list_prim_u_8_strict,
-        skip_prefix: u64,
-    ) {
-        wire__crate__api__crypto__Aes_decrypt_file_impl(port_, key, in_path, out_path, skip_prefix)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__crypto__Aes_derive_key(
-        port_: i64,
-        salt: *mut wire_cst_list_prim_u_8_strict,
-        user_key: *mut wire_cst_list_prim_u_8_strict,
-        m_cost_kib: *mut u32,
-        t_cost: *mut u32,
-        p_cost: *mut u32,
-    ) {
-        wire__crate__api__crypto__Aes_derive_key_impl(
-            port_, salt, user_key, m_cost_kib, t_cost, p_cost,
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__crypto__Aes_encrypt(
-        port_: i64,
-        key: *mut wire_cst_list_prim_u_8_loose,
-        data: *mut wire_cst_list_prim_u_8_loose,
-    ) {
-        wire__crate__api__crypto__Aes_encrypt_impl(port_, key, data)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__crypto__Aes_encrypt_file(
-        port_: i64,
-        key: *mut wire_cst_list_prim_u_8_loose,
-        in_path: *mut wire_cst_list_prim_u_8_strict,
-        out_path: *mut wire_cst_list_prim_u_8_strict,
-        prefix: *mut wire_cst_list_prim_u_8_loose,
-    ) {
-        wire__crate__api__crypto__Aes_encrypt_file_impl(port_, key, in_path, out_path, prefix)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__crypto__Argon2_hash(
-        port_: i64,
-        password: *mut wire_cst_list_prim_u_8_strict,
-    ) {
-        wire__crate__api__crypto__Argon2_hash_impl(port_, password)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__crypto__Argon2_verify(
-        port_: i64,
-        hash: *mut wire_cst_list_prim_u_8_strict,
-        password: *mut wire_cst_list_prim_u_8_strict,
-    ) {
-        wire__crate__api__crypto__Argon2_verify_impl(port_, hash, password)
-    }
-
-    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__cancel__CancelToken_cancel(
         that: usize,
     ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
@@ -1908,42 +1444,6 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes(
-        ptr: *const std::ffi::c_void,
-    ) {
-        unsafe {
-            StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Aes>>::increment_strong_count(ptr as _);
-        }
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes(
-        ptr: *const std::ffi::c_void,
-    ) {
-        unsafe {
-            StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Aes>>::decrement_strong_count(ptr as _);
-        }
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2(
-        ptr: *const std::ffi::c_void,
-    ) {
-        unsafe {
-            StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Argon2>>::increment_strong_count(ptr as _);
-        }
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2(
-        ptr: *const std::ffi::c_void,
-    ) {
-        unsafe {
-            StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Argon2>>::decrement_strong_count(ptr as _);
-        }
-    }
-
-    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCancelToken(
         ptr: *const std::ffi::c_void,
     ) {
@@ -2008,11 +1508,6 @@ mod io {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
             wire_cst_graph_layout_params::new_with_null_ptr(),
         )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_u_32(value: u32) -> *mut u32 {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
     }
 
     #[unsafe(no_mangle)]

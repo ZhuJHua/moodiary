@@ -24,7 +24,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:moodiary_rust/foundation.dart' as rust;
+import 'package:fast_crypto/fast_crypto.dart';
 
 const int lanDefaultPort = 6636;
 const int lanProtoVersion = 2;
@@ -49,15 +49,15 @@ class RustLanCrypto implements LanCrypto {
 
   @override
   Future<List<int>> deriveKey({required String salt, required String pin}) =>
-      rust.Aes.deriveKey(salt: salt, userKey: pin);
+      Aes.deriveKey(salt: salt, userKey: pin);
 
   @override
   Future<Uint8List> encrypt(List<int> key, List<int> plain) async =>
-      .fromList(await rust.Aes.encrypt(key: key, data: plain));
+      .fromList(await Aes.encrypt(key: key, data: plain));
 
   @override
   Future<Uint8List> decrypt(List<int> key, List<int> cipher) async =>
-      .fromList(await rust.Aes.decrypt(key: key, encryptedData: cipher));
+      .fromList(await Aes.decrypt(key: key, encryptedData: cipher));
 }
 
 final Random _secureRandom = .secure();

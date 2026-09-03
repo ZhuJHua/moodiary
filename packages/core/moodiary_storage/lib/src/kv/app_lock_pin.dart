@@ -1,7 +1,7 @@
+import 'package:fast_crypto/fast_crypto.dart';
 import 'package:flutter/foundation.dart'
     show ValueListenable, ValueNotifier, visibleForTesting;
 import 'package:moodiary_logging/moodiary_logging.dart';
-import 'package:moodiary_rust/foundation.dart' as rust;
 import 'package:moodiary_storage/moodiary_storage.dart';
 
 /// 应用锁 PIN 的编解码。存进 [MoodiarySecureKVs.password] 的是 **Argon2id 的 PHC
@@ -21,11 +21,10 @@ final class AppLockPin {
   @visibleForTesting
   static Future<bool> Function(String hash, String pin) verifier = _rustVerify;
 
-  static Future<String> _rustHash(String pin) =>
-      rust.Argon2.hash(password: pin);
+  static Future<String> _rustHash(String pin) => Argon2.hash(password: pin);
 
   static Future<bool> _rustVerify(String hash, String pin) =>
-      rust.Argon2.verify(hash: hash, password: pin);
+      Argon2.verify(hash: hash, password: pin);
 
   /// Argon2 的 PHC 串一律以 `$argon2` 开头；不是这个形状的就是 2.7.3 的明文原件。
   static bool isHashed(String stored) => stored.startsWith(r'$argon2');

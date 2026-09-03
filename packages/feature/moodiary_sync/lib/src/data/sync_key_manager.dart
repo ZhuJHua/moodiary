@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:fast_crypto/fast_crypto.dart' as crypto;
 import 'package:flutter/foundation.dart' show listEquals, visibleForTesting;
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_rust/foundation.dart' as rust;
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
@@ -70,7 +70,7 @@ class SyncKeyManager {
     required int mCostKib,
     required int tCost,
     required int pCost,
-  }) => rust.Aes.deriveKey(
+  }) => crypto.Aes.deriveKey(
     salt: salt,
     userKey: passphrase,
     mCostKib: mCostKib,
@@ -81,12 +81,12 @@ class SyncKeyManager {
   static Future<List<int>> _rustEncrypt({
     required List<int> key,
     required List<int> data,
-  }) => rust.Aes.encrypt(key: key, data: data);
+  }) => crypto.Aes.encrypt(key: key, data: data);
 
   static Future<List<int>> _rustDecrypt({
     required List<int> key,
     required List<int> data,
-  }) => rust.Aes.decrypt(key: key, encryptedData: data);
+  }) => crypto.Aes.decrypt(key: key, encryptedData: data);
 
   static final Random _rng = .secure();
 

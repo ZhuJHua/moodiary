@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:fast_crypto/fast_crypto.dart' as crypto;
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_rust/foundation.dart' as rust;
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 
@@ -57,7 +57,7 @@ class SyncCipher {
       await File(srcPath).copy(dstPath);
       return;
     }
-    await rust.Aes.encryptFile(
+    await crypto.Aes.encryptFile(
       key: aesKey!,
       inPath: srcPath,
       outPath: dstPath,
@@ -77,11 +77,11 @@ class SyncCipher {
       throw SyncException(l10n.sync.errNoUserKey);
     }
     try {
-      await rust.Aes.decryptFile(
+      await crypto.Aes.decryptFile(
         key: aesKey!,
         inPath: srcPath,
         outPath: dstPath,
-        skipPrefix: BigInt.from(magicBytes.length),
+        skipPrefix: magicBytes.length,
       );
     } catch (_) {
       throw SyncException(l10n.sync.errDecryptFailed);
@@ -125,7 +125,7 @@ class SyncCipher {
   }
 
   Future<Uint8List> _encrypt(List<int> plain) =>
-      rust.Aes.encrypt(key: aesKey!, data: plain);
+      crypto.Aes.encrypt(key: aesKey!, data: plain);
 
   Future<Uint8List> _maybeDecrypt(Uint8List bytes) async {
     if (!SyncCipher.isCipherText(bytes)) return bytes;
@@ -135,7 +135,7 @@ class SyncCipher {
     try {
       final magicLen = utf8.encode(magic).length;
       // 视图而非拷贝：FRB 的编码器直接把它 setRange 进 Rust 缓冲区。
-      return await rust.Aes.decrypt(
+      return await crypto.Aes.decrypt(
         key: aesKey!,
         encryptedData: Uint8List.sublistView(bytes, magicLen),
       );

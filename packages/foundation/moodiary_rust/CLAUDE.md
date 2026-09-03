@@ -6,7 +6,7 @@
 rust/
   src/api/            # bridge = app layer: the ONLY place that knows about FRB
   crates/
-    foundation/       # crypto / archive / font
+    foundation/       # archive / font
     feature_base/     # （空）——唯一的住户 doc 随导出 2026-09-03 搬去了 fast_press
     feature/          # graph
 ```
@@ -34,7 +34,7 @@ rustc 在 `lto="thin"` 下直接拒绝，强行关掉 LTO 是 +170%。**拆库�
 
 | 门面 | 内容 | 谁能推 |
 |---|---|---|
-| `foundation.dart` | cancel / crypto / font / zip | 全仓 |
+| `foundation.dart` | cancel / font / zip | 全仓 |
 | `graph.dart` | 力导向布局 | 只有 `moodiary_diary` |
 | `rust.dart` | `RustLib.init()` | 只有 app 组合根 |
 
@@ -62,7 +62,7 @@ Two invariants worth keeping:
   不并集（这部分推理是对的），但没被调用的那几张表本来就被 thin LTO + `--gc-sections`
   剥干净了。写在 Cargo.toml 里只为说清依赖面，别拿它当体积手段。
 
-**分词也不在这里**：jieba 与 HF tokenizer 拆去了 `fast_text`（`libfasttext`，含测试替身）。**网络与助手都不在这里**：reqwest 客户端 / hyper 服务端 / WebDAV / S3 2026-09-03 拆去了
+**加密也不在这里**：AES-GCM / Argon2id 拆去了 `fast_crypto`（`libfastcrypto`，裸 FFI）。**分词也不在这里**：jieba 与 HF tokenizer 拆去了 `fast_text`（`libfasttext`，含测试替身）。**网络与助手都不在这里**：reqwest 客户端 / hyper 服务端 / WebDAV / S3 2026-09-03 拆去了
 `packages/foundation/fast_http`（原生库 `libfasthttp`），rig 对话流拆去了 `fast_llm`（`libfastllm`）。**图片编解码与导出都不在这里**：turbojpeg / libwebp / png 与整条图片管线 2026-09-03 拆去了
 `packages/foundation/fast_image`（原生库 `libfastimage`）；typst / docx-rs / syntect 与导出 IR
 同日拆去了 `packages/foundation/fast_press`（原生库 `libfastpress`）。`image` / `syntect` /

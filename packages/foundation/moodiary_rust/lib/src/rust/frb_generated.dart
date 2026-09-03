@@ -4,7 +4,6 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'api/cancel.dart';
-import 'api/crypto.dart';
 import 'api/font.dart';
 import 'api/graph_layout.dart';
 import 'api/zip.dart';
@@ -71,7 +70,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 1118702843;
+  int get rustContentHash => 1795552395;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -83,45 +82,6 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
-  Future<Uint8List> crateApiCryptoAesDecrypt({
-    required List<int> key,
-    required List<int> encryptedData,
-  });
-
-  Future<void> crateApiCryptoAesDecryptFile({
-    required List<int> key,
-    required String inPath,
-    required String outPath,
-    required BigInt skipPrefix,
-  });
-
-  Future<Uint8List> crateApiCryptoAesDeriveKey({
-    required String salt,
-    required String userKey,
-    int? mCostKib,
-    int? tCost,
-    int? pCost,
-  });
-
-  Future<Uint8List> crateApiCryptoAesEncrypt({
-    required List<int> key,
-    required List<int> data,
-  });
-
-  Future<void> crateApiCryptoAesEncryptFile({
-    required List<int> key,
-    required String inPath,
-    required String outPath,
-    required List<int> prefix,
-  });
-
-  Future<String> crateApiCryptoArgon2Hash({required String password});
-
-  Future<bool> crateApiCryptoArgon2Verify({
-    required String hash,
-    required String password,
-  });
-
   void crateApiCancelCancelTokenCancel({required CancelToken that});
 
   bool crateApiCancelCancelTokenIsCancelled({required CancelToken that});
@@ -169,18 +129,6 @@ abstract class RustLibApi extends BaseApi {
     required GraphLayoutParams params,
   });
 
-  RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_Aes;
-
-  RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_Aes;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_AesPtr;
-
-  RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_Argon2;
-
-  RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_Argon2;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_Argon2Ptr;
-
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_CancelToken;
 
@@ -211,233 +159,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required super.generalizedFrbRustBinding,
     required super.portManager,
   });
-
-  @override
-  Future<Uint8List> crateApiCryptoAesDecrypt({
-    required List<int> key,
-    required List<int> encryptedData,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 = cst_encode_list_prim_u_8_loose(key);
-          var arg1 = cst_encode_list_prim_u_8_loose(encryptedData);
-          return wire.wire__crate__api__crypto__Aes_decrypt(port_, arg0, arg1);
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiCryptoAesDecryptConstMeta,
-        argValues: [key, encryptedData],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiCryptoAesDecryptConstMeta => const TaskConstMeta(
-    debugName: "Aes_decrypt",
-    argNames: ["key", "encryptedData"],
-  );
-
-  @override
-  Future<void> crateApiCryptoAesDecryptFile({
-    required List<int> key,
-    required String inPath,
-    required String outPath,
-    required BigInt skipPrefix,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 = cst_encode_list_prim_u_8_loose(key);
-          var arg1 = cst_encode_String(inPath);
-          var arg2 = cst_encode_String(outPath);
-          var arg3 = cst_encode_u_64(skipPrefix);
-          return wire.wire__crate__api__crypto__Aes_decrypt_file(
-            port_,
-            arg0,
-            arg1,
-            arg2,
-            arg3,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_unit,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiCryptoAesDecryptFileConstMeta,
-        argValues: [key, inPath, outPath, skipPrefix],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiCryptoAesDecryptFileConstMeta =>
-      const TaskConstMeta(
-        debugName: "Aes_decrypt_file",
-        argNames: ["key", "inPath", "outPath", "skipPrefix"],
-      );
-
-  @override
-  Future<Uint8List> crateApiCryptoAesDeriveKey({
-    required String salt,
-    required String userKey,
-    int? mCostKib,
-    int? tCost,
-    int? pCost,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 = cst_encode_String(salt);
-          var arg1 = cst_encode_String(userKey);
-          var arg2 = cst_encode_opt_box_autoadd_u_32(mCostKib);
-          var arg3 = cst_encode_opt_box_autoadd_u_32(tCost);
-          var arg4 = cst_encode_opt_box_autoadd_u_32(pCost);
-          return wire.wire__crate__api__crypto__Aes_derive_key(
-            port_,
-            arg0,
-            arg1,
-            arg2,
-            arg3,
-            arg4,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiCryptoAesDeriveKeyConstMeta,
-        argValues: [salt, userKey, mCostKib, tCost, pCost],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiCryptoAesDeriveKeyConstMeta => const TaskConstMeta(
-    debugName: "Aes_derive_key",
-    argNames: ["salt", "userKey", "mCostKib", "tCost", "pCost"],
-  );
-
-  @override
-  Future<Uint8List> crateApiCryptoAesEncrypt({
-    required List<int> key,
-    required List<int> data,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 = cst_encode_list_prim_u_8_loose(key);
-          var arg1 = cst_encode_list_prim_u_8_loose(data);
-          return wire.wire__crate__api__crypto__Aes_encrypt(port_, arg0, arg1);
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiCryptoAesEncryptConstMeta,
-        argValues: [key, data],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiCryptoAesEncryptConstMeta =>
-      const TaskConstMeta(debugName: "Aes_encrypt", argNames: ["key", "data"]);
-
-  @override
-  Future<void> crateApiCryptoAesEncryptFile({
-    required List<int> key,
-    required String inPath,
-    required String outPath,
-    required List<int> prefix,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 = cst_encode_list_prim_u_8_loose(key);
-          var arg1 = cst_encode_String(inPath);
-          var arg2 = cst_encode_String(outPath);
-          var arg3 = cst_encode_list_prim_u_8_loose(prefix);
-          return wire.wire__crate__api__crypto__Aes_encrypt_file(
-            port_,
-            arg0,
-            arg1,
-            arg2,
-            arg3,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_unit,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiCryptoAesEncryptFileConstMeta,
-        argValues: [key, inPath, outPath, prefix],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiCryptoAesEncryptFileConstMeta =>
-      const TaskConstMeta(
-        debugName: "Aes_encrypt_file",
-        argNames: ["key", "inPath", "outPath", "prefix"],
-      );
-
-  @override
-  Future<String> crateApiCryptoArgon2Hash({required String password}) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 = cst_encode_String(password);
-          return wire.wire__crate__api__crypto__Argon2_hash(port_, arg0);
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_String,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiCryptoArgon2HashConstMeta,
-        argValues: [password],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiCryptoArgon2HashConstMeta =>
-      const TaskConstMeta(debugName: "Argon2_hash", argNames: ["password"]);
-
-  @override
-  Future<bool> crateApiCryptoArgon2Verify({
-    required String hash,
-    required String password,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 = cst_encode_String(hash);
-          var arg1 = cst_encode_String(password);
-          return wire.wire__crate__api__crypto__Argon2_verify(
-            port_,
-            arg0,
-            arg1,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_bool,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiCryptoArgon2VerifyConstMeta,
-        argValues: [hash, password],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiCryptoArgon2VerifyConstMeta => const TaskConstMeta(
-    debugName: "Argon2_verify",
-    argNames: ["hash", "password"],
-  );
 
   @override
   void crateApiCancelCancelTokenCancel({required CancelToken that}) {
@@ -795,22 +516,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_Aes => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_Aes => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_Argon2 => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_Argon2 => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2;
-
-  RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_CancelToken => wire
       .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCancelToken;
 
@@ -838,24 +543,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   AnyhowException dco_decode_AnyhowException(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return AnyhowException(raw as String);
-  }
-
-  @protected
-  Aes
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return AesImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  Argon2
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return Argon2Impl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -909,24 +596,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return Map.fromEntries(
       dco_decode_list_record_string_f_32(raw).map((e) => MapEntry(e.$1, e.$2)),
     );
-  }
-
-  @protected
-  Aes
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return AesImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  Argon2
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return Argon2Impl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -986,12 +655,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   GraphLayoutParams dco_decode_box_autoadd_graph_layout_params(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_graph_layout_params(raw);
-  }
-
-  @protected
-  int dco_decode_box_autoadd_u_32(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw as int;
   }
 
   @protected
@@ -1085,12 +748,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  int? dco_decode_opt_box_autoadd_u_32(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw == null ? null : dco_decode_box_autoadd_u_32(raw);
-  }
-
-  @protected
   (String, double) dco_decode_record_string_f_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -1104,12 +761,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   int dco_decode_u_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
-  }
-
-  @protected
-  BigInt dco_decode_u_64(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dcoDecodeU64(raw);
   }
 
   @protected
@@ -1135,30 +786,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var inner = sse_decode_String(deserializer);
     return AnyhowException(inner);
-  }
-
-  @protected
-  Aes
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return AesImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  Argon2
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return Argon2Impl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
   }
 
   @protected
@@ -1231,30 +858,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  Aes
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return AesImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  Argon2
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return Argon2Impl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
   CancelToken
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCancelToken(
     SseDeserializer deserializer,
@@ -1323,12 +926,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_graph_layout_params(deserializer));
-  }
-
-  @protected
-  int sse_decode_box_autoadd_u_32(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_u_32(deserializer));
   }
 
   @protected
@@ -1459,17 +1056,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    if (sse_decode_bool(deserializer)) {
-      return (sse_decode_box_autoadd_u_32(deserializer));
-    } else {
-      return null;
-    }
-  }
-
-  @protected
   (String, double) sse_decode_record_string_f_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_field0 = sse_decode_String(deserializer);
@@ -1481,12 +1067,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   int sse_decode_u_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint32();
-  }
-
-  @protected
-  BigInt sse_decode_u_64(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getBigUint64();
   }
 
   @protected
@@ -1504,26 +1084,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   BigInt sse_decode_usize(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getBigUint64();
-  }
-
-  @protected
-  int
-  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes(
-    Aes raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as AesImpl).frbInternalCstEncode(move: true);
-  }
-
-  @protected
-  int
-  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2(
-    Argon2 raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as Argon2Impl).frbInternalCstEncode(move: true);
   }
 
   @protected
@@ -1574,26 +1134,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Cst (C-struct based), see doc to use other codecs
     // ignore: invalid_use_of_internal_member
     return (raw as CancelTokenImpl).frbInternalCstEncode(move: false);
-  }
-
-  @protected
-  int
-  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes(
-    Aes raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as AesImpl).frbInternalCstEncode();
-  }
-
-  @protected
-  int
-  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2(
-    Argon2 raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as Argon2Impl).frbInternalCstEncode();
   }
 
   @protected
@@ -1673,32 +1213,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes(
-    Aes self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as AesImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2(
-    Argon2 self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as Argon2Impl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCancelToken(
     CancelToken self,
     SseSerializer serializer,
@@ -1770,32 +1284,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_record_string_f_32(
       self.entries.map((e) => (e.key, e.value)).toList(),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes(
-    Aes self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as AesImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2(
-    Argon2 self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as Argon2Impl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
@@ -1881,12 +1369,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_graph_layout_params(self, serializer);
-  }
-
-  @protected
-  void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_u_32(self, serializer);
   }
 
   @protected
@@ -2022,16 +1504,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    sse_encode_bool(self != null, serializer);
-    if (self != null) {
-      sse_encode_box_autoadd_u_32(self, serializer);
-    }
-  }
-
-  @protected
   void sse_encode_record_string_f_32(
     (String, double) self,
     SseSerializer serializer,
@@ -2045,12 +1517,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_u_32(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putUint32(self);
-  }
-
-  @protected
-  void sse_encode_u_64(BigInt self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putBigUint64(self);
   }
 
   @protected
@@ -2069,46 +1535,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putBigUint64(self);
   }
-}
-
-@sealed
-class AesImpl extends RustOpaque implements Aes {
-  // Not to be used by end users
-  AesImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  AesImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_Aes,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_Aes,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_AesPtr,
-  );
-}
-
-@sealed
-class Argon2Impl extends RustOpaque implements Argon2 {
-  // Not to be used by end users
-  Argon2Impl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  Argon2Impl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_Argon2,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_Argon2,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_Argon2Ptr,
-  );
 }
 
 @sealed

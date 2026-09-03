@@ -1,0 +1,14 @@
+analyzer:
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
+    # flutter_rust_bridge 的产物。不是 *.g.dart / *.freezed.dart，落不进共享配置
+    # 那几条排除，而它的写法（大量 var 局部变量）与我们的规则天然不合。
+    # 排除项与被 include 的那份是**并集**，共享配置里的排除不会因为这里写了而失效。
+    - lib/src/rust/**
+include: package:moodiary_lint/analysis_options.yaml

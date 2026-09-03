@@ -18,8 +18,6 @@ members = ["crates/*/*"]
 anyhow = "=1.0.104"
 
 
-ring = "=0.17.14"
-argon2 = { version = "=0.6.0-rc.8", features = ["default"] }
 zip = { version = "=8.6.0", default-features = false, features = ["aes-crypto", "deflate"] }
 
 ttf-parser = { git = "https://github.com/ZhuJHua/ttf-parser", rev = "4a0ddfee643e4a25a3d1363241fa94b9c5f113c3", default-features = false, features = ["std", "variable-fonts"] }
@@ -27,7 +25,6 @@ ttf-parser = { git = "https://github.com/ZhuJHua/ttf-parser", rev = "4a0ddfee643
 
 
 moodiary-archive = { path = "crates/foundation/archive" }
-moodiary-crypto = { path = "crates/foundation/crypto" }
 moodiary-font = { path = "crates/foundation/font" }
 moodiary-graph = { path = "crates/feature/graph" }
 
@@ -36,7 +33,6 @@ flutter_rust_bridge = "=2.13.0"
 anyhow = { workspace = true }
 
 moodiary-archive = { workspace = true }
-moodiary-crypto = { workspace = true }
 moodiary-font = { workspace = true }
 moodiary-graph = { workspace = true }
 

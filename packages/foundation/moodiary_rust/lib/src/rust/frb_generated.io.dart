@@ -4,7 +4,6 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'api/cancel.dart';
-import 'api/crypto.dart';
 import 'api/font.dart';
 import 'api/graph_layout.dart';
 import 'api/zip.dart';
@@ -25,13 +24,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     required super.portManager,
   });
 
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_AesPtr => wire
-      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAesPtr;
-
-  CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_Argon2Ptr => wire
-      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2Ptr;
-
   CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_CancelTokenPtr => wire
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCancelTokenPtr;
@@ -45,18 +37,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw);
-
-  @protected
-  Aes
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes(
-    dynamic raw,
-  );
-
-  @protected
-  Argon2
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2(
-    dynamic raw,
-  );
 
   @protected
   CancelToken
@@ -92,18 +72,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Map<String, double> dco_decode_Map_String_f_32_None(dynamic raw);
 
   @protected
-  Aes
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes(
-    dynamic raw,
-  );
-
-  @protected
-  Argon2
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2(
-    dynamic raw,
-  );
-
-  @protected
   CancelToken
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCancelToken(
     dynamic raw,
@@ -137,9 +105,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   GraphLayoutParams dco_decode_box_autoadd_graph_layout_params(dynamic raw);
-
-  @protected
-  int dco_decode_box_autoadd_u_32(dynamic raw);
 
   @protected
   double dco_decode_f_32(dynamic raw);
@@ -178,16 +143,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool? dco_decode_opt_box_autoadd_bool(dynamic raw);
 
   @protected
-  int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
-
-  @protected
   (String, double) dco_decode_record_string_f_32(dynamic raw);
 
   @protected
   int dco_decode_u_32(dynamic raw);
-
-  @protected
-  BigInt dco_decode_u_64(dynamic raw);
 
   @protected
   int dco_decode_u_8(dynamic raw);
@@ -200,18 +159,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
-
-  @protected
-  Aes
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  Argon2
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2(
-    SseDeserializer deserializer,
-  );
 
   @protected
   CancelToken
@@ -245,18 +192,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Map<String, double> sse_decode_Map_String_f_32_None(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  Aes
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  Argon2
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2(
     SseDeserializer deserializer,
   );
 
@@ -296,9 +231,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   GraphLayoutParams sse_decode_box_autoadd_graph_layout_params(
     SseDeserializer deserializer,
   );
-
-  @protected
-  int sse_decode_box_autoadd_u_32(SseDeserializer deserializer);
 
   @protected
   double sse_decode_f_32(SseDeserializer deserializer);
@@ -341,16 +273,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer);
 
   @protected
-  int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
-
-  @protected
   (String, double) sse_decode_record_string_f_32(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_32(SseDeserializer deserializer);
-
-  @protected
-  BigInt sse_decode_u_64(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_8(SseDeserializer deserializer);
@@ -414,12 +340,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     final ptr = wire.cst_new_box_autoadd_graph_layout_params();
     cst_api_fill_to_wire_graph_layout_params(raw, ptr.ref);
     return ptr;
-  }
-
-  @protected
-  ffi.Pointer<ffi.Uint32> cst_encode_box_autoadd_u_32(int raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    return wire.cst_new_box_autoadd_u_32(cst_encode_u_32(raw));
   }
 
   @protected
@@ -508,18 +428,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  ffi.Pointer<ffi.Uint32> cst_encode_opt_box_autoadd_u_32(int? raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    return raw == null ? ffi.nullptr : cst_encode_box_autoadd_u_32(raw);
-  }
-
-  @protected
-  int cst_encode_u_64(BigInt raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    return raw.toSigned(64).toInt();
-  }
-
-  @protected
   int cst_encode_usize(BigInt raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw.toSigned(64).toInt();
@@ -565,18 +473,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int
-  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes(
-    Aes raw,
-  );
-
-  @protected
-  int
-  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2(
-    Argon2 raw,
-  );
-
-  @protected
-  int
   cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCancelToken(
     CancelToken raw,
   );
@@ -603,18 +499,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int
   cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCancelToken(
     CancelToken raw,
-  );
-
-  @protected
-  int
-  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes(
-    Aes raw,
-  );
-
-  @protected
-  int
-  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2(
-    Argon2 raw,
   );
 
   @protected
@@ -661,20 +545,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes(
-    Aes self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2(
-    Argon2 self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCancelToken(
     CancelToken self,
     SseSerializer serializer,
@@ -711,20 +581,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_Map_String_f_32_None(
     Map<String, double> self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes(
-    Aes self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2(
-    Argon2 self,
     SseSerializer serializer,
   );
 
@@ -769,9 +625,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     GraphLayoutParams self,
     SseSerializer serializer,
   );
-
-  @protected
-  void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_f_32(double self, SseSerializer serializer);
@@ -831,9 +684,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer);
 
   @protected
-  void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);
-
-  @protected
   void sse_encode_record_string_f_32(
     (String, double) self,
     SseSerializer serializer,
@@ -841,9 +691,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_u_32(int self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_u_64(BigInt self, SseSerializer serializer);
 
   @protected
   void sse_encode_u_8(int self, SseSerializer serializer);
@@ -904,17 +751,6 @@ class RustLibWire implements BaseWire {
   late final _cst_new_box_autoadd_graph_layout_params =
       _cst_new_box_autoadd_graph_layout_paramsPtr
           .asFunction<ffi.Pointer<wire_cst_graph_layout_params> Function()>();
-
-  ffi.Pointer<ffi.Uint32> cst_new_box_autoadd_u_32(int value) {
-    return _cst_new_box_autoadd_u_32(value);
-  }
-
-  late final _cst_new_box_autoadd_u_32Ptr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Uint32> Function(ffi.Uint32)>>(
-        'frbgen_moodiary_rust_cst_new_box_autoadd_u_32',
-      );
-  late final _cst_new_box_autoadd_u_32 = _cst_new_box_autoadd_u_32Ptr
-      .asFunction<ffi.Pointer<ffi.Uint32> Function(int)>();
 
   ffi.Pointer<wire_cst_list_prim_f_32_loose> cst_new_list_prim_f_32_loose(
     int len,
@@ -1036,40 +872,6 @@ class RustLibWire implements BaseWire {
       _dummy_method_to_enforce_bundlingPtr.asFunction<int Function()>();
 
   void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAesPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_moodiary_rust_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes',
-      );
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes =
-      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAesPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_moodiary_rust_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2',
-      );
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2 =
-      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
   rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCancelToken(
     ffi.Pointer<ffi.Void> ptr,
   ) {
@@ -1118,40 +920,6 @@ class RustLibWire implements BaseWire {
       );
   late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZip =
       _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAesPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes',
-      );
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes =
-      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAesPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2',
-      );
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2 =
-      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2Ptr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void
@@ -1253,236 +1021,6 @@ class RustLibWire implements BaseWire {
   late final _wire__crate__api__cancel__CancelToken_new =
       _wire__crate__api__cancel__CancelToken_newPtr
           .asFunction<WireSyncRust2DartDco Function()>();
-
-  void wire__crate__api__crypto__Aes_decrypt(
-    int port_,
-    ffi.Pointer<wire_cst_list_prim_u_8_loose> key,
-    ffi.Pointer<wire_cst_list_prim_u_8_loose> encrypted_data,
-  ) {
-    return _wire__crate__api__crypto__Aes_decrypt(port_, key, encrypted_data);
-  }
-
-  late final _wire__crate__api__crypto__Aes_decryptPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
-            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
-          )
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__crypto__Aes_decrypt');
-  late final _wire__crate__api__crypto__Aes_decrypt =
-      _wire__crate__api__crypto__Aes_decryptPtr
-          .asFunction<
-            void Function(
-              int,
-              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
-              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
-            )
-          >();
-
-  void wire__crate__api__crypto__Aes_decrypt_file(
-    int port_,
-    ffi.Pointer<wire_cst_list_prim_u_8_loose> key,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> in_path,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> out_path,
-    int skip_prefix,
-  ) {
-    return _wire__crate__api__crypto__Aes_decrypt_file(
-      port_,
-      key,
-      in_path,
-      out_path,
-      skip_prefix,
-    );
-  }
-
-  late final _wire__crate__api__crypto__Aes_decrypt_filePtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Uint64,
-          )
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__crypto__Aes_decrypt_file');
-  late final _wire__crate__api__crypto__Aes_decrypt_file =
-      _wire__crate__api__crypto__Aes_decrypt_filePtr
-          .asFunction<
-            void Function(
-              int,
-              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              int,
-            )
-          >();
-
-  void wire__crate__api__crypto__Aes_derive_key(
-    int port_,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> salt,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> user_key,
-    ffi.Pointer<ffi.Uint32> m_cost_kib,
-    ffi.Pointer<ffi.Uint32> t_cost,
-    ffi.Pointer<ffi.Uint32> p_cost,
-  ) {
-    return _wire__crate__api__crypto__Aes_derive_key(
-      port_,
-      salt,
-      user_key,
-      m_cost_kib,
-      t_cost,
-      p_cost,
-    );
-  }
-
-  late final _wire__crate__api__crypto__Aes_derive_keyPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Pointer<ffi.Uint32>,
-            ffi.Pointer<ffi.Uint32>,
-            ffi.Pointer<ffi.Uint32>,
-          )
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__crypto__Aes_derive_key');
-  late final _wire__crate__api__crypto__Aes_derive_key =
-      _wire__crate__api__crypto__Aes_derive_keyPtr
-          .asFunction<
-            void Function(
-              int,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<ffi.Uint32>,
-              ffi.Pointer<ffi.Uint32>,
-              ffi.Pointer<ffi.Uint32>,
-            )
-          >();
-
-  void wire__crate__api__crypto__Aes_encrypt(
-    int port_,
-    ffi.Pointer<wire_cst_list_prim_u_8_loose> key,
-    ffi.Pointer<wire_cst_list_prim_u_8_loose> data,
-  ) {
-    return _wire__crate__api__crypto__Aes_encrypt(port_, key, data);
-  }
-
-  late final _wire__crate__api__crypto__Aes_encryptPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
-            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
-          )
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__crypto__Aes_encrypt');
-  late final _wire__crate__api__crypto__Aes_encrypt =
-      _wire__crate__api__crypto__Aes_encryptPtr
-          .asFunction<
-            void Function(
-              int,
-              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
-              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
-            )
-          >();
-
-  void wire__crate__api__crypto__Aes_encrypt_file(
-    int port_,
-    ffi.Pointer<wire_cst_list_prim_u_8_loose> key,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> in_path,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> out_path,
-    ffi.Pointer<wire_cst_list_prim_u_8_loose> prefix,
-  ) {
-    return _wire__crate__api__crypto__Aes_encrypt_file(
-      port_,
-      key,
-      in_path,
-      out_path,
-      prefix,
-    );
-  }
-
-  late final _wire__crate__api__crypto__Aes_encrypt_filePtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
-          )
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__crypto__Aes_encrypt_file');
-  late final _wire__crate__api__crypto__Aes_encrypt_file =
-      _wire__crate__api__crypto__Aes_encrypt_filePtr
-          .asFunction<
-            void Function(
-              int,
-              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
-            )
-          >();
-
-  void wire__crate__api__crypto__Argon2_hash(
-    int port_,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> password,
-  ) {
-    return _wire__crate__api__crypto__Argon2_hash(port_, password);
-  }
-
-  late final _wire__crate__api__crypto__Argon2_hashPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-          )
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__crypto__Argon2_hash');
-  late final _wire__crate__api__crypto__Argon2_hash =
-      _wire__crate__api__crypto__Argon2_hashPtr
-          .asFunction<
-            void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
-          >();
-
-  void wire__crate__api__crypto__Argon2_verify(
-    int port_,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> hash,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> password,
-  ) {
-    return _wire__crate__api__crypto__Argon2_verify(port_, hash, password);
-  }
-
-  late final _wire__crate__api__crypto__Argon2_verifyPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-          )
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__crypto__Argon2_verify');
-  late final _wire__crate__api__crypto__Argon2_verify =
-      _wire__crate__api__crypto__Argon2_verifyPtr
-          .asFunction<
-            void Function(
-              int,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            )
-          >();
 
   void wire__crate__api__font__FontReader_get_font_name_from_ttf(
     int port_,
