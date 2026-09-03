@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/widgets.dart';
@@ -87,6 +88,9 @@ class _FastTileImageViewState extends State<FastTileImageView> {
   /// 解出来的 tile 缓存上限（规划内的块不算，它们由 [FastTilePlanner.maxPlannedTiles] 封顶）。
   /// fit 那一层（整图 ≤ 36 块）留着，缩回去不用再画 overview 的模糊。
   static const _cacheBudgetBytes = 64 * 1024 * 1024;
+
+  /// 一批位图分几块一组上传（见 [_decodeBatch]）。
+  static const _uploadChunk = 12;
 
   /// 一批最多解几块。可见 tile 一批全要：Rust 把它们的并集当一条带一次解出来，视口跨几行
   /// 也只跑一趟熵解码（313MB 的图一趟两三秒，按行解就是行数倍）。
@@ -333,11 +337,31 @@ class _FastTileImageViewState extends State<FastTileImageView> {
         denom: batch.first.sample,
       );
       if (_disposed || generation != _generation) return;
-      // 一批的位图并行上传，不逐块 await；一块失败其余的也释放。
-      final images = await Future.wait([
-        for (var i = 0; i < batch.length && i < results.length; i++)
-          _toImage(results[i]),
-      ], cleanUp: (image) => image.dispose());
+      // 位图进引擎：`ImmutableBuffer.fromUint8List` 那一次拷贝在 UI 线程上，一块 1MB；
+      // 48 块一口气就是几毫秒的一帧。分组上传，组与组之间让出事件循环，别攒成一帧的抖动。
+      // 一块失败其余的也释放。
+      final images = <ui.Image>[];
+      final count = math.min(batch.length, results.length);
+      try {
+        for (var start = 0; start < count; start += _uploadChunk) {
+          if (start > 0) await Future<void>.delayed(Duration.zero);
+          images.addAll(
+            await Future.wait([
+              for (
+                var i = start;
+                i < math.min(start + _uploadChunk, count);
+                i++
+              )
+                _toImage(results[i]),
+            ], cleanUp: (image) => image.dispose()),
+          );
+        }
+      } catch (_) {
+        for (final image in images) {
+          image.dispose();
+        }
+        rethrow;
+      }
       final stale = _disposed || generation != _generation;
       // Rust 会跳过落在图外的矩形，结果按覆盖矩形对号，不按下标。
       final pending = batch.toList();
