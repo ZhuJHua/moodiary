@@ -29,3 +29,13 @@
   拆库本身不省体积——每个 Android cdylib 约 300 KB 固定地板，它是投递策略。
 - 测试字体用仓内 `packages/foundation/mui/assets/fonts/Dosis.ttf`（相对 crate 根 `../../mui/…`，
   不用系统字体：macOS 的中日韩字体都是 .ttc，CI 上更没有）。
+- **typst 走自家 fork**（`https://github.com/ZhuJHua/typst`，分支 `moodiary/slim`，基于 v0.15.1 tag，
+  `[patch.crates-io]` 钉 rev；版本号仍写 `=0.15.1`）。fork 只多了六个 opt-out cargo feature：
+  typst-library 的 `bibliography` / `plugin` / `svg` / `pdf-image`、typst-pdf 的 `svg` / `pdf-image`、
+  typst-realize 与 typst 的 `html`、typst-layout 的 `hyphenation`；全部默认开启，我们这里
+  `default-features = false` 全关（日记导出只要 PDF：不引文献、不跑 wasm 插件、不嵌 SVG / PDF 图、
+  不导 HTML、中文不连字）。关掉的部分在 typst 里是同形的桩：`bibliography()` / SVG / PDF 图片会以
+  「not compiled into this build」报错、`plugin()` 不注册、COLR / SVG 彩色字形不画。
+  **升级 typst**：在 fork 上 rebase 那一个提交（`git log v0.15.1..moodiary/slim`），推上去改 rev；
+  workspace 依赖里 typst-library / typst-layout / typst-realize 必须 `default-features = false`，
+  否则 cargo 的 feature 合并会把默认全开回来（第一次就踩了）。CI 每次要拉 fork 仓库（约 150 MB）。

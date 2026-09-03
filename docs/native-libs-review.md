@@ -224,3 +224,17 @@ usvg 60 行 / hayro 4 行；typst-html 经 `typst` 与 `typst-realize` 两处 `u
 | B. fork 三个 crate 加 feature | 照 07fff038 的样子给 typst-library / typst-realize / typst 加 `bibliography` / `plugin` / `svg` / `html` feature，约 150–200 行 | 整个 typst workspace 改成 git 依赖，每次升级 rebase |
 
 A 更省心（typst 永远是原版，只多四个几十到几百行的小 crate），先做 hayagriva 那一个就拿回 ≈ 4.5 MB。
+
+### 落地：fork typst（2026-09-03）
+
+选了 B。fork 在 `ZhuJHua/typst` 的 `moodiary/slim` 分支（基于 v0.15.1 tag，一个提交），加了六个
+默认开启的 opt-out feature：typst-library `bibliography` / `plugin` / `svg` / `pdf-image`，typst-pdf
+`svg` / `pdf-image`，typst-realize + typst `html`，typst-layout `hyphenation`。元素类型经桩模块保持
+同形，其余 crate 零改动；两种配置 clippy 零警告、单测全过、整个 workspace 默认构建不变。
+fast_press 用 `[patch.crates-io]` 钉 rev 并 `default-features = false`，依赖树里 hayagriva /
+wasmi / usvg / hayro / typst-html / typst-svg / hypher 归零。
+**libfastpress：33.10 → 18.58 MB（−44%）**（Android arm64 stripped；`.text` 18.42 → 11.63，`.rodata` 8.73 → 3.14）。
+比第六节按子树估的 8 MB 多省了一倍——那些子树还各自拖着一份 std 泛型实例化、unicode / icu 表与 unwind 数据。
+两个坑：fork 的 `main` 比 v0.15.1 多 120 个提交（krilla 已换 git 版本），必须从 tag 开分支；
+workspace 依赖上不关 `default-features`，cargo 的 feature 合并会把默认全开回来，`cargo tree`
+看着 patch 生效了其实一个都没关。
