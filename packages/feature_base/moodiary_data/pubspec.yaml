@@ -18,7 +18,7 @@ dependencies:
   moodiary_files: 0.0.1
   moodiary_storage: 0.0.1
   crypto: 3.0.7
-  drift: 2.34.3
+  drift: 2.34.4
   sqlite3: 3.5.2
   moodiary_theme: 0.0.1
   moodiary_logging: 0.0.1
@@ -37,6 +37,6 @@ dev_dependencies:
     sdk: flutter
   flutter_riverpod: 3.4.2
   moodiary_lint: 0.0.1
-  build_runner: 2.16.0
+  build_runner: 2.16.1
   riverpod_generator: 4.0.8
-  drift_dev: 2.34.5
+  drift_dev: 2.34.6

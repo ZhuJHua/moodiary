@@ -26,13 +26,13 @@ dependencies:
   moodiary_components: 0.0.1
   mui: 0.0.1
 
-  drift: 2.34.3
+  drift: 2.34.4
   gap: 3.0.1
   flutter_riverpod: 3.4.2
   riverpod_annotation: 4.0.6
   gpt_markdown: 1.2.1
   re_highlight: 0.0.3
-  json_schema_builder: 0.1.6
+  json_schema_builder: 0.1.7
   url_launcher: 6.3.2
   meta: 1.19.0
   injectable: 3.0.0
@@ -41,6 +41,6 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
-  build_runner: 2.16.0
+  build_runner: 2.16.1
   riverpod_generator: 4.0.8
   injectable_generator: 3.1.3

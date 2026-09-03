@@ -20,6 +20,6 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  build_runner: 2.16.0
+  build_runner: 2.16.1
   ffigen: 21.0.0
   freezed: 4.0.1

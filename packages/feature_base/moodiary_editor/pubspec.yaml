@@ -42,18 +42,14 @@ dependencies:
   share_plus: 13.3.0
   latlong2: 0.10.1
   path: 1.9.1
-  geolocator:
-    git:
-      url: https://github.com/ZhuJHua/flutter-geolocator.git
-      path: geolocator
-      ref: 96718c1ac20e3fb3d5fd9518b74ed6613000a7e6
+  geolocator: 14.0.3
 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
-  build_runner: 2.16.0
+  build_runner: 2.16.1
   freezed: 4.0.1
   json_serializable: 6.14.1
   riverpod_generator: 4.0.8
