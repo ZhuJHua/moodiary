@@ -5,7 +5,6 @@
 
 import 'api/cancel.dart';
 import 'api/font.dart';
-import 'api/graph_layout.dart';
 import 'api/zip.dart';
 
 import 'dart:async';
@@ -90,11 +89,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  RustStreamSink<Float32List> dco_decode_StreamSink_list_prim_f_32_strict_Dco(
-    dynamic raw,
-  );
-
-  @protected
   String dco_decode_String(dynamic raw);
 
   @protected
@@ -104,28 +98,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool dco_decode_box_autoadd_bool(dynamic raw);
 
   @protected
-  GraphLayoutParams dco_decode_box_autoadd_graph_layout_params(dynamic raw);
-
-  @protected
   double dco_decode_f_32(dynamic raw);
-
-  @protected
-  GraphLayoutParams dco_decode_graph_layout_params(dynamic raw);
-
-  @protected
-  int dco_decode_i_32(dynamic raw);
-
-  @protected
-  List<double> dco_decode_list_prim_f_32_loose(dynamic raw);
-
-  @protected
-  Float32List dco_decode_list_prim_f_32_strict(dynamic raw);
-
-  @protected
-  List<int> dco_decode_list_prim_i_32_loose(dynamic raw);
-
-  @protected
-  Int32List dco_decode_list_prim_i_32_strict(dynamic raw);
 
   @protected
   List<int> dco_decode_list_prim_u_8_loose(dynamic raw);
@@ -144,9 +117,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   (String, double) dco_decode_record_string_f_32(dynamic raw);
-
-  @protected
-  int dco_decode_u_32(dynamic raw);
 
   @protected
   int dco_decode_u_8(dynamic raw);
@@ -214,11 +184,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  RustStreamSink<Float32List> sse_decode_StreamSink_list_prim_f_32_strict_Dco(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
@@ -228,32 +193,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool sse_decode_box_autoadd_bool(SseDeserializer deserializer);
 
   @protected
-  GraphLayoutParams sse_decode_box_autoadd_graph_layout_params(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   double sse_decode_f_32(SseDeserializer deserializer);
-
-  @protected
-  GraphLayoutParams sse_decode_graph_layout_params(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  int sse_decode_i_32(SseDeserializer deserializer);
-
-  @protected
-  List<double> sse_decode_list_prim_f_32_loose(SseDeserializer deserializer);
-
-  @protected
-  Float32List sse_decode_list_prim_f_32_strict(SseDeserializer deserializer);
-
-  @protected
-  List<int> sse_decode_list_prim_i_32_loose(SseDeserializer deserializer);
-
-  @protected
-  Int32List sse_decode_list_prim_i_32_strict(SseDeserializer deserializer);
 
   @protected
   List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer);
@@ -276,9 +216,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   (String, double) sse_decode_record_string_f_32(SseDeserializer deserializer);
 
   @protected
-  int sse_decode_u_32(SseDeserializer deserializer);
-
-  @protected
   int sse_decode_u_8(SseDeserializer deserializer);
 
   @protected
@@ -286,6 +223,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BigInt sse_decode_usize(SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_i_32(SseDeserializer deserializer);
 
   @protected
   ffi.Pointer<wire_cst_list_prim_u_8_strict> cst_encode_AnyhowException(
@@ -306,22 +246,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  ffi.Pointer<wire_cst_list_prim_u_8_strict>
-  cst_encode_StreamSink_list_prim_f_32_strict_Dco(
-    RustStreamSink<Float32List> raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    return cst_encode_String(
-      raw.setupAndSerialize(
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_list_prim_f_32_strict,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-      ),
-    );
-  }
-
-  @protected
   ffi.Pointer<wire_cst_list_prim_u_8_strict> cst_encode_String(String raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return cst_encode_list_prim_u_8_strict(utf8.encoder.convert(raw));
@@ -331,55 +255,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ffi.Pointer<ffi.Bool> cst_encode_box_autoadd_bool(bool raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return wire.cst_new_box_autoadd_bool(cst_encode_bool(raw));
-  }
-
-  @protected
-  ffi.Pointer<wire_cst_graph_layout_params>
-  cst_encode_box_autoadd_graph_layout_params(GraphLayoutParams raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    final ptr = wire.cst_new_box_autoadd_graph_layout_params();
-    cst_api_fill_to_wire_graph_layout_params(raw, ptr.ref);
-    return ptr;
-  }
-
-  @protected
-  ffi.Pointer<wire_cst_list_prim_f_32_loose> cst_encode_list_prim_f_32_loose(
-    List<double> raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    final ans = wire.cst_new_list_prim_f_32_loose(raw.length);
-    ans.ref.ptr.asTypedList(raw.length).setAll(0, raw);
-    return ans;
-  }
-
-  @protected
-  ffi.Pointer<wire_cst_list_prim_f_32_strict> cst_encode_list_prim_f_32_strict(
-    Float32List raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    final ans = wire.cst_new_list_prim_f_32_strict(raw.length);
-    ans.ref.ptr.asTypedList(raw.length).setAll(0, raw);
-    return ans;
-  }
-
-  @protected
-  ffi.Pointer<wire_cst_list_prim_i_32_loose> cst_encode_list_prim_i_32_loose(
-    List<int> raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    final ans = wire.cst_new_list_prim_i_32_loose(raw.length);
-    ans.ref.ptr.asTypedList(raw.length).setAll(0, raw);
-    return ans;
-  }
-
-  @protected
-  ffi.Pointer<wire_cst_list_prim_i_32_strict> cst_encode_list_prim_i_32_strict(
-    Int32List raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    final ans = wire.cst_new_list_prim_i_32_strict(raw.length);
-    ans.ref.ptr.asTypedList(raw.length).setAll(0, raw);
-    return ans;
   }
 
   @protected
@@ -431,35 +306,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int cst_encode_usize(BigInt raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw.toSigned(64).toInt();
-  }
-
-  @protected
-  void cst_api_fill_to_wire_box_autoadd_graph_layout_params(
-    GraphLayoutParams apiObj,
-    ffi.Pointer<wire_cst_graph_layout_params> wireObj,
-  ) {
-    cst_api_fill_to_wire_graph_layout_params(apiObj, wireObj.ref);
-  }
-
-  @protected
-  void cst_api_fill_to_wire_graph_layout_params(
-    GraphLayoutParams apiObj,
-    wire_cst_graph_layout_params wireObj,
-  ) {
-    wireObj.iterations = cst_encode_u_32(apiObj.iterations);
-    wireObj.theta = cst_encode_f_32(apiObj.theta);
-    wireObj.repulsion = cst_encode_f_32(apiObj.repulsion);
-    wireObj.spring_length = cst_encode_f_32(apiObj.springLength);
-    wireObj.spring_strength = cst_encode_f_32(apiObj.springStrength);
-    wireObj.gravity = cst_encode_f_32(apiObj.gravity);
-    wireObj.collide_radius = cst_encode_f_32(apiObj.collideRadius);
-    wireObj.velocity_decay = cst_encode_f_32(apiObj.velocityDecay);
-    wireObj.emit_every = cst_encode_u_32(apiObj.emitEvery);
-    wireObj.frame_delay_ms = cst_encode_u_32(apiObj.frameDelayMs);
-    wireObj.initial_alpha = cst_encode_f_32(apiObj.initialAlpha);
-    wireObj.min_step = cst_encode_f_32(apiObj.minStep);
-    wireObj.pinned_count = cst_encode_u_32(apiObj.pinnedCount);
-    wireObj.normalize_scale = cst_encode_bool(apiObj.normalizeScale);
   }
 
   @protected
@@ -524,12 +370,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   double cst_encode_f_32(double raw);
-
-  @protected
-  int cst_encode_i_32(int raw);
-
-  @protected
-  int cst_encode_u_32(int raw);
 
   @protected
   int cst_encode_u_8(int raw);
@@ -606,12 +446,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_StreamSink_list_prim_f_32_strict_Dco(
-    RustStreamSink<Float32List> self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
@@ -621,46 +455,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_bool(bool self, SseSerializer serializer);
 
   @protected
-  void sse_encode_box_autoadd_graph_layout_params(
-    GraphLayoutParams self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_f_32(double self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_graph_layout_params(
-    GraphLayoutParams self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_i_32(int self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_list_prim_f_32_loose(
-    List<double> self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_list_prim_f_32_strict(
-    Float32List self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_list_prim_i_32_loose(
-    List<int> self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_list_prim_i_32_strict(
-    Int32List self,
-    SseSerializer serializer,
-  );
 
   @protected
   void sse_encode_list_prim_u_8_loose(List<int> self, SseSerializer serializer);
@@ -690,9 +485,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_u_32(int self, SseSerializer serializer);
-
-  @protected
   void sse_encode_u_8(int self, SseSerializer serializer);
 
   @protected
@@ -700,6 +492,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_usize(BigInt self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_i_32(int self, SseSerializer serializer);
 }
 
 // Section: wire_class
@@ -738,79 +533,6 @@ class RustLibWire implements BaseWire {
       );
   late final _cst_new_box_autoadd_bool = _cst_new_box_autoadd_boolPtr
       .asFunction<ffi.Pointer<ffi.Bool> Function(bool)>();
-
-  ffi.Pointer<wire_cst_graph_layout_params>
-  cst_new_box_autoadd_graph_layout_params() {
-    return _cst_new_box_autoadd_graph_layout_params();
-  }
-
-  late final _cst_new_box_autoadd_graph_layout_paramsPtr =
-      _lookup<
-        ffi.NativeFunction<ffi.Pointer<wire_cst_graph_layout_params> Function()>
-      >('frbgen_moodiary_rust_cst_new_box_autoadd_graph_layout_params');
-  late final _cst_new_box_autoadd_graph_layout_params =
-      _cst_new_box_autoadd_graph_layout_paramsPtr
-          .asFunction<ffi.Pointer<wire_cst_graph_layout_params> Function()>();
-
-  ffi.Pointer<wire_cst_list_prim_f_32_loose> cst_new_list_prim_f_32_loose(
-    int len,
-  ) {
-    return _cst_new_list_prim_f_32_loose(len);
-  }
-
-  late final _cst_new_list_prim_f_32_loosePtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Pointer<wire_cst_list_prim_f_32_loose> Function(ffi.Int32)
-        >
-      >('frbgen_moodiary_rust_cst_new_list_prim_f_32_loose');
-  late final _cst_new_list_prim_f_32_loose = _cst_new_list_prim_f_32_loosePtr
-      .asFunction<ffi.Pointer<wire_cst_list_prim_f_32_loose> Function(int)>();
-
-  ffi.Pointer<wire_cst_list_prim_f_32_strict> cst_new_list_prim_f_32_strict(
-    int len,
-  ) {
-    return _cst_new_list_prim_f_32_strict(len);
-  }
-
-  late final _cst_new_list_prim_f_32_strictPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Pointer<wire_cst_list_prim_f_32_strict> Function(ffi.Int32)
-        >
-      >('frbgen_moodiary_rust_cst_new_list_prim_f_32_strict');
-  late final _cst_new_list_prim_f_32_strict = _cst_new_list_prim_f_32_strictPtr
-      .asFunction<ffi.Pointer<wire_cst_list_prim_f_32_strict> Function(int)>();
-
-  ffi.Pointer<wire_cst_list_prim_i_32_loose> cst_new_list_prim_i_32_loose(
-    int len,
-  ) {
-    return _cst_new_list_prim_i_32_loose(len);
-  }
-
-  late final _cst_new_list_prim_i_32_loosePtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Pointer<wire_cst_list_prim_i_32_loose> Function(ffi.Int32)
-        >
-      >('frbgen_moodiary_rust_cst_new_list_prim_i_32_loose');
-  late final _cst_new_list_prim_i_32_loose = _cst_new_list_prim_i_32_loosePtr
-      .asFunction<ffi.Pointer<wire_cst_list_prim_i_32_loose> Function(int)>();
-
-  ffi.Pointer<wire_cst_list_prim_i_32_strict> cst_new_list_prim_i_32_strict(
-    int len,
-  ) {
-    return _cst_new_list_prim_i_32_strict(len);
-  }
-
-  late final _cst_new_list_prim_i_32_strictPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Pointer<wire_cst_list_prim_i_32_strict> Function(ffi.Int32)
-        >
-      >('frbgen_moodiary_rust_cst_new_list_prim_i_32_strict');
-  late final _cst_new_list_prim_i_32_strict = _cst_new_list_prim_i_32_strictPtr
-      .asFunction<ffi.Pointer<wire_cst_list_prim_i_32_strict> Function(int)>();
 
   ffi.Pointer<wire_cst_list_prim_u_8_loose> cst_new_list_prim_u_8_loose(
     int len,
@@ -1076,52 +798,6 @@ class RustLibWire implements BaseWire {
             void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
           >();
 
-  void wire__crate__api__graph_layout__layout_graph_stream(
-    int port_,
-    int node_count,
-    ffi.Pointer<wire_cst_list_prim_i_32_loose> edges,
-    ffi.Pointer<wire_cst_list_prim_f_32_loose> initial_positions,
-    ffi.Pointer<wire_cst_graph_layout_params> params,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> sink,
-  ) {
-    return _wire__crate__api__graph_layout__layout_graph_stream(
-      port_,
-      node_count,
-      edges,
-      initial_positions,
-      params,
-      sink,
-    );
-  }
-
-  late final _wire__crate__api__graph_layout__layout_graph_streamPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.Uint32,
-            ffi.Pointer<wire_cst_list_prim_i_32_loose>,
-            ffi.Pointer<wire_cst_list_prim_f_32_loose>,
-            ffi.Pointer<wire_cst_graph_layout_params>,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-          )
-        >
-      >(
-        'frbgen_moodiary_rust_wire__crate__api__graph_layout__layout_graph_stream',
-      );
-  late final _wire__crate__api__graph_layout__layout_graph_stream =
-      _wire__crate__api__graph_layout__layout_graph_streamPtr
-          .asFunction<
-            void Function(
-              int,
-              int,
-              ffi.Pointer<wire_cst_list_prim_i_32_loose>,
-              ffi.Pointer<wire_cst_list_prim_f_32_loose>,
-              ffi.Pointer<wire_cst_graph_layout_params>,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            )
-          >();
-
   void wire__crate__api__zip__Zip_add_bytes(
     int port_,
     int that,
@@ -1293,142 +969,6 @@ typedef DartDartPostCObjectFnTypeFunction = bool Function(
   DartDartPort port_id,
   ffi.Pointer<ffi.Void> message,
 );
-
-final class wire_cst_graph_layout_params extends ffi.Struct {
-  @ffi.Uint32()
-  external int iterations;
-
-  @ffi.Float()
-  external double theta;
-
-  @ffi.Float()
-  external double repulsion;
-
-  @ffi.Float()
-  external double spring_length;
-
-  @ffi.Float()
-  external double spring_strength;
-
-  @ffi.Float()
-  external double gravity;
-
-  @ffi.Float()
-  external double collide_radius;
-
-  @ffi.Float()
-  external double velocity_decay;
-
-  @ffi.Uint32()
-  external int emit_every;
-
-  @ffi.Uint32()
-  external int frame_delay_ms;
-
-  @ffi.Float()
-  external double initial_alpha;
-
-  @ffi.Float()
-  external double min_step;
-
-  @ffi.Uint32()
-  external int pinned_count;
-
-  @ffi.Bool()
-  external bool normalize_scale;
-
-  static ffi.Pointer<wire_cst_graph_layout_params> $allocate(
-    ffi.Allocator $allocator, {
-    required int iterations,
-    required double theta,
-    required double repulsion,
-    required double spring_length,
-    required double spring_strength,
-    required double gravity,
-    required double collide_radius,
-    required double velocity_decay,
-    required int emit_every,
-    required int frame_delay_ms,
-    required double initial_alpha,
-    required double min_step,
-    required int pinned_count,
-    required bool normalize_scale,
-  }) => $allocator<wire_cst_graph_layout_params>()
-    ..ref.iterations = iterations
-    ..ref.theta = theta
-    ..ref.repulsion = repulsion
-    ..ref.spring_length = spring_length
-    ..ref.spring_strength = spring_strength
-    ..ref.gravity = gravity
-    ..ref.collide_radius = collide_radius
-    ..ref.velocity_decay = velocity_decay
-    ..ref.emit_every = emit_every
-    ..ref.frame_delay_ms = frame_delay_ms
-    ..ref.initial_alpha = initial_alpha
-    ..ref.min_step = min_step
-    ..ref.pinned_count = pinned_count
-    ..ref.normalize_scale = normalize_scale;
-}
-
-final class wire_cst_list_prim_f_32_loose extends ffi.Struct {
-  external ffi.Pointer<ffi.Float> ptr;
-
-  @ffi.Int32()
-  external int len;
-
-  static ffi.Pointer<wire_cst_list_prim_f_32_loose> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<ffi.Float> ptr,
-    required int len,
-  }) => $allocator<wire_cst_list_prim_f_32_loose>()
-    ..ref.ptr = ptr
-    ..ref.len = len;
-}
-
-final class wire_cst_list_prim_f_32_strict extends ffi.Struct {
-  external ffi.Pointer<ffi.Float> ptr;
-
-  @ffi.Int32()
-  external int len;
-
-  static ffi.Pointer<wire_cst_list_prim_f_32_strict> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<ffi.Float> ptr,
-    required int len,
-  }) => $allocator<wire_cst_list_prim_f_32_strict>()
-    ..ref.ptr = ptr
-    ..ref.len = len;
-}
-
-final class wire_cst_list_prim_i_32_loose extends ffi.Struct {
-  external ffi.Pointer<ffi.Int32> ptr;
-
-  @ffi.Int32()
-  external int len;
-
-  static ffi.Pointer<wire_cst_list_prim_i_32_loose> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<ffi.Int32> ptr,
-    required int len,
-  }) => $allocator<wire_cst_list_prim_i_32_loose>()
-    ..ref.ptr = ptr
-    ..ref.len = len;
-}
-
-final class wire_cst_list_prim_i_32_strict extends ffi.Struct {
-  external ffi.Pointer<ffi.Int32> ptr;
-
-  @ffi.Int32()
-  external int len;
-
-  static ffi.Pointer<wire_cst_list_prim_i_32_strict> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<ffi.Int32> ptr,
-    required int len,
-  }) => $allocator<wire_cst_list_prim_i_32_strict>()
-    ..ref.ptr = ptr
-    ..ref.len = len;
-}
 
 final class wire_cst_list_prim_u_8_loose extends ffi.Struct {
   external ffi.Pointer<ffi.Uint8> ptr;

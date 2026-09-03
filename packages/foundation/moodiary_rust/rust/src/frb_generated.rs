@@ -42,7 +42,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1795552395;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1024675961;
 
 // Section: executor
 
@@ -399,66 +399,6 @@ fn wire__crate__api__zip__Zip_new_impl(
         },
     )
 }
-fn wire__crate__api__graph_layout__layout_graph_stream_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    node_count: impl CstDecode<u32>,
-    edges: impl CstDecode<Vec<i32>>,
-    initial_positions: impl CstDecode<Vec<f32>>,
-    params: impl CstDecode<crate::api::graph_layout::GraphLayoutParams>,
-    sink: impl CstDecode<StreamSink<Vec<f32>, flutter_rust_bridge::for_generated::DcoCodec>>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "layout_graph_stream",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_node_count = node_count.cst_decode();
-            let api_edges = edges.cst_decode();
-            let api_initial_positions = initial_positions.cst_decode();
-            let api_params = params.cst_decode();
-            let api_sink = sink.cst_decode();
-            move |context| async move {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
-                    (move || async move {
-                        let output_ok = crate::api::graph_layout::layout_graph_stream(
-                            api_node_count,
-                            api_edges,
-                            api_initial_positions,
-                            api_params,
-                            api_sink,
-                        )
-                        .await?;
-                        std::result::Result::Ok(output_ok)
-                    })()
-                    .await,
-                )
-            }
-        },
-    )
-}
-
-// Section: static_checks
-
-#[allow(clippy::unnecessary_literal_unwrap)]
-const _: fn() = || {
-    let GraphLayoutParams = None::<crate::api::graph_layout::GraphLayoutParams>.unwrap();
-    let _: u32 = GraphLayoutParams.iterations;
-    let _: f32 = GraphLayoutParams.theta;
-    let _: f32 = GraphLayoutParams.repulsion;
-    let _: f32 = GraphLayoutParams.spring_length;
-    let _: f32 = GraphLayoutParams.spring_strength;
-    let _: f32 = GraphLayoutParams.gravity;
-    let _: f32 = GraphLayoutParams.collide_radius;
-    let _: f32 = GraphLayoutParams.velocity_decay;
-    let _: u32 = GraphLayoutParams.emit_every;
-    let _: u32 = GraphLayoutParams.frame_delay_ms;
-    let _: f32 = GraphLayoutParams.initial_alpha;
-    let _: f32 = GraphLayoutParams.min_step;
-    let _: u32 = GraphLayoutParams.pinned_count;
-    let _: bool = GraphLayoutParams.normalize_scale;
-};
 
 // Section: dart2rust
 
@@ -471,18 +411,6 @@ impl CstDecode<bool> for bool {
 impl CstDecode<f32> for f32 {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> f32 {
-        self
-    }
-}
-impl CstDecode<i32> for i32 {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> i32 {
-        self
-    }
-}
-impl CstDecode<u32> for u32 {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> u32 {
         self
     }
 }
@@ -570,14 +498,6 @@ impl SseDecode for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpa
     }
 }
 
-impl SseDecode for StreamSink<Vec<f32>, flutter_rust_bridge::for_generated::DcoCodec> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <String>::sse_decode(deserializer);
-        return StreamSink::deserialize(inner);
-    }
-}
-
 impl SseDecode for String {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -597,73 +517,6 @@ impl SseDecode for f32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_f32::<NativeEndian>().unwrap()
-    }
-}
-
-impl SseDecode for crate::api::graph_layout::GraphLayoutParams {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_iterations = <u32>::sse_decode(deserializer);
-        let mut var_theta = <f32>::sse_decode(deserializer);
-        let mut var_repulsion = <f32>::sse_decode(deserializer);
-        let mut var_springLength = <f32>::sse_decode(deserializer);
-        let mut var_springStrength = <f32>::sse_decode(deserializer);
-        let mut var_gravity = <f32>::sse_decode(deserializer);
-        let mut var_collideRadius = <f32>::sse_decode(deserializer);
-        let mut var_velocityDecay = <f32>::sse_decode(deserializer);
-        let mut var_emitEvery = <u32>::sse_decode(deserializer);
-        let mut var_frameDelayMs = <u32>::sse_decode(deserializer);
-        let mut var_initialAlpha = <f32>::sse_decode(deserializer);
-        let mut var_minStep = <f32>::sse_decode(deserializer);
-        let mut var_pinnedCount = <u32>::sse_decode(deserializer);
-        let mut var_normalizeScale = <bool>::sse_decode(deserializer);
-        return crate::api::graph_layout::GraphLayoutParams {
-            iterations: var_iterations,
-            theta: var_theta,
-            repulsion: var_repulsion,
-            spring_length: var_springLength,
-            spring_strength: var_springStrength,
-            gravity: var_gravity,
-            collide_radius: var_collideRadius,
-            velocity_decay: var_velocityDecay,
-            emit_every: var_emitEvery,
-            frame_delay_ms: var_frameDelayMs,
-            initial_alpha: var_initialAlpha,
-            min_step: var_minStep,
-            pinned_count: var_pinnedCount,
-            normalize_scale: var_normalizeScale,
-        };
-    }
-}
-
-impl SseDecode for i32 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        deserializer.cursor.read_i32::<NativeEndian>().unwrap()
-    }
-}
-
-impl SseDecode for Vec<f32> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut len_ = <i32>::sse_decode(deserializer);
-        let mut ans_ = Vec::with_capacity(len_ as usize);
-        for idx_ in 0..len_ {
-            ans_.push(<f32>::sse_decode(deserializer));
-        }
-        return ans_;
-    }
-}
-
-impl SseDecode for Vec<i32> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut len_ = <i32>::sse_decode(deserializer);
-        let mut ans_ = Vec::with_capacity(len_ as usize);
-        for idx_ in 0..len_ {
-            ans_.push(<i32>::sse_decode(deserializer));
-        }
-        return ans_;
     }
 }
 
@@ -722,13 +575,6 @@ impl SseDecode for (String, f32) {
     }
 }
 
-impl SseDecode for u32 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        deserializer.cursor.read_u32::<NativeEndian>().unwrap()
-    }
-}
-
 impl SseDecode for u8 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -745,6 +591,13 @@ impl SseDecode for usize {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_u64::<NativeEndian>().unwrap() as _
+    }
+}
+
+impl SseDecode for i32 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        deserializer.cursor.read_i32::<NativeEndian>().unwrap()
     }
 }
 
@@ -820,40 +673,6 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<Zip>> for Zip {
     }
 }
 
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::graph_layout::GraphLayoutParams> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.0.iterations.into_into_dart().into_dart(),
-            self.0.theta.into_into_dart().into_dart(),
-            self.0.repulsion.into_into_dart().into_dart(),
-            self.0.spring_length.into_into_dart().into_dart(),
-            self.0.spring_strength.into_into_dart().into_dart(),
-            self.0.gravity.into_into_dart().into_dart(),
-            self.0.collide_radius.into_into_dart().into_dart(),
-            self.0.velocity_decay.into_into_dart().into_dart(),
-            self.0.emit_every.into_into_dart().into_dart(),
-            self.0.frame_delay_ms.into_into_dart().into_dart(),
-            self.0.initial_alpha.into_into_dart().into_dart(),
-            self.0.min_step.into_into_dart().into_dart(),
-            self.0.pinned_count.into_into_dart().into_dart(),
-            self.0.normalize_scale.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crate::api::graph_layout::GraphLayoutParams>
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::graph_layout::GraphLayoutParams>>
-    for crate::api::graph_layout::GraphLayoutParams
-{
-    fn into_into_dart(self) -> FrbWrapper<crate::api::graph_layout::GraphLayoutParams> {
-        self.into()
-    }
-}
-
 impl SseEncode for flutter_rust_bridge::for_generated::anyhow::Error {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -923,13 +742,6 @@ impl SseEncode for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpa
     }
 }
 
-impl SseEncode for StreamSink<Vec<f32>, flutter_rust_bridge::for_generated::DcoCodec> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        unimplemented!("")
-    }
-}
-
 impl SseEncode for String {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -948,53 +760,6 @@ impl SseEncode for f32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         serializer.cursor.write_f32::<NativeEndian>(self).unwrap();
-    }
-}
-
-impl SseEncode for crate::api::graph_layout::GraphLayoutParams {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <u32>::sse_encode(self.iterations, serializer);
-        <f32>::sse_encode(self.theta, serializer);
-        <f32>::sse_encode(self.repulsion, serializer);
-        <f32>::sse_encode(self.spring_length, serializer);
-        <f32>::sse_encode(self.spring_strength, serializer);
-        <f32>::sse_encode(self.gravity, serializer);
-        <f32>::sse_encode(self.collide_radius, serializer);
-        <f32>::sse_encode(self.velocity_decay, serializer);
-        <u32>::sse_encode(self.emit_every, serializer);
-        <u32>::sse_encode(self.frame_delay_ms, serializer);
-        <f32>::sse_encode(self.initial_alpha, serializer);
-        <f32>::sse_encode(self.min_step, serializer);
-        <u32>::sse_encode(self.pinned_count, serializer);
-        <bool>::sse_encode(self.normalize_scale, serializer);
-    }
-}
-
-impl SseEncode for i32 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        serializer.cursor.write_i32::<NativeEndian>(self).unwrap();
-    }
-}
-
-impl SseEncode for Vec<f32> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(self.len() as _, serializer);
-        for item in self {
-            <f32>::sse_encode(item, serializer);
-        }
-    }
-}
-
-impl SseEncode for Vec<i32> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(self.len() as _, serializer);
-        for item in self {
-            <i32>::sse_encode(item, serializer);
-        }
     }
 }
 
@@ -1046,13 +811,6 @@ impl SseEncode for (String, f32) {
     }
 }
 
-impl SseEncode for u32 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        serializer.cursor.write_u32::<NativeEndian>(self).unwrap();
-    }
-}
-
 impl SseEncode for u8 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -1072,6 +830,13 @@ impl SseEncode for usize {
             .cursor
             .write_u64::<NativeEndian>(self as _)
             .unwrap();
+    }
+}
+
+impl SseEncode for i32 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        serializer.cursor.write_i32::<NativeEndian>(self).unwrap();
     }
 }
 
@@ -1179,15 +944,6 @@ mod io {
             unsafe { decode_rust_opaque_nom(self as _) }
         }
     }
-    impl CstDecode<StreamSink<Vec<f32>, flutter_rust_bridge::for_generated::DcoCodec>>
-        for *mut wire_cst_list_prim_u_8_strict
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> StreamSink<Vec<f32>, flutter_rust_bridge::for_generated::DcoCodec> {
-            let raw: String = self.cst_decode();
-            StreamSink::deserialize(raw)
-        }
-    }
     impl CstDecode<String> for *mut wire_cst_list_prim_u_8_strict {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> String {
@@ -1199,70 +955,6 @@ mod io {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> bool {
             unsafe { *flutter_rust_bridge::for_generated::box_from_leak_ptr(self) }
-        }
-    }
-    impl CstDecode<crate::api::graph_layout::GraphLayoutParams> for *mut wire_cst_graph_layout_params {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::graph_layout::GraphLayoutParams {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::api::graph_layout::GraphLayoutParams>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<crate::api::graph_layout::GraphLayoutParams> for wire_cst_graph_layout_params {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::graph_layout::GraphLayoutParams {
-            crate::api::graph_layout::GraphLayoutParams {
-                iterations: self.iterations.cst_decode(),
-                theta: self.theta.cst_decode(),
-                repulsion: self.repulsion.cst_decode(),
-                spring_length: self.spring_length.cst_decode(),
-                spring_strength: self.spring_strength.cst_decode(),
-                gravity: self.gravity.cst_decode(),
-                collide_radius: self.collide_radius.cst_decode(),
-                velocity_decay: self.velocity_decay.cst_decode(),
-                emit_every: self.emit_every.cst_decode(),
-                frame_delay_ms: self.frame_delay_ms.cst_decode(),
-                initial_alpha: self.initial_alpha.cst_decode(),
-                min_step: self.min_step.cst_decode(),
-                pinned_count: self.pinned_count.cst_decode(),
-                normalize_scale: self.normalize_scale.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<Vec<f32>> for *mut wire_cst_list_prim_f_32_loose {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<f32> {
-            unsafe {
-                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
-                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
-            }
-        }
-    }
-    impl CstDecode<Vec<f32>> for *mut wire_cst_list_prim_f_32_strict {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<f32> {
-            unsafe {
-                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
-                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
-            }
-        }
-    }
-    impl CstDecode<Vec<i32>> for *mut wire_cst_list_prim_i_32_loose {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<i32> {
-            unsafe {
-                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
-                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
-            }
-        }
-    }
-    impl CstDecode<Vec<i32>> for *mut wire_cst_list_prim_i_32_strict {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<i32> {
-            unsafe {
-                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
-                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
-            }
         }
     }
     impl CstDecode<Vec<u8>> for *mut wire_cst_list_prim_u_8_loose {
@@ -1297,31 +989,6 @@ mod io {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> (String, f32) {
             (self.field0.cst_decode(), self.field1.cst_decode())
-        }
-    }
-    impl NewWithNullPtr for wire_cst_graph_layout_params {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                iterations: Default::default(),
-                theta: Default::default(),
-                repulsion: Default::default(),
-                spring_length: Default::default(),
-                spring_strength: Default::default(),
-                gravity: Default::default(),
-                collide_radius: Default::default(),
-                velocity_decay: Default::default(),
-                emit_every: Default::default(),
-                frame_delay_ms: Default::default(),
-                initial_alpha: Default::default(),
-                min_step: Default::default(),
-                pinned_count: Default::default(),
-                normalize_scale: Default::default(),
-            }
-        }
-    }
-    impl Default for wire_cst_graph_layout_params {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
         }
     }
     impl NewWithNullPtr for wire_cst_record_string_f_32 {
@@ -1425,25 +1092,6 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__graph_layout__layout_graph_stream(
-        port_: i64,
-        node_count: u32,
-        edges: *mut wire_cst_list_prim_i_32_loose,
-        initial_positions: *mut wire_cst_list_prim_f_32_loose,
-        params: *mut wire_cst_graph_layout_params,
-        sink: *mut wire_cst_list_prim_u_8_strict,
-    ) {
-        wire__crate__api__graph_layout__layout_graph_stream_impl(
-            port_,
-            node_count,
-            edges,
-            initial_positions,
-            params,
-            sink,
-        )
-    }
-
-    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCancelToken(
         ptr: *const std::ffi::c_void,
     ) {
@@ -1503,58 +1151,6 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_graph_layout_params()
-    -> *mut wire_cst_graph_layout_params {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(
-            wire_cst_graph_layout_params::new_with_null_ptr(),
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_list_prim_f_32_loose(
-        len: i32,
-    ) -> *mut wire_cst_list_prim_f_32_loose {
-        let ans = wire_cst_list_prim_f_32_loose {
-            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(Default::default(), len),
-            len,
-        };
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(ans)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_list_prim_f_32_strict(
-        len: i32,
-    ) -> *mut wire_cst_list_prim_f_32_strict {
-        let ans = wire_cst_list_prim_f_32_strict {
-            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(Default::default(), len),
-            len,
-        };
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(ans)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_list_prim_i_32_loose(
-        len: i32,
-    ) -> *mut wire_cst_list_prim_i_32_loose {
-        let ans = wire_cst_list_prim_i_32_loose {
-            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(Default::default(), len),
-            len,
-        };
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(ans)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_list_prim_i_32_strict(
-        len: i32,
-    ) -> *mut wire_cst_list_prim_i_32_strict {
-        let ans = wire_cst_list_prim_i_32_strict {
-            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(Default::default(), len),
-            len,
-        };
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(ans)
-    }
-
-    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_moodiary_rust_cst_new_list_prim_u_8_loose(
         len: i32,
     ) -> *mut wire_cst_list_prim_u_8_loose {
@@ -1590,48 +1186,6 @@ mod io {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
     }
 
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_graph_layout_params {
-        iterations: u32,
-        theta: f32,
-        repulsion: f32,
-        spring_length: f32,
-        spring_strength: f32,
-        gravity: f32,
-        collide_radius: f32,
-        velocity_decay: f32,
-        emit_every: u32,
-        frame_delay_ms: u32,
-        initial_alpha: f32,
-        min_step: f32,
-        pinned_count: u32,
-        normalize_scale: bool,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_list_prim_f_32_loose {
-        ptr: *mut f32,
-        len: i32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_list_prim_f_32_strict {
-        ptr: *mut f32,
-        len: i32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_list_prim_i_32_loose {
-        ptr: *mut i32,
-        len: i32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_list_prim_i_32_strict {
-        ptr: *mut i32,
-        len: i32,
-    }
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub struct wire_cst_list_prim_u_8_loose {

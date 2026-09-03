@@ -636,13 +636,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "moodiary-graph"
-version = "0.1.0"
-dependencies = [
- "anyhow",
-]
-
-[[package]]
 name = "moodiary_rust"
 version = "0.1.0"
 dependencies = [
@@ -650,7 +643,6 @@ dependencies = [
  "flutter_rust_bridge",
  "moodiary-archive",
  "moodiary-font",
- "moodiary-graph",
 ]
 
 [[package]]

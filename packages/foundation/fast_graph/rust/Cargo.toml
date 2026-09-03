@@ -1,0 +1,20 @@
+[package]
+name = "fastgraph"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+# 产物名 libfastgraph.*：native_toolchain_rust 按 lib.name 取文件名，Dart 侧 `@Native`
+# 经 hook 登记的 code asset（`src/ffi.dart`）解析符号，不用 dlopen。
+name = "fastgraph"
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+anyhow = "=1.0.104"
+
+# 裸 FFI 没有 FRB 替我们兜 panic：布局线程整体 catch_unwind，所以 panic 仍不 abort。
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "symbols"

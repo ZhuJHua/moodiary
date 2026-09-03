@@ -26,7 +26,6 @@ ttf-parser = { git = "https://github.com/ZhuJHua/ttf-parser", rev = "4a0ddfee643
 
 moodiary-archive = { path = "crates/foundation/archive" }
 moodiary-font = { path = "crates/foundation/font" }
-moodiary-graph = { path = "crates/feature/graph" }
 
 [dependencies]
 flutter_rust_bridge = "=2.13.0"
@@ -34,7 +33,6 @@ anyhow = { workspace = true }
 
 moodiary-archive = { workspace = true }
 moodiary-font = { workspace = true }
-moodiary-graph = { workspace = true }
 
 
 [lints.rust]
