@@ -36,6 +36,21 @@ void main() {
     expect(out.value, '["undefined","undefined","undefined","undefined"]');
   });
 
+  // 结果里的 JS 函数到了 Dart 会被包成 JSRef，要调用方自己释放；序幕在 JS 侧把值先
+  // 字符串化，函数值根本到不了 Dart —— 这两条守住这个不变量。
+  test('函数值与含函数的对象也只以字符串出来', () async {
+    expect(
+      (await JsSandbox.run('(function named() {})')).value,
+      contains('function'),
+    );
+    expect(
+      (await JsSandbox.run(
+        '({ handler: function () {}, name: "x", list: [() => 1] })',
+      )).value,
+      '{"name":"x","list":[null]}',
+    );
+  });
+
   test('每次都是新沙箱', () async {
     await JsSandbox.run('globalThis.leak = 1');
     expect((await JsSandbox.run('typeof leak')).value, 'undefined');
