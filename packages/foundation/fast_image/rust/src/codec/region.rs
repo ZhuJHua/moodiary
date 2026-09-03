@@ -14,11 +14,11 @@ use anyhow::{Result, anyhow, bail};
 use image::{DynamicImage, metadata::Orientation};
 use memmap2::Mmap;
 
-use crate::jpeg_region::JpegRegion;
-use crate::png_region::PngRegion;
-use crate::turbo::PixelRegion;
-use crate::webp_region::WebPRegion;
-use crate::{ImageFormat, ImageProbe, swaps_axes};
+use crate::codec::jpeg_region::JpegRegion;
+use crate::codec::png_region::PngRegion;
+use crate::codec::turbo::PixelRegion;
+use crate::codec::webp_region::WebPRegion;
+use crate::codec::{ImageFormat, ImageProbe, swaps_axes};
 
 /// 缓存的带最多占这么多字节。整图带（fit 比例那条）不参与淘汰：缩回去要再用，重解是一趟
 /// 全图熵解码。
@@ -163,7 +163,7 @@ impl RegionDecoder {
         let file = File::open(file_path)?;
         // 原件不可变（这是全库的约定），映射期间不会被改写。
         let bytes = unsafe { Mmap::map(&file)? };
-        let backend: Box<dyn RawDecoder> = match crate::sniff(&bytes) {
+        let backend: Box<dyn RawDecoder> = match crate::codec::sniff(&bytes) {
             ImageFormat::Jpeg => Box::new(JpegRegion::open(bytes)?),
             ImageFormat::Png => Box::new(PngRegion::open(bytes)?),
             ImageFormat::WebP => Box::new(WebPRegion::open(bytes)?),
@@ -525,7 +525,7 @@ mod tests {
             let decoder = RegionDecoder::open(&path.to_string_lossy()).unwrap();
             let (up_w, up_h) = decoder.upright_size();
             // 参照物必须转正：`image::open` 不看 EXIF。
-            let reference = crate::decode_upright(&path.to_string_lossy())
+            let reference = crate::codec::decode_upright(&path.to_string_lossy())
                 .unwrap()
                 .into_rgba8();
             assert_eq!(reference.dimensions(), (up_w, up_h), "o{orientation}");

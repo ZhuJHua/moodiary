@@ -183,7 +183,11 @@ const MCU_WIDTH: [u32; 7] = [8, 16, 16, 8, 8, 32, 8];
 const MCU_HEIGHT: [u32; 7] = [8, 8, 16, 8, 16, 8, 32];
 
 /// 按 1/`denom` 缩放、只解缩放坐标系里的 `rect`，RGBA。见 [`decode_region_n8`]。
-pub fn decode_region(bytes: &[u8], denom: u8, rect: crate::region::Rect) -> Result<PixelRegion> {
+pub fn decode_region(
+    bytes: &[u8],
+    denom: u8,
+    rect: crate::codec::region::Rect,
+) -> Result<PixelRegion> {
     decode_region_n8(bytes, numerator(denom)?, rect, true)
 }
 
@@ -193,7 +197,7 @@ pub fn decode_region(bytes: &[u8], denom: u8, rect: crate::region::Rect) -> Resu
 pub fn decode_region_n8(
     bytes: &[u8],
     num: u8,
-    rect: crate::region::Rect,
+    rect: crate::codec::region::Rect,
     rgba: bool,
 ) -> Result<PixelRegion> {
     let handle = Handle::new(tj::TJINIT_TJINIT_DECOMPRESS)?;

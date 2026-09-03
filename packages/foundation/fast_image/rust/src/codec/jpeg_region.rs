@@ -7,10 +7,10 @@ use anyhow::{Result, bail};
 use image::metadata::Orientation;
 use memmap2::Mmap;
 
-use crate::region::{RawDecoder, Rect};
-use crate::restart::{self, RestartIndex};
-use crate::turbo::{self, JpegHeader, PixelRegion};
-use crate::{ImageFormat, image_header};
+use crate::codec::region::{RawDecoder, Rect};
+use crate::codec::restart::{self, RestartIndex};
+use crate::codec::turbo::{self, JpegHeader, PixelRegion};
+use crate::codec::{ImageFormat, image_header};
 
 pub struct JpegRegion {
     /// mmap：313MB 的原图不整个读进内存，turbojpeg 按需翻页。

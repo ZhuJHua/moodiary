@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:fast_image/fast_image.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
@@ -650,11 +651,11 @@ class _MediaStage {
     final name = '${p.basenameWithoutExtension(source)}.jpg';
     final target = p.join(_workDir.path, 'media', name);
     try {
-      await rust.ImageCompressor.containToFile(
+      await FastImageCodec.containToFile(
         filePath: source,
         outputPath: target,
         // 不给 maxWidth/maxHeight：那两个字段不是夹取而是「拉到正好」，小图会被放大。
-        spec: const rust.CompressSpec(compressFormat: .jpeg, quality: 85),
+        spec: const FastCompressSpec(compressFormat: .jpeg, quality: 85),
       );
     } catch (e, st) {
       // 别静默吞：这里曾经把「源文件缺失」和「转码失败」压成同一个结果，用户看到

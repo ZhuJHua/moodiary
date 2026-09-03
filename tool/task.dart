@@ -81,6 +81,9 @@ Future<void> _editor() async {
 
 const _rustPkgDir = 'packages/foundation/moodiary_rust';
 
+/// 带自己 FRB 的包：各自一份 flutter_rust_bridge.yaml、一个原生库。
+const _frbPkgDirs = [_rustPkgDir, 'packages/foundation/fast_image'];
+
 /// CLI 是整条链上唯一不由仓库钉版本的东西，而它默认开着 auto_upgrade_dependency ——
 /// 版本不一致时会反过来把 Cargo.toml / pubspec.yaml / lock 的钉版本改成它自己的。
 Future<void> _assertCodegenVersion() async {
@@ -116,8 +119,6 @@ Future<void> _assertCodegenVersion() async {
     exit(1);
   }
 }
-
-const _genRustOutDir = '$_rustPkgDir/lib/src/rust';
 
 /// ffigen 21 起会给每个结构体生成 `$allocate`，它的具名参数列表自带一层 `{}`。
 /// FRB **2.13.0 之前**剥离 WireSyncRust2DartSse 用的是非贪婪正则（`.*?\}`），会止于那层
@@ -175,12 +176,14 @@ Future<void> _genRust() async {
   final ffigen = _resolvedFfigenVersion();
   _assertFfigenVersion(ffigen);
   _clearStaleFfigenSnapshot(ffigen);
-  await _run('flutter_rust_bridge_codegen', ['generate'], cwd: _rustPkgDir);
-  // 2.13.0 起 codegen 自己那趟 rustfmt 不带 style_edition，产物是 2015 风格，
-  // 与 workspace 的 2024 对不上，`cargo fmt --check` 会红。补跑一次。
-  await _run('cargo', ['fmt', '--all'], cwd: '$_rustPkgDir/rust');
-  // codegen 产出坏文件时依然 exit 0 并打印 Done!，只能自己验一遍。
-  await _run('fvm', ['dart', 'analyze', _genRustOutDir]);
+  for (final dir in _frbPkgDirs) {
+    await _run('flutter_rust_bridge_codegen', ['generate'], cwd: dir);
+    // 2.13.0 起 codegen 自己那趟 rustfmt 不带 style_edition，产物是 2015 风格，
+    // 与 workspace 的 2024 对不上，`cargo fmt --check` 会红。补跑一次。
+    await _run('cargo', ['fmt', '--all'], cwd: '$dir/rust');
+    // codegen 产出坏文件时依然 exit 0 并打印 Done!，只能自己验一遍。
+    await _run('fvm', ['dart', 'analyze', '$dir/lib/src/rust']);
+  }
 }
 
 Future<void> _checkLayers() => _run('fvm', ['dart', 'tool/check_layers.dart']);

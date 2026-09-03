@@ -308,9 +308,10 @@ String? _subjectOf(Translations l10n, SyncEvent event) {
       're-cipher' => l10n.sync.directionReCipher,
       _ => null,
     },
-    .manifestRead || .manifestWrite => payload['entries'] is int
-        ? l10n.sync.logEventCount(count: payload['entries'] as int)
-        : null,
+    .manifestRead || .manifestWrite =>
+      payload['entries'] is int
+          ? l10n.sync.logEventCount(count: payload['entries'] as int)
+          : null,
     // 失败事件多半只带原始 manifest key（条目还没解析出来就炸了），兜到 key
     // 才不会渲染成光秃秃一句「下载日记」、看不出是哪条红了。
     .diaryUpload ||
@@ -407,11 +408,7 @@ class _EventGroupTileState extends State<_EventGroupTile> {
       tilePadding: const .symmetric(horizontal: 10),
       childrenPadding: const .only(left: 12),
       visualDensity: .compact,
-      leading: Icon(
-        _kindIcon(kind),
-        size: 18,
-        color: color,
-      ),
+      leading: Icon(_kindIcon(kind), size: 18, color: color),
       onExpansionChanged: (v) => setState(() => _expanded = v),
       trailing: AnimatedRotation(
         turns: _expanded ? 0.5 : 0,

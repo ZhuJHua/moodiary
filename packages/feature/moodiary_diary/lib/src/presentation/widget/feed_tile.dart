@@ -1,3 +1,4 @@
+import 'package:fast_image/fast_image.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_diary/src/application/diary_stamp.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
@@ -395,7 +396,7 @@ class _Thumb extends StatelessWidget {
             // 先画上一篇的照片。
             key: ValueKey(cell.path),
             // 视频封面不是原件目录里的图，不走档位（派生物只给原件算）。
-            image: MediaImage(
+            image: FastImage(
               cell.path,
               tier: cell.isVideo ? null : .s,
               decodeWidth: decodeWidth,

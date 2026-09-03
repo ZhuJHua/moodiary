@@ -8,7 +8,6 @@ pub mod graph_layout;
 pub mod hf_tokenizer;
 pub mod http;
 pub mod http_server;
-pub mod image;
 pub mod js;
 pub mod pdf;
 pub mod s3;

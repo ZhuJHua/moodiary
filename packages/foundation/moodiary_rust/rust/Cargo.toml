@@ -55,15 +55,6 @@ image = { version = "=0.25.10", default-features = false, features = [
     "tiff",
     "webp",
 ] }
-# 只开 cmake（vendored libjpeg-turbo 3.1.0 静态链接）。不开 require-simd：arm64 的 NEON 是
-# intrinsics 必然编进去，它只会把 x86_64 缺 NASM 从警告变成配置失败，而 x86_64 只跑 CI 测试。
-turbojpeg-sys = { version = "=1.2.0", default-features = false, features = ["cmake"] }
-# 313MB 的原图不整个读进内存：mmap 给 turbojpeg 按需翻页（fontdb 已经带着它，零增量）。
-memmap2 = "=0.9.11"
-memchr = "=2.8.3"
-png = { version = "=0.18.1", default-features = false }
-libwebp-sys = { version = "=0.14.4", default-features = false, features = ["std", "neon"] }
-fast_image_resize = { version = "=6.1.0", default-features = false, features = ["image", "rayon"] }
 ttf-parser = { git = "https://github.com/ZhuJHua/ttf-parser", rev = "4a0ddfee643e4a25a3d1363241fa94b9c5f113c3", default-features = false, features = ["std", "variable-fonts"] }
 
 jieba-rs = { version = "=0.10.3", default-features = false, features = ["default-dict"] }
@@ -93,7 +84,6 @@ moodiary-font = { path = "crates/foundation/font" }
 moodiary-hf-tokenizer = { path = "crates/foundation/hf_tokenizer" }
 moodiary-http = { path = "crates/foundation/http" }
 moodiary-js = { path = "crates/foundation/js" }
-moodiary-image = { path = "crates/foundation/image" }
 moodiary-text = { path = "crates/foundation/text" }
 moodiary-doc = { path = "crates/feature_base/doc" }
 moodiary-assistant = { path = "crates/feature/assistant" }
@@ -115,7 +105,6 @@ moodiary-graph = { workspace = true }
 moodiary-hf-tokenizer = { workspace = true }
 moodiary-http = { workspace = true }
 moodiary-js = { workspace = true }
-moodiary-image = { workspace = true }
 moodiary-sync = { workspace = true }
 moodiary-text = { workspace = true }
 

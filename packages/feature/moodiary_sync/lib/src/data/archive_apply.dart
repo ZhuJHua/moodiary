@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:fast_image/fast_image.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
@@ -702,7 +703,7 @@ class ArchiveApplier {
       );
       // 缩略图不同步：拉到原图后本机自己算。fire-and-forget，没跑完被杀由展示端按需补。
       if (type == MediaType.image.value && localPath != null) {
-        unawaited(ImageDerivatives.warm(localPath));
+        unawaited(FastImageDerivatives.warm(localPath));
       }
     } catch (e) {
       _mediaFailed++;

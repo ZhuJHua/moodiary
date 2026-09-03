@@ -12,9 +12,9 @@ use image::metadata::Orientation;
 use memmap2::Mmap;
 use png::{BitDepth, ColorType, Decoder, Transformations};
 
-use crate::region::{RawDecoder, Rect};
-use crate::turbo::PixelRegion;
-use crate::{ImageFormat, image_header};
+use crate::codec::region::{RawDecoder, Rect};
+use crate::codec::turbo::PixelRegion;
+use crate::codec::{ImageFormat, image_header};
 
 pub struct PngRegion {
     bytes: Mmap,
@@ -223,7 +223,7 @@ mod tests {
     use memmap2::Mmap;
 
     use super::PngRegion;
-    use crate::region::{RawDecoder, Rect};
+    use crate::codec::region::{RawDecoder, Rect};
 
     fn noisy(width: u32, height: u32) -> image::RgbaImage {
         let mut seed = 0x1234_5678u32;

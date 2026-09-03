@@ -5,7 +5,7 @@ import 'dart:ui' show Offset, Rect, Size;
 /// [tileSize] 源像素见方的 tile、可见 tile 按离视口中心距离排序、封顶、外圈预取。
 ///
 /// 坐标全部是**转正后的源像素**；解码由 Rust 按 sampleSize 缩放（`denom`）出 RGBA。
-class TilePlanner {
+class FastTilePlanner {
   /// 源图尺寸（转正后）。
   final Size imageSize;
 
@@ -24,7 +24,7 @@ class TilePlanner {
   /// 可见已经超过它时只留可见。
   final int maxPlannedTiles;
 
-  const TilePlanner({
+  const FastTilePlanner({
     required this.imageSize,
     this.tileSize = 512,
     this.cacheExtentScreens = 0.5,
@@ -33,13 +33,13 @@ class TilePlanner {
   });
 
   /// [visible] 视口在源像素坐标里的矩形；[physicalScale] 每个源像素占多少物理像素。
-  TilePlan plan({required Rect visible, required double physicalScale}) {
+  FastTilePlan plan({required Rect visible, required double physicalScale}) {
     final bounds = Offset.zero & imageSize;
     final visibleRect = visible.intersect(bounds);
     if (visibleRect.isEmpty ||
         visibleRect.width <= 0 ||
         visibleRect.height <= 0) {
-      return const TilePlan(sample: 1, visible: [], prefetch: []);
+      return const FastTilePlan(sample: 1, visible: [], prefetch: []);
     }
     var sample = _chooseSample(physicalScale);
     var raw = _rawPlan(visibleRect, sample);
@@ -48,7 +48,7 @@ class TilePlanner {
       raw = _rawPlan(visibleRect, sample);
     }
     final shown = raw.visible.take(maxVisibleTiles).toList(growable: false);
-    return TilePlan(
+    return FastTilePlan(
       sample: sample,
       visible: shown,
       prefetch: raw.prefetch
@@ -69,7 +69,7 @@ class TilePlanner {
     return sample;
   }
 
-  ({List<TileSpec> visible, List<TileSpec> prefetch}) _rawPlan(
+  ({List<FastTileSpec> visible, List<FastTileSpec> prefetch}) _rawPlan(
     Rect visibleRect,
     int sample,
   ) {
@@ -93,12 +93,12 @@ class TilePlanner {
     return (visible: visible, prefetch: prefetch);
   }
 
-  static int Function(TileSpec, TileSpec) _byDistance(Offset center) =>
+  static int Function(FastTileSpec, FastTileSpec) _byDistance(Offset center) =>
       (a, b) => (a.sourceRect.center - center).distanceSquared.compareTo(
         (b.sourceRect.center - center).distanceSquared,
       );
 
-  List<TileSpec> _tilesFor(Rect rect, int sample) {
+  List<FastTileSpec> _tilesFor(Rect rect, int sample) {
     final span = (tileSize * sample).toDouble();
     final maxCol = math.max(0, ((imageSize.width - 1) / span).floor());
     final maxRow = math.max(0, ((imageSize.height - 1) / span).floor());
@@ -115,7 +115,7 @@ class TilePlanner {
     return [
       for (var row = firstRow; row <= lastRow; row++)
         for (var col = firstCol; col <= lastCol; col++)
-          TileSpec(
+          FastTileSpec(
             sample: sample,
             row: row,
             col: col,
@@ -130,23 +130,23 @@ class TilePlanner {
   }
 }
 
-class TilePlan {
+class FastTilePlan {
   final int sample;
 
   /// 与视口相交的 tile，按离中心距离排序。
-  final List<TileSpec> visible;
+  final List<FastTileSpec> visible;
 
   /// 视口外圈、值得先解的 tile。
-  final List<TileSpec> prefetch;
+  final List<FastTileSpec> prefetch;
 
-  const TilePlan({
+  const FastTilePlan({
     required this.sample,
     required this.visible,
     required this.prefetch,
   });
 }
 
-class TileSpec {
+class FastTileSpec {
   final int sample;
   final int row;
   final int col;
@@ -154,7 +154,7 @@ class TileSpec {
   /// 这块 tile 覆盖的源像素矩形（未对齐 iMCU；实际覆盖以解码结果为准）。
   final Rect sourceRect;
 
-  const TileSpec({
+  const FastTileSpec({
     required this.sample,
     required this.row,
     required this.col,

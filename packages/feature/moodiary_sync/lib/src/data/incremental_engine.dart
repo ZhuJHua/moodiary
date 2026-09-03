@@ -207,10 +207,7 @@ class IncrementalSyncEngine {
         null,
       );
     }
-    _logger.info(
-      .manifestRead,
-      payload: {'entries': manifest.entries.length},
-    );
+    _logger.info(.manifestRead, payload: {'entries': manifest.entries.length});
     // 到这一步 manifest 已成功解码 = 本地 cipher 与远端一致（auth tag 已验密钥）。
 
     final report = await ArchiveApplier(
@@ -321,10 +318,7 @@ class IncrementalSyncEngine {
     if (virginRemote && (await _cipher()).encrypted) {
       await _ensureKeyfileOnVirginRemote();
     }
-    _logger.info(
-      .manifestRead,
-      payload: {'entries': manifest.entries.length},
-    );
+    _logger.info(.manifestRead, payload: {'entries': manifest.entries.length});
     final updated = manifest.copyForUpdate();
 
     // 「远端已有媒体」集合（非 tombstone 条目并集）：命中即零往返跳过上传。
@@ -536,11 +530,7 @@ class IncrementalSyncEngine {
       // 未知前缀（损坏行 / 未来版本写入）：跳过本条而不是抛错打断整次 push——
       // 一行脏墓碑不该让同步永久失败。行保留原样，等版本升级后自然认领。
       if (kind == null) {
-        _logger.warn(
-          .error,
-          reason: .unknownTombstone,
-          payload: {'key': key},
-        );
+        _logger.warn(.error, reason: .unknownTombstone, payload: {'key': key});
         return;
       }
       final (skipKind, pushKind, idKey) = switch (kind) {

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:fast_image/fast_image.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:path/path.dart';
@@ -97,7 +98,7 @@ class AppFiles {
   /// 删一张图：原件 + 全部派生物。业务侧删图一律走这里，别直接 [deleteFile]。
   static Future<void> deleteImage(String name) async {
     await deleteFile(getRealPath('image', name));
-    await ImageDerivatives.deleteFor(name);
+    await FastImageDerivatives.deleteFor(name);
   }
 
   /// 删除用户媒体目录后重建为空。不动 `database` 目录——它由打开中的 Isar 句柄
@@ -220,7 +221,7 @@ class AppFiles {
       }
     }
     // 源图已不在的派生物：删图路径漏网（旧版本、迁移）时的兜底。
-    for (final path in await ImageDerivatives.stale(
+    for (final path in await FastImageDerivatives.stale(
       await getDirFileName(MediaType.image.value),
     )) {
       bytes += await File(path).length();
@@ -235,7 +236,7 @@ class AppFiles {
       report.paths.map((path) async {
         await deleteFile(path);
         if (dirname(path) == imageDir) {
-          await ImageDerivatives.deleteFor(basename(path));
+          await FastImageDerivatives.deleteFor(basename(path));
         }
       }),
     );

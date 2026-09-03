@@ -1,14 +1,13 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
-// material_ui 不转发 SynchronousFuture，取用得回 flutter/foundation（同 mui 自己的 delegate）。
 import 'package:flutter/foundation.dart' show SynchronousFuture;
-import 'package:mui/mui.dart';
+import 'package:flutter/widgets.dart';
 
-import 'image_derivatives.dart';
+import 'derivatives.dart';
 
 /// 本地图片的 [ImageProvider]。相对 `ResizeImage(FileImage(...))` 多做两件事，
-/// 都在 [ImageDerivatives] 那层：
+/// 都在 [FastImageDerivatives] 那层：
 ///
 /// - 给了 [tier] 就取该档位的磁盘缩略图（只查不生成），此后每次滚动只解几十 KB。
 ///   档位还没生成的（存量图片、预热没跑完）拿到的是原图，按档位宽夹住解码：JPEG 走
@@ -27,7 +26,7 @@ import 'image_derivatives.dart';
 /// 按 GPU 最大纹理再夹一道，等于上限随设备漂）。12MP 以内一个像素不丢；再往上想放大看
 /// 细节得做可见区域分块解码，dart:ui 没有区域解码，那是另一件事。
 @immutable
-class MediaImage extends ImageProvider<MediaImage> {
+class FastImage extends ImageProvider<FastImage> {
   /// 看图页解码上限（最长边，物理像素）。
   static const viewerMaxSide = 4096;
 
@@ -35,19 +34,19 @@ class MediaImage extends ImageProvider<MediaImage> {
   final String path;
 
   /// 取哪一档缩略图；null = 解原图（最长边封顶 [viewerMaxSide]），看图页用。
-  final ImageTier? tier;
+  final FastImageTier? tier;
 
   /// 固定尺寸容器的解码宽（物理像素），只缩不放大。随布局变化的容器**不要传**。
   final int? decodeWidth;
 
-  const MediaImage(this.path, {this.tier, this.decodeWidth});
+  const FastImage(this.path, {this.tier, this.decodeWidth});
 
   @override
-  Future<MediaImage> obtainKey(ImageConfiguration configuration) =>
-      SynchronousFuture<MediaImage>(this);
+  Future<FastImage> obtainKey(ImageConfiguration configuration) =>
+      SynchronousFuture<FastImage>(this);
 
   @override
-  ImageStreamCompleter loadImage(MediaImage key, ImageDecoderCallback decode) {
+  ImageStreamCompleter loadImage(FastImage key, ImageDecoderCallback decode) {
     return MultiFrameImageStreamCompleter(
       codec: _load(key, decode),
       scale: 1,
@@ -56,11 +55,11 @@ class MediaImage extends ImageProvider<MediaImage> {
     );
   }
 
-  Future<ui.Codec> _load(MediaImage key, ImageDecoderCallback decode) async {
+  Future<ui.Codec> _load(FastImage key, ImageDecoderCallback decode) async {
     final tier = key.tier;
     final path = tier == null
         ? key.path
-        : await ImageDerivatives.resolve(key.path, tier: tier);
+        : await FastImageDerivatives.resolve(key.path, tier: tier);
     // 文件缺失在这里抛，与 FileImage 一样落到调用方的 errorBuilder。
     final buffer = await ui.ImmutableBuffer.fromFilePath(path);
     // 取了档位但拿回的是原图（小图 / 还没生成 / HEIC）时按档位宽夹住，别把全分辨率
@@ -102,7 +101,7 @@ class MediaImage extends ImageProvider<MediaImage> {
 
   @override
   bool operator ==(Object other) =>
-      other is MediaImage &&
+      other is FastImage &&
       other.path == path &&
       other.tier == tier &&
       other.decodeWidth == decodeWidth;
@@ -112,5 +111,5 @@ class MediaImage extends ImageProvider<MediaImage> {
 
   @override
   String toString() =>
-      'MediaImage("$path", tier: ${tier?.name}, decodeWidth: $decodeWidth)';
+      'FastImage("$path", tier: ${tier?.name}, decodeWidth: $decodeWidth)';
 }

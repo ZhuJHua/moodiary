@@ -1,3 +1,4 @@
+import 'package:fast_image/fast_image.dart';
 import 'package:moodiary_editor/moodiary_editor.dart'
     show audioMimeOf, imageMimeOf, videoMimeOf;
 import 'package:moodiary_files/moodiary_files.dart';
@@ -24,7 +25,7 @@ Future<({String path, String mime})?> appMediaResolver(
   // 正文供 m 档缩略图；档位还没生成的（存量图片）供原图，webview 自己解——那是唯一
   // 一处原图会进 webview 的路，用户跑过「图片优化」就没有了。历史 `.heic` 这里不转码
   // （照旧破图），同样由「图片优化」一次性转成 JPG。MIME 按实际供出的文件定，不按正文里的名字。
-  final display = await ImageDerivatives.resolve(
+  final display = await FastImageDerivatives.resolve(
     AppFiles.getRealPath('image', name),
     tier: .m,
   );

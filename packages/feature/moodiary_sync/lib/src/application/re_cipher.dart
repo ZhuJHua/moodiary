@@ -166,11 +166,7 @@ class CloudReCipher {
         return null;
       }
       if (decoded is! Map<String, dynamic>) {
-        _logger.warn(
-          .reCipher,
-          reason: .decodeFailed,
-          payload: {'path': path},
-        );
+        _logger.warn(.reCipher, reason: .decodeFailed, payload: {'path': path});
         return false;
       }
       await backend.writeObject(path, await to.encode(decoded));
@@ -256,10 +252,7 @@ class CloudReCipher {
         mediaCount++;
       } catch (e) {
         failed++;
-        _logger.error(
-          .reCipher,
-          payload: {'ref': ref, 'detail': e.toString()},
-        );
+        _logger.error(.reCipher, payload: {'ref': ref, 'detail': e.toString()});
       }
       done++;
       emitProgress(l10n.sync.stepMedia(ref: ref));

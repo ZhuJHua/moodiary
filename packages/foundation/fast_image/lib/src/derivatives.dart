@@ -1,27 +1,26 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:moodiary_logging/moodiary_logging.dart';
-import 'package:moodiary_rust/foundation.dart' as rust;
 import 'package:path/path.dart';
 import 'package:pool/pool.dart';
 
-import 'app_files.dart';
+import 'runtime.dart';
+import 'rust/api/image.dart';
 
 /// 缩略图档位（宽度，物理像素）。只留两档：全仓展示点都落在这两个尺寸里 ——
 /// s 给网格 / 日历 / 首页多图格，m 给编辑器正文 / 首页单图 / 看图页占位帧。
 /// 第三档省不下解码，只多一份盘。
-enum ImageTier {
+enum FastImageTier {
   s(512),
   m(1280);
 
   final int width;
 
-  const ImageTier(this.width);
+  const FastImageTier(this.width);
 
   /// 随布局变化的容器按显示宽（物理像素）取档：向上取，比最大档还宽也只给最大档 ——
   /// 列表里永远不解原图，平板一整行宽也是 m。缓存键因此只在跨档时才变。
-  static ImageTier fit(int width) {
+  static FastImageTier fit(int width) {
     for (final tier in values) {
       if (width <= tier.width) return tier;
     }
@@ -31,10 +30,10 @@ enum ImageTier {
 
 /// 图片派生物：原图一个字节不动，展示端只碰派生物。
 ///
-/// 缩略图按 [ImageTier] 由 Rust 一次解码链式缩出，落 `image/thumb/<uuid>_<w>.jpg`；带 alpha
+/// 缩略图按 [FastImageTier] 由 Rust 一次解码链式缩出，落 `image/thumb/<uuid>_<w>.jpg`；带 alpha
 /// 的源（贴纸类 PNG、透明 GIF）落 `.png` 保透明。后缀由**内容**定（后缀名可能撒谎：改名的
 /// PNG、历史上按扩展名猜的格式），展示端两种都查。快慢路也按内容分：读三个魔数字节判
-/// JPEG，不看扩展名。只给 [AppFiles.imageDir] 里的原件算派生物：视频封面之类走这里只会被
+/// JPEG，不看扩展名。只给 [FastImageRuntime.imageDir] 里的原件算派生物：视频封面之类走这里只会被
 /// 孤儿扫描当野文件删掉，永远重算。
 ///
 /// **生成分快慢两条路**：JPEG 源走 turbojpeg 按 1/N 缩放解码，12MP 约 20ms、48MP 峰值约
@@ -47,8 +46,8 @@ enum ImageTier {
 /// 全部落在 `image/thumb/`（support 目录，不是 cache）：从全分辨率原件重算一次太贵，
 /// 不能让系统清缓存清掉。**不同步、不进备份**，谁拿到原图谁自己算；删图连带删
 /// （[deleteFor]），漏网的由孤儿扫描兜底（[stale]）。
-class ImageDerivatives {
-  ImageDerivatives._();
+class FastImageDerivatives {
+  FastImageDerivatives._();
 
   static const _thumbQuality = 82;
 
@@ -84,23 +83,24 @@ class ImageDerivatives {
   static String _base(String imagePath) => basenameWithoutExtension(imagePath);
 
   /// 档位文件不带后缀的路径：`image/thumb/<uuid>_<width>`。
-  static String tierStem(String imagePath, ImageTier tier) =>
-      join(AppFiles.imageThumbDir, '${_base(imagePath)}_${tier.width}');
+  static String tierStem(String imagePath, FastImageTier tier) =>
+      join(FastImageRuntime.thumbDir, '${_base(imagePath)}_${tier.width}');
 
   /// 某档位可能存在的文件名（相对 thumb 目录），按优先级。后缀由内容定，两种都要查：
   /// 一张叫 `.jpg` 的带 alpha PNG 写出来就是 `.png`。
-  static List<String> candidateNames(String imageName, ImageTier tier) {
+  static List<String> candidateNames(String imageName, FastImageTier tier) {
     final stem = '${basenameWithoutExtension(imageName)}_${tier.width}';
     return [for (final ext in _exts) '$stem$ext'];
   }
 
   /// 只给原件目录里的文件算派生物。
   static bool _eligible(String imagePath) =>
-      equals(dirname(imagePath), AppFiles.imageDir) && !_isHeif(imagePath);
+      equals(dirname(imagePath), FastImageRuntime.imageDir) &&
+      !_isHeif(imagePath);
 
-  static List<String> candidatePaths(String imagePath, ImageTier tier) => [
+  static List<String> candidatePaths(String imagePath, FastImageTier tier) => [
     for (final name in candidateNames(imagePath, tier))
-      join(AppFiles.imageThumbDir, name),
+      join(FastImageRuntime.thumbDir, name),
   ];
 
   /// progressive JPEG 的 baseline 副本：`image/thumb/<uuid>_base.jpg`，像素与原件逐字节相同、
@@ -109,24 +109,24 @@ class ImageDerivatives {
       '${basenameWithoutExtension(imageName)}_base.jpg';
 
   static String baselinePath(String imagePath) =>
-      join(AppFiles.imageThumbDir, baselineName(imagePath));
+      join(FastImageRuntime.thumbDir, baselineName(imagePath));
 
   /// 一张图的全部派生物文件名（相对 thumb 目录），两种后缀都算。删图与孤儿扫描共用。
   static List<String> derivativeNamesOf(String imageName) {
     final base = basenameWithoutExtension(imageName);
     return [
-      for (final tier in ImageTier.values)
+      for (final tier in FastImageTier.values)
         for (final ext in _exts) '${base}_${tier.width}$ext',
       baselineName(imageName),
     ];
   }
 
   /// 某档位的可解码路径。要的档位在就给它；不在就往更大档找（m 顶 s 只多解几毫秒）；
-  /// 都没有时，JPEG 源就地生成（快路径），其余给原图由 [MediaImage] 按档位宽夹住解。
+  /// 都没有时，JPEG 源就地生成（快路径），其余给原图由 [FastImage] 按档位宽夹住解。
   /// 这张图的预热若还在飞先等它 —— 刚导入的图正文立刻就要 m 档。
   static Future<String> resolve(
     String imagePath, {
-    required ImageTier tier,
+    required FastImageTier tier,
   }) async {
     if (!_eligible(imagePath)) return imagePath;
     final warming = _inflight[imagePath];
@@ -144,8 +144,8 @@ class ImageDerivatives {
     return await _find(imagePath, tier) ?? imagePath;
   }
 
-  static Future<String?> _find(String imagePath, ImageTier tier) async {
-    for (final candidate in ImageTier.values) {
+  static Future<String?> _find(String imagePath, FastImageTier tier) async {
+    for (final candidate in FastImageTier.values) {
       if (candidate.width < tier.width) continue;
       for (final path in candidatePaths(imagePath, candidate)) {
         if (await File(path).exists()) return path;
@@ -216,21 +216,18 @@ class ImageDerivatives {
       if (await File(src).length() < _baselineMinBytes) return;
       // 读头在闸门外：便宜，别占着转码的位子。不够格的不记 [_absent]（读头就够便宜），
       // 只记转失败的。
-      final probe = await rust.ImageCompressor.probe(filePath: src);
+      final probe = await FastImageCodec.probe(filePath: src);
       if (!probe.progressive ||
           probe.width * probe.height <= baselineMinPixels) {
         return;
       }
       await _transcodeGate.withResource(() async {
         if (await File(path).exists()) return;
-        await rust.ImageCompressor.toBaselineFile(
-          filePath: src,
-          outputPath: path,
-        );
+        await FastImageCodec.toBaselineFile(filePath: src, outputPath: path);
       });
     } catch (e) {
       _absent.add(path);
-      logger.d('baseline transcode failed: $src ($e)');
+      FastImageRuntime.log('baseline transcode failed: $src ($e)');
     }
   }
 
@@ -240,7 +237,7 @@ class ImageDerivatives {
   /// JPEG 转 baseline 副本。
   static Future<void> _generate(
     String src, {
-    ImageTier? only,
+    FastImageTier? only,
     required bool jpeg,
   }) async {
     if (only == null && jpeg) {
@@ -251,10 +248,10 @@ class ImageDerivatives {
         : jpeg
         ? _warmGate
         : _heavyGate;
-    final targets = <rust.ThumbnailTarget>[];
+    final targets = <FastThumbnailTarget>[];
     try {
       await gate.withResource(() async {
-        for (final tier in ImageTier.values) {
+        for (final tier in FastImageTier.values) {
           if (only != null && tier != only) continue;
           final stem = tierStem(src, tier);
           if (_absent.contains(stem)) continue;
@@ -266,12 +263,10 @@ class ImageDerivatives {
             }
           }
           if (present) continue;
-          targets.add(
-            rust.ThumbnailTarget(width: tier.width, outputStem: stem),
-          );
+          targets.add(FastThumbnailTarget(width: tier.width, outputStem: stem));
         }
         if (targets.isEmpty) return;
-        final meta = await rust.ImageCompressor.makeThumbnails(
+        final meta = await FastImageCodec.makeThumbnails(
           filePath: src,
           targets: targets,
           quality: _thumbQuality,
@@ -287,24 +282,24 @@ class ImageDerivatives {
       for (final target in targets) {
         _absent.add(target.outputStem);
       }
-      logger.d('thumbnail generate failed: $src ($e)');
+      FastImageRuntime.log('thumbnail generate failed: $src ($e)');
     }
   }
 
   /// 删图连带删派生物。
   static Future<void> deleteFor(String imageName) async {
-    for (final tier in ImageTier.values) {
+    for (final tier in FastImageTier.values) {
       _absent.remove(tierStem(imageName, tier));
     }
     _absent.remove(baselinePath(imageName));
     for (final name in derivativeNamesOf(imageName)) {
-      final path = join(AppFiles.imageThumbDir, name);
+      final path = join(FastImageRuntime.thumbDir, name);
       try {
         await File(path).delete();
       } on PathNotFoundException {
         // 没生成过。
       } catch (e) {
-        logger.d('delete derivative failed: $path ($e)');
+        FastImageRuntime.log('delete derivative failed: $path ($e)');
       }
     }
   }
@@ -313,7 +308,7 @@ class ImageDerivatives {
   /// 文件名。派生物名里不带源图后缀，按去后缀的 uuid 对账；写到一半的 `.part` 与
   /// 不认识的后缀一律算。
   static Future<List<String>> stale(Iterable<String> imageNames) async {
-    final dir = Directory(AppFiles.imageThumbDir);
+    final dir = Directory(FastImageRuntime.thumbDir);
     if (!await dir.exists()) return const [];
     final alive = {for (final n in imageNames) basenameWithoutExtension(n)};
     final out = <String>[];

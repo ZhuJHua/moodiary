@@ -1,3 +1,4 @@
+import 'package:fast_image/fast_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
@@ -505,7 +506,7 @@ class _ImageTile extends StatelessWidget {
       child: Hero(
         tag: '$_kImageHeroPrefix-$path',
         // 网格格子宽随屏宽 / 折叠态变，缓存键只认档位，展开过程中不重载。
-        child: _Thumb(image: MediaImage(path, tier: .s)),
+        child: _Thumb(image: FastImage(path, tier: .s)),
       ),
     );
   }
@@ -524,9 +525,9 @@ class _VideoTile extends StatelessWidget {
       child: _Thumb(
         // 海报本身就是 1280 宽的 JPEG，不走档位：派生物目录只按 image 目录的名字对账，
         // thumbnail- 前缀的档位会被孤儿扫描当 stale 删掉。夹到 512 解即可，键仍稳定。
-        image: MediaImage(
+        image: FastImage(
           AppFiles.getRealPath('thumbnail', name),
-          decodeWidth: ImageTier.s.width,
+          decodeWidth: FastImageTier.s.width,
         ),
         // 缩略图底色不可预测：用固定 scrim 压暗，前景按「暗底」配对 onInverseSurface。
         overlay: Stack(

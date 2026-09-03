@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:fast_image/fast_image.dart';
 import 'package:fc_native_video_thumbnail/fc_native_video_thumbnail.dart';
 import 'package:gal/gal.dart';
 import 'package:mime/mime.dart';
@@ -30,7 +31,7 @@ class MediaManager {
   /// 图片入库：**原字节直存**，不缩不转码 —— 用户的图我们不动。只有 HEIC 例外：
   /// Flutter 与 webview 两端都解不了，且都是相机成片没有透明通道，固定转 JPG。
   /// 后缀按魔数定（picker 吐的临时文件名不可信），从此后缀就是真实格式。
-  /// 落盘后 fire-and-forget 预热缩略图档位（[ImageDerivatives.warm]）。
+  /// 落盘后 fire-and-forget 预热缩略图档位（[FastImageDerivatives.warm]）。
   /// 已是 image- 命名的（重复插入）直接复用。失败返回 null。
   static Future<String?> saveImage(XFile imageFile) async {
     final srcName = basename(imageFile.path);
@@ -50,7 +51,7 @@ class MediaManager {
         name = 'image-${uuidV7()}${_extensionFor(mime, imageFile.path)}';
         await imageFile.saveTo(AppFiles.getRealPath('image', name));
       }
-      unawaited(ImageDerivatives.warm(AppFiles.getRealPath('image', name)));
+      unawaited(FastImageDerivatives.warm(AppFiles.getRealPath('image', name)));
       return name;
     } catch (e) {
       logger.d('saveImage failed: ${imageFile.path} ($e)');

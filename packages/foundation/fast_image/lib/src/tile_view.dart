@@ -1,27 +1,27 @@
 import 'dart:async';
 import 'dart:ui' as ui;
 
-import 'package:moodiary_files/moodiary_files.dart';
-import 'package:moodiary_logging/moodiary_logging.dart';
-import 'package:moodiary_rust/foundation.dart' as rust;
-import 'package:mui/mui.dart';
+import 'package:flutter/widgets.dart';
 import 'package:photo_view/photo_view.dart';
 
+import 'provider.dart';
+import 'runtime.dart';
+import 'rust/api/image.dart';
 import 'tile_plan.dart';
 
-part 'original_image_debug.dart';
+part 'tile_debug.dart';
 
 /// 看图页的原图层：铺在 `PhotoView.customChild` 里，child 尺寸 = 源图像素，所以
 /// PhotoView 的 scale 就是「每源像素占几个逻辑像素」。三层叠加：
 ///
 /// 1. overview：m 档缩略图铺满，首帧就有像素（从网格进来直接命中缓存）。
-/// 2. tile：按 [TilePlanner] 把视口相交的 tile 交给 Rust 按 1/sample 缩放解码，解到哪画到哪。
+/// 2. tile：按 [FastTilePlanner] 把视口相交的 tile 交给 Rust 按 1/sample 缩放解码，解到哪画到哪。
 ///    粗档的 tile 不急着丢，细档没到之前它顶着，放大过程就是「模糊到清晰」。
-/// 3. 兜底：不能区域解码的（progressive）用引擎解整图，最长边封顶 4096（[MediaImage]）。
+/// 3. 兜底：不能区域解码的（progressive）用引擎解整图，最长边封顶 4096（[FastImage]）。
 ///
 /// 内存由视口决定：可见 + 外圈预取的 tile 每块 ≤ 1MB，缓存按字节预算淘汰；文件字节和
-/// 带缓存在 Rust 侧随 [rust.RegionDecoder] 活着，页面 dispose 时一起释放。
-class OriginalImageView extends StatefulWidget {
+/// 带缓存在 Rust 侧随 [FastRegionDecoder] 活着，页面 dispose 时一起释放。
+class FastTileImageView extends StatefulWidget {
   /// 调试叠层开关（进程级）：画每块 tile 的边框与编号、按 sample 着色、在飞 / 排队状态，
   /// 左上角一行统计。看图页长按 ⓘ 切换。
   static final debugOverlay = ValueNotifier<bool>(false);
@@ -48,7 +48,7 @@ class OriginalImageView extends StatefulWidget {
   /// 切过去再开（open 是毫秒级）。不然三页各一份带缓存 + tile 缓存，内存是三倍。
   final bool active;
 
-  const OriginalImageView({
+  const FastTileImageView({
     super.key,
     required this.path,
     String? decodePath,
@@ -60,11 +60,11 @@ class OriginalImageView extends StatefulWidget {
   }) : decodePath = decodePath ?? path;
 
   @override
-  State<OriginalImageView> createState() => _OriginalImageViewState();
+  State<FastTileImageView> createState() => _FastTileImageViewState();
 }
 
 class _Tile {
-  final TileSpec spec;
+  final FastTileSpec spec;
   final ui.Image image;
   final Rect covered;
   int lastUse;
@@ -83,8 +83,8 @@ class _Tile {
   int get bytes => image.width * image.height * 4;
 }
 
-class _OriginalImageViewState extends State<OriginalImageView> {
-  /// 解出来的 tile 缓存上限（规划内的块不算，它们由 [TilePlanner.maxPlannedTiles] 封顶）。
+class _FastTileImageViewState extends State<FastTileImageView> {
+  /// 解出来的 tile 缓存上限（规划内的块不算，它们由 [FastTilePlanner.maxPlannedTiles] 封顶）。
   /// fit 那一层（整图 ≤ 36 块）留着，缩回去不用再画 overview 的模糊。
   static const _cacheBudgetBytes = 64 * 1024 * 1024;
 
@@ -92,14 +92,16 @@ class _OriginalImageViewState extends State<OriginalImageView> {
   /// 也只跑一趟熵解码（313MB 的图一趟两三秒，按行解就是行数倍）。
   static const _batchSize = 48;
 
-  rust.RegionDecoder? _decoder;
+  FastRegionDecoder? _decoder;
   bool? _randomAccess;
   String _format = '';
   bool _fallback = false;
   bool _disposed = false;
 
-  late final TilePlanner _planner = TilePlanner(imageSize: widget.imageSize);
-  TilePlan? _plan;
+  late final FastTilePlanner _planner = FastTilePlanner(
+    imageSize: widget.imageSize,
+  );
+  FastTilePlan? _plan;
   int _planSeq = 0;
   StreamSubscription<PhotoViewControllerValue>? _sub;
   Timer? _prefetchTimer;
@@ -111,7 +113,7 @@ class _OriginalImageViewState extends State<OriginalImageView> {
 
   final _tiles = <String, _Tile>{};
   final _inflight = <String>{};
-  final _queue = <TileSpec>[];
+  final _queue = <FastTileSpec>[];
   bool _busy = false;
   int _decoded = 0;
   int _batches = 0;
@@ -124,12 +126,12 @@ class _OriginalImageViewState extends State<OriginalImageView> {
   void initState() {
     super.initState();
     _sub = widget.controller.outputStateStream.listen((_) => _scheduleReplan());
-    OriginalImageView.debugOverlay.addListener(_bump);
+    FastTileImageView.debugOverlay.addListener(_bump);
     if (widget.active) unawaited(_open());
   }
 
   @override
-  void didUpdateWidget(OriginalImageView old) {
+  void didUpdateWidget(FastTileImageView old) {
     super.didUpdateWidget(old);
     if (old.active == widget.active) return;
     if (widget.active) {
@@ -145,9 +147,7 @@ class _OriginalImageViewState extends State<OriginalImageView> {
     if (_decoder != null || _fallback) return;
     final generation = _generation;
     try {
-      final decoder = await rust.RegionDecoder.open(
-        filePath: widget.decodePath,
-      );
+      final decoder = await FastRegionDecoder.open(filePath: widget.decodePath);
       if (_disposed || generation != _generation || !widget.active) {
         decoder.dispose();
         return;
@@ -158,10 +158,12 @@ class _OriginalImageViewState extends State<OriginalImageView> {
       final randomAccess = await decoder.randomAccess();
       if (!_disposed && identical(_decoder, decoder)) {
         _randomAccess = randomAccess;
-        if (OriginalImageView.debugOverlay.value) _bump();
+        if (FastTileImageView.debugOverlay.value) _bump();
       }
     } catch (e) {
-      logger.d('region decoder open failed: ${widget.decodePath} ($e)');
+      FastImageRuntime.log(
+        'region decoder open failed: ${widget.decodePath} ($e)',
+      );
       if (!_disposed && generation == _generation) _fail();
     }
   }
@@ -197,13 +199,13 @@ class _OriginalImageViewState extends State<OriginalImageView> {
     _replanTimer?.cancel();
     _replanTimer = Timer(const Duration(milliseconds: 60), _replan);
     // 叠层的视口框与 HUD 跟着手势走；不开叠层时手势期间一帧都不重画（层由合成器变换）。
-    if (OriginalImageView.debugOverlay.value) _repaint.value++;
+    if (FastTileImageView.debugOverlay.value) _repaint.value++;
   }
 
   @override
   void dispose() {
     _disposed = true;
-    OriginalImageView.debugOverlay.removeListener(_bump);
+    FastTileImageView.debugOverlay.removeListener(_bump);
     _sub?.cancel();
     _teardown();
     _repaint.dispose();
@@ -267,7 +269,7 @@ class _OriginalImageViewState extends State<OriginalImageView> {
     _repaint.value++;
   }
 
-  bool _missing(TileSpec spec) =>
+  bool _missing(FastTileSpec spec) =>
       !_tiles.containsKey(spec.key) && !_inflight.contains(spec.key);
 
   void _evict({required Set<String> keep}) {
@@ -287,7 +289,7 @@ class _OriginalImageViewState extends State<OriginalImageView> {
   /// 一次只跑一批：带在 Rust 侧共享，串行才能让后一批命中前一批解出的带。
   void _pump() {
     if (_busy) return;
-    final batch = <TileSpec>[];
+    final batch = <FastTileSpec>[];
     while (_queue.isNotEmpty && batch.length < _batchSize) {
       final spec = _queue.removeAt(0);
       if (!_missing(spec)) continue;
@@ -305,14 +307,14 @@ class _OriginalImageViewState extends State<OriginalImageView> {
     unawaited(_decodeBatch(batch));
   }
 
-  bool _stillWanted(TileSpec spec) {
+  bool _stillWanted(FastTileSpec spec) {
     final plan = _plan;
     if (plan == null || spec.sample != plan.sample) return false;
     return plan.visible.any((t) => t.key == spec.key) ||
         plan.prefetch.any((t) => t.key == spec.key);
   }
 
-  Future<void> _decodeBatch(List<TileSpec> batch) async {
+  Future<void> _decodeBatch(List<FastTileSpec> batch) async {
     final generation = _generation;
     var failed = false;
     try {
@@ -321,7 +323,7 @@ class _OriginalImageViewState extends State<OriginalImageView> {
       final results = await decoder.decodeTiles(
         rects: [
           for (final spec in batch)
-            rust.TileRect(
+            FastTileRect(
               x: spec.sourceRect.left.floor(),
               y: spec.sourceRect.top.floor(),
               width: spec.sourceRect.width.ceil(),
@@ -382,7 +384,9 @@ class _OriginalImageViewState extends State<OriginalImageView> {
       }
     } catch (e) {
       failed = true;
-      logger.d('tile batch decode failed: ${batch.length} tiles ($e)');
+      FastImageRuntime.log(
+        'tile batch decode failed: ${batch.length} tiles ($e)',
+      );
     } finally {
       if (generation == _generation) {
         for (final spec in batch) {
@@ -401,7 +405,7 @@ class _OriginalImageViewState extends State<OriginalImageView> {
 
   /// RGBA 进引擎。不用 `decodeImageFromPixels`：它失败时回调永远不来，这里的批就永远
   /// 等不到。这条链每一步都是 Future，错会抛出来。
-  static Future<ui.Image> _toImage(rust.TilePixels pixels) async {
+  static Future<ui.Image> _toImage(FastTilePixels pixels) async {
     final buffer = await ui.ImmutableBuffer.fromUint8List(pixels.rgba);
     try {
       final descriptor = ui.ImageDescriptor.raw(
@@ -439,7 +443,7 @@ class _OriginalImageViewState extends State<OriginalImageView> {
         ),
         if (_fallback)
           Image(
-            image: MediaImage(widget.path),
+            image: FastImage(widget.path),
             fit: .fill,
             gaplessPlayback: true,
             errorBuilder: (_, _, _) => const SizedBox.shrink(),
@@ -452,8 +456,8 @@ class _OriginalImageViewState extends State<OriginalImageView> {
                 tiles: _tiles,
                 visible: _visibleSource,
                 repaint: _repaint,
-                labelStyle: context.theme.typography.labelMedium.onSurface,
-                debug: () => OriginalImageView.debugOverlay.value
+                labelStyle: DefaultTextStyle.of(context).style,
+                debug: () => FastTileImageView.debugOverlay.value
                     ? _DebugSnapshot(
                         plan: _plan,
                         inflight: _inflight,

@@ -9,9 +9,9 @@ use image::metadata::Orientation;
 use libwebp_sys as webp;
 use memmap2::Mmap;
 
-use crate::region::{RawDecoder, Rect};
-use crate::turbo::PixelRegion;
-use crate::{ImageFormat, image_header};
+use crate::codec::region::{RawDecoder, Rect};
+use crate::codec::turbo::PixelRegion;
+use crate::codec::{ImageFormat, image_header};
 
 /// 无损 WebP 解码时整幅 ARGB 都在内存里（4 字节 / 像素），16MP 就是 64MB。
 const LOSSLESS_MAX_PIXELS: u64 = 16 * 1024 * 1024;
@@ -182,7 +182,7 @@ mod tests {
     use memmap2::Mmap;
 
     use super::{WebPRegion, region_decodable};
-    use crate::region::{RawDecoder, Rect};
+    use crate::codec::region::{RawDecoder, Rect};
 
     fn noisy(width: u32, height: u32) -> image::RgbaImage {
         let mut seed = 0x5EED_1234u32;
@@ -355,7 +355,7 @@ mod tests {
 mod samples {
     //! `MOODIARY_SAMPLES_DIR=/path cargo test --release -p moodiary-image samples -- --ignored`
     //! 造真机 / 模拟器验收用的大图：PNG、有损 WebP、无损 WebP、progressive JPEG。
-    use crate::turbo;
+    use crate::codec::turbo;
 
     fn scene(width: u32, height: u32) -> image::RgbaImage {
         image::RgbaImage::from_fn(width, height, |x, y| {

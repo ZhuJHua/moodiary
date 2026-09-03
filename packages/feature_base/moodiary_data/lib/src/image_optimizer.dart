@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:fast_image/fast_image.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
@@ -13,7 +14,7 @@ import 'diary_repository.dart';
 ///    解不了。同 uuid 换后缀转成 JPG，正文里的引用一并改写，旧文件删掉。这是一次
 ///    **真实的用户编辑**（要 bump lastModified）：新名字得经同步推到其它设备，它们
 ///    拉到 jpg 后旧 heic 在那边成孤儿，由各自的「清理无用文件」回收。
-/// 2. **补齐缩略图**：全部被引用的图片过一遍 [ImageDerivatives.warm]，已有的档位
+/// 2. **补齐缩略图**：全部被引用的图片过一遍 [FastImageDerivatives.warm]，已有的档位
 ///    直接跳过，所以反复执行是幂等的。展示端只查不生成，存量图片在这一步之前一直
 ///    按原图解，所以这是老用户升级后该跑一次的入口。
 ///
@@ -77,7 +78,7 @@ class ImageOptimizer {
     final images = (await repo.collectReferencedMedia()).images;
     for (final name in images) {
       final path = AppFiles.getRealPath('image', name);
-      if (await File(path).exists()) await ImageDerivatives.warm(path);
+      if (await File(path).exists()) await FastImageDerivatives.warm(path);
       onProgress?.call(++done, total);
     }
 

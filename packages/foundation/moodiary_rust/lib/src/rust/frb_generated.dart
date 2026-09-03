@@ -13,7 +13,6 @@ import 'api/graph_layout.dart';
 import 'api/hf_tokenizer.dart';
 import 'api/http.dart';
 import 'api/http_server.dart';
-import 'api/image.dart';
 import 'api/js.dart';
 import 'api/pdf.dart';
 import 'api/s3.dart';
@@ -83,7 +82,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 1075983454;
+  int get rustContentHash => 626437788;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -265,27 +264,6 @@ abstract class RustLibApi extends BaseApi {
 
   void crateApiHttpServerHttpServerStop({required HttpServer that});
 
-  Future<void> crateApiImageImageCompressorContainToFile({
-    required String filePath,
-    required String outputPath,
-    required CompressSpec spec,
-  });
-
-  Future<ImageMeta> crateApiImageImageCompressorMakeThumbnails({
-    required String filePath,
-    required List<ThumbnailTarget> targets,
-    int? quality,
-  });
-
-  Future<ImageProbe> crateApiImageImageCompressorProbe({
-    required String filePath,
-  });
-
-  Future<void> crateApiImageImageCompressorToBaselineFile({
-    required String filePath,
-    required String outputPath,
-  });
-
   Future<void> crateApiPdfPdfBuilderAdd({
     required PdfBuilder that,
     required IrDoc doc,
@@ -298,31 +276,6 @@ abstract class RustLibApi extends BaseApi {
   });
 
   Future<PdfBuilder> crateApiPdfPdfBuilderNew({required PdfStyle style});
-
-  Future<TilePixels> crateApiImageRegionDecoderDecodeTile({
-    required RegionDecoder that,
-    required int x,
-    required int y,
-    required int width,
-    required int height,
-    required int denom,
-  });
-
-  Future<List<TilePixels>> crateApiImageRegionDecoderDecodeTiles({
-    required RegionDecoder that,
-    required List<TileRect> rects,
-    required int denom,
-  });
-
-  Future<RegionDecoder> crateApiImageRegionDecoderOpen({
-    required String filePath,
-  });
-
-  ImageProbe crateApiImageRegionDecoderProbe({required RegionDecoder that});
-
-  Future<bool> crateApiImageRegionDecoderRandomAccess({
-    required RegionDecoder that,
-  });
 
   Future<bool> crateApiS3S3ClientCreateExclusive({
     required S3Client that,
@@ -507,30 +460,12 @@ abstract class RustLibApi extends BaseApi {
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_HttpServerPtr;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_ImageCompressor;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_ImageCompressor;
-
-  CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_ImageCompressorPtr;
-
-  RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_PdfBuilder;
 
   RustArcDecrementStrongCountFnType
   get rust_arc_decrement_strong_count_PdfBuilder;
 
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_PdfBuilderPtr;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_RegionDecoder;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_RegionDecoder;
-
-  CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_RegionDecoderPtr;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_S3Client;
@@ -1780,141 +1715,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "HttpServer_stop", argNames: ["that"]);
 
   @override
-  Future<void> crateApiImageImageCompressorContainToFile({
-    required String filePath,
-    required String outputPath,
-    required CompressSpec spec,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 = cst_encode_String(filePath);
-          var arg1 = cst_encode_String(outputPath);
-          var arg2 = cst_encode_box_autoadd_compress_spec(spec);
-          return wire.wire__crate__api__image__ImageCompressor_contain_to_file(
-            port_,
-            arg0,
-            arg1,
-            arg2,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_unit,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiImageImageCompressorContainToFileConstMeta,
-        argValues: [filePath, outputPath, spec],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiImageImageCompressorContainToFileConstMeta =>
-      const TaskConstMeta(
-        debugName: "ImageCompressor_contain_to_file",
-        argNames: ["filePath", "outputPath", "spec"],
-      );
-
-  @override
-  Future<ImageMeta> crateApiImageImageCompressorMakeThumbnails({
-    required String filePath,
-    required List<ThumbnailTarget> targets,
-    int? quality,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 = cst_encode_String(filePath);
-          var arg1 = cst_encode_list_thumbnail_target(targets);
-          var arg2 = cst_encode_opt_box_autoadd_u_8(quality);
-          return wire.wire__crate__api__image__ImageCompressor_make_thumbnails(
-            port_,
-            arg0,
-            arg1,
-            arg2,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_image_meta,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiImageImageCompressorMakeThumbnailsConstMeta,
-        argValues: [filePath, targets, quality],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiImageImageCompressorMakeThumbnailsConstMeta =>
-      const TaskConstMeta(
-        debugName: "ImageCompressor_make_thumbnails",
-        argNames: ["filePath", "targets", "quality"],
-      );
-
-  @override
-  Future<ImageProbe> crateApiImageImageCompressorProbe({
-    required String filePath,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 = cst_encode_String(filePath);
-          return wire.wire__crate__api__image__ImageCompressor_probe(
-            port_,
-            arg0,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_image_probe,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiImageImageCompressorProbeConstMeta,
-        argValues: [filePath],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiImageImageCompressorProbeConstMeta =>
-      const TaskConstMeta(
-        debugName: "ImageCompressor_probe",
-        argNames: ["filePath"],
-      );
-
-  @override
-  Future<void> crateApiImageImageCompressorToBaselineFile({
-    required String filePath,
-    required String outputPath,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 = cst_encode_String(filePath);
-          var arg1 = cst_encode_String(outputPath);
-          return wire.wire__crate__api__image__ImageCompressor_to_baseline_file(
-            port_,
-            arg0,
-            arg1,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_unit,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiImageImageCompressorToBaselineFileConstMeta,
-        argValues: [filePath, outputPath],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiImageImageCompressorToBaselineFileConstMeta =>
-      const TaskConstMeta(
-        debugName: "ImageCompressor_to_baseline_file",
-        argNames: ["filePath", "outputPath"],
-      );
-
-  @override
   Future<void> crateApiPdfPdfBuilderAdd({
     required PdfBuilder that,
     required IrDoc doc,
@@ -2009,179 +1809,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiPdfPdfBuilderNewConstMeta =>
       const TaskConstMeta(debugName: "PdfBuilder_new", argNames: ["style"]);
-
-  @override
-  Future<TilePixels> crateApiImageRegionDecoderDecodeTile({
-    required RegionDecoder that,
-    required int x,
-    required int y,
-    required int width,
-    required int height,
-    required int denom,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
-                that,
-              );
-          var arg1 = cst_encode_u_32(x);
-          var arg2 = cst_encode_u_32(y);
-          var arg3 = cst_encode_u_32(width);
-          var arg4 = cst_encode_u_32(height);
-          var arg5 = cst_encode_u_8(denom);
-          return wire.wire__crate__api__image__RegionDecoder_decode_tile(
-            port_,
-            arg0,
-            arg1,
-            arg2,
-            arg3,
-            arg4,
-            arg5,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_tile_pixels,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiImageRegionDecoderDecodeTileConstMeta,
-        argValues: [that, x, y, width, height, denom],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiImageRegionDecoderDecodeTileConstMeta =>
-      const TaskConstMeta(
-        debugName: "RegionDecoder_decode_tile",
-        argNames: ["that", "x", "y", "width", "height", "denom"],
-      );
-
-  @override
-  Future<List<TilePixels>> crateApiImageRegionDecoderDecodeTiles({
-    required RegionDecoder that,
-    required List<TileRect> rects,
-    required int denom,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
-                that,
-              );
-          var arg1 = cst_encode_list_tile_rect(rects);
-          var arg2 = cst_encode_u_8(denom);
-          return wire.wire__crate__api__image__RegionDecoder_decode_tiles(
-            port_,
-            arg0,
-            arg1,
-            arg2,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_list_tile_pixels,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiImageRegionDecoderDecodeTilesConstMeta,
-        argValues: [that, rects, denom],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiImageRegionDecoderDecodeTilesConstMeta =>
-      const TaskConstMeta(
-        debugName: "RegionDecoder_decode_tiles",
-        argNames: ["that", "rects", "denom"],
-      );
-
-  @override
-  Future<RegionDecoder> crateApiImageRegionDecoderOpen({
-    required String filePath,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 = cst_encode_String(filePath);
-          return wire.wire__crate__api__image__RegionDecoder_open(port_, arg0);
-        },
-        codec: DcoCodec(
-          decodeSuccessData:
-              dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiImageRegionDecoderOpenConstMeta,
-        argValues: [filePath],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiImageRegionDecoderOpenConstMeta =>
-      const TaskConstMeta(
-        debugName: "RegionDecoder_open",
-        argNames: ["filePath"],
-      );
-
-  @override
-  ImageProbe crateApiImageRegionDecoderProbe({required RegionDecoder that}) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
-                that,
-              );
-          return wire.wire__crate__api__image__RegionDecoder_probe(arg0);
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_image_probe,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiImageRegionDecoderProbeConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiImageRegionDecoderProbeConstMeta =>
-      const TaskConstMeta(debugName: "RegionDecoder_probe", argNames: ["that"]);
-
-  @override
-  Future<bool> crateApiImageRegionDecoderRandomAccess({
-    required RegionDecoder that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
-                that,
-              );
-          return wire.wire__crate__api__image__RegionDecoder_random_access(
-            port_,
-            arg0,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_bool,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiImageRegionDecoderRandomAccessConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiImageRegionDecoderRandomAccessConstMeta =>
-      const TaskConstMeta(
-        debugName: "RegionDecoder_random_access",
-        argNames: ["that"],
-      );
 
   @override
   Future<bool> crateApiS3S3ClientCreateExclusive({
@@ -3155,28 +2782,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_ImageCompressor => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_ImageCompressor => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor;
-
-  RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_PdfBuilder => wire
       .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder;
 
   RustArcDecrementStrongCountFnType
   get rust_arc_decrement_strong_count_PdfBuilder => wire
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_RegionDecoder => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_RegionDecoder => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_S3Client => wire
@@ -3290,30 +2901,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  ImageCompressor
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return ImageCompressorImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
   PdfBuilder
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return PdfBuilderImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  RegionDecoder
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return RegionDecoderImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -3422,15 +3015,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return HttpServerImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  RegionDecoder
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return RegionDecoderImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -3563,30 +3147,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  ImageCompressor
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return ImageCompressorImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
   PdfBuilder
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return PdfBuilderImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  RegionDecoder
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return RegionDecoderImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -3673,18 +3239,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  CompressFormat dco_decode_box_autoadd_compress_format(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_compress_format(raw);
-  }
-
-  @protected
-  CompressSpec dco_decode_box_autoadd_compress_spec(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_compress_spec(raw);
-  }
-
-  @protected
   DocxStyle dco_decode_box_autoadd_docx_style(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_docx_style(raw);
@@ -3739,12 +3293,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  int dco_decode_box_autoadd_u_8(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw as int;
-  }
-
-  @protected
   ClientSettings dco_decode_client_settings(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -3757,30 +3305,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       userAgent: dco_decode_opt_String(arr[3]),
       maxRedirects: dco_decode_opt_box_autoadd_u_32(arr[4]),
       throwOnStatus: dco_decode_bool(arr[5]),
-    );
-  }
-
-  @protected
-  CompressFormat dco_decode_compress_format(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return CompressFormat.values[raw as int];
-  }
-
-  @protected
-  CompressSpec dco_decode_compress_spec(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 8)
-      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
-    return CompressSpec(
-      compressFormat: dco_decode_opt_box_autoadd_compress_format(arr[0]),
-      targetWidth: dco_decode_opt_box_autoadd_u_32(arr[1]),
-      targetHeight: dco_decode_opt_box_autoadd_u_32(arr[2]),
-      minWidth: dco_decode_opt_box_autoadd_u_32(arr[3]),
-      minHeight: dco_decode_opt_box_autoadd_u_32(arr[4]),
-      maxWidth: dco_decode_opt_box_autoadd_u_32(arr[5]),
-      maxHeight: dco_decode_opt_box_autoadd_u_32(arr[6]),
-      quality: dco_decode_opt_box_autoadd_u_8(arr[7]),
     );
   }
 
@@ -3934,40 +3458,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PlatformInt64 dco_decode_i_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dcoDecodeI64(raw);
-  }
-
-  @protected
-  ImageFormat dco_decode_image_format(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return ImageFormat.values[raw as int];
-  }
-
-  @protected
-  ImageMeta dco_decode_image_meta(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
-    return ImageMeta(
-      width: dco_decode_u_32(arr[0]),
-      height: dco_decode_u_32(arr[1]),
-      ext: dco_decode_String(arr[2]),
-    );
-  }
-
-  @protected
-  ImageProbe dco_decode_image_probe(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 5)
-      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
-    return ImageProbe(
-      format: dco_decode_image_format(arr[0]),
-      width: dco_decode_u_32(arr[1]),
-      height: dco_decode_u_32(arr[2]),
-      progressive: dco_decode_bool(arr[3]),
-      regionDecodable: dco_decode_bool(arr[4]),
-    );
   }
 
   @protected
@@ -4237,24 +3727,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  List<ThumbnailTarget> dco_decode_list_thumbnail_target(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return (raw as List<dynamic>).map(dco_decode_thumbnail_target).toList();
-  }
-
-  @protected
-  List<TilePixels> dco_decode_list_tile_pixels(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return (raw as List<dynamic>).map(dco_decode_tile_pixels).toList();
-  }
-
-  @protected
-  List<TileRect> dco_decode_list_tile_rect(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return (raw as List<dynamic>).map(dco_decode_tile_rect).toList();
-  }
-
-  @protected
   List<TokenizeResult> dco_decode_list_tokenize_result(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_tokenize_result).toList();
@@ -4273,12 +3745,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  CompressFormat? dco_decode_opt_box_autoadd_compress_format(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw == null ? null : dco_decode_box_autoadd_compress_format(raw);
-  }
-
-  @protected
   HttpResponse? dco_decode_opt_box_autoadd_http_response(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_http_response(raw);
@@ -4294,12 +3760,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   int? dco_decode_opt_box_autoadd_u_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_u_32(raw);
-  }
-
-  @protected
-  int? dco_decode_opt_box_autoadd_u_8(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw == null ? null : dco_decode_box_autoadd_u_8(raw);
   }
 
   @protected
@@ -4431,49 +3891,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       name: dco_decode_String(arr[0]),
       description: dco_decode_String(arr[1]),
       parametersJson: dco_decode_String(arr[2]),
-    );
-  }
-
-  @protected
-  ThumbnailTarget dco_decode_thumbnail_target(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-    return ThumbnailTarget(
-      width: dco_decode_u_32(arr[0]),
-      outputStem: dco_decode_String(arr[1]),
-    );
-  }
-
-  @protected
-  TilePixels dco_decode_tile_pixels(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 7)
-      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
-    return TilePixels(
-      x: dco_decode_u_32(arr[0]),
-      y: dco_decode_u_32(arr[1]),
-      width: dco_decode_u_32(arr[2]),
-      height: dco_decode_u_32(arr[3]),
-      pixelWidth: dco_decode_u_32(arr[4]),
-      pixelHeight: dco_decode_u_32(arr[5]),
-      rgba: dco_decode_list_prim_u_8_strict(arr[6]),
-    );
-  }
-
-  @protected
-  TileRect dco_decode_tile_rect(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
-    return TileRect(
-      x: dco_decode_u_32(arr[0]),
-      y: dco_decode_u_32(arr[1]),
-      width: dco_decode_u_32(arr[2]),
-      height: dco_decode_u_32(arr[3]),
     );
   }
 
@@ -4654,36 +4071,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  ImageCompressor
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return ImageCompressorImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
   PdfBuilder
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return PdfBuilderImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  RegionDecoder
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return RegionDecoderImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -4834,18 +4227,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  RegionDecoder
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return RegionDecoderImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
   S3Client
   sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
     SseDeserializer deserializer,
@@ -4982,36 +4363,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  ImageCompressor
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return ImageCompressorImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
   PdfBuilder
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return PdfBuilderImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  RegionDecoder
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return RegionDecoderImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -5113,22 +4470,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  CompressFormat sse_decode_box_autoadd_compress_format(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_compress_format(deserializer));
-  }
-
-  @protected
-  CompressSpec sse_decode_box_autoadd_compress_spec(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_compress_spec(deserializer));
-  }
-
-  @protected
   DocxStyle sse_decode_box_autoadd_docx_style(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_docx_style(deserializer));
@@ -5191,12 +4532,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  int sse_decode_box_autoadd_u_8(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_u_8(deserializer));
-  }
-
-  @protected
   ClientSettings sse_decode_client_settings(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_baseUrl = sse_decode_opt_String(deserializer);
@@ -5212,38 +4547,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       userAgent: var_userAgent,
       maxRedirects: var_maxRedirects,
       throwOnStatus: var_throwOnStatus,
-    );
-  }
-
-  @protected
-  CompressFormat sse_decode_compress_format(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var inner = sse_decode_i_32(deserializer);
-    return CompressFormat.values[inner];
-  }
-
-  @protected
-  CompressSpec sse_decode_compress_spec(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_compressFormat = sse_decode_opt_box_autoadd_compress_format(
-      deserializer,
-    );
-    var var_targetWidth = sse_decode_opt_box_autoadd_u_32(deserializer);
-    var var_targetHeight = sse_decode_opt_box_autoadd_u_32(deserializer);
-    var var_minWidth = sse_decode_opt_box_autoadd_u_32(deserializer);
-    var var_minHeight = sse_decode_opt_box_autoadd_u_32(deserializer);
-    var var_maxWidth = sse_decode_opt_box_autoadd_u_32(deserializer);
-    var var_maxHeight = sse_decode_opt_box_autoadd_u_32(deserializer);
-    var var_quality = sse_decode_opt_box_autoadd_u_8(deserializer);
-    return CompressSpec(
-      compressFormat: var_compressFormat,
-      targetWidth: var_targetWidth,
-      targetHeight: var_targetHeight,
-      minWidth: var_minWidth,
-      minHeight: var_minHeight,
-      maxWidth: var_maxWidth,
-      maxHeight: var_maxHeight,
-      quality: var_quality,
     );
   }
 
@@ -5426,39 +4729,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getPlatformInt64();
-  }
-
-  @protected
-  ImageFormat sse_decode_image_format(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var inner = sse_decode_i_32(deserializer);
-    return ImageFormat.values[inner];
-  }
-
-  @protected
-  ImageMeta sse_decode_image_meta(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_width = sse_decode_u_32(deserializer);
-    var var_height = sse_decode_u_32(deserializer);
-    var var_ext = sse_decode_String(deserializer);
-    return ImageMeta(width: var_width, height: var_height, ext: var_ext);
-  }
-
-  @protected
-  ImageProbe sse_decode_image_probe(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_format = sse_decode_image_format(deserializer);
-    var var_width = sse_decode_u_32(deserializer);
-    var var_height = sse_decode_u_32(deserializer);
-    var var_progressive = sse_decode_bool(deserializer);
-    var var_regionDecodable = sse_decode_bool(deserializer);
-    return ImageProbe(
-      format: var_format,
-      width: var_width,
-      height: var_height,
-      progressive: var_progressive,
-      regionDecodable: var_regionDecodable,
-    );
   }
 
   @protected
@@ -5827,44 +5097,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  List<ThumbnailTarget> sse_decode_list_thumbnail_target(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    var len_ = sse_decode_i_32(deserializer);
-    var ans_ = <ThumbnailTarget>[];
-    for (var idx_ = 0; idx_ < len_; ++idx_) {
-      ans_.add(sse_decode_thumbnail_target(deserializer));
-    }
-    return ans_;
-  }
-
-  @protected
-  List<TilePixels> sse_decode_list_tile_pixels(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    var len_ = sse_decode_i_32(deserializer);
-    var ans_ = <TilePixels>[];
-    for (var idx_ = 0; idx_ < len_; ++idx_) {
-      ans_.add(sse_decode_tile_pixels(deserializer));
-    }
-    return ans_;
-  }
-
-  @protected
-  List<TileRect> sse_decode_list_tile_rect(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    var len_ = sse_decode_i_32(deserializer);
-    var ans_ = <TileRect>[];
-    for (var idx_ = 0; idx_ < len_; ++idx_) {
-      ans_.add(sse_decode_tile_rect(deserializer));
-    }
-    return ans_;
-  }
-
-  @protected
   List<TokenizeResult> sse_decode_list_tokenize_result(
     SseDeserializer deserializer,
   ) {
@@ -5901,19 +5133,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  CompressFormat? sse_decode_opt_box_autoadd_compress_format(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    if (sse_decode_bool(deserializer)) {
-      return (sse_decode_box_autoadd_compress_format(deserializer));
-    } else {
-      return null;
-    }
-  }
-
-  @protected
   HttpResponse? sse_decode_opt_box_autoadd_http_response(
     SseDeserializer deserializer,
   ) {
@@ -5943,17 +5162,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
     if (sse_decode_bool(deserializer)) {
       return (sse_decode_box_autoadd_u_32(deserializer));
-    } else {
-      return null;
-    }
-  }
-
-  @protected
-  int? sse_decode_opt_box_autoadd_u_8(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    if (sse_decode_bool(deserializer)) {
-      return (sse_decode_box_autoadd_u_8(deserializer));
     } else {
       return null;
     }
@@ -6129,45 +5337,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  ThumbnailTarget sse_decode_thumbnail_target(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_width = sse_decode_u_32(deserializer);
-    var var_outputStem = sse_decode_String(deserializer);
-    return ThumbnailTarget(width: var_width, outputStem: var_outputStem);
-  }
-
-  @protected
-  TilePixels sse_decode_tile_pixels(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_x = sse_decode_u_32(deserializer);
-    var var_y = sse_decode_u_32(deserializer);
-    var var_width = sse_decode_u_32(deserializer);
-    var var_height = sse_decode_u_32(deserializer);
-    var var_pixelWidth = sse_decode_u_32(deserializer);
-    var var_pixelHeight = sse_decode_u_32(deserializer);
-    var var_rgba = sse_decode_list_prim_u_8_strict(deserializer);
-    return TilePixels(
-      x: var_x,
-      y: var_y,
-      width: var_width,
-      height: var_height,
-      pixelWidth: var_pixelWidth,
-      pixelHeight: var_pixelHeight,
-      rgba: var_rgba,
-    );
-  }
-
-  @protected
-  TileRect sse_decode_tile_rect(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_x = sse_decode_u_32(deserializer);
-    var var_y = sse_decode_u_32(deserializer);
-    var var_width = sse_decode_u_32(deserializer);
-    var var_height = sse_decode_u_32(deserializer);
-    return TileRect(x: var_x, y: var_y, width: var_width, height: var_height);
-  }
-
-  @protected
   TokenizeResult sse_decode_tokenize_result(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_cut = sse_decode_list_String(deserializer);
@@ -6315,32 +5484,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   int
-  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor(
-    ImageCompressor raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as ImageCompressorImpl).frbInternalCstEncode(move: true);
-  }
-
-  @protected
-  int
   cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     PdfBuilder raw,
   ) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     // ignore: invalid_use_of_internal_member
     return (raw as PdfBuilderImpl).frbInternalCstEncode(move: true);
-  }
-
-  @protected
-  int
-  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
-    RegionDecoder raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as RegionDecoderImpl).frbInternalCstEncode(move: true);
   }
 
   @protected
@@ -6461,16 +5610,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Cst (C-struct based), see doc to use other codecs
     // ignore: invalid_use_of_internal_member
     return (raw as HttpServerImpl).frbInternalCstEncode(move: false);
-  }
-
-  @protected
-  int
-  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
-    RegionDecoder raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as RegionDecoderImpl).frbInternalCstEncode(move: false);
   }
 
   @protected
@@ -6620,32 +5759,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   int
-  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor(
-    ImageCompressor raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as ImageCompressorImpl).frbInternalCstEncode();
-  }
-
-  @protected
-  int
   cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     PdfBuilder raw,
   ) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     // ignore: invalid_use_of_internal_member
     return (raw as PdfBuilderImpl).frbInternalCstEncode();
-  }
-
-  @protected
-  int
-  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
-    RegionDecoder raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as RegionDecoderImpl).frbInternalCstEncode();
   }
 
   @protected
@@ -6685,12 +5804,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  int cst_encode_compress_format(CompressFormat raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    return cst_encode_i_32(raw.index);
-  }
-
-  @protected
   double cst_encode_f_32(double raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw;
@@ -6718,12 +5831,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   int cst_encode_i_32(int raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw;
-  }
-
-  @protected
-  int cst_encode_image_format(ImageFormat raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    return cst_encode_i_32(raw.index);
   }
 
   @protected
@@ -6878,19 +5985,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor(
-    ImageCompressor self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as ImageCompressorImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     PdfBuilder self,
     SseSerializer serializer,
@@ -6898,19 +5992,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as PdfBuilderImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
-    RegionDecoder self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as RegionDecoderImpl).frbInternalSseEncode(move: true),
       serializer,
     );
   }
@@ -7067,19 +6148,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as HttpServerImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
-    RegionDecoder self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as RegionDecoderImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
@@ -7282,19 +6350,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor(
-    ImageCompressor self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as ImageCompressorImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     PdfBuilder self,
     SseSerializer serializer,
@@ -7302,19 +6357,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as PdfBuilderImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
-    RegionDecoder self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as RegionDecoderImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
@@ -7454,24 +6496,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_box_autoadd_compress_format(
-    CompressFormat self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_compress_format(self, serializer);
-  }
-
-  @protected
-  void sse_encode_box_autoadd_compress_spec(
-    CompressSpec self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_compress_spec(self, serializer);
-  }
-
-  @protected
   void sse_encode_box_autoadd_docx_style(
     DocxStyle self,
     SseSerializer serializer,
@@ -7544,12 +6568,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_box_autoadd_u_8(int self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_u_8(self, serializer);
-  }
-
-  @protected
   void sse_encode_client_settings(
     ClientSettings self,
     SseSerializer serializer,
@@ -7561,28 +6579,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_String(self.userAgent, serializer);
     sse_encode_opt_box_autoadd_u_32(self.maxRedirects, serializer);
     sse_encode_bool(self.throwOnStatus, serializer);
-  }
-
-  @protected
-  void sse_encode_compress_format(
-    CompressFormat self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.index, serializer);
-  }
-
-  @protected
-  void sse_encode_compress_spec(CompressSpec self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_opt_box_autoadd_compress_format(self.compressFormat, serializer);
-    sse_encode_opt_box_autoadd_u_32(self.targetWidth, serializer);
-    sse_encode_opt_box_autoadd_u_32(self.targetHeight, serializer);
-    sse_encode_opt_box_autoadd_u_32(self.minWidth, serializer);
-    sse_encode_opt_box_autoadd_u_32(self.minHeight, serializer);
-    sse_encode_opt_box_autoadd_u_32(self.maxWidth, serializer);
-    sse_encode_opt_box_autoadd_u_32(self.maxHeight, serializer);
-    sse_encode_opt_box_autoadd_u_8(self.quality, serializer);
   }
 
   @protected
@@ -7712,30 +6708,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putPlatformInt64(self);
-  }
-
-  @protected
-  void sse_encode_image_format(ImageFormat self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.index, serializer);
-  }
-
-  @protected
-  void sse_encode_image_meta(ImageMeta self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_u_32(self.width, serializer);
-    sse_encode_u_32(self.height, serializer);
-    sse_encode_String(self.ext, serializer);
-  }
-
-  @protected
-  void sse_encode_image_probe(ImageProbe self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_image_format(self.format, serializer);
-    sse_encode_u_32(self.width, serializer);
-    sse_encode_u_32(self.height, serializer);
-    sse_encode_bool(self.progressive, serializer);
-    sse_encode_bool(self.regionDecodable, serializer);
   }
 
   @protected
@@ -8068,42 +7040,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_list_thumbnail_target(
-    List<ThumbnailTarget> self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.length, serializer);
-    for (final item in self) {
-      sse_encode_thumbnail_target(item, serializer);
-    }
-  }
-
-  @protected
-  void sse_encode_list_tile_pixels(
-    List<TilePixels> self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.length, serializer);
-    for (final item in self) {
-      sse_encode_tile_pixels(item, serializer);
-    }
-  }
-
-  @protected
-  void sse_encode_list_tile_rect(
-    List<TileRect> self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.length, serializer);
-    for (final item in self) {
-      sse_encode_tile_rect(item, serializer);
-    }
-  }
-
-  @protected
   void sse_encode_list_tokenize_result(
     List<TokenizeResult> self,
     SseSerializer serializer,
@@ -8132,19 +7068,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_bool(self != null, serializer);
     if (self != null) {
       sse_encode_box_autoadd_bool(self, serializer);
-    }
-  }
-
-  @protected
-  void sse_encode_opt_box_autoadd_compress_format(
-    CompressFormat? self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    sse_encode_bool(self != null, serializer);
-    if (self != null) {
-      sse_encode_box_autoadd_compress_format(self, serializer);
     }
   }
 
@@ -8178,16 +7101,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_bool(self != null, serializer);
     if (self != null) {
       sse_encode_box_autoadd_u_32(self, serializer);
-    }
-  }
-
-  @protected
-  void sse_encode_opt_box_autoadd_u_8(int? self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    sse_encode_bool(self != null, serializer);
-    if (self != null) {
-      sse_encode_box_autoadd_u_8(self, serializer);
     }
   }
 
@@ -8325,37 +7238,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.name, serializer);
     sse_encode_String(self.description, serializer);
     sse_encode_String(self.parametersJson, serializer);
-  }
-
-  @protected
-  void sse_encode_thumbnail_target(
-    ThumbnailTarget self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_u_32(self.width, serializer);
-    sse_encode_String(self.outputStem, serializer);
-  }
-
-  @protected
-  void sse_encode_tile_pixels(TilePixels self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_u_32(self.x, serializer);
-    sse_encode_u_32(self.y, serializer);
-    sse_encode_u_32(self.width, serializer);
-    sse_encode_u_32(self.height, serializer);
-    sse_encode_u_32(self.pixelWidth, serializer);
-    sse_encode_u_32(self.pixelHeight, serializer);
-    sse_encode_list_prim_u_8_strict(self.rgba, serializer);
-  }
-
-  @protected
-  void sse_encode_tile_rect(TileRect self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_u_32(self.x, serializer);
-    sse_encode_u_32(self.y, serializer);
-    sse_encode_u_32(self.width, serializer);
-    sse_encode_u_32(self.height, serializer);
   }
 
   @protected
@@ -8713,26 +7595,6 @@ class HttpServerImpl extends RustOpaque implements HttpServer {
 }
 
 @sealed
-class ImageCompressorImpl extends RustOpaque implements ImageCompressor {
-  // Not to be used by end users
-  ImageCompressorImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  ImageCompressorImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_ImageCompressor,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_ImageCompressor,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_ImageCompressorPtr,
-  );
-}
-
-@sealed
 class PdfBuilderImpl extends RustOpaque implements PdfBuilder {
   // Not to be used by end users
   PdfBuilderImpl.frbInternalDcoDecode(List<dynamic> wire)
@@ -8760,61 +7622,6 @@ class PdfBuilderImpl extends RustOpaque implements PdfBuilder {
         outPath: outPath,
         cancel: cancel,
       );
-}
-
-@sealed
-class RegionDecoderImpl extends RustOpaque implements RegionDecoder {
-  // Not to be used by end users
-  RegionDecoderImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  RegionDecoderImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_RegionDecoder,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_RegionDecoder,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_RegionDecoderPtr,
-  );
-
-  /// `x/y/width/height` 是转正后源像素坐标，`denom` 是 1..=8 的缩放分母。
-  /// 返回实际覆盖的矩形（对齐 iMCU 后可能比请求大）与转正后的 RGBA。
-  Future<TilePixels> decodeTile({
-    required int x,
-    required int y,
-    required int width,
-    required int height,
-    required int denom,
-  }) => RustLib.instance.api.crateApiImageRegionDecoderDecodeTile(
-    that: this,
-    x: x,
-    y: y,
-    width: width,
-    height: height,
-    denom: denom,
-  );
-
-  /// 一批同 denom 的 tile：并集一次解出来当带，再逐块切。视口里的可见 tile 一次全要，
-  /// 313MB 的图就只跑一趟熵解码。
-  Future<List<TilePixels>> decodeTiles({
-    required List<TileRect> rects,
-    required int denom,
-  }) => RustLib.instance.api.crateApiImageRegionDecoderDecodeTiles(
-    that: this,
-    rects: rects,
-    denom: denom,
-  );
-
-  ImageProbe probe() =>
-      RustLib.instance.api.crateApiImageRegionDecoderProbe(that: this);
-
-  /// 文件带对齐的 restart marker：tile 只解覆盖它的段、还能并行。第一次调用会扫一遍文件。
-  Future<bool> randomAccess() =>
-      RustLib.instance.api.crateApiImageRegionDecoderRandomAccess(that: this);
 }
 
 @sealed

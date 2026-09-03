@@ -13,6 +13,7 @@ dependencies:
   flutter:
     sdk: flutter
 
+  fast_image: 0.0.1
   moodiary_files: 0.0.1
   moodiary_logging: 0.0.1
   moodiary_platform: 0.0.1

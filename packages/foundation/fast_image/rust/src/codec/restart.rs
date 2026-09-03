@@ -15,8 +15,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use anyhow::{Result, anyhow, bail};
 use memchr::memchr;
 
-use crate::region::Rect;
-use crate::turbo::{self, PixelRegion};
+use crate::codec::region::Rect;
+use crate::codec::turbo::{self, PixelRegion};
 
 /// 一段至少切这么多 MCU 行才值得再分一个线程。
 const MIN_ROWS_PER_CHUNK: u32 = 8;
@@ -394,8 +394,8 @@ pub fn threads() -> usize {
 #[cfg(test)]
 mod tests {
     use super::RestartIndex;
-    use crate::region::Rect;
-    use crate::turbo;
+    use crate::codec::region::Rect;
+    use crate::codec::turbo;
 
     /// 渐变 + 确定性噪声：分段接缝处哪怕差一行也能对出来。
     fn noisy(width: u32, height: u32) -> Vec<u8> {
@@ -582,8 +582,8 @@ mod bench {
     use std::time::Instant;
 
     use super::RestartIndex;
-    use crate::region::Rect;
-    use crate::turbo;
+    use crate::codec::region::Rect;
+    use crate::codec::turbo;
 
     #[test]
     #[ignore]

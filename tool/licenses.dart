@@ -13,7 +13,10 @@
 import 'dart:convert';
 import 'dart:io';
 
-const _rustDir = 'packages/foundation/moodiary_rust/rust';
+const _rustDirs = [
+  'packages/foundation/moodiary_rust/rust',
+  'packages/foundation/fast_image/rust',
+];
 const _npmManifest =
     'packages/feature_base/moodiary_editor/editor/build/third-party-licenses.json';
 const _outPath = 'mobile/assets/licenses/third_party.json';
@@ -23,7 +26,10 @@ typedef _Entry = ({List<String> packages, String text});
 
 Future<void> main() async {
   final texts = <String, Set<String>>{};
-  for (final e in [...await _rust(), ..._npm()]) {
+  for (final e in [
+    for (final dir in _rustDirs) ...await _rust(dir),
+    ..._npm(),
+  ]) {
     texts.putIfAbsent(e.text, () => <String>{}).addAll(e.packages);
   }
 
@@ -54,13 +60,13 @@ Future<void> main() async {
 }
 
 /// cargo-about 的原生 JSON。`about.toml` 已按目标平台过滤，并排除构建期与测试期依赖。
-Future<List<_Entry>> _rust() async {
+Future<List<_Entry>> _rust(String rustDir) async {
   final proc = await Process.run('cargo', [
     'about',
     'generate',
     '--format',
     'json',
-  ], workingDirectory: _rustDir);
+  ], workingDirectory: rustDir);
   if (proc.exitCode != 0) {
     stderr.writeln(proc.stderr);
     throw StateError('cargo about 失败，先装 cargo-about');

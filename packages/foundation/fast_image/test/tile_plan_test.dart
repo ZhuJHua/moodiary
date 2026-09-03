@@ -1,10 +1,10 @@
 import 'dart:ui' show Offset, Rect, Size;
 
+import 'package:fast_image/fast_image.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_components/src/common/tile_plan.dart';
 
 void main() {
-  const planner = TilePlanner(imageSize: Size(8000, 6000));
+  const planner = FastTilePlanner(imageSize: Size(8000, 6000));
 
   test('fit 比例：整图落到一屏几块 tile，sample 取到 8', () {
     // 8000 宽在 1440 物理像素的屏上 fit：每源像素 0.18 物理像素。
@@ -41,7 +41,10 @@ void main() {
   });
 
   test('可见 tile 超上限就升一档 sample', () {
-    const small = TilePlanner(imageSize: Size(8000, 6000), maxVisibleTiles: 4);
+    const small = FastTilePlanner(
+      imageSize: Size(8000, 6000),
+      maxVisibleTiles: 4,
+    );
     final plan = small.plan(
       visible: const Rect.fromLTWH(0, 0, 8000, 6000),
       physicalScale: 1,
@@ -51,7 +54,7 @@ void main() {
   });
 
   test('可见 + 预取总数不超过上限', () {
-    const capped = TilePlanner(
+    const capped = FastTilePlanner(
       imageSize: Size(8000, 6000),
       maxVisibleTiles: 30,
     );

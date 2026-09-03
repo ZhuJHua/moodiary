@@ -20,10 +20,7 @@ void main() {
     });
 
     test('omits empty payload and absent reason in json', () {
-      final json = SyncEvent.now(
-        level: .info,
-        kind: .syncStart,
-      ).toJson();
+      final json = SyncEvent.now(level: .info, kind: .syncStart).toJson();
       expect(json.containsKey('payload'), isFalse);
       expect(json.containsKey('reason'), isFalse);
     });

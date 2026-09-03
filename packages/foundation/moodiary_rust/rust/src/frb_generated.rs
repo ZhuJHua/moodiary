@@ -34,7 +34,6 @@ use crate::api::font::*;
 use crate::api::hf_tokenizer::*;
 use crate::api::http::*;
 use crate::api::http_server::*;
-use crate::api::image::*;
 use crate::api::pdf::*;
 use crate::api::s3::*;
 use crate::api::text::*;
@@ -52,7 +51,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1075983454;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 626437788;
 
 // Section: executor
 
@@ -1414,119 +1413,6 @@ fn wire__crate__api__http_server__HttpServer_stop_impl(
         },
     )
 }
-fn wire__crate__api__image__ImageCompressor_contain_to_file_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    file_path: impl CstDecode<String>,
-    output_path: impl CstDecode<String>,
-    spec: impl CstDecode<crate::api::image::CompressSpec>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "ImageCompressor_contain_to_file",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_file_path = file_path.cst_decode();
-            let api_output_path = output_path.cst_decode();
-            let api_spec = spec.cst_decode();
-            move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
-                    (move || {
-                        let output_ok = crate::api::image::ImageCompressor::contain_to_file(
-                            api_file_path,
-                            api_output_path,
-                            api_spec,
-                        )?;
-                        std::result::Result::Ok(output_ok)
-                    })(),
-                )
-            }
-        },
-    )
-}
-fn wire__crate__api__image__ImageCompressor_make_thumbnails_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    file_path: impl CstDecode<String>,
-    targets: impl CstDecode<Vec<crate::api::image::ThumbnailTarget>>,
-    quality: impl CstDecode<Option<u8>>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "ImageCompressor_make_thumbnails",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_file_path = file_path.cst_decode();
-            let api_targets = targets.cst_decode();
-            let api_quality = quality.cst_decode();
-            move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
-                    (move || {
-                        let output_ok = crate::api::image::ImageCompressor::make_thumbnails(
-                            api_file_path,
-                            api_targets,
-                            api_quality,
-                        )?;
-                        std::result::Result::Ok(output_ok)
-                    })(),
-                )
-            }
-        },
-    )
-}
-fn wire__crate__api__image__ImageCompressor_probe_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    file_path: impl CstDecode<String>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "ImageCompressor_probe",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_file_path = file_path.cst_decode();
-            move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
-                    (move || {
-                        let output_ok = crate::api::image::ImageCompressor::probe(api_file_path)?;
-                        std::result::Result::Ok(output_ok)
-                    })(),
-                )
-            }
-        },
-    )
-}
-fn wire__crate__api__image__ImageCompressor_to_baseline_file_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    file_path: impl CstDecode<String>,
-    output_path: impl CstDecode<String>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "ImageCompressor_to_baseline_file",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_file_path = file_path.cst_decode();
-            let api_output_path = output_path.cst_decode();
-            move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
-                    (move || {
-                        let output_ok = crate::api::image::ImageCompressor::to_baseline_file(
-                            api_file_path,
-                            api_output_path,
-                        )?;
-                        std::result::Result::Ok(output_ok)
-                    })(),
-                )
-            }
-        },
-    )
-}
 fn wire__crate__api__pdf__PdfBuilder_add_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     that: impl CstDecode<
@@ -1642,206 +1528,6 @@ fn wire__crate__api__pdf__PdfBuilder_new_impl(
             move |context| {
                 transform_result_dco::<_, _, ()>((move || {
                     let output_ok = Ok::<_, ()>(crate::api::pdf::PdfBuilder::new(api_style))?;
-                    std::result::Result::Ok(output_ok)
-                })())
-            }
-        },
-    )
-}
-fn wire__crate__api__image__RegionDecoder_decode_tile_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<
-        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<RegionDecoder>>,
-    >,
-    x: impl CstDecode<u32>,
-    y: impl CstDecode<u32>,
-    width: impl CstDecode<u32>,
-    height: impl CstDecode<u32>,
-    denom: impl CstDecode<u8>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "RegionDecoder_decode_tile",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_that = that.cst_decode();
-            let api_x = x.cst_decode();
-            let api_y = y.cst_decode();
-            let api_width = width.cst_decode();
-            let api_height = height.cst_decode();
-            let api_denom = denom.cst_decode();
-            move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
-                    (move || {
-                        let mut api_that_guard = None;
-                        let decode_indices_ =
-                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
-                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                                    &api_that, 0, false,
-                                )],
-                            );
-                        for i in decode_indices_ {
-                            match i {
-                                0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
-                                _ => unreachable!(),
-                            }
-                        }
-                        let api_that_guard = api_that_guard.unwrap();
-                        let output_ok = crate::api::image::RegionDecoder::decode_tile(
-                            &*api_that_guard,
-                            api_x,
-                            api_y,
-                            api_width,
-                            api_height,
-                            api_denom,
-                        )?;
-                        std::result::Result::Ok(output_ok)
-                    })(),
-                )
-            }
-        },
-    )
-}
-fn wire__crate__api__image__RegionDecoder_decode_tiles_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<
-        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<RegionDecoder>>,
-    >,
-    rects: impl CstDecode<Vec<crate::api::image::TileRect>>,
-    denom: impl CstDecode<u8>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "RegionDecoder_decode_tiles",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_that = that.cst_decode();
-            let api_rects = rects.cst_decode();
-            let api_denom = denom.cst_decode();
-            move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
-                    (move || {
-                        let mut api_that_guard = None;
-                        let decode_indices_ =
-                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
-                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                                    &api_that, 0, false,
-                                )],
-                            );
-                        for i in decode_indices_ {
-                            match i {
-                                0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
-                                _ => unreachable!(),
-                            }
-                        }
-                        let api_that_guard = api_that_guard.unwrap();
-                        let output_ok = crate::api::image::RegionDecoder::decode_tiles(
-                            &*api_that_guard,
-                            api_rects,
-                            api_denom,
-                        )?;
-                        std::result::Result::Ok(output_ok)
-                    })(),
-                )
-            }
-        },
-    )
-}
-fn wire__crate__api__image__RegionDecoder_open_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    file_path: impl CstDecode<String>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "RegionDecoder_open",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_file_path = file_path.cst_decode();
-            move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
-                    (move || {
-                        let output_ok = crate::api::image::RegionDecoder::open(api_file_path)?;
-                        std::result::Result::Ok(output_ok)
-                    })(),
-                )
-            }
-        },
-    )
-}
-fn wire__crate__api__image__RegionDecoder_probe_impl(
-    that: impl CstDecode<
-        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<RegionDecoder>>,
-    >,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "RegionDecoder_probe",
-            port: None,
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
-        },
-        move || {
-            let api_that = that.cst_decode();
-            transform_result_dco::<_, _, ()>((move || {
-                let mut api_that_guard = None;
-                let decode_indices_ =
-                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
-                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                            &api_that, 0, false,
-                        ),
-                    ]);
-                for i in decode_indices_ {
-                    match i {
-                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
-                        _ => unreachable!(),
-                    }
-                }
-                let api_that_guard = api_that_guard.unwrap();
-                let output_ok =
-                    Ok::<_, ()>(crate::api::image::RegionDecoder::probe(&*api_that_guard))?;
-                std::result::Result::Ok(output_ok)
-            })())
-        },
-    )
-}
-fn wire__crate__api__image__RegionDecoder_random_access_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<
-        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<RegionDecoder>>,
-    >,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "RegionDecoder_random_access",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_that = that.cst_decode();
-            move |context| {
-                transform_result_dco::<_, _, ()>((move || {
-                    let mut api_that_guard = None;
-                    let decode_indices_ =
-                        flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
-                            flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                                &api_that, 0, false,
-                            ),
-                        ]);
-                    for i in decode_indices_ {
-                        match i {
-                            0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
-                            _ => unreachable!(),
-                        }
-                    }
-                    let api_that_guard = api_that_guard.unwrap();
-                    let output_ok = Ok::<_, ()>(crate::api::image::RegionDecoder::random_access(
-                        &*api_that_guard,
-                    ))?;
                     std::result::Result::Ok(output_ok)
                 })())
             }
@@ -2772,17 +2458,6 @@ const _: fn() = || {
         let _: bool = ClientSettings.throw_on_status;
     }
     {
-        let CompressSpec = None::<crate::api::image::CompressSpec>.unwrap();
-        let _: Option<crate::api::image::CompressFormat> = CompressSpec.compress_format;
-        let _: Option<u32> = CompressSpec.target_width;
-        let _: Option<u32> = CompressSpec.target_height;
-        let _: Option<u32> = CompressSpec.min_width;
-        let _: Option<u32> = CompressSpec.min_height;
-        let _: Option<u32> = CompressSpec.max_width;
-        let _: Option<u32> = CompressSpec.max_height;
-        let _: Option<u8> = CompressSpec.quality;
-    }
-    {
         let DocxStyle = None::<crate::api::docx::DocxStyle>.unwrap();
         let _: String = DocxStyle.east_asia_font;
         let _: String = DocxStyle.ascii_font;
@@ -2836,20 +2511,6 @@ const _: fn() = || {
         let _: Vec<crate::api::http::KeyValue> = HttpServerResponse.headers;
         let _: Vec<u8> = HttpServerResponse.body;
         let _: Option<String> = HttpServerResponse.body_file_path;
-    }
-    {
-        let ImageMeta = None::<crate::api::image::ImageMeta>.unwrap();
-        let _: u32 = ImageMeta.width;
-        let _: u32 = ImageMeta.height;
-        let _: String = ImageMeta.ext;
-    }
-    {
-        let ImageProbe = None::<crate::api::image::ImageProbe>.unwrap();
-        let _: crate::api::image::ImageFormat = ImageProbe.format;
-        let _: u32 = ImageProbe.width;
-        let _: u32 = ImageProbe.height;
-        let _: bool = ImageProbe.progressive;
-        let _: bool = ImageProbe.region_decodable;
     }
     match None::<crate::api::export_ir::IrBlock>.unwrap() {
         crate::api::export_ir::IrBlock::Paragraph { spans } => {
@@ -3036,21 +2697,6 @@ const _: fn() = || {
         let _: String = RigToolDef.parameters_json;
     }
     {
-        let ThumbnailTarget = None::<crate::api::image::ThumbnailTarget>.unwrap();
-        let _: u32 = ThumbnailTarget.width;
-        let _: String = ThumbnailTarget.output_stem;
-    }
-    {
-        let TilePixels = None::<crate::api::image::TilePixels>.unwrap();
-        let _: u32 = TilePixels.x;
-        let _: u32 = TilePixels.y;
-        let _: u32 = TilePixels.width;
-        let _: u32 = TilePixels.height;
-        let _: u32 = TilePixels.pixel_width;
-        let _: u32 = TilePixels.pixel_height;
-        let _: Vec<u8> = TilePixels.rgba;
-    }
-    {
         let TokenizeResult = None::<crate::api::text::TokenizeResult>.unwrap();
         let _: Vec<String> = TokenizeResult.cut;
         let _: Vec<String> = TokenizeResult.cut_for_search;
@@ -3208,16 +2854,6 @@ impl CstDecode<bool> for bool {
         self
     }
 }
-impl CstDecode<crate::api::image::CompressFormat> for i32 {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> crate::api::image::CompressFormat {
-        match self {
-            0 => crate::api::image::CompressFormat::Jpeg,
-            1 => crate::api::image::CompressFormat::Png,
-            _ => unreachable!("Invalid variant for CompressFormat: {}", self),
-        }
-    }
-}
 impl CstDecode<f32> for f32 {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> f32 {
@@ -3270,20 +2906,6 @@ impl CstDecode<i64> for i64 {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> i64 {
         self
-    }
-}
-impl CstDecode<crate::api::image::ImageFormat> for i32 {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> crate::api::image::ImageFormat {
-        match self {
-            0 => crate::api::image::ImageFormat::Jpeg,
-            1 => crate::api::image::ImageFormat::Png,
-            2 => crate::api::image::ImageFormat::WebP,
-            3 => crate::api::image::ImageFormat::Gif,
-            4 => crate::api::image::ImageFormat::Bmp,
-            5 => crate::api::image::ImageFormat::Other,
-            _ => unreachable!("Invalid variant for ImageFormat: {}", self),
-        }
     }
 }
 impl CstDecode<isize> for isize {
@@ -3418,31 +3040,11 @@ impl SseDecode for HttpServer {
     }
 }
 
-impl SseDecode for ImageCompressor {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <RustOpaqueNom<
-            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ImageCompressor>,
-        >>::sse_decode(deserializer);
-        return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
-    }
-}
-
 impl SseDecode for PdfBuilder {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <RustOpaqueNom<
             flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PdfBuilder>,
-        >>::sse_decode(deserializer);
-        return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
-    }
-}
-
-impl SseDecode for RegionDecoder {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <RustOpaqueNom<
-            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<RegionDecoder>,
         >>::sse_decode(deserializer);
         return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
     }
@@ -3579,27 +3181,7 @@ impl SseDecode
 }
 
 impl SseDecode
-    for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ImageCompressor>>
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <usize>::sse_decode(deserializer);
-        return unsafe { decode_rust_opaque_nom(inner) };
-    }
-}
-
-impl SseDecode
     for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PdfBuilder>>
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <usize>::sse_decode(deserializer);
-        return unsafe { decode_rust_opaque_nom(inner) };
-    }
-}
-
-impl SseDecode
-    for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<RegionDecoder>>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3708,43 +3290,6 @@ impl SseDecode for crate::api::http::ClientSettings {
             user_agent: var_userAgent,
             max_redirects: var_maxRedirects,
             throw_on_status: var_throwOnStatus,
-        };
-    }
-}
-
-impl SseDecode for crate::api::image::CompressFormat {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <i32>::sse_decode(deserializer);
-        return match inner {
-            0 => crate::api::image::CompressFormat::Jpeg,
-            1 => crate::api::image::CompressFormat::Png,
-            _ => unreachable!("Invalid variant for CompressFormat: {}", inner),
-        };
-    }
-}
-
-impl SseDecode for crate::api::image::CompressSpec {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_compressFormat =
-            <Option<crate::api::image::CompressFormat>>::sse_decode(deserializer);
-        let mut var_targetWidth = <Option<u32>>::sse_decode(deserializer);
-        let mut var_targetHeight = <Option<u32>>::sse_decode(deserializer);
-        let mut var_minWidth = <Option<u32>>::sse_decode(deserializer);
-        let mut var_minHeight = <Option<u32>>::sse_decode(deserializer);
-        let mut var_maxWidth = <Option<u32>>::sse_decode(deserializer);
-        let mut var_maxHeight = <Option<u32>>::sse_decode(deserializer);
-        let mut var_quality = <Option<u8>>::sse_decode(deserializer);
-        return crate::api::image::CompressSpec {
-            compress_format: var_compressFormat,
-            target_width: var_targetWidth,
-            target_height: var_targetHeight,
-            min_width: var_minWidth,
-            min_height: var_minHeight,
-            max_width: var_maxWidth,
-            max_height: var_maxHeight,
-            quality: var_quality,
         };
     }
 }
@@ -3956,54 +3501,6 @@ impl SseDecode for i64 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_i64::<NativeEndian>().unwrap()
-    }
-}
-
-impl SseDecode for crate::api::image::ImageFormat {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <i32>::sse_decode(deserializer);
-        return match inner {
-            0 => crate::api::image::ImageFormat::Jpeg,
-            1 => crate::api::image::ImageFormat::Png,
-            2 => crate::api::image::ImageFormat::WebP,
-            3 => crate::api::image::ImageFormat::Gif,
-            4 => crate::api::image::ImageFormat::Bmp,
-            5 => crate::api::image::ImageFormat::Other,
-            _ => unreachable!("Invalid variant for ImageFormat: {}", inner),
-        };
-    }
-}
-
-impl SseDecode for crate::api::image::ImageMeta {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_width = <u32>::sse_decode(deserializer);
-        let mut var_height = <u32>::sse_decode(deserializer);
-        let mut var_ext = <String>::sse_decode(deserializer);
-        return crate::api::image::ImageMeta {
-            width: var_width,
-            height: var_height,
-            ext: var_ext,
-        };
-    }
-}
-
-impl SseDecode for crate::api::image::ImageProbe {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_format = <crate::api::image::ImageFormat>::sse_decode(deserializer);
-        let mut var_width = <u32>::sse_decode(deserializer);
-        let mut var_height = <u32>::sse_decode(deserializer);
-        let mut var_progressive = <bool>::sse_decode(deserializer);
-        let mut var_regionDecodable = <bool>::sse_decode(deserializer);
-        return crate::api::image::ImageProbe {
-            format: var_format,
-            width: var_width,
-            height: var_height,
-            progressive: var_progressive,
-            region_decodable: var_regionDecodable,
-        };
     }
 }
 
@@ -4405,44 +3902,6 @@ impl SseDecode for Vec<crate::api::assistant::RigToolDef> {
     }
 }
 
-impl SseDecode for Vec<crate::api::image::ThumbnailTarget> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut len_ = <i32>::sse_decode(deserializer);
-        let mut ans_ = Vec::with_capacity(len_ as usize);
-        for idx_ in 0..len_ {
-            ans_.push(<crate::api::image::ThumbnailTarget>::sse_decode(
-                deserializer,
-            ));
-        }
-        return ans_;
-    }
-}
-
-impl SseDecode for Vec<crate::api::image::TilePixels> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut len_ = <i32>::sse_decode(deserializer);
-        let mut ans_ = Vec::with_capacity(len_ as usize);
-        for idx_ in 0..len_ {
-            ans_.push(<crate::api::image::TilePixels>::sse_decode(deserializer));
-        }
-        return ans_;
-    }
-}
-
-impl SseDecode for Vec<crate::api::image::TileRect> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut len_ = <i32>::sse_decode(deserializer);
-        let mut ans_ = Vec::with_capacity(len_ as usize);
-        for idx_ in 0..len_ {
-            ans_.push(<crate::api::image::TileRect>::sse_decode(deserializer));
-        }
-        return ans_;
-    }
-}
-
 impl SseDecode for Vec<crate::api::text::TokenizeResult> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -4477,19 +3936,6 @@ impl SseDecode for Option<bool> {
     }
 }
 
-impl SseDecode for Option<crate::api::image::CompressFormat> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        if (<bool>::sse_decode(deserializer)) {
-            return Some(<crate::api::image::CompressFormat>::sse_decode(
-                deserializer,
-            ));
-        } else {
-            return None;
-        }
-    }
-}
-
 impl SseDecode for Option<crate::api::http::HttpResponse> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -4517,17 +3963,6 @@ impl SseDecode for Option<u32> {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         if (<bool>::sse_decode(deserializer)) {
             return Some(<u32>::sse_decode(deserializer));
-        } else {
-            return None;
-        }
-    }
-}
-
-impl SseDecode for Option<u8> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        if (<bool>::sse_decode(deserializer)) {
-            return Some(<u8>::sse_decode(deserializer));
         } else {
             return None;
         }
@@ -4710,56 +4145,6 @@ impl SseDecode for crate::api::assistant::RigToolDef {
             name: var_name,
             description: var_description,
             parameters_json: var_parametersJson,
-        };
-    }
-}
-
-impl SseDecode for crate::api::image::ThumbnailTarget {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_width = <u32>::sse_decode(deserializer);
-        let mut var_outputStem = <String>::sse_decode(deserializer);
-        return crate::api::image::ThumbnailTarget {
-            width: var_width,
-            output_stem: var_outputStem,
-        };
-    }
-}
-
-impl SseDecode for crate::api::image::TilePixels {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_x = <u32>::sse_decode(deserializer);
-        let mut var_y = <u32>::sse_decode(deserializer);
-        let mut var_width = <u32>::sse_decode(deserializer);
-        let mut var_height = <u32>::sse_decode(deserializer);
-        let mut var_pixelWidth = <u32>::sse_decode(deserializer);
-        let mut var_pixelHeight = <u32>::sse_decode(deserializer);
-        let mut var_rgba = <Vec<u8>>::sse_decode(deserializer);
-        return crate::api::image::TilePixels {
-            x: var_x,
-            y: var_y,
-            width: var_width,
-            height: var_height,
-            pixel_width: var_pixelWidth,
-            pixel_height: var_pixelHeight,
-            rgba: var_rgba,
-        };
-    }
-}
-
-impl SseDecode for crate::api::image::TileRect {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_x = <u32>::sse_decode(deserializer);
-        let mut var_y = <u32>::sse_decode(deserializer);
-        let mut var_width = <u32>::sse_decode(deserializer);
-        let mut var_height = <u32>::sse_decode(deserializer);
-        return crate::api::image::TileRect {
-            x: var_x,
-            y: var_y,
-            width: var_width,
-            height: var_height,
         };
     }
 }
@@ -4993,21 +4378,6 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<HttpServer>> for HttpServer {
 }
 
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<ImageCompressor> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, StdArc<_>>(self.0)
-            .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<ImageCompressor> {}
-
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<ImageCompressor>> for ImageCompressor {
-    fn into_into_dart(self) -> FrbWrapper<ImageCompressor> {
-        self.into()
-    }
-}
-
-// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<PdfBuilder> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, StdArc<_>>(self.0)
@@ -5018,21 +4388,6 @@ impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<
 
 impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<PdfBuilder>> for PdfBuilder {
     fn into_into_dart(self) -> FrbWrapper<PdfBuilder> {
-        self.into()
-    }
-}
-
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<RegionDecoder> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, StdArc<_>>(self.0)
-            .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<RegionDecoder> {}
-
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<RegionDecoder>> for RegionDecoder {
-    fn into_into_dart(self) -> FrbWrapper<RegionDecoder> {
         self.into()
     }
 }
@@ -5104,54 +4459,6 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::http::ClientSettin
     for crate::api::http::ClientSettings
 {
     fn into_into_dart(self) -> FrbWrapper<crate::api::http::ClientSettings> {
-        self.into()
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::image::CompressFormat> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        match self.0 {
-            crate::api::image::CompressFormat::Jpeg => 0.into_dart(),
-            crate::api::image::CompressFormat::Png => 1.into_dart(),
-            _ => unreachable!(),
-        }
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crate::api::image::CompressFormat>
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::image::CompressFormat>>
-    for crate::api::image::CompressFormat
-{
-    fn into_into_dart(self) -> FrbWrapper<crate::api::image::CompressFormat> {
-        self.into()
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::image::CompressSpec> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.0.compress_format.into_into_dart().into_dart(),
-            self.0.target_width.into_into_dart().into_dart(),
-            self.0.target_height.into_into_dart().into_dart(),
-            self.0.min_width.into_into_dart().into_dart(),
-            self.0.min_height.into_into_dart().into_dart(),
-            self.0.max_width.into_into_dart().into_dart(),
-            self.0.max_height.into_into_dart().into_dart(),
-            self.0.quality.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crate::api::image::CompressSpec>
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::image::CompressSpec>>
-    for crate::api::image::CompressSpec
-{
-    fn into_into_dart(self) -> FrbWrapper<crate::api::image::CompressSpec> {
         self.into()
     }
 }
@@ -5380,77 +4687,6 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::http_server::HttpS
     for crate::api::http_server::HttpServerResponse
 {
     fn into_into_dart(self) -> FrbWrapper<crate::api::http_server::HttpServerResponse> {
-        self.into()
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::image::ImageFormat> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        match self.0 {
-            crate::api::image::ImageFormat::Jpeg => 0.into_dart(),
-            crate::api::image::ImageFormat::Png => 1.into_dart(),
-            crate::api::image::ImageFormat::WebP => 2.into_dart(),
-            crate::api::image::ImageFormat::Gif => 3.into_dart(),
-            crate::api::image::ImageFormat::Bmp => 4.into_dart(),
-            crate::api::image::ImageFormat::Other => 5.into_dart(),
-            _ => unreachable!(),
-        }
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crate::api::image::ImageFormat>
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::image::ImageFormat>>
-    for crate::api::image::ImageFormat
-{
-    fn into_into_dart(self) -> FrbWrapper<crate::api::image::ImageFormat> {
-        self.into()
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::image::ImageMeta> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.0.width.into_into_dart().into_dart(),
-            self.0.height.into_into_dart().into_dart(),
-            self.0.ext.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crate::api::image::ImageMeta>
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::image::ImageMeta>>
-    for crate::api::image::ImageMeta
-{
-    fn into_into_dart(self) -> FrbWrapper<crate::api::image::ImageMeta> {
-        self.into()
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::image::ImageProbe> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.0.format.into_into_dart().into_dart(),
-            self.0.width.into_into_dart().into_dart(),
-            self.0.height.into_into_dart().into_dart(),
-            self.0.progressive.into_into_dart().into_dart(),
-            self.0.region_decodable.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crate::api::image::ImageProbe>
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::image::ImageProbe>>
-    for crate::api::image::ImageProbe
-{
-    fn into_into_dart(self) -> FrbWrapper<crate::api::image::ImageProbe> {
         self.into()
     }
 }
@@ -5882,73 +5118,6 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::assistant::RigTool
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::image::ThumbnailTarget> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.0.width.into_into_dart().into_dart(),
-            self.0.output_stem.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crate::api::image::ThumbnailTarget>
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::image::ThumbnailTarget>>
-    for crate::api::image::ThumbnailTarget
-{
-    fn into_into_dart(self) -> FrbWrapper<crate::api::image::ThumbnailTarget> {
-        self.into()
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::image::TilePixels> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.0.x.into_into_dart().into_dart(),
-            self.0.y.into_into_dart().into_dart(),
-            self.0.width.into_into_dart().into_dart(),
-            self.0.height.into_into_dart().into_dart(),
-            self.0.pixel_width.into_into_dart().into_dart(),
-            self.0.pixel_height.into_into_dart().into_dart(),
-            self.0.rgba.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crate::api::image::TilePixels>
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::image::TilePixels>>
-    for crate::api::image::TilePixels
-{
-    fn into_into_dart(self) -> FrbWrapper<crate::api::image::TilePixels> {
-        self.into()
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::image::TileRect {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.x.into_into_dart().into_dart(),
-            self.y.into_into_dart().into_dart(),
-            self.width.into_into_dart().into_dart(),
-            self.height.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::image::TileRect {}
-impl flutter_rust_bridge::IntoIntoDart<crate::api::image::TileRect>
-    for crate::api::image::TileRect
-{
-    fn into_into_dart(self) -> crate::api::image::TileRect {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::text::TokenizeResult> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -6065,24 +5234,10 @@ impl SseEncode for HttpServer {
     }
 }
 
-impl SseEncode for ImageCompressor {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ImageCompressor>>>::sse_encode(flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, StdArc<_>>(self), serializer);
-    }
-}
-
 impl SseEncode for PdfBuilder {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PdfBuilder>>>::sse_encode(flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, StdArc<_>>(self), serializer);
-    }
-}
-
-impl SseEncode for RegionDecoder {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<RegionDecoder>>>::sse_encode(flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, StdArc<_>>(self), serializer);
     }
 }
 
@@ -6220,29 +5375,7 @@ impl SseEncode
 }
 
 impl SseEncode
-    for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ImageCompressor>>
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        let (ptr, size) = self.sse_encode_raw();
-        <usize>::sse_encode(ptr, serializer);
-        <i32>::sse_encode(size, serializer);
-    }
-}
-
-impl SseEncode
     for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PdfBuilder>>
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        let (ptr, size) = self.sse_encode_raw();
-        <usize>::sse_encode(ptr, serializer);
-        <i32>::sse_encode(size, serializer);
-    }
-}
-
-impl SseEncode
-    for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<RegionDecoder>>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -6343,36 +5476,6 @@ impl SseEncode for crate::api::http::ClientSettings {
         <Option<String>>::sse_encode(self.user_agent, serializer);
         <Option<u32>>::sse_encode(self.max_redirects, serializer);
         <bool>::sse_encode(self.throw_on_status, serializer);
-    }
-}
-
-impl SseEncode for crate::api::image::CompressFormat {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(
-            match self {
-                crate::api::image::CompressFormat::Jpeg => 0,
-                crate::api::image::CompressFormat::Png => 1,
-                _ => {
-                    unimplemented!("");
-                }
-            },
-            serializer,
-        );
-    }
-}
-
-impl SseEncode for crate::api::image::CompressSpec {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <Option<crate::api::image::CompressFormat>>::sse_encode(self.compress_format, serializer);
-        <Option<u32>>::sse_encode(self.target_width, serializer);
-        <Option<u32>>::sse_encode(self.target_height, serializer);
-        <Option<u32>>::sse_encode(self.min_width, serializer);
-        <Option<u32>>::sse_encode(self.min_height, serializer);
-        <Option<u32>>::sse_encode(self.max_width, serializer);
-        <Option<u32>>::sse_encode(self.max_height, serializer);
-        <Option<u8>>::sse_encode(self.quality, serializer);
     }
 }
 
@@ -6531,46 +5634,6 @@ impl SseEncode for i64 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         serializer.cursor.write_i64::<NativeEndian>(self).unwrap();
-    }
-}
-
-impl SseEncode for crate::api::image::ImageFormat {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(
-            match self {
-                crate::api::image::ImageFormat::Jpeg => 0,
-                crate::api::image::ImageFormat::Png => 1,
-                crate::api::image::ImageFormat::WebP => 2,
-                crate::api::image::ImageFormat::Gif => 3,
-                crate::api::image::ImageFormat::Bmp => 4,
-                crate::api::image::ImageFormat::Other => 5,
-                _ => {
-                    unimplemented!("");
-                }
-            },
-            serializer,
-        );
-    }
-}
-
-impl SseEncode for crate::api::image::ImageMeta {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <u32>::sse_encode(self.width, serializer);
-        <u32>::sse_encode(self.height, serializer);
-        <String>::sse_encode(self.ext, serializer);
-    }
-}
-
-impl SseEncode for crate::api::image::ImageProbe {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <crate::api::image::ImageFormat>::sse_encode(self.format, serializer);
-        <u32>::sse_encode(self.width, serializer);
-        <u32>::sse_encode(self.height, serializer);
-        <bool>::sse_encode(self.progressive, serializer);
-        <bool>::sse_encode(self.region_decodable, serializer);
     }
 }
 
@@ -6885,36 +5948,6 @@ impl SseEncode for Vec<crate::api::assistant::RigToolDef> {
     }
 }
 
-impl SseEncode for Vec<crate::api::image::ThumbnailTarget> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(self.len() as _, serializer);
-        for item in self {
-            <crate::api::image::ThumbnailTarget>::sse_encode(item, serializer);
-        }
-    }
-}
-
-impl SseEncode for Vec<crate::api::image::TilePixels> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(self.len() as _, serializer);
-        for item in self {
-            <crate::api::image::TilePixels>::sse_encode(item, serializer);
-        }
-    }
-}
-
-impl SseEncode for Vec<crate::api::image::TileRect> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(self.len() as _, serializer);
-        for item in self {
-            <crate::api::image::TileRect>::sse_encode(item, serializer);
-        }
-    }
-}
-
 impl SseEncode for Vec<crate::api::text::TokenizeResult> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -6945,16 +5978,6 @@ impl SseEncode for Option<bool> {
     }
 }
 
-impl SseEncode for Option<crate::api::image::CompressFormat> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <bool>::sse_encode(self.is_some(), serializer);
-        if let Some(value) = self {
-            <crate::api::image::CompressFormat>::sse_encode(value, serializer);
-        }
-    }
-}
-
 impl SseEncode for Option<crate::api::http::HttpResponse> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -6981,16 +6004,6 @@ impl SseEncode for Option<u32> {
         <bool>::sse_encode(self.is_some(), serializer);
         if let Some(value) = self {
             <u32>::sse_encode(value, serializer);
-        }
-    }
-}
-
-impl SseEncode for Option<u8> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <bool>::sse_encode(self.is_some(), serializer);
-        if let Some(value) = self {
-            <u8>::sse_encode(value, serializer);
         }
     }
 }
@@ -7126,37 +6139,6 @@ impl SseEncode for crate::api::assistant::RigToolDef {
     }
 }
 
-impl SseEncode for crate::api::image::ThumbnailTarget {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <u32>::sse_encode(self.width, serializer);
-        <String>::sse_encode(self.output_stem, serializer);
-    }
-}
-
-impl SseEncode for crate::api::image::TilePixels {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <u32>::sse_encode(self.x, serializer);
-        <u32>::sse_encode(self.y, serializer);
-        <u32>::sse_encode(self.width, serializer);
-        <u32>::sse_encode(self.height, serializer);
-        <u32>::sse_encode(self.pixel_width, serializer);
-        <u32>::sse_encode(self.pixel_height, serializer);
-        <Vec<u8>>::sse_encode(self.rgba, serializer);
-    }
-}
-
-impl SseEncode for crate::api::image::TileRect {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <u32>::sse_encode(self.x, serializer);
-        <u32>::sse_encode(self.y, serializer);
-        <u32>::sse_encode(self.width, serializer);
-        <u32>::sse_encode(self.height, serializer);
-    }
-}
-
 impl SseEncode for crate::api::text::TokenizeResult {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -7232,7 +6214,6 @@ mod io {
     use crate::api::hf_tokenizer::*;
     use crate::api::http::*;
     use crate::api::http_server::*;
-    use crate::api::image::*;
     use crate::api::pdf::*;
     use crate::api::s3::*;
     use crate::api::text::*;
@@ -7348,35 +6329,11 @@ mod io {
             ))
         }
     }
-    impl CstDecode<ImageCompressor> for usize {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> ImageCompressor {
-            flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(CstDecode::<
-                RustOpaqueNom<
-                    flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ImageCompressor>,
-                >,
-            >::cst_decode(
-                self
-            ))
-        }
-    }
     impl CstDecode<PdfBuilder> for usize {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> PdfBuilder {
             flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(CstDecode::<
                 RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PdfBuilder>>,
-            >::cst_decode(
-                self
-            ))
-        }
-    }
-    impl CstDecode<RegionDecoder> for usize {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> RegionDecoder {
-            flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(CstDecode::<
-                RustOpaqueNom<
-                    flutter_rust_bridge::for_generated::RustAutoOpaqueInner<RegionDecoder>,
-                >,
             >::cst_decode(
                 self
             ))
@@ -7538,19 +6495,6 @@ mod io {
     }
     impl
         CstDecode<
-            RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ImageCompressor>>,
-        > for usize
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(
-            self,
-        ) -> RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ImageCompressor>>
-        {
-            unsafe { decode_rust_opaque_nom(self as _) }
-        }
-    }
-    impl
-        CstDecode<
             RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PdfBuilder>>,
         > for usize
     {
@@ -7558,19 +6502,6 @@ mod io {
         fn cst_decode(
             self,
         ) -> RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PdfBuilder>>
-        {
-            unsafe { decode_rust_opaque_nom(self as _) }
-        }
-    }
-    impl
-        CstDecode<
-            RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<RegionDecoder>>,
-        > for usize
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(
-            self,
-        ) -> RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<RegionDecoder>>
         {
             unsafe { decode_rust_opaque_nom(self as _) }
         }
@@ -7687,20 +6618,6 @@ mod io {
             CstDecode::<crate::api::http::ClientSettings>::cst_decode(*wrap).into()
         }
     }
-    impl CstDecode<crate::api::image::CompressFormat> for *mut i32 {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::image::CompressFormat {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::api::image::CompressFormat>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<crate::api::image::CompressSpec> for *mut wire_cst_compress_spec {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::image::CompressSpec {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::api::image::CompressSpec>::cst_decode(*wrap).into()
-        }
-    }
     impl CstDecode<crate::api::docx::DocxStyle> for *mut wire_cst_docx_style {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::api::docx::DocxStyle {
@@ -7762,12 +6679,6 @@ mod io {
             unsafe { *flutter_rust_bridge::for_generated::box_from_leak_ptr(self) }
         }
     }
-    impl CstDecode<u8> for *mut u8 {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> u8 {
-            unsafe { *flutter_rust_bridge::for_generated::box_from_leak_ptr(self) }
-        }
-    }
     impl CstDecode<crate::api::http::ClientSettings> for wire_cst_client_settings {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::api::http::ClientSettings {
@@ -7778,21 +6689,6 @@ mod io {
                 user_agent: self.user_agent.cst_decode(),
                 max_redirects: self.max_redirects.cst_decode(),
                 throw_on_status: self.throw_on_status.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::api::image::CompressSpec> for wire_cst_compress_spec {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::image::CompressSpec {
-            crate::api::image::CompressSpec {
-                compress_format: self.compress_format.cst_decode(),
-                target_width: self.target_width.cst_decode(),
-                target_height: self.target_height.cst_decode(),
-                min_width: self.min_width.cst_decode(),
-                min_height: self.min_height.cst_decode(),
-                max_width: self.max_width.cst_decode(),
-                max_height: self.max_height.cst_decode(),
-                quality: self.quality.cst_decode(),
             }
         }
     }
@@ -7888,28 +6784,6 @@ mod io {
                 headers: self.headers.cst_decode(),
                 body: self.body.cst_decode(),
                 body_file_path: self.body_file_path.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::api::image::ImageMeta> for wire_cst_image_meta {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::image::ImageMeta {
-            crate::api::image::ImageMeta {
-                width: self.width.cst_decode(),
-                height: self.height.cst_decode(),
-                ext: self.ext.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::api::image::ImageProbe> for wire_cst_image_probe {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::image::ImageProbe {
-            crate::api::image::ImageProbe {
-                format: self.format.cst_decode(),
-                width: self.width.cst_decode(),
-                height: self.height.cst_decode(),
-                progressive: self.progressive.cst_decode(),
-                region_decodable: self.region_decodable.cst_decode(),
             }
         }
     }
@@ -8241,36 +7115,6 @@ mod io {
             vec.into_iter().map(CstDecode::cst_decode).collect()
         }
     }
-    impl CstDecode<Vec<crate::api::image::ThumbnailTarget>> for *mut wire_cst_list_thumbnail_target {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<crate::api::image::ThumbnailTarget> {
-            let vec = unsafe {
-                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
-                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
-            };
-            vec.into_iter().map(CstDecode::cst_decode).collect()
-        }
-    }
-    impl CstDecode<Vec<crate::api::image::TilePixels>> for *mut wire_cst_list_tile_pixels {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<crate::api::image::TilePixels> {
-            let vec = unsafe {
-                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
-                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
-            };
-            vec.into_iter().map(CstDecode::cst_decode).collect()
-        }
-    }
-    impl CstDecode<Vec<crate::api::image::TileRect>> for *mut wire_cst_list_tile_rect {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<crate::api::image::TileRect> {
-            let vec = unsafe {
-                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
-                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
-            };
-            vec.into_iter().map(CstDecode::cst_decode).collect()
-        }
-    }
     impl CstDecode<Vec<crate::api::text::TokenizeResult>> for *mut wire_cst_list_tokenize_result {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> Vec<crate::api::text::TokenizeResult> {
@@ -8399,40 +7243,6 @@ mod io {
             }
         }
     }
-    impl CstDecode<crate::api::image::ThumbnailTarget> for wire_cst_thumbnail_target {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::image::ThumbnailTarget {
-            crate::api::image::ThumbnailTarget {
-                width: self.width.cst_decode(),
-                output_stem: self.output_stem.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::api::image::TilePixels> for wire_cst_tile_pixels {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::image::TilePixels {
-            crate::api::image::TilePixels {
-                x: self.x.cst_decode(),
-                y: self.y.cst_decode(),
-                width: self.width.cst_decode(),
-                height: self.height.cst_decode(),
-                pixel_width: self.pixel_width.cst_decode(),
-                pixel_height: self.pixel_height.cst_decode(),
-                rgba: self.rgba.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::api::image::TileRect> for wire_cst_tile_rect {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::image::TileRect {
-            crate::api::image::TileRect {
-                x: self.x.cst_decode(),
-                y: self.y.cst_decode(),
-                width: self.width.cst_decode(),
-                height: self.height.cst_decode(),
-            }
-        }
-    }
     impl CstDecode<crate::api::text::TokenizeResult> for wire_cst_tokenize_result {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::api::text::TokenizeResult {
@@ -8465,25 +7275,6 @@ mod io {
         }
     }
     impl Default for wire_cst_client_settings {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_compress_spec {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                compress_format: core::ptr::null_mut(),
-                target_width: core::ptr::null_mut(),
-                target_height: core::ptr::null_mut(),
-                min_width: core::ptr::null_mut(),
-                min_height: core::ptr::null_mut(),
-                max_width: core::ptr::null_mut(),
-                max_height: core::ptr::null_mut(),
-                quality: core::ptr::null_mut(),
-            }
-        }
-    }
-    impl Default for wire_cst_compress_spec {
         fn default() -> Self {
             Self::new_with_null_ptr()
         }
@@ -8607,36 +7398,6 @@ mod io {
         }
     }
     impl Default for wire_cst_http_server_response {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_image_meta {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                width: Default::default(),
-                height: Default::default(),
-                ext: core::ptr::null_mut(),
-            }
-        }
-    }
-    impl Default for wire_cst_image_meta {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_image_probe {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                format: Default::default(),
-                width: Default::default(),
-                height: Default::default(),
-                progressive: Default::default(),
-                region_decodable: Default::default(),
-            }
-        }
-    }
-    impl Default for wire_cst_image_probe {
         fn default() -> Self {
             Self::new_with_null_ptr()
         }
@@ -8870,52 +7631,6 @@ mod io {
         }
     }
     impl Default for wire_cst_rig_tool_def {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_thumbnail_target {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                width: Default::default(),
-                output_stem: core::ptr::null_mut(),
-            }
-        }
-    }
-    impl Default for wire_cst_thumbnail_target {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_tile_pixels {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                x: Default::default(),
-                y: Default::default(),
-                width: Default::default(),
-                height: Default::default(),
-                pixel_width: Default::default(),
-                pixel_height: Default::default(),
-                rgba: core::ptr::null_mut(),
-            }
-        }
-    }
-    impl Default for wire_cst_tile_pixels {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_tile_rect {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                x: Default::default(),
-                y: Default::default(),
-                width: Default::default(),
-                height: Default::default(),
-            }
-        }
-    }
-    impl Default for wire_cst_tile_rect {
         fn default() -> Self {
             Self::new_with_null_ptr()
         }
@@ -9283,54 +7998,6 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__image__ImageCompressor_contain_to_file(
-        port_: i64,
-        file_path: *mut wire_cst_list_prim_u_8_strict,
-        output_path: *mut wire_cst_list_prim_u_8_strict,
-        spec: *mut wire_cst_compress_spec,
-    ) {
-        wire__crate__api__image__ImageCompressor_contain_to_file_impl(
-            port_,
-            file_path,
-            output_path,
-            spec,
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__image__ImageCompressor_make_thumbnails(
-        port_: i64,
-        file_path: *mut wire_cst_list_prim_u_8_strict,
-        targets: *mut wire_cst_list_thumbnail_target,
-        quality: *mut u8,
-    ) {
-        wire__crate__api__image__ImageCompressor_make_thumbnails_impl(
-            port_, file_path, targets, quality,
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__image__ImageCompressor_probe(
-        port_: i64,
-        file_path: *mut wire_cst_list_prim_u_8_strict,
-    ) {
-        wire__crate__api__image__ImageCompressor_probe_impl(port_, file_path)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__image__ImageCompressor_to_baseline_file(
-        port_: i64,
-        file_path: *mut wire_cst_list_prim_u_8_strict,
-        output_path: *mut wire_cst_list_prim_u_8_strict,
-    ) {
-        wire__crate__api__image__ImageCompressor_to_baseline_file_impl(
-            port_,
-            file_path,
-            output_path,
-        )
-    }
-
-    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__pdf__PdfBuilder_add(
         port_: i64,
         that: usize,
@@ -9355,54 +8022,6 @@ mod io {
         style: *mut wire_cst_pdf_style,
     ) {
         wire__crate__api__pdf__PdfBuilder_new_impl(port_, style)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__image__RegionDecoder_decode_tile(
-        port_: i64,
-        that: usize,
-        x: u32,
-        y: u32,
-        width: u32,
-        height: u32,
-        denom: u8,
-    ) {
-        wire__crate__api__image__RegionDecoder_decode_tile_impl(
-            port_, that, x, y, width, height, denom,
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__image__RegionDecoder_decode_tiles(
-        port_: i64,
-        that: usize,
-        rects: *mut wire_cst_list_tile_rect,
-        denom: u8,
-    ) {
-        wire__crate__api__image__RegionDecoder_decode_tiles_impl(port_, that, rects, denom)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__image__RegionDecoder_open(
-        port_: i64,
-        file_path: *mut wire_cst_list_prim_u_8_strict,
-    ) {
-        wire__crate__api__image__RegionDecoder_open_impl(port_, file_path)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__image__RegionDecoder_probe(
-        that: usize,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__image__RegionDecoder_probe_impl(that)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__image__RegionDecoder_random_access(
-        port_: i64,
-        that: usize,
-    ) {
-        wire__crate__api__image__RegionDecoder_random_access_impl(port_, that)
     }
 
     #[unsafe(no_mangle)]
@@ -9796,24 +8415,6 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor(
-        ptr: *const std::ffi::c_void,
-    ) {
-        unsafe {
-            StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ImageCompressor>>::increment_strong_count(ptr as _);
-        }
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor(
-        ptr: *const std::ffi::c_void,
-    ) {
-        unsafe {
-            StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ImageCompressor>>::decrement_strong_count(ptr as _);
-        }
-    }
-
-    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
         ptr: *const std::ffi::c_void,
     ) {
@@ -9828,24 +8429,6 @@ mod io {
     ) {
         unsafe {
             StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PdfBuilder>>::decrement_strong_count(ptr as _);
-        }
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
-        ptr: *const std::ffi::c_void,
-    ) {
-        unsafe {
-            StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<RegionDecoder>>::increment_strong_count(ptr as _);
-        }
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRegionDecoder(
-        ptr: *const std::ffi::c_void,
-    ) {
-        unsafe {
-            StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<RegionDecoder>>::decrement_strong_count(ptr as _);
         }
     }
 
@@ -9917,21 +8500,6 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_compress_format(
-        value: i32,
-    ) -> *mut i32 {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_compress_spec()
-    -> *mut wire_cst_compress_spec {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(
-            wire_cst_compress_spec::new_with_null_ptr(),
-        )
-    }
-
-    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_docx_style()
     -> *mut wire_cst_docx_style {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
@@ -9989,11 +8557,6 @@ mod io {
 
     #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_u_32(value: u32) -> *mut u32 {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_u_8(value: u8) -> *mut u8 {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
     }
 
@@ -10243,48 +8806,6 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_list_thumbnail_target(
-        len: i32,
-    ) -> *mut wire_cst_list_thumbnail_target {
-        let wrap = wire_cst_list_thumbnail_target {
-            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
-                <wire_cst_thumbnail_target>::new_with_null_ptr(),
-                len,
-            ),
-            len,
-        };
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_list_tile_pixels(
-        len: i32,
-    ) -> *mut wire_cst_list_tile_pixels {
-        let wrap = wire_cst_list_tile_pixels {
-            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
-                <wire_cst_tile_pixels>::new_with_null_ptr(),
-                len,
-            ),
-            len,
-        };
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_list_tile_rect(
-        len: i32,
-    ) -> *mut wire_cst_list_tile_rect {
-        let wrap = wire_cst_list_tile_rect {
-            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
-                <wire_cst_tile_rect>::new_with_null_ptr(),
-                len,
-            ),
-            len,
-        };
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
-    }
-
-    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_moodiary_rust_cst_new_list_tokenize_result(
         len: i32,
     ) -> *mut wire_cst_list_tokenize_result {
@@ -10307,18 +8828,6 @@ mod io {
         user_agent: *mut wire_cst_list_prim_u_8_strict,
         max_redirects: *mut u32,
         throw_on_status: bool,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_compress_spec {
-        compress_format: *mut i32,
-        target_width: *mut u32,
-        target_height: *mut u32,
-        min_width: *mut u32,
-        min_height: *mut u32,
-        max_width: *mut u32,
-        max_height: *mut u32,
-        quality: *mut u8,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -10393,22 +8902,6 @@ mod io {
         headers: *mut wire_cst_list_key_value,
         body: *mut wire_cst_list_prim_u_8_strict,
         body_file_path: *mut wire_cst_list_prim_u_8_strict,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_image_meta {
-        width: u32,
-        height: u32,
-        ext: *mut wire_cst_list_prim_u_8_strict,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_image_probe {
-        format: i32,
-        width: u32,
-        height: u32,
-        progressive: bool,
-        region_decodable: bool,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -10652,24 +9145,6 @@ mod io {
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
-    pub struct wire_cst_list_thumbnail_target {
-        ptr: *mut wire_cst_thumbnail_target,
-        len: i32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_list_tile_pixels {
-        ptr: *mut wire_cst_tile_pixels,
-        len: i32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_list_tile_rect {
-        ptr: *mut wire_cst_tile_rect,
-        len: i32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
     pub struct wire_cst_list_tokenize_result {
         ptr: *mut wire_cst_tokenize_result,
         len: i32,
@@ -10785,31 +9260,6 @@ mod io {
         name: *mut wire_cst_list_prim_u_8_strict,
         description: *mut wire_cst_list_prim_u_8_strict,
         parameters_json: *mut wire_cst_list_prim_u_8_strict,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_thumbnail_target {
-        width: u32,
-        output_stem: *mut wire_cst_list_prim_u_8_strict,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_tile_pixels {
-        x: u32,
-        y: u32,
-        width: u32,
-        height: u32,
-        pixel_width: u32,
-        pixel_height: u32,
-        rgba: *mut wire_cst_list_prim_u_8_strict,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_tile_rect {
-        x: u32,
-        y: u32,
-        width: u32,
-        height: u32,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

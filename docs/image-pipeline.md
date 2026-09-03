@@ -155,11 +155,17 @@ EXIF 方向：先缩后转，只转小图（已落地）。`.part` 写完 rename
 
 存相册 / 分享 / 导出 / 同步 / 备份都拿 L1。HEIC 转出的 JPG 就是它在本库的「原图」（§1.0）。
 
-## 2. Rust 侧（`moodiary_image` crate，foundation 门面）
+## 2. Rust 侧（`fast_image/rust`，原生库 `libfastimage`）
 
-模块：`turbo.rs`（读头 / N/8 缩放 / 裁剪 / 编码 / 无损转码的安全封装）、`region.rs`
+**2026-09-03 拆包**：整条管线（Rust + Dart）搬进 `packages/foundation/fast_image`，自带 FRB 与
+第二个原生库 `libfastimage`；Dart 公开名一律 `Fast` 前缀（`FastImage` / `FastImageTier` /
+`FastImageDerivatives` / `FastTilePlanner` / `FastTileImageView` / `FastTileImageViewer` /
+`FastTileSource` / `FastImageCodec` / `FastRegionDecoder`），目录与日志由 `FastImageRuntime.configure`
+注入，看图页的壳留在 `moodiary_components`。
+
+模块（`rust/src/codec/`）：`turbo.rs`（读头 / N/8 缩放 / 裁剪 / 编码 / 无损转码的安全封装）、`region.rs`
 （格式无关：`RawDecoder` trait、转正坐标、带缓存）、`jpeg_region.rs` / `png_region.rs` /
-`webp_region.rs`（三个后端）、`restart.rs`（RST 索引 + 分段并行）。FRB 门面在 `api/image.rs`：
+`webp_region.rs`（三个后端）、`restart.rs`（RST 索引 + 分段并行）。FRB 门面在 `rust/src/api/image.rs`：
 
 ```rust
 pub struct ImageProbe { format, width, height, progressive: bool, region_decodable: bool }

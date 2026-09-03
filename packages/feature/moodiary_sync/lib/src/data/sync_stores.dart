@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:fast_image/fast_image.dart';
 import 'package:file/file.dart';
 import 'package:file/local.dart';
 import 'package:moodiary_data/moodiary_data.dart';
@@ -208,7 +209,7 @@ class DiskSyncMediaFiles implements SyncMediaFiles {
     if (await file.exists()) await file.delete();
     // 派生物只认真实磁盘布局；内存文件系统（单测）里没有它们。
     if (type == MediaType.image.value && _fs is LocalFileSystem) {
-      await ImageDerivatives.deleteFor(filename);
+      await FastImageDerivatives.deleteFor(filename);
     }
   }
 

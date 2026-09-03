@@ -1,10 +1,10 @@
-part of 'original_image_view.dart';
+part of 'tile_view.dart';
 
 // 看图页 tile 调试叠层（长按 ⓘ 开）。颜色是状态编码 —— 绿 / 黄绿 / 橙 / 红 = sample 1 / 2 / 4 / 8，
 // 黄 = 解码中，灰 = 排队，蓝 = 视口 —— 画在照片上，刻意不跟主题；闸门里整文件放行。
 
 class _DebugSnapshot {
-  final TilePlan? plan;
+  final FastTilePlan? plan;
   final Set<String> inflight;
   final Set<String> queued;
   final double scale;

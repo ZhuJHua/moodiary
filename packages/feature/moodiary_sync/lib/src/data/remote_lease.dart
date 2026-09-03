@@ -211,10 +211,7 @@ class RemoteLease {
         );
         final verify = await _read(backend);
         if (verify != null && verify.owner == owner) {
-          log.info(
-            .lockAcquire,
-            payload: {'owner': owner, 'attempt': attempt},
-          );
+          log.info(.lockAcquire, payload: {'owner': owner, 'attempt': attempt});
           if (backendId != null && !_casVerified.containsKey(backendId)) {
             await _probeCas(backend, backendId, owner, log);
           }
@@ -231,11 +228,7 @@ class RemoteLease {
         if (existing.owner == owner) {
           // 本机残留（上次崩溃 / 释放失败）→ 刷新接管。
           await backend.writeObject(SyncKeys.lockPath, payload.toBytes());
-          log.info(
-            .lockAcquire,
-            reason: .takeover,
-            payload: {'owner': owner},
-          );
+          log.info(.lockAcquire, reason: .takeover, payload: {'owner': owner});
           return;
         }
         if (existing.isExpired(.timestamp())) {

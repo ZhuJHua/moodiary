@@ -1,19 +1,21 @@
 use anyhow::Result;
 use flutter_rust_bridge::frb;
 
-pub use moodiary_image::{
-    CompressFormat, CompressSpec, ImageFormat, ImageMeta, ImageProbe, ThumbnailTarget, TilePixels,
+pub use crate::codec::{
+    CompressFormat as FastCompressFormat, CompressSpec as FastCompressSpec,
+    ImageFormat as FastImageFormat, ImageMeta as FastImageMeta, ImageProbe as FastImageProbe,
+    ThumbnailTarget as FastThumbnailTarget, TilePixels as FastTilePixels,
 };
 
-#[frb(mirror(CompressFormat))]
-pub enum _CompressFormat {
+#[frb(mirror(FastCompressFormat))]
+pub enum _FastCompressFormat {
     Jpeg,
     Png,
 }
 
-#[frb(mirror(CompressSpec))]
-pub struct _CompressSpec {
-    pub compress_format: Option<CompressFormat>,
+#[frb(mirror(FastCompressSpec))]
+pub struct _FastCompressSpec {
+    pub compress_format: Option<FastCompressFormat>,
     pub target_width: Option<u32>,
     pub target_height: Option<u32>,
     pub min_width: Option<u32>,
@@ -23,8 +25,8 @@ pub struct _CompressSpec {
     pub quality: Option<u8>,
 }
 
-#[frb(mirror(ImageFormat))]
-pub enum _ImageFormat {
+#[frb(mirror(FastImageFormat))]
+pub enum _FastImageFormat {
     Jpeg,
     Png,
     WebP,
@@ -33,30 +35,30 @@ pub enum _ImageFormat {
     Other,
 }
 
-#[frb(mirror(ImageProbe))]
-pub struct _ImageProbe {
-    pub format: ImageFormat,
+#[frb(mirror(FastImageProbe))]
+pub struct _FastImageProbe {
+    pub format: FastImageFormat,
     pub width: u32,
     pub height: u32,
     pub progressive: bool,
     pub region_decodable: bool,
 }
 
-#[frb(mirror(ThumbnailTarget))]
-pub struct _ThumbnailTarget {
+#[frb(mirror(FastThumbnailTarget))]
+pub struct _FastThumbnailTarget {
     pub width: u32,
     pub output_stem: String,
 }
 
-#[frb(mirror(ImageMeta))]
-pub struct _ImageMeta {
+#[frb(mirror(FastImageMeta))]
+pub struct _FastImageMeta {
     pub width: u32,
     pub height: u32,
     pub ext: String,
 }
 
-#[frb(mirror(TilePixels))]
-pub struct _TilePixels {
+#[frb(mirror(FastTilePixels))]
+pub struct _FastTilePixels {
     pub x: u32,
     pub y: u32,
     pub width: u32,
@@ -67,15 +69,15 @@ pub struct _TilePixels {
 }
 
 /// 转正后源像素坐标里的一个 tile 矩形。
-pub struct TileRect {
+pub struct FastTileRect {
     pub x: u32,
     pub y: u32,
     pub width: u32,
     pub height: u32,
 }
 
-impl From<&TileRect> for moodiary_image::Rect {
-    fn from(r: &TileRect) -> Self {
+impl From<&FastTileRect> for crate::codec::Rect {
+    fn from(r: &FastTileRect) -> Self {
         Self {
             x: r.x,
             y: r.y,
@@ -87,11 +89,11 @@ impl From<&TileRect> for moodiary_image::Rect {
 
 /// 看图页的 tile 解码器：一个看图会话一个，文件只读一次，带缓存跟着它走。
 #[frb(opaque)]
-pub struct RegionDecoder(moodiary_image::RegionDecoder);
+pub struct FastRegionDecoder(crate::codec::RegionDecoder);
 
-impl RegionDecoder {
-    pub fn open(file_path: String) -> Result<RegionDecoder> {
-        Ok(RegionDecoder(moodiary_image::RegionDecoder::open(
+impl FastRegionDecoder {
+    pub fn open(file_path: String) -> Result<FastRegionDecoder> {
+        Ok(FastRegionDecoder(crate::codec::RegionDecoder::open(
             &file_path,
         )?))
     }
@@ -102,14 +104,14 @@ impl RegionDecoder {
     }
 
     #[frb(sync)]
-    pub fn probe(&self) -> ImageProbe {
+    pub fn probe(&self) -> FastImageProbe {
         self.0.probe()
     }
 
     /// 一批同 denom 的 tile：并集一次解出来当带，再逐块切。视口里的可见 tile 一次全要，
     /// 313MB 的图就只跑一趟熵解码。
-    pub fn decode_tiles(&self, rects: Vec<TileRect>, denom: u8) -> Result<Vec<TilePixels>> {
-        let rects: Vec<moodiary_image::Rect> = rects.iter().map(Into::into).collect();
+    pub fn decode_tiles(&self, rects: Vec<FastTileRect>, denom: u8) -> Result<Vec<FastTilePixels>> {
+        let rects: Vec<crate::codec::Rect> = rects.iter().map(Into::into).collect();
         self.0.decode_tiles(&rects, denom)
     }
 
@@ -122,9 +124,9 @@ impl RegionDecoder {
         width: u32,
         height: u32,
         denom: u8,
-    ) -> Result<TilePixels> {
+    ) -> Result<FastTilePixels> {
         self.0.decode_tile(
-            moodiary_image::Rect {
+            crate::codec::Rect {
                 x,
                 y,
                 w: width,
@@ -136,36 +138,36 @@ impl RegionDecoder {
 }
 
 #[frb(opaque)]
-pub struct ImageCompressor {}
+pub struct FastImageCodec {}
 
-impl ImageCompressor {
+impl FastImageCodec {
     /// 只读头不解像素：格式、转正后宽高、是否能走 turbojpeg 缩放 / 区域解码。
-    pub fn probe(file_path: String) -> Result<ImageProbe> {
-        moodiary_image::probe(&file_path)
+    pub fn probe(file_path: String) -> Result<FastImageProbe> {
+        crate::codec::probe(&file_path)
     }
 
     /// progressive JPEG 无损转 baseline（带 restart marker）落盘，给看图页 tile 用；
     /// 超过 64MP 的报错（要整幅系数缓冲）。先写 `.part` 再 rename。
     pub fn to_baseline_file(file_path: String, output_path: String) -> Result<()> {
-        moodiary_image::to_baseline_file(&file_path, &output_path)
+        crate::codec::to_baseline_file(&file_path, &output_path)
     }
 
     /// 导出用：整图转正、按 spec 定尺寸、编成 JPEG / PNG。
     pub fn contain_to_file(
         file_path: String,
         output_path: String,
-        spec: CompressSpec,
+        spec: FastCompressSpec,
     ) -> Result<()> {
-        moodiary_image::contain_to_file(file_path, output_path, spec)
+        crate::codec::contain_to_file(file_path, output_path, spec)
     }
 
     /// 一次解码、链式缩出多个宽度档位；不比档位宽的档位跳过不写。派生物后缀按内容定
     /// （`jpg`，带 alpha 的源 `png`），写在返回的 `ext` 里。
     pub fn make_thumbnails(
         file_path: String,
-        targets: Vec<ThumbnailTarget>,
+        targets: Vec<FastThumbnailTarget>,
         quality: Option<u8>,
-    ) -> Result<ImageMeta> {
-        moodiary_image::make_thumbnails(&file_path, &targets, quality.unwrap_or(82))
+    ) -> Result<FastImageMeta> {
+        crate::codec::make_thumbnails(&file_path, &targets, quality.unwrap_or(82))
     }
 }

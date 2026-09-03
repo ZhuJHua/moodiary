@@ -1,3 +1,4 @@
+import 'package:fast_image/fast_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_files/moodiary_files.dart';
@@ -601,7 +602,7 @@ class _CoverCell extends StatelessWidget {
         ColoredBox(color: colors.surfaceContainerHigh),
         Image(
           // 格子是固定 48dp：档位 s 之上再把解码夹到格子宽，42 格进缓存才够小。
-          image: MediaImage(path, tier: .s, decodeWidth: cacheWidth),
+          image: FastImage(path, tier: .s, decodeWidth: cacheWidth),
           fit: .cover,
           filterQuality: .low,
           gaplessPlayback: true,
@@ -782,7 +783,7 @@ class _EntryTile extends ConsumerWidget {
                   ClipRRect(
                     borderRadius: .circular(9),
                     child: Image(
-                      image: MediaImage(
+                      image: FastImage(
                         AppFiles.getRealPath('image', cover),
                         tier: .s,
                         decodeWidth:

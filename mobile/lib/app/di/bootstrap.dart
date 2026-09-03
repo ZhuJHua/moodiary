@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:fast_image/fast_image.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_editor/moodiary_editor.dart'
     show EditorMigrationService;
@@ -22,6 +23,12 @@ import 'package:moodiary_sync/moodiary_sync.dart';
 Future<void> bootstrapPlatform() async {
   await PlatformService.get().init();
   await AppFiles.initCreateDir();
+  // 图片管线只认路径与日志回调，不认识 AppFiles。
+  FastImageRuntime.configure(
+    imageDir: AppFiles.imageDir,
+    thumbDir: AppFiles.imageThumbDir,
+    log: logger.d,
+  );
   AppLogger.configure(logFilePath: AppFiles.getErrorLogPath());
 }
 

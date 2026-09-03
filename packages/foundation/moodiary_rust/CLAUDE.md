@@ -71,25 +71,8 @@ Two invariants worth keeping:
   剥干净了。写在 Cargo.toml 里只为说清依赖面，别拿它当体积手段。
 - **`syntect` 的四个 feature 全与 typst-library 重合**，收窄一个字节都省不到。
 
-**turbojpeg-sys（2026-09-02 进仓）**：`crates/foundation/image` 的 JPEG 读头 / IDCT 缩放解码 /
-编码走 vendored libjpeg-turbo 3.1.0，静态链进这一个 .so，`webp` crate 随之出仓。构建机要有
-**cmake**（brew / GitHub runner 自带），**不需要 NASM**：feature 只开 `cmake` 不开
-`require-simd`，arm64 的 NEON 是 intrinsics 必然编进去（Android 交叉产物 `llvm-nm` 可见
-`*_neon` 符号），x86_64 只跑 CI 测试、缺 NASM 只是没 SIMD。hook 多传两样：Android 从
-Flutter 给的 clang 路径推 NDK 根，给 cmake-rs `CMAKE_TOOLCHAIN_FILE_<triple>` 与
-`ANDROID_NDK_ROOT`；iOS 模拟器传 `SDKROOT`（cmake-rs 不区分 `-sim` 三元组）。三个交叉目标
-（aarch64-linux-android / aarch64-apple-ios / aarch64-apple-ios-sim）都用 `cargo check -p
-moodiary-image --target …` 加同一套环境变量验过。设计稿 `docs/image-pipeline.md`。
-两条 API 坑：**缩放系数只认 N/8 的十六档且要约分**（1/3 直接报 Unsupported scaling factor，
-4/8 要写 1/2，`turbo::set_scale` 统一处理）；`tj3SetCroppingRegion` 的坐标是缩放后的，左边界
-须整除缩放后 iMCU 宽。baseline JPEG 跳行仍要熵解码，随机访问靠 `restart.rs` 的 RST 索引
-（带 DRI 的文件拼合成段交给 turbojpeg，分块并行），没有 DRI 就整趟。progressive 不能区域解，
-`tj3Transform` 无损转 baseline 副本再解。
-
-**libwebp-sys 0.14.4（2026-09-03 回来）**只给 WebP 区域解码（`webp_region.rs`），`cc` 编译、
-`default-features = false, features = ["std", "neon"]`；没有只编解码器的 feature，编码器靠
-`--gc-sections` 丢掉。libwebp 裁剪不省熵解析、有损解码会把裁剪起点对齐到偶数。`png` 0.18.1
-直接依赖给 PNG 流式区域解码（`png_region.rs`）。
+**图片编解码不在这里**：turbojpeg / libwebp / png 与整条图片管线 2026-09-03 拆去了
+`packages/foundation/fast_image`（自带 FRB 与原生库 `libfastimage`），坑见那份 CLAUDE.md。
 
 **两侧 formatter 现在都是干净的**（2026-08-20 统一跑过一次并单独提交）：
 `cargo fmt --all -- --check` 与 `dart format --set-exit-if-changed` 都是零差异，
