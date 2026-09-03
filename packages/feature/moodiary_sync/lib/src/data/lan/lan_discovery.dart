@@ -3,17 +3,19 @@ import 'dart:async';
 import 'package:bonsoir/bonsoir.dart';
 import 'package:flutter/foundation.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
+import 'package:moodiary_sync/src/data/lan/lan_protocol.dart';
 
 /// mDNS/Bonjour 发现层（bonsoir 插件包装）。发现是纯增强：任何一步失败都静默降级，
 /// 手动「IP + 配对码」路径始终可用。iOS 需要 Info.plist 的 `NSBonjourServices`
 /// 列出 [lanServiceType]，否则浏览会静默返回空。
 const String lanServiceType = '_moodiary._tcp';
 
-/// 接收端：把本机服务广播到局域网（服务名 = 设备名，端口 = 实际监听端口）。
+/// 接收端：把本机服务广播到局域网（服务名 = 设备名，端口 = 实际监听端口，TXT = 协议与
+/// App 版本，见 [lanTxtRecord]）。
 class LanAdvertiser {
   BonsoirBroadcast? _broadcast;
 
-  Future<void> start({required int port}) async {
+  Future<void> start({required int port, required String version}) async {
     if (_broadcast != null) return;
     try {
       final broadcast = BonsoirBroadcast(
@@ -21,6 +23,7 @@ class LanAdvertiser {
           name: 'Moodiary · ${await AppInfo.getDeviceName()}',
           type: lanServiceType,
           port: port,
+          attributes: lanTxtRecord(version),
         ),
       );
       _broadcast = broadcast;
@@ -49,7 +52,22 @@ class LanPeer {
   final String host;
   final int port;
 
-  const LanPeer({required this.name, required this.host, required this.port});
+  /// TXT 里的协议版本；旧版本不广播 TXT 时为 null。
+  final int? proto;
+
+  /// TXT 里的 App 版本（线上形式），只进文案。
+  final String? version;
+
+  const LanPeer({
+    required this.name,
+    required this.host,
+    required this.port,
+    this.proto,
+    this.version,
+  });
+
+  /// 协议明确不同才算不兼容；TXT 缺失（旧版本、平台没解析出来）仍可选，由握手兜底。
+  bool get compatible => proto == null || proto == lanProtoVersion;
 }
 
 /// 发送端：浏览局域网内的接收端，结果经 [peers] 通知 UI。
@@ -94,6 +112,8 @@ class LanBrowser {
             name: service.name,
             host: host,
             port: service.port,
+            proto: int.tryParse(service.attributes['proto'] ?? ''),
+            version: service.attributes['ver'],
           );
           _publish();
         }

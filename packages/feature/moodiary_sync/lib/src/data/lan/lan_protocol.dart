@@ -19,6 +19,12 @@
 /// 明文（nonce ‖ path）里 path 是已知的，逐个候选 PIN 派生密钥试解即可验证。6 位
 /// PIN = 10^6 个候选，每个要跑一次 Argon2id(64 MiB, t=3)，单核约 100 ms，多核工作站
 /// 量级在小时级。这是低熵配对码 + 非 PAKE 的固有代价，只能靠提高 PIN 熵来抬高。
+///
+/// **版本门**：兼容性只看 [lanProtoVersion]，两端严格相等才通（握手由发送端比对，带令牌
+/// 的请求由接收端比对 [lanProtoHeader]，mDNS TXT 里也广播一份供发送页预筛）。App 版本
+/// 只进报错文案。**动了线上格式的任何一处 —— 端点、令牌、manifest 结构、归档条目封装、
+/// 加密对象格式 —— 必须 bump**；`lan_protocol_test.dart` 把有常量可钉的那些钉成指纹，
+/// 没常量可钉的（例如条目封装方式）只能靠这条规则。
 library;
 
 import 'dart:convert';
@@ -26,15 +32,51 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:fast_crypto/fast_crypto.dart';
+import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 
 const int lanDefaultPort = 6636;
-const int lanProtoVersion = 2;
+
+/// 3：归档从 zip 条目级 AES 改为明文 zip + 条目走 [SyncCipher]（接收端拒收明文条目）。
+const int lanProtoVersion = 3;
 const String lanApiBase = '/moodiary/lan/v1';
 const String lanHandshakePath = '$lanApiBase/handshake';
 const String lanManifestPath = '$lanApiBase/manifest';
 const String lanArchivePath = '$lanApiBase/archive';
 const String lanAuthHeader = 'x-moodiary-auth';
+
+/// 发送端每个请求都带：接收端据此拒绝协议不同的发送端（握手只能挡住会检查的发送端）。
+const String lanProtoHeader = 'x-moodiary-proto';
+
+/// 发送端 App 版本，只进接收端的报错文案。
+const String lanVersionHeader = 'x-moodiary-version';
+
+/// 本机 App 版本的线上形式 `2.8.1+101`。取不到（测试环境）给 `unknown`：它只进文案，
+/// 不能因为它挡住同步。
+Future<String> lanLocalAppVersion() async {
+  try {
+    final info = await AppInfo.getPackageInfo();
+    return info.buildNumber.isEmpty
+        ? info.version
+        : '${info.version}+${info.buildNumber}';
+  } catch (_) {
+    return 'unknown';
+  }
+}
+
+/// `2.8.1+101` → `2.8.1 (101)`。
+String lanDisplayVersion(String? wire) {
+  if (wire == null || wire.isEmpty) return 'unknown';
+  final plus = wire.indexOf('+');
+  if (plus <= 0) return wire;
+  return '${wire.substring(0, plus)} (${wire.substring(plus + 1)})';
+}
+
+/// mDNS TXT 记录：发送页据此把协议不同的接收端置灰。
+Map<String, String> lanTxtRecord(String version) => {
+  'proto': '$lanProtoVersion',
+  'ver': version,
+};
 
 /// 会话加密端口：生产走 Rust（Argon2id + AES-256-GCM），测试注入纯 Dart 假实现。
 abstract interface class LanCrypto {

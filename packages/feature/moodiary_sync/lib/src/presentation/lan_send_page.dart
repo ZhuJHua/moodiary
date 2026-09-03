@@ -275,7 +275,7 @@ class _PeerTile extends StatelessWidget {
       ),
       child: MInkWell(
         borderRadius: .circular(16),
-        onTap: enabled ? () => onPick(peer) : null,
+        onTap: enabled && peer.compatible ? () => onPick(peer) : null,
         child: Padding(
           padding: const .all(12),
           child: Row(
@@ -317,6 +317,15 @@ class _PeerTile extends StatelessWidget {
                                   : typography.bodySmall.onSurfaceVariant)
                               .copyWith(fontFamily: 'monospace'),
                     ),
+                    if (!peer.compatible) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        context.l10n.sync.lanPeerIncompatible(
+                          version: lanDisplayVersion(peer.version),
+                        ),
+                        style: typography.bodySmall.error,
+                      ),
+                    ],
                   ],
                 ),
               ),

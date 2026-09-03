@@ -273,6 +273,7 @@ void main() {
     tempDirPath: tmp.path,
     manifestBuilder: () async => receiverManifest,
     archiveApplier: applier,
+    appVersion: () async => '2.8.1+101',
   );
 
   test('环回：握手 → 取清单 → 上传 → 报告', () async {
@@ -395,6 +396,7 @@ void main() {
       ),
     ) as Map<String, dynamic>;
     expect(handshake['proto'], lanProtoVersion);
+    expect(handshake['ver'], '2.8.1+101');
     expect(
       handshake.containsKey('challenge'),
       isFalse,
@@ -411,6 +413,89 @@ void main() {
     expect(await _rawStatus(url, token), 200);
     // 同一个令牌第二次就该被拒——抓包重放正是这条挡的。
     expect(await _rawStatus(url, token), 401);
+  });
+
+  test('令牌正确但协议版本不同（含没带头的旧发送端）→ 426，接收端标记不兼容', () async {
+    final receiver = buildReceiver(applier: (_, _) async => fail('不应走到导入'));
+    await receiver.start();
+    addTearDown(receiver.stop);
+
+    final crypto = FakeLanCrypto();
+    final handshake = jsonDecode(
+      utf8.decode(
+        await _rawGet('http://127.0.0.1:${receiver.port}$lanHandshakePath'),
+      ),
+    ) as Map<String, dynamic>;
+    final key = await crypto.deriveKey(
+      salt: handshake['salt'] as String,
+      pin: receiver.pin,
+    );
+    final url = 'http://127.0.0.1:${receiver.port}$lanManifestPath';
+
+    expect(
+      await _rawStatus(
+        url,
+        await lanBuildAuthToken(crypto, key, lanManifestPath),
+        proto: null,
+      ),
+      426,
+    );
+    expect(
+      receiver.state.value,
+      isA<LanReceiveFailed>()
+          .having((s) => s.incompatible, 'incompatible', isTrue)
+          .having((s) => s.message, 'message', contains('2.8.1 (101)')),
+    );
+    expect(
+      await _rawStatus(
+        url,
+        await lanBuildAuthToken(crypto, key, lanManifestPath),
+        proto: '${lanProtoVersion - 1}',
+      ),
+      426,
+    );
+    // 令牌错的一律先按认证处理，版本门不给未认证者改状态的机会。
+    final wrongKey = await crypto.deriveKey(
+      salt: handshake['salt'] as String,
+      pin: '000000',
+    );
+    expect(
+      await _rawStatus(
+        url,
+        await lanBuildAuthToken(crypto, wrongKey, lanManifestPath),
+        proto: null,
+      ),
+      401,
+    );
+  });
+
+  test('握手协议版本不同 → 发送方报错写全两边版本号', () async {
+    final server = IoTestHttpServer();
+    await server.start(
+      handler: (_) async => HttpServerResponse.json({
+        'app': 'moodiary',
+        'proto': lanProtoVersion - 1,
+        'ver': '2.8.0+94',
+        'salt': 'ab',
+      }),
+    );
+    addTearDown(server.stop);
+
+    final sender = LanSender(
+      crypto: FakeLanCrypto(),
+      http: IoTestHttpClient(),
+      appVersion: () async => '2.8.1+101',
+    );
+    await expectLater(
+      sender.send(host: '127.0.0.1', port: server.port, pin: '123456'),
+      throwsA(
+        isA<SyncException>().having(
+          (e) => e.message,
+          'message',
+          allOf(contains('2.8.1 (101)'), contains('2.8.0 (94)')),
+        ),
+      ),
+    );
   });
 
   test('令牌绑定 path：清单的令牌拿不到归档端点', () async {
@@ -561,11 +646,13 @@ Future<int> _rawStatus(
   String url,
   String token, {
   String method = 'GET',
+  String? proto = '$lanProtoVersion',
 }) async {
   final client = io.HttpClient();
   try {
     final req = await client.openUrl(method, .parse(url));
     req.headers.set(lanAuthHeader, token);
+    if (proto != null) req.headers.set(lanProtoHeader, proto);
     if (method == 'POST') req.add(const [1, 2, 3]);
     final resp = await req.close();
     await resp.drain<void>();

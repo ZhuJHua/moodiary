@@ -1020,6 +1020,7 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String get lanSendTitle => 'Send over the local network';
 	@override String get lanSendIntro => 'Only what the other device is missing gets sent. Changes merge by last-modified time, so sending twice never duplicates anything.';
 	@override String get lanNearbyDevices => 'Nearby devices';
+	@override String lanPeerIncompatible({required Object version}) => 'Incompatible version · peer ${version}';
 	@override String get lanReceiverAddress => 'Receiver address';
 	@override String get lanAddressHint => 'Filled in when you pick a device above';
 	@override String get lanPin => 'Pairing code';
@@ -1125,7 +1126,7 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String get errLegacyBackup => 'This backup was created by a version older than 2.8.0 and cannot be imported. Restore it in the old version first, then upgrade.';
 	@override String errBackupParse({required Object error}) => 'Could not parse the backup file: ${error}';
 	@override String get errNotReceiver => 'That host is not a Moodiary receiver';
-	@override String get errVersionMismatch => 'Version mismatch — update Moodiary on both devices to the same version';
+	@override String errVersionMismatchDetail({required Object sender, required Object receiver}) => 'Version mismatch: sender ${sender}, receiver ${receiver}. Update Moodiary on both devices to the same version';
 	@override String get errReceiverOffline => 'The other device is not receiving. Make sure its Receive page is open.';
 	@override String get errS3Config => 'Finish the S3 configuration first';
 	@override String get errWebdavConfig => 'Finish the WebDAV configuration first';

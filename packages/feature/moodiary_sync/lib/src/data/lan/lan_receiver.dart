@@ -44,15 +44,25 @@ class LanReceiveFailed extends LanReceiveState {
   /// 会话因认证连续失败被锁死：配对码已作废，「对方可直接重试」这类提示不适用。
   final bool locked;
 
-  const LanReceiveFailed(this.message, {this.locked = false});
+  /// 对方协议版本不同：配对码仍有效，但对方升级之前重试没有意义。
+  final bool incompatible;
+
+  const LanReceiveFailed(
+    this.message, {
+    this.locked = false,
+    this.incompatible = false,
+  });
 }
 
 /// 局域网接收端：[IHttpServer] 上的一次性会话（PIN / 盐随 [start] 生成，[stop]
 /// 即作废）。三个端点：
-/// - `GET  handshake` → 明文 `{app, proto, salt}`；
+/// - `GET  handshake` → 明文 `{app, proto, ver, salt}`；
 /// - `GET  manifest`  → 会话密钥加密的本机 manifest 投影（发送方据此算增量）；
 /// - `POST archive`   → 条目加密的 zip（服务器层已流式落盘）→ 解压导入（engine.pull，
 ///   LWW 与云同步一致）→ 回加密报告。一次只处理一个归档（并发 409）。
+///
+/// 带令牌的两个端点先验令牌再验 [lanProtoHeader]：协议不同回 426，且只有持会话密钥的
+/// 对端才改得动本页状态。
 class LanReceiverService {
   LanReceiverService({
     this._crypto = const RustLanCrypto(),
@@ -61,8 +71,10 @@ class LanReceiverService {
     Future<SyncReport> Function(String zipPath, SyncCipher cipher)?
     archiveApplier,
     this._tempDirPath,
+    Future<String> Function()? appVersion,
   }) : _manifestBuilder = manifestBuilder ?? LocalArchive.buildLocalManifest,
-       _archiveApplier = archiveApplier ?? _applyArchive;
+       _archiveApplier = archiveApplier ?? _applyArchive,
+       _appVersion = appVersion ?? lanLocalAppVersion;
 
   static Future<SyncReport> _applyArchive(String zipPath, SyncCipher cipher) =>
       LocalArchive.import(zipPath, cipherProvider: () async => cipher);
@@ -71,6 +83,7 @@ class LanReceiverService {
   final Future<SyncManifest> Function() _manifestBuilder;
   final Future<SyncReport> Function(String, SyncCipher) _archiveApplier;
   final String? _tempDirPath;
+  final Future<String> Function() _appVersion;
 
   final ValueNotifier<LanReceiveState> state = ValueNotifier(
     const LanReceiveWaiting(),
@@ -78,6 +91,9 @@ class LanReceiverService {
 
   IHttpServer? _server;
   late String pin;
+
+  /// 本机 App 版本（线上形式），[start] 后有效；握手与 mDNS TXT 都带它。
+  String version = '';
   String _salt = '';
   List<int> _key = const [];
   bool _busy = false;
@@ -99,6 +115,7 @@ class LanReceiverService {
   bool get isRunning => _server?.isRunning ?? false;
 
   Future<void> start() async {
+    version = await _appVersion();
     pin = lanGeneratePin();
     _salt = lanRandomHex(16);
     _key = await _crypto.deriveKey(salt: _salt, pin: pin);
@@ -132,8 +149,28 @@ class LanReceiverService {
     };
   }
 
-  HttpServerResponse _handshake() =>
-      .json({'app': 'moodiary', 'proto': lanProtoVersion, 'salt': _salt});
+  HttpServerResponse _handshake() => .json({
+    'app': 'moodiary',
+    'proto': lanProtoVersion,
+    'ver': version,
+    'salt': _salt,
+  });
+
+  /// 令牌通过后再比协议版本：不等（含没带头的旧发送端）回 426。
+  Future<HttpServerResponse?> _admit(HttpServerRequest request) async {
+    final denied = await _checkAuth(request);
+    if (denied != null) return denied;
+    if (int.tryParse(request.headers[lanProtoHeader] ?? '') ==
+        lanProtoVersion) {
+      return null;
+    }
+    final message = l10n.sync.errVersionMismatchDetail(
+      sender: lanDisplayVersion(request.headers[lanVersionHeader]),
+      receiver: lanDisplayVersion(version),
+    );
+    state.value = LanReceiveFailed(message, incompatible: true);
+    return .text(HttpStatus.upgradeRequired, message);
+  }
 
   /// 校验一次性令牌：解得开（= 持有会话密钥）、绑定的 path 与本请求一致、nonce 没
   /// 用过。通过返回 null，否则返回 401。
@@ -159,7 +196,7 @@ class LanReceiverService {
   }
 
   Future<HttpServerResponse> _manifest(HttpServerRequest request) async {
-    final denied = await _checkAuth(request);
+    final denied = await _admit(request);
     if (denied != null) return denied;
     final manifest = await _manifestBuilder();
     final body = await _crypto.encrypt(
@@ -170,7 +207,7 @@ class LanReceiverService {
   }
 
   Future<HttpServerResponse> _archive(HttpServerRequest request) async {
-    final denied = await _checkAuth(request);
+    final denied = await _admit(request);
     if (denied != null) return denied;
     if (_busy) {
       return .text(HttpStatus.conflict, '对方正忙，请稍后再试');

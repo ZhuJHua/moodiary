@@ -66,13 +66,16 @@ class LanSendResult {
 
 /// 局域网发送端：握手 → 取对方 manifest → 增量打包（条目加密的 zip）→ 流式上传 →
 /// 解密对方导入报告。请求全部经统一 [IHttpClient]；一次性会话，无持久状态。
+/// 握手比对协议版本，之后每个请求都带 [lanProtoHeader] 让接收端再比一次。
 class LanSender {
   LanSender({
     this._crypto = const RustLanCrypto(),
     this._http,
     Future<(String, int)> Function(SyncManifest remote, SyncCipher cipher)?
     archiveBuilder,
-  }) : _archiveBuilder = archiveBuilder ?? _buildArchive;
+    Future<String> Function()? appVersion,
+  }) : _archiveBuilder = archiveBuilder ?? _buildArchive,
+       _appVersion = appVersion ?? lanLocalAppVersion;
 
   static Future<(String, int)> _buildArchive(
     SyncManifest remote,
@@ -82,6 +85,7 @@ class LanSender {
   final LanCrypto _crypto;
   final Future<(String, int)> Function(SyncManifest, SyncCipher)
   _archiveBuilder;
+  final Future<String> Function() _appVersion;
 
   IHttpClient? _http;
 
@@ -96,11 +100,19 @@ class LanSender {
     void Function(LanSendProgress progress)? onProgress,
   }) async {
     final base = 'http://$host:$port';
+    final version = await _appVersion();
+    final identity = {
+      lanProtoHeader: '$lanProtoVersion',
+      lanVersionHeader: version,
+    };
     String? zipPath;
     var uploading = false;
     try {
       onProgress?.call(const LanSendProgress(.connecting));
-      final handshake = _decodeHandshake(await _get('$base$lanHandshakePath'));
+      final handshake = _decodeHandshake(
+        await _get('$base$lanHandshakePath', headers: identity),
+        localVersion: version,
+      );
       final key = await _crypto.deriveKey(
         salt: handshake['salt'] as String,
         pin: pin,
@@ -108,7 +120,10 @@ class LanSender {
       // 令牌一次一造：绑定 nonce 与 path，用过即废（见 [lanBuildAuthToken]）。
       final manifestCipher = await _get(
         '$base$lanManifestPath',
-        auth: await lanBuildAuthToken(_crypto, key, lanManifestPath),
+        headers: {
+          ...identity,
+          lanAuthHeader: await lanBuildAuthToken(_crypto, key, lanManifestPath),
+        },
       );
       final manifest = SyncManifest.fromJson(
         jsonDecode(utf8.decode(await _crypto.decrypt(key, manifestCipher)))
@@ -129,6 +144,7 @@ class LanSender {
         '$base$lanArchivePath',
         filePath: zipPath,
         headers: {
+          ...identity,
           lanAuthHeader: await lanBuildAuthToken(_crypto, key, lanArchivePath),
           'content-type': 'application/octet-stream',
         },
@@ -168,11 +184,14 @@ class LanSender {
     }
   }
 
-  Future<Uint8List> _get(String url, {String? auth}) async {
+  Future<Uint8List> _get(
+    String url, {
+    required Map<String, String> headers,
+  }) async {
     final resp = await _client.requestBytes(
       .get,
       url,
-      headers: auth == null ? null : {lanAuthHeader: auth},
+      headers: headers,
       timeout: _controlTimeout,
       silent: true,
       throwOnStatus: false,
@@ -181,7 +200,10 @@ class LanSender {
     return resp.data!;
   }
 
-  Map<String, dynamic> _decodeHandshake(Uint8List body) {
+  Map<String, dynamic> _decodeHandshake(
+    Uint8List body, {
+    required String localVersion,
+  }) {
     final Object? decoded;
     try {
       decoded = jsonDecode(utf8.decode(body));
@@ -194,7 +216,12 @@ class LanSender {
       throw SyncException(l10n.sync.errReceiverOffline);
     }
     if (decoded['proto'] != lanProtoVersion) {
-      throw SyncException(l10n.sync.errVersionMismatch);
+      throw SyncException(
+        l10n.sync.errVersionMismatchDetail(
+          sender: lanDisplayVersion(localVersion),
+          receiver: lanDisplayVersion(decoded['ver'] as String?),
+        ),
+      );
     }
     return decoded;
   }
@@ -206,6 +233,8 @@ class LanSender {
       // 401 的正文可能是「配对码错误次数过多…」，别一律盖成「配对码不正确」。
       401 => detail.isEmpty ? '配对码不正确' : detail,
       409 => '对方正忙，请稍后再试',
+      // 接收端的版本门：正文已是两边版本号写全的文案。
+      426 => detail,
       _ => detail.isEmpty ? '对方处理失败（$statusCode）' : '对方处理失败：$detail',
     });
   }

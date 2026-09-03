@@ -33,7 +33,7 @@ class _LanReceivePageState extends State<LanReceivePage> {
     try {
       await _service.start();
       // mDNS 广播是纯增强，失败静默（对方仍可手动输 IP）。
-      await _advertiser.start(port: _service.port);
+      await _advertiser.start(port: _service.port, version: _service.version);
       final ips = await NetworkStatus.getLocalIPv4s();
       if (!mounted) return;
       setState(() {
@@ -231,25 +231,30 @@ class _StatusLine extends StatelessWidget {
           ),
         ],
       ),
-      LanReceiveFailed(:final message, :final locked) => Column(
-        key: const ValueKey('failed'),
-        children: [
-          Text(
-            context.l10n.sync.lanFailed,
-            style: typography.titleMedium.error,
-          ),
-          const SizedBox(height: 6),
-          Text(message, textAlign: .center, style: typography.bodySmall.error),
-          // 锁死时配对码已经作废，再说「配对码不变，对方可直接重试」是自相矛盾的。
-          if (!locked) ...[
-            const SizedBox(height: 4),
+      LanReceiveFailed(:final message, :final locked, :final incompatible) =>
+        Column(
+          key: const ValueKey('failed'),
+          children: [
             Text(
-              context.l10n.sync.lanFailedHint,
-              style: typography.bodySmall.outline,
+              context.l10n.sync.lanFailed,
+              style: typography.titleMedium.error,
             ),
+            const SizedBox(height: 6),
+            Text(
+              message,
+              textAlign: .center,
+              style: typography.bodySmall.error,
+            ),
+            // 锁死时配对码已经作废、版本不同时对方升级前重试无意义，都不说「可直接重试」。
+            if (!locked && !incompatible) ...[
+              const SizedBox(height: 4),
+              Text(
+                context.l10n.sync.lanFailedHint,
+                style: typography.bodySmall.outline,
+              ),
+            ],
           ],
-        ],
-      ),
+        ),
     };
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 250),

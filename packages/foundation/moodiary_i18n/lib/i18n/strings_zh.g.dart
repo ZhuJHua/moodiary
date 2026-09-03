@@ -2747,6 +2747,9 @@ class Translations$sync$zh {
 	/// zh: '附近的设备'
 	String get lanNearbyDevices => '附近的设备';
 
+	/// zh: '版本不兼容 · 对方 {version}'
+	String lanPeerIncompatible({required Object version}) => '版本不兼容 · 对方 ${version}';
+
 	/// zh: '接收方地址'
 	String get lanReceiverAddress => '接收方地址';
 
@@ -3062,8 +3065,8 @@ class Translations$sync$zh {
 	/// zh: '对方不是 Moodiary 局域网接收端'
 	String get errNotReceiver => '对方不是 Moodiary 局域网接收端';
 
-	/// zh: '版本不兼容，请将两台设备的 Moodiary 升级到同一版本'
-	String get errVersionMismatch => '版本不兼容，请将两台设备的 Moodiary 升级到同一版本';
+	/// zh: '版本不兼容：发送方 {sender}，接收方 {receiver}。请将两台设备的 Moodiary 升级到同一版本'
+	String errVersionMismatchDetail({required Object sender, required Object receiver}) => '版本不兼容：发送方 ${sender}，接收方 ${receiver}。请将两台设备的 Moodiary 升级到同一版本';
 
 	/// zh: '对方设备未在接收，请确认已打开「局域网接收」'
 	String get errReceiverOffline => '对方设备未在接收，请确认已打开「局域网接收」';
