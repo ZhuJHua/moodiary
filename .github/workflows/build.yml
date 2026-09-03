@@ -53,7 +53,7 @@ jobs:
           corepack pnpm -C packages/feature_base/moodiary_editor/editor build
 
       - name: Set Up Rust
-        working-directory: packages/foundation/moodiary_rust/rust
+        working-directory: packages/foundation/fast_image/rust
         run: rustup show active-toolchain
 
       - name: Install Dependencies

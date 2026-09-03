@@ -95,6 +95,7 @@ class ExportService {
     /// 取消信号。长任务只在循环边界响应；typst 的整篇排版会跑完当前这一趟。
     press.CancelToken? cancel,
   }) async {
+    await press.FastPress.ensureInitialized();
     final token = cancel ?? press.CancelToken();
     final diaries = await scope.resolve();
     if (diaries.isEmpty) {

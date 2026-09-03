@@ -4,8 +4,9 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:moodiary_files/moodiary_files.dart';
-import 'package:moodiary_rust/foundation.dart' as rust;
 import 'package:path/path.dart';
+
+import 'font_tables.dart';
 
 typedef ActiveFontDescriptor = ({
   String family,
@@ -41,18 +42,14 @@ class FontManager {
     }
   }
 
-  static Future<String?> getFontName({required String filePath}) async {
-    return await rust.FontReader.getFontNameFromTtf(ttfFilePath: filePath);
-  }
+  static Future<String?> getFontName({required String filePath}) =>
+      FontTables.fullName(filePath);
 
   static Future<Map<String, dynamic>> getFontWghtAxis({
     required String filePath,
   }) async {
     try {
-      final axis = await rust.FontReader.getWghtAxisFromVfFont(
-        ttfFilePath: filePath,
-      );
-      return Map<String, dynamic>.from(axis);
+      return Map<String, dynamic>.from(await FontTables.wghtAxis(filePath));
     } catch (_) {
       return {};
     }

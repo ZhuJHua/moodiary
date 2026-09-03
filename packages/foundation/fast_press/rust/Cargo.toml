@@ -39,7 +39,7 @@ zip = { version = "=8.6.0", default-features = false, features = ["deflate"] }
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
 
-# 与 moodiary_rust 同口径；不要加 panic = "abort"（FRB 靠 catch_unwind 把 panic 转成 Dart 异常，
+# 与其他 fast_* 同口径；不要加 panic = "abort"（FRB 靠 catch_unwind 把 panic 转成 Dart 异常，
 # typst 在脏输入上的 panic 要靠它兜住）。
 [profile.release]
 opt-level = 3

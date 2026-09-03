@@ -557,6 +557,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
 
   Future<void> _run() async {
     final l10n = context.l10n;
+    await press.FastPress.ensureInitialized();
     final token = press.CancelToken();
     setState(() {
       _running = true;

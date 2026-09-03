@@ -44,7 +44,7 @@ jobs:
         run: dart tool/check_layers.dart
 
       - name: Set up Rust toolchain
-        working-directory: packages/foundation/moodiary_rust/rust
+        working-directory: packages/foundation/fast_image/rust
         run: rustup toolchain install
 
       # 真库集成测试（倒排索引 / 2.8.0 迁移）靠这个变量解除 skip；动态库随
@@ -68,9 +68,6 @@ jobs:
   rust:
     name: Rust
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/foundation/moodiary_rust/rust
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -79,12 +76,6 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
-
-      - name: Clippy
-        run: cargo clippy --workspace --all-targets -- -D warnings
-
-      - name: Test
-        run: cargo test --workspace
 
       # 每个 fast_* 包自带一个 crate；一次循环全部过 clippy + test。
       - name: Clippy + Test (fast_*)

@@ -14,9 +14,7 @@ dependencies:
     sdk: flutter
 
   fast_image: 0.0.1
-  fast_press: 0.0.1
   fast_text: 0.0.1
-  moodiary_rust: 0.0.1
   moodiary_router: 0.0.1
   moodiary_assistant: 0.0.1
   moodiary_diary: 0.0.1

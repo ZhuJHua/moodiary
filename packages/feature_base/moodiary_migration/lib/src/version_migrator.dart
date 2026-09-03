@@ -228,7 +228,7 @@ void _fixV2_6_3(String dir) {
               legacy.Category(
                 id: id,
                 // 只要 4 个随机 hex 字符做名字后缀；本函数在 compute isolate 内运行，
-                // RustLib 未初始化，不能走 Rust 侧 uuid。
+                // 原生库不一定装载，不能走 Rust 侧 uuid。
                 categoryName:
                     '已修复${Random().nextInt(0x10000).toRadixString(16).padLeft(4, '0')}',
                 lastModified: diary.lastModified,

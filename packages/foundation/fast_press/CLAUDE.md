@@ -6,10 +6,11 @@
 `pdf.rs` / `docx.rs` 是引擎，只收纯闭包）。2026-09-03 从 moodiary_rust 的 `doc` + `export`
 两个 crate 与 `export.dart` 门面拆出来，与 fast_image 同一套形状。
 
-- **foundation 叶子包，零 `moodiary_*` 依赖，但只有 `moodiary_export` 与 app 组合根能依赖它**
+- **foundation 叶子包，零 `moodiary_*` 依赖，只有 `moodiary_export` 能依赖它**
   （`tool/check_layers.dart` 的 `_nativePkgOwners`，接替原来 moodiary_rust 的 export 门面）。
-  组合根只做 `FastPressLib.init()`，与 `RustLib.init()` 并列在启动最早。
-- **`CancelToken` 是这个库自己的**：FRB 不透明句柄跨不了 .so，与 moodiary_rust 的同名类型互不
+- **延迟装载**：没有启动 init。导出服务的 `run` 与导出页构造 `CancelToken()` 之前都先
+  `await FastPress.ensureInitialized()`——`CancelToken()` 是同步构造，库没装载就抛。
+- **`CancelToken` 是这个库自己的**：FRB 不透明句柄跨不了 .so，与其他 fast_* 的同名类型互不
   相通。导出服务 Dart 侧的轮询（含 zip 打包那段）也只读它，所以 moodiary_export 只拿这一枚。
   只在循环边界生效——typst 整篇排版会跑完当前这一趟。
 - **改了 `rust/src/api` 必跑 `dart tool/task.dart gen-rust`**（三个 FRB 包都会重生成；`IrBlock`

@@ -1,11 +1,10 @@
 // 分层依赖检查：只能上层依赖下层，同层不互相依赖。另外三段无 baseline 的主题闸门
 // （ThemeData 只在 mui 的 build.dart 里构造 / 业务代码零色板外颜色）
-// 也挂在这里跑。依赖检查本身分三段——
+// 也挂在这里跑。依赖检查本身分两段——
 //   1) 包级：各 pubspec 的 moodiary_*/mui 依赖（foundation → core → feature_base → feature → apps）。
 //      pub 只保证依赖图无环、不保证方向，这段补上方向约束。无 baseline，必须零违规。
-//   2) Rust crate 级：moodiary_rust/rust/crates 下各 Cargo.toml 的 moodiary-* 依赖
-//      （foundation → core → feature → bridge）。同样，cargo 只保证无环、不保证方向。
-//   3) 文件级：mobile/lib 内部的 package:moodiary import（见 _layers）。
+//      自带原生库的 fast_* 包另有一张归属表（_nativePkgOwners）。
+//   2) 文件级：mobile/lib 内部的 package:moodiary import（见 _layers）。
 //
 // 运行：dart run tool/check_layers.dart            // 检查，存在新增违规则 exit(1)
 //      dart run tool/check_layers.dart --update-baseline  // 用当前文件级违规重写 baseline
@@ -162,84 +161,9 @@ List<String> _checkPackageLayers() {
   return out;
 }
 
-/// Rust crate 层级：index 越小越底层。bridge（moodiary_rust 本体）是顶层聚合。
-const Map<String, int> _rustLayers = {
-  'foundation': 0,
-  'feature_base': 1,
-  'feature': 2,
-};
-
-const String _rustRoot = 'packages/foundation/moodiary_rust/rust';
-final RegExp _cargoDepRe = RegExp(
-  r'^\s*(moodiary-[a-z-]+)\s*=',
-  multiLine: true,
-);
-
-/// 校验 Rust crate 依赖方向，返回违规描述（空表示通过）。
-/// bridge crate（rust/Cargo.toml）可以依赖任何层，不参与源侧检查。
-List<String> _checkRustLayers() {
-  final crates = Directory('$_rustRoot/crates');
-  if (!crates.existsSync()) return const [];
-
-  final layerOf = <String, String>{};
-  final depsOf = <String, List<String>>{};
-
-  for (final layerDir in crates.listSync().whereType<Directory>()) {
-    final layer = layerDir.path.split(Platform.pathSeparator).last;
-    if (!_rustLayers.containsKey(layer)) continue;
-    for (final crate in layerDir.listSync().whereType<Directory>()) {
-      final f = File('${crate.path}/Cargo.toml');
-      if (!f.existsSync()) continue;
-      final text = f.readAsStringSync();
-      final name = RegExp(
-        r'^name\s*=\s*"([^"]+)"',
-        multiLine: true,
-      ).firstMatch(text)?.group(1);
-      if (name == null) continue;
-      layerOf[name] = layer;
-      // dev-dependencies（测试用）不参与方向约束。
-      final main = text
-          .split(RegExp(r'^\[dev-dependencies\]', multiLine: true))
-          .first;
-      depsOf[name] = _cargoDepRe
-          .allMatches(main)
-          .map((m) => m.group(1)!)
-          .toList();
-    }
-  }
-
-  final out = <String>[];
-  for (final entry in depsOf.entries) {
-    final src = entry.key;
-    final srcLayer = _rustLayers[layerOf[src]]!;
-    for (final dst in entry.value) {
-      final dstLayerName = layerOf[dst];
-      if (dstLayerName == null) {
-        out.add('$src -> $dst（依赖了不在 crates/ 里的 moodiary-* crate）');
-        continue;
-      }
-      final dstLayer = _rustLayers[dstLayerName]!;
-      if (dstLayer < srcLayer) continue;
-      if (dstLayer > srcLayer) {
-        out.add('$src（${layerOf[src]}）-> $dst（$dstLayerName）：下层依赖上层');
-      } else {
-        out.add('$src -> $dst：同层互引（${layerOf[src]} 层不允许）');
-      }
-    }
-  }
-  out.sort();
-  return out;
-}
-
-/// moodiary_rust 的门面归属。
-const Map<String, Set<String>> _rustFacadeOwners = {
-  // app 门面：每个组合根都够得着（desktop 进树后 _appPubNames 自动带上）。
-  'rust': {'moodiary_mobile', 'moodiary_desktop'},
-};
-
-/// 自带原生库、又只服务一个 feature 的 foundation 包：pub 依赖就是它的门面，归属
-/// 与 _rustFacadeOwners 同一意思（导出的 Rust 以前是 moodiary_rust 的 export 门面）。
-/// app 组合根为了 `XxxLib.init()` 总在名单里。fast_image 全仓开放，不在这里。
+/// 自带原生库、又只服务一个 feature 的 foundation 包：pub 依赖就是它的门面（接替曾经
+/// 那个总 Rust 包的门面闸门）。app 组合根总在名单里（启动装载的那几个要 init）。
+/// fast_image / fast_text / fast_crypto 多方共用，全仓开放，不在这里。
 const Map<String, Set<String>> _nativePkgOwners = {
   'fast_press': {'moodiary_export'},
   // 客户端给 core 的 http 端口实现，WebDAV / S3 给同步后端。
@@ -284,19 +208,12 @@ List<String> _checkNativePkgOwners() {
   return out;
 }
 
-final RegExp _rustFacadeRe = RegExp(
-  r"""^\s*(?:import|export)\s+['"]package:moodiary_rust/([a-z_]+)\.dart['"]""",
-  multiLine: true,
-);
-
-/// 门面之外还有一条：不许绕过门面深入 `src/`。
-
-/// app 目录清单：desktop 落地时在这里加一行（目录不存在自动跳过），五段检查
-/// （app 层收集 / rust 门面 / legacy material / 配色纯度 / ThemeData 构造点）
+/// app 目录清单：desktop 落地时在这里加一行（目录不存在自动跳过），几段检查
+/// （app 层收集 / 原生库包归属 / legacy material / 配色纯度 / ThemeData 构造点）
 /// 一起生效——此前 mobile 写死在五处，desktop 进树当天会同时漏检与误报。
 const List<String> _appDirs = ['mobile', 'desktop'];
 
-/// app 目录 → pub 包名（读 pubspec 的 name），rust 门面归属用。
+/// app 目录 → pub 包名（读 pubspec 的 name），原生库包归属用。
 final Map<String, String> _appPubNames = {
   for (final dir in _appDirs)
     if (File('$dir/pubspec.yaml').existsSync())
@@ -332,52 +249,6 @@ List<File> _dartFiles(String root) {
     walk(dir);
     return out;
   });
-}
-
-final RegExp _rustDeepRe = RegExp(
-  r"""^\s*(?:import|export)\s+['"]package:moodiary_rust/src/""",
-  multiLine: true,
-);
-
-List<String> _checkRustFacades() {
-  final out = <String>[];
-  for (final root in [
-    for (final dir in _appDirs) ...['$dir/lib', '$dir/test'],
-    'packages',
-  ]) {
-    for (final entity in _dartFiles(root)) {
-      final rel = entity.path.replaceAll('\\', '/');
-      if (rel.contains('packages/foundation/moodiary_rust/')) continue;
-      if (rel.endsWith('.g.dart') || rel.endsWith('.freezed.dart')) continue;
-
-      final String owner;
-      final appDir = _appDirs.where((d) => rel.startsWith('$d/')).firstOrNull;
-      if (appDir != null) {
-        owner = _appPubNames[appDir]!;
-      } else {
-        final parts = rel.split('/');
-        if (parts.length < 3) continue;
-        owner = parts[2];
-      }
-
-      final content = entity.readAsStringSync();
-      if (_rustDeepRe.hasMatch(content)) {
-        out.add('$rel：绕过门面深入了 package:moodiary_rust/src/');
-      }
-      for (final m in _rustFacadeRe.allMatches(content)) {
-        final facade = m.group(1)!;
-        final owners = _rustFacadeOwners[facade];
-        if (owners == null) continue; // foundation：全仓开放
-        if (owners.contains(owner)) continue;
-        out.add(
-          '$rel（$owner）-> moodiary_rust/$facade.dart：'
-          '该门面只属于 ${owners.join('/')}',
-        );
-      }
-    }
-  }
-  out.sort();
-  return out;
 }
 
 /// Flutter 3.47 把 material 拆成独立包 `material_ui`；SDK 内的
@@ -737,29 +608,6 @@ void main(List<String> args) {
       stderr.writeln('  ✗ $v');
     }
     if (!update) exit(1);
-  }
-
-  final rustViolations = _checkRustLayers();
-  if (rustViolations.isEmpty) {
-    stdout.writeln('✅ Rust crate 依赖方向检查通过。');
-  } else {
-    stderr.writeln('❌ Rust crate 依赖方向违规 ${rustViolations.length} 条：');
-    for (final v in rustViolations) {
-      stderr.writeln('  ✗ $v');
-    }
-    if (!update) exit(1);
-  }
-
-  final facadeViolations = _checkRustFacades();
-  if (facadeViolations.isEmpty) {
-    stdout.writeln('✅ moodiary_rust 门面归属检查通过。');
-  } else {
-    stderr.writeln('❌ moodiary_rust 门面归属违规 ${facadeViolations.length} 条：');
-    for (final v in facadeViolations) {
-      stderr.writeln('  ✗ $v');
-    }
-    stderr.writeln('  → 见 _rustFacadeOwners；通用能力请走 foundation.dart。');
-    exit(1);
   }
 
   final nativeViolations = _checkNativePkgOwners();

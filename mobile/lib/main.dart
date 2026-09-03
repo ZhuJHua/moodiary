@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:fast_image/fast_image.dart';
-import 'package:fast_press/fast_press.dart';
 import 'package:fast_text/fast_text.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
@@ -26,19 +25,16 @@ import 'package:moodiary_mobile/app/lifecycle/app_lock_observer.dart';
 import 'package:moodiary_mobile/app/locale.dart';
 import 'package:moodiary_mobile/app/router/router.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
-import 'package:moodiary_rust/rust.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_sync/moodiary_sync.dart';
 import 'package:moodiary_theme/moodiary_theme.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 Future<void> _initSystem() async {
-  // Rust 桥最先就绪：dlopen 的耗时串行计入启动，换来「后面任何一步都可以打 Rust」
-  // 的零心智负担——迁移的字体重扫、维护任务的分词都不用再关心桥的时序。
-  await RustLib.init();
+  // 启动路径只装这两个原生库：图片管线与分词（迁移、搜索索引、心情建议都要）。其余 fast_*
+  // 各自延迟装载（首次导出 / 请求 / 对话 / 打包时 ensureInitialized），裸 FFI 的更是没有 init。
   await FastImageRuntime.init();
   await FastText.ensureInitialized();
-  await FastPressLib.init();
 
   // ── 1. 路径与日志（一切存储的前置）→ 容器装配 ∥ SQLite 打开。
   // configureDependencies 内部的 preResolve 在这一步落定：SecureKV → KV（含 2.8.0

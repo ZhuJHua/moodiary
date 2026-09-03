@@ -15,7 +15,6 @@ import 'dart:io';
 
 /// 带自己 FRB 的包，与 tool/task.dart 的 _frbPkgDirs 同一份。
 const _frbPkgDirs = [
-  'packages/foundation/moodiary_rust',
   'packages/foundation/fast_image',
   'packages/foundation/fast_press',
   'packages/foundation/fast_http',
@@ -28,6 +27,7 @@ void main() {
   for (final dir in _frbPkgDirs) {
     _check(dir);
   }
+  _checkConsistency();
 }
 
 void _check(String pkgDir) {
@@ -70,7 +70,7 @@ void _check(String pkgDir) {
   }
 
   // 两侧的 content hash 由同一次 codegen 写出，必须相等。不等 = 只提交了一半生成物，
-  // 而运行时那句 StateError 要等到 RustLib.init() 才响，测试跑不到就发不出来。
+  // 而运行时那句 StateError 要等到 XxxLib.init() 才响，测试跑不到就发不出来。
   final rustHash = grab(
     '$pkgDir/rust/src/frb_generated.rs',
     RegExp(r'FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = (-?\d+);'),
@@ -91,6 +91,72 @@ void _check(String pkgDir) {
       '✗ $pkgDir：两侧 content hash 不一致：rust=$rustHash dart=$dartHash\n'
       '  只提交了一半生成物。跑 `dart tool/task.dart gen-rust` 并把两份都提交。',
     );
+    exit(1);
+  }
+}
+
+/// 没有 `[workspace.dependencies]` 了：同一 crate 在多个 fast_* 里各钉一次，这里比对它们相等；
+/// 同样比对各包 rust-toolchain.toml 的 channel，以及各 FRB 包 pubspec 的 flutter_rust_bridge / ffigen。
+/// 漂了就红：FRB / tokio / reqwest 两份不同版本进两个 .so 既是体积倒退也是行为分叉。
+void _checkConsistency() {
+  final dirs =
+      Directory('packages/foundation')
+          .listSync()
+          .whereType<Directory>()
+          .map((d) => d.path.replaceAll('\\', '/'))
+          .where((p) => p.split('/').last.startsWith('fast_'))
+          .toList()
+        ..sort();
+  final depRe = RegExp(
+    r'^([A-Za-z0-9_-]+)\s*=\s*(?:"=([^"]+)"|\{[^}]*?version\s*=\s*"=([^"]+)")',
+    multiLine: true,
+  );
+  // crate → {包目录: 版本}
+  final pins = <String, Map<String, String>>{};
+  final channels = <String, String>{};
+  final frbPins = <String, String>{};
+  final ffigenPins = <String, String>{};
+  for (final dir in dirs) {
+    final cargo = File('$dir/rust/Cargo.toml');
+    if (!cargo.existsSync()) continue;
+    for (final m in depRe.allMatches(cargo.readAsStringSync())) {
+      pins.putIfAbsent(m.group(1)!, () => {})[dir] = m.group(2) ?? m.group(3)!;
+    }
+    final channel = RegExp(r'channel\s*=\s*"([^"]+)"')
+        .firstMatch(File('$dir/rust/rust-toolchain.toml').readAsStringSync())
+        ?.group(1);
+    if (channel != null) channels[dir] = channel;
+    if (File('$dir/flutter_rust_bridge.yaml').existsSync()) {
+      final pubspec = File('$dir/pubspec.yaml').readAsStringSync();
+      String? pin(String name) => RegExp(
+        '^\\s*$name:\\s*(\\S+)\\s*\$',
+        multiLine: true,
+      ).firstMatch(pubspec)?.group(1);
+      frbPins[dir] = pin('flutter_rust_bridge') ?? '?';
+      ffigenPins[dir] = pin('ffigen') ?? '?';
+    }
+  }
+
+  final drift = <String>[];
+  void compare(String what, Map<String, String> byDir) {
+    if (byDir.values.toSet().length > 1) {
+      drift.add(
+        '$what：${byDir.entries.map((e) => '${e.key.split('/').last}=${e.value}').join(' / ')}',
+      );
+    }
+  }
+
+  for (final e in pins.entries) {
+    compare('crate ${e.key}', e.value);
+  }
+  compare('rust-toolchain channel', channels);
+  compare('pubspec flutter_rust_bridge', frbPins);
+  compare('pubspec ffigen', ffigenPins);
+  if (drift.isNotEmpty) {
+    stderr.writeln('✗ fast_* 之间的钉版本不一致（同一 crate 必须钉同一个版本）：');
+    for (final d in drift) {
+      stderr.writeln('    $d');
+    }
     exit(1);
   }
 }

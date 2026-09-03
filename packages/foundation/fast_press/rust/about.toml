@@ -1,5 +1,4 @@
-# cargo-about 的许可证清单配置：产物由 `dart tool/task.dart licenses` 与 moodiary_rust、
-# fast_image 那两份合并，最终进 App 关于页的「开源许可」。只覆盖装车的部分：
+# cargo-about 的许可证清单配置：产物由 `dart tool/task.dart licenses` 与其他 fast_* 那几份合并，最终进 App 关于页的「开源许可」。只覆盖装车的部分：
 # 构建期与测试期依赖不进包。
 accepted = [
     "Apache-2.0",

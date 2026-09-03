@@ -16,7 +16,7 @@ import 'package:moodiary_sync/moodiary_sync.dart';
 /// 路径 + 业务目录 + 日志：一切存储的前置，必须先于容器装配（Isar 要求 database
 /// 目录存在；MMKV 的 rootDir 取 applicationSupportPath）。
 ///
-/// 只做这一件事：RustLib.init / ThemeManager / 同步后端装载都含业务或 UI 决策，
+/// 只做这一件事：原生库装载 / ThemeManager / 同步后端装载都含业务或 UI 决策，
 /// 由 main.dart 显式编排。「SecureKV 必须先于 KV 就位」这条不再写在这里 ——
 /// 它已是 `MmkvKVStorage.create(ISecureKVStorage)` 的类型边，由容器的 preResolve
 /// 保证次序。

@@ -79,11 +79,9 @@ Future<void> _editor() async {
   ], cwd: 'packages/feature_base/moodiary_editor/editor');
 }
 
-const _rustPkgDir = 'packages/foundation/moodiary_rust';
-
 /// 带自己 FRB 的包：各自一份 flutter_rust_bridge.yaml、一个原生库。
+/// （fast_crypto / fast_graph 走裸 dart:ffi，没有 codegen，不在这里。）
 const _frbPkgDirs = [
-  _rustPkgDir,
   'packages/foundation/fast_image',
   'packages/foundation/fast_press',
   'packages/foundation/fast_http',
@@ -92,15 +90,20 @@ const _frbPkgDirs = [
   'packages/foundation/fast_zip',
 ];
 
+/// codegen / ffigen 版本的锚点：读第一个 FRB 包的 pubspec（check_generated 保证各包一致）。
+const _frbAnchorDir = 'packages/foundation/fast_image';
+
 /// CLI 是整条链上唯一不由仓库钉版本的东西，而它默认开着 auto_upgrade_dependency ——
 /// 版本不一致时会反过来把 Cargo.toml / pubspec.yaml / lock 的钉版本改成它自己的。
 Future<void> _assertCodegenVersion() async {
-  final pinned = RegExp(
-    r'^\s*flutter_rust_bridge:\s*(\S+)\s*$',
-    multiLine: true,
-  ).firstMatch(File('$_rustPkgDir/pubspec.yaml').readAsStringSync())?.group(1);
+  final pinned =
+      RegExp(r'^\s*flutter_rust_bridge:\s*(\S+)\s*$', multiLine: true)
+          .firstMatch(File('$_frbAnchorDir/pubspec.yaml').readAsStringSync())
+          ?.group(1);
   if (pinned == null) {
-    stderr.writeln('✗ 读不到 $_rustPkgDir/pubspec.yaml 里的 flutter_rust_bridge 版本');
+    stderr.writeln(
+      '✗ 读不到 $_frbAnchorDir/pubspec.yaml 里的 flutter_rust_bridge 版本',
+    );
     exit(1);
   }
   final ProcessResult r;
@@ -158,7 +161,7 @@ void _assertFfigenVersion(String version) {
     stderr.writeln(
       '✗ ffigen 版本未验证：解析到 $version，需要 >=$_ffigenMin.0.0 且 <$_ffigenMaxExclusive.0.0。\n'
       '  产出坏绑定时 codegen 仍会 exit 0，所以这里只放行验过的区间。\n'
-      '  请把 $_rustPkgDir/pubspec.yaml 的 ffigen 钉回区间内后重跑 flutter pub get。',
+      '  请把 $_frbAnchorDir/pubspec.yaml 的 ffigen 钉回区间内后重跑 flutter pub get。',
     );
     exit(1);
   }

@@ -7,7 +7,7 @@ Moodiary — a Flutter + Rust diary app. **Layered pub-workspace monorepo**: 27 
 ## Tech Stack
 
 - **Flutter 3.47.0 / Dart 3.13.0** (FVM, `.fvmrc`)
-- **Rust** (pinned in `packages/foundation/moodiary_rust/rust/rust-toolchain.toml`), `flutter_rust_bridge` 2.13.0-beta.6 — native lib built & bundled via Native Assets build hooks (`rustup` required)
+- **Rust** (每个 `packages/foundation/fast_*/rust/rust-toolchain.toml` 各一份，`tool/check_generated.dart` 保证一致)，`flutter_rust_bridge` 2.13.0 — 原生库经 Native Assets 构建钩子构建并打包（需要 `rustup`）；fast_crypto / fast_graph 走裸 `dart:ffi` + `native_toolchain_rust`
 - **Android**: AGP 9.1.0 / Gradle 9.3.1 / KGP 2.4.0，内置 Kotlin（`android.builtInKotlin=true`）；daemon JVM 由 `gradle-daemon-jvm.properties` 钉在 21
 - **Riverpod** (dev) + code gen, **go_router**, **get_it**, **SQLite**（drift + FTS5，schema 真源在 `moodiary_data` 的 `.drift` 文件），**Freezed** + **json_serializable**
 
@@ -35,7 +35,7 @@ dart tool/task.dart editor         # rebuild editor asset only (needs corepack o
 dart tool/task.dart analyze        # layer check + flutter analyze
 dart tool/task.dart test           # 全仓 Dart 测试（CI 口径；SQLite 用例零门槛，仅 migration 的旧库用例要 ISAR_TEST_DYLIB）
 dart tool/task.dart test-mobile    # 只跑 mobile/ 的测试
-cd packages/foundation/moodiary_rust/rust && cargo test --workspace && cargo clippy --workspace --all-targets -- -D warnings
+for d in packages/foundation/fast_*/rust; do (cd $d && cargo clippy --all-targets -- -D warnings && cargo test); done
 cd packages/feature_base/moodiary_editor/editor && corepack pnpm type-check && corepack pnpm test
 ```
 
@@ -65,7 +65,6 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
       moodiary_logging/      #   日志；落盘路径由组合根注入，故不认识文件布局
       moodiary_i18n/         #   i18n：slang 文案与取串入口（见下）
       moodiary_router/       #   typed route primitives over go_router
-      moodiary_rust/         #   Rust FFI package (cargo workspace in rust/, built by hook/build.dart)
       fast_image/            #   图片管线：派生物 / 区域解码 / 分片看图页，自带 FRB 与原生库 libfastimage
       fast_press/            #   导出压印：IR → PDF(typst) / DOCX，自带 FRB 与原生库 libfastpress（只给 moodiary_export）
       fast_http/             #   HTTP 客户端/服务端 + WebDAV/S3，自带 FRB 与原生库 libfasthttp（只给 moodiary_http / moodiary_sync）
@@ -168,13 +167,31 @@ In-app layering within `mobile/lib` (same script): `gen → core → data → co
 - **PIN 别直接读写 `password`，走 `AppLockPin`**（存 Argon2id PHC 串）；「应用锁开没开」=
   有没有凭据（`AppLockPin.enabled`，进程内 ValueListenable，`main.dart` 里 load）。
 
-### Rust —— 详见 packages/foundation/moodiary_rust/CLAUDE.md
+### Rust —— 若干 `fast_*` 包，各自一个原生库
 
-moodiary_rust 正在按 `docs/rust-split-plan.md` 拆成若干 `fast_*` 包（各自一个 .so、按需
-延迟装载）；还没拆走的部分所有权用门面表达（foundation / rust），零基线闸门在
-`tool/check_layers.dart` 的 `_rustFacadeOwners`。workspace 分层、拆库与体积实测、
-依赖收窄的四条结论都在 `packages/foundation/moodiary_rust/CLAUDE.md`（碰那棵目录树时自动加载）。
-已拆出的包各自带 FRB 与原生库：`fast_image`（libfastimage，全仓开放）、`fast_press`
-（libfastpress，只给 `moodiary_export`）、`fast_http`（libfasthttp，只给 `moodiary_http` /
-`moodiary_sync`）、`fast_llm`（libfastllm，只给 `moodiary_assistant`）、`fast_text`（libfasttext，全仓开放，启动装载）、`fast_crypto`（libfastcrypto，**裸 FFI 不走 FRB**，全仓开放）、`fast_graph`（libfastgraph，裸 FFI，只给 `moodiary_diary`）、`fast_zip`（libfastzip，只给 `moodiary_export` / `moodiary_sync`）；归属闸门 `_nativePkgOwners`。`dart tool/task.dart gen-rust` 与 `licenses`
-对所有 FRB 包都跑（名单在 `tool/task.dart` 的 `_frbPkgDirs`）。
+业务 Rust 没有「专属」的部分：2026-09-03 按 `docs/rust-split-plan.md` 把原来的总 Rust 包整个拆成了
+foundation 层的 `fast_*` 包并删除。每个包自带一个 crate、一个原生库、一份 hook / about.toml /
+rust-toolchain / Cargo.lock，坑各记在自己的 CLAUDE.md：
+
+| 包 | 桥 | 归属（`_nativePkgOwners`） | 装载 |
+|---|---|---|---|
+| fast_image | FRB | 全仓 | 启动 `FastImageRuntime.init` |
+| fast_text | FRB | 全仓（含 `testing.dart` 替身） | 启动 `FastText.ensureInitialized` |
+| fast_http | FRB | moodiary_http / moodiary_sync | 首次请求 / 起服务 |
+| fast_llm | FRB | moodiary_assistant | 首次对话 |
+| fast_press | FRB | moodiary_export | 首次导出 |
+| fast_zip | FRB | moodiary_export / moodiary_sync | 首次打包 / 解压 |
+| fast_crypto | 裸 dart:ffi | 全仓 | 无 init，首次调用自动 |
+| fast_graph | 裸 dart:ffi | moodiary_diary | 无 init，首次调用自动 |
+
+- **FRB 包**：每个暴露 `XxxLib` 与幂等的 `Xxx.ensureInitialized()`；不透明句柄（`CancelToken`
+  之类）跨不了 .so，每库一枚，且是同步构造——**库没装载就构造会抛**，先 await 再 new。
+  改了 `rust/src/api` 必跑 `dart tool/task.dart gen-rust`（名单 `tool/task.dart` 的 `_frbPkgDirs`）。
+- **裸 FFI 包**：hook 里 `RustBuilder(assetName: 'src/ffi.dart')`，Dart 侧 `@Native` 直接解析符号；
+  C ABI 约定与 `catch_unwind` 纪律见 fast_crypto 的 CLAUDE.md（它是模板）。
+- **跨包版本一致**：没有 `[workspace.dependencies]` 了，同一 crate 在多个包里各钉一次；
+  `tool/check_generated.dart` 比对所有 `fast_*/rust/Cargo.toml` 的同名 crate、toolchain channel、
+  FRB / ffigen 的 pubspec 钉版本，漂了就红。
+- 拆库是投递策略，不是省体积手段：每库地板（带 FRB 运行时）实测 619 KB，fast_llm 与 fast_http
+  各带一份 reqwest/rustls/tokio 底座，已拍板接受。改了任何 `rust/Cargo.toml` 依赖必跑
+  `dart tool/task.dart licenses`。

@@ -14,7 +14,6 @@ import 'dart:convert';
 import 'dart:io';
 
 const _rustDirs = [
-  'packages/foundation/moodiary_rust/rust',
   'packages/foundation/fast_image/rust',
   'packages/foundation/fast_press/rust',
   'packages/foundation/fast_http/rust',
