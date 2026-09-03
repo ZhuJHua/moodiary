@@ -146,3 +146,52 @@ regex，press 33 MB 且按需装载，不值得为它合并任何东西。text /
   门面 `Aes` / `Argon2` 每次调用自己 `ensureInitialized`，调用方不用 init。
 - 第二节里「换成 Dart」的四项都没有采纳（zip / graph / http / llm 留 Rust）；网络层长期留 Rust。
 - 结果：8 → 6 个原生库，全部 FRB；两个 tokio 运行时归一。
+
+## 六、libfastpress 33 MB 里是什么（2026-09-03，Android arm64 stripped 实测）
+
+段：`.text` 18.42 MB、`.rodata` 8.73、`.eh_frame` 1.83、`.rela.dyn` 1.76、`.data.rel.ro` 1.33、
+`.gcc_except_table` 0.63。typst 自带字体没进来（`typst-assets` 的 `fonts` 没开）。
+
+**`.rodata` 8.73 MB**（符号表只认得 0.9 MB，其余是 `include_bytes!` 的匿名块，用资源文件的字节片段
+回搜 .so 归因）：
+
+| 数据 | MB | 日记导出用不用 |
+|---|---:|---|
+| hayagriva 参考文献 CSL 样式 + locale（cbor） | 2.95 | 不用 |
+| two-face 语法包（typst `raw` 的高亮，我们 PDF / DOCX 代码块都用） | 2.65 | **用** |
+| hypher 48 种语言的连字模式 | 1.11 | 中文不用，西文 justify 时才用 |
+| unicode / icu 表、typst 内置函数文档串等散项 | ≈ 2.0 | 混杂 |
+
+**`.text` 18.4 MB**（宿主 bloat 归因，按子树）：
+
+| 子树 | MiB | 日记导出用不用 |
+|---|---:|---|
+| typst 核心（library / layout / eval / syntax / realize） | 3.80 | 用 |
+| std / core / alloc（泛型实例化） | 3.54 | 地板 |
+| 参考文献 hayagriva / citationberg | 1.52 | 不用 |
+| 光栅图解码 image / webp / jpeg / png | 1.29 | 用（照片） |
+| PDF 当图片嵌入 hayro | 1.19 | 不用 |
+| 字体 / shaping rustybuzz / skrifa | 1.02 | 用 |
+| 插件 wasmi / wasmparser | 0.95 | 不用 |
+| SVG usvg / resvg / typst_svg | 0.79 | 不用 |
+| 代码高亮 syntect / regex | 0.74 | 用 |
+| PDF 写出 krilla | 0.71 | 用 |
+| docx-rs / zip | 0.52 | 用 |
+
+「永远不会执行」的子树合计：`.text` 4.5 + `.rodata` 3.0 + 它们摊到的重定位 / unwind ≈ **8 MB**。
+它们关不掉的根因见 memory `typst-size-tradeoff`：typst 全家零 feature、官方拒绝、过程宏不支持 cfg、
+`hayro → typst-svg → typst-html → typst-realize` 这条链把排版必需件和 SVG / HTML 锁在一起。
+
+**可选的刀**（都是实测或按上表推算）：
+
+| 刀 | 省 | 代价 / 风险 |
+|---|---:|---|
+| `lto = "fat"`（只对 fast_press） | **−1.6 MB**（34.70 → 33.07 MB，实测） | 构建 198 s；零风险 |
+| `[patch.crates-io]` 桩掉 hayagriva（+citationberg） | ≈ −4.5 MB | 一个桩 crate 复刻 typst-library 用到的类型签名（约 200–300 行）；我们从不发 `#bibliography` / `#cite`，桩路径不会被执行；typst 升级时桩编不过会立刻暴露，不是静默回归 |
+| 再桩 hayro / wasmi / usvg+resvg | ≈ −1.3 / −1.0 / −0.9 MB | 同上，各一个桩；四个桩合计 ≈ −8 MB → 约 25 MB |
+| `panic = "abort"` | ≈ −3 MB | 失去 FRB 的 panic → Dart 异常兜底，typst 在脏输入上会杀进程；此前已否决 |
+| `opt-level` 降档 | −4 MB 量级 | 排版 +19%；此前已否决 |
+| 去掉导出的代码高亮 | −3.4 MB | 产品功能退化，不建议 |
+| Android Play Feature Delivery：fast_press 做按需下载模块 | 首包 −33 MB（下载约 −15 MB） | 只对 Play 分发有效，iOS 无对应机制；要动 Gradle dynamic feature + split 安装后的 dlopen 路径 |
+
+下载体积口径：APK 里 .so 不压缩，Play 下发压缩后约为 raw 的 45%（33 MB ≈ 15 MB 下载）。
