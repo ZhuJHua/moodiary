@@ -37,6 +37,11 @@ dependencies:
   url_launcher: 6.3.2
   meta: 1.19.0
   injectable: 3.0.0
+  # 自家 fork（modernize-flutter-3.47：SwiftPM / built-in Kotlin / quickjs-ng code asset），钉 commit。
+  flutter_js:
+    git:
+      url: https://github.com/ZhuJHua/flutter_js.git
+      ref: 2dd6d4d16352888d018c81b4fb3168bac7a17650
 
 dev_dependencies:
   flutter_test:

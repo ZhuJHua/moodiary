@@ -90,7 +90,7 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
       moodiary_export/       #   导出 Markdown/Word/PDF + 本地备份导入
       moodiary_diary/        #   diary CRUD/search/category/calendar/map/recycle
       moodiary_sync/         #   sync engine + UI
-      moodiary_assistant/    #   AI assistant (flutter_chat_ui + rig)
+      moodiary_assistant/    #   AI assistant (flutter_chat_ui + rig)；runJavascript 沙箱走 flutter_js 自家 fork（git 钉 commit，quickjs-ng code asset）
       moodiary_media/        #   media library
       moodiary_lock/         #   app lock
       moodiary_share/        #   diary sharing
