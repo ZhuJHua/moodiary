@@ -17,5 +17,12 @@ void main(List<String> args) async {
       cratePath: 'rust',
       extraCargoEnvironmentVariables: env,
     ).run(input: input, output: output);
+    // native_toolchain_rust 只把 crate 自己的 src 文件（cargo dep-info）登记为依赖：
+    // 改了 Cargo.toml / Cargo.lock（换依赖、换 [patch]、改 profile）钩子不会重跑，
+    // hooks_runner 会一直复用上一份 .so。显式登记这两个文件把这条路堵上。
+    output.addDependencies([
+      input.packageRoot.resolve('rust/Cargo.toml'),
+      input.packageRoot.resolve('rust/Cargo.lock'),
+    ]);
   });
 }

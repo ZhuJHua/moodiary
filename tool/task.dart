@@ -10,7 +10,7 @@
 //   dart tool/task.dart build-runner     # 代码生成
 //   dart tool/task.dart i18n             # slang 文案生成（moodiary_i18n + mui）
 //   dart tool/task.dart licenses         # 第三方许可清单（Rust crates + 编辑器 npm）
-//   dart tool/task.dart clean            # 删除 editor 构建产物
+//   dart tool/task.dart clean            # 删除 editor 构建产物 + 原生库构建钩子缓存
 //
 // 用 `dart`（非 `dart run`）调用本脚本可跳过 flutter_rust_bridge 的原生构建钩子。
 import 'dart:io';
@@ -291,18 +291,20 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
     await _editor();
   },
   'clean': (_) async {
-    final dir = Directory(
+    // 编辑器资源 + 原生库构建钩子的缓存。后者在 workspace 根的 .dart_tool/hooks_runner/，
+    // `flutter clean` 只清 mobile/ 下的目录碰不到它；而钩子只跟踪 crate 自己的 src，
+    // 换了依赖来源不一定重跑，删掉最稳。
+    for (final path in [
       'packages/feature_base/moodiary_editor/assets/editor',
-    );
-    if (dir.existsSync()) {
-      dir.deleteSync(recursive: true);
-      stdout.writeln(
-        '已删除 packages/feature_base/moodiary_editor/assets/editor/',
-      );
-    } else {
-      stdout.writeln(
-        'packages/feature_base/moodiary_editor/assets/editor/ 不存在，跳过。',
-      );
+      '.dart_tool/hooks_runner',
+    ]) {
+      final dir = Directory(path);
+      if (dir.existsSync()) {
+        dir.deleteSync(recursive: true);
+        stdout.writeln('已删除 $path/');
+      } else {
+        stdout.writeln('$path/ 不存在，跳过。');
+      }
     }
   },
 };

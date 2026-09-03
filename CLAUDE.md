@@ -188,6 +188,9 @@ about.toml / rust-toolchain / Cargo.lock，坑各记在自己的 CLAUDE.md：
 - **跨包版本一致**：没有 `[workspace.dependencies]` 了，同一 crate 在多个包里各钉一次；
   `tool/check_generated.dart` 比对所有 `fast_*/rust/Cargo.toml` 的同名 crate、toolchain channel、
   FRB / ffigen 的 pubspec 钉版本，漂了就红。
+- **换了 Rust 依赖 / `[patch]` / profile 之后 APK 体积没变，先怀疑钩子缓存**：hooks_runner 的缓存在
+  workspace 根的 `.dart_tool/hooks_runner/`，`flutter clean` 碰不到；各 hook 已显式登记 Cargo.toml /
+  Cargo.lock 为依赖，改动能触发重跑，仍不放心就 `dart tool/task.dart clean`。
 - 拆库是投递策略，不是省体积手段：每库地板（带 FRB 运行时）实测 619 KB；两库之间共享 crate 的
   实际字节看 `docs/native-libs-review.md` 第四节，依赖树重叠不等于二进制重复。改了任何 `rust/Cargo.toml` 依赖必跑
   `dart tool/task.dart licenses`。
