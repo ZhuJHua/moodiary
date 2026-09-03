@@ -1,9 +1,29 @@
 import 'dart:io';
 
 import 'package:fast_crypto/fast_crypto.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show ExternalLibrary;
 import 'package:flutter_test/flutter_test.dart';
 
+/// `flutter test` 会为宿主构建 hook，产物落在 `build/native_assets/<os>/`；FRB 默认去
+/// rust/target/release/ 找，那份要么没有要么陈旧，所以显式指过去。
+String _hostLibrary() {
+  final (dir, file) = switch (Platform.operatingSystem) {
+    'macos' => ('macos', 'libfastcrypto.dylib'),
+    'linux' => ('linux', 'libfastcrypto.so'),
+    'windows' => ('windows', 'fastcrypto.dll'),
+    final os => throw UnsupportedError(os),
+  };
+  return 'build/native_assets/$dir/$file';
+}
+
 void main() {
+  setUpAll(
+    () => FastCryptoLib.init(
+      externalLibrary: ExternalLibrary.open(_hostLibrary()),
+    ),
+  );
+
   // 测试里把 Argon2 成本压到最低：默认 64 MiB / 3 轮是给真实口令用的。盐至少 8 字节。
   Future<List<int>> key() => Aes.deriveKey(
     salt: 'salt-salt',

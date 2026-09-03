@@ -15,6 +15,7 @@ import 'dart:io';
 
 /// 带自己 FRB 的包，与 tool/task.dart 的 _frbPkgDirs 同一份。
 const _frbPkgDirs = [
+  'packages/foundation/fast_crypto',
   'packages/foundation/fast_image',
   'packages/foundation/fast_press',
   'packages/foundation/fast_tokenizer',

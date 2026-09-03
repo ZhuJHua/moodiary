@@ -1,21 +1,19 @@
 # fast_crypto
 
 AES-256-GCM 对称加密（`aes.rs`，含整文件加解密与 Argon2id 密钥派生）与 Argon2id 密码哈希
-（`password.rs`）。**裸 FFI，不走 FRB**：原生库 **libfastcrypto** 由 `native_toolchain_rust` 的
-`RustBuilder` 在 `hook/build.dart` 里构建并登记为 code asset，Dart 侧 `lib/src/ffi.dart` 用
-`@Native` 直接解析符号——没有 init、没有 dlopen、没有 codegen，首次调用自动装载。
-2026-09-03 从 moodiary_rust 的 `crypto` crate 拆出来，是后续裸 FFI 包（fast_graph）的模板。
+（`password.rs`）。自带 FRB（入口类 `FastCryptoLib`）与原生库 **libfastcrypto**。
+2026-09-03 从旧 moodiary_rust 的 `crypto` crate 拆出来；曾短暂改成裸 `dart:ffi`，同日按
+「fast_* 统一走 FRB」改回（裸 FFI 省的只是 0.3 MB 地板，换来的是手写 C ABI 与 catch_unwind 纪律）。
 
 - 多个消费方（moodiary_storage 的应用锁 PIN、moodiary_sync 的信封加密 / LAN 协议），不进
   `_nativePkgOwners`。
-- **C ABI 约定**（`rust/src/ffi.rs` 文件头）：入参「指针 + 长度」、出参 `FfiBuf`（0 = 载荷 /
-  1 = 业务错误 / 2 = panic，都是 Rust 堆、都由 `fastcrypto_buf_free` 归还）、**每个入口
-  `catch_unwind`**——panic 越过 FFI 边界是 UB，FRB 那套兜底在这里不存在。Dart 侧 `_call` 把
-  出参拷成 Dart 内存再归还，非 0 码抛 `FastCryptoException`。
-- 全部跑在 `Isolate.run`：Argon2 派生（默认 64 MiB / 3 轮）与整文件加解密都是几十毫秒起的活，
-  `@Native` 在任何 isolate 都能直接调。
-- `hook/build.dart` 的 `assetName: 'src/ffi.dart'` 必须与 `@Native` 声明所在文件一致（asset id
-  就是那个 `package:` URI）。Apple 部署目标映射与 FRB 包同一段。
-- 单测（`test/crypto_test.dart`）真跑原生库：`flutter test` 会为宿主构建 hook。
-- `argon2` 钉预发布版 `=0.6.0-rc.8`，`parallel` feature 对 p=1 无效别开；改了 `rust/Cargo.toml`
-  依赖必跑 `dart tool/task.dart licenses`。
+- **调用方不用 init**：`Aes` / `Argon2` 是手写门面（`lib/src/crypto.dart`），每个方法先
+  `FastCrypto.ensureInitialized()` 再调生成的 `api.*`，Rust 的 `Err` 统一转成 `FastCryptoException`。
+  这也是为什么 api 是自由函数（`aes_derive_key` …）而不是 opaque 类。
+- 全部跑在 FRB 线程池上：Argon2 派生（默认 64 MiB / 3 轮）与整文件加解密都是几十毫秒起的活。
+  实测（本机）：应用锁 Argon2id 13 ms、同步 KDF 79 ms、AES-GCM 20 MiB 11 ms；纯 Dart 分别慢
+  6× / 5× / 100×，这是它留在 Rust 的理由。
+- `aes_decrypt_file` 的 `skip_prefix` 故意用 u32：FRB 把 u64 映射成 BigInt，Dart 侧拿 int 更顺手。
+- `argon2` 钉预发布版 `=0.6.0-rc.8`，`parallel` feature 对 p=1 无效别开；Argon2 盐至少 8 字节。
+- 单测（`test/crypto_test.dart`）真跑原生库：`flutter test` 会为宿主构建 hook，测试用
+  `build/native_assets/<os>/` 里的产物初始化。

@@ -136,3 +136,13 @@ gimli / addr2line / object ≈ 0.27——FRB 直接依赖 backtrace crate，去�
 http → sync / llm，延迟装载保留。press 与 image / text 之间那 1.3 MiB 是 typst 自带的解码器与
 regex，press 33 MB 且按需装载，不值得为它合并任何东西。text / crypto / graph 与谁都不重复，
 并进去只省各自 0.2–0.4 MiB 的地板：text 启动装载应独立，crypto 留裸 FFI，graph 直接 Dart 化。
+
+## 五、执行结果（2026-09-03）
+
+- `moodiary_rust` = http → sync / llm（共享网络底座）+ graph（用户拍板并入，不 Dart 化）；四个门面
+  各有主，延迟装载。
+- `fast_tokenizer`（原 fast_text）、`fast_image`、`fast_press`、`fast_zip`、`fast_crypto` 独立。
+- **fast_* 统一走 FRB**：fast_crypto 从裸 dart:ffi 改回 FRB（用户拍板：FRB 成熟，0.3 MB 地板可以接受）。
+  门面 `Aes` / `Argon2` 每次调用自己 `ensureInitialized`，调用方不用 init。
+- 第二节里「换成 Dart」的四项都没有采纳（zip / graph / http / llm 留 Rust）；网络层长期留 Rust。
+- 结果：8 → 6 个原生库，全部 FRB；两个 tokio 运行时归一。

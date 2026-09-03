@@ -80,8 +80,8 @@ Future<void> _editor() async {
 }
 
 /// 带自己 FRB 的包：各自一份 flutter_rust_bridge.yaml、一个原生库。
-/// （fast_crypto / fast_graph 走裸 dart:ffi，没有 codegen，不在这里。）
 const _frbPkgDirs = [
+  'packages/foundation/fast_crypto',
   'packages/foundation/fast_image',
   'packages/foundation/fast_press',
   'packages/foundation/fast_tokenizer',

@@ -1,5 +1,5 @@
 name: fast_crypto
-description: "Fast crypto primitives — AES-256-GCM and Argon2id over a bare dart:ffi binding to its own Rust native library (libfastcrypto), built with native_toolchain_rust."
+description: "Fast crypto primitives — AES-256-GCM and Argon2id, backed by its own Rust native library (libfastcrypto) via flutter_rust_bridge."
 version: 0.0.1
 publish_to: none
 
@@ -11,13 +11,13 @@ environment:
 
 dependencies:
   code_assets: 1.2.1
-  ffi: 2.2.0
   flutter:
     sdk: flutter
-  hooks: 2.2.0
-  native_toolchain_rust: 1.0.6
+  flutter_rust_bridge: 2.13.0
+  flutter_rust_bridge_hooks: 2.13.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  ffigen: 21.0.0
   moodiary_lint: 0.0.1

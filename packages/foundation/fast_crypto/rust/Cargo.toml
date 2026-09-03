@@ -4,18 +4,22 @@ version = "0.1.0"
 edition = "2024"
 
 [lib]
-# 产物名 libfastcrypto.*：native_toolchain_rust 按 lib.name 取文件名，Dart 侧 `@Native`
-# 经 hook 登记的 code asset（`src/ffi.dart`）解析符号，不用 dlopen。
+# 产物名 libfastcrypto.*：native_toolchain_rust 按 lib.name 取文件名，`FastCryptoLib.init()`
+# 也按这个 stem 找库。
 name = "fastcrypto"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
+flutter_rust_bridge = "=2.13.0"
 anyhow = "=1.0.104"
 ring = "=0.17.14"
 # `parallel` feature 对我们无效（p=1 只有一条 lane），别开。
 argon2 = { version = "=0.6.0-rc.8", features = ["default"] }
 
-# 裸 FFI 没有 FRB 替我们兜 panic：每个 extern "C" 入口自己 catch_unwind，所以 panic 仍不 abort。
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
+
+# 与其他 fast_* 同口径；不要加 panic = "abort"（FRB 靠 catch_unwind 把 panic 转成 Dart 异常）。
 [profile.release]
 opt-level = 3
 lto = "thin"

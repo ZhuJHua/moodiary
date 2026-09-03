@@ -7,7 +7,7 @@ Moodiary — a Flutter + Rust diary app. **Layered pub-workspace monorepo**: 27 
 ## Tech Stack
 
 - **Flutter 3.47.0 / Dart 3.13.0** (FVM, `.fvmrc`)
-- **Rust** (每个 `packages/foundation/fast_*/rust/rust-toolchain.toml` 各一份，`tool/check_generated.dart` 保证一致)，`flutter_rust_bridge` 2.13.0 — 原生库经 Native Assets 构建钩子构建并打包（需要 `rustup`）；fast_crypto / fast_graph 走裸 `dart:ffi` + `native_toolchain_rust`
+- **Rust** (每个原生库包的 `rust/rust-toolchain.toml` 各一份，`tool/check_generated.dart` 保证一致)，`flutter_rust_bridge` 2.13.0 — 原生库经 Native Assets 构建钩子构建并打包（需要 `rustup`）
 - **Android**: AGP 9.1.0 / Gradle 9.3.1 / KGP 2.4.0，内置 Kotlin（`android.builtInKotlin=true`）；daemon JVM 由 `gradle-daemon-jvm.properties` 钉在 21
 - **Riverpod** (dev) + code gen, **go_router**, **get_it**, **SQLite**（drift + FTS5，schema 真源在 `moodiary_data` 的 `.drift` 文件），**Freezed** + **json_serializable**
 
@@ -67,10 +67,9 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
       moodiary_router/       #   typed route primitives over go_router
       fast_image/            #   图片管线：派生物 / 区域解码 / 分片看图页，自带 FRB 与原生库 libfastimage
       fast_press/            #   导出压印：IR → PDF(typst) / DOCX，自带 FRB 与原生库 libfastpress（只给 moodiary_export）
-      moodiary_rust/         #   网络业务库：http 客户端/服务端 → WebDAV/S3 / rig 对话，共享一套 reqwest 底座，libmoodiary_rust（三个门面各有主，延迟装载）
+      moodiary_rust/         #   业务库：http 客户端/服务端 → WebDAV/S3 / rig 对话（共享一套 reqwest 底座）+ 图布局，libmoodiary_rust（四个门面各有主，延迟装载）
       fast_tokenizer/        #   jieba 分词 + HF tokenizer，自带 FRB 与原生库 libfasttokenizer（启动装载，带测试替身）
-      fast_crypto/           #   AES-GCM + Argon2id，裸 dart:ffi + native_toolchain_rust，原生库 libfastcrypto（无 init）
-      fast_graph/            #   ForceAtlas2 力导向布局流，裸 dart:ffi，原生库 libfastgraph（只给 moodiary_diary）
+      fast_crypto/           #   AES-GCM + Argon2id，自带 FRB 与原生库 libfastcrypto（门面自带 ensureInitialized，调用方不用 init）
       fast_zip/              #   zip 写/解压，自带 FRB 与原生库 libfastzip（只给 moodiary_export / moodiary_sync）
       moodiary_utils/        #   pure utils + content converters (tiptap/markdown/quill)
       mui/                   #   设计系统：material_ui 的**补充**（详见下）
@@ -170,24 +169,22 @@ In-app layering within `mobile/lib` (same script): `gen → core → data → co
 
 原则（2026-09-03 拍板，账在 `docs/native-libs-review.md`）：**允许拆分，但不重复依赖**。有独立价值的
 能力各自成包；共享一套网络底座的 http / sync / llm 合在 `moodiary_rust` 里（包内 `http → sync / llm`
-分层，实测这是唯一一处真实的二进制重复，2 MiB）。每个包自带一个 crate、一个原生库、一份 hook /
+分层，实测这是唯一一处真实的二进制重复，2 MiB），graph 也放那里（不值得单独一个库）。每个包自带一个 crate、一个原生库、一份 hook /
 about.toml / rust-toolchain / Cargo.lock，坑各记在自己的 CLAUDE.md：
 
 | 包 | 桥 | 归属 | 装载 |
 |---|---|---|---|
-| moodiary_rust | FRB | 门面各有主：http.dart → moodiary_http / sync.dart → moodiary_sync / llm.dart → moodiary_assistant（`_rustFacadeOwners`） | 首次请求 / 起服务 / 对话 |
+| moodiary_rust | FRB | 门面各有主：http.dart → moodiary_http / sync.dart → moodiary_sync / llm.dart → moodiary_assistant / graph.dart → moodiary_diary（`_rustFacadeOwners`） | 首次请求 / 起服务 / 对话 / 开图谱 |
 | fast_tokenizer | FRB | 全仓（含 `testing.dart` 替身） | 启动 `FastTokenizer.ensureInitialized` |
 | fast_image | FRB | 全仓 | 启动 `FastImageRuntime.init` |
 | fast_press | FRB | moodiary_export（`_nativePkgOwners`） | 首次导出 |
 | fast_zip | FRB | moodiary_export / moodiary_sync（`_nativePkgOwners`） | 首次打包 / 解压 |
-| fast_crypto | 裸 dart:ffi | 全仓 | 无 init，首次调用自动 |
-| fast_graph | 裸 dart:ffi | moodiary_diary（`_nativePkgOwners`） | 无 init，首次调用自动 |
+| fast_crypto | FRB | 全仓 | 门面每次调用自己 ensureInitialized |
 
 - **FRB 包**：每个暴露 `XxxLib` 与幂等的 `Xxx.ensureInitialized()`；不透明句柄（`CancelToken`
   之类）跨不了 .so，每库一枚，且是同步构造——**库没装载就构造会抛**，先 await 再 new。
   改了 `rust/src/api` 必跑 `dart tool/task.dart gen-rust`（名单 `tool/task.dart` 的 `_frbPkgDirs`）。
-- **裸 FFI 包**：hook 里 `RustBuilder(assetName: 'src/ffi.dart')`，Dart 侧 `@Native` 直接解析符号；
-  C ABI 约定与 `catch_unwind` 纪律见 fast_crypto 的 CLAUDE.md（它是模板）。
+- **全部走 FRB**（2026-09-03 拍板：裸 dart:ffi 省的只是 0.3 MB 地板，不值得手写 C ABI）。
 - **跨包版本一致**：没有 `[workspace.dependencies]` 了，同一 crate 在多个包里各钉一次；
   `tool/check_generated.dart` 比对所有 `fast_*/rust/Cargo.toml` 的同名 crate、toolchain channel、
   FRB / ffigen 的 pubspec 钉版本，漂了就红。
