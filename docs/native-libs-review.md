@@ -102,3 +102,37 @@ Argon2 慢 5–6 倍勉强能忍（手机上应用锁解锁大概 0.3–0.5 秒�
 
 顺序：fast_zip（半天，最低风险）→ fast_graph（一天，帧对帧校验）→ fast_http（2–3 天，LAN 与
 云端真实服务器回归）→ fast_llm（3–4 天，三家供应商联网回归）。每项一个提交，照拆分时的做法。
+
+## 四、重复依赖实测（2026-09-03，cargo-bloat 宿主 `.text` 归因）
+
+判据从「功能独立」改成「二进制里真的重复了什么」。两两之间共享 crate 的实际字节（MiB）：
+
+| | image | press | http | llm | text | zip | crypto | graph |
+|---|---|---|---|---|---|---|---|---|
+| image | – | 1.30 | 0.62 | 0.57 | 0.69 | 0.42 | 0.23 | 0.23 |
+| press | | – | 1.02 | 1.62 | 1.49 | 0.57 | 0.23 | 0.23 |
+| http | | | – | **2.07** | 0.81 | 0.42 | 0.24 | 0.23 |
+| llm | | | | – | 0.84 | 0.41 | 0.24 | 0.23 |
+| text | | | | | – | 0.42 | 0.23 | 0.23 |
+| zip | | | | | | – | 0.22 | 0.23 |
+| crypto | | | | | | | – | 0.21 |
+
+每个库必带的地板（std 用到的那部分 0.2–0.4 MiB、tokio + FRB + 线程池 ≈ 0.35、backtrace 那套
+gimli / addr2line / object ≈ 0.27——FRB 直接依赖 backtrace crate，去不掉）占了矩阵里绝大部分数字。
+扣掉地板后**真正的重复**只有四处：
+
+| 重复 | 实际字节 | 内容 |
+|---|---:|---|
+| http ∩ llm | ≈ 2.0 MiB | rustls 314K、ring 157K、reqwest 112K、hyper 86K、hyper_util、webpki、url、brotli……整套网络底座 |
+| press ∩ image | ≈ 0.7 MiB | typst-library 自带的 image / image_webp / zune_jpeg / tiff / png 解码 |
+| press ∩ text | ≈ 0.6 MiB | syntect 与 tokenizers 各带一份 regex_automata / regex_syntax / aho_corasick / fancy_regex |
+| press ∩ llm | ≈ 0.3 MiB | serde / serde_core |
+
+已证伪：`cargo tree` 里 regex 出现在 6 个库，但二进制里没有——去掉 FRB 的 `user-utils`
+实测只省 96 字节（链接期早剥掉了）；`rust-async` 去不掉（生成代码依赖 `Lockable`）。
+**依赖树重叠不等于二进制重复，只认 bloat。**
+
+结论：按「不重复依赖」分组，唯一该合并的是 **http + llm（含 sync）→ moodiary_rust**，包内分层
+http → sync / llm，延迟装载保留。press 与 image / text 之间那 1.3 MiB 是 typst 自带的解码器与
+regex，press 33 MB 且按需装载，不值得为它合并任何东西。text / crypto / graph 与谁都不重复，
+并进去只省各自 0.2–0.4 MiB 的地板：text 启动装载应独立，crypto 留裸 FFI，graph 直接 Dart 化。
