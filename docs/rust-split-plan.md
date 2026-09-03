@@ -2,7 +2,8 @@
 
 > ✅ 2026-09-03 已全部落地：fast_press → fast_http → fast_llm → fast_text → fast_crypto（裸 FFI 模板）→
 > fast_graph（裸 FFI）→ fast_zip → 字体 Dart 化 + 删除 moodiary_rust，每步一个提交。以下是决策时的原文。
-> 后续变动见 docs/native-libs-review.md 第五节（同日回收成 6 个库；fast_zip 当晚改纯 Dart `archive`，剩 5 个）。
+> 后续变动见 docs/native-libs-review.md 第五节（同日回收成 6 个库；fast_zip 当晚改纯 Dart `archive`，
+> 次日因局域网线上兼容又改回 Rust，仍是 6 个）。
 
 目标（2026-09-03 已拍板，见第四节「决策」）：`moodiary_rust` 只留 moodiary 专属的业务 Rust；与 moodiary 无关的能力各自成包（`fast_*`，
 foundation 层，自带 FRB 与原生库，形状同 fast_image / fast_press），并且**按需延迟初始化**，

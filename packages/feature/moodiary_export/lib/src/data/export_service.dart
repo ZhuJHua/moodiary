@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:fast_image/fast_image.dart';
 import 'package:fast_press/fast_press.dart' as press;
+import 'package:fast_zip/fast_zip.dart' as archive;
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
@@ -487,17 +488,23 @@ class ExportService {
     String zipPath,
     press.CancelToken token,
   ) async {
-    final zip = await ZipWriter.create(zipPath);
+    await archive.FastZip.ensureInitialized();
+    final zip = await archive.Zip.newInstance(filePath: zipPath);
+    // 中途抛错就到不了 finish()，不 dispose 则 ZipWriter 一直攥着 fd 到 GC。
     try {
       for (final entity in dir.listSync(recursive: true)) {
         if (entity is! File) continue;
         _throwIfCancelled(token);
-        await zip.addFile(p.relative(entity.path, from: dir.path), entity.path);
+        await zip.addFile(
+          filePath: entity.path,
+          zipPath: p.relative(entity.path, from: dir.path),
+          // 媒体与 docx/pdf 本身都是已压缩格式，再 deflate 一遍只费时间。
+          stored: true,
+        );
       }
       await zip.finish();
-    } catch (_) {
-      await zip.abort();
-      rethrow;
+    } finally {
+      zip.dispose();
     }
     return zipPath;
   }

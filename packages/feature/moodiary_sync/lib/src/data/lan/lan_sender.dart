@@ -4,7 +4,6 @@ import 'dart:typed_data';
 
 import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/impl/local_archive.dart';
 import 'package:moodiary_sync/src/data/lan/lan_protocol.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
@@ -64,14 +63,14 @@ class LanSendResult {
   }
 }
 
-/// 局域网发送端：握手 → 取对方 manifest → 增量打包（条目加密的 zip）→ 流式上传 →
+/// 局域网发送端：握手 → 取对方 manifest → 增量打包（加密 zip）→ 流式上传 →
 /// 解密对方导入报告。请求全部经统一 [IHttpClient]；一次性会话，无持久状态。
 /// 握手比对协议版本，之后每个请求都带 [lanProtoHeader] 让接收端再比一次。
 class LanSender {
   LanSender({
     this._crypto = const RustLanCrypto(),
     this._http,
-    Future<(String, int)> Function(SyncManifest remote, SyncCipher cipher)?
+    Future<(String, int)> Function(SyncManifest remote, String zipPassword)?
     archiveBuilder,
     Future<String> Function()? appVersion,
   }) : _archiveBuilder = archiveBuilder ?? _buildArchive,
@@ -79,12 +78,11 @@ class LanSender {
 
   static Future<(String, int)> _buildArchive(
     SyncManifest remote,
-    SyncCipher cipher,
-  ) => LocalArchive.exportDelta(remote: remote, cipher: cipher);
+    String zipPassword,
+  ) => LocalArchive.exportDelta(remote: remote, zipPassword: zipPassword);
 
   final LanCrypto _crypto;
-  final Future<(String, int)> Function(SyncManifest, SyncCipher)
-  _archiveBuilder;
+  final Future<(String, int)> Function(SyncManifest, String) _archiveBuilder;
   final Future<String> Function() _appVersion;
 
   IHttpClient? _http;
@@ -133,7 +131,7 @@ class LanSender {
       onProgress?.call(const LanSendProgress(.packing));
       final (path, count) = await _archiveBuilder(
         manifest,
-        lanArchiveCipher(key),
+        lanZipPassword(key),
       );
       zipPath = path;
       if (count == 0) return const LanSendResult(entryCount: 0);

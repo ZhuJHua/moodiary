@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
-import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/impl/local_archive.dart';
 import 'package:moodiary_sync/src/data/lan/lan_protocol.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
@@ -58,7 +57,7 @@ class LanReceiveFailed extends LanReceiveState {
 /// 即作废）。三个端点：
 /// - `GET  handshake` → 明文 `{app, proto, ver, salt}`；
 /// - `GET  manifest`  → 会话密钥加密的本机 manifest 投影（发送方据此算增量）；
-/// - `POST archive`   → 条目加密的 zip（服务器层已流式落盘）→ 解压导入（engine.pull，
+/// - `POST archive`   → 加密 zip（服务器层已流式落盘）→ 解压导入（engine.pull，
 ///   LWW 与云同步一致）→ 回加密报告。一次只处理一个归档（并发 409）。
 ///
 /// 带令牌的两个端点先验令牌再验 [lanProtoHeader]：协议不同回 426，且只有持会话密钥的
@@ -68,7 +67,7 @@ class LanReceiverService {
     this._crypto = const RustLanCrypto(),
     this._server,
     Future<SyncManifest> Function()? manifestBuilder,
-    Future<SyncReport> Function(String zipPath, SyncCipher cipher)?
+    Future<SyncReport> Function(String zipPath, String zipPassword)?
     archiveApplier,
     this._tempDirPath,
     Future<String> Function()? appVersion,
@@ -76,12 +75,12 @@ class LanReceiverService {
        _archiveApplier = archiveApplier ?? _applyArchive,
        _appVersion = appVersion ?? lanLocalAppVersion;
 
-  static Future<SyncReport> _applyArchive(String zipPath, SyncCipher cipher) =>
-      LocalArchive.import(zipPath, cipherProvider: () async => cipher);
+  static Future<SyncReport> _applyArchive(String zipPath, String zipPassword) =>
+      LocalArchive.import(zipPath, password: zipPassword);
 
   final LanCrypto _crypto;
   final Future<SyncManifest> Function() _manifestBuilder;
-  final Future<SyncReport> Function(String, SyncCipher) _archiveApplier;
+  final Future<SyncReport> Function(String, String) _archiveApplier;
   final String? _tempDirPath;
   final Future<String> Function() _appVersion;
 
@@ -156,14 +155,13 @@ class LanReceiverService {
     'salt': _salt,
   });
 
-  /// 令牌通过后再比协议版本：不等（含没带头的旧发送端）回 426。
+  /// 令牌通过后再比协议版本：不等回 426。头缺失 = 协议 2 的发送端（那一版还没有这个
+  /// 头），按 2 放行；[lanProtoVersion] 一旦离开 2，这条宽容要跟着删。
   Future<HttpServerResponse?> _admit(HttpServerRequest request) async {
     final denied = await _checkAuth(request);
     if (denied != null) return denied;
-    if (int.tryParse(request.headers[lanProtoHeader] ?? '') ==
-        lanProtoVersion) {
-      return null;
-    }
+    final peer = int.tryParse(request.headers[lanProtoHeader] ?? '') ?? 2;
+    if (peer == lanProtoVersion) return null;
     final message = l10n.sync.errVersionMismatchDetail(
       sender: lanDisplayVersion(request.headers[lanVersionHeader]),
       receiver: lanDisplayVersion(version),
@@ -227,7 +225,7 @@ class LanReceiverService {
         await inlineSpool.writeAsBytes(request.body);
         zipPath = inlineSpool.path;
       }
-      final report = await _archiveApplier(zipPath, lanArchiveCipher(_key));
+      final report = await _archiveApplier(zipPath, lanZipPassword(_key));
       state.value = LanReceiveDone(report);
       final body = await _crypto.encrypt(
         _key,

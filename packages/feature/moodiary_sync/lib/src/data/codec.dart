@@ -18,13 +18,7 @@ class SyncCipher {
   /// 原始 32 字节 AES-256 key；`null` = 明文模式。
   final List<int>? aesKey;
 
-  /// 为真时明文对象一律拒收。局域网接收端把「能解开」当作对端持有会话密钥的证明，
-  /// 不挡的话一个完全不加密的伪造包就能带着 tombstone 进来删光本机日记——校验的是来源，
-  /// 不是机密性。
-  final bool requireEncrypted;
-
-  const SyncCipher.withKey(this.aesKey, {this.requireEncrypted = false})
-    : assert(aesKey != null || !requireEncrypted);
+  const SyncCipher.withKey(this.aesKey);
 
   static const SyncCipher plaintext = .withKey(null);
 
@@ -76,7 +70,6 @@ class SyncCipher {
     final magicBytes = utf8.encode(magic);
     final head = await _readHead(srcPath, magicBytes.length);
     if (!_startsWith(head, magicBytes)) {
-      if (requireEncrypted) throw SyncException(l10n.sync.errDecryptFailed);
       await File(srcPath).copy(dstPath);
       return;
     }
@@ -135,10 +128,7 @@ class SyncCipher {
       crypto.Aes.encrypt(key: aesKey!, data: plain);
 
   Future<Uint8List> _maybeDecrypt(Uint8List bytes) async {
-    if (!SyncCipher.isCipherText(bytes)) {
-      if (requireEncrypted) throw SyncException(l10n.sync.errDecryptFailed);
-      return bytes;
-    }
+    if (!SyncCipher.isCipherText(bytes)) return bytes;
     if (!encrypted) {
       throw SyncException(l10n.sync.errNoUserKey);
     }

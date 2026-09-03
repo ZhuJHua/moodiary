@@ -1,7 +1,7 @@
 /// Moodiary 导入导出。
 ///
 /// 序列化核心不在这里：tiptap → IR → Markdown 在 moodiary_utils，DOCX 生成在
-/// fast_press；打包走 moodiary_utils 的 ZipWriter。本包只做编排（范围解析、媒体转码、打包）与页面。
+/// fast_press；打包走 fast_zip。本包只做编排（范围解析、媒体转码、打包）与页面。
 library;
 
 export 'src/data/export_doc.dart';

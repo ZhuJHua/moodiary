@@ -167,6 +167,8 @@ List<String> _checkPackageLayers() {
 /// 门面各有主，归属由下面的 _rustFacadeOwners 按 import 守。
 const Map<String, Set<String>> _nativePkgOwners = {
   'fast_press': {'moodiary_export'},
+  // 导出打包与本地备份 / LAN 归档。
+  'fast_zip': {'moodiary_export', 'moodiary_sync'},
 };
 
 /// 校验 _nativePkgOwners：读每个 pubspec 的正式依赖，返回违规描述（空表示通过）。

@@ -5,7 +5,6 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_http/moodiary_http.dart';
-import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/lan/lan_protocol.dart';
 import 'package:moodiary_sync/src/data/lan/lan_receiver.dart';
 import 'package:moodiary_sync/src/data/lan/lan_sender.dart';
@@ -266,7 +265,7 @@ void main() {
   );
 
   LanReceiverService buildReceiver({
-    required Future<SyncReport> Function(String, SyncCipher) applier,
+    required Future<SyncReport> Function(String, String) applier,
   }) => LanReceiverService(
     crypto: FakeLanCrypto(),
     server: IoTestHttpServer(),
@@ -278,14 +277,14 @@ void main() {
 
   test('环回：握手 → 取清单 → 上传 → 报告', () async {
     SyncManifest? builderGotManifest;
-    SyncCipher? builderGotCipher;
-    SyncCipher? applierGotCipher;
+    String? builderGotPassword;
+    String? applierGotPassword;
     List<int>? applierGotBytes;
     final archiveBytes = List<int>.generate(300000, (i) => i % 251);
 
     final receiver = buildReceiver(
-      applier: (zipPath, cipher) async {
-        applierGotCipher = cipher;
+      applier: (zipPath, password) async {
+        applierGotPassword = password;
         applierGotBytes = await io.File(zipPath).readAsBytes();
         return const SyncReport(
           diaryCount: 3,
@@ -302,9 +301,9 @@ void main() {
     final sender = LanSender(
       crypto: FakeLanCrypto(),
       http: IoTestHttpClient(),
-      archiveBuilder: (remote, cipher) async {
+      archiveBuilder: (remote, password) async {
         builderGotManifest = remote;
-        builderGotCipher = cipher;
+        builderGotPassword = password;
         final file = io.File(p.join(tmp.path, 'delta.zip'));
         await file.writeAsBytes(archiveBytes);
         return (file.path, 4);
@@ -322,12 +321,8 @@ void main() {
     // 对方 manifest 原样到达发送方
     expect(builderGotManifest!.updatedAtMs, 42);
     expect(builderGotManifest!.entries['d:existing']!.timeMs, 12345);
-    // 双方持同一会话密钥；接收端必须拒收明文条目
-    expect(
-      listEquals(builderGotCipher!.aesKey, applierGotCipher!.aesKey),
-      isTrue,
-    );
-    expect(applierGotCipher!.requireEncrypted, isTrue);
+    // 双方对同一 key 派生出同一 zip 密码
+    expect(builderGotPassword, applierGotPassword);
     // 归档字节完整送达
     expect(applierGotBytes, archiveBytes);
     // 报告回传
@@ -415,7 +410,7 @@ void main() {
     expect(await _rawStatus(url, token), 401);
   });
 
-  test('令牌正确但协议版本不同（含没带头的旧发送端）→ 426，接收端标记不兼容', () async {
+  test('令牌正确但协议版本不同 → 426，接收端标记不兼容；没带头的协议 2 发送端放行', () async {
     final receiver = buildReceiver(applier: (_, _) async => fail('不应走到导入'));
     await receiver.start();
     addTearDown(receiver.stop);
@@ -432,11 +427,22 @@ void main() {
     );
     final url = 'http://127.0.0.1:${receiver.port}$lanManifestPath';
 
+    // 2.8.0 的发送端还没有这个头：当作协议 2 放行，页面不进失败态。
     expect(
       await _rawStatus(
         url,
         await lanBuildAuthToken(crypto, key, lanManifestPath),
         proto: null,
+      ),
+      200,
+    );
+    expect(receiver.state.value, isNot(isA<LanReceiveFailed>()));
+
+    expect(
+      await _rawStatus(
+        url,
+        await lanBuildAuthToken(crypto, key, lanManifestPath),
+        proto: '${lanProtoVersion + 1}',
       ),
       426,
     );
@@ -445,14 +451,6 @@ void main() {
       isA<LanReceiveFailed>()
           .having((s) => s.incompatible, 'incompatible', isTrue)
           .having((s) => s.message, 'message', contains('2.8.1 (101)')),
-    );
-    expect(
-      await _rawStatus(
-        url,
-        await lanBuildAuthToken(crypto, key, lanManifestPath),
-        proto: '${lanProtoVersion - 1}',
-      ),
-      426,
     );
     // 令牌错的一律先按认证处理，版本门不给未认证者改状态的机会。
     final wrongKey = await crypto.deriveKey(
@@ -463,7 +461,7 @@ void main() {
       await _rawStatus(
         url,
         await lanBuildAuthToken(crypto, wrongKey, lanManifestPath),
-        proto: null,
+        proto: '${lanProtoVersion + 1}',
       ),
       401,
     );
@@ -474,8 +472,8 @@ void main() {
     await server.start(
       handler: (_) async => HttpServerResponse.json({
         'app': 'moodiary',
-        'proto': lanProtoVersion - 1,
-        'ver': '2.8.0+94',
+        'proto': lanProtoVersion + 1,
+        'ver': '2.9.0+120',
         'salt': 'ab',
       }),
     );
@@ -492,7 +490,7 @@ void main() {
         isA<SyncException>().having(
           (e) => e.message,
           'message',
-          allOf(contains('2.8.1 (101)'), contains('2.8.0 (94)')),
+          allOf(contains('2.8.1 (101)'), contains('2.9.0 (120)')),
         ),
       ),
     );

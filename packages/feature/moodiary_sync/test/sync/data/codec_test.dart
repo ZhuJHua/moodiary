@@ -52,14 +52,6 @@ void main() {
       expect(cipher.decode(garbage), throwsA(isA<SyncException>()));
     });
 
-    // 局域网接收端：明文对象不是「无需解密」而是「对端没有会话密钥」。
-    test('requireEncrypted rejects plaintext objects', () async {
-      const strict = SyncCipher.withKey([1, 2, 3], requireEncrypted: true);
-      final plain = Uint8List.fromList(utf8.encode('{"a":1}'));
-      expect(strict.decode(plain), throwsA(isA<SyncException>()));
-      expect(strict.decryptBytes(plain), throwsA(isA<SyncException>()));
-    });
-
     test('isCipherText needs the full magic header', () {
       expect(SyncCipher.isCipherText(.fromList([1, 2, 3])), isFalse);
       expect(
@@ -102,18 +94,6 @@ void main() {
 
       await expectLater(
         cipher.decryptFileTo(enc.path, p.join(dir.path, 'out.bin')),
-        throwsA(isA<SyncException>()),
-      );
-      expect(File(p.join(dir.path, 'out.bin')).existsSync(), isFalse);
-    });
-
-    test('requireEncrypted refuses to copy a plaintext file', () async {
-      const strict = SyncCipher.withKey([1, 2, 3], requireEncrypted: true);
-      final src = File(p.join(dir.path, 'src.bin'));
-      await src.writeAsBytes([1, 2, 3, 4]);
-
-      await expectLater(
-        strict.decryptFileTo(src.path, p.join(dir.path, 'out.bin')),
         throwsA(isA<SyncException>()),
       );
       expect(File(p.join(dir.path, 'out.bin')).existsSync(), isFalse);

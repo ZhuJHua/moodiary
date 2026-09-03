@@ -18,7 +18,7 @@ void main() {
     ].join(';');
     expect(
       fingerprint,
-      'proto=3;'
+      'proto=2;'
       'handshake=/moodiary/lan/v1/handshake;'
       'manifest=/moodiary/lan/v1/manifest;'
       'archive=/moodiary/lan/v1/archive;'
@@ -38,6 +38,6 @@ void main() {
     expect(lanDisplayVersion('2.8.1'), '2.8.1');
     expect(lanDisplayVersion(null), 'unknown');
     expect(lanDisplayVersion(''), 'unknown');
-    expect(lanTxtRecord('2.8.1+101'), {'proto': '3', 'ver': '2.8.1+101'});
+    expect(lanTxtRecord('2.8.1+101'), {'proto': '2', 'ver': '2.8.1+101'});
   });
 }
