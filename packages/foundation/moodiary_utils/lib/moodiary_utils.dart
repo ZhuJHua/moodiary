@@ -21,3 +21,4 @@ export 'src/time_format.dart';
 export 'src/tiptap_content.dart';
 export 'src/upload_speed_calculator.dart';
 export 'src/uuid.dart';
+export 'src/zip_archive.dart';

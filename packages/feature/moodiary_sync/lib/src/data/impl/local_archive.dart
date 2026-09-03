@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:fast_zip/fast_zip.dart' as archive;
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -13,6 +12,7 @@ import 'package:moodiary_sync/src/data/media_refs.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_stores.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path/path.dart' as p;
 
 /// 本地备份归档 —— 导出/导入 zip，包内布局与远端同步完全一致：
@@ -41,13 +41,12 @@ class LocalArchive {
         PlatformService.get().applicationCachePath,
         _fileName(.now()),
       );
-      // 中途抛错到不了 writeArchive 末尾的 finish()；不 dispose 则 fd 一直攥着，
-      // 被删的半成品要等 GC 才真正释放磁盘 —— 而失败原因往往正是磁盘满。
-      await archive.FastZip.ensureInitialized();
-      final zip = await archive.Zip.newInstance(filePath: zipPath);
+      // 中途抛错到不了 writeArchive 末尾的 finish()；不 abort 则 worker 一直攥着 fd，
+      // 被删的半成品要等进程退出才真正释放磁盘 —— 而失败原因往往正是磁盘满。
+      final zip = await ZipWriter.create(zipPath);
       try {
         await writeArchive(
-          sink: _RustZipSink(zip),
+          sink: _ZipSink(zip),
           diaries: diaries,
           categories: categories,
           mediaInfos: mediaInfos,
@@ -55,13 +54,12 @@ class LocalArchive {
           mediaBaseDir: PlatformService.get().applicationSupportPath,
         );
       } catch (_) {
-        zip.dispose();
+        await zip.abort();
         try {
           await File(zipPath).delete();
         } catch (_) {}
         rethrow;
       }
-      zip.dispose();
       return zipPath;
     });
   }
@@ -72,12 +70,13 @@ class LocalArchive {
         '-${two(now.hour)}${two(now.minute)}${two(now.second)}.zip';
   }
 
-  /// 局域网发送：构建针对 [remote] 的增量归档，zip 条目以 [zipPassword] AES-256
-  /// 加密。返回 (zip 路径, 条目数)；条目数为 0 表示对方已是最新，调用方直接删掉
-  /// 空包即可。
+  /// 局域网发送：构建针对 [remote] 的增量归档。zip 是明文容器，每个条目的内容经
+  /// [cipher] 封装（对象 = magic 头 + AES-256-GCM，媒体整文件走原生加密，一次一个
+  /// 暂存在缓存目录）。返回 (zip 路径, 条目数)；条目数为 0 表示对方已是最新，调用方
+  /// 直接删掉空包即可。
   static Future<(String, int)> exportDelta({
     required SyncManifest remote,
-    required String zipPassword,
+    required SyncCipher cipher,
   }) {
     return IncrementalSyncEngine.runExclusive(() async {
       final diaries = await RepoSyncDiaryStore().getAllDiaries();
@@ -86,16 +85,14 @@ class LocalArchive {
       final mediaInfos = await RepoSyncMediaInfoStore()
           .getAllMediaInfosForSync();
       final tombstones = await RepoSyncTombstoneStore().getAll();
-      final zipPath = p.join(
-        PlatformService.get().applicationCachePath,
-        _fileName(.now()),
-      );
-      await archive.FastZip.ensureInitialized();
-      final zip = await archive.Zip.newInstance(filePath: zipPath);
+      final cacheDir = PlatformService.get().applicationCachePath;
+      final zipPath = p.join(cacheDir, _fileName(.now()));
+      final scratch = await Directory(cacheDir).createTemp('lan-send-');
+      final zip = await ZipWriter.create(zipPath);
       final int count;
       try {
         count = await writeArchive(
-          sink: _RustZipSink(zip, zipPassword),
+          sink: _EncryptingSink(_ZipSink(zip), cipher, scratch.path),
           diaries: diaries,
           categories: categories,
           mediaInfos: mediaInfos,
@@ -104,13 +101,16 @@ class LocalArchive {
           remote: remote,
         );
       } catch (_) {
-        zip.dispose();
+        await zip.abort();
         try {
           await File(zipPath).delete();
         } catch (_) {}
         rethrow;
+      } finally {
+        try {
+          await scratch.delete(recursive: true);
+        } catch (_) {}
       }
-      zip.dispose();
       return (zipPath, count);
     });
   }
@@ -267,24 +267,22 @@ class LocalArchive {
 
   /// [policy] 见 [ArchiveApplyPolicy]。「从备份恢复」传 [RestorePolicy]（只增不删）；
   /// 局域网接收是设备间搬运，保持默认的 [SyncPullPolicy]（删除照常传播）。
+  /// [cipherProvider] 不传走 [SyncCipher.current]；局域网接收传会话 cipher。
   static Future<SyncReport> import(
     String zipPath, {
-    String? password,
-    archive.CancelToken? cancel,
+    Future<SyncCipher> Function()? cipherProvider,
     ArchiveApplyPolicy policy = const SyncPullPolicy(),
   }) async {
     final extractDir = await Directory(
       PlatformService.get().applicationCachePath,
     ).createTemp('backup-import-');
     try {
-      await archive.FastZip.ensureInitialized();
-      await archive.Zip.extract(
-        zipPath: zipPath,
-        destDir: extractDir.path,
-        password: password,
-        cancel: cancel ?? archive.CancelToken(),
+      await extractZip(zipPath: zipPath, destDir: extractDir.path);
+      return await importDirectory(
+        extractDir.path,
+        policy: policy,
+        cipherProvider: cipherProvider,
       );
-      return await importDirectory(extractDir.path, policy: policy);
     } finally {
       try {
         await extractDir.delete(recursive: true);
@@ -361,34 +359,59 @@ class LocalArchive {
   }
 }
 
-/// 归档写入端口：生产走 Rust zip（[LocalArchive.export]），测试注入内存实现。
+/// 归档写入端口：生产走 [ZipWriter]（[LocalArchive.export]），测试注入内存实现。
 abstract interface class ArchiveSink {
   Future<void> addBytes(String zipPath, Uint8List data);
   Future<void> addLocalFile(String zipPath, String filePath);
   Future<void> finish();
 }
 
-class _RustZipSink implements ArchiveSink {
-  final archive.Zip _zip;
-  final String? _password;
+class _ZipSink implements ArchiveSink {
+  final ZipWriter _zip;
 
-  _RustZipSink(this._zip, [this._password]);
+  _ZipSink(this._zip);
 
   @override
   Future<void> addBytes(String zipPath, Uint8List data) =>
-      _zip.addBytes(zipPath: zipPath, data: data, password: _password);
+      _zip.addBytes(zipPath, data);
 
-  /// 媒体本身已是压缩格式，Stored 直存省 CPU。
   @override
-  Future<void> addLocalFile(String zipPath, String filePath) => _zip.addFile(
-    filePath: filePath,
-    zipPath: zipPath,
-    password: _password,
-    stored: true,
-  );
+  Future<void> addLocalFile(String zipPath, String filePath) =>
+      _zip.addFile(zipPath, filePath);
 
   @override
   Future<void> finish() => _zip.finish();
+}
+
+/// 条目内容先过 [SyncCipher] 再交给内层：字节直接加密，媒体文件整文件加密到
+/// [_scratchDir] 暂存后直存（密文不可压缩），进包即删。
+class _EncryptingSink implements ArchiveSink {
+  final ArchiveSink _inner;
+  final SyncCipher _cipher;
+  final String _scratchDir;
+  int _staged = 0;
+
+  _EncryptingSink(this._inner, this._cipher, this._scratchDir);
+
+  @override
+  Future<void> addBytes(String zipPath, Uint8List data) async =>
+      _inner.addBytes(zipPath, await _cipher.encryptBytes(data));
+
+  @override
+  Future<void> addLocalFile(String zipPath, String filePath) async {
+    final staged = File(p.join(_scratchDir, '${_staged++}.enc'));
+    try {
+      await _cipher.encryptFileTo(filePath, staged.path);
+      await _inner.addLocalFile(zipPath, staged.path);
+    } finally {
+      try {
+        await staged.delete();
+      } catch (_) {}
+    }
+  }
+
+  @override
+  Future<void> finish() => _inner.finish();
 }
 
 /// 把解压后的备份目录当作「远端」——引擎的 pull 原样跑在本地文件上。

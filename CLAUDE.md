@@ -70,8 +70,7 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
       moodiary_rust/         #   业务库：http 客户端/服务端 → WebDAV/S3 / rig 对话（共享一套 reqwest 底座）+ 图布局，libmoodiary_rust（四个门面各有主，延迟装载）
       fast_tokenizer/        #   jieba 分词 + HF tokenizer，自带 FRB 与原生库 libfasttokenizer（启动装载，带测试替身）
       fast_crypto/           #   AES-GCM + Argon2id，自带 FRB 与原生库 libfastcrypto（门面自带 ensureInitialized，调用方不用 init）
-      fast_zip/              #   zip 写/解压，自带 FRB 与原生库 libfastzip（只给 moodiary_export / moodiary_sync）
-      moodiary_utils/        #   pure utils + content converters (tiptap/markdown/quill)
+      moodiary_utils/        #   pure utils + content converters (tiptap/markdown/quill) + zip 读写（纯 Dart archive，跑在 isolate）
       mui/                   #   设计系统：material_ui 的**补充**（详见下）
     core/                    # 无领域基建。内部次序 platform,http → storage → files → theme
       moodiary_platform/     #   应用目录/缓存目录/生物识别/网络状态/应用与设备信息
@@ -178,7 +177,6 @@ about.toml / rust-toolchain / Cargo.lock，坑各记在自己的 CLAUDE.md：
 | fast_tokenizer | FRB | 全仓（含 `testing.dart` 替身） | 启动 `FastTokenizer.ensureInitialized` |
 | fast_image | FRB | 全仓 | 启动 `FastImageRuntime.init` |
 | fast_press | FRB | moodiary_export（`_nativePkgOwners`） | 首次导出 |
-| fast_zip | FRB | moodiary_export / moodiary_sync（`_nativePkgOwners`） | 首次打包 / 解压 |
 | fast_crypto | FRB | 全仓 | 门面每次调用自己 ensureInitialized |
 
 - **FRB 包**：每个暴露 `XxxLib` 与幂等的 `Xxx.ensureInitialized()`；不透明句柄（`CancelToken`
@@ -194,3 +192,7 @@ about.toml / rust-toolchain / Cargo.lock，坑各记在自己的 CLAUDE.md：
 - 拆库是投递策略，不是省体积手段：每库地板（带 FRB 运行时）实测 619 KB；两库之间共享 crate 的
   实际字节看 `docs/native-libs-review.md` 第四节，依赖树重叠不等于二进制重复。改了任何 `rust/Cargo.toml` 依赖必跑
   `dart tool/task.dart licenses`。
+- **zip 不在 Rust 里**（2026-09-03 拍板，原 fast_zip 已删）：`moodiary_utils` 的 `ZipWriter` / `extractZip`
+  基于纯 Dart `archive`，写入器是一个专属 isolate 的命令队列、解压整段 `Isolate.run`。**不做 zip 内 AES**
+  （纯 Dart 实测 17 MB/s 且整条目进堆）：局域网归档改为明文 zip + 条目内容走 `SyncCipher`（会话密钥，
+  与云同步同一套 magic + AES-GCM 对象格式，接收端 `requireEncrypted` 拒收明文条目）。

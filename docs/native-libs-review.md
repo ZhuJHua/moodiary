@@ -13,7 +13,7 @@
 | fast_text | 6.40 MB | FRB | 启动 |
 | fast_image | 4.96 MB（模拟器实测） | FRB | 启动 |
 | fast_http | 4.58 MB | FRB | 首次请求 |
-| fast_zip | 1.00 MB | FRB | 首次打包 |
+| fast_zip | 1.00 MB | FRB | 首次打包（2026-09-03 晚已改纯 Dart，见第五节末） |
 | fast_crypto | 0.41 MB | 裸 FFI | 无 |
 | fast_graph | 0.35 MB | 裸 FFI | 无 |
 
@@ -144,8 +144,15 @@ regex，press 33 MB 且按需装载，不值得为它合并任何东西。text /
 - `fast_tokenizer`（原 fast_text）、`fast_image`、`fast_press`、`fast_zip`、`fast_crypto` 独立。
 - **fast_* 统一走 FRB**：fast_crypto 从裸 dart:ffi 改回 FRB（用户拍板：FRB 成熟，0.3 MB 地板可以接受）。
   门面 `Aes` / `Argon2` 每次调用自己 `ensureInitialized`，调用方不用 init。
-- 第二节里「换成 Dart」的四项都没有采纳（zip / graph / http / llm 留 Rust）；网络层长期留 Rust。
+- 第二节里「换成 Dart」的四项当时都没有采纳（zip / graph / http / llm 留 Rust）；网络层长期留 Rust。
 - 结果：8 → 6 个原生库，全部 FRB；两个 tokio 运行时归一。
+- **补记（同日晚）：fast_zip 改用纯 Dart `archive` 4.2.0，原生库降到 5 个。** 落点 `moodiary_utils`
+  的 `ZipWriter`（专属 isolate 的命令队列，主 isolate 逐条目发命令、取消照旧在两次 add 之间查）与
+  `extractZip`（整段 `Isolate.run`，自己做 zip-slip 校验、不吞写盘错误）。第二节没验的那件事验了：
+  宿主 AOT 实测 Stored 写 226 MB/s / 读 1.2 GB/s，**zip 内 AES 只有 17 / 19 MB/s，且 `archive` 对加密
+  条目整块进堆**——所以 LAN 归档不再用 zip 密码，改为明文 zip + 条目内容走 `SyncCipher(会话密钥)`
+  （云同步同一套 magic + AES-GCM 对象格式，媒体整文件经 fast_crypto 原生加密），接收端
+  `requireEncrypted` 拒收明文条目，接替 Rust 侧「传了密码就要求条目确实加密」那道闸。
 
 ## 六、libfastpress 33 MB 里是什么（2026-09-03，Android arm64 stripped 实测）
 

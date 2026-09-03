@@ -85,7 +85,6 @@ const _frbPkgDirs = [
   'packages/foundation/fast_image',
   'packages/foundation/fast_press',
   'packages/foundation/fast_tokenizer',
-  'packages/foundation/fast_zip',
   'packages/foundation/moodiary_rust',
 ];
 

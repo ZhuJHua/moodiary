@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
+import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/impl/local_archive.dart';
 import 'package:moodiary_sync/src/data/lan/lan_protocol.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
@@ -50,25 +51,25 @@ class LanReceiveFailed extends LanReceiveState {
 /// 即作废）。三个端点：
 /// - `GET  handshake` → 明文 `{app, proto, salt}`；
 /// - `GET  manifest`  → 会话密钥加密的本机 manifest 投影（发送方据此算增量）；
-/// - `POST archive`   → 加密 zip（服务器层已流式落盘）→ 解压导入（engine.pull，
+/// - `POST archive`   → 条目加密的 zip（服务器层已流式落盘）→ 解压导入（engine.pull，
 ///   LWW 与云同步一致）→ 回加密报告。一次只处理一个归档（并发 409）。
 class LanReceiverService {
   LanReceiverService({
     this._crypto = const RustLanCrypto(),
     this._server,
     Future<SyncManifest> Function()? manifestBuilder,
-    Future<SyncReport> Function(String zipPath, String zipPassword)?
+    Future<SyncReport> Function(String zipPath, SyncCipher cipher)?
     archiveApplier,
     this._tempDirPath,
   }) : _manifestBuilder = manifestBuilder ?? LocalArchive.buildLocalManifest,
        _archiveApplier = archiveApplier ?? _applyArchive;
 
-  static Future<SyncReport> _applyArchive(String zipPath, String zipPassword) =>
-      LocalArchive.import(zipPath, password: zipPassword);
+  static Future<SyncReport> _applyArchive(String zipPath, SyncCipher cipher) =>
+      LocalArchive.import(zipPath, cipherProvider: () async => cipher);
 
   final LanCrypto _crypto;
   final Future<SyncManifest> Function() _manifestBuilder;
-  final Future<SyncReport> Function(String, String) _archiveApplier;
+  final Future<SyncReport> Function(String, SyncCipher) _archiveApplier;
   final String? _tempDirPath;
 
   final ValueNotifier<LanReceiveState> state = ValueNotifier(
@@ -189,7 +190,7 @@ class LanReceiverService {
         await inlineSpool.writeAsBytes(request.body);
         zipPath = inlineSpool.path;
       }
-      final report = await _archiveApplier(zipPath, lanZipPassword(_key));
+      final report = await _archiveApplier(zipPath, lanArchiveCipher(_key));
       state.value = LanReceiveDone(report);
       final body = await _crypto.encrypt(
         _key,

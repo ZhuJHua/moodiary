@@ -13,10 +13,12 @@ dependencies:
   flutter:
     sdk: flutter
 
+  archive: 4.2.0
   intl: 0.20.3
   synchronized: 3.4.1+2
   image_size_getter: 2.4.1
   markdown: 7.3.1
+  path: 1.9.1
   uuid: 4.6.0
 
 dev_dependencies:

@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_http/moodiary_http.dart';
+import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/lan/lan_protocol.dart';
 import 'package:moodiary_sync/src/data/lan/lan_receiver.dart';
 import 'package:moodiary_sync/src/data/lan/lan_sender.dart';
@@ -265,7 +266,7 @@ void main() {
   );
 
   LanReceiverService buildReceiver({
-    required Future<SyncReport> Function(String, String) applier,
+    required Future<SyncReport> Function(String, SyncCipher) applier,
   }) => LanReceiverService(
     crypto: FakeLanCrypto(),
     server: IoTestHttpServer(),
@@ -276,14 +277,14 @@ void main() {
 
   test('环回：握手 → 取清单 → 上传 → 报告', () async {
     SyncManifest? builderGotManifest;
-    String? builderGotPassword;
-    String? applierGotPassword;
+    SyncCipher? builderGotCipher;
+    SyncCipher? applierGotCipher;
     List<int>? applierGotBytes;
     final archiveBytes = List<int>.generate(300000, (i) => i % 251);
 
     final receiver = buildReceiver(
-      applier: (zipPath, password) async {
-        applierGotPassword = password;
+      applier: (zipPath, cipher) async {
+        applierGotCipher = cipher;
         applierGotBytes = await io.File(zipPath).readAsBytes();
         return const SyncReport(
           diaryCount: 3,
@@ -300,9 +301,9 @@ void main() {
     final sender = LanSender(
       crypto: FakeLanCrypto(),
       http: IoTestHttpClient(),
-      archiveBuilder: (remote, password) async {
+      archiveBuilder: (remote, cipher) async {
         builderGotManifest = remote;
-        builderGotPassword = password;
+        builderGotCipher = cipher;
         final file = io.File(p.join(tmp.path, 'delta.zip'));
         await file.writeAsBytes(archiveBytes);
         return (file.path, 4);
@@ -320,8 +321,12 @@ void main() {
     // 对方 manifest 原样到达发送方
     expect(builderGotManifest!.updatedAtMs, 42);
     expect(builderGotManifest!.entries['d:existing']!.timeMs, 12345);
-    // 双方对同一 key 派生出同一 zip 密码
-    expect(builderGotPassword, applierGotPassword);
+    // 双方持同一会话密钥；接收端必须拒收明文条目
+    expect(
+      listEquals(builderGotCipher!.aesKey, applierGotCipher!.aesKey),
+      isTrue,
+    );
+    expect(applierGotCipher!.requireEncrypted, isTrue);
     // 归档字节完整送达
     expect(applierGotBytes, archiveBytes);
     // 报告回传

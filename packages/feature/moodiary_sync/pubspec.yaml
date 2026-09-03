@@ -15,7 +15,6 @@ dependencies:
 
   fast_crypto: 0.0.1
   fast_image: 0.0.1
-  fast_zip: 0.0.1
   moodiary_components: 0.0.1
   moodiary_data: 0.0.1
   moodiary_di: 0.0.1

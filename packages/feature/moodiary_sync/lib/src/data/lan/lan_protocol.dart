@@ -9,8 +9,9 @@
 ///   第二次。（协议 1 回传的是握手下发的固定 challenge，同会话内可无限重放。）
 /// - 在线穷举 = 认证连续失败 [lanMaxAuthFailures] 次即锁死本次会话，必须重开接收页
 ///   换新 PIN。
-/// - 载荷：控制面（manifest / 报告）整体 AES-256-GCM；归档 zip 以密钥 hex 作条目
-///   级 AES-256 密码（流式加解密，GB 级媒体不进内存）。
+/// - 载荷：控制面（manifest / 报告）整体 AES-256-GCM；归档 zip 是明文容器，每个条目
+///   的内容经 [lanArchiveCipher]（与云端同步同一套 magic 头 + AES-256-GCM 对象格式，
+///   媒体整文件走原生加解密，不进 Dart 堆）。接收端 `requireEncrypted`：明文条目一律拒收。
 /// - 不做 PAKE：主动 MITM 不设防（归档的 lan-transfer 设计文档 §3 记录过 PAKE 路线，
 ///   被明确放弃）。
 ///
@@ -25,6 +26,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:fast_crypto/fast_crypto.dart';
+import 'package:moodiary_sync/src/data/codec.dart';
 
 const int lanDefaultPort = 6636;
 const int lanProtoVersion = 2;
@@ -76,8 +78,10 @@ List<int> hexToBytes(String hex) => [
     int.parse(hex.substring(i, i + 2), radix: 16),
 ];
 
-/// 归档 zip 的条目密码：会话密钥的 hex（256 bit 熵，zip 内置 PBKDF2 不构成短板）。
-String lanZipPassword(List<int> key) => bytesToHex(key);
+/// 归档条目的 cipher：会话密钥直接当 DEK。发送端只用它加密；接收端靠 `requireEncrypted`
+/// 把「能解开」当作对端持有会话密钥的证明。
+SyncCipher lanArchiveCipher(List<int> key) =>
+    SyncCipher.withKey(key, requireEncrypted: true);
 
 /// 令牌里 nonce 的字节数（定长前缀，其余是绑定的 path）。
 const int lanNonceBytes = 16;
@@ -87,7 +91,7 @@ const int lanMaxAuthFailures = 5;
 
 /// 造一次性请求令牌。绑定 path 是为了让令牌不能挪用到别的端点上。
 ///
-/// 不再额外绑定请求体：控制面响应本就整体 AES-GCM、归档 zip 逐条目 AES-256，
+/// 不再额外绑定请求体：控制面响应本就整体 AES-GCM、归档条目逐个 AES-GCM，
 /// 两者都要会话密钥才造得出，令牌再压一层 body 摘要并不多挡什么，却要引进一个
 /// 目前 Rust 门面没有导出的哈希原语。
 Future<String> lanBuildAuthToken(
