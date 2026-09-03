@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:fast_zip/fast_zip.dart' as archive;
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
-import 'package:moodiary_rust/foundation.dart' as rust;
 import 'package:moodiary_sync/src/data/archive_apply.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/incremental_engine.dart';
@@ -43,7 +43,8 @@ class LocalArchive {
       );
       // 中途抛错到不了 writeArchive 末尾的 finish()；不 dispose 则 fd 一直攥着，
       // 被删的半成品要等 GC 才真正释放磁盘 —— 而失败原因往往正是磁盘满。
-      final zip = await rust.Zip.newInstance(filePath: zipPath);
+      await archive.FastZip.ensureInitialized();
+      final zip = await archive.Zip.newInstance(filePath: zipPath);
       try {
         await writeArchive(
           sink: _RustZipSink(zip),
@@ -89,7 +90,8 @@ class LocalArchive {
         PlatformService.get().applicationCachePath,
         _fileName(.now()),
       );
-      final zip = await rust.Zip.newInstance(filePath: zipPath);
+      await archive.FastZip.ensureInitialized();
+      final zip = await archive.Zip.newInstance(filePath: zipPath);
       final int count;
       try {
         count = await writeArchive(
@@ -268,18 +270,19 @@ class LocalArchive {
   static Future<SyncReport> import(
     String zipPath, {
     String? password,
-    rust.CancelToken? cancel,
+    archive.CancelToken? cancel,
     ArchiveApplyPolicy policy = const SyncPullPolicy(),
   }) async {
     final extractDir = await Directory(
       PlatformService.get().applicationCachePath,
     ).createTemp('backup-import-');
     try {
-      await rust.Zip.extract(
+      await archive.FastZip.ensureInitialized();
+      await archive.Zip.extract(
         zipPath: zipPath,
         destDir: extractDir.path,
         password: password,
-        cancel: cancel ?? rust.CancelToken(),
+        cancel: cancel ?? archive.CancelToken(),
       );
       return await importDirectory(extractDir.path, policy: policy);
     } finally {
@@ -366,7 +369,7 @@ abstract interface class ArchiveSink {
 }
 
 class _RustZipSink implements ArchiveSink {
-  final rust.Zip _zip;
+  final archive.Zip _zip;
   final String? _password;
 
   _RustZipSink(this._zip, [this._password]);

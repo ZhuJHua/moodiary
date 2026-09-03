@@ -21,6 +21,7 @@ const _frbPkgDirs = [
   'packages/foundation/fast_http',
   'packages/foundation/fast_llm',
   'packages/foundation/fast_text',
+  'packages/foundation/fast_zip',
 ];
 
 void main() {

@@ -13,8 +13,9 @@ dependencies:
   flutter:
     sdk: flutter
 
-  fast_press: 0.0.1
   fast_image: 0.0.1
+  fast_press: 0.0.1
+  fast_zip: 0.0.1
   moodiary_files: 0.0.1
   moodiary_logging: 0.0.1
   moodiary_platform: 0.0.1
@@ -25,7 +26,6 @@ dependencies:
   moodiary_i18n: 0.0.1
   moodiary_components: 0.0.1
   moodiary_router: 0.0.1
-  moodiary_rust: 0.0.1
   moodiary_utils: 0.0.1
   mui: 0.0.1
 

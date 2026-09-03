@@ -89,6 +89,7 @@ const _frbPkgDirs = [
   'packages/foundation/fast_http',
   'packages/foundation/fast_llm',
   'packages/foundation/fast_text',
+  'packages/foundation/fast_zip',
 ];
 
 /// CLI 是整条链上唯一不由仓库钉版本的东西，而它默认开着 auto_upgrade_dependency ——

@@ -2,12 +2,12 @@ import 'dart:io';
 
 import 'package:fast_image/fast_image.dart';
 import 'package:fast_press/fast_press.dart' as press;
+import 'package:fast_zip/fast_zip.dart' as archive;
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
-import 'package:moodiary_rust/foundation.dart' as rust;
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path/path.dart' as p;
 
@@ -487,7 +487,8 @@ class ExportService {
     String zipPath,
     press.CancelToken token,
   ) async {
-    final zip = await rust.Zip.newInstance(filePath: zipPath);
+    await archive.FastZip.ensureInitialized();
+    final zip = await archive.Zip.newInstance(filePath: zipPath);
     // 中途抛错就到不了 finish()，不 dispose 则 ZipWriter 一直攥着 fd 到 GC。
     try {
       for (final entity in dir.listSync(recursive: true)) {

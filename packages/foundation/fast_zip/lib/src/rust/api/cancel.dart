@@ -15,5 +15,6 @@ abstract class CancelToken implements RustOpaqueInterface {
 
   bool isCancelled();
 
-  factory CancelToken() => RustLib.instance.api.crateApiCancelCancelTokenNew();
+  factory CancelToken() =>
+      FastZipLib.instance.api.crateApiCancelCancelTokenNew();
 }

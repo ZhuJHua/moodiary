@@ -246,6 +246,8 @@ const Map<String, Set<String>> _nativePkgOwners = {
   'fast_http': {'moodiary_http', 'moodiary_sync'},
   'fast_llm': {'moodiary_assistant'},
   'fast_graph': {'moodiary_diary'},
+  // 导出打包与本地备份 / LAN 归档。
+  'fast_zip': {'moodiary_export', 'moodiary_sync'},
 };
 
 /// 校验 _nativePkgOwners：读每个 pubspec 的正式依赖，返回违规描述（空表示通过）。

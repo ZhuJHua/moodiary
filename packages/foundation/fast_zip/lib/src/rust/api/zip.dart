@@ -29,7 +29,7 @@ abstract class Zip implements RustOpaqueInterface {
     required String destDir,
     String? password,
     required CancelToken cancel,
-  }) => RustLib.instance.api.crateApiZipZipExtract(
+  }) => FastZipLib.instance.api.crateApiZipZipExtract(
     zipPath: zipPath,
     destDir: destDir,
     password: password,
@@ -40,5 +40,5 @@ abstract class Zip implements RustOpaqueInterface {
 
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
   static Future<Zip> newInstance({required String filePath}) =>
-      RustLib.instance.api.crateApiZipZipNew(filePath: filePath);
+      FastZipLib.instance.api.crateApiZipZipNew(filePath: filePath);
 }

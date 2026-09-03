@@ -5,13 +5,13 @@ use crate::api::cancel::CancelToken;
 
 #[frb(opaque)]
 pub struct Zip {
-    inner: moodiary_archive::Zip,
+    inner: crate::archive::Zip,
 }
 
 impl Zip {
     pub fn new(file_path: String) -> Result<Self> {
         Ok(Self {
-            inner: moodiary_archive::Zip::new(file_path)?,
+            inner: crate::archive::Zip::new(file_path)?,
         })
     }
 
@@ -45,6 +45,6 @@ impl Zip {
         password: Option<String>,
         cancel: &CancelToken,
     ) -> Result<()> {
-        moodiary_archive::Zip::extract(zip_path, dest_dir, password, &cancel.checker())
+        crate::archive::Zip::extract(zip_path, dest_dir, password, &cancel.checker())
     }
 }

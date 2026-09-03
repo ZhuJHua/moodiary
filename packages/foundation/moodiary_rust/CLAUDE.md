@@ -6,7 +6,7 @@
 rust/
   src/api/            # bridge = app layer: the ONLY place that knows about FRB
   crates/
-    foundation/       # archive / font
+    foundation/       # font
     feature_base/     # （空）——唯一的住户 doc 随导出 2026-09-03 搬去了 fast_press
 ```
 
@@ -33,7 +33,7 @@ rustc 在 `lto="thin"` 下直接拒绝，强行关掉 LTO 是 +170%。**拆库�
 
 | 门面 | 内容 | 谁能推 |
 |---|---|---|
-| `foundation.dart` | cancel / font / zip | 全仓 |
+| `foundation.dart` | font | 全仓 |
 | `rust.dart` | `RustLib.init()` | 只有 app 组合根 |
 
 零基线闸门在 `tool/check_layers.dart` 的 `_rustFacadeOwners`，另带一条「不许绕过门面
@@ -53,14 +53,11 @@ Two invariants worth keeping:
 
 **依赖收窄的四条实测结论**（2026-08-20，别再重新推导）：
 
-- **`zip` 不开 `zstd`**：值 396,784 字节，是这类收窄里唯一有分量的一条。代价是第三方
-  工具重压成 Zstd 的备份导不进来（zip 8.6.0 的 `compression.rs:123` 会给出
-  `Unsupported(93)`，报错不好懂）。我们自己写的档只有 Deflated / Stored。
 - **`ttf-parser` 收窄只值 16 字节**：fork 与 registry 版确实是两个独立编译单元、feature
   不并集（这部分推理是对的），但没被调用的那几张表本来就被 thin LTO + `--gc-sections`
   剥干净了。写在 Cargo.toml 里只为说清依赖面，别拿它当体积手段。
 
-**图布局也不在这里**：ForceAtlas2 拆去了 `fast_graph`（`libfastgraph`，裸 FFI）。**加密也不在这里**：AES-GCM / Argon2id 拆去了 `fast_crypto`（`libfastcrypto`，裸 FFI）。**分词也不在这里**：jieba 与 HF tokenizer 拆去了 `fast_text`（`libfasttext`，含测试替身）。**网络与助手都不在这里**：reqwest 客户端 / hyper 服务端 / WebDAV / S3 2026-09-03 拆去了
+**zip 也不在这里**：归档拆去了 `fast_zip`（`libfastzip`）。**图布局也不在这里**：ForceAtlas2 拆去了 `fast_graph`（`libfastgraph`，裸 FFI）。**加密也不在这里**：AES-GCM / Argon2id 拆去了 `fast_crypto`（`libfastcrypto`，裸 FFI）。**分词也不在这里**：jieba 与 HF tokenizer 拆去了 `fast_text`（`libfasttext`，含测试替身）。**网络与助手都不在这里**：reqwest 客户端 / hyper 服务端 / WebDAV / S3 2026-09-03 拆去了
 `packages/foundation/fast_http`（原生库 `libfasthttp`），rig 对话流拆去了 `fast_llm`（`libfastllm`）。**图片编解码与导出都不在这里**：turbojpeg / libwebp / png 与整条图片管线 2026-09-03 拆去了
 `packages/foundation/fast_image`（原生库 `libfastimage`）；typst / docx-rs / syntect 与导出 IR
 同日拆去了 `packages/foundation/fast_press`（原生库 `libfastpress`）。`image` / `syntect` /
