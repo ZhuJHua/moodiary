@@ -1,4 +1,3 @@
-pub mod assistant;
 pub mod cancel;
 pub mod crypto;
 pub mod font;

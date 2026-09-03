@@ -16,18 +16,7 @@ members = ["crates/*/*"]
 
 [workspace.dependencies]
 anyhow = "=1.0.104"
-futures = { version = "=0.3.34", default-features = false, features = ["std", "async-await"] }
-serde_json = "=1.0.151"
 
-reqwest = { version = "=0.13.4", default-features = false, features = [
-    "rustls-no-provider",
-    "gzip",
-    "brotli",
-    "deflate",
-    "stream",
-] }
-rustls = { version = "=0.23.43", default-features = false, features = ["ring", "std", "tls12"] }
-webpki-roots = "=1.0.9"
 
 ring = "=0.17.14"
 argon2 = { version = "=0.6.0-rc.8", features = ["default"] }
@@ -41,16 +30,12 @@ tokenizers = { version = "=0.23.1", default-features = false, features = ["unsta
 unicode-segmentation = "=1.13.3"
 rust-stemmers = "=1.2.0"
 
-rig = { package = "rig-core", version = "=0.42.0", default-features = false, features = ["reqwest"] }
-# 0.42 把 agent 运行时从 rig-core 拆了出来（AgentBuilder / 多轮工具循环都在这里）。
-rig-agent = { version = "=0.42.0", default-features = false }
 
 moodiary-archive = { path = "crates/foundation/archive" }
 moodiary-crypto = { path = "crates/foundation/crypto" }
 moodiary-font = { path = "crates/foundation/font" }
 moodiary-hf-tokenizer = { path = "crates/foundation/hf_tokenizer" }
 moodiary-text = { path = "crates/foundation/text" }
-moodiary-assistant = { path = "crates/feature/assistant" }
 moodiary-graph = { path = "crates/feature/graph" }
 
 [dependencies]
@@ -58,7 +43,6 @@ flutter_rust_bridge = "=2.13.0"
 anyhow = { workspace = true }
 
 moodiary-archive = { workspace = true }
-moodiary-assistant = { workspace = true }
 moodiary-crypto = { workspace = true }
 moodiary-font = { workspace = true }
 moodiary-graph = { workspace = true }
@@ -70,7 +54,7 @@ moodiary-text = { workspace = true }
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
 
 # 不要加 panic = "abort"：FRB 靠 catch_unwind 把 Rust panic 转成 Dart 异常，abort
-# 会让第三方 crate（zip / rig）在脏输入上直接杀进程，而 Dart 侧
+# 会让第三方 crate（zip / jieba）在脏输入上直接杀进程，而 Dart 侧
 # 现成的 try/catch 本来兜得住。代价实测（arm64 release）：.so 42.52 → 46.00 MB、
 # APK 40.2 → 41.6 MB，大头是 .text 里的 landing pad 而非 unwind 表本身。
 # 注：改 [profile.*] 后必须 flutter clean 才会真正重编——构建钩子与 Gradle 两层都会

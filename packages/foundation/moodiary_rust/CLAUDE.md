@@ -8,7 +8,7 @@ rust/
   crates/
     foundation/       # crypto / archive / text / font / hf_tokenizer
     feature_base/     # （空）——唯一的住户 doc 随导出 2026-09-03 搬去了 fast_press
-    feature/          # assistant (rig，自带 reqwest client) / graph
+    feature/          # graph
 ```
 
 Same direction rule as Dart, enforced by the same script: `foundation → feature_base → feature → bridge`, features never import each other, zero violations.
@@ -16,10 +16,9 @@ Same direction rule as Dart, enforced by the same script: `foundation → featur
 **层名与 Dart 侧同名同义**：`feature_base` 装跨 feature 共享的领域类型。刻意不叫 `core` ——
 Dart 的 core 现在特指「一个领域词都不认识的基建」，而这一层的住户（曾经的 `doc`：导出 IR 带
 weather / position / tags / category_name）恰恰带领域，两边同名不同义比不同名更难查。它现在
-是空的（`doc` 与 `export` 一起去了 fast_press），层位与闸门保留。内部依赖边已经归零（assistant 原来借 http 的
-`client::shared()`，http 搬去 fast_http 时给它复制了一份自己的）。
+是空的（`doc` 与 `export` 一起去了 fast_press），层位与闸门保留。内部依赖边已经归零。
 
-### moodiary_rust —— 一个 .so，四扇门
+### moodiary_rust —— 一个 .so，三扇门
 
 **原生库只有一个，而且必须只有一个。** 2026-08-20 实测（Android arm64、仓库真实
 profile 与 feature 集）：拆成两个 cdylib、共享 crate 走普通 cargo 依赖是 **+95.6%**
@@ -36,7 +35,6 @@ rustc 在 `lto="thin"` 下直接拒绝，强行关掉 LTO 是 +170%。**拆库�
 | 门面 | 内容 | 谁能推 |
 |---|---|---|
 | `foundation.dart` | cancel / crypto / font / hf_tokenizer / text / zip | 全仓 |
-| `assistant.dart` | rig 对话流 | 只有 `moodiary_assistant` |
 | `graph.dart` | 力导向布局 | 只有 `moodiary_diary` |
 | `rust.dart` | `RustLib.init()` | 只有 app 组合根 |
 | `testing.dart` | 分词替身 | 只有 `moodiary_data` 的测试 |
@@ -65,8 +63,8 @@ Two invariants worth keeping:
   不并集（这部分推理是对的），但没被调用的那几张表本来就被 thin LTO + `--gc-sections`
   剥干净了。写在 Cargo.toml 里只为说清依赖面，别拿它当体积手段。
 
-**网络也不在这里**：reqwest 客户端 / hyper 服务端 / WebDAV / S3 2026-09-03 拆去了
-`packages/foundation/fast_http`（原生库 `libfasthttp`）。**图片编解码与导出都不在这里**：turbojpeg / libwebp / png 与整条图片管线 2026-09-03 拆去了
+**网络与助手都不在这里**：reqwest 客户端 / hyper 服务端 / WebDAV / S3 2026-09-03 拆去了
+`packages/foundation/fast_http`（原生库 `libfasthttp`），rig 对话流拆去了 `fast_llm`（`libfastllm`）。**图片编解码与导出都不在这里**：turbojpeg / libwebp / png 与整条图片管线 2026-09-03 拆去了
 `packages/foundation/fast_image`（原生库 `libfastimage`）；typst / docx-rs / syntect 与导出 IR
 同日拆去了 `packages/foundation/fast_press`（原生库 `libfastpress`）。`image` / `syntect` /
 `two-face` 的收窄结论随它们走了，坑见各自的 CLAUDE.md。

@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:fast_llm/fast_llm.dart' as rust;
 import 'package:injectable/injectable.dart';
 import 'package:meta/meta.dart';
 import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/assistant_tools.dart';
-import 'package:moodiary_rust/assistant.dart' as rust;
 
 @LazySingleton(as: AssistantService)
 class RigAssistantService implements AssistantService {
@@ -70,6 +70,7 @@ class RigAssistantService implements AssistantService {
       reasoningBudget: request.reasoning.budgetTokens,
     );
 
+    await rust.FastLlm.ensureInitialized();
     final stream = rust.rigChatStream(
       config: config,
       systemPrompt: request.systemPrompt,

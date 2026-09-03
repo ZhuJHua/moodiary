@@ -1,8 +1,6 @@
 //! Rust 侧完全通用、不认识「日记」：工具定义作为数据从 Dart 传入，工具执行（含权限
 //! 闸门）由 Dart 回调完成。新增 / 修改工具无需动 Rust。
 
-mod http_client;
-
 use std::sync::Arc;
 
 use anyhow::Result;

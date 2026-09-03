@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use crate::frb_generated::StreamSink;
 
-pub use moodiary_assistant::{RigChatMessage, RigProviderConfig, RigStreamEvent, RigToolDef};
+pub use crate::chat::{RigChatMessage, RigProviderConfig, RigStreamEvent, RigToolDef};
 
 #[frb(mirror(RigProviderConfig))]
 pub struct _RigProviderConfig {
@@ -82,14 +82,14 @@ pub async fn rig_chat_stream(
     // 包 Arc 而非 sink.clone()：StreamSink 的 derive(Clone) 带了多余的 `T: Clone` 约束。
     let sink = Arc::new(sink);
     let emit_sink = sink.clone();
-    let emit: moodiary_assistant::EmitFn = Arc::new(move |event| emit_sink.add(event).is_ok());
+    let emit: crate::chat::EmitFn = Arc::new(move |event| emit_sink.add(event).is_ok());
     // 回调必须声明成可失败：不可失败版本的生成代码会对 Dart 抛出的异常 `.expect`，
     // 变成一次 Rust panic。这里只兜意料外的抛出，同样回灌模型而不中断对话。
-    let dispatch: moodiary_assistant::ToolDispatch = Arc::new(move |name, args| {
+    let dispatch: crate::chat::ToolDispatch = Arc::new(move |name, args| {
         let call = tool_dispatch(name, args);
         Box::pin(async move { call.await.unwrap_or_else(|e| format!("tool error: {e}")) })
     });
-    if let Err(e) = moodiary_assistant::rig_chat_stream(
+    if let Err(e) = crate::chat::rig_chat_stream(
         emit,
         config,
         system_prompt,

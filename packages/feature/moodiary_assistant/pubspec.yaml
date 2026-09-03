@@ -13,6 +13,7 @@ dependencies:
   flutter:
     sdk: flutter
 
+  fast_llm: 0.0.1
   moodiary_router: 0.0.1
   moodiary_rust: 0.0.1
   moodiary_utils: 0.0.1

@@ -20,7 +20,7 @@ Stream<RigStreamEvent> rigChatStream({
   required List<RigToolDef> tools,
   required int maxTurns,
   required FutureOr<String> Function(String, String) toolDispatch,
-}) => RustLib.instance.api.crateApiAssistantRigChatStream(
+}) => FastLlmLib.instance.api.crateApiAssistantRigChatStream(
   config: config,
   systemPrompt: systemPrompt,
   history: history,

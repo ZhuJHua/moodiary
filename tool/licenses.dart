@@ -18,6 +18,7 @@ const _rustDirs = [
   'packages/foundation/fast_image/rust',
   'packages/foundation/fast_press/rust',
   'packages/foundation/fast_http/rust',
+  'packages/foundation/fast_llm/rust',
 ];
 const _npmManifest =
     'packages/feature_base/moodiary_editor/editor/build/third-party-licenses.json';
