@@ -13,33 +13,44 @@
 // 纯 dart:io，不依赖 fvm / flutter，CI 可直接 `dart tool/check_generated.dart`。
 import 'dart:io';
 
-const _rustPkgDir = 'packages/foundation/moodiary_rust';
+/// 带自己 FRB 的包，与 tool/task.dart 的 _frbPkgDirs 同一份。
+const _frbPkgDirs = [
+  'packages/foundation/moodiary_rust',
+  'packages/foundation/fast_image',
+  'packages/foundation/fast_press',
+];
 
 void main() {
+  for (final dir in _frbPkgDirs) {
+    _check(dir);
+  }
+}
+
+void _check(String pkgDir) {
   String? grab(String path, RegExp re) =>
       re.firstMatch(File(path).readAsStringSync())?.group(1);
 
   final pinned = grab(
-    '$_rustPkgDir/pubspec.yaml',
+    '$pkgDir/pubspec.yaml',
     RegExp(r'^\s*flutter_rust_bridge:\s*(\S+)\s*$', multiLine: true),
   );
   if (pinned == null) {
-    stderr.writeln('✗ 读不到 $_rustPkgDir/pubspec.yaml 里的 flutter_rust_bridge 版本');
+    stderr.writeln('✗ 读不到 $pkgDir/pubspec.yaml 里的 flutter_rust_bridge 版本');
     exit(1);
   }
 
   final versions = {
     'rust/src/frb_generated.rs': grab(
-      '$_rustPkgDir/rust/src/frb_generated.rs',
+      '$pkgDir/rust/src/frb_generated.rs',
       RegExp(r'FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "([^"]+)"'),
     ),
     'lib/src/rust/frb_generated.dart': grab(
-      '$_rustPkgDir/lib/src/rust/frb_generated.dart',
+      '$pkgDir/lib/src/rust/frb_generated.dart',
       RegExp(r"codegenVersion => '([^']+)'"),
     ),
     // Rust 侧的钉版本没有别的检查覆盖，一并比对。
     'rust/Cargo.toml': grab(
-      '$_rustPkgDir/rust/Cargo.toml',
+      '$pkgDir/rust/Cargo.toml',
       RegExp(r'^flutter_rust_bridge = "=([^"]+)"', multiLine: true),
     ),
   };
@@ -47,7 +58,7 @@ void main() {
   final stale = versions.entries.where((e) => e.value != pinned).toList();
   if (stale.isNotEmpty) {
     stderr.writeln(
-      '✗ 生成物 / 钉版本与 pubspec 的 $pinned 不一致：\n'
+      '✗ $pkgDir：生成物 / 钉版本与 pubspec 的 $pinned 不一致：\n'
       '${stale.map((e) => '    ${e.key} = ${e.value ?? '未知'}').join('\n')}\n'
       '  跑 `dart tool/task.dart gen-rust` 重新生成。',
     );
@@ -57,11 +68,11 @@ void main() {
   // 两侧的 content hash 由同一次 codegen 写出，必须相等。不等 = 只提交了一半生成物，
   // 而运行时那句 StateError 要等到 RustLib.init() 才响，测试跑不到就发不出来。
   final rustHash = grab(
-    '$_rustPkgDir/rust/src/frb_generated.rs',
+    '$pkgDir/rust/src/frb_generated.rs',
     RegExp(r'FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = (-?\d+);'),
   );
   final dartHash = grab(
-    '$_rustPkgDir/lib/src/rust/frb_generated.dart',
+    '$pkgDir/lib/src/rust/frb_generated.dart',
     RegExp(r'rustContentHash => (-?\d+);'),
   );
   if (rustHash == null || dartHash == null) {
@@ -73,7 +84,7 @@ void main() {
   }
   if (rustHash != dartHash) {
     stderr.writeln(
-      '✗ 两侧 content hash 不一致：rust=$rustHash dart=$dartHash\n'
+      '✗ $pkgDir：两侧 content hash 不一致：rust=$rustHash dart=$dartHash\n'
       '  只提交了一半生成物。跑 `dart tool/task.dart gen-rust` 并把两份都提交。',
     );
     exit(1);

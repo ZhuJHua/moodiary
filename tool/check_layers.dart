@@ -234,7 +234,6 @@ List<String> _checkRustLayers() {
 /// moodiary_rust 的门面归属。
 const Map<String, Set<String>> _rustFacadeOwners = {
   'assistant': {'moodiary_assistant'},
-  'export': {'moodiary_export'},
   'sync': {'moodiary_sync'},
   'graph': {'moodiary_diary'},
   // app 门面：每个组合根都够得着（desktop 进树后 _appPubNames 自动带上）。
@@ -242,6 +241,47 @@ const Map<String, Set<String>> _rustFacadeOwners = {
   // 引擎搬迁测试要给拷贝路径注入分词替身，与 moodiary_data 同一份。
   'testing': {'moodiary_data', 'moodiary_migration'},
 };
+
+/// 自带原生库、又只服务一个 feature 的 foundation 包：pub 依赖就是它的门面，归属
+/// 与 _rustFacadeOwners 同一意思（导出的 Rust 以前是 moodiary_rust 的 export 门面）。
+/// app 组合根为了 `XxxLib.init()` 总在名单里。fast_image 全仓开放，不在这里。
+const Map<String, Set<String>> _nativePkgOwners = {
+  'fast_press': {'moodiary_export'},
+};
+
+/// 校验 _nativePkgOwners：读每个 pubspec 的正式依赖，返回违规描述（空表示通过）。
+List<String> _checkNativePkgOwners() {
+  final out = <String>[];
+  final pubspecs = <String>[
+    for (final dir in Directory('packages').listSync().whereType<Directory>())
+      for (final pkg in dir.listSync().whereType<Directory>())
+        '${pkg.path}/pubspec.yaml',
+    for (final dir in _appDirs) '$dir/pubspec.yaml',
+  ];
+  for (final path in pubspecs) {
+    final f = File(path);
+    if (!f.existsSync()) continue;
+    final text = f.readAsStringSync();
+    final name = RegExp(
+      r'^name:\s*(\S+)',
+      multiLine: true,
+    ).firstMatch(text)?.group(1);
+    if (name == null) continue;
+    final main = text
+        .split(RegExp(r'^dev_dependencies:', multiLine: true))
+        .first;
+    for (final entry in _nativePkgOwners.entries) {
+      final dep = entry.key;
+      if (name == dep) continue;
+      if (!RegExp('^\\s{2}$dep:', multiLine: true).hasMatch(main)) continue;
+      if (entry.value.contains(name)) continue;
+      if (_appPubNames.values.contains(name)) continue;
+      out.add('$name -> $dep：该包只属于 ${entry.value.join('/')}（与 app 组合根）');
+    }
+  }
+  out.sort();
+  return out;
+}
 
 final RegExp _rustFacadeRe = RegExp(
   r"""^\s*(?:import|export)\s+['"]package:moodiary_rust/([a-z_]+)\.dart['"]""",
@@ -718,6 +758,18 @@ void main(List<String> args) {
       stderr.writeln('  ✗ $v');
     }
     stderr.writeln('  → 见 _rustFacadeOwners；通用能力请走 foundation.dart。');
+    exit(1);
+  }
+
+  final nativeViolations = _checkNativePkgOwners();
+  if (nativeViolations.isEmpty) {
+    stdout.writeln('✅ 原生库包归属检查通过。');
+  } else {
+    stderr.writeln('❌ 原生库包归属违规 ${nativeViolations.length} 条：');
+    for (final v in nativeViolations) {
+      stderr.writeln('  ✗ $v');
+    }
+    stderr.writeln('  → 见 _nativePkgOwners。');
     exit(1);
   }
 

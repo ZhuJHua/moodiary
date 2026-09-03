@@ -2,9 +2,9 @@ use anyhow::Result;
 use flutter_rust_bridge::frb;
 
 use crate::api::cancel::CancelToken;
-use crate::api::export_ir::IrDoc;
+use crate::api::ir::IrDoc;
 
-pub use moodiary_export::docx::DocxStyle;
+pub use crate::docx::DocxStyle;
 
 #[frb(mirror(DocxStyle))]
 pub struct _DocxStyle {
@@ -34,7 +34,7 @@ pub fn write_docx(
     out_path: String,
     cancel: &CancelToken,
 ) -> Result<()> {
-    moodiary_export::docx::write_docx(docs, &style, out_path, &cancel.checker())
+    crate::docx::write_docx(docs, &style, out_path, &cancel.checker())
 }
 
 /// 合并导出用的累加器，理由同 [PdfBuilder](crate::api::pdf::PdfBuilder)。
@@ -57,7 +57,7 @@ impl DocxBuilder {
     }
 
     pub fn finish(&mut self, out_path: String, cancel: &CancelToken) -> Result<()> {
-        moodiary_export::docx::write_docx(
+        crate::docx::write_docx(
             std::mem::take(&mut self.docs),
             &self.style,
             out_path,

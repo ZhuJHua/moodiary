@@ -5,7 +5,7 @@
 
 import '../frb_generated.dart';
 import 'cancel.dart';
-import 'export_ir.dart';
+import 'ir.dart';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
@@ -14,7 +14,7 @@ Future<void> writeDocx({
   required DocxStyle style,
   required String outPath,
   required CancelToken cancel,
-}) => RustLib.instance.api.crateApiDocxWriteDocx(
+}) => FastPressLib.instance.api.crateApiDocxWriteDocx(
   docs: docs,
   style: style,
   outPath: outPath,
@@ -29,7 +29,7 @@ abstract class DocxBuilder implements RustOpaqueInterface {
 
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
   static Future<DocxBuilder> newInstance({required DocxStyle style}) =>
-      RustLib.instance.api.crateApiDocxDocxBuilderNew(style: style);
+      FastPressLib.instance.api.crateApiDocxDocxBuilderNew(style: style);
 }
 
 class DocxStyle {

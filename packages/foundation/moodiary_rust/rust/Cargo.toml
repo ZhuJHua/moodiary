@@ -47,14 +47,6 @@ ring = "=0.17.14"
 argon2 = { version = "=0.6.0-rc.8", features = ["default"] }
 zip = { version = "=8.6.0", default-features = false, features = ["aes-crypto", "deflate"] }
 
-image = { version = "=0.25.10", default-features = false, features = [
-    "bmp",
-    "gif",
-    "jpeg",
-    "png",
-    "tiff",
-    "webp",
-] }
 ttf-parser = { git = "https://github.com/ZhuJHua/ttf-parser", rev = "4a0ddfee643e4a25a3d1363241fa94b9c5f113c3", default-features = false, features = ["std", "variable-fonts"] }
 
 jieba-rs = { version = "=0.10.3", default-features = false, features = ["default-dict"] }
@@ -62,17 +54,6 @@ jieba-rs = { version = "=0.10.3", default-features = false, features = ["default
 tokenizers = { version = "=0.23.1", default-features = false, features = ["unstable_wasm"] }
 unicode-segmentation = "=1.13.3"
 rust-stemmers = "=1.2.0"
-
-typst = "=0.15.1"
-typst-pdf = "=0.15.1"
-docx-rs = { version = "=0.4.22", default-features = false }
-syntect = { version = "=5.3.0", default-features = false, features = [
-    "parsing",
-    "regex-fancy",
-    "plist-load",
-    "yaml-load",
-] }
-two-face = { version = "=0.4.5", default-features = false, features = ["syntect-fancy"] }
 
 rig = { package = "rig-core", version = "=0.42.0", default-features = false, features = ["reqwest"] }
 # 0.42 把 agent 运行时从 rig-core 拆了出来（AgentBuilder / 多轮工具循环都在这里）。
@@ -85,9 +66,7 @@ moodiary-hf-tokenizer = { path = "crates/foundation/hf_tokenizer" }
 moodiary-http = { path = "crates/foundation/http" }
 moodiary-js = { path = "crates/foundation/js" }
 moodiary-text = { path = "crates/foundation/text" }
-moodiary-doc = { path = "crates/feature_base/doc" }
 moodiary-assistant = { path = "crates/feature/assistant" }
-moodiary-export = { path = "crates/feature/export" }
 moodiary-graph = { path = "crates/feature/graph" }
 moodiary-sync = { path = "crates/feature/sync" }
 
@@ -98,8 +77,6 @@ anyhow = { workspace = true }
 moodiary-archive = { workspace = true }
 moodiary-assistant = { workspace = true }
 moodiary-crypto = { workspace = true }
-moodiary-doc = { workspace = true }
-moodiary-export = { workspace = true }
 moodiary-font = { workspace = true }
 moodiary-graph = { workspace = true }
 moodiary-hf-tokenizer = { workspace = true }
@@ -113,7 +90,7 @@ moodiary-text = { workspace = true }
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
 
 # 不要加 panic = "abort"：FRB 靠 catch_unwind 把 Rust panic 转成 Dart 异常，abort
-# 会让第三方 crate（typst / image / zip）在脏输入上直接杀进程，而 Dart 侧
+# 会让第三方 crate（zip / rig）在脏输入上直接杀进程，而 Dart 侧
 # 现成的 try/catch 本来兜得住。代价实测（arm64 release）：.so 42.52 → 46.00 MB、
 # APK 40.2 → 41.6 MB，大头是 .text 里的 landing pad 而非 unwind 表本身。
 # 注：改 [profile.*] 后必须 flutter clean 才会真正重编——构建钩子与 Gradle 两层都会

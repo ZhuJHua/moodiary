@@ -1,12 +1,12 @@
 import 'dart:io';
 
 import 'package:fast_image/fast_image.dart';
+import 'package:fast_press/fast_press.dart' as press;
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
-import 'package:moodiary_rust/export.dart' as rust;
 import 'package:moodiary_rust/foundation.dart' as rust;
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path/path.dart' as p;
@@ -93,9 +93,9 @@ class ExportService {
     void Function(ExportProgress progress)? onProgress,
 
     /// 取消信号。长任务只在循环边界响应；typst 的整篇排版会跑完当前这一趟。
-    rust.CancelToken? cancel,
+    press.CancelToken? cancel,
   }) async {
-    final token = cancel ?? rust.CancelToken();
+    final token = cancel ?? press.CancelToken();
     final diaries = await scope.resolve();
     if (diaries.isEmpty) {
       throw const ExportException(.emptyScope);
@@ -168,7 +168,7 @@ class ExportService {
     }
   }
 
-  static void _throwIfCancelled(rust.CancelToken token) {
+  static void _throwIfCancelled(press.CancelToken token) {
     if (token.isCancelled()) throw const ExportException(.cancelled);
   }
 
@@ -232,7 +232,7 @@ class ExportService {
     Directory workDir,
     _MediaStage media,
     String untitledLabel,
-    rust.CancelToken token,
+    press.CancelToken token,
   ) async {
     final options = MarkdownOptions(
       dialect: settings.markdown.dialect,
@@ -289,10 +289,10 @@ class ExportService {
     String untitledLabel,
     String videoLabel,
     String audioLabel,
-    rust.CancelToken token,
+    press.CancelToken token,
   ) async {
     final layout = settings.docx;
-    final style = rust.DocxStyle(
+    final style = press.DocxStyle(
       eastAsiaFont: layout.eastAsiaFont.isEmpty ? '宋体' : layout.eastAsiaFont,
       asciiFont: layout.asciiFont,
       fontSizePt: layout.fontSizePt,
@@ -313,7 +313,7 @@ class ExportService {
 
     if (settings.common.merge) {
       final path = p.join(outDir.path, '${_stamp()}.docx');
-      final builder = await rust.DocxBuilder.newInstance(style: style);
+      final builder = await press.DocxBuilder.newInstance(style: style);
       try {
         for (final doc in docs) {
           _throwIfCancelled(token);
@@ -335,7 +335,7 @@ class ExportService {
         used,
         untitledLabel,
       );
-      await rust.writeDocx(
+      await press.writeDocx(
         docs: _toIr([doc]),
         style: style,
         outPath: p.join(outDir.path, name),
@@ -364,10 +364,10 @@ class ExportService {
     String videoLabel,
     String audioLabel,
     void Function(ExportProgress progress)? onProgress,
-    rust.CancelToken token,
+    press.CancelToken token,
   ) async {
     final layout = settings.pdf;
-    final style = rust.PdfStyle(
+    final style = press.PdfStyle(
       fontPath: AppFiles.getRealPath('font', layout.eastAsiaFont),
       // 留空让 typst 用字体文件自报的家族名——用户导入什么就用什么，不必猜名字。
       fontFamily: '',
@@ -389,7 +389,7 @@ class ExportService {
 
     if (settings.common.merge) {
       final path = p.join(outDir.path, '${_stamp()}.pdf');
-      final builder = await rust.PdfBuilder.newInstance(style: style);
+      final builder = await press.PdfBuilder.newInstance(style: style);
       try {
         onProgress?.call(ExportProgress(.writing, 0, docs.length));
         for (var i = 0; i < docs.length; i++) {
@@ -417,7 +417,7 @@ class ExportService {
         used,
         untitledLabel,
       );
-      await rust.writePdf(
+      await press.writePdf(
         docs: _toIr([doc]),
         style: style,
         outPath: p.join(outDir.path, name),
@@ -433,10 +433,10 @@ class ExportService {
   }
 
   /// 时间过桥前换成人读格式 —— Rust 侧只是照抄进 meta 行。
-  static rust.IrDoc _toIrDoc(ExportDoc doc) =>
+  static press.IrDoc _toIrDoc(ExportDoc doc) =>
       doc.toIr(TimeFormat.longDateTime(doc.time));
 
-  static List<rust.IrDoc> _toIr(List<ExportDoc> docs) => [
+  static List<press.IrDoc> _toIr(List<ExportDoc> docs) => [
     for (final doc in docs) _toIrDoc(doc),
   ];
 
@@ -485,7 +485,7 @@ class ExportService {
   static Future<String> _zip(
     Directory dir,
     String zipPath,
-    rust.CancelToken token,
+    press.CancelToken token,
   ) async {
     final zip = await rust.Zip.newInstance(filePath: zipPath);
     // 中途抛错就到不了 finish()，不 dispose 则 ZipWriter 一直攥着 fd 到 GC。

@@ -6,15 +6,12 @@
 import 'api/assistant.dart';
 import 'api/cancel.dart';
 import 'api/crypto.dart';
-import 'api/docx.dart';
-import 'api/export_ir.dart';
 import 'api/font.dart';
 import 'api/graph_layout.dart';
 import 'api/hf_tokenizer.dart';
 import 'api/http.dart';
 import 'api/http_server.dart';
 import 'api/js.dart';
-import 'api/pdf.dart';
 import 'api/s3.dart';
 import 'api/text.dart';
 import 'api/webdav.dart';
@@ -52,10 +49,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClientPtr;
 
   CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_DocxBuilderPtr => wire
-      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilderPtr;
-
-  CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_FontReaderPtr => wire
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReaderPtr;
 
@@ -70,10 +63,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_HttpServerPtr => wire
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServerPtr;
-
-  CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_PdfBuilderPtr => wire
-      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilderPtr;
 
   CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_S3ClientPtr => wire
@@ -114,12 +103,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  DocxBuilder
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-    dynamic raw,
-  );
-
-  @protected
   FontReader
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     dynamic raw,
@@ -144,12 +127,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  PdfBuilder
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-    dynamic raw,
-  );
-
-  @protected
   S3Client
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
     dynamic raw,
@@ -168,20 +145,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  DocxBuilder
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-    dynamic raw,
-  );
-
-  @protected
   HttpServer
   dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    dynamic raw,
-  );
-
-  @protected
-  PdfBuilder
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     dynamic raw,
   );
 
@@ -274,12 +239,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  DocxBuilder
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-    dynamic raw,
-  );
-
-  @protected
   FontReader
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     dynamic raw,
@@ -300,12 +259,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   HttpServer
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    dynamic raw,
-  );
-
-  @protected
-  PdfBuilder
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     dynamic raw,
   );
 
@@ -360,19 +313,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ClientSettings dco_decode_box_autoadd_client_settings(dynamic raw);
 
   @protected
-  DocxStyle dco_decode_box_autoadd_docx_style(dynamic raw);
-
-  @protected
   GraphLayoutParams dco_decode_box_autoadd_graph_layout_params(dynamic raw);
 
   @protected
   HttpResponse dco_decode_box_autoadd_http_response(dynamic raw);
-
-  @protected
-  IrDoc dco_decode_box_autoadd_ir_doc(dynamic raw);
-
-  @protected
-  PdfStyle dco_decode_box_autoadd_pdf_style(dynamic raw);
 
   @protected
   RequestOptions dco_decode_box_autoadd_request_options(dynamic raw);
@@ -390,16 +334,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ClientSettings dco_decode_client_settings(dynamic raw);
 
   @protected
-  DocxStyle dco_decode_docx_style(dynamic raw);
-
-  @protected
   DownloadEvent dco_decode_download_event(dynamic raw);
 
   @protected
   double dco_decode_f_32(dynamic raw);
-
-  @protected
-  double dco_decode_f_64(dynamic raw);
 
   @protected
   GraphLayoutParams dco_decode_graph_layout_params(dynamic raw);
@@ -429,24 +367,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 dco_decode_i_64(dynamic raw);
 
   @protected
-  IrBlock dco_decode_ir_block(dynamic raw);
-
-  @protected
-  IrCell dco_decode_ir_cell(dynamic raw);
-
-  @protected
-  IrDoc dco_decode_ir_doc(dynamic raw);
-
-  @protected
-  IrListItem dco_decode_ir_list_item(dynamic raw);
-
-  @protected
-  IrRow dco_decode_ir_row(dynamic raw);
-
-  @protected
-  IrSpan dco_decode_ir_span(dynamic raw);
-
-  @protected
   PlatformInt64 dco_decode_isize(dynamic raw);
 
   @protected
@@ -457,24 +377,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<String> dco_decode_list_String(dynamic raw);
-
-  @protected
-  List<IrBlock> dco_decode_list_ir_block(dynamic raw);
-
-  @protected
-  List<IrCell> dco_decode_list_ir_cell(dynamic raw);
-
-  @protected
-  List<IrDoc> dco_decode_list_ir_doc(dynamic raw);
-
-  @protected
-  List<IrListItem> dco_decode_list_ir_list_item(dynamic raw);
-
-  @protected
-  List<IrRow> dco_decode_list_ir_row(dynamic raw);
-
-  @protected
-  List<IrSpan> dco_decode_list_ir_span(dynamic raw);
 
   @protected
   List<KeyValue> dco_decode_list_key_value(dynamic raw);
@@ -532,9 +434,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Uint8List? dco_decode_opt_list_prim_u_8_strict(dynamic raw);
-
-  @protected
-  PdfStyle dco_decode_pdf_style(dynamic raw);
 
   @protected
   (String, double) dco_decode_record_string_f_32(dynamic raw);
@@ -606,12 +505,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  DocxBuilder
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   FontReader
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     SseDeserializer deserializer,
@@ -636,12 +529,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  PdfBuilder
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   S3Client
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
     SseDeserializer deserializer,
@@ -660,20 +547,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  DocxBuilder
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   HttpServer
   sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  PdfBuilder
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     SseDeserializer deserializer,
   );
 
@@ -752,12 +627,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  DocxBuilder
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   FontReader
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     SseDeserializer deserializer,
@@ -778,12 +647,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   HttpServer
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  PdfBuilder
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
     SseDeserializer deserializer,
   );
 
@@ -840,9 +703,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  DocxStyle sse_decode_box_autoadd_docx_style(SseDeserializer deserializer);
-
-  @protected
   GraphLayoutParams sse_decode_box_autoadd_graph_layout_params(
     SseDeserializer deserializer,
   );
@@ -851,12 +711,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   HttpResponse sse_decode_box_autoadd_http_response(
     SseDeserializer deserializer,
   );
-
-  @protected
-  IrDoc sse_decode_box_autoadd_ir_doc(SseDeserializer deserializer);
-
-  @protected
-  PdfStyle sse_decode_box_autoadd_pdf_style(SseDeserializer deserializer);
 
   @protected
   RequestOptions sse_decode_box_autoadd_request_options(
@@ -878,16 +732,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ClientSettings sse_decode_client_settings(SseDeserializer deserializer);
 
   @protected
-  DocxStyle sse_decode_docx_style(SseDeserializer deserializer);
-
-  @protected
   DownloadEvent sse_decode_download_event(SseDeserializer deserializer);
 
   @protected
   double sse_decode_f_32(SseDeserializer deserializer);
-
-  @protected
-  double sse_decode_f_64(SseDeserializer deserializer);
 
   @protected
   GraphLayoutParams sse_decode_graph_layout_params(
@@ -923,24 +771,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
 
   @protected
-  IrBlock sse_decode_ir_block(SseDeserializer deserializer);
-
-  @protected
-  IrCell sse_decode_ir_cell(SseDeserializer deserializer);
-
-  @protected
-  IrDoc sse_decode_ir_doc(SseDeserializer deserializer);
-
-  @protected
-  IrListItem sse_decode_ir_list_item(SseDeserializer deserializer);
-
-  @protected
-  IrRow sse_decode_ir_row(SseDeserializer deserializer);
-
-  @protected
-  IrSpan sse_decode_ir_span(SseDeserializer deserializer);
-
-  @protected
   PlatformInt64 sse_decode_isize(SseDeserializer deserializer);
 
   @protected
@@ -951,24 +781,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer);
-
-  @protected
-  List<IrBlock> sse_decode_list_ir_block(SseDeserializer deserializer);
-
-  @protected
-  List<IrCell> sse_decode_list_ir_cell(SseDeserializer deserializer);
-
-  @protected
-  List<IrDoc> sse_decode_list_ir_doc(SseDeserializer deserializer);
-
-  @protected
-  List<IrListItem> sse_decode_list_ir_list_item(SseDeserializer deserializer);
-
-  @protected
-  List<IrRow> sse_decode_list_ir_row(SseDeserializer deserializer);
-
-  @protected
-  List<IrSpan> sse_decode_list_ir_span(SseDeserializer deserializer);
 
   @protected
   List<KeyValue> sse_decode_list_key_value(SseDeserializer deserializer);
@@ -1036,9 +848,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Uint8List? sse_decode_opt_list_prim_u_8_strict(SseDeserializer deserializer);
-
-  @protected
-  PdfStyle sse_decode_pdf_style(SseDeserializer deserializer);
 
   @protected
   (String, double) sse_decode_record_string_f_32(SseDeserializer deserializer);
@@ -1185,16 +994,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  ffi.Pointer<wire_cst_docx_style> cst_encode_box_autoadd_docx_style(
-    DocxStyle raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    final ptr = wire.cst_new_box_autoadd_docx_style();
-    cst_api_fill_to_wire_docx_style(raw, ptr.ref);
-    return ptr;
-  }
-
-  @protected
   ffi.Pointer<wire_cst_graph_layout_params>
   cst_encode_box_autoadd_graph_layout_params(GraphLayoutParams raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
@@ -1210,24 +1009,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     // Codec=Cst (C-struct based), see doc to use other codecs
     final ptr = wire.cst_new_box_autoadd_http_response();
     cst_api_fill_to_wire_http_response(raw, ptr.ref);
-    return ptr;
-  }
-
-  @protected
-  ffi.Pointer<wire_cst_ir_doc> cst_encode_box_autoadd_ir_doc(IrDoc raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    final ptr = wire.cst_new_box_autoadd_ir_doc();
-    cst_api_fill_to_wire_ir_doc(raw, ptr.ref);
-    return ptr;
-  }
-
-  @protected
-  ffi.Pointer<wire_cst_pdf_style> cst_encode_box_autoadd_pdf_style(
-    PdfStyle raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    final ptr = wire.cst_new_box_autoadd_pdf_style();
-    cst_api_fill_to_wire_pdf_style(raw, ptr.ref);
     return ptr;
   }
 
@@ -1280,70 +1061,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     final ans = wire.cst_new_list_String(raw.length);
     for (var i = 0; i < raw.length; ++i) {
       ans.ref.ptr[i] = cst_encode_String(raw[i]);
-    }
-    return ans;
-  }
-
-  @protected
-  ffi.Pointer<wire_cst_list_ir_block> cst_encode_list_ir_block(
-    List<IrBlock> raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    final ans = wire.cst_new_list_ir_block(raw.length);
-    for (var i = 0; i < raw.length; ++i) {
-      cst_api_fill_to_wire_ir_block(raw[i], ans.ref.ptr[i]);
-    }
-    return ans;
-  }
-
-  @protected
-  ffi.Pointer<wire_cst_list_ir_cell> cst_encode_list_ir_cell(List<IrCell> raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    final ans = wire.cst_new_list_ir_cell(raw.length);
-    for (var i = 0; i < raw.length; ++i) {
-      cst_api_fill_to_wire_ir_cell(raw[i], ans.ref.ptr[i]);
-    }
-    return ans;
-  }
-
-  @protected
-  ffi.Pointer<wire_cst_list_ir_doc> cst_encode_list_ir_doc(List<IrDoc> raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    final ans = wire.cst_new_list_ir_doc(raw.length);
-    for (var i = 0; i < raw.length; ++i) {
-      cst_api_fill_to_wire_ir_doc(raw[i], ans.ref.ptr[i]);
-    }
-    return ans;
-  }
-
-  @protected
-  ffi.Pointer<wire_cst_list_ir_list_item> cst_encode_list_ir_list_item(
-    List<IrListItem> raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    final ans = wire.cst_new_list_ir_list_item(raw.length);
-    for (var i = 0; i < raw.length; ++i) {
-      cst_api_fill_to_wire_ir_list_item(raw[i], ans.ref.ptr[i]);
-    }
-    return ans;
-  }
-
-  @protected
-  ffi.Pointer<wire_cst_list_ir_row> cst_encode_list_ir_row(List<IrRow> raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    final ans = wire.cst_new_list_ir_row(raw.length);
-    for (var i = 0; i < raw.length; ++i) {
-      cst_api_fill_to_wire_ir_row(raw[i], ans.ref.ptr[i]);
-    }
-    return ans;
-  }
-
-  @protected
-  ffi.Pointer<wire_cst_list_ir_span> cst_encode_list_ir_span(List<IrSpan> raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    final ans = wire.cst_new_list_ir_span(raw.length);
-    for (var i = 0; i < raw.length; ++i) {
-      cst_api_fill_to_wire_ir_span(raw[i], ans.ref.ptr[i]);
     }
     return ans;
   }
@@ -1552,14 +1269,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  void cst_api_fill_to_wire_box_autoadd_docx_style(
-    DocxStyle apiObj,
-    ffi.Pointer<wire_cst_docx_style> wireObj,
-  ) {
-    cst_api_fill_to_wire_docx_style(apiObj, wireObj.ref);
-  }
-
-  @protected
   void cst_api_fill_to_wire_box_autoadd_graph_layout_params(
     GraphLayoutParams apiObj,
     ffi.Pointer<wire_cst_graph_layout_params> wireObj,
@@ -1573,22 +1282,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     ffi.Pointer<wire_cst_http_response> wireObj,
   ) {
     cst_api_fill_to_wire_http_response(apiObj, wireObj.ref);
-  }
-
-  @protected
-  void cst_api_fill_to_wire_box_autoadd_ir_doc(
-    IrDoc apiObj,
-    ffi.Pointer<wire_cst_ir_doc> wireObj,
-  ) {
-    cst_api_fill_to_wire_ir_doc(apiObj, wireObj.ref);
-  }
-
-  @protected
-  void cst_api_fill_to_wire_box_autoadd_pdf_style(
-    PdfStyle apiObj,
-    ffi.Pointer<wire_cst_pdf_style> wireObj,
-  ) {
-    cst_api_fill_to_wire_pdf_style(apiObj, wireObj.ref);
   }
 
   @protected
@@ -1622,26 +1315,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       apiObj.maxRedirects,
     );
     wireObj.throw_on_status = cst_encode_bool(apiObj.throwOnStatus);
-  }
-
-  @protected
-  void cst_api_fill_to_wire_docx_style(
-    DocxStyle apiObj,
-    wire_cst_docx_style wireObj,
-  ) {
-    wireObj.east_asia_font = cst_encode_String(apiObj.eastAsiaFont);
-    wireObj.ascii_font = cst_encode_String(apiObj.asciiFont);
-    wireObj.font_size_pt = cst_encode_f_64(apiObj.fontSizePt);
-    wireObj.line_spacing = cst_encode_f_64(apiObj.lineSpacing);
-    wireObj.first_line_indent = cst_encode_bool(apiObj.firstLineIndent);
-    wireObj.page_width = cst_encode_u_32(apiObj.pageWidth);
-    wireObj.page_height = cst_encode_u_32(apiObj.pageHeight);
-    wireObj.page_margin = cst_encode_u_32(apiObj.pageMargin);
-    wireObj.include_title = cst_encode_bool(apiObj.includeTitle);
-    wireObj.include_meta = cst_encode_bool(apiObj.includeMeta);
-    wireObj.page_break_between = cst_encode_bool(apiObj.pageBreakBetween);
-    wireObj.video_label = cst_encode_String(apiObj.videoLabel);
-    wireObj.audio_label = cst_encode_String(apiObj.audioLabel);
   }
 
   @protected
@@ -1720,134 +1393,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  void cst_api_fill_to_wire_ir_block(
-    IrBlock apiObj,
-    wire_cst_ir_block wireObj,
-  ) {
-    if (apiObj is IrBlock_Paragraph) {
-      var pre_spans = cst_encode_list_ir_span(apiObj.spans);
-      wireObj.tag = 0;
-      wireObj.kind.Paragraph.spans = pre_spans;
-      return;
-    }
-    if (apiObj is IrBlock_Heading) {
-      var pre_level = cst_encode_u_32(apiObj.level);
-      var pre_spans = cst_encode_list_ir_span(apiObj.spans);
-      wireObj.tag = 1;
-      wireObj.kind.Heading.level = pre_level;
-      wireObj.kind.Heading.spans = pre_spans;
-      return;
-    }
-    if (apiObj is IrBlock_List) {
-      var pre_ordered = cst_encode_bool(apiObj.ordered);
-      var pre_start = cst_encode_u_32(apiObj.start);
-      var pre_items = cst_encode_list_ir_list_item(apiObj.items);
-      wireObj.tag = 2;
-      wireObj.kind.List.ordered = pre_ordered;
-      wireObj.kind.List.start = pre_start;
-      wireObj.kind.List.items = pre_items;
-      return;
-    }
-    if (apiObj is IrBlock_Quote) {
-      var pre_children = cst_encode_list_ir_block(apiObj.children);
-      wireObj.tag = 3;
-      wireObj.kind.Quote.children = pre_children;
-      return;
-    }
-    if (apiObj is IrBlock_Code) {
-      var pre_language = cst_encode_opt_String(apiObj.language);
-      var pre_text = cst_encode_String(apiObj.text);
-      wireObj.tag = 4;
-      wireObj.kind.Code.language = pre_language;
-      wireObj.kind.Code.text = pre_text;
-      return;
-    }
-    if (apiObj is IrBlock_Divider) {
-      wireObj.tag = 5;
-      return;
-    }
-    if (apiObj is IrBlock_Image) {
-      var pre_path = cst_encode_String(apiObj.path);
-      var pre_alt = cst_encode_opt_String(apiObj.alt);
-      var pre_width_percent = cst_encode_opt_box_autoadd_u_32(
-        apiObj.widthPercent,
-      );
-      var pre_is_external = cst_encode_bool(apiObj.isExternal);
-      wireObj.tag = 6;
-      wireObj.kind.Image.path = pre_path;
-      wireObj.kind.Image.alt = pre_alt;
-      wireObj.kind.Image.width_percent = pre_width_percent;
-      wireObj.kind.Image.is_external = pre_is_external;
-      return;
-    }
-    if (apiObj is IrBlock_Media) {
-      var pre_kind = cst_encode_String(apiObj.kind);
-      var pre_filename = cst_encode_String(apiObj.filename);
-      var pre_path = cst_encode_String(apiObj.path);
-      var pre_cover_path = cst_encode_opt_String(apiObj.coverPath);
-      wireObj.tag = 7;
-      wireObj.kind.Media.kind = pre_kind;
-      wireObj.kind.Media.filename = pre_filename;
-      wireObj.kind.Media.path = pre_path;
-      wireObj.kind.Media.cover_path = pre_cover_path;
-      return;
-    }
-    if (apiObj is IrBlock_Table) {
-      var pre_rows = cst_encode_list_ir_row(apiObj.rows);
-      wireObj.tag = 8;
-      wireObj.kind.Table.rows = pre_rows;
-      return;
-    }
-  }
-
-  @protected
-  void cst_api_fill_to_wire_ir_cell(IrCell apiObj, wire_cst_ir_cell wireObj) {
-    wireObj.children = cst_encode_list_ir_block(apiObj.children);
-    wireObj.colspan = cst_encode_u_32(apiObj.colspan);
-    wireObj.rowspan = cst_encode_u_32(apiObj.rowspan);
-    wireObj.align = cst_encode_opt_String(apiObj.align);
-    wireObj.header = cst_encode_bool(apiObj.header);
-  }
-
-  @protected
-  void cst_api_fill_to_wire_ir_doc(IrDoc apiObj, wire_cst_ir_doc wireObj) {
-    wireObj.id = cst_encode_String(apiObj.id);
-    wireObj.title = cst_encode_String(apiObj.title);
-    wireObj.time = cst_encode_String(apiObj.time);
-    wireObj.weather = cst_encode_list_String(apiObj.weather);
-    wireObj.position = cst_encode_list_String(apiObj.position);
-    wireObj.tags = cst_encode_list_String(apiObj.tags);
-    wireObj.category_name = cst_encode_opt_String(apiObj.categoryName);
-    wireObj.blocks = cst_encode_list_ir_block(apiObj.blocks);
-  }
-
-  @protected
-  void cst_api_fill_to_wire_ir_list_item(
-    IrListItem apiObj,
-    wire_cst_ir_list_item wireObj,
-  ) {
-    wireObj.children = cst_encode_list_ir_block(apiObj.children);
-    wireObj.checked = cst_encode_opt_box_autoadd_bool(apiObj.checked);
-  }
-
-  @protected
-  void cst_api_fill_to_wire_ir_row(IrRow apiObj, wire_cst_ir_row wireObj) {
-    wireObj.cells = cst_encode_list_ir_cell(apiObj.cells);
-  }
-
-  @protected
-  void cst_api_fill_to_wire_ir_span(IrSpan apiObj, wire_cst_ir_span wireObj) {
-    wireObj.text = cst_encode_String(apiObj.text);
-    wireObj.bold = cst_encode_bool(apiObj.bold);
-    wireObj.italic = cst_encode_bool(apiObj.italic);
-    wireObj.strike = cst_encode_bool(apiObj.strike);
-    wireObj.underline = cst_encode_bool(apiObj.underline);
-    wireObj.code = cst_encode_bool(apiObj.code);
-    wireObj.href = cst_encode_opt_String(apiObj.href);
-    wireObj.diary_link_id = cst_encode_opt_String(apiObj.diaryLinkId);
-  }
-
-  @protected
   void cst_api_fill_to_wire_js_outcome(
     JsOutcome apiObj,
     wire_cst_js_outcome wireObj,
@@ -1864,25 +1409,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ) {
     wireObj.key = cst_encode_String(apiObj.key);
     wireObj.value = cst_encode_String(apiObj.value);
-  }
-
-  @protected
-  void cst_api_fill_to_wire_pdf_style(
-    PdfStyle apiObj,
-    wire_cst_pdf_style wireObj,
-  ) {
-    wireObj.font_path = cst_encode_String(apiObj.fontPath);
-    wireObj.font_family = cst_encode_String(apiObj.fontFamily);
-    wireObj.font_size_pt = cst_encode_f_64(apiObj.fontSizePt);
-    wireObj.line_spacing_em = cst_encode_f_64(apiObj.lineSpacingEm);
-    wireObj.first_line_indent = cst_encode_bool(apiObj.firstLineIndent);
-    wireObj.page_width_mm = cst_encode_f_64(apiObj.pageWidthMm);
-    wireObj.page_height_mm = cst_encode_f_64(apiObj.pageHeightMm);
-    wireObj.page_margin_mm = cst_encode_f_64(apiObj.pageMarginMm);
-    wireObj.include_title = cst_encode_bool(apiObj.includeTitle);
-    wireObj.include_meta = cst_encode_bool(apiObj.includeMeta);
-    wireObj.video_label = cst_encode_String(apiObj.videoLabel);
-    wireObj.audio_label = cst_encode_String(apiObj.audioLabel);
   }
 
   @protected
@@ -2047,12 +1573,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int
-  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-    DocxBuilder raw,
-  );
-
-  @protected
-  int
   cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     FontReader raw,
   );
@@ -2077,12 +1597,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int
-  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-    PdfBuilder raw,
-  );
-
-  @protected
-  int
   cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
     S3Client raw,
   );
@@ -2101,20 +1615,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int
-  cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-    DocxBuilder raw,
-  );
-
-  @protected
-  int
   cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
     HttpServer raw,
-  );
-
-  @protected
-  int
-  cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-    PdfBuilder raw,
   );
 
   @protected
@@ -2206,12 +1708,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int
-  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-    DocxBuilder raw,
-  );
-
-  @protected
-  int
   cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     FontReader raw,
   );
@@ -2232,12 +1728,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int
   cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
     HttpServer raw,
-  );
-
-  @protected
-  int
-  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-    PdfBuilder raw,
   );
 
   @protected
@@ -2263,9 +1753,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   double cst_encode_f_32(double raw);
-
-  @protected
-  double cst_encode_f_64(double raw);
 
   @protected
   int cst_encode_http_error_kind(HttpErrorKind raw);
@@ -2324,13 +1811,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-    DocxBuilder self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     FontReader self,
     SseSerializer serializer,
@@ -2359,13 +1839,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-    PdfBuilder self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
     S3Client self,
     SseSerializer serializer,
@@ -2387,22 +1860,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-    DocxBuilder self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
   sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
     HttpServer self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-    PdfBuilder self,
     SseSerializer serializer,
   );
 
@@ -2513,13 +1972,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-    DocxBuilder self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     FontReader self,
     SseSerializer serializer,
@@ -2543,13 +1995,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
     HttpServer self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-    PdfBuilder self,
     SseSerializer serializer,
   );
 
@@ -2614,12 +2059,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_box_autoadd_docx_style(
-    DocxStyle self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_box_autoadd_graph_layout_params(
     GraphLayoutParams self,
     SseSerializer serializer,
@@ -2628,15 +2067,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_http_response(
     HttpResponse self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_box_autoadd_ir_doc(IrDoc self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_box_autoadd_pdf_style(
-    PdfStyle self,
     SseSerializer serializer,
   );
 
@@ -2665,16 +2095,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_docx_style(DocxStyle self, SseSerializer serializer);
-
-  @protected
   void sse_encode_download_event(DownloadEvent self, SseSerializer serializer);
 
   @protected
   void sse_encode_f_32(double self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_f_64(double self, SseSerializer serializer);
 
   @protected
   void sse_encode_graph_layout_params(
@@ -2713,24 +2137,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
 
   @protected
-  void sse_encode_ir_block(IrBlock self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_ir_cell(IrCell self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_ir_doc(IrDoc self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_ir_list_item(IrListItem self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_ir_row(IrRow self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_ir_span(IrSpan self, SseSerializer serializer);
-
-  @protected
   void sse_encode_isize(PlatformInt64 self, SseSerializer serializer);
 
   @protected
@@ -2741,27 +2147,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_list_ir_block(List<IrBlock> self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_list_ir_cell(List<IrCell> self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_list_ir_doc(List<IrDoc> self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_list_ir_list_item(
-    List<IrListItem> self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_list_ir_row(List<IrRow> self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_list_ir_span(List<IrSpan> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_key_value(List<KeyValue> self, SseSerializer serializer);
@@ -2858,9 +2243,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     Uint8List? self,
     SseSerializer serializer,
   );
-
-  @protected
-  void sse_encode_pdf_style(PdfStyle self, SseSerializer serializer);
 
   @protected
   void sse_encode_record_string_f_32(
@@ -2972,18 +2354,6 @@ class RustLibWire implements BaseWire {
       _cst_new_box_autoadd_client_settingsPtr
           .asFunction<ffi.Pointer<wire_cst_client_settings> Function()>();
 
-  ffi.Pointer<wire_cst_docx_style> cst_new_box_autoadd_docx_style() {
-    return _cst_new_box_autoadd_docx_style();
-  }
-
-  late final _cst_new_box_autoadd_docx_stylePtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_docx_style> Function()>>(
-        'frbgen_moodiary_rust_cst_new_box_autoadd_docx_style',
-      );
-  late final _cst_new_box_autoadd_docx_style =
-      _cst_new_box_autoadd_docx_stylePtr
-          .asFunction<ffi.Pointer<wire_cst_docx_style> Function()>();
-
   ffi.Pointer<wire_cst_graph_layout_params>
   cst_new_box_autoadd_graph_layout_params() {
     return _cst_new_box_autoadd_graph_layout_params();
@@ -3008,28 +2378,6 @@ class RustLibWire implements BaseWire {
   late final _cst_new_box_autoadd_http_response =
       _cst_new_box_autoadd_http_responsePtr
           .asFunction<ffi.Pointer<wire_cst_http_response> Function()>();
-
-  ffi.Pointer<wire_cst_ir_doc> cst_new_box_autoadd_ir_doc() {
-    return _cst_new_box_autoadd_ir_doc();
-  }
-
-  late final _cst_new_box_autoadd_ir_docPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_ir_doc> Function()>>(
-        'frbgen_moodiary_rust_cst_new_box_autoadd_ir_doc',
-      );
-  late final _cst_new_box_autoadd_ir_doc = _cst_new_box_autoadd_ir_docPtr
-      .asFunction<ffi.Pointer<wire_cst_ir_doc> Function()>();
-
-  ffi.Pointer<wire_cst_pdf_style> cst_new_box_autoadd_pdf_style() {
-    return _cst_new_box_autoadd_pdf_style();
-  }
-
-  late final _cst_new_box_autoadd_pdf_stylePtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_pdf_style> Function()>>(
-        'frbgen_moodiary_rust_cst_new_box_autoadd_pdf_style',
-      );
-  late final _cst_new_box_autoadd_pdf_style = _cst_new_box_autoadd_pdf_stylePtr
-      .asFunction<ffi.Pointer<wire_cst_pdf_style> Function()>();
 
   ffi.Pointer<wire_cst_request_options> cst_new_box_autoadd_request_options() {
     return _cst_new_box_autoadd_request_options();
@@ -3090,84 +2438,6 @@ class RustLibWire implements BaseWire {
       >('frbgen_moodiary_rust_cst_new_list_String');
   late final _cst_new_list_String = _cst_new_list_StringPtr
       .asFunction<ffi.Pointer<wire_cst_list_String> Function(int)>();
-
-  ffi.Pointer<wire_cst_list_ir_block> cst_new_list_ir_block(int len) {
-    return _cst_new_list_ir_block(len);
-  }
-
-  late final _cst_new_list_ir_blockPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Pointer<wire_cst_list_ir_block> Function(ffi.Int32)
-        >
-      >('frbgen_moodiary_rust_cst_new_list_ir_block');
-  late final _cst_new_list_ir_block = _cst_new_list_ir_blockPtr
-      .asFunction<ffi.Pointer<wire_cst_list_ir_block> Function(int)>();
-
-  ffi.Pointer<wire_cst_list_ir_cell> cst_new_list_ir_cell(int len) {
-    return _cst_new_list_ir_cell(len);
-  }
-
-  late final _cst_new_list_ir_cellPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Pointer<wire_cst_list_ir_cell> Function(ffi.Int32)
-        >
-      >('frbgen_moodiary_rust_cst_new_list_ir_cell');
-  late final _cst_new_list_ir_cell = _cst_new_list_ir_cellPtr
-      .asFunction<ffi.Pointer<wire_cst_list_ir_cell> Function(int)>();
-
-  ffi.Pointer<wire_cst_list_ir_doc> cst_new_list_ir_doc(int len) {
-    return _cst_new_list_ir_doc(len);
-  }
-
-  late final _cst_new_list_ir_docPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Pointer<wire_cst_list_ir_doc> Function(ffi.Int32)
-        >
-      >('frbgen_moodiary_rust_cst_new_list_ir_doc');
-  late final _cst_new_list_ir_doc = _cst_new_list_ir_docPtr
-      .asFunction<ffi.Pointer<wire_cst_list_ir_doc> Function(int)>();
-
-  ffi.Pointer<wire_cst_list_ir_list_item> cst_new_list_ir_list_item(int len) {
-    return _cst_new_list_ir_list_item(len);
-  }
-
-  late final _cst_new_list_ir_list_itemPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Pointer<wire_cst_list_ir_list_item> Function(ffi.Int32)
-        >
-      >('frbgen_moodiary_rust_cst_new_list_ir_list_item');
-  late final _cst_new_list_ir_list_item = _cst_new_list_ir_list_itemPtr
-      .asFunction<ffi.Pointer<wire_cst_list_ir_list_item> Function(int)>();
-
-  ffi.Pointer<wire_cst_list_ir_row> cst_new_list_ir_row(int len) {
-    return _cst_new_list_ir_row(len);
-  }
-
-  late final _cst_new_list_ir_rowPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Pointer<wire_cst_list_ir_row> Function(ffi.Int32)
-        >
-      >('frbgen_moodiary_rust_cst_new_list_ir_row');
-  late final _cst_new_list_ir_row = _cst_new_list_ir_rowPtr
-      .asFunction<ffi.Pointer<wire_cst_list_ir_row> Function(int)>();
-
-  ffi.Pointer<wire_cst_list_ir_span> cst_new_list_ir_span(int len) {
-    return _cst_new_list_ir_span(len);
-  }
-
-  late final _cst_new_list_ir_spanPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Pointer<wire_cst_list_ir_span> Function(ffi.Int32)
-        >
-      >('frbgen_moodiary_rust_cst_new_list_ir_span');
-  late final _cst_new_list_ir_span = _cst_new_list_ir_spanPtr
-      .asFunction<ffi.Pointer<wire_cst_list_ir_span> Function(int)>();
 
   ffi.Pointer<wire_cst_list_key_value> cst_new_list_key_value(int len) {
     return _cst_new_list_key_value(len);
@@ -3445,23 +2715,6 @@ class RustLibWire implements BaseWire {
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilderPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_moodiary_rust_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder',
-      );
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder =
-      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilderPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
   rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     ffi.Pointer<ffi.Void> ptr,
   ) {
@@ -3527,23 +2780,6 @@ class RustLibWire implements BaseWire {
       );
   late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer =
       _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServerPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilderPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_moodiary_rust_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder',
-      );
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder =
-      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilderPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void
@@ -3666,23 +2902,6 @@ class RustLibWire implements BaseWire {
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilderPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder',
-      );
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder =
-      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilderPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
   rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     ffi.Pointer<ffi.Void> ptr,
   ) {
@@ -3748,23 +2967,6 @@ class RustLibWire implements BaseWire {
       );
   late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer =
       _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServerPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilderPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder',
-      );
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder =
-      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilderPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void
@@ -4146,121 +3348,6 @@ class RustLibWire implements BaseWire {
               int,
               ffi.Pointer<wire_cst_list_prim_u_8_strict>,
               ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            )
-          >();
-
-  void wire__crate__api__docx__DocxBuilder_add(
-    int port_,
-    int that,
-    ffi.Pointer<wire_cst_ir_doc> doc,
-  ) {
-    return _wire__crate__api__docx__DocxBuilder_add(port_, that, doc);
-  }
-
-  late final _wire__crate__api__docx__DocxBuilder_addPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.UintPtr,
-            ffi.Pointer<wire_cst_ir_doc>,
-          )
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__docx__DocxBuilder_add');
-  late final _wire__crate__api__docx__DocxBuilder_add =
-      _wire__crate__api__docx__DocxBuilder_addPtr
-          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_ir_doc>)>();
-
-  void wire__crate__api__docx__DocxBuilder_finish(
-    int port_,
-    int that,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> out_path,
-    int cancel,
-  ) {
-    return _wire__crate__api__docx__DocxBuilder_finish(
-      port_,
-      that,
-      out_path,
-      cancel,
-    );
-  }
-
-  late final _wire__crate__api__docx__DocxBuilder_finishPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.UintPtr,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.UintPtr,
-          )
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__docx__DocxBuilder_finish');
-  late final _wire__crate__api__docx__DocxBuilder_finish =
-      _wire__crate__api__docx__DocxBuilder_finishPtr
-          .asFunction<
-            void Function(
-              int,
-              int,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              int,
-            )
-          >();
-
-  void wire__crate__api__docx__DocxBuilder_new(
-    int port_,
-    ffi.Pointer<wire_cst_docx_style> style,
-  ) {
-    return _wire__crate__api__docx__DocxBuilder_new(port_, style);
-  }
-
-  late final _wire__crate__api__docx__DocxBuilder_newPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(ffi.Int64, ffi.Pointer<wire_cst_docx_style>)
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__docx__DocxBuilder_new');
-  late final _wire__crate__api__docx__DocxBuilder_new =
-      _wire__crate__api__docx__DocxBuilder_newPtr
-          .asFunction<void Function(int, ffi.Pointer<wire_cst_docx_style>)>();
-
-  void wire__crate__api__docx__write_docx(
-    int port_,
-    ffi.Pointer<wire_cst_list_ir_doc> docs,
-    ffi.Pointer<wire_cst_docx_style> style,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> out_path,
-    int cancel,
-  ) {
-    return _wire__crate__api__docx__write_docx(
-      port_,
-      docs,
-      style,
-      out_path,
-      cancel,
-    );
-  }
-
-  late final _wire__crate__api__docx__write_docxPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.Pointer<wire_cst_list_ir_doc>,
-            ffi.Pointer<wire_cst_docx_style>,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.UintPtr,
-          )
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__docx__write_docx');
-  late final _wire__crate__api__docx__write_docx =
-      _wire__crate__api__docx__write_docxPtr
-          .asFunction<
-            void Function(
-              int,
-              ffi.Pointer<wire_cst_list_ir_doc>,
-              ffi.Pointer<wire_cst_docx_style>,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              int,
             )
           >();
 
@@ -4725,121 +3812,6 @@ class RustLibWire implements BaseWire {
       .asFunction<
         void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
       >();
-
-  void wire__crate__api__pdf__PdfBuilder_add(
-    int port_,
-    int that,
-    ffi.Pointer<wire_cst_ir_doc> doc,
-  ) {
-    return _wire__crate__api__pdf__PdfBuilder_add(port_, that, doc);
-  }
-
-  late final _wire__crate__api__pdf__PdfBuilder_addPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.UintPtr,
-            ffi.Pointer<wire_cst_ir_doc>,
-          )
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__pdf__PdfBuilder_add');
-  late final _wire__crate__api__pdf__PdfBuilder_add =
-      _wire__crate__api__pdf__PdfBuilder_addPtr
-          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_ir_doc>)>();
-
-  void wire__crate__api__pdf__PdfBuilder_finish(
-    int port_,
-    int that,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> out_path,
-    int cancel,
-  ) {
-    return _wire__crate__api__pdf__PdfBuilder_finish(
-      port_,
-      that,
-      out_path,
-      cancel,
-    );
-  }
-
-  late final _wire__crate__api__pdf__PdfBuilder_finishPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.UintPtr,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.UintPtr,
-          )
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__pdf__PdfBuilder_finish');
-  late final _wire__crate__api__pdf__PdfBuilder_finish =
-      _wire__crate__api__pdf__PdfBuilder_finishPtr
-          .asFunction<
-            void Function(
-              int,
-              int,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              int,
-            )
-          >();
-
-  void wire__crate__api__pdf__PdfBuilder_new(
-    int port_,
-    ffi.Pointer<wire_cst_pdf_style> style,
-  ) {
-    return _wire__crate__api__pdf__PdfBuilder_new(port_, style);
-  }
-
-  late final _wire__crate__api__pdf__PdfBuilder_newPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(ffi.Int64, ffi.Pointer<wire_cst_pdf_style>)
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__pdf__PdfBuilder_new');
-  late final _wire__crate__api__pdf__PdfBuilder_new =
-      _wire__crate__api__pdf__PdfBuilder_newPtr
-          .asFunction<void Function(int, ffi.Pointer<wire_cst_pdf_style>)>();
-
-  void wire__crate__api__pdf__write_pdf(
-    int port_,
-    ffi.Pointer<wire_cst_list_ir_doc> docs,
-    ffi.Pointer<wire_cst_pdf_style> style,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> out_path,
-    int cancel,
-  ) {
-    return _wire__crate__api__pdf__write_pdf(
-      port_,
-      docs,
-      style,
-      out_path,
-      cancel,
-    );
-  }
-
-  late final _wire__crate__api__pdf__write_pdfPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.Pointer<wire_cst_list_ir_doc>,
-            ffi.Pointer<wire_cst_pdf_style>,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.UintPtr,
-          )
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__pdf__write_pdf');
-  late final _wire__crate__api__pdf__write_pdf =
-      _wire__crate__api__pdf__write_pdfPtr
-          .asFunction<
-            void Function(
-              int,
-              ffi.Pointer<wire_cst_list_ir_doc>,
-              ffi.Pointer<wire_cst_pdf_style>,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              int,
-            )
-          >();
 
   void wire__crate__api__s3__S3Client_create_exclusive(
     int port_,
@@ -5606,24 +4578,6 @@ typedef DartDartPostCObjectFnTypeFunction = bool Function(
   ffi.Pointer<ffi.Void> message,
 );
 
-final class IrBlockKind extends ffi.Union {
-  external wire_cst_IrBlock_Paragraph Paragraph;
-
-  external wire_cst_IrBlock_Heading Heading;
-
-  external wire_cst_IrBlock_List List;
-
-  external wire_cst_IrBlock_Quote Quote;
-
-  external wire_cst_IrBlock_Code Code;
-
-  external wire_cst_IrBlock_Image Image;
-
-  external wire_cst_IrBlock_Media Media;
-
-  external wire_cst_IrBlock_Table Table;
-}
-
 final class RigStreamEventKind extends ffi.Union {
   external wire_cst_RigStreamEvent_TextDelta TextDelta;
 
@@ -5636,127 +4590,6 @@ final class RigStreamEventKind extends ffi.Union {
   external wire_cst_RigStreamEvent_ToolFinished ToolFinished;
 
   external wire_cst_RigStreamEvent_Usage Usage;
-}
-
-final class wire_cst_IrBlock_Code extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> language;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> text;
-
-  static ffi.Pointer<wire_cst_IrBlock_Code> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> language,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> text,
-  }) => $allocator<wire_cst_IrBlock_Code>()
-    ..ref.language = language
-    ..ref.text = text;
-}
-
-final class wire_cst_IrBlock_Heading extends ffi.Struct {
-  @ffi.Uint32()
-  external int level;
-
-  external ffi.Pointer<wire_cst_list_ir_span> spans;
-
-  static ffi.Pointer<wire_cst_IrBlock_Heading> $allocate(
-    ffi.Allocator $allocator, {
-    required int level,
-    required ffi.Pointer<wire_cst_list_ir_span> spans,
-  }) => $allocator<wire_cst_IrBlock_Heading>()
-    ..ref.level = level
-    ..ref.spans = spans;
-}
-
-final class wire_cst_IrBlock_Image extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> path;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> alt;
-
-  external ffi.Pointer<ffi.Uint32> width_percent;
-
-  @ffi.Bool()
-  external bool is_external;
-
-  static ffi.Pointer<wire_cst_IrBlock_Image> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> path,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> alt,
-    required ffi.Pointer<ffi.Uint32> width_percent,
-    required bool is_external,
-  }) => $allocator<wire_cst_IrBlock_Image>()
-    ..ref.path = path
-    ..ref.alt = alt
-    ..ref.width_percent = width_percent
-    ..ref.is_external = is_external;
-}
-
-final class wire_cst_IrBlock_List extends ffi.Struct {
-  @ffi.Bool()
-  external bool ordered;
-
-  @ffi.Uint32()
-  external int start;
-
-  external ffi.Pointer<wire_cst_list_ir_list_item> items;
-
-  static ffi.Pointer<wire_cst_IrBlock_List> $allocate(
-    ffi.Allocator $allocator, {
-    required bool ordered,
-    required int start,
-    required ffi.Pointer<wire_cst_list_ir_list_item> items,
-  }) => $allocator<wire_cst_IrBlock_List>()
-    ..ref.ordered = ordered
-    ..ref.start = start
-    ..ref.items = items;
-}
-
-final class wire_cst_IrBlock_Media extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> kind;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> filename;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> path;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> cover_path;
-
-  static ffi.Pointer<wire_cst_IrBlock_Media> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> kind,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> filename,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> path,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> cover_path,
-  }) => $allocator<wire_cst_IrBlock_Media>()
-    ..ref.kind = kind
-    ..ref.filename = filename
-    ..ref.path = path
-    ..ref.cover_path = cover_path;
-}
-
-final class wire_cst_IrBlock_Paragraph extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_ir_span> spans;
-
-  static ffi.Pointer<wire_cst_IrBlock_Paragraph> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<wire_cst_list_ir_span> spans,
-  }) => $allocator<wire_cst_IrBlock_Paragraph>()..ref.spans = spans;
-}
-
-final class wire_cst_IrBlock_Quote extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_ir_block> children;
-
-  static ffi.Pointer<wire_cst_IrBlock_Quote> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<wire_cst_list_ir_block> children,
-  }) => $allocator<wire_cst_IrBlock_Quote>()..ref.children = children;
-}
-
-final class wire_cst_IrBlock_Table extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_ir_row> rows;
-
-  static ffi.Pointer<wire_cst_IrBlock_Table> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<wire_cst_list_ir_row> rows,
-  }) => $allocator<wire_cst_IrBlock_Table>()..ref.rows = rows;
 }
 
 final class wire_cst_RigStreamEvent_ReasoningDelta extends ffi.Struct {
@@ -5874,73 +4707,6 @@ final class wire_cst_client_settings extends ffi.Struct {
     ..ref.user_agent = user_agent
     ..ref.max_redirects = max_redirects
     ..ref.throw_on_status = throw_on_status;
-}
-
-final class wire_cst_docx_style extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> east_asia_font;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> ascii_font;
-
-  @ffi.Double()
-  external double font_size_pt;
-
-  @ffi.Double()
-  external double line_spacing;
-
-  @ffi.Bool()
-  external bool first_line_indent;
-
-  @ffi.Uint32()
-  external int page_width;
-
-  @ffi.Uint32()
-  external int page_height;
-
-  @ffi.Uint32()
-  external int page_margin;
-
-  @ffi.Bool()
-  external bool include_title;
-
-  @ffi.Bool()
-  external bool include_meta;
-
-  @ffi.Bool()
-  external bool page_break_between;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> video_label;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> audio_label;
-
-  static ffi.Pointer<wire_cst_docx_style> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> east_asia_font,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> ascii_font,
-    required double font_size_pt,
-    required double line_spacing,
-    required bool first_line_indent,
-    required int page_width,
-    required int page_height,
-    required int page_margin,
-    required bool include_title,
-    required bool include_meta,
-    required bool page_break_between,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> video_label,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> audio_label,
-  }) => $allocator<wire_cst_docx_style>()
-    ..ref.east_asia_font = east_asia_font
-    ..ref.ascii_font = ascii_font
-    ..ref.font_size_pt = font_size_pt
-    ..ref.line_spacing = line_spacing
-    ..ref.first_line_indent = first_line_indent
-    ..ref.page_width = page_width
-    ..ref.page_height = page_height
-    ..ref.page_margin = page_margin
-    ..ref.include_title = include_title
-    ..ref.include_meta = include_meta
-    ..ref.page_break_between = page_break_between
-    ..ref.video_label = video_label
-    ..ref.audio_label = audio_label;
 }
 
 final class wire_cst_download_event extends ffi.Struct {
@@ -6131,146 +4897,6 @@ final class wire_cst_http_server_response extends ffi.Struct {
     ..ref.body_file_path = body_file_path;
 }
 
-final class wire_cst_ir_block extends ffi.Struct {
-  @ffi.Int32()
-  external int tag;
-
-  external IrBlockKind kind;
-}
-
-final class wire_cst_ir_cell extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_ir_block> children;
-
-  @ffi.Uint32()
-  external int colspan;
-
-  @ffi.Uint32()
-  external int rowspan;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> align;
-
-  @ffi.Bool()
-  external bool header;
-
-  static ffi.Pointer<wire_cst_ir_cell> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<wire_cst_list_ir_block> children,
-    required int colspan,
-    required int rowspan,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> align,
-    required bool header,
-  }) => $allocator<wire_cst_ir_cell>()
-    ..ref.children = children
-    ..ref.colspan = colspan
-    ..ref.rowspan = rowspan
-    ..ref.align = align
-    ..ref.header = header;
-}
-
-final class wire_cst_ir_doc extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> id;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> title;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> time;
-
-  external ffi.Pointer<wire_cst_list_String> weather;
-
-  external ffi.Pointer<wire_cst_list_String> position;
-
-  external ffi.Pointer<wire_cst_list_String> tags;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> category_name;
-
-  external ffi.Pointer<wire_cst_list_ir_block> blocks;
-
-  static ffi.Pointer<wire_cst_ir_doc> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> id,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> title,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> time,
-    required ffi.Pointer<wire_cst_list_String> weather,
-    required ffi.Pointer<wire_cst_list_String> position,
-    required ffi.Pointer<wire_cst_list_String> tags,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> category_name,
-    required ffi.Pointer<wire_cst_list_ir_block> blocks,
-  }) => $allocator<wire_cst_ir_doc>()
-    ..ref.id = id
-    ..ref.title = title
-    ..ref.time = time
-    ..ref.weather = weather
-    ..ref.position = position
-    ..ref.tags = tags
-    ..ref.category_name = category_name
-    ..ref.blocks = blocks;
-}
-
-final class wire_cst_ir_list_item extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_ir_block> children;
-
-  external ffi.Pointer<ffi.Bool> checked;
-
-  static ffi.Pointer<wire_cst_ir_list_item> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<wire_cst_list_ir_block> children,
-    required ffi.Pointer<ffi.Bool> checked,
-  }) => $allocator<wire_cst_ir_list_item>()
-    ..ref.children = children
-    ..ref.checked = checked;
-}
-
-final class wire_cst_ir_row extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_ir_cell> cells;
-
-  static ffi.Pointer<wire_cst_ir_row> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<wire_cst_list_ir_cell> cells,
-  }) => $allocator<wire_cst_ir_row>()..ref.cells = cells;
-}
-
-final class wire_cst_ir_span extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> text;
-
-  @ffi.Bool()
-  external bool bold;
-
-  @ffi.Bool()
-  external bool italic;
-
-  @ffi.Bool()
-  external bool strike;
-
-  @ffi.Bool()
-  external bool underline;
-
-  @ffi.Bool()
-  external bool code;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> href;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> diary_link_id;
-
-  static ffi.Pointer<wire_cst_ir_span> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> text,
-    required bool bold,
-    required bool italic,
-    required bool strike,
-    required bool underline,
-    required bool code,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> href,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> diary_link_id,
-  }) => $allocator<wire_cst_ir_span>()
-    ..ref.text = text
-    ..ref.bold = bold
-    ..ref.italic = italic
-    ..ref.strike = strike
-    ..ref.underline = underline
-    ..ref.code = code
-    ..ref.href = href
-    ..ref.diary_link_id = diary_link_id;
-}
-
 final class wire_cst_js_outcome extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> value;
 
@@ -6315,96 +4941,6 @@ final class wire_cst_list_String extends ffi.Struct {
     required ffi.Pointer<ffi.Pointer<wire_cst_list_prim_u_8_strict>> ptr,
     required int len,
   }) => $allocator<wire_cst_list_String>()
-    ..ref.ptr = ptr
-    ..ref.len = len;
-}
-
-final class wire_cst_list_ir_block extends ffi.Struct {
-  external ffi.Pointer<wire_cst_ir_block> ptr;
-
-  @ffi.Int32()
-  external int len;
-
-  static ffi.Pointer<wire_cst_list_ir_block> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<wire_cst_ir_block> ptr,
-    required int len,
-  }) => $allocator<wire_cst_list_ir_block>()
-    ..ref.ptr = ptr
-    ..ref.len = len;
-}
-
-final class wire_cst_list_ir_cell extends ffi.Struct {
-  external ffi.Pointer<wire_cst_ir_cell> ptr;
-
-  @ffi.Int32()
-  external int len;
-
-  static ffi.Pointer<wire_cst_list_ir_cell> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<wire_cst_ir_cell> ptr,
-    required int len,
-  }) => $allocator<wire_cst_list_ir_cell>()
-    ..ref.ptr = ptr
-    ..ref.len = len;
-}
-
-final class wire_cst_list_ir_doc extends ffi.Struct {
-  external ffi.Pointer<wire_cst_ir_doc> ptr;
-
-  @ffi.Int32()
-  external int len;
-
-  static ffi.Pointer<wire_cst_list_ir_doc> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<wire_cst_ir_doc> ptr,
-    required int len,
-  }) => $allocator<wire_cst_list_ir_doc>()
-    ..ref.ptr = ptr
-    ..ref.len = len;
-}
-
-final class wire_cst_list_ir_list_item extends ffi.Struct {
-  external ffi.Pointer<wire_cst_ir_list_item> ptr;
-
-  @ffi.Int32()
-  external int len;
-
-  static ffi.Pointer<wire_cst_list_ir_list_item> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<wire_cst_ir_list_item> ptr,
-    required int len,
-  }) => $allocator<wire_cst_list_ir_list_item>()
-    ..ref.ptr = ptr
-    ..ref.len = len;
-}
-
-final class wire_cst_list_ir_row extends ffi.Struct {
-  external ffi.Pointer<wire_cst_ir_row> ptr;
-
-  @ffi.Int32()
-  external int len;
-
-  static ffi.Pointer<wire_cst_list_ir_row> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<wire_cst_ir_row> ptr,
-    required int len,
-  }) => $allocator<wire_cst_list_ir_row>()
-    ..ref.ptr = ptr
-    ..ref.len = len;
-}
-
-final class wire_cst_list_ir_span extends ffi.Struct {
-  external ffi.Pointer<wire_cst_ir_span> ptr;
-
-  @ffi.Int32()
-  external int len;
-
-  static ffi.Pointer<wire_cst_list_ir_span> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<wire_cst_ir_span> ptr,
-    required int len,
-  }) => $allocator<wire_cst_list_ir_span>()
     ..ref.ptr = ptr
     ..ref.len = len;
 }
@@ -6602,68 +5138,6 @@ final class wire_cst_list_tokenize_result extends ffi.Struct {
   }) => $allocator<wire_cst_list_tokenize_result>()
     ..ref.ptr = ptr
     ..ref.len = len;
-}
-
-final class wire_cst_pdf_style extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> font_path;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> font_family;
-
-  @ffi.Double()
-  external double font_size_pt;
-
-  @ffi.Double()
-  external double line_spacing_em;
-
-  @ffi.Bool()
-  external bool first_line_indent;
-
-  @ffi.Double()
-  external double page_width_mm;
-
-  @ffi.Double()
-  external double page_height_mm;
-
-  @ffi.Double()
-  external double page_margin_mm;
-
-  @ffi.Bool()
-  external bool include_title;
-
-  @ffi.Bool()
-  external bool include_meta;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> video_label;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> audio_label;
-
-  static ffi.Pointer<wire_cst_pdf_style> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> font_path,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> font_family,
-    required double font_size_pt,
-    required double line_spacing_em,
-    required bool first_line_indent,
-    required double page_width_mm,
-    required double page_height_mm,
-    required double page_margin_mm,
-    required bool include_title,
-    required bool include_meta,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> video_label,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> audio_label,
-  }) => $allocator<wire_cst_pdf_style>()
-    ..ref.font_path = font_path
-    ..ref.font_family = font_family
-    ..ref.font_size_pt = font_size_pt
-    ..ref.line_spacing_em = line_spacing_em
-    ..ref.first_line_indent = first_line_indent
-    ..ref.page_width_mm = page_width_mm
-    ..ref.page_height_mm = page_height_mm
-    ..ref.page_margin_mm = page_margin_mm
-    ..ref.include_title = include_title
-    ..ref.include_meta = include_meta
-    ..ref.video_label = video_label
-    ..ref.audio_label = audio_label;
 }
 
 final class wire_cst_record_string_f_32 extends ffi.Struct {

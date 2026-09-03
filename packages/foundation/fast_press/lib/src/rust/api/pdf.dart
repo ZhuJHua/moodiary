@@ -5,7 +5,7 @@
 
 import '../frb_generated.dart';
 import 'cancel.dart';
-import 'export_ir.dart';
+import 'ir.dart';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
@@ -14,7 +14,7 @@ Future<void> writePdf({
   required PdfStyle style,
   required String outPath,
   required CancelToken cancel,
-}) => RustLib.instance.api.crateApiPdfWritePdf(
+}) => FastPressLib.instance.api.crateApiPdfWritePdf(
   docs: docs,
   style: style,
   outPath: outPath,
@@ -29,7 +29,7 @@ abstract class PdfBuilder implements RustOpaqueInterface {
 
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
   static Future<PdfBuilder> newInstance({required PdfStyle style}) =>
-      RustLib.instance.api.crateApiPdfPdfBuilderNew(style: style);
+      FastPressLib.instance.api.crateApiPdfPdfBuilderNew(style: style);
 }
 
 class PdfStyle {

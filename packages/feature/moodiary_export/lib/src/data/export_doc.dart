@@ -1,8 +1,8 @@
+import 'package:fast_press/fast_press.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_rust/export.dart';
 
 // freezed 变体类（IrBlock_Paragraph 等）也要透出去，模式匹配要用。
-export 'package:moodiary_rust/export.dart'
+export 'package:fast_press/fast_press.dart'
     show
         IrBlock,
         IrBlock_Code,

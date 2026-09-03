@@ -1,11 +1,15 @@
-//! 日记导出：把 [`moodiary_doc`] 的 IR 渲染成 PDF（typst 排版引擎）或 DOCX（OOXML）。
+//! 日记导出：把 [`ir`] 的文档模型渲染成 PDF（typst 排版引擎）或 DOCX（OOXML）。
+//! `api/` 是 FRB 门面，唯一认识 `flutter_rust_bridge` 的地方；其余模块只收纯闭包。
 
+pub mod api;
 pub mod docx;
+mod frb_generated;
+pub mod ir;
 pub mod pdf;
 
 #[cfg(test)]
 pub(crate) mod fixture {
-    use moodiary_doc::{IrBlock, IrCell, IrDoc, IrListItem, IrSpan};
+    use crate::ir::{IrBlock, IrCell, IrDoc, IrListItem, IrSpan};
 
     pub fn doc(blocks: Vec<IrBlock>) -> IrDoc {
         IrDoc {

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:fast_image/fast_image.dart';
+import 'package:fast_press/fast_press.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,6 +36,7 @@ Future<void> _initSystem() async {
   // 的零心智负担——迁移的字体重扫、维护任务的分词都不用再关心桥的时序。
   await RustLib.init();
   await FastImageRuntime.init();
+  await FastPressLib.init();
 
   // ── 1. 路径与日志（一切存储的前置）→ 容器装配 ∥ SQLite 打开。
   // configureDependencies 内部的 preResolve 在这一步落定：SecureKV → KV（含 2.8.0

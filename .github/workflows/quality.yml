@@ -94,6 +94,14 @@ jobs:
         working-directory: packages/foundation/fast_image/rust
         run: cargo test
 
+      - name: Clippy (fast_press)
+        working-directory: packages/foundation/fast_press/rust
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Test (fast_press)
+        working-directory: packages/foundation/fast_press/rust
+        run: cargo test
+
   editor:
     name: Editor
     runs-on: ubuntu-latest

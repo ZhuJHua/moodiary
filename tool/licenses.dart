@@ -16,6 +16,7 @@ import 'dart:io';
 const _rustDirs = [
   'packages/foundation/moodiary_rust/rust',
   'packages/foundation/fast_image/rust',
+  'packages/foundation/fast_press/rust',
 ];
 const _npmManifest =
     'packages/feature_base/moodiary_editor/editor/build/third-party-licenses.json';

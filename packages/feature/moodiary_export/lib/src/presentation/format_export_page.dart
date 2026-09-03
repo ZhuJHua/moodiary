@@ -1,6 +1,6 @@
+import 'package:fast_press/fast_press.dart' as press;
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_rust/foundation.dart' as rust;
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
 
@@ -31,7 +31,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
   int? _scopeCount;
   bool _running = false;
   ExportProgress? _progress;
-  rust.CancelToken? _cancel;
+  press.CancelToken? _cancel;
 
   @override
   void initState() {
@@ -557,7 +557,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
 
   Future<void> _run() async {
     final l10n = context.l10n;
-    final token = rust.CancelToken();
+    final token = press.CancelToken();
     setState(() {
       _running = true;
       _cancel = token;

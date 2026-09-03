@@ -6,15 +6,12 @@
 import 'api/assistant.dart';
 import 'api/cancel.dart';
 import 'api/crypto.dart';
-import 'api/docx.dart';
-import 'api/export_ir.dart';
 import 'api/font.dart';
 import 'api/graph_layout.dart';
 import 'api/hf_tokenizer.dart';
 import 'api/http.dart';
 import 'api/http_server.dart';
 import 'api/js.dart';
-import 'api/pdf.dart';
 import 'api/s3.dart';
 import 'api/text.dart';
 import 'api/webdav.dart';
@@ -82,7 +79,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 626437788;
+  int get rustContentHash => -726576857;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -186,19 +183,6 @@ abstract class RustLibApi extends BaseApi {
     required String filePath,
   });
 
-  Future<void> crateApiDocxDocxBuilderAdd({
-    required DocxBuilder that,
-    required IrDoc doc,
-  });
-
-  Future<void> crateApiDocxDocxBuilderFinish({
-    required DocxBuilder that,
-    required String outPath,
-    required CancelToken cancel,
-  });
-
-  Future<DocxBuilder> crateApiDocxDocxBuilderNew({required DocxStyle style});
-
   Future<String> crateApiFontFontReaderGetFontNameFromTtf({
     required String ttfFilePath,
   });
@@ -263,19 +247,6 @@ abstract class RustLibApi extends BaseApi {
   });
 
   void crateApiHttpServerHttpServerStop({required HttpServer that});
-
-  Future<void> crateApiPdfPdfBuilderAdd({
-    required PdfBuilder that,
-    required IrDoc doc,
-  });
-
-  Future<void> crateApiPdfPdfBuilderFinish({
-    required PdfBuilder that,
-    required String outPath,
-    required CancelToken cancel,
-  });
-
-  Future<PdfBuilder> crateApiPdfPdfBuilderNew({required PdfStyle style});
 
   Future<bool> crateApiS3S3ClientCreateExclusive({
     required S3Client that,
@@ -377,20 +348,6 @@ abstract class RustLibApi extends BaseApi {
     required FutureOr<String> Function(String, String) toolDispatch,
   });
 
-  Future<void> crateApiDocxWriteDocx({
-    required List<IrDoc> docs,
-    required DocxStyle style,
-    required String outPath,
-    required CancelToken cancel,
-  });
-
-  Future<void> crateApiPdfWritePdf({
-    required List<IrDoc> docs,
-    required PdfStyle style,
-    required String outPath,
-    required CancelToken cancel,
-  });
-
   RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_Aes;
 
   RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_Aes;
@@ -418,14 +375,6 @@ abstract class RustLibApi extends BaseApi {
   get rust_arc_decrement_strong_count_DavClient;
 
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_DavClientPtr;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_DocxBuilder;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_DocxBuilder;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_DocxBuilderPtr;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_FontReader;
@@ -458,14 +407,6 @@ abstract class RustLibApi extends BaseApi {
   get rust_arc_decrement_strong_count_HttpServer;
 
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_HttpServerPtr;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_PdfBuilder;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_PdfBuilder;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_PdfBuilderPtr;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_S3Client;
@@ -1134,106 +1075,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<void> crateApiDocxDocxBuilderAdd({
-    required DocxBuilder that,
-    required IrDoc doc,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-                that,
-              );
-          var arg1 = cst_encode_box_autoadd_ir_doc(doc);
-          return wire.wire__crate__api__docx__DocxBuilder_add(
-            port_,
-            arg0,
-            arg1,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiDocxDocxBuilderAddConstMeta,
-        argValues: [that, doc],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiDocxDocxBuilderAddConstMeta => const TaskConstMeta(
-    debugName: "DocxBuilder_add",
-    argNames: ["that", "doc"],
-  );
-
-  @override
-  Future<void> crateApiDocxDocxBuilderFinish({
-    required DocxBuilder that,
-    required String outPath,
-    required CancelToken cancel,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-                that,
-              );
-          var arg1 = cst_encode_String(outPath);
-          var arg2 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCancelToken(
-                cancel,
-              );
-          return wire.wire__crate__api__docx__DocxBuilder_finish(
-            port_,
-            arg0,
-            arg1,
-            arg2,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_unit,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiDocxDocxBuilderFinishConstMeta,
-        argValues: [that, outPath, cancel],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiDocxDocxBuilderFinishConstMeta =>
-      const TaskConstMeta(
-        debugName: "DocxBuilder_finish",
-        argNames: ["that", "outPath", "cancel"],
-      );
-
-  @override
-  Future<DocxBuilder> crateApiDocxDocxBuilderNew({required DocxStyle style}) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 = cst_encode_box_autoadd_docx_style(style);
-          return wire.wire__crate__api__docx__DocxBuilder_new(port_, arg0);
-        },
-        codec: DcoCodec(
-          decodeSuccessData:
-              dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiDocxDocxBuilderNewConstMeta,
-        argValues: [style],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiDocxDocxBuilderNewConstMeta =>
-      const TaskConstMeta(debugName: "DocxBuilder_new", argNames: ["style"]);
-
-  @override
   Future<String> crateApiFontFontReaderGetFontNameFromTtf({
     required String ttfFilePath,
   }) {
@@ -1713,102 +1554,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiHttpServerHttpServerStopConstMeta =>
       const TaskConstMeta(debugName: "HttpServer_stop", argNames: ["that"]);
-
-  @override
-  Future<void> crateApiPdfPdfBuilderAdd({
-    required PdfBuilder that,
-    required IrDoc doc,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-                that,
-              );
-          var arg1 = cst_encode_box_autoadd_ir_doc(doc);
-          return wire.wire__crate__api__pdf__PdfBuilder_add(port_, arg0, arg1);
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiPdfPdfBuilderAddConstMeta,
-        argValues: [that, doc],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiPdfPdfBuilderAddConstMeta => const TaskConstMeta(
-    debugName: "PdfBuilder_add",
-    argNames: ["that", "doc"],
-  );
-
-  @override
-  Future<void> crateApiPdfPdfBuilderFinish({
-    required PdfBuilder that,
-    required String outPath,
-    required CancelToken cancel,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-                that,
-              );
-          var arg1 = cst_encode_String(outPath);
-          var arg2 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCancelToken(
-                cancel,
-              );
-          return wire.wire__crate__api__pdf__PdfBuilder_finish(
-            port_,
-            arg0,
-            arg1,
-            arg2,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_unit,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiPdfPdfBuilderFinishConstMeta,
-        argValues: [that, outPath, cancel],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiPdfPdfBuilderFinishConstMeta =>
-      const TaskConstMeta(
-        debugName: "PdfBuilder_finish",
-        argNames: ["that", "outPath", "cancel"],
-      );
-
-  @override
-  Future<PdfBuilder> crateApiPdfPdfBuilderNew({required PdfStyle style}) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 = cst_encode_box_autoadd_pdf_style(style);
-          return wire.wire__crate__api__pdf__PdfBuilder_new(port_, arg0);
-        },
-        codec: DcoCodec(
-          decodeSuccessData:
-              dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiPdfPdfBuilderNewConstMeta,
-        argValues: [style],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiPdfPdfBuilderNewConstMeta =>
-      const TaskConstMeta(debugName: "PdfBuilder_new", argNames: ["style"]);
 
   @override
   Future<bool> crateApiS3S3ClientCreateExclusive({
@@ -2520,88 +2265,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         ],
       );
 
-  @override
-  Future<void> crateApiDocxWriteDocx({
-    required List<IrDoc> docs,
-    required DocxStyle style,
-    required String outPath,
-    required CancelToken cancel,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 = cst_encode_list_ir_doc(docs);
-          var arg1 = cst_encode_box_autoadd_docx_style(style);
-          var arg2 = cst_encode_String(outPath);
-          var arg3 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCancelToken(
-                cancel,
-              );
-          return wire.wire__crate__api__docx__write_docx(
-            port_,
-            arg0,
-            arg1,
-            arg2,
-            arg3,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_unit,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiDocxWriteDocxConstMeta,
-        argValues: [docs, style, outPath, cancel],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiDocxWriteDocxConstMeta => const TaskConstMeta(
-    debugName: "write_docx",
-    argNames: ["docs", "style", "outPath", "cancel"],
-  );
-
-  @override
-  Future<void> crateApiPdfWritePdf({
-    required List<IrDoc> docs,
-    required PdfStyle style,
-    required String outPath,
-    required CancelToken cancel,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 = cst_encode_list_ir_doc(docs);
-          var arg1 = cst_encode_box_autoadd_pdf_style(style);
-          var arg2 = cst_encode_String(outPath);
-          var arg3 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCancelToken(
-                cancel,
-              );
-          return wire.wire__crate__api__pdf__write_pdf(
-            port_,
-            arg0,
-            arg1,
-            arg2,
-            arg3,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_unit,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiPdfWritePdfConstMeta,
-        argValues: [docs, style, outPath, cancel],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiPdfWritePdfConstMeta => const TaskConstMeta(
-    debugName: "write_pdf",
-    argNames: ["docs", "style", "outPath", "cancel"],
-  );
-
   Future<void> Function(int, dynamic, dynamic)
   encode_DartFn_Inputs_String_String_Output_String_AnyhowException(
     FutureOr<String> Function(String, String) raw,
@@ -2742,14 +2405,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_DocxBuilder => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_DocxBuilder => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder;
-
-  RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_FontReader => wire
       .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader;
 
@@ -2780,14 +2435,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RustArcDecrementStrongCountFnType
   get rust_arc_decrement_strong_count_HttpServer => wire
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_PdfBuilder => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_PdfBuilder => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_S3Client => wire
@@ -2856,15 +2503,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  DocxBuilder
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return DocxBuilderImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
   FontReader
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     dynamic raw,
@@ -2901,15 +2539,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  PdfBuilder
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return PdfBuilderImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
   S3Client
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
     dynamic raw,
@@ -2937,30 +2566,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  DocxBuilder
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return DocxBuilderImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
   HttpServer
   dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return HttpServerImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  PdfBuilder
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return PdfBuilderImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -3102,15 +2713,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  DocxBuilder
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return DocxBuilderImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
   FontReader
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     dynamic raw,
@@ -3144,15 +2746,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return HttpServerImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  PdfBuilder
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return PdfBuilderImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -3239,12 +2832,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  DocxStyle dco_decode_box_autoadd_docx_style(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_docx_style(raw);
-  }
-
-  @protected
   GraphLayoutParams dco_decode_box_autoadd_graph_layout_params(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_graph_layout_params(raw);
@@ -3254,18 +2841,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   HttpResponse dco_decode_box_autoadd_http_response(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_http_response(raw);
-  }
-
-  @protected
-  IrDoc dco_decode_box_autoadd_ir_doc(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_ir_doc(raw);
-  }
-
-  @protected
-  PdfStyle dco_decode_box_autoadd_pdf_style(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_pdf_style(raw);
   }
 
   @protected
@@ -3309,29 +2884,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  DocxStyle dco_decode_docx_style(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 13)
-      throw Exception('unexpected arr length: expect 13 but see ${arr.length}');
-    return DocxStyle(
-      eastAsiaFont: dco_decode_String(arr[0]),
-      asciiFont: dco_decode_String(arr[1]),
-      fontSizePt: dco_decode_f_64(arr[2]),
-      lineSpacing: dco_decode_f_64(arr[3]),
-      firstLineIndent: dco_decode_bool(arr[4]),
-      pageWidth: dco_decode_u_32(arr[5]),
-      pageHeight: dco_decode_u_32(arr[6]),
-      pageMargin: dco_decode_u_32(arr[7]),
-      includeTitle: dco_decode_bool(arr[8]),
-      includeMeta: dco_decode_bool(arr[9]),
-      pageBreakBetween: dco_decode_bool(arr[10]),
-      videoLabel: dco_decode_String(arr[11]),
-      audioLabel: dco_decode_String(arr[12]),
-    );
-  }
-
-  @protected
   DownloadEvent dco_decode_download_event(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -3346,12 +2898,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   double dco_decode_f_32(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw as double;
-  }
-
-  @protected
-  double dco_decode_f_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as double;
   }
@@ -3461,125 +3007,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  IrBlock dco_decode_ir_block(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    switch (raw[0]) {
-      case 0:
-        return IrBlock_Paragraph(spans: dco_decode_list_ir_span(raw[1]));
-      case 1:
-        return IrBlock_Heading(
-          level: dco_decode_u_32(raw[1]),
-          spans: dco_decode_list_ir_span(raw[2]),
-        );
-      case 2:
-        return IrBlock_List(
-          ordered: dco_decode_bool(raw[1]),
-          start: dco_decode_u_32(raw[2]),
-          items: dco_decode_list_ir_list_item(raw[3]),
-        );
-      case 3:
-        return IrBlock_Quote(children: dco_decode_list_ir_block(raw[1]));
-      case 4:
-        return IrBlock_Code(
-          language: dco_decode_opt_String(raw[1]),
-          text: dco_decode_String(raw[2]),
-        );
-      case 5:
-        return IrBlock_Divider();
-      case 6:
-        return IrBlock_Image(
-          path: dco_decode_String(raw[1]),
-          alt: dco_decode_opt_String(raw[2]),
-          widthPercent: dco_decode_opt_box_autoadd_u_32(raw[3]),
-          isExternal: dco_decode_bool(raw[4]),
-        );
-      case 7:
-        return IrBlock_Media(
-          kind: dco_decode_String(raw[1]),
-          filename: dco_decode_String(raw[2]),
-          path: dco_decode_String(raw[3]),
-          coverPath: dco_decode_opt_String(raw[4]),
-        );
-      case 8:
-        return IrBlock_Table(rows: dco_decode_list_ir_row(raw[1]));
-      default:
-        throw Exception("unreachable");
-    }
-  }
-
-  @protected
-  IrCell dco_decode_ir_cell(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 5)
-      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
-    return IrCell(
-      children: dco_decode_list_ir_block(arr[0]),
-      colspan: dco_decode_u_32(arr[1]),
-      rowspan: dco_decode_u_32(arr[2]),
-      align: dco_decode_opt_String(arr[3]),
-      header: dco_decode_bool(arr[4]),
-    );
-  }
-
-  @protected
-  IrDoc dco_decode_ir_doc(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 8)
-      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
-    return IrDoc(
-      id: dco_decode_String(arr[0]),
-      title: dco_decode_String(arr[1]),
-      time: dco_decode_String(arr[2]),
-      weather: dco_decode_list_String(arr[3]),
-      position: dco_decode_list_String(arr[4]),
-      tags: dco_decode_list_String(arr[5]),
-      categoryName: dco_decode_opt_String(arr[6]),
-      blocks: dco_decode_list_ir_block(arr[7]),
-    );
-  }
-
-  @protected
-  IrListItem dco_decode_ir_list_item(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-    return IrListItem(
-      children: dco_decode_list_ir_block(arr[0]),
-      checked: dco_decode_opt_box_autoadd_bool(arr[1]),
-    );
-  }
-
-  @protected
-  IrRow dco_decode_ir_row(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 1)
-      throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-    return IrRow(cells: dco_decode_list_ir_cell(arr[0]));
-  }
-
-  @protected
-  IrSpan dco_decode_ir_span(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 8)
-      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
-    return IrSpan(
-      text: dco_decode_String(arr[0]),
-      bold: dco_decode_bool(arr[1]),
-      italic: dco_decode_bool(arr[2]),
-      strike: dco_decode_bool(arr[3]),
-      underline: dco_decode_bool(arr[4]),
-      code: dco_decode_bool(arr[5]),
-      href: dco_decode_opt_String(arr[6]),
-      diaryLinkId: dco_decode_opt_String(arr[7]),
-    );
-  }
-
-  @protected
   PlatformInt64 dco_decode_isize(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dcoDecodeI64(raw);
@@ -3614,42 +3041,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<String> dco_decode_list_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_String).toList();
-  }
-
-  @protected
-  List<IrBlock> dco_decode_list_ir_block(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return (raw as List<dynamic>).map(dco_decode_ir_block).toList();
-  }
-
-  @protected
-  List<IrCell> dco_decode_list_ir_cell(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return (raw as List<dynamic>).map(dco_decode_ir_cell).toList();
-  }
-
-  @protected
-  List<IrDoc> dco_decode_list_ir_doc(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return (raw as List<dynamic>).map(dco_decode_ir_doc).toList();
-  }
-
-  @protected
-  List<IrListItem> dco_decode_list_ir_list_item(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return (raw as List<dynamic>).map(dco_decode_ir_list_item).toList();
-  }
-
-  @protected
-  List<IrRow> dco_decode_list_ir_row(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return (raw as List<dynamic>).map(dco_decode_ir_row).toList();
-  }
-
-  @protected
-  List<IrSpan> dco_decode_list_ir_span(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return (raw as List<dynamic>).map(dco_decode_ir_span).toList();
   }
 
   @protected
@@ -3766,28 +3157,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Uint8List? dco_decode_opt_list_prim_u_8_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_list_prim_u_8_strict(raw);
-  }
-
-  @protected
-  PdfStyle dco_decode_pdf_style(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 12)
-      throw Exception('unexpected arr length: expect 12 but see ${arr.length}');
-    return PdfStyle(
-      fontPath: dco_decode_String(arr[0]),
-      fontFamily: dco_decode_String(arr[1]),
-      fontSizePt: dco_decode_f_64(arr[2]),
-      lineSpacingEm: dco_decode_f_64(arr[3]),
-      firstLineIndent: dco_decode_bool(arr[4]),
-      pageWidthMm: dco_decode_f_64(arr[5]),
-      pageHeightMm: dco_decode_f_64(arr[6]),
-      pageMarginMm: dco_decode_f_64(arr[7]),
-      includeTitle: dco_decode_bool(arr[8]),
-      includeMeta: dco_decode_bool(arr[9]),
-      videoLabel: dco_decode_String(arr[10]),
-      audioLabel: dco_decode_String(arr[11]),
-    );
   }
 
   @protected
@@ -4011,18 +3380,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  DocxBuilder
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return DocxBuilderImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
   FontReader
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     SseDeserializer deserializer,
@@ -4071,18 +3428,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  PdfBuilder
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return PdfBuilderImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
   S3Client
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
     SseDeserializer deserializer,
@@ -4119,36 +3464,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  DocxBuilder
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return DocxBuilderImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
   HttpServer
   sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return HttpServerImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  PdfBuilder
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return PdfBuilderImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -4303,18 +3624,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  DocxBuilder
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return DocxBuilderImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
   FontReader
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     SseDeserializer deserializer,
@@ -4357,18 +3666,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return HttpServerImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  PdfBuilder
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return PdfBuilderImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -4470,12 +3767,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  DocxStyle sse_decode_box_autoadd_docx_style(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_docx_style(deserializer));
-  }
-
-  @protected
   GraphLayoutParams sse_decode_box_autoadd_graph_layout_params(
     SseDeserializer deserializer,
   ) {
@@ -4489,18 +3780,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_http_response(deserializer));
-  }
-
-  @protected
-  IrDoc sse_decode_box_autoadd_ir_doc(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_ir_doc(deserializer));
-  }
-
-  @protected
-  PdfStyle sse_decode_box_autoadd_pdf_style(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_pdf_style(deserializer));
   }
 
   @protected
@@ -4551,39 +3830,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  DocxStyle sse_decode_docx_style(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_eastAsiaFont = sse_decode_String(deserializer);
-    var var_asciiFont = sse_decode_String(deserializer);
-    var var_fontSizePt = sse_decode_f_64(deserializer);
-    var var_lineSpacing = sse_decode_f_64(deserializer);
-    var var_firstLineIndent = sse_decode_bool(deserializer);
-    var var_pageWidth = sse_decode_u_32(deserializer);
-    var var_pageHeight = sse_decode_u_32(deserializer);
-    var var_pageMargin = sse_decode_u_32(deserializer);
-    var var_includeTitle = sse_decode_bool(deserializer);
-    var var_includeMeta = sse_decode_bool(deserializer);
-    var var_pageBreakBetween = sse_decode_bool(deserializer);
-    var var_videoLabel = sse_decode_String(deserializer);
-    var var_audioLabel = sse_decode_String(deserializer);
-    return DocxStyle(
-      eastAsiaFont: var_eastAsiaFont,
-      asciiFont: var_asciiFont,
-      fontSizePt: var_fontSizePt,
-      lineSpacing: var_lineSpacing,
-      firstLineIndent: var_firstLineIndent,
-      pageWidth: var_pageWidth,
-      pageHeight: var_pageHeight,
-      pageMargin: var_pageMargin,
-      includeTitle: var_includeTitle,
-      includeMeta: var_includeMeta,
-      pageBreakBetween: var_pageBreakBetween,
-      videoLabel: var_videoLabel,
-      audioLabel: var_audioLabel,
-    );
-  }
-
-  @protected
   DownloadEvent sse_decode_download_event(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_received = sse_decode_i_64(deserializer);
@@ -4600,12 +3846,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   double sse_decode_f_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getFloat32();
-  }
-
-  @protected
-  double sse_decode_f_64(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getFloat64();
   }
 
   @protected
@@ -4732,145 +3972,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  IrBlock sse_decode_ir_block(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    var tag_ = sse_decode_i_32(deserializer);
-    switch (tag_) {
-      case 0:
-        var var_spans = sse_decode_list_ir_span(deserializer);
-        return IrBlock_Paragraph(spans: var_spans);
-      case 1:
-        var var_level = sse_decode_u_32(deserializer);
-        var var_spans = sse_decode_list_ir_span(deserializer);
-        return IrBlock_Heading(level: var_level, spans: var_spans);
-      case 2:
-        var var_ordered = sse_decode_bool(deserializer);
-        var var_start = sse_decode_u_32(deserializer);
-        var var_items = sse_decode_list_ir_list_item(deserializer);
-        return IrBlock_List(
-          ordered: var_ordered,
-          start: var_start,
-          items: var_items,
-        );
-      case 3:
-        var var_children = sse_decode_list_ir_block(deserializer);
-        return IrBlock_Quote(children: var_children);
-      case 4:
-        var var_language = sse_decode_opt_String(deserializer);
-        var var_text = sse_decode_String(deserializer);
-        return IrBlock_Code(language: var_language, text: var_text);
-      case 5:
-        return IrBlock_Divider();
-      case 6:
-        var var_path = sse_decode_String(deserializer);
-        var var_alt = sse_decode_opt_String(deserializer);
-        var var_widthPercent = sse_decode_opt_box_autoadd_u_32(deserializer);
-        var var_isExternal = sse_decode_bool(deserializer);
-        return IrBlock_Image(
-          path: var_path,
-          alt: var_alt,
-          widthPercent: var_widthPercent,
-          isExternal: var_isExternal,
-        );
-      case 7:
-        var var_kind = sse_decode_String(deserializer);
-        var var_filename = sse_decode_String(deserializer);
-        var var_path = sse_decode_String(deserializer);
-        var var_coverPath = sse_decode_opt_String(deserializer);
-        return IrBlock_Media(
-          kind: var_kind,
-          filename: var_filename,
-          path: var_path,
-          coverPath: var_coverPath,
-        );
-      case 8:
-        var var_rows = sse_decode_list_ir_row(deserializer);
-        return IrBlock_Table(rows: var_rows);
-      default:
-        throw UnimplementedError('');
-    }
-  }
-
-  @protected
-  IrCell sse_decode_ir_cell(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_children = sse_decode_list_ir_block(deserializer);
-    var var_colspan = sse_decode_u_32(deserializer);
-    var var_rowspan = sse_decode_u_32(deserializer);
-    var var_align = sse_decode_opt_String(deserializer);
-    var var_header = sse_decode_bool(deserializer);
-    return IrCell(
-      children: var_children,
-      colspan: var_colspan,
-      rowspan: var_rowspan,
-      align: var_align,
-      header: var_header,
-    );
-  }
-
-  @protected
-  IrDoc sse_decode_ir_doc(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_id = sse_decode_String(deserializer);
-    var var_title = sse_decode_String(deserializer);
-    var var_time = sse_decode_String(deserializer);
-    var var_weather = sse_decode_list_String(deserializer);
-    var var_position = sse_decode_list_String(deserializer);
-    var var_tags = sse_decode_list_String(deserializer);
-    var var_categoryName = sse_decode_opt_String(deserializer);
-    var var_blocks = sse_decode_list_ir_block(deserializer);
-    return IrDoc(
-      id: var_id,
-      title: var_title,
-      time: var_time,
-      weather: var_weather,
-      position: var_position,
-      tags: var_tags,
-      categoryName: var_categoryName,
-      blocks: var_blocks,
-    );
-  }
-
-  @protected
-  IrListItem sse_decode_ir_list_item(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_children = sse_decode_list_ir_block(deserializer);
-    var var_checked = sse_decode_opt_box_autoadd_bool(deserializer);
-    return IrListItem(children: var_children, checked: var_checked);
-  }
-
-  @protected
-  IrRow sse_decode_ir_row(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_cells = sse_decode_list_ir_cell(deserializer);
-    return IrRow(cells: var_cells);
-  }
-
-  @protected
-  IrSpan sse_decode_ir_span(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_text = sse_decode_String(deserializer);
-    var var_bold = sse_decode_bool(deserializer);
-    var var_italic = sse_decode_bool(deserializer);
-    var var_strike = sse_decode_bool(deserializer);
-    var var_underline = sse_decode_bool(deserializer);
-    var var_code = sse_decode_bool(deserializer);
-    var var_href = sse_decode_opt_String(deserializer);
-    var var_diaryLinkId = sse_decode_opt_String(deserializer);
-    return IrSpan(
-      text: var_text,
-      bold: var_bold,
-      italic: var_italic,
-      strike: var_strike,
-      underline: var_underline,
-      code: var_code,
-      href: var_href,
-      diaryLinkId: var_diaryLinkId,
-    );
-  }
-
-  @protected
   PlatformInt64 sse_decode_isize(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getPlatformInt64();
@@ -4905,78 +4006,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var ans_ = <String>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_String(deserializer));
-    }
-    return ans_;
-  }
-
-  @protected
-  List<IrBlock> sse_decode_list_ir_block(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    var len_ = sse_decode_i_32(deserializer);
-    var ans_ = <IrBlock>[];
-    for (var idx_ = 0; idx_ < len_; ++idx_) {
-      ans_.add(sse_decode_ir_block(deserializer));
-    }
-    return ans_;
-  }
-
-  @protected
-  List<IrCell> sse_decode_list_ir_cell(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    var len_ = sse_decode_i_32(deserializer);
-    var ans_ = <IrCell>[];
-    for (var idx_ = 0; idx_ < len_; ++idx_) {
-      ans_.add(sse_decode_ir_cell(deserializer));
-    }
-    return ans_;
-  }
-
-  @protected
-  List<IrDoc> sse_decode_list_ir_doc(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    var len_ = sse_decode_i_32(deserializer);
-    var ans_ = <IrDoc>[];
-    for (var idx_ = 0; idx_ < len_; ++idx_) {
-      ans_.add(sse_decode_ir_doc(deserializer));
-    }
-    return ans_;
-  }
-
-  @protected
-  List<IrListItem> sse_decode_list_ir_list_item(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    var len_ = sse_decode_i_32(deserializer);
-    var ans_ = <IrListItem>[];
-    for (var idx_ = 0; idx_ < len_; ++idx_) {
-      ans_.add(sse_decode_ir_list_item(deserializer));
-    }
-    return ans_;
-  }
-
-  @protected
-  List<IrRow> sse_decode_list_ir_row(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    var len_ = sse_decode_i_32(deserializer);
-    var ans_ = <IrRow>[];
-    for (var idx_ = 0; idx_ < len_; ++idx_) {
-      ans_.add(sse_decode_ir_row(deserializer));
-    }
-    return ans_;
-  }
-
-  @protected
-  List<IrSpan> sse_decode_list_ir_span(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    var len_ = sse_decode_i_32(deserializer);
-    var ans_ = <IrSpan>[];
-    for (var idx_ = 0; idx_ < len_; ++idx_) {
-      ans_.add(sse_decode_ir_span(deserializer));
     }
     return ans_;
   }
@@ -5176,37 +4205,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     } else {
       return null;
     }
-  }
-
-  @protected
-  PdfStyle sse_decode_pdf_style(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_fontPath = sse_decode_String(deserializer);
-    var var_fontFamily = sse_decode_String(deserializer);
-    var var_fontSizePt = sse_decode_f_64(deserializer);
-    var var_lineSpacingEm = sse_decode_f_64(deserializer);
-    var var_firstLineIndent = sse_decode_bool(deserializer);
-    var var_pageWidthMm = sse_decode_f_64(deserializer);
-    var var_pageHeightMm = sse_decode_f_64(deserializer);
-    var var_pageMarginMm = sse_decode_f_64(deserializer);
-    var var_includeTitle = sse_decode_bool(deserializer);
-    var var_includeMeta = sse_decode_bool(deserializer);
-    var var_videoLabel = sse_decode_String(deserializer);
-    var var_audioLabel = sse_decode_String(deserializer);
-    return PdfStyle(
-      fontPath: var_fontPath,
-      fontFamily: var_fontFamily,
-      fontSizePt: var_fontSizePt,
-      lineSpacingEm: var_lineSpacingEm,
-      firstLineIndent: var_firstLineIndent,
-      pageWidthMm: var_pageWidthMm,
-      pageHeightMm: var_pageHeightMm,
-      pageMarginMm: var_pageMarginMm,
-      includeTitle: var_includeTitle,
-      includeMeta: var_includeMeta,
-      videoLabel: var_videoLabel,
-      audioLabel: var_audioLabel,
-    );
   }
 
   @protected
@@ -5434,16 +4432,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   int
-  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-    DocxBuilder raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as DocxBuilderImpl).frbInternalCstEncode(move: true);
-  }
-
-  @protected
-  int
   cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     FontReader raw,
   ) {
@@ -5484,16 +4472,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   int
-  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-    PdfBuilder raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as PdfBuilderImpl).frbInternalCstEncode(move: true);
-  }
-
-  @protected
-  int
   cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
     S3Client raw,
   ) {
@@ -5524,32 +4502,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   int
-  cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-    DocxBuilder raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as DocxBuilderImpl).frbInternalCstEncode(move: false);
-  }
-
-  @protected
-  int
   cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
     HttpServer raw,
   ) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     // ignore: invalid_use_of_internal_member
     return (raw as HttpServerImpl).frbInternalCstEncode(move: false);
-  }
-
-  @protected
-  int
-  cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-    PdfBuilder raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as PdfBuilderImpl).frbInternalCstEncode(move: false);
   }
 
   @protected
@@ -5709,16 +4667,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   int
-  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-    DocxBuilder raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as DocxBuilderImpl).frbInternalCstEncode();
-  }
-
-  @protected
-  int
   cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     FontReader raw,
   ) {
@@ -5759,16 +4707,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   int
-  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-    PdfBuilder raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as PdfBuilderImpl).frbInternalCstEncode();
-  }
-
-  @protected
-  int
   cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
     S3Client raw,
   ) {
@@ -5805,12 +4743,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   double cst_encode_f_32(double raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    return raw;
-  }
-
-  @protected
-  double cst_encode_f_64(double raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw;
   }
@@ -5920,19 +4852,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-    DocxBuilder self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as DocxBuilderImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     FontReader self,
     SseSerializer serializer,
@@ -5985,19 +4904,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-    PdfBuilder self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as PdfBuilderImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
     S3Client self,
     SseSerializer serializer,
@@ -6037,19 +4943,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-    DocxBuilder self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as DocxBuilderImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
   sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
     HttpServer self,
     SseSerializer serializer,
@@ -6057,19 +4950,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as HttpServerImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-    PdfBuilder self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as PdfBuilderImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
@@ -6285,19 +5165,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-    DocxBuilder self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as DocxBuilderImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     FontReader self,
     SseSerializer serializer,
@@ -6344,19 +5211,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as HttpServerImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-    PdfBuilder self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as PdfBuilderImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
@@ -6496,15 +5350,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_box_autoadd_docx_style(
-    DocxStyle self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_docx_style(self, serializer);
-  }
-
-  @protected
   void sse_encode_box_autoadd_graph_layout_params(
     GraphLayoutParams self,
     SseSerializer serializer,
@@ -6520,21 +5365,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_http_response(self, serializer);
-  }
-
-  @protected
-  void sse_encode_box_autoadd_ir_doc(IrDoc self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_ir_doc(self, serializer);
-  }
-
-  @protected
-  void sse_encode_box_autoadd_pdf_style(
-    PdfStyle self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_pdf_style(self, serializer);
   }
 
   @protected
@@ -6582,24 +5412,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_docx_style(DocxStyle self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(self.eastAsiaFont, serializer);
-    sse_encode_String(self.asciiFont, serializer);
-    sse_encode_f_64(self.fontSizePt, serializer);
-    sse_encode_f_64(self.lineSpacing, serializer);
-    sse_encode_bool(self.firstLineIndent, serializer);
-    sse_encode_u_32(self.pageWidth, serializer);
-    sse_encode_u_32(self.pageHeight, serializer);
-    sse_encode_u_32(self.pageMargin, serializer);
-    sse_encode_bool(self.includeTitle, serializer);
-    sse_encode_bool(self.includeMeta, serializer);
-    sse_encode_bool(self.pageBreakBetween, serializer);
-    sse_encode_String(self.videoLabel, serializer);
-    sse_encode_String(self.audioLabel, serializer);
-  }
-
-  @protected
   void sse_encode_download_event(DownloadEvent self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_64(self.received, serializer);
@@ -6611,12 +5423,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_f_32(double self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putFloat32(self);
-  }
-
-  @protected
-  void sse_encode_f_64(double self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putFloat64(self);
   }
 
   @protected
@@ -6711,112 +5517,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_ir_block(IrBlock self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    switch (self) {
-      case IrBlock_Paragraph(spans: final spans):
-        sse_encode_i_32(0, serializer);
-        sse_encode_list_ir_span(spans, serializer);
-      case IrBlock_Heading(level: final level, spans: final spans):
-        sse_encode_i_32(1, serializer);
-        sse_encode_u_32(level, serializer);
-        sse_encode_list_ir_span(spans, serializer);
-      case IrBlock_List(
-        ordered: final ordered,
-        start: final start,
-        items: final items,
-      ):
-        sse_encode_i_32(2, serializer);
-        sse_encode_bool(ordered, serializer);
-        sse_encode_u_32(start, serializer);
-        sse_encode_list_ir_list_item(items, serializer);
-      case IrBlock_Quote(children: final children):
-        sse_encode_i_32(3, serializer);
-        sse_encode_list_ir_block(children, serializer);
-      case IrBlock_Code(language: final language, text: final text):
-        sse_encode_i_32(4, serializer);
-        sse_encode_opt_String(language, serializer);
-        sse_encode_String(text, serializer);
-      case IrBlock_Divider():
-        sse_encode_i_32(5, serializer);
-      case IrBlock_Image(
-        path: final path,
-        alt: final alt,
-        widthPercent: final widthPercent,
-        isExternal: final isExternal,
-      ):
-        sse_encode_i_32(6, serializer);
-        sse_encode_String(path, serializer);
-        sse_encode_opt_String(alt, serializer);
-        sse_encode_opt_box_autoadd_u_32(widthPercent, serializer);
-        sse_encode_bool(isExternal, serializer);
-      case IrBlock_Media(
-        kind: final kind,
-        filename: final filename,
-        path: final path,
-        coverPath: final coverPath,
-      ):
-        sse_encode_i_32(7, serializer);
-        sse_encode_String(kind, serializer);
-        sse_encode_String(filename, serializer);
-        sse_encode_String(path, serializer);
-        sse_encode_opt_String(coverPath, serializer);
-      case IrBlock_Table(rows: final rows):
-        sse_encode_i_32(8, serializer);
-        sse_encode_list_ir_row(rows, serializer);
-    }
-  }
-
-  @protected
-  void sse_encode_ir_cell(IrCell self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_list_ir_block(self.children, serializer);
-    sse_encode_u_32(self.colspan, serializer);
-    sse_encode_u_32(self.rowspan, serializer);
-    sse_encode_opt_String(self.align, serializer);
-    sse_encode_bool(self.header, serializer);
-  }
-
-  @protected
-  void sse_encode_ir_doc(IrDoc self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(self.id, serializer);
-    sse_encode_String(self.title, serializer);
-    sse_encode_String(self.time, serializer);
-    sse_encode_list_String(self.weather, serializer);
-    sse_encode_list_String(self.position, serializer);
-    sse_encode_list_String(self.tags, serializer);
-    sse_encode_opt_String(self.categoryName, serializer);
-    sse_encode_list_ir_block(self.blocks, serializer);
-  }
-
-  @protected
-  void sse_encode_ir_list_item(IrListItem self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_list_ir_block(self.children, serializer);
-    sse_encode_opt_box_autoadd_bool(self.checked, serializer);
-  }
-
-  @protected
-  void sse_encode_ir_row(IrRow self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_list_ir_cell(self.cells, serializer);
-  }
-
-  @protected
-  void sse_encode_ir_span(IrSpan self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(self.text, serializer);
-    sse_encode_bool(self.bold, serializer);
-    sse_encode_bool(self.italic, serializer);
-    sse_encode_bool(self.strike, serializer);
-    sse_encode_bool(self.underline, serializer);
-    sse_encode_bool(self.code, serializer);
-    sse_encode_opt_String(self.href, serializer);
-    sse_encode_opt_String(self.diaryLinkId, serializer);
-  }
-
-  @protected
   void sse_encode_isize(PlatformInt64 self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putPlatformInt64(self);
@@ -6843,63 +5543,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_String(item, serializer);
-    }
-  }
-
-  @protected
-  void sse_encode_list_ir_block(List<IrBlock> self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.length, serializer);
-    for (final item in self) {
-      sse_encode_ir_block(item, serializer);
-    }
-  }
-
-  @protected
-  void sse_encode_list_ir_cell(List<IrCell> self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.length, serializer);
-    for (final item in self) {
-      sse_encode_ir_cell(item, serializer);
-    }
-  }
-
-  @protected
-  void sse_encode_list_ir_doc(List<IrDoc> self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.length, serializer);
-    for (final item in self) {
-      sse_encode_ir_doc(item, serializer);
-    }
-  }
-
-  @protected
-  void sse_encode_list_ir_list_item(
-    List<IrListItem> self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.length, serializer);
-    for (final item in self) {
-      sse_encode_ir_list_item(item, serializer);
-    }
-  }
-
-  @protected
-  void sse_encode_list_ir_row(List<IrRow> self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.length, serializer);
-    for (final item in self) {
-      sse_encode_ir_row(item, serializer);
-    }
-  }
-
-  @protected
-  void sse_encode_list_ir_span(List<IrSpan> self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.length, serializer);
-    for (final item in self) {
-      sse_encode_ir_span(item, serializer);
     }
   }
 
@@ -7115,23 +5758,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (self != null) {
       sse_encode_list_prim_u_8_strict(self, serializer);
     }
-  }
-
-  @protected
-  void sse_encode_pdf_style(PdfStyle self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(self.fontPath, serializer);
-    sse_encode_String(self.fontFamily, serializer);
-    sse_encode_f_64(self.fontSizePt, serializer);
-    sse_encode_f_64(self.lineSpacingEm, serializer);
-    sse_encode_bool(self.firstLineIndent, serializer);
-    sse_encode_f_64(self.pageWidthMm, serializer);
-    sse_encode_f_64(self.pageHeightMm, serializer);
-    sse_encode_f_64(self.pageMarginMm, serializer);
-    sse_encode_bool(self.includeTitle, serializer);
-    sse_encode_bool(self.includeMeta, serializer);
-    sse_encode_String(self.videoLabel, serializer);
-    sse_encode_String(self.audioLabel, serializer);
   }
 
   @protected
@@ -7432,36 +6058,6 @@ class DavClientImpl extends RustOpaque implements DavClient {
 }
 
 @sealed
-class DocxBuilderImpl extends RustOpaque implements DocxBuilder {
-  // Not to be used by end users
-  DocxBuilderImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  DocxBuilderImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_DocxBuilder,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_DocxBuilder,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_DocxBuilderPtr,
-  );
-
-  Future<void> add({required IrDoc doc}) =>
-      RustLib.instance.api.crateApiDocxDocxBuilderAdd(that: this, doc: doc);
-
-  Future<void> finish({required String outPath, required CancelToken cancel}) =>
-      RustLib.instance.api.crateApiDocxDocxBuilderFinish(
-        that: this,
-        outPath: outPath,
-        cancel: cancel,
-      );
-}
-
-@sealed
 class FontReaderImpl extends RustOpaque implements FontReader {
   // Not to be used by end users
   FontReaderImpl.frbInternalDcoDecode(List<dynamic> wire)
@@ -7592,36 +6188,6 @@ class HttpServerImpl extends RustOpaque implements HttpServer {
 
   void stop() =>
       RustLib.instance.api.crateApiHttpServerHttpServerStop(that: this);
-}
-
-@sealed
-class PdfBuilderImpl extends RustOpaque implements PdfBuilder {
-  // Not to be used by end users
-  PdfBuilderImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  PdfBuilderImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_PdfBuilder,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_PdfBuilder,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_PdfBuilderPtr,
-  );
-
-  Future<void> add({required IrDoc doc}) =>
-      RustLib.instance.api.crateApiPdfPdfBuilderAdd(that: this, doc: doc);
-
-  Future<void> finish({required String outPath, required CancelToken cancel}) =>
-      RustLib.instance.api.crateApiPdfPdfBuilderFinish(
-        that: this,
-        outPath: outPath,
-        cancel: cancel,
-      );
 }
 
 @sealed

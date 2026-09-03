@@ -7,7 +7,7 @@ import '../frb_generated.dart';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
-part 'export_ir.freezed.dart';
+part 'ir.freezed.dart';
 
 @freezed
 sealed class IrBlock with _$IrBlock {

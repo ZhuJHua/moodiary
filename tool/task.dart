@@ -82,7 +82,11 @@ Future<void> _editor() async {
 const _rustPkgDir = 'packages/foundation/moodiary_rust';
 
 /// 带自己 FRB 的包：各自一份 flutter_rust_bridge.yaml、一个原生库。
-const _frbPkgDirs = [_rustPkgDir, 'packages/foundation/fast_image'];
+const _frbPkgDirs = [
+  _rustPkgDir,
+  'packages/foundation/fast_image',
+  'packages/foundation/fast_press',
+];
 
 /// CLI 是整条链上唯一不由仓库钉版本的东西，而它默认开着 auto_upgrade_dependency ——
 /// 版本不一致时会反过来把 Cargo.toml / pubspec.yaml / lock 的钉版本改成它自己的。

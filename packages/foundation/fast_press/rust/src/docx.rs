@@ -1,7 +1,7 @@
 //! 日记导出 DOCX。
 //!
 //! 输入是 Dart 侧 `ExportDoc` 的 JSON（见 moodiary_utils 的 export_doc.dart）——不是 tiptap
-//! 文档。IR 的 Rust 镜像在 [`moodiary_doc`]，与 PDF 那条链共用一份定义。
+//! 文档。IR 的 Rust 镜像在 [`crate::ir`]，与 PDF 那条链共用一份定义。
 //!
 //! DOCX 对中文是白送的：OOXML 只写字体名不嵌字体，正文由 Word / WPS 用本机字体渲染。
 //! 这也是它相对 PDF 的关键优势 —— 导出侧一个字节的字体都不用管。
@@ -21,7 +21,7 @@ use std::collections::HashSet;
 use std::fs::File;
 use std::path::Path;
 
-use moodiary_doc::{IrBlock, IrDoc, IrListItem, IrRow, IrSpan};
+use crate::ir::{IrBlock, IrDoc, IrListItem, IrRow, IrSpan};
 
 pub struct DocxStyle {
     /// 中文字体名（写进 `w:rFonts` 的 `eastAsia`）。
@@ -649,7 +649,7 @@ fn image_run(path: &str, width_percent: Option<u32>, ctx: &Ctx) -> Option<Run> {
 mod tests {
     use super::*;
     use crate::fixture;
-    use moodiary_doc::IrCell;
+    use crate::ir::IrCell;
     use std::collections::HashMap;
     use std::io::Read;
 

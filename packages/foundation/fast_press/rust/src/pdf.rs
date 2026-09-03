@@ -22,7 +22,7 @@ use typst::text::{Font, FontBook};
 use typst::utils::LazyHash;
 use typst::{Library, LibraryExt, World};
 
-use moodiary_doc::{IrBlock, IrDoc, IrListItem, IrRow, IrSpan};
+use crate::ir::{IrBlock, IrDoc, IrListItem, IrRow, IrSpan};
 
 pub struct PdfStyle {
     pub font_path: String,
@@ -651,14 +651,14 @@ fn break_point(chars: &[char], limit: usize) -> usize {
 mod tests {
     use super::*;
     use crate::fixture;
-    use moodiary_doc::IrCell;
+    use crate::ir::IrCell;
     use std::io::Read;
 
     /// 仓内自带的 TrueType（mui 打包的 Dosis）。不用系统字体：macOS 上的
     /// 中日韩字体都是 .ttc，CI 上更没有。
     pub(super) fn font_path() -> String {
         let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
-        dir.join("../../../../../mui/assets/fonts/Dosis.ttf")
+        dir.join("../../mui/assets/fonts/Dosis.ttf")
             .canonicalize()
             .expect("测试字体不见了")
             .to_string_lossy()

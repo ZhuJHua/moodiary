@@ -1,8 +1,8 @@
-//! 导出 IR 的跨桥声明。类型本体在 [`moodiary_doc`]，这里只让 FRB 生成 Dart 侧的对应类。
+//! 导出 IR 的跨桥声明。类型本体在 [`crate::ir`]，这里只让 FRB 生成 Dart 侧的对应类。
 
 use flutter_rust_bridge::frb;
 
-pub use moodiary_doc::{IrBlock, IrCell, IrDoc, IrListItem, IrRow, IrSpan};
+pub use crate::ir::{IrBlock, IrCell, IrDoc, IrListItem, IrRow, IrSpan};
 
 #[frb(mirror(IrDoc))]
 pub struct _IrDoc {

@@ -2,9 +2,9 @@ use anyhow::Result;
 use flutter_rust_bridge::frb;
 
 use crate::api::cancel::CancelToken;
-use crate::api::export_ir::IrDoc;
+use crate::api::ir::IrDoc;
 
-pub use moodiary_export::pdf::PdfStyle;
+pub use crate::pdf::PdfStyle;
 
 #[frb(mirror(PdfStyle))]
 pub struct _PdfStyle {
@@ -30,7 +30,7 @@ pub fn write_pdf(
     out_path: String,
     cancel: &CancelToken,
 ) -> Result<()> {
-    moodiary_export::pdf::write_pdf(docs, &style, out_path, &cancel.checker())
+    crate::pdf::write_pdf(docs, &style, out_path, &cancel.checker())
 }
 
 /// 合并导出用的累加器。直接把整库交给 [write_pdf] 结果一样，但那样整个语料会同时以
@@ -54,7 +54,7 @@ impl PdfBuilder {
     }
 
     pub fn finish(&mut self, out_path: String, cancel: &CancelToken) -> Result<()> {
-        moodiary_export::pdf::write_pdf(
+        crate::pdf::write_pdf(
             std::mem::take(&mut self.docs),
             &self.style,
             out_path,

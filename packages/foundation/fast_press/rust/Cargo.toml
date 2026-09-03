@@ -1,0 +1,48 @@
+[package]
+name = "fastpress"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+# 产物名 libfastpress.*：native_toolchain_rust 按 lib.name 取文件名，`FastPressLib.init()`
+# 也按这个 stem 找库。
+name = "fastpress"
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+flutter_rust_bridge = "=2.13.0"
+anyhow = "=1.0.104"
+typst = "=0.15.1"
+typst-pdf = "=0.15.1"
+docx-rs = { version = "=0.4.22", default-features = false }
+# 代码块高亮。四个 feature 全与 typst-library 重合，收窄一个字节都省不到。
+syntect = { version = "=5.3.0", default-features = false, features = [
+    "parsing",
+    "regex-fancy",
+    "plist-load",
+    "yaml-load",
+] }
+# 只给 docx 读图片尺寸。七个 feature 里只有 ico 是「只有我们开」的，其余六个
+# docx-rs 与 typst-library 各自已经开着，收窄零差异。
+image = { version = "=0.25.10", default-features = false, features = [
+    "bmp",
+    "gif",
+    "jpeg",
+    "png",
+    "tiff",
+    "webp",
+] }
+
+[dev-dependencies]
+zip = { version = "=8.6.0", default-features = false, features = ["deflate"] }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
+
+# 与 moodiary_rust 同口径；不要加 panic = "abort"（FRB 靠 catch_unwind 把 panic 转成 Dart 异常，
+# typst 在脏输入上的 panic 要靠它兜住）。
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "symbols"

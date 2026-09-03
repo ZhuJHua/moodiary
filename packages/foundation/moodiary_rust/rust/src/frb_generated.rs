@@ -29,12 +29,10 @@
 
 use crate::api::cancel::*;
 use crate::api::crypto::*;
-use crate::api::docx::*;
 use crate::api::font::*;
 use crate::api::hf_tokenizer::*;
 use crate::api::http::*;
 use crate::api::http_server::*;
-use crate::api::pdf::*;
 use crate::api::s3::*;
 use crate::api::text::*;
 use crate::api::webdav::*;
@@ -51,7 +49,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 626437788;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -726576857;
 
 // Section: executor
 
@@ -776,127 +774,6 @@ fn wire__crate__api__webdav__DavClient_write_object_file_impl(
         },
     )
 }
-fn wire__crate__api__docx__DocxBuilder_add_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<
-        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DocxBuilder>>,
-    >,
-    doc: impl CstDecode<crate::api::export_ir::IrDoc>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "DocxBuilder_add",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_that = that.cst_decode();
-            let api_doc = doc.cst_decode();
-            move |context| {
-                transform_result_dco::<_, _, ()>((move || {
-                    let mut api_that_guard = None;
-                    let decode_indices_ =
-                        flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
-                            flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                                &api_that, 0, true,
-                            ),
-                        ]);
-                    for i in decode_indices_ {
-                        match i {
-                            0 => api_that_guard = Some(api_that.lockable_decode_sync_ref_mut()),
-                            _ => unreachable!(),
-                        }
-                    }
-                    let mut api_that_guard = api_that_guard.unwrap();
-                    let output_ok = Ok::<_, ()>({
-                        crate::api::docx::DocxBuilder::add(&mut *api_that_guard, api_doc);
-                    })?;
-                    std::result::Result::Ok(output_ok)
-                })())
-            }
-        },
-    )
-}
-fn wire__crate__api__docx__DocxBuilder_finish_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<
-        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DocxBuilder>>,
-    >,
-    out_path: impl CstDecode<String>,
-    cancel: impl CstDecode<
-        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CancelToken>>,
-    >,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "DocxBuilder_finish",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_that = that.cst_decode();
-            let api_out_path = out_path.cst_decode();
-            let api_cancel = cancel.cst_decode();
-            move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
-                    (move || {
-                        let mut api_that_guard = None;
-                        let mut api_cancel_guard = None;
-                        let decode_indices_ =
-                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
-                                vec![
-                                    flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                                        &api_that, 0, true,
-                                    ),
-                                    flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                                        &api_cancel,
-                                        1,
-                                        false,
-                                    ),
-                                ],
-                            );
-                        for i in decode_indices_ {
-                            match i {
-                                0 => api_that_guard = Some(api_that.lockable_decode_sync_ref_mut()),
-                                1 => api_cancel_guard = Some(api_cancel.lockable_decode_sync_ref()),
-                                _ => unreachable!(),
-                            }
-                        }
-                        let mut api_that_guard = api_that_guard.unwrap();
-                        let api_cancel_guard = api_cancel_guard.unwrap();
-                        let output_ok = crate::api::docx::DocxBuilder::finish(
-                            &mut *api_that_guard,
-                            api_out_path,
-                            &*api_cancel_guard,
-                        )?;
-                        std::result::Result::Ok(output_ok)
-                    })(),
-                )
-            }
-        },
-    )
-}
-fn wire__crate__api__docx__DocxBuilder_new_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    style: impl CstDecode<crate::api::docx::DocxStyle>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "DocxBuilder_new",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_style = style.cst_decode();
-            move |context| {
-                transform_result_dco::<_, _, ()>((move || {
-                    let output_ok = Ok::<_, ()>(crate::api::docx::DocxBuilder::new(api_style))?;
-                    std::result::Result::Ok(output_ok)
-                })())
-            }
-        },
-    )
-}
 fn wire__crate__api__font__FontReader_get_font_name_from_ttf_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ttf_file_path: impl CstDecode<String>,
@@ -1410,127 +1287,6 @@ fn wire__crate__api__http_server__HttpServer_stop_impl(
                 })?;
                 std::result::Result::Ok(output_ok)
             })())
-        },
-    )
-}
-fn wire__crate__api__pdf__PdfBuilder_add_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<
-        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PdfBuilder>>,
-    >,
-    doc: impl CstDecode<crate::api::export_ir::IrDoc>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "PdfBuilder_add",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_that = that.cst_decode();
-            let api_doc = doc.cst_decode();
-            move |context| {
-                transform_result_dco::<_, _, ()>((move || {
-                    let mut api_that_guard = None;
-                    let decode_indices_ =
-                        flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
-                            flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                                &api_that, 0, true,
-                            ),
-                        ]);
-                    for i in decode_indices_ {
-                        match i {
-                            0 => api_that_guard = Some(api_that.lockable_decode_sync_ref_mut()),
-                            _ => unreachable!(),
-                        }
-                    }
-                    let mut api_that_guard = api_that_guard.unwrap();
-                    let output_ok = Ok::<_, ()>({
-                        crate::api::pdf::PdfBuilder::add(&mut *api_that_guard, api_doc);
-                    })?;
-                    std::result::Result::Ok(output_ok)
-                })())
-            }
-        },
-    )
-}
-fn wire__crate__api__pdf__PdfBuilder_finish_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<
-        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PdfBuilder>>,
-    >,
-    out_path: impl CstDecode<String>,
-    cancel: impl CstDecode<
-        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CancelToken>>,
-    >,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "PdfBuilder_finish",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_that = that.cst_decode();
-            let api_out_path = out_path.cst_decode();
-            let api_cancel = cancel.cst_decode();
-            move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
-                    (move || {
-                        let mut api_that_guard = None;
-                        let mut api_cancel_guard = None;
-                        let decode_indices_ =
-                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
-                                vec![
-                                    flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                                        &api_that, 0, true,
-                                    ),
-                                    flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                                        &api_cancel,
-                                        1,
-                                        false,
-                                    ),
-                                ],
-                            );
-                        for i in decode_indices_ {
-                            match i {
-                                0 => api_that_guard = Some(api_that.lockable_decode_sync_ref_mut()),
-                                1 => api_cancel_guard = Some(api_cancel.lockable_decode_sync_ref()),
-                                _ => unreachable!(),
-                            }
-                        }
-                        let mut api_that_guard = api_that_guard.unwrap();
-                        let api_cancel_guard = api_cancel_guard.unwrap();
-                        let output_ok = crate::api::pdf::PdfBuilder::finish(
-                            &mut *api_that_guard,
-                            api_out_path,
-                            &*api_cancel_guard,
-                        )?;
-                        std::result::Result::Ok(output_ok)
-                    })(),
-                )
-            }
-        },
-    )
-}
-fn wire__crate__api__pdf__PdfBuilder_new_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    style: impl CstDecode<crate::api::pdf::PdfStyle>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "PdfBuilder_new",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_style = style.cst_decode();
-            move |context| {
-                transform_result_dco::<_, _, ()>((move || {
-                    let output_ok = Ok::<_, ()>(crate::api::pdf::PdfBuilder::new(api_style))?;
-                    std::result::Result::Ok(output_ok)
-                })())
-            }
         },
     )
 }
@@ -2339,110 +2095,6 @@ fn wire__crate__api__assistant__rig_chat_stream_impl(
         },
     )
 }
-fn wire__crate__api__docx__write_docx_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    docs: impl CstDecode<Vec<crate::api::export_ir::IrDoc>>,
-    style: impl CstDecode<crate::api::docx::DocxStyle>,
-    out_path: impl CstDecode<String>,
-    cancel: impl CstDecode<
-        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CancelToken>>,
-    >,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "write_docx",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_docs = docs.cst_decode();
-            let api_style = style.cst_decode();
-            let api_out_path = out_path.cst_decode();
-            let api_cancel = cancel.cst_decode();
-            move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
-                    (move || {
-                        let mut api_cancel_guard = None;
-                        let decode_indices_ =
-                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
-                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                                    &api_cancel,
-                                    0,
-                                    false,
-                                )],
-                            );
-                        for i in decode_indices_ {
-                            match i {
-                                0 => api_cancel_guard = Some(api_cancel.lockable_decode_sync_ref()),
-                                _ => unreachable!(),
-                            }
-                        }
-                        let api_cancel_guard = api_cancel_guard.unwrap();
-                        let output_ok = crate::api::docx::write_docx(
-                            api_docs,
-                            api_style,
-                            api_out_path,
-                            &*api_cancel_guard,
-                        )?;
-                        std::result::Result::Ok(output_ok)
-                    })(),
-                )
-            }
-        },
-    )
-}
-fn wire__crate__api__pdf__write_pdf_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    docs: impl CstDecode<Vec<crate::api::export_ir::IrDoc>>,
-    style: impl CstDecode<crate::api::pdf::PdfStyle>,
-    out_path: impl CstDecode<String>,
-    cancel: impl CstDecode<
-        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CancelToken>>,
-    >,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "write_pdf",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_docs = docs.cst_decode();
-            let api_style = style.cst_decode();
-            let api_out_path = out_path.cst_decode();
-            let api_cancel = cancel.cst_decode();
-            move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
-                    (move || {
-                        let mut api_cancel_guard = None;
-                        let decode_indices_ =
-                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
-                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                                    &api_cancel,
-                                    0,
-                                    false,
-                                )],
-                            );
-                        for i in decode_indices_ {
-                            match i {
-                                0 => api_cancel_guard = Some(api_cancel.lockable_decode_sync_ref()),
-                                _ => unreachable!(),
-                            }
-                        }
-                        let api_cancel_guard = api_cancel_guard.unwrap();
-                        let output_ok = crate::api::pdf::write_pdf(
-                            api_docs,
-                            api_style,
-                            api_out_path,
-                            &*api_cancel_guard,
-                        )?;
-                        std::result::Result::Ok(output_ok)
-                    })(),
-                )
-            }
-        },
-    )
-}
 
 // Section: static_checks
 
@@ -2456,22 +2108,6 @@ const _: fn() = || {
         let _: Option<String> = ClientSettings.user_agent;
         let _: Option<u32> = ClientSettings.max_redirects;
         let _: bool = ClientSettings.throw_on_status;
-    }
-    {
-        let DocxStyle = None::<crate::api::docx::DocxStyle>.unwrap();
-        let _: String = DocxStyle.east_asia_font;
-        let _: String = DocxStyle.ascii_font;
-        let _: f64 = DocxStyle.font_size_pt;
-        let _: f64 = DocxStyle.line_spacing;
-        let _: bool = DocxStyle.first_line_indent;
-        let _: u32 = DocxStyle.page_width;
-        let _: u32 = DocxStyle.page_height;
-        let _: u32 = DocxStyle.page_margin;
-        let _: bool = DocxStyle.include_title;
-        let _: bool = DocxStyle.include_meta;
-        let _: bool = DocxStyle.page_break_between;
-        let _: String = DocxStyle.video_label;
-        let _: String = DocxStyle.audio_label;
     }
     {
         let GraphLayoutParams = None::<crate::api::graph_layout::GraphLayoutParams>.unwrap();
@@ -2512,96 +2148,6 @@ const _: fn() = || {
         let _: Vec<u8> = HttpServerResponse.body;
         let _: Option<String> = HttpServerResponse.body_file_path;
     }
-    match None::<crate::api::export_ir::IrBlock>.unwrap() {
-        crate::api::export_ir::IrBlock::Paragraph { spans } => {
-            let _: Vec<crate::api::export_ir::IrSpan> = spans;
-        }
-        crate::api::export_ir::IrBlock::Heading { level, spans } => {
-            let _: u32 = level;
-            let _: Vec<crate::api::export_ir::IrSpan> = spans;
-        }
-        crate::api::export_ir::IrBlock::List {
-            ordered,
-            start,
-            items,
-        } => {
-            let _: bool = ordered;
-            let _: u32 = start;
-            let _: Vec<crate::api::export_ir::IrListItem> = items;
-        }
-        crate::api::export_ir::IrBlock::Quote { children } => {
-            let _: Vec<crate::api::export_ir::IrBlock> = children;
-        }
-        crate::api::export_ir::IrBlock::Code { language, text } => {
-            let _: Option<String> = language;
-            let _: String = text;
-        }
-        crate::api::export_ir::IrBlock::Divider => {}
-        crate::api::export_ir::IrBlock::Image {
-            path,
-            alt,
-            width_percent,
-            is_external,
-        } => {
-            let _: String = path;
-            let _: Option<String> = alt;
-            let _: Option<u32> = width_percent;
-            let _: bool = is_external;
-        }
-        crate::api::export_ir::IrBlock::Media {
-            kind,
-            filename,
-            path,
-            cover_path,
-        } => {
-            let _: String = kind;
-            let _: String = filename;
-            let _: String = path;
-            let _: Option<String> = cover_path;
-        }
-        crate::api::export_ir::IrBlock::Table { rows } => {
-            let _: Vec<crate::api::export_ir::IrRow> = rows;
-        }
-    }
-    {
-        let IrCell = None::<crate::api::export_ir::IrCell>.unwrap();
-        let _: Vec<crate::api::export_ir::IrBlock> = IrCell.children;
-        let _: u32 = IrCell.colspan;
-        let _: u32 = IrCell.rowspan;
-        let _: Option<String> = IrCell.align;
-        let _: bool = IrCell.header;
-    }
-    {
-        let IrDoc = None::<crate::api::export_ir::IrDoc>.unwrap();
-        let _: String = IrDoc.id;
-        let _: String = IrDoc.title;
-        let _: String = IrDoc.time;
-        let _: Vec<String> = IrDoc.weather;
-        let _: Vec<String> = IrDoc.position;
-        let _: Vec<String> = IrDoc.tags;
-        let _: Option<String> = IrDoc.category_name;
-        let _: Vec<crate::api::export_ir::IrBlock> = IrDoc.blocks;
-    }
-    {
-        let IrListItem = None::<crate::api::export_ir::IrListItem>.unwrap();
-        let _: Vec<crate::api::export_ir::IrBlock> = IrListItem.children;
-        let _: Option<bool> = IrListItem.checked;
-    }
-    {
-        let IrRow = None::<crate::api::export_ir::IrRow>.unwrap();
-        let _: Vec<crate::api::export_ir::IrCell> = IrRow.cells;
-    }
-    {
-        let IrSpan = None::<crate::api::export_ir::IrSpan>.unwrap();
-        let _: String = IrSpan.text;
-        let _: bool = IrSpan.bold;
-        let _: bool = IrSpan.italic;
-        let _: bool = IrSpan.strike;
-        let _: bool = IrSpan.underline;
-        let _: bool = IrSpan.code;
-        let _: Option<String> = IrSpan.href;
-        let _: Option<String> = IrSpan.diary_link_id;
-    }
     {
         let JsOutcome = None::<crate::api::js::JsOutcome>.unwrap();
         let _: String = JsOutcome.value;
@@ -2612,21 +2158,6 @@ const _: fn() = || {
         let KeyValue = None::<crate::api::http::KeyValue>.unwrap();
         let _: String = KeyValue.key;
         let _: String = KeyValue.value;
-    }
-    {
-        let PdfStyle = None::<crate::api::pdf::PdfStyle>.unwrap();
-        let _: String = PdfStyle.font_path;
-        let _: String = PdfStyle.font_family;
-        let _: f64 = PdfStyle.font_size_pt;
-        let _: f64 = PdfStyle.line_spacing_em;
-        let _: bool = PdfStyle.first_line_indent;
-        let _: f64 = PdfStyle.page_width_mm;
-        let _: f64 = PdfStyle.page_height_mm;
-        let _: f64 = PdfStyle.page_margin_mm;
-        let _: bool = PdfStyle.include_title;
-        let _: bool = PdfStyle.include_meta;
-        let _: String = PdfStyle.video_label;
-        let _: String = PdfStyle.audio_label;
     }
     {
         let RequestOptions = None::<crate::api::http::RequestOptions>.unwrap();
@@ -2860,12 +2391,6 @@ impl CstDecode<f32> for f32 {
         self
     }
 }
-impl CstDecode<f64> for f64 {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> f64 {
-        self
-    }
-}
 impl CstDecode<crate::api::http::HttpErrorKind> for i32 {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::api::http::HttpErrorKind {
@@ -2990,16 +2515,6 @@ impl SseDecode for DavClient {
     }
 }
 
-impl SseDecode for DocxBuilder {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <RustOpaqueNom<
-            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DocxBuilder>,
-        >>::sse_decode(deserializer);
-        return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
-    }
-}
-
 impl SseDecode for FontReader {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3035,16 +2550,6 @@ impl SseDecode for HttpServer {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <RustOpaqueNom<
             flutter_rust_bridge::for_generated::RustAutoOpaqueInner<HttpServer>,
-        >>::sse_decode(deserializer);
-        return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
-    }
-}
-
-impl SseDecode for PdfBuilder {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <RustOpaqueNom<
-            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PdfBuilder>,
         >>::sse_decode(deserializer);
         return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
     }
@@ -3131,16 +2636,6 @@ impl SseDecode
 }
 
 impl SseDecode
-    for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DocxBuilder>>
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <usize>::sse_decode(deserializer);
-        return unsafe { decode_rust_opaque_nom(inner) };
-    }
-}
-
-impl SseDecode
     for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FontReader>>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -3172,16 +2667,6 @@ impl SseDecode
 
 impl SseDecode
     for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<HttpServer>>
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <usize>::sse_decode(deserializer);
-        return unsafe { decode_rust_opaque_nom(inner) };
-    }
-}
-
-impl SseDecode
-    for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PdfBuilder>>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3294,40 +2779,6 @@ impl SseDecode for crate::api::http::ClientSettings {
     }
 }
 
-impl SseDecode for crate::api::docx::DocxStyle {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_eastAsiaFont = <String>::sse_decode(deserializer);
-        let mut var_asciiFont = <String>::sse_decode(deserializer);
-        let mut var_fontSizePt = <f64>::sse_decode(deserializer);
-        let mut var_lineSpacing = <f64>::sse_decode(deserializer);
-        let mut var_firstLineIndent = <bool>::sse_decode(deserializer);
-        let mut var_pageWidth = <u32>::sse_decode(deserializer);
-        let mut var_pageHeight = <u32>::sse_decode(deserializer);
-        let mut var_pageMargin = <u32>::sse_decode(deserializer);
-        let mut var_includeTitle = <bool>::sse_decode(deserializer);
-        let mut var_includeMeta = <bool>::sse_decode(deserializer);
-        let mut var_pageBreakBetween = <bool>::sse_decode(deserializer);
-        let mut var_videoLabel = <String>::sse_decode(deserializer);
-        let mut var_audioLabel = <String>::sse_decode(deserializer);
-        return crate::api::docx::DocxStyle {
-            east_asia_font: var_eastAsiaFont,
-            ascii_font: var_asciiFont,
-            font_size_pt: var_fontSizePt,
-            line_spacing: var_lineSpacing,
-            first_line_indent: var_firstLineIndent,
-            page_width: var_pageWidth,
-            page_height: var_pageHeight,
-            page_margin: var_pageMargin,
-            include_title: var_includeTitle,
-            include_meta: var_includeMeta,
-            page_break_between: var_pageBreakBetween,
-            video_label: var_videoLabel,
-            audio_label: var_audioLabel,
-        };
-    }
-}
-
 impl SseDecode for crate::api::http::DownloadEvent {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3346,13 +2797,6 @@ impl SseDecode for f32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_f32::<NativeEndian>().unwrap()
-    }
-}
-
-impl SseDecode for f64 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        deserializer.cursor.read_f64::<NativeEndian>().unwrap()
     }
 }
 
@@ -3504,173 +2948,6 @@ impl SseDecode for i64 {
     }
 }
 
-impl SseDecode for crate::api::export_ir::IrBlock {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut tag_ = <i32>::sse_decode(deserializer);
-        match tag_ {
-            0 => {
-                let mut var_spans = <Vec<crate::api::export_ir::IrSpan>>::sse_decode(deserializer);
-                return crate::api::export_ir::IrBlock::Paragraph { spans: var_spans };
-            }
-            1 => {
-                let mut var_level = <u32>::sse_decode(deserializer);
-                let mut var_spans = <Vec<crate::api::export_ir::IrSpan>>::sse_decode(deserializer);
-                return crate::api::export_ir::IrBlock::Heading {
-                    level: var_level,
-                    spans: var_spans,
-                };
-            }
-            2 => {
-                let mut var_ordered = <bool>::sse_decode(deserializer);
-                let mut var_start = <u32>::sse_decode(deserializer);
-                let mut var_items =
-                    <Vec<crate::api::export_ir::IrListItem>>::sse_decode(deserializer);
-                return crate::api::export_ir::IrBlock::List {
-                    ordered: var_ordered,
-                    start: var_start,
-                    items: var_items,
-                };
-            }
-            3 => {
-                let mut var_children =
-                    <Vec<crate::api::export_ir::IrBlock>>::sse_decode(deserializer);
-                return crate::api::export_ir::IrBlock::Quote {
-                    children: var_children,
-                };
-            }
-            4 => {
-                let mut var_language = <Option<String>>::sse_decode(deserializer);
-                let mut var_text = <String>::sse_decode(deserializer);
-                return crate::api::export_ir::IrBlock::Code {
-                    language: var_language,
-                    text: var_text,
-                };
-            }
-            5 => {
-                return crate::api::export_ir::IrBlock::Divider;
-            }
-            6 => {
-                let mut var_path = <String>::sse_decode(deserializer);
-                let mut var_alt = <Option<String>>::sse_decode(deserializer);
-                let mut var_widthPercent = <Option<u32>>::sse_decode(deserializer);
-                let mut var_isExternal = <bool>::sse_decode(deserializer);
-                return crate::api::export_ir::IrBlock::Image {
-                    path: var_path,
-                    alt: var_alt,
-                    width_percent: var_widthPercent,
-                    is_external: var_isExternal,
-                };
-            }
-            7 => {
-                let mut var_kind = <String>::sse_decode(deserializer);
-                let mut var_filename = <String>::sse_decode(deserializer);
-                let mut var_path = <String>::sse_decode(deserializer);
-                let mut var_coverPath = <Option<String>>::sse_decode(deserializer);
-                return crate::api::export_ir::IrBlock::Media {
-                    kind: var_kind,
-                    filename: var_filename,
-                    path: var_path,
-                    cover_path: var_coverPath,
-                };
-            }
-            8 => {
-                let mut var_rows = <Vec<crate::api::export_ir::IrRow>>::sse_decode(deserializer);
-                return crate::api::export_ir::IrBlock::Table { rows: var_rows };
-            }
-            _ => {
-                unimplemented!("");
-            }
-        }
-    }
-}
-
-impl SseDecode for crate::api::export_ir::IrCell {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_children = <Vec<crate::api::export_ir::IrBlock>>::sse_decode(deserializer);
-        let mut var_colspan = <u32>::sse_decode(deserializer);
-        let mut var_rowspan = <u32>::sse_decode(deserializer);
-        let mut var_align = <Option<String>>::sse_decode(deserializer);
-        let mut var_header = <bool>::sse_decode(deserializer);
-        return crate::api::export_ir::IrCell {
-            children: var_children,
-            colspan: var_colspan,
-            rowspan: var_rowspan,
-            align: var_align,
-            header: var_header,
-        };
-    }
-}
-
-impl SseDecode for crate::api::export_ir::IrDoc {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_id = <String>::sse_decode(deserializer);
-        let mut var_title = <String>::sse_decode(deserializer);
-        let mut var_time = <String>::sse_decode(deserializer);
-        let mut var_weather = <Vec<String>>::sse_decode(deserializer);
-        let mut var_position = <Vec<String>>::sse_decode(deserializer);
-        let mut var_tags = <Vec<String>>::sse_decode(deserializer);
-        let mut var_categoryName = <Option<String>>::sse_decode(deserializer);
-        let mut var_blocks = <Vec<crate::api::export_ir::IrBlock>>::sse_decode(deserializer);
-        return crate::api::export_ir::IrDoc {
-            id: var_id,
-            title: var_title,
-            time: var_time,
-            weather: var_weather,
-            position: var_position,
-            tags: var_tags,
-            category_name: var_categoryName,
-            blocks: var_blocks,
-        };
-    }
-}
-
-impl SseDecode for crate::api::export_ir::IrListItem {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_children = <Vec<crate::api::export_ir::IrBlock>>::sse_decode(deserializer);
-        let mut var_checked = <Option<bool>>::sse_decode(deserializer);
-        return crate::api::export_ir::IrListItem {
-            children: var_children,
-            checked: var_checked,
-        };
-    }
-}
-
-impl SseDecode for crate::api::export_ir::IrRow {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_cells = <Vec<crate::api::export_ir::IrCell>>::sse_decode(deserializer);
-        return crate::api::export_ir::IrRow { cells: var_cells };
-    }
-}
-
-impl SseDecode for crate::api::export_ir::IrSpan {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_text = <String>::sse_decode(deserializer);
-        let mut var_bold = <bool>::sse_decode(deserializer);
-        let mut var_italic = <bool>::sse_decode(deserializer);
-        let mut var_strike = <bool>::sse_decode(deserializer);
-        let mut var_underline = <bool>::sse_decode(deserializer);
-        let mut var_code = <bool>::sse_decode(deserializer);
-        let mut var_href = <Option<String>>::sse_decode(deserializer);
-        let mut var_diaryLinkId = <Option<String>>::sse_decode(deserializer);
-        return crate::api::export_ir::IrSpan {
-            text: var_text,
-            bold: var_bold,
-            italic: var_italic,
-            strike: var_strike,
-            underline: var_underline,
-            code: var_code,
-            href: var_href,
-            diary_link_id: var_diaryLinkId,
-        };
-    }
-}
-
 impl SseDecode for isize {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3711,80 +2988,6 @@ impl SseDecode for Vec<String> {
         let mut ans_ = Vec::with_capacity(len_ as usize);
         for idx_ in 0..len_ {
             ans_.push(<String>::sse_decode(deserializer));
-        }
-        return ans_;
-    }
-}
-
-impl SseDecode for Vec<crate::api::export_ir::IrBlock> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut len_ = <i32>::sse_decode(deserializer);
-        let mut ans_ = Vec::with_capacity(len_ as usize);
-        for idx_ in 0..len_ {
-            ans_.push(<crate::api::export_ir::IrBlock>::sse_decode(deserializer));
-        }
-        return ans_;
-    }
-}
-
-impl SseDecode for Vec<crate::api::export_ir::IrCell> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut len_ = <i32>::sse_decode(deserializer);
-        let mut ans_ = Vec::with_capacity(len_ as usize);
-        for idx_ in 0..len_ {
-            ans_.push(<crate::api::export_ir::IrCell>::sse_decode(deserializer));
-        }
-        return ans_;
-    }
-}
-
-impl SseDecode for Vec<crate::api::export_ir::IrDoc> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut len_ = <i32>::sse_decode(deserializer);
-        let mut ans_ = Vec::with_capacity(len_ as usize);
-        for idx_ in 0..len_ {
-            ans_.push(<crate::api::export_ir::IrDoc>::sse_decode(deserializer));
-        }
-        return ans_;
-    }
-}
-
-impl SseDecode for Vec<crate::api::export_ir::IrListItem> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut len_ = <i32>::sse_decode(deserializer);
-        let mut ans_ = Vec::with_capacity(len_ as usize);
-        for idx_ in 0..len_ {
-            ans_.push(<crate::api::export_ir::IrListItem>::sse_decode(
-                deserializer,
-            ));
-        }
-        return ans_;
-    }
-}
-
-impl SseDecode for Vec<crate::api::export_ir::IrRow> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut len_ = <i32>::sse_decode(deserializer);
-        let mut ans_ = Vec::with_capacity(len_ as usize);
-        for idx_ in 0..len_ {
-            ans_.push(<crate::api::export_ir::IrRow>::sse_decode(deserializer));
-        }
-        return ans_;
-    }
-}
-
-impl SseDecode for Vec<crate::api::export_ir::IrSpan> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut len_ = <i32>::sse_decode(deserializer);
-        let mut ans_ = Vec::with_capacity(len_ as usize);
-        for idx_ in 0..len_ {
-            ans_.push(<crate::api::export_ir::IrSpan>::sse_decode(deserializer));
         }
         return ans_;
     }
@@ -3977,38 +3180,6 @@ impl SseDecode for Option<Vec<u8>> {
         } else {
             return None;
         }
-    }
-}
-
-impl SseDecode for crate::api::pdf::PdfStyle {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_fontPath = <String>::sse_decode(deserializer);
-        let mut var_fontFamily = <String>::sse_decode(deserializer);
-        let mut var_fontSizePt = <f64>::sse_decode(deserializer);
-        let mut var_lineSpacingEm = <f64>::sse_decode(deserializer);
-        let mut var_firstLineIndent = <bool>::sse_decode(deserializer);
-        let mut var_pageWidthMm = <f64>::sse_decode(deserializer);
-        let mut var_pageHeightMm = <f64>::sse_decode(deserializer);
-        let mut var_pageMarginMm = <f64>::sse_decode(deserializer);
-        let mut var_includeTitle = <bool>::sse_decode(deserializer);
-        let mut var_includeMeta = <bool>::sse_decode(deserializer);
-        let mut var_videoLabel = <String>::sse_decode(deserializer);
-        let mut var_audioLabel = <String>::sse_decode(deserializer);
-        return crate::api::pdf::PdfStyle {
-            font_path: var_fontPath,
-            font_family: var_fontFamily,
-            font_size_pt: var_fontSizePt,
-            line_spacing_em: var_lineSpacingEm,
-            first_line_indent: var_firstLineIndent,
-            page_width_mm: var_pageWidthMm,
-            page_height_mm: var_pageHeightMm,
-            page_margin_mm: var_pageMarginMm,
-            include_title: var_includeTitle,
-            include_meta: var_includeMeta,
-            video_label: var_videoLabel,
-            audio_label: var_audioLabel,
-        };
     }
 }
 
@@ -4303,21 +3474,6 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<DavClient>> for DavClient {
 }
 
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<DocxBuilder> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, StdArc<_>>(self.0)
-            .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<DocxBuilder> {}
-
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<DocxBuilder>> for DocxBuilder {
-    fn into_into_dart(self) -> FrbWrapper<DocxBuilder> {
-        self.into()
-    }
-}
-
-// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<FontReader> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, StdArc<_>>(self.0)
@@ -4373,21 +3529,6 @@ impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<
 
 impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<HttpServer>> for HttpServer {
     fn into_into_dart(self) -> FrbWrapper<HttpServer> {
-        self.into()
-    }
-}
-
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<PdfBuilder> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, StdArc<_>>(self.0)
-            .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<PdfBuilder> {}
-
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<PdfBuilder>> for PdfBuilder {
-    fn into_into_dart(self) -> FrbWrapper<PdfBuilder> {
         self.into()
     }
 }
@@ -4459,38 +3600,6 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::http::ClientSettin
     for crate::api::http::ClientSettings
 {
     fn into_into_dart(self) -> FrbWrapper<crate::api::http::ClientSettings> {
-        self.into()
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::docx::DocxStyle> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.0.east_asia_font.into_into_dart().into_dart(),
-            self.0.ascii_font.into_into_dart().into_dart(),
-            self.0.font_size_pt.into_into_dart().into_dart(),
-            self.0.line_spacing.into_into_dart().into_dart(),
-            self.0.first_line_indent.into_into_dart().into_dart(),
-            self.0.page_width.into_into_dart().into_dart(),
-            self.0.page_height.into_into_dart().into_dart(),
-            self.0.page_margin.into_into_dart().into_dart(),
-            self.0.include_title.into_into_dart().into_dart(),
-            self.0.include_meta.into_into_dart().into_dart(),
-            self.0.page_break_between.into_into_dart().into_dart(),
-            self.0.video_label.into_into_dart().into_dart(),
-            self.0.audio_label.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crate::api::docx::DocxStyle>
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::docx::DocxStyle>>
-    for crate::api::docx::DocxStyle
-{
-    fn into_into_dart(self) -> FrbWrapper<crate::api::docx::DocxStyle> {
         self.into()
     }
 }
@@ -4691,202 +3800,6 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::http_server::HttpS
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::export_ir::IrBlock> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        match self.0 {
-            crate::api::export_ir::IrBlock::Paragraph { spans } => {
-                [0.into_dart(), spans.into_into_dart().into_dart()].into_dart()
-            }
-            crate::api::export_ir::IrBlock::Heading { level, spans } => [
-                1.into_dart(),
-                level.into_into_dart().into_dart(),
-                spans.into_into_dart().into_dart(),
-            ]
-            .into_dart(),
-            crate::api::export_ir::IrBlock::List {
-                ordered,
-                start,
-                items,
-            } => [
-                2.into_dart(),
-                ordered.into_into_dart().into_dart(),
-                start.into_into_dart().into_dart(),
-                items.into_into_dart().into_dart(),
-            ]
-            .into_dart(),
-            crate::api::export_ir::IrBlock::Quote { children } => {
-                [3.into_dart(), children.into_into_dart().into_dart()].into_dart()
-            }
-            crate::api::export_ir::IrBlock::Code { language, text } => [
-                4.into_dart(),
-                language.into_into_dart().into_dart(),
-                text.into_into_dart().into_dart(),
-            ]
-            .into_dart(),
-            crate::api::export_ir::IrBlock::Divider => [5.into_dart()].into_dart(),
-            crate::api::export_ir::IrBlock::Image {
-                path,
-                alt,
-                width_percent,
-                is_external,
-            } => [
-                6.into_dart(),
-                path.into_into_dart().into_dart(),
-                alt.into_into_dart().into_dart(),
-                width_percent.into_into_dart().into_dart(),
-                is_external.into_into_dart().into_dart(),
-            ]
-            .into_dart(),
-            crate::api::export_ir::IrBlock::Media {
-                kind,
-                filename,
-                path,
-                cover_path,
-            } => [
-                7.into_dart(),
-                kind.into_into_dart().into_dart(),
-                filename.into_into_dart().into_dart(),
-                path.into_into_dart().into_dart(),
-                cover_path.into_into_dart().into_dart(),
-            ]
-            .into_dart(),
-            crate::api::export_ir::IrBlock::Table { rows } => {
-                [8.into_dart(), rows.into_into_dart().into_dart()].into_dart()
-            }
-            _ => {
-                unimplemented!("");
-            }
-        }
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crate::api::export_ir::IrBlock>
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::export_ir::IrBlock>>
-    for crate::api::export_ir::IrBlock
-{
-    fn into_into_dart(self) -> FrbWrapper<crate::api::export_ir::IrBlock> {
-        self.into()
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::export_ir::IrCell> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.0.children.into_into_dart().into_dart(),
-            self.0.colspan.into_into_dart().into_dart(),
-            self.0.rowspan.into_into_dart().into_dart(),
-            self.0.align.into_into_dart().into_dart(),
-            self.0.header.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crate::api::export_ir::IrCell>
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::export_ir::IrCell>>
-    for crate::api::export_ir::IrCell
-{
-    fn into_into_dart(self) -> FrbWrapper<crate::api::export_ir::IrCell> {
-        self.into()
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::export_ir::IrDoc> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.0.id.into_into_dart().into_dart(),
-            self.0.title.into_into_dart().into_dart(),
-            self.0.time.into_into_dart().into_dart(),
-            self.0.weather.into_into_dart().into_dart(),
-            self.0.position.into_into_dart().into_dart(),
-            self.0.tags.into_into_dart().into_dart(),
-            self.0.category_name.into_into_dart().into_dart(),
-            self.0.blocks.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crate::api::export_ir::IrDoc>
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::export_ir::IrDoc>>
-    for crate::api::export_ir::IrDoc
-{
-    fn into_into_dart(self) -> FrbWrapper<crate::api::export_ir::IrDoc> {
-        self.into()
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::export_ir::IrListItem> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.0.children.into_into_dart().into_dart(),
-            self.0.checked.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crate::api::export_ir::IrListItem>
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::export_ir::IrListItem>>
-    for crate::api::export_ir::IrListItem
-{
-    fn into_into_dart(self) -> FrbWrapper<crate::api::export_ir::IrListItem> {
-        self.into()
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::export_ir::IrRow> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [self.0.cells.into_into_dart().into_dart()].into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crate::api::export_ir::IrRow>
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::export_ir::IrRow>>
-    for crate::api::export_ir::IrRow
-{
-    fn into_into_dart(self) -> FrbWrapper<crate::api::export_ir::IrRow> {
-        self.into()
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::export_ir::IrSpan> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.0.text.into_into_dart().into_dart(),
-            self.0.bold.into_into_dart().into_dart(),
-            self.0.italic.into_into_dart().into_dart(),
-            self.0.strike.into_into_dart().into_dart(),
-            self.0.underline.into_into_dart().into_dart(),
-            self.0.code.into_into_dart().into_dart(),
-            self.0.href.into_into_dart().into_dart(),
-            self.0.diary_link_id.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crate::api::export_ir::IrSpan>
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::export_ir::IrSpan>>
-    for crate::api::export_ir::IrSpan
-{
-    fn into_into_dart(self) -> FrbWrapper<crate::api::export_ir::IrSpan> {
-        self.into()
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::js::JsOutcome> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -4926,37 +3839,6 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::http::KeyValue>>
     for crate::api::http::KeyValue
 {
     fn into_into_dart(self) -> FrbWrapper<crate::api::http::KeyValue> {
-        self.into()
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::pdf::PdfStyle> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.0.font_path.into_into_dart().into_dart(),
-            self.0.font_family.into_into_dart().into_dart(),
-            self.0.font_size_pt.into_into_dart().into_dart(),
-            self.0.line_spacing_em.into_into_dart().into_dart(),
-            self.0.first_line_indent.into_into_dart().into_dart(),
-            self.0.page_width_mm.into_into_dart().into_dart(),
-            self.0.page_height_mm.into_into_dart().into_dart(),
-            self.0.page_margin_mm.into_into_dart().into_dart(),
-            self.0.include_title.into_into_dart().into_dart(),
-            self.0.include_meta.into_into_dart().into_dart(),
-            self.0.video_label.into_into_dart().into_dart(),
-            self.0.audio_label.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crate::api::pdf::PdfStyle>
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::pdf::PdfStyle>>
-    for crate::api::pdf::PdfStyle
-{
-    fn into_into_dart(self) -> FrbWrapper<crate::api::pdf::PdfStyle> {
         self.into()
     }
 }
@@ -5199,13 +4081,6 @@ impl SseEncode for DavClient {
     }
 }
 
-impl SseEncode for DocxBuilder {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DocxBuilder>>>::sse_encode(flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, StdArc<_>>(self), serializer);
-    }
-}
-
 impl SseEncode for FontReader {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5231,13 +4106,6 @@ impl SseEncode for HttpServer {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<HttpServer>>>::sse_encode(flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, StdArc<_>>(self), serializer);
-    }
-}
-
-impl SseEncode for PdfBuilder {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PdfBuilder>>>::sse_encode(flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, StdArc<_>>(self), serializer);
     }
 }
 
@@ -5320,17 +4188,6 @@ impl SseEncode
 }
 
 impl SseEncode
-    for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DocxBuilder>>
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        let (ptr, size) = self.sse_encode_raw();
-        <usize>::sse_encode(ptr, serializer);
-        <i32>::sse_encode(size, serializer);
-    }
-}
-
-impl SseEncode
     for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FontReader>>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -5365,17 +4222,6 @@ impl SseEncode
 
 impl SseEncode
     for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<HttpServer>>
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        let (ptr, size) = self.sse_encode_raw();
-        <usize>::sse_encode(ptr, serializer);
-        <i32>::sse_encode(size, serializer);
-    }
-}
-
-impl SseEncode
-    for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PdfBuilder>>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5479,25 +4325,6 @@ impl SseEncode for crate::api::http::ClientSettings {
     }
 }
 
-impl SseEncode for crate::api::docx::DocxStyle {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <String>::sse_encode(self.east_asia_font, serializer);
-        <String>::sse_encode(self.ascii_font, serializer);
-        <f64>::sse_encode(self.font_size_pt, serializer);
-        <f64>::sse_encode(self.line_spacing, serializer);
-        <bool>::sse_encode(self.first_line_indent, serializer);
-        <u32>::sse_encode(self.page_width, serializer);
-        <u32>::sse_encode(self.page_height, serializer);
-        <u32>::sse_encode(self.page_margin, serializer);
-        <bool>::sse_encode(self.include_title, serializer);
-        <bool>::sse_encode(self.include_meta, serializer);
-        <bool>::sse_encode(self.page_break_between, serializer);
-        <String>::sse_encode(self.video_label, serializer);
-        <String>::sse_encode(self.audio_label, serializer);
-    }
-}
-
 impl SseEncode for crate::api::http::DownloadEvent {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5511,13 +4338,6 @@ impl SseEncode for f32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         serializer.cursor.write_f32::<NativeEndian>(self).unwrap();
-    }
-}
-
-impl SseEncode for f64 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        serializer.cursor.write_f64::<NativeEndian>(self).unwrap();
     }
 }
 
@@ -5637,130 +4457,6 @@ impl SseEncode for i64 {
     }
 }
 
-impl SseEncode for crate::api::export_ir::IrBlock {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        match self {
-            crate::api::export_ir::IrBlock::Paragraph { spans } => {
-                <i32>::sse_encode(0, serializer);
-                <Vec<crate::api::export_ir::IrSpan>>::sse_encode(spans, serializer);
-            }
-            crate::api::export_ir::IrBlock::Heading { level, spans } => {
-                <i32>::sse_encode(1, serializer);
-                <u32>::sse_encode(level, serializer);
-                <Vec<crate::api::export_ir::IrSpan>>::sse_encode(spans, serializer);
-            }
-            crate::api::export_ir::IrBlock::List {
-                ordered,
-                start,
-                items,
-            } => {
-                <i32>::sse_encode(2, serializer);
-                <bool>::sse_encode(ordered, serializer);
-                <u32>::sse_encode(start, serializer);
-                <Vec<crate::api::export_ir::IrListItem>>::sse_encode(items, serializer);
-            }
-            crate::api::export_ir::IrBlock::Quote { children } => {
-                <i32>::sse_encode(3, serializer);
-                <Vec<crate::api::export_ir::IrBlock>>::sse_encode(children, serializer);
-            }
-            crate::api::export_ir::IrBlock::Code { language, text } => {
-                <i32>::sse_encode(4, serializer);
-                <Option<String>>::sse_encode(language, serializer);
-                <String>::sse_encode(text, serializer);
-            }
-            crate::api::export_ir::IrBlock::Divider => {
-                <i32>::sse_encode(5, serializer);
-            }
-            crate::api::export_ir::IrBlock::Image {
-                path,
-                alt,
-                width_percent,
-                is_external,
-            } => {
-                <i32>::sse_encode(6, serializer);
-                <String>::sse_encode(path, serializer);
-                <Option<String>>::sse_encode(alt, serializer);
-                <Option<u32>>::sse_encode(width_percent, serializer);
-                <bool>::sse_encode(is_external, serializer);
-            }
-            crate::api::export_ir::IrBlock::Media {
-                kind,
-                filename,
-                path,
-                cover_path,
-            } => {
-                <i32>::sse_encode(7, serializer);
-                <String>::sse_encode(kind, serializer);
-                <String>::sse_encode(filename, serializer);
-                <String>::sse_encode(path, serializer);
-                <Option<String>>::sse_encode(cover_path, serializer);
-            }
-            crate::api::export_ir::IrBlock::Table { rows } => {
-                <i32>::sse_encode(8, serializer);
-                <Vec<crate::api::export_ir::IrRow>>::sse_encode(rows, serializer);
-            }
-            _ => {
-                unimplemented!("");
-            }
-        }
-    }
-}
-
-impl SseEncode for crate::api::export_ir::IrCell {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <Vec<crate::api::export_ir::IrBlock>>::sse_encode(self.children, serializer);
-        <u32>::sse_encode(self.colspan, serializer);
-        <u32>::sse_encode(self.rowspan, serializer);
-        <Option<String>>::sse_encode(self.align, serializer);
-        <bool>::sse_encode(self.header, serializer);
-    }
-}
-
-impl SseEncode for crate::api::export_ir::IrDoc {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <String>::sse_encode(self.id, serializer);
-        <String>::sse_encode(self.title, serializer);
-        <String>::sse_encode(self.time, serializer);
-        <Vec<String>>::sse_encode(self.weather, serializer);
-        <Vec<String>>::sse_encode(self.position, serializer);
-        <Vec<String>>::sse_encode(self.tags, serializer);
-        <Option<String>>::sse_encode(self.category_name, serializer);
-        <Vec<crate::api::export_ir::IrBlock>>::sse_encode(self.blocks, serializer);
-    }
-}
-
-impl SseEncode for crate::api::export_ir::IrListItem {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <Vec<crate::api::export_ir::IrBlock>>::sse_encode(self.children, serializer);
-        <Option<bool>>::sse_encode(self.checked, serializer);
-    }
-}
-
-impl SseEncode for crate::api::export_ir::IrRow {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <Vec<crate::api::export_ir::IrCell>>::sse_encode(self.cells, serializer);
-    }
-}
-
-impl SseEncode for crate::api::export_ir::IrSpan {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <String>::sse_encode(self.text, serializer);
-        <bool>::sse_encode(self.bold, serializer);
-        <bool>::sse_encode(self.italic, serializer);
-        <bool>::sse_encode(self.strike, serializer);
-        <bool>::sse_encode(self.underline, serializer);
-        <bool>::sse_encode(self.code, serializer);
-        <Option<String>>::sse_encode(self.href, serializer);
-        <Option<String>>::sse_encode(self.diary_link_id, serializer);
-    }
-}
-
 impl SseEncode for isize {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5794,66 +4490,6 @@ impl SseEncode for Vec<String> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <String>::sse_encode(item, serializer);
-        }
-    }
-}
-
-impl SseEncode for Vec<crate::api::export_ir::IrBlock> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(self.len() as _, serializer);
-        for item in self {
-            <crate::api::export_ir::IrBlock>::sse_encode(item, serializer);
-        }
-    }
-}
-
-impl SseEncode for Vec<crate::api::export_ir::IrCell> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(self.len() as _, serializer);
-        for item in self {
-            <crate::api::export_ir::IrCell>::sse_encode(item, serializer);
-        }
-    }
-}
-
-impl SseEncode for Vec<crate::api::export_ir::IrDoc> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(self.len() as _, serializer);
-        for item in self {
-            <crate::api::export_ir::IrDoc>::sse_encode(item, serializer);
-        }
-    }
-}
-
-impl SseEncode for Vec<crate::api::export_ir::IrListItem> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(self.len() as _, serializer);
-        for item in self {
-            <crate::api::export_ir::IrListItem>::sse_encode(item, serializer);
-        }
-    }
-}
-
-impl SseEncode for Vec<crate::api::export_ir::IrRow> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(self.len() as _, serializer);
-        for item in self {
-            <crate::api::export_ir::IrRow>::sse_encode(item, serializer);
-        }
-    }
-}
-
-impl SseEncode for Vec<crate::api::export_ir::IrSpan> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(self.len() as _, serializer);
-        for item in self {
-            <crate::api::export_ir::IrSpan>::sse_encode(item, serializer);
         }
     }
 }
@@ -6015,24 +4651,6 @@ impl SseEncode for Option<Vec<u8>> {
         if let Some(value) = self {
             <Vec<u8>>::sse_encode(value, serializer);
         }
-    }
-}
-
-impl SseEncode for crate::api::pdf::PdfStyle {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <String>::sse_encode(self.font_path, serializer);
-        <String>::sse_encode(self.font_family, serializer);
-        <f64>::sse_encode(self.font_size_pt, serializer);
-        <f64>::sse_encode(self.line_spacing_em, serializer);
-        <bool>::sse_encode(self.first_line_indent, serializer);
-        <f64>::sse_encode(self.page_width_mm, serializer);
-        <f64>::sse_encode(self.page_height_mm, serializer);
-        <f64>::sse_encode(self.page_margin_mm, serializer);
-        <bool>::sse_encode(self.include_title, serializer);
-        <bool>::sse_encode(self.include_meta, serializer);
-        <String>::sse_encode(self.video_label, serializer);
-        <String>::sse_encode(self.audio_label, serializer);
     }
 }
 
@@ -6209,12 +4827,10 @@ mod io {
     use super::*;
     use crate::api::cancel::*;
     use crate::api::crypto::*;
-    use crate::api::docx::*;
     use crate::api::font::*;
     use crate::api::hf_tokenizer::*;
     use crate::api::http::*;
     use crate::api::http_server::*;
-    use crate::api::pdf::*;
     use crate::api::s3::*;
     use crate::api::text::*;
     use crate::api::webdav::*;
@@ -6279,16 +4895,6 @@ mod io {
             ))
         }
     }
-    impl CstDecode<DocxBuilder> for usize {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> DocxBuilder {
-            flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(CstDecode::<
-                RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DocxBuilder>>,
-            >::cst_decode(
-                self
-            ))
-        }
-    }
     impl CstDecode<FontReader> for usize {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> FontReader {
@@ -6324,16 +4930,6 @@ mod io {
         fn cst_decode(self) -> HttpServer {
             flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(CstDecode::<
                 RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<HttpServer>>,
-            >::cst_decode(
-                self
-            ))
-        }
-    }
-    impl CstDecode<PdfBuilder> for usize {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> PdfBuilder {
-            flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(CstDecode::<
-                RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PdfBuilder>>,
             >::cst_decode(
                 self
             ))
@@ -6430,19 +5026,6 @@ mod io {
     }
     impl
         CstDecode<
-            RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DocxBuilder>>,
-        > for usize
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(
-            self,
-        ) -> RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DocxBuilder>>
-        {
-            unsafe { decode_rust_opaque_nom(self as _) }
-        }
-    }
-    impl
-        CstDecode<
             RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FontReader>>,
         > for usize
     {
@@ -6489,19 +5072,6 @@ mod io {
         fn cst_decode(
             self,
         ) -> RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<HttpServer>>
-        {
-            unsafe { decode_rust_opaque_nom(self as _) }
-        }
-    }
-    impl
-        CstDecode<
-            RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PdfBuilder>>,
-        > for usize
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(
-            self,
-        ) -> RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PdfBuilder>>
         {
             unsafe { decode_rust_opaque_nom(self as _) }
         }
@@ -6618,13 +5188,6 @@ mod io {
             CstDecode::<crate::api::http::ClientSettings>::cst_decode(*wrap).into()
         }
     }
-    impl CstDecode<crate::api::docx::DocxStyle> for *mut wire_cst_docx_style {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::docx::DocxStyle {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::api::docx::DocxStyle>::cst_decode(*wrap).into()
-        }
-    }
     impl CstDecode<crate::api::graph_layout::GraphLayoutParams> for *mut wire_cst_graph_layout_params {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::api::graph_layout::GraphLayoutParams {
@@ -6637,20 +5200,6 @@ mod io {
         fn cst_decode(self) -> crate::api::http::HttpResponse {
             let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
             CstDecode::<crate::api::http::HttpResponse>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<crate::api::export_ir::IrDoc> for *mut wire_cst_ir_doc {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::export_ir::IrDoc {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::api::export_ir::IrDoc>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<crate::api::pdf::PdfStyle> for *mut wire_cst_pdf_style {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::pdf::PdfStyle {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::api::pdf::PdfStyle>::cst_decode(*wrap).into()
         }
     }
     impl CstDecode<crate::api::http::RequestOptions> for *mut wire_cst_request_options {
@@ -6689,26 +5238,6 @@ mod io {
                 user_agent: self.user_agent.cst_decode(),
                 max_redirects: self.max_redirects.cst_decode(),
                 throw_on_status: self.throw_on_status.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::api::docx::DocxStyle> for wire_cst_docx_style {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::docx::DocxStyle {
-            crate::api::docx::DocxStyle {
-                east_asia_font: self.east_asia_font.cst_decode(),
-                ascii_font: self.ascii_font.cst_decode(),
-                font_size_pt: self.font_size_pt.cst_decode(),
-                line_spacing: self.line_spacing.cst_decode(),
-                first_line_indent: self.first_line_indent.cst_decode(),
-                page_width: self.page_width.cst_decode(),
-                page_height: self.page_height.cst_decode(),
-                page_margin: self.page_margin.cst_decode(),
-                include_title: self.include_title.cst_decode(),
-                include_meta: self.include_meta.cst_decode(),
-                page_break_between: self.page_break_between.cst_decode(),
-                video_label: self.video_label.cst_decode(),
-                audio_label: self.audio_label.cst_decode(),
             }
         }
     }
@@ -6787,132 +5316,6 @@ mod io {
             }
         }
     }
-    impl CstDecode<crate::api::export_ir::IrBlock> for wire_cst_ir_block {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::export_ir::IrBlock {
-            match self.tag {
-                0 => {
-                    let ans = unsafe { self.kind.Paragraph };
-                    crate::api::export_ir::IrBlock::Paragraph {
-                        spans: ans.spans.cst_decode(),
-                    }
-                }
-                1 => {
-                    let ans = unsafe { self.kind.Heading };
-                    crate::api::export_ir::IrBlock::Heading {
-                        level: ans.level.cst_decode(),
-                        spans: ans.spans.cst_decode(),
-                    }
-                }
-                2 => {
-                    let ans = unsafe { self.kind.List };
-                    crate::api::export_ir::IrBlock::List {
-                        ordered: ans.ordered.cst_decode(),
-                        start: ans.start.cst_decode(),
-                        items: ans.items.cst_decode(),
-                    }
-                }
-                3 => {
-                    let ans = unsafe { self.kind.Quote };
-                    crate::api::export_ir::IrBlock::Quote {
-                        children: ans.children.cst_decode(),
-                    }
-                }
-                4 => {
-                    let ans = unsafe { self.kind.Code };
-                    crate::api::export_ir::IrBlock::Code {
-                        language: ans.language.cst_decode(),
-                        text: ans.text.cst_decode(),
-                    }
-                }
-                5 => crate::api::export_ir::IrBlock::Divider,
-                6 => {
-                    let ans = unsafe { self.kind.Image };
-                    crate::api::export_ir::IrBlock::Image {
-                        path: ans.path.cst_decode(),
-                        alt: ans.alt.cst_decode(),
-                        width_percent: ans.width_percent.cst_decode(),
-                        is_external: ans.is_external.cst_decode(),
-                    }
-                }
-                7 => {
-                    let ans = unsafe { self.kind.Media };
-                    crate::api::export_ir::IrBlock::Media {
-                        kind: ans.kind.cst_decode(),
-                        filename: ans.filename.cst_decode(),
-                        path: ans.path.cst_decode(),
-                        cover_path: ans.cover_path.cst_decode(),
-                    }
-                }
-                8 => {
-                    let ans = unsafe { self.kind.Table };
-                    crate::api::export_ir::IrBlock::Table {
-                        rows: ans.rows.cst_decode(),
-                    }
-                }
-                _ => unreachable!(),
-            }
-        }
-    }
-    impl CstDecode<crate::api::export_ir::IrCell> for wire_cst_ir_cell {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::export_ir::IrCell {
-            crate::api::export_ir::IrCell {
-                children: self.children.cst_decode(),
-                colspan: self.colspan.cst_decode(),
-                rowspan: self.rowspan.cst_decode(),
-                align: self.align.cst_decode(),
-                header: self.header.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::api::export_ir::IrDoc> for wire_cst_ir_doc {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::export_ir::IrDoc {
-            crate::api::export_ir::IrDoc {
-                id: self.id.cst_decode(),
-                title: self.title.cst_decode(),
-                time: self.time.cst_decode(),
-                weather: self.weather.cst_decode(),
-                position: self.position.cst_decode(),
-                tags: self.tags.cst_decode(),
-                category_name: self.category_name.cst_decode(),
-                blocks: self.blocks.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::api::export_ir::IrListItem> for wire_cst_ir_list_item {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::export_ir::IrListItem {
-            crate::api::export_ir::IrListItem {
-                children: self.children.cst_decode(),
-                checked: self.checked.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::api::export_ir::IrRow> for wire_cst_ir_row {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::export_ir::IrRow {
-            crate::api::export_ir::IrRow {
-                cells: self.cells.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::api::export_ir::IrSpan> for wire_cst_ir_span {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::export_ir::IrSpan {
-            crate::api::export_ir::IrSpan {
-                text: self.text.cst_decode(),
-                bold: self.bold.cst_decode(),
-                italic: self.italic.cst_decode(),
-                strike: self.strike.cst_decode(),
-                underline: self.underline.cst_decode(),
-                code: self.code.cst_decode(),
-                href: self.href.cst_decode(),
-                diary_link_id: self.diary_link_id.cst_decode(),
-            }
-        }
-    }
     impl CstDecode<crate::api::js::JsOutcome> for wire_cst_js_outcome {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::api::js::JsOutcome {
@@ -6935,66 +5338,6 @@ mod io {
     impl CstDecode<Vec<String>> for *mut wire_cst_list_String {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> Vec<String> {
-            let vec = unsafe {
-                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
-                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
-            };
-            vec.into_iter().map(CstDecode::cst_decode).collect()
-        }
-    }
-    impl CstDecode<Vec<crate::api::export_ir::IrBlock>> for *mut wire_cst_list_ir_block {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<crate::api::export_ir::IrBlock> {
-            let vec = unsafe {
-                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
-                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
-            };
-            vec.into_iter().map(CstDecode::cst_decode).collect()
-        }
-    }
-    impl CstDecode<Vec<crate::api::export_ir::IrCell>> for *mut wire_cst_list_ir_cell {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<crate::api::export_ir::IrCell> {
-            let vec = unsafe {
-                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
-                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
-            };
-            vec.into_iter().map(CstDecode::cst_decode).collect()
-        }
-    }
-    impl CstDecode<Vec<crate::api::export_ir::IrDoc>> for *mut wire_cst_list_ir_doc {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<crate::api::export_ir::IrDoc> {
-            let vec = unsafe {
-                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
-                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
-            };
-            vec.into_iter().map(CstDecode::cst_decode).collect()
-        }
-    }
-    impl CstDecode<Vec<crate::api::export_ir::IrListItem>> for *mut wire_cst_list_ir_list_item {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<crate::api::export_ir::IrListItem> {
-            let vec = unsafe {
-                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
-                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
-            };
-            vec.into_iter().map(CstDecode::cst_decode).collect()
-        }
-    }
-    impl CstDecode<Vec<crate::api::export_ir::IrRow>> for *mut wire_cst_list_ir_row {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<crate::api::export_ir::IrRow> {
-            let vec = unsafe {
-                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
-                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
-            };
-            vec.into_iter().map(CstDecode::cst_decode).collect()
-        }
-    }
-    impl CstDecode<Vec<crate::api::export_ir::IrSpan>> for *mut wire_cst_list_ir_span {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<crate::api::export_ir::IrSpan> {
             let vec = unsafe {
                 let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
                 flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
@@ -7123,25 +5466,6 @@ mod io {
                 flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
             };
             vec.into_iter().map(CstDecode::cst_decode).collect()
-        }
-    }
-    impl CstDecode<crate::api::pdf::PdfStyle> for wire_cst_pdf_style {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::pdf::PdfStyle {
-            crate::api::pdf::PdfStyle {
-                font_path: self.font_path.cst_decode(),
-                font_family: self.font_family.cst_decode(),
-                font_size_pt: self.font_size_pt.cst_decode(),
-                line_spacing_em: self.line_spacing_em.cst_decode(),
-                first_line_indent: self.first_line_indent.cst_decode(),
-                page_width_mm: self.page_width_mm.cst_decode(),
-                page_height_mm: self.page_height_mm.cst_decode(),
-                page_margin_mm: self.page_margin_mm.cst_decode(),
-                include_title: self.include_title.cst_decode(),
-                include_meta: self.include_meta.cst_decode(),
-                video_label: self.video_label.cst_decode(),
-                audio_label: self.audio_label.cst_decode(),
-            }
         }
     }
     impl CstDecode<(String, f32)> for wire_cst_record_string_f_32 {
@@ -7279,30 +5603,6 @@ mod io {
             Self::new_with_null_ptr()
         }
     }
-    impl NewWithNullPtr for wire_cst_docx_style {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                east_asia_font: core::ptr::null_mut(),
-                ascii_font: core::ptr::null_mut(),
-                font_size_pt: Default::default(),
-                line_spacing: Default::default(),
-                first_line_indent: Default::default(),
-                page_width: Default::default(),
-                page_height: Default::default(),
-                page_margin: Default::default(),
-                include_title: Default::default(),
-                include_meta: Default::default(),
-                page_break_between: Default::default(),
-                video_label: core::ptr::null_mut(),
-                audio_label: core::ptr::null_mut(),
-            }
-        }
-    }
-    impl Default for wire_cst_docx_style {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
     impl NewWithNullPtr for wire_cst_download_event {
         fn new_with_null_ptr() -> Self {
             Self {
@@ -7402,98 +5702,6 @@ mod io {
             Self::new_with_null_ptr()
         }
     }
-    impl NewWithNullPtr for wire_cst_ir_block {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                tag: -1,
-                kind: IrBlockKind { nil__: () },
-            }
-        }
-    }
-    impl Default for wire_cst_ir_block {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_ir_cell {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                children: core::ptr::null_mut(),
-                colspan: Default::default(),
-                rowspan: Default::default(),
-                align: core::ptr::null_mut(),
-                header: Default::default(),
-            }
-        }
-    }
-    impl Default for wire_cst_ir_cell {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_ir_doc {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                id: core::ptr::null_mut(),
-                title: core::ptr::null_mut(),
-                time: core::ptr::null_mut(),
-                weather: core::ptr::null_mut(),
-                position: core::ptr::null_mut(),
-                tags: core::ptr::null_mut(),
-                category_name: core::ptr::null_mut(),
-                blocks: core::ptr::null_mut(),
-            }
-        }
-    }
-    impl Default for wire_cst_ir_doc {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_ir_list_item {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                children: core::ptr::null_mut(),
-                checked: core::ptr::null_mut(),
-            }
-        }
-    }
-    impl Default for wire_cst_ir_list_item {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_ir_row {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                cells: core::ptr::null_mut(),
-            }
-        }
-    }
-    impl Default for wire_cst_ir_row {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_ir_span {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                text: core::ptr::null_mut(),
-                bold: Default::default(),
-                italic: Default::default(),
-                strike: Default::default(),
-                underline: Default::default(),
-                code: Default::default(),
-                href: core::ptr::null_mut(),
-                diary_link_id: core::ptr::null_mut(),
-            }
-        }
-    }
-    impl Default for wire_cst_ir_span {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
     impl NewWithNullPtr for wire_cst_js_outcome {
         fn new_with_null_ptr() -> Self {
             Self {
@@ -7517,29 +5725,6 @@ mod io {
         }
     }
     impl Default for wire_cst_key_value {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_pdf_style {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                font_path: core::ptr::null_mut(),
-                font_family: core::ptr::null_mut(),
-                font_size_pt: Default::default(),
-                line_spacing_em: Default::default(),
-                first_line_indent: Default::default(),
-                page_width_mm: Default::default(),
-                page_height_mm: Default::default(),
-                page_margin_mm: Default::default(),
-                include_title: Default::default(),
-                include_meta: Default::default(),
-                video_label: core::ptr::null_mut(),
-                audio_label: core::ptr::null_mut(),
-            }
-        }
-    }
-    impl Default for wire_cst_pdf_style {
         fn default() -> Self {
             Self::new_with_null_ptr()
         }
@@ -7840,33 +6025,6 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__docx__DocxBuilder_add(
-        port_: i64,
-        that: usize,
-        doc: *mut wire_cst_ir_doc,
-    ) {
-        wire__crate__api__docx__DocxBuilder_add_impl(port_, that, doc)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__docx__DocxBuilder_finish(
-        port_: i64,
-        that: usize,
-        out_path: *mut wire_cst_list_prim_u_8_strict,
-        cancel: usize,
-    ) {
-        wire__crate__api__docx__DocxBuilder_finish_impl(port_, that, out_path, cancel)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__docx__DocxBuilder_new(
-        port_: i64,
-        style: *mut wire_cst_docx_style,
-    ) {
-        wire__crate__api__docx__DocxBuilder_new_impl(port_, style)
-    }
-
-    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__font__FontReader_get_font_name_from_ttf(
         port_: i64,
         ttf_file_path: *mut wire_cst_list_prim_u_8_strict,
@@ -7995,33 +6153,6 @@ mod io {
         that: usize,
     ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
         wire__crate__api__http_server__HttpServer_stop_impl(that)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__pdf__PdfBuilder_add(
-        port_: i64,
-        that: usize,
-        doc: *mut wire_cst_ir_doc,
-    ) {
-        wire__crate__api__pdf__PdfBuilder_add_impl(port_, that, doc)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__pdf__PdfBuilder_finish(
-        port_: i64,
-        that: usize,
-        out_path: *mut wire_cst_list_prim_u_8_strict,
-        cancel: usize,
-    ) {
-        wire__crate__api__pdf__PdfBuilder_finish_impl(port_, that, out_path, cancel)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__pdf__PdfBuilder_new(
-        port_: i64,
-        style: *mut wire_cst_pdf_style,
-    ) {
-        wire__crate__api__pdf__PdfBuilder_new_impl(port_, style)
     }
 
     #[unsafe(no_mangle)]
@@ -8231,28 +6362,6 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__docx__write_docx(
-        port_: i64,
-        docs: *mut wire_cst_list_ir_doc,
-        style: *mut wire_cst_docx_style,
-        out_path: *mut wire_cst_list_prim_u_8_strict,
-        cancel: usize,
-    ) {
-        wire__crate__api__docx__write_docx_impl(port_, docs, style, out_path, cancel)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__pdf__write_pdf(
-        port_: i64,
-        docs: *mut wire_cst_list_ir_doc,
-        style: *mut wire_cst_pdf_style,
-        out_path: *mut wire_cst_list_prim_u_8_strict,
-        cancel: usize,
-    ) {
-        wire__crate__api__pdf__write_pdf_impl(port_, docs, style, out_path, cancel)
-    }
-
-    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes(
         ptr: *const std::ffi::c_void,
     ) {
@@ -8321,24 +6430,6 @@ mod io {
     ) {
         unsafe {
             StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DavClient>>::decrement_strong_count(ptr as _);
-        }
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-        ptr: *const std::ffi::c_void,
-    ) {
-        unsafe {
-            StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DocxBuilder>>::increment_strong_count(ptr as _);
-        }
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
-        ptr: *const std::ffi::c_void,
-    ) {
-        unsafe {
-            StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DocxBuilder>>::decrement_strong_count(ptr as _);
         }
     }
 
@@ -8415,24 +6506,6 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-        ptr: *const std::ffi::c_void,
-    ) {
-        unsafe {
-            StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PdfBuilder>>::increment_strong_count(ptr as _);
-        }
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
-        ptr: *const std::ffi::c_void,
-    ) {
-        unsafe {
-            StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PdfBuilder>>::decrement_strong_count(ptr as _);
-        }
-    }
-
-    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
         ptr: *const std::ffi::c_void,
     ) {
@@ -8500,14 +6573,6 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_docx_style()
-    -> *mut wire_cst_docx_style {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(
-            wire_cst_docx_style::new_with_null_ptr(),
-        )
-    }
-
-    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_graph_layout_params()
     -> *mut wire_cst_graph_layout_params {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
@@ -8521,17 +6586,6 @@ mod io {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
             wire_cst_http_response::new_with_null_ptr(),
         )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_ir_doc() -> *mut wire_cst_ir_doc {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wire_cst_ir_doc::new_with_null_ptr())
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_pdf_style() -> *mut wire_cst_pdf_style
-    {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wire_cst_pdf_style::new_with_null_ptr())
     }
 
     #[unsafe(no_mangle)]
@@ -8567,90 +6621,6 @@ mod io {
         let wrap = wire_cst_list_String {
             ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
                 <*mut wire_cst_list_prim_u_8_strict>::new_with_null_ptr(),
-                len,
-            ),
-            len,
-        };
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_list_ir_block(
-        len: i32,
-    ) -> *mut wire_cst_list_ir_block {
-        let wrap = wire_cst_list_ir_block {
-            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
-                <wire_cst_ir_block>::new_with_null_ptr(),
-                len,
-            ),
-            len,
-        };
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_list_ir_cell(
-        len: i32,
-    ) -> *mut wire_cst_list_ir_cell {
-        let wrap = wire_cst_list_ir_cell {
-            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
-                <wire_cst_ir_cell>::new_with_null_ptr(),
-                len,
-            ),
-            len,
-        };
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_list_ir_doc(
-        len: i32,
-    ) -> *mut wire_cst_list_ir_doc {
-        let wrap = wire_cst_list_ir_doc {
-            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
-                <wire_cst_ir_doc>::new_with_null_ptr(),
-                len,
-            ),
-            len,
-        };
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_list_ir_list_item(
-        len: i32,
-    ) -> *mut wire_cst_list_ir_list_item {
-        let wrap = wire_cst_list_ir_list_item {
-            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
-                <wire_cst_ir_list_item>::new_with_null_ptr(),
-                len,
-            ),
-            len,
-        };
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_list_ir_row(
-        len: i32,
-    ) -> *mut wire_cst_list_ir_row {
-        let wrap = wire_cst_list_ir_row {
-            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
-                <wire_cst_ir_row>::new_with_null_ptr(),
-                len,
-            ),
-            len,
-        };
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_list_ir_span(
-        len: i32,
-    ) -> *mut wire_cst_list_ir_span {
-        let wrap = wire_cst_list_ir_span {
-            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
-                <wire_cst_ir_span>::new_with_null_ptr(),
                 len,
             ),
             len,
@@ -8831,23 +6801,6 @@ mod io {
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
-    pub struct wire_cst_docx_style {
-        east_asia_font: *mut wire_cst_list_prim_u_8_strict,
-        ascii_font: *mut wire_cst_list_prim_u_8_strict,
-        font_size_pt: f64,
-        line_spacing: f64,
-        first_line_indent: bool,
-        page_width: u32,
-        page_height: u32,
-        page_margin: u32,
-        include_title: bool,
-        include_meta: bool,
-        page_break_between: bool,
-        video_label: *mut wire_cst_list_prim_u_8_strict,
-        audio_label: *mut wire_cst_list_prim_u_8_strict,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
     pub struct wire_cst_download_event {
         received: i64,
         total: i64,
@@ -8905,119 +6858,6 @@ mod io {
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
-    pub struct wire_cst_ir_block {
-        tag: i32,
-        kind: IrBlockKind,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub union IrBlockKind {
-        Paragraph: wire_cst_IrBlock_Paragraph,
-        Heading: wire_cst_IrBlock_Heading,
-        List: wire_cst_IrBlock_List,
-        Quote: wire_cst_IrBlock_Quote,
-        Code: wire_cst_IrBlock_Code,
-        Image: wire_cst_IrBlock_Image,
-        Media: wire_cst_IrBlock_Media,
-        Table: wire_cst_IrBlock_Table,
-        nil__: (),
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_IrBlock_Paragraph {
-        spans: *mut wire_cst_list_ir_span,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_IrBlock_Heading {
-        level: u32,
-        spans: *mut wire_cst_list_ir_span,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_IrBlock_List {
-        ordered: bool,
-        start: u32,
-        items: *mut wire_cst_list_ir_list_item,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_IrBlock_Quote {
-        children: *mut wire_cst_list_ir_block,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_IrBlock_Code {
-        language: *mut wire_cst_list_prim_u_8_strict,
-        text: *mut wire_cst_list_prim_u_8_strict,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_IrBlock_Image {
-        path: *mut wire_cst_list_prim_u_8_strict,
-        alt: *mut wire_cst_list_prim_u_8_strict,
-        width_percent: *mut u32,
-        is_external: bool,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_IrBlock_Media {
-        kind: *mut wire_cst_list_prim_u_8_strict,
-        filename: *mut wire_cst_list_prim_u_8_strict,
-        path: *mut wire_cst_list_prim_u_8_strict,
-        cover_path: *mut wire_cst_list_prim_u_8_strict,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_IrBlock_Table {
-        rows: *mut wire_cst_list_ir_row,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_ir_cell {
-        children: *mut wire_cst_list_ir_block,
-        colspan: u32,
-        rowspan: u32,
-        align: *mut wire_cst_list_prim_u_8_strict,
-        header: bool,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_ir_doc {
-        id: *mut wire_cst_list_prim_u_8_strict,
-        title: *mut wire_cst_list_prim_u_8_strict,
-        time: *mut wire_cst_list_prim_u_8_strict,
-        weather: *mut wire_cst_list_String,
-        position: *mut wire_cst_list_String,
-        tags: *mut wire_cst_list_String,
-        category_name: *mut wire_cst_list_prim_u_8_strict,
-        blocks: *mut wire_cst_list_ir_block,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_ir_list_item {
-        children: *mut wire_cst_list_ir_block,
-        checked: *mut bool,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_ir_row {
-        cells: *mut wire_cst_list_ir_cell,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_ir_span {
-        text: *mut wire_cst_list_prim_u_8_strict,
-        bold: bool,
-        italic: bool,
-        strike: bool,
-        underline: bool,
-        code: bool,
-        href: *mut wire_cst_list_prim_u_8_strict,
-        diary_link_id: *mut wire_cst_list_prim_u_8_strict,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
     pub struct wire_cst_js_outcome {
         value: *mut wire_cst_list_prim_u_8_strict,
         logs: *mut wire_cst_list_String,
@@ -9033,42 +6873,6 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_list_String {
         ptr: *mut *mut wire_cst_list_prim_u_8_strict,
-        len: i32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_list_ir_block {
-        ptr: *mut wire_cst_ir_block,
-        len: i32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_list_ir_cell {
-        ptr: *mut wire_cst_ir_cell,
-        len: i32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_list_ir_doc {
-        ptr: *mut wire_cst_ir_doc,
-        len: i32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_list_ir_list_item {
-        ptr: *mut wire_cst_ir_list_item,
-        len: i32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_list_ir_row {
-        ptr: *mut wire_cst_ir_row,
-        len: i32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_list_ir_span {
-        ptr: *mut wire_cst_ir_span,
         len: i32,
     }
     #[repr(C)]
@@ -9148,22 +6952,6 @@ mod io {
     pub struct wire_cst_list_tokenize_result {
         ptr: *mut wire_cst_tokenize_result,
         len: i32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_pdf_style {
-        font_path: *mut wire_cst_list_prim_u_8_strict,
-        font_family: *mut wire_cst_list_prim_u_8_strict,
-        font_size_pt: f64,
-        line_spacing_em: f64,
-        first_line_indent: bool,
-        page_width_mm: f64,
-        page_height_mm: f64,
-        page_margin_mm: f64,
-        include_title: bool,
-        include_meta: bool,
-        video_label: *mut wire_cst_list_prim_u_8_strict,
-        audio_label: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
