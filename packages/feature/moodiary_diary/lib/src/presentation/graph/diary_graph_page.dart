@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:fast_graph/fast_graph.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
@@ -14,6 +13,7 @@ import 'package:moodiary_diary/src/presentation/widget/diary_nav.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
+import 'package:moodiary_rust/graph.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'diary_graph_page.g.dart';

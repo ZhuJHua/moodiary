@@ -167,7 +167,6 @@ List<String> _checkPackageLayers() {
 /// 门面各有主，归属由下面的 _rustFacadeOwners 按 import 守。
 const Map<String, Set<String>> _nativePkgOwners = {
   'fast_press': {'moodiary_export'},
-  'fast_graph': {'moodiary_diary'},
   // 导出打包与本地备份 / LAN 归档。
   'fast_zip': {'moodiary_export', 'moodiary_sync'},
 };
@@ -255,6 +254,7 @@ const Map<String, Set<String>> _rustFacadeOwners = {
   'http': {'moodiary_http'},
   'sync': {'moodiary_sync'},
   'llm': {'moodiary_assistant'},
+  'graph': {'moodiary_diary'},
 };
 
 final RegExp _rustFacadeRe = RegExp(

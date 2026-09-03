@@ -18,7 +18,6 @@ const _rustDirs = [
   'packages/foundation/fast_press/rust',
   'packages/foundation/fast_tokenizer/rust',
   'packages/foundation/fast_crypto/rust',
-  'packages/foundation/fast_graph/rust',
   'packages/foundation/fast_zip/rust',
   'packages/foundation/moodiary_rust/rust',
 ];
