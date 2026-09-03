@@ -7,8 +7,6 @@ rust/
   src/api/            # bridge = app layer: the ONLY place that knows about FRB
   crates/
     foundation/       # http (reqwest 客户端 + hyper 服务端) / crypto / archive / image / text / font
-                      #   js —— QuickJS 沙箱（rquickjs）。三道闸门在 JsSandbox::new 一次装齐；
-                      #   **别开 rust-alloc**：那会让 set_memory_limit 静默变成 no-op
     feature_base/     # （空）——唯一的住户 doc 随导出 2026-09-03 搬去了 fast_press
     feature/          # sync (s3+webdav) / assistant (rig) / graph
 ```
@@ -38,7 +36,7 @@ rustc 在 `lto="thin"` 下直接拒绝，强行关掉 LTO 是 +170%。**拆库�
 | 门面 | 内容 | 谁能推 |
 |---|---|---|
 | `foundation.dart` | cancel / crypto / font / http / http_server / image / text / zip | 全仓 |
-| `assistant.dart` | rig 对话流 + QuickJS 沙箱 | 只有 `moodiary_assistant` |
+| `assistant.dart` | rig 对话流 | 只有 `moodiary_assistant` |
 | `sync.dart` | s3 / webdav | 只有 `moodiary_sync` |
 | `graph.dart` | 力导向布局 | 只有 `moodiary_diary` |
 | `rust.dart` | `RustLib.init()` | 只有 app 组合根 |

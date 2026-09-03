@@ -6,7 +6,6 @@ pub mod graph_layout;
 pub mod hf_tokenizer;
 pub mod http;
 pub mod http_server;
-pub mod js;
 pub mod s3;
 pub mod text;
 pub mod webdav;

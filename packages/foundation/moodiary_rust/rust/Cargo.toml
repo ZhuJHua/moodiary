@@ -21,11 +21,6 @@ futures = { version = "=0.3.34", default-features = false, features = ["std", "a
 serde_json = "=1.0.151"
 url = "=2.5.8"
 
-# QuickJS（quickjs-ng）。**不要开 `rust-alloc`**：它会让 `set_memory_limit` 变成静默的
-# no-op，上限消失且不报错。也不开 `parallel` —— 那个 feature 才给 Runtime 加
-# `unsafe impl Send/Sync`，而我们刻意让 JS 只在一次同步调用里活着，不跨 await。
-rquickjs = { version = "=0.12.2", default-features = false, features = ["bindgen"] }
-
 tokio = { version = "=1.53.1", default-features = false }
 tokio-util = { version = "=0.7.19", default-features = false, features = ["io"] }
 hyper = { version = "=1.11.0", default-features = false, features = ["server", "http1"] }
@@ -64,7 +59,6 @@ moodiary-crypto = { path = "crates/foundation/crypto" }
 moodiary-font = { path = "crates/foundation/font" }
 moodiary-hf-tokenizer = { path = "crates/foundation/hf_tokenizer" }
 moodiary-http = { path = "crates/foundation/http" }
-moodiary-js = { path = "crates/foundation/js" }
 moodiary-text = { path = "crates/foundation/text" }
 moodiary-assistant = { path = "crates/feature/assistant" }
 moodiary-graph = { path = "crates/feature/graph" }
@@ -81,7 +75,6 @@ moodiary-font = { workspace = true }
 moodiary-graph = { workspace = true }
 moodiary-hf-tokenizer = { workspace = true }
 moodiary-http = { workspace = true }
-moodiary-js = { workspace = true }
 moodiary-sync = { workspace = true }
 moodiary-text = { workspace = true }
 

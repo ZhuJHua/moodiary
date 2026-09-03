@@ -33,9 +33,9 @@ enum AssistantTool {
 
   updateMemory('updateMemory'),
 
-  forgetFact('forgetFact'),
+  forgetFact('forgetFact');
 
-  runJavascript('runJavascript');
+  // TODO(js): runJavascript 随 QuickJS 沙箱下架（2026-09-03），新方案落地后再加回。
 
   final String id;
 

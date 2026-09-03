@@ -11,7 +11,6 @@ import 'api/graph_layout.dart';
 import 'api/hf_tokenizer.dart';
 import 'api/http.dart';
 import 'api/http_server.dart';
-import 'api/js.dart';
 import 'api/s3.dart';
 import 'api/text.dart';
 import 'api/webdav.dart';
@@ -79,7 +78,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => -726576857;
+  int get rustContentHash => 1916157028;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -329,8 +328,6 @@ abstract class RustLibApi extends BaseApi {
   Future<void> crateApiZipZipFinish({required Zip that});
 
   Future<Zip> crateApiZipZipNew({required String filePath});
-
-  Future<JsOutcome> crateApiJsJsEval({required String code});
 
   Stream<Float32List> crateApiGraphLayoutLayoutGraphStream({
     required int nodeCount,
@@ -2129,28 +2126,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "Zip_new", argNames: ["filePath"]);
 
   @override
-  Future<JsOutcome> crateApiJsJsEval({required String code}) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 = cst_encode_String(code);
-          return wire.wire__crate__api__js__js_eval(port_, arg0);
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_js_outcome,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiJsJsEvalConstMeta,
-        argValues: [code],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiJsJsEvalConstMeta =>
-      const TaskConstMeta(debugName: "js_eval", argNames: ["code"]);
-
-  @override
   Stream<Float32List> crateApiGraphLayoutLayoutGraphStream({
     required int nodeCount,
     required List<int> edges,
@@ -3010,19 +2985,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PlatformInt64 dco_decode_isize(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dcoDecodeI64(raw);
-  }
-
-  @protected
-  JsOutcome dco_decode_js_outcome(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
-    return JsOutcome(
-      value: dco_decode_String(arr[0]),
-      logs: dco_decode_list_String(arr[1]),
-      truncated: dco_decode_bool(arr[2]),
-    );
   }
 
   @protected
@@ -3975,19 +3937,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PlatformInt64 sse_decode_isize(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getPlatformInt64();
-  }
-
-  @protected
-  JsOutcome sse_decode_js_outcome(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_value = sse_decode_String(deserializer);
-    var var_logs = sse_decode_list_String(deserializer);
-    var var_truncated = sse_decode_bool(deserializer);
-    return JsOutcome(
-      value: var_value,
-      logs: var_logs,
-      truncated: var_truncated,
-    );
   }
 
   @protected
@@ -5520,14 +5469,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_isize(PlatformInt64 self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putPlatformInt64(self);
-  }
-
-  @protected
-  void sse_encode_js_outcome(JsOutcome self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(self.value, serializer);
-    sse_encode_list_String(self.logs, serializer);
-    sse_encode_bool(self.truncated, serializer);
   }
 
   @protected
