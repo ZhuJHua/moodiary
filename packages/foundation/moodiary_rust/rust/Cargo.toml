@@ -24,18 +24,11 @@ zip = { version = "=8.6.0", default-features = false, features = ["aes-crypto", 
 
 ttf-parser = { git = "https://github.com/ZhuJHua/ttf-parser", rev = "4a0ddfee643e4a25a3d1363241fa94b9c5f113c3", default-features = false, features = ["std", "variable-fonts"] }
 
-jieba-rs = { version = "=0.10.3", default-features = false, features = ["default-dict"] }
-# 关默认避 onig C 依赖；unstable_wasm 只为激活 fancy-regex 引擎（getrandom/wasm_js 仅作用于 wasm 目标）
-tokenizers = { version = "=0.23.1", default-features = false, features = ["unstable_wasm"] }
-unicode-segmentation = "=1.13.3"
-rust-stemmers = "=1.2.0"
 
 
 moodiary-archive = { path = "crates/foundation/archive" }
 moodiary-crypto = { path = "crates/foundation/crypto" }
 moodiary-font = { path = "crates/foundation/font" }
-moodiary-hf-tokenizer = { path = "crates/foundation/hf_tokenizer" }
-moodiary-text = { path = "crates/foundation/text" }
 moodiary-graph = { path = "crates/feature/graph" }
 
 [dependencies]
@@ -46,15 +39,13 @@ moodiary-archive = { workspace = true }
 moodiary-crypto = { workspace = true }
 moodiary-font = { workspace = true }
 moodiary-graph = { workspace = true }
-moodiary-hf-tokenizer = { workspace = true }
-moodiary-text = { workspace = true }
 
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
 
 # 不要加 panic = "abort"：FRB 靠 catch_unwind 把 Rust panic 转成 Dart 异常，abort
-# 会让第三方 crate（zip / jieba）在脏输入上直接杀进程，而 Dart 侧
+# 会让第三方 crate（zip）在脏输入上直接杀进程，而 Dart 侧
 # 现成的 try/catch 本来兜得住。代价实测（arm64 release）：.so 42.52 → 46.00 MB、
 # APK 40.2 → 41.6 MB，大头是 .text 里的 landing pad 而非 unwind 表本身。
 # 注：改 [profile.*] 后必须 flutter clean 才会真正重编——构建钩子与 Gradle 两层都会

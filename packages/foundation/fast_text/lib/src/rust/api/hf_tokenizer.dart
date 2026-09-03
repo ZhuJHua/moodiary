@@ -16,7 +16,7 @@ abstract class HfTokenizer implements RustOpaqueInterface {
 
   /// [max_tokens] 含特殊 token，超出按 LongestFirst 截断。
   static Future<HfTokenizer> fromFile({required String path, int? maxTokens}) =>
-      RustLib.instance.api.crateApiHfTokenizerHfTokenizerFromFile(
+      FastTextLib.instance.api.crateApiHfTokenizerHfTokenizerFromFile(
         path: path,
         maxTokens: maxTokens,
       );

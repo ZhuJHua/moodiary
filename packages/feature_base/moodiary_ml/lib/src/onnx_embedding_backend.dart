@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:moodiary_rust/foundation.dart' show HfTokenizer;
+import 'package:fast_text/fast_text.dart' show FastText, HfTokenizer;
 import 'package:onnxruntime_plus/onnxruntime_plus.dart';
 
 import 'embedding_backend.dart';
@@ -42,6 +42,7 @@ final class OnnxEmbeddingBackend implements EmbeddingBackend {
   }) async {
     if (_session != null) return;
     ensureOrtEnv();
+    await FastText.ensureInitialized();
     final tokenizer = await HfTokenizer.fromFile(
       path: tokenizerPath,
       maxTokens: contextSize,

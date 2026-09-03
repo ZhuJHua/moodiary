@@ -8,6 +8,8 @@ import 'dart:io';
 
 import 'package:drift/drift.dart' show countAll;
 import 'package:drift/native.dart';
+import 'package:fast_text/fast_text.dart' show TokenizeResult;
+import 'package:fast_text/testing.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_data/moodiary_data.dart';
@@ -15,8 +17,6 @@ import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
 import 'package:moodiary_migration/src/legacy/legacy_models.dart' as legacy;
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_rust/foundation.dart' show TokenizeResult;
-import 'package:moodiary_rust/testing.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 
@@ -91,7 +91,7 @@ void main() {
 
   setUp(() {
     dir = Directory.systemTemp.createTempSync('engine_migration_test');
-    installFakeRustLib(fakeTokenize);
+    installFakeFastText(fakeTokenize);
     db = MoodiaryDatabase.forTesting(
       NativeDatabase.memory(
         setup: (raw) => raw.execute('PRAGMA foreign_keys = ON'),

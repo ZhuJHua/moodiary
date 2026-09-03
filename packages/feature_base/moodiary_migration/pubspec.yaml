@@ -13,6 +13,7 @@ dependencies:
   flutter:
     sdk: flutter
 
+  fast_text: 0.0.1
   moodiary_files: 0.0.1
   moodiary_logging: 0.0.1
   moodiary_storage: 0.0.1
@@ -34,7 +35,6 @@ dev_dependencies:
     sdk: flutter
   moodiary_di: 0.0.1
   moodiary_lint: 0.0.1
-  moodiary_rust: 0.0.1
   build_runner: 2.16.1
   freezed: 4.0.1
   json_serializable: 6.14.1

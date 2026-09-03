@@ -236,8 +236,6 @@ const Map<String, Set<String>> _rustFacadeOwners = {
   'graph': {'moodiary_diary'},
   // app 门面：每个组合根都够得着（desktop 进树后 _appPubNames 自动带上）。
   'rust': {'moodiary_mobile', 'moodiary_desktop'},
-  // 引擎搬迁测试要给拷贝路径注入分词替身，与 moodiary_data 同一份。
-  'testing': {'moodiary_data', 'moodiary_migration'},
 };
 
 /// 自带原生库、又只服务一个 feature 的 foundation 包：pub 依赖就是它的门面，归属
@@ -598,11 +596,11 @@ List<String> _checkMobileOnlyPlugins() {
   return out;
 }
 
-/// lib/testing.dart 是测试替身的官方出口（storage / rust），放 lib/ 只是因为
+/// lib/testing.dart 是测试替身的官方出口（storage / fast_text），放 lib/ 只是因为
 /// `package:` 解析不到别人的 test/——**生产代码不许 import**：手滑注册
 /// MemoryKVStorage 出的包每次冷启动都丢全部设置，且只有真机跑一次才暴露。
 final RegExp _testingImportRe = RegExp(
-  r"""^\s*import\s+['"]package:moodiary_\w+/testing\.dart['"]""",
+  r"""^\s*import\s+['"]package:(?:moodiary|fast)_\w+/testing\.dart['"]""",
   multiLine: true,
 );
 

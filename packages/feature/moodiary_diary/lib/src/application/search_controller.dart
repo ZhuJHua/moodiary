@@ -1,7 +1,7 @@
+import 'package:fast_text/fast_text.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_rust/foundation.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 

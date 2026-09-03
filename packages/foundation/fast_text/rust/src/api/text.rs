@@ -1,7 +1,7 @@
 use anyhow::Result;
 use flutter_rust_bridge::frb;
 
-pub use moodiary_text::TokenizeResult;
+pub use crate::jieba::TokenizeResult;
 
 /// `cut`（高精度）与 `cut_for_search`（高召回）两组分词结果。
 #[frb(mirror(TokenizeResult))]
@@ -15,11 +15,11 @@ pub struct Tokenizer {}
 
 impl Tokenizer {
     pub fn tokenize(text: String) -> Result<TokenizeResult> {
-        moodiary_text::Tokenizer::tokenize(text)
+        crate::jieba::Tokenizer::tokenize(text)
     }
 
     /// 一次过桥处理整批，跨篇并行铺满多核。全量重建索引 / 批量导入走这条。
     pub fn tokenize_batch(texts: Vec<String>) -> Result<Vec<TokenizeResult>> {
-        moodiary_text::Tokenizer::tokenize_batch(texts)
+        crate::jieba::Tokenizer::tokenize_batch(texts)
     }
 }

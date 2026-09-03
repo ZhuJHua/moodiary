@@ -5,13 +5,13 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:drift/native.dart';
+import 'package:fast_text/fast_text.dart' show TokenizeResult;
+import 'package:fast_text/testing.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_ml/moodiary_ml.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_rust/foundation.dart' show TokenizeResult;
-import 'package:moodiary_rust/testing.dart';
 import 'package:moodiary_sqlite_vec/moodiary_sqlite_vec.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
@@ -91,7 +91,7 @@ void main() {
         setup: (raw) => raw.execute('PRAGMA foreign_keys = ON'),
       ),
     );
-    installFakeRustLib(fakeTokenize);
+    installFakeFastText(fakeTokenize);
     repo = .forTesting(db);
     embedder = FakeEmbedder();
     index = .forTesting(db, embedder);

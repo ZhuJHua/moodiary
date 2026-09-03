@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:fast_image/fast_image.dart';
 import 'package:fast_press/fast_press.dart';
+import 'package:fast_text/fast_text.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -36,6 +37,7 @@ Future<void> _initSystem() async {
   // 的零心智负担——迁移的字体重扫、维护任务的分词都不用再关心桥的时序。
   await RustLib.init();
   await FastImageRuntime.init();
+  await FastText.ensureInitialized();
   await FastPressLib.init();
 
   // ── 1. 路径与日志（一切存储的前置）→ 容器装配 ∥ SQLite 打开。

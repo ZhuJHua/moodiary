@@ -11,11 +11,11 @@
 // 模型 / 分词器由测试自己经 hf-mirror 下载并缓存在系统临时目录。
 import 'dart:io';
 
+import 'package:fast_text/fast_text.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:moodiary_ml/moodiary_ml.dart';
-import 'package:moodiary_rust/rust.dart';
 
 // 双主机回退：先 hf-mirror（不经代理也稳），失败换 huggingface.co 直连。
 const _hosts = ['https://hf-mirror.com', 'https://huggingface.co'];
@@ -103,7 +103,7 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() async {
-    await RustLib.init();
+    await FastText.ensureInitialized();
   });
 
   testWidgets('Qwen3 embedding benchmark + retrieval smoke', (tester) async {

@@ -1,16 +1,16 @@
 // SQLite（drift 内存库）上的仓储集成测试：FTS5 检索、双链/图谱、子表装配、
 // 事件与墓碑语义。无原生 dylib 门槛——sqlite3 的 code asset 由 flutter test
-// 自动构建（P0 已验证），分词走替身（moodiary_rust/testing.dart）。
+// 自动构建（P0 已验证），分词走替身（fast_text/testing.dart）。
 import 'dart:convert';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
+import 'package:fast_text/fast_text.dart' show TokenizeResult;
+import 'package:fast_text/testing.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_rust/foundation.dart' show TokenizeResult;
-import 'package:moodiary_rust/testing.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 
@@ -93,7 +93,7 @@ void main() {
         setup: (raw) => raw.execute('PRAGMA foreign_keys = ON'),
       ),
     );
-    installFakeRustLib(fakeTokenize);
+    installFakeFastText(fakeTokenize);
     repo = .forTesting(db);
   });
 

@@ -10,12 +10,13 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 // Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Tokenizer>>
 abstract class Tokenizer implements RustOpaqueInterface {
   static Future<TokenizeResult> tokenize({required String text}) =>
-      RustLib.instance.api.crateApiTextTokenizerTokenize(text: text);
+      FastTextLib.instance.api.crateApiTextTokenizerTokenize(text: text);
 
   /// 一次过桥处理整批，跨篇并行铺满多核。全量重建索引 / 批量导入走这条。
   static Future<List<TokenizeResult>> tokenizeBatch({
     required List<String> texts,
-  }) => RustLib.instance.api.crateApiTextTokenizerTokenizeBatch(texts: texts);
+  }) =>
+      FastTextLib.instance.api.crateApiTextTokenizerTokenizeBatch(texts: texts);
 }
 
 /// `cut`（高精度）与 `cut_for_search`（高召回）两组分词结果。

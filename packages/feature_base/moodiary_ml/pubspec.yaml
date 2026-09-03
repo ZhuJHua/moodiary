@@ -14,10 +14,10 @@ dependencies:
     sdk: flutter
   injectable: 3.0.0
   onnxruntime_plus: 1.5.0
+  fast_text: 0.0.1
   moodiary_files: 0.0.1
   moodiary_http: 0.0.1
   moodiary_logging: 0.0.1
-  moodiary_rust: 0.0.1
   moodiary_storage: 0.0.1
 
 dev_dependencies:

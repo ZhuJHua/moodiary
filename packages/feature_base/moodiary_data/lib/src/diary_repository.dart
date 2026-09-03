@@ -3,10 +3,10 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:drift/drift.dart';
+import 'package:fast_text/fast_text.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_rust/foundation.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 
 import 'db/database.dart';
@@ -31,7 +31,7 @@ class DiaryRepository {
 
   factory DiaryRepository.get() => _instance;
 
-  /// 测试用：注入独立数据库。分词替身走 `RustLib.initMock`（moodiary_rust/testing.dart）。
+  /// 测试用：注入独立数据库。分词替身走 `FastTextLib.initMock`（fast_text/testing.dart）。
   @visibleForTesting
   DiaryRepository.forTesting(this._db);
 
