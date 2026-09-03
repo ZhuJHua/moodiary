@@ -163,6 +163,18 @@ EXIF 方向：先缩后转，只转小图（已落地）。`.part` 写完 rename
 `FastTileSource` / `FastImageCodec` / `FastRegionDecoder`），目录与日志由 `FastImageRuntime.configure`
 注入，看图页的壳留在 `moodiary_components`。
 
+```
+调用方                         fast_image（Dart）                      libfastimage（Rust，经 FRB）
+网格/日历/首页/编辑器 ───────▶ FastImage(tier) ──▶ FastImageDerivatives ──▶ codec: probe / make_thumbnails /
+看图页壳 MImageBrowser ──────▶ FastTileSource.resolve ┐                      to_baseline_file / contain_to_file
+                               FastTileImageViewer ───┼─▶ FastTilePlanner        │
+入库/同步/图片优化 ──────────▶ FastImageDerivatives.warm ┘        │              ▼
+导出 ────────────────────────▶ FastImageCodec.containToFile        └──▶ region.rs RegionDecoder（带缓存 96MB）
+组合根 ──────────────────────▶ FastImageRuntime.init / configure           ├─ jpeg_region（turbo 裁剪 + restart 并行）
+                                                                            ├─ png_region（流式 + 盒式）
+磁盘：image/<uuid>.<ext> 原件（只读 mmap）   image/thumb/<uuid>_{512,1280,base}.jpg 派生物   └─ webp_region（libwebp 裁剪）
+```
+
 模块（`rust/src/codec/`）：`turbo.rs`（读头 / N/8 缩放 / 裁剪 / 编码 / 无损转码的安全封装）、`region.rs`
 （格式无关：`RawDecoder` trait、转正坐标、带缓存）、`jpeg_region.rs` / `png_region.rs` /
 `webp_region.rs`（三个后端）、`restart.rs`（RST 索引 + 分段并行）。FRB 门面在 `rust/src/api/image.rs`：
