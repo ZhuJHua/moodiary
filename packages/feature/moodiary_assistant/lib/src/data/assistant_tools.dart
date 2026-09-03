@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:fast_text/fast_text.dart';
+import 'package:fast_tokenizer/fast_tokenizer.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/memory_repository.dart';

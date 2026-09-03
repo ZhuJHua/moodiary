@@ -15,7 +15,7 @@ dependencies:
 
   fast_graph: 0.0.1
   fast_image: 0.0.1
-  fast_text: 0.0.1
+  fast_tokenizer: 0.0.1
   moodiary_files: 0.0.1
   moodiary_logging: 0.0.1
   moodiary_platform: 0.0.1

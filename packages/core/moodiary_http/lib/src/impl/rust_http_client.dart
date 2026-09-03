@@ -1,15 +1,15 @@
 import 'dart:convert';
 
-import 'package:fast_http/fast_http.dart' as rust;
 import 'package:flutter/foundation.dart';
 import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
+import 'package:moodiary_rust/http.dart' as rust;
 
 /// [IHttpClient] 的 Rust(reqwest) 实现。opaque `HttpClient` 内含 reqwest 连接池，
 /// 作为全局单例常驻、跨请求复用连接。
 class RustHttpClient extends IHttpClient {
   RustHttpClient({this.onError})
-    : _client = rust.FastHttp.ensureInitialized().then(
+    : _client = rust.MoodiaryRust.ensureInitialized().then(
         (_) => rust.HttpClient.newInstance(
           settings: const rust.ClientSettings(
             connectTimeoutMs: 5000,

@@ -3,7 +3,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:fast_image/fast_image.dart';
-import 'package:fast_text/fast_text.dart';
+import 'package:fast_tokenizer/fast_tokenizer.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,7 +34,7 @@ Future<void> _initSystem() async {
   // 启动路径只装这两个原生库：图片管线与分词（迁移、搜索索引、心情建议都要）。其余 fast_*
   // 各自延迟装载（首次导出 / 请求 / 对话 / 打包时 ensureInitialized），裸 FFI 的更是没有 init。
   await FastImageRuntime.init();
-  await FastText.ensureInitialized();
+  await FastTokenizer.ensureInitialized();
 
   // ── 1. 路径与日志（一切存储的前置）→ 容器装配 ∥ SQLite 打开。
   // configureDependencies 内部的 preResolve 在这一步落定：SecureKV → KV（含 2.8.0

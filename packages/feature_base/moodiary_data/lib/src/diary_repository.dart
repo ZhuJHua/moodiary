@@ -3,7 +3,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:drift/drift.dart';
-import 'package:fast_text/fast_text.dart';
+import 'package:fast_tokenizer/fast_tokenizer.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -31,7 +31,7 @@ class DiaryRepository {
 
   factory DiaryRepository.get() => _instance;
 
-  /// 测试用：注入独立数据库。分词替身走 `FastTextLib.initMock`（fast_text/testing.dart）。
+  /// 测试用：注入独立数据库。分词替身走 `FastTokenizerLib.initMock`（fast_tokenizer/testing.dart）。
   @visibleForTesting
   DiaryRepository.forTesting(this._db);
 

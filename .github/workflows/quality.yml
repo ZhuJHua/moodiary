@@ -77,11 +77,11 @@ jobs:
         with:
           components: clippy
 
-      # 每个 fast_* 包自带一个 crate；一次循环全部过 clippy + test。
+      # 每个自带原生库的包（fast_* 与 moodiary_rust）各一个 crate；一次循环全部过 clippy + test。
       - name: Clippy + Test (fast_*)
         working-directory: packages/foundation
         run: |
-          for d in fast_*/rust; do
+          for d in */rust; do
             echo "== $d"
             (cd "$d" && cargo clippy --all-targets -- -D warnings && cargo test)
           done

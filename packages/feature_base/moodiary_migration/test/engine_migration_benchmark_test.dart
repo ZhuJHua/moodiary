@@ -10,8 +10,8 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:drift/native.dart';
-import 'package:fast_text/fast_text.dart' show TokenizeResult;
-import 'package:fast_text/testing.dart';
+import 'package:fast_tokenizer/fast_tokenizer.dart' show TokenizeResult;
+import 'package:fast_tokenizer/testing.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_data/moodiary_data.dart';
@@ -56,7 +56,7 @@ void main() {
   test('搬迁 $n 篇 + 典型查询', () async {
     final dir = Directory.systemTemp.createTempSync('engine_bench');
     addTearDown(() => dir.deleteSync(recursive: true));
-    installFakeFastText(fakeTokenize);
+    installFakeFastTokenizer(fakeTokenize);
 
     // —— 种子旧库 —— //
     final rng = Random(42);

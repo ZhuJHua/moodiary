@@ -84,10 +84,9 @@ Future<void> _editor() async {
 const _frbPkgDirs = [
   'packages/foundation/fast_image',
   'packages/foundation/fast_press',
-  'packages/foundation/fast_http',
-  'packages/foundation/fast_llm',
-  'packages/foundation/fast_text',
+  'packages/foundation/fast_tokenizer',
   'packages/foundation/fast_zip',
+  'packages/foundation/moodiary_rust',
 ];
 
 /// codegen / ffigen 版本的锚点：读第一个 FRB 包的 pubspec（check_generated 保证各包一致）。

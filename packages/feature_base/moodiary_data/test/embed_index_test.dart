@@ -5,8 +5,8 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:drift/native.dart';
-import 'package:fast_text/fast_text.dart' show TokenizeResult;
-import 'package:fast_text/testing.dart';
+import 'package:fast_tokenizer/fast_tokenizer.dart' show TokenizeResult;
+import 'package:fast_tokenizer/testing.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
@@ -91,7 +91,7 @@ void main() {
         setup: (raw) => raw.execute('PRAGMA foreign_keys = ON'),
       ),
     );
-    installFakeFastText(fakeTokenize);
+    installFakeFastTokenizer(fakeTokenize);
     repo = .forTesting(db);
     embedder = FakeEmbedder();
     index = .forTesting(db, embedder);

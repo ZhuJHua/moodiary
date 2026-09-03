@@ -16,12 +16,11 @@ import 'dart:io';
 const _rustDirs = [
   'packages/foundation/fast_image/rust',
   'packages/foundation/fast_press/rust',
-  'packages/foundation/fast_http/rust',
-  'packages/foundation/fast_llm/rust',
-  'packages/foundation/fast_text/rust',
+  'packages/foundation/fast_tokenizer/rust',
   'packages/foundation/fast_crypto/rust',
   'packages/foundation/fast_graph/rust',
   'packages/foundation/fast_zip/rust',
+  'packages/foundation/moodiary_rust/rust',
 ];
 const _npmManifest =
     'packages/feature_base/moodiary_editor/editor/build/third-party-licenses.json';

@@ -1,4 +1,4 @@
-/// 官方测试替身（同 fast_text 的 lib/testing.dart 先例）：放 lib/ 是因为
+/// 官方测试替身（同 fast_tokenizer 的 lib/testing.dart 先例）：放 lib/ 是因为
 /// `package:` 只解析 lib/，跨包 import 不到别人的 test/——此前同一个内存 KV
 /// 在仓里被手抄了 5 份且能力分叉。纯 Dart、零 flutter_test 依赖，不污染生产
 /// 依赖图（不进 barrel，按需 `import 'package:moodiary_storage/testing.dart'`）。

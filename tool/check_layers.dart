@@ -163,12 +163,10 @@ List<String> _checkPackageLayers() {
 
 /// 自带原生库、又只服务一个 feature 的 foundation 包：pub 依赖就是它的门面（接替曾经
 /// 那个总 Rust 包的门面闸门）。app 组合根总在名单里（启动装载的那几个要 init）。
-/// fast_image / fast_text / fast_crypto 多方共用，全仓开放，不在这里。
+/// fast_image / fast_tokenizer / fast_crypto 多方共用，全仓开放，不在这里；moodiary_rust 有三个
+/// 门面各有主，归属由下面的 _rustFacadeOwners 按 import 守。
 const Map<String, Set<String>> _nativePkgOwners = {
   'fast_press': {'moodiary_export'},
-  // 客户端给 core 的 http 端口实现，WebDAV / S3 给同步后端。
-  'fast_http': {'moodiary_http', 'moodiary_sync'},
-  'fast_llm': {'moodiary_assistant'},
   'fast_graph': {'moodiary_diary'},
   // 导出打包与本地备份 / LAN 归档。
   'fast_zip': {'moodiary_export', 'moodiary_sync'},
@@ -249,6 +247,66 @@ List<File> _dartFiles(String root) {
     walk(dir);
     return out;
   });
+}
+
+/// moodiary_rust（网络业务库）的门面归属：每个门面一个主人。通用能力不在这个库里——
+/// 它只装共享一套网络底座的 http / sync / llm。
+const Map<String, Set<String>> _rustFacadeOwners = {
+  'http': {'moodiary_http'},
+  'sync': {'moodiary_sync'},
+  'llm': {'moodiary_assistant'},
+};
+
+final RegExp _rustFacadeRe = RegExp(
+  r"""^\s*(?:import|export)\s+['"]package:moodiary_rust/([a-z_]+)\.dart['"]""",
+  multiLine: true,
+);
+
+/// 门面之外还有一条：不许绕过门面深入 `src/`。
+final RegExp _rustDeepRe = RegExp(
+  r"""^\s*(?:import|export)\s+['"]package:moodiary_rust/src/""",
+  multiLine: true,
+);
+
+List<String> _checkRustFacades() {
+  final out = <String>[];
+  for (final root in [
+    for (final dir in _appDirs) ...['$dir/lib', '$dir/test'],
+    'packages',
+  ]) {
+    for (final entity in _dartFiles(root)) {
+      final rel = entity.path.replaceAll('\\', '/');
+      if (rel.contains('packages/foundation/moodiary_rust/')) continue;
+      if (rel.endsWith('.g.dart') || rel.endsWith('.freezed.dart')) continue;
+
+      final String owner;
+      final appDir = _appDirs.where((d) => rel.startsWith('$d/')).firstOrNull;
+      if (appDir != null) {
+        owner = _appPubNames[appDir]!;
+      } else {
+        final parts = rel.split('/');
+        if (parts.length < 3) continue;
+        owner = parts[2];
+      }
+
+      final content = entity.readAsStringSync();
+      if (_rustDeepRe.hasMatch(content)) {
+        out.add('$rel：绕过门面深入了 package:moodiary_rust/src/');
+      }
+      for (final m in _rustFacadeRe.allMatches(content)) {
+        final facade = m.group(1)!;
+        final owners = _rustFacadeOwners[facade];
+        if (owners == null) continue;
+        if (owners.contains(owner)) continue;
+        out.add(
+          '$rel（$owner）-> moodiary_rust/$facade.dart：'
+          '该门面只属于 ${owners.join('/')}',
+        );
+      }
+    }
+  }
+  out.sort();
+  return out;
 }
 
 /// Flutter 3.47 把 material 拆成独立包 `material_ui`；SDK 内的
@@ -469,7 +527,7 @@ List<String> _checkMobileOnlyPlugins() {
   return out;
 }
 
-/// lib/testing.dart 是测试替身的官方出口（storage / fast_text），放 lib/ 只是因为
+/// lib/testing.dart 是测试替身的官方出口（storage / fast_tokenizer），放 lib/ 只是因为
 /// `package:` 解析不到别人的 test/——**生产代码不许 import**：手滑注册
 /// MemoryKVStorage 出的包每次冷启动都丢全部设置，且只有真机跑一次才暴露。
 final RegExp _testingImportRe = RegExp(
@@ -608,6 +666,18 @@ void main(List<String> args) {
       stderr.writeln('  ✗ $v');
     }
     if (!update) exit(1);
+  }
+
+  final facadeViolations = _checkRustFacades();
+  if (facadeViolations.isEmpty) {
+    stdout.writeln('✅ moodiary_rust 门面归属检查通过。');
+  } else {
+    stderr.writeln('❌ moodiary_rust 门面归属违规 ${facadeViolations.length} 条：');
+    for (final v in facadeViolations) {
+      stderr.writeln('  ✗ $v');
+    }
+    stderr.writeln('  → 见 _rustFacadeOwners。');
+    exit(1);
   }
 
   final nativeViolations = _checkNativePkgOwners();

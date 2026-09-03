@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:io' show Directory;
 
-import 'package:fast_http/fast_http.dart' as rust;
 import 'package:injectable/injectable.dart';
 import 'package:moodiary_http/moodiary_http.dart';
+import 'package:moodiary_rust/http.dart' as rust;
 
 /// [IHttpServer] 的 Rust(hyper) 实现。传输层全在 Rust：监听/端口回退、大请求体
 /// 流式落盘、文件响应与 Range；本类只做类型转换，并保证跨 FFI 的 handler 回调
@@ -23,7 +23,7 @@ class RustHttpServer extends IHttpServer {
     String? spoolDir,
     void Function(int received, int? total)? onBodyProgress,
   }) async {
-    await rust.FastHttp.ensureInitialized();
+    await rust.MoodiaryRust.ensureInitialized();
     _server = await rust.HttpServer.start(
       preferredPort: preferredPort,
       loopbackOnly: loopbackOnly,

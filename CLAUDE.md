@@ -67,9 +67,8 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
       moodiary_router/       #   typed route primitives over go_router
       fast_image/            #   图片管线：派生物 / 区域解码 / 分片看图页，自带 FRB 与原生库 libfastimage
       fast_press/            #   导出压印：IR → PDF(typst) / DOCX，自带 FRB 与原生库 libfastpress（只给 moodiary_export）
-      fast_http/             #   HTTP 客户端/服务端 + WebDAV/S3，自带 FRB 与原生库 libfasthttp（只给 moodiary_http / moodiary_sync）
-      fast_llm/              #   rig 流式对话 + 工具调用，自带 FRB 与原生库 libfastllm（只给 moodiary_assistant）
-      fast_text/             #   jieba 分词 + HF tokenizer，自带 FRB 与原生库 libfasttext（启动装载，带测试替身）
+      moodiary_rust/         #   网络业务库：http 客户端/服务端 → WebDAV/S3 / rig 对话，共享一套 reqwest 底座，libmoodiary_rust（三个门面各有主，延迟装载）
+      fast_tokenizer/        #   jieba 分词 + HF tokenizer，自带 FRB 与原生库 libfasttokenizer（启动装载，带测试替身）
       fast_crypto/           #   AES-GCM + Argon2id，裸 dart:ffi + native_toolchain_rust，原生库 libfastcrypto（无 init）
       fast_graph/            #   ForceAtlas2 力导向布局流，裸 dart:ffi，原生库 libfastgraph（只给 moodiary_diary）
       fast_zip/              #   zip 写/解压，自带 FRB 与原生库 libfastzip（只给 moodiary_export / moodiary_sync）
@@ -169,20 +168,20 @@ In-app layering within `mobile/lib` (same script): `gen → core → data → co
 
 ### Rust —— 若干 `fast_*` 包，各自一个原生库
 
-业务 Rust 没有「专属」的部分：2026-09-03 按 `docs/rust-split-plan.md` 把原来的总 Rust 包整个拆成了
-foundation 层的 `fast_*` 包并删除。每个包自带一个 crate、一个原生库、一份 hook / about.toml /
-rust-toolchain / Cargo.lock，坑各记在自己的 CLAUDE.md：
+原则（2026-09-03 拍板，账在 `docs/native-libs-review.md`）：**允许拆分，但不重复依赖**。有独立价值的
+能力各自成包；共享一套网络底座的 http / sync / llm 合在 `moodiary_rust` 里（包内 `http → sync / llm`
+分层，实测这是唯一一处真实的二进制重复，2 MiB）。每个包自带一个 crate、一个原生库、一份 hook /
+about.toml / rust-toolchain / Cargo.lock，坑各记在自己的 CLAUDE.md：
 
-| 包 | 桥 | 归属（`_nativePkgOwners`） | 装载 |
+| 包 | 桥 | 归属 | 装载 |
 |---|---|---|---|
+| moodiary_rust | FRB | 门面各有主：http.dart → moodiary_http / sync.dart → moodiary_sync / llm.dart → moodiary_assistant（`_rustFacadeOwners`） | 首次请求 / 起服务 / 对话 |
+| fast_tokenizer | FRB | 全仓（含 `testing.dart` 替身） | 启动 `FastTokenizer.ensureInitialized` |
 | fast_image | FRB | 全仓 | 启动 `FastImageRuntime.init` |
-| fast_text | FRB | 全仓（含 `testing.dart` 替身） | 启动 `FastText.ensureInitialized` |
-| fast_http | FRB | moodiary_http / moodiary_sync | 首次请求 / 起服务 |
-| fast_llm | FRB | moodiary_assistant | 首次对话 |
-| fast_press | FRB | moodiary_export | 首次导出 |
-| fast_zip | FRB | moodiary_export / moodiary_sync | 首次打包 / 解压 |
+| fast_press | FRB | moodiary_export（`_nativePkgOwners`） | 首次导出 |
+| fast_zip | FRB | moodiary_export / moodiary_sync（`_nativePkgOwners`） | 首次打包 / 解压 |
 | fast_crypto | 裸 dart:ffi | 全仓 | 无 init，首次调用自动 |
-| fast_graph | 裸 dart:ffi | moodiary_diary | 无 init，首次调用自动 |
+| fast_graph | 裸 dart:ffi | moodiary_diary（`_nativePkgOwners`） | 无 init，首次调用自动 |
 
 - **FRB 包**：每个暴露 `XxxLib` 与幂等的 `Xxx.ensureInitialized()`；不透明句柄（`CancelToken`
   之类）跨不了 .so，每库一枚，且是同步构造——**库没装载就构造会抛**，先 await 再 new。
@@ -192,6 +191,6 @@ rust-toolchain / Cargo.lock，坑各记在自己的 CLAUDE.md：
 - **跨包版本一致**：没有 `[workspace.dependencies]` 了，同一 crate 在多个包里各钉一次；
   `tool/check_generated.dart` 比对所有 `fast_*/rust/Cargo.toml` 的同名 crate、toolchain channel、
   FRB / ffigen 的 pubspec 钉版本，漂了就红。
-- 拆库是投递策略，不是省体积手段：每库地板（带 FRB 运行时）实测 619 KB，fast_llm 与 fast_http
-  各带一份 reqwest/rustls/tokio 底座，已拍板接受。改了任何 `rust/Cargo.toml` 依赖必跑
+- 拆库是投递策略，不是省体积手段：每库地板（带 FRB 运行时）实测 619 KB；两库之间共享 crate 的
+  实际字节看 `docs/native-libs-review.md` 第四节，依赖树重叠不等于二进制重复。改了任何 `rust/Cargo.toml` 依赖必跑
   `dart tool/task.dart licenses`。

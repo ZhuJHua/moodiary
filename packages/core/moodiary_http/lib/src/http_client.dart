@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:fast_http/fast_http.dart' show CancelToken;
 import 'package:moodiary_di/moodiary_di.dart';
+import 'package:moodiary_rust/http.dart' show CancelToken;
 
-// 取消令牌是 fast_http 的不透明句柄，经这里转出去，消费方不必直接依赖 fast_http。
+// 取消令牌是 moodiary_rust 的不透明句柄，经这里转出去，消费方不必直接依赖 moodiary_rust。
 // 它是同步构造的，必须在库装载之后才能 `CancelToken()`（本包的实现类都先 ensureInitialized）。
-export 'package:fast_http/fast_http.dart' show CancelToken;
+export 'package:moodiary_rust/http.dart' show CancelToken;
 
 /// HTTP 方法。
 enum HttpMethod { get, post, put, delete, patch, head, options }

@@ -4,9 +4,9 @@ library;
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:fast_http/fast_http.dart' as rust;
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_rust/sync.dart' as rust;
 import 'package:moodiary_sync/src/data/incremental_engine.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/secure_options.dart';
@@ -53,7 +53,7 @@ class WebDavSyncBackend with CloudSyncOrchestration {
     final opts = _options;
     final cached = _cachedClient;
     if (cached != null && listEquals(_cachedOptions, opts)) return cached;
-    final future = rust.FastHttp.ensureInitialized().then(
+    final future = rust.MoodiaryRust.ensureInitialized().then(
       (_) =>
           rust.DavClient.newInstance(
             baseUrl: _baseUrl,

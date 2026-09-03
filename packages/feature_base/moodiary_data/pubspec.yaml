@@ -14,7 +14,7 @@ dependencies:
     sdk: flutter
 
   fast_image: 0.0.1
-  fast_text: 0.0.1
+  fast_tokenizer: 0.0.1
   moodiary_di: 0.0.1
   moodiary_files: 0.0.1
   moodiary_storage: 0.0.1

@@ -11,7 +11,7 @@
 // 模型 / 分词器由测试自己经 hf-mirror 下载并缓存在系统临时目录。
 import 'dart:io';
 
-import 'package:fast_text/fast_text.dart';
+import 'package:fast_tokenizer/fast_tokenizer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -103,7 +103,7 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() async {
-    await FastText.ensureInitialized();
+    await FastTokenizer.ensureInitialized();
   });
 
   testWidgets('Qwen3 embedding benchmark + retrieval smoke', (tester) async {

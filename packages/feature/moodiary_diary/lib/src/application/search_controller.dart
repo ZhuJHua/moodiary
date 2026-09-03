@@ -1,4 +1,4 @@
-import 'package:fast_text/fast_text.dart';
+import 'package:fast_tokenizer/fast_tokenizer.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';

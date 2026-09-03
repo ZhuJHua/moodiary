@@ -17,10 +17,9 @@ import 'dart:io';
 const _frbPkgDirs = [
   'packages/foundation/fast_image',
   'packages/foundation/fast_press',
-  'packages/foundation/fast_http',
-  'packages/foundation/fast_llm',
-  'packages/foundation/fast_text',
+  'packages/foundation/fast_tokenizer',
   'packages/foundation/fast_zip',
+  'packages/foundation/moodiary_rust',
 ];
 
 void main() {
@@ -95,7 +94,7 @@ void _check(String pkgDir) {
   }
 }
 
-/// 没有 `[workspace.dependencies]` 了：同一 crate 在多个 fast_* 里各钉一次，这里比对它们相等；
+/// 没有 `[workspace.dependencies]` 了：同一 crate 在多个原生库包里各钉一次，这里比对它们相等；
 /// 同样比对各包 rust-toolchain.toml 的 channel，以及各 FRB 包 pubspec 的 flutter_rust_bridge / ffigen。
 /// 漂了就红：FRB / tokio / reqwest 两份不同版本进两个 .so 既是体积倒退也是行为分叉。
 void _checkConsistency() {
@@ -104,7 +103,7 @@ void _checkConsistency() {
           .listSync()
           .whereType<Directory>()
           .map((d) => d.path.replaceAll('\\', '/'))
-          .where((p) => p.split('/').last.startsWith('fast_'))
+          .where((p) => File('$p/rust/Cargo.toml').existsSync())
           .toList()
         ..sort();
   final depRe = RegExp(
@@ -153,7 +152,7 @@ void _checkConsistency() {
   compare('pubspec flutter_rust_bridge', frbPins);
   compare('pubspec ffigen', ffigenPins);
   if (drift.isNotEmpty) {
-    stderr.writeln('✗ fast_* 之间的钉版本不一致（同一 crate 必须钉同一个版本）：');
+    stderr.writeln('✗ 原生库包之间的钉版本不一致（同一 crate 必须钉同一个版本）：');
     for (final d in drift) {
       stderr.writeln('    $d');
     }

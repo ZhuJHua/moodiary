@@ -13,7 +13,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  fast_text: 0.0.1
+  fast_tokenizer: 0.0.1
   moodiary_files: 0.0.1
   moodiary_logging: 0.0.1
   moodiary_storage: 0.0.1
