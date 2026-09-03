@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use crate::api::http::KeyValue;
 
-pub use moodiary_http::server::{HttpServerRequest, HttpServerResponse};
+pub use crate::http::server::{HttpServerRequest, HttpServerResponse};
 
 #[frb(mirror(HttpServerRequest))]
 pub struct _HttpServerRequest {
@@ -43,7 +43,7 @@ fn fallback_response(error: anyhow::Error) -> HttpServerResponse {
 
 #[frb(opaque)]
 pub struct HttpServer {
-    inner: moodiary_http::server::HttpServer,
+    inner: crate::http::server::HttpServer,
 }
 
 impl HttpServer {
@@ -59,11 +59,11 @@ impl HttpServer {
         + 'static,
         on_body_progress: impl Fn(i64, i64) -> DartFnFuture<Result<()>> + Send + Sync + 'static,
     ) -> Result<HttpServer> {
-        let handler: moodiary_http::server::HandlerFn = Arc::new(move |req| {
+        let handler: crate::http::server::HandlerFn = Arc::new(move |req| {
             let call = on_request(req);
             Box::pin(async move { call.await.unwrap_or_else(fallback_response) })
         });
-        let progress: moodiary_http::server::ProgressFn = Arc::new(move |received, total| {
+        let progress: crate::http::server::ProgressFn = Arc::new(move |received, total| {
             let call = on_body_progress(received, total);
             // 进度回报失败不该影响传输本身。
             Box::pin(async move {
@@ -71,7 +71,7 @@ impl HttpServer {
             })
         });
         Ok(HttpServer {
-            inner: moodiary_http::server::HttpServer::start(
+            inner: crate::http::server::HttpServer::start(
                 preferred_port,
                 loopback_only,
                 spool_dir,

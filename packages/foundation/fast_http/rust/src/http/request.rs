@@ -4,8 +4,8 @@ use std::time::Duration;
 
 use futures::StreamExt;
 
-use crate::KeyValue;
-use crate::client::builder as http_client_builder;
+use crate::http::KeyValue;
+use crate::http::client::builder as http_client_builder;
 
 #[derive(Clone, Copy)]
 pub enum HttpMethod {
@@ -325,7 +325,7 @@ impl HttpClient {
             });
         }
 
-        let body = crate::client::read_body(resp)
+        let body = crate::http::client::read_body(resp)
             .await
             .map_err(map_reqwest_err)?;
         Ok(HttpResponse {

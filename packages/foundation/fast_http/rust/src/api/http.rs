@@ -4,8 +4,8 @@ use flutter_rust_bridge::frb;
 use crate::api::cancel::CancelToken;
 use crate::frb_generated::StreamSink;
 
-pub use moodiary_http::KeyValue;
-pub use moodiary_http::request::{
+pub use crate::http::KeyValue;
+pub use crate::http::request::{
     ClientSettings, HttpMethod, HttpResponse, RequestOptions, UploadEvent,
 };
 
@@ -77,17 +77,17 @@ pub struct HttpError {
     pub message: String,
 }
 
-impl From<moodiary_http::request::HttpError> for HttpError {
-    fn from(e: moodiary_http::request::HttpError) -> Self {
+impl From<crate::http::request::HttpError> for HttpError {
+    fn from(e: crate::http::request::HttpError) -> Self {
         HttpError {
             kind: match e.kind {
-                moodiary_http::request::HttpErrorKind::Timeout => HttpErrorKind::Timeout,
-                moodiary_http::request::HttpErrorKind::Connect => HttpErrorKind::Connect,
-                moodiary_http::request::HttpErrorKind::Request => HttpErrorKind::Request,
-                moodiary_http::request::HttpErrorKind::Redirect => HttpErrorKind::Redirect,
-                moodiary_http::request::HttpErrorKind::Decode => HttpErrorKind::Decode,
-                moodiary_http::request::HttpErrorKind::Status => HttpErrorKind::Status,
-                moodiary_http::request::HttpErrorKind::Unknown => HttpErrorKind::Unknown,
+                crate::http::request::HttpErrorKind::Timeout => HttpErrorKind::Timeout,
+                crate::http::request::HttpErrorKind::Connect => HttpErrorKind::Connect,
+                crate::http::request::HttpErrorKind::Request => HttpErrorKind::Request,
+                crate::http::request::HttpErrorKind::Redirect => HttpErrorKind::Redirect,
+                crate::http::request::HttpErrorKind::Decode => HttpErrorKind::Decode,
+                crate::http::request::HttpErrorKind::Status => HttpErrorKind::Status,
+                crate::http::request::HttpErrorKind::Unknown => HttpErrorKind::Unknown,
             },
             status: e.status,
             message: e.message,
@@ -105,13 +105,13 @@ pub struct _UploadEvent {
 
 #[frb(opaque)]
 pub struct HttpClient {
-    inner: moodiary_http::request::HttpClient,
+    inner: crate::http::request::HttpClient,
 }
 
 impl HttpClient {
     pub fn new(settings: ClientSettings) -> Result<HttpClient, HttpError> {
         Ok(HttpClient {
-            inner: moodiary_http::request::HttpClient::new(settings).map_err(HttpError::from)?,
+            inner: crate::http::request::HttpClient::new(settings).map_err(HttpError::from)?,
         })
     }
 

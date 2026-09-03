@@ -9,4 +9,6 @@ futures = { workspace = true }
 serde_json = { workspace = true }
 rig = { workspace = true }
 rig-agent = { workspace = true }
-moodiary-http = { workspace = true }
+reqwest = { workspace = true }
+rustls = { workspace = true }
+webpki-roots = { workspace = true }

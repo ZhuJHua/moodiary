@@ -86,21 +86,14 @@ jobs:
       - name: Test
         run: cargo test --workspace
 
-      - name: Clippy (fast_image)
-        working-directory: packages/foundation/fast_image/rust
-        run: cargo clippy --all-targets -- -D warnings
-
-      - name: Test (fast_image)
-        working-directory: packages/foundation/fast_image/rust
-        run: cargo test
-
-      - name: Clippy (fast_press)
-        working-directory: packages/foundation/fast_press/rust
-        run: cargo clippy --all-targets -- -D warnings
-
-      - name: Test (fast_press)
-        working-directory: packages/foundation/fast_press/rust
-        run: cargo test
+      # 每个 fast_* 包自带一个 crate；一次循环全部过 clippy + test。
+      - name: Clippy + Test (fast_*)
+        working-directory: packages/foundation
+        run: |
+          for d in fast_*/rust; do
+            echo "== $d"
+            (cd "$d" && cargo clippy --all-targets -- -D warnings && cargo test)
+          done
 
   editor:
     name: Editor

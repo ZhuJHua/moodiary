@@ -1,25 +1,27 @@
 import 'dart:convert';
 
+import 'package:fast_http/fast_http.dart' as rust;
 import 'package:flutter/foundation.dart';
 import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
-import 'package:moodiary_rust/foundation.dart' as rust;
 
 /// [IHttpClient] 的 Rust(reqwest) 实现。opaque `HttpClient` 内含 reqwest 连接池，
 /// 作为全局单例常驻、跨请求复用连接。
 class RustHttpClient extends IHttpClient {
   RustHttpClient({this.onError})
-    : _client = rust.HttpClient.newInstance(
-        settings: const rust.ClientSettings(
-          connectTimeoutMs: 5000,
-          throwOnStatus: true,
+    : _client = rust.FastHttp.ensureInitialized().then(
+        (_) => rust.HttpClient.newInstance(
+          settings: const rust.ClientSettings(
+            connectTimeoutMs: 5000,
+            throwOnStatus: true,
+          ),
         ),
       );
 
   /// 非 silent 请求失败时的回调（用于弹 toast）。
   final void Function(String message)? onError;
 
-  /// 建 client 是异步的（frb 未标 sync）；只建一次，后续请求 await 已完成的 future。
+  /// 库装载 + 建 client 都是异步的；只做一次，后续请求 await 已完成的 future。
   final Future<rust.HttpClient> _client;
 
   static const bool _enableLogging = kDebugMode;

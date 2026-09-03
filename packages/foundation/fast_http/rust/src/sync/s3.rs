@@ -6,7 +6,7 @@ use std::time::Duration;
 
 use rusty_s3::{Bucket, Credentials, S3Action, UrlStyle};
 
-use moodiary_http::client::shared as shared_http_client;
+use crate::http::client::shared as shared_http_client;
 
 const SIGN_TTL: Duration = Duration::from_secs(300);
 
@@ -274,7 +274,7 @@ impl S3Client {
         if !resp.status().is_success() {
             return Err(Self::fail(&format!("Read {key}"), resp).await);
         }
-        moodiary_http::client::read_body(resp)
+        crate::http::client::read_body(resp)
             .await
             .map(Some)
             .map_err(|e| anyhow::anyhow!("Failed to read object content: {e}"))
@@ -313,14 +313,14 @@ impl S3Client {
         if !resp.status().is_success() {
             return Err(Self::fail(&format!("Read {key}"), resp).await);
         }
-        moodiary_http::client::write_body_to_file(resp, &file_path).await?;
+        crate::http::client::write_body_to_file(resp, &file_path).await?;
         Ok(true)
     }
 
     /// [write_object] 的文件版：请求体边读边发，整份不进内存。
     pub async fn write_object_file(&self, key: String, file_path: String) -> Result<()> {
         self.ensure_bucket().await?;
-        let (body, len) = moodiary_http::client::file_body(&file_path).await?;
+        let (body, len) = crate::http::client::file_body(&file_path).await?;
         let len = len.to_string();
         let resp = self
             .send(

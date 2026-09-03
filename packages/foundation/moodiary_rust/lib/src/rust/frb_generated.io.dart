@@ -9,11 +9,7 @@ import 'api/crypto.dart';
 import 'api/font.dart';
 import 'api/graph_layout.dart';
 import 'api/hf_tokenizer.dart';
-import 'api/http.dart';
-import 'api/http_server.dart';
-import 'api/s3.dart';
 import 'api/text.dart';
-import 'api/webdav.dart';
 import 'api/zip.dart';
 
 import 'dart:async';
@@ -44,28 +40,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCancelTokenPtr;
 
   CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_DavClientPtr => wire
-      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClientPtr;
-
-  CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_FontReaderPtr => wire
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReaderPtr;
 
   CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_HfTokenizerPtr => wire
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizerPtr;
-
-  CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_HttpClientPtr => wire
-      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClientPtr;
-
-  CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_HttpServerPtr => wire
-      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServerPtr;
-
-  CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_S3ClientPtr => wire
-      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3ClientPtr;
 
   CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_TokenizerPtr => wire
@@ -96,12 +76,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  DavClient
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-    dynamic raw,
-  );
-
-  @protected
   FontReader
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     dynamic raw,
@@ -110,24 +84,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   HfTokenizer
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
-    dynamic raw,
-  );
-
-  @protected
-  HttpClient
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-    dynamic raw,
-  );
-
-  @protected
-  HttpServer
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    dynamic raw,
-  );
-
-  @protected
-  S3Client
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
     dynamic raw,
   );
 
@@ -144,12 +100,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  HttpServer
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    dynamic raw,
-  );
-
-  @protected
   Zip
   dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZip(
     dynamic raw,
@@ -162,32 +112,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  DavClient
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-    dynamic raw,
-  );
-
-  @protected
   HfTokenizer
   dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
-    dynamic raw,
-  );
-
-  @protected
-  HttpClient
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-    dynamic raw,
-  );
-
-  @protected
-  HttpServer
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    dynamic raw,
-  );
-
-  @protected
-  S3Client
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
     dynamic raw,
   );
 
@@ -196,16 +122,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   dco_decode_DartFn_Inputs_String_String_Output_String_AnyhowException(
     dynamic raw,
   );
-
-  @protected
-  FutureOr<HttpServerResponse> Function(HttpServerRequest)
-  dco_decode_DartFn_Inputs_http_server_request_Output_http_server_response_AnyhowException(
-    dynamic raw,
-  );
-
-  @protected
-  FutureOr<void> Function(PlatformInt64, PlatformInt64)
-  dco_decode_DartFn_Inputs_i_64_i_64_Output_unit_AnyhowException(dynamic raw);
 
   @protected
   Object dco_decode_DartOpaque(dynamic raw);
@@ -232,12 +148,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  DavClient
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-    dynamic raw,
-  );
-
-  @protected
   FontReader
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     dynamic raw,
@@ -246,24 +156,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   HfTokenizer
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
-    dynamic raw,
-  );
-
-  @protected
-  HttpClient
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-    dynamic raw,
-  );
-
-  @protected
-  HttpServer
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    dynamic raw,
-  );
-
-  @protected
-  S3Client
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
     dynamic raw,
   );
 
@@ -280,22 +172,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  RustStreamSink<DownloadEvent> dco_decode_StreamSink_download_event_Dco(
-    dynamic raw,
-  );
-
-  @protected
   RustStreamSink<Float32List> dco_decode_StreamSink_list_prim_f_32_strict_Dco(
     dynamic raw,
   );
 
   @protected
   RustStreamSink<RigStreamEvent> dco_decode_StreamSink_rig_stream_event_Dco(
-    dynamic raw,
-  );
-
-  @protected
-  RustStreamSink<UploadEvent> dco_decode_StreamSink_upload_event_Dco(
     dynamic raw,
   );
 
@@ -309,31 +191,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool dco_decode_box_autoadd_bool(dynamic raw);
 
   @protected
-  ClientSettings dco_decode_box_autoadd_client_settings(dynamic raw);
-
-  @protected
   GraphLayoutParams dco_decode_box_autoadd_graph_layout_params(dynamic raw);
-
-  @protected
-  HttpResponse dco_decode_box_autoadd_http_response(dynamic raw);
-
-  @protected
-  RequestOptions dco_decode_box_autoadd_request_options(dynamic raw);
 
   @protected
   RigProviderConfig dco_decode_box_autoadd_rig_provider_config(dynamic raw);
 
   @protected
-  int dco_decode_box_autoadd_u_16(dynamic raw);
-
-  @protected
   int dco_decode_box_autoadd_u_32(dynamic raw);
-
-  @protected
-  ClientSettings dco_decode_client_settings(dynamic raw);
-
-  @protected
-  DownloadEvent dco_decode_download_event(dynamic raw);
 
   @protected
   double dco_decode_f_32(dynamic raw);
@@ -342,40 +206,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   GraphLayoutParams dco_decode_graph_layout_params(dynamic raw);
 
   @protected
-  HttpError dco_decode_http_error(dynamic raw);
-
-  @protected
-  HttpErrorKind dco_decode_http_error_kind(dynamic raw);
-
-  @protected
-  HttpMethod dco_decode_http_method(dynamic raw);
-
-  @protected
-  HttpResponse dco_decode_http_response(dynamic raw);
-
-  @protected
-  HttpServerRequest dco_decode_http_server_request(dynamic raw);
-
-  @protected
-  HttpServerResponse dco_decode_http_server_response(dynamic raw);
-
-  @protected
   int dco_decode_i_32(dynamic raw);
-
-  @protected
-  PlatformInt64 dco_decode_i_64(dynamic raw);
 
   @protected
   PlatformInt64 dco_decode_isize(dynamic raw);
 
   @protected
-  KeyValue dco_decode_key_value(dynamic raw);
-
-  @protected
   List<String> dco_decode_list_String(dynamic raw);
-
-  @protected
-  List<KeyValue> dco_decode_list_key_value(dynamic raw);
 
   @protected
   List<Uint32List> dco_decode_list_list_prim_u_32_strict(dynamic raw);
@@ -420,22 +257,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool? dco_decode_opt_box_autoadd_bool(dynamic raw);
 
   @protected
-  HttpResponse? dco_decode_opt_box_autoadd_http_response(dynamic raw);
-
-  @protected
-  int? dco_decode_opt_box_autoadd_u_16(dynamic raw);
-
-  @protected
   int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
 
   @protected
-  Uint8List? dco_decode_opt_list_prim_u_8_strict(dynamic raw);
-
-  @protected
   (String, double) dco_decode_record_string_f_32(dynamic raw);
-
-  @protected
-  RequestOptions dco_decode_request_options(dynamic raw);
 
   @protected
   RigChatMessage dco_decode_rig_chat_message(dynamic raw);
@@ -453,9 +278,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   TokenizeResult dco_decode_tokenize_result(dynamic raw);
 
   @protected
-  int dco_decode_u_16(dynamic raw);
-
-  @protected
   int dco_decode_u_32(dynamic raw);
 
   @protected
@@ -466,9 +288,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void dco_decode_unit(dynamic raw);
-
-  @protected
-  UploadEvent dco_decode_upload_event(dynamic raw);
 
   @protected
   BigInt dco_decode_usize(dynamic raw);
@@ -495,12 +314,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  DavClient
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   FontReader
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     SseDeserializer deserializer,
@@ -509,24 +322,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   HfTokenizer
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  HttpClient
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  HttpServer
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  S3Client
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
     SseDeserializer deserializer,
   );
 
@@ -543,12 +338,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  HttpServer
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   Zip
   sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZip(
     SseDeserializer deserializer,
@@ -561,32 +350,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  DavClient
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   HfTokenizer
   sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  HttpClient
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  HttpServer
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  S3Client
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
     SseDeserializer deserializer,
   );
 
@@ -617,12 +382,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  DavClient
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   FontReader
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     SseDeserializer deserializer,
@@ -631,24 +390,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   HfTokenizer
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  HttpClient
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  HttpServer
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  S3Client
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
     SseDeserializer deserializer,
   );
 
@@ -665,22 +406,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  RustStreamSink<DownloadEvent> sse_decode_StreamSink_download_event_Dco(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   RustStreamSink<Float32List> sse_decode_StreamSink_list_prim_f_32_strict_Dco(
     SseDeserializer deserializer,
   );
 
   @protected
   RustStreamSink<RigStreamEvent> sse_decode_StreamSink_rig_stream_event_Dco(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  RustStreamSink<UploadEvent> sse_decode_StreamSink_upload_event_Dco(
     SseDeserializer deserializer,
   );
 
@@ -694,22 +425,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool sse_decode_box_autoadd_bool(SseDeserializer deserializer);
 
   @protected
-  ClientSettings sse_decode_box_autoadd_client_settings(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   GraphLayoutParams sse_decode_box_autoadd_graph_layout_params(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  HttpResponse sse_decode_box_autoadd_http_response(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  RequestOptions sse_decode_box_autoadd_request_options(
     SseDeserializer deserializer,
   );
 
@@ -719,16 +435,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  int sse_decode_box_autoadd_u_16(SseDeserializer deserializer);
-
-  @protected
   int sse_decode_box_autoadd_u_32(SseDeserializer deserializer);
-
-  @protected
-  ClientSettings sse_decode_client_settings(SseDeserializer deserializer);
-
-  @protected
-  DownloadEvent sse_decode_download_event(SseDeserializer deserializer);
 
   @protected
   double sse_decode_f_32(SseDeserializer deserializer);
@@ -739,44 +446,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  HttpError sse_decode_http_error(SseDeserializer deserializer);
-
-  @protected
-  HttpErrorKind sse_decode_http_error_kind(SseDeserializer deserializer);
-
-  @protected
-  HttpMethod sse_decode_http_method(SseDeserializer deserializer);
-
-  @protected
-  HttpResponse sse_decode_http_response(SseDeserializer deserializer);
-
-  @protected
-  HttpServerRequest sse_decode_http_server_request(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  HttpServerResponse sse_decode_http_server_response(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   int sse_decode_i_32(SseDeserializer deserializer);
-
-  @protected
-  PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
 
   @protected
   PlatformInt64 sse_decode_isize(SseDeserializer deserializer);
 
   @protected
-  KeyValue sse_decode_key_value(SseDeserializer deserializer);
-
-  @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer);
-
-  @protected
-  List<KeyValue> sse_decode_list_key_value(SseDeserializer deserializer);
 
   @protected
   List<Uint32List> sse_decode_list_list_prim_u_32_strict(
@@ -829,24 +505,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer);
 
   @protected
-  HttpResponse? sse_decode_opt_box_autoadd_http_response(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  int? sse_decode_opt_box_autoadd_u_16(SseDeserializer deserializer);
-
-  @protected
   int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
 
   @protected
-  Uint8List? sse_decode_opt_list_prim_u_8_strict(SseDeserializer deserializer);
-
-  @protected
   (String, double) sse_decode_record_string_f_32(SseDeserializer deserializer);
-
-  @protected
-  RequestOptions sse_decode_request_options(SseDeserializer deserializer);
 
   @protected
   RigChatMessage sse_decode_rig_chat_message(SseDeserializer deserializer);
@@ -866,9 +528,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   TokenizeResult sse_decode_tokenize_result(SseDeserializer deserializer);
 
   @protected
-  int sse_decode_u_16(SseDeserializer deserializer);
-
-  @protected
   int sse_decode_u_32(SseDeserializer deserializer);
 
   @protected
@@ -879,9 +538,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_decode_unit(SseDeserializer deserializer);
-
-  @protected
-  UploadEvent sse_decode_upload_event(SseDeserializer deserializer);
 
   @protected
   BigInt sse_decode_usize(SseDeserializer deserializer);
@@ -901,20 +557,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return cst_encode_list_record_string_f_32(
       raw.entries.map((e) => (e.key, e.value)).toList(),
-    );
-  }
-
-  @protected
-  ffi.Pointer<wire_cst_list_prim_u_8_strict>
-  cst_encode_StreamSink_download_event_Dco(RustStreamSink<DownloadEvent> raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    return cst_encode_String(
-      raw.setupAndSerialize(
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_download_event,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-      ),
     );
   }
 
@@ -951,20 +593,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  ffi.Pointer<wire_cst_list_prim_u_8_strict>
-  cst_encode_StreamSink_upload_event_Dco(RustStreamSink<UploadEvent> raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    return cst_encode_String(
-      raw.setupAndSerialize(
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_upload_event,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-      ),
-    );
-  }
-
-  @protected
   ffi.Pointer<wire_cst_list_prim_u_8_strict> cst_encode_String(String raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return cst_encode_list_prim_u_8_strict(utf8.encoder.convert(raw));
@@ -977,41 +605,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  ffi.Pointer<wire_cst_client_settings> cst_encode_box_autoadd_client_settings(
-    ClientSettings raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    final ptr = wire.cst_new_box_autoadd_client_settings();
-    cst_api_fill_to_wire_client_settings(raw, ptr.ref);
-    return ptr;
-  }
-
-  @protected
   ffi.Pointer<wire_cst_graph_layout_params>
   cst_encode_box_autoadd_graph_layout_params(GraphLayoutParams raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     final ptr = wire.cst_new_box_autoadd_graph_layout_params();
     cst_api_fill_to_wire_graph_layout_params(raw, ptr.ref);
-    return ptr;
-  }
-
-  @protected
-  ffi.Pointer<wire_cst_http_response> cst_encode_box_autoadd_http_response(
-    HttpResponse raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    final ptr = wire.cst_new_box_autoadd_http_response();
-    cst_api_fill_to_wire_http_response(raw, ptr.ref);
-    return ptr;
-  }
-
-  @protected
-  ffi.Pointer<wire_cst_request_options> cst_encode_box_autoadd_request_options(
-    RequestOptions raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    final ptr = wire.cst_new_box_autoadd_request_options();
-    cst_api_fill_to_wire_request_options(raw, ptr.ref);
     return ptr;
   }
 
@@ -1025,21 +623,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  ffi.Pointer<ffi.Uint16> cst_encode_box_autoadd_u_16(int raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    return wire.cst_new_box_autoadd_u_16(cst_encode_u_16(raw));
-  }
-
-  @protected
   ffi.Pointer<ffi.Uint32> cst_encode_box_autoadd_u_32(int raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return wire.cst_new_box_autoadd_u_32(cst_encode_u_32(raw));
-  }
-
-  @protected
-  int cst_encode_i_64(PlatformInt64 raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    return raw.toInt();
   }
 
   @protected
@@ -1054,18 +640,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     final ans = wire.cst_new_list_String(raw.length);
     for (var i = 0; i < raw.length; ++i) {
       ans.ref.ptr[i] = cst_encode_String(raw[i]);
-    }
-    return ans;
-  }
-
-  @protected
-  ffi.Pointer<wire_cst_list_key_value> cst_encode_list_key_value(
-    List<KeyValue> raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    final ans = wire.cst_new_list_key_value(raw.length);
-    for (var i = 0; i < raw.length; ++i) {
-      cst_api_fill_to_wire_key_value(raw[i], ans.ref.ptr[i]);
     }
     return ans;
   }
@@ -1213,32 +787,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  ffi.Pointer<wire_cst_http_response> cst_encode_opt_box_autoadd_http_response(
-    HttpResponse? raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    return raw == null
-        ? ffi.nullptr
-        : cst_encode_box_autoadd_http_response(raw);
-  }
-
-  @protected
-  ffi.Pointer<ffi.Uint16> cst_encode_opt_box_autoadd_u_16(int? raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    return raw == null ? ffi.nullptr : cst_encode_box_autoadd_u_16(raw);
-  }
-
-  @protected
   ffi.Pointer<ffi.Uint32> cst_encode_opt_box_autoadd_u_32(int? raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw == null ? ffi.nullptr : cst_encode_box_autoadd_u_32(raw);
-  }
-
-  @protected
-  ffi.Pointer<wire_cst_list_prim_u_8_strict>
-  cst_encode_opt_list_prim_u_8_strict(Uint8List? raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    return raw == null ? ffi.nullptr : cst_encode_list_prim_u_8_strict(raw);
   }
 
   @protected
@@ -1254,14 +805,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  void cst_api_fill_to_wire_box_autoadd_client_settings(
-    ClientSettings apiObj,
-    ffi.Pointer<wire_cst_client_settings> wireObj,
-  ) {
-    cst_api_fill_to_wire_client_settings(apiObj, wireObj.ref);
-  }
-
-  @protected
   void cst_api_fill_to_wire_box_autoadd_graph_layout_params(
     GraphLayoutParams apiObj,
     ffi.Pointer<wire_cst_graph_layout_params> wireObj,
@@ -1270,54 +813,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  void cst_api_fill_to_wire_box_autoadd_http_response(
-    HttpResponse apiObj,
-    ffi.Pointer<wire_cst_http_response> wireObj,
-  ) {
-    cst_api_fill_to_wire_http_response(apiObj, wireObj.ref);
-  }
-
-  @protected
-  void cst_api_fill_to_wire_box_autoadd_request_options(
-    RequestOptions apiObj,
-    ffi.Pointer<wire_cst_request_options> wireObj,
-  ) {
-    cst_api_fill_to_wire_request_options(apiObj, wireObj.ref);
-  }
-
-  @protected
   void cst_api_fill_to_wire_box_autoadd_rig_provider_config(
     RigProviderConfig apiObj,
     ffi.Pointer<wire_cst_rig_provider_config> wireObj,
   ) {
     cst_api_fill_to_wire_rig_provider_config(apiObj, wireObj.ref);
-  }
-
-  @protected
-  void cst_api_fill_to_wire_client_settings(
-    ClientSettings apiObj,
-    wire_cst_client_settings wireObj,
-  ) {
-    wireObj.base_url = cst_encode_opt_String(apiObj.baseUrl);
-    wireObj.connect_timeout_ms = cst_encode_opt_box_autoadd_u_32(
-      apiObj.connectTimeoutMs,
-    );
-    wireObj.timeout_ms = cst_encode_opt_box_autoadd_u_32(apiObj.timeoutMs);
-    wireObj.user_agent = cst_encode_opt_String(apiObj.userAgent);
-    wireObj.max_redirects = cst_encode_opt_box_autoadd_u_32(
-      apiObj.maxRedirects,
-    );
-    wireObj.throw_on_status = cst_encode_bool(apiObj.throwOnStatus);
-  }
-
-  @protected
-  void cst_api_fill_to_wire_download_event(
-    DownloadEvent apiObj,
-    wire_cst_download_event wireObj,
-  ) {
-    wireObj.received = cst_encode_i_64(apiObj.received);
-    wireObj.total = cst_encode_i_64(apiObj.total);
-    wireObj.done = cst_encode_bool(apiObj.done);
   }
 
   @protected
@@ -1342,80 +842,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  void cst_api_fill_to_wire_http_error(
-    HttpError apiObj,
-    wire_cst_http_error wireObj,
-  ) {
-    wireObj.kind = cst_encode_http_error_kind(apiObj.kind);
-    wireObj.status = cst_encode_opt_box_autoadd_u_16(apiObj.status);
-    wireObj.message = cst_encode_String(apiObj.message);
-  }
-
-  @protected
-  void cst_api_fill_to_wire_http_response(
-    HttpResponse apiObj,
-    wire_cst_http_response wireObj,
-  ) {
-    wireObj.status = cst_encode_u_16(apiObj.status);
-    wireObj.headers = cst_encode_list_key_value(apiObj.headers);
-    wireObj.body = cst_encode_list_prim_u_8_strict(apiObj.body);
-  }
-
-  @protected
-  void cst_api_fill_to_wire_http_server_request(
-    HttpServerRequest apiObj,
-    wire_cst_http_server_request wireObj,
-  ) {
-    wireObj.method = cst_encode_String(apiObj.method);
-    wireObj.path = cst_encode_String(apiObj.path);
-    wireObj.query = cst_encode_list_key_value(apiObj.query);
-    wireObj.headers = cst_encode_list_key_value(apiObj.headers);
-    wireObj.body = cst_encode_list_prim_u_8_strict(apiObj.body);
-    wireObj.body_file_path = cst_encode_opt_String(apiObj.bodyFilePath);
-  }
-
-  @protected
-  void cst_api_fill_to_wire_http_server_response(
-    HttpServerResponse apiObj,
-    wire_cst_http_server_response wireObj,
-  ) {
-    wireObj.status = cst_encode_u_16(apiObj.status);
-    wireObj.headers = cst_encode_list_key_value(apiObj.headers);
-    wireObj.body = cst_encode_list_prim_u_8_strict(apiObj.body);
-    wireObj.body_file_path = cst_encode_opt_String(apiObj.bodyFilePath);
-  }
-
-  @protected
-  void cst_api_fill_to_wire_key_value(
-    KeyValue apiObj,
-    wire_cst_key_value wireObj,
-  ) {
-    wireObj.key = cst_encode_String(apiObj.key);
-    wireObj.value = cst_encode_String(apiObj.value);
-  }
-
-  @protected
   void cst_api_fill_to_wire_record_string_f_32(
     (String, double) apiObj,
     wire_cst_record_string_f_32 wireObj,
   ) {
     wireObj.field0 = cst_encode_String(apiObj.$1);
     wireObj.field1 = cst_encode_f_32(apiObj.$2);
-  }
-
-  @protected
-  void cst_api_fill_to_wire_request_options(
-    RequestOptions apiObj,
-    wire_cst_request_options wireObj,
-  ) {
-    wireObj.method = cst_encode_http_method(apiObj.method);
-    wireObj.url = cst_encode_String(apiObj.url);
-    wireObj.query = cst_encode_list_key_value(apiObj.query);
-    wireObj.headers = cst_encode_list_key_value(apiObj.headers);
-    wireObj.timeout_ms = cst_encode_opt_box_autoadd_u_32(apiObj.timeoutMs);
-    wireObj.throw_on_status = cst_encode_opt_box_autoadd_bool(
-      apiObj.throwOnStatus,
-    );
   }
 
   @protected
@@ -1519,18 +951,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  void cst_api_fill_to_wire_upload_event(
-    UploadEvent apiObj,
-    wire_cst_upload_event wireObj,
-  ) {
-    wireObj.sent = cst_encode_i_64(apiObj.sent);
-    wireObj.total = cst_encode_i_64(apiObj.total);
-    wireObj.response = cst_encode_opt_box_autoadd_http_response(
-      apiObj.response,
-    );
-  }
-
-  @protected
   int
   cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes(
     Aes raw,
@@ -1550,12 +970,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int
-  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-    DavClient raw,
-  );
-
-  @protected
-  int
   cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     FontReader raw,
   );
@@ -1564,24 +978,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int
   cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
     HfTokenizer raw,
-  );
-
-  @protected
-  int
-  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-    HttpClient raw,
-  );
-
-  @protected
-  int
-  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    HttpServer raw,
-  );
-
-  @protected
-  int
-  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-    S3Client raw,
   );
 
   @protected
@@ -1598,12 +994,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int
-  cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    HttpServer raw,
-  );
-
-  @protected
-  int
   cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZip(
     Zip raw,
   );
@@ -1616,50 +1006,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int
-  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-    DavClient raw,
-  );
-
-  @protected
-  int
   cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
     HfTokenizer raw,
-  );
-
-  @protected
-  int
-  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-    HttpClient raw,
-  );
-
-  @protected
-  int
-  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    HttpServer raw,
-  );
-
-  @protected
-  int
-  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-    S3Client raw,
   );
 
   @protected
   PlatformPointer
   cst_encode_DartFn_Inputs_String_String_Output_String_AnyhowException(
     FutureOr<String> Function(String, String) raw,
-  );
-
-  @protected
-  PlatformPointer
-  cst_encode_DartFn_Inputs_http_server_request_Output_http_server_response_AnyhowException(
-    FutureOr<HttpServerResponse> Function(HttpServerRequest) raw,
-  );
-
-  @protected
-  PlatformPointer
-  cst_encode_DartFn_Inputs_i_64_i_64_Output_unit_AnyhowException(
-    FutureOr<void> Function(PlatformInt64, PlatformInt64) raw,
   );
 
   @protected
@@ -1685,12 +1039,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int
-  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-    DavClient raw,
-  );
-
-  @protected
-  int
   cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     FontReader raw,
   );
@@ -1699,24 +1047,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int
   cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
     HfTokenizer raw,
-  );
-
-  @protected
-  int
-  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-    HttpClient raw,
-  );
-
-  @protected
-  int
-  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    HttpServer raw,
-  );
-
-  @protected
-  int
-  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-    S3Client raw,
   );
 
   @protected
@@ -1738,16 +1068,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double cst_encode_f_32(double raw);
 
   @protected
-  int cst_encode_http_error_kind(HttpErrorKind raw);
-
-  @protected
-  int cst_encode_http_method(HttpMethod raw);
-
-  @protected
   int cst_encode_i_32(int raw);
-
-  @protected
-  int cst_encode_u_16(int raw);
 
   @protected
   int cst_encode_u_32(int raw);
@@ -1787,13 +1108,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-    DavClient self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     FontReader self,
     SseSerializer serializer,
@@ -1803,27 +1117,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
     HfTokenizer self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-    HttpClient self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    HttpServer self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-    S3Client self,
     SseSerializer serializer,
   );
 
@@ -1843,13 +1136,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    HttpServer self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
   sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZip(
     Zip self,
     SseSerializer serializer,
@@ -1864,55 +1150,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-    DavClient self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
   sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
     HfTokenizer self,
     SseSerializer serializer,
   );
 
   @protected
-  void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-    HttpClient self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    HttpServer self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-    S3Client self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_DartFn_Inputs_String_String_Output_String_AnyhowException(
     FutureOr<String> Function(String, String) self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_DartFn_Inputs_http_server_request_Output_http_server_response_AnyhowException(
-    FutureOr<HttpServerResponse> Function(HttpServerRequest) self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_DartFn_Inputs_i_64_i_64_Output_unit_AnyhowException(
-    FutureOr<void> Function(PlatformInt64, PlatformInt64) self,
     SseSerializer serializer,
   );
 
@@ -1948,13 +1193,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-    DavClient self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     FontReader self,
     SseSerializer serializer,
@@ -1964,27 +1202,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
     HfTokenizer self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-    HttpClient self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    HttpServer self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-    S3Client self,
     SseSerializer serializer,
   );
 
@@ -2003,12 +1220,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_StreamSink_download_event_Dco(
-    RustStreamSink<DownloadEvent> self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_StreamSink_list_prim_f_32_strict_Dco(
     RustStreamSink<Float32List> self,
     SseSerializer serializer,
@@ -2017,12 +1228,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_StreamSink_rig_stream_event_Dco(
     RustStreamSink<RigStreamEvent> self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_StreamSink_upload_event_Dco(
-    RustStreamSink<UploadEvent> self,
     SseSerializer serializer,
   );
 
@@ -2036,26 +1241,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_bool(bool self, SseSerializer serializer);
 
   @protected
-  void sse_encode_box_autoadd_client_settings(
-    ClientSettings self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_box_autoadd_graph_layout_params(
     GraphLayoutParams self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_box_autoadd_http_response(
-    HttpResponse self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_box_autoadd_request_options(
-    RequestOptions self,
     SseSerializer serializer,
   );
 
@@ -2066,19 +1253,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_box_autoadd_u_16(int self, SseSerializer serializer);
-
-  @protected
   void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_client_settings(
-    ClientSettings self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_download_event(DownloadEvent self, SseSerializer serializer);
 
   @protected
   void sse_encode_f_32(double self, SseSerializer serializer);
@@ -2090,46 +1265,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_http_error(HttpError self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_http_error_kind(HttpErrorKind self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_http_method(HttpMethod self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_http_response(HttpResponse self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_http_server_request(
-    HttpServerRequest self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_http_server_response(
-    HttpServerResponse self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
 
   @protected
   void sse_encode_isize(PlatformInt64 self, SseSerializer serializer);
 
   @protected
-  void sse_encode_key_value(KeyValue self, SseSerializer serializer);
-
-  @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_list_key_value(List<KeyValue> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_list_prim_u_32_strict(
@@ -2207,32 +1349,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer);
 
   @protected
-  void sse_encode_opt_box_autoadd_http_response(
-    HttpResponse? self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_opt_box_autoadd_u_16(int? self, SseSerializer serializer);
-
-  @protected
   void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_opt_list_prim_u_8_strict(
-    Uint8List? self,
-    SseSerializer serializer,
-  );
 
   @protected
   void sse_encode_record_string_f_32(
     (String, double) self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_request_options(
-    RequestOptions self,
     SseSerializer serializer,
   );
 
@@ -2264,9 +1385,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_u_16(int self, SseSerializer serializer);
-
-  @protected
   void sse_encode_u_32(int self, SseSerializer serializer);
 
   @protected
@@ -2277,9 +1395,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_unit(void self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_upload_event(UploadEvent self, SseSerializer serializer);
 
   @protected
   void sse_encode_usize(BigInt self, SseSerializer serializer);
@@ -2322,18 +1437,6 @@ class RustLibWire implements BaseWire {
   late final _cst_new_box_autoadd_bool = _cst_new_box_autoadd_boolPtr
       .asFunction<ffi.Pointer<ffi.Bool> Function(bool)>();
 
-  ffi.Pointer<wire_cst_client_settings> cst_new_box_autoadd_client_settings() {
-    return _cst_new_box_autoadd_client_settings();
-  }
-
-  late final _cst_new_box_autoadd_client_settingsPtr =
-      _lookup<
-        ffi.NativeFunction<ffi.Pointer<wire_cst_client_settings> Function()>
-      >('frbgen_moodiary_rust_cst_new_box_autoadd_client_settings');
-  late final _cst_new_box_autoadd_client_settings =
-      _cst_new_box_autoadd_client_settingsPtr
-          .asFunction<ffi.Pointer<wire_cst_client_settings> Function()>();
-
   ffi.Pointer<wire_cst_graph_layout_params>
   cst_new_box_autoadd_graph_layout_params() {
     return _cst_new_box_autoadd_graph_layout_params();
@@ -2347,30 +1450,6 @@ class RustLibWire implements BaseWire {
       _cst_new_box_autoadd_graph_layout_paramsPtr
           .asFunction<ffi.Pointer<wire_cst_graph_layout_params> Function()>();
 
-  ffi.Pointer<wire_cst_http_response> cst_new_box_autoadd_http_response() {
-    return _cst_new_box_autoadd_http_response();
-  }
-
-  late final _cst_new_box_autoadd_http_responsePtr =
-      _lookup<
-        ffi.NativeFunction<ffi.Pointer<wire_cst_http_response> Function()>
-      >('frbgen_moodiary_rust_cst_new_box_autoadd_http_response');
-  late final _cst_new_box_autoadd_http_response =
-      _cst_new_box_autoadd_http_responsePtr
-          .asFunction<ffi.Pointer<wire_cst_http_response> Function()>();
-
-  ffi.Pointer<wire_cst_request_options> cst_new_box_autoadd_request_options() {
-    return _cst_new_box_autoadd_request_options();
-  }
-
-  late final _cst_new_box_autoadd_request_optionsPtr =
-      _lookup<
-        ffi.NativeFunction<ffi.Pointer<wire_cst_request_options> Function()>
-      >('frbgen_moodiary_rust_cst_new_box_autoadd_request_options');
-  late final _cst_new_box_autoadd_request_options =
-      _cst_new_box_autoadd_request_optionsPtr
-          .asFunction<ffi.Pointer<wire_cst_request_options> Function()>();
-
   ffi.Pointer<wire_cst_rig_provider_config>
   cst_new_box_autoadd_rig_provider_config() {
     return _cst_new_box_autoadd_rig_provider_config();
@@ -2383,17 +1462,6 @@ class RustLibWire implements BaseWire {
   late final _cst_new_box_autoadd_rig_provider_config =
       _cst_new_box_autoadd_rig_provider_configPtr
           .asFunction<ffi.Pointer<wire_cst_rig_provider_config> Function()>();
-
-  ffi.Pointer<ffi.Uint16> cst_new_box_autoadd_u_16(int value) {
-    return _cst_new_box_autoadd_u_16(value);
-  }
-
-  late final _cst_new_box_autoadd_u_16Ptr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Uint16> Function(ffi.Uint16)>>(
-        'frbgen_moodiary_rust_cst_new_box_autoadd_u_16',
-      );
-  late final _cst_new_box_autoadd_u_16 = _cst_new_box_autoadd_u_16Ptr
-      .asFunction<ffi.Pointer<ffi.Uint16> Function(int)>();
 
   ffi.Pointer<ffi.Uint32> cst_new_box_autoadd_u_32(int value) {
     return _cst_new_box_autoadd_u_32(value);
@@ -2418,19 +1486,6 @@ class RustLibWire implements BaseWire {
       >('frbgen_moodiary_rust_cst_new_list_String');
   late final _cst_new_list_String = _cst_new_list_StringPtr
       .asFunction<ffi.Pointer<wire_cst_list_String> Function(int)>();
-
-  ffi.Pointer<wire_cst_list_key_value> cst_new_list_key_value(int len) {
-    return _cst_new_list_key_value(len);
-  }
-
-  late final _cst_new_list_key_valuePtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Pointer<wire_cst_list_key_value> Function(ffi.Int32)
-        >
-      >('frbgen_moodiary_rust_cst_new_list_key_value');
-  late final _cst_new_list_key_value = _cst_new_list_key_valuePtr
-      .asFunction<ffi.Pointer<wire_cst_list_key_value> Function(int)>();
 
   ffi.Pointer<wire_cst_list_list_prim_u_32_strict>
   cst_new_list_list_prim_u_32_strict(int len) {
@@ -2678,23 +1733,6 @@ class RustLibWire implements BaseWire {
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClientPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_moodiary_rust_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient',
-      );
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient =
-      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClientPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
   rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     ffi.Pointer<ffi.Void> ptr,
   ) {
@@ -2726,57 +1764,6 @@ class RustLibWire implements BaseWire {
       );
   late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer =
       _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizerPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClientPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_moodiary_rust_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient',
-      );
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient =
-      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClientPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServerPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_moodiary_rust_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer',
-      );
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer =
-      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServerPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3ClientPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_moodiary_rust_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client',
-      );
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client =
-      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3ClientPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void
@@ -2865,23 +1852,6 @@ class RustLibWire implements BaseWire {
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClientPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient',
-      );
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient =
-      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClientPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
   rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     ffi.Pointer<ffi.Void> ptr,
   ) {
@@ -2913,57 +1883,6 @@ class RustLibWire implements BaseWire {
       );
   late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer =
       _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizerPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClientPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient',
-      );
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient =
-      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClientPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServerPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer',
-      );
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer =
-      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServerPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3ClientPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client',
-      );
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client =
-      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3ClientPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void
@@ -3555,498 +2474,6 @@ class RustLibWire implements BaseWire {
             void Function(int, int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
           >();
 
-  void wire__crate__api__http__HttpClient_download_file(
-    int port_,
-    int that,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> sink,
-    ffi.Pointer<wire_cst_request_options> options,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> dest_path,
-    int cancel,
-  ) {
-    return _wire__crate__api__http__HttpClient_download_file(
-      port_,
-      that,
-      sink,
-      options,
-      dest_path,
-      cancel,
-    );
-  }
-
-  late final _wire__crate__api__http__HttpClient_download_filePtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.UintPtr,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Pointer<wire_cst_request_options>,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.UintPtr,
-          )
-        >
-      >(
-        'frbgen_moodiary_rust_wire__crate__api__http__HttpClient_download_file',
-      );
-  late final _wire__crate__api__http__HttpClient_download_file =
-      _wire__crate__api__http__HttpClient_download_filePtr
-          .asFunction<
-            void Function(
-              int,
-              int,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<wire_cst_request_options>,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              int,
-            )
-          >();
-
-  void wire__crate__api__http__HttpClient_new(
-    int port_,
-    ffi.Pointer<wire_cst_client_settings> settings,
-  ) {
-    return _wire__crate__api__http__HttpClient_new(port_, settings);
-  }
-
-  late final _wire__crate__api__http__HttpClient_newPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(ffi.Int64, ffi.Pointer<wire_cst_client_settings>)
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__http__HttpClient_new');
-  late final _wire__crate__api__http__HttpClient_new =
-      _wire__crate__api__http__HttpClient_newPtr
-          .asFunction<
-            void Function(int, ffi.Pointer<wire_cst_client_settings>)
-          >();
-
-  void wire__crate__api__http__HttpClient_request(
-    int port_,
-    int that,
-    ffi.Pointer<wire_cst_request_options> options,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> body,
-  ) {
-    return _wire__crate__api__http__HttpClient_request(
-      port_,
-      that,
-      options,
-      body,
-    );
-  }
-
-  late final _wire__crate__api__http__HttpClient_requestPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.UintPtr,
-            ffi.Pointer<wire_cst_request_options>,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-          )
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__http__HttpClient_request');
-  late final _wire__crate__api__http__HttpClient_request =
-      _wire__crate__api__http__HttpClient_requestPtr
-          .asFunction<
-            void Function(
-              int,
-              int,
-              ffi.Pointer<wire_cst_request_options>,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            )
-          >();
-
-  void wire__crate__api__http__HttpClient_upload_file(
-    int port_,
-    int that,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> sink,
-    ffi.Pointer<wire_cst_request_options> options,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> file_path,
-    int cancel,
-  ) {
-    return _wire__crate__api__http__HttpClient_upload_file(
-      port_,
-      that,
-      sink,
-      options,
-      file_path,
-      cancel,
-    );
-  }
-
-  late final _wire__crate__api__http__HttpClient_upload_filePtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.UintPtr,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Pointer<wire_cst_request_options>,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.UintPtr,
-          )
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__http__HttpClient_upload_file');
-  late final _wire__crate__api__http__HttpClient_upload_file =
-      _wire__crate__api__http__HttpClient_upload_filePtr
-          .asFunction<
-            void Function(
-              int,
-              int,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<wire_cst_request_options>,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              int,
-            )
-          >();
-
-  WireSyncRust2DartDco wire__crate__api__http_server__HttpServer_port(
-    int that,
-  ) {
-    return _wire__crate__api__http_server__HttpServer_port(that);
-  }
-
-  late final _wire__crate__api__http_server__HttpServer_portPtr =
-      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
-        'frbgen_moodiary_rust_wire__crate__api__http_server__HttpServer_port',
-      );
-  late final _wire__crate__api__http_server__HttpServer_port =
-      _wire__crate__api__http_server__HttpServer_portPtr
-          .asFunction<WireSyncRust2DartDco Function(int)>();
-
-  void wire__crate__api__http_server__HttpServer_start(
-    int port_,
-    int preferred_port,
-    bool loopback_only,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> spool_dir,
-    ffi.Pointer<ffi.Void> on_request,
-    ffi.Pointer<ffi.Void> on_body_progress,
-  ) {
-    return _wire__crate__api__http_server__HttpServer_start(
-      port_,
-      preferred_port,
-      loopback_only,
-      spool_dir,
-      on_request,
-      on_body_progress,
-    );
-  }
-
-  late final _wire__crate__api__http_server__HttpServer_startPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.Uint16,
-            ffi.Bool,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Pointer<ffi.Void>,
-            ffi.Pointer<ffi.Void>,
-          )
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__http_server__HttpServer_start');
-  late final _wire__crate__api__http_server__HttpServer_start =
-      _wire__crate__api__http_server__HttpServer_startPtr
-          .asFunction<
-            void Function(
-              int,
-              int,
-              bool,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<ffi.Void>,
-              ffi.Pointer<ffi.Void>,
-            )
-          >();
-
-  WireSyncRust2DartDco wire__crate__api__http_server__HttpServer_stop(
-    int that,
-  ) {
-    return _wire__crate__api__http_server__HttpServer_stop(that);
-  }
-
-  late final _wire__crate__api__http_server__HttpServer_stopPtr =
-      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
-        'frbgen_moodiary_rust_wire__crate__api__http_server__HttpServer_stop',
-      );
-  late final _wire__crate__api__http_server__HttpServer_stop =
-      _wire__crate__api__http_server__HttpServer_stopPtr
-          .asFunction<WireSyncRust2DartDco Function(int)>();
-
-  void wire__crate__api__s3__S3Client_create_exclusive(
-    int port_,
-    int that,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
-    ffi.Pointer<wire_cst_list_prim_u_8_loose> data,
-  ) {
-    return _wire__crate__api__s3__S3Client_create_exclusive(
-      port_,
-      that,
-      key,
-      data,
-    );
-  }
-
-  late final _wire__crate__api__s3__S3Client_create_exclusivePtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.UintPtr,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
-          )
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__s3__S3Client_create_exclusive');
-  late final _wire__crate__api__s3__S3Client_create_exclusive =
-      _wire__crate__api__s3__S3Client_create_exclusivePtr
-          .asFunction<
-            void Function(
-              int,
-              int,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
-            )
-          >();
-
-  void wire__crate__api__s3__S3Client_delete_object(
-    int port_,
-    int that,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
-  ) {
-    return _wire__crate__api__s3__S3Client_delete_object(port_, that, key);
-  }
-
-  late final _wire__crate__api__s3__S3Client_delete_objectPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.UintPtr,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-          )
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__s3__S3Client_delete_object');
-  late final _wire__crate__api__s3__S3Client_delete_object =
-      _wire__crate__api__s3__S3Client_delete_objectPtr
-          .asFunction<
-            void Function(int, int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
-          >();
-
-  void wire__crate__api__s3__S3Client_new(
-    int port_,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> endpoint,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> access_key,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> secret_key,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> bucket,
-    bool use_ssl,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> region,
-  ) {
-    return _wire__crate__api__s3__S3Client_new(
-      port_,
-      endpoint,
-      access_key,
-      secret_key,
-      bucket,
-      use_ssl,
-      region,
-    );
-  }
-
-  late final _wire__crate__api__s3__S3Client_newPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Bool,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-          )
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__s3__S3Client_new');
-  late final _wire__crate__api__s3__S3Client_new =
-      _wire__crate__api__s3__S3Client_newPtr
-          .asFunction<
-            void Function(
-              int,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              bool,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            )
-          >();
-
-  void wire__crate__api__s3__S3Client_read_object(
-    int port_,
-    int that,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
-  ) {
-    return _wire__crate__api__s3__S3Client_read_object(port_, that, key);
-  }
-
-  late final _wire__crate__api__s3__S3Client_read_objectPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.UintPtr,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-          )
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__s3__S3Client_read_object');
-  late final _wire__crate__api__s3__S3Client_read_object =
-      _wire__crate__api__s3__S3Client_read_objectPtr
-          .asFunction<
-            void Function(int, int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
-          >();
-
-  void wire__crate__api__s3__S3Client_read_object_to_file(
-    int port_,
-    int that,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> file_path,
-  ) {
-    return _wire__crate__api__s3__S3Client_read_object_to_file(
-      port_,
-      that,
-      key,
-      file_path,
-    );
-  }
-
-  late final _wire__crate__api__s3__S3Client_read_object_to_filePtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.UintPtr,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-          )
-        >
-      >(
-        'frbgen_moodiary_rust_wire__crate__api__s3__S3Client_read_object_to_file',
-      );
-  late final _wire__crate__api__s3__S3Client_read_object_to_file =
-      _wire__crate__api__s3__S3Client_read_object_to_filePtr
-          .asFunction<
-            void Function(
-              int,
-              int,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            )
-          >();
-
-  void wire__crate__api__s3__S3Client_stat_object(
-    int port_,
-    int that,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
-  ) {
-    return _wire__crate__api__s3__S3Client_stat_object(port_, that, key);
-  }
-
-  late final _wire__crate__api__s3__S3Client_stat_objectPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.UintPtr,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-          )
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__s3__S3Client_stat_object');
-  late final _wire__crate__api__s3__S3Client_stat_object =
-      _wire__crate__api__s3__S3Client_stat_objectPtr
-          .asFunction<
-            void Function(int, int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
-          >();
-
-  void wire__crate__api__s3__S3Client_test_connection(int port_, int that) {
-    return _wire__crate__api__s3__S3Client_test_connection(port_, that);
-  }
-
-  late final _wire__crate__api__s3__S3Client_test_connectionPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
-        'frbgen_moodiary_rust_wire__crate__api__s3__S3Client_test_connection',
-      );
-  late final _wire__crate__api__s3__S3Client_test_connection =
-      _wire__crate__api__s3__S3Client_test_connectionPtr
-          .asFunction<void Function(int, int)>();
-
-  void wire__crate__api__s3__S3Client_write_object(
-    int port_,
-    int that,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
-    ffi.Pointer<wire_cst_list_prim_u_8_loose> data,
-  ) {
-    return _wire__crate__api__s3__S3Client_write_object(port_, that, key, data);
-  }
-
-  late final _wire__crate__api__s3__S3Client_write_objectPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.UintPtr,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
-          )
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__s3__S3Client_write_object');
-  late final _wire__crate__api__s3__S3Client_write_object =
-      _wire__crate__api__s3__S3Client_write_objectPtr
-          .asFunction<
-            void Function(
-              int,
-              int,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
-            )
-          >();
-
-  void wire__crate__api__s3__S3Client_write_object_file(
-    int port_,
-    int that,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> file_path,
-  ) {
-    return _wire__crate__api__s3__S3Client_write_object_file(
-      port_,
-      that,
-      key,
-      file_path,
-    );
-  }
-
-  late final _wire__crate__api__s3__S3Client_write_object_filePtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.UintPtr,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-          )
-        >
-      >(
-        'frbgen_moodiary_rust_wire__crate__api__s3__S3Client_write_object_file',
-      );
-  late final _wire__crate__api__s3__S3Client_write_object_file =
-      _wire__crate__api__s3__S3Client_write_object_filePtr
-          .asFunction<
-            void Function(
-              int,
-              int,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            )
-          >();
-
   void wire__crate__api__text__Tokenizer_tokenize(
     int port_,
     ffi.Pointer<wire_cst_list_prim_u_8_strict> text,
@@ -4087,283 +2514,6 @@ class RustLibWire implements BaseWire {
   late final _wire__crate__api__text__Tokenizer_tokenize_batch =
       _wire__crate__api__text__Tokenizer_tokenize_batchPtr
           .asFunction<void Function(int, ffi.Pointer<wire_cst_list_String>)>();
-
-  void wire__crate__api__webdav__DavClient_create_exclusive(
-    int port_,
-    int that,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
-    ffi.Pointer<wire_cst_list_prim_u_8_loose> data,
-  ) {
-    return _wire__crate__api__webdav__DavClient_create_exclusive(
-      port_,
-      that,
-      key,
-      data,
-    );
-  }
-
-  late final _wire__crate__api__webdav__DavClient_create_exclusivePtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.UintPtr,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
-          )
-        >
-      >(
-        'frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_create_exclusive',
-      );
-  late final _wire__crate__api__webdav__DavClient_create_exclusive =
-      _wire__crate__api__webdav__DavClient_create_exclusivePtr
-          .asFunction<
-            void Function(
-              int,
-              int,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
-            )
-          >();
-
-  void wire__crate__api__webdav__DavClient_delete_object(
-    int port_,
-    int that,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
-  ) {
-    return _wire__crate__api__webdav__DavClient_delete_object(port_, that, key);
-  }
-
-  late final _wire__crate__api__webdav__DavClient_delete_objectPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.UintPtr,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-          )
-        >
-      >(
-        'frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_delete_object',
-      );
-  late final _wire__crate__api__webdav__DavClient_delete_object =
-      _wire__crate__api__webdav__DavClient_delete_objectPtr
-          .asFunction<
-            void Function(int, int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
-          >();
-
-  void wire__crate__api__webdav__DavClient_new(
-    int port_,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> base_url,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> username,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> password,
-  ) {
-    return _wire__crate__api__webdav__DavClient_new(
-      port_,
-      base_url,
-      username,
-      password,
-    );
-  }
-
-  late final _wire__crate__api__webdav__DavClient_newPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-          )
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_new');
-  late final _wire__crate__api__webdav__DavClient_new =
-      _wire__crate__api__webdav__DavClient_newPtr
-          .asFunction<
-            void Function(
-              int,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            )
-          >();
-
-  void wire__crate__api__webdav__DavClient_read_object(
-    int port_,
-    int that,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
-  ) {
-    return _wire__crate__api__webdav__DavClient_read_object(port_, that, key);
-  }
-
-  late final _wire__crate__api__webdav__DavClient_read_objectPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.UintPtr,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-          )
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_read_object');
-  late final _wire__crate__api__webdav__DavClient_read_object =
-      _wire__crate__api__webdav__DavClient_read_objectPtr
-          .asFunction<
-            void Function(int, int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
-          >();
-
-  void wire__crate__api__webdav__DavClient_read_object_to_file(
-    int port_,
-    int that,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> file_path,
-  ) {
-    return _wire__crate__api__webdav__DavClient_read_object_to_file(
-      port_,
-      that,
-      key,
-      file_path,
-    );
-  }
-
-  late final _wire__crate__api__webdav__DavClient_read_object_to_filePtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.UintPtr,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-          )
-        >
-      >(
-        'frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_read_object_to_file',
-      );
-  late final _wire__crate__api__webdav__DavClient_read_object_to_file =
-      _wire__crate__api__webdav__DavClient_read_object_to_filePtr
-          .asFunction<
-            void Function(
-              int,
-              int,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            )
-          >();
-
-  void wire__crate__api__webdav__DavClient_stat_object(
-    int port_,
-    int that,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
-  ) {
-    return _wire__crate__api__webdav__DavClient_stat_object(port_, that, key);
-  }
-
-  late final _wire__crate__api__webdav__DavClient_stat_objectPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.UintPtr,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-          )
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_stat_object');
-  late final _wire__crate__api__webdav__DavClient_stat_object =
-      _wire__crate__api__webdav__DavClient_stat_objectPtr
-          .asFunction<
-            void Function(int, int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
-          >();
-
-  void wire__crate__api__webdav__DavClient_test_connection(
-    int port_,
-    int that,
-  ) {
-    return _wire__crate__api__webdav__DavClient_test_connection(port_, that);
-  }
-
-  late final _wire__crate__api__webdav__DavClient_test_connectionPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
-        'frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_test_connection',
-      );
-  late final _wire__crate__api__webdav__DavClient_test_connection =
-      _wire__crate__api__webdav__DavClient_test_connectionPtr
-          .asFunction<void Function(int, int)>();
-
-  void wire__crate__api__webdav__DavClient_write_object(
-    int port_,
-    int that,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
-    ffi.Pointer<wire_cst_list_prim_u_8_loose> data,
-  ) {
-    return _wire__crate__api__webdav__DavClient_write_object(
-      port_,
-      that,
-      key,
-      data,
-    );
-  }
-
-  late final _wire__crate__api__webdav__DavClient_write_objectPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.UintPtr,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
-          )
-        >
-      >(
-        'frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_write_object',
-      );
-  late final _wire__crate__api__webdav__DavClient_write_object =
-      _wire__crate__api__webdav__DavClient_write_objectPtr
-          .asFunction<
-            void Function(
-              int,
-              int,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
-            )
-          >();
-
-  void wire__crate__api__webdav__DavClient_write_object_file(
-    int port_,
-    int that,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> file_path,
-  ) {
-    return _wire__crate__api__webdav__DavClient_write_object_file(
-      port_,
-      that,
-      key,
-      file_path,
-    );
-  }
-
-  late final _wire__crate__api__webdav__DavClient_write_object_filePtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.UintPtr,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-          )
-        >
-      >(
-        'frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_write_object_file',
-      );
-  late final _wire__crate__api__webdav__DavClient_write_object_file =
-      _wire__crate__api__webdav__DavClient_write_object_filePtr
-          .asFunction<
-            void Function(
-              int,
-              int,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            )
-          >();
 
   void wire__crate__api__zip__Zip_add_bytes(
     int port_,
@@ -4637,58 +2787,6 @@ final class wire_cst_RigStreamEvent_Usage extends ffi.Struct {
     ..ref.cache_write_tokens = cache_write_tokens;
 }
 
-final class wire_cst_client_settings extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> base_url;
-
-  external ffi.Pointer<ffi.Uint32> connect_timeout_ms;
-
-  external ffi.Pointer<ffi.Uint32> timeout_ms;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> user_agent;
-
-  external ffi.Pointer<ffi.Uint32> max_redirects;
-
-  @ffi.Bool()
-  external bool throw_on_status;
-
-  static ffi.Pointer<wire_cst_client_settings> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> base_url,
-    required ffi.Pointer<ffi.Uint32> connect_timeout_ms,
-    required ffi.Pointer<ffi.Uint32> timeout_ms,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> user_agent,
-    required ffi.Pointer<ffi.Uint32> max_redirects,
-    required bool throw_on_status,
-  }) => $allocator<wire_cst_client_settings>()
-    ..ref.base_url = base_url
-    ..ref.connect_timeout_ms = connect_timeout_ms
-    ..ref.timeout_ms = timeout_ms
-    ..ref.user_agent = user_agent
-    ..ref.max_redirects = max_redirects
-    ..ref.throw_on_status = throw_on_status;
-}
-
-final class wire_cst_download_event extends ffi.Struct {
-  @ffi.Int64()
-  external int received;
-
-  @ffi.Int64()
-  external int total;
-
-  @ffi.Bool()
-  external bool done;
-
-  static ffi.Pointer<wire_cst_download_event> $allocate(
-    ffi.Allocator $allocator, {
-    required int received,
-    required int total,
-    required bool done,
-  }) => $allocator<wire_cst_download_event>()
-    ..ref.received = received
-    ..ref.total = total
-    ..ref.done = done;
-}
-
 final class wire_cst_graph_layout_params extends ffi.Struct {
   @ffi.Uint32()
   external int iterations;
@@ -4765,111 +2863,6 @@ final class wire_cst_graph_layout_params extends ffi.Struct {
     ..ref.normalize_scale = normalize_scale;
 }
 
-final class wire_cst_http_error extends ffi.Struct {
-  @ffi.Int32()
-  external int kind;
-
-  external ffi.Pointer<ffi.Uint16> status;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> message;
-
-  static ffi.Pointer<wire_cst_http_error> $allocate(
-    ffi.Allocator $allocator, {
-    required int kind,
-    required ffi.Pointer<ffi.Uint16> status,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> message,
-  }) => $allocator<wire_cst_http_error>()
-    ..ref.kind = kind
-    ..ref.status = status
-    ..ref.message = message;
-}
-
-final class wire_cst_http_response extends ffi.Struct {
-  @ffi.Uint16()
-  external int status;
-
-  external ffi.Pointer<wire_cst_list_key_value> headers;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> body;
-
-  static ffi.Pointer<wire_cst_http_response> $allocate(
-    ffi.Allocator $allocator, {
-    required int status,
-    required ffi.Pointer<wire_cst_list_key_value> headers,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> body,
-  }) => $allocator<wire_cst_http_response>()
-    ..ref.status = status
-    ..ref.headers = headers
-    ..ref.body = body;
-}
-
-final class wire_cst_http_server_request extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> method;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> path;
-
-  external ffi.Pointer<wire_cst_list_key_value> query;
-
-  external ffi.Pointer<wire_cst_list_key_value> headers;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> body;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> body_file_path;
-
-  static ffi.Pointer<wire_cst_http_server_request> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> method,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> path,
-    required ffi.Pointer<wire_cst_list_key_value> query,
-    required ffi.Pointer<wire_cst_list_key_value> headers,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> body,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> body_file_path,
-  }) => $allocator<wire_cst_http_server_request>()
-    ..ref.method = method
-    ..ref.path = path
-    ..ref.query = query
-    ..ref.headers = headers
-    ..ref.body = body
-    ..ref.body_file_path = body_file_path;
-}
-
-final class wire_cst_http_server_response extends ffi.Struct {
-  @ffi.Uint16()
-  external int status;
-
-  external ffi.Pointer<wire_cst_list_key_value> headers;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> body;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> body_file_path;
-
-  static ffi.Pointer<wire_cst_http_server_response> $allocate(
-    ffi.Allocator $allocator, {
-    required int status,
-    required ffi.Pointer<wire_cst_list_key_value> headers,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> body,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> body_file_path,
-  }) => $allocator<wire_cst_http_server_response>()
-    ..ref.status = status
-    ..ref.headers = headers
-    ..ref.body = body
-    ..ref.body_file_path = body_file_path;
-}
-
-final class wire_cst_key_value extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> key;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> value;
-
-  static ffi.Pointer<wire_cst_key_value> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> value,
-  }) => $allocator<wire_cst_key_value>()
-    ..ref.key = key
-    ..ref.value = value;
-}
-
 final class wire_cst_list_String extends ffi.Struct {
   external ffi.Pointer<ffi.Pointer<wire_cst_list_prim_u_8_strict>> ptr;
 
@@ -4881,21 +2874,6 @@ final class wire_cst_list_String extends ffi.Struct {
     required ffi.Pointer<ffi.Pointer<wire_cst_list_prim_u_8_strict>> ptr,
     required int len,
   }) => $allocator<wire_cst_list_String>()
-    ..ref.ptr = ptr
-    ..ref.len = len;
-}
-
-final class wire_cst_list_key_value extends ffi.Struct {
-  external ffi.Pointer<wire_cst_key_value> ptr;
-
-  @ffi.Int32()
-  external int len;
-
-  static ffi.Pointer<wire_cst_list_key_value> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<wire_cst_key_value> ptr,
-    required int len,
-  }) => $allocator<wire_cst_list_key_value>()
     ..ref.ptr = ptr
     ..ref.len = len;
 }
@@ -5095,37 +3073,6 @@ final class wire_cst_record_string_f_32 extends ffi.Struct {
     ..ref.field1 = field1;
 }
 
-final class wire_cst_request_options extends ffi.Struct {
-  @ffi.Int32()
-  external int method;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> url;
-
-  external ffi.Pointer<wire_cst_list_key_value> query;
-
-  external ffi.Pointer<wire_cst_list_key_value> headers;
-
-  external ffi.Pointer<ffi.Uint32> timeout_ms;
-
-  external ffi.Pointer<ffi.Bool> throw_on_status;
-
-  static ffi.Pointer<wire_cst_request_options> $allocate(
-    ffi.Allocator $allocator, {
-    required int method,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> url,
-    required ffi.Pointer<wire_cst_list_key_value> query,
-    required ffi.Pointer<wire_cst_list_key_value> headers,
-    required ffi.Pointer<ffi.Uint32> timeout_ms,
-    required ffi.Pointer<ffi.Bool> throw_on_status,
-  }) => $allocator<wire_cst_request_options>()
-    ..ref.method = method
-    ..ref.url = url
-    ..ref.query = query
-    ..ref.headers = headers
-    ..ref.timeout_ms = timeout_ms
-    ..ref.throw_on_status = throw_on_status;
-}
-
 final class wire_cst_rig_chat_message extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> role;
 
@@ -5225,24 +3172,4 @@ final class wire_cst_tokenize_result extends ffi.Struct {
   }) => $allocator<wire_cst_tokenize_result>()
     ..ref.cut = cut
     ..ref.cut_for_search = cut_for_search;
-}
-
-final class wire_cst_upload_event extends ffi.Struct {
-  @ffi.Int64()
-  external int sent;
-
-  @ffi.Int64()
-  external int total;
-
-  external ffi.Pointer<wire_cst_http_response> response;
-
-  static ffi.Pointer<wire_cst_upload_event> $allocate(
-    ffi.Allocator $allocator, {
-    required int sent,
-    required int total,
-    required ffi.Pointer<wire_cst_http_response> response,
-  }) => $allocator<wire_cst_upload_event>()
-    ..ref.sent = sent
-    ..ref.total = total
-    ..ref.response = response;
 }

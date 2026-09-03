@@ -4,9 +4,9 @@ library;
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:fast_http/fast_http.dart' as rust;
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_rust/sync.dart' as rust;
 import 'package:moodiary_sync/src/data/incremental_engine.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/secure_options.dart';
@@ -53,17 +53,19 @@ class WebDavSyncBackend with CloudSyncOrchestration {
     final opts = _options;
     final cached = _cachedClient;
     if (cached != null && listEquals(_cachedOptions, opts)) return cached;
-    final future =
-        rust.DavClient.newInstance(
-          baseUrl: _baseUrl,
-          username: _username,
-          password: _password,
-        ).onError((Object error, StackTrace stackTrace) {
-          // 构造失败的 Future 不能留缓存，否则后续操作会复用同一失败结果直到重启。
-          _cachedClient = null;
-          _cachedOptions = null;
-          Error.throwWithStackTrace(error, stackTrace);
-        });
+    final future = rust.FastHttp.ensureInitialized().then(
+      (_) =>
+          rust.DavClient.newInstance(
+            baseUrl: _baseUrl,
+            username: _username,
+            password: _password,
+          ).onError((Object error, StackTrace stackTrace) {
+            // 构造失败的 Future 不能留缓存，否则后续操作会复用同一失败结果直到重启。
+            _cachedClient = null;
+            _cachedOptions = null;
+            Error.throwWithStackTrace(error, stackTrace);
+          }),
+    );
     _cachedClient = future;
     _cachedOptions = opts;
     return future;

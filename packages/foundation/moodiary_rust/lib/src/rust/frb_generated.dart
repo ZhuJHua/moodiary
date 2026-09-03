@@ -9,11 +9,7 @@ import 'api/crypto.dart';
 import 'api/font.dart';
 import 'api/graph_layout.dart';
 import 'api/hf_tokenizer.dart';
-import 'api/http.dart';
-import 'api/http_server.dart';
-import 'api/s3.dart';
 import 'api/text.dart';
-import 'api/webdav.dart';
 import 'api/zip.dart';
 
 import 'dart:async';
@@ -78,7 +74,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 1916157028;
+  int get rustContentHash => -2017695175;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -135,53 +131,6 @@ abstract class RustLibApi extends BaseApi {
 
   CancelToken crateApiCancelCancelTokenNew();
 
-  Future<bool> crateApiWebdavDavClientCreateExclusive({
-    required DavClient that,
-    required String key,
-    required List<int> data,
-  });
-
-  Future<void> crateApiWebdavDavClientDeleteObject({
-    required DavClient that,
-    required String key,
-  });
-
-  Future<DavClient> crateApiWebdavDavClientNew({
-    required String baseUrl,
-    required String username,
-    required String password,
-  });
-
-  Future<Uint8List?> crateApiWebdavDavClientReadObject({
-    required DavClient that,
-    required String key,
-  });
-
-  Future<bool> crateApiWebdavDavClientReadObjectToFile({
-    required DavClient that,
-    required String key,
-    required String filePath,
-  });
-
-  Future<String> crateApiWebdavDavClientStatObject({
-    required DavClient that,
-    required String key,
-  });
-
-  Future<bool> crateApiWebdavDavClientTestConnection({required DavClient that});
-
-  Future<void> crateApiWebdavDavClientWriteObject({
-    required DavClient that,
-    required String key,
-    required List<int> data,
-  });
-
-  Future<void> crateApiWebdavDavClientWriteObjectFile({
-    required DavClient that,
-    required String key,
-    required String filePath,
-  });
-
   Future<String> crateApiFontFontReaderGetFontNameFromTtf({
     required String ttfFilePath,
   });
@@ -208,93 +157,6 @@ abstract class RustLibApi extends BaseApi {
   Future<int?> crateApiHfTokenizerHfTokenizerTokenId({
     required HfTokenizer that,
     required String token,
-  });
-
-  Stream<DownloadEvent> crateApiHttpHttpClientDownloadFile({
-    required HttpClient that,
-    required RequestOptions options,
-    required String destPath,
-    required CancelToken cancel,
-  });
-
-  Future<HttpClient> crateApiHttpHttpClientNew({
-    required ClientSettings settings,
-  });
-
-  Future<HttpResponse> crateApiHttpHttpClientRequest({
-    required HttpClient that,
-    required RequestOptions options,
-    Uint8List? body,
-  });
-
-  Stream<UploadEvent> crateApiHttpHttpClientUploadFile({
-    required HttpClient that,
-    required RequestOptions options,
-    required String filePath,
-    required CancelToken cancel,
-  });
-
-  int crateApiHttpServerHttpServerPort({required HttpServer that});
-
-  Future<HttpServer> crateApiHttpServerHttpServerStart({
-    required int preferredPort,
-    required bool loopbackOnly,
-    required String spoolDir,
-    required FutureOr<HttpServerResponse> Function(HttpServerRequest) onRequest,
-    required FutureOr<void> Function(PlatformInt64, PlatformInt64)
-    onBodyProgress,
-  });
-
-  void crateApiHttpServerHttpServerStop({required HttpServer that});
-
-  Future<bool> crateApiS3S3ClientCreateExclusive({
-    required S3Client that,
-    required String key,
-    required List<int> data,
-  });
-
-  Future<void> crateApiS3S3ClientDeleteObject({
-    required S3Client that,
-    required String key,
-  });
-
-  Future<S3Client> crateApiS3S3ClientNew({
-    required String endpoint,
-    required String accessKey,
-    required String secretKey,
-    required String bucket,
-    required bool useSsl,
-    String? region,
-  });
-
-  Future<Uint8List?> crateApiS3S3ClientReadObject({
-    required S3Client that,
-    required String key,
-  });
-
-  Future<bool> crateApiS3S3ClientReadObjectToFile({
-    required S3Client that,
-    required String key,
-    required String filePath,
-  });
-
-  Future<String> crateApiS3S3ClientStatObject({
-    required S3Client that,
-    required String key,
-  });
-
-  Future<bool> crateApiS3S3ClientTestConnection({required S3Client that});
-
-  Future<void> crateApiS3S3ClientWriteObject({
-    required S3Client that,
-    required String key,
-    required List<int> data,
-  });
-
-  Future<void> crateApiS3S3ClientWriteObjectFile({
-    required S3Client that,
-    required String key,
-    required String filePath,
   });
 
   Future<TokenizeResult> crateApiTextTokenizerTokenize({required String text});
@@ -366,14 +228,6 @@ abstract class RustLibApi extends BaseApi {
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_CancelTokenPtr;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_DavClient;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_DavClient;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_DavClientPtr;
-
-  RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_FontReader;
 
   RustArcDecrementStrongCountFnType
@@ -388,30 +242,6 @@ abstract class RustLibApi extends BaseApi {
   get rust_arc_decrement_strong_count_HfTokenizer;
 
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_HfTokenizerPtr;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_HttpClient;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_HttpClient;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_HttpClientPtr;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_HttpServer;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_HttpServer;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_HttpServerPtr;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_S3Client;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_S3Client;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_S3ClientPtr;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_Tokenizer;
@@ -739,339 +569,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "CancelToken_new", argNames: []);
 
   @override
-  Future<bool> crateApiWebdavDavClientCreateExclusive({
-    required DavClient that,
-    required String key,
-    required List<int> data,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-                that,
-              );
-          var arg1 = cst_encode_String(key);
-          var arg2 = cst_encode_list_prim_u_8_loose(data);
-          return wire.wire__crate__api__webdav__DavClient_create_exclusive(
-            port_,
-            arg0,
-            arg1,
-            arg2,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_bool,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiWebdavDavClientCreateExclusiveConstMeta,
-        argValues: [that, key, data],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiWebdavDavClientCreateExclusiveConstMeta =>
-      const TaskConstMeta(
-        debugName: "DavClient_create_exclusive",
-        argNames: ["that", "key", "data"],
-      );
-
-  @override
-  Future<void> crateApiWebdavDavClientDeleteObject({
-    required DavClient that,
-    required String key,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-                that,
-              );
-          var arg1 = cst_encode_String(key);
-          return wire.wire__crate__api__webdav__DavClient_delete_object(
-            port_,
-            arg0,
-            arg1,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_unit,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiWebdavDavClientDeleteObjectConstMeta,
-        argValues: [that, key],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiWebdavDavClientDeleteObjectConstMeta =>
-      const TaskConstMeta(
-        debugName: "DavClient_delete_object",
-        argNames: ["that", "key"],
-      );
-
-  @override
-  Future<DavClient> crateApiWebdavDavClientNew({
-    required String baseUrl,
-    required String username,
-    required String password,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 = cst_encode_String(baseUrl);
-          var arg1 = cst_encode_String(username);
-          var arg2 = cst_encode_String(password);
-          return wire.wire__crate__api__webdav__DavClient_new(
-            port_,
-            arg0,
-            arg1,
-            arg2,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData:
-              dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiWebdavDavClientNewConstMeta,
-        argValues: [baseUrl, username, password],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiWebdavDavClientNewConstMeta => const TaskConstMeta(
-    debugName: "DavClient_new",
-    argNames: ["baseUrl", "username", "password"],
-  );
-
-  @override
-  Future<Uint8List?> crateApiWebdavDavClientReadObject({
-    required DavClient that,
-    required String key,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-                that,
-              );
-          var arg1 = cst_encode_String(key);
-          return wire.wire__crate__api__webdav__DavClient_read_object(
-            port_,
-            arg0,
-            arg1,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_opt_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiWebdavDavClientReadObjectConstMeta,
-        argValues: [that, key],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiWebdavDavClientReadObjectConstMeta =>
-      const TaskConstMeta(
-        debugName: "DavClient_read_object",
-        argNames: ["that", "key"],
-      );
-
-  @override
-  Future<bool> crateApiWebdavDavClientReadObjectToFile({
-    required DavClient that,
-    required String key,
-    required String filePath,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-                that,
-              );
-          var arg1 = cst_encode_String(key);
-          var arg2 = cst_encode_String(filePath);
-          return wire.wire__crate__api__webdav__DavClient_read_object_to_file(
-            port_,
-            arg0,
-            arg1,
-            arg2,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_bool,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiWebdavDavClientReadObjectToFileConstMeta,
-        argValues: [that, key, filePath],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiWebdavDavClientReadObjectToFileConstMeta =>
-      const TaskConstMeta(
-        debugName: "DavClient_read_object_to_file",
-        argNames: ["that", "key", "filePath"],
-      );
-
-  @override
-  Future<String> crateApiWebdavDavClientStatObject({
-    required DavClient that,
-    required String key,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-                that,
-              );
-          var arg1 = cst_encode_String(key);
-          return wire.wire__crate__api__webdav__DavClient_stat_object(
-            port_,
-            arg0,
-            arg1,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_String,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiWebdavDavClientStatObjectConstMeta,
-        argValues: [that, key],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiWebdavDavClientStatObjectConstMeta =>
-      const TaskConstMeta(
-        debugName: "DavClient_stat_object",
-        argNames: ["that", "key"],
-      );
-
-  @override
-  Future<bool> crateApiWebdavDavClientTestConnection({
-    required DavClient that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-                that,
-              );
-          return wire.wire__crate__api__webdav__DavClient_test_connection(
-            port_,
-            arg0,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_bool,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiWebdavDavClientTestConnectionConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiWebdavDavClientTestConnectionConstMeta =>
-      const TaskConstMeta(
-        debugName: "DavClient_test_connection",
-        argNames: ["that"],
-      );
-
-  @override
-  Future<void> crateApiWebdavDavClientWriteObject({
-    required DavClient that,
-    required String key,
-    required List<int> data,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-                that,
-              );
-          var arg1 = cst_encode_String(key);
-          var arg2 = cst_encode_list_prim_u_8_loose(data);
-          return wire.wire__crate__api__webdav__DavClient_write_object(
-            port_,
-            arg0,
-            arg1,
-            arg2,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_unit,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiWebdavDavClientWriteObjectConstMeta,
-        argValues: [that, key, data],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiWebdavDavClientWriteObjectConstMeta =>
-      const TaskConstMeta(
-        debugName: "DavClient_write_object",
-        argNames: ["that", "key", "data"],
-      );
-
-  @override
-  Future<void> crateApiWebdavDavClientWriteObjectFile({
-    required DavClient that,
-    required String key,
-    required String filePath,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-                that,
-              );
-          var arg1 = cst_encode_String(key);
-          var arg2 = cst_encode_String(filePath);
-          return wire.wire__crate__api__webdav__DavClient_write_object_file(
-            port_,
-            arg0,
-            arg1,
-            arg2,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_unit,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiWebdavDavClientWriteObjectFileConstMeta,
-        argValues: [that, key, filePath],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiWebdavDavClientWriteObjectFileConstMeta =>
-      const TaskConstMeta(
-        debugName: "DavClient_write_object_file",
-        argNames: ["that", "key", "filePath"],
-      );
-
-  @override
   Future<String> crateApiFontFontReaderGetFontNameFromTtf({
     required String ttfFilePath,
   }) {
@@ -1272,631 +769,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(
         debugName: "HfTokenizer_token_id",
         argNames: ["that", "token"],
-      );
-
-  @override
-  Stream<DownloadEvent> crateApiHttpHttpClientDownloadFile({
-    required HttpClient that,
-    required RequestOptions options,
-    required String destPath,
-    required CancelToken cancel,
-  }) {
-    final sink = RustStreamSink<DownloadEvent>();
-    unawaited(
-      handler.executeNormal(
-        NormalTask(
-          callFfi: (port_) {
-            var arg0 =
-                cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-                  that,
-                );
-            var arg1 = cst_encode_StreamSink_download_event_Dco(sink);
-            var arg2 = cst_encode_box_autoadd_request_options(options);
-            var arg3 = cst_encode_String(destPath);
-            var arg4 =
-                cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCancelToken(
-                  cancel,
-                );
-            return wire.wire__crate__api__http__HttpClient_download_file(
-              port_,
-              arg0,
-              arg1,
-              arg2,
-              arg3,
-              arg4,
-            );
-          },
-          codec: DcoCodec(
-            decodeSuccessData: dco_decode_unit,
-            decodeErrorData: dco_decode_http_error,
-          ),
-          constMeta: kCrateApiHttpHttpClientDownloadFileConstMeta,
-          argValues: [that, sink, options, destPath, cancel],
-          apiImpl: this,
-        ),
-      ),
-    );
-    return sink.stream;
-  }
-
-  TaskConstMeta get kCrateApiHttpHttpClientDownloadFileConstMeta =>
-      const TaskConstMeta(
-        debugName: "HttpClient_download_file",
-        argNames: ["that", "sink", "options", "destPath", "cancel"],
-      );
-
-  @override
-  Future<HttpClient> crateApiHttpHttpClientNew({
-    required ClientSettings settings,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 = cst_encode_box_autoadd_client_settings(settings);
-          return wire.wire__crate__api__http__HttpClient_new(port_, arg0);
-        },
-        codec: DcoCodec(
-          decodeSuccessData:
-              dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient,
-          decodeErrorData: dco_decode_http_error,
-        ),
-        constMeta: kCrateApiHttpHttpClientNewConstMeta,
-        argValues: [settings],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiHttpHttpClientNewConstMeta =>
-      const TaskConstMeta(debugName: "HttpClient_new", argNames: ["settings"]);
-
-  @override
-  Future<HttpResponse> crateApiHttpHttpClientRequest({
-    required HttpClient that,
-    required RequestOptions options,
-    Uint8List? body,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-                that,
-              );
-          var arg1 = cst_encode_box_autoadd_request_options(options);
-          var arg2 = cst_encode_opt_list_prim_u_8_strict(body);
-          return wire.wire__crate__api__http__HttpClient_request(
-            port_,
-            arg0,
-            arg1,
-            arg2,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_http_response,
-          decodeErrorData: dco_decode_http_error,
-        ),
-        constMeta: kCrateApiHttpHttpClientRequestConstMeta,
-        argValues: [that, options, body],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiHttpHttpClientRequestConstMeta =>
-      const TaskConstMeta(
-        debugName: "HttpClient_request",
-        argNames: ["that", "options", "body"],
-      );
-
-  @override
-  Stream<UploadEvent> crateApiHttpHttpClientUploadFile({
-    required HttpClient that,
-    required RequestOptions options,
-    required String filePath,
-    required CancelToken cancel,
-  }) {
-    final sink = RustStreamSink<UploadEvent>();
-    unawaited(
-      handler.executeNormal(
-        NormalTask(
-          callFfi: (port_) {
-            var arg0 =
-                cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-                  that,
-                );
-            var arg1 = cst_encode_StreamSink_upload_event_Dco(sink);
-            var arg2 = cst_encode_box_autoadd_request_options(options);
-            var arg3 = cst_encode_String(filePath);
-            var arg4 =
-                cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCancelToken(
-                  cancel,
-                );
-            return wire.wire__crate__api__http__HttpClient_upload_file(
-              port_,
-              arg0,
-              arg1,
-              arg2,
-              arg3,
-              arg4,
-            );
-          },
-          codec: DcoCodec(
-            decodeSuccessData: dco_decode_unit,
-            decodeErrorData: dco_decode_http_error,
-          ),
-          constMeta: kCrateApiHttpHttpClientUploadFileConstMeta,
-          argValues: [that, sink, options, filePath, cancel],
-          apiImpl: this,
-        ),
-      ),
-    );
-    return sink.stream;
-  }
-
-  TaskConstMeta get kCrateApiHttpHttpClientUploadFileConstMeta =>
-      const TaskConstMeta(
-        debugName: "HttpClient_upload_file",
-        argNames: ["that", "sink", "options", "filePath", "cancel"],
-      );
-
-  @override
-  int crateApiHttpServerHttpServerPort({required HttpServer that}) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-                that,
-              );
-          return wire.wire__crate__api__http_server__HttpServer_port(arg0);
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_u_16,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiHttpServerHttpServerPortConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiHttpServerHttpServerPortConstMeta =>
-      const TaskConstMeta(debugName: "HttpServer_port", argNames: ["that"]);
-
-  @override
-  Future<HttpServer> crateApiHttpServerHttpServerStart({
-    required int preferredPort,
-    required bool loopbackOnly,
-    required String spoolDir,
-    required FutureOr<HttpServerResponse> Function(HttpServerRequest) onRequest,
-    required FutureOr<void> Function(PlatformInt64, PlatformInt64)
-    onBodyProgress,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 = cst_encode_u_16(preferredPort);
-          var arg1 = cst_encode_bool(loopbackOnly);
-          var arg2 = cst_encode_String(spoolDir);
-          var arg3 =
-              cst_encode_DartFn_Inputs_http_server_request_Output_http_server_response_AnyhowException(
-                onRequest,
-              );
-          var arg4 =
-              cst_encode_DartFn_Inputs_i_64_i_64_Output_unit_AnyhowException(
-                onBodyProgress,
-              );
-          return wire.wire__crate__api__http_server__HttpServer_start(
-            port_,
-            arg0,
-            arg1,
-            arg2,
-            arg3,
-            arg4,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData:
-              dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiHttpServerHttpServerStartConstMeta,
-        argValues: [
-          preferredPort,
-          loopbackOnly,
-          spoolDir,
-          onRequest,
-          onBodyProgress,
-        ],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiHttpServerHttpServerStartConstMeta =>
-      const TaskConstMeta(
-        debugName: "HttpServer_start",
-        argNames: [
-          "preferredPort",
-          "loopbackOnly",
-          "spoolDir",
-          "onRequest",
-          "onBodyProgress",
-        ],
-      );
-
-  @override
-  void crateApiHttpServerHttpServerStop({required HttpServer that}) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          var arg0 =
-              cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-                that,
-              );
-          return wire.wire__crate__api__http_server__HttpServer_stop(arg0);
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiHttpServerHttpServerStopConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiHttpServerHttpServerStopConstMeta =>
-      const TaskConstMeta(debugName: "HttpServer_stop", argNames: ["that"]);
-
-  @override
-  Future<bool> crateApiS3S3ClientCreateExclusive({
-    required S3Client that,
-    required String key,
-    required List<int> data,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-                that,
-              );
-          var arg1 = cst_encode_String(key);
-          var arg2 = cst_encode_list_prim_u_8_loose(data);
-          return wire.wire__crate__api__s3__S3Client_create_exclusive(
-            port_,
-            arg0,
-            arg1,
-            arg2,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_bool,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiS3S3ClientCreateExclusiveConstMeta,
-        argValues: [that, key, data],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiS3S3ClientCreateExclusiveConstMeta =>
-      const TaskConstMeta(
-        debugName: "S3Client_create_exclusive",
-        argNames: ["that", "key", "data"],
-      );
-
-  @override
-  Future<void> crateApiS3S3ClientDeleteObject({
-    required S3Client that,
-    required String key,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-                that,
-              );
-          var arg1 = cst_encode_String(key);
-          return wire.wire__crate__api__s3__S3Client_delete_object(
-            port_,
-            arg0,
-            arg1,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_unit,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiS3S3ClientDeleteObjectConstMeta,
-        argValues: [that, key],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiS3S3ClientDeleteObjectConstMeta =>
-      const TaskConstMeta(
-        debugName: "S3Client_delete_object",
-        argNames: ["that", "key"],
-      );
-
-  @override
-  Future<S3Client> crateApiS3S3ClientNew({
-    required String endpoint,
-    required String accessKey,
-    required String secretKey,
-    required String bucket,
-    required bool useSsl,
-    String? region,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 = cst_encode_String(endpoint);
-          var arg1 = cst_encode_String(accessKey);
-          var arg2 = cst_encode_String(secretKey);
-          var arg3 = cst_encode_String(bucket);
-          var arg4 = cst_encode_bool(useSsl);
-          var arg5 = cst_encode_opt_String(region);
-          return wire.wire__crate__api__s3__S3Client_new(
-            port_,
-            arg0,
-            arg1,
-            arg2,
-            arg3,
-            arg4,
-            arg5,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData:
-              dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiS3S3ClientNewConstMeta,
-        argValues: [endpoint, accessKey, secretKey, bucket, useSsl, region],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiS3S3ClientNewConstMeta => const TaskConstMeta(
-    debugName: "S3Client_new",
-    argNames: [
-      "endpoint",
-      "accessKey",
-      "secretKey",
-      "bucket",
-      "useSsl",
-      "region",
-    ],
-  );
-
-  @override
-  Future<Uint8List?> crateApiS3S3ClientReadObject({
-    required S3Client that,
-    required String key,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-                that,
-              );
-          var arg1 = cst_encode_String(key);
-          return wire.wire__crate__api__s3__S3Client_read_object(
-            port_,
-            arg0,
-            arg1,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_opt_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiS3S3ClientReadObjectConstMeta,
-        argValues: [that, key],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiS3S3ClientReadObjectConstMeta =>
-      const TaskConstMeta(
-        debugName: "S3Client_read_object",
-        argNames: ["that", "key"],
-      );
-
-  @override
-  Future<bool> crateApiS3S3ClientReadObjectToFile({
-    required S3Client that,
-    required String key,
-    required String filePath,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-                that,
-              );
-          var arg1 = cst_encode_String(key);
-          var arg2 = cst_encode_String(filePath);
-          return wire.wire__crate__api__s3__S3Client_read_object_to_file(
-            port_,
-            arg0,
-            arg1,
-            arg2,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_bool,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiS3S3ClientReadObjectToFileConstMeta,
-        argValues: [that, key, filePath],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiS3S3ClientReadObjectToFileConstMeta =>
-      const TaskConstMeta(
-        debugName: "S3Client_read_object_to_file",
-        argNames: ["that", "key", "filePath"],
-      );
-
-  @override
-  Future<String> crateApiS3S3ClientStatObject({
-    required S3Client that,
-    required String key,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-                that,
-              );
-          var arg1 = cst_encode_String(key);
-          return wire.wire__crate__api__s3__S3Client_stat_object(
-            port_,
-            arg0,
-            arg1,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_String,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiS3S3ClientStatObjectConstMeta,
-        argValues: [that, key],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiS3S3ClientStatObjectConstMeta =>
-      const TaskConstMeta(
-        debugName: "S3Client_stat_object",
-        argNames: ["that", "key"],
-      );
-
-  @override
-  Future<bool> crateApiS3S3ClientTestConnection({required S3Client that}) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-                that,
-              );
-          return wire.wire__crate__api__s3__S3Client_test_connection(
-            port_,
-            arg0,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_bool,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiS3S3ClientTestConnectionConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiS3S3ClientTestConnectionConstMeta =>
-      const TaskConstMeta(
-        debugName: "S3Client_test_connection",
-        argNames: ["that"],
-      );
-
-  @override
-  Future<void> crateApiS3S3ClientWriteObject({
-    required S3Client that,
-    required String key,
-    required List<int> data,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-                that,
-              );
-          var arg1 = cst_encode_String(key);
-          var arg2 = cst_encode_list_prim_u_8_loose(data);
-          return wire.wire__crate__api__s3__S3Client_write_object(
-            port_,
-            arg0,
-            arg1,
-            arg2,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_unit,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiS3S3ClientWriteObjectConstMeta,
-        argValues: [that, key, data],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiS3S3ClientWriteObjectConstMeta =>
-      const TaskConstMeta(
-        debugName: "S3Client_write_object",
-        argNames: ["that", "key", "data"],
-      );
-
-  @override
-  Future<void> crateApiS3S3ClientWriteObjectFile({
-    required S3Client that,
-    required String key,
-    required String filePath,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-                that,
-              );
-          var arg1 = cst_encode_String(key);
-          var arg2 = cst_encode_String(filePath);
-          return wire.wire__crate__api__s3__S3Client_write_object_file(
-            port_,
-            arg0,
-            arg1,
-            arg2,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_unit,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiS3S3ClientWriteObjectFileConstMeta,
-        argValues: [that, key, filePath],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiS3S3ClientWriteObjectFileConstMeta =>
-      const TaskConstMeta(
-        debugName: "S3Client_write_object_file",
-        argNames: ["that", "key", "filePath"],
       );
 
   @override
@@ -2276,77 +1148,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     };
   }
 
-  Future<void> Function(int, dynamic)
-  encode_DartFn_Inputs_http_server_request_Output_http_server_response_AnyhowException(
-    FutureOr<HttpServerResponse> Function(HttpServerRequest) raw,
-  ) {
-    return (callId, rawArg0) async {
-      final arg0 = dco_decode_http_server_request(rawArg0);
-
-      Box<HttpServerResponse>? rawOutput;
-      Box<AnyhowException>? rawError;
-      try {
-        rawOutput = Box(await raw(arg0));
-      } catch (e, s) {
-        rawError = Box(AnyhowException("$e\n\n$s"));
-      }
-
-      final serializer = SseSerializer(generalizedFrbRustBinding);
-      assert((rawOutput != null) ^ (rawError != null));
-      if (rawOutput != null) {
-        serializer.buffer.putUint8(0);
-        sse_encode_http_server_response(rawOutput.value, serializer);
-      } else {
-        serializer.buffer.putUint8(1);
-        sse_encode_AnyhowException(rawError!.value, serializer);
-      }
-      final output = serializer.intoRaw();
-
-      generalizedFrbRustBinding.dartFnDeliverOutput(
-        callId: callId,
-        ptr: output.ptr,
-        rustVecLen: output.rustVecLen,
-        dataLen: output.dataLen,
-      );
-    };
-  }
-
-  Future<void> Function(int, dynamic, dynamic)
-  encode_DartFn_Inputs_i_64_i_64_Output_unit_AnyhowException(
-    FutureOr<void> Function(PlatformInt64, PlatformInt64) raw,
-  ) {
-    return (callId, rawArg0, rawArg1) async {
-      final arg0 = dco_decode_i_64(rawArg0);
-      final arg1 = dco_decode_i_64(rawArg1);
-
-      Box<void>? rawOutput;
-      Box<AnyhowException>? rawError;
-      try {
-        rawOutput = Box(await raw(arg0, arg1));
-      } catch (e, s) {
-        rawError = Box(AnyhowException("$e\n\n$s"));
-      }
-
-      final serializer = SseSerializer(generalizedFrbRustBinding);
-      assert((rawOutput != null) ^ (rawError != null));
-      if (rawOutput != null) {
-        serializer.buffer.putUint8(0);
-        sse_encode_unit(rawOutput.value, serializer);
-      } else {
-        serializer.buffer.putUint8(1);
-        sse_encode_AnyhowException(rawError!.value, serializer);
-      }
-      final output = serializer.intoRaw();
-
-      generalizedFrbRustBinding.dartFnDeliverOutput(
-        callId: callId,
-        ptr: output.ptr,
-        rustVecLen: output.rustVecLen,
-        dataLen: output.dataLen,
-      );
-    };
-  }
-
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_Aes => wire
       .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes;
@@ -2372,14 +1173,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCancelToken;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_DavClient => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_DavClient => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient;
-
-  RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_FontReader => wire
       .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader;
 
@@ -2394,30 +1187,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RustArcDecrementStrongCountFnType
   get rust_arc_decrement_strong_count_HfTokenizer => wire
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_HttpClient => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_HttpClient => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_HttpServer => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_HttpServer => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_S3Client => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_S3Client => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_Tokenizer => wire
@@ -2469,15 +1238,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  DavClient
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return DavClientImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
   FontReader
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     dynamic raw,
@@ -2493,33 +1253,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return HfTokenizerImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  HttpClient
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return HttpClientImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  HttpServer
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return HttpServerImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  S3Client
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return S3ClientImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -2541,15 +1274,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  HttpServer
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return HttpServerImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
   Zip
   dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZip(
     dynamic raw,
@@ -2568,15 +1292,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  DavClient
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return DavClientImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
   HfTokenizer
   dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
     dynamic raw,
@@ -2586,53 +1301,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  HttpClient
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return HttpClientImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  HttpServer
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return HttpServerImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  S3Client
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return S3ClientImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
   FutureOr<String> Function(String, String)
   dco_decode_DartFn_Inputs_String_String_Output_String_AnyhowException(
     dynamic raw,
   ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    throw UnimplementedError('');
-  }
-
-  @protected
-  FutureOr<HttpServerResponse> Function(HttpServerRequest)
-  dco_decode_DartFn_Inputs_http_server_request_Output_http_server_response_AnyhowException(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    throw UnimplementedError('');
-  }
-
-  @protected
-  FutureOr<void> Function(PlatformInt64, PlatformInt64)
-  dco_decode_DartFn_Inputs_i_64_i_64_Output_unit_AnyhowException(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     throw UnimplementedError('');
   }
@@ -2679,15 +1351,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  DavClient
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return DavClientImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
   FontReader
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     dynamic raw,
@@ -2703,33 +1366,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return HfTokenizerImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  HttpClient
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return HttpClientImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  HttpServer
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return HttpServerImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  S3Client
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return S3ClientImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -2751,14 +1387,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  RustStreamSink<DownloadEvent> dco_decode_StreamSink_download_event_Dco(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    throw UnimplementedError();
-  }
-
-  @protected
   RustStreamSink<Float32List> dco_decode_StreamSink_list_prim_f_32_strict_Dco(
     dynamic raw,
   ) {
@@ -2768,14 +1396,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   RustStreamSink<RigStreamEvent> dco_decode_StreamSink_rig_stream_event_Dco(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    throw UnimplementedError();
-  }
-
-  @protected
-  RustStreamSink<UploadEvent> dco_decode_StreamSink_upload_event_Dco(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -2801,27 +1421,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  ClientSettings dco_decode_box_autoadd_client_settings(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_client_settings(raw);
-  }
-
-  @protected
   GraphLayoutParams dco_decode_box_autoadd_graph_layout_params(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_graph_layout_params(raw);
-  }
-
-  @protected
-  HttpResponse dco_decode_box_autoadd_http_response(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_http_response(raw);
-  }
-
-  @protected
-  RequestOptions dco_decode_box_autoadd_request_options(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_request_options(raw);
   }
 
   @protected
@@ -2831,44 +1433,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  int dco_decode_box_autoadd_u_16(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw as int;
-  }
-
-  @protected
   int dco_decode_box_autoadd_u_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
-  }
-
-  @protected
-  ClientSettings dco_decode_client_settings(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 6)
-      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
-    return ClientSettings(
-      baseUrl: dco_decode_opt_String(arr[0]),
-      connectTimeoutMs: dco_decode_opt_box_autoadd_u_32(arr[1]),
-      timeoutMs: dco_decode_opt_box_autoadd_u_32(arr[2]),
-      userAgent: dco_decode_opt_String(arr[3]),
-      maxRedirects: dco_decode_opt_box_autoadd_u_32(arr[4]),
-      throwOnStatus: dco_decode_bool(arr[5]),
-    );
-  }
-
-  @protected
-  DownloadEvent dco_decode_download_event(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
-    return DownloadEvent(
-      received: dco_decode_i_64(arr[0]),
-      total: dco_decode_i_64(arr[1]),
-      done: dco_decode_bool(arr[2]),
-    );
   }
 
   @protected
@@ -2902,83 +1469,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  HttpError dco_decode_http_error(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
-    return HttpError(
-      kind: dco_decode_http_error_kind(arr[0]),
-      status: dco_decode_opt_box_autoadd_u_16(arr[1]),
-      message: dco_decode_String(arr[2]),
-    );
-  }
-
-  @protected
-  HttpErrorKind dco_decode_http_error_kind(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return HttpErrorKind.values[raw as int];
-  }
-
-  @protected
-  HttpMethod dco_decode_http_method(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return HttpMethod.values[raw as int];
-  }
-
-  @protected
-  HttpResponse dco_decode_http_response(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
-    return HttpResponse(
-      status: dco_decode_u_16(arr[0]),
-      headers: dco_decode_list_key_value(arr[1]),
-      body: dco_decode_list_prim_u_8_strict(arr[2]),
-    );
-  }
-
-  @protected
-  HttpServerRequest dco_decode_http_server_request(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 6)
-      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
-    return HttpServerRequest(
-      method: dco_decode_String(arr[0]),
-      path: dco_decode_String(arr[1]),
-      query: dco_decode_list_key_value(arr[2]),
-      headers: dco_decode_list_key_value(arr[3]),
-      body: dco_decode_list_prim_u_8_strict(arr[4]),
-      bodyFilePath: dco_decode_opt_String(arr[5]),
-    );
-  }
-
-  @protected
-  HttpServerResponse dco_decode_http_server_response(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
-    return HttpServerResponse(
-      status: dco_decode_u_16(arr[0]),
-      headers: dco_decode_list_key_value(arr[1]),
-      body: dco_decode_list_prim_u_8_strict(arr[2]),
-      bodyFilePath: dco_decode_opt_String(arr[3]),
-    );
-  }
-
-  @protected
   int dco_decode_i_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
-  }
-
-  @protected
-  PlatformInt64 dco_decode_i_64(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dcoDecodeI64(raw);
   }
 
   @protected
@@ -2988,27 +1481,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  KeyValue dco_decode_key_value(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-    return KeyValue(
-      key: dco_decode_String(arr[0]),
-      value: dco_decode_String(arr[1]),
-    );
-  }
-
-  @protected
   List<String> dco_decode_list_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_String).toList();
-  }
-
-  @protected
-  List<KeyValue> dco_decode_list_key_value(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return (raw as List<dynamic>).map(dco_decode_key_value).toList();
   }
 
   @protected
@@ -3098,27 +1573,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  HttpResponse? dco_decode_opt_box_autoadd_http_response(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw == null ? null : dco_decode_box_autoadd_http_response(raw);
-  }
-
-  @protected
-  int? dco_decode_opt_box_autoadd_u_16(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw == null ? null : dco_decode_box_autoadd_u_16(raw);
-  }
-
-  @protected
   int? dco_decode_opt_box_autoadd_u_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_u_32(raw);
-  }
-
-  @protected
-  Uint8List? dco_decode_opt_list_prim_u_8_strict(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw == null ? null : dco_decode_list_prim_u_8_strict(raw);
   }
 
   @protected
@@ -3129,22 +1586,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       throw Exception('Expected 2 elements, got ${arr.length}');
     }
     return (dco_decode_String(arr[0]), dco_decode_f_32(arr[1]));
-  }
-
-  @protected
-  RequestOptions dco_decode_request_options(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 6)
-      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
-    return RequestOptions(
-      method: dco_decode_http_method(arr[0]),
-      url: dco_decode_String(arr[1]),
-      query: dco_decode_list_key_value(arr[2]),
-      headers: dco_decode_list_key_value(arr[3]),
-      timeoutMs: dco_decode_opt_box_autoadd_u_32(arr[4]),
-      throwOnStatus: dco_decode_opt_box_autoadd_bool(arr[5]),
-    );
   }
 
   @protected
@@ -3238,12 +1679,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  int dco_decode_u_16(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw as int;
-  }
-
-  @protected
   int dco_decode_u_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
@@ -3265,19 +1700,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void dco_decode_unit(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return;
-  }
-
-  @protected
-  UploadEvent dco_decode_upload_event(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
-    return UploadEvent(
-      sent: dco_decode_i_64(arr[0]),
-      total: dco_decode_i_64(arr[1]),
-      response: dco_decode_opt_box_autoadd_http_response(arr[2]),
-    );
   }
 
   @protected
@@ -3330,18 +1752,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  DavClient
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return DavClientImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
   FontReader
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     SseDeserializer deserializer,
@@ -3360,42 +1770,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return HfTokenizerImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  HttpClient
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return HttpClientImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  HttpServer
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return HttpServerImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  S3Client
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return S3ClientImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -3426,18 +1800,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  HttpServer
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return HttpServerImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
   Zip
   sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZip(
     SseDeserializer deserializer,
@@ -3462,60 +1824,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  DavClient
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return DavClientImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
   HfTokenizer
   sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return HfTokenizerImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  HttpClient
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return HttpClientImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  HttpServer
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return HttpServerImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  S3Client
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return S3ClientImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -3574,18 +1888,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  DavClient
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return DavClientImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
   FontReader
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     SseDeserializer deserializer,
@@ -3604,42 +1906,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return HfTokenizerImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  HttpClient
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return HttpClientImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  HttpServer
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return HttpServerImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  S3Client
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return S3ClientImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -3670,14 +1936,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  RustStreamSink<DownloadEvent> sse_decode_StreamSink_download_event_Dco(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    throw UnimplementedError('Unreachable ()');
-  }
-
-  @protected
   RustStreamSink<Float32List> sse_decode_StreamSink_list_prim_f_32_strict_Dco(
     SseDeserializer deserializer,
   ) {
@@ -3687,14 +1945,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   RustStreamSink<RigStreamEvent> sse_decode_StreamSink_rig_stream_event_Dco(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    throw UnimplementedError('Unreachable ()');
-  }
-
-  @protected
-  RustStreamSink<UploadEvent> sse_decode_StreamSink_upload_event_Dco(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -3721,35 +1971,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  ClientSettings sse_decode_box_autoadd_client_settings(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_client_settings(deserializer));
-  }
-
-  @protected
   GraphLayoutParams sse_decode_box_autoadd_graph_layout_params(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_graph_layout_params(deserializer));
-  }
-
-  @protected
-  HttpResponse sse_decode_box_autoadd_http_response(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_http_response(deserializer));
-  }
-
-  @protected
-  RequestOptions sse_decode_box_autoadd_request_options(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_request_options(deserializer));
   }
 
   @protected
@@ -3761,47 +1987,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  int sse_decode_box_autoadd_u_16(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_u_16(deserializer));
-  }
-
-  @protected
   int sse_decode_box_autoadd_u_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_u_32(deserializer));
-  }
-
-  @protected
-  ClientSettings sse_decode_client_settings(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_baseUrl = sse_decode_opt_String(deserializer);
-    var var_connectTimeoutMs = sse_decode_opt_box_autoadd_u_32(deserializer);
-    var var_timeoutMs = sse_decode_opt_box_autoadd_u_32(deserializer);
-    var var_userAgent = sse_decode_opt_String(deserializer);
-    var var_maxRedirects = sse_decode_opt_box_autoadd_u_32(deserializer);
-    var var_throwOnStatus = sse_decode_bool(deserializer);
-    return ClientSettings(
-      baseUrl: var_baseUrl,
-      connectTimeoutMs: var_connectTimeoutMs,
-      timeoutMs: var_timeoutMs,
-      userAgent: var_userAgent,
-      maxRedirects: var_maxRedirects,
-      throwOnStatus: var_throwOnStatus,
-    );
-  }
-
-  @protected
-  DownloadEvent sse_decode_download_event(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_received = sse_decode_i_64(deserializer);
-    var var_total = sse_decode_i_64(deserializer);
-    var var_done = sse_decode_bool(deserializer);
-    return DownloadEvent(
-      received: var_received,
-      total: var_total,
-      done: var_done,
-    );
   }
 
   @protected
@@ -3848,103 +2036,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  HttpError sse_decode_http_error(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_kind = sse_decode_http_error_kind(deserializer);
-    var var_status = sse_decode_opt_box_autoadd_u_16(deserializer);
-    var var_message = sse_decode_String(deserializer);
-    return HttpError(kind: var_kind, status: var_status, message: var_message);
-  }
-
-  @protected
-  HttpErrorKind sse_decode_http_error_kind(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var inner = sse_decode_i_32(deserializer);
-    return HttpErrorKind.values[inner];
-  }
-
-  @protected
-  HttpMethod sse_decode_http_method(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var inner = sse_decode_i_32(deserializer);
-    return HttpMethod.values[inner];
-  }
-
-  @protected
-  HttpResponse sse_decode_http_response(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_status = sse_decode_u_16(deserializer);
-    var var_headers = sse_decode_list_key_value(deserializer);
-    var var_body = sse_decode_list_prim_u_8_strict(deserializer);
-    return HttpResponse(
-      status: var_status,
-      headers: var_headers,
-      body: var_body,
-    );
-  }
-
-  @protected
-  HttpServerRequest sse_decode_http_server_request(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_method = sse_decode_String(deserializer);
-    var var_path = sse_decode_String(deserializer);
-    var var_query = sse_decode_list_key_value(deserializer);
-    var var_headers = sse_decode_list_key_value(deserializer);
-    var var_body = sse_decode_list_prim_u_8_strict(deserializer);
-    var var_bodyFilePath = sse_decode_opt_String(deserializer);
-    return HttpServerRequest(
-      method: var_method,
-      path: var_path,
-      query: var_query,
-      headers: var_headers,
-      body: var_body,
-      bodyFilePath: var_bodyFilePath,
-    );
-  }
-
-  @protected
-  HttpServerResponse sse_decode_http_server_response(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_status = sse_decode_u_16(deserializer);
-    var var_headers = sse_decode_list_key_value(deserializer);
-    var var_body = sse_decode_list_prim_u_8_strict(deserializer);
-    var var_bodyFilePath = sse_decode_opt_String(deserializer);
-    return HttpServerResponse(
-      status: var_status,
-      headers: var_headers,
-      body: var_body,
-      bodyFilePath: var_bodyFilePath,
-    );
-  }
-
-  @protected
   int sse_decode_i_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getInt32();
   }
 
   @protected
-  PlatformInt64 sse_decode_i_64(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getPlatformInt64();
-  }
-
-  @protected
   PlatformInt64 sse_decode_isize(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getPlatformInt64();
-  }
-
-  @protected
-  KeyValue sse_decode_key_value(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_key = sse_decode_String(deserializer);
-    var var_value = sse_decode_String(deserializer);
-    return KeyValue(key: var_key, value: var_value);
   }
 
   @protected
@@ -3955,18 +2055,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var ans_ = <String>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_String(deserializer));
-    }
-    return ans_;
-  }
-
-  @protected
-  List<KeyValue> sse_decode_list_key_value(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    var len_ = sse_decode_i_32(deserializer);
-    var ans_ = <KeyValue>[];
-    for (var idx_ = 0; idx_ < len_; ++idx_) {
-      ans_.add(sse_decode_key_value(deserializer));
     }
     return ans_;
   }
@@ -4111,30 +2199,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  HttpResponse? sse_decode_opt_box_autoadd_http_response(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    if (sse_decode_bool(deserializer)) {
-      return (sse_decode_box_autoadd_http_response(deserializer));
-    } else {
-      return null;
-    }
-  }
-
-  @protected
-  int? sse_decode_opt_box_autoadd_u_16(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    if (sse_decode_bool(deserializer)) {
-      return (sse_decode_box_autoadd_u_16(deserializer));
-    } else {
-      return null;
-    }
-  }
-
-  @protected
   int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -4146,41 +2210,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  Uint8List? sse_decode_opt_list_prim_u_8_strict(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    if (sse_decode_bool(deserializer)) {
-      return (sse_decode_list_prim_u_8_strict(deserializer));
-    } else {
-      return null;
-    }
-  }
-
-  @protected
   (String, double) sse_decode_record_string_f_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_field0 = sse_decode_String(deserializer);
     var var_field1 = sse_decode_f_32(deserializer);
     return (var_field0, var_field1);
-  }
-
-  @protected
-  RequestOptions sse_decode_request_options(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_method = sse_decode_http_method(deserializer);
-    var var_url = sse_decode_String(deserializer);
-    var var_query = sse_decode_list_key_value(deserializer);
-    var var_headers = sse_decode_list_key_value(deserializer);
-    var var_timeoutMs = sse_decode_opt_box_autoadd_u_32(deserializer);
-    var var_throwOnStatus = sse_decode_opt_box_autoadd_bool(deserializer);
-    return RequestOptions(
-      method: var_method,
-      url: var_url,
-      query: var_query,
-      headers: var_headers,
-      timeoutMs: var_timeoutMs,
-      throwOnStatus: var_throwOnStatus,
-    );
   }
 
   @protected
@@ -4292,12 +2326,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  int sse_decode_u_16(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getUint16();
-  }
-
-  @protected
   int sse_decode_u_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint32();
@@ -4318,19 +2346,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_decode_unit(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-  }
-
-  @protected
-  UploadEvent sse_decode_upload_event(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_sent = sse_decode_i_64(deserializer);
-    var var_total = sse_decode_i_64(deserializer);
-    var var_response = sse_decode_opt_box_autoadd_http_response(deserializer);
-    return UploadEvent(
-      sent: var_sent,
-      total: var_total,
-      response: var_response,
-    );
   }
 
   @protected
@@ -4371,16 +2386,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   int
-  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-    DavClient raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as DavClientImpl).frbInternalCstEncode(move: true);
-  }
-
-  @protected
-  int
   cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     FontReader raw,
   ) {
@@ -4397,36 +2402,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Cst (C-struct based), see doc to use other codecs
     // ignore: invalid_use_of_internal_member
     return (raw as HfTokenizerImpl).frbInternalCstEncode(move: true);
-  }
-
-  @protected
-  int
-  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-    HttpClient raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as HttpClientImpl).frbInternalCstEncode(move: true);
-  }
-
-  @protected
-  int
-  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    HttpServer raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as HttpServerImpl).frbInternalCstEncode(move: true);
-  }
-
-  @protected
-  int
-  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-    S3Client raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as S3ClientImpl).frbInternalCstEncode(move: true);
   }
 
   @protected
@@ -4451,16 +2426,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   int
-  cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    HttpServer raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as HttpServerImpl).frbInternalCstEncode(move: false);
-  }
-
-  @protected
-  int
   cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZip(
     Zip raw,
   ) {
@@ -4481,52 +2446,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   int
-  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-    DavClient raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as DavClientImpl).frbInternalCstEncode(move: false);
-  }
-
-  @protected
-  int
   cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
     HfTokenizer raw,
   ) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     // ignore: invalid_use_of_internal_member
     return (raw as HfTokenizerImpl).frbInternalCstEncode(move: false);
-  }
-
-  @protected
-  int
-  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-    HttpClient raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as HttpClientImpl).frbInternalCstEncode(move: false);
-  }
-
-  @protected
-  int
-  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    HttpServer raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as HttpServerImpl).frbInternalCstEncode(move: false);
-  }
-
-  @protected
-  int
-  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-    S3Client raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as S3ClientImpl).frbInternalCstEncode(move: false);
   }
 
   @protected
@@ -4537,30 +2462,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return cst_encode_DartOpaque(
       encode_DartFn_Inputs_String_String_Output_String_AnyhowException(raw),
-    );
-  }
-
-  @protected
-  PlatformPointer
-  cst_encode_DartFn_Inputs_http_server_request_Output_http_server_response_AnyhowException(
-    FutureOr<HttpServerResponse> Function(HttpServerRequest) raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    return cst_encode_DartOpaque(
-      encode_DartFn_Inputs_http_server_request_Output_http_server_response_AnyhowException(
-        raw,
-      ),
-    );
-  }
-
-  @protected
-  PlatformPointer
-  cst_encode_DartFn_Inputs_i_64_i_64_Output_unit_AnyhowException(
-    FutureOr<void> Function(PlatformInt64, PlatformInt64) raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    return cst_encode_DartOpaque(
-      encode_DartFn_Inputs_i_64_i_64_Output_unit_AnyhowException(raw),
     );
   }
 
@@ -4606,16 +2507,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   int
-  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-    DavClient raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as DavClientImpl).frbInternalCstEncode();
-  }
-
-  @protected
-  int
   cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     FontReader raw,
   ) {
@@ -4632,36 +2523,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Cst (C-struct based), see doc to use other codecs
     // ignore: invalid_use_of_internal_member
     return (raw as HfTokenizerImpl).frbInternalCstEncode();
-  }
-
-  @protected
-  int
-  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-    HttpClient raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as HttpClientImpl).frbInternalCstEncode();
-  }
-
-  @protected
-  int
-  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    HttpServer raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as HttpServerImpl).frbInternalCstEncode();
-  }
-
-  @protected
-  int
-  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-    S3Client raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as S3ClientImpl).frbInternalCstEncode();
   }
 
   @protected
@@ -4697,25 +2558,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  int cst_encode_http_error_kind(HttpErrorKind raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    return cst_encode_i_32(raw.index);
-  }
-
-  @protected
-  int cst_encode_http_method(HttpMethod raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    return cst_encode_i_32(raw.index);
-  }
-
-  @protected
   int cst_encode_i_32(int raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    return raw;
-  }
-
-  @protected
-  int cst_encode_u_16(int raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw;
   }
@@ -4788,19 +2631,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-    DavClient self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as DavClientImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     FontReader self,
     SseSerializer serializer,
@@ -4821,45 +2651,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as HfTokenizerImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-    HttpClient self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as HttpClientImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    HttpServer self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as HttpServerImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-    S3Client self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as S3ClientImpl).frbInternalSseEncode(move: true),
       serializer,
     );
   }
@@ -4892,19 +2683,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    HttpServer self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as HttpServerImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
   sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZip(
     Zip self,
     SseSerializer serializer,
@@ -4931,19 +2709,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-    DavClient self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as DavClientImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
   sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
     HfTokenizer self,
     SseSerializer serializer,
@@ -4956,45 +2721,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-    HttpClient self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as HttpClientImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    HttpServer self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as HttpServerImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-    S3Client self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as S3ClientImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
   void sse_encode_DartFn_Inputs_String_String_Output_String_AnyhowException(
     FutureOr<String> Function(String, String) self,
     SseSerializer serializer,
@@ -5002,33 +2728,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_DartOpaque(
       encode_DartFn_Inputs_String_String_Output_String_AnyhowException(self),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_DartFn_Inputs_http_server_request_Output_http_server_response_AnyhowException(
-    FutureOr<HttpServerResponse> Function(HttpServerRequest) self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_DartOpaque(
-      encode_DartFn_Inputs_http_server_request_Output_http_server_response_AnyhowException(
-        self,
-      ),
-      serializer,
-    );
-  }
-
-  @protected
-  void sse_encode_DartFn_Inputs_i_64_i_64_Output_unit_AnyhowException(
-    FutureOr<void> Function(PlatformInt64, PlatformInt64) self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_DartOpaque(
-      encode_DartFn_Inputs_i_64_i_64_Output_unit_AnyhowException(self),
       serializer,
     );
   }
@@ -5101,19 +2800,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
-    DavClient self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as DavClientImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
     FontReader self,
     SseSerializer serializer,
@@ -5140,45 +2826,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
-    HttpClient self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as HttpClientImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    HttpServer self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as HttpServerImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
-    S3Client self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as S3ClientImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer(
     Tokenizer self,
     SseSerializer serializer,
@@ -5199,23 +2846,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as ZipImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void sse_encode_StreamSink_download_event_Dco(
-    RustStreamSink<DownloadEvent> self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(
-      self.setupAndSerialize(
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_download_event,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-      ),
       serializer,
     );
   }
@@ -5255,23 +2885,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_StreamSink_upload_event_Dco(
-    RustStreamSink<UploadEvent> self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(
-      self.setupAndSerialize(
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_upload_event,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-      ),
-      serializer,
-    );
-  }
-
-  @protected
   void sse_encode_String(String self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_prim_u_8_strict(utf8.encoder.convert(self), serializer);
@@ -5290,39 +2903,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_box_autoadd_client_settings(
-    ClientSettings self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_client_settings(self, serializer);
-  }
-
-  @protected
   void sse_encode_box_autoadd_graph_layout_params(
     GraphLayoutParams self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_graph_layout_params(self, serializer);
-  }
-
-  @protected
-  void sse_encode_box_autoadd_http_response(
-    HttpResponse self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_http_response(self, serializer);
-  }
-
-  @protected
-  void sse_encode_box_autoadd_request_options(
-    RequestOptions self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_request_options(self, serializer);
   }
 
   @protected
@@ -5335,37 +2921,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_box_autoadd_u_16(int self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_u_16(self, serializer);
-  }
-
-  @protected
   void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_32(self, serializer);
-  }
-
-  @protected
-  void sse_encode_client_settings(
-    ClientSettings self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_opt_String(self.baseUrl, serializer);
-    sse_encode_opt_box_autoadd_u_32(self.connectTimeoutMs, serializer);
-    sse_encode_opt_box_autoadd_u_32(self.timeoutMs, serializer);
-    sse_encode_opt_String(self.userAgent, serializer);
-    sse_encode_opt_box_autoadd_u_32(self.maxRedirects, serializer);
-    sse_encode_bool(self.throwOnStatus, serializer);
-  }
-
-  @protected
-  void sse_encode_download_event(DownloadEvent self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_64(self.received, serializer);
-    sse_encode_i_64(self.total, serializer);
-    sse_encode_bool(self.done, serializer);
   }
 
   @protected
@@ -5397,72 +2955,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_http_error(HttpError self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_http_error_kind(self.kind, serializer);
-    sse_encode_opt_box_autoadd_u_16(self.status, serializer);
-    sse_encode_String(self.message, serializer);
-  }
-
-  @protected
-  void sse_encode_http_error_kind(
-    HttpErrorKind self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.index, serializer);
-  }
-
-  @protected
-  void sse_encode_http_method(HttpMethod self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.index, serializer);
-  }
-
-  @protected
-  void sse_encode_http_response(HttpResponse self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_u_16(self.status, serializer);
-    sse_encode_list_key_value(self.headers, serializer);
-    sse_encode_list_prim_u_8_strict(self.body, serializer);
-  }
-
-  @protected
-  void sse_encode_http_server_request(
-    HttpServerRequest self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(self.method, serializer);
-    sse_encode_String(self.path, serializer);
-    sse_encode_list_key_value(self.query, serializer);
-    sse_encode_list_key_value(self.headers, serializer);
-    sse_encode_list_prim_u_8_strict(self.body, serializer);
-    sse_encode_opt_String(self.bodyFilePath, serializer);
-  }
-
-  @protected
-  void sse_encode_http_server_response(
-    HttpServerResponse self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_u_16(self.status, serializer);
-    sse_encode_list_key_value(self.headers, serializer);
-    sse_encode_list_prim_u_8_strict(self.body, serializer);
-    sse_encode_opt_String(self.bodyFilePath, serializer);
-  }
-
-  @protected
   void sse_encode_i_32(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putInt32(self);
-  }
-
-  @protected
-  void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putPlatformInt64(self);
   }
 
   @protected
@@ -5472,30 +2967,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_key_value(KeyValue self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(self.key, serializer);
-    sse_encode_String(self.value, serializer);
-  }
-
-  @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_String(item, serializer);
-    }
-  }
-
-  @protected
-  void sse_encode_list_key_value(
-    List<KeyValue> self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.length, serializer);
-    for (final item in self) {
-      sse_encode_key_value(item, serializer);
     }
   }
 
@@ -5656,48 +3132,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_opt_box_autoadd_http_response(
-    HttpResponse? self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    sse_encode_bool(self != null, serializer);
-    if (self != null) {
-      sse_encode_box_autoadd_http_response(self, serializer);
-    }
-  }
-
-  @protected
-  void sse_encode_opt_box_autoadd_u_16(int? self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    sse_encode_bool(self != null, serializer);
-    if (self != null) {
-      sse_encode_box_autoadd_u_16(self, serializer);
-    }
-  }
-
-  @protected
   void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     sse_encode_bool(self != null, serializer);
     if (self != null) {
       sse_encode_box_autoadd_u_32(self, serializer);
-    }
-  }
-
-  @protected
-  void sse_encode_opt_list_prim_u_8_strict(
-    Uint8List? self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    sse_encode_bool(self != null, serializer);
-    if (self != null) {
-      sse_encode_list_prim_u_8_strict(self, serializer);
     }
   }
 
@@ -5709,20 +3149,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.$1, serializer);
     sse_encode_f_32(self.$2, serializer);
-  }
-
-  @protected
-  void sse_encode_request_options(
-    RequestOptions self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_http_method(self.method, serializer);
-    sse_encode_String(self.url, serializer);
-    sse_encode_list_key_value(self.query, serializer);
-    sse_encode_list_key_value(self.headers, serializer);
-    sse_encode_opt_box_autoadd_u_32(self.timeoutMs, serializer);
-    sse_encode_opt_box_autoadd_bool(self.throwOnStatus, serializer);
   }
 
   @protected
@@ -5818,12 +3244,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_u_16(int self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putUint16(self);
-  }
-
-  @protected
   void sse_encode_u_32(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putUint32(self);
@@ -5844,14 +3264,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_unit(void self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-  }
-
-  @protected
-  void sse_encode_upload_event(UploadEvent self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_64(self.sent, serializer);
-    sse_encode_i_64(self.total, serializer);
-    sse_encode_opt_box_autoadd_http_response(self.response, serializer);
   }
 
   @protected
@@ -5928,77 +3340,6 @@ class CancelTokenImpl extends RustOpaque implements CancelToken {
 }
 
 @sealed
-class DavClientImpl extends RustOpaque implements DavClient {
-  // Not to be used by end users
-  DavClientImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  DavClientImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_DavClient,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_DavClient,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_DavClientPtr,
-  );
-
-  /// 条件创建：仅当远端不存在时写入（`If-None-Match: *`）。返回 true=创建成功，
-  /// false=远端已存在（412）。不支持条件 PUT 的服务器会忽略该头、直接覆盖并返回 true ——
-  /// 调用方（Dart 租约层）必须用「写后回读校验」兜底。
-  Future<bool> createExclusive({
-    required String key,
-    required List<int> data,
-  }) => RustLib.instance.api.crateApiWebdavDavClientCreateExclusive(
-    that: this,
-    key: key,
-    data: data,
-  );
-
-  Future<void> deleteObject({required String key}) => RustLib.instance.api
-      .crateApiWebdavDavClientDeleteObject(that: this, key: key);
-
-  Future<Uint8List?> readObject({required String key}) => RustLib.instance.api
-      .crateApiWebdavDavClientReadObject(that: this, key: key);
-
-  /// 落盘版读取，整份不进内存。远端不存在返回 false 且不建文件。
-  Future<bool> readObjectToFile({
-    required String key,
-    required String filePath,
-  }) => RustLib.instance.api.crateApiWebdavDavClientReadObjectToFile(
-    that: this,
-    key: key,
-    filePath: filePath,
-  );
-
-  Future<String> statObject({required String key}) => RustLib.instance.api
-      .crateApiWebdavDavClientStatObject(that: this, key: key);
-
-  Future<bool> testConnection() =>
-      RustLib.instance.api.crateApiWebdavDavClientTestConnection(that: this);
-
-  Future<void> writeObject({required String key, required List<int> data}) =>
-      RustLib.instance.api.crateApiWebdavDavClientWriteObject(
-        that: this,
-        key: key,
-        data: data,
-      );
-
-  /// 文件版写入，整份不进内存。
-  Future<void> writeObjectFile({
-    required String key,
-    required String filePath,
-  }) => RustLib.instance.api.crateApiWebdavDavClientWriteObjectFile(
-    that: this,
-    key: key,
-    filePath: filePath,
-  );
-}
-
-@sealed
 class FontReaderImpl extends RustOpaque implements FontReader {
   // Not to be used by end users
   FontReaderImpl.frbInternalDcoDecode(List<dynamic> wire)
@@ -6048,162 +3389,6 @@ class HfTokenizerImpl extends RustOpaque implements HfTokenizer {
 
   Future<int?> tokenId({required String token}) => RustLib.instance.api
       .crateApiHfTokenizerHfTokenizerTokenId(that: this, token: token);
-}
-
-@sealed
-class HttpClientImpl extends RustOpaque implements HttpClient {
-  // Not to be used by end users
-  HttpClientImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  HttpClientImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_HttpClient,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_HttpClient,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_HttpClientPtr,
-  );
-
-  /// 流式下载到本地文件（不整块进内存）。进度经 [sink] 回报，最后一条 `done=true`；
-  /// 取消或失败删除半成品，错误经 `sink.add_error` 下发。
-  Stream<DownloadEvent> downloadFile({
-    required RequestOptions options,
-    required String destPath,
-    required CancelToken cancel,
-  }) => RustLib.instance.api.crateApiHttpHttpClientDownloadFile(
-    that: this,
-    options: options,
-    destPath: destPath,
-    cancel: cancel,
-  );
-
-  Future<HttpResponse> request({
-    required RequestOptions options,
-    Uint8List? body,
-  }) => RustLib.instance.api.crateApiHttpHttpClientRequest(
-    that: this,
-    options: options,
-    body: body,
-  );
-
-  /// 流式上传本地文件（不整块进内存）。进度经 [sink] 回报（`response` 为 None），
-  /// 最后一条事件携带最终响应。
-  Stream<UploadEvent> uploadFile({
-    required RequestOptions options,
-    required String filePath,
-    required CancelToken cancel,
-  }) => RustLib.instance.api.crateApiHttpHttpClientUploadFile(
-    that: this,
-    options: options,
-    filePath: filePath,
-    cancel: cancel,
-  );
-}
-
-@sealed
-class HttpServerImpl extends RustOpaque implements HttpServer {
-  // Not to be used by end users
-  HttpServerImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  HttpServerImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_HttpServer,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_HttpServer,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_HttpServerPtr,
-  );
-
-  int port() =>
-      RustLib.instance.api.crateApiHttpServerHttpServerPort(that: this);
-
-  void stop() =>
-      RustLib.instance.api.crateApiHttpServerHttpServerStop(that: this);
-}
-
-@sealed
-class S3ClientImpl extends RustOpaque implements S3Client {
-  // Not to be used by end users
-  S3ClientImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  S3ClientImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_S3Client,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_S3Client,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_S3ClientPtr,
-  );
-
-  /// 条件创建：仅当远端不存在时写入（`If-None-Match: *`）。返回 true=创建成功，
-  /// false=远端已存在（412）。不支持条件 PUT 的实现会忽略该头、直接覆盖并返回 true ——
-  /// 调用方（Dart 租约层）必须用「写后回读校验」兜底。
-  Future<bool> createExclusive({
-    required String key,
-    required List<int> data,
-  }) => RustLib.instance.api.crateApiS3S3ClientCreateExclusive(
-    that: this,
-    key: key,
-    data: data,
-  );
-
-  /// 「不存在」视为成功；其它错误如实上抛 —— 引擎依赖删除结果决定 tombstone 是否已被远端接收。
-  Future<void> deleteObject({required String key}) =>
-      RustLib.instance.api.crateApiS3S3ClientDeleteObject(that: this, key: key);
-
-  /// 仅「不存在」（404）返回空 Vec；其它错误如实上抛 —— 调用方（同步引擎）
-  /// 必须能区分「不存在」与「读取失败」，否则 push 会在网络抖动时把 manifest 从零重建。
-  Future<Uint8List?> readObject({required String key}) =>
-      RustLib.instance.api.crateApiS3S3ClientReadObject(that: this, key: key);
-
-  /// 落盘版读取，整份不进内存。远端不存在返回 false 且不建文件。
-  Future<bool> readObjectToFile({
-    required String key,
-    required String filePath,
-  }) => RustLib.instance.api.crateApiS3S3ClientReadObjectToFile(
-    that: this,
-    key: key,
-    filePath: filePath,
-  );
-
-  /// HEAD 请求取 Last-Modified，不存在返回空字符串。调用方只判空/非空，不解析格式。
-  Future<String> statObject({required String key}) =>
-      RustLib.instance.api.crateApiS3S3ClientStatObject(that: this, key: key);
-
-  Future<bool> testConnection() =>
-      RustLib.instance.api.crateApiS3S3ClientTestConnection(that: this);
-
-  Future<void> writeObject({required String key, required List<int> data}) =>
-      RustLib.instance.api.crateApiS3S3ClientWriteObject(
-        that: this,
-        key: key,
-        data: data,
-      );
-
-  /// 文件版写入，整份不进内存。
-  Future<void> writeObjectFile({
-    required String key,
-    required String filePath,
-  }) => RustLib.instance.api.crateApiS3S3ClientWriteObjectFile(
-    that: this,
-    key: key,
-    filePath: filePath,
-  );
 }
 
 @sealed

@@ -16,16 +16,9 @@ members = ["crates/*/*"]
 
 [workspace.dependencies]
 anyhow = "=1.0.104"
-bytes = "=1.12.1"
 futures = { version = "=0.3.34", default-features = false, features = ["std", "async-await"] }
 serde_json = "=1.0.151"
-url = "=2.5.8"
 
-tokio = { version = "=1.53.1", default-features = false }
-tokio-util = { version = "=0.7.19", default-features = false, features = ["io"] }
-hyper = { version = "=1.11.0", default-features = false, features = ["server", "http1"] }
-hyper-util = { version = "=0.1.20", default-features = false, features = ["tokio"] }
-http-body-util = "=0.1.5"
 reqwest = { version = "=0.13.4", default-features = false, features = [
     "rustls-no-provider",
     "gzip",
@@ -35,8 +28,6 @@ reqwest = { version = "=0.13.4", default-features = false, features = [
 ] }
 rustls = { version = "=0.23.43", default-features = false, features = ["ring", "std", "tls12"] }
 webpki-roots = "=1.0.9"
-reqwest_dav = { version = "=0.3.3", default-features = false, features = ["rustls-tls-no-provider"] }
-rusty-s3 = { version = "=0.10.2", default-features = false, features = ["rustcrypto"] }
 
 ring = "=0.17.14"
 argon2 = { version = "=0.6.0-rc.8", features = ["default"] }
@@ -58,11 +49,9 @@ moodiary-archive = { path = "crates/foundation/archive" }
 moodiary-crypto = { path = "crates/foundation/crypto" }
 moodiary-font = { path = "crates/foundation/font" }
 moodiary-hf-tokenizer = { path = "crates/foundation/hf_tokenizer" }
-moodiary-http = { path = "crates/foundation/http" }
 moodiary-text = { path = "crates/foundation/text" }
 moodiary-assistant = { path = "crates/feature/assistant" }
 moodiary-graph = { path = "crates/feature/graph" }
-moodiary-sync = { path = "crates/feature/sync" }
 
 [dependencies]
 flutter_rust_bridge = "=2.13.0"
@@ -74,8 +63,6 @@ moodiary-crypto = { workspace = true }
 moodiary-font = { workspace = true }
 moodiary-graph = { workspace = true }
 moodiary-hf-tokenizer = { workspace = true }
-moodiary-http = { workspace = true }
-moodiary-sync = { workspace = true }
 moodiary-text = { workspace = true }
 
 

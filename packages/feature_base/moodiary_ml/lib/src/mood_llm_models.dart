@@ -4,7 +4,6 @@ import 'package:injectable/injectable.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
-import 'package:moodiary_rust/foundation.dart' show CancelToken;
 import 'package:moodiary_storage/moodiary_storage.dart';
 
 import 'onnx_mood_classifier.dart';

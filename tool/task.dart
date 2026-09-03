@@ -86,6 +86,7 @@ const _frbPkgDirs = [
   _rustPkgDir,
   'packages/foundation/fast_image',
   'packages/foundation/fast_press',
+  'packages/foundation/fast_http',
 ];
 
 /// CLI 是整条链上唯一不由仓库钉版本的东西，而它默认开着 auto_upgrade_dependency ——

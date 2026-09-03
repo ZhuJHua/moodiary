@@ -68,6 +68,7 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
       moodiary_rust/         #   Rust FFI package (cargo workspace in rust/, built by hook/build.dart)
       fast_image/            #   图片管线：派生物 / 区域解码 / 分片看图页，自带 FRB 与原生库 libfastimage
       fast_press/            #   导出压印：IR → PDF(typst) / DOCX，自带 FRB 与原生库 libfastpress（只给 moodiary_export）
+      fast_http/             #   HTTP 客户端/服务端 + WebDAV/S3，自带 FRB 与原生库 libfasthttp（只给 moodiary_http / moodiary_sync）
       moodiary_utils/        #   pure utils + content converters (tiptap/markdown/quill)
       mui/                   #   设计系统：material_ui 的**补充**（详见下）
     core/                    # 无领域基建。内部次序 platform,http → storage → files → theme
@@ -164,11 +165,11 @@ In-app layering within `mobile/lib` (same script): `gen → core → data → co
 
 ### Rust —— 详见 packages/foundation/moodiary_rust/CLAUDE.md
 
-业务 Rust 都在 `moodiary_rust` 这一个 .so 里，所有权用六个门面表达
-（foundation / assistant / sync / graph / rust / testing），零基线闸门在
+moodiary_rust 正在按 `docs/rust-split-plan.md` 拆成若干 `fast_*` 包（各自一个 .so、按需
+延迟装载）；还没拆走的部分所有权用门面表达（foundation / assistant / graph / rust / testing），零基线闸门在
 `tool/check_layers.dart` 的 `_rustFacadeOwners`。workspace 分层、拆库与体积实测、
 依赖收窄的四条结论都在 `packages/foundation/moodiary_rust/CLAUDE.md`（碰那棵目录树时自动加载）。
-**两个例外**各自带 FRB 与自己的原生库：图片管线 `packages/foundation/fast_image`
-（`libfastimage`：turbojpeg / libwebp / png，全仓开放）与导出压印 `packages/foundation/fast_press`
-（`libfastpress`：typst / docx-rs，只有 `moodiary_export` 与组合根能依赖，闸门 `_nativePkgOwners`）；
-`dart tool/task.dart gen-rust` 与 `licenses` 三个包都跑。
+已拆出的包各自带 FRB 与原生库：`fast_image`（libfastimage，全仓开放）、`fast_press`
+（libfastpress，只给 `moodiary_export`）、`fast_http`（libfasthttp，只给 `moodiary_http` /
+`moodiary_sync`）；归属闸门 `_nativePkgOwners`。`dart tool/task.dart gen-rust` 与 `licenses`
+对所有 FRB 包都跑（名单在 `tool/task.dart` 的 `_frbPkgDirs`）。

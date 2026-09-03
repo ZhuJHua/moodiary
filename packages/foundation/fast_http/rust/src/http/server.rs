@@ -17,7 +17,7 @@ use tokio::io::{AsyncReadExt, AsyncSeekExt, AsyncWriteExt};
 use tokio::net::TcpListener;
 use tokio::sync::oneshot;
 
-use crate::KeyValue;
+use crate::http::KeyValue;
 
 pub struct HttpServerRequest {
     pub method: String,
@@ -413,7 +413,7 @@ mod tests {
 
     /// 不用 `reqwest::Client::new()`：它不装 rustls provider，单独跑本 crate 时建 client 即 panic。
     fn test_client() -> reqwest::Client {
-        crate::client::builder().unwrap().build().unwrap()
+        crate::http::client::builder().unwrap().build().unwrap()
     }
 
     fn test_dir(tag: &str) -> PathBuf {
@@ -598,7 +598,7 @@ mod tests {
 
     #[tokio::test]
     async fn upload_file_streams_to_server_with_content_length() {
-        use crate::request::{ClientSettings, HttpClient, HttpMethod};
+        use crate::http::request::{ClientSettings, HttpClient, HttpMethod};
 
         let dir = test_dir("upload");
         let payload = vec![3u8; 3 * 1024 * 1024];
@@ -643,7 +643,7 @@ mod tests {
         let sent_in_progress = sent.clone();
         let (response, total) = client
             .upload_file(
-                crate::request::RequestOptions {
+                crate::http::request::RequestOptions {
                     method: HttpMethod::Post,
                     url: format!("http://127.0.0.1:{}/upload", server.port()),
                     query: vec![],

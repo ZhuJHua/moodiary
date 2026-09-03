@@ -234,7 +234,6 @@ List<String> _checkRustLayers() {
 /// moodiary_rust 的门面归属。
 const Map<String, Set<String>> _rustFacadeOwners = {
   'assistant': {'moodiary_assistant'},
-  'sync': {'moodiary_sync'},
   'graph': {'moodiary_diary'},
   // app 门面：每个组合根都够得着（desktop 进树后 _appPubNames 自动带上）。
   'rust': {'moodiary_mobile', 'moodiary_desktop'},
@@ -247,6 +246,8 @@ const Map<String, Set<String>> _rustFacadeOwners = {
 /// app 组合根为了 `XxxLib.init()` 总在名单里。fast_image 全仓开放，不在这里。
 const Map<String, Set<String>> _nativePkgOwners = {
   'fast_press': {'moodiary_export'},
+  // 客户端给 core 的 http 端口实现，WebDAV / S3 给同步后端。
+  'fast_http': {'moodiary_http', 'moodiary_sync'},
 };
 
 /// 校验 _nativePkgOwners：读每个 pubspec 的正式依赖，返回违规描述（空表示通过）。

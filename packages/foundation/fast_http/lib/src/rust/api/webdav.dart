@@ -21,7 +21,7 @@ abstract class DavClient implements RustOpaqueInterface {
     required String baseUrl,
     required String username,
     required String password,
-  }) => RustLib.instance.api.crateApiWebdavDavClientNew(
+  }) => FastHttpLib.instance.api.crateApiWebdavDavClientNew(
     baseUrl: baseUrl,
     username: username,
     password: password,

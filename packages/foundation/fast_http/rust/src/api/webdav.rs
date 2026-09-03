@@ -3,13 +3,13 @@ use flutter_rust_bridge::frb;
 
 #[frb(opaque)]
 pub struct DavClient {
-    inner: moodiary_sync::webdav::DavClient,
+    inner: crate::sync::webdav::DavClient,
 }
 
 impl DavClient {
     pub fn new(base_url: String, username: String, password: String) -> Result<DavClient> {
         Ok(DavClient {
-            inner: moodiary_sync::webdav::DavClient::new(base_url, username, password)?,
+            inner: crate::sync::webdav::DavClient::new(base_url, username, password)?,
         })
     }
 

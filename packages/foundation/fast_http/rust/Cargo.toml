@@ -1,0 +1,44 @@
+[package]
+name = "fasthttp"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+# 产物名 libfasthttp.*：native_toolchain_rust 按 lib.name 取文件名，`FastHttpLib.init()`
+# 也按这个 stem 找库。
+name = "fasthttp"
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+flutter_rust_bridge = "=2.13.0"
+anyhow = "=1.0.104"
+bytes = "=1.12.1"
+futures = { version = "=0.3.34", default-features = false, features = ["std", "async-await"] }
+url = "=2.5.8"
+tokio = { version = "=1.53.1", default-features = false, features = ["net", "fs", "io-util", "sync", "rt", "macros"] }
+tokio-util = { version = "=0.7.19", default-features = false, features = ["io"] }
+hyper = { version = "=1.11.0", default-features = false, features = ["server", "http1"] }
+hyper-util = { version = "=0.1.20", default-features = false, features = ["tokio"] }
+http-body-util = "=0.1.5"
+# gzip / brotli / deflate 必须开着：和风天气无条件 gzip。
+reqwest = { version = "=0.13.4", default-features = false, features = [
+    "rustls-no-provider",
+    "gzip",
+    "brotli",
+    "deflate",
+    "stream",
+] }
+rustls = { version = "=0.23.43", default-features = false, features = ["ring", "std", "tls12"] }
+webpki-roots = "=1.0.9"
+reqwest_dav = { version = "=0.3.3", default-features = false, features = ["rustls-tls-no-provider"] }
+rusty-s3 = { version = "=0.10.2", default-features = false, features = ["rustcrypto"] }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
+
+# 与其他 fast_* 同口径；不要加 panic = "abort"（FRB 靠 catch_unwind 把 panic 转成 Dart 异常）。
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "symbols"

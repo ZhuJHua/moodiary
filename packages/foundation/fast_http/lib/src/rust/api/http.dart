@@ -22,7 +22,7 @@ abstract class HttpClient implements RustOpaqueInterface {
 
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
   static Future<HttpClient> newInstance({required ClientSettings settings}) =>
-      RustLib.instance.api.crateApiHttpHttpClientNew(settings: settings);
+      FastHttpLib.instance.api.crateApiHttpHttpClientNew(settings: settings);
 
   Future<HttpResponse> request({
     required RequestOptions options,

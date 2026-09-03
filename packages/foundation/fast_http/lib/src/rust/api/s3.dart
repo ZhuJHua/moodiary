@@ -25,7 +25,7 @@ abstract class S3Client implements RustOpaqueInterface {
     required String bucket,
     required bool useSsl,
     String? region,
-  }) => RustLib.instance.api.crateApiS3S3ClientNew(
+  }) => FastHttpLib.instance.api.crateApiS3S3ClientNew(
     endpoint: endpoint,
     accessKey: accessKey,
     secretKey: secretKey,

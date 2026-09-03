@@ -3,7 +3,7 @@ use flutter_rust_bridge::frb;
 
 #[frb(opaque)]
 pub struct S3Client {
-    inner: moodiary_sync::s3::S3Client,
+    inner: crate::sync::s3::S3Client,
 }
 
 impl S3Client {
@@ -16,7 +16,7 @@ impl S3Client {
         region: Option<String>,
     ) -> Result<S3Client> {
         Ok(S3Client {
-            inner: moodiary_sync::s3::S3Client::new(
+            inner: crate::sync::s3::S3Client::new(
                 endpoint, access_key, secret_key, bucket, use_ssl, region,
             )?,
         })

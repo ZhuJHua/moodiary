@@ -30,7 +30,7 @@ impl DavClient {
         // 注入共享客户端：reqwest_dav 默认 agent 用 reqwest 0.13 的 rustls-platform-verifier，
         // 在 Android 上未初始化会 panic；client::shared 仅在 Android 换成内置 webpki 根。
         let client = ClientBuilder::new()
-            .set_agent(moodiary_http::client::shared()?)
+            .set_agent(crate::http::client::shared()?)
             .set_host(base_url)
             .set_auth(Auth::Basic(username, password))
             .build()
@@ -106,7 +106,7 @@ impl DavClient {
             Err(e) if dav_is_not_found(&e) => return Ok(None),
             Err(e) => return Err(anyhow::anyhow!("Failed to read {key}: {e}")),
         };
-        moodiary_http::client::read_body(resp)
+        crate::http::client::read_body(resp)
             .await
             .map(Some)
             .map_err(|e| anyhow::anyhow!("Failed to read {key}: {e}"))
@@ -120,7 +120,7 @@ impl DavClient {
             Err(e) if dav_is_not_found(&e) => return Ok(false),
             Err(e) => return Err(anyhow::anyhow!("Failed to read {key}: {e}")),
         };
-        moodiary_http::client::write_body_to_file(resp, &file_path).await?;
+        crate::http::client::write_body_to_file(resp, &file_path).await?;
         Ok(true)
     }
 
@@ -154,9 +154,9 @@ impl DavClient {
         file_path: &str,
         override_url: Option<&str>,
     ) -> Result<reqwest::Response> {
-        let (body, len) = moodiary_http::client::file_body(file_path).await?;
+        let (body, len) = crate::http::client::file_body(file_path).await?;
         let req = match override_url {
-            Some(url) => moodiary_http::client::shared()?.put(url),
+            Some(url) => crate::http::client::shared()?.put(url),
             None => self
                 .client
                 .start_request(Method::PUT, path)
