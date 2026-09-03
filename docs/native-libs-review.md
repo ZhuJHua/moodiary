@@ -195,3 +195,32 @@ regex，press 33 MB 且按需装载，不值得为它合并任何东西。text /
 | Android Play Feature Delivery：fast_press 做按需下载模块 | 首包 −33 MB（下载约 −15 MB） | 只对 Play 分发有效，iOS 无对应机制；要动 Gradle dynamic feature + split 安装后的 dlopen 路径 |
 
 下载体积口径：APK 里 .so 不压缩，Play 下发压缩后约为 raw 的 45%（33 MB ≈ 15 MB 下载）。
+
+### 社区有没有现成的精简 fork（2026-09-03 查）
+
+没有。查过的全部落空：
+
+- 上游 [#3857](https://github.com/typst/typst/issues/3857)（2024-04，荷兰选举委员会提的「加 feature flag 缩体积」）被维护者以
+  「flag 多了没法测」拒绝并关闭；他们给的示例提交
+  [07fff038](https://github.com/typst/typst/commit/07fff038be531a267942c1fbd8a89c55ab15b601) 只把 `cbor` 加载
+  gate 掉（2 个文件 8 行），从没进主线。同一串里 zinifier 实测砍掉引文 / SVG / 公式 / WASM / 数据加载 / 大纲
+  能 36 → 25 MiB（−30%），但他的 [fork](https://github.com/zinifier/typst) 只有 `main` 和 `public-cli-crate`
+  两个分支，那份实验没有发布。
+- 提需求的人自己的正式项目 [kiesraad/abacus](https://github.com/kiesraad/abacus)（`backend/pdf_gen/impl/Cargo.toml`）
+  最终用的是原版 `typst = "0.15.0"` + `typst-pdf`，没有 fork、没有 patch——连最在意供应链的人都放弃了裁剪。
+- typst 主线 `crates/typst-library/Cargo.toml`（main）至今零 `[features]`、零 `optional = true`；
+  0.15 的 `--features html` 是运行时开关，与二进制无关。
+- [Myriad-Dreamin/typst.ts](https://github.com/Myriad-Dreamin/typst.ts)（把 typst 跑进浏览器，最在意体积）确实用
+  自家 fork（tag `typst.ts/v0.8.1`），但那是为 wasm 兼容改的，其 typst-library 同样零 feature。
+- crates.io 上带 typst 的 43 个 crate 没有任何 lite / slim / pdf-only 变体；GitHub 代码搜索里
+  `[patch.crates-io]` 桩 hayagriva 的公开仓库为 0。
+
+所以精简版只能自己养。两条路，耦合面都小（typst-library 里引用 hayagriva 67 行 / wasmi 21 行 /
+usvg 60 行 / hayro 4 行；typst-html 经 `typst` 与 `typst-realize` 两处 `use` 进来）：
+
+| 路 | 做法 | 维护成本 |
+|---|---|---|
+| A. `[patch.crates-io]` 桩 | 不动 typst；给 hayagriva+citationberg / wasmi / usvg+resvg / hayro 各写一个 API 同形的空壳 crate | typst 升级时桩编不过 → 补签名；typst 本体仍是 registry 原版 |
+| B. fork 三个 crate 加 feature | 照 07fff038 的样子给 typst-library / typst-realize / typst 加 `bibliography` / `plugin` / `svg` / `html` feature，约 150–200 行 | 整个 typst workspace 改成 git 依赖，每次升级 rebase |
+
+A 更省心（typst 永远是原版，只多四个几十到几百行的小 crate），先做 hayagriva 那一个就拿回 ≈ 4.5 MB。
