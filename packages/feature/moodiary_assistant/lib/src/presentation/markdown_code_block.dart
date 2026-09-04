@@ -4,10 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
-import 'package:mui/mui.dart';
-import 'package:re_highlight/re_highlight.dart';
-
-import 'code_theme.dart';
 
 /// 助手回复里的 ``` 代码块。替代 gpt_markdown 自带的 CodeField —— 那个把复制按钮
 /// 写死成 `Icons.content_paste` / `Icons.done` 且文案是硬编码英文，两者都没有入参。

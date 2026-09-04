@@ -1,8 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_assistant/src/presentation/code_theme.dart';
 import 'package:moodiary_assistant/src/presentation/markdown_code_block.dart';
+import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:mui/mui.dart';
 
 /// 编辑器（lowlight 3.3.0 的 `common`）注册的那 37 种。助手这边必须一模一样 ——
 /// 「与编辑器同源」是选 re_highlight 的全部理由，语言集分叉就等于白选。

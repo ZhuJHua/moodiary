@@ -31,6 +31,8 @@ dependencies:
 
   cached_network_image_ce: 4.10.1
 
+  flutter_svg: 2.3.0
+  re_highlight: 0.0.3
   photo_view: 0.15.0
   dismissible_page: 1.0.2
   audioplayers: 6.8.1
@@ -40,3 +42,20 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
+  build_runner: 2.16.1
+  flutter_gen_runner: 5.15.0
+
+flutter:
+  assets:
+    - assets/brand/
+
+# 资产索引由 flutter_gen 生成（`dart tool/task.dart build-runner`）。
+# **package_parameter_enabled 必须开**：这是个被别人 import 的包，产物里要带
+# `package: 'moodiary_components'`，否则宿主按裸键去自己的 bundle 里找，运行时才炸。
+flutter_gen:
+  output: lib/src/gen/
+  integrations:
+    flutter_svg: true
+  assets:
+    outputs:
+      package_parameter_enabled: true

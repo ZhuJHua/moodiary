@@ -82,22 +82,26 @@ extension DiaryMoodVisuals on DiaryMood {
     .sick => 'thermometer',
   };
 
-  String label(BuildContext context) => switch (this) {
-    .positive => context.l10n.common.moodPositive,
-    .neutral => context.l10n.common.moodNeutral,
-    .negative => context.l10n.common.moodNegative,
-    .fulfilled => context.l10n.common.moodFulfilled,
-    .angry => context.l10n.common.moodAngry,
-    .anxious => context.l10n.common.moodAnxious,
-    .tired => context.l10n.common.moodTired,
-    .speechless => context.l10n.common.moodSpeechless,
-    .love => context.l10n.common.moodLove,
-    .study => context.l10n.common.moodStudy,
-    .slacking => context.l10n.common.moodSlacking,
-    .food => context.l10n.common.moodFood,
-    .work => context.l10n.common.moodWork,
-    .travel => context.l10n.common.moodTravel,
-    .sports => context.l10n.common.moodSports,
-    .sick => context.l10n.common.moodSick,
+  /// widget 里用这个（切语言自动重建）。没有 context 的地方（导出、服务）走 [labelOf]。
+  String label(BuildContext context) => labelOf(context.l10n);
+
+  /// 取串不重建的版本：导出的产物落盘即定，不需要跟着语言切换重画。
+  String labelOf(Translations l10n) => switch (this) {
+    .positive => l10n.common.moodPositive,
+    .neutral => l10n.common.moodNeutral,
+    .negative => l10n.common.moodNegative,
+    .fulfilled => l10n.common.moodFulfilled,
+    .angry => l10n.common.moodAngry,
+    .anxious => l10n.common.moodAnxious,
+    .tired => l10n.common.moodTired,
+    .speechless => l10n.common.moodSpeechless,
+    .love => l10n.common.moodLove,
+    .study => l10n.common.moodStudy,
+    .slacking => l10n.common.moodSlacking,
+    .food => l10n.common.moodFood,
+    .work => l10n.common.moodWork,
+    .travel => l10n.common.moodTravel,
+    .sports => l10n.common.moodSports,
+    .sick => l10n.common.moodSick,
   };
 }

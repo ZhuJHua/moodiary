@@ -2,9 +2,7 @@ import 'dart:io';
 
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_mobile/gen/assets.gen.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
-import 'package:mui/mui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// 许可证页顶部那段。读者是用户，但内容是法律标识（GPL 的名称与工具链名），不进 i18n。
@@ -156,14 +154,11 @@ class _LogoTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    final icon = theme.isDark
-        ? Assets.icons.appiconDark
-        : Assets.icons.appiconLight;
     return Column(
       mainAxisSize: .min,
       spacing: 16,
       children: [
-        icon.svg(width: 160, height: 160),
+        const MoodiaryLogo(size: 160),
         Row(
           mainAxisAlignment: .center,
           children: [
