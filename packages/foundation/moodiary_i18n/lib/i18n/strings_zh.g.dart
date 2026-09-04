@@ -2579,9 +2579,6 @@ class Translations$sync$zh {
 	/// zh: '{minutes} 分 {seconds} 秒'
 	String minutesSeconds({required Object minutes, required Object seconds}) => '${minutes} 分 ${seconds} 秒';
 
-	/// zh: '同步日志'
-	String get logTitle => '同步日志';
-
 	/// zh: '选择日期'
 	String get logPickDate => '选择日期';
 
@@ -2774,29 +2771,11 @@ class Translations$sync$zh {
 	/// zh: '同步状态'
 	String get statusTitle => '同步状态';
 
-	/// zh: '{backend} · {encryption}'
-	String statusSubtitle({required Object backend, required Object encryption}) => '${backend} · ${encryption}';
-
 	/// zh: '已加密'
 	String get encrypted => '已加密';
 
 	/// zh: '未加密'
 	String get notEncrypted => '未加密';
-
-	/// zh: '查看日志'
-	String get viewLog => '查看日志';
-
-	/// zh: '数据概览'
-	String get overview => '数据概览';
-
-	/// zh: '刷新数据概览'
-	String get overviewRefresh => '刷新数据概览';
-
-	/// zh: '远端有 {count} 篇日记待拉取'
-	String pendingPull({required Object count}) => '远端有 ${count} 篇日记待拉取';
-
-	/// zh: '同步完成'
-	String get statusDone => '同步完成';
 
 	/// zh: '同步失败'
 	String get statusFailed => '同步失败';
@@ -2815,12 +2794,6 @@ class Translations$sync$zh {
 
 	/// zh: '尚未同步'
 	String get statusNever => '尚未同步';
-
-	/// zh: '本地'
-	String get columnLocal => '本地';
-
-	/// zh: '远端'
-	String get columnRemote => '远端';
 
 	/// zh: '日记'
 	String get rowDiary => '日记';
@@ -3278,9 +3251,6 @@ class Translations$sync$zh {
 	/// zh: '媒体 {count} 个'
 	String summaryMedia({required Object count}) => '媒体 ${count} 个';
 
-	/// zh: '已是最新'
-	String get statusUpToDate => '已是最新';
-
 	/// zh: '配对码错误次数过多，本次接收已锁定，请重新开始接收以更换配对码'
 	String get lanAuthLocked => '配对码错误次数过多，本次接收已锁定，请重新开始接收以更换配对码';
 
@@ -3298,9 +3268,6 @@ class Translations$sync$zh {
 
 	/// zh: '自动同步中：{backend}'
 	String syncingAuto({required Object backend}) => '自动同步中：${backend}';
-
-	/// zh: '上次运行'
-	String get statusLastRun => '上次运行';
 
 	/// zh: '手动'
 	String get triggerManual => '手动';
@@ -3350,23 +3317,11 @@ class Translations$sync$zh {
 	/// zh: '自 {time} 起'
 	String healthSince({required Object time}) => '自 ${time} 起';
 
-	/// zh: '检查配置'
-	String get checkConfig => '检查配置';
-
-	/// zh: '重试'
-	String get retry => '重试';
-
 	/// zh: '关闭日记后几秒内推送；每 {interval} 检查其它设备的变更'
 	String autoSyncSubtitleDetail({required Object interval}) => '关闭日记后几秒内推送；每 ${interval} 检查其它设备的变更';
 
 	/// zh: '远端恢复可达'
 	String get reasonRecovered => '远端恢复可达';
-
-	/// zh: '{runs} 次同步 · {events} 条事件'
-	String logRunCount({required Object runs, required Object events}) => '${runs} 次同步 · ${events} 条事件';
-
-	/// zh: '全部'
-	String get logFilterAll => '全部';
 
 	/// zh: '仅问题'
 	String get logFilterProblems => '仅问题';
@@ -3388,6 +3343,27 @@ class Translations$sync$zh {
 
 	/// zh: '{ms} 毫秒'
 	String elapsedMillis({required Object ms}) => '${ms} 毫秒';
+
+	/// zh: '同步'
+	String get consoleTitle => '同步';
+
+	/// zh: '自动同步 · 每 {interval}'
+	String autoSyncEvery({required Object interval}) => '自动同步 · 每 ${interval}';
+
+	/// zh: '自动同步已关闭'
+	String get autoSyncOff => '自动同步已关闭';
+
+	/// zh: '{minutes} 分 {seconds} 秒后'
+	String nextPollIn({required Object minutes, required Object seconds}) => '${minutes} 分 ${seconds} 秒后';
+
+	/// zh: '{seconds} 秒后'
+	String nextPollInSeconds({required Object seconds}) => '${seconds} 秒后';
+
+	/// zh: '远端 {count}'
+	String remoteCount({required Object count}) => '远端 ${count}';
+
+	/// zh: '连接'
+	String get logHealth => '连接';
 }
 
 // Path: ui

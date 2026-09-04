@@ -1,13 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_sync/src/application/sync_controller.dart';
 import 'package:moodiary_sync/src/application/sync_runner.dart';
-import 'package:moodiary_sync/src/presentation/widget/sync_status_sheet.dart';
 import 'package:mui/mui.dart';
 
 /// AppBar 同步入口：运行中（手动或自动）转圈，连接健康坏了右上角一枚 error 色小点，
-/// 点击弹出状态面板。供两端 app 直接 `const SyncStatusButton()` 组合，无需宿主接线。
+/// 点击直接进同步控制台。供两端 app 直接 `const SyncStatusButton()` 组合。
 class SyncStatusButton extends ConsumerWidget {
   const SyncStatusButton({super.key});
 
@@ -19,7 +19,7 @@ class SyncStatusButton extends ConsumerWidget {
       builder: (context, status, _) => IconButton(
         tooltip: running
             ? context.l10n.sync.statusRunning
-            : context.l10n.sync.statusTitle,
+            : context.l10n.sync.consoleTitle,
         icon: running
             ? const SizedBox(
                 width: 18,
@@ -32,7 +32,7 @@ class SyncStatusButton extends ConsumerWidget {
                 backgroundColor: context.theme.colors.error,
                 child: const Icon(LucideIcons.refreshCw),
               ),
-        onPressed: () => showSyncStatusSheet(context),
+        onPressed: () => const SyncLogRoute().push(context),
       ),
     );
   }

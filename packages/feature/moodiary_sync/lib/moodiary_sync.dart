@@ -26,8 +26,6 @@ export 'src/data/sync_logger.dart' show SyncLogger;
 export 'src/data/sync_provider_scope.dart'
     show activateSyncProvider, configuredCloudBackendIds;
 export 'src/presentation/backup_sync_page.dart' show BackupSyncPage;
-export 'src/presentation/sync_log_page.dart' show SyncLogPage;
+export 'src/presentation/sync_console_page.dart' show SyncConsolePage;
 export 'src/presentation/widget/sync_status_button.dart' show SyncStatusButton;
-export 'src/presentation/widget/sync_status_sheet.dart'
-    show showSyncStatusSheet;
 export 'src/routes.dart' show syncRoutes;

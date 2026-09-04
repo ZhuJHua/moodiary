@@ -964,7 +964,6 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String seconds({required Object count}) => '${count}s';
 	@override String minutes({required Object count}) => '${count} min';
 	@override String minutesSeconds({required Object minutes, required Object seconds}) => '${minutes} min ${seconds}s';
-	@override String get logTitle => 'Sync log';
 	@override String get logPickDate => 'Pick a date';
 	@override String get logFilterByDate => 'Filter by date';
 	@override String get logToday => 'Today';
@@ -1029,22 +1028,14 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String get reasonStopped => 'Stopped';
 	@override String get reasonAborted => 'Aborted';
 	@override String get statusTitle => 'Sync status';
-	@override String statusSubtitle({required Object backend, required Object encryption}) => '${backend} · ${encryption}';
 	@override String get encrypted => 'encrypted';
 	@override String get notEncrypted => 'not encrypted';
-	@override String get viewLog => 'Open the log';
-	@override String get overview => 'Overview';
-	@override String get overviewRefresh => 'Refresh the overview';
-	@override String pendingPull({required Object count}) => '${count} entries waiting to be pulled';
-	@override String get statusDone => 'Sync finished';
 	@override String get statusFailed => 'Sync failed';
 	@override String get statusNoBackend => 'No sync backend configured';
 	@override String get statusNoBackendDetail => 'Set one up under Backup and sync';
 	@override String get statusSynced => 'Synced';
 	@override String get statusLastSync => 'Last synced ';
 	@override String get statusNever => 'Never synced';
-	@override String get columnLocal => 'Local';
-	@override String get columnRemote => 'Remote';
 	@override String get rowDiary => 'Entries';
 	@override String get rowCategory => 'Categories';
 	@override String get rowMedia => 'Media';
@@ -1197,14 +1188,12 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String summaryDownloadedDiaries({required Object count}) => '${count} diaries downloaded';
 	@override String summaryDownloadedCategories({required Object count}) => '${count} categories downloaded';
 	@override String summaryMedia({required Object count}) => '${count} media files';
-	@override String get statusUpToDate => 'Up to date';
 	@override String get lanAuthLocked => 'Too many incorrect pairing codes. This session is locked — start receiving again to get a new code.';
 	@override String errWriteRemote({required Object key, required Object error}) => 'Failed to write remote object (${key}): ${error}';
 	@override String errDeleteRemote({required Object key, required Object error}) => 'Failed to delete remote object (${key}): ${error}';
 	@override String errStatRemote({required Object key, required Object error}) => 'Failed to query remote object (${key}): ${error}';
 	@override String errBucketMissing({required Object bucket}) => 'Bucket "${bucket}" does not exist';
 	@override String syncingAuto({required Object backend}) => 'Auto-syncing: ${backend}';
-	@override String get statusLastRun => 'Last run';
 	@override String get triggerManual => 'manual';
 	@override String get triggerChange => 'change';
 	@override String get triggerClose => 'diary closed';
@@ -1221,12 +1210,8 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String get healthAuthFailedShort => 'credentials rejected';
 	@override String get healthKeyConflictShort => 'key conflict';
 	@override String healthSince({required Object time}) => 'since ${time}';
-	@override String get checkConfig => 'Check settings';
-	@override String get retry => 'Retry';
 	@override String autoSyncSubtitleDetail({required Object interval}) => 'Pushes a few seconds after you close a diary; checks other devices every ${interval}';
 	@override String get reasonRecovered => 'Remote reachable again';
-	@override String logRunCount({required Object runs, required Object events}) => '${runs} syncs · ${events} events';
-	@override String get logFilterAll => 'All';
 	@override String get logFilterProblems => 'Problems only';
 	@override String get logRunStopped => 'Stopped';
 	@override String get logRunFailed => 'Failed';
@@ -1234,6 +1219,13 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String get logRunUpToDate => 'Up to date';
 	@override String get directionSync => 'Sync';
 	@override String elapsedMillis({required Object ms}) => '${ms} ms';
+	@override String get consoleTitle => 'Sync';
+	@override String autoSyncEvery({required Object interval}) => 'Auto sync · every ${interval}';
+	@override String get autoSyncOff => 'Auto sync is off';
+	@override String nextPollIn({required Object minutes, required Object seconds}) => 'in ${minutes} min ${seconds} s';
+	@override String nextPollInSeconds({required Object seconds}) => 'in ${seconds} s';
+	@override String remoteCount({required Object count}) => 'remote ${count}';
+	@override String get logHealth => 'Connection';
 }
 
 // Path: ui

@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:flutter/foundation.dart'
+    show ValueListenable, ValueNotifier, visibleForTesting;
 import 'package:flutter/widgets.dart' show AppLifecycleListener;
 import 'package:injectable/injectable.dart';
 import 'package:moodiary_data/moodiary_data.dart';
@@ -95,6 +96,11 @@ class AutoSyncWatcher {
   /// 探测连续失败次数，驱动轮询退避。
   int _probeFailStreak = 0;
   DateTime? _lastTickAt;
+
+  final ValueNotifier<DateTime?> _nextPollAt = ValueNotifier(null);
+
+  /// 下一次轮询到点的时刻（含退避）。开关关着定时器也照排，控制台自己判断显示。
+  ValueListenable<DateTime?> get nextPollAt => _nextPollAt;
 
   Timer? _timer;
 
@@ -190,6 +196,7 @@ class AutoSyncWatcher {
     _timerDue = null;
     _pollTimer?.cancel();
     _pollTimer = null;
+    _nextPollAt.value = null;
     MoodiaryKVs.syncPollInterval.getNotifier().removeListener(_schedulePoll);
     await _diarySub?.cancel();
     await _categorySub?.cancel();
@@ -222,6 +229,7 @@ class AutoSyncWatcher {
       base: _resolvePollSeconds(),
       failStreak: _probeFailStreak,
     );
+    _nextPollAt.value = DateTime.now().add(Duration(seconds: seconds));
     _pollTimer = Timer(Duration(seconds: seconds), () async {
       await _pollTick();
       if (_started) _schedulePoll();
