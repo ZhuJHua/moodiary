@@ -95,7 +95,10 @@ void main() {
     });
 
     test('key conflict is tagged keyConflict', () {
-      expect(const SyncKeyConflictException('x').kind, SyncErrorKind.keyConflict);
+      expect(
+        const SyncKeyConflictException('x').kind,
+        SyncErrorKind.keyConflict,
+      );
     });
   });
 
@@ -107,9 +110,18 @@ void main() {
         ),
         SyncErrorKind.network,
       );
-      expect(SyncErrorKind.fromDetail('[auth] Read x failed: HTTP 401'), SyncErrorKind.auth);
-      expect(SyncErrorKind.fromDetail('[not_found] gone'), SyncErrorKind.notFound);
-      expect(SyncErrorKind.fromDetail('[server] HTTP 503'), SyncErrorKind.server);
+      expect(
+        SyncErrorKind.fromDetail('[auth] Read x failed: HTTP 401'),
+        SyncErrorKind.auth,
+      );
+      expect(
+        SyncErrorKind.fromDetail('[not_found] gone'),
+        SyncErrorKind.notFound,
+      );
+      expect(
+        SyncErrorKind.fromDetail('[server] HTTP 503'),
+        SyncErrorKind.server,
+      );
       expect(SyncErrorKind.fromDetail('[http] HTTP 418'), SyncErrorKind.http);
       expect(
         SyncErrorKind.fromDetail('Stat request failed: [network] x'),

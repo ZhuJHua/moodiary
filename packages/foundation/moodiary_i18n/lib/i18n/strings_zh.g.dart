@@ -3361,6 +3361,27 @@ class Translations$sync$zh {
 
 	/// zh: '远端恢复可达'
 	String get reasonRecovered => '远端恢复可达';
+
+	/// zh: '{runs} 次同步 · {events} 条事件'
+	String logRunCount({required Object runs, required Object events}) => '${runs} 次同步 · ${events} 条事件';
+
+	/// zh: '全部'
+	String get logFilterAll => '全部';
+
+	/// zh: '仅问题'
+	String get logFilterProblems => '仅问题';
+
+	/// zh: '已停止'
+	String get logRunStopped => '已停止';
+
+	/// zh: '失败'
+	String get logRunFailed => '失败';
+
+	/// zh: '未完成'
+	String get logRunPartial => '未完成';
+
+	/// zh: '已是最新'
+	String get logRunUpToDate => '已是最新';
 }
 
 // Path: ui

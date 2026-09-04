@@ -323,5 +323,12 @@
   "checkConfig": "Check settings",
   "retry": "Retry",
   "autoSyncSubtitleDetail": "Pushes a few seconds after you close a diary; checks other devices every {interval}",
-  "reasonRecovered": "Remote reachable again"
+  "reasonRecovered": "Remote reachable again",
+  "logRunCount": "{runs} syncs · {events} events",
+  "logFilterAll": "All",
+  "logFilterProblems": "Problems only",
+  "logRunStopped": "Stopped",
+  "logRunFailed": "Failed",
+  "logRunPartial": "Incomplete",
+  "logRunUpToDate": "Up to date"
 }

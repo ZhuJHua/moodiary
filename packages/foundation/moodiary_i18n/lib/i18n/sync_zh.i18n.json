@@ -323,5 +323,12 @@
   "checkConfig": "检查配置",
   "retry": "重试",
   "autoSyncSubtitleDetail": "关闭日记后几秒内推送；每 {interval} 检查其它设备的变更",
-  "reasonRecovered": "远端恢复可达"
+  "reasonRecovered": "远端恢复可达",
+  "logRunCount": "{runs} 次同步 · {events} 条事件",
+  "logFilterAll": "全部",
+  "logFilterProblems": "仅问题",
+  "logRunStopped": "已停止",
+  "logRunFailed": "失败",
+  "logRunPartial": "未完成",
+  "logRunUpToDate": "已是最新"
 }

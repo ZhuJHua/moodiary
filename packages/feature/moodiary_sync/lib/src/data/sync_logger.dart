@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:injectable/injectable.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
@@ -144,15 +146,21 @@ class SyncLogger {
     }
   }
 
-  /// 读取指定日期（默认今天）的历史日志，解析失败的行静默跳过。
+  /// 读取指定日期（默认今天）的历史日志，解析失败的行静默跳过。一天几千行的
+  /// 逐行 jsonDecode 在 `Isolate.run` 里做——纯 Dart、不碰原生库，主 isolate 只收结果。
   Future<List<SyncEvent>> readDay([DateTime? day]) async {
     if (_dir == null) return const [];
     final key = _dayKey(day ?? .now());
-    final file = File(p.join(_dir!.path, '$_filePrefix$key$_fileSuffix'));
-    if (!await file.exists()) return const [];
-    final lines = await file.readAsLines(encoding: utf8);
+    final path = p.join(_dir!.path, '$_filePrefix$key$_fileSuffix');
+    if (!await File(path).exists()) return const [];
+    return Isolate.run(() => parseDayFile(path));
+  }
+
+  /// 逐行解析一份 jsonl（供 [readDay] 在子 isolate 里调；坏行跳过）。
+  @visibleForTesting
+  static List<SyncEvent> parseDayFile(String path) {
     final events = <SyncEvent>[];
-    for (final line in lines) {
+    for (final line in File(path).readAsLinesSync(encoding: utf8)) {
       if (line.trim().isEmpty) continue;
       try {
         final json = jsonDecode(line) as Map<String, Object?>;

@@ -1225,6 +1225,13 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String get retry => 'Retry';
 	@override String autoSyncSubtitleDetail({required Object interval}) => 'Pushes a few seconds after you close a diary; checks other devices every ${interval}';
 	@override String get reasonRecovered => 'Remote reachable again';
+	@override String logRunCount({required Object runs, required Object events}) => '${runs} syncs · ${events} events';
+	@override String get logFilterAll => 'All';
+	@override String get logFilterProblems => 'Problems only';
+	@override String get logRunStopped => 'Stopped';
+	@override String get logRunFailed => 'Failed';
+	@override String get logRunPartial => 'Incomplete';
+	@override String get logRunUpToDate => 'Up to date';
 }
 
 // Path: ui

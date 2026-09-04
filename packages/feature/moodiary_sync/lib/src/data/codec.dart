@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:fast_crypto/fast_crypto.dart' as crypto;
@@ -27,8 +28,13 @@ class SyncCipher {
 
   bool get encrypted => aesKey != null;
 
+  /// 超过这个明文体积的 JSON 编解码挪到 `Isolate.run`：manifest 几千条时
+  /// `jsonDecode + fromJson` 要几十毫秒，留在主 isolate 就是一次掉帧；单条日记
+  /// 远小于此，跨 isolate 的固定成本反而更贵。SQL、网络、AES 本就不在主 isolate。
+  static const int isolateThresholdBytes = 64 * 1024;
+
   Future<Uint8List> encode(Object value) async {
-    final plain = utf8.encode(jsonEncode(value));
+    final plain = await _encodeJson(value);
     if (!encrypted) return plain;
     return _framed(await _encrypt(plain));
   }
@@ -37,10 +43,22 @@ class SyncCipher {
   Future<dynamic> decode(Uint8List bytes) async {
     final plain = await _maybeDecrypt(bytes);
     try {
-      return jsonDecode(utf8.decode(plain));
+      if (plain.length < isolateThresholdBytes) {
+        return jsonDecode(utf8.decode(plain));
+      }
+      return await Isolate.run(() => jsonDecode(utf8.decode(plain)));
     } catch (e) {
       throw SyncException(l10n.sync.errBackupParse(error: '$e'));
     }
+  }
+
+  /// 编码前不知道体积，用条目数估：manifest 的 `entries` 过 512 条就当大对象。
+  static Future<Uint8List> _encodeJson(Object value) async {
+    final entries = value is Map ? value['entries'] : null;
+    if (entries is Map && entries.length > 512) {
+      return Isolate.run(() => utf8.encode(jsonEncode(value)));
+    }
+    return utf8.encode(jsonEncode(value));
   }
 
   /// 原始字节加密（媒体文件）。
