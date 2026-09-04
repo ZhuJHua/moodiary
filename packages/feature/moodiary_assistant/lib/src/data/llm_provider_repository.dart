@@ -1,23 +1,18 @@
 import 'dart:async';
 
 import 'package:drift/drift.dart';
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:injectable/injectable.dart';
 
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 
 /// Provider 元数据存 SQLite；**API Key 存 SecureStorage**，按 `llm_key_<id>` 读写，
 /// 删除 Provider 时一并清除。
+@lazySingleton
 class LlmProviderRepository {
-  LlmProviderRepository._(this._db);
-
-  factory LlmProviderRepository.get() => _instance;
-
-  @visibleForTesting
-  LlmProviderRepository.forTesting(this._db);
-
-  static final LlmProviderRepository _instance = ._(MoodiaryDatabase.get());
+  LlmProviderRepository(this._db);
 
   final MoodiaryDatabase _db;
 
@@ -119,13 +114,14 @@ class LlmProviderRepository {
     return (row.read(maxOrder) ?? -1) + 1;
   }
 
-  Future<String?> getKey(String id) => ISecureKVStorage.get().get(_keyOf(id));
+  Future<String?> getKey(String id) =>
+      getIt<ISecureKVStorage>().get(_keyOf(id));
 
   Future<void> setKey(String id, String value) =>
-      ISecureKVStorage.get().set(_keyOf(id), value);
+      getIt<ISecureKVStorage>().set(_keyOf(id), value);
 
   Future<void> removeKey(String id) =>
-      ISecureKVStorage.get().remove(_keyOf(id));
+      getIt<ISecureKVStorage>().remove(_keyOf(id));
 
   /// 当前激活的 Provider。激活指针缺失或失效时回退到列表首个；列表为空返回 null。
   Future<LlmProvider?> getActiveProvider() async {

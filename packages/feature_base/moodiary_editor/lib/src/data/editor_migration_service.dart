@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -30,7 +31,7 @@ class EditorMigrationService {
   static bool requiresMigration = false;
 
   static Future<void> refreshRequiresMigration() async {
-    requiresMigration = await DiaryRepository.get().hasLegacyFormatDiaries();
+    requiresMigration = await getIt<DiaryRepository>().hasLegacyFormatDiaries();
     // 已无旧格式日记 = 迁移已收敛：sidecar 存的是整库旧日记**正文明文**，安全网
     // 使命结束就不能永久留在磁盘上（迁移完成的当次会话仍保留，下次启动才清）。
     if (!requiresMigration) unawaited(purgeBackups());
@@ -71,7 +72,7 @@ class EditorMigrationService {
 
   /// 待迁移：所有非 tiptap 日记（richText + 旧 markdown，含回收站）。
   static Future<List<Diary>> pendingDiaries() =>
-      DiaryRepository.get().getLegacyFormatDiaries();
+      getIt<DiaryRepository>().getLegacyFormatDiaries();
 
   /// 一篇内容 → tiptap JSON。逐级降级、必然产出合法文档：
   /// 转换器 → 纯文本再走 markdown 解析（与只读渲染路径一致）→ 逐行包段落。
@@ -127,7 +128,7 @@ class EditorMigrationService {
     // 索引：升级用户的倒排本就是空的、等「重建索引」一次性回填，逐篇 inline 会让
     // posting 行随已迁移篇数线性变长地整行重写（O(N²)），skip 掉；已回填过的
     // （多设备 pull 带回旧格式行的窄场景）保持 inline，迁移完即可搜。
-    await DiaryRepository.get().updateADiary(
+    await getIt<DiaryRepository>().updateADiary(
       newDiary: newDiary,
       fromSync: true,
       index: MoodiaryKVs.searchIndexBackfilled.get() ?? false ? .inline : .skip,

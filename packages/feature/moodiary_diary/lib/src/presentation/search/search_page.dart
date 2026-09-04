@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/src/application/search_controller.dart';
 import 'package:moodiary_diary/src/presentation/search/search_result_card.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
@@ -405,7 +406,7 @@ class _SearchIndexBannerState extends State<_SearchIndexBanner> {
     setState(() => _rebuilding = true);
     try {
       // 重建完成即置位 searchIndexBackfilled，外层 ValueListenableBuilder 收起本卡片。
-      await DiaryRepository.get().rebuildAllIndexes();
+      await getIt<DiaryRepository>().rebuildAllIndexes();
     } catch (e, s) {
       logger.e('搜索索引重建失败', error: e, stackTrace: s);
       if (mounted) setState(() => _rebuilding = false);

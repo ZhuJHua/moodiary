@@ -1,5 +1,4 @@
 import 'package:flutter/widgets.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 
 class KVNotifier<T extends Object> extends ValueNotifier<T> {
   final IKVStorage storage;
@@ -25,8 +24,6 @@ abstract interface class IKVSource {
 
 abstract class IKVStorage implements IKVSource {
   IKVStorage();
-
-  factory IKVStorage.get() => getIt.get();
 
   final Map<String, KVNotifier> _notifiers = {};
 
@@ -65,8 +62,6 @@ abstract class IKVStorage implements IKVSource {
 /// 机密 KV。与 [IKVStorage] 相反，这套接口保持异步：后端是系统钥匙串 /
 /// Keystore，每次读写都是一次真正的平台调用。
 abstract class ISecureKVStorage {
-  factory ISecureKVStorage.get() => getIt.get();
-
   Future<void> init();
 
   Future<String?> get(String key);

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:fast_image/fast_image.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
@@ -27,7 +28,7 @@ class ImageOptimizer {
   static Future<ImageOptimizeReport> run({
     void Function(int done, int total)? onProgress,
   }) async {
-    final repo = DiaryRepository.get();
+    final repo = getIt<DiaryRepository>();
     // 只装引用了 HEIC 的那几篇，不把全库正文物化。总数在开跑前就齐：转码数 + 被引用
     // 图片数（改名不改数）。
     final heicDiaries = await repo.getDiariesReferencingMedia(
@@ -98,7 +99,7 @@ class ImageOptimizer {
     if (!await File(src).exists()) return false;
     final part = AppFiles.getRealPath('image', 'heif-${uuidV7()}.jpg');
     try {
-      final out = await IHeifDecoder.get().convert(
+      final out = await getIt<IHeifDecoder>().convert(
         src,
         outputPath: part,
         format: 'jpg',

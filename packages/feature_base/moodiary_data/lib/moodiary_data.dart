@@ -24,7 +24,6 @@ export 'src/media_info_controller.dart';
 export 'src/media_info_repository.dart';
 export 'src/media_item.dart';
 export 'src/open_diary_registry.dart';
-export 'src/repository_providers.dart';
 export 'src/secret_controller.dart';
 export 'src/sync_pending.dart';
 export 'src/tombstone_repository.dart';

@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
@@ -36,7 +37,7 @@ class _SyncLogPageState extends State<SyncLogPage> {
     super.initState();
     // 先订阅再读文件，把订阅期间到达的事件并入，避免漏掉（仅今天视图）。
     final pending = <SyncEvent>[];
-    _sub = SyncLogger.get().events.listen((event) {
+    _sub = getIt<SyncLogger>().events.listen((event) {
       if (!mounted || !_viewingToday) return;
       if (_loading) {
         pending.add(event);
@@ -56,7 +57,7 @@ class _SyncLogPageState extends State<SyncLogPage> {
       _loading = true;
       _events = const [];
     });
-    final fromFile = await SyncLogger.get().readDay(day);
+    final fromFile = await getIt<SyncLogger>().readDay(day);
     // 文件按时间升序、UI 要最新在前 → reversed
     final ordered = fromFile.reversed.toList();
     if (pendingDuringLoad != null && pendingDuringLoad.isNotEmpty) {
@@ -76,7 +77,7 @@ class _SyncLogPageState extends State<SyncLogPage> {
   }
 
   Future<void> _pickDay() async {
-    final days = await SyncLogger.get().availableDays();
+    final days = await getIt<SyncLogger>().availableDays();
     // 今天可能还没有日志文件，但作为实时视图始终可选。
     final today = DateTime.now();
     if (!days.any((d) => _sameDay(d, today))) {
@@ -120,7 +121,7 @@ class _SyncLogPageState extends State<SyncLogPage> {
       isDestructive: true,
     );
     if (!confirmed) return;
-    await SyncLogger.get().clearAll();
+    await getIt<SyncLogger>().clearAll();
     if (!mounted) return;
     setState(() => _events = const []);
   }

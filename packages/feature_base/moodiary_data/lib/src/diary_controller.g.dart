@@ -56,7 +56,7 @@ final class DiaryControllerProvider
   }
 }
 
-String _$diaryControllerHash() => r'a4aecc77ccbeca134dcdeeeec5a96106b1bc66fb';
+String _$diaryControllerHash() => r'6eb54bf30e516cec0357c04ea04cde2756d83546';
 
 /// 按 [categoryId] 维度的日记列表（`categoryId == null` 表示「全部分类」）。
 /// 订阅 [DiaryRepository.diaryEvents] 按事件原地增量更新，无需重查库。
@@ -153,7 +153,7 @@ final class RecycleBinDiariesProvider
   RecycleBinDiaries create() => RecycleBinDiaries();
 }
 
-String _$recycleBinDiariesHash() => r'fe6ba2670a71bcb0aad1f77a2a2e4f57334fd766';
+String _$recycleBinDiariesHash() => r'4f2945ccb70517edee4de34bd8d57212884d5e6c';
 
 /// 回收站列表（按时间倒序的所有 `show == false` 的日记）。
 
@@ -247,7 +247,7 @@ final class GetDiaryProvider
   }
 }
 
-String _$getDiaryHash() => r'24dc6c11e9f89574fcbf25653d42140689f334db';
+String _$getDiaryHash() => r'a95947229c598ed69043beb842d37273495cbee3';
 
 /// 取单条日记的「活动流」：实时跟随 [DiaryRepository.watchDiary]，彻底删除时发出 `null`。
 /// id 为空发出空模板用于「新建」，此时务必显式传 [defaultType]，否则无法确定 markdown /

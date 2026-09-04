@@ -10,7 +10,7 @@ part 'database.g.dart';
 
 /// SQLite 数据库（drift）。schema 真源按领域拆在 `*_tables.drift`（日记 / 基础 /
 /// 同步 / 助手），具名查询只给 Dart DSL 表达不了的 SQL（FTS5，见 `diary.drift`）；
-/// 领域仓储持本类实例做查询，同旧 Isar 时代的 `XxxRepository.get()` 惯例。
+/// 领域仓储经构造器注入持本类实例做查询；本类由组合根的 @module 打开后注册进容器。
 ///
 /// 全库 schema 约定：
 /// - 业务主键统一 uuid v7 `TEXT PRIMARY KEY`；`diaries.rid` 是唯一的整数键残留，
@@ -39,19 +39,8 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
   @visibleForTesting
   MoodiaryDatabase.forTesting(super.e);
 
-  static MoodiaryDatabase? _instance;
-
-  factory MoodiaryDatabase.get() {
-    final db = _instance;
-    if (db == null) {
-      throw StateError('MoodiaryDatabase 未初始化：main 必须先 await open()');
-    }
-    return db;
-  }
-
   /// 组合根调用一次；路径由调用方注入（本包不认识文件布局）。
-  static Future<void> open({required String path}) async {
-    assert(_instance == null, 'MoodiaryDatabase 已初始化');
+  static Future<MoodiaryDatabase> open({required String path}) async {
     // sqlite-vec 走 sqlite3_auto_extension（进程级 C 状态），必须在任何连接
     // 打开之前注册；之后写连接与 readPool 的每个连接自动带上 vec0。
     loadSqliteVec();
@@ -63,7 +52,7 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
     final db = MoodiaryDatabase._(executor);
     // 触发打开与迁移（drift 惰性连接，显式碰一次让建表错误在启动期就暴露）。
     await db.customSelect('SELECT 1').get();
-    _instance = db;
+    return db;
   }
 
   /// 每个池内连接各跑一遍（写连接与读连接都在内）。

@@ -1,6 +1,7 @@
 import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/model_resolver.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 /// 参与压缩判定的一条消息（从聊天控制器的文本消息投影而来）。
@@ -105,7 +106,7 @@ class ContextCompactionController {
     );
 
     final buffer = StringBuffer();
-    await for (final event in AssistantService.get().chat(request)) {
+    await for (final event in getIt<AssistantService>().chat(request)) {
       if (event.kind == .text) buffer.write(event.text);
     }
     return buffer.toString();

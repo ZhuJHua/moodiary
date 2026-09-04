@@ -1,21 +1,15 @@
 import 'dart:async';
 
 import 'package:drift/drift.dart';
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:injectable/injectable.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 import 'db/database.dart';
 import 'db/db_codec.dart';
 
+@lazySingleton
 class MediaInfoRepository {
-  MediaInfoRepository._(this._db);
-
-  factory MediaInfoRepository.get() => _instance;
-
-  @visibleForTesting
-  MediaInfoRepository.forTesting(this._db);
-
-  static final MediaInfoRepository _instance = ._(MoodiaryDatabase.get());
+  MediaInfoRepository(this._db);
 
   final MoodiaryDatabase _db;
 

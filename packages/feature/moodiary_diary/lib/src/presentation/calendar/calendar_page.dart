@@ -1,6 +1,7 @@
 import 'package:fast_image/fast_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -167,7 +168,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     _dayKey = key;
     _dayEntries = ids.isEmpty
         ? Future.value(const <Diary>[])
-        : Future.wait(ids.map(DiaryRepository.get().getDiaryByBusinessId))
+        : Future.wait(ids.map(getIt<DiaryRepository>().getDiaryByBusinessId))
               .then((list) => list.whereType<Diary>().toList());
   }
 

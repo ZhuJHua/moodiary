@@ -1,3 +1,4 @@
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_cancellation.dart';
@@ -63,7 +64,7 @@ class SyncController extends _$SyncController {
 
   /// 请求停止当前同步（协作式：不再发起新条目，在飞的跑完后正常收尾，
   /// 见 [SyncCancellation]）。状态仍保持 syncing，直到引擎返回报告。
-  void stop() => SyncCancellation.instance.requestStop();
+  void stop() => getIt<SyncCancellation>().requestStop();
 
   void reset() => state = const .idle();
 }

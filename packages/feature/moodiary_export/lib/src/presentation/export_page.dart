@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:gap/gap.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
@@ -82,7 +83,9 @@ class _ImportSection extends StatelessWidget {
   Future<void> _restoreBackup(BuildContext context) async {
     // 在第一个 await 之前取好：之后 context 可能已经不 mounted。
     final l10n = context.l10n;
-    final file = await IFilePicker.get().pickFile(allowedExtensions: ['zip']);
+    final file = await getIt<IFilePicker>().pickFile(
+      allowedExtensions: ['zip'],
+    );
     if (file == null || !context.mounted) return;
 
     final confirmed = await MAlert.confirm(
@@ -95,7 +98,7 @@ class _ImportSection extends StatelessWidget {
 
     toast.loading(message: l10n.export.restoring);
     try {
-      final result = await IBackupArchive.get().import(file.path);
+      final result = await getIt<IBackupArchive>().import(file.path);
       await toast.dismiss();
       final base = l10n.export.restoreSummary(
         diary: result.diaryCount,
@@ -137,7 +140,7 @@ class _ImportSection extends StatelessWidget {
     toast.loading(message: l10n.export.packingBackup);
     final String zipPath;
     try {
-      zipPath = await IBackupArchive.get().export();
+      zipPath = await getIt<IBackupArchive>().export();
       await toast.dismiss();
     } catch (e) {
       await toast.dismiss();

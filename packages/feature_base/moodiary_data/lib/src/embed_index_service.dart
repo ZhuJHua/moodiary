@@ -4,8 +4,7 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
-import 'package:flutter/foundation.dart' show visibleForTesting;
-import 'package:moodiary_di/moodiary_di.dart';
+import 'package:injectable/injectable.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_ml/moodiary_ml.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -29,18 +28,9 @@ typedef SemanticHit = ({
 /// 写路径只入队（[DiaryRepository] 各写入口同事务插 `embed_queue`），推理在
 /// [drain] 异步完成；硬删的日记同样入队，由 drain 回收孤儿分块——删除与检索之间
 /// 的 stale 向量会被 KNN 的 diaries JOIN 天然屏蔽，无正确性问题。
+@lazySingleton
 class EmbedIndexService {
-  EmbedIndexService._(this._db, this._engine);
-
-  factory EmbedIndexService.get() => _instance ??= EmbedIndexService._(
-    MoodiaryDatabase.get(),
-    getIt<EmbeddingEngine>(),
-  );
-
-  @visibleForTesting
-  EmbedIndexService.forTesting(this._db, this._engine);
-
-  static EmbedIndexService? _instance;
+  EmbedIndexService(this._db, this._engine);
 
   final MoodiaryDatabase _db;
   final SemanticEmbedder _engine;

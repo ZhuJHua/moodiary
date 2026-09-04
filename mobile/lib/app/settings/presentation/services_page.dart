@@ -123,7 +123,7 @@ class _SemanticSectionState extends State<_SemanticSection> {
   Future<void> _rebuild() async {
     setState(() => _rebuilding = true);
     try {
-      final count = await EmbedIndexService.get().rebuildAll();
+      final count = await getIt<EmbedIndexService>().rebuildAll();
       toast.success(message: l10n.app.semanticRebuildDone(count: count));
     } catch (e, s) {
       logger.e('semantic rebuild failed', error: e, stackTrace: s);
@@ -267,7 +267,7 @@ class _ModelPickerSheetState extends State<_ModelPickerSheet> {
       if (mounted) setState(() => _progress = -1);
       await _manager.activate(spec);
       // 激活即置 stale，直接开建（后台跑，不等）。
-      unawaited(EmbedIndexService.get().drain());
+      unawaited(getIt<EmbedIndexService>().drain());
       toast.success(message: l10n.app.semanticEnabled);
       if (mounted) Navigator.of(context).pop();
     } catch (e, s) {
@@ -302,7 +302,7 @@ class _ModelPickerSheetState extends State<_ModelPickerSheet> {
     if (!confirmed || !mounted) return;
     try {
       _manager.deactivate();
-      await EmbedIndexService.get().clearAll();
+      await getIt<EmbedIndexService>().clearAll();
       if (mounted) Navigator.of(context).pop();
     } catch (e, s) {
       logger.e('disable semantic search failed', error: e, stackTrace: s);

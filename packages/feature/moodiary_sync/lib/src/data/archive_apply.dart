@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:fast_image/fast_image.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -39,7 +40,7 @@ Future<T> runSyncExclusive<T>(Future<T> Function() body) =>
       try {
         return await body();
       } finally {
-        SyncCancellation.instance.reset();
+        getIt<SyncCancellation>().reset();
       }
     });
 
@@ -118,7 +119,7 @@ class ArchiveApplier {
     backend,
     policy,
     concurrency,
-    logger ?? .get(),
+    logger ?? getIt<SyncLogger>(),
     diaryStore ?? RepoSyncDiaryStore(),
     categoryStore ?? RepoSyncCategoryStore(),
     mediaInfoStore ?? RepoSyncMediaInfoStore(),
@@ -208,7 +209,7 @@ class ArchiveApplier {
     /// 且不可恢复。
     // 预扫描：用快照 LWW 先算出「将要新增/更新」的条目并公布，首页立即占位/打标，
     // 不必等每条真正落库（见 [SyncPendingTracker]）。
-    final pending = SyncPendingTracker.instance;
+    final pending = getIt<SyncPendingTracker>();
     {
       final newDiaries = <String>{};
       final updDiaries = <String>{};
@@ -260,7 +261,7 @@ class ArchiveApplier {
 
     Future<void> pullOneEntry(MapEntry<String, ManifestEntry> entry) async {
       // 协作式停止：不再发起新条目，在飞的正常跑完（见 [SyncCancellation]）。
-      if (SyncCancellation.instance.isRequested) return;
+      if (getIt<SyncCancellation>().isRequested) return;
       final key = entry.key;
       final isTombstone = entry.value.deleted;
       try {
@@ -292,7 +293,7 @@ class ArchiveApplier {
             // 打开中的日记不应用远端删除：行硬删会让编辑器脚下抽行（watchDiary
             // 发 null → 报错丢稿）。跳过本条，关闭后下一轮 pull 再收敛；与 push
             // 的 open-diary 跳过对称。
-            if (local != null && OpenDiaryRegistry.instance.contains(id)) {
+            if (local != null && getIt<OpenDiaryRegistry>().contains(id)) {
               _logger.info(
                 .diarySkip,
                 reason: .openDiary,
@@ -607,7 +608,7 @@ class ArchiveApplier {
     await tombstones.flush(_tombstoneStore);
 
     sw.stop();
-    final stopped = SyncCancellation.instance.isRequested;
+    final stopped = getIt<SyncCancellation>().isRequested;
     _logger.info(
       .syncEnd,
       reason: stopped ? .stopped : null,

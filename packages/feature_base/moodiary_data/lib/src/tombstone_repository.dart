@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:injectable/injectable.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 import 'db/database.dart';
@@ -7,15 +7,9 @@ import 'db/db_codec.dart';
 
 /// 同步墓碑仓储。行由 [DiaryRepository] / [CategoryRepository] 在各自的删除 /
 /// 复活事务内写入与清除；本仓储负责同步引擎的读取与推送记录回写，以及启动 GC。
+@lazySingleton
 class TombstoneRepository {
-  TombstoneRepository._(this._db);
-
-  factory TombstoneRepository.get() => _instance;
-
-  @visibleForTesting
-  TombstoneRepository.forTesting(this._db);
-
-  static final TombstoneRepository _instance = ._(MoodiaryDatabase.get());
+  TombstoneRepository(this._db);
 
   final MoodiaryDatabase _db;
 

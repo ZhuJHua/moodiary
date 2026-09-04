@@ -1,18 +1,12 @@
 import 'package:drift/drift.dart';
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:injectable/injectable.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 /// 助手长期记忆（[MemoryEntry]）的读写。仅设备本地：不进 local_archive 备份、不进 LAN 同步。
+@lazySingleton
 class MemoryRepository {
-  MemoryRepository._(this._db);
-
-  factory MemoryRepository.get() => _instance;
-
-  @visibleForTesting
-  MemoryRepository.forTesting(this._db);
-
-  static final MemoryRepository _instance = ._(MoodiaryDatabase.get());
+  MemoryRepository(this._db);
 
   final MoodiaryDatabase _db;
 

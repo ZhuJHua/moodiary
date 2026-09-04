@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:fast_image/fast_image.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_editor/moodiary_editor.dart'
     show EditorMigrationService;
 import 'package:moodiary_files/moodiary_files.dart';
@@ -39,7 +40,7 @@ void runStartupMaintenance() {
   // 上次进程被杀时残留的同步临时密文（全尺寸，没人来收）。
   unawaited(purgeSyncMediaTemp());
   // 语义索引启动兜底排空 + 事件驱动补嵌（模型未激活时均为 no-op）。
-  unawaited(EmbedIndexService.get().drain());
+  unawaited(getIt<EmbedIndexService>().drain());
   _watchEmbedQueue();
 }
 
@@ -48,10 +49,10 @@ void runStartupMaintenance() {
 /// 进程级订阅，不随界面存亡（同 AutoSyncWatcher 的编排定位，归 main 不归容器）。
 void _watchEmbedQueue() {
   Timer? debounce;
-  DiaryRepository.get().diaryEvents.listen((_) {
+  getIt<DiaryRepository>().diaryEvents.listen((_) {
     debounce?.cancel();
     debounce = Timer(const Duration(seconds: 10), () {
-      unawaited(EmbedIndexService.get().drain());
+      unawaited(getIt<EmbedIndexService>().drain());
     });
   });
 }
@@ -62,10 +63,10 @@ void _watchEmbedQueue() {
 /// 是空操作），由用户手动重启后从干净存储初始化。
 Future<void> resetAllData() async {
   // 先清空数据库（保持句柄有效），再并发清空其余存储与文件。
-  await MoodiaryDatabase.get().clearAll();
-  IKVStorage.get().clear();
+  await getIt<MoodiaryDatabase>().clearAll();
+  getIt<IKVStorage>().clear();
   await Future.wait([
-    ISecureKVStorage.get().clear(),
+    getIt<ISecureKVStorage>().clear(),
     // 2.8.0 的搬迁自己会删旧仓库，但重置可能发生在搬迁完成之前 —— 那时旧仓库还在，
     // 不清就会被下次启动的搬迁原样搬回来，重置成了摆设。
     LegacyPrefsKVSource.clearStore(),

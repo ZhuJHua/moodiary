@@ -1,5 +1,4 @@
 import 'package:injectable/injectable.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_sync/src/data/impl/s3_sync.dart';
 import 'package:moodiary_sync/src/data/impl/webdav_sync.dart';
@@ -21,8 +20,6 @@ import 'package:moodiary_sync/src/data/sync.dart';
 @singleton
 class RemoteSyncRegistry {
   RemoteSyncRegistry();
-
-  static RemoteSyncRegistry get() => getIt<RemoteSyncRegistry>();
 
   IRemoteSyncBackend? _backend;
 

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart' show SystemNavigator;
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_editor/src/data/editor_migration_service.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
@@ -134,8 +135,9 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
     var diaries = 0;
     var categories = 0;
     try {
-      diaries = await DiaryRepository.get().countAllDiaries();
-      categories = (await CategoryRepository.get().getAllCategories()).length;
+      diaries = await getIt<DiaryRepository>().countAllDiaries();
+      categories =
+          (await getIt<CategoryRepository>().getAllCategories()).length;
     } catch (e, s) {
       logger.e('load migration summary failed', error: e, stackTrace: s);
     }

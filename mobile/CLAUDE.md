@@ -5,7 +5,7 @@
 ### DI —— get_it + injectable
 
 **绑定的注解落在实现类上**（`@Singleton(as:)` / `@LazySingleton(as:)` / `@Injectable(as:)`）：
-storage / http / assistant / sync 四个包各自是一份 **micro-package**（`lib/injectable.dart` 里的
+storage / http / ml / data / assistant / sync / editor 七个包各自是一份 **micro-package**（`lib/injectable.dart` 里的
 `@InjectableInit.microPackage()` → 生成 `injectable.module.dart`），由 app 侧
 `mobile/lib/app/di/di.dart` 一处经 `externalPackageModulesBefore` 挂载。**全仓只有一份
 `configureDependencies`**：不指定 initializerName（默认 `init`），也没有 generateForDir
@@ -13,8 +13,10 @@ storage / http / assistant / sync 四个包各自是一份 **micro-package**（`
 storage 列最前，它的两个 preResolve 是别人的地基；两个存储的 `init` 已折进
 `@FactoryMethod(preResolve: true)` 的 create 工厂，**SecureKV → KV 的次序因此是类型边**
 （`MmkvKVStorage.create(ISecureKVStorage)`），不再靠调用顺序守。
-`@module` 只剩 `AppModule.httpClient` 一个方法：`IHttpClient` 的 `onError` 要接 app 的 toast，
-这种构造用类注解表达不出来。
+`@module` 只有两个方法：`AppModule.httpClient`（`IHttpClient` 的 `onError` 要接 app 的 toast）
+与 `AppModule.database`（`@preResolve @singleton`，SQLite 路径来自组合根，moodiary_data 不认识
+文件布局）—— 都是类注解表达不出来的构造。data 的仓储是懒单例、首次取用时才解析 DB，所以
+它虽在 externalPackageModulesBefore 里先于根 config 注册也没关系。
 
 **启动阶段属于 main 的引导编排，不属于容器**：路径/日志与重置在
 `mobile/lib/app/di/bootstrap.dart`，序列在 `main.dart` 的 `_initSystem`。版本迁移跑完后由组合根
@@ -28,9 +30,10 @@ storage 列最前，它的两个 preResolve 是别人的地基；两个存储的
 容器只管生命周期内不变的接线。
 
 **双组合根记档（desktop 立项时照此办）**：desktop 建自己的 `desktop/lib/app/di/di.dart`
-（同样四个 externalPackageModulesBefore + 自己的 `@InjectableInit`），app 侧绑定以
-`_assertRequiredBindings` 里非 micro-package 的那几条为准（当前三条）：`IHttpClient`
-（照抄 AppModule.httpClient，onError 接桌面的通知方式）、`IFilePicker`（走系统对话框）、
+（同样七个 externalPackageModulesBefore + 自己的 `@InjectableInit`），app 侧绑定以
+`_assertRequiredBindings` 里非 micro-package 的那几条为准（当前四条）：`IHttpClient`
+（照抄 AppModule.httpClient，onError 接桌面的通知方式）、`MoodiaryDatabase`（照抄
+AppModule.database，换桌面路径）、`IFilePicker`（走系统对话框）、
 `IHeifDecoder`（桌面实现可直接返回 null 走既有降级）。**不用 `@Environment` 分平台**：environment 的语义是
 「同一份被扫源码按标签筛」，要求两端实现类同包，会把 moodiary_picker/wechat 系依赖
 塞给桌面；两个 app 本就是两个包、两份 config，天然互不干扰（injectable 的根 config 只

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:moodiary_assistant/src/data/llm_provider_repository.dart';
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
@@ -23,7 +24,7 @@ class _AssistantSummaryTileState extends State<AssistantSummaryTile> {
   bool _loaded = false;
   StreamSubscription<void>? _sub;
 
-  LlmProviderRepository get _repo => .get();
+  late final _repo = getIt<LlmProviderRepository>();
 
   @override
   void initState() {

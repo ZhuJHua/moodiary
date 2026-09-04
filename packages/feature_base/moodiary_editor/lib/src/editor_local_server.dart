@@ -6,6 +6,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_http/moodiary_http.dart';
 
 import 'media.dart';
@@ -72,7 +73,7 @@ class EditorLocalServer {
   }
 
   Future<void> _start() async {
-    final server = IHttpServer.create();
+    final server = getIt<IHttpServer>();
     await server.start(handler: _handle, loopbackOnly: true);
     _server = server;
     _port = server.port;

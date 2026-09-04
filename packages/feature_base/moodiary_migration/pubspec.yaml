@@ -18,6 +18,7 @@ dependencies:
   moodiary_logging: 0.0.1
   moodiary_storage: 0.0.1
   moodiary_data: 0.0.1
+  moodiary_di: 0.0.1
   moodiary_models: 0.0.1
   moodiary_platform: 0.0.1
   moodiary_utils: 0.0.1
@@ -33,7 +34,6 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  moodiary_di: 0.0.1
   moodiary_lint: 0.0.1
   build_runner: 2.16.1
   freezed: 4.0.1

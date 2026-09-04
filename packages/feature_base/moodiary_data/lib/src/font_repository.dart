@@ -1,22 +1,16 @@
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:injectable/injectable.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_theme/moodiary_theme.dart';
 
 import 'db/database.dart';
 
+@lazySingleton
 class FontRepository {
-  FontRepository._(this._db);
-
-  factory FontRepository.get() => _instance;
-
-  @visibleForTesting
-  FontRepository.forTesting(this._db);
-
-  static final FontRepository _instance = ._(MoodiaryDatabase.get());
+  FontRepository(this._db);
 
   final MoodiaryDatabase _db;
 

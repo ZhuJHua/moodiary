@@ -4,6 +4,7 @@ import 'package:moodiary_assistant/src/data/llm_preset_repository.dart';
 import 'package:moodiary_assistant/src/presentation/provider_logo.dart';
 import 'package:moodiary_assistant/src/routes.dart';
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
@@ -121,7 +122,7 @@ class _AssistantProviderPickerPageState
                 padding: const .only(bottom: 8),
                 child: _PresetCard(preset: p, onTap: () => _openPreset(p)),
               ),
-            _UpdatedFooter(at: LlmPresetRepository.get().cachedAt),
+            _UpdatedFooter(at: getIt<LlmPresetRepository>().cachedAt),
           ],
         ],
       ),

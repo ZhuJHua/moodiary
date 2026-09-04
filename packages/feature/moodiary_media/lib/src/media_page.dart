@@ -2,6 +2,7 @@ import 'package:fast_image/fast_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
@@ -301,9 +302,11 @@ Future<void> _backfillMediaInfo(String name) async {
     AppFiles.getRealPath('audio', name),
   );
   if (duration == null) return;
-  final existing = await MediaInfoRepository.get().getMediaInfoByFileName(name);
+  final existing = await getIt<MediaInfoRepository>().getMediaInfoByFileName(
+    name,
+  );
   if (existing?.durationMs != null) return;
-  await MediaInfoRepository.get().insertAMediaInfo(
+  await getIt<MediaInfoRepository>().insertAMediaInfo(
     MediaInfo(
       fileName: name,
       name: existing?.name,

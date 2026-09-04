@@ -1,30 +1,31 @@
 # moodiary_data — 仓储与状态边界约定
 
-这个包同时装着仓储与跨 feature 的 controller，是「get_it / riverpod / 进程级单例」
-三条通道的物理交汇点。四条准则 + 硬事实，新代码照此写，别再各自发明。
+这个包同时装着仓储与跨 feature 的 controller，是 get_it 与 riverpod 两条通道的
+物理交汇点。三条准则 + 硬事实，新代码照此写，别再各自发明。
 
-## 四条准则
+## 三条准则
 
-1. **get_it = 需要换实现的接线**（端口、平台实现，如 IFilePicker）。
-   **仓储刻意不进容器**：`XxxRepository.get()` 是进程级静态单例，直接持
-   `MoodiaryDatabase.get()`（drift；组合根在 `MoodiaryDatabase.open(path:)` 一处
-   吸收平台差异）。schema 真源按领域拆在 `src/db/*_tables.drift`（日记/基础/同步/助手），
-   具名查询只给 DSL 表达不了的 SQL（FTS5，`diary.drift`），改动后跑 build_runner。要替身：测试用 `XxxRepository.forTesting(
-   MoodiaryDatabase.forTesting(NativeDatabase.memory(...)))`——记得 setup 里开
-   `PRAGMA foreign_keys = ON`，级联删除靠它。消费侧真需要第二实现时在
-   **消费侧**抽窄端口（只声明用到的几个方法 + 转发实现，样板见
-   moodiary_sync 的 `sync_stores.dart`），不做全仓端口化。
-2. **riverpod = 与界面生命周期挂钩的读模型**。provider 不 new 服务、不持有服务
-   实例；仓储一律经 `repository_providers.dart` 的薄 provider 取用
-   （`ref.watch(diaryRepositoryProvider)`）——那层薄 provider 是测试 override 的
-   唯一抓手（`overrideWithValue(DiaryRepository.forTesting(db))`）。
-3. **进程级、跨页面、不随界面存亡的可变持有者**（RemoteSyncRegistry /
-   SyncPendingTracker / SyncDirtyTracker / OpenDiaryRegistry / KVNotifier）留在
-   容器外——既定决策。新代码经 provider 或构造参数暴露给 widget，不在 widget 里
-   直接 `.instance.listenable`（存量不批量迁）。
-4. **widget 的反应式通道以 `ref.watch` 为准**。跨包公开的 widget 不得命令式读
-   全局 KV——那会把正确性挂在宿主怎么包（KeyedSubtree 换 key）这种写不进类型的
-   契约上；要么走 provider，要么把值提成构造参数由宿主传入。
+1. **get_it = 整张对象图**（2026-09-04 起；之前仓储是静态单例 + riverpod 薄 provider 桥，
+   已整个撤掉）。`MoodiaryDatabase` 由组合根的 `AppModule.database` 打开后注册
+   （preResolve；路径来自组合根，本包不认识文件布局）；仓储是 `@lazySingleton`，
+   **构造器注入 DB**（`DiaryRepository(this._db)`），本包是 micro-package
+   （`lib/injectable.dart`）。schema 真源按领域拆在 `src/db/*_tables.drift`，具名查询
+   只给 DSL 表达不了的 SQL（FTS5，`diary.drift`），改动后跑 build_runner。
+   取用一律 `getIt<XxxRepository>()`：容器内的类（AutoSyncWatcher 一类）走构造器注入；
+   Riverpod Notifier / widget 写 `late final _repository = getIt<XxxRepository>()`
+   （late 让被 stub 的 controller 不碰容器）。消费侧真需要第二实现时在**消费侧**抽
+   窄端口（样板见 moodiary_sync 的 `sync_stores.dart`），不做全仓端口化。
+   测试：仓储自测直接 `XxxRepository(MoodiaryDatabase.forTesting(NativeDatabase.memory(...)))`
+   （setup 里开 `PRAGMA foreign_keys = ON`，级联删除靠它）；上层测试
+   `getIt.registerSingleton<XxxRepository>(替身)` + `tearDown(getIt.reset)`，替身可以是
+   mocktail 的 `Mock implements XxxRepository`。
+2. **riverpod = 与界面生命周期挂钩的读模型**，只管界面状态。provider 不 new 服务、不持有
+   服务实例，也不再有仓储 provider。
+3. **进程级、跨页面、不随界面存亡的可变持有者**（OpenDiaryRegistry / SyncPendingTracker /
+   SyncDirtyTracker / SyncCancellation）是 `@singleton`，同样 `getIt<X>()` 取。
+   跨包公开的 widget 不得命令式读全局 KV——那会把正确性挂在宿主怎么包（KeyedSubtree
+   换 key）这种写不进类型的契约上；要么走 provider，要么把值提成构造参数由宿主传入。
+   widget 的反应式通道以 `ref.watch` 为准。
 
 ## 硬事实（错一条就是一类 bug）
 

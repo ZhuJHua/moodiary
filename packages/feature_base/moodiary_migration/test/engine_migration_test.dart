@@ -225,11 +225,11 @@ void main() {
 
   Future<EngineMigrationReport> migrate() => EngineMigrationService.migrate(
     database: db,
-    diaryRepository: DiaryRepository.forTesting(db),
-    categoryRepository: CategoryRepository.forTesting(db),
-    fontRepository: FontRepository.forTesting(db),
-    mediaInfoRepository: MediaInfoRepository.forTesting(db),
-    tombstoneRepository: TombstoneRepository.forTesting(db),
+    diaryRepository: DiaryRepository(db),
+    categoryRepository: CategoryRepository(db),
+    fontRepository: FontRepository(db),
+    mediaInfoRepository: MediaInfoRepository(db),
+    tombstoneRepository: TombstoneRepository(db),
     legacyDir: dir.path,
   );
 
@@ -241,7 +241,7 @@ void main() {
     expect(report.positionDropped, 1, reason: '坏定位只丢定位不丢日记');
     expect(report.orphanMessagesDropped, 1);
 
-    final repo = DiaryRepository.forTesting(db);
+    final repo = DiaryRepository(db);
     // 值对象转换
     final full = (await repo.getDiaryByBusinessId('d-full'))!;
     expect(full.position?.latitude, 24.48);
@@ -271,20 +271,15 @@ void main() {
     expect(await repo.hasLegacyFormatDiaries(), isTrue);
 
     // 其余实体
+    expect((await CategoryRepository(db).getAllCategories()).single.id, 'c1');
     expect(
-      (await CategoryRepository.forTesting(db).getAllCategories()).single.id,
-      'c1',
-    );
-    expect(
-      (await FontRepository.forTesting(db).getFontByFontFamily('LXGW'))!
-          .fontWghtAxisMap,
+      (await FontRepository(db).getFontByFontFamily('LXGW'))!.fontWghtAxisMap,
       {'wght': 400},
     );
-    final mediaInfo = await MediaInfoRepository.forTesting(db)
+    final mediaInfo = await MediaInfoRepository(db)
         .getMediaInfoByFileName('audio-1.m4a');
     expect(mediaInfo!.durationMs, 1234);
-    final tombstone = await TombstoneRepository.forTesting(db)
-        .getByKey('d:deleted-diary');
+    final tombstone = await TombstoneRepository(db).getByKey('d:deleted-diary');
     expect(tombstone!.pushedBackends, ['backend-a']);
 
     final session = await (db.select(
@@ -315,7 +310,7 @@ void main() {
 
   test('搬迁不产生本地变更事件（fromSync）', () async {
     seedLegacy();
-    final repo = DiaryRepository.forTesting(db);
+    final repo = DiaryRepository(db);
     final localChanges = <DiaryEvent>[];
     final sub = repo.diaryEvents.listen((e) {
       final fromSync = switch (e) {
@@ -329,10 +324,10 @@ void main() {
     await EngineMigrationService.migrate(
       database: db,
       diaryRepository: repo,
-      categoryRepository: CategoryRepository.forTesting(db),
-      fontRepository: FontRepository.forTesting(db),
-      mediaInfoRepository: MediaInfoRepository.forTesting(db),
-      tombstoneRepository: TombstoneRepository.forTesting(db),
+      categoryRepository: CategoryRepository(db),
+      fontRepository: FontRepository(db),
+      mediaInfoRepository: MediaInfoRepository(db),
+      tombstoneRepository: TombstoneRepository(db),
       legacyDir: dir.path,
     );
     await pumpEventQueue();

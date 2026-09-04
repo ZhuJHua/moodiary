@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/src/presentation/graph/graph_canvas.dart';
 import 'package:moodiary_diary/src/presentation/graph/graph_info_card.dart';
 import 'package:moodiary_diary/src/presentation/graph/graph_scene.dart';
@@ -21,7 +22,7 @@ part 'diary_ego_graph_page.g.dart';
 /// 成本随邻域规模增长、与总日记数无关，所以详情页高频进出也不心疼。
 @riverpod
 Future<DiaryGraphData> diaryEgoGraph(Ref ref, {required String diaryId}) async {
-  final repo = DiaryRepository.get();
+  final repo = getIt<DiaryRepository>();
   Timer? debounce;
   final sub = repo.diaryEvents.listen((_) {
     debounce?.cancel();
@@ -168,7 +169,7 @@ class _DiaryEgoGraphPageState extends ConsumerState<DiaryEgoGraphPage>
   }
 
   Future<void> _open(DiaryGraphNode n) async {
-    final diary = await DiaryRepository.get().getDiaryByBusinessId(n.id);
+    final diary = await getIt<DiaryRepository>().getDiaryByBusinessId(n.id);
     if (diary == null || !mounted) return;
     openDiaryDetail(context, diary);
   }

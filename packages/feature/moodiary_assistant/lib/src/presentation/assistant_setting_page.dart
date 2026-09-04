@@ -8,6 +8,7 @@ import 'package:moodiary_assistant/src/data/llm_provider_repository.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_tool_ui.dart';
 import 'package:moodiary_assistant/src/routes.dart';
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -61,7 +62,7 @@ class _ProviderEntryTileState extends State<_ProviderEntryTile> {
   late final VoidCallback _activeListener;
   late final ValueNotifier<String> _activeNotifier;
 
-  LlmProviderRepository get _repo => .get();
+  late final _repo = getIt<LlmProviderRepository>();
 
   @override
   void initState() {
@@ -131,7 +132,7 @@ class _PresetSectionState extends State<_PresetSection> {
     final id = await AgentPresetResolver.defaultId();
     final preset = id == builtinAgentPresetId
         ? null
-        : await AgentPresetRepository.get().get(id);
+        : await getIt<AgentPresetRepository>().get(id);
     if (mounted) {
       setState(() {
         _defaultName = preset?.name;

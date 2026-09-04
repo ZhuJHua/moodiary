@@ -13,6 +13,9 @@
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 import 'package:moodiary_assistant/injectable.module.dart' as _i578;
+import 'package:moodiary_data/injectable.module.dart' as _i860;
+import 'package:moodiary_data/moodiary_data.dart' as _i691;
+import 'package:moodiary_editor/injectable.module.dart' as _i565;
 import 'package:moodiary_files/moodiary_files.dart' as _i800;
 import 'package:moodiary_http/injectable.module.dart' as _i545;
 import 'package:moodiary_http/moodiary_http.dart' as _i765;
@@ -33,9 +36,16 @@ extension GetItInjectableX on _i174.GetIt {
     await _i295.MoodiaryStoragePackageModule().init(gh);
     await _i545.MoodiaryHttpPackageModule().init(gh);
     await _i591.MoodiaryMlPackageModule().init(gh);
+    await _i860.MoodiaryDataPackageModule().init(gh);
     await _i578.MoodiaryAssistantPackageModule().init(gh);
     await _i412.MoodiarySyncPackageModule().init(gh);
+    await _i565.MoodiaryEditorPackageModule().init(gh);
     final appModule = _$AppModule();
+    await gh.singletonAsync<_i691.MoodiaryDatabase>(
+      () => appModule.database(),
+      preResolve: true,
+      dispose: _i461.closeDatabase,
+    );
     gh.lazySingleton<_i765.IHttpClient>(() => appModule.httpClient());
     gh.lazySingleton<_i800.IHeifDecoder>(() => _i845.MobileHeifDecoder());
     gh.lazySingleton<_i800.IFilePicker>(() => _i964.MobileFilePicker());

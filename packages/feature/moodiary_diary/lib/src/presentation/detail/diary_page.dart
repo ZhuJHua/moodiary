@@ -147,19 +147,19 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     final id = widget.diaryId;
     if (id != null) {
       _guardId = id;
-      OpenDiaryRegistry.instance.open(id);
+      getIt<OpenDiaryRegistry>().open(id);
       _hops.reset(id);
     } else {
       _guardSub = ref.listenManual(_provider, (_, next) {
         final diary = next.value;
         if (diary != null && _guardId == null) {
           _guardId = diary.id;
-          OpenDiaryRegistry.instance.open(diary.id);
+          getIt<OpenDiaryRegistry>().open(diary.id);
         }
       });
     }
     // 任意日记增删改都可能改双链关系；合并突发（如同步批量写）后再刷。
-    _linksSub = DiaryRepository.get().diaryEvents.listen((_) {
+    _linksSub = getIt<DiaryRepository>().diaryEvents.listen((_) {
       _linksDebounce?.cancel();
       _linksDebounce = Timer(const Duration(milliseconds: 400), _loadLinks);
     });
@@ -224,10 +224,10 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     _guardSub?.close();
     _guardSub = null;
     if (oldId != null && oldId != newId) {
-      OpenDiaryRegistry.instance.close(oldId);
+      getIt<OpenDiaryRegistry>().close(oldId);
     }
     _guardId = newId;
-    if (oldId != newId) OpenDiaryRegistry.instance.open(newId);
+    if (oldId != newId) getIt<OpenDiaryRegistry>().open(newId);
     _notifier = ref.read(_provider.notifier);
     _mode = widget.startInEdit ? .edit : .read;
     _dirty = false;
@@ -240,7 +240,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
 
   /// 外部 replace 到另一篇日记（当前无此入口，防御性兜底）：取库换文档。
   Future<void> _applyExternalSwap(String id) async {
-    final target = await DiaryRepository.get().getDiaryByBusinessId(id);
+    final target = await getIt<DiaryRepository>().getDiaryByBusinessId(id);
     if (!mounted || target == null) return;
     setState(() => _hopTarget = target);
     await _editorController.swapDocument(
@@ -270,7 +270,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
         if (_dirty) await _notifier.autoSave();
       } finally {
         guardSub?.close();
-        if (guardId != null) OpenDiaryRegistry.instance.close(guardId);
+        if (guardId != null) getIt<OpenDiaryRegistry>().close(guardId);
       }
     }();
     super.dispose();
@@ -791,7 +791,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     final id = _linksFor;
     if (id == null) return;
     final token = ++_linksToken;
-    final repo = DiaryRepository.get();
+    final repo = getIt<DiaryRepository>();
     final results = await Future.wait([
       repo.getForwardLinks(id),
       repo.getBacklinks(id),
@@ -809,7 +809,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     if (id == _guardId) return; // 自链不跳
     _hopping = true;
     try {
-      final target = await DiaryRepository.get().getDiaryByBusinessId(id);
+      final target = await getIt<DiaryRepository>().getDiaryByBusinessId(id);
       if (!mounted) return;
       if (target == null) {
         toast.error(message: context.l10n.diary.linkNotFound);
@@ -847,7 +847,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       while (true) {
         final entry = _hops.peek(delta);
         if (entry == null) return;
-        final target = await DiaryRepository.get().getDiaryByBusinessId(
+        final target = await getIt<DiaryRepository>().getDiaryByBusinessId(
           entry.diaryId,
         );
         if (!mounted) return;

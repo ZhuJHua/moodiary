@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
@@ -15,9 +16,7 @@ part 'map_page.g.dart';
 /// 钥匙串调用。分开 watch 会让底图先按「无 tk」建成 OSM 单层、再重建成天地图双层。
 @riverpod
 Future<({List<Diary> diaries, String tiandituKey})> mapData(Ref ref) async {
-  final withPosition = await ref
-      .watch(diaryRepositoryProvider)
-      .getDiariesWithPosition();
+  final withPosition = await getIt<DiaryRepository>().getDiariesWithPosition();
   final key = await ref.watch(
     secretKvProvider(MoodiarySecureKVs.tiandituKey).future,
   );

@@ -108,14 +108,14 @@ void main() {
       ),
     );
     addTearDown(db.close);
-    final repo = DiaryRepository.forTesting(db);
+    final repo = DiaryRepository(db);
     final report = await EngineMigrationService.migrate(
       database: db,
       diaryRepository: repo,
-      categoryRepository: CategoryRepository.forTesting(db),
-      fontRepository: FontRepository.forTesting(db),
-      mediaInfoRepository: MediaInfoRepository.forTesting(db),
-      tombstoneRepository: TombstoneRepository.forTesting(db),
+      categoryRepository: CategoryRepository(db),
+      fontRepository: FontRepository(db),
+      mediaInfoRepository: MediaInfoRepository(db),
+      tombstoneRepository: TombstoneRepository(db),
       legacyDir: dir.path,
     );
     expect(report.diaries, n);

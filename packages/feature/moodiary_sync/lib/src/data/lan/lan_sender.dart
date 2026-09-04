@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io' show File;
 import 'dart:typed_data';
 
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_sync/src/data/impl/local_archive.dart';
@@ -69,11 +70,12 @@ class LanSendResult {
 class LanSender {
   LanSender({
     this._crypto = const RustLanCrypto(),
-    this._http,
+    IHttpClient? http,
     Future<(String, int)> Function(SyncManifest remote, String zipPassword)?
     archiveBuilder,
     Future<String> Function()? appVersion,
-  }) : _archiveBuilder = archiveBuilder ?? _buildArchive,
+  }) : _client = http ?? getIt<IHttpClient>(),
+       _archiveBuilder = archiveBuilder ?? _buildArchive,
        _appVersion = appVersion ?? lanLocalAppVersion;
 
   static Future<(String, int)> _buildArchive(
@@ -85,9 +87,7 @@ class LanSender {
   final Future<(String, int)> Function(SyncManifest, String) _archiveBuilder;
   final Future<String> Function() _appVersion;
 
-  IHttpClient? _http;
-
-  IHttpClient get _client => _http ??= IHttpClient.get();
+  final IHttpClient _client;
 
   static const Duration _controlTimeout = Duration(seconds: 10);
 

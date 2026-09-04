@@ -1,6 +1,7 @@
 import 'package:moodiary_assistant/src/data/agent_preset_repository.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_tool_ui.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:mui/mui.dart';
@@ -50,7 +51,7 @@ class _AgentPresetEditPageState extends State<AgentPresetEditPage> {
   Future<void> _load() async {
     final id = widget.id;
     if (id != null && id.isNotEmpty) {
-      final preset = await AgentPresetRepository.get().get(id);
+      final preset = await getIt<AgentPresetRepository>().get(id);
       if (!mounted) return;
       if (preset == null) {
         Navigator.of(context).maybePop();
@@ -65,7 +66,7 @@ class _AgentPresetEditPageState extends State<AgentPresetEditPage> {
       final fromId = widget.fromId;
       final source = fromId == null || fromId.isEmpty
           ? null
-          : await AgentPresetRepository.get().get(fromId);
+          : await getIt<AgentPresetRepository>().get(fromId);
       if (!mounted) return;
       final l10n = context.l10n;
       final sourceName = source?.name ?? l10n.assistant.presetBuiltinName;
@@ -116,7 +117,7 @@ class _AgentPresetEditPageState extends State<AgentPresetEditPage> {
             tools: tools,
             updatedAt: DateTime.timestamp(),
           );
-    await AgentPresetRepository.get().put(preset);
+    await getIt<AgentPresetRepository>().put(preset);
     if (!mounted) return;
     setState(() => _saving = false);
     toast.success(message: context.l10n.assistant.presetSaved);

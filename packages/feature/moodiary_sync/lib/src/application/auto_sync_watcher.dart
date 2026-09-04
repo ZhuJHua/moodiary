@@ -31,15 +31,27 @@ import 'package:moodiary_sync/src/data/sync_registry.dart';
 ///   同秒并发写理论上可漏判，故距上次成功同步超过 10 个轮询周期时强制全量兜底。
 /// - **静默失败**：出错不弹 toast，错误已落进 SyncLogger。
 ///
-/// 由 DI 装配成懒单例：[SyncLogger] 与 [RemoteSyncRegistry] 走构造器注入，保证两者
-/// 就位后才构造；[start] 由组合根在版本迁移与后端装载完成后显式调用 —— 迁移写出的
+/// 由 DI 装配成懒单例：依赖全部走构造器注入，保证就位后才构造；[start] 由组合根在版本迁移与后端装载完成后显式调用 —— 迁移写出的
 /// 行不该被 watcher 当成本地变更推给云端。
 @lazySingleton
 class AutoSyncWatcher {
-  AutoSyncWatcher(this._logger, this._registry);
+  AutoSyncWatcher(
+    this._logger,
+    this._registry,
+    this._diaries,
+    this._categories,
+    this._mediaInfos,
+    this._dirty,
+    this._openDiaries,
+  );
 
   final SyncLogger _logger;
   final RemoteSyncRegistry _registry;
+  final DiaryRepository _diaries;
+  final CategoryRepository _categories;
+  final MediaInfoRepository _mediaInfos;
+  final SyncDirtyTracker _dirty;
+  final OpenDiaryRegistry _openDiaries;
 
   /// 写入后到真正发起 push 的静默期。
   static const Duration _debounce = Duration(seconds: 5);
@@ -66,7 +78,7 @@ class AutoSyncWatcher {
 
   void start() {
     _started = true;
-    _diarySub ??= DiaryRepository.get().diaryEvents.listen((event) {
+    _diarySub ??= _diaries.diaryEvents.listen((event) {
       // 云 pull 落库的变更远端已持有：不标脏、不置待推标记、不排推送。
       if (event.fromSync) return;
       MoodiaryKVs.syncPendingLocal.set(true);
@@ -75,24 +87,24 @@ class AutoSyncWatcher {
           // 本地有改动 → 标记卡片「待同步」。
           // 仅在配置了云后端时才追踪：没配同步就没有「待同步」概念，避免误导角标。
           if (configuredCloudBackendIds().isNotEmpty) {
-            SyncDirtyTracker.instance.markDirty(diary.id);
+            _dirty.markDirty(diary.id);
           }
           // 打开中的日记不触发同步（编辑期不上传半成品）。这是廉价前置闸门；权威跳过
           // 在引擎 push 快照里（poll / syncAll 绕过本闸门）。
-          if (!OpenDiaryRegistry.instance.contains(diary.id)) _onLocalChange();
+          if (!_openDiaries.contains(diary.id)) _onLocalChange();
         case DiaryDeleted(:final id):
           // 行已不在：脏标记里这条 id 不再有对应卡片，顺手清掉（进程内 Set，
           // 不清也只是残留到重启）；随后放行触发同步——永久删除的墓碑应尽快推送。
-          SyncDirtyTracker.instance.clearDirty(id);
+          _dirty.clearDirty(id);
           _onLocalChange();
       }
     });
-    _categorySub ??= CategoryRepository.get().categoryEvents.listen((event) {
+    _categorySub ??= _categories.categoryEvents.listen((event) {
       if (event.fromSync) return;
       MoodiaryKVs.syncPendingLocal.set(true);
       _onLocalChange();
     });
-    _mediaInfoSub ??= MediaInfoRepository.get().mediaInfoEvents.listen((event) {
+    _mediaInfoSub ??= _mediaInfos.mediaInfoEvents.listen((event) {
       if (event.fromSync) return;
       MoodiaryKVs.syncPendingLocal.set(true);
       _onLocalChange();
@@ -103,6 +115,7 @@ class AutoSyncWatcher {
     _schedulePoll();
   }
 
+  @disposeMethod
   Future<void> dispose() async {
     _started = false;
     _timer?.cancel();

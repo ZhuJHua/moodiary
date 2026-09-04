@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:injectable/injectable.dart';
 
 /// pull 预扫描得出的「即将从远端到达」清单。引擎读完 manifest 后用快照 LWW 一次
 /// 算出，首页据此**立即**渲染占位卡/角标，不必等每条落库；逐条下载完成时消除。
@@ -35,11 +36,8 @@ class SyncPendingState {
 
 /// 进程级单例：引擎写（预扫描发布 / 逐条消除 / pull 结束清空），UI 用 [listenable]
 /// 监听。纯进程内状态，不持久化。
+@singleton
 class SyncPendingTracker {
-  SyncPendingTracker._();
-
-  static final SyncPendingTracker instance = ._();
-
   final ValueNotifier<SyncPendingState> _notifier = ValueNotifier(
     SyncPendingState.empty,
   );
@@ -100,11 +98,8 @@ class SyncPendingTracker {
 /// [AutoSyncWatcher] 在领域事件上 [markDirty]，引擎 push 提交确认后 [clearDirty]。
 /// 纯进程内、不持久化——重启即丢，下次 push 由 manifest LWW 重新推导（manifest 才是
 /// 「什么已同步」的权威），角标只是瞬态 UI 提示。
+@singleton
 class SyncDirtyTracker {
-  SyncDirtyTracker._();
-
-  static final SyncDirtyTracker instance = ._();
-
   final ValueNotifier<Set<String>> _notifier = ValueNotifier(const {});
 
   ValueListenable<Set<String>> get listenable => _notifier;

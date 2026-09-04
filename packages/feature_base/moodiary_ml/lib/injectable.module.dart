@@ -28,14 +28,16 @@ class MoodiaryMlPackageModule extends _i526.MicroPackageModule {
     gh.lazySingleton<_i834.MoodLlmModelManager>(
       () => _i834.MoodLlmModelManager(gh<_i765.IHttpClient>()),
     );
-    gh.lazySingleton<_i618.EmbeddingEngine>(
+    gh.lazySingleton<_i618.SemanticEmbedder>(
       () => _i618.EmbeddingEngine(
         gh<_i444.EmbeddingModelManager>(),
         gh<_i172.EmbeddingBackend>(),
       ),
+      dispose: (i) => i.dispose(),
     );
     gh.lazySingleton<_i1031.MoodLlmEngine>(
       () => _i1031.MoodLlmEngine(gh<_i834.MoodLlmModelManager>()),
+      dispose: (i) => i.dispose(),
     );
   }
 }

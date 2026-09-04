@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -92,7 +93,7 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
 
   Future<void> _switchProvider(SyncProviderType type) async {
     SyncProviderType.setCurrent(type);
-    await RemoteSyncRegistry.get().reload();
+    await getIt<RemoteSyncRegistry>().reload();
     if (mounted) setState(() {});
   }
 
@@ -177,7 +178,7 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
             final running = syncState is SyncRunning;
             if (running) {
               return ValueListenableBuilder(
-                valueListenable: SyncCancellation.instance.listenable,
+                valueListenable: getIt<SyncCancellation>().listenable,
                 builder: (context, stopping, _) {
                   return SettingListTile(
                     title: stopping

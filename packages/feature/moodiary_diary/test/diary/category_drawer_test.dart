@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/src/application/diary_filter.dart';
 import 'package:moodiary_diary/src/application/diary_selection.dart';
 import 'package:moodiary_diary/src/presentation/widget/category_drawer.dart';
@@ -34,6 +35,10 @@ Widget wrap({
 );
 
 void main() {
+  // drawer 经容器取「待同步」持有者。
+  setUp(() => getIt.registerSingleton(SyncPendingTracker()));
+  tearDown(getIt.reset);
+
   final three = [cat('tr', '旅行'), cat('dy', '日常'), cat('rd', '阅读')];
 
   testWidgets('lists every category with its count', (t) async {

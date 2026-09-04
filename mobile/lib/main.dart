@@ -14,7 +14,6 @@ import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_editor/moodiary_editor.dart'
     show EditorMigrationService;
 import 'package:moodiary_export/moodiary_export.dart' show showDiaryShareSheet;
-import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
@@ -37,17 +36,12 @@ Future<void> _initSystem() async {
   await FastImageRuntime.init();
   await FastTokenizer.ensureInitialized();
 
-  // ── 1. 路径与日志（一切存储的前置）→ 容器装配 ∥ SQLite 打开。
+  // ── 1. 路径与日志（一切存储的前置）→ 容器装配。
   // configureDependencies 内部的 preResolve 在这一步落定：SecureKV → KV（含 2.8.0
   // 搬迁；这条次序不再靠调用顺序，它是 MmkvKVStorage.create 收 ISecureKVStorage
-  // 的类型边）、SyncLogger 落盘就绪。KV 与 SQLite 互不依赖，并行开。
+  // 的类型边）、SyncLogger 落盘就绪、SQLite 打开并跑完建表（AppModule.database）。
   await bootstrapPlatform();
-  await Future.wait([
-    configureDependencies(),
-    MoodiaryDatabase.open(
-      path: AppFiles.getRealPath('database', 'moodiary.db'),
-    ),
-  ]);
+  await configureDependencies();
   // 应用锁的开关是「有没有凭据」的派生态，读一次钥匙串装进内存；
   // 路由与生命周期回调都是同步的，够不着异步的 SecureKV。
   await AppLockPin.load();
@@ -71,7 +65,7 @@ Future<void> _initSystem() async {
   // 失败回落默认主题（未 buildTheme 时 lightTheme getter 自带 buildMuiTheme 兜底）。
   final themeFuture = () async {
     try {
-      final font = await FontRepository.get().getActiveFont();
+      final font = await getIt<FontRepository>().getActiveFont();
       await ThemeManager().buildTheme(customFont: font?.themeDescriptor);
     } catch (e, s) {
       logger.e(
@@ -114,7 +108,7 @@ Future<void> _initSystem() async {
   // 与 AppLockPin._read 的取舍同口径。
   final syncBackendFuture = () async {
     try {
-      await RemoteSyncRegistry.get().reload();
+      await getIt<RemoteSyncRegistry>().reload();
     } catch (e, s) {
       logger.e('sync backend reload failed', error: e, stackTrace: s);
     }

@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:injectable/injectable.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
@@ -15,8 +14,6 @@ import 'package:path/path.dart' as p;
 @singleton
 class SyncLogger {
   SyncLogger._();
-
-  factory SyncLogger.get() => getIt<SyncLogger>();
 
   /// 内存 ring buffer 上限，超过丢弃最旧一批。
   static const int _bufferLimit = 500;
@@ -207,6 +204,7 @@ class SyncLogger {
     }
   }
 
+  @disposeMethod
   Future<void> dispose() async {
     await _sink?.flush();
     await _sink?.close();

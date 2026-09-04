@@ -4,6 +4,7 @@ library;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/src/application/diary_filter.dart';
 import 'package:moodiary_diary/src/application/diary_selection.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_nav.dart';
@@ -44,12 +45,12 @@ class DiaryFeedView extends ConsumerWidget {
       data: (diaries) {
         return ListenableBuilder(
           listenable: .merge([
-            SyncPendingTracker.instance.listenable,
-            SyncDirtyTracker.instance.listenable,
+            getIt<SyncPendingTracker>().listenable,
+            getIt<SyncDirtyTracker>().listenable,
           ]),
           builder: (context, _) {
-            final pending = SyncPendingTracker.instance.listenable.value;
-            final dirty = SyncDirtyTracker.instance.listenable.value;
+            final pending = getIt<SyncPendingTracker>().listenable.value;
+            final dirty = getIt<SyncDirtyTracker>().listenable.value;
             Widget body;
             if (diaries.isEmpty) {
               body = Center(child: Text(context.l10n.diary.tabViewEmpty));

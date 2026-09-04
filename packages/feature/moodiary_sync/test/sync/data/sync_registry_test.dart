@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/sync_registry.dart';
 
@@ -25,14 +26,14 @@ void main() {
   group('RemoteSyncRegistry', () {
     test('holds the backend that matches the current provider', () async {
       SyncProviderType.setCurrent(.webdav);
-      await RemoteSyncRegistry.get().reload();
-      expect(RemoteSyncRegistry.get().backend.type, SyncProviderType.webdav);
+      await getIt<RemoteSyncRegistry>().reload();
+      expect(getIt<RemoteSyncRegistry>().backend.type, SyncProviderType.webdav);
 
       // 切换 provider → 换持为对应后端（单持有不残留旧实例）。
       SyncProviderType.setCurrent(.s3);
-      await RemoteSyncRegistry.get().reload();
-      expect(RemoteSyncRegistry.get().backend.type, SyncProviderType.s3);
-      expect(RemoteSyncRegistry.get().hasBackend, isTrue);
+      await getIt<RemoteSyncRegistry>().reload();
+      expect(getIt<RemoteSyncRegistry>().backend.type, SyncProviderType.s3);
+      expect(getIt<RemoteSyncRegistry>().hasBackend, isTrue);
     });
 
     test('starts empty', () {

@@ -56,7 +56,7 @@ final class SyncControllerProvider
   }
 }
 
-String _$syncControllerHash() => r'301bc70a03f7c5471f662ecbb7be09f57dec37ba';
+String _$syncControllerHash() => r'17cbb57dec8bd0d5b0c41821ef59815c65ca95e1';
 
 /// 同步 controller：状态机 idle → syncing → success / partial / error。不持有具体 [SyncBackend]，
 /// 调用方在 [push]/[pull] 时显式传入，同一 controller 可服务 JSON 备份与 WebDAV。

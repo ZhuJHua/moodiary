@@ -1,4 +1,5 @@
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 enum ExportScopeKind { all, category, dateRange, picked }
@@ -23,7 +24,7 @@ class AllDiariesScope extends ExportScope {
 
   @override
   Future<List<Diary>> resolve() async =>
-      _visibleSorted(await DiaryRepository.get().getAllDiaries());
+      _visibleSorted(await getIt<DiaryRepository>().getAllDiaries());
 
   @override
   ExportScopeKind get kind => .all;
@@ -40,7 +41,7 @@ class CategoryScope extends ExportScope {
 
   @override
   Future<List<Diary>> resolve() async {
-    final all = await DiaryRepository.get().getAllDiaries();
+    final all = await getIt<DiaryRepository>().getAllDiaries();
     return _visibleSorted(
       all.where((d) => categoryIds.contains(d.categoryId)).toList(),
     );
@@ -62,7 +63,7 @@ class DateRangeScope extends ExportScope {
 
   @override
   Future<List<Diary>> resolve() async {
-    final all = await DiaryRepository.get().getAllDiaries();
+    final all = await getIt<DiaryRepository>().getAllDiaries();
     final start = DateTime(from.year, from.month, from.day);
     final end = DateTime(to.year, to.month, to.day, 23, 59, 59, 999);
     return _visibleSorted(
@@ -92,7 +93,7 @@ class PickedScope extends ExportScope {
   @override
   Future<List<Diary>> resolve() async {
     // 主键 get O(1)：勾了几篇取几篇，不整库物化后再过滤。
-    final repo = DiaryRepository.get();
+    final repo = getIt<DiaryRepository>();
     final picked = <Diary>[];
     for (final id in diaryIds) {
       final d = await repo.getDiaryByBusinessId(id);

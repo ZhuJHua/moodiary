@@ -18,11 +18,14 @@ abstract class SemanticEmbedder {
   Future<List<Float32List>> embedPassages(List<String> texts);
 
   Future<Float32List> embedQuery(String text);
+
+  /// 释放已装载的模型；容器回收（`getIt.reset()`）经此调用。
+  Future<void> dispose();
 }
 
 /// 嵌入引擎：懒加载激活模型、空闲自动卸载（Q8 模型常驻约 40MB RAM，不长期占用）。
 /// 调用方不感知前缀与加载时机。
-@LazySingleton()
+@LazySingleton(as: SemanticEmbedder)
 class EmbeddingEngine implements SemanticEmbedder {
   final EmbeddingModelManager _models;
   final EmbeddingBackend _backend;
@@ -101,7 +104,8 @@ class EmbeddingEngine implements SemanticEmbedder {
     });
   }
 
-  /// 立即释放模型（停用模型 / 重置数据时调用）。
+  /// 立即释放模型（停用模型 / 重置数据时调用；`getIt.reset()` 也会经此回收）。
+  @disposeMethod
   Future<void> dispose() {
     _idleTimer?.cancel();
     _chain = _chain.then((_) => _backend.unload());

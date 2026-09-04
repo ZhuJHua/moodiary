@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -110,7 +111,7 @@ class _StressTestTileState extends State<StressTestTile> {
           for (var i = start; i < end; i++)
             _makeDiary(i, total, idFor, rng, now),
         ];
-        await DiaryRepository.get().insertDiaries(batch);
+        await getIt<DiaryRepository>().insertDiaries(batch);
         progress.value = end / total;
         await Future<void>.delayed(.zero); // 让进度条刷新
       }
@@ -185,7 +186,7 @@ class _StressTestTileState extends State<StressTestTile> {
     final progress = ValueNotifier<double>(0);
     var count = 0;
     try {
-      final all = await DiaryRepository.get().getAllDiaries();
+      final all = await getIt<DiaryRepository>().getAllDiaries();
       final ids = [
         for (final d in all)
           if (d.title.startsWith(_prefix)) d.id,
@@ -198,7 +199,9 @@ class _StressTestTileState extends State<StressTestTile> {
       _showProgress(progress, l10n.app.stressClearing, ids.length);
       for (var start = 0; start < ids.length; start += _chunk) {
         final end = min(start + _chunk, ids.length);
-        await DiaryRepository.get().deleteDiariesByIds(ids.sublist(start, end));
+        await getIt<DiaryRepository>().deleteDiariesByIds(
+          ids.sublist(start, end),
+        );
         progress.value = end / ids.length;
         await Future<void>.delayed(.zero);
       }

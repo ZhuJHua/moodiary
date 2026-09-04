@@ -91,7 +91,7 @@ final class TimelineMonthCountsProvider
 }
 
 String _$timelineMonthCountsHash() =>
-    r'1afb916d7ba3b45c171508bf1c9b9864586ac0fc';
+    r'274bc4691bf8e2f2da8b8e155f0b86761179a5ba';
 
 /// 月份 -> 该月可见日记篇数（月首零点为键，本地时区）。
 ///

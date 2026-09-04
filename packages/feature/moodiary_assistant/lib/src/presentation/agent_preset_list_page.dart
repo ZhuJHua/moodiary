@@ -3,6 +3,7 @@ import 'package:moodiary_assistant/src/data/agent_preset_resolver.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/presentation/agent_preset_sheet.dart';
 import 'package:moodiary_assistant/src/routes.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -31,7 +32,7 @@ class _AgentPresetListPageState extends State<AgentPresetListPage> {
   }
 
   Future<void> _load() async {
-    final presets = await AgentPresetRepository.get().getAll();
+    final presets = await getIt<AgentPresetRepository>().getAll();
     final defaultId = await AgentPresetResolver.defaultId();
     if (!mounted) return;
     setState(() {
@@ -66,7 +67,7 @@ class _AgentPresetListPageState extends State<AgentPresetListPage> {
       isDestructive: true,
     );
     if (!confirmed || !mounted) return;
-    await AgentPresetRepository.get().delete(preset.id);
+    await getIt<AgentPresetRepository>().delete(preset.id);
     // 删的是默认项 → 默认回落内置。
     if (_defaultId == preset.id) {
       MoodiaryKVs.assistantAgentPresetId.set(builtinAgentPresetId);

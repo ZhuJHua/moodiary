@@ -94,7 +94,7 @@ void main() {
       ),
     );
     installFakeFastTokenizer(fakeTokenize);
-    repo = .forTesting(db);
+    repo = DiaryRepository(db);
   });
 
   tearDown(() async {
@@ -333,7 +333,7 @@ void main() {
       expect(await repo.deleteADiary('d1'), isTrue);
       expect(await repo.getDiaryByBusinessId('d1'), isNull);
       expect(await search('苹果'), isEmpty);
-      final tombstone = await TombstoneRepository.forTesting(db)
+      final tombstone = await TombstoneRepository(db)
           .getByKey(SyncTombstone.diaryKey('d1'));
       expect(tombstone, isNotNull);
     });
@@ -342,7 +342,7 @@ void main() {
       await repo.insertADiary(makeDiary('d1', '苹果'));
       await repo.tombstoneDiaryForSync(makeDiary('d1', '苹果'));
       await repo.insertADiary(makeDiary('d1', '苹果'));
-      final tombstone = await TombstoneRepository.forTesting(db)
+      final tombstone = await TombstoneRepository(db)
           .getByKey(SyncTombstone.diaryKey('d1'));
       expect(tombstone, isNull);
     });
@@ -351,7 +351,7 @@ void main() {
       await repo.insertDiaries([makeDiary('a', '一'), makeDiary('b', '二')]);
       await repo.deleteDiariesByIds(['a', 'b']);
       expect(await repo.getAllDiaries(), isEmpty);
-      expect(await TombstoneRepository.forTesting(db).getAll(), isEmpty);
+      expect(await TombstoneRepository(db).getAll(), isEmpty);
     });
 
     test('事件携带业务 id', () async {

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:injectable/injectable.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:moodiary_editor/src/data/model/weather.dart';
 import 'package:moodiary_http/moodiary_http.dart';
@@ -7,12 +8,9 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
 
 /// 和风天气「实时天气」仓储：按经纬度取 [DiaryWeather]。
+@lazySingleton
 class WeatherRepository {
   WeatherRepository(this._http);
-
-  factory WeatherRepository.get() => _instance;
-
-  static final WeatherRepository _instance = WeatherRepository(.get());
 
   final IHttpClient _http;
 

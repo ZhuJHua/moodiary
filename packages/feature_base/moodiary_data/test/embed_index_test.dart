@@ -23,6 +23,9 @@ Future<TokenizeResult> fakeTokenize(String text) async {
 
 /// 确定性替身：按关键词 one-hot（归一化），含关键词的文本与同词查询余弦距离最小。
 final class FakeEmbedder implements SemanticEmbedder {
+  @override
+  Future<void> dispose() async {}
+
   static const markers = ['旅行', '工作', '美食', '天气'];
 
   int embeddedPassages = 0;
@@ -92,9 +95,9 @@ void main() {
       ),
     );
     installFakeFastTokenizer(fakeTokenize);
-    repo = .forTesting(db);
+    repo = DiaryRepository(db);
     embedder = FakeEmbedder();
-    index = .forTesting(db, embedder);
+    index = EmbedIndexService(db, embedder);
   });
 
   tearDown(() async {

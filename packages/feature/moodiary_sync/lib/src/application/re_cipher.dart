@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
@@ -62,7 +63,7 @@ class CloudReCipher {
   static int _seq = 0;
 
   CloudReCipher(this.backend, {SyncLogger? logger})
-    : _logger = logger ?? .get();
+    : _logger = logger ?? getIt<SyncLogger>();
 
   Map<String, Object?> _backendPayload() => {
     'backend': backend.displayName,

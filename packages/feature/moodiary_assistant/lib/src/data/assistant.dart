@@ -1,5 +1,4 @@
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 enum AssistantRole { user, assistant }
@@ -217,7 +216,5 @@ class AssistantChatRequest {
 }
 
 abstract class AssistantService {
-  factory AssistantService.get() => getIt.get<AssistantService>();
-
   Stream<AssistantStreamEvent> chat(AssistantChatRequest request);
 }

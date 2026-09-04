@@ -13,8 +13,8 @@
 
 1. **不做投机抽象**：桌面形态未定的东西（app_shared 包、barrel 导页面、tab 深链、
    StartupHooks）一律等 desktop 立项再动——这类搬迁无复利，现在搬和届时搬成本相同。
-2. **不撞已拍板决策**：仓储不进 get_it 容器（静态单例是刻意的）；启动编排归 main 不归
-   容器；@PostConstruct 不用；feature 互不引用。
+2. **不撞已拍板决策**：仓储不进 get_it 容器（静态单例是刻意的；**2026-09-04 已翻案**，
+   见文末）；启动编排归 main 不归容器；@PostConstruct 不用；feature 互不引用。
 3. **改法取核验修正版**：多条原始建议被怀疑者证伪或找到了更省的改法，以下写的都是
    修正后的版本。
 
@@ -280,7 +280,7 @@ CI dylib 那条在本机先验证目标用例真跑通过。
 
 | 提议 | 否决理由 |
 |---|---|
-| 仓储进 get_it 容器 | 撞 injectable-di-migration 拍板；desktop 多窗口论证错误（分 isolate 下容器也是 static）；127 调用点换来的收益已有更便宜解法 |
+| 仓储进 get_it 容器 | 撞 injectable-di-migration 拍板；desktop 多窗口论证错误（分 isolate 下容器也是 static）；127 调用点换来的收益已有更便宜解法。**2026-09-04 翻案**：「更便宜解法」（薄 provider 桥）实际被 123 处直接 `.get()` 绕过，抓手形同虚设；已改为容器管整张对象图，见文末 |
 | @Environment 分平台/测试 | 两 app 两份 config 天然隔离；test 替身在 lib 外扫不到 |
 | 「媒体管线整体桌面阻塞」 | gal/fc_native/local_auth/connectivity/screen_brightness/volume_controller 均支持桌面；唯 heif_converter 与 video_player 例外 |
 | HEIF 走 Rust image facade | image crate 无 HEIF 解码器；libheif = C 库 + HEVC 专利 + 体积 |
@@ -320,3 +320,12 @@ CI dylib 那条在本机先验证目标用例真跑通过。
   （其注释明说 ref 会被回收）——保留静态取用并写明原因；search_controller 的
   `_repository` 在 tokenize await 后无守卫，补 `ref.mounted`。
 
+## 2026-09-04 补记：仓储进容器（翻上表第一行）
+
+复核发现薄 provider 桥只有 22 处走、123 处直接 `XxxRepository.get()`，测试 override 在多数页面
+失效；三条对象生命周期通道（get_it / 静态 `_instance` / riverpod）并存。改为标准 injectable 形态：
+`MoodiaryDatabase` 经 app `AppModule.database`（`@preResolve @singleton`）注册；13 个仓储
+`@lazySingleton` 构造器注入 DB / IHttpClient；4 个进程级持有者 `@singleton`；data / editor 成
+micro-package；`repository_providers.dart` 与所有 `.get()` / `.instance` 门面删除，取用一律
+`getIt<X>()`（Notifier / widget 用 `late final`）。AutoSyncWatcher 改为 7 参构造注入。
+DB 打开从与容器装配并行变成 `getIt.init()` 内串行，启动多的是一次 `SELECT 1` 的时间。

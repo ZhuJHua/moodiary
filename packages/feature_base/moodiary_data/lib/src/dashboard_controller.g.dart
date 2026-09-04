@@ -34,7 +34,7 @@ final class DashboardControllerProvider
 }
 
 String _$dashboardControllerHash() =>
-    r'ca059439988798fed8f366ddea8d8b583cff707b';
+    r'b8720320960d812467626695d9bb8bf217526860';
 
 abstract class _$DashboardController extends $AsyncNotifier<DashboardStats> {
   FutureOr<DashboardStats> build();

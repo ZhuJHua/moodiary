@@ -26,6 +26,7 @@ import 'package:moodiary_assistant/src/presentation/markdown_code_block.dart';
 import 'package:moodiary_assistant/src/presentation/model_picker_sheet.dart';
 import 'package:moodiary_assistant/src/routes.dart';
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -213,7 +214,7 @@ class _AssistantPageState extends State<AssistantPage> {
   }
 
   Future<void> _refreshReady() async {
-    final repo = LlmProviderRepository.get();
+    final repo = getIt<LlmProviderRepository>();
     final session = _session;
     // 会话已建立就用它钉住的那份；供应商被删了就回落到默认，别让历史会话打不开。
     final pinned = session == null || session.providerId.isEmpty
@@ -284,7 +285,7 @@ class _AssistantPageState extends State<AssistantPage> {
   /// 对话注入任何内容；归属靠每条回复落库的 model 字段与合成的提示。
   Future<void> _pickModel() async {
     if (_sending) return;
-    final repo = LlmProviderRepository.get();
+    final repo = getIt<LlmProviderRepository>();
     final providers = await repo.getAllProviders();
     final groups = <ProviderModels>[];
     for (final p in providers) {
@@ -313,7 +314,7 @@ class _AssistantPageState extends State<AssistantPage> {
         model: choice.modelId,
         reasoningEffort: choice.level,
       );
-      await ChatRepository.get().upsertSession(updated);
+      await getIt<ChatRepository>().upsertSession(updated);
       if (!mounted) return;
       setState(() => _session = updated);
     }
@@ -329,7 +330,7 @@ class _AssistantPageState extends State<AssistantPage> {
   }
 
   Future<void> _loadSessionById(String id) async {
-    final session = await ChatRepository.get().getSession(id);
+    final session = await getIt<ChatRepository>().getSession(id);
     if (!mounted) return;
     if (session == null) {
       Navigator.of(context).maybePop();
@@ -370,7 +371,7 @@ class _AssistantPageState extends State<AssistantPage> {
     if (!mounted || _session != null) return;
     final preset = id == builtinAgentPresetId
         ? null
-        : await AgentPresetRepository.get().get(id);
+        : await getIt<AgentPresetRepository>().get(id);
     if (!mounted || _session != null) return;
     setState(() {
       _stagedPresetId = preset == null ? builtinAgentPresetId : preset.id;
@@ -389,7 +390,7 @@ class _AssistantPageState extends State<AssistantPage> {
       });
       return;
     }
-    final preset = await AgentPresetRepository.get().get(id);
+    final preset = await getIt<AgentPresetRepository>().get(id);
     if (!mounted || _session?.id != session.id) return;
     setState(() {
       _presetName = preset?.name;
@@ -418,7 +419,7 @@ class _AssistantPageState extends State<AssistantPage> {
       personaSnapshot: _stagedPresetId.isEmpty ? null : persona,
       toolsSnapshot: _stagedPresetId.isEmpty ? null : tools,
     );
-    await ChatRepository.get().upsertSession(session);
+    await getIt<ChatRepository>().upsertSession(session);
     _chat.sessionId = session.id;
     if (mounted) setState(() => _session = session);
     // 与本轮回复并行跑，不 await：标题的延迟和失败都不该压在主回复上。
@@ -430,7 +431,7 @@ class _AssistantPageState extends State<AssistantPage> {
   Future<void> _generateTitle(ChatSession session, String firstUserText) async {
     final provider = _provider;
     if (provider == null) return;
-    final key = await LlmProviderRepository.get().getKey(provider.id);
+    final key = await getIt<LlmProviderRepository>().getKey(provider.id);
     if (key == null || key.isEmpty) return;
     if (!mounted || _session?.id != session.id) return;
 
@@ -443,7 +444,7 @@ class _AssistantPageState extends State<AssistantPage> {
     );
     // 跑的这段时间里会话可能已被切走或删掉，落库前后各查一次。
     if (updated == null || !mounted || _session?.id != session.id) return;
-    await ChatRepository.get().upsertSession(updated);
+    await getIt<ChatRepository>().upsertSession(updated);
     if (!mounted || _session?.id != session.id) return;
     setState(() => _session = updated);
   }
@@ -502,7 +503,7 @@ class _AssistantPageState extends State<AssistantPage> {
   }) async {
     final provider = _provider;
     if (provider == null) return null;
-    final key = await LlmProviderRepository.get().getKey(provider.id);
+    final key = await getIt<LlmProviderRepository>().getKey(provider.id);
     if (key == null || key.isEmpty) return null;
     // 协议与 baseUrl 按**模型**解析：中转站底下 Claude 走 messages、GPT 走
     // responses，取供应商级的会直接发错地方。
@@ -641,7 +642,7 @@ class _AssistantPageState extends State<AssistantPage> {
     // 模型能力 × 预设声明：子集为空 = 本会话不挂工具，目录层也跟着略去。
     final toolsActive =
         _canUseTools && (allowedTools == null || allowedTools.isNotEmpty);
-    final memories = await MemoryRepository.get().getRecent(
+    final memories = await getIt<MemoryRepository>().getRecent(
       memoryInjectionLimit,
     );
     if (!mounted || gen != _generation) return;
@@ -700,7 +701,7 @@ class _AssistantPageState extends State<AssistantPage> {
     final needApiKeyText = l10n.assistant.needApiKey;
     var errored = false;
     try {
-      _streamSub = AssistantService.get()
+      _streamSub = getIt<AssistantService>()
           .chat(request)
           .listen(
             (event) {
@@ -822,7 +823,7 @@ class _AssistantPageState extends State<AssistantPage> {
     if (session == null || _lastTurnInputTokens <= 0) return null;
     final provider = _provider;
     if (provider == null) return null;
-    final key = await LlmProviderRepository.get().getKey(provider.id);
+    final key = await getIt<LlmProviderRepository>().getKey(provider.id);
     if (key == null || key.isEmpty) return null;
     if (!mounted || _session?.id != session.id) return null;
 
@@ -846,7 +847,7 @@ class _AssistantPageState extends State<AssistantPage> {
       apiKey: key,
     );
     if (updated == null || !mounted || _session?.id != session.id) return null;
-    await ChatRepository.get().upsertSession(updated);
+    await getIt<ChatRepository>().upsertSession(updated);
     if (!mounted || _session?.id != session.id) return null;
     setState(() => _session = updated);
     _syncCompactionNotice();
@@ -891,7 +892,7 @@ class _AssistantPageState extends State<AssistantPage> {
       compactedAt: null,
       compactedInputTokensAtTrigger: null,
     );
-    await ChatRepository.get().upsertSession(restored);
+    await getIt<ChatRepository>().upsertSession(restored);
     if (!mounted) return;
     setState(() => _session = restored);
     _syncCompactionNotice();
@@ -1058,7 +1059,7 @@ class _AssistantPageState extends State<AssistantPage> {
   Future<void> _pickImage() async {
     if (_sending) return;
     _inputFocusNode.unfocus();
-    final files = await IFilePicker.get().pickImages(context, maxAssets: 1);
+    final files = await getIt<IFilePicker>().pickImages(context, maxAssets: 1);
     if (files.isEmpty || !mounted) return;
     final first = files.first;
     final saved = await MediaManager.saveImages(imageFileList: [first]);
@@ -2278,7 +2279,8 @@ class AssistantSessionListPage extends StatelessWidget {
       body: _SessionListView(
         onSelect: (session) =>
             AssistantConversationRoute(sessionId: session.id).push(context),
-        onDelete: (session) => ChatRepository.get().deleteSession(session.id),
+        onDelete: (session) =>
+            getIt<ChatRepository>().deleteSession(session.id),
         // 根壳开了 extendBody，底栏整条带高已折进 padding.bottom，直接读来让开。
         padding: .only(bottom: 8 + MediaQuery.paddingOf(context).bottom),
       ),
@@ -2305,7 +2307,7 @@ class _ActiveModelActionState extends State<_ActiveModelAction> {
   @override
   void initState() {
     super.initState();
-    _sub = LlmProviderRepository.get().providerEvents.listen((_) => _load());
+    _sub = getIt<LlmProviderRepository>().providerEvents.listen((_) => _load());
     _load();
   }
 
@@ -2316,7 +2318,7 @@ class _ActiveModelActionState extends State<_ActiveModelAction> {
   }
 
   Future<void> _load() async {
-    final active = await LlmProviderRepository.get().getActiveProvider();
+    final active = await getIt<LlmProviderRepository>().getActiveProvider();
     if (!mounted) return;
     setState(() {
       _active = active;
@@ -2446,7 +2448,7 @@ class _SessionListViewState extends State<_SessionListView> {
   void initState() {
     super.initState();
     _load();
-    _sub = ChatRepository.get().sessionEvents.listen((_) => _load());
+    _sub = getIt<ChatRepository>().sessionEvents.listen((_) => _load());
   }
 
   @override
@@ -2456,7 +2458,7 @@ class _SessionListViewState extends State<_SessionListView> {
   }
 
   Future<void> _load() async {
-    final sessions = await ChatRepository.get().getAllSessions();
+    final sessions = await getIt<ChatRepository>().getAllSessions();
     if (mounted) setState(() => _sessions = sessions);
   }
 

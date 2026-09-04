@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -18,7 +19,7 @@ Future<Map<DateTime, int>> timelineMonthCounts(
   bool uncategorized = false,
   required DiarySort sort,
 }) async {
-  final repository = ref.watch(diaryRepositoryProvider);
+  final repository = getIt<DiaryRepository>();
   // 去抖：底下是全表聚合（isar_plus 读不走索引），同步 pull 逐条发事件，
   // 不去抖等于 pull 期间每帧扫一遍全表（同 categoryDiaryCounts 的处理）。
   Timer? debounce;

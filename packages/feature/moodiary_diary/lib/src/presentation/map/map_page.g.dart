@@ -54,4 +54,4 @@ final class MapDataProvider
   }
 }
 
-String _$mapDataHash() => r'60748068e5411247930347f3cb338f4a4e906a39';
+String _$mapDataHash() => r'2b6bb6638874e31b07c5ec570773ca543b992373';

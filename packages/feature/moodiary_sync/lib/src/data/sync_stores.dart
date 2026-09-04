@@ -4,6 +4,7 @@ import 'package:fast_image/fast_image.dart';
 import 'package:file/file.dart';
 import 'package:file/local.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -82,7 +83,7 @@ abstract interface class SyncMediaFiles {
 }
 
 class RepoSyncDiaryStore implements SyncDiaryStore {
-  final DiaryRepository _repo = .get();
+  late final _repo = getIt<DiaryRepository>();
 
   @override
   Future<List<Diary>> getAllDiaries() => _repo.getAllDiaries();
@@ -101,7 +102,7 @@ class RepoSyncDiaryStore implements SyncDiaryStore {
 }
 
 class RepoSyncCategoryStore implements SyncCategoryStore {
-  final CategoryRepository _repo = .get();
+  late final _repo = getIt<CategoryRepository>();
 
   @override
   Future<List<Category>> getAllCategoriesForSync() => _repo.getAllCategories();
@@ -119,7 +120,7 @@ class RepoSyncCategoryStore implements SyncCategoryStore {
 }
 
 class RepoSyncMediaInfoStore implements SyncMediaInfoStore {
-  final MediaInfoRepository _repo = .get();
+  late final _repo = getIt<MediaInfoRepository>();
 
   @override
   Future<List<MediaInfo>> getAllMediaInfosForSync() => _repo.getAllMediaInfos();
@@ -140,7 +141,7 @@ class RepoSyncMediaInfoStore implements SyncMediaInfoStore {
 }
 
 class RepoSyncTombstoneStore implements SyncTombstoneStore {
-  final TombstoneRepository _repo = .get();
+  late final _repo = getIt<TombstoneRepository>();
 
   @override
   Future<List<SyncTombstone>> getAll() => _repo.getAll();

@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:injectable/injectable.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
@@ -7,15 +7,9 @@ import 'package:moodiary_models/moodiary_models.dart';
 ///
 /// 只管落库的用户行；内置预设「Moodiary助手」是虚拟的（persona 常量 + l10n 名称），
 /// 由 assistant feature 侧合成 roster——data 层不该认识提示词文本与文案。
+@lazySingleton
 class AgentPresetRepository {
-  AgentPresetRepository._(this._db);
-
-  factory AgentPresetRepository.get() => _instance;
-
-  @visibleForTesting
-  AgentPresetRepository.forTesting(this._db);
-
-  static final AgentPresetRepository _instance = ._(MoodiaryDatabase.get());
+  AgentPresetRepository(this._db);
 
   final MoodiaryDatabase _db;
 

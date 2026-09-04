@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/incremental_engine.dart';
@@ -126,8 +127,8 @@ void main() {
         buildDiary(id: 'open', modifiedMs: 100, title: 'editing'),
         buildDiary(id: 'closed', modifiedMs: 100, title: 'done'),
       ]);
-      OpenDiaryRegistry.instance.open('open');
-      addTearDown(() => OpenDiaryRegistry.instance.close('open'));
+      getIt<OpenDiaryRegistry>().open('open');
+      addTearDown(() => getIt<OpenDiaryRegistry>().close('open'));
 
       final report = await engineOn(backend, diaries: store).push();
 
@@ -142,13 +143,13 @@ void main() {
       final backend = FakeRemoteBackend();
       final store = FakeDiaryStore([buildDiary(id: 'a', modifiedMs: 100)]);
 
-      OpenDiaryRegistry.instance.open('a');
-      addTearDown(() => OpenDiaryRegistry.instance.close('a'));
+      getIt<OpenDiaryRegistry>().open('a');
+      addTearDown(() => getIt<OpenDiaryRegistry>().close('a'));
       final first = await engineOn(backend, diaries: store).push();
       expect(first.diaryCount, 0);
       expect(backend.hasObject(SyncKeys.diaryObjectPath('a')), isFalse);
 
-      OpenDiaryRegistry.instance.close('a');
+      getIt<OpenDiaryRegistry>().close('a');
       final second = await engineOn(backend, diaries: store).push();
       expect(second.diaryCount, 1);
       expect(backend.hasObject(SyncKeys.diaryObjectPath('a')), isTrue);
@@ -159,28 +160,28 @@ void main() {
     test('clears 待同步 for an uploaded diary after commit', () async {
       final backend = FakeRemoteBackend();
       final store = FakeDiaryStore([buildDiary(id: 'a', modifiedMs: 100)]);
-      SyncDirtyTracker.instance.markDirty('a');
-      addTearDown(() => SyncDirtyTracker.instance.clearDirty('a'));
+      getIt<SyncDirtyTracker>().markDirty('a');
+      addTearDown(() => getIt<SyncDirtyTracker>().clearDirty('a'));
 
       await engineOn(backend, diaries: store).push();
 
-      expect(SyncDirtyTracker.instance.listenable.value.contains('a'), isFalse);
+      expect(getIt<SyncDirtyTracker>().listenable.value.contains('a'), isFalse);
     });
 
     test('keeps 待同步 for a diary skipped because it is open', () async {
       final backend = FakeRemoteBackend();
       final store = FakeDiaryStore([buildDiary(id: 'a', modifiedMs: 100)]);
-      SyncDirtyTracker.instance.markDirty('a');
-      OpenDiaryRegistry.instance.open('a');
+      getIt<SyncDirtyTracker>().markDirty('a');
+      getIt<OpenDiaryRegistry>().open('a');
       addTearDown(() {
-        SyncDirtyTracker.instance.clearDirty('a');
-        OpenDiaryRegistry.instance.close('a');
+        getIt<SyncDirtyTracker>().clearDirty('a');
+        getIt<OpenDiaryRegistry>().close('a');
       });
 
       await engineOn(backend, diaries: store).push();
 
       // 被「打开中」过滤、未上传 → 仍保留待同步角标。
-      expect(SyncDirtyTracker.instance.listenable.value.contains('a'), isTrue);
+      expect(getIt<SyncDirtyTracker>().listenable.value.contains('a'), isTrue);
     });
   });
 
@@ -704,8 +705,8 @@ void main() {
         },
       });
       final local = FakeDiaryStore([buildDiary(id: 'a', modifiedMs: 1000)]);
-      OpenDiaryRegistry.instance.open('a');
-      addTearDown(() => OpenDiaryRegistry.instance.close('a'));
+      getIt<OpenDiaryRegistry>().open('a');
+      addTearDown(() => getIt<OpenDiaryRegistry>().close('a'));
 
       final report = await engineOn(backend, diaries: local).pull();
       expect(report.diaryCount, 0);
@@ -717,7 +718,7 @@ void main() {
       expect(local.tombstones.rows, isEmpty);
 
       // 关闭后下一轮 pull 正常收敛。
-      OpenDiaryRegistry.instance.close('a');
+      getIt<OpenDiaryRegistry>().close('a');
       final second = await engineOn(backend, diaries: local).pull();
       expect(second.diaryCount, 1);
       expect(local.diaries.containsKey('a'), isFalse);
@@ -752,7 +753,7 @@ void main() {
           buildDiary(id: 'a', modifiedMs: 100),
           buildDiary(id: 'b', modifiedMs: 200),
         ]);
-        SyncCancellation.instance.requestStop();
+        getIt<SyncCancellation>().requestStop();
 
         final report = await engineOn(backend, diaries: store).push();
         expect(report.cancelled, isTrue);

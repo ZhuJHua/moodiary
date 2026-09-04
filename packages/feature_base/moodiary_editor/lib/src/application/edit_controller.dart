@@ -1,5 +1,6 @@
 import 'package:latlong2/latlong.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_editor/src/data/geo_repository.dart';
 import 'package:moodiary_editor/src/data/weather_repository.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -14,7 +15,7 @@ enum DraftSaveResult { saved, failed }
 /// 空白不创建，有内容才 insert，写了又清空则丢弃。
 @riverpod
 class EditController extends _$EditController {
-  DiaryRepository get _repository => .get();
+  late final _repository = getIt<DiaryRepository>();
 
   /// 是否已落库：false → 首次保存走 insert，之后 update。
   bool _persisted = false;
@@ -31,8 +32,8 @@ class EditController extends _$EditController {
 
   /// 最近一次有效 state 快照。dispose 后异步收尾时 provider 已销毁，读
   /// `state`/`ref` 会抛 "Cannot use Ref after dispose"；落库/清理统一走此缓存
-  /// （[DiaryRepository] 是进程级静态单例，不随 provider 生命周期销毁，可安全
-  /// 调用——也因此本类刻意不走 diaryRepositoryProvider），写回 `state` 仍由
+  /// （[DiaryRepository] 是容器懒单例，不随 provider 生命周期销毁，可安全
+  /// 调用），写回 `state` 仍由
   /// `ref.mounted` 守卫。
   Diary? _latest;
 
@@ -139,7 +140,7 @@ class EditController extends _$EditController {
 
   Future<DiaryPosition?> fetchPosition(BuildContext context) async {
     try {
-      final result = await GeoRepository.get().getGeo(context);
+      final result = await getIt<GeoRepository>().getGeo(context);
       if (result == null) return null;
       changePosition(result);
       return result;
@@ -157,7 +158,7 @@ class EditController extends _$EditController {
     final position = state.value?.position;
     if (position == null) return null;
     try {
-      final result = await WeatherRepository.get().getWeather(
+      final result = await getIt<WeatherRepository>().getWeather(
         context: context,
         position: LatLng(position.latitude, position.longitude),
       );

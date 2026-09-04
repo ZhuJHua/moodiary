@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'package:flutter/foundation.dart';
 import 'package:moodiary_assistant/src/application/chat_items.dart';
 import 'package:moodiary_assistant/src/data/chat_repository.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 
 /// 聊天列表的内存真源。取代了实现 flutter_chat_core `ChatController` 的
 /// `IsarChatController`（连同它那条 `ChatOperation` 广播流）。
@@ -16,13 +17,13 @@ import 'package:moodiary_assistant/src/data/chat_repository.dart';
 ///    一个气泡，而不是让每个可见气泡重跑一遍 Markdown 解析。
 class AssistantChatController extends ChangeNotifier {
   /// [repository] 只为测试注入。默认走单例，且是**惰性**取用的 ——
-  /// `ChatRepository.get()` 的静态初始化会碰 Isar，宿主单测里一碰就抛。
+  /// `getIt<ChatRepository>()` 的静态初始化会碰 Isar，宿主单测里一碰就抛。
   AssistantChatController({this.repository});
 
   /// 注入点，默认 null。
   final ChatRepository? repository;
 
-  ChatRepository get _repo => repository ?? ChatRepository.get();
+  ChatRepository get _repo => repository ?? getIt<ChatRepository>();
 
   final List<AssistantChatItem> _items = [];
 

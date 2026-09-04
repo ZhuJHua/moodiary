@@ -1,5 +1,6 @@
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:mui/mui.dart';
@@ -55,7 +56,7 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
   }
 
   Future<void> _load() async {
-    final all = await DiaryRepository.get().getAllDiaries();
+    final all = await getIt<DiaryRepository>().getAllDiaries();
     final visible = all.where((d) => d.show).toList()
       ..sort((a, b) => b.time.compareTo(a.time));
 
@@ -64,7 +65,7 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
         .whereType<String>()
         .where((id) => id.isNotEmpty)
         .toSet();
-    final repository = CategoryRepository.get();
+    final repository = getIt<CategoryRepository>();
     final categories = <Category>[];
     for (final id in ids) {
       final category = await repository.getCategoryById(id);

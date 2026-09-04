@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_migration/src/legacy/legacy_models.dart' as legacy;
 import 'package:moodiary_migration/src/orphan_media_cleaner.dart';
@@ -93,7 +94,7 @@ class VersionMigrator {
       MoodiaryKVs.customFont.set('');
       if (hasLegacyDb()) {
         // scanDiskFonts 经 FontReader 打 Rust——宿主在启动第一行就 await 了桥就绪。
-        final allFont = await FontRepository.get().scanDiskFonts();
+        final allFont = await getIt<FontRepository>().scanDiskFonts();
         await compute(_mergeToV2_7_3, {
           'database': dir(),
           'fonts': [

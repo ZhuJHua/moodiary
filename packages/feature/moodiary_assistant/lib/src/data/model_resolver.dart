@@ -1,5 +1,6 @@
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/llm_preset_repository.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 /// 一款模型的可选项（选择器用）。
@@ -67,7 +68,7 @@ abstract final class ModelResolver {
           ModelOption(id: id, label: id, preset: null, levels: levels),
       ];
     }
-    for (final preset in LlmPresetRepository.get().cachedPresets()) {
+    for (final preset in getIt<LlmPresetRepository>().cachedPresets()) {
       if (preset.id != provider.presetId) continue;
       return [
         for (final m in preset.models)
@@ -90,7 +91,7 @@ abstract final class ModelResolver {
   }
 
   static LlmModelPreset? _presetModel(LlmProvider provider, String modelId) {
-    for (final preset in LlmPresetRepository.get().cachedPresets()) {
+    for (final preset in getIt<LlmPresetRepository>().cachedPresets()) {
       if (preset.id != provider.presetId) continue;
       for (final model in preset.models) {
         if (model.id == modelId) return model;

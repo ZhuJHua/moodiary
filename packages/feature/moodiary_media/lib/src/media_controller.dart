@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -20,19 +21,18 @@ class MediaItems extends _$MediaItems with LoadMoreMixin<MediaItem> {
 
   @override
   FutureOr<List<MediaItem>> build({required MediaType type}) async {
-    final sub = ref
-        .read(diaryRepositoryProvider)
-        .diaryEvents
-        .listen(_applyChange);
+    final sub = getIt<DiaryRepository>().diaryEvents.listen(_applyChange);
     ref.onDispose(sub.cancel);
     return init();
   }
 
   @override
   Future<Iterable<MediaItem>?> load({required int limit, required int offset}) {
-    return ref
-        .read(diaryRepositoryProvider)
-        .getMediaItems(type: type, offset: offset, limit: limit);
+    return getIt<DiaryRepository>().getMediaItems(
+      type: type,
+      offset: offset,
+      limit: limit,
+    );
   }
 
   List<String> _namesOf(Diary d) => switch (type) {
@@ -94,10 +94,8 @@ class MediaCleanupController extends _$MediaCleanupController {
   @override
   void build() {}
 
-  // 本类刻意用静态 `XxxRepository.get()` 而非 ref.read(xxxRepositoryProvider)：
-  // autoDispose 下 ref 在确认弹窗 await 期间被回收，dispose 后碰 ref 会抛。
   Future<MediaCleanupReport> scan() async {
-    final used = await DiaryRepository.get().collectReferencedMedia();
+    final used = await getIt<DiaryRepository>().collectReferencedMedia();
     return AppFiles.scanOrphanMedia(
       usedImages: used.images,
       usedAudios: used.audios,
@@ -115,14 +113,14 @@ class MediaCleanupController extends _$MediaCleanupController {
     // 「文件已不存在」在本机不可区分（媒体下载失败只记日志、pull 照常推进），
     // 按文件存在性删行会把用户手工起的名字做成墓碑推向全网、永久抹掉——
     // 本表是名字的唯一事实源，media_page 的懒补行防的就是同一类事故。
-    final used = await DiaryRepository.get().collectReferencedMedia();
+    final used = await getIt<DiaryRepository>().collectReferencedMedia();
     final referenced = {...used.images, ...used.audios, ...used.videos};
-    final rows = await MediaInfoRepository.get().getAllMediaInfos();
+    final rows = await getIt<MediaInfoRepository>().getAllMediaInfos();
     for (final row in rows) {
       if (referenced.contains(row.fileName)) continue;
       final file = File(AppFiles.getRealPath(row.mediaType, row.fileName));
       if (!await file.exists()) {
-        await MediaInfoRepository.get().deleteAMediaInfo(row.fileName);
+        await getIt<MediaInfoRepository>().deleteAMediaInfo(row.fileName);
       }
     }
   }

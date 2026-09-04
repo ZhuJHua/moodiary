@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_rust/http.dart' show CancelToken;
 
 // 取消令牌是 moodiary_rust 的不透明句柄，经这里转出去，消费方不必直接依赖 moodiary_rust。
@@ -81,8 +80,6 @@ class HttpException implements Exception {
 /// 应用统一 HTTP 客户端接口。默认实现走 Rust(reqwest)，见 `RustHttpClient`。
 abstract class IHttpClient {
   IHttpClient();
-
-  factory IHttpClient.get() => getIt.get<IHttpClient>();
 
   /// 通用请求。[query] / [headers] 的值会被 `toString`，null 值跳过。[plainText] 为
   /// true 时 [HttpResponse.data] 为原始字符串，否则为 `jsonDecode` 结果。[silent]

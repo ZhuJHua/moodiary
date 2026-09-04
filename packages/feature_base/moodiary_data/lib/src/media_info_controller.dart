@@ -1,11 +1,11 @@
 import 'dart:async';
 
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'media_info_repository.dart';
-import 'repository_providers.dart';
 
 part 'media_info_controller.g.dart';
 
@@ -27,7 +27,7 @@ Map<String, MediaInfo> _applyEvent(
 /// 以 fileName 为键——消费方（媒体库 / 播放页）都按文件名点查。
 @riverpod
 class MediaInfoController extends _$MediaInfoController {
-  MediaInfoRepository get _repository => ref.read(mediaInfoRepositoryProvider);
+  late final _repository = getIt<MediaInfoRepository>();
 
   // 首次加载期间事件无处可并，标记后补一次重查（同 LoadMoreMixin.markMissedEvent）。
   bool _missedEvent = false;

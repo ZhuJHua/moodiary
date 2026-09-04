@@ -5,6 +5,7 @@ import 'package:fast_image/fast_image.dart';
 import 'package:fc_native_video_thumbnail/fc_native_video_thumbnail.dart';
 import 'package:gal/gal.dart';
 import 'package:mime/mime.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
@@ -41,7 +42,7 @@ class MediaManager {
       final String name;
       if (mime == 'image/heic' || mime == 'image/heif') {
         name = 'image-${uuidV7()}.jpg';
-        final out = await IHeifDecoder.get().convert(
+        final out = await getIt<IHeifDecoder>().convert(
           imageFile.path,
           outputPath: AppFiles.getRealPath('image', name),
           format: 'jpg',

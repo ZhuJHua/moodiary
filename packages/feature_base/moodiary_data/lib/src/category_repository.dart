@@ -1,21 +1,15 @@
 import 'dart:async';
 
 import 'package:drift/drift.dart';
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:injectable/injectable.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 import 'db/database.dart';
 import 'db/db_codec.dart';
 
+@lazySingleton
 class CategoryRepository {
-  CategoryRepository._(this._db);
-
-  factory CategoryRepository.get() => _instance;
-
-  @visibleForTesting
-  CategoryRepository.forTesting(this._db);
-
-  static final CategoryRepository _instance = ._(MoodiaryDatabase.get());
+  CategoryRepository(this._db);
 
   final MoodiaryDatabase _db;
 

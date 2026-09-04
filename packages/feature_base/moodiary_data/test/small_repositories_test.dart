@@ -20,8 +20,8 @@ void main() {
 
   group('CategoryRepository', () {
     test('增删查 + 墓碑 + 复活闸门', () async {
-      final repo = CategoryRepository.forTesting(db);
-      final tombs = TombstoneRepository.forTesting(db);
+      final repo = CategoryRepository(db);
+      final tombs = TombstoneRepository(db);
       final c = Category.create(categoryName: '生活');
       await repo.insertACategory(c);
       expect((await repo.getAllCategories()).single.categoryName, '生活');
@@ -36,7 +36,7 @@ void main() {
     });
 
     test('分类下有日记时拒绝删除', () async {
-      final repo = CategoryRepository.forTesting(db);
+      final repo = CategoryRepository(db);
       final c = Category.create(categoryName: '生活');
       await repo.insertACategory(c);
       await db
@@ -62,8 +62,8 @@ void main() {
 
   group('MediaInfoRepository', () {
     test('upsert / 查 / 删 + 墓碑往返', () async {
-      final repo = MediaInfoRepository.forTesting(db);
-      final tombs = TombstoneRepository.forTesting(db);
+      final repo = MediaInfoRepository(db);
+      final tombs = TombstoneRepository(db);
       final info = MediaInfo.create(
         fileName: 'audio-1.m4a',
         name: '晨间录音',
@@ -92,7 +92,7 @@ void main() {
 
   group('TombstoneRepository', () {
     test('putAll / deleteByKeys / purgeExpired', () async {
-      final repo = TombstoneRepository.forTesting(db);
+      final repo = TombstoneRepository(db);
       final now = DateTime.utc(2026, 6, 1);
       await repo.putAll([
         SyncTombstone.forDiary(
@@ -123,7 +123,7 @@ void main() {
 
   group('FontRepository', () {
     test('按 family upsert / 查 / 删，字重轴 JSON 往返', () async {
-      final repo = FontRepository.forTesting(db);
+      final repo = FontRepository(db);
       const font = Font(
         fontFileName: 'LXGW.ttf',
         fontWghtAxisMap: {'wght': 400},

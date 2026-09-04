@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_migration/src/legacy/legacy_models.dart' as legacy;
@@ -54,12 +55,12 @@ class EngineMigrationService {
     String? legacyDir,
   }) async {
     final watch = Stopwatch()..start();
-    final db = database ?? MoodiaryDatabase.get();
-    final diaryRepo = diaryRepository ?? DiaryRepository.get();
-    final categoryRepo = categoryRepository ?? CategoryRepository.get();
-    final fontRepo = fontRepository ?? FontRepository.get();
-    final mediaInfoRepo = mediaInfoRepository ?? MediaInfoRepository.get();
-    final tombstoneRepo = tombstoneRepository ?? TombstoneRepository.get();
+    final db = database ?? getIt<MoodiaryDatabase>();
+    final diaryRepo = diaryRepository ?? getIt<DiaryRepository>();
+    final categoryRepo = categoryRepository ?? getIt<CategoryRepository>();
+    final fontRepo = fontRepository ?? getIt<FontRepository>();
+    final mediaInfoRepo = mediaInfoRepository ?? getIt<MediaInfoRepository>();
+    final tombstoneRepo = tombstoneRepository ?? getIt<TombstoneRepository>();
 
     final dir = legacyDir ?? AppFiles.getRealPath('database', '');
     // Isar.open 是 open-or-create：旧库不在时它会造出一个**空库**，往下走就是拿

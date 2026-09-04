@@ -1,17 +1,13 @@
+import 'package:injectable/injectable.dart';
 import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 /// 从端点现拉模型列表。给自定义供应商用 —— 它们不在 models.dev 里，此前只能手打模型 id。
 ///
 /// 三种协议的列表端点形状一致（`{"data":[{"id":…}]}`），差别只在路径与鉴权头。
+@lazySingleton
 class ModelCatalogRepository {
   ModelCatalogRepository(this._http);
-
-  factory ModelCatalogRepository.get() => _instance;
-
-  static final ModelCatalogRepository _instance = ModelCatalogRepository(
-    .get(),
-  );
 
   final IHttpClient _http;
 

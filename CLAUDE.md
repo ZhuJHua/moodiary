@@ -121,8 +121,17 @@ In-app layering within `mobile/lib` (same script): `gen → core → data → co
 ### DI —— get_it + injectable（引导编排与拍板细节见 mobile/CLAUDE.md）
 
 - **绑定注解落在实现类上**（`@Singleton(as:)` / `@LazySingleton(as:)` / `@Injectable(as:)`）；
-  storage / http / assistant / sync 四包各是 micro-package，由 `mobile/lib/app/di/di.dart`
-  一处挂载，**全仓只有一份 `configureDependencies`**。
+  storage / http / ml / data / assistant / sync / editor 七包各是 micro-package，由
+  `mobile/lib/app/di/di.dart` 一处挂载，**全仓只有一份 `configureDependencies`**。
+- **容器管整张对象图**：`MoodiaryDatabase`（app 的 `AppModule.database`，preResolve）、
+  13 个仓储（`@lazySingleton`，构造器注入 DB / IHttpClient）、进程级持有者（Registry /
+  Tracker / Cancellation，`@singleton`）都在容器里。取用一律 `getIt<X>()`：容器内的类走
+  构造器注入，Riverpod Notifier / widget 写 `late final _repo = getIt<X>()`。**Riverpod 只管
+  界面状态**，不再有仓储 provider（2026-09-04 撤掉薄 provider 桥与全部静态 `.get()` 门面）。
+  测试：仓储自测 `XxxRepository(MoodiaryDatabase.forTesting(...))`；上层测试
+  `getIt.registerSingleton<XxxRepository>(替身)` + `tearDown(getIt.reset)`。
+  **全仓没有 `X.get()` 静态门面**（端口的 `IHttpClient.get()` 一类也已删）；`MoodiaryKVs.x.get()`
+  是键访问器不是容器门面，保留。
 - 改了注解**必跑 `dart tool/task.dart build-runner`**（生成物是提交的）。业务代码不手写
   `getIt.register*`；`IRemoteSyncBackend` 的运行时切换走 `RemoteSyncRegistry`，不进容器。
 - **`@PostConstruct` 是刻意不用的**（watcher 会赶在迁移之前醒来）；启动阶段属于 main 的

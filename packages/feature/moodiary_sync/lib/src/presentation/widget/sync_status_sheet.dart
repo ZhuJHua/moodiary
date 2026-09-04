@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -50,10 +51,10 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
   void initState() {
     super.initState();
     // 卡片可能在同步中途打开：先从内存 ring buffer 回放本会话事件补齐计数，再订阅后续。
-    for (final event in SyncLogger.get().recent) {
+    for (final event in getIt<SyncLogger>().recent) {
       _applyCounter(event);
     }
-    _sub = SyncLogger.get().events.listen((event) {
+    _sub = getIt<SyncLogger>().events.listen((event) {
       if (!mounted) return;
       setState(() => _applyCounter(event));
     });
@@ -186,7 +187,7 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
 
     if (!running) return buildSheet(false);
     return ValueListenableBuilder(
-      valueListenable: SyncCancellation.instance.listenable,
+      valueListenable: getIt<SyncCancellation>().listenable,
       builder: (context, stopping, _) => buildSheet(stopping),
     );
   }

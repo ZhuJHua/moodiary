@@ -1,4 +1,5 @@
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
@@ -36,10 +37,10 @@ class SyncStats {
 /// 以 [SyncStats.remoteError] 呈现，本地数量始终可用。
 @riverpod
 Future<SyncStats> syncStats(Ref ref) async {
-  final diaries = await ref.read(diaryRepositoryProvider).getAllDiaries();
+  final diaries = await getIt<DiaryRepository>().getAllDiaries();
   final localDiaries = diaries.length;
   final localCategories =
-      (await ref.read(categoryRepositoryProvider).getAllCategories()).length;
+      (await getIt<CategoryRepository>().getAllCategories()).length;
 
   int? remoteDiaries;
   int? remoteCategories;

@@ -68,7 +68,7 @@ final class MediaItemsProvider
   }
 }
 
-String _$mediaItemsHash() => r'4ca954e78e18ff9672831c24aa3dcfe5ca2cb00f';
+String _$mediaItemsHash() => r'edbb801306abd0254b08319471e4057f6fb0584b';
 
 /// 媒体库分页数据源：按 [MediaType] 分页加载**媒体条目**（一页 [pageSize] 个文件，
 /// 日记时间倒序）。每类一个 family 实例，各自维护 offset / noMore。
@@ -180,7 +180,7 @@ final class MediaCleanupControllerProvider
 }
 
 String _$mediaCleanupControllerHash() =>
-    r'66acabaa965b5a26227ee93becb42cd755f71715';
+    r'64e5cff97a19df503a65ea26778e9bf4552d846a';
 
 /// 媒体清理：找出 / 删除未被任何日记引用的孤儿媒体文件。[scan] 只扫描不删除；
 /// [clean] 只删文件——刷新（失效 [mediaItemsProvider]）由调用方用自身有效 ref 触发，

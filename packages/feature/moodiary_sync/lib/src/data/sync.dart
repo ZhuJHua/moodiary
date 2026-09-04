@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/sync_registry.dart';
@@ -68,7 +69,7 @@ abstract class RemoteObjectStore {
 }
 
 abstract class IRemoteSyncBackend implements SyncBackend, RemoteObjectStore {
-  factory IRemoteSyncBackend.get() => RemoteSyncRegistry.get().backend;
+  factory IRemoteSyncBackend.get() => getIt<RemoteSyncRegistry>().backend;
 
   /// 与 KV `syncProvider` 对齐的 provider 类型。
   SyncProviderType get type;

@@ -7,6 +7,7 @@ import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/js_sandbox.dart';
 import 'package:moodiary_assistant/src/data/memory_repository.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
@@ -699,7 +700,7 @@ abstract final class AssistantToolRegistry {
     final endExclusive = _parseDate(input['endDate'])
         ?.add(const Duration(days: 1));
 
-    final repo = DiaryRepository.get();
+    final repo = getIt<DiaryRepository>();
     List<Diary> results;
     if (rawKeywords.isNotEmpty) {
       // 关键词必须走与建索引同一套 jieba 分词，否则中文按空格硬切、命中率骤降。
@@ -753,7 +754,7 @@ abstract final class AssistantToolRegistry {
     if (query.isEmpty) {
       return 'Failed: query must not be empty.';
     }
-    final index = EmbedIndexService.get();
+    final index = getIt<EmbedIndexService>();
     if (!index.enabled) {
       return 'Semantic search is not available: the local embedding model is '
           'not enabled on this device. Use queryDiaries with keywords instead.';
@@ -778,7 +779,7 @@ abstract final class AssistantToolRegistry {
           'nothing exists.';
     }
 
-    final repo = DiaryRepository.get();
+    final repo = getIt<DiaryRepository>();
     final buffer = StringBuffer()
       ..writeln(
         '${hits.length} semantically similar entries, best match first '
@@ -843,7 +844,7 @@ abstract final class AssistantToolRegistry {
       return 'Failed: no diary id given. Get ids from queryDiaries first.';
     }
 
-    final repo = DiaryRepository.get();
+    final repo = getIt<DiaryRepository>();
     final chunks = <String>[];
     final missing = <String>[];
     for (final id in ids.take(_maxBatchRead)) {
@@ -1013,11 +1014,11 @@ abstract final class AssistantToolRegistry {
   }
 
   static Future<String> _diaryOverview(Map<String, dynamic> input) async {
-    final repo = DiaryRepository.get();
+    final repo = getIt<DiaryRepository>();
     final counts = await repo.diaryCountByCategory();
     if (counts.total == 0) return 'No diaries yet.';
 
-    final cats = await CategoryRepository.get().getAllCategories();
+    final cats = await getIt<CategoryRepository>().getAllCategories();
     final nameById = {for (final c in cats) c.id: c.categoryName};
     final newest = await repo.getDiaryByCategory(sort: .timeDesc, limit: 1);
     final oldest = await repo.getDiaryByCategory(sort: .timeAsc, limit: 1);
@@ -1090,7 +1091,7 @@ abstract final class AssistantToolRegistry {
       type: converted.type,
       aspect: null,
     );
-    await DiaryRepository.get().insertADiary(diary);
+    await getIt<DiaryRepository>().insertADiary(diary);
     return 'Created "${title.isEmpty ? 'Untitled' : title}" '
         '(${TimeFormat.isoDate(diary.time)}), id=${diary.id}.';
   }
@@ -1120,7 +1121,7 @@ abstract final class AssistantToolRegistry {
     final id = (input['id'] as String?)?.trim() ?? '';
     if (id.isEmpty) return 'Failed: no diary id given.';
 
-    final repo = DiaryRepository.get();
+    final repo = getIt<DiaryRepository>();
     final existing = await repo.getDiaryByBusinessId(id);
     if (existing == null || !existing.show) {
       return 'Failed: no diary with id=$id.';
@@ -1175,7 +1176,7 @@ abstract final class AssistantToolRegistry {
     final id = (input['id'] as String?)?.trim() ?? '';
     if (id.isEmpty) return 'Failed: no diary id given.';
 
-    final repo = DiaryRepository.get();
+    final repo = getIt<DiaryRepository>();
     final existing = await repo.getDiaryByBusinessId(id);
     if (existing == null) return 'Failed: no diary with id=$id.';
 
@@ -1191,7 +1192,7 @@ abstract final class AssistantToolRegistry {
   }
 
   static Future<String> _listCategories(Map<String, dynamic> input) async {
-    final cats = await CategoryRepository.get().getAllCategories();
+    final cats = await getIt<CategoryRepository>().getAllCategories();
     if (cats.isEmpty) return 'No categories yet.';
     final buffer = StringBuffer();
     for (final c in cats) {
@@ -1208,7 +1209,7 @@ abstract final class AssistantToolRegistry {
     if (name.isEmpty) return 'Failed: the category name cannot be empty.';
     final category = Category.create(categoryName: name);
     try {
-      await CategoryRepository.get().insertACategory(category);
+      await getIt<CategoryRepository>().insertACategory(category);
       return 'Created category "$name", id=${category.id}.';
     } catch (_) {
       return 'Failed: could not create the category.';
@@ -1225,7 +1226,7 @@ abstract final class AssistantToolRegistry {
       return 'Failed: category id and name are both required.';
     }
 
-    final repo = CategoryRepository.get();
+    final repo = getIt<CategoryRepository>();
     final existing = await repo.getCategoryById(id);
     if (existing == null) {
       return 'Failed: no category with id=$id.';
@@ -1250,7 +1251,7 @@ abstract final class AssistantToolRegistry {
     if (id.isEmpty) return 'Failed: no category id given.';
     bool ok;
     try {
-      ok = await CategoryRepository.get().deleteACategory(id);
+      ok = await getIt<CategoryRepository>().deleteACategory(id);
     } catch (_) {
       ok = false;
     }
@@ -1262,7 +1263,7 @@ abstract final class AssistantToolRegistry {
   static const _validMemoryCategories = {'preference', 'theme', 'goal', 'fact'};
 
   static Future<String> _listMemories(Map<String, dynamic> input) async {
-    final memories = await MemoryRepository.get().getAll();
+    final memories = await getIt<MemoryRepository>().getAll();
     if (memories.isEmpty) return 'No saved facts yet.';
     final buffer = StringBuffer();
     for (final m in memories) {
@@ -1280,7 +1281,7 @@ abstract final class AssistantToolRegistry {
     final rawCat = (input['category'] as String?)?.trim() ?? 'fact';
     final category = _validMemoryCategories.contains(rawCat) ? rawCat : 'fact';
     final entry = MemoryEntry.create(category: category, text: text);
-    await MemoryRepository.get().put(entry);
+    await getIt<MemoryRepository>().put(entry);
     return 'Remembered ($category): $text (id=${entry.id}).';
   }
 
@@ -1293,7 +1294,7 @@ abstract final class AssistantToolRegistry {
     if (id.isEmpty || text.isEmpty) {
       return 'Failed: memory id and text are both required.';
     }
-    final repo = MemoryRepository.get();
+    final repo = getIt<MemoryRepository>();
     final existing = await repo.get(id);
     if (existing == null) return 'Failed: no memory with id=$id.';
     final rawCat = (input['category'] as String?)?.trim();
@@ -1363,7 +1364,7 @@ abstract final class AssistantToolRegistry {
   static Future<String> _forgetOneFact(Map<String, dynamic> input) async {
     final id = (input['id'] as String?)?.trim() ?? '';
     if (id.isEmpty) return 'Failed: no memory id given.';
-    final ok = await MemoryRepository.get().delete(id);
+    final ok = await getIt<MemoryRepository>().delete(id);
     return ok
         ? 'Deleted the memory (id=$id).'
         : 'Failed: no memory with id=$id.';
@@ -1372,7 +1373,7 @@ abstract final class AssistantToolRegistry {
   static Future<String?> _resolveCategoryId(Object? raw) async {
     final id = (raw as String?)?.trim();
     if (id == null || id.isEmpty) return null;
-    final cat = await CategoryRepository.get().getCategoryById(id);
+    final cat = await getIt<CategoryRepository>().getCategoryById(id);
     return cat == null ? null : id;
   }
 
@@ -1381,7 +1382,7 @@ abstract final class AssistantToolRegistry {
 
   /// 分类 id → 名字。查不到（已删）时返回 null，调用方自行降级。
   static Future<String?> _categoryNameOf(String id) async {
-    final cats = await CategoryRepository.get().getAllCategories();
+    final cats = await getIt<CategoryRepository>().getAllCategories();
     for (final c in cats) {
       if (c.id == id) return c.categoryName;
     }

@@ -1,5 +1,3 @@
-import 'package:moodiary_di/moodiary_di.dart';
-
 /// 本地备份归档的进出口。
 ///
 /// **不是整库备份**，范围就是日记 + 分类 + 媒体元数据 + 日记引用到的媒体文件
@@ -12,8 +10,6 @@ import 'package:moodiary_di/moodiary_di.dart';
 /// 「导入与导出」页 —— 两者都是 feature 层、互相不能 import，故契约下沉到这里，
 /// 由 app 层在 DI 里把 sync 的实现接上（同 [IFilePicker] / [IHttpClient] 的做法）。
 abstract class IBackupArchive {
-  static IBackupArchive get() => getIt.get<IBackupArchive>();
-
   /// 打包全部日记与媒体（范围见类文档），返回生成的 zip 路径。
   Future<String> export();
 

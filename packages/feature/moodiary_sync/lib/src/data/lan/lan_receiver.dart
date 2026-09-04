@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
@@ -121,7 +122,7 @@ class LanReceiverService {
     _usedNonces.clear();
     _authFailures = 0;
     _authLocked = false;
-    final server = _server ??= IHttpServer.create();
+    final server = _server ??= getIt<IHttpServer>();
     await server.start(
       handler: _handle,
       preferredPort: lanDefaultPort,

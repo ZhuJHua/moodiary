@@ -1,8 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:moodiary_di/moodiary_di.dart';
-
 /// 收到的请求（body 已收集完毕才交给 handler）。
 class HttpServerRequest {
   /// 大写方法名（GET / POST / ...）。
@@ -91,9 +89,6 @@ typedef HttpServerHandler = Future<HttpServerResponse> Function(
 /// 文件响应与 Range）由实现负责。
 abstract class IHttpServer {
   IHttpServer();
-
-  /// 每次调用返回一个新实例（实现类上的 `@Injectable` 是工厂注册）。
-  factory IHttpServer.create() => getIt.get<IHttpServer>();
 
   /// 启动服务。[preferredPort] 被占自动回退随机端口（[port] 读实际值）；
   /// [loopbackOnly] 为 true 只监听 127.0.0.1，否则监听所有 IPv4 接口。

@@ -5,6 +5,7 @@ import 'package:moodiary_assistant/src/data/llm_provider_repository.dart';
 import 'package:moodiary_assistant/src/presentation/provider_logo.dart';
 import 'package:moodiary_assistant/src/routes.dart';
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -20,7 +21,7 @@ class AssistantProviderListPage extends StatefulWidget {
 }
 
 class _AssistantProviderListPageState extends State<AssistantProviderListPage> {
-  LlmProviderRepository get _repo => .get();
+  late final _repo = getIt<LlmProviderRepository>();
 
   List<LlmProvider> _providers = const [];
   Set<String> _withKey = const {};

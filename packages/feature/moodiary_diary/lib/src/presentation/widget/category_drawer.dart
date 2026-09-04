@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/src/application/diary_filter.dart';
 import 'package:moodiary_diary/src/application/diary_selection.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
@@ -58,7 +59,7 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
     return Drawer(
       child: SafeArea(
         child: ValueListenableBuilder(
-          valueListenable: SyncPendingTracker.instance.listenable,
+          valueListenable: getIt<SyncPendingTracker>().listenable,
           builder: (context, pending, _) {
             return Column(
               crossAxisAlignment: .stretch,

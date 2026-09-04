@@ -1,5 +1,6 @@
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 
@@ -51,7 +52,7 @@ class _DataRepairTileState extends State<DataRepairTile> {
     setState(() => _repairing = true);
     toast.loading(message: l10n.app.repairRunning);
     try {
-      final report = await DiaryRepository.get().repairData();
+      final report = await getIt<DiaryRepository>().repairData();
       await toast.dismiss();
       if (!mounted) return;
       await _showResult(report);

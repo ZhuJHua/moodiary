@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:cached_network_image_ce/cached_network_image.dart';
 import 'package:dismissible_page/dismissible_page.dart';
 import 'package:fast_image/fast_image.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
@@ -321,7 +322,7 @@ class _MImageBrowserState extends State<MImageBrowser> {
       if (_isNetwork(image)) {
         toast.loading();
         try {
-          final resp = await IHttpClient.get().requestBytes(
+          final resp = await getIt<IHttpClient>().requestBytes(
             .get,
             image,
             silent: true,

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/model_resolver.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 /// 会话标题：第一条用户消息发出后，用一次辅助模型调用把它总结成短标题。
@@ -94,7 +95,7 @@ class SessionTitleController {
     final buffer = StringBuffer();
     final done = Completer<bool>();
     late final StreamSubscription<AssistantStreamEvent> sub;
-    sub = AssistantService.get()
+    sub = getIt<AssistantService>()
         .chat(request)
         .listen(
           (event) {

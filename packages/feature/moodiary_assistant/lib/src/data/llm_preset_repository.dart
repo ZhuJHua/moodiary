@@ -1,16 +1,14 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:injectable/injectable.dart';
 import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 
+@lazySingleton
 class LlmPresetRepository {
   LlmPresetRepository(this._http);
-
-  factory LlmPresetRepository.get() => _instance;
-
-  static final LlmPresetRepository _instance = LlmPresetRepository(.get());
 
   final IHttpClient _http;
 

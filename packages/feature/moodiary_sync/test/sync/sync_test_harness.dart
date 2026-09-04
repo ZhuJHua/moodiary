@@ -427,18 +427,19 @@ setUpSyncEnv() async {
   // prod 由组合根在装载后显式 reload；测试注新构造的空持有者，未 reload 前
   // hasBackend 为 false。
   getIt.registerSingleton<RemoteSyncRegistry>(RemoteSyncRegistry());
+  // 四个进程级持有者：prod 由 micro-package 注册为 @singleton，测试每次新建。
+  getIt.registerSingleton<OpenDiaryRegistry>(OpenDiaryRegistry());
+  getIt.registerSingleton<SyncPendingTracker>(SyncPendingTracker());
+  getIt.registerSingleton<SyncDirtyTracker>(SyncDirtyTracker());
+  getIt.registerSingleton<SyncCancellation>(SyncCancellation());
   // 预置设备 id：RemoteLease 无此值时会调 uuidV4()（Rust），测试环境不可用。
   MoodiaryKVs.syncDeviceId.set('test-device');
-  SyncCancellation.instance.reset();
-  SyncPendingTracker.instance.clear();
   RemoteLease.resetCasProbeCache();
   SyncKeyManager.resetForTest();
   return (kv: kv, secure: secure, logger: logger);
 }
 
 Future<void> tearDownSyncEnv() async {
-  SyncCancellation.instance.reset();
-  SyncPendingTracker.instance.clear();
   RemoteLease.resetCasProbeCache();
   SyncKeyManager.resetForTest();
   await getIt.reset();

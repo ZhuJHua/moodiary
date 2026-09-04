@@ -71,7 +71,7 @@ final class DiaryEgoGraphProvider
   }
 }
 
-String _$diaryEgoGraphHash() => r'777998a10bdfca569da6642f191ce441707162ca';
+String _$diaryEgoGraphHash() => r'c4ec6f6ae3460d92b203a52b917797d222d85f59';
 
 /// 以某篇日记为中心的 k 跳邻域。全程主键批量 get（见 [DiaryRepository.buildEgoGraph]），
 /// 成本随邻域规模增长、与总日记数无关，所以详情页高频进出也不心疼。

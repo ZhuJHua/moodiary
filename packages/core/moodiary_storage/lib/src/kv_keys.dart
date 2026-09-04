@@ -1,3 +1,4 @@
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 
 /// Moodiary 全部本地 KV 配置；业务侧只允许通过本 enum 访问。
@@ -153,11 +154,11 @@ enum MoodiaryKVs<T extends Object> {
 
   const MoodiaryKVs({this.defaultValue});
 
-  T? get() => IKVStorage.get().get<T>(name) ?? defaultValue;
+  T? get() => getIt<IKVStorage>().get<T>(name) ?? defaultValue;
 
-  void set(T value) => IKVStorage.get().set<T>(name, value);
+  void set(T value) => getIt<IKVStorage>().set<T>(name, value);
 
-  void remove() => IKVStorage.get().remove(name);
+  void remove() => getIt<IKVStorage>().remove(name);
 
   /// 把本键的值从 [source] 搬进 [into]，类型由 [T] 决定；源里没有就跳过。
   /// 换 KV 后端时用——泛型只有在 enum 自己的实例方法里才绑得住，
@@ -173,12 +174,12 @@ enum MoodiaryKVs<T extends Object> {
         'MoodiaryKVs.$name has no defaultValue; getNotifier() requires one.',
       );
     }
-    return IKVStorage.get().getNotifier<T>(name, defaultValue as T);
+    return getIt<IKVStorage>().getNotifier<T>(name, defaultValue as T);
   }
 
   /// 同 [getNotifier]，但就地提供 [fallback]，用于无 defaultValue 又想监听的 key。
   KVNotifier<T> getNotifierOr(T fallback) {
-    return IKVStorage.get().getNotifier<T>(name, defaultValue ?? fallback);
+    return getIt<IKVStorage>().getNotifier<T>(name, defaultValue ?? fallback);
   }
 }
 
@@ -204,9 +205,9 @@ enum MoodiarySecureKVs {
   /// 天地图 API Key。
   tiandituKey;
 
-  Future<String?> get() => ISecureKVStorage.get().get(name);
+  Future<String?> get() => getIt<ISecureKVStorage>().get(name);
 
-  Future<void> set(String value) => ISecureKVStorage.get().set(name, value);
+  Future<void> set(String value) => getIt<ISecureKVStorage>().set(name, value);
 
-  Future<void> remove() => ISecureKVStorage.get().remove(name);
+  Future<void> remove() => getIt<ISecureKVStorage>().remove(name);
 }

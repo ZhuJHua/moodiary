@@ -65,7 +65,8 @@ class MoodLlmEngine {
     });
   }
 
-  /// 立即释放模型（停用模型 / 重置数据时调用）。
+  /// 立即释放模型（停用模型 / 重置数据时调用；`getIt.reset()` 也会经此回收）。
+  @disposeMethod
   Future<void> dispose() {
     _idleTimer?.cancel();
     _chain = _chain.then((_) => _classifier.unload());

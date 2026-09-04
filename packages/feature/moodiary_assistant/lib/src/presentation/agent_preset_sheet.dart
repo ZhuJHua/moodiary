@@ -1,6 +1,7 @@
 import 'package:moodiary_assistant/src/data/agent_preset_repository.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_tool_ui.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:mui/mui.dart';
@@ -14,7 +15,7 @@ Future<AgentPresetChoice?> showAgentPresetPicker(
   BuildContext context, {
   required String selectedId,
 }) async {
-  final presets = await AgentPresetRepository.get().getAll();
+  final presets = await getIt<AgentPresetRepository>().getAll();
   if (!context.mounted) return null;
   return MSheet.show<AgentPresetChoice>(
     context,

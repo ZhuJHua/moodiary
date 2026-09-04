@@ -5,6 +5,7 @@ import 'package:moodiary_assistant/src/data/model_catalog_repository.dart';
 import 'package:moodiary_assistant/src/data/model_resolver.dart';
 import 'package:moodiary_assistant/src/presentation/model_picker_sheet.dart';
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -28,7 +29,7 @@ class AssistantProviderEditPage extends ConsumerStatefulWidget {
 
 class _AssistantProviderEditPageState
     extends ConsumerState<AssistantProviderEditPage> {
-  LlmProviderRepository get _repo => .get();
+  late final _repo = getIt<LlmProviderRepository>();
 
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
@@ -206,7 +207,7 @@ class _AssistantProviderEditPageState
     }
     setState(() => _fetchingModels = true);
     try {
-      final ids = await ModelCatalogRepository.get().fetch(
+      final ids = await getIt<ModelCatalogRepository>().fetch(
         protocol: _type,
         baseUrl: _baseUrl.text.trim(),
         apiKey: key,

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
@@ -92,7 +93,7 @@ class IncrementalSyncEngine {
     return IncrementalSyncEngine._(
       _GatedBackend(backend, n),
       n,
-      logger ?? .get(),
+      logger ?? getIt<SyncLogger>(),
       diaryStore ?? RepoSyncDiaryStore(),
       categoryStore ?? RepoSyncCategoryStore(),
       mediaInfoStore ?? RepoSyncMediaInfoStore(),
@@ -332,7 +333,7 @@ class IncrementalSyncEngine {
     // 权威跳过「打开中的日记」：push 前冻结一份 open-set 快照，把这些条目排除出本次
     // 上传。仅滤 push（pull 仍按 LWW 回写）；manifest 不会因本地缺席而删条目，故被
     // 跳过的日记远端副本原样保留，关闭后下一轮同步再收敛。
-    final openSnapshot = OpenDiaryRegistry.instance.snapshot();
+    final openSnapshot = getIt<OpenDiaryRegistry>().snapshot();
     final diaries = (await _diaryStore.getAllDiaries())
         .where((d) => !openSnapshot.contains(d.id))
         .toList();
@@ -374,7 +375,7 @@ class IncrementalSyncEngine {
 
     Future<void> pushOneDiary(Diary diary) async {
       // 协作式停止：不发起新条目，已完成条目的 manifest 照常写回（进度不丢）。
-      if (SyncCancellation.instance.isRequested) return;
+      if (getIt<SyncCancellation>().isRequested) return;
       final key = SyncKeys.diary(diary.id);
       final remoteEntry = manifest.entries[key];
 
@@ -441,7 +442,7 @@ class IncrementalSyncEngine {
     await runPooled(diaries, concurrency, pushOneDiary);
 
     Future<void> pushOneCategory(Category category) async {
-      if (SyncCancellation.instance.isRequested) return;
+      if (getIt<SyncCancellation>().isRequested) return;
       final key = SyncKeys.category(category.id);
       final remoteEntry = manifest.entries[key];
       final remoteMs = remoteEntry?.timeMs;
@@ -480,7 +481,7 @@ class IncrementalSyncEngine {
     await runPooled(categories, concurrency, pushOneCategory);
 
     Future<void> pushOneMediaInfo(MediaInfo mediaInfo) async {
-      if (SyncCancellation.instance.isRequested) return;
+      if (getIt<SyncCancellation>().isRequested) return;
       final key = SyncKeys.mediaInfo(mediaInfo.fileName);
       final remoteEntry = manifest.entries[key];
       final remoteMs = remoteEntry?.timeMs;
@@ -602,7 +603,7 @@ class IncrementalSyncEngine {
     }
 
     for (final t in tombstones.snapshot()) {
-      if (SyncCancellation.instance.isRequested) break;
+      if (getIt<SyncCancellation>().isRequested) break;
       pushOneTombstone(t);
     }
 
@@ -645,11 +646,11 @@ class IncrementalSyncEngine {
     await tombstones.flush(_tombstoneStore);
     // 提交确认后清除已同步日记的「待同步」角标。
     for (final id in pushedDiaryIds) {
-      SyncDirtyTracker.instance.clearDirty(id);
+      getIt<SyncDirtyTracker>().clearDirty(id);
     }
 
     sw.stop();
-    final stopped = SyncCancellation.instance.isRequested;
+    final stopped = getIt<SyncCancellation>().isRequested;
     // 整轮无失败无中断才算重传完成：半截清掉标记会让剩下的旧密文媒体永远留在
     // 远端且再也不会被覆盖。
     if (_distrustRemoteMedia && failed == 0 && !stopped) {

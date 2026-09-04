@@ -2,20 +2,14 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:drift/drift.dart';
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:injectable/injectable.dart';
 
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
+@lazySingleton
 class ChatRepository {
-  ChatRepository._(this._db);
-
-  factory ChatRepository.get() => _instance;
-
-  @visibleForTesting
-  ChatRepository.forTesting(this._db);
-
-  static final ChatRepository _instance = ._(MoodiaryDatabase.get());
+  ChatRepository(this._db);
 
   final MoodiaryDatabase _db;
 

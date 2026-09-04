@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_editor/moodiary_editor.dart';
 import 'package:moodiary_editor/src/data/markdown_media.dart';
 import 'package:moodiary_files/moodiary_files.dart';
@@ -97,7 +98,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
   /// 直接进选择器 —— 「相册 / 拍照」那个二选一弹窗已经去掉了：拍照是选择器
   /// 网格的第一格，多一层弹窗只是让两条路都多一次点击。
   Future<void> _pickImages() async {
-    final files = await IFilePicker.get().pickImages(context);
+    final files = await getIt<IFilePicker>().pickImages(context);
     if (files.isEmpty) return;
     await _insertPicked(files);
   }
@@ -145,7 +146,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
 
   // —— 视频：选取（相册网格首格就是录像）→ 存盘（含缩略图）→ insertVideo —— //
   Future<void> _pickVideo() async {
-    final file = await IFilePicker.get().pickVideo(context);
+    final file = await getIt<IFilePicker>().pickVideo(context);
     if (file == null) return;
     final saved = await MediaManager.saveVideo(videoFileList: [file]);
     final name = saved[file.path];
@@ -187,7 +188,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
     Navigator.of(sheetContext).pop();
     String? name;
     try {
-      final file = await IFilePicker.get().pickAudio();
+      final file = await getIt<IFilePicker>().pickAudio();
       if (file == null) return;
       final ext = p.extension(file.path);
       name = 'audio-${uuidV7()}$ext';
@@ -240,7 +241,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
     Duration? duration,
   }) async {
     try {
-      await MediaInfoRepository.get().insertAMediaInfo(
+      await getIt<MediaInfoRepository>().insertAMediaInfo(
         MediaInfo.create(
           fileName: fileName,
           name: title,
@@ -282,7 +283,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
   Future<List<DiaryLinkCandidate>> _linkCandidates(String query) async {
     final q = query.trim();
     if (q.isEmpty) return const [];
-    final diaries = await DiaryRepository.get().searchDiariesByText(
+    final diaries = await getIt<DiaryRepository>().searchDiariesByText(
       q,
       limit: 12,
     );
@@ -340,7 +341,8 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       fontResolver: () => ThemeManager().editorFont,
       mediaResolver: appMediaResolver,
       mediaNameResolver: (name) async =>
-          (await MediaInfoRepository.get().getMediaInfoByFileName(name))?.name,
+          (await getIt<MediaInfoRepository>().getMediaInfoByFileName(name))
+              ?.name,
       audioDefaultName: context.l10n.common.audio,
       loadingBuilder: (_) => const MLoading(),
     );

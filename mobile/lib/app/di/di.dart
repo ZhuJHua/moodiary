@@ -2,8 +2,11 @@ import 'package:injectable/injectable.dart';
 import 'package:moodiary_assistant/injectable.module.dart';
 import 'package:moodiary_assistant/moodiary_assistant.dart'
     show AssistantService;
-import 'package:moodiary_data/moodiary_data.dart' show IBackupArchive;
+import 'package:moodiary_data/injectable.module.dart';
+import 'package:moodiary_data/moodiary_data.dart'
+    show IBackupArchive, MoodiaryDatabase;
 import 'package:moodiary_di/moodiary_di.dart';
+import 'package:moodiary_editor/injectable.module.dart';
 import 'package:moodiary_files/moodiary_files.dart'
     show IFilePicker, IHeifDecoder;
 import 'package:moodiary_http/injectable.module.dart';
@@ -22,7 +25,7 @@ import 'package:moodiary_sync/moodiary_sync.dart'
 /// generateForDir（默认扫全包）—— 只有一份 config，不存在「两份扫同一片源码、
 /// 同一注解被各注册一次」的互斥问题，白名单也就不必要了。
 ///
-/// 四个包各自是一份 micro-package（`@InjectableInit.microPackage()` 生成
+/// 六个包各自是一份 micro-package（`@InjectableInit.microPackage()` 生成
 /// `injectable.module.dart`），在这里经 externalPackageModulesBefore 挂载。
 /// **storage 列最前**：它的两个 preResolve 绑定（SecureKV → KV）是别人的地基。
 ///
@@ -34,8 +37,12 @@ import 'package:moodiary_sync/moodiary_sync.dart'
     ExternalModule(MoodiaryHttpPackageModule),
     // ml 在 http 之后：EmbeddingModelManager 注入 IHttpClient 下载模型。
     ExternalModule(MoodiaryMlPackageModule),
+    // data 的仓储都是懒单例，依赖本 config 的 AppModule.database（preResolve）——
+    // 懒单例在首次取用时才解析，此处次序只需在 ml 之后（EmbedIndexService 注入嵌入引擎）。
+    ExternalModule(MoodiaryDataPackageModule),
     ExternalModule(MoodiaryAssistantPackageModule),
     ExternalModule(MoodiarySyncPackageModule),
+    ExternalModule(MoodiaryEditorPackageModule),
   ],
   preferRelativeImports: false,
 )
@@ -50,6 +57,7 @@ Future<void> configureDependencies() async {
 void _assertRequiredBindings() {
   final missing = <String>[
     if (!getIt.isRegistered<IKVStorage>()) 'IKVStorage',
+    if (!getIt.isRegistered<MoodiaryDatabase>()) 'MoodiaryDatabase',
     if (!getIt.isRegistered<ISecureKVStorage>()) 'ISecureKVStorage',
     if (!getIt.isRegistered<IHttpClient>()) 'IHttpClient',
     if (!getIt.isRegistered<IHttpServer>()) 'IHttpServer',

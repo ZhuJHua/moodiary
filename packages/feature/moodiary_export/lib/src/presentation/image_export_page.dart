@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
@@ -116,7 +117,7 @@ class _ImageExportPageState extends State<ImageExportPage> {
     final diaries = scope != null
         ? await scope.resolve()
         : [
-            ?await DiaryRepository.get().getDiaryByBusinessId(
+            ?await getIt<DiaryRepository>().getDiaryByBusinessId(
               widget.diaryId ?? '',
             ),
           ];
