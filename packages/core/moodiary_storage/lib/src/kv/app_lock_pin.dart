@@ -47,17 +47,36 @@ final class AppLockPin {
   static ValueListenable<bool> get enabled => _enabled;
 
   /// 在 SecureKV 就绪后、决定初始路由之前调一次。
+  ///
+  /// [MoodiaryKVs.appLockHint] 为 false 时不碰钥匙串：无锁用户（绝大多数）冷启动
+  /// 省掉 Keystore 首次初始化那 40–60ms。提示位只能「关」不能「开」（见其注释），
+  /// true 或缺失都走钥匙串确认并回写；读失败不回写，下次启动再读。
   static Future<void> load() async {
-    final stored = await _read();
-    _enabled.value = stored != null && stored.isNotEmpty;
+    if (MoodiaryKVs.appLockHint.get() == false) {
+      _enabled.value = false;
+      return;
+    }
+    final String? stored;
+    try {
+      stored = await MoodiarySecureKVs.password.get();
+    } catch (e, s) {
+      logger.e('应用锁：凭据读取失败，按未开启处理', error: e, stackTrace: s);
+      _enabled.value = false;
+      return;
+    }
+    final on = stored != null && stored.isNotEmpty;
+    MoodiaryKVs.appLockHint.set(on);
+    _enabled.value = on;
   }
 
   static Future<void> set(String pin) async {
     await MoodiarySecureKVs.password.set(await hasher(pin));
+    MoodiaryKVs.appLockHint.set(true);
     _enabled.value = true;
   }
 
   static Future<void> clear() async {
+    MoodiaryKVs.appLockHint.set(false);
     await MoodiarySecureKVs.password.remove();
     _enabled.value = false;
   }

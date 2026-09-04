@@ -6,11 +6,14 @@ import 'package:moodiary_storage/testing.dart';
 
 void main() {
   late MemorySecureKVStorage secure;
+  late MemoryKVStorage kv;
 
   setUp(() async {
     await getIt.reset();
     secure = MemorySecureKVStorage();
+    kv = MemoryKVStorage();
     getIt.registerSingleton<ISecureKVStorage>(secure);
+    getIt.registerSingleton<IKVStorage>(kv);
     // 宿主没有 Rust FFI，用可辨认的假哈希顶上（形状与 Argon2 的 PHC 串一致）。
     AppLockPin.hasher = (pin) async => r'$argon2id$fake$' + pin;
     AppLockPin.verifier = (hash, pin) async => hash == r'$argon2id$fake$' + pin;
@@ -73,9 +76,56 @@ void main() {
       expect(AppLockPin.enabled.value, isTrue);
 
       secure.failingReads.add(MoodiarySecureKVs.password.name);
+      kv.data.remove(MoodiaryKVs.appLockHint.name);
       await AppLockPin.load();
 
       expect(AppLockPin.enabled.value, isFalse);
+      // 读失败不回写提示位：钥匙串恢复后下次启动还会再读，锁不会因一次故障永久关掉。
+      expect(kv.data.containsKey(MoodiaryKVs.appLockHint.name), isFalse);
+    });
+  });
+
+  /// 提示位只能把锁「关」掉、不能「开」：false 时跳过钥匙串，其余一律以钥匙串为准。
+  group('appLockHint', () {
+    Object? hint() => kv.data[MoodiaryKVs.appLockHint.name];
+
+    test('false → 不读钥匙串（有凭据也按无锁，这是 fail-open 那一侧）', () async {
+      secure.data[MoodiarySecureKVs.password.name] = r'$argon2id$fake$1234';
+      kv.set<bool>(MoodiaryKVs.appLockHint.name, false);
+
+      await AppLockPin.load();
+
+      expect(AppLockPin.enabled.value, isFalse);
+    });
+
+    test('缺失 → 读钥匙串并按结果回写', () async {
+      await AppLockPin.load();
+      expect(AppLockPin.enabled.value, isFalse);
+      expect(hint(), isFalse);
+
+      secure.data[MoodiarySecureKVs.password.name] = r'$argon2id$fake$1234';
+      kv.data.remove(MoodiaryKVs.appLockHint.name);
+      await AppLockPin.load();
+      expect(AppLockPin.enabled.value, isTrue);
+      expect(hint(), isTrue);
+    });
+
+    /// 早先 `lock` 开关的锁死场景：MMKV 说开着、钥匙串却没有密码。
+    test('true 而钥匙串无凭据 → 按未开启并回写 false，不会锁死', () async {
+      kv.set<bool>(MoodiaryKVs.appLockHint.name, true);
+
+      await AppLockPin.load();
+
+      expect(AppLockPin.enabled.value, isFalse);
+      expect(hint(), isFalse);
+    });
+
+    test('set / clear 维护提示位', () async {
+      await AppLockPin.set('1234');
+      expect(hint(), isTrue);
+
+      await AppLockPin.clear();
+      expect(hint(), isFalse);
     });
   });
 

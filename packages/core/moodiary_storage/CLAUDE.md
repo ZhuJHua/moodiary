@@ -63,6 +63,11 @@ Rust FFI，同 `SyncKeyManager` 的做法。
 SecureKV），由 `main.dart` 里的 `AppLockPin.load()` 装载，不落盘所以不会再分叉。
 **因此搬迁只在旧 `lock` 为真时才搬 PIN** —— 否则等于替关着锁的用户把锁打开。
 
+`MoodiaryKVs.appLockHint` 不是那个开关回来了：它**只能把锁「关」掉、不能「开」**。false →
+`load` 不碰钥匙串（无锁用户冷启动省掉 Keystore 首次初始化的 40–60ms）；true / 缺失 →
+读钥匙串确认、以钥匙串为准并回写；读失败不回写。它造不出「锁开着但没密码」，最坏是
+false 却有凭据（部分恢复 / 写到一半被杀），落在 fail-open 那一侧。
+
 **搬迁把 PIN 原样挪过去，哈希推迟到 `verify` 头一次比对时就地做**（`isHashed` 分辨）。
 不在搬迁里哈希是有原因的：那会让 KV 初始化依赖 Rust 桥先就绪，等于让一次性迁移的需求
 永久钉死 `main.dart` 的启动顺序，而那个顺序只有注释守着 —— 谁调换一下，`Argon2.hash`

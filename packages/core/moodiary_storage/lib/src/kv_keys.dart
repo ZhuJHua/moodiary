@@ -98,6 +98,13 @@ enum MoodiaryKVs<T extends Object> {
   /// 「退到后台再回来需重新解锁」。**应用锁本身开没开不在这里** ——
   /// 那是「有没有凭据」的派生态，见 `AppLockPin.enabled`。
   lockNow<bool>(defaultValue: false),
+
+  /// 应用锁凭据的**提示位**，只为省掉无锁用户冷启动那一次钥匙串读（Keystore 首次
+  /// 初始化，真机 40–60ms）。**只能把锁「关」掉，不能「开」**：false → 不碰钥匙串、
+  /// 按无锁；true / 缺失 → 读钥匙串确认，以钥匙串为准并回写。所以它造不出早先那个
+  /// `lock` 开关的「锁开着但没有密码」锁死；最坏是 false 却有凭据（部分恢复 / 写到一半
+  /// 被杀），那是 fail-open，与钥匙串读不出同一档。读失败不回写。
+  appLockHint<bool>(),
   supportBiometrics<bool>(defaultValue: false),
   backendPrivacy<bool>(defaultValue: false),
 
