@@ -9,7 +9,7 @@ class DiarySettingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.app.diaryPrefsTitle)),
+      appBar: AppBar(title: Text(context.l10n.app.diarySettings)),
       body: Padding(
         padding: const .symmetric(horizontal: 8.0),
         child: CustomScrollView(

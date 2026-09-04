@@ -167,7 +167,8 @@ body {
   font-size: calc(22px * var(--app-font-scale, 1));
   font-weight: 700;
   line-height: 1.4;
-  padding: 16px 16px 2px;
+  /* 上疏下密：标题归属于它下面的正文，离属性头要比离正文远。 */
+  padding: 12px 16px 0;
 }
 .moodiary-title::placeholder {
   color: var(--app-on-surface-variant);
@@ -283,7 +284,8 @@ body {
   /* flex 子项必须允许收缩到视口宽，否则长连续 ASCII/宽表格把 min-content 撑大，
      break-word 与块内横滚都不会触发，整个视口被顶出横向滚动。 */
   min-width: 0;
-  padding: 16px;
+  /* 顶部只留一点：与标题的间距由这 6px 加两侧的行内半行距凑齐（标题 padding-bottom 为 0）。 */
+  padding: 6px 16px 16px;
   background: transparent;
   color: var(--app-on-background);
   font-family: var(--app-font-sans);

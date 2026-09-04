@@ -248,12 +248,14 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
 </template>
 
 <style scoped>
+/* 属性头 / 标题 / 正文三段共用 16px 左边线；下边距交给标题的 padding-top 统一给，
+   这里给 0 —— 两处各留一半会让「属性头到标题」比「标题到正文」还宽。 */
 .meta-header {
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: calc(12px * var(--app-font-scale, 1)) 16px 4px;
+  padding: calc(12px * var(--app-font-scale, 1)) 16px 0;
   font-family: var(--app-font-sans);
 }
 
@@ -374,7 +376,7 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 8px 4px;
+  padding: 6px 4px;
   min-width: 0;
   margin-right: 8px;
 }
@@ -412,11 +414,13 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
 }
 
 /* ③ 标签行 */
+/* 负边距抵掉 .meta-tag 自己的 2px 横向内边距，让「#」与标题、正文对齐同一条左边线。 */
 .meta-tags-row {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   column-gap: 8px;
+  margin-left: -2px;
 }
 .meta-tag {
   display: inline-block;

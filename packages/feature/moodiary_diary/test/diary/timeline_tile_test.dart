@@ -111,14 +111,24 @@ void main() {
     expect(find.text('work'), findsNothing);
   });
 
-  testWidgets('selection mark replaces the category label while selecting', (
+  testWidgets('selecting overlays a corner mark in place of the category', (
     t,
   ) async {
     await t.pumpWidget(
       wrap(tile(category: cat(), selecting: true, selected: true)),
     );
-    expect(find.byIcon(LucideIcons.circleCheck), findsOneWidget);
+    // 标记浮在右上角（信息流同一条规则、同一组 top/right）；分类标签正好在那个角，让位。
+    expect(find.byType(DiarySelectMark), findsOneWidget);
+    expect(find.byIcon(LucideIcons.check), findsOneWidget);
     expect(find.text('work'), findsNothing);
+  });
+
+  testWidgets('unselected entries still get an empty mark', (t) async {
+    await t.pumpWidget(
+      wrap(tile(category: cat(), selecting: true, selected: false)),
+    );
+    expect(find.byType(DiarySelectMark), findsOneWidget);
+    expect(find.byIcon(LucideIcons.check), findsNothing);
   });
 
   testWidgets('footer shows tags, location and media chips', (t) async {

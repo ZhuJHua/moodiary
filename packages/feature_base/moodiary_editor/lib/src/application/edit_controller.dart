@@ -138,35 +138,45 @@ class EditController extends _$EditController {
     state = state.whenData((current) => current.copyWith(weather: weather));
   }
 
-  Future<DiaryPosition?> fetchPosition(BuildContext context) async {
+  /// 失败原因随结果一起返回：文案由调用方挑（手动点是 toast，自动获取则静默）。
+  Future<GeoResult> fetchPosition(BuildContext context) async {
     try {
       final result = await getIt<GeoRepository>().getGeo(context);
-      if (result == null) return null;
-      changePosition(result);
+      final position = result.position;
+      if (position != null) changePosition(position);
       return result;
     } catch (_) {
-      return null;
+      return (position: null, failure: GeoFailure.lookupFailed);
     }
   }
 
-  Future<DiaryWeather?> fetchWeather(BuildContext context) async {
+  Future<({DiaryWeather? weather, GeoFailure? failure})> fetchWeather(
+    BuildContext context,
+  ) async {
     final current = state.value;
     if (current == null || current.position == null) {
-      final pos = await fetchPosition(context);
-      if (pos == null || !context.mounted) return null;
+      final geo = await fetchPosition(context);
+      if (geo.position == null) {
+        return (weather: null, failure: geo.failure ?? GeoFailure.lookupFailed);
+      }
+      if (!context.mounted) {
+        return (weather: null, failure: GeoFailure.lookupFailed);
+      }
     }
     final position = state.value?.position;
-    if (position == null) return null;
+    if (position == null) {
+      return (weather: null, failure: GeoFailure.lookupFailed);
+    }
     try {
       final result = await getIt<WeatherRepository>().getWeather(
         context: context,
         position: LatLng(position.latitude, position.longitude),
       );
-      if (result == null) return null;
-      changeWeather(result);
+      final weather = result.weather;
+      if (weather != null) changeWeather(weather);
       return result;
     } catch (_) {
-      return null;
+      return (weather: null, failure: GeoFailure.lookupFailed);
     }
   }
 

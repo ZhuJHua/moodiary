@@ -74,65 +74,65 @@ class DiaryTimelineView extends ConsumerWidget {
               for (final month in months) {
                 final base = offset;
                 offset += month.entries.length;
-                slivers.add(
-                  SliverPersistentHeader(
-                    pinned: true,
-                    delegate: _MonthHeaderDelegate(
-                      month: month.month,
-                      count: monthCounts?[month.month],
-                    ),
+                final header = SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _MonthHeaderDelegate(
+                    month: month.month,
+                    count: monthCounts?[month.month],
                   ),
                 );
-                slivers.add(
-                  SliverList.builder(
-                    itemCount: month.entries.length,
-                    itemBuilder: (context, index) {
-                      final flatIndex = base + index;
-                      final entry = flat[flatIndex];
-                      final diary = entry.diary;
-                      final syncState =
-                          (pending.updateDiaryIds.contains(diary.id) ||
-                              pending.newDiaryIds.contains(diary.id))
-                          ? DiaryCardSyncState.syncing
-                          : dirty.contains(diary.id)
-                          ? DiaryCardSyncState.dirty
-                          : DiaryCardSyncState.none;
-                      return Consumer(
-                        builder: (context, ref, _) {
-                          final category = ref.watch(
-                            categoryByIdProvider(diary.categoryId),
-                          );
-                          final next = flatIndex == flat.length - 1
+                final list = SliverList.builder(
+                  itemCount: month.entries.length,
+                  itemBuilder: (context, index) {
+                    final flatIndex = base + index;
+                    final entry = flat[flatIndex];
+                    final diary = entry.diary;
+                    final syncState =
+                        (pending.updateDiaryIds.contains(diary.id) ||
+                            pending.newDiaryIds.contains(diary.id))
+                        ? DiaryCardSyncState.syncing
+                        : dirty.contains(diary.id)
+                        ? DiaryCardSyncState.dirty
+                        : DiaryCardSyncState.none;
+                    return Consumer(
+                      builder: (context, ref, _) {
+                        final category = ref.watch(
+                          categoryByIdProvider(diary.categoryId),
+                        );
+                        final next = flatIndex == flat.length - 1
+                            ? null
+                            : flat[flatIndex + 1];
+                        return DiaryTimelineTile(
+                          // 按日记 id 定身份：列表按 index 复用 Element，重排后
+                          // 缩略图（gaplessPlayback）会先画上一篇的照片。
+                          key: ValueKey(diary.id),
+                          diary: diary,
+                          stamp: entry.stamp,
+                          dayStart: entry.dayStart,
+                          breakBefore: entry.breakBefore,
+                          breakAfter: next?.breakBefore ?? false,
+                          hasAbove: flatIndex > 0,
+                          moodBelow: next?.diary.mood,
+                          category: category,
+                          showCategoryLabel: filter.isAll,
+                          syncState: syncState,
+                          selecting: selecting,
+                          selected: selection.contains(diary.id),
+                          onTap: selecting
+                              ? () => selNotifier.toggle(diary.id)
+                              : () => openDiaryDetail(context, diary),
+                          onLongPress: selecting
                               ? null
-                              : flat[flatIndex + 1];
-                          return DiaryTimelineTile(
-                            // 按日记 id 定身份：列表按 index 复用 Element，重排后
-                            // 缩略图（gaplessPlayback）会先画上一篇的照片。
-                            key: ValueKey(diary.id),
-                            diary: diary,
-                            stamp: entry.stamp,
-                            dayStart: entry.dayStart,
-                            breakBefore: entry.breakBefore,
-                            breakAfter: next?.breakBefore ?? false,
-                            hasAbove: flatIndex > 0,
-                            moodBelow: next?.diary.mood,
-                            category: category,
-                            showCategoryLabel: filter.isAll,
-                            syncState: syncState,
-                            selecting: selecting,
-                            selected: selection.contains(diary.id),
-                            onTap: selecting
-                                ? () => selNotifier.toggle(diary.id)
-                                : () => openDiaryDetail(context, diary),
-                            onLongPress: selecting
-                                ? null
-                                : () => selNotifier.enter(diary.id),
-                          );
-                        },
-                      );
-                    },
-                  ),
+                              : () => selNotifier.enter(diary.id),
+                        );
+                      },
+                    );
+                  },
                 );
+                // 每个月自成一组：吸顶头只在**本组**范围内固定，下一组顶上来时被推走。
+                // 若把所有月份摊在同一个 group 里，pinned 头会各自独立吸顶、越翻越多地
+                // 堆在顶部。
+                slivers.add(SliverMainAxisGroup(slivers: [header, list]));
               }
               slivers.add(
                 SliverToBoxAdapter(

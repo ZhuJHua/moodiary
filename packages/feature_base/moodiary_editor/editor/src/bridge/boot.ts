@@ -5,6 +5,8 @@ export interface EditorBoot {
   platform?: 'mobile' | 'desktop'
   editable?: boolean
   placeholder?: string
+  /** 标题行占位提示（Flutter 传本地化文案，同 placeholder）。 */
+  titlePlaceholder?: string
   theme?: EditorTheme | null
   /** 本篇自动保存状态初值：'saving' / 'saved' / 'failed' / 'idle'（驱动编辑器右下角气泡）。 */
   saveStatus?: string

@@ -115,7 +115,6 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get fontAdd => 'Add';
 	@override String get fontPreviewTitle => 'Pangrams';
 	@override String get fontPreviewText => 'The quick brown fox jumps over the lazy dog.\nPack my box with five dozen liquor jugs.\nHow vexingly quick daft zebras jump!\nSphinx of black quartz, judge my vow.\nWaltz, bad nymph, for quick jigs vex.\nThe five boxing wizards jump quickly.';
-	@override String get diaryPrefsTitle => 'Entry preferences';
 	@override String get diaryPrefsEditor => 'Editor';
 	@override String get firstLineIndent => 'Indent the first line';
 	@override String get showWritingTime => 'Show writing time';
@@ -579,9 +578,13 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get addTag => 'Add a tag';
 	@override String get tagNameHint => 'Tag name';
 	@override String get add => 'Add';
-	@override String get weatherFailed => 'Could not fetch the weather — check the QWeather settings under Lab';
+	@override String get weatherFailed => 'Could not fetch the weather — try again later';
 	@override String weatherFetched({required Object weather, required Object temperature}) => 'Weather: ${weather} ${temperature}°C';
-	@override String get positionFailed => 'Could not fetch the location — check location permission';
+	@override String get positionFailed => 'Could not fetch the location — try again later';
+	@override String get qweatherNotConfigured => 'QWeather is not set up yet — add your key under Settings › Third-party services';
+	@override String get positionPermissionDenied => 'Location permission was not granted';
+	@override String get positionPermissionForever => 'Location permission is denied — enable it in system settings';
+	@override String get positionServiceOff => 'Location services are turned off';
 	@override String get home => 'Home';
 	@override String get goBack => 'Back';
 	@override String get goForward => 'Forward';
@@ -610,13 +613,12 @@ class _Translations$editor$en extends Translations$editor$zh {
 	final TranslationsEn _root; // ignore: unused_field
 
 	// Translations
-	@override String get noticeEnableLocation => 'Please enable location permission';
-	@override String get noticeEnableLocation2 => 'Please go to settings to enable location permissions';
 	@override String get audioFileError => 'Audio file error';
 	@override String get pickAudio => 'Select audio';
 	@override String get pickAudioFromRecord => 'Recording';
 	@override String get pickAudioFromFile => 'File Audio';
 	@override String get content => 'Text';
+	@override String get titlePlaceholder => 'Title';
 	@override String get unsupportedPlatform => 'The editor is not supported on this platform';
 	@override String loadFailed({required Object error}) => 'Failed to load the editor\n${error}';
 	@override String get pickCategory => 'Pick a category';

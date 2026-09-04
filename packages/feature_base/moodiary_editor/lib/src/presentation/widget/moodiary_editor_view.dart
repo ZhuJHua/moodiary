@@ -308,6 +308,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       controller: _controller,
       readOnly: !widget.editable,
       placeholder: context.l10n.editor.content,
+      titlePlaceholder: context.l10n.editor.titlePlaceholder,
       initialContent: widget.initialContent,
       initialTitle: widget.initialTitle,
       onChanged: widget.onChanged,

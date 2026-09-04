@@ -178,6 +178,7 @@ class _Content extends StatelessWidget {
     final body = diary.contentText.preview();
 
     return DiaryTileFrame(
+      selecting: selecting,
       selected: selected,
       onTap: onTap,
       onLongPress: onLongPress,
@@ -188,10 +189,9 @@ class _Content extends StatelessWidget {
             diary: diary,
             stamp: stamp,
             category: category,
-            showCategoryLabel: showCategoryLabel,
+            // 分类标签与勾选标记同在右上角，多选态让位。
+            showCategoryLabel: showCategoryLabel && !selecting,
             syncState: syncState,
-            selecting: selecting,
-            selected: selected,
           ),
           if (hasTitle) ...[
             const SizedBox(height: 3),
@@ -232,8 +232,6 @@ class _MetaLine extends StatelessWidget {
   final Category? category;
   final bool showCategoryLabel;
   final DiaryCardSyncState syncState;
-  final bool selecting;
-  final bool selected;
 
   const _MetaLine({
     required this.diary,
@@ -241,8 +239,6 @@ class _MetaLine extends StatelessWidget {
     required this.category,
     required this.showCategoryLabel,
     required this.syncState,
-    required this.selecting,
-    required this.selected,
   });
 
   @override
@@ -287,9 +283,7 @@ class _MetaLine extends StatelessWidget {
           DiarySyncBadge(state: syncState),
           const SizedBox(width: 8),
         ],
-        if (selecting)
-          DiarySelectMark(selected: selected)
-        else if (showCategoryLabel && category != null)
+        if (showCategoryLabel && category != null)
           _CategoryLabel(category: category!, style: style),
       ],
     );

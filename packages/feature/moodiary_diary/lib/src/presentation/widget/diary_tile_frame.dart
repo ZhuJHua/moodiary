@@ -29,6 +29,9 @@ class DiaryTileFrame extends StatelessWidget {
   final bool card;
 
   final BorderRadius borderRadius;
+
+  /// 列表处于多选态 —— 无论本条选没选中都要出勾选位（未选是空心圈）。
+  final bool selecting;
   final bool selected;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
@@ -40,10 +43,17 @@ class DiaryTileFrame extends StatelessWidget {
     this.margin = .zero,
     this.card = false,
     this.borderRadius = AppBorderRadius.mediumBorderRadius,
+    this.selecting = false,
     this.selected = false,
     this.onTap,
     this.onLongPress,
   });
+
+  /// 勾选标记的边长，以及它到外壳上边 / 右边的距离（两个方向同一个值）。
+  /// 标记由外壳统一摆放：时间线与信息流的元信息行一个在顶、一个在底，内联进去必然
+  /// 一个在右上、一个在右下。
+  static const double _kMarkSize = 18.0;
+  static const double _kMarkInset = 8.0;
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +80,21 @@ class DiaryTileFrame extends StatelessWidget {
           overlayColor: colors.onSurface.withValues(alpha: 0.06),
           onTap: onTap,
           onLongPress: onLongPress,
-          child: Padding(padding: padding, child: child),
+          child: Stack(
+            children: [
+              Padding(padding: padding, child: child),
+              // 浮在内容之上，不占位：让槽会把缩略图挤窄，进出多选态整列都在跳。
+              // top 与 right 同一个值，两种布局看上去在同一个位置。
+              if (selecting)
+                Positioned(
+                  top: _kMarkInset,
+                  right: _kMarkInset,
+                  width: _kMarkSize,
+                  height: _kMarkSize,
+                  child: DiarySelectMark(selected: selected),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -97,7 +121,10 @@ class DiarySyncBadge extends StatelessWidget {
   }
 }
 
-/// 多选态的勾选标记。选中实心勾，未选中空心圈。
+/// 多选态的勾选标记：选中 = 实心圆 + 白勾，未选 = 描边空圈。
+///
+/// 自绘圆而不是用 `circleCheck` 字形 —— 图标字重细、在缩略图上方几乎看不见，
+/// 且实心/空心两态的视线跳动太小。铺满父级给的方框（[DiaryTileFrame] 统一定尺寸）。
 class DiarySelectMark extends StatelessWidget {
   final bool selected;
 
@@ -106,10 +133,21 @@ class DiarySelectMark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
-    return Icon(
-      selected ? LucideIcons.circleCheck : LucideIcons.circle,
-      size: 16,
-      color: selected ? colors.primary : colors.outline,
+    return AnimatedContainer(
+      duration: Durations.short3,
+      curve: Curves.easeOut,
+      decoration: BoxDecoration(
+        shape: .circle,
+        // 不透明：它浮在内容之上，半透会让底下的字透出来糊成一团。
+        color: selected ? colors.primary : colors.surfaceContainerLowest,
+        border: .all(
+          color: selected ? colors.primary : colors.outline,
+          width: 1.25,
+        ),
+      ),
+      child: selected
+          ? Icon(LucideIcons.check, size: 12, color: colors.onPrimary)
+          : null,
     );
   }
 }

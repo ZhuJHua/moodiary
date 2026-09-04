@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 import 'package:moodiary_diary/src/presentation/widget/feed_tile.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
@@ -136,7 +137,9 @@ void main() {
     expect(find.text('#c'), findsNothing);
   });
 
-  testWidgets('selection mark replaces the tags while selecting', (t) async {
+  testWidgets('selecting adds a corner mark without hiding the tags', (
+    t,
+  ) async {
     await t.pumpWidget(
       wrap(
         DiaryFeedTile(
@@ -146,8 +149,9 @@ void main() {
         ),
       ),
     );
-    expect(find.byIcon(LucideIcons.circleCheck), findsOneWidget);
-    expect(find.text('#a'), findsNothing);
+    expect(find.byType(DiarySelectMark), findsOneWidget);
+    expect(find.byIcon(LucideIcons.check), findsOneWidget);
+    expect(find.text('#a'), findsOneWidget);
   });
 
   testWidgets('audio-only entry shows the waveform bar', (t) async {

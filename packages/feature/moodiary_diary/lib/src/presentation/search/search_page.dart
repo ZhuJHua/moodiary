@@ -72,27 +72,39 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
 
     return Scaffold(
       appBar: AppBar(
+        // 输入框做成填充胶囊：贴着返回键的裸输入行既没有边界也没有留白。
         titleSpacing: 0,
-        title: TextField(
-          maxLines: 1,
-          autofocus: true,
-          controller: _textController,
-          focusNode: _focusNode,
-          textInputAction: .search,
-          onChanged: _onChanged,
-          onSubmitted: (_) => _searchNow(),
-          decoration: InputDecoration(
-            border: .none,
-            hintText: context.l10n.diary.search,
-            suffixIcon: ValueListenableBuilder(
-              valueListenable: _textController,
-              builder: (context, value, _) {
-                if (value.text.isEmpty) return const SizedBox.shrink();
-                return IconButton(
-                  icon: const Icon(LucideIcons.x),
-                  onPressed: _clearInput,
-                );
-              },
+        title: Padding(
+          padding: const .fromLTRB(4, 0, 12, 0),
+          child: TextField(
+            maxLines: 1,
+            autofocus: true,
+            controller: _textController,
+            focusNode: _focusNode,
+            textInputAction: .search,
+            onChanged: _onChanged,
+            onSubmitted: (_) => _searchNow(),
+            decoration: InputDecoration(
+              hintText: context.l10n.diary.search,
+              prefixIcon: const Icon(LucideIcons.search, size: 20),
+              filled: true,
+              fillColor: context.theme.colors.surfaceContainerHigh,
+              isDense: true,
+              contentPadding: const .symmetric(vertical: 4),
+              border: const OutlineInputBorder(
+                borderRadius: .all(.circular(22)),
+                borderSide: .none,
+              ),
+              suffixIcon: ValueListenableBuilder(
+                valueListenable: _textController,
+                builder: (context, value, _) {
+                  if (value.text.isEmpty) return const SizedBox.shrink();
+                  return IconButton(
+                    icon: const Icon(LucideIcons.x, size: 20),
+                    onPressed: _clearInput,
+                  );
+                },
+              ),
             ),
           ),
         ),

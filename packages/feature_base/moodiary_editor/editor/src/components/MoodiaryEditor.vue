@@ -24,6 +24,7 @@ import { openSearch } from '../editor/search'
 const props = defineProps<{
   editable: boolean
   placeholder: string
+  titlePlaceholder: string
   platform: 'mobile' | 'desktop'
 }>()
 
@@ -66,9 +67,13 @@ const showLinks = computed(
 const titleEl = ref<HTMLTextAreaElement>()
 const viewportEl = ref<HTMLElement>()
 let titleComposing = false
+// 只读且无标题时整行不出现；编辑态恒显（此时占位提示就是「这里能写标题」的唯一线索）。
+const titleVisible = computed(() => editable.value || title.value.trim().length > 0)
 function autoGrowTitle(): void {
   const el = titleEl.value
-  if (!el) return
+  // v-show 隐藏时 scrollHeight 恒为 0：量了会把 height 钉死成 0px，之后再显示出来
+  // 就是一条既看不见占位提示、上下留白又对不上的空行（只有敲字才会重新量回来）。
+  if (!el || el.offsetParent === null) return
   el.style.height = 'auto'
   el.style.height = `${el.scrollHeight}px`
 }
@@ -79,6 +84,10 @@ watch(title, (v) => {
     el.value = v
     nextTick(autoGrowTitle)
   }
+})
+// 隐藏期间量不到高度，重新露出时补量一次（阅读态无标题 → 进编辑态是主路径）。
+watch(titleVisible, (v) => {
+  if (v) nextTick(autoGrowTitle)
 })
 function onTitleInput(e: Event): void {
   const el = e.target as HTMLTextAreaElement
@@ -202,11 +211,11 @@ onBeforeUnmount(() => {
         <EditorMetaHeader v-if="meta" :meta="meta" :editable="editable" />
         <textarea
           ref="titleEl"
-          v-show="editable || title.trim().length > 0"
+          v-show="titleVisible"
           class="moodiary-title"
           rows="1"
           :readonly="!editable"
-          :placeholder="editable ? '标题' : ''"
+          :placeholder="editable ? titlePlaceholder : ''"
           @input="onTitleInput"
           @compositionstart="onTitleCompositionStart"
           @compositionend="onTitleCompositionEnd"

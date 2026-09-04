@@ -56,6 +56,10 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   /// 本次编辑会话内用户是否手动动过心情选择器；动过则自动建议永久让位。
   bool _moodTouched = false;
 
+  /// 「保存时自动获取天气」本会话已试过一次 —— 失败也不再重试（否则每轮自动保存
+  /// 都会再打一发定位 / 网络请求）。
+  bool _autoWeatherTried = false;
+
   /// 已建议过的正文快照，内容没变不重复打分。
   String? _suggestedForContent;
 
@@ -311,7 +315,10 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     if (ok) _dirty = false;
     if (!mounted) return;
     setState(() => _saveStatus = ok ? 'saved' : 'failed');
-    if (ok) unawaited(_maybeSuggestMood());
+    if (ok) {
+      unawaited(_maybeSuggestMood());
+      unawaited(_maybeAutoWeather());
+    }
   }
 
   /// 自动保存成功后的心情建议：只对本次会话新建、且用户没动过选择器的日记生效，
@@ -406,29 +413,62 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     final notifier = ref.read(_provider.notifier);
     final result = await notifier.fetchWeather(context);
     if (!mounted) return;
-    if (result == null) {
-      toast.error(message: l10n.diary.weatherFailed);
-    } else {
-      toast.success(
-        message: l10n.diary.weatherFetched(
-          weather: result.text,
-          temperature: result.temp,
-        ),
-      );
-      _dirty = true;
-      _scheduleAutoSave();
+    final weather = result.weather;
+    if (weather == null) {
+      toast.error(message: _geoFailureMessage(result.failure, weather: true));
+      return;
     }
+    toast.success(
+      message: l10n.diary.weatherFetched(
+        weather: weather.text,
+        temperature: weather.temp,
+      ),
+    );
+    _dirty = true;
+    _scheduleAutoSave();
   }
 
   Future<void> _onFetchPosition() async {
     final result = await ref.read(_provider.notifier).fetchPosition(context);
     if (!mounted) return;
-    if (result == null) {
-      toast.error(message: l10n.diary.positionFailed);
+    if (result.position == null) {
+      toast.error(message: _geoFailureMessage(result.failure));
       return;
     }
     _dirty = true;
     _scheduleAutoSave();
+  }
+
+  /// 失败原因 → 文案。位置与天气同一条链路（都走和风），故共用一张表；只有
+  /// [GeoFailure.lookupFailed] 需要区分「查位置」还是「查天气」失败。
+  String _geoFailureMessage(GeoFailure? failure, {bool weather = false}) =>
+      switch (failure) {
+        .notConfigured => l10n.diary.qweatherNotConfigured,
+        .permissionDenied => l10n.diary.positionPermissionDenied,
+        .permissionDeniedForever => l10n.diary.positionPermissionForever,
+        .serviceOff => l10n.diary.positionServiceOff,
+        _ => weather ? l10n.diary.weatherFailed : l10n.diary.positionFailed,
+      };
+
+  /// 「保存日记时自动获取天气」：开关打开、本篇是本次新建且还没有天气时，首次落库后补一次。
+  ///
+  /// 只认新建 —— 给一篇三年前的日记补上今天的天气是错的。静默执行：用户没主动点，
+  /// 失败（没配和风 / 没给定位）不该弹提示打断书写。
+  Future<void> _maybeAutoWeather() async {
+    if (_autoWeatherTried || widget.diaryId != null) return;
+    if (MoodiaryKVs.autoWeather.get() != true) return;
+    final current = ref.read(_provider).value;
+    if (current == null || current.weather != null) return;
+    _autoWeatherTried = true;
+    final result = await ref.read(_provider.notifier).fetchWeather(context);
+    if (!mounted || result.weather == null) return;
+    _dirty = true;
+    // 取数期间可能已经保存退出：那时 _scheduleAutoSave 直接 no-op，刚拿到的天气会丢。
+    if (_mode == .edit) {
+      _scheduleAutoSave();
+    } else {
+      unawaited(_flushAutoSave());
+    }
   }
 
   @override

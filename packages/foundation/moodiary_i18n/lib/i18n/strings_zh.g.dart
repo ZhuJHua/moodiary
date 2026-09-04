@@ -240,9 +240,6 @@ class Translations$app$zh {
 	/// zh: '黄水塘里游着白鸭， 高粱梗油青的刚高过头， 这跳动的心怎样安插， 田里一窄条路，八月里这忧愁？ 天是昨夜雨洗过的，山岗 照着太阳又留一片影； 羊跟着放羊的转进村庄， 一大棵树荫下罩着井，又像是心！ 从没有人说过八月什么话， 夏天过去了，也不到秋天。 但我望着田垄，土墙上的瓜， 仍不明白生活同梦怎样的连牵。'
 	String get fontPreviewText => '黄水塘里游着白鸭，\n高粱梗油青的刚高过头，\n这跳动的心怎样安插，\n田里一窄条路，八月里这忧愁？\n天是昨夜雨洗过的，山岗\n照着太阳又留一片影；\n羊跟着放羊的转进村庄，\n一大棵树荫下罩着井，又像是心！\n从没有人说过八月什么话，\n夏天过去了，也不到秋天。\n但我望着田垄，土墙上的瓜，\n仍不明白生活同梦怎样的连牵。';
 
-	/// zh: '日记偏好'
-	String get diaryPrefsTitle => '日记偏好';
-
 	/// zh: '编辑器'
 	String get diaryPrefsEditor => '编辑器';
 
@@ -1571,14 +1568,26 @@ class Translations$diary$zh {
 	/// zh: '添加'
 	String get add => '添加';
 
-	/// zh: '获取天气失败：请检查实验室内的和风天气配置'
-	String get weatherFailed => '获取天气失败：请检查实验室内的和风天气配置';
+	/// zh: '获取天气失败，请稍后重试'
+	String get weatherFailed => '获取天气失败，请稍后重试';
 
 	/// zh: '已获取天气：{weather} {temperature}°C'
 	String weatherFetched({required Object weather, required Object temperature}) => '已获取天气：${weather} ${temperature}°C';
 
-	/// zh: '获取位置失败：请检查定位权限'
-	String get positionFailed => '获取位置失败：请检查定位权限';
+	/// zh: '获取位置失败，请稍后重试'
+	String get positionFailed => '获取位置失败，请稍后重试';
+
+	/// zh: '尚未配置和风天气，请前往设置 - 第三方服务填写'
+	String get qweatherNotConfigured => '尚未配置和风天气，请前往设置 - 第三方服务填写';
+
+	/// zh: '未授予定位权限，无法获取位置'
+	String get positionPermissionDenied => '未授予定位权限，无法获取位置';
+
+	/// zh: '定位权限已被拒绝，请前往系统设置开启'
+	String get positionPermissionForever => '定位权限已被拒绝，请前往系统设置开启';
+
+	/// zh: '系统定位服务未开启'
+	String get positionServiceOff => '系统定位服务未开启';
 
 	/// zh: '主页'
 	String get home => '主页';
@@ -1646,12 +1655,6 @@ class Translations$editor$zh {
 
 	// Translations
 
-	/// zh: '请开启定位权限'
-	String get noticeEnableLocation => '请开启定位权限';
-
-	/// zh: '请前往设置中开启定位权限'
-	String get noticeEnableLocation2 => '请前往设置中开启定位权限';
-
 	/// zh: '音频文件错误'
 	String get audioFileError => '音频文件错误';
 
@@ -1666,6 +1669,9 @@ class Translations$editor$zh {
 
 	/// zh: '正文'
 	String get content => '正文';
+
+	/// zh: '标题'
+	String get titlePlaceholder => '标题';
 
 	/// zh: '当前平台暂不支持编辑器'
 	String get unsupportedPlatform => '当前平台暂不支持编辑器';

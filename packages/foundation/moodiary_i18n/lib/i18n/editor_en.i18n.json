@@ -1,11 +1,10 @@
 {
-  "noticeEnableLocation": "Please enable location permission",
-  "noticeEnableLocation2": "Please go to settings to enable location permissions",
   "audioFileError": "Audio file error",
   "pickAudio": "Select audio",
   "pickAudioFromRecord": "Recording",
   "pickAudioFromFile": "File Audio",
   "content": "Text",
+  "titlePlaceholder": "Title",
   "unsupportedPlatform": "The editor is not supported on this platform",
   "loadFailed": "Failed to load the editor\n{error}",
   "pickCategory": "Pick a category",

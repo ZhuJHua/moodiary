@@ -24,6 +24,7 @@ if (boot.audioDefaultName) setAudioDefaultName(boot.audioDefaultName)
 if (boot.fontBase) setFontBase(boot.fontBase)
 const initialEditable = boot.editable ?? true
 const placeholder = boot.placeholder ?? ''
+const titlePlaceholder = boot.titlePlaceholder ?? ''
 // 决定工具栏位置（桌面置顶 / 移动置底）。Flutter 始终下发 platform；缺省按桌面（顶部工具栏到处都合理）。
 const platform = boot.platform ?? 'desktop'
 
@@ -72,6 +73,7 @@ onBeforeUnmount(() => shell.value?.removeEventListener('click', onClick))
     <MoodiaryEditor
       :editable="initialEditable"
       :placeholder="placeholder"
+      :title-placeholder="titlePlaceholder"
       :platform="platform"
     />
     <DiaryLinkSuggestion />

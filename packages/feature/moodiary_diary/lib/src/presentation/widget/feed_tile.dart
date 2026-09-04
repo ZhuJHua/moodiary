@@ -74,6 +74,7 @@ class DiaryFeedTile extends StatelessWidget {
     final showAudioMark = diary.audioName.isNotEmpty && cells.isNotEmpty;
 
     return DiaryTileFrame(
+      selecting: selecting,
       selected: selected,
       onTap: onTap,
       onLongPress: onLongPress,
@@ -90,8 +91,6 @@ class DiaryFeedTile extends StatelessWidget {
               category: category,
               showCategoryLabel: showCategoryLabel,
               syncState: syncState,
-              selecting: selecting,
-              selected: selected,
             )
           : _StackedColumn(
               diary: diary,
@@ -101,8 +100,6 @@ class DiaryFeedTile extends StatelessWidget {
               category: category,
               showCategoryLabel: showCategoryLabel,
               syncState: syncState,
-              selecting: selecting,
-              selected: selected,
             ),
     );
   }
@@ -117,8 +114,6 @@ class _SideThumbRow extends StatelessWidget {
   final Category? category;
   final bool showCategoryLabel;
   final DiaryCardSyncState syncState;
-  final bool selecting;
-  final bool selected;
 
   const _SideThumbRow({
     required this.diary,
@@ -128,8 +123,6 @@ class _SideThumbRow extends StatelessWidget {
     required this.category,
     required this.showCategoryLabel,
     required this.syncState,
-    required this.selecting,
-    required this.selected,
   });
 
   @override
@@ -160,8 +153,6 @@ class _SideThumbRow extends StatelessWidget {
                 category: category,
                 showCategoryLabel: showCategoryLabel,
                 syncState: syncState,
-                selecting: selecting,
-                selected: selected,
               ),
             ],
           ),
@@ -195,8 +186,6 @@ class _StackedColumn extends StatelessWidget {
   final Category? category;
   final bool showCategoryLabel;
   final DiaryCardSyncState syncState;
-  final bool selecting;
-  final bool selected;
 
   const _StackedColumn({
     required this.diary,
@@ -206,8 +195,6 @@ class _StackedColumn extends StatelessWidget {
     required this.category,
     required this.showCategoryLabel,
     required this.syncState,
-    required this.selecting,
-    required this.selected,
   });
 
   @override
@@ -234,8 +221,6 @@ class _StackedColumn extends StatelessWidget {
           category: category,
           showCategoryLabel: showCategoryLabel,
           syncState: syncState,
-          selecting: selecting,
-          selected: selected,
         ),
       ],
     );
@@ -564,8 +549,6 @@ class _MetaLine extends StatelessWidget {
   final Category? category;
   final bool showCategoryLabel;
   final DiaryCardSyncState syncState;
-  final bool selecting;
-  final bool selected;
 
   const _MetaLine({
     required this.diary,
@@ -574,8 +557,6 @@ class _MetaLine extends StatelessWidget {
     required this.category,
     required this.showCategoryLabel,
     required this.syncState,
-    required this.selecting,
-    required this.selected,
   });
 
   @override
@@ -645,10 +626,7 @@ class _MetaLine extends StatelessWidget {
           const SizedBox(width: 6),
           DiarySyncBadge(state: syncState),
         ],
-        if (selecting) ...[
-          const SizedBox(width: 6),
-          DiarySelectMark(selected: selected),
-        ] else if (diary.tags.isNotEmpty)
+        if (diary.tags.isNotEmpty)
           // 标签块整体封顶：它是 Row 里的**非 flex** 子节点，不限宽的话标签有多长
           // 就吃多宽，把左边那段 Expanded 压到 0 之后直接 RenderFlex 溢出。
           ConstrainedBox(
