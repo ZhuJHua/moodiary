@@ -76,8 +76,8 @@ abstract class IRemoteSyncBackend implements RemoteObjectStore {
 
   Future<void> clearOptions();
 
-  /// 探测连通性 / 凭据。失败返回错误信息，成功返回 `null`。
-  Future<String?> testConnection();
+  /// 探测连通性 / 凭据。失败抛 [SyncException]（带 [SyncErrorKind]），成功静默返回。
+  Future<void> testConnection();
 }
 
 /// 一个方向上的变更条数。日记 / 分类 / 媒体信息按条目计（含推送或应用的墓碑），
@@ -188,9 +188,100 @@ class SyncReport {
       '${warning == null ? '' : '\n$warning'}';
 }
 
+/// 同步错误的机器可读分类。UI 据此给「下一步」（重试 / 检查配置 / 解锁密钥），
+/// 连接健康（`SyncHealth`）据此判定远端是否可达。
+enum SyncErrorKind {
+  /// 连不上：DNS / 拒绝连接 / 超时。
+  network,
+
+  /// 401 / 403：凭据失效或权限不足。
+  auth,
+
+  /// 404 从对象层冒了上来（正常情况下后端把「不存在」折成 null / false）。
+  notFound,
+
+  /// 5xx。
+  server,
+
+  /// 其它非 2xx。
+  http,
+
+  /// 远端锁被另一台设备持有（远端活着）。
+  locked,
+
+  /// manifest 写后回读不是自己写的（远端活着）。
+  manifestRace,
+
+  /// 远端 manifest 解不成对象（远端活着，数据坏了）。
+  manifestCorrupt,
+
+  /// 远端由另一把密钥加密。
+  keyConflict,
+
+  /// 后端配置不齐。
+  notConfigured,
+
+  unknown;
+
+  static final RegExp _tag = RegExp(
+    r'\[(network|auth|not_found|server|http|unknown)\]',
+  );
+
+  /// 从 Rust 侧成文的错误明细里读 `[kind]` 标签（见 moodiary_rust `sync/mod.rs`）。
+  /// 标签可能不在开头——Dart 包装层会在前面加自己的一句，FRB 又会套一层
+  /// `AnyhowException(...)`，所以扫整串取第一个。没有标签 → [unknown]。
+  static SyncErrorKind fromDetail(String detail) {
+    final m = _tag.firstMatch(detail);
+    return switch (m?.group(1)) {
+      'network' => .network,
+      'auth' => .auth,
+      'not_found' => .notFound,
+      'server' => .server,
+      'http' => .http,
+      _ => .unknown,
+    };
+  }
+
+  /// 给人看之前把标签摘掉。
+  static final RegExp _tagWithSpace = RegExp(
+    r'\[(network|auth|not_found|server|http|unknown)\]\s*',
+  );
+
+  static String stripTag(String detail) =>
+      detail.replaceFirst(_tagWithSpace, '').trim();
+
+  /// 这类错误说明远端本身不可达 / 不接受本机（连接健康要变红）；其余是远端活着
+  /// 但这一次没成（锁、竞争、数据坏），健康态不动。
+  bool get affectsHealth => switch (this) {
+    .network ||
+    .auth ||
+    .server ||
+    .http ||
+    .keyConflict ||
+    .notConfigured => true,
+    _ => false,
+  };
+}
+
 class SyncException implements Exception {
   final String message;
-  const SyncException(this.message);
+  final SyncErrorKind kind;
+  const SyncException(this.message, {this.kind = .unknown});
+
+  /// 包装底层（Rust）错误：从明细里读分类、摘掉标签再交给 [message] 成文。
+  factory SyncException.wrap(
+    Object error,
+    String Function(String detail) message,
+  ) {
+    final detail = error is SyncException ? error.message : error.toString();
+    return SyncException(
+      message(SyncErrorKind.stripTag(detail)),
+      kind: error is SyncException
+          ? error.kind
+          : SyncErrorKind.fromDetail(detail),
+    );
+  }
+
   @override
   String toString() => 'SyncException: $message';
 }
@@ -201,5 +292,5 @@ class SyncException implements Exception {
 /// 「记 warn 后继续同步」，而这一种必须中止：继续下去要么用错误的密钥覆盖远端
 /// 唯一的信封，要么在半路以「密码错误」这类无从下手的错误收场。
 class SyncKeyConflictException extends SyncException {
-  const SyncKeyConflictException(super.message);
+  const SyncKeyConflictException(super.message) : super(kind: .keyConflict);
 }

@@ -3283,6 +3283,84 @@ class Translations$sync$zh {
 
 	/// zh: '配对码错误次数过多，本次接收已锁定，请重新开始接收以更换配对码'
 	String get lanAuthLocked => '配对码错误次数过多，本次接收已锁定，请重新开始接收以更换配对码';
+
+	/// zh: '写入远端对象失败（{key}）：{error}'
+	String errWriteRemote({required Object key, required Object error}) => '写入远端对象失败（${key}）：${error}';
+
+	/// zh: '删除远端对象失败（{key}）：{error}'
+	String errDeleteRemote({required Object key, required Object error}) => '删除远端对象失败（${key}）：${error}';
+
+	/// zh: '查询远端对象失败（{key}）：{error}'
+	String errStatRemote({required Object key, required Object error}) => '查询远端对象失败（${key}）：${error}';
+
+	/// zh: 'Bucket「{bucket}」不存在'
+	String errBucketMissing({required Object bucket}) => 'Bucket「${bucket}」不存在';
+
+	/// zh: '自动同步中：{backend}'
+	String syncingAuto({required Object backend}) => '自动同步中：${backend}';
+
+	/// zh: '上次运行'
+	String get statusLastRun => '上次运行';
+
+	/// zh: '手动'
+	String get triggerManual => '手动';
+
+	/// zh: '变更'
+	String get triggerChange => '变更';
+
+	/// zh: '关闭日记'
+	String get triggerClose => '关闭日记';
+
+	/// zh: '轮询'
+	String get triggerPoll => '轮询';
+
+	/// zh: '回到前台'
+	String get triggerResume => '回到前台';
+
+	/// zh: '网络恢复'
+	String get triggerNetwork => '网络恢复';
+
+	/// zh: '{seconds} 秒'
+	String elapsedSeconds({required Object seconds}) => '${seconds} 秒';
+
+	/// zh: '本地 {count} 篇待上传'
+	String pendingLocal({required Object count}) => '本地 ${count} 篇待上传';
+
+	/// zh: '已连接'
+	String get healthConnected => '已连接';
+
+	/// zh: '无法连接到 {backend}'
+	String healthUnreachable({required Object backend}) => '无法连接到 ${backend}';
+
+	/// zh: '用户名或密码已失效'
+	String get healthAuthFailed => '用户名或密码已失效';
+
+	/// zh: '云端密钥与本机不一致'
+	String get healthKeyConflict => '云端密钥与本机不一致';
+
+	/// zh: '无法连接'
+	String get healthUnreachableShort => '无法连接';
+
+	/// zh: '凭据失效'
+	String get healthAuthFailedShort => '凭据失效';
+
+	/// zh: '密钥冲突'
+	String get healthKeyConflictShort => '密钥冲突';
+
+	/// zh: '自 {time} 起'
+	String healthSince({required Object time}) => '自 ${time} 起';
+
+	/// zh: '检查配置'
+	String get checkConfig => '检查配置';
+
+	/// zh: '重试'
+	String get retry => '重试';
+
+	/// zh: '关闭日记后几秒内推送；每 {interval} 检查其它设备的变更'
+	String autoSyncSubtitleDetail({required Object interval}) => '关闭日记后几秒内推送；每 ${interval} 检查其它设备的变更';
+
+	/// zh: '远端恢复可达'
+	String get reasonRecovered => '远端恢复可达';
 }
 
 // Path: ui

@@ -87,15 +87,19 @@ class S3SyncBackend implements IRemoteSyncBackend {
   String _objectName(String key) => '$_root/$key';
 
   @override
-  Future<String?> testConnection() async {
+  Future<void> testConnection() async {
     final opts = await _read();
-    if (!_ready(opts)) return '尚未配置 endpoint / 凭据 / bucket';
+    if (!_ready(opts)) throw notReadyError;
     try {
       final client = await _client();
-      final exists = await client.testConnection();
-      return exists ? null : 'Bucket "${_at(opts, 4)}" 不存在';
+      if (!await client.testConnection()) {
+        throw SyncException(
+          l10n.sync.errBucketMissing(bucket: _at(opts, 4)),
+          kind: .notFound,
+        );
+      }
     } catch (e) {
-      return e.toString();
+      throw SyncException.wrap(e, (d) => l10n.sync.connectFailed(error: d));
     }
   }
 
@@ -113,14 +117,24 @@ class S3SyncBackend implements IRemoteSyncBackend {
       final bytes = await client.readObject(key: _objectName(key));
       return bytes;
     } catch (e) {
-      throw SyncException(l10n.sync.errReadRemote(key: key, error: '$e'));
+      throw SyncException.wrap(
+        e,
+        (d) => l10n.sync.errReadRemote(key: key, error: d),
+      );
     }
   }
 
   @override
   Future<void> writeObject(String key, Uint8List bytes) async {
-    final client = await _client();
-    await client.writeObject(key: _objectName(key), data: bytes);
+    try {
+      final client = await _client();
+      await client.writeObject(key: _objectName(key), data: bytes);
+    } catch (e) {
+      throw SyncException.wrap(
+        e,
+        (d) => l10n.sync.errWriteRemote(key: key, error: d),
+      );
+    }
   }
 
   @override
@@ -135,14 +149,24 @@ class S3SyncBackend implements IRemoteSyncBackend {
         filePath: filePath,
       );
     } catch (e) {
-      throw SyncException(l10n.sync.errReadRemote(key: key, error: '$e'));
+      throw SyncException.wrap(
+        e,
+        (d) => l10n.sync.errReadRemote(key: key, error: d),
+      );
     }
   }
 
   @override
   Future<void> writeObjectFile(String key, String filePath) async {
-    final client = await _client();
-    await client.writeObjectFile(key: _objectName(key), filePath: filePath);
+    try {
+      final client = await _client();
+      await client.writeObjectFile(key: _objectName(key), filePath: filePath);
+    } catch (e) {
+      throw SyncException.wrap(
+        e,
+        (d) => l10n.sync.errWriteRemote(key: key, error: d),
+      );
+    }
   }
 
   @override
@@ -151,7 +175,10 @@ class S3SyncBackend implements IRemoteSyncBackend {
       final client = await _client();
       return await client.createExclusive(key: _objectName(key), data: bytes);
     } catch (e) {
-      throw SyncException(l10n.sync.errCreateRemote(key: key, error: '$e'));
+      throw SyncException.wrap(
+        e,
+        (d) => l10n.sync.errCreateRemote(key: key, error: d),
+      );
     }
   }
 
@@ -163,7 +190,10 @@ class S3SyncBackend implements IRemoteSyncBackend {
       final client = await _client();
       await client.deleteObject(key: _objectName(key));
     } catch (e) {
-      throw SyncException('删除远端对象失败（$key）：$e');
+      throw SyncException.wrap(
+        e,
+        (d) => l10n.sync.errDeleteRemote(key: key, error: d),
+      );
     }
   }
 
@@ -175,12 +205,16 @@ class S3SyncBackend implements IRemoteSyncBackend {
       final stat = await client.statObject(key: _objectName(key));
       return stat.isEmpty ? null : stat;
     } catch (e) {
-      throw SyncException('查询远端对象失败（$key）：$e');
+      throw SyncException.wrap(
+        e,
+        (d) => l10n.sync.errStatRemote(key: key, error: d),
+      );
     }
   }
 
   @override
-  SyncException get notReadyError => SyncException(l10n.sync.errS3Config);
+  SyncException get notReadyError =>
+      SyncException(l10n.sync.errS3Config, kind: .notConfigured);
 
   @override
   Future<List<String>> savedOptions() => _read();

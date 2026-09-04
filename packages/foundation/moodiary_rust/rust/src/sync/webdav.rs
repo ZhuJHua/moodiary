@@ -1,3 +1,4 @@
+use super::{kind_of_reqwest, kind_of_status, tagged};
 use anyhow::Result;
 use reqwest_dav::re_exports::reqwest::Method;
 use reqwest_dav::{Auth, ClientBuilder, Dav2xx, Depth};
@@ -17,6 +18,22 @@ fn dav_status(e: &reqwest_dav::Error) -> Option<u16> {
 
 fn dav_is_not_found(e: &reqwest_dav::Error) -> bool {
     dav_status(e) == Some(404)
+}
+
+fn dav_kind(e: &reqwest_dav::Error) -> &'static str {
+    match (dav_status(e), e) {
+        (Some(status), _) => kind_of_status(status),
+        (None, reqwest_dav::Error::Reqwest(re)) => kind_of_reqwest(re),
+        _ => "unknown",
+    }
+}
+
+fn dav_err(e: reqwest_dav::Error, msg: impl std::fmt::Display) -> anyhow::Error {
+    tagged(dav_kind(&e), format!("{msg}: {e}"))
+}
+
+fn req_err(e: reqwest::Error, msg: impl std::fmt::Display) -> anyhow::Error {
+    tagged(kind_of_reqwest(&e), format!("{msg}: {e}"))
 }
 
 pub struct DavClient {
@@ -70,7 +87,7 @@ impl DavClient {
                 let exists = dav_status(&e) == Some(405)
                     || self.client.list(&current, Depth::Number(0)).await.is_ok();
                 if !exists {
-                    return Err(anyhow::anyhow!("Failed to create dir {current}: {e}"));
+                    return Err(dav_err(e, format!("Failed to create dir {current}")));
                 }
             }
             self.created_dirs.lock().unwrap().insert(current.clone());
@@ -86,7 +103,7 @@ impl DavClient {
                 if dav_is_not_found(&e) {
                     Ok(true)
                 } else {
-                    Err(anyhow::anyhow!("Connection failed: {e}"))
+                    Err(dav_err(e, "Connection failed"))
                 }
             }
         }
@@ -104,12 +121,12 @@ impl DavClient {
         let resp = match self.client.get(&path).await {
             Ok(r) => r,
             Err(e) if dav_is_not_found(&e) => return Ok(None),
-            Err(e) => return Err(anyhow::anyhow!("Failed to read {key}: {e}")),
+            Err(e) => return Err(dav_err(e, format!("Failed to read {key}"))),
         };
         crate::http::client::read_body(resp)
             .await
             .map(Some)
-            .map_err(|e| anyhow::anyhow!("Failed to read {key}: {e}"))
+            .map_err(|e| req_err(e, format!("Failed to read {key}")))
     }
 
     /// [read_object] 的落盘版：响应体边收边写，整份不进内存。远端不存在返回 false。
@@ -118,7 +135,7 @@ impl DavClient {
         let resp = match self.client.get(&path).await {
             Ok(r) => r,
             Err(e) if dav_is_not_found(&e) => return Ok(false),
-            Err(e) => return Err(anyhow::anyhow!("Failed to read {key}: {e}")),
+            Err(e) => return Err(dav_err(e, format!("Failed to read {key}"))),
         };
         crate::http::client::write_body_to_file(resp, &file_path).await?;
         Ok(true)
@@ -143,7 +160,7 @@ impl DavClient {
         };
         resp.dav2xx()
             .await
-            .map_err(|e| anyhow::anyhow!("Failed to write {key}: {e}"))?;
+            .map_err(|e| dav_err(e, format!("Failed to write {key}")))?;
         Ok(())
     }
 
@@ -161,13 +178,13 @@ impl DavClient {
                 .client
                 .start_request(Method::PUT, path)
                 .await
-                .map_err(|e| anyhow::anyhow!("Failed to build request: {e}"))?,
+                .map_err(|e| dav_err(e, "Failed to build request"))?,
         };
         req.header(reqwest::header::CONTENT_LENGTH, len)
             .body(body)
             .send()
             .await
-            .map_err(|e| anyhow::anyhow!("Failed to write {path}: {e}"))
+            .map_err(|e| req_err(e, format!("Failed to write {path}")))
     }
 
     /// 条件创建：仅当远端不存在时写入（`If-None-Match: *`）。返回 true=创建成功，
@@ -182,19 +199,19 @@ impl DavClient {
             .client
             .start_request(Method::PUT, &path)
             .await
-            .map_err(|e| anyhow::anyhow!("Failed to build request: {e}"))?;
+            .map_err(|e| dav_err(e, "Failed to build request"))?;
         let resp = req
             .header("If-None-Match", "*")
             .body(data)
             .send()
             .await
-            .map_err(|e| anyhow::anyhow!("Failed to create {key}: {e}"))?;
+            .map_err(|e| req_err(e, format!("Failed to create {key}")))?;
         if resp.status().as_u16() == 412 {
             return Ok(false);
         }
         resp.dav2xx()
             .await
-            .map_err(|e| anyhow::anyhow!("Failed to create {key}: {e}"))?;
+            .map_err(|e| dav_err(e, format!("Failed to create {key}")))?;
         Ok(true)
     }
 
@@ -206,7 +223,7 @@ impl DavClient {
         self.client
             .put(&path, data)
             .await
-            .map_err(|e| anyhow::anyhow!("Failed to write {key}: {e}"))?;
+            .map_err(|e| dav_err(e, format!("Failed to write {key}")))?;
         Ok(())
     }
 
@@ -216,7 +233,7 @@ impl DavClient {
         match self.client.delete(&path).await {
             Ok(_) => Ok(()),
             Err(e) if dav_is_not_found(&e) => Ok(()),
-            Err(e) => Err(anyhow::anyhow!("Failed to delete {key}: {e}")),
+            Err(e) => Err(dav_err(e, format!("Failed to delete {key}"))),
         }
     }
 
@@ -226,18 +243,21 @@ impl DavClient {
             .client
             .start_request(Method::HEAD, &path)
             .await
-            .map_err(|e| anyhow::anyhow!("Failed to build request: {e}"))?;
+            .map_err(|e| dav_err(e, "Failed to build request"))?;
         let resp = req
             .send()
             .await
-            .map_err(|e| anyhow::anyhow!("Stat request failed: {e}"))?;
+            .map_err(|e| req_err(e, "Stat request failed"))?;
         // 只有 404 表示「不存在」（空串）；网络错误与 401/5xx 必须上抛，
         // 否则调用方把「远端不可达」误判成「远端没有」，已上传媒体会整体重传。
         if resp.status() == reqwest::StatusCode::NOT_FOUND {
             return Ok(String::new());
         }
         if !resp.status().is_success() {
-            anyhow::bail!("Stat failed: HTTP {}", resp.status());
+            return Err(tagged(
+                kind_of_status(resp.status().as_u16()),
+                format!("Stat failed: HTTP {}", resp.status()),
+            ));
         }
         Ok(resp
             .headers()

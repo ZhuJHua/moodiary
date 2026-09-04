@@ -4,6 +4,11 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 
 class NetworkStatus {
+  /// 在线 / 离线的边沿流（去重）。「在线」只说有网络接口，不保证目标可达。
+  static Stream<bool> get onlineChanges => Connectivity().onConnectivityChanged
+      .map((r) => r.isNotEmpty && !r.contains(ConnectivityResult.none))
+      .distinct();
+
   static Future<bool> isWifiConnected() async {
     final connectivityResult = await Connectivity().checkConnectivity();
     return connectivityResult.contains(ConnectivityResult.wifi);

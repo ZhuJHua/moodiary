@@ -74,7 +74,7 @@ final class FakeRemoteBackend implements IRemoteSyncBackend {
   Future<void> clearOptions() async {}
 
   @override
-  Future<String?> testConnection() async => null;
+  Future<void> testConnection() async {}
 
   @override
   Future<Uint8List?> readObject(String key) async {

@@ -74,14 +74,18 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
   }
 
   @override
-  Future<String?> testConnection() async {
-    if (!await isReady()) return '尚未配置 URL / 用户名';
+  Future<void> testConnection() async {
+    if (!await isReady()) throw notReadyError;
     try {
       final client = await _client();
-      final ok = await client.testConnection();
-      return ok ? null : '连接失败';
+      if (!await client.testConnection()) {
+        throw SyncException(
+          l10n.sync.connectFailed(error: l10n.sync.healthUnreachableShort),
+          kind: .http,
+        );
+      }
     } catch (e) {
-      return e.toString();
+      throw SyncException.wrap(e, (d) => l10n.sync.connectFailed(error: d));
     }
   }
 
@@ -99,14 +103,24 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
       final bytes = await client.readObject(key: key);
       return bytes;
     } catch (e) {
-      throw SyncException(l10n.sync.errReadRemote(key: key, error: '$e'));
+      throw SyncException.wrap(
+        e,
+        (d) => l10n.sync.errReadRemote(key: key, error: d),
+      );
     }
   }
 
   @override
   Future<void> writeObject(String key, Uint8List bytes) async {
-    final client = await _client();
-    await client.writeObject(key: key, data: bytes);
+    try {
+      final client = await _client();
+      await client.writeObject(key: key, data: bytes);
+    } catch (e) {
+      throw SyncException.wrap(
+        e,
+        (d) => l10n.sync.errWriteRemote(key: key, error: d),
+      );
+    }
   }
 
   @override
@@ -118,14 +132,24 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
       final client = await _client();
       return await client.readObjectToFile(key: key, filePath: filePath);
     } catch (e) {
-      throw SyncException(l10n.sync.errReadRemote(key: key, error: '$e'));
+      throw SyncException.wrap(
+        e,
+        (d) => l10n.sync.errReadRemote(key: key, error: d),
+      );
     }
   }
 
   @override
   Future<void> writeObjectFile(String key, String filePath) async {
-    final client = await _client();
-    await client.writeObjectFile(key: key, filePath: filePath);
+    try {
+      final client = await _client();
+      await client.writeObjectFile(key: key, filePath: filePath);
+    } catch (e) {
+      throw SyncException.wrap(
+        e,
+        (d) => l10n.sync.errWriteRemote(key: key, error: d),
+      );
+    }
   }
 
   @override
@@ -134,7 +158,10 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
       final client = await _client();
       return await client.createExclusive(key: key, data: bytes);
     } catch (e) {
-      throw SyncException(l10n.sync.errCreateRemote(key: key, error: '$e'));
+      throw SyncException.wrap(
+        e,
+        (d) => l10n.sync.errCreateRemote(key: key, error: d),
+      );
     }
   }
 
@@ -146,7 +173,10 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
       final client = await _client();
       await client.deleteObject(key: key);
     } catch (e) {
-      throw SyncException('删除远端对象失败（$key）：$e');
+      throw SyncException.wrap(
+        e,
+        (d) => l10n.sync.errDeleteRemote(key: key, error: d),
+      );
     }
   }
 
@@ -158,12 +188,16 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
       final stat = await client.statObject(key: key);
       return stat.isEmpty ? null : stat;
     } catch (e) {
-      throw SyncException('查询远端对象失败（$key）：$e');
+      throw SyncException.wrap(
+        e,
+        (d) => l10n.sync.errStatRemote(key: key, error: d),
+      );
     }
   }
 
   @override
-  SyncException get notReadyError => SyncException(l10n.sync.errWebdavConfig);
+  SyncException get notReadyError =>
+      SyncException(l10n.sync.errWebdavConfig, kind: .notConfigured);
 
   @override
   Future<List<String>> savedOptions() => _read();

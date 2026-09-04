@@ -249,7 +249,7 @@ class RemoteLease {
         await Future.delayed(_retryDelay);
       }
     }
-    throw SyncException(l10n.sync.errLocked);
+    throw SyncException(l10n.sync.errLocked, kind: .locked);
   }
 
   /// 条件写探测：锁已在本机手中，再次条件创建**必须**被 412 拒绝，否则服务器

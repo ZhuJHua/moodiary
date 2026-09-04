@@ -90,7 +90,63 @@ void main() {
     test('carries message in toString', () {
       const e = SyncException('boom');
       expect(e.message, 'boom');
+      expect(e.kind, SyncErrorKind.unknown);
       expect(e.toString(), contains('boom'));
+    });
+
+    test('key conflict is tagged keyConflict', () {
+      expect(const SyncKeyConflictException('x').kind, SyncErrorKind.keyConflict);
+    });
+  });
+
+  group('SyncErrorKind.fromDetail', () {
+    test('reads the Rust-side tag anywhere in the string', () {
+      expect(
+        SyncErrorKind.fromDetail(
+          'AnyhowException(message: [network] Failed to read x: dns)',
+        ),
+        SyncErrorKind.network,
+      );
+      expect(SyncErrorKind.fromDetail('[auth] Read x failed: HTTP 401'), SyncErrorKind.auth);
+      expect(SyncErrorKind.fromDetail('[not_found] gone'), SyncErrorKind.notFound);
+      expect(SyncErrorKind.fromDetail('[server] HTTP 503'), SyncErrorKind.server);
+      expect(SyncErrorKind.fromDetail('[http] HTTP 418'), SyncErrorKind.http);
+      expect(
+        SyncErrorKind.fromDetail('Stat request failed: [network] x'),
+        SyncErrorKind.network,
+      );
+    });
+
+    test('untagged → unknown; stripTag removes the tag', () {
+      expect(SyncErrorKind.fromDetail('plain failure'), SyncErrorKind.unknown);
+      expect(SyncErrorKind.stripTag('[auth] HTTP 401'), 'HTTP 401');
+      expect(SyncErrorKind.stripTag('plain'), 'plain');
+    });
+
+    test(
+      'wrap keeps the kind and hands the stripped detail to the message',
+      () {
+        final e = SyncException.wrap(
+          Exception('[server] Write k failed: HTTP 500'),
+          (d) => 'wrapped: $d',
+        );
+        expect(e.kind, SyncErrorKind.server);
+        expect(e.message, contains('wrapped: Exception: Write k failed'));
+        // 已经是 SyncException 的原样保留 kind。
+        final inner = SyncException.wrap(
+          const SyncException('locked', kind: .locked),
+          (d) => d,
+        );
+        expect(inner.kind, SyncErrorKind.locked);
+      },
+    );
+
+    test('affectsHealth: remote-alive failures do not', () {
+      expect(SyncErrorKind.network.affectsHealth, isTrue);
+      expect(SyncErrorKind.auth.affectsHealth, isTrue);
+      expect(SyncErrorKind.locked.affectsHealth, isFalse);
+      expect(SyncErrorKind.manifestRace.affectsHealth, isFalse);
+      expect(SyncErrorKind.unknown.affectsHealth, isFalse);
     });
   });
 }

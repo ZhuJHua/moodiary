@@ -353,6 +353,7 @@ String? _reasonLabel(Translations l10n, SyncEventReason? reason) {
     .openDiary => l10n.sync.reasonOpenDiary,
     .localMissing => l10n.sync.reasonLocalMissing,
     .probeFailed => l10n.sync.reasonProbeFailed,
+    .recovered => l10n.sync.reasonRecovered,
     .remoteExists => l10n.sync.reasonRemoteExists,
     .localExists => l10n.sync.reasonLocalExists,
     .remoteMissing => l10n.sync.reasonRemoteMissing,

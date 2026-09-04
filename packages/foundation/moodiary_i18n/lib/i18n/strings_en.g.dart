@@ -1199,6 +1199,32 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String summaryMedia({required Object count}) => '${count} media files';
 	@override String get statusUpToDate => 'Up to date';
 	@override String get lanAuthLocked => 'Too many incorrect pairing codes. This session is locked — start receiving again to get a new code.';
+	@override String errWriteRemote({required Object key, required Object error}) => 'Failed to write remote object (${key}): ${error}';
+	@override String errDeleteRemote({required Object key, required Object error}) => 'Failed to delete remote object (${key}): ${error}';
+	@override String errStatRemote({required Object key, required Object error}) => 'Failed to query remote object (${key}): ${error}';
+	@override String errBucketMissing({required Object bucket}) => 'Bucket "${bucket}" does not exist';
+	@override String syncingAuto({required Object backend}) => 'Auto-syncing: ${backend}';
+	@override String get statusLastRun => 'Last run';
+	@override String get triggerManual => 'manual';
+	@override String get triggerChange => 'change';
+	@override String get triggerClose => 'diary closed';
+	@override String get triggerPoll => 'poll';
+	@override String get triggerResume => 'resumed';
+	@override String get triggerNetwork => 'back online';
+	@override String elapsedSeconds({required Object seconds}) => '${seconds} s';
+	@override String pendingLocal({required Object count}) => '${count} diaries waiting to upload';
+	@override String get healthConnected => 'Connected';
+	@override String healthUnreachable({required Object backend}) => 'Cannot reach ${backend}';
+	@override String get healthAuthFailed => 'Username or password no longer works';
+	@override String get healthKeyConflict => 'Remote key differs from this device';
+	@override String get healthUnreachableShort => 'unreachable';
+	@override String get healthAuthFailedShort => 'credentials rejected';
+	@override String get healthKeyConflictShort => 'key conflict';
+	@override String healthSince({required Object time}) => 'since ${time}';
+	@override String get checkConfig => 'Check settings';
+	@override String get retry => 'Retry';
+	@override String autoSyncSubtitleDetail({required Object interval}) => 'Pushes a few seconds after you close a diary; checks other devices every ${interval}';
+	@override String get reasonRecovered => 'Remote reachable again';
 }
 
 // Path: ui

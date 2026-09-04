@@ -1,5 +1,6 @@
 //! rusty-s3 是 Sans-IO 的：只算 SigV4 签名给出预签名 URL，请求走共享 reqwest 客户端。
 
+use super::{kind_of_reqwest, kind_of_status, tagged};
 use anyhow::Result;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
@@ -190,9 +191,9 @@ impl S3Client {
                 self.fell_back.store(true, Ordering::Relaxed);
                 self.send_once(method, sign(&self.bucket_path), headers, None)
                     .await
-                    .map_err(|e| anyhow::anyhow!("{e}"))
+                    .map_err(|e| tagged(kind_of_reqwest(&e), e))
             }
-            Err(e) => Err(anyhow::anyhow!("{e}")),
+            Err(e) => Err(tagged(kind_of_reqwest(&e), e)),
         }
     }
 
@@ -209,7 +210,10 @@ impl S3Client {
         } else {
             ""
         };
-        anyhow::anyhow!("{op} failed: HTTP {status} {body}{hint}")
+        tagged(
+            kind_of_status(status),
+            format!("{op} failed: HTTP {status} {body}{hint}"),
+        )
     }
 
     pub async fn test_connection(&self) -> Result<bool> {
@@ -244,7 +248,7 @@ impl S3Client {
             let resp = self
                 .send_once(reqwest::Method::PUT, url, &[], None)
                 .await
-                .map_err(|e| anyhow::anyhow!("{e}"))?;
+                .map_err(|e| tagged(kind_of_reqwest(&e), e))?;
             // 409 = BucketAlreadyOwnedByYou：并发创建撞上了，等价于成功。
             if !resp.status().is_success() && resp.status().as_u16() != 409 {
                 return Err(Self::fail("Create bucket", resp).await);
@@ -277,7 +281,7 @@ impl S3Client {
         crate::http::client::read_body(resp)
             .await
             .map(Some)
-            .map_err(|e| anyhow::anyhow!("Failed to read object content: {e}"))
+            .map_err(|e| tagged(kind_of_reqwest(&e), format!("Failed to read object content: {e}")))
     }
 
     pub async fn write_object(&self, key: String, data: Vec<u8>) -> Result<()> {
@@ -402,13 +406,16 @@ impl S3Client {
                 None,
             )
             .await
-            .map_err(|e| anyhow::anyhow!("Stat request failed: {e}"))?;
+            .map_err(|e| anyhow::anyhow!("Stat request failed: {e:#}"))?;
         // 同 webdav：只有 404 是「不存在」，其余错误上抛。
         if resp.status() == reqwest::StatusCode::NOT_FOUND {
             return Ok(String::new());
         }
         if !resp.status().is_success() {
-            anyhow::bail!("Stat failed: HTTP {}", resp.status());
+            return Err(tagged(
+                kind_of_status(resp.status().as_u16()),
+                format!("Stat failed: HTTP {}", resp.status()),
+            ));
         }
         Ok(resp
             .headers()

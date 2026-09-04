@@ -3,6 +3,24 @@ import 'package:moodiary_sync/src/application/auto_sync_watcher.dart';
 
 /// 轮询空转短路与去抖重排的纯函数判定（watcher 本体依赖 getIt，不做实例级单测）。
 void main() {
+  group('pollDelaySeconds — 探测失败退避', () {
+    test('无失败 → 基础间隔', () {
+      expect(AutoSyncWatcher.pollDelaySeconds(base: 30, failStreak: 0), 30);
+    });
+
+    test('每次失败翻倍', () {
+      expect(AutoSyncWatcher.pollDelaySeconds(base: 30, failStreak: 1), 60);
+      expect(AutoSyncWatcher.pollDelaySeconds(base: 30, failStreak: 2), 120);
+      expect(AutoSyncWatcher.pollDelaySeconds(base: 30, failStreak: 4), 480);
+    });
+
+    test('封顶 10 分钟，且大 streak 不溢出', () {
+      expect(AutoSyncWatcher.pollDelaySeconds(base: 30, failStreak: 5), 600);
+      expect(AutoSyncWatcher.pollDelaySeconds(base: 30, failStreak: 40), 600);
+      expect(AutoSyncWatcher.pollDelaySeconds(base: 600, failStreak: 1), 600);
+    });
+  });
+
   group('shouldRearm — 排定的推送只提前不推后', () {
     final base = DateTime(2026, 9, 4, 12);
 

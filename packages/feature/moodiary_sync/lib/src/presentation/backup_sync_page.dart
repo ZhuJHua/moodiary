@@ -6,6 +6,7 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_sync/src/application/sync_controller.dart';
+import 'package:moodiary_sync/src/application/sync_runner.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_cancellation.dart';
@@ -13,6 +14,7 @@ import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/sync_provider_scope.dart';
 import 'package:moodiary_sync/src/presentation/widget/s3_form_sheet.dart';
 import 'package:moodiary_sync/src/presentation/widget/sync_key_guard.dart';
+import 'package:moodiary_sync/src/presentation/widget/sync_labels.dart';
 import 'package:moodiary_sync/src/presentation/widget/user_key_tile.dart';
 import 'package:moodiary_sync/src/presentation/widget/webdav_form_sheet.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
@@ -101,10 +103,13 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
   Future<void> _switchProvider(SyncProviderType type) async {
     SyncProviderType.setCurrent(type);
     await activateSyncProvider();
+    // 换了后端：旧服务器的健康结论不该挂在新服务器头上。
+    getIt<SyncRunner>().resetHealth();
     if (!mounted) return;
     setState(() => _configured = getIt<IRemoteSyncBackend>().isReady());
   }
 
+  /// 走 runner：结果同时写进连接健康，副标题与 AppBar 小点随之更新。
   Future<void> _testConnection() async {
     final backend = getIt<IRemoteSyncBackend>();
     if (!await backend.isReady()) {
@@ -112,13 +117,51 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
       return;
     }
     toast.loading(message: l10n.sync.testing);
-    final err = await backend.testConnection();
-    await toast.dismiss();
-    if (err == null) {
+    try {
+      await getIt<SyncRunner>().testConnection();
+      await toast.dismiss();
       toast.success(message: l10n.sync.connectOk);
-    } else {
-      toast.error(message: l10n.sync.connectFailed(error: err));
+    } on SyncException catch (e) {
+      await toast.dismiss();
+      toast.error(message: e.message);
     }
+  }
+
+  /// 「已配置 · 已连接 / 无法连接（14:20）」；未配置时只说未配置。
+  Widget _backendSubtitle(BuildContext context, bool configured) {
+    if (!configured) return Text(context.l10n.sync.notConfiguredTap);
+    return ValueListenableBuilder(
+      valueListenable: getIt<SyncRunner>().status,
+      builder: (context, status, _) {
+        final scheme = context.theme.colors;
+        final short = syncHealthShort(context.l10n, status.health);
+        final since = status.healthSince;
+        final text = [
+          context.l10n.common.configured,
+          if (short != null)
+            status.health.isBad && since != null
+                ? '$short（${TimeFormat.clock(since)}）'
+                : short,
+        ].join(' · ');
+        return Row(
+          mainAxisSize: .min,
+          children: [
+            if (short != null) ...[
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  shape: .circle,
+                  color: status.health.isBad ? scheme.error : scheme.primary,
+                ),
+              ),
+              const SizedBox(width: 6),
+            ],
+            Flexible(child: Text(text, overflow: .ellipsis)),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -149,15 +192,14 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
           leading: Icon(
             current == .webdav ? LucideIcons.cloud : LucideIcons.database,
           ),
-          subtitle: configured
-              ? context.l10n.common.configured
-              : context.l10n.sync.notConfiguredTap,
+          subtitle: _backendSubtitle(context, configured),
           trailing: const Icon(LucideIcons.chevronRight),
           onTap: () async {
             final ok = current == .webdav
                 ? await WebDavFormSheet.show(context)
                 : await S3FormSheet.show(context);
             if (ok != true || !mounted) return;
+            getIt<SyncRunner>().resetHealth();
             setState(() => _configured = getIt<IRemoteSyncBackend>().isReady());
             if (!context.mounted) return;
             // 新设备接入：远端若已加密而本地无密钥，保存配置后立即引导配置。
@@ -340,12 +382,17 @@ class _AutoSyncSection extends StatelessWidget {
         return MSliverSettingGroup(
           title: context.l10n.sync.autoSection,
           children: [
-            SettingSwitchListTile(
-              title: context.l10n.sync.autoSync,
-              subtitle: context.l10n.sync.autoSyncSubtitle,
-              secondary: const Icon(LucideIcons.refreshCw),
-              value: enabled,
-              onChanged: (v) => MoodiaryKVs.autoSync.set(v),
+            ValueListenableBuilder(
+              valueListenable: MoodiaryKVs.syncPollInterval.getNotifier(),
+              builder: (context, seconds, _) => SettingSwitchListTile(
+                title: context.l10n.sync.autoSync,
+                subtitle: context.l10n.sync.autoSyncSubtitleDetail(
+                  interval: _fmtInterval(seconds),
+                ),
+                secondary: const Icon(LucideIcons.refreshCw),
+                value: enabled,
+                onChanged: (v) => MoodiaryKVs.autoSync.set(v),
+              ),
             ),
             ValueListenableBuilder(
               valueListenable: MoodiaryKVs.syncPollInterval.getNotifier(),

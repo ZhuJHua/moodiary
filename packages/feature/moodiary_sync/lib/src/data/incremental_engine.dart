@@ -648,7 +648,7 @@ class IncrementalSyncEngine {
       await backend.writeObject(SyncKeys.manifestPath, manifestBytes);
       final readback = await _readManifest();
       if (readback?.writeToken != token) {
-        throw SyncException(l10n.sync.errManifestRacePush);
+        throw SyncException(l10n.sync.errManifestRacePush, kind: .manifestRace);
       }
       _logger.info(
         .manifestWrite,
@@ -777,7 +777,7 @@ class IncrementalSyncEngine {
     // 远端 manifest 损坏。绝不能当作「远端为空」返回 null —— 那会让 push 用本地
     // 重建 manifest、丢掉仅存在于远端的条目（契约一）。宁可抛错中止本次同步。
     if (decoded is! Map<String, dynamic>) {
-      throw SyncException(l10n.sync.errManifestCorrupt);
+      throw SyncException(l10n.sync.errManifestCorrupt, kind: .manifestCorrupt);
     }
     return .fromJson(decoded);
   }
