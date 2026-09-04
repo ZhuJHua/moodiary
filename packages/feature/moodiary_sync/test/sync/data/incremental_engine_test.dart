@@ -133,6 +133,8 @@ void main() {
       final report = await engineOn(backend, diaries: store).push();
 
       expect(report.diaryCount, 1);
+      // 报告要说出「有一篇因打开被跳过」：watcher 据此保留「待推」标记。
+      expect(report.skippedOpen, 1);
       expect(backend.hasObject(SyncKeys.diaryObjectPath('closed')), isTrue);
       expect(backend.hasObject(SyncKeys.diaryObjectPath('open')), isFalse);
       // 被跳过的日记不进 manifest。

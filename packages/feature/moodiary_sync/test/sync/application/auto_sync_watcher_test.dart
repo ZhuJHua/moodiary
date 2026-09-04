@@ -1,8 +1,34 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_sync/src/application/auto_sync_watcher.dart';
+import 'package:moodiary_sync/src/data/sync.dart';
 
 /// 轮询空转短路与去抖重排的纯函数判定（watcher 本体依赖 getIt，不做实例级单测）。
 void main() {
+  group('clearsPendingLocal — 何时能清「本地有待推」', () {
+    const clean = SyncReport(elapsed: .zero);
+    test('干净一轮 → 清', () {
+      expect(
+        AutoSyncWatcher.clearsPendingLocal(clean, dirtyDuringSync: false),
+        isTrue,
+      );
+    });
+
+    test('同步期间又有写入 → 不清', () {
+      expect(
+        AutoSyncWatcher.clearsPendingLocal(clean, dirtyDuringSync: true),
+        isFalse,
+      );
+    });
+
+    test('push 因日记打开中跳过了条目 → 不清（关闭日记后还要推）', () {
+      const skipped = SyncReport(elapsed: .zero, skippedOpen: 1);
+      expect(
+        AutoSyncWatcher.clearsPendingLocal(skipped, dirtyDuringSync: false),
+        isFalse,
+      );
+    });
+  });
+
   group('pollDelaySeconds — 探测失败退避', () {
     test('无失败 → 基础间隔', () {
       expect(AutoSyncWatcher.pollDelaySeconds(base: 30, failStreak: 0), 30);

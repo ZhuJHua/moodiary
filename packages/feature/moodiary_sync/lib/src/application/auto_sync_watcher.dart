@@ -148,9 +148,13 @@ class AutoSyncWatcher {
       MoodiaryKVs.syncPendingLocal.set(true);
       _onLocalChange();
     });
-    _closedSub ??= _openDiaries.closed.listen((_) {
-      // 只读打开、没保存过 → 没有待推变更，不动。
-      if (MoodiaryKVs.syncPendingLocal.get() != true) return;
+    _closedSub ??= _openDiaries.closed.listen((id) {
+      // 只读打开、没保存过 → 没有待推变更，不动。脏标记是这篇自己的证据；
+      // pendingLocal 是兜底（脏标记只在配置了云后端时才打）。
+      if (!_dirty.listenable.value.contains(id) &&
+          MoodiaryKVs.syncPendingLocal.get() != true) {
+        return;
+      }
       _onLocalChange(trigger: .close, delay: _closeDebounce);
     });
     _syncSub ??= _logger.events.listen(_onSyncEvent);
@@ -235,6 +239,15 @@ class AutoSyncWatcher {
       if (_started) _schedulePoll();
     });
   }
+
+  /// 一轮成功之后能不能清「本地有待推」（纯函数）：同步期间又有新写入、或 push 因
+  /// 日记打开中跳过了条目，都说明本地还有没推上去的东西——清了标记，关闭日记时
+  /// 就没人再推，轮询也会因指纹未变而短路，只剩 10 轮一次的兜底全量。
+  @visibleForTesting
+  static bool clearsPendingLocal(
+    SyncReport report, {
+    required bool dirtyDuringSync,
+  }) => !dirtyDuringSync && report.skippedOpen == 0;
 
   /// 退避序列（纯函数）：连续失败 n 次 → 基础间隔 × 2ⁿ，封顶 [_maxBackoffSeconds]。
   @visibleForTesting
@@ -394,7 +407,7 @@ class AutoSyncWatcher {
       final outcome = await _runner.run(direction, trigger: trigger);
       final report = outcome?.report;
       if (report != null && report.failed == 0 && !report.cancelled) {
-        if (!_dirtyDuringSync) {
+        if (clearsPendingLocal(report, dirtyDuringSync: _dirtyDuringSync)) {
           MoodiaryKVs.syncPendingLocal.set(false);
         }
         onSuccess?.call();

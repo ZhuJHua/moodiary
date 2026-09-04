@@ -303,6 +303,7 @@ class IncrementalSyncEngine {
         warning: warnings.isEmpty ? null : warnings,
         failed: pulled.failed + pushed.failed,
         cancelled: pushed.cancelled,
+        skippedOpen: pushed.skippedOpen,
       );
     });
     if (report.failed == 0 && !report.cancelled) _markSynced();
@@ -363,9 +364,11 @@ class IncrementalSyncEngine {
     // 上传。仅滤 push（pull 仍按 LWW 回写）；manifest 不会因本地缺席而删条目，故被
     // 跳过的日记远端副本原样保留，关闭后下一轮同步再收敛。
     final openSnapshot = _openDiaries.snapshot();
-    final diaries = (await _diaryStore.getAllDiaries())
+    final allDiaries = await _diaryStore.getAllDiaries();
+    final diaries = allDiaries
         .where((d) => !openSnapshot.contains(d.id))
         .toList();
+    final skippedOpen = allDiaries.length - diaries.length;
     final categories = await _categoryStore.getAllCategoriesForSync();
     final mediaInfoRows = await _mediaInfoStore.getAllMediaInfosForSync();
 
@@ -698,6 +701,7 @@ class IncrementalSyncEngine {
         'mediaCount': _mediaUploaded,
         'failed': failed,
         'cancelled': stopped,
+        'skippedOpen': skippedOpen,
         'elapsedMs': sw.elapsedMilliseconds,
       },
     );
@@ -716,6 +720,7 @@ class IncrementalSyncEngine {
       warning: warnings.isEmpty ? null : warnings,
       failed: failed,
       cancelled: stopped,
+      skippedOpen: skippedOpen,
     );
   }
 

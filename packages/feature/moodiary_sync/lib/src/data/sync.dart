@@ -133,6 +133,10 @@ class SyncReport {
   /// 与「有 N 条因本机更新被跳过」—— 两者此前显示的都是「恢复 0 条」。
   final int skipped;
 
+  /// push 时因「正在编辑器中打开」被排除的日记数。>0 说明本地仍有没推上去的
+  /// 变更——调用方不得据此清「待推」标记，否则关闭日记后无人再推。
+  final int skippedOpen;
+
   const SyncReport({
     this.pushed = .zero,
     this.pulled = .zero,
@@ -141,6 +145,7 @@ class SyncReport {
     this.failed = 0,
     this.cancelled = false,
     this.skipped = 0,
+    this.skippedOpen = 0,
   });
 
   /// 两个方向合计。局域网接收 / 备份导入 / 导出页仍按合计读，它们只有一个方向。
