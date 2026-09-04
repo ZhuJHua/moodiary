@@ -5,6 +5,9 @@ import 'package:flutter_rust_bridge_hooks/flutter_rust_bridge_hooks.dart';
 
 void main(List<String> args) async {
   await build(args, (input, output) async {
+    // 这一趟不要 code asset（Flutter 在 run 时还会跑一趟只收数据资产的构建）就直接收工 ——
+    // `input.config.code` 在那种配置下访问即抛（hooks 的 API 契约）。
+    if (!input.config.buildCodeAssets) return;
     final code = input.config.code;
     // Apple 部署目标由 hook 从 input.config 映射给工具链——这是 Native Assets 的
     // 架构约定：hooks_runner 用环境白名单运行 hook（*_DEPLOYMENT_TARGET 进不来），
