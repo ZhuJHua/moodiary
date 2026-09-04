@@ -19,7 +19,7 @@ import 'package:moodiary_storage/moodiary_storage.dart'
     show IKVStorage, ISecureKVStorage;
 import 'package:moodiary_sync/injectable.module.dart';
 import 'package:moodiary_sync/moodiary_sync.dart'
-    show AutoSyncWatcher, RemoteSyncRegistry, SyncLogger;
+    show AutoSyncWatcher, IRemoteSyncBackend, SyncLogger, SyncProviderType;
 
 /// 容器装配的唯一入口：没有 initializerName（用默认的 `init`），也没有
 /// generateForDir（默认扫全包）—— 只有一份 config，不存在「两份扫同一片源码、
@@ -66,8 +66,11 @@ void _assertRequiredBindings() {
     if (!getIt.isRegistered<IBackupArchive>()) 'IBackupArchive',
     if (!getIt.isRegistered<AssistantService>()) 'AssistantService',
     if (!getIt.isRegistered<SyncLogger>()) 'SyncLogger',
-    if (!getIt.isRegistered<RemoteSyncRegistry>()) 'RemoteSyncRegistry',
     if (!getIt.isRegistered<AutoSyncWatcher>()) 'AutoSyncWatcher',
+    // 后端按名注册，名字与枚举 value 是运行时契约：这里替 @Named 补一道编译期没有的检查。
+    for (final t in SyncProviderType.values)
+      if (!getIt.isRegistered<IRemoteSyncBackend>(instanceName: t.value))
+        'IRemoteSyncBackend(${t.value})',
   ];
   if (missing.isEmpty) return;
   logger.e('DI missing required bindings', error: missing);

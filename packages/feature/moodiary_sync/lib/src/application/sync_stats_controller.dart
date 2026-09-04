@@ -47,7 +47,7 @@ Future<SyncStats> syncStats(Ref ref) async {
   int? remoteMedia;
   String? remoteError;
 
-  final backend = IRemoteSyncBackend.get();
+  final backend = getIt<IRemoteSyncBackend>();
   if (!backend.isReady) {
     remoteError = l10n.sync.errNoBackend;
   } else {

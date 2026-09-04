@@ -5,6 +5,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show listEquals;
+import 'package:injectable/injectable.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_rust/sync.dart' as rust;
 import 'package:moodiary_sync/src/data/incremental_engine.dart';
@@ -13,15 +14,18 @@ import 'package:moodiary_sync/src/data/secure_options.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 
-import 'cloud_orchestration.dart';
-
 /// WebDAV 实现 [IRemoteSyncBackend]，经 flutter_rust_bridge 调 Rust reqwest_dav。
 /// 配置以 `[baseUrl, username, password]` 存于 [MoodiarySecureKVs.webDavOption]（含密码）。
 /// 增量逻辑交给 [IncrementalSyncEngine]。
-class WebDavSyncBackend with CloudSyncOrchestration {
+@Named(SyncProviderIds.webdav)
+@LazySingleton(as: IRemoteSyncBackend)
+class WebDavSyncBackend implements IRemoteSyncBackend {
   WebDavSyncBackend();
 
   static final SecureOptions options = SecureOptions(.webDavOption);
+
+  @override
+  Future<void> loadOptions() => options.load();
 
   Future<rust.DavClient>? _cachedClient;
 
@@ -174,13 +178,6 @@ class WebDavSyncBackend with CloudSyncOrchestration {
     if (await SyncKeyManager.loadDek() != null) {
       await SyncKeyManager.markPendingUpload([SyncProviderType.webdav.value]);
     }
-  }
-
-  static bool isConfigured() {
-    final opts = options.value;
-    return opts.length >= 3 &&
-        opts[0].trim().isNotEmpty &&
-        opts[1].trim().isNotEmpty;
   }
 
   static Future<void> clear() async {

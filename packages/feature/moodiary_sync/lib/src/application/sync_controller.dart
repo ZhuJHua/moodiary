@@ -1,13 +1,14 @@
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_sync/src/data/incremental_engine.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_cancellation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'sync_controller.g.dart';
 
-/// 同步 controller：状态机 idle → syncing → success / partial / error。不持有具体 [SyncBackend]，
-/// 调用方在 [push]/[pull] 时显式传入，同一 controller 可服务 JSON 备份与 WebDAV。
+/// 同步 controller：状态机 idle → syncing → success / partial / error。不持有后端，
+/// 调用方在 [push] / [pull] / [sync] 时显式传入，操作本身交给增量引擎。
 ///
 /// keepAlive：同步是后台过程，不随页面销毁 —— 否则 autoDispose 会在页面关闭时销毁
 /// notifier，同步完成后的 state 赋值直接抛错。
@@ -16,10 +17,10 @@ class SyncController extends _$SyncController {
   @override
   SyncState build() => const .idle();
 
-  Future<void> push(SyncBackend backend) async {
+  Future<void> push(IRemoteSyncBackend backend) async {
     state = .syncing(label: l10n.sync.uploading(backend: backend.displayName));
     try {
-      _settle(await backend.pushAll());
+      _settle(await IncrementalSyncEngine.forCloud(backend).push());
     } on SyncException catch (e) {
       state = .error(message: e.message);
     } catch (e) {
@@ -27,12 +28,12 @@ class SyncController extends _$SyncController {
     }
   }
 
-  Future<void> pull(SyncBackend backend) async {
+  Future<void> pull(IRemoteSyncBackend backend) async {
     state = .syncing(
       label: l10n.sync.downloading(backend: backend.displayName),
     );
     try {
-      _settle(await backend.pullAll());
+      _settle(await IncrementalSyncEngine.forCloud(backend).pull());
     } on SyncException catch (e) {
       state = .error(message: e.message);
     } catch (e) {
@@ -44,7 +45,7 @@ class SyncController extends _$SyncController {
   Future<void> sync(IRemoteSyncBackend backend) async {
     state = .syncing(label: l10n.sync.syncing(backend: backend.displayName));
     try {
-      _settle(await backend.syncAll());
+      _settle(await IncrementalSyncEngine.forCloud(backend).sync());
     } on SyncException catch (e) {
       state = .error(message: e.message);
     } catch (e) {

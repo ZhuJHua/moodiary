@@ -18,7 +18,7 @@ import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_cancellation.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
-import 'package:moodiary_sync/src/data/sync_registry.dart';
+import 'package:moodiary_sync/src/data/sync_provider_scope.dart';
 import 'package:moodiary_sync/src/data/sync_stores.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path/path.dart' as p;
@@ -77,6 +77,13 @@ class IncrementalSyncEngine {
   static const int defaultConcurrency = 8;
   static const int _minConcurrency = 1;
   static const int _maxConcurrency = 32;
+
+  /// 云后端入口：先做配置就绪检查（未就绪抛该后端的 [IRemoteSyncBackend.notReadyError]），
+  /// 再按默认装配建引擎。UI 与自动同步都从这里进。
+  factory IncrementalSyncEngine.forCloud(IRemoteSyncBackend backend) {
+    if (!backend.isReady) throw backend.notReadyError;
+    return IncrementalSyncEngine(backend);
+  }
 
   factory IncrementalSyncEngine(
     RemoteObjectStore backend, {

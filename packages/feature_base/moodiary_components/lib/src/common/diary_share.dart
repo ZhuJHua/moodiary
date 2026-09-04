@@ -7,7 +7,7 @@ import 'package:flutter/widgets.dart';
 /// 由组合根（`mobile/lib/main.dart`）在启动时接上。
 ///
 /// 不走 get_it：容器管的是生命周期内不变的绑定，而这是一次 UI 跳转的落点，
-/// 与 `RemoteSyncRegistry` 同类 —— 进程内一个变量就够，不必为它生成一份 injectable。
+/// 进程内一个变量就够，不必为它生成一份 injectable。
 typedef DiaryShareEntry = Future<void> Function(
   BuildContext context,
   String diaryId,

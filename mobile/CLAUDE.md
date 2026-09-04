@@ -20,13 +20,13 @@ storage 列最前，它的两个 preResolve 是别人的地基；两个存储的
 
 **启动阶段属于 main 的引导编排，不属于容器**：路径/日志与重置在
 `mobile/lib/app/di/bootstrap.dart`，序列在 `main.dart` 的 `_initSystem`。版本迁移跑完后由组合根
-显式调 `RemoteSyncRegistry.reload()`（装载同步后端）与 `AutoSyncWatcher.start()`。
+显式调 `loadSyncBackendOptions()` + `activateSyncProvider()`（装载同步后端）与 `AutoSyncWatcher.start()`。
 **`@PostConstruct` 是刻意不用的**：那会让 watcher 在容器装配当场醒来、赶在迁移之前，
 迁移写出的行就被当成本地变更回声推给云端。
 
 改了注解**必须跑 `dart tool/task.dart build-runner`**（生成物是提交的；micro-package 的
 `*.module.dart` 出炉不带格式，该任务末尾会统一 format 一遍）。业务代码不手写
-`getIt.register*`；`IRemoteSyncBackend` 的运行时切换不进容器、走 `RemoteSyncRegistry`——
+`getIt.register*`；`IRemoteSyncBackend` 的运行时切换走手写的会话 scope（`activateSyncProvider`）——
 容器只管生命周期内不变的接线。
 
 **双组合根记档（desktop 立项时照此办）**：desktop 建自己的 `desktop/lib/app/di/di.dart`

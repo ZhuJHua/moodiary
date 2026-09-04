@@ -16,7 +16,7 @@ import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_cancellation.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
-import 'package:moodiary_sync/src/data/sync_registry.dart';
+import 'package:moodiary_sync/src/data/sync_provider_scope.dart';
 import 'package:moodiary_sync/src/data/sync_stores.dart';
 
 /// 同步引擎单测脚手架：把引擎对 KV / 后端 / 本地存储 / cipher 的依赖全部替换成
@@ -59,6 +59,12 @@ final class FakeRemoteBackend implements IRemoteSyncBackend {
 
   @override
   bool get isReady => true;
+
+  @override
+  SyncException get notReadyError => const SyncException('fake not ready');
+
+  @override
+  Future<void> loadOptions() async {}
 
   @override
   Future<String?> testConnection() async => null;
@@ -123,13 +129,6 @@ final class FakeRemoteBackend implements IRemoteSyncBackend {
     beforeOp?.call('stat', key);
     return objects.containsKey(key) ? _mtime : null;
   }
-
-  @override
-  Future<SyncReport> pushAll() => throw UnimplementedError();
-  @override
-  Future<SyncReport> pullAll() => throw UnimplementedError();
-  @override
-  Future<SyncReport> syncAll() => throw UnimplementedError();
 
   // ── 测试辅助 ──
 
@@ -424,9 +423,15 @@ setUpSyncEnv() async {
   // SyncLogger.create() 内部访问 PlatformService 失败会降级为纯内存模式，测试安全。
   final logger = await SyncLogger.create();
   getIt.registerSingleton<SyncLogger>(logger);
-  // prod 由组合根在装载后显式 reload；测试注新构造的空持有者，未 reload 前
-  // hasBackend 为 false。
-  getIt.registerSingleton<RemoteSyncRegistry>(RemoteSyncRegistry());
+  // 两个云后端按名注册（prod 由 sync 的 micro-package 生成同样的注册）。
+  getIt.registerLazySingleton<IRemoteSyncBackend>(
+    () => WebDavSyncBackend(),
+    instanceName: SyncProviderIds.webdav,
+  );
+  getIt.registerLazySingleton<IRemoteSyncBackend>(
+    () => S3SyncBackend(),
+    instanceName: SyncProviderIds.s3,
+  );
   // 四个进程级持有者：prod 由 micro-package 注册为 @singleton，测试每次新建。
   getIt.registerSingleton<OpenDiaryRegistry>(OpenDiaryRegistry());
   getIt.registerSingleton<SyncPendingTracker>(SyncPendingTracker());

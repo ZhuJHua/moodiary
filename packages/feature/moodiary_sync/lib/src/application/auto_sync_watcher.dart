@@ -4,19 +4,21 @@ import 'dart:math';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:injectable/injectable.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_sync/src/data/incremental_engine.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
-import 'package:moodiary_sync/src/data/sync_registry.dart';
+import 'package:moodiary_sync/src/data/sync_provider_scope.dart';
 
 /// 自动同步监听器 —— 单开关 [MoodiaryKVs.autoSync] 启用两条机制，共用「正在同步」
-/// 闸门（[_syncing]）：变更触发（订阅领域事件流，去抖后 pushAll）+ 周期轮询
-/// （每 [MoodiaryKVs.syncPollInterval] 秒双向 syncAll）。
+/// 闸门（[_syncing]）：变更触发（订阅领域事件流，去抖后 push）+ 周期轮询
+/// （每 [MoodiaryKVs.syncPollInterval] 秒双向 sync）。
 ///
 /// 设计要点：
 /// - **数据源**：订阅 [DiaryRepository.diaryEvents] / [CategoryRepository.categoryEvents]
@@ -27,7 +29,7 @@ import 'package:moodiary_sync/src/data/sync_registry.dart';
 ///   都暂停响应，故 sync 内部写入（如 tombstone 清理）不会引发二次同步。
 /// - **空转短路**：轮询先 HEAD 远端 manifest（[MoodiaryKVs.syncManifestStat] 缓存
 ///   指纹），未变且本地无待推变更（[MoodiaryKVs.syncPendingLocal]）→ 跳过整个
-///   syncAll，把空转成本从 5 个往返降到 1 个 HEAD。Last-Modified 是秒级粒度，
+///   sync，把空转成本从 5 个往返降到 1 个 HEAD。Last-Modified 是秒级粒度，
 ///   同秒并发写理论上可漏判，故距上次成功同步超过 10 个轮询周期时强制全量兜底。
 /// - **静默失败**：出错不弹 toast，错误已落进 SyncLogger。
 ///
@@ -37,7 +39,6 @@ import 'package:moodiary_sync/src/data/sync_registry.dart';
 class AutoSyncWatcher {
   AutoSyncWatcher(
     this._logger,
-    this._registry,
     this._diaries,
     this._categories,
     this._mediaInfos,
@@ -46,7 +47,6 @@ class AutoSyncWatcher {
   );
 
   final SyncLogger _logger;
-  final RemoteSyncRegistry _registry;
   final DiaryRepository _diaries;
   final CategoryRepository _categories;
   final MediaInfoRepository _mediaInfos;
@@ -90,7 +90,7 @@ class AutoSyncWatcher {
             _dirty.markDirty(diary.id);
           }
           // 打开中的日记不触发同步（编辑期不上传半成品）。这是廉价前置闸门；权威跳过
-          // 在引擎 push 快照里（poll / syncAll 绕过本闸门）。
+          // 在引擎 push 快照里（poll / sync 绕过本闸门）。
           if (!_openDiaries.contains(diary.id)) _onLocalChange();
         case DiaryDeleted(:final id):
           // 行已不在：脏标记里这条 id 不再有对应卡片，顺手清掉（进程内 Set，
@@ -187,15 +187,18 @@ class AutoSyncWatcher {
   Future<void> _trigger() async {
     _timer = null;
     if (MoodiaryKVs.autoSync.get() != true) return;
-    await _runAutoSync((backend) => backend.pushAll());
+    await _runAutoSync(
+      (backend) => IncrementalSyncEngine.forCloud(backend).push(),
+    );
   }
 
   /// 周期轮询到点：先做空转短路探测，未命中才双向 sync。开关关闭时直接空转返回。
   Future<void> _pollTick() async {
     if (MoodiaryKVs.autoSync.get() != true) return;
     if (_syncing) return;
-    if (!_registry.hasBackend) return;
-    final backend = _registry.backend;
+    // 未激活 provider（启动侧 fail-open 可达）：本轮跳过。
+    final backend = getIt.maybeGet<IRemoteSyncBackend>();
+    if (backend == null) return;
     if (!backend.isReady) return;
 
     String? preStat;
@@ -229,7 +232,7 @@ class AutoSyncWatcher {
       }
     }
     await _runAutoSync(
-      (backend) => backend.syncAll(),
+      (backend) => IncrementalSyncEngine.forCloud(backend).sync(),
       // 缓存的是同步开始前观测的指纹：本机 push 会再改 manifest，使下一轮指纹
       // 不匹配、多跑一次（随即空转的）全量同步 —— 换取「同步期间他机写入必不被
       // 漏判」。
@@ -268,8 +271,9 @@ class AutoSyncWatcher {
     void Function()? onSuccess,
   }) async {
     if (_syncing) return;
-    if (!_registry.hasBackend) return;
-    final backend = _registry.backend;
+    // 未激活 provider（启动侧 fail-open 可达）：本轮跳过。
+    final backend = getIt.maybeGet<IRemoteSyncBackend>();
+    if (backend == null) return;
     if (!backend.isReady) return;
     // 远端由另一把密钥加密：跑下去每个对象都解不开，还会一次次撞上 keyfile 冲突。
     // 挂起直到用户在同步页输入密码解锁（同步页会显示待处理入口）。

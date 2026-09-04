@@ -133,7 +133,10 @@ In-app layering within `mobile/lib` (same script): `gen → core → data → co
   **全仓没有 `X.get()` 静态门面**（端口的 `IHttpClient.get()` 一类也已删）；`MoodiaryKVs.x.get()`
   是键访问器不是容器门面，保留。
 - 改了注解**必跑 `dart tool/task.dart build-runner`**（生成物是提交的）。业务代码不手写
-  `getIt.register*`；`IRemoteSyncBackend` 的运行时切换走 `RemoteSyncRegistry`，不进容器。
+  `getIt.register*`，**唯一例外是会话型 scope**：injectable 的 `@Scope` 进不了 micro-package，
+  「当前同步 provider」这种会话由手写的 `activateSyncProvider()` 开 get_it scope 表达——基础层
+  各实现 `@Named(SyncProviderIds.x)`（名字与枚举 value 同源），scope 里以无名
+  `IRemoteSyncBackend` 暴露选中的那个，切换 = pop 再 push；上层只写 `getIt<IRemoteSyncBackend>()`。
 - **`@PostConstruct` 是刻意不用的**（watcher 会赶在迁移之前醒来）；启动阶段属于 main 的
   引导编排，不属于容器。
 

@@ -329,3 +329,16 @@ CI dylib 那条在本机先验证目标用例真跑通过。
 micro-package；`repository_providers.dart` 与所有 `.get()` / `.instance` 门面删除，取用一律
 `getIt<X>()`（Notifier / widget 用 `late final`）。AutoSyncWatcher 改为 7 参构造注入。
 DB 打开从与容器装配并行变成 `getIt.init()` 内串行，启动多的是一次 `SELECT 1` 的时间。
+
+## 2026-09-04 补记：同步后端收成两层 + `@Named` 注册
+
+`SyncBackend`（零独立实现者、单消费者）与 `CloudSyncOrchestration` mixin（后端「自己同步自己」，
+方法体只是把自己交给引擎）删除。终态两层：`RemoteObjectStore`（原语，引擎/租约/密钥只认它）+
+`IRemoteSyncBackend extends RemoteObjectStore`（`type` / `isReady` / `notReadyError` / `loadOptions` /
+`testConnection`）。push / pull / sync 走 `IncrementalSyncEngine.forCloud(backend)`，就绪检查收在这
+一处。两个后端 `@Named(SyncProviderIds.x) @LazySingleton(as: IRemoteSyncBackend)`；Registry 按枚举
+逐个取名，不再 import 实现类，`configuredCloudBackendIds` 成为它的 getter；加后端 = 枚举值 + 注解
+类。`@Scope` 走不通：生成器在 micro-package 里禁用。`_assertRequiredBindings` 补了按名检查兜住
+「注解字符串 ≠ 枚举 value」这条运行时契约。
+
+**同日再补**：`RemoteSyncRegistry` 整个删除。「当前 provider」按 get_it 的会话原语表达：`activateSyncProvider()` 手写开 `syncProvider` scope，把选中的具名懒单例以无名 `IRemoteSyncBackend` 注册进去，切换 = `popScopesTill` 再 push；`loadSyncBackendOptions()` / `configuredCloudBackendIds()` 成顶层函数；watcher 用 `maybeGet` 守卫未激活态。上层只剩 `getIt<IRemoteSyncBackend>()`。

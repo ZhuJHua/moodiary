@@ -5,6 +5,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show listEquals;
+import 'package:injectable/injectable.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_rust/sync.dart' as rust;
 import 'package:moodiary_sync/src/data/incremental_engine.dart';
@@ -13,17 +14,20 @@ import 'package:moodiary_sync/src/data/secure_options.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 
-import 'cloud_orchestration.dart';
-
 /// S3 / MinIO 实现 [IRemoteSyncBackend]，经 flutter_rust_bridge 调 Rust minio SDK。
 /// 配置存于 [MoodiarySecureKVs.s3Option]（含 secretKey），按索引：0 endpoint、1 region（可空）、
 /// 2 accessKey、3 secretKey、4 bucket、5 useSSL（'1'/'0'）。
 /// 远端 key 前缀 `moodiary/`。
 /// 增量逻辑交给 [IncrementalSyncEngine]。
-class S3SyncBackend with CloudSyncOrchestration {
+@Named(SyncProviderIds.s3)
+@LazySingleton(as: IRemoteSyncBackend)
+class S3SyncBackend implements IRemoteSyncBackend {
   static const String _root = 'moodiary';
 
   static final SecureOptions options = SecureOptions(.s3Option);
+
+  @override
+  Future<void> loadOptions() => options.load();
 
   S3SyncBackend();
 
@@ -204,15 +208,6 @@ class S3SyncBackend with CloudSyncOrchestration {
     if (await SyncKeyManager.loadDek() != null) {
       await SyncKeyManager.markPendingUpload([SyncProviderType.s3.value]);
     }
-  }
-
-  static bool isConfigured() {
-    final opts = options.value;
-    return opts.length >= 5 &&
-        opts[0].trim().isNotEmpty &&
-        opts[2].trim().isNotEmpty &&
-        opts[3].isNotEmpty &&
-        opts[4].trim().isNotEmpty;
   }
 
   static Future<void> clear() async {

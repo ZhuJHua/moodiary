@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_sync/src/application/user_key_controller.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
@@ -111,7 +112,7 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
     });
     IRemoteSyncBackend? backend;
     try {
-      backend = .get();
+      backend = getIt<IRemoteSyncBackend>();
     } catch (_) {
       backend = null;
     }

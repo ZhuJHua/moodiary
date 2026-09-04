@@ -10,7 +10,7 @@ import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_cancellation.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
-import 'package:moodiary_sync/src/data/sync_registry.dart';
+import 'package:moodiary_sync/src/data/sync_provider_scope.dart';
 import 'package:moodiary_sync/src/presentation/widget/s3_form_sheet.dart';
 import 'package:moodiary_sync/src/presentation/widget/sync_key_guard.dart';
 import 'package:moodiary_sync/src/presentation/widget/user_key_tile.dart';
@@ -87,18 +87,22 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
   }
 
   Future<void> _unlockRemoteKey() async {
-    await ensureSyncKeyReady(context: context, ref: ref, backend: .get());
+    await ensureSyncKeyReady(
+      context: context,
+      ref: ref,
+      backend: getIt<IRemoteSyncBackend>(),
+    );
     if (mounted) setState(() {});
   }
 
   Future<void> _switchProvider(SyncProviderType type) async {
     SyncProviderType.setCurrent(type);
-    await getIt<RemoteSyncRegistry>().reload();
+    await activateSyncProvider();
     if (mounted) setState(() {});
   }
 
   Future<void> _testConnection() async {
-    final backend = IRemoteSyncBackend.get();
+    final backend = getIt<IRemoteSyncBackend>();
     if (!backend.isReady) {
       toast.info(message: l10n.sync.configureFirst);
       return;
@@ -116,7 +120,7 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
   @override
   Widget build(BuildContext context) {
     final current = SyncProviderType.current();
-    final backend = IRemoteSyncBackend.get();
+    final backend = getIt<IRemoteSyncBackend>();
     final configured = backend.isReady;
     return MSliverSettingGroup(
       title: context.l10n.sync.cloudSection,
@@ -150,7 +154,7 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
             await ensureSyncKeyReady(
               context: context,
               ref: ref,
-              backend: .get(),
+              backend: getIt<IRemoteSyncBackend>(),
             );
           },
         ),
@@ -216,7 +220,7 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
               trailing: const Icon(LucideIcons.chevronRight),
               onTap: configured
                   ? () async {
-                      final backend = IRemoteSyncBackend.get();
+                      final backend = getIt<IRemoteSyncBackend>();
                       if (!await ensureSyncKeyReady(
                         context: context,
                         ref: ref,

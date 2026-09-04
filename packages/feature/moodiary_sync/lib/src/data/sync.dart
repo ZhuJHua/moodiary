@@ -1,29 +1,16 @@
 import 'dart:typed_data';
 
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
-import 'package:moodiary_sync/src/data/sync_registry.dart';
 
-/// 同步 / 备份后端的统一抽象，按依赖方向拆三层：
+/// 同步 / 备份后端的抽象，两层：
 ///
 /// - [RemoteObjectStore]：对象存储原语。**引擎只依赖它**——归档导入这类「只当
-///   对象源用」的实现（LocalArchiveBackend）实现到这一层为止，不必再为
-///   push/pull/syncAll 写一排 UnimplementedError。
-/// - [SyncBackend]：编排门面（push/pull/显示名/就绪）。
-/// - [IRemoteSyncBackend]：云端后端 = 编排 + 对象原语 + provider 元信息。
-///   [RemoteSyncRegistry] 中**同时只持有一个**，由当前 [SyncProviderType] 决定。
-abstract class SyncBackend {
-  String get displayName;
-
-  /// 是否已就绪可执行 [pushAll]（例如 WebDAV 是否填了 url/user/pass）。
-  bool get isReady;
-
-  Future<SyncReport> pushAll();
-
-  Future<SyncReport> pullAll();
-}
-
+///   对象源用」的实现（LocalArchiveBackend）实现到这一层为止。
+/// - [IRemoteSyncBackend]：云端后端 = 对象原语 + 配置（provider 类型 / 就绪 / 探测）。
+///   push / pull / sync 不长在后端上，调用方走 `IncrementalSyncEngine.forCloud`。
+///   各实现以 `@Named(SyncProviderIds.x)` 注册；当前那个由 `activateSyncProvider`
+///   开 scope 以无名 [IRemoteSyncBackend] 暴露（sync_provider_scope.dart）。
 /// 低层对象存储原语。引擎、租约锁、密钥文件管理只认这一层。
 abstract class RemoteObjectStore {
   /// 日志用显示名。
@@ -68,17 +55,22 @@ abstract class RemoteObjectStore {
   Future<String?> statObject(String key);
 }
 
-abstract class IRemoteSyncBackend implements SyncBackend, RemoteObjectStore {
-  factory IRemoteSyncBackend.get() => getIt<RemoteSyncRegistry>().backend;
-
+abstract class IRemoteSyncBackend implements RemoteObjectStore {
   /// 与 KV `syncProvider` 对齐的 provider 类型。
   SyncProviderType get type;
 
+  /// 配置是否齐全（例如 WebDAV 是否填了 url / user）。未就绪时引擎入口抛
+  /// [notReadyError]；`configuredCloudBackendIds()` 也据此统计。
+  bool get isReady;
+
+  /// [isReady] 为假时的配置错误（各后端文案不同）。
+  SyncException get notReadyError;
+
+  /// 把 SecureKV 里的配置读进进程内缓存——[isReady] 是同步 getter，靠这一步先行。
+  Future<void> loadOptions();
+
   /// 探测连通性 / 凭据。失败返回错误信息，成功返回 `null`。
   Future<String?> testConnection();
-
-  /// 双向同步：同一把锁内先 pull 再 push，原子完成、不与其它操作交叠。
-  Future<SyncReport> syncAll();
 }
 
 class SyncReport {

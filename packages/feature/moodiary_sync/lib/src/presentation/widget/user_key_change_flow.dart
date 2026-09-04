@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_sync/src/application/re_cipher.dart';
 import 'package:moodiary_sync/src/application/user_key_controller.dart';
@@ -10,7 +11,7 @@ import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/sync_keyfile.dart';
-import 'package:moodiary_sync/src/data/sync_registry.dart';
+import 'package:moodiary_sync/src/data/sync_provider_scope.dart';
 import 'package:mui/mui.dart';
 
 /// 加密开关 / 改密码的「准备—确认—执行」编排（信封加密）：
@@ -37,7 +38,7 @@ Future<bool> applyUserKeyChange({
 
   IRemoteSyncBackend? backend;
   try {
-    backend = .get();
+    backend = getIt<IRemoteSyncBackend>();
   } catch (_) {
     backend = null;
   }

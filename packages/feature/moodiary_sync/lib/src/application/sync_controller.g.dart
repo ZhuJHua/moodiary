@@ -8,8 +8,8 @@ part of 'sync_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 同步 controller：状态机 idle → syncing → success / partial / error。不持有具体 [SyncBackend]，
-/// 调用方在 [push]/[pull] 时显式传入，同一 controller 可服务 JSON 备份与 WebDAV。
+/// 同步 controller：状态机 idle → syncing → success / partial / error。不持有后端，
+/// 调用方在 [push] / [pull] / [sync] 时显式传入，操作本身交给增量引擎。
 ///
 /// keepAlive：同步是后台过程，不随页面销毁 —— 否则 autoDispose 会在页面关闭时销毁
 /// notifier，同步完成后的 state 赋值直接抛错。
@@ -17,15 +17,15 @@ part of 'sync_controller.dart';
 @ProviderFor(SyncController)
 final syncControllerProvider = SyncControllerProvider._();
 
-/// 同步 controller：状态机 idle → syncing → success / partial / error。不持有具体 [SyncBackend]，
-/// 调用方在 [push]/[pull] 时显式传入，同一 controller 可服务 JSON 备份与 WebDAV。
+/// 同步 controller：状态机 idle → syncing → success / partial / error。不持有后端，
+/// 调用方在 [push] / [pull] / [sync] 时显式传入，操作本身交给增量引擎。
 ///
 /// keepAlive：同步是后台过程，不随页面销毁 —— 否则 autoDispose 会在页面关闭时销毁
 /// notifier，同步完成后的 state 赋值直接抛错。
 final class SyncControllerProvider
     extends $NotifierProvider<SyncController, SyncState> {
-  /// 同步 controller：状态机 idle → syncing → success / partial / error。不持有具体 [SyncBackend]，
-  /// 调用方在 [push]/[pull] 时显式传入，同一 controller 可服务 JSON 备份与 WebDAV。
+  /// 同步 controller：状态机 idle → syncing → success / partial / error。不持有后端，
+  /// 调用方在 [push] / [pull] / [sync] 时显式传入，操作本身交给增量引擎。
   ///
   /// keepAlive：同步是后台过程，不随页面销毁 —— 否则 autoDispose 会在页面关闭时销毁
   /// notifier，同步完成后的 state 赋值直接抛错。
@@ -56,10 +56,10 @@ final class SyncControllerProvider
   }
 }
 
-String _$syncControllerHash() => r'17cbb57dec8bd0d5b0c41821ef59815c65ca95e1';
+String _$syncControllerHash() => r'5364270a7c19c1eac509757ccfa734cbb1b9dfe5';
 
-/// 同步 controller：状态机 idle → syncing → success / partial / error。不持有具体 [SyncBackend]，
-/// 调用方在 [push]/[pull] 时显式传入，同一 controller 可服务 JSON 备份与 WebDAV。
+/// 同步 controller：状态机 idle → syncing → success / partial / error。不持有后端，
+/// 调用方在 [push] / [pull] / [sync] 时显式传入，操作本身交给增量引擎。
 ///
 /// keepAlive：同步是后台过程，不随页面销毁 —— 否则 autoDispose 会在页面关闭时销毁
 /// notifier，同步完成后的 state 赋值直接抛错。

@@ -5,7 +5,7 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 /// 含密钥的连接配置（S3 的 secretKey、WebDAV 的密码）存 SecureKV。
 ///
 /// SecureKV 只收 String 且读写都是异步的，而 `isReady` / `displayName` /
-/// `isConfigured()` 都是同步 getter，所以这里在进程内缓存一份：启动时 [load] 一次，
+/// `isReady` 都是同步 getter，所以这里在进程内缓存一份：启动时 [load] 一次，
 /// 之后同步读缓存，写入时同步更新缓存。
 class SecureOptions {
   SecureOptions(this._key);

@@ -98,7 +98,7 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
 
     final state = ref.watch(syncControllerProvider);
     final stats = ref.watch(syncStatsProvider);
-    final backend = IRemoteSyncBackend.get();
+    final backend = getIt<IRemoteSyncBackend>();
     final encryption = ref
         .watch(syncDekControllerProvider)
         .maybeWhen(
@@ -139,7 +139,9 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
                 )) {
                   return;
                 }
-                await ref.read(syncControllerProvider.notifier).sync(.get());
+                await ref
+                    .read(syncControllerProvider.notifier)
+                    .sync(getIt<IRemoteSyncBackend>());
               },
             )
           else

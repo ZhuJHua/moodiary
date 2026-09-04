@@ -1,6 +1,9 @@
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_sync/src/data/impl/s3_sync.dart';
+import 'package:moodiary_sync/src/data/model/sync_provider.dart';
+import 'package:moodiary_sync/src/data/sync.dart';
 
 /// S3 / MinIO 后端配置。字段按连接 / 凭证 / 选项分三节，装不下一屏时只有中间
 /// 内容滚动，动作条始终贴在卡片底边。
@@ -22,7 +25,9 @@ class _S3FormSheetState extends State<S3FormSheet> {
   late final TextEditingController _secretKeyCtl;
   late final TextEditingController _bucketCtl;
 
-  late final bool _configured = S3SyncBackend.isConfigured();
+  late final bool _configured = getIt<IRemoteSyncBackend>(
+    instanceName: SyncProviderIds.s3,
+  ).isReady;
   late final String _savedBucket;
 
   bool _useSSL = true;
@@ -70,7 +75,7 @@ class _S3FormSheetState extends State<S3FormSheet> {
     );
   }
 
-  /// 校验口径与 [S3SyncBackend.isConfigured] 一致：region 可空，其余四项必填。
+  /// 校验口径与 [IRemoteSyncBackend.isReady] 一致：region 可空，其余四项必填。
   bool _validate() {
     final l10n = context.l10n;
     String? required(TextEditingController controller, String field) =>
