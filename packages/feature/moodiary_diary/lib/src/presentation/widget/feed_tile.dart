@@ -177,6 +177,7 @@ class _SideThumbRow extends StatelessWidget {
               // 容器是固定 dp 尺寸，解码宽不随布局变，夹小省缓存。
               decodeWidth: (width * dpr).round(),
               radius: const .all(.circular(10)),
+              pending: syncState == .syncing,
             ),
           ),
         ),
@@ -220,7 +221,7 @@ class _StackedColumn extends StatelessWidget {
         if (!hasMedia) _Excerpt(diary: diary, maxLines: 2),
         if (cells.isNotEmpty) ...[
           const SizedBox(height: 8),
-          _Strip(cells: cells),
+          _Strip(cells: cells, pending: syncState == .syncing),
         ] else if (diary.audioName.isNotEmpty) ...[
           const SizedBox(height: 6),
           _AudioBar(count: diary.audioName.length),
@@ -331,8 +332,9 @@ class _Excerpt extends StatelessWidget {
 /// 媒体横排：三等分 16:9，第三格叠「+N」。
 class _Strip extends StatelessWidget {
   final List<_Cell> cells;
+  final bool pending;
 
-  const _Strip({required this.cells});
+  const _Strip({required this.cells, required this.pending});
 
   @override
   Widget build(BuildContext context) {
@@ -356,6 +358,7 @@ class _Strip extends StatelessWidget {
                     cell: cells[i],
                     radius: const .all(.circular(10)),
                     moreCount: i == show - 1 && extra > 0 ? extra : 0,
+                    pending: pending,
                   ),
                 ),
               ],
@@ -375,11 +378,16 @@ class _Thumb extends StatelessWidget {
   final BorderRadius radius;
   final int moreCount;
 
+  /// 这篇正在从远端拉取：文件多半还没到，失败不画破图；角标摘掉时 key 变、
+  /// Image 重新装载——同一个 provider 不会自己重试。
+  final bool pending;
+
   const _Thumb({
     required this.cell,
     this.decodeWidth,
     required this.radius,
     this.moreCount = 0,
+    this.pending = false,
   });
 
   @override
@@ -394,7 +402,7 @@ class _Thumb extends StatelessWidget {
           Image(
             // 按文件名 key：开了 gaplessPlayback，列表重排后复用同一个 Element 会
             // 先画上一篇的照片。
-            key: ValueKey(cell.path),
+            key: ValueKey('${cell.path}#$pending'),
             // 视频封面不是原件目录里的图，不走档位（派生物只给原件算）。
             image: FastImage(
               cell.path,
@@ -404,8 +412,9 @@ class _Thumb extends StatelessWidget {
             fit: .cover,
             gaplessPlayback: true,
             // 重装后媒体文件会被清空而日记还在——没有 errorBuilder 就是一片空白。
-            errorBuilder: (context, _, _) =>
-                Icon(LucideIcons.imageOff, color: colors.onSurfaceVariant),
+            errorBuilder: (context, _, _) => pending
+                ? const SizedBox.shrink()
+                : Icon(LucideIcons.imageOff, color: colors.onSurfaceVariant),
           ),
           if (cell.isVideo) const _VideoScrim(),
           if (moreCount > 0) _MoreOverlay(count: moreCount),

@@ -403,12 +403,14 @@ class ArchiveApplier {
                 : diary,
             fromSync: fromSync,
           );
-          pending.completeDiary(id);
           tombstones.remove(key);
           await _pullDiaryMedia(diary);
           if (oldDiary != null) {
             await _mediaFiles.cleanUpReplaced(oldDiary, diary);
           }
+          // 「同步中」角标等媒体落地才摘：行一落库首页就渲染卡片，图片文件还没到，
+          // Image 会记住那次失败；角标摘掉时列表重建、卡片按新 key 重新加载。
+          pending.completeDiary(id);
           diaryChanged++;
           _logger.info(
             .diaryDownload,

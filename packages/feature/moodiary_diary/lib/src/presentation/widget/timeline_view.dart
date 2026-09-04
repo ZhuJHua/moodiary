@@ -91,7 +91,8 @@ class DiaryTimelineView extends ConsumerWidget {
                       final entry = flat[flatIndex];
                       final diary = entry.diary;
                       final syncState =
-                          pending.updateDiaryIds.contains(diary.id)
+                          (pending.updateDiaryIds.contains(diary.id) ||
+                              pending.newDiaryIds.contains(diary.id))
                           ? DiaryCardSyncState.syncing
                           : dirty.contains(diary.id)
                           ? DiaryCardSyncState.dirty

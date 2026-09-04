@@ -213,7 +213,11 @@ class _Content extends StatelessWidget {
           ],
           if (diary.imageName.isNotEmpty) ...[
             const SizedBox(height: 8),
-            _Images(names: diary.imageName, aspect: diary.aspect),
+            _Images(
+              names: diary.imageName,
+              aspect: diary.aspect,
+              pending: syncState == .syncing,
+            ),
           ],
           _Footer(diary: diary),
         ],
@@ -329,8 +333,13 @@ class _CategoryLabel extends StatelessWidget {
 class _Images extends StatelessWidget {
   final List<String> names;
   final double? aspect;
+  final bool pending;
 
-  const _Images({required this.names, required this.aspect});
+  const _Images({
+    required this.names,
+    required this.aspect,
+    required this.pending,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -356,6 +365,7 @@ class _Images extends StatelessWidget {
               // 单图占整行，按显示宽取档（手机落 m）；只在跨档时换缓存键。
               tier: FastImageTier.fit((boxWidth * dpr).round()),
               radius: AppBorderRadius.mediumBorderRadius,
+              pending: pending,
             ),
           );
         }
@@ -374,6 +384,7 @@ class _Images extends StatelessWidget {
                   tier: .s,
                   radius: AppBorderRadius.smallBorderRadius,
                   moreCount: i == show - 1 && extra > 0 ? extra : 0,
+                  pending: pending,
                 ),
               ),
             ],
@@ -390,11 +401,16 @@ class _Thumb extends StatelessWidget {
   final BorderRadius radius;
   final int moreCount;
 
+  /// 这篇正在从远端拉取：文件多半还没到，失败不画破图；角标摘掉时 key 变、
+  /// Image 重新装载——同一个 provider 不会自己重试。
+  final bool pending;
+
   const _Thumb({
     required this.name,
     required this.tier,
     required this.radius,
     this.moreCount = 0,
+    this.pending = false,
   });
 
   @override
@@ -409,13 +425,14 @@ class _Thumb extends StatelessWidget {
           Image(
             // 按文件名 key：开了 gaplessPlayback，换图期间旧帧不会清空，列表重排后
             // 复用同一个 Element 会先画上一篇日记的照片。与媒体库同一处理。
-            key: ValueKey(name),
+            key: ValueKey('$name#$pending'),
             image: FastImage(AppFiles.getRealPath('image', name), tier: tier),
             fit: .cover,
             gaplessPlayback: true,
             // 重装后媒体文件会被清空而日记还在——没有 errorBuilder 就是一片空白。
-            errorBuilder: (context, _, _) =>
-                Icon(LucideIcons.imageOff, color: colors.onSurfaceVariant),
+            errorBuilder: (context, _, _) => pending
+                ? const SizedBox.shrink()
+                : Icon(LucideIcons.imageOff, color: colors.onSurfaceVariant),
           ),
           if (moreCount > 0)
             DecoratedBox(

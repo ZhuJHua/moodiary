@@ -72,7 +72,9 @@ class DiaryFeedView extends ConsumerWidget {
                   separatorBuilder: (_, _) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final diary = diaries[index];
-                    final syncState = pending.updateDiaryIds.contains(diary.id)
+                    final syncState =
+                        (pending.updateDiaryIds.contains(diary.id) ||
+                            pending.newDiaryIds.contains(diary.id))
                         ? DiaryCardSyncState.syncing
                         : dirty.contains(diary.id)
                         ? DiaryCardSyncState.dirty
