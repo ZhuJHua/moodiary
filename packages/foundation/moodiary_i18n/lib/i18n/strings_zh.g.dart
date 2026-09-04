@@ -3364,6 +3364,9 @@ class Translations$sync$zh {
 
 	/// zh: '连接'
 	String get logHealth => '连接';
+
+	/// zh: '上次成功 {time}'
+	String lastSuccess({required Object time}) => '上次成功 ${time}';
 }
 
 // Path: ui

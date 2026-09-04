@@ -16,6 +16,7 @@ import 'package:mui/src/themes/value.dart';
 class MuiTokens extends ThemeExtension<MuiTokens> with MuiValue {
   const MuiTokens({
     required this.onMedia,
+    required this.success,
     required this.font,
     required this.radii,
     required this.spacing,
@@ -32,6 +33,10 @@ class MuiTokens extends ThemeExtension<MuiTokens> with MuiValue {
   /// 有这个槽位是为了让「这里为什么是白的」写在代码里，而不是散落的 `Colors.white`。
   final Color onMedia;
 
+  /// 「好」的语义色（连接可达、已完成）。M3 只有 error 一个语义槽，tertiary 在灰度
+  /// 配色下是灰的，说不了「绿」；与 error 一样不参与强调色派生。
+  final Color success;
+
   final MuiFontConfig font;
   final MuiRadii radii;
   final MuiSpacing spacing;
@@ -43,6 +48,7 @@ class MuiTokens extends ThemeExtension<MuiTokens> with MuiValue {
   @override
   List<Object?> get props => [
     onMedia,
+    success,
     font,
     radii,
     spacing,
@@ -55,6 +61,7 @@ class MuiTokens extends ThemeExtension<MuiTokens> with MuiValue {
   @override
   MuiTokens copyWith({
     Color? onMedia,
+    Color? success,
     MuiFontConfig? font,
     MuiRadii? radii,
     MuiSpacing? spacing,
@@ -64,6 +71,7 @@ class MuiTokens extends ThemeExtension<MuiTokens> with MuiValue {
     MuiStateTokens? states,
   }) => MuiTokens(
     onMedia: onMedia ?? this.onMedia,
+    success: success ?? this.success,
     font: font ?? this.font,
     radii: radii ?? this.radii,
     spacing: spacing ?? this.spacing,
@@ -85,6 +93,7 @@ class MuiTokens extends ThemeExtension<MuiTokens> with MuiValue {
     final second = t < 0.5 ? this : other;
     return MuiTokens(
       onMedia: Color.lerp(onMedia, other.onMedia, t)!,
+      success: Color.lerp(success, other.success, t)!,
       font: second.font,
       radii: second.radii,
       spacing: second.spacing,
@@ -97,8 +106,13 @@ class MuiTokens extends ThemeExtension<MuiTokens> with MuiValue {
 
   /// 主题里没挂 [MuiTokens] 时的兜底 —— 第三方自建 `ThemeData` 的子树会走到这里
   /// （wechat 的 picker、chat_ui 等）。取各 token 表的默认值，不抛异常。
+  /// 深色取 M3 tertiary 常见的浅绿档、浅色取深绿档，两者对各自底色的对比都 ≥ 4.5。
+  static Color successFor(Brightness brightness) =>
+      brightness == .dark ? const Color(0xFF7CD992) : const Color(0xFF1E7F4F);
+
   factory MuiTokens.fallback(Brightness brightness) => MuiTokens(
     onMedia: const Color(0xFFFFFFFF),
+    success: successFor(brightness),
     font: const MuiFontConfig(),
     radii: const MuiRadii(),
     spacing: const MuiSpacing(),

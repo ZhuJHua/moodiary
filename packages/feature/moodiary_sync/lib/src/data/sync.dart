@@ -268,19 +268,28 @@ class SyncException implements Exception {
   final SyncErrorKind kind;
   const SyncException(this.message, {this.kind = .unknown});
 
-  /// 包装底层（Rust）错误：从明细里读分类、摘掉标签再交给 [message] 成文。
+  /// 包装底层（Rust）错误：从明细里读分类、摘掉标签与 FRB 的
+  /// `AnyhowException(...)` 外壳，再交给 [message] 成文。
   factory SyncException.wrap(
     Object error,
     String Function(String detail) message,
   ) {
     final detail = error is SyncException ? error.message : error.toString();
     return SyncException(
-      message(SyncErrorKind.stripTag(detail)),
+      message(SyncErrorKind.stripTag(_unwrapAnyhow(detail))),
       kind: error is SyncException
           ? error.kind
           : SyncErrorKind.fromDetail(detail),
     );
   }
+
+  static final RegExp _anyhow = RegExp(
+    r'^AnyhowException\((.*)\)$',
+    dotAll: true,
+  );
+
+  static String _unwrapAnyhow(String detail) =>
+      _anyhow.firstMatch(detail.trim())?.group(1) ?? detail;
 
   @override
   String toString() => 'SyncException: $message';

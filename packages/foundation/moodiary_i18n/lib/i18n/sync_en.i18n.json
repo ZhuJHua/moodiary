@@ -324,5 +324,6 @@
   "nextPollIn": "in {minutes} min {seconds} s",
   "nextPollInSeconds": "in {seconds} s",
   "remoteCount": "remote {count}",
-  "logHealth": "Connection"
+  "logHealth": "Connection",
+  "lastSuccess": "last success {time}"
 }

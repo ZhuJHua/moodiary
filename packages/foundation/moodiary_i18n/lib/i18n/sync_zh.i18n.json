@@ -324,5 +324,6 @@
   "nextPollIn": "{minutes} 分 {seconds} 秒后",
   "nextPollInSeconds": "{seconds} 秒后",
   "remoteCount": "远端 {count}",
-  "logHealth": "连接"
+  "logHealth": "连接",
+  "lastSuccess": "上次成功 {time}"
 }

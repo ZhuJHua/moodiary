@@ -1226,6 +1226,7 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String nextPollInSeconds({required Object seconds}) => 'in ${seconds} s';
 	@override String remoteCount({required Object count}) => 'remote ${count}';
 	@override String get logHealth => 'Connection';
+	@override String lastSuccess({required Object time}) => 'last success ${time}';
 }
 
 // Path: ui

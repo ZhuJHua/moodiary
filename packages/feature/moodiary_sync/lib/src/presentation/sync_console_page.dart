@@ -359,7 +359,7 @@ class _StatusPanelState extends ConsumerState<_StatusPanel> {
         : bad
         ? scheme.error
         : status.health == .reachable
-        ? scheme.tertiary
+        ? context.theme.success
         : scheme.outline;
     final micro = [
       backend.type.label,
@@ -457,15 +457,15 @@ class _StatusPanelState extends ConsumerState<_StatusPanel> {
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 4),
                 Padding(
-                  padding: const .only(top: 22),
-                  child: Icon(
-                    backend.type == .webdav
+                  padding: const .only(top: 10),
+                  child: _ProbeButton(
+                    icon: backend.type == .webdav
                         ? LucideIcons.cloud
                         : LucideIcons.database,
-                    size: 22,
-                    color: scheme.outline,
+                    enabled: configured && !running,
+                    onProbed: () => ref.invalidate(syncStatsProvider),
                   ),
                 ),
               ],
@@ -503,16 +503,17 @@ class _StatusPanelState extends ConsumerState<_StatusPanel> {
               ],
             ),
           ),
-          if (value?.remoteError case final error?)
-            Padding(
-              padding: const .fromLTRB(18, 0, 18, 12),
-              child: Text(
-                error,
-                maxLines: 2,
-                overflow: .ellipsis,
-                style: typography.bodySmall.error,
+          if (!bad)
+            if (value?.remoteError case final error?)
+              Padding(
+                padding: const .fromLTRB(18, 0, 18, 12),
+                child: Text(
+                  error,
+                  maxLines: 2,
+                  overflow: .ellipsis,
+                  style: typography.bodySmall.error,
+                ),
               ),
-            ),
           _hair(context),
           Padding(
             padding: const .fromLTRB(18, 12, 18, 12),
@@ -605,14 +606,19 @@ class _StatusPanelState extends ConsumerState<_StatusPanel> {
       backend: backendName,
     );
     if (healthTitle != null) {
+      // 明细（原始错误串）不上面板：标题已经说了病因，原文在日志行的 payload 里。
       final since = status.healthSince;
+      final lastOk = MoodiaryKVs.lastSyncTime.get() ?? 0;
       return (
         healthTitle,
         [
           if (since != null)
             l10n.sync.healthSince(time: TimeFormat.clock(since)),
+          if (lastOk > 0)
+            l10n.sync.lastSuccess(
+              time: TimeFormat.clock(.fromMillisecondsSinceEpoch(lastOk)),
+            ),
           ?pending,
-          ?status.healthDetail,
         ].join(' · '),
         true,
       );
@@ -676,6 +682,55 @@ class _StatusPanelState extends ConsumerState<_StatusPanel> {
     height: 40,
     color: context.theme.colors.outlineVariant,
   );
+}
+
+/// 面板右上角的后端图标同时是「测试连接」：点一下重新探测，转圈期间禁点；
+/// 结果直接写进健康态（指示灯、标题随之变），不弹 toast。
+class _ProbeButton extends StatefulWidget {
+  final IconData icon;
+  final bool enabled;
+  final VoidCallback onProbed;
+
+  const _ProbeButton({
+    required this.icon,
+    required this.enabled,
+    required this.onProbed,
+  });
+
+  @override
+  State<_ProbeButton> createState() => _ProbeButtonState();
+}
+
+class _ProbeButtonState extends State<_ProbeButton> {
+  bool _busy = false;
+
+  Future<void> _probe() async {
+    setState(() => _busy = true);
+    try {
+      await getIt<SyncRunner>().testConnection();
+    } on SyncException {
+      // 健康态已由 runner 更新，面板自己会红。
+    } finally {
+      if (mounted) setState(() => _busy = false);
+      widget.onProbed();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.theme.colors;
+    return IconButton(
+      tooltip: context.l10n.sync.testConnection,
+      onPressed: widget.enabled && !_busy ? _probe : null,
+      icon: _busy
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : Icon(widget.icon, size: 22, color: scheme.outline),
+    );
+  }
 }
 
 /// 一格计数：标签、本地数；远端不一致时旁边一小行 tertiary 色的「远端 N」。
@@ -1011,14 +1066,15 @@ class _SingleLine extends StatelessWidget {
     final hasPayload = event.payload != null && event.payload!.isNotEmpty;
     if (health != null) {
       final bad = health.isBad;
+      final tone = bad ? scheme.error : context.theme.success;
       return _Line(
         at: event.at,
         icon: bad ? LucideIcons.cloudOff : LucideIcons.cloud,
-        iconColor: bad ? scheme.error : scheme.tertiary,
+        iconColor: tone,
         title: l10n.sync.logHealth,
         titleColor: bad ? scheme.error : null,
         result: syncHealthShort(l10n, health) ?? '',
-        resultColor: bad ? scheme.error : scheme.tertiary,
+        resultColor: tone,
         onTap: hasPayload ? () => _showPayloadSheet(context, event) : null,
       );
     }

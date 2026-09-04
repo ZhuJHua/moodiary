@@ -69,12 +69,14 @@ ThemeData buildMuiTheme({
   MuiElevations? elevations,
   MuiStateTokens states = const MuiStateTokens(),
   Color onMedia = const Color(0xFFFFFFFF),
+  Color? success,
 }) {
   final cs = resolveColorScheme(brightness, accent);
   final text = buildTextTheme(font, cs.onSurface);
 
   final tokens = MuiTokens(
     onMedia: onMedia,
+    success: success ?? MuiTokens.successFor(brightness),
     font: font,
     radii: radii,
     spacing: spacing,

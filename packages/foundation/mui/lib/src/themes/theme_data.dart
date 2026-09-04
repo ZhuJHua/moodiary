@@ -41,6 +41,9 @@ class MuiThemeData with MuiValue {
   /// 叠在画面上的前景（缩略图角标、播放器控件…）。M3 没有这个角色。
   Color get onMedia => tokens.onMedia;
 
+  /// 「好」的语义色，见 [MuiTokens.success]。
+  Color get success => tokens.success;
+
   MuiFontConfig get font => tokens.font;
   MuiRadii get radii => tokens.radii;
   MuiSpacing get spacing => tokens.spacing;
