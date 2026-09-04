@@ -26,7 +26,7 @@ dependencies:
   video_player: 2.14.0
   volume_controller: 3.6.1
 
-  flutter_riverpod: 3.4.2
+  flutter_riverpod: 3.4.3
   path: 1.9.1
 
   cached_network_image_ce: 4.10.1
@@ -38,7 +38,7 @@ dependencies:
   audioplayers: 6.8.1
 
 dev_dependencies:
-  riverpod_annotation: 4.0.6
+  riverpod_annotation: 4.0.7
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1

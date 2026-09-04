@@ -22,8 +22,8 @@ dependencies:
   moodiary_models: 0.0.1
   mui: 0.0.1
 
-  flutter_riverpod: 3.4.2
-  riverpod_annotation: 4.0.6
+  flutter_riverpod: 3.4.3
+  riverpod_annotation: 4.0.7
   freezed_annotation: 3.1.0
   intl: 0.20.3
   path: 1.9.1
@@ -33,5 +33,5 @@ dev_dependencies:
     sdk: flutter
   moodiary_lint: 0.0.1
   build_runner: 2.16.1
-  riverpod_generator: 4.0.8
+  riverpod_generator: 4.0.9
   freezed: 4.0.1

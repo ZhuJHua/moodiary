@@ -30,13 +30,13 @@ dependencies:
 
   meta: 1.19.0
 
-  riverpod_annotation: 4.0.6
+  riverpod_annotation: 4.0.7
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_riverpod: 3.4.2
+  flutter_riverpod: 3.4.3
   moodiary_lint: 0.0.1
   build_runner: 2.16.1
-  riverpod_generator: 4.0.8
+  riverpod_generator: 4.0.9
   drift_dev: 2.34.6
