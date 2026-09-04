@@ -387,24 +387,35 @@ class _StateCard extends StatelessWidget {
       SyncSuccess(:final message, :final upToDate) => _Line(
         icon: LucideIcons.circleCheck,
         title: upToDate ? l10n.sync.statusUpToDate : l10n.sync.statusDone,
-        detail: message,
+        detail: _manualDetail(message),
       ),
       // 有失败条目 / 被停止：绝不能和「同步完成」长一个样——引擎正因为这两种情况
       // 不推进「上次同步时间」，用户却会据此以为云端已有完整副本。
       SyncPartial(:final message) => _Line(
         icon: LucideIcons.triangleAlert,
         title: l10n.sync.statusPartial,
-        detail: message,
+        detail: _manualDetail(message),
         warn: true,
       ),
       SyncError(:final message) => _Line(
         icon: LucideIcons.triangleAlert,
         title: l10n.sync.statusFailed,
-        detail: message,
+        detail: _manualDetail(message),
         warn: true,
       ),
       _ => _idle(context),
     };
+  }
+
+  /// 手动同步的结果带上时刻与耗时：空转一次只要几十毫秒，进度条一闪而过，
+  /// 卡片文案又与上一次相同，用户看不出「刚才那下按到了」，就会再按。
+  String _manualDetail(String message) {
+    final last = status.last;
+    if (last == null || last.trigger != .manual) return message;
+    return [
+      message,
+      '${TimeFormat.timeHms(last.at)} · ${syncElapsedLabel(l10n, last.elapsed)}',
+    ].join('\n');
   }
 
   Widget _idle(BuildContext context) {
