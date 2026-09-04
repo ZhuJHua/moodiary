@@ -7527,7 +7527,7 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
     return customUpdate(
       'DELETE FROM diary_fts WHERE "rowid" = ?1',
       variables: [Variable<int>(rid)],
-      updates: {diaryFts},
+      updates: {this.diaryFts},
       updateKind: UpdateKind.delete,
     );
   }
@@ -7540,7 +7540,7 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
         Variable<String>(titleTok),
         Variable<String>(bodyTok),
       ],
-      updates: {diaryFts},
+      updates: {this.diaryFts},
     );
   }
 
@@ -7563,10 +7563,10 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
         Variable<int>(limitCount),
         ...generatedpred.introducedVariables,
       ],
-      readsFrom: {diaryFts, diaries, ...generatedpred.watchedTables},
+      readsFrom: {this.diaryFts, this.diaries, ...generatedpred.watchedTables},
     ).asyncMap(
       (QueryRow row) async => FtsSearchByRankResult(
-        d: await diaries.mapFromRow(row, tablePrefix: 'nested_0'),
+        d: await this.diaries.mapFromRow(row, tablePrefix: 'nested_0'),
       ),
     );
   }
@@ -7600,14 +7600,14 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
         ...generatedorder.introducedVariables,
       ],
       readsFrom: {
-        diaryFts,
-        diaries,
+        this.diaryFts,
+        this.diaries,
         ...generatedpred.watchedTables,
         ...generatedorder.watchedTables,
       },
     ).asyncMap(
       (QueryRow row) async => FtsSearchByTimeResult(
-        d: await diaries.mapFromRow(row, tablePrefix: 'nested_0'),
+        d: await this.diaries.mapFromRow(row, tablePrefix: 'nested_0'),
       ),
     );
   }
@@ -7616,10 +7616,10 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
     return customSelect(
       'SELECT"d"."rid" AS "nested_0.rid", "d"."id" AS "nested_0.id", "d"."category_id" AS "nested_0.category_id", "d"."title" AS "nested_0.title", "d"."content" AS "nested_0.content", "d"."content_text" AS "nested_0.content_text", "d"."time" AS "nested_0.time", "d"."last_modified" AS "nested_0.last_modified", "d"."show" AS "nested_0.show", "d"."mood" AS "nested_0.mood", "d"."type" AS "nested_0.type", "d"."aspect" AS "nested_0.aspect", "d"."latitude" AS "nested_0.latitude", "d"."longitude" AS "nested_0.longitude", "d"."place_name" AS "nested_0.place_name", "d"."weather_icon" AS "nested_0.weather_icon", "d"."weather_temp" AS "nested_0.weather_temp", "d"."weather_text" AS "nested_0.weather_text" FROM diary_links AS l INNER JOIN diaries AS d ON d.id = l.src_id WHERE l.dst_id = ?1 AND d.show = 1 ORDER BY d.time DESC, d.id DESC',
       variables: [Variable<String>(toId)],
-      readsFrom: {diaryLinks, diaries},
+      readsFrom: {this.diaryLinks, this.diaries},
     ).asyncMap(
       (QueryRow row) async => BacklinksResult(
-        d: await diaries.mapFromRow(row, tablePrefix: 'nested_0'),
+        d: await this.diaries.mapFromRow(row, tablePrefix: 'nested_0'),
       ),
     );
   }
@@ -7628,10 +7628,10 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
     return customSelect(
       'SELECT"d"."rid" AS "nested_0.rid", "d"."id" AS "nested_0.id", "d"."category_id" AS "nested_0.category_id", "d"."title" AS "nested_0.title", "d"."content" AS "nested_0.content", "d"."content_text" AS "nested_0.content_text", "d"."time" AS "nested_0.time", "d"."last_modified" AS "nested_0.last_modified", "d"."show" AS "nested_0.show", "d"."mood" AS "nested_0.mood", "d"."type" AS "nested_0.type", "d"."aspect" AS "nested_0.aspect", "d"."latitude" AS "nested_0.latitude", "d"."longitude" AS "nested_0.longitude", "d"."place_name" AS "nested_0.place_name", "d"."weather_icon" AS "nested_0.weather_icon", "d"."weather_temp" AS "nested_0.weather_temp", "d"."weather_text" AS "nested_0.weather_text" FROM diary_links AS l INNER JOIN diaries AS d ON d.id = l.dst_id WHERE l.src_id = ?1 AND d.id != ?1 AND d.show = 1 ORDER BY d.time DESC, d.id DESC',
       variables: [Variable<String>(fromId)],
-      readsFrom: {diaryLinks, diaries},
+      readsFrom: {this.diaryLinks, this.diaries},
     ).asyncMap(
       (QueryRow row) async => ForwardLinksResult(
-        d: await diaries.mapFromRow(row, tablePrefix: 'nested_0'),
+        d: await this.diaries.mapFromRow(row, tablePrefix: 'nested_0'),
       ),
     );
   }
@@ -7640,7 +7640,7 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
     return customSelect(
       'SELECT EXISTS (SELECT 1 AS _c0 FROM diary_links WHERE(src_id = ?1 AND dst_id != ?1)OR(dst_id = ?1 AND src_id != ?1)) AS present',
       variables: [Variable<String>(id)],
-      readsFrom: {diaryLinks},
+      readsFrom: {this.diaryLinks},
     ).map((QueryRow row) => row.read<bool>('present'));
   }
 
@@ -7648,9 +7648,9 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
     return customSelect(
       'SELECT l.src_id AS srcId, l.dst_id AS dstId FROM diary_links AS l INNER JOIN diaries AS s ON s.id = l.src_id INNER JOIN diaries AS t ON t.id = l.dst_id WHERE s.show = 1 AND t.show = 1 AND l.src_id != l.dst_id',
       variables: [],
-      readsFrom: {diaryLinks, diaries},
+      readsFrom: {this.diaryLinks, this.diaries},
     ).asyncMap(
-      (QueryRow row) async => diaryLinks.mapFromRowWithAlias(row, const {
+      (QueryRow row) async => this.diaryLinks.mapFromRowWithAlias(row, const {
         'srcId': 'src_id',
         'dstId': 'dst_id',
       }),
@@ -7664,9 +7664,9 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
     return customSelect(
       'SELECT src_id AS srcId, dst_id AS dstId FROM diary_links WHERE src_id IN ($expandedids) AND dst_id != src_id',
       variables: [for (var $ in ids) Variable<String>($)],
-      readsFrom: {diaryLinks},
+      readsFrom: {this.diaryLinks},
     ).asyncMap(
-      (QueryRow row) async => diaryLinks.mapFromRowWithAlias(row, const {
+      (QueryRow row) async => this.diaryLinks.mapFromRowWithAlias(row, const {
         'srcId': 'src_id',
         'dstId': 'dst_id',
       }),
@@ -7680,9 +7680,9 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
     return customSelect(
       'SELECT src_id AS srcId, dst_id AS dstId FROM diary_links WHERE dst_id IN ($expandedids) AND src_id != dst_id',
       variables: [for (var $ in ids) Variable<String>($)],
-      readsFrom: {diaryLinks},
+      readsFrom: {this.diaryLinks},
     ).asyncMap(
-      (QueryRow row) async => diaryLinks.mapFromRowWithAlias(row, const {
+      (QueryRow row) async => this.diaryLinks.mapFromRowWithAlias(row, const {
         'srcId': 'src_id',
         'dstId': 'dst_id',
       }),
@@ -7877,7 +7877,16 @@ class $DiaryFtsTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<DiaryFts, DiaryFt>(table),
+                  BaseReferences<_$MoodiaryDatabase, DiaryFts, DiaryFt>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -8534,7 +8543,10 @@ class $DiariesTableManager
               ),
           withReferenceMapper: (p0) => p0
               .map(
-                (e) => (e.readTable(table), $DiariesReferences(db, table, e)),
+                (e) => (
+                  e.readTable<Diaries, DiaryRow>(table),
+                  $DiariesReferences(db, table, e),
+                ),
               )
               .toList(),
           prefetchHooksCallback:
@@ -8818,8 +8830,10 @@ class $DiaryLinksTableManager
               ),
           withReferenceMapper: (p0) => p0
               .map(
-                (e) =>
-                    (e.readTable(table), $DiaryLinksReferences(db, table, e)),
+                (e) => (
+                  e.readTable<DiaryLinks, DiaryLinkRow>(table),
+                  $DiaryLinksReferences(db, table, e),
+                ),
               )
               .toList(),
           prefetchHooksCallback: ({srcId = false}) {
@@ -9065,7 +9079,16 @@ class $DiaryChunksTableManager
                 textHash: textHash,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<DiaryChunks, DiaryChunkRow>(table),
+                  BaseReferences<
+                    _$MoodiaryDatabase,
+                    DiaryChunks,
+                    DiaryChunkRow
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -9208,7 +9231,16 @@ class $EmbedQueueTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<EmbedQueue, EmbedQueueRow>(table),
+                  BaseReferences<_$MoodiaryDatabase, EmbedQueue, EmbedQueueRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -9545,7 +9577,16 @@ class $LlmProvidersTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<LlmProviders, LlmProviderRow>(table),
+                  BaseReferences<
+                    _$MoodiaryDatabase,
+                    LlmProviders,
+                    LlmProviderRow
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -10006,8 +10047,10 @@ class $ChatSessionsTableManager
               ),
           withReferenceMapper: (p0) => p0
               .map(
-                (e) =>
-                    (e.readTable(table), $ChatSessionsReferences(db, table, e)),
+                (e) => (
+                  e.readTable<ChatSessions, ChatSessionRow>(table),
+                  $ChatSessionsReferences(db, table, e),
+                ),
               )
               .toList(),
           prefetchHooksCallback: ({chatMessagesRefs = false}) {
@@ -10498,8 +10541,10 @@ class $ChatMessagesTableManager
               ),
           withReferenceMapper: (p0) => p0
               .map(
-                (e) =>
-                    (e.readTable(table), $ChatMessagesReferences(db, table, e)),
+                (e) => (
+                  e.readTable<ChatMessages, ChatMessageRow>(table),
+                  $ChatMessagesReferences(db, table, e),
+                ),
               )
               .toList(),
           prefetchHooksCallback:
@@ -10882,7 +10927,7 @@ class $AssistantToolCallsTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<AssistantToolCalls, AssistantToolCallRow>(table),
                   $AssistantToolCallsReferences(db, table, e),
                 ),
               )
@@ -11113,7 +11158,16 @@ class $MemoriesTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<Memories, MemoryRow>(table),
+                  BaseReferences<_$MoodiaryDatabase, Memories, MemoryRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -11348,7 +11402,16 @@ class $AgentPresetsTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<AgentPresets, AgentPresetRow>(table),
+                  BaseReferences<
+                    _$MoodiaryDatabase,
+                    AgentPresets,
+                    AgentPresetRow
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -11510,7 +11573,16 @@ class $TombstonesTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<Tombstones, TombstoneRow>(table),
+                  BaseReferences<_$MoodiaryDatabase, Tombstones, TombstoneRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -11710,7 +11782,16 @@ class $CategoriesTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<Categories, CategoryRow>(table),
+                  BaseReferences<_$MoodiaryDatabase, Categories, CategoryRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -11870,7 +11951,16 @@ class $FontsTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<Fonts, FontRow>(table),
+                  BaseReferences<_$MoodiaryDatabase, Fonts, FontRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -12050,7 +12140,16 @@ class $MediaInfosTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<MediaInfos, MediaInfoRow>(table),
+                  BaseReferences<_$MoodiaryDatabase, MediaInfos, MediaInfoRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -12305,8 +12404,10 @@ class $DiaryMediaTableManager
               ),
           withReferenceMapper: (p0) => p0
               .map(
-                (e) =>
-                    (e.readTable(table), $DiaryMediaReferences(db, table, e)),
+                (e) => (
+                  e.readTable<DiaryMedia, DiaryMediaRow>(table),
+                  $DiaryMediaReferences(db, table, e),
+                ),
               )
               .toList(),
           prefetchHooksCallback: ({diaryId = false}) {
@@ -12578,7 +12679,10 @@ class $DiaryTagsTableManager
               ),
           withReferenceMapper: (p0) => p0
               .map(
-                (e) => (e.readTable(table), $DiaryTagsReferences(db, table, e)),
+                (e) => (
+                  e.readTable<DiaryTags, DiaryTagRow>(table),
+                  $DiaryTagsReferences(db, table, e),
+                ),
               )
               .toList(),
           prefetchHooksCallback: ({diaryId = false}) {

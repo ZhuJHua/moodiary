@@ -8,7 +8,7 @@ part of 'sync_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 同步 controller：状态机 idle → syncing → idle / error。不持有具体 [SyncBackend]，
+/// 同步 controller：状态机 idle → syncing → success / partial / error。不持有具体 [SyncBackend]，
 /// 调用方在 [push]/[pull] 时显式传入，同一 controller 可服务 JSON 备份与 WebDAV。
 ///
 /// keepAlive：同步是后台过程，不随页面销毁 —— 否则 autoDispose 会在页面关闭时销毁
@@ -17,14 +17,14 @@ part of 'sync_controller.dart';
 @ProviderFor(SyncController)
 final syncControllerProvider = SyncControllerProvider._();
 
-/// 同步 controller：状态机 idle → syncing → idle / error。不持有具体 [SyncBackend]，
+/// 同步 controller：状态机 idle → syncing → success / partial / error。不持有具体 [SyncBackend]，
 /// 调用方在 [push]/[pull] 时显式传入，同一 controller 可服务 JSON 备份与 WebDAV。
 ///
 /// keepAlive：同步是后台过程，不随页面销毁 —— 否则 autoDispose 会在页面关闭时销毁
 /// notifier，同步完成后的 state 赋值直接抛错。
 final class SyncControllerProvider
     extends $NotifierProvider<SyncController, SyncState> {
-  /// 同步 controller：状态机 idle → syncing → idle / error。不持有具体 [SyncBackend]，
+  /// 同步 controller：状态机 idle → syncing → success / partial / error。不持有具体 [SyncBackend]，
   /// 调用方在 [push]/[pull] 时显式传入，同一 controller 可服务 JSON 备份与 WebDAV。
   ///
   /// keepAlive：同步是后台过程，不随页面销毁 —— 否则 autoDispose 会在页面关闭时销毁
@@ -56,9 +56,9 @@ final class SyncControllerProvider
   }
 }
 
-String _$syncControllerHash() => r'af44fb9e107d4ae9222bfd21d5ef8ec714033c2d';
+String _$syncControllerHash() => r'301bc70a03f7c5471f662ecbb7be09f57dec37ba';
 
-/// 同步 controller：状态机 idle → syncing → idle / error。不持有具体 [SyncBackend]，
+/// 同步 controller：状态机 idle → syncing → success / partial / error。不持有具体 [SyncBackend]，
 /// 调用方在 [push]/[pull] 时显式传入，同一 controller 可服务 JSON 备份与 WebDAV。
 ///
 /// keepAlive：同步是后台过程，不随页面销毁 —— 否则 autoDispose 会在页面关闭时销毁
