@@ -10,6 +10,7 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_rust/sync.dart' as rust;
 import 'package:moodiary_sync/src/data/incremental_engine.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
+import 'package:moodiary_sync/src/data/remote_lease.dart';
 import 'package:moodiary_sync/src/data/secure_options.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
@@ -194,11 +195,16 @@ class S3SyncBackend implements IRemoteSyncBackend {
   @override
   Future<void> saveOptions(List<String> options) async {
     await _config.save(options);
+    // 服务器可能换了：进程内的条件写探测结论作废，下次抢占重新探测。
+    RemoteLease.resetCasProbeCache();
     if (await SyncKeyManager.loadDek() != null) {
       await SyncKeyManager.markPendingUpload([type.value]);
     }
   }
 
   @override
-  Future<void> clearOptions() => _config.clear();
+  Future<void> clearOptions() async {
+    await _config.clear();
+    RemoteLease.resetCasProbeCache();
+  }
 }

@@ -35,16 +35,20 @@ Future<void> _initSystem() async {
   // 各自延迟装载（首次导出 / 请求 / 对话 / 打包时 ensureInitialized），裸 FFI 的更是没有 init。
   await FastImageRuntime.init();
   await FastTokenizer.ensureInitialized();
+  bootMark('native libs ready');
 
   // ── 1. 路径与日志（一切存储的前置）→ 容器装配。
   // configureDependencies 内部的 preResolve 在这一步落定：SecureKV → KV（含 2.8.0
   // 搬迁；这条次序不再靠调用顺序，它是 MmkvKVStorage.create 收 ISecureKVStorage
   // 的类型边）、SyncLogger 落盘就绪、SQLite 打开并跑完建表（AppModule.database）。
   await bootstrapPlatform();
+  bootMark('bootstrapPlatform');
   await configureDependencies();
+  bootMark('configureDependencies');
   // 应用锁的开关是「有没有凭据」的派生态，读一次钥匙串装进内存；
   // 路由与生命周期回调都是同步的，够不着异步的 SecureKV。
   await AppLockPin.load();
+  bootMark('AppLockPin.load');
 
   // ── 2. 版本迁移：基础存储就位后、任何人读业务数据之前，
   // 也必须在 AutoSyncWatcher 醒来之前——迁移写出的行不是用户的本地变更，
@@ -56,6 +60,7 @@ Future<void> _initSystem() async {
   } catch (e, s) {
     logger.e('version migration failed', error: e, stackTrace: s);
   }
+  bootMark('VersionMigrator');
 
   // ── 3. 四条互不依赖的初始化，并行发起（在阶段 4 收拢）。
   // 三条 future 各自兜底：它们在创建与 await 之间隔着阶段 4 的 await，不兜底的话
@@ -66,7 +71,7 @@ Future<void> _initSystem() async {
   final themeFuture = () async {
     try {
       final font = await getIt<FontRepository>().getActiveFont();
-      await ThemeManager().buildTheme(customFont: font?.themeDescriptor);
+      await getIt<ThemeManager>().buildTheme(customFont: font?.themeDescriptor);
     } catch (e, s) {
       logger.e(
         'theme init failed, fallback to default',
@@ -74,7 +79,7 @@ Future<void> _initSystem() async {
         stackTrace: s,
       );
       try {
-        await ThemeManager().buildTheme();
+        await getIt<ThemeManager>().buildTheme();
       } catch (_) {}
     }
   }();
@@ -117,6 +122,7 @@ Future<void> _initSystem() async {
 
   // ── 4. 唤醒长驻服务与启动期维护。
   await syncBackendFuture;
+  bootMark('sync provider activated');
   // 显式 start，排在版本迁移与后端装载之后。刻意不用 @PostConstruct——那会让
   // watcher 在容器装配当场醒来，赶在迁移之前，迁移写出的行就被回声推给云端了。
   getIt<AutoSyncWatcher>().start();
@@ -125,6 +131,7 @@ Future<void> _initSystem() async {
   DiaryShare.register(showDiaryShareSheet);
   runStartupMaintenance();
   await Future.wait([themeFuture, localeFuture, migrationGateFuture]);
+  bootMark('theme/locale/migration gate');
 
   // ── 5. 系统 UI：沉浸式 + 透明导航栏 + 方向锁。
   SystemChrome.setEnabledSystemUIMode(.edgeToEdge);
@@ -166,6 +173,7 @@ String resolveInitialLocation() {
 }
 
 void main() async {
+  bootMark('main');
   WidgetsFlutterBinding.ensureInitialized();
 
   // 错误处理器在 _initSystem 之前装：初始化阶段的异常也要被记录，装在后面
@@ -200,6 +208,8 @@ void main() async {
   // App 的字串走 slang 的 `TranslationProvider`（切语言自动重建整棵树）。mui 自己那
   // 十来个通用词不在这里——它是被 import 的包，走 `Localizations`，挂在下面的
   // `localizationsDelegates` 里。
+  bootMark('runApp');
+  WidgetsBinding.instance.addPostFrameCallback((_) => bootMark('first frame'));
   runApp(
     TranslationProvider(
       child: const ProviderScope(retry: _providerRetry, child: Moodiary()),

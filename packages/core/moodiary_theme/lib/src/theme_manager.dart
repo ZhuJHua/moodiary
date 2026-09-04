@@ -1,5 +1,6 @@
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/services.dart';
+import 'package:injectable/injectable.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -10,12 +11,9 @@ import 'package:mui/mui.dart';
 ///
 /// 只负责**取参数**（系统取色、自定义字体、KV 读档）并调 mui 的 [buildMuiTheme]；
 /// 主题本身是一棵 material 的 [ThemeData]，mui 的那部分挂在它的 `MuiTokens` 扩展上。
+@lazySingleton
 class ThemeManager {
-  ThemeManager._();
-
-  static final ThemeManager instance = ._();
-
-  factory ThemeManager() => instance;
+  ThemeManager();
 
   ThemeData? _lightTheme;
 

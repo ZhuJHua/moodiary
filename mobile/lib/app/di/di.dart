@@ -20,12 +20,13 @@ import 'package:moodiary_storage/moodiary_storage.dart'
 import 'package:moodiary_sync/injectable.module.dart';
 import 'package:moodiary_sync/moodiary_sync.dart'
     show AutoSyncWatcher, IRemoteSyncBackend, SyncLogger, SyncProviderType;
+import 'package:moodiary_theme/injectable.module.dart';
 
 /// 容器装配的唯一入口：没有 initializerName（用默认的 `init`），也没有
 /// generateForDir（默认扫全包）—— 只有一份 config，不存在「两份扫同一片源码、
 /// 同一注解被各注册一次」的互斥问题，白名单也就不必要了。
 ///
-/// 七个包各自是一份 micro-package（`@InjectableInit.microPackage()` 生成
+/// 八个包各自是一份 micro-package（`@InjectableInit.microPackage()` 生成
 /// `injectable.module.dart`），在这里经 externalPackageModulesBefore 挂载。
 /// **storage 列最前**：它的两个 preResolve 绑定（SecureKV → KV）是别人的地基。
 ///
@@ -44,6 +45,7 @@ import 'package:moodiary_sync/moodiary_sync.dart'
     ExternalModule(MoodiaryAssistantPackageModule),
     ExternalModule(MoodiarySyncPackageModule),
     ExternalModule(MoodiaryEditorPackageModule),
+    ExternalModule(MoodiaryThemePackageModule),
   ],
   preferRelativeImports: false,
 )

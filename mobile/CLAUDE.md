@@ -5,7 +5,7 @@
 ### DI —— get_it + injectable
 
 **绑定的注解落在实现类上**（`@Singleton(as:)` / `@LazySingleton(as:)` / `@Injectable(as:)`）：
-storage / http / ml / data / assistant / sync / editor 七个包各自是一份 **micro-package**（`lib/injectable.dart` 里的
+storage / http / ml / data / assistant / sync / editor / theme 八个包各自是一份 **micro-package**（`lib/injectable.dart` 里的
 `@InjectableInit.microPackage()` → 生成 `injectable.module.dart`），由 app 侧
 `mobile/lib/app/di/di.dart` 一处经 `externalPackageModulesBefore` 挂载。**全仓只有一份
 `configureDependencies`**：不指定 initializerName（默认 `init`），也没有 generateForDir
@@ -30,7 +30,7 @@ storage 列最前，它的两个 preResolve 是别人的地基；两个存储的
 容器只管生命周期内不变的接线。
 
 **双组合根记档（desktop 立项时照此办）**：desktop 建自己的 `desktop/lib/app/di/di.dart`
-（同样七个 externalPackageModulesBefore + 自己的 `@InjectableInit`），app 侧绑定以
+（同样八个 externalPackageModulesBefore + 自己的 `@InjectableInit`），app 侧绑定以
 `_assertRequiredBindings` 里非 micro-package 的那几条为准（当前四条）：`IHttpClient`
 （照抄 AppModule.httpClient，onError 接桌面的通知方式）、`MoodiaryDatabase`（照抄
 AppModule.database，换桌面路径）、`IFilePicker`（走系统对话框）、

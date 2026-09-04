@@ -121,7 +121,7 @@ In-app layering within `mobile/lib` (same script): `gen → core → data → co
 ### DI —— get_it + injectable（引导编排与拍板细节见 mobile/CLAUDE.md）
 
 - **绑定注解落在实现类上**（`@Singleton(as:)` / `@LazySingleton(as:)` / `@Injectable(as:)`）；
-  storage / http / ml / data / assistant / sync / editor 七包各是 micro-package，由
+  storage / http / ml / data / assistant / sync / editor / theme 八包各是 micro-package，由
   `mobile/lib/app/di/di.dart` 一处挂载，**全仓只有一份 `configureDependencies`**。
 - **容器管整张对象图**：`MoodiaryDatabase`（app 的 `AppModule.database`，preResolve）、
   13 个仓储（`@lazySingleton`，构造器注入 DB / IHttpClient）、进程级持有者（Registry /

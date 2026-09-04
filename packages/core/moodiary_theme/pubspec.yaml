@@ -19,9 +19,12 @@ dependencies:
   moodiary_storage: 0.0.1
   mui: 0.0.1
   dynamic_color: 2.1.0
+  injectable: 3.0.0
   path: 1.9.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
+  build_runner: 2.16.1
+  injectable_generator: 3.1.3

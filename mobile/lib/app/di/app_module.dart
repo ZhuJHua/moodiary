@@ -3,6 +3,7 @@ import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_http/moodiary_http.dart';
+import 'package:moodiary_mobile/app/di/bootstrap.dart' show bootMark;
 
 /// 标准 injectable 用法里 @module 只装无法用类注解表达的构造：
 /// RustHttpClient 的 onError 要接 app 的 toast；SQLite 的路径来自组合根
@@ -17,9 +18,14 @@ abstract class AppModule {
   /// 一定是就绪的库。dispose 接 [closeDatabase]：`getIt.reset()` 时关连接池。
   @preResolve
   @Singleton(dispose: closeDatabase)
-  Future<MoodiaryDatabase> database() => MoodiaryDatabase.open(
-    path: AppFiles.getRealPath('database', 'moodiary.db'),
-  );
+  Future<MoodiaryDatabase> database() async {
+    bootMark('db.open start');
+    final db = await MoodiaryDatabase.open(
+      path: AppFiles.getRealPath('database', 'moodiary.db'),
+    );
+    bootMark('db.open end');
+    return db;
+  }
 }
 
 /// [AppModule.database] 的 dispose 回调（injectable 只收顶层函数，签名 `FutureOr Function(T)`）。

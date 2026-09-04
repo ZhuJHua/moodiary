@@ -20,7 +20,7 @@ part 'app_settings_controller.g.dart';
 class AppSettingsController extends _$AppSettingsController {
   @override
   AppSettings build() {
-    final (lightTheme, darkTheme) = ThemeManager().getThemeData();
+    final (lightTheme, darkTheme) = getIt<ThemeManager>().getThemeData();
     return AppSettings(
       lightTheme: lightTheme,
       darkTheme: darkTheme,
@@ -29,11 +29,11 @@ class AppSettingsController extends _$AppSettingsController {
   }
 
   Future<void> bumpTheme() async {
-    await ThemeManager().buildTheme(
+    await getIt<ThemeManager>().buildTheme(
       customFont:
           (await getIt<FontRepository>().getActiveFont())?.themeDescriptor,
     );
-    final (lightTheme, darkTheme) = ThemeManager().getThemeData();
+    final (lightTheme, darkTheme) = getIt<ThemeManager>().getThemeData();
     state = state.copyWith(
       lightTheme: lightTheme,
       darkTheme: darkTheme,

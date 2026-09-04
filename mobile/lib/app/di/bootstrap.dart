@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:fast_image/fast_image.dart';
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_editor/moodiary_editor.dart'
@@ -41,20 +42,7 @@ void runStartupMaintenance() {
   unawaited(purgeSyncMediaTemp());
   // 语义索引启动兜底排空 + 事件驱动补嵌（模型未激活时均为 no-op）。
   unawaited(getIt<EmbedIndexService>().drain());
-  _watchEmbedQueue();
-}
-
-/// 写日记（含同步落库）后去抖排空补嵌队列。10s 去抖：编辑器自动保存每次都发
-/// DiaryUpdated，停笔后才真正嵌入，避免打字期间反复重嵌同一篇。
-/// 进程级订阅，不随界面存亡（同 AutoSyncWatcher 的编排定位，归 main 不归容器）。
-void _watchEmbedQueue() {
-  Timer? debounce;
-  getIt<DiaryRepository>().diaryEvents.listen((_) {
-    debounce?.cancel();
-    debounce = Timer(const Duration(seconds: 10), () {
-      unawaited(getIt<EmbedIndexService>().drain());
-    });
-  });
+  getIt<EmbedQueueWatcher>().start();
 }
 
 /// 重置所有应用数据，恢复到「全新安装」状态（SQLite / KV / SecureKV / 媒体 / 缓存）。
@@ -145,4 +133,16 @@ Future<void> resetAllData() async {
   if (failed.isNotEmpty) {
     throw StateError('resetAllData: ${failed.join(', ')} failed');
   }
+}
+
+/// 启动计时：从 `main()` 进入起算，每个阶段结束打一行 `[boot] <ms> <label>`，
+/// release 不打。冷启动量化用（真机 `adb logcat -s flutter`）。
+final Stopwatch bootClock = Stopwatch()..start();
+
+void bootMark(String label) {
+  if (kReleaseMode) return;
+  // ignore: avoid_print
+  print(
+    '[boot] ${bootClock.elapsedMilliseconds.toString().padLeft(5)}ms  $label',
+  );
 }

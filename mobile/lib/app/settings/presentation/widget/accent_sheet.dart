@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_mobile/app/settings/setting_routes.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
@@ -25,7 +26,7 @@ class AccentSheet extends ConsumerWidget {
     // 开关只会让人怀疑是不是坏了。
     final modes = [
       ThemeAccentMode.neutral,
-      if (ThemeManager().supportDynamic) ThemeAccentMode.system,
+      if (getIt<ThemeManager>().supportDynamic) ThemeAccentMode.system,
       ThemeAccentMode.custom,
     ];
 
@@ -170,7 +171,7 @@ class _AccentModeRow extends StatelessWidget {
       .system => DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: radius,
-          color: ThemeManager().systemAccentSeed ?? scheme.primary,
+          color: getIt<ThemeManager>().systemAccentSeed ?? scheme.primary,
         ),
       ),
       .custom => DecoratedBox(

@@ -11,6 +11,7 @@ import 'package:moodiary_data/src/category_repository.dart' as _i428;
 import 'package:moodiary_data/src/db/database.dart' as _i527;
 import 'package:moodiary_data/src/diary_repository.dart' as _i1068;
 import 'package:moodiary_data/src/embed_index_service.dart' as _i768;
+import 'package:moodiary_data/src/embed_queue_watcher.dart' as _i135;
 import 'package:moodiary_data/src/font_repository.dart' as _i377;
 import 'package:moodiary_data/src/media_info_repository.dart' as _i297;
 import 'package:moodiary_data/src/open_diary_registry.dart' as _i107;
@@ -45,6 +46,13 @@ class MoodiaryDataPackageModule extends _i526.MicroPackageModule {
     );
     gh.lazySingleton<_i952.TombstoneRepository>(
       () => _i952.TombstoneRepository(gh<_i527.MoodiaryDatabase>()),
+    );
+    gh.lazySingleton<_i135.EmbedQueueWatcher>(
+      () => _i135.EmbedQueueWatcher(
+        gh<_i1068.DiaryRepository>(),
+        gh<_i768.EmbedIndexService>(),
+      ),
+      dispose: (i) => i.dispose(),
     );
   }
 }

@@ -25,6 +25,7 @@ import 'package:moodiary_mobile/app/media/mobile_heif_decoder.dart' as _i845;
 import 'package:moodiary_mobile/app/picker/mobile_file_picker.dart' as _i964;
 import 'package:moodiary_storage/injectable.module.dart' as _i295;
 import 'package:moodiary_sync/injectable.module.dart' as _i412;
+import 'package:moodiary_theme/injectable.module.dart' as _i608;
 
 extension GetItInjectableX on _i174.GetIt {
   // initializes the registration of main-scope dependencies inside of GetIt
@@ -40,6 +41,7 @@ extension GetItInjectableX on _i174.GetIt {
     await _i578.MoodiaryAssistantPackageModule().init(gh);
     await _i412.MoodiarySyncPackageModule().init(gh);
     await _i565.MoodiaryEditorPackageModule().init(gh);
+    await _i608.MoodiaryThemePackageModule().init(gh);
     final appModule = _$AppModule();
     await gh.singletonAsync<_i691.MoodiaryDatabase>(
       () => appModule.database(),

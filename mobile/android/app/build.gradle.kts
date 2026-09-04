@@ -77,6 +77,7 @@ android {
         }
         maybeCreate("profile").apply {
             signingConfig = signingConfigs.getByName("config")
+            applicationIdSuffix = ".profile"
         }
     }
 }

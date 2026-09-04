@@ -63,7 +63,7 @@ final class AppSettingsControllerProvider
 }
 
 String _$appSettingsControllerHash() =>
-    r'c8ce1859b6896ca2ae1c43489d4430e127d29976';
+    r'192c2e01b9a21edafc2ed5eee3b1fe04af6de421';
 
 /// 全局应用设置。业务侧改完 KV 后调 [AppSettingsController.bumpTheme]，
 /// 根 widget `ref.watch` 即刷新根节点的 theme / themeMode。

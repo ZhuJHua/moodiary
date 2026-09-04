@@ -1,4 +1,5 @@
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_theme/moodiary_theme.dart';
 
 /// 图片卡片的样式快照 —— **纯数据，不含 BuildContext**。
@@ -162,7 +163,7 @@ class ImageCardStyle {
     required bool watermark,
   }) {
     final target = brightness ?? fallback;
-    final manager = ThemeManager.instance;
+    final manager = getIt<ThemeManager>();
     return ImageCardStyle.of(
       target == Brightness.dark ? manager.darkTheme : manager.lightTheme,
       widthDp: widthDp,
