@@ -20,7 +20,10 @@ class SyncController extends _$SyncController {
   Future<void> push(IRemoteSyncBackend backend) async {
     state = .syncing(label: l10n.sync.uploading(backend: backend.displayName));
     try {
-      final engine = await IncrementalSyncEngine.forCloud(backend);
+      final engine = await IncrementalSyncEngine.forCloud(
+        backend,
+        trigger: .manual,
+      );
       _settle(await engine.push());
     } on SyncException catch (e) {
       state = .error(message: e.message);
@@ -34,7 +37,10 @@ class SyncController extends _$SyncController {
       label: l10n.sync.downloading(backend: backend.displayName),
     );
     try {
-      final engine = await IncrementalSyncEngine.forCloud(backend);
+      final engine = await IncrementalSyncEngine.forCloud(
+        backend,
+        trigger: .manual,
+      );
       _settle(await engine.pull());
     } on SyncException catch (e) {
       state = .error(message: e.message);
@@ -47,7 +53,10 @@ class SyncController extends _$SyncController {
   Future<void> sync(IRemoteSyncBackend backend) async {
     state = .syncing(label: l10n.sync.syncing(backend: backend.displayName));
     try {
-      final engine = await IncrementalSyncEngine.forCloud(backend);
+      final engine = await IncrementalSyncEngine.forCloud(
+        backend,
+        trigger: .manual,
+      );
       _settle(await engine.sync());
     } on SyncException catch (e) {
       state = .error(message: e.message);
@@ -63,7 +72,7 @@ class SyncController extends _$SyncController {
     final message = report.userSummary();
     state = report.failed > 0 || report.cancelled
         ? .partial(message: message)
-        : .success(message: message);
+        : .success(message: message, upToDate: report.changedNothing);
   }
 
   /// 请求停止当前同步（协作式：不再发起新条目，在飞的跑完后正常收尾，
@@ -77,7 +86,8 @@ sealed class SyncState {
   const SyncState();
   const factory SyncState.idle() = SyncIdle;
   const factory SyncState.syncing({required String label}) = SyncRunning;
-  const factory SyncState.success({required String message}) = SyncSuccess;
+  const factory SyncState.success({required String message, bool upToDate}) =
+      SyncSuccess;
   const factory SyncState.partial({required String message}) = SyncPartial;
   const factory SyncState.error({required String message}) = SyncError;
 }
@@ -93,7 +103,10 @@ class SyncRunning extends SyncState {
 
 class SyncSuccess extends SyncState {
   final String message;
-  const SyncSuccess({required this.message});
+
+  /// 跑完了但两侧都没动：标题说「已是最新」而不是「同步完成」。
+  final bool upToDate;
+  const SyncSuccess({required this.message, this.upToDate = false});
 }
 
 /// 跑完了但不完整：有条目失败，或被用户停止。

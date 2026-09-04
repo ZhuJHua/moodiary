@@ -81,10 +81,11 @@ class IncrementalSyncEngine {
   /// 云后端入口：先做配置就绪检查（未就绪抛该后端的 [IRemoteSyncBackend.notReadyError]），
   /// 再按默认装配建引擎。UI 与自动同步都从这里进。
   static Future<IncrementalSyncEngine> forCloud(
-    IRemoteSyncBackend backend,
-  ) async {
+    IRemoteSyncBackend backend, {
+    SyncTrigger? trigger,
+  }) async {
     if (!await backend.isReady()) throw backend.notReadyError;
-    return IncrementalSyncEngine(backend);
+    return IncrementalSyncEngine(backend, trigger: trigger);
   }
 
   factory IncrementalSyncEngine(
@@ -100,6 +101,7 @@ class IncrementalSyncEngine {
     OpenDiaryRegistry? openDiaries,
     SyncCancellation? cancellation,
     SyncDirtyTracker? dirty,
+    SyncTrigger? trigger,
   }) {
     final n = concurrency ?? _resolveConcurrency();
     return IncrementalSyncEngine._(
@@ -115,6 +117,7 @@ class IncrementalSyncEngine {
       openDiaries ?? getIt<OpenDiaryRegistry>(),
       cancellation ?? getIt<SyncCancellation>(),
       dirty ?? getIt<SyncDirtyTracker>(),
+      trigger,
     );
   }
 
@@ -131,12 +134,19 @@ class IncrementalSyncEngine {
     this._openDiaries,
     this._cancellation,
     this._dirty,
+    this._trigger,
   ) : _mediaGate = Pool(concurrency);
 
   /// 进程级持有者（与取消按钮 / 首页角标共享同一实例），缺省取容器，测试可注入。
   final OpenDiaryRegistry _openDiaries;
   final SyncCancellation _cancellation;
   final SyncDirtyTracker _dirty;
+
+  /// 本次操作的发起方，只进日志 payload；null = 未声明（归档导入 / 测试）。
+  final SyncTrigger? _trigger;
+
+  /// 本次 push 真正上传的媒体文件数（跳过的不算），进报告的 [SyncCounts.mediaFiles]。
+  int _mediaUploaded = 0;
 
   static int _resolveConcurrency() {
     final raw = MoodiaryKVs.syncConcurrency.get() ?? defaultConcurrency;
@@ -159,6 +169,7 @@ class IncrementalSyncEngine {
   Map<String, Object?> _backendPayload() => {
     'backend': backend.displayName,
     'backendId': backend.persistentBackendId ?? 'transient',
+    if (_trigger != null) 'trigger': _trigger.name,
   };
 
   /// 「进程内互斥锁 + 远端租约锁」双重保护下执行 [body]（后者挡其它设备，见
@@ -222,12 +233,7 @@ class IncrementalSyncEngine {
         },
       );
       return (
-        SyncReport(
-          diaryCount: 0,
-          categoryCount: 0,
-          elapsed: sw.elapsed,
-          warning: l10n.sync.warnRemoteEmpty,
-        ),
+        SyncReport(elapsed: sw.elapsed, warning: l10n.sync.warnRemoteEmpty),
         null,
       );
     }
@@ -247,6 +253,7 @@ class IncrementalSyncEngine {
       concurrency: concurrency,
       openDiaries: _openDiaries,
       cancellation: _cancellation,
+      trigger: _trigger,
     ).apply(manifest);
     return (report, manifest);
   }
@@ -268,9 +275,7 @@ class IncrementalSyncEngine {
       if (pulled.cancelled) {
         sw.stop();
         return SyncReport(
-          diaryCount: pulled.diaryCount,
-          categoryCount: pulled.categoryCount,
-          mediaInfoCount: pulled.mediaInfoCount,
+          pulled: pulled.pulled,
           elapsed: sw.elapsed,
           warning: pulled.warning,
           failed: pulled.failed,
@@ -282,9 +287,7 @@ class IncrementalSyncEngine {
       // 较长，保守起见仍让 push 重读，缩小「读取→写回」的基线窗口。
       final reuse =
           manifest != null &&
-          pulled.diaryCount == 0 &&
-          pulled.categoryCount == 0 &&
-          pulled.mediaInfoCount == 0 &&
+          !pulled.pulled.hasEntryChanges &&
           pulled.failed == 0;
       final pushed = await _push(preloaded: reuse ? manifest : null);
       sw.stop();
@@ -292,10 +295,10 @@ class IncrementalSyncEngine {
         pulled.warning,
         pushed.warning,
       ].whereType<String>().join('\n');
+      // 两个方向分开记：弹窗要说「上传 2 篇 · 下载 1 篇」，合数说不清。
       return SyncReport(
-        diaryCount: pulled.diaryCount + pushed.diaryCount,
-        categoryCount: pulled.categoryCount + pushed.categoryCount,
-        mediaInfoCount: pulled.mediaInfoCount + pushed.mediaInfoCount,
+        pushed: pushed.pushed,
+        pulled: pulled.pulled,
         elapsed: sw.elapsed,
         warning: warnings.isEmpty ? null : warnings,
         failed: pulled.failed + pushed.failed,
@@ -328,6 +331,7 @@ class IncrementalSyncEngine {
       backend.persistentBackendId,
     );
     final sw = Stopwatch()..start();
+    _mediaUploaded = 0;
     _logger.info(
       .syncStart,
       payload: {..._backendPayload(), 'direction': 'push'},
@@ -691,6 +695,7 @@ class IncrementalSyncEngine {
         'diaryCount': diaryChanged,
         'categoryCount': categoryChanged,
         'mediaInfoCount': mediaInfoChanged,
+        'mediaCount': _mediaUploaded,
         'failed': failed,
         'cancelled': stopped,
         'elapsedMs': sw.elapsedMilliseconds,
@@ -701,9 +706,12 @@ class IncrementalSyncEngine {
       if (stopped) l10n.sync.warnStopped,
     ].join('\n');
     return SyncReport(
-      diaryCount: diaryChanged,
-      categoryCount: categoryChanged,
-      mediaInfoCount: mediaInfoChanged,
+      pushed: SyncCounts(
+        diaries: diaryChanged,
+        categories: categoryChanged,
+        mediaInfos: mediaInfoChanged,
+        mediaFiles: _mediaUploaded,
+      ),
       elapsed: sw.elapsed,
       warning: warnings.isEmpty ? null : warnings,
       failed: failed,
@@ -878,6 +886,7 @@ class IncrementalSyncEngine {
         .mediaUpload,
         payload: {'type': type, 'filename': filename, 'bytes': bytes},
       );
+      _mediaUploaded++;
       remoteMedia.add(SyncKeys.mediaRef(type, filename));
       return true;
     } catch (e) {

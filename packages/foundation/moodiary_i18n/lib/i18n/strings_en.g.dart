@@ -1191,7 +1191,13 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String stepMedia({required Object ref}) => 'Media ${ref}';
 	@override String get stepManifest => 'Writing the manifest';
 	@override String get statusPartial => 'Sync incomplete';
-	@override String summaryCounts({required Object diary, required Object category}) => '${diary} diaries · ${category} categories';
+	@override String get summaryUpToDate => 'Nothing to sync';
+	@override String summaryUploadedDiaries({required Object count}) => '${count} diaries uploaded';
+	@override String summaryUploadedCategories({required Object count}) => '${count} categories uploaded';
+	@override String summaryDownloadedDiaries({required Object count}) => '${count} diaries downloaded';
+	@override String summaryDownloadedCategories({required Object count}) => '${count} categories downloaded';
+	@override String summaryMedia({required Object count}) => '${count} media files';
+	@override String get statusUpToDate => 'Up to date';
 	@override String get lanAuthLocked => 'Too many incorrect pairing codes. This session is locked — start receiving again to get a new code.';
 }
 

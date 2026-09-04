@@ -156,6 +156,62 @@ void main() {
     });
   });
 
+  group('sync — report keeps the two directions apart', () {
+    test(
+      'one local-only + one remote-only diary → pushed 1 / pulled 1',
+      () async {
+        final backend = FakeRemoteBackend();
+        await seedRemote(
+          backend,
+          diaries: [buildDiary(id: 'remote', modifiedMs: 100, title: 'R')],
+        );
+        final store = FakeDiaryStore([
+          buildDiary(id: 'local', modifiedMs: 100, title: 'L'),
+        ]);
+
+        final report = await engineOn(backend, diaries: store).sync();
+
+        expect(report.pushed.diaries, 1);
+        expect(report.pulled.diaries, 1);
+        expect(report.diaryCount, 2);
+        expect(report.changedNothing, isFalse);
+        expect(report.failed, 0);
+
+        // 第二轮两侧都不动：这是弹窗说「已是最新」的依据，不能再报「0 条」之外的东西。
+        final again = await engineOn(backend, diaries: store).sync();
+        expect(again.changedNothing, isTrue);
+        expect(again.pushed.isEmpty, isTrue);
+        expect(again.pulled.isEmpty, isTrue);
+      },
+    );
+
+    test('trigger lands in syncStart / syncEnd payloads', () async {
+      final backend = FakeRemoteBackend();
+      final events = <SyncEvent>[];
+      final sub = logger.events.listen(events.add);
+      addTearDown(sub.cancel);
+
+      await IncrementalSyncEngine(
+        backend,
+        logger: logger,
+        diaryStore: FakeDiaryStore(const []),
+        categoryStore: FakeCategoryStore(const []),
+        mediaInfoStore: FakeMediaInfoStore(const []),
+        tombstoneStore: FakeTombstoneStore(),
+        mediaFiles: FakeMediaFiles(),
+        cipherProvider: () async => SyncCipher.plaintext,
+        concurrency: 2,
+        trigger: .close,
+      ).push();
+
+      final starts = events.where((e) => e.kind == .syncStart);
+      expect(starts, isNotEmpty);
+      expect(starts.every((e) => e.payload?['trigger'] == 'close'), isTrue);
+      final ends = events.where((e) => e.kind == .syncEnd);
+      expect(ends.every((e) => e.payload?['trigger'] == 'close'), isTrue);
+    });
+  });
+
   group('push — dirty badge', () {
     test('clears 待同步 for an uploaded diary after commit', () async {
       final backend = FakeRemoteBackend();

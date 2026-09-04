@@ -11,6 +11,7 @@ import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/media_refs.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
+import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_cancellation.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
@@ -118,6 +119,7 @@ class ArchiveApplier {
     OpenDiaryRegistry? openDiaries,
     SyncCancellation? cancellation,
     SyncPendingTracker? pending,
+    SyncTrigger? trigger,
   }) => ArchiveApplier._(
     backend,
     policy,
@@ -132,6 +134,7 @@ class ArchiveApplier {
     openDiaries ?? getIt<OpenDiaryRegistry>(),
     cancellation ?? getIt<SyncCancellation>(),
     pending ?? getIt<SyncPendingTracker>(),
+    trigger,
   );
 
   // 私有构造走位置参数：Dart 不允许下划线开头的具名参数（同 IncrementalSyncEngine._）。
@@ -149,6 +152,7 @@ class ArchiveApplier {
     this._openDiaries,
     this._cancellation,
     this._pending,
+    this._trigger,
   ) : _mediaGate = Pool(concurrency);
 
   /// 进程级持有者，缺省取容器，测试可注入（同 [IncrementalSyncEngine]）。
@@ -156,9 +160,13 @@ class ArchiveApplier {
   final SyncCancellation _cancellation;
   final SyncPendingTracker _pending;
 
-  /// 本次应用里下载失败的媒体数。媒体下载跑在 `Future.wait(eagerError: false)`
+  /// 发起方，只进日志 payload（同 [IncrementalSyncEngine]）。
+  final SyncTrigger? _trigger;
+
+  /// 本次应用里下载失败 / 成功的媒体数。媒体下载跑在 `Future.wait(eagerError: false)`
   /// 里、失败只记日志不上抛，所以计数必须搭在实例上。
   int _mediaFailed = 0;
+  int _mediaDownloaded = 0;
 
   /// 整场只解析一次：恢复中途若发生换密码（CloudReCipher 会清 DEK 缓存），
   /// 逐次重取会让后半程拿新 DEK 去解旧 DEK 加密的归档，剩下的条目全部解不开。
@@ -172,6 +180,7 @@ class ArchiveApplier {
   Map<String, Object?> _backendPayload() => {
     'backend': backend.displayName,
     'backendId': backend.persistentBackendId ?? 'transient',
+    if (_trigger != null) 'trigger': _trigger.name,
   };
 
   /// 把 [manifest] 描述的条目应用到本地。调用方负责先读出 manifest —— 「远端为空」
@@ -180,6 +189,7 @@ class ArchiveApplier {
     final restoring = _restoring;
     final sw = Stopwatch()..start();
     _mediaFailed = 0;
+    _mediaDownloaded = 0;
     // 与结尾的 syncEnd 成对。AutoSyncWatcher 靠这一对开关 _syncing 闸门：不发的话
     // 恢复期间本机每条写入都会触发 5 秒去抖的自动 push，恢复只要超过 5 秒就必然
     // 撞上一次并发同步；而结尾那记裸 syncEnd 还会把真正在飞的同步的闸门提前放开。
@@ -632,6 +642,7 @@ class ArchiveApplier {
         'diaryCount': diaryChanged,
         'categoryCount': categoryChanged,
         'mediaInfoCount': mediaInfoChanged,
+        'mediaCount': _mediaDownloaded,
         'failed': failed,
         'mediaFailed': _mediaFailed,
         'cancelled': stopped,
@@ -647,9 +658,12 @@ class ArchiveApplier {
       if (stopped) l10n.sync.warnStopped,
     ].join('\n');
     return SyncReport(
-      diaryCount: diaryChanged,
-      categoryCount: categoryChanged,
-      mediaInfoCount: mediaInfoChanged,
+      pulled: SyncCounts(
+        diaries: diaryChanged,
+        categories: categoryChanged,
+        mediaInfos: mediaInfoChanged,
+        mediaFiles: _mediaDownloaded,
+      ),
       elapsed: sw.elapsed,
       warning: warnings.isEmpty ? null : warnings,
       failed: totalFailed,
@@ -716,6 +730,7 @@ class ArchiveApplier {
         .mediaDownload,
         payload: {'type': type, 'filename': filename, 'bytes': bytes},
       );
+      _mediaDownloaded++;
       // 缩略图不同步：拉到原图后本机自己算。fire-and-forget，没跑完被杀由展示端按需补。
       if (type == MediaType.image.value && localPath != null) {
         unawaited(FastImageDerivatives.warm(localPath));

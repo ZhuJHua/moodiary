@@ -3260,8 +3260,26 @@ class Translations$sync$zh {
 	/// zh: '同步未完成'
 	String get statusPartial => '同步未完成';
 
-	/// zh: '日记 {diary} 条 · 分类 {category} 个'
-	String summaryCounts({required Object diary, required Object category}) => '日记 ${diary} 条 · 分类 ${category} 个';
+	/// zh: '没有需要同步的内容'
+	String get summaryUpToDate => '没有需要同步的内容';
+
+	/// zh: '上传 {count} 篇日记'
+	String summaryUploadedDiaries({required Object count}) => '上传 ${count} 篇日记';
+
+	/// zh: '上传 {count} 个分类'
+	String summaryUploadedCategories({required Object count}) => '上传 ${count} 个分类';
+
+	/// zh: '下载 {count} 篇日记'
+	String summaryDownloadedDiaries({required Object count}) => '下载 ${count} 篇日记';
+
+	/// zh: '下载 {count} 个分类'
+	String summaryDownloadedCategories({required Object count}) => '下载 ${count} 个分类';
+
+	/// zh: '媒体 {count} 个'
+	String summaryMedia({required Object count}) => '媒体 ${count} 个';
+
+	/// zh: '已是最新'
+	String get statusUpToDate => '已是最新';
 
 	/// zh: '配对码错误次数过多，本次接收已锁定，请重新开始接收以更换配对码'
 	String get lanAuthLocked => '配对码错误次数过多，本次接收已锁定，请重新开始接收以更换配对码';

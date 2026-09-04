@@ -9,6 +9,28 @@
 /// 并在 [fromJson] 兜底。
 enum SyncEventLevel { info, warn, error }
 
+/// 一次同步是谁发起的。随 `syncStart` / `syncEnd` 的 payload（`trigger` 字段）
+/// 持久化，日志页据此区分手动与自动。
+enum SyncTrigger {
+  /// 用户点了「立即同步」。
+  manual,
+
+  /// 分类 / 媒体信息 / 删除等本地变更去抖后的推送。
+  change,
+
+  /// 编辑器关闭后的推送（编辑期的保存被「打开中」闸门挡下，在这里补）。
+  close,
+
+  /// 周期轮询。
+  poll,
+
+  /// 回到前台。
+  resume,
+
+  /// 网络恢复。
+  network,
+}
+
 enum SyncEventKind {
   syncStart,
   syncEnd,

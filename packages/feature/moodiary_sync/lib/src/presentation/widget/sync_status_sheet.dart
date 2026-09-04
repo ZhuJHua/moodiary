@@ -275,9 +275,9 @@ class _StateCard extends StatelessWidget {
     }
 
     return switch (state) {
-      SyncSuccess(:final message) => _Line(
+      SyncSuccess(:final message, :final upToDate) => _Line(
         icon: LucideIcons.circleCheck,
-        title: l10n.sync.statusDone,
+        title: upToDate ? l10n.sync.statusUpToDate : l10n.sync.statusDone,
         detail: message,
       ),
       // 有失败条目 / 被停止：绝不能和「同步完成」长一个样——引擎正因为这两种情况
@@ -478,11 +478,10 @@ class _StatsTable extends StatelessWidget {
           local: value?.localCategories,
           remote: value?.remoteCategories,
         ),
-        // 本地媒体没有统计口径（SyncStats 只数日记与分类），宁可留空也不编。
         _row(
           context,
           label: context.l10n.sync.rowMedia,
-          local: null,
+          local: value?.localMedia,
           remote: value?.remoteMedia,
         ),
         if (error != null)

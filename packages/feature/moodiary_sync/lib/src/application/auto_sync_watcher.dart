@@ -25,6 +25,11 @@ import 'package:moodiary_sync/src/data/sync_provider_scope.dart';
 ///   而非 Isar `watchLazy` —— 领域流只在写成功后发出（零误报）。云 pull 落库的
 ///   事件带 `fromSync` 标记，据此不标脏、不回声推送（远端已持有）；归档导入 /
 ///   局域网接收不带标记，照常触发向云端的推送。
+/// - **关闭即推**：编辑期的保存被「打开中」闸门挡下，而编辑页最后一次保存发生在
+///   `OpenDiaryRegistry.close()` 之前——此后没有事件了。所以另订阅
+///   [OpenDiaryRegistry.closed]：有待推变更就以短去抖（[_closeDebounce]）补一次 push。
+///   排定的推送**只会提前、不会推后**（[shouldRearm]）：关闭日记排下的 1.5 秒不会被
+///   随后分类改动的 5 秒顶掉。
 /// - **互斥**：监听 [SyncLogger.events] 的 `syncStart`/`syncEnd`，任何 push/pull 进行中
 ///   都暂停响应，故 sync 内部写入（如 tombstone 清理）不会引发二次同步。
 /// - **空转短路**：轮询先 HEAD 远端 manifest（[MoodiaryKVs.syncManifestStat] 缓存
@@ -56,6 +61,9 @@ class AutoSyncWatcher {
   /// 写入后到真正发起 push 的静默期。
   static const Duration _debounce = Duration(seconds: 5);
 
+  /// 关闭日记后到 push 的静默期：合并「关了又马上点开」，体感上与立即无差。
+  static const Duration _closeDebounce = Duration(milliseconds: 1500);
+
   /// 轮询间隔下限（秒）。塞更小值也夹到此 —— 过频轮询每次抢锁 + 读清单，徒增流量/耗电。
   static const int _minPollSeconds = 5;
 
@@ -65,9 +73,14 @@ class AutoSyncWatcher {
   StreamSubscription<DiaryEvent>? _diarySub;
   StreamSubscription<CategoryEvent>? _categorySub;
   StreamSubscription<MediaInfoEvent>? _mediaInfoSub;
+  StreamSubscription<String>? _closedSub;
   StreamSubscription<SyncEvent>? _syncSub;
 
   Timer? _timer;
+
+  /// [_timer] 的到点时刻与发起方；重排时据此只提前不推后。
+  DateTime? _timerDue;
+  SyncTrigger _pendingTrigger = .change;
   Timer? _pollTimer;
   bool _syncing = false;
   bool _dirtyDuringSync = false;
@@ -109,6 +122,11 @@ class AutoSyncWatcher {
       MoodiaryKVs.syncPendingLocal.set(true);
       _onLocalChange();
     });
+    _closedSub ??= _openDiaries.closed.listen((_) {
+      // 只读打开、没保存过 → 没有待推变更，不动。
+      if (MoodiaryKVs.syncPendingLocal.get() != true) return;
+      _onLocalChange(trigger: .close, delay: _closeDebounce);
+    });
     _syncSub ??= _logger.events.listen(_onSyncEvent);
     // 改了轮询间隔 → 立即按新值重排（缩短间隔不必等旧定时器走完）。
     MoodiaryKVs.syncPollInterval.getNotifier().addListener(_schedulePoll);
@@ -120,16 +138,19 @@ class AutoSyncWatcher {
     _started = false;
     _timer?.cancel();
     _timer = null;
+    _timerDue = null;
     _pollTimer?.cancel();
     _pollTimer = null;
     MoodiaryKVs.syncPollInterval.getNotifier().removeListener(_schedulePoll);
     await _diarySub?.cancel();
     await _categorySub?.cancel();
     await _mediaInfoSub?.cancel();
+    await _closedSub?.cancel();
     await _syncSub?.cancel();
     _diarySub = null;
     _categorySub = null;
     _mediaInfoSub = null;
+    _closedSub = null;
     _syncSub = null;
   }
 
@@ -150,14 +171,17 @@ class AutoSyncWatcher {
     });
   }
 
-  void _onLocalChange() {
+  void _onLocalChange({
+    SyncTrigger trigger = .change,
+    Duration delay = _debounce,
+  }) {
     if (MoodiaryKVs.autoSync.get() != true) return;
     if (_syncing) {
       // 同步进行中的写入：记脏标，等同步结束再合并触发。
       _dirtyDuringSync = true;
       return;
     }
-    _scheduleDebounced();
+    _scheduleDebounced(delay, trigger);
   }
 
   void _onSyncEvent(SyncEvent event) {
@@ -167,28 +191,47 @@ class AutoSyncWatcher {
         // 已有同步在跑，撤掉待发 push；同步内部写入由 _dirtyDuringSync 兜底。
         _timer?.cancel();
         _timer = null;
+        _timerDue = null;
       case .syncEnd:
         _syncing = false;
         if (_dirtyDuringSync) {
           _dirtyDuringSync = false;
-          _scheduleDebounced();
+          _scheduleDebounced(_debounce, .change);
         }
       default:
         break;
     }
   }
 
-  void _scheduleDebounced() {
+  void _scheduleDebounced(Duration delay, SyncTrigger trigger) {
+    final due = DateTime.now().add(delay);
+    if (_timer != null && !shouldRearm(currentDue: _timerDue, newDue: due)) {
+      return;
+    }
     _timer?.cancel();
-    _timer = Timer(_debounce, _trigger);
+    _timerDue = due;
+    _pendingTrigger = trigger;
+    _timer = Timer(delay, _trigger);
   }
+
+  /// 已排定的推送只提前不推后：没有排定、或新到点更早才重排。
+  @visibleForTesting
+  static bool shouldRearm({
+    required DateTime? currentDue,
+    required DateTime newDue,
+  }) => currentDue == null || newDue.isBefore(currentDue);
 
   /// 变更去抖到点：只 push 本地改动（pull 由周期轮询负责）。
   Future<void> _trigger() async {
     _timer = null;
+    _timerDue = null;
+    final trigger = _pendingTrigger;
     if (MoodiaryKVs.autoSync.get() != true) return;
     await _runAutoSync(
-      (backend) async => (await IncrementalSyncEngine.forCloud(backend)).push(),
+      (backend) async => (await IncrementalSyncEngine.forCloud(
+        backend,
+        trigger: trigger,
+      )).push(),
     );
   }
 
@@ -232,7 +275,10 @@ class AutoSyncWatcher {
       }
     }
     await _runAutoSync(
-      (backend) async => (await IncrementalSyncEngine.forCloud(backend)).sync(),
+      (backend) async => (await IncrementalSyncEngine.forCloud(
+        backend,
+        trigger: .poll,
+      )).sync(),
       // 缓存的是同步开始前观测的指纹：本机 push 会再改 manifest，使下一轮指纹
       // 不匹配、多跑一次（随即空转的）全量同步 —— 换取「同步期间他机写入必不被
       // 漏判」。
@@ -294,7 +340,7 @@ class AutoSyncWatcher {
       _syncing = false;
       if (_dirtyDuringSync) {
         _dirtyDuringSync = false;
-        _scheduleDebounced();
+        _scheduleDebounced(_debounce, .change);
       }
     }
   }

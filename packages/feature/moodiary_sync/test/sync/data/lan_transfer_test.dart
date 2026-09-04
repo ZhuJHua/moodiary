@@ -287,8 +287,7 @@ void main() {
         applierGotPassword = password;
         applierGotBytes = await io.File(zipPath).readAsBytes();
         return const SyncReport(
-          diaryCount: 3,
-          categoryCount: 1,
+          pulled: SyncCounts(diaries: 3, categories: 1),
           elapsed: .zero,
           warning: '1 个条目同步失败已跳过',
           failed: 1,
@@ -349,11 +348,7 @@ void main() {
     final receiver = buildReceiver(
       applier: (_, _) async {
         applied = true;
-        return const SyncReport(
-          diaryCount: 0,
-          categoryCount: 0,
-          elapsed: .zero,
-        );
+        return const SyncReport(elapsed: .zero);
       },
     );
     await receiver.start();
@@ -565,11 +560,7 @@ void main() {
     final receiver = buildReceiver(
       applier: (_, _) async {
         posted = true;
-        return const SyncReport(
-          diaryCount: 0,
-          categoryCount: 0,
-          elapsed: .zero,
-        );
+        return const SyncReport(elapsed: .zero);
       },
     );
     await receiver.start();

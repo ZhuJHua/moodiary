@@ -290,6 +290,12 @@
   "stepMedia": "Media {ref}",
   "stepManifest": "Writing the manifest",
   "statusPartial": "Sync incomplete",
-  "summaryCounts": "{diary} diaries · {category} categories",
+  "summaryUpToDate": "Nothing to sync",
+  "summaryUploadedDiaries": "{count} diaries uploaded",
+  "summaryUploadedCategories": "{count} categories uploaded",
+  "summaryDownloadedDiaries": "{count} diaries downloaded",
+  "summaryDownloadedCategories": "{count} categories downloaded",
+  "summaryMedia": "{count} media files",
+  "statusUpToDate": "Up to date",
   "lanAuthLocked": "Too many incorrect pairing codes. This session is locked — start receiving again to get a new code."
 }

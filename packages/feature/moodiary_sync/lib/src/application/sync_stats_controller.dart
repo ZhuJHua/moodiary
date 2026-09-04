@@ -2,6 +2,7 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
+import 'package:moodiary_sync/src/data/media_refs.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -16,6 +17,10 @@ class SyncStats {
   /// 本地活跃分类数。
   final int localCategories;
 
+  /// 本地日记引用的媒体文件并集（含视频缩略图），与 [remoteMedia] 同口径；
+  /// 不逐文件 stat，缺失与否是引擎 push 时的事。
+  final int localMedia;
+
   /// 远端来自 manifest 非 tombstone 条目计数，媒体为清单并集。
   /// null = 未能获取（原因见 [remoteError]）。
   final int? remoteDiaries;
@@ -26,6 +31,7 @@ class SyncStats {
   const SyncStats({
     required this.localDiaries,
     required this.localCategories,
+    required this.localMedia,
     this.remoteDiaries,
     this.remoteCategories,
     this.remoteMedia,
@@ -41,6 +47,11 @@ Future<SyncStats> syncStats(Ref ref) async {
   final localDiaries = diaries.length;
   final localCategories =
       (await getIt<CategoryRepository>().getAllCategories()).length;
+  final localMedia = {
+    for (final d in diaries)
+      for (final e in collectDiaryMediaEntries(d))
+        SyncKeys.mediaRef(e.$1, e.$2),
+  }.length;
 
   int? remoteDiaries;
   int? remoteCategories;
@@ -82,6 +93,7 @@ Future<SyncStats> syncStats(Ref ref) async {
   return SyncStats(
     localDiaries: localDiaries,
     localCategories: localCategories,
+    localMedia: localMedia,
     remoteDiaries: remoteDiaries,
     remoteCategories: remoteCategories,
     remoteMedia: remoteMedia,

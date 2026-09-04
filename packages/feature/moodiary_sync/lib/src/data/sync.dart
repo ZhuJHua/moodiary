@@ -80,10 +80,45 @@ abstract class IRemoteSyncBackend implements RemoteObjectStore {
   Future<String?> testConnection();
 }
 
+/// 一个方向上的变更条数。日记 / 分类 / 媒体信息按条目计（含推送或应用的墓碑），
+/// [mediaFiles] 是真正传输过的媒体文件数（跳过的不算）。
+class SyncCounts {
+  final int diaries;
+  final int categories;
+  final int mediaInfos;
+  final int mediaFiles;
+
+  const SyncCounts({
+    this.diaries = 0,
+    this.categories = 0,
+    this.mediaInfos = 0,
+    this.mediaFiles = 0,
+  });
+
+  static const SyncCounts zero = SyncCounts();
+
+  bool get isEmpty =>
+      diaries == 0 && categories == 0 && mediaInfos == 0 && mediaFiles == 0;
+
+  /// 条目级是否有变更（不看媒体文件）：pull 的 skip 分支会补拉缺失媒体，
+  /// 那不改 manifest，push 侧据此判断能否复用 pull 读到的快照。
+  bool get hasEntryChanges => diaries > 0 || categories > 0 || mediaInfos > 0;
+
+  SyncCounts operator +(SyncCounts other) => SyncCounts(
+    diaries: diaries + other.diaries,
+    categories: categories + other.categories,
+    mediaInfos: mediaInfos + other.mediaInfos,
+    mediaFiles: mediaFiles + other.mediaFiles,
+  );
+}
+
 class SyncReport {
-  final int diaryCount;
-  final int categoryCount;
-  final int mediaInfoCount;
+  /// 本地 → 远端（上传 + 推送的墓碑）。
+  final SyncCounts pushed;
+
+  /// 远端 → 本地（下载 + 应用的墓碑；归档导入也走这一侧）。
+  final SyncCounts pulled;
+
   final Duration elapsed;
   final String? warning;
 
@@ -99,9 +134,8 @@ class SyncReport {
   final int skipped;
 
   const SyncReport({
-    required this.diaryCount,
-    required this.categoryCount,
-    this.mediaInfoCount = 0,
+    this.pushed = .zero,
+    this.pulled = .zero,
     required this.elapsed,
     this.warning,
     this.failed = 0,
@@ -109,19 +143,47 @@ class SyncReport {
     this.skipped = 0,
   });
 
-  /// 面向用户的摘要：条目数 + 停止 / 失败的补充说明，逐字段走 l10n。
+  /// 两个方向合计。局域网接收 / 备份导入 / 导出页仍按合计读，它们只有一个方向。
+  int get diaryCount => pushed.diaries + pulled.diaries;
+  int get categoryCount => pushed.categories + pulled.categories;
+  int get mediaInfoCount => pushed.mediaInfos + pulled.mediaInfos;
+
+  /// 两侧都没动过：远端与本地已一致（失败与停止另看 [failed] / [cancelled]）。
+  bool get changedNothing => pushed.isEmpty && pulled.isEmpty;
+
+  /// 面向用户的摘要，逐字段走 l10n。只列非零项，方向分开说；零变更说「没有需要
+  /// 同步的内容」而不是「0 条」——这个数字是本轮变更数，不是库里的总数。
   /// UI 一律用这个，别用 [toString]。
-  String userSummary() => [
-    l10n.sync.summaryCounts(diary: diaryCount, category: categoryCount),
-    if (cancelled) l10n.sync.warnStopped,
-    if (failed > 0) l10n.sync.warnFailedSkipped(count: failed),
-  ].join(' · ');
+  String userSummary() {
+    final media = pushed.mediaFiles + pulled.mediaFiles;
+    final parts = <String>[
+      if (pushed.diaries > 0)
+        l10n.sync.summaryUploadedDiaries(count: pushed.diaries),
+      if (pushed.categories > 0)
+        l10n.sync.summaryUploadedCategories(count: pushed.categories),
+      if (pulled.diaries > 0)
+        l10n.sync.summaryDownloadedDiaries(count: pulled.diaries),
+      if (pulled.categories > 0)
+        l10n.sync.summaryDownloadedCategories(count: pulled.categories),
+      if (media > 0) l10n.sync.summaryMedia(count: media),
+    ];
+    final clean = failed == 0 && !cancelled;
+    return [
+      if (parts.isEmpty && clean) l10n.sync.summaryUpToDate,
+      ...parts,
+      if (cancelled) l10n.sync.warnStopped,
+      if (failed > 0) l10n.sync.warnFailedSkipped(count: failed),
+    ].join(' · ');
+  }
 
   /// 仅供日志 / payload，**禁止进 UI**——硬编码中文；给用户的摘要逐字段走 l10n
   /// （范例：lan_receive_page 的 _summary、export_page 的 restoreSummary）。
   @override
   String toString() =>
-      '日记 $diaryCount 条 / 分类 $categoryCount 条 / 媒体信息 $mediaInfoCount 条'
+      '上行 日记 ${pushed.diaries} / 分类 ${pushed.categories} / '
+      '媒体信息 ${pushed.mediaInfos} / 媒体 ${pushed.mediaFiles}；'
+      '下行 日记 ${pulled.diaries} / 分类 ${pulled.categories} / '
+      '媒体信息 ${pulled.mediaInfos} / 媒体 ${pulled.mediaFiles}'
       '（耗时 ${elapsed.inMilliseconds}ms）'
       '${warning == null ? '' : '\n$warning'}';
 }
