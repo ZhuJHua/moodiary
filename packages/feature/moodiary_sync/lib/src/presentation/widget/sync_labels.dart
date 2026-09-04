@@ -45,6 +45,8 @@ String? syncHealthShort(Translations l10n, SyncHealth health) =>
     };
 
 String syncElapsedLabel(Translations l10n, Duration elapsed) =>
-    l10n.sync.elapsedSeconds(
-      seconds: (elapsed.inMilliseconds / 1000).toStringAsFixed(1),
-    );
+    elapsed.inMilliseconds < 1000
+    ? l10n.sync.elapsedMillis(ms: elapsed.inMilliseconds)
+    : l10n.sync.elapsedSeconds(
+        seconds: (elapsed.inMilliseconds / 1000).toStringAsFixed(1),
+      );

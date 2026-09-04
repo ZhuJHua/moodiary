@@ -1232,6 +1232,8 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String get logRunFailed => 'Failed';
 	@override String get logRunPartial => 'Incomplete';
 	@override String get logRunUpToDate => 'Up to date';
+	@override String get directionSync => 'Sync';
+	@override String elapsedMillis({required Object ms}) => '${ms} ms';
 }
 
 // Path: ui

@@ -3,7 +3,8 @@ import 'package:moodiary_sync/src/application/sync_log_runs.dart';
 import 'package:moodiary_sync/src/application/sync_runner.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
 
-/// 日志页的分段：syncStart → syncEnd 成段，紧挨的锁事件归段，段外事件独立，最新在前。
+/// 日志页的分段：一次锁会话（lockAcquire → lockRelease，含 pull + push）成一段，
+/// 无锁的 syncStart → syncEnd 自成一段，段外事件独立，最新在前。
 void main() {
   final base = DateTime(2026, 9, 4, 14, 32);
   SyncEvent ev(
@@ -20,11 +21,14 @@ void main() {
     payload: payload,
   );
 
-  test('一次 push：锁 + start…end + 释放锁折成一段，段内升序', () {
+  test('双向同步：抢锁、读清单、pull、push、释放锁折成一段', () {
     final entries = groupSyncRuns([
       ev(0, .lockAcquire),
-      ev(1, .syncStart, payload: {'direction': 'push', 'trigger': 'close'}),
-      ev(2, .manifestRead),
+      ev(0, .lockAcquire, reason: .casVerified),
+      ev(1, .manifestRead, payload: {'entries': 26}),
+      ev(1, .syncStart, payload: {'direction': 'pull', 'trigger': 'network'}),
+      ev(2, .syncEnd, payload: {'direction': 'pull', 'failed': 0}),
+      ev(2, .syncStart, payload: {'direction': 'push', 'trigger': 'network'}),
       ev(3, .diaryUpload),
       ev(
         4,
@@ -41,47 +45,46 @@ void main() {
     ]);
     expect(entries.length, 1);
     final run = entries.single as SyncLogRun;
-    expect(run.events.map((e) => e.kind), [
-      SyncEventKind.lockAcquire,
-      SyncEventKind.syncStart,
-      SyncEventKind.manifestRead,
-      SyncEventKind.diaryUpload,
-      SyncEventKind.syncEnd,
-      SyncEventKind.lockRelease,
-    ]);
-    expect(run.direction, 'push');
-    expect(run.trigger, 'close');
+    expect(run.events.length, 9);
+    expect(run.events.first.kind, SyncEventKind.lockAcquire);
+    expect(run.events.last.kind, SyncEventKind.lockRelease);
+    expect(run.bidirectional, isTrue);
+    expect(run.directions, ['pull', 'push']);
+    expect(run.trigger, 'network');
     expect(run.outcome, SyncOutcomeKind.changed);
-    expect(run.changedCount, 1);
+    expect(run.pushedCount, 1);
+    expect(run.pulledCount, 0);
     expect(run.mediaCount, 2);
-    expect(run.elapsed, const Duration(milliseconds: 1300));
+    expect(run.elapsed, const Duration(seconds: 5));
+    expect(run.open, isFalse);
     expect(run.hasProblem, isFalse);
   });
 
-  test('双向同步：同一把锁下 pull / push 各成一段，锁分别归首尾', () {
+  test('无锁的一段（归档导入）在 syncEnd 收尾', () {
     final entries = groupSyncRuns([
-      ev(0, .lockAcquire),
-      ev(1, .syncStart, payload: {'direction': 'pull'}),
-      ev(2, .syncEnd, payload: {'direction': 'pull', 'failed': 0}),
-      ev(3, .syncStart, payload: {'direction': 'push'}),
-      ev(4, .syncEnd, payload: {'direction': 'push', 'failed': 0}),
-      ev(5, .lockRelease),
+      ev(1, .syncStart, payload: {'direction': 'restore'}),
+      ev(2, .diaryDownload),
+      ev(3, .syncEnd, payload: {'direction': 'restore', 'diaryCount': 1}),
+      ev(4, .keyfileUpload, level: .warn),
     ]);
     expect(entries.length, 2);
-    final push = entries[0] as SyncLogRun;
-    final pull = entries[1] as SyncLogRun;
-    expect(push.direction, 'push');
-    expect(push.events.last.kind, SyncEventKind.lockRelease);
-    expect(pull.direction, 'pull');
-    expect(pull.events.first.kind, SyncEventKind.lockAcquire);
-    expect(pull.outcome, SyncOutcomeKind.upToDate);
+    final run = entries[1] as SyncLogRun;
+    expect(run.directions, ['restore']);
+    expect(run.pulledCount, 1);
+    expect(run.outcome, SyncOutcomeKind.changed);
+    expect(
+      (entries[0] as SyncLogSingle).event.kind,
+      SyncEventKind.keyfileUpload,
+    );
   });
 
   test('段外事件独立成条，输入乱序也按时间归位，输出最新在前', () {
     final entries = groupSyncRuns([
       ev(9, .manifestRead, level: .warn, reason: .probeFailed),
-      ev(1, .syncStart, payload: {'direction': 'push'}),
-      ev(2, .syncEnd, payload: {'direction': 'push', 'failed': 0}),
+      ev(1, .lockAcquire),
+      ev(2, .syncStart, payload: {'direction': 'push'}),
+      ev(3, .syncEnd, payload: {'direction': 'push', 'failed': 0}),
+      ev(4, .lockRelease),
       ev(0, .keyfileUpload, level: .warn),
     ]);
     expect(entries.length, 3);
@@ -90,6 +93,7 @@ void main() {
       SyncEventReason.probeFailed,
     );
     expect(entries[1], isA<SyncLogRun>());
+    expect((entries[1] as SyncLogRun).outcome, SyncOutcomeKind.upToDate);
     expect(
       (entries[2] as SyncLogSingle).event.kind,
       SyncEventKind.keyfileUpload,
@@ -97,8 +101,9 @@ void main() {
     expect(entries[0].hasProblem, isTrue);
   });
 
-  test('没等到 end 的段：open，结果未知', () {
+  test('没等到释放锁的段：open，结果未知', () {
     final entries = groupSyncRuns([
+      ev(0, .lockAcquire),
       ev(1, .syncStart, payload: {'direction': 'pull'}),
       ev(2, .manifestRead),
     ]);
@@ -107,11 +112,30 @@ void main() {
     expect(run.outcome, isNull);
   });
 
+  test('抢锁失败的尝试：没有 start，隔够久的下一次抢锁开新段', () {
+    final entries = groupSyncRuns([
+      ev(0, .lockAcquire, level: .warn, reason: .expiredLock),
+      ev(3, .lockAcquire, level: .warn, reason: .expiredLock),
+      ev(60, .lockAcquire),
+      ev(61, .syncStart, payload: {'direction': 'push'}),
+      ev(62, .syncEnd, payload: {'direction': 'push', 'failed': 0}),
+      ev(63, .lockRelease),
+    ]);
+    expect(entries.length, 2);
+    final failedAttempt = entries[1] as SyncLogRun;
+    expect(failedAttempt.neverStarted, isTrue);
+    expect(failedAttempt.outcome, SyncOutcomeKind.failed);
+    expect(failedAttempt.events.length, 2);
+    expect((entries[0] as SyncLogRun).outcome, SyncOutcomeKind.upToDate);
+  });
+
   test('结果判定：异常中止 / 停止 / 有失败条目', () {
     SyncLogRun runWith(SyncEvent end) =>
         groupSyncRuns([
+              ev(0, .lockAcquire),
               ev(1, .syncStart, payload: {'direction': 'push'}),
               end,
+              ev(3, .lockRelease),
             ]).single
             as SyncLogRun;
 

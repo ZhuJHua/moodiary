@@ -15,9 +15,10 @@ import 'package:mui/mui.dart';
 /// 同步日志单页：默认展示今天并实时追加；可按 [SyncLogger] 的按天 jsonl 切换历史
 /// 日期（保留 7 天，历史视图不追加实时事件）。
 ///
-/// 显示单元是「一次同步」（[groupSyncRuns]）：方向 · 触发源 · 结果 · 耗时，展开
-/// 才看逐条事件（段内连续同 kind 再折一层）。所有行走同一个 [_LogRow] 网格——
-/// 时间 / 图标 / 文本 / 尾部四列在任何层级都对齐。
+/// 显示单元是「一次同步」（[groupSyncRuns]，抢锁到释放锁、含 pull + push）：方向 ·
+/// 触发源 · 结果 · 耗时，展开才看逐条事件（段内连续同 kind 再折一层）。所有行走同
+/// 一个 [_LogRow] 网格——时间 / 图标 / 文本 / 尾部四列在任何层级都对齐；段的归属
+/// 靠卡体底色说，不画线。
 class SyncLogPage extends StatefulWidget {
   const SyncLogPage({super.key});
 
@@ -135,7 +136,7 @@ class _SyncLogPageState extends State<SyncLogPage> {
   }
 
   static String _runKey(SyncLogRun run) =>
-      '${run.start.at.microsecondsSinceEpoch}-${run.direction ?? ''}';
+      '${run.at.microsecondsSinceEpoch}-${run.directions.join('+')}';
 
   /// 默认只展开最新一次和出了问题的——打开日志页多半是想看「刚才那次」。
   bool _isExpanded(SyncLogRun run, {required bool newest}) =>
@@ -437,7 +438,7 @@ class _LogRow extends StatelessWidget {
   final Widget text;
   final Widget? trailing;
   final Color? background;
-  final bool nested;
+  final BorderRadius radius;
   final VoidCallback? onTap;
 
   const _LogRow({
@@ -447,7 +448,7 @@ class _LogRow extends StatelessWidget {
     required this.text,
     this.trailing,
     this.background,
-    this.nested = false,
+    this.radius = const .all(.circular(10)),
     this.onTap,
   });
 
@@ -458,22 +459,14 @@ class _LogRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.theme.colors;
     final typography = context.theme.typography;
     return MInkWell(
-      borderRadius: .circular(10),
+      borderRadius: radius,
       onTap: onTap,
       child: Container(
         constraints: const BoxConstraints(minHeight: 36),
         padding: const .symmetric(horizontal: 8, vertical: 7),
-        decoration: BoxDecoration(
-          color: background,
-          borderRadius: .circular(10),
-          // 子项：左缘一条 2px 轨，列位不动。
-          border: nested
-              ? Border(left: BorderSide(color: scheme.outlineVariant, width: 2))
-              : null,
-        ),
+        decoration: BoxDecoration(color: background, borderRadius: radius),
         child: Row(
           crossAxisAlignment: .center,
           children: [
@@ -519,6 +512,7 @@ class _Chevron extends StatelessWidget {
 
 // ─────────────────────── 一次同步 ───────────────────────
 
+/// 一张卡：段头深一档底色，展开的卡体浅一档——归属靠底色说，不画线。
 class _RunTile extends StatelessWidget {
   final SyncLogRun run;
   final bool expanded;
@@ -530,18 +524,31 @@ class _RunTile extends StatelessWidget {
     required this.onToggle,
   });
 
+  static const Radius _r = Radius.circular(12);
+
+  /// 段头标题：「同步 · 轮询」/「推送 · 关闭日记」/ 抢锁失败时「获取同步锁」。
+  String _headline(Translations l10n) {
+    final direction = run.neverStarted
+        ? _kindLabel(l10n, .lockAcquire)
+        : run.bidirectional
+        ? l10n.sync.directionSync
+        : (_directionLabel(l10n, run.directions.firstOrNull) ??
+              _kindLabel(l10n, .syncStart));
+    return [direction, ?syncTriggerLabelOf(l10n, run.trigger)].join(' · ');
+  }
+
+  IconData get _icon => run.neverStarted
+      ? LucideIcons.lock
+      : run.bidirectional
+      ? LucideIcons.refreshCw
+      : _directionIcon(run.directions.firstOrNull);
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = context.theme.colors;
     final typography = context.theme.typography;
-    final outcome = run.outcome;
-    final failed = outcome == .failed;
-    final headline = [
-      _directionLabel(l10n, run.direction) ?? _kindLabel(l10n, .syncStart),
-      ?syncTriggerLabelOf(l10n, run.trigger),
-    ].join(' · ');
-    final elapsed = run.elapsed;
+    final failed = run.outcome == .failed;
 
     return Padding(
       padding: const .only(top: 6),
@@ -549,21 +556,22 @@ class _RunTile extends StatelessWidget {
         crossAxisAlignment: .stretch,
         children: [
           _LogRow(
-            at: run.start.at,
-            icon: _directionIcon(run.direction),
+            at: run.at,
+            icon: _icon,
             iconColor: failed
                 ? scheme.error
                 : run.hasProblem
                 ? scheme.tertiary
                 : scheme.primary,
             background: scheme.surfaceContainerHighest,
+            radius: expanded ? const .vertical(top: _r) : const .all(_r),
             onTap: onToggle,
             trailing: _Chevron(expanded: expanded),
             text: Row(
               children: [
                 Flexible(
                   child: Text(
-                    headline,
+                    _headline(l10n),
                     overflow: .ellipsis,
                     style: failed
                         ? typography.bodyMedium.emphasized.error
@@ -572,10 +580,10 @@ class _RunTile extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 _OutcomeChip(run: run),
-                if (elapsed != null) ...[
+                if (!run.open) ...[
                   const SizedBox(width: 6),
                   Text(
-                    syncElapsedLabel(l10n, elapsed),
+                    syncElapsedLabel(l10n, run.elapsed),
                     style: typography.bodySmall.outline.copyWith(
                       fontFeatures: const [.tabularFigures()],
                     ),
@@ -588,21 +596,25 @@ class _RunTile extends StatelessWidget {
             duration: const Duration(milliseconds: 200),
             alignment: .topCenter,
             child: expanded
-                ? Column(
-                    crossAxisAlignment: .stretch,
-                    children: [
-                      for (final entry in foldSameKind(run.events))
-                        switch (entry) {
-                          final SyncEvent e => _EventRow(
-                            event: e,
-                            nested: true,
-                          ),
-                          final List<SyncEvent> group => _FoldTile(
-                            events: group,
-                          ),
-                          _ => const SizedBox.shrink(),
-                        },
-                    ],
+                ? Container(
+                    decoration: BoxDecoration(
+                      color: scheme.surfaceContainerLow,
+                      borderRadius: const .vertical(bottom: _r),
+                    ),
+                    padding: const .only(top: 2, bottom: 4),
+                    child: Column(
+                      crossAxisAlignment: .stretch,
+                      children: [
+                        for (final entry in foldSameKind(run.events))
+                          switch (entry) {
+                            final SyncEvent e => _EventRow(event: e),
+                            final List<SyncEvent> group => _FoldTile(
+                              events: group,
+                            ),
+                            _ => const SizedBox.shrink(),
+                          },
+                      ],
+                    ),
                   )
                 : const SizedBox(width: double.infinity),
           ),
@@ -612,7 +624,7 @@ class _RunTile extends StatelessWidget {
   }
 }
 
-/// 段头上的结果胶囊：已是最新 / ↑ 1 · 媒体 2 / 失败 / 未完成 / 已停止 / 进行中。
+/// 段头上的结果胶囊：已是最新 / ↑ 1 · ↓ 2 · 媒体 3 / 失败 / 未完成 / 已停止 / 进行中。
 class _OutcomeChip extends StatelessWidget {
   final SyncLogRun run;
 
@@ -651,8 +663,8 @@ class _OutcomeChip extends StatelessWidget {
       ),
       .changed => (
         [
-          if (run.changedCount > 0)
-            '${run.direction == 'push' ? '↑' : '↓'} ${run.changedCount}',
+          if (run.pushedCount > 0) '↑ ${run.pushedCount}',
+          if (run.pulledCount > 0) '↓ ${run.pulledCount}',
           if (run.mediaCount > 0) l10n.sync.summaryMedia(count: run.mediaCount),
         ].join(' · '),
         scheme.primary,
@@ -673,7 +685,7 @@ class _OutcomeChip extends StatelessWidget {
   }
 }
 
-/// 段内连续同 kind 的折叠组（≥2 条），如「跳过日记 · 127 条 · 本地不旧于远端」。
+/// 段内连续同 kind 的折叠组（≥2 条），如「跳过日记 · 已是最新 · 127 条」。
 class _FoldTile extends StatefulWidget {
   final List<SyncEvent> events;
 
@@ -696,7 +708,7 @@ class _FoldTileState extends State<_FoldTile> {
       .info,
       (acc, e) => e.level.index > acc.index ? e.level : acc,
     );
-    // 组内 reason 一致才写进组头（多半如此：一串「本地不旧于远端」）。
+    // 组内 reason 一致才写进组头（多半如此：一串「已是最新」）。
     final reasons = {for (final e in events) e.reason};
     final line = [
       l10n.sync.logGroupCount(
@@ -713,11 +725,11 @@ class _FoldTileState extends State<_FoldTile> {
           at: events.first.at,
           icon: _kindIcon(kind),
           iconColor: _levelColor(context, worst),
-          nested: true,
           onTap: () => setState(() => _expanded = !_expanded),
           trailing: _Chevron(expanded: _expanded),
           text: Text(
             line,
+            maxLines: 1,
             overflow: .ellipsis,
             style: worst == .error
                 ? typography.bodyMedium.error
@@ -725,7 +737,7 @@ class _FoldTileState extends State<_FoldTile> {
           ),
         ),
         if (_expanded)
-          for (final e in events) _EventRow(event: e, nested: true),
+          for (final e in events) _EventRow(event: e),
       ],
     );
   }
@@ -735,9 +747,8 @@ class _FoldTileState extends State<_FoldTile> {
 
 class _EventRow extends StatelessWidget {
   final SyncEvent event;
-  final bool nested;
 
-  const _EventRow({required this.event, this.nested = false});
+  const _EventRow({required this.event});
 
   @override
   Widget build(BuildContext context) {
@@ -746,25 +757,27 @@ class _EventRow extends StatelessWidget {
     final typography = context.theme.typography;
     final hasPayload = event.payload != null && event.payload!.isNotEmpty;
     final isError = event.level == .error;
-    // 事件本身只有机器字段：文案 = kind 标签 + payload 摘要 + reason，
-    // 例如「上传日记 · 我的周末」「跳过媒体 · a.jpg · 本地文件缺失」。
+    // 事件本身只有机器字段：文案 = kind 标签 + reason + payload 摘要，例如
+    // 「上传日记 · 我的周末」「跳过媒体 · 本地文件缺失 · a.jpg」。主语放最后、
+    // 单行省略：uuid / 文件名一长就把行撑成三行，完整值点进 payload 看。
     final line = [
       _kindLabel(l10n, event.kind),
-      ?_subjectOf(l10n, event),
       ?_reasonLabel(l10n, event.reason),
+      ?_subjectOf(l10n, event),
     ].where((s) => s.isNotEmpty).join(' · ');
 
     return _LogRow(
       at: event.at,
       icon: _kindIcon(event.kind),
       iconColor: _levelColor(context, event.level),
-      nested: nested,
       onTap: hasPayload ? () => _showPayloadSheet(context) : null,
       trailing: hasPayload
           ? Icon(LucideIcons.chevronRight, size: 16, color: scheme.outline)
           : null,
       text: Text(
         line,
+        maxLines: 1,
+        overflow: .ellipsis,
         style: isError
             ? typography.bodyMedium.error
             : typography.bodyMedium.onSurface,

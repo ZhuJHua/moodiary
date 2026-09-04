@@ -3382,6 +3382,12 @@ class Translations$sync$zh {
 
 	/// zh: '已是最新'
 	String get logRunUpToDate => '已是最新';
+
+	/// zh: '同步'
+	String get directionSync => '同步';
+
+	/// zh: '{ms} 毫秒'
+	String elapsedMillis({required Object ms}) => '${ms} 毫秒';
 }
 
 // Path: ui

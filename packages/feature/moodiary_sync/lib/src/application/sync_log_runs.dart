@@ -11,57 +11,82 @@ sealed class SyncLogEntry {
   bool get hasProblem;
 }
 
-/// `syncStart` 到 `syncEnd` 之间的一段（含首尾），前面紧挨的 `lockAcquire` 与后面
-/// 紧挨的 `lockRelease` 一并收进来。[events] 按时间**升序**——读一次同步是顺着读的，
-/// 页面整体的新→旧只作用在条目之间。
+/// 一次同步 = 引擎一次 `_exclusive` 会话：从 `lockAcquire` 到 `lockRelease`，中间
+/// 是一对或两对 `syncStart / syncEnd`（双向同步 = pull + push 共用一把锁）。没有锁的
+/// 场景（归档导入、局域网接收）以 `syncStart / syncEnd` 自成一段。[events] 按时间
+/// **升序**——读一次同步是顺着读的，页面整体的新→旧只作用在条目之间。
 class SyncLogRun extends SyncLogEntry {
-  final SyncEvent start;
-  final SyncEvent? end;
   final List<SyncEvent> events;
+  final List<SyncEvent> starts;
+  final List<SyncEvent> ends;
+
+  /// 还没等到收尾（锁未释放 / start 多于 end）：还在跑，或进程当时被杀。
+  final bool open;
 
   const SyncLogRun({
-    required this.start,
-    required this.end,
     required this.events,
+    required this.starts,
+    required this.ends,
+    required this.open,
   });
 
   @override
-  DateTime get at => start.at;
+  DateTime get at => events.first.at;
 
-  /// payload 里的 `direction`：push / pull / restore / re-cipher。
-  String? get direction => _str(start.payload, 'direction');
+  /// 段内出现过的方向（push / pull / restore / re-cipher），按出现顺序。
+  List<String> get directions => [
+    for (final s in starts) ?_str(s.payload, 'direction'),
+  ];
+
+  /// pull + push 都有 → 一次双向同步。
+  bool get bidirectional =>
+      directions.contains('pull') && directions.contains('push');
 
   /// payload 里的 `trigger`（枚举名）；旧日志没有这个字段。
-  String? get trigger => _str(start.payload, 'trigger');
+  String? get trigger =>
+      starts.isEmpty ? null : _str(starts.first.payload, 'trigger');
 
-  /// 没等到 syncEnd：还在跑，或进程当时被杀。
-  bool get open => end == null;
+  /// 连 syncStart 都没有：抢锁就失败了。
+  bool get neverStarted => starts.isEmpty;
 
   SyncOutcomeKind? get outcome {
-    final end = this.end;
-    if (end == null) return null;
-    if (end.level == .error) return .failed;
-    if (end.reason == .stopped || end.payload?['cancelled'] == true) {
+    if (open) return null;
+    if (neverStarted || ends.any((e) => e.level == .error)) return .failed;
+    if (ends.any(
+      (e) => e.reason == .stopped || e.payload?['cancelled'] == true,
+    )) {
       return .stopped;
     }
-    if (_int(end.payload, 'failed') > 0) return .partial;
-    return changedCount == 0 ? .upToDate : .changed;
+    if (failedCount > 0) return .partial;
+    return pushedCount + pulledCount == 0 ? .upToDate : .changed;
   }
 
-  /// 条目变更数（日记 + 分类 + 媒体信息），来自 syncEnd payload。
-  int get changedCount =>
-      _int(end?.payload, 'diaryCount') +
-      _int(end?.payload, 'categoryCount') +
-      _int(end?.payload, 'mediaInfoCount');
-
-  int get diaryCount => _int(end?.payload, 'diaryCount');
-  int get mediaCount => _int(end?.payload, 'mediaCount');
-  int get failedCount => _int(end?.payload, 'failed');
-
-  Duration? get elapsed {
-    final ms = end?.payload?['elapsedMs'];
-    return ms is int ? Duration(milliseconds: ms) : null;
+  int _sum(String key, {bool Function(String? direction)? where}) {
+    var n = 0;
+    for (final e in ends) {
+      if (where != null && !where(_str(e.payload, 'direction'))) continue;
+      n += _int(e.payload, key);
+    }
+    return n;
   }
+
+  /// 上行条目变更数（日记 + 分类 + 媒体信息）。
+  int get pushedCount =>
+      _sum('diaryCount', where: (d) => d == 'push') +
+      _sum('categoryCount', where: (d) => d == 'push') +
+      _sum('mediaInfoCount', where: (d) => d == 'push');
+
+  /// 下行条目变更数（pull / restore）。
+  int get pulledCount =>
+      _sum('diaryCount', where: (d) => d != 'push') +
+      _sum('categoryCount', where: (d) => d != 'push') +
+      _sum('mediaInfoCount', where: (d) => d != 'push');
+
+  int get mediaCount => _sum('mediaCount');
+  int get failedCount => _sum('failed');
+
+  /// 整轮墙钟耗时（含抢锁 / 释放锁），首尾事件之差。
+  Duration get elapsed => events.last.at.difference(events.first.at);
 
   @override
   bool get hasProblem => events.any((e) => e.level != .info);
@@ -89,63 +114,82 @@ int _int(Map<String, Object?>? payload, String key) {
   return v is int ? v : 0;
 }
 
+/// 抢锁失败的尝试没有 syncStart 也没有 lockRelease：下一次 `lockAcquire` 若与上一条
+/// 事件隔了超过这个时长，视作新的一次。引擎的 4 次重试相隔 3 秒，远小于此。
+const Duration _acquireGap = Duration(seconds: 20);
+
 /// 把一天的事件（任意顺序）折成显示条目，**最新在前**。
 ///
-/// 规则：`syncStart` 开一段，`syncEnd` 收一段；段外紧挨着的 `lockAcquire` 归入
-/// 下一段、`lockRelease` 归入上一段（引擎抢锁在 start 之前、释放在 end 之后）；
-/// 其它段外事件各自独立。没等到 end 的段照样成段（[SyncLogRun.open]）。
+/// 状态机：`lockAcquire` 或 `syncStart` 开一段；开段后的事件一律归段。锁开的段在
+/// `lockRelease` 收尾（含 releaseFailed 的 warn），无锁的段在 `syncEnd` 收尾。
+/// 段外其它事件各自独立。没等到收尾的段照样成段（[SyncLogRun.open]）。
 List<SyncLogEntry> groupSyncRuns(Iterable<SyncEvent> events) {
   final sorted = events.toList()..sort((a, b) => a.at.compareTo(b.at));
   final out = <SyncLogEntry>[];
-  // 等着并入下一段的 lockAcquire。
-  final pendingLocks = <SyncEvent>[];
-  SyncEvent? runStart;
-  List<SyncEvent>? runEvents;
 
-  void flushPending() {
-    for (final e in pendingLocks) {
-      out.add(SyncLogSingle(e));
-    }
-    pendingLocks.clear();
+  List<SyncEvent>? session;
+  var lockOpened = false;
+  var starts = <SyncEvent>[];
+  var ends = <SyncEvent>[];
+
+  void open(SyncEvent e, {required bool byLock}) {
+    session = [e];
+    lockOpened = byLock;
+    starts = byLock ? [] : [e];
+    ends = [];
   }
 
-  void closeRun(SyncEvent? end) {
-    if (runStart == null) return;
-    out.add(SyncLogRun(start: runStart!, end: end, events: runEvents!));
-    runStart = null;
-    runEvents = null;
+  void close({required bool finished}) {
+    final s = session;
+    if (s == null) return;
+    out.add(
+      SyncLogRun(
+        events: s,
+        starts: starts,
+        ends: ends,
+        open: !finished || starts.length > ends.length,
+      ),
+    );
+    session = null;
   }
 
   for (final e in sorted) {
-    if (runStart != null) {
-      runEvents!.add(e);
-      if (e.kind == .syncEnd) closeRun(e);
+    final s = session;
+    if (s == null) {
+      switch (e.kind) {
+        case .lockAcquire:
+          open(e, byLock: true);
+        case .syncStart:
+          open(e, byLock: false);
+        default:
+          out.add(SyncLogSingle(e));
+      }
       continue;
     }
+    // 抢锁失败的旧尝试悬着：隔得够久的下一次抢锁开新段，旧的按「已结束、从未开始」算。
+    if (e.kind == .lockAcquire &&
+        lockOpened &&
+        starts.isEmpty &&
+        e.at.difference(s.last.at) > _acquireGap) {
+      close(finished: true);
+      open(e, byLock: true);
+      continue;
+    }
+    s.add(e);
     switch (e.kind) {
       case .syncStart:
-        runStart = e;
-        runEvents = [...pendingLocks, e];
-        pendingLocks.clear();
-      case .lockAcquire:
-        pendingLocks.add(e);
-      case .lockRelease when out.isNotEmpty && out.last is SyncLogRun:
-        // 刚收完一段：释放锁属于它。
-        final last = out.removeLast() as SyncLogRun;
-        out.add(
-          SyncLogRun(
-            start: last.start,
-            end: last.end,
-            events: [...last.events, e],
-          ),
-        );
+        starts.add(e);
+      case .syncEnd:
+        ends.add(e);
+        if (!lockOpened) close(finished: true);
+      case .lockRelease:
+        close(finished: true);
       default:
-        flushPending();
-        out.add(SyncLogSingle(e));
+        break;
     }
   }
-  closeRun(null);
-  flushPending();
+  // 收尾：有 start 没 end 的是还在跑（或被杀）；连 start 都没有的是抢锁失败的残留。
+  close(finished: starts.isEmpty);
   return out.reversed.toList();
 }
 

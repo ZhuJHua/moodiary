@@ -330,5 +330,7 @@
   "logRunStopped": "已停止",
   "logRunFailed": "失败",
   "logRunPartial": "未完成",
-  "logRunUpToDate": "已是最新"
+  "logRunUpToDate": "已是最新",
+  "directionSync": "同步",
+  "elapsedMillis": "{ms} 毫秒"
 }

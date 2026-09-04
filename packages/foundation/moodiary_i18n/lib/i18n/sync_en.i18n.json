@@ -330,5 +330,7 @@
   "logRunStopped": "Stopped",
   "logRunFailed": "Failed",
   "logRunPartial": "Incomplete",
-  "logRunUpToDate": "Up to date"
+  "logRunUpToDate": "Up to date",
+  "directionSync": "Sync",
+  "elapsedMillis": "{ms} ms"
 }
