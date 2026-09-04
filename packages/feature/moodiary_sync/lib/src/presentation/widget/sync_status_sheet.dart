@@ -20,9 +20,12 @@ import 'package:mui/mui.dart';
 /// 「同步状态」底部弹窗：配置标签 / 当前状态与进度 / 数据概览 / 立即同步
 /// （同步中可停止）/ 查看日志入口。日志本身见 [SyncLogPage]。
 Future<void> showSyncStatusSheet(BuildContext context) async {
+  // 「已配置」是钥匙串里的事实，进弹窗前读好；弹窗开着时配置不会变（改配置在另一张弹窗）。
+  final configured = await getIt<IRemoteSyncBackend>().isReady();
+  if (!context.mounted) return;
   final result = await MSheet.show<String>(
     context,
-    builder: (_) => const _SyncStatusSheet(),
+    builder: (_) => _SyncStatusSheet(configured: configured),
   );
   // 等弹窗收起后再用外层 context 导航：弹窗自己的 context pop 后已卸载。
   if (result == _SyncStatusSheet.resultViewLog && context.mounted) {
@@ -33,7 +36,9 @@ Future<void> showSyncStatusSheet(BuildContext context) async {
 class _SyncStatusSheet extends ConsumerStatefulWidget {
   static const String resultViewLog = 'viewLog';
 
-  const _SyncStatusSheet();
+  const _SyncStatusSheet({required this.configured});
+
+  final bool configured;
 
   @override
   ConsumerState<_SyncStatusSheet> createState() => _SyncStatusSheetState();
@@ -130,7 +135,7 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
             MAction(
               label: context.l10n.sync.syncNow,
               isPrimary: true,
-              enabled: backend.isReady,
+              enabled: widget.configured,
               onPressed: () async {
                 if (!await ensureSyncKeyReady(
                   context: context,
@@ -160,7 +165,7 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
           children: [
             _StateCard(
               state: state,
-              configured: backend.isReady,
+              configured: widget.configured,
               stats: stats,
               uploaded: _uploaded,
               downloaded: _downloaded,

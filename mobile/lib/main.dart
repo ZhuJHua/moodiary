@@ -105,15 +105,13 @@ Future<void> _initSystem() async {
       logger.e('migration gate probe failed', error: e, stackTrace: s);
     }
   }();
-  // 同步 provider 激活：先把各后端配置（SecureKV）读进进程内缓存，再按 KV
-  // `syncProvider` 开 scope 暴露当前后端。「什么时候按 KV 换持」是编排不是接线，
-  // 故由组合根显式调；排在版本迁移之后，读到的是迁移后的配置。
-  // 配置装载逐后端吞错（钥匙串故障 / 设备锁定时该后端 isReady 为 false，UI 走
-  // 「先去配置」）。激活先解析后换 scope、正常不会失败；这里的 try/catch 与 watcher
-  // 的 maybeGet 只是最后防线，同步暂不可用好过启动炸死。
+  // 同步 provider 激活：按 KV `syncProvider` 开 scope 暴露当前后端。「什么时候按 KV
+  // 换持」是编排不是接线，故由组合根显式调；排在版本迁移之后。后端配置（SecureKV）
+  // **不在启动读**：启动只读应用锁 PIN，同步配置由后端首次用到（引擎入口 / 轮询 /
+  // 同步页）时异步读并自缓存。激活先解析后换 scope、正常不会失败；这里的 try/catch
+  // 与 watcher 的 maybeGet 只是最后防线，同步暂不可用好过启动炸死。
   final syncBackendFuture = () async {
     try {
-      await loadSyncBackendOptions();
       await activateSyncProvider();
     } catch (e, s) {
       logger.e('sync provider activation failed', error: e, stackTrace: s);

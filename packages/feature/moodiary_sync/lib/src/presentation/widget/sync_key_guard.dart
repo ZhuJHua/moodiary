@@ -22,7 +22,7 @@ Future<bool> ensureSyncKeyReady({
   required WidgetRef ref,
   required IRemoteSyncBackend backend,
 }) async {
-  if (!backend.isReady) return true;
+  if (!await backend.isReady()) return true;
 
   Uint8List? manifestBytes;
   try {
@@ -110,7 +110,7 @@ Future<bool> ensureSyncKeyReady({
   await SyncKeyManager.storeDek(unwrappedDek!);
   SyncKeyManager.cacheKeyfile(keyfile);
   // 其余已配置后端也需要 keyfile（本后端已有，出清单）。
-  await SyncKeyManager.markPendingUpload(configuredCloudBackendIds());
+  await SyncKeyManager.markPendingUpload(await configuredCloudBackendIds());
   final backendId = backend.persistentBackendId;
   if (backendId != null) await SyncKeyManager.clearPendingUpload(backendId);
   SyncKeyManager.clearKeyConflict(backendId);

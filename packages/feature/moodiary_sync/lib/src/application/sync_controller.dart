@@ -20,7 +20,8 @@ class SyncController extends _$SyncController {
   Future<void> push(IRemoteSyncBackend backend) async {
     state = .syncing(label: l10n.sync.uploading(backend: backend.displayName));
     try {
-      _settle(await IncrementalSyncEngine.forCloud(backend).push());
+      final engine = await IncrementalSyncEngine.forCloud(backend);
+      _settle(await engine.push());
     } on SyncException catch (e) {
       state = .error(message: e.message);
     } catch (e) {
@@ -33,7 +34,8 @@ class SyncController extends _$SyncController {
       label: l10n.sync.downloading(backend: backend.displayName),
     );
     try {
-      _settle(await IncrementalSyncEngine.forCloud(backend).pull());
+      final engine = await IncrementalSyncEngine.forCloud(backend);
+      _settle(await engine.pull());
     } on SyncException catch (e) {
       state = .error(message: e.message);
     } catch (e) {
@@ -45,7 +47,8 @@ class SyncController extends _$SyncController {
   Future<void> sync(IRemoteSyncBackend backend) async {
     state = .syncing(label: l10n.sync.syncing(backend: backend.displayName));
     try {
-      _settle(await IncrementalSyncEngine.forCloud(backend).sync());
+      final engine = await IncrementalSyncEngine.forCloud(backend);
+      _settle(await engine.sync());
     } on SyncException catch (e) {
       state = .error(message: e.message);
     } catch (e) {

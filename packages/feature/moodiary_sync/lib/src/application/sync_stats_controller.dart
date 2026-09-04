@@ -48,7 +48,7 @@ Future<SyncStats> syncStats(Ref ref) async {
   String? remoteError;
 
   final backend = getIt<IRemoteSyncBackend>();
-  if (!backend.isReady) {
+  if (!await backend.isReady()) {
     remoteError = l10n.sync.errNoBackend;
   } else {
     try {

@@ -60,17 +60,15 @@ abstract class IRemoteSyncBackend implements RemoteObjectStore {
   SyncProviderType get type;
 
   /// 配置是否齐全（例如 WebDAV 是否填了 url / user）。未就绪时引擎入口抛
-  /// [notReadyError]；`configuredCloudBackendIds()` 也据此统计。
-  bool get isReady;
+  /// [notReadyError]；`configuredCloudBackendIds()` 也据此统计。异步：配置在
+  /// SecureKV，不在启动时预读，后端首次用到才读（可自缓存，写时作废）。
+  Future<bool> isReady();
 
   /// [isReady] 为假时的配置错误（各后端文案不同）。
   SyncException get notReadyError;
 
-  /// 把 SecureKV 里的配置读进进程内缓存——[isReady] 是同步 getter，靠这一步先行。
-  Future<void> loadOptions();
-
   /// 已保存的连接配置（表单回填用；条目顺序由各后端定义，与 [saveOptions] 对称）。
-  List<String> get savedOptions;
+  Future<List<String>> savedOptions();
 
   /// 保存连接配置。加密已开启时同时登记 keyfile 待上传：新（重）配置的后端必须
   /// 拿到 keyfile，否则会收到加密对象而无 keys.json，换设备后永远解不开。

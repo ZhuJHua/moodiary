@@ -78,7 +78,7 @@ class AutoSyncWatcher {
 
   void start() {
     _started = true;
-    _diarySub ??= _diaries.diaryEvents.listen((event) {
+    _diarySub ??= _diaries.diaryEvents.listen((event) async {
       // 云 pull 落库的变更远端已持有：不标脏、不置待推标记、不排推送。
       if (event.fromSync) return;
       MoodiaryKVs.syncPendingLocal.set(true);
@@ -86,7 +86,7 @@ class AutoSyncWatcher {
         case DiaryCreated(:final diary) || DiaryUpdated(:final diary):
           // 本地有改动 → 标记卡片「待同步」。
           // 仅在配置了云后端时才追踪：没配同步就没有「待同步」概念，避免误导角标。
-          if (configuredCloudBackendIds().isNotEmpty) {
+          if ((await configuredCloudBackendIds()).isNotEmpty) {
             _dirty.markDirty(diary.id);
           }
           // 打开中的日记不触发同步（编辑期不上传半成品）。这是廉价前置闸门；权威跳过
@@ -188,7 +188,7 @@ class AutoSyncWatcher {
     _timer = null;
     if (MoodiaryKVs.autoSync.get() != true) return;
     await _runAutoSync(
-      (backend) => IncrementalSyncEngine.forCloud(backend).push(),
+      (backend) async => (await IncrementalSyncEngine.forCloud(backend)).push(),
     );
   }
 
@@ -199,7 +199,7 @@ class AutoSyncWatcher {
     // 防线：provider 激活失败（正常不会）时本轮跳过。
     final backend = getIt.maybeGet<IRemoteSyncBackend>();
     if (backend == null) return;
-    if (!backend.isReady) return;
+    if (!await backend.isReady()) return;
 
     String? preStat;
     final backendId = backend.persistentBackendId;
@@ -232,7 +232,7 @@ class AutoSyncWatcher {
       }
     }
     await _runAutoSync(
-      (backend) => IncrementalSyncEngine.forCloud(backend).sync(),
+      (backend) async => (await IncrementalSyncEngine.forCloud(backend)).sync(),
       // 缓存的是同步开始前观测的指纹：本机 push 会再改 manifest，使下一轮指纹
       // 不匹配、多跑一次（随即空转的）全量同步 —— 换取「同步期间他机写入必不被
       // 漏判」。
@@ -274,7 +274,7 @@ class AutoSyncWatcher {
     // 防线：provider 激活失败（正常不会）时本轮跳过。
     final backend = getIt.maybeGet<IRemoteSyncBackend>();
     if (backend == null) return;
-    if (!backend.isReady) return;
+    if (!await backend.isReady()) return;
     // 远端由另一把密钥加密：跑下去每个对象都解不开，还会一次次撞上 keyfile 冲突。
     // 挂起直到用户在同步页输入密码解锁（同步页会显示待处理入口）。
     if (SyncKeyManager.hasKeyConflict(backend.persistentBackendId)) return;

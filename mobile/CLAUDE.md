@@ -20,7 +20,7 @@ storage 列最前，它的两个 preResolve 是别人的地基；两个存储的
 
 **启动阶段属于 main 的引导编排，不属于容器**：路径/日志与重置在
 `mobile/lib/app/di/bootstrap.dart`，序列在 `main.dart` 的 `_initSystem`。版本迁移跑完后由组合根
-显式调 `loadSyncBackendOptions()` + `activateSyncProvider()`（装载同步后端）与 `AutoSyncWatcher.start()`。
+显式调 `activateSyncProvider()`（按 KV 选当前后端；后端配置不在启动读，后端首次用到时异步读并自缓存）与 `AutoSyncWatcher.start()`。
 **`@PostConstruct` 是刻意不用的**：那会让 watcher 在容器装配当场醒来、赶在迁移之前，
 迁移写出的行就被当成本地变更回声推给云端。
 

@@ -367,7 +367,7 @@ class SyncKeyManager {
     final localDek = await loadDek();
     if (localDek == null) return false;
     SyncKeyfile? keyfile;
-    if (backend != null && backend.isReady) {
+    if (backend != null && await backend.isReady()) {
       try {
         keyfile = await readRemoteKeyfile(backend);
       } catch (_) {

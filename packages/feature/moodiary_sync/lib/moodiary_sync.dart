@@ -24,10 +24,7 @@ export 'src/data/model/sync_provider.dart' show SyncProviderType;
 export 'src/data/sync.dart' show IRemoteSyncBackend;
 export 'src/data/sync_logger.dart' show SyncLogger;
 export 'src/data/sync_provider_scope.dart'
-    show
-        activateSyncProvider,
-        configuredCloudBackendIds,
-        loadSyncBackendOptions;
+    show activateSyncProvider, configuredCloudBackendIds;
 export 'src/presentation/backup_sync_page.dart' show BackupSyncPage;
 export 'src/presentation/sync_log_page.dart' show SyncLogPage;
 export 'src/presentation/widget/sync_status_button.dart' show SyncStatusButton;

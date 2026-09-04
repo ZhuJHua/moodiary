@@ -7,13 +7,32 @@ import 'package:moodiary_sync/src/data/sync.dart';
 /// WebDAV 后端配置。保存与清除都返回 true，让调用方刷新「已配置」状态；
 /// 取消 / 下拉 / 点遮罩返回 null 或 false。
 class WebDavFormSheet extends StatefulWidget {
-  const WebDavFormSheet({super.key});
+  const WebDavFormSheet({
+    super.key,
+    required this.initial,
+    required this.configured,
+  });
+
+  /// 打开时钥匙串里的配置与就绪态（在 [show] 里读好再进弹窗，弹窗内不读钥匙串）。
+  final List<String> initial;
+  final bool configured;
 
   @override
   State<WebDavFormSheet> createState() => _WebDavFormSheetState();
 
-  static Future<bool?> show(BuildContext context) {
-    return MSheet.show<bool>(context, builder: (_) => const WebDavFormSheet());
+  static Future<bool?> show(BuildContext context) async {
+    final backend = getIt<IRemoteSyncBackend>(
+      instanceName: SyncProviderIds.webdav,
+    );
+    final (initial, configured) = await (
+      backend.savedOptions(),
+      backend.isReady(),
+    ).wait;
+    if (!context.mounted) return null;
+    return MSheet.show<bool>(
+      context,
+      builder: (_) => WebDavFormSheet(initial: initial, configured: configured),
+    );
   }
 }
 
@@ -26,7 +45,7 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
   late final _backend = getIt<IRemoteSyncBackend>(
     instanceName: SyncProviderIds.webdav,
   );
-  late final bool _configured = _backend.isReady;
+  late final bool _configured = widget.configured;
   late final String? _savedHost;
 
   String? _urlError;
@@ -36,7 +55,7 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
   @override
   void initState() {
     super.initState();
-    final opts = _backend.savedOptions;
+    final opts = widget.initial;
     String at(int i) => opts.length > i ? opts[i] : '';
     _urlCtl = TextEditingController(text: at(0));
     _userCtl = TextEditingController(text: at(1));

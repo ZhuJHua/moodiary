@@ -59,16 +59,13 @@ final class FakeRemoteBackend implements IRemoteSyncBackend {
   String get displayName => 'Fake($backendId)';
 
   @override
-  bool get isReady => true;
+  Future<bool> isReady() async => true;
 
   @override
   SyncException get notReadyError => const SyncException('fake not ready');
 
   @override
-  Future<void> loadOptions() async {}
-
-  @override
-  List<String> get savedOptions => const [];
+  Future<List<String>> savedOptions() async => const [];
 
   @override
   Future<void> saveOptions(List<String> options) async {}

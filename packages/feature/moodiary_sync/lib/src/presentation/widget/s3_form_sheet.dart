@@ -7,13 +7,30 @@ import 'package:moodiary_sync/src/data/sync.dart';
 /// S3 / MinIO 后端配置。字段按连接 / 凭证 / 选项分三节，装不下一屏时只有中间
 /// 内容滚动，动作条始终贴在卡片底边。
 class S3FormSheet extends StatefulWidget {
-  const S3FormSheet({super.key});
+  const S3FormSheet({
+    super.key,
+    required this.initial,
+    required this.configured,
+  });
+
+  /// 打开时钥匙串里的配置与就绪态（在 [show] 里读好再进弹窗，弹窗内不读钥匙串）。
+  final List<String> initial;
+  final bool configured;
 
   @override
   State<S3FormSheet> createState() => _S3FormSheetState();
 
-  static Future<bool?> show(BuildContext context) {
-    return MSheet.show<bool>(context, builder: (_) => const S3FormSheet());
+  static Future<bool?> show(BuildContext context) async {
+    final backend = getIt<IRemoteSyncBackend>(instanceName: SyncProviderIds.s3);
+    final (initial, configured) = await (
+      backend.savedOptions(),
+      backend.isReady(),
+    ).wait;
+    if (!context.mounted) return null;
+    return MSheet.show<bool>(
+      context,
+      builder: (_) => S3FormSheet(initial: initial, configured: configured),
+    );
   }
 }
 
@@ -27,7 +44,7 @@ class _S3FormSheetState extends State<S3FormSheet> {
   late final _backend = getIt<IRemoteSyncBackend>(
     instanceName: SyncProviderIds.s3,
   );
-  late final bool _configured = _backend.isReady;
+  late final bool _configured = widget.configured;
   late final String _savedBucket;
 
   bool _useSSL = true;
@@ -40,7 +57,7 @@ class _S3FormSheetState extends State<S3FormSheet> {
   @override
   void initState() {
     super.initState();
-    final opts = _backend.savedOptions;
+    final opts = widget.initial;
     String at(int i) => opts.length > i ? opts[i] : '';
     _endpointCtl = TextEditingController(text: at(0));
     _regionCtl = TextEditingController(text: at(1));

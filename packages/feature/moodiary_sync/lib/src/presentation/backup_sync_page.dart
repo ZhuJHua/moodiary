@@ -95,15 +95,19 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
     if (mounted) setState(() {});
   }
 
+  /// 「已配置」是钥匙串里的事实，异步读；切换 provider / 保存配置后重取。
+  late Future<bool> _configured = getIt<IRemoteSyncBackend>().isReady();
+
   Future<void> _switchProvider(SyncProviderType type) async {
     SyncProviderType.setCurrent(type);
     await activateSyncProvider();
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    setState(() => _configured = getIt<IRemoteSyncBackend>().isReady());
   }
 
   Future<void> _testConnection() async {
     final backend = getIt<IRemoteSyncBackend>();
-    if (!backend.isReady) {
+    if (!await backend.isReady()) {
       toast.info(message: l10n.sync.configureFirst);
       return;
     }
@@ -119,9 +123,15 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
 
   @override
   Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: _configured,
+      builder: (context, snapshot) => _build(context, snapshot.data ?? false),
+    );
+  }
+
+  Widget _build(BuildContext context, bool configured) {
     final current = SyncProviderType.current();
     final backend = getIt<IRemoteSyncBackend>();
-    final configured = backend.isReady;
     return MSliverSettingGroup(
       title: context.l10n.sync.cloudSection,
       children: [
@@ -148,7 +158,7 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
                 ? await WebDavFormSheet.show(context)
                 : await S3FormSheet.show(context);
             if (ok != true || !mounted) return;
-            setState(() {});
+            setState(() => _configured = getIt<IRemoteSyncBackend>().isReady());
             if (!context.mounted) return;
             // 新设备接入：远端若已加密而本地无密钥，保存配置后立即引导配置。
             await ensureSyncKeyReady(

@@ -42,14 +42,14 @@ Future<bool> applyUserKeyChange({
   } catch (_) {
     backend = null;
   }
-  final backendReady = backend != null && backend.isReady;
+  final backendReady = backend != null && await backend.isReady();
 
   // ── 改密码：重包 keyfile，数据零重写 ──
   if (dek != null && target != null) {
     final keyfile = await SyncKeyManager.wrapDek(dek: dek, passphrase: target);
     SyncKeyManager.cacheKeyfile(keyfile);
     // 所有已配置后端都需要新信封；活跃后端立即写，其余（含写失败的）走补传清单。
-    await SyncKeyManager.markPendingUpload(configuredCloudBackendIds());
+    await SyncKeyManager.markPendingUpload(await configuredCloudBackendIds());
     if (backendReady) {
       // 换了后端 / 指向了别人加密过的目录时，本机 DEK 未必是这份远端数据的 DEK。
       // 盲写会把远端信封换掉、令那些数据永久解不开——同 uploadPendingKeyfile 的判据。
@@ -163,7 +163,7 @@ Future<bool> applyUserKeyChange({
     );
     // keyfile 先行（提交点）：远端一旦有 keys.json，任何设备都能凭密码解包，
     // 之后的重加密中断也可恢复。
-    await SyncKeyManager.markPendingUpload(configuredCloudBackendIds());
+    await SyncKeyManager.markPendingUpload(await configuredCloudBackendIds());
     if (backendReady) {
       try {
         await SyncKeyManager.writeRemoteKeyfile(backend, keyfile);
@@ -320,7 +320,7 @@ Future<_AdoptOutcome> _adoptRemoteKey({
       await SyncKeyManager.storeDek(unwrapped);
       SyncKeyManager.cacheKeyfile(keyfile);
       // 其余已配置后端也需要这份信封（本后端已有，出清单）。
-      await SyncKeyManager.markPendingUpload(configuredCloudBackendIds());
+      await SyncKeyManager.markPendingUpload(await configuredCloudBackendIds());
       final id = backend.persistentBackendId;
       if (id != null) {
         await SyncKeyManager.clearPendingUpload(id);

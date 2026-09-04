@@ -80,8 +80,10 @@ class IncrementalSyncEngine {
 
   /// 云后端入口：先做配置就绪检查（未就绪抛该后端的 [IRemoteSyncBackend.notReadyError]），
   /// 再按默认装配建引擎。UI 与自动同步都从这里进。
-  factory IncrementalSyncEngine.forCloud(IRemoteSyncBackend backend) {
-    if (!backend.isReady) throw backend.notReadyError;
+  static Future<IncrementalSyncEngine> forCloud(
+    IRemoteSyncBackend backend,
+  ) async {
+    if (!await backend.isReady()) throw backend.notReadyError;
     return IncrementalSyncEngine(backend);
   }
 
@@ -371,7 +373,7 @@ class IncrementalSyncEngine {
     // 多后端 tombstone 跟踪：仅当墓碑的「已 push 集合」覆盖所有已配置云后端后才
     // 清除墓碑行；trackingId 为 null 则旧行为 push 完即清。
     final trackingId = backend.persistentBackendId;
-    final configuredBackends = configuredCloudBackendIds();
+    final configuredBackends = await configuredCloudBackendIds();
     final tombstones = TombstoneBatch(await _tombstoneStore.getAll());
     final coveredTombstoneKeys = <String>[];
 

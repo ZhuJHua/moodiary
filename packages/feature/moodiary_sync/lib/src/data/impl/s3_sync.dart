@@ -4,7 +4,6 @@ library;
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart' show listEquals;
 import 'package:injectable/injectable.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_rust/sync.dart' as rust;
@@ -25,28 +24,24 @@ import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 class S3SyncBackend implements IRemoteSyncBackend {
   static const String _root = 'moodiary';
 
-  final SecureOptions _config;
-
-  @override
-  Future<void> loadOptions() => _config.load();
-
   S3SyncBackend(@Named(SyncProviderIds.s3) this._config);
 
+  final SecureOptions _config;
+
+  /// 配置与 client 都是首次用到才从钥匙串读、建，之后缓存在后端自己身上；
+  /// 配置只经 [saveOptions] / [clearOptions] 改动，两处直接作废。
+  Future<List<String>>? _options;
   Future<rust.S3Client>? _cachedClient;
 
-  /// 构建 client 时的配置快照。每次取 client 与当前 KV 对比，配置变更后自动失效重建。
-  List<String>? _cachedOptions;
+  Future<List<String>> _read() => _options ??= _config.read();
 
-  List<String> get _options => _config.value;
+  static String _at(List<String> o, int i) => o.length > i ? o[i] : '';
 
-  String _opt(int i) => _options.length > i ? _options[i] : '';
-
-  String get _endpoint => _opt(0);
-  String? get _region => _opt(1).isEmpty ? null : _opt(1);
-  String get _accessKey => _opt(2);
-  String get _secretKey => _opt(3);
-  String get _bucket => _opt(4);
-  bool get _useSSL => _opt(5) != '0'; // 默认开启
+  static bool _ready(List<String> o) =>
+      _at(o, 0).isNotEmpty &&
+      _at(o, 2).isNotEmpty &&
+      _at(o, 3).isNotEmpty &&
+      _at(o, 4).isNotEmpty;
 
   @override
   SyncProviderType get type => .s3;
@@ -55,52 +50,50 @@ class S3SyncBackend implements IRemoteSyncBackend {
   String get persistentBackendId => SyncProviderType.s3.value;
 
   @override
-  String get displayName {
-    if (_endpoint.isEmpty || _bucket.isEmpty) return 'S3 / MinIO (未配置)';
-    return 'S3 / MinIO ($_endpoint • $_bucket)';
-  }
+  String get displayName => type.label;
 
   @override
-  bool get isReady =>
-      _endpoint.isNotEmpty &&
-      _accessKey.isNotEmpty &&
-      _secretKey.isNotEmpty &&
-      _bucket.isNotEmpty;
+  Future<bool> isReady() async => _ready(await _read());
 
   Future<rust.S3Client> _client() {
-    final opts = _options;
     final cached = _cachedClient;
-    if (cached != null && listEquals(_cachedOptions, opts)) return cached;
-    final future = rust.MoodiaryRust.ensureInitialized().then(
-      (_) =>
-          rust.S3Client.newInstance(
-            endpoint: _endpoint,
-            accessKey: _accessKey,
-            secretKey: _secretKey,
-            bucket: _bucket,
-            useSsl: _useSSL,
-            region: _region,
-          ).onError((Object error, StackTrace stackTrace) {
-            // 构造失败的 Future 不能留缓存，否则后续操作会复用同一失败结果直到重启。
-            _cachedClient = null;
-            _cachedOptions = null;
-            Error.throwWithStackTrace(error, stackTrace);
-          }),
-    );
+    if (cached != null) return cached;
+    final future = _buildClient().onError((
+      Object error,
+      StackTrace stackTrace,
+    ) {
+      // 构造失败的 Future 不能留缓存，否则后续操作会复用同一失败结果直到重启。
+      _cachedClient = null;
+      Error.throwWithStackTrace(error, stackTrace);
+    });
     _cachedClient = future;
-    _cachedOptions = opts;
     return future;
+  }
+
+  Future<rust.S3Client> _buildClient() async {
+    final opts = await _read();
+    await rust.MoodiaryRust.ensureInitialized();
+    final region = _at(opts, 1);
+    return rust.S3Client.newInstance(
+      endpoint: _at(opts, 0),
+      accessKey: _at(opts, 2),
+      secretKey: _at(opts, 3),
+      bucket: _at(opts, 4),
+      useSsl: _at(opts, 5) != '0', // 默认开启
+      region: region.isEmpty ? null : region,
+    );
   }
 
   String _objectName(String key) => '$_root/$key';
 
   @override
   Future<String?> testConnection() async {
-    if (!isReady) return '尚未配置 endpoint / 凭据 / bucket';
+    final opts = await _read();
+    if (!_ready(opts)) return '尚未配置 endpoint / 凭据 / bucket';
     try {
       final client = await _client();
       final exists = await client.testConnection();
-      return exists ? null : 'Bucket "$_bucket" 不存在';
+      return exists ? null : 'Bucket "${_at(opts, 4)}" 不存在';
     } catch (e) {
       return e.toString();
     }
@@ -190,11 +183,13 @@ class S3SyncBackend implements IRemoteSyncBackend {
   SyncException get notReadyError => SyncException(l10n.sync.errS3Config);
 
   @override
-  List<String> get savedOptions => _config.value;
+  Future<List<String>> savedOptions() => _read();
 
   @override
   Future<void> saveOptions(List<String> options) async {
     await _config.save(options);
+    _options = null;
+    _cachedClient = null;
     // 服务器可能换了：进程内的条件写探测结论作废，下次抢占重新探测。
     RemoteLease.resetCasProbeCache();
     if (await SyncKeyManager.loadDek() != null) {
@@ -205,6 +200,8 @@ class S3SyncBackend implements IRemoteSyncBackend {
   @override
   Future<void> clearOptions() async {
     await _config.clear();
+    _options = null;
+    _cachedClient = null;
     RemoteLease.resetCasProbeCache();
   }
 }

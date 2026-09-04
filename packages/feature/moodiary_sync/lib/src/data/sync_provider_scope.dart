@@ -1,5 +1,4 @@
 import 'package:moodiary_di/moodiary_di.dart';
-import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/remote_lease.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
@@ -16,6 +15,9 @@ import 'package:moodiary_sync/src/data/sync.dart';
 /// `_assertRequiredBindings` 先报）再换 scope，失败时旧 scope 原样保留。启动引导在
 /// 版本迁移之后、watcher 醒来之前调用一次；main 的 try/catch 与 watcher 的 `maybeGet`
 /// 只是最后防线，不是受支持的中间态。
+///
+/// 后端配置（SecureKV）**不在这里读**：启动只读应用锁 PIN，其余机密由后端首次用到时
+/// 异步读并自缓存。
 const kSyncProviderScope = 'syncProvider';
 
 /// 全部云后端（基础层的具名懒单例，按 [SyncProviderType] 逐个取名）。
@@ -23,33 +25,11 @@ Iterable<IRemoteSyncBackend> allSyncBackends() => SyncProviderType.values.map(
   (t) => getIt<IRemoteSyncBackend>(instanceName: t.value),
 );
 
-/// 把每个后端的 SecureKV 配置读进进程内缓存——`isReady` 是同步 getter，靠这一步
-/// 先行。启动时调一次；之后 `configure()` / `clear()` 会同步刷缓存。
-///
-/// 逐后端 fail-open：钥匙串故障（Keystore 失效 / 设备重启未首次解锁）时该后端缓存
-/// 留空、isReady 为 false，UI 走「先去配置」分支，同步暂不可用好过启动炸死。
-Future<void> loadSyncBackendOptions() =>
-    Future.wait([for (final b in allSyncBackends()) _loadQuietly(b)]);
-
-Future<void> _loadQuietly(IRemoteSyncBackend backend) async {
-  try {
-    await backend.loadOptions();
-  } catch (e, s) {
-    logger.e(
-      'sync backend options load failed: ${backend.type.value}',
-      error: e,
-      stackTrace: s,
-    );
-  }
-}
-
 /// 按 KV `syncProvider` 激活当前后端（启动 / 切换 provider 时调用）。
 Future<void> activateSyncProvider() async {
   final backend = getIt<IRemoteSyncBackend>(
     instanceName: SyncProviderType.current().value,
   );
-  // 切换 provider 也重读一次它的配置：钥匙串短暂不可用时启动期可能读空。
-  await _loadQuietly(backend);
   if (getIt.hasScope(kSyncProviderScope)) {
     await getIt.dropScope(kSyncProviderScope);
   }
@@ -66,7 +46,7 @@ Future<void> activateSyncProvider() async {
 
 /// 已完成配置的云后端 id 集合。引擎据此判断 tombstone 是否覆盖所有云后端
 /// （覆盖后才真正清除）。
-Set<String> configuredCloudBackendIds() => {
+Future<Set<String>> configuredCloudBackendIds() async => {
   for (final b in allSyncBackends())
-    if (b.isReady) b.type.value,
+    if (await b.isReady()) b.type.value,
 };

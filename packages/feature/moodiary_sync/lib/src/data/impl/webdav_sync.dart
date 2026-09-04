@@ -4,7 +4,6 @@ library;
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart' show listEquals;
 import 'package:injectable/injectable.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_rust/sync.dart' as rust;
@@ -25,19 +24,17 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
 
   final SecureOptions _config;
 
-  @override
-  Future<void> loadOptions() => _config.load();
-
+  /// 配置与 client 都是首次用到才从钥匙串读、建，之后缓存在后端自己身上；
+  /// 配置只经 [saveOptions] / [clearOptions] 改动，两处直接作废。
+  Future<List<String>>? _options;
   Future<rust.DavClient>? _cachedClient;
 
-  /// 构建 client 时的配置快照。每次取 client 与当前 KV 对比，配置变更后自动失效重建。
-  List<String>? _cachedOptions;
+  Future<List<String>> _read() => _options ??= _config.read();
 
-  List<String> get _options => _config.value;
+  static String _at(List<String> o, int i) => o.length > i ? o[i] : '';
 
-  String get _baseUrl => _options.isNotEmpty ? _options[0] : '';
-  String get _username => _options.length > 1 ? _options[1] : '';
-  String get _password => _options.length > 2 ? _options[2] : '';
+  static bool _ready(List<String> o) =>
+      _at(o, 0).isNotEmpty && _at(o, 1).isNotEmpty;
 
   @override
   SyncProviderType get type => .webdav;
@@ -46,39 +43,39 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
   String get persistentBackendId => SyncProviderType.webdav.value;
 
   @override
-  String get displayName {
-    if (_baseUrl.isEmpty) return 'WebDAV (未配置)';
-    return 'WebDAV ($_baseUrl)';
-  }
+  String get displayName => type.label;
 
   @override
-  bool get isReady => _baseUrl.isNotEmpty && _username.isNotEmpty;
+  Future<bool> isReady() async => _ready(await _read());
 
   Future<rust.DavClient> _client() {
-    final opts = _options;
     final cached = _cachedClient;
-    if (cached != null && listEquals(_cachedOptions, opts)) return cached;
-    final future = rust.MoodiaryRust.ensureInitialized().then(
-      (_) =>
-          rust.DavClient.newInstance(
-            baseUrl: _baseUrl,
-            username: _username,
-            password: _password,
-          ).onError((Object error, StackTrace stackTrace) {
-            // 构造失败的 Future 不能留缓存，否则后续操作会复用同一失败结果直到重启。
-            _cachedClient = null;
-            _cachedOptions = null;
-            Error.throwWithStackTrace(error, stackTrace);
-          }),
-    );
+    if (cached != null) return cached;
+    final future = _buildClient().onError((
+      Object error,
+      StackTrace stackTrace,
+    ) {
+      // 构造失败的 Future 不能留缓存，否则后续操作会复用同一失败结果直到重启。
+      _cachedClient = null;
+      Error.throwWithStackTrace(error, stackTrace);
+    });
     _cachedClient = future;
-    _cachedOptions = opts;
     return future;
+  }
+
+  Future<rust.DavClient> _buildClient() async {
+    final opts = await _read();
+    await rust.MoodiaryRust.ensureInitialized();
+    return rust.DavClient.newInstance(
+      baseUrl: _at(opts, 0),
+      username: _at(opts, 1),
+      password: _at(opts, 2),
+    );
   }
 
   @override
   Future<String?> testConnection() async {
-    if (!isReady) return '尚未配置 URL / 用户名';
+    if (!await isReady()) return '尚未配置 URL / 用户名';
     try {
       final client = await _client();
       final ok = await client.testConnection();
@@ -169,11 +166,13 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
   SyncException get notReadyError => SyncException(l10n.sync.errWebdavConfig);
 
   @override
-  List<String> get savedOptions => _config.value;
+  Future<List<String>> savedOptions() => _read();
 
   @override
   Future<void> saveOptions(List<String> options) async {
     await _config.save(options);
+    _options = null;
+    _cachedClient = null;
     // 服务器可能换了：进程内的条件写探测结论作废，下次抢占重新探测。
     RemoteLease.resetCasProbeCache();
     if (await SyncKeyManager.loadDek() != null) {
@@ -184,6 +183,8 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
   @override
   Future<void> clearOptions() async {
     await _config.clear();
+    _options = null;
+    _cachedClient = null;
     RemoteLease.resetCasProbeCache();
   }
 }

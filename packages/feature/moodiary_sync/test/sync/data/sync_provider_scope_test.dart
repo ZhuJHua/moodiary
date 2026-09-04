@@ -11,15 +11,15 @@ void main() {
   tearDown(tearDownSyncEnv);
 
   group('configuredCloudBackendIds', () {
-    test('is empty when nothing is configured', () {
-      expect(configuredCloudBackendIds(), isEmpty);
+    test('is empty when nothing is configured', () async {
+      expect(await configuredCloudBackendIds(), isEmpty);
     });
 
     test('reflects each configured backend', () async {
       await configureBackend(.webdav);
-      expect(configuredCloudBackendIds(), {'webdav'});
+      expect(await configuredCloudBackendIds(), {'webdav'});
       await configureBackend(.s3);
-      expect(configuredCloudBackendIds(), {'webdav', 's3'});
+      expect(await configuredCloudBackendIds(), {'webdav', 's3'});
     });
   });
 
