@@ -14,10 +14,10 @@ class BiometricAuth {
     );
   }
 
+  /// 真机冷启动实测 26–48ms（BiometricManager 的 binder 调用），**别放回启动路径**；
+  /// 锁页 / 设置项用到时再探测。个别机型/系统状态下 local_auth 会抛 PlatformException，
+  /// 探测失败一律按「不支持生物识别」处理（曾在启动链上炸到 main，App 黑屏）。
   static Future<bool> canCheckBiometrics() async {
-    // 启动链上被 PlatformService.init 的 record `.wait` 并发调用：这里抛出会被包成
-    // ParallelWaitError 一路冒到 main，App 黑屏都到不了 runApp。个别机型/系统状态下
-    // local_auth 会抛 PlatformException，探测失败一律按「不支持生物识别」处理。
     try {
       return await _authentication.canCheckBiometrics;
     } catch (_) {
