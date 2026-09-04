@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:fast_image/fast_image.dart';
-import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_editor/moodiary_editor.dart'
@@ -133,16 +132,4 @@ Future<void> resetAllData() async {
   if (failed.isNotEmpty) {
     throw StateError('resetAllData: ${failed.join(', ')} failed');
   }
-}
-
-/// 启动计时：从 `main()` 进入起算，每个阶段结束打一行 `[boot] <ms> <label>`，
-/// release 不打。冷启动量化用（真机 `adb logcat -s flutter`）。
-final Stopwatch bootClock = Stopwatch()..start();
-
-void bootMark(String label) {
-  if (kReleaseMode) return;
-  // ignore: avoid_print
-  print(
-    '[boot] ${bootClock.elapsedMilliseconds.toString().padLeft(5)}ms  $label',
-  );
 }

@@ -3,7 +3,6 @@ import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_http/moodiary_http.dart';
-import 'package:moodiary_mobile/app/di/bootstrap.dart' show bootMark;
 
 /// 标准 injectable 用法里 @module 只装无法用类注解表达的构造：
 /// RustHttpClient 的 onError 要接 app 的 toast；SQLite 的路径来自组合根
@@ -19,11 +18,9 @@ abstract class AppModule {
   @preResolve
   @Singleton(dispose: closeDatabase)
   Future<MoodiaryDatabase> database() async {
-    bootMark('db.open start');
     final db = await MoodiaryDatabase.open(
       path: AppFiles.getRealPath('database', 'moodiary.db'),
     );
-    bootMark('db.open end');
     return db;
   }
 }
