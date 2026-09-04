@@ -1,7 +1,6 @@
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_sync/src/data/impl/webdav_sync.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 
@@ -24,9 +23,10 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
   late final TextEditingController _passCtl;
 
   /// 打开时的配置状态。保存后弹窗即关闭，所以它不需要跟着输入变。
-  late final bool _configured = getIt<IRemoteSyncBackend>(
+  late final _backend = getIt<IRemoteSyncBackend>(
     instanceName: SyncProviderIds.webdav,
-  ).isReady;
+  );
+  late final bool _configured = _backend.isReady;
   late final String? _savedHost;
 
   String? _urlError;
@@ -36,7 +36,7 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
   @override
   void initState() {
     super.initState();
-    final opts = WebDavSyncBackend.options.value;
+    final opts = _backend.savedOptions;
     String at(int i) => opts.length > i ? opts[i] : '';
     _urlCtl = TextEditingController(text: at(0));
     _userCtl = TextEditingController(text: at(1));
@@ -80,11 +80,11 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
     if (_saving || !_validate()) return;
     setState(() => _saving = true);
     try {
-      await WebDavSyncBackend.configure(
-        baseUrl: _urlCtl.text,
-        username: _userCtl.text,
-        password: _passCtl.text,
-      );
+      await _backend.saveOptions([
+        _urlCtl.text.trim(),
+        _userCtl.text.trim(),
+        _passCtl.text,
+      ]);
     } finally {
       if (mounted) {
         setState(() => _saving = false);
@@ -106,7 +106,7 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
     if (!confirmed || !mounted) return;
     setState(() => _saving = true);
     try {
-      await WebDavSyncBackend.clear();
+      await _backend.clearOptions();
     } finally {
       if (mounted) {
         setState(() => _saving = false);

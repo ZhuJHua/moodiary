@@ -118,16 +118,14 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
   }
 
   /// 批量软删（首页多选删除）：对当前列表里 id ∈ [ids] 的日记逐一软删，返回成功数。
-  /// 仓储在循环外取一次：`_repository` 每次都要碰 ref，批量操作耗时秒级，期间页面
-  /// 退出（autoDispose 回收）会让 ref.read 抛 UnmountedRefException——单例本身
-  /// 跨 dispose 持有是安全的。
+  /// 仓储是容器单例，不随 provider 销毁：批量操作耗时秒级，期间页面退出
+  /// （autoDispose 回收）仍可继续落库；只有写回 `state` 要看 `ref.mounted`。
   Future<int> softDeleteByIds(Set<String> ids) async {
     final list = state.value ?? const <Diary>[];
-    final repo = _repository;
     var count = 0;
     for (final diary in list.where((d) => ids.contains(d.id)).toList()) {
       try {
-        await repo.setVisibility(diary, show: false);
+        await _repository.setVisibility(diary, show: false);
         count += 1;
       } catch (e, s) {
         logger.e('soft delete failed: ${diary.id}', error: e, stackTrace: s);
@@ -187,17 +185,15 @@ class RecycleBinDiaries extends _$RecycleBinDiaries {
     }
   }
 
-  /// 清空回收站。仓储在循环外取一次——逐篇删除（含删媒体文件）耗时秒级，
-  /// 期间用户返回上一页会销毁本 provider，循环里再碰 `_repository`（ref.read）
-  /// 就抛 UnmountedRefException 且被 catch 吞掉，剩余日记留在回收站而 count
-  /// 谎报成功；单例跨 dispose 持有是安全的。
+  /// 清空回收站。仓储是容器单例，不随 provider 销毁：逐篇删除（含删媒体文件）
+  /// 耗时秒级，期间用户返回上一页销毁本 provider 也不会中断循环；只有写回
+  /// `state` 要看 `ref.mounted`。
   Future<int> clear() async {
     final diaries = state.value ?? const <Diary>[];
-    final repo = _repository;
     int count = 0;
     for (final d in diaries) {
       try {
-        if (await repo.deleteADiary(d.id)) count += 1;
+        if (await _repository.deleteADiary(d.id)) count += 1;
       } catch (e, s) {
         logger.e('recycle clear failed: ${d.id}', error: e, stackTrace: s);
       }

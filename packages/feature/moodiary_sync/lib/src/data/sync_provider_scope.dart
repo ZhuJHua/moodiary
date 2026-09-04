@@ -12,8 +12,10 @@ import 'package:moodiary_sync/src/data/sync.dart';
 ///   不认识名字、不认识 WebDAV 还是 S3。切换 = pop 旧 scope 再开一个。
 /// - injectable 的 `@Scope` 进不了 micro-package（生成器直接拒绝），会话 scope 手写。
 ///
-/// 未激活时 `getIt<IRemoteSyncBackend>()` 抛；启动引导在版本迁移之后、watcher 醒来
-/// 之前调用一次，watcher 自己也用 `maybeGet` 守卫。
+/// 激活是不可失败的操作：先解析后端（唯一可能抛的一步，缺 `@Named` 绑定在 debug 由
+/// `_assertRequiredBindings` 先报）再换 scope，失败时旧 scope 原样保留。启动引导在
+/// 版本迁移之后、watcher 醒来之前调用一次；main 的 try/catch 与 watcher 的 `maybeGet`
+/// 只是最后防线，不是受支持的中间态。
 const kSyncProviderScope = 'syncProvider';
 
 /// 全部云后端（基础层的具名懒单例，按 [SyncProviderType] 逐个取名）。
@@ -43,14 +45,18 @@ Future<void> _loadQuietly(IRemoteSyncBackend backend) async {
 
 /// 按 KV `syncProvider` 激活当前后端（启动 / 切换 provider 时调用）。
 Future<void> activateSyncProvider() async {
-  if (getIt.hasScope(kSyncProviderScope)) {
-    await getIt.popScopesTill(kSyncProviderScope, inclusive: true);
-  }
   final backend = getIt<IRemoteSyncBackend>(
     instanceName: SyncProviderType.current().value,
   );
+  // 切换 provider 也重读一次它的配置：钥匙串短暂不可用时启动期可能读空。
+  await _loadQuietly(backend);
+  if (getIt.hasScope(kSyncProviderScope)) {
+    await getIt.dropScope(kSyncProviderScope);
+  }
   getIt.pushNewScope(
     scopeName: kSyncProviderScope,
+    // 与基础层的具名注册是同一实例、无 dispose 回调。后端不得实现 get_it 的
+    // Disposable，否则 drop scope 会把共享实例释放掉。
     init: (g) => g.registerSingleton<IRemoteSyncBackend>(backend),
   );
   // 后端配置可能换了服务器（backendId 只是 provider 类型）：清掉进程内的

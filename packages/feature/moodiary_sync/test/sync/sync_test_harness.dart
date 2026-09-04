@@ -12,6 +12,7 @@ import 'package:moodiary_sync/src/data/impl/webdav_sync.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/remote_lease.dart';
+import 'package:moodiary_sync/src/data/secure_options.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_cancellation.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
@@ -65,6 +66,15 @@ final class FakeRemoteBackend implements IRemoteSyncBackend {
 
   @override
   Future<void> loadOptions() async {}
+
+  @override
+  List<String> get savedOptions => const [];
+
+  @override
+  Future<void> saveOptions(List<String> options) async {}
+
+  @override
+  Future<void> clearOptions() async {}
 
   @override
   Future<String?> testConnection() async => null;
@@ -424,12 +434,22 @@ setUpSyncEnv() async {
   final logger = await SyncLogger.create();
   getIt.registerSingleton<SyncLogger>(logger);
   // 两个云后端按名注册（prod 由 sync 的 micro-package 生成同样的注册）。
+  getIt.registerLazySingleton<SecureOptions>(
+    () => SecureOptions(.webDavOption),
+    instanceName: SyncProviderIds.webdav,
+  );
+  getIt.registerLazySingleton<SecureOptions>(
+    () => SecureOptions(.s3Option),
+    instanceName: SyncProviderIds.s3,
+  );
   getIt.registerLazySingleton<IRemoteSyncBackend>(
-    () => WebDavSyncBackend(),
+    () => WebDavSyncBackend(
+      getIt<SecureOptions>(instanceName: SyncProviderIds.webdav),
+    ),
     instanceName: SyncProviderIds.webdav,
   );
   getIt.registerLazySingleton<IRemoteSyncBackend>(
-    () => S3SyncBackend(),
+    () => S3SyncBackend(getIt<SecureOptions>(instanceName: SyncProviderIds.s3)),
     instanceName: SyncProviderIds.s3,
   );
   // 四个进程级持有者：prod 由 micro-package 注册为 @singleton，测试每次新建。
@@ -454,20 +474,11 @@ Future<void> tearDownSyncEnv() async {
 Future<void> configureBackend(SyncProviderType type) async {
   switch (type) {
     case .webdav:
-      await WebDavSyncBackend.options.save([
-        'https://dav.example',
-        'user',
-        'pass',
-      ]);
+      await getIt<IRemoteSyncBackend>(instanceName: type.value)
+          .saveOptions(['https://dav.example', 'user', 'pass']);
     case .s3:
-      await S3SyncBackend.options.save([
-        'https://s3.example',
-        '',
-        'ak',
-        'sk',
-        'bucket',
-        '1',
-      ]);
+      await getIt<IRemoteSyncBackend>(instanceName: type.value)
+          .saveOptions(['https://s3.example', '', 'ak', 'sk', 'bucket', '1']);
   }
 }
 

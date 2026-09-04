@@ -196,7 +196,7 @@ class AutoSyncWatcher {
   Future<void> _pollTick() async {
     if (MoodiaryKVs.autoSync.get() != true) return;
     if (_syncing) return;
-    // 未激活 provider（启动侧 fail-open 可达）：本轮跳过。
+    // 防线：provider 激活失败（正常不会）时本轮跳过。
     final backend = getIt.maybeGet<IRemoteSyncBackend>();
     if (backend == null) return;
     if (!backend.isReady) return;
@@ -271,7 +271,7 @@ class AutoSyncWatcher {
     void Function()? onSuccess,
   }) async {
     if (_syncing) return;
-    // 未激活 provider（启动侧 fail-open 可达）：本轮跳过。
+    // 防线：provider 激活失败（正常不会）时本轮跳过。
     final backend = getIt.maybeGet<IRemoteSyncBackend>();
     if (backend == null) return;
     if (!backend.isReady) return;

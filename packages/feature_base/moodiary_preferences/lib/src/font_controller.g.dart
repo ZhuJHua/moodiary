@@ -33,7 +33,7 @@ final class FontControllerProvider
   FontController create() => FontController();
 }
 
-String _$fontControllerHash() => r'9e98827e04d1e50b69a40c223ba7ac7175fac821';
+String _$fontControllerHash() => r'dbde9ffec71aca2d12ddb8965ac5c0739906537e';
 
 abstract class _$FontController extends $AsyncNotifier<List<Font>> {
   FutureOr<List<Font>> build();

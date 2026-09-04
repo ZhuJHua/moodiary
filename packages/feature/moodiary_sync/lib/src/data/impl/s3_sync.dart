@@ -24,19 +24,19 @@ import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 class S3SyncBackend implements IRemoteSyncBackend {
   static const String _root = 'moodiary';
 
-  static final SecureOptions options = SecureOptions(.s3Option);
+  final SecureOptions _config;
 
   @override
-  Future<void> loadOptions() => options.load();
+  Future<void> loadOptions() => _config.load();
 
-  S3SyncBackend();
+  S3SyncBackend(@Named(SyncProviderIds.s3) this._config);
 
   Future<rust.S3Client>? _cachedClient;
 
   /// 构建 client 时的配置快照。每次取 client 与当前 KV 对比，配置变更后自动失效重建。
   List<String>? _cachedOptions;
 
-  List<String> get _options => options.value;
+  List<String> get _options => _config.value;
 
   String _opt(int i) => _options.length > i ? _options[i] : '';
 
@@ -188,29 +188,17 @@ class S3SyncBackend implements IRemoteSyncBackend {
   @override
   SyncException get notReadyError => SyncException(l10n.sync.errS3Config);
 
-  static Future<void> configure({
-    required String endpoint,
-    required String region,
-    required String accessKey,
-    required String secretKey,
-    required String bucket,
-    required bool useSSL,
-  }) async {
-    await options.save([
-      endpoint.trim(),
-      region.trim(),
-      accessKey.trim(),
-      secretKey,
-      bucket.trim(),
-      useSSL ? '1' : '0',
-    ]);
-    // 同 WebDavSyncBackend.configure：加密已开启时登记 keyfile 待上传。
+  @override
+  List<String> get savedOptions => _config.value;
+
+  @override
+  Future<void> saveOptions(List<String> options) async {
+    await _config.save(options);
     if (await SyncKeyManager.loadDek() != null) {
-      await SyncKeyManager.markPendingUpload([SyncProviderType.s3.value]);
+      await SyncKeyManager.markPendingUpload([type.value]);
     }
   }
 
-  static Future<void> clear() async {
-    await options.clear();
-  }
+  @override
+  Future<void> clearOptions() => _config.clear();
 }

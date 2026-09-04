@@ -56,7 +56,7 @@ final class DiaryControllerProvider
   }
 }
 
-String _$diaryControllerHash() => r'6eb54bf30e516cec0357c04ea04cde2756d83546';
+String _$diaryControllerHash() => r'1ec0634998c20f62d500c52cc888e8bf45feb524';
 
 /// 按 [categoryId] 维度的日记列表（`categoryId == null` 表示「全部分类」）。
 /// 订阅 [DiaryRepository.diaryEvents] 按事件原地增量更新，无需重查库。
@@ -153,7 +153,7 @@ final class RecycleBinDiariesProvider
   RecycleBinDiaries create() => RecycleBinDiaries();
 }
 
-String _$recycleBinDiariesHash() => r'4f2945ccb70517edee4de34bd8d57212884d5e6c';
+String _$recycleBinDiariesHash() => r'1da1572e21567036a215095dd7ccea7cb42f7fd6';
 
 /// 回收站列表（按时间倒序的所有 `show == false` 的日记）。
 

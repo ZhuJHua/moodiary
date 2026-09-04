@@ -20,19 +20,19 @@ import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 @Named(SyncProviderIds.webdav)
 @LazySingleton(as: IRemoteSyncBackend)
 class WebDavSyncBackend implements IRemoteSyncBackend {
-  WebDavSyncBackend();
+  WebDavSyncBackend(@Named(SyncProviderIds.webdav) this._config);
 
-  static final SecureOptions options = SecureOptions(.webDavOption);
+  final SecureOptions _config;
 
   @override
-  Future<void> loadOptions() => options.load();
+  Future<void> loadOptions() => _config.load();
 
   Future<rust.DavClient>? _cachedClient;
 
   /// 构建 client 时的配置快照。每次取 client 与当前 KV 对比，配置变更后自动失效重建。
   List<String>? _cachedOptions;
 
-  List<String> get _options => options.value;
+  List<String> get _options => _config.value;
 
   String get _baseUrl => _options.isNotEmpty ? _options[0] : '';
   String get _username => _options.length > 1 ? _options[1] : '';
@@ -167,20 +167,17 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
   @override
   SyncException get notReadyError => SyncException(l10n.sync.errWebdavConfig);
 
-  static Future<void> configure({
-    required String baseUrl,
-    required String username,
-    required String password,
-  }) async {
-    await options.save([baseUrl.trim(), username.trim(), password]);
-    // 加密已开启 → 新（重）配置的后端必须拿到 keyfile，登记待上传，下次同步补传。
-    // 否则该后端会收到加密对象而无 keys.json，换设备后永远解不开。
+  @override
+  List<String> get savedOptions => _config.value;
+
+  @override
+  Future<void> saveOptions(List<String> options) async {
+    await _config.save(options);
     if (await SyncKeyManager.loadDek() != null) {
-      await SyncKeyManager.markPendingUpload([SyncProviderType.webdav.value]);
+      await SyncKeyManager.markPendingUpload([type.value]);
     }
   }
 
-  static Future<void> clear() async {
-    await options.clear();
-  }
+  @override
+  Future<void> clearOptions() => _config.clear();
 }

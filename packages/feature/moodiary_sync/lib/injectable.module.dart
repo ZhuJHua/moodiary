@@ -12,27 +12,30 @@ import 'package:moodiary_sync/src/application/auto_sync_watcher.dart' as _i1035;
 import 'package:moodiary_sync/src/data/impl/backup_archive_impl.dart' as _i218;
 import 'package:moodiary_sync/src/data/impl/s3_sync.dart' as _i454;
 import 'package:moodiary_sync/src/data/impl/webdav_sync.dart' as _i351;
+import 'package:moodiary_sync/src/data/secure_options.dart' as _i731;
 import 'package:moodiary_sync/src/data/sync.dart' as _i472;
 import 'package:moodiary_sync/src/data/sync_cancellation.dart' as _i870;
 import 'package:moodiary_sync/src/data/sync_logger.dart' as _i59;
+import 'package:moodiary_sync/src/data/sync_options_module.dart' as _i997;
 
 class MoodiarySyncPackageModule extends _i526.MicroPackageModule {
   // initializes the registration of main-scope dependencies inside of GetIt
   @override
   _i687.FutureOr<void> init(_i526.GetItHelper gh) async {
+    final syncOptionsModule = _$SyncOptionsModule();
     gh.singleton<_i870.SyncCancellation>(() => _i870.SyncCancellation());
     await gh.singletonAsync<_i59.SyncLogger>(
       () => _i59.SyncLogger.create(),
       preResolve: true,
       dispose: (i) => i.dispose(),
     );
-    gh.lazySingleton<_i472.IRemoteSyncBackend>(
-      () => _i351.WebDavSyncBackend(),
-      instanceName: 'webdav',
-    );
-    gh.lazySingleton<_i472.IRemoteSyncBackend>(
-      () => _i454.S3SyncBackend(),
+    gh.lazySingleton<_i731.SecureOptions>(
+      () => syncOptionsModule.s3Options(),
       instanceName: 's3',
+    );
+    gh.lazySingleton<_i731.SecureOptions>(
+      () => syncOptionsModule.webDavOptions(),
+      instanceName: 'webdav',
     );
     gh.lazySingleton<_i691.IBackupArchive>(
       () => const _i218.SyncBackupArchive(),
@@ -48,5 +51,17 @@ class MoodiarySyncPackageModule extends _i526.MicroPackageModule {
       ),
       dispose: (i) => i.dispose(),
     );
+    gh.lazySingleton<_i472.IRemoteSyncBackend>(
+      () => _i454.S3SyncBackend(gh<_i731.SecureOptions>(instanceName: 's3')),
+      instanceName: 's3',
+    );
+    gh.lazySingleton<_i472.IRemoteSyncBackend>(
+      () => _i351.WebDavSyncBackend(
+        gh<_i731.SecureOptions>(instanceName: 'webdav'),
+      ),
+      instanceName: 'webdav',
+    );
   }
 }
+
+class _$SyncOptionsModule extends _i997.SyncOptionsModule {}

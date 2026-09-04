@@ -21,6 +21,7 @@ import 'package:moodiary_assistant/src/data/model_catalog_repository.dart'
     as _i803;
 import 'package:moodiary_data/moodiary_data.dart' as _i691;
 import 'package:moodiary_http/moodiary_http.dart' as _i765;
+import 'package:moodiary_storage/moodiary_storage.dart' as _i877;
 
 class MoodiaryAssistantPackageModule extends _i526.MicroPackageModule {
   // initializes the registration of main-scope dependencies inside of GetIt
@@ -33,14 +34,17 @@ class MoodiaryAssistantPackageModule extends _i526.MicroPackageModule {
     gh.lazySingleton<_i803.ModelCatalogRepository>(
       () => _i803.ModelCatalogRepository(gh<_i765.IHttpClient>()),
     );
+    gh.lazySingleton<_i19.LlmProviderRepository>(
+      () => _i19.LlmProviderRepository(
+        gh<_i691.MoodiaryDatabase>(),
+        gh<_i877.ISecureKVStorage>(),
+      ),
+    );
     gh.lazySingleton<_i773.AgentPresetRepository>(
       () => _i773.AgentPresetRepository(gh<_i691.MoodiaryDatabase>()),
     );
     gh.lazySingleton<_i349.ChatRepository>(
       () => _i349.ChatRepository(gh<_i691.MoodiaryDatabase>()),
-    );
-    gh.lazySingleton<_i19.LlmProviderRepository>(
-      () => _i19.LlmProviderRepository(gh<_i691.MoodiaryDatabase>()),
     );
     gh.lazySingleton<_i682.MemoryRepository>(
       () => _i682.MemoryRepository(gh<_i691.MoodiaryDatabase>()),

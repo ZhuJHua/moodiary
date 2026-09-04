@@ -4,6 +4,7 @@ import 'dart:developer' as developer;
 import 'dart:io';
 
 import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:mui/mui.dart';
 
@@ -302,7 +303,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
       // 首帧即用正确配色：web 侧据此用 material-color-utilities 生成整套配色。
       'theme': _themePayload(),
     };
-    final server = EditorLocalServer.instance;
+    final server = getIt<EditorLocalServer>();
     server.mediaResolver ??= widget.mediaResolver;
     server.fontResolver ??= widget.fontResolver;
     server.mediaNameResolver ??= widget.mediaNameResolver;

@@ -115,6 +115,9 @@ class ArchiveApplier {
     SyncMediaFiles? mediaFiles,
     Future<SyncCipher> Function()? cipherProvider,
     int concurrency = 4,
+    OpenDiaryRegistry? openDiaries,
+    SyncCancellation? cancellation,
+    SyncPendingTracker? pending,
   }) => ArchiveApplier._(
     backend,
     policy,
@@ -126,6 +129,9 @@ class ArchiveApplier {
     tombstoneStore ?? RepoSyncTombstoneStore(),
     mediaFiles ?? DiskSyncMediaFiles(),
     cipherProvider ?? SyncCipher.current,
+    openDiaries ?? getIt<OpenDiaryRegistry>(),
+    cancellation ?? getIt<SyncCancellation>(),
+    pending ?? getIt<SyncPendingTracker>(),
   );
 
   // 私有构造走位置参数：Dart 不允许下划线开头的具名参数（同 IncrementalSyncEngine._）。
@@ -140,7 +146,15 @@ class ArchiveApplier {
     this._tombstoneStore,
     this._mediaFiles,
     this._cipherProvider,
+    this._openDiaries,
+    this._cancellation,
+    this._pending,
   ) : _mediaGate = Pool(concurrency);
+
+  /// 进程级持有者，缺省取容器，测试可注入（同 [IncrementalSyncEngine]）。
+  final OpenDiaryRegistry _openDiaries;
+  final SyncCancellation _cancellation;
+  final SyncPendingTracker _pending;
 
   /// 本次应用里下载失败的媒体数。媒体下载跑在 `Future.wait(eagerError: false)`
   /// 里、失败只记日志不上抛，所以计数必须搭在实例上。
@@ -209,7 +223,7 @@ class ArchiveApplier {
     /// 且不可恢复。
     // 预扫描：用快照 LWW 先算出「将要新增/更新」的条目并公布，首页立即占位/打标，
     // 不必等每条真正落库（见 [SyncPendingTracker]）。
-    final pending = getIt<SyncPendingTracker>();
+    final pending = _pending;
     {
       final newDiaries = <String>{};
       final updDiaries = <String>{};
@@ -261,7 +275,7 @@ class ArchiveApplier {
 
     Future<void> pullOneEntry(MapEntry<String, ManifestEntry> entry) async {
       // 协作式停止：不再发起新条目，在飞的正常跑完（见 [SyncCancellation]）。
-      if (getIt<SyncCancellation>().isRequested) return;
+      if (_cancellation.isRequested) return;
       final key = entry.key;
       final isTombstone = entry.value.deleted;
       try {
@@ -293,7 +307,7 @@ class ArchiveApplier {
             // 打开中的日记不应用远端删除：行硬删会让编辑器脚下抽行（watchDiary
             // 发 null → 报错丢稿）。跳过本条，关闭后下一轮 pull 再收敛；与 push
             // 的 open-diary 跳过对称。
-            if (local != null && getIt<OpenDiaryRegistry>().contains(id)) {
+            if (local != null && _openDiaries.contains(id)) {
               _logger.info(
                 .diarySkip,
                 reason: .openDiary,
@@ -608,7 +622,7 @@ class ArchiveApplier {
     await tombstones.flush(_tombstoneStore);
 
     sw.stop();
-    final stopped = getIt<SyncCancellation>().isRequested;
+    final stopped = _cancellation.isRequested;
     _logger.info(
       .syncEnd,
       reason: stopped ? .stopped : null,

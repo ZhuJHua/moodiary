@@ -6,7 +6,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:moodiary_di/moodiary_di.dart';
+import 'package:injectable/injectable.dart';
 import 'package:moodiary_http/moodiary_http.dart';
 
 import 'media.dart';
@@ -23,15 +23,15 @@ import 'media.dart';
 /// 端口：`preferredPort: 0` 让 OS 分配空闲端口，再用 [IHttpServer.port] 读回实际值。
 /// token 为每次启动随机生成的 128 位十六进制，拼进媒体 URL 路径并在 handler 校验：
 /// 防同机其它进程读日记媒体。
+@lazySingleton
 class EditorLocalServer {
-  EditorLocalServer._();
-
-  static final EditorLocalServer instance = ._();
+  EditorLocalServer(this._server);
 
   static const _assetBase = 'packages/moodiary_editor/assets/editor';
 
   final String _token = _randomToken();
-  IHttpServer? _server;
+  final IHttpServer _server;
+  bool _started = false;
   int _port = 0;
   Future<void>? _starting;
 
@@ -62,7 +62,7 @@ class EditorLocalServer {
 
   /// 启动（或复用）服务。并发调用共享同一次启动；失败后允许重试。
   Future<void> ensureStarted() async {
-    if (_server != null) return;
+    if (_started) return;
     _starting ??= _start();
     try {
       await _starting;
@@ -73,10 +73,18 @@ class EditorLocalServer {
   }
 
   Future<void> _start() async {
-    final server = getIt<IHttpServer>();
-    await server.start(handler: _handle, loopbackOnly: true);
-    _server = server;
-    _port = server.port;
+    await _server.start(handler: _handle, loopbackOnly: true);
+    _port = _server.port;
+    _started = true;
+  }
+
+  /// 容器回收（`getIt.reset()`）时停服务、释放端口。
+  @disposeMethod
+  Future<void> dispose() async {
+    if (!_started) return;
+    _started = false;
+    _starting = null;
+    await _server.stop();
   }
 
   /// 路由：`/<token>/media/<name>`（可带 `?poster=1` 取视频海报）与 `/<token>/font`

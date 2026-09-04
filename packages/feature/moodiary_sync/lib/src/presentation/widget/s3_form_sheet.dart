@@ -1,7 +1,6 @@
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_sync/src/data/impl/s3_sync.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 
@@ -25,9 +24,10 @@ class _S3FormSheetState extends State<S3FormSheet> {
   late final TextEditingController _secretKeyCtl;
   late final TextEditingController _bucketCtl;
 
-  late final bool _configured = getIt<IRemoteSyncBackend>(
+  late final _backend = getIt<IRemoteSyncBackend>(
     instanceName: SyncProviderIds.s3,
-  ).isReady;
+  );
+  late final bool _configured = _backend.isReady;
   late final String _savedBucket;
 
   bool _useSSL = true;
@@ -40,7 +40,7 @@ class _S3FormSheetState extends State<S3FormSheet> {
   @override
   void initState() {
     super.initState();
-    final opts = S3SyncBackend.options.value;
+    final opts = _backend.savedOptions;
     String at(int i) => opts.length > i ? opts[i] : '';
     _endpointCtl = TextEditingController(text: at(0));
     _regionCtl = TextEditingController(text: at(1));
@@ -103,14 +103,14 @@ class _S3FormSheetState extends State<S3FormSheet> {
     if (_saving || !_validate()) return;
     setState(() => _saving = true);
     try {
-      await S3SyncBackend.configure(
-        endpoint: _endpointCtl.text,
-        region: _regionCtl.text,
-        accessKey: _accessKeyCtl.text,
-        secretKey: _secretKeyCtl.text,
-        bucket: _bucketCtl.text,
-        useSSL: _useSSL,
-      );
+      await _backend.saveOptions([
+        _endpointCtl.text.trim(),
+        _regionCtl.text.trim(),
+        _accessKeyCtl.text.trim(),
+        _secretKeyCtl.text,
+        _bucketCtl.text.trim(),
+        _useSSL ? '1' : '0',
+      ]);
     } finally {
       if (mounted) {
         setState(() => _saving = false);
@@ -132,7 +132,7 @@ class _S3FormSheetState extends State<S3FormSheet> {
     if (!confirmed || !mounted) return;
     setState(() => _saving = true);
     try {
-      await S3SyncBackend.clear();
+      await _backend.clearOptions();
     } finally {
       if (mounted) {
         setState(() => _saving = false);

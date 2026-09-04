@@ -103,8 +103,9 @@ Future<void> _initSystem() async {
   // 同步 provider 激活：先把各后端配置（SecureKV）读进进程内缓存，再按 KV
   // `syncProvider` 开 scope 暴露当前后端。「什么时候按 KV 换持」是编排不是接线，
   // 故由组合根显式调；排在版本迁移之后，读到的是迁移后的配置。
-  // fail-open：配置装载逐后端吞错；激活失败只记日志——未激活是受支持状态
-  // （watcher 两处入口用 maybeGet 守卫），同步暂不可用好过启动炸死。
+  // 配置装载逐后端吞错（钥匙串故障 / 设备锁定时该后端 isReady 为 false，UI 走
+  // 「先去配置」）。激活先解析后换 scope、正常不会失败；这里的 try/catch 与 watcher
+  // 的 maybeGet 只是最后防线，同步暂不可用好过启动炸死。
   final syncBackendFuture = () async {
     try {
       await loadSyncBackendOptions();

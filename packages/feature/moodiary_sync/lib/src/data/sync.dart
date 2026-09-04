@@ -69,6 +69,15 @@ abstract class IRemoteSyncBackend implements RemoteObjectStore {
   /// 把 SecureKV 里的配置读进进程内缓存——[isReady] 是同步 getter，靠这一步先行。
   Future<void> loadOptions();
 
+  /// 已保存的连接配置（表单回填用；条目顺序由各后端定义，与 [saveOptions] 对称）。
+  List<String> get savedOptions;
+
+  /// 保存连接配置。加密已开启时同时登记 keyfile 待上传：新（重）配置的后端必须
+  /// 拿到 keyfile，否则会收到加密对象而无 keys.json，换设备后永远解不开。
+  Future<void> saveOptions(List<String> options);
+
+  Future<void> clearOptions();
+
   /// 探测连通性 / 凭据。失败返回错误信息，成功返回 `null`。
   Future<String?> testConnection();
 }

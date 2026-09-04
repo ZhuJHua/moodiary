@@ -9,6 +9,7 @@ import 'dart:async' as _i687;
 import 'package:injectable/injectable.dart' as _i526;
 import 'package:moodiary_editor/src/data/geo_repository.dart' as _i951;
 import 'package:moodiary_editor/src/data/weather_repository.dart' as _i431;
+import 'package:moodiary_editor/src/editor_local_server.dart' as _i271;
 import 'package:moodiary_http/moodiary_http.dart' as _i765;
 
 class MoodiaryEditorPackageModule extends _i526.MicroPackageModule {
@@ -20,6 +21,10 @@ class MoodiaryEditorPackageModule extends _i526.MicroPackageModule {
     );
     gh.lazySingleton<_i431.WeatherRepository>(
       () => _i431.WeatherRepository(gh<_i765.IHttpClient>()),
+    );
+    gh.lazySingleton<_i271.EditorLocalServer>(
+      () => _i271.EditorLocalServer(gh<_i765.IHttpServer>()),
+      dispose: (i) => i.dispose(),
     );
   }
 }

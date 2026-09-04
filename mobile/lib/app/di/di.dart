@@ -25,7 +25,7 @@ import 'package:moodiary_sync/moodiary_sync.dart'
 /// generateForDir（默认扫全包）—— 只有一份 config，不存在「两份扫同一片源码、
 /// 同一注解被各注册一次」的互斥问题，白名单也就不必要了。
 ///
-/// 六个包各自是一份 micro-package（`@InjectableInit.microPackage()` 生成
+/// 七个包各自是一份 micro-package（`@InjectableInit.microPackage()` 生成
 /// `injectable.module.dart`），在这里经 externalPackageModulesBefore 挂载。
 /// **storage 列最前**：它的两个 preResolve 绑定（SecureKV → KV）是别人的地基。
 ///
@@ -35,10 +35,11 @@ import 'package:moodiary_sync/moodiary_sync.dart'
   externalPackageModulesBefore: [
     ExternalModule(MoodiaryStoragePackageModule),
     ExternalModule(MoodiaryHttpPackageModule),
-    // ml 在 http 之后：EmbeddingModelManager 注入 IHttpClient 下载模型。
+    // 以下次序对懒单例无意义（首次取用才解析）。唯一硬约束：AppModule 的
+    // database / httpClient 在全部 micro-package **之后**注册，所以任何包里的
+    // eager `@singleton` / `@preResolve` 都不得依赖 MoodiaryDatabase 或
+    // IHttpClient——那会在 getIt.init() 当场抛。
     ExternalModule(MoodiaryMlPackageModule),
-    // data 的仓储都是懒单例，依赖本 config 的 AppModule.database（preResolve）——
-    // 懒单例在首次取用时才解析，此处次序只需在 ml 之后（EmbedIndexService 注入嵌入引擎）。
     ExternalModule(MoodiaryDataPackageModule),
     ExternalModule(MoodiaryAssistantPackageModule),
     ExternalModule(MoodiarySyncPackageModule),

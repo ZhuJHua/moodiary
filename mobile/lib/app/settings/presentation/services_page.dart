@@ -64,7 +64,7 @@ class _SemanticSection extends StatefulWidget {
 }
 
 class _SemanticSectionState extends State<_SemanticSection> {
-  final _manager = getIt<EmbeddingModelManager>();
+  late final _manager = getIt<EmbeddingModelManager>();
 
   bool _rebuilding = false;
 
@@ -320,7 +320,7 @@ class _MoodSuggestSection extends StatefulWidget {
 }
 
 class _MoodSuggestSectionState extends State<_MoodSuggestSection> {
-  final _manager = getIt<MoodLlmModelManager>();
+  late final _manager = getIt<MoodLlmModelManager>();
 
   @override
   Widget build(BuildContext context) {

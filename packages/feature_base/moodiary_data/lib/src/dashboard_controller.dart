@@ -34,7 +34,9 @@ class DashboardController extends _$DashboardController {
   Future<void> refreshIfStale() async {
     if (!_stale) return;
     _stale = false;
-    state = AsyncData(await _compute());
+    final stats = await _compute();
+    if (!ref.mounted) return;
+    state = AsyncData(stats);
   }
 
   Future<DashboardStats> _compute() async {

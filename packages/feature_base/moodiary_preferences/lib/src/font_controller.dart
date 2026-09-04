@@ -14,9 +14,11 @@ part 'font_controller.g.dart';
 
 @riverpod
 class FontController extends _$FontController {
+  late final _repository = getIt<FontRepository>();
+
   @override
   Future<List<Font>> build() async {
-    final list = await getIt<FontRepository>().getAllFonts();
+    final list = await _repository.getAllFonts();
     await Future.wait([
       for (final f in list)
         FontManager.loadFont(
@@ -29,12 +31,13 @@ class FontController extends _$FontController {
 
   /// 返回 `null`=用户取消、非空错误 message=失败、空字符串=成功。
   Future<String?> addFont() async {
-    // 仓储在首个 await 之前取：选文件期间页面可能退出（autoDispose 回收 ref）。
-    final repo = getIt<FontRepository>();
+    // 选文件期间页面可能退出（autoDispose 回收 ref）：仓储是容器单例不受影响，
+    // 但 `state` 的读写都要先看 `ref.mounted`。
     final xFile = await FontManager.pickFont();
     if (xFile == null) return null;
     final fontName = await FontManager.getFontName(filePath: xFile.path);
     if (fontName == null || fontName.isEmpty) return l10n.app.fontNameFailed;
+    if (!ref.mounted) return null;
     final current = state.value ?? const <Font>[];
     if (current.any((e) => e.fontFamily == fontName)) {
       return l10n.app.fontExists;
@@ -46,20 +49,20 @@ class FontController extends _$FontController {
       fontWghtAxisMap: await FontManager.getFontWghtAxis(filePath: xFile.path),
     );
     await xFile.saveTo(newPath);
-    await repo.insertFont(newFont);
+    await _repository.insertFont(newFont);
     await FontManager.loadFont(fontName: newFont.fontFamily, fontPath: newPath);
-    state = .data([...current, newFont]);
+    if (ref.mounted) state = .data([...current, newFont]);
     return '';
   }
 
   /// 若正在使用，先切回系统字体再删，避免引用已删除文件。
   Future<void> removeFont(Font font) async {
-    final repo = getIt<FontRepository>();
     if (MoodiaryKVs.customFont.get() == font.fontFamily) {
       await setActive(null);
     }
-    await repo.deleteFontByFamily(font.fontFamily);
+    await _repository.deleteFontByFamily(font.fontFamily);
     await AppFiles.deleteFile(AppFiles.getRealPath('font', font.fontFileName));
+    if (!ref.mounted) return;
     final next = (state.value ?? const <Font>[])
         .where((e) => e.fontFamily != font.fontFamily)
         .toList();

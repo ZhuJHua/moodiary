@@ -16,8 +16,7 @@ import 'package:moodiary_di/moodiary_di.dart';
 ///    列表只把正在流式的那一条包进 `ValueListenableBuilder`，于是一个 token 只重建
 ///    一个气泡，而不是让每个可见气泡重跑一遍 Markdown 解析。
 class AssistantChatController extends ChangeNotifier {
-  /// [repository] 只为测试注入。默认走单例，且是**惰性**取用的 ——
-  /// `getIt<ChatRepository>()` 的静态初始化会碰 Isar，宿主单测里一碰就抛。
+  /// [repository] 只为测试注入。默认惰性取容器里的仓储（[_repo]），宿主单测不碰容器。
   AssistantChatController({this.repository});
 
   /// 注入点，默认 null。

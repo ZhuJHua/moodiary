@@ -95,6 +95,9 @@ class IncrementalSyncEngine {
     SyncMediaFiles? mediaFiles,
     Future<SyncCipher> Function()? cipherProvider,
     int? concurrency,
+    OpenDiaryRegistry? openDiaries,
+    SyncCancellation? cancellation,
+    SyncDirtyTracker? dirty,
   }) {
     final n = concurrency ?? _resolveConcurrency();
     return IncrementalSyncEngine._(
@@ -107,6 +110,9 @@ class IncrementalSyncEngine {
       tombstoneStore ?? RepoSyncTombstoneStore(),
       mediaFiles ?? DiskSyncMediaFiles(),
       cipherProvider ?? SyncCipher.current,
+      openDiaries ?? getIt<OpenDiaryRegistry>(),
+      cancellation ?? getIt<SyncCancellation>(),
+      dirty ?? getIt<SyncDirtyTracker>(),
     );
   }
 
@@ -120,7 +126,15 @@ class IncrementalSyncEngine {
     this._tombstoneStore,
     this._mediaFiles,
     this._cipherProvider,
+    this._openDiaries,
+    this._cancellation,
+    this._dirty,
   ) : _mediaGate = Pool(concurrency);
+
+  /// 进程级持有者（与取消按钮 / 首页角标共享同一实例），缺省取容器，测试可注入。
+  final OpenDiaryRegistry _openDiaries;
+  final SyncCancellation _cancellation;
+  final SyncDirtyTracker _dirty;
 
   static int _resolveConcurrency() {
     final raw = MoodiaryKVs.syncConcurrency.get() ?? defaultConcurrency;
@@ -229,6 +243,8 @@ class IncrementalSyncEngine {
       mediaFiles: _mediaFiles,
       cipherProvider: _cipher,
       concurrency: concurrency,
+      openDiaries: _openDiaries,
+      cancellation: _cancellation,
     ).apply(manifest);
     return (report, manifest);
   }
@@ -340,7 +356,7 @@ class IncrementalSyncEngine {
     // 权威跳过「打开中的日记」：push 前冻结一份 open-set 快照，把这些条目排除出本次
     // 上传。仅滤 push（pull 仍按 LWW 回写）；manifest 不会因本地缺席而删条目，故被
     // 跳过的日记远端副本原样保留，关闭后下一轮同步再收敛。
-    final openSnapshot = getIt<OpenDiaryRegistry>().snapshot();
+    final openSnapshot = _openDiaries.snapshot();
     final diaries = (await _diaryStore.getAllDiaries())
         .where((d) => !openSnapshot.contains(d.id))
         .toList();
@@ -382,7 +398,7 @@ class IncrementalSyncEngine {
 
     Future<void> pushOneDiary(Diary diary) async {
       // 协作式停止：不发起新条目，已完成条目的 manifest 照常写回（进度不丢）。
-      if (getIt<SyncCancellation>().isRequested) return;
+      if (_cancellation.isRequested) return;
       final key = SyncKeys.diary(diary.id);
       final remoteEntry = manifest.entries[key];
 
@@ -449,7 +465,7 @@ class IncrementalSyncEngine {
     await runPooled(diaries, concurrency, pushOneDiary);
 
     Future<void> pushOneCategory(Category category) async {
-      if (getIt<SyncCancellation>().isRequested) return;
+      if (_cancellation.isRequested) return;
       final key = SyncKeys.category(category.id);
       final remoteEntry = manifest.entries[key];
       final remoteMs = remoteEntry?.timeMs;
@@ -488,7 +504,7 @@ class IncrementalSyncEngine {
     await runPooled(categories, concurrency, pushOneCategory);
 
     Future<void> pushOneMediaInfo(MediaInfo mediaInfo) async {
-      if (getIt<SyncCancellation>().isRequested) return;
+      if (_cancellation.isRequested) return;
       final key = SyncKeys.mediaInfo(mediaInfo.fileName);
       final remoteEntry = manifest.entries[key];
       final remoteMs = remoteEntry?.timeMs;
@@ -610,7 +626,7 @@ class IncrementalSyncEngine {
     }
 
     for (final t in tombstones.snapshot()) {
-      if (getIt<SyncCancellation>().isRequested) break;
+      if (_cancellation.isRequested) break;
       pushOneTombstone(t);
     }
 
@@ -653,11 +669,11 @@ class IncrementalSyncEngine {
     await tombstones.flush(_tombstoneStore);
     // 提交确认后清除已同步日记的「待同步」角标。
     for (final id in pushedDiaryIds) {
-      getIt<SyncDirtyTracker>().clearDirty(id);
+      _dirty.clearDirty(id);
     }
 
     sw.stop();
-    final stopped = getIt<SyncCancellation>().isRequested;
+    final stopped = _cancellation.isRequested;
     // 整轮无失败无中断才算重传完成：半截清掉标记会让剩下的旧密文媒体永远留在
     // 远端且再也不会被覆盖。
     if (_distrustRemoteMedia && failed == 0 && !stopped) {

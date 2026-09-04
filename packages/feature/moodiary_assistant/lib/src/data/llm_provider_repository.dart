@@ -4,7 +4,6 @@ import 'package:drift/drift.dart';
 import 'package:injectable/injectable.dart';
 
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 
@@ -12,9 +11,10 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 /// 删除 Provider 时一并清除。
 @lazySingleton
 class LlmProviderRepository {
-  LlmProviderRepository(this._db);
+  LlmProviderRepository(this._db, this._secure);
 
   final MoodiaryDatabase _db;
+  final ISecureKVStorage _secure;
 
   static String _keyOf(String id) => 'llm_key_$id';
 
@@ -114,14 +114,12 @@ class LlmProviderRepository {
     return (row.read(maxOrder) ?? -1) + 1;
   }
 
-  Future<String?> getKey(String id) =>
-      getIt<ISecureKVStorage>().get(_keyOf(id));
+  Future<String?> getKey(String id) => _secure.get(_keyOf(id));
 
   Future<void> setKey(String id, String value) =>
-      getIt<ISecureKVStorage>().set(_keyOf(id), value);
+      _secure.set(_keyOf(id), value);
 
-  Future<void> removeKey(String id) =>
-      getIt<ISecureKVStorage>().remove(_keyOf(id));
+  Future<void> removeKey(String id) => _secure.remove(_keyOf(id));
 
   /// 当前激活的 Provider。激活指针缺失或失效时回退到列表首个；列表为空返回 null。
   Future<LlmProvider?> getActiveProvider() async {
