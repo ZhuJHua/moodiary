@@ -56,6 +56,21 @@ class FastImage extends ImageProvider<FastImage> {
   }
 
   Future<ui.Codec> _load(FastImage key, ImageDecoderCallback decode) async {
+    try {
+      return await _loadUnchecked(key, decode);
+    } catch (_) {
+      // ImageCache 只在成功时把 pending 条目转正，失败的会带着错误一直留在
+      // pending 表里：同一个 key 再来（文件晚到了、重建了 Image）拿到的还是那次
+      // 失败。自己把它踢出去，下次才是真的重试。
+      PaintingBinding.instance.imageCache.evict(key);
+      rethrow;
+    }
+  }
+
+  Future<ui.Codec> _loadUnchecked(
+    FastImage key,
+    ImageDecoderCallback decode,
+  ) async {
     final tier = key.tier;
     final path = tier == null
         ? key.path

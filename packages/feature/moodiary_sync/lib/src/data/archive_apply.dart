@@ -376,8 +376,13 @@ class ArchiveApplier {
             );
             return;
           }
+          // 媒体先于行落地（与 push 的「媒体先于 JSON」对称）：行一落库首页就建卡片，
+          // 图片文件还没到的话 Image 会失败，而失败的加载会留在 ImageCache 里，
+          // 之后同一张图再也不重试。先把文件拉齐，卡片第一次加载就成功。
+          await _pullDiaryMedia(diary);
           // 快照可能过期，写入前重读做最终 LWW（活跃行与墓碑都要看），防止远端
-          // 旧版覆盖刚保存的内容 / 复活刚被永久删除的日记。
+          // 旧版覆盖刚保存的内容 / 复活刚被永久删除的日记。重读放在媒体之后：
+          // 下载可能很慢，闸门要贴着写入。
           final oldDiary = await diaryRepo.getDiaryByBusinessId(id);
           final freshMs =
               oldDiary?.lastModified.millisecondsSinceEpoch ??
@@ -404,12 +409,9 @@ class ArchiveApplier {
             fromSync: fromSync,
           );
           tombstones.remove(key);
-          await _pullDiaryMedia(diary);
           if (oldDiary != null) {
             await _mediaFiles.cleanUpReplaced(oldDiary, diary);
           }
-          // 「同步中」角标等媒体落地才摘：行一落库首页就渲染卡片，图片文件还没到，
-          // Image 会记住那次失败；角标摘掉时列表重建、卡片按新 key 重新加载。
           pending.completeDiary(id);
           diaryChanged++;
           _logger.info(
