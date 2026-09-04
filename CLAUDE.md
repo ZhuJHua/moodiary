@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Moodiary — a Flutter + Rust diary app. **Layered pub-workspace monorepo**: 27 shared packages under `packages/` across four dependency layers, consumed by the single Flutter app **`mobile/`** (Android + iOS, pub name `moodiary`). The root `pubspec.yaml` is a pure coordinator (workspace + Melos config, no app code). A desktop app will be rebuilt later — the packages are already layered for it, but no desktop target exists in the tree today.
+Moodiary — a Flutter + Rust diary app. **Layered pub-workspace monorepo**: 26 shared packages under `packages/` across four dependency layers, consumed by the single Flutter app **`mobile/`** (Android + iOS, pub name `moodiary`). The root `pubspec.yaml` is a pure coordinator (workspace + Melos config, no app code). A desktop app will be rebuilt later — the packages are already layered for it, but no desktop target exists in the tree today.
 
 ## Tech Stack
 
@@ -82,19 +82,18 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
     feature_base/            # → core/foundation。内部次序 models → data → components,migration,preferences → picker → editor
       moodiary_models/       #   domain: 纯 Freezed 模型 + DTOs + 事件类型（零存储依赖）
       moodiary_data/         #   SQLite（drift，src/db/*_tables.drift 是 schema 真源）+ repositories + controllers + 共享瞬态状态
-      moodiary_components/   #   业务组件：features 共用、够不着 mui 的那部分 UI
+      moodiary_components/   #   业务组件：features 共用、够不着 mui 的那部分 UI；代码高亮表与 DiaryShare 挂钩也在这
       moodiary_migration/    #   one-shot legacy migration；legacy/ 冻结旧 Isar 模型（isar_plus 最后据点）
       moodiary_preferences/  #   preference state
       moodiary_picker/       #   相册选择器：骑 wechat_assets_picker 换皮 + image_picker 系统相机（仅 mobile 依赖）
       moodiary_editor/       #   TipTap webview 编辑器基建（EditorBody/controller/本地回环服务），被 diary 内嵌消费
     feature/                 # → feature_base/core/foundation (features never import each other)
-      moodiary_export/       #   导出 Markdown/Word/PDF + 本地备份导入
+      moodiary_export/       #   导出 Markdown/Word/PDF/图片 + 本地备份导入；**分享也在这里**（= scope 只有一篇的导出）
       moodiary_diary/        #   diary CRUD/search/category/calendar/map/recycle
       moodiary_sync/         #   sync engine + UI
       moodiary_assistant/    #   AI assistant (flutter_chat_ui + rig)；runJavascript 沙箱走 flutter_js 自家 fork（git 钉 commit，quickjs-ng code asset）
       moodiary_media/        #   media library
       moodiary_lock/         #   app lock
-      moodiary_share/        #   diary sharing
 ```
 
 Path convention: unqualified `lib/...` refers to `mobile/lib/...`; `packages/` and `tool/` are repo-root-relative.

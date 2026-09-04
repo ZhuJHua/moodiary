@@ -1,11 +1,13 @@
 import 'dart:convert';
+import 'dart:ui' show Brightness;
 
 import 'markdown_writer.dart';
 
 enum ExportFormat {
   markdown('markdown', 'md'),
   docx('docx', 'docx'),
-  pdf('pdf', 'pdf');
+  pdf('pdf', 'pdf'),
+  image('image', 'png');
 
   final String id;
   final String extension;
@@ -63,12 +65,19 @@ class ExportCommon {
   /// 每篇一份时的文件名模板，支持 `{date}` `{title}` `{id}`。
   final String nameTemplate;
 
+  /// 元信息里的位置**单独一个开关，且默认关**。
+  ///
+  /// 日记页上看是自己的，导出去就是把行踪给了别人 —— 图片尤其（发朋友圈那张）。
+  /// 日期 / 心情 / 天气 / 分类仍归 [includeMeta] 管，四种格式一起生效。
+  final bool includePosition;
+
   const ExportCommon({
     this.includeTitle = true,
     this.includeMeta = true,
     this.media = .embed,
     this.merge = true,
     this.nameTemplate = '{date}-{title}',
+    this.includePosition = false,
   });
 
   ExportCommon copyWith({
@@ -77,12 +86,14 @@ class ExportCommon {
     ExportMediaPolicy? media,
     bool? merge,
     String? nameTemplate,
+    bool? includePosition,
   }) => ExportCommon(
     includeTitle: includeTitle ?? this.includeTitle,
     includeMeta: includeMeta ?? this.includeMeta,
     media: media ?? this.media,
     merge: merge ?? this.merge,
     nameTemplate: nameTemplate ?? this.nameTemplate,
+    includePosition: includePosition ?? this.includePosition,
   );
 
   Map<String, dynamic> toJson() => {
@@ -91,6 +102,7 @@ class ExportCommon {
     'media': media.name,
     'merge': merge,
     'nameTemplate': nameTemplate,
+    'includePosition': includePosition,
   };
 
   factory ExportCommon.fromJson(Map<String, dynamic> json) => ExportCommon(
@@ -102,6 +114,7 @@ class ExportCommon {
     ),
     merge: json['merge'] as bool? ?? true,
     nameTemplate: json['nameTemplate'] as String? ?? '{date}-{title}',
+    includePosition: json['includePosition'] as bool? ?? false,
   );
 }
 
@@ -200,18 +213,76 @@ class LayoutExportOptions {
       );
 }
 
+/// 图片专属。模版只有「原稿」一个（跟随应用配色），所以这里没有模版字段 ——
+/// 明暗、宽度、清晰度、水印四个旋钮就是全部。
+class ImageExportOptions {
+  /// 卡片明暗。null = 跟随应用当前主题。
+  final Brightness? brightness;
+
+  /// 逻辑宽度（dp）。标准 360 / 宽 480。
+  final double widthDp;
+
+  /// 清晰度倍率，2 或 3。产物像素宽 = widthDp * scale。
+  final int scale;
+
+  /// 底部的 Moodiary 标识条。
+  final bool watermark;
+
+  const ImageExportOptions({
+    this.brightness,
+    this.widthDp = 360,
+    this.scale = 3,
+    this.watermark = true,
+  });
+
+  ImageExportOptions copyWith({
+    Brightness? brightness,
+    bool clearBrightness = false,
+    double? widthDp,
+    int? scale,
+    bool? watermark,
+  }) => ImageExportOptions(
+    brightness: clearBrightness ? null : (brightness ?? this.brightness),
+    widthDp: widthDp ?? this.widthDp,
+    scale: scale ?? this.scale,
+    watermark: watermark ?? this.watermark,
+  );
+
+  Map<String, dynamic> toJson() => {
+    // null 存成 'system'：跟随应用是一种明确的选择，不是「没设过」。
+    'brightness': brightness?.name ?? 'system',
+    'widthDp': widthDp,
+    'scale': scale,
+    'watermark': watermark,
+  };
+
+  factory ImageExportOptions.fromJson(Map<String, dynamic> json) =>
+      ImageExportOptions(
+        brightness: switch (json['brightness'] as String?) {
+          'light' => Brightness.light,
+          'dark' => Brightness.dark,
+          _ => null,
+        },
+        widthDp: (json['widthDp'] as num?)?.toDouble() ?? 360,
+        scale: (json['scale'] as num?)?.toInt() ?? 3,
+        watermark: json['watermark'] as bool? ?? true,
+      );
+}
+
 /// 一次导出的完整配置。按格式分别持久化，互不覆盖。
 class ExportSettings {
   final ExportCommon common;
   final MarkdownExportOptions markdown;
   final LayoutExportOptions docx;
   final LayoutExportOptions pdf;
+  final ImageExportOptions image;
 
   const ExportSettings({
     this.common = const ExportCommon(),
     this.markdown = const MarkdownExportOptions(),
     this.docx = const LayoutExportOptions(eastAsiaFont: '宋体'),
     this.pdf = const LayoutExportOptions(),
+    this.image = const ImageExportOptions(),
   });
 
   ExportSettings copyWith({
@@ -219,11 +290,13 @@ class ExportSettings {
     MarkdownExportOptions? markdown,
     LayoutExportOptions? docx,
     LayoutExportOptions? pdf,
+    ImageExportOptions? image,
   }) => ExportSettings(
     common: common ?? this.common,
     markdown: markdown ?? this.markdown,
     docx: docx ?? this.docx,
     pdf: pdf ?? this.pdf,
+    image: image ?? this.image,
   );
 
   String encode() => jsonEncode({
@@ -231,6 +304,7 @@ class ExportSettings {
     'markdown': markdown.toJson(),
     'docx': docx.toJson(),
     'pdf': pdf.toJson(),
+    'image': image.toJson(),
   });
 
   static ExportSettings decode(String raw) {
@@ -244,6 +318,7 @@ class ExportSettings {
         ),
         docx: .fromJson(json['docx'] as Map<String, dynamic>? ?? const {}),
         pdf: .fromJson(json['pdf'] as Map<String, dynamic>? ?? const {}),
+        image: .fromJson(json['image'] as Map<String, dynamic>? ?? const {}),
       );
     } catch (_) {
       // 配置格式变过 / 存坏了：退回默认，不让设置页打不开。

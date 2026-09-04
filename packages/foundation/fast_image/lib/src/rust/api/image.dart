@@ -51,6 +51,25 @@ abstract class FastImageCodec implements RustOpaqueInterface {
   );
 }
 
+// Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FastPngWriter>>
+abstract class FastPngWriter implements RustOpaqueInterface {
+  static Future<FastPngWriter> create({
+    required String outputPath,
+    required int width,
+    required int height,
+  }) => FastImageLib.instance.api.crateApiImageFastPngWriterCreate(
+    outputPath: outputPath,
+    width: width,
+    height: height,
+  );
+
+  /// 收尾。行数不够会报错，不会留下一张被截断的图。
+  Future<void> finish();
+
+  /// 追加若干整行像素；长度必须是 `width * 4` 的整数倍。
+  Future<void> push({required List<int> rgba});
+}
+
 // Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FastRegionDecoder>>
 abstract class FastRegionDecoder implements RustOpaqueInterface {
   /// `x/y/width/height` 是转正后源像素坐标，`denom` 是 1..=8 的缩放分母。

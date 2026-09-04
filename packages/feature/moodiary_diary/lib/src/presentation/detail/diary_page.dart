@@ -505,7 +505,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
               IconButton(
                 tooltip: context.l10n.diary.share,
                 icon: const Icon(LucideIcons.share),
-                onPressed: () => ShareRoute(diaryId: diary.id).push(context),
+                onPressed: () => DiaryShare.open(context, diary.id),
               ),
             if (headings.isNotEmpty)
               IconButton(

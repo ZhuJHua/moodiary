@@ -45,6 +45,12 @@ class _ExportSection extends StatelessWidget {
       title: context.l10n.export.sectionExport,
       children: [
         SettingListTile(
+          title: context.l10n.export.formatImage,
+          leading: const FileTypeIcon('PNG'),
+          trailing: const Icon(LucideIcons.chevronRight),
+          onTap: () => _open(context, .image),
+        ),
+        SettingListTile(
           title: 'Markdown',
           leading: const FileTypeIcon('MD'),
           trailing: const Icon(LucideIcons.chevronRight),
@@ -182,6 +188,7 @@ Future<void> shareExported(String path, Translations l10n) async {
     'docx' =>
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'pdf' => 'application/pdf',
+    'png' => 'image/png',
     'zip' => 'application/zip',
     _ => 'application/octet-stream',
   };

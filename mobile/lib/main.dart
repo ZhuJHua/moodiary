@@ -13,6 +13,7 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_editor/moodiary_editor.dart'
     show EditorMigrationService;
+import 'package:moodiary_export/moodiary_export.dart' show showDiaryShareSheet;
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
@@ -124,6 +125,9 @@ Future<void> _initSystem() async {
   // 显式 start，排在版本迁移与后端装载之后。刻意不用 @PostConstruct——那会让
   // watcher 在容器装配当场醒来，赶在迁移之前，迁移写出的行就被回声推给云端了。
   getIt<AutoSyncWatcher>().start();
+  // 日记页的分享按钮落到导出包（分享 = scope 只有一篇的导出）。两个都是 feature，
+  // 不能互相 import，所以由组合根接这一根线。
+  DiaryShare.register(showDiaryShareSheet);
   runStartupMaintenance();
   await Future.wait([themeFuture, localeFuture, migrationGateFuture]);
 

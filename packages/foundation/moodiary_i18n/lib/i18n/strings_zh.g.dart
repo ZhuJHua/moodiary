@@ -1232,6 +1232,9 @@ class Translations$common$zh {
 
 	/// zh: '未配置'
 	String get notConfigured => '未配置';
+
+	/// zh: '已复制到剪贴板'
+	String get copied => '已复制到剪贴板';
 }
 
 // Path: diary
@@ -2056,6 +2059,66 @@ class Translations$export$zh {
 
 	/// zh: '音频'
 	String get mediaAudio => '音频';
+
+	/// zh: '图片'
+	String get formatImage => '图片';
+
+	/// zh: 'PNG 长图'
+	String get formatImageSubtitle => 'PNG 长图';
+
+	/// zh: '导出为图片'
+	String get titleImage => '导出为图片';
+
+	/// zh: '图片'
+	String get sectionImage => '图片';
+
+	/// zh: '包含位置'
+	String get includePosition => '包含位置';
+
+	/// zh: '默认关闭 —— 导出的文件是要发给别人的'
+	String get includePositionSubtitle => '默认关闭 —— 导出的文件是要发给别人的';
+
+	/// zh: '明暗'
+	String get imageBrightness => '明暗';
+
+	/// zh: '跟随应用'
+	String get imageBrightnessSystem => '跟随应用';
+
+	/// zh: '浅色'
+	String get imageBrightnessLight => '浅色';
+
+	/// zh: '深色'
+	String get imageBrightnessDark => '深色';
+
+	/// zh: '尺寸与清晰度'
+	String get imageSize => '尺寸与清晰度';
+
+	/// zh: '{width} dp · {scale}×（输出宽 {pixels} px）'
+	String imageSizeValue({required Object width, required Object scale, required Object pixels}) => '${width} dp · ${scale}×（输出宽 ${pixels} px）';
+
+	/// zh: '宽度'
+	String get imageWidth => '宽度';
+
+	/// zh: '标准'
+	String get imageWidthStandard => '标准';
+
+	/// zh: '宽'
+	String get imageWidthWide => '宽';
+
+	/// zh: '清晰度'
+	String get imageScale => '清晰度';
+
+	/// zh: '显示 Moodiary 标识'
+	String get imageWatermark => '显示 Moodiary 标识';
+
+	/// zh: '合并成一张长图'
+	String get imageMerge => '合并成一张长图';
+
+	/// zh: '关闭则每篇一张，超过 9 张打包 zip'
+	String get imageMergeSubtitle => '关闭则每篇一张，超过 9 张打包 zip';
+
+	/// zh: '预览样张'
+	String get previewSample => '预览样张';
 }
 
 // Path: lock
@@ -2255,32 +2318,65 @@ class Translations$share$zh {
 
 	// Translations
 
-	/// zh: '分享'
-	String get title => '分享';
+	/// zh: '分享这篇日记'
+	String get sheetTitle => '分享这篇日记';
+
+	/// zh: '导出为图片或文档，范围只有这一篇'
+	String get sheetSubtitle => '导出为图片或文档，范围只有这一篇';
+
+	/// zh: '图片'
+	String get optionImage => '图片';
+
+	/// zh: '长图 · 可存相册'
+	String get optionImageSubtitle => '长图 · 可存相册';
+
+	/// zh: '纯文本 + 素材'
+	String get optionMarkdownSubtitle => '纯文本 + 素材';
+
+	/// zh: '可继续编辑'
+	String get optionDocxSubtitle => '可继续编辑';
+
+	/// zh: '排版固定'
+	String get optionPdfSubtitle => '排版固定';
+
+	/// zh: '排版固定 · 需先选字体'
+	String get optionPdfNeedFont => '排版固定 · 需先选字体';
+
+	/// zh: '图片预览'
+	String get previewTitle => '图片预览';
+
+	/// zh: '样张 · 第一篇'
+	String get previewSampleTitle => '样张 · 第一篇';
+
+	/// zh: '正在生成…'
+	String get rendering => '正在生成…';
+
+	/// zh: '生成失败：{error}'
+	String renderFailed({required Object error}) => '生成失败：${error}';
 
 	/// zh: '没有可分享的日记'
 	String get empty => '没有可分享的日记';
 
-	/// zh: '复制文本'
-	String get copyText => '复制文本';
+	/// zh: '保存到相册'
+	String get saveToAlbum => '保存到相册';
 
-	/// zh: '导出图片'
-	String get exportImage => '导出图片';
+	/// zh: '分享'
+	String get share => '分享';
 
-	/// zh: '已复制到剪贴板'
-	String get copied => '已复制到剪贴板';
+	/// zh: '已保存到相册'
+	String get savedToAlbum => '已保存到相册';
+
+	/// zh: '已保存 {count} 张到相册'
+	String savedToAlbumCount({required Object count}) => '已保存 ${count} 张到相册';
+
+	/// zh: '保存失败，检查相册权限'
+	String get saveToAlbumFailed => '保存失败，检查相册权限';
 
 	/// zh: '来自 Moodiary 的分享'
 	String get subject => '来自 Moodiary 的分享';
 
-	/// zh: '已生成图片：{path}（路径已复制）'
-	String imageSaved({required Object path}) => '已生成图片：${path}（路径已复制）';
-
-	/// zh: '简约'
-	String get templateMinimal => '简约';
-
-	/// zh: '便签'
-	String get templateNote => '便签';
+	/// zh: '正在生成 {format}…'
+	String generating({required Object format}) => '正在生成 ${format}…';
 }
 
 // Path: sync

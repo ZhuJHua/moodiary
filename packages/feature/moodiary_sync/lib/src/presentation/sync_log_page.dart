@@ -529,7 +529,7 @@ class _EventTile extends StatelessWidget {
               await Clipboard.setData(ClipboardData(text: pretty));
               if (!ctx.mounted) return;
               Navigator.of(ctx).pop();
-              toast.success(message: l10n.share.copied);
+              toast.success(message: l10n.common.copied);
             },
           ),
           MAction(label: ctx.l10n.common.ok, isPrimary: true),

@@ -11,15 +11,24 @@ import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path/path.dart' as p;
 
+import '../presentation/image_card/card_style.dart';
 import 'export_doc.dart';
 import 'export_options.dart';
 import 'export_scope.dart';
+import 'image_composer.dart';
 import 'markdown_writer.dart';
 import 'tiptap_to_ir.dart';
 
 class ExportOutcome {
   /// 最终产物路径。单文件时是它本身，多文件 / 带素材时是打包好的 zip。
   final String path;
+
+  /// 图片格式的逐张路径（其余格式为空）。
+  ///
+  /// 单篇永远只有一张；多篇「每篇一张」才会有多个。相册与分享两条出口都按文件处理，
+  /// 所以要单独给出来 —— [path] 只够喂系统分享面板。
+  final List<String> images;
+
   final int diaryCount;
 
   /// IR 表达不了的 tiptap 节点类型。非空说明编辑器加了新节点而导出没跟上。
@@ -31,6 +40,7 @@ class ExportOutcome {
   const ExportOutcome({
     required this.path,
     required this.diaryCount,
+    this.images = const [],
     this.unsupportedNodes = const {},
     this.skippedMedia = 0,
   });
@@ -94,6 +104,10 @@ class ExportService {
 
     /// 取消信号。长任务只在循环边界响应；typst 的整篇排版会跑完当前这一趟。
     press.CancelToken? cancel,
+
+    /// 图片格式的样式快照。离屏渲染树里没有祖先 `Theme`，配色与排版必须由调用方
+    /// （有 context 的那一侧）解析好传进来。[ExportFormat.image] 时必填。
+    ImageCardStyle? imageStyle,
   }) async {
     await press.FastPress.ensureInitialized();
     final token = cancel ?? press.CancelToken();
@@ -114,7 +128,14 @@ class ExportService {
       final unsupported = <String>{};
       for (var i = 0; i < diaries.length; i++) {
         _throwIfCancelled(token);
-        docs.add(await _toExportDoc(diaries[i], categories, media));
+        docs.add(
+          await _toExportDoc(
+            diaries[i],
+            categories,
+            media,
+            includePosition: settings.common.includePosition,
+          ),
+        );
         unsupported.addAll(docs.last.unsupportedNodes);
         onProgress?.call(ExportProgress(.converting, i + 1, diaries.length));
         // 无图日记整条链只产生 microtask，不让出事件循环——一批纯文字日记会连成一整块
@@ -122,6 +143,7 @@ class ExportService {
         if (i % 8 == 7) await Future<void>.delayed(.zero);
       }
 
+      final images = <String>[];
       final outcome = switch (format) {
         .markdown => await _writeMarkdown(
           docs,
@@ -150,10 +172,22 @@ class ExportService {
           onProgress,
           token,
         ),
+        .image => await _writeImage(
+          docs,
+          settings,
+          workDir,
+          untitledLabel,
+          imageStyle ??
+              (throw ArgumentError('image export needs an ImageCardStyle')),
+          images,
+          onProgress,
+          token,
+        ),
       };
 
       return ExportOutcome(
         path: outcome,
+        images: images,
         diaryCount: docs.length,
         unsupportedNodes: unsupported,
         skippedMedia: media.skipped,
@@ -175,11 +209,32 @@ class ExportService {
 
   // ------------------------------------------------------------- 组装 IR
 
+  /// 预览用：日记 → IR，**不做媒体转码**。
+  ///
+  /// 图片渲染器直接解原件（`ui.instantiateImageCodec` 认 WebP），不像 docx / pdf 那样
+  /// 需要先统一转成 JPEG，所以预览这条路不必落一份临时素材。
+  static Future<List<ExportDoc>> previewDocs(
+    List<Diary> diaries, {
+    required bool includePosition,
+  }) async {
+    final categories = await _categoryNames(diaries);
+    return [
+      for (final diary in diaries)
+        await _toExportDoc(
+          diary,
+          categories,
+          null,
+          includePosition: includePosition,
+        ),
+    ];
+  }
+
   static Future<ExportDoc> _toExportDoc(
     Diary diary,
     Map<String, String> categories,
-    _MediaStage media,
-  ) async {
+    _MediaStage? media, {
+    required bool includePosition,
+  }) async {
     // 旧 markdown / richText 日记先转成 tiptap 文档，走同一条遍历。转换器按 type 分派
     // （与 EditorMigrationService 同构）：richText 是 `[` 开头的 Quill Delta 数组，喂给
     // markdown 解析器只会得到「整段转义 JSON 文本 + 零媒体」的坏产物。
@@ -201,13 +256,15 @@ class ExportService {
       content: content,
       mood: diary.mood,
       weather: diary.weather,
-      position: diary.position,
+      // 位置默认不出门（ExportCommon.includePosition）。在这里掐掉，四种格式一起生效 ——
+      // 下游的三个 writer 与图片渲染器都只看 ExportDoc，不必各自再判一次。
+      position: includePosition ? diary.position : null,
       tags: diary.tags,
       categoryName: categories[diary.categoryId],
       resolvePath: AppFiles.getRealPath,
     );
 
-    return media.apply(doc);
+    return media == null ? doc : media.apply(doc);
   }
 
   static Future<Map<String, String>> _categoryNames(List<Diary> diaries) async {
@@ -432,6 +489,73 @@ class ExportService {
       token,
     );
   }
+
+  /// 图片：一篇一张长 PNG（或合并成一张）。
+  ///
+  /// 与另外三种最大的不同是**产物可能有多个文件而每个都要单独进相册**，所以逐张路径
+  /// 收在 [images] 里回传；[ExportOutcome.path] 只是喂系统分享面板的那一个。
+  static Future<String> _writeImage(
+    List<ExportDoc> docs,
+    ExportSettings settings,
+    Directory workDir,
+    String untitledLabel,
+    ImageCardStyle style,
+    List<String> images,
+    void Function(ExportProgress progress)? onProgress,
+    press.CancelToken token,
+  ) async {
+    final outDir = Directory(p.join(workDir.path, 'out'))
+      ..createSync(recursive: true);
+
+    Future<String> compose(List<ExportDoc> group, String name) async {
+      final path = p.join(outDir.path, name);
+      final result = await ImageComposer.composeToFile(
+        docs: group,
+        common: settings.common,
+        options: settings.image,
+        style: style,
+        outPath: path,
+        isCancelled: token.isCancelled,
+      );
+      return result.path;
+    }
+
+    if (settings.common.merge) {
+      onProgress?.call(const ExportProgress(.writing, 0, 1));
+      final path = await compose(docs, '${_stamp()}.png');
+      images.add(path);
+      onProgress?.call(const ExportProgress(.writing, 1, 1));
+      return path;
+    }
+
+    final used = <String>{};
+    onProgress?.call(ExportProgress(.writing, 0, docs.length));
+    for (var i = 0; i < docs.length; i++) {
+      _throwIfCancelled(token);
+      final name = _uniqueName(
+        _fileName(docs[i], settings.common.nameTemplate, untitledLabel),
+        'png',
+        used,
+        untitledLabel,
+      );
+      images.add(await compose([docs[i]], name));
+      onProgress?.call(ExportProgress(.writing, i + 1, docs.length));
+    }
+
+    // 张数不多就把逐张的文件直接交出去（相册要一张张写，zip 反而挡路）；
+    // 多到没法一张张处理才打包。
+    if (images.length <= _kLooseImageLimit) return images.first;
+    final zipPath = await _zip(
+      outDir,
+      p.join(workDir.path, 'moodiary-image-${_stamp()}.zip'),
+      token,
+    );
+    images.clear();
+    return zipPath;
+  }
+
+  /// 超过这个张数就打包 zip，不再逐张交给相册 / 分享面板。
+  static const int _kLooseImageLimit = 9;
 
   /// 时间过桥前换成人读格式 —— Rust 侧只是照抄进 meta 行。
   static press.IrDoc _toIrDoc(ExportDoc doc) =>

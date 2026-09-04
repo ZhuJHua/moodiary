@@ -27,6 +27,10 @@ abstract class FastImageLibApiImplPlatform
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastImageCodecPtr;
 
   CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_FastPngWriterPtr => wire
+      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriterPtr;
+
+  CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_FastRegionDecoderPtr => wire
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastRegionDecoderPtr;
 
@@ -40,8 +44,20 @@ abstract class FastImageLibApiImplPlatform
   );
 
   @protected
+  FastPngWriter
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
+    dynamic raw,
+  );
+
+  @protected
   FastRegionDecoder
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastRegionDecoder(
+    dynamic raw,
+  );
+
+  @protected
+  FastPngWriter
+  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
     dynamic raw,
   );
 
@@ -54,6 +70,12 @@ abstract class FastImageLibApiImplPlatform
   @protected
   FastImageCodec
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastImageCodec(
+    dynamic raw,
+  );
+
+  @protected
+  FastPngWriter
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
     dynamic raw,
   );
 
@@ -118,6 +140,9 @@ abstract class FastImageLibApiImplPlatform
   List<FastTileRect> dco_decode_list_fast_tile_rect(dynamic raw);
 
   @protected
+  List<int> dco_decode_list_prim_u_8_loose(dynamic raw);
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
@@ -153,8 +178,20 @@ abstract class FastImageLibApiImplPlatform
   );
 
   @protected
+  FastPngWriter
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   FastRegionDecoder
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastRegionDecoder(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FastPngWriter
+  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
     SseDeserializer deserializer,
   );
 
@@ -167,6 +204,12 @@ abstract class FastImageLibApiImplPlatform
   @protected
   FastImageCodec
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastImageCodec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FastPngWriter
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
     SseDeserializer deserializer,
   );
 
@@ -243,6 +286,9 @@ abstract class FastImageLibApiImplPlatform
   List<FastTileRect> sse_decode_list_fast_tile_rect(
     SseDeserializer deserializer,
   );
+
+  @protected
+  List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer);
 
   @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
@@ -347,6 +393,16 @@ abstract class FastImageLibApiImplPlatform
     for (var i = 0; i < raw.length; ++i) {
       cst_api_fill_to_wire_fast_tile_rect(raw[i], ans.ref.ptr[i]);
     }
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_prim_u_8_loose> cst_encode_list_prim_u_8_loose(
+    List<int> raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_prim_u_8_loose(raw.length);
+    ans.ref.ptr.asTypedList(raw.length).setAll(0, raw);
     return ans;
   }
 
@@ -479,8 +535,20 @@ abstract class FastImageLibApiImplPlatform
 
   @protected
   int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
+    FastPngWriter raw,
+  );
+
+  @protected
+  int
   cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastRegionDecoder(
     FastRegionDecoder raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
+    FastPngWriter raw,
   );
 
   @protected
@@ -493,6 +561,12 @@ abstract class FastImageLibApiImplPlatform
   int
   cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastImageCodec(
     FastImageCodec raw,
+  );
+
+  @protected
+  int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
+    FastPngWriter raw,
   );
 
   @protected
@@ -537,8 +611,22 @@ abstract class FastImageLibApiImplPlatform
 
   @protected
   void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
+    FastPngWriter self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastRegionDecoder(
     FastRegionDecoder self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
+    FastPngWriter self,
     SseSerializer serializer,
   );
 
@@ -553,6 +641,13 @@ abstract class FastImageLibApiImplPlatform
   void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastImageCodec(
     FastImageCodec self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
+    FastPngWriter self,
     SseSerializer serializer,
   );
 
@@ -649,6 +744,9 @@ abstract class FastImageLibApiImplPlatform
     List<FastTileRect> self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_list_prim_u_8_loose(List<int> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_prim_u_8_strict(
@@ -801,6 +899,21 @@ class FastImageLibWire implements BaseWire {
   late final _cst_new_list_fast_tile_rect = _cst_new_list_fast_tile_rectPtr
       .asFunction<ffi.Pointer<wire_cst_list_fast_tile_rect> Function(int)>();
 
+  ffi.Pointer<wire_cst_list_prim_u_8_loose> cst_new_list_prim_u_8_loose(
+    int len,
+  ) {
+    return _cst_new_list_prim_u_8_loose(len);
+  }
+
+  late final _cst_new_list_prim_u_8_loosePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_prim_u_8_loose> Function(ffi.Int32)
+        >
+      >('frbgen_fast_image_cst_new_list_prim_u_8_loose');
+  late final _cst_new_list_prim_u_8_loose = _cst_new_list_prim_u_8_loosePtr
+      .asFunction<ffi.Pointer<wire_cst_list_prim_u_8_loose> Function(int)>();
+
   ffi.Pointer<wire_cst_list_prim_u_8_strict> cst_new_list_prim_u_8_strict(
     int len,
   ) {
@@ -845,6 +958,23 @@ class FastImageLibWire implements BaseWire {
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriterPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+        'frbgen_fast_image_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter',
+      );
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter =
+      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriterPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
   rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastRegionDecoder(
     ffi.Pointer<ffi.Void> ptr,
   ) {
@@ -876,6 +1006,23 @@ class FastImageLibWire implements BaseWire {
       );
   late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastImageCodec =
       _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastImageCodecPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriterPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+        'frbgen_fast_image_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter',
+      );
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter =
+      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriterPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void
@@ -1036,6 +1183,78 @@ class FastImageLibWire implements BaseWire {
               ffi.Pointer<wire_cst_list_prim_u_8_strict>,
               ffi.Pointer<wire_cst_list_prim_u_8_strict>,
             )
+          >();
+
+  void wire__crate__api__image__FastPngWriter_create(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> output_path,
+    int width,
+    int height,
+  ) {
+    return _wire__crate__api__image__FastPngWriter_create(
+      port_,
+      output_path,
+      width,
+      height,
+    );
+  }
+
+  late final _wire__crate__api__image__FastPngWriter_createPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Uint32,
+            ffi.Uint32,
+          )
+        >
+      >('frbgen_fast_image_wire__crate__api__image__FastPngWriter_create');
+  late final _wire__crate__api__image__FastPngWriter_create =
+      _wire__crate__api__image__FastPngWriter_createPtr
+          .asFunction<
+            void Function(
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              int,
+              int,
+            )
+          >();
+
+  void wire__crate__api__image__FastPngWriter_finish(int port_, int that) {
+    return _wire__crate__api__image__FastPngWriter_finish(port_, that);
+  }
+
+  late final _wire__crate__api__image__FastPngWriter_finishPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+        'frbgen_fast_image_wire__crate__api__image__FastPngWriter_finish',
+      );
+  late final _wire__crate__api__image__FastPngWriter_finish =
+      _wire__crate__api__image__FastPngWriter_finishPtr
+          .asFunction<void Function(int, int)>();
+
+  void wire__crate__api__image__FastPngWriter_push(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_loose> rgba,
+  ) {
+    return _wire__crate__api__image__FastPngWriter_push(port_, that, rgba);
+  }
+
+  late final _wire__crate__api__image__FastPngWriter_pushPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+          )
+        >
+      >('frbgen_fast_image_wire__crate__api__image__FastPngWriter_push');
+  late final _wire__crate__api__image__FastPngWriter_push =
+      _wire__crate__api__image__FastPngWriter_pushPtr
+          .asFunction<
+            void Function(int, int, ffi.Pointer<wire_cst_list_prim_u_8_loose>)
           >();
 
   void wire__crate__api__image__FastRegionDecoder_decode_tile(
@@ -1395,6 +1614,21 @@ final class wire_cst_list_fast_tile_rect extends ffi.Struct {
     required ffi.Pointer<wire_cst_fast_tile_rect> ptr,
     required int len,
   }) => $allocator<wire_cst_list_fast_tile_rect>()
+    ..ref.ptr = ptr
+    ..ref.len = len;
+}
+
+final class wire_cst_list_prim_u_8_loose extends ffi.Struct {
+  external ffi.Pointer<ffi.Uint8> ptr;
+
+  @ffi.Int32()
+  external int len;
+
+  static ffi.Pointer<wire_cst_list_prim_u_8_loose> $allocate(
+    ffi.Allocator $allocator, {
+    required ffi.Pointer<ffi.Uint8> ptr,
+    required int len,
+  }) => $allocator<wire_cst_list_prim_u_8_loose>()
     ..ref.ptr = ptr
     ..ref.len = len;
 }

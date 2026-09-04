@@ -34,5 +34,6 @@
   "close": "Close",
   "appName": "Moodiary",
   "configured": "Configured",
-  "notConfigured": "Not configured"
+  "notConfigured": "Not configured",
+  "copied": "Copied to clipboard"
 }

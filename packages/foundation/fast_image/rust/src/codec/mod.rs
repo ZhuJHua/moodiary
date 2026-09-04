@@ -2,6 +2,7 @@
 
 mod jpeg_region;
 mod png_region;
+mod png_stripe;
 mod region;
 mod restart;
 mod turbo;
@@ -23,6 +24,7 @@ use image::{
     metadata::Orientation,
 };
 
+pub use png_stripe::PngStripeWriter;
 pub use region::{RawDecoder, Rect, RegionDecoder, TilePixels};
 pub use turbo::JpegHeader;
 

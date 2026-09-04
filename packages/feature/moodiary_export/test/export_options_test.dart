@@ -1,3 +1,5 @@
+import 'dart:ui' show Brightness;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_export/moodiary_export.dart';
 
@@ -26,6 +28,12 @@ void main() {
           asciiFont: 'Iowan',
         ),
         pdf: LayoutExportOptions(paper: .a5, eastAsiaFont: 'x.ttf'),
+        image: ImageExportOptions(
+          brightness: Brightness.dark,
+          widthDp: 480,
+          scale: 2,
+          watermark: false,
+        ),
       );
 
       final restored = ExportSettings.decode(settings.encode());
@@ -36,6 +44,10 @@ void main() {
       expect(restored.common.nameTemplate, '{title}');
       expect(restored.markdown.dialect, MarkdownDialect.commonMark);
       expect(restored.markdown.frontMatter, isFalse);
+      expect(restored.image.brightness, Brightness.dark);
+      expect(restored.image.widthDp, 480);
+      expect(restored.image.scale, 2);
+      expect(restored.image.watermark, isFalse);
       expect(restored.docx.paper, ExportPaper.letter);
       expect(restored.docx.margin, 720);
       expect(restored.docx.fontSizePt, 14);
@@ -86,6 +98,7 @@ void main() {
     test('按 id 还原，未知 id 退回 markdown', () {
       expect(ExportFormat.byId('docx'), ExportFormat.docx);
       expect(ExportFormat.byId('pdf'), ExportFormat.pdf);
+      expect(ExportFormat.byId('image'), ExportFormat.image);
       expect(ExportFormat.byId('还没有的格式'), ExportFormat.markdown);
     });
 
@@ -93,6 +106,65 @@ void main() {
       expect(ExportFormat.markdown.extension, 'md');
       expect(ExportFormat.docx.extension, 'docx');
       expect(ExportFormat.pdf.extension, 'pdf');
+      expect(ExportFormat.image.extension, 'png');
+    });
+  });
+
+  group('位置开关', () {
+    test('默认关 —— 导出的文件是要发给别人的', () {
+      expect(const ExportCommon().includePosition, isFalse);
+    });
+
+    test('往返保住 true', () {
+      const settings = ExportSettings(
+        common: ExportCommon(includePosition: true),
+      );
+      expect(
+        ExportSettings.decode(settings.encode()).common.includePosition,
+        isTrue,
+      );
+    });
+
+    test('老配置里没有这个键时按关处理', () {
+      final decoded = ExportSettings.decode('{"common":{"merge":false}}');
+      expect(decoded.common.includePosition, isFalse);
+      expect(decoded.common.merge, isFalse);
+    });
+  });
+
+  group('长图分带', () {
+    test('首尾相接、不重不漏', () {
+      final bands = imageBands(4500, 2000);
+      expect(bands.length, 3);
+      expect(bands[0], (0.0, 2000.0));
+      expect(bands[1], (2000.0, 2000.0));
+      expect(bands[2], (4000.0, 500.0));
+      // 各带高度之和 = 总高：拼起来就是原图，PNG 声明的行数才对得上。
+      expect(bands.fold<double>(0, (sum, b) => sum + b.$2), 4500);
+      // 每一带的起点都接着上一带的终点。
+      for (var i = 1; i < bands.length; i++) {
+        expect(bands[i].$1, bands[i - 1].$1 + bands[i - 1].$2);
+      }
+    });
+
+    test('切点都是整数：乘倍率不会出现半个像素', () {
+      for (final total in [1, 7, 1999, 2000, 2001, 12345]) {
+        for (final band in imageBands(total, 2000)) {
+          expect(band.$1 % 1, 0);
+          expect(band.$2 % 1, 0);
+        }
+      }
+    });
+
+    test('内容不足一带只出一带；空内容也出 1px，而不是非法的 0 高 PNG', () {
+      expect(imageBands(800, 2000), [(0.0, 800.0)]);
+      expect(imageBands(0, 2000), [(0.0, 1.0)]);
+    });
+
+    test('恰好整除时不多出一条空带', () {
+      final bands = imageBands(6000, 2000);
+      expect(bands.length, 3);
+      expect(bands.last, (4000.0, 2000.0));
     });
   });
 }

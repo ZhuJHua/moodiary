@@ -458,6 +458,7 @@ class _Translations$common$en extends Translations$common$zh {
 	@override String get appName => 'Moodiary';
 	@override String get configured => 'Configured';
 	@override String get notConfigured => 'Not configured';
+	@override String get copied => 'Copied to clipboard';
 }
 
 // Path: diary
@@ -753,6 +754,26 @@ class _Translations$export$en extends Translations$export$zh {
 	@override String get progressSerializing => 'Writing file…';
 	@override String get mediaVideo => 'Video';
 	@override String get mediaAudio => 'Audio';
+	@override String get formatImage => 'Image';
+	@override String get formatImageSubtitle => 'PNG long image';
+	@override String get titleImage => 'Export as image';
+	@override String get sectionImage => 'Image';
+	@override String get includePosition => 'Include location';
+	@override String get includePositionSubtitle => 'Off by default — exported files are meant to be shared';
+	@override String get imageBrightness => 'Appearance';
+	@override String get imageBrightnessSystem => 'Follow app';
+	@override String get imageBrightnessLight => 'Light';
+	@override String get imageBrightnessDark => 'Dark';
+	@override String get imageSize => 'Size and sharpness';
+	@override String imageSizeValue({required Object width, required Object scale, required Object pixels}) => '${width} dp · ${scale}× (${pixels} px wide)';
+	@override String get imageWidth => 'Width';
+	@override String get imageWidthStandard => 'Standard';
+	@override String get imageWidthWide => 'Wide';
+	@override String get imageScale => 'Sharpness';
+	@override String get imageWatermark => 'Show Moodiary mark';
+	@override String get imageMerge => 'Merge into one long image';
+	@override String get imageMergeSubtitle => 'Off means one image per entry; over 9 are zipped';
+	@override String get previewSample => 'Preview sample';
 }
 
 // Path: lock
@@ -850,15 +871,26 @@ class _Translations$share$en extends Translations$share$zh {
 	final TranslationsEn _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'Share';
+	@override String get sheetTitle => 'Share this entry';
+	@override String get sheetSubtitle => 'Export as an image or a document — this entry only';
+	@override String get optionImage => 'Image';
+	@override String get optionImageSubtitle => 'Long image · can be saved to Photos';
+	@override String get optionMarkdownSubtitle => 'Plain text + assets';
+	@override String get optionDocxSubtitle => 'Keep editing in Word';
+	@override String get optionPdfSubtitle => 'Fixed layout';
+	@override String get optionPdfNeedFont => 'Fixed layout · pick a font first';
+	@override String get previewTitle => 'Image preview';
+	@override String get previewSampleTitle => 'Sample · first entry';
+	@override String get rendering => 'Rendering…';
+	@override String renderFailed({required Object error}) => 'Rendering failed: ${error}';
 	@override String get empty => 'Nothing to share';
-	@override String get copyText => 'Copy text';
-	@override String get exportImage => 'Export image';
-	@override String get copied => 'Copied to clipboard';
+	@override String get saveToAlbum => 'Save to Photos';
+	@override String get share => 'Share';
+	@override String get savedToAlbum => 'Saved to Photos';
+	@override String savedToAlbumCount({required Object count}) => 'Saved ${count} images to Photos';
+	@override String get saveToAlbumFailed => 'Could not save — check Photos permission';
 	@override String get subject => 'Shared from Moodiary';
-	@override String imageSaved({required Object path}) => 'Image saved to ${path} (path copied)';
-	@override String get templateMinimal => 'Minimal';
-	@override String get templateNote => 'Note';
+	@override String generating({required Object format}) => 'Generating ${format}…';
 }
 
 // Path: sync

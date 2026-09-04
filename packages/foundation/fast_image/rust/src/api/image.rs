@@ -171,3 +171,30 @@ impl FastImageCodec {
         crate::codec::make_thumbnails(&file_path, &targets, quality.unwrap_or(82))
     }
 }
+
+/// 逐带写一张长 PNG。一次导出一个，`finish` 之后不可再用。
+///
+/// 用法：`create` → 反复 `push`（整行 RGBA，自上而下）→ `finish`。整张图的位图不会
+/// 在任何一侧完整存在，峰值只跟单带高度有关。
+#[frb(opaque)]
+pub struct FastPngWriter(crate::codec::PngStripeWriter);
+
+impl FastPngWriter {
+    pub fn create(output_path: String, width: u32, height: u32) -> Result<FastPngWriter> {
+        Ok(FastPngWriter(crate::codec::PngStripeWriter::create(
+            &output_path,
+            width,
+            height,
+        )?))
+    }
+
+    /// 追加若干整行像素；长度必须是 `width * 4` 的整数倍。
+    pub fn push(&mut self, rgba: Vec<u8>) -> Result<()> {
+        self.0.push(&rgba)
+    }
+
+    /// 收尾。行数不够会报错，不会留下一张被截断的图。
+    pub fn finish(&mut self) -> Result<()> {
+        self.0.finish()
+    }
+}

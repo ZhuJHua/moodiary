@@ -1,13 +1,19 @@
+import 'dart:io';
+
 import 'package:fast_press/fast_press.dart' as press;
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../data/export_options.dart';
 import '../data/export_scope.dart';
 import '../data/export_service.dart';
 import 'export_page.dart' show shareExported;
+import 'image_card/card_style.dart';
+import 'image_export_page.dart';
 import 'pdf_font_page.dart';
 import 'scope_picker_page.dart';
 
@@ -16,7 +22,10 @@ import 'scope_picker_page.dart';
 class FormatExportPage extends StatefulWidget {
   final ExportFormat format;
 
-  const FormatExportPage({super.key, required this.format});
+  /// 锁死的范围。非空时「范围」整组隐藏 —— 从日记页进来的单篇导出用它。
+  final ExportScope? lockedScope;
+
+  const FormatExportPage({super.key, required this.format, this.lockedScope});
 
   @override
   State<FormatExportPage> createState() => _FormatExportPageState();
@@ -27,7 +36,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
     MoodiaryKVs.exportSettings.get() ?? '',
   );
 
-  ExportScope _scope = const AllDiariesScope();
+  late ExportScope _scope = widget.lockedScope ?? const AllDiariesScope();
   int? _scopeCount;
   bool _running = false;
   ExportProgress? _progress;
@@ -64,7 +73,10 @@ class _FormatExportPageState extends State<FormatExportPage> {
     .markdown => l10n.export.titleMarkdown,
     .docx => l10n.export.titleDocx,
     .pdf => l10n.export.titlePdf,
+    .image => l10n.export.titleImage,
   };
+
+  bool get _isImage => widget.format == ExportFormat.image;
 
   @override
   Widget build(BuildContext context) {
@@ -74,12 +86,15 @@ class _FormatExportPageState extends State<FormatExportPage> {
         // 底部有操作栏吃安全区，这里只补常规内边距。
         padding: const .symmetric(horizontal: 8, vertical: 8),
         children: [
-          _scopeSection(),
-          const SizedBox(height: 4),
+          if (widget.lockedScope == null) ...[
+            _scopeSection(),
+            const SizedBox(height: 4),
+          ],
           _contentSection(),
           const SizedBox(height: 4),
           if (widget.format == .markdown) _markdownSection(),
-          if (widget.format != .markdown) _layoutSection(),
+          if (_isImage) _imageSection(),
+          if (widget.format == .docx || widget.format == .pdf) _layoutSection(),
         ],
       ),
       bottomNavigationBar: _actionBar(),
@@ -121,8 +136,16 @@ class _FormatExportPageState extends State<FormatExportPage> {
               ),
               SwitchListTile(
                 value: _common.merge,
-                title: Text(l10n.export.mergeIntoOneFile),
-                subtitle: Text(l10n.export.mergeSubtitle),
+                title: Text(
+                  _isImage
+                      ? l10n.export.imageMerge
+                      : l10n.export.mergeIntoOneFile,
+                ),
+                subtitle: Text(
+                  _isImage
+                      ? l10n.export.imageMergeSubtitle
+                      : l10n.export.mergeSubtitle,
+                ),
                 secondary: const Icon(LucideIcons.package),
                 onChanged: (v) => _update(
                   _settings.copyWith(common: _common.copyWith(merge: v)),
@@ -202,6 +225,17 @@ class _FormatExportPageState extends State<FormatExportPage> {
                 secondary: const Icon(LucideIcons.info),
                 onChanged: (v) => _update(
                   _settings.copyWith(common: _common.copyWith(includeMeta: v)),
+                ),
+              ),
+              SwitchListTile(
+                value: _common.includePosition,
+                title: Text(l10n.export.includePosition),
+                subtitle: Text(l10n.export.includePositionSubtitle),
+                secondary: const Icon(LucideIcons.mapPin),
+                onChanged: (v) => _update(
+                  _settings.copyWith(
+                    common: _common.copyWith(includePosition: v),
+                  ),
                 ),
               ),
               SettingListTile(
@@ -294,6 +328,124 @@ class _FormatExportPageState extends State<FormatExportPage> {
           ),
         ),
       ],
+    );
+  }
+
+  // ---------------------------------------------------------------- 图片
+
+  /// 模版只有「原稿」一个（跟随应用配色），所以这里没有模版行 —— 明暗、尺寸清晰度、
+  /// 水印三个旋钮就是全部。
+  Widget _imageSection() {
+    final l10n = context.l10n;
+    final theme = context.theme;
+    final image = _settings.image;
+    return Column(
+      crossAxisAlignment: .stretch,
+      children: [
+        SettingTitleTile(title: l10n.export.sectionImage),
+        Card.filled(
+          color: theme.colors.surfaceContainerLow,
+          margin: .zero,
+          child: Column(
+            children: [
+              SettingListTile(
+                isFirst: true,
+                title: l10n.export.imageBrightness,
+                subtitle: _brightnessLabel(l10n, image.brightness),
+                leading: const Icon(LucideIcons.sunMoon),
+                trailing: const Icon(LucideIcons.chevronRight),
+                onTap: _pickBrightness,
+              ),
+              SettingListTile(
+                title: l10n.export.imageSize,
+                subtitle: l10n.export.imageSizeValue(
+                  width: image.widthDp.toStringAsFixed(0),
+                  scale: image.scale,
+                  pixels: (image.widthDp * image.scale).round(),
+                ),
+                leading: const Icon(LucideIcons.ruler),
+                trailing: const Icon(LucideIcons.chevronRight),
+                onTap: _pickImageSize,
+              ),
+              SettingSwitchListTile(
+                isLast: true,
+                value: image.watermark,
+                title: l10n.export.imageWatermark,
+                secondary: const Icon(LucideIcons.bookOpen),
+                onChanged: (v) => _update(
+                  _settings.copyWith(image: image.copyWith(watermark: v)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  static String _brightnessLabel(Translations l10n, Brightness? value) =>
+      switch (value) {
+        null => l10n.export.imageBrightnessSystem,
+        Brightness.light => l10n.export.imageBrightnessLight,
+        Brightness.dark => l10n.export.imageBrightnessDark,
+      };
+
+  Future<void> _pickBrightness() async {
+    final l10n = context.l10n;
+    // 「跟随应用」是一种明确的选择，不是「没设过」，所以它也占一格。
+    const values = <Brightness?>[null, Brightness.light, Brightness.dark];
+    final picked = await MAlert.show<int>(
+      context,
+      title: l10n.export.imageBrightness,
+      actions: [
+        for (var i = 0; i < values.length; i++)
+          MAction(
+            label: _brightnessLabel(l10n, values[i]),
+            value: i,
+            isPrimary: values[i] == _settings.image.brightness,
+          ),
+      ],
+    );
+    if (picked == null) return;
+    _update(
+      _settings.copyWith(
+        image: _settings.image.copyWith(
+          brightness: values[picked],
+          clearBrightness: values[picked] == null,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickImageSize() async {
+    final l10n = context.l10n;
+    const combos = [(360.0, 2), (360.0, 3), (480.0, 2), (480.0, 3)];
+    final picked = await MAlert.show<int>(
+      context,
+      title: l10n.export.imageSize,
+      actions: [
+        for (var i = 0; i < combos.length; i++)
+          MAction(
+            label: l10n.export.imageSizeValue(
+              width: combos[i].$1.toStringAsFixed(0),
+              scale: combos[i].$2,
+              pixels: (combos[i].$1 * combos[i].$2).round(),
+            ),
+            value: i,
+            isPrimary:
+                combos[i].$1 == _settings.image.widthDp &&
+                combos[i].$2 == _settings.image.scale,
+          ),
+      ],
+    );
+    if (picked == null) return;
+    _update(
+      _settings.copyWith(
+        image: _settings.image.copyWith(
+          widthDp: combos[picked].$1,
+          scale: combos[picked].$2,
+        ),
+      ),
     );
   }
 
@@ -471,34 +623,53 @@ class _FormatExportPageState extends State<FormatExportPage> {
               ),
             ),
           if (_running && _progress != null) _progressBar(_progress!, l10n),
-          SizedBox(
-            height: 50,
-            child: FilledButton.icon(
-              style: FilledButton.styleFrom(
-                shape: RoundedRectangleBorder(borderRadius: .circular(14)),
+          Row(
+            children: [
+              // 全量导出前先看一眼版式：只跑第一篇，秒出。另外三种格式没有预览可给。
+              if (_isImage) ...[
+                Expanded(
+                  child: SizedBox(
+                    height: 52,
+                    child: FilledButton.tonalIcon(
+                      onPressed: _running || count == null || count == 0
+                          ? null
+                          : _previewSample,
+                      icon: const Icon(LucideIcons.eye, size: 18),
+                      label: Text(l10n.export.previewSample),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
+              Expanded(
+                child: SizedBox(
+                  height: 52,
+                  child: FilledButton.icon(
+                    onPressed: _running
+                        ? _cancelRun
+                        : ((count == null || count == 0 || blocked != null)
+                              ? null
+                              : _run),
+                    icon: _running
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(LucideIcons.download, size: 18),
+                    label: Text(
+                      _running
+                          ? l10n.common.cancel
+                          : (count == null
+                                ? l10n.export.counting
+                                : (count == 0
+                                      ? l10n.export.scopeEmpty
+                                      : l10n.export.runButton(count: count))),
+                    ),
+                  ),
+                ),
               ),
-              onPressed: _running
-                  ? _cancelRun
-                  : ((count == null || count == 0 || blocked != null)
-                        ? null
-                        : _run),
-              icon: _running
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(LucideIcons.download),
-              label: Text(
-                _running
-                    ? l10n.common.cancel
-                    : (count == null
-                          ? l10n.export.counting
-                          : (count == 0
-                                ? l10n.export.scopeEmpty
-                                : l10n.export.runButton(count: count))),
-              ),
-            ),
+            ],
           ),
         ],
       ),
@@ -570,6 +741,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
         format: widget.format,
         scope: _scope,
         settings: _settings,
+        imageStyle: _isImage ? _imageStyle() : null,
         untitledLabel: l10n.common.untitled,
         videoLabel: l10n.common.video,
         audioLabel: l10n.common.audio,
@@ -599,6 +771,19 @@ class _FormatExportPageState extends State<FormatExportPage> {
     }
   }
 
+  ImageCardStyle _imageStyle() => ImageCardStyle.resolve(
+    brightness: _settings.image.brightness,
+    fallback: Theme.of(context).brightness,
+    widthDp: _settings.image.widthDp,
+    watermark: _settings.image.watermark,
+  );
+
+  Future<void> _previewSample() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(builder: (_) => ImageExportPage.sample(scope: _scope)),
+    );
+  }
+
   Future<void> _reportAndShare(ExportOutcome outcome, Translations l10n) async {
     final notes = [
       if (outcome.skippedMedia > 0)
@@ -616,6 +801,72 @@ class _FormatExportPageState extends State<FormatExportPage> {
         message: notes.join('\n'),
       );
     }
+    if (outcome.images.isNotEmpty && mounted) {
+      await _deliverImages(outcome.images, l10n);
+      return;
+    }
     await shareExported(outcome.path, l10n);
+  }
+
+  /// 图片产物的两条出口。相册是系统分享面板做不好的那件事，所以单独给一颗。
+  ///
+  /// **文件要查两次**：产物落在缓存目录，而磁盘吃紧的 Android 会随时 purge 它 ——
+  /// 实测导出完 15 秒就被清了，而清的时机正好落在「弹窗弹出」与「用户点下去」之间。
+  /// 只查一次挡不住。缺了就报 `artifactMissing`，别让 Gal 把「文件不存在」报成
+  /// `NOT_SUPPORTED_FORMAT`（那句话用户看不懂）。
+  Future<void> _deliverImages(List<String> images, Translations l10n) async {
+    List<String> alive() =>
+        images.where((path) => File(path).existsSync()).toList();
+    if (alive().isEmpty) {
+      toast.error(message: l10n.export.artifactMissing);
+      return;
+    }
+
+    final choice = await MSheet.picker<int>(
+      context,
+      title: l10n.export.generated,
+      icon: LucideIcons.image,
+      options: [
+        MSheetOption(
+          value: 0,
+          label: l10n.share.saveToAlbum,
+          icon: LucideIcons.image,
+        ),
+        MSheetOption(
+          value: 1,
+          label: l10n.share.share,
+          icon: LucideIcons.share2,
+        ),
+      ],
+    );
+    if (choice == null) return;
+
+    // 用户想了几秒的这段时间里文件可能已经没了，落地前再查一次。
+    final files = alive();
+    if (files.isEmpty) {
+      toast.error(message: l10n.export.artifactMissing);
+      return;
+    }
+
+    if (choice == 1) {
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [for (final path in files) XFile(path, mimeType: 'image/png')],
+          text: l10n.share.subject,
+        ),
+      );
+      return;
+    }
+    var saved = 0;
+    for (final path in files) {
+      if (await MediaManager.saveToGallery(path: path, type: .image)) saved++;
+    }
+    if (saved == 0) {
+      toast.error(message: l10n.share.saveToAlbumFailed);
+    } else if (saved == 1) {
+      toast.success(message: l10n.share.savedToAlbum);
+    } else {
+      toast.success(message: l10n.share.savedToAlbumCount(count: saved));
+    }
   }
 }

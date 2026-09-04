@@ -11,7 +11,6 @@ import 'package:moodiary_mobile/app/router/route_error_page.dart';
 import 'package:moodiary_mobile/app/settings/setting_routes.dart';
 import 'package:moodiary_mobile/app/shell/root_shell.dart' show MobileRootShell;
 import 'package:moodiary_router/moodiary_router.dart';
-import 'package:moodiary_share/moodiary_share.dart';
 import 'package:moodiary_sync/moodiary_sync.dart';
 import 'package:mui/mui.dart';
 
@@ -76,7 +75,6 @@ List<RouteBase> _mobileRoutes() => [
   ...syncRoutes(),
   ...exportRoutes(),
   ...lockRoutes(),
-  ...shareRoutes(),
   ...editorRoutes(),
   ...assistantRoutes(),
   GoRoute(

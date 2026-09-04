@@ -34,5 +34,6 @@
   "close": "关闭",
   "appName": "Moodiary",
   "configured": "已配置",
-  "notConfigured": "未配置"
+  "notConfigured": "未配置",
+  "copied": "已复制到剪贴板"
 }

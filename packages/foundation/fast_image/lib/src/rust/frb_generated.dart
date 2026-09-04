@@ -69,7 +69,7 @@ class FastImageLib
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => -2110393147;
+  int get rustContentHash => -281142125;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -100,6 +100,19 @@ abstract class FastImageLibApi extends BaseApi {
   Future<void> crateApiImageFastImageCodecToBaselineFile({
     required String filePath,
     required String outputPath,
+  });
+
+  Future<FastPngWriter> crateApiImageFastPngWriterCreate({
+    required String outputPath,
+    required int width,
+    required int height,
+  });
+
+  Future<void> crateApiImageFastPngWriterFinish({required FastPngWriter that});
+
+  Future<void> crateApiImageFastPngWriterPush({
+    required FastPngWriter that,
+    required List<int> rgba,
   });
 
   Future<FastTilePixels> crateApiImageFastRegionDecoderDecodeTile({
@@ -137,6 +150,15 @@ abstract class FastImageLibApi extends BaseApi {
 
   CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_FastImageCodecPtr;
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_FastPngWriter;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_FastPngWriter;
+
+  CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_FastPngWriterPtr;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_FastRegionDecoder;
@@ -290,6 +312,110 @@ class FastImageLibApiImpl extends FastImageLibApiImplPlatform
       const TaskConstMeta(
         debugName: "FastImageCodec_to_baseline_file",
         argNames: ["filePath", "outputPath"],
+      );
+
+  @override
+  Future<FastPngWriter> crateApiImageFastPngWriterCreate({
+    required String outputPath,
+    required int width,
+    required int height,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          var arg0 = cst_encode_String(outputPath);
+          var arg1 = cst_encode_u_32(width);
+          var arg2 = cst_encode_u_32(height);
+          return wire.wire__crate__api__image__FastPngWriter_create(
+            port_,
+            arg0,
+            arg1,
+            arg2,
+          );
+        },
+        codec: DcoCodec(
+          decodeSuccessData:
+              dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter,
+          decodeErrorData: dco_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiImageFastPngWriterCreateConstMeta,
+        argValues: [outputPath, width, height],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiImageFastPngWriterCreateConstMeta =>
+      const TaskConstMeta(
+        debugName: "FastPngWriter_create",
+        argNames: ["outputPath", "width", "height"],
+      );
+
+  @override
+  Future<void> crateApiImageFastPngWriterFinish({required FastPngWriter that}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          var arg0 =
+              cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
+                that,
+              );
+          return wire.wire__crate__api__image__FastPngWriter_finish(
+            port_,
+            arg0,
+          );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_unit,
+          decodeErrorData: dco_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiImageFastPngWriterFinishConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiImageFastPngWriterFinishConstMeta =>
+      const TaskConstMeta(
+        debugName: "FastPngWriter_finish",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<void> crateApiImageFastPngWriterPush({
+    required FastPngWriter that,
+    required List<int> rgba,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          var arg0 =
+              cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
+                that,
+              );
+          var arg1 = cst_encode_list_prim_u_8_loose(rgba);
+          return wire.wire__crate__api__image__FastPngWriter_push(
+            port_,
+            arg0,
+            arg1,
+          );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_unit,
+          decodeErrorData: dco_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiImageFastPngWriterPushConstMeta,
+        argValues: [that, rgba],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiImageFastPngWriterPushConstMeta =>
+      const TaskConstMeta(
+        debugName: "FastPngWriter_push",
+        argNames: ["that", "rgba"],
       );
 
   @override
@@ -482,6 +608,14 @@ class FastImageLibApiImpl extends FastImageLibApiImplPlatform
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastImageCodec;
 
   RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_FastPngWriter => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_FastPngWriter => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter;
+
+  RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_FastRegionDecoder => wire
       .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastRegionDecoder;
 
@@ -505,12 +639,30 @@ class FastImageLibApiImpl extends FastImageLibApiImplPlatform
   }
 
   @protected
+  FastPngWriter
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return FastPngWriterImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   FastRegionDecoder
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastRegionDecoder(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return FastRegionDecoderImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  FastPngWriter
+  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return FastPngWriterImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -529,6 +681,15 @@ class FastImageLibApiImpl extends FastImageLibApiImplPlatform
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return FastImageCodecImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  FastPngWriter
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return FastPngWriterImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -704,6 +865,12 @@ class FastImageLibApiImpl extends FastImageLibApiImplPlatform
   }
 
   @protected
+  List<int> dco_decode_list_prim_u_8_loose(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as List<int>;
+  }
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as Uint8List;
@@ -775,12 +942,36 @@ class FastImageLibApiImpl extends FastImageLibApiImplPlatform
   }
 
   @protected
+  FastPngWriter
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return FastPngWriterImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
   FastRegionDecoder
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastRegionDecoder(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return FastRegionDecoderImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  FastPngWriter
+  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return FastPngWriterImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -805,6 +996,18 @@ class FastImageLibApiImpl extends FastImageLibApiImplPlatform
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return FastImageCodecImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  FastPngWriter
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return FastPngWriterImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -1025,6 +1228,13 @@ class FastImageLibApiImpl extends FastImageLibApiImplPlatform
   }
 
   @protected
+  List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var len_ = sse_decode_i_32(deserializer);
+    return deserializer.buffer.getUint8List(len_);
+  }
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
@@ -1101,12 +1311,32 @@ class FastImageLibApiImpl extends FastImageLibApiImplPlatform
 
   @protected
   int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
+    FastPngWriter raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    // ignore: invalid_use_of_internal_member
+    return (raw as FastPngWriterImpl).frbInternalCstEncode(move: true);
+  }
+
+  @protected
+  int
   cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastRegionDecoder(
     FastRegionDecoder raw,
   ) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     // ignore: invalid_use_of_internal_member
     return (raw as FastRegionDecoderImpl).frbInternalCstEncode(move: true);
+  }
+
+  @protected
+  int
+  cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
+    FastPngWriter raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    // ignore: invalid_use_of_internal_member
+    return (raw as FastPngWriterImpl).frbInternalCstEncode(move: false);
   }
 
   @protected
@@ -1127,6 +1357,16 @@ class FastImageLibApiImpl extends FastImageLibApiImplPlatform
     // Codec=Cst (C-struct based), see doc to use other codecs
     // ignore: invalid_use_of_internal_member
     return (raw as FastImageCodecImpl).frbInternalCstEncode();
+  }
+
+  @protected
+  int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
+    FastPngWriter raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    // ignore: invalid_use_of_internal_member
+    return (raw as FastPngWriterImpl).frbInternalCstEncode();
   }
 
   @protected
@@ -1205,6 +1445,19 @@ class FastImageLibApiImpl extends FastImageLibApiImplPlatform
 
   @protected
   void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
+    FastPngWriter self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as FastPngWriterImpl).frbInternalSseEncode(move: true),
+      serializer,
+    );
+  }
+
+  @protected
+  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastRegionDecoder(
     FastRegionDecoder self,
     SseSerializer serializer,
@@ -1212,6 +1465,19 @@ class FastImageLibApiImpl extends FastImageLibApiImplPlatform
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as FastRegionDecoderImpl).frbInternalSseEncode(move: true),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
+    FastPngWriter self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as FastPngWriterImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
@@ -1238,6 +1504,19 @@ class FastImageLibApiImpl extends FastImageLibApiImplPlatform
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as FastImageCodecImpl).frbInternalSseEncode(move: null),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFastPngWriter(
+    FastPngWriter self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as FastPngWriterImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
@@ -1435,6 +1714,18 @@ class FastImageLibApiImpl extends FastImageLibApiImplPlatform
   }
 
   @protected
+  void sse_encode_list_prim_u_8_loose(
+    List<int> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    serializer.buffer.putUint8List(
+      self is Uint8List ? self : Uint8List.fromList(self),
+    );
+  }
+
+  @protected
   void sse_encode_list_prim_u_8_strict(
     Uint8List self,
     SseSerializer serializer,
@@ -1525,6 +1816,36 @@ class FastImageCodecImpl extends RustOpaque implements FastImageCodec {
         .api
         .rust_arc_decrement_strong_count_FastImageCodecPtr,
   );
+}
+
+@sealed
+class FastPngWriterImpl extends RustOpaque implements FastPngWriter {
+  // Not to be used by end users
+  FastPngWriterImpl.frbInternalDcoDecode(List<dynamic> wire)
+    : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  FastPngWriterImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount:
+        FastImageLib.instance.api.rust_arc_increment_strong_count_FastPngWriter,
+    rustArcDecrementStrongCount:
+        FastImageLib.instance.api.rust_arc_decrement_strong_count_FastPngWriter,
+    rustArcDecrementStrongCountPtr: FastImageLib
+        .instance
+        .api
+        .rust_arc_decrement_strong_count_FastPngWriterPtr,
+  );
+
+  /// 收尾。行数不够会报错，不会留下一张被截断的图。
+  Future<void> finish() =>
+      FastImageLib.instance.api.crateApiImageFastPngWriterFinish(that: this);
+
+  /// 追加若干整行像素；长度必须是 `width * 4` 的整数倍。
+  Future<void> push({required List<int> rgba}) => FastImageLib.instance.api
+      .crateApiImageFastPngWriterPush(that: this, rgba: rgba);
 }
 
 @sealed
