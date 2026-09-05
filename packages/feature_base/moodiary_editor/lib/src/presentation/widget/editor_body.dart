@@ -45,8 +45,15 @@ class EditorBody extends StatefulWidget {
   final VoidCallback? onAddTag;
   final ValueChanged<int>? onRemoveTag;
   final ValueChanged<String>? onChangeMood;
+  final ValueChanged<String>? onChangeWeather;
+  final VoidCallback? onClearWeather;
   final VoidCallback? onFetchWeather;
   final VoidCallback? onFetchPosition;
+  final VoidCallback? onLocateForPlaces;
+  final ValueChanged<String>? onPickPlace;
+  final VoidCallback? onNewPlace;
+  final VoidCallback? onManagePlaces;
+  final VoidCallback? onClearPosition;
   final VoidCallback? onOpenGraph;
 
   const EditorBody({
@@ -69,8 +76,15 @@ class EditorBody extends StatefulWidget {
     this.onAddTag,
     this.onRemoveTag,
     this.onChangeMood,
+    this.onChangeWeather,
+    this.onClearWeather,
     this.onFetchWeather,
     this.onFetchPosition,
+    this.onLocateForPlaces,
+    this.onPickPlace,
+    this.onNewPlace,
+    this.onManagePlaces,
+    this.onClearPosition,
     this.onOpenGraph,
   });
 
@@ -135,8 +149,15 @@ class _EditorBodyState extends State<EditorBody> {
         onAddTag: widget.onAddTag,
         onRemoveTag: widget.onRemoveTag,
         onChangeMood: widget.onChangeMood,
+        onChangeWeather: widget.onChangeWeather,
+        onClearWeather: widget.onClearWeather,
         onFetchWeather: widget.onFetchWeather,
         onFetchPosition: widget.onFetchPosition,
+        onLocateForPlaces: widget.onLocateForPlaces,
+        onPickPlace: widget.onPickPlace,
+        onNewPlace: widget.onNewPlace,
+        onManagePlaces: widget.onManagePlaces,
+        onClearPosition: widget.onClearPosition,
         onOpenGraph: widget.onOpenGraph,
       ),
     );

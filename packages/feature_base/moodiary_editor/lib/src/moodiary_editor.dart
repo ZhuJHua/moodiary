@@ -124,8 +124,33 @@ class MoodiaryEditor extends StatefulWidget {
 
   /// 心情三选（web 侧页内菜单选定）：入参为枚举名 negative/neutral/positive。
   final ValueChanged<String>? onChangeMood;
+
+  /// 手选天气（web 侧天气面板选定）：入参为和风天气码（[ManualWeather.code]）。
+  final ValueChanged<String>? onChangeWeather;
+
+  /// 清除天气（天气面板底部）。
+  final VoidCallback? onClearWeather;
+
+  /// 天气面板里的「自动获取」：走和风实时接口，只写天气不写位置。
   final VoidCallback? onFetchWeather;
+
+  /// 位置面板的「自动获取」：定位 + 和风反查地名，只写位置。
   final VoidCallback? onFetchPosition;
+
+  /// 位置面板打开：宿主取一次定位，用来给常用地点排距离（失败静默）。
+  final VoidCallback? onLocateForPlaces;
+
+  /// 位置面板选中某个常用地点：入参为 `Place.id`。
+  final ValueChanged<String>? onPickPlace;
+
+  /// 位置面板的「新建常用地点」：开新增表单（本会话定位过就带上坐标）。
+  final VoidCallback? onNewPlace;
+
+  /// 位置面板的「管理常用地点」：导航到管理页。
+  final VoidCallback? onManagePlaces;
+
+  /// 位置面板的「清除」。
+  final VoidCallback? onClearPosition;
 
   /// 文末双链面板的图谱入口。
   final VoidCallback? onOpenGraph;
@@ -191,8 +216,15 @@ class MoodiaryEditor extends StatefulWidget {
     this.onAddTag,
     this.onRemoveTag,
     this.onChangeMood,
+    this.onChangeWeather,
+    this.onClearWeather,
     this.onFetchWeather,
     this.onFetchPosition,
+    this.onLocateForPlaces,
+    this.onPickPlace,
+    this.onNewPlace,
+    this.onManagePlaces,
+    this.onClearPosition,
     this.onOpenGraph,
     this.saveStatus = 'idle',
     this.firstLineIndent = false,
@@ -496,11 +528,40 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
           }
         }
         return;
+      case 'changeWeather':
+        if (payload is Map) {
+          final code = payload['code'];
+          if (code is String && code.isNotEmpty) {
+            widget.onChangeWeather?.call(code);
+          }
+        }
+        return;
+      case 'clearWeather':
+        widget.onClearWeather?.call();
+        return;
       case 'fetchWeather':
         widget.onFetchWeather?.call();
         return;
       case 'fetchPosition':
         widget.onFetchPosition?.call();
+        return;
+      case 'locateForPlaces':
+        widget.onLocateForPlaces?.call();
+        return;
+      case 'pickPlace':
+        if (payload is Map) {
+          final id = payload['id'];
+          if (id is String && id.isNotEmpty) widget.onPickPlace?.call(id);
+        }
+        return;
+      case 'newPlace':
+        widget.onNewPlace?.call();
+        return;
+      case 'managePlaces':
+        widget.onManagePlaces?.call();
+        return;
+      case 'clearPosition':
+        widget.onClearPosition?.call();
         return;
       case 'openGraph':
         widget.onOpenGraph?.call();

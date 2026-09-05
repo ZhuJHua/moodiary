@@ -12,7 +12,6 @@ Diary diary({
   DiaryMood mood = .neutral,
   DiaryWeather? weather,
   List<String> tags = const [],
-  DiaryPosition? position,
   List<String> audio = const [],
   List<String> video = const [],
 }) => Diary(
@@ -29,8 +28,15 @@ Diary diary({
   audioName: audio,
   videoName: video,
   tags: tags,
-  position: position,
   type: DiaryType.tiptap.value,
+);
+
+Place place() => Place(
+  id: 'p',
+  name: '厦门 环岛路',
+  latitude: 1,
+  longitude: 2,
+  lastModified: DateTime(2026),
 );
 
 Category cat() =>
@@ -48,6 +54,7 @@ DiaryTimelineTile tile({
   bool dayStart = true,
   bool breakBefore = false,
   Category? category,
+  Place? place,
   bool showCategoryLabel = true,
   bool selecting = false,
   bool selected = false,
@@ -61,6 +68,7 @@ DiaryTimelineTile tile({
     dayStart: dayStart,
     breakBefore: breakBefore,
     category: category,
+    place: place,
     showCategoryLabel: showCategoryLabel,
     selecting: selecting,
     selected: selected,
@@ -137,14 +145,10 @@ void main() {
         tile(
           d: diary(
             tags: const ['旅行', '海'],
-            position: const DiaryPosition(
-              latitude: 1,
-              longitude: 2,
-              name: '厦门 环岛路',
-            ),
             audio: const ['a.m4a'],
             video: const ['video-1.mp4'],
           ),
+          place: place(),
         ),
       ),
     );

@@ -98,12 +98,12 @@ class ImageCard extends StatelessWidget {
     final chips = <Widget>[
       _moodChip(doc.mood),
       if (doc.weather case final w?)
-        _metaItem(LucideIcons.cloudSun, '${w.text} ${w.temp}'.trim()),
+        _metaItem(LucideIcons.cloudSun, w.displayText),
       if (doc.categoryName case final name? when name.isNotEmpty)
         _metaItem(LucideIcons.folder, name),
       // 位置**默认不进图**：日记页上看是自己的，发出去就是行踪（ExportCommon.includePosition）。
       if (common.includePosition)
-        if (doc.position case final p?) _metaItem(LucideIcons.mapPin, p.name),
+        if (doc.place case final p?) _metaItem(LucideIcons.mapPin, p.name),
     ];
 
     return [

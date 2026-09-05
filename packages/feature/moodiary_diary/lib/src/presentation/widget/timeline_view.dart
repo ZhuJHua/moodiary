@@ -99,6 +99,9 @@ class DiaryTimelineView extends ConsumerWidget {
                         final category = ref.watch(
                           categoryByIdProvider(diary.categoryId),
                         );
+                        final place = ref.watch(
+                          placeByIdProvider(diary.placeId),
+                        );
                         final next = flatIndex == flat.length - 1
                             ? null
                             : flat[flatIndex + 1];
@@ -114,6 +117,7 @@ class DiaryTimelineView extends ConsumerWidget {
                           hasAbove: flatIndex > 0,
                           moodBelow: next?.diary.mood,
                           category: category,
+                          place: place,
                           showCategoryLabel: filter.isAll,
                           syncState: syncState,
                           selecting: selecting,

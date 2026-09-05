@@ -84,7 +84,10 @@ class _MePageState extends ConsumerState<MePage> with RouteAware {
           const _RecallGrid(),
           const SizedBox(height: 16),
           _SectionLabel(context.l10n.app.meSectionManage),
-          _ManageRows(categoryCount: stats?.categoryCount),
+          _ManageRows(
+            categoryCount: stats?.categoryCount,
+            placeCount: ref.watch(placeControllerProvider).value?.length,
+          ),
         ],
       ),
     );
@@ -451,8 +454,9 @@ class _RecallTile extends StatelessWidget {
 
 class _ManageRows extends StatelessWidget {
   final int? categoryCount;
+  final int? placeCount;
 
-  const _ManageRows({required this.categoryCount});
+  const _ManageRows({required this.categoryCount, required this.placeCount});
 
   @override
   Widget build(BuildContext context) {
@@ -461,6 +465,16 @@ class _ManageRows extends StatelessWidget {
     Widget chevron() =>
         Icon(LucideIcons.chevronRight, color: colors.onSurfaceVariant);
     Widget lead(IconData i) => Icon(i, color: colors.onSurfaceVariant);
+    Widget countChevron(int? count) => count == null
+        ? chevron()
+        : Row(
+            mainAxisSize: .min,
+            children: [
+              Text('$count', style: context.theme.typography.bodySmall.primary),
+              const SizedBox(width: 4),
+              chevron(),
+            ],
+          );
 
     return Card.filled(
       color: colors.surfaceContainerLow,
@@ -471,20 +485,14 @@ class _ManageRows extends StatelessWidget {
             isFirst: true,
             title: l10n.app.categoryManager,
             leading: lead(LucideIcons.folders),
-            trailing: categoryCount == null
-                ? chevron()
-                : Row(
-                    mainAxisSize: .min,
-                    children: [
-                      Text(
-                        '$categoryCount',
-                        style: context.theme.typography.bodySmall.primary,
-                      ),
-                      const SizedBox(width: 4),
-                      chevron(),
-                    ],
-                  ),
+            trailing: countChevron(categoryCount),
             onTap: () => const CategoryManagerRoute().push(context),
+          ),
+          SettingListTile(
+            title: l10n.app.placeManager,
+            leading: lead(LucideIcons.mapPinned),
+            trailing: countChevron(placeCount),
+            onTap: () => const PlaceManagerRoute().push(context),
           ),
           SettingListTile(
             title: l10n.app.recycle,

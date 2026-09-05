@@ -8,27 +8,24 @@ part of 'map_page.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 底图需要的两样东西一起等：天地图的 tk 在 SecureKV 里，读它是一次异步的
-/// 钥匙串调用。分开 watch 会让底图先按「无 tk」建成 OSM 单层、再重建成天地图双层。
+/// 日记引用常用地点，足迹 = 有日记的地点各打一个点，同一地点的日记挂在一起。
 
 @ProviderFor(mapData)
 final mapDataProvider = MapDataProvider._();
 
-/// 底图需要的两样东西一起等：天地图的 tk 在 SecureKV 里，读它是一次异步的
-/// 钥匙串调用。分开 watch 会让底图先按「无 tk」建成 OSM 单层、再重建成天地图双层。
+/// 日记引用常用地点，足迹 = 有日记的地点各打一个点，同一地点的日记挂在一起。
 
 final class MapDataProvider
     extends
         $FunctionalProvider<
-          AsyncValue<({List<Diary> diaries, String tiandituKey})>,
-          ({List<Diary> diaries, String tiandituKey}),
-          FutureOr<({List<Diary> diaries, String tiandituKey})>
+          AsyncValue<({List<PlacePin> pins, String tiandituKey})>,
+          ({List<PlacePin> pins, String tiandituKey}),
+          FutureOr<({List<PlacePin> pins, String tiandituKey})>
         >
     with
-        $FutureModifier<({List<Diary> diaries, String tiandituKey})>,
-        $FutureProvider<({List<Diary> diaries, String tiandituKey})> {
-  /// 底图需要的两样东西一起等：天地图的 tk 在 SecureKV 里，读它是一次异步的
-  /// 钥匙串调用。分开 watch 会让底图先按「无 tk」建成 OSM 单层、再重建成天地图双层。
+        $FutureModifier<({List<PlacePin> pins, String tiandituKey})>,
+        $FutureProvider<({List<PlacePin> pins, String tiandituKey})> {
+  /// 日记引用常用地点，足迹 = 有日记的地点各打一个点，同一地点的日记挂在一起。
   MapDataProvider._()
     : super(
         from: null,
@@ -45,13 +42,13 @@ final class MapDataProvider
 
   @$internal
   @override
-  $FutureProviderElement<({List<Diary> diaries, String tiandituKey})>
+  $FutureProviderElement<({List<PlacePin> pins, String tiandituKey})>
   $createElement($ProviderPointer pointer) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<({List<Diary> diaries, String tiandituKey})> create(Ref ref) {
+  FutureOr<({List<PlacePin> pins, String tiandituKey})> create(Ref ref) {
     return mapData(ref);
   }
 }
 
-String _$mapDataHash() => r'2b6bb6638874e31b07c5ec570773ca543b992373';
+String _$mapDataHash() => r'fd0a56b4716c6e1f59b1339b8fecbf38f1ae2680';

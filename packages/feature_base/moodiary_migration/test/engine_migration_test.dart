@@ -227,6 +227,7 @@ void main() {
     database: db,
     diaryRepository: DiaryRepository(db),
     categoryRepository: CategoryRepository(db),
+    placeRepository: PlaceRepository(db),
     fontRepository: FontRepository(db),
     mediaInfoRepository: MediaInfoRepository(db),
     tombstoneRepository: TombstoneRepository(db),
@@ -244,18 +245,25 @@ void main() {
     final repo = DiaryRepository(db);
     // 值对象转换
     final full = (await repo.getDiaryByBusinessId('d-full'))!;
-    expect(full.position?.latitude, 24.48);
-    expect(full.position?.name, '厦门 环岛路');
+    // 旧定位快照归并成常用地点，日记改为引用它。
+    final place = (await PlaceRepository(db).getPlaceById(full.placeId!))!;
+    expect(place.name, '厦门 环岛路');
+    expect(place.id, Place.idForName('厦门 环岛路'));
+    expect(place.latitude, 24.48);
+    expect(place.longitude, 118.08);
     expect(full.weather?.text, '晴');
     expect(full.imageName, ['image-1.jpg']);
     expect(full.tags, ['旅行']);
     expect(full.time, DateTime.utc(2026, 1, 1, 8));
-    // 两元素旧定位：地名空串
+    // 两元素旧定位没有地名：拿坐标当名字，不丢
     final pos2 = (await repo.getDiaryByBusinessId('d-pos2'))!;
-    expect(pos2.position?.latitude, 1.5);
-    expect(pos2.position?.name, '');
+    expect(
+      (await PlaceRepository(db).getPlaceById(pos2.placeId!))!.name,
+      '1.5000, 2.5000',
+    );
     // 坏定位丢弃
-    expect((await repo.getDiaryByBusinessId('d-badpos'))!.position, isNull);
+    expect((await repo.getDiaryByBusinessId('d-badpos'))!.placeId, isNull);
+    expect(await PlaceRepository(db).getAllPlaces(), hasLength(2));
     // 回收站保留
     expect((await repo.getRecycleBinDiaries()).single.id, 'd-recycled');
 

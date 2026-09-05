@@ -302,6 +302,52 @@ final class FakeCategoryStore implements SyncCategoryStore {
   }
 }
 
+/// 内存常用地点仓库，实现 [SyncPlaceStore]。
+final class FakePlaceStore implements SyncPlaceStore {
+  final Map<String, Place> places = {};
+  final FakeTombstoneStore tombstones;
+
+  /// 写入返回 false 用于模拟仓库写失败。
+  bool insertSucceeds = true;
+
+  FakePlaceStore([
+    Iterable<Place> seed = const [],
+    FakeTombstoneStore? tombstones,
+  ]) : tombstones = tombstones ?? FakeTombstoneStore() {
+    for (final p in seed) {
+      places[p.id] = p;
+    }
+  }
+
+  @override
+  Future<List<Place>> getAllPlacesForSync() async => places.values.toList();
+
+  @override
+  Future<Place?> getPlaceById(String id) async => places[id];
+
+  @override
+  Future<Place?> getPlaceByName(String name) async =>
+      places.values.where((p) => p.name == name).firstOrNull;
+
+  @override
+  Future<void> insertAPlace(Place place, {bool fromSync = false}) async {
+    if (!insertSucceeds) throw StateError('injected insert failure');
+    places[place.id] = place;
+    tombstones.rows.remove(SyncTombstone.placeKey(place.id));
+  }
+
+  @override
+  Future<SyncTombstone> tombstonePlace(
+    String id, {
+    bool fromSync = false,
+  }) async {
+    places.remove(id);
+    final row = SyncTombstone.forPlace(id, at: .timestamp());
+    tombstones.rows[row.key] = row;
+    return row;
+  }
+}
+
 /// 内存媒体元数据仓库，实现 [SyncMediaInfoStore]。
 final class FakeMediaInfoStore implements SyncMediaInfoStore {
   final Map<String, MediaInfo> mediaInfos = {};

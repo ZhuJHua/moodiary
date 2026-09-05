@@ -30,7 +30,7 @@ class TiptapToIr {
     required ResolveMediaPath resolvePath,
     DiaryMood mood = .neutral,
     DiaryWeather? weather,
-    DiaryPosition? position,
+    Place? place,
     List<String> tags = const [],
     String? categoryName,
   }) {
@@ -52,7 +52,7 @@ class TiptapToIr {
       time: time,
       mood: mood,
       weather: weather,
-      position: position,
+      place: place,
       tags: tags,
       categoryName: categoryName,
       blocks: blocks,

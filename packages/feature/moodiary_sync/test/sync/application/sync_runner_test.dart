@@ -33,6 +33,7 @@ void main() {
         logger: logger,
         diaryStore: FakeDiaryStore(const []),
         categoryStore: FakeCategoryStore(const []),
+        placeStore: FakePlaceStore(),
         mediaInfoStore: FakeMediaInfoStore(const []),
         tombstoneStore: FakeTombstoneStore(),
         mediaFiles: FakeMediaFiles(),

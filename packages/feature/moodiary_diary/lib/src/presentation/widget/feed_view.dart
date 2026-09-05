@@ -84,6 +84,9 @@ class DiaryFeedView extends ConsumerWidget {
                         final category = ref.watch(
                           categoryByIdProvider(diary.categoryId),
                         );
+                        final place = ref.watch(
+                          placeByIdProvider(diary.placeId),
+                        );
                         return DiaryFeedTile(
                           // 按日记 id 定身份：列表按 index 复用 Element，重排后
                           // 缩略图（gaplessPlayback）会先画上一篇的照片。
@@ -91,6 +94,7 @@ class DiaryFeedView extends ConsumerWidget {
                           diary: diary,
                           sort: sort,
                           category: category,
+                          place: place,
                           showCategoryLabel: filter.isAll,
                           syncState: syncState,
                           selecting: selecting,

@@ -405,7 +405,7 @@ void main() {
     expect(await _rawStatus(url, token), 401);
   });
 
-  test('令牌正确但协议版本不同 → 426，接收端标记不兼容；没带头的协议 2 发送端放行', () async {
+  test('令牌正确但协议版本不同（含没带头）→ 426，接收端标记不兼容', () async {
     final receiver = buildReceiver(applier: (_, _) async => fail('不应走到导入'));
     await receiver.start();
     addTearDown(receiver.stop);
@@ -422,16 +422,23 @@ void main() {
     );
     final url = 'http://127.0.0.1:${receiver.port}$lanManifestPath';
 
-    // 2.8.0 的发送端还没有这个头：当作协议 2 放行，页面不进失败态。
+    // 协议 3 起没带头就是不兼容：那是 2.8.0 早期构建（协议 2）的发送端。
     expect(
       await _rawStatus(
         url,
         await lanBuildAuthToken(crypto, key, lanManifestPath),
         proto: null,
       ),
-      200,
+      426,
     );
-    expect(receiver.state.value, isNot(isA<LanReceiveFailed>()));
+    expect(
+      receiver.state.value,
+      isA<LanReceiveFailed>().having(
+        (s) => s.incompatible,
+        'incompatible',
+        isTrue,
+      ),
+    );
 
     expect(
       await _rawStatus(

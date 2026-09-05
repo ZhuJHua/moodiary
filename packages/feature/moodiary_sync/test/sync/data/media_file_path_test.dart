@@ -50,6 +50,7 @@ void main() {
         logger: logger,
         diaryStore: d,
         categoryStore: FakeCategoryStore(const [], d.tombstones),
+        placeStore: FakePlaceStore(const [], d.tombstones),
         mediaInfoStore: FakeMediaInfoStore(const [], d.tombstones),
         tombstoneStore: d.tombstones,
         mediaFiles: mediaFiles,

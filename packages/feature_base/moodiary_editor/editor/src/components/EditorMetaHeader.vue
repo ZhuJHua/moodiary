@@ -29,6 +29,16 @@ import IconMapPin from '~icons/lucide/map-pin'
 import IconPlus from '~icons/lucide/plus'
 import IconTrash from '~icons/lucide/trash-2'
 import IconCloud from '~icons/lucide/cloud'
+import IconRefresh from '~icons/lucide/refresh-cw'
+import IconX from '~icons/lucide/x'
+import IconLocateFixed from '~icons/lucide/locate-fixed'
+import IconSettings from '~icons/lucide/settings'
+import IconHouse from '~icons/lucide/house'
+import IconBuilding from '~icons/lucide/building-2'
+import IconSchool from '~icons/lucide/school'
+import IconCoffee from '~icons/lucide/coffee'
+import IconTrees from '~icons/lucide/trees'
+import IconHospital from '~icons/lucide/hospital'
 // 和风官方图标字体：只引 woff2（?url 产出资产地址）+ JSON 码表，不 import 它的 css ——
 // 那份 css 会把 woff/ttf 两种回退格式（约 270KB）一起拽进产物，且 460 条 .qi-* 规则也用不上。
 import qiFontUrl from 'qweather-icons/font/fonts/qweather-icons.woff2?url'
@@ -59,6 +69,19 @@ const MOOD_ICONS: Record<string, Component> = {
   thermometer: IconThermometer,
 }
 
+// 常用地点的图标：契约里给 lucide 名，未知名回退图钉。
+const PLACE_ICONS: Record<string, Component> = {
+  house: IconHouse,
+  'building-2': IconBuilding,
+  school: IconSchool,
+  coffee: IconCoffee,
+  dumbbell: IconDumbbell,
+  trees: IconTrees,
+  hospital: IconHospital,
+  plane: IconPlane,
+  'map-pin': IconMapPin,
+}
+
 const currentMood = computed(
   () => props.meta.moods.find((m) => m.value === props.meta.mood) ?? props.meta.moods[0],
 )
@@ -76,12 +99,39 @@ document.fonts.add(qiFace)
 void qiFace.load().catch(() => {})
 
 /** 和风图标码 → 字形字符；未知码返回空串（模板回退 lucide 云）。 */
-const weatherGlyph = computed(() => {
-  const code = props.meta.weather?.icon
+function glyphOf(code: string | undefined | null): string {
   if (!code) return ''
   const cp = (qiCodepoints as Record<string, number>)[code]
   return cp ? String.fromCodePoint(cp) : ''
-})
+}
+
+const weatherGlyph = computed(() => glyphOf(props.meta.weather?.icon))
+
+const weatherMenuOpen = ref(false)
+function onWeatherSelect(code: string): void {
+  weatherMenuOpen.value = false
+  post('changeWeather', { code })
+}
+function onWeatherAuto(): void {
+  weatherMenuOpen.value = false
+  post('fetchWeather')
+}
+function onWeatherClear(): void {
+  weatherMenuOpen.value = false
+  post('clearWeather')
+}
+
+const positionMenuOpen = ref(false)
+// 点位置总是开面板（与心情 / 天气一致）。开面板那一刻让宿主取一次定位：常用地点按
+// 「距此多远」排序、「存为常用地点」也靠这次坐标——不取就只是手排顺序、没有距离。
+function onPositionMenuToggle(open: boolean): void {
+  positionMenuOpen.value = open
+  if (open) post('locateForPlaces')
+}
+function onPositionAction(type: string, payload?: unknown): void {
+  positionMenuOpen.value = false
+  post(type, payload)
+}
 
 const tagMenuIndex = ref(-1)
 const tagMenuItems = computed<PopupMenuItem[]>(() => [
@@ -189,33 +239,161 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
         <IconFolder class="meta-fn-icon" :class="{ 'meta-fn-icon--unset': !meta.category }" />
         <span v-if="meta.category" class="meta-fn-label">{{ meta.category }}</span>
       </button>
-      <button
-        v-if="showWeather"
-        type="button"
-        class="meta-plain-btn meta-fn-item"
-        :disabled="!editable"
-        @mousedown.prevent
-        @click="editable && post('fetchWeather')"
+      <PopupMenu
+        v-if="editable && showWeather"
+        class="meta-fn-weather"
+        :model-value="weatherMenuOpen"
+        @update:model-value="(v) => (weatherMenuOpen = v)"
       >
+        <template #trigger>
+          <span class="meta-fn-item" @mousedown.prevent>
+            <span v-if="weatherGlyph" class="meta-fn-icon meta-fn-qi">{{ weatherGlyph }}</span>
+            <IconCloud
+              v-else
+              class="meta-fn-icon"
+              :class="{ 'meta-fn-icon--unset': !meta.weather }"
+            />
+            <span v-if="meta.weather" class="meta-fn-label">{{ meta.weather.text }}</span>
+          </span>
+        </template>
+        <template #panel>
+          <div class="weather-panel">
+            <div class="weather-grid">
+              <button
+                v-for="w in meta.weatherOptions"
+                :key="w.code"
+                type="button"
+                class="weather-cell"
+                :class="{ 'weather-cell--active': w.code === meta.weather?.icon }"
+                @mousedown.prevent
+                @click.stop="onWeatherSelect(w.code)"
+              >
+                <span class="weather-cell-icon">{{ glyphOf(w.code) }}</span>
+                <span class="weather-cell-label">{{ w.label }}</span>
+              </button>
+            </div>
+            <!-- 和风没配好时 weatherAutoLabel 为 null，整条不渲染（点了也只会失败） -->
+            <template v-if="meta.weatherAutoLabel || meta.weather">
+              <div class="weather-divider"></div>
+              <button
+                v-if="meta.weatherAutoLabel"
+                type="button"
+                class="weather-action"
+                @mousedown.prevent
+                @click.stop="onWeatherAuto()"
+              >
+                <IconRefresh class="weather-action-icon" />
+                <span>{{ meta.weatherAutoLabel }}</span>
+              </button>
+              <button
+                v-if="meta.weather"
+                type="button"
+                class="weather-action weather-action--dim"
+                @mousedown.prevent
+                @click.stop="onWeatherClear()"
+              >
+                <IconX class="weather-action-icon" />
+                <span>{{ meta.weatherClearLabel }}</span>
+              </button>
+            </template>
+          </div>
+        </template>
+      </PopupMenu>
+      <span v-else-if="showWeather" class="meta-fn-item">
         <span v-if="weatherGlyph" class="meta-fn-icon meta-fn-qi">{{ weatherGlyph }}</span>
-        <IconCloud
-          v-else
-          class="meta-fn-icon"
-          :class="{ 'meta-fn-icon--unset': !meta.weather }"
-        />
+        <IconCloud v-else class="meta-fn-icon meta-fn-icon--unset" />
         <span v-if="meta.weather" class="meta-fn-label">{{ meta.weather.text }}</span>
-      </button>
-      <button
-        v-if="showPosition"
-        type="button"
-        class="meta-plain-btn meta-fn-item meta-fn-item--shrink"
-        :disabled="!editable"
-        @mousedown.prevent
-        @click="editable && post('fetchPosition')"
+      </span>
+      <PopupMenu
+        v-if="editable && showPosition"
+        class="meta-fn-position"
+        :model-value="positionMenuOpen"
+        @update:model-value="onPositionMenuToggle"
       >
-        <IconMapPin class="meta-fn-icon" :class="{ 'meta-fn-icon--unset': !meta.position }" />
+        <template #trigger>
+          <span class="meta-fn-item meta-fn-item--shrink" @mousedown.prevent>
+            <IconMapPin
+              class="meta-fn-icon"
+              :class="{ 'meta-fn-icon--unset': !meta.position }"
+            />
+            <span v-if="meta.position" class="meta-fn-label">{{ meta.position }}</span>
+          </span>
+        </template>
+        <template #panel>
+          <div class="place-panel">
+            <!-- 和风没配好时 positionAutoLabel 为 null，整条不渲染（同天气面板） -->
+            <button
+              v-if="meta.positionAutoLabel"
+              type="button"
+              class="place-action"
+              @mousedown.prevent
+              @click.stop="onPositionAction('fetchPosition')"
+            >
+              <IconLocateFixed class="place-action-icon" />
+              <span>{{ meta.positionAutoLabel }}</span>
+            </button>
+            <template v-if="meta.places.length > 0">
+              <div v-if="meta.positionAutoLabel" class="place-divider"></div>
+              <div class="place-list">
+                <button
+                  v-for="place in meta.places"
+                  :key="place.id"
+                  type="button"
+                  class="place-row"
+                  :class="{ 'place-row--active': place.id === meta.positionId }"
+                  @mousedown.prevent
+                  @click.stop="onPositionAction('pickPlace', { id: place.id })"
+                >
+                  <component
+                    :is="PLACE_ICONS[place.icon] ?? IconMapPin"
+                    class="place-row-icon"
+                  />
+                  <span class="place-row-name">{{ place.name }}</span>
+                  <span v-if="place.distance" class="place-row-distance">
+                    {{ place.distance }}
+                  </span>
+                </button>
+              </div>
+            </template>
+            <div
+              v-if="meta.positionAutoLabel || meta.places.length > 0"
+              class="place-divider"
+            ></div>
+            <button
+              type="button"
+              class="place-action"
+              @mousedown.prevent
+              @click.stop="onPositionAction('newPlace')"
+            >
+              <IconPlus class="place-action-icon" />
+              <span>{{ meta.positionNewPlaceLabel }}</span>
+            </button>
+            <button
+              type="button"
+              class="place-action place-action--dim"
+              @mousedown.prevent
+              @click.stop="onPositionAction('managePlaces')"
+            >
+              <IconSettings class="place-action-icon" />
+              <span>{{ meta.positionManageLabel }}</span>
+            </button>
+            <button
+              v-if="meta.position"
+              type="button"
+              class="place-action place-action--dim"
+              @mousedown.prevent
+              @click.stop="onPositionAction('clearPosition')"
+            >
+              <IconX class="place-action-icon" />
+              <span>{{ meta.positionClearLabel }}</span>
+            </button>
+          </div>
+        </template>
+      </PopupMenu>
+      <span v-else-if="showPosition" class="meta-fn-item meta-fn-item--shrink">
+        <IconMapPin class="meta-fn-icon meta-fn-icon--unset" />
         <span v-if="meta.position" class="meta-fn-label">{{ meta.position }}</span>
-      </button>
+      </span>
     </div>
 
     <!-- ③ 标签行 -->
@@ -325,6 +503,12 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
   flex: none;
   margin-right: 10px;
 }
+/* PopupMenu 的宿主 div 是功能行里的一个 flex 项，天气标签长了要能收窄。 */
+.meta-fn-weather,
+.meta-fn-position {
+  flex: 0 1 auto;
+  min-width: 0;
+}
 
 /* 心情状态面板：4 列平铺网格，格子 = 图标 + 标签，选中格用该态语义色高亮。 */
 .mood-panel {
@@ -364,6 +548,164 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
 .mood-cell-label {
   font-size: 11px;
   white-space: nowrap;
+}
+
+/* 天气面板：与心情面板同一栅格（4 列、gap 2、格子 radius 12），图标换成和风字形。
+   选中态用 secondaryContainer —— 天气没有心情那样的语义色，借它的会误导。 */
+.weather-panel {
+  width: 276px;
+  padding-top: 4px;
+}
+.weather-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+}
+.weather-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 2px 6px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--app-on-surface);
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.weather-cell:hover {
+  background: var(--app-selected);
+}
+.weather-cell--active {
+  background: var(--app-secondary);
+  color: var(--app-on-secondary);
+  font-weight: 600;
+}
+.weather-cell--active:hover {
+  background: var(--app-secondary);
+}
+.weather-cell-icon {
+  font-family: 'qweather-icons';
+  font-size: 20px;
+  line-height: 1;
+  font-style: normal;
+  font-weight: 400;
+}
+.weather-cell-label {
+  font-size: 11px;
+  white-space: nowrap;
+}
+.weather-divider {
+  height: 1px;
+  background: var(--app-outline);
+  margin: 5px 10px;
+}
+.weather-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--app-on-surface);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.weather-action:hover {
+  background: var(--app-selected);
+}
+.weather-action--dim {
+  color: var(--app-on-surface-variant);
+}
+.weather-action-icon {
+  width: 19px;
+  height: 19px;
+  flex: none;
+}
+
+/* 位置面板：一列条目，与 PopupMenu 默认条目同规格（radius 12、14px 中等字重）。
+   预设行多一列距离，右对齐、等宽数字，免得 120 m / 4.2 km 抖动。 */
+.place-panel {
+  width: 236px;
+  padding-top: 2px;
+}
+.place-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.place-row,
+.place-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 9px 12px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--app-on-surface);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.place-row:hover,
+.place-action:hover {
+  background: var(--app-selected);
+}
+.place-row--active {
+  background: var(--app-secondary);
+  color: var(--app-on-secondary);
+}
+.place-row--active:hover {
+  background: var(--app-secondary);
+}
+.place-row-icon,
+.place-action-icon {
+  width: 19px;
+  height: 19px;
+  flex: none;
+}
+.place-row-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.place-row-distance {
+  flex: none;
+  font-size: 12px;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  color: var(--app-on-surface-variant);
+}
+.place-row--active .place-row-distance {
+  color: inherit;
+}
+.place-action--dim {
+  color: var(--app-on-surface-variant);
+}
+.place-divider {
+  height: 1px;
+  background: var(--app-outline);
+  margin: 5px 10px;
 }
 
 /* ② 功能行 */

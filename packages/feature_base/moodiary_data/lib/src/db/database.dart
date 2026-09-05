@@ -3,8 +3,11 @@ import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_sqlite_vec/moodiary_sqlite_vec.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite3;
+
+import 'db_codec.dart';
 
 part 'database.g.dart';
 
@@ -35,6 +38,10 @@ part 'database.g.dart';
 class MoodiaryDatabase extends _$MoodiaryDatabase {
   MoodiaryDatabase._(super.e);
 
+  /// 本次打开时从哪一档升上来的；没升级为 null。组合根据此把「本地有待推变更」置位
+  /// ——迁移写出的常用地点不走仓储事件，自动同步的空转短路否则会一直跳过它们。
+  int? upgradedFrom;
+
   /// 测试用：内存库（同步单连接，无 isolate）。
   @visibleForTesting
   MoodiaryDatabase.forTesting(super.e);
@@ -64,7 +71,7 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
   }
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -76,7 +83,84 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
         "INSERT INTO diary_fts(diary_fts, rank) VALUES('rank', 'bm25(1.5, 1.0)')",
       );
     },
+    // .drift 里的建表语句永远是**最新形状**（全新安装 createAll 直接带齐）；老库靠这里
+    // 一档一档追上去，每档只做增量。db_migration_test 用「把新库降回旧档」的办法复现
+    // 旧形状，所以每档都要能从上一档的真实形状迁过来。
+    // drift 不把 onUpgrade 包进事务：中途被杀会留下半成品、user_version 仍是旧值，
+    // 下次打开再跑一遍。所以每档都（1）整体放进一个事务，（2）按实际形状判断再动手，
+    // 两道保险叠着上。
+    onUpgrade: (m, from, to) async {
+      upgradedFrom = from;
+      // v1（已发布的 2.8.0）→ v2：常用地点表 + 日记改为引用地点。日记原来的
+      // latitude / longitude / place_name 快照按地名归并成地点，再把列删掉。
+      if (from < 2) {
+        await transaction(() async {
+          await m.createTable(places);
+          if (!await _hasColumn('diaries', 'place_id')) {
+            await m.addColumn(diaries, diaries.placeId);
+          }
+          if (await _hasColumn('diaries', 'latitude')) {
+            await _migratePositionsToPlaces();
+            for (final column in ['latitude', 'longitude', 'place_name']) {
+              await customStatement('ALTER TABLE diaries DROP COLUMN $column');
+            }
+          }
+        });
+      }
+    },
   );
+
+  Future<bool> _hasColumn(String table, String column) async {
+    final rows = await customSelect('PRAGMA table_info($table)').get();
+    return rows.any((r) => r.read<String>('name') == column);
+  }
+
+  /// v1 日记的位置快照 → 常用地点。同名归并（和风反查出的行政区名会反复出现），
+  /// 坐标取最近一篇的；没有地名的拿坐标当名字，**一篇都不丢**。地点 id 由地名派生
+  /// （[Place.forName]），两台设备各自升级也会得到同一批 id，同步时合并。
+  Future<void> _migratePositionsToPlaces() async {
+    final rows = await customSelect(
+      'SELECT id, latitude, longitude, place_name FROM diaries '
+      'WHERE latitude IS NOT NULL AND longitude IS NOT NULL '
+      'ORDER BY time DESC',
+    ).get();
+    if (rows.isEmpty) return;
+    final byName = <String, Place>{};
+    final placeOf = <String, String>{};
+    for (final row in rows) {
+      final lat = row.read<double>('latitude');
+      final lon = row.read<double>('longitude');
+      var name = (row.readNullable<String>('place_name') ?? '').trim();
+      if (name.isEmpty) name = Place.coordinateName(lat, lon);
+      final place = byName.putIfAbsent(
+        name,
+        () => Place.forName(name, latitude: lat, longitude: lon),
+      );
+      placeOf[row.read<String>('id')] = place.id;
+    }
+    await batch((b) {
+      for (final p in byName.values) {
+        b.insert(
+          places,
+          PlacesCompanion.insert(
+            id: p.id,
+            name: p.name,
+            latitude: p.latitude,
+            longitude: p.longitude,
+            lastModified: dbTime(p.lastModified),
+          ),
+          mode: InsertMode.insertOrIgnore,
+        );
+      }
+      for (final MapEntry(key: diaryId, value: placeId) in placeOf.entries) {
+        b.update(
+          diaries,
+          DiariesCompanion(placeId: Value(placeId)),
+          where: (d) => d.id.equals(diaryId),
+        );
+      }
+    });
+  }
 
   /// 清空全部数据但保持句柄有效（`resetAllData` 的契约）。FTS 虚表走
   /// `delete-all`，影子表由引擎自管。

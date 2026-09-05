@@ -8,7 +8,10 @@ library;
 
 export 'src/application/edit_controller.dart';
 export 'src/data/editor_migration_service.dart' show EditorMigrationService;
-export 'src/data/geo_repository.dart' show GeoFailure, GeoResult;
+export 'src/data/geo_repository.dart'
+    show CoordinatesResult, GeoFailure, GeoResult;
+export 'src/data/qweather_config.dart' show qweatherCredentials;
+export 'src/data/weather_repository.dart' show WeatherResult;
 export 'src/editor_local_server.dart' show EditorLocalServer;
 export 'src/media.dart'
     show MediaResolver, imageMimeOf, audioMimeOf, videoMimeOf;

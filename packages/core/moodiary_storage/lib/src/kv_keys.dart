@@ -147,7 +147,21 @@ enum MoodiaryKVs<T extends Object> {
   moodLlmModelId<String>(defaultValue: ''),
 
   getWeather<bool>(defaultValue: false),
+
+  /// 新建日记时自动获取天气（和风实时接口）。和风没配好时视同关闭。
   autoWeather<bool>(defaultValue: false),
+
+  /// 新建日记时自动获取位置 = **和风反查行政区名**。和风没配好时视同关闭。
+  /// 与 [autoNearestPlace] 都开时常用地点优先，没命中才反查；三条都只打一发 GPS。
+  autoPosition<bool>(defaultValue: false),
+
+  /// 新建日记时自动选中就近的常用地点（坐标落在某地点半径内）。只要定位权限，
+  /// 不需要和风。
+  autoNearestPlace<bool>(defaultValue: false),
+
+  /// 常用地点的展示顺序（地点 id 列表）。**不给 Place 加 sortOrder** —— 同步是
+  /// 整对象 LWW，排序字段会让两台设备互相踩（同 [categoryOrder] 的理由）。
+  placeOrder<List<String>>(),
   weather<List<String>>(),
 
   startTime<int>(),

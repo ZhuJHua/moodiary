@@ -54,6 +54,7 @@ void main() {
       logger: logger,
       diaryStore: diaries ?? FakeDiaryStore(const [], tombstoneStore),
       categoryStore: FakeCategoryStore(const [], tombstoneStore),
+      placeStore: FakePlaceStore(const [], tombstoneStore),
       mediaInfoStore:
           mediaInfos ?? FakeMediaInfoStore(const [], tombstoneStore),
       tombstoneStore: tombstoneStore,

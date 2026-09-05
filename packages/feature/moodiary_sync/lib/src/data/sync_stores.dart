@@ -43,6 +43,20 @@ abstract interface class SyncCategoryStore {
   Future<SyncTombstone> tombstoneCategory(String id, {bool fromSync = false});
 }
 
+abstract interface class SyncPlaceStore {
+  /// 全量常用地点快照（同步用）。
+  Future<List<Place>> getAllPlacesForSync();
+  Future<Place?> getPlaceById(String id);
+  Future<Place?> getPlaceByName(String name);
+
+  /// 落库并连带清除同 id 的墓碑行（复活闸门）。失败直接抛（与仓储一致），
+  /// 由引擎的条目级 catch 计 failed。
+  Future<void> insertAPlace(Place place, {bool fromSync = false});
+
+  /// pull 应用远端地点墓碑：行硬删 + 写墓碑，返回墓碑行。
+  Future<SyncTombstone> tombstonePlace(String id, {bool fromSync = false});
+}
+
 abstract interface class SyncMediaInfoStore {
   /// 全量媒体元数据快照（同步用）。
   Future<List<MediaInfo>> getAllMediaInfosForSync();
@@ -117,6 +131,27 @@ class RepoSyncCategoryStore implements SyncCategoryStore {
   @override
   Future<SyncTombstone> tombstoneCategory(String id, {bool fromSync = false}) =>
       _repo.tombstoneCategoryForSync(id, fromSync: fromSync);
+}
+
+class RepoSyncPlaceStore implements SyncPlaceStore {
+  late final _repo = getIt<PlaceRepository>();
+
+  @override
+  Future<List<Place>> getAllPlacesForSync() => _repo.getAllPlaces();
+
+  @override
+  Future<Place?> getPlaceById(String id) => _repo.getPlaceById(id);
+
+  @override
+  Future<Place?> getPlaceByName(String name) => _repo.getPlaceByName(name);
+
+  @override
+  Future<void> insertAPlace(Place place, {bool fromSync = false}) =>
+      _repo.insertAPlace(place, fromSync: fromSync);
+
+  @override
+  Future<SyncTombstone> tombstonePlace(String id, {bool fromSync = false}) =>
+      _repo.tombstonePlaceForSync(id, fromSync: fromSync);
 }
 
 class RepoSyncMediaInfoStore implements SyncMediaInfoStore {

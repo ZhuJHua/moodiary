@@ -26,11 +26,14 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
         const <String, int>{};
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.diary.categoryManagerTitle)),
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'categoryManagerFab',
-        onPressed: _onAddCategory,
-        child: const Icon(LucideIcons.plus),
-      ),
+      // 空态自带「新建」按钮，右下角的 FAB 只在有列表时出现，免得两个入口撞车。
+      floatingActionButton: (async.value?.isNotEmpty ?? false)
+          ? FloatingActionButton(
+              heroTag: 'categoryManagerFab',
+              onPressed: _onAddCategory,
+              child: const Icon(LucideIcons.plus),
+            )
+          : null,
       body: async.buildLoading(
         data: (categories) {
           if (categories.isEmpty) {

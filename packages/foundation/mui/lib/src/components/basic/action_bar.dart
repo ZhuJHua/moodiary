@@ -24,6 +24,14 @@ class MAction<T> {
   /// 应当留住弹层并就地报错，不要「先关弹层再 toast」。[onPressed] 存在时不生效。
   final bool Function()? onIntercept;
 
+  /// 异步提交：执行期间这颗键转圈、整条动作条禁用、遮罩与返回键挡住；resolve true
+  /// 关闭弹层并返回 [value]，false 留住弹层（错误由内容区就地展示）。抛错视同 false
+  /// 并继续向上抛。[onIntercept] 先跑，同步校验没过就不进异步。[onPressed] 存在时不生效。
+  ///
+  /// 与 [busy] 的分工：[busy] 是调用方自己管状态时的静态旗子（[onPressed] 那条路），
+  /// 走 [onSubmit] 则由动作条自己管，调用方一行都不用写。
+  final Future<bool> Function()? onSubmit;
+
   const MAction({
     required this.label,
     this.value,
@@ -33,6 +41,7 @@ class MAction<T> {
     this.busy = false,
     this.onPressed,
     this.onIntercept,
+    this.onSubmit,
   });
 }
 
@@ -50,7 +59,10 @@ enum MActionsLayout {
 /// 右，沿用 M3 OverflowBar 的既有顺序），竖排时反序（主操作在上、取消在最下）。
 ///
 /// 排布规则：单个动作全宽；两个动作且量出来放得下时横排等宽；其余一律竖排并反序。
-class MActionBar<T> extends StatelessWidget {
+///
+/// 有状态只为一件事：某颗键的 [MAction.onSubmit] 跑着的时候，它转圈、其它键禁用、
+/// 本路由禁 pop（PopScope 注册到最近的 ModalRoute，遮罩与返回键都走 maybePop）。
+class MActionBar<T> extends StatefulWidget {
   final List<MAction<T>> actions;
   final MActionsLayout layout;
   final double height;
@@ -64,7 +76,17 @@ class MActionBar<T> extends StatelessWidget {
     required this.gap,
   });
 
+  @override
+  State<MActionBar<T>> createState() => _MActionBarState<T>();
+}
+
+class _MActionBarState<T> extends State<MActionBar<T>> {
+  /// 正在异步提交的那颗键。
+  int? _busyIndex;
+
   bool _fitsInRow(BuildContext context, double maxWidth, TextStyle? style) {
+    final actions = widget.actions;
+    final gap = widget.gap;
     final scaler = MediaQuery.textScalerOf(context);
     final direction = Directionality.of(context);
     var total = gap * (actions.length - 1);
@@ -81,67 +103,106 @@ class MActionBar<T> extends StatelessWidget {
     return total <= maxWidth;
   }
 
+  /// 点击默认 `pop(action.value)`；[MAction.onPressed] 接管则什么都不做；
+  /// [MAction.onIntercept] 返回 false 留住；[MAction.onSubmit] 先转圈等结果。
+  Future<void> _tap(int index) async {
+    final action = widget.actions[index];
+    final onPressed = action.onPressed;
+    if (onPressed != null) {
+      onPressed();
+      return;
+    }
+    if (action.onIntercept?.call() == false) return;
+    final submit = action.onSubmit;
+    if (submit != null) {
+      setState(() => _busyIndex = index);
+      var ok = false;
+      try {
+        ok = await submit();
+      } finally {
+        if (mounted) setState(() => _busyIndex = null);
+      }
+      if (!ok || !mounted) return;
+    }
+    if (!mounted) return;
+    Navigator.of(context).pop(action.value);
+  }
+
+  Widget _button(int index, TextStyle style) {
+    final action = widget.actions[index];
+    final busyIndex = _busyIndex;
+    return MActionButton<T>(
+      action: action,
+      textStyle: style,
+      height: widget.height,
+      busy: action.busy || busyIndex == index,
+      enabled: action.enabled && busyIndex == null,
+      onTap: () => _tap(index),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final style = context.theme.typography.labelLarge.emphasized.onSurface;
+    final actions = widget.actions;
+    final gap = widget.gap;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final horizontal = switch (layout) {
-          .horizontal => true,
-          .vertical => false,
-          .auto =>
-            actions.length == 1 ||
-                (actions.length == 2 &&
-                    _fitsInRow(context, constraints.maxWidth, style)),
-        };
+    return PopScope(
+      canPop: _busyIndex == null,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final horizontal = switch (widget.layout) {
+            .horizontal => true,
+            .vertical => false,
+            .auto =>
+              actions.length == 1 ||
+                  (actions.length == 2 &&
+                      _fitsInRow(context, constraints.maxWidth, style)),
+          };
 
-        if (horizontal) {
-          return Row(
+          if (horizontal) {
+            return Row(
+              children: [
+                for (var index = 0; index < actions.length; index++) ...[
+                  if (index > 0) SizedBox(width: gap),
+                  Expanded(child: _button(index, style)),
+                ],
+              ],
+            );
+          }
+          return Column(
+            crossAxisAlignment: .stretch,
+            mainAxisSize: .min,
             children: [
-              for (final (index, action) in actions.indexed) ...[
-                if (index > 0) SizedBox(width: gap),
-                Expanded(
-                  child: MActionButton<T>(
-                    action: action,
-                    textStyle: style,
-                    height: height,
-                  ),
-                ),
+              for (var index = actions.length - 1; index >= 0; index--) ...[
+                if (index < actions.length - 1) SizedBox(height: gap),
+                _button(index, style),
               ],
             ],
           );
-        }
-        return Column(
-          crossAxisAlignment: .stretch,
-          mainAxisSize: .min,
-          children: [
-            for (final (index, action) in actions.reversed.indexed) ...[
-              if (index > 0) SizedBox(height: gap),
-              MActionButton<T>(
-                action: action,
-                textStyle: style,
-                height: height,
-              ),
-            ],
-          ],
-        );
-      },
+        },
+      ),
     );
   }
 }
 
-/// 单颗动作键。点击默认 `pop(action.value)`，除非动作自带 [MAction.onPressed]。
+/// 单颗动作键，纯呈现：转圈 / 禁用 / 点击全由 [MActionBar] 决定。
 class MActionButton<T> extends StatelessWidget {
   final MAction<T> action;
   final TextStyle? textStyle;
   final double height;
+  final bool busy;
+  final bool enabled;
+  final VoidCallback onTap;
 
   const MActionButton({
     super.key,
     required this.action,
     required this.textStyle,
     required this.height,
+    required this.busy,
+    required this.enabled,
+    required this.onTap,
   });
 
   @override
@@ -160,18 +221,8 @@ class MActionButton<T> extends StatelessWidget {
       foreground = scheme.onSurfaceVariant;
     }
 
-    void handleTap() {
-      final onPressed = action.onPressed;
-      if (onPressed != null) {
-        onPressed();
-        return;
-      }
-      if (action.onIntercept?.call() == false) return;
-      Navigator.of(context).pop(action.value);
-    }
-
     return FilledButton(
-      onPressed: action.enabled ? handleTap : null,
+      onPressed: enabled ? onTap : null,
       style: FilledButton.styleFrom(
         backgroundColor: background,
         foregroundColor: foreground,
@@ -187,7 +238,7 @@ class MActionButton<T> extends StatelessWidget {
         shape: const RoundedRectangleBorder(borderRadius: MuiRadius.md),
       ),
       // 转圈期间按钮通常已被禁用，颜色只能显式给——否则会被 disabledForegroundColor 吃掉。
-      child: action.busy
+      child: busy
           ? SizedBox(
               width: 18,
               height: 18,

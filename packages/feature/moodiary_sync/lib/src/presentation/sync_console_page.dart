@@ -1319,6 +1319,11 @@ IconData _kindIcon(SyncEventKind kind) => switch (kind) {
   .categorySkip => LucideIcons.skipForward,
   .categoryTombstonePush => LucideIcons.eraser,
   .categoryTombstonePull => LucideIcons.trash2,
+  .placeUpload => LucideIcons.upload,
+  .placeDownload => LucideIcons.download,
+  .placeSkip => LucideIcons.skipForward,
+  .placeTombstonePush => LucideIcons.eraser,
+  .placeTombstonePull => LucideIcons.trash2,
   .mediaInfoUpload => LucideIcons.fileUp,
   .mediaInfoDownload => LucideIcons.fileDown,
   .mediaInfoSkip => LucideIcons.skipForward,
@@ -1351,6 +1356,11 @@ String _kindLabel(Translations l10n, SyncEventKind kind) => switch (kind) {
   .categorySkip => l10n.sync.kindCategorySkip,
   .categoryTombstonePush => l10n.sync.kindCategoryTombstonePush,
   .categoryTombstonePull => l10n.sync.kindCategoryTombstonePull,
+  .placeUpload => l10n.sync.kindPlaceUpload,
+  .placeDownload => l10n.sync.kindPlaceDownload,
+  .placeSkip => l10n.sync.kindPlaceSkip,
+  .placeTombstonePush => l10n.sync.kindPlaceTombstonePush,
+  .placeTombstonePull => l10n.sync.kindPlaceTombstonePull,
   .mediaInfoUpload => l10n.sync.kindMediaInfoUpload,
   .mediaInfoDownload => l10n.sync.kindMediaInfoDownload,
   .mediaInfoSkip => l10n.sync.kindMediaInfoSkip,
@@ -1395,6 +1405,11 @@ String? _subjectOf(Translations l10n, SyncEvent event) {
     .categorySkip ||
     .categoryTombstonePush ||
     .categoryTombstonePull => str('categoryId') ?? str('key'),
+    .placeUpload ||
+    .placeDownload ||
+    .placeSkip ||
+    .placeTombstonePush ||
+    .placeTombstonePull => str('placeName') ?? str('placeId') ?? str('key'),
     .mediaInfoUpload ||
     .mediaInfoDownload ||
     .mediaInfoSkip ||

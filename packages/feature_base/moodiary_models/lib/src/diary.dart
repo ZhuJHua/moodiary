@@ -27,7 +27,10 @@ abstract class Diary with _$Diary {
     required List<String> audioName,
     required List<String> videoName,
     required List<String> tags,
-    DiaryPosition? position,
+
+    /// 常用地点 id（与 [categoryId] 同一套语义：引用、不是快照——改名 / 挪坐标全体
+    /// 日记跟着变，有日记引用的地点不能删）。
+    String? placeId,
     required String type,
     double? aspect,
   }) = _Diary;
@@ -45,7 +48,7 @@ abstract class Diary with _$Diary {
     required List<String> audioName,
     required List<String> videoName,
     required List<String> tags,
-    DiaryPosition? position,
+    String? placeId,
     required DiaryType type,
     double? aspect,
   }) {
@@ -64,7 +67,7 @@ abstract class Diary with _$Diary {
       audioName: audioName,
       videoName: videoName,
       tags: tags,
-      position: position,
+      placeId: placeId,
       type: type.value,
       aspect: aspect,
     );

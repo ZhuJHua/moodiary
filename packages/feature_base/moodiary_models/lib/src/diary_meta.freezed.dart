@@ -14,288 +14,11 @@ part of 'diary_meta.dart';
 T _$identity<T>(T value) => value;
 
 /// @nodoc
-mixin _$DiaryPosition {
-
- double get latitude; double get longitude;/// 展示用地名（行政区 + 城市名）。
- String get name;
-/// Create a copy of DiaryPosition
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$DiaryPositionCopyWith<DiaryPosition> get copyWith => _$DiaryPositionCopyWithImpl<DiaryPosition>(this as DiaryPosition, _$identity);
-
-  /// Serializes this DiaryPosition to a JSON map.
-  Map<String, dynamic> toJson();
-
-
-@override
-bool operator ==(Object other) {
-  final _this = this as DiaryPosition;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiaryPosition&&(identical(other.latitude, _this.latitude) || other.latitude == _this.latitude)&&(identical(other.longitude, _this.longitude) || other.longitude == _this.longitude)&&(identical(other.name, _this.name) || other.name == _this.name));
-}
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode {
-  final _this = this as DiaryPosition;
-  return Object.hash(runtimeType,_this.latitude,_this.longitude,_this.name);
-}
-
-@override
-String toString() {
-  final _this = this as DiaryPosition;
-  return 'DiaryPosition(latitude: ${_this.latitude}, longitude: ${_this.longitude}, name: ${_this.name})';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $DiaryPositionCopyWith<$Res>  {
-  factory $DiaryPositionCopyWith(DiaryPosition value, $Res Function(DiaryPosition) _then) = _$DiaryPositionCopyWithImpl;
-@useResult
-$Res call({
- double latitude, double longitude, String name
-});
-
-
-
-
-}
-/// @nodoc
-class _$DiaryPositionCopyWithImpl<$Res>
-    implements $DiaryPositionCopyWith<$Res> {
-  _$DiaryPositionCopyWithImpl(this._self, this._then);
-
-  final DiaryPosition _self;
-  final $Res Function(DiaryPosition) _then;
-
-/// Create a copy of DiaryPosition
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? latitude = null,Object? longitude = null,Object? name = null,}) {
-  return _then(DiaryPosition(
-latitude: null == latitude ? _self.latitude : latitude // ignore: cast_nullable_to_non_nullable
-as double,longitude: null == longitude ? _self.longitude : longitude // ignore: cast_nullable_to_non_nullable
-as double,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,
-  ));
-}
-
-}
-
-
-/// Adds pattern-matching-related methods to [DiaryPosition].
-extension DiaryPositionPatterns on DiaryPosition {
-/// A variant of `map` that fallback to returning `orElse`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _DiaryPosition value)?  $default,{required TResult orElse(),}){
-final _that = this;
-switch (_that) {
-case _DiaryPosition() when $default != null:
-return $default(_that);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// Callbacks receives the raw object, upcasted.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case final Subclass2 value:
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _DiaryPosition value)  $default,){
-final _that = this;
-switch (_that) {
-case _DiaryPosition():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
-}
-/// A variant of `map` that fallback to returning `null`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _DiaryPosition value)?  $default,){
-final _that = this;
-switch (_that) {
-case _DiaryPosition() when $default != null:
-return $default(_that);case _:
-  return null;
-
-}
-}
-/// A variant of `when` that fallback to an `orElse` callback.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( double latitude,  double longitude,  String name)?  $default,{required TResult orElse(),}) {final _that = this;
-switch (_that) {
-case _DiaryPosition() when $default != null:
-return $default(_that.latitude,_that.longitude,_that.name);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// As opposed to `map`, this offers destructuring.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case Subclass2(:final field2):
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( double latitude,  double longitude,  String name)  $default,) {final _that = this;
-switch (_that) {
-case _DiaryPosition():
-return $default(_that.latitude,_that.longitude,_that.name);case _:
-  throw StateError('Unexpected subclass');
-
-}
-}
-/// A variant of `when` that fallback to returning `null`
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( double latitude,  double longitude,  String name)?  $default,) {final _that = this;
-switch (_that) {
-case _DiaryPosition() when $default != null:
-return $default(_that.latitude,_that.longitude,_that.name);case _:
-  return null;
-
-}
-}
-
-}
-
-/// @nodoc
-@JsonSerializable()
-
-class _DiaryPosition implements DiaryPosition {
-  const _DiaryPosition({required this.latitude, required this.longitude, required this.name});
-  factory _DiaryPosition.fromJson(Map<String, dynamic> json) => _$DiaryPositionFromJson(json);
-
-@override final  double latitude;
-@override final  double longitude;
-/// 展示用地名（行政区 + 城市名）。
-@override final  String name;
-
-/// Create a copy of DiaryPosition
-/// with the given fields replaced by the non-null parameter values.
-@override @JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-_$DiaryPositionCopyWith<_DiaryPosition> get copyWith => __$DiaryPositionCopyWithImpl<_DiaryPosition>(this, _$identity);
-
-@override
-Map<String, dynamic> toJson() {
-  return _$DiaryPositionToJson(this, );
-}
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DiaryPosition&&(identical(other.latitude, latitude) || other.latitude == latitude)&&(identical(other.longitude, longitude) || other.longitude == longitude)&&(identical(other.name, name) || other.name == name));
-}
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode {
-    return Object.hash(runtimeType,latitude,longitude,name);
-}
-
-@override
-String toString() {
-    return 'DiaryPosition(latitude: $latitude, longitude: $longitude, name: $name)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class _$DiaryPositionCopyWith<$Res> implements $DiaryPositionCopyWith<$Res> {
-  factory _$DiaryPositionCopyWith(_DiaryPosition value, $Res Function(_DiaryPosition) _then) = __$DiaryPositionCopyWithImpl;
-@override @useResult
-$Res call({
- double latitude, double longitude, String name
-});
-
-
-
-
-}
-/// @nodoc
-class __$DiaryPositionCopyWithImpl<$Res>
-    implements _$DiaryPositionCopyWith<$Res> {
-  __$DiaryPositionCopyWithImpl(this._self, this._then);
-
-  final _DiaryPosition _self;
-  final $Res Function(_DiaryPosition) _then;
-
-/// Create a copy of DiaryPosition
-/// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? latitude = null,Object? longitude = null,Object? name = null,}) {
-  return _then(_DiaryPosition(
-latitude: null == latitude ? _self.latitude : latitude // ignore: cast_nullable_to_non_nullable
-as double,longitude: null == longitude ? _self.longitude : longitude // ignore: cast_nullable_to_non_nullable
-as double,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,
-  ));
-}
-
-
-}
-
-
-/// @nodoc
 mixin _$DiaryWeather {
 
 /// 和风天气图标码（如 `"100"`）。
- String get icon; String get temp;/// 文字描述（如「晴」/「多云」）。
+ String get icon;/// 摄氏温度的数字字符串；null = 手选天气，没有温度。
+ String? get temp;/// 文字描述（如「晴」/「多云」）。
  String get text;
 /// Create a copy of DiaryWeather
 /// with the given fields replaced by the non-null parameter values.
@@ -334,7 +57,7 @@ abstract mixin class $DiaryWeatherCopyWith<$Res>  {
   factory $DiaryWeatherCopyWith(DiaryWeather value, $Res Function(DiaryWeather) _then) = _$DiaryWeatherCopyWithImpl;
 @useResult
 $Res call({
- String icon, String temp, String text
+ String icon, String? temp, String text
 });
 
 
@@ -351,11 +74,11 @@ class _$DiaryWeatherCopyWithImpl<$Res>
 
 /// Create a copy of DiaryWeather
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? icon = null,Object? temp = null,Object? text = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? icon = null,Object? temp = freezed,Object? text = null,}) {
   return _then(DiaryWeather(
 icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
-as String,temp: null == temp ? _self.temp : temp // ignore: cast_nullable_to_non_nullable
-as String,text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
+as String,temp: freezed == temp ? _self.temp : temp // ignore: cast_nullable_to_non_nullable
+as String?,text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }
@@ -441,7 +164,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String icon,  String temp,  String text)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String icon,  String? temp,  String text)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _DiaryWeather() when $default != null:
 return $default(_that.icon,_that.temp,_that.text);case _:
@@ -462,7 +185,7 @@ return $default(_that.icon,_that.temp,_that.text);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String icon,  String temp,  String text)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String icon,  String? temp,  String text)  $default,) {final _that = this;
 switch (_that) {
 case _DiaryWeather():
 return $default(_that.icon,_that.temp,_that.text);case _:
@@ -482,7 +205,7 @@ return $default(_that.icon,_that.temp,_that.text);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String icon,  String temp,  String text)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String icon,  String? temp,  String text)?  $default,) {final _that = this;
 switch (_that) {
 case _DiaryWeather() when $default != null:
 return $default(_that.icon,_that.temp,_that.text);case _:
@@ -497,12 +220,13 @@ return $default(_that.icon,_that.temp,_that.text);case _:
 @JsonSerializable()
 
 class _DiaryWeather implements DiaryWeather {
-  const _DiaryWeather({required this.icon, required this.temp, required this.text});
+  const _DiaryWeather({required this.icon, this.temp, required this.text});
   factory _DiaryWeather.fromJson(Map<String, dynamic> json) => _$DiaryWeatherFromJson(json);
 
 /// 和风天气图标码（如 `"100"`）。
 @override final  String icon;
-@override final  String temp;
+/// 摄氏温度的数字字符串；null = 手选天气，没有温度。
+@override final  String? temp;
 /// 文字描述（如「晴」/「多云」）。
 @override final  String text;
 
@@ -541,7 +265,7 @@ abstract mixin class _$DiaryWeatherCopyWith<$Res> implements $DiaryWeatherCopyWi
   factory _$DiaryWeatherCopyWith(_DiaryWeather value, $Res Function(_DiaryWeather) _then) = __$DiaryWeatherCopyWithImpl;
 @override @useResult
 $Res call({
- String icon, String temp, String text
+ String icon, String? temp, String text
 });
 
 
@@ -558,11 +282,11 @@ class __$DiaryWeatherCopyWithImpl<$Res>
 
 /// Create a copy of DiaryWeather
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? icon = null,Object? temp = null,Object? text = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? icon = null,Object? temp = freezed,Object? text = null,}) {
   return _then(_DiaryWeather(
 icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
-as String,temp: null == temp ? _self.temp : temp // ignore: cast_nullable_to_non_nullable
-as String,text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
+as String,temp: freezed == temp ? _self.temp : temp // ignore: cast_nullable_to_non_nullable
+as String?,text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }

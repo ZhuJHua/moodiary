@@ -70,16 +70,18 @@ class SyncLogRun extends SyncLogEntry {
     return n;
   }
 
-  /// 上行条目变更数（日记 + 分类 + 媒体信息）。
+  /// 上行条目变更数（日记 + 分类 + 常用地点 + 媒体信息）。
   int get pushedCount =>
       _sum('diaryCount', where: (d) => d == 'push') +
       _sum('categoryCount', where: (d) => d == 'push') +
+      _sum('placeCount', where: (d) => d == 'push') +
       _sum('mediaInfoCount', where: (d) => d == 'push');
 
   /// 下行条目变更数（pull / restore）。
   int get pulledCount =>
       _sum('diaryCount', where: (d) => d != 'push') +
       _sum('categoryCount', where: (d) => d != 'push') +
+      _sum('placeCount', where: (d) => d != 'push') +
       _sum('mediaInfoCount', where: (d) => d != 'push');
 
   int get mediaCount => _sum('mediaCount');

@@ -11,6 +11,8 @@ part 'edit_controller.g.dart';
 
 enum DraftSaveResult { saved, failed }
 
+typedef PlaceResult = ({Place? place, GeoFailure? failure});
+
 /// 编辑页状态机。`changeXxx` 改本地 `state`，落库走 [autoSave]。新建延迟落库：
 /// 空白不创建，有内容才 insert，写了又清空则丢弃。
 @riverpod
@@ -130,50 +132,85 @@ class EditController extends _$EditController {
     state = state.whenData((current) => current.copyWith(tags: tags));
   }
 
-  void changePosition(DiaryPosition? position) {
-    state = state.whenData((current) => current.copyWith(position: position));
+  void changePlace(String? placeId) {
+    state = state.whenData((current) => current.copyWith(placeId: placeId));
   }
 
   void changeWeather(DiaryWeather? weather) {
     state = state.whenData((current) => current.copyWith(weather: weather));
   }
 
+  /// 只定位、不写任何字段：位置面板打开时给常用地点排距离用。
+  Future<CoordinatesResult> locate() =>
+      getIt<GeoRepository>().currentCoordinates();
+
+  /// 定位 + 和风反查地名 → 常用地点（同名复用、没有就建一个）→ 写 placeId。
+  /// 反查出来的行政区名也进常用地点表：日记只认地点 id，没有别的落点。
   /// 失败原因随结果一起返回：文案由调用方挑（手动点是 toast，自动获取则静默）。
-  Future<GeoResult> fetchPosition(BuildContext context) async {
+  /// [coords] 可传入已取到的坐标免再定位。[onlyIfUnset]（自动填充用）：结果回来时
+  /// 日记已经有地点了就不写——那是用户在等待期间自己选的。
+  Future<PlaceResult> fetchPosition(
+    BuildContext context, {
+    LatLng? coords,
+    bool onlyIfUnset = false,
+  }) async {
     try {
-      final result = await getIt<GeoRepository>().getGeo(context);
-      final position = result.position;
-      if (position != null) changePosition(position);
-      return result;
+      final geo = await getIt<GeoRepository>().getGeo(context, coords: coords);
+      final name = geo.name;
+      final at = geo.coords;
+      if (name == null || at == null) {
+        return (place: null, failure: geo.failure);
+      }
+      final places = getIt<PlaceRepository>();
+      // 先按派生 id 找（用户把「杭州市 西湖区」改名成「家」后照样命中），再按名字，
+      // 都没有才建；id 由地名派生，别的设备反查同一个区得到同一个地点。
+      var place =
+          await places.getPlaceById(Place.idForName(name)) ??
+          await places.getPlaceByName(name);
+      if (place == null) {
+        place = Place.forName(
+          name,
+          latitude: at.latitude,
+          longitude: at.longitude,
+        );
+        await places.insertAPlace(place);
+      }
+      if (!onlyIfUnset || state.value?.placeId == null) changePlace(place.id);
+      return (place: place, failure: null);
     } catch (_) {
-      return (position: null, failure: GeoFailure.lookupFailed);
+      return (place: null, failure: GeoFailure.lookupFailed);
     }
   }
 
-  Future<({DiaryWeather? weather, GeoFailure? failure})> fetchWeather(
-    BuildContext context,
-  ) async {
-    final current = state.value;
-    if (current == null || current.position == null) {
-      final geo = await fetchPosition(context);
-      if (geo.position == null) {
-        return (weather: null, failure: geo.failure ?? GeoFailure.lookupFailed);
+  /// 取此刻的天气。**只写 weather，绝不碰 position。**
+  ///
+  /// 旧实现在日记没有位置时会先跑一趟 `fetchPosition`（那是会写进日记的），于是
+  /// 点「获取天气」会顺手把位置也填上；而且天气是拿日记里**已有的** position 去查的
+  /// ——那可能是三年前、或者用户手选的别处。现在直接问一次坐标（或用传入的
+  /// [coords]），两条链路只共用 [GeoRepository.currentCoordinates] 这个底座。
+  Future<WeatherResult> fetchWeather(
+    BuildContext context, {
+    LatLng? coords,
+    bool onlyIfUnset = false,
+  }) async {
+    try {
+      var at = coords;
+      if (at == null) {
+        final located = await getIt<GeoRepository>().currentCoordinates();
+        at = located.coords;
+        if (at == null) return (weather: null, failure: located.failure);
       }
       if (!context.mounted) {
         return (weather: null, failure: GeoFailure.lookupFailed);
       }
-    }
-    final position = state.value?.position;
-    if (position == null) {
-      return (weather: null, failure: GeoFailure.lookupFailed);
-    }
-    try {
       final result = await getIt<WeatherRepository>().getWeather(
         context: context,
-        position: LatLng(position.latitude, position.longitude),
+        coords: at,
       );
       final weather = result.weather;
-      if (weather != null) changeWeather(weather);
+      if (weather != null && (!onlyIfUnset || state.value?.weather == null)) {
+        changeWeather(weather);
+      }
       return result;
     } catch (_) {
       return (weather: null, failure: GeoFailure.lookupFailed);

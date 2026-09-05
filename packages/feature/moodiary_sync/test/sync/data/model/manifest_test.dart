@@ -80,8 +80,16 @@ void main() {
       expect(restored.entries['c:cat']!.media, isEmpty);
     });
 
+    test('accepts the legacy v1 manifest (released 2.8.0)', () {
+      final json = validJson()..['version'] = SyncManifest.legacyVersion;
+      final m = SyncManifest.fromJson(json);
+      expect(m.version, SyncManifest.legacyVersion);
+      // 写回升到当前版本：2.8.0 客户端从此被版本门拦住。
+      expect(m.copyForUpdate().version, SyncManifest.currentVersion);
+    });
+
     test('rejects other versions (older and newer)', () {
-      for (final version in [0, 3, SyncManifest.currentVersion + 1]) {
+      for (final version in [0, SyncManifest.currentVersion + 1]) {
         final json = validJson()..['version'] = version;
         expect(
           () => SyncManifest.fromJson(json),

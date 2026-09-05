@@ -45,6 +45,7 @@ class DiaryTimelineTile extends StatelessWidget {
   final DiaryMood? moodBelow;
 
   final Category? category;
+  final Place? place;
   final bool showCategoryLabel;
   final DiaryCardSyncState syncState;
   final VoidCallback? onTap;
@@ -62,6 +63,7 @@ class DiaryTimelineTile extends StatelessWidget {
     this.hasAbove = false,
     this.moodBelow,
     this.category,
+    this.place,
     this.showCategoryLabel = true,
     this.syncState = .none,
     this.onTap,
@@ -104,6 +106,7 @@ class DiaryTimelineTile extends StatelessWidget {
                 diary: diary,
                 stamp: stamp,
                 category: category,
+                place: place,
                 showCategoryLabel: showCategoryLabel,
                 syncState: syncState,
                 selecting: selecting,
@@ -152,6 +155,7 @@ class _Content extends StatelessWidget {
   final Diary diary;
   final DateTime stamp;
   final Category? category;
+  final Place? place;
   final bool showCategoryLabel;
   final DiaryCardSyncState syncState;
   final bool selecting;
@@ -163,6 +167,7 @@ class _Content extends StatelessWidget {
     required this.diary,
     required this.stamp,
     required this.category,
+    required this.place,
     required this.showCategoryLabel,
     required this.syncState,
     required this.selecting,
@@ -189,6 +194,7 @@ class _Content extends StatelessWidget {
             diary: diary,
             stamp: stamp,
             category: category,
+            place: place,
             // 分类标签与勾选标记同在右上角，多选态让位。
             showCategoryLabel: showCategoryLabel && !selecting,
             syncState: syncState,
@@ -219,7 +225,7 @@ class _Content extends StatelessWidget {
               pending: syncState == .syncing,
             ),
           ],
-          _Footer(diary: diary),
+          _Footer(diary: diary, place: place),
         ],
       ),
     );
@@ -230,6 +236,7 @@ class _MetaLine extends StatelessWidget {
   final Diary diary;
   final DateTime stamp;
   final Category? category;
+  final Place? place;
   final bool showCategoryLabel;
   final DiaryCardSyncState syncState;
 
@@ -237,6 +244,7 @@ class _MetaLine extends StatelessWidget {
     required this.diary,
     required this.stamp,
     required this.category,
+    required this.place,
     required this.showCategoryLabel,
     required this.syncState,
   });
@@ -268,7 +276,7 @@ class _MetaLine extends StatelessWidget {
                 const SizedBox(width: 3),
                 Flexible(
                   child: Text(
-                    '${weather.text} ${weather.temp}°',
+                    weather.displayText,
                     maxLines: 1,
                     overflow: .ellipsis,
                     style: style,
@@ -450,8 +458,9 @@ class _Thumb extends StatelessWidget {
 /// 语音 / 视频 / 标签 / 地点：一行细元信息，都没有就整行不占高。
 class _Footer extends StatelessWidget {
   final Diary diary;
+  final Place? place;
 
-  const _Footer({required this.diary});
+  const _Footer({required this.diary, required this.place});
 
   @override
   Widget build(BuildContext context) {
@@ -488,8 +497,8 @@ class _Footer extends StatelessWidget {
     if (diary.tags.length > 2) {
       chips.add(Text('+${diary.tags.length - 2}', style: style));
     }
-    final place = diary.position?.name.trim() ?? '';
-    if (place.isNotEmpty) {
+    final placeName = place?.name.trim() ?? '';
+    if (placeName.isNotEmpty) {
       chips.add(
         Row(
           mainAxisSize: .min,
@@ -499,7 +508,7 @@ class _Footer extends StatelessWidget {
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 132),
               child: Text(
-                place,
+                placeName,
                 maxLines: 1,
                 overflow: .ellipsis,
                 style: style,

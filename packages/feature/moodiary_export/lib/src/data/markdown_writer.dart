@@ -92,19 +92,19 @@ class MarkdownWriter {
       buf.writeln('category: ${_yamlString(doc.categoryName!)}');
     }
     final weather = doc.weather;
-    final position = doc.position;
+    final place = doc.place;
     // 两个键保持旧的定长数组形态（`[icon, temp, text]` / `[lat, lng, name]`），
     // 缺失就整键不写。
     if (weather != null) {
       buf.writeln(
-        'weather: ${_yamlList([weather.icon, weather.temp, weather.text])}',
+        'weather: ${_yamlList([weather.icon, weather.temp ?? '', weather.text])}',
       );
     }
-    if (position != null) {
+    if (place != null) {
       final tuple = [
-        position.latitude.toString(),
-        position.longitude.toString(),
-        position.name,
+        place.latitude.toString(),
+        place.longitude.toString(),
+        place.name,
       ];
       buf.writeln('position: ${_yamlList(tuple)}');
     }
@@ -117,8 +117,9 @@ class MarkdownWriter {
     final weather = doc.weather;
     final parts = <String>[
       _formatTime(doc.time),
-      if (weather != null) '${weather.icon} ${weather.temp} ${weather.text}',
-      ?doc.position?.name,
+      if (weather != null)
+        [weather.icon, ?weather.temp, weather.text].join(' '),
+      ?doc.place?.name,
       ?doc.categoryName,
     ];
     return parts.join(' · ');

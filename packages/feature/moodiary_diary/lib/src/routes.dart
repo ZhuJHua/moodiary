@@ -6,6 +6,7 @@ import 'package:moodiary_diary/src/presentation/graph/diary_ego_graph_page.dart'
 import 'package:moodiary_diary/src/presentation/graph/diary_graph_page.dart';
 import 'package:moodiary_diary/src/presentation/manager/diary_manager_page.dart';
 import 'package:moodiary_diary/src/presentation/map/map_page.dart';
+import 'package:moodiary_diary/src/presentation/place/place_manager_page.dart';
 import 'package:moodiary_diary/src/presentation/recycle/recycle_page.dart';
 import 'package:moodiary_diary/src/presentation/search/search_page.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -42,6 +43,10 @@ List<RouteBase> diaryRoutes() => [
   GoRoute(
     path: CategoryManagerRoute.path,
     builder: (_, _) => const CategoryManagerPage(),
+  ),
+  GoRoute(
+    path: PlaceManagerRoute.path,
+    builder: (_, _) => const PlaceManagerPage(),
   ),
   GoRoute(path: MapRoute.path, builder: (_, _) => const MapPage()),
   GoRoute(path: CalendarRoute.path, builder: (_, _) => const CalendarPage()),

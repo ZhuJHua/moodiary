@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
@@ -15,6 +16,7 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 import '../../application/mood_suggester.dart';
+import '../place/place_editor.dart';
 import 'hop_history.dart';
 
 enum _Mode { read, edit }
@@ -56,9 +58,19 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   /// 本次编辑会话内用户是否手动动过心情选择器；动过则自动建议永久让位。
   bool _moodTouched = false;
 
-  /// 「保存时自动获取天气」本会话已试过一次 —— 失败也不再重试（否则每轮自动保存
-  /// 都会再打一发定位 / 网络请求）。
-  bool _autoWeatherTried = false;
+  /// 三条自动填充（天气 / 就近地点 / 和风位置）本会话已试过一次 —— 失败也不再
+  /// 重试（否则每轮自动保存都会再打一发定位 / 网络请求）。
+  bool _autoFillTried = false;
+
+  /// 用户手动动过天气 / 地点（同 [_moodTouched]）：自动填充在定位与网络往返期间
+  /// 可能挂着十几秒，回来时不能盖掉用户这段时间里自己选的。
+  bool _weatherTouched = false;
+  bool _placeTouched = false;
+
+  /// 本会话最近一次定位。位置面板打开时取（常用地点按它排距离、「存为常用地点」
+  /// 用它的坐标），自动填充与「自动获取」也会更新它。不是日记的 position——那可能
+  /// 是三年前、或者用户手选的别处。
+  LatLng? _fix;
 
   /// 已建议过的正文快照，内容没变不重复打分。
   String? _suggestedForContent;
@@ -317,7 +329,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     setState(() => _saveStatus = ok ? 'saved' : 'failed');
     if (ok) {
       unawaited(_maybeSuggestMood());
-      unawaited(_maybeAutoWeather());
+      unawaited(_maybeAutoFill());
     }
   }
 
@@ -409,9 +421,31 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     _scheduleAutoSave();
   }
 
+  /// 天气面板手选：只有码与本地化名称，**没有温度**。
+  void _onChangeWeather(String code) {
+    final option = ManualWeather.fromCode(code);
+    if (option == null) return;
+    _weatherTouched = true;
+    ref
+        .read(_provider.notifier)
+        .changeWeather(
+          DiaryWeather(icon: option.code, text: option.label(context)),
+        );
+    _dirty = true;
+    _scheduleAutoSave();
+  }
+
+  void _onClearWeather() {
+    _weatherTouched = true;
+    ref.read(_provider.notifier).changeWeather(null);
+    _dirty = true;
+    _scheduleAutoSave();
+  }
+
+  /// 天气面板里的「自动获取」。只写天气：定位链路已与它解绑，不会顺手填上位置。
   Future<void> _onFetchWeather() async {
-    final notifier = ref.read(_provider.notifier);
-    final result = await notifier.fetchWeather(context);
+    _weatherTouched = true;
+    final result = await ref.read(_provider.notifier).fetchWeather(context);
     if (!mounted) return;
     final weather = result.weather;
     if (weather == null) {
@@ -419,19 +453,18 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       return;
     }
     toast.success(
-      message: l10n.diary.weatherFetched(
-        weather: weather.text,
-        temperature: weather.temp,
-      ),
+      message: l10n.diary.weatherFetched(weather: weather.displayText),
     );
     _dirty = true;
     _scheduleAutoSave();
   }
 
+  /// 位置面板里的「自动获取」：定位 + 和风反查 → 常用地点（同名复用）→ 写 placeId。
   Future<void> _onFetchPosition() async {
+    _placeTouched = true;
     final result = await ref.read(_provider.notifier).fetchPosition(context);
     if (!mounted) return;
-    if (result.position == null) {
+    if (result.place == null) {
       toast.error(message: _geoFailureMessage(result.failure));
       return;
     }
@@ -439,8 +472,49 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     _scheduleAutoSave();
   }
 
-  /// 失败原因 → 文案。位置与天气同一条链路（都走和风），故共用一张表；只有
-  /// [GeoFailure.lookupFailed] 需要区分「查位置」还是「查天气」失败。
+  /// 位置面板打开：取一次定位给常用地点排距离。失败静默——面板退回手排顺序。
+  Future<void> _onLocateForPlaces() async {
+    final located = await ref.read(_provider.notifier).locate();
+    final fix = located.coords;
+    if (!mounted || fix == null) return;
+    setState(() => _fix = fix);
+  }
+
+  /// 面板里选中某个常用地点。
+  void _onPickPlace(String id) {
+    final places = ref.read(orderedPlacesProvider).value ?? const <Place>[];
+    if (!places.any((p) => p.id == id)) return;
+    _placeTouched = true;
+    ref.read(_provider.notifier).changePlace(id);
+    _dirty = true;
+    _scheduleAutoSave();
+  }
+
+  void _onClearPosition() {
+    _placeTouched = true;
+    ref.read(_provider.notifier).changePlace(null);
+    _dirty = true;
+    _scheduleAutoSave();
+  }
+
+  /// 面板里的「新建常用地点」：本会话定位过就带上坐标（否则表单确认时再定位），
+  /// 存完顺手选中它。
+  Future<void> _onNewPlace() async {
+    _placeTouched = true;
+    final fix = _fix;
+    final saved = await showPlaceEditor(
+      context,
+      latitude: fix?.latitude,
+      longitude: fix?.longitude,
+    );
+    if (saved == null || !mounted) return;
+    ref.read(_provider.notifier).changePlace(saved.id);
+    _dirty = true;
+    _scheduleAutoSave();
+  }
+
+  /// 失败原因 → 文案。「自动获取」的位置与天气同一条链路（都走和风），故共用一张表；
+  /// 只有 [GeoFailure.lookupFailed] 需要区分「查位置」还是「查天气」失败。
   String _geoFailureMessage(GeoFailure? failure, {bool weather = false}) =>
       switch (failure) {
         .notConfigured => l10n.diary.qweatherNotConfigured,
@@ -450,26 +524,80 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
         _ => weather ? l10n.diary.weatherFailed : l10n.diary.positionFailed,
       };
 
-  /// 「保存日记时自动获取天气」：开关打开、本篇是本次新建且还没有天气时，首次落库后补一次。
+  /// 新建日记首次落库后的自动填充，三条开关各管一件事、只打**一发** GPS：
   ///
-  /// 只认新建 —— 给一篇三年前的日记补上今天的天气是错的。静默执行：用户没主动点，
-  /// 失败（没配和风 / 没给定位）不该弹提示打断书写。
-  Future<void> _maybeAutoWeather() async {
-    if (_autoWeatherTried || widget.diaryId != null) return;
-    if (MoodiaryKVs.autoWeather.get() != true) return;
+  /// - `autoNearestPlace`：坐标落在某个常用地点半径内 → 写地点名 + 真实坐标
+  /// - `autoPosition`（需和风）：位置仍空 → 和风反查行政区名
+  /// - `autoWeather`（需和风）：和风实时天气
+  ///
+  /// 两条位置开关都开时常用地点优先——精确的私人名字永远赢过粗糙的行政区名，
+  /// 没有第二种合理顺序。和风没配好时那两条视同关闭（不为它们要定位权限）。
+  ///
+  /// 只认新建 —— 给一篇三年前的日记补上今天的天气或位置是错的；已有值不覆盖；
+  /// 静默执行：用户没主动点，失败不该弹提示打断书写。
+  Future<void> _maybeAutoFill() async {
+    if (_autoFillTried || widget.diaryId != null) return;
     final current = ref.read(_provider).value;
-    if (current == null || current.weather != null) return;
-    _autoWeatherTried = true;
-    final result = await ref.read(_provider.notifier).fetchWeather(context);
-    if (!mounted || result.weather == null) return;
+    if (current == null) return;
+    final wantPlace =
+        MoodiaryKVs.autoNearestPlace.get() == true && _placeUntouched;
+    final wantApi = MoodiaryKVs.autoPosition.get() == true && _placeUntouched;
+    final wantWeather =
+        MoodiaryKVs.autoWeather.get() == true && _weatherUntouched;
+    if (!wantPlace && !wantApi && !wantWeather) return;
+    final qweatherReady =
+        (wantApi || wantWeather) && await qweatherCredentials() != null;
+    if (!mounted) return;
+    if (!wantPlace && !qweatherReady) return;
+    _autoFillTried = true;
+    final notifier = ref.read(_provider.notifier);
+    final located = await notifier.locate();
+    final fix = located.coords;
+    if (!mounted || fix == null) return;
+    _fix = fix;
+    // 每一步落笔前都重新看一眼：定位与网络往返期间用户可能已经自己选了。
+    var changed = false;
+    if (wantPlace && _placeUntouched) {
+      final places = ref.read(orderedPlacesProvider).value ?? const <Place>[];
+      final hit = places.matchAt(fix.latitude, fix.longitude);
+      if (hit != null) {
+        notifier.changePlace(hit.id);
+        changed = true;
+      }
+    }
+    if (wantApi && qweatherReady && !changed && _placeUntouched) {
+      final result = await notifier.fetchPosition(
+        context,
+        coords: fix,
+        onlyIfUnset: true,
+      );
+      if (!mounted) return;
+      changed = result.place != null && _placeUntouched;
+    }
+    if (wantWeather && qweatherReady && _weatherUntouched) {
+      final result = await notifier.fetchWeather(
+        context,
+        coords: fix,
+        onlyIfUnset: true,
+      );
+      if (!mounted) return;
+      changed = changed || (result.weather != null && _weatherUntouched);
+    }
+    if (!changed) return;
     _dirty = true;
-    // 取数期间可能已经保存退出：那时 _scheduleAutoSave 直接 no-op，刚拿到的天气会丢。
+    // 取数期间可能已经保存退出：那时 _scheduleAutoSave 直接 no-op，刚拿到的值会丢。
     if (_mode == .edit) {
       _scheduleAutoSave();
     } else {
       unawaited(_flushAutoSave());
     }
   }
+
+  bool get _placeUntouched =>
+      !_placeTouched && ref.read(_provider).value?.placeId == null;
+
+  bool get _weatherUntouched =>
+      !_weatherTouched && ref.read(_provider).value?.weather == null;
 
   @override
   Widget build(BuildContext context) {
@@ -733,8 +861,15 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       onAddTag: () => _onAddTag(diary),
       onRemoveTag: (i) => _onRemoveTag(diary, i),
       onChangeMood: _onChangeMoodName,
+      onChangeWeather: _onChangeWeather,
+      onClearWeather: _onClearWeather,
       onFetchWeather: _onFetchWeather,
       onFetchPosition: _onFetchPosition,
+      onLocateForPlaces: _onLocateForPlaces,
+      onPickPlace: _onPickPlace,
+      onNewPlace: _onNewPlace,
+      onManagePlaces: () => const PlaceManagerRoute().push(context),
+      onClearPosition: _onClearPosition,
       onOpenGraph: () => DiaryGraphRoute(diaryId: diary.id).push(context),
     );
   }
@@ -749,7 +884,6 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   /// 属性头数据：显示串（日期 / 分类名 / 字数 / 菜单文案）全部在此解析好，web 侧零本地化。
   String _metaJson(Diary diary) {
     final weather = diary.weather;
-    final position = diary.position;
     final categoryAsync = ref.watch(
       getCategoryProvider(id: diary.categoryId ?? ''),
     );
@@ -759,6 +893,36 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
             data: (c) => c?.categoryName ?? context.l10n.diary.unknownCategory,
             orElse: () => context.l10n.diary.loading,
           );
+    // 和风是否可用：host 在明文 KV（同步），key 在钥匙串（异步，走 provider 缓存；
+    // 未就绪期间按不可用，面板先不显示「自动获取」，读到后重建自会补上）。
+    final qweatherHost = MoodiaryKVs.qweatherApiHost.get();
+    final qweatherKey = ref
+        .watch(secretKvProvider(MoodiarySecureKVs.qweatherKey))
+        .value;
+    final qweatherReady =
+        (qweatherHost?.isNotEmpty ?? false) &&
+        (qweatherKey?.isNotEmpty ?? false);
+    final places = ref.watch(orderedPlacesProvider).value ?? const <Place>[];
+    final place = places.where((p) => p.id == diary.placeId).firstOrNull;
+    // 本会话定位过就按「距此多远」升序，否则保持用户手排的顺序、不带距离。
+    final fix = _fix;
+    final placeRows = [
+      for (final p in places)
+        (
+          place: p,
+          meters: fix == null
+              ? null
+              : distanceMeters(
+                  fix.latitude,
+                  fix.longitude,
+                  p.latitude,
+                  p.longitude,
+                ),
+        ),
+    ];
+    if (fix != null) {
+      placeRows.sort((a, b) => a.meters!.compareTo(b.meters!));
+    }
     final sub = TimeFormat.weekdayTimeHms(diary.time);
     final words = context.l10n.diary.wordCount(
       count: diary.contentText.runes.length,
@@ -780,10 +944,35 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       'category': categoryLabel,
       'weather': weather == null
           ? null
-          : {'icon': weather.icon, 'text': '${weather.text} ${weather.temp}°C'},
-      'position': (position == null || position.name.isEmpty)
-          ? null
-          : position.name,
+          : {'icon': weather.icon, 'text': weather.displayText},
+      'weatherOptions': [
+        for (final w in ManualWeather.values)
+          {'code': w.code, 'label': w.label(context)},
+      ],
+      // null = 和风没配好，面板里就不出现「自动获取」那条（点了也只会失败）。
+      'weatherAutoLabel': qweatherReady ? context.l10n.diary.weatherAuto : null,
+      'weatherClearLabel': context.l10n.diary.weatherClear,
+      // 日记引用常用地点：名字随地点改。引用的地点被别的设备删了就暂时没名字。
+      'position': place?.name,
+      'positionId': place?.id,
+      'places': [
+        for (final row in placeRows)
+          {
+            'id': row.place.id,
+            'name': row.place.name,
+            'icon': row.place.icon ?? 'map-pin',
+            'distance': row.meters == null
+                ? null
+                : formatDistance(context, row.meters!),
+          },
+      ],
+      // null = 和风没配好，面板里不出现「自动获取」（同天气面板）。
+      'positionAutoLabel': qweatherReady
+          ? context.l10n.diary.positionAuto
+          : null,
+      'positionNewPlaceLabel': context.l10n.diary.positionNewPlace,
+      'positionManageLabel': context.l10n.diary.positionManagePlaces,
+      'positionClearLabel': context.l10n.diary.positionClear,
       'tags': diary.tags,
       'deleteLabel': context.l10n.common.delete,
     });

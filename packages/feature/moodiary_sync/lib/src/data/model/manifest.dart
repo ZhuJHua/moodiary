@@ -47,7 +47,7 @@ class ManifestEntry {
 /// JSON：
 /// ```json
 /// {
-///   "version": 1,
+///   "version": 2,
 ///   "updatedAt": 1780000000000,
 ///   "entries": {
 ///     "d:<diaryId>": {"t": 1780000000000, "m": ["image/a.png"]},
@@ -56,11 +56,25 @@ class ManifestEntry {
 ///   }
 /// }
 /// ```
-/// 版本严格匹配：[fromJson] 对 `version != 1` 抛 [SyncException]，含**更高版本**
+/// 加一个键命名空间（如 2.8.0 的 `p:` 常用地点）**不算格式变更、不 bump `version`**：
+/// pull 端的前缀分派是 if/else 链，不认识的前缀天然被忽略；push 端是
+/// `manifest.copyForUpdate()` 往里合并、不是用本地重建，所以老版本推送也不会抹掉
+/// 新版本写的条目。
+///
+/// 历史：v1（已发布的 2.8.0）的日记对象带 `position: {latitude, longitude, name}`
+/// 快照；v2（2.8.1）改为 `placeId` 引用常用地点（`p:` 条目）。**读 v1 放行**——用户
+/// 升级后第一次同步面对的就是自己的 v1 远端；旧格式的日记对象由 pull 端按地名归并成
+/// 地点（`ArchiveApplier`），写回时 manifest 升到 v2，此后 2.8.0 客户端会被版本门拦住
+/// （它看不懂 placeId，若继续推会把位置抹掉）。
+///
+/// 版本门：[fromJson] 只放行 1 与 [currentVersion]，其余（含**更高版本**）抛 [SyncException]
 /// —— 静默丢条目会诱发「push 用本地重建 manifest」的数据丢失，宁可拒绝同步。
 /// 密钥正确性由解密时的 AES-GCM auth tag 一票否决，manifest 自身不持密钥材料。
 class SyncManifest {
-  static const int currentVersion = 1;
+  static const int currentVersion = 2;
+
+  /// 仍可读的旧版本（2.8.0）。
+  static const int legacyVersion = 1;
 
   final int version;
 
@@ -91,7 +105,7 @@ class SyncManifest {
     // 非 int 的 version（被改成字符串/小数）也走版本守卫抛 SyncException，
     // 而不是 `as int?` 抛裸 TypeError。
     final version = json['version'] is int ? json['version'] as int : 0;
-    if (version != currentVersion) {
+    if (version != currentVersion && version != legacyVersion) {
       // 措辞对「云同步」与「本地 zip 恢复」两条链都成立：旧文案让本地恢复的用户
       // 去「清空远端备份目录」，而他手里只有一个文件，指引指向不存在的东西。
       throw SyncException(
@@ -128,8 +142,9 @@ class SyncManifest {
   };
 
   /// 浅拷贝，供 push 过程中对 [entries] 增量更新（[ManifestEntry] 不可变，共享无碍）。
+  /// 写回一律用 [currentVersion]：读进来的 v1 远端由此升到 v2。
   SyncManifest copyForUpdate() => SyncManifest(
-    version: version,
+    version: currentVersion,
     updatedAtMs: DateTime.now().millisecondsSinceEpoch,
     entries: Map<String, ManifestEntry>.from(entries),
     writeToken: writeToken,
@@ -156,10 +171,12 @@ class SyncKeys {
   static const String diaryPrefix = 'd:';
   static const String categoryPrefix = 'c:';
   static const String mediaInfoPrefix = 'm:';
+  static const String placePrefix = 'p:';
 
   static String diary(String id) => '$diaryPrefix$id';
   static String category(String id) => '$categoryPrefix$id';
   static String mediaInfo(String fileName) => '$mediaInfoPrefix$fileName';
+  static String place(String id) => '$placePrefix$id';
 
   static const String manifestPath = 'manifest.json';
 
@@ -172,6 +189,8 @@ class SyncKeys {
   static String diaryObjectPath(String id) => 'diary/$id.json';
 
   static String categoryObjectPath(String id) => 'category/$id.json';
+
+  static String placeObjectPath(String id) => 'place/$id.json';
 
   /// 媒体元数据对象路径，按类型分子目录（`mediainfo/audio/…`，类型取自文件名
   /// 前缀），与媒体本体目录 `media/<type>/` 平行、互不混淆。

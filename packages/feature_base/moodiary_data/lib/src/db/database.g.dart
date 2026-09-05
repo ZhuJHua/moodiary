@@ -353,33 +353,11 @@ class Diaries extends Table with TableInfo<Diaries, DiaryRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _latitudeMeta = const VerificationMeta(
-    'latitude',
+  static const VerificationMeta _placeIdMeta = const VerificationMeta(
+    'placeId',
   );
-  late final GeneratedColumn<double> latitude = GeneratedColumn<double>(
-    'latitude',
-    aliasedName,
-    true,
-    type: DriftSqlType.double,
-    requiredDuringInsert: false,
-    $customConstraints: '',
-  );
-  static const VerificationMeta _longitudeMeta = const VerificationMeta(
-    'longitude',
-  );
-  late final GeneratedColumn<double> longitude = GeneratedColumn<double>(
-    'longitude',
-    aliasedName,
-    true,
-    type: DriftSqlType.double,
-    requiredDuringInsert: false,
-    $customConstraints: '',
-  );
-  static const VerificationMeta _placeNameMeta = const VerificationMeta(
-    'placeName',
-  );
-  late final GeneratedColumn<String> placeName = GeneratedColumn<String>(
-    'place_name',
+  late final GeneratedColumn<String> placeId = GeneratedColumn<String>(
+    'place_id',
     aliasedName,
     true,
     type: DriftSqlType.string,
@@ -433,9 +411,7 @@ class Diaries extends Table with TableInfo<Diaries, DiaryRow> {
     mood,
     type,
     aspect,
-    latitude,
-    longitude,
-    placeName,
+    placeId,
     weatherIcon,
     weatherTemp,
     weatherText,
@@ -545,22 +521,10 @@ class Diaries extends Table with TableInfo<Diaries, DiaryRow> {
         aspect.isAcceptableOrUnknown(data['aspect']!, _aspectMeta),
       );
     }
-    if (data.containsKey('latitude')) {
+    if (data.containsKey('place_id')) {
       context.handle(
-        _latitudeMeta,
-        latitude.isAcceptableOrUnknown(data['latitude']!, _latitudeMeta),
-      );
-    }
-    if (data.containsKey('longitude')) {
-      context.handle(
-        _longitudeMeta,
-        longitude.isAcceptableOrUnknown(data['longitude']!, _longitudeMeta),
-      );
-    }
-    if (data.containsKey('place_name')) {
-      context.handle(
-        _placeNameMeta,
-        placeName.isAcceptableOrUnknown(data['place_name']!, _placeNameMeta),
+        _placeIdMeta,
+        placeId.isAcceptableOrUnknown(data['place_id']!, _placeIdMeta),
       );
     }
     if (data.containsKey('weather_icon')) {
@@ -647,17 +611,9 @@ class Diaries extends Table with TableInfo<Diaries, DiaryRow> {
         DriftSqlType.double,
         data['${effectivePrefix}aspect'],
       ),
-      latitude: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
-        data['${effectivePrefix}latitude'],
-      ),
-      longitude: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
-        data['${effectivePrefix}longitude'],
-      ),
-      placeName: attachedDatabase.typeMapping.read(
+      placeId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}place_name'],
+        data['${effectivePrefix}place_id'],
       ),
       weatherIcon: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -696,9 +652,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
   final String mood;
   final String type;
   final double? aspect;
-  final double? latitude;
-  final double? longitude;
-  final String? placeName;
+  final String? placeId;
   final String? weatherIcon;
   final String? weatherTemp;
   final String? weatherText;
@@ -715,9 +669,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
     required this.mood,
     required this.type,
     this.aspect,
-    this.latitude,
-    this.longitude,
-    this.placeName,
+    this.placeId,
     this.weatherIcon,
     this.weatherTemp,
     this.weatherText,
@@ -741,14 +693,8 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
     if (!nullToAbsent || aspect != null) {
       map['aspect'] = Variable<double>(aspect);
     }
-    if (!nullToAbsent || latitude != null) {
-      map['latitude'] = Variable<double>(latitude);
-    }
-    if (!nullToAbsent || longitude != null) {
-      map['longitude'] = Variable<double>(longitude);
-    }
-    if (!nullToAbsent || placeName != null) {
-      map['place_name'] = Variable<String>(placeName);
+    if (!nullToAbsent || placeId != null) {
+      map['place_id'] = Variable<String>(placeId);
     }
     if (!nullToAbsent || weatherIcon != null) {
       map['weather_icon'] = Variable<String>(weatherIcon);
@@ -780,15 +726,9 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
       aspect: aspect == null && nullToAbsent
           ? const Value.absent()
           : Value(aspect),
-      latitude: latitude == null && nullToAbsent
+      placeId: placeId == null && nullToAbsent
           ? const Value.absent()
-          : Value(latitude),
-      longitude: longitude == null && nullToAbsent
-          ? const Value.absent()
-          : Value(longitude),
-      placeName: placeName == null && nullToAbsent
-          ? const Value.absent()
-          : Value(placeName),
+          : Value(placeId),
       weatherIcon: weatherIcon == null && nullToAbsent
           ? const Value.absent()
           : Value(weatherIcon),
@@ -819,9 +759,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
       mood: serializer.fromJson<String>(json['mood']),
       type: serializer.fromJson<String>(json['type']),
       aspect: serializer.fromJson<double?>(json['aspect']),
-      latitude: serializer.fromJson<double?>(json['latitude']),
-      longitude: serializer.fromJson<double?>(json['longitude']),
-      placeName: serializer.fromJson<String?>(json['place_name']),
+      placeId: serializer.fromJson<String?>(json['place_id']),
       weatherIcon: serializer.fromJson<String?>(json['weather_icon']),
       weatherTemp: serializer.fromJson<String?>(json['weather_temp']),
       weatherText: serializer.fromJson<String?>(json['weather_text']),
@@ -843,9 +781,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
       'mood': serializer.toJson<String>(mood),
       'type': serializer.toJson<String>(type),
       'aspect': serializer.toJson<double?>(aspect),
-      'latitude': serializer.toJson<double?>(latitude),
-      'longitude': serializer.toJson<double?>(longitude),
-      'place_name': serializer.toJson<String?>(placeName),
+      'place_id': serializer.toJson<String?>(placeId),
       'weather_icon': serializer.toJson<String?>(weatherIcon),
       'weather_temp': serializer.toJson<String?>(weatherTemp),
       'weather_text': serializer.toJson<String?>(weatherText),
@@ -865,9 +801,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
     String? mood,
     String? type,
     Value<double?> aspect = const Value.absent(),
-    Value<double?> latitude = const Value.absent(),
-    Value<double?> longitude = const Value.absent(),
-    Value<String?> placeName = const Value.absent(),
+    Value<String?> placeId = const Value.absent(),
     Value<String?> weatherIcon = const Value.absent(),
     Value<String?> weatherTemp = const Value.absent(),
     Value<String?> weatherText = const Value.absent(),
@@ -884,9 +818,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
     mood: mood ?? this.mood,
     type: type ?? this.type,
     aspect: aspect.present ? aspect.value : this.aspect,
-    latitude: latitude.present ? latitude.value : this.latitude,
-    longitude: longitude.present ? longitude.value : this.longitude,
-    placeName: placeName.present ? placeName.value : this.placeName,
+    placeId: placeId.present ? placeId.value : this.placeId,
     weatherIcon: weatherIcon.present ? weatherIcon.value : this.weatherIcon,
     weatherTemp: weatherTemp.present ? weatherTemp.value : this.weatherTemp,
     weatherText: weatherText.present ? weatherText.value : this.weatherText,
@@ -911,9 +843,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
       mood: data.mood.present ? data.mood.value : this.mood,
       type: data.type.present ? data.type.value : this.type,
       aspect: data.aspect.present ? data.aspect.value : this.aspect,
-      latitude: data.latitude.present ? data.latitude.value : this.latitude,
-      longitude: data.longitude.present ? data.longitude.value : this.longitude,
-      placeName: data.placeName.present ? data.placeName.value : this.placeName,
+      placeId: data.placeId.present ? data.placeId.value : this.placeId,
       weatherIcon: data.weatherIcon.present
           ? data.weatherIcon.value
           : this.weatherIcon,
@@ -941,9 +871,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
           ..write('mood: $mood, ')
           ..write('type: $type, ')
           ..write('aspect: $aspect, ')
-          ..write('latitude: $latitude, ')
-          ..write('longitude: $longitude, ')
-          ..write('placeName: $placeName, ')
+          ..write('placeId: $placeId, ')
           ..write('weatherIcon: $weatherIcon, ')
           ..write('weatherTemp: $weatherTemp, ')
           ..write('weatherText: $weatherText')
@@ -965,9 +893,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
     mood,
     type,
     aspect,
-    latitude,
-    longitude,
-    placeName,
+    placeId,
     weatherIcon,
     weatherTemp,
     weatherText,
@@ -988,9 +914,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
           other.mood == this.mood &&
           other.type == this.type &&
           other.aspect == this.aspect &&
-          other.latitude == this.latitude &&
-          other.longitude == this.longitude &&
-          other.placeName == this.placeName &&
+          other.placeId == this.placeId &&
           other.weatherIcon == this.weatherIcon &&
           other.weatherTemp == this.weatherTemp &&
           other.weatherText == this.weatherText);
@@ -1009,9 +933,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
   final Value<String> mood;
   final Value<String> type;
   final Value<double?> aspect;
-  final Value<double?> latitude;
-  final Value<double?> longitude;
-  final Value<String?> placeName;
+  final Value<String?> placeId;
   final Value<String?> weatherIcon;
   final Value<String?> weatherTemp;
   final Value<String?> weatherText;
@@ -1028,9 +950,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
     this.mood = const Value.absent(),
     this.type = const Value.absent(),
     this.aspect = const Value.absent(),
-    this.latitude = const Value.absent(),
-    this.longitude = const Value.absent(),
-    this.placeName = const Value.absent(),
+    this.placeId = const Value.absent(),
     this.weatherIcon = const Value.absent(),
     this.weatherTemp = const Value.absent(),
     this.weatherText = const Value.absent(),
@@ -1048,9 +968,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
     required String mood,
     required String type,
     this.aspect = const Value.absent(),
-    this.latitude = const Value.absent(),
-    this.longitude = const Value.absent(),
-    this.placeName = const Value.absent(),
+    this.placeId = const Value.absent(),
     this.weatherIcon = const Value.absent(),
     this.weatherTemp = const Value.absent(),
     this.weatherText = const Value.absent(),
@@ -1076,9 +994,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
     Expression<String>? mood,
     Expression<String>? type,
     Expression<double>? aspect,
-    Expression<double>? latitude,
-    Expression<double>? longitude,
-    Expression<String>? placeName,
+    Expression<String>? placeId,
     Expression<String>? weatherIcon,
     Expression<String>? weatherTemp,
     Expression<String>? weatherText,
@@ -1096,9 +1012,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
       if (mood != null) 'mood': mood,
       if (type != null) 'type': type,
       if (aspect != null) 'aspect': aspect,
-      if (latitude != null) 'latitude': latitude,
-      if (longitude != null) 'longitude': longitude,
-      if (placeName != null) 'place_name': placeName,
+      if (placeId != null) 'place_id': placeId,
       if (weatherIcon != null) 'weather_icon': weatherIcon,
       if (weatherTemp != null) 'weather_temp': weatherTemp,
       if (weatherText != null) 'weather_text': weatherText,
@@ -1118,9 +1032,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
     Value<String>? mood,
     Value<String>? type,
     Value<double?>? aspect,
-    Value<double?>? latitude,
-    Value<double?>? longitude,
-    Value<String?>? placeName,
+    Value<String?>? placeId,
     Value<String?>? weatherIcon,
     Value<String?>? weatherTemp,
     Value<String?>? weatherText,
@@ -1138,9 +1050,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
       mood: mood ?? this.mood,
       type: type ?? this.type,
       aspect: aspect ?? this.aspect,
-      latitude: latitude ?? this.latitude,
-      longitude: longitude ?? this.longitude,
-      placeName: placeName ?? this.placeName,
+      placeId: placeId ?? this.placeId,
       weatherIcon: weatherIcon ?? this.weatherIcon,
       weatherTemp: weatherTemp ?? this.weatherTemp,
       weatherText: weatherText ?? this.weatherText,
@@ -1186,14 +1096,8 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
     if (aspect.present) {
       map['aspect'] = Variable<double>(aspect.value);
     }
-    if (latitude.present) {
-      map['latitude'] = Variable<double>(latitude.value);
-    }
-    if (longitude.present) {
-      map['longitude'] = Variable<double>(longitude.value);
-    }
-    if (placeName.present) {
-      map['place_name'] = Variable<String>(placeName.value);
+    if (placeId.present) {
+      map['place_id'] = Variable<String>(placeId.value);
     }
     if (weatherIcon.present) {
       map['weather_icon'] = Variable<String>(weatherIcon.value);
@@ -1222,9 +1126,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
           ..write('mood: $mood, ')
           ..write('type: $type, ')
           ..write('aspect: $aspect, ')
-          ..write('latitude: $latitude, ')
-          ..write('longitude: $longitude, ')
-          ..write('placeName: $placeName, ')
+          ..write('placeId: $placeId, ')
           ..write('weatherIcon: $weatherIcon, ')
           ..write('weatherTemp: $weatherTemp, ')
           ..write('weatherText: $weatherText')
@@ -6869,6 +6771,418 @@ class MediaInfosCompanion extends UpdateCompanion<MediaInfoRow> {
   }
 }
 
+class Places extends Table with TableInfo<Places, PlaceRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  Places(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _latitudeMeta = const VerificationMeta(
+    'latitude',
+  );
+  late final GeneratedColumn<double> latitude = GeneratedColumn<double>(
+    'latitude',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _longitudeMeta = const VerificationMeta(
+    'longitude',
+  );
+  late final GeneratedColumn<double> longitude = GeneratedColumn<double>(
+    'longitude',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _iconMeta = const VerificationMeta('icon');
+  late final GeneratedColumn<String> icon = GeneratedColumn<String>(
+    'icon',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _lastModifiedMeta = const VerificationMeta(
+    'lastModified',
+  );
+  late final GeneratedColumn<int> lastModified = GeneratedColumn<int>(
+    'last_modified',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    latitude,
+    longitude,
+    icon,
+    lastModified,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'places';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PlaceRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('latitude')) {
+      context.handle(
+        _latitudeMeta,
+        latitude.isAcceptableOrUnknown(data['latitude']!, _latitudeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_latitudeMeta);
+    }
+    if (data.containsKey('longitude')) {
+      context.handle(
+        _longitudeMeta,
+        longitude.isAcceptableOrUnknown(data['longitude']!, _longitudeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_longitudeMeta);
+    }
+    if (data.containsKey('icon')) {
+      context.handle(
+        _iconMeta,
+        icon.isAcceptableOrUnknown(data['icon']!, _iconMeta),
+      );
+    }
+    if (data.containsKey('last_modified')) {
+      context.handle(
+        _lastModifiedMeta,
+        lastModified.isAcceptableOrUnknown(
+          data['last_modified']!,
+          _lastModifiedMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_lastModifiedMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PlaceRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlaceRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      latitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}latitude'],
+      )!,
+      longitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}longitude'],
+      )!,
+      icon: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}icon'],
+      ),
+      lastModified: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_modified'],
+      )!,
+    );
+  }
+
+  @override
+  Places createAlias(String alias) {
+    return Places(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class PlaceRow extends DataClass implements Insertable<PlaceRow> {
+  final String id;
+  final String name;
+  final double latitude;
+  final double longitude;
+  final String? icon;
+  final int lastModified;
+  const PlaceRow({
+    required this.id,
+    required this.name,
+    required this.latitude,
+    required this.longitude,
+    this.icon,
+    required this.lastModified,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['latitude'] = Variable<double>(latitude);
+    map['longitude'] = Variable<double>(longitude);
+    if (!nullToAbsent || icon != null) {
+      map['icon'] = Variable<String>(icon);
+    }
+    map['last_modified'] = Variable<int>(lastModified);
+    return map;
+  }
+
+  PlacesCompanion toCompanion(bool nullToAbsent) {
+    return PlacesCompanion(
+      id: Value(id),
+      name: Value(name),
+      latitude: Value(latitude),
+      longitude: Value(longitude),
+      icon: icon == null && nullToAbsent ? const Value.absent() : Value(icon),
+      lastModified: Value(lastModified),
+    );
+  }
+
+  factory PlaceRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlaceRow(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      latitude: serializer.fromJson<double>(json['latitude']),
+      longitude: serializer.fromJson<double>(json['longitude']),
+      icon: serializer.fromJson<String?>(json['icon']),
+      lastModified: serializer.fromJson<int>(json['last_modified']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'latitude': serializer.toJson<double>(latitude),
+      'longitude': serializer.toJson<double>(longitude),
+      'icon': serializer.toJson<String?>(icon),
+      'last_modified': serializer.toJson<int>(lastModified),
+    };
+  }
+
+  PlaceRow copyWith({
+    String? id,
+    String? name,
+    double? latitude,
+    double? longitude,
+    Value<String?> icon = const Value.absent(),
+    int? lastModified,
+  }) => PlaceRow(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    latitude: latitude ?? this.latitude,
+    longitude: longitude ?? this.longitude,
+    icon: icon.present ? icon.value : this.icon,
+    lastModified: lastModified ?? this.lastModified,
+  );
+  PlaceRow copyWithCompanion(PlacesCompanion data) {
+    return PlaceRow(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      latitude: data.latitude.present ? data.latitude.value : this.latitude,
+      longitude: data.longitude.present ? data.longitude.value : this.longitude,
+      icon: data.icon.present ? data.icon.value : this.icon,
+      lastModified: data.lastModified.present
+          ? data.lastModified.value
+          : this.lastModified,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlaceRow(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('icon: $icon, ')
+          ..write('lastModified: $lastModified')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, name, latitude, longitude, icon, lastModified);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlaceRow &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.latitude == this.latitude &&
+          other.longitude == this.longitude &&
+          other.icon == this.icon &&
+          other.lastModified == this.lastModified);
+}
+
+class PlacesCompanion extends UpdateCompanion<PlaceRow> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<double> latitude;
+  final Value<double> longitude;
+  final Value<String?> icon;
+  final Value<int> lastModified;
+  final Value<int> rowid;
+  const PlacesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.latitude = const Value.absent(),
+    this.longitude = const Value.absent(),
+    this.icon = const Value.absent(),
+    this.lastModified = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PlacesCompanion.insert({
+    required String id,
+    required String name,
+    required double latitude,
+    required double longitude,
+    this.icon = const Value.absent(),
+    required int lastModified,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       name = Value(name),
+       latitude = Value(latitude),
+       longitude = Value(longitude),
+       lastModified = Value(lastModified);
+  static Insertable<PlaceRow> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<double>? latitude,
+    Expression<double>? longitude,
+    Expression<String>? icon,
+    Expression<int>? lastModified,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (latitude != null) 'latitude': latitude,
+      if (longitude != null) 'longitude': longitude,
+      if (icon != null) 'icon': icon,
+      if (lastModified != null) 'last_modified': lastModified,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PlacesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? name,
+    Value<double>? latitude,
+    Value<double>? longitude,
+    Value<String?>? icon,
+    Value<int>? lastModified,
+    Value<int>? rowid,
+  }) {
+    return PlacesCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      icon: icon ?? this.icon,
+      lastModified: lastModified ?? this.lastModified,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (latitude.present) {
+      map['latitude'] = Variable<double>(latitude.value);
+    }
+    if (longitude.present) {
+      map['longitude'] = Variable<double>(longitude.value);
+    }
+    if (icon.present) {
+      map['icon'] = Variable<String>(icon.value);
+    }
+    if (lastModified.present) {
+      map['last_modified'] = Variable<int>(lastModified.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlacesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('icon: $icon, ')
+          ..write('lastModified: $lastModified, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class DiaryMedia extends Table with TableInfo<DiaryMedia, DiaryMediaRow> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -7493,6 +7807,7 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
   late final Categories categories = Categories(this);
   late final Fonts fonts = Fonts(this);
   late final MediaInfos mediaInfos = MediaInfos(this);
+  late final Places places = Places(this);
   late final Index idxDiariesShowTime = Index(
     'idx_diaries_show_time',
     'CREATE INDEX idx_diaries_show_time ON diaries (show, time DESC, id DESC)',
@@ -7557,7 +7872,7 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
     );
     $arrayStartIndex += generatedpred.amountOfVariables;
     return customSelect(
-      'SELECT"d"."rid" AS "nested_0.rid", "d"."id" AS "nested_0.id", "d"."category_id" AS "nested_0.category_id", "d"."title" AS "nested_0.title", "d"."content" AS "nested_0.content", "d"."content_text" AS "nested_0.content_text", "d"."time" AS "nested_0.time", "d"."last_modified" AS "nested_0.last_modified", "d"."show" AS "nested_0.show", "d"."mood" AS "nested_0.mood", "d"."type" AS "nested_0.type", "d"."aspect" AS "nested_0.aspect", "d"."latitude" AS "nested_0.latitude", "d"."longitude" AS "nested_0.longitude", "d"."place_name" AS "nested_0.place_name", "d"."weather_icon" AS "nested_0.weather_icon", "d"."weather_temp" AS "nested_0.weather_temp", "d"."weather_text" AS "nested_0.weather_text" FROM diary_fts INNER JOIN diaries AS d ON d.rid = diary_fts."rowid" WHERE diary_fts MATCH ?1 AND d.show = 1 AND ${generatedpred.sql} ORDER BY rank, d.time DESC, d.id DESC LIMIT ?2',
+      'SELECT"d"."rid" AS "nested_0.rid", "d"."id" AS "nested_0.id", "d"."category_id" AS "nested_0.category_id", "d"."title" AS "nested_0.title", "d"."content" AS "nested_0.content", "d"."content_text" AS "nested_0.content_text", "d"."time" AS "nested_0.time", "d"."last_modified" AS "nested_0.last_modified", "d"."show" AS "nested_0.show", "d"."mood" AS "nested_0.mood", "d"."type" AS "nested_0.type", "d"."aspect" AS "nested_0.aspect", "d"."place_id" AS "nested_0.place_id", "d"."weather_icon" AS "nested_0.weather_icon", "d"."weather_temp" AS "nested_0.weather_temp", "d"."weather_text" AS "nested_0.weather_text" FROM diary_fts INNER JOIN diaries AS d ON d.rid = diary_fts."rowid" WHERE diary_fts MATCH ?1 AND d.show = 1 AND ${generatedpred.sql} ORDER BY rank, d.time DESC, d.id DESC LIMIT ?2',
       variables: [
         Variable<String>(query),
         Variable<int>(limitCount),
@@ -7592,7 +7907,7 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
     );
     $arrayStartIndex += generatedorder.amountOfVariables;
     return customSelect(
-      'SELECT"d"."rid" AS "nested_0.rid", "d"."id" AS "nested_0.id", "d"."category_id" AS "nested_0.category_id", "d"."title" AS "nested_0.title", "d"."content" AS "nested_0.content", "d"."content_text" AS "nested_0.content_text", "d"."time" AS "nested_0.time", "d"."last_modified" AS "nested_0.last_modified", "d"."show" AS "nested_0.show", "d"."mood" AS "nested_0.mood", "d"."type" AS "nested_0.type", "d"."aspect" AS "nested_0.aspect", "d"."latitude" AS "nested_0.latitude", "d"."longitude" AS "nested_0.longitude", "d"."place_name" AS "nested_0.place_name", "d"."weather_icon" AS "nested_0.weather_icon", "d"."weather_temp" AS "nested_0.weather_temp", "d"."weather_text" AS "nested_0.weather_text" FROM diary_fts INNER JOIN diaries AS d ON d.rid = diary_fts."rowid" WHERE diary_fts MATCH ?1 AND d.show = 1 AND ${generatedpred.sql} ${generatedorder.sql} LIMIT ?2',
+      'SELECT"d"."rid" AS "nested_0.rid", "d"."id" AS "nested_0.id", "d"."category_id" AS "nested_0.category_id", "d"."title" AS "nested_0.title", "d"."content" AS "nested_0.content", "d"."content_text" AS "nested_0.content_text", "d"."time" AS "nested_0.time", "d"."last_modified" AS "nested_0.last_modified", "d"."show" AS "nested_0.show", "d"."mood" AS "nested_0.mood", "d"."type" AS "nested_0.type", "d"."aspect" AS "nested_0.aspect", "d"."place_id" AS "nested_0.place_id", "d"."weather_icon" AS "nested_0.weather_icon", "d"."weather_temp" AS "nested_0.weather_temp", "d"."weather_text" AS "nested_0.weather_text" FROM diary_fts INNER JOIN diaries AS d ON d.rid = diary_fts."rowid" WHERE diary_fts MATCH ?1 AND d.show = 1 AND ${generatedpred.sql} ${generatedorder.sql} LIMIT ?2',
       variables: [
         Variable<String>(query),
         Variable<int>(limitCount),
@@ -7614,7 +7929,7 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
 
   Selectable<BacklinksResult> backlinks(String toId) {
     return customSelect(
-      'SELECT"d"."rid" AS "nested_0.rid", "d"."id" AS "nested_0.id", "d"."category_id" AS "nested_0.category_id", "d"."title" AS "nested_0.title", "d"."content" AS "nested_0.content", "d"."content_text" AS "nested_0.content_text", "d"."time" AS "nested_0.time", "d"."last_modified" AS "nested_0.last_modified", "d"."show" AS "nested_0.show", "d"."mood" AS "nested_0.mood", "d"."type" AS "nested_0.type", "d"."aspect" AS "nested_0.aspect", "d"."latitude" AS "nested_0.latitude", "d"."longitude" AS "nested_0.longitude", "d"."place_name" AS "nested_0.place_name", "d"."weather_icon" AS "nested_0.weather_icon", "d"."weather_temp" AS "nested_0.weather_temp", "d"."weather_text" AS "nested_0.weather_text" FROM diary_links AS l INNER JOIN diaries AS d ON d.id = l.src_id WHERE l.dst_id = ?1 AND d.show = 1 ORDER BY d.time DESC, d.id DESC',
+      'SELECT"d"."rid" AS "nested_0.rid", "d"."id" AS "nested_0.id", "d"."category_id" AS "nested_0.category_id", "d"."title" AS "nested_0.title", "d"."content" AS "nested_0.content", "d"."content_text" AS "nested_0.content_text", "d"."time" AS "nested_0.time", "d"."last_modified" AS "nested_0.last_modified", "d"."show" AS "nested_0.show", "d"."mood" AS "nested_0.mood", "d"."type" AS "nested_0.type", "d"."aspect" AS "nested_0.aspect", "d"."place_id" AS "nested_0.place_id", "d"."weather_icon" AS "nested_0.weather_icon", "d"."weather_temp" AS "nested_0.weather_temp", "d"."weather_text" AS "nested_0.weather_text" FROM diary_links AS l INNER JOIN diaries AS d ON d.id = l.src_id WHERE l.dst_id = ?1 AND d.show = 1 ORDER BY d.time DESC, d.id DESC',
       variables: [Variable<String>(toId)],
       readsFrom: {this.diaryLinks, this.diaries},
     ).asyncMap(
@@ -7626,7 +7941,7 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
 
   Selectable<ForwardLinksResult> forwardLinks(String fromId) {
     return customSelect(
-      'SELECT"d"."rid" AS "nested_0.rid", "d"."id" AS "nested_0.id", "d"."category_id" AS "nested_0.category_id", "d"."title" AS "nested_0.title", "d"."content" AS "nested_0.content", "d"."content_text" AS "nested_0.content_text", "d"."time" AS "nested_0.time", "d"."last_modified" AS "nested_0.last_modified", "d"."show" AS "nested_0.show", "d"."mood" AS "nested_0.mood", "d"."type" AS "nested_0.type", "d"."aspect" AS "nested_0.aspect", "d"."latitude" AS "nested_0.latitude", "d"."longitude" AS "nested_0.longitude", "d"."place_name" AS "nested_0.place_name", "d"."weather_icon" AS "nested_0.weather_icon", "d"."weather_temp" AS "nested_0.weather_temp", "d"."weather_text" AS "nested_0.weather_text" FROM diary_links AS l INNER JOIN diaries AS d ON d.id = l.dst_id WHERE l.src_id = ?1 AND d.id != ?1 AND d.show = 1 ORDER BY d.time DESC, d.id DESC',
+      'SELECT"d"."rid" AS "nested_0.rid", "d"."id" AS "nested_0.id", "d"."category_id" AS "nested_0.category_id", "d"."title" AS "nested_0.title", "d"."content" AS "nested_0.content", "d"."content_text" AS "nested_0.content_text", "d"."time" AS "nested_0.time", "d"."last_modified" AS "nested_0.last_modified", "d"."show" AS "nested_0.show", "d"."mood" AS "nested_0.mood", "d"."type" AS "nested_0.type", "d"."aspect" AS "nested_0.aspect", "d"."place_id" AS "nested_0.place_id", "d"."weather_icon" AS "nested_0.weather_icon", "d"."weather_temp" AS "nested_0.weather_temp", "d"."weather_text" AS "nested_0.weather_text" FROM diary_links AS l INNER JOIN diaries AS d ON d.id = l.dst_id WHERE l.src_id = ?1 AND d.id != ?1 AND d.show = 1 ORDER BY d.time DESC, d.id DESC',
       variables: [Variable<String>(fromId)],
       readsFrom: {this.diaryLinks, this.diaries},
     ).asyncMap(
@@ -7715,6 +8030,7 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
     categories,
     fonts,
     mediaInfos,
+    places,
     idxDiariesShowTime,
     idxDiariesShowCatTime,
     idxDiariesShowLastmod,
@@ -7920,9 +8236,7 @@ typedef $DiariesCreateCompanionBuilder = DiariesCompanion Function({
   required String mood,
   required String type,
   Value<double?> aspect,
-  Value<double?> latitude,
-  Value<double?> longitude,
-  Value<String?> placeName,
+  Value<String?> placeId,
   Value<String?> weatherIcon,
   Value<String?> weatherTemp,
   Value<String?> weatherText,
@@ -7940,9 +8254,7 @@ typedef $DiariesUpdateCompanionBuilder = DiariesCompanion Function({
   Value<String> mood,
   Value<String> type,
   Value<double?> aspect,
-  Value<double?> latitude,
-  Value<double?> longitude,
-  Value<String?> placeName,
+  Value<String?> placeId,
   Value<String?> weatherIcon,
   Value<String?> weatherTemp,
   Value<String?> weatherText,
@@ -8076,18 +8388,8 @@ class $DiariesFilterComposer extends Composer<_$MoodiaryDatabase, Diaries> {
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<double> get latitude => $composableBuilder(
-    column: $table.latitude,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<double> get longitude => $composableBuilder(
-    column: $table.longitude,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get placeName => $composableBuilder(
-    column: $table.placeName,
+  ColumnFilters<String> get placeId => $composableBuilder(
+    column: $table.placeId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8250,18 +8552,8 @@ class $DiariesOrderingComposer extends Composer<_$MoodiaryDatabase, Diaries> {
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<double> get latitude => $composableBuilder(
-    column: $table.latitude,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<double> get longitude => $composableBuilder(
-    column: $table.longitude,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get placeName => $composableBuilder(
-    column: $table.placeName,
+  ColumnOrderings<String> get placeId => $composableBuilder(
+    column: $table.placeId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -8331,14 +8623,8 @@ class $DiariesAnnotationComposer extends Composer<_$MoodiaryDatabase, Diaries> {
   GeneratedColumn<double> get aspect =>
       $composableBuilder(column: $table.aspect, builder: (column) => column);
 
-  GeneratedColumn<double> get latitude =>
-      $composableBuilder(column: $table.latitude, builder: (column) => column);
-
-  GeneratedColumn<double> get longitude =>
-      $composableBuilder(column: $table.longitude, builder: (column) => column);
-
-  GeneratedColumn<String> get placeName =>
-      $composableBuilder(column: $table.placeName, builder: (column) => column);
+  GeneratedColumn<String> get placeId =>
+      $composableBuilder(column: $table.placeId, builder: (column) => column);
 
   GeneratedColumn<String> get weatherIcon => $composableBuilder(
     column: $table.weatherIcon,
@@ -8475,9 +8761,7 @@ class $DiariesTableManager
                 Value<String> mood = const Value.absent(),
                 Value<String> type = const Value.absent(),
                 Value<double?> aspect = const Value.absent(),
-                Value<double?> latitude = const Value.absent(),
-                Value<double?> longitude = const Value.absent(),
-                Value<String?> placeName = const Value.absent(),
+                Value<String?> placeId = const Value.absent(),
                 Value<String?> weatherIcon = const Value.absent(),
                 Value<String?> weatherTemp = const Value.absent(),
                 Value<String?> weatherText = const Value.absent(),
@@ -8494,9 +8778,7 @@ class $DiariesTableManager
                 mood: mood,
                 type: type,
                 aspect: aspect,
-                latitude: latitude,
-                longitude: longitude,
-                placeName: placeName,
+                placeId: placeId,
                 weatherIcon: weatherIcon,
                 weatherTemp: weatherTemp,
                 weatherText: weatherText,
@@ -8515,9 +8797,7 @@ class $DiariesTableManager
                 required String mood,
                 required String type,
                 Value<double?> aspect = const Value.absent(),
-                Value<double?> latitude = const Value.absent(),
-                Value<double?> longitude = const Value.absent(),
-                Value<String?> placeName = const Value.absent(),
+                Value<String?> placeId = const Value.absent(),
                 Value<String?> weatherIcon = const Value.absent(),
                 Value<String?> weatherTemp = const Value.absent(),
                 Value<String?> weatherText = const Value.absent(),
@@ -8534,9 +8814,7 @@ class $DiariesTableManager
                 mood: mood,
                 type: type,
                 aspect: aspect,
-                latitude: latitude,
-                longitude: longitude,
-                placeName: placeName,
+                placeId: placeId,
                 weatherIcon: weatherIcon,
                 weatherTemp: weatherTemp,
                 weatherText: weatherText,
@@ -12173,6 +12451,225 @@ typedef $MediaInfosProcessedTableManager =
       MediaInfoRow,
       PrefetchHooks Function()
     >;
+typedef $PlacesCreateCompanionBuilder = PlacesCompanion Function({
+  required String id,
+  required String name,
+  required double latitude,
+  required double longitude,
+  Value<String?> icon,
+  required int lastModified,
+  Value<int> rowid,
+});
+typedef $PlacesUpdateCompanionBuilder = PlacesCompanion Function({
+  Value<String> id,
+  Value<String> name,
+  Value<double> latitude,
+  Value<double> longitude,
+  Value<String?> icon,
+  Value<int> lastModified,
+  Value<int> rowid,
+});
+
+class $PlacesFilterComposer extends Composer<_$MoodiaryDatabase, Places> {
+  $PlacesFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get latitude => $composableBuilder(
+    column: $table.latitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get longitude => $composableBuilder(
+    column: $table.longitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get icon => $composableBuilder(
+    column: $table.icon,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastModified => $composableBuilder(
+    column: $table.lastModified,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $PlacesOrderingComposer extends Composer<_$MoodiaryDatabase, Places> {
+  $PlacesOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get latitude => $composableBuilder(
+    column: $table.latitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get longitude => $composableBuilder(
+    column: $table.longitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get icon => $composableBuilder(
+    column: $table.icon,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lastModified => $composableBuilder(
+    column: $table.lastModified,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $PlacesAnnotationComposer extends Composer<_$MoodiaryDatabase, Places> {
+  $PlacesAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<double> get latitude =>
+      $composableBuilder(column: $table.latitude, builder: (column) => column);
+
+  GeneratedColumn<double> get longitude =>
+      $composableBuilder(column: $table.longitude, builder: (column) => column);
+
+  GeneratedColumn<String> get icon =>
+      $composableBuilder(column: $table.icon, builder: (column) => column);
+
+  GeneratedColumn<int> get lastModified => $composableBuilder(
+    column: $table.lastModified,
+    builder: (column) => column,
+  );
+}
+
+class $PlacesTableManager
+    extends
+        RootTableManager<
+          _$MoodiaryDatabase,
+          Places,
+          PlaceRow,
+          $PlacesFilterComposer,
+          $PlacesOrderingComposer,
+          $PlacesAnnotationComposer,
+          $PlacesCreateCompanionBuilder,
+          $PlacesUpdateCompanionBuilder,
+          (PlaceRow, BaseReferences<_$MoodiaryDatabase, Places, PlaceRow>),
+          PlaceRow,
+          PrefetchHooks Function()
+        > {
+  $PlacesTableManager(_$MoodiaryDatabase db, Places table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $PlacesFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $PlacesOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $PlacesAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<double> latitude = const Value.absent(),
+                Value<double> longitude = const Value.absent(),
+                Value<String?> icon = const Value.absent(),
+                Value<int> lastModified = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PlacesCompanion(
+                id: id,
+                name: name,
+                latitude: latitude,
+                longitude: longitude,
+                icon: icon,
+                lastModified: lastModified,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String name,
+                required double latitude,
+                required double longitude,
+                Value<String?> icon = const Value.absent(),
+                required int lastModified,
+                Value<int> rowid = const Value.absent(),
+              }) => PlacesCompanion.insert(
+                id: id,
+                name: name,
+                latitude: latitude,
+                longitude: longitude,
+                icon: icon,
+                lastModified: lastModified,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<Places, PlaceRow>(table),
+                  BaseReferences<_$MoodiaryDatabase, Places, PlaceRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $PlacesProcessedTableManager =
+    ProcessedTableManager<
+      _$MoodiaryDatabase,
+      Places,
+      PlaceRow,
+      $PlacesFilterComposer,
+      $PlacesOrderingComposer,
+      $PlacesAnnotationComposer,
+      $PlacesCreateCompanionBuilder,
+      $PlacesUpdateCompanionBuilder,
+      (PlaceRow, BaseReferences<_$MoodiaryDatabase, Places, PlaceRow>),
+      PlaceRow,
+      PrefetchHooks Function()
+    >;
 typedef $DiaryMediaCreateCompanionBuilder = DiaryMediaCompanion Function({
   required String diaryId,
   required String kind,
@@ -12773,6 +13270,7 @@ class $MoodiaryDatabaseManager {
   $FontsTableManager get fonts => $FontsTableManager(_db, _db.fonts);
   $MediaInfosTableManager get mediaInfos =>
       $MediaInfosTableManager(_db, _db.mediaInfos);
+  $PlacesTableManager get places => $PlacesTableManager(_db, _db.places);
   $DiaryMediaTableManager get diaryMedia =>
       $DiaryMediaTableManager(_db, _db.diaryMedia);
   $DiaryTagsTableManager get diaryTags =>

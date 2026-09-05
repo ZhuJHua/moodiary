@@ -115,6 +115,11 @@ Future<void> _initSystem() async {
 
   // ── 4. 唤醒长驻服务与启动期维护。
   await syncBackendFuture;
+  // schema 升级写出的行（v1 → v2 把位置快照归并成常用地点）不走仓储事件，得显式
+  // 告诉自动同步「本地有待推」，否则轮询的空转短路会一直跳过它们。
+  if (getIt<MoodiaryDatabase>().upgradedFrom != null) {
+    MoodiaryKVs.syncPendingLocal.set(true);
+  }
   // 显式 start，排在版本迁移与后端装载之后。刻意不用 @PostConstruct——那会让
   // watcher 在容器装配当场醒来，赶在迁移之前，迁移写出的行就被回声推给云端了。
   getIt<AutoSyncWatcher>().start();

@@ -48,6 +48,7 @@ void main() {
       logger: logger,
       diaryStore: diaries ?? FakeDiaryStore(const [], tombstoneStore),
       categoryStore: categories ?? FakeCategoryStore(const [], tombstoneStore),
+      placeStore: FakePlaceStore(const [], tombstoneStore),
       mediaInfoStore:
           mediaInfos ?? FakeMediaInfoStore(const [], tombstoneStore),
       tombstoneStore: tombstoneStore,
@@ -71,6 +72,7 @@ void main() {
       logger: logger,
       diaryStore: FakeDiaryStore(diaries.cast()),
       categoryStore: FakeCategoryStore(cats.cast()),
+      placeStore: FakePlaceStore(),
       mediaInfoStore: FakeMediaInfoStore(mediaInfos.cast()),
       tombstoneStore: FakeTombstoneStore(),
       mediaFiles: media ?? FakeMediaFiles(),
@@ -198,6 +200,7 @@ void main() {
         logger: logger,
         diaryStore: FakeDiaryStore(const []),
         categoryStore: FakeCategoryStore(const []),
+        placeStore: FakePlaceStore(),
         mediaInfoStore: FakeMediaInfoStore(const []),
         tombstoneStore: FakeTombstoneStore(),
         mediaFiles: FakeMediaFiles(),

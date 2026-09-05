@@ -45,6 +45,19 @@ class MoodiarySyncPackageModule extends _i526.MicroPackageModule {
       () =>
           _i443.SyncRunner(gh<_i870.SyncCancellation>(), gh<_i59.SyncLogger>()),
     );
+    gh.lazySingleton<_i1035.AutoSyncWatcher>(
+      () => _i1035.AutoSyncWatcher(
+        gh<_i59.SyncLogger>(),
+        gh<_i443.SyncRunner>(),
+        gh<_i691.DiaryRepository>(),
+        gh<_i691.CategoryRepository>(),
+        gh<_i691.PlaceRepository>(),
+        gh<_i691.MediaInfoRepository>(),
+        gh<_i691.SyncDirtyTracker>(),
+        gh<_i691.OpenDiaryRegistry>(),
+      ),
+      dispose: (i) => i.dispose(),
+    );
     gh.lazySingleton<_i472.IRemoteSyncBackend>(
       () => _i454.S3SyncBackend(gh<_i731.SecureOptions>(instanceName: 's3')),
       instanceName: 's3',
@@ -54,18 +67,6 @@ class MoodiarySyncPackageModule extends _i526.MicroPackageModule {
         gh<_i731.SecureOptions>(instanceName: 'webdav'),
       ),
       instanceName: 'webdav',
-    );
-    gh.lazySingleton<_i1035.AutoSyncWatcher>(
-      () => _i1035.AutoSyncWatcher(
-        gh<_i59.SyncLogger>(),
-        gh<_i443.SyncRunner>(),
-        gh<_i691.DiaryRepository>(),
-        gh<_i691.CategoryRepository>(),
-        gh<_i691.MediaInfoRepository>(),
-        gh<_i691.SyncDirtyTracker>(),
-        gh<_i691.OpenDiaryRegistry>(),
-      ),
-      dispose: (i) => i.dispose(),
     );
   }
 }

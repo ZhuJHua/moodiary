@@ -60,6 +60,7 @@ class IncrementalSyncEngine {
   /// 本地存储端口（生产实现转发到 repository / AppFiles；测试注入内存假实现）。
   final SyncDiaryStore _diaryStore;
   final SyncCategoryStore _categoryStore;
+  final SyncPlaceStore _placeStore;
   final SyncMediaInfoStore _mediaInfoStore;
   final SyncTombstoneStore _tombstoneStore;
   final SyncMediaFiles _mediaFiles;
@@ -93,6 +94,7 @@ class IncrementalSyncEngine {
     SyncLogger? logger,
     SyncDiaryStore? diaryStore,
     SyncCategoryStore? categoryStore,
+    SyncPlaceStore? placeStore,
     SyncMediaInfoStore? mediaInfoStore,
     SyncTombstoneStore? tombstoneStore,
     SyncMediaFiles? mediaFiles,
@@ -110,6 +112,7 @@ class IncrementalSyncEngine {
       logger ?? getIt<SyncLogger>(),
       diaryStore ?? RepoSyncDiaryStore(),
       categoryStore ?? RepoSyncCategoryStore(),
+      placeStore ?? RepoSyncPlaceStore(),
       mediaInfoStore ?? RepoSyncMediaInfoStore(),
       tombstoneStore ?? RepoSyncTombstoneStore(),
       mediaFiles ?? DiskSyncMediaFiles(),
@@ -127,6 +130,7 @@ class IncrementalSyncEngine {
     this._logger,
     this._diaryStore,
     this._categoryStore,
+    this._placeStore,
     this._mediaInfoStore,
     this._tombstoneStore,
     this._mediaFiles,
@@ -246,6 +250,7 @@ class IncrementalSyncEngine {
       logger: _logger,
       diaryStore: _diaryStore,
       categoryStore: _categoryStore,
+      placeStore: _placeStore,
       mediaInfoStore: _mediaInfoStore,
       tombstoneStore: _tombstoneStore,
       mediaFiles: _mediaFiles,
@@ -370,10 +375,12 @@ class IncrementalSyncEngine {
         .toList();
     final skippedOpen = allDiaries.length - diaries.length;
     final categories = await _categoryStore.getAllCategoriesForSync();
+    final places = await _placeStore.getAllPlacesForSync();
     final mediaInfoRows = await _mediaInfoStore.getAllMediaInfosForSync();
 
     int diaryChanged = 0;
     int categoryChanged = 0;
+    int placeChanged = 0;
     int mediaInfoChanged = 0;
     int failed = 0;
 
@@ -512,6 +519,46 @@ class IncrementalSyncEngine {
 
     await runPooled(categories, concurrency, pushOneCategory);
 
+    Future<void> pushOnePlace(Place place) async {
+      if (_cancellation.isRequested) return;
+      final key = SyncKeys.place(place.id);
+      final remoteEntry = manifest.entries[key];
+      final remoteMs = remoteEntry?.timeMs;
+      if (remoteMs != null &&
+          place.lastModified.millisecondsSinceEpoch <= remoteMs) {
+        _logger.info(
+          .placeSkip,
+          reason: .upToDate,
+          payload: {'placeId': place.id, 'placeName': place.name},
+        );
+        return;
+      }
+      try {
+        final bytes = await (await _cipher()).encode(place.toJson());
+        await backend.writeObject(SyncKeys.placeObjectPath(place.id), bytes);
+        updated.entries[key] = ManifestEntry(
+          timeMs: place.lastModified.millisecondsSinceEpoch,
+        );
+        placeChanged++;
+        _logger.info(
+          .placeUpload,
+          payload: {
+            'placeId': place.id,
+            'placeName': place.name,
+            'bytes': bytes.length,
+          },
+        );
+      } catch (e) {
+        failed++;
+        _logger.error(
+          .placeUpload,
+          payload: {'placeId': place.id, 'detail': e.toString()},
+        );
+      }
+    }
+
+    await runPooled(places, concurrency, pushOnePlace);
+
     Future<void> pushOneMediaInfo(MediaInfo mediaInfo) async {
       if (_cancellation.isRequested) return;
       final key = SyncKeys.mediaInfo(mediaInfo.fileName);
@@ -577,6 +624,11 @@ class IncrementalSyncEngine {
           SyncEventKind.categoryTombstonePush,
           'categoryId',
         ),
+        .place => (
+          SyncEventKind.placeSkip,
+          SyncEventKind.placeTombstonePush,
+          'placeId',
+        ),
         .mediaInfo => (
           SyncEventKind.mediaInfoSkip,
           SyncEventKind.mediaInfoTombstonePush,
@@ -622,6 +674,9 @@ class IncrementalSyncEngine {
         case .category:
           deferredObjectDeletes.add(SyncKeys.categoryObjectPath(t.entityId));
           categoryChanged++;
+        case .place:
+          deferredObjectDeletes.add(SyncKeys.placeObjectPath(t.entityId));
+          placeChanged++;
         case .mediaInfo:
           deferredObjectDeletes.add(SyncKeys.mediaInfoObjectPath(t.entityId));
           mediaInfoChanged++;
@@ -639,7 +694,10 @@ class IncrementalSyncEngine {
       pushOneTombstone(t);
     }
 
-    if (diaryChanged > 0 || categoryChanged > 0 || mediaInfoChanged > 0) {
+    if (diaryChanged > 0 ||
+        categoryChanged > 0 ||
+        placeChanged > 0 ||
+        mediaInfoChanged > 0) {
       // 写入带唯一 token 的 manifest，再回读校验 token 仍是自己写的。token 不一致 =
       // 另一台设备在我们之后又写了 manifest（租约被绕过/网络分区），本次 push 视为
       // 失败：抛错中止，**此前未做任何破坏性远端操作、也不会硬删本地**，下次同步会
@@ -697,6 +755,7 @@ class IncrementalSyncEngine {
         'direction': 'push',
         'diaryCount': diaryChanged,
         'categoryCount': categoryChanged,
+        'placeCount': placeChanged,
         'mediaInfoCount': mediaInfoChanged,
         'mediaCount': _mediaUploaded,
         'failed': failed,
@@ -713,6 +772,7 @@ class IncrementalSyncEngine {
       pushed: SyncCounts(
         diaries: diaryChanged,
         categories: categoryChanged,
+        places: placeChanged,
         mediaInfos: mediaInfoChanged,
         mediaFiles: _mediaUploaded,
       ),

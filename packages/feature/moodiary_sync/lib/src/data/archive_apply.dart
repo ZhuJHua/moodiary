@@ -97,6 +97,7 @@ class ArchiveApplier {
   final SyncLogger _logger;
   final SyncDiaryStore _diaryStore;
   final SyncCategoryStore _categoryStore;
+  final SyncPlaceStore _placeStore;
   final SyncMediaInfoStore _mediaInfoStore;
   final SyncTombstoneStore _tombstoneStore;
   final SyncMediaFiles _mediaFiles;
@@ -111,6 +112,7 @@ class ArchiveApplier {
     SyncLogger? logger,
     SyncDiaryStore? diaryStore,
     SyncCategoryStore? categoryStore,
+    SyncPlaceStore? placeStore,
     SyncMediaInfoStore? mediaInfoStore,
     SyncTombstoneStore? tombstoneStore,
     SyncMediaFiles? mediaFiles,
@@ -127,6 +129,7 @@ class ArchiveApplier {
     logger ?? getIt<SyncLogger>(),
     diaryStore ?? RepoSyncDiaryStore(),
     categoryStore ?? RepoSyncCategoryStore(),
+    placeStore ?? RepoSyncPlaceStore(),
     mediaInfoStore ?? RepoSyncMediaInfoStore(),
     tombstoneStore ?? RepoSyncTombstoneStore(),
     mediaFiles ?? DiskSyncMediaFiles(),
@@ -145,6 +148,7 @@ class ArchiveApplier {
     this._logger,
     this._diaryStore,
     this._categoryStore,
+    this._placeStore,
     this._mediaInfoStore,
     this._tombstoneStore,
     this._mediaFiles,
@@ -202,9 +206,13 @@ class ArchiveApplier {
     );
     final diaryRepo = _diaryStore;
     final categoryRepo = _categoryStore;
+    final placeRepo = _placeStore;
     final mediaInfoRepo = _mediaInfoStore;
     final localDiaries = {
       for (final d in await diaryRepo.getAllDiaries()) d.id: d,
+    };
+    final localPlaces = {
+      for (final p in await placeRepo.getAllPlacesForSync()) p.id: p,
     };
     final localCategories = {
       for (final c in await categoryRepo.getAllCategoriesForSync()) c.id: c,
@@ -280,6 +288,7 @@ class ArchiveApplier {
     int skipped = 0;
     int diaryChanged = 0;
     int categoryChanged = 0;
+    int placeChanged = 0;
     int mediaInfoChanged = 0;
     int failed = 0;
 
@@ -365,6 +374,7 @@ class ArchiveApplier {
           if (bytes == null) return;
           final decoded = await (await _cipher()).decode(bytes);
           if (decoded is! Map<String, dynamic>) return;
+          await _adoptLegacyPosition(decoded);
           final diary = Diary.fromJson(decoded);
           // 对象身份校验：远端 JSON 的 id 必须与 manifest 键一致，否则损坏 / 被
           // 篡改的对象会错位覆盖本地。
@@ -512,6 +522,89 @@ class ArchiveApplier {
           pending.completeCategory(id);
           categoryChanged++;
           _logger.info(.categoryDownload, payload: {'categoryId': id});
+        } else if (key.startsWith(SyncKeys.placePrefix)) {
+          final id = key.substring(SyncKeys.placePrefix.length);
+          if (isTombstone) {
+            // 恢复模式只增不删：备份是「当时存在过什么」的快照，不是删除命令。
+            if (restoring) return;
+            final tombstoneMs = entry.value.timeMs;
+            // 与分类同理：写入前重读做 LWW（快照可能过期）。
+            Place? local = localPlaces[id];
+            if (local != null) {
+              local = await placeRepo.getPlaceById(id);
+            }
+            if (local != null &&
+                local.lastModified.millisecondsSinceEpoch > tombstoneMs) {
+              _logger.info(
+                .placeSkip,
+                reason: .localNewer,
+                payload: {'placeId': id},
+              );
+              return;
+            }
+            if (local != null) {
+              tombstones.add(
+                await placeRepo.tombstonePlace(id, fromSync: fromSync),
+              );
+              placeChanged++;
+              _logger.info(.placeTombstonePull, payload: {'placeId': id});
+            }
+            if (trackingId != null) tombstones.markPushed(key, trackingId);
+            return;
+          }
+          final remoteMs = entry.value.timeMs;
+          final localMs =
+              localPlaces[id]?.lastModified.millisecondsSinceEpoch ??
+              (restoring ? null : tombstones[key]?.timeMs);
+          if (localMs != null && remoteMs <= localMs) {
+            skipped++;
+            _logger.info(
+              .placeSkip,
+              reason: .upToDate,
+              payload: {'placeId': id},
+            );
+            return;
+          }
+          final bytes = await backend.readObject(SyncKeys.placeObjectPath(id));
+          if (bytes == null) return;
+          final decoded = await (await _cipher()).decode(bytes);
+          if (decoded is! Map<String, dynamic>) return;
+          // 写入前重读做最终 LWW（快照可能过期，活跃行与墓碑都要看）。
+          final freshLocal = await placeRepo.getPlaceById(id);
+          final freshMs =
+              freshLocal?.lastModified.millisecondsSinceEpoch ??
+              (restoring
+                  ? null
+                  : (await _tombstoneStore.getByKey(key))?.timeMs);
+          if (freshMs != null && remoteMs <= freshMs) {
+            _logger.info(
+              .placeSkip,
+              reason: .upToDate,
+              payload: {'placeId': id},
+            );
+            return;
+          }
+          final place = Place.fromJson(decoded);
+          if (place.id != id) {
+            failed++;
+            _logger.error(
+              .placeDownload,
+              payload: {'key': key, 'objectId': place.id},
+            );
+            return;
+          }
+          await placeRepo.insertAPlace(
+            restoring && freshLocal == null
+                ? place.copyWith(lastModified: DateTime.timestamp())
+                : place,
+            fromSync: fromSync,
+          );
+          tombstones.remove(key);
+          placeChanged++;
+          _logger.info(
+            .placeDownload,
+            payload: {'placeId': id, 'placeName': place.name},
+          );
         } else if (key.startsWith(SyncKeys.mediaInfoPrefix)) {
           final id = key.substring(SyncKeys.mediaInfoPrefix.length);
           if (isTombstone) {
@@ -612,6 +705,7 @@ class ArchiveApplier {
             final k when k.startsWith(SyncKeys.diaryPrefix) => .diaryDownload,
             final k when k.startsWith(SyncKeys.categoryPrefix) =>
               .categoryDownload,
+            final k when k.startsWith(SyncKeys.placePrefix) => .placeDownload,
             final k when k.startsWith(SyncKeys.mediaInfoPrefix) =>
               .mediaInfoDownload,
             _ => .error,
@@ -622,12 +716,18 @@ class ArchiveApplier {
     }
 
     // 条目级并发：网络往返是 pull 耗时大头，串行会让「恢复到新设备」慢 N 倍。
+    // 地点先于其它条目整批落地：日记引用地点，先到的地点让旧格式日记归并时直接命中
+    // 同名，而不是各建一份。
+    final entries = manifest.entries.entries.toList();
+    final placeEntries = entries
+        .where((e) => e.key.startsWith(SyncKeys.placePrefix))
+        .toList();
+    final otherEntries = entries
+        .where((e) => !e.key.startsWith(SyncKeys.placePrefix))
+        .toList();
     try {
-      await runPooled(
-        manifest.entries.entries.toList(),
-        concurrency,
-        pullOneEntry,
-      );
+      await runPooled(placeEntries, concurrency, pullOneEntry);
+      await runPooled(otherEntries, concurrency, pullOneEntry);
     } finally {
       // pull 结束（含异常）清空占位，失败条目的占位不留到下一轮。
       pending.clear();
@@ -645,6 +745,7 @@ class ArchiveApplier {
         'direction': 'pull',
         'diaryCount': diaryChanged,
         'categoryCount': categoryChanged,
+        'placeCount': placeChanged,
         'mediaInfoCount': mediaInfoChanged,
         'mediaCount': _mediaDownloaded,
         'failed': failed,
@@ -665,6 +766,7 @@ class ArchiveApplier {
       pulled: SyncCounts(
         diaries: diaryChanged,
         categories: categoryChanged,
+        places: placeChanged,
         mediaInfos: mediaInfoChanged,
         mediaFiles: _mediaDownloaded,
       ),
@@ -674,6 +776,36 @@ class ArchiveApplier {
       cancelled: stopped,
       skipped: skipped,
     );
+  }
+
+  /// v1（2.8.0）日记对象带 `position: {latitude, longitude, name}` 快照而没有
+  /// `placeId`：按地名归并成常用地点（派生 id 优先、其次同名、都没有才建），把
+  /// `placeId` 补进 JSON 再解。远端对象不在这里改写——它由持有该日记的设备下次
+  /// 推送时自然换成新格式；派生 id 保证各设备归并到同一个地点。
+  Future<void> _adoptLegacyPosition(Map<String, dynamic> decoded) async {
+    if (decoded['placeId'] is String) return;
+    final position = decoded['position'];
+    if (position is! Map) return;
+    final lat = position['latitude'];
+    final lon = position['longitude'];
+    if (lat is! num || lon is! num) return;
+    var name = (position['name'] is String ? position['name'] as String : '')
+        .trim();
+    if (name.isEmpty) {
+      name = Place.coordinateName(lat.toDouble(), lon.toDouble());
+    }
+    var place =
+        await _placeStore.getPlaceById(Place.idForName(name)) ??
+        await _placeStore.getPlaceByName(name);
+    if (place == null) {
+      place = Place.forName(
+        name,
+        latitude: lat.toDouble(),
+        longitude: lon.toDouble(),
+      );
+      await _placeStore.insertAPlace(place, fromSync: true);
+    }
+    decoded['placeId'] = place.id;
   }
 
   Future<void> _pullDiaryMedia(Diary diary) async {

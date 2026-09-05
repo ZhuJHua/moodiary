@@ -8,20 +8,32 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'map_page.g.dart';
 
 /// 底图需要的两样东西一起等：天地图的 tk 在 SecureKV 里，读它是一次异步的
 /// 钥匙串调用。分开 watch 会让底图先按「无 tk」建成 OSM 单层、再重建成天地图双层。
+typedef PlacePin = ({Place place, List<Diary> diaries});
+
+/// 日记引用常用地点，足迹 = 有日记的地点各打一个点，同一地点的日记挂在一起。
 @riverpod
-Future<({List<Diary> diaries, String tiandituKey})> mapData(Ref ref) async {
-  final withPosition = await getIt<DiaryRepository>().getDiariesWithPosition();
+Future<({List<PlacePin> pins, String tiandituKey})> mapData(Ref ref) async {
+  final diaries = await getIt<DiaryRepository>().getDiariesWithPlace();
+  final places = await getIt<PlaceRepository>().getAllPlaces();
   final key = await ref.watch(
     secretKvProvider(MoodiarySecureKVs.tiandituKey).future,
   );
+  final byPlace = <String, List<Diary>>{};
+  for (final d in diaries) {
+    (byPlace[d.placeId!] ??= []).add(d);
+  }
   return (
-    diaries: withPosition.where((d) => d.position != null).toList(),
+    pins: [
+      for (final p in places)
+        if (byPlace[p.id] case final ds?) (place: p, diaries: ds),
+    ],
     tiandituKey: key ?? '',
   );
 }
@@ -43,14 +55,14 @@ class MapPage extends ConsumerWidget {
       appBar: AppBar(title: Text(context.l10n.diary.mapTitle)),
       body: async.buildLoading(
         data: (data) {
-          final (:diaries, :tiandituKey) = data;
-          final initialCenter = diaries.isNotEmpty
-              ? _latLng(diaries.first.position!)
+          final (:pins, :tiandituKey) = data;
+          final initialCenter = pins.isNotEmpty
+              ? _latLng(pins.first.place)
               : const LatLng(39.9, 116.4);
           return FlutterMap(
             options: MapOptions(
               initialCenter: initialCenter,
-              initialZoom: diaries.isNotEmpty ? 12 : 4,
+              initialZoom: pins.isNotEmpty ? 12 : 4,
               minZoom: 3,
               maxZoom: 18,
             ),
@@ -58,18 +70,14 @@ class MapPage extends ConsumerWidget {
               ..._tileLayers(tiandituKey),
               MarkerLayer(
                 markers: [
-                  for (final d in diaries)
+                  for (final pin in pins)
                     Marker(
-                      point: _latLng(d.position!),
-                      width: 40,
-                      height: 40,
+                      point: _latLng(pin.place),
+                      width: 44,
+                      height: 44,
                       child: GestureDetector(
-                        onTap: () => _openDiary(context, d),
-                        child: Icon(
-                          LucideIcons.mapPin,
-                          color: context.theme.colors.primary,
-                          size: 32,
-                        ),
+                        onTap: () => _openPin(context, pin),
+                        child: _PinIcon(count: pin.diaries.length),
                       ),
                     ),
                 ],
@@ -106,6 +114,31 @@ class MapPage extends ConsumerWidget {
     ];
   }
 
+  /// 一篇直接开；多篇先列出来选。
+  Future<void> _openPin(BuildContext context, PlacePin pin) async {
+    if (pin.diaries.length == 1) return _openDiary(context, pin.diaries.first);
+    final picked = await MSheet.show<Diary>(
+      context,
+      builder: (context) => ListView(
+        shrinkWrap: true,
+        padding: const .fromLTRB(8, 0, 8, 16),
+        children: [
+          for (final (i, d) in pin.diaries.indexed)
+            SettingListTile(
+              isFirst: i == 0,
+              isLast: i == pin.diaries.length - 1,
+              title: d.title.trim().isEmpty
+                  ? context.l10n.common.untitled
+                  : d.title,
+              subtitle: TimeFormat.weekdayTimeHms(d.time),
+              onTap: () => Navigator.of(context).pop(d),
+            ),
+        ],
+      ),
+    );
+    if (picked != null && context.mounted) _openDiary(context, picked);
+  }
+
   void _openDiary(BuildContext context, Diary diary) {
     final route = DiaryRoute(
       type: DiaryType.fromValue(diary.type).routeQuery,
@@ -115,6 +148,40 @@ class MapPage extends ConsumerWidget {
     route.push(context);
   }
 
-  LatLng _latLng(DiaryPosition position) =>
-      LatLng(position.latitude, position.longitude);
+  LatLng _latLng(Place place) => LatLng(place.latitude, place.longitude);
+}
+
+/// 图钉 + 篇数角标（一篇不带角标）。
+class _PinIcon extends StatelessWidget {
+  final int count;
+
+  const _PinIcon({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.theme.colors;
+    return Stack(
+      clipBehavior: .none,
+      alignment: .center,
+      children: [
+        Icon(LucideIcons.mapPin, color: colors.primary, size: 32),
+        if (count > 1)
+          Positioned(
+            top: 0,
+            right: 0,
+            child: Container(
+              padding: const .symmetric(horizontal: 5, vertical: 1),
+              decoration: BoxDecoration(
+                color: colors.primary,
+                borderRadius: .circular(9),
+              ),
+              child: Text(
+                '$count',
+                style: context.theme.typography.labelSmall.onPrimary,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
 }

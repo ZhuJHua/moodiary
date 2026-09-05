@@ -123,6 +123,7 @@ class ExportService {
     final workDir = await _freshWorkDir();
     try {
       final categories = await _categoryNames(diaries);
+      final places = await _places(diaries);
       final media = _MediaStage(workDir, settings.common.media);
 
       final docs = <ExportDoc>[];
@@ -133,6 +134,7 @@ class ExportService {
           await _toExportDoc(
             diaries[i],
             categories,
+            places,
             media,
             includePosition: settings.common.includePosition,
           ),
@@ -219,11 +221,13 @@ class ExportService {
     required bool includePosition,
   }) async {
     final categories = await _categoryNames(diaries);
+    final places = await _places(diaries);
     return [
       for (final diary in diaries)
         await _toExportDoc(
           diary,
           categories,
+          places,
           null,
           includePosition: includePosition,
         ),
@@ -233,6 +237,7 @@ class ExportService {
   static Future<ExportDoc> _toExportDoc(
     Diary diary,
     Map<String, String> categories,
+    Map<String, Place> places,
     _MediaStage? media, {
     required bool includePosition,
   }) async {
@@ -259,7 +264,7 @@ class ExportService {
       weather: diary.weather,
       // 位置默认不出门（ExportCommon.includePosition）。在这里掐掉，四种格式一起生效 ——
       // 下游的三个 writer 与图片渲染器都只看 ExportDoc，不必各自再判一次。
-      position: includePosition ? diary.position : null,
+      place: includePosition ? places[diary.placeId] : null,
       tags: diary.tags,
       categoryName: categories[diary.categoryId],
       resolvePath: AppFiles.getRealPath,
@@ -281,6 +286,16 @@ class ExportService {
       if (category != null) names[id] = category.categoryName;
     }
     return names;
+  }
+
+  static Future<Map<String, Place>> _places(List<Diary> diaries) async {
+    final ids = diaries.map((d) => d.placeId).whereType<String>().toSet();
+    if (ids.isEmpty) return const {};
+    final all = await getIt<PlaceRepository>().getAllPlaces();
+    return {
+      for (final p in all)
+        if (ids.contains(p.id)) p.id: p,
+    };
   }
 
   // -------------------------------------------------------------- 各格式
@@ -820,7 +835,7 @@ class _MediaStage {
     time: doc.time,
     mood: doc.mood,
     weather: doc.weather,
-    position: doc.position,
+    place: doc.place,
     tags: doc.tags,
     categoryName: doc.categoryName,
     blocks: blocks,

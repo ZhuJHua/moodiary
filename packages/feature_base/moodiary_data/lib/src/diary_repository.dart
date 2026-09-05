@@ -52,7 +52,6 @@ class DiaryRepository {
     required List<String> videos,
     required List<String> tags,
   }) {
-    final lat = r.latitude;
     final icon = r.weatherIcon;
     return Diary(
       id: r.id,
@@ -64,24 +63,20 @@ class DiaryRepository {
       lastModified: dbToTime(r.lastModified),
       show: r.show != 0,
       mood: DiaryMood.fromName(r.mood),
+      // temp 可空（手选天气没有温度）；icon / text 是「有天气」的充要条件，
+      // 两者同写同清，text 的兜底只为极旧行的半残数据。
       weather: icon == null
           ? null
           : DiaryWeather(
               icon: icon,
-              temp: r.weatherTemp!,
-              text: r.weatherText!,
+              temp: r.weatherTemp,
+              text: r.weatherText ?? '',
             ),
       imageName: images,
       audioName: audios,
       videoName: videos,
       tags: tags,
-      position: lat == null
-          ? null
-          : DiaryPosition(
-              latitude: lat,
-              longitude: r.longitude!,
-              name: r.placeName!,
-            ),
+      placeId: r.placeId,
       type: r.type,
       aspect: r.aspect,
     );
@@ -99,9 +94,7 @@ class DiaryRepository {
     mood: d.mood.name,
     type: d.type,
     aspect: Value(d.aspect),
-    latitude: Value(d.position?.latitude),
-    longitude: Value(d.position?.longitude),
-    placeName: Value(d.position?.name),
+    placeId: Value(d.placeId),
     weatherIcon: Value(d.weather?.icon),
     weatherTemp: Value(d.weather?.temp),
     weatherText: Value(d.weather?.text),
@@ -661,11 +654,24 @@ class DiaryRepository {
     return row != null;
   }
 
-  /// 地图用：只取带定位的可见日记（时间倒序）。
-  Future<List<Diary>> getDiariesWithPosition() async {
-    final q = _visible()..where((d) => d.latitude.isNotNull());
+  /// 地图用：只取挂了常用地点的可见日记（时间倒序）。
+  Future<List<Diary>> getDiariesWithPlace() async {
+    final q = _visible()..where((d) => d.placeId.isNotNull());
     _orderBy(q, .timeDesc);
     return _assemble(await q.get());
+  }
+
+  /// 各常用地点下的在册日记数（不含回收站）。
+  Future<Map<String, int>> diaryCountByPlace() async {
+    final place = _db.diaries.placeId;
+    final count = countAll();
+    final q = _db.selectOnly(_db.diaries)
+      ..addColumns([place, count])
+      ..where(_db.diaries.show.equals(1) & place.isNotNull())
+      ..groupBy([place]);
+    return {
+      for (final row in await q.get()) row.read(place)!: row.read(count)!,
+    };
   }
 
   Future<List<Diary>> getRecycleBinDiaries() async {

@@ -25,8 +25,8 @@
 /// 加密对象格式 —— 必须 bump**；`lan_protocol_test.dart` 把有常量可钉的那些钉成指纹，
 /// 没常量可钉的（例如条目封装方式）只能靠这条规则。
 ///
-/// 协议 2 的发送端（2.8.0 的早期构建）不带 [lanProtoHeader]，接收端把「没带」当作 2 放行 ——
-/// 这条宽容只在 [lanProtoVersion] 还是 2 时成立，下次 bump 必须一起删掉。
+/// 协议 3（2026-09-05）：日记对象 `position` 快照改为 `placeId` 引用，manifest 升 v2；
+/// 顺带删掉了「不带 [lanProtoHeader] 按 2 放行」的宽容——没带头就是不兼容。
 library;
 
 import 'dart:convert';
@@ -38,7 +38,7 @@ import 'package:moodiary_platform/moodiary_platform.dart';
 
 const int lanDefaultPort = 6636;
 
-const int lanProtoVersion = 2;
+const int lanProtoVersion = 3;
 const String lanApiBase = '/moodiary/lan/v1';
 const String lanHandshakePath = '$lanApiBase/handshake';
 const String lanManifestPath = '$lanApiBase/manifest';

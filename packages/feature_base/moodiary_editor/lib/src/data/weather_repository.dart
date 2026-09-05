@@ -3,51 +3,55 @@ import 'package:injectable/injectable.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:moodiary_editor/src/data/geo_repository.dart';
 import 'package:moodiary_editor/src/data/model/weather.dart';
+import 'package:moodiary_editor/src/data/qweather_config.dart';
 import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
 
-/// 和风天气「实时天气」仓储：按经纬度取 [DiaryWeather]。
+typedef WeatherResult = ({DiaryWeather? weather, GeoFailure? failure});
+
+/// 和风「实时天气」仓储：按经纬度取 [DiaryWeather]。
+///
+/// 入参是**裸坐标**，不是 [DiaryPosition] —— 天气与位置是两条互不相干的链路，
+/// 取天气既不需要地名、也不该顺手把位置写进日记。
 @lazySingleton
 class WeatherRepository {
   WeatherRepository(this._http);
 
   final IHttpClient _http;
 
-  Future<({DiaryWeather? weather, GeoFailure? failure})> getWeather({
+  Future<WeatherResult> getWeather({
     required BuildContext context,
-    required LatLng position,
+    required LatLng coords,
   }) async {
-    // key / host 任一未配置就短路：和风的 API Host 是 per-key 专属的（2.8.0 新增配置，
-    // 升级用户为空），拼出来的 `https://null/...` 只会白打一发必败请求。
-    final host = MoodiaryKVs.qweatherApiHost.get();
-    final key = await MoodiarySecureKVs.qweatherKey.get();
-    if (host == null || host.isEmpty || key == null || key.isEmpty) {
+    final credentials = await qweatherCredentials();
+    if (credentials == null) {
       return (weather: null, failure: GeoFailure.notConfigured);
     }
     if (!context.mounted) {
       return (weather: null, failure: GeoFailure.lookupFailed);
     }
     final local = Localizations.localeOf(context);
-    final parameters = {
-      'location':
-          '${double.parse(position.longitude.toStringAsFixed(2))},${double.parse(position.latitude.toStringAsFixed(2))}',
-      'key': key,
-      'lang': local,
-    };
     final res = await _http.get(
-      'https://$host/v7/weather/now',
-      query: parameters,
+      'https://${credentials.host}/v7/weather/now',
+      query: {
+        'location': qweatherLocation(coords),
+        'key': credentials.key,
+        'lang': local,
+      },
     );
     final weather = await compute(
       WeatherResponse.fromJson,
       res.data as Map<String, dynamic>,
     );
     final now = weather.now;
-    if (now == null) return (weather: null, failure: GeoFailure.lookupFailed);
+    final icon = now?.icon;
+    final text = now?.text;
+    if (icon == null || text == null) {
+      return (weather: null, failure: GeoFailure.lookupFailed);
+    }
     return (
-      weather: DiaryWeather(icon: now.icon!, temp: now.temp!, text: now.text!),
+      weather: DiaryWeather(icon: icon, temp: now?.temp, text: text),
       failure: null,
     );
   }

@@ -118,6 +118,13 @@ class CategoryManagerRoute extends MoodiaryRouteBase {
   String get location => path;
 }
 
+class PlaceManagerRoute extends MoodiaryRouteBase {
+  static const String path = '/place_manager';
+  const PlaceManagerRoute();
+  @override
+  String get location => path;
+}
+
 class MapRoute extends MoodiaryRouteBase {
   static const String path = '/map';
   const MapRoute();

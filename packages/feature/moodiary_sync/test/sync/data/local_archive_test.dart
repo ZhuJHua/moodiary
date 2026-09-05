@@ -8,6 +8,7 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_sync/src/data/archive_apply.dart';
+import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/impl/local_archive.dart';
 import 'package:moodiary_sync/src/data/incremental_engine.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
@@ -364,6 +365,80 @@ void main() {
       );
     });
 
+    test('2.8.0 导出的备份（manifest v1、日记带 position 快照）→ 归并成地点后恢复', () async {
+      // 手工摆出 2.8.0 的布局：没有 place/，日记对象带 position 快照。
+      final dir = p.join(tmp.path, 'v1-backup');
+      await Directory(p.join(dir, 'diary')).create(recursive: true);
+      Map<String, dynamic> legacyDiary(
+        String id,
+        Map<String, dynamic> position,
+      ) => {
+        'id': id,
+        'title': 't-$id',
+        'content': '',
+        'contentText': '',
+        'time': '2026-01-01T00:00:00.000Z',
+        'lastModified': '2026-01-01T00:00:00.000Z',
+        'show': true,
+        'mood': 'neutral',
+        'weather': {'icon': '100', 'temp': '26', 'text': '晴'},
+        'imageName': <String>[],
+        'audioName': <String>[],
+        'videoName': <String>[],
+        'tags': <String>[],
+        'type': 'tiptap',
+        'position': position,
+      };
+      await File(p.join(dir, SyncKeys.manifestPath)).writeAsString(
+        jsonEncode({
+          'version': SyncManifest.legacyVersion,
+          'updatedAt': 1,
+          'entries': {
+            'd:a': {'t': 1000},
+            'd:b': {'t': 1000},
+          },
+        }),
+      );
+      await File(p.join(dir, SyncKeys.diaryObjectPath('a'))).writeAsString(
+        jsonEncode(
+          legacyDiary('a', {
+            'latitude': 30.28,
+            'longitude': 120.15,
+            'name': '杭州市 西湖区',
+          }),
+        ),
+      );
+      await File(p.join(dir, SyncKeys.diaryObjectPath('b'))).writeAsString(
+        jsonEncode(
+          legacyDiary('b', {
+            'latitude': 30.29,
+            'longitude': 120.16,
+            'name': '杭州市 西湖区',
+          }),
+        ),
+      );
+
+      final diaryStore = FakeDiaryStore();
+      final placeStore = FakePlaceStore();
+      final report = await LocalArchive.importDirectory(
+        dir,
+        diaryStore: diaryStore,
+        categoryStore: FakeCategoryStore(),
+        placeStore: placeStore,
+        mediaInfoStore: FakeMediaInfoStore(),
+        tombstoneStore: diaryStore.tombstones,
+        mediaFiles: FakeMediaFiles(),
+        cipherProvider: () async => SyncCipher.plaintext,
+      );
+      expect(report.failed, 0);
+      expect(report.diaryCount, 2);
+      final xihu = Place.idForName('杭州市 西湖区');
+      expect(placeStore.places.keys, [xihu], reason: '同名归并成一个地点');
+      expect(diaryStore.diaries['a']!.placeId, xihu);
+      expect(diaryStore.diaries['b']!.placeId, xihu);
+      expect(diaryStore.diaries['a']!.weather?.temp, '26');
+    });
+
     test('归档较新 → 覆盖本地；本地较新 → 保留', () async {
       final dir = await buildArchiveDir(
         diaries: [
@@ -379,6 +454,7 @@ void main() {
         dir,
         diaryStore: diaryStore,
         categoryStore: FakeCategoryStore(),
+        placeStore: FakePlaceStore(),
         mediaInfoStore: FakeMediaInfoStore(),
         tombstoneStore: diaryStore.tombstones,
         mediaFiles: FakeMediaFiles(),
@@ -404,6 +480,7 @@ void main() {
         dir,
         diaryStore: diaryStore,
         categoryStore: categoryStore,
+        placeStore: FakePlaceStore(),
         mediaInfoStore: FakeMediaInfoStore(),
         tombstoneStore: diaryStore.tombstones,
         mediaFiles: mediaFiles,
@@ -436,6 +513,7 @@ void main() {
         dir,
         diaryStore: diaryStore,
         categoryStore: FakeCategoryStore(),
+        placeStore: FakePlaceStore(),
         mediaInfoStore: FakeMediaInfoStore(),
         tombstoneStore: diaryStore.tombstones,
         mediaFiles: mediaFiles,
@@ -476,6 +554,7 @@ void main() {
         policy: const RestorePolicy(),
         diaryStore: diaryStore,
         categoryStore: FakeCategoryStore(),
+        placeStore: FakePlaceStore(),
         mediaInfoStore: FakeMediaInfoStore(),
         tombstoneStore: diaryStore.tombstones,
         mediaFiles: mediaFiles,
@@ -509,6 +588,7 @@ void main() {
         policy: const RestorePolicy(),
         diaryStore: diaryStore,
         categoryStore: FakeCategoryStore(),
+        placeStore: FakePlaceStore(),
         mediaInfoStore: FakeMediaInfoStore(),
         tombstoneStore: diaryStore.tombstones,
         mediaFiles: FakeMediaFiles(),
@@ -531,6 +611,7 @@ void main() {
         dir,
         diaryStore: diaryStore,
         categoryStore: FakeCategoryStore(),
+        placeStore: FakePlaceStore(),
         mediaInfoStore: FakeMediaInfoStore(),
         tombstoneStore: diaryStore.tombstones,
         mediaFiles: FakeMediaFiles(),
@@ -558,6 +639,7 @@ void main() {
         policy: const RestorePolicy(),
         diaryStore: diaryStore,
         categoryStore: FakeCategoryStore(),
+        placeStore: FakePlaceStore(),
         mediaInfoStore: FakeMediaInfoStore(),
         tombstoneStore: diaryStore.tombstones,
         mediaFiles: FakeMediaFiles(),
@@ -584,6 +666,7 @@ void main() {
         dir,
         diaryStore: diaryStore,
         categoryStore: FakeCategoryStore(),
+        placeStore: FakePlaceStore(),
         mediaInfoStore: FakeMediaInfoStore(),
         tombstoneStore: diaryStore.tombstones,
         mediaFiles: FakeMediaFiles(),
@@ -605,6 +688,7 @@ void main() {
         dir,
         diaryStore: FakeDiaryStore(),
         categoryStore: FakeCategoryStore(),
+        placeStore: FakePlaceStore(),
         mediaInfoStore: FakeMediaInfoStore(),
         tombstoneStore: FakeTombstoneStore(),
         mediaFiles: FakeMediaFiles(),

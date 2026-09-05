@@ -35,9 +35,7 @@ _Diary _$DiaryFromJson(Map<String, dynamic> json) => _Diary(
       .map((e) => e as String)
       .toList(),
   tags: (json['tags'] as List<dynamic>).map((e) => e as String).toList(),
-  position: json['position'] == null
-      ? null
-      : DiaryPosition.fromJson(json['position'] as Map<String, dynamic>),
+  placeId: json['placeId'] as String?,
   type: json['type'] as String,
   aspect: (json['aspect'] as num?)?.toDouble(),
 );
@@ -57,7 +55,7 @@ Map<String, dynamic> _$DiaryToJson(_Diary instance) => <String, dynamic>{
   'audioName': instance.audioName,
   'videoName': instance.videoName,
   'tags': instance.tags,
-  'position': instance.position,
+  'placeId': instance.placeId,
   'type': instance.type,
   'aspect': instance.aspect,
 };

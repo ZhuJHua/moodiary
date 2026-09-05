@@ -105,3 +105,31 @@ extension DiaryMoodVisuals on DiaryMood {
     .sick => l10n.common.moodSick,
   };
 }
+
+/// 手选天气的本地化名称。与 [DiaryMoodVisuals] 同一套写法：widget 里用
+/// [label]（切语言自动重建），导出 / 服务这类没有 context 的地方走 [labelOf]。
+///
+/// 图标不在这里 —— 天气图标是和风字体按 [ManualWeather.code] 取字形
+/// （Flutter 侧 `qweatherIcon`，web 侧 qweather-icons 码表），不是 lucide。
+extension ManualWeatherLabel on ManualWeather {
+  String label(BuildContext context) => labelOf(context.l10n);
+
+  String labelOf(Translations l10n) => switch (this) {
+    .sunny => l10n.common.weatherSunny,
+    .cloudy => l10n.common.weatherCloudy,
+    .overcast => l10n.common.weatherOvercast,
+    .showerRain => l10n.common.weatherShowerRain,
+    .lightRain => l10n.common.weatherLightRain,
+    .moderateRain => l10n.common.weatherModerateRain,
+    .heavyRain => l10n.common.weatherHeavyRain,
+    .storm => l10n.common.weatherStorm,
+    .thundershower => l10n.common.weatherThundershower,
+    .lightSnow => l10n.common.weatherLightSnow,
+    .heavySnow => l10n.common.weatherHeavySnow,
+    .sleet => l10n.common.weatherSleet,
+    .foggy => l10n.common.weatherFoggy,
+    .haze => l10n.common.weatherHaze,
+    .hot => l10n.common.weatherHot,
+    .cold => l10n.common.weatherCold,
+  };
+}

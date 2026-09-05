@@ -18,14 +18,14 @@ void main() {
     ].join(';');
     expect(
       fingerprint,
-      'proto=2;'
+      'proto=3;'
       'handshake=/moodiary/lan/v1/handshake;'
       'manifest=/moodiary/lan/v1/manifest;'
       'archive=/moodiary/lan/v1/archive;'
       'auth=x-moodiary-auth;'
       'protoHeader=x-moodiary-proto;'
       'nonce=16;'
-      'manifestVersion=1;'
+      'manifestVersion=2;'
       'cipher=MD-ENC-V1',
       reason:
           '线上格式变了：先 bump lanProtoVersion（两端严格相等才能同步），再改这里的期望值。'
@@ -38,6 +38,6 @@ void main() {
     expect(lanDisplayVersion('2.8.1'), '2.8.1');
     expect(lanDisplayVersion(null), 'unknown');
     expect(lanDisplayVersion(''), 'unknown');
-    expect(lanTxtRecord('2.8.1+101'), {'proto': '2', 'ver': '2.8.1+101'});
+    expect(lanTxtRecord('2.8.1+101'), {'proto': '3', 'ver': '2.8.1+101'});
   });
 }

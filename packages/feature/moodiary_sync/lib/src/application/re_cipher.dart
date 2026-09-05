@@ -18,6 +18,7 @@ import 'package:path/path.dart' as p;
 class ReCipherReport {
   final int diaryCount;
   final int categoryCount;
+  final int placeCount;
   final int mediaInfoCount;
   final int mediaCount;
   final int failed;
@@ -26,6 +27,7 @@ class ReCipherReport {
   const ReCipherReport({
     required this.diaryCount,
     required this.categoryCount,
+    this.placeCount = 0,
     this.mediaInfoCount = 0,
     required this.mediaCount,
     required this.failed,
@@ -123,6 +125,7 @@ class CloudReCipher {
     // 收集需改写的对象（跳过 tombstone：无 body）。媒体集合取 manifest 清单并集。
     final diaryIds = <String>[];
     final categoryIds = <String>[];
+    final placeIds = <String>[];
     final mediaInfoIds = <String>[];
     for (final entry in manifest.entries.entries) {
       if (entry.value.deleted) continue;
@@ -130,6 +133,8 @@ class CloudReCipher {
         diaryIds.add(entry.key.substring(SyncKeys.diaryPrefix.length));
       } else if (entry.key.startsWith(SyncKeys.categoryPrefix)) {
         categoryIds.add(entry.key.substring(SyncKeys.categoryPrefix.length));
+      } else if (entry.key.startsWith(SyncKeys.placePrefix)) {
+        placeIds.add(entry.key.substring(SyncKeys.placePrefix.length));
       } else if (entry.key.startsWith(SyncKeys.mediaInfoPrefix)) {
         mediaInfoIds.add(entry.key.substring(SyncKeys.mediaInfoPrefix.length));
       }
@@ -138,13 +143,18 @@ class CloudReCipher {
 
     int diaryCount = 0;
     int categoryCount = 0;
+    int placeCount = 0;
     int mediaInfoCount = 0;
     int mediaCount = 0;
     int failed = 0;
 
     int done = 0;
     // 媒体引用在改写 diary 时还会补收（见 _collectMediaRefs），total 待后补媒体数。
-    int total = diaryIds.length + categoryIds.length + mediaInfoIds.length;
+    int total =
+        diaryIds.length +
+        categoryIds.length +
+        placeIds.length +
+        mediaInfoIds.length;
     void emitProgress(String label) => onProgress?.call(done, total, label);
     emitProgress(l10n.sync.stepPrepare);
 
@@ -218,6 +228,26 @@ class CloudReCipher {
       emitProgress(l10n.sync.stepCategory(id: id));
     }
 
+    // 改写 place JSON（漏掉 = 改密码后常用地点对象永久解不开，同 mediainfo）
+    for (final id in placeIds) {
+      try {
+        final ok = await reEncodeJson(SyncKeys.placeObjectPath(id));
+        if (ok == true) {
+          placeCount++;
+        } else if (ok == false) {
+          failed++;
+        }
+      } catch (e) {
+        failed++;
+        _logger.error(
+          .reCipher,
+          payload: {'placeId': id, 'detail': e.toString()},
+        );
+      }
+      done++;
+      emitProgress(l10n.sync.stepPlace(id: id));
+    }
+
     // 改写 mediainfo JSON（漏掉 = 改密码后媒体元数据对象永久解不开）
     for (final id in mediaInfoIds) {
       try {
@@ -289,6 +319,7 @@ class CloudReCipher {
         'direction': 're-cipher',
         'diaryCount': diaryCount,
         'categoryCount': categoryCount,
+        'placeCount': placeCount,
         'mediaCount': mediaCount,
         'failed': failed,
         'elapsedMs': sw.elapsedMilliseconds,
@@ -298,6 +329,7 @@ class CloudReCipher {
     return ReCipherReport(
       diaryCount: diaryCount,
       categoryCount: categoryCount,
+      placeCount: placeCount,
       mediaInfoCount: mediaInfoCount,
       mediaCount: mediaCount,
       failed: failed,

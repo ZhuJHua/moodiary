@@ -123,6 +123,9 @@ class Translations$app$zh {
 	/// zh: '分类管理'
 	String get categoryManager => '分类管理';
 
+	/// zh: '常用地点'
+	String get placeManager => '常用地点';
+
 	/// zh: '足迹地图'
 	String get mapTitle => '足迹地图';
 
@@ -252,11 +255,29 @@ class Translations$app$zh {
 	/// zh: '展示字数统计'
 	String get showWordCount => '展示字数统计';
 
-	/// zh: '天气'
-	String get diaryPrefsWeather => '天气';
+	/// zh: '天气与位置'
+	String get diaryPrefsWeather => '天气与位置';
 
-	/// zh: '保存日记时自动获取天气'
-	String get autoWeather => '保存日记时自动获取天气';
+	/// zh: '自动记录天气'
+	String get autoWeather => '自动记录天气';
+
+	/// zh: '新建日记时从和风天气获取'
+	String get autoWeatherSubtitle => '新建日记时从和风天气获取';
+
+	/// zh: '自动记录位置'
+	String get autoPosition => '自动记录位置';
+
+	/// zh: '新建日记时从和风天气获取所在城市'
+	String get autoPositionSubtitle => '新建日记时从和风天气获取所在城市';
+
+	/// zh: '自动匹配常用地点'
+	String get autoNearestPlace => '自动匹配常用地点';
+
+	/// zh: '新建日记时若在某个常用地点附近，就记为该地点而不是城市'
+	String get autoNearestPlaceSubtitle => '新建日记时若在某个常用地点附近，就记为该地点而不是城市';
+
+	/// zh: '需先配置和风天气'
+	String get qweatherRequired => '需先配置和风天气';
 
 	/// zh: '在此填入您自有的第三方服务凭证，启用 AI 助手、天气与地图等能力。所有凭证仅保存在本机。'
 	String get servicesIntro => '在此填入您自有的第三方服务凭证，启用 AI 助手、天气与地图等能力。所有凭证仅保存在本机。';
@@ -1173,6 +1194,54 @@ class Translations$common$zh {
 	/// zh: '生病'
 	String get moodSick => '生病';
 
+	/// zh: '晴'
+	String get weatherSunny => '晴';
+
+	/// zh: '多云'
+	String get weatherCloudy => '多云';
+
+	/// zh: '阴'
+	String get weatherOvercast => '阴';
+
+	/// zh: '阵雨'
+	String get weatherShowerRain => '阵雨';
+
+	/// zh: '小雨'
+	String get weatherLightRain => '小雨';
+
+	/// zh: '中雨'
+	String get weatherModerateRain => '中雨';
+
+	/// zh: '大雨'
+	String get weatherHeavyRain => '大雨';
+
+	/// zh: '暴雨'
+	String get weatherStorm => '暴雨';
+
+	/// zh: '雷阵雨'
+	String get weatherThundershower => '雷阵雨';
+
+	/// zh: '小雪'
+	String get weatherLightSnow => '小雪';
+
+	/// zh: '大雪'
+	String get weatherHeavySnow => '大雪';
+
+	/// zh: '雨夹雪'
+	String get weatherSleet => '雨夹雪';
+
+	/// zh: '雾'
+	String get weatherFoggy => '雾';
+
+	/// zh: '霾'
+	String get weatherHaze => '霾';
+
+	/// zh: '热'
+	String get weatherHot => '热';
+
+	/// zh: '冷'
+	String get weatherCold => '冷';
+
 	/// zh: '取消'
 	String get cancel => '取消';
 
@@ -1454,14 +1523,14 @@ class Translations$diary$zh {
 	/// zh: '删除分类？'
 	String get categoryDeleteTitle => '删除分类？';
 
-	/// zh: '「{name}」下若仍有日记将无法删除。本操作不会影响日记本身。'
-	String categoryDeleteMessage({required Object name}) => '「${name}」下若仍有日记将无法删除。本操作不会影响日记本身。';
+	/// zh: '「{name}」下仍有日记（含回收站）时不可删除，日记本身不受影响。'
+	String categoryDeleteMessage({required Object name}) => '「${name}」下仍有日记（含回收站）时不可删除，日记本身不受影响。';
 
 	/// zh: '已删除'
 	String get categoryDeleted => '已删除';
 
-	/// zh: '分类下仍有日记，删除失败'
-	String get categoryDeleteBlocked => '分类下仍有日记，删除失败';
+	/// zh: '仍有日记（含回收站），无法删除'
+	String get categoryDeleteBlocked => '仍有日记（含回收站），无法删除';
 
 	/// zh: '暂无分类'
 	String get categoryEmpty => '暂无分类';
@@ -1571,8 +1640,14 @@ class Translations$diary$zh {
 	/// zh: '获取天气失败，请稍后重试'
 	String get weatherFailed => '获取天气失败，请稍后重试';
 
-	/// zh: '已获取天气：{weather} {temperature}°C'
-	String weatherFetched({required Object weather, required Object temperature}) => '已获取天气：${weather} ${temperature}°C';
+	/// zh: '已获取天气：{weather}'
+	String weatherFetched({required Object weather}) => '已获取天气：${weather}';
+
+	/// zh: '自动获取'
+	String get weatherAuto => '自动获取';
+
+	/// zh: '清除天气'
+	String get weatherClear => '清除天气';
 
 	/// zh: '获取位置失败，请稍后重试'
 	String get positionFailed => '获取位置失败，请稍后重试';
@@ -1588,6 +1663,90 @@ class Translations$diary$zh {
 
 	/// zh: '系统定位服务未开启'
 	String get positionServiceOff => '系统定位服务未开启';
+
+	/// zh: '自动获取'
+	String get positionAuto => '自动获取';
+
+	/// zh: '新建常用地点'
+	String get positionNewPlace => '新建常用地点';
+
+	/// zh: '管理常用地点'
+	String get positionManagePlaces => '管理常用地点';
+
+	/// zh: '清除位置'
+	String get positionClear => '清除位置';
+
+	/// zh: '常用地点'
+	String get placeManagerTitle => '常用地点';
+
+	/// zh: '搜索地点'
+	String get placeSearchHint => '搜索地点';
+
+	/// zh: '没有匹配的地点'
+	String get placeNoMatch => '没有匹配的地点';
+
+	/// zh: '还没有常用地点'
+	String get placeEmpty => '还没有常用地点';
+
+	/// zh: '新建地点'
+	String get placeNew => '新建地点';
+
+	/// zh: '新建常用地点'
+	String get placeCreateTitle => '新建常用地点';
+
+	/// zh: '编辑常用地点'
+	String get placeEditTitle => '编辑常用地点';
+
+	/// zh: '名称'
+	String get placeNameLabel => '名称';
+
+	/// zh: '名称不能为空'
+	String get placeNameEmpty => '名称不能为空';
+
+	/// zh: '更新为当前位置'
+	String get placeRelocate => '更新为当前位置';
+
+	/// zh: '图标'
+	String get placeIconLabel => '图标';
+
+	/// zh: '{meters} m'
+	String placeDistanceMeters({required Object meters}) => '${meters} m';
+
+	/// zh: '{km} km'
+	String placeDistanceKilometers({required Object km}) => '${km} km';
+
+	/// zh: '与「{name}」相距 {distance}，太近了，可能互相误命中。'
+	String placeOverlapWarning({required Object name, required Object distance}) => '与「${name}」相距 ${distance}，太近了，可能互相误命中。';
+
+	/// zh: '{count} 篇日记'
+	String placeDiaryCount({required Object count}) => '${count} 篇日记';
+
+	/// zh: '暂无日记'
+	String get placeNoDiary => '暂无日记';
+
+	/// zh: '删除「{name}」？'
+	String placeDeleteTitle({required Object name}) => '删除「${name}」？';
+
+	/// zh: '仍有日记（含回收站）使用「{name}」时不可删除，日记本身不受影响。'
+	String placeDeleteMessage({required Object name}) => '仍有日记（含回收站）使用「${name}」时不可删除，日记本身不受影响。';
+
+	/// zh: '仍有日记（含回收站），无法删除'
+	String get placeDeleteBlocked => '仍有日记（含回收站），无法删除';
+
+	/// zh: '已添加「{name}」'
+	String placeCreated({required Object name}) => '已添加「${name}」';
+
+	/// zh: '已保存'
+	String get placeSaved => '已保存';
+
+	/// zh: '已删除'
+	String get placeDeleted => '已删除';
+
+	/// zh: '保存失败'
+	String get placeSaveFailed => '保存失败';
+
+	/// zh: '距此 {distance}'
+	String placeDistanceAway({required Object distance}) => '距此 ${distance}';
 
 	/// zh: '主页'
 	String get home => '主页';
@@ -2660,6 +2819,21 @@ class Translations$sync$zh {
 	/// zh: '同步分类删除'
 	String get kindCategoryTombstonePull => '同步分类删除';
 
+	/// zh: '地点上传'
+	String get kindPlaceUpload => '地点上传';
+
+	/// zh: '地点下载'
+	String get kindPlaceDownload => '地点下载';
+
+	/// zh: '地点跳过'
+	String get kindPlaceSkip => '地点跳过';
+
+	/// zh: '地点删除推送'
+	String get kindPlaceTombstonePush => '地点删除推送';
+
+	/// zh: '地点删除应用'
+	String get kindPlaceTombstonePull => '地点删除应用';
+
 	/// zh: '上传媒体信息'
 	String get kindMediaInfoUpload => '上传媒体信息';
 
@@ -3226,6 +3400,9 @@ class Translations$sync$zh {
 
 	/// zh: '分类 {id}'
 	String stepCategory({required Object id}) => '分类 ${id}';
+
+	/// zh: '地点 {id}'
+	String stepPlace({required Object id}) => '地点 ${id}';
 
 	/// zh: '媒体信息 {id}'
 	String stepMediaInfo({required Object id}) => '媒体信息 ${id}';

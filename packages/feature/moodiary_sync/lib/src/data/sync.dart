@@ -80,17 +80,19 @@ abstract class IRemoteSyncBackend implements RemoteObjectStore {
   Future<void> testConnection();
 }
 
-/// 一个方向上的变更条数。日记 / 分类 / 媒体信息按条目计（含推送或应用的墓碑），
-/// [mediaFiles] 是真正传输过的媒体文件数（跳过的不算）。
+/// 一个方向上的变更条数。日记 / 分类 / 常用地点 / 媒体信息按条目计（含推送或应用
+/// 的墓碑），[mediaFiles] 是真正传输过的媒体文件数（跳过的不算）。
 class SyncCounts {
   final int diaries;
   final int categories;
+  final int places;
   final int mediaInfos;
   final int mediaFiles;
 
   const SyncCounts({
     this.diaries = 0,
     this.categories = 0,
+    this.places = 0,
     this.mediaInfos = 0,
     this.mediaFiles = 0,
   });
@@ -98,15 +100,21 @@ class SyncCounts {
   static const SyncCounts zero = SyncCounts();
 
   bool get isEmpty =>
-      diaries == 0 && categories == 0 && mediaInfos == 0 && mediaFiles == 0;
+      diaries == 0 &&
+      categories == 0 &&
+      places == 0 &&
+      mediaInfos == 0 &&
+      mediaFiles == 0;
 
   /// 条目级是否有变更（不看媒体文件）：pull 的 skip 分支会补拉缺失媒体，
   /// 那不改 manifest，push 侧据此判断能否复用 pull 读到的快照。
-  bool get hasEntryChanges => diaries > 0 || categories > 0 || mediaInfos > 0;
+  bool get hasEntryChanges =>
+      diaries > 0 || categories > 0 || places > 0 || mediaInfos > 0;
 
   SyncCounts operator +(SyncCounts other) => SyncCounts(
     diaries: diaries + other.diaries,
     categories: categories + other.categories,
+    places: places + other.places,
     mediaInfos: mediaInfos + other.mediaInfos,
     mediaFiles: mediaFiles + other.mediaFiles,
   );

@@ -156,12 +156,11 @@ class LanReceiverService {
     'salt': _salt,
   });
 
-  /// 令牌通过后再比协议版本：不等回 426。头缺失 = 协议 2 的发送端（那一版还没有这个
-  /// 头），按 2 放行；[lanProtoVersion] 一旦离开 2，这条宽容要跟着删。
+  /// 令牌通过后再比协议版本：不等（含没带头）回 426。
   Future<HttpServerResponse?> _admit(HttpServerRequest request) async {
     final denied = await _checkAuth(request);
     if (denied != null) return denied;
-    final peer = int.tryParse(request.headers[lanProtoHeader] ?? '') ?? 2;
+    final peer = int.tryParse(request.headers[lanProtoHeader] ?? '');
     if (peer == lanProtoVersion) return null;
     final message = l10n.sync.errVersionMismatchDetail(
       sender: lanDisplayVersion(request.headers[lanVersionHeader]),

@@ -235,24 +235,37 @@ void main() {
       expect(got.tags, ['旅行', '随笔']);
     });
 
-    test('position/weather 值对象往返（含 null）', () async {
+    test('placeId/weather 往返（含 null）', () async {
       final withMeta = makeDiary('d1', '正文').copyWith(
-        position: const DiaryPosition(
-          latitude: 24.48,
-          longitude: 118.08,
-          name: '厦门 环岛路',
-        ),
+        placeId: 'p-xiamen',
         weather: const DiaryWeather(icon: '100', temp: '26', text: '晴'),
       );
       await repo.insertADiary(withMeta);
       await repo.insertADiary(makeDiary('d2', '正文'));
       final a = (await repo.getDiaryByBusinessId('d1'))!;
-      expect(a.position?.name, '厦门 环岛路');
-      expect(a.position?.latitude, 24.48);
+      expect(a.placeId, 'p-xiamen');
       expect(a.weather?.text, '晴');
       final b = (await repo.getDiaryByBusinessId('d2'))!;
-      expect(b.position, isNull);
+      expect(b.placeId, isNull);
       expect(b.weather, isNull);
+      expect(await repo.diaryCountByPlace(), {'p-xiamen': 1});
+      expect((await repo.getDiariesWithPlace()).map((d) => d.id), ['d1']);
+    });
+
+    test('手选天气没有温度：weather_temp 存 NULL 且读回不炸', () async {
+      // 属性头手选的那 16 个天气只有码与描述。读回时对 weather_temp 用 `!`
+      // 会在这里炸——分析器看不见，只有往返测试能挡住。
+      await repo.insertADiary(
+        makeDiary('manual', '正文').copyWith(
+          weather: const DiaryWeather(icon: '305', text: '小雨'),
+        ),
+      );
+      final got = (await repo.getDiaryByBusinessId('manual'))!;
+      expect(got.weather?.icon, '305');
+      expect(got.weather?.text, '小雨');
+      expect(got.weather?.temp, isNull);
+      expect(got.weather?.displayText, '小雨');
+      expect(got.weather?.compactText, '小雨');
     });
 
     test('getMediaSourceDiaries 按类型过滤且排序稳定', () async {

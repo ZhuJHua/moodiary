@@ -49,6 +49,7 @@ class EngineMigrationService {
     MoodiaryDatabase? database,
     DiaryRepository? diaryRepository,
     CategoryRepository? categoryRepository,
+    PlaceRepository? placeRepository,
     FontRepository? fontRepository,
     MediaInfoRepository? mediaInfoRepository,
     TombstoneRepository? tombstoneRepository,
@@ -58,6 +59,7 @@ class EngineMigrationService {
     final db = database ?? getIt<MoodiaryDatabase>();
     final diaryRepo = diaryRepository ?? getIt<DiaryRepository>();
     final categoryRepo = categoryRepository ?? getIt<CategoryRepository>();
+    final placeRepo = placeRepository ?? getIt<PlaceRepository>();
     final fontRepo = fontRepository ?? getIt<FontRepository>();
     final mediaInfoRepo = mediaInfoRepository ?? getIt<MediaInfoRepository>();
     final tombstoneRepo = tombstoneRepository ?? getIt<TombstoneRepository>();
@@ -105,6 +107,11 @@ class EngineMigrationService {
 
       var positionDropped = 0;
       var orphanMessagesDropped = 0;
+      // 旧日记的定位是每篇一份的 `[纬度, 经度, 地名]` 快照；新模型是引用常用地点。
+      // 按地名归并：同名（和风反查出来的行政区名会反复出现）合成一个地点，坐标取
+      // 第一次出现的那篇；没有地名的拿坐标当名字。id 由地名派生（Place.forName），
+      // 两台设备各自搬迁得到同一批 id，同步时合并。
+      final placesByName = <String, Place>{};
 
       // —— 起步清空：标记未置位即整库重来，天然可重入。—— //
       // 清空前的最后一道闸：旧库一条日记都没有、而 SQLite 里已经有行，说明打开的
@@ -149,8 +156,23 @@ class EngineMigrationService {
         );
         final converted = <Diary>[];
         for (final d in rows) {
-          final (position, dropped) = _position(d.position);
-          if (dropped) positionDropped++;
+          final position = _position(d.position);
+          String? placeId;
+          if (position == null) {
+            if (d.position.length >= 2) positionDropped++;
+          } else {
+            var place = placesByName[position.name];
+            if (place == null) {
+              place = Place.forName(
+                position.name,
+                latitude: position.latitude,
+                longitude: position.longitude,
+              );
+              placesByName[position.name] = place;
+              await placeRepo.insertAPlace(place, fromSync: true);
+            }
+            placeId = place.id;
+          }
           converted.add(
             Diary(
               id: d.id,
@@ -167,7 +189,7 @@ class EngineMigrationService {
               audioName: d.audioName,
               videoName: d.videoName,
               tags: d.tags,
-              position: position,
+              placeId: placeId,
               type: d.type,
               aspect: d.aspect,
             ),
@@ -365,6 +387,7 @@ class EngineMigrationService {
       final checks = <String, (int, int)>{
         'diaries': (diaryCount, await sqliteCount(db.diaries)),
         'categories': (categoryCount, await sqliteCount(db.categories)),
+        'places': (placesByName.length, await sqliteCount(db.places)),
         'fonts': (fontCount, await sqliteCount(db.fonts)),
         'media_infos': (mediaInfoCount, await sqliteCount(db.mediaInfos)),
         'tombstones': (tombstoneCount, await sqliteCount(db.tombstones)),
@@ -417,19 +440,20 @@ class EngineMigrationService {
     }
   }
 
-  /// 旧 `[纬度, 经度, 地名]`（地名可缺）→ 值对象；数值解析失败按无定位并计数。
-  static (DiaryPosition?, bool) _position(List<String> raw) {
-    if (raw.length < 2) return (null, false);
+  /// 旧 `[纬度, 经度, 地名]`（地名可缺）→ 可建地点的三元组；数值解析失败返回 null
+  ///（调用方计入 positionDropped），没有地名的拿坐标当名字。
+  static ({double latitude, double longitude, String name})? _position(
+    List<String> raw,
+  ) {
+    if (raw.length < 2) return null;
     final lat = double.tryParse(raw[0]);
     final lng = double.tryParse(raw[1]);
-    if (lat == null || lng == null) return (null, true);
+    if (lat == null || lng == null) return null;
+    final name = raw.length >= 3 ? raw[2].trim() : '';
     return (
-      DiaryPosition(
-        latitude: lat,
-        longitude: lng,
-        name: raw.length >= 3 ? raw[2] : '',
-      ),
-      false,
+      latitude: lat,
+      longitude: lng,
+      name: name.isEmpty ? Place.coordinateName(lat, lng) : name,
     );
   }
 
@@ -462,7 +486,7 @@ class EngineMigrationReport {
   /// 全部实体条数（进度分母）。
   final int entities;
 
-  /// 旧定位数据解析失败被丢弃的篇数（只丢定位，不丢日记）。
+  /// 旧定位坐标解析失败而被丢弃的篇数（只丢定位，不丢日记）。
   final int positionDropped;
 
   /// 会话行缺失被跳过的悬挂消息数。

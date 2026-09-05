@@ -542,4 +542,81 @@ void main() {
       expect(message.dy, lessThan(content.dy));
     });
   });
+
+  group('MAction.onSubmit', () {
+    testWidgets('等待期间转圈、其它键禁用、遮罩挡住；true 关闭并返回 value', (tester) async {
+      final gate = Completer<bool>();
+      String? result;
+      await tester.pumpWidget(
+        host((context) async {
+          result = await MAlert.show<String>(
+            context,
+            title: '新建地点',
+            actions: [
+              const MAction(label: '取消', value: 'cancel'),
+              MAction(
+                label: '确定',
+                value: 'ok',
+                isPrimary: true,
+                onSubmit: () => gate.future,
+              ),
+            ],
+          );
+        }),
+      );
+
+      await open(tester);
+      await tester.tap(find.text('确定'));
+      await tester.pump();
+      // 转圈替掉了文字，取消键跟着禁用。
+      expect(find.text('确定'), findsNothing);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      final cancel = tester.widget<FilledButton>(
+        find.ancestor(of: find.text('取消'), matching: find.byType(FilledButton)),
+      );
+      expect(cancel.onPressed, isNull);
+      // 点遮罩关不掉。（转圈动画不会静止，这里不能 pumpAndSettle。）
+      await tester.tapAt(const Offset(5, 5));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text('新建地点'), findsOneWidget);
+
+      gate.complete(true);
+      await tester.pumpAndSettle();
+      expect(find.text('新建地点'), findsNothing);
+      expect(result, 'ok');
+    });
+
+    testWidgets('false 留住弹层并恢复按钮', (tester) async {
+      String? result;
+      await tester.pumpWidget(
+        host((context) async {
+          result = await MAlert.show<String>(
+            context,
+            title: '新建地点',
+            actions: [
+              const MAction(label: '取消', value: 'cancel'),
+              MAction(
+                label: '确定',
+                value: 'ok',
+                isPrimary: true,
+                onSubmit: () async => false,
+              ),
+            ],
+          );
+        }),
+      );
+
+      await open(tester);
+      await tester.tap(find.text('确定'));
+      await tester.pumpAndSettle();
+      expect(find.text('新建地点'), findsOneWidget);
+      expect(find.text('确定'), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(result, isNull);
+
+      await tester.tap(find.text('取消'));
+      await tester.pumpAndSettle();
+      expect(result, 'cancel');
+    });
+  });
 }

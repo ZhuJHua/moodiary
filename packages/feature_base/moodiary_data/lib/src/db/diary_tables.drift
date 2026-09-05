@@ -17,9 +17,7 @@ CREATE TABLE diaries (
   mood          TEXT NOT NULL,
   type          TEXT NOT NULL,
   aspect        REAL,
-  latitude      REAL,
-  longitude     REAL,
-  place_name    TEXT,
+  place_id      TEXT,
   weather_icon  TEXT,
   weather_temp  TEXT,
   weather_text  TEXT

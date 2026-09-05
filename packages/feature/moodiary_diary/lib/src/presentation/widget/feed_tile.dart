@@ -44,6 +44,7 @@ class DiaryFeedTile extends StatelessWidget {
   /// 排序时用户看到的是一列日期无序的条目。
   final DiarySort sort;
   final Category? category;
+  final Place? place;
   final bool showCategoryLabel;
   final DiaryCardSyncState syncState;
   final VoidCallback? onTap;
@@ -56,6 +57,7 @@ class DiaryFeedTile extends StatelessWidget {
     required this.diary,
     this.sort = .timeDesc,
     this.category,
+    this.place,
     this.showCategoryLabel = true,
     this.syncState = .none,
     this.onTap,
@@ -89,6 +91,7 @@ class DiaryFeedTile extends StatelessWidget {
               stamp: stamp,
               showAudioMark: showAudioMark,
               category: category,
+              place: place,
               showCategoryLabel: showCategoryLabel,
               syncState: syncState,
             )
@@ -98,6 +101,7 @@ class DiaryFeedTile extends StatelessWidget {
               stamp: stamp,
               showAudioMark: showAudioMark,
               category: category,
+              place: place,
               showCategoryLabel: showCategoryLabel,
               syncState: syncState,
             ),
@@ -112,6 +116,7 @@ class _SideThumbRow extends StatelessWidget {
   final bool showAudioMark;
   final _Cell cell;
   final Category? category;
+  final Place? place;
   final bool showCategoryLabel;
   final DiaryCardSyncState syncState;
 
@@ -121,6 +126,7 @@ class _SideThumbRow extends StatelessWidget {
     required this.showAudioMark,
     required this.cell,
     required this.category,
+    required this.place,
     required this.showCategoryLabel,
     required this.syncState,
   });
@@ -151,6 +157,7 @@ class _SideThumbRow extends StatelessWidget {
                 stamp: stamp,
                 showAudioMark: showAudioMark,
                 category: category,
+                place: place,
                 showCategoryLabel: showCategoryLabel,
                 syncState: syncState,
               ),
@@ -184,6 +191,7 @@ class _StackedColumn extends StatelessWidget {
   final bool showAudioMark;
   final List<_Cell> cells;
   final Category? category;
+  final Place? place;
   final bool showCategoryLabel;
   final DiaryCardSyncState syncState;
 
@@ -193,6 +201,7 @@ class _StackedColumn extends StatelessWidget {
     required this.showAudioMark,
     required this.cells,
     required this.category,
+    required this.place,
     required this.showCategoryLabel,
     required this.syncState,
   });
@@ -219,6 +228,7 @@ class _StackedColumn extends StatelessWidget {
           stamp: stamp,
           showAudioMark: showAudioMark,
           category: category,
+          place: place,
           showCategoryLabel: showCategoryLabel,
           syncState: syncState,
         ),
@@ -547,6 +557,7 @@ class _MetaLine extends StatelessWidget {
   final DateTime stamp;
   final bool showAudioMark;
   final Category? category;
+  final Place? place;
   final bool showCategoryLabel;
   final DiaryCardSyncState syncState;
 
@@ -555,6 +566,7 @@ class _MetaLine extends StatelessWidget {
     required this.stamp,
     required this.showAudioMark,
     required this.category,
+    required this.place,
     required this.showCategoryLabel,
     required this.syncState,
   });
@@ -565,7 +577,7 @@ class _MetaLine extends StatelessWidget {
     final onVariant = colors.onSurfaceVariant;
     final style = context.theme.typography.labelSmall.onSurfaceVariant;
     final weather = diary.weather;
-    final place = diary.position?.name.trim() ?? '';
+    final placeName = place?.name.trim() ?? '';
 
     // 左半组做成**一段文本**而不是一排固定块：Row 里的固定块加起来超宽就会 overflow，
     // 而单行 Text 自带省略号，优先级天然由顺序决定（地点最先被吃掉）。
@@ -603,12 +615,12 @@ class _MetaLine extends StatelessWidget {
         dot,
         // 天气数据来自和风，图标就用和风自己那套天气码；码不认识才退回通用的云。
         icon(qweatherIcon(weather.icon) ?? LucideIcons.cloud),
-        TextSpan(text: '${weather.temp}°'),
+        TextSpan(text: weather.compactText),
       ],
-      if (place.isNotEmpty) ...[
+      if (placeName.isNotEmpty) ...[
         dot,
         icon(LucideIcons.mapPin),
-        TextSpan(text: place),
+        TextSpan(text: placeName),
       ],
     ];
 

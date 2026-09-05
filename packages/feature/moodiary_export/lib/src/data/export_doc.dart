@@ -29,7 +29,7 @@ class ExportDoc {
   final DateTime time;
   final DiaryMood mood;
   final DiaryWeather? weather;
-  final DiaryPosition? position;
+  final Place? place;
   final List<String> tags;
   final String? categoryName;
   final List<IrBlock> blocks;
@@ -45,7 +45,7 @@ class ExportDoc {
     required this.blocks,
     this.mood = .neutral,
     this.weather,
-    this.position,
+    this.place,
     this.tags = const [],
     this.categoryName,
     this.unsupportedNodes = const {},
@@ -57,12 +57,12 @@ class ExportDoc {
   /// （`[icon, temp, text]` / `[lat, lng, name]`）；降级只发生在这一处。
   IrDoc toIr(String displayTime) {
     final w = weather;
-    final p = position;
+    final p = place;
     return IrDoc(
       id: id,
       title: title,
       time: displayTime,
-      weather: w == null ? const [] : [w.icon, w.temp, w.text],
+      weather: w == null ? const [] : [w.icon, w.temp ?? '', w.text],
       position: p == null
           ? const []
           : [p.latitude.toString(), p.longitude.toString(), p.name],

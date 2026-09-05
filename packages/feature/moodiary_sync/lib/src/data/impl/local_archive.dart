@@ -34,6 +34,7 @@ class LocalArchive {
       final diaries = await RepoSyncDiaryStore().getAllDiaries();
       final categories = await RepoSyncCategoryStore()
           .getAllCategoriesForSync();
+      final places = await RepoSyncPlaceStore().getAllPlacesForSync();
       final mediaInfos = await RepoSyncMediaInfoStore()
           .getAllMediaInfosForSync();
       final tombstones = await RepoSyncTombstoneStore().getAll();
@@ -50,6 +51,7 @@ class LocalArchive {
           sink: _RustZipSink(zip),
           diaries: diaries,
           categories: categories,
+          places: places,
           mediaInfos: mediaInfos,
           tombstones: tombstones,
           mediaBaseDir: PlatformService.get().applicationSupportPath,
@@ -83,6 +85,7 @@ class LocalArchive {
       final diaries = await RepoSyncDiaryStore().getAllDiaries();
       final categories = await RepoSyncCategoryStore()
           .getAllCategoriesForSync();
+      final places = await RepoSyncPlaceStore().getAllPlacesForSync();
       final mediaInfos = await RepoSyncMediaInfoStore()
           .getAllMediaInfosForSync();
       final tombstones = await RepoSyncTombstoneStore().getAll();
@@ -98,6 +101,7 @@ class LocalArchive {
           sink: _RustZipSink(zip, zipPassword),
           diaries: diaries,
           categories: categories,
+          places: places,
           mediaInfos: mediaInfos,
           tombstones: tombstones,
           mediaBaseDir: PlatformService.get().applicationSupportPath,
@@ -119,6 +123,7 @@ class LocalArchive {
   static Future<SyncManifest> buildLocalManifest() async => buildManifest(
     diaries: await RepoSyncDiaryStore().getAllDiaries(),
     categories: await RepoSyncCategoryStore().getAllCategoriesForSync(),
+    places: await RepoSyncPlaceStore().getAllPlacesForSync(),
     mediaInfos: await RepoSyncMediaInfoStore().getAllMediaInfosForSync(),
     tombstones: await RepoSyncTombstoneStore().getAll(),
     mediaBaseDir: PlatformService.get().applicationSupportPath,
@@ -129,12 +134,13 @@ class LocalArchive {
   static Future<SyncManifest> buildManifest({
     required List<Diary> diaries,
     required List<Category> categories,
+    List<Place> places = const [],
     List<MediaInfo> mediaInfos = const [],
     required List<SyncTombstone> tombstones,
     required String mediaBaseDir,
   }) async {
     final entries = <String, ManifestEntry>{};
-    // 墓碑键（`d:`/`c:`/`m:` 前缀）与活跃行按不变量互斥，覆盖顺序无关紧要。
+    // 墓碑键（`d:`/`c:`/`m:`/`p:` 前缀）与活跃行按不变量互斥，覆盖顺序无关紧要。
     for (final tombstone in tombstones) {
       entries[tombstone.key] = ManifestEntry(
         timeMs: tombstone.timeMs,
@@ -156,6 +162,11 @@ class LocalArchive {
     for (final category in categories) {
       entries[SyncKeys.category(category.id)] = ManifestEntry(
         timeMs: category.lastModified.millisecondsSinceEpoch,
+      );
+    }
+    for (final place in places) {
+      entries[SyncKeys.place(place.id)] = ManifestEntry(
+        timeMs: place.lastModified.millisecondsSinceEpoch,
       );
     }
     for (final mediaInfo in mediaInfos) {
@@ -182,6 +193,7 @@ class LocalArchive {
     required ArchiveSink sink,
     required List<Diary> diaries,
     required List<Category> categories,
+    List<Place> places = const [],
     List<MediaInfo> mediaInfos = const [],
     required List<SyncTombstone> tombstones,
     required String mediaBaseDir,
@@ -191,6 +203,7 @@ class LocalArchive {
     final manifest = await buildManifest(
       diaries: diaries,
       categories: categories,
+      places: places,
       mediaInfos: mediaInfos,
       tombstones: tombstones,
       mediaBaseDir: mediaBaseDir,
@@ -216,6 +229,7 @@ class LocalArchive {
 
     final diaryById = {for (final d in diaries) d.id: d};
     final categoryById = {for (final c in categories) c.id: c};
+    final placeById = {for (final p in places) p.id: p};
     final mediaInfoByName = {for (final m in mediaInfos) m.fileName: m};
     final remoteMedia = remote?.referencedMedia() ?? const <String>{};
     final addedMedia = <String>{};
@@ -241,6 +255,12 @@ class LocalArchive {
         await sink.addBytes(
           SyncKeys.categoryObjectPath(id),
           await cipher.encode(categoryById[id]!.toJson()),
+        );
+      } else if (entry.key.startsWith(SyncKeys.placePrefix)) {
+        final id = entry.key.substring(SyncKeys.placePrefix.length);
+        await sink.addBytes(
+          SyncKeys.placeObjectPath(id),
+          await cipher.encode(placeById[id]!.toJson()),
         );
       } else if (entry.key.startsWith(SyncKeys.mediaInfoPrefix)) {
         final id = entry.key.substring(SyncKeys.mediaInfoPrefix.length);
@@ -316,6 +336,7 @@ class LocalArchive {
     String dir, {
     SyncDiaryStore? diaryStore,
     SyncCategoryStore? categoryStore,
+    SyncPlaceStore? placeStore,
     SyncMediaInfoStore? mediaInfoStore,
     SyncTombstoneStore? tombstoneStore,
     SyncMediaFiles? mediaFiles,
@@ -351,6 +372,7 @@ class LocalArchive {
         policy: policy,
         diaryStore: diaryStore,
         categoryStore: categoryStore,
+        placeStore: placeStore,
         mediaInfoStore: mediaInfoStore,
         tombstoneStore: tombstoneStore,
         mediaFiles: mediaFiles,
