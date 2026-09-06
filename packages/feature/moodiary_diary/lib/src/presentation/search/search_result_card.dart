@@ -37,7 +37,7 @@ class SearchResultCard extends StatelessWidget {
         onTap: () {
           onTap?.call();
           DiaryRoute(
-            type: DiaryType.fromValue(diary.type).routeQuery,
+            type: DiaryType.fromValue(diary.type).value,
             diaryId: diary.id,
           ).push(context);
         },

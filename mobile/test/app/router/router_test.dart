@@ -63,28 +63,28 @@ void main() {
     test('DiaryRoute', () {
       expect(
         DiaryRoute(
-          type: DiaryType.markdown.routeQuery,
+          type: DiaryType.markdown.value,
           diaryId: 'abc',
         ).location,
         '/diary/abc?type=markdown',
       );
       expect(
         DiaryRoute(
-          type: DiaryType.richText.routeQuery,
+          type: DiaryType.richText.value,
           diaryId: 'x',
           edit: true,
         ).location,
-        '/diary/x?type=rich-text&edit=true',
+        '/diary/x?type=richText&edit=true',
       );
     });
 
     test('NewDiaryRoute', () {
       expect(
-        NewDiaryRoute(type: DiaryType.tiptap.routeQuery).location,
+        NewDiaryRoute(type: DiaryType.tiptap.value).location,
         '/diary-new?type=tiptap',
       );
       expect(
-        NewDiaryRoute(type: DiaryType.markdown.routeQuery).location,
+        NewDiaryRoute(type: DiaryType.markdown.value).location,
         '/diary-new?type=markdown',
       );
     });

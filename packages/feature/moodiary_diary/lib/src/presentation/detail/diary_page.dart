@@ -1010,7 +1010,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     if (!mounted) return;
     _selfReplace = true;
     DiaryRoute(
-      type: DiaryType.fromValue(target.type).routeQuery,
+      type: DiaryType.fromValue(target.type).value,
       diaryId: target.id,
     ).replace(context);
   }

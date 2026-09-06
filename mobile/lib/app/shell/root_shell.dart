@@ -2,15 +2,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_assistant/moodiary_assistant.dart'
     show AssistantConversationRoute, AssistantSessionListPage;
 import 'package:moodiary_diary/moodiary_diary.dart'
-    show
-        CategoryDrawer,
-        diarySelectionProvider,
-        homeDiaryFilterProvider,
-        openNewDiaryEditor;
+    show CategoryDrawer, diarySelectionProvider, homeDiaryFilterProvider;
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_mobile/app/home/diary_home_page.dart'
     show DiaryHomePage;
 import 'package:moodiary_mobile/app/me/me_page.dart' show MePage;
+import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:mui/mui.dart';
 
@@ -52,11 +49,14 @@ class _MobileRootShellState extends ConsumerState<MobileRootShell> {
     const MePage(),
   ];
 
-  void _newDiary() {
+  Future<void> _newDiary() async {
     final categoryId = _tab == .diary
         ? ref.read(homeDiaryFilterProvider).categoryId
         : null;
-    openNewDiaryEditor(context, .tiptap, categoryId: categoryId);
+    await NewDiaryRoute(
+      type: DiaryType.tiptap.value,
+      categoryId: categoryId,
+    ).push(context);
   }
 
   MNavAction _navAction(BuildContext context) {

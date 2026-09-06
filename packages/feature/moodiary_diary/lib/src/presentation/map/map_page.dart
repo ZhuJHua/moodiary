@@ -137,7 +137,7 @@ class MapPage extends ConsumerWidget {
 
   void _openDiary(BuildContext context, Diary diary) {
     final route = DiaryRoute(
-      type: DiaryType.fromValue(diary.type).routeQuery,
+      type: DiaryType.fromValue(diary.type).value,
       diaryId: diary.id,
     );
     route.push(context);

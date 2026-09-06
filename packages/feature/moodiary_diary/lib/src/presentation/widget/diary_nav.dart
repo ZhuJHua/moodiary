@@ -4,7 +4,7 @@ import 'package:moodiary_router/moodiary_router.dart';
 
 void openDiaryDetail(BuildContext context, Diary diary) {
   DiaryRoute(
-    type: DiaryType.fromValue(diary.type).routeQuery,
+    type: DiaryType.fromValue(diary.type).value,
     diaryId: diary.id,
   ).push(context);
 }
