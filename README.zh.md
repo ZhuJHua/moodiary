@@ -1,4 +1,8 @@
-![moodiary](res/social.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="res/social_dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="res/social_light.svg">
+  <img alt="moodiary" src="res/social_light.svg">
+</picture>
 <p align="center">简体中文 | <a href="README.md">English</a></p>
 
 <p align="center"><a href="https://answer.moodiary.net" target="_blank">官方论坛</a>丨QQ群: <a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=xGr0TNp_X1z3XEn09_iE_iGSLolQwl6Y&jump_from=webapi&authKey=ZmSb2oEd94FSXxBXRBq53hgTjjvcfmgkQrduB3uL12XtRylPmRlO2OdFz6R25tIo">760014526</a>丨Telegram: <a target="_blank" href="https://t.me/openmoodiary">openmoodiary</a></p>
