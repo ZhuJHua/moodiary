@@ -11,7 +11,8 @@ enum MarkdownDialect {
 }
 
 enum MarkdownMediaMode {
-  /// `./assets/xxx.jpg` —— 调用方负责把文件真的拷到 assets 目录。
+  /// `assets/<image|video|audio>/xxx` —— 与 Markdown 导入规范同一套布局，调用方负责把
+  /// 文件真的拷到对应目录。
   relative,
 
   /// 绝对路径，只在本机有意义。
@@ -86,7 +87,8 @@ class MarkdownWriter {
     buf.writeln('---');
     buf.writeln('id: ${doc.id}');
     buf.writeln('title: ${_yamlString(doc.title)}');
-    buf.writeln('time: ${doc.time.toIso8601String()}');
+    // 带时区偏移：导回来时换了时区也还是同一时刻。
+    buf.writeln('time: ${_isoWithOffset(doc.time)}');
     buf.writeln('mood: ${doc.mood.name}');
     if (doc.categoryName != null) {
       buf.writeln('category: ${_yamlString(doc.categoryName!)}');
@@ -123,6 +125,16 @@ class MarkdownWriter {
       ?doc.categoryName,
     ];
     return parts.join(' · ');
+  }
+
+  /// `2026-09-06T10:30:00.000+08:00`；UTC 时刻写 `Z`。`toIso8601String` 对本地时间不带偏移。
+  static String _isoWithOffset(DateTime t) {
+    if (t.isUtc) return t.toIso8601String();
+    final offset = t.timeZoneOffset;
+    final sign = offset.isNegative ? '-' : '+';
+    final abs = offset.abs();
+    String two(int v) => v.toString().padLeft(2, '0');
+    return '${t.toIso8601String()}$sign${two(abs.inHours)}:${two(abs.inMinutes % 60)}';
   }
 
   static String _formatTime(DateTime t) {
@@ -214,7 +226,7 @@ class MarkdownWriter {
             ? l10n.export.mediaVideo
             : l10n.export.mediaAudio;
         final target = o.mediaMode == .relative
-            ? '${o.assetsDir}/$filename'
+            ? '${o.assetsDir}/$kind/$filename'
             : filename;
         _writeIndented(buf, '[$label：$filename]($target)', indent);
         buf.writeln();
@@ -306,7 +318,7 @@ class MarkdownWriter {
     if (img.isExternal) return '![$alt](${img.path})';
     final name = img.path.split(RegExp(r'[/\\]')).last;
     final target = switch (o.mediaMode) {
-      .relative => '${o.assetsDir}/$name',
+      .relative => '${o.assetsDir}/image/$name',
       .absolute => img.path,
     };
     return '![$alt]($target)';

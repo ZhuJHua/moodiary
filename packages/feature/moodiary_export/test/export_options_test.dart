@@ -14,10 +14,6 @@ void main() {
           merge: false,
           nameTemplate: '{title}',
         ),
-        markdown: MarkdownExportOptions(
-          dialect: .commonMark,
-          frontMatter: false,
-        ),
         docx: LayoutExportOptions(
           paper: .letter,
           margin: 720,
@@ -42,8 +38,6 @@ void main() {
       expect(restored.common.media, ExportMediaPolicy.placeholder);
       expect(restored.common.merge, isFalse);
       expect(restored.common.nameTemplate, '{title}');
-      expect(restored.markdown.dialect, MarkdownDialect.commonMark);
-      expect(restored.markdown.frontMatter, isFalse);
       expect(restored.image.brightness, Brightness.dark);
       expect(restored.image.widthDp, 480);
       expect(restored.image.scale, 2);
@@ -73,11 +67,9 @@ void main() {
     test('未知枚举值退回默认', () {
       const raw =
           '{"common":{"media":"someFutureMode"},'
-          '"markdown":{"dialect":"someFutureDialect"},'
           '"docx":{"paper":"B5"}}';
       final settings = ExportSettings.decode(raw);
       expect(settings.common.media, ExportMediaPolicy.embed);
-      expect(settings.markdown.dialect, MarkdownDialect.gfm);
       expect(settings.docx.paper, ExportPaper.a4);
     });
   });

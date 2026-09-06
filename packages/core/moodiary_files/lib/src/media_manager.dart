@@ -33,10 +33,14 @@ class MediaManager {
   /// Flutter 与 webview 两端都解不了，且都是相机成片没有透明通道，固定转 JPG。
   /// 后缀按魔数定（picker 吐的临时文件名不可信），从此后缀就是真实格式。
   /// 落盘后 fire-and-forget 预热缩略图档位（[FastImageDerivatives.warm]）。
-  /// 已是 image- 命名的（重复插入）直接复用。失败返回 null。
-  static Future<String?> saveImage(XFile imageFile) async {
+  /// 已是 image- 命名的（重复插入）直接复用；[reuseExisting] 关掉则一律拷贝重命名 ——
+  /// 导入别人的包时，`image-` 名只是巧合，文件并不在本机目录里。失败返回 null。
+  static Future<String?> saveImage(
+    XFile imageFile, {
+    bool reuseExisting = true,
+  }) async {
     final srcName = basename(imageFile.path);
-    if (srcName.startsWith('image-')) return srcName;
+    if (reuseExisting && srcName.startsWith('image-')) return srcName;
     try {
       final mime = await _sniffMime(imageFile.path);
       final String name;
@@ -89,12 +93,13 @@ class MediaManager {
   /// 返回 map：key=XFile 临时路径，value=实际文件名
   static Future<Map<String, String>> saveVideo({
     required List<XFile> videoFileList,
+    bool reuseExisting = true,
   }) async {
     final Map<String, String> videoNameMap = {};
 
     await Future.wait(
       videoFileList.map((videoFile) async {
-        if (basename(videoFile.path).startsWith('video-')) {
+        if (reuseExisting && basename(videoFile.path).startsWith('video-')) {
           videoNameMap[videoFile.path] = basename(videoFile.path);
           return;
         }

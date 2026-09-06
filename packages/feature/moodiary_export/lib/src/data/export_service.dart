@@ -124,7 +124,11 @@ class ExportService {
     try {
       final categories = await _categoryNames(diaries);
       final places = await _places(diaries);
-      final media = _MediaStage(workDir, settings.common.media);
+      final media = _MediaStage(
+        workDir,
+        settings.common.media,
+        copyOriginals: format == .markdown,
+      );
 
       final docs = <ExportDoc>[];
       final unsupported = <String>{};
@@ -308,12 +312,10 @@ class ExportService {
     String untitledLabel,
     press.CancelToken token,
   ) async {
+    // GFM + front matter 不给用户选：前者阅读器都认，后者是导回来的唯一凭据。
     final options = MarkdownOptions(
-      dialect: settings.markdown.dialect,
-      frontMatter: settings.markdown.frontMatter,
       includeTitle: settings.common.includeTitle,
       includeMetaLine: settings.common.includeMeta,
-      mediaMode: .relative,
     );
 
     final outDir = Directory(p.join(workDir.path, 'out'))
@@ -680,18 +682,23 @@ class ExportService {
 
 /// 媒体转码与暂存。
 ///
-/// 磁盘上的图片是有损 WebP：docx-rs 只认 png/jpeg，dart_pdf 遇到非 JPEG 会解码成裸位图
-/// 再 Flate（2 MB 图能撑出 13 MB PDF）。所以两条路都先统一转成 JPEG 落到工作目录，
-/// IR 里的路径换成转码后的临时文件。
+/// docx-rs 只认 png/jpeg，dart_pdf 遇到非 JPEG 会解码成裸位图再 Flate（2 MB 图能撑出
+/// 13 MB PDF），所以 docx / pdf 先统一转成 JPEG 落到工作目录，IR 里的路径换成转码后的
+/// 临时文件。**Markdown 走 [copyOriginals]：原字节照搬**（PNG 透明、GIF 动图、WebP 都
+/// 原样），素材按 `assets/<image|video|audio>/` 分目录 —— 这是 Markdown 导入规范的布局，
+/// 导出的包能原样导回。
 class _MediaStage {
   final Directory _workDir;
   final ExportMediaPolicy _policy;
+  final bool copyOriginals;
   final Map<String, String?> _converted = {};
+
+  /// 待拷贝的素材：源路径 → 产物目录内相对 `assets/` 的路径。
   final Map<String, String> _assets = {};
 
   int skipped = 0;
 
-  _MediaStage(this._workDir, this._policy);
+  _MediaStage(this._workDir, this._policy, {this.copyOriginals = false});
 
   Future<ExportDoc> apply(ExportDoc doc) async {
     if (_policy == .none) {
@@ -752,7 +759,7 @@ class _MediaStage {
         final cover = block.coverPath == null || _policy == .placeholder
             ? null
             : await _stageImage(block.coverPath!);
-        _rememberAsset(block.path, block.filename);
+        _rememberAsset(block.path, '${block.kind}/${block.filename}');
         return .media(
           kind: block.kind,
           filename: block.filename,
@@ -789,6 +796,11 @@ class _MediaStage {
       _converted[source] = null;
       return null;
     }
+    if (copyOriginals) {
+      _converted[source] = source;
+      _assets[source] = 'image/${p.basename(source)}';
+      return source;
+    }
 
     final name = '${p.basenameWithoutExtension(source)}.jpg';
     final target = p.join(_workDir.path, 'media', name);
@@ -809,23 +821,24 @@ class _MediaStage {
       return null;
     }
     _converted[source] = target;
-    _assets[target] = name;
+    _assets[target] = 'image/$name';
     return target;
   }
 
-  void _rememberAsset(String path, String name) {
-    if (File(path).existsSync()) _assets[path] = name;
+  void _rememberAsset(String path, String relative) {
+    if (File(path).existsSync()) _assets[path] = relative;
   }
 
-  /// 把用到的素材拷进产物目录的 `assets/`（markdown 相对引用指向这里）。
+  /// 把用到的素材拷进产物目录的 `assets/<kind>/`（markdown 相对引用指向这里）。
   Future<void> copyAssetsInto(Directory outDir) async {
     if (_assets.isEmpty) return;
-    final assets = Directory(p.join(outDir.path, 'assets'))
-      ..createSync(recursive: true);
+    final assets = Directory(p.join(outDir.path, 'assets'));
     for (final entry in _assets.entries) {
       final source = File(entry.key);
       if (!source.existsSync()) continue;
-      source.copySync(p.join(assets.path, entry.value));
+      final target = File(p.join(assets.path, entry.value));
+      target.parent.createSync(recursive: true);
+      source.copySync(target.path);
     }
   }
 

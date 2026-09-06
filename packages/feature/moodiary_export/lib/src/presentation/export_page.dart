@@ -28,7 +28,8 @@ class ExportPage extends StatelessWidget {
         child: CustomScrollView(
           slivers: [
             const _ExportSection(),
-            const _ImportSection(),
+            const _MarkdownImportSection(),
+            const _BackupSection(),
             SliverGap(context.safeBottom),
           ],
         ),
@@ -77,8 +78,28 @@ class _ExportSection extends StatelessWidget {
       ExportFormatRoute(format: format.id).push(context);
 }
 
-class _ImportSection extends StatelessWidget {
-  const _ImportSection();
+class _MarkdownImportSection extends StatelessWidget {
+  const _MarkdownImportSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return MSliverSettingGroup(
+      title: context.l10n.export.sectionImport,
+      children: [
+        SettingListTile(
+          title: context.l10n.export.importMarkdown,
+          subtitle: context.l10n.export.importMarkdownSubtitle,
+          leading: const FileTypeIcon('MD'),
+          trailing: const Icon(LucideIcons.chevronRight),
+          onTap: () => const ImportMarkdownRoute().push(context),
+        ),
+      ],
+    );
+  }
+}
+
+class _BackupSection extends StatelessWidget {
+  const _BackupSection();
 
   Future<void> _restoreBackup(BuildContext context) async {
     // 在第一个 await 之前取好：之后 context 可能已经不 mounted。

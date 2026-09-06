@@ -211,6 +211,14 @@ class ExportFormatRoute extends MoodiaryRouteBase {
   );
 }
 
+/// Markdown zip / 单文件导入页。
+class ImportMarkdownRoute extends MoodiaryRouteBase {
+  static const String path = '/setting/export/import-markdown';
+  const ImportMarkdownRoute();
+  @override
+  String get location => path;
+}
+
 class SyncLogRoute extends MoodiaryRouteBase {
   static const String path = '/sync_log';
   const SyncLogRoute();

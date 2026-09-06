@@ -719,6 +719,7 @@ class _Translations$export$en extends Translations$export$zh {
 	// Translations
 	@override String get pageTitle => 'Import & export';
 	@override String get sectionExport => 'Export';
+	@override String get sectionImport => 'Import';
 	@override String get sectionBackup => 'Backup';
 	@override String get formatDocx => 'DOCX';
 	@override String get backupExport => 'Export backup';
@@ -754,14 +755,10 @@ class _Translations$export$en extends Translations$export$zh {
 	@override String get templateEmpty => 'Template can\'t be empty';
 	@override String get sectionContent => 'Content';
 	@override String get includeTitle => 'Title';
-	@override String get includeMeta => 'Date, weather and location';
+	@override String get includeMeta => 'Date and weather';
 	@override String get mediaEmbed => 'Embed images';
 	@override String get mediaPlaceholder => 'Placeholder text only';
 	@override String get mediaNone => 'No media';
-	@override String get markdownGfm => 'GitHub Flavored';
-	@override String get markdownGfmSubtitle => 'Supports tables and task lists';
-	@override String get markdownFrontMatter => 'Write front matter';
-	@override String get markdownFrontMatterSubtitle => 'Records date, category and more at the top of the file';
 	@override String get sectionLayout => 'Layout';
 	@override String get font => 'Font';
 	@override String get eastAsiaFont => 'Chinese font';
@@ -829,6 +826,31 @@ class _Translations$export$en extends Translations$export$zh {
 	@override String get imageMerge => 'Merge into one long image';
 	@override String get imageMergeSubtitle => 'Off means one image per entry; over 9 are zipped';
 	@override String get previewSample => 'Preview sample';
+	@override String get importMarkdown => 'Import from Markdown';
+	@override String get importMarkdownSubtitle => 'A zip package or a single .md file';
+	@override String get importTitle => 'Import from Markdown';
+	@override String get importSectionFile => 'File';
+	@override String get importPickFile => 'Choose file';
+	@override String get importNoFile => 'Nothing chosen yet';
+	@override String get importScanning => 'Reading…';
+	@override String importDetected({required Object count}) => '${count} entries';
+	@override String get importSpec => 'Format';
+	@override String get importSpecEntries => 'Every .md file at the top level of the zip is one entry; a single .md file also works.';
+	@override String get importSpecAssets => 'Put images, videos and audio under assets/ (subfolders allowed) and reference them with relative paths.';
+	@override String get importSpecFrontMatter => 'An optional front matter at the top may set title, time, mood, category, tags, weather and position. Without it, the title comes from the first level-1 heading or the file name, and the time from a date at the start of the file name.';
+	@override String get importSpecRoundTrip => 'Markdown exported by this app without merging can be imported back directly; merged single-file exports are not supported.';
+	@override String get importSpecExample => 'diaries.zip\n├── 2026-09-06-sunny.md\n├── 2026-09-07-walk.md\n└── assets/\n    ├── image/a.jpg\n    └── video/b.mp4\n\n2026-09-06-sunny.md\n---\ntitle: "Sunny"\ntime: 2026-09-06T10:30:00+08:00\nmood: fulfilled\ncategory: "Life"\ntags: ["weekend"]\n---\n\nWent out for a walk today.\n![](assets/image/a.jpg)';
+	@override String importRunButton({required Object count}) => 'Import ${count} entries';
+	@override String importProgress({required Object done, required Object total}) => 'Importing ${done}/${total}';
+	@override String importSummary({required Object diary, required Object category, required Object place}) => '${diary} entries / ${category} new categories / ${place} new places';
+	@override String importSummarySkipped({required Object base, required Object skipped}) => '${base}, ${skipped} skipped (already exist)';
+	@override String importSummaryFailed({required Object base, required Object failed}) => '${base}, ${failed} failed';
+	@override String importDone({required Object summary}) => 'Imported: ${summary}';
+	@override String importPartial({required Object summary}) => 'Import did not fully succeed: ${summary}';
+	@override String importStopped({required Object summary}) => 'Import stopped (incomplete): ${summary}';
+	@override String importRunFailed({required Object error}) => 'Import failed: ${error}';
+	@override String get importEmpty => 'No .md files found in the package';
+	@override String importMissingMedia({required Object count}) => '${count} media files could not be imported (missing or unreadable) and were kept as plain links';
 }
 
 // Path: lock

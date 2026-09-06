@@ -3,6 +3,7 @@ import 'package:moodiary_router/moodiary_router.dart';
 import 'presentation/export_page.dart';
 import 'presentation/format_export_page.dart';
 import 'presentation/image_export_page.dart';
+import 'presentation/markdown_import_page.dart';
 
 List<RouteBase> exportRoutes() => [
   GoRoute(path: ExportRoute.path, builder: (_, _) => const ExportPage()),
@@ -12,6 +13,10 @@ List<RouteBase> exportRoutes() => [
     path: ShareRoute.path,
     builder: (_, state) =>
         ImageExportPage(diaryId: ShareRoute.fromState(state).diaryId),
+  ),
+  GoRoute(
+    path: ImportMarkdownRoute.path,
+    builder: (_, _) => const MarkdownImportPage(),
   ),
   GoRoute(
     path: ExportFormatRoute.path,

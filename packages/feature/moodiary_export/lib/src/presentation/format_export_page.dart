@@ -92,7 +92,6 @@ class _FormatExportPageState extends State<FormatExportPage> {
           ],
           _contentSection(),
           const SizedBox(height: 4),
-          if (widget.format == .markdown) _markdownSection(),
           if (_isImage) _imageSection(),
           if (widget.format == .docx || widget.format == .pdf) _layoutSection(),
         ],
@@ -287,48 +286,6 @@ class _FormatExportPageState extends State<FormatExportPage> {
     );
     if (picked == null) return;
     _update(_settings.copyWith(common: _common.copyWith(media: picked)));
-  }
-
-  // ------------------------------------------------------------ Markdown
-
-  Widget _markdownSection() {
-    final l10n = context.l10n;
-    final theme = context.theme;
-    final md = _settings.markdown;
-    return Column(
-      crossAxisAlignment: .stretch,
-      children: [
-        const SettingTitleTile(title: 'Markdown'),
-        Card.filled(
-          color: theme.colors.surfaceContainerLow,
-          margin: .zero,
-          child: Column(
-            children: [
-              SwitchListTile(
-                value: md.dialect == .gfm,
-                title: Text(l10n.export.markdownGfm),
-                subtitle: Text(l10n.export.markdownGfmSubtitle),
-                secondary: const Icon(LucideIcons.fileJson),
-                onChanged: (v) => _update(
-                  _settings.copyWith(
-                    markdown: md.copyWith(dialect: v ? .gfm : .commonMark),
-                  ),
-                ),
-              ),
-              SwitchListTile(
-                value: md.frontMatter,
-                title: Text(l10n.export.markdownFrontMatter),
-                subtitle: Text(l10n.export.markdownFrontMatterSubtitle),
-                secondary: const Icon(LucideIcons.fileInput),
-                onChanged: (v) => _update(
-                  _settings.copyWith(markdown: md.copyWith(frontMatter: v)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
   }
 
   // ---------------------------------------------------------------- 图片

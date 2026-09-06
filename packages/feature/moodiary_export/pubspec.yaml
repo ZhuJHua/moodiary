@@ -30,12 +30,16 @@ dependencies:
   moodiary_utils: 0.0.1
   mui: 0.0.1
 
+  crypto: 3.0.7
   gap: 3.0.1
   path: 1.9.1
   share_plus: 13.3.0
+  yaml: 3.1.4
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
   build_runner: 2.16.1
+  drift: 2.34.4
+  fast_tokenizer: 0.0.1

@@ -1,8 +1,6 @@
 import 'dart:convert';
 import 'dart:ui' show Brightness;
 
-import 'markdown_writer.dart';
-
 enum ExportFormat {
   markdown('markdown', 'md'),
   docx('docx', 'docx'),
@@ -116,36 +114,6 @@ class ExportCommon {
     nameTemplate: json['nameTemplate'] as String? ?? '{date}-{title}',
     includePosition: json['includePosition'] as bool? ?? false,
   );
-}
-
-/// Markdown 专属。方言与 front matter 直接透传给 [MarkdownWriter]。
-class MarkdownExportOptions {
-  final MarkdownDialect dialect;
-  final bool frontMatter;
-
-  const MarkdownExportOptions({this.dialect = .gfm, this.frontMatter = true});
-
-  MarkdownExportOptions copyWith({
-    MarkdownDialect? dialect,
-    bool? frontMatter,
-  }) => MarkdownExportOptions(
-    dialect: dialect ?? this.dialect,
-    frontMatter: frontMatter ?? this.frontMatter,
-  );
-
-  Map<String, dynamic> toJson() => {
-    'dialect': dialect.name,
-    'frontMatter': frontMatter,
-  };
-
-  factory MarkdownExportOptions.fromJson(Map<String, dynamic> json) =>
-      MarkdownExportOptions(
-        dialect: MarkdownDialect.values.firstWhere(
-          (d) => d.name == json['dialect'],
-          orElse: () => MarkdownDialect.gfm,
-        ),
-        frontMatter: json['frontMatter'] as bool? ?? true,
-      );
 }
 
 /// 排版类格式（docx / pdf）共用的页面与字体设定。
@@ -272,14 +240,12 @@ class ImageExportOptions {
 /// 一次导出的完整配置。按格式分别持久化，互不覆盖。
 class ExportSettings {
   final ExportCommon common;
-  final MarkdownExportOptions markdown;
   final LayoutExportOptions docx;
   final LayoutExportOptions pdf;
   final ImageExportOptions image;
 
   const ExportSettings({
     this.common = const ExportCommon(),
-    this.markdown = const MarkdownExportOptions(),
     this.docx = const LayoutExportOptions(eastAsiaFont: '宋体'),
     this.pdf = const LayoutExportOptions(),
     this.image = const ImageExportOptions(),
@@ -287,13 +253,11 @@ class ExportSettings {
 
   ExportSettings copyWith({
     ExportCommon? common,
-    MarkdownExportOptions? markdown,
     LayoutExportOptions? docx,
     LayoutExportOptions? pdf,
     ImageExportOptions? image,
   }) => ExportSettings(
     common: common ?? this.common,
-    markdown: markdown ?? this.markdown,
     docx: docx ?? this.docx,
     pdf: pdf ?? this.pdf,
     image: image ?? this.image,
@@ -301,7 +265,6 @@ class ExportSettings {
 
   String encode() => jsonEncode({
     'common': common.toJson(),
-    'markdown': markdown.toJson(),
     'docx': docx.toJson(),
     'pdf': pdf.toJson(),
     'image': image.toJson(),
@@ -313,9 +276,6 @@ class ExportSettings {
       final json = jsonDecode(raw) as Map<String, dynamic>;
       return ExportSettings(
         common: .fromJson(json['common'] as Map<String, dynamic>? ?? const {}),
-        markdown: .fromJson(
-          json['markdown'] as Map<String, dynamic>? ?? const {},
-        ),
         docx: .fromJson(json['docx'] as Map<String, dynamic>? ?? const {}),
         pdf: .fromJson(json['pdf'] as Map<String, dynamic>? ?? const {}),
         image: .fromJson(json['image'] as Map<String, dynamic>? ?? const {}),

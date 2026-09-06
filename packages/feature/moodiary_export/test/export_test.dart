@@ -404,8 +404,26 @@ void main() {
       );
       expect(
         MarkdownWriter.write(doc, _noMeta),
-        '![封面](assets/image-abc.webp)',
+        '![封面](assets/image/image-abc.webp)',
       );
+    });
+
+    test('视频 / 音频按种类分目录引用', () {
+      final doc = _convert(
+        _doc([
+          {
+            'type': 'video',
+            'attrs': {'filename': 'video-abc.mp4'},
+          },
+          {
+            'type': 'audio',
+            'attrs': {'filename': 'audio-abc.m4a'},
+          },
+        ]),
+      );
+      final md = MarkdownWriter.write(doc, _noMeta);
+      expect(md, contains('](assets/video/video-abc.mp4)'));
+      expect(md, contains('](assets/audio/audio-abc.m4a)'));
     });
 
     test('硬换行写成反斜杠形式', () {

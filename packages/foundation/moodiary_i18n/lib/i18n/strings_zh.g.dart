@@ -1955,6 +1955,9 @@ class Translations$export$zh {
 	/// zh: '导出'
 	String get sectionExport => '导出';
 
+	/// zh: '导入'
+	String get sectionImport => '导入';
+
 	/// zh: '备份'
 	String get sectionBackup => '备份';
 
@@ -2060,8 +2063,8 @@ class Translations$export$zh {
 	/// zh: '标题'
 	String get includeTitle => '标题';
 
-	/// zh: '日期、天气与位置'
-	String get includeMeta => '日期、天气与位置';
+	/// zh: '日期与天气'
+	String get includeMeta => '日期与天气';
 
 	/// zh: '内嵌图片'
 	String get mediaEmbed => '内嵌图片';
@@ -2071,18 +2074,6 @@ class Translations$export$zh {
 
 	/// zh: '不含媒体'
 	String get mediaNone => '不含媒体';
-
-	/// zh: 'GitHub 风味'
-	String get markdownGfm => 'GitHub 风味';
-
-	/// zh: '支持表格与任务清单'
-	String get markdownGfmSubtitle => '支持表格与任务清单';
-
-	/// zh: '写入 Front Matter'
-	String get markdownFrontMatter => '写入 Front Matter';
-
-	/// zh: '在文件开头记录日期、分类等信息'
-	String get markdownFrontMatterSubtitle => '在文件开头记录日期、分类等信息';
 
 	/// zh: '排版'
 	String get sectionLayout => '排版';
@@ -2284,6 +2275,81 @@ class Translations$export$zh {
 
 	/// zh: '预览样张'
 	String get previewSample => '预览样张';
+
+	/// zh: '从 Markdown 导入'
+	String get importMarkdown => '从 Markdown 导入';
+
+	/// zh: 'zip 包或单个 .md 文件'
+	String get importMarkdownSubtitle => 'zip 包或单个 .md 文件';
+
+	/// zh: '从 Markdown 导入'
+	String get importTitle => '从 Markdown 导入';
+
+	/// zh: '文件'
+	String get importSectionFile => '文件';
+
+	/// zh: '选择文件'
+	String get importPickFile => '选择文件';
+
+	/// zh: '还没有选择'
+	String get importNoFile => '还没有选择';
+
+	/// zh: '正在读取…'
+	String get importScanning => '正在读取…';
+
+	/// zh: '{count} 篇'
+	String importDetected({required Object count}) => '${count} 篇';
+
+	/// zh: '格式说明'
+	String get importSpec => '格式说明';
+
+	/// zh: 'zip 顶层的每个 .md 文件是一篇日记；也可以直接选一个 .md 文件。'
+	String get importSpecEntries => 'zip 顶层的每个 .md 文件是一篇日记；也可以直接选一个 .md 文件。';
+
+	/// zh: '图片、视频、音频放在 assets/ 目录（可再分子目录），正文里用相对路径引用。'
+	String get importSpecAssets => '图片、视频、音频放在 assets/ 目录（可再分子目录），正文里用相对路径引用。';
+
+	/// zh: '文件开头可选 front matter，记录标题、时间、心情、分类、标签、天气、位置。没有时标题取正文的第一个一级标题或文件名，时间取文件名开头的日期。'
+	String get importSpecFrontMatter => '文件开头可选 front matter，记录标题、时间、心情、分类、标签、天气、位置。没有时标题取正文的第一个一级标题或文件名，时间取文件名开头的日期。';
+
+	/// zh: '本应用「不合并」导出的 Markdown 可以直接导回；合并成一个文件的不支持。'
+	String get importSpecRoundTrip => '本应用「不合并」导出的 Markdown 可以直接导回；合并成一个文件的不支持。';
+
+	/// zh: '日记.zip ├── 2026-09-06-晴天.md ├── 2026-09-07-散步.md └── assets/ ├── image/a.jpg └── video/b.mp4 2026-09-06-晴天.md --- title: "晴天" time: 2026-09-06T10:30:00+08:00 mood: fulfilled category: "生活" tags: ["周末"] --- 今天出门走了走。 ![](assets/image/a.jpg)'
+	String get importSpecExample => '日记.zip\n├── 2026-09-06-晴天.md\n├── 2026-09-07-散步.md\n└── assets/\n    ├── image/a.jpg\n    └── video/b.mp4\n\n2026-09-06-晴天.md\n---\ntitle: "晴天"\ntime: 2026-09-06T10:30:00+08:00\nmood: fulfilled\ncategory: "生活"\ntags: ["周末"]\n---\n\n今天出门走了走。\n![](assets/image/a.jpg)';
+
+	/// zh: '导入 {count} 篇'
+	String importRunButton({required Object count}) => '导入 ${count} 篇';
+
+	/// zh: '正在导入 {done}/{total}'
+	String importProgress({required Object done, required Object total}) => '正在导入 ${done}/${total}';
+
+	/// zh: '日记 {diary} 篇 / 新建分类 {category} 个 / 新建地点 {place} 个'
+	String importSummary({required Object diary, required Object category, required Object place}) => '日记 ${diary} 篇 / 新建分类 ${category} 个 / 新建地点 ${place} 个';
+
+	/// zh: '{base}，跳过 {skipped} 篇（已存在）'
+	String importSummarySkipped({required Object base, required Object skipped}) => '${base}，跳过 ${skipped} 篇（已存在）';
+
+	/// zh: '{base}，失败 {failed} 篇'
+	String importSummaryFailed({required Object base, required Object failed}) => '${base}，失败 ${failed} 篇';
+
+	/// zh: '导入完成：{summary}'
+	String importDone({required Object summary}) => '导入完成：${summary}';
+
+	/// zh: '导入未全部成功：{summary}'
+	String importPartial({required Object summary}) => '导入未全部成功：${summary}';
+
+	/// zh: '导入已停止（未完成）：{summary}'
+	String importStopped({required Object summary}) => '导入已停止（未完成）：${summary}';
+
+	/// zh: '导入失败：{error}'
+	String importRunFailed({required Object error}) => '导入失败：${error}';
+
+	/// zh: '包里没有找到 .md 文件'
+	String get importEmpty => '包里没有找到 .md 文件';
+
+	/// zh: '{count} 个媒体文件无法导入（缺失或无法读取），已按普通链接保留'
+	String importMissingMedia({required Object count}) => '${count} 个媒体文件无法导入（缺失或无法读取），已按普通链接保留';
 }
 
 // Path: lock
