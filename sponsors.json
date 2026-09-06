@@ -1,0 +1,23 @@
+{
+  "currency": "CNY",
+  "sponsors": [
+    { "name": "朱东杰", "amount": 60 },
+    { "name": "dsxksss", "github": "dsxksss", "amount": 50 },
+    { "name": "十*", "amount": 20 },
+    { "name": "不**", "amount": 20 },
+    { "name": "曾**", "amount": 20 },
+    { "name": "*Person*", "amount": 20 },
+    { "name": "*Person*", "amount": 18.88 },
+    { "name": "沭**", "amount": 10 },
+    { "name": "wu*", "amount": 10 },
+    { "name": "不对味的雪碧", "amount": 10 },
+    { "name": "帕斯卡的芦苇", "github": "xiaoxianzi-99", "amount": 10 },
+    { "name": "Lucci", "amount": 9.9 },
+    { "name": "w**", "amount": 6.6 },
+    { "name": "*Person*", "amount": 5 },
+    { "name": "*Person*", "amount": 5 },
+    { "name": "宋**", "amount": 5 },
+    { "name": "翰**", "amount": 5 },
+    { "name": "云*", "amount": 2.76 }
+  ]
+}

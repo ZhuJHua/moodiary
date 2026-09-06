@@ -229,6 +229,7 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
     await _editor();
     await _run('fvm', ['dart', 'run', 'tool/licenses.dart']);
   },
+  'sponsors': (_) => _run('fvm', ['dart', 'run', 'tool/sponsors.dart']),
   'gen': (_) async {
     await _genRust();
     await _i18n();
