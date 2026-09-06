@@ -6,8 +6,8 @@ Moodiary — a Flutter + Rust diary app. **Layered pub-workspace monorepo**: 33 
 
 ## Tech Stack
 
-- **Flutter 3.47.0 / Dart 3.13.0** (FVM, `.fvmrc`)
-- **Rust** (每个原生库包的 `rust/rust-toolchain.toml` 各一份，`tool/check_generated.dart` 保证一致)，`flutter_rust_bridge` 2.13.0 — 原生库经 Native Assets 构建钩子构建并打包（需要 `rustup`）
+- **Flutter 3.47.2 / Dart 3.13.0** —— `.fvmrc` 钉的是 3.47.2，`mobile/pubspec.yaml` 的下限约束才是 3.47.0，别把两者混为一谈
+- **Rust 1.95.0 stable**（不是 nightly；每个原生库包的 `rust/rust-toolchain.toml` 各一份，`tool/check_generated.dart` 保证一致），`flutter_rust_bridge` 2.13.0 — 原生库经 Native Assets 构建钩子构建并打包（需要 `rustup`）
 - **Android**: AGP 9.1.0 / Gradle 9.3.1 / KGP 2.4.0，内置 Kotlin（`android.builtInKotlin=true`）；daemon JVM 由 `gradle-daemon-jvm.properties` 钉在 21
 - **Riverpod** (dev) + code gen, **go_router**, **get_it**, **SQLite**（drift + FTS5，schema 真源在 `moodiary_data` 的 `.drift` 文件），**Freezed** + **json_serializable**
 
@@ -35,7 +35,7 @@ dart tool/task.dart editor         # rebuild editor asset only (needs corepack o
 dart tool/task.dart analyze        # layer check + flutter analyze
 dart tool/task.dart test           # 全仓 Dart 测试（CI 口径；SQLite 用例零门槛，仅 migration 的旧库用例要 ISAR_TEST_DYLIB）
 dart tool/task.dart test-mobile    # 只跑 mobile/ 的测试
-for d in packages/foundation/fast_*/rust; do (cd $d && cargo clippy --all-targets -- -D warnings && cargo test); done
+for d in packages/foundation/*/rust; do (cd $d && cargo clippy --all-targets -- -D warnings && cargo test); done  # 六个包，别写成 fast_*：那样会漏掉 moodiary_rust
 cd packages/feature_base/moodiary_editor/editor && corepack pnpm type-check && corepack pnpm test
 ```
 

@@ -73,7 +73,7 @@ jobs:
         with:
           components: clippy
 
-      - name: Clippy + Test (fast_*)
+      - name: Clippy + Test (all six native packages)
         working-directory: packages/foundation
         run: |
           for d in */rust; do

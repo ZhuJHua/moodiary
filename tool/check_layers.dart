@@ -295,8 +295,6 @@ const Map<String, String> _themeAllowlist = {
       '启动失败兜底页：主题系统此刻可能正是坏掉的那一环，刻意零依赖、硬编码配色',
   'packages/foundation/fast_image/lib/src/tile_debug.dart':
       '看图页 tile 调试叠层：颜色是 tile 状态编码，画在照片上，不跟主题',
-  'packages/feature/moodiary_share/lib/src/presentation/templates/':
-      '分享卡片是固定设计稿（纸/墨配色），要导出成图片，不能跟随 App 主题',
   'packages/foundation/mui/lib/src/components/common/env_badge.dart':
       '开发环境角标，固定红',
   'packages/foundation/mui/lib/src/components/common/video/':
