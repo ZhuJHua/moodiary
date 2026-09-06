@@ -7,8 +7,6 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 
-/// Provider 元数据存 SQLite；**API Key 存 SecureStorage**，按 `llm_key_<id>` 读写，
-/// 删除 Provider 时一并清除。
 @lazySingleton
 class LlmProviderRepository {
   LlmProviderRepository(this._db, this._secure);
@@ -20,7 +18,6 @@ class LlmProviderRepository {
 
   final StreamController<void> _events = StreamController<void>.broadcast();
 
-  /// 单例随应用整个生命周期存活，故此 controller 不主动关闭。
   Stream<void> get providerEvents => _events.stream;
 
   static LlmProvider _toProvider(LlmProviderRow r) => LlmProvider(
@@ -54,7 +51,6 @@ class LlmProviderRepository {
         attachment: Value(p.attachment ? 1 : 0),
       );
 
-  /// 全部 Provider，按 [LlmProvider.sortOrder]、再按创建时间排序。
   Future<List<LlmProvider>> getAllProviders() async {
     final rows =
         await (_db.select(_db.llmProviders)..orderBy([
@@ -79,7 +75,6 @@ class LlmProviderRepository {
     _events.add(null);
   }
 
-  /// 删除 Provider，并清除其 API Key；若删的是当前激活项则清空激活指针。
   Future<void> deleteProvider(String id) async {
     await (_db.delete(_db.llmProviders)..where((p) => p.id.equals(id))).go();
     await removeKey(id);
@@ -89,8 +84,6 @@ class LlmProviderRepository {
     _events.add(null);
   }
 
-  /// 按给定顺序重写全部 [LlmProvider.sortOrder]。整批一个事务（drift 的 batch 自带）、
-  /// 只发一次事件 —— 逐条 upsert 会发 N 次刷新事件，列表在拖完的那一帧连闪 N 下。
   Future<void> reorderProviders(List<String> orderedIds) async {
     await _db.batch((b) {
       for (var i = 0; i < orderedIds.length; i++) {
@@ -105,7 +98,6 @@ class LlmProviderRepository {
     _events.add(null);
   }
 
-  /// 追加到列表末尾时用的 sortOrder（当前最大值 + 1）。
   Future<int> nextSortOrder() async {
     final maxOrder = _db.llmProviders.sortOrder.max();
     final row = await (_db.selectOnly(
@@ -121,7 +113,6 @@ class LlmProviderRepository {
 
   Future<void> removeKey(String id) => _secure.remove(_keyOf(id));
 
-  /// 当前激活的 Provider。激活指针缺失或失效时回退到列表首个；列表为空返回 null。
   Future<LlmProvider?> getActiveProvider() async {
     final id = MoodiaryKVs.assistantActiveProviderId.get();
     if (id != null && id.isNotEmpty) {

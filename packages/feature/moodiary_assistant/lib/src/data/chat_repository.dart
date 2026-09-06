@@ -13,15 +13,11 @@ class ChatRepository {
 
   final MoodiaryDatabase _db;
 
-  /// `WHERE x IN (...)` 的分块上限（SQLite 变量数上限 32766，留足余量）。
   static const int _inChunk = 5000;
 
   final StreamController<void> _events = StreamController<void>.broadcast();
 
-  /// 单例随应用整个生命周期存活，不主动关闭。
   Stream<void> get sessionEvents => _events.stream;
-
-  // —— 行 ↔ 域模型映射 —— //
 
   static ChatSession _toSession(ChatSessionRow r) => ChatSession(
     id: r.id,
@@ -101,7 +97,6 @@ class ChatRepository {
         done: r.done != 0,
       );
 
-  /// 批量装配：一页消息行 → 域模型（子表按 message_id 分块 IN 批量取，无 N+1）。
   Future<List<ChatMessage>> _assemble(List<ChatMessageRow> rows) async {
     if (rows.isEmpty) return const [];
     final callsById = <String, List<AssistantToolCall>>{};
@@ -123,7 +118,6 @@ class ChatRepository {
     ];
   }
 
-  /// 该消息的 tool_calls 子表整体替换（子表是消息的一部分，随消息一起写）。
   Future<void> _syncToolCalls(ChatMessage message) async {
     await (_db.delete(
       _db.assistantToolCalls,
@@ -145,7 +139,6 @@ class ChatRepository {
     });
   }
 
-  /// 全部会话，按最后活跃时间倒序。
   Future<List<ChatSession>> getAllSessions() async {
     final rows = await (_db.select(
       _db.chatSessions,
@@ -167,13 +160,11 @@ class ChatRepository {
     _events.add(null);
   }
 
-  /// 删除会话并连带删除其全部消息（消息与工具调用由外键 ON DELETE CASCADE 级联）。
   Future<void> deleteSession(String id) async {
     await (_db.delete(_db.chatSessions)..where((s) => s.id.equals(id))).go();
     _events.add(null);
   }
 
-  /// 删除单条消息（用于重新生成时清理最后一轮回复）。
   Future<void> deleteMessage(String id) async {
     await (_db.delete(_db.chatMessages)..where((m) => m.id.equals(id))).go();
   }
@@ -187,7 +178,6 @@ class ChatRepository {
     return _assemble(rows);
   }
 
-  /// 追加一条消息，并把所属会话的 `updatedAt` 顶到该消息时间。
   Future<void> addMessage(ChatMessage message) async {
     await _db.transaction(() async {
       await _db
@@ -198,7 +188,6 @@ class ChatRepository {
         _db.chatSessions,
       )..where((s) => s.id.equals(message.sessionId))).getSingleOrNull();
       if (session != null) {
-        // 活跃时间只向前推进：重新生成会重存较早的用户消息，避免把会话时间倒退。
         final createdAt = dbTime(message.createdAt);
         final updatedAt = createdAt > session.updatedAt
             ? createdAt

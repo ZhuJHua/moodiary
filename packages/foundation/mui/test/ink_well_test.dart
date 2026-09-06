@@ -8,10 +8,6 @@ Widget host(Widget child) => MaterialApp(
   home: Scaffold(body: Center(child: child)),
 );
 
-/// 找到 [MInkWell] 自己那层遮罩，返回它当前的颜色。
-///
-/// 取 `.last` 而不是 `.first`：遮罩是 Stack 的**第二个**孩子，深度优先遍历会先
-/// 走完 child 子树 —— 嵌套场景下 `.first` 拿到的是内层那个 MInkWell 的遮罩。
 Color? overlayColorOf(WidgetTester tester, Finder inkWell) {
   final box = tester.widget<ColoredBox>(
     find.descendant(of: inkWell, matching: find.byType(ColoredBox)).last,
@@ -42,7 +38,6 @@ void main() {
 
     await gesture.up();
     await tester.pump();
-    // 松手当帧还留着 —— 否则快速点一下根本看不见反馈。
     expect(isPressed(tester, finder), isTrue);
     expect(taps, 1);
 
@@ -50,8 +45,6 @@ void main() {
     expect(isPressed(tester, finder), isFalse);
   });
 
-  // 这是选自绘遮罩而不是 ink feature 的理由：反馈与背景解耦，
-  // 不需要在自带底色的东西下面再垫一层 Material。
   testWidgets('没有祖先 Material 也能出反馈', (tester) async {
     await tester.pumpWidget(
       MuiTheme(
@@ -73,7 +66,6 @@ void main() {
     await tester.pump(const Duration(milliseconds: 80));
   });
 
-  // 一行里再放一颗按钮：按按钮时只有按钮高亮，整行不跟着亮。
   testWidgets('嵌套时内层赢，外层抑制自己的高亮', (tester) async {
     await tester.pumpWidget(
       host(
@@ -99,8 +91,6 @@ void main() {
     final inner = find.byKey(const ValueKey('inner'));
 
     final gesture = await tester.startGesture(tester.getCenter(inner));
-    // 内外两个 tap 识别器一起进 arena，谁都没立刻赢，`onTapDown` 因此被推迟到
-    // kPressTimeout 之后 —— 嵌套 InkWell 也是这个行为。
     await tester.pump(const Duration(milliseconds: 150));
     expect(isPressed(tester, inner), isTrue);
     expect(isPressed(tester, outer), isFalse, reason: '内层按着的时候外层不该也亮');
@@ -142,7 +132,6 @@ void main() {
     await tester.pump(const Duration(milliseconds: 80));
   });
 
-  // `onTap: enabled ? handler : null` 是调用点的惯用写法，得表示「不可点」。
   testWidgets('一个回调都不传时不吃指针，点击穿到下面', (tester) async {
     var belowTaps = 0;
     await tester.pumpWidget(
@@ -205,8 +194,6 @@ void main() {
     );
     final finder = find.byType(MInkWell);
     final gesture = await tester.startGesture(tester.getCenter(finder));
-    // 可滚动区域里，tap 识别器要和 drag 抢 arena，`onTapDown` 被推迟到
-    // kPressTimeout（100ms）之后才发 —— 这与 InkWell 的行为一致，不是回归。
     await tester.pump(const Duration(milliseconds: 150));
     expect(isPressed(tester, finder), isTrue);
 
@@ -236,8 +223,6 @@ void main() {
   });
 
   testWidgets('固定高度下子节点撑满，不被顶到上边', (tester) async {
-    // Stack 默认的 loose fit + topStart 对齐会让「父级给固定高度、child 比它矮」的
-    // 调用点（MChipBar 的 height: 32 胶囊）内容贴到上边。passthrough 把约束原样透下去。
     await tester.pumpWidget(
       host(
         SizedBox(

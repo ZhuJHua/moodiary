@@ -9,19 +9,16 @@ import 'package:flutter/rendering.dart'
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 
-/// 媒体库的平铺条目：整条列表只有**一个** sliver，标题与格子都是它的 child。
 sealed class MediaEntry {
   const MediaEntry();
 }
 
-/// 日期标题，整行宽、固定高。
 class MediaHeader extends MediaEntry {
   final int group;
 
   const MediaHeader(this.group);
 }
 
-/// 一个媒体格子：第 [group] 组里的第 [index] 个。
 class MediaCell extends MediaEntry {
   final int group;
   final int index;
@@ -29,9 +26,6 @@ class MediaCell extends MediaEntry {
   const MediaCell(this.group, this.index);
 }
 
-/// 已加载条目按本地日期分组后的平铺视图。[entries] 是 sliver 的 child 序列；
-/// [groups] 每组的文件名（看图页左右翻页只在同一天内）；[keys] 与 entries 一一对应，
-/// 供 `findChildIndexCallback` 在插入 / 删除后按 key 找回已建的 element。
 class MediaFlat {
   final List<MediaEntry> entries;
   final List<DateTime> dates;
@@ -46,7 +40,6 @@ class MediaFlat {
 
   int? indexOfKey(Key key) => _indexOf[key];
 
-  /// [items] 已按日记时间倒序；同一天跨分页边界会并入同一组。
   factory MediaFlat.of(List<MediaItem> items) {
     final entries = <MediaEntry>[];
     final dates = <DateTime>[];
@@ -72,13 +65,6 @@ class MediaFlat {
   }
 }
 
-/// 一条 sliver 装下「日期标题 + 网格」的布局：数据变化时预算每个 child 的几何，滚动
-/// 时按 scrollOffset 二分定位可见范围（O(log n)），不再是每个日期两条 sliver、
-/// viewport 每帧顺序问一遍。
-///
-/// 标题整行宽、[headerExtent] 高；格子 [columns] 列，横向间距 [spacing]，主轴
-/// [tileMainExtent]（null = 正方形，边长即格宽）。标题前后的空隙就是它自带的内边距，
-/// 行与行之间才加 [spacing]。
 class GroupedGridDelegate extends SliverGridDelegate {
   final List<MediaEntry> entries;
   final int columns;
@@ -94,7 +80,6 @@ class GroupedGridDelegate extends SliverGridDelegate {
     this.tileMainExtent,
   });
 
-  // performLayout 每滚一帧都会来要一次 layout；几何只跟横向宽度有关，按宽度缓存。
   GroupedGridLayout? _cache;
   double _cacheCross = -1;
 
@@ -193,7 +178,6 @@ class GroupedGridLayout extends SliverGridLayout {
     crossAxisExtent: _crossExtents[index],
   );
 
-  /// 第一个「尾在 [scrollOffset] 之后」的 child。ends 单调不减（同一行的格子尾相同）。
   @override
   int getMinChildIndexForScrollOffset(double scrollOffset) {
     var lo = 0;
@@ -209,7 +193,6 @@ class GroupedGridLayout extends SliverGridLayout {
     return lo;
   }
 
-  /// 最后一个「头在 [scrollOffset] 之前」的 child。starts 单调不减。
   @override
   int getMaxChildIndexForScrollOffset(double scrollOffset) {
     var lo = 0;

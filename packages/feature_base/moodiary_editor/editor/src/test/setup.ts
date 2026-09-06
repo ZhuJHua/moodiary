@@ -1,4 +1,3 @@
-// jsdom 无布局引擎：补齐 prosemirror-view 读坐标用的 Range API。
 const zeroRect = {
   x: 0,
   y: 0,

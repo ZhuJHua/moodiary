@@ -33,7 +33,6 @@ void main() {
       SyncProviderType.setCurrent(.webdav);
       await activateSyncProvider();
       expect(getIt<IRemoteSyncBackend>().type, SyncProviderType.webdav);
-      // 切换 provider → 旧 scope 被 pop，新 scope 只有对应后端（无残留）。
       SyncProviderType.setCurrent(.s3);
       await activateSyncProvider();
       expect(getIt<IRemoteSyncBackend>().type, SyncProviderType.s3);

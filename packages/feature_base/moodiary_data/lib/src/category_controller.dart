@@ -11,7 +11,6 @@ import 'diary_repository.dart';
 
 part 'category_controller.g.dart';
 
-/// 把单条 [CategoryEvent] 原地并入列表（按 id 升序）。
 List<Category> _applyEvent(List<Category> list, CategoryEvent event) {
   switch (event) {
     case CategoryDeleted(:final id):
@@ -30,12 +29,10 @@ List<Category> _applyEvent(List<Category> list, CategoryEvent event) {
   }
 }
 
-/// 订阅 [CategoryRepository.categoryEvents]，按事件原地增量更新，无需重查库。
 @riverpod
 class CategoryController extends _$CategoryController {
   late final _repository = getIt<CategoryRepository>();
 
-  // 首次加载期间事件无处可并，标记后补一次重查（同 LoadMoreMixin.markMissedEvent）。
   bool _missedEvent = false;
 
   @override
@@ -43,8 +40,6 @@ class CategoryController extends _$CategoryController {
     final sub = _repository.categoryEvents.listen(_applyChange);
     ref.onDispose(sub.cancel);
     var list = await _repository.getAllCategories();
-    // 循环补偿（上限防饥饿）：补查期间 state 仍是 loading，事件只能置标记——
-    // 单次检查过后标记就没人消费了（LoadMoreMixin 版无此洞：refresh 时 state 已有值）。
     for (var i = 0; _missedEvent && i < 3; i++) {
       _missedEvent = false;
       list = await _repository.getAllCategories();
@@ -71,7 +66,6 @@ class CategoryController extends _$CategoryController {
     }
   }
 
-  /// 删除分类（行硬删 + 同步墓碑），仅当其下没有日记时成功。
   Future<bool> deleteCategory(String id) async {
     try {
       return await _repository.deleteACategory(id);

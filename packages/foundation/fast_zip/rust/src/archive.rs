@@ -16,7 +16,6 @@ impl Zip {
         let file = File::create(&file_path)
             .with_context(|| format!("Failed to create ZIP file at {}", file_path))?;
 
-        // Deflate 而非 Zstd：系统自带解压工具普遍不支持 zip 内 Zstd 条目。
         let options = SimpleFileOptions::default()
             .compression_method(CompressionMethod::Deflated)
             .unix_permissions(0o755);
@@ -27,7 +26,6 @@ impl Zip {
         })
     }
 
-    /// [stored] 为 true 时不压缩直接存储（媒体等已压缩格式），并允许单文件 >= 4GiB。
     pub fn add_file(
         &mut self,
         file_path: String,
@@ -104,10 +102,6 @@ impl Zip {
                 None => archive.by_index(i)?,
             };
 
-            // 传了密码就要求每个条目**确实是加密的**。`by_index_decrypt` 对未加密条目
-            // 会静默丢掉密码照常解出，于是「能解开这个包」根本不证明对方持有会话密钥
-            // ——局域网接收端据此把归档当可信来源，一个完全不加密的伪造包就能带着
-            // tombstone 进来删光本机日记。校验的是来源，不是机密性。
             if password.is_some() && !file.encrypted() {
                 anyhow::bail!("archive entry is not encrypted, refusing: {}", file.name());
             }
@@ -186,9 +180,6 @@ mod tests {
         std::fs::remove_dir_all(&dir).ok();
     }
 
-    /// 未加密的包不能因为「我们传了密码」就被当成可信来源。局域网接收端把归档的
-    /// 可解性当作对端持有会话密钥的证明，而 `by_index_decrypt` 对未加密条目会静默
-    /// 丢掉密码照常解出——不挡的话，一个明文伪造包就能带着 tombstone 删光本机日记。
     #[test]
     fn rejects_unencrypted_entry_when_password_given() {
         let dir =
@@ -197,7 +188,6 @@ mod tests {
 
         let zip_path = dir.join("forged.zip");
         let mut zip = Zip::new(zip_path.to_str().unwrap().to_string()).unwrap();
-        // 伪造方没有会话密钥，只能写明文条目。
         zip.add_bytes(
             "manifest.json".to_string(),
             br#"{"version":1,"entries":{}}"#.to_vec(),

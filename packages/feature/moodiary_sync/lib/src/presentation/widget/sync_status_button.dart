@@ -6,8 +6,6 @@ import 'package:moodiary_sync/src/application/sync_controller.dart';
 import 'package:moodiary_sync/src/application/sync_runner.dart';
 import 'package:mui/mui.dart';
 
-/// AppBar 同步入口：运行中（手动或自动）转圈，连接健康坏了右上角一枚 error 色小点，
-/// 点击直接进同步控制台。供两端 app 直接 `const SyncStatusButton()` 组合。
 class SyncStatusButton extends ConsumerWidget {
   const SyncStatusButton({super.key});
 

@@ -6,8 +6,6 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:mui/mui.dart';
 
-/// 编辑一个用户预设（[id]），或从别的预设派生新副本（[fromId]；两者都空 = 从内置
-/// 「Moodiary助手」派生）。派生只预填内容、**保存才落库**，退出即弃，不留空壳行。
 class AgentPresetEditPage extends StatefulWidget {
   final String? id;
   final String? fromId;
@@ -23,13 +21,10 @@ class _AgentPresetEditPageState extends State<AgentPresetEditPage> {
   final _description = TextEditingController();
   final _persona = TextEditingController();
 
-  /// 编辑目标；null = 派生新预设。
   AgentPreset? _editing;
   bool _loaded = false;
   bool _saving = false;
 
-  /// 关 = 挂全部工具（含未来新增），对应 `tools == null`；
-  /// 开 = 只挂勾选的子集（可以一个都不选 = 纯陪聊）。
   bool _customTools = false;
   final Set<String> _selectedTools = {};
 
@@ -95,7 +90,6 @@ class _AgentPresetEditPageState extends State<AgentPresetEditPage> {
     if (persona.length > personaMaxChars) {
       persona = persona.substring(0, personaMaxChars);
     }
-    // 按 AssistantTool.values 的顺序存，勾选顺序不进库（列表顺序稳定可比对）。
     final tools = _customTools
         ? [
             for (final t in AssistantTool.values)
@@ -146,8 +140,6 @@ class _AgentPresetEditPageState extends State<AgentPresetEditPage> {
       ),
       body: !_loaded
           ? const Center(child: CircularProgressIndicator())
-          // 整页滚动：工具芯片展开有五六行高，Expanded 的人格框在小屏 + 键盘下
-          // 会被挤到溢出；人格框改为随内容生长、页面滚动。
           : ListView(
               padding: const .all(16),
               children: [

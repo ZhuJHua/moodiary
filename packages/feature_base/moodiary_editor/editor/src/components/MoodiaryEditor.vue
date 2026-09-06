@@ -1,12 +1,4 @@
 <script setup lang="ts">
-// TipTap 经 @tiptap/vue-3 的 useEditor 接入：编辑器生命周期随组件自动管理（卸载即销毁），且为
-// 将来 video/audio/自定义块的 Vue node view（VueNodeViewRenderer）提供 app 上下文。onCreate
-// （实例就绪）时把 kit 的命令式 [EditorApi] 绑定到 bridge 并上报 ready。editor 的 options 与 api
-// 共享同一份闭包状态，由 createEditorKit 统一产出（见 ../editor/tiptap）。
-//
-// 工具栏（EditorToolbar）由本组件按 platform 摆放：桌面置顶、移动置底（CSS 见
-// ../styles/moodiary-editor.css）。仅在可编辑态显示；可编辑性运行期可由 Flutter 经 bridge 切换,
-// 故用本地 editable ref 反映（onEditableChange 回调驱动,见 kit）。
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { EditorContent, useEditor } from '@tiptap/vue-3'
 import { createEditorKit } from '../editor/tiptap'
@@ -45,14 +37,12 @@ const editor = useEditor({
     kit.attach(instance)
     bindApi(kit.api)
     markReady()
-    // 内容变化可能增删标题 → 重算当前标题（rAF 合并）。
     instance.on('transaction', onViewportScroll)
   },
 })
 
 const showToolbar = computed(() => editable.value)
 
-// 文末双链面板：仅阅读态且有链接时渲染（编辑态不占文末空间）。
 const showLinks = computed(
   () =>
     !editable.value &&
@@ -60,24 +50,17 @@ const showLinks = computed(
     links.value.outgoing.length + links.value.incoming.length > 0,
 )
 
-// —— 顶部标题区（不进正文文档，单独映射 Diary.title），随正文一起滚动 ——
-// title 为 bridge 共享 ref（Flutter setTitle 推入）。非受控写法：程序化推入经下方 watch 同步进 DOM
-// （仅值不同才写，避免跳光标）；用户输入只读 DOM 回传 titleChange，不回写 DOM（避免中文输入法被打断，
-// 也规避 v-model 对导入 ref 写回不可靠的问题）。
 const titleEl = ref<HTMLTextAreaElement>()
 const viewportEl = ref<HTMLElement>()
 let titleComposing = false
-// 只读且无标题时整行不出现；编辑态恒显（此时占位提示就是「这里能写标题」的唯一线索）。
 const titleVisible = computed(() => editable.value || title.value.trim().length > 0)
 function autoGrowTitle(): void {
   const el = titleEl.value
-  // v-show 隐藏时 scrollHeight 恒为 0：量了会把 height 钉死成 0px，之后再显示出来
-  // 就是一条既看不见占位提示、上下留白又对不上的空行（只有敲字才会重新量回来）。
+  // v-show 隐藏时 scrollHeight 恒为 0，量出来会把 height 钉死成 0px
   if (!el || el.offsetParent === null) return
   el.style.height = 'auto'
   el.style.height = `${el.scrollHeight}px`
 }
-// 程序化推入（打开日记 setTitle）→ 同步进 DOM（值相同则跳过，避免打断输入 / 跳光标）。
 watch(title, (v) => {
   const el = titleEl.value
   if (el && el.value !== v) {
@@ -85,15 +68,14 @@ watch(title, (v) => {
     nextTick(autoGrowTitle)
   }
 })
-// 隐藏期间量不到高度，重新露出时补量一次（阅读态无标题 → 进编辑态是主路径）。
 watch(titleVisible, (v) => {
   if (v) nextTick(autoGrowTitle)
 })
 function onTitleInput(e: Event): void {
   const el = e.target as HTMLTextAreaElement
-  title.value = el.value // 驱动 v-show（watch 里值相同会跳过回写）
+  title.value = el.value
   autoGrowTitle()
-  if (titleComposing) return // 组合输入中（拼音）先不回传，等 compositionend
+  if (titleComposing) return
   post('titleChange', el.value)
 }
 function onTitleCompositionStart(): void {
@@ -105,13 +87,11 @@ function onTitleCompositionEnd(e: Event): void {
   title.value = el.value
   post('titleChange', el.value)
 }
-// 标题回车 → 跳到正文起始（符合"标题→正文"书写流）；组合输入中的回车用于确认候选，不劫持。
 function onTitleKeydown(e: KeyboardEvent): void {
   if (e.key !== 'Enter' || e.isComposing) return
   e.preventDefault()
   editor.value?.commands.focus('start')
 }
-// 标题焦点变化上报（'title' / ''），与正文的 onFocus/onBlur 共用 focusChange 事件。
 function onTitleFocus(): void {
   post('focusChange', 'title')
 }
@@ -119,9 +99,6 @@ function onTitleBlur(): void {
   post('focusChange', '')
 }
 
-// —— 目录（TOC）滚动联动 ——
-// 视口滚动 / 内容变化时算出「当前顶部可见的最后一个标题」下标（文档序，与 Dart TiptapContent.headings
-// 一致），仅在变化时回传 activeHeading，供 Flutter 高亮目录项。跳转由 bridge.scrollToHeading 反向驱动。
 let activeHeadingIndex = -1
 let spyRaf = 0
 function computeActiveHeading(): void {
@@ -145,7 +122,6 @@ function onViewportScroll(): void {
   spyRaf = requestAnimationFrame(computeActiveHeading)
 }
 
-// 工具栏媒体按钮 → 通知 Flutter 弹原生选取（存盘后经 insertMedia/insertAudio/insertVideo 回插）。
 function onPickImage(): void {
   post('pickImage')
 }
@@ -156,9 +132,6 @@ function onPickVideo(): void {
   post('pickVideo')
 }
 
-// 移动端：点击聚焦后软键盘弹出 → webview 高度被 Flutter（Scaffold.resizeToAvoidBottomInset）压缩 →
-// window resize。ProseMirror 不会因 resize 自动重滚、点击也不触发滚动,故这里把光标重新滚进视口,
-// 避免它被压到工具栏/键盘下方看不见（尤其点击末行时）。rAF 合并键盘动画期间的多次 resize。
 let scrollRaf = 0
 function onViewportResize(): void {
   const ed = editor.value
@@ -166,7 +139,6 @@ function onViewportResize(): void {
   cancelAnimationFrame(scrollRaf)
   scrollRaf = requestAnimationFrame(() => ed.commands.scrollIntoView())
 }
-// Cmd/Ctrl+F 打开查找条（仅可编辑态；webview 内无浏览器查找栏抢这个快捷键）。
 function onKeydown(e: KeyboardEvent): void {
   if ((e.metaKey || e.ctrlKey) && (e.key === 'f' || e.key === 'F')) {
     if (!editable.value) return
@@ -203,11 +175,9 @@ onBeforeUnmount(() => {
       @pick-audio="onPickAudio"
       @pick-video="onPickVideo"
     />
-    <!-- 桌面：查找条置于工具栏下方 -->
     <EditorSearchBar v-if="platform === 'desktop'" :platform="platform" />
     <div class="moodiary-editor-scroll">
       <div ref="viewportEl" class="moodiary-editor-viewport">
-        <!-- 属性头随正文一起滚动；数据经 bridge setMeta 推入（未推入前不占位）。 -->
         <EditorMetaHeader v-if="meta" :meta="meta" :editable="editable" />
         <textarea
           ref="titleEl"
@@ -224,11 +194,9 @@ onBeforeUnmount(() => {
           @blur="onTitleBlur"
         ></textarea>
         <EditorContent :editor="editor" class="moodiary-editor" />
-        <!-- 文末双链面板：在文档流末尾，滚到底自然出现。 -->
         <EditorLinksPanel v-if="showLinks && links" :links="links" />
       </div>
     </div>
-    <!-- 移动：查找条置于工具栏上方 -->
     <EditorSearchBar v-if="platform === 'mobile'" :platform="platform" />
     <EditorToolbar
       v-if="editor && showToolbar && platform === 'mobile'"

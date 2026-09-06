@@ -34,26 +34,14 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
-/// 「+」菜单里的两项。全屏编辑不在里面 —— 它只在输入框开始滚动时,
-/// 作为独立按钮出现在发送键左边。
 enum _ComposerTool { diary, image }
 
-/// 控制条右侧那两颗按钮（「+」与发送 / 停止）的直径。
-///
-/// 它们撑起整条的高度；左边的思考胶囊保持自己的高度，靠底对齐把底边对齐到同一条线上。
 const double _kComposerControlSize = 40;
 
-/// 面板内壁到控件的留白。与 [_kComposerControlSize] 一起决定同心圆角的收缩量。
 const double _kComposerPadding = 8;
 
-/// 两行标题各自的横向内缩：模型那一行要给点击遮罩留出呼吸，会话名跟着缩同样多才
-/// 对得齐。`AppBar.titleSpacing` 再减掉这么多，整块的视觉左边缘仍落在常规的 16。
 const double _kTitleInset = 6;
 
-/// 两行标题需要的工具栏高度。
-///
-/// `NavigationToolbar` 给中间槽位的是 **loose** 约束 —— 撑不下就是 RenderFlex 溢出，
-/// 而字号跟随系统、能到两倍，56 的默认值必然不够。所以按两行的实际行高算一遍。
 double _toolbarHeight(BuildContext context) {
   final typography = context.theme.typography;
   final scaler = MediaQuery.textScalerOf(context);
@@ -62,7 +50,6 @@ double _toolbarHeight(BuildContext context) {
   final needed =
       lineOf(typography.titleMedium.emphasized.onSurface) +
       lineOf(typography.labelSmall.onSurfaceVariant) +
-      // 上下各留 8，外加模型那行自己的 2×2。
       20;
   return math.max(kToolbarHeight, needed);
 }
@@ -83,8 +70,6 @@ class AssistantPage extends StatefulWidget {
   State<AssistantPage> createState() => _AssistantPageState();
 }
 
-/// 会话标题：空表示还没生成出来，显示「新对话」。**别把这句存进库**——存了就等于把
-/// 生成当时的语种烤进历史记录。
 String _sessionTitle(ChatSession? session, Translations l10n) {
   final title = session?.title.trim() ?? '';
   return title.isEmpty ? l10n.assistant.newChat : title;
@@ -102,13 +87,11 @@ class _AssistantPageState extends State<AssistantPage> {
 
   AssistantTurn? _streamingMessage;
 
-  /// 思考模式流式状态（每轮生成开始时由 [_resetThinkingState] 重置）。
   DateTime? _reasoningStart;
   String _streamingReasoning = '';
   int _thinkingMillis = 0;
   bool _thinkingActive = false;
 
-  /// 重新生成时被移除的旧回复 id：等新回复成功落库后才真正删除（兜底防丢）。
   List<String> _staleReplyIds = [];
 
   int _generation = 0;
@@ -117,63 +100,44 @@ class _AssistantPageState extends State<AssistantPage> {
   bool _ready = true;
   bool _initialized = false;
 
-  /// 本次会话的思考档位。空串 = 关。
   String _reasoningLevel = '';
 
-  /// 本次会话用的供应商与模型。首条消息落库时钉进 [ChatSession]，之后改设置里的
-  /// 默认供应商不影响它。
   LlmProvider? _provider;
   String _modelId = '';
 
-  /// 当前模型是否支持图片附件（决定是否显示「发送图片」入口）。
   bool _canSendImage = false;
 
-  /// 当前模型可选的思考档位（来自目录的 `reasoning_options`）。空 = 不给强度控件。
   List<String> _reasoningLevels = const [];
 
-  /// 当前模型的目录条目；自定义供应商或缓存未命中时为 null。
   LlmModelPreset? _activeModel;
 
-  /// 单次回复的 max_tokens，取自目录的 `limit.output`。
   int _maxTokens = assistantFallbackMaxTokens;
 
-  /// 当前模型是否支持工具调用（不支持则本轮不挂载工具）。
   bool _canUseTools = true;
 
-  /// 已选、待随下一条消息发送的图片文件名（image 目录内）。null 表示无待发图片。
   String? _pendingImageName;
 
   final ContextCompactionController _compaction = ContextCompactionController();
   final SessionTitleController _title = SessionTitleController();
 
-  /// 最近一轮 provider 上报的输入 token 数（压缩触发判据）。0 表示尚无用量数据。
   int _lastTurnInputTokens = 0;
 
-  /// 当前激活模型的上下文窗口（用于上下文占用指示与压缩阈值）。随 provider 变化刷新。
   int _contextLimit = assistantDefaultContextBudget;
 
-  /// 悬浮输入面板的实测高度：列表底部留白与「回到底部」按钮的位置都读它。
   double _composerHeight = 0;
 
   ChatSession? _session;
 
   bool _disclaimerAccepted = false;
 
-  /// 空白会话的待创建状态（staged，dsh 同款）：跨供应商选择先落在这里，
-  /// 撑过 [_refreshReady] 的重解析；首条消息 [_ensureSession] 时随 [_provider] 钉进会话。
-  /// 空串 = 没切过，照常走 KV 的全局默认供应商。
   String _stagedProviderId = '';
 
-  /// 空白会话待创建时选中的预设 id（[builtinAgentPresetId] = 内置）。
   String _stagedPresetId = builtinAgentPresetId;
 
-  /// 用户在 chip 上显式选过预设：从设置页回来时不再用全局默认覆盖它。
   bool _presetPickedExplicitly = false;
 
-  /// 标题预设 chip 的显示名；null = 内置（用 l10n 名）。
   String? _presetName;
 
-  /// 会话钉住的预设已被删：名称无从解析（chip 显示兜底文案），人格仍走会话快照。
   bool _presetMissing = false;
 
   @override
@@ -197,8 +161,6 @@ class _AssistantPageState extends State<AssistantPage> {
     super.didChangeDependencies();
     if (_initialized) return;
     _initialized = true;
-    // 新会话就是一张空列表 —— 不再合成欢迎语。它从前还会作为一条真正的
-    // assistant 轮次进 `_buildHistory` 一起发给模型。
     final id = widget.initialSessionId;
     if (id != null) _loadSessionById(id);
   }
@@ -216,12 +178,9 @@ class _AssistantPageState extends State<AssistantPage> {
   Future<void> _refreshReady() async {
     final repo = getIt<LlmProviderRepository>();
     final session = _session;
-    // 会话已建立就用它钉住的那份；供应商被删了就回落到默认，别让历史会话打不开。
     final pinned = session == null || session.providerId.isEmpty
         ? null
         : await repo.getProvider(session.providerId);
-    // 空白会话在 picker 里跨供应商选过：staged 优先于全局默认，否则每次重解析
-    // 都会把选择顶回 KV 的 active（staged 的供应商被删则自然回落）。
     final staged = pinned != null || _stagedProviderId.isEmpty
         ? null
         : await repo.getProvider(_stagedProviderId);
@@ -249,18 +208,14 @@ class _AssistantPageState extends State<AssistantPage> {
         _canUseTools = caps.tools;
         _contextLimit = model?.contextLimit ?? assistantDefaultContextBudget;
         _maxTokens = maxTokensFor(model?.outputLimit);
-        // 档位表按模型给，换了模型旧档位可能已经不在表里。
         if (_reasoningLevel.isNotEmpty && !levels.contains(_reasoningLevel)) {
           _reasoningLevel = '';
         }
-        // 切到不收图的模型：丢弃已选但还没发出的图片，免得发出去被供应商拒。
         if (!caps.attachment) _pendingImageName = null;
       });
     }
   }
 
-  /// 目录命中就以目录为准（逐模型），否则按自定义供应商声明的标记；
-  /// preset 但缓存未命中时保守放行工具（多数模型支持）。
   ({bool tools, bool attachment}) _capabilities(
     LlmProvider? provider,
     LlmModelPreset? model,
@@ -273,16 +228,6 @@ class _AssistantPageState extends State<AssistantPage> {
     return (tools: provider.toolCall, attachment: provider.attachment);
   }
 
-  /// 改模型与思考强度，**跨供应商**。会话进行中也能改，改完立刻写回会话记录。
-  ///
-  /// 顺序不能反：[_refreshReady] 在会话存在时以 `session.model` 为准
-  /// （历史会话要按它自己钉住的那份解析），先刷新再落库会被旧值顶回去。
-  ///
-  /// 生成中禁用 —— 换模型要重建请求参数，中途换等于让这一轮的后半段换个模型接着说。
-  ///
-  /// 换的只是「路由」：工具目录与人格都不受影响，历史里的工具记录是纯文本、图片每轮
-  /// 重编码，所以已有的历史对新模型（哪怕换了供应商/协议）仍然可用。切换本身不向
-  /// 对话注入任何内容；归属靠每条回复落库的 model 字段与合成的提示。
   Future<void> _pickModel() async {
     if (_sending) return;
     final repo = getIt<LlmProviderRepository>();
@@ -323,8 +268,6 @@ class _AssistantPageState extends State<AssistantPage> {
       _modelId = choice.modelId;
       _reasoningLevel = choice.level;
     });
-    // 档位是「最后一次用的」，作为下个新会话的起始值。模型不写默认 ——
-    // 那是供应商列表页那枚「默认」标记的事。
     MoodiaryKVs.assistantReasoningEffort.set(choice.level);
     await _refreshReady();
   }
@@ -349,23 +292,19 @@ class _AssistantPageState extends State<AssistantPage> {
     if (!mounted) return;
     setState(() {
       _session = session;
-      _reasoningLevel = session.reasoningEffort; // 恢复该会话钉住的档位
+      _reasoningLevel = session.reasoningEffort;
       _pendingImageName = null;
       _sending = false;
     });
-    // 会话钉住的供应商 / 模型要重新解析一遍（可能与当前默认不是同一个）。
     await _refreshReady();
     if (!mounted) return;
     await _syncPresetLabel(session);
     if (!mounted) return;
-    // 会话若已压缩，按水位重新合成压缩提示 chip（完整消息仍在库里、照常展示）。
     _syncCompactionNotice();
     _syncModelSwitchNotices();
     _listKey.currentState?.pinToBottom();
   }
 
-  /// 载入新会话的默认预设（KV，被删回落内置）。deep link 打开的历史会话随后由
-  /// [_syncPresetLabel] 以会话钉住的为准覆盖，这里只管空白会话。
   Future<void> _initStagedPreset() async {
     final id = await AgentPresetResolver.defaultId();
     if (!mounted || _session != null) return;
@@ -379,8 +318,6 @@ class _AssistantPageState extends State<AssistantPage> {
     });
   }
 
-  /// 解析会话钉住的预设显示名：内置 → null；用户预设被删 → 兜底标记
-  /// （人格不受影响，始终读会话快照）。
   Future<void> _syncPresetLabel(ChatSession session) async {
     final id = session.agentPresetId;
     if (id == null || id.isEmpty) {
@@ -407,14 +344,10 @@ class _AssistantPageState extends State<AssistantPage> {
     if (existing != null) return existing;
     final provider = _provider;
     if (provider == null) return null;
-    // 标题留空 → 界面显示「新对话」，模型总结好之后就地换掉。
     final session = ChatSession.create(
       providerId: provider.id,
       model: _modelId,
       reasoningEffort: _reasoningLevel,
-      // 预设在此钉死（dsh：中途不换人格/工具）。内置预设不快照 —— 出厂配置随
-      // App 升级自动更新；用户预设把 persona 与工具子集定格进会话，之后编辑 /
-      // 删除都不回读。
       agentPresetId: _stagedPresetId.isEmpty ? null : _stagedPresetId,
       personaSnapshot: _stagedPresetId.isEmpty ? null : persona,
       toolsSnapshot: _stagedPresetId.isEmpty ? null : tools,
@@ -422,12 +355,10 @@ class _AssistantPageState extends State<AssistantPage> {
     await getIt<ChatRepository>().upsertSession(session);
     _chat.sessionId = session.id;
     if (mounted) setState(() => _session = session);
-    // 与本轮回复并行跑，不 await：标题的延迟和失败都不该压在主回复上。
     unawaited(_generateTitle(session, firstUserText));
     return session;
   }
 
-  /// 用模型把第一条消息总结成标题，替掉兜底。失败静默——兜底本来就够用。
   Future<void> _generateTitle(ChatSession session, String firstUserText) async {
     final provider = _provider;
     if (provider == null) return;
@@ -442,15 +373,12 @@ class _AssistantPageState extends State<AssistantPage> {
       model: _modelId,
       apiKey: key,
     );
-    // 跑的这段时间里会话可能已被切走或删掉，落库前后各查一次。
     if (updated == null || !mounted || _session?.id != session.id) return;
     await getIt<ChatRepository>().upsertSession(updated);
     if (!mounted || _session?.id != session.id) return;
     setState(() => _session = updated);
   }
 
-  /// 全屏编辑：把输入框内容搬到一整页去改，回来再塞回控制器。
-  /// 取消（返回键 / 关闭）返回 null，此时一个字都不动。
   Future<void> _openFullscreenComposer() async {
     final edited = await Navigator.of(context).push<String>(
       MaterialPageRoute(
@@ -461,7 +389,6 @@ class _AssistantPageState extends State<AssistantPage> {
     if (edited == null || !mounted) return;
     _inputController
       ..text = edited
-      // 光标落到末尾，回来就能接着写。
       ..selection = TextSelection.collapsed(offset: edited.length);
     _inputFocusNode.requestFocus();
   }
@@ -469,7 +396,6 @@ class _AssistantPageState extends State<AssistantPage> {
   Future<void> _openSettings() async {
     await const AssistantSettingRoute().push(context);
     await _refreshReady();
-    // 用户可能在设置里改了默认预设：空白会话跟着换种子，但别覆盖 chip 上的显式选择。
     if (_session == null && !_presetPickedExplicitly) {
       await _initStagedPreset();
     }
@@ -505,8 +431,6 @@ class _AssistantPageState extends State<AssistantPage> {
     if (provider == null) return null;
     final key = await getIt<LlmProviderRepository>().getKey(provider.id);
     if (key == null || key.isEmpty) return null;
-    // 协议与 baseUrl 按**模型**解析：中转站底下 Claude 走 messages、GPT 走
-    // responses，取供应商级的会直接发错地方。
     final route = ModelResolver.resolve(provider, _modelId);
     return AssistantChatRequest(
       type: route.protocol,
@@ -546,7 +470,6 @@ class _AssistantPageState extends State<AssistantPage> {
     }
     final imageLabel = context.l10n.assistant.imageMessageLabel;
     final gen = ++_generation;
-    // 用户开启了新一轮对话：放弃上一次失败重生成遗留的旧回复（保留在库里，不删）。
     _staleReplyIds = [];
 
     final base = DateTime.timestamp();
@@ -570,7 +493,6 @@ class _AssistantPageState extends State<AssistantPage> {
     );
   }
 
-  /// 重新回答：删掉最后一条用户消息之后的全部内容，基于同一条用户消息重新生成；也用于停止/报错后重试。
   Future<void> _regenerate() async {
     if (_sending || !_disclaimerAccepted) return;
     final gen = ++_generation;
@@ -591,17 +513,13 @@ class _AssistantPageState extends State<AssistantPage> {
     final userMsg = items[lastUserIdx] as AssistantTurn;
 
     setState(() => _sending = true);
-    // 旧回复先只从内存移除，落库删除推迟到新回复落库后（_purgeStaleReplies），避免重新生成失败时连旧答案一起丢掉。
     final trailing = items.sublist(lastUserIdx + 1).toList();
-    // 一次性删完再发一次通知：逐条删会发 N 次通知、触发 N 轮补跳互相 abort，肉眼是抖。
     _chat.batch(() {
       for (final m in trailing) {
         _chat.remove(m);
         if (m is AssistantTurn) _staleReplyIds.add(m.id);
       }
     });
-    // 被删回复上挂着的「已切换模型」提示要立刻收走 —— 万一 _generate 因代际检查
-    // 提前退出，它会一直指着一条不存在的消息。
     _syncModelSwitchNotices();
     if (!mounted || gen != _generation) return;
 
@@ -619,15 +537,9 @@ class _AssistantPageState extends State<AssistantPage> {
     required AssistantTurn userMessage,
     required DateTime placeholderAt,
   }) async {
-    // 发送与重新回答都从这里进，所以强制跟随放这一层。
-    // 特别是「重新回答」：它删掉尾部回复会让 RangeMaintainingScrollPhysics 在布局里
-    // 静默 clamp（走 correctPixels，不发通知），位置其实已经在底部而标志位还是旧的。
     _listKey.currentState?.pinToBottom();
     final l10n = context.l10n;
     final localeTag = Localizations.localeOf(context).toLanguageTag();
-    // 稳定前缀（身份/护栏/人格/工具目录）逐轮字节一致以命中缓存；易变文本另拼到
-    // 外发消息。人格与工具子集同源：已钉会话读快照（无快照的旧行回落内置），
-    // 空白会话读 staged 预设 —— 与随后 _ensureSession 钉进会话的是同一份。
     final currentSession = _session;
     final String persona;
     final List<String>? allowedTools;
@@ -639,7 +551,6 @@ class _AssistantPageState extends State<AssistantPage> {
       persona = mount.persona;
       allowedTools = mount.tools;
     }
-    // 模型能力 × 预设声明：子集为空 = 本会话不挂工具，目录层也跟着略去。
     final toolsActive =
         _canUseTools && (allowedTools == null || allowedTools.isNotEmpty);
     final memories = await getIt<MemoryRepository>().getRecent(
@@ -661,12 +572,10 @@ class _AssistantPageState extends State<AssistantPage> {
       '',
       streaming: true,
       createdAt: placeholderAt,
-      // 归属戳打在创建点：stop / 出错 / 重新回答全走同一个占位，settle 点反而不唯一。
       model: _modelId,
     );
     _chat.beginStreaming(placeholder);
     _streamingMessage = placeholder;
-    // 切过模型的话，提示随占位一起出现在新回复上方。
     _syncModelSwitchNotices();
 
     final history = _buildHistory();
@@ -712,7 +621,6 @@ class _AssistantPageState extends State<AssistantPage> {
                 case .reasoning:
                   _appendReasoning(event.text);
                 case .tool:
-                  // 模型开始调用工具 → 思考阶段结束，冻结计时（不计入工具执行时间）。
                   _freezeThinkingOnTool();
                 case .toolStarted:
                   _applyToolStarted(event.callId, event.text, event.argsJson);
@@ -731,19 +639,14 @@ class _AssistantPageState extends State<AssistantPage> {
               } else {
                 _appendDelta(l10n.assistant.streamError(error: '$e'));
               }
-              // 落库：屏幕上已经有这半截回复 + 出错标记，不存的话重进会话就凭空少一段。
-              // 空回复由 _finalizeStreaming 自己剔除。
               _finalizeStreaming(persist: true);
               if (mounted) setState(() => _sending = false);
             },
             onDone: () {
               if (gen != _generation) return;
-              // 默认 cancelOnError: false，出错后流仍会正常关闭 —— 不挡住的话这一轮会被
-              // 收尾两次，还会对一次失败的对话发起自动压缩。
               if (errored) return;
               _finalizeStreaming(persist: true);
               if (mounted) setState(() => _sending = false);
-              // 本轮已落库、拿到 provider 上报的输入 token 后，按阈值尝试压缩上下文。
               unawaited(_maybeCompact());
             },
           );
@@ -755,7 +658,6 @@ class _AssistantPageState extends State<AssistantPage> {
   }
 
   List<AssistantMessage> _buildHistory() {
-    // 1. 收集逐字文本消息（带 id，供压缩水位定位）。
     final raw =
         <
           ({String id, AssistantRole role, String content, String? imagePath})
@@ -773,7 +675,6 @@ class _AssistantPageState extends State<AssistantPage> {
       ));
     }
 
-    // 2. 应用压缩水位：丢弃水位（含）之前的逐字内容，改由摘要代表。
     final session = _session;
     final summary = session?.compactedSummary;
     final watermark = session?.compactedUpToMessageId;
@@ -784,7 +685,6 @@ class _AssistantPageState extends State<AssistantPage> {
     }
     final kept = raw.sublist(start);
 
-    // 3. 压缩过则先放一对合成的「摘要」问答；放历史里、不进 system，保持缓存前缀稳定。
     final result = <AssistantMessage>[];
     if (start > 0 && summary != null && summary.isNotEmpty) {
       result
@@ -792,7 +692,6 @@ class _AssistantPageState extends State<AssistantPage> {
         ..add(const .assistant('Understood — I have the earlier context.'));
     }
 
-    // 4. 合并相邻同角色纯文本；含图片的独立成条（避免图片被并进别的气泡）。
     for (final e in kept) {
       if (e.imagePath == null &&
           result.isNotEmpty &&
@@ -809,15 +708,12 @@ class _AssistantPageState extends State<AssistantPage> {
     return result;
   }
 
-  /// 把这一轮用过的工具补进 assistant 那条消息（见 [AssistantToolRegistry.recordOf]）。
   String _withToolRecord(AssistantTurn turn) {
     final record = AssistantToolRegistry.recordOf(turn.toolCalls);
     if (record.isEmpty) return turn.text;
     return turn.text.isEmpty ? record : '$record\n\n${turn.text}';
   }
 
-  /// 每轮结束后按 token 阈值自动尝试压缩。手动的「立即压缩」入口已经去掉 ——
-  /// 压缩是自动的实现细节，不该让用户去猜什么时候该按它。
   Future<ChatSession?> _maybeCompact() async {
     final session = _session;
     if (session == null || _lastTurnInputTokens <= 0) return null;
@@ -854,10 +750,7 @@ class _AssistantPageState extends State<AssistantPage> {
     return updated;
   }
 
-  /// 按当前会话压缩水位，把提示 chip 对齐到边界：移除旧的、在水位消息后插入新的。
   void _syncCompactionNotice() {
-    // 整段包进 batch：删旧 chip + 插新 chip 是一次逻辑改动，分两次通知会让
-    // 列表在一轮结束的瞬间抖一下 —— 而那正是用户翻历史的时刻。
     _chat.batch(() {
       _chat.removeWhere((m) => m is AssistantCompactionNotice);
       final session = _session;
@@ -869,9 +762,6 @@ class _AssistantPageState extends State<AssistantPage> {
     });
   }
 
-  /// 由消息的 model 变化点重新合成全部「已切换模型」提示（幂等，重算即自愈）。
-  /// 提示只插在切换后首条消息**之前**，所以永远不会落在列表末尾（重试按钮的
-  /// `items.last` 判定不受影响）。
   void _syncModelSwitchNotices() {
     _chat.batch(() {
       _chat.removeWhere((m) => m is AssistantModelSwitchNotice);
@@ -882,7 +772,6 @@ class _AssistantPageState extends State<AssistantPage> {
     });
   }
 
-  /// 撤销压缩：清空会话的摘要 / 水位（Isar 消息未动，整段历史恢复逐字发送）。
   Future<void> _restoreFullHistory() async {
     final session = _session;
     if (session == null || session.compactedSummary == null) return;
@@ -927,11 +816,9 @@ class _AssistantPageState extends State<AssistantPage> {
         _purgeStaleReplies();
       }
     }
-    // 空占位被移除后，指向它的「已切换模型」提示要跟着收走（重算即自愈）。
     _syncModelSwitchNotices();
   }
 
-  /// 新回复已成功落库后，才删除被它替换掉的旧回复；在此之前旧回复一直留在库里兜底。
   void _purgeStaleReplies() {
     if (_staleReplyIds.isEmpty) return;
     final ids = _staleReplyIds;
@@ -943,7 +830,6 @@ class _AssistantPageState extends State<AssistantPage> {
 
   void _appendDelta(String delta) {
     if (delta.isEmpty) return;
-    // 首个正文 token 到来即结束思考阶段（不计入后续正文时间）。
     _freezeThinkingTimer();
     final cur = _streamingMessage;
     if (cur == null) return;
@@ -954,18 +840,15 @@ class _AssistantPageState extends State<AssistantPage> {
     if (delta.isEmpty) return;
     final cur = _streamingMessage;
     if (cur == null) return;
-    // 开启（或在工具调用后重新开启）一个思考分段；耗时按分段累加，排除工具等待间隙。
     _reasoningStart ??= DateTime.timestamp();
     _thinkingActive = true;
     _streamingReasoning += delta;
     _syncReasoning(cur);
   }
 
-  /// 一次工具调用开始执行：先挂一条未完成的记录（界面上是转圈那条）。
   void _applyToolStarted(String callId, String name, String argsJson) {
     final cur = _streamingMessage;
     if (cur == null) return;
-    // 同一个 callId 重复上报就忽略，别把同一次调用画两条。
     if (cur.toolCalls.any((c) => c.callId == callId)) return;
     final next = cur.copyWith(
       toolCalls: [
@@ -977,7 +860,6 @@ class _AssistantPageState extends State<AssistantPage> {
     _streamingMessage = next;
   }
 
-  /// 工具结果回来了：就地把那一条标成完成。
   void _applyToolFinished(String callId, String result) {
     final cur = _streamingMessage;
     if (cur == null) return;
@@ -990,7 +872,6 @@ class _AssistantPageState extends State<AssistantPage> {
     _streamingMessage = next;
   }
 
-  /// 本轮结束的 token 用量：写回当前流式消息（随后 settled 保留、落库）。
   void _applyUsage(int inputTokens, int outputTokens) {
     if (inputTokens > 0) _lastTurnInputTokens = inputTokens;
     final cur = _streamingMessage;
@@ -1003,7 +884,6 @@ class _AssistantPageState extends State<AssistantPage> {
     _streamingMessage = next;
   }
 
-  /// 模型转入工具调用：冻结思考计时并把「已思考」态写回当前流式消息。
   void _freezeThinkingOnTool() {
     if (!_thinkingActive) return;
     _freezeThinkingTimer();
@@ -1011,7 +891,6 @@ class _AssistantPageState extends State<AssistantPage> {
     if (cur != null) _syncReasoning(cur);
   }
 
-  /// 结束当前思考分段：把已过去的时间累加进 [_thinkingMillis]，停表。幂等。
   void _freezeThinkingTimer() {
     if (!_thinkingActive) return;
     _thinkingActive = false;
@@ -1022,7 +901,6 @@ class _AssistantPageState extends State<AssistantPage> {
     }
   }
 
-  /// 累计思考耗时（已冻结分段之和 + 当前分段进行中的时长）。
   int _liveThinkingMillis() {
     final start = _reasoningStart;
     if (_thinkingActive && start != null) {
@@ -1032,7 +910,6 @@ class _AssistantPageState extends State<AssistantPage> {
     return _thinkingMillis;
   }
 
-  /// 把当前思考状态（正文 + 思考正文 / 时长 / 是否进行中）刷进流式消息并更新引用。
   void _syncReasoning(AssistantTurn message) {
     var next = message;
     if (_streamingReasoning.isNotEmpty) {
@@ -1055,7 +932,6 @@ class _AssistantPageState extends State<AssistantPage> {
     await _submit(_formatDiaryMessage(diary));
   }
 
-  /// 相册选一张图，经 MediaManager 转码/压缩存进 image 目录，挂到输入框待发（可再配文字）。
   Future<void> _pickImage() async {
     if (_sending) return;
     _inputFocusNode.unfocus();
@@ -1081,7 +957,6 @@ class _AssistantPageState extends State<AssistantPage> {
     return '${l10n.assistant.sendDiaryLead}\n\n【$header】\n$body';
   }
 
-  /// 点击消息列表时收起键盘与工具面板（焦点从输入框移开）。
   void _dismissComposer() {
     if (_inputFocusNode.hasFocus) _inputFocusNode.unfocus();
   }
@@ -1115,7 +990,6 @@ class _AssistantPageState extends State<AssistantPage> {
     final items = _chat.items;
     final isLast = items.isNotEmpty && items.last.id == turn.id;
     if (turn.fromUser) {
-      // 用户消息落在末尾（首个 token 前被停止 / 本轮未产出回复）时也给出重试入口。
       return _UserBubble(
         text: turn.text,
         imageName: turn.imageName,
@@ -1136,7 +1010,6 @@ class _AssistantPageState extends State<AssistantPage> {
     );
   }
 
-  /// 回到底部：悬在输入区正上方、居中。
   Widget _buildScrollToBottom(
     BuildContext context,
     bool visible,
@@ -1145,7 +1018,6 @@ class _AssistantPageState extends State<AssistantPage> {
     return Positioned(
       left: 0,
       right: 0,
-      // 悬在输入面板正上方。
       bottom: _composerHeight + 8,
       child: Center(
         child: AnimatedSlide(
@@ -1155,7 +1027,6 @@ class _AssistantPageState extends State<AssistantPage> {
           child: AnimatedOpacity(
             opacity: visible ? 1 : 0,
             duration: Durations.short4,
-            // 隐藏时不能还挡着最后一条气泡的点击。
             child: IgnorePointer(
               ignoring: !visible,
               child: _ScrollToBottomButton(onTap: onTap),
@@ -1183,13 +1054,11 @@ class _AssistantPageState extends State<AssistantPage> {
     return Column(
       children: [
         if (!_ready) _NotConfiguredBanner(onTap: _openSettings),
-        // 消息列表铺满，输入面板浮在它上面 —— 内容从面板底下穿过去。
         Expanded(
           child: Stack(
             children: [
               Positioned.fill(child: _buildChat()),
               Positioned(
-                // 缺了 left/right，Positioned 在横向就不受约束，Column 会缩成内容宽。
                 left: 0,
                 right: 0,
                 bottom: 0,
@@ -1217,13 +1086,8 @@ class _AssistantPageState extends State<AssistantPage> {
         : _buildConversation(context);
 
     return Scaffold(
-      // 键盘由 Scaffold 抬：浮起来的输入面板贴在 body 底边，body 一缩它就跟着上来。
-      // （原先是 false + ChatBottomPanelContainer 自己垫键盘高度，那套已经拆掉。）
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        // 两行：会话名 + 模型。工具栏默认 56 只够一行，所以高度跟着这两行的
-        // 实际排版走 —— NavigationToolbar 给中间槽位的是 loose 约束，撑不下就是
-        // RenderFlex 溢出，而字号是跟随系统的，大字号下必然撑不下。
         toolbarHeight: _toolbarHeight(context),
         titleSpacing: NavigationToolbar.kMiddleSpacing - _kTitleInset,
         title: Column(
@@ -1243,10 +1107,6 @@ class _AssistantPageState extends State<AssistantPage> {
             Row(
               mainAxisSize: .min,
               children: [
-                // 预设 chip：空白会话可选（staged），首条消息后钉死、点按只看不改
-                // （dsh 的 header label，多给一层只读预览）。发送中同样置灰 ——
-                // 首条消息在途时 _session 仍是 null，这个窗口里改 staged 预设会让
-                // 钉进会话的快照与已发出的 prompt 分叉。
                 Flexible(
                   child: _PresetChip(
                     label:
@@ -1265,14 +1125,11 @@ class _AssistantPageState extends State<AssistantPage> {
                     '·',
                     style: context.theme.typography.labelSmall.onSurfaceVariant,
                   ),
-                  // 模型名（含档位）通常比预设名长得多，flex 给 2 —— 等分会让
-                  // 模型那边早早截断而预设旁边空着。
                   Flexible(
                     flex: 2,
                     child: _ModelChip(
                       modelLabel: modelLabel,
                       reasoningLevel: _reasoningLevel,
-                      // 生成中不给改；其余时候（含会话进行中）都可以换。
                       onTap: _sending ? null : _pickModel,
                     ),
                   ),
@@ -1286,7 +1143,6 @@ class _AssistantPageState extends State<AssistantPage> {
     );
   }
 
-  /// 空白会话：换预设（只改 staged，不落任何库）。
   Future<void> _pickPreset() async {
     if (_sending || _session != null) return;
     final choice = await showAgentPresetPicker(
@@ -1302,7 +1158,6 @@ class _AssistantPageState extends State<AssistantPage> {
     });
   }
 
-  /// 已钉会话：只读预览（预设名 + 人格与工具快照）。预设被删也照常可看 —— 都在快照里。
   void _showPresetInfo() {
     final l10n = context.l10n;
     showAgentPresetInfo(
@@ -1318,7 +1173,6 @@ class _AssistantPageState extends State<AssistantPage> {
   }
 }
 
-/// 「已切换到 X」：与压缩提示同一形态的最简 notice，无展开无动作。
 class _ModelSwitchChip extends StatelessWidget {
   final String model;
 
@@ -1333,7 +1187,6 @@ class _ModelSwitchChip extends StatelessWidget {
   }
 }
 
-/// 上下文压缩提示：居中的低调 chip，点开可看摘要并「恢复完整历史」。
 class _CompactionNoticeChip extends StatelessWidget {
   final String summary;
   final VoidCallback onRestore;
@@ -1342,8 +1195,6 @@ class _CompactionNoticeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 和思考块同一个组件：一行、无容器、onSurfaceVariant。它不就地展开而是开弹窗
-    // （里面还有「恢复完整历史」这个动作），所以画的是**向右**箭头。
     return AssistantNotice(
       icon: LucideIcons.foldVertical,
       kind: context.l10n.assistant.compactionNotice,
@@ -1467,7 +1318,6 @@ class _AssistantComposer extends StatefulWidget {
 
   final VoidCallback onSendDiary;
 
-  /// null 表示当前模型不支持图片附件，菜单里就不出这一项。
   final VoidCallback? onSendImage;
   final VoidCallback onFullscreen;
   final String? pendingImageName;
@@ -1491,14 +1341,8 @@ class _AssistantComposer extends StatefulWidget {
 }
 
 class _AssistantComposerState extends State<_AssistantComposer> {
-  /// 输入区已经长到上限、开始自己滚了。只有这时才给全屏编辑入口 ——
-  /// 一两行的时候那颗按钮没有意义，只是在抢发送键的注意力。
   bool _overflowing = false;
 
-  /// 输入区的最大行数随系统字号收缩。
-  ///
-  /// App 内的字号设置已经整个删掉、只跟系统走，所以 2.0× 是可达的 —— 那时 6 行
-  /// 正文加上图片预览能占到 500px，而面板现在是浮在列表上的，盖住的是对话本身。
   int _maxLines(BuildContext context) {
     final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
     if (scale >= 1.6) return 3;
@@ -1511,23 +1355,13 @@ class _AssistantComposerState extends State<_AssistantComposer> {
     final scheme = context.theme.colors;
     final l10n = context.l10n;
     const radius = MuiRadius.xl;
-    // 底部安全区现在归自己让。用 `paddingOf` 而不是 `viewPaddingOf`：
-    // Scaffold 开了 resizeToAvoidBottomInset，键盘弹起时 padding.bottom 会归零
-    // （那段已经被 viewInsets 吃掉、body 整体抬了上来），正好不该再让第二次。
     return SafeArea(
       top: false,
       bottom: false,
       child: Padding(
         padding: .fromLTRB(12, 0, 12, 8 + MediaQuery.paddingOf(context).bottom),
-        // 面板得自己吃掉点击：输入框与按钮行之间那几 px 缝隙一旦漏下去就打在
-        // 列表上，正打字时按到就收键盘。跟 mui 的底栏一样显式声明，不靠
-        // Material 的 absorbHitTest 顺带兜住。
         child: GestureDetector(
           behavior: .opaque,
-          // 和底栏胶囊同一块玻璃：`MGlass` 全仓没有注入点，两边拿的都是
-          // `MGlassConfig` 的默认档（σ20 / tint 0.62 / 饱和 1.2）。底色、一个物理
-          // 像素的发丝边、投影全归它 —— 投影尤其不能自己用 ShapeDecoration 画，
-          // 那圈会被 BackdropFilter 当背景采走，面板内部整块压暗。
           child: MGlassSurface(
             shape: const RoundedRectangleBorder(borderRadius: radius),
             child: Padding(
@@ -1541,18 +1375,8 @@ class _AssistantComposerState extends State<_AssistantComposer> {
                       imageName: widget.pendingImageName!,
                       onRemove: widget.onRemoveImage,
                     ),
-                  // 文字输入区：独占上方，向上增高。无背景 —— 面板本身就是容器了。
-                  //
-                  // 上内边距与左右取齐（都是面板的 8 再加这里的 8 = 16）。给 2 的话
-                  // 上是 10、左右是 16，整块文字看着往上贴。
                   Padding(
                     padding: const .fromLTRB(8, 8, 8, 6),
-                    // 「内容超过最大高度」这件事，问输入框自己的滚动条最准 ——
-                    // 它到达 maxLines 之后就地滚，`maxScrollExtent > 0` 正是那一刻。
-                    // 拿 TextPainter 另算一遍行数则要复刻它的宽度与内边距，迟早飘。
-                    //
-                    // 通知是排在布局之后派发的（`didUpdateScrollMetrics` 里有断言），
-                    // 所以这里 setState 是安全的；字号、宽度、语言变化一样会走到。
                     child: NotificationListener<ScrollMetricsNotification>(
                       onNotification: (notification) {
                         final overflowing =
@@ -1575,13 +1399,9 @@ class _AssistantComposerState extends State<_AssistantComposer> {
                       ),
                     ),
                   ),
-                  // 底部控制条：「+」独占左下角，右边是全屏编辑（按需）与发送 /
-                  // 停止。四颗控件同高（[_kComposerControlSize]），所以两端到面板
-                  // 边角的留白天然一致。
                   Row(
                     mainAxisAlignment: .spaceBetween,
                     children: [
-                      // 锚点贴着屏幕底，MMenu 会自己算出 preferAbove 向上弹。
                       MMenuButton<_ComposerTool>(
                         tooltip: l10n.assistant.tool,
                         entries: [
@@ -1614,7 +1434,6 @@ class _AssistantComposerState extends State<_AssistantComposer> {
                       Row(
                         mainAxisSize: .min,
                         children: [
-                          // 与「+」同款的裸图标：这一行只该有发送键一个实心圆。
                           if (_overflowing) ...[
                             Tooltip(
                               message: l10n.assistant.composerFullscreen,
@@ -1668,12 +1487,6 @@ class _AssistantComposerState extends State<_AssistantComposer> {
   }
 }
 
-/// 把 [child] 的高度报给外面。用来让消息列表给悬浮输入面板让出底部空间。
-///
-/// 走 [SizeChangedLayoutNotifier] 而不是「在 initState / didUpdateWidget 里各测一次」：
-/// 后者要把所有会改高度的原因**列全**才对，而输入框长出一行是重排不是重建，
-/// 系统字号和语言变化也不经过 didUpdateWidget —— 漏一个就是最后一条气泡永久压在
-/// 面板底下，且没有任何报错。notifier 不管原因，只管「重排了」。
 class _SizeReporter extends StatefulWidget {
   final Widget child;
   final ValueChanged<double> onHeight;
@@ -1691,7 +1504,6 @@ class _SizeReporterState extends State<_SizeReporter> {
   @override
   void initState() {
     super.initState();
-    // notifier 不为首次布局发通知，所以初值要自己测一次。
     _schedule();
   }
 
@@ -1701,7 +1513,6 @@ class _SizeReporterState extends State<_SizeReporter> {
       final box = _key.currentContext?.findRenderObject();
       if (box is! RenderBox || !box.hasSize) return;
       final height = box.size.height;
-      // 阈值兼作循环闸门：报高度会让外面 setState，别让它抖回来。
       if ((height - _last).abs() < 0.5) return;
       _last = height;
       widget.onHeight(height);
@@ -1711,7 +1522,6 @@ class _SizeReporterState extends State<_SizeReporter> {
 
   @override
   Widget build(BuildContext context) {
-    // NotificationListener 必须在 notifier **之上** —— 通知是往上冒的。
     return NotificationListener<SizeChangedLayoutNotification>(
       onNotification: (_) {
         _schedule();
@@ -1724,7 +1534,6 @@ class _SizeReporterState extends State<_SizeReporter> {
   }
 }
 
-/// 回到底部。浮在输入面板上方的小圆片。
 class _ScrollToBottomButton extends StatelessWidget {
   final VoidCallback onTap;
 
@@ -1743,19 +1552,11 @@ class _ScrollToBottomButton extends StatelessWidget {
   }
 }
 
-/// 当前模型 + 思考强度。会话开始前可点开换（[onTap] 非空），开始后变成只读标签 ——
-/// 模型和强度在首条消息落库时就钉进 `ChatSession` 了，中途换等于让同一段对话
-/// 前后由不同模型作答，历史里却看不出来。
-///
-/// 标题栏第二行左侧：预设名。空白会话点开换预设（带下箭头），钉死后是只读标签
-/// （可点看预览，无箭头）。
 class _PresetChip extends StatelessWidget {
   final String label;
 
-  /// true = 空白会话，选择仍开放（画下箭头）；false = 已钉死，点按只看不改。
   final bool staged;
 
-  /// null = 发送中，这一刻不给动。
   final VoidCallback? onTap;
 
   const _PresetChip({
@@ -1788,7 +1589,6 @@ class _PresetChip extends StatelessWidget {
         ],
       ],
     );
-    // 与 _ModelChip 同规格的内边距，两个 chip 在一行里基线与间距才对得齐。
     const inset = EdgeInsets.symmetric(horizontal: _kTitleInset, vertical: 2);
     if (onTap == null) return Padding(padding: inset, child: content);
     return MInkWell(
@@ -1799,14 +1599,10 @@ class _PresetChip extends StatelessWidget {
   }
 }
 
-/// 没有容器底色：它挨着「+」，再套一层胶囊会和右边两颗圆钮抢视觉重量，
-/// 而它只是个状态标签。
-/// 标题栏第二行：模型名 + 思考强度，点开换模型 / 换思考强度。
 class _ModelChip extends StatelessWidget {
   final String modelLabel;
   final String reasoningLevel;
 
-  /// null = 正在生成，这一刻不给改。
   final VoidCallback? onTap;
 
   const _ModelChip({
@@ -1823,7 +1619,6 @@ class _ModelChip extends StatelessWidget {
     final label = Row(
       mainAxisSize: .min,
       children: [
-        // 只有模型名可压缩：强度和箭头都是定宽的小东西，先让它们占住位。
         Flexible(
           child: Text(
             modelLabel,
@@ -1834,7 +1629,6 @@ class _ModelChip extends StatelessWidget {
         ),
         if (reasoningLevel.isNotEmpty) ...[
           const SizedBox(width: 4),
-          // 目录原值，不翻译（见 model_picker_sheet）。
           Text(reasoningLevel, style: typography.labelSmall.onSurfaceVariant),
         ],
         if (!locked) ...[
@@ -1848,7 +1642,6 @@ class _ModelChip extends StatelessWidget {
       ],
     );
 
-    // 两个分支的内边距必须一样，否则可点 / 不可点之间会横向错开 6px。
     const inset = EdgeInsets.symmetric(horizontal: _kTitleInset, vertical: 2);
     if (locked) return Padding(padding: inset, child: label);
     return MInkWell(
@@ -1879,8 +1672,6 @@ class _ComposerImagePreview extends StatelessWidget {
           clipBehavior: .none,
           children: [
             ClipRRect(
-              // 同心圆角：面板内壁是 xl(24)，缩略图离内壁 8（面板 padding）+ 8
-              // （这层自己的 padding）= 16，所以取 24 − 16 = 8。
               borderRadius: MuiRadius.inside(
                 MuiRadius.xl,
                 _kComposerPadding * 2,
@@ -2002,23 +1793,18 @@ class _UserBubble extends StatelessWidget {
   }
 }
 
-/// token 数紧凑显示：≥100 万用 M、≥1000 用 K，均保留一位小数；千以内直接显示原值。
 String _compactTokens(int n) {
   if (n < 1000) return '$n';
   if (n < 1000000) return '${(n / 1000).toStringAsFixed(1)}K';
   return '${(n / 1000000).toStringAsFixed(1)}M';
 }
 
-/// 思考时长的短写：10 秒以上取整，以下保留一位。
 String _durationText(int millis) {
   final secs = millis / 1000;
   if (secs >= 10) return secs.toStringAsFixed(0);
   return (secs < 0.1 ? 0.1 : secs).toStringAsFixed(1);
 }
 
-/// 从思考正文里取一行当摘要。[tail] 为真取最后一行（思考中，跟着长），
-/// 否则取第一行（结束了，要个稳定的开头）。Markdown 的标记符号先剥掉，
-/// 一行摘要里出现 `## ` 或 `- ` 只是噪声。
 String _reasoningPeek(String reasoning, {required bool tail}) {
   final lines = [
     for (final line in reasoning.split('\n'))
@@ -2060,10 +1846,6 @@ class _AssistantBubble extends StatelessWidget {
     final hasText = text.isNotEmpty;
     final showThinking = thinkingActive || reasoning.isNotEmpty;
 
-    // 助手正文**不带气泡**：整段 Markdown 拿回全屏宽（列表、代码块在 82% 宽的
-    // 气泡里每行都被截短），而且页面上唯一带底色的东西就只剩用户自己发的那句 ——
-    // 「模型说的」与「过程信息」不再都装在盒子里、分不开。分层改由颜色承担：
-    // 正文 onSurface，过程提示 onSurfaceVariant。
     Widget? bubble;
     if (hasText) {
       bubble = SelectionArea(
@@ -2093,7 +1875,6 @@ class _AssistantBubble extends StatelessWidget {
               : l10n.assistant.thoughtFor(
                   duration: _durationText(thinkingMillis),
                 ),
-          // 思考中给**最后一行**（跟着长，看得出在动），结束后给第一行（稳定的开头）。
           summary: _reasoningPeek(reasoning, tail: thinkingActive),
           detail: reasoning.isEmpty
               ? null
@@ -2103,12 +1884,10 @@ class _AssistantBubble extends StatelessWidget {
                   codeBuilder: _codeBlock,
                 ),
         ),
-      // 工具调用排在思考之后、正文之前 —— 那正是它们发生的顺序。
       for (final call in toolCalls) _toolNotice(context, call),
       ?bubble,
     ];
 
-    // 流式中或还没有正文：只堆叠提示条 + 正文，不显示操作按钮。
     if (!hasText || streaming) {
       return _fullWidth(
         Column(
@@ -2126,7 +1905,6 @@ class _AssistantBubble extends StatelessWidget {
         mainAxisSize: .min,
         children: [
           ...stacked,
-          // 复制 / 重新回答，token 用量紧跟其右；用 Wrap，窄屏放不下时自动换行不溢出。
           Wrap(
             crossAxisAlignment: .center,
             children: [
@@ -2179,17 +1957,12 @@ class _AssistantBubble extends StatelessWidget {
   }
 }
 
-/// 一次工具调用渲染成一条提示条。与思考同一个组件。
-///
-/// 摘要由工具自己给（`AssistantToolSpec.summaryOf`）——截断结果字符串得到的是
-/// 半截元数据，工具自己才知道该说「7 条 · 08-11 至 08-17」。
 Widget _toolNotice(BuildContext context, AssistantToolCall call) {
   final spec = AssistantToolRegistry.byId(call.name);
   final display = spec == null
       ? call.name
       : assistantToolDisplay(context, spec.tool).title;
   if (!call.done) {
-    // 还在跑：转圈，没有箭头（还没有下文可展开）。
     return AssistantNotice(kind: display);
   }
   final input = _decodeArgs(call.argsJson);
@@ -2216,12 +1989,6 @@ Map<String, dynamic> _decodeArgs(String raw) {
   }
 }
 
-/// 助手那一列钉成满宽。
-///
-/// 列表给条目的是**紧**的横向约束，但 `_align` 外面还包了一层 `Align`（授权卡
-/// 要靠那层松约束保住自己 400 的宽度上限），松约束下 Column 会按内容缩包 ——
-/// 短回复窄一截还好说，markdown 的表格和代码块拿不到完整可用宽度就不行了。
-/// 气泡都去掉了，正文就不该再有任何宽度限制。
 Widget _fullWidth(Widget child) => SizedBox(width: .infinity, child: child);
 
 class _BubbleActionButton extends StatelessWidget {
@@ -2266,32 +2033,21 @@ class AssistantSessionListPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
-      // 顶栏右侧那行模型名，是原先「AI 助手配置」那张磁贴留下的唯一有用信息。
-      // 磁贴本身是从设置页搬来的 SettingListTile —— 图标、标题、尾箭头整套都在说
-      // 「这是设置项」，却占着首屏最值钱的位置。信息挪上来，形状换成顶栏动作。
-      // （磁贴没删，它在「设置 → 服务」里还是本职工作。）
       appBar: AppBar(
         title: Text(l10n.assistant.settingFunctionAIAssistant),
         actions: const [_ActiveModelAction(), SizedBox(width: 4)],
       ),
-      // 「新对话」不在本页了 —— 本页是根壳的一个 tab，入口是底栏胶囊右边那颗按钮
-      // （站在助手 tab 上它就是新对话）。
       body: _SessionListView(
         onSelect: (session) =>
             AssistantConversationRoute(sessionId: session.id).push(context),
         onDelete: (session) =>
             getIt<ChatRepository>().deleteSession(session.id),
-        // 根壳开了 extendBody，底栏整条带高已折进 padding.bottom，直接读来让开。
         padding: .only(bottom: 8 + MediaQuery.paddingOf(context).bottom),
       ),
     );
   }
 }
 
-/// 顶栏上的「当前用哪个模型」。点进助手设置。
-///
-/// 样式跟输入框那颗 [_ModelChip] 一致：文字 + 箭头、无背景 —— 它俩说的是同一件事，
-/// 长得不一样只会让人以为是两个东西。
 class _ActiveModelAction extends StatefulWidget {
   const _ActiveModelAction();
 
@@ -2328,7 +2084,6 @@ class _ActiveModelActionState extends State<_ActiveModelAction> {
 
   @override
   Widget build(BuildContext context) {
-    // 还没读出来时不占位：先画一个空壳再跳成模型名，比晚 50ms 出现更晃眼。
     if (!_loaded) return const SizedBox.shrink();
     final l10n = context.l10n;
     final active = _active;
@@ -2344,7 +2099,6 @@ class _ActiveModelActionState extends State<_ActiveModelAction> {
         child: Row(
           mainAxisSize: .min,
           children: [
-            // 中转站的模型 id 可以很长，给个上限省得把标题挤没。
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 150),
               child: Text(
@@ -2369,7 +2123,6 @@ class _ActiveModelActionState extends State<_ActiveModelAction> {
   }
 }
 
-/// 会话按更新时间分的三桶。
 enum SessionHistoryBucket { today, last7, earlier }
 
 typedef SessionHistoryGroup = ({
@@ -2377,10 +2130,6 @@ typedef SessionHistoryGroup = ({
   List<ChatSession> sessions,
 });
 
-/// 分桶。**边界与日记搜索的「近 7 天」一致**（今天零点往前 7 天），否则同一个 App
-/// 两处对「近 7 天」给出不同答案。
-///
-/// [now] 显式传入而不是就地取，纯函数才测得动。
 List<SessionHistoryGroup> sessionHistoryGroups(
   List<ChatSession> sessions, {
   required DateTime now,
@@ -2390,7 +2139,6 @@ List<SessionHistoryGroup> sessionHistoryGroups(
   final weekAgo = today.subtract(const Duration(days: 7));
   final buckets = <SessionHistoryBucket, List<ChatSession>>{};
   for (final session in sessions) {
-    // updatedAt 是绝对时刻（UTC），分桶前必须落到本地日历上。
     final at = session.updatedAt.toLocal();
     final bucket = !at.isBefore(today)
         ? SessionHistoryBucket.today
@@ -2399,7 +2147,6 @@ List<SessionHistoryGroup> sessionHistoryGroups(
         : SessionHistoryBucket.earlier;
     (buckets[bucket] ??= <ChatSession>[]).add(session);
   }
-  // 会话本身按更新时间倒序取出，桶序与之同向，桶内顺序原样保留。
   return [
     for (final bucket in SessionHistoryBucket.values)
       if (buckets[bucket] case final list?) (bucket: bucket, sessions: list),
@@ -2462,10 +2209,6 @@ class _SessionListViewState extends State<_SessionListView> {
     if (mounted) setState(() => _sessions = sessions);
   }
 
-  /// 摊平成「标题 + 行」的一维表，交给 `ListView.builder` 按需构建。
-  ///
-  /// **标题一律画，哪怕只有一个桶**：它不只是段落之间的分隔，也是「这些是什么时候的」
-  /// 这个问题的答案。会话全在今天时把「今天」吞掉，页面反而显得没头没尾。
   List<_HistoryEntry> _entries(List<ChatSession> sessions) {
     return [
       for (final group in sessionHistoryGroups(
@@ -2521,7 +2264,6 @@ class _HistoryGroupLabel extends StatelessWidget {
       .earlier => l10n.assistant.historyEarlier,
     };
     return Padding(
-      // 上间距远大于下间距：标题要贴着它统辖的那一段，而不是浮在两段中间。
       padding: const .fromLTRB(16, 18, 16, 4),
       child: Text(
         label,
@@ -2557,10 +2299,6 @@ class _EmptySessions extends StatelessWidget {
   }
 }
 
-/// 一条会话。单行：标题 + 右对齐的短时刻。
-///
-/// 没有卡片、没有头像、没有分割线：头像是同一个图标重复 N 遍，不承载区分度，却把行
-/// 高从 44 顶到 76；分割线在有分组标题的列表里是第二套节奏，两套一起用反而把段落切碎。
 class _SessionTile extends StatelessWidget {
   final ChatSession session;
   final SessionHistoryBucket bucket;
@@ -2574,8 +2312,6 @@ class _SessionTile extends StatelessWidget {
     required this.onDelete,
   });
 
-  /// 桶已经说了「哪一天」，行里只补桶内的相对位置：今天给时刻、近 7 天给星期、
-  /// 更早给日期。一屏八条「3 天前」「3 天前」「上周」是噪声，不是信息。
   String _time() => switch (bucket) {
     .today => TimeFormat.clock(session.updatedAt),
     .last7 => TimeFormat.weekdayShort(session.updatedAt),
@@ -2641,12 +2377,6 @@ class _SessionTile extends StatelessWidget {
   }
 }
 
-/// 全屏编辑。长内容在那个最多 6 行的输入框里改不动 —— 尤其是要往中间插话、
-/// 或者粘一段长文进来的时候。
-///
-/// 只负责编辑：确认把文本交回输入框，发不发由用户回去决定。塞一个「发送」进来
-/// 会让这一页多出一条与主流程并行的发送路径，而那条路径上没有模型选择、没有图片、
-/// 也没有会话建立的那套判断。
 class _FullscreenComposerPage extends StatefulWidget {
   final String text;
 
@@ -2690,7 +2420,6 @@ class _FullscreenComposerPageState extends State<_FullscreenComposerPage> {
           child: MField(
             controller: _controller,
             autofocus: true,
-            // 撑满整页：高度由这层 Padding 的父级（Scaffold body）定。
             maxLines: null,
             expands: true,
             variant: .plain,

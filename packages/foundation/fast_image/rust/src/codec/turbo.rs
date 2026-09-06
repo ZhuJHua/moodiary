@@ -1,16 +1,9 @@
-//! turbojpeg-sys（vendored libjpeg-turbo 3.1.0）的最小安全封装：读头、缩放解码、编码。
-//! 句柄一次调用一个，不跨线程持有；每个入口都先钉 `TJPARAM_MAXPIXELS`，用户文件不可信。
-//!
-//! 缩放一律按 libjpeg 的口径 **N/8**（N = 1..=8）：turbojpeg 只认这 16 档系数，1/3、1/6
-//! 这种分母会被 `tj3SetScalingFactor` 直接拒掉。
-
 use std::ffi::{CStr, c_int, c_void};
 use std::ptr;
 
 use anyhow::{Result, bail};
 use turbojpeg_sys as tj;
 
-/// JPEG 头信息（原始朝向，EXIF 方向不在这里）。
 #[derive(Clone, Copy, Debug)]
 pub struct JpegHeader {
     pub width: u32,
@@ -19,20 +12,15 @@ pub struct JpegHeader {
     pub lossless: bool,
     pub arithmetic: bool,
     pub precision: u32,
-    /// CMYK / YCCK：turbojpeg 不给 RGB 输出，交给引擎整解。
     pub cmyk: bool,
 }
 
 impl JpegHeader {
-    /// 能走缩放 / 区域解码：8 位 Huffman 有损 YCbCr / 灰度 JPEG。progressive 要整幅系数缓冲，
-    /// 无损不能缩放，算术编码没有 SIMD 路径，CMYK 转不了 RGB，都不算。
     pub fn region_decodable(&self) -> bool {
         self.precision == 8 && !self.progressive && !self.lossless && !self.arithmetic && !self.cmyk
     }
 }
 
-/// 源图像素数上限（宽 × 高）。内存由输出侧的预算兜着（缩略图解 N/8、区域解码按带），
-/// 这里只挡真正的解压炸弹：24000² 的全景 / 天文照片（576MP）要能过。
 const MAX_SOURCE_PIXELS: c_int = 1_000_000_000;
 
 struct Handle(tj::tjhandle);
@@ -94,7 +82,6 @@ impl Handle {
         })
     }
 
-    /// turbojpeg 按约分后的分数查表（4/8 要写成 1/2）。
     fn set_scale(&self, num: u8) -> Result<()> {
         let num = num.clamp(1, 8) as c_int;
         let gcd = (1..=8)
@@ -126,12 +113,10 @@ pub fn read_header(bytes: &[u8]) -> Result<JpegHeader> {
     Handle::new(tj::TJINIT_TJINIT_DECOMPRESS)?.read_header(bytes)
 }
 
-/// libjpeg 的缩放尺寸公式（`TJSCALED`）：`dim × num / 8` 向上取整。
 pub fn scaled(dim: u32, num: u8) -> u32 {
     (dim as u64 * num.clamp(1, 8) as u64).div_ceil(8) as u32
 }
 
-/// 1/`denom`（denom ∈ {1, 2, 4, 8}）对应的 N/8 分子。
 pub fn numerator(denom: u8) -> Result<u8> {
     match denom {
         1 | 2 | 4 | 8 => Ok(8 / denom),
@@ -139,7 +124,6 @@ pub fn numerator(denom: u8) -> Result<u8> {
     }
 }
 
-/// 按 `num`/8 IDCT 缩放解码为 RGB8，**原始朝向**。无损 JPEG 不能缩放，强制 8/8。
 pub fn decode_scaled(bytes: &[u8], num: u8) -> Result<image::RgbImage> {
     let handle = Handle::new(tj::TJINIT_TJINIT_DECOMPRESS)?;
     let header = handle.read_header(bytes)?;
@@ -168,7 +152,6 @@ pub fn decode_scaled(bytes: &[u8], num: u8) -> Result<image::RgbImage> {
         .ok_or_else(|| anyhow::anyhow!("decoded buffer size mismatch"))
 }
 
-/// 缩放坐标系里的一块像素（原始朝向）。`channels` 是 3（RGB）或 4（RGBA）。
 pub struct PixelRegion {
     pub x: u32,
     pub y: u32,
@@ -178,11 +161,9 @@ pub struct PixelRegion {
     pub pixels: Vec<u8>,
 }
 
-/// 各子采样的 iMCU 宽高（turbojpeg.h 的 `tjMCUWidth` / `tjMCUHeight`，按 TJSAMP 顺序）。
 const MCU_WIDTH: [u32; 7] = [8, 16, 16, 8, 8, 32, 8];
 const MCU_HEIGHT: [u32; 7] = [8, 8, 16, 8, 16, 8, 32];
 
-/// 按 1/`denom` 缩放、只解缩放坐标系里的 `rect`，RGBA。见 [`decode_region_n8`]。
 pub fn decode_region(
     bytes: &[u8],
     denom: u8,
@@ -191,9 +172,6 @@ pub fn decode_region(
     decode_region_n8(bytes, numerator(denom)?, rect, true)
 }
 
-/// 按 `num`/8 缩放、只解缩放坐标系里的 `rect`（`tj3SetCroppingRegion`）。左边界会向左
-/// 对齐到缩放后的 iMCU 宽（libjpeg 的硬要求），上边界对齐到 iMCU 高（省掉半个 MCU 的
-/// 上采样边缘差异），矩形相应扩大；返回实际覆盖的矩形。**原始朝向**。
 pub fn decode_region_n8(
     bytes: &[u8],
     num: u8,
@@ -265,7 +243,6 @@ pub fn decode_region_n8(
     })
 }
 
-/// RGB8 编成 JPEG。`chroma_444` 给截图类源图保文字边缘，照片用 4:2:0。
 pub fn encode_jpeg(
     rgb: &[u8],
     width: u32,
@@ -276,8 +253,6 @@ pub fn encode_jpeg(
     encode_jpeg_with(rgb, width, height, quality, chroma_444, 0, false)
 }
 
-/// 同 [`encode_jpeg`]，每 `restart_rows` 行 MCU 写一个 restart marker（0 = 不写），
-/// `progressive` 出多次扫描的文件（只有测试造样张用）。
 pub fn encode_jpeg_with(
     rgb: &[u8],
     width: u32,
@@ -331,10 +306,6 @@ pub fn encode_jpeg_with(
     result
 }
 
-/// 无损转码：把 progressive（或任意 Huffman 8 位）JPEG 重新熵编码成 baseline，每行 MCU 一个
-/// restart marker（`restart_rows`，0 = 不写）。系数原样搬，像素逐字节相同；`tj3Transform` 要整幅
-/// 系数缓冲（4:2:0 约 3 字节 / 像素），所以调用方按像素数把关。EXIF 等标记默认全部带过去
-/// （`TJPARAM_SAVEMARKERS` = 2）。
 pub fn to_baseline(bytes: &[u8], restart_rows: u16) -> Result<Vec<u8>> {
     let handle = Handle::new(tj::TJINIT_TJINIT_TRANSFORM)?;
     handle.set(tj::TJPARAM_TJPARAM_MAXPIXELS, MAX_SOURCE_PIXELS)?;

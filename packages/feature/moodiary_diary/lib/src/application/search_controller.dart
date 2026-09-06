@@ -73,10 +73,8 @@ class DiarySearchController extends _$DiarySearchController {
     await _run();
   }
 
-  /// 把时间范围预设解析成具体起止；end 为开区间上界（不含）。
   ({DateTime? start, DateTime? end}) _resolveRange() {
     final now = DateTime.now();
-    // 统一按「天」对齐（零点），与 thisYear / custom 一致，避免随搜索时刻漂移而漏掉边界当天。
     final today = DateTime(now.year, now.month, now.day);
     switch (state.datePreset) {
       case .all:
@@ -91,7 +89,6 @@ class DiarySearchController extends _$DiarySearchController {
         final end = state.customEnd;
         return (
           start: state.customStart,
-          // 含自定义结束日当天 → 上界取次日零点。
           end: end == null
               ? null
               : DateTime(
@@ -121,7 +118,6 @@ class DiarySearchController extends _$DiarySearchController {
     final stopwatch = Stopwatch()..start();
     final tokenizeResult = await Tokenizer.tokenize(text: trimmed);
     final range = _resolveRange();
-    // dispose 后 ref.read 会抛（_repository 经 provider 取），也没必要再查。
     if (!ref.mounted) return;
     final results = await _repository.searchDiaries(
       cutTokens: tokenizeResult.cut,
@@ -153,7 +149,6 @@ class DiarySearchController extends _$DiarySearchController {
 
   static const _historyMax = 12;
 
-  /// 把当前查询记入搜索历史（最近在前、去重、截断到上限）。
   void recordHistory() {
     final q = state.query.trim();
     if (q.isEmpty) return;

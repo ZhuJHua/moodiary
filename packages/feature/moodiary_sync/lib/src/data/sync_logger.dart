@@ -10,14 +10,10 @@ import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:path/path.dart' as p;
 
-/// 同步引擎事件日志接收器：① 广播流（[events]）；② 内存 ring buffer（UI 进入
-/// Dashboard 即见最近事件）；③ 按天 jsonl 文件，超 [_retentionDays] 天自动清理。
-/// 单例，启动时由 DI 预解析（[create] 是 preResolve 工厂）。
 @singleton
 class SyncLogger {
   SyncLogger._();
 
-  /// 内存 ring buffer 上限，超过丢弃最旧一批。
   static const int _bufferLimit = 500;
 
   static const int _retentionDays = 7;
@@ -34,10 +30,8 @@ class SyncLogger {
   IOSink? _sink;
   String? _currentDayKey;
 
-  /// 内存中本进程已产生的事件（最旧在前）。
   List<SyncEvent> get recent => .unmodifiable(_buffer);
 
-  /// 广播流，每个监听者从订阅之后的事件开始收。
   Stream<SyncEvent> get events => _controller.stream;
 
   @FactoryMethod(preResolve: true)
@@ -54,14 +48,10 @@ class SyncLogger {
       await _dir!.create(recursive: true);
       await _cleanupOldFiles();
     } catch (e, s) {
-      // 目录创建失败 → 降级为纯内存模式，sink 留 null 不再写盘。
-      // 降级行为保留（测试依赖它在无 PlatformService 的宿主上安全通过），
-      // 但违约至少要有声音——否则「同步日志整场没落盘」无从察觉。
       logger.e('SyncLogger 落盘不可用，降级为纯内存模式', error: e, stackTrace: s);
     }
   }
 
-  /// 先入 buffer、再广播、最后异步落盘（互不阻塞）。
   void log(SyncEvent event) {
     _buffer.add(event);
     if (_buffer.length > _bufferLimit) {
@@ -73,8 +63,6 @@ class SyncLogger {
     unawaited(_persist(event));
   }
 
-  /// [reason] 是同一 [SyncEventKind] 下的细分语义（可选）；[payload] 携带机器可读
-  /// 细节。两者都会随事件持久化，文案渲染在日志页完成。
   void info(
     SyncEventKind kind, {
     SyncEventReason? reason,
@@ -99,7 +87,6 @@ class SyncLogger {
       await _ensureSink(event.at);
       _sink?.writeln(jsonEncode(event.toJson()));
     } catch (_) {
-      // 写日志失败不能影响同步流程，吞掉。
     }
   }
 
@@ -146,8 +133,6 @@ class SyncLogger {
     }
   }
 
-  /// 读取指定日期（默认今天）的历史日志，解析失败的行静默跳过。一天几千行的
-  /// 逐行 jsonDecode 在 `Isolate.run` 里做——纯 Dart、不碰原生库，主 isolate 只收结果。
   Future<List<SyncEvent>> readDay([DateTime? day]) async {
     if (_dir == null) return const [];
     final key = _dayKey(day ?? .now());
@@ -156,7 +141,6 @@ class SyncLogger {
     return Isolate.run(() => parseDayFile(path));
   }
 
-  /// 逐行解析一份 jsonl（供 [readDay] 在子 isolate 里调；坏行跳过）。
   @visibleForTesting
   static List<SyncEvent> parseDayFile(String path) {
     final events = <SyncEvent>[];
@@ -170,7 +154,6 @@ class SyncLogger {
     return events;
   }
 
-  /// 列出磁盘上仍保留的日志日期（新 → 旧），供日志页筛选。
   Future<List<DateTime>> availableDays() async {
     if (_dir == null) return const [];
     final keys = <String>[];
@@ -184,14 +167,13 @@ class SyncLogger {
         name.substring(_filePrefix.length, name.length - _fileSuffix.length),
       );
     }
-    keys.sort((a, b) => b.compareTo(a)); // 字典序倒排 = 日期新→旧
+    keys.sort((a, b) => b.compareTo(a));
     return [
       for (final key in keys)
         if (DateTime.tryParse(key) case final DateTime day) day,
     ];
   }
 
-  /// 清空内存 buffer 和所有日志文件。UI 的"清空日志"按钮调用。
   Future<void> clearAll() async {
     _buffer.clear();
     await _sink?.flush();

@@ -1,6 +1,3 @@
-//! ForceAtlas2(Jacomy 2014)+ Barnes-Hut 加速。两处刻意偏离原版:保留线性向心力
-//! (把不连通分量收进视野)与 forceCollide 碰撞(硬保不重叠)。
-
 use anyhow::{Result, anyhow};
 use std::collections::HashMap;
 use std::thread;
@@ -8,32 +5,18 @@ use std::time::Duration;
 
 pub struct GraphLayoutParams {
     pub iterations: u32,
-    /// Barnes-Hut 开角:节点宽度 / 距离 < theta 时整簇当一个质点。越小越准越慢(~0.9)。
     pub theta: f32,
     pub repulsion: f32,
     pub spring_length: f32,
     pub spring_strength: f32,
-    /// 向心力,把彼此不连通的分量拉进视野。
     pub gravity: f32,
-    /// 碰撞半径(世界单位,d3 forceCollide 语义):节点视为半径 r 的圆盘,每步把重叠对
-    /// 推开,收敛后圆心最小间距≈2r。配合 UI 按 scale 绘制节点,任意缩放不重叠。
     pub collide_radius: f32,
-    /// 速度衰减(0~1,d3 velocityDecay 语义):每步速度乘以 `1-velocity_decay`。越大越黏、
-    /// 越不易振荡(过冲=抽搐感的来源),0.4 左右平滑。
     pub velocity_decay: f32,
     pub emit_every: u32,
     pub frame_delay_ms: u32,
-    /// 起始 alpha(<=0 或 >1 视为 1.0)。增量重布局(数据刷新 / 换筛选)传 0.25~0.35,
-    /// 配合 initial_positions 让图原地微调而不是整体炸开重排。
     pub initial_alpha: f32,
-    /// 收敛提前退出阈值,单位 = spring_length 的倍数(<=0 表示跑满 iterations)。
-    /// 建议 1e-3:连续 5 步最大位移低于它且 alpha 已衰减到 0.05 以下时收尾。
     pub min_step: f32,
-    /// 前 k 个下标的节点钉住不动(0 = 不钉)。ego 图把中心节点排在下标 0。
     pub pinned_count: u32,
-    /// 是否对**发出的**坐标做尺度归一化:把相连节点距离的中位数缩放到 spring_length。
-    /// 仿真空间不变,只换算发出的副本;碰撞半径与单步位移上限同步按该因子放大,
-    /// 使二者在归一化后的视图里恒等于传入值。
     pub normalize_scale: bool,
 }
 
@@ -70,7 +53,6 @@ impl GraphLayoutParams {
                 400
             },
             theta_sq: theta * theta,
-            // 默认与 spring 默认(60, 0.08)自洽:kr = 0.08×(60/2)²。
             repulsion: pos(self.repulsion, 72.0),
             spring_length: pos(self.spring_length, 60.0),
             spring_strength: pos(self.spring_strength, 0.08),
@@ -99,21 +81,13 @@ impl GraphLayoutParams {
     }
 }
 
-/// 距离过近时的软化项,避免斥力爆炸/除零。
 const SOFTENING: f32 = 0.01;
-/// 四叉树最大深度;坐标重合时防止无限细分。再深下去格宽已低于 f32 在该量级的间隔,
-/// 象限判定失效,纯浪费 cell。
 const MAX_DEPTH: u32 = 24;
-/// 退火终点(d3 alphaMin 惯例值):alpha 几何衰减,恰在末次迭代降到此值。
 const ALPHA_MIN: f32 = 0.001;
 const SEED_SPREAD: f32 = 20.0;
 const STILL_STEPS: u32 = 5;
-/// 早停只在退火尾段生效,避免高能阶段的瞬时低速误判。
 const STILL_ALPHA: f32 = 0.05;
 
-/// 流式布局。`edges` 为 `[src0,dst0,src1,dst1,...]` 密集下标对(无向,建议去重);
-/// `initial_positions` 为空则用黄金角螺旋确定性播种。每帧向 `emit` 推 `[x0,y0,...]`
-/// (长度 `2*node_count`),`emit` 返回 false 表示下游已取消;函数返回即代表沉降完成。
 pub fn layout_graph_stream(
     node_count: u32,
     edges: Vec<i32>,
@@ -155,8 +129,6 @@ fn run_layout(
     let mut force = vec![0.0f32; n * 2];
     let mut scratch = Scratch::new();
 
-    // 归一化因子 =「相连中位距 / spring_length」的 EMA(逐帧原值会抖)。种子帧先按种子
-    // 自身的尺度换算,免得第一帧与后续帧尺度跳变;关缩放时恒为 1.0,行为与旧版一致。
     let mut scale_ema = if p.normalize_scale {
         (layout_scale(pos, edges, n) / p.spring_length).clamp(1e-3, 1e6)
     } else {
@@ -167,9 +139,6 @@ fn run_layout(
         return 0;
     }
 
-    // d3-force 式退火:alpha 从 initial_alpha 几何衰减到 ALPHA_MIN(在末次迭代到达),力按
-    // alpha 缩放、速度每步乘 velocity_retain。平衡点由力自身决定、与 alpha 无关,故只影响
-    // 动态(平滑、无过冲),不改最终布局。这是消除「抽搐」的关键。
     let alpha_decay = 1.0 - ALPHA_MIN.powf(1.0 / p.iterations as f32);
     let mut alpha = p.initial_alpha;
     let mut still = 0u32;
@@ -194,8 +163,6 @@ fn run_layout(
             scale_ema = (scale_ema * 0.9 + raw * 0.1).clamp(1e-3, 1e6);
         }
 
-        // 阈值随仿真尺度放大:开归一化时仿真空间被撑大 scale_ema 倍,位移绝对值同比变大,
-        // 不换算的话大图永远触不到早停。
         let settled = p.min_step > 0.0
             && alpha < STILL_ALPHA
             && moved < p.min_step * p.spring_length * scale_ema;
@@ -298,8 +265,6 @@ fn node_masses(n: usize, edges: &[i32]) -> Vec<f32> {
     m
 }
 
-/// FA2 线性引力:每条边 F = ka·d(无自然长),分量即位移差×ka——间距不是设出来的,
-/// 而是与度数加权斥力平衡后涌现的:叶对距 = 2·√(kr/ka),度数越高的对自动越远。
 fn accumulate_attraction(pos: &[f32], edges: &[i32], p: &Params, force: &mut [f32]) {
     let ka = p.spring_strength;
     let mut k = 0;
@@ -352,7 +317,6 @@ fn integrate_step(
     accumulate_attraction(b.pos, edges, p, b.force);
     accumulate_gravity(b.pos, n, p, b.force);
 
-    // 每步位移设安全上限(约一个理想边长),防重合时的偶发爆炸。
     let max_step = p.spring_length * scale;
     let pinned = p.pinned_count.min(n);
     let mut max_disp = 0.0f32;
@@ -383,9 +347,6 @@ fn integrate_step(
     max_disp
 }
 
-/// 碰撞解算(d3 forceCollide 的位置修正式):均匀网格哈希(格宽 = 直径)找近邻,
-/// 圆心距 < 2r 的对推开重叠量。每步一遍,随迭代收敛到最小间距。O(N)。
-/// 前 `pinned` 个节点不动:一对里只有一个被钉时重叠量全给未钉的那个,两个都钉则跳过。
 fn resolve_collisions(pos: &mut [f32], r: f32, pinned: usize) {
     let n = pos.len() / 2;
     if r <= 0.0 || n < 2 {
@@ -423,7 +384,6 @@ fn resolve_collisions(pos: &mut [f32], r: f32, pinned: usize) {
                         continue;
                     }
                     if dist_sq <= f32::EPSILON {
-                        // 完全重合:按下标黄金角确定性推开(无 RNG)。
                         let a = (i as f32) * 2.399_963_2;
                         let (s, c) = a.sin_cos();
                         pos[i * 2] -= c * r * wi;
@@ -451,9 +411,7 @@ struct Cell {
     mass: f32,
     com_x: f32,
     com_y: f32,
-    /// >=0 单体叶子;-1 表示内部节点或已细分。
     body: i32,
-    /// 四象限子节点在 arena 的下标,-1 为空。
     children: [i32; 4],
     internal: bool,
 }
@@ -587,7 +545,6 @@ impl QuadTree {
                 return;
             }
 
-            // 叶子已有老体:超深度则叠加为聚簇(质量已加),否则细分下推。
             if depth >= MAX_DEPTH {
                 return;
             }
@@ -639,8 +596,6 @@ impl QuadTree {
 
             let width = c.half * 2.0;
             if !c.internal || (width * width) < p.theta_sq * dist_sq {
-                // FA2 斥力 F = kr·m_i·m_cell/d,沿连线方向 → 分量 = Δ·F/d = Δ·kr·m/d²。
-                // 自身与自身不施力(dist≈0 时 Δ=0,软化项兜底)。
                 let f = p.repulsion * own_mass * c.mass / dist_sq;
                 fx += dx * f;
                 fy += dy * f;
@@ -683,7 +638,6 @@ mod tests {
         s[s.len() / 2]
     }
 
-    /// FA2:kr = ka·(SL/2)²,叶对(度数 1)平衡距即 SL。
     fn base_params(iters: u32) -> GraphLayoutParams {
         GraphLayoutParams {
             iterations: iters,
@@ -736,9 +690,6 @@ mod tests {
 
     #[test]
     fn fa2_linked_pairs_settle_near_equilibrium() {
-        // 一条链:两体平衡距 = (SL/2)·√(m₁·m₂)(链中对 1.5·SL),但 FA2 斥力 1/d 是
-        // 长程力,全链累计推挤会把链再拉伸约一倍(实测 ~3·SL)——间距由全局平衡涌现。
-        // 断言相连对落入 [0.5, 4]·SL:收敛且未塌缩/未飞散。
         let edges: Vec<i32> = (0..19).flat_map(|i| [i, i + 1]).collect();
         let end = run(20, edges.clone(), 400);
         let dists = linked_dists(&end, &edges);
@@ -761,7 +712,6 @@ mod tests {
 
     #[test]
     fn collision_enforces_min_distance() {
-        // 星型:30 个叶子全连中心,叶子间相互挤压,碰撞应保证最小圆心距≈2r。
         let n = 31;
         let edges: Vec<i32> = (1..n).flat_map(|i| [0, i]).collect();
         let pos = run(n as u32, edges, 400);
@@ -785,7 +735,6 @@ mod tests {
     fn normalization_pins_median_edge_length() {
         let edges = mixed_graph();
 
-        // 不归一化:仿真空间的中位边长远大于 spring_length,正是大图「缩到看不见」的根因。
         let plain = drive(base_params(600), 60, &edges, &[]).0;
         let raw = median(&linked_dists(&plain, &edges)) / SL;
         assert!(raw > 2.0, "raw median ratio {raw} should be far above 1");
@@ -804,7 +753,6 @@ mod tests {
     fn pinned_nodes_do_not_move() {
         let n = 40usize;
         let edges: Vec<i32> = (1..n as i32).flat_map(|i| [0, i]).collect();
-        // 中心给一个偏离原点的种子:不钉的话会被向心力/斥力推走。
         let mut initial = seed_positions(n, &[]).unwrap();
         initial[0] = 17.5;
         initial[1] = -3.25;

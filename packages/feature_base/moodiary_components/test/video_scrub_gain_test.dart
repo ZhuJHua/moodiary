@@ -1,8 +1,6 @@
-// 刮擦换算。以前是「一屏 = 全片 60%」的定比例，长视频完全落不准，这里把封顶钉住。
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_components/src/common/video/video_fullscreen_page.dart';
 
-/// 划满一屏能走多少秒。
 double _screenSeconds(Duration duration, double width) =>
     scrubMillisPerPixel(duration, width) * width / 1000;
 
@@ -24,7 +22,6 @@ void main() {
     test('长片封顶：一屏最多约 67 秒，不再随时长膨胀', () {
       final tenMin = _screenSeconds(const Duration(minutes: 10), width);
       final oneHour = _screenSeconds(const Duration(hours: 1), width);
-      // 不封顶的话 10 分钟的片子一屏就是 6 分钟。
       expect(tenMin, closeTo(400 / 6, 1e-9));
       expect(oneHour, tenMin, reason: '封顶之后与时长无关');
     });

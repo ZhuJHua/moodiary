@@ -1,10 +1,8 @@
 import 'package:flutter/services.dart';
 import 'package:mui/mui.dart';
 
-/// 密码长度 —— 与启动解锁页对齐。
 const int kPinLength = 4;
 
-/// 命令式句柄：外层驱动键盘清空 / 抖动。
 class LockPinPadController {
   _LockPinPadState? _state;
 
@@ -14,10 +12,8 @@ class LockPinPadController {
     if (identical(_state, state)) _state = null;
   }
 
-  /// 正常清空，不抖动。
   void clear() => _state?._clear();
 
-  /// 触觉 + 抖动 + 清空（密码错误 / 两次不一致）。
   void reject() => _state?._reject();
 }
 
@@ -105,7 +101,6 @@ class _LockPinPadState extends State<LockPinPad>
     setState(() => _pin += d);
     if (_pin.length == kPinLength) {
       final pin = _pin;
-      // 让最后一个圆点动画完成再回调校验。
       Future.delayed(const Duration(milliseconds: 120), () {
         if (mounted) widget.onCompleted(pin);
       });
@@ -118,7 +113,6 @@ class _LockPinPadState extends State<LockPinPad>
     setState(() => _pin = _pin.substring(0, _pin.length - 1));
   }
 
-  /// 在 0~1 区间制造 -10 → +10 → -10 → 0 的水平抖动位移。
   double _shakeOffset(double v) {
     const amp = 10.0;
     if (v <= 0.25) return 4 * amp * v;
@@ -275,7 +269,6 @@ class _IconButton extends StatelessWidget {
       child: SizedBox(
         width: size,
         height: size,
-        // 与同排数字键同一视觉权重，不做弱化。
         child: Icon(icon, size: 24, color: context.theme.colors.onSurface),
       ),
     );

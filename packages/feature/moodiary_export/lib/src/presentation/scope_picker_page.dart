@@ -9,7 +9,6 @@ import '../data/export_scope.dart';
 
 enum _ScopeKind { all, category, dateRange, picked }
 
-/// 选择要导出哪些日记。返回一个 [ExportScope]，取消返回 null。
 class ScopePickerPage extends StatefulWidget {
   final ExportScope initial;
 
@@ -170,7 +169,6 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
     .picked => l10n.export.scopePicked,
   };
 
-  /// 只有「全部」需要带篇数，其余选项自解释。
   Widget? _kindHint(Translations l10n, _ScopeKind kind) => kind == .all
       ? Text(l10n.export.entryCount(count: _diaries.length))
       : null;
@@ -246,7 +244,6 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
 
   Future<void> _pickRange() async {
     final now = DateTime.now();
-    // 库里最早的一篇即可选下限；日记不会写在「第一篇之前」。
     final earliest = _diaries.isEmpty
         ? DateTime(now.year - 1)
         : _diaries.last.time.toLocal();

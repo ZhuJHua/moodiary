@@ -41,10 +41,8 @@ class LanReceiveDone extends LanReceiveState {
 class LanReceiveFailed extends LanReceiveState {
   final String message;
 
-  /// 会话因认证连续失败被锁死：配对码已作废，「对方可直接重试」这类提示不适用。
   final bool locked;
 
-  /// 对方协议版本不同：配对码仍有效，但对方升级之前重试没有意义。
   final bool incompatible;
 
   const LanReceiveFailed(
@@ -54,15 +52,6 @@ class LanReceiveFailed extends LanReceiveState {
   });
 }
 
-/// 局域网接收端：[IHttpServer] 上的一次性会话（PIN / 盐随 [start] 生成，[stop]
-/// 即作废）。三个端点：
-/// - `GET  handshake` → 明文 `{app, proto, ver, salt}`；
-/// - `GET  manifest`  → 会话密钥加密的本机 manifest 投影（发送方据此算增量）；
-/// - `POST archive`   → 加密 zip（服务器层已流式落盘）→ 解压导入（engine.pull，
-///   LWW 与云同步一致）→ 回加密报告。一次只处理一个归档（并发 409）。
-///
-/// 带令牌的两个端点先验令牌再验 [lanProtoHeader]：协议不同回 426，且只有持会话密钥的
-/// 对端才改得动本页状态。
 class LanReceiverService {
   LanReceiverService({
     this._crypto = const RustLanCrypto(),
@@ -92,18 +81,13 @@ class LanReceiverService {
   IHttpServer? _server;
   late String pin;
 
-  /// 本机 App 版本（线上形式），[start] 后有效；握手与 mDNS TXT 都带它。
   String version = '';
   String _salt = '';
   List<int> _key = const [];
   bool _busy = false;
 
-  /// 已用过的令牌 nonce。只有解得开的令牌才会进来（造得出就等于持有会话密钥），
-  /// 所以外人塞不满它。
   final Set<String> _usedNonces = {};
 
-  /// 连续认证失败计数。达到 [lanMaxAuthFailures] 即锁死本次会话——否则 6 位 PIN
-  /// 在同网段里是个不限次数的在线预言机。
   int _authFailures = 0;
   bool _authLocked = false;
 
@@ -127,7 +111,6 @@ class LanReceiverService {
       handler: _handle,
       preferredPort: lanDefaultPort,
       spoolDir: _tempDir,
-      // 只有归档上传带请求体，控制面请求不产生进度事件。
       onBodyProgress: (received, total) {
         state.value = LanReceiveReceiving(received: received, total: total);
       },
@@ -156,7 +139,6 @@ class LanReceiverService {
     'salt': _salt,
   });
 
-  /// 令牌通过后再比协议版本：不等（含没带头）回 426。
   Future<HttpServerResponse?> _admit(HttpServerRequest request) async {
     final denied = await _checkAuth(request);
     if (denied != null) return denied;
@@ -170,8 +152,6 @@ class LanReceiverService {
     return .text(HttpStatus.upgradeRequired, message);
   }
 
-  /// 校验一次性令牌：解得开（= 持有会话密钥）、绑定的 path 与本请求一致、nonce 没
-  /// 用过。通过返回 null，否则返回 401。
   Future<HttpServerResponse?> _checkAuth(HttpServerRequest request) async {
     if (_authLocked) {
       return .text(HttpStatus.unauthorized, l10n.sync.lanAuthLocked);
@@ -180,7 +160,6 @@ class LanReceiverService {
     final nonce = header == null
         ? null
         : await lanReadAuthToken(_crypto, _key, header, request.path);
-    // 令牌重放（nonce 用过）与密钥不对同等处理：都不是合法发送端会做的事。
     if (nonce != null && _usedNonces.add(nonce)) {
       _authFailures = 0;
       return null;
@@ -214,7 +193,6 @@ class LanReceiverService {
     File? inlineSpool;
     try {
       state.value = const LanReceiveImporting();
-      // 大归档已由服务器层流式落盘；极小归档内联到内存，这里补落一份。
       String zipPath;
       if (request.bodyFilePath != null) {
         zipPath = request.bodyFilePath!;
@@ -241,7 +219,6 @@ class LanReceiverService {
       return .ok(body, contentType: 'application/octet-stream');
     } catch (e) {
       state.value = LanReceiveFailed(e.toString());
-      // 服务器适配层把异常折叠为 500 + 错误信息，发送方据此展示。
       rethrow;
     } finally {
       _busy = false;

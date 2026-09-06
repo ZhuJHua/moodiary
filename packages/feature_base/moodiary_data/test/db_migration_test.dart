@@ -5,12 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
-/// v1 → v2 迁移档。v1 是**已发布的 2.8.0**：日记带 latitude / longitude / place_name
-/// 快照、没有 places 表。升级必须把快照归并成常用地点、日记改为引用，一篇不丢。
-///
-/// 造 v1 的办法是**降级一个真库**：先让 drift 建出 v2，再 DROP / ALTER 回 v1 的形状并把
-/// `user_version` 拨回 1。这比手抄一份 v1 DDL 可靠——手抄的副本会随主 schema 漂移，
-/// 到时候测的就不是真正发布过的那个形状了。
 void main() {
   late Directory dir;
   late String path;
@@ -42,7 +36,6 @@ void main() {
     return [for (final r in rows) r.read<String>('name')];
   }
 
-  /// 把新库降回 v1（2.8.0 发布时的形状）。
   Future<void> downgradeToV1(MoodiaryDatabase db) async {
     await db.customStatement('DROP TABLE places');
     await db.customStatement('ALTER TABLE diaries DROP COLUMN place_id');
@@ -84,7 +77,6 @@ void main() {
       ),
     );
     await downgradeToV1(db);
-    // 同名两篇（坐标略有差异，取最近一篇的）、没有地名一篇、没有定位一篇。
     await insertV1Diary(
       db,
       'd1',
@@ -127,7 +119,6 @@ void main() {
     expect((await repo.getDiaryByBusinessId('d2'))!.placeId, xihu.id);
     expect((await repo.getDiaryByBusinessId('d3'))!.placeId, byCoords.id);
     expect((await repo.getDiaryByBusinessId('d4'))!.placeId, isNull);
-    // 升级不是重建：v1 时写下的分类还在；之后照常能写。
     expect(
       (await CategoryRepository(db).getCategoryById('c1'))?.categoryName,
       '生活',
@@ -143,7 +134,6 @@ void main() {
     var db = await open();
     await downgradeToV1(db);
     await insertV1Diary(db, 'd1', lat: 30.28, lon: 120.15, placeName: '公司');
-    // 半成品：表与列都已存在，但 user_version 还是 1。
     await db.customStatement(
       'CREATE TABLE places (id TEXT NOT NULL PRIMARY KEY, name TEXT NOT NULL, '
       'latitude REAL NOT NULL, longitude REAL NOT NULL, icon TEXT, '

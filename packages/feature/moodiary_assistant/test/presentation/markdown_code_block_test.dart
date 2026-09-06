@@ -3,8 +3,6 @@ import 'package:moodiary_assistant/src/presentation/markdown_code_block.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 
-/// 编辑器（lowlight 3.3.0 的 `common`）注册的那 37 种。助手这边必须一模一样 ——
-/// 「与编辑器同源」是选 re_highlight 的全部理由，语言集分叉就等于白选。
 const _editorCommonLanguages = {
   'arduino',
   'bash',
@@ -47,8 +45,6 @@ const _editorCommonLanguages = {
 
 void main() {
   Widget host(Widget child, {Brightness brightness = Brightness.light}) {
-    // 明暗要挂在 MaterialApp 的 `theme` 上：`context.theme` 是 `Theme.of(context)` 的
-    // 派生视图，MaterialApp 会在自己下面重挂一层 Theme，套在外面的那层盖不住。
     final data = buildMuiTheme(brightness: brightness);
     return TranslationProvider(
       child: MuiTheme(
@@ -69,7 +65,6 @@ void main() {
 
   const code = 'fn main() {\n    // note\n    let x = "hi";\n}';
 
-  /// 代码区那个 Text 里所有 span 的文字与样式，按出现顺序摊平。
   List<(String, TextStyle?)> spansOf(WidgetTester tester) {
     final text = tester.widget<Text>(
       find.descendant(

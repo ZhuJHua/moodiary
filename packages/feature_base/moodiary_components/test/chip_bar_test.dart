@@ -5,7 +5,6 @@ import 'package:mui/mui.dart';
 import 'support/pump.dart';
 
 void main() {
-  // T = String? with a null-valued chip mirrors the home category "全部" usage.
   Widget host({
     required String? selected,
     required ValueChanged<String?> onSelected,

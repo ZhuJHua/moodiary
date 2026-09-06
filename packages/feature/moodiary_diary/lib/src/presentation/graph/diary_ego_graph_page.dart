@@ -18,8 +18,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'diary_ego_graph_page.g.dart';
 
-/// 以某篇日记为中心的 k 跳邻域。全程主键批量 get（见 [DiaryRepository.buildEgoGraph]），
-/// 成本随邻域规模增长、与总日记数无关，所以详情页高频进出也不心疼。
 @riverpod
 Future<DiaryGraphData> diaryEgoGraph(Ref ref, {required String diaryId}) async {
   final repo = getIt<DiaryRepository>();
@@ -32,12 +30,9 @@ Future<DiaryGraphData> diaryEgoGraph(Ref ref, {required String diaryId}) async {
     debounce?.cancel();
     sub.cancel();
   });
-  return repo.buildEgoGraph(diaryId); // 只取直接关联（depth 1）
+  return repo.buildEgoGraph(diaryId);
 }
 
-/// 局部关系图：以当前日记为中心的 k 跳邻域，跑**力导向布局**（ForceAtlas2 + Barnes-Hut，
-/// 由 Rust [layoutGraphStream] 逐帧流式回传）。中心节点被 pin 在原点（`pinnedCount:1`），
-/// 邻居受力自然铺开。方向靠边的颜色 + 选中态箭头编码：出链取 primary、入链取 tertiary。
 class DiaryEgoGraphPage extends ConsumerStatefulWidget {
   final String centerId;
 
@@ -61,8 +56,6 @@ class _DiaryEgoGraphPageState extends ConsumerState<DiaryEgoGraphPage>
   final _canvas = GraphCanvasController();
   StreamSubscription<Float32List>? _layoutSub;
 
-  // 沉降展示与物理解耦：Rust 全速算出终态（几毫秒），再用缓动曲线从种子补间过去——
-  // 时长与手感完全可控，不再是「物理前几帧猛跳、后面静止」的生硬观感。
   late final AnimationController _settle = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 850),
@@ -92,8 +85,6 @@ class _DiaryEgoGraphPageState extends ConsumerState<DiaryEgoGraphPage>
     _frame.push(out, settled: _settle.isCompleted);
   }
 
-  /// 起一轮力导向布局。中心（数据层保证在下标 0）pin 在原点，其余节点用确定性径向位置
-  /// 作种子；Rust FA2+Barnes-Hut 不带延迟直接算到收敛，只取终态帧。
   void _startLayout(GraphScene scene) {
     _layoutSub?.cancel();
     _settle.stop();
@@ -101,11 +92,11 @@ class _DiaryEgoGraphPageState extends ConsumerState<DiaryEgoGraphPage>
       _frame.push(Float32List(0), settled: true);
       return;
     }
-    final seed = layoutEgoRadial(scene).positions; // 好初值：中心在原点、逐跳成环
+    final seed = layoutEgoRadial(scene).positions;
     _seed = seed;
     _target = null;
     _frame.push(seed);
-    // 中心必须在下标 0 才能 pin（buildEgoGraph 的排序保证如此）；否则退化为不 pin。
+    // 中心必须在下标 0 才能 pin（buildEgoGraph 排序保证），否则退化为不 pin
     final pin = scene.centerIndex == 0 ? 1 : 0;
     const density = GraphDensity.normal;
     Float32List? last;
@@ -247,7 +238,6 @@ class _DiaryEgoGraphPageState extends ConsumerState<DiaryEgoGraphPage>
         identical(_categories, categories)) {
       return;
     }
-    // 只是主题 / 分类色变了（节点数据没变）：重建场景配色，但不重跑布局，保住当前坐标。
     final sameGraph = _scene != null && identical(_scene!.data, graph);
     _palette = palette;
     _categories = categories;
@@ -284,7 +274,6 @@ class _DiaryEgoGraphPageState extends ConsumerState<DiaryEgoGraphPage>
             onSelect: (i) => setState(() => _selected = i),
           ),
         ),
-        // 图例：边色的方向语义（primary=出链 / tertiary=入链），屏幕空间固定不随相机。
         Positioned(
           left: 12,
           right: 12,
@@ -383,7 +372,6 @@ class _Legend extends StatelessWidget {
             decoration: BoxDecoration(color: color, shape: .circle),
           ),
           const SizedBox(width: 6),
-          // 图例上的计数，弱前景。
           Text(label, style: theme.typography.labelSmall.onSurfaceVariant),
         ],
       ),

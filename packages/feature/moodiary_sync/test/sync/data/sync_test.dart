@@ -144,7 +144,6 @@ void main() {
         );
         expect(e.kind, SyncErrorKind.server);
         expect(e.message, contains('wrapped: Exception: Write k failed'));
-        // 已经是 SyncException 的原样保留 kind。
         final inner = SyncException.wrap(
           const SyncException('locked', kind: .locked),
           (d) => d,

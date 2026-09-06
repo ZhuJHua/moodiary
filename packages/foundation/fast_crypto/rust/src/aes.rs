@@ -1,5 +1,3 @@
-//! AES-256-GCM 对称加密，以及同步对象唯一的 KDF（Argon2id 派生 AES key）。
-
 use anyhow::{Result, anyhow, bail};
 use ring::{
     aead::{AES_256_GCM, Aad, LessSafeKey, MAX_TAG_LEN, NONCE_LEN, Nonce, UnboundKey},
@@ -7,8 +5,6 @@ use ring::{
 };
 use std::io::{Read, Seek, Write};
 
-/// 缺省参数取 OWASP 推荐档（m=64 MiB, t=3, p=4，PC 上约 100 ms）。同步层解包 keyfile
-/// 时按文件所记参数显式传入，这样升级强度不会破坏旧 keyfile。
 pub fn derive_key(
     salt: &str,
     user_key: &str,
@@ -62,8 +58,6 @@ pub fn decrypt(key: Vec<u8>, mut encrypted_data: Vec<u8>) -> Result<Vec<u8>> {
     let nonce = Nonce::try_assume_unique_for_key(&encrypted_data[..NONCE_LEN])
         .map_err(|_| anyhow!("Nonce 无效"))?;
 
-    // open_within 就是为「前缀 + 密文 + tag」这种布局准备的：原地解密并把明文左移到
-    // 开头，省掉「复制密文」与「复制明文」两趟全载荷拷贝。
     let plain_len = key
         .open_within(nonce, Aad::empty(), &mut encrypted_data, NONCE_LEN..)
         .map_err(|_| anyhow!("解密失败"))?
@@ -72,8 +66,6 @@ pub fn decrypt(key: Vec<u8>, mut encrypted_data: Vec<u8>) -> Result<Vec<u8>> {
     Ok(encrypted_data)
 }
 
-/// 字节布局与 [encrypt] 一致（`prefix || nonce || 密文 || tag`），两条路互通。
-/// 做不到真流式：GCM 的 tag 覆盖整条消息，改分块封装就读不了历史数据。
 pub fn encrypt_file(key: Vec<u8>, in_path: &str, out_path: &str, prefix: &[u8]) -> Result<()> {
     let key = UnboundKey::new(&AES_256_GCM, &key).map_err(|_| anyhow!("密钥无效"))?;
     let key = LessSafeKey::new(key);
@@ -101,7 +93,6 @@ pub fn encrypt_file(key: Vec<u8>, in_path: &str, out_path: &str, prefix: &[u8]) 
     Ok(())
 }
 
-/// [skip_prefix] 是 [encrypt_file] 写入的 prefix 长度，直接 seek 掉，不产生额外副本。
 pub fn decrypt_file(key: Vec<u8>, in_path: &str, out_path: &str, skip_prefix: u64) -> Result<()> {
     let key = UnboundKey::new(&AES_256_GCM, &key).map_err(|_| anyhow!("密钥无效"))?;
     let key = LessSafeKey::new(key);
@@ -174,7 +165,6 @@ mod tests {
         )
         .unwrap();
 
-        // 文件版写出的密文，去掉 magic 后必须能被内存版解开——两条路互通。
         let on_disk = std::fs::read(&enc).unwrap();
         assert_eq!(&on_disk[..magic.len()], magic);
         assert_eq!(

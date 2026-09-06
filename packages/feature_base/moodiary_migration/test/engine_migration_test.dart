@@ -1,8 +1,3 @@
-// 引擎搬迁（旧 Isar → SQLite）集成测试：真开一个旧世界的 isar 库灌入代表性数据，
-// 跑 EngineMigrationService.migrate 后在 SQLite 侧逐项验收。
-//
-// 需要 ISAR_TEST_DYLIB 指向 libisar_plus 动态库（获取方式见
-// moodiary_migration/test/version_migrator_test.dart 文件头）。未设置时整组跳过。
 import 'dart:convert';
 import 'dart:io';
 
@@ -104,7 +99,6 @@ void main() {
     dir.deleteSync(recursive: true);
   });
 
-  /// 旧世界种子库：覆盖全部实体与边角形状。
   void seedLegacy() {
     final isar = Isar.open(
       schemas: legacy.moodiarySchemas,
@@ -243,9 +237,7 @@ void main() {
     expect(report.orphanMessagesDropped, 1);
 
     final repo = DiaryRepository(db);
-    // 值对象转换
     final full = (await repo.getDiaryByBusinessId('d-full'))!;
-    // 旧定位快照归并成常用地点，日记改为引用它。
     final place = (await PlaceRepository(db).getPlaceById(full.placeId!))!;
     expect(place.name, '厦门 环岛路');
     expect(place.id, Place.idForName('厦门 环岛路'));
@@ -255,19 +247,15 @@ void main() {
     expect(full.imageName, ['image-1.jpg']);
     expect(full.tags, ['旅行']);
     expect(full.time, DateTime.utc(2026, 1, 1, 8));
-    // 两元素旧定位没有地名：拿坐标当名字，不丢
     final pos2 = (await repo.getDiaryByBusinessId('d-pos2'))!;
     expect(
       (await PlaceRepository(db).getPlaceById(pos2.placeId!))!.name,
       '1.5000, 2.5000',
     );
-    // 坏定位丢弃
     expect((await repo.getDiaryByBusinessId('d-badpos'))!.placeId, isNull);
     expect(await PlaceRepository(db).getAllPlaces(), hasLength(2));
-    // 回收站保留
     expect((await repo.getRecycleBinDiaries()).single.id, 'd-recycled');
 
-    // FTS 与双链在搬迁中建成
     final hits = await repo.searchDiaries(
       cutTokens: const ['苹果'],
       cutForSearchTokens: const [],
@@ -275,10 +263,8 @@ void main() {
     expect(hits.map((d) => d.id), ['d-full']);
     expect((await repo.getBacklinks('d-full')).map((d) => d.id), ['d-linked']);
 
-    // 旧格式日记原样搬入（等阶段二的正文格式迁移处理）
     expect(await repo.hasLegacyFormatDiaries(), isTrue);
 
-    // 其余实体
     expect((await CategoryRepository(db).getAllCategories()).single.id, 'c1');
     expect(
       (await FontRepository(db).getFontByFontFamily('LXGW'))!.fontWghtAxisMap,

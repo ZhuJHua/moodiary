@@ -1,6 +1,3 @@
-// SQLite（drift 内存库）上的仓储集成测试：FTS5 检索、双链/图谱、子表装配、
-// 事件与墓碑语义。无原生 dylib 门槛——sqlite3 的 code asset 由 flutter test
-// 自动构建（P0 已验证），分词走替身（fast_tokenizer/testing.dart）。
 import 'dart:convert';
 
 import 'package:drift/drift.dart' show Value;
@@ -14,7 +11,6 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 
-/// 替身分词：空白切词（保留重复，词频 = 出现次数），cut 与 cutForSearch 同词表。
 Future<TokenizeResult> fakeTokenize(String text) async {
   final words = text.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
   return TokenizeResult(cut: words, cutForSearch: words);
@@ -253,8 +249,6 @@ void main() {
     });
 
     test('手选天气没有温度：weather_temp 存 NULL 且读回不炸', () async {
-      // 属性头手选的那 16 个天气只有码与描述。读回时对 weather_temp 用 `!`
-      // 会在这里炸——分析器看不见，只有往返测试能挡住。
       await repo.insertADiary(
         makeDiary('manual', '正文').copyWith(
           weather: const DiaryWeather(icon: '305', text: '小雨'),
@@ -306,9 +300,6 @@ void main() {
       expect(refs.audios, {'audio-1.m4a'});
     });
 
-    // 助手聊天图片落在同一个 image/ 目录、用同一套命名，却只被 chat_messages
-    // 引用。漏算就会被「清理无用文件」当孤儿永久删除，而它从没进过日记、
-    // 没有任何其它备份通道。
     test('collectReferencedMedia 含助手聊天图片', () async {
       await db
           .into(db.chatSessions)
@@ -466,7 +457,6 @@ void main() {
       final fromDb = await repo.getDiaryByCategory(sort: .timeDesc);
       final inMemory = [...diaries]..sort(diarySortComparator(.timeDesc));
       expect(fromDb.map((d) => d.id), inMemory.map((d) => d.id));
-      // 分页切片与整读前缀一致
       final page1 = await repo.getDiaryByCategory(
         sort: .timeDesc,
         limit: 2,
@@ -533,7 +523,6 @@ void main() {
         'd1',
         '正文 内容',
       ).copyWith(contentText: '陈旧 纯文本', categoryId: 'ghost-category');
-      // 绕过派生断言的写入路径：skip 模式落一个派生已漂移的行。
       await repo.updateADiary(newDiary: broken, index: .skip);
       final report = await repo.repairData();
       expect(report.hasFix, isTrue);

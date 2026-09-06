@@ -6,7 +6,6 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 class FlutterSecureStorageKVStorage implements ISecureKVStorage {
   late final FlutterSecureStorage _storage;
 
-  /// [init] 只是构造 [FlutterSecureStorage]，没有 I/O，折进注册里不花时间。
   @FactoryMethod(preResolve: true)
   static Future<FlutterSecureStorageKVStorage> create() async {
     final storage = FlutterSecureStorageKVStorage();

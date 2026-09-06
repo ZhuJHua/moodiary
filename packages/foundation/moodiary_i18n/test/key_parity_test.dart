@@ -3,15 +3,9 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-/// slang 两份配置都是 `base_locale: zh` + `fallback_strategy: base_locale`，
-/// 所以**en 缺一个键不会报错、不会失败，直接把中文渲染给英文用户**。
-/// 这条闸门就是替代那份编译期检查的（`4534e368` 修的正是同一类问题）。
 void main() {
   final dir = Directory('lib/i18n');
 
-  // 复数节点**到此为止，不再下钻**：分类（one / other / …）本来就按语种不同 ——
-  // 中文侧只有 other，因为 slang 内置的复数规则表里没有 zh。可翻译的单位是这个
-  // 节点本身，不是它底下的分类。
   bool isPlural(String key) =>
       key.contains('(plural') ||
       key.contains('(cardinal') ||

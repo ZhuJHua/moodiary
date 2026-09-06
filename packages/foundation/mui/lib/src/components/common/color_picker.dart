@@ -3,9 +3,6 @@ import 'dart:math' as math;
 import 'package:flutter/services.dart';
 import 'package:mui/mui.dart';
 
-/// 起手色板。**不是**主题预置档 —— 点一格等于往自定义色里填一个值，落库的是 ARGB
-/// 而不是索引，所以改动这张表不会动到任何人已经选好的颜色。
-/// 前三格是中性锚点，其余沿用仓里那套传统色的色值。
 const List<Color> kAccentSwatches = [
   Color(0xFF0A0A0A),
   Color(0xFF525252),
@@ -18,18 +15,11 @@ const List<Color> kAccentSwatches = [
   Color(0xFF45465E),
 ];
 
-/// MColorPicker 的弹层入口。按组件归类的静态方法，替代原来的 show* 顶层函数。
 abstract final class MColorPicker {
-  /// 取色弹窗。返回选中的颜色；取消 / 点遮罩 / 返回键都返回 null。
-  ///
-  /// 只干调色这一件事 —— 色板与生成结果留在调用方页面上。`MAlert.show` 的卡片
-  /// 宽度上限 340（内容区约 308），塞不下更多东西，小屏上也会顶到安全区。
   static Future<Color?> show(
     BuildContext context, {
     required Color initialColor,
   }) async {
-    // 弹窗按钮的返回值是静态的，用可变 holder 承接内容区的实时编辑结果，
-    // 按钮只负责回答「确认还是取消」。
     final draft = _ColorDraft(initialColor);
     final confirmed = await MAlert.show<bool>(
       context,
@@ -45,9 +35,6 @@ abstract final class MColorPicker {
 }
 
 class _ColorDraft {
-  /// 真源是 [HSVColor] 而不是 [Color]：`HSVColor.fromColor` 在 `r == g == b` 时把色相
-  /// 抹成 0、明度为 0 时把饱和度抹成 0。拿 Color 当真源，用户把明度拖到底再拖回来，
-  /// 色相和饱和度就永久丢了。
   HSVColor hsv;
 
   _ColorDraft(Color initial) : hsv = HSVColor.fromColor(initial);
@@ -103,8 +90,6 @@ class _ColorPickerContentState extends State<_ColorPickerContent> {
     super.dispose();
   }
 
-  /// 把模型写回输入框。**跳过持有焦点的那个** —— 否则用户每敲一个字符，
-  /// `controller.text = …` 就把光标弹回行首。
   void _syncFields() {
     void put(String key, String value) {
       if (_focusNodes[key]!.hasFocus) return;
@@ -139,8 +124,6 @@ class _ColorPickerContentState extends State<_ColorPickerContent> {
   }
 
   void _commitColor(Color color) {
-    // 走 Color 的入口（HEX / RGB）没有独立的色相信息，只能反算；灰色反算出来的 0°
-    // 会覆盖掉用户之前调好的色相，所以饱和度为 0 时留住旧色相。
     final parsed = HSVColor.fromColor(color);
     _commit(parsed.saturation == 0 ? parsed.withHue(_hsv.hue) : parsed);
   }
@@ -168,7 +151,6 @@ class _ColorPickerContentState extends State<_ColorPickerContent> {
   }
 
   Widget _buildFields() {
-    // 模式按钮标的是**下一档**，点一下轮换 HEX → RGB → HSV → HSL。
     final rotate = _ModeButton(
       label: _mode.next.name.toUpperCase(),
       onTap: () => setState(() {
@@ -236,7 +218,6 @@ class _ColorPickerContentState extends State<_ColorPickerContent> {
       _commitColor(Color.fromARGB(255, byte('a'), byte('b'), byte('c')));
       return;
     }
-    // 360 与 0 同值，但 HSVColor.fromAHSV 断言 hue <= 360，输入 361 会在 debug 直接崩。
     final hue = (double.tryParse(_controllers['a']!.text) ?? 0) % 360;
     final second = read('b', 100);
     final third = read('c', 100);
@@ -248,9 +229,6 @@ class _ColorPickerContentState extends State<_ColorPickerContent> {
   }
 }
 
-// ───────────────────────── 面板 ─────────────────────────
-
-/// 饱和度（横）× 明度（纵）方块。三层叠加：底色相 → 向右透白 → 向下透黑。
 class _SaturationValuePanel extends StatelessWidget {
   final HSVColor hsv;
   final void Function(double saturation, double value) onChanged;
@@ -396,8 +374,6 @@ class _Knob extends StatelessWidget {
   }
 }
 
-// ───────────────────────── 输入 ─────────────────────────
-
 class _PickerField extends StatelessWidget {
   final TextEditingController controller;
   final FocusNode focusNode;
@@ -428,13 +404,11 @@ class _PickerField extends StatelessWidget {
       inputFormatters: formatters,
       onChanged: onChanged,
       onSubmitted: onChanged,
-      // 清除键在三列并排时会把数字挤没。
       showClear: false,
     );
   }
 }
 
-/// 模式轮换键。标的是**下一档**，省下一整行分段控件的高度。
 class _ModeButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
@@ -445,7 +419,6 @@ class _ModeButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
     return Padding(
-      // 与输入框对齐：MField 的 label 占了上方一行。
       padding: const .only(top: 20),
       child: Material(
         color: scheme.surfaceContainerHighest,
@@ -474,7 +447,6 @@ class _ModeButton extends StatelessWidget {
   }
 }
 
-/// 大写化时必须把 selection 迁过来，否则光标每敲一个字符就跳回行首。
 class _UpperCaseFormatter extends TextInputFormatter {
   const _UpperCaseFormatter();
 
@@ -493,9 +465,6 @@ class _UpperCaseFormatter extends TextInputFormatter {
   }
 }
 
-// ───────────────────────── 色板 ─────────────────────────
-
-/// 一排起手色。放在页面上而不是弹窗里 —— 弹窗只负责调色。
 class MSwatchRow extends StatelessWidget {
   final List<Color> swatches;
   final Color selected;
@@ -516,8 +485,6 @@ class MSwatchRow extends StatelessWidget {
         for (final swatch in swatches)
           Expanded(
             child: Semantics(
-              // Color 的 == 比的是浮点分量，且 HSV 往返不是恒等变换，
-              // 判定选中只能比 8 位整数。
               selected: swatch.toARGB32() == selected.toARGB32(),
               child: AspectRatio(
                 aspectRatio: 1,
@@ -531,13 +498,10 @@ class MSwatchRow extends StatelessWidget {
                         ? Icon(
                             LucideIcons.check,
                             size: 15,
-                            // 色板是原始种子色，没有配套的 onXxx 角色可用，
-                            // 只能按亮度自己挑黑白墨色。
                             color: swatch.computeLuminance() > 0.45
                                 ? Colors.black
                                 : Colors.white,
                           )
-                        // 未选中的格子也要撑满，否则 MInkWell 只有图标那么大。
                         : const SizedBox.expand(),
                   ),
                 ),
@@ -549,11 +513,6 @@ class MSwatchRow extends StatelessWidget {
   }
 }
 
-// ───────────────────────── 色彩模型换算 ─────────────────────────
-
-/// 宽容解析：接受 3 / 6 位，`#`、全角 `＃`、`0x` 前缀与空白都剥掉，大小写不敏感。
-/// 不收 alpha —— 8 位写法在 CSS（RRGGBBAA）与 Flutter（AARRGGBB）之间有字节序歧义，
-/// 而这里要的只是一个强调色种子。
 Color? parseHexColor(String raw) {
   var text = raw.trim().replaceAll(RegExp(r'[\s#＃]'), '');
   if (text.length > 1 && text[0] == '0' && (text[1] == 'x' || text[1] == 'X')) {
@@ -571,12 +530,8 @@ Color? parseHexColor(String raw) {
 String hexOfColor(Color color) =>
     '#${(color.toARGB32() & 0xFFFFFF).toRadixString(16).toUpperCase().padLeft(6, '0')}';
 
-/// 与 `Color.toARGB32()` 同一条量化公式（`_floatToInt8`）。用 floor / truncate
-/// 会让 RGB 数字和同屏的 HEX 差 1。
 int _byteOf(double channel) => (channel * 255.0).round().clamp(0, 255);
 
-/// SDK 只给 RGB↔HSV 与 RGB↔HSL，不给 HSV↔HSL 直转；经 Color 中转是双重有损
-/// 而且会丢灰色的色相，所以两边都自己算。
 HSLColor _hsvToHsl(HSVColor hsv) {
   final lightness = hsv.value * (1 - hsv.saturation / 2);
   final saturation = (lightness == 0 || lightness == 1)

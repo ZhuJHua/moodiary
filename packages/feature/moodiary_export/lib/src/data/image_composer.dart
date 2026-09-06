@@ -12,13 +12,11 @@ import '../presentation/image_card/card_style.dart';
 import 'export_doc.dart';
 import 'export_options.dart';
 
-/// 一次出图的结果。
 class ImageComposeResult {
   final String path;
   final int widthPx;
   final int heightPx;
 
-  /// 解不出来被跳过的图片数（文件没了 / 格式坏了）。
   final int skippedImages;
 
   const ImageComposeResult({
@@ -29,31 +27,16 @@ class ImageComposeResult {
   });
 }
 
-/// IR → 一张长 PNG。
-///
-/// **不截 WebView**：`RenderRepaintBoundary.toImage()` 只光栅化 Flutter 自己的图层树，
-/// 平台视图（Android hybrid/TLHC、iOS `UIKitView`）不在其中，截出来是空白。所以图片这条
-/// 和 md / docx / pdf 一样吃 [ExportDoc] 的 IR，自己画一棵树。
-///
-/// **产物永远是一张图**，高度不设上限。分带只是实现细节：`toImage` 走 GPU 光栅化，单边
-/// 受纹理上限约束（多数设备 16384，老设备 4096），而整张 1080×12000 的 RGBA 缓冲就有
-/// 51.8 MB。所以按 [_kBandLogicalHeight] 一带一带地光栅化，逐带喂给 Rust 的
-/// `FastPngWriter` 流式写进同一个 PNG —— 整张图的位图在任何一侧都不存在，
-/// 峰值只跟带高有关（1080 宽的带 ≈ 8.6 MB），与篇幅无关。
 abstract final class ImageComposer {
-  /// 一带的逻辑高度。2000 × 3 倍 = 6000 物理像素，稳在所有设备的纹理上限之内。
+  // 2000 × 3 倍 = 6000 物理像素，稳在纹理上限内
   static const double _kBandLogicalHeight = 2000;
 
-  /// 单带 RGBA 的字节上限之外，还挡一道离谱篇幅：超过这个逻辑高度就降档重来。
   static const double _kDowngradeAboveLogical = 60000;
 
-  /// 预览的倍率上限。再高眼睛也看不出，白付内存。
   static const int _kMaxPreviewScale = 3;
 
-  /// 预览所有带加起来的像素预算（RGBA 4 字节/像素，12M 像素 ≈ 48 MB）。
   static const int _kPreviewPixelBudget = 12 * 1000 * 1000;
 
-  /// 出图并落盘。返回产物路径与像素尺寸。
   static Future<ImageComposeResult> composeToFile({
     required List<ExportDoc> docs,
     required ExportCommon common,
@@ -79,7 +62,6 @@ abstract final class ImageComposer {
         brand: brand,
         scale: scale,
       );
-      // 离谱篇幅（32 万字那篇外推约 50 万像素高）自动降档，仍然是一张，不弹询问。
       while (composition.contentHeight > _kDowngradeAboveLogical && scale > 1) {
         composition.dispose();
         scale -= 1;
@@ -108,7 +90,6 @@ abstract final class ImageComposer {
         );
         for (var i = 0; i < bands.length; i++) {
           if (isCancelled?.call() ?? false) {
-            // 半张 PNG 不能留在盘上：相册里能打开，用户不会发现日记被截断了。
             await File(outPath).delete().catchError((_) => File(outPath));
             throw const ImageComposeCancelled();
           }
@@ -144,15 +125,6 @@ abstract final class ImageComposer {
     }
   }
 
-  /// 预览用：同一棵树、同一套分带，只是把带交出去而不落盘。
-  ///
-  /// 调用方把这些带竖着摞起来就是整张长图（预览页正是这么做的），既避开了单张纹理上限，
-  /// 也不必先落盘再解码。**用完必须逐个 `dispose`。**
-  ///
-  /// **倍率跟着屏幕走，不是固定 1**：卡片在预览页上按逻辑宽度铺开，3x 屏上一个逻辑像素
-  /// 就是 3 个物理像素 —— 按 1 倍出图等于让 GPU 放大三倍，看着就是糊的。所以这里取
-  /// [devicePixelRatio]，再被 [_kPreviewPixelBudget] 压一道：超长日记（每一带都要留在内存里）
-  /// 宁可糊一点也不能吃掉几十 MB。
   static Future<ImagePreviewBands> renderBands({
     required List<ExportDoc> docs,
     required ExportCommon common,
@@ -166,7 +138,6 @@ abstract final class ImageComposer {
       (style.contentWidth * maxScale).round(),
     );
     final brand = await _brandMark(style, maxScale);
-    // 布局与倍率无关，先按最大倍率建树、量出高度，再决定实际渲多细。
     final composition = await _Composition.layout(
       docs: docs,
       common: common,
@@ -199,8 +170,6 @@ abstract final class ImageComposer {
     }
   }
 
-  /// 预览要把所有带同时留在内存里，所以按总像素数封顶：能按屏幕密度渲就渲，
-  /// 渲不下就逐级降档（3 → 2 → 1），最差也比 OOM 强。
   static int _previewScale({
     required double logicalHeight,
     required double widthDp,
@@ -213,8 +182,6 @@ abstract final class ImageComposer {
     return 1;
   }
 
-  /// 页脚的品牌标识：[MoodiaryLogo] 的预光栅化版本（离屏树不跑第二帧，SVG 必须先转位图）。
-  /// 关了水印就不必解。
   static Future<ui.Image?> _brandMark(ImageCardStyle style, int scale) =>
       style.watermark
       ? MoodiaryLogo.rasterize(
@@ -226,11 +193,7 @@ abstract final class ImageComposer {
   static List<(double, double)> _bands(int totalLogical) =>
       imageBands(totalLogical, _kBandLogicalHeight.toInt());
 
-  /// 预解码正文里的图片与视频封面。
-  ///
-  /// **离屏渲染树不会跑第二帧**，`Image.file` 的异步 resolve 永远来不及，所以必须在进树
-  /// 之前解成 `ui.Image`。解码时就按目标像素宽降采样（`targetWidth`），4000px 的原图不会
-  /// 整张进堆。
+  // 离屏树不跑第二帧，Image.file 异步 resolve 来不及，必须先解成 ui.Image
   static Future<_DecodedImages> _decodeImages(
     List<ExportDoc> docs,
     ExportCommon common,
@@ -286,7 +249,6 @@ abstract final class ImageComposer {
         codec.dispose();
         images[path] = frame.image;
       } catch (e) {
-        // 文件没了 / 解不动：走占位，不让整次导出失败。
         logger.d('image export: skip $path ($e)');
         skipped++;
       }
@@ -302,7 +264,6 @@ class _DecodedImages {
   const _DecodedImages(this.images, this.skipped);
 }
 
-/// 取消信号：产物已经清掉，调用方只需翻译成「已取消」。
 class ImageComposeCancelled implements Exception {
   const ImageComposeCancelled();
 
@@ -310,13 +271,6 @@ class ImageComposeCancelled implements Exception {
   String toString() => 'ImageComposeCancelled';
 }
 
-/// 一棵挂在窗口之外的渲染树：布局一次，按带反复出图。
-///
-/// 四条硬约束（违反了就是空白图）：
-///   1. 图片必须预解码好再进树（见 [ImageComposer._decodeImages]）；
-///   2. `TextScaler.noScaling` —— 导出物的字号不跟手机的显示设置走；
-///   3. 主题是快照（[ImageCardStyle]），树里没有祖先 `Theme`；
-///   4. 每带出图后立刻 `dispose`。
 class _Composition {
   final _BandController _controller;
   final RenderView _renderView;
@@ -370,7 +324,6 @@ class _Composition {
         controller: controller,
         background: style.background,
         child: MediaQuery(
-          // 系统字号不进产物：文件的字号是定死的，不随手机的显示设置变。
           data: const MediaQueryData(textScaler: TextScaler.noScaling),
           child: Directionality(
             textDirection: TextDirection.ltr,
@@ -403,10 +356,6 @@ class _Composition {
     );
   }
 
-  /// 出一带。只改偏移与带高，不重建 widget、不重排文字。
-  ///
-  /// [ratio] 缺省用建树时的倍率。布局是逻辑像素的、与倍率无关，所以同一棵已排好版的树
-  /// 可以按任意倍率光栅化 —— 预览正是靠这一点先量高度、再决定渲多细。
   Future<ui.Image> band(double offset, double height, {int? ratio}) async {
     _controller.moveTo(offset: offset, height: height);
     _pipelineOwner
@@ -422,8 +371,6 @@ class _Composition {
   }
 }
 
-/// 当前这一带的偏移与高度。用 [ChangeNotifier] 而不是重建 widget：
-/// 树只建一次、只排一次版，换带只是换画。
 class _BandController extends ChangeNotifier {
   double offset = 0;
   double height = ImageComposer._kBandLogicalHeight;
@@ -459,10 +406,6 @@ class _BandView extends SingleChildRenderObjectWidget {
   }
 }
 
-/// 把一棵任意高的子树裁成「当前这一带」。
-///
-/// 子树按无限高布局一次（`contentHeight` 由此得到），之后换带只 `markNeedsPaint`：
-/// 同一份约束下 `child.layout` 是空操作，文字不会重新排版。
 class _RenderBand extends RenderBox with RenderObjectWithChildMixin<RenderBox> {
   _RenderBand({required this._controller, required this._background}) {
     _controller.addListener(_onBandChanged);
@@ -513,7 +456,7 @@ class _RenderBand extends RenderBox with RenderObjectWithChildMixin<RenderBox> {
 
   @override
   void paint(PaintingContext context, Offset offset) {
-    // 先铺底：最后一带的下沿可能超出内容高度（ceil 的余数），不能留下一条透明缝。
+    // 先铺底：ceil 的余数会让末带下沿超出内容高度，留下透明缝
     context.canvas.drawRect(offset & size, Paint()..color = _background);
     context.pushClipRect(needsCompositing, offset, Offset.zero & size, (
       inner,
@@ -524,12 +467,6 @@ class _RenderBand extends RenderBox with RenderObjectWithChildMixin<RenderBox> {
   }
 }
 
-/// 切带：`(offset, height)`，逻辑像素。
-///
-/// 三条性质是这套「分带出图、流式落盘」的地基，[imageBands] 的测试就是在钉它们：
-///   1. **首尾相接、不重不漏**：各带高度之和恰好等于总高，拼起来就是原图；
-///   2. **切点是整数**：乘上倍率不会出现半个像素，PNG 的行数才对得上声明的高度；
-///   3. **至少一带**：空内容也要出一张 1px 高的图，而不是一个非法的 0 高 PNG。
 @visibleForTesting
 List<(double, double)> imageBands(int totalLogical, int bandHeight) {
   final bands = <(double, double)>[];
@@ -543,15 +480,10 @@ List<(double, double)> imageBands(int totalLogical, int bandHeight) {
   return bands;
 }
 
-/// [ImageComposer.renderBands] 的产物：竖着摞起来就是整张长图。
-///
-/// [logicalHeight] 是逻辑高度（与倍率无关），算产物尺寸角标要用它 —— 预览的倍率是
-/// 按屏幕定的，跟用户在设置里选的导出倍率不是一回事。
 class ImagePreviewBands {
   final List<ui.Image> bands;
   final double logicalHeight;
 
-  /// 这批带实际用的光栅化倍率。
   final int scale;
 
   const ImagePreviewBands({

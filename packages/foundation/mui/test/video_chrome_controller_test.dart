@@ -1,4 +1,3 @@
-// 控制条显隐。时间推进借 testWidgets 的 FakeAsync 时钟（同仓内其它视频测试的做法）。
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mui/mui.dart';
 
@@ -49,7 +48,7 @@ void main() {
       final chrome = VideoChromeController();
       addTearDown(chrome.dispose);
       chrome.syncPlayIntent(true);
-      chrome.toggle(); // 收起
+      chrome.toggle();
       expect(chrome.value, isFalse);
 
       final release = chrome.pin(reveal: false);

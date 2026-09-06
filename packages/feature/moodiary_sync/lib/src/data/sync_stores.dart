@@ -13,67 +13,46 @@ import 'package:moodiary_sync/src/data/media_refs.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:path/path.dart' as p;
 
-/// 引擎对本地存储的最小依赖面，抽成端口以便单测注入内存假实现 —— 生产实现
-/// （[RepoSyncDiaryStore] / [RepoSyncCategoryStore] / [DiskSyncMediaFiles]）只是
-/// 转发到现有 repository / AppFiles，行为与重构前完全一致。
 abstract interface class SyncDiaryStore {
-  /// 全量活跃日记（含回收站；已删日记的行已硬删、事实在墓碑表）。
   Future<List<Diary>> getAllDiaries();
   Future<Diary?> getDiaryByBusinessId(String id);
 
-  /// 落库并连带清除同 id 的墓碑行（复活闸门）。[fromSync] = 来源为活跃云后端
-  /// 的 pull（远端已持有），领域事件携带此标记以免除回声推送。
-  /// 行与搜索/双链索引同事务原子落库（SQLite/FTS5），无重索引账要结。
   Future<void> insertADiary(Diary diary, {bool fromSync = false});
 
-  /// pull 应用远端墓碑：行硬删 + 写墓碑（媒体由引擎媒体端口清理），返回墓碑行。
   Future<SyncTombstone> tombstoneDiary(Diary diary, {bool fromSync = false});
 }
 
 abstract interface class SyncCategoryStore {
-  /// 全量分类快照（同步用）。
   Future<List<Category>> getAllCategoriesForSync();
   Future<Category?> getCategoryById(String id);
 
-  /// 写入成功返回 `true`；落库并连带清除同 id 的墓碑行（复活闸门）。
-  /// 失败直接抛（与仓储一致），由引擎的条目级 catch 计 failed。
   Future<void> insertACategory(Category category, {bool fromSync = false});
 
-  /// pull 应用远端分类墓碑：行硬删 + 写墓碑，返回墓碑行。
   Future<SyncTombstone> tombstoneCategory(String id, {bool fromSync = false});
 }
 
 abstract interface class SyncPlaceStore {
-  /// 全量常用地点快照（同步用）。
   Future<List<Place>> getAllPlacesForSync();
   Future<Place?> getPlaceById(String id);
   Future<Place?> getPlaceByName(String name);
 
-  /// 落库并连带清除同 id 的墓碑行（复活闸门）。失败直接抛（与仓储一致），
-  /// 由引擎的条目级 catch 计 failed。
   Future<void> insertAPlace(Place place, {bool fromSync = false});
 
-  /// pull 应用远端地点墓碑：行硬删 + 写墓碑，返回墓碑行。
   Future<SyncTombstone> tombstonePlace(String id, {bool fromSync = false});
 }
 
 abstract interface class SyncMediaInfoStore {
-  /// 全量媒体元数据快照（同步用）。
   Future<List<MediaInfo>> getAllMediaInfosForSync();
   Future<MediaInfo?> getMediaInfoByFileName(String fileName);
 
-  /// 写入成功返回 `true`；落库并连带清除同 key 的墓碑行（复活闸门）。
-  /// 失败直接抛（与仓储一致），由引擎的条目级 catch 计 failed。
   Future<void> insertAMediaInfo(MediaInfo mediaInfo, {bool fromSync = false});
 
-  /// pull 应用远端媒体元数据墓碑：行硬删 + 写墓碑，返回墓碑行。
   Future<SyncTombstone> tombstoneMediaInfo(
     String fileName, {
     bool fromSync = false,
   });
 }
 
-/// 同步墓碑表端口：引擎读取全量、批量回写推送记录、清除已覆盖的行。
 abstract interface class SyncTombstoneStore {
   Future<List<SyncTombstone>> getAll();
   Future<SyncTombstone?> getByKey(String key);
@@ -81,18 +60,14 @@ abstract interface class SyncTombstoneStore {
   Future<void> deleteByKeys(List<String> keys);
 }
 
-/// 本地媒体文件读写（按 `type`/`filename` 寻址，[type] 为 image/audio/video）。
 abstract interface class SyncMediaFiles {
   Future<bool> exists(String type, String filename);
   Future<Uint8List> read(String type, String filename);
   Future<void> write(String type, String filename, Uint8List bytes);
   Future<void> delete(String type, String filename);
 
-  /// 真实磁盘路径，供 Rust 直接读写；内存文件系统等 Rust 看不见的实现返回 null，
-  /// 调用方退回字节路径。
   String? realPath(String type, String filename);
 
-  /// 用新日记替换旧日记后，删除不再被引用的旧媒体（含视频缩略图）。
   Future<void> cleanUpReplaced(Diary oldDiary, Diary newDiary);
 }
 
@@ -191,9 +166,6 @@ class RepoSyncTombstoneStore implements SyncTombstoneStore {
   Future<void> deleteByKeys(List<String> keys) => _repo.deleteByKeys(keys);
 }
 
-/// 生产媒体实现：默认 [LocalFileSystem]（行为同 `dart:io`），布局
-/// `<baseDir>/<type>/<filename>`，与 `AppFiles.getRealPath` 一致。注入
-/// `package:file` 的 `MemoryFileSystem` + 自定义 [baseDir] 即可纯内存单测。
 class DiskSyncMediaFiles implements SyncMediaFiles {
   DiskSyncMediaFiles({FileSystem? fileSystem, String? baseDir})
     : _fs = fileSystem ?? const LocalFileSystem(),
@@ -202,10 +174,6 @@ class DiskSyncMediaFiles implements SyncMediaFiles {
   final FileSystem _fs;
   final String _baseDir;
 
-  /// 归档里的媒体名是**外来数据**（别人给的备份 zip、局域网对端发来的包），直接
-  /// 拼进路径就能逃出媒体目录：`../database/moodiary.db` 这种名字落库后，哪怕只是
-  /// 后来「永久删除这篇日记」顺手清它的媒体，删掉的也是主库。zip 解压侧的 slip 已由
-  /// Rust 的 `enclosed_name` 挡住，这里是它在落盘侧的对称面——两侧都要有。
   File _file(String type, String filename) {
     _rejectPathEscape(type);
     _rejectPathEscape(filename);
@@ -243,7 +211,6 @@ class DiskSyncMediaFiles implements SyncMediaFiles {
   Future<void> delete(String type, String filename) async {
     final file = _file(type, filename);
     if (await file.exists()) await file.delete();
-    // 派生物只认真实磁盘布局；内存文件系统（单测）里没有它们。
     if (type == MediaType.image.value && _fs is LocalFileSystem) {
       await FastImageDerivatives.deleteFor(filename);
     }
@@ -264,7 +231,6 @@ class DiskSyncMediaFiles implements SyncMediaFiles {
     await drop(oldDiary.imageName, newDiary.imageName, 'image');
     await drop(oldDiary.audioName, newDiary.audioName, 'audio');
     await drop(oldDiary.videoName, newDiary.videoName, 'video');
-    // 被移除的视频连带删其缩略图（与视频同目录）。
     for (final name in oldDiary.videoName) {
       if (newDiary.videoName.contains(name)) continue;
       final thumb = videoThumbnailName(name);

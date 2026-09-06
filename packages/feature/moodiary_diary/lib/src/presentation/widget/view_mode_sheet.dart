@@ -3,8 +3,6 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 
-/// 首页的视图与排序。选择先暂存，按下确定才落盘 —— 「取消」必须真的能取消
-/// （对齐同批改造的轮询间隔 / 并发数）。
 class ViewModeSheet extends StatefulWidget {
   const ViewModeSheet({super.key});
 
@@ -12,7 +10,6 @@ class ViewModeSheet extends StatefulWidget {
     return MSheet.show<void>(context, builder: (_) => const ViewModeSheet());
   }
 
-  /// 只剩一种模式时不画模式切换——一格的选择器没有意义。加回第二种布局时自动出现。
   static bool get _showModes => ViewModeType.values.length > 1;
 
   @override
@@ -24,7 +21,6 @@ class _ViewModeSheetState extends State<ViewModeSheet> {
       MoodiaryKVs.homeViewMode.get() ?? ViewModeType.timeline.number;
   late int _sort = MoodiaryKVs.homeSortMode.get() ?? DiarySort.timeDesc.number;
 
-  /// 时间线是按记录时间叙事的轴，只给两种时间序；「最近修改在前」留给信息流。
   static const List<DiarySort> _timelineSorts = [.timeDesc, .timeAsc];
 
   List<DiarySort> get _availableSorts =>
@@ -49,9 +45,6 @@ class _ViewModeSheetState extends State<ViewModeSheet> {
     .lastModifiedDesc => LucideIcons.calendarClock,
   };
 
-  /// 停在当前模式选不到的排序上就退回默认的「最新在前」。两处都要做：切模式时，
-  /// 以及打开面板时 —— 老用户的 KV 里可能存着「时间线 + 最近修改在前」这种旧组合，
-  /// 不归一的话面板里一项都不高亮，按确定还会把它原样存回去。
   void _coerceSort() {
     if (!_availableSorts.any((sort) => sort.number == _sort)) {
       _sort = DiarySort.timeDesc.number;
@@ -82,7 +75,6 @@ class _ViewModeSheetState extends State<ViewModeSheet> {
     final l10n = context.l10n;
     final showModes = ViewModeSheet._showModes;
     return MSheetScaffold<void>(
-      // 标题跟着内容走：只有排序时就别再叫「视图模式」。
       title: showModes ? l10n.diary.pageViewModeButton : l10n.diary.sortTitle,
       icon: LucideIcons.arrowDownUp,
       actions: [

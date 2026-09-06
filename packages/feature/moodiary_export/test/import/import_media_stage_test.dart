@@ -77,7 +77,6 @@ void main() {
       md,
     );
     expect(out, '![a](image-1.jpg) ![b](image-1.jpg)');
-    // 同一素材只落一次。
     expect(store.calls, hasLength(1));
   });
 

@@ -8,17 +8,14 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 
 import 'onnx_mood_classifier.dart';
 
-/// 心情建议 LLM 清单里的一项。
 class MoodLlmSpec {
   final String id;
 
-  /// UI 展示名（专名不进 i18n）。
   final String displayName;
 
   final String modelHfPath;
   final String tokenizerHfPath;
 
-  /// 近似体积（字节，模型+分词器），仅供 UI 展示。
   final int sizeBytes;
 
   const MoodLlmSpec({
@@ -34,10 +31,6 @@ class MoodLlmSpec {
   String get tokenizerFileName => '$id.tokenizer.json';
 }
 
-/// 内置清单：固定 Qwen3-0.6B（2026-08-31 拍板）。量化档同套 22 条中文样例实测
-/// int8 16/22 > q4 12/22 > q4f16 4/22（q4f16 另有 fp16 KV 输入 + 移动端 CPU EP
-/// 无优势），int8 定案；专用文本分类模型路线已废——分类头标签训练时固定，
-/// 扩不到自定义 16 类。
 const moodLlmCatalog = <MoodLlmSpec>[
   MoodLlmSpec(
     id: 'qwen3-0.6b-int8',
@@ -50,7 +43,6 @@ const moodLlmCatalog = <MoodLlmSpec>[
   ),
 ];
 
-/// 心情建议模型的下载 / 校验 / 激活管理，与嵌入模型同一套形态与目录。
 @LazySingleton()
 class MoodLlmModelManager {
   final IHttpClient _http;
@@ -82,8 +74,6 @@ class MoodLlmModelManager {
     return 'https://$host/$hfPath';
   }
 
-  /// 下载并校验（真加载一次 + 答一道两选题），通过后落到最终路径。
-  /// 半成品带 `.part` 后缀，任何一步失败都不会留下会被误判为完整模型的文件。
   Future<void> download(
     MoodLlmSpec spec, {
     void Function(int received, int total)? onProgress,
@@ -138,7 +128,6 @@ class MoodLlmModelManager {
     await AppFiles.deleteFile(tokenizerPathOf(spec));
   }
 
-  /// 校验 = 真加载 + 答一道题 + key 在候选集内，通过即丢弃（不常驻）。
   Future<void> _probe(String modelPath, String tokenizerPath) async {
     final classifier = OnnxMoodClassifier();
     try {

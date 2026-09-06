@@ -13,10 +13,6 @@ import 'package:moodiary_router/moodiary_router.dart';
 import 'package:mui/mui.dart';
 import 'package:share_plus/share_plus.dart';
 
-/// 强制迁移页（启动闸门）：存在旧引擎库或旧格式日记时，路由 redirect 把一切目的地
-/// 重定向到这里，迁移完成前进不了主界面。**不自动开跑**：由用户点「开始迁移」才执行，
-/// 否则只能退出应用。逐篇独立事务 + 转换前 sidecar 备份，失败重试不丢数据；
-/// 失败时落一份不含正文的日志，可经系统分享面板发出。
 class EditorMigrationPage extends StatefulWidget {
   const EditorMigrationPage({super.key});
 
@@ -31,12 +27,10 @@ enum _Stage { engine, editor }
 class _EditorMigrationPageState extends State<EditorMigrationPage> {
   _Phase _phase = .landing;
 
-  /// 正在执行的阶段；running 之外无意义。
   _Stage? _activeStage;
   int _done = 0;
   int _total = 0;
 
-  /// 失败态的归因：引擎阶段整体抛出，或正文阶段的逐篇失败数。
   bool _engineFailed = false;
   int _editorFailed = 0;
   String? _logPath;
@@ -54,11 +48,7 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
       _editorFailed = 0;
       _logPath = null;
     });
-    // 整段兜底：这里是强制闸门里唯一的页面，任何未捕获异常都会让进度永久停住、
-    // 重试按钮渲染不出来，用户被锁死在门外。
     try {
-      // 阶段一：引擎搬迁（旧 Isar → SQLite）。可重入：标记只在对账通过后置位，
-      // 中途被杀下次启动整库重来；旧库全程只读。
       if (EngineMigrationService.requiresMigration) {
         setState(() => _activeStage = .engine);
         await EngineMigrationService.migrate(
@@ -72,7 +62,6 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
           },
         );
         await EngineMigrationService.finalizeMigration();
-        // 阶段二的判据此刻才有意义：正文格式闸门查的是刚灌满的 SQLite。
         await EditorMigrationService.refreshRequiresMigration();
         if (!mounted) return;
         setState(() {
@@ -108,7 +97,6 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
         return;
       }
     } catch (e, s) {
-      // 引擎阶段的异常同样可能是 drift/sqlite3 的、带着绑定参数（正文）的那种。
       final redacted = EditorMigrationService.redactDbError(e);
       logger.e('forced migration failed', error: redacted, stackTrace: s);
       final engineFailed = _activeStage == .engine;
@@ -131,7 +119,6 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
       return;
     }
     EditorMigrationService.requiresMigration = false;
-    // 完成页摘要。取数失败不挡完成态——摘要是锦上添花，闸门已放行。
     var diaries = 0;
     var categories = 0;
     try {
@@ -149,9 +136,6 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
     });
   }
 
-  /// 失败日志落盘。只写阶段、**已脱敏的**异常与失败日记的 id——不含正文、标题等
-  /// 任何隐私内容（页脚文案对用户是这么承诺的，脱敏见
-  /// [EditorMigrationService.redactDbError]）。
   Future<String> _writeFailureLog({
     required String stage,
     String? error,
@@ -503,7 +487,6 @@ class _StepRow extends StatelessWidget {
   final bool trailingError;
   final Color? iconColor;
 
-  /// null + [showProgress] = 不确定进度。
   final double? progress;
   final bool showProgress;
 

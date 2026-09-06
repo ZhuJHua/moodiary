@@ -4,30 +4,23 @@ version = "0.1.0"
 edition = "2024"
 
 [lib]
-# 产物名 libfastpress.*：native_toolchain_rust 按 lib.name 取文件名，`FastPressLib.init()`
-# 也按这个 stem 找库。
+# 改名即断：native_toolchain_rust 按 lib.name 出文件名，Dart 侧按同一 stem 找库。
 name = "fastpress"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 flutter_rust_bridge = "=2.13.0"
 anyhow = "=1.0.104"
-# 走自家 fork（分支 moodiary/slim，基于 v0.15.1 tag，只多了几个 opt-out feature）：日记导出只要
-# PDF，参考文献 / wasm 插件 / SVG / PDF 嵌图 / HTML 导出 / 连字全部关掉，libfastpress 33 → 19 MB。
-# fork 内部的 typst-* 都是同仓 path 依赖，cargo 会自动从同一个 git 源解析，不必逐个列。
-# version 只做校验（fork 的版本号必须还是 0.15.1，钉版本闸门也认它）；升级 typst 时 rebase fork 并改 rev。
+# 自家 fork（分支 moodiary/slim，基于 v0.15.1）：关掉六个 opt-out feature，libfastpress 33 → 19 MB。
 typst = { git = "https://github.com/ZhuJHua/typst.git", rev = "237a52c41ac894a8e03e53a7e0b794d006b8701f", version = "=0.15.1", default-features = false }
 typst-pdf = { git = "https://github.com/ZhuJHua/typst.git", rev = "237a52c41ac894a8e03e53a7e0b794d006b8701f", version = "=0.15.1", default-features = false }
 docx-rs = { version = "=0.4.22", default-features = false }
-# 代码块高亮。四个 feature 全与 typst-library 重合，收窄一个字节都省不到。
 syntect = { version = "=5.3.0", default-features = false, features = [
     "parsing",
     "regex-fancy",
     "plist-load",
     "yaml-load",
 ] }
-# 只给 docx 读图片尺寸。七个 feature 里只有 ico 是「只有我们开」的，其余六个
-# docx-rs 与 typst-library 各自已经开着，收窄零差异。
 image = { version = "=0.25.10", default-features = false, features = [
     "bmp",
     "gif",
@@ -40,12 +33,9 @@ image = { version = "=0.25.10", default-features = false, features = [
 [dev-dependencies]
 zip = { version = "=8.6.0", default-features = false, features = ["deflate"] }
 
-
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
 
-# 与其他 fast_* 同口径；不要加 panic = "abort"（FRB 靠 catch_unwind 把 panic 转成 Dart 异常，
-# typst 在脏输入上的 panic 要靠它兜住）。
 [profile.release]
 opt-level = 3
 lto = "thin"

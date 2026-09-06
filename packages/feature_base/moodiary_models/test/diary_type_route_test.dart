@@ -7,7 +7,6 @@ void main() {
       expect(DiaryType.markdown.routeQuery, 'markdown');
       expect(DiaryType.richText.routeQuery, 'rich-text');
       expect(DiaryType.tiptap.routeQuery, 'tiptap');
-      // 守住路由编码与 DiaryType.value 的分歧：value 是 'richText'，路由串是 'rich-text'。
       expect(DiaryType.richText.value, 'richText');
     });
 
@@ -19,7 +18,7 @@ void main() {
 
     test('diaryTypeFromRouteQuery returns null for null/unknown', () {
       expect(diaryTypeFromRouteQuery(null), isNull);
-      expect(diaryTypeFromRouteQuery('richText'), isNull); // 枚举原值不是路由串
+      expect(diaryTypeFromRouteQuery('richText'), isNull);
       expect(diaryTypeFromRouteQuery('nope'), isNull);
     });
   });

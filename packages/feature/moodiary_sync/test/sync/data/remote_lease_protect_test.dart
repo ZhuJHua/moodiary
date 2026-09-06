@@ -9,14 +9,11 @@ import 'package:moodiary_sync/src/data/sync_logger.dart';
 
 import '../sync_test_harness.dart';
 
-/// RemoteLease.protect 的跨设备互斥逻辑：用 fake_async 推进 jitter / 重试 / 续租
-/// 定时器。注意 isExpired 用 DateTime.timestamp()（真实时钟，fakeAsync 不伪造），
-/// 故过期类用例用真实「过去时间」构造，不依赖 fake elapsed。
 void main() {
   late SyncLogger logger;
 
   setUp(() async {
-    logger = (await setUpSyncEnv()).logger; // 预置 deviceId='test-device'
+    logger = (await setUpSyncEnv()).logger;
   });
   tearDown(tearDownSyncEnv);
 
@@ -30,7 +27,7 @@ void main() {
         return 7;
       }, logger: logger).then((v) => result = v);
 
-      async.elapse(const Duration(seconds: 1)); // 越过 acquire 的回读 jitter
+      async.elapse(const Duration(seconds: 1));
       expect(ran, isTrue);
       expect(result, 7);
       expect(backend.hasObject(SyncKeys.lockPath), isFalse, reason: '结束应释放锁');
@@ -91,10 +88,9 @@ void main() {
         return 0;
       });
 
-      async.elapse(const Duration(seconds: 20)); // 越过 4 次重试
+      async.elapse(const Duration(seconds: 20));
       expect(error, isA<SyncException>());
       expect(bodyRan, isFalse);
-      // 别人的活跃锁绝不能被动过。
       expect(
         LeasePayload.fromBytes(backend.objects[SyncKeys.lockPath]!)!.owner,
         'other-device',
@@ -108,9 +104,9 @@ void main() {
       final completer = Completer<int>();
       RemoteLease.protect(backend, () => completer.future, logger: logger);
 
-      async.elapse(const Duration(seconds: 1)); // acquire
+      async.elapse(const Duration(seconds: 1));
       final before = backend.opCount('write', SyncKeys.lockPath);
-      async.elapse(const Duration(seconds: 101)); // 越过一个续租周期(100s)
+      async.elapse(const Duration(seconds: 101));
       expect(
         backend.opCount('write', SyncKeys.lockPath),
         greaterThan(before),

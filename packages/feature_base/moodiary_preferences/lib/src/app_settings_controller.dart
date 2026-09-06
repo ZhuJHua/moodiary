@@ -9,13 +9,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'app_settings_controller.freezed.dart';
 part 'app_settings_controller.g.dart';
 
-/// 全局应用设置。业务侧改完 KV 后调 [AppSettingsController.bumpTheme]，
-/// 根 widget `ref.watch` 即刷新根节点的 theme / themeMode。
-/// 收进 provider 而非直接读 KV：主题色 KV 无 defaultValue 不能 `getNotifier()`，
-/// 且主题重建是异步的。
-///
-/// 语言不在这里：当前语种的真源是 slang 的 `GlobalLocaleState`，根节点通过
-/// `TranslationProvider` 拿到它并自动重建。
 @Riverpod(keepAlive: true)
 class AppSettingsController extends _$AppSettingsController {
   @override

@@ -22,24 +22,11 @@ import 'package:moodiary_sync/moodiary_sync.dart'
     show AutoSyncWatcher, IRemoteSyncBackend, SyncLogger, SyncProviderType;
 import 'package:moodiary_theme/injectable.module.dart';
 
-/// 容器装配的唯一入口：没有 initializerName（用默认的 `init`），也没有
-/// generateForDir（默认扫全包）—— 只有一份 config，不存在「两份扫同一片源码、
-/// 同一注解被各注册一次」的互斥问题，白名单也就不必要了。
-///
-/// 八个包各自是一份 micro-package（`@InjectableInit.microPackage()` 生成
-/// `injectable.module.dart`），在这里经 externalPackageModulesBefore 挂载。
-/// **storage 列最前**：它的两个 preResolve 绑定（SecureKV → KV）是别人的地基。
-///
-/// 容器只管生命周期内不变的接线。「什么时候按 KV 装载同步后端、什么时候唤醒
-/// 长驻服务」是启动编排，归 main.dart，不归容器。
 @InjectableInit(
   externalPackageModulesBefore: [
     ExternalModule(MoodiaryStoragePackageModule),
     ExternalModule(MoodiaryHttpPackageModule),
-    // 以下次序对懒单例无意义（首次取用才解析）。唯一硬约束：AppModule 的
-    // database / httpClient 在全部 micro-package **之后**注册，所以任何包里的
-    // eager `@singleton` / `@preResolve` 都不得依赖 MoodiaryDatabase 或
-    // IHttpClient——那会在 getIt.init() 当场抛。
+    // AppModule 的 database / httpClient 在全部 micro-package 之后注册，包内 eager 单例不得依赖它们。
     ExternalModule(MoodiaryMlPackageModule),
     ExternalModule(MoodiaryDataPackageModule),
     ExternalModule(MoodiaryAssistantPackageModule),
@@ -54,9 +41,6 @@ Future<void> configureDependencies() async {
   _assertRequiredBindings();
 }
 
-/// 一个组合根必须提供的绑定清单——这就是 desktop 建自己的 di.dart 时要照着填的表。
-/// 端口在包里、实现由 app 注册的跨包组合没有编译期约束，漏一条要等用户触发功能时
-/// 才炸（如漏 IFilePicker = 点「插入图片」当场抛）；这里把失败提前到启动第一秒。
 void _assertRequiredBindings() {
   final missing = <String>[
     if (!getIt.isRegistered<IKVStorage>()) 'IKVStorage',
@@ -70,7 +54,6 @@ void _assertRequiredBindings() {
     if (!getIt.isRegistered<AssistantService>()) 'AssistantService',
     if (!getIt.isRegistered<SyncLogger>()) 'SyncLogger',
     if (!getIt.isRegistered<AutoSyncWatcher>()) 'AutoSyncWatcher',
-    // 后端按名注册，名字与枚举 value 是运行时契约：这里替 @Named 补一道编译期没有的检查。
     for (final t in SyncProviderType.values)
       if (!getIt.isRegistered<IRemoteSyncBackend>(instanceName: t.value))
         'IRemoteSyncBackend(${t.value})',

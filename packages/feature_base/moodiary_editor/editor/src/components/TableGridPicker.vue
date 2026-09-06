@@ -1,6 +1,4 @@
 <script setup lang="ts">
-// 表格尺寸网格选择器（最大 8×8）：悬停高亮左上 rows×cols 区域、显示「列 × 行」，点击/点按发 select。
-// 移动端无 hover，点哪个格就插入那个尺寸（无预览，直接插）。插入后仍可用表内 +行/+列 继续扩。
 import { ref } from 'vue'
 
 const MAX_R = 8

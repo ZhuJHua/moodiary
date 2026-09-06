@@ -1,6 +1,3 @@
-/// 2.8.0 之前的 Isar 数据模型全家福（只读留底），供引擎搬迁与历史版本迁移钩子
-/// 打开旧 `default.isar` 用。消费侧一律 `import ... as legacy` 前缀引用，
-/// 避免与 moodiary_models 的新模型同名冲突。
 library;
 
 export 'agent_preset.dart';

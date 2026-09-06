@@ -26,7 +26,6 @@ void buildRouter({String initialLocation = '/'}) {
   router = createMobileRouter(initialLocation: initialLocation);
 }
 
-/// 全局 [router] 是 `late final`，测试里装不了第二次，故把构造单独拆出来。
 @visibleForTesting
 GoRouter createMobileRouter({
   String initialLocation = '/',
@@ -36,10 +35,7 @@ GoRouter createMobileRouter({
   initialLocation: initialLocation,
   navigatorKey: navigatorKey ?? moodiaryNavigationKey,
   observers: [FlutterSmartDialog.observer, moodiaryRouteObserver],
-  // 强制迁移闸门：存在旧格式日记时，除锁屏外一切目的地重定向到迁移页——首启初始
-  // 路由、解锁后的 go('/')、深链全走这里，成功前进不了主界面。
   redirect: (context, state) => migrationGateRedirect(state.matchedLocation),
-  // go_router 自带的错误页是英文写死的 MaterialErrorScreen，换成我们自己的。
   errorBuilder: (context, state) =>
       RouteErrorPage(uri: state.uri, error: state.error),
 );
@@ -47,8 +43,6 @@ GoRouter createMobileRouter({
 @visibleForTesting
 List<RouteBase> buildMobileRoutes() => _mobileRoutes();
 
-/// 强制迁移闸门的重定向决策：迁移未完成时只放行锁屏与迁移页本身。
-/// 两道闸共用一页：引擎搬迁（旧 Isar → SQLite）在前，正文格式迁移在后。
 @visibleForTesting
 String? migrationGateRedirect(String matchedLocation) {
   if (!EngineMigrationService.requiresMigration &&
@@ -62,8 +56,6 @@ String? migrationGateRedirect(String matchedLocation) {
   return EditorMigrationRoute.path;
 }
 
-/// 各 feature 自带路由片段（`xRoutes()`）+ app 侧组合：首页 shell、以及跨 feature 的
-/// 助手→选日记页绑定（契约在 moodiary_router / moodiary_assistant，页面归 diary，故 app 绑定）。
 List<RouteBase> _mobileRoutes() => [
   GoRoute(
     path: DiaryHomeRoute.path,

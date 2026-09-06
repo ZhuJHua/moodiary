@@ -8,8 +8,6 @@ import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/presentation/widget/user_key_change_flow.dart';
 import 'package:mui/mui.dart';
 
-/// 端到端加密设置项。**加密语义**：设置密码即开启加密（生成随机数据密钥 DEK，
-/// 密码只用来封装它）；清除即关闭加密。
 class UserKeyTile extends ConsumerWidget {
   const UserKeyTile({super.key});
 
@@ -102,8 +100,6 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
     super.dispose();
   }
 
-  /// 校验当前密码：对着 keyfile（后端可达取远端，离线用本机缓存）解包 DEK
-  /// 并与本机比对 —— 密码原文不落库，无从做字符串比较。
   Future<void> _verifyCurrent() async {
     if (_verifying) return;
     setState(() {
@@ -147,7 +143,6 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
     return currentError == null && newError == null && confirmError == null;
   }
 
-  /// 关闭加密须先验证当前密码，防止拿到已解锁设备者直接解除加密。
   void _remove() {
     if (!_currentVerified) {
       setState(() => _currentError = l10n.sync.keyVerifyFirst);
@@ -191,7 +186,6 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
               onChanged: (_) {
                 if (_currentVerified) setState(() => _currentVerified = false);
               },
-              // 验证是这个字段自己的动作，放尾部槽位比另起一行按钮更贴。
               trailing: _currentVerified
                   ? Icon(LucideIcons.circleCheck, color: scheme.primary)
                   : IconButton(

@@ -36,7 +36,6 @@ void main() {
 
     test('fromCode 认得自己的码，不在候选里的返回 null', () {
       expect(ManualWeather.fromCode('305'), ManualWeather.lightRain);
-      // 313 冻雨是和风的真码，但不在手选候选里（自动获取仍会存它）。
       expect(ManualWeather.fromCode('313'), isNull);
       expect(ManualWeather.fromCode(''), isNull);
     });

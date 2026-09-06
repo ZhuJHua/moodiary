@@ -7,10 +7,6 @@ import 'package:moodiary_mobile/app/settings/presentation/setting_page.dart';
 import 'package:moodiary_mobile/app/settings/presentation/sponsor_page.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 
-// ── app 私有路由契约：只有 mobile 在读，不进 moodiary_router 的跨包表。
-// （SettingRoute 有跨包读者——分类抽屉——仍在包里；Privacy/Agreement/Start 随着协议页与
-//   引导页一起下架了。）
-
 class FontRoute extends MoodiaryRouteBase {
   static const String path = '/setting/font';
   const FontRoute();
@@ -18,7 +14,6 @@ class FontRoute extends MoodiaryRouteBase {
   String get location => path;
 }
 
-/// 自定义强调色取色页。灰度 / 壁纸两档在弹窗里一步选完，只有自定义才进这一层。
 class AccentRoute extends MoodiaryRouteBase {
   static const String path = '/setting/accent';
   const AccentRoute();

@@ -8,13 +8,11 @@ import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
-/// 可编排的假服务：按脚本吐文本 / 报错 / 干脆不结束。
 class _FakeAssistant implements AssistantService {
   final List<String> chunks;
   final Object? error;
   final bool hang;
 
-  /// 前几次调用一律失败，用来验重试。
   final int failFirst;
   final List<AssistantChatRequest> seen = [];
 
@@ -111,7 +109,6 @@ void main() {
       await run(fake, from: session(effort: 'high'));
       final request = fake.seen.single;
       expect(request.tools, isFalse);
-      // 会话开着 high 也不跟：标题这一次调用一律不思考。
       expect(request.reasoning.mode, AssistantReasoningMode.off);
       expect(request.maxTokens, assistantTitleMaxOutputTokens);
     });
@@ -136,7 +133,6 @@ void main() {
     });
 
     test('洗完是空也算失败，会再试', () async {
-      // 推理模型把额度全花在 think 上，正文空 —— 再来一次往往就有了。
       final fake = _FakeAssistant(chunks: ['<think>想了半天</think>']);
       expect(await run(fake), isNull);
       expect(fake.seen.length, assistantTitleRetries + 1);
@@ -207,7 +203,7 @@ void main() {
     });
 
     test('去掉控制字符与零宽 / 方向控制符', () {
-      // 零宽空格、RLO（能让显示顺序与实际字符串不符）、退格。
+      // \u200B 零宽空格 / \u202E RLO / \u0008 退格
       expect(
         normalizeSessionTitle('\u200B搬家\u202E后的\u0008', maxBytes: 80),
         '搬家后的',
@@ -215,7 +211,6 @@ void main() {
     });
 
     test('按字节截断且不切碎码点', () {
-      // 每个汉字 3 字节：7 字节只装得下 2 个，剩的那个整体丢掉。
       expect(normalizeSessionTitle('搬家后的疲惫', maxBytes: 7), '搬家');
       expect(normalizeSessionTitle('搬家', maxBytes: 7).runes.length, 2);
     });

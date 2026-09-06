@@ -4,14 +4,11 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
-/// 分类选择 sheet：返回选择的 [Category?]，`null` 代表「不分类」。
 class CategoryPickerSheet extends ConsumerWidget {
   final String? currentCategoryId;
 
   const CategoryPickerSheet({super.key, required this.currentCategoryId});
 
-  /// 点已选中的那一项按「没选」返回：调用方拿到结果就会改脏日记、刷新 lastModified
-  /// 并在下次同步推上去。改前用的 RadioListTile 在这种情况下是彻底的 no-op。
   void _pick(BuildContext context, Category? category) {
     final changed = category?.id != currentCategoryId;
     Navigator.of(
@@ -54,7 +51,6 @@ class CategoryPickerSheet extends ConsumerWidget {
     );
   }
 
-  /// 调用入口：返回 `(true, Category?)` 表示用户做出了选择；`null` 表示用户没选。
   static Future<(bool, Category?)> show({
     required BuildContext context,
     required String? currentCategoryId,

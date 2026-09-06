@@ -1,6 +1,3 @@
-//! 日记导出：把 [`ir`] 的文档模型渲染成 PDF（typst 排版引擎）或 DOCX（OOXML）。
-//! `api/` 是 FRB 门面，唯一认识 `flutter_rust_bridge` 的地方；其余模块只收纯闭包。
-
 pub mod api;
 pub mod docx;
 mod frb_generated;

@@ -5,7 +5,6 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 
-/// 历史 HEIC 转 JPG + 补齐缩略图（[ImageOptimizer]）。幂等，可反复执行。
 class ImageOptimizeTile extends StatefulWidget {
   final bool isFirst;
   final bool isLast;
@@ -92,7 +91,6 @@ class _ImageOptimizeTileState extends State<ImageOptimizeTile> {
     );
   }
 
-  /// 总数 = 待转码的 HEIC + 被引用的图片，开跑前就知道；total 为 0 时显示不定长。
   void _showProgress(ValueNotifier<(int, int)> progress) {
     unawaited(
       showDialog<void>(

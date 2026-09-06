@@ -10,22 +10,13 @@ import 'embedding_backend.dart';
 
 var _ortEnvReady = false;
 
-/// OrtEnv 是进程级单例且 init 无幂等保护，全仓只经这里初始化。
+// OrtEnv 是进程级单例且 init 无幂等保护，全仓只经这里初始化。
 void ensureOrtEnv() {
   if (_ortEnvReady) return;
   OrtEnv.instance.init();
   _ortEnvReady = true;
 }
 
-/// ONNX Runtime（onnxruntime_plus，FFI 直调）嵌入后端，Qwen3-Embedding 系。
-/// last-token 池化 + L2 归一化；分词走 Rust 的 HF tokenizers（读模型自带
-/// tokenizer.json，其 post-processor 自动补尾部 `<|endoftext|>`，池化取的
-/// 就是这个 EOS 位）。右 padding + causal attention 下，末位真实 token 的
-/// hidden state 不受 pad 影响，取 len-1 即正确。
-///
-/// **恒 CPU**（bge 时代真机 benchmark，PJZ110）：int8 单条 19.0ms / 49.2 chunks/s；
-/// XNNPACK EP 与默认 CPU 持平（int8 QLinear 算子不在其覆盖面），不启用。
-/// 前向经 runAsync 在独立 isolate 执行，不阻塞调用方。
 final class OnnxEmbeddingBackend implements EmbeddingBackend {
   OrtSession? _session;
   HfTokenizer? _tokenizer;
@@ -77,7 +68,7 @@ final class OnnxEmbeddingBackend implements EmbeddingBackend {
     final rows = await runEncoder(session, encoded, padId: _padId);
     return [
       for (final (i, row) in rows.indexed)
-        // [L][H] 取末位真实 token；[H] 视作已在图里池化。
+        // tokenizer 自动补尾部 EOS，len-1 就是 last-token 池化位；[H] 是图里已池化。
         normalized(
           row.first is List ? (row[encoded[i].length - 1] as List) : row,
         ),
@@ -85,8 +76,7 @@ final class OnnxEmbeddingBackend implements EmbeddingBackend {
   }
 }
 
-/// Qwen3 系 decoder 形态导出图的空 past KV 输入（[batch, 8 头, 0, 128 维]）。
-/// 图上每个 `past_key_values.*` 输入都是必填的，即便不带缓存也要喂零长度张量。
+// past_key_values.* 全部必填，无缓存也要喂 [batch, 8 头, 0, 128 维] 的零长度张量。
 Map<String, OrtValueTensor> emptyPastInputs(OrtSession session, int batch) => {
   for (final name in session.inputNames)
     if (name.startsWith('past_key_values.'))
@@ -98,9 +88,6 @@ Map<String, OrtValueTensor> emptyPastInputs(OrtSession session, int batch) => {
       ]),
 };
 
-/// 组批（右 padding + attention mask + position_ids + 空 KV）跑一次前向，
-/// 只取 `last_hidden_state`（不取的话 56 个 present KV 白算白物化），按 batch
-/// 拆开返回嵌套 List（每项 [L][H]）。
 Future<List<List>> runEncoder(
   OrtSession session,
   List<Uint32List> encoded, {
@@ -158,7 +145,6 @@ Future<List<List>> runEncoder(
   }
 }
 
-/// L2 归一化成 Float32List。
 Float32List normalized(List vector) {
   final result = Float32List(vector.length);
   var normSquared = 0.0;

@@ -3,15 +3,10 @@ import 'dart:typed_data';
 
 import 'package:moodiary_rust/http.dart' show CancelToken;
 
-// 取消令牌是 moodiary_rust 的不透明句柄，经这里转出去，消费方不必直接依赖 moodiary_rust。
-// 它是同步构造的，必须在库装载之后才能 `CancelToken()`（本包的实现类都先 ensureInitialized）。
 export 'package:moodiary_rust/http.dart' show CancelToken;
 
-/// HTTP 方法。
 enum HttpMethod { get, post, put, delete, patch, head, options }
 
-/// 一次 HTTP 响应。[data] 由请求时的 `plainText` 决定：true 为原始字符串，
-/// 否则为 `jsonDecode` 结果（空响应体为 null）。
 class HttpResponse<T> {
   final int? statusCode;
   final T? data;
@@ -20,7 +15,6 @@ class HttpResponse<T> {
   const HttpResponse({this.statusCode, this.data, this.headers = const {}});
 }
 
-/// 请求体。跨 FFI 前统一压平成「字节 + content-type」，json / form / text 的编码在此完成。
 class HttpBody {
   final Uint8List bytes;
   final String? contentType;
@@ -54,7 +48,6 @@ class HttpBody {
   }
 }
 
-/// 网络异常分型，映射自 Rust 侧 `HttpErrorKind`。
 enum HttpErrorType {
   timeout,
   connection,
@@ -77,13 +70,9 @@ class HttpException implements Exception {
       'HttpException($type${statusCode != null ? ' $statusCode' : ''}: $message)';
 }
 
-/// 应用统一 HTTP 客户端接口。默认实现走 Rust(reqwest)，见 `RustHttpClient`。
 abstract class IHttpClient {
   IHttpClient();
 
-  /// 通用请求。[query] / [headers] 的值会被 `toString`，null 值跳过。[plainText] 为
-  /// true 时 [HttpResponse.data] 为原始字符串，否则为 `jsonDecode` 结果。[silent]
-  /// 抑制错误上报（仍会抛 [HttpException]）。
   Future<HttpResponse<T>> request<T>(
     HttpMethod method,
     String url, {
@@ -131,8 +120,6 @@ abstract class IHttpClient {
     plainText: plainText,
   );
 
-  /// 原始字节请求：响应体不做任何解码。[throwOnStatus] 为 false 时非 2xx 不抛
-  /// [HttpException]，由调用方读 statusCode 自行分支；null 沿用实现默认（抛）。
   Future<HttpResponse<Uint8List>> requestBytes(
     HttpMethod method,
     String url, {
@@ -144,8 +131,6 @@ abstract class IHttpClient {
     bool? throwOnStatus,
   });
 
-  /// 流式下载到本地文件（不整块进内存），[onProgress] 以 (已接收, 总字节) 回报，
-  /// 总字节未知时为 -1。取消经 [cancel]；取消或失败会删除半成品文件。
   Future<void> downloadFile(
     String url,
     String destPath, {
@@ -156,8 +141,6 @@ abstract class IHttpClient {
     CancelToken? cancel,
   });
 
-  /// 流式上传本地文件（不整块进内存），[onProgress] 以 (已发送, 总字节) 回报。
-  /// 响应体以原始字节返回。
   Future<HttpResponse<Uint8List>> uploadFile(
     String url, {
     required String filePath,

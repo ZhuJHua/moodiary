@@ -1,6 +1,3 @@
-// 原生 HTMLMediaElement 播放控制（不引任何播放器库）。音频/视频节点视图共用：把 <audio>/<video>
-// 的播放状态、进度、音量、缓冲映射成响应式 ref，并提供播放/拖拽定位/静音命令。控件 UI 由各节点
-// 视图用 daisyUI（btn / range）自绘。Range 拖拽用 dragging 标志隔离 timeupdate,避免拖拽指与流值打架。
 import { computed, onBeforeUnmount, onMounted, ref, type Ref } from 'vue'
 
 export function useMediaControls(mediaRef: Ref<HTMLMediaElement | null>) {
@@ -10,7 +7,6 @@ export function useMediaControls(mediaRef: Ref<HTMLMediaElement | null>) {
   const muted = ref(false)
   const buffering = ref(false)
 
-  // 拖拽进度条期间用本地值显示,松手前不被 timeupdate 覆盖。
   const dragging = ref(false)
   const dragValue = ref(0)
   const sliderValue = computed(() => (dragging.value ? dragValue.value : current.value))
@@ -75,7 +71,6 @@ export function useMediaControls(mediaRef: Ref<HTMLMediaElement | null>) {
   function toggleMute(): void {
     if (el) el.muted = !el.muted
   }
-  // 拖拽中实时定位（current 不变,显示走 dragValue,避免回弹）；松手提交并恢复跟随。
   function seekTo(seconds: number): void {
     dragging.value = true
     dragValue.value = seconds
@@ -87,7 +82,6 @@ export function useMediaControls(mediaRef: Ref<HTMLMediaElement | null>) {
     dragging.value = false
   }
 
-  // <input type="range"> 的两个包装 —— 音频节点仍用原生 range（那儿是一条窄条,没必要自绘）。
   function onSeekInput(e: Event): void {
     seekTo(Number((e.target as HTMLInputElement).value))
   }
@@ -112,7 +106,6 @@ export function useMediaControls(mediaRef: Ref<HTMLMediaElement | null>) {
   }
 }
 
-/** 秒 → m:ss（超过 1 小时则 h:mm:ss）。NaN/负数按 0 处理。 */
 export function formatTime(seconds: number): string {
   const s = Number.isFinite(seconds) && seconds > 0 ? Math.floor(seconds) : 0
   const h = Math.floor(s / 3600)

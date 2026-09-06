@@ -20,7 +20,6 @@ void main() {
       final ids = [
         for (final s in AssistantToolRegistry.specsFor(allowed)) s.id,
       ];
-      // specs 里 queryDiaries 在 rememberFact 之前。
       expect(ids, [
         AssistantTool.queryDiaries.id,
         AssistantTool.rememberFact.id,

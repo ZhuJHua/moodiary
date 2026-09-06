@@ -24,10 +24,8 @@ const backdrop = (): HTMLElement | null =>
 const videoEl = (): HTMLVideoElement | null =>
   h.editor.view.dom.querySelector('.moodiary-video__el')
 
-/** 容器比例经 CSS 变量注入（CSS 侧同时用它算限高换算的宽度，比例不会被压扁）。 */
 const frameRatio = (): number => Number(frame()?.style.getPropertyValue('--video-ratio'))
 
-/** jsdom 不解码视频，videoWidth/videoHeight 恒 0 —— 手工塞进去再发 loadedmetadata。 */
 const fakeMetadata = async (w: number, hgt: number): Promise<void> => {
   const el = videoEl()
   expect(el).not.toBeNull()
@@ -49,7 +47,6 @@ describe('video player box', () => {
 
   it('defaults to 16:9 before the ratio is known', () => {
     expect(frameRatio()).toBeCloseTo(16 / 9, 3)
-    // 比例未知时也铺着模糊层：此时看不见，但不能因为「不知道」就漏掉竖拍。
     expect(backdrop()).not.toBeNull()
   })
 })
@@ -57,7 +54,6 @@ describe('video player box', () => {
 describe('frame ratio is clamped, not fixed', () => {
   it('clamps a 9:16 portrait video to 4:5 so the picture is not squeezed to a stamp', async () => {
     await fakeMetadata(1080, 1920)
-    // 恒 16:9 的话画面只有 203×9/16 ≈ 114px 宽；夹到 4:5 后是 450×9/16 ≈ 253px。
     expect(frameRatio()).toBeCloseTo(4 / 5, 3)
     const el = backdrop()
     expect(el).not.toBeNull()
@@ -71,9 +67,8 @@ describe('frame ratio is clamped, not fixed', () => {
   })
 
   it('uses the video ratio verbatim inside the range, with no blur layer needed', async () => {
-    await fakeMetadata(1440, 1080) // 4:3
+    await fakeMetadata(1440, 1080)
     expect(frameRatio()).toBeCloseTo(4 / 3, 3)
-    // 画面正好铺满容器 → 模糊层是纯浪费的合成层。
     expect(backdrop()).toBeNull()
   })
 
@@ -87,7 +82,6 @@ describe('frame ratio is clamped, not fixed', () => {
 const bar = (): HTMLElement | null => h.editor.view.dom.querySelector('.moodiary-video__bar')
 const track = (): HTMLElement | null => h.editor.view.dom.querySelector('.moodiary-video__track')
 
-/** jsdom 没有 PointerEvent，也不做布局。用 MouseEvent 顶替，再把轨道的矩形写死成 200px 宽。 */
 const pointer = (type: string, clientX: number): Event => {
   const e = new MouseEvent(type, { bubbles: true, clientX })
   Object.defineProperty(e, 'pointerId', { value: 1 })
@@ -99,7 +93,6 @@ const layoutTrack = (width = 200): void => {
   el!.getBoundingClientRect = () =>
     ({ left: 0, top: 0, right: width, bottom: 28, width, height: 28, x: 0, y: 0 }) as DOMRect
 }
-/** jsdom 的 <video> 没有时长也不让写 currentTime，两样都得手工塞。 */
 const fakeDuration = async (seconds: number): Promise<void> => {
   const el = videoEl()!
   Object.defineProperty(el, 'duration', { value: seconds, configurable: true })
@@ -111,7 +104,6 @@ const fakeDuration = async (seconds: number): Promise<void> => {
 describe('control bar auto-hide', () => {
   const hidden = (): boolean => bar()?.classList.contains('is-hidden') ?? false
 
-  // jsdom 没实现 play()/pause()，直接派发事件驱动 useMediaControls 的状态。
   const fire = async (type: 'play' | 'pause'): Promise<void> => {
     videoEl()!.dispatchEvent(new Event(type))
     await nextTick()
@@ -166,7 +158,6 @@ describe('control bar auto-hide', () => {
     layoutTrack()
 
     track()!.dispatchEvent(pointer('pointerdown', 20))
-    // 拖了 4 秒（超过隐藏延时）—— 每一下都续命，不能中途藏掉。
     for (let i = 0; i < 4; i += 1) {
       track()!.dispatchEvent(pointer('pointermove', 30 + i * 10))
       await advance(1000)
@@ -192,7 +183,7 @@ describe('seek track', () => {
     await fakeDuration(100)
     layoutTrack()
 
-    track()!.dispatchEvent(pointer('pointerdown', 50)) // 200px 宽的四分之一
+    track()!.dispatchEvent(pointer('pointerdown', 50))
     await nextTick()
     expect(videoEl()!.currentTime).toBeCloseTo(25, 3)
     expect(fillWidth()).toBe('25%')

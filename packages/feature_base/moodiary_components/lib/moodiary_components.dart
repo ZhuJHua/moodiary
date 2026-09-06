@@ -1,7 +1,6 @@
 library;
 
 export 'package:mui/mui.dart';
-// 代码高亮引擎：本包是 owner（code_theme.dart 注册语言表），调用方从这里取 TextSpanRenderer。
 export 'package:re_highlight/re_highlight.dart'
     show Highlight, HighlightResult, TextSpanRenderer;
 

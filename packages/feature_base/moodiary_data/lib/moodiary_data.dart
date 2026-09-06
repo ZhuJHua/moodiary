@@ -1,8 +1,3 @@
-/// Moodiary 数据层（infra）：SQLite（drift）数据库 + 仓储 + DiaryContent，
-/// 以及跨 feature 共享的进程级瞬态状态（feature 之间不能互引，data 是它们的最低公共祖先）。
-///
-/// 准入线：**只被单个 feature 读、又不被包内复用的东西不进 data**——那只是
-/// 「放这儿方便」。assistant 专属的四个仓储已因此搬回 moodiary_assistant。
 library;
 
 export 'src/backup_archive.dart';

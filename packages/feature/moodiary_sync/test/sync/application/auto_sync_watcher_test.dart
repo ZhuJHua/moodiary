@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_sync/src/application/auto_sync_watcher.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 
-/// 轮询空转短路与去抖重排的纯函数判定（watcher 本体依赖 getIt，不做实例级单测）。
 void main() {
   group('clearsPendingLocal — 何时能清「本地有待推」', () {
     const clean = SyncReport(elapsed: .zero);
@@ -125,7 +124,6 @@ void main() {
   });
 
   test('距上次成功同步超过 10 个轮询周期 → 强制全量兜底', () {
-    // Last-Modified 秒级粒度可能漏判同秒并发写，定期强制全量保证最终收敛。
     expect(skip(lastSyncMs: 1, nowMs: 1 + minutes(5), pollSeconds: 30), isTrue);
     expect(
       skip(lastSyncMs: 1, nowMs: 1 + minutes(5) + 1000, pollSeconds: 30),
@@ -134,7 +132,6 @@ void main() {
   });
 
   test('兜底窗上限 30 分钟，不随轮询间隔无限放大', () {
-    // 间隔 1 小时 × 10 = 10 小时 → 收敛保证不可接受，夹到 30 分钟。
     expect(
       skip(lastSyncMs: 1, nowMs: 1 + minutes(30), pollSeconds: 3600),
       isTrue,

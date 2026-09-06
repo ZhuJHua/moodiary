@@ -3,9 +3,7 @@ import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_migration/src/legacy/legacy_models.dart' as legacy;
 
 Future<void> cleanOrphanMediaIn(String dir) async {
-  // [openLegacyIsar] 的存在性守卫在这里是**保命**的：Isar.open 是 open-or-create，
-  // 旧库不在（2.8.0 搬迁完成后被 finalizeMigration 改名成 .pre-sqlite.bak）时它会
-  // 静默新建一个空库，count 为 0 →「磁盘上全部媒体」都算孤儿被物理删除，不可恢复。
+  // Isar.open 是 open-or-create：旧库不在时会静默新建空库，count 为 0 会导致全部媒体被误判孤儿删除。
   final isar = legacy.openLegacyIsar(
     schemas: legacy.diaryAndCategorySchemas,
     dir: dir,
@@ -36,7 +34,6 @@ Future<void> cleanOrphanMediaIn(String dir) async {
         usedAudios.addAll(diary.audioName);
         usedVideos.addAll(diary.videoName);
         for (final name in diary.videoName) {
-          // 派生不出名字说明当初也生成不出缩略图，没有对应文件要保留。
           final thumbnailName = AppFiles.thumbnailNameOf(name);
           if (thumbnailName != null) usedVideos.add(thumbnailName);
         }
@@ -53,9 +50,7 @@ Future<void> cleanOrphanMediaIn(String dir) async {
       AppFiles.deleteMediaFiles(videosToDelete, MediaType.video.value),
     ]);
   } finally {
-    // 不 close 的话，isar_plus 的 per-isolate 缓存会让同一次启动里后续用 15 张表
-    // 打开同一个库时**直接拿回这个只有 2 张表的实例并忽略传入的 schemas**，
-    // 引擎搬迁走到 isar.fonts 当场抛 ArgumentError。
+    // isar_plus per-isolate 缓存会复用未 close 的实例并忽略新传入的 schemas。
     isar.close();
   }
 }

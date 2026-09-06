@@ -4,23 +4,19 @@ version = "0.1.0"
 edition = "2024"
 
 [lib]
-# 产物名 libfastzip.*：native_toolchain_rust 按 lib.name 取文件名，`FastZipLib.init()`
-# 也按这个 stem 找库。
+# 改名即断：native_toolchain_rust 按 lib.name 出文件名，Dart 侧按同一 stem 找库。
 name = "fastzip"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 flutter_rust_bridge = "=2.13.0"
 anyhow = "=1.0.104"
-# 不开 zstd：值 396,784 字节。代价是第三方工具重压成 Zstd 的备份导不进来
-# （zip 8.6.0 的 compression.rs:123 会给出 Unsupported(93)）。我们自己写的档只有 Deflated / Stored。
+# 不开 zstd：省 387 KB；代价是第三方重压成 Zstd 的档导不进来。
 zip = { version = "=8.6.0", default-features = false, features = ["aes-crypto", "deflate"] }
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
 
-# 与其他 fast_* 同口径；不要加 panic = "abort"（FRB 靠 catch_unwind 把 panic 转成 Dart 异常，
-# zip 在脏输入上的 panic 要靠它兜住）。
 [profile.release]
 opt-level = 3
 lto = "thin"

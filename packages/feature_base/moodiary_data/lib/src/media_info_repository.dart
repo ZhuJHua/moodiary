@@ -13,7 +13,6 @@ class MediaInfoRepository {
 
   final MoodiaryDatabase _db;
 
-  /// 单例随应用整个生命周期存活，故此 controller 不主动关闭。
   final StreamController<MediaInfoEvent> _events =
       StreamController<MediaInfoEvent>.broadcast();
 
@@ -26,8 +25,6 @@ class MediaInfoRepository {
     lastModified: dbToTime(r.lastModified),
   );
 
-  /// 全量媒体元数据（表内即全部活跃行，删除后行硬删、事实入墓碑表）。
-  /// 错误约定：失败直接抛（本包统一），调用方按需 catch 且至少 logger.e。
   Future<List<MediaInfo>> getAllMediaInfos() async {
     final rows = await (_db.select(
       _db.mediaInfos,
@@ -35,7 +32,6 @@ class MediaInfoRepository {
     return [for (final r in rows) _toMediaInfo(r)];
   }
 
-  /// 按文件名（主键）取单行。
   Future<MediaInfo?> getMediaInfoByFileName(String fileName) async {
     final row = await (_db.select(
       _db.mediaInfos,
@@ -43,8 +39,6 @@ class MediaInfoRepository {
     return row == null ? null : _toMediaInfo(row);
   }
 
-  /// 同步 pull 应用远端媒体元数据墓碑：行硬删 + 写墓碑。返回写入的墓碑行。
-  /// [fromSync] 语义同 [insertAMediaInfo]。
   Future<SyncTombstone> tombstoneMediaInfoForSync(
     String fileName, {
     bool fromSync = false,
@@ -68,8 +62,6 @@ class MediaInfoRepository {
     return tombstone;
   }
 
-  /// [fromSync] = 该写入由活跃云后端的 pull 落库（远端已持有），事件携带此标记
-  /// 供 AutoSyncWatcher 免除回声推送。
   Future<void> insertAMediaInfo(
     MediaInfo mediaInfo, {
     bool fromSync = false,
@@ -85,7 +77,6 @@ class MediaInfoRepository {
               lastModified: dbTime(mediaInfo.lastModified),
             ),
           );
-      // 复活闸门：同 key 的同步墓碑连带清除（同步下载 / 重建同名文件场景）。
       await (_db.delete(_db.tombstones)..where(
             (t) => t.key.equals(SyncTombstone.mediaInfoKey(mediaInfo.fileName)),
           ))
@@ -94,7 +85,6 @@ class MediaInfoRepository {
     _events.add(MediaInfoUpserted(mediaInfo, fromSync: fromSync));
   }
 
-  /// 本地删除（清理孤儿媒体时联动）：行硬删 + 写同步墓碑。
   Future<bool> deleteAMediaInfo(String fileName) async {
     final tombstone = SyncTombstone.forMediaInfo(fileName, at: .timestamp());
     final deleted = await _db.transaction(() async {

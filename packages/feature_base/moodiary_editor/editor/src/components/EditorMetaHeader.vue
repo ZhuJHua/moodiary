@@ -1,8 +1,4 @@
 <script setup lang="ts">
-// 日记属性头（原 Flutter 侧渲染，整体搬进 webview 以随正文一起滚动）。
-// 三行分层，强度四级递减：日期(粗) > 心情(彩色胶囊) > 功能(灰字图标) > 标签(浅灰 #)。
-// 编辑态各项可点：原生选择器（日期/时间/分类/加标签/天气/定位）经事件回跳 Flutter，
-// 心情状态面板（平铺网格）与标签删除用页内 PopupMenu，不回跳。
 import { computed, ref, type Component } from 'vue'
 import { post } from '../bridge/post'
 import type { EditorMeta } from '../bridge/meta'
@@ -39,8 +35,6 @@ import IconSchool from '~icons/lucide/school'
 import IconCoffee from '~icons/lucide/coffee'
 import IconTrees from '~icons/lucide/trees'
 import IconHospital from '~icons/lucide/hospital'
-// 和风官方图标字体：只引 woff2（?url 产出资产地址）+ JSON 码表，不 import 它的 css ——
-// 那份 css 会把 woff/ttf 两种回退格式（约 270KB）一起拽进产物，且 460 条 .qi-* 规则也用不上。
 import qiFontUrl from 'qweather-icons/font/fonts/qweather-icons.woff2?url'
 import qiCodepoints from 'qweather-icons/font/qweather-icons.json'
 
@@ -49,7 +43,6 @@ const props = defineProps<{
   editable: boolean
 }>()
 
-// 键 = 契约里的 lucide 图标名（EditorMetaMoodOption.icon）。
 const MOOD_ICONS: Record<string, Component> = {
   smile: IconSmile,
   meh: IconMeh,
@@ -69,7 +62,6 @@ const MOOD_ICONS: Record<string, Component> = {
   thermometer: IconThermometer,
 }
 
-// 常用地点的图标：契约里给 lucide 名，未知名回退图钉。
 const PLACE_ICONS: Record<string, Component> = {
   house: IconHouse,
   'building-2': IconBuilding,
@@ -93,12 +85,10 @@ function onMoodSelect(key: string): void {
   post('changeMood', { mood: key })
 }
 
-// 字体注册一次（模块作用域）：编辑器 boot 即开始加载，早于 setMeta 推入，头部露出时已就绪。
 const qiFace = new FontFace('qweather-icons', `url('${qiFontUrl}')`)
 document.fonts.add(qiFace)
 void qiFace.load().catch(() => {})
 
-/** 和风图标码 → 字形字符；未知码返回空串（模板回退 lucide 云）。 */
 function glyphOf(code: string | undefined | null): string {
   if (!code) return ''
   const cp = (qiCodepoints as Record<string, number>)[code]
@@ -122,8 +112,6 @@ function onWeatherClear(): void {
 }
 
 const positionMenuOpen = ref(false)
-// 点位置总是开面板（与心情 / 天气一致）。开面板那一刻让宿主取一次定位：常用地点按
-// 「距此多远」排序、「存为常用地点」也靠这次坐标——不取就只是手排顺序、没有距离。
 function onPositionMenuToggle(open: boolean): void {
   positionMenuOpen.value = open
   if (open) post('locateForPlaces')
@@ -147,7 +135,6 @@ function onTagSelect(index: number): void {
   post('removeTag', { index })
 }
 
-// 阅读态只列已设置项；编辑态三项常驻（未设置只剩浅图标）。心情必有值，功能行恒显。
 const showCategory = computed(() => props.editable || props.meta.category)
 const showWeather = computed(() => props.editable || props.meta.weather)
 const showPosition = computed(() => props.editable || props.meta.position)
@@ -156,7 +143,6 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
 
 <template>
   <div class="meta-header">
-    <!-- ① 日期锚点行 -->
     <div class="meta-date-row">
       <button
         type="button"
@@ -179,7 +165,6 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
       <IconChevronDown v-if="editable" class="meta-date-chevron" />
     </div>
 
-    <!-- ② 功能行：心情 / 分类 / 天气 / 位置 -->
     <div class="meta-fn-row">
       <PopupMenu
         v-if="editable"
@@ -272,7 +257,6 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
                 <span class="weather-cell-label">{{ w.label }}</span>
               </button>
             </div>
-            <!-- 和风没配好时 weatherAutoLabel 为 null，整条不渲染（点了也只会失败） -->
             <template v-if="meta.weatherAutoLabel || meta.weather">
               <div class="weather-divider"></div>
               <button
@@ -321,7 +305,6 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
         </template>
         <template #panel>
           <div class="place-panel">
-            <!-- 和风没配好时 positionAutoLabel 为 null，整条不渲染（同天气面板） -->
             <button
               v-if="meta.positionAutoLabel"
               type="button"
@@ -396,7 +379,6 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
       </span>
     </div>
 
-    <!-- ③ 标签行 -->
     <div v-if="showTagsRow" class="meta-tags-row">
       <template v-for="(tag, i) in meta.tags" :key="`${i}-${tag}`">
         <PopupMenu
@@ -426,8 +408,6 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
 </template>
 
 <style scoped>
-/* 属性头 / 标题 / 正文三段共用 16px 左边线；下边距交给标题的 padding-top 统一给，
-   这里给 0 —— 两处各留一半会让「属性头到标题」比「标题到正文」还宽。 */
 .meta-header {
   flex: 0 0 auto;
   display: flex;
@@ -452,7 +432,6 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
   cursor: default;
 }
 
-/* ① 日期锚点行 */
 .meta-date-row {
   display: flex;
   align-items: center;
@@ -487,7 +466,7 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
   opacity: 0.7;
 }
 
-/* 心情胶囊：色值来自 meta 数据（业务色），背景 15% 透明度由内联 style 拼 8 位 hex。 */
+/* 内联 style 拼的 8 位 hex 尾码 26 = 约 15% 透明度 */
 .meta-mood-chip {
   display: inline-flex;
   align-items: center;
@@ -503,14 +482,12 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
   flex: none;
   margin-right: 10px;
 }
-/* PopupMenu 的宿主 div 是功能行里的一个 flex 项，天气标签长了要能收窄。 */
 .meta-fn-weather,
 .meta-fn-position {
   flex: 0 1 auto;
   min-width: 0;
 }
 
-/* 心情状态面板：4 列平铺网格，格子 = 图标 + 标签，选中格用该态语义色高亮。 */
 .mood-panel {
   width: 276px;
   padding-top: 4px;
@@ -550,8 +527,6 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
   white-space: nowrap;
 }
 
-/* 天气面板：与心情面板同一栅格（4 列、gap 2、格子 radius 12），图标换成和风字形。
-   选中态用 secondaryContainer —— 天气没有心情那样的语义色，借它的会误导。 */
 .weather-panel {
   width: 276px;
   padding-top: 4px;
@@ -633,8 +608,6 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
   flex: none;
 }
 
-/* 位置面板：一列条目，与 PopupMenu 默认条目同规格（radius 12、14px 中等字重）。
-   预设行多一列距离，右对齐、等宽数字，免得 120 m / 4.2 km 抖动。 */
 .place-panel {
   width: 236px;
   padding-top: 2px;
@@ -708,7 +681,6 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
   margin: 5px 10px;
 }
 
-/* ② 功能行 */
 .meta-fn-row {
   display: flex;
   align-items: center;
@@ -736,7 +708,6 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
   color: var(--app-outline);
   opacity: 1;
 }
-/* 和风字体字形：以文字渲染，宽高交给字体度量（覆盖 .meta-fn-icon 的固定宽高）。 */
 .meta-fn-qi {
   width: auto;
   height: auto;
@@ -755,8 +726,6 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
   min-width: 0;
 }
 
-/* ③ 标签行 */
-/* 负边距抵掉 .meta-tag 自己的 2px 横向内边距，让「#」与标题、正文对齐同一条左边线。 */
 .meta-tags-row {
   display: flex;
   align-items: center;

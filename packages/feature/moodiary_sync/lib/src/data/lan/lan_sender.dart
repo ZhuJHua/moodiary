@@ -11,16 +11,9 @@ import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 
 enum LanSendPhase {
-  /// 握手 + 拉取对方 manifest。
   connecting,
-
-  /// 引擎锁内构建增量归档。
   packing,
-
-  /// 上传归档（带字节进度）。
   uploading,
-
-  /// 对方解压导入中（等待报告）。
   applying,
 }
 
@@ -33,7 +26,6 @@ class LanSendProgress {
 }
 
 class LanSendResult {
-  /// 发出的 manifest 条目数；0 = 对方已是最新，未发生上传。
   final int entryCount;
   final int diaryCount;
   final int categoryCount;
@@ -64,9 +56,6 @@ class LanSendResult {
   }
 }
 
-/// 局域网发送端：握手 → 取对方 manifest → 增量打包（加密 zip）→ 流式上传 →
-/// 解密对方导入报告。请求全部经统一 [IHttpClient]；一次性会话，无持久状态。
-/// 握手比对协议版本，之后每个请求都带 [lanProtoHeader] 让接收端再比一次。
 class LanSender {
   LanSender({
     this._crypto = const RustLanCrypto(),
@@ -115,7 +104,6 @@ class LanSender {
         salt: handshake['salt'] as String,
         pin: pin,
       );
-      // 令牌一次一造：绑定 nonce 与 path，用过即废（见 [lanBuildAuthToken]）。
       final manifestCipher = await _get(
         '$base$lanManifestPath',
         headers: {
@@ -137,7 +125,6 @@ class LanSender {
       if (count == 0) return const LanSendResult(entryCount: 0);
 
       uploading = true;
-      // 不设超时：对方解压 + 导入大库可能要几分钟。
       final resp = await _client.uploadFile(
         '$base$lanArchivePath',
         filePath: zipPath,
@@ -228,10 +215,8 @@ class LanSender {
     if (statusCode == 200) return;
     final detail = body == null ? '' : utf8.decode(body, allowMalformed: true);
     throw SyncException(switch (statusCode) {
-      // 401 的正文可能是「配对码错误次数过多…」，别一律盖成「配对码不正确」。
       401 => detail.isEmpty ? '配对码不正确' : detail,
       409 => '对方正忙，请稍后再试',
-      // 接收端的版本门：正文已是两边版本号写全的文案。
       426 => detail,
       _ => detail.isEmpty ? '对方处理失败（$statusCode）' : '对方处理失败：$detail',
     });
@@ -243,7 +228,6 @@ class LanSender {
     int port, {
     required bool uploading,
   }) {
-    // 上传途中对方断开（掉线 / 关闭接收页）与「根本连不上」是两种情况，分开提示。
     if (uploading) {
       return '传输中断，请确认对方仍停留在接收页后重试';
     }

@@ -7,15 +7,7 @@ const double _kActionHeight = 44;
 const double _kActionGap = 8;
 const double _kFieldHeight = 46;
 
-/// MAlert 的弹层入口。按组件归类的静态方法，替代原来的 show* 顶层函数。
 abstract final class MAlert {
-  /// 通用弹窗：圆角容器、内容居中、底部圆角按钮。
-  ///
-  /// [actions] 的顺序是「从次要到主要」——横排时从左到右按原序（取消在左、主操作在
-  /// 右，沿用 M3 OverflowBar 的既有顺序），竖排时反序（主操作在上、取消在最下）。
-  ///
-  /// 大多数场景用 [MAlert.confirm] / [MAlert.prompt] / [MAlert.notice]
-  /// 三个便捷函数即可，本函数留给需要自定义 [content] 的复合弹窗。
   static Future<T?> show<T>(
     BuildContext context, {
     String? title,
@@ -42,10 +34,6 @@ abstract final class MAlert {
     );
   }
 
-  /// 二选一确认。返回 true 表示用户确认；取消、点遮罩、返回键都返回 false。
-  ///
-  /// [isDestructive] 会把确认键染成 error 色，并在未显式给 [icon] 时补一个警告图标 ——
-  /// 破坏性操作在全仓必须一眼可辨，不再依赖各调用点手抄 `foregroundColor: error`。
   static Future<bool> confirm(
     BuildContext context, {
     required String title,
@@ -81,7 +69,6 @@ abstract final class MAlert {
     return result ?? false;
   }
 
-  /// 单按钮提示。用于「结果报告」这类需要用户读完再关的内容；一次性提示请继续用 toast。
   static Future<void> notice(
     BuildContext context, {
     required String title,
@@ -102,14 +89,6 @@ abstract final class MAlert {
     );
   }
 
-  /// 单输入弹窗。返回输入值；取消 / 点遮罩 / 返回键返回 null。
-  ///
-  /// 校验分两级：
-  /// * [validator] 同步校验，返回非 null 时作为 errorText 显示并阻止关闭；
-  /// * [onSubmit] 异步校验或提交，执行期间确认键转圈、取消键禁用、遮罩与返回键都被
-  ///   挡住；返回 null 表示成功并关闭，返回字符串则作为错误提示保留弹窗与已输入内容。
-  ///
-  /// 输入框由弹窗自行创建与释放，调用方只拿到结果字符串，不必再管 controller 生命周期。
   static Future<String?> prompt(
     BuildContext context, {
     required String title,
@@ -155,8 +134,6 @@ abstract final class MAlert {
   }
 }
 
-// ─────────────────────────── 路由 ───────────────────────────
-
 Future<T?> _push<T>(
   BuildContext context, {
   required WidgetBuilder builder,
@@ -179,15 +156,11 @@ Future<T?> _push<T>(
   );
 }
 
-/// 自实现 PopupRoute 而非 [showDialog]：需要 200/130ms 的非对称进出、缩放 + 淡入，
-/// 以及在异步提交期间临时关掉遮罩点击。参数与动效对齐 [MMenu.show]。
 class _MAlertRoute<T> extends PopupRoute<T> {
   final WidgetBuilder builder;
   final Color barrierColorValue;
   final String barrierLabelText;
 
-  /// 路由名，读屏进入弹窗时播报。与 [barrierLabelText]（遮罩的「点这里关闭」）分开 ——
-  /// 混用会让读屏把每张弹窗都念成「关闭」。
   final String routeLabelText;
   final CapturedThemes capturedThemes;
 
@@ -217,15 +190,12 @@ class _MAlertRoute<T> extends PopupRoute<T> {
   @override
   String get barrierLabel => barrierLabelText;
 
-  /// 异步提交期间锁住遮罩；[changedInternalState] 会让 Navigator 重建 ModalBarrier。
   void setBarrierDismissible(bool value) {
     if (_barrierDismissible == value) return;
     _barrierDismissible = value;
     changedInternalState();
   }
 
-  /// 带着活跃的输入法会话被 pop 会在 debug 触发 `_dependents.isEmpty` 断言，
-  /// 所以按钮、遮罩、返回键三条关闭路径统一在这里收口。
   @override
   bool didPop(T? result) {
     FocusManager.instance.primaryFocus?.unfocus();
@@ -277,8 +247,6 @@ class _MAlertRoute<T> extends PopupRoute<T> {
   }
 }
 
-/// 居中 + 宽度上限 + 键盘避让。上限 340 是为了让平板/横屏下弹窗不被拉成长条
-/// （M3 默认宽度是「屏宽 − 80」且无上限）。
 class _AlertScaffold extends StatelessWidget {
   final EdgeInsets viewPadding;
   final Widget child;
@@ -319,13 +287,9 @@ class _AlertScaffold extends StatelessWidget {
   }
 }
 
-// ─────────────────────────── 内容 ───────────────────────────
-
-/// 换行或超过一屏宽的正文按长文处理（左对齐）。阈值取两行左右的字数。
 bool _isLongForm(String message) =>
     message.contains('\n') || message.runes.length > 44;
 
-/// 弹窗内部的通用骨架：图标 → 标题 → 正文 → 自定义内容 → 按钮，整体居中。
 class _AlertShell extends StatelessWidget {
   final String? title;
   final String? message;
@@ -389,8 +353,6 @@ class _AlertShell extends StatelessWidget {
               if (title != null) const SizedBox(height: 8),
               Text(
                 message!,
-                // 一句话居中；分段或长文左对齐 —— 「·」要点列表、免责声明这类多段
-                // 正文居中后每行起点都在跳，读起来很费劲。
                 textAlign: _isLongForm(message!) ? .start : .center,
                 style: typography.bodyMedium.onSurfaceVariant,
               ),

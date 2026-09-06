@@ -1,8 +1,4 @@
 <script setup lang="ts">
-// 编辑器查找/替换条（daisyUI）。两行用 grid `1fr auto`：两个输入框都在 1fr 列 → 等宽对齐；按钮在
-// auto 列右对齐。控件用 xs 尺寸（更矮、更窄，给输入框让出宽度）、圆角 rounded-md（比主题 radius-field 小）。
-// 位置由 platform 决定边框（桌面工具栏下=border-b、移动工具栏上=border-t）。
-// 按钮 @mousedown.prevent 保持查找框焦点；Enter=下一个、Shift+Enter=上一个、Esc=关闭。
 import { nextTick, ref, watch } from 'vue'
 import {
   closeSearch,
@@ -52,7 +48,6 @@ function onFindKey(e: KeyboardEvent): void {
     :class="platform === 'desktop' ? 'border-b border-base-300' : 'border-t border-base-300'"
   >
     <div class="grid grid-cols-[1fr_auto] items-center gap-x-1.5 gap-y-1">
-      <!-- 查找行 -->
       <input
         ref="findInput"
         :value="editorSearch.term"
@@ -87,7 +82,6 @@ function onFindKey(e: KeyboardEvent): void {
         </button>
       </div>
 
-      <!-- 替换行 -->
       <input
         :value="editorSearch.replace"
         type="text"

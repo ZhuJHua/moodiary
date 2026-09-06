@@ -11,8 +11,6 @@ import 'package:moodiary_theme/moodiary_theme.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
-/// 强调色来源选择。三行，没别的 —— 前两档点了立刻生效并留在弹窗里，
-/// 「自定义」进单独一页。
 class AccentSheet extends ConsumerWidget {
   const AccentSheet({super.key});
 
@@ -22,8 +20,6 @@ class AccentSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 壁纸取色只有 Android 12+ 拿得到。拿不到就整档不显示 —— 摆一个永远点不亮的
-    // 开关只会让人怀疑是不是坏了。
     final modes = [
       ThemeAccentMode.neutral,
       if (getIt<ThemeManager>().supportDynamic) ThemeAccentMode.system,
@@ -33,8 +29,6 @@ class AccentSheet extends ConsumerWidget {
     return MSheetScaffold<void>(
       title: context.l10n.app.accentTitle,
       icon: LucideIcons.palette,
-      // 选中态自己订阅 KV：弹窗页面被路由缓存（builder 只跑一次），本 widget 若不
-      // 依赖任何会变的 InheritedWidget 就永远不重建，对勾会冻在打开时的那一格。
       child: ValueListenableBuilder<int>(
         valueListenable: MoodiaryKVs.themeAccentMode.getNotifier(),
         builder: (context, index, _) {
@@ -65,9 +59,6 @@ class AccentSheet extends ConsumerWidget {
   ) async {
     HapticFeedback.selectionClick();
     if (mode == .custom) {
-      // 自定义得先挑色再落库 —— 这里只负责跳转，KV 由取色页在「保存」时写。
-      // 路由器必须在 pop 之前拿好：pop 之后本 widget 的 element 已失效，
-      // 再用它查 InheritedWidget 会炸。
       final router = GoRouter.of(context);
       Navigator.of(context).pop();
       router.push(const AccentRoute().location);
@@ -154,9 +145,6 @@ class _AccentModeRow extends StatelessWidget {
     final scheme = context.theme.colors;
     const radius = AppBorderRadius.smallBorderRadius;
     return switch (mode) {
-      // 白到黑的连续渐变。没有任何一条边，也就没有锯齿 —— 硬断点（stops [0.5, 0.5]）
-      // 是着色器逐像素求值，不走几何抗锯齿，28px 下的斜边会糊成一条灰带。
-      // 纯 #FFFFFF / #000000 且不随明暗档翻转：它是「没有颜色」这个概念的符号，不是某张表面。
       .neutral => DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: radius,

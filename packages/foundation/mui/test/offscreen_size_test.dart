@@ -28,8 +28,7 @@ void main() {
       viewSize: const Size(400, double.infinity),
     );
     expect(size, const Size(120, 48));
-    // 被量的东西不该出现在真实树里。
-    expect(find.byType(SizedBox), findsOneWidget); // 只有宿主那个 shrink
+    expect(find.byType(SizedBox), findsOneWidget);
   });
 
   testWidgets('宽度受限、高度不限时量出换行后的真实高度', (tester) async {
@@ -51,7 +50,6 @@ void main() {
     expect(narrow.height, greaterThan(wide.height), reason: '窄的那次要换更多行');
   });
 
-  // InheritedTheme 会被带过去，所以取主题的组件量得出来。
   testWidgets('主题随上下文带进离屏树', (tester) async {
     await pumpHost(tester);
     final size = getWidgetSizeOffScreen(
@@ -80,9 +78,6 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  // 真实树里已经挂着同类型 widget 时再离屏建一份，不能互相干扰。
-  // 唯一会炸的情况是被量的子树里带了 GlobalKey —— 那种 key 全进程唯一，
-  // 同时挂两处就是「Multiple widgets used the same GlobalKey」。
   testWidgets('被量的子树里带 GlobalKey 会撞车（带 GlobalKey 的祖先包不进来）', (tester) async {
     final shared = GlobalKey();
     await tester.pumpWidget(

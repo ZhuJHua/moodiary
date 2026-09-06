@@ -44,8 +44,6 @@ pub struct DavClient {
 
 impl DavClient {
     pub fn new(base_url: String, username: String, password: String) -> Result<DavClient> {
-        // 注入共享客户端：reqwest_dav 默认 agent 用 reqwest 0.13 的 rustls-platform-verifier，
-        // 在 Android 上未初始化会 panic；client::shared 仅在 Android 换成内置 webpki 根。
         let client = ClientBuilder::new()
             .set_agent(crate::http::client::shared()?)
             .set_host(base_url)
@@ -64,12 +62,6 @@ impl DavClient {
         format!("{}/{}", self.root, key)
     }
 
-    /// 逐级确保目录存在（深层目录如 `moodiary/media/image` 需中间层先存在），命中进程内
-    /// 缓存则跳过以省 mkcol 往返。MKCOL 路径带尾斜杠 —— RFC 4918 两者皆可，但
-    /// nginx dav 等实现要求集合以 `/` 结尾，否则直接 409。「已存在」（405）视作
-    /// 成功；其它失败再用 PROPFIND 复核一次，目录确实不存在则**如实上抛** ——
-    /// 吞掉错误并写入缓存会把一次创建失败固化成该目录后续所有 PUT 的 409
-    /// （比 MKCOL 的原始错误难排查得多）。
     async fn ensure_dir_cached(&self, dir: &str) -> Result<()> {
         let parts: Vec<&str> = dir.split('/').filter(|s| !s.is_empty()).collect();
         let mut current = String::new();
@@ -78,7 +70,6 @@ impl DavClient {
                 current.push('/');
             }
             current.push_str(part);
-            // 锁绝不跨 await，避免 std::Mutex 的 Send 问题。
             let known = self.created_dirs.lock().unwrap().contains(&current);
             if known {
                 continue;
@@ -99,7 +90,6 @@ impl DavClient {
         match self.client.list(&self.root, Depth::Number(0)).await {
             Ok(_) => Ok(true),
             Err(e) => {
-                // 404 表示目录不存在但服务器可达，也算连通
                 if dav_is_not_found(&e) {
                     Ok(true)
                 } else {
@@ -109,13 +99,6 @@ impl DavClient {
         }
     }
 
-    /// 不存在（404）返回 `None`；其它错误如实上抛 —— 调用方（同步引擎）必须能区分
-    /// 「不存在」与「读取失败」，否则 push 会在网络抖动时把 manifest 从零重建、丢失远端独有条目。
-    ///
-    /// **返回 `Option` 而不是空 Vec**：曾经用空 Vec 编码 404，于是「不存在」与
-    /// 「存在但 0 字节」在 Dart 那层被压成同一个 null，绕过了 manifest 的损坏守卫
-    /// ——0 字节的 manifest.json 会让 push 认定远端是空的、用本机数据重建，远端墓碑
-    /// 全部消失、已删日记在其它设备复活。
     pub async fn read_object(&self, key: String) -> Result<Option<Vec<u8>>> {
         let path = self.full_path(&key);
         let resp = match self.client.get(&path).await {
@@ -129,7 +112,6 @@ impl DavClient {
             .map_err(|e| req_err(e, format!("Failed to read {key}")))
     }
 
-    /// [read_object] 的落盘版：响应体边收边写，整份不进内存。远端不存在返回 false。
     pub async fn read_object_to_file(&self, key: String, file_path: String) -> Result<bool> {
         let path = self.full_path(&key);
         let resp = match self.client.get(&path).await {
@@ -141,10 +123,6 @@ impl DavClient {
         Ok(true)
     }
 
-    /// [write_object] 的文件版：请求体边读边发，整份不进内存。
-    ///
-    /// 流式 body 不能 clone（`try_clone` 返回 None），重定向中间件会把 3xx 原样交回来，
-    /// 所以这里重开文件手动跟一跳 —— 反代做 http→https 的 308 很常见。
     pub async fn write_object_file(&self, key: String, file_path: String) -> Result<()> {
         let path = self.full_path(&key);
         if let Some(pos) = path.rfind('/') {
@@ -164,7 +142,6 @@ impl DavClient {
         Ok(())
     }
 
-    /// [override_url] 非空时直接 PUT 到该地址（跟随重定向用），否则走 dav 客户端的路径。
     async fn put_file_once(
         &self,
         path: &str,
@@ -187,9 +164,6 @@ impl DavClient {
             .map_err(|e| req_err(e, format!("Failed to write {path}")))
     }
 
-    /// 条件创建：仅当远端不存在时写入（`If-None-Match: *`）。返回 true=创建成功，
-    /// false=远端已存在（412）。不支持条件 PUT 的服务器会忽略该头、直接覆盖并返回 true ——
-    /// 调用方（Dart 租约层）必须用「写后回读校验」兜底。
     pub async fn create_exclusive(&self, key: String, data: Vec<u8>) -> Result<bool> {
         let path = self.full_path(&key);
         if let Some(pos) = path.rfind('/') {
@@ -227,7 +201,6 @@ impl DavClient {
         Ok(())
     }
 
-    /// 404（不存在）视为成功；其它错误如实上抛 —— 引擎依赖删除结果决定 tombstone 是否已被远端接收。
     pub async fn delete_object(&self, key: String) -> Result<()> {
         let path = self.full_path(&key);
         match self.client.delete(&path).await {
@@ -248,8 +221,6 @@ impl DavClient {
             .send()
             .await
             .map_err(|e| req_err(e, "Stat request failed"))?;
-        // 只有 404 表示「不存在」（空串）；网络错误与 401/5xx 必须上抛，
-        // 否则调用方把「远端不可达」误判成「远端没有」，已上传媒体会整体重传。
         if resp.status() == reqwest::StatusCode::NOT_FOUND {
             return Ok(String::new());
         }
@@ -268,7 +239,6 @@ impl DavClient {
     }
 }
 
-/// 3xx 且带 Location 时返回目标地址。
 fn redirect_target(resp: &reqwest::Response) -> Option<String> {
     if !resp.status().is_redirection() {
         return None;

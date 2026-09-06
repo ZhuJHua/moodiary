@@ -13,6 +13,5 @@ external int _sqlite3VecInit(
   Pointer<Void> pApi,
 );
 
-/// `sqlite3_vec_init` 的函数地址，供 `sqlite3_auto_extension` 注册。
 Pointer<Void> vecInitAddress() =>
     Native.addressOf<NativeFunction<_VecInitNative>>(_sqlite3VecInit).cast();

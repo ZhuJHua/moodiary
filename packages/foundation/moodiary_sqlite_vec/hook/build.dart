@@ -5,11 +5,7 @@ import 'package:native_toolchain_c/native_toolchain_c.dart';
 
 void main(List<String> args) async {
   await build(args, (input, output) async {
-    // 这一趟不要 code asset（Flutter 在 run 时还会跑一趟只收数据资产的构建）就直接收工 ——
-    // `input.config.code` 在那种配置下访问即抛（hooks 的 API 契约）。
     if (!input.config.buildCodeAssets) return;
-    // loadable 扩展：不定义 SQLITE_CORE，sqlite3ext.h 走宿主函数表，
-    // 由 Dart 侧经 sqlite3_auto_extension 注册进 sqlite3 包自带的 SQLite。
     final builder = CBuilder.library(
       name: 'sqlite_vec',
       assetName: 'src/bindings.dart',
@@ -17,7 +13,6 @@ void main(List<String> args) async {
       includes: ['src'],
       flags: [
         if (input.config.code.targetOS == OS.android)
-          // Android 15+ 的 16KB page 设备要求 .so 段按 16KB 对齐。
           '-Wl,-z,max-page-size=16384',
       ],
     );

@@ -5,12 +5,6 @@ import 'package:injectable/injectable.dart';
 import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_rust/http.dart' as rust;
 
-/// [IHttpServer] 的 Rust(hyper) 实现。传输层全在 Rust：监听/端口回退、大请求体
-/// 流式落盘、文件响应与 Range；本类只做类型转换，并保证跨 FFI 的 handler 回调
-/// 绝不抛异常（Dart 侧任何错误统一折叠为 500）。
-///
-/// 注册是工厂而非单例：服务器是「按会话起停」的对象（编辑器 / 局域网接收各一），
-/// 共享实例会让后启动的一方顶掉前一方的端口与 handler。
 @Injectable(as: IHttpServer)
 class RustHttpServer extends IHttpServer {
   rust.HttpServer? _server;
@@ -47,7 +41,6 @@ class RustHttpServer extends IHttpServer {
           );
         }
       },
-      // 抛出不会击穿 FFI：Rust 侧把这个回调声明为可失败，异常会被解成 Err 后丢弃。
       onBodyProgress: (received, total) {
         onBodyProgress?.call(received, total < 0 ? null : total);
       },
@@ -64,7 +57,6 @@ class RustHttpServer extends IHttpServer {
         bodyFilePath: request.bodyFilePath,
       );
 
-  /// 重复键保留首个。
   static Map<String, String> _map(List<rust.KeyValue> pairs) => {
     for (final kv in pairs.reversed) kv.key: kv.value,
   };

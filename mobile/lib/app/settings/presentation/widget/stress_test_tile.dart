@@ -10,9 +10,6 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
-/// 压测数据:批量生成 / 清除随机双链日记,用于知识图谱等极限性能测试。数量对话框内
-/// 手动输入([_minTotal]–[_maxTotal]);生成的日记标题以 [_prefix] 开头,可一键清除。
-/// 所有构建可见——性能须在 profile/release 下测。
 class StressTestTile extends StatefulWidget {
   final bool isFirst;
   final bool isLast;
@@ -26,7 +23,7 @@ class StressTestTile extends StatefulWidget {
 class _StressTestTileState extends State<StressTestTile> {
   static const _prefix = '『压测』';
   static const _defaultTotal = 10000;
-  static const _minTotal = 2; // 至少 2 篇才可能互链
+  static const _minTotal = 2;
   static const _maxTotal = 100000;
   static const _chunk = 500;
   static const _minLinks = 1;

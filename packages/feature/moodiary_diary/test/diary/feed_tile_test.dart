@@ -53,12 +53,9 @@ Widget wrap(Widget child) => MuiTheme(
 
 void main() {
   setUpAll(() {
-    // 图片路径走 AppFiles，它读的是 late final 的应用目录；宿主测试没跑过 init。
-    // 只影响拼出来的路径字符串（文件本来就不存在，走 errorBuilder）。
     try {
       PlatformService.get().applicationSupportPath = '/tmp/moodiary-test';
     } catch (_) {
-      // 同一个测试进程里只能设一次，重复设置直接忽略。
     }
   });
 
@@ -74,7 +71,6 @@ void main() {
       ),
     );
     expect(t.takeException(), isNull);
-    // 标题行是 Text.rich（行首那根心情色标是 WidgetSpan），要按富文本查找。
     expect(find.textContaining('标题在这', findRichText: true), findsOneWidget);
   });
 
@@ -105,7 +101,6 @@ void main() {
       ),
     );
     expect(t.takeException(), isNull);
-    // 元信息是单个 Text.rich：整行拼在一起，装不下时靠省略号，不会 overflow。
     final meta = t.widgetList<Text>(find.byType(Text)).firstWhere((w) {
       final s = w.textSpan?.toPlainText() ?? '';
       return s.contains('26°');
@@ -171,7 +166,6 @@ void main() {
         wrap(DiaryFeedTile(diary: diary(images: const ['1.jpg']))),
       );
       expect(t.takeException(), isNull);
-      // 右侧缩略图固定 96×72 —— 单图不占整行正是密度的来源。
       final box = t
           .widgetList<SizedBox>(find.byType(SizedBox))
           .where((w) => w.width == 96 && w.height == 72);
@@ -197,9 +191,6 @@ void main() {
   });
 
   testWidgets('long tags never overflow the meta line', (t) async {
-    // 标签名输入框没有长度限制，长标签是用户随手能造出来的数据。
-    // 标签块是 Row 里的非 flex 子节点，不封顶的话会把整行撑爆。
-    // 视口必须**真的**收窄（MediaQuery 的 size 不改变布局约束）。
     t.view.physicalSize = const Size(360 * 3, 800 * 3);
     t.view.devicePixelRatio = 3.0;
     addTearDown(t.view.reset);
@@ -257,7 +248,6 @@ void main() {
         ),
       ),
     );
-    // 有图时波形条让位给图片，语音只剩元信息行里的标记 —— 不能连它也没有。
     expect(find.byIcon(LucideIcons.mic), findsOneWidget);
   });
 
@@ -296,7 +286,6 @@ void main() {
       ),
     );
     expect(t.takeException(), isNull);
-    // 时长没有存进模型，所以只标「这是视频」。
     expect(find.byIcon(LucideIcons.circlePlay), findsOneWidget);
   });
 }

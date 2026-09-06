@@ -10,8 +10,6 @@ import 'package:moodiary_sync/src/data/sync_logger.dart';
 
 import '../sync_test_harness.dart';
 
-/// runner 的状态机与健康态：手动 / 自动同源，错误按 kind 折进 health，
-/// 边沿日志只在切换时各记一条。
 void main() {
   late SyncLogger logger;
   late FakeRemoteBackend backend;
@@ -21,7 +19,6 @@ void main() {
     logger = (await setUpSyncEnv()).logger;
     await configureBackend(.webdav);
     backend = FakeRemoteBackend();
-    // runner 取的是当前 scope 里的无名后端（prod 由 activateSyncProvider 暴露）。
     getIt.registerSingleton<IRemoteSyncBackend>(backend);
     runner = SyncRunner.withEngine(getIt<SyncCancellation>(), logger, (
       backend, {
@@ -58,7 +55,6 @@ void main() {
     expect(runner.isRunning, isFalse);
     expect(runner.status.value.last, same(outcome));
     expect(runner.status.value.health, SyncHealth.reachable);
-    // 先 running=true 再 false。
     expect(seen.first, isTrue);
     expect(seen.last, isFalse);
   });
@@ -104,7 +100,7 @@ void main() {
   });
 
   test('远端活着的失败（锁 / 竞争）不动健康态', () async {
-    await runner.run(.push, trigger: .manual); // reachable
+    await runner.run(.push, trigger: .manual);
     backend.beforeOp = (op, key) {
       throw const SyncException('locked', kind: .locked);
     };
@@ -124,7 +120,7 @@ void main() {
     expect(runner.status.value.health, SyncHealth.unreachable);
 
     backend.beforeOp = null;
-    expect(await runner.probe(trigger: .resume), isNull); // 空远端没有 manifest
+    expect(await runner.probe(trigger: .resume), isNull);
     expect(runner.status.value.health, SyncHealth.reachable);
   });
 

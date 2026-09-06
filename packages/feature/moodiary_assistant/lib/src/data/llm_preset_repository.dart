@@ -28,7 +28,6 @@ class LlmPresetRepository {
     return refresh();
   }
 
-  /// 只读本地缓存、绝不联网。缓存缺失或解码失败均返回空列表。
   List<LlmProviderPreset> cachedPresets() {
     final cached = MoodiaryKVs.llmPresetCache.get() ?? '';
     if (cached.isEmpty) return const [];
@@ -39,15 +38,12 @@ class LlmPresetRepository {
     }
   }
 
-  /// 目录多久算过期。models.dev 每天都在动（新模型 / 下架 / 改价），而缓存
-  /// 没有任何 TTL —— 三个月前加的供应商不手动刷就永远看不到新模型。
   static const Duration _staleAfter = Duration(hours: 24);
 
   bool get isStale =>
       DateTime.now().millisecondsSinceEpoch - cachedAt >
       _staleAfter.inMilliseconds;
 
-  /// 缓存过期才联网。失败静默吞掉 —— 这是后台保鲜，不该打断用户手上的事。
   Future<void> refreshIfStale() async {
     if (!isStale) return;
     try {

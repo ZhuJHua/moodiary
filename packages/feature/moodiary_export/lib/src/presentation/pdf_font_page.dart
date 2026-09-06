@@ -8,12 +8,6 @@ import 'package:moodiary_theme/moodiary_theme.dart';
 import 'package:mui/mui.dart';
 import 'package:path/path.dart' as p;
 
-/// 选一个用于 PDF 的字体，返回它的文件名；取消返回 null。
-///
-/// PDF 必须把字体嵌进文件才能显示中文，而本应用不内置任何字体 —— 用的是用户在
-/// 「字体样式」页导入的那些。排版引擎换成 typst 之后 TTF / OTF / 字体集合都能读，
-/// 不用再按格式挑拣（dart_pdf 时代只吃 TrueType，`.otf` 会静默产出结构非法的 PDF，
-/// 所以那时这页要逐个判魔数、把不可用的置灰）。
 class PdfFontPage extends StatefulWidget {
   final String selected;
 

@@ -8,7 +8,6 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
-/// 可选的地点图标。八个够用——再多就成了图标选择器，而这是个只填一次的表单。
 const List<String> kPlaceIcons = [
   'house',
   'building-2',
@@ -20,8 +19,6 @@ const List<String> kPlaceIcons = [
   'plane',
 ];
 
-/// lucide 名 → 图标；未知名（旧数据 / 手改的库）回退图钉。名字而不是码点进库，
-/// 是为了让 web 侧的位置面板拿同一个字符串去查它自己那份组件表。
 IconData placeIconOf(String? name) => switch (name) {
   'house' => LucideIcons.house,
   'building-2' => LucideIcons.building2,
@@ -34,7 +31,6 @@ IconData placeIconOf(String? name) => switch (name) {
   _ => LucideIcons.mapPin,
 };
 
-/// 距离的展示串：1 km 以下给米（取整），以上给一位小数的公里。
 String formatDistance(BuildContext context, double meters) {
   if (meters < 1000) {
     return context.l10n.diary.placeDistanceMeters(meters: meters.round());
@@ -44,15 +40,6 @@ String formatDistance(BuildContext context, double meters) {
   );
 }
 
-/// 新建 / 编辑常用地点。承载在 [MAlert.show] 上，与 `showCategoryEditor` 同构：
-/// 值放在可变 holder 里由内容区实时更新，按钮只回答「确认还是取消」，确认键走
-/// `onSubmit` 校验空名——就地亮红字并留住弹窗，而不是关掉再 toast 骂人。
-///
-/// [existing] 为空即新建。坐标**不给用户看、也不让用户点**：点确认那一刻才定位
-/// （高精度，确认键转圈等它），失败 toast 提示、弹窗留住，再点确认重试。编辑时
-/// 多一个「更新为当前位置」开关，打开后确认时同样重新定位并覆盖坐标。
-/// [latitude] / [longitude] 用于「从当前日记的坐标存一个地点」那条路径（坐标已经
-/// 在手上，不再定位）。返回落库后的 [Place]，取消返回 null。
 Future<Place?> showPlaceEditor(
   BuildContext context, {
   Place? existing,
@@ -124,7 +111,6 @@ class _PlaceDraft {
   double? latitude;
   double? longitude;
 
-  /// 编辑时勾选「更新为当前位置」：确认时重新定位并覆盖坐标。
   bool relocate = false;
 
   _PlaceDraft({
@@ -138,10 +124,8 @@ class _PlaceDraft {
 class _PlaceEditorContent extends ConsumerStatefulWidget {
   final _PlaceDraft draft;
 
-  /// 编辑既有地点时把它自己排除在「靠太近」检查之外。
   final String? excludeId;
 
-  /// 编辑既有地点：显示「更新为当前位置」开关。
   final bool canRelocate;
 
   const _PlaceEditorContent({
@@ -161,7 +145,6 @@ class _PlaceEditorContentState extends ConsumerState<_PlaceEditorContent> {
     text: widget.draft.name,
   );
 
-  /// 一进来就红字太吵，用户动过输入框、或点了确认之后才提示空名。
   bool _edited = false;
 
   @override
@@ -170,9 +153,6 @@ class _PlaceEditorContentState extends ConsumerState<_PlaceEditorContent> {
     super.dispose();
   }
 
-  /// 确认键的异步提交：名字非空；坐标还没有（或勾了更新）就**此刻**定位（确认键
-  /// 转圈等它）。存地点要的是这个点本身，不接受系统缓存的旧定位：高精度、等一次
-  /// 新鲜的。失败 toast 提示、留住弹窗，再点确认重试。
   Future<bool> submit() async {
     if (widget.draft.name.trim().isEmpty) {
       if (!_edited) setState(() => _edited = true);
@@ -201,8 +181,6 @@ class _PlaceEditorContentState extends ConsumerState<_PlaceEditorContent> {
     LocationFailure.unavailable => l10n.diary.positionFailed,
   };
 
-  /// 与已有地点靠得太近（两个命中圆相交）时的提示。室内 GPS 误差常有 50–100 m，
-  /// 挨着的两个地点会互相误命中——先让用户看见这件事，而不是等他发现日记记错了地方。
   String? _overlapWarning(List<Place> places) {
     final lat = widget.draft.latitude;
     final lon = widget.draft.longitude;
@@ -292,7 +270,6 @@ class _PlaceEditorContentState extends ConsumerState<_PlaceEditorContent> {
               ),
           ],
         ),
-        // 坐标本身不展示；定位由确认键转圈表达，失败走 toast。
         if (widget.canRelocate) ...[
           const SizedBox(height: 12),
           Row(

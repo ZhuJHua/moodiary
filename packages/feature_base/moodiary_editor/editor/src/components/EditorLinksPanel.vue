@@ -1,6 +1,4 @@
 <script setup lang="ts">
-// 文末双链面板（原 Flutter 侧渲染，搬进 webview 落到文档流末尾——滚到底自然出现）。
-// 条目点击复用 linkTap 通道（Flutter 页内跳转），图谱入口经 openGraph 回跳。
 import { computed } from 'vue'
 import { post } from '../bridge/post'
 import type { EditorLinkItem, EditorLinks } from '../bridge/meta'

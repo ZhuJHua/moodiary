@@ -6,8 +6,6 @@ import 'package:fast_image/fast_image.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// 失败的加载不能留在 ImageCache 的 pending 表里：文件晚到（同步先落行后拉媒体）
-/// 或重建 Image 时，同一个 key 要能真的重试。文件 IO 是真异步，得在 runAsync 里跑。
 void main() {
   testWidgets('a failed load is evicted so the next attempt retries', (
     tester,
@@ -37,14 +35,12 @@ void main() {
         reason: '失败后 pending 条目应被踢出，否则永远拿到同一次失败',
       );
 
-      // 文件到了：同一个 provider 再来必须真的去读，而不是复用上次的失败。
       await File(provider.path).writeAsBytes(await _onePixelPng());
       expect(await attempt(), isNull);
     });
   });
 }
 
-/// 1×1 PNG，用引擎自己编码——手写字节容易错一位就「Codec failed」。
 Future<List<int>> _onePixelPng() async {
   final recorder = ui.PictureRecorder();
   ui.Canvas(recorder).drawRect(const ui.Rect.fromLTWH(0, 0, 1, 1), ui.Paint());

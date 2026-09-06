@@ -29,10 +29,7 @@ class FontController extends _$FontController {
     return list;
   }
 
-  /// 返回 `null`=用户取消、非空错误 message=失败、空字符串=成功。
   Future<String?> addFont() async {
-    // 选文件期间页面可能退出（autoDispose 回收 ref）：仓储是容器单例不受影响，
-    // 但 `state` 的读写都要先看 `ref.mounted`。
     final xFile = await FontManager.pickFont();
     if (xFile == null) return null;
     final fontName = await FontManager.getFontName(filePath: xFile.path);
@@ -55,7 +52,6 @@ class FontController extends _$FontController {
     return '';
   }
 
-  /// 若正在使用，先切回系统字体再删，避免引用已删除文件。
   Future<void> removeFont(Font font) async {
     if (MoodiaryKVs.customFont.get() == font.fontFamily) {
       await setActive(null);

@@ -1,6 +1,3 @@
-// 语义索引（EmbedIndexService + sqlite-vec）集成测试：入队/排空/幂等/删除回收/
-// 重建/KNN 检索。嵌入走确定性替身（关键词 one-hot），vec0 扩展由
-// moodiary_sqlite_vec 的 code asset 提供，宿主 flutter test 零门槛。
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -21,7 +18,6 @@ Future<TokenizeResult> fakeTokenize(String text) async {
   return TokenizeResult(cut: words, cutForSearch: words);
 }
 
-/// 确定性替身：按关键词 one-hot（归一化），含关键词的文本与同词查询余弦距离最小。
 final class FakeEmbedder implements SemanticEmbedder {
   @override
   Future<void> dispose() async {}
@@ -123,11 +119,9 @@ void main() {
 
     expect(await index.drain(), 2);
     expect(await queueCount(), 0);
-    // d1 = 标题块 + 正文块，d2 = 正文块。
     expect(await chunkCount(), 3);
     expect(await vecCount(), 3);
 
-    // 内容未变：重新入队排空只对比 hash，不再嵌入。
     final embedded = embedder.embeddedPassages;
     await repo.updateADiary(newDiary: makeDiary('d1', '今天去旅行了', title: '出门'));
     expect(await index.drain(), 1);
@@ -149,7 +143,7 @@ void main() {
   });
 
   test('内容变化触发重嵌，摘录偏移指向命中分块', () async {
-    // 首段撑过 400 字符上限，第二段才会落进独立分块（并列短段会被合并）。
+    // 400 字符是分块字数上限
     final firstParagraph = '工作${'。' * 400}';
     await repo.insertADiary(makeDiary('d1', '$firstParagraph\n\n第二段说的是旅行的事'));
     await index.drain();
@@ -169,7 +163,7 @@ void main() {
     expect(await chunkCount(), 1);
 
     await repo.deleteDiariesByIds(['d1']);
-    expect(await queueCount(), 1); // 删除同样入队
+    expect(await queueCount(), 1);
     await index.drain();
     expect(await chunkCount(), 0);
     expect(await vecCount(), 0);

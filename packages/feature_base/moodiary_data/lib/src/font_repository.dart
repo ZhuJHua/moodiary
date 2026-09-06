@@ -58,7 +58,6 @@ class FontRepository {
     )..where((f) => f.fontFamily.equals(fontFamily))).go();
   }
 
-  /// 当前激活的自定义字体（[MoodiaryKVs.customFont]）；未设置或记录缺失返回 null。
   Future<Font?> getActiveFont() async {
     final family = MoodiaryKVs.customFont.get();
     if (family == null || family.isEmpty) return null;

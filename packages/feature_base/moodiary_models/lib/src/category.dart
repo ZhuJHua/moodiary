@@ -14,7 +14,6 @@ abstract class Category with _$Category {
     @UtcDateTimeConverter() required DateTime lastModified,
     String? parentId,
 
-    /// 卡片/标签用的 ARGB 颜色；null = 未设置（由 categoryColorOf 回退到派生色）。
     int? color,
   }) = _Category;
 

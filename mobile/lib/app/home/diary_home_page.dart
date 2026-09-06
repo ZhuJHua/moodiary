@@ -10,12 +10,7 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_sync/moodiary_sync.dart';
 import 'package:mui/mui.dart';
 
-/// 移动端首页壳（app 侧组合面）：把 moodiary_diary 的视图主体与 moodiary_sync 的
-/// [SyncStatusButton]、新建日记 FAB 焊到一起。这是 diary↔sync 的唯一相遇处，故留在
-/// app 侧、不入包。
 class _DiaryListView extends ConsumerStatefulWidget {
-  /// 打开分类抽屉。抽屉挂在**根壳**的 Scaffold 上（首页只是 IndexedStack 里的一个
-  /// tab，挂在这层会被底部导航条截断），所以只能由外面把开关递进来。
   final VoidCallback? onOpenDrawer;
 
   const _DiaryListView({this.onOpenDrawer});
@@ -34,9 +29,6 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
           builder: (context, sortMode, _) {
             final viewModeType = ViewModeType.getType(viewMode);
             final sort = DiarySort.getType(sortMode);
-            // sort 既是视图的显式参数（正确性契约），也参与 key：换排序要整树
-            // 重建「从头看」——否则旧的 ScrollPosition 保留，refresh 把列表截回
-            // 一页后用户停在新排序的**末尾**，还会触发一次多余的 loadMore。
             return AnimatedSwitcher(
               duration: Durations.short3,
               child: KeyedSubtree(
@@ -59,7 +51,6 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
     final selecting = selection.isNotEmpty;
     final filter = ref.watch(homeDiaryFilterProvider);
 
-    // 选中的分类被删掉时切回「全部」。放在这层是因为提示需要 context 取文案。
     ref.listen(orderedCategoriesProvider, (_, next) {
       final id = ref.read(homeDiaryFilterProvider).categoryId;
       final categories = next.value;
@@ -71,11 +62,8 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
       }
     });
 
-    // 底部留白不再由本页自己注入：新建按钮上了底栏，而根壳开了 extendBody，
-    // 底栏的整条带高已经在 MediaQuery.padding.bottom 里，列表直接读就是。
     final body = _buildDiaryView(filter);
     return PopScope(
-      // 多选态：返回键先退出多选，而非离开首页。
       canPop: !selecting,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) ref.read(diarySelectionProvider.notifier).clear();
@@ -116,7 +104,6 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
           tooltip: context.l10n.diary.allCategories,
           onPressed: widget.onOpenDrawer,
           icon: Badge(
-            // 有新建但还没同步上去的分类时点一下 —— 抽屉里才看得到详情。
             isLabelVisible: pending.newCategoryIds.isNotEmpty,
             smallSize: 7,
             child: const Icon(LucideIcons.menu),
@@ -131,8 +118,6 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
           icon: const Icon(LucideIcons.search),
           onPressed: () => const DiarySearchRoute().push(context),
         ),
-        // 知识图谱入口暂隐藏(功能保留,打磨后再放出):
-        // IconButton(icon: Icon(LucideIcons.waypoints)) → DiaryGraphRoute().push
         const SyncStatusButton(),
         ValueListenableBuilder(
           valueListenable: MoodiaryKVs.homeViewMode.getNotifier(),
@@ -174,8 +159,6 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
         .softDeleteByIds(ids);
     if (!mounted) return;
     ref.read(diarySelectionProvider.notifier).clear();
-    // 一篇都没删掉时别报成功：选中集合与当前列表对不上时 softDeleteByIds 会返回 0，
-    // 弹绿色的「已移入回收站（0 篇）」等于骗人。
     if (n == 0) {
       toast.info(message: l10n.app.homeNothingToDelete);
     } else {
@@ -184,8 +167,6 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
   }
 }
 
-/// 顶栏标题位：不再是固定的 App 名，而是「当前在看什么」——分类色点 + 名称 + 篇数。
-/// App 名下沉到抽屉头部。
 class _FilterTitle extends ConsumerWidget {
   final DiaryFilter filter;
 
@@ -252,10 +233,7 @@ class _FilterTitle extends ConsumerWidget {
   }
 }
 
-/// 移动端：详情路由是顶层兄弟，push 落 root navigator 全屏盖过 shell，故本页只渲染
-/// 列表，不涉及内层 navigator。
 class DiaryHomePage extends StatelessWidget {
-  /// 见 [_DiaryListView.onOpenDrawer]。
   final VoidCallback? onOpenDrawer;
 
   const DiaryHomePage({super.key, this.onOpenDrawer});

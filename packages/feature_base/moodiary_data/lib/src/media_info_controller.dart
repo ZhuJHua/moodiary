@@ -9,7 +9,6 @@ import 'media_info_repository.dart';
 
 part 'media_info_controller.g.dart';
 
-/// 把单条 [MediaInfoEvent] 原地并入映射（fileName → MediaInfo）。
 Map<String, MediaInfo> _applyEvent(
   Map<String, MediaInfo> map,
   MediaInfoEvent event,
@@ -23,13 +22,10 @@ Map<String, MediaInfo> _applyEvent(
   }
 }
 
-/// 订阅 [MediaInfoRepository.mediaInfoEvents]，按事件原地增量更新，无需重查库。
-/// 以 fileName 为键——消费方（媒体库 / 播放页）都按文件名点查。
 @riverpod
 class MediaInfoController extends _$MediaInfoController {
   late final _repository = getIt<MediaInfoRepository>();
 
-  // 首次加载期间事件无处可并，标记后补一次重查（同 LoadMoreMixin.markMissedEvent）。
   bool _missedEvent = false;
 
   @override
@@ -37,7 +33,6 @@ class MediaInfoController extends _$MediaInfoController {
     final sub = _repository.mediaInfoEvents.listen(_applyChange);
     ref.onDispose(sub.cancel);
     var list = await _repository.getAllMediaInfos();
-    // 循环补偿（上限防饥饿），同 CategoryController 的注释。
     for (var i = 0; _missedEvent && i < 3; i++) {
       _missedEvent = false;
       list = await _repository.getAllMediaInfos();
@@ -64,7 +59,6 @@ class MediaInfoController extends _$MediaInfoController {
     }
   }
 
-  /// 删除元数据行（行硬删 + 同步墓碑），清理孤儿媒体时联动调用。
   Future<bool> deleteMediaInfo(String fileName) async {
     try {
       return await _repository.deleteAMediaInfo(fileName);

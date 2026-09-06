@@ -9,10 +9,6 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
 
-/// 助手预设管理：内置「Moodiary助手」（只读，可派生）+ 用户预设（可编辑 / 派生 /
-/// 删除）。创建只有派生一条路（dsh 同款：copy is the only way），FAB = 从内置派生。
-///
-/// 「默认」标记只影响**新会话**的初始预设；已有会话钉的是自己创建时那份。
 class AgentPresetListPage extends StatefulWidget {
   const AgentPresetListPage({super.key});
 
@@ -68,7 +64,6 @@ class _AgentPresetListPageState extends State<AgentPresetListPage> {
     );
     if (!confirmed || !mounted) return;
     await getIt<AgentPresetRepository>().delete(preset.id);
-    // 删的是默认项 → 默认回落内置。
     if (_defaultId == preset.id) {
       MoodiaryKVs.assistantAgentPresetId.set(builtinAgentPresetId);
     }
@@ -134,16 +129,13 @@ class _PresetCard extends StatelessWidget {
   final String description;
   final bool builtin;
 
-  /// 自定义了工具子集时的工具数；null = 全部（不显示标签）。
   final int? toolCount;
   final bool isDefault;
   final VoidCallback onTap;
 
-  /// null = 已经是默认项，菜单里不再给这一项。
   final VoidCallback? onSetDefault;
   final VoidCallback onDerive;
 
-  /// null = 内置预设，不可删。
   final VoidCallback? onDelete;
 
   const _PresetCard({

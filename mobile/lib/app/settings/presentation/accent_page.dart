@@ -7,11 +7,6 @@ import 'package:moodiary_theme/moodiary_theme.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
-/// 自定义强调色。页面主体就是**这个种子生成出来的真实色板** —— 每格底色即该角色的色、
-/// 文字用它配对的 on 色，所以「这个色上放字读不读得清」是直接看出来的，不必另做预览。
-///
-/// 改色只刷新本页，不动全局主题：`bumpTheme()` 会重读字体文件（磁盘 IO），
-/// 逐次调用会卡。真正生效在「保存」。
 class AccentPage extends ConsumerStatefulWidget {
   const AccentPage({super.key});
 
@@ -133,8 +128,6 @@ class _AccentPageState extends ConsumerState<AccentPage> {
   }
 }
 
-/// 当前种子色。点开取色弹窗 —— 用户挑的是**种子**，上面那些格子才是 Material
-/// 生成的结果，两者几乎不会相同，所以这里的 hex 单独摆着。
 class _SeedCard extends StatelessWidget {
   final Color seed;
   final VoidCallback onTap;
@@ -144,7 +137,6 @@ class _SeedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
-    // 这层不是为了托水波 —— 它画着那圈描边，所以留着，只是换成不带 ink 的形态。
     return DecoratedBox(
       decoration: ShapeDecoration(
         shape: RoundedRectangleBorder(
@@ -231,7 +223,6 @@ class _TokenGrid extends StatelessWidget {
           decoration: BoxDecoration(
             color: token.color,
             borderRadius: AppBorderRadius.smallBorderRadius,
-            // 近白的表面格在白底页面上会没边，补一道发丝线。
             border: Border.all(color: scheme.outlineVariant),
           ),
           child: Column(

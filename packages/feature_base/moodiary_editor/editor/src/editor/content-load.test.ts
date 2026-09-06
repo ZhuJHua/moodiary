@@ -25,8 +25,6 @@ const undoTimes = (n: number): void => {
 }
 
 describe('loadContent resets the undo stack', () => {
-  // 页内双链跳转 A→B 用的是同一个编辑器实例（HopHistory，webview 不重建）。灌入即新文档的
-  // 起点，undo 绝不能穿越回上一篇日记，否则正文被撤成别的内容后照常 autoSave + LWW 同步。
   it('cannot undo past a freshly loaded document', async () => {
     h.api.setContent(docWith('第一篇的正文'))
     h.api.setContent(docWith('第二篇的正文'))
@@ -48,7 +46,6 @@ describe('loadContent resets the undo stack', () => {
   })
 
   it('swaps the history plugin instead of stacking copies of it', () => {
-    // plugin.key 是运行期字段，类型里没有（TipTap 自己的 unregisterPlugin 也这么读）。
     const historyPlugins = (): number =>
       h.editor.state.plugins.filter((p) =>
         (p as unknown as { key: string }).key.startsWith('history$'),

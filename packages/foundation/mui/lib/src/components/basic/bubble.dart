@@ -3,7 +3,6 @@ import 'package:mui/mui.dart';
 class Bubble extends StatelessWidget {
   final Widget child;
 
-  /// 不给就跟着主题走。默认参数必须是编译期常量，取不到 context，所以留空。
   final Color? backgroundColor;
   final double borderRadius;
 

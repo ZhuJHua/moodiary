@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mui/mui.dart';
 
-/// 记录自己被 build / dispose 过几次，并把外面传进来的 label 显示出来。
 class _Probe extends StatefulWidget {
   final String name;
   final String label;
@@ -71,16 +70,12 @@ void main() {
     expect(_Probe.built, {'p0': 1, 'p2': 1}, reason: '切回来不该重建');
   });
 
-  // lazy_load_indexed_stack 的真 bug：它把 List<Widget> 存进 State，didUpdateWidget
-  // 里只换当前那一格，于是已建但隐藏的格子永远拿着离开时的那个 widget。
   testWidgets('已建但隐藏的格子照样收到父级传下来的新 widget', (tester) async {
     await tester.pumpWidget(_host(index: 0, label: 'v1'));
     await tester.pumpWidget(_host(index: 1, label: 'v1'));
     expect(find.text('p1:v1'), findsOneWidget);
 
-    // 站在 1 上把 label 换掉：0 此刻是隐藏的，但它建过。
     await tester.pumpWidget(_host(index: 1, label: 'v2'));
-    // 切回 0，它必须是 v2 而不是离开时的 v1。
     await tester.pumpWidget(_host(index: 0, label: 'v2'));
 
     expect(find.text('p0:v2'), findsOneWidget);
@@ -91,7 +86,6 @@ void main() {
   testWidgets('preloadIndexes 第一帧就建', (tester) async {
     await tester.pumpWidget(_host(index: 0, preload: const [2]));
     expect(_Probe.built, {'p0': 1, 'p2': 1});
-    // 预建的格子在树里、也照常布局，只是不画 —— finder 默认 skipOffstage 会跳过它。
     expect(find.text('p2:'), findsNothing);
     expect(find.text('p2:', skipOffstage: false), findsOneWidget);
   });
@@ -112,7 +106,6 @@ void main() {
     await tester.pumpWidget(_host(index: 1, count: 3));
     expect(_Probe.built, {'p0': 1, 'p1': 1});
 
-    // 砍掉最后一格：p0 / p1 都还在，不该被重建。
     await tester.pumpWidget(_host(index: 1, count: 2));
     expect(_Probe.built, {'p0': 1, 'p1': 1});
     expect(_Probe.disposed, isEmpty);
@@ -134,7 +127,6 @@ void main() {
         ),
       ),
     );
-    // 第二格还没建，占位是 0×0 —— 换成默认的 Container() 会撑满约束。
     expect(tester.getSize(find.byType(MLazyIndexedStack)), const Size(50, 50));
   });
 

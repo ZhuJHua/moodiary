@@ -7,8 +7,6 @@ import 'package:path/path.dart' as p;
 
 import '../sync_test_harness.dart';
 
-/// 用 package:file 的 MemoryFileSystem 测真正的生产媒体实现 [DiskSyncMediaFiles]
-/// （默认的 LocalFileSystem 行为同 dart:io），不落真实磁盘。
 void main() {
   late MemoryFileSystem fs;
   late DiskSyncMediaFiles media;
@@ -29,7 +27,6 @@ void main() {
 
       expect(await media.exists('image', 'a.jpg'), isTrue);
       expect(await media.read('image', 'a.jpg'), bytes([1, 2, 3]));
-      // 路径布局与 AppFiles.getRealPath 一致。
       expect(fs.file(p.join(baseDir, 'image', 'a.jpg')).existsSync(), isTrue);
     },
   );
@@ -38,7 +35,6 @@ void main() {
     await media.write('audio', 'x.m4a', bytes([9]));
     await media.delete('audio', 'x.m4a');
     expect(await media.exists('audio', 'x.m4a'), isFalse);
-    // 不存在时删除不抛错。
     await media.delete('audio', 'x.m4a');
   });
 

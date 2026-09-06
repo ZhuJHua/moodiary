@@ -12,10 +12,6 @@ import 'package:mui/mui.dart';
 
 final _mui = buildMuiTheme(brightness: Brightness.light);
 
-/// 应用锁状态机的回归测试。「飞行中退格起第二个 _verify、五次机会实际不到五次」
-/// 是修过的真实缺陷（见 lock_page._onBackspace 的注释），此前只能人肉复现。
-/// Argon2 原语经 AppLockPin.verifier 注入（宿主单测无 Rust FFI）；lockType
-/// 传 'pause' 使解锁走 Navigator.pop、不碰路由契约。
 void main() {
   late int verifyCalls;
 
@@ -56,12 +52,10 @@ void main() {
       await t.tap(find.text(d));
       await t.pump();
     }
-    // 第四位落下后延一拍才发起校验（时长取自被测代码的常量，不抄数字）。
     await t.pump(kLockVerifyDelay + const Duration(milliseconds: 1));
     await t.pump();
   }
 
-  /// 错误分支的收尾：清 pin 延迟 + 抖动往返（时长取自被测常量，留 20ms 余量）。
   Future<void> settleFailure(WidgetTester t) async {
     await t.pump(kLockClearDelay + const Duration(milliseconds: 20));
     await t.pump(kLockShakeDuration * 2 + const Duration(milliseconds: 20));
@@ -78,7 +72,6 @@ void main() {
     await enterPin(t, '1111');
     expect(verifyCalls, 1, reason: '校验已发起且在飞');
 
-    // 飞行中退格 + 补位：修过的缺陷是这里会起第二个 _verify、多记一次失败。
     await t.tap(find.byIcon(LucideIcons.delete));
     await t.pump();
     await t.tap(find.text('2'));
@@ -105,18 +98,15 @@ void main() {
     expect(verifyCalls, 5);
     expect(find.textContaining('尝试次数过多'), findsOneWidget);
 
-    // 冷却期：键盘无效，不发起校验。
     await enterPin(t, '2222');
     expect(verifyCalls, 5, reason: '冷却期输入必须被挡住');
 
-    // 冷却 30 秒逐秒走完后计数清零、提示消失。
     for (var s = 0; s < 30; s++) {
       await t.pump(const Duration(seconds: 1));
     }
     await t.pump();
     expect(find.textContaining('尝试次数过多'), findsNothing);
 
-    // 再错一次：从头数（还剩 4 次），而不是直接再进冷却。
     await enterPin(t, '3333');
     await settleFailure(t);
     expect(verifyCalls, 6);
@@ -133,12 +123,10 @@ void main() {
     await t.pump(kLockClearDelay + const Duration(milliseconds: 20));
     expect(verifyCalls, 1);
     expect(find.textContaining('还可重试'), findsNothing);
-    // 已解锁态：锁形图标翻开；解锁后输入被挡住、不再发起校验。
     expect(find.byIcon(LucideIcons.lockOpen), findsOneWidget);
     await t.tap(find.text('1'), warnIfMissed: false);
     await t.pump(const Duration(milliseconds: 200));
     expect(verifyCalls, 1);
-    // 结掉解锁 pop 延迟，别留 pending timer（根路由 pop 是 no-op）。
     await t.pump(kLockClearDelay + const Duration(milliseconds: 20));
   });
 }

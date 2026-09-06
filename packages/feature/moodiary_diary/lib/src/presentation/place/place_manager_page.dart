@@ -9,15 +9,6 @@ import 'package:moodiary_utils/moodiary_utils.dart';
 
 import 'place_editor.dart';
 
-/// 常用地点管理。与 [CategoryManagerPage] 是同一套骨架（搜索框 + 可拖拽卡片列表 +
-/// FAB + MAlert 编辑弹窗），三处刻意不同：
-///
-/// - 方块底色**按 id 自动取**（复用 `categoryColorOf`），不给用户选颜色——图标已经
-///   承担了辨识，再加一个调色板等于为一条设置选两次；
-/// - 副标题是「N 篇日记 · 半径 200 m」，日记数按**坐标落在半径内**统计，不按名字
-///   匹配（名字是快照，改名就断）；
-/// - 删除**不拦**。日记的 `DiaryPosition.name` 是写入时的字符串快照、不是对本表的
-///   引用，删掉「公司」旧日记照样显示「公司」，只是以后不再自动命中。
 class PlaceManagerPage extends ConsumerStatefulWidget {
   const PlaceManagerPage({super.key});
 
@@ -34,7 +25,6 @@ class _PlaceManagerPageState extends ConsumerState<PlaceManagerPage> {
     final counts = ref.watch(placeDiaryCountsProvider).value ?? const {};
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.diary.placeManagerTitle)),
-      // 空态自带「新建」按钮，右下角的 FAB 只在有列表时出现，免得两个入口撞车。
       floatingActionButton: (async.value?.isNotEmpty ?? false)
           ? FloatingActionButton(
               heroTag: 'placeManagerFab',
@@ -160,7 +150,6 @@ class _PlaceManagerPageState extends ConsumerState<PlaceManagerPage> {
     final confirmed = await MAlert.confirm(
       context,
       title: l10n.diary.placeDeleteTitle(name: place.name),
-      // 「已写的日记不受影响」是这里最该说清楚的一句：地名是快照不是引用。
       message: l10n.diary.placeDeleteMessage(name: place.name),
       confirmLabel: l10n.common.delete,
       isDestructive: true,
@@ -269,8 +258,6 @@ class _PlaceTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
-    // 地点没有用户选的颜色，一律按 id 自动取——复用分类那套取色，两个页面的方块
-    // 看起来才是同一个东西。
     final color = categoryColorOf(colorValue: null, id: place.id);
     final onColor = onCategoryColor(color);
     return Card.filled(

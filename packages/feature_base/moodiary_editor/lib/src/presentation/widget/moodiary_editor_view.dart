@@ -11,45 +11,31 @@ import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_theme/moodiary_theme.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path/path.dart' as p;
 
-/// Markdown 编辑视图，包一层 [MoodiaryEditor]（始终嵌入式；AppBar 由 Flutter 承载，
-/// 属性头 / 正文 / 文末双链面板在 webview 内随正文滚动，见 [DiaryPage]）。图片两条路径：
-/// 原生选图（[_pickImages] → 存盘 → insertMedia）与拖拽/粘贴（[_saveDataUriImage]）。
 class MoodiaryEditorView extends StatefulWidget {
   final String initialContent;
   final ValueChanged<String> onChanged;
 
-  /// 初始标题 + 标题变更回调（webview 顶部标题区，映射 Diary.title）。
   final String initialTitle;
   final ValueChanged<String>? onTitleChanged;
 
-  /// 命令式句柄（宿主传入以驱动目录跳转 scrollToHeading）；不传则内部自建。
   final MoodiaryEditorController? controller;
 
-  /// 当前顶部可见标题下标变化（目录高亮）。
   final ValueChanged<int>? onActiveHeadingChanged;
 
   final bool editable;
 
-  /// 全局「首行缩进」偏好（[MoodiaryKVs.firstLineIndent]）。透传给 [MoodiaryEditor]，
-  /// 经主题通道下发到 webview，由 CSS `text-indent` 对正文段落生效。
   final bool firstLineIndent;
 
-  /// 系统字号缩放倍率。透传给 [MoodiaryEditor]，经主题通道下发到 webview，
-  /// 由 CSS `--app-font-scale` 缩放正文与标题字号。
   final double fontScale;
 
-  /// 本篇自动保存状态，透传给编辑器内右下角气泡：saving / saved / failed。
   final String saveStatus;
 
-  /// 点击双链 chip：入参为目标日记业务 id。导航由上层（[DiaryPage]）实现（本层不依赖路由）。
   final ValueChanged<String>? onOpenDiaryLink;
 
-  /// 属性头 / 文末双链面板数据与交互回调，原样透传给 [MoodiaryEditor]（见其字段注释）。
   final String? metaJson;
   final String? linksJson;
   final VoidCallback? onPickDate;
@@ -109,16 +95,12 @@ class MoodiaryEditorView extends StatefulWidget {
 class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
   late final _controller = widget.controller ?? MoodiaryEditorController();
 
-  /// 直接进选择器 —— 「相册 / 拍照」那个二选一弹窗已经去掉了：拍照是选择器
-  /// 网格的第一格，多一层弹窗只是让两条路都多一次点击。
   Future<void> _pickImages() async {
     final files = await getIt<IFilePicker>().pickImages(context);
     if (files.isEmpty) return;
     await _insertPicked(files);
   }
 
-  /// 选图后原字节直接落 image 目录并插入；正文显示走 m 档缩略图，由
-  /// [MediaManager.saveImage] 落盘后自行预热。
   Future<void> _insertPicked(List<XFile> files) async {
     for (final file in files) {
       final name = await MediaManager.saveImage(file);
@@ -127,8 +109,6 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
     }
   }
 
-  /// 把 web 侧 data URI 落盘，复用 [MediaManager.saveImages] 命名，返回存盘
-  /// 文件名（失败返回 null）。
   Future<String?> _saveDataUriImage(String dataUri, String fallbackName) async {
     final xfile = await _dataUriToTempFile(dataUri, fallbackName);
     if (xfile == null) return null;
@@ -158,7 +138,6 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
     return XFile(tmpPath);
   }
 
-  // —— 视频：选取（相册网格首格就是录像）→ 存盘（含缩略图）→ insertVideo —— //
   Future<void> _pickVideo() async {
     final file = await getIt<IFilePicker>().pickVideo(context);
     if (file == null) return;
@@ -167,7 +146,6 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
     if (name != null) await _controller.insertVideo(name);
   }
 
-  // —— 音频：选取文件 / 录制 → 落盘 → insertAudio —— //
   void _showAudioDialog() {
     showDialog<void>(
       context: context,
@@ -195,9 +173,6 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
     );
   }
 
-  /// 复制原文件到 audio 目录、命名 `audio-uuid.ext` 直接落库，不压缩 / 转码。
-  /// 时长探测（按内容识别容器）就是准入闸门：认不出的文件不允许添加。
-  /// 原文件名（去扩展名）作为音频名称落 MediaInfo。
   Future<void> _pickAudioFile(BuildContext sheetContext) async {
     Navigator.of(sheetContext).pop();
     String? name;
@@ -221,7 +196,6 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       );
       await _controller.insertAudio(name);
     } catch (_) {
-      // 已复制的文件别留成孤儿（与时长探测失败分支同口径）。
       if (name != null) {
         try {
           await AppFiles.deleteFile(AppFiles.getRealPath('audio', name));
@@ -246,9 +220,6 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
     await _controller.insertAudio(result.fileName);
   }
 
-  /// 名称 + 时长落 MediaInfo 表（随同步传播）。失败不阻断插入——缺行由媒体库
-  /// 懒补行兜底；仓储改抛异常后这句承诺要在这里自己兜住（录音路径没有外层
-  /// catch，抛出去等于刚录好的音频不进日记且无提示）。
   Future<void> _saveMediaInfo(
     String fileName, {
     String? title,
@@ -267,8 +238,6 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
     }
   }
 
-  /// 点击正文图片 → 原生全屏画廊（翻页 / 缩放 / 下拉关闭 / 保存 / 信息）。
-  /// 本地文件名解析成磁盘路径，外链原样交给浏览器加载。
   void _previewImages(List<String> images, int index) {
     final resolved = [
       for (final src in images)
@@ -279,8 +248,6 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
     MImageBrowser.show(context, images: resolved, initialIndex: index);
   }
 
-  /// 正文视频交接给原生播放器。路径解析、封面比例预读、锁方向都在 showByName 里
-  /// （与媒体库那条路共用同一份），这里只负责把退出位置带回去给编辑器回灌。
   Future<Duration?> _openVideoFullscreen(String name, Duration position) async {
     Duration? exitAt;
     await MVideoPlayerPage.showByName(
@@ -292,8 +259,6 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
     return exitAt;
   }
 
-  // —— 双链候选 = 搜索：不输入关键词不列任何日记（避免列出全部）；输入后走相关性搜索（限量）。
-  // 标签：标题优先，否则「日期 · 片段」。
   Future<List<DiaryLinkCandidate>> _linkCandidates(String query) async {
     final q = query.trim();
     if (q.isEmpty) return const [];
@@ -334,8 +299,6 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       onSaveImage: _saveDataUriImage,
       onImageTap: _previewImages,
       onVideoFullscreen: _openVideoFullscreen,
-      // —— 注入宿主依赖（主题种子 / 媒体磁盘解析 / 加载遮罩）——
-      // 音视频在 webview 内用原生元素内联播放；双链候选/跳转见下。
       onRequestLinkCandidates: _linkCandidates,
       onOpenDiaryLink: widget.onOpenDiaryLink,
       metaJson: widget.metaJson,

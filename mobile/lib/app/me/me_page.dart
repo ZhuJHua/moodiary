@@ -5,10 +5,6 @@ import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
-/// 「我的」：统计 + 换个维度看日记 + 内容管理，设置在右上角。
-///
-/// 它是 app 层的组合面 —— 一页要同时碰 diary / media / sync / export 四个 feature 的
-/// 路由，放进任何一个 feature 包都会变成 feature 互相 import。
 class MePage extends ConsumerStatefulWidget {
   const MePage({super.key});
 
@@ -19,25 +15,16 @@ class MePage extends ConsumerStatefulWidget {
 class _MePageState extends ConsumerState<MePage> with RouteAware {
   DateTime? _selectedDay;
 
-  /// null = 还没跑过 [didChangeDependencies]。见下面为什么首帧要跳过。
   bool? _wasVisible;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    // 「管理」那一组（回收站 / 分类管理 / 导出 / 同步）就在本页，从那儿恢复一篇日记
-    // 或删掉一个分类后是 **pop 回来**、不换 tab，切 tab 那条路够不着。
-    // 本页所在的是根壳那条 `/` 路由，pop 回它时 didPopNext 会响。
     final route = ModalRoute.of(context);
     if (route is PageRoute) moodiaryRouteObserver.subscribe(this, route);
 
-    // 换 tab 走这条：IndexedStack 给每个 child 挂了 `_VisibilityScope`，
-    // `Visibility.of` 读它并登记依赖，所以本页自己就能知道何时重新可见 ——
-    // 不必让根壳知道这一页里有个看板、再反过来回调它。
     final visible = Visibility.of(context);
-    // 首帧不推：build 里的 watch 自己就会算一趟，这里再推等于算两遍，而且此刻
-    // provider 还没被 watch，read 会把它建起来又立刻回收。
     if (_wasVisible == false && visible) _refresh();
     _wasVisible = visible;
   }
@@ -51,7 +38,6 @@ class _MePageState extends ConsumerState<MePage> with RouteAware {
   @override
   void didPopNext() => _refresh();
 
-  /// 没脏就是空操作 —— 所以站在别的 tab 上 pop 回来也不会白算一遍。
   void _refresh() =>
       ref.read(dashboardControllerProvider.notifier).refreshIfStale();
 
@@ -59,10 +45,7 @@ class _MePageState extends ConsumerState<MePage> with RouteAware {
   Widget build(BuildContext context) {
     final stats = ref.watch(dashboardControllerProvider).value;
     return Scaffold(
-      // 顶栏不放 ⚙：设置是本 tab 的主动作，落在底栏胶囊右边那颗按钮上
-      // （见 root_shell 的 _navAction），三个 tab 各对应一个主动作。
       appBar: AppBar(title: Text(context.l10n.app.meTitle)),
-      // 根壳开了 extendBody，底栏整条带高已折进 padding.bottom，直接读来让开。
       body: ListView(
         padding: .fromLTRB(
           12,
@@ -111,8 +94,6 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-// ── 热力图卡 ──────────────────────────────────────────────────────────
-
 class _HeatmapCard extends StatelessWidget {
   final DashboardStats? stats;
   final DateTime? selected;
@@ -137,8 +118,6 @@ class _HeatmapCard extends StatelessWidget {
       child: Padding(
         padding: const .all(14),
         child: data == null || data.diaryCount == 0
-            // 全新用户的 371 格全空，是一片灰点阵，看着像加载失败 —— 一行字比一张空网格
-            // 诚实。数据还没回来时也走这里，不闪骨架。
             ? SizedBox(
                 height: 96,
                 child: Center(
@@ -294,8 +273,6 @@ class _Footer extends StatelessWidget {
   }
 }
 
-// ── 数字栏 ────────────────────────────────────────────────────────────
-
 class _StatRow extends StatelessWidget {
   final DashboardStats? stats;
 
@@ -351,8 +328,6 @@ class _Metric extends StatelessWidget {
     );
   }
 }
-
-// ── 回顾 ──────────────────────────────────────────────────────────────
 
 class _RecallGrid extends StatelessWidget {
   const _RecallGrid();
@@ -449,8 +424,6 @@ class _RecallTile extends StatelessWidget {
     );
   }
 }
-
-// ── 管理 ──────────────────────────────────────────────────────────────
 
 class _ManageRows extends StatelessWidget {
   final int? categoryCount;

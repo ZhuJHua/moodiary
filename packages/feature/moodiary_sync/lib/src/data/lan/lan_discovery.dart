@@ -5,13 +5,9 @@ import 'package:flutter/foundation.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_sync/src/data/lan/lan_protocol.dart';
 
-/// mDNS/Bonjour 发现层（bonsoir 插件包装）。发现是纯增强：任何一步失败都静默降级，
-/// 手动「IP + 配对码」路径始终可用。iOS 需要 Info.plist 的 `NSBonjourServices`
-/// 列出 [lanServiceType]，否则浏览会静默返回空。
+// iOS 需要 Info.plist 的 NSBonjourServices 列出这个值，否则浏览会静默返回空。
 const String lanServiceType = '_moodiary._tcp';
 
-/// 接收端：把本机服务广播到局域网（服务名 = 设备名，端口 = 实际监听端口，TXT = 协议与
-/// App 版本，见 [lanTxtRecord]）。
 class LanAdvertiser {
   BonsoirBroadcast? _broadcast;
 
@@ -30,7 +26,6 @@ class LanAdvertiser {
       await broadcast.initialize();
       await broadcast.start();
     } catch (_) {
-      // 广播失败不影响接收：对方仍可手动输入 IP。
       _broadcast = null;
     }
   }
@@ -46,16 +41,13 @@ class LanAdvertiser {
   }
 }
 
-/// 发现到的接收端。
 class LanPeer {
   final String name;
   final String host;
   final int port;
 
-  /// TXT 里的协议版本；旧版本不广播 TXT 时为 null。
   final int? proto;
 
-  /// TXT 里的 App 版本（线上形式），只进文案。
   final String? version;
 
   const LanPeer({
@@ -66,16 +58,13 @@ class LanPeer {
     this.version,
   });
 
-  /// 协议明确不同才算不兼容；TXT 缺失（旧版本、平台没解析出来）仍可选，由握手兜底。
   bool get compatible => proto == null || proto == lanProtoVersion;
 }
 
-/// 发送端：浏览局域网内的接收端，结果经 [peers] 通知 UI。
 class LanBrowser {
   BonsoirDiscovery? _discovery;
   StreamSubscription<BonsoirDiscoveryEvent>? _subscription;
 
-  /// 服务名 → 已解析的对端。bonsoir 逐事件推送，这里自己维持全量列表。
   final Map<String, LanPeer> _found = {};
 
   final ValueNotifier<List<LanPeer>> peers = ValueNotifier(const []);
@@ -86,18 +75,17 @@ class LanBrowser {
       final discovery = BonsoirDiscovery(type: lanServiceType);
       _discovery = discovery;
       await discovery.initialize();
-      // 先订阅再 start，否则会漏掉启动瞬间就已在网的服务。
+      // 先订阅再 start，否则会漏掉启动瞬间已在网的服务
       _subscription = discovery.eventStream?.listen(_onEvent);
       await discovery.start();
     } catch (_) {
-      // 浏览失败（权限被拒 / 平台不支持）→ 列表保持为空，走手动输入。
       _discovery = null;
     }
   }
 
   void _onEvent(BonsoirDiscoveryEvent event) {
     switch (event) {
-      // found 只有名字，必须显式 resolve 才会带回 hostAddresses。
+      // found 事件只有名字，需显式 resolve 才带回 hostAddresses
       case BonsoirDiscoveryServiceFoundEvent(:final service):
         final resolver = _discovery?.serviceResolver;
         if (resolver != null) {
@@ -126,8 +114,7 @@ class LanBrowser {
 
   void _publish() => peers.value = List.unmodifiable(_found.values);
 
-  /// 直连要数字 IP —— `.local` 主机名在 Android 的标准 DNS 解析里不可用，
-  /// 所以只认 hostAddresses，且优先 IPv4。
+  // Android 标准 DNS 解析不认 .local 主机名，只能用数字 IP（hostAddresses），优先 IPv4
   static String? _hostOf(BonsoirService service) {
     final addresses = service.hostAddresses;
     if (addresses.isEmpty) return null;

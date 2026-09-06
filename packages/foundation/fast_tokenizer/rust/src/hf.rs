@@ -1,14 +1,11 @@
 use anyhow::{Result, anyhow};
 use tokenizers::{Tokenizer, TruncationParams};
 
-/// HF tokenizer.json 的通用封装（WordPiece / SentencePiece / BPE 通吃），
-/// 供 ONNX 推理侧分词——ONNX 模型是裸计算图，不带分词器。
 pub struct HfTokenizer {
     inner: Tokenizer,
 }
 
 impl HfTokenizer {
-    /// [max_tokens] 含特殊 token，超出按 HF 默认 LongestFirst 截断。
     pub fn from_file(path: &str, max_tokens: Option<usize>) -> Result<Self> {
         let mut inner = Tokenizer::from_file(path).map_err(|e| anyhow!("{e}"))?;
         if let Some(max_length) = max_tokens {
@@ -22,7 +19,6 @@ impl HfTokenizer {
         Ok(Self { inner })
     }
 
-    /// 含特殊 token（CLS/SEP 等随 json 里的 post-processor）。
     pub fn encode(&self, text: &str) -> Result<Vec<u32>> {
         Ok(self
             .inner

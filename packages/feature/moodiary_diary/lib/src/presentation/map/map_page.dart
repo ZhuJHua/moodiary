@@ -13,11 +13,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'map_page.g.dart';
 
-/// 底图需要的两样东西一起等：天地图的 tk 在 SecureKV 里，读它是一次异步的
-/// 钥匙串调用。分开 watch 会让底图先按「无 tk」建成 OSM 单层、再重建成天地图双层。
 typedef PlacePin = ({Place place, List<Diary> diaries});
 
-/// 日记引用常用地点，足迹 = 有日记的地点各打一个点，同一地点的日记挂在一起。
 @riverpod
 Future<({List<PlacePin> pins, String tiandituKey})> mapData(Ref ref) async {
   final diaries = await getIt<DiaryRepository>().getDiariesWithPlace();
@@ -41,7 +38,7 @@ Future<({List<PlacePin> pins, String tiandituKey})> mapData(Ref ref) async {
 class MapPage extends ConsumerWidget {
   const MapPage({super.key});
 
-  // 天地图 WMTS：vec_w 矢量底图 + cva_w 中文注记；需在「实验室」配置 tk。
+  // vec_w = 矢量底图，cva_w = 中文注记
   static const _tiandituVec =
       'https://t{s}.tianditu.gov.cn/vec_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=vec&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk={tk}';
   static const _tiandituCva =
@@ -114,7 +111,6 @@ class MapPage extends ConsumerWidget {
     ];
   }
 
-  /// 一篇直接开；多篇先列出来选。
   Future<void> _openPin(BuildContext context, PlacePin pin) async {
     if (pin.diaries.length == 1) return _openDiary(context, pin.diaries.first);
     final picked = await MSheet.show<Diary>(
@@ -144,14 +140,12 @@ class MapPage extends ConsumerWidget {
       type: DiaryType.fromValue(diary.type).routeQuery,
       diaryId: diary.id,
     );
-    // 足迹地图归属 Setting 分支，打开日记需切到 Diary 分支后全屏 push。
     route.push(context);
   }
 
   LatLng _latLng(Place place) => LatLng(place.latitude, place.longitude);
 }
 
-/// 图钉 + 篇数角标（一篇不带角标）。
 class _PinIcon extends StatelessWidget {
   final int count;
 

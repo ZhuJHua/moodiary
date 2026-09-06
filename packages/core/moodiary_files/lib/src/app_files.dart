@@ -87,22 +87,15 @@ class AppFiles {
     }
   }
 
-  /// 图片派生物目录（缩略图档位）。放在 image 下的子目录：
-  /// [getDirFileName] 不递归，孤儿扫描 / 归档 / LAN 同步天然看不见它；删 image 目录
-  /// 连带删。
-  /// 原件目录。派生物只给这里的文件算（视频封面、缓存里的临时图都不算）。
   static String get imageDir => join(_filePath, 'image');
 
   static String get imageThumbDir => join(_filePath, 'image', 'thumb');
 
-  /// 删一张图：原件 + 全部派生物。业务侧删图一律走这里，别直接 [deleteFile]。
   static Future<void> deleteImage(String name) async {
     await deleteFile(getRealPath('image', name));
     await FastImageDerivatives.deleteFor(name);
   }
 
-  /// 删除用户媒体目录后重建为空。不动 `database` 目录——它由打开中的 Isar 句柄
-  /// 管理，须改用 [IsarDatabase.clear]，直接删目录会损坏句柄。
   static Future<void> resetUserMediaDirs() async {
     await Future.wait([
       deleteDir(join(_filePath, 'image')),
@@ -113,12 +106,6 @@ class AppFiles {
     await initCreateDir();
   }
 
-  /// 视频文件名 `video-<uuid>.<ext>` → 缩略图名 `thumbnail-<uuid>.jpeg`（同在 video/ 目录）。
-  /// 这是**全仓唯一**的派生实现 —— 之前散着六份、还分两套公式（定长 substring(6,42) 与按点号
-  /// 定位），标准名下一致、非标准名下会算出不同的名字，core 与 sync 因此可能各认一个缩略图。
-  ///
-  /// 名字不合约定时返回 null。裸 substring 会**同步抛 RangeError**：那是在 build 方法里红屏，
-  /// 不是「没有封面」这种可降级的情况。
   static String? thumbnailNameOf(String videoName) {
     if (!videoName.startsWith('video-')) return null;
     final dotIdx = videoName.lastIndexOf('.');
@@ -128,8 +115,6 @@ class AppFiles {
 
   static String getRealPath(String fileType, String fileName) {
     if (fileType == 'thumbnail') {
-      // 派生不出规范名就退回一个必然不存在的路径：调用方本来就在判存在性 / 用 errorBuilder，
-      // 抛异常会把「没有封面」升级成崩溃。
       final name = thumbnailNameOf(fileName) ?? 'thumbnail-$fileName.jpeg';
       return join(_filePath, 'video', name);
     }
@@ -181,8 +166,6 @@ class AppFiles {
     }
   }
 
-  /// 扫描未被任何日记引用的「孤儿」媒体文件（不删除）。调用方须传入全量引用集
-  /// （含回收站/草稿）；[usedVideos] 须含 thumbnail 名（缩略图与视频同存 `video`）。
   static Future<MediaCleanupReport> scanOrphanMedia({
     required Set<String> usedImages,
     required Set<String> usedAudios,
@@ -220,7 +203,6 @@ class AppFiles {
         }
       }
     }
-    // 源图已不在的派生物：删图路径漏网（旧版本、迁移）时的兜底。
     for (final path in await FastImageDerivatives.stale(
       await getDirFileName(MediaType.image.value),
     )) {
@@ -251,7 +233,6 @@ class AppFiles {
   }
 }
 
-/// [AppFiles.scanOrphanMedia] 的结果：待清理的孤儿媒体文件绝对路径及其总字节数。
 class MediaCleanupReport {
   final List<String> paths;
 

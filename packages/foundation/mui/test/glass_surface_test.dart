@@ -31,7 +31,6 @@ Widget _harness(List<BoxShadow>? shadows) {
   );
 }
 
-/// 取屏幕坐标 [at] 处的 RGB。
 Future<List<int>> _pixel(WidgetTester tester, Offset at) async {
   final boundary = tester.renderObject<RenderRepaintBoundary>(
     find.byKey(_boundaryKey),
@@ -52,10 +51,6 @@ Future<List<int>> _pixel(WidgetTester tester, Offset at) async {
   return rgb;
 }
 
-/// 取同一点在「无投影」与「默认投影」两种渲染下的像素。
-///
-/// `debugDisableShadows` 必须在**测试体内**还原：flutter_test 在 test body 结束时就
-/// 校验绘制类 debug 变量已复位，放 tearDown 里来不及。
 Future<(List<int> without, List<int> with_)> _probe(
   WidgetTester tester,
   Offset at,
@@ -66,7 +61,7 @@ Future<(List<int> without, List<int> with_)> _probe(
     await tester.pumpAndSettle();
     final without = await _pixel(tester, at);
 
-    await tester.pumpWidget(_harness(null)); // null = 组件的默认投影
+    await tester.pumpWidget(_harness(null));
     await tester.pumpAndSettle();
     final with_ = await _pixel(tester, at);
     return (without, with_);
@@ -83,8 +78,6 @@ void main() {
       Offset(size.width / 2, size.height / 2),
     );
 
-    // 允许一点点误差：BackdropFilter 的 sigma 24 会从胶囊外面把邻近的投影带进来
-    // 一点，这是对的（真玻璃的边缘也会吃到）。但不该有整片压暗。
     for (var i = 0; i < 3; i++) {
       expect(
         (with_[i] - without[i]).abs(),
@@ -98,7 +91,6 @@ void main() {
 
   testWidgets('投影仍然画在胶囊外面', (tester) async {
     final size = tester.view.physicalSize / tester.view.devicePixelRatio;
-    // 胶囊下缘往下 10 px：默认投影 offset(0, 8) + blur 24 覆盖得到。
     final (without, with_) = await _probe(
       tester,
       Offset(size.width / 2, size.height / 2 + _capsuleSize.height / 2 + 10),

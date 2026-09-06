@@ -38,12 +38,6 @@ Future<TextTheme> _resolveInTree(WidgetTester tester, ThemeData theme) async {
 void main() {
   for (final brightness in Brightness.values) {
     testWidgets('$brightness 排版投影与 M3 2021 逐级等价', (tester) async {
-      // 契约是**与 M3 2021 逐级等价**，不是「与改造前等价」—— 老的字重表
-      // （display 500 / headlineLarge 700 / titleLarge 600…）既不是 M3、内部也
-      // 不自洽，2026-08-12 已换成 `Typography.englishLike2021` 的原值。
-      //
-      // 在真实渲染树里比，而不是比构造出的对象 —— 差异藏在 ThemeData 的
-      // `typography.black.merge(textTheme)` 与 `ThemeData.localize` 两层里。
       final mui = buildMuiTheme(brightness: brightness);
       final projected = mui;
       final m3 = _levels(
@@ -66,7 +60,6 @@ void main() {
           reason: '$key letterSpacing 偏离 M3',
         );
         expect(a.fontWeight, b.fontWeight, reason: '$key fontWeight 偏离 M3');
-        // 可变字体的 wght 轴必须跟 fontWeight 同步，否则字重静默失效。
         expect(a.fontVariations, [
           FontVariation('wght', b.fontWeight!.value.toDouble()),
         ], reason: '$key 的 wght 轴与 fontWeight 不一致');
@@ -92,7 +85,6 @@ void main() {
           base.letterSpacing,
           reason: '$level 字距被改了',
         );
-        // 22px 及以上用 Bold，其余 SemiBold（取自 iOS HIG 的做法）。
         final expected = base.fontSize! >= 22
             ? FontWeight.w700
             : FontWeight.w600;
@@ -107,13 +99,6 @@ void main() {
   testWidgets(
     'MaterialApp 根下的 DefaultTextStyle 是 48px 红字 —— MuiScaffold 必须自己发',
     (tester) async {
-      // 这不是 bug，是 MaterialApp 故意传给 WidgetsApp.textStyle 的 `_errorTextStyle`
-      // （material/app.dart:45，debugLabel 写着「考虑把文字放进 Material」）。
-      // 真正能用的兜底来自 Scaffold → Material → AnimatedDefaultTextStyle。
-      //
-      // 所以批次 3 的 MuiScaffold 一旦替掉 Scaffold 而**不自己发 DefaultTextStyle**，
-      // 整页文字会变成 48px 红字黄双下划线。这条断言把这个前提钉在这里，
-      // 等 MuiScaffold 落地时把它翻过来断言「不是 48」。
       late TextStyle style;
       await tester.pumpWidget(
         MaterialApp(
@@ -155,7 +140,6 @@ void main() {
 
     expect(emphasized.color, mui.colorScheme.primary);
     expect(emphasized.fontSize, 14);
-    // 字重两条路必须一起动，否则可变字体下 fontWeight 会被 fontVariations 吃掉。
     expect(emphasized.fontWeight, FontWeight.w600);
     expect(emphasized.fontVariations, [const FontVariation('wght', 600)]);
   });
@@ -174,12 +158,8 @@ void main() {
         ),
       ),
     );
-    // 不比 ThemeData 实例本身：MaterialApp 会先跑一遍 `ThemeData.localize`
-    // 与 typography 合并，树里拿到的是**加工过**的那份。要比的是配色与
-    // MuiTokens 原样传到了子树。
     expect(seen.colors, mui.colorScheme);
     expect(seen.tokens, mui.extension<MuiTokens>());
-    // 无彩档就是标准 SchemeMonochrome，不写死色值。
     expect(
       seen.colors.surface,
       ColorScheme.fromSeed(

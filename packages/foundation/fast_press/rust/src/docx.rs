@@ -1,20 +1,3 @@
-//! 日记导出 DOCX。
-//!
-//! 输入是 Dart 侧 `ExportDoc` 的 JSON（见 moodiary_utils 的 export_doc.dart）——不是 tiptap
-//! 文档。IR 的 Rust 镜像在 [`crate::ir`]，与 PDF 那条链共用一份定义。
-//!
-//! DOCX 对中文是白送的：OOXML 只写字体名不嵌字体，正文由 Word / WPS 用本机字体渲染。
-//! 这也是它相对 PDF 的关键优势 —— 导出侧一个字节的字体都不用管。
-//!
-//! 两个 docx-rs 的坑，改这个文件时别踩回去：
-//! 1. [`Pic::new`] 内部连着四个 `expect()` —— 一张坏图就让整次导出以 panic 收场
-//!    （FRB 会兜成 Dart 异常，但这一趟导出的成果全没了）。**只用
-//!    [`Pic::new_with_dimensions`]**，尺寸自己用 image crate 读，每张图失败就跳过。
-//! 2. zipper 把媒体一律写成 `word/media/{id}.png`（`src/zipper/mod.rs:111`，上游 main 至今
-//!    未改）。我们喂的是 JPEG 字节，故部件名与实际格式不符。`[Content_Types].xml` 里 png 与
-//!    jpeg 都声明了 Default，Word / WPS 按内容嗅探能正常渲染，但这不是合规写法；若哪天遇到
-//!    某个阅读器不认，解法是 fork 那一行按字节嗅探决定扩展名。
-
 use anyhow::{Context, Result};
 use docx_rs::*;
 use std::collections::HashSet;
@@ -24,47 +7,36 @@ use std::path::Path;
 use crate::ir::{IrBlock, IrDoc, IrListItem, IrRow, IrSpan};
 
 pub struct DocxStyle {
-    /// 中文字体名（写进 `w:rFonts` 的 `eastAsia`）。
     pub east_asia_font: String,
-    /// 西文字体名（`ascii` / `hAnsi`）。
     pub ascii_font: String,
     pub font_size_pt: f64,
-    /// 行距倍数（1.0 = 单倍）。
     pub line_spacing: f64,
     pub first_line_indent: bool,
-    /// 页面宽高（twip，1/1440 英寸）。A4 = 11906 × 16838。
     pub page_width: u32,
     pub page_height: u32,
     pub page_margin: u32,
     pub include_title: bool,
-    /// 标题下写一行「日期 · 天气 · 位置 · 分类」摘要。
     pub include_meta: bool,
     pub page_break_between: bool,
-    /// 音视频占位行的类型词（已本地化，由 Dart 传入 —— 这一侧没有 l10n）。
     pub video_label: String,
     pub audio_label: String,
 }
 
 const NUM_BULLET: usize = 1;
 const NUM_ORDERED: usize = 2;
-/// 每级缩进（twip）。420 ≈ 两个中文字符宽。
 const INDENT_STEP: i32 = 420;
 const MAX_LEVEL: usize = 5;
-/// 正文可用宽度 = 页宽 - 两侧边距，换算成 EMU（1 twip = 635 EMU）。
 const EMU_PER_TWIP: u32 = 635;
 
 const CODE_BG: &str = "F2F3F5";
 
-/// 代码块里的一段同色文字。
 struct CodePiece {
     text: String,
-    /// RRGGBB，docx 的 `w:color` 不带 #。
     color: String,
     bold: bool,
     italic: bool,
 }
 
-/// 把代码按行、按 token 切开并染色。语言为空或不认识时退回纯文本（仍然是黑字等宽）。
 fn highlight(language: Option<&str>, text: &str) -> Vec<Vec<CodePiece>> {
     let syntax = language
         .map(str::trim)
@@ -89,7 +61,6 @@ fn highlight(language: Option<&str>, text: &str) -> Vec<Vec<CodePiece>> {
                         }
                     })
                     .collect(),
-                // 高亮失败不该让整篇导出失败，退回无色一行。
                 Err(_) => vec![CodePiece {
                     text: line.to_string(),
                     color: "000000".to_string(),
@@ -104,20 +75,12 @@ const QUOTE_COLOR: &str = "6B7686";
 const LINK_COLOR: &str = "2B5CB8";
 const META_COLOR: &str = "8A93A0";
 
-/// 把一批日记写成一个 .docx 文件。
-///
-/// [docs_json] 是 `ExportDoc.toJson()` 的**数组**。每篇一文件的场景由 Dart 侧循环调用、
-/// 每次传单元素数组实现 —— 合并与拆分共用同一条码路。
-///
-/// 直接落盘而不回传字节：与 `Zip::new(file_path)`、`ImageCompressor::optimize_to_file`
-/// 的既有约定一致，且带图日记几十 MB 时不必在内存里整份成型。
 pub fn write_docx(
     docs: Vec<IrDoc>,
     style: &DocxStyle,
     out_path: String,
     cancelled: &dyn Fn() -> bool,
 ) -> Result<()> {
-    // 同一批里的双链改成文档内跳转；不在这批里的目标只能降级成普通文字。
     let ids: HashSet<&str> = docs.iter().map(|d| d.id.as_str()).collect();
 
     let mut docx = base_docx(style);
@@ -199,12 +162,9 @@ fn base_docx(style: &DocxStyle) -> Docx {
         .default_line_spacing(
             LineSpacing::new()
                 .line_rule(LineSpacingType::Auto)
-                // w:line 单位是 1/240 行。
                 .line((style.line_spacing * 240.0).round() as i32),
         );
 
-    // 自己定义标题样式：docx-rs 的空文档不带 Heading1..6，不定义的话 Word 的导航窗格与
-    // 目录域都认不出标题。
     for level in 1..=6usize {
         let scale = [1.8_f64, 1.5, 1.3, 1.15, 1.05, 1.0][level - 1];
         docx = docx.add_style(
@@ -213,7 +173,6 @@ fn base_docx(style: &DocxStyle) -> Docx {
                 .bold()
                 .size(half_pt(style.font_size_pt * scale))
                 .fonts(run_fonts(style))
-                // outline_lvl 才是 Word 导航窗格与目录域识别标题的依据，光有样式名不够。
                 .outline_lvl(level - 1)
                 .q_format(true)
                 .line_spacing(LineSpacing::new().before(240).after(120)),
@@ -235,7 +194,6 @@ fn numbering_def(id: usize, ordered: bool) -> AbstractNumbering {
                 LevelText::new(format!("%{}.", level + 1)),
             )
         } else {
-            // 三种符号轮换，嵌套层级一眼可辨。
             let bullet = ["•", "◦", "▪"][level % 3];
             (NumberFormat::new("bullet"), LevelText::new(bullet))
         };
@@ -264,7 +222,6 @@ fn fonts(run: Run, style: &DocxStyle) -> Run {
     run.fonts(run_fonts(style))
 }
 
-/// 磅 → 半磅（OOXML 的字号单位）。
 fn half_pt(pt: f64) -> usize {
     (pt * 2.0).round().max(2.0) as usize
 }
@@ -276,7 +233,6 @@ fn content_width_emu(style: &DocxStyle) -> u32 {
         .saturating_mul(EMU_PER_TWIP)
 }
 
-/// 书签名不能有连字符、不能以数字开头，长度也有限制。
 fn anchor_of(id: &str) -> String {
     format!("d_{}", id.replace('-', ""))
 }
@@ -310,8 +266,6 @@ fn block(docx: Docx, block: &IrBlock, ctx: &Ctx, depth: usize) -> Docx {
         }
 
         IrBlock::Quote { children } => {
-            // docx-rs 的 Paragraph 没有直出的底纹 / 边框构造器，引用块用「缩进 + 灰字」表达，
-            // 视觉上够用且不必去改 pub 字段。
             let mut docx = docx;
             for child in children {
                 docx = quoted(docx, child, ctx, depth + 1);
@@ -319,14 +273,10 @@ fn block(docx: Docx, block: &IrBlock, ctx: &Ctx, depth: usize) -> Docx {
             docx
         }
 
-        // docx 的 numbering 是文档级定义，起始序号要为每个列表单独建一份，
-        // 暂不支持 IR 里的 start（与接 IR 之前的行为一致）。
         IrBlock::List { ordered, items, .. } => list(docx, *ordered, items, ctx, depth),
 
         IrBlock::Code { language, text } => {
             let mut docx = docx;
-            // 代码块逐行成段：整块塞一个 run 里 Word 不会按换行断行。
-            // 一行内再按高亮切成多个 run，每个 run 自带颜色。
             for line in highlight(language.as_deref(), text) {
                 let mut para = indented(Paragraph::new(), depth + 1);
                 for piece in line {
@@ -360,12 +310,10 @@ fn block(docx: Docx, block: &IrBlock, ctx: &Ctx, depth: usize) -> Docx {
             ..
         } => {
             if *is_external {
-                // 外链图不下载（导出必须离线可用），退化成链接文字。
                 return docx.add_paragraph(link_paragraph(path, path, ctx));
             }
             match image_run(path, *width_percent, ctx) {
                 Some(run) => docx.add_paragraph(Paragraph::new().add_run(run)),
-                // 文件缺失 / 解码失败：跳过这一张，不让整次导出失败。
                 None => docx,
             }
         }
@@ -401,7 +349,6 @@ fn block(docx: Docx, block: &IrBlock, ctx: &Ctx, depth: usize) -> Docx {
     }
 }
 
-/// 引用块的子块：整体再缩进一级并染灰。
 fn quoted(docx: Docx, child: &IrBlock, ctx: &Ctx, depth: usize) -> Docx {
     match child {
         IrBlock::Paragraph { spans } => {
@@ -431,19 +378,16 @@ fn list(mut docx: Docx, ordered: bool, items: &[IrListItem], ctx: &Ctx, depth: u
                     first = false;
                     let mut para = Paragraph::new()
                         .numbering(NumberingId::new(num_id), IndentLevel::new(level));
-                    // docx 没有原生复选框，勾选状态用符号表达。
                     if let Some(checked) = item.checked {
                         let mark = if checked { "☑ " } else { "☐ " };
                         para = para.add_run(fonts(Run::new(), ctx.style).add_text(mark));
                     }
                     docx = docx.add_paragraph(inline(para, spans, ctx));
                 }
-                // 列表项里的后续块（嵌套列表 / 第二段 / 图片）按下一级缩进。
                 other => docx = block(docx, other, ctx, depth + 1),
             }
         }
         if first {
-            // 空列表项也要占一行，否则编号会错位。
             docx = docx.add_paragraph(
                 Paragraph::new().numbering(NumberingId::new(num_id), IndentLevel::new(level)),
             );
@@ -457,8 +401,6 @@ fn table(docx: Docx, rows: &[IrRow], ctx: &Ctx) -> Docx {
         return docx;
     }
     let columns = rows.iter().map(|r| r.cells.len()).max().unwrap_or(1).max(1);
-    // 表格铺满正文宽度、列宽均分。光给 set_grid 不够 —— 不显式设 width + Fixed 布局，
-    // Word 会按内容自动收窄，两列中文表会挤成窄条。
     let total = (ctx.content_width_emu / EMU_PER_TWIP) as usize;
     let column_width = total / columns;
     let grid = vec![column_width; columns];
@@ -482,7 +424,6 @@ fn table(docx: Docx, rows: &[IrRow], ctx: &Ctx) -> Docx {
                     for child in &cell.children {
                         if let IrBlock::Paragraph { spans } = child {
                             wrote = true;
-                            // 表头整格加粗：run 建好后改不了，故在 span 层面先强制。
                             let spans: Vec<IrSpan> = if cell.header {
                                 spans
                                     .iter()
@@ -527,7 +468,6 @@ fn inline_colored(
     force_color: Option<&str>,
 ) -> Paragraph {
     for span in spans {
-        // 双链：目标在同一批导出里就做文档内跳转，否则只留文字。
         if let Some(target) = span.diary_link_id.as_deref() {
             let run = styled_run(span, ctx, Some(LINK_COLOR));
             if ctx.ids.contains(target) {
@@ -551,7 +491,6 @@ fn inline_colored(
             continue;
         }
 
-        // 段内换行（hardBreak）在 IR 里是 span 文本中的 \n，docx 要显式 break。
         if span.text.contains('\n') {
             let mut lines = span.text.split('\n').peekable();
             while let Some(line) = lines.next() {
@@ -613,8 +552,6 @@ fn link_paragraph(text: &str, href: &str, ctx: &Ctx) -> Paragraph {
     )
 }
 
-/// 读图并按正文宽度换算显示尺寸。任何一步失败都返回 None（跳过这张），
-/// 绝不 panic —— 一次 panic 会废掉整次导出。
 fn image_run(path: &str, width_percent: Option<u32>, ctx: &Ctx) -> Option<Run> {
     let path = Path::new(path);
     if !path.is_file() {
@@ -622,7 +559,6 @@ fn image_run(path: &str, width_percent: Option<u32>, ctx: &Ctx) -> Option<Run> {
     }
     let bytes = std::fs::read(path).ok()?;
 
-    // 只读文件头拿尺寸，不解码整张图。复用上面已读进内存的字节，不再开第二次文件。
     let (px_w, px_h) = image::ImageReader::new(std::io::Cursor::new(&bytes))
         .with_guessed_format()
         .ok()?
@@ -632,10 +568,9 @@ fn image_run(path: &str, width_percent: Option<u32>, ctx: &Ctx) -> Option<Run> {
         return None;
     }
 
-    // 按正文宽度等比缩放；widthPercent 是编辑器里的列宽上限，没有就按 100% 但不放大。
     let percent = width_percent.unwrap_or(100).clamp(1, 100);
     let target_w = ctx.content_width_emu / 100 * percent;
-    let natural_w = px_w * EMU_PER_TWIP * 15; // px → EMU（96 DPI: 1px = 9525 EMU ≈ 635×15）
+    let natural_w = px_w * EMU_PER_TWIP * 15;
     let final_w = target_w.min(natural_w).max(1);
     let final_h = ((final_w as u64 * px_h as u64) / px_w as u64) as u32;
 
@@ -671,7 +606,6 @@ mod tests {
         }
     }
 
-    /// 每个用例一个独立目录，避免并行跑时互相踩。
     fn tempdir() -> std::path::PathBuf {
         static COUNTER: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
         let n = COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -709,8 +643,6 @@ mod tests {
         String::from_utf8(parts["word/document.xml"].clone()).expect("document.xml 必须是 UTF-8")
     }
 
-    /// 代码块要有语法高亮，且配色必须和 PDF 一致 —— 两边都用 typst 的 RAW_THEME。
-    /// 这几个色值直接抄自 typst-library 的主题定义，PDF 侧实测渲染出的也是它们。
     #[test]
     fn code_block_is_syntax_highlighted() {
         let dir = tempdir();
@@ -734,7 +666,6 @@ mod tests {
         }
     }
 
-    /// 语言未知时不该炸，退回纯文本。
     #[test]
     fn unknown_language_falls_back_to_plain() {
         let dir = tempdir();
@@ -844,15 +775,12 @@ mod tests {
         write_docx(docs, &test_style(), out.clone(), &|| false).expect("导出应当成功");
 
         let parts = unzip(&out);
-        // zipper 会单独写一个 `word/media/` 目录条目，过滤时要排掉它。
         let media: Vec<&String> = parts
             .keys()
             .filter(|k| k.starts_with("word/media/") && !k.ends_with('/'))
             .collect();
         assert_eq!(media.len(), 1, "只有存在的那张图应当落成 media 部件");
 
-        // docx-rs 的 zipper 硬编码 .png 扩展名，但我们喂的是 JPEG 字节 —— 部件名与内容不符。
-        // Word / WPS 按内容嗅探能渲染；哪天遇到不认的阅读器，解法是 fork 那一行按魔数定扩展名。
         let bytes = &parts[media[0]];
         assert_eq!(
             &bytes[..2],
@@ -990,8 +918,6 @@ mod tests {
         assert!(xml.contains("gridSpan"), "colspan 应当写成 gridSpan");
         assert!(xml.contains("合并表头") && xml.contains("甲") && xml.contains("乙"));
 
-        // 表宽必须显式写死并配 fixed 布局，否则 Word 按内容自动收窄，中文表会挤成窄条。
-        // A4（11906）减两侧 1440 页边距 = 9026 twip，两列各 4513。
         assert!(
             xml.contains(r#"<w:tblW w:w="9026" w:type="dxa" />"#),
             "表格应当铺满正文宽度"

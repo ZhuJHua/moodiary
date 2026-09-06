@@ -49,13 +49,11 @@ void main() {
       expect(restored.docx.firstLineIndent, isFalse);
       expect(restored.docx.eastAsiaFont, '思源宋体');
       expect(restored.docx.asciiFont, 'Iowan');
-      // 两种格式的排版配置互不覆盖。
       expect(restored.pdf.paper, ExportPaper.a5);
       expect(restored.pdf.eastAsiaFont, 'x.ttf');
     });
 
     test('存坏了退回默认而不是抛异常', () {
-      // 设置页要能打开 —— 配置格式变过或写坏时不能把页面炸掉。
       expect(ExportSettings.decode('不是 json').common.merge, isTrue);
       expect(ExportSettings.decode('').docx.paper, ExportPaper.a4);
       expect(
@@ -76,10 +74,8 @@ void main() {
 
   group('纸张单位换算', () {
     test('twip → mm（typst 按毫米取尺寸）', () {
-      // A4 = 210 × 297 mm
       expect(ExportPaper.a4.widthMm, closeTo(210, 0.5));
       expect(ExportPaper.a4.heightMm, closeTo(297, 0.5));
-      // Letter = 8.5 × 11 英寸
       expect(ExportPaper.letter.widthMm, closeTo(215.9, 0.5));
       expect(ExportPaper.letter.heightMm, closeTo(279.4, 0.5));
       expect(ExportPaper.a5.widthMm, closeTo(148, 0.5));
@@ -131,9 +127,7 @@ void main() {
       expect(bands[0], (0.0, 2000.0));
       expect(bands[1], (2000.0, 2000.0));
       expect(bands[2], (4000.0, 500.0));
-      // 各带高度之和 = 总高：拼起来就是原图，PNG 声明的行数才对得上。
       expect(bands.fold<double>(0, (sum, b) => sum + b.$2), 4500);
-      // 每一带的起点都接着上一带的终点。
       for (var i = 1; i < bands.length; i++) {
         expect(bands[i].$1, bands[i - 1].$1 + bands[i - 1].$2);
       }

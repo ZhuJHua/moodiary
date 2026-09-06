@@ -1,5 +1,3 @@
-# cargo-about 的许可证清单配置：产物由 `dart tool/task.dart licenses` 与其他 fast_* 那几份合并，
-# 最终进 App 关于页的「开源许可」。只覆盖装车的部分：构建期与测试期依赖不进包。
 accepted = [
     "Apache-2.0",
     "MIT",
@@ -29,10 +27,7 @@ targets = [
 ignore-build-dependencies = true
 ignore-dev-dependencies = true
 
-# turbojpeg-sys 把 libjpeg-turbo 整棵源码 vendor 进来，cargo-about 自动扫描会把
-# doc/turbojpeg/menudata.js（Doxygen 的 MIT 头）当成许可证文本。真正的许可证：IJG 在
-# README.ijg（整份，LEGAL ISSUES 一节是许可证；cargo-about 的 start/end 切片校验对不上，索性整份），Modified BSD（含 SIMD 代码 zlib 的说明）在 LICENSE.md。
-# 键是 crate 名直接放顶层（cargo-about 0.9 的写法），不是 [crates.<name>]。
+# 真正的许可证：IJG 在 README.ijg（整份），Modified BSD 在 LICENSE.md。
 ["turbojpeg-sys".clarify]
 license = "IJG AND BSD-3-Clause"
 
@@ -46,8 +41,6 @@ path = "libjpeg-turbo/LICENSE.md"
 license = "BSD-3-Clause"
 checksum = "96f5b328adbb78eeaaec6980d73fd558cb1e4d62560ed615646bc3cf5e532430"
 
-# libwebp-sys 的 vendor/COPYING 是 libwebp 的 BSD-3-Clause（装车的是 C 代码）；绑定本身 MIT
-# 没有许可证文件，用 SPDX 的通用文本。
 ["libwebp-sys".clarify]
 license = "MIT AND BSD-3-Clause"
 

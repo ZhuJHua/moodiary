@@ -1,5 +1,3 @@
-//! 「字节进、字节出」的透明转发：json / form / text 编码与响应解码都在 Dart 侧做。
-
 use std::time::Duration;
 
 use futures::StreamExt;
@@ -33,14 +31,11 @@ impl From<HttpMethod> for reqwest::Method {
 }
 
 pub struct ClientSettings {
-    /// 相对 url 的基准；为 None 时所有请求都必须传绝对 url。
     pub base_url: Option<String>,
     pub connect_timeout_ms: Option<u32>,
     pub timeout_ms: Option<u32>,
     pub user_agent: Option<String>,
-    /// None=reqwest 默认(最多 10 跳)，Some(0)=不跟随重定向，Some(n)=最多 n 跳。
     pub max_redirects: Option<u32>,
-    /// 为 true 时非 2xx 响应抛 [HttpErrorKind::Status]（对齐旧 Dio 行为）。
     pub throw_on_status: bool,
 }
 
@@ -50,7 +45,6 @@ pub struct RequestOptions {
     pub query: Vec<KeyValue>,
     pub headers: Vec<KeyValue>,
     pub timeout_ms: Option<u32>,
-    /// 覆盖 client 级 throw_on_status；None 沿用。
     pub throw_on_status: Option<bool>,
 }
 
@@ -116,8 +110,6 @@ pub struct HttpClient {
 
 impl HttpClient {
     pub fn new(settings: ClientSettings) -> Result<HttpClient, HttpError> {
-        // 这里不复用 http_client::shared()：user_agent / max_redirects 在 reqwest 里是
-        // client 级设置，做不到 per-request，所以按 settings 单独建一个。TLS 配置同源。
         let mut builder =
             http_client_builder().map_err(|e| err(HttpErrorKind::Unknown, e.to_string()))?;
         if let Some(ms) = settings.connect_timeout_ms {
@@ -142,8 +134,6 @@ impl HttpClient {
         })
     }
 
-    /// 相对 url 用 base_url 解析；base_url 为 None 时要求绝对 url。传入的绝对 url 即便
-    /// 有 base_url 也按其自身解析（Url::join 语义）。
     fn resolve_url(&self, url: &str) -> Result<reqwest::Url, HttpError> {
         match self.base_url.as_deref() {
             Some(base) => reqwest::Url::parse(base)
@@ -157,8 +147,6 @@ impl HttpClient {
     fn builder(&self, options: &RequestOptions) -> Result<reqwest::RequestBuilder, HttpError> {
         let mut full_url = self.resolve_url(&options.url)?;
         if !options.query.is_empty() {
-            // reqwest 关了默认特性，RequestBuilder::query 不可用；直接往 Url 追加
-            // query（application/x-www-form-urlencoded，语义一致）。
             let mut pairs = full_url.query_pairs_mut();
             for kv in &options.query {
                 pairs.append_pair(&kv.key, &kv.value);
@@ -187,8 +175,6 @@ impl HttpClient {
         self.collect_response(resp, options.throw_on_status).await
     }
 
-    /// 流式上传本地文件（不整块进内存）。`on_progress` 收 (已发送, 总长)，
-    /// 每 512 KiB 报一次；返回最终响应与总长。
     pub async fn upload_file(
         &self,
         options: RequestOptions,
@@ -211,7 +197,6 @@ impl HttpClient {
         let mut last_report: i64 = 0;
         let stream =
             tokio_util::io::ReaderStream::with_capacity(file, 64 * 1024).map(move |chunk| {
-                // 传输中途取消：给 body 流一个 Err，reqwest 随即中断这次请求。
                 if cancelled() {
                     return Err(std::io::Error::other("cancelled"));
                 }
@@ -225,7 +210,6 @@ impl HttpClient {
                 chunk
             });
 
-        // 显式 content-length：hyper 对带该头的流式 body 走定长编码，接收端才有确定进度。
         let req = self
             .builder(&options)?
             .header(reqwest::header::CONTENT_LENGTH, total)
@@ -236,9 +220,6 @@ impl HttpClient {
         Ok((response, total))
     }
 
-    /// 流式下载到本地文件（不整块进内存）。`on_progress` 收 (已接收, 总长)，总长未知
-    /// 为 -1，每 512 KiB 报一次；成功返回总接收字节。取消或失败删除半成品文件，
-    /// 不留下会被误判为完整下载的残件。
     pub async fn download_file(
         &self,
         options: RequestOptions,
@@ -336,7 +317,6 @@ impl HttpClient {
     }
 }
 
-/// 文件上传过程事件：进度事件 [response] 为 None，最后一条携带最终响应。
 #[derive(Clone)]
 pub struct UploadEvent {
     pub sent: i64,

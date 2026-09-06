@@ -1,15 +1,3 @@
-//! 带 restart marker 的 baseline JPEG：随机访问 + 并行解码。
-//!
-//! 每个 RSTn 标记处熵编码状态归零（DC 预测器、比特缓冲），从任意标记起都能独立解。把文件里
-//! 所有 RST 的字节偏移索引出来，要哪几行就拼一段合成 JPEG：原来的头（SOF 高度改成这一段的
-//! 行数）+ 从对应标记起的熵数据（RST 编号从 0 重排）+ EOI，交给 libjpeg 只解这几行。没有这层，
-//! libjpeg 的 `jpeg_skip_scanlines` 跳过的行照样要熵解码：24000² 的图解视口那 6% 也要跑完
-//! 整 313MB。段与段互相独立，一条带还能切成几段并行解。
-//!
-//! 只接 SOF0 / SOF1（Huffman 顺序）、8 位、单 scan、且 restart 间隔与 MCU 行对齐（间隔是
-//! 整行数的倍数，或整行被间隔整除）的文件；其余 [`RestartIndex::build`] 返回 None，调用方走
-//! 整趟解码。相机、Photoshop / Lightroom、libjpeg 系导出的大多带 DRI，手机相册也常见。
-
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use anyhow::{Result, anyhow, bail};
@@ -18,35 +6,25 @@ use memchr::memchr;
 use crate::codec::region::Rect;
 use crate::codec::turbo::{self, PixelRegion};
 
-/// 一段至少切这么多 MCU 行才值得再分一个线程。
 const MIN_ROWS_PER_CHUNK: u32 = 8;
-/// 一块最多复制这么多熵数据：合成 JPEG 是拷贝出来的，块越大同时活着的拷贝越多。
 const CHUNK_BYTES: usize = 8 * 1024 * 1024;
 const MAX_THREADS: usize = 6;
 
 pub struct RestartIndex {
-    /// SOI 到熵数据开始（SOS 段结束）的头。APPn / COM 剔掉了（Adobe APP14 除外，它定色彩
-    /// 变换），每段合成都要复制一份头。
     header: Vec<u8>,
-    /// `header` 里 SOF 高度字段（2 字节大端）的偏移。
     sof_height_at: usize,
     entropy_start: usize,
     entropy_end: usize,
-    /// 每个 RST 标记的 0xFF 字节偏移（文件内），按出现顺序。
     markers: Vec<usize>,
     mcu_height: u32,
     mcu_rows: u32,
-    /// 对齐的 restart 边界每隔几行 MCU 一个（间隔 ≥ 一行时）。
     row_step: u32,
-    /// 一行里几个间隔（间隔 < 一行时；否则 1）。
     intervals_per_row: u32,
     height: u32,
 }
 
-/// 第几块 → （缩放坐标的起始行，像素）。
 type Indexed = (usize, (u32, PixelRegion));
 
-/// 一段合成 JPEG 及它覆盖的原图 MCU 行区间。
 struct RowSlice {
     jpeg: Vec<u8>,
     start_row: u32,
@@ -83,7 +61,6 @@ impl RestartIndex {
             let mut keep = true;
             match marker {
                 0xC0 | 0xC1 => {
-                    // precision(1) height(2) width(2) ncomp(1) [id, hv, tq]*
                     if len < 8 || bytes[i + 4] != 8 {
                         return None;
                     }
@@ -100,7 +77,6 @@ impl RestartIndex {
                     mcu_w = 8 * hmax;
                     mcu_h = 8 * vmax;
                 }
-                // progressive / 无损 / 算术编码 / 分层：不接。
                 0xC2 | 0xC3 | 0xC5..=0xC7 | 0xC9..=0xCB | 0xCD..=0xCF => return None,
                 0xDD => {
                     if len != 4 {
@@ -135,8 +111,6 @@ impl RestartIndex {
             return None;
         };
 
-        // 扫熵数据：FF 后面跟 D0..D7 是 RST，00 是填充，D9 是 EOI；碰到别的标记（第二个
-        // SOS、DNL）就不接。
         let mut markers = Vec::new();
         let mut pos = entropy_start;
         let entropy_end;
@@ -145,7 +119,6 @@ impl RestartIndex {
             let next = *bytes.get(at + 1)?;
             match next {
                 0x00 => {}
-                // 填充字节：FF FF D0 里第二个 FF 才是标记的开头，只跳一个。
                 0xFF => {
                     pos = at + 1;
                     continue;
@@ -159,7 +132,6 @@ impl RestartIndex {
             }
             pos = at + 2;
         }
-        // 标记数要与几何吻合：每 restart_interval 个 MCU 一个，最后一个间隔后面没有。
         let mcus = mcus_per_row as u64 * mcu_rows as u64;
         let expected = mcus.div_ceil(restart_interval as u64).saturating_sub(1);
         if markers.len() as u64 != expected {
@@ -180,12 +152,10 @@ impl RestartIndex {
         })
     }
 
-    /// 第 `row` 行（必须是 `row_step` 的倍数）是第几个 restart 间隔的开头。
     fn interval_at(&self, row: u32) -> usize {
         (row / self.row_step * self.intervals_per_row) as usize
     }
 
-    /// MCU 行 `[row0, row1)` 的熵数据有多少字节。
     fn bytes_of_rows(&self, row0: u32, row1: u32) -> usize {
         let to = if row1 >= self.mcu_rows {
             self.entropy_end
@@ -203,8 +173,6 @@ impl RestartIndex {
         }
     }
 
-    /// 拼出覆盖 MCU 行 `[row0, row1)` 的合成 JPEG；`row0`、`row1` 都要落在对齐边界上
-    /// （`row1` 可以是末行）。
     fn slice_rows(&self, bytes: &[u8], row0: u32, row1: u32) -> Result<RowSlice> {
         let row1 = row1.min(self.mcu_rows);
         if row0 >= row1 || !row0.is_multiple_of(self.row_step) {
@@ -230,7 +198,6 @@ impl RestartIndex {
         jpeg[self.sof_height_at + 1] = h[1];
         let body_at = jpeg.len();
         jpeg.extend_from_slice(&bytes[from..to]);
-        // RST 编号从 0 重排：libjpeg 按 0..7 循环校验。
         let mut n = 0u8;
         let mut pos = body_at;
         while let Some(off) = memchr(0xFF, &jpeg[pos..]) {
@@ -258,11 +225,6 @@ impl RestartIndex {
         })
     }
 
-    /// 按 `num`/8 缩放、解缩放坐标系里的 `rect`，语义同 [`turbo::decode_region_n8`]，但只熵解码
-    /// 覆盖它的那些 restart 段；段按字节封顶切块，最多 `threads` 个线程并行。
-    ///
-    /// 每块上下各多带一个对齐间隔再裁掉：4:2:0 的 fancy 上采样要看相邻行的色度，块边界上没有
-    /// 邻行会退化成边缘复制，多带一段就与整图解码逐像素一致。
     pub fn decode(
         &self,
         bytes: &[u8],
@@ -272,7 +234,6 @@ impl RestartIndex {
         threads: usize,
     ) -> Result<PixelRegion> {
         let num = num.clamp(1, 8);
-        // 每行 MCU 缩放后占几行像素（mcu_height ∈ {8, 16, 32}，恒为整数）。
         let rows_per_mcu = self.mcu_height * num as u32 / 8;
         let scaled_h = turbo::scaled(self.height, num);
         let y0 = rect.y.min(scaled_h);
@@ -383,7 +344,6 @@ impl RestartIndex {
     }
 }
 
-/// 并行解码用几个线程：大核数封顶 6，再多是内存带宽在排队。
 pub fn threads() -> usize {
     std::thread::available_parallelism()
         .map(|n| n.get())
@@ -397,7 +357,6 @@ mod tests {
     use crate::codec::region::Rect;
     use crate::codec::turbo;
 
-    /// 渐变 + 确定性噪声：分段接缝处哪怕差一行也能对出来。
     fn noisy(width: u32, height: u32) -> Vec<u8> {
         let mut seed = 0x9E37_79B9u32;
         let mut rgb = Vec::with_capacity((width * height * 3) as usize);
@@ -436,7 +395,6 @@ mod tests {
         let three = RestartIndex::build(&jpeg(1000, 700, false, 3)).unwrap();
         assert_eq!(three.row_step, 3);
         assert_eq!(three.markers.len(), 14);
-        // progressive 不接。
         let mut prog = Vec::new();
         let img = image::RgbImage::from_raw(64, 64, noisy(64, 64)).unwrap();
         image::codecs::jpeg::JpegEncoder::new_with_quality(&mut prog, 80)
@@ -445,7 +403,6 @@ mod tests {
         assert!(RestartIndex::build(&prog).is_none(), "无 DRI 的也不接");
     }
 
-    /// 分段 + 并行解出来的像素与整趟 `tj3SetCroppingRegion` 逐字节一致（含上下接缝）。
     #[test]
     fn chunked_decode_matches_full_decode() {
         for (chroma_444, restart_rows) in [(false, 1), (false, 3), (true, 1), (true, 5)] {
@@ -498,7 +455,6 @@ mod tests {
         }
     }
 
-    /// 标记前的 FF 填充字节（T.81 允许）：索引不能漏标记，重排也不能漏。
     #[test]
     fn fill_bytes_before_markers_are_handled() {
         let bytes = jpeg(1000, 700, false, 1);
@@ -525,7 +481,6 @@ mod tests {
         assert!(got.pixels == want.pixels, "填充字节后分段解码应仍一致");
     }
 
-    /// progressive → baseline 无损：像素逐字节相同、带 restart 索引、头不再是 progressive。
     #[test]
     fn progressive_to_baseline_is_lossless_and_indexed() {
         let rgb = noisy(1000, 700);
@@ -578,7 +533,6 @@ mod tests {
 
 #[cfg(test)]
 mod bench {
-    //! `MOODIARY_BENCH_JPEG=/path/to/big.jpg cargo test --release -p moodiary-image bench -- --ignored --nocapture`
     use std::time::Instant;
 
     use super::RestartIndex;

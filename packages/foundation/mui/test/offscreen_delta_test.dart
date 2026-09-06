@@ -1,8 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mui/mui.dart';
 
-/// 复刻思考块的形状：Container(maxWidth 82%) > Column(mainAxisSize.min)，
-/// 收起时宽度只有那行窄标题，展开时正文要吃满约束。
 Widget block({required bool expanded, required double screenWidth}) =>
     Container(
       constraints: BoxConstraints(maxWidth: screenWidth * 0.82),
@@ -33,8 +31,6 @@ void main() {
       MaterialApp(
         theme: buildMuiTheme(brightness: Brightness.light),
         home: Scaffold(
-          // 必须是**松**约束：真实列表里条目外面是 Align。给紧约束的话
-          // block 自己的 maxWidth 会被 enforce 夹掉，量的就不是同一回事了。
           body: SizedBox(
             width: screenWidth,
             child: Align(
@@ -72,9 +68,6 @@ void main() {
     );
   });
 
-  // 上一版的 bug：拿「这块当时的宽度」去量，而不是拿它在真实树里那份约束。
-  // 收起态下这块只有标题那么窄，正文在那个宽度上会多换好几行，量出来的高度偏大 ——
-  // 补偿跟着偏，长内容甚至会把列表甩到内容之外。
   testWidgets('宽度给窄了高度就偏大：量的时候必须用真实约束', (tester) async {
     await realHeight(tester, true);
 

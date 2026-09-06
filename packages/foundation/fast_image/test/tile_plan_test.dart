@@ -7,12 +7,10 @@ void main() {
   const planner = FastTilePlanner(imageSize: Size(8000, 6000));
 
   test('fit 比例：整图落到一屏几块 tile，sample 取到 8', () {
-    // 8000 宽在 1440 物理像素的屏上 fit：每源像素 0.18 物理像素。
     final plan = planner.plan(
       visible: const Rect.fromLTWH(0, 0, 8000, 6000),
       physicalScale: 0.18,
     );
-    // 1 → 2（0.36 ≤ 1.15）→ 4（0.72 ≤ 1.15），再翻是 1.44 超了：解出来每设备像素 1.39 个采样。
     expect(plan.sample, 4);
     expect(plan.visible.length, 4 * 3, reason: '2048 一格：4 列 3 行');
     expect(plan.prefetch, isEmpty);

@@ -10,7 +10,6 @@ import '../data/import/import_media_stage.dart';
 import '../data/import/import_source.dart';
 import '../data/import/markdown_importer.dart';
 
-/// 「从 Markdown 导入」：选包 → 看到篇数 → 导入 → 报告。骨架照 FormatExportPage。
 class MarkdownImportPage extends StatefulWidget {
   const MarkdownImportPage({super.key});
 
@@ -88,7 +87,6 @@ class _MarkdownImportPageState extends State<MarkdownImportPage> {
     );
   }
 
-  /// 规范直接摆在页面上：用户要照着它造包，藏进弹窗就得来回翻。
   Widget _specSection() {
     final l10n = context.l10n;
     final theme = context.theme;
@@ -274,7 +272,6 @@ class _MarkdownImportPageState extends State<MarkdownImportPage> {
     }
   }
 
-  /// 报法同「从备份恢复」：有失败不能走绿色，中途停止更不能。
   Future<void> _report(MarkdownImportReport report, Translations l10n) async {
     final base = l10n.export.importSummary(
       diary: report.diaries,
@@ -304,7 +301,6 @@ class _MarkdownImportPageState extends State<MarkdownImportPage> {
         message: l10n.export.importMissingMedia(count: report.missingMedia),
       );
     }
-    // 包已经用完，工作目录不必等到离开页面再清。
     await _source?.dispose();
     if (mounted) {
       setState(() {

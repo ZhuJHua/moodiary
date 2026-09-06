@@ -2,8 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:logger/logger.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 
-/// 钉住 427aae3a 修复的行为：configure 可以晚于首条日志，
-/// 且到达后必须失效重建（否则输出永久钉死在首次构建的那份上）。
 void main() {
   tearDown(AppLogger.debugReset);
 

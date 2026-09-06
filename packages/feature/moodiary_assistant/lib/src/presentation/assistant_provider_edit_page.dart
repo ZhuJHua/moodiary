@@ -13,9 +13,6 @@ import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// 供应商编辑页。两条路差别很大，**preset 供应商没有 baseUrl 与协议字段** ——
-/// 那两项是按模型从 models.dev 解析的（中转站底下 Claude 与 GPT 就走不同协议），
-/// 摆出来只会让用户改错。
 class AssistantProviderEditPage extends ConsumerStatefulWidget {
   final String? id;
   final String? presetId;
@@ -40,7 +37,6 @@ class _AssistantProviderEditPageState
   String _presetId = '';
   String _defaultModel = '';
 
-  /// 仅自定义供应商：可选模型 id。
   List<String> _models = const [];
 
   String? _docUrl;
@@ -51,7 +47,6 @@ class _AssistantProviderEditPageState
   bool _fetchingModels = false;
   bool _refreshingCatalog = false;
 
-  // 自定义供应商的用户声明能力（preset 以在线目录为准，逐模型）。
   bool _toolCall = false;
   bool _reasoning = false;
   bool _attachment = false;
@@ -112,7 +107,6 @@ class _AssistantProviderEditPageState
           _name.text = preset.name;
           _presetId = preset.id;
           _docUrl = preset.docUrl;
-          // 目录已按「未下线 → 支持工具 → 名称」排好序，首个就是最合理的起手。
           _defaultModel = preset.models.isEmpty ? '' : preset.models.first.id;
           _loaded = true;
         });
@@ -135,7 +129,6 @@ class _AssistantProviderEditPageState
     return null;
   }
 
-  /// 还没落库时也要能列模型，所以拿当前表单拼一个草稿供应商去问解析器。
   LlmProvider get _draft => LlmProvider(
     id: widget.id ?? '',
     name: _name.text.trim(),
@@ -170,7 +163,6 @@ class _AssistantProviderEditPageState
     }
   }
 
-  /// preset 供应商的模型来自目录，更新 = 重拉整份 models.dev。
   Future<void> _refreshCatalog() async {
     if (_refreshingCatalog) return;
     setState(() => _refreshingCatalog = true);
@@ -193,8 +185,6 @@ class _AssistantProviderEditPageState
     }
   }
 
-  /// 自定义供应商的模型来自端点。`GET {base}/models` 是 OpenAI / Anthropic 的
-  /// 正式接口，兼容端点也基本都实现了 —— 但**不保证**，所以手动添加一直留着。
   Future<void> _fetchModels() async {
     if (_fetchingModels) return;
     final l10n = context.l10n;
@@ -214,7 +204,6 @@ class _AssistantProviderEditPageState
       );
       if (!mounted) return;
       setState(() {
-        // 手动加过的不因为一次拉取而消失。
         _models = {..._models, ...ids}.toList()..sort();
         if (_defaultModel.isEmpty && ids.isNotEmpty) _defaultModel = ids.first;
       });
@@ -291,8 +280,7 @@ class _AssistantProviderEditPageState
       );
     }
 
-    // 先写 key 再 upsert：upsert 会广播刷新事件，此时 key 已就位，
-    // 否则列表/配置页会残留「没有 key」直到重启（setKey 不发事件）。
+    // 必须先写 key 再 upsert：setKey 不发事件，upsert 才广播刷新
     if (key.isNotEmpty) await _repo.setKey(id, key);
     await _repo.upsertProvider(toSave);
     if (_isNew && (MoodiaryKVs.assistantActiveProviderId.get() ?? '').isEmpty) {
@@ -352,7 +340,6 @@ class _AssistantProviderEditPageState
             ChoiceChip(
               label: Text(label(t)),
               selected: _type == t,
-              // 换协议等于换端点形状，之前拉到的模型列表不再适用。
               onSelected: (_) => setState(() {
                 _type = t;
                 _models = const [];
@@ -551,7 +538,6 @@ class _AssistantProviderEditPageState
                             : null,
                       ),
                     ),
-                    // preset 的协议与 baseUrl 按模型解析，页面上不出现。
                     if (!_isPreset) ...[
                       const SizedBox(height: 18),
                       _buildProtocolSelector(l10n),

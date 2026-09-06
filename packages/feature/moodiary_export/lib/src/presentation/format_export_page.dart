@@ -17,12 +17,9 @@ import 'image_export_page.dart';
 import 'pdf_font_page.dart';
 import 'scope_picker_page.dart';
 
-/// 一种格式的导出配置。三种格式共用这一页 —— 差别只在「排版」分组的内容，
-/// 各写一页会让「范围 / 内容」两组逻辑复制三份、慢慢漂移。
 class FormatExportPage extends StatefulWidget {
   final ExportFormat format;
 
-  /// 锁死的范围。非空时「范围」整组隐藏 —— 从日记页进来的单篇导出用它。
   final ExportScope? lockedScope;
 
   const FormatExportPage({super.key, required this.format, this.lockedScope});
@@ -83,7 +80,6 @@ class _FormatExportPageState extends State<FormatExportPage> {
     return Scaffold(
       appBar: AppBar(title: Text(_titleOf(context.l10n))),
       body: ListView(
-        // 底部有操作栏吃安全区，这里只补常规内边距。
         padding: const .symmetric(horizontal: 8, vertical: 8),
         children: [
           if (widget.lockedScope == null) ...[
@@ -99,8 +95,6 @@ class _FormatExportPageState extends State<FormatExportPage> {
       bottomNavigationBar: _actionBar(),
     );
   }
-
-  // ---------------------------------------------------------------- 范围
 
   Widget _scopeSection() {
     final l10n = context.l10n;
@@ -183,7 +177,6 @@ class _FormatExportPageState extends State<FormatExportPage> {
     final value = await MAlert.prompt(
       context,
       title: l10n.export.fileNameTemplate,
-      // 花括号是模板语法本身，作为字面量传进占位符 —— 文案里的 `{x}` 会被 slang 当参数吃掉。
       message: l10n.export.fileNameTemplateHint(
         date: '{date}',
         title: '{title}',
@@ -195,8 +188,6 @@ class _FormatExportPageState extends State<FormatExportPage> {
     if (value == null) return;
     _update(_settings.copyWith(common: _common.copyWith(nameTemplate: value)));
   }
-
-  // ---------------------------------------------------------------- 内容
 
   Widget _contentSection() {
     final l10n = context.l10n;
@@ -259,7 +250,6 @@ class _FormatExportPageState extends State<FormatExportPage> {
         .none => l10n.export.mediaNone,
       };
 
-  /// 范围描述：成句的部分走 l10n，分类名 / 日期区间这类用户数据由 scope 自己带。
   String _scopeLabel(Translations l10n) {
     final detail = _scope.detail;
     return switch (_scope.kind) {
@@ -288,10 +278,6 @@ class _FormatExportPageState extends State<FormatExportPage> {
     _update(_settings.copyWith(common: _common.copyWith(media: picked)));
   }
 
-  // ---------------------------------------------------------------- 图片
-
-  /// 模版只有「原稿」一个（跟随应用配色），所以这里没有模版行 —— 明暗、尺寸清晰度、
-  /// 水印三个旋钮就是全部。
   Widget _imageSection() {
     final l10n = context.l10n;
     final theme = context.theme;
@@ -349,7 +335,6 @@ class _FormatExportPageState extends State<FormatExportPage> {
 
   Future<void> _pickBrightness() async {
     final l10n = context.l10n;
-    // 「跟随应用」是一种明确的选择，不是「没设过」，所以它也占一格。
     const values = <Brightness?>[null, Brightness.light, Brightness.dark];
     final picked = await MAlert.show<int>(
       context,
@@ -405,8 +390,6 @@ class _FormatExportPageState extends State<FormatExportPage> {
       ),
     );
   }
-
-  // ---------------------------------------------------------------- 排版
 
   Widget _layoutSection() {
     final l10n = context.l10n;
@@ -558,8 +541,6 @@ class _FormatExportPageState extends State<FormatExportPage> {
     ],
   );
 
-  // ---------------------------------------------------------------- 执行
-
   Widget _actionBar() {
     final l10n = context.l10n;
     final count = _scopeCount;
@@ -582,7 +563,6 @@ class _FormatExportPageState extends State<FormatExportPage> {
           if (_running && _progress != null) _progressBar(_progress!, l10n),
           Row(
             children: [
-              // 全量导出前先看一眼版式：只跑第一篇，秒出。另外三种格式没有预览可给。
               if (_isImage) ...[
                 Expanded(
                   child: SizedBox(
@@ -644,7 +624,6 @@ class _FormatExportPageState extends State<FormatExportPage> {
         done: progress.done,
         total: progress.total,
       ),
-      // 收尾阶段切不开，只能给不确定进度条。
       .serializing => l10n.export.progressSerializing,
     };
     return Padding(
@@ -672,7 +651,6 @@ class _FormatExportPageState extends State<FormatExportPage> {
     );
   }
 
-  /// PDF 必须先有一个可用的字体，否则导出会在写文件那一步才失败。
   String? _pdfBlockedReason() {
     if (widget.format != .pdf) return null;
     if (_settings.pdf.eastAsiaFont.isEmpty) {
@@ -765,12 +743,6 @@ class _FormatExportPageState extends State<FormatExportPage> {
     await shareExported(outcome.path, l10n);
   }
 
-  /// 图片产物的两条出口。相册是系统分享面板做不好的那件事，所以单独给一颗。
-  ///
-  /// **文件要查两次**：产物落在缓存目录，而磁盘吃紧的 Android 会随时 purge 它 ——
-  /// 实测导出完 15 秒就被清了，而清的时机正好落在「弹窗弹出」与「用户点下去」之间。
-  /// 只查一次挡不住。缺了就报 `artifactMissing`，别让 Gal 把「文件不存在」报成
-  /// `NOT_SUPPORTED_FORMAT`（那句话用户看不懂）。
   Future<void> _deliverImages(List<String> images, Translations l10n) async {
     List<String> alive() =>
         images.where((path) => File(path).existsSync()).toList();
@@ -798,7 +770,6 @@ class _FormatExportPageState extends State<FormatExportPage> {
     );
     if (choice == null) return;
 
-    // 用户想了几秒的这段时间里文件可能已经没了，落地前再查一次。
     final files = alive();
     if (files.isEmpty) {
       toast.error(message: l10n.export.artifactMissing);

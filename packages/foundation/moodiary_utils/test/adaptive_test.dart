@@ -65,15 +65,11 @@ void main() {
       ]);
 
       release();
-      // 恢复必须真的重新下发一次 —— 观察者按策略去重，清不掉去重状态就会是空操作，
-      // 竖屏锁再也回不来（这是 chewie 那条路上的既有 bug）。
       expect(calls, hasLength(2));
       expect(orientationsOf(calls.last), isNotEmpty);
     });
 
     testWidgets('恢复函数报告「是否真的恢复了」—— 调用方据此决定要不要等旋转', (tester) async {
-      // 嵌套时内层 release 一个方向请求都没发出去，调用方若照样去等「屏幕转回来」
-      // 就必然吃满超时。返回值就是这个判据。
       final outer = lockOrientationsTemporarily(const [.portraitUp]);
       final inner = lockOrientationsTemporarily(const [.landscapeLeft]);
       expect(inner(), isFalse, reason: '计数未归零，没有下发方向');
@@ -113,8 +109,6 @@ void main() {
       calls = <MethodCall>[];
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(SystemChannels.platform, (call) async {
-            // manual 走的是**另一个方法名**（setEnabledSystemUIOverlays），
-            // 只筛 setEnabledSystemUIMode 会把「点亮两条栏」那一步整个漏掉。
             if (call.method.startsWith('SystemChrome.setEnabledSystemUI')) {
               calls.add(call);
             }
@@ -141,8 +135,6 @@ void main() {
       calls.clear();
 
       release();
-      // 只调 edgeToEdge 的话对「栏的显隐」是空操作（此刻本来就在 edgeToEdge 里），
-      // 状态栏会一直藏着 —— 整个 app 从此没有状态栏。顺序不能反，也不能少。
       expect(calls, hasLength(2));
       expect(calls.first.method, 'SystemChrome.setEnabledSystemUIOverlays');
       expect((calls.first.arguments as List).cast<String>(), [

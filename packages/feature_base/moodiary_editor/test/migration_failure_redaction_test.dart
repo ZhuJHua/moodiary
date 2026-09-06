@@ -1,7 +1,3 @@
-// 迁移失败日志是给用户经系统分享面板发出去的，页脚对用户的承诺是「不含日记内容」。
-// drift / sqlite3 的异常 toString 会把**绑定参数原样打印**，标题与正文全在里面，
-// 这一层脱敏就是那句承诺的唯一实现。字符串形状取自 sqlite3-3.5.2 的
-// `SqliteException.toString`（`\n  Causing statement: <sql>, parameters: <值...>`）。
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -27,7 +23,6 @@ void main() {
       expect(redacted, isNot(contains(body)));
       expect(redacted, isNot(contains('Causing statement')));
       expect(redacted, isNot(contains('parameters:')));
-      // 诊断价值必须留住：错误码与原因还在。
       expect(redacted, contains('SqliteException(13)'));
       expect(redacted, contains('database or disk is full'));
     });

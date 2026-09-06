@@ -7,19 +7,13 @@ import 'package:mui/mui.dart';
 
 import '../audio_player.dart';
 
-/// 音频全屏播放页 —— 普通主题页面（跟随深 / 浅色，配色全走 colorScheme），不是
-/// 视频那种纯黑「暗室」：AppBar 关闭键、唱盘 + 名称居中、底部刮擦条 + 播放键。
-/// 手势取子集：横拖刮擦、双击播放 / 暂停；关闭走 AppBar 或系统返回。进入即自动播放。
 class MAudioPlayerPage extends StatefulWidget {
   final String audioPath;
 
-  /// 显示名（调用方已做默认名兜底）。
   final String title;
 
-  /// 次要信息行（如所属日记日期），可空。
   final String? subtitle;
 
-  /// 表内已知总时长：进场即显示，不必等播放器初始化回报。
   final Duration? knownDuration;
 
   const MAudioPlayerPage({
@@ -30,7 +24,6 @@ class MAudioPlayerPage extends StatefulWidget {
     this.knownDuration,
   });
 
-  /// 防双开：快速双击卡片会推两个路由。
   static bool _opening = false;
 
   static Future<void> show(
@@ -62,7 +55,6 @@ class MAudioPlayerPage extends StatefulWidget {
     }
   }
 
-  /// 按媒体文件名打开（媒体库入口）。
   static Future<void> showByName(
     BuildContext context, {
     required String name,
@@ -87,7 +79,6 @@ class _MAudioPlayerPageState extends State<MAudioPlayerPage>
     with SingleTickerProviderStateMixin {
   final AudioPlaybackController _controller = AudioPlaybackController();
 
-  /// 刮擦草稿进度（0..1）；null = 没在刮。拖动中只改显示，松手才 seek。
   final _draftFraction = ValueNotifier<double?>(null);
 
   late final AnimationController _spin = AnimationController(
@@ -99,7 +90,6 @@ class _MAudioPlayerPageState extends State<MAudioPlayerPage>
   void initState() {
     super.initState();
     _controller.progress.addListener(_syncSpin);
-    // 进入即自动播放。
     _controller.toggle(widget.audioPath);
   }
 
@@ -133,8 +123,6 @@ class _MAudioPlayerPageState extends State<MAudioPlayerPage>
     final position = _controller.progress.value.position;
     return (position.inMilliseconds / total.inMilliseconds).clamp(0.0, 1.0);
   }
-
-  // —— 手势：横拖刮擦（全页）、双击播放/暂停 —— //
 
   void _onHorizontalDragStart(DragStartDetails d) {
     if (_totalDuration <= Duration.zero) return;
@@ -174,8 +162,6 @@ class _MAudioPlayerPageState extends State<MAudioPlayerPage>
           onPressed: () => Navigator.of(context).maybePop(),
         ),
       ),
-      // 横拖刮擦挂整页（拖动识别不拖延点击）；双击只覆盖唱盘区——双击识别器会把
-      // 手势竞技场按住 ~300ms 等第二击，罩住底部控制条会让播放键点按明显迟钝。
       body: GestureDetector(
         behavior: .opaque,
         onHorizontalDragStart: _onHorizontalDragStart,
@@ -262,13 +248,11 @@ class _MAudioPlayerPageState extends State<MAudioPlayerPage>
               const SizedBox(height: 8),
               Row(
                 children: [
-                  // 播完回到起点显示播放键，点按即重播（toggle 内部处理 completed）。
                   IconButton.filled(
                     onPressed: () => _controller.toggle(widget.audioPath),
                     tooltip: p.playing ? l10n.ui.pause : l10n.ui.play,
                     iconSize: 24,
-                    // 主题的 iconTheme 会经 themeStyleOf 把前景改成 onSurface，
-                    // 盖掉 filled 变体的 onPrimary 默认值 —— 图标得显式给色。
+                    // iconTheme 会把 filled 图标前景覆盖成 onSurface，需显式指定颜色
                     icon: Icon(
                       p.playing ? LucideIcons.pause : LucideIcons.play,
                       color: scheme.onPrimary,
@@ -301,7 +285,6 @@ class _MAudioPlayerPageState extends State<MAudioPlayerPage>
   }
 }
 
-/// 中央唱盘：同心圆 + 音符图标，播放时由外层 RotationTransition 缓慢旋转。
 class _Disc extends StatelessWidget {
   const _Disc();
 
@@ -334,7 +317,6 @@ class _Disc extends StatelessWidget {
   }
 }
 
-/// 底部刮擦条：视觉 3dp（按下 6dp），命中整行高；拖动 / 点按都按横向比例 seek。
 class _ScrubBar extends StatelessWidget {
   final double fraction;
   final bool dragging;

@@ -29,7 +29,6 @@ const disabled = (id: string): boolean =>
   (btn(id).element as HTMLButtonElement).disabled
 
 describe('undo / redo buttons', () => {
-  // 移动端软键盘不提供 Mod-Z，工具栏按钮是撤销重做的唯一入口 —— 这两条测试守的就是它。
   it('starts disabled on a fresh document', () => {
     expect(disabled('undo')).toBe(true)
     expect(disabled('redo')).toBe(true)
@@ -62,7 +61,6 @@ describe('undo / redo buttons', () => {
       }),
     )
     await nextTick()
-    // 灌入即新文档的起点：撤销不能把用户带回上一篇日记。
     expect(disabled('undo')).toBe(true)
   })
 })

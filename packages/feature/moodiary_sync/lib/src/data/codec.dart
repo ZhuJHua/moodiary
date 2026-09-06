@@ -8,29 +8,19 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 
-/// 同步层字节编/解码器。持有原始 AES-256 key（数据密钥 DEK）直接加解密——
-/// 密钥的派生 / 包装 / 存取全部在 [SyncKeyManager]（信封加密：随机 DEK 加密
-/// 数据，用户密码只用来包 DEK）。格式 `MD-ENC-V1\n` magic 头 + AES-256-GCM；
-/// 密钥正确性的唯一可信源 = AES-GCM auth tag，密钥错则解密失败抛 [SyncException]。
-/// 不可变实例，构造时绑定一个 key（CloudReCipher 显式构造旧/新两个）。
 class SyncCipher {
   static const String magic = 'MD-ENC-V1\n';
 
-  /// 原始 32 字节 AES-256 key；`null` = 明文模式。
   final List<int>? aesKey;
 
   const SyncCipher.withKey(this.aesKey);
 
   static const SyncCipher plaintext = .withKey(null);
 
-  /// 当前设备的 cipher：本机 SecureKV 里的 DEK，未配置即明文模式。
   static Future<SyncCipher> current() => SyncKeyManager.currentCipher();
 
   bool get encrypted => aesKey != null;
 
-  /// 超过这个明文体积的 JSON 编解码挪到 `Isolate.run`：manifest 几千条时
-  /// `jsonDecode + fromJson` 要几十毫秒，留在主 isolate 就是一次掉帧；单条日记
-  /// 远小于此，跨 isolate 的固定成本反而更贵。SQL、网络、AES 本就不在主 isolate。
   static const int isolateThresholdBytes = 64 * 1024;
 
   Future<Uint8List> encode(Object value) async {
@@ -39,7 +29,6 @@ class SyncCipher {
     return _framed(await _encrypt(plain));
   }
 
-  /// 自动按 magic 头识别加密；密文但本 cipher 未配密钥 → 抛 [SyncException]。
   Future<dynamic> decode(Uint8List bytes) async {
     final plain = await _maybeDecrypt(bytes);
     try {
@@ -52,7 +41,6 @@ class SyncCipher {
     }
   }
 
-  /// 编码前不知道体积，用条目数估：manifest 的 `entries` 过 512 条就当大对象。
   static Future<Uint8List> _encodeJson(Object value) async {
     final entries = value is Map ? value['entries'] : null;
     if (entries is Map && entries.length > 512) {
@@ -61,7 +49,6 @@ class SyncCipher {
     return utf8.encode(jsonEncode(value));
   }
 
-  /// 原始字节加密（媒体文件）。
   Future<Uint8List> encryptBytes(Uint8List bytes) async {
     if (!encrypted) return bytes;
     return _framed(await _encrypt(bytes));
@@ -69,7 +56,6 @@ class SyncCipher {
 
   Future<Uint8List> decryptBytes(Uint8List bytes) async => _maybeDecrypt(bytes);
 
-  /// [encryptBytes] 的文件版：明文与密文都不进 Dart 内存。明文模式退化为复制。
   Future<void> encryptFileTo(String srcPath, String dstPath) async {
     if (!encrypted) {
       await File(srcPath).copy(dstPath);
@@ -83,7 +69,6 @@ class SyncCipher {
     );
   }
 
-  /// [decryptBytes] 的文件版，语义相同：按 magic 头识别，明文原样复制。
   Future<void> decryptFileTo(String srcPath, String dstPath) async {
     final magicBytes = utf8.encode(magic);
     final head = await _readHead(srcPath, magicBytes.length);
@@ -132,8 +117,6 @@ class SyncCipher {
     return true;
   }
 
-  /// 必须预分配 typed buffer：`[...a, ...b]` 的字面量上下文类型是 `List<int>`，会先
-  /// 摊出一个每字节一个字长的装箱列表，媒体文件走这条 = OOM。
   static Uint8List _framed(Uint8List cipher) {
     final magicBytes = utf8.encode(magic);
     final out = Uint8List(magicBytes.length + cipher.length);
@@ -152,7 +135,6 @@ class SyncCipher {
     }
     try {
       final magicLen = utf8.encode(magic).length;
-      // 视图而非拷贝：FRB 的编码器直接把它 setRange 进 Rust 缓冲区。
       return await crypto.Aes.decrypt(
         key: aesKey!,
         encryptedData: Uint8List.sublistView(bytes, magicLen),

@@ -1,5 +1,3 @@
-//! 导出 IR 的跨桥声明。类型本体在 [`crate::ir`]，这里只让 FRB 生成 Dart 侧的对应类。
-
 use flutter_rust_bridge::frb;
 
 pub use crate::ir::{IrBlock, IrCell, IrDoc, IrListItem, IrRow, IrSpan};
@@ -25,19 +23,15 @@ pub struct _IrSpan {
     pub underline: bool,
     pub code: bool,
     pub href: Option<String>,
-    /// 双链目标日记 id；非空时 [text] 是链接标签。
     pub diary_link_id: Option<String>,
 }
 
 #[frb(mirror(IrListItem))]
 pub struct _IrListItem {
     pub children: Vec<IrBlock>,
-    /// 非空表示这是任务项。
     pub checked: Option<bool>,
 }
 
-/// 表格的一行。包一层具名结构而不是 `Vec<Vec<IrCell>>` —— FRB 的 CST 编解码器
-/// 生成嵌套列表时会漏掉内层的 fill 函数。
 #[frb(mirror(IrRow))]
 pub struct _IrRow {
     pub cells: Vec<IrCell>,
@@ -77,9 +71,7 @@ pub enum _IrBlock {
     Image {
         path: String,
         alt: Option<String>,
-        /// 正文列宽百分比上限（25/50/75/100）。
         width_percent: Option<u32>,
-        /// 粘贴进来的外链图，导出时不下载、只当链接处理。
         is_external: bool,
     },
     Media {

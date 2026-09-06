@@ -10,8 +10,6 @@ import 'package:moodiary_sync/src/data/sync_logger.dart';
 
 import '../sync_test_harness.dart';
 
-/// 常用地点走的是与分类完全相同的那条线（LWW + 墓碑），这里钉住三件事：
-/// 往返、LWW 方向、以及**不认识 `p:` 的旧客户端不会把它抹掉**。
 void main() {
   late SyncLogger logger;
 
@@ -63,7 +61,6 @@ void main() {
     expect(backend.objects, contains(SyncKeys.placeObjectPath('p1')));
     final manifest = backend.manifest()!;
     expect(manifest.entries, contains(SyncKeys.place('p1')));
-    // v2 = 日记对象由 position 快照改为 placeId 引用（2026-09-05）；加键命名空间本身不 bump。
     expect(SyncManifest.currentVersion, 2);
   });
 
@@ -171,7 +168,6 @@ void main() {
     final source = FakePlaceStore([place('p1', '公司')]);
     await engine(backend, places: source).push();
 
-    // 另一端先同步到，再收删除。
     final other = FakePlaceStore();
     await engine(backend, places: other).pull();
     expect(other.places, hasLength(1));
@@ -186,11 +182,9 @@ void main() {
 
   test('不认识 p: 的旧客户端 push 不会抹掉它 —— manifest 是合并不是重建', () async {
     final backend = FakeRemoteBackend();
-    // 新客户端先推一个地点。
     await engine(backend, places: FakePlaceStore([place('p1', '公司')])).push();
     expect(backend.manifest()!.entries, contains(SyncKeys.place('p1')));
 
-    // 「旧客户端」= 一个地点存储为空的引擎；它也推一篇日记，让 manifest 真被写回。
     await IncrementalSyncEngine(
       backend,
       logger: logger,
@@ -206,7 +200,6 @@ void main() {
 
     final manifest = backend.manifest()!;
     expect(manifest.entries, contains(SyncKeys.diary('d1')));
-    // 关键：p: 条目与它的对象都还在。
     expect(manifest.entries, contains(SyncKeys.place('p1')));
     expect(backend.objects, contains(SyncKeys.placeObjectPath('p1')));
   });

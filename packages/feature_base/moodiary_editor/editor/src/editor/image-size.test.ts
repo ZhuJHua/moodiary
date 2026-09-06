@@ -32,12 +32,10 @@ const imageNodes = (): Array<Record<string, unknown>> => {
 const wrapper = (): HTMLElement | null => h.editor.view.dom.querySelector('.moodiary-image')
 const badge = (): HTMLElement | null => h.editor.view.dom.querySelector('.moodiary-image__badge')
 const menuHost = (): HTMLElement | null => h.editor.view.dom.querySelector('.moodiary-image__menu')
-// 面板 Teleport 到 body，不在编辑器 DOM 里。
 const panel = (): HTMLElement | null => document.body.querySelector('.moodiary-image__panel')
 const slider = (): HTMLInputElement | null =>
   document.body.querySelector('.moodiary-image__panel input[type="range"]')
 
-/** 已开则原样（点角标是 toggle，重复点会关掉）。 */
 const openPanel = async (): Promise<void> => {
   if (!panel()) {
     badge()?.click()
@@ -51,15 +49,12 @@ const emitRange = (value: string, type: 'input' | 'change'): void => {
   range!.value = value
   range!.dispatchEvent(new Event(type, { bubbles: true }))
 }
-/** 拖动中（连续触发）。 */
 const drag = (value: string): void => emitRange(value, 'input')
-/** 松手。 */
 const release = (value: string): void => emitRange(value, 'change')
 
 describe('image node view', () => {
   it('mounts the Vue node view instead of falling back to bare renderHTML', () => {
     h.api.insertMedia('image-1.jpg')
-    // 回退形态是一个光秃秃的 <img>，没有外层包裹；有 .moodiary-image 才说明 node view 真挂上了。
     expect(wrapper()).not.toBeNull()
   })
 
@@ -155,8 +150,6 @@ describe('size badge', () => {
   })
 
   it('anchors the panel on the badge itself, not on a stand-in element', () => {
-    // PopupMenu 按 trigger 插槽的包裹元素定位。角标必须真的在那个包裹里，否则面板会弹到
-    // 图片下方的满宽处（这是「拇指手柄」方案评审里挑出的必现 bug）。
     const host = menuHost()
     expect(host).not.toBeNull()
     expect(host?.contains(badge())).toBe(true)
@@ -180,7 +173,6 @@ describe('size badge', () => {
 
     drag('62')
     await nextTick()
-    // 拖动中：画面已经跟手，但还没落库 —— 否则一次拖拽会往 undo 栈塞几十步。
     expect(wrapper()?.style.maxWidth).toBe('62%')
     expect(imageNode()?.attrs).toMatchObject({ widthPercent: null })
 
@@ -208,7 +200,7 @@ describe('size badge', () => {
 
   it('jumps to a stop when its tick label is tapped', async () => {
     await openPanel()
-    document.body.querySelectorAll<HTMLElement>('.moodiary-image__stop')[2].click() // 75
+    document.body.querySelectorAll<HTMLElement>('.moodiary-image__stop')[2].click()
     await nextTick()
     expect(imageNode()?.attrs).toMatchObject({ widthPercent: 75 })
   })
@@ -236,15 +228,13 @@ describe('targets the right node', () => {
     h.api.insertMedia('image-2.jpg')
     await nextTick()
 
-    // 选中第一张，却去点第二张的角标 —— 若实现里写成 commands.updateAttributes('image', …)
-    // （按当前选区改），改中的会是第一张。
     h.editor.commands.setNodeSelection(0)
     const badges = h.editor.view.dom.querySelectorAll<HTMLElement>('.moodiary-image__badge')
     expect(badges.length).toBe(2)
     badges[1].click()
     await nextTick()
 
-    document.body.querySelectorAll<HTMLElement>('.moodiary-image__stop')[1].click() // 50
+    document.body.querySelectorAll<HTMLElement>('.moodiary-image__stop')[1].click()
     await nextTick()
 
     expect(imageNodes().map((a) => a.widthPercent)).toEqual([null, 50])
@@ -261,7 +251,6 @@ describe('read-only mode', () => {
     await nextTick()
 
     expect(badge()).toBeNull()
-    // 只断言角标消失是不够的：node view 整个没挂、回退成裸 renderHTML 时它同样为 null。
     expect(wrapper()?.style.maxWidth).toBe('50%')
     expect(h.editor.view.dom.querySelector('img')?.getAttribute('src')).toBe(
       `${PREFIX}image-1.jpg`,
@@ -276,8 +265,6 @@ describe('HTML parsing (clipboard)', () => {
 
   it('strips the media prefix again so the stored src stays a bare filename', () => {
     h.api.insertMedia('image-1.jpg')
-    // 复制走 renderHTML（拼了前缀），粘贴走 parseHTML —— 前缀必须能剥回来，否则带随机端口的
-    // 绝对 URL 会落库，冷启动后永久裂图，且 Dart 侧的孤儿清理会误删真实文件。
     paste(h.editor.getHTML())
     expect(imageNodes().every((a) => String(a.src).startsWith('image-'))).toBe(true)
   })

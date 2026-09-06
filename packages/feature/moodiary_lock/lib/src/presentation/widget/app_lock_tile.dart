@@ -5,7 +5,6 @@ import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
 
-/// 设置页应用锁管理（开关 + 改密 + 生物识别开关）；解锁时机由 `/lock` 负责，此处只管开关与凭据。
 class AppLockTile extends StatefulWidget {
   const AppLockTile({super.key});
 
@@ -42,7 +41,6 @@ class _AppLockTileState extends State<AppLockTile> {
 
   Future<void> _toggleBiometric(bool value) async {
     if (value) {
-      // 开启前先验证一次，确认设备已录入且本人可用。
       final ok = await BiometricAuth.check(reason: l10n.lock.biometricReason);
       if (!ok) return;
       MoodiaryKVs.supportBiometrics.set(true);
@@ -51,12 +49,6 @@ class _AppLockTileState extends State<AppLockTile> {
     }
   }
 
-  /// 本组件在 [MSliverSettingGroup] 眼里是**一项**，但自己展开成 1–4 行，行数还随
-  /// 上锁状态与设备是否支持生物识别变 —— 所以内部分隔线由自己插。
-  ///
-  /// 生物识别那一行是否存在取决于一个 Future，**必须在拼列表之前解出来**：留在行内用
-  /// `SizedBox.shrink()` 占位的话，它上面那条分隔线会挂在一行看不见的东西上，变成组尾
-  /// 一条悬空的线。
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -125,8 +117,6 @@ class _AppLockTileState extends State<AppLockTile> {
   }
 }
 
-/// 写 PIN，成功返回 true。写钥匙串会抛（设备锁定 / Keystore 故障），两个调用点都得
-/// 在失败时留在原地报错 —— 各自要复位的状态不同，所以只共用「试着写 + 记日志」这半。
 Future<bool> savePin(String pin) async {
   try {
     await AppLockPin.set(pin);
@@ -137,7 +127,6 @@ Future<bool> savePin(String pin) async {
   }
 }
 
-/// PIN 键盘自己就是完整版式：输满即完成，没有需要确认的中间态，所以不给动作条。
 class _SheetScaffold extends StatelessWidget {
   final Widget child;
 
@@ -160,7 +149,7 @@ class SetPasswordSheet extends StatefulWidget {
 
 class _SetPasswordSheetState extends State<SetPasswordSheet> {
   final _pad = LockPinPadController();
-  String? _first; // 第一遍输入；null 表示尚在第一遍
+  String? _first;
   String? _error;
 
   Future<void> _onCompleted(String pin) async {
@@ -173,8 +162,6 @@ class _SetPasswordSheetState extends State<SetPasswordSheet> {
       return;
     }
     if (pin == _first) {
-      // 写成功即等于开锁：`AppLockPin.enabled` 就是「有没有凭据」，没有第二个开关
-      // 要同步，也就没有「锁开着但没有密码」那种把用户挡在门外的中间态。
       if (!await savePin(pin)) {
         if (!mounted) return;
         setState(() {
@@ -316,7 +303,6 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
         _pad.clear();
       case .confirmNew:
         if (pin == _newPin) {
-          // 写失败时旧 PIN 原样还在，别报「已修改」骗用户。
           if (!await savePin(pin)) {
             if (!mounted) return;
             setState(() {

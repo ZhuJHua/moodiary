@@ -118,7 +118,6 @@ class _PresetSection extends StatefulWidget {
 }
 
 class _PresetSectionState extends State<_PresetSection> {
-  /// 当前默认预设的显示名；null = 内置（用 l10n 名）。
   String? _defaultName;
   bool _loaded = false;
 

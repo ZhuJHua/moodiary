@@ -1,6 +1,3 @@
-//! 只负责传输层，路由与业务全在 Dart 侧的 handler 回调里。
-//! 大 body 流式落盘（移动端不吃内存）；响应支持单段 Range —— webview `<video>` 依赖 206。
-
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -24,14 +21,10 @@ pub struct HttpServerRequest {
     pub path: String,
     pub query: Vec<KeyValue>,
     pub headers: Vec<KeyValue>,
-    /// 小请求体内联；已落盘时为空、见 [Self::body_file_path]。
     pub body: Vec<u8>,
-    /// 大请求体流式落盘的临时文件。仅在 handler 执行期间有效，返回后由服务器删除。
     pub body_file_path: Option<String>,
 }
 
-/// handler 返回的响应。[Self::body_file_path] 非空时从磁盘流式发送并自动支持
-/// Range（此时 [Self::body] 被忽略）。
 pub struct HttpServerResponse {
     pub status: u16,
     pub headers: Vec<KeyValue>,
@@ -47,7 +40,6 @@ static SPOOL_SEQ: AtomicU64 = AtomicU64::new(0);
 type BoxedBody = http_body_util::combinators::BoxBody<Bytes, std::io::Error>;
 pub type HandlerFn =
     Arc<dyn Fn(HttpServerRequest) -> BoxFuture<'static, HttpServerResponse> + Send + Sync>;
-/// (received, total)，total 为 -1 表示长度未知（chunked）。
 pub type ProgressFn = Arc<dyn Fn(i64, i64) -> BoxFuture<'static, ()> + Send + Sync>;
 
 pub struct HttpServer {
@@ -109,7 +101,6 @@ impl HttpServer {
                     }
                 }
             }
-            // stop() 语义 = close(force)：在飞连接直接掐断。
             connections.abort_all();
         });
 
@@ -130,7 +121,6 @@ impl HttpServer {
     }
 }
 
-/// 单个请求的完整生命周期。任何内部错误统一映射为 500，绝不让连接层报错。
 async fn serve_one(
     req: hyper::Request<Incoming>,
     handler: HandlerFn,
@@ -200,7 +190,6 @@ async fn serve_inner(
 
     let response = handler(request).await;
 
-    // 落盘的请求体只在 handler 执行期间有效。
     if let Some(path) = collected.file_path {
         let _ = tokio::fs::remove_file(path).await;
     }
@@ -234,7 +223,7 @@ async fn collect_body(
     while let Some(frame) = body.frame().await {
         let frame = frame.context("read request body failed")?;
         let Ok(data) = frame.into_data() else {
-            continue; // trailers
+            continue;
         };
         received += data.len() as i64;
         if file.is_none() && inline.len() + data.len() > SPOOL_THRESHOLD {
@@ -298,10 +287,6 @@ fn text_response(status: u16, message: &str) -> hyper::Response<BoxedBody> {
         .expect("static response")
 }
 
-/// 从磁盘流式供给文件，自动支持单段 HTTP Range：
-/// - 无 Range → 200 全量（带 `Accept-Ranges: bytes`）；
-/// - 合法 Range → 206 + `Content-Range` + 精确 `Content-Length`，只读对应区间；
-/// - 不可满足的 Range → 416 + `Content-Range: bytes */total`。
 async fn file_response(
     path: &str,
     status: u16,
@@ -355,8 +340,6 @@ async fn file_response(
         .unwrap_or_else(|e| text_response(500, &format!("build response failed: {e}"))))
 }
 
-/// 解析单段 Range（`bytes=start-end` / `bytes=start-` / `bytes=-suffix`）为闭区间。
-/// 多段 / 语法错误 / 起点越界返回 None（调用方回 416）。
 fn parse_range(header: &str, total: u64) -> Option<(u64, u64)> {
     if total == 0 {
         return None;
@@ -368,7 +351,6 @@ fn parse_range(header: &str, total: u64) -> Option<(u64, u64)> {
     let dash = spec.find('-')?;
     let (start_str, end_str) = (spec[..dash].trim(), spec[dash + 1..].trim());
     let (start, mut end) = if start_str.is_empty() {
-        // `-suffix`：末尾 N 字节。
         let suffix: u64 = end_str.parse().ok().filter(|n| *n > 0)?;
         (total.saturating_sub(suffix), total - 1)
     } else {
@@ -411,7 +393,6 @@ mod tests {
         Arc::new(|_, _| Box::pin(async {}))
     }
 
-    /// 不用 `reqwest::Client::new()`：它不装 rustls provider，单独跑本 crate 时建 client 即 panic。
     fn test_client() -> reqwest::Client {
         crate::http::client::builder().unwrap().build().unwrap()
     }
@@ -520,7 +501,6 @@ mod tests {
         assert!(!progress_events.is_empty());
         assert_eq!(progress_events.last().unwrap().0, payload.len() as i64);
         assert_eq!(progress_events.last().unwrap().1, payload.len() as i64);
-        // handler 返回后落盘文件已清理
         assert_eq!(std::fs::read_dir(&dir).unwrap().count(), 0);
 
         server.stop();
@@ -660,9 +640,7 @@ mod tests {
 
         assert_eq!(total, payload.len() as i64);
         assert_eq!(response.status, 200);
-        // 服务端收到完整字节数（handler 回显 spool 文件长度）
         assert_eq!(response.body, payload.len().to_string().into_bytes());
-        // content-length 生效：服务端进度事件的 total 已知而非 -1
         assert!(
             totals
                 .lock()
@@ -670,7 +648,6 @@ mod tests {
                 .iter()
                 .all(|t| *t == payload.len() as i64)
         );
-        // 客户端进度单调且收尾于总长
         let sent = sent.lock().unwrap();
         assert_eq!(sent.last().unwrap().0, payload.len() as i64);
 

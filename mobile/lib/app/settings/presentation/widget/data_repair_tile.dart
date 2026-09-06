@@ -4,7 +4,6 @@ import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 
-/// 重推导预览/媒体引用、清除失效分类引用并重建索引。幂等，可反复执行。
 class DataRepairTile extends StatefulWidget {
   final bool isFirst;
   final bool isLast;

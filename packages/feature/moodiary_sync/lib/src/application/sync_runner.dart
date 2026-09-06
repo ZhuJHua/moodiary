@@ -12,8 +12,6 @@ import 'package:moodiary_sync/src/data/sync_logger.dart';
 
 enum SyncDirection { push, pull, sync }
 
-/// 远端连接健康。由每次同步 / 轮询探测 / 测试连接的结果更新，UI 据此给
-/// 「无法连接」「凭据失效」这类需要用户动手的提示。
 enum SyncHealth {
   unknown,
   notConfigured,
@@ -22,7 +20,6 @@ enum SyncHealth {
   authFailed,
   keyConflict;
 
-  /// 需要用户去做点什么的状态。
   bool get isBad => switch (this) {
     .unreachable || .authFailed || .keyConflict => true,
     _ => false,
@@ -31,7 +28,6 @@ enum SyncHealth {
 
 enum SyncOutcomeKind { upToDate, changed, partial, stopped, failed }
 
-/// 正在跑的那一次。
 class SyncActivity {
   final SyncTrigger trigger;
   final SyncDirection direction;
@@ -46,7 +42,6 @@ class SyncActivity {
   });
 }
 
-/// 本进程内最近一次跑完的结果（手动与自动同源）。
 class SyncOutcome {
   final DateTime at;
   final SyncTrigger trigger;
@@ -66,22 +61,18 @@ class SyncOutcome {
     this.error,
   });
 
-  /// 给用户的一句话：报告摘要或错误文案。
   String get message => report?.userSummary() ?? error?.message ?? '';
 
   bool get ok => kind == .upToDate || kind == .changed;
 }
 
 class SyncStatus {
-  /// null = 空闲。
   final SyncActivity? running;
   final SyncOutcome? last;
   final SyncHealth health;
 
-  /// 进入当前健康态的时刻。
   final DateTime? healthSince;
 
-  /// 最近一次失败的明细（已摘掉机器标签）。
   final String? healthDetail;
 
   const SyncStatus({
@@ -113,19 +104,11 @@ class SyncStatus {
   );
 }
 
-/// 同步的唯一执行入口：手动、变更、关闭日记、轮询、回前台、网络恢复全经这里跑引擎，
-/// 持有唯一一份「正在跑 / 上次结果 / 连接健康」（[status]）。UI 只看它，不再有
-/// 「自动同步跑了但图标不转」这种两条路径各说各话的情况。
-///
-/// 不抛：[run] 把报告与错误都折进 [SyncOutcome]；[probe] / [testConnection] 抛出
-/// 供调用方决定退避，但抛之前健康态已经更新。健康态的日志是**边沿触发**的：
-/// 只在可达 ↔ 不可达切换时各记一条，轮询期间的重复失败不刷屏。
 @singleton
 class SyncRunner {
   SyncRunner(this._cancellation, this._logger)
     : _engineFactory = IncrementalSyncEngine.forCloud;
 
-  /// 测试注入替身引擎（生产装配的引擎要碰 PlatformService 与真仓储）。
   @visibleForTesting
   SyncRunner.withEngine(this._cancellation, this._logger, this._engineFactory);
 
@@ -145,8 +128,6 @@ class SyncRunner {
 
   IRemoteSyncBackend? get _backend => getIt.maybeGet<IRemoteSyncBackend>();
 
-  /// 跑一次。已有同步在跑、或没有后端时返回 null（调用方各自的闸门通常已挡住，
-  /// 这里是兜底）。
   Future<SyncOutcome?> run(
     SyncDirection direction, {
     required SyncTrigger trigger,
@@ -185,7 +166,6 @@ class SyncRunner {
         report: report,
         elapsed: report.elapsed,
       );
-      // 跑到了引擎收尾就说明远端是通的，哪怕有条目失败。
       _setHealth(.reachable);
     } on SyncException catch (e) {
       outcome = _failed(e, trigger, direction, startedAt);
@@ -218,8 +198,6 @@ class SyncRunner {
     elapsed: DateTime.now().difference(startedAt),
   );
 
-  /// HEAD manifest；返回 stat 记号（null = 远端没有 manifest）。失败抛出供调用方
-  /// 退避，健康态已更新——连清单都探不到，不论错误类别都算不可达。
   Future<String?> probe({required SyncTrigger trigger}) async {
     final backend = _backend;
     if (backend == null) {
@@ -239,7 +217,6 @@ class SyncRunner {
     }
   }
 
-  /// 设置页「测试连接」：结果同样写进健康态。
   Future<void> testConnection() async {
     final backend = _backend;
     if (backend == null) {
@@ -254,10 +231,8 @@ class SyncRunner {
     }
   }
 
-  /// 请求停止当前同步（协作式，见 [SyncCancellation]）。
   void stop() => _cancellation.requestStop();
 
-  /// 后端换了配置：健康态回到未知，别拿旧服务器的结论说新服务器。
   void resetHealth() {
     _status.value = _status.value.copyWith(
       health: .unknown,
@@ -266,8 +241,6 @@ class SyncRunner {
     );
   }
 
-  /// [force]：探测 / 测试连接的失败一律影响健康态（连 HEAD 都失败没有「远端活着」
-  /// 的余地）；同步运行中的失败只有 [SyncErrorKind.affectsHealth] 的那些才算。
   void _applyFailure(SyncErrorKind kind, String detail, {bool force = false}) {
     final health = switch (kind) {
       .auth => SyncHealth.authFailed,

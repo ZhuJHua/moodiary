@@ -16,11 +16,6 @@ Widget _closeIcon(BuildContext context) => const Icon(LucideIcons.x);
 
 Widget _menuIcon(BuildContext context) => const Icon(LucideIcons.menu);
 
-/// 框架自带 leading/actions 的图标（`AppBar` 隐式返回键、`Scaffold` 抽屉键、
-/// `showDateRangePicker` 全屏关闭键）唯一的主题级替换入口 —— 全仓 60 个 `AppBar`
-/// 都不写 `leading:`，靠这一处把 Material 字形换成 lucide。
-/// 命中 builder 会短路掉 `_ActionIcon` 里的平台分支，iOS 的 `arrow_back_ios_new`
-/// 与 Android 的 `arrow_back` 就此统一。
 const ActionIconThemeData _actionIconTheme = ActionIconThemeData(
   backButtonIconBuilder: _backIcon,
   closeButtonIconBuilder: _closeIcon,
@@ -28,16 +23,6 @@ const ActionIconThemeData _actionIconTheme = ActionIconThemeData(
   endDrawerButtonIconBuilder: _menuIcon,
 );
 
-/// 状态栏与导航栏图标的明暗。**由主题亮度决定，不由背景色猜。**
-///
-/// 框架那条路只覆盖有 `AppBar` 的页面：`AppBar` 自带一层 `AnnotatedRegion`，
-/// 缺省值来自 `estimateBrightnessForColor(背景色)`。没有 AppBar 的页面（日记详情、
-/// 图片浏览、相机、视频全屏）不发任何注解，系统就沿用上一次设过的值 —— 症状是从
-/// 深色页退回浅色页后状态栏图标仍是白的，看不见。所以这个值要同时喂给
-/// [AppBarTheme.systemOverlayStyle] 与根部的 `AnnotatedRegion` 兜底。
-///
-/// iOS 与 Android 的字段语义相反：`statusBarBrightness` 说的是**背景**的明暗，
-/// `statusBarIconBrightness` 说的是**图标**的明暗，所以两者必须写反。
 SystemUiOverlayStyle systemOverlayStyleOf(Brightness brightness) {
   final icons = brightness == Brightness.dark
       ? Brightness.light
@@ -53,11 +38,6 @@ SystemUiOverlayStyle systemOverlayStyleOf(Brightness brightness) {
   );
 }
 
-/// 全仓唯一构造 [ThemeData] 的地方（由 `tool/check_layers.dart` 钉住）。
-///
-/// [ColorScheme] 与 [TextTheme] 就是配色与排版的真源；`ThemeData` 装不下的部分
-/// 挂在 [MuiTokens] 扩展上。**深浅两档都必须挂**，否则 `ThemeData.lerp` 不会
-/// 插值这些值，主题切换时会硬跳。
 ThemeData buildMuiTheme({
   required Brightness brightness,
   MuiAccent accent = const MuiAccent.neutral(),
@@ -129,15 +109,6 @@ ThemeData buildMuiTheme({
       },
     ),
 
-    // ── 色板漏点 ────────────────────────────────────────────────────
-    // 下面这几个字段的 SDK 缺省值**完全绕开 colorScheme**：
-    //   iconTheme             light 0xDD000000 / dark 纯白 —— 裸 Icon 从来不是 onSurface
-    //   dividerColor          colorScheme.outline —— M3 规范里分隔线是 outlineVariant
-    //   hintColor             black60 / white60
-    //   unselectedWidgetColor black54 / white70
-    //   disabledColor         black38 / white38
-    //   shadowColor           Colors.black
-    // 只投颜色不投尺寸：`IconTheme.of` 会用 `IconThemeData.fallback()` 补上 size 24。
     iconTheme: IconThemeData(color: cs.onSurface),
     primaryIconTheme: IconThemeData(color: cs.onPrimary),
     dividerColor: cs.outlineVariant,
@@ -146,32 +117,17 @@ ThemeData buildMuiTheme({
     disabledColor: cs.onSurface.withValues(alpha: states.disabledOpacity),
     shadowColor: cs.shadow,
 
-    // 光标与拖拽手柄用 primary，选中底色半透明（画在文字下方，要叠在任意背景上）。
     textSelectionTheme: TextSelectionThemeData(
       cursorColor: cs.primary,
       selectionColor: cs.primary.withValues(alpha: 0.25),
       selectionHandleColor: cs.primary,
     ),
 
-    // ── 一行式视觉收敛 ──────────────────────────────────────────────
-    // 水波纹整个关掉：按压反馈是「状态驱动的色块变化」，不是从触点扩散的圆。
-    // highlight/hover/focus **不能一起关**，否则 InkWell 完全没有按压反馈；
-    // 这里把它们改成走 mui 的状态透明度档。
-    //
-    // 例外：`AssetPicker.themeData(...)` 是从零构造的 ThemeData，拿不到这里的设置，
-    // 两个 wechat picker 因此保留原生水波纹 —— 那两个界面不归 mui 管。
     splashFactory: NoSplash.splashFactory,
     highlightColor: cs.onSurface.withValues(alpha: states.pressedOpacity),
     hoverColor: cs.onSurface.withValues(alpha: states.hoverOpacity),
     focusColor: cs.onSurface.withValues(alpha: states.focusOpacity),
 
-    // 只动形状，**不动填充色** —— 在这里改底色会一次性重涂全仓每一张卡片。
-    // 卡片**不描边**，分组只靠填充色。描边与容器阶梯是两套各自够用的手段，叠在一起
-    // 会让每一组内容都框起来，页面读成一张表格。
-    //
-    // 注意 `Card` 是 `shape ?? cardTheme.shape ?? 变体默认`（card.dart:264），所以这条
-    // shape 会盖掉 `Card.outlined` 自带的那道边 —— 本仓的卡片一律 filled，别用
-    // `.outlined`（用了也不会有边）。半径必须显式给：变体默认是 12，我们的 lg 是 16。
     cardTheme: CardThemeData(
       elevation: 0,
       surfaceTintColor: Colors.transparent,
@@ -197,8 +153,6 @@ ThemeData buildMuiTheme({
       style: ButtonStyle(shape: buttonShape),
     ),
 
-    // SegmentedButton 选中态的 √（框架默认 Icons.check）。当前调用点都写了
-    // showSelectedIcon: false，这里是给将来不写的那处兜底。
     segmentedButtonTheme: SegmentedButtonThemeData(
       selectedIcon: const Icon(LucideIcons.check),
       style: ButtonStyle(shape: buttonShape),
@@ -212,7 +166,6 @@ ThemeData buildMuiTheme({
       pressElevation: 0,
     ),
 
-    // 圆角填充式、静息态无边框、聚焦态 1.5px 强调色环。
     inputDecorationTheme: InputDecorationThemeData(
       filled: true,
       isDense: true,
@@ -226,18 +179,12 @@ ThemeData buildMuiTheme({
       focusedErrorBorder: fieldBorder(cs.error, borders.ring),
     ),
 
-    // 内容滚到顶栏下方时不再有任何视觉变化。要关**两件事**，缺一个都还会跳：
-    //   1. 底色：滚动态取的是 `colorScheme.surfaceContainer` 而非 `surface`；
-    //   2. 阴影：scrolledUnderElevation 默认 3。
-    // 注意**不是**改 surfaceTintColor —— M3 默认值本来就是 transparent。
     appBarTheme: AppBarTheme(
       backgroundColor: cs.surface,
       scrolledUnderElevation: 0,
       systemOverlayStyle: systemOverlayStyleOf(brightness),
     ),
 
-    // 兜住尚未迁到 MAlert 的原生弹窗（选择列表、进度、日期选择器）。
-    // 弹窗的 elevation **不归零**：它浮在遮罩上，投影是层级信息。
     dialogTheme: DialogThemeData(
       backgroundColor: cs.surfaceContainerHigh,
       surfaceTintColor: Colors.transparent,

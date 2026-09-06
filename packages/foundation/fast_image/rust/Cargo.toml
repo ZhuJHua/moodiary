@@ -4,8 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [lib]
-# 产物名 libfastimage.*：native_toolchain_rust 按 lib.name 取文件名，`FastImageLib.init()`
-# 也按这个 stem 找库。
+# 改名即断：native_toolchain_rust 按 lib.name 出文件名，Dart 侧按同一 stem 找库。
 name = "fastimage"
 crate-type = ["cdylib", "staticlib"]
 
@@ -20,20 +19,17 @@ image = { version = "=0.25.10", default-features = false, features = [
     "tiff",
     "webp",
 ] }
-# 只开 cmake（vendored libjpeg-turbo 3.1.0 静态链接）。不开 require-simd：arm64 的 NEON 是
-# intrinsics 必然编进去，它只会把 x86_64 缺 NASM 从警告变成配置失败，而 x86_64 只跑 CI 测试。
+# 不开 require-simd：arm64 的 NEON 本就编进去，它只会让缺 NASM 的 x86_64 配置失败。
 turbojpeg-sys = { version = "=1.2.0", default-features = false, features = ["cmake"] }
 memmap2 = "=0.9.11"
 memchr = "=2.8.3"
 png = { version = "=0.18.1", default-features = false }
-# 只给 WebP 区域解码；没有只编解码器的 feature，编码器靠链接期死代码剔除丢掉。
 libwebp-sys = { version = "=0.14.4", default-features = false, features = ["std", "neon"] }
 fast_image_resize = { version = "=6.1.0", default-features = false, features = ["image", "rayon"] }
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
 
-# 与其他 fast_* 同口径；不要加 panic = "abort"（FRB 靠 catch_unwind 把 panic 转成 Dart 异常）。
 [profile.release]
 opt-level = 3
 lto = "thin"

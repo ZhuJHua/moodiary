@@ -19,10 +19,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'diary_graph_page.g.dart';
 
-/// 知识图谱数据（只含有双链的日记）。订阅 [DiaryRepository.diaryEvents]，任何日记增删改都
-/// 令其失效重建；从双链快照直接装配，免解析 content。
-///
-/// 事件做 400ms 防抖：同步拉取 / 批量编辑会连续触发多次，不防抖就是连续多次全量重建。
 @riverpod
 Future<DiaryGraphData> diaryGraph(Ref ref) async {
   final repo = getIt<DiaryRepository>();
@@ -54,7 +50,6 @@ class DiaryGraphPage extends ConsumerWidget {
   }
 }
 
-/// 全图为空（一条双链都没有）。装饰图示比一个 Icon 更切题：三个节点两条弧，就是双链本身。
 class GraphEmptyState extends StatelessWidget {
   const GraphEmptyState({super.key});
 
@@ -87,7 +82,7 @@ class GraphEmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           FilledButton.tonal(
-            onPressed: () => openNewDiaryEditor(context, .tiptap),
+            onPressed: () async => await openNewDiaryEditor(context, .tiptap),
             child: Text(context.l10n.diary.graphEmptyAction),
           ),
         ],
@@ -140,7 +135,6 @@ class _GraphView extends ConsumerStatefulWidget {
 }
 
 class _GraphViewState extends ConsumerState<_GraphView> {
-  // —— 会话级视图状态（不持久化）——
   String? _categoryId;
   _TimeFilter _time = .all;
   GraphDensity _density = .normal;
@@ -158,8 +152,6 @@ class _GraphViewState extends ConsumerState<_GraphView> {
   final _canvas = GraphCanvasController();
   StreamSubscription<Float32List>? _layoutSub;
 
-  /// 上一次的世界坐标，按业务 id 记。数据刷新 / 换筛选时作为新布局的种子，
-  /// 配合低 initialAlpha 让图原地微调而不是整体炸开重排。
   final _memory = <String, Offset>{};
 
   @override
@@ -179,7 +171,6 @@ class _GraphViewState extends ConsumerState<_GraphView> {
   @override
   void didUpdateWidget(covariant _GraphView old) {
     super.didUpdateWidget(old);
-    // didUpdateWidget 之后本就要重建，直接改字段即可，不必 setState。
     if (!identical(old.graph, widget.graph)) _invalidate(keepSelection: true);
   }
 
@@ -200,8 +191,6 @@ class _GraphViewState extends ConsumerState<_GraphView> {
     );
   }
 
-  /// 重算子图并（可选）重跑布局。[keepSelection] 用于数据刷新：按业务 id 把选中态
-  /// 挪到新下标，否则用户正在看的信息卡会凭空消失。
   void _invalidate({bool relayout = true, bool keepSelection = false}) {
     final selectedId =
         keepSelection && _selected != null && _selected! < _sub.nodeCount
@@ -212,7 +201,7 @@ class _GraphViewState extends ConsumerState<_GraphView> {
       categoryId: _categoryId,
       range: _timeRange(_time),
     );
-    _scene = null; // 交给 _ensureScene 按新数据 + 当前主题重建
+    _scene = null;
     _palette = null;
     if (selectedId == null) {
       _selected = null;
@@ -232,7 +221,6 @@ class _GraphViewState extends ConsumerState<_GraphView> {
       return;
     }
     final springLength = GraphTuning.springLength(_density);
-    // 结构感知播种 + 复用上次坐标：相连节点开局就在一起，力只做精修。
     final seed = seedByBfs(scene, springLength);
     var reused = 0;
     for (var i = 0; i < scene.nodeCount; i++) {
@@ -261,7 +249,6 @@ class _GraphViewState extends ConsumerState<_GraphView> {
             gravity: GraphTuning.gravity(_density),
             collideRadius: GraphTuning.collideRadius(_density),
             velocityDecay: GraphTuning.velocityDecay,
-            // 帧数恒定：动画时长与图规模脱钩（旧公式在 2000 节点时算出 1，等于 100Hz 空转）。
             emitEvery: (iterations / GraphTuning.targetFrames).ceil().clamp(
               1,
               64,
@@ -350,7 +337,6 @@ class _GraphViewState extends ConsumerState<_GraphView> {
                 MChipData(
                   value: c.id,
                   label: c.categoryName,
-                  // chip 上的分类色圆点与画布节点色一一对应，筛选条本身就是图例。
                   accentColor: categoryColorOf(colorValue: c.color, id: c.id),
                 ),
             ],
@@ -474,7 +460,6 @@ class _GraphViewState extends ConsumerState<_GraphView> {
             if (relayout) {
               setState(_invalidate);
             } else {
-              // 只换着色 / 标签开关：场景重建即可，不必重跑布局。
               setState(() {
                 _scene = null;
                 _palette = null;
@@ -541,7 +526,7 @@ class _GraphViewState extends ConsumerState<_GraphView> {
                     ],
                     onSelectionChanged: (v) => apply(() {
                       _density = v.first;
-                      _memory.clear(); // 换疏密即换尺度，旧坐标不能当种子
+                      _memory.clear();
                     }, relayout: true),
                   ),
                 ),
@@ -606,7 +591,6 @@ class _SheetGroup extends StatelessWidget {
           children: [
             Icon(icon, size: 16, color: theme.colors.onSurfaceVariant),
             const SizedBox(width: 6),
-            // 分组小标题，弱前景。
             Text(label, style: theme.typography.titleSmall.onSurfaceVariant),
           ],
         ),

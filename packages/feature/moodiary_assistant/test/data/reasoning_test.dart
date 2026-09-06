@@ -86,8 +86,6 @@ void main() {
       expect(r.mode, AssistantReasoningMode.off);
     });
 
-    // 新 Claude 只认 effort，老 Claude 只认 budget_tokens；把 budget 发给新模型
-    // 是 400，把 effort 发给老模型是无效参数。分派必须照目录来。
     test('effort 型走 effort', () {
       final r = resolveReasoning(
         level: 'high',

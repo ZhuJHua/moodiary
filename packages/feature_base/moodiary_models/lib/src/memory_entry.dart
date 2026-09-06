@@ -4,15 +4,11 @@ import 'package:moodiary_utils/moodiary_utils.dart';
 part 'memory_entry.freezed.dart';
 part 'memory_entry.g.dart';
 
-/// 助手对用户的一条长期记忆（结构化，非向量）。
-///
-/// 仅设备本地：不进备份、不进同步。[createdAt] / [updatedAt] 为 UTC 绝对时刻。
 @freezed
 abstract class MemoryEntry with _$MemoryEntry {
   const factory MemoryEntry({
     required String id,
 
-    /// 记忆类别：`preference`（偏好）| `theme`（反复出现的主题）| `goal`（目标）| `fact`（事实）。
     required String category,
 
     required String text,

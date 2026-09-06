@@ -12,41 +12,21 @@ import 'tile_plan.dart';
 
 part 'tile_debug.dart';
 
-/// 看图页的原图层：铺在 `PhotoView.customChild` 里，child 尺寸 = 源图像素，所以
-/// PhotoView 的 scale 就是「每源像素占几个逻辑像素」。三层叠加：
-///
-/// 1. overview：m 档缩略图铺满，首帧就有像素（从网格进来直接命中缓存）。
-/// 2. tile：按 [FastTilePlanner] 把视口相交的 tile 交给 Rust 按 1/sample 缩放解码，解到哪画到哪。
-///    粗档的 tile 不急着丢，细档没到之前它顶着，放大过程就是「模糊到清晰」。
-/// 3. 兜底：不能区域解码的（progressive）用引擎解整图，最长边封顶 4096（[FastImage]）。
-///
-/// 内存由视口决定：可见 + 外圈预取的 tile 每块 ≤ 1MB，缓存按字节预算淘汰；文件字节和
-/// 带缓存在 Rust 侧随 [FastRegionDecoder] 活着，页面 dispose 时一起释放。
 class FastTileImageView extends StatefulWidget {
-  /// 调试叠层开关（进程级）：画每块 tile 的边框与编号、按 sample 着色、在飞 / 排队状态，
-  /// 左上角一行统计。看图页长按 ⓘ 切换。
   static final debugOverlay = ValueNotifier<bool>(false);
 
-  /// JPEG 原图绝对路径。
   final String path;
 
-  /// 交给 Rust 区域解码的文件；默认就是 [path]，progressive JPEG 给它的 baseline 副本。
   final String decodePath;
 
-  /// 转正后的源图尺寸。
   final Size imageSize;
 
   final PhotoViewController controller;
 
-  /// PhotoView 所在视口的逻辑尺寸。
   final Size viewportSize;
-
-  /// 打底用的缩略图。
 
   final ImageProvider overview;
 
-  /// 是不是当前页。PageView 会把邻页也装着；只有当前页开解码器、解 tile，邻页只画打底图，
-  /// 切过去再开（open 是毫秒级）。不然三页各一份带缓存 + tile 缓存，内存是三倍。
   final bool active;
 
   const FastTileImageView({
@@ -70,7 +50,6 @@ class _Tile {
   final Rect covered;
   int lastUse;
 
-  /// 第几块解出来的（调试叠层用）。
   final int order;
 
   _Tile({
@@ -85,15 +64,10 @@ class _Tile {
 }
 
 class _FastTileImageViewState extends State<FastTileImageView> {
-  /// 解出来的 tile 缓存上限（规划内的块不算，它们由 [FastTilePlanner.maxPlannedTiles] 封顶）。
-  /// fit 那一层（整图 ≤ 36 块）留着，缩回去不用再画 overview 的模糊。
   static const _cacheBudgetBytes = 64 * 1024 * 1024;
 
-  /// 一批位图分几块一组上传（见 [_decodeBatch]）。
   static const _uploadChunk = 12;
 
-  /// 一批最多解几块。可见 tile 一批全要：Rust 把它们的并集当一条带一次解出来，视口跨几行
-  /// 也只跑一趟熵解码（313MB 的图一趟两三秒，按行解就是行数倍）。
   static const _batchSize = 48;
 
   FastRegionDecoder? _decoder;
@@ -111,8 +85,6 @@ class _FastTileImageViewState extends State<FastTileImageView> {
   Timer? _prefetchTimer;
   Timer? _replanTimer;
 
-  /// 超过这个像素数就不预取外圈：一批就是一趟全图熵解码，313MB 的图一趟两三秒，
-  /// 预取会把用户真正要看的那一批排到后面。
   static const _prefetchMaxPixels = 50 * 1000 * 1000;
 
   final _tiles = <String, _Tile>{};
@@ -123,7 +95,6 @@ class _FastTileImageViewState extends State<FastTileImageView> {
   int _batches = 0;
   final _repaint = ValueNotifier<int>(0);
 
-  /// 每次 [_teardown] 加一：在飞的批回来时对不上号就丢掉。
   int _generation = 0;
 
   @override
@@ -172,13 +143,11 @@ class _FastTileImageViewState extends State<FastTileImageView> {
     }
   }
 
-  /// tile 这条路走不通：拆掉解码器与缓存，退回引擎整解封顶的路径。
   void _fail() {
     _teardown();
     if (mounted) setState(() => _fallback = true);
   }
 
-  /// 放掉解码器、tile 与排队；在飞的批回来时按代号丢弃。
   void _teardown() {
     _generation++;
     _replanTimer?.cancel();
@@ -197,12 +166,9 @@ class _FastTileImageViewState extends State<FastTileImageView> {
     if (!_disposed) _repaint.value++;
   }
 
-  /// 捏合 / 双击动画期间 controller 每帧都在变，等它停 60ms 再规划：中间比例的那几批
-  /// 解了也是白解，而每批对超大图都是一趟熵解码。
   void _scheduleReplan() {
     _replanTimer?.cancel();
     _replanTimer = Timer(const Duration(milliseconds: 60), _replan);
-    // 叠层的视口框与 HUD 跟着手势走；不开叠层时手势期间一帧都不重画（层由合成器变换）。
     if (FastTileImageView.debugOverlay.value) _repaint.value++;
   }
 
@@ -216,8 +182,6 @@ class _FastTileImageViewState extends State<FastTileImageView> {
     super.dispose();
   }
 
-  /// 视口在源像素坐标里的矩形。PhotoView 把 child 居中后按 scale 绕视口中心缩放、再平移
-  /// position：视口点 v ↔ child 点 c 满足 v = 视口中心 + position + (c − child/2) × scale。
   Rect? _visibleSource() {
     final value = widget.controller.value;
     final scale = value.scale;
@@ -290,7 +254,6 @@ class _FastTileImageViewState extends State<FastTileImageView> {
     }
   }
 
-  /// 一次只跑一批：带在 Rust 侧共享，串行才能让后一批命中前一批解出的带。
   void _pump() {
     if (_busy) return;
     final batch = <FastTileSpec>[];
@@ -337,9 +300,6 @@ class _FastTileImageViewState extends State<FastTileImageView> {
         denom: batch.first.sample,
       );
       if (_disposed || generation != _generation) return;
-      // 位图进引擎：`ImmutableBuffer.fromUint8List` 那一次拷贝在 UI 线程上，一块 1MB；
-      // 48 块一口气就是几毫秒的一帧。分组上传，组与组之间让出事件循环，别攒成一帧的抖动。
-      // 一块失败其余的也释放。
       final images = <ui.Image>[];
       final count = math.min(batch.length, results.length);
       try {
@@ -396,7 +356,6 @@ class _FastTileImageViewState extends State<FastTileImageView> {
         );
         _repaint.value++;
       }
-      // 插入后再按预算淘汰一次：规划里的块不动，动的是上一档留下的。
       final plan = _plan;
       if (!stale && plan != null) {
         _evict(
@@ -417,7 +376,6 @@ class _FastTileImageViewState extends State<FastTileImageView> {
           _inflight.remove(spec.key);
         }
         _busy = false;
-        // 一块都没解出来就失败：这个文件在 Rust 那边解不动，别一批批地撞。
         if (failed && _decoded == 0 && !_disposed) {
           _fail();
         } else if (!_disposed) {
@@ -427,8 +385,6 @@ class _FastTileImageViewState extends State<FastTileImageView> {
     }
   }
 
-  /// RGBA 进引擎。不用 `decodeImageFromPixels`：它失败时回调永远不来，这里的批就永远
-  /// 等不到。这条链每一步都是 Future，错会抛出来。
   static Future<ui.Image> _toImage(FastTilePixels pixels) async {
     final buffer = await ui.ImmutableBuffer.fromUint8List(pixels.rgba);
     try {
@@ -473,7 +429,6 @@ class _FastTileImageViewState extends State<FastTileImageView> {
             errorBuilder: (_, _, _) => const SizedBox.shrink(),
           )
         else
-          // 自成一层：PhotoView 每帧重建、变换由合成器套在层上，tile 只在有新块时重画。
           RepaintBoundary(
             child: CustomPaint(
               painter: _TilePainter(
@@ -522,8 +477,7 @@ class _TilePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final rect = visible() ?? (Offset.zero & size);
-    // 全部缓存的 tile 都画（≤ 48MB、几十块，GPU 不在乎），不按视口裁：这一层只在有新块时
-    // 重画，平移时不重画，裁了就会露白。粗档先画、细档盖在上面：换档过程中旧 tile 顶着。
+    // 不按视口裁：这层只在有新块时重画，裁了平移会露白；粗档先画、细档盖在上面
     final order = tiles.values.toList()
       ..sort((a, b) => b.spec.sample.compareTo(a.spec.sample));
     final paint = Paint()..filterQuality = .medium;
@@ -540,8 +494,6 @@ class _TilePainter extends CustomPainter {
     if (snapshot != null) _paintDebug(canvas, rect, order, snapshot);
   }
 
-  /// 重画只由 [repaint] 通知驱动：PhotoView 每帧重建会换一个 painter 实例，这里回 false，
-  /// 手势期间层不重画，变换由合成器套在层上。
   @override
   bool shouldRepaint(_TilePainter oldDelegate) => false;
 }

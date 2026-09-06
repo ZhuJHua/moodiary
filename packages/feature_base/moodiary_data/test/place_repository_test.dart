@@ -65,7 +65,6 @@ void main() {
     final ok = await repo.deleteAPlace('p1');
     expect(ok, isTrue);
     expect(await repo.getPlaceById('p1'), isNull);
-    // 墓碑落在同步表里，键带 p: 前缀。
     final rows = await TombstoneRepository(db).getAll();
     expect(rows.map((t) => t.key), contains(SyncTombstone.placeKey('p1')));
     expect(rows.first.kind, TombstoneKind.place);
@@ -96,14 +95,12 @@ void main() {
   });
 
   group('就近匹配', () {
-    // 杭州西湖区一带；两点相距约 96 m。
     const lat = 30.2841;
     const lon = 120.1552;
 
     test('半径内命中，半径外不命中', () {
       final places = [make('p1', '公司')];
       expect(places.matchAt(lat, lon)?.name, '公司');
-      // 往北挪 0.01 度 ≈ 1.1 km，超出 200 m。
       expect(places.matchAt(lat + 0.01, lon), isNull);
     });
 
@@ -121,7 +118,6 @@ void main() {
   });
 
   test('Haversine 距离与已知值一致（±1%）', () {
-    // 纬度每 0.01 度约 1111 m。
     final d = distanceMeters(30.0, 120.0, 30.01, 120.0);
     expect(d, closeTo(1111, 11));
     expect(distanceMeters(30.0, 120.0, 30.0, 120.0), 0);
@@ -134,7 +130,6 @@ void main() {
       'a',
       'b',
     ]);
-    // 空清单 = 原样返回；清单里的陌生 id 被忽略。
     expect(applyPlaceOrder(places, const []).map((p) => p.id), ['a', 'b', 'c']);
     expect(applyPlaceOrder(places, ['zzz', 'b']).map((p) => p.id), [
       'b',

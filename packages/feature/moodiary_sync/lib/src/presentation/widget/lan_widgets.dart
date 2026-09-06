@@ -7,7 +7,6 @@ String lanFmtBytes(int bytes) {
   return '${unit['size']} ${unit['unit']}';
 }
 
-/// 雷达脉冲：中心圆形图标，外圈周期性扩散渐隐。[active] 为 false 时只留静止中心。
 class LanRipple extends StatefulWidget {
   final double size;
   final Widget child;
@@ -123,7 +122,6 @@ class _RipplePainter extends CustomPainter {
       oldDelegate.color != color;
 }
 
-/// 六格数字盒（展示态）。[onTap] 常用于整体复制。
 class LanPinBoxes extends StatelessWidget {
   final String pin;
   final VoidCallback? onTap;
@@ -167,7 +165,6 @@ class LanPinBoxes extends StatelessWidget {
   }
 }
 
-/// 六格数字输入（OTP 样式）：隐形 [TextField] 收键盘输入，上层格子只负责展示。
 class LanPinInput extends StatefulWidget {
   final TextEditingController controller;
   final bool enabled;
@@ -206,7 +203,6 @@ class _LanPinInputState extends State<LanPinInput> {
       height: 56,
       child: Stack(
         children: [
-          // 铺满整块区域的隐形输入框：点任意格子都聚焦到它。
           Positioned.fill(
             child: Opacity(
               opacity: 0,

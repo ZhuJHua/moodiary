@@ -14,14 +14,8 @@ import 'package:moodiary_utils/moodiary_utils.dart';
 
 typedef AssistantToolRun = Future<String> Function(Map<String, dynamic> input);
 
-/// 工具结果的失败前缀。**是个约定**：结果给模型看是英文，而界面上那一行要 i18n，
-/// 成败得有个不依赖语言的判据。
 const String _failurePrefix = 'Failed:';
 
-/// 把一次调用压成一行摘要，显示在对话里那条提示条上。
-///
-/// **由工具自己实现**：截断结果字符串得到的是「id=0198a… 【2026-08-11】…」这种
-/// 半截元数据，而工具自己知道该说「7 条 · 08-11 至 08-17」。
 typedef AssistantToolSummarize = String Function(
   AssistantTool tool,
   Map<String, dynamic> input,
@@ -34,7 +28,6 @@ class AssistantToolSpec {
   final Map<String, dynamic> jsonSchema;
   final AssistantToolRun run;
 
-  /// 缺省时回落到结果的首行。
   final AssistantToolSummarize? summarize;
 
   const AssistantToolSpec({
@@ -45,9 +38,6 @@ class AssistantToolSpec {
     this.summarize,
   });
 
-  /// 这次调用显示成一行是什么样。
-  /// 这次调用显示成一行是什么样。**走 i18n，与给模型的英文结果无关** ——
-  /// 早先是截结果首行，结果英文化之后那条路会让用户看到英文。
   String summaryOf(Map<String, dynamic> input, String output) {
     if (output.startsWith(_failurePrefix)) return l10n.assistant.toolFailed;
     final custom = summarize?.call(tool, input, output);
@@ -67,26 +57,14 @@ abstract final class AssistantToolRegistry {
 
   static const _maxFullContentLength = 4000;
 
-  /// getDiary 一次最多读几篇。再多就该先用 queryDiaries 收窄。
   static const _maxBatchRead = 10;
 
-  /// 语义检索的默认/上限条数。比关键词检索小：每条都带「最佳分块摘录」，
-  /// 且 KNN 超采样按 limit 放大，给大了徒增延迟。
   static const _defaultSemanticLimit = 5;
 
   static const _maxSemanticLimit = 10;
 
-  /// 一次能写多少。对齐 [_maxQueryLimit]：目标 id 只能来自 queryDiaries /
-  /// listCategories / listMemories，而查询一次最多给出这么多条，模型手上本就不会
-  /// 有更长的合法列表。超出的不做，并在结果里说明 —— 写入有副作用，宁可让它再调
-  /// 一次，也不能让它以为做完了。
   static const _maxBatchWrite = _maxQueryLimit;
 
-  /// 工具定义**一律英文**：读者是模型，不是用户。跨模型的指令服从度在英文上更稳，
-  /// 同样的意思也更省 token（这些描述每一轮都要重发）。
-  ///
-  /// 结果字符串同理 —— 但结果里夹带的用户数据（标题、正文、分类名）原样保留。
-  /// 给用户看的那一行由 [AssistantToolSpec.summarize] 单独产出，走 i18n。
   static final List<AssistantToolSpec> specs = [
     const AssistantToolSpec(
       tool: .queryDiaries,
@@ -504,8 +482,6 @@ abstract final class AssistantToolRegistry {
       summarize: _summarizeWrite,
     ),
     const AssistantToolSpec(
-      // **不收 items**：脚本本来就该把全部逻辑写在一处。拆成多段各自求值反而更糟
-      // —— 每段一个独立 runtime，变量互相看不见。
       tool: .runJavascript,
       description:
           'Run JavaScript (ES2023) to compute something — arithmetic across '
@@ -535,14 +511,6 @@ abstract final class AssistantToolRegistry {
     ),
   ];
 
-  /// 把一轮用过的工具压成一段记录，回灌进发给模型的历史。
-  ///
-  /// **回灌摘要不是完整结果。** 完整结果在当轮已经进过模型的上下文、答案正文就是
-  /// 从它写出来的；跨轮真正丢掉的只是「我已经查过了」这件事，摘要足够表达。逐轮
-  /// 重放完整结果的话，一次 queryDiaries 的两千字会在之后每一轮里再付一遍。
-  ///
-  /// 入参一并带上：模型据此能判断「这次的问题和上次查的是不是同一个范围」，
-  /// 要重查也知道该传什么。返回空串表示这一轮没有已完成的工具调用。
   static String recordOf(List<AssistantToolCall> calls) {
     final lines = <String>[];
     for (final call in calls) {
@@ -574,8 +542,6 @@ abstract final class AssistantToolRegistry {
     return null;
   }
 
-  /// 按预设声明的子集过滤（保持 [specs] 的顺序，未知 id 忽略）。
-  /// null = 全部；空列表 = 一个都不挂。
   static List<AssistantToolSpec> specsFor(List<String>? allowed) {
     if (allowed == null) return specs;
     return [
@@ -584,10 +550,6 @@ abstract final class AssistantToolRegistry {
     ];
   }
 
-  /// 查询的一行摘要：命中数 + 实际生效的筛选条件。
-  ///
-  /// 不从结果文本里截 —— 那开头是「共命中 47 篇，以下是前 8 篇…」，
-  /// 而提示条要的是「47 篇 · 08-11 至 08-17」这种能一眼扫过去的形状。
   static String _summarizeQuery(
     AssistantTool _,
     Map<String, dynamic> input,
@@ -628,26 +590,12 @@ abstract final class AssistantToolRegistry {
     Map<String, dynamic> _,
     String output,
   ) {
-    // 数 `id=` 开头的行 —— 两个列举工具都是一项一行、以 id 起头。别数「非空行」：
-    // 空列表回的是一句 'No categories yet.'，那也是一行。
     final count = output.split('\n').where((e) => e.startsWith('id=')).length;
     return count == 0
         ? l10n.assistant.toolNoMatch
         : l10n.assistant.toolListed(count: count);
   }
 
-  /// 写入类共用。摘要说的是**动了什么**，不是「已创建」—— 提示条前面那个类型词
-  /// （「创建日记」）已经说过动作了，再说一遍是废话。
-  /// 写入类共用。摘要说的是**动了什么**，不是「已创建」—— 提示条前面那个类型词
-  /// （「创建日记」）已经说过动作了，再说一遍是废话。
-  ///
-  /// 这里刻意逐处写全 `l10n.assistant.xxx`，不存局部别名：slang 的死键扫描是按
-  /// `l10n.` 前缀做子串匹配的，起个别名它就看不见，这几个键会被误报成未使用。
-  /// 唯一一个不套用批量计数的写入工具：「已移入回收站」说的是**东西去了哪**，
-  /// 而提示条前面的类型词（「删除日记」）恰恰不带这个信息，删掉就成了「已删除」。
-  ///
-  /// 数的是**请求的条数**而不是实际移动的条数：调用结束后这几篇确实都在回收站里
-  /// （本来就在里面的那几篇也算），说的是结果状态，不是差量。
   static String _summarizeDelete(
     AssistantTool _,
     Map<String, dynamic> input,
@@ -665,8 +613,6 @@ abstract final class AssistantToolRegistry {
     String output,
   ) {
     final items = _parseItems(input);
-    // 多条时只报条数：逐条标题拼起来必然被一行的宽度截断，截断后反而看不出有几条。
-    // 动词由提示条前面的类型词负责（「创建日记 · 3 篇」），这里不重复。
     if (items.length > 1) {
       return switch (tool) {
         .createDiary ||
@@ -695,7 +641,6 @@ abstract final class AssistantToolRegistry {
     final categoryId = _trimToNull(input['categoryId']);
     final sortName = (input['sort'] as String?)?.trim();
     final limit = _parseLimit(input['limit']);
-    // 起止日期按本地日历解释；结束日以次日零点作排他上界，从而包含整个结束日。
     final start = _parseDate(input['startDate']);
     final endExclusive = _parseDate(input['endDate'])
         ?.add(const Duration(days: 1));
@@ -703,7 +648,7 @@ abstract final class AssistantToolRegistry {
     final repo = getIt<DiaryRepository>();
     List<Diary> results;
     if (rawKeywords.isNotEmpty) {
-      // 关键词必须走与建索引同一套 jieba 分词，否则中文按空格硬切、命中率骤降。
+      // 关键词必须走与建索引同一套 jieba 分词
       final tokenized = await Tokenizer.tokenize(text: rawKeywords);
       results = await repo.searchDiaries(
         cutTokens: tokenized.cut,
@@ -740,13 +685,9 @@ abstract final class AssistantToolRegistry {
         endExclusive,
       );
     }
-    // **总数必须回传**：只给前 limit 条而不说还有多少，模型会把这几条当成全部，
-    // 然后对用户说「你这周只写了 8 篇」——一个由工具输出直接导致的错误结论。
     return _formatDiaryList(results.take(limit), total: results.length);
   }
 
-  /// 语义检索：EmbedIndexService 做 KNN，这里补日记元数据与最佳分块摘录。
-  /// 模型未激活时给出明确说明，模型自然回退 queryDiaries。
   static Future<String> _semanticSearchDiaries(
     Map<String, dynamic> input,
   ) async {
@@ -806,8 +747,6 @@ abstract final class AssistantToolRegistry {
     return buffer.toString().trim();
   }
 
-  /// 命中分块的摘录：标题块（startOff=-1）直接说命中标题；正文块按偏移切原文
-  /// （偏移对当前正文防御性夹取——索引落后于编辑时宁可摘错位置也不能越界）。
   static String _semanticExcerpt(Diary diary, SemanticHit hit) {
     if (hit.startOff < 0) return '(matched the title)';
     final text = diary.contentText;
@@ -836,8 +775,6 @@ abstract final class AssistantToolRegistry {
     ].join(' · ');
   }
 
-  /// 批量读全文。**一次多篇**：总结一周日记要 7 篇，逐篇调用就是 7 轮往返，
-  /// 而每一轮都要把整段历史重发一遍。
   static Future<String> _getDiary(Map<String, dynamic> input) async {
     final ids = _parseIds(input['ids'] ?? input['id']);
     if (ids.isEmpty) {
@@ -849,7 +786,6 @@ abstract final class AssistantToolRegistry {
     final missing = <String>[];
     for (final id in ids.take(_maxBatchRead)) {
       final diary = await repo.getDiaryByBusinessId(id);
-      // 排除回收站
       if (diary == null || !diary.show) {
         missing.add(id);
         continue;
@@ -903,17 +839,6 @@ abstract final class AssistantToolRegistry {
     return buffer.toString().trim();
   }
 
-  /// 兼容单个 id 与 id 数组两种传法 —— 模型偶尔会退回旧形状。
-  /// 批量入参的两种形状：`ids: [...]`（只指目标）与 `items: [{...}]`（带内容）。
-  /// 除了这两种，还收两种**没写进 schema 的变体**，因为模型常这么写，而为一次
-  /// 形状偏差退回去重试一轮不值得：
-  ///
-  /// - 扁平的单条（老形状），`{id: 'a', name: 'x'}`；
-  /// - `items` 给成裸对象而不是数组。
-  ///
-  /// `ids` 那条路会把**其余顶层字段并进每一项**。少了这一步，
-  /// `{ids: [...], categoryId: 'x'}`（「把这几篇都归到某类」的自然写法）会退化成
-  /// 一批只有 id 的空补丁：一个字段都没改，却逐条回「Updated」，模型无从看出。
   static List<Map<String, dynamic>> _parseItems(Map<String, dynamic> input) {
     final raw = input['items'];
     if (raw is List) {
@@ -933,9 +858,6 @@ abstract final class AssistantToolRegistry {
     return [input];
   }
 
-  /// 批量执行的公共骨架：逐项跑 [each]，按 [_failurePrefix] 分拣，再交给
-  /// [_batchResult] 收尾。**串行**执行——两条同时改同一篇日记会互相覆盖，
-  /// 而批量里出现重复 id 并不稀奇。
   @visibleForTesting
   static Future<String> runBatch(
     Map<String, dynamic> input, {
@@ -953,9 +875,6 @@ abstract final class AssistantToolRegistry {
       try {
         line = await each(item);
       } catch (e) {
-        // **抛出去就等于把已经落库的那几条从结果里抹掉**：外层只有整次调用的
-        // catch，模型会读到「整批失败」，照系统提示词重跑一遍 —— 创建类因此写出
-        // 重复数据。降级成这一条的失败行，其余的成败照常回报。
         final id = item['id'];
         line =
             '$_failurePrefix ${id == null ? 'item $index' : 'id=$id'} '
@@ -971,20 +890,15 @@ abstract final class AssistantToolRegistry {
     );
   }
 
-  /// 一条都没成才算整体失败。**部分成功必须把已经生效的那些说清楚**，否则模型
-  /// 会把整次调用当作没发生，转头重试已经做过的事。
   static String _batchResult({
     required List<String> done,
     required List<String> failed,
     required int requested,
     required int cap,
   }) {
-    // 超出上限的那截**两条分支都要说**：全失败时同样有没试过的尾巴，不说的话
-    // 模型会把「这 20 条都不行」当成整件事的结论，剩下的再也不会被碰。
     final tail = requested > cap
         ? '\n(Only the first $cap were processed; call again for the rest.)'
         : '';
-    // 整体失败时前缀只加一次：逐条的 'Failed: ' 去掉，免得叠成一串。
     if (done.isEmpty) {
       final reasons = failed.map(_stripFailure).where((e) => e.isNotEmpty);
       return '$_failurePrefix ${reasons.join(' ')}'.trim() + tail;
@@ -1045,8 +959,6 @@ abstract final class AssistantToolRegistry {
     }
     if (uncategorized > 0) buffer.writeln('- uncategorised: $uncategorized');
 
-    // 心情分布：这是日记 App 的助手最常被问到的东西，概览里没有它，模型只能
-    // 去逐篇拉全文自己数 —— 那既慢又容易在 limit 上出错。
     final moods = await repo.getDiaryByCategory(sort: .timeDesc, limit: 9999);
     if (moods.isNotEmpty) {
       final counts = <DiaryMood, int>{};
@@ -1138,7 +1050,7 @@ abstract final class AssistantToolRegistry {
         contentText: converted.contentText,
         type: converted.type.value,
       );
-      // 内容变更必须重算媒体引用列表，否则媒体库出现幻影条目、废弃媒体永不回收。
+      // 内容变更必须重算媒体引用，否则媒体库留下幻影条目
       updated = withDerivedMedia(updated);
     }
     final mood = _parseMood(input['mood']);
@@ -1146,10 +1058,9 @@ abstract final class AssistantToolRegistry {
     if (input.containsKey('categoryId')) {
       final rawCategory = (input['categoryId'] as String?)?.trim() ?? '';
       if (rawCategory.isEmpty) {
-        updated = updated.copyWith(categoryId: null); // 显式清除归类
+        updated = updated.copyWith(categoryId: null);
       } else {
         final resolved = await _resolveCategoryId(rawCategory);
-        // 传了非空但无效的 id 时报错、保持原归类不变，避免「无效 id 静默清空分类」。
         if (resolved == null) {
           return 'Failed: no category with id=$rawCategory (check listCategories).';
         }
@@ -1158,7 +1069,6 @@ abstract final class AssistantToolRegistry {
     }
     updated = touched(updated);
 
-    // 倒排只吃标题/正文：仅改 mood/分类时跳过重索引。
     await repo.updateADiary(
       newDiary: updated,
       index: (title == null && content == null) ? .skip : .inline,
@@ -1311,11 +1221,6 @@ abstract final class AssistantToolRegistry {
     return 'Updated the memory (id=$id): $text.';
   }
 
-  /// 结果与 console 分开报，和 rikkahub 的 `eval_javascript` 同一个约定 —— 模型对它
-  /// 熟悉，而且混在一起时它分不清哪行是返回值。
-  ///
-  /// 抛异常一律进 `Failed:`。语法错误在这里既是「这次调用失败了」，也是「模型应该
-  /// 自己改了重来」的信号，两件事共用同一个前缀是有意的：模型看得懂原始报错。
   static Future<String> _runJavascript(Map<String, dynamic> input) async {
     final code = (input['code'] as String?)?.trim() ?? '';
     if (code.isEmpty) return 'Failed: no code given.';
@@ -1337,12 +1242,10 @@ abstract final class AssistantToolRegistry {
       }
       return buffer.toString().trim();
     } catch (e) {
-      // 沙箱抛的是 JS 的原始报错（含超时与内存上限），原样回灌，模型据此改代码。
       return 'Failed: $e';
     }
   }
 
-  /// 摘要给用户看的是**算出了什么**，不是那段代码 —— 代码是过程，值才是结论。
   static String _summarizeJavascript(
     AssistantTool _,
     Map<String, dynamic> _,
@@ -1380,7 +1283,6 @@ abstract final class AssistantToolRegistry {
   static DiaryMood? _parseMood(Object? raw) =>
       raw is String ? DiaryMood.values.asNameMap()[raw] : null;
 
-  /// 分类 id → 名字。查不到（已删）时返回 null，调用方自行降级。
   static Future<String?> _categoryNameOf(String id) async {
     final cats = await getIt<CategoryRepository>().getAllCategories();
     for (final c in cats) {
@@ -1400,7 +1302,6 @@ abstract final class AssistantToolRegistry {
     return n.clamp(1, _maxQueryLimit);
   }
 
-  /// 解析 `YYYY-MM-DD` 为本地日历日的零点。无法解析返回 null。
   static DateTime? _parseDate(Object? raw) {
     final s = (raw as String?)?.trim();
     if (s == null || s.isEmpty) return null;
@@ -1409,7 +1310,6 @@ abstract final class AssistantToolRegistry {
     return DateTime(parsed.year, parsed.month, parsed.day);
   }
 
-  /// [start] 含、[endExclusive] 排他，按绝对时刻比较（`time` 为 UTC，本地边界仍按瞬时可比）。
   static bool _inRange(DateTime time, DateTime? start, DateTime? endExclusive) {
     if (start != null && time.isBefore(start)) return false;
     if (endExclusive != null && !time.isBefore(endExclusive)) return false;
@@ -1461,8 +1361,6 @@ abstract final class AssistantToolRegistry {
       if (text.isNotEmpty) {
         buffer.writeln(
           text.length > _maxExcerptLength
-              // 明写「摘录」而不是只加个省略号：模型分不清「日记就这么短」和
-              // 「被我们截断了」，据此下结论就是编造。要全文请调 getDiary。
               ? '${text.substring(0, _maxExcerptLength)}… (excerpt; full text via getDiary)'
               : text,
         );
@@ -1478,7 +1376,6 @@ abstract final class AssistantToolRegistry {
     DateTime? start,
     DateTime? endExclusive,
   ) async {
-    // 吐 uuid 没用：模型没法在回复里跟用户说「分类 0198a…下没有日记」。
     final categoryName = categoryId == null
         ? null
         : await _categoryNameOf(categoryId);

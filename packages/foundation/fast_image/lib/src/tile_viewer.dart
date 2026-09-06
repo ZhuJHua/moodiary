@@ -7,14 +7,9 @@ import 'derivatives.dart';
 import 'rust/api/image.dart';
 import 'tile_view.dart';
 
-/// 一张图能不能走分片：能的话给（转正后尺寸, 交给 Rust 解的文件）。
-///
-/// baseline JPEG、非隔行 PNG、非动图 WebP 直接解原件；大的 progressive JPEG 解它的 baseline
-/// 副本（不在就现转，见 [FastImageDerivatives.ensureBaseline]）；其余给 null，调用方走整图。
 class FastTileSource {
   final Size size;
 
-  /// 交给 [FastRegionDecoder] 打开的文件。
   final String decodePath;
 
   const FastTileSource({required this.size, required this.decodePath});
@@ -35,25 +30,15 @@ class FastTileSource {
   }
 }
 
-/// 分片看图页：自己持有 [PhotoViewController]（[FastTileImageView] 靠它算可见区域），
-/// 生命周期跟页元素一致 —— PageView 会销毁两页外的页，复用的控制器会带着上次的平移量回来。
-///
-/// 放大上限跟分辨率走，不跟屏幕比例走：铺满屏再放 3 倍，或者放到每个源像素占 2 个物理像素
-/// （1:1 再放一倍，系统相册的口径），取大者。
 class FastTileImageViewer extends StatefulWidget {
-  /// 原图绝对路径（打底与兜底用）。
   final String path;
 
-  /// 交给 Rust 区域解码的文件；默认就是 [path]。
   final String? decodePath;
 
-  /// 转正后的源图尺寸。
   final Size imageSize;
 
-  /// 打底用的缩略图。
   final ImageProvider overview;
 
-  /// 是不是当前页：只有当前页开解码器、解 tile。
   final bool active;
 
   final ValueChanged<PhotoViewScaleState>? onScaleState;

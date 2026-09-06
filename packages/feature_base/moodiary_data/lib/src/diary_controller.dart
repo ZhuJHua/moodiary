@@ -10,8 +10,7 @@ import 'loadmore.dart';
 part 'diary_controller.g.dart';
 
 Comparator<Diary> diarySortComparator(DiarySort sort) => switch (sort) {
-  // 第二排序键 = 业务 id（uuid v7，按创建时刻有序），与 SQL 侧 ORDER BY 的
-  // `, id DESC` 逐字段一致——LoadMoreMixin 的分页 offset 依赖两侧次序对齐。
+  // 第二排序键必须与 SQL 的 `, id DESC` 逐字段一致（分页 offset 依赖对齐）
   .timeDesc => (a, b) {
     final c = b.time.compareTo(a.time);
     return c != 0 ? c : b.id.compareTo(a.id);
@@ -26,10 +25,6 @@ Comparator<Diary> diarySortComparator(DiarySort sort) => switch (sort) {
   },
 };
 
-/// 把单条 [DiaryEvent] 原地并入已加载列表。[belongs] 判定日记是否属于当前视图：增 /
-/// 改时属于则 upsert + 重排，不属于则移除（处理软删 / 还原导致的迁出）。
-///
-/// 内存增量与库内增量逐条一致，故分页 offset（= 已加载条数）始终与库对齐，无需重查。
 List<Diary> applyDiaryEvent(
   List<Diary> list,
   DiaryEvent event, {
@@ -53,8 +48,6 @@ List<Diary> applyDiaryEvent(
   }
 }
 
-/// 按 [categoryId] 维度的日记列表（`categoryId == null` 表示「全部分类」）。
-/// 订阅 [DiaryRepository.diaryEvents] 按事件原地增量更新，无需重查库。
 @riverpod
 class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
   late final _repository = getIt<DiaryRepository>();
@@ -107,7 +100,6 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
     );
   }
 
-  /// 软删除：移入回收站（`show = false`）。仅写库，各视图经事件流自动同步。
   Future<bool> softDeleteDiary(Diary diary) async {
     try {
       await _repository.setVisibility(diary, show: false);
@@ -117,9 +109,6 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
     }
   }
 
-  /// 批量软删（首页多选删除）：对当前列表里 id ∈ [ids] 的日记逐一软删，返回成功数。
-  /// 仓储是容器单例，不随 provider 销毁：批量操作耗时秒级，期间页面退出
-  /// （autoDispose 回收）仍可继续落库；只有写回 `state` 要看 `ref.mounted`。
   Future<int> softDeleteByIds(Set<String> ids) async {
     final list = state.value ?? const <Diary>[];
     var count = 0;
@@ -135,12 +124,10 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
   }
 }
 
-/// 回收站列表（按时间倒序的所有 `show == false` 的日记）。
 @riverpod
 class RecycleBinDiaries extends _$RecycleBinDiaries {
   late final _repository = getIt<DiaryRepository>();
 
-  // 首次加载期间事件无处可并，标记后补一次重查（同 LoadMoreMixin.markMissedEvent）。
   bool _missedEvent = false;
 
   @override
@@ -148,9 +135,6 @@ class RecycleBinDiaries extends _$RecycleBinDiaries {
     final sub = _repository.diaryEvents.listen(_applyChange);
     ref.onDispose(sub.cancel);
     var list = await _repository.getRecycleBinDiaries();
-    // 循环而非单次补偿：补查期间 state 仍是 loading，事件照样只能置标记——
-    // 单次检查过后标记就再也没人消费了。上限防饥饿（异常高频写入时交给
-    // autoDispose 重建兜底）。
     for (var i = 0; _missedEvent && i < 3; i++) {
       _missedEvent = false;
       list = await _repository.getRecycleBinDiaries();
@@ -167,7 +151,6 @@ class RecycleBinDiaries extends _$RecycleBinDiaries {
     state = .data(applyDiaryEvent(list, event, belongs: (d) => !d.show));
   }
 
-  /// 还原为 `show = true`。仅写库，回收站与目标分类列表经事件流自动同步。
   Future<bool> restore(Diary diary) async {
     try {
       await _repository.setVisibility(diary, show: true);
@@ -185,9 +168,6 @@ class RecycleBinDiaries extends _$RecycleBinDiaries {
     }
   }
 
-  /// 清空回收站。仓储是容器单例，不随 provider 销毁：逐篇删除（含删媒体文件）
-  /// 耗时秒级，期间用户返回上一页销毁本 provider 也不会中断循环；只有写回
-  /// `state` 要看 `ref.mounted`。
   Future<int> clear() async {
     final diaries = state.value ?? const <Diary>[];
     int count = 0;
@@ -202,9 +182,6 @@ class RecycleBinDiaries extends _$RecycleBinDiaries {
   }
 }
 
-/// 取单条日记的「活动流」：实时跟随 [DiaryRepository.watchDiary]，彻底删除时发出 `null`。
-/// id 为空发出空模板用于「新建」，此时务必显式传 [defaultType]，否则无法确定 markdown /
-/// richText。
 @riverpod
 Stream<Diary?> getDiary(
   Ref ref, {
@@ -229,7 +206,6 @@ Stream<Diary?> getDiary(
     return;
   }
   yield initial;
-  // 单对象跟随走领域事件流（旧 Isar watchObject 的等价物）：更新即重发，删除发 null。
   await for (final event in repository.diaryEvents) {
     switch (event) {
       case DiaryCreated(:final diary) || DiaryUpdated(:final diary):

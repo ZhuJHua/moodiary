@@ -1,11 +1,3 @@
-// 版本迁移链测试，分两层：
-//
-// 1. 闸门语义（无门控，CI 常跑）：versionBelow 的 semver 比较——2.8.0 发版前
-//    版本号闸门恒真的事故正是这一层没有测试才漏的。
-// 2. 2.8.0 迁移步骤（真库集成，需 `ISAR_TEST_DYLIB` 指向 libisar_plus 动态库，
-//    获取方式见 moodiary_data/test/diary_index_test.dart 文件头）：对 2.7.3 时代
-//    的行形状验证 type=='text' 的翻转与包装。isar_plus 与旧引擎按名匹配字段、
-//    磁盘格式兼容，「旧数据」的本质是旧行形状而非旧二进制。
 import 'dart:convert';
 import 'dart:io';
 
@@ -64,8 +56,6 @@ void main() {
   });
 
   group('merge 在 2.8.0 及以上是纯 no-op', () {
-    // 全部 below() 为假时 merge 不得触碰 KV / Isar / 文件——这些单例在本测试里
-    // 均未注册，触碰即抛。
     test('正式版与 beta 版都直接返回', () async {
       await VersionMigrator.merge(lastAppVersion: '2.8.0+94');
       await VersionMigrator.merge(lastAppVersion: '2.8.0-beta+94');
@@ -83,8 +73,6 @@ void main() {
     return;
   }
 
-  // 顶层初始化（不放在任一 group 里）：setUpAll 只在本 group 有用例被选中时才跑，
-  // 挂在 2.8.0 组会让单跑旧步骤组（--plain-name '2.6.0'）拿到 IsarNotReadyError。
   setUpAll(() async {
     await Isar.initialize(dylib);
   });
@@ -95,7 +83,6 @@ void main() {
 
     setUp(() {
       dir = Directory.systemTemp.createTempSync('moodiary_migration_test');
-      // 与 _mergeToV2_8_0 内部的开库列表同源（legacyMigrationSchemas 是真源前缀）。
       isar = .open(
         schemas: legacyMigrationSchemas,
         directory: dir.path,
@@ -112,9 +99,6 @@ void main() {
       isar.write((isar) => isar.diarys.putAll(diaries));
     }
 
-    // 生产路径在 compute 子 isolate 里 open + close 同目录库；测试进程内同目录
-    // open 返回同一实例，merge 末尾的 close 会把测试自己的句柄一并关掉——
-    // 每次跑完重开一份再断言。
     void runMerge() {
       VersionMigrator.debugMergeToV280(dir.path);
       isar = .open(
@@ -134,7 +118,7 @@ void main() {
       expect(d.type, DiaryType.richText.value);
       expect(QuillDelta.isDelta(d.content), isTrue);
       expect(QuillDelta.plainText(d.content), '第一篇\n随手记\n');
-      // isar_plus 反序列化会 toLocal（时刻守恒、isUtc 翻转），按绝对时刻比较。
+      // isar_plus 反序列化会 toLocal，按绝对时刻比较
       expect(d.lastModified.toUtc(), DateTime.utc(2024, 6, 2));
       expect(d.time.toUtc(), DateTime.utc(2024, 6, 1));
     });
@@ -204,7 +188,6 @@ void main() {
       dir.deleteSync(recursive: true);
     });
 
-    // 旧步骤在同 isolate 内 open + close 同目录库，跑完重开句柄（同 2.8.0 组）。
     void reopen() {
       isar = .open(
         schemas: legacyMigrationSchemas,
@@ -230,7 +213,6 @@ void main() {
       expect(QuillDelta.isDelta(plain.content), isTrue, reason: '裸文本被包装');
       expect(QuillDelta.plainText(plain.content), '第一篇\n随手记\n');
       expect(plain.type, DiaryType.richText.value);
-      // lastModified 同步为 time（该版本新增字段的回填语义）。
       expect(plain.lastModified.toUtc(), plain.time.toUtc());
       expect(byId('delta').content, delta, reason: '合法 Delta 逐字节不动');
 

@@ -17,7 +17,6 @@ import 'package:path/path.dart' as p;
 
 import '../sync_test_harness.dart';
 
-/// 内存归档 sink：记录条目字节，断言导出布局。
 final class MemoryArchiveSink implements ArchiveSink {
   final Map<String, Uint8List> entries = {};
   final List<String> localFiles = [];
@@ -41,7 +40,6 @@ final class MemoryArchiveSink implements ArchiveSink {
       jsonDecode(utf8.decode(entries[zipPath]!)) as Map<String, dynamic>;
 }
 
-/// 目录归档 sink：直接写出「解压后」的目录，喂给 importDirectory 做回环测试。
 final class DirArchiveSink implements ArchiveSink {
   final String root;
 
@@ -80,7 +78,6 @@ void main() {
     await tmp.delete(recursive: true);
   });
 
-  /// 在临时媒体目录写一个假媒体文件。
   Future<void> putMedia(String type, String name) async {
     final f = File(p.join(tmp.path, 'media-src', type, name));
     await f.parent.create(recursive: true);
@@ -94,7 +91,6 @@ void main() {
       await putMedia('image', 'img-1.png');
       await putMedia('video', 'video-abc.mp4');
       await putMedia('video', 'thumbnail-abc.jpeg');
-      // audio-1.m4a 故意缺失
 
       final sink = MemoryArchiveSink();
       await LocalArchive.writeArchive(
@@ -129,10 +125,8 @@ void main() {
           'media/video/thumbnail-abc.jpeg',
         ]),
       );
-      // tombstone 不带 body
       expect(sink.entries.containsKey('diary/d2.json'), isFalse);
       expect(sink.entries.containsKey('category/c2.json'), isFalse);
-      // 本地缺失的媒体不进包
       expect(sink.entries.containsKey('media/audio/audio-1.m4a'), isFalse);
 
       final manifest = SyncManifest.fromJson(sink.json('manifest.json'));
@@ -140,7 +134,6 @@ void main() {
       final d1 = manifest.entries['d:d1']!;
       expect(d1.deleted, isFalse);
       expect(d1.timeMs, atMs(100).millisecondsSinceEpoch);
-      // manifest 只声明真实进包的媒体
       expect(
         d1.media,
         unorderedEquals([
@@ -224,10 +217,8 @@ void main() {
       );
       expect(count, 4);
       expect(manifest.entries['d:alive-remote']!.deleted, isTrue);
-      // 对方比本地新 → 不发；对方从未有过 → tombstone 无意义不发
       expect(sink.entries.containsKey('diary/newer-remote.json'), isFalse);
       expect(manifest.entries.containsKey('d:unknown-tomb'), isFalse);
-      // 入选的普通条目带 body
       expect(sink.entries.containsKey('diary/older-remote.json'), isTrue);
       expect(sink.entries.containsKey('diary/brand-new.json'), isTrue);
       expect(sink.entries.containsKey('category/cat-old.json'), isTrue);
@@ -294,7 +285,6 @@ void main() {
   });
 
   group('importDirectory LWW', () {
-    /// 用 DirArchiveSink 生成「解压后」目录。
     Future<String> buildArchiveDir({
       required List<Diary> diaries,
       List<Category> categories = const [],
@@ -311,9 +301,6 @@ void main() {
       return dir;
     }
 
-    // 只断言 isA<SyncException>() 的负路径正是这个 bug 的藏身处：旧包识别写的是
-    // 运行期数据目录的布局（database/default.isar），真实旧包全部落到「不是备份
-    // 文件」，而两条都抛 SyncException，测试照样绿。所以逐条钉住 message。
     test('缺 manifest.json 且非旧包 → errNotBackup', () async {
       final dir = p.join(tmp.path, 'empty');
       await Directory(dir).create(recursive: true);
@@ -332,7 +319,6 @@ void main() {
     test('2.7.3 真实布局（根目录 <毫秒戳>.isar）→ errLegacyBackup', () async {
       final dir = p.join(tmp.path, 'legacy273');
       await Directory(dir).create(recursive: true);
-      // v2.7.3 的 zipFile：根目录一个按导出时刻命名的 .isar + 四个媒体目录。
       await File(p.join(dir, '1699999999999.isar')).writeAsBytes([0]);
       for (final d in ['image', 'audio', 'video', 'font']) {
         await Directory(p.join(dir, d)).create();
@@ -366,7 +352,6 @@ void main() {
     });
 
     test('2.8.0 导出的备份（manifest v1、日记带 position 快照）→ 归并成地点后恢复', () async {
-      // 手工摆出 2.8.0 的布局：没有 place/，日记对象带 position 快照。
       final dir = p.join(tmp.path, 'v1-backup');
       await Directory(p.join(dir, 'diary')).create(recursive: true);
       Map<String, dynamic> legacyDiary(
@@ -489,7 +474,6 @@ void main() {
       expect(report.diaryCount, 1);
       expect(report.categoryCount, 1);
       expect(diaryStore.diaries.containsKey('fresh'), isTrue);
-      // 归档导入不是云后端 pull：事件不带 fromSync，仍触发向云端的推送。
       expect(diaryStore.writeOrigins['fresh'], isFalse);
       expect(categoryStore.categories.containsKey('c1'), isTrue);
       expect(mediaFiles.files.containsKey('image/img-1.png'), isTrue);
@@ -534,11 +518,6 @@ void main() {
       );
     });
 
-    // ── 恢复语义：只增不删（SyncPullMode.restore）──
-    //
-    // 判据是可逆性不对称：多留数据可逆（再删一次就行），少留不可逆（行硬删 +
-    // 磁盘媒体真删、无回收站兜底）。下面三条把两个方向都钉住。
-
     test('E6：恢复模式下归档 tombstone 不删本地日记，也不动磁盘媒体', () async {
       final dir = await buildArchiveDir(
         diaries: const [],
@@ -577,7 +556,6 @@ void main() {
         ],
       );
       final diaryStore = FakeDiaryStore();
-      // 本机在备份之后永久删除了它 —— 墓碑时间必然晚于备份里的 lastModified。
       diaryStore.tombstones.rows['d:oops'] = buildDiaryTombstone(
         'oops',
         modifiedMs: 5000,
@@ -650,14 +628,10 @@ void main() {
       expect(report.skipped, 1, reason: '「跳过」要能和「备份已是最新」区分开');
     });
 
-    // 重构把恢复从 engine.pull 挪到 ArchiveApplier 时，顺手丢掉了 engine._exclusive
-    // 那把进程内互斥锁 —— 恢复能与云端 push 交错，push 会把恢复尚未插回的那批墓碑
-    // 推成远端删除，反过来把刚恢复的日记全网抹掉。这条钉住锁还在。
     test('导入持有同步家族互斥锁（不与 push/pull 交错）', () async {
       final dir = await buildArchiveDir(
         diaries: [buildDiary(id: 'd1', modifiedMs: 100)],
       );
-      // 先占住锁，再起导入：导入必须卡在锁上，不能把日记落库。
       final gate = Completer<void>();
       final holder = IncrementalSyncEngine.runExclusive(() => gate.future);
 

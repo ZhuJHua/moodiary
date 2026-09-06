@@ -1,9 +1,3 @@
-/// Moodiary 日记包：自洽的日记 feature。
-///
-/// 详情/编辑页（基于 moodiary_editor）、搜索/分类/统计/地图/回收站/管理页、日记选择器，
-/// 时间线 / 信息流视图主体、[ViewModeSheet]、[CategoryDrawer] 等可复用主体，
-/// 以及 [diaryRoutes]。首页壳与 sync 状态由 app 侧组合（本包不依赖
-/// moodiary_sync）。
 library;
 
 export 'src/application/diary_filter.dart'

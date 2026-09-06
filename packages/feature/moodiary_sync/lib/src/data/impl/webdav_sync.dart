@@ -1,4 +1,3 @@
-/// @docImport 'package:moodiary_http/moodiary_http.dart';
 library;
 
 import 'dart:async';
@@ -7,16 +6,12 @@ import 'dart:typed_data';
 import 'package:injectable/injectable.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_rust/sync.dart' as rust;
-import 'package:moodiary_sync/src/data/incremental_engine.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/remote_lease.dart';
 import 'package:moodiary_sync/src/data/secure_options.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 
-/// WebDAV 实现 [IRemoteSyncBackend]，经 flutter_rust_bridge 调 Rust reqwest_dav。
-/// 配置以 `[baseUrl, username, password]` 存于 [MoodiarySecureKVs.webDavOption]（含密码）。
-/// 增量逻辑交给 [IncrementalSyncEngine]。
 @Named(SyncProviderIds.webdav)
 @LazySingleton(as: IRemoteSyncBackend)
 class WebDavSyncBackend implements IRemoteSyncBackend {
@@ -24,8 +19,6 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
 
   final SecureOptions _config;
 
-  /// 配置与 client 都是首次用到才从钥匙串读、建，之后缓存在后端自己身上；
-  /// 配置只经 [saveOptions] / [clearOptions] 改动，两处直接作废。
   Future<List<String>>? _options;
   Future<rust.DavClient>? _cachedClient;
 
@@ -55,7 +48,6 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
       Object error,
       StackTrace stackTrace,
     ) {
-      // 构造失败的 Future 不能留缓存，否则后续操作会复用同一失败结果直到重启。
       _cachedClient = null;
       Error.throwWithStackTrace(error, stackTrace);
     });
@@ -89,13 +81,6 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
     }
   }
 
-  /// 404 → null；其它错误（网络/认证/5xx）**必须**抛 [SyncException]、不可吞错 ——
-  /// 引擎据此区分「首次同步」与「读取失败」，吞错会导致 manifest 被从零重建。
-  ///
-  /// **0 字节对象不是「不存在」**：Rust 侧用 `Option` 表达 404，这里原样透传。
-  /// 曾经两边都用空 Vec 编码 404，于是被截断的 0 字节 manifest.json 会被当成
-  /// 「远端为空」，push 用本机数据重建 manifest —— 远端墓碑全丢、已删日记在其它
-  /// 设备复活。0 字节现在如实返回空 [Uint8List]，交给 manifest 的损坏守卫处理。
   @override
   Future<Uint8List?> readObject(String key) async {
     try {
@@ -165,8 +150,6 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
     }
   }
 
-  /// 404 已在 Rust 层视为成功；其它错误抛 [SyncException]，引擎据此决定
-  /// tombstone 是否真的已被远端接收。
   @override
   Future<void> deleteObject(String key) async {
     try {
@@ -184,7 +167,7 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
   Future<String?> statObject(String key) async {
     try {
       final client = await _client();
-      // Rust 侧只在 404 返回空串（网络错误与 401/5xx 都抛），这里映射成 null。
+      // Rust 侧只在 404 返回空串，网络错误与 401/5xx 都抛
       final stat = await client.statObject(key: key);
       return stat.isEmpty ? null : stat;
     } catch (e) {
@@ -207,7 +190,6 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
     await _config.save(options);
     _options = null;
     _cachedClient = null;
-    // 服务器可能换了：进程内的条件写探测结论作废，下次抢占重新探测。
     RemoteLease.resetCasProbeCache();
     if (await SyncKeyManager.loadDek() != null) {
       await SyncKeyManager.markPendingUpload([type.value]);

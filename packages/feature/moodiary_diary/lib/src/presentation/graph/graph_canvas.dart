@@ -8,7 +8,6 @@ import 'package:moodiary_diary/src/presentation/graph/graph_scene.dart';
 import 'package:moodiary_diary/src/presentation/graph/graph_style.dart';
 import 'package:mui/mui.dart';
 
-/// 布局产出的坐标帧。布局侧（Rust 流 / ego 径向）只管往里写，画布订阅重绘。
 class GraphFrame extends ChangeNotifier {
   Float32List _positions = Float32List(0);
   bool _settled = false;
@@ -29,8 +28,6 @@ class GraphFrame extends ChangeNotifier {
   }
 }
 
-/// 画布把手：页面上的浮动按钮用它请求「回到全景 / 回到中心」，并观察相机是否被挪过
-/// （用于按钮的淡入淡出）。
 class GraphCanvasController extends ChangeNotifier {
   VoidCallback? _onFit;
   bool _userMoved = false;
@@ -46,8 +43,6 @@ class GraphCanvasController extends ChangeNotifier {
   }
 }
 
-/// 图谱画布：相机 / 手势 / 命中测试 / 绘制。总图与 ego 图共用，差异只在
-/// 「坐标从哪来」与 [egoDirections]（方位方向着色）。
 class GraphCanvas extends StatefulWidget {
   final GraphScene scene;
   final GraphFrame frame;
@@ -57,10 +52,8 @@ class GraphCanvas extends StatefulWidget {
   final bool showLabels;
   final GraphCanvasController? controller;
 
-  /// ego 图：每个一跳节点相对中心的方向，用于边着色；null = 总图。
   final List<EgoDirection?>? egoDirections;
 
-  /// 给定则按「固定视觉密度」拟合（ego 图，中心恒在屏幕中央），否则按包围盒全景。
   final double? preferredExtent;
 
   const GraphCanvas({
@@ -82,7 +75,6 @@ class GraphCanvas extends StatefulWidget {
 
 class _GraphCanvasState extends State<GraphCanvas>
     with TickerProviderStateMixin {
-  // —— 相机（world→screen: p*scale + translate）——
   double _scale = 1;
   Offset _translate = .zero;
   bool _autoFit = true;
@@ -92,11 +84,9 @@ class _GraphCanvasState extends State<GraphCanvas>
   Offset _startTranslate = .zero;
   Offset _startFocal = .zero;
 
-  // —— 绘制缓冲（世界坐标；手势只改相机，缓冲不重建）——
   Float32List _nodeBuf = Float32List(0);
   ui.Vertices? _edgeMesh;
 
-  // —— 动画 ——
   late final AnimationController _focusCtl;
   late final AnimationController _exitCtl;
   late final AnimationController _settleCtl;
@@ -106,22 +96,17 @@ class _GraphCanvasState extends State<GraphCanvas>
   double _camFromScale = 1, _camToScale = 1;
   Offset _camFromT = .zero, _camToT = .zero;
 
-  /// 聚焦中的节点。取消选中时保留到淡出动画走完，否则「取消」是一瞬间的跳变。
   int? _focusIndex;
 
-  /// 换选中时正在淡出的**上一个**焦点。新旧两头同时动（旧的收、新的长），
-  /// 否则 A→B 时 `_focusCtl` 已经在 1，forward() 直接完成、一个 tick 都不发 —— 就是跳变。
   int? _exitIndex;
 
   final _repaint = ValueNotifier<int>(0);
 
-  // 复用的 Paint / 渐变 shader：绘制命令在录制时就拷走了参数，复用安全且省掉每帧几十次分配。
   final _paint = Paint()..isAntiAlias = true;
   Shader? _spotShader;
   Shader? _vignetteShader;
   Size _shaderSize = .zero;
 
-  // 标签 TextPainter 缓存（帧间标题不变，重复 layout 是纯浪费）。
   final _labels = <int, TextPainter>{};
   Color? _labelColor;
   TextDirection? _labelDir;
@@ -177,7 +162,6 @@ class _GraphCanvasState extends State<GraphCanvas>
     final sceneChanged = !identical(old.scene, widget.scene);
     if (sceneChanged) {
       _clearLabels();
-      // 只换配色 / 标签开关时节点数不变，别把用户的视角拽回全景。
       if (old.scene.nodeCount != widget.scene.nodeCount) {
         _autoFit = true;
         widget.controller?._setMoved(false);
@@ -185,8 +169,6 @@ class _GraphCanvasState extends State<GraphCanvas>
         _cameraCtl.stop();
       }
       if (!widget.frame.settled) _settleCtl.value = 0;
-      // 场景缩小（换筛选 / 换深度）后，正在淡出的旧焦点下标可能已越界：立即作废，
-      // 否则 _paintFocus 会用陈旧下标越界访问。
       if (_focusIndex != null && _focusIndex! >= widget.scene.nodeCount) {
         _focusIndex = null;
         _focusCtl.value = 0;
@@ -198,8 +180,6 @@ class _GraphCanvasState extends State<GraphCanvas>
     }
     if (old.selected != widget.selected) {
       if (widget.selected != null) {
-        // 换选中（A→B）：旧焦点交给 _exitCtl 接着收，新焦点从 0 长出来，两头同时动。
-        // 少了这一步，_focusCtl 已经停在 1，forward() 直接完成，B 是「啪」地出现的。
         if (_focusIndex != null &&
             _focusIndex != widget.selected &&
             _focusCtl.value > 0) {
@@ -219,8 +199,6 @@ class _GraphCanvasState extends State<GraphCanvas>
         old.showLabels != widget.showLabels ||
         !identical(old.egoDirections, widget.egoDirections)) {
       _rebuildBuffers();
-      // shouldRepaint 恒为 false，重绘全靠 _repaint：换配色 / 标签 / 主题这类不推坐标帧、
-      // 不启动动画的变更，必须在这里主动 bump，否则画布停在旧帧。
       _bump();
     }
   }
@@ -264,14 +242,12 @@ class _GraphCanvasState extends State<GraphCanvas>
     }
   }
 
-  // 落定动画只用来淡入节点的底色描边（边是直线，与 settle 无关）。
   void _onSettleTick() => _bump();
 
   void _onFrame() {
     if (widget.frame.settled) {
       if (_settleT < 1) _settleCtl.forward();
     } else if (_settleCtl.value != 0) {
-      // 新一轮布局开跑：边先绷直，落定时再放松成弧。
       _settleCtl
         ..stop()
         ..value = 0;
@@ -280,8 +256,6 @@ class _GraphCanvasState extends State<GraphCanvas>
     if (_autoFit && !_viewport.isEmpty) _fitCamera(_viewport);
     _bump();
   }
-
-  // —— 缓冲填充：只在布局帧 / 选中 / 主题变化时跑，手势期零重算 ——
 
   void _rebuildBuffers() {
     final scene = widget.scene;
@@ -302,16 +276,12 @@ class _GraphCanvasState extends State<GraphCanvas>
     final palette = widget.palette;
     final center = widget.scene.centerIndex;
     if (widget.egoDirections != null && center != null) {
-      // ego：边独占方向编码（出链 primary / 入链 tertiary），节点仍是分类色，两个通道不打架。
       if (a == center) return palette.outgoing.withValues(alpha: 0.8);
       if (b == center) return palette.incoming.withValues(alpha: 0.8);
     }
     return palette.edge;
   }
 
-  /// 边：**直线** + 常态箭头，同一网格一次画完（每条边 = 线身四边形 6 顶点 + 箭头 3 顶点，
-  /// 不用 indices 以规避 Uint16 上限）。用 drawVertices 是为了逐边配色（ego 出链 primary /
-  /// 入链 tertiary）；箭头与边同色但透明度抬高——线淡箭头实，方向常读。
   void _rebuildEdgeMesh() {
     final scene = widget.scene;
     final pos = widget.frame.positions;
@@ -321,8 +291,6 @@ class _GraphCanvasState extends State<GraphCanvas>
       _edgeMesh = null;
       return;
     }
-    // 选中态外径恒等于节点半径，端点内缩量因此**与选中无关** —— 边不参与聚焦动画，
-    // 这份网格只在换选中 / 换坐标帧 / 换主题时重建一次，手势期与动画期都零重算。
     final rawSel = _focusIndex;
     final sel = (rawSel != null && rawSel < scene.nodeCount) ? rawSel : null;
     final palette = widget.palette;
@@ -338,7 +306,7 @@ class _GraphCanvasState extends State<GraphCanvas>
       var width = widget.egoDirections != null ? 0.9 : GraphTuning.edgeWidth;
       if (sel != null) {
         if (a == sel || b == sel) {
-          base = scene.colors[a]; // 关联边取「源节点」色：一眼看出这条链来自哪一类
+          base = scene.colors[a];
           width = GraphTuning.edgeWidthHi;
         } else {
           base = palette.dimEdge(base);
@@ -349,19 +317,16 @@ class _GraphCanvasState extends State<GraphCanvas>
       final rawBx = pos[b * 2], rawBy = pos[b * 2 + 1];
       final dx = rawBx - rawAx, dy = rawBy - rawAy;
       final len = math.sqrt(dx * dx + dy * dy);
-      // 箭头跟目标节点半径走，小而克制。
       final headLen = 2.4 + radii[b] * 0.24;
       final halfW = headLen * 0.38;
       final trimA = radii[a] + 1.0, trimB = radii[b] + 1.5;
       if (!len.isFinite || len <= trimA + trimB + headLen + 2) {
-        v += 9; // 退化：留零 → 零面积三角形，不出像素
+        v += 9;
         continue;
       }
-      // 端点内缩到节点外缘，边不插进圆里。
       final ux = dx / len, uy = dy / len;
       final ax = rawAx + ux * trimA, ay = rawAy + uy * trimA;
       final tipX = rawBx - ux * trimB, tipY = rawBy - uy * trimB;
-      // 线身止于箭头底，半透明下叠加会出深斑。
       final backX = tipX - ux * headLen, backY = tipY - uy * headLen;
 
       final hw = width / 2;
@@ -403,7 +368,7 @@ class _GraphCanvasState extends State<GraphCanvas>
     _edgeMesh = .raw(.triangles, xy, colors: colors);
   }
 
-  /// 写入一个四边形（两个三角形；不用 indices 以规避 Uint16 顶点上限）。
+  // 不用 indices：规避 Vertices 顶点索引的 Uint16 上限
   static void _quad(
     Float32List xy,
     Int32List colors,
@@ -433,15 +398,12 @@ class _GraphCanvasState extends State<GraphCanvas>
     put(5, x3, y3, cEnd);
   }
 
-  // —— 相机 ——
-
   void _fitCamera(Size size) {
     final pos = widget.frame.positions;
     final n = widget.scene.nodeCount;
     if (pos.length != n * 2 || n == 0 || size.isEmpty) return;
     final extent = widget.preferredExtent;
     if (extent != null && extent > 0) {
-      // ego：固定视觉密度 —— 只有两个邻居时也是大而舒展，而不是三个小点飘在正中。
       _scale = (math.min(size.width, size.height) * 0.42 / extent).clamp(
         0.35,
         1.6,
@@ -490,7 +452,6 @@ class _GraphCanvasState extends State<GraphCanvas>
 
   void _onCameraTick() {
     final t = Curves.easeInOutCubic.transform(_cameraCtl.value);
-    // scale 走对数插值：线性插值缩放会有「先慢后爆冲」的错觉。
     _scale = math.exp(lerpD(math.log(_camFromScale), math.log(_camToScale), t));
     _translate = Offset.lerp(_camFromT, _camToT, t)!;
     _bump();
@@ -518,7 +479,6 @@ class _GraphCanvasState extends State<GraphCanvas>
     })..start();
   }
 
-  // —— 命中测试：半径感知（画多大就能点多大），平方距离比较、零 Offset 分配 ——
   int? _hitTest(Offset local) {
     final scene = widget.scene;
     final pos = widget.frame.positions;
@@ -546,12 +506,9 @@ class _GraphCanvasState extends State<GraphCanvas>
         text: TextSpan(
           text: text,
           style: _labelTemplate!.copyWith(
-            // 标题、正文摘要、日期一视同仁：来源不同不该体现成深浅不一。
             color: widget.palette.label,
-            // 一律同一档：选中不改字号字重，免得标签跟着「跳一下」。
             fontSize: GraphTuning.labelSize * _labelFactor,
             height: 1.1,
-            // 底色描边两遍：标签压在边和点阵上仍然可读。
             shadows: [
               Shadow(color: halo, blurRadius: widget.palette.isDark ? 4 : 3),
               Shadow(color: halo, blurRadius: widget.palette.isDark ? 4 : 3),
@@ -585,8 +542,6 @@ class _GraphCanvasState extends State<GraphCanvas>
   @override
   Widget build(BuildContext context) {
     final dir = Directionality.of(context);
-    // 画布自己 layout 文本，吃不到 MediaQuery 的自动缩放，所以把系统字号倍率
-    // 显式取出来乘进标签几何（节点间距也按它放大，否则大字号下标签会糊成一片）。
     final template = context.theme.typography.labelSmall.onSurface;
     final factor = MediaQuery.textScalerOf(context).scale(11) / 11;
     if (_labelColor != widget.palette.label ||
@@ -598,8 +553,7 @@ class _GraphCanvasState extends State<GraphCanvas>
       _labelDir = dir;
       _labelFactor = factor;
       _labelTemplate = template;
-      _shaderSize = .zero; // 主题变了，渐变也要重建
-      // 标签 / 渐变缓存刚被清空，但重绘只认 _repaint —— 帧后补一次，避免停在旧样式。
+      _shaderSize = .zero;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _bump();
       });
@@ -624,8 +578,6 @@ class _GraphCanvasState extends State<GraphCanvas>
             _startFocal = d.localFocalPoint;
           },
           onScaleUpdate: (d) {
-            // 焦点跟随 = 平移 + 缩放合一；只改字段 + 重绘信号，不 setState，
-            // 手势期间 Dart 侧零重算（缓冲是世界坐标，变换交给 GPU）。
             final ns = (_startScale * d.scale).clamp(
               GraphTuning.minScale,
               GraphTuning.maxScale,
@@ -668,7 +620,6 @@ class _GraphPainter extends CustomPainter {
     s._ensureShaders(size);
     final scale = s._scale;
     final tx = s._translate.dx, ty = s._translate.dy;
-    // 淡出动画期间焦点下标可能滞后于已缩小的场景，越界即视为无焦点（防越界访问）。
     final rawFocus = s._focusIndex;
     final focus = (rawFocus != null && rawFocus < n) ? rawFocus : null;
     final focusT = focus == null ? 0.0 : s._focusT;
@@ -684,7 +635,7 @@ class _GraphPainter extends CustomPainter {
 
     final mesh = s._edgeMesh;
     if (mesh != null) {
-      // BlendMode.dst = 忽略 paint、只用顶点色（见 painting.dart 的 drawVertices 文档）。
+      // BlendMode.dst：忽略 paint，只用顶点色
       canvas.drawVertices(
         mesh,
         .dst,
@@ -693,14 +644,12 @@ class _GraphPainter extends CustomPainter {
           ..color = palette.edge,
       );
     }
-    // 正在动的节点（进入 / 退出的焦点）从批量绘制里剔出来单独画，位置升序传入。
     final animating = <int>[
       if (exit != null) scene.orderOf[exit],
       if (focus != null) scene.orderOf[focus],
     ]..sort();
     _paintNodes(canvas, scene, palette, math.max(focusT, exitT), animating);
 
-    // 先退后进：换选中时新焦点画在上层。
     final dimT = math.max(focusT, exitT);
     if (exit != null) {
       _paintFocus(canvas, scene, palette, exit, exitT, dimT, scale);
@@ -711,11 +660,10 @@ class _GraphPainter extends CustomPainter {
 
     canvas.restore();
 
-    // 标签在沉降落定后才出现（settle 动画驱动淡入）；补间期间画面只有点和线。
     final settleT = s._settleT;
     if (s.widget.showLabels && settleT > 0.01) {
       if (settleT < 1) {
-        // saveLayer 只吃 alpha，RGB 被整层忽略 —— 这里不是在选颜色。
+        // saveLayer 的 paint 只取 alpha，RGB 被忽略
         canvas.saveLayer(
           Offset.zero & size,
           Paint()..color = Color.fromRGBO(0, 0, 0, settleT),
@@ -744,7 +692,6 @@ class _GraphPainter extends CustomPainter {
     if (spot != null) {
       canvas.drawRect(Offset.zero & size, Paint()..shader = spot);
     }
-    // 点阵：空间参照物。没有它，拖动一张没选中节点的图几乎没有位移反馈。
     var spacing = GraphTuning.dotSpacing;
     var step = spacing * scale;
     if (step > GraphTuning.dotMaxPx) {
@@ -776,8 +723,6 @@ class _GraphPainter extends CustomPainter {
     );
   }
 
-  /// 批量画节点。[skip] 是要跳过的节点在 `drawOrder` 里的位置（升序，最多两个：正在
-  /// 进入与正在退出的焦点）—— 它们的实心圆半径在动，得单独画，留在批里会被整径盖住。
   void _paintNodes(
     Canvas canvas,
     GraphScene scene,
@@ -790,7 +735,6 @@ class _GraphPainter extends CustomPainter {
     final paint = s._paint
       ..strokeCap = .round
       ..style = .fill;
-    // 节点 = 纯色圆，无描边（用户定调）。
     for (final b in scene.fillBatches) {
       var color = b.color;
       if (dimT > 0) {
@@ -821,11 +765,6 @@ class _GraphPainter extends CustomPainter {
     }
   }
 
-  /// 聚焦态：邻域按本色画回来（保住分类身份色），选中节点自身变成**断环** ——
-  /// 外径始终等于它原本的半径，缩的是里面那颗实心圆，中间空出留白。
-  ///
-  /// 占位不变是这套画法的全部意义：边的内缩量与未选中时一致，环压不到线，
-  /// 边网格也不必跟着聚焦动画重建（[t] 只驱动这一个节点）。
   void _paintFocus(
     Canvas canvas,
     GraphScene scene,
@@ -837,8 +776,6 @@ class _GraphPainter extends CustomPainter {
   ) {
     final pos = s.widget.frame.positions;
     final paint = s._paint..style = .fill;
-    // 把这一圈邻居从「整体淡出」里捞回来。起点必须是批量绘制当前的实际颜色
-    // （按 dimT 淡的），否则换选中期间新邻域会比背景还暗一档。
     for (final i in scene.neighborsOf(sel)) {
       final c = scene.colors[i];
       canvas.drawCircle(
@@ -849,9 +786,8 @@ class _GraphPainter extends CustomPainter {
     }
 
     final center = Offset(pos[sel * 2], pos[sel * 2 + 1]);
-    final outer = scene.radii[sel]; // 外径恒定：选中不改变这个节点的占位
+    final outer = scene.radii[sel];
     final color = scene.colors[sel];
-    // 环宽有屏幕下限，不够粗时向内长；外缘钉死在 outer。
     final ringW = math.min(
       outer,
       math.max(
@@ -880,8 +816,6 @@ class _GraphPainter extends CustomPainter {
     }
   }
 
-  /// 标签走屏幕空间固定字号：任何缩放都清晰、glyph atlas 零重栅格；靠贪心占位防重叠，
-  /// 按度数优先 —— 缩小时只剩枢纽标题，放大时逐渐铺开（地图式 LOD）。
   void _paintLabels(
     Canvas canvas,
     Size size,
@@ -899,9 +833,7 @@ class _GraphPainter extends CustomPainter {
 
     for (final i in scene.labelOrder) {
       if (drawn >= GraphTuning.labelMaxCount) break;
-      // 选中项与 ego 中心的标签强制显示（不受占位裁剪），但样式与其它标签一致。
       final always = i == focus || i == scene.centerIndex;
-      // 聚焦时只留邻域标签，其余隐藏（比整体淡出更干净）。
       if (focus != null &&
           focusT > 0.5 &&
           i != focus &&

@@ -3,15 +3,6 @@ import 'package:mui/src/themes/tokens.dart';
 import 'package:mui/src/themes/typography.dart';
 import 'package:mui/src/themes/value.dart';
 
-/// material 的 [ThemeData] 装不下的那部分主题，全部收在这一个扩展里。
-///
-/// 颜色**不在这里** —— [ColorScheme] 就是配色真源，本包不再另建一套色板。
-/// 唯一的例外是 [onMedia]：它在 M3 里没有对应角色，且不参与 on\* 配对。
-///
-/// [font] 必须留在主题里，不能靠 `TextStyle.fontWeight` 反推 ——
-/// [MuiTextRole.emphasized] 要同时设 `fontWeight` 与 `fontVariations`，而后者的轴值
-/// 只有宿主读过 ttf 才知道。`ThemeData` 没有任何槽位放它，漏了就会在自定义可变字体
-/// 下静默出错字重。
 @immutable
 class MuiTokens extends ThemeExtension<MuiTokens> with MuiValue {
   const MuiTokens({
@@ -26,15 +17,8 @@ class MuiTokens extends ThemeExtension<MuiTokens> with MuiValue {
     required this.states,
   });
 
-  /// 叠在**画面**上的前景：缩略图角标、播放器控件、图片浏览器、心情色带上的描边。
-  ///
-  /// 底不可预测（用户的照片可以是任何颜色），所以它既不跟明暗档变，也不参与 on\*
-  /// 配对 —— 深浅两档同为纯白，靠调用点自己压 scrim/阴影保证对比度。
-  /// 有这个槽位是为了让「这里为什么是白的」写在代码里，而不是散落的 `Colors.white`。
   final Color onMedia;
 
-  /// 「好」的语义色（连接可达、已完成）。M3 只有 error 一个语义槽，tertiary 在灰度
-  /// 配色下是灰的，说不了「绿」；与 error 一样不参与强调色派生。
   final Color success;
 
   final MuiFontConfig font;
@@ -81,12 +65,6 @@ class MuiTokens extends ThemeExtension<MuiTokens> with MuiValue {
     states: states ?? this.states,
   );
 
-  /// `ThemeData.lerp` 只对**两边都存在且 runtimeType 相同**的扩展调这个方法，
-  /// 所以 `buildMuiTheme` 必须给深浅两档都无条件挂上 [MuiTokens]，缺一边就整个
-  /// 不插值、主题切换时这些值会硬跳。
-  ///
-  /// 只插视觉上会跳的投影，其余 token 走 `t < 0.5` 硬切 —— 中途取一半的圆角
-  /// 或一半的时长没有意义。
   @override
   MuiTokens lerp(ThemeExtension<MuiTokens>? other, double t) {
     if (other is! MuiTokens) return this;
@@ -104,9 +82,6 @@ class MuiTokens extends ThemeExtension<MuiTokens> with MuiValue {
     );
   }
 
-  /// 主题里没挂 [MuiTokens] 时的兜底 —— 第三方自建 `ThemeData` 的子树会走到这里
-  /// （wechat 的 picker、chat_ui 等）。取各 token 表的默认值，不抛异常。
-  /// 深色取 M3 tertiary 常见的浅绿档、浅色取深绿档，两者对各自底色的对比都 ≥ 4.5。
   static Color successFor(Brightness brightness) =>
       brightness == .dark ? const Color(0xFF7CD992) : const Color(0xFF1E7F4F);
 

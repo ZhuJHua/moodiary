@@ -1,12 +1,3 @@
-//! 看图页的 tile 解码：一个看图会话一个 [`RegionDecoder`]，文件只读一次；tile 用**转正后**的
-//! 源像素坐标请求，内部按 EXIF 方向映射回原始朝向，只解那一块，解完再把小块转正。
-//!
-//! 格式差异全部收在 [`RawDecoder`] 后面（JPEG 走 turbojpeg 裁剪 + restart 随机访问，PNG 流式
-//! 逐行、WebP 走 libwebp 裁剪），这层只管坐标映射与**带缓存**：tile 模型参考 pixa（2 的幂
-//! sampleSize、512 源像素 tile、按距离排序），但串行码流跳过的行照样要解，同一行的 12 个 tile
-//! 就是 12 趟；所以一次解整条带（未旋转的图是「全宽 × tile 高」，旋转过的图是「全高 × tile
-//! 宽」，都对应上层的一行 tile），后续同一行的 tile 直接从带里切，一行一趟。
-
 use std::fs::File;
 use std::sync::Mutex;
 
@@ -20,17 +11,10 @@ use crate::codec::turbo::PixelRegion;
 use crate::codec::webp_region::WebPRegion;
 use crate::codec::{ImageFormat, ImageProbe, swaps_axes};
 
-/// 缓存的带最多占这么多字节。整图带（fit 比例那条）不参与淘汰：缩回去要再用，重解是一趟
-/// 全图熵解码。
 const BAND_BUDGET_BYTES: usize = 96 * 1024 * 1024;
 
-/// 单条带超过这个字节数就不缓存，只解请求的那一块。fit 比例下整张缩放图放得下就整张当一条带
-/// （24000² 的图解 1/8 是 3000²、36MB，一趟熵解码出全部 tile）；放不下退回一行一带；再放不下
-/// （24000 宽在 1/1 下一行就是 49MB）才逐块解，那是 JPEG 没有随机访问的代价。
 const BAND_MAX_BYTES: usize = 48 * 1024 * 1024;
 
-/// 一块解出来的 tile：`x/y/width/height` 是它实际覆盖的**转正后源像素**矩形（对齐 iMCU 后
-/// 可能比请求的大），`pixel_width/height` 是 RGBA 的像素尺寸（= 覆盖矩形 / denom）。
 pub struct TilePixels {
     pub x: u32,
     pub y: u32,
@@ -41,7 +25,6 @@ pub struct TilePixels {
     pub rgba: Vec<u8>,
 }
 
-/// 整数矩形 `[x, x+w) × [y, y+h)`。
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Rect {
     pub x: u32,
@@ -78,8 +61,6 @@ impl Rect {
     }
 }
 
-/// image crate 的 `apply_orientation` 语义：原始像素 (x, y) 在 `width × height` 的图上，
-/// 转正后落到哪。8 种方向都是轴对齐变换，矩形只要映两个对角。
 fn map_point(orientation: Orientation, width: u32, height: u32, x: u32, y: u32) -> (u32, u32) {
     match orientation {
         Orientation::NoTransforms => (x, y),
@@ -88,9 +69,7 @@ fn map_point(orientation: Orientation, width: u32, height: u32, x: u32, y: u32) 
         Orientation::Rotate180 => (width - 1 - x, height - 1 - y),
         Orientation::Rotate90 => (height - 1 - y, x),
         Orientation::Rotate270 => (y, width - 1 - x),
-        // rotate90 再水平翻 = 转置。
         Orientation::Rotate90FlipH => (y, x),
-        // rotate270 再水平翻 = 反转置。
         Orientation::Rotate270FlipH => (height - 1 - y, width - 1 - x),
     }
 }
@@ -103,7 +82,6 @@ fn inverse(orientation: Orientation) -> Orientation {
     }
 }
 
-/// 把 `width × height` 图上的矩形按方向映过去（非空矩形）。
 fn map_rect(orientation: Orientation, width: u32, height: u32, rect: Rect) -> Rect {
     let (ax, ay) = map_point(orientation, width, height, rect.x, rect.y);
     let (bx, by) = map_point(
@@ -126,7 +104,6 @@ fn map_rect(orientation: Orientation, width: u32, height: u32, rect: Rect) -> Re
 struct Band {
     denom: u8,
     region: PixelRegion,
-    /// 覆盖整张缩放图的带，钉住不淘汰。
     whole: bool,
 }
 
@@ -136,20 +113,16 @@ impl Band {
     }
 }
 
-/// 一种格式的区域解码：只认**原始朝向**、缩放后的坐标，返回的块要覆盖请求（对齐后可以更大）。
 pub trait RawDecoder: Send + Sync {
     fn format(&self) -> ImageFormat;
-    /// 原始朝向的尺寸。
     fn raw_size(&self) -> (u32, u32);
     fn orientation(&self) -> Orientation;
     fn progressive(&self) -> bool {
         false
     }
-    /// 能随机访问：解一块的代价只与块有关，不与它上方的数据量有关。
     fn random_access(&self) -> bool {
         false
     }
-    /// 按 1/`denom`（1 / 2 / 4 / 8）缩放，解缩放坐标系里的 `rect`，RGBA。
     fn decode_raw(&self, denom: u8, rect: Rect) -> Result<PixelRegion>;
 }
 
@@ -161,7 +134,6 @@ pub struct RegionDecoder {
 impl RegionDecoder {
     pub fn open(file_path: &str) -> Result<Self> {
         let file = File::open(file_path)?;
-        // 原件不可变（这是全库的约定），映射期间不会被改写。
         let bytes = unsafe { Mmap::map(&file)? };
         let backend: Box<dyn RawDecoder> = match crate::codec::sniff(&bytes) {
             ImageFormat::Jpeg => Box::new(JpegRegion::open(bytes)?),
@@ -175,7 +147,6 @@ impl RegionDecoder {
         })
     }
 
-    /// 文件能随机访问（JPEG 带对齐的 restart marker 等）：解一块的代价只与块有关。
     pub fn random_access(&self) -> bool {
         self.backend.random_access()
     }
@@ -184,7 +155,6 @@ impl RegionDecoder {
         swaps_axes(self.backend.orientation())
     }
 
-    /// 转正后的尺寸。
     pub fn upright_size(&self) -> (u32, u32) {
         let (w, h) = self.backend.raw_size();
         if self.swaps() { (h, w) } else { (w, h) }
@@ -201,7 +171,6 @@ impl RegionDecoder {
         }
     }
 
-    /// 转正坐标的 tile 矩形 → 缩放后原始朝向坐标的矩形（`want`）。
     fn want_for(&self, rect: Rect, denom: u8) -> Result<Rect> {
         let (up_w, up_h) = self.upright_size();
         let rect = rect.clamp(up_w, up_h);
@@ -220,7 +189,6 @@ impl RegionDecoder {
         .clamp(scaled_down(raw_w, denom), scaled_down(raw_h, denom)))
     }
 
-    /// 切好的原始朝向小块 → 转正 + 覆盖矩形换算。
     fn finish(&self, want: Rect, slice: Vec<u8>, denom: u8) -> Result<TilePixels> {
         let (raw_w, raw_h) = self.backend.raw_size();
         let d = denom as u32;
@@ -248,7 +216,6 @@ impl RegionDecoder {
         })
     }
 
-    /// 解一块 tile。`rect` 是转正后的源像素矩形，`denom` 是 1 / 2 / 4 / 8。
     pub fn decode_tile(&self, rect: Rect, denom: u8) -> Result<TilePixels> {
         let denom = denom.clamp(1, 8);
         let want = self.want_for(rect, denom)?;
@@ -257,13 +224,9 @@ impl RegionDecoder {
         self.finish(want, slice, denom)
     }
 
-    /// 一批 tile（同一 denom）：先把它们的并集当一条带一次解出来（放得下的话），再逐块切。
-    /// 视口跨几行 tile 就省几趟熵解码 —— 313MB 的图一趟就是两三秒，系统相册用
-    /// `BitmapRegionDecoder` 也是整个可见区域一次解。
     pub fn decode_tiles(&self, rects: &[Rect], denom: u8) -> Result<Vec<TilePixels>> {
         let denom = denom.clamp(1, 8);
         let (scaled_w, scaled_h) = self.scaled_size(denom);
-        // 落在图外的矩形跳过而不是整批报错：上层按覆盖矩形对号，少一块无妨。
         let wants: Vec<Rect> = rects
             .iter()
             .filter_map(|r| self.want_for(*r, denom).ok())
@@ -285,8 +248,6 @@ impl RegionDecoder {
         (scaled_down(w, denom), scaled_down(h, denom))
     }
 
-    /// 没有覆盖 `rect` 的带、且它放得下时，把它当一条带解出来缓存。放不下就什么都不做，
-    /// 交给 [`slice_for`] 的行带 / 逐块路径。
     fn ensure_band(&self, rect: Rect, denom: u8, scaled_w: u32, scaled_h: u32) -> Result<()> {
         let rect = rect.clamp(scaled_w, scaled_h);
         if rect.w as usize * rect.h as usize * 4 > BAND_MAX_BYTES {
@@ -313,8 +274,6 @@ impl RegionDecoder {
         Ok(())
     }
 
-    /// 从缓存带里切出 `want`；没有覆盖它的带就解一条新带（放得下就缓存），或直接解这一块。
-    /// 整段持锁：上层两路并发请求同一行的两块时，第二路等第一路把带解完再切，而不是各解一条。
     fn slice_for(&self, want: Rect, denom: u8, scaled_w: u32, scaled_h: u32) -> Result<Vec<u8>> {
         let mut bands = self
             .bands
@@ -326,9 +285,6 @@ impl RegionDecoder {
         {
             return Ok(slice_rgba(&band.region, want));
         }
-        // 整张缩放图放得下就整张当一条带（fit 比例下一趟熵解码出全部 tile）。否则带的走向
-        // 跟上层 tile 行一致：没旋转的图一行 tile 是原始坐标的一横条，转了 90° 的图一行 tile
-        // 是原始坐标的一竖条。
         let whole_rect = Rect {
             x: 0,
             y: 0,
@@ -369,8 +325,6 @@ impl RegionDecoder {
     }
 }
 
-/// 超预算时从最老的开始淘汰。只钉最粗那一档的整图带（fit 比例那条，缩回去要用）：
-/// 每档都钉的话一张 12MP 的图 1/1 + 1/2 + 1/4 + 1/8 四条整图带 64MB 永远不放。
 fn trim_bands(bands: &mut Vec<Band>) {
     let pinned = bands.iter().filter(|b| b.whole).map(|b| b.denom).max();
     let mut total: usize = bands.iter().map(Band::bytes).sum();
@@ -385,7 +339,6 @@ fn trim_bands(bands: &mut Vec<Band>) {
     }
 }
 
-/// 1/`denom` 缩放后的尺寸（libjpeg 口径，向上取整）。
 fn scaled_down(dim: u32, denom: u8) -> u32 {
     dim.div_ceil(denom.max(1) as u32)
 }
@@ -410,7 +363,6 @@ fn rect_of(region: &PixelRegion) -> Rect {
     }
 }
 
-/// 从 `region` 里切出 `want`（`region` 必须覆盖 `want`）。
 fn slice_rgba(region: &PixelRegion, want: Rect) -> Vec<u8> {
     let stride = region.width as usize * 4;
     let mut out = Vec::with_capacity(want.w as usize * want.h as usize * 4);
@@ -428,7 +380,6 @@ mod tests {
 
     use super::{Rect, RegionDecoder, inverse, map_rect};
 
-    /// EXIF Orientation 1..=8 的最小 TIFF。
     fn exif(orientation: u8) -> Vec<u8> {
         vec![
             b'I',
@@ -460,7 +411,6 @@ mod tests {
         ]
     }
 
-    /// 平滑渐变 + 一个色块，方向搞错了立刻能看出来。
     fn gradient(width: u32, height: u32) -> image::RgbImage {
         image::RgbImage::from_fn(width, height, |x, y| {
             let r = (x * 255 / width.max(1)) as u8;
@@ -512,7 +462,6 @@ mod tests {
         }
     }
 
-    /// 八种 EXIF 方向：tile 解出来的像素与「整图解码转正后裁同一块」一致。
     #[test]
     fn tile_matches_full_decode_for_every_orientation() {
         let dir = std::env::temp_dir().join("moodiary_img_region_test");
@@ -524,7 +473,6 @@ mod tests {
 
             let decoder = RegionDecoder::open(&path.to_string_lossy()).unwrap();
             let (up_w, up_h) = decoder.upright_size();
-            // 参照物必须转正：`image::open` 不看 EXIF。
             let reference = crate::codec::decode_upright(&path.to_string_lossy())
                 .unwrap()
                 .into_rgba8();
@@ -559,13 +507,11 @@ mod tests {
                     }
                 }
             }
-            // 两个解码器（turbojpeg / zune-jpeg）的 IDCT 与上采样实现不同，允许几个灰阶。
             assert!(worst <= 12, "o{orientation}: 最大色差 {worst}");
         }
         let _ = std::fs::remove_dir_all(&dir);
     }
 
-    /// 一批 tile 合成一条带一次解：结果与逐块解一致，且只多一条带。
     #[test]
     fn batched_tiles_share_one_band() {
         let dir = std::env::temp_dir().join("moodiary_img_region_batch_test");
@@ -612,7 +558,6 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 
-    /// 1/2 缩放：像素尺寸减半，覆盖矩形仍按全分辨率给；第二块同一行走带缓存。
     #[test]
     fn scaled_tile_and_band_reuse() {
         let dir = std::env::temp_dir().join("moodiary_img_region_scale_test");

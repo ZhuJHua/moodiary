@@ -1,4 +1,3 @@
-/// 取首个命中关键词前后各 [contextLength] 字的摘要，溢出补省略号；无命中退回前 200 字。
 String getHighlightedExcerpt(
   String content,
   List<String> keywords, {

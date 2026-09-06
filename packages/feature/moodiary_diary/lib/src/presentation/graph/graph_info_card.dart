@@ -4,8 +4,6 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
-/// 选中节点的悬浮信息卡（总图与 ego 图共用）。整卡可点打开日记；前导圆点用**节点本色**，
-/// 与画布上看到的颜色一致。出/入链分开显示——只给合计看不出方向。
 class GraphInfoCard extends StatelessWidget {
   final DiaryGraphNode node;
   final Color accent;
@@ -14,7 +12,6 @@ class GraphInfoCard extends StatelessWidget {
   final VoidCallback onOpen;
   final VoidCallback? onCenter;
 
-  /// 为空则不显示关闭按钮（ego 图默认展示中心节点，没有「取消选中」可言）。
   final VoidCallback? onClose;
 
   const GraphInfoCard({
@@ -47,8 +44,6 @@ class GraphInfoCard extends StatelessWidget {
           child: child,
         ),
       ),
-      // 毛玻璃卡（无阴影）：浮在图上但不压图。走全仓统一的玻璃面，跟着设置里的
-      // 「玻璃效果」开关走 —— 关掉后退成实色，而不是变成一层看不清字的半透明。
       child: Semantics(
         button: true,
         label: l10n.diary.graphOpenDiary,
@@ -56,8 +51,6 @@ class GraphInfoCard extends StatelessWidget {
           shape: const RoundedRectangleBorder(
             borderRadius: AppBorderRadius.xLargeBorderRadius,
           ),
-          // 这张卡不投影（浮在图上但不压图），边界全靠发丝线交代。描边比默认再淡一档：
-          // 图谱画布本身线条就多，实色描边会跟着一起抢。
           shadows: const [],
           borderColor: cs.outlineVariant.withValues(alpha: 0.45),
           child: MInkWell(

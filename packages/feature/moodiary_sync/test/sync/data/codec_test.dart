@@ -8,7 +8,6 @@ import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:path/path.dart' as p;
 
 void main() {
-  // 仅覆盖明文路径与密文识别 —— 加密走 Rust AES-GCM，无法在 flutter test 中跑。
   group('SyncCipher plaintext', () {
     const cipher = SyncCipher.plaintext;
 
@@ -19,7 +18,6 @@ void main() {
 
     test('encode → decode round-trips a map and is bare utf8 json', () async {
       final bytes = await cipher.encode({'a': 1, 'b': 'x'});
-      // 明文模式不加 magic 头。
       expect(SyncCipher.isCipherText(bytes), isFalse);
       expect(jsonDecode(utf8.decode(bytes)), {'a': 1, 'b': 'x'});
 
@@ -61,8 +59,6 @@ void main() {
     });
   });
 
-  // 文件版的加解密本体在 Rust（moodiary-crypto 那侧有格式互通测试），这里只覆盖
-  // 不需要 FFI 的分支：明文直通与「密文但无密钥」。
   group('SyncCipher file path', () {
     late Directory dir;
 

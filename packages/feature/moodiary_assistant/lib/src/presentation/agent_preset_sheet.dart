@@ -6,11 +6,8 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:mui/mui.dart';
 
-/// 选择结果。[name] 为 null 表示内置预设（显示名走 l10n）。
 typedef AgentPresetChoice = ({String id, String? name});
 
-/// 空白会话换预设的底部弹窗：内置「Moodiary助手」+ 用户预设，点选即回。
-/// 返回 null 表示取消。
 Future<AgentPresetChoice?> showAgentPresetPicker(
   BuildContext context, {
   required String selectedId,
@@ -24,8 +21,6 @@ Future<AgentPresetChoice?> showAgentPresetPicker(
   );
 }
 
-/// 已钉会话的只读预览：预设名 + 人格全文 + 工具子集（来自会话快照，预设被删也
-/// 照常可看）。[tools] null = 全部工具。
 void showAgentPresetInfo(
   BuildContext context, {
   required String name,
@@ -73,7 +68,6 @@ void showAgentPresetInfo(
   );
 }
 
-/// 工具子集的只读展示：null = 全部；未知 id（工具集随版本变化）静默跳过。
 class _ToolTags extends StatelessWidget {
   final List<String>? tools;
 
@@ -171,7 +165,6 @@ class _PresetTile extends StatelessWidget {
   final String description;
   final bool builtin;
 
-  /// 自定义了工具子集时的工具数；null = 全部（不显示标签）。
   final int? toolCount;
   final bool selected;
   final VoidCallback onTap;

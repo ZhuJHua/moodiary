@@ -2,13 +2,10 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:path/path.dart' as p;
 import 'package:yaml/yaml.dart';
 
-/// 一篇 markdown 文件头部声明的元数据。键与 `MarkdownWriter._frontMatter` 逐一对应，
-/// 全部可空 —— 用户手写的包多半只有正文。
 class MarkdownEntryMeta {
   final String? id;
   final String? title;
 
-  /// 绝对时刻（UTC）。无时区的字面量按本地时间解释。
   final DateTime? time;
   final DiaryMood? mood;
   final String? category;
@@ -45,13 +42,11 @@ class MarkdownPosition {
 class ParsedMarkdown {
   final MarkdownEntryMeta meta;
 
-  /// 去掉 front matter 之后的正文。
   final String body;
 
   const ParsedMarkdown(this.meta, this.body);
 }
 
-/// Markdown 导入的文本层：front matter 解析与缺省推导，纯函数、不碰文件系统。
 abstract final class MarkdownFrontMatter {
   static final RegExp _fence = RegExp(r'^(---|\.\.\.)[ \t]*$');
   static final RegExp _heading = RegExp(r'^#[ \t]+(.+?)[ \t]*#*[ \t]*$');
@@ -78,7 +73,6 @@ abstract final class MarkdownFrontMatter {
     }
     if (close < 0) return ParsedMarkdown(MarkdownEntryMeta.empty, text);
 
-    // 顶部一条分割线加一段普通文字也长这样：YAML 解不出映射就当没有 front matter。
     final Object? yaml;
     try {
       yaml = loadYaml(lines.sublist(1, close).join('\n'));
@@ -126,7 +120,6 @@ abstract final class MarkdownFrontMatter {
     return single == null ? const [] : [single];
   }
 
-  /// `[icon, temp, text]`（导出形态）或 `{icon, temp, text}`。没有图标码就不算天气。
   static DiaryWeather? _weather(Object? v) {
     String? icon, temp, text;
     if (v is List) {
@@ -142,7 +135,6 @@ abstract final class MarkdownFrontMatter {
     return DiaryWeather(icon: icon, temp: temp, text: text ?? '');
   }
 
-  /// `[lat, lng, name]`（导出形态）或 `{latitude, longitude, name}`。坐标非法就丢掉。
   static MarkdownPosition? _position(Object? v) {
     double? lat, lng;
     String? name;
@@ -166,13 +158,11 @@ abstract final class MarkdownFrontMatter {
     _ => null,
   };
 
-  /// ISO 8601（含 `T` / 空格分隔、可带 Z 或偏移）与 `yyyy-MM-dd`。无时区按本地。
   static DateTime? parseTime(String raw) {
     final parsed = DateTime.tryParse(raw.trim());
     return parsed?.toUtc();
   }
 
-  /// 正文开头的一级标题：取走作标题，剩余作正文。没有就原样返回。
   static (String? title, String body) splitLeadingTitle(String body) {
     final lines = body.split('\n');
     var i = 0;
@@ -191,7 +181,6 @@ abstract final class MarkdownFrontMatter {
     return (title, rest.join('\n'));
   }
 
-  /// 文件名开头的 `YYYY-MM-DD`（导出默认模板 `{date}-{title}`），当天零点、本地时区。
   static DateTime? dateFromFileName(String fileName) {
     final m = _leadingDate.firstMatch(p.basename(fileName));
     if (m == null) return null;
@@ -205,7 +194,6 @@ abstract final class MarkdownFrontMatter {
     return local.toUtc();
   }
 
-  /// 文件名去扩展名、去开头日期与紧随的分隔符；剩下的作标题。
   static String titleFromFileName(String fileName) {
     var name = p.basenameWithoutExtension(fileName);
     name = name.replaceFirst(_leadingDate, '');

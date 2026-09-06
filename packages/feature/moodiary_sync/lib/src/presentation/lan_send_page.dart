@@ -141,9 +141,6 @@ class _LanSendPageState extends State<LanSendPage> {
             controller: _hostController,
             enabled: !_running,
             keyboardType: .url,
-            // 圆角与聚焦环整段交给主题：原先只写了 border / focusedBorder 而漏了
-            // enabledBorder，于是未聚焦时主题的 12 胜出、聚焦时自己的 14 胜出，
-            // 一点就跳一下。
             decoration: InputDecoration(
               hintText: context.l10n.sync.lanAddressHint,
               prefixIcon: const Icon(LucideIcons.network),
@@ -418,7 +415,6 @@ class _ResultCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
-    // 成功走 primary、失败走 error —— 灰度档下没有绿色可用于「成功」。
     final background = success
         ? scheme.primaryContainer
         : scheme.errorContainer;

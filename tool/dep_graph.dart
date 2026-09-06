@@ -1,19 +1,9 @@
-// 工作区包依赖图：扫描 mobile / desktop / packages/*/* 的 pubspec，输出内部依赖关系。
-//
-// 用法：dart tool/task.dart deps [flags]   或   fvm dart tool/dep_graph.dart [flags]
-//   （无参）      Mermaid flowchart，按层分组；默认做传递归约（a→c 可经 a→b→c 推出则省略）
-//   --full       不做传递归约，输出全部声明边
-//   --dot        输出 Graphviz DOT（配合 dot -Tsvg）
-//   --pub [dep]  第三方依赖声明分布：谁声明了什么，声明数 ≥2 的排前面；带包名则只查该依赖
-//   --out <f>    写入文件而非 stdout
-//
-// 只统计 dependencies:（dev_dependencies 里的 moodiary_lint 等噪声不计）。
 import 'dart:io';
 
 class Pkg {
   final String name;
-  final String layer; // foundation / core / ui / feature / apps
-  final List<String> internal = []; // moodiary_* 工作区依赖
+  final String layer;
+  final List<String> internal = [];
   final List<String> thirdParty = [];
   Pkg(this.name, this.layer);
 }
@@ -46,7 +36,6 @@ Pkg _parse(File file, String layer) {
     if (m == null) continue;
     final dep = m.group(1)!;
     if (dep == 'flutter' || dep == 'flutter_localizations') continue;
-    // mui 是唯一不带 moodiary_ 前缀的工作区包，漏了它整张图就没有设计系统的边。
     (dep.startsWith('moodiary_') || dep == 'mui' ? pkg : third).add(dep);
   }
   return Pkg(name!, layer)
@@ -75,7 +64,6 @@ Map<String, Pkg> _scan() {
   return pkgs;
 }
 
-/// 每个包可达的全部下游工作区包（pub 图无环，直接递归记忆化）。
 Map<String, Set<String>> _reach(Map<String, Pkg> pkgs) {
   final memo = <String, Set<String>>{};
   Set<String> go(String n) => memo[n] ??= {
@@ -85,7 +73,6 @@ Map<String, Set<String>> _reach(Map<String, Pkg> pkgs) {
   return memo;
 }
 
-/// 传递归约：若 u 的另一直接依赖 w 已可达 v，则省略 u→v。
 List<(String, String)> _edges(Map<String, Pkg> pkgs, {required bool reduce}) {
   final reach = _reach(pkgs);
   final edges = <(String, String)>[];

@@ -9,42 +9,30 @@ import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
-/// 格子的宽高比。略高于正方形，缩略图才不至于被裁得只剩一条。
 const double _kCellAspect = 46 / 54;
 const double _kCellGap = 3;
 const double _kGridPadding = 8;
 
-/// 网格**恒定六行**。一个月按前导空格能占 4–6 行（2 月 1 号是周日时只要 4 行，
-/// 8 月 1 号是周六时要 6 行），行数跟着月份变的话，翻月时整个下半屏会上下弹。
+// 恒定六行：行数跟着月份变的话，翻月时下半屏会上下弹
 const int _kGridRows = 6;
 
-/// 锚页。前面还剩 6000 个月（500 年）可以往回翻，往后不设界。
+// 锚页：往前 6000 个月（500 年），往后不设界
 const int _kAnchorPage = 6000;
 
-/// 格子里的字号上限。格子是定死的 46×54，日期与篇数跟着系统字号涨到 1.6× 就会互相顶。
-/// 与 `MHeatmap` / `MNavBar` 同一个理由：网格是图表不是正文。下半屏的日记列表不受此限。
+// 系统字号放大到 1.6× 时日期与篇数会互相顶，故封顶
 const double _kCellMaxTextScale = 1.15;
 
-/// 格子顶部那一行（日期 + 篇数）的定高。钉死它，各种格子的版式才一致。
 const double _kHeaderHeight = 18;
 
-/// 一个月的网格几何：前面空几格、这个月有几天。
-///
-/// 两处都别自己算：
-/// * `DateTime.weekday` 是**周一 1 到周日 7**，`% 7` 才把周日折成 0（周日打头）；
-/// * `DateTime(y, m + 1, 0)` 是「下个月第 0 天」= 本月最后一天，跨年（12 月 + 1）
-///   与闰年二月都由 [DateTime] 自己归一，不需要任何分支。
 @visibleForTesting
 ({int leading, int days}) monthGeometry(DateTime month) => (
+  // weekday 是周一=1..周日=7，% 7 折成周日=0
   leading: DateTime(month.year, month.month).weekday % 7,
+  // 下个月第 0 天 = 本月最后一天，跨年/闰年由 DateTime 自动归一
   days: DateTime(month.year, month.month + 1, 0).day,
 );
 
-/// 页码 ↔ 月份。[anchorMonth] 落在 [_kAnchorPage] 这一页上。
-///
-/// 月份加减一律交给 [DateTime] 自己归一（`month + n` 越界会自动进位到年），
-/// **别手写 `~/ 12` 与 `% 12`** —— 负数月份的取模在 Dart 里不是数学取模，跨到锚点之前
-/// 的年份会差一整年。
+// 别手写 ~/12 与 %12：负数月份取模在 Dart 不是数学取模，跨到锚点之前的年份会差一年
 @visibleForTesting
 DateTime monthForPage(DateTime anchorMonth, int page) =>
     DateTime(anchorMonth.year, anchorMonth.month + page - _kAnchorPage);
@@ -55,14 +43,6 @@ int pageForMonth(DateTime anchorMonth, DateTime month) =>
     (month.year - anchorMonth.year) * 12 +
     (month.month - anchorMonth.month);
 
-/// 月历回顾：一屏一个月，格子里是**那天的封面图**，下半屏是选中日的日记。
-///
-/// 格子画的是「那天是什么」而不是「那天写没写」—— 后者「我的」页的热力图已经说了，
-/// 而且说得更全（一整年）。日历要是也只画个点，它就是个更大更慢的热力图。
-///
-/// **翻月不查库。** 数据全部来自 [DashboardStats.byDay]（惰性重算，见
-/// [DashboardController]）：isar_plus 的读查询不走二级索引，按月查一次就是全表扫一次，
-/// 翻页翻不起。选中某天后才按 id 走主键 get 取出当天的日记，那个是 O(1)。
 class CalendarPage extends ConsumerStatefulWidget {
   const CalendarPage({super.key});
 
@@ -74,8 +54,6 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
   late DateTime _month = _monthOf(_today());
   late DateTime _selected = _today();
 
-  /// 当天日记的取数结果。按 [_dayKey] 记忆化 —— 直接在 build 里 new 一个 Future 的话，
-  /// 每次重建都会重新取一遍，列表也会跟着闪。
   Future<List<Diary>>? _dayEntries;
   String _dayKey = '';
 
@@ -86,8 +64,6 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
 
   static DateTime _monthOf(DateTime d) => DateTime(d.year, d.month);
 
-  /// 翻月的锚：`_kAnchorPage` 这一页恒等于**打开这一页时的当月**。往前能翻 500 年，
-  /// 往后无限 —— [PageView.builder] 不给 itemCount 就没有后界。
   late final DateTime _anchorMonth = _monthOf(_today());
   late final PageController _pageCtl = PageController(
     initialPage: _kAnchorPage,
@@ -103,8 +79,6 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     super.dispose();
   }
 
-  /// 翻到某一页。**只动页面，不动选中日** —— 选中日等落位之后由
-  /// [_onSettled] 改，见那里的说明。
   void _goToPage(int page) {
     _pageCtl.animateToPage(
       page,
@@ -113,13 +87,10 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     );
   }
 
-  /// 月份滑到哪一页了。只更新标题 —— 它是个标签，跟着手指走才不会和网格错开。
   void _onPageChanged(int page) {
     setState(() => _month = _monthForPage(page));
   }
 
-  /// **落位之后**才换选中日。滑动途中就改的话，手指还在拖、下半屏的日记已经换了一茬，
-  /// 而且中途路过的月份都会各触发一次取数。
   void _onSettled() {
     final target = _pendingToday ? _today() : _pickDayIn(_month);
     _pendingToday = false;
@@ -127,24 +98,17 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     setState(() => _selected = target);
   }
 
-  /// 「回到今天」按下之后那一次落位要选中今天，而不是按常规规则挑一天。
   bool _pendingToday = false;
 
   void _backToToday() {
     _pendingToday = true;
     _goToPage(_pageForMonth(_monthOf(_today())));
-    // 已经在当月时不会有滚动，也就等不到落位回调。
     if (_pageCtl.hasClients &&
         _pageCtl.page?.round() == _pageForMonth(_month)) {
       _onSettled();
     }
   }
 
-  /// 换月后选中日**必须落在当月**：否则网格里一个高亮都没有，下半屏却还挂着上个月
-  /// 某天的日记，看起来像是没翻动。
-  ///
-  /// 优先保留同一个日号（翻月对比同一天是常见动作）；那天没写就退到当月第一个写过的
-  /// 日子，好让下半屏有东西可看；整月都空才停在同号。
   DateTime _pickDayIn(DateTime month) {
     final byDay = ref.read(dashboardControllerProvider).value?.byDay;
     final days = monthGeometry(month).days;
@@ -226,8 +190,6 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
   }
 }
 
-// ── 顶部月份条 ────────────────────────────────────────────────────────
-
 class _MonthBar extends StatelessWidget {
   final DateTime month;
   final int? entryCount;
@@ -277,7 +239,6 @@ class _WeekdayHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 取任意一周的七天来问 intl 要本地化的简称，周日打头。
     final sunday = DateTime(2026, 8, 2);
     return Padding(
       padding: const .symmetric(horizontal: _kGridPadding),
@@ -298,17 +259,6 @@ class _WeekdayHeader extends StatelessWidget {
   }
 }
 
-// ── 月网格 ────────────────────────────────────────────────────────────
-
-/// 横向翻月。
-///
-/// [PageView] 要一个定高，拿不到 `shrinkWrap` 那套 —— 好在网格是**恒定六行**，
-/// 高度由宽度算得出来：格宽 =（可用宽 − 6 个间隙）/ 7，格高 = 格宽 / [_kCellAspect]。
-///
-/// 两个回调分工是这一块的关键：[onPageChanged] 只改标题（它是个标签，得跟着手指走，
-/// 不然网格滑过去了标题还写着上个月）；真正的动作 —— 换选中日、重新取当天的日记 ——
-/// 等 [ScrollEndNotification] 落位之后再做。滑动途中就做的话，手指还在拖、下半屏已经
-/// 换了一茬，而且一次快滑路过的每个月都会各触发一次取数。
 class _MonthPager extends StatelessWidget {
   final PageController controller;
   final Map<DateTime, DayWriting>? byDay;
@@ -342,8 +292,7 @@ class _MonthPager extends StatelessWidget {
         return SizedBox(
           height: height,
           child: NotificationListener<ScrollEndNotification>(
-            // depth 0 = 分页器自己。格子里那个 GridView 关掉了滚动，但布局时照样会
-            // 冒泡通知上来，不筛掉的话每次重建都会被当成一次落位。
+            // depth 0 = 分页器自身；子级冒泡通知不筛掉会被误判为落位
             onNotification: (n) {
               if (n.depth == 0) onSettled();
               return false;
@@ -391,7 +340,6 @@ class _MonthGrid extends StatelessWidget {
         maxScaleFactor: _kCellMaxTextScale,
         child: GridView.count(
           crossAxisCount: 7,
-          // 高度由 [_MonthPager] 给死，这里只管铺格子。
           physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: _kCellGap,
           crossAxisSpacing: _kCellGap,
@@ -409,7 +357,6 @@ class _MonthGrid extends StatelessWidget {
                   onTap: () => onSelect(day),
                 );
               }(),
-            // 补满六行，见 [_kGridRows]。
             for (var i = leading + days; i < _kGridRows * 7; i++)
               const SizedBox.shrink(),
           ],
@@ -457,8 +404,6 @@ class _DayCell extends StatelessWidget {
       content = _TextCell(writing: w, day: day, isToday: isToday);
     }
 
-    // 格子画的是图和数字，读屏拿不到任何东西 —— 日期与篇数只能显式给。
-    // 子树里那些日期数字、标题节选会和这里的 label 打架，整个排除掉。
     return Semantics(
       button: true,
       selected: isSelected,
@@ -491,20 +436,10 @@ class _DayCell extends StatelessWidget {
   }
 }
 
-/// 格子顶部那一行：左边日期、右边篇数。
-///
-/// **必须是 Row，不能是两个 Align。** 格子只有 `(360−16−18)/7 ≈ 46.6` 宽，两个绝对定位
-/// 的角标在 320dp 上就贴到一起了，字号放大档更是直接叠上。Row + [Spacer] 让重叠在结构上
-/// 不可能发生，挤不下时日期自己省略。
-///
-/// 「今天」= 日期用 `primary` 色 + 加粗，**不加任何形状**：46 宽的格子里，药丸或描边
-/// 既挤又吵。封面格只加粗不上色，见下面的说明。
-///
-/// 整行定高 [_kHeaderHeight]，各种格子版式一致。
 class _CellHeader extends StatelessWidget {
   final DateTime day;
 
-  /// 0 = 那天没写。>1 才显示篇数。
+  // count 0 = 没写；只有 >1 才显示
   final int count;
   final bool onCover;
   final bool isToday;
@@ -519,9 +454,7 @@ class _CellHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final typo = context.theme.typography;
-    // 盖在封面上时前景走 onMedia —— 封面是任意画面，主题的 on* 角色在这里不成立。
     const tabular = [FontFeature.tabularFigures()];
-    // 常规档：篇数、以及不是今天的日期。
     final style =
         (onCover
                 ? typo.labelSmall.onMedia
@@ -530,12 +463,7 @@ class _CellHeader extends StatelessWidget {
                 : typo.labelSmall.onSurfaceVariant)
             .copyWith(fontFeatures: tabular);
 
-    // 今天 = primary + 粗。**封面上只加粗、不上色**：那儿的日期走 onMedia（恒定白），
-    // 换成 primary 在灰度档就是纯黑压在深色 scrim 上、直接消失，有彩档也比周围那些白
-    // 日期更暗，读起来像被禁用而不是「当前」。
-    //
-    // 加粗必须走 `.emphasized`，不能 `copyWith(fontWeight:)` —— 可变字体下 fontWeight
-    // 会被 fontVariations 吃掉，不报错也不生效。
+    // 加粗须用 .emphasized，不能 copyWith(fontWeight)：可变字体下会被 fontVariations 吃掉，不报错也不生效
     final dateStyle = !isToday
         ? style
         : (onCover
@@ -555,8 +483,6 @@ class _CellHeader extends StatelessWidget {
     );
 
     if (!onCover) return row;
-    // 照片上直接放字读不出来。顶部一条渐变 scrim 同时托住日期和篇数，
-    // 比两个各自带底的小药丸干净。
     return Container(
       padding: const .fromLTRB(4, 2, 4, 8),
       decoration: BoxDecoration(
@@ -574,7 +500,6 @@ class _CellHeader extends StatelessWidget {
   }
 }
 
-/// 有封面：整格铺图，顶部一条 scrim 托住日期与篇数。
 class _CoverCell extends StatelessWidget {
   final DayWriting writing;
   final DateTime day;
@@ -593,16 +518,13 @@ class _CoverCell extends StatelessWidget {
       writing.coverIsVideo ? 'thumbnail' : 'image',
       writing.coverName!,
     );
-    // 一屏 42 格，不降采样就是 42 张原图进内存。按格子实际像素解。
     final cacheWidth = (48 * MediaQuery.devicePixelRatioOf(context)).round();
 
     return Stack(
       fit: .expand,
       children: [
-        // 解码完成前的底色。整页从灰底逐格闪成彩色很难看。
         ColoredBox(color: colors.surfaceContainerHigh),
         Image(
-          // 格子是固定 48dp：档位 s 之上再把解码夹到格子宽，42 格进缓存才够小。
           image: FastImage(path, tier: .s, decodeWidth: cacheWidth),
           fit: .cover,
           filterQuality: .low,
@@ -624,8 +546,6 @@ class _CoverCell extends StatelessWidget {
   }
 }
 
-/// 没有封面：分类色条 + 标题首行。**别退回只剩一个日期数字** —— 那样无图的日子全都
-/// 长一样，格子就没有任何可回忆的抓手，等于把日历退回成日期选择器。
 class _TextCell extends StatelessWidget {
   final DayWriting writing;
   final DateTime day;
@@ -684,8 +604,6 @@ class _TextCell extends StatelessWidget {
   }
 }
 
-// ── 下半屏：选中日的日记 ──────────────────────────────────────────────
-
 class _DayEntries extends StatelessWidget {
   final DateTime day;
   final Future<List<Diary>>? entries;
@@ -731,7 +649,6 @@ class _DayEntries extends StatelessWidget {
             future: future,
             builder: (context, snapshot) {
               final list = snapshot.data;
-              // 取数极快（主键 get），这一小段空窗按空渲染，不闪骨架。
               if (list == null || list.isEmpty) return const SizedBox.shrink();
               return ListView.builder(
                 padding: .fromLTRB(

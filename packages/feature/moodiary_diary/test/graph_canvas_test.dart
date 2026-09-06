@@ -106,13 +106,12 @@ Future<void> _pumpCanvas(
 void main() {
   group('GraphScene', () {
     test('CSR 邻接去重互链，度数与无向边正确', () {
-      // 0↔1（互链两条有向边）、1→2、3 孤立
       final scene = _scene(_graph(n: 4, edges: [(0, 1), (1, 0), (1, 2)]));
       expect(scene.degreeOf(0), 1);
       expect(scene.degreeOf(1), 2);
       expect(scene.degreeOf(2), 1);
       expect(scene.degreeOf(3), 0);
-      expect(scene.undirectedEdges.length ~/ 2, 2); // 0-1, 1-2
+      expect(scene.undirectedEdges.length ~/ 2, 2);
       expect(scene.isNeighbor(0, 1), isTrue);
       expect(scene.isNeighbor(0, 2), isFalse);
     });
@@ -142,7 +141,6 @@ void main() {
         cursor = b.end;
       }
       expect(cursor, 30);
-      // 度数最高的中心节点半径应显著大于叶子。
       expect(scene.radii[0], greaterThan(scene.radii[1]));
     });
 
@@ -155,8 +153,6 @@ void main() {
     });
 
     test('节点尺寸：中心 > 枢纽 > 叶子，且中心不超过叶子两倍', () {
-      // 中心必须超出 nodeRadiusMax（_batch 靠这个把它单独分一档），但比例要收着，
-      // 否则局部图又会变回「一个大球 + 一圈针尖」。
       expect(GraphTuning.nodeRadiusMin, lessThan(GraphTuning.nodeRadiusMax));
       expect(GraphTuning.centerRadius, greaterThan(GraphTuning.nodeRadiusMax));
       expect(
@@ -166,14 +162,13 @@ void main() {
     });
 
     test('选中断环：外径不变，实心圆收进环内缘之内', () {
-      // 选中不改变节点占位（边的内缩量因此与选中无关），缩的是里面那颗实心圆。
       for (final r in [
         GraphTuning.nodeRadiusMin,
         GraphTuning.nodeRadiusMax,
         GraphTuning.centerRadius,
       ]) {
         final core = GraphTuning.selectedCoreRadius(r);
-        expect(core, greaterThan(0)); // 再小的节点也不能缩没
+        expect(core, greaterThan(0));
         expect(core, lessThan(r - GraphTuning.selectedRingWidth));
         expect(
           core,
@@ -183,7 +178,6 @@ void main() {
     });
 
     test('初始拟合不放大：世界单位已被 normalizeScale 标定，1x 即设计密度', () {
-      // 顶破 1x 的后果是节点少的局部图被撑满屏幕，看着就是一颗颗大球。
       expect(GraphTuning.maxInitialFit, lessThanOrEqualTo(1.0));
     });
 
@@ -193,13 +187,11 @@ void main() {
         const MuiAccent.neutral(),
       );
       final scene = _scene(_graph(n: 4, edges: [(0, 1), (2, 3)]));
-      // index 0/3 无分类（i % 3 == 0）→ 主题色本色，不需要 harmonize。
       expect(scene.colors[0], cs.primary);
       expect(
         scene.colors[1],
         const Color(0xFF42A5F5).harmonizeWith(cs.primary),
       );
-      // cat-2 没给 color，走 id 哈希取色板，同样 harmonize。
       expect(
         scene.colors[2],
         categoryColorOf(
@@ -207,7 +199,6 @@ void main() {
           id: 'cat-2',
         ).harmonizeWith(cs.primary),
       );
-      // 只是把色相往主色挪，不是把分类色抹成主色 —— 否则分类之间就没区分了。
       expect(scene.colors[1], isNot(cs.primary));
       expect(scene.colors[1], isNot(scene.colors[2]));
     });
@@ -221,7 +212,6 @@ void main() {
 
     test('filterGraph 丢弃因筛选而孤立的节点并重排下标', () {
       final full = _graph(n: 4, edges: [(0, 1), (2, 3)]);
-      // cat-1 的是 index 1 / 4...；这里按分类筛，只留同类两端的边。
       final sub = filterGraph(full, categoryId: 'cat-1');
       for (final n in sub.nodes) {
         expect(n.categoryId, 'cat-1');
@@ -256,7 +246,6 @@ void main() {
     test('没标题取正文开头，上限 5 字', () {
       expect(graphNodeLabel(node(preview: '今天下雨了')), '今天下雨了');
       expect(graphNodeLabel(node(preview: '今天下雨了，很凉快')), '今天下雨了…');
-      // 标题只有空白等同没标题。
       expect(graphNodeLabel(node(title: '  ', preview: '正文开头一句')), '正文开头一…');
     });
 
@@ -281,7 +270,6 @@ void main() {
       final seed = seedByBfs(scene, 63);
       expect(seed.length, 24);
       expect(seed.every((v) => v.isFinite), isTrue);
-      // 相连节点应比随机播种更近：0-1 的距离约等于一层环距。
       final d = math.sqrt(
         math.pow(seed[2] - seed[0], 2) + math.pow(seed[3] - seed[1], 2),
       );
@@ -297,7 +285,6 @@ void main() {
 
   group('layoutEgoRadial', () {
     test('中心在原点，出链在右、入链在左、互链在上', () {
-      // 0 = 中心；1 出链、2 入链、3 互链
       final scene = _scene(
         _graph(
           n: 4,
@@ -312,9 +299,9 @@ void main() {
       expect(r.dirs[1], EgoDirection.outgoing);
       expect(r.dirs[2], EgoDirection.incoming);
       expect(r.dirs[3], EgoDirection.mutual);
-      expect(r.positions[2], greaterThan(0)); // 出链 x > 0
-      expect(r.positions[4], lessThan(0)); // 入链 x < 0
-      expect(r.positions[7], lessThan(0)); // 互链 y < 0（屏幕坐标向上）
+      expect(r.positions[2], greaterThan(0));
+      expect(r.positions[4], lessThan(0));
+      expect(r.positions[7], lessThan(0));
       expect(r.outerRadius, greaterThan(0));
     });
 
@@ -356,11 +343,11 @@ void main() {
         ),
       );
       final dirs = egoDirectionsOf(scene);
-      expect(dirs[0], isNull); // 中心
+      expect(dirs[0], isNull);
       expect(dirs[1], EgoDirection.outgoing);
       expect(dirs[2], EgoDirection.incoming);
       expect(dirs[3], EgoDirection.mutual);
-      expect(dirs[4], isNull); // 二跳，不直连中心
+      expect(dirs[4], isNull);
     });
 
     test('无中心返回全 null', () {
@@ -402,15 +389,12 @@ void main() {
       frame.push(seedByBfs(scene, 63), settled: true);
       await _pumpCanvas(tester, scene: scene, frame: frame);
       await _pumpCanvas(tester, scene: scene, frame: frame, selected: 0);
-      // 逐帧走完聚焦动画：边网格每帧重建（内缩 / 加粗 / 配色都是 focusT 的函数），
-      // 中途的帧同样要能画出来。
       for (var i = 0; i < 12; i++) {
         await tester.pump(const Duration(milliseconds: 20));
         expect(tester.takeException(), isNull);
       }
       await tester.pump(const Duration(milliseconds: 300));
       expect(tester.takeException(), isNull);
-      // 取消选中：淡出动画同样逐帧回退，走完不应残留异常
       await _pumpCanvas(tester, scene: scene, frame: frame);
       for (var i = 0; i < 12; i++) {
         await tester.pump(const Duration(milliseconds: 20));
@@ -470,8 +454,7 @@ void main() {
       );
       final frame = GraphFrame()..push(seedByBfs(scene, 63), settled: true);
       await _pumpCanvas(tester, scene: scene, frame: frame, selected: 3);
-      await tester.pump(const Duration(milliseconds: 400)); // A 已完全选中
-      // 直接切到 B：旧焦点交给淡出控制器，新焦点从 0 长起来，中途每帧都得画得出来
+      await tester.pump(const Duration(milliseconds: 400));
       await _pumpCanvas(tester, scene: scene, frame: frame, selected: 5);
       for (var i = 0; i < 12; i++) {
         await tester.pump(const Duration(milliseconds: 20));
@@ -479,7 +462,6 @@ void main() {
       }
       await tester.pump(const Duration(milliseconds: 400));
       expect(tester.takeException(), isNull);
-      // 淡出没走完就再切一次，旧的 exit 被顶掉也不能崩
       await _pumpCanvas(tester, scene: scene, frame: frame, selected: 7);
       await tester.pump(const Duration(milliseconds: 40));
       await _pumpCanvas(tester, scene: scene, frame: frame, selected: 2);
@@ -489,8 +471,6 @@ void main() {
     });
 
     testWidgets('选中断环在极端相机倍率下都画得出来', (tester) async {
-      // preferredExtent 把相机倍率钉在 [0.35, 1.6]：两端各走一次，覆盖「环宽跌破屏幕
-      // 下限、只能向内长」与「环宽照世界单位走」两条分支。
       final scene = _scene(
         _graph(n: 16, edges: [for (var i = 1; i < 16; i++) (0, i)]),
         dark: true,
@@ -518,7 +498,6 @@ void main() {
       await tester.pump();
       expect(tester.takeException(), isNull);
 
-      // 陈旧帧：坐标数与节点数不匹配，必须被守卫挡住而不是越界。
       final single = _scene(_graph(n: 1, edges: const []));
       frame.push(.fromList([1, 2, 3, 4]), settled: true);
       await _pumpCanvas(tester, scene: single, frame: frame);
@@ -528,13 +507,12 @@ void main() {
     });
 
     testWidgets('选中高下标节点后场景缩小（换筛选/换深度）不越界崩溃', (tester) async {
-      // 12 节点选中 index 10 → 换成只剩 4 节点的新场景 + 匹配的短帧。
       final big = _scene(
         _graph(n: 12, edges: [for (var i = 1; i < 12; i++) (0, i)]),
       );
       final frame = GraphFrame()..push(seedByBfs(big, 63), settled: true);
       await _pumpCanvas(tester, scene: big, frame: frame, selected: 10);
-      await tester.pump(const Duration(milliseconds: 120)); // 淡出动画进行中
+      await tester.pump(const Duration(milliseconds: 120));
 
       final small = _scene(_graph(n: 4, edges: [(0, 1), (0, 2), (0, 3)]));
       frame.push(seedByBfs(small, 63), settled: true);
@@ -551,7 +529,6 @@ void main() {
       final byCategory = _scene(data);
       await _pumpCanvas(tester, scene: byCategory, frame: frame);
       await tester.pump(const Duration(milliseconds: 300));
-      // 换成 plain 着色的新场景（节点数不变、不推帧）
       final byPlain = _scene(data, mode: .plain);
       await _pumpCanvas(tester, scene: byPlain, frame: frame);
       await tester.pump();

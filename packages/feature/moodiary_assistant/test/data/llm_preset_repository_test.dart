@@ -148,8 +148,6 @@ void main() {
     });
   });
   group('模型级路由覆盖（models.*.provider）', () {
-    // zenmux / opencode / ofox 就是这个形状：一家 openai-compatible 网关，
-    // 底下的 Claude 走 anthropic、GPT 走 responses、其余走 chat completions。
     const gateway = {
       'id': 'gateway',
       'npm': '@ai-sdk/openai-compatible',
@@ -245,8 +243,6 @@ void main() {
       expect(list, isEmpty);
     });
 
-    // 目录里真有这么一条（cloudflare-ai-gateway 的 Claude）：模型把 npm 覆盖成
-    // anthropic 却没给 api。放过去就是把网关的 key 发去 api.anthropic.com。
     test('模型覆盖成 anthropic 但没给 api 时同样丢弃', () {
       final list = parseModelsDevCatalog(
         _catalog({
@@ -287,7 +283,6 @@ void main() {
       expect(list, isEmpty);
     });
 
-    // 反过来，覆盖块把 npm 和 api 都给全了就该放行——azure / vertex 就是这样。
     test('供应商 npm 不在名单，但模型覆盖给全了 npm + api 则放行', () {
       final list = parseModelsDevCatalog(
         _catalog({

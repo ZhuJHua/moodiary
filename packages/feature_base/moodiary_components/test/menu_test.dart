@@ -68,7 +68,6 @@ void main() {
 
     await tester.tap(find.byIcon(LucideIcons.ellipsisVertical));
     await tester.pumpAndSettle();
-    // Tap outside the menu to dismiss.
     await tester.tapAt(const Offset(10, 10));
     await tester.pumpAndSettle();
 
@@ -103,7 +102,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(picked, isNull);
-    // Menu stays open since the disabled item ignores taps.
     expect(find.text('Apple'), findsOneWidget);
   });
 }

@@ -8,13 +8,8 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:mui/mui.dart';
 
-/// 分类超过这个数才在抽屉里出现搜索框 —— 三五个分类时搜索框只是噪音。
 const int _kSearchThreshold = 8;
 
-/// 首页的分类抽屉：品牌区 + 全部 / 各分类 / 未分类 + 底部「管理分类」。
-///
-/// 必须挂在**根壳**的 Scaffold 上：首页只是 IndexedStack 里的一个 tab，抽屉挂在它
-/// 自己那层会被底部 NavigationBar 截断，只盖住内容区。
 class CategoryDrawer extends ConsumerStatefulWidget {
   const CategoryDrawer({super.key});
 
@@ -26,8 +21,7 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
   String _query = '';
 
   void _pick(DiaryFilter filter) {
-    // 换筛选必须清空多选：选中的 id 属于**旧**筛选，跨维度存活的话
-    // softDeleteByIds 会在新列表里一条都匹配不上，删除变成静默空操作。
+    // 跨筛选存活的选中 id 会让 softDeleteByIds 匹配不上，删除变成静默空操作
     ref.read(diarySelectionProvider.notifier).clear();
     ref.read(homeDiaryFilterProvider.notifier).select(filter);
     Navigator.of(context).pop();
@@ -39,10 +33,7 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
     final filter = ref.watch(homeDiaryFilterProvider);
     final categories = ref.watch(orderedCategoriesProvider).value ?? const [];
     final counts = ref.watch(categoryDiaryCountsProvider).value;
-    // 查询没回来时一律传 null 让数字整个不显示 —— 先铺一屏 0 再跳成真实值，
-    // 比空着更像出了错。
     final total = counts?.total;
-    // 未分类篇数 = 可见总数 − 各分类之和，不必再查一次库。
     final uncategorized = counts == null
         ? null
         : (counts.total -
@@ -105,8 +96,6 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                   child: ListView(
                     padding: const .only(bottom: 8),
                     children: [
-                      // 搜索时只留搜索结果：「全部日记」与「同步中」占位行永远匹配
-                      // 不上查询，混在结果里会和下面的「没有匹配的分类」自相矛盾。
                       if (query.isEmpty)
                         _Tile(
                           label: context.l10n.diary.categoryAllDiary,
@@ -129,7 +118,6 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                           syncing: pending.updateCategoryIds.contains(c.id),
                           onTap: () => _pick(.category(c.id)),
                         ),
-                      // 新建但还没同步上去的分类：没有名字可显示，只表明「还有东西在路上」。
                       if (query.isEmpty)
                         for (var i = 0; i < pending.newCategoryIds.length; i++)
                           _PendingTile(
@@ -155,9 +143,6 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                   ),
                 ),
                 Divider(height: 1, color: colors.outlineVariant),
-                // 抽屉不随键盘缩，底部这两项会被输入法整个盖住 —— 手动让位。
-                // 「未分类」不是一个分类，是「缺少分类」——所以放在分隔线以下、
-                // 和管理入口一组，而不是混进分类列表里。
                 _Tile(
                   label: context.l10n.diary.categoryNoCategory,
                   count: uncategorized,
@@ -195,8 +180,6 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      // 设置从底栏挪进来了：底栏只剩三个 tab，而抽屉本来就是「离开当前
-                      // 内容去别处」的那一栏。
                       IconButton.filledTonal(
                         tooltip: context.l10n.app.homeNavigatorSetting,
                         onPressed: () {
@@ -221,7 +204,6 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
 }
 
 class _Header extends StatelessWidget {
-  /// null = 计数查询还没回来，副标题整行留空而不是写「共有 0 篇」。
   final int? total;
 
   const _Header({required this.total});
@@ -254,7 +236,6 @@ class _Header extends StatelessWidget {
 class _Tile extends StatelessWidget {
   final String label;
 
-  /// 篇数；null = 计数查询还没回来，此时整个数字不显示。
   final int? count;
   final bool selected;
   final Widget leading;
@@ -357,7 +338,6 @@ class _PendingTile extends StatelessWidget {
   }
 }
 
-/// 分类色点。「全部」用主题色渐变、「未分类」用一圈虚线描边 —— 三者一眼能分。
 class _Swatch extends StatelessWidget {
   final Color? color;
   final Gradient? gradient;

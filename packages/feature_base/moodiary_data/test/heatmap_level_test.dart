@@ -11,7 +11,6 @@ void main() {
     });
 
     test('字数没有分布（p25 == p75）时退回按篇数，不把所有格子压成同一级', () {
-      // 每天都写同样长度的一句话：按字数分位数会让四级全落到同一档。
       final level = heatmapLevelResolver(List.filled(30, 42));
       expect(level(1, 42), 2);
       expect(level(3, 42), 4);
@@ -22,7 +21,6 @@ void main() {
       final level = heatmapLevelResolver(words);
       final produced = {for (final w in words) level(1, w)};
       expect(produced, {1, 2, 3, 4}, reason: '四级都要用上，否则梯度是假的');
-      // 单调：字数越多级别不降。
       var last = 0;
       for (final w in words) {
         final l = level(1, w);

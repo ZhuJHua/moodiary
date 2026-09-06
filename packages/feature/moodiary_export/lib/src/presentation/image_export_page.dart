@@ -19,19 +19,9 @@ import '../data/export_service.dart';
 import '../data/image_composer.dart';
 import 'image_card/card_style.dart';
 
-/// 图片预览页 —— **整页只有三个可点的东西**：返回、保存到相册、分享。
-///
-/// 样式一个都不在这里选：模版只有「原稿」一个，明暗 / 尺寸 / 清晰度 / 水印全部取
-/// 「导入与导出 → 图片」存下的那份设置，**分享只读不写**。分享是个快动作，
-/// 用户在这里改不动设置，也就不会顺手改掉批量导出的默认值。
-///
-/// 预览显示的是**真产物**：同一个 [ImageComposer] 出的带，只是倍率取 1；
-/// 点按钮时才按设置里的倍率重出一张落盘。所以不存在「预览与产物两份代码」。
 class ImageExportPage extends StatefulWidget {
-  /// 单篇分享。与 [scope] 二选一。
   final String? diaryId;
 
-  /// 批量导出的样张：只渲 scope 里的第一篇。
   final ExportScope? scope;
 
   const ImageExportPage({super.key, this.diaryId}) : scope = null;
@@ -60,7 +50,6 @@ class _ImageExportPageState extends State<ImageExportPage> {
   @override
   void initState() {
     super.initState();
-    // 主题快照要在 build 之外拿：离屏树没有祖先 Theme，样式必须由这一侧解析好。
     WidgetsBinding.instance.addPostFrameCallback((_) => _render());
   }
 
@@ -83,7 +72,6 @@ class _ImageExportPageState extends State<ImageExportPage> {
   );
 
   Future<void> _render() async {
-    // context 在第一个 await 之前取干净：渲染是异步的，之后不保证还 mounted。
     final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
     final style = _style();
     try {
@@ -96,7 +84,6 @@ class _ImageExportPageState extends State<ImageExportPage> {
         docs: docs,
         common: _settings.common,
         style: style,
-        // 按屏幕像素密度出图：预览卡片是按逻辑宽度铺开的，1 倍出图在 3x 屏上等于放大三倍。
         devicePixelRatio: devicePixelRatio,
       );
       if (!mounted) {
@@ -121,7 +108,6 @@ class _ImageExportPageState extends State<ImageExportPage> {
               widget.diaryId ?? '',
             ),
           ];
-    // 样张只看第一篇：全量导出前确认一眼版式，不必等 342 篇都渲完。
     final picked = widget.isSample ? diaries.take(1).toList() : diaries;
     return ExportService.previewDocs(
       picked,
@@ -129,7 +115,6 @@ class _ImageExportPageState extends State<ImageExportPage> {
     );
   }
 
-  /// 按设置里的真实倍率出一张 PNG 落到缓存目录。
   Future<String?> _composeFile() async {
     final docs = _docs;
     if (docs == null || docs.isEmpty) return null;
@@ -148,8 +133,6 @@ class _ImageExportPageState extends State<ImageExportPage> {
         'moodiary-${DateTime.now().millisecondsSinceEpoch}.png',
       ),
     );
-    // 每次点按钮都现出一张，所以这里不会撞上缓存被 purge 的时间窗；
-    // 真出不来（磁盘满）就当没有产物，由调用方报错。
     return File(result.path).existsSync() ? result.path : null;
   }
 
@@ -166,7 +149,6 @@ class _ImageExportPageState extends State<ImageExportPage> {
       if (ok) {
         toast.success(message: l10n.share.savedToAlbum);
       } else {
-        // saveToGallery 把异常吞成 false，最现实的成因就是相册权限被拒。
         toast.error(message: l10n.share.saveToAlbumFailed);
       }
     } catch (e) {
@@ -279,8 +261,6 @@ class _ImageExportPageState extends State<ImageExportPage> {
       );
     }
 
-    // 底色比卡片深一档，卡片才浮得起来；短图垂直居中、长图从顶上开始滚 ——
-    // 用 ConstrainedBox(minHeight: 视口) + Center 一次拿到两种行为。
     return ColoredBox(
       color: scheme.surfaceContainerHigh,
       child: LayoutBuilder(
@@ -308,8 +288,6 @@ class _ImageExportPageState extends State<ImageExportPage> {
                     child: Column(
                       mainAxisSize: .min,
                       children: [
-                        // 各带首尾相接就是整张长图；分带是为了绕开单张纹理上限，
-                        // 拼在一起看不出接缝（切点落在整数像素上）。
                         for (final band in _bands)
                           RawImage(
                             image: band,

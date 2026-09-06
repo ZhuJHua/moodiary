@@ -6,19 +6,14 @@ import 'reasoning_control.dart';
 part 'llm_model_preset.freezed.dart';
 part 'llm_model_preset.g.dart';
 
-/// models.dev 的模型条目。**线路（协议 + baseUrl）在解析时就定下来了**：
-/// 目录的路由覆盖是模型级的，同一家网关的 Claude 走 messages、GPT 走 responses、
-/// 其余走 chat completions，所以这两项属于模型而不属于供应商。
 @freezed
 abstract class LlmModelPreset with _$LlmModelPreset {
   const factory LlmModelPreset({
     required String id,
     required String name,
 
-    /// 这一款模型实际要走的协议。
     required AssistantProviderType protocol,
 
-    /// 这一款模型实际要打的 baseUrl。空串表示走该协议官方端点。
     required String baseUrl,
 
     @Default('') String description,
@@ -27,18 +22,14 @@ abstract class LlmModelPreset with _$LlmModelPreset {
     @Default(false) bool reasoning,
     bool? structuredOutput,
 
-    /// 温度是否可调（gpt-5 一类是 false）。
     bool? temperature,
 
-    /// 思考控制能力。null = 目录没标；空列表 = 模型会思考但调用方无控制。
     List<ReasoningControl>? reasoningOptions,
 
-    /// 交错思考的回传字段名（`reasoning_content` / `reasoning_details`）。
     String? interleavedField,
 
     int? contextLimit,
 
-    /// 最大输入 token。与 [contextLimit] 不是一回事：后者含输出。
     int? inputLimit,
 
     int? outputLimit,
@@ -53,7 +44,6 @@ abstract class LlmModelPreset with _$LlmModelPreset {
 
     String? releaseDate,
 
-    /// `alpha` / `beta` / `deprecated`。null 表示正常在服。
     String? status,
   }) = _LlmModelPreset;
 
@@ -62,14 +52,10 @@ abstract class LlmModelPreset with _$LlmModelPreset {
   factory LlmModelPreset.fromJson(Map<String, dynamic> json) =>
       _$LlmModelPresetFromJson(json);
 
-  /// 已下线的模型仍留在目录里，选择器该把它们折叠起来。
   bool get deprecated => status == 'deprecated';
 
-  /// 能不能收图。目录给的 `modalities` 比那个粗粒度的 `attachment` bool 准
-  /// —— 两者在 369 个模型上并不一致，且 modalities 全量都有。
   bool get acceptsImage => inputModalities.contains('image');
 
-  /// [protocol] / [baseUrl] 由调用方按供应商与模型级覆盖解析后传入。
   static LlmModelPreset? fromModelsDev(
     String id,
     Map<String, dynamic> json, {

@@ -1,7 +1,3 @@
-/// 会话开始前挑模型与思考强度的底部弹窗。
-///
-/// 用弹窗而不是锚定菜单，是因为中转站的模型能有几百个（openrouter 352 个）——
-/// 那个体量必须有搜索框和一整屏的滚动区，挂在输入框上方的小浮层装不下。
 library;
 
 import 'package:moodiary_assistant/src/data/model_resolver.dart';
@@ -9,30 +5,22 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:mui/mui.dart';
 
-/// 选择结果。
 typedef ModelChoice = ({String modelId, String level});
 
-/// 跨供应商选择结果。模型 id 在聚合类供应商之间会撞名（同一个 gpt-4o 挂在
-/// openrouter 和 openai 下），所以必须连供应商一起返回、比对也按二元组。
 typedef GlobalModelChoice = ({String providerId, String modelId, String level});
 
-/// 一个供应商分组：没配 Key 的供应商照常列出但不可选——换过去下一轮必死
-/// （`_buildRequest` 无 Key 直接判 needProvider），置灰比让用户踩坑诚实。
 typedef ProviderModels = ({
   LlmProvider provider,
   List<ModelOption> options,
   bool hasKey,
 });
 
-/// 打开选择器。返回 null 表示用户取消（下拉 / 点遮罩 / 返回键），此时不应改动任何状态。
 Future<ModelChoice?> showModelPicker(
   BuildContext context, {
   required String providerName,
   required List<ModelOption> options,
   required String modelId,
   String level = '',
-
-  /// 编辑页只挑模型（那里定的是「默认模型」，思考强度是每次会话开始前才定的）。
   bool showEffort = true,
 }) {
   return MSheet.show<ModelChoice>(
@@ -47,7 +35,6 @@ Future<ModelChoice?> showModelPicker(
   );
 }
 
-/// 打开跨供应商选择器（会话中切模型用）。返回 null 表示取消。
 Future<GlobalModelChoice?> showGlobalModelPicker(
   BuildContext context, {
   required List<ProviderModels> groups,
@@ -83,7 +70,6 @@ class _GlobalModelPickerBody extends StatefulWidget {
   State<_GlobalModelPickerBody> createState() => _GlobalModelPickerBodyState();
 }
 
-/// 展开后的一行：`option == null` 是供应商组头，否则是该组下的一个模型。
 typedef _GlobalRow = ({LlmProvider provider, bool hasKey, ModelOption? option});
 
 class _GlobalModelPickerBodyState extends State<_GlobalModelPickerBody> {
@@ -143,8 +129,6 @@ class _GlobalModelPickerBodyState extends State<_GlobalModelPickerBody> {
     setState(() {
       _providerId = provider.id;
       _modelId = option.id;
-      // 档位表按模型给，换了模型旧档位可能整个不在表里；发一个模型不认的档位
-      // 会被供应商直接拒，所以退回「关」。
       if (_level.isNotEmpty && !option.levels.contains(_level)) _level = '';
     });
   }
@@ -181,7 +165,6 @@ class _GlobalModelPickerBodyState extends State<_GlobalModelPickerBody> {
                 onChanged: (v) => setState(() => _query = v),
               ),
             ),
-          // 列表自己滚，强度滑杆钉在下面不跟着走 —— 几百个模型时滑杆不该被翻没。
           ConstrainedBox(
             constraints: BoxConstraints(
               maxHeight: MediaQuery.sizeOf(context).height * 0.42,
@@ -319,8 +302,6 @@ class _ModelPickerBodyState extends State<_ModelPickerBody> {
   void _pickModel(ModelOption option) {
     setState(() {
       _modelId = option.id;
-      // 档位表按模型给，换了模型旧档位可能整个不在表里（有的模型只有 high/max）。
-      // 发一个模型不认的档位会被供应商直接拒，所以退回「关」。
       if (_level.isNotEmpty && !option.levels.contains(_level)) _level = '';
     });
   }
@@ -360,7 +341,6 @@ class _ModelPickerBodyState extends State<_ModelPickerBody> {
                 onChanged: (v) => setState(() => _query = v),
               ),
             ),
-          // 列表自己滚，强度滑杆钉在下面不跟着走 —— 几百个模型时滑杆不该被翻没。
           ConstrainedBox(
             constraints: BoxConstraints(
               maxHeight: MediaQuery.sizeOf(context).height * 0.42,
@@ -431,15 +411,12 @@ class _EffortSlider extends StatelessWidget {
               ),
             ),
             Text(
-              // 直接用目录的原值（low / xhigh / max…）：那是一个开放集合，
-              // 手写映射表只会在出现新档位时悄悄漏掉。
               level.isEmpty ? l10n.assistant.reasoningOff : level,
               style: typography.labelLarge.emphasized.primary,
             ),
           ],
         ),
         Slider(
-          // 0 号档位是「关」，之后依次是目录给出的档位。
           value: (level.isEmpty ? 0 : levels.indexOf(level) + 1)
               .toDouble()
               .clamp(0, levels.length.toDouble()),
@@ -459,7 +436,6 @@ class _ModelTile extends StatelessWidget {
   final ModelOption option;
   final bool selected;
 
-  /// null = 不可选（所属供应商没配 Key），整行降不透明度。
   final VoidCallback? onTap;
 
   const _ModelTile({
@@ -474,8 +450,6 @@ class _ModelTile extends StatelessWidget {
     final typography = context.theme.typography;
     final l10n = context.l10n;
     final preset = option.preset;
-    // 几百个模型里挑，光有名字判断不了。徽章全部来自目录，自定义供应商没有目录
-    // 就只剩 id 一行 —— 那也是实话。
     final badges = <Widget>[
       if (preset != null) ...[
         if (preset.toolCall)

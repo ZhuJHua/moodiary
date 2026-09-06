@@ -64,8 +64,6 @@ class AssistantPresetsRoute extends MoodiaryRouteBase {
   String get location => path;
 }
 
-/// [id] = 编辑已有用户预设；[fromId] = 从该用户预设派生副本；
-/// 两者都空 = 从内置「Moodiary助手」派生。
 class AssistantPresetEditRoute extends MoodiaryRouteBase {
   static const String path = '/setting/assistant/preset_edit';
 

@@ -11,8 +11,6 @@ import 'support/pump.dart';
 void main() {
   late MemoryKVStorage kv;
 
-  // get_it scope：push 里注册的绑定遮蔽外层同类型，pop 整层撤掉——
-  // 不必 isRegistered/unregister 手工对账。
   setUp(() {
     kv = MemoryKVStorage();
     getIt.pushNewScope(init: (gi) => gi.registerSingleton<IKVStorage>(kv));
@@ -38,7 +36,6 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  /// 排序项排在模式网格之后，测试视口里可能在折叠线以下。
   Future<void> pick(WidgetTester tester, String label) async {
     await tester.ensureVisible(find.text(label));
     await tester.pumpAndSettle();
@@ -119,7 +116,6 @@ void main() {
     await tester.tap(find.text('确认'));
     await tester.pumpAndSettle();
 
-    // 否则会存下一个这张面板再也选不到的组合。
     expect(storedSort(), DiarySort.timeDesc.number);
   });
 }

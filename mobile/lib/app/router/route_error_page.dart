@@ -4,9 +4,6 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:mui/mui.dart';
 
-/// 路由解析失败时的兜底页。
-///
-/// go_router 自带的 `MaterialErrorScreen` 是英文写死的，所以这里自己给一个。
 class RouteErrorPage extends StatelessWidget {
   final Uri uri;
   final Exception? error;

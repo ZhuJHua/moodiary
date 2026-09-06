@@ -17,37 +17,6 @@ import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
 import 'package:moodiary_sync/src/data/sync_provider_scope.dart';
 
-/// 自动同步监听器 —— 单开关 [MoodiaryKVs.autoSync] 启用两条机制，共用「正在同步」
-/// 闸门（[_syncing]）：变更触发（订阅领域事件流，去抖后 push）+ 周期轮询
-/// （每 [MoodiaryKVs.syncPollInterval] 秒双向 sync）。
-///
-/// 设计要点：
-/// - **数据源**：订阅 [DiaryRepository.diaryEvents] / [CategoryRepository.categoryEvents]
-///   / [PlaceRepository.placeEvents] / [MediaInfoRepository.mediaInfoEvents]
-///   而非 Isar `watchLazy` —— 领域流只在写成功后发出（零误报）。云 pull 落库的
-///   事件带 `fromSync` 标记，据此不标脏、不回声推送（远端已持有）；归档导入 /
-///   局域网接收不带标记，照常触发向云端的推送。
-/// - **关闭即推**：编辑期的保存被「打开中」闸门挡下，而编辑页最后一次保存发生在
-///   `OpenDiaryRegistry.close()` 之前——此后没有事件了。所以另订阅
-///   [OpenDiaryRegistry.closed]：有待推变更就以短去抖（[_closeDebounce]）补一次 push。
-///   排定的推送**只会提前、不会推后**（[shouldRearm]）：关闭日记排下的 1.5 秒不会被
-///   随后分类改动的 5 秒顶掉。
-/// - **互斥**：监听 [SyncLogger.events] 的 `syncStart`/`syncEnd`，任何 push/pull 进行中
-///   都暂停响应，故 sync 内部写入（如 tombstone 清理）不会引发二次同步。归档导入 /
-///   局域网接收不经 [SyncRunner]，所以这道闸门不能只看 `runner.isRunning`。
-/// - **空转短路**：轮询先 HEAD 远端 manifest（[MoodiaryKVs.syncManifestStat] 缓存
-///   指纹），未变且本地无待推变更（[MoodiaryKVs.syncPendingLocal]）→ 跳过整个
-///   sync，把空转成本从 5 个往返降到 1 个 HEAD。Last-Modified 是秒级粒度，
-///   同秒并发写理论上可漏判，故距上次成功同步超过 10 个轮询周期时强制全量兜底。
-/// - **回前台 / 网络恢复**立刻探测一次（[SyncTrigger.resume] / [SyncTrigger.network]），
-///   切后台把等待中的推送立刻冲出去（尽力而为，系统可能中途杀进程，杀了也只是回到
-///   轮询兜底）。
-/// - **退避**：探测连续失败后下一 tick 间隔翻倍（上限 [_maxBackoffSeconds]），成功 /
-///   回前台 / 网络变化归零。健康态与边沿日志在 [SyncRunner]，这里不再逐轮记 warn。
-/// - **静默失败**：出错不弹 toast，结果在 [SyncRunner.status] 与 SyncLogger 里。
-///
-/// 由 DI 装配成懒单例：依赖全部走构造器注入，保证就位后才构造；[start] 由组合根在版本迁移与后端装载完成后显式调用 —— 迁移写出的
-/// 行不该被 watcher 当成本地变更推给云端。
 @lazySingleton
 class AutoSyncWatcher {
   AutoSyncWatcher(
@@ -70,22 +39,16 @@ class AutoSyncWatcher {
   final SyncDirtyTracker _dirty;
   final OpenDiaryRegistry _openDiaries;
 
-  /// 写入后到真正发起 push 的静默期。
   static const Duration _debounce = Duration(seconds: 5);
 
-  /// 关闭日记后到 push 的静默期：合并「关了又马上点开」，体感上与立即无差。
   static const Duration _closeDebounce = Duration(milliseconds: 1500);
 
-  /// 轮询间隔下限（秒）。塞更小值也夹到此 —— 过频轮询每次抢锁 + 读清单，徒增流量/耗电。
   static const int _minPollSeconds = 5;
 
-  /// 轮询间隔缺省值（秒），与 [MoodiaryKVs.syncPollInterval] 的 defaultValue 一致。
   static const int _defaultPollSeconds = 30;
 
-  /// 探测失败退避的上限（秒）。
   static const int _maxBackoffSeconds = 600;
 
-  /// 回前台后距上次 tick 不足此时长就不额外探测（刚探过）。
   static const Duration _resumeMinGap = Duration(seconds: 10);
 
   StreamSubscription<DiaryEvent>? _diarySub;
@@ -97,47 +60,35 @@ class AutoSyncWatcher {
   StreamSubscription<bool>? _netSub;
   AppLifecycleListener? _lifecycle;
 
-  /// 探测连续失败次数，驱动轮询退避。
   int _probeFailStreak = 0;
   DateTime? _lastTickAt;
 
   final ValueNotifier<DateTime?> _nextPollAt = ValueNotifier(null);
 
-  /// 下一次轮询到点的时刻（含退避）。开关关着定时器也照排，控制台自己判断显示。
   ValueListenable<DateTime?> get nextPollAt => _nextPollAt;
 
   Timer? _timer;
 
-  /// [_timer] 的到点时刻与发起方；重排时据此只提前不推后。
   DateTime? _timerDue;
   SyncTrigger _pendingTrigger = .change;
   Timer? _pollTimer;
   bool _syncing = false;
   bool _dirtyDuringSync = false;
 
-  /// 监听器是否在生命周期内 —— 自调度轮询据此决定 tick 后是否续期，避免 [dispose]
-  /// 在一次 tick 进行中时被随后的续期重新拉起。
   bool _started = false;
 
   void start() {
     _started = true;
     _diarySub ??= _diaries.diaryEvents.listen((event) async {
-      // 云 pull 落库的变更远端已持有：不标脏、不置待推标记、不排推送。
       if (event.fromSync) return;
       MoodiaryKVs.syncPendingLocal.set(true);
       switch (event) {
         case DiaryCreated(:final diary) || DiaryUpdated(:final diary):
-          // 本地有改动 → 标记卡片「待同步」。
-          // 仅在配置了云后端时才追踪：没配同步就没有「待同步」概念，避免误导角标。
           if ((await configuredCloudBackendIds()).isNotEmpty) {
             _dirty.markDirty(diary.id);
           }
-          // 打开中的日记不触发同步（编辑期不上传半成品）。这是廉价前置闸门；权威跳过
-          // 在引擎 push 快照里（poll / sync 绕过本闸门）。
           if (!_openDiaries.contains(diary.id)) _onLocalChange();
         case DiaryDeleted(:final id):
-          // 行已不在：脏标记里这条 id 不再有对应卡片，顺手清掉（进程内 Set，
-          // 不清也只是残留到重启）；随后放行触发同步——永久删除的墓碑应尽快推送。
           _dirty.clearDirty(id);
           _onLocalChange();
       }
@@ -147,8 +98,6 @@ class AutoSyncWatcher {
       MoodiaryKVs.syncPendingLocal.set(true);
       _onLocalChange();
     });
-    // 地点与分类同款：不订阅的话只改地点不会置待推标记，轮询的空转短路会把它
-    // 一直跳过，直到别的变更捎带出去。
     _placeSub ??= _places.placeEvents.listen((event) {
       if (event.fromSync) return;
       MoodiaryKVs.syncPendingLocal.set(true);
@@ -160,8 +109,6 @@ class AutoSyncWatcher {
       _onLocalChange();
     });
     _closedSub ??= _openDiaries.closed.listen((id) {
-      // 只读打开、没保存过 → 没有待推变更，不动。脏标记是这篇自己的证据；
-      // pendingLocal 是兜底（脏标记只在配置了云后端时才打）。
       if (!_dirty.listenable.value.contains(id) &&
           MoodiaryKVs.syncPendingLocal.get() != true) {
         return;
@@ -173,7 +120,6 @@ class AutoSyncWatcher {
       if (online) _kick(.network);
     }, onError: (_) {});
     _lifecycle ??= AppLifecycleListener(onResume: _onResume, onHide: _onHide);
-    // 改了轮询间隔 → 立即按新值重排（缩短间隔不必等旧定时器走完）。
     MoodiaryKVs.syncPollInterval.getNotifier().addListener(_schedulePoll);
     _schedulePoll();
   }
@@ -186,7 +132,6 @@ class AutoSyncWatcher {
     _kick(.resume);
   }
 
-  /// 切后台：等待中的推送立刻冲出去，别把半截留到下次打开。
   void _onHide() {
     if (_timer == null) return;
     _timer!.cancel();
@@ -195,7 +140,6 @@ class AutoSyncWatcher {
     unawaited(_trigger());
   }
 
-  /// 归零退避、按当前间隔重排定时器、立刻探测一轮。
   void _kick(SyncTrigger trigger) {
     if (!_started) return;
     _probeFailStreak = 0;
@@ -236,9 +180,6 @@ class AutoSyncWatcher {
     return raw < _minPollSeconds ? _minPollSeconds : raw;
   }
 
-  /// 自调度轮询：单次定时器到点跑 [_pollTick]，跑完按当前 KV 间隔（乘退避）续期。
-  /// 比 `Timer.periodic` 好在：间隔可热更新，且续期在上一 tick 完成后、长同步不与
-  /// 下一 tick 叠加。开关关闭时定时器照转，但 [_pollTick] 读 KV 直接空转返回。
   void _schedulePoll() {
     if (!_started) return;
     _pollTimer?.cancel();
@@ -253,16 +194,12 @@ class AutoSyncWatcher {
     });
   }
 
-  /// 一轮成功之后能不能清「本地有待推」（纯函数）：同步期间又有新写入、或 push 因
-  /// 日记打开中跳过了条目，都说明本地还有没推上去的东西——清了标记，关闭日记时
-  /// 就没人再推，轮询也会因指纹未变而短路，只剩 10 轮一次的兜底全量。
   @visibleForTesting
   static bool clearsPendingLocal(
     SyncReport report, {
     required bool dirtyDuringSync,
   }) => !dirtyDuringSync && report.skippedOpen == 0;
 
-  /// 退避序列（纯函数）：连续失败 n 次 → 基础间隔 × 2ⁿ，封顶 [_maxBackoffSeconds]。
   @visibleForTesting
   static int pollDelaySeconds({required int base, required int failStreak}) {
     if (failStreak <= 0) return base;
@@ -276,7 +213,6 @@ class AutoSyncWatcher {
   }) {
     if (MoodiaryKVs.autoSync.get() != true) return;
     if (_syncing) {
-      // 同步进行中的写入：记脏标，等同步结束再合并触发。
       _dirtyDuringSync = true;
       return;
     }
@@ -287,7 +223,6 @@ class AutoSyncWatcher {
     switch (event.kind) {
       case .syncStart:
         _syncing = true;
-        // 已有同步在跑，撤掉待发 push；同步内部写入由 _dirtyDuringSync 兜底。
         _timer?.cancel();
         _timer = null;
         _timerDue = null;
@@ -313,14 +248,12 @@ class AutoSyncWatcher {
     _timer = Timer(delay, _trigger);
   }
 
-  /// 已排定的推送只提前不推后：没有排定、或新到点更早才重排。
   @visibleForTesting
   static bool shouldRearm({
     required DateTime? currentDue,
     required DateTime newDue,
   }) => currentDue == null || newDue.isBefore(currentDue);
 
-  /// 变更去抖到点：只 push 本地改动（pull 由周期轮询负责）。
   Future<void> _trigger() async {
     _timer = null;
     _timerDue = null;
@@ -329,11 +262,9 @@ class AutoSyncWatcher {
     await _runAutoSync(.push, trigger);
   }
 
-  /// 周期轮询到点：先做空转短路探测，未命中才双向 sync。开关关闭时直接空转返回。
   Future<void> _pollTick({SyncTrigger trigger = .poll}) async {
     if (MoodiaryKVs.autoSync.get() != true) return;
     if (_syncing || _runner.isRunning) return;
-    // 防线：provider 激活失败（正常不会）时本轮跳过。
     final backend = getIt.maybeGet<IRemoteSyncBackend>();
     if (backend == null) return;
     if (!await backend.isReady()) return;
@@ -344,12 +275,9 @@ class AutoSyncWatcher {
     if (backendId != null) {
       try {
         final stat = await _runner.probe(trigger: trigger);
-        // KV syncManifestStat 的历史格式是「id|串」，不存在时串为空——保持不变，
-        // 否则老用户缓存的 stat 全部失配、轮询短路永不命中。
+        // 格式固定为 'id|串'，改了会导致老用户缓存的 stat 全部失配
         preStat = '$backendId|${stat ?? ''}';
       } catch (_) {
-        // 远端不可达：完整同步同样会失败，退避到下个周期（省掉整套租约往返）。
-        // 健康态与「可达 → 不可达」那条日志已由 runner 记下。
         _probeFailStreak++;
         return;
       }
@@ -368,19 +296,12 @@ class AutoSyncWatcher {
     await _runAutoSync(
       .sync,
       trigger,
-      // 缓存的是同步开始前观测的指纹：本机 push 会再改 manifest，使下一轮指纹
-      // 不匹配、多跑一次（随即空转的）全量同步 —— 换取「同步期间他机写入必不被
-      // 漏判」。
       onSuccess: preStat == null
           ? null
           : () => MoodiaryKVs.syncManifestStat.set(preStat!),
     );
   }
 
-  /// 空转短路判定（纯函数，便于单测）：远端指纹未变 + 本地无待推变更 + 距上次
-  /// 成功同步不超过兜底窗（10 个轮询周期，上限 30 分钟）。兜底窗保证秒级粒度
-  /// 漏判与「待推标记未落盘就被杀进程」都能在有限时间内收敛，且不随用户把
-  /// 轮询间隔调大而无限放大。
   @visibleForTesting
   static bool shouldSkipPoll({
     required String preStat,
@@ -397,22 +318,15 @@ class AutoSyncWatcher {
     return nowMs - lastSyncMs <= beltMs;
   }
 
-  /// 公共执行体：复查同步状态/后端就绪后经 [SyncRunner] 跑 [direction]，失败由
-  /// runner 折进它的 status（这里不抛）。结束后若同步期间有新变更
-  /// （[_dirtyDuringSync]）则补排一次去抖 push。成功（零失败未取消）时清待推标记
-  /// 并执行 [onSuccess]；同步期间的新变更由 [_dirtyDuringSync] 兜底，不清标记。
   Future<void> _runAutoSync(
     SyncDirection direction,
     SyncTrigger trigger, {
     void Function()? onSuccess,
   }) async {
     if (_syncing || _runner.isRunning) return;
-    // 防线：provider 激活失败（正常不会）时本轮跳过。
     final backend = getIt.maybeGet<IRemoteSyncBackend>();
     if (backend == null) return;
     if (!await backend.isReady()) return;
-    // 远端由另一把密钥加密：跑下去每个对象都解不开，还会一次次撞上 keyfile 冲突。
-    // 挂起直到用户在同步页输入密码解锁（同步页会显示待处理入口）。
     if (SyncKeyManager.hasKeyConflict(backend.persistentBackendId)) return;
 
     _syncing = true;

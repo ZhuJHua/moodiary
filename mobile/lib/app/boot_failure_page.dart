@@ -3,9 +3,6 @@ import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_mobile/app/di/bootstrap.dart';
 import 'package:mui/mui.dart';
 
-/// 启动失败兜底页。此刻 slang / 主题 / 容器可能正是坏掉的那一环，所以刻意零依赖：
-/// 裸 MaterialApp + 硬编码中英双语。主出口是「看到错误、复制错误」；「清空数据」
-/// 只是尽力而为的自救（装配失败时它自己也可能抛，全程 try/catch）。
 class BootFailurePage extends StatefulWidget {
   final Object error;
 
@@ -34,7 +31,6 @@ class _BootFailurePageState extends State<BootFailurePage> {
     try {
       return AppFiles.getErrorLogPath();
     } catch (_) {
-      // bootstrapPlatform 没走完时 AppFiles 的路径根基未就绪。
       return null;
     }
   }

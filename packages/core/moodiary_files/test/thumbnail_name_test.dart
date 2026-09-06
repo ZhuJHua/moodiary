@@ -2,10 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 
 void main() {
-  // 这条派生规则以前散在六处、还分两套公式（定长 substring(6,42) 与按点号定位），
-  // 其中两处裸 substring 会同步抛 RangeError。收成一份之后用测试钉住边界。
   group('AppFiles.thumbnailNameOf', () {
-    const uuid = '0123456789abcdef0123456789abcdef0123'; // 36 位
+    const uuid = '0123456789abcdef0123456789abcdef0123';
 
     test('标准名 → thumbnail-<uuid>.jpeg', () {
       expect(
@@ -38,7 +36,6 @@ void main() {
     });
 
     test('短名 / 空名 / 无扩展名 → null，绝不抛 RangeError', () {
-      // 这几个就是原来 substring(6, 42) 直接在 build 里红屏的输入。
       for (final bad in ['', 'v', 'video-', 'video-.mp4', 'video-abc', 'mp4']) {
         expect(
           () => AppFiles.thumbnailNameOf(bad),

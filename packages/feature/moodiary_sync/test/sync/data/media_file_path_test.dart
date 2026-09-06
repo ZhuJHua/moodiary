@@ -1,9 +1,3 @@
-// 覆盖引擎的**路径式**媒体分支（_uploadMediaByFile / _downloadMediaByFile）。
-//
-// 其余同步用例用的 FakeMediaFiles 是纯内存的、realPath 返回 null，所以恒走字节路径；
-// 生产上 S3/WebDAV 走的是这里这条。用生产的 DiskSyncMediaFiles 配临时目录即可打开它。
-// 明文模式：加解密本体在 Rust，flutter test 里跑不了 FFI，但引擎侧的分支逻辑、
-// 临时文件生命周期、空对象守卫都在这条路上。
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -23,8 +17,6 @@ void main() {
   late DiskSyncMediaFiles mediaFiles;
   late Directory cacheRoot;
 
-  // 路径式分支要用 PlatformService 的缓存目录放临时密文；测试环境跑不了它的 init()
-  // （path_provider 走平台通道），直接把 late final 赋一次。
   setUpAll(() {
     cacheRoot = Directory.systemTemp.createTempSync('media-file-path-cache');
     PlatformService.get().applicationCachePath = cacheRoot.path;
@@ -94,7 +86,6 @@ void main() {
         buildDiary(id: 'd2', images: const ['b.jpg']),
       ]),
     ).push();
-    // 清掉本地那份，强制走下载。
     await File(p.join(root.path, 'image', 'b.jpg')).delete();
 
     await engineOn(remote, FakeDiaryStore(const [])).pull();
@@ -112,7 +103,6 @@ void main() {
         buildDiary(id: 'd3', images: const ['c.jpg']),
       ]),
     ).push();
-    // 模拟「流式 PUT 中途断网，服务端留下 0 字节对象」。
     await putLocal('image', 'c.jpg', const [1, 2, 3]);
     backend.objects['media/image/c.jpg'] = Uint8List(0);
     await File(p.join(root.path, 'image', 'c.jpg')).delete();

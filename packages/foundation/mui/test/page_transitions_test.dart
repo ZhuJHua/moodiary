@@ -33,7 +33,6 @@ void main() {
     ),
   );
 
-  /// 预测性返回是系统经 `flutter/backgesture` 发进来的，测试里照原样喂一遍。
   Future<void> backGesture(
     WidgetTester tester,
     String method, {
@@ -130,15 +129,12 @@ void main() {
 
       final incoming = dxOf(tester, 'detail');
       expect(incoming, greaterThan(0));
-      // 我们那套是整屏推；官方那条只走四分之一。
       expect(incoming, lessThan(width * 0.25));
 
-      // 官方那条自带淡入，我们那套没有。
       expect(
         above<FadeTransition>(tester, 'detail').map((f) => f.opacity.value),
         isNotEmpty,
       );
-      // 也不该有我们的压暗与圆角。
       expect(scrimAbove(tester, 'home'), isNull);
       expect(
         above<ClipRRect>(tester, 'detail').map((c) => c.borderRadius),
@@ -160,9 +156,7 @@ void main() {
       await backGesture(tester, 'startBackGesture');
       await backGesture(tester, 'updateBackGestureProgress', progress: 0.4);
 
-      // 跟手是线性的：进度 0.4 就该正好挪走四成屏宽。
       expect(dxOf(tester, 'detail'), closeTo(width * 0.4, 0.5));
-      // 旧页同步跟着走，只走三分之一。
       expect(dxOf(tester, 'home'), closeTo(-width * 0.6 / 3, 0.5));
 
       final scrim = scrimAbove(tester, 'home')!;
@@ -186,7 +180,6 @@ void main() {
       await backGesture(tester, 'updateBackGestureProgress', progress: 0.4);
       await backGesture(tester, 'commitBackGesture');
 
-      // 框架自带的 handleCommitBackGesture 会先把进度弹回 1.0 再倒放。
       expect(dxOf(tester, 'detail'), greaterThanOrEqualTo(width * 0.4 - 0.5));
 
       await tester.pumpAndSettle();
@@ -201,7 +194,6 @@ void main() {
       await backGesture(tester, 'startBackGesture');
       await backGesture(tester, 'updateBackGestureProgress', progress: 0.3);
       await backGesture(tester, 'commitBackGesture');
-      // 松手那一帧收尾的 ticker 才起跑，位移还是 0，从下一帧开始量。
       await tester.pump(const Duration(milliseconds: 16));
 
       final detail = find.byKey(const Key('detail'));
@@ -219,7 +211,6 @@ void main() {
       for (var i = 1; i < steps.length; i++) {
         expect(steps[i], lessThanOrEqualTo(steps[i - 1] + 0.01));
       }
-      // 前半程走掉的明显多于后半程。匀速收尾两边一样多。
       final half = steps.length ~/ 2;
       final head = steps.take(half).reduce((a, b) => a + b);
       final tail = steps.skip(half).reduce((a, b) => a + b);
@@ -267,7 +258,6 @@ void main() {
       expect(at, greaterThan(0));
 
       await backGesture(tester, 'startBackGesture');
-      // 官方那条只横移四分之一屏，我们整屏推；接手时要折算，否则当场跳一大段。
       expect(dxOf(tester, 'detail'), closeTo(at, 0.5));
 
       await backGesture(tester, 'commitBackGesture');
@@ -275,9 +265,6 @@ void main() {
       expect(find.byKey(const Key('detail')), findsNothing);
     });
 
-    /// flutter/flutter#174336 的作者踩过这条：`_backGestureObservers` 是「谁认领就发
-    /// 给谁」，下层探测器若不判 `isCurrent` 就会把手势截走，顶层反而关不掉。
-    /// 本仓的菜单、全屏对话框、视频页都是没有探测器的顶层。
     testWidgets('顶层没有探测器时，返回手势关掉的仍是顶层', (tester) async {
       await tester.pumpWidget(host(TargetPlatform.android));
       await tester.tap(find.text('push'));

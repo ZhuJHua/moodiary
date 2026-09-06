@@ -11,7 +11,6 @@ import 'place_repository.dart';
 
 part 'place_controller.g.dart';
 
-/// 把单条 [PlaceEvent] 原地并入列表（按 id 升序）。整体照 [CategoryController]。
 List<Place> _applyEvent(List<Place> list, PlaceEvent event) {
   switch (event) {
     case PlaceDeleted(:final id):
@@ -30,12 +29,10 @@ List<Place> _applyEvent(List<Place> list, PlaceEvent event) {
   }
 }
 
-/// 订阅 [PlaceRepository.placeEvents]，按事件原地增量更新，无需重查库。
 @riverpod
 class PlaceController extends _$PlaceController {
   late final _repository = getIt<PlaceRepository>();
 
-  // 首次加载期间事件无处可并，标记后补一次重查（同 CategoryController）。
   bool _missedEvent = false;
 
   @override
@@ -69,7 +66,6 @@ class PlaceController extends _$PlaceController {
     }
   }
 
-  /// 删除地点（行硬删 + 同步墓碑）。仍有日记引用时返回 false。
   Future<bool> deletePlace(String id) async {
     try {
       return await _repository.deleteAPlace(id);
@@ -92,8 +88,6 @@ AsyncValue<List<Place>> orderedPlaces(Ref ref) {
   );
 }
 
-/// 顺序存在 KV（见 [MoodiaryKVs.placeOrder]），不在表里 —— 同步是整对象 LWW，
-/// 排序字段会让两台设备互相踩。清单里没提到的地点接在后面，按 id 稳定排序。
 List<Place> applyPlaceOrder(List<Place> places, List<String> order) {
   if (order.isEmpty) return places;
   final byId = {for (final p in places) p.id: p};
@@ -116,7 +110,6 @@ Place? placeById(Ref ref, String? id) {
   return null;
 }
 
-/// 「这个地点写过几篇」。同 `categoryDiaryCounts`：日记事件去抖后重查。
 @riverpod
 Future<Map<String, int>> placeDiaryCounts(Ref ref) async {
   final diaryRepo = getIt<DiaryRepository>();

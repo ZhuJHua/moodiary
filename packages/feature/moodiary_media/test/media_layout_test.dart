@@ -36,7 +36,6 @@ void main() {
   });
 
   group('GroupedGridLayout', () {
-    // 标题 40 高；3 列、间距 4、宽 316 → 格宽 (316-8)/3 = 102.666…
     final flat = MediaFlat.of([
       for (var i = 0; i < 4; i++) _item('a$i', 'x', d1),
       _item('c', 'y', d2),
@@ -74,7 +73,6 @@ void main() {
     test('二分定位可见范围：min 取尾在其后的第一个，max 取头在其前的最后一个', () {
       expect(layout.getMinChildIndexForScrollOffset(0), 0);
       expect(layout.getMinChildIndexForScrollOffset(40), 1);
-      // 第一行格子尾 = 40 + tile；刚过它，最小可见是第二行首格（index 4）。
       expect(layout.getMinChildIndexForScrollOffset(40 + tile + 0.5), 4);
       expect(layout.getMaxChildIndexForScrollOffset(41), 3);
       expect(layout.getMaxChildIndexForScrollOffset(1e9), 6);

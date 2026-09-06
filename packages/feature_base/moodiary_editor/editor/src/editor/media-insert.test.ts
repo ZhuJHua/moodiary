@@ -14,7 +14,6 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-/** 文档序收集媒体节点：image 取 src，audio/video 取 filename。 */
 const mediaNames = (h: EditorHarness): string[] => {
   const names: string[] = []
   const walk = (n: { type?: string; attrs?: Record<string, unknown>; content?: unknown[] }): void => {

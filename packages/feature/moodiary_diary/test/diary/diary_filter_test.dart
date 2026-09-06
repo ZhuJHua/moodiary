@@ -14,7 +14,6 @@ void main() {
     expect(cat.isAll, isFalse);
     expect(cat.categoryId, 'tr');
 
-    // 关键：「未分类」的 categoryId 也是 null，但它不是「全部」。
     expect(none.categoryId, isNull);
     expect(none.isAll, isFalse);
     expect(none.uncategorized, isTrue);

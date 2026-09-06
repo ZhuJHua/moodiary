@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_assistant/src/data/js_sandbox.dart';
 
-/// 真跑 quickjs-ng：flutter test 会为宿主编译 flutter_js 的 code asset。
 void main() {
   test('最后一个表达式的值就是结果，不必 return', () async {
     final out = await JsSandbox.run(
@@ -36,8 +35,6 @@ void main() {
     expect(out.value, '["undefined","undefined","undefined","undefined"]');
   });
 
-  // 结果里的 JS 函数到了 Dart 会被包成 JSRef，要调用方自己释放；序幕在 JS 侧把值先
-  // 字符串化，函数值根本到不了 Dart —— 这两条守住这个不变量。
   test('函数值与含函数的对象也只以字符串出来', () async {
     expect(
       (await JsSandbox.run('(function named() {})')).value,

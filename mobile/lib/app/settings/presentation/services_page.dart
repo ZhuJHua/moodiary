@@ -53,9 +53,6 @@ class _AiSection extends StatelessWidget {
   }
 }
 
-/// 语义检索：嵌入模型选择（下载/切换/删除）+ 停用 + 索引重建。模型运行时下载，
-/// 启用后由 EmbedIndexService 后台建索引，助手的 semanticSearchDiaries 随即可用；
-/// 切换模型 = 维度变 = 全量重建索引（激活即置 stale）。
 class _SemanticSection extends StatefulWidget {
   const _SemanticSection();
 
@@ -143,7 +140,6 @@ class _ModelPickerSheet extends StatefulWidget {
 }
 
 class _ModelPickerSheetState extends State<_ModelPickerSheet> {
-  /// 正在下载的模型 id 与进度（0~1；-1 = 校验中）。
   String? _downloadingId;
   double _progress = 0;
 
@@ -266,7 +262,6 @@ class _ModelPickerSheetState extends State<_ModelPickerSheet> {
       }
       if (mounted) setState(() => _progress = -1);
       await _manager.activate(spec);
-      // 激活即置 stale，直接开建（后台跑，不等）。
       unawaited(getIt<EmbedIndexService>().drain());
       toast.success(message: l10n.app.semanticEnabled);
       if (mounted) Navigator.of(context).pop();
@@ -310,8 +305,6 @@ class _ModelPickerSheetState extends State<_ModelPickerSheet> {
   }
 }
 
-/// 心情建议：小型本地 LLM 下载/启停。启用后写日记自动保存时在本机建议心情
-/// （仅本次会话新建且用户未动过选择器的日记，见 diary_page 的 _maybeSuggestMood）。
 class _MoodSuggestSection extends StatefulWidget {
   const _MoodSuggestSection();
 
@@ -368,7 +361,6 @@ class _MoodLlmPickerSheet extends StatefulWidget {
 }
 
 class _MoodLlmPickerSheetState extends State<_MoodLlmPickerSheet> {
-  /// 正在下载的模型 id 与进度（0~1；-1 = 校验中）。
   String? _downloadingId;
   double _progress = 0;
 
@@ -601,8 +593,6 @@ class _KvTile extends StatelessWidget {
   }
 }
 
-/// 同 [_KvTile]，但值在 SecureKV 里：读是异步的、也没有 [KVNotifier]，
-/// 所以走 `secretKvProvider` 并在写完 invalidate。
 class _SecretKvTile extends ConsumerWidget {
   final MoodiarySecureKVs kv;
   final String title;
@@ -612,7 +602,6 @@ class _SecretKvTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 钥匙串读的这一小段空窗按「未配置」渲染，与真的没配一致，不闪骨架。
     final value = ref.watch(secretKvProvider(kv)).value ?? '';
     return SettingInputTile(
       title: title,
@@ -622,8 +611,6 @@ class _SecretKvTile extends ConsumerWidget {
           ? context.l10n.common.notConfigured
           : context.l10n.common.configured,
       onValue: (v) async {
-        // 写钥匙串会抛（设备锁定 / Keystore 故障）；吞掉的话磁贴还显示旧值，
-        // 看起来像存成功了。ref 在 await 之后用，先确认还挂着。
         try {
           await kv.set(v);
         } catch (e, s) {

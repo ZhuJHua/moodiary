@@ -58,8 +58,6 @@ class _AssistantProviderListPageState extends State<AssistantProviderListPage> {
     });
   }
 
-  /// 选中 = 设为默认（新会话的起始模型）。已开始的会话不受影响 ——
-  /// 会话在首条消息落库时就把模型定格进 `ChatSession` 了。
   Future<void> _setDefault(LlmProvider provider) async {
     MoodiaryKVs.assistantActiveProviderId.set(provider.id);
     if (mounted) setState(() => _activeId = provider.id);
@@ -69,7 +67,6 @@ class _AssistantProviderListPageState extends State<AssistantProviderListPage> {
     if (oldIndex == newIndex) return;
     final next = [..._providers];
     next.insert(newIndex, next.removeAt(oldIndex));
-    // 先就地更新再落库：等 Isar 回来才动列表的话，手指抬起到重排之间会闪一帧旧序。
     setState(() => _providers = next);
     HapticFeedback.mediumImpact();
     await _repo.reorderProviders([for (final p in next) p.id]);
@@ -243,7 +240,6 @@ class _ProviderCard extends StatelessWidget {
                         style:
                             context.theme.typography.bodySmall.onSurfaceVariant,
                       ),
-                      // 只与「是否配置密钥」有关（和选中无关）→ 不影响选中时的尺寸。
                       if (!hasKey) ...[
                         const SizedBox(height: 8),
                         _Badge(

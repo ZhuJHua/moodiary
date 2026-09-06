@@ -26,7 +26,6 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
         const <String, int>{};
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.diary.categoryManagerTitle)),
-      // 空态自带「新建」按钮，右下角的 FAB 只在有列表时出现，免得两个入口撞车。
       floatingActionButton: (async.value?.isNotEmpty ?? false)
           ? FloatingActionButton(
               heroTag: 'categoryManagerFab',
@@ -394,8 +393,6 @@ Future<CategoryDraft?> showCategoryEditor(
   required String initialName,
   required int? initialColor,
 }) async {
-  // 名字与颜色两个值要一起回传，弹窗按钮的返回值是静态的，所以用可变 holder 承接
-  // 内容区的实时编辑结果，按钮只负责回答「确认还是取消」。
   final draft = _CategoryDraft(name: initialName, color: initialColor);
   final contentKey = GlobalKey<_CategoryEditorContentState>();
   final confirmed = await MAlert.show<bool>(
@@ -407,7 +404,6 @@ Future<CategoryDraft?> showCategoryEditor(
         label: context.l10n.common.ok,
         value: true,
         isPrimary: true,
-        // 空名不放行：就地亮红字并留住弹窗，而不是关掉再 toast 骂人。
         onIntercept: () => contentKey.currentState?.validate() ?? false,
       ),
     ],
@@ -437,10 +433,8 @@ class _CategoryEditorContentState extends State<_CategoryEditorContent> {
     text: widget.draft.name,
   );
 
-  /// 一进来就红字太吵，用户动过输入框、或点了确认之后才提示空名。
   bool _edited = false;
 
-  /// 供确认键拦截使用：名字非空才放行，否则亮出错误提示。
   bool validate() {
     final ok = widget.draft.name.trim().isNotEmpty;
     if (!ok && !_edited) setState(() => _edited = true);

@@ -1,14 +1,6 @@
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
 
-/// 后台隐私保护遮罩。**包住整个 App**，内部自建 `Overlay` 把遮罩作为独立 entry
-/// 叠在 [child] 之上 —— 调用方不需要自己摆 `Stack`，也不需要传 key 或回调。
-///
-/// 用 Overlay 而不是 Stack 的理由：遮罩与 App 是两条互不影响的渲染分支，
-/// App 侧重建不会带着遮罩一起重建，遮罩每帧的模糊动画也不会让 App 重新 layout。
-/// `FlutterSmartDialog.init()` 内部用的是同一套做法。
-///
-/// 仅当 [MoodiaryKVs.backendPrivacy] 为 true 时起效；关掉时遮罩恒为透明且不吃点击。
 class FrostedGlassOverlayComponent extends StatefulWidget {
   const FrostedGlassOverlayComponent({super.key, required this.child});
 
@@ -42,8 +34,7 @@ class _FrostedGlassOverlayComponentState
   @override
   void didUpdateWidget(covariant FrostedGlassOverlayComponent oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // entry 的 builder 闭包捕获的是**旧**的 widget.child，父级换 child 时
-    // 必须显式标脏，否则整个 App 分支停在上一帧。
+    // OverlayEntry 的 builder 闭包捕获旧值，child 变化需显式 markNeedsBuild
     if (widget.child != oldWidget.child) _appEntry.markNeedsBuild();
   }
 
@@ -91,7 +82,7 @@ class _FrostedGlassOverlayComponentState
 
   @override
   Widget build(BuildContext context) {
-    // entry 按列表顺序自下而上：App 在下，遮罩在上。
+    // OverlayEntry 列表顺序即层叠顺序，App 在下、遮罩在上
     return Overlay(initialEntries: [_appEntry, _maskEntry]);
   }
 }

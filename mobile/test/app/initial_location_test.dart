@@ -13,9 +13,7 @@ void main() {
         gi.registerSingleton<ISecureKVStorage>(MemorySecureKVStorage());
       },
     );
-    // 宿主单测没有 Rust FFI，换掉 Argon2 原语（同 app_lock_pin_test 的做法）。
     AppLockPin.hasher = (pin) async => r'$argon2-fake';
-    // KVNotifier 是进程级静态的，换了存储实例值也会残留——显式复位。
     MoodiaryKVs.firstStart.remove();
   });
 

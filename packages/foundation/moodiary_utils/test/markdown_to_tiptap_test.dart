@@ -6,7 +6,6 @@ import 'package:moodiary_utils/moodiary_utils.dart';
 Map<String, dynamic> _parse(String? json) =>
     jsonDecode(json!) as Map<String, dynamic>;
 
-/// 深度收集指定 type 的节点。
 List<Map<String, dynamic>> _find(dynamic node, String type) {
   final out = <Map<String, dynamic>>[];
   void walk(dynamic n) {

@@ -11,9 +11,6 @@ import 'package:moodiary_sync/src/data/sync_keyfile.dart';
 
 import '../sync_test_harness.dart';
 
-/// 纯 Dart 假原语（宿主测试无 Rust FFI）：
-/// - deriveKey：把 (salt, passphrase, 参数) 折叠成确定性的 32 字节；
-/// - AEAD：`[checksum(key)] + data ^ key`，解密校验 checksum 模拟 GCM tag 失败。
 Future<List<int>> fakeDerive({
   required String salt,
   required String passphrase,
@@ -90,7 +87,7 @@ void main() {
 
     test('KDF 参数超限拒绝（keys.json 是不可信输入，防内存炸弹 DoS）', () {
       final json = keyfile.toJson();
-      (json['kdf'] as Map)['mKiB'] = 4 * 1024 * 1024; // 4 GiB
+      (json['kdf'] as Map)['mKiB'] = 4 * 1024 * 1024;
       expect(() => SyncKeyfile.fromJson(json), throwsA(isA<SyncException>()));
       (json['kdf'] as Map)['mKiB'] = 65536;
       (json['kdf'] as Map)['t'] = 0;
@@ -192,7 +189,6 @@ void main() {
 
     test('uploadPendingKeyfile：pending 命中才写远端，成功后出清单', () async {
       final backend = FakeRemoteBackend();
-      // 非 pending：零操作。
       await SyncKeyManager.uploadPendingKeyfile(backend);
       expect(backend.ops, isEmpty);
 
@@ -218,11 +214,6 @@ void main() {
     });
   });
 
-  // 远端唯一的信封一旦被换掉，用旧 DEK 加密的日记与媒体就永久解不开。这组用例钉住
-  // 「写之前必须先证明本机 DEK 就是远端那把」。
-  //
-  // 「本机有 DEK 且解得开远端密文 manifest」那一支落在 Rust AES-GCM 上，宿主测试
-  // 跑不了（同 codec_test 的限制），故只覆盖不需要真解密的分支。
   group('checkRemoteKeyfile', () {
     Uint8List cipherTextBytes() =>
         Uint8List.fromList([...utf8.encode(SyncCipher.magic), 1, 2, 3]);
@@ -296,7 +287,6 @@ void main() {
         SyncKeyManager.uploadPendingKeyfile(backend),
         throwsA(isA<SyncKeyConflictException>()),
       );
-      // 远端信封原封不动。
       expect(
         SyncKeyfile.fromBytes(backend.objects[SyncKeys.keysPath]!)
             .wrappedDekB64,

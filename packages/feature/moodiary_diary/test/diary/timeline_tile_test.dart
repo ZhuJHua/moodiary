@@ -125,7 +125,6 @@ void main() {
     await t.pumpWidget(
       wrap(tile(category: cat(), selecting: true, selected: true)),
     );
-    // 标记浮在右上角（信息流同一条规则、同一组 top/right）；分类标签正好在那个角，让位。
     expect(find.byType(DiarySelectMark), findsOneWidget);
     expect(find.byIcon(LucideIcons.check), findsOneWidget);
     expect(find.text('work'), findsNothing);
@@ -173,9 +172,6 @@ void main() {
   testWidgets('the axis does not jump colour at the seam between two rows', (
     t,
   ) async {
-    // 每行只画自己那段轴。若两端直接取邻居原色，上一行底边会画成下一条的颜色、
-    // 紧邻的下一行顶边却退回上一条的颜色 —— 接缝处整幅色差硬跳变。
-    // 这里让相邻两条取低落（红）与愉快（绿），直接采样接缝上下的像素。
     t.view.devicePixelRatio = 1.0;
     addTearDown(t.view.reset);
 
@@ -221,7 +217,7 @@ void main() {
     final seam = t.getBottomLeft(find.byKey(const ValueKey('a'))).dy;
     final boundary =
         t.renderObject(find.byKey(boundaryKey)) as RenderRepaintBoundary;
-    // toImage 要等引擎真的出帧：必须跑在 runAsync 里，否则在 fake async 下永不完成。
+    // toImage 必须跑在 runAsync 里，否则在 fake async 下永不完成
     final data = await t.runAsync(() async {
       final image = await boundary.toImage();
       final bytes = await image.toByteData(format: .rawRgba);
@@ -262,8 +258,7 @@ void main() {
   });
 
   testWidgets('天气图标取和风天气码，不是通用的云', (tester) async {
-    // weather[0] 存的就是和风的天气码，而天气数据本身也来自和风 —— 画通用云等于
-    // 把这条信息丢了。101 = 多云。
+    // 101 = 和风天气码「多云」
     await tester.pumpWidget(
       wrap(
         tile(
@@ -278,7 +273,6 @@ void main() {
   });
 
   testWidgets('认不出的天气码退回通用的云', (tester) async {
-    // 和风将来加了新码、或老日记存了脏值时不能画成豆腐块。
     await tester.pumpWidget(
       wrap(
         tile(

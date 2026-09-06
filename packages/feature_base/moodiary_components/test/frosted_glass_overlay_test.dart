@@ -14,7 +14,6 @@ void main() {
     await tester.pumpWidget(host(const Text('first')));
     expect(find.text('first'), findsOneWidget);
 
-    // entry 的 builder 闭包捕获旧 child，没有 markNeedsBuild 就会停在上一帧。
     await tester.pumpWidget(host(const Text('second')));
     expect(find.text('second'), findsOneWidget);
     expect(find.text('first'), findsNothing);
@@ -34,7 +33,6 @@ void main() {
     final filter = tester.widget<BackdropFilter>(find.byType(BackdropFilter));
     expect(filter.enabled, isFalse, reason: '没切后台时不该真的跑模糊');
 
-    // MaterialApp / Overlay 自己也会插 IgnorePointer，取离遮罩最近的那个。
     final ignore = tester.widget<IgnorePointer>(
       find
           .ancestor(

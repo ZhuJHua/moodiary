@@ -2,30 +2,17 @@ import 'dart:convert';
 
 import 'package:markdown/markdown.dart' as md;
 
-/// 旧 markdown 文本日记 → TipTap 文档 JSON 串，供「迁移到 tiptap」与 AI 助手落库用。
-///
-/// 纯 Dart（`markdown` 包 GFM 解析 → AST → ProseMirror 节点树），不再起无头 webview。与可见编辑器的
-/// tiptap-markdown 在极端边角可能有细微差异，迁移可接受。
-///
-/// 覆盖：段落 / heading(h1-6) / bulletList / orderedList / taskList(GFM `- [ ]`) / blockquote /
-/// codeBlock(带语言) / horizontalRule / 表格(GFM)；行内 bold/italic/strike/underline/code/link/硬换行；
-/// 媒体 `![](name)` 按文件名前缀还原为 image/audio/video 一等节点（与 DiaryContent 路由一致）。
-/// 丢弃：原始 HTML、表格单元格对齐、嵌套列表以外的 GFM 扩展（脚注/alert 等降级为其文本）。
-///
-/// 容错：解析抛异常返回 null，调用方据此跳过该篇（保留原 markdown）。
 class MarkdownToTiptap {
   const MarkdownToTiptap._();
 
   static const Set<String> _blockTags = {
-    'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', //
-    'ul', 'ol', 'li', 'blockquote', 'pre', 'hr', //
+    'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'ul', 'ol', 'li', 'blockquote', 'pre', 'hr',
     'table', 'thead', 'tbody', 'tr', 'th', 'td',
   };
 
   static String? convert(String markdown) {
     try {
-      // encodeHtml 默认为 true，会在解析期就把 " & < > 转义成 HTML 实体写进
-      // md.Text.text——产物是 JSON 文档不是 HTML，落库就成了字面量 `&quot;`。
       final nodes = md.Document(
         extensionSet: .gitHubFlavored,
         encodeHtml: false,
@@ -38,7 +25,6 @@ class MarkdownToTiptap {
     }
   }
 
-  /// 一串 AST 节点 → PM 块节点列表：相邻行内（Text + 行内元素）聚成段落（媒体拆出），块元素各自递归。
   static List<Map<String, dynamic>> _blocks(List<md.Node>? nodes) {
     final out = <Map<String, dynamic>>[];
     final inlineBuf = <md.Node>[];
@@ -64,7 +50,6 @@ class MarkdownToTiptap {
     return out;
   }
 
-  /// 单个块元素 → 0..n 个 PM 块节点。
   static List<Map<String, dynamic>> _block(md.Element el) {
     switch (el.tag) {
       case 'p':
@@ -110,12 +95,10 @@ class MarkdownToTiptap {
       case 'table':
         return [_table(el)];
       default:
-        // 未知块（脚注/alert 等）：降级为其内容。
         return _blocks(el.children);
     }
   }
 
-  /// 行内节点序列 → 段落/标题（媒体 img 拆成兄弟块节点，模仿 Quill 转换器）。
   static List<Map<String, dynamic>> _paragraphLike(
     List<md.Node> children, {
     int? heading,
@@ -150,7 +133,6 @@ class MarkdownToTiptap {
     return out;
   }
 
-  /// 行内 AST → 文本节点（带累积 marks）追加进 [buf]。
   static void _inline(
     md.Node node,
     List<Map<String, dynamic>> marks,
@@ -205,7 +187,7 @@ class MarkdownToTiptap {
       case 'br':
         buf.add({'type': 'hardBreak'});
       case 'img':
-        return; // 行内嵌套图片（如链接里的图）少见，丢弃
+        return;
       default:
         _inlineChildren(el, marks, buf);
     }
@@ -223,7 +205,6 @@ class MarkdownToTiptap {
 
   static Map<String, dynamic> _mark(String type) => {'type': type};
 
-  /// `![](name)` → 按前缀分流的媒体节点；非 img / 无 src 返回 null。
   static Map<String, dynamic>? _mediaIfAny(md.Node node) {
     if (node is! md.Element || node.tag != 'img') return null;
     final src = node.attributes['src'] ?? '';
@@ -276,18 +257,14 @@ class MarkdownToTiptap {
     for (final c in li.children ?? const <md.Node>[]) {
       if (task && c is md.Element && c.tag == 'input') {
         checked = c.attributes['checked'] == 'true';
-        continue; // 跳过 checkbox 本身
+        continue;
       }
       kids.add(c);
     }
-    // 任务项 checkbox 后常带一个前导空格，去掉。
     if (task && kids.isNotEmpty && kids.first is md.Text) {
       kids[0] = md.Text((kids.first as md.Text).text.trimLeft());
     }
     var content = _blocks(kids);
-    // listItem / taskItem(nested) 的 schema 是 `paragraph block*`：首子必须是段落。
-    // `- ![](img)` 这类首子是媒体的项若不补，产物 schema 非法（编辑器选中该媒体按
-    // 回车会在 createParagraphNear 抛异常）。
     if (content.isEmpty) {
       content = [
         {'type': 'paragraph'},

@@ -1,12 +1,10 @@
 import 'package:mui/mui.dart';
 
-/// 圆角弹出菜单的单个条目。
 class MMenuEntry<T> {
   final T value;
   final String label;
   final IconData? icon;
 
-  /// 破坏性操作（如删除）以 error 色呈现。
   final bool isDestructive;
   final bool enabled;
 
@@ -24,11 +22,7 @@ const double _kMenuAnchorGap = 6.0;
 const double _kMenuMinWidth = 168.0;
 const double _kMenuMaxWidth = 320.0;
 
-/// MMenu 的弹层入口。按组件归类的静态方法，替代原来的 show* 顶层函数。
 abstract final class MMenu {
-  /// 圆角风格的弹出菜单：锚定在 [anchorContext] 对应的控件下方（空间不足时向上），
-  /// 选中项以次级容器色高亮并带勾选标记。返回被选中的值；未选择（点空白/返回键关闭）时为
-  /// null，故条目的值应为非空 —— 值本身为 null 的条目会与「未选择」混淆。
   static Future<T?> show<T>({
     required BuildContext anchorContext,
     required List<MMenuEntry<T>> entries,
@@ -60,7 +54,6 @@ abstract final class MMenu {
   }
 }
 
-/// [PopupMenuButton] 的圆角替代：点击 [child] 弹出 [MMenu.show]。
 class MMenuButton<T> extends StatelessWidget {
   final List<MMenuEntry<T>> entries;
   final ValueChanged<T> onSelected;
@@ -136,8 +129,6 @@ class _MMenuRoute<T> extends PopupRoute<T> {
     Animation<double> animation,
     Animation<double> secondaryAnimation,
   ) {
-    // 从路由（overlay）上下文读安全区 padding：锚点所在的深层上下文可能已被
-    // Scaffold/SafeArea 消费掉顶部 padding，会导致上翻时钻到状态栏下面。
     final screenPadding = MediaQuery.viewPaddingOf(context);
     final menu = Semantics(
       scopesRoute: true,
@@ -179,7 +170,6 @@ class _MMenuBodyState<T> extends State<_MMenuBody<T>> {
     super.dispose();
   }
 
-  /// 打开时聚焦的条目：优先选中项，否则首个可用项 —— 让键盘方向键/回车可直接操作。
   int _autofocusIndex(List<MMenuEntry<T>> entries) {
     final selectedIndex = entries.indexWhere(
       (e) => e.enabled && e.value == widget.route.selected,
@@ -339,7 +329,6 @@ class _MMenuItem<T> extends StatelessWidget {
   }
 }
 
-/// 定位委托：优先在锚点下方左对齐弹出，空间不足则上方，并夹在安全区内。
 class _MMenuLayout extends SingleChildLayoutDelegate {
   final Rect anchor;
   final bool preferAbove;

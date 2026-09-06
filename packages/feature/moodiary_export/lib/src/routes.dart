@@ -7,7 +7,6 @@ import 'presentation/markdown_import_page.dart';
 
 List<RouteBase> exportRoutes() => [
   GoRoute(path: ExportRoute.path, builder: (_, _) => const ExportPage()),
-  // 分享 = scope 只有一篇的导出，所以 /share 也归这个包（moodiary_share 已退休）。
   // 路径不能改：app_lock_observer 里按字面量放行它。
   GoRoute(
     path: ShareRoute.path,

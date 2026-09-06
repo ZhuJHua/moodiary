@@ -3,8 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:material_color_utilities/material_color_utilities.dart' as mcu;
 import 'package:mui/mui.dart';
 
-/// 无彩档的结构性角色必须真的是灰、且与种子无关。[resolveColorScheme] 换掉
-/// 变体或往里加覆盖，这里就会红。
 const List<String> _structuralRoles = [
   'surface',
   'surfaceBright',
@@ -53,7 +51,6 @@ void main() {
       final neutral = resolveColorScheme(brightness, const MuiAccent.neutral());
 
       test('$brightness 无彩档除 error 家族外全部是灰', () {
-        // error 四件套刻意保留语义红：灰度 UI 里它是唯一还能喊「出事了」的颜色。
         final chromatic = {
           neutral.error.toARGB32(),
           neutral.onError.toARGB32(),
@@ -70,7 +67,6 @@ void main() {
         expect(_isGray(neutral.primary), isTrue);
         expect(_isGray(neutral.secondary), isTrue);
         expect(_isGray(neutral.tertiary), isTrue);
-        // 焦点环/光标派生自 primary，无彩档下也必须是灰。
         final cursor = buildMuiTheme(brightness: brightness)
             .textSelectionTheme
             .cursorColor!;
@@ -123,8 +119,6 @@ void main() {
           ).primaryPalette;
 
       test('on*Container 走 Tone 30/90，不是 legacy 的 Tone 10', () {
-        // dynamic_color 的 toColorScheme() 至 1.9.0 仍取 primary.get(10)，实测
-        // 对比度 13.2（近黑压浅块）。现代规范是 tone 30/90，对比度 7.2。
         for (final brightness in Brightness.values) {
           final scheme = resolveColorScheme(
             brightness,
@@ -166,7 +160,6 @@ void main() {
       });
 
       test('系统档与自定义档同一条路 —— 种子相同则结果逐字节相同', () {
-        // dynamic_color 只负责交出种子色；交出来之后与用户挑的颜色没有区别。
         for (final brightness in Brightness.values) {
           expect(
             resolveColorScheme(brightness, const MuiAccent.seeded(seed)),
@@ -261,7 +254,6 @@ void main() {
       expect(t.bodyMedium.onSurface.fontVariations, [
         const FontVariation('wght', 380),
       ]);
-      // M3 2021：headline 三级都是 Regular，Bold 只出现在 22px 以上的强调档。
       expect(t.headlineLarge.onSurface.fontWeight, FontWeight.w400);
       expect(t.headlineLarge.emphasized.onSurface.fontVariations, [
         const FontVariation('wght', 680),
@@ -307,7 +299,6 @@ void main() {
       expect(role.emphasized.onSurface.fontVariations, [
         const FontVariation('wght', 610),
       ]);
-      // 换字重不动几何。
       expect(role.emphasized.onSurface.fontSize, role.onSurface.fontSize);
       expect(role.emphasized.onSurface.height, role.onSurface.height);
     });
@@ -318,7 +309,6 @@ void main() {
       expect(role.onSurface.color, colors.onSurface);
       expect(role.onSurfaceVariant.color, colors.onSurfaceVariant);
       expect(role.error.color, colors.error);
-      // 色板之外的颜色走惯例 copyWith，不另开 API。
       expect(
         role.onSurface.copyWith(color: const Color(0xFF123456)).color,
         const Color(0xFF123456),

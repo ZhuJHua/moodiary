@@ -33,7 +33,6 @@ void main() {
       final persona = prompt.indexOf('PERSONA-MARK');
       final tools = prompt.indexOf('Tool guidelines:');
       expect(identity, greaterThanOrEqualTo(0));
-      // 护栏压在 persona 之前：人格改不掉安全与权限规则。
       expect(guardrails, greaterThan(identity));
       expect(persona, greaterThan(guardrails));
       expect(tools, greaterThan(persona));

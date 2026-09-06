@@ -1,13 +1,6 @@
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:mui/mui.dart';
 
-/// 网格第一格：拍摄 / 录像。
-///
-/// 它在这里，编辑器那个「相册 / 拍照」二选一弹窗才能整个去掉 —— 弹窗让两条路都多
-/// 一次点击，而拍照本来就该和相册在同一屏里选。
-///
-/// iOS 上要显式 `shouldRevertGrid: false` 才真的是「第一格」：包里 Apple 分支默认
-/// 翻转整个网格，`prepend` 的那格会被甩到视觉最后。
 class CaptureTile extends StatelessWidget {
   const CaptureTile({super.key, required this.video, required this.onTap});
 

@@ -87,7 +87,6 @@ tags: ["a"]
 ''';
     write('2026-09-01-一.md', '$head\n# 第一天\n\n出发');
     write('2026-09-02-二.md', '$head\n到达');
-    // 导出形态：front matter 有 title，正文又以同名一级标题开头 —— 那行不该进正文。
     write('2026-09-03-三.md', '---\ntitle: "第三天"\n---\n\n# 第三天\n\n# 小标题\n\n到家');
 
     final report = await importer.run(source());
@@ -119,7 +118,6 @@ tags: ["a"]
     expect(place.id, Place.idForName('西湖'));
     expect(withHead.every((d) => d.placeId == place.id), isTrue);
 
-    // 第二篇没有一级标题：标题来自文件名。
     expect(all.singleWhere((d) => d.title == '二').contentText, '到达');
   });
 
@@ -168,7 +166,6 @@ tags: ["a"]
     write('2.md', '二');
     write('3.md', '三');
     final entries = source();
-    // 扫描后删掉第二篇：读取失败计 failed。
     File(entries.entries[1].path).deleteSync();
 
     final report = await importer.run(entries);

@@ -1,6 +1,3 @@
-// 编辑器内查找/替换：用官方 prosemirror-search（search 插件高亮匹配 + SearchQuery/命令）。
-// 本模块产出：① SearchExtension（挂 search 插件，绑定 editor 实例）；② 响应式 editorSearch 状态 +
-// 一组操作函数，供 EditorSearchBar.vue 消费。匹配高亮配色见 moodiary-editor.css 的 .ProseMirror-search-match。
 import { Extension } from '@tiptap/core'
 import type { Editor } from '@tiptap/core'
 import type { Command } from '@tiptap/pm/state'
@@ -22,7 +19,7 @@ export const editorSearch = reactive({
   replace: '',
   caseSensitive: false,
   count: 0,
-  current: 0, // 当前选中匹配的序号（1 起；0 表示选区不在任何匹配上）
+  current: 0,
 })
 
 let boundEditor: Editor | null = null
@@ -90,7 +87,6 @@ function applyDebounced(): void {
 export function openSearch(): void {
   const editor = boundEditor
   editorSearch.open = true
-  // 选中一段单行文字时预填为搜索词。
   if (editor) {
     const { from, to } = editor.state.selection
     if (to > from) {
@@ -105,7 +101,6 @@ export function closeSearch(): void {
   editorSearch.open = false
   const editor = boundEditor
   if (editor) {
-    // 清空查询 → 撤掉高亮。
     editor.view.dispatch(setSearchState(editor.state.tr, new SearchQuery({ search: '' })))
     editor.commands.focus()
   }

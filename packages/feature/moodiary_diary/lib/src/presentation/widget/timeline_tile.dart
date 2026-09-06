@@ -6,42 +6,30 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
-/// 左栏三段固定宽度：日期列 / 间隙 / 轴列 / 间隙。轴心 x 与内容起始 x 都由它们推出，
-/// Painter 与 Row 必须用同一组常量，否则线会画歪。
 const double _kDateWidth = 30.0;
 const double _kAxisWidth = 20.0;
 const double _kGap = 8.0;
 const double _kAxisCenter = _kDateWidth + _kGap + _kAxisWidth / 2;
 
-/// 断档时上方多留的空白 —— 让「隔了几天」在版面上真的有间隔感。
 const double _kBreakPad = 14.0;
 const double _kTopPad = 4.0;
 const double _kBottomPad = 14.0;
 
-/// 圆点相对本行内容顶部的中心偏移：与元信息行（11px 字 + 12px 图标）的视觉中线对齐。
 const double _kDotOffset = 9.0;
 
-/// 时间线最多展示三张图，多出来的折成末张上的「+N」。
 const int _kMaxImages = 3;
 
-/// 时间线的一行 = 一篇日记。左栏日期只在当天第一条出现，轴上圆点每条都有 ——
-/// 一天多篇时不会共用一个心情色。
 class DiaryTimelineTile extends StatelessWidget {
   final Diary diary;
 
-  /// 参与分组的时间戳（本地）。按「最近修改」排序时它是 lastModified。
   final DateTime stamp;
   final bool dayStart;
   final bool breakBefore;
 
-  /// 下一条与本条之间也隔了整天 —— 本条圆点**以下**那段同样属于空档，一并画成虚线。
-  /// 只虚上面一小截的话，两颗圆点之间绝大部分仍是实线，看不出「这里空了几天」。
   final bool breakAfter;
 
-  /// 上面还有没有条目：列表首条不画上半段轴。
   final bool hasAbove;
 
-  /// 下一条的心情值 —— 圆点以下那段由本条的颜色渐变到它；null 表示列表末条。
   final DiaryMood? moodBelow;
 
   final Category? category;
@@ -89,8 +77,6 @@ class DiaryTimelineTile extends StatelessWidget {
         dotDy: topPad + _kDotOffset,
         big: dayStart,
       ),
-      // 点击响应放在内容块里（见 [_Content]），不包整行：整行 InkWell 的水波是个直角
-      // 矩形，会从日期列和轴线上直接洗过去，把轴那条线糊掉。
       child: Padding(
         padding: .only(top: topPad, bottom: _kBottomPad),
         child: Row(
@@ -195,7 +181,6 @@ class _Content extends StatelessWidget {
             stamp: stamp,
             category: category,
             place: place,
-            // 分类标签与勾选标记同在右上角，多选态让位。
             showCategoryLabel: showCategoryLabel && !selecting,
             syncState: syncState,
           ),
@@ -258,9 +243,6 @@ class _MetaLine extends StatelessWidget {
 
     return Row(
       children: [
-        // 左半组整体 Expanded、天气在组内 Flexible：不能写成「Flexible(天气) + Spacer()」——
-        // 两个 flex 子节点会均分剩余宽度，Spacer 拿到的那一半空着也不让，天气会在旁边
-        // 留着等宽空白的情况下先打省略号。
         Expanded(
           child: Row(
             children: [
@@ -268,7 +250,6 @@ class _MetaLine extends StatelessWidget {
               if (weather != null) ...[
                 const SizedBox(width: 8),
                 Icon(
-                  // 天气来自和风，图标跟着数据源走；未知码退回通用的云。
                   qweatherIcon(weather.icon) ?? LucideIcons.cloud,
                   size: 12,
                   color: onVariant,
@@ -330,8 +311,6 @@ class _CategoryLabel extends StatelessWidget {
   }
 }
 
-/// 图片区：最多三张，按张数换尺寸——1 张给整幅大图，2/3 张等分方格，
-/// 超出的折进末张的「+N」。
 class _Images extends StatelessWidget {
   final List<String> names;
   final double? aspect;
@@ -355,8 +334,6 @@ class _Images extends StatelessWidget {
         if (width <= 0) return const SizedBox.shrink();
 
         if (show == 1) {
-          // aspect 目前全仓没有写入方，取不到就按 16:10 裁切；等主色/比例管线补上后
-          // 竖图会自动收窄而不是被裁掉大半。
           final ratio = (aspect ?? 16 / 10).clamp(0.6, 2.0).toDouble();
           final boxWidth = ratio < 1 ? width * 0.58 : width;
           return SizedBox(
@@ -364,7 +341,6 @@ class _Images extends StatelessWidget {
             height: boxWidth / ratio,
             child: _Thumb(
               name: names.first,
-              // 单图占整行，按显示宽取档（手机落 m）；只在跨档时换缓存键。
               tier: FastImageTier.fit((boxWidth * dpr).round()),
               radius: AppBorderRadius.mediumBorderRadius,
               pending: pending,
@@ -403,8 +379,6 @@ class _Thumb extends StatelessWidget {
   final BorderRadius radius;
   final int moreCount;
 
-  /// 这篇正在从远端拉取：文件多半还没到，失败不画破图；角标摘掉时 key 变、
-  /// Image 重新装载——同一个 provider 不会自己重试。
   final bool pending;
 
   const _Thumb({
@@ -425,13 +399,10 @@ class _Thumb extends StatelessWidget {
         children: [
           ColoredBox(color: colors.surfaceContainerHighest),
           Image(
-            // 按文件名 key：开了 gaplessPlayback，换图期间旧帧不会清空，列表重排后
-            // 复用同一个 Element 会先画上一篇日记的照片。与媒体库同一处理。
             key: ValueKey('$name#$pending'),
             image: FastImage(AppFiles.getRealPath('image', name), tier: tier),
             fit: .cover,
             gaplessPlayback: true,
-            // 重装后媒体文件会被清空而日记还在——没有 errorBuilder 就是一片空白。
             errorBuilder: (context, _, _) => pending
                 ? const SizedBox.shrink()
                 : Icon(LucideIcons.imageOff, color: colors.onSurfaceVariant),
@@ -455,7 +426,6 @@ class _Thumb extends StatelessWidget {
   }
 }
 
-/// 语音 / 视频 / 标签 / 地点：一行细元信息，都没有就整行不占高。
 class _Footer extends StatelessWidget {
   final Diary diary;
   final Place? place;
@@ -532,8 +502,6 @@ class _Footer extends StatelessWidget {
   }
 }
 
-/// 时长没有存在模型里（[Diary] 只有文件名），所以这里只表达「有几段」，
-/// 不假装知道播放时长。
 class _MediaChip extends StatelessWidget {
   final IconData icon;
   final int count;
@@ -560,11 +528,9 @@ class _MediaChip extends StatelessWidget {
   }
 }
 
-/// 轴：上下两段渐变 + 一颗心情色圆点。断档整段画成虚线并取中性色 —— 那里没有情绪可言。
 class _AxisPainter extends CustomPainter {
   final Color color;
 
-  /// 上面还有没有条目 —— 只决定要不要画上半段，颜色一律用本条自己的。
   final bool hasAbove;
   final Color? below;
   final bool dashedAbove;
@@ -590,9 +556,6 @@ class _AxisPainter extends CustomPainter {
     final radius = big ? 5.0 : 3.5;
     final clear = radius + 3.0;
 
-    // 两颗圆点之间的整段过渡都放在**圆点以下**那一段完成：圆点贴着行顶（dotDy 只有
-    // 13px），上一段留给它的高度不到 7px，把整幅色差塞进去会变成一次硬切换。
-    // 圆点以上因此是本条自己的纯色 —— 上一行底边画到的正是本条的颜色，接缝严丝合缝。
     if (hasAbove) {
       final top = dotDy - clear;
       if (top > 0) {

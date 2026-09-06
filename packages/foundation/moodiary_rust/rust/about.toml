@@ -1,6 +1,3 @@
-# cargo-about 的许可证清单配置：产物由 `dart tool/task.dart licenses` 与各 fast_* 那几份合并，
-# 最终进 App 关于页的「开源许可」。只覆盖 App 真正装车的那部分：
-# 构建期与测试期依赖不进包，按目标平台过滤掉不参与链接的那些。
 accepted = [
     "Apache-2.0",
     "MIT",
@@ -31,6 +28,4 @@ targets = [
 ignore-build-dependencies = true
 ignore-dev-dependencies = true
 
-
-# 这几个 crate 的许可证文件不在仓库根上，cargo-about 自带的采集补丁认得它们。
 workarounds = ["ring", "rustls", "chrono", "bitvec"]

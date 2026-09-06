@@ -1,11 +1,3 @@
-// 引擎搬迁压测（宿主）：灌 N 篇旧 Isar 日记 → migrate → 抽查典型查询耗时。
-// 与 docs/db-benchmark.md 的旧引擎数字对照用；分词是空白切词替身（宿主无 FRB），
-// 真机上 jieba 单篇毫秒级，量级判断不受影响。
-//
-//   ISAR_TEST_DYLIB=... MOODIARY_BENCH_N=20000 fvm flutter test \
-//     test/engine_migration_benchmark_test.dart
-//
-// 未设置 ISAR_TEST_DYLIB 时整组跳过；N 缺省 2000（CI 可承受）。
 import 'dart:io';
 import 'dart:math';
 
@@ -58,7 +50,6 @@ void main() {
     addTearDown(() => dir.deleteSync(recursive: true));
     installFakeFastTokenizer(fakeTokenize);
 
-    // —— 种子旧库 —— //
     final rng = Random(42);
     final seedWatch = Stopwatch()..start();
     final isar = Isar.open(
@@ -96,7 +87,6 @@ void main() {
     isar.close();
     seedWatch.stop();
 
-    // —— 搬迁（文件库，贴近真机形态）—— //
     final db = MoodiaryDatabase.forTesting(
       NativeDatabase(
         File('${dir.path}/bench.db'),

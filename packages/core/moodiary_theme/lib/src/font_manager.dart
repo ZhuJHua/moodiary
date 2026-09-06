@@ -57,8 +57,6 @@ class FontManager {
   }
 
   static Future<XFile?> pickFont() {
-    // 走端口：全仓选文件收敛到 IFilePicker 一个入口（实现由 app 组合根注册），
-    // 桌面换实现时字体导入不会成为被漏掉的第二条路。
     return getIt<IFilePicker>().pickFile(allowedExtensions: ['ttf', 'otf']);
   }
 

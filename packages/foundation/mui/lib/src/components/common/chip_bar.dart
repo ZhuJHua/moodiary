@@ -1,8 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:mui/mui.dart';
 
-/// 圆角胶囊筛选条的单个条目。[accentColor] 提供时以小圆点 + 选中态着色（分类色）；
-/// [icon] 提供时改为前置图标（媒体类型等）；二者皆空则纯文字。
 class MChipData<T> {
   final T value;
   final String label;
@@ -17,8 +15,6 @@ class MChipData<T> {
   });
 }
 
-/// 横向滚动的圆角胶囊筛选条（首页日记分类同款）：选中项高亮，右侧渐隐，切换时
-/// 自动滚动到可见，点选带轻触反馈。[trailing] 可放一个尾随按钮（如分类切换器）。
 class MChipBar<T> extends StatefulWidget {
   final List<MChipData<T>> items;
   final T selected;
@@ -27,7 +23,6 @@ class MChipBar<T> extends StatefulWidget {
   final EdgeInsetsGeometry padding;
   final double height;
 
-  /// 右侧渐隐所融入的底色，默认取 surface。
   final Color? fadeColor;
 
   const MChipBar({
@@ -148,8 +143,6 @@ class _MChipBarState<T> extends State<MChipBar<T>> {
         curve: Curves.easeOut,
         height: widget.height,
         decoration: ShapeDecoration(color: bg, shape: const StadiumBorder()),
-        // 裁剪交给 MInkWell 自己（它的按压遮罩要跟着胶囊形状收边），
-        // 不再为了托住水波而垫一层 Material。
         child: MInkWell(
           shape: const StadiumBorder(),
           onTap: () {
@@ -177,8 +170,6 @@ class _MChipBarState<T> extends State<MChipBar<T>> {
                   constraints: const BoxConstraints(maxWidth: 140),
                   child: AnimatedDefaultTextStyle(
                     duration: Durations.short4,
-                    // 选中态配色：无强调色走 onSecondaryContainer，业务强调色
-                    // （分类色）在其上 copyWith 覆盖，对齐 bg 那侧的 fg 计算。
                     style: selected
                         ? (color == null
                               ? context

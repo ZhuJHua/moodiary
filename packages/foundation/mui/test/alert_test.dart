@@ -7,8 +7,6 @@ import 'package:mui/mui.dart';
 final _mui = buildMuiTheme(brightness: Brightness.light);
 
 void main() {
-  /// 弹窗内部取 `context.muiL10n` 的默认「取消 / 确认」，所以宿主必须挂
-  /// [GlobalMuiLocalizations.delegate]。
   Widget host(void Function(BuildContext context) onReady) {
     final body = Builder(
       builder: (context) => Center(
@@ -24,10 +22,7 @@ void main() {
         theme: _mui,
         locale: const Locale('zh'),
         localizationsDelegates: const [
-          // material_ui 自带的那份（不是 flutter_localizations 的），
-          // 它给出的才是 material_ui 的 MaterialLocalizations 类型。
           ...GlobalMaterialLocalizations.delegates,
-          // mui 自己那十来个通用词。漏了它 MuiLocalizations.of 会断言。
           GlobalMuiLocalizations.delegate,
         ],
         supportedLocales: const [Locale('zh'), Locale('en')],
@@ -568,14 +563,12 @@ void main() {
       await open(tester);
       await tester.tap(find.text('确定'));
       await tester.pump();
-      // 转圈替掉了文字，取消键跟着禁用。
       expect(find.text('确定'), findsNothing);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       final cancel = tester.widget<FilledButton>(
         find.ancestor(of: find.text('取消'), matching: find.byType(FilledButton)),
       );
       expect(cancel.onPressed, isNull);
-      // 点遮罩关不掉。（转圈动画不会静止，这里不能 pumpAndSettle。）
       await tester.tapAt(const Offset(5, 5));
       await tester.pump(const Duration(milliseconds: 500));
       expect(find.text('新建地点'), findsOneWidget);

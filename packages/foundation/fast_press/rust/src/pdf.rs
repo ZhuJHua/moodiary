@@ -1,16 +1,3 @@
-//! 日记导出 PDF，排版引擎是 typst。
-//!
-//! 选 typst 而不是 Dart 的 `pdf` 包，原因是后者在长文上是二次方的：它按空格切词，
-//! 中文整段被当成**一个词**，每排一行都要在整段上做二分查找并测量前缀宽度。实测
-//! 4 万字要 55 秒、8 万字跑不完，32 万字的真实日记外推是 8 小时。typst 同一份
-//! 32.5 万字单段落 0.29 秒排完 352 页，且 CJK 禁则（行首不出现标点）是原生的。
-//!
-//! **安全要点：生成的是 typst 代码模式，用户文本一律进字符串字面量。**
-//! typst 标记模式有二十多个上下文相关的特殊字符（`#` `$` `@` `<` `_` `//` …），
-//! 逐字符转义既挡不住 `@张三` / `a<b` 这类硬报错，也挡不住 `$100 到 $200` 这类静默改内容。
-//! 走 `#par(text("……"))` 之后，转义规则只剩 `\` 与 `"` 两条，注入面为零。
-//! 硬纪律：**任何用户文本都不得进 `[...]` 内容块**——那是标记模式，等于把闸门重新打开。
-
 use anyhow::{Context, Result, anyhow};
 use std::collections::HashMap;
 use std::fmt::Write as _;
@@ -26,7 +13,6 @@ use crate::ir::{IrBlock, IrDoc, IrListItem, IrRow, IrSpan};
 
 pub struct PdfStyle {
     pub font_path: String,
-    /// 写进 `#set text(font: …)` 的字体族名。留空则用字体文件自报的家族名。
     pub font_family: String,
     pub font_size_pt: f64,
     pub line_spacing_em: f64,
@@ -36,12 +22,10 @@ pub struct PdfStyle {
     pub page_margin_mm: f64,
     pub include_title: bool,
     pub include_meta: bool,
-    /// 音视频占位行的类型词（已本地化）。
     pub video_label: String,
     pub audio_label: String,
 }
 
-/// [docs_json] 是 `ExportDoc.toJson()` 的数组；每篇一文件由 Dart 侧循环调用实现。
 pub fn write_pdf(
     docs: Vec<IrDoc>,
     style: &PdfStyle,
@@ -85,8 +69,6 @@ pub fn write_pdf(
 
     std::fs::write(&out_path, bytes).with_context(|| format!("写入失败：{out_path}"))?;
 
-    // comemo 是**进程级**全局缓存，不清理的话每次导出都往上垒（实测连续 10 次从 55MB
-    // 涨到 133MB）。app 是长期存活的，导出完必须清干净。
     typst::comemo::evict(0);
     Ok(())
 }
@@ -96,17 +78,13 @@ struct MoodiaryWorld {
     book: LazyHash<FontBook>,
     fonts: Vec<Font>,
     source: Source,
-    /// 虚拟路径 → 图片字节。typst 的 `image("/img/0.jpg")` 会经 [World::file] 回来取。
     files: HashMap<String, Bytes>,
 }
 
 impl MoodiaryWorld {
     fn new(text: String, font_blob: Vec<u8>, images: Vec<(String, Vec<u8>)>) -> Result<Self> {
-        // 一份文件里可能有多个字体（.ttc），全收下交给 typst 自己挑。
         let fonts: Vec<Font> = Font::iter(Bytes::new(font_blob)).collect();
         if fonts.is_empty() {
-            // 字体库为空时 typst 会「编译成功」并产出一份一个字都没有的空白 PDF，
-            // 只报一句 warning。必须在这里拦掉，否则用户拿到的是看起来正常的空文件。
             return Err(anyhow!("字体文件里没有可用的字体"));
         }
         let book = FontBook::from_fonts(&fonts);
@@ -161,8 +139,6 @@ impl World for MoodiaryWorld {
     }
 }
 
-/// typst 本身排得动，但**内存**扛不住：100 万字的单段落峰值 1.09 GB，移动端必 OOM。
-/// 切开后 32.5 万字只要 136 MB。切点尽量落在标点后，视觉上看不出来。
 const PARAGRAPH_CHUNK: usize = 2000;
 
 struct Markup<'a> {
@@ -233,11 +209,7 @@ impl<'a> Markup<'a> {
             "#set text({family}size: {}pt, lang: \"zh\")",
             s.font_size_pt
         );
-        // linebreaks: "simple" 是内存与速度的关键开关：默认的 optimized 会做全段最优化断行，
-        // 32.5 万字下峰值 365MB / 1.3s，换成 simple 后 221MB / 0.145s，两端对齐依然保留。
         let indent = if s.first_line_indent {
-            // all: false 是排版惯例——标题后的第一段不缩进。列表 / 引用 / 表格内部
-            // 会再显式清零，否则每个列表项都会被顶进去两格。
             ", first-line-indent: (amount: 2em, all: false)"
         } else {
             ""
@@ -282,8 +254,6 @@ impl<'a> Markup<'a> {
             IrBlock::Quote { children } => {
                 self.out
                     .push_str("#quote(block: true)[\n#set par(first-line-indent: 0em);\n");
-                // 引用块内部是内容块，但里面装的仍然是我们自己生成的 `#…` 调用，
-                // 用户文本依旧在字符串字面量里，闸门没有打开。
                 self.blocks(children);
                 self.out.push_str("]\n");
             }
@@ -342,8 +312,6 @@ impl<'a> Markup<'a> {
     }
 
     fn list(&mut self, ordered: bool, start: usize, items: &[IrListItem]) {
-        // 任务项没有原生 checkbox，用方框字符会踩「用户字体没有这个码位」的坑，
-        // 所以自绘一个小方块，勾选的填实。
         let func = if ordered { "enum" } else { "list" };
         let head = if ordered {
             format!("#enum(start: {start}, tight: false")
@@ -360,7 +328,6 @@ impl<'a> Markup<'a> {
                     "#box(width: 0.7em, height: 0.7em, stroke: 0.6pt, fill: {fill}, baseline: 0.1em)#h(0.35em)"
                 );
             }
-            // 首段直接铺开，不包 par——包了会另起一段，勾选框和正文就分了行。
             let mut rest = item.children.as_slice();
             if let Some(IrBlock::Paragraph { spans }) = rest.first() {
                 let _ = write!(self.out, "#({})", self.inline(spans));
@@ -429,7 +396,6 @@ impl<'a> Markup<'a> {
         is_external: bool,
     ) {
         if is_external {
-            // 外链图不下载（导出必须离线可用），退化成链接文字。
             let _ = writeln!(
                 self.out,
                 "#link({}, {})",
@@ -439,7 +405,6 @@ impl<'a> Markup<'a> {
             return;
         }
         let Ok(bytes) = std::fs::read(path) else {
-            // 文件缺失就跳过这一张，不让整次导出失败。
             return;
         };
         let extension = Path::new(path)
@@ -470,7 +435,6 @@ impl<'a> Markup<'a> {
             .iter()
             .map(|piece| match piece {
                 InlinePiece::Span(s) => self.span(s),
-                // 宽度取 0.25em：实测该字号下空格宽 0.2em，视觉上对得上。
                 InlinePiece::Spacer => "box(width: 0.25em)".to_string(),
             })
             .collect();
@@ -478,7 +442,6 @@ impl<'a> Markup<'a> {
     }
 
     fn span(&self, span: &IrSpan) -> String {
-        // 段内换行（hardBreak）在 IR 里是文本中的 \n，typst 要显式 linebreak()。
         let pieces: Vec<String> = span
             .text
             .split('\n')
@@ -487,8 +450,6 @@ impl<'a> Markup<'a> {
         let mut body = pieces.join(" + linebreak() + ");
 
         if let Some(target) = span.diary_link_id.as_deref() {
-            // 双链在同一份 PDF 里没有稳定的锚点（跨篇导出时目标未必在内），
-            // 统一降级成带色文字，保留可读性。
             let _ = target;
             body = format!("text(fill: rgb(\"#2b5cb8\"), {body})");
         } else if let Some(href) = span.href.as_deref() {
@@ -503,8 +464,6 @@ impl<'a> Markup<'a> {
         }
         let mut body = text_call(line, self.style);
         if span.bold {
-            // typst 没有合成粗体：静态单字重字体下这一层是静默无效的，
-            // 只有可变字体（带 wght 轴）或另外导入了 Bold 才有效果。
             body = format!("strong({body})");
         }
         if span.italic {
@@ -520,27 +479,12 @@ impl<'a> Markup<'a> {
     }
 }
 
-/// [`Markup::inline`] 的一节：要么是一个 span，要么是一段无装饰的间隔。
 enum InlinePiece {
     Span(IrSpan),
-    /// 两侧都带「会在空白上留痕的装饰」时，用它代替空格。
     Spacer,
 }
 
-/// 两条实测规律（探针量的几何，别凭直觉改）：
-///
-/// 1. **纯空白的内容元素紧挨样式包裹元素时会被裁掉。** `strike(text("a")) + text(" ") +
-///    underline(text("b"))` 渲染成 "ab"，两词粘连；markup 空格 `[ ]`、`\u{00A0}`、`box`、
-///    零宽字符包夹都救不回来。空白只有和真实字形处在同一个 text run 里才活得下来 ——
-///    所以只能并给某一侧。
-/// 2. **删除线 / 下划线 / 行内代码会画到并进来的空格上**，而且删除线会一路画到下一个 span
-///    的起点（实测线长 19.95pt vs 词宽 17.75pt），等于划掉了没被删除的内容。加粗、斜体、
-///    链接、颜色则在空格上完全看不出来。
-///
-/// 于是优先并给「不会留痕」的那一侧；两侧都会留痕时退化成 [`InlinePiece::Spacer`]，
-/// 它是唯一能撑出无装饰间隔的写法，代价是那个位置不再是断行点。
 fn merge_whitespace_spans(spans: &[IrSpan]) -> Vec<InlinePiece> {
-    /// 这些装饰并进空格后肉眼可见；bold / italic / link / 颜色不可见。
     fn marks_whitespace(span: &IrSpan) -> bool {
         span.strike || span.underline || span.code
     }
@@ -586,14 +530,11 @@ fn text_call(value: &str, _style: &PdfStyle) -> String {
     format!("text({})", string_literal(value))
 }
 
-/// **唯一的转义点。** 直接复用 typst 自己的 `Repr for str`——它与 typst 词法器
-/// （`typst_syntax::ast::Str::get`）同仓维护，转义集合天然对齐。
 fn string_literal(value: &str) -> typst::ecow::EcoString {
     use typst::foundations::Repr;
     value.repr()
 }
 
-/// 纯粹为了压内存峰值——typst 排得动，但移动端的内存扛不住。
 fn chunk_spans(spans: &[IrSpan]) -> Vec<Vec<IrSpan>> {
     let total: usize = spans.iter().map(|s| s.text.chars().count()).sum();
     if total <= PARAGRAPH_CHUNK {
@@ -654,8 +595,6 @@ mod tests {
     use crate::ir::IrCell;
     use std::io::Read;
 
-    /// 仓内自带的 TrueType（mui 打包的 Dosis）。不用系统字体：macOS 上的
-    /// 中日韩字体都是 .ttc，CI 上更没有。
     pub(super) fn font_path() -> String {
         let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
         dir.join("../../mui/assets/fonts/Dosis.ttf")
@@ -777,7 +716,6 @@ mod tests {
 
     #[test]
     fn user_text_cannot_inject_typst_code() {
-        // 走「代码模式 + 字符串字面量」的意义就在这里：正文里的 typst 指令必须是死的字面量。
         let out = temp("inject");
         let payloads = [
             r#"#import "@preview/x": *"#,
@@ -805,14 +743,12 @@ mod tests {
     fn escapes_only_backslash_and_quote() {
         assert_eq!(string_literal(r#"a"b"#), r#""a\"b""#);
         assert_eq!(string_literal(r"a\b"), r#""a\\b""#);
-        // 其余全是字面量，不需要也不应该转义。
         assert_eq!(string_literal("#$@<>_*`[]"), "\"#$@<>_*`[]\"");
         assert_eq!(string_literal("行一\n行二"), "\"行一\\n行二\"");
     }
 
     #[test]
     fn huge_paragraph_completes() {
-        // 真机上让 dart_pdf 卡死的那一篇：单个段落 32.5 万字。
         let out = temp("huge");
         let unit = "这是一段用于测试的中文正文内容";
         let mut text = String::with_capacity(325253 * 3);
@@ -830,7 +766,6 @@ mod tests {
         let elapsed = started.elapsed();
 
         assert_eq!(&read_head(&out, 5), b"%PDF-");
-        // 留足余量：本机实测个位数秒级，真机慢几倍也远在此之内。
         assert!(elapsed.as_secs() < 120, "耗时 {elapsed:?}，超出预期");
     }
 
@@ -847,7 +782,6 @@ mod tests {
             let n: usize = chunk.iter().map(|s| s.text.chars().count()).sum();
             assert!(n <= PARAGRAPH_CHUNK, "每块不应超过阈值，实际 {n}");
         }
-        // 切完拼回去必须与原文逐字节相同。
         let joined: String = chunks
             .iter()
             .flat_map(|c| c.iter().map(|s| s.text.clone()))
@@ -883,7 +817,6 @@ mod whitespace_between_marks {
     use super::*;
     use crate::fixture;
 
-    /// 删除线 / 下划线在 typst 的输出里就是 `Geometry::Line`。
     fn render(spans: Vec<IrSpan>) -> (String, Vec<f64>) {
         let docs = vec![fixture::doc(vec![fixture::para(spans)])];
         let font_blob = std::fs::read(super::tests::font_path()).unwrap();
@@ -894,7 +827,6 @@ mod whitespace_between_marks {
         let world = MoodiaryWorld::new(source, font_blob, images).unwrap();
         let compiled = typst::compile(&world);
         let doc = compiled.output.unwrap();
-        // PagedDocument 在本 crate 的依赖里不可达，靠这一行把 doc 的类型钉住。
         let _ = typst_pdf::pdf(&doc, &typst_pdf::PdfOptions::default()).unwrap();
         let mut text = String::new();
         let mut lines = Vec::new();
@@ -933,7 +865,6 @@ mod whitespace_between_marks {
         let world = MoodiaryWorld::new(source, font_blob, images).unwrap();
         let compiled = typst::compile(&world);
         let doc = compiled.output.unwrap();
-        // PagedDocument 在本 crate 的依赖里不可达，靠这一行把 doc 的类型钉住。
         let _ = typst_pdf::pdf(&doc, &typst_pdf::PdfOptions::default()).unwrap();
         let (mut t, mut l) = (String::new(), Vec::new());
         for page in doc.pages() {
@@ -942,8 +873,6 @@ mod whitespace_between_marks {
         l[0]
     }
 
-    /// 代码块要有语法高亮。色值取自 typst 的 RAW_THEME，DOCX 侧断言的是同一组 ——
-    /// 两种格式导出同一篇日记，代码块配色必须一致。
     #[test]
     fn code_block_is_syntax_highlighted() {
         let docs = vec![fixture::doc(vec![IrBlock::Code {
@@ -997,10 +926,6 @@ mod whitespace_between_marks {
         }
     }
 
-    /// 回归：删除线不得渗到它和后面链接之间的空格上。
-    ///
-    /// 修之前生成的是 `strike(text("AAA "))`，删除线长 19.95pt 而 "AAA" 只有 17.75pt ——
-    /// 多出来的一个空格宽正好顶到链接起点，看上去像把链接也划掉了一截。
     #[test]
     fn strike_does_not_bleed_into_following_link() {
         let (text, lines) = render(vec![
@@ -1028,8 +953,6 @@ mod whitespace_between_marks {
         );
     }
 
-    /// 两侧都是「会在空白上留痕」的装饰时，退化成 Spacer：
-    /// 空格看不见了但间距还在，且两条线都只盖住各自的词。
     #[test]
     fn both_sides_marked_falls_back_to_spacer() {
         let (_text, lines) = render(vec![
@@ -1056,7 +979,6 @@ mod whitespace_between_marks {
         }
     }
 
-    /// 没有装饰冲突时，空格照旧并进相邻文字，不产生多余元素。
     #[test]
     fn plain_neighbours_keep_the_space() {
         let (text, lines) = render(vec![

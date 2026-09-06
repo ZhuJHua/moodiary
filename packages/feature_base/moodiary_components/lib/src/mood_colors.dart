@@ -2,8 +2,6 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:mui/mui.dart';
 
-/// 心情/状态语义色（业务色，不随主题）。离散取色，两两互异——
-/// 时间线渐变连线与「颜色互异」测试都依赖这一点。
 abstract class AppColor {
   static const Color moodPositive = Color(0xFF2EB872);
   static const Color moodNeutral = Color(0xFF8A9099);
@@ -62,7 +60,6 @@ extension DiaryMoodVisuals on DiaryMood {
     .sick => LucideIcons.thermometer,
   };
 
-  /// 编辑器 webview 侧按这个名字查 @iconify-json/lucide 组件。
   String get iconName => switch (this) {
     .positive => 'smile',
     .neutral => 'meh',
@@ -82,10 +79,8 @@ extension DiaryMoodVisuals on DiaryMood {
     .sick => 'thermometer',
   };
 
-  /// widget 里用这个（切语言自动重建）。没有 context 的地方（导出、服务）走 [labelOf]。
   String label(BuildContext context) => labelOf(context.l10n);
 
-  /// 取串不重建的版本：导出的产物落盘即定，不需要跟着语言切换重画。
   String labelOf(Translations l10n) => switch (this) {
     .positive => l10n.common.moodPositive,
     .neutral => l10n.common.moodNeutral,
@@ -106,11 +101,6 @@ extension DiaryMoodVisuals on DiaryMood {
   };
 }
 
-/// 手选天气的本地化名称。与 [DiaryMoodVisuals] 同一套写法：widget 里用
-/// [label]（切语言自动重建），导出 / 服务这类没有 context 的地方走 [labelOf]。
-///
-/// 图标不在这里 —— 天气图标是和风字体按 [ManualWeather.code] 取字形
-/// （Flutter 侧 `qweatherIcon`，web 侧 qweather-icons 码表），不是 lucide。
 extension ManualWeatherLabel on ManualWeather {
   String label(BuildContext context) => labelOf(context.l10n);
 

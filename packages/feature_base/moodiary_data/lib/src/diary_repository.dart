@@ -14,9 +14,6 @@ import 'db/db_codec.dart';
 import 'diary_content.dart';
 import 'media_item.dart';
 
-/// 搜索 / 双链索引的建立时机：[inline] 与写行同事务原子建（默认——分词先行再开
-/// 事务，SQLite 时代没有「分词夹不进事务」的两段式）；[skip] 不建（编辑期仅改
-/// 元数据，内容未变、索引仍有效）。
 enum IndexMode { inline, skip }
 
 typedef _IndexEntry = ({
@@ -32,18 +29,15 @@ class DiaryRepository {
 
   final MoodiaryDatabase _db;
 
-  /// 批量分词每次过桥的条目数上限（限制单次桥载荷与内存峰值；128 篇已够铺满多核）。
   static const int _tokenizeChunk = 128;
 
-  /// `WHERE x IN (...)` 的分块上限（SQLite 变量数上限 32766，留足余量）。
+  // SQLite 变量数上限 32766，留足余量
   static const int _inChunk = 5000;
 
   final StreamController<DiaryEvent> _events =
       StreamController<DiaryEvent>.broadcast();
 
   Stream<DiaryEvent> get diaryEvents => _events.stream;
-
-  // —— 行 ↔ 域模型映射与子表装配 —— //
 
   static Diary _toDiary(
     DiaryRow r, {
@@ -63,8 +57,6 @@ class DiaryRepository {
       lastModified: dbToTime(r.lastModified),
       show: r.show != 0,
       mood: DiaryMood.fromName(r.mood),
-      // temp 可空（手选天气没有温度）；icon / text 是「有天气」的充要条件，
-      // 两者同写同清，text 的兜底只为极旧行的半残数据。
       weather: icon == null
           ? null
           : DiaryWeather(
@@ -100,7 +92,6 @@ class DiaryRepository {
     weatherText: Value(d.weather?.text),
   );
 
-  /// 批量装配：一页行 → 域模型（子表按 id 分块 IN 批量取，无 N+1）。
   Future<List<Diary>> _assemble(List<DiaryRow> rows) async {
     if (rows.isEmpty) return const [];
     final mediaById = <String, Map<String, List<String>>>{};
@@ -143,8 +134,6 @@ class DiaryRepository {
   Future<Diary?> _assembleOne(DiaryRow? row) async =>
       row == null ? null : (await _assemble([row])).first;
 
-  // —— 分词与索引条目 —— //
-
   Future<TokenizeResult?> _tokenize(String text) async {
     if (text.isEmpty) return null;
     try {
@@ -154,8 +143,6 @@ class DiaryRepository {
     }
   }
 
-  /// 索引侧只存 cut_for_search（高召回，含全词与子词；真实词频 = 重复次数）；
-  /// 标题同样取细粒度分词。查询侧的 cut 词形是它的子集，天然可命中。
   Future<_IndexEntry> _buildEntry(Diary diary) async {
     final tokens = await _tokenize(diary.contentText.trim());
     final title = await _tokenize(diary.title.trim());
@@ -167,13 +154,10 @@ class DiaryRepository {
     );
   }
 
-  /// 批量构建索引条目（[diaries] 应已按 [_tokenizeChunk] 分块）。整批的正文与标题
-  /// 拼成一次分词调用，Rust 侧跨篇并行；长度不符或异常退回逐篇（宁慢不错位）。
   Future<List<_IndexEntry>> _buildEntries(List<Diary> diaries) async {
     if (diaries.length <= 1) {
       return [for (final diary in diaries) await _buildEntry(diary)];
     }
-    // slot 编码：偶数 = 该篇正文，奇数 = 该篇标题；空文本不进批次。
     final texts = <String>[];
     final slots = <int>[];
     for (var i = 0; i < diaries.length; i++) {
@@ -221,9 +205,6 @@ class DiaryRepository {
     ];
   }
 
-  // —— 事务内的写原语（调用方负责包 transaction）—— //
-
-  /// upsert 日记行（冲突键 = 业务 id），返回 rid。
   Future<int> _upsertRow(Diary d) async {
     final row = await _db
         .into(_db.diaries)
@@ -237,7 +218,6 @@ class DiaryRepository {
     return row.rid;
   }
 
-  /// 媒体三列 + 标签子表与行同步（每次写行都做——它们是行的一部分）。
   Future<void> _syncChildren(Diary d) async {
     await (_db.delete(
       _db.diaryMedia,
@@ -267,7 +247,6 @@ class DiaryRepository {
     });
   }
 
-  /// FTS 行（按 rid 寻址——FTS5 的引擎约束）与双链边整体替换（幂等）。
   Future<void> _applyIndex(int rid, String id, _IndexEntry e) async {
     await _db.ftsDelete(rid);
     if (e.bodyTokens.isNotEmpty || e.titleTokens.isNotEmpty) {
@@ -288,18 +267,12 @@ class DiaryRepository {
     }
   }
 
-  // —— 写路径 —— //
-
-  /// [fromSync] = 该写入由活跃云后端的 pull 落库（远端已持有），事件携带此标记
-  /// 供 AutoSyncWatcher 免除回声推送；归档导入 / 局域网接收传 false。
   Future<void> insertADiary(
     Diary diary, {
     bool fromSync = false,
     IndexMode index = .inline,
   }) => insertDiaries([diary], fromSync: fromSync, index: index);
 
-  /// 批量插入（云 pull / JSON 导入等本地批处理入口）。分词在事务外整批完成
-  /// （跨篇并行），行 + 子表 + FTS + 双链单事务原子落库。
   Future<void> insertDiaries(
     List<Diary> diaries, {
     bool fromSync = false,
@@ -320,7 +293,6 @@ class DiaryRepository {
         await _syncChildren(diary);
         if (index == .inline) await _applyIndex(rid, diary.id, entries[i]);
       }
-      // 复活闸门：同 id 的同步墓碑连带清除，历史推送记录不会误判下一次删除。
       await (_db.delete(_db.tombstones)..where(
             (t) => t.key.isIn([
               for (final diary in diaries) SyncTombstone.diaryKey(diary.id),
@@ -336,19 +308,11 @@ class DiaryRepository {
     }
   }
 
-  /// [fromSync] 语义同 [insertADiary]；编辑器迁移等「远端已持有等价内容」的本机改写
-  /// 也走此标记，免得被当作待推变更。
   Future<void> updateADiary({
     required Diary newDiary,
     IndexMode index = .inline,
     bool fromSync = false,
   }) async {
-    // 派生一致性闸门（debug 期抓第四个写入方）：媒体三列必须等于正文引用——
-    // 改了 content 的写入方要过 withDerivedMedia（diary_derive.dart）。
-    // 只审 inline（真的动了内容的写入）：.skip 写入（软删/改元数据）没碰 content，
-    // 回灌的旧格式行会被误炸。判据用集合而非顺序（与 repairData 的 _sameNameSet
-    // 同源）。contentText 不在此断言内：编辑器的纯文本由 webview 侧提取，与
-    // DiaryContent 的序列化不保证逐字节一致。
     assert(() {
       if (index == .skip) return true;
       final derived = DiaryContent.of(newDiary).media;
@@ -368,14 +332,11 @@ class DiaryRepository {
     _events.add(DiaryUpdated(newDiary, fromSync: fromSync));
   }
 
-  /// 软删 / 还原：只翻 show 并 bump lastModified（用户操作，LWW 需要赢）；
-  /// 索引 skip——它只看内容/标题，show 过滤在查询期。
   Future<void> setVisibility(Diary diary, {required bool show}) => updateADiary(
     newDiary: diary.copyWith(show: show, lastModified: .timestamp()),
     index: .skip,
   );
 
-  /// 永久删除：行硬删（子表级联）+ FTS 摘除 + 写同步墓碑，清本地媒体。
   Future<bool> deleteADiary(String id) async {
     final diary = await getDiaryByBusinessId(id);
     if (diary == null) return false;
@@ -384,8 +345,6 @@ class DiaryRepository {
     return true;
   }
 
-  /// 同步 pull 应用远端墓碑：与 [deleteADiary] 同一事务形态，但媒体文件由
-  /// 引擎的媒体端口清理（测试可注入），这里不动文件。返回写入的墓碑行。
   Future<SyncTombstone> tombstoneDiaryForSync(
     Diary diary, {
     bool fromSync = false,
@@ -413,9 +372,6 @@ class DiaryRepository {
         pushedBackendsJson: Value(dbStringList(t.pushedBackends)),
       );
 
-  /// 事务内：删行（子表级联）+ FTS 摘除。行不存在则为 no-op。
-  /// 语义索引不在这里清——入队后由 EmbedIndexService.drain 回收孤儿分块
-  /// （删除与排空之间的 stale 向量被 KNN 的 diaries JOIN 天然屏蔽）。
   Future<void> _deleteRowAndIndex(String id) async {
     final row = await (_db.select(
       _db.diaries,
@@ -426,8 +382,6 @@ class DiaryRepository {
     await _enqueueEmbed([id]);
   }
 
-  /// 事务内：语义索引补嵌入队（幂等覆盖）。嵌入推理不在写路径——异步排空见
-  /// EmbedIndexService。
   Future<void> _enqueueEmbed(Iterable<String> ids) async {
     final at = dbTime(.timestamp());
     await _db.batch((b) {
@@ -438,7 +392,6 @@ class DiaryRepository {
     });
   }
 
-  /// 硬删除且不留墓碑（草稿丢弃等本地兜底路径）。
   Future<void> deleteDiariesByIds(List<String> ids) async {
     if (ids.isEmpty) return;
     await _db.transaction(() async {
@@ -451,7 +404,6 @@ class DiaryRepository {
     }
   }
 
-  /// 草稿丢弃：直接移除 + 清理媒体，不保留 tombstone。
   Future<bool> hardDeleteDiary(String id) async {
     final diary = await getDiaryByBusinessId(id);
     if (diary == null) return false;
@@ -482,8 +434,6 @@ class DiaryRepository {
     }
   }
 
-  // —— 读路径（真索引 seek + 过滤/排序/分页全部下推）—— //
-
   SimpleSelectStatement<Diaries, DiaryRow> _visible() =>
       _db.select(_db.diaries)..where((d) => d.show.equals(1));
 
@@ -507,8 +457,6 @@ class DiaryRepository {
     }
   }
 
-  /// [uncategorized] 为真时只取**没有分类**的日记；此时 [categoryId] 必须为 null。
-  /// 「全部」与「未分类」都以 categoryId == null 表达，靠这个开关区分。
   Future<List<Diary>> getDiaryByCategory({
     String? categoryId,
     bool uncategorized = false,
@@ -528,8 +476,6 @@ class DiaryRepository {
     return _assemble(await q.get());
   }
 
-  /// 按**本地月份**统计可见日记篇数（该月 1 号零点 -> 篇数）。分桶字段跟着 [sort]
-  /// 走；只取一列时间属性、在 Dart 侧按本地时区分桶（SQL 按 UTC 分桶会错月）。
   Future<Map<DateTime, int>> diaryCountByMonth({
     String? categoryId,
     bool uncategorized = false,
@@ -556,7 +502,6 @@ class DiaryRepository {
     return counts;
   }
 
-  /// 每个分类下「可见」日记的数量（categoryId -> count）与可见总数（含未分类）。
   Future<({Map<String, int> byCategory, int total})>
   diaryCountByCategory() async {
     final cat = _db.diaries.categoryId;
@@ -576,7 +521,6 @@ class DiaryRepository {
     return (byCategory: byCategory, total: total);
   }
 
-  /// 全部日记行数（含回收站）。迁移完成页的摘要用。
   Future<int> countAllDiaries() async {
     final count = countAll();
     final q = _db.selectOnly(_db.diaries)..addColumns([count]);
@@ -591,7 +535,6 @@ class DiaryRepository {
     return _assembleOne(row);
   }
 
-  /// [visibleOnly]=true 只取可见（默认，不含回收站）；false 只取回收站。
   Future<List<Diary>> getDiariesByDateRange(
     DateTime start,
     DateTime end, {
@@ -607,14 +550,10 @@ class DiaryRepository {
     return _assemble(rows);
   }
 
-  /// 含回收站的全量日记（同步快照 / dashboard 统计用）。
   Future<List<Diary>> getAllDiaries() async {
     return _assemble(await _db.select(_db.diaries).get());
   }
 
-  /// 引用了以 [suffixes]（小写，含点）结尾的 [kind] 媒体的日记，含回收站。走
-  /// diary_media 的 file_name 索引只装命中的几篇，不像 [getAllDiaries] 把全库正文物化；
-  /// 「图片优化」找历史 HEIC 用。
   Future<List<Diary>> getDiariesReferencingMedia({
     required MediaType kind,
     required List<String> suffixes,
@@ -635,8 +574,6 @@ class DiaryRepository {
     );
   }
 
-  /// 旧编辑器格式（一切非 tiptap，含回收站）的日记——强制迁移的工作集。
-  /// 用非等值而不是枚举等值：异常 type 值渲染时按 richText 兜底，迁移也必须带上。
   Future<List<Diary>> getLegacyFormatDiaries() async {
     final rows = await (_db.select(
       _db.diaries,
@@ -644,7 +581,6 @@ class DiaryRepository {
     return _assemble(rows);
   }
 
-  /// 是否存在旧编辑器格式日记（启动闸门用，LIMIT 1 短路）。
   Future<bool> hasLegacyFormatDiaries() async {
     final row =
         await (_db.select(_db.diaries)
@@ -654,14 +590,12 @@ class DiaryRepository {
     return row != null;
   }
 
-  /// 地图用：只取挂了常用地点的可见日记（时间倒序）。
   Future<List<Diary>> getDiariesWithPlace() async {
     final q = _visible()..where((d) => d.placeId.isNotNull());
     _orderBy(q, .timeDesc);
     return _assemble(await q.get());
   }
 
-  /// 各常用地点下的在册日记数（不含回收站）。
   Future<Map<String, int>> diaryCountByPlace() async {
     final place = _db.diaries.placeId;
     final count = countAll();
@@ -684,8 +618,6 @@ class DiaryRepository {
     return _assemble(await q.get());
   }
 
-  /// 按类型分页取「在册」日记（排除回收站）。EXISTS 子查询走 diary_media 的
-  /// kind 索引；排序第二键与 diarySortComparator 一致，分页 offset 才不丢不重。
   Future<List<Diary>> getMediaSourceDiaries({
     required MediaType type,
     int? offset,
@@ -708,9 +640,6 @@ class DiaryRepository {
     return _assemble(await q.get());
   }
 
-  /// 媒体库分页：按**媒体文件**翻页（一页 N 张，而不是 N 篇日记——一篇可能 0 张也可能
-  /// 几十张）。只取三列，不物化正文；排序与 [MediaItem.compare] 逐字段一致，
-  /// 第三键 seq 保正文内次序。
   Future<List<MediaItem>> getMediaItems({
     required MediaType type,
     int? offset,
@@ -737,13 +666,6 @@ class DiaryRepository {
     ];
   }
 
-  /// 汇全集引用的媒体文件名（含回收站/草稿），供孤儿清理用。
-  /// 子表即引用清单：一次全表读，不物化任何日记正文。
-  ///
-  /// **助手聊天图片也必须算进来**：它经 `MediaManager.saveImages` 落在同一个
-  /// `image/` 目录、用同一套命名，却只被 `chat_messages.image_name` 引用。漏掉它
-  /// 就会被「清理无用文件」当成孤儿永久删除，而这些图从未进过日记、没有任何
-  /// 其它备份通道。
   Future<({Set<String> images, Set<String> audios, Set<String> videos})>
   collectReferencedMedia() async {
     final images = <String>{};
@@ -761,7 +683,6 @@ class DiaryRepository {
           if (thumb != null) videos.add(thumb);
       }
     }
-    // 只取这一列，不物化聊天正文。
     final chatImages = _db.selectOnly(_db.chatMessages)
       ..addColumns([_db.chatMessages.imageName])
       ..where(_db.chatMessages.imageName.isNotNull());
@@ -772,9 +693,6 @@ class DiaryRepository {
     return (images: images, audios: audios, videos: videos);
   }
 
-  // —— 全文搜索（FTS5：MATCH 召回，bm25 引擎内打分）—— //
-
-  /// FTS5 查询串：词加引号转义，OR 召回（与旧倒排的 union-probe 语义一致）。
   static String _matchQuery(Iterable<String> tokens) =>
       tokens.map((t) => '"${t.replaceAll('"', '""')}"').join(' OR ');
 
@@ -839,8 +757,6 @@ class DiaryRepository {
     return _assemble(rows);
   }
 
-  /// 按原始查询串搜索（Rust 分词后走 [searchDiaries]）。供「双链 `[[` 选取」等
-  /// 需要把用户输入当查询的场景用。空串 / 无 token 返回空列表。
   Future<List<Diary>> searchDiariesByText(
     String query, {
     SearchSort sort = .relevance,
@@ -856,29 +772,23 @@ class DiaryRepository {
     );
   }
 
-  // —— 双链 / 知识图谱 —— //
-
-  /// 反向链接：正文里双链指向 [toId] 的源日记（时间倒序，排除回收站）。
   Future<List<Diary>> getBacklinks(String toId) async {
     if (toId.isEmpty) return const [];
     final rows = await _db.backlinks(toId).get();
     return _assemble([for (final r in rows) r.d]);
   }
 
-  /// 正向链接：这篇日记正文里双链指向的目标日记（时间倒序，自链丢弃）。
   Future<List<Diary>> getForwardLinks(String fromId) async {
     if (fromId.isEmpty) return const [];
     final rows = await _db.forwardLinks(fromId).get();
     return _assemble([for (final r in rows) r.d]);
   }
 
-  /// 这篇日记是否至少有一条出链或入链（详情页「关系图」入口显隐）。自链不算。
   Future<bool> hasAnyLink(String id) async {
     if (id.isEmpty) return false;
     return await _db.hasAnyLink(id).getSingle();
   }
 
-  /// 图谱标签用的正文摘要：折叠空白后截前 [_graphPreviewChars] 个码点。
   static const _graphPreviewChars = 24;
 
   static String? _graphPreview(String contentText) {
@@ -916,10 +826,6 @@ class DiaryRepository {
         preview: _graphPreview(d.contentText),
       );
 
-  /// 装配知识图谱数据：从 diary_links 直接取边。只含 linked-only 节点（至少一条
-  /// 有效双链）；悬空边（指向已删/回收站日记）在 SQL 层丢弃。边为**有向** src→dst，
-  /// 供 UI 画箭头；A↔B 互链保留为两条。节点按 time desc（id 兜底）稳定排序后
-  /// 分配密集下标——供 Rust 布局与坐标数组一一对应。
   Future<DiaryGraphData> buildLinkGraph() async {
     final edges = await _db.visibleLinkEdges().get();
     if (edges.isEmpty) {
@@ -951,12 +857,7 @@ class DiaryRepository {
     return DiaryGraphData(nodes: nodes, edges: out);
   }
 
-  /// 以 [rootId] 为中心的局部知识图谱（ego graph / k 跳邻域）。BFS 展开 [depth] 跳，
-  /// 出链入链同时展开（不分方向），[depth] clamp 到 [1,3]，节点数按 [maxNodes] 截断
-  /// （先排序再截，结果确定）。最外层多跑一轮「只读边不扩点」补成**诱导子图**。
-  /// 节点排序 depth asc → time desc → id asc，中心是唯一的 depth 0，
-  /// **故 centerIndex 恒为 0**——Rust 布局的中心 pin 依赖这一点，改排序必须同步改那边。
-  /// 与 [buildLinkGraph] 的 linked-only 语义不同：中心节点即使无链接也在图里（孤点）。
+  // centerIndex 恒为 0：中心节点排最前，Rust 布局的中心 pin 依赖这个顺序
   Future<DiaryGraphData> buildEgoGraph(
     String rootId, {
     int depth = 1,
@@ -980,7 +881,6 @@ class DiaryRepository {
         candidateEdges.add((e.srcId, e.dstId));
         if (!visitedDepth.containsKey(e.srcId)) discovered.add(e.srcId);
       }
-      // 最后一轮只补边、不扩点。
       if (currentDepth >= clampedDepth) break;
       final budget = maxNodes - visitedDepth.length;
       if (budget <= 0) break;
@@ -993,11 +893,9 @@ class DiaryRepository {
     }
 
     final visible = await _visibleRowsByIds(visitedDepth.keys);
-    // 中心自身已删 / 在回收站：整张图无意义。
     if (!visible.containsKey(rootId)) {
       return DiaryGraphData(nodes: const [], edges: Int32List(0));
     }
-    // 两端都可见才保留（悬空链接 / 回收站 / 被 maxNodes 截掉的候选在此丢弃）。
     final validEdges = <(String, String)>[];
     final connected = <String>{rootId};
     for (final (s, d) in candidateEdges) {
@@ -1007,7 +905,6 @@ class DiaryRepository {
         ..add(s)
         ..add(d);
     }
-    // 只经由不可见节点才可达的深层孤岛剔除，恢复「非中心节点必有边」不变量。
     visible.removeWhere((id, _) => !connected.contains(id));
 
     final nodesSorted = visible.values.toList()
@@ -1036,11 +933,6 @@ class DiaryRepository {
     );
   }
 
-  // —— 全量重建 / 修复 —— //
-
-  /// 清空并重建全部 FTS 与双链边（设置里的「重建索引」按钮、升级回填、分词器
-  /// 词典变更后的重灌入口）。contentless FTS5 无 'rebuild' 命令，走 delete-all +
-  /// 整批重灌。返回处理篇数。幂等，均由 content 重算、不改 lastModified。
   Future<int> rebuildAllIndexes() async {
     final rows = await _db.select(_db.diaries).get();
     final ridOf = {for (final r in rows) r.id: r.rid};
@@ -1074,14 +966,10 @@ class DiaryRepository {
         }
       }
     });
-    // 任何一次全量重建都完成了升级后的一次性回填（搜索页提示据此收起）。
     MoodiaryKVs.searchIndexBackfilled.set(true);
     return entries.length;
   }
 
-  /// 全量数据修复：按 `content` 重推 `contentText` / 媒体引用、清失效 `categoryId`，
-  /// 重建搜索索引。幂等，可反复执行。不更新 `lastModified`——均为可由 `content`
-  /// 重算的本地衍生数据，避免误触发同步层的「用户编辑」判断。
   Future<DiaryRepairReport> repairData() async {
     final diaries = await getAllDiaries();
     final categoryIds = {
@@ -1150,7 +1038,6 @@ class DiaryRepository {
     );
   }
 
-  /// 文件名集合是否等价（忽略顺序）；仅顺序差异不算「需修正」，避免无谓写入。
   static bool _sameNameSet(List<String> a, List<String> b) {
     if (a.length != b.length) return false;
     final setA = a.toSet();
@@ -1159,7 +1046,6 @@ class DiaryRepository {
   }
 }
 
-/// [DiaryRepository.repairData] 的修复统计。
 class DiaryRepairReport {
   final int scanned;
 

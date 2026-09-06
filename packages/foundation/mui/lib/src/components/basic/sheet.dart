@@ -1,9 +1,5 @@
 import 'package:mui/mui.dart';
 
-/// 顶部圆角取仓内的 [MuiRadius.xl]（24）而不是 M3 默认的 28 ——
-/// 那个 24 本来就是为了统一替掉 M3 弹窗的 28 才定的，两处得说同一种话。这也是本组件
-/// 唯一覆盖官方默认值的形状；底色、elevation、宽度上限 640、高度上限、抓手与拖动
-/// 手势全部沿用 [showModalBottomSheet] 的默认行为。
 const RoundedRectangleBorder _kSheetShape = RoundedRectangleBorder(
   borderRadius: .vertical(top: .circular(24)),
 );
@@ -12,17 +8,7 @@ const double _kSheetActionHeight = 52;
 const double _kSheetActionGap = 12;
 const double _kSheetPadding = 20;
 
-/// MSheet 的弹层入口。按组件归类的静态方法，替代原来的 show* 顶层函数。
 abstract final class MSheet {
-  /// 底部弹窗。就是官方的 [showModalBottomSheet]，本仓只固定了几个参数，让 18 处调用点
-  /// 说同一种话：`isScrollControlled`（表单要吃键盘）、`useSafeArea`（别盖住状态栏）、
-  /// 抓手、遮罩色与顶部圆角。
-  ///
-  /// 尺寸上限全走官方：宽度 640 后居中，高度即可用高度（顶部安全区已被 `useSafeArea`
-  /// 扣掉），超出部分由 [MSheetScaffold] 的内容区滚动吸收。
-  ///
-  /// [builder] 通常返回一个 [MSheetScaffold]；需要完全自定义版式（PIN 键盘、
-  /// 录音）时也可以直接返回内容。
   static Future<T?> show<T>(
     BuildContext context, {
     required WidgetBuilder builder,
@@ -40,7 +26,6 @@ abstract final class MSheet {
       clipBehavior: .antiAlias,
       barrierColor: context.theme.colors.scrim.withValues(alpha: 0.32),
       builder: (sheetContext) => Semantics(
-        // 官方路由不给弹窗起名，读屏进入时只会念遮罩的「关闭」。
         scopesRoute: true,
         namesRoute: true,
         explicitChildNodes: true,
@@ -53,10 +38,6 @@ abstract final class MSheet {
     );
   }
 
-  /// 选择型弹窗：一列选项，点中即回填并关闭，底部只留一颗「取消」。
-  ///
-  /// 返回被选中的值；取消 / 下拉 / 点遮罩 / 返回键都返回 null。需要在列表尾部挂
-  /// 「新建…」这类附加入口时给 [footer]。
   static Future<T?> picker<T>(
     BuildContext context, {
     required String title,
@@ -92,8 +73,6 @@ abstract final class MSheet {
   }
 }
 
-/// 键盘避让 + 底部安全区。官方这两件不管：`useSafeArea` 只挡上、左、右，
-/// 键盘按惯例由 builder 自己让。
 class _SheetInsets extends StatelessWidget {
   final double topGap;
   final Widget child;
@@ -105,7 +84,6 @@ class _SheetInsets extends StatelessWidget {
     final media = MediaQuery.of(context);
     final bottomInset = media.viewInsets.bottom;
     return Padding(
-      // 弹窗贴住屏幕下沿，内容要让开手势条；键盘顶起时那块已经被 viewInsets 占了。
       padding: .only(
         top: topGap,
         bottom: bottomInset + (bottomInset > 0 ? 0 : media.viewPadding.bottom),
@@ -115,7 +93,6 @@ class _SheetInsets extends StatelessWidget {
   }
 }
 
-/// [MSheet.picker] 的一项。
 class MSheetOption<T> {
   final T value;
   final String label;
@@ -132,8 +109,6 @@ class MSheetOption<T> {
   });
 }
 
-/// 选项行。选中态用 primaryContainer 打底 + 右侧对勾，不用 Radio ——
-/// 点一下即关闭的列表里，单选圈只是多一层要解读的控件。
 class MSheetOptionTile<T> extends StatelessWidget {
   final MSheetOption<T> option;
   final bool selected;
@@ -151,8 +126,6 @@ class MSheetOptionTile<T> extends StatelessWidget {
     final scheme = context.theme.colors;
     final typography = context.theme.typography;
     final foreground = selected ? scheme.onPrimaryContainer : scheme.onSurface;
-    // 选中态给读屏一个真的标志位：底色、字重、对勾都只是视觉，语义树里三项完全同形，
-    // 读屏用户无从知道当前生效的是哪一个。
     return Semantics(
       selected: selected,
       enabled: option.enabled,
@@ -163,8 +136,6 @@ class MSheetOptionTile<T> extends StatelessWidget {
               ? scheme.primaryContainer
               : scheme.surfaceContainerHighest,
           clipBehavior: .antiAlias,
-          // primaryContainer 与卡片底色在浅色 tonalSpot 下只差一点，描边是不依赖
-          // 色彩辨识度的第二条线索。shape 与 borderRadius 只能给一个（Material 断言）。
           shape: RoundedRectangleBorder(
             borderRadius: MuiRadius.md,
             side: selected
@@ -220,16 +191,9 @@ class MSheetOptionTile<T> extends StatelessWidget {
   }
 }
 
-/// 弹窗骨架：抓手 → 头部 → 可滚内容 → 固定动作条。
-///
-/// 只有中间内容滚动，动作条永远贴在卡片底边 —— 键盘升起时整卡上移，「保存」不会
-/// 被推出屏幕（这正是旧表单把整体塞进 SingleChildScrollView 的毛病）。
-///
-/// [actions] 语义与排布规则和 [MAlert.show] 完全一致，只是按钮更高更宽松。
 class MSheetScaffold<T> extends StatelessWidget {
   final String? title;
 
-  /// 承载状态而非说明：写「已连接 · dav.example.com」，不写「请填写服务器地址」。
   final String? subtitle;
   final IconData? icon;
   final bool isDestructive;
@@ -248,8 +212,6 @@ class MSheetScaffold<T> extends StatelessWidget {
     this.actionsLayout = .auto,
   });
 
-  /// 低于这个可用高度就把头部折进滚动区。头部与动作条都不可压缩，两者之和撑破
-  /// 剩余高度时 Column 会直接溢出（平板分屏 / 折叠屏横屏 + 键盘就够矮）。
   static const double _kFoldHeaderBelow = 240;
 
   @override
@@ -269,10 +231,8 @@ class MSheetScaffold<T> extends StatelessWidget {
     final typography = context.theme.typography;
     final hasHeader = title != null || subtitle != null || icon != null;
 
-    // 折进滚动区时不再重复左右内边距 —— 滚动区自己已经有一份。
     final header = hasHeader
         ? Padding(
-            // 顶部空隙由容器的手柄区负责，头部自己不再留。
             padding: .symmetric(horizontal: foldHeader ? 0 : _kSheetPadding),
             child: Row(
               children: [

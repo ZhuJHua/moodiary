@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
-/// 由 op 列表转换并解析回 doc map。
 Map<String, dynamic> doc(List<Map<String, dynamic>> ops) =>
     jsonDecode(QuillDeltaToTiptap.convert(jsonEncode(ops))!)
         as Map<String, dynamic>;
@@ -258,7 +257,6 @@ void main() {
       expect(c[0]['type'], 'orderedList');
       final items = c[0]['content'] as List;
       expect(items.length, 2);
-      // listItem 的 schema 是 `paragraph block*`：首子必须是段落，媒体随后。
       expect(items[1]['content'], [
         {'type': 'paragraph'},
         {
@@ -271,8 +269,6 @@ void main() {
 
   group('QuillDeltaToTiptap — 旧首行缩进 embed', () {
     test('text_indent 占位被丢弃，段落文字保留（不崩、不留空节点）', () {
-      // 旧「首行缩进」日记：每段行首一个 {"insert":{"text_indent":"2"}}，与段落文字同一行。
-      // 迁移到 tiptap 后首行缩进改由全局 CSS 实现，故此占位应被静默丢弃、文字原样保留。
       expect(
         content([
           {

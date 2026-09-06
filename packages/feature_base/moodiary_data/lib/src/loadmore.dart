@@ -12,9 +12,6 @@ mixin LoadMoreMixin<T> on AnyNotifier<AsyncValue<List<T>>, List<T>> {
 
   bool get noMore => _noMore;
 
-  /// 首次加载期间到达的事件无处可并（state 还没有列表值），事件回调在丢弃处
-  /// 置此标记；[init] 发现有遗漏即补一次 [refresh]——丢事件退化成一次多余重查，
-  /// 分页 offset 天然对齐。
   void markMissedEvent() => _missedEvent = true;
 
   Future<List<T>> init() async {
@@ -56,7 +53,6 @@ mixin LoadMoreMixin<T> on AnyNotifier<AsyncValue<List<T>>, List<T>> {
     return _load(offset: 0, refresh: true);
   }
 
-  /// 加载下一页，返回是否（可能）还有更多；false 供刷新组件置为「没有更多」。
   Future<bool> loadMore() async {
     if (!_noMore && !state.isLoading) {
       await _load(offset: _offset);

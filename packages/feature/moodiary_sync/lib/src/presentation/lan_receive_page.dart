@@ -32,7 +32,6 @@ class _LanReceivePageState extends State<LanReceivePage> {
   Future<void> _start() async {
     try {
       await _service.start();
-      // mDNS 广播是纯增强，失败静默（对方仍可手动输 IP）。
       await _advertiser.start(port: _service.port, version: _service.version);
       final ips = await NetworkStatus.getLocalIPv4s();
       if (!mounted) return;
@@ -147,8 +146,6 @@ class _StatusLine extends StatelessWidget {
   const _StatusLine({required this.state});
 
   static String _summary(SyncReport report) {
-    // failed 与 cancelled 都要看：媒体全失败、或用户中途取消而条目零变更时，
-    // 只看两个 count 会报「已是最新」——半截接收被说成什么都不缺。
     if (report.diaryCount == 0 &&
         report.categoryCount == 0 &&
         report.failed == 0 &&
@@ -214,8 +211,6 @@ class _StatusLine extends StatelessWidget {
           Text(
             _summary(report),
             textAlign: .center,
-            // 有失败就不能和「全部收完」长一个样：接收方磁盘不足时日记先落库、
-            // 媒体半途 ENOSPC，用户会据此抹掉旧机。
             style: report.failed > 0 || report.cancelled
                 ? typography.bodyMedium.error
                 : typography.bodyMedium.onSurfaceVariant,
@@ -245,7 +240,6 @@ class _StatusLine extends StatelessWidget {
               textAlign: .center,
               style: typography.bodySmall.error,
             ),
-            // 锁死时配对码已经作废、版本不同时对方升级前重试无意义，都不说「可直接重试」。
             if (!locked && !incompatible) ...[
               const SizedBox(height: 4),
               Text(

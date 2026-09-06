@@ -1,4 +1,3 @@
-/// mui 自有组件。material 够用的直接用 material 的，这里只放不够用的那部分。
 library;
 
 export 'components/basic/action_bar.dart';

@@ -2,13 +2,6 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 
-/// 单个 manifest 条目。JSON：`{"t": <ms>, "d": true?, "m": ["image/a.png", ...]?}`
-/// - `t`：普通条目 lastModified、tombstone 删除时间的**毫秒戳**，仅用于 LWW 比较。
-///   全程纯 int（本地侧取 `lastModified.millisecondsSinceEpoch`），不经 DateTime，
-///   故无「本地微秒 vs 远端毫秒」精度错位；毫秒足够（跨设备时钟偏差远大于毫秒）；
-/// - `d`：tombstone 标记，省略即 false；
-/// - `m`：该条目引用的远端媒体相对路径（`<type>/<filename>`，**含视频缩略图**）。
-///   引擎据此构建「远端已有媒体」集合；tombstone / 分类条目省略。
 class ManifestEntry {
   final int timeMs;
   final bool deleted;
@@ -20,8 +13,6 @@ class ManifestEntry {
     this.media = const [],
   });
 
-  /// 时间戳缺失/损坏返回 null，由 [SyncManifest.fromJson] 丢弃该条目（单条损坏
-  /// 不应让整个同步失败）。
   static ManifestEntry? fromJson(Object? json) {
     if (json is! Map) return null;
     final t = json['t'];
@@ -42,50 +33,16 @@ class ManifestEntry {
   };
 }
 
-/// 远端 manifest 模型 —— 描述「远端有哪些 item、各自版本与媒体引用」。时间一律
-/// 为 millisecondsSinceEpoch 整数。key 用 `kind:id`（`d:` 日记、`c:` 分类）。
-/// JSON：
-/// ```json
-/// {
-///   "version": 2,
-///   "updatedAt": 1780000000000,
-///   "entries": {
-///     "d:<diaryId>": {"t": 1780000000000, "m": ["image/a.png"]},
-///     "d:<deletedId>": {"t": 1780000000000, "d": true},
-///     "c:<categoryId>": {"t": 1780000000000}
-///   }
-/// }
-/// ```
-/// 加一个键命名空间（如 2.8.0 的 `p:` 常用地点）**不算格式变更、不 bump `version`**：
-/// pull 端的前缀分派是 if/else 链，不认识的前缀天然被忽略；push 端是
-/// `manifest.copyForUpdate()` 往里合并、不是用本地重建，所以老版本推送也不会抹掉
-/// 新版本写的条目。
-///
-/// 历史：v1（已发布的 2.8.0）的日记对象带 `position: {latitude, longitude, name}`
-/// 快照；v2（2.8.1）改为 `placeId` 引用常用地点（`p:` 条目）。**读 v1 放行**——用户
-/// 升级后第一次同步面对的就是自己的 v1 远端；旧格式的日记对象由 pull 端按地名归并成
-/// 地点（`ArchiveApplier`），写回时 manifest 升到 v2，此后 2.8.0 客户端会被版本门拦住
-/// （它看不懂 placeId，若继续推会把位置抹掉）。
-///
-/// 版本门：[fromJson] 只放行 1 与 [currentVersion]，其余（含**更高版本**）抛 [SyncException]
-/// —— 静默丢条目会诱发「push 用本地重建 manifest」的数据丢失，宁可拒绝同步。
-/// 密钥正确性由解密时的 AES-GCM auth tag 一票否决，manifest 自身不持密钥材料。
 class SyncManifest {
   static const int currentVersion = 2;
 
-  /// 仍可读的旧版本（2.8.0）。
   static const int legacyVersion = 1;
 
   final int version;
 
-  /// 最近一次写回的毫秒戳，仅供人工排查，不参与逻辑。
   final int updatedAtMs;
   final Map<String, ManifestEntry> entries;
 
-  /// 每次写回时由写入方生成的唯一标记（`<deviceId>:<micros>:<seq>`）。push 写完后
-  /// **回读校验**此 token 仍是自己写的，借此发现「租约被绕过、另一台设备并发覆盖了
-  /// manifest」—— 不依赖服务器是否支持 HTTP 条件写，任意后端可用。空串 = 尚未写过 /
-  /// 旧格式。
   final String writeToken;
 
   SyncManifest({
@@ -102,12 +59,8 @@ class SyncManifest {
   );
 
   factory SyncManifest.fromJson(Map<String, dynamic> json) {
-    // 非 int 的 version（被改成字符串/小数）也走版本守卫抛 SyncException，
-    // 而不是 `as int?` 抛裸 TypeError。
     final version = json['version'] is int ? json['version'] as int : 0;
     if (version != currentVersion && version != legacyVersion) {
-      // 措辞对「云同步」与「本地 zip 恢复」两条链都成立：旧文案让本地恢复的用户
-      // 去「清空远端备份目录」，而他手里只有一个文件，指引指向不存在的东西。
       throw SyncException(
         l10n.sync.errManifestVersion(remote: version, local: currentVersion),
       );
@@ -121,8 +74,6 @@ class SyncManifest {
         if (entry != null) entries[k] = entry;
       });
     } else if (entriesRaw != null) {
-      // entries 字段存在但不是对象（被外部覆盖成 array/字符串/数字）= manifest 损坏。
-      // 绝不能静默当作空清单 —— 否则 push 用本地重建 manifest、丢掉仅远端有的条目（契约一）。
       throw SyncException(l10n.sync.errManifestEntriesCorrupt);
     }
     final updatedAtRaw = json['updatedAt'];
@@ -141,8 +92,6 @@ class SyncManifest {
     'entries': entries.map((k, v) => MapEntry(k, v.toJson())),
   };
 
-  /// 浅拷贝，供 push 过程中对 [entries] 增量更新（[ManifestEntry] 不可变，共享无碍）。
-  /// 写回一律用 [currentVersion]：读进来的 v1 远端由此升到 v2。
   SyncManifest copyForUpdate() => SyncManifest(
     version: currentVersion,
     updatedAtMs: DateTime.now().millisecondsSinceEpoch,
@@ -150,7 +99,6 @@ class SyncManifest {
     writeToken: writeToken,
   );
 
-  /// 提交前给本次写入打上唯一 [writeToken]，供写后回读校验并发覆盖。
   SyncManifest withWriteToken(String token) => SyncManifest(
     version: version,
     updatedAtMs: DateTime.now().millisecondsSinceEpoch,
@@ -158,15 +106,12 @@ class SyncManifest {
     writeToken: token,
   );
 
-  /// 所有非 tombstone 条目引用的媒体并集 = 「远端应当已有」的媒体。「媒体先传、
-  /// manifest 后写」保证集合内对象真实存在；集合外的（中断残留）由调用方 stat 兜底。
   Set<String> referencedMedia() => {
     for (final e in entries.values)
       if (!e.deleted) ...e.media,
   };
 }
 
-/// manifest key 命名约定。
 class SyncKeys {
   static const String diaryPrefix = 'd:';
   static const String categoryPrefix = 'c:';
@@ -180,10 +125,8 @@ class SyncKeys {
 
   static const String manifestPath = 'manifest.json';
 
-  /// 远端同步锁文件路径（明文租约 JSON，见 `RemoteLease`）。
   static const String lockPath = 'sync.lock';
 
-  /// 密钥文件路径（明文 JSON：盐 + KDF 参数 + 密码包裹的 DEK，见 `SyncKeyfile`）。
   static const String keysPath = 'keys.json';
 
   static String diaryObjectPath(String id) => 'diary/$id.json';
@@ -192,16 +135,12 @@ class SyncKeys {
 
   static String placeObjectPath(String id) => 'place/$id.json';
 
-  /// 媒体元数据对象路径，按类型分子目录（`mediainfo/audio/…`，类型取自文件名
-  /// 前缀），与媒体本体目录 `media/<type>/` 平行、互不混淆。
   static String mediaInfoObjectPath(String fileName) =>
       'mediainfo/${mediaTypeOfFileName(fileName)}/$fileName.json';
 
-  /// [type] 为 `image` / `audio` / `video`。
   static String mediaObjectPath(String type, String filename) =>
       'media/$type/$filename';
 
-  /// manifest 条目里的媒体相对引用（`<type>/<filename>`）。
   static String mediaRef(String type, String filename) => '$type/$filename';
 
   static String mediaObjectPathFromRef(String ref) => 'media/$ref';

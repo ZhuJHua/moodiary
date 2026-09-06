@@ -109,7 +109,6 @@ class _DiaryManagerPageState extends ConsumerState<DiaryManagerPage> {
     for (final id in picked) {
       final d = list.firstWhere(
         (e) => e.id == id,
-        // 占位，下面被 d.id.isEmpty 拦掉，type 取哪个都行。
         orElse: () => Diary.empty(type: .richText),
       );
       if (d.id.isEmpty) continue;

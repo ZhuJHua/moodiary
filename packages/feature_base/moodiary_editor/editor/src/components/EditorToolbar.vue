@@ -1,9 +1,4 @@
 <script setup lang="ts">
-// 编辑器工具栏。TipTap 是 headless 编辑器,核心不带工具栏 UI —— 这里用它的命令 API
-// （editor.chain().focus().toggleXxx().run()）自建,激活态读 editor.isActive(...)。外观用 daisyUI
-// 按钮（btn btn-ghost）+ Tailwind 工具类,配色跟随 --app-* / 明暗（见 ../styles/moodiary-editor.css）。
-// 图标用 unplugin-icons 按需引入 lucide（`~icons/lucide/*`，内联 SVG、tree-shake、离线）。
-// 位置由 platform 决定：桌面置顶（下边框）、移动置底（上边框）。
 import { computed, onBeforeUnmount, onMounted, ref, type Component } from 'vue'
 import type { Editor } from '@tiptap/core'
 import IconUndo from '~icons/lucide/undo-2'
@@ -38,20 +33,16 @@ const props = defineProps<{
   platform: 'mobile' | 'desktop'
 }>()
 
-// 媒体插入走原生选取（Flutter 弹选择器→存盘→insertMedia/insertAudio/insertVideo 回插）,故只发事件给宿主。
 const emit = defineEmits<{
   (e: 'pick-image'): void
   (e: 'pick-audio'): void
   (e: 'pick-video'): void
 }>()
 
-// 移动端触控目标更大（btn-md）,桌面紧凑（btn-sm）。
 const btnClass = computed(
   () => `btn btn-ghost shrink-0 ${props.platform === 'mobile' ? 'btn-md' : 'btn-sm'}`,
 )
 
-// 选区 / 格式状态变化经 editor 的 transaction 事件驱动重渲染：render 时各按钮调 active() →
-// 读 tick.value 建立响应依赖,bump() 自增即触发重渲染,按钮激活态随选区实时更新。
 const tick = ref(0)
 const bump = (): void => {
   tick.value += 1
@@ -64,12 +55,8 @@ const isActive = (name: string, attrs?: Record<string, unknown>): boolean => {
   return props.editor.isActive(name, attrs)
 }
 
-// 命令统一带 .focus()：执行后把焦点交回正文（配合按钮的 @mousedown.prevent,移动端点工具栏
-// 不会让 contenteditable 失焦收键盘）。
 const chain = () => props.editor.chain().focus()
 
-// 撤销 / 重做。移动端没有 Mod-Z（软键盘不给这套快捷键），工具栏按钮是唯一入口，故放在最前。
-// 可用性与激活态同理走 tick：每个 transaction 后重算。
 const canUndo = (): boolean => {
   void tick.value
   return props.editor.can().undo()
@@ -79,7 +66,6 @@ const canRedo = (): boolean => {
   return props.editor.can().redo()
 }
 
-// 插入日记双链：在光标处插入 `[[`，触发搜索弹层（纯编辑器侧，无需宿主回调）。
 const insertLink = (): void => {
   chain().insertContent('[[').run()
 }
@@ -87,9 +73,7 @@ const insertLink = (): void => {
 interface Tool {
   key: string
   title: string
-  /** 图标组件（unplugin-icons）；与 label 二选一。 */
   icon?: Component
-  /** 文本标签（标题用 H1/H2/H3,比图标更清晰）。 */
   label?: string
   run: () => void
   active: () => boolean
@@ -108,10 +92,8 @@ const tools: Tool[] = [
   { key: 'codeBlock', title: '代码块', icon: IconCodeBlock, run: () => chain().toggleCodeBlock().run(), active: () => isActive('codeBlock') },
 ]
 
-// 表格：插入按钮常驻；下列行列操作仅在光标位于表格内时出现（inTable 经 isActive 响应式跟随选区）。
 const inTable = (): boolean => isActive('table')
 
-// 插入表格：点按钮弹网格选择器选尺寸（位置按按钮 rect 计算，靠近底部/右侧自动避让）。
 const tableOpen = ref(false)
 const tablePos = ref({ left: 0, top: 0 })
 function openTablePicker(e: MouseEvent): void {
@@ -142,7 +124,6 @@ const tableOps: { key: string; label: string; title: string; run: () => void }[]
   { key: 'delTable', label: '删表', title: '删除表格', run: () => chain().deleteTable().run() },
 ]
 
-// —— 标题下拉菜单 ——
 const headingMenuOpen = ref(false)
 const headingItems = computed<PopupMenuItem[]>(() => [
   { key: 'paragraph', label: '正文', icon: IconParagraph, active: !isActive('heading') },
@@ -152,7 +133,6 @@ const headingItems = computed<PopupMenuItem[]>(() => [
 ])
 function onHeadingSelect(key: string): void {
   if (key === 'paragraph') {
-    // toggleHeading 同 level 会关掉标题 → 切回正文。
     const level = isActive('heading', { level: 1 })
       ? 1
       : isActive('heading', { level: 2 })
@@ -176,7 +156,6 @@ function onHeadingSelect(key: string): void {
     class="moodiary-toolbar no-scrollbar flex items-center gap-0.5 overflow-x-auto bg-base-100 px-2 py-1.5"
     :class="platform === 'desktop' ? 'border-b border-base-300' : 'border-t border-base-300'"
   >
-    <!-- 撤销 / 重做：移动端唯一入口（无 Mod-Z），故置于最前，不随工具栏横向滚动被推走 -->
     <button
       :class="[btnClass, 'btn-square']"
       type="button"
@@ -201,7 +180,6 @@ function onHeadingSelect(key: string): void {
     </button>
     <span class="mx-1 h-5 w-px shrink-0 bg-base-300" />
 
-    <!-- 媒体：图片 / 音频 / 视频（均走原生选取） -->
     <button :class="[btnClass, 'btn-square']" type="button" title="插入图片" @mousedown.prevent @click="emit('pick-image')">
       <IconImage class="size-5" />
     </button>
@@ -215,7 +193,6 @@ function onHeadingSelect(key: string): void {
       <IconLink class="size-5" />
     </button>
     <span class="mx-1 h-5 w-px shrink-0 bg-base-300" />
-    <!-- 标题下拉：H1/H2/H3 收进一个按钮，图标随当前级别切换，激活时高亮 -->
     <PopupMenu v-model="headingMenuOpen" :items="headingItems" @select="onHeadingSelect">
       <template #trigger>
         <button
@@ -248,7 +225,6 @@ function onHeadingSelect(key: string): void {
       <span v-else class="text-sm font-semibold leading-none">{{ t.label }}</span>
     </button>
 
-    <!-- 表格：插入键常驻；行列操作仅在表格内出现 -->
     <span class="mx-1 h-5 w-px shrink-0 bg-base-300" />
     <button :class="[btnClass, 'btn-square']" type="button" title="插入表格" @mousedown.prevent @click="openTablePicker">
       <IconTable class="size-5" />
@@ -267,13 +243,11 @@ function onHeadingSelect(key: string): void {
       </button>
     </template>
 
-    <!-- 查找/替换 -->
     <span class="mx-1 h-5 w-px shrink-0 bg-base-300" />
     <button :class="[btnClass, 'btn-square']" type="button" title="查找替换" @mousedown.prevent @click="openSearch">
       <IconSearch class="size-5" />
     </button>
 
-    <!-- 表格尺寸选择器（点「插入表格」弹出，背景遮罩点击关闭） -->
     <template v-if="tableOpen">
       <div class="fixed inset-0 z-[60]" @mousedown.prevent="tableOpen = false" />
       <TableGridPicker

@@ -13,16 +13,9 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
-/// 时间线视图：左侧一条真正的轴——圆点与线段都取心情色，滑动即读一段情绪走向。
-///
-/// 分组键必须等于排序键（见 [diaryStampOf]），否则按「最近修改」排序时月份吸顶头
-/// 会重复且乱序。分组本身是对**已加载前缀**的纯函数（[buildTimeline]），分页续加和
-/// 同步回写触发的重排都只是重新算一遍。
 class DiaryTimelineView extends ConsumerWidget {
   final DiaryFilter filter;
 
-  /// 排序是显式参数而非命令式读全局 KV——本 widget 是包的公开 API，正确性
-  /// 不能挂在「宿主会在 sort 变化时换 key 重建」这种写不进类型的契约上。
   final DiarySort sort;
 
   const DiaryTimelineView({
@@ -55,7 +48,6 @@ class DiaryTimelineView extends ConsumerWidget {
             if (diaries.isEmpty) {
               body = Center(child: Text(context.l10n.diary.tabViewEmpty));
             } else {
-              // 篇数走独立聚合查询：列表分页加载，从中数只能数出「加载到哪儿了」。
               final monthCounts = ref
                   .watch(
                     timelineMonthCountsProvider(
@@ -106,8 +98,6 @@ class DiaryTimelineView extends ConsumerWidget {
                             ? null
                             : flat[flatIndex + 1];
                         return DiaryTimelineTile(
-                          // 按日记 id 定身份：列表按 index 复用 Element，重排后
-                          // 缩略图（gaplessPlayback）会先画上一篇的照片。
                           key: ValueKey(diary.id),
                           diary: diary,
                           stamp: entry.stamp,
@@ -133,9 +123,6 @@ class DiaryTimelineView extends ConsumerWidget {
                     );
                   },
                 );
-                // 每个月自成一组：吸顶头只在**本组**范围内固定，下一组顶上来时被推走。
-                // 若把所有月份摊在同一个 group 里，pinned 头会各自独立吸顶、越翻越多地
-                // 堆在顶部。
                 slivers.add(SliverMainAxisGroup(slivers: [header, list]));
               }
               slivers.add(
@@ -151,8 +138,6 @@ class DiaryTimelineView extends ConsumerWidget {
                 onRefresh: () => ref.read(provider.notifier).refresh(),
                 child: CustomScrollView(
                   slivers: [
-                    // 左右留白统一加在这里：吸顶头与条目必须同一条左边线，
-                    // 否则轴心 x 会跟着差 14px。
                     SliverPadding(
                       padding: const .symmetric(horizontal: 14),
                       sliver: SliverMainAxisGroup(slivers: slivers),
@@ -161,7 +146,6 @@ class DiaryTimelineView extends ConsumerWidget {
                 ),
               );
             }
-            // 聚合提示卡只进「全部」视图（全局数量）。
             final showSummary =
                 filter.isAll &&
                 (pending.newDiaryIds.isNotEmpty ||
@@ -197,8 +181,6 @@ class DiaryTimelineView extends ConsumerWidget {
   }
 }
 
-/// 月份吸顶头。篇数由 [timelineMonthCounts] 聚合查询提供（不是数已加载的列表），
-/// 查询回来之前为 null —— 宁可先不显示，也不要先显示一个会跳变的数。
 class _MonthHeaderDelegate extends SliverPersistentHeaderDelegate {
   final DateTime month;
   final int? count;

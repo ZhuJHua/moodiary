@@ -1,22 +1,8 @@
 import 'package:flutter/widgets.dart';
 
-/// 和风天气图标。[Diary.weather] 的第一项存的就是和风的天气码（`100` 晴、`101` 多云…），
-/// 天气数据本身也来自和风，所以图标跟着数据源走，别用通用的云。
-///
-/// 字体随本包发布（`assets/fonts/qweather-icons.ttf`，401 个天气码），
-/// 调用方不需要在自己的 pubspec 里声明。
 const _family = 'qweather';
 const _package = 'mui';
 
-/// 天气码 → 图标。码点取自字体自己的 `post` 表 —— glyph 名就是和风的天气码本身
-/// （`100` → U+F101、`101` → U+F102…），不是按偏移量推的。
-///
-/// **必须逐条写成 const**。动态拼 `IconData(0xF101 + i, ...)` 会让 release 构建直接失败：
-/// icon tree-shaker 用 ConstFinder 扫 kernel 里的常量 IconData，扫到非常量实例就
-/// `throwToolExit('Avoid non-constant invocations of IconData')`，不是退化成不裁剪。
-///
-/// 字体里有 15 个天气码挂着两三个码点，比对过 `glyf` 数据是逐字节相同的纯别名，取哪个
-/// 都一样；另有一套 `-fill` 实心变体没收进来，本仓的图标风格是单线。
 const _icons = <String, IconData>{
   '100': IconData(0xF101, fontFamily: _family, fontPackage: _package),
   '101': IconData(0xF102, fontFamily: _family, fontPackage: _package),
@@ -421,5 +407,4 @@ const _icons = <String, IconData>{
   '9999': IconData(0xF1CB, fontFamily: _family, fontPackage: _package),
 };
 
-/// 取天气码对应的图标；码为空或不认识时返回 null，调用方自己决定兜底。
 IconData? qweatherIcon(String? code) => code == null ? null : _icons[code];

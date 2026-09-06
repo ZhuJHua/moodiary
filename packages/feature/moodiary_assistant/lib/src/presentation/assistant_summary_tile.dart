@@ -8,9 +8,6 @@ import 'package:moodiary_models/moodiary_models.dart';
 
 import '../routes.dart';
 
-/// 设置页可嵌入的「AI 助手配置」摘要磁贴：展示当前供应商 / 模型 / Key 状态，点击进入
-/// 助手设置页。自监听 [LlmProviderRepository.providerEvents]，由 app 侧 `const
-/// AssistantSummaryTile()` 组合进设置页。
 class AssistantSummaryTile extends StatefulWidget {
   const AssistantSummaryTile({super.key});
 

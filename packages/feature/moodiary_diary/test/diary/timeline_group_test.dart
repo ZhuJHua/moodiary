@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_diary/src/application/timeline_group.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
-/// [time] / [modified] 按**本地时区**给，分组也按本地日历切——UTC 存储、本地分桶。
 Diary diary(DateTime time, {DateTime? modified, String id = 'x'}) => Diary(
   id: id,
   title: '',
@@ -52,9 +51,9 @@ void main() {
   test('breakBefore only when a whole day is skipped', () {
     final months = buildTimeline([
       diary(DateTime(2026, 7, 20, 9), id: 'a'),
-      diary(DateTime(2026, 7, 19, 9), id: 'b'), // 相邻日：不算断档
-      diary(DateTime(2026, 7, 16, 9), id: 'c'), // 隔了两天：断档
-      diary(DateTime(2026, 7, 16, 8), id: 'd'), // 同日：不算
+      diary(DateTime(2026, 7, 19, 9), id: 'b'),
+      diary(DateTime(2026, 7, 16, 9), id: 'c'),
+      diary(DateTime(2026, 7, 16, 8), id: 'd'),
     ], .timeDesc);
 
     final entries = months.single.entries;
@@ -88,7 +87,6 @@ void main() {
   });
 
   test('month boundary does not reset day-gap detection', () {
-    // 7/1 与 6/29 隔了一天以上，即使跨月也要判成断档。
     final months = buildTimeline([
       diary(DateTime(2026, 7, 1, 9), id: 'a'),
       diary(DateTime(2026, 6, 29, 9), id: 'b'),
@@ -98,8 +96,6 @@ void main() {
   });
 
   test('a two-day gap across a DST spring-forward still counts as a break', () {
-    // 纽约 2026/3/8、柏林 2026/3/29 前拨一小时：相隔两天的两个「本地零点」只差 47h，
-    // Duration.inDays 会截断成 1。日键必须按日历天算，不能按本地时刻差算。
     for (final (a, b) in [
       (DateTime(2026, 3, 7, 9), DateTime(2026, 3, 9, 9)),
       (DateTime(2026, 3, 28, 9), DateTime(2026, 3, 30, 9)),

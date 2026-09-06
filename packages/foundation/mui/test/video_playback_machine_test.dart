@@ -1,7 +1,3 @@
-// 状态机的纯逻辑测试。用假端口手推快照走转移表 —— 不需要插件桩，也不需要真设备。
-//
-// 时间推进借 testWidgets 的 FakeAsync 时钟（tester.pump(d)）：不引 fake_async
-// 这个 transitive 依赖，也不用真等 250/600ms。
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -28,7 +24,6 @@ class FakePort implements VideoPlaybackPort {
     if (!_ctl.isClosed) _ctl.add(s);
   }
 
-  /// 就绪快照的便捷构造。
   void ready({
     Duration position = .zero,
     Duration duration = const Duration(seconds: 60),
@@ -128,7 +123,6 @@ void main() {
     testWidgets('autoPlay 就绪即播，且回声窗口内不许被旧快照打回', (tester) async {
       final ctl = build(autoPlay: true);
       await ctl.initialize();
-      // 就绪快照里 isPlaying 还是 false（play 尚未生效，100ms 轮询先报了一张旧的）。
       ports.first.ready();
       await tester.pump();
       expect(ports.first.calls, contains('play'));
@@ -138,7 +132,7 @@ void main() {
         reason: '命令已发、平台未回声的窗口内必须屏蔽 isPlaying=false，否则播放键会闪一下',
       );
 
-      ports.first.ready(playing: true); // 平台回声到了
+      ports.first.ready(playing: true);
       await tester.pump();
       expect(ctl.state.value, isA<VideoPlaying>());
     });
@@ -174,7 +168,6 @@ void main() {
     ) async {
       final ctl = build();
       await ctl.initialize();
-      // 编码朝向是 1920×1080（横），但带 90° 旋转 → 实际显示是竖的。
       ports.first.ready(width: 1920, height: 1080, rotation: 90);
       await tester.pump();
       expect(ctl.geometry.value.naturalAspect, closeTo(1080 / 1920, 0.001));
@@ -194,7 +187,6 @@ void main() {
       expect(ctl.progress.value.position, const Duration(seconds: 40));
       expect(ctl.progress.value.draft, isTrue);
 
-      // 平台还在报旧位置（100ms 轮询要过一拍）——绝不能让它把显示拽回去。
       ports.first.ready(position: const Duration(seconds: 5));
       await tester.pump();
       expect(ctl.progress.value.position, const Duration(seconds: 40));
@@ -298,7 +290,6 @@ void main() {
       await tester.pump();
 
       ctl.beginScrub(const Duration(seconds: 20));
-      // 两端 seek 都会让 isBuffering 闪一下，跟着画 spinner 就是每拖一次闪一次。
       ports.first.ready(
         playing: false,
         buffering: true,
@@ -319,7 +310,6 @@ void main() {
       ports.first.ready(playing: true, position: const Duration(seconds: 59));
       await tester.pump();
 
-      // 插件对 completed 的处理是 pause().then(seekTo(duration)) 这条跨帧链。
       ports.first.ready(
         playing: false,
         completed: true,
@@ -340,7 +330,6 @@ void main() {
       await tester.pump();
       expect(ctl.state.value, isA<VideoPlaying>());
 
-      // 我们没发任何命令，平台自己暂停了。
       ports.first.ready(playing: false, position: const Duration(seconds: 3));
       await tester.pump();
       expect(
@@ -423,7 +412,6 @@ void main() {
         portFactory: (_) => secondPort = FakePort(),
       );
       await second.initialize();
-      // 第二个也得真的就绪才会走到 play → 才会去抢仲裁。
       secondPort.ready();
       await tester.pump();
 

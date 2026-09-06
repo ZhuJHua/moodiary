@@ -1,27 +1,15 @@
 import 'dart:math' as math;
 import 'dart:ui' show Offset, Rect, Size;
 
-/// 看图页 tile 规划（纯函数，不碰 widget）。模型参考 pixa：2 的幂 sampleSize、
-/// [tileSize] 源像素见方的 tile、可见 tile 按离视口中心距离排序、封顶、外圈预取。
-///
-/// 坐标全部是**转正后的源像素**；解码由 Rust 按 sampleSize 缩放（`denom`）出 RGBA。
 class FastTilePlanner {
-  /// 源图尺寸（转正后）。
   final Size imageSize;
 
-  /// tile 边长（源像素，未缩放前）。
   final int tileSize;
 
-  /// 视口之外再预取几屏。半屏：一块 tile 是 1MB 的 RGBA，整圈一屏要预取可见数的八倍。
   final double cacheExtentScreens;
 
-  /// 可见 tile 上限（超过就升一档 sample）。密度带下沿（每源像素 0.575 物理像素）一块 tile
-  /// 只有 295 物理像素，1440×3200 的竖屏平移到不对齐时可见 6×12 = 72 块；上限比它高，
-  /// 不然平移一下就升档、整屏变糊。
   final int maxVisibleTiles;
 
-  /// 可见 + 预取的总上限：上层缓存不淘汰规划内的块，这就是它的内存上界（1MB 一块）。
-  /// 可见已经超过它时只留可见。
   final int maxPlannedTiles;
 
   const FastTilePlanner({
@@ -32,7 +20,6 @@ class FastTilePlanner {
     this.maxPlannedTiles = 64,
   });
 
-  /// [visible] 视口在源像素坐标里的矩形；[physicalScale] 每个源像素占多少物理像素。
   FastTilePlan plan({required Rect visible, required double physicalScale}) {
     final bounds = Offset.zero & imageSize;
     final visibleRect = visible.intersect(bounds);
@@ -59,7 +46,6 @@ class FastTilePlanner {
 
   static const _maxSample = 8;
 
-  /// 解出的像素密度落在屏幕的 0.58–1.15 倍之间：够清晰，又不多解一倍。
   int _chooseSample(double physicalScale) {
     final scale = math.max(physicalScale, 1e-6);
     var sample = 1;
@@ -133,10 +119,8 @@ class FastTilePlanner {
 class FastTilePlan {
   final int sample;
 
-  /// 与视口相交的 tile，按离中心距离排序。
   final List<FastTileSpec> visible;
 
-  /// 视口外圈、值得先解的 tile。
   final List<FastTileSpec> prefetch;
 
   const FastTilePlan({
@@ -151,7 +135,6 @@ class FastTileSpec {
   final int row;
   final int col;
 
-  /// 这块 tile 覆盖的源像素矩形（未对齐 iMCU；实际覆盖以解码结果为准）。
   final Rect sourceRect;
 
   const FastTileSpec({

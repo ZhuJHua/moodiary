@@ -2,21 +2,10 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_picker/src/asset_thumb_image.dart';
 import 'package:moodiary_picker/src/picker_route.dart';
 import 'package:mui/mui.dart';
-// picker 的状态用的是 provider，覆写点里要读它的 Consumer/Selector。
 import 'package:provider/provider.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 import 'package:wechat_picker_library/wechat_picker_library.dart';
 
-/// Moodiary 风格的相册选择器。
-///
-/// **只重绘视觉件**：网格单元、序号角标、选中蒙层、确定按钮、相册胶囊与相册行、
-/// 受限提示条、顶栏。资源分页、iCloud 回源、图库变更通知、受限授权、拖动多选
-/// 全部沿用包里的实现 —— 那几层是「抄错了才出事」的活，本来就不该我们维护。
-///
-/// **这个文件是纯 mui 的，没有 legacy material**。material_ui 的 `Theme` 与
-/// legacy 的 `Theme` 是两个不同的 widget 类型，所以 picker 内部那句
-/// `Theme(data: pickerTheme)` 盖不住 mui 的取用链，这里 [mui] 拿到的仍是 App 的
-/// 真主题。`pickerTheme` 只服务我们覆写不到的地方（见 `picker_theme.dart`）。
 class MoodiaryPickerDelegate
     extends DefaultAssetPickerBuilderDelegate<DefaultAssetPickerProvider> {
   MoodiaryPickerDelegate({
@@ -27,36 +16,19 @@ class MoodiaryPickerDelegate
     super.pickerTheme,
     super.textDelegate,
     super.specialItems,
-    // iOS 默认会把整个网格翻转（新的在底）。关掉它有两个理由：相机格用的是
-    // `prepend`，翻转后会被甩到视觉最后；两端排序不一致也没必要。
     super.shouldRevertGrid = false,
   }) : super(pathNameBuilder: _pathName(recentLabel));
 
-  /// App 的真主题。构造时传进来，避免在 build 里依赖取用链的解析结果。
   final MuiThemeData mui;
   final String recentLabel;
 
-  /// Android 的「全部照片」是个固定叫 `Recent` 的英文虚拟相册，不随系统语言。
   static PathNameBuilder<AssetPathEntity> _pathName(String recent) =>
       (path) => path.isAll ? recent : path.name;
 
   MuiThemeData get _t => mui;
 
-  /// 角标固定 20dp，不按 `屏宽 / 列数 / 3` 算 —— 间距只有 2dp，按比例算出来的
-  /// 角标之间会糊成一片。
   static const double _badgeSize = 20;
 
-  // ——————————————————————————————— 网格单元 ——————————————————————————————— //
-
-  /// 保留 [LocallyAvailableBuilder]（iCloud 未下载资源的那套状态机：先探
-  /// `isLocallyAvailable`，为 false 才建 progress handler 并主动触发下载），
-  /// 只把图源换成自家的 [AssetThumbImage]。
-  ///
-  /// 换图源是有理由的：包里默认的 `AssetEntityImageProvider` 有一张只增不删的
-  /// 包级 Map（key 强引用 `AssetEntity`，滚过上万张就是上万条，`imageCache.clear()`
-  /// 也清不掉），iOS 上每格还多一次 `titleAsync` 平台往返，而且它一个
-  /// `PMCancelToken` 都不暴露 —— 滚出屏的请求撤不掉，Android 的原生线程池又是
-  /// 无界队列。
   @override
   Widget imageAndVideoItemBuilder(
     BuildContext context,
@@ -97,8 +69,6 @@ class MoodiaryPickerDelegate
     );
   }
 
-  /// 选中只压一层暗遮罩，**不描边**：2dp 的间距下描边会把相邻格子连成一片，
-  /// 而遮罩的明暗差本来就够读，序号角标还在上面再说一遍。
   @override
   Widget selectedBackdrop(BuildContext context, int index, AssetEntity asset) {
     return Positioned.fill(
@@ -115,9 +85,6 @@ class MoodiaryPickerDelegate
     );
   }
 
-  /// 选中 = 主色圆 + 序号（单选为对勾），未选 = 半透明底 + 白圈 —— 压在任何深浅
-  /// 的照片上都读得出来。命中区靠 [ExpandTapWidget] 往**格子内部**扩到 44dp；
-  /// 只能往内扩，往外那部分落在相邻格子里，父级不会把命中测试交过来。
   @override
   Widget selectIndicator(BuildContext context, int index, AssetEntity asset) {
     return Consumer<DefaultAssetPickerProvider>(
@@ -171,8 +138,6 @@ class MoodiaryPickerDelegate
     );
   }
 
-  /// 视频时长条：渐变底 + `onMedia`，压在任何封面上都读得出来。
-  /// 时长用自家的 `m:ss` 口径（包里那份是 `mm:ss`）。
   @override
   Widget videoIndicator(BuildContext context, AssetEntity asset) {
     return Align(
@@ -205,10 +170,6 @@ class MoodiaryPickerDelegate
     );
   }
 
-  // ——————————————————————————————— 顶栏 ——————————————————————————————— //
-
-  /// 顶栏左上角关闭键。默认实现写死 `Icons.close`，主题的 actionIconTheme 管不到
-  /// （它不是 CloseButton，是裸 IconButton）。
   @override
   Widget backButton(BuildContext context) {
     return Padding(
@@ -221,8 +182,6 @@ class MoodiaryPickerDelegate
     );
   }
 
-  /// 相册切换胶囊。外面包一层 [DragDownToDismiss]：顶栏下拉关闭走的是与 Android
-  /// 预测性返回**同一套** `PredictiveBackRoute` 接口，两种来源共用一条动画路径。
   @override
   Widget pathEntitySelector(BuildContext context) {
     return DragDownToDismiss(
@@ -301,7 +260,6 @@ class MoodiaryPickerDelegate
     );
   }
 
-  /// 相册面板行：方形缩略图 + 名称 + 数量灰字 + 选中对勾。
   @override
   Widget pathEntityWidget({
     required BuildContext context,
@@ -369,8 +327,6 @@ class MoodiaryPickerDelegate
     );
   }
 
-  // ——————————————————————————————— 底部 ——————————————————————————————— //
-
   @override
   Widget confirmButton(BuildContext context) {
     return Consumer<DefaultAssetPickerProvider>(
@@ -396,8 +352,6 @@ class MoodiaryPickerDelegate
     );
   }
 
-  /// 受限授权（仅选定照片）时的底部提示条。默认实现是 `Icons.warning` +
-  /// `Icons.keyboard_arrow_right`，且底色写死 `primaryColor`。
   @override
   Widget accessLimitedBottomTip(BuildContext context) {
     final bottomPadding = hasBottomActions
@@ -441,7 +395,6 @@ class MoodiaryPickerDelegate
   }
 }
 
-/// `m:ss` / `h:mm:ss`。是代码不是文案，不进 slang。
 String formatAssetDuration(Duration duration) {
   String two(int n) => n.toString().padLeft(2, '0');
   final hours = duration.inHours;

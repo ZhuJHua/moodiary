@@ -14,8 +14,6 @@ import {
   unproxyMedia,
 } from './editor/media'
 
-// Flutter 把引导数据挂在页面 URL 的 ?boot= 上（readBoot 同步解析，先于编辑器构建）。
-// 初始内容不走 boot：ready 后由 Flutter setContent（见 moodiary_editor.dart）。
 const boot = readBoot()
 if (boot.mediaBase) setMediaPrefix(boot.mediaBase)
 if (boot.mediaInfoBase) setMediaInfoPrefix(boot.mediaInfoBase)
@@ -25,7 +23,6 @@ if (boot.fontBase) setFontBase(boot.fontBase)
 const initialEditable = boot.editable ?? true
 const placeholder = boot.placeholder ?? ''
 const titlePlaceholder = boot.titlePlaceholder ?? ''
-// 决定工具栏位置（桌面置顶 / 移动置底）。Flutter 始终下发 platform；缺省按桌面（顶部工具栏到处都合理）。
 const platform = boot.platform ?? 'desktop'
 
 installBridge()
@@ -34,7 +31,6 @@ if (boot.saveStatus) setSaveStatus(boot.saveStatus)
 
 const shell = ref<HTMLElement>()
 
-// 点击：① 双链 chip → 上报 linkTap（Flutter 跳转目标日记）；② 正文图片 → imageTap（反解文件名）。
 function onClick(e: MouseEvent): void {
   const target = e.target as HTMLElement | null
   const link = target?.closest('[data-type="diaryLink"]') as HTMLElement | null
@@ -49,10 +45,8 @@ function onClick(e: MouseEvent): void {
   const img = target?.closest('img')
   if (!img) return
   const src = (img as HTMLImageElement).getAttribute('src')
-  // data: URI = 拖拽/粘贴上传落盘前的临时预览，落盘后 src 会换成文件名，此时不预览。
   if (!src || src.startsWith('data:')) return
   e.preventDefault()
-  // 全文图片列表 + 被点下标，供 Flutter 原生画廊左右翻页。
   const all = (
     Array.from(shell.value?.querySelectorAll('.ProseMirror img') ?? []) as HTMLImageElement[]
   ).filter((el) => {

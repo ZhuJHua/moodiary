@@ -151,8 +151,6 @@ class _PrivacySection extends StatelessWidget {
     return MSliverSettingGroup(
       title: context.l10n.app.sectionPrivacy,
       children: [
-        // 自己就是一组多行（开关 / 改密码 / 立即上锁 / 生物识别），行数还随状态变，
-        // 所以它自带内部分隔线，在本组里算一项。
         const AppLockTile(),
         ValueListenableBuilder(
           valueListenable: MoodiaryKVs.backendPrivacy.getNotifier(),
@@ -171,8 +169,6 @@ class _PrivacySection extends StatelessWidget {
   }
 }
 
-/// 只剩维护动作 —— 回收站 / 分类管理 / 导出 / 同步、以及足迹地图都归「我的」了，
-/// 那些操作的是内容，不是偏好。
 class _DataSection extends StatelessWidget {
   const _DataSection();
 
@@ -183,7 +179,6 @@ class _DataSection extends StatelessWidget {
       children: const [
         DataRepairTile(),
         ImageOptimizeTile(),
-        // 压测入口随图谱一起暂隐藏(StressTestTile,打磨期再放出)。
         CacheUsageTile(),
       ],
     );

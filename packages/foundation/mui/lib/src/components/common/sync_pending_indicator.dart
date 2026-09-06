@@ -1,14 +1,10 @@
 import 'package:mui/mui.dart';
 
-/// 同步进行中的聚合提示卡。不为每篇远端日记插入独立占位 —— manifest 只有 LWW 时间戳，
-/// 占位卡无法按真实展示时间排序、会出现在错误位置；待更新的已有日记改用 [SyncPendingBadge]。
 class SyncPendingSummaryCard extends StatelessWidget {
   final int newCount;
 
   final int updateCount;
 
-  /// 文案由调用方给：mui 是零业务依赖的设计系统包，取不到 App 的文案，
-  /// 也不该把「同步」这类领域词收进自己那十来个通用词里。
   final String Function(int newCount, int updateCount) label;
 
   const SyncPendingSummaryCard({
@@ -84,8 +80,6 @@ class SyncPendingBadge extends StatelessWidget {
   }
 }
 
-/// 本地有改动、尚未上行同步的「待同步」角标。与 [SyncPendingBadge]（pull 侧「同步中」）
-/// 同形不同色以区分；同一卡片上「同步中」优先。
 class SyncDirtyBadge extends StatelessWidget {
   final String label;
 

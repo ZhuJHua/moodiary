@@ -2,7 +2,6 @@ import 'dart:ui';
 
 import 'package:flutter/widgets.dart';
 
-/// 软键盘状态。只有 [KeyboardObserver] 产出它，所以定义就放在这里。
 enum KeyboardState { unknown, opening, closing, closed }
 
 class KeyboardObserver with WidgetsBindingObserver {

@@ -13,33 +13,20 @@ enum DraftSaveResult { saved, failed }
 
 typedef PlaceResult = ({Place? place, GeoFailure? failure});
 
-/// 编辑页状态机。`changeXxx` 改本地 `state`，落库走 [autoSave]。新建延迟落库：
-/// 空白不创建，有内容才 insert，写了又清空则丢弃。
 @riverpod
 class EditController extends _$EditController {
   late final _repository = getIt<DiaryRepository>();
 
-  /// 是否已落库：false → 首次保存走 insert，之后 update。
   bool _persisted = false;
 
-  /// 仅新建（无 id）打开的日记允许空白丢弃；既有日记清空只 update，不删。
   bool _wasNewDraft = false;
 
-  /// 搜索/链接索引已反映（或已入队）的 contentText / title 快照。打开时 = 当前值
-  /// （索引此刻正确）；自动保存时与之比较：都相同 → skip（仅元数据变，免重索引）；
-  /// 任一变化 → defer 入队（标题也进倒排，标题变更同样需要重索引）。
   String? _indexedContent;
 
   String? _indexedTitle;
 
-  /// 最近一次有效 state 快照。dispose 后异步收尾时 provider 已销毁，读
-  /// `state`/`ref` 会抛 "Cannot use Ref after dispose"；落库/清理统一走此缓存
-  /// （[DiaryRepository] 是容器懒单例，不随 provider 生命周期销毁，可安全
-  /// 调用），写回 `state` 仍由
-  /// `ref.mounted` 守卫。
   Diary? _latest;
 
-  /// 进行中的保存，用于串行化——见 [autoSave]。
   Future<DraftSaveResult>? _inFlight;
 
   @override
@@ -55,8 +42,6 @@ class EditController extends _$EditController {
         defaultCategoryId: defaultCategoryId,
       ).future,
     );
-    // StateError（Error 子类）不会触发 riverpod 的自动重试：这是预期内的业务
-    // 分支（同步硬删后旧路由再打开），重试只会把错误页拖慢。
     if (diary == null) throw StateError('Diary not found: $diaryId');
     _persisted = !(diaryId == null || diaryId.isEmpty);
     _wasNewDraft = !_persisted;
@@ -102,8 +87,6 @@ class EditController extends _$EditController {
     state = state.whenData((current) => current.copyWith(title: title));
   }
 
-  /// 同步 `content` 与纯文本镜像 `contentText`（搜索/字数用）。Markdown 传剥离语法
-  /// 后的纯文本，richText 传 Delta 解析出的纯文本；未显式传时由 [content] 兜底。
   void changeContent(String content, {String? contentText}) {
     state = state.whenData(
       (current) => current.copyWith(
@@ -113,7 +96,6 @@ class EditController extends _$EditController {
     );
   }
 
-  /// 仅新建场景调用；已落库日记 type 不应被覆盖，调用方需自行判断。
   void changeType(DiaryType type) {
     state = state.whenData((current) => current.copyWith(type: type.value));
   }
@@ -140,15 +122,9 @@ class EditController extends _$EditController {
     state = state.whenData((current) => current.copyWith(weather: weather));
   }
 
-  /// 只定位、不写任何字段：位置面板打开时给常用地点排距离用。
   Future<CoordinatesResult> locate() =>
       getIt<GeoRepository>().currentCoordinates();
 
-  /// 定位 + 和风反查地名 → 常用地点（同名复用、没有就建一个）→ 写 placeId。
-  /// 反查出来的行政区名也进常用地点表：日记只认地点 id，没有别的落点。
-  /// 失败原因随结果一起返回：文案由调用方挑（手动点是 toast，自动获取则静默）。
-  /// [coords] 可传入已取到的坐标免再定位。[onlyIfUnset]（自动填充用）：结果回来时
-  /// 日记已经有地点了就不写——那是用户在等待期间自己选的。
   Future<PlaceResult> fetchPosition(
     BuildContext context, {
     LatLng? coords,
@@ -162,8 +138,6 @@ class EditController extends _$EditController {
         return (place: null, failure: geo.failure);
       }
       final places = getIt<PlaceRepository>();
-      // 先按派生 id 找（用户把「杭州市 西湖区」改名成「家」后照样命中），再按名字，
-      // 都没有才建；id 由地名派生，别的设备反查同一个区得到同一个地点。
       var place =
           await places.getPlaceById(Place.idForName(name)) ??
           await places.getPlaceByName(name);
@@ -182,12 +156,6 @@ class EditController extends _$EditController {
     }
   }
 
-  /// 取此刻的天气。**只写 weather，绝不碰 position。**
-  ///
-  /// 旧实现在日记没有位置时会先跑一趟 `fetchPosition`（那是会写进日记的），于是
-  /// 点「获取天气」会顺手把位置也填上；而且天气是拿日记里**已有的** position 去查的
-  /// ——那可能是三年前、或者用户手选的别处。现在直接问一次坐标（或用传入的
-  /// [coords]），两条链路只共用 [GeoRepository.currentCoordinates] 这个底座。
   Future<WeatherResult> fetchWeather(
     BuildContext context, {
     LatLng? coords,
@@ -217,8 +185,6 @@ class EditController extends _$EditController {
     }
   }
 
-  /// 自动保存：新建走 insert，其余 update。串行化——并发调用（去抖 / 生命周期 / dispose
-  /// flush 可能重叠）若都读到未落库会各 insert 一次，导致倒排索引出现重复行。
   Future<DraftSaveResult> autoSave() async {
     while (_inFlight != null) {
       await _inFlight;
@@ -236,7 +202,6 @@ class EditController extends _$EditController {
     final current = _latest;
     if (current == null) return .saved;
     final next = touched(withDerivedMedia(current));
-    // 新建且空白：从没写过则不创建；写了又清空则硬删丢弃。既有日记清空不走此路。
     if (_wasNewDraft && _isBlank(next)) {
       try {
         if (_persisted) {
@@ -254,9 +219,6 @@ class EditController extends _$EditController {
         return .failed;
       }
     }
-    // 内容与标题都未变（仅元数据/媒体）→ skip：FTS 与双链仍有效，免一次分词；
-    // 任一变了 → inline：分词先行、行 + 索引同事务原子落库（SQLite 时代不再有
-    // 「分词夹不进事务」的两段式与重索引队列）。
     final indexMode =
         next.contentText == _indexedContent && next.title == _indexedTitle
         ? IndexMode.skip
@@ -271,7 +233,6 @@ class EditController extends _$EditController {
       _indexedContent = next.contentText;
       _indexedTitle = next.title;
       _latest = next;
-      // dispose 后 notifier 已销毁，set state 会抛 "use notifier after dispose"。
       if (ref.mounted) {
         state = .data(next);
       }
@@ -281,7 +242,6 @@ class EditController extends _$EditController {
     }
   }
 
-  /// 空白 = 无标题、无正文、无媒体（元数据不算，故只改心情/标签的新建不会落库）。
   bool _isBlank(Diary d) =>
       d.title.trim().isEmpty &&
       d.contentText.trim().isEmpty &&

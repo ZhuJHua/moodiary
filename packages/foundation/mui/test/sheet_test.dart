@@ -4,8 +4,6 @@ import 'package:mui/mui.dart';
 final _mui = buildMuiTheme(brightness: Brightness.light);
 
 void main() {
-  /// 弹窗内部取 `context.muiL10n` 的默认「取消」，所以宿主必须挂
-  /// [GlobalMuiLocalizations.delegate]。
   Widget host(void Function(BuildContext context) onReady) {
     final body = Builder(
       builder: (context) => Center(
@@ -20,10 +18,7 @@ void main() {
       child: MaterialApp(
         locale: const Locale('zh'),
         localizationsDelegates: const [
-          // material_ui 自带的那份（不是 flutter_localizations 的），
-          // 它给出的才是 material_ui 的 MaterialLocalizations 类型。
           ...GlobalMaterialLocalizations.delegates,
-          // mui 自己那十来个通用词。漏了它 MuiLocalizations.of 会断言。
           GlobalMuiLocalizations.delegate,
         ],
         supportedLocales: const [Locale('zh'), Locale('en')],
@@ -37,7 +32,6 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  /// 抓手在内容上方 48（kMinInteractiveDimension）那条里，居中。
   Offset handleOf(WidgetTester tester) {
     final rect = tester.getRect(find.byType(MSheetScaffold<void>));
     return Offset(rect.center.dx, rect.top - 24);
@@ -101,7 +95,6 @@ void main() {
       final title = tester.getRect(find.text('长表单'));
       expect(title.top, lessThan(footer.top));
 
-      // 内容滚到底后按钮仍在原位 —— 固定动作条的全部意义。
       await tester.drag(find.text('行 3'), const Offset(0, -400));
       await tester.pumpAndSettle();
       expect(tester.getRect(find.text('保存')), footer);
@@ -146,7 +139,7 @@ void main() {
     }
 
     testWidgets('贴住屏幕下沿，宽屏限宽 640 居中', (tester) async {
-      tester.view.physicalSize = const Size(2400, 1800); // 800 × 600
+      tester.view.physicalSize = const Size(2400, 1800);
       tester.view.devicePixelRatio = 3;
       addTearDown(tester.view.reset);
 
@@ -158,7 +151,7 @@ void main() {
     });
 
     testWidgets('内容超过可用高度时滚动，不再被自定义上限截断', (tester) async {
-      tester.view.physicalSize = const Size(1080, 2400); // 360 × 800
+      tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 3;
       addTearDown(tester.view.reset);
 
@@ -182,14 +175,11 @@ void main() {
       );
       await open(tester);
 
-      // isScrollControlled: true 下官方上限就是可用高度本身，顶到屏幕顶为止。
       final rect = tester.getRect(find.byType(MSheetScaffold<void>));
       expect(rect.bottom, 800);
-      // 48 是官方抓手预留的高度，内容从这里开始 —— 也就是弹窗本身已经顶到屏幕顶。
       expect(rect.top, 48, reason: '够高就该顶满，不留 10% 的自定义余量');
       expect(tester.takeException(), isNull);
 
-      // 超出的部分靠内容区滚动吸收，动作条不动。
       final footer = tester.getRect(find.text('保存'));
       await tester.drag(find.text('行 3'), const Offset(0, -400));
       await tester.pumpAndSettle();
@@ -197,7 +187,7 @@ void main() {
     });
 
     testWidgets('窄屏铺满宽度', (tester) async {
-      tester.view.physicalSize = const Size(1080, 2400); // 360 × 800
+      tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 3;
       addTearDown(tester.view.reset);
 
@@ -210,8 +200,7 @@ void main() {
     testWidgets('内容让开手势条', (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 3;
-      // padding 与 viewPadding 是两个字段，MediaQuery.viewPadding 只看后者。
-      const inset = FakeViewPadding(bottom: 90); // 30 逻辑像素
+      const inset = FakeViewPadding(bottom: 90);
       tester.view.padding = inset;
       tester.view.viewPadding = inset;
       addTearDown(tester.view.reset);
@@ -373,10 +362,7 @@ void main() {
       child: MaterialApp(
         locale: const Locale('zh'),
         localizationsDelegates: const [
-          // material_ui 自带的那份（不是 flutter_localizations 的），
-          // 它给出的才是 material_ui 的 MaterialLocalizations 类型。
           ...GlobalMaterialLocalizations.delegates,
-          // mui 自己那十来个通用词。漏了它 MuiLocalizations.of 会断言。
           GlobalMuiLocalizations.delegate,
         ],
         supportedLocales: const [Locale('zh'), Locale('en')],
@@ -404,8 +390,6 @@ void main() {
       expect(find.byIcon(LucideIcons.x), findsNothing);
     });
 
-    // 只撤 `border` 是没用的：InputDecorator 先解析五条状态边框，主题把它们填满了，
-    // `decoration.border` 根本读不到。这条闸门钉的就是「六条一条都不能漏」。
     testWidgets('plain 档撤掉填充与全部六条边框', (tester) async {
       final controller = TextEditingController();
       addTearDown(controller.dispose);
@@ -431,7 +415,6 @@ void main() {
       }
     });
 
-    // filled 档必须继续把这些交给主题（传 null），否则等于在组件里复刻一份色板。
     testWidgets('filled 档不覆盖主题的填充与边框', (tester) async {
       final controller = TextEditingController();
       addTearDown(controller.dispose);
@@ -463,7 +446,6 @@ void main() {
       expect(find.byIcon(LucideIcons.eyeOff), findsOneWidget);
     });
 
-    // controller.clear() 不触发 TextField.onChanged，搜索类页面会停在旧结果上。
     testWidgets('清除键补发一次 onChanged', (tester) async {
       final controller = TextEditingController(text: 'moodiary');
       addTearDown(controller.dispose);
@@ -536,7 +518,6 @@ void main() {
       );
 
       final field = tester.widget<TextField>(find.byType(TextField));
-      // TextField 的硬约定：expands 要求 maxLines 与 minLines 同时为 null。
       expect(field.expands, isTrue);
       expect(field.maxLines, isNull);
       expect(field.minLines, isNull);

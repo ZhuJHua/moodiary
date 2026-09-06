@@ -20,8 +20,6 @@ void main() {
     });
 
     test('LWW compare against local diary works on plain ints', () {
-      // 本地 lastModified 带微秒（Isar 按微秒存）；LWW 全程比毫秒 int，
-      // 同版本「本地不晚于远端」必须成立，否则每次 push 全量重传。
       final localMicros = DateTime.fromMicrosecondsSinceEpoch(
         1780000000123456,
         isUtc: true,
@@ -30,7 +28,6 @@ void main() {
       final restored = ManifestEntry.fromJson(
         jsonDecode(jsonEncode(entry.toJson())),
       )!;
-      // 模拟 push 的跳过判断
       expect(localMicros.millisecondsSinceEpoch <= restored.timeMs, isTrue);
     });
 
@@ -84,7 +81,6 @@ void main() {
       final json = validJson()..['version'] = SyncManifest.legacyVersion;
       final m = SyncManifest.fromJson(json);
       expect(m.version, SyncManifest.legacyVersion);
-      // 写回升到当前版本：2.8.0 客户端从此被版本门拦住。
       expect(m.copyForUpdate().version, SyncManifest.currentVersion);
     });
 
@@ -123,7 +119,6 @@ void main() {
             reason: 'entries $bad must be rejected, never silently empty',
           );
         }
-        // 缺失 entries 仍合法（视作空清单）。
         final m = SyncManifest.fromJson(validJson()..remove('entries'));
         expect(m.entries, isEmpty);
       },

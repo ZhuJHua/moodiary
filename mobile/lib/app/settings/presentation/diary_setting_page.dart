@@ -38,8 +38,6 @@ class DiarySettingPage extends StatelessWidget {
             MSliverSettingGroup(
               title: context.l10n.app.diaryPrefsWeather,
               children: [
-                // 三条各管一件事：前两条走和风（没配好就灰掉、点行跳去配），第三条
-                // 只要定位权限。都打开时也只打一发 GPS。
                 _GatedKvSwitchTile(
                   kv: .autoWeather,
                   title: context.l10n.app.autoWeather,
@@ -88,11 +86,6 @@ class _KvSwitchTile extends StatelessWidget {
   }
 }
 
-/// 依赖和风的开关：未配置时开关灰掉显示关（KV 值保留，配好即恢复），副标题改成
-/// 提示，整行点击跳到第三方服务页。
-///
-/// 和风是否可用：host 在明文 KV（同步、可监听），key 在钥匙串（异步，走 provider，
-/// 未读到前按不可用）。
 class _GatedKvSwitchTile extends ConsumerWidget {
   final MoodiaryKVs<bool> kv;
   final String title;

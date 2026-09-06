@@ -2,13 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-/// 直接读 SFNT 表：`name`（全名）与 `fvar`（可变字体 wght 轴）。
-///
-/// TTF / OTF（CFF）/ TTC（取第 0 张脸）都认。与曾经的 Rust ttf-parser 实现逐字对比过
-/// （Dosis、Apple 的多轴 SF、Songti.ttc、Noto OTF），行为一致：没有 Unicode 名字记录返回 null，
-/// 没有 fvar 返回空表。
 abstract final class FontTables {
-  /// nameID 4（Full font name）的 Unicode 记录；只有 Mac Roman 记录的老字体拿不到。
   static Future<String?> fullName(String path) async {
     final d = ByteData.sublistView(await File(path).readAsBytes());
     final tables = _tables(d);
@@ -17,7 +11,6 @@ abstract final class FontTables {
     return _names(d, name)[4];
   }
 
-  /// `{"default": 轴默认值, "<命名实例>": 该实例的 wght}`；没有 fvar 或没有 wght 轴则为空。
   static Future<Map<String, double>> wghtAxis(String path) async {
     final d = ByteData.sublistView(await File(path).readAsBytes());
     final tables = _tables(d);
@@ -29,10 +22,9 @@ abstract final class FontTables {
 
 const _ttcTag = 0x74746366; // 'ttcf'
 
-/// 表目录：tag → (offset, length)。
 Map<String, (int, int)> _tables(ByteData d) {
   var base = 0;
-  if (d.getUint32(0) == _ttcTag) base = d.getUint32(12); // 第 0 张脸的偏移
+  if (d.getUint32(0) == _ttcTag) base = d.getUint32(12);
   final numTables = d.getUint16(base + 4);
   final out = <String, (int, int)>{};
   for (var i = 0; i < numTables; i++) {
@@ -43,8 +35,6 @@ Map<String, (int, int)> _tables(ByteData d) {
   return out;
 }
 
-/// name 表：每个 nameID 取第一条 Unicode 记录（platform 0，或 platform 3 且 encoding 0/1/10），
-/// UTF-16BE 解码。
 Map<int, String> _names(ByteData d, (int, int) table) {
   final (off, _) = table;
   final count = d.getUint16(off + 2), strOff = off + d.getUint16(off + 4);
@@ -68,7 +58,6 @@ Map<int, String> _names(ByteData d, (int, int) table) {
 
 double _fixed(ByteData d, int o) => d.getInt32(o) / 65536.0;
 
-/// fvar 表：wght 轴默认值 + 每个命名实例的 wght。
 Map<String, double> _wght(
   ByteData d,
   (int, int) table,

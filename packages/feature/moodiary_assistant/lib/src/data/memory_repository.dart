@@ -3,7 +3,6 @@ import 'package:injectable/injectable.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
-/// 助手长期记忆（[MemoryEntry]）的读写。仅设备本地：不进 local_archive 备份、不进 LAN 同步。
 @lazySingleton
 class MemoryRepository {
   MemoryRepository(this._db);
@@ -18,7 +17,6 @@ class MemoryRepository {
     updatedAt: dbToTime(r.updatedAt),
   );
 
-  /// 全部记忆，按更新时间倒序（最近的在前）。
   Future<List<MemoryEntry>> getAll() async {
     final rows = await (_db.select(
       _db.memories,
@@ -26,7 +24,6 @@ class MemoryRepository {
     return [for (final r in rows) _toEntry(r)];
   }
 
-  /// 最近更新的前 [limit] 条，用于每轮注入（避免注入全部撑爆上下文）。
   Future<List<MemoryEntry>> getRecent(int limit) async {
     final rows =
         await (_db.select(_db.memories)

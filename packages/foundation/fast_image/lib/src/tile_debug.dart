@@ -1,8 +1,5 @@
 part of 'tile_view.dart';
 
-// 看图页 tile 调试叠层（长按 ⓘ 开）。颜色是状态编码 —— 绿 / 黄绿 / 橙 / 红 = sample 1 / 2 / 4 / 8，
-// 黄 = 解码中，灰 = 排队，蓝 = 视口 —— 画在照片上，刻意不跟主题；闸门里整文件放行。
-
 class _DebugSnapshot {
   final FastTilePlan? plan;
   final Set<String> inflight;
@@ -28,7 +25,6 @@ class _DebugSnapshot {
 }
 
 extension _TileDebugPainting on _TilePainter {
-  /// 画在 child 坐标里，线宽与字号按 1/scale 反缩，屏幕上恒定。
   void _paintDebug(
     Canvas canvas,
     Rect rect,
@@ -127,7 +123,6 @@ extension _TileDebugPainting on _TilePainter {
     );
   }
 
-  /// 标签按文字缓存排版结果；画的时候把画布缩到屏幕空间，字号不随 scale 变。
   static final _labels = <String, TextPainter>{};
 
   void _label(

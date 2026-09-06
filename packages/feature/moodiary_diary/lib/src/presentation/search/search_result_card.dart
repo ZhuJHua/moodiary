@@ -16,7 +16,6 @@ class SearchResultCard extends StatelessWidget {
   final Diary diary;
   final List<String> queryList;
 
-  /// 打开详情前的回调（如记录搜索历史）；之后照常 push 日记详情。
   final VoidCallback? onTap;
 
   @override
@@ -54,7 +53,6 @@ class SearchResultCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: .ellipsis,
                   textStyle: typography.titleMedium.emphasized.onSurface,
-                  // 搜索命中高亮是业务语义色，落到容器角色后按块底再补一个 backgroundColor。
                   textStyleHighlight: typography
                       .titleMedium
                       .emphasized

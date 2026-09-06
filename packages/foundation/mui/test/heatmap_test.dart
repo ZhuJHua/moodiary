@@ -1,8 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mui/mui.dart';
 
-/// 相邻两级之间最小的通道距离。20 是实测出来的失败点：把色阶写成「primary 按透明度叠
-/// 在卡片上」时，有彩档的 L0 与 L1 正好差 20，肉眼分不出来。
 const int _kMinChannelGap = 25;
 
 int _maxChannelDelta(Color a, Color b) {
@@ -35,8 +33,6 @@ Future<List<Color>> _rampOf(
 }
 
 void main() {
-  // 灰度档的 primary 是纯黑 / 纯白，跨度天然拉满，只测它等于没测 —— 真正会塌的是有彩档
-  // （primary 是 tone-40 / tone-80，离 surfaceContainerHighest 近得多）。
   const accents = [
     ('灰度', MuiAccent.neutral()),
     ('蓝', MuiAccent.seeded(Color(0xFF2E59A7))),
@@ -62,7 +58,6 @@ void main() {
       testWidgets('$brightness · $name 档色阶单调', (tester) async {
         final ramp = await _rampOf(tester, brightness, accent);
         final lum = ramp.map((c) => c.computeLuminance()).toList();
-        // 浅色主题往深走，深色主题往亮走 —— 方向不同，但必须一路同向。
         final rising = lum.last > lum.first;
         for (var i = 0; i < lum.length - 1; i++) {
           expect(
@@ -76,7 +71,6 @@ void main() {
   }
 
   testWidgets('网格铺满 weeks × 7，今天之后的格子留空占位', (tester) async {
-    // 2026-08-17 是周一，所以末列里周二到周六共 5 天在未来。
     final today = DateTime(2026, 8, 17);
     await tester.pumpWidget(
       MaterialApp(
@@ -97,7 +91,6 @@ void main() {
       ),
     );
 
-    // 可点的格子 = 4 × 7 − 5 个未来占位。
     expect(find.byType(GestureDetector), findsNWidgets(4 * 7 - 5));
   });
 
@@ -126,7 +119,6 @@ void main() {
       ),
     );
     final position = scrollable.controller!.position;
-    // 第一帧就在最右：没有「先渲染一年前、下一帧才跳过来」的那一下闪烁。
     expect(position.pixels, position.maxScrollExtent);
     expect(position.maxScrollExtent, greaterThan(0));
   });

@@ -15,7 +15,6 @@ import 'package:path/path.dart';
 class MediaManager {
   static final _thumbnail = FcNativeVideoThumbnail();
 
-  /// 返回 map：key=XFile 临时路径，value=实际文件名。
   static Future<Map<String, String>> saveImages({
     required List<XFile> imageFileList,
   }) async {
@@ -29,12 +28,6 @@ class MediaManager {
     return imageNameMap;
   }
 
-  /// 图片入库：**原字节直存**，不缩不转码 —— 用户的图我们不动。只有 HEIC 例外：
-  /// Flutter 与 webview 两端都解不了，且都是相机成片没有透明通道，固定转 JPG。
-  /// 后缀按魔数定（picker 吐的临时文件名不可信），从此后缀就是真实格式。
-  /// 落盘后 fire-and-forget 预热缩略图档位（[FastImageDerivatives.warm]）。
-  /// 已是 image- 命名的（重复插入）直接复用；[reuseExisting] 关掉则一律拷贝重命名 ——
-  /// 导入别人的包时，`image-` 名只是巧合，文件并不在本机目录里。失败返回 null。
   static Future<String?> saveImage(
     XFile imageFile, {
     bool reuseExisting = true,
@@ -64,7 +57,6 @@ class MediaManager {
     }
   }
 
-  /// 读文件头识别 MIME，认不出再退回按后缀。
   static Future<String?> _sniffMime(String path) async {
     RandomAccessFile? raf;
     try {
@@ -89,8 +81,6 @@ class MediaManager {
     };
   }
 
-  /// 返回 map：key=缓存路径，value=实际文件名
-  /// 返回 map：key=XFile 临时路径，value=实际文件名
   static Future<Map<String, String>> saveVideo({
     required List<XFile> videoFileList,
     bool reuseExisting = true,
@@ -161,7 +151,7 @@ class MediaManager {
   }
 
   static Future<bool> _getVideoThumbnail(XFile xFile, destPath) async {
-    // 封面仅用于列表 / 网格展示，与图片 m 档位同宽。
+    // 1280 = 图片 m 档位宽度，封面与其同宽
     const size = 1280;
     return await _thumbnail.saveThumbnailToFile(
       srcFile: xFile.path,
@@ -173,7 +163,6 @@ class MediaManager {
     );
   }
 
-  /// 存入系统相册（Moodiary 相簿）。返回是否成功，提示语由调用方按 l10n 处理。
   static Future<bool> saveToGallery({
     required String path,
     required MediaType type,
@@ -199,6 +188,4 @@ class MediaManager {
     if (timestampInt == null) return null;
     return .fromMillisecondsSinceEpoch(timestampInt);
   }
-
-  /// 根据日期分组文件
 }

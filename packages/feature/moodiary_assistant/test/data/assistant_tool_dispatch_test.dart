@@ -4,8 +4,6 @@ import 'package:moodiary_assistant/src/data/assistant_tools.dart';
 import 'package:moodiary_assistant/src/data/impl/rig_assistant.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
-/// 工具分发。**没有事前闸门**——三个删除都可恢复（日记进回收站、分类可重建、
-/// 记忆软删），事前确认对可逆操作是过度设计，误删走事后撤销。
 void main() {
   final probe = AssistantToolSpec(
     tool: .deleteDiary,
@@ -62,7 +60,6 @@ void main() {
     AssistantToolSpec specOf(AssistantTool t) =>
         AssistantToolRegistry.byId(t.id)!;
 
-    // 给模型的结果是英文，给用户的摘要走 i18n —— 两者刻意解耦。
     test('查询：命中数与生效的筛选条件，不截英文结果', () {
       final line = specOf(AssistantTool.queryDiaries).summaryOf({
         'keywords': '搬家',
@@ -181,7 +178,6 @@ void main() {
     });
 
     test('描述里必须写明沙箱够不到日记', () {
-      // 模型只能算它自己写进代码里的值；这条不写清楚它会去猜有没有全局的数据。
       final description = spec().description.toLowerCase();
       expect(description, contains('no network'));
       expect(description, contains('no access to the diaries'));
@@ -259,7 +255,6 @@ void main() {
           return 'did $id.';
         },
       );
-      // 抛出去的话，a 已经落库却会被报成整批失败，模型照提示词重跑 → 写重复数据。
       expect(ran, ['a', 'c']);
       expect(out.startsWith('Failed:'), isFalse);
       expect(out, contains('did a.'));
@@ -345,7 +340,6 @@ void main() {
       expect(record, startsWith('[tools already run]'));
       expect(record, contains('queryDiaries({"keywords":"搬家"})'));
       expect(record, contains('→ 47 篇 · 搬家'));
-      // 完整结果不该被重放：跨轮真正丢掉的只是「已经查过了」这件事。
       expect(record, isNot(contains('搬家第一天')));
       expect(record, isNot(contains('此处还有两千字')));
     });

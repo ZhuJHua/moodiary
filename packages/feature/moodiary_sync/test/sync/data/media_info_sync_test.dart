@@ -10,7 +10,6 @@ import 'package:moodiary_sync/src/data/sync_logger.dart';
 
 import '../sync_test_harness.dart';
 
-/// 内存归档 sink：记录条目字节，断言导出布局。
 final class MemoryArchiveSink implements ArchiveSink {
   final Map<String, Uint8List> entries = {};
 
@@ -112,7 +111,6 @@ void main() {
 
     test('墓碑推送删除远端对象，另一端 pull 后行随之删除', () async {
       final backend = FakeRemoteBackend();
-      // 设备 A 推上去，设备 B 也拉到本地。
       await engineOn(
         backend,
         mediaInfos: FakeMediaInfoStore([
@@ -123,7 +121,6 @@ void main() {
       await engineOn(backend, mediaInfos: deviceB).pull();
       expect(deviceB.mediaInfos, isNotEmpty);
 
-      // 设备 A 删除（行硬删 + 墓碑），push 墓碑。
       final tombstones = FakeTombstoneStore();
       tombstones.rows['m:audio-1.m4a'] = buildMediaInfoTombstone(
         'audio-1.m4a',
@@ -141,7 +138,6 @@ void main() {
         reason: '墓碑提交后远端对象应被删除',
       );
 
-      // 设备 B pull 应用墓碑。
       final pulled = await engineOn(backend, mediaInfos: deviceB).pull();
       expect(pulled.failed, 0);
       expect(deviceB.mediaInfos, isEmpty);
@@ -156,7 +152,6 @@ void main() {
           buildMediaInfo(fileName: 'audio-1.m4a', modifiedMs: 100),
         ]),
       ).push();
-      // 篡改远端对象：manifest 键指向 audio-1，对象却自称 audio-2。
       final tampered = buildMediaInfo(fileName: 'audio-2.m4a', modifiedMs: 100);
       backend.objects['mediainfo/audio/audio-1.m4a.json'] = await SyncCipher
           .plaintext
@@ -186,7 +181,6 @@ void main() {
     ).push();
     expect(report.failed, 0);
     expect(report.mediaInfoCount, 1);
-    // 脏行原样保留，不推送也不清除。
     expect(tombstones.rows.containsKey('z:weird'), isTrue);
   });
 

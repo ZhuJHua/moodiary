@@ -4,9 +4,6 @@ import 'package:moodiary_assistant/src/application/chat_items.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 void main() {
-  // 磁盘上区分两种角色的只有 'user' / 'assistant' 两个字面量。换成枚举的 .name
-  // 或改大小写，历史会全部读回成 assistant：整段对话左对齐，而「重新回答」
-  // 找不到最后一条用户消息、静默什么都不做。
   group('ChatMessage 往返', () {
     ChatMessage record({
       String role = kRoleAssistant,
@@ -78,7 +75,6 @@ void main() {
       expect(AssistantTurn.assistant('x').toRecord('s').role, 'assistant');
     });
 
-    // 旧的 settled() 是重建整张 metadata，顺手把 imageName 丢了。
     test('settled 只清两个瞬态标记，不碰 imageName 与用量', () {
       final turn = AssistantTurn(
         id: 'm1',
@@ -123,7 +119,6 @@ void main() {
     );
 
     setUp(() {
-      // 不传 repository：仓库是惰性取用的，只要不碰持久化就不会去碰 Isar。
       controller = AssistantChatController();
     });
 
@@ -144,7 +139,6 @@ void main() {
       expect(controller.tailRevision, greaterThan(before));
     });
 
-    // 跟随底部只认尾部变化：压缩 chip 插在会话中部不该把用户从历史里拽走。
     test('中插不算尾部变化', () {
       controller
         ..add(turn('a'))
@@ -191,7 +185,6 @@ void main() {
       expect(notifications, 0);
     });
 
-    // 流式增量只动 streaming 通道，列表结构没变就不该让整列表重建。
     test('updateStreaming 不发列表通知，但写回了表里那一条', () {
       controller.beginStreaming(
         AssistantTurn.assistant('', streaming: true).copyWith(),

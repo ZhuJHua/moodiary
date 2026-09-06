@@ -1,6 +1,3 @@
-//! 导出中间表示。三条导出链（Dart 的 Markdown、Rust 的 PDF / DOCX）共用这一份文档模型。
-//! 用 IR 而不是 tiptap 文档，是因为 tiptap 的 schema 随上游升级会变。
-
 pub struct IrDoc {
     pub id: String,
     pub title: String,
@@ -21,18 +18,14 @@ pub struct IrSpan {
     pub underline: bool,
     pub code: bool,
     pub href: Option<String>,
-    /// 双链目标日记 id；非空时 [text] 是链接标签。
     pub diary_link_id: Option<String>,
 }
 
 pub struct IrListItem {
     pub children: Vec<IrBlock>,
-    /// 非空表示这是任务项。
     pub checked: Option<bool>,
 }
 
-/// 表格的一行。包一层具名结构而不是 `Vec<Vec<IrCell>>`：FRB 的 CST 编解码器
-/// （full_dep: true）生成嵌套列表时会漏掉内层的 fill 函数，编译不过。
 pub struct IrRow {
     pub cells: Vec<IrCell>,
 }
@@ -69,9 +62,7 @@ pub enum IrBlock {
     Image {
         path: String,
         alt: Option<String>,
-        /// 正文列宽百分比上限（25/50/75/100）。
         width_percent: Option<u32>,
-        /// 粘贴进来的外链图，导出时不下载、只当链接处理。
         is_external: bool,
     },
     Media {
@@ -86,7 +77,6 @@ pub enum IrBlock {
 }
 
 impl IrDoc {
-    /// 「日期 · 天气 · 位置 · 分类」摘要行。
     pub fn meta_line(&self) -> String {
         let mut parts: Vec<&str> = Vec::new();
         if !self.time.is_empty() {

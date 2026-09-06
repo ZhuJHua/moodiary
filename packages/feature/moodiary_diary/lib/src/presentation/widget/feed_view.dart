@@ -1,4 +1,3 @@
-/// @docImport 'package:moodiary_diary/src/application/diary_stamp.dart';
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,16 +12,9 @@ import 'package:moodiary_diary/src/presentation/widget/feed_tile.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
-/// 信息流视图：没有左栏、没有卡片，单图不占整行。
-///
-/// 与时间线不同，这里**不分组**，所以不受「分组键必须等于排序键」的约束。但行内显示的
-/// 时间戳仍必须跟着排序键走（见 [diaryStampOf]）——否则按「最近修改」排序时，
-/// 列表顺序按 lastModified、行里却写着 time，看起来就是一列日期无序的条目。
 class DiaryFeedView extends ConsumerWidget {
   final DiaryFilter filter;
 
-  /// 排序是显式参数而非命令式读全局 KV——本 widget 是包的公开 API，正确性
-  /// 不能挂在「宿主会在 sort 变化时换 key 重建」这种写不进类型的契约上。
   final DiarySort sort;
 
   const DiaryFeedView({
@@ -67,8 +59,6 @@ class DiaryFeedView extends ConsumerWidget {
                     12 + MediaQuery.paddingOf(context).bottom,
                   ),
                   itemCount: diaries.length,
-                  // 条目之间只留间距：分隔线会把整页压成一张表格，卡片自己的
-                  // 边界已经说清楚「这里换了一条」。
                   separatorBuilder: (_, _) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final diary = diaries[index];
@@ -88,8 +78,6 @@ class DiaryFeedView extends ConsumerWidget {
                           placeByIdProvider(diary.placeId),
                         );
                         return DiaryFeedTile(
-                          // 按日记 id 定身份：列表按 index 复用 Element，重排后
-                          // 缩略图（gaplessPlayback）会先画上一篇的照片。
                           key: ValueKey(diary.id),
                           diary: diary,
                           sort: sort,
@@ -112,7 +100,6 @@ class DiaryFeedView extends ConsumerWidget {
                 ),
               );
             }
-            // 聚合提示卡只进「全部」视图（全局数量）。
             final showSummary =
                 filter.isAll &&
                 (pending.newDiaryIds.isNotEmpty ||

@@ -15,14 +15,11 @@ class MarkdownImportReport {
   final int categories;
   final int places;
 
-  /// front matter 的 id 在库里已存在（或本批里重复）而跳过的篇数。
   final int skipped;
   final int failed;
 
-  /// 引用了但没能收进来的媒体次数。
   final int missingMedia;
 
-  /// 中途被取消：已落库的批次不回滚，页面不得按成功呈现。
   final bool cancelled;
 
   const MarkdownImportReport({
@@ -36,8 +33,6 @@ class MarkdownImportReport {
   });
 }
 
-/// Markdown 包 → 日记的编排。逐篇：front matter → 媒体改写 → tiptap → `Diary`，
-/// 攒批经 `insertDiaries` 落库（一次分词 + 单事务）。单篇出错记 failed 不中止。
 class MarkdownImporter {
   final DiaryRepository _diaries;
   final CategoryRepository _categories;
@@ -106,8 +101,6 @@ class MarkdownImporter {
 
         var body = parsed.body;
         var title = meta.title;
-        // 导出时标题既写进 front matter 又写成一级标题：同名的那行取走，不然正文开头
-        // 会多出一个与标题重复的 h1。
         final (heading, rest) = MarkdownFrontMatter.splitLeadingTitle(body);
         if (heading != null && (title == null || heading == title.trim())) {
           title ??= heading;
@@ -175,7 +168,6 @@ class MarkdownImporter {
         onProgress?.call(i + 1, total);
       }
     }
-    // 取消也把已转换的落库：媒体已经拷进来了，丢掉这一批只会留下孤儿文件。
     await flush();
 
     return MarkdownImportReport(
@@ -189,7 +181,6 @@ class MarkdownImporter {
     );
   }
 
-  /// 同助手落库的做法：转不成 tiptap 就按旧 markdown 类型原文保存，至少不丢字。
   static ({String content, String contentText, DiaryType type}) _toTiptap(
     String markdown,
   ) {
@@ -208,7 +199,6 @@ class MarkdownImporter {
     );
   }
 
-  /// 地点复用顺序：同名 → 200 m 内最近 → 新建（按名派生 id，跨设备同名合并）。
   Future<(String id, bool created)> _resolvePlace(
     MarkdownPosition position,
     List<Place> known,

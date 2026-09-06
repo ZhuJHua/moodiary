@@ -16,19 +16,14 @@ enum ExportFormat {
       ExportFormat.values.firstWhere((f) => f.id == id, orElse: () => markdown);
 }
 
-/// 音视频在 docx / pdf 里没有对等物，这里决定怎么降级。
 enum ExportMediaPolicy {
-  /// 图片内嵌；音视频写占位（视频带封面）。
   embed,
 
-  /// 图片也只写占位文字，产物最小。
   placeholder,
 
-  /// 完全不含媒体。
   none,
 }
 
-/// 纸张。twip = 1/1440 英寸。
 enum ExportPaper {
   a4('A4', 11906, 16838),
   letter('Letter', 12240, 15840),
@@ -40,7 +35,7 @@ enum ExportPaper {
 
   const ExportPaper(this.label, this.width, this.height);
 
-  /// typst 按毫米取尺寸；1 twip = 1/1440 英寸。
+  // 1 twip = 1/1440 英寸
   double get widthMm => width * 25.4 / 1440;
 
   double get heightMm => height * 25.4 / 1440;
@@ -49,24 +44,16 @@ enum ExportPaper {
       ExportPaper.values.firstWhere((p) => p.label == label, orElse: () => a4);
 }
 
-/// 三种格式共用的部分。
 class ExportCommon {
   final bool includeTitle;
 
-  /// 标题下写一行「日期 · 天气 · 位置 · 分类」。
   final bool includeMeta;
   final ExportMediaPolicy media;
 
-  /// 合并成一个文件；关闭则每篇一份并打包 zip。
   final bool merge;
 
-  /// 每篇一份时的文件名模板，支持 `{date}` `{title}` `{id}`。
   final String nameTemplate;
 
-  /// 元信息里的位置**单独一个开关，且默认关**。
-  ///
-  /// 日记页上看是自己的，导出去就是把行踪给了别人 —— 图片尤其（发朋友圈那张）。
-  /// 日期 / 心情 / 天气 / 分类仍归 [includeMeta] 管，四种格式一起生效。
   final bool includePosition;
 
   const ExportCommon({
@@ -116,18 +103,14 @@ class ExportCommon {
   );
 }
 
-/// 排版类格式（docx / pdf）共用的页面与字体设定。
 class LayoutExportOptions {
   final ExportPaper paper;
 
-  /// 四边页边距（twip）。
   final int margin;
   final double fontSizePt;
   final double lineSpacing;
   final bool firstLineIndent;
 
-  /// DOCX 写进 `w:rFonts` 的字体名（只存名不嵌文件，随便填）；
-  /// PDF 下这里存的是用户已导入字体的文件名，必须真实存在且为 TrueType。
   final String eastAsiaFont;
   final String asciiFont;
 
@@ -181,19 +164,13 @@ class LayoutExportOptions {
       );
 }
 
-/// 图片专属。模版只有「原稿」一个（跟随应用配色），所以这里没有模版字段 ——
-/// 明暗、宽度、清晰度、水印四个旋钮就是全部。
 class ImageExportOptions {
-  /// 卡片明暗。null = 跟随应用当前主题。
   final Brightness? brightness;
 
-  /// 逻辑宽度（dp）。标准 360 / 宽 480。
   final double widthDp;
 
-  /// 清晰度倍率，2 或 3。产物像素宽 = widthDp * scale。
   final int scale;
 
-  /// 底部的 Moodiary 标识条。
   final bool watermark;
 
   const ImageExportOptions({
@@ -217,7 +194,6 @@ class ImageExportOptions {
   );
 
   Map<String, dynamic> toJson() => {
-    // null 存成 'system'：跟随应用是一种明确的选择，不是「没设过」。
     'brightness': brightness?.name ?? 'system',
     'widthDp': widthDp,
     'scale': scale,
@@ -237,7 +213,6 @@ class ImageExportOptions {
       );
 }
 
-/// 一次导出的完整配置。按格式分别持久化，互不覆盖。
 class ExportSettings {
   final ExportCommon common;
   final LayoutExportOptions docx;
@@ -281,7 +256,6 @@ class ExportSettings {
         image: .fromJson(json['image'] as Map<String, dynamic>? ?? const {}),
       );
     } catch (_) {
-      // 配置格式变过 / 存坏了：退回默认，不让设置页打不开。
       return const ExportSettings();
     }
   }

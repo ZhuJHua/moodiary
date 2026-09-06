@@ -1,6 +1,4 @@
-// 2.8.0 之前的 Isar collection 定义（引擎搬迁的只读留底）。
-// ⚠️ 逐字节冻结：schema 由「注册顺序 + 字段形状」决定（位置即地址），任何改动都会
-// 让旧库被错误解读。新世界的模型在 moodiary_models，这里永不跟进。
+// 字段顺序/形状即 isar 编码地址，改动会读坏旧库
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:isar_plus/isar_plus.dart';
@@ -19,7 +17,6 @@ abstract class Category with _$Category {
     @UtcDateTimeConverter() required DateTime lastModified,
     String? parentId,
 
-    /// 卡片/标签用的 ARGB 颜色；null = 未设置（由 categoryColorOf 回退到派生色）。
     int? color,
   }) = _Category;
 

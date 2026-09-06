@@ -90,8 +90,6 @@ void main() {
   });
 
   group('DiaryContent — 媒体守恒（正则少认时不清空已有引用）', () {
-    // 这四种手打 markdown 写法 `![](name)` 正则都认不出，但文件名仍在正文里。
-    // 少认即清空 imageName → 媒体成孤儿 → 「清理无用文件」永久删除 + LWW 扩散。
     const cases = {
       'title 语法': '![](image-a.png "标题")',
       '尖括号': '![](<image-a.png>)',

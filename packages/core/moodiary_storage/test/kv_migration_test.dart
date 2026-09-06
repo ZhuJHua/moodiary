@@ -55,14 +55,9 @@ void main() {
     });
   });
 
-  /// MMKV / SharedPreferences 两侧的类型分派都是 `switch (T)` 加一个抛异常的
-  /// default 分支，加一个 `MoodiaryKVs<Duration>` 之类的键不会有编译错误，
-  /// 只会在运行时炸。这条闸门把它挪到编译-测试期。
   test('每个 KV 的值类型都在后端支持的五种之内', () {
     const supported = {'int', 'bool', 'double', 'String', 'List<String>'};
     for (final kv in MoodiaryKVs.values) {
-      // defaultValue 为 null 的键从 runtimeType 取不到 T，退而用 toString 里的
-      // 泛型实参（`MoodiaryKVs<String>.appVersion`）。
       final generic = RegExp(r'<(.+)>').firstMatch(kv.runtimeType.toString());
       expect(
         supported,

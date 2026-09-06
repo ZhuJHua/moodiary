@@ -5,18 +5,8 @@ import 'package:moodiary_models/moodiary_models.dart';
 
 import 'export_doc.dart';
 
-/// 媒体裸文件名 → 绝对路径。`kind` 取 `image` / `audio` / `video` / `thumbnail`，
-/// 与 core 的 `AppFiles.getRealPath` 同签名 —— 本包是 foundation 叶子，不能反向依赖 core，
-/// 故由调用方注入。
 typedef ResolveMediaPath = String Function(String kind, String name);
 
-/// tiptap 文档 JSON → [ExportDoc]。
-///
-/// 与 [MarkdownToTiptap] 互为反向，但**不是无损往返**：markdown 表达不了 diaryLink、
-/// image 的 widthPercent、表格的合并与对齐，这些在 markdown writer 里会降级（docx/pdf 保留）。
-///
-/// 认不出的节点类型记进 [ExportDoc.unsupportedNodes] 而不是抛异常 —— 一篇日记里的一个
-/// 怪节点不该让整批 300 篇的导出失败；但也不静默，UI 负责把它报出来。
 class TiptapToIr {
   const TiptapToIr._();
 
@@ -41,8 +31,6 @@ class TiptapToIr {
     if (doc != null) {
       _blocks(doc['content'], blocks, unsupported, resolvePath);
     } else if (content.trim().isNotEmpty) {
-      // 旧 markdown / richText 日记：不在这里解析，交由调用方先经 MarkdownToTiptap
-      // 转换。走到这里说明调用方没转，按整段纯文本降级，至少不丢字。
       blocks.add(.paragraph(spans: [irSpan(content)]));
     }
 
@@ -66,9 +54,7 @@ class TiptapToIr {
     try {
       final obj = jsonDecode(content);
       if (obj is Map<String, dynamic> && obj['type'] == 'doc') return obj;
-    } catch (_) {
-      /* 非 JSON */
-    }
+    } catch (_) {}
     return null;
   }
 
@@ -95,7 +81,6 @@ class TiptapToIr {
     switch (node['type']) {
       case 'paragraph':
         final spans = _inline(node['content'], unsupported);
-        // 空段落保留：它在原文里是有意的留白，markdown/docx 都靠它分段。
         out.add(.paragraph(spans: spans));
 
       case 'heading':
@@ -229,7 +214,6 @@ class TiptapToIr {
     return .table(rows: rows);
   }
 
-  /// 合并跨度：属性缺失或非法（0 / 负数）时退回 1。
   static int _span(dynamic attrs, String key) {
     if (attrs is! Map) return 1;
     final v = attrs[key];
@@ -273,14 +257,11 @@ class TiptapToIr {
     );
   }
 
-  /// 外链媒体：编辑器允许粘贴 http(s) 图片，此时 src 不是 `image-` 裸名。
-  /// 拿它当本地名去拼路径会得到一个必然不存在的文件。
   static bool _isExternal(String src) {
     if (_mediaPrefixes.any(src.startsWith)) return false;
     return src.startsWith('http://') || src.startsWith('https://');
   }
 
-  /// 收集行内节点为 span 列表，相邻同样式片段合并。
   static List<IrSpan> _inline(dynamic content, Set<String> unsupported) {
     final spans = <IrSpan>[];
     if (content is! List) return spans;
@@ -385,7 +366,6 @@ class TiptapToIr {
     );
   }
 
-  /// 代码块正文：内容是纯 text 节点，直接拼接（不认 mark）。
   static String _plainText(dynamic content) {
     if (content is! List) return '';
     final buf = StringBuffer();

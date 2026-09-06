@@ -1,4 +1,3 @@
-// Category / MediaInfo / Tombstone / Font 四个小仓储的 SQLite 行为测试。
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -30,7 +29,6 @@ void main() {
       expect(await repo.deleteACategory(c.id), isTrue);
       expect(await repo.getAllCategories(), isEmpty);
       expect(await tombs.getByKey(SyncTombstone.categoryKey(c.id)), isNotNull);
-      // 复活：重插清墓碑
       await repo.insertACategory(c);
       expect(await tombs.getByKey(SyncTombstone.categoryKey(c.id)), isNull);
     });
@@ -81,7 +79,6 @@ void main() {
         await tombs.getByKey(SyncTombstone.mediaInfoKey('audio-1.m4a')),
         isNotNull,
       );
-      // durationMs 为 null 的行不落哨兵
       await repo.insertAMediaInfo(MediaInfo.create(fileName: 'audio-2.m4a'));
       expect(
         (await repo.getMediaInfoByFileName('audio-2.m4a'))!.durationMs,

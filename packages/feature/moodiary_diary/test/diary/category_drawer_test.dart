@@ -13,7 +13,6 @@ import 'package:mui/mui.dart';
 
 import '../support/pump.dart';
 
-// 三个定制宿主（带 drawer key / containerOf 捕获）仍手写包裹，用得到主题。
 final _mui = buildMuiTheme(brightness: Brightness.light);
 
 Category cat(String id, String name) =>
@@ -35,7 +34,6 @@ Widget wrap({
 );
 
 void main() {
-  // drawer 经容器取「待同步」持有者。
   setUp(() => getIt.registerSingleton(SyncPendingTracker()));
   tearDown(getIt.reset);
 
@@ -67,14 +65,12 @@ void main() {
       ),
     );
     await t.pumpAndSettle();
-    // 8 − (2+4+1) = 1，不用再查一次库。
-    expect(find.text('未分类'), findsNothing); // l10n 里叫「无分类」
+    expect(find.text('未分类'), findsNothing);
     expect(find.text('无分类'), findsOneWidget);
-    expect(find.text('1'), findsNWidgets(2)); // 阅读 1 + 无分类 1
+    expect(find.text('1'), findsNWidgets(2));
   });
 
   testWidgets('never shows a negative uncategorized count', (t) async {
-    // 计数来自两次独立查询，中间插入日记时可能短暂对不上。
     await t.pumpWidget(
       wrap(categories: three, byCategory: const {'tr': 9}, total: 2),
     );
@@ -85,7 +81,6 @@ void main() {
   testWidgets('picking a category writes the filter and closes the drawer', (
     t,
   ) async {
-    // 必须挂成真正的 drawer：选中后组件会 pop 自己，当 body 挂时 pop 掉的是整个页面。
     final key = GlobalKey<ScaffoldState>();
     late ProviderContainer container;
     await t.pumpWidget(
@@ -132,7 +127,6 @@ void main() {
       container.read(homeDiaryFilterProvider),
       const DiaryFilter.category('tr'),
     );
-    // 选完抽屉应当自己关上。
     expect(find.text('管理分类'), findsNothing);
 
     key.currentState!.openDrawer();
@@ -148,8 +142,6 @@ void main() {
   testWidgets('picking a category drops the pending multi-selection', (
     t,
   ) async {
-    // 选中的 id 属于旧筛选。跨维度存活的话，批量删除会在新列表里一条都匹配不上，
-    // 变成「弹成功提示但一篇没删」。
     final key = GlobalKey<ScaffoldState>();
     late ProviderContainer container;
     await t.pumpWidget(
@@ -198,7 +190,6 @@ void main() {
   });
 
   testWidgets('counts stay blank until the query lands', (t) async {
-    // 先铺一屏 0 再跳成真实值，比空着更像出了错。
     await t.pumpWidget(
       ProviderScope(
         overrides: [
@@ -213,7 +204,6 @@ void main() {
             data: _mui,
             child: MaterialApp(
               localizationsDelegates: const [
-                // material_ui 的 widget 要它自己那份 MaterialLocalizations。
                 ...GlobalMaterialLocalizations.delegates,
                 GlobalMuiLocalizations.delegate,
               ],

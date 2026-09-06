@@ -4,15 +4,11 @@ import 'package:moodiary_assistant/src/data/model_resolver.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
-/// 参与压缩判定的一条消息（从聊天控制器的文本消息投影而来）。
 typedef CompactionMessage = ({String id, bool fromUser, String text});
 
-/// 自动上下文压缩：把较早对话摘要进 [ChatSession]，只影响发送给模型的历史（Isar 消息永不
-/// 删除，可逆）。任何失败都返回 null，不打断主对话。
 class ContextCompactionController {
   final Set<String> _inFlight = <String>{};
 
-  /// 判定并执行压缩，返回带新摘要/水位的会话副本；无需压缩或失败返回 null。
   Future<ChatSession?> maybeCompact({
     required ChatSession session,
     required List<CompactionMessage> orderedMessages,
@@ -31,12 +27,10 @@ class ContextCompactionController {
     if (lastInputTokens < budget * assistantCompactionTriggerRatio) return null;
     if (orderedMessages.length <= assistantCompactionTailMessages) return null;
 
-    // 末尾若干条逐字保留；其余为可压缩范围。
     final preTail = orderedMessages.sublist(
       0,
       orderedMessages.length - assistantCompactionTailMessages,
     );
-    // 只折叠上次水位之后新增的部分（滚动摘要），不重复摘要已压缩内容。
     var startIdx = 0;
     final watermark = session.compactedUpToMessageId;
     if (watermark != null) {
@@ -92,7 +86,6 @@ class ContextCompactionController {
       ),
     );
 
-    // 摘要用与对话同一条线路（协议按模型解析）。
     final route = ModelResolver.resolve(provider, model);
     final request = AssistantChatRequest(
       type: route.protocol,

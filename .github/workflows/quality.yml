@@ -47,11 +47,7 @@ jobs:
         working-directory: packages/foundation/fast_image/rust
         run: rustup toolchain install
 
-      # 真库集成测试（倒排索引 / 2.8.0 迁移）靠这个变量解除 skip；动态库随
-      # isar_plus_flutter_libs 的 pub 包分发。路径从 bootstrap 必然生成的
-      # package_config.json 读——不猜 PUB_CACHE 落点（container/self-hosted runner
-      # 会变），版本也不再第三份手抄（跟着 pubspec.lock 走）。找不到即 exit 1，
-      # 不许静默退回「全部跳过」。
+      # 真库集成测试靠 ISAR_TEST_DYLIB 解除 skip；找不到即 exit 1，不许静默全跳过。
       - name: Locate Isar test dylib
         run: |
           root=$(python3 -c "import json;d=json.load(open('.dart_tool/package_config.json'));print(next(p['rootUri'] for p in d['packages'] if p['name']=='isar_plus_flutter_libs'))")
@@ -77,7 +73,6 @@ jobs:
         with:
           components: clippy
 
-      # 每个自带原生库的包（fast_* 与 moodiary_rust）各一个 crate；一次循环全部过 clippy + test。
       - name: Clippy + Test (fast_*)
         working-directory: packages/foundation
         run: |

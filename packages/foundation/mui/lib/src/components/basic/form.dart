@@ -3,30 +3,12 @@ import 'package:mui/mui.dart';
 
 const double kMoodiaryFieldHeight = 48;
 
-/// 输入框的外观档。
 enum MFieldVariant {
-  /// 圆角填充式：底色 / 内边距 / 六条边框全部来自 `inputDecorationTheme`。
   filled,
 
-  /// 无背景：宿主自己画了容器（聊天输入面板、AppBar 里的搜索框），
-  /// 字直接落在宿主的面上。
-  ///
-  /// **必须同时撤掉六条边框，只撤 `border` 不管用** —— `InputDecorator` 先解析
-  /// 状态边框（enabled / focused / disabled / error / focusedError），
-  /// 只有它们全为 null 才回落到 `decoration.border`，而主题把五条都填满了。
-  /// 同理 `filled: false` 也漏不得：`applyDefaults` 是 `filled ?? theme.filled`，
-  /// 不写就继承 true。这两个坑合起来的症状是「写了 border: .none 却还有个药丸」。
   plain,
 }
 
-/// 圆角填充式输入框。取代仓内并存的三种写法（OutlineInputBorder 默认 4 圆角 /
-/// 裸下划线 / 从不 filled），圆角与按钮同为 [MuiRadius.md]。
-///
-/// 字段名由 [label] 承担，静态置于框上方 —— 多字段表单里所有标签共用一条左基线，
-/// 比会浮动的 M3 label 好扫。弹层标题已经点明唯一字段时（单输入弹窗）省略 [label]。
-///
-/// 尾部槽位一次只出现一个，优先级：[trailing] > 密码眼睛（[obscureText]）> 清除键
-/// （[showClear] 只管最后这一个，关掉它不影响眼睛）。
 class MField extends StatefulWidget {
   final TextEditingController controller;
   final String? label;
@@ -37,14 +19,8 @@ class MField extends StatefulWidget {
   final bool autofocus;
   final int? maxLength;
 
-  /// null = 不限行数，随内容一直长。与 [expands] 互斥。
   final int? maxLines;
 
-  /// 撑满父级给的高度（全屏编辑器这类整页输入用）。
-  ///
-  /// 开了它就由父级决定高度：[maxLines] / [minHeight] 都不再生效，光标从顶部起
-  /// 排（否则单行内容会垂直居中浮在整页中间）。**父级必须给出有界高度**，
-  /// 放进无界的 Column / ListView 里会直接报约束错误。
   final bool expands;
 
   final double minHeight;
@@ -57,11 +33,8 @@ class MField extends StatefulWidget {
   final Widget? trailing;
   final MFieldVariant variant;
 
-  /// 关掉内置清除键（[trailing] 与密码眼睛不受影响）。聊天输入框、并排的数值格
-  /// 都不该有它。
   final bool showClear;
 
-  /// 覆盖主题的内边距。[MFieldVariant.plain] 下不传即为零。
   final EdgeInsetsGeometry? contentPadding;
 
   const MField({
@@ -102,7 +75,6 @@ class _MFieldState extends State<MField> {
   @override
   void initState() {
     super.initState();
-    // 只为了在有/无内容之间切换清除键，不参与校验。
     widget.controller.addListener(_onChanged);
   }
 
@@ -146,8 +118,6 @@ class _MFieldState extends State<MField> {
       color: scheme.onSurfaceVariant,
       visualDensity: .compact,
       tooltip: MaterialLocalizations.of(context).deleteButtonTooltip,
-      // 清空后要**手动**补一次 onChanged：`TextField.onChanged` 只在用户输入时触发，
-      // 程序改 controller 不算。少了这一句，「清除」会让搜索类页面停在旧结果上。
       onPressed: () {
         widget.controller.clear();
         widget.onChanged?.call('');
@@ -158,7 +128,6 @@ class _MFieldState extends State<MField> {
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
-    // 密码框永远单行。除此之外「不限行数」与「撑满高度」都算多行。
     final multiline =
         !widget.obscureText && (widget.expands || (widget.maxLines ?? 2) > 1);
     final plain = widget.variant == MFieldVariant.plain;
@@ -171,13 +140,11 @@ class _MFieldState extends State<MField> {
       enabled: widget.enabled,
       obscureText: _obscured,
       maxLength: widget.maxLength,
-      // expands 要求 maxLines 与 minLines 同时为 null，这是 TextField 的硬约定。
       maxLines: widget.obscureText
           ? 1
           : (widget.expands ? null : widget.maxLines),
       minLines: widget.expands ? null : 1,
       expands: widget.expands && !widget.obscureText,
-      // 撑满高度时不从中间起排。
       textAlignVertical: widget.expands ? TextAlignVertical.top : null,
       keyboardType: widget.keyboardType,
       inputFormatters: widget.inputFormatters,
@@ -185,20 +152,14 @@ class _MFieldState extends State<MField> {
       onSubmitted: widget.onSubmitted,
       onChanged: widget.onChanged,
       style: context.theme.typography.bodyLarge.onSurface,
-      // 圆角填充式外观（filled / fillColor / contentPadding / 六种边框）已经整段
-      // 搬进 `inputDecorationTheme`，见 mui 的 themes/build.dart。
-      // 这里只留**每个实例各不相同**的部分。
       decoration: InputDecoration(
         hintText: widget.hintText,
         errorText: widget.errorText,
         counterText: '',
-        // plain 档不给最小高度：宿主已经决定了这块地方多高。
         constraints: multiline || plain
             ? null
             : BoxConstraints(minHeight: widget.minHeight),
         suffixIcon: _buildTrailing(scheme),
-        // 下面六项在 filled 档全传 null，也就是照旧继承主题。
-        // 见 [MFieldVariant.plain] 上的注释：六条边框缺一条都白撤。
         filled: plain ? false : null,
         isCollapsed: plain ? true : null,
         contentPadding: plain
@@ -236,7 +197,6 @@ class _MFieldState extends State<MField> {
   }
 }
 
-/// 表单分组标题。字段多到需要分节时才用（S3 的连接 / 凭证 / 选项）。
 class MFormSection extends StatelessWidget {
   final String label;
 
@@ -256,8 +216,6 @@ class MFormSection extends StatelessWidget {
   }
 }
 
-/// 表单里的开关行。与 [MField] 同宽同圆角同填充，读起来才属于这张表单
-/// （[SwitchListTile] 是透明背景的列表行，混在填充式字段里像是掉进来的）。
 class MSwitchField extends StatelessWidget {
   final String label;
   final bool value;
@@ -298,8 +256,6 @@ class MSwitchField extends StatelessWidget {
   }
 }
 
-/// 表单末尾的破坏性动作行。刻意不放进底部动作条 —— 动作条只承载「取消 / 提交」
-/// 这一对，破坏性操作混进去会让手指在错误的位置形成肌肉记忆。
 class MDangerRow extends StatelessWidget {
   final String label;
   final IconData icon;

@@ -5,16 +5,11 @@ import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_rust/http.dart' as rust;
 
-/// [IHttpClient] 的 Rust(reqwest) 实现。opaque `HttpClient` 内含 reqwest 连接池，
-/// 作为全局单例常驻、跨请求复用连接。
 class RustHttpClient extends IHttpClient {
   RustHttpClient({this.onError});
 
-  /// 非 silent 请求失败时的回调（用于弹 toast）。
   final void Function(String message)? onError;
 
-  /// 库装载 + 建 client 都是异步的；只做一次，后续请求 await 已完成的 future。
-  /// late：构造本类的是容器（启动期就会构造），Rust 库要等首个真实请求才装载。
   late final Future<rust.HttpClient> _client =
       rust.MoodiaryRust.ensureInitialized().then(
         (_) => rust.HttpClient.newInstance(
@@ -51,8 +46,6 @@ class RustHttpClient extends IHttpClient {
     try {
       data = _decode<T>(raw.data!, plainText);
     } catch (error) {
-      // 解码失败（非法 JSON / 类型不符）不是 rust.HttpError，需单独兜住，
-      // 否则会绕过统一 catch、既不上报也不转成 HttpException。
       throw _report(
         HttpException(
           .decode,
@@ -104,8 +97,6 @@ class RustHttpClient extends IHttpClient {
       logger.i('Request: ${method.name} $url');
     }
     try {
-      // 建 client 也在 try 内：一旦（Android TLS 初始化等）建失败，rust.HttpError
-      // 会被下面统一捕获并上报，而非以裸异常逃逸。
       final client = await _client;
       final response = await client.request(
         options: rust.RequestOptions(
@@ -163,7 +154,6 @@ class RustHttpClient extends IHttpClient {
     } on rust.HttpError catch (error) {
       throw _report(_exception(error), silent: silent);
     } catch (error) {
-      // 传输失败经 sink 下发，编解码固定为 AnyhowException，拿不到 kind 只有文本。
       throw _report(HttpException(.unknown, error.toString()), silent: silent);
     }
   }
@@ -185,7 +175,6 @@ class RustHttpClient extends IHttpClient {
     }
     try {
       final client = await _client;
-      // 事件流：progress 事件 response 为 null，末条携带最终响应。
       await for (final event in client.uploadFile(
         options: rust.RequestOptions(
           method: _method(method),
@@ -215,13 +204,11 @@ class RustHttpClient extends IHttpClient {
     } on rust.HttpError catch (error) {
       throw _report(_exception(error), silent: silent);
     } catch (error) {
-      // 传输失败经 sink 下发，编解码固定为 AnyhowException，拿不到 kind 只有文本。
       throw _report(HttpException(.unknown, error.toString()), silent: silent);
     }
     throw const HttpException(.unknown, 'upload ended without response');
   }
 
-  /// 非 silent 时上报错误（弹 toast），再返回原异常供调用方 `throw`。
   HttpException _report(HttpException exception, {required bool silent}) {
     if (!silent) {
       onError?.call(
@@ -252,7 +239,6 @@ class RustHttpClient extends IHttpClient {
     return pairs;
   }
 
-  /// 合并调用方 headers 与请求体的 content-type（仅在调用方未显式给出时补上）。
   List<rust.KeyValue> _headers(Map<String, dynamic>? map, HttpBody? body) {
     final pairs = _pairs(map);
     final contentType = body?.contentType;

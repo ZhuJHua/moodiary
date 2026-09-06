@@ -3,7 +3,6 @@ import 'package:moodiary_assistant/src/presentation/assistant_page.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 void main() {
-  // 本地时刻，分桶只认本地日历。
   final now = DateTime(2026, 8, 18, 14, 30);
 
   ChatSession at(DateTime local) => ChatSession.create(
@@ -29,7 +28,6 @@ void main() {
   });
 
   test('近 7 天的边界与日记搜索一致：今天零点往前 7 天', () {
-    // 8/11 00:00 正好是边界，算在内；再早一秒落到「更早」。
     expect(bucketsOf([at(DateTime(2026, 8, 11, 0, 0))]), <SessionHistoryBucket>[
       .last7,
     ]);
@@ -74,8 +72,6 @@ void main() {
   });
 
   test('落库的 UTC 时刻按本地日历分桶，不按 UTC 日历', () {
-    // 8/18 00:30 本地 = UTC 前一天（在 UTC+n 的机器上）。少一次 toLocal 就会掉到
-    // 「近 7 天」。UTC 机器上两者无差别，这条只在有时区偏移时才真正判别。
     final session = at(DateTime(2026, 8, 18, 0, 30));
     expect(session.updatedAt.isUtc, isTrue);
     expect(bucketsOf([session]), <SessionHistoryBucket>[.today]);

@@ -1,5 +1,3 @@
-// 亮度 / 音量控制器的纯逻辑测试。假端口 + testWidgets 的 FakeAsync 时钟
-// （沿用 video_playback_machine_test 的做法：不引 fake_async 这个 transitive 依赖）。
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -8,13 +6,11 @@ import 'package:mui/mui.dart';
 class FakeAmbientPort implements VideoAmbientChannelPort {
   FakeAmbientPort({this.initial = 0.5});
 
-  /// null 模拟「平台读不到」。
   final double? initial;
 
   final _ctl = StreamController<double>.broadcast();
   final writes = <double>[];
 
-  /// 卡住写入用来观察单飞合并。
   Completer<void>? gate;
   bool released = false;
   int reads = 0;
@@ -50,8 +46,6 @@ typedef Rig = ({
   FakeAmbientPort volume,
 });
 
-/// 建台 → 跑用例 → **在用例体内**收尾。dispose 必须发生在测试体结束前：
-/// binding 的「不许留悬挂 timer」检查排在 tearDown 之前，放 addTearDown 里救不回来。
 void ambientTest(
   String name,
   Future<void> Function(WidgetTester tester, Rig rig) body, {
@@ -160,13 +154,12 @@ void main() {
       await tester.pump();
 
       rig.controller.begin(.brightness);
-      rig.controller.dragBy(.brightness, 3.0); // 划过头
+      rig.controller.dragBy(.brightness, 3.0);
       await tester.pump();
       expect(rig.controller.valueOf(.brightness), 1.0);
 
       rig.controller.dragBy(.brightness, -0.1);
       await tester.pump();
-      // 攒了欠账的话这里还会停在 1.0。
       expect(rig.controller.valueOf(.brightness), closeTo(0.9, 1e-9));
     });
 
@@ -212,11 +205,11 @@ void main() {
       await tester.pump();
       final mine = rig.controller.valueOf(.volume);
 
-      rig.volume.emitExternal(0.6); // 平台把 0.63 落到了 0.6 档
+      rig.volume.emitExternal(0.6);
       await tester.pump();
       expect(rig.controller.valueOf(.volume), mine);
 
-      await tester.pump(const Duration(milliseconds: 60)); // 窗口过期
+      await tester.pump(const Duration(milliseconds: 60));
       rig.volume.emitExternal(0.6);
       await tester.pump();
       expect(rig.controller.valueOf(.volume), 0.6);
@@ -246,13 +239,13 @@ void main() {
     });
 
     ambientTest('初值迟到：按下时还没读到，读到之后以那一刻为基准', (tester, rig) async {
-      rig.controller.prime(); // 刻意不 pump，read 还没完成
+      rig.controller.prime();
 
       rig.controller.begin(.volume);
-      rig.controller.dragBy(.volume, 0.3); // 这一段作废
+      rig.controller.dragBy(.volume, 0.3);
       expect(rig.volume.writes, isEmpty);
 
-      await tester.pump(); // 初值 0.4 落地
+      await tester.pump();
       rig.controller.dragBy(.volume, 0.1);
       await tester.pump();
       expect(rig.controller.valueOf(.volume), closeTo(0.5, 1e-9));

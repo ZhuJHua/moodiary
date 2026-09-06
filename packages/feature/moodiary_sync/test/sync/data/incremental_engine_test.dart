@@ -21,7 +21,6 @@ void main() {
 
   setUp(() async {
     logger = (await setUpSyncEnv()).logger;
-    // 默认把 webdav 标记为唯一已配置后端，使单后端 tombstone 推完即可硬删。
     await configureBackend(.webdav);
   });
 
@@ -36,7 +35,6 @@ void main() {
     FakeMediaFiles? media,
     int concurrency = 4,
   }) {
-    // 引擎与日记/分类/媒体元数据 store 必须共享同一墓碑表（镜像真实仓储的同库不变量）。
     final tombstoneStore =
         tombstones ??
         diaries?.tombstones ??
@@ -58,8 +56,6 @@ void main() {
     );
   }
 
-  /// 用一个独立 store 的引擎把 [diaries]/[cats] push 到 [backend]，模拟「另一台设备
-  /// 已经同步过」。[media] 须含被引用的媒体文件，否则不会被声明进 manifest。
   Future<void> seedRemote(
     FakeRemoteBackend backend, {
     List<dynamic> diaries = const [],
@@ -109,7 +105,6 @@ void main() {
       expect(manifest.version, SyncManifest.currentVersion);
       expect(manifest.entries.keys, containsAll(['d:a', 'd:b', 'c:c1']));
       expect(manifest.entries['d:a']!.timeMs, atMs(100).millisecondsSinceEpoch);
-      // 成功且无失败 → 推进「上次同步时间」。
       expect(MoodiaryKVs.lastSyncTime.get(), greaterThan(0));
     });
 
@@ -135,11 +130,9 @@ void main() {
       final report = await engineOn(backend, diaries: store).push();
 
       expect(report.diaryCount, 1);
-      // 报告要说出「有一篇因打开被跳过」：watcher 据此保留「待推」标记。
       expect(report.skippedOpen, 1);
       expect(backend.hasObject(SyncKeys.diaryObjectPath('closed')), isTrue);
       expect(backend.hasObject(SyncKeys.diaryObjectPath('open')), isFalse);
-      // 被跳过的日记不进 manifest。
       expect(backend.manifest()!.entries.keys, isNot(contains('d:open')));
     });
 
@@ -181,7 +174,6 @@ void main() {
         expect(report.changedNothing, isFalse);
         expect(report.failed, 0);
 
-        // 第二轮两侧都不动：这是弹窗说「已是最新」的依据，不能再报「0 条」之外的东西。
         final again = await engineOn(backend, diaries: store).sync();
         expect(again.changedNothing, isTrue);
         expect(again.pushed.isEmpty, isTrue);
@@ -241,7 +233,6 @@ void main() {
 
       await engineOn(backend, diaries: store).push();
 
-      // 被「打开中」过滤、未上传 → 仍保留待同步角标。
       expect(getIt<SyncDirtyTracker>().listenable.value.contains('a'), isTrue);
     });
   });
@@ -256,7 +247,6 @@ void main() {
         SyncKeys.diaryObjectPath('a'),
       );
 
-      // 同一份本地（时间戳不变）再 push 一次 → 不应重传。
       final report = await engineOn(backend, diaries: store).push();
       expect(report.diaryCount, 0);
       expect(
@@ -305,10 +295,6 @@ void main() {
   });
 
   group('push — 0 字节 manifest', () {
-    // 曾经 Rust 用空 Vec 编码 404、Dart 又把空字节压成 null，「不存在」与「存在但
-    // 0 字节」不可区分：截断的 manifest.json 会让 push 认定远端为空、用本机数据
-    // 重建，远端墓碑全丢、已删日记在其它设备复活。现在 404 走 Option、0 字节如实
-    // 返回，落到损坏守卫上中止同步。
     test('0 字节 manifest 中止 push，不当作空远端重建', () async {
       final backend = FakeRemoteBackend();
       backend.objects[SyncKeys.manifestPath] = Uint8List(0);
@@ -318,7 +304,6 @@ void main() {
         engineOn(backend, diaries: store).push(),
         throwsA(isA<SyncException>()),
       );
-      // 关键：远端 manifest 没有被本机数据重建覆盖。
       expect(backend.objects[SyncKeys.manifestPath], isEmpty);
       expect(backend.hasObject(SyncKeys.diaryObjectPath('a')), isFalse);
     });
@@ -368,7 +353,6 @@ void main() {
 
     test('丢弃远端后强制重传：同名旧密文媒体被覆盖，不再被 stat 兜底确认进 manifest', () async {
       final backend = FakeRemoteBackend();
-      // 远端残留一份旧 DEK 的同名密文（丢弃信封后 manifest 已删，只剩它）。
       backend.objects['media/image/img-1.jpg'] = Uint8List.fromList(
         utf8.encode('OLD-DEK-CIPHERTEXT'),
       );
@@ -411,7 +395,6 @@ void main() {
       'locally-missing media is skipped, not claimed in manifest, no failure',
       () async {
         final backend = FakeRemoteBackend();
-        // 媒体文件本地缺失（FakeMediaFiles 为空）。
         final store = FakeDiaryStore([
           buildDiary(id: 'a', modifiedMs: 100, images: ['gone.jpg']),
         ]);
@@ -419,7 +402,6 @@ void main() {
         final report = await engineOn(backend, diaries: store).push();
         expect(report.failed, 0);
         expect(backend.hasObject(SyncKeys.diaryObjectPath('a')), isTrue);
-        // 本地缺失的引用绝不能写进 manifest（否则谎报存在、永失补传机会）。
         expect(backend.manifest()!.entries['d:a']!.media, isEmpty);
         expect(backend.hasObject('media/image/gone.jpg'), isFalse);
       },
@@ -445,13 +427,11 @@ void main() {
           media: media,
         ).push();
         expect(report.failed, 1);
-        // 媒体上传失败 → diary JSON 不得写入（避免远端 JSON 引用到未上传的媒体）。
         expect(backend.hasObject(SyncKeys.diaryObjectPath('a')), isFalse);
         expect(
           backend.manifest()?.entries.containsKey('d:a') ?? false,
           isFalse,
         );
-        // 有失败条目 → 不推进上次同步时间。
         expect(MoodiaryKVs.lastSyncTime.get(), 0);
       },
     );
@@ -459,11 +439,8 @@ void main() {
     test(
       'deferred stale-media delete spares media re-referenced by another diary',
       () async {
-        // 回归：A 把共享媒体 R 判为 stale 后,同一次 push 里新日记 B 又引用了 R。
-        // 推迟删除必须按终态 manifest 再确认——R 仍被 B 引用,不能删（否则 B 破图）。
         final backend = FakeRemoteBackend();
         final media = FakeMediaFiles()..put('image', 'R.jpg');
-        // 远端已有 A 引用 R。
         await seedRemote(
           backend,
           diaries: [
@@ -473,7 +450,6 @@ void main() {
         );
         expect(backend.hasObject('media/image/R.jpg'), isTrue);
 
-        // 本地：A 改成不再引用 R；新增 B 引用同一个 R。顺序 [a, b] + 串行,确保 A 先处理。
         final local = FakeDiaryStore([
           buildDiary(id: 'a', modifiedMs: 200, images: []),
           buildDiary(id: 'b', modifiedMs: 150, images: ['R.jpg']),
@@ -500,7 +476,6 @@ void main() {
       final media = FakeMediaFiles()
         ..put('image', 'old.jpg')
         ..put('image', 'new.jpg');
-      // 先同步带 old.jpg 的版本。
       await engineOn(
         backend,
         diaries: FakeDiaryStore([
@@ -510,7 +485,6 @@ void main() {
       ).push();
       expect(backend.hasObject('media/image/old.jpg'), isTrue);
 
-      // 编辑成只引用 new.jpg。
       await engineOn(
         backend,
         diaries: FakeDiaryStore([
@@ -549,7 +523,6 @@ void main() {
         expect(report.diaryCount, 1);
         expect(backend.hasObject(SyncKeys.diaryObjectPath('ok')), isTrue);
         expect(backend.hasObject(SyncKeys.diaryObjectPath('bad')), isFalse);
-        // 失败条目不进 manifest → 下次 LWW 仍判本地更新会重试。
         expect(backend.manifest()!.entries.containsKey('d:bad'), isFalse);
         expect(MoodiaryKVs.lastSyncTime.get(), 0);
       },
@@ -646,7 +619,6 @@ void main() {
           media: remoteMedia,
         );
 
-        // 本地已有同版本 diary 但缺媒体（上次媒体下载失败）。
         final local = FakeDiaryStore([
           buildDiary(id: 'a', modifiedMs: 1000, images: ['p.jpg']),
         ]);
@@ -656,7 +628,7 @@ void main() {
           diaries: local,
           media: localMedia,
         ).pull();
-        expect(report.diaryCount, 0); // 没下载 diary
+        expect(report.diaryCount, 0);
         expect(
           await localMedia.exists('image', 'p.jpg'),
           isTrue,
@@ -669,7 +641,6 @@ void main() {
   group('pull — tombstone', () {
     test('soft-deletes a local diary and deletes its media', () async {
       final backend = FakeRemoteBackend();
-      // 远端把 a 标记删除（tombstoneMs=2000）。
       backend.objects[SyncKeys.manifestPath] = jsonBytes({
         'version': SyncManifest.currentVersion,
         'updatedAt': 1,
@@ -744,8 +715,6 @@ void main() {
         final media = FakeMediaFiles()..put('image', 'p.jpg');
         bool? tombstonedAtMediaDelete;
         media.onDelete = (type, name) {
-          // 媒体删除时，记录必须已经落成墓碑（先落记录再删媒体），
-          // 否则并发编辑可在「删媒体」与「写 tombstone」之间插入并丢失。
           tombstonedAtMediaDelete =
               !local.diaries.containsKey('a') &&
               local.tombstones.rows.containsKey('d:a');
@@ -778,7 +747,6 @@ void main() {
       );
       expect(local.tombstones.rows, isEmpty);
 
-      // 关闭后下一轮 pull 正常收敛。
       getIt<OpenDiaryRegistry>().close('a');
       final second = await engineOn(backend, diaries: local).pull();
       expect(second.diaryCount, 1);
@@ -829,28 +797,23 @@ void main() {
     test(
       'hard-deletes only after EVERY configured backend received the tombstone',
       () async {
-        // 两个云后端都已配置。
         await configureBackend(.webdav);
         await configureBackend(.s3);
 
         final webdav = FakeRemoteBackend(backendId: 'webdav');
         final s3 = FakeRemoteBackend(backendId: 's3');
 
-        // 两个远端都已有 a 的普通条目。
         await seedRemote(
           webdav,
           diaries: [buildDiary(id: 'a', modifiedMs: 100)],
         );
         await seedRemote(s3, diaries: [buildDiary(id: 'a', modifiedMs: 100)]);
 
-        // 本地把 a 删除（行已硬删，墓碑行承载删除事实）。共享同一墓碑表
-        // （同一台设备切换后端）。
         final tombstones = FakeTombstoneStore([
           buildDiaryTombstone('a', modifiedMs: 200),
         ]);
         final local = FakeDiaryStore(const [], tombstones);
 
-        // 推到 webdav：仅覆盖 webdav，未覆盖全部 → 墓碑行不得清除。
         await engineOn(webdav, diaries: local).push();
         expect(
           tombstones.rows.containsKey('d:a'),
@@ -860,7 +823,6 @@ void main() {
         expect(tombstones.rows['d:a']!.pushedBackends, contains('webdav'));
         expect(webdav.manifest()!.entries['d:a']!.deleted, isTrue);
 
-        // 切到 s3 再推：现在两后端都覆盖 → 清除墓碑行。
         await engineOn(s3, diaries: local).push();
         expect(
           tombstones.rows.containsKey('d:a'),
@@ -877,7 +839,6 @@ void main() {
     () {
       test('a present-but-non-object manifest aborts push instead of dropping entries', () async {
         final backend = FakeRemoteBackend();
-        // 远端 manifest 被外部写成 JSON 数组（合法 JSON 但不是对象）。
         backend.objects[SyncKeys.manifestPath] = jsonBytes(<dynamic>[]);
         final store = FakeDiaryStore([buildDiary(id: 'local', modifiedMs: 1)]);
 
@@ -885,7 +846,6 @@ void main() {
           engineOn(backend, diaries: store).push(),
           throwsA(isA<SyncException>()),
         );
-        // 关键：绝不能把 manifest 重建/覆盖掉。
         expect(backend.opCount('write', SyncKeys.manifestPath), 0);
         expect(backend.objects[SyncKeys.manifestPath], jsonBytes(<dynamic>[]));
       });
@@ -897,7 +857,6 @@ void main() {
     () {
       test('tombstone push skips when the remote entry is newer', () async {
         final backend = FakeRemoteBackend();
-        // 远端有 a 的较新普通条目（来自别的设备的更新）。
         await seedRemote(
           backend,
           diaries: [
@@ -906,21 +865,18 @@ void main() {
         );
         expect(backend.hasObject(SyncKeys.diaryObjectPath('a')), isTrue);
 
-        // 本地持有一个过期的删除（删除时间早于远端更新）。
         final tombstones = FakeTombstoneStore([
           buildDiaryTombstone('a', modifiedMs: 1000),
         ]);
         final report = await engineOn(backend, tombstones: tombstones).push();
 
         expect(report.diaryCount, 0);
-        // 远端较新的内容不得被旧 tombstone 删除/覆盖。
         expect(backend.hasObject(SyncKeys.diaryObjectPath('a')), isTrue);
         expect(backend.manifest()!.entries['d:a']!.deleted, isFalse);
         expect(
           backend.manifest()!.entries['d:a']!.timeMs,
           atMs(2000).millisecondsSinceEpoch,
         );
-        // 未推送 → 墓碑行保留（下次 pull 按 LWW 复活时随复活清除）。
         expect(tombstones.rows.containsKey('d:a'), isTrue);
         expect(tombstones.rows['d:a']!.pushedBackends, isEmpty);
       });
@@ -941,7 +897,6 @@ void main() {
       'write-then-readback token mismatch → throw, no remote/local destruction',
       () async {
         final backend = FakeRemoteBackend();
-        // 远端已有普通条目 a + 其媒体。
         final media = FakeMediaFiles()..put('image', 'p.jpg');
         await seedRemote(
           backend,
@@ -951,12 +906,10 @@ void main() {
           media: media,
         );
 
-        // 本地删除 a（行已硬删、墓碑承载）：push 会想删远端 a.json + 媒体 + 清墓碑行。
         final tombstones = FakeTombstoneStore([
           buildDiaryTombstone('a', modifiedMs: 200),
         ]);
 
-        // 注入并发覆盖：我们写完 manifest 后，回读时它已被另一台设备覆盖（不同 token）。
         var wroteManifest = false;
         backend.beforeOp = (op, key) {
           if (op == 'write' && key == SyncKeys.manifestPath) {
@@ -974,8 +927,6 @@ void main() {
           throwsA(isA<SyncException>()),
         );
 
-        // 关键不变量：中止后远端对象 / 媒体都没被删，墓碑行也没清 / 没记推送，
-        // 删除事实零丢失。
         expect(
           backend.hasObject(SyncKeys.diaryObjectPath('a')),
           isTrue,
@@ -992,7 +943,6 @@ void main() {
           isEmpty,
           reason: '回读校验失败 → 推送记录不得落库',
         );
-        // 抛错中止 → 不推进上次同步时间。
         expect(MoodiaryKVs.lastSyncTime.get(), syncTimeBefore);
       },
     );
@@ -1012,7 +962,6 @@ void main() {
           media: media,
         );
 
-        // 正常 push（无并发覆盖）：回读 token 命中 → 推迟的旧媒体删除照常执行。
         final report = await engineOn(
           backend,
           diaries: FakeDiaryStore([
@@ -1045,7 +994,6 @@ void main() {
         );
         expect(backend.hasObject(SyncKeys.categoryObjectPath('c1')), isTrue);
 
-        // 本地持有过期的分类删除。
         final tombstones = FakeTombstoneStore([
           buildCategoryTombstone('c1', modifiedMs: 1000),
         ]);
@@ -1069,14 +1017,13 @@ void main() {
           backend,
           cats: [buildCategory(id: 'c1', modifiedMs: 1000)],
         );
-        MoodiaryKVs.lastSyncTime.set(0); // 清掉 seed push 推进的时间
+        MoodiaryKVs.lastSyncTime.set(0);
 
         final localCats = FakeCategoryStore()..insertSucceeds = false;
         final report = await engineOn(backend, categories: localCats).pull();
 
         expect(report.failed, greaterThan(0), reason: '本地写失败必须计入 failed');
         expect(localCats.categories.containsKey('c1'), isFalse);
-        // 有失败 → 不推进上次同步时间。
         expect(MoodiaryKVs.lastSyncTime.get(), 0);
       },
     );
@@ -1104,7 +1051,7 @@ void main() {
       'emits a syncEnd even when push throws (auto-sync gate safety) (D)',
       () async {
         final backend = FakeRemoteBackend();
-        backend.objects[SyncKeys.manifestPath] = jsonBytes(<dynamic>[]); // 触发抛错
+        backend.objects[SyncKeys.manifestPath] = jsonBytes(<dynamic>[]);
         final kinds = <SyncEventKind>[];
         final sub = logger.events.listen((e) => kinds.add(e.kind));
 
@@ -1115,7 +1062,7 @@ void main() {
           ).push(),
           throwsA(isA<SyncException>()),
         );
-        await Future<void>.delayed(.zero); // 让广播事件投递完
+        await Future<void>.delayed(.zero);
         await sub.cancel();
 
         expect(kinds, contains(SyncEventKind.syncStart));

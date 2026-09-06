@@ -1,7 +1,3 @@
-//! WebP 的区域解码后端：libwebp 的 `use_cropping` + `use_scaling`。VP8 / VP8L 都没有随机访问，
-//! 裁剪省的是滤波、上采样与输出（内存按裁剪块算），熵解析仍是整幅；WebP 最大 16383²，
-//! 有损的一趟最多几秒。VP8L 内部要整幅 ARGB 缓冲，超过 [`LOSSLESS_MAX_PIXELS`] 不接；动图不接。
-
 use std::mem::MaybeUninit;
 
 use anyhow::{Result, bail};
@@ -13,10 +9,8 @@ use crate::codec::region::{RawDecoder, Rect};
 use crate::codec::turbo::PixelRegion;
 use crate::codec::{ImageFormat, image_header};
 
-/// 无损 WebP 解码时整幅 ARGB 都在内存里（4 字节 / 像素），16MP 就是 64MB。
 const LOSSLESS_MAX_PIXELS: u64 = 16 * 1024 * 1024;
 
-/// 有损 WebP 没有随机访问，每条带都是整幅 VP8 熵解析；64MP 一趟已是秒级，再大交给引擎封顶。
 const LOSSY_MAX_PIXELS: u64 = 64 * 1024 * 1024;
 
 pub struct WebPRegion {
@@ -59,7 +53,6 @@ fn accepts(f: &Features) -> bool {
             }
 }
 
-/// 头一眼能判定的：非动图、像素数在该编码的上限内。
 pub fn region_decodable(bytes: &[u8]) -> bool {
     features(bytes).is_ok_and(|f| accepts(&f))
 }
@@ -106,14 +99,10 @@ impl RawDecoder for WebPRegion {
             bail!("empty region");
         }
         let (out_w, out_h) = (right - rect.x, bottom - rect.y);
-        // 裁剪框在源坐标里、起点是 d 的倍数：整数倍缩放正好是 d×d 的盒式平均，块与块之间无缝。
-        // 只有贴着右 / 下边缘、裁剪尺寸不是 d 的整倍数时，libwebp 的面积平均会有不到一个输出
-        // 像素的漂移，屏幕上看不出来。
         let (x0, y0) = (rect.x * d, rect.y * d);
         let crop_w = (right * d).min(self.width) - x0;
         let crop_h = (bottom * d).min(self.height) - y0;
-        // 有损 WebP 的解码走 YUV 4:2:0，libwebp 会把裁剪起点向下对齐到偶数；1/1 时起点可能是奇数，
-        // 自己对齐后多解一行一列再裁掉（d ≥ 2 时起点天然是偶数）。
+        // libwebp 有损解码会把裁剪起点向下对齐到偶数
         let (ax, ay) = (x0 & !1, y0 & !1);
         let (dx, dy) = (x0 - ax, y0 - ay);
         let (dec_w, dec_h) = if d == 1 {
@@ -198,7 +187,6 @@ mod tests {
         })
     }
 
-    /// image 的 WebP 编码器是无损的（VP8L）；有损样张用 libwebp 自己编。
     fn write_lossy(path: &std::path::Path, img: &image::RgbaImage) {
         let mut out: *mut u8 = std::ptr::null_mut();
         let size = unsafe {
@@ -232,7 +220,6 @@ mod tests {
         assert!(region_decodable(&std::fs::read(&path).unwrap()));
         let region = open(&path);
         assert_eq!(region.raw_size(), (1024, 704));
-        // 1/1：逐字节等于裁剪。
         let rect = Rect {
             x: 37,
             y: 53,
@@ -242,7 +229,6 @@ mod tests {
         let got = region.decode_raw(1, rect).unwrap();
         let want = image::imageops::crop_imm(&img, 37, 53, 300, 200).to_image();
         assert!(got.pixels == want.as_raw()[..], "1/1 裁剪应逐字节一致");
-        // 缩放档：尺寸是 d 的整倍数时，分块缩放与整图缩放同一块一致（都是 d×d 盒式平均）。
         for d in [2u8, 4, 8] {
             let (w, h) = (1024u32 / d as u32, 704u32 / d as u32);
             let whole = region.decode_raw(d, Rect { x: 0, y: 0, w, h }).unwrap();
@@ -275,7 +261,6 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 
-    /// 尺寸不是 8 的整倍数：贴边的块尺寸按向上取整给，允许不到一个输出像素的漂移。
     #[test]
     fn odd_sized_lossless_edges_have_ceil_sizes() {
         let dir = std::env::temp_dir().join("moodiary_webp_odd_region_test");
@@ -353,13 +338,10 @@ mod tests {
 
 #[cfg(test)]
 mod samples {
-    //! `MOODIARY_SAMPLES_DIR=/path cargo test --release -p moodiary-image samples -- --ignored`
-    //! 造真机 / 模拟器验收用的大图：PNG、有损 WebP、无损 WebP、progressive JPEG。
     use crate::codec::turbo;
 
     fn scene(width: u32, height: u32) -> image::RgbaImage {
         image::RgbaImage::from_fn(width, height, |x, y| {
-            // 细网格 + 大渐变 + 对角条纹：放大后看得出 tile 是否对齐、缩放是否糊。
             let grid = if x % 100 < 2 || y % 100 < 2 { 255 } else { 0 };
             let stripe = ((x + y) / 37 % 2) as u8 * 40;
             image::Rgba([

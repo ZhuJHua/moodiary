@@ -7,19 +7,15 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
-/// 右侧缩略图的固定尺寸。密度全靠它：单图不再占整行，一条带图的日记只有约 85px 高。
 const double _kThumbW = 96.0;
 const double _kThumbTallW = 56.0;
 const double _kThumbH = 72.0;
 
-/// 元信息行右端标签块的宽度上限。超过就让标签自己打省略号，绝不挤爆整行。
 const double _kTagAreaMax = 116.0;
 
-/// 横排媒体最多三格，多出来的折成末格上的「+N」。
 const int _kMaxCells = 3;
 const double _kCellGap = 5.0;
 
-/// 一格媒体：图片或视频（视频取其封面缩略图）。
 class _Cell {
   final String name;
   final bool isVideo;
@@ -35,13 +31,9 @@ List<_Cell> _cellsOf(Diary diary) => [
   for (final n in diary.imageName) _Cell(n),
 ];
 
-/// 信息流的一条 = 一篇日记。没有左栏、没有卡片，三种形态：
-/// 纯文字 / 左文右图（单图）/ 文字在上媒体横排在下（多图或含视频）。
 class DiaryFeedTile extends StatelessWidget {
   final Diary diary;
 
-  /// 列表当前的排序方式 —— 元信息行显示的时间戳要跟着它走，否则按「最近修改」
-  /// 排序时用户看到的是一列日期无序的条目。
   final DiarySort sort;
   final Category? category;
   final Place? place;
@@ -69,10 +61,8 @@ class DiaryFeedTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cells = _cellsOf(diary);
-    // 恰好一张图（且没有视频）才走左文右图；其余走纵向，媒体在正文下方横排。
     final sideThumb = cells.length == 1 && !cells.first.isVideo;
     final stamp = diaryStampOf(diary, sort);
-    // 有图时媒体位让给了图片、波形条不出现，语音只能靠元信息行里的标记。
     final showAudioMark = diary.audioName.isNotEmpty && cells.isNotEmpty;
 
     return DiaryTileFrame(
@@ -109,7 +99,6 @@ class DiaryFeedTile extends StatelessWidget {
   }
 }
 
-/// 左文右图：文字列吃满图高，元信息行正好与图片下沿齐平。
 class _SideThumbRow extends StatelessWidget {
   final Diary diary;
   final DateTime stamp;
@@ -134,7 +123,6 @@ class _SideThumbRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dpr = MediaQuery.devicePixelRatioOf(context);
-    // aspect 全仓还没有写入方，取不到就按横图给宽度；等比例管线补上后竖图自动收窄。
     final ratio = diary.aspect;
     final width = (ratio != null && ratio < 1) ? _kThumbTallW : _kThumbW;
 
@@ -142,9 +130,6 @@ class _SideThumbRow extends StatelessWidget {
       crossAxisAlignment: .start,
       children: [
         Expanded(
-          // 行高自然取「文字高」与「图高 72」的大者：列表给的是无界高度，
-          // 这里不能用 Spacer/Expanded 把元信息顶到底，也不值得为对齐上
-          // IntrinsicHeight（每帧多测一遍）。
           child: Column(
             mainAxisSize: .min,
             crossAxisAlignment: .start,
@@ -172,7 +157,6 @@ class _SideThumbRow extends StatelessWidget {
             height: _kThumbH,
             child: _Thumb(
               cell: cell,
-              // 容器是固定 dp 尺寸，解码宽不随布局变，夹小省缓存。
               decodeWidth: (width * dpr).round(),
               radius: const .all(.circular(10)),
               pending: syncState == .syncing,
@@ -184,7 +168,6 @@ class _SideThumbRow extends StatelessWidget {
   }
 }
 
-/// 纯文字 / 多图：文字在上，媒体横排在下。
 class _StackedColumn extends StatelessWidget {
   final Diary diary;
   final DateTime stamp;
@@ -212,7 +195,6 @@ class _StackedColumn extends StatelessWidget {
     return Column(
       crossAxisAlignment: .start,
       children: [
-        // 有媒体压在下面时正文接在标题后跑成同一行，媒体就不额外吃一行。
         _Headline(diary: diary, runInBody: hasMedia),
         if (!hasMedia) _Excerpt(diary: diary, maxLines: 2),
         if (cells.isNotEmpty) ...[
@@ -237,7 +219,6 @@ class _StackedColumn extends StatelessWidget {
   }
 }
 
-/// 标题行：行首一根心情竖色标（寄生在行内，不占额外行高）。无标题时正文首行顶上来。
 class _Headline extends StatelessWidget {
   final Diary diary;
   final bool runInBody;
@@ -266,7 +247,6 @@ class _Headline extends StatelessWidget {
     );
 
     if (title.isEmpty) {
-      // 无标题：正文首行当标题位，字重轻一档以示区分。
       return Text.rich(
         TextSpan(
           children: [
@@ -324,7 +304,6 @@ class _Excerpt extends StatelessWidget {
   }
 }
 
-/// 媒体横排：三等分 16:9，第三格叠「+N」。
 class _Strip extends StatelessWidget {
   final List<_Cell> cells;
   final bool pending;
@@ -368,13 +347,10 @@ class _Strip extends StatelessWidget {
 class _Thumb extends StatelessWidget {
   final _Cell cell;
 
-  /// 固定尺寸容器才传；随布局变的格子不传，缓存键只认档位（折叠屏展开不重载）。
   final int? decodeWidth;
   final BorderRadius radius;
   final int moreCount;
 
-  /// 这篇正在从远端拉取：文件多半还没到，失败不画破图；角标摘掉时 key 变、
-  /// Image 重新装载——同一个 provider 不会自己重试。
   final bool pending;
 
   const _Thumb({
@@ -395,10 +371,9 @@ class _Thumb extends StatelessWidget {
         children: [
           ColoredBox(color: colors.surfaceContainerHighest),
           Image(
-            // 按文件名 key：开了 gaplessPlayback，列表重排后复用同一个 Element 会
-            // 先画上一篇的照片。
+            // key 需含 pending：gaplessPlayback 下 Element 复用会先画上一篇的照片
             key: ValueKey('${cell.path}#$pending'),
-            // 视频封面不是原件目录里的图，不走档位（派生物只给原件算）。
+            // 视频封面不走派生档位，派生物只给原件算
             image: FastImage(
               cell.path,
               tier: cell.isVideo ? null : .s,
@@ -406,7 +381,7 @@ class _Thumb extends StatelessWidget {
             ),
             fit: .cover,
             gaplessPlayback: true,
-            // 重装后媒体文件会被清空而日记还在——没有 errorBuilder 就是一片空白。
+            // 重装后媒体文件会被清空而日记还在，没有 errorBuilder 就是一片空白
             errorBuilder: (context, _, _) => pending
                 ? const SizedBox.shrink()
                 : Icon(LucideIcons.imageOff, color: colors.onSurfaceVariant),
@@ -419,8 +394,6 @@ class _Thumb extends StatelessWidget {
   }
 }
 
-/// 视频格：底部一层渐变 + 播放角标。时长没有存进模型（[Diary] 只有文件名），
-/// 所以只标「这是视频」，不假装知道有多长。
 class _VideoScrim extends StatelessWidget {
   const _VideoScrim();
 
@@ -475,8 +448,6 @@ class _MoreOverlay extends StatelessWidget {
   }
 }
 
-/// 语音：一条窄横条，不占整格高度。波形是固定条 —— 仓里录音实际是 ADTS AAC，
-/// 不去解码取真实包络。
 class _AudioBar extends StatelessWidget {
   final int count;
 
@@ -548,10 +519,6 @@ class _AudioBar extends StatelessWidget {
   }
 }
 
-/// 元信息行：分类 · 时间 · 天气 · 地点 …… 标签靠右，恒定一行。
-///
-/// 左半组整体 [Expanded]、地点在组内 [Flexible]：不能写成「Flexible(地点) + Spacer()」——
-/// 两个 flex 子节点会均分剩余宽度，Spacer 拿到的那一半空着也不让。
 class _MetaLine extends StatelessWidget {
   final Diary diary;
   final DateTime stamp;
@@ -579,8 +546,6 @@ class _MetaLine extends StatelessWidget {
     final weather = diary.weather;
     final placeName = place?.name.trim() ?? '';
 
-    // 左半组做成**一段文本**而不是一排固定块：Row 里的固定块加起来超宽就会 overflow，
-    // 而单行 Text 自带省略号，优先级天然由顺序决定（地点最先被吃掉）。
     InlineSpan icon(IconData data) => WidgetSpan(
       alignment: .middle,
       child: Padding(
@@ -603,8 +568,6 @@ class _MetaLine extends StatelessWidget {
         dot,
       ],
       TextSpan(text: TimeFormat.compactDateTime(stamp)),
-      // 有图时波形条不出现（媒体位让给了图片），语音就只剩这个标记 —— 不能连它也没有，
-      // 否则「配了图又录了音」的日记在信息流里没有任何语音痕迹。
       if (showAudioMark) ...[
         dot,
         icon(LucideIcons.mic),
@@ -613,7 +576,6 @@ class _MetaLine extends StatelessWidget {
       ],
       if (weather != null) ...[
         dot,
-        // 天气数据来自和风，图标就用和风自己那套天气码；码不认识才退回通用的云。
         icon(qweatherIcon(weather.icon) ?? LucideIcons.cloud),
         TextSpan(text: weather.compactText),
       ],
@@ -639,8 +601,7 @@ class _MetaLine extends StatelessWidget {
           DiarySyncBadge(state: syncState),
         ],
         if (diary.tags.isNotEmpty)
-          // 标签块整体封顶：它是 Row 里的**非 flex** 子节点，不限宽的话标签有多长
-          // 就吃多宽，把左边那段 Expanded 压到 0 之后直接 RenderFlex 溢出。
+          // 不限宽会把左边 Expanded 压到 0 导致 RenderFlex 溢出
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: _kTagAreaMax),
             child: Row(
@@ -679,7 +640,6 @@ class _CategoryDot extends StatelessWidget {
   }
 }
 
-/// 标签退成同色系的纯文字：一行里塞两个描边小方框，视觉噪音比信息量大。
 class _TagChip extends StatelessWidget {
   final String label;
 

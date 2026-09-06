@@ -50,9 +50,7 @@ flutter:
   assets:
     - assets/brand/
 
-# 资产索引由 flutter_gen 生成（`dart tool/task.dart build-runner`）。
-# **package_parameter_enabled 必须开**：这是个被别人 import 的包，产物里要带
-# `package: 'moodiary_components'`，否则宿主按裸键去自己的 bundle 里找，运行时才炸。
+# package_parameter_enabled 必须开：被 import 的包，产物要带 package 名，否则运行时才炸。
 flutter_gen:
   output: lib/src/gen/
   integrations:

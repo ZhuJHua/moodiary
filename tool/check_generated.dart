@@ -1,19 +1,5 @@
-// 校验两侧生成物的 codegen 版本与 pubspec 钉的一致，外加两侧 content hash 相等。
-// 不是完整的漂移检查（那要装 codegen CLI 重跑一遍，而 CI 刻意不带缓存），挡的是：
-//   1) 用别的 codegen 版本生成后提交；
-//   2) 只提交了两份生成物里的一份（content hash 对不上）。
-//
-// 剩下的缺口只有一个，且它需要 codegen 真的跑过：**content hash 只对 api 函数名做
-// SHA1**（codegen 的 generate_content_hash 取 sha1 前四字节），参数类型、返回类型、
-// 结构体定义都不在里面。所以「改了签名但没改名、且只提交了 Rust 那半」不会被 hash
-// 抓到 —— 不过那一半里 frb_generated.rs 是编译进去的，cargo clippy 会先炸。真正裸奔的
-// 是「只提交了 Dart 那半」，此时 Dart 按新签名编码、Rust 按旧签名解码，静默错解。
-// 要堵死它得在 CI 里装 flutter_rust_bridge_codegen 重跑 + git diff --exit-code。
-//
-// 纯 dart:io，不依赖 fvm / flutter，CI 可直接 `dart tool/check_generated.dart`。
 import 'dart:io';
 
-/// 带自己 FRB 的包，与 tool/task.dart 的 _frbPkgDirs 同一份。
 const _frbPkgDirs = [
   'packages/foundation/fast_crypto',
   'packages/foundation/fast_image',
@@ -52,7 +38,6 @@ void _check(String pkgDir) {
       '$pkgDir/lib/src/rust/frb_generated.dart',
       RegExp(r"codegenVersion => '([^']+)'"),
     ),
-    // Rust 侧的钉版本没有别的检查覆盖，一并比对。
     'rust/Cargo.toml': grab(
       '$pkgDir/rust/Cargo.toml',
       RegExp(r'^flutter_rust_bridge = "=([^"]+)"', multiLine: true),
@@ -69,8 +54,6 @@ void _check(String pkgDir) {
     exit(1);
   }
 
-  // 两侧的 content hash 由同一次 codegen 写出，必须相等。不等 = 只提交了一半生成物，
-  // 而运行时那句 StateError 要等到 XxxLib.init() 才响，测试跑不到就发不出来。
   final rustHash = grab(
     '$pkgDir/rust/src/frb_generated.rs',
     RegExp(r'FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = (-?\d+);'),
@@ -95,9 +78,6 @@ void _check(String pkgDir) {
   }
 }
 
-/// 没有 `[workspace.dependencies]` 了：同一 crate 在多个原生库包里各钉一次，这里比对它们相等；
-/// 同样比对各包 rust-toolchain.toml 的 channel，以及各 FRB 包 pubspec 的 flutter_rust_bridge / ffigen。
-/// 漂了就红：FRB / tokio / reqwest 两份不同版本进两个 .so 既是体积倒退也是行为分叉。
 void _checkConsistency() {
   final dirs =
       Directory('packages/foundation')
@@ -111,7 +91,6 @@ void _checkConsistency() {
     r'^([A-Za-z0-9_-]+)\s*=\s*(?:"=([^"]+)"|\{[^}]*?version\s*=\s*"=([^"]+)")',
     multiLine: true,
   );
-  // crate → {包目录: 版本}
   final pins = <String, Map<String, String>>{};
   final channels = <String, String>{};
   final frbPins = <String, String>{};

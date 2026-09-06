@@ -28,8 +28,6 @@ class AppInfo {
     return await deviceInfoPlugin.deviceInfo;
   }
 
-  /// 面向用户展示的设备名（局域网发现等场景）。iOS 16+ 无特殊授权时返回通用
-  /// 名称（如「iPhone」），可接受。
   static Future<String> getDeviceName() async {
     final plugin = DeviceInfoPlugin();
     try {

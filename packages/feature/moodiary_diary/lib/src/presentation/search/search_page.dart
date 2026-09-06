@@ -14,7 +14,6 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
 
-/// 日记搜索页：AppBar 内嵌搜索框，下方筛选栏（时间 / 分类 / 排序）；空查询时展示搜索历史。
 class DiarySearchPage extends ConsumerStatefulWidget {
   const DiarySearchPage({super.key});
 
@@ -72,7 +71,6 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
 
     return Scaffold(
       appBar: AppBar(
-        // 输入框做成填充胶囊：贴着返回键的裸输入行既没有边界也没有留白。
         titleSpacing: 0,
         title: Padding(
           padding: const .fromLTRB(4, 0, 12, 0),
@@ -145,8 +143,6 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
     );
   }
 
-  // ── 筛选栏 ────────────────────────────────────────────────────────────────
-
   Widget _buildFilterBar(BuildContext context, DiarySearchState state) {
     return SingleChildScrollView(
       scrollDirection: .horizontal,
@@ -215,7 +211,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
                   ?.categoryName ??
               context.l10n.diary.allCategories);
     return MMenuButton<String>(
-      // 空串 = 全部分类（null 语义留给「未选择」，故用空串表达「全部」）。
+      // 空串 = 全部分类，null = 未选择
       selected: state.categoryId ?? '',
       onSelected: (id) => _controller.setCategory(id.isEmpty ? null : id),
       entries: [
@@ -270,8 +266,6 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
     .timeDesc => context.l10n.diary.searchSortNewest,
     .timeAsc => context.l10n.diary.searchSortOldest,
   };
-
-  // ── 主体（历史 / 结果 / 空 / 加载） ──────────────────────────────────────
 
   Widget _buildBody(BuildContext context, DiarySearchState state) {
     if (state.isSearching && state.results.isEmpty) {
@@ -359,7 +353,6 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
                   for (final q in history)
                     InputChip(
                       avatar: const Icon(LucideIcons.history, size: 18),
-                      // 限宽 + 省略，避免超长查询（粘贴串 / 长 URL）撑破胶囊。
                       label: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 200),
                         child: Text(q, maxLines: 1, overflow: .ellipsis),
@@ -401,9 +394,6 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
   }
 }
 
-/// 升级提示卡片：全文 / 双链倒排索引 2.8.0 才引入，旧库既有日记未建索引 → 正文搜不到、双链为空。
-/// 点「重建」一次即可（[DiaryRepository.rebuildAllIndexes]）；完成后置 [MoodiaryKVs.searchIndexBackfilled]，
-/// 本卡片经 notifier 自动收起。全新安装在迁移钩子里已置位，不会显示。
 class _SearchIndexBanner extends StatefulWidget {
   const _SearchIndexBanner();
 
@@ -417,7 +407,6 @@ class _SearchIndexBannerState extends State<_SearchIndexBanner> {
   Future<void> _rebuild() async {
     setState(() => _rebuilding = true);
     try {
-      // 重建完成即置位 searchIndexBackfilled，外层 ValueListenableBuilder 收起本卡片。
       await getIt<DiaryRepository>().rebuildAllIndexes();
     } catch (e, s) {
       logger.e('搜索索引重建失败', error: e, stackTrace: s);
@@ -477,7 +466,6 @@ class _SearchIndexBannerState extends State<_SearchIndexBanner> {
   }
 }
 
-/// 筛选栏上的下拉胶囊：填充式软色调，选中态用次级容器色高亮。
 class _FilterChip extends StatelessWidget {
   final IconData icon;
   final String label;

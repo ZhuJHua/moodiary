@@ -12,8 +12,6 @@ import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:path/path.dart' as p;
 
-/// 纯 Dart 假加密：key = utf8('salt|pin')；密文 = key ++ 明文；解密校验 key 前缀，
-/// 不匹配即抛 —— 保留「密钥错则解密失败」的认证语义。
 final class FakeLanCrypto implements LanCrypto {
   @override
   Future<List<int>> deriveKey({
@@ -35,9 +33,6 @@ final class FakeLanCrypto implements LanCrypto {
   }
 }
 
-/// 测试用 [IHttpServer]：dart:io 实现，模拟生产（Rust）语义 —— 请求体超阈值落盘、
-/// 进度回调、handler 异常折叠为 500。生产实现 RustHttpServer 需要原生库，
-/// flutter test 环境不可用。
 final class IoTestHttpServer extends IHttpServer {
   static const int _spoolThreshold = 1024;
   static int _seq = 0;
@@ -136,8 +131,6 @@ final class IoTestHttpServer extends IHttpServer {
   }
 }
 
-/// 测试用 [IHttpClient]：dart:io 实现 requestBytes / uploadFile（生产 RustHttpClient
-/// 需要原生库）。
 final class IoTestHttpClient extends IHttpClient {
   final io.HttpClient _client = io.HttpClient();
 
@@ -317,14 +310,10 @@ void main() {
       onProgress: (progress) => phases.add(progress.phase),
     );
 
-    // 对方 manifest 原样到达发送方
     expect(builderGotManifest!.updatedAtMs, 42);
     expect(builderGotManifest!.entries['d:existing']!.timeMs, 12345);
-    // 双方对同一 key 派生出同一 zip 密码
     expect(builderGotPassword, applierGotPassword);
-    // 归档字节完整送达
     expect(applierGotBytes, archiveBytes);
-    // 报告回传
     expect(result.entryCount, 4);
     expect(result.diaryCount, 3);
     expect(result.categoryCount, 1);
@@ -339,7 +328,6 @@ void main() {
         LanSendPhase.applying,
       ]),
     );
-    // 接收端状态收敛到 done
     expect(receiver.state.value, isA<LanReceiveDone>());
   });
 
@@ -372,8 +360,6 @@ void main() {
     expect(applied, isFalse);
   });
 
-  // —— 协议 2 的三条安全性质：令牌不可重放、不可挪用端点、在线穷举会被锁死。——
-
   test('令牌用过即废：重放同一个 auth 头 → 401', () async {
     final receiver = buildReceiver(applier: (_, _) async => fail('不应走到导入'));
     await receiver.start();
@@ -401,7 +387,6 @@ void main() {
     final url = 'http://127.0.0.1:${receiver.port}$lanManifestPath';
 
     expect(await _rawStatus(url, token), 200);
-    // 同一个令牌第二次就该被拒——抓包重放正是这条挡的。
     expect(await _rawStatus(url, token), 401);
   });
 
@@ -422,7 +407,6 @@ void main() {
     );
     final url = 'http://127.0.0.1:${receiver.port}$lanManifestPath';
 
-    // 协议 3 起没带头就是不兼容：那是 2.8.0 早期构建（协议 2）的发送端。
     expect(
       await _rawStatus(
         url,
@@ -454,7 +438,6 @@ void main() {
           .having((s) => s.incompatible, 'incompatible', isTrue)
           .having((s) => s.message, 'message', contains('2.8.1 (101)')),
     );
-    // 令牌错的一律先按认证处理，版本门不给未认证者改状态的机会。
     final wrongKey = await crypto.deriveKey(
       salt: handshake['salt'] as String,
       pin: '000000',
@@ -589,7 +572,6 @@ void main() {
     );
     expect(result.upToDate, isTrue);
     expect(posted, isFalse);
-    // 空包已被发送方清理
     expect(io.File(p.join(tmp.path, 'empty.zip')).existsSync(), isFalse);
   });
 
@@ -623,7 +605,6 @@ void main() {
   });
 }
 
-/// 直接发裸请求（不经 [LanSender]）：安全性质要拿手工构造的请求来验。
 Future<Uint8List> _rawGet(String url) async {
   final client = io.HttpClient();
   try {

@@ -1,6 +1,4 @@
-// 2.8.0 之前的 Isar collection 定义（引擎搬迁的只读留底）。
-// ⚠️ 逐字节冻结：schema 由「注册顺序 + 字段形状」决定（位置即地址），任何改动都会
-// 让旧库被错误解读。新世界的模型在 moodiary_models，这里永不跟进。
+// 字段顺序/形状即 isar 编码地址，改动会读坏旧库
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:isar_plus/isar_plus.dart';
@@ -36,8 +34,7 @@ abstract class Diary with _$Diary {
 
   const Diary._();
 
-  // `this.id` 必须显式限定：isar_plus 导出了顶层 `const id = Id()`，
-  // 裸 `id` 会被解析成它而非 freezed mixin 的 `String get id`。
+  // this.id 须显式限定：isar_plus 顶层 const id 会掩盖 freezed 的 id
   @Id()
   int get isarId => fastHash(this.id);
 
@@ -77,8 +74,6 @@ abstract class Diary with _$Diary {
     );
   }
 
-  /// 空模板。必须显式指定 [type]——禁止隐藏的默认类型，避免默认值与 UI 层
-  /// post-frame `changeType` 兜底带来的时序坑。
   factory Diary.empty({required DiaryType type}) {
     return Diary(
       id: uuidV7(),

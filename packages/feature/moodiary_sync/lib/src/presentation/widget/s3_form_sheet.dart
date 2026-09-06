@@ -4,8 +4,6 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 
-/// S3 / MinIO 后端配置。字段按连接 / 凭证 / 选项分三节，装不下一屏时只有中间
-/// 内容滚动，动作条始终贴在卡片底边。
 class S3FormSheet extends StatefulWidget {
   const S3FormSheet({
     super.key,
@@ -13,7 +11,6 @@ class S3FormSheet extends StatefulWidget {
     required this.configured,
   });
 
-  /// 打开时钥匙串里的配置与就绪态（在 [show] 里读好再进弹窗，弹窗内不读钥匙串）。
   final List<String> initial;
   final bool configured;
 
@@ -78,8 +75,6 @@ class _S3FormSheetState extends State<S3FormSheet> {
     super.dispose();
   }
 
-  /// Endpoint 存的是裸主机名，协议由下面的 HTTPS 开关决定。粘进来一整条 URL 时
-  /// 就地拆开：主机留在框里、协议翻到开关上，改动是看得见的。
   void _normalizeEndpoint(String value) {
     if (!value.contains('://')) return;
     final uri = Uri.tryParse(value.trim());
@@ -92,7 +87,6 @@ class _S3FormSheetState extends State<S3FormSheet> {
     );
   }
 
-  /// 校验口径与 [IRemoteSyncBackend.isReady] 一致：region 可空，其余四项必填。
   bool _validate() {
     final l10n = context.l10n;
     String? required(TextEditingController controller, String field) =>

@@ -1,5 +1,3 @@
-//! 图片读头 / 缩放 / 编码。JPEG 走 turbojpeg（读头、IDCT 缩放解码、编码），其余格式走 image。
-
 mod jpeg_region;
 mod png_region;
 mod png_stripe;
@@ -45,7 +43,6 @@ pub struct CompressSpec {
     pub quality: Option<u8>,
 }
 
-/// 源格式，按魔数定。
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum ImageFormat {
     Jpeg,
@@ -56,24 +53,19 @@ pub enum ImageFormat {
     Other,
 }
 
-/// 只读头不解像素。宽高是 EXIF 转正后的。
 pub struct ImageProbe {
     pub format: ImageFormat,
     pub width: u32,
     pub height: u32,
     pub progressive: bool,
-    /// 能走 turbojpeg 缩放 / 区域解码（8 位 Huffman 有损 JPEG）。
     pub region_decodable: bool,
 }
 
-/// 一个缩略图档位：缩到 [`width`] 宽（高等比），写到 `output_stem` + 按内容定的后缀
-/// （`.jpg`，带 alpha 的源 `.png`）。
 pub struct ThumbnailTarget {
     pub width: u32,
     pub output_stem: String,
 }
 
-/// 源图（EXIF 转正后）的像素尺寸，以及这次写出的派生物后缀（`jpg` / `png`）。
 pub struct ImageMeta {
     pub width: u32,
     pub height: u32,
@@ -91,19 +83,16 @@ fn sniff(bytes: &[u8]) -> ImageFormat {
     }
 }
 
-/// image 侧只读头：原始朝向的宽高 + EXIF 方向。JPEG 的宽高改由 turbojpeg 给，这里只要方向。
 fn image_header(bytes: &[u8]) -> Result<(u32, u32, Orientation)> {
     let mut decoder = ImageReader::new(Cursor::new(bytes))
         .with_guessed_format()?
         .into_decoder()
         .map_err(|e| anyhow!("Failed to read image header: {}", e))?;
     let (width, height) = decoder.dimensions();
-    // 没有 EXIF、或解不出方向的，一律按不变换处理 —— 别让一个可选的元数据把整张图挡在门外。
     let orientation = decoder.orientation().unwrap_or(Orientation::NoTransforms);
     Ok((width, height, orientation))
 }
 
-/// 头信息：原始朝向宽高、方向、格式、JPEG 头（非 JPEG 为 None）。
 struct Header {
     format: ImageFormat,
     raw_width: u32,
@@ -145,7 +134,6 @@ impl Header {
     }
 }
 
-/// 原件只读映射：313MB 的原图不整个读进内存。原件不可变是全库约定，映射期间不会被改写。
 fn map_file(file_path: &str) -> Result<memmap2::Mmap> {
     let file = File::open(file_path)?;
     Ok(unsafe { memmap2::Mmap::map(&file)? })
@@ -170,19 +158,15 @@ pub fn probe(file_path: &str) -> Result<ImageProbe> {
     })
 }
 
-/// progressive 转 baseline 能接的像素上限：`tj3Transform` 要整幅系数缓冲，4:2:0 约 3 字节 / 像素，
-/// 64MP 就是 192MB 的瞬时峰值。
+// tj3Transform 要整幅系数缓冲，64MP ≈ 192MB 瞬时峰值
 const BASELINE_MAX_PIXELS: u64 = 64 * 1024 * 1024;
 
-/// 把 progressive JPEG **无损**转成 baseline（每行 MCU 一个 restart marker）落到 `output_path`：
-/// 看图页 tile 只吃 baseline，progressive 要整幅系数缓冲、不能区域解。先写 `.part` 再 rename。
 pub fn to_baseline_file(file_path: &str, output_path: &str) -> Result<()> {
     let bytes = map_file(file_path)?;
     let header = turbo::read_header(&bytes)?;
     if header.width as u64 * header.height as u64 > BASELINE_MAX_PIXELS {
         bail!("JPEG too large to transcode to baseline");
     }
-    // 转出来的必须能区域解：12 位 / 算术 / 无损的转了也白转；已是 baseline 的没必要转。
     if !header.progressive {
         bail!("JPEG is already baseline");
     }
@@ -203,19 +187,6 @@ pub fn to_baseline_file(file_path: &str, output_path: &str) -> Result<()> {
     Ok(())
 }
 
-/// 一次解码、链式缩出多个宽度档位。
-///
-/// - JPEG 源走 turbojpeg 按 N/8 IDCT 缩放解码，只解到「刚不小于最大档位」的尺寸：
-///   48MP 出 1280 档解 2/8，峰值约 6MB；其余格式走 image 全解。大文件带 restart marker
-///   的还分段并行（[`decode_jpeg_scaled`]）。
-/// - 编码按透明通道选：不带 alpha 编 JPEG（PNG 源 4:4:4 保文字边缘，其余 4:2:0），
-///   带 alpha 编 PNG 无损。派生物后缀由此定，调用方按 [`ImageMeta::ext`] 认。
-/// - 源图不比档位宽的档位**跳过不写**（不放大）。
-/// - 档位按宽度从大到小处理，每一级从上一级缩：Lanczos3 在这种比例下看不出差别，
-///   而重采样的像素数少一个量级；处理完一级就丢掉上一级，内存里只压着两张。
-/// - **先缩后转**：链路全程按原始朝向缩，EXIF 方向只作用在每一级缩好的小图上
-///   （1280 宽转 90° 是几 MB 的事，全分辨率上转是再来一份原图）。
-/// - 先写 `.part` 再 rename：生成中途被杀不会留下半张图被当成有效缩略图。
 pub fn make_thumbnails(
     file_path: &str,
     targets: &[ThumbnailTarget],
@@ -226,7 +197,6 @@ pub fn make_thumbnails(
     let (src_width, src_height) = header.upright();
     let swaps = swaps_axes(header.orientation);
 
-    // 每档的目标尺寸（转正后坐标）；源图已经不比档位大的档位跳过不写。
     let mut order: Vec<(&ThumbnailTarget, (u32, u32))> = targets
         .iter()
         .filter(|t| t.width > 0)
@@ -253,7 +223,6 @@ pub fn make_thumbnails(
                 .with_guessed_format()?
                 .decode()
                 .map_err(|e| anyhow!("Failed to decode image: {}", e))?;
-            // 必须用 into_ 而非 to_：后者借用再新建一份，两份全分辨率缓冲会一直活到函数结束。
             if img.color().has_alpha() {
                 DynamicImage::ImageRgba8(img.into_rgba8())
             } else {
@@ -263,7 +232,6 @@ pub fn make_thumbnails(
     };
     drop(bytes);
 
-    // 带 alpha 通道但全不透明（WebP / PNG 导出常见）当不透明处理：编 JPEG 而不是 PNG。
     let has_alpha = current.color().has_alpha()
         && current
             .as_rgba8()
@@ -277,8 +245,6 @@ pub fn make_thumbnails(
     let mut resizer = Resizer::new();
 
     for (target, (up_width, up_height)) in order {
-        // 目标尺寸按源图比例算，不按上一级：N/8 缩放的向上取整会把中间级的比例带偏一像素。
-        // 缓冲仍是原始朝向，转正后的宽高换回去。
         let (dst_width, dst_height) = if swaps {
             (up_height, up_width)
         } else {
@@ -291,7 +257,6 @@ pub fn make_thumbnails(
         let mut dst = Image::new(dst_width, dst_height, pixel_type);
         resizer.resize(&current, &mut dst, None)?;
 
-        // 下一级从这一级缩（仍是原始朝向）。
         let raw = dst.into_vec();
         current = if has_alpha {
             DynamicImage::ImageRgba8(
@@ -305,7 +270,6 @@ pub fn make_thumbnails(
             )
         };
 
-        // 转正只作用在这一级的小图上。
         let upright;
         let img = if matches!(header.orientation, Orientation::NoTransforms) {
             &current
@@ -335,8 +299,6 @@ pub fn make_thumbnails(
     Ok(meta)
 }
 
-/// 临时文件名带进程号与序号：同一档位两路并发生成时各写各的，rename 是原子的，谁后到谁赢，
-/// 不会出现一方 rename 另一方的半成品。
 fn part_path(out_path: &str) -> String {
     use std::sync::atomic::{AtomicU64, Ordering};
     static SEQ: AtomicU64 = AtomicU64::new(0);
@@ -347,9 +309,6 @@ fn part_path(out_path: &str) -> String {
     )
 }
 
-/// 档位 `width` 在**转正后**的图上的目标尺寸：按宽缩，但高不超过宽的 [`TIER_MAX_ASPECT`] 倍
-/// （长截图 1000×30000 的 512 档不能是 512×15360、一张 31MB 的位图），且永不放大；
-/// 源图两个方向都已不比目标大就返回 None（不写这一档）。
 fn tier_target(src_width: u32, src_height: u32, width: u32) -> Option<(u32, u32)> {
     let scale = (width as f64 / src_width as f64)
         .min(width as f64 * TIER_MAX_ASPECT / src_height as f64)
@@ -361,20 +320,16 @@ fn tier_target(src_width: u32, src_height: u32, width: u32) -> Option<(u32, u32)
     Some((round(src_width), round(src_height)))
 }
 
-/// 派生物的高最多是档位宽的几倍。
 const TIER_MAX_ASPECT: f64 = 3.0;
 
-/// 最小的 N/8 使转正后的宽仍 ≥ `needed`。`src_width > needed` 由调用方保证。
 fn scale_numerator(src_width: u32, needed: u32) -> u8 {
     (1..=8u8)
         .find(|&n| turbo::scaled(src_width, n) >= needed)
         .unwrap_or(8)
 }
 
-/// 超过这个体积的 JPEG 才值得扫一遍 restart 索引并行解：一趟解码 ≥ 几十毫秒时线程才划算。
 const PARALLEL_MIN_BYTES: usize = 6 * 1024 * 1024;
 
-/// 整图按 `num`/8 解成 RGB（原始朝向）：大文件且带对齐 restart marker 就分段并行。
 fn decode_jpeg_scaled(bytes: &[u8], num: u8) -> Result<image::RgbImage> {
     let index = (bytes.len() >= PARALLEL_MIN_BYTES)
         .then(|| restart::RestartIndex::build(bytes))
@@ -406,7 +361,6 @@ fn encode_png(rgba: &[u8], width: u32, height: u32) -> Result<Vec<u8>> {
     Ok(out)
 }
 
-/// 解码但**不**转正：原始朝向的像素 + EXIF 方向。
 fn decode_raw(file_path: &str) -> Result<(DynamicImage, Orientation)> {
     let mut decoder = ImageReader::open(file_path)?
         .with_guessed_format()?
@@ -418,15 +372,12 @@ fn decode_raw(file_path: &str) -> Result<(DynamicImage, Orientation)> {
     Ok((img, orientation))
 }
 
-/// 解码并按 EXIF 把像素转正。`ImageReader::decode()` 不看 EXIF：相机成片只写标记不转像素，
-/// 不转正的话竖拍照片进了导出就是横的。
 fn decode_upright(file_path: &str) -> Result<DynamicImage> {
     let (mut img, orientation) = decode_raw(file_path)?;
     img.apply_orientation(orientation);
     Ok(img)
 }
 
-/// 方向是否交换宽高（90° / 270° 系）。
 fn swaps_axes(orientation: Orientation) -> bool {
     matches!(
         orientation,
@@ -437,7 +388,6 @@ fn swaps_axes(orientation: Orientation) -> bool {
     )
 }
 
-/// 导出用：整图转正、按 [`CompressSpec`] 定尺寸、编成 JPEG / PNG 落盘。
 pub fn contain_to_file(file_path: String, output_path: String, spec: CompressSpec) -> Result<()> {
     let (src_img, dst_width, dst_height, format, quality) = prepare(file_path, spec)?;
 
@@ -486,7 +436,6 @@ fn prepare(
     let quality = spec.quality.unwrap_or(80);
 
     // image 0.25 的 JPEG 编码器只认 L8 与 Rgb8，其余（RGBA、16 位…）一律 Err(Unsupported)。
-    // 带 alpha 的源图合成到白底：直接丢弃 alpha 会把透明区留成黑块。
     if format == CompressFormat::Jpeg {
         src_img = match src_img {
             img @ (DynamicImage::ImageLuma8(_) | DynamicImage::ImageRgb8(_)) => img,
@@ -575,7 +524,6 @@ mod tests {
         make_thumbnails, probe, scale_numerator, tier_target,
     };
 
-    /// 一段最小 TIFF：Orientation(0x0112) = 6，即 Rotate90（顺时针）。
     const EXIF_ROTATE90: [u8; 26] = [
         b'I', b'I', 0x2a, 0x00, // little endian
         0x08, 0x00, 0x00, 0x00, // IFD0 @8
@@ -590,7 +538,6 @@ mod tests {
         dir.join(name).to_string_lossy().into_owned()
     }
 
-    /// 原始朝向 2000x1500 的竖拍 JPEG（EXIF Rotate90）：左半红、右半蓝。
     fn write_rotated_jpeg(path: &std::path::Path) {
         let img = image::RgbImage::from_fn(2000, 1500, |x, _| {
             if x < 1000 {
@@ -606,7 +553,6 @@ mod tests {
             .unwrap();
     }
 
-    /// 竖拍 JPEG 走 turbojpeg 缩放解码：档位宽按转正后算，输出已转正，且是先缩后转。
     #[test]
     fn thumbnails_rotate_after_resize() {
         let dir = std::env::temp_dir().join("moodiary_img_thumb_rot_test");
@@ -662,11 +608,8 @@ mod tests {
     fn tier_target_caps_width_then_height_and_never_upscales() {
         assert_eq!(tier_target(2000, 1500, 512), Some((512, 384)));
         assert_eq!(tier_target(1500, 2000, 512), Some((512, 683)));
-        // 长截图：高封顶在 3 × 档位宽，宽跟着缩。
         assert_eq!(tier_target(1000, 30000, 512), Some((51, 1536)));
-        // 比档位窄但很高：仍然值得出一档（位图小一个量级）。
         assert_eq!(tier_target(512, 20000, 512), Some((39, 1536)));
-        // 两个方向都不比档位大：不写。
         assert_eq!(tier_target(512, 400, 512), None);
         assert_eq!(tier_target(300, 1536, 512), None);
     }
@@ -679,7 +622,6 @@ mod tests {
         assert_eq!(scale_numerator(1300, 1280), 8);
     }
 
-    /// 不带 alpha 的 PNG 源：image 全解，链式出两档 JPEG；比源图宽的档位不写（不放大）。
     #[test]
     fn thumbnails_chain_and_skip_upscale() {
         let dir = std::env::temp_dir().join("moodiary_img_thumb_test");
@@ -727,13 +669,11 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 
-    /// 带 alpha 的源：派生物是 PNG，透明保住。
     #[test]
     fn thumbnails_alpha_source_stays_png() {
         let dir = std::env::temp_dir().join("moodiary_img_thumb_alpha_test");
         std::fs::create_dir_all(&dir).unwrap();
         let src = dir.join("src.png");
-        // 左半不透明红、右半全透明。
         let img = image::RgbaImage::from_fn(1200, 600, |x, _| {
             if x < 600 {
                 image::Rgba([255, 0, 0, 255])
@@ -759,7 +699,6 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 
-    /// 带 alpha 的源图必须能编成 JPEG（导出）：透明区合成到白底而不是黑块。
     #[test]
     fn rgba_source_encodes_to_jpeg() {
         let dir = std::env::temp_dir().join("moodiary_img_alpha_test");
@@ -767,7 +706,6 @@ mod tests {
         let src = dir.join("src.png");
         let dst = dir.join("out.jpg");
 
-        // 左半不透明红、右半全透明。
         let mut img = image::RgbaImage::new(8, 4);
         for (x, _y, px) in img.enumerate_pixels_mut() {
             *px = if x < 4 {
@@ -794,8 +732,7 @@ mod tests {
         )
         .expect("RGBA 源图应当能编码成 JPEG");
 
-        // 尺寸不断言：CompressSpec 的 min_* 不是夹取而是「拉到正好」，小图会被放大，
-        // 那是既有行为。
+        // CompressSpec 的 min_* 不是夹取而是「拉到正好」，小图会被放大
         let out = image::open(&dst).expect("产物应当是可解码的 JPEG");
         let (w, h) = image::GenericImageView::dimensions(&out);
         assert_eq!(w / 2, h, "宽高比应保持 2:1");

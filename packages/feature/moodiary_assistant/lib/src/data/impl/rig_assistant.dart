@@ -47,7 +47,6 @@ class RigAssistantService implements AssistantService {
         ),
       );
     }
-    // 易变前缀拼到本轮外发消息上（不进 system，不污染缓存前缀）；history 是临时发送副本，不落库。
     if (request.volatilePrefix.isNotEmpty && history.isNotEmpty) {
       final last = history.last;
       history[history.length - 1] = rust.RigChatMessage(
@@ -86,7 +85,6 @@ class RigAssistantService implements AssistantService {
           AssistantStreamEvent.text(field0),
         rust.RigStreamEvent_ReasoningDelta(:final field0) =>
           AssistantStreamEvent.reasoning(field0),
-        // 工具调用不在气泡里展示，但用作「思考阶段结束」的信号（冻结思考计时）。
         rust.RigStreamEvent_ToolCall(:final field0) =>
           AssistantStreamEvent.tool(field0),
         rust.RigStreamEvent_ToolStarted(
@@ -117,8 +115,6 @@ class RigAssistantService implements AssistantService {
     }
   }
 
-  /// 按文件内容（magic number）判定 MIME——扩展名可能与实际内容不符（原图质量不重编码），
-  /// 否则会因 media_type 不符被供应商拒；识别不出再按扩展名兜底。
   String _imageMime(List<int> b, String path) {
     if (b.length >= 4 &&
         b[0] == 0x89 &&
@@ -156,7 +152,6 @@ class RigAssistantService implements AssistantService {
     String name,
     String argsJson,
   ) {
-    // 声明子集也是执行闸门：没挂载的工具即使被点名也不执行。
     final allowed = request.allowedTools;
     final spec = allowed != null && !allowed.contains(name)
         ? null
@@ -177,10 +172,6 @@ Future<String> dispatchAssistantTool({
 }) async {
   if (spec == null) return 'Failed: unknown tool "$toolName".';
 
-  // 失败一律以文本回灌模型，让它自己纠正参数——而不是抛穿 FFI 中断整轮对话。
-  //
-  // **没有事前闸门**：三个删除都是可恢复的（日记进回收站、分类可重建、记忆软删），
-  // 事前确认对可逆操作是过度设计，代价是每次都要打断对话。误删走事后撤销。
   try {
     final trimmed = argsJson.trim();
     final raw = (trimmed.isEmpty || trimmed == 'null') ? '{}' : trimmed;

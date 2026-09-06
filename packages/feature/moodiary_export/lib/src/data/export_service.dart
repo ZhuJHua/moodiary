@@ -21,21 +21,14 @@ import 'markdown_writer.dart';
 import 'tiptap_to_ir.dart';
 
 class ExportOutcome {
-  /// 最终产物路径。单文件时是它本身，多文件 / 带素材时是打包好的 zip。
   final String path;
 
-  /// 图片格式的逐张路径（其余格式为空）。
-  ///
-  /// 单篇永远只有一张；多篇「每篇一张」才会有多个。相册与分享两条出口都按文件处理，
-  /// 所以要单独给出来 —— [path] 只够喂系统分享面板。
   final List<String> images;
 
   final int diaryCount;
 
-  /// IR 表达不了的 tiptap 节点类型。非空说明编辑器加了新节点而导出没跟上。
   final Set<String> unsupportedNodes;
 
-  /// 文件缺失 / 解码失败被跳过的媒体数。
   final int skippedMedia;
 
   const ExportOutcome({
@@ -47,19 +40,13 @@ class ExportOutcome {
   });
 }
 
-/// 导出失败的原因。文案在 UI 层按 l10n 映射。
 enum ExportError { emptyScope, cancelled }
 
-/// 导出进度的阶段。文案在 UI 层按 l10n 映射。
 enum ExportPhase {
-  /// 逐篇把日记转成 IR、转码媒体。跑在主 isolate，但每篇之间会让出事件循环。
   converting,
 
-  /// 生成目标文件：PDF 逐篇排版，能报真实进度。
   writing,
 
-  /// PDF 的收尾：二次排版 + 绘制 + 字形子集化 + 序列化，一整块切不开，
-  /// [ExportProgress.total] 恒为 0（不确定进度）。大库导出时这一段最久。
   serializing,
 }
 
@@ -67,7 +54,7 @@ class ExportProgress {
   final ExportPhase phase;
   final int done;
 
-  /// 0 表示总量未知（不确定进度条）。
+  // 0 表示总量未知（不确定进度条）
   final int total;
 
   const ExportProgress(this.phase, this.done, this.total);
@@ -82,11 +69,6 @@ class ExportException implements Exception {
   String toString() => 'ExportException(${error.name})';
 }
 
-/// 导出编排：日记 → [ExportDoc] → 目标格式文件。
-///
-/// 全程不经 WebView —— 遍历在 Dart 侧（见 [TiptapToExportDoc]），批量导出才不必等编辑器
-/// 起来、也才能报进度。代价是「节点覆盖」有 JS 与 Dart 两份真相，故未知节点会被收集进
-/// [ExportOutcome.unsupportedNodes] 上报，而不是静默丢掉。
 class ExportService {
   const ExportService._();
 
@@ -95,19 +77,14 @@ class ExportService {
     required ExportScope scope,
     required ExportSettings settings,
 
-    /// 无标题日记在文件名里的回退词（已本地化）。
     required String untitledLabel,
 
-    /// 音视频占位行的类型词（已本地化）——Rust 侧没有 l10n，由这里传下去。
     required String videoLabel,
     required String audioLabel,
     void Function(ExportProgress progress)? onProgress,
 
-    /// 取消信号。长任务只在循环边界响应；typst 的整篇排版会跑完当前这一趟。
     press.CancelToken? cancel,
 
-    /// 图片格式的样式快照。离屏渲染树里没有祖先 `Theme`，配色与排版必须由调用方
-    /// （有 context 的那一侧）解析好传进来。[ExportFormat.image] 时必填。
     ImageCardStyle? imageStyle,
   }) async {
     await press.FastPress.ensureInitialized();
@@ -117,8 +94,6 @@ class ExportService {
       throw const ExportException(.emptyScope);
     }
 
-    // 上一次的产物已经交给用户（分享 / 另存）了，这里先清掉再开工 —— 产物必须留在盘上
-    // 直到分享面板用完，所以不能在导出结束时删，只能下次进来时收。
     await clearWorkspace();
     final workDir = await _freshWorkDir();
     try {
@@ -145,8 +120,7 @@ class ExportService {
         );
         unsupported.addAll(docs.last.unsupportedNodes);
         onProgress?.call(ExportProgress(.converting, i + 1, diaries.length));
-        // 无图日记整条链只产生 microtask，不让出事件循环——一批纯文字日记会连成一整块
-        // 同步 CPU。显式让一帧，保证进度条能画出来。
+        // 每 8 篇让出一帧，避免纯文字日记连续同步 CPU 卡住进度条
         if (i % 8 == 7) await Future<void>.delayed(.zero);
       }
 
@@ -201,8 +175,6 @@ class ExportService {
       );
     } catch (e) {
       await _deleteQuietly(workDir);
-      // 取消若落在 Rust 调用内（合并导出的耗时主体在 builder.finish，Dart 侧已无检查点），
-      // 抛上来的是 AnyhowException("cancelled")，翻译成取消而不是弹「导出失败」。
       if (e is! ExportException && token.isCancelled()) {
         throw const ExportException(.cancelled);
       }
@@ -214,12 +186,6 @@ class ExportService {
     if (token.isCancelled()) throw const ExportException(.cancelled);
   }
 
-  // ------------------------------------------------------------- 组装 IR
-
-  /// 预览用：日记 → IR，**不做媒体转码**。
-  ///
-  /// 图片渲染器直接解原件（`ui.instantiateImageCodec` 认 WebP），不像 docx / pdf 那样
-  /// 需要先统一转成 JPEG，所以预览这条路不必落一份临时素材。
   static Future<List<ExportDoc>> previewDocs(
     List<Diary> diaries, {
     required bool includePosition,
@@ -245,9 +211,6 @@ class ExportService {
     _MediaStage? media, {
     required bool includePosition,
   }) async {
-    // 旧 markdown / richText 日记先转成 tiptap 文档，走同一条遍历。转换器按 type 分派
-    // （与 EditorMigrationService 同构）：richText 是 `[` 开头的 Quill Delta 数组，喂给
-    // markdown 解析器只会得到「整段转义 JSON 文本 + 零媒体」的坏产物。
     var content = diary.content;
     if (!TiptapContent.parse(content).isDoc) {
       content =
@@ -261,13 +224,10 @@ class ExportService {
     final doc = TiptapToIr.convert(
       id: diary.id,
       title: diary.title,
-      // 模型里存的是绝对时刻（UTC），展示与分桶前必须转本地。
       time: diary.time.toLocal(),
       content: content,
       mood: diary.mood,
       weather: diary.weather,
-      // 位置默认不出门（ExportCommon.includePosition）。在这里掐掉，四种格式一起生效 ——
-      // 下游的三个 writer 与图片渲染器都只看 ExportDoc，不必各自再判一次。
       place: includePosition ? places[diary.placeId] : null,
       tags: diary.tags,
       categoryName: categories[diary.categoryId],
@@ -302,8 +262,6 @@ class ExportService {
     };
   }
 
-  // -------------------------------------------------------------- 各格式
-
   static Future<String> _writeMarkdown(
     List<ExportDoc> docs,
     ExportSettings settings,
@@ -312,7 +270,6 @@ class ExportService {
     String untitledLabel,
     press.CancelToken token,
   ) async {
-    // GFM + front matter 不给用户选：前者阅读器都认，后者是导回来的唯一凭据。
     final options = MarkdownOptions(
       includeTitle: settings.common.includeTitle,
       includeMetaLine: settings.common.includeMeta,
@@ -346,7 +303,6 @@ class ExportService {
     }
 
     await media.copyAssetsInto(outDir);
-    // 单个 .md 且无素材时直接给文件，省掉一层解压。
     final entries = outDir.listSync();
     if (entries.length == 1 && entries.single is File) {
       return (entries.single as File).path;
@@ -425,13 +381,6 @@ class ExportService {
     );
   }
 
-  /// PDF 排版走 Rust 侧的 typst。
-  ///
-  /// 之前用 Dart 的 `pdf` 包，它按空格切词，中文整段被当成一个「词」，每排一行都要在
-  /// 整段上二分查找并测量前缀宽度——实测 4 万字 55 秒、8 万字跑不完，真机上 32 万字的
-  /// 那篇外推 8 小时。typst 同一份 0.29 秒排完 352 页，且 CJK 禁则是原生的。
-  ///
-  /// 也因此不再需要 isolate：FRB 调用跑在 Rust 线程池上，本来就不占主 isolate。
   static Future<String> _writePdf(
     List<ExportDoc> docs,
     ExportSettings settings,
@@ -445,10 +394,10 @@ class ExportService {
     final layout = settings.pdf;
     final style = press.PdfStyle(
       fontPath: AppFiles.getRealPath('font', layout.eastAsiaFont),
-      // 留空让 typst 用字体文件自报的家族名——用户导入什么就用什么，不必猜名字。
+      // 留空让 typst 用字体文件自报的家族名
       fontFamily: '',
       fontSizePt: layout.fontSizePt,
-      // typst 的 leading 是行间距（默认 0.65em），把「倍数」线性映射过去。
+      // typst 默认 leading 是 0.65em，行距倍数按此映射
       lineSpacingEm: 0.65 * layout.lineSpacing,
       firstLineIndent: layout.firstLineIndent,
       pageWidthMm: layout.paper.widthMm,
@@ -473,7 +422,6 @@ class ExportService {
           await builder.add(doc: _toIrDoc(docs[i]));
           onProgress?.call(ExportProgress(.writing, i + 1, docs.length));
         }
-        // 排版 + 绘制 + 子集化是一整块，切不开。
         onProgress?.call(const ExportProgress(.serializing, 0, 0));
         await builder.finish(outPath: path, cancel: token);
       } finally {
@@ -508,10 +456,6 @@ class ExportService {
     );
   }
 
-  /// 图片：一篇一张长 PNG（或合并成一张）。
-  ///
-  /// 与另外三种最大的不同是**产物可能有多个文件而每个都要单独进相册**，所以逐张路径
-  /// 收在 [images] 里回传；[ExportOutcome.path] 只是喂系统分享面板的那一个。
   static Future<String> _writeImage(
     List<ExportDoc> docs,
     ExportSettings settings,
@@ -560,8 +504,6 @@ class ExportService {
       onProgress?.call(ExportProgress(.writing, i + 1, docs.length));
     }
 
-    // 张数不多就把逐张的文件直接交出去（相册要一张张写，zip 反而挡路）；
-    // 多到没法一张张处理才打包。
     if (images.length <= _kLooseImageLimit) return images.first;
     final zipPath = await _zip(
       outDir,
@@ -572,18 +514,14 @@ class ExportService {
     return zipPath;
   }
 
-  /// 超过这个张数就打包 zip，不再逐张交给相册 / 分享面板。
   static const int _kLooseImageLimit = 9;
 
-  /// 时间过桥前换成人读格式 —— Rust 侧只是照抄进 meta 行。
   static press.IrDoc _toIrDoc(ExportDoc doc) =>
       doc.toIr(TimeFormat.longDateTime(doc.time));
 
   static List<press.IrDoc> _toIr(List<ExportDoc> docs) => [
     for (final doc in docs) _toIrDoc(doc),
   ];
-
-  // ------------------------------------------------------------ 文件命名
 
   static String _fileName(ExportDoc doc, String template, String untitled) {
     final t = doc.time;
@@ -596,7 +534,6 @@ class ExportService {
         .replaceAll('{id}', doc.id);
   }
 
-  /// 文件名里剔掉路径分隔符与各平台保留字符，并按需去重。
   static String _uniqueName(
     String raw,
     String extension,
@@ -623,8 +560,6 @@ class ExportService {
         '${two(t.hour)}${two(t.minute)}${two(t.second)}';
   }
 
-  // ---------------------------------------------------------------- 打包
-
   static Future<String> _zip(
     Directory dir,
     String zipPath,
@@ -632,7 +567,6 @@ class ExportService {
   ) async {
     await archive.FastZip.ensureInitialized();
     final zip = await archive.Zip.newInstance(filePath: zipPath);
-    // 中途抛错就到不了 finish()，不 dispose 则 ZipWriter 一直攥着 fd 到 GC。
     try {
       for (final entity in dir.listSync(recursive: true)) {
         if (entity is! File) continue;
@@ -640,7 +574,6 @@ class ExportService {
         await zip.addFile(
           filePath: entity.path,
           zipPath: p.relative(entity.path, from: dir.path),
-          // 媒体与 docx/pdf 本身都是已压缩格式，再 deflate 一遍只费时间。
           stored: true,
         );
       }
@@ -667,11 +600,9 @@ class ExportService {
     try {
       if (dir.existsSync()) await dir.delete(recursive: true);
     } catch (_) {
-      /* 清理失败不该盖住真正的错误 */
     }
   }
 
-  /// 清掉历次导出留下的工作目录。产物已经交给用户（分享/保存）后调用。
   static Future<void> clearWorkspace() async {
     final root = Directory(
       p.join(PlatformService.get().applicationCachePath, 'export'),
@@ -680,20 +611,12 @@ class ExportService {
   }
 }
 
-/// 媒体转码与暂存。
-///
-/// docx-rs 只认 png/jpeg，dart_pdf 遇到非 JPEG 会解码成裸位图再 Flate（2 MB 图能撑出
-/// 13 MB PDF），所以 docx / pdf 先统一转成 JPEG 落到工作目录，IR 里的路径换成转码后的
-/// 临时文件。**Markdown 走 [copyOriginals]：原字节照搬**（PNG 透明、GIF 动图、WebP 都
-/// 原样），素材按 `assets/<image|video|audio>/` 分目录 —— 这是 Markdown 导入规范的布局，
-/// 导出的包能原样导回。
 class _MediaStage {
   final Directory _workDir;
   final ExportMediaPolicy _policy;
   final bool copyOriginals;
   final Map<String, String?> _converted = {};
 
-  /// 待拷贝的素材：源路径 → 产物目录内相对 `assets/` 的路径。
   final Map<String, String> _assets = {};
 
   int skipped = 0;
@@ -788,7 +711,6 @@ class _MediaStage {
     }
   }
 
-  /// WebP → JPEG。同一张图在多篇日记里复用时只转一次。
   Future<String?> _stageImage(String source) async {
     if (_converted.containsKey(source)) return _converted[source];
 
@@ -808,14 +730,10 @@ class _MediaStage {
       await FastImageCodec.containToFile(
         filePath: source,
         outputPath: target,
-        // 不给 maxWidth/maxHeight：那两个字段不是夹取而是「拉到正好」，小图会被放大。
+        // maxWidth/maxHeight 是"拉到正好"不是夹取，会放大小图，故不传
         spec: const FastCompressSpec(compressFormat: .jpeg, quality: 85),
       );
     } catch (e, st) {
-      // 别静默吞：这里曾经把「源文件缺失」和「转码失败」压成同一个结果，用户看到
-      // 的只有「N 个媒体文件找不到」，去相册一看文件还在，无从判断原因。带 alpha
-      // 的图必转码失败那条已在 Rust 侧修掉（JPEG 现在会先压平色型），留日志是为了
-      // 下一个色型坑能被认出来。
       logger.e('导出转码失败：$source', error: e, stackTrace: st);
       _converted[source] = null;
       return null;
@@ -829,7 +747,6 @@ class _MediaStage {
     if (File(path).existsSync()) _assets[path] = relative;
   }
 
-  /// 把用到的素材拷进产物目录的 `assets/<kind>/`（markdown 相对引用指向这里）。
   Future<void> copyAssetsInto(Directory outDir) async {
     if (_assets.isEmpty) return;
     final assets = Directory(p.join(outDir.path, 'assets'));

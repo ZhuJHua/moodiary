@@ -3,8 +3,6 @@ import 'package:moodiary_sync/src/application/sync_log_runs.dart';
 import 'package:moodiary_sync/src/application/sync_runner.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
 
-/// 日志页的分段：一次锁会话（lockAcquire → lockRelease，含 pull + push）成一段，
-/// 无锁的 syncStart → syncEnd 自成一段，段外事件独立，最新在前。
 void main() {
   final base = DateTime(2026, 9, 4, 14, 32);
   SyncEvent ev(

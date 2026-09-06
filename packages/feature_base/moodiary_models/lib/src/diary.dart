@@ -20,7 +20,6 @@ abstract class Diary with _$Diary {
     @UtcDateTimeConverter() required DateTime time,
     @UtcDateTimeConverter() required DateTime lastModified,
     required bool show,
-    // 未知值兜底中性：将来加状态时旧版本解新 JSON 不炸
     @JsonKey(unknownEnumValue: DiaryMood.neutral) required DiaryMood mood,
     DiaryWeather? weather,
     required List<String> imageName,
@@ -28,8 +27,6 @@ abstract class Diary with _$Diary {
     required List<String> videoName,
     required List<String> tags,
 
-    /// 常用地点 id（与 [categoryId] 同一套语义：引用、不是快照——改名 / 挪坐标全体
-    /// 日记跟着变，有日记引用的地点不能删）。
     String? placeId,
     required String type,
     double? aspect,
@@ -73,8 +70,6 @@ abstract class Diary with _$Diary {
     );
   }
 
-  /// 空模板。必须显式指定 [type]——禁止隐藏的默认类型，避免默认值与 UI 层
-  /// post-frame `changeType` 兜底带来的时序坑。
   factory Diary.empty({required DiaryType type}) {
     return Diary(
       id: uuidV7(),

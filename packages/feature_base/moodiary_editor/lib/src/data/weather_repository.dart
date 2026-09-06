@@ -10,10 +10,6 @@ import 'package:mui/mui.dart';
 
 typedef WeatherResult = ({DiaryWeather? weather, GeoFailure? failure});
 
-/// 和风「实时天气」仓储：按经纬度取 [DiaryWeather]。
-///
-/// 入参是**裸坐标**，不是 [DiaryPosition] —— 天气与位置是两条互不相干的链路，
-/// 取天气既不需要地名、也不该顺手把位置写进日记。
 @lazySingleton
 class WeatherRepository {
   WeatherRepository(this._http);

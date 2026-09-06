@@ -1,14 +1,5 @@
 import 'dart:convert';
 
-/// Quill Delta（richText 落库形态）→ TipTap 文档 JSON 串，供「迁移到 tiptap」用。
-///
-/// 直接产出 ProseMirror 节点树（不经 markdown 中转），故图片/音频/视频都还原为对应的一等节点
-/// （image / audio / video），不会退化成图片，也无需任何文件名前缀约定。
-/// 覆盖：行内 bold/italic/underline/strike/code/link（color/background/align 在 tiptap 当前 schema
-/// 无对应，丢弃只保留文字）；块级 heading(h1-6)/bulletList/orderedList/taskList(复选列表)/blockquote/
-/// codeBlock；三种 embed。
-///
-/// 容错：JSON 解析失败 / 非 Delta 数组返回 null，调用方据此跳过该篇（保留原 Delta）。
 class QuillDeltaToTiptap {
   const QuillDeltaToTiptap._();
 
@@ -21,15 +12,11 @@ class QuillDeltaToTiptap {
     } catch (_) {
       return null;
     }
-    // 「恰好是 JSON 数组」的裸文本（`["买菜","做饭"]`、`[2026]`）不是 Delta：
-    // 循环会把非 Map op 全部跳过、产出只剩空段落的"合法"文档，正文静默清空。
-    // 返回 null 让调用方走纯文本兜底链。空数组是合法的空 Delta，放行。
     if (ops.isNotEmpty &&
         !ops.any((op) => op is Map && op.containsKey('insert'))) {
       return null;
     }
 
-    // 1) 解析为「行」：文本 op 按 \n 切，换行处用行级属性（header/list/blockquote/code-block）收行。
     final lines = <_Line>[];
     var current = _Line();
     void close(Map<String, dynamic> attrs) {
@@ -73,7 +60,6 @@ class QuillDeltaToTiptap {
   static List<Map<String, dynamic>> _buildBlocks(List<_Line> lines) {
     final blocks = <Map<String, dynamic>>[];
 
-    // 分组累积器：相邻 list 项合一个列表、相邻 blockquote 行合一个引用、相邻 code-block 行合一个代码块。
     List<Map<String, dynamic>>? listItems;
     String? listType;
     List<Map<String, dynamic>>? quoteBlocks;
@@ -115,8 +101,6 @@ class QuillDeltaToTiptap {
       if (isCode) {
         flushList();
         flushQuote();
-        // codeBlock 只能容纳文本：行内 embed 在此切断代码块、以一等媒体节点保留
-        // （丢弃会连带丢文件引用，清理孤儿文件时媒体被永久删除）。
         final text = line.segs
             .where((s) => s.embed == null)
             .map((s) => s.text)
@@ -134,13 +118,11 @@ class QuillDeltaToTiptap {
       }
       flushCode();
 
-      // 这一行产出的块节点。含 embed 时：文本段聚成 paragraph、embed 段各成对应节点。
       final produced = _lineBlocks(line);
 
       final list = la['list'];
       if (list != null) {
         flushQuote();
-        // Quill 复选列表（checked/unchecked）→ taskList；ordered→orderedList；其余→bulletList。
         final isCheck = list == 'checked' || list == 'unchecked';
         final type = isCheck
             ? 'taskList'
@@ -152,8 +134,6 @@ class QuillDeltaToTiptap {
           listItems = [];
           listType = type;
         }
-        // listItem / taskItem(nested) 的 schema 是 `paragraph block*`：首子必须是段落，
-        // 列表行只有 embed 时补一个空段落（与 markdown 转换器同款防护）。
         final itemContent =
             produced.isNotEmpty && produced.first['type'] != 'paragraph'
             ? [
@@ -184,12 +164,10 @@ class QuillDeltaToTiptap {
     flushQuote();
     flushCode();
 
-    // doc 至少要有一个块。
     if (blocks.isEmpty) blocks.add({'type': 'paragraph'});
     return blocks;
   }
 
-  /// 一行 → 块节点列表（heading/paragraph + 内联 embed 拆出的 image/audio/video）。
   static List<Map<String, dynamic>> _lineBlocks(_Line line) {
     final la = line.attrs;
     final hasEmbed = line.segs.any((s) => s.embed != null);
@@ -290,7 +268,6 @@ class _Line {
   Map<String, dynamic> attrs = const {};
 }
 
-/// 行内一段：文本段（text+attrs）或 embed 段（kind=image/audio/video + 裸文件名 name）。
 class _Seg {
   final String text;
   final Map<String, dynamic> attrs;

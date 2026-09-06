@@ -14,18 +14,11 @@ import 'package:mui/mui.dart';
 import 'package:path/path.dart' as p;
 import 'package:photo_view/photo_view.dart';
 
-/// 全屏图片浏览器：左右翻页、双指缩放、下拉手势关闭（背景与操作钮随手势渐隐）、
-/// Hero 飞入飞出（传 [heroPrefix] 启用，缩略图侧 tag 须为 `'$heroPrefix-<image>'`）。
-/// 底部操作：保存到相册 / 图片信息（分辨率、大小、格式、修改时间）。
-/// [images] 每项为本地绝对路径或 http(s) 外链。
 class MImageBrowser extends StatefulWidget {
   final List<String> images;
   final int initialIndex;
   final String? heroPrefix;
 
-  /// 缩略图侧的档位。传入后全图解码完成前先显示同缓存键的缩略图
-  /// （命中内存缓存，首帧即有像素）——Hero 首次打开就能起飞，全图就绪后无缝替换。
-  /// 必须与缩略图侧完全一致（同路径 [FastImage] + 同档位）才会命中缓存。
   final FastImageTier? placeholderTier;
 
   const MImageBrowser({
@@ -63,22 +56,15 @@ class _MImageBrowserState extends State<MImageBrowser> {
   );
   late int _current = widget.initialIndex;
 
-  /// 操作钮不透明度，随下拉手势渐隐（DismissiblePage onDragUpdate 回传）。
   double _chrome = 1.0;
   bool _saving = false;
 
-  /// 各页是否放大（非 initial 缩放态）。当前页放大时禁掉 PageView 的水平滚动，
-  /// 让横向平移完全归 PhotoView（竖直平移由 scope 的 shouldMove 抢占解决）。邻页仍装着、
-  /// 缩放态还在，翻回去要照它的态来。
   final _zoomedPages = <int>{};
 
   bool get _zoomed => _zoomedPages.contains(_current);
 
-  /// 本地图能走 tile 的话记（转正后尺寸, 交给 Rust 解的文件），探头一次记一次；
-  /// null = 探过了，不能走 tile。
   final _regions = <String, FastTileSource?>{};
 
-  /// 探头还没回来的图：这期间只画 m 档打底，不解原图。
   final _probing = <String>{};
 
   static bool _isNetwork(String image) =>
@@ -94,8 +80,6 @@ class _MImageBrowserState extends State<MImageBrowser> {
     super.dispose();
   }
 
-  /// 本地图只读头：能区域解码（baseline JPEG、非隔行 PNG、非动图 WebP）就直接走 tile 页；
-  /// 大的 progressive JPEG 先要它的 baseline 副本（在就秒开，不在现转）；其余留在整图路径。
   Future<void> _probe(String image) async {
     if (_regions.containsKey(image) || _probing.contains(image)) return;
     _probing.add(image);
@@ -171,8 +155,6 @@ class _MImageBrowserState extends State<MImageBrowser> {
               child: Row(
                 mainAxisAlignment: .spaceBetween,
                 children: [
-                  // 长按：切换 tile 调试叠层（看图页原图层的加载过程）。不能再给
-                  // tooltip：它自己就靠长按触发，会把手势抢走。
                   Semantics(
                     button: true,
                     label: context.l10n.ui.imageBrowserInfo,
@@ -217,21 +199,15 @@ class _MImageBrowserState extends State<MImageBrowser> {
         physics: _zoomed ? const NeverScrollableScrollPhysics() : null,
         onPageChanged: (i) => setState(() => _current = i),
         itemCount: widget.images.length,
-        // 仅当前页参与 Hero，避免离屏页与缩略图侧 tag 冲突。
         itemBuilder: (context, index) => HeroMode(
           enabled: hero && index == _current,
           child: _buildPage(index, hero: hero),
         ),
       );
     }
-    // 竖直轴 scope 让 PhotoView 的识别器按需抢占手势竞技场：双指（捏合）立即抢，
-    // 否则会被外层 DismissiblePage 的竖直拖动判成下拉；单指竖直仅在放大后图可平移时
-    // 抢（平移到边缘 / 原始比例时不抢，下拉 dismiss 照常）。
     return PhotoViewGestureDetectorScope(axis: .vertical, child: gallery);
   }
 
-  /// Hero 包在整个 PhotoView 外面（而非 photo_view 的 heroAttributes——那个 Hero 在图
-  /// 解码完成前不存在，目的地缺席导致首次打开不起飞）；加载态显示缩略图占位，飞的就是它。
   Widget _buildPage(int index, {required bool hero}) {
     final image = widget.images[index];
     final placeholder = _placeholderOf(image);
@@ -242,8 +218,6 @@ class _MImageBrowserState extends State<MImageBrowser> {
     final region = _regions[image];
     final Widget page;
     if (region != null) {
-      // 能区域解码的图：child 尺寸 = 源像素，三层叠加，原图从不整解。控制器归页自己：
-      // PageView 会销毁两页开外的页，复用的控制器会带着上次的平移量回来，整页白屏。
       page = FastTileImageViewer(
         path: image,
         decodePath: region.decodePath,
@@ -254,8 +228,6 @@ class _MImageBrowserState extends State<MImageBrowser> {
         onTap: () => Navigator.of(context).maybePop(),
       );
     } else if (local && _probing.contains(image)) {
-      // 探头还没回来：只画 m 档。直接上原图会让引擎先整解一张 4096 封顶的位图进缓存，
-      // 探头一回来它就被换掉，白解 50MB。
       page = PhotoView(
         imageProvider: placeholder ?? FastImage(image, tier: .m),
         backgroundDecoration: const BoxDecoration(color: Colors.transparent),
@@ -310,7 +282,6 @@ class _MImageBrowserState extends State<MImageBrowser> {
     return FastImage(image, tier: tier);
   }
 
-  /// 保存当前图到相册。外链先经 [IHttpClient] 下载到缓存临时文件，成功与否统一 toast。
   Future<void> _save() async {
     if (_saving) return;
     _saving = true;
@@ -354,7 +325,6 @@ class _MImageBrowserState extends State<MImageBrowser> {
     }
   }
 
-  /// URL 的扩展名（剥 query），拿不到按 .jpg 兜底（gal 依后缀选类型）。
   static String _extOf(String url) {
     final ext = p.extension(Uri.tryParse(url)?.path ?? url);
     return ext.isEmpty ? '.jpg' : ext;
@@ -376,7 +346,6 @@ class _MImageBrowserState extends State<MImageBrowser> {
 
   Future<_ImageInfoData> _loadInfo(String image) async {
     if (_isNetwork(image)) {
-      // 外链：图已在屏上（provider 命中缓存），只补分辨率。
       String? resolution;
       try {
         final size = await MediaManager.getImageSize(_providerOf(image))
@@ -394,7 +363,6 @@ class _MImageBrowserState extends State<MImageBrowser> {
       modified = await file.lastModified();
     } catch (_) {}
 
-    // 只读头：转正后的宽高，不把原图整解一遍。顺带说清这张图走的是哪条解码路。
     String? resolution;
     String? decode;
     try {

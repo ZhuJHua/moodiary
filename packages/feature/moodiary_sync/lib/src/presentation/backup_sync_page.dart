@@ -67,7 +67,6 @@ class _RemoteSection extends ConsumerStatefulWidget {
 }
 
 class _RemoteSectionState extends ConsumerState<_RemoteSection> {
-  /// 密钥冲突标记由引擎在同步途中写入（无 UI），页面得自己听着才会亮出入口。
   late final KVNotifier<List<String>> _keyConflicts = MoodiaryKVs
       .syncKeyConflictBackends
       .getNotifierOr(const <String>[]);
@@ -97,19 +96,16 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
     if (mounted) setState(() {});
   }
 
-  /// 「已配置」是钥匙串里的事实，异步读；切换 provider / 保存配置后重取。
   late Future<bool> _configured = getIt<IRemoteSyncBackend>().isReady();
 
   Future<void> _switchProvider(SyncProviderType type) async {
     SyncProviderType.setCurrent(type);
     await activateSyncProvider();
-    // 换了后端：旧服务器的健康结论不该挂在新服务器头上。
     getIt<SyncRunner>().resetHealth();
     if (!mounted) return;
     setState(() => _configured = getIt<IRemoteSyncBackend>().isReady());
   }
 
-  /// 走 runner：结果同时写进连接健康，副标题与 AppBar 小点随之更新。
   Future<void> _testConnection() async {
     final backend = getIt<IRemoteSyncBackend>();
     if (!await backend.isReady()) {
@@ -127,7 +123,6 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
     }
   }
 
-  /// 「已配置 · 已连接 / 无法连接（14:20）」；未配置时只说未配置。
   Widget _backendSubtitle(BuildContext context, bool configured) {
     if (!configured) return Text(context.l10n.sync.notConfiguredTap);
     return ValueListenableBuilder(
@@ -202,7 +197,6 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
             getIt<SyncRunner>().resetHealth();
             setState(() => _configured = getIt<IRemoteSyncBackend>().isReady());
             if (!context.mounted) return;
-            // 新设备接入：远端若已加密而本地无密钥，保存配置后立即引导配置。
             await ensureSyncKeyReady(
               context: context,
               ref: ref,
@@ -350,7 +344,6 @@ class _EncryptionSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 无独立加密开关：配置用户密钥即开启 AES-256 加密，清空即回到明文。
     return MSliverSettingGroup(
       title: context.l10n.sync.encryptionSection,
       children: const [UserKeyTile()],
@@ -420,12 +413,10 @@ class _AutoSyncSection extends StatelessWidget {
   }
 
   Future<void> _editPollInterval(BuildContext context, int current) async {
-    // 取不大于当前值的最大预设作为初始游标。
     int index = 0;
     for (var i = 0; i < _pollPresets.length; i++) {
       if (_pollPresets[i] <= current) index = i;
     }
-    // 只在按下「确定」时落盘，「取消」就是真的取消。
     final picked = await MSheet.show<int>(
       context,
       builder: (ctx) => StatefulBuilder(

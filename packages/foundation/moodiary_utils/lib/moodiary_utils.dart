@@ -1,6 +1,3 @@
-/// Moodiary foundation 工具包：无上行依赖的叶子工具、枚举与文本转换器。
-///
-/// 纯叶子：仅依赖 dart/flutter SDK 与外部 pub 包，无任何 workspace 上/下层依赖。
 library;
 
 export 'src/adaptive.dart';

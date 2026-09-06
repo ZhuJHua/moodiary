@@ -50,7 +50,6 @@ void main() {
     });
 
     test('旧数据（model 为空）不参与，也不桥接前后两段', () {
-      // a2 是升级前的旧行：既不该在它身上出提示，也不该让 m1→m1 被误判成切换。
       final notices = modelSwitchNoticesFor([
         reply('a1', model: 'm1'),
         reply('a2'),
@@ -77,7 +76,6 @@ void main() {
         reply('a2', model: 'm2'),
       ];
       for (final n in modelSwitchNoticesFor(items)) {
-        // beforeId 必是列表里某条消息：提示插在它之前，列表最后一项仍是真消息。
         expect(items.any((m) => m.id == n.beforeId), isTrue);
       }
     });

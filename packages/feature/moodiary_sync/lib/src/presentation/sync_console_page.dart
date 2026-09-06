@@ -24,12 +24,6 @@ import 'package:moodiary_sync/src/presentation/widget/sync_labels.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
-/// 同步控制台：上半是状态面板（连接 · 状态 · 本地计数 · 自动同步 · 立即同步），
-/// 下半是日志——一次同步一行（[groupSyncRuns]），点一行看逐条事件。AppBar 的同步
-/// 按钮直接进这一页，原来的状态弹窗已并入面板。
-///
-/// 状态来自 [SyncRunner.status]（手动与自动同源）；日志默认今天并实时追加，可按
-/// [SyncLogger] 的按天 jsonl 切换历史日期（保留 7 天，历史视图不追加实时事件）。
 class SyncConsolePage extends ConsumerStatefulWidget {
   const SyncConsolePage({super.key});
 
@@ -44,7 +38,6 @@ class _SyncConsolePageState extends ConsumerState<SyncConsolePage> {
   bool _problemsOnly = false;
   DateTime _selectedDay = .now();
 
-  /// 「已配置」是钥匙串里的事实，异步读一次；从设置页回来重取。
   late Future<bool> _configured = getIt<IRemoteSyncBackend>().isReady();
 
   static bool _sameDay(DateTime a, DateTime b) =>
@@ -55,7 +48,7 @@ class _SyncConsolePageState extends ConsumerState<SyncConsolePage> {
   @override
   void initState() {
     super.initState();
-    // 先订阅再读文件，把订阅期间到达的事件并入，避免漏掉（仅今天视图）。
+    // 先订阅再读文件，否则漏掉订阅期间到达的事件
     final pending = <SyncEvent>[];
     _sub = getIt<SyncLogger>().events.listen((event) {
       if (!mounted || !_viewingToday) return;
@@ -267,11 +260,6 @@ class _SyncConsolePageState extends ConsumerState<SyncConsolePage> {
   }
 }
 
-// ─────────────────────── 状态面板 ───────────────────────
-
-/// 四段：连接指示灯与后端一行 / 状态标题与时刻 / 本地计数（远端不一致才标）/
-/// 自动同步与下次轮询，末尾一颗按钮。「未配置」与「连不上」是仅有的两个要用户
-/// 离开去做点什么的状态，标题走 error 色。
 class _StatusPanel extends ConsumerStatefulWidget {
   final bool configured;
   final Future<void> Function() onSync;
@@ -283,7 +271,6 @@ class _StatusPanel extends ConsumerStatefulWidget {
 }
 
 class _StatusPanelState extends ConsumerState<_StatusPanel> {
-  /// 倒计时每秒走一格。
   Timer? _ticker;
 
   @override
@@ -353,7 +340,6 @@ class _StatusPanelState extends ConsumerState<_StatusPanel> {
     final configured = widget.configured;
     final bad = configured && status.health.isBad;
 
-    // 指示灯：绿 = 可达，红 = 坏了，灰 = 未知 / 未配置。
     final led = !configured
         ? scheme.outline
         : bad
@@ -574,8 +560,6 @@ class _StatusPanelState extends ConsumerState<_StatusPanel> {
     );
   }
 
-  /// 标题 / 副行 / 是否 error 色。优先级：正在跑 → 未配置 → 连不上 → 上次失败或
-  /// 未完成 → 同步过 → 从未同步。
   (String, String?, bool) _headline(
     Translations l10n, {
     required SyncState state,
@@ -606,7 +590,6 @@ class _StatusPanelState extends ConsumerState<_StatusPanel> {
       backend: backendName,
     );
     if (healthTitle != null) {
-      // 明细（原始错误串）不上面板：标题已经说了病因，原文在日志行的 payload 里。
       final since = status.healthSince;
       final lastOk = MoodiaryKVs.lastSyncTime.get() ?? 0;
       return (
@@ -684,8 +667,6 @@ class _StatusPanelState extends ConsumerState<_StatusPanel> {
   );
 }
 
-/// 面板右上角的后端图标同时是「测试连接」：点一下重新探测，转圈期间禁点；
-/// 结果直接写进健康态（指示灯、标题随之变），不弹 toast。
 class _ProbeButton extends StatefulWidget {
   final IconData icon;
   final bool enabled;
@@ -709,7 +690,7 @@ class _ProbeButtonState extends State<_ProbeButton> {
     try {
       await getIt<SyncRunner>().testConnection();
     } on SyncException {
-      // 健康态已由 runner 更新，面板自己会红。
+      // 探测失败不报错，结果由 onProbed 回读连接状态
     } finally {
       if (mounted) setState(() => _busy = false);
       widget.onProbed();
@@ -733,7 +714,6 @@ class _ProbeButtonState extends State<_ProbeButton> {
   }
 }
 
-/// 一格计数：标签、本地数；远端不一致时旁边一小行 tertiary 色的「远端 N」。
 class _Counter extends StatelessWidget {
   final String label;
   final int? local;
@@ -853,9 +833,6 @@ class _Empty extends StatelessWidget {
   }
 }
 
-// ─────────────────────── 日志行 ───────────────────────
-
-/// 一行：时间 58 · 图标 16 · 标题 · 结果 · 耗时 48。段头与散落事件同一网格。
 class _Line extends StatelessWidget {
   final DateTime at;
   final IconData icon;
@@ -1005,7 +982,6 @@ class _RunLine extends StatelessWidget {
   }
 }
 
-/// 段头结果文案与颜色：已是最新 / ↑ 1 · ↓ 2 · 媒体 3 / 未完成 · n / 已停止 / 失败 / 进行中。
 (String, Color?) _outcome(BuildContext context, SyncLogRun run) {
   final l10n = context.l10n;
   final scheme = context.theme.colors;
@@ -1050,8 +1026,6 @@ IconData _runIcon(SyncLogRun run) => run.neverStarted
         _ => LucideIcons.refreshCw,
       };
 
-/// 段外的散落事件：健康态切换（payload 带 health）显示成「连接 · 无法连接」，
-/// 其余按 kind + reason。
 class _SingleLine extends StatelessWidget {
   final SyncEvent event;
 
@@ -1099,8 +1073,6 @@ class _SingleLine extends StatelessWidget {
     return null;
   }
 }
-
-// ─────────────────────── 运行详情里的事件行 ───────────────────────
 
 class _EventRow extends StatelessWidget {
   final SyncEvent event;
@@ -1160,7 +1132,6 @@ class _EventRow extends StatelessWidget {
   }
 }
 
-/// 详情里连续同 kind 的折叠组（≥2 条）。
 class _FoldTile extends StatefulWidget {
   final List<SyncEvent> events;
 
@@ -1283,8 +1254,6 @@ void _showPayloadSheet(BuildContext context, SyncEvent event) {
   );
 }
 
-// ─────────────────────── 文案 / 图标映射 ───────────────────────
-
 Color _levelColor(BuildContext context, SyncEventLevel level) {
   final scheme = context.theme.colors;
   return switch (level) {
@@ -1303,7 +1272,6 @@ String? _directionLabel(Translations l10n, String? direction) =>
       _ => null,
     };
 
-/// kind → 图标 / 文案，都用 switch 而不是 Map：加了新 kind 忘了配就编译报错。
 IconData _kindIcon(SyncEventKind kind) => switch (kind) {
   .syncStart => LucideIcons.play,
   .syncEnd => LucideIcons.flag,
@@ -1378,7 +1346,6 @@ String _kindLabel(Translations l10n, SyncEventKind kind) => switch (kind) {
   .error => l10n.sync.kindError,
 };
 
-/// 从 payload 提取事件的一行摘要（方向 / 条数 / 标题 / 文件名…）。取不到返回 null。
 String? _subjectOf(Translations l10n, SyncEvent event) {
   final payload = event.payload ?? const {};
   String? str(String key) {
@@ -1428,7 +1395,6 @@ String? _subjectOf(Translations l10n, SyncEvent event) {
   };
 }
 
-/// [SyncEventReason] 的展示文案。
 String? _reasonLabel(Translations l10n, SyncEventReason? reason) {
   if (reason == null) return null;
   return switch (reason) {

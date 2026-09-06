@@ -4,8 +4,6 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 
-/// WebDAV 后端配置。保存与清除都返回 true，让调用方刷新「已配置」状态；
-/// 取消 / 下拉 / 点遮罩返回 null 或 false。
 class WebDavFormSheet extends StatefulWidget {
   const WebDavFormSheet({
     super.key,
@@ -13,7 +11,6 @@ class WebDavFormSheet extends StatefulWidget {
     required this.configured,
   });
 
-  /// 打开时钥匙串里的配置与就绪态（在 [show] 里读好再进弹窗，弹窗内不读钥匙串）。
   final List<String> initial;
   final bool configured;
 
@@ -41,7 +38,6 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
   late final TextEditingController _userCtl;
   late final TextEditingController _passCtl;
 
-  /// 打开时的配置状态。保存后弹窗即关闭，所以它不需要跟着输入变。
   late final _backend = getIt<IRemoteSyncBackend>(
     instanceName: SyncProviderIds.webdav,
   );
@@ -72,8 +68,6 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
     super.dispose();
   }
 
-  /// 校验口径与 [IRemoteSyncBackend.isReady] 一致 —— 存下一份它认不出的配置，
-  /// 用户要到同步失败时才知道。密码可空（部分服务器允许匿名）。
   bool _validate() {
     final l10n = context.l10n;
     final url = _urlCtl.text.trim();

@@ -6,11 +6,6 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'diary_repository.dart';
 import 'embed_index_service.dart';
 
-/// 写日记（含同步落库）后去抖排空补嵌队列。10s 去抖：编辑器自动保存每次都发
-/// DiaryUpdated，停笔后才真正嵌入，避免打字期间反复重嵌同一篇。
-///
-/// 与 AutoSyncWatcher 同款：容器懒单例、构造器注入；[start] 由组合根在启动维护里
-/// 显式调用（模型未激活时 drain 是 no-op，队列自然累积）。
 @lazySingleton
 class EmbedQueueWatcher {
   EmbedQueueWatcher(this._diaries, this._index);

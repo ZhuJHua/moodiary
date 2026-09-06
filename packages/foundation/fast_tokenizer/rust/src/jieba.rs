@@ -4,7 +4,6 @@ use rust_stemmers::{Algorithm, Stemmer};
 use std::sync::OnceLock;
 use unicode_segmentation::UnicodeSegmentation;
 
-/// `cut`（高精度）和 `cut_for_search`（高召回）两组分词结果。
 pub struct TokenizeResult {
     pub cut: Vec<String>,
     pub cut_for_search: Vec<String>,
@@ -76,7 +75,6 @@ fn segment_text(text: &str) -> Vec<Segment> {
 static GLOBAL_TOKENIZER: OnceLock<Tokenizer> = OnceLock::new();
 
 impl Tokenizer {
-    /// 惰性建词典（约 100ms）。调用方都在 FRB 线程池上，不占启动路径。
     fn get() -> &'static Tokenizer {
         GLOBAL_TOKENIZER.get_or_init(|| Tokenizer {
             jieba: JiebaInner::new(),
@@ -99,14 +97,11 @@ impl Tokenizer {
             .collect()
     }
 
-    /// 单篇路径：CJK 段的两种切分拆两条线程并行，压低单次延迟。批量走 tokenize_batch。
     pub fn tokenize(text: String) -> Result<TokenizeResult> {
         let tokenizer = Self::get();
         Ok(tokenizer.tokenize_one(&text, true))
     }
 
-    /// 返回顺序与入参一一对应。篇内串行——若篇内再起线程，20k 篇会退化成数万次
-    /// 线程创建，那正是逐篇调用的主要开销来源。
     pub fn tokenize_batch(texts: Vec<String>) -> Result<Vec<TokenizeResult>> {
         let tokenizer = Self::get();
         if texts.len() <= 1 {
@@ -220,8 +215,6 @@ impl Tokenizer {
             all_cfs.extend(tokens);
         }
 
-        // 保留重复与出现序：词频（BM25 的 TF）由消费方（FTS5 / 统计）从重复次数得出。
-        // 早期版本在这里做 HashSet 去重，导致全库 TF 恒为 1、词频饱和项退化成常数。
         TokenizeResult {
             cut: all_cut,
             cut_for_search: all_cfs,
@@ -241,8 +234,6 @@ mod tests {
         (a, b)
     }
 
-    /// 分词黄金用例：锁住若干典型句子的切分结果。词表或 jieba 版本变动导致切分漂移时，
-    /// 这里先红，而不是等到用户发现旧日记搜不到。
     #[test]
     fn segmentation_goldens() {
         let tk = ensure_tokenizer();
@@ -310,7 +301,6 @@ mod tests {
     #[test]
     fn tokenize_batch_alignment_is_per_index() {
         ensure_tokenizer();
-        // 每篇含唯一标记词，确认结果没有串位（步长分配 + 回填的正确性）。
         let texts: Vec<String> = (0..37)
             .map(|i| format!("唯一标记 marker{i} 后面是正文内容"))
             .collect();

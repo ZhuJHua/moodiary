@@ -285,7 +285,6 @@ void main() {
     });
 
     test('整篇被判成代码块（缩进日记）时图片引用救得回来', () {
-      // MarkdownToTiptap 对全文 4 空格缩进的产物：单个 codeBlock，图片成了字面文本。
       final doc = _doc([
         {
           'type': 'codeBlock',

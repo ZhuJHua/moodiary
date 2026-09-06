@@ -10,7 +10,6 @@ void main() {
       expect(spec.dim, greaterThan(0));
       expect(spec.modelFileName, endsWith('.onnx'));
       expect(spec.tokenizerFileName, endsWith('.tokenizer.json'));
-      // 镜像与官方共用仓内路径：不带协议与主机。
       for (final path in [spec.modelHfPath, spec.tokenizerHfPath]) {
         expect(path, isNot(startsWith('http')));
         expect(path, contains('/resolve/'));
@@ -39,7 +38,6 @@ void main() {
         expect(path, contains('/resolve/'));
       }
       expect(spec.sizeBytes, greaterThan(0));
-      // 与嵌入清单不撞文件名（两类模型共用 model/ 目录）。
       expect(embeddingModelCatalog.map((e) => e.id), isNot(contains(spec.id)));
     }
   });

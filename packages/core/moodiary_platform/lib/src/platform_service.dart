@@ -17,9 +17,6 @@ class PlatformService {
 
   late final String applicationCachePath;
 
-  /// 只做路径。生物识别探测**不在这里**：`canCheckBiometrics` 是一次 BiometricManager
-  /// 的 binder 调用，真机冷启动实测 26–48ms，曾占掉整个 bootstrapPlatform；锁页与
-  /// 设置项用到时自己调 `BiometricAuth.canCheckBiometrics()`。
   Future<void> init() async {
     final (supportDir, cacheDir) = await (
       getApplicationSupportDirectory(),

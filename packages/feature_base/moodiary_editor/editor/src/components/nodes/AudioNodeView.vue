@@ -1,8 +1,4 @@
 <script setup lang="ts">
-// 音频节点视图：webview 内播放，用原生 <audio>（HTMLMediaElement API）+ daisyUI 自绘控件（无播放器库）。
-// 音频字节由本地回环服务按需供给（支持 HTTP Range）。双行版式：名称行（名称 + 静音）+
-// 控制行（播放/暂停 + daisyUI range 进度条 + 时间）。名称来自 MediaInfo 表（挂载时经
-// 本地服务取，未命名回退默认名）。图标用 unplugin-icons 按需引入 lucide。读模式下同样可播。
 import { computed, onMounted, ref } from 'vue'
 import { NodeViewWrapper, nodeViewProps } from '@tiptap/vue-3'
 import IconPlay from '~icons/lucide/play'

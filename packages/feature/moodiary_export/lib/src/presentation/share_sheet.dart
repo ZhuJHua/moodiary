@@ -10,14 +10,6 @@ import '../data/export_service.dart';
 import 'export_page.dart' show shareExported;
 import 'pdf_font_page.dart';
 
-/// 日记页的分享入口：一个底部弹窗，四种格式并列。
-///
-/// **分享就是 scope 只有一篇的导出** —— 所以这里不另起一条链，直接拿默认设置跑
-/// [ExportService]。四种都是「点了就走」，中间不插配置页：
-///   * 图片 → 预览页（`/share`），看完再决定存相册还是发出去；
-///   * md / docx / pdf → 直接生成，完了拉起系统分享面板。
-///
-/// 想改设置去「导入与导出」，分享侧一律只读那份设置。
 Future<void> showDiaryShareSheet(BuildContext context, String diaryId) async {
   final l10n = context.l10n;
   final settings = ExportSettings.decode(
@@ -52,7 +44,6 @@ Future<void> showDiaryShareSheet(BuildContext context, String diaryId) async {
       MSheetOption(
         value: .pdf,
         label: 'PDF',
-        // 没导入字体时先把话说在前面，点进去是字体选择页而不是一行红字。
         subtitle: needsFont
             ? l10n.share.optionPdfNeedFont
             : l10n.share.optionPdfSubtitle,
@@ -69,7 +60,6 @@ Future<void> showDiaryShareSheet(BuildContext context, String diaryId) async {
   await _exportSingle(context, format: format, diaryId: diaryId);
 }
 
-/// 单篇 md / docx / pdf：用默认设置生成，完了直接交给系统分享面板。
 Future<void> _exportSingle(
   BuildContext context, {
   required ExportFormat format,
@@ -101,7 +91,6 @@ Future<void> _exportSingle(
     final outcome = await ExportService.run(
       format: format,
       scope: PickedScope({diaryId}),
-      // 单篇分享永远是一个文件，合并与否没有意义。
       settings: settings.copyWith(
         common: settings.common.copyWith(merge: true),
       ),

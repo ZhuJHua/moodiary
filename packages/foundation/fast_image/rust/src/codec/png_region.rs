@@ -1,10 +1,3 @@
-//! PNG 的区域解码后端：zlib 是串行的、每行滤波依赖上一行，没有随机访问；这里流式逐行解，
-//! 窗口之上的行解完就丢，窗口内的行按 1/denom 盒式降采样后累进输出。内存 = 一行 + 输出块，
-//! CPU 与「窗口底部以上的行数」成正比，同没有 restart marker 的 JPEG。
-//!
-//! Adam7 隔行的文件 `png` crate 不按整行吐（逐 pass 给子行），要整幅缓冲才能还原，这里不接，
-//! 由上层退回引擎封顶路径。APNG 只解第一帧。
-
 use std::io::Cursor;
 
 use anyhow::{Result, anyhow, bail};
@@ -23,15 +16,12 @@ pub struct PngRegion {
     orientation: Orientation,
 }
 
-/// 源图像素数上限。没有随机访问，每条带都要从第一行 inflate 到带底：100MP 的 RGBA 一趟约
-/// 400MB 的解压，已经是一秒量级；再大的交给引擎整解封顶，一次解完不再重复。
 const MAX_PIXELS: u64 = 100_000_000;
 
 fn accepts(info: &png::Info<'_>) -> bool {
     !info.interlaced && info.width as u64 * info.height as u64 <= MAX_PIXELS
 }
 
-/// 头一眼能判定的：不是 Adam7 隔行、像素数在上限内。
 pub fn region_decodable(bytes: &[u8]) -> bool {
     Decoder::new(Cursor::new(bytes))
         .read_info()
@@ -84,18 +74,14 @@ impl RawDecoder for PngRegion {
             bail!("empty region");
         }
         let (out_w, out_h) = (right - rect.x, bottom - rect.y);
-        // 源像素窗口。
         let (x0, x1) = (rect.x * d, (right * d).min(self.width));
         let (y0, y1) = (rect.y * d, (bottom * d).min(self.height));
 
         let mut decoder = Decoder::new(Cursor::new(&self.bytes[..]));
-        // 不用 STRIP_16：它是截断（v >> 8），而缩略图那条路（image 的 into_rgba8）是四舍五入，
-        // 16 位源两层会差一个灰阶。这里自己按 16 位读、四舍五入。
         decoder.set_transformations(Transformations::EXPAND | Transformations::ALPHA);
         decoder.set_ignore_text_chunk(true);
         decoder.ignore_checksums(true);
         let mut reader = decoder.read_info()?;
-        // ALPHA 之后只剩两种：RGBA，或灰度 + alpha（png 不会把灰扩成 RGB）。
         let (color, depth) = reader.output_color_type();
         let gray = match color {
             ColorType::Rgba => false,
@@ -150,7 +136,6 @@ impl RawDecoder for PngRegion {
     }
 }
 
-/// 解出来的行长什么样：灰 + alpha 还是 RGBA，8 位还是 16 位。
 #[derive(Clone, Copy)]
 struct Layout {
     gray: bool,
@@ -159,7 +144,6 @@ struct Layout {
 }
 
 impl Layout {
-    /// 一个像素的 RGBA8。16 位四舍五入到 8 位（与 image 的 `into_rgba8` 同一口径）。
     #[inline]
     fn rgba(self, px: &[u8]) -> [u8; 4] {
         let sample = |i: usize| -> u8 {
@@ -204,7 +188,6 @@ fn accumulate(acc: &mut [u32], data: &[u8], x0: u32, x1: u32, shift: u32, layout
     }
 }
 
-/// 把累加好的 `rows` 行 × d 列的块平均成一行输出；右边缘的块列数不足 d 按实际算。
 fn flush_block(out: &mut Vec<u8>, acc: &mut [u32], rows: u32, x0: u32, x1: u32, d: u32) {
     let out_w = acc.len() / 4;
     for ox in 0..out_w {
@@ -239,7 +222,6 @@ mod tests {
         })
     }
 
-    /// 真 16 位样本：低字节不是高字节的复制，截断与四舍五入会分道扬镳。
     fn noisy16(width: u32, height: u32) -> image::ImageBuffer<image::Rgba<u16>, Vec<u16>> {
         let mut seed = 0xBEEF_CAFEu32;
         image::ImageBuffer::from_fn(width, height, |x, y| {
@@ -264,7 +246,6 @@ mod tests {
         PngRegion::open(unsafe { Mmap::map(&file).unwrap() }).unwrap()
     }
 
-    /// 参考：整图 RGBA 上按同一套盒式平均算出的块。
     fn reference(full: &image::RgbaImage, d: u32, rect: Rect) -> Vec<u8> {
         let mut out = Vec::new();
         for oy in rect.y..rect.y + rect.h {

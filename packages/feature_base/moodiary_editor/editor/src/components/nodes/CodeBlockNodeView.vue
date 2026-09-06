@@ -1,7 +1,4 @@
 <script setup lang="ts">
-// 代码块节点视图：左上角显示**只读**语言标签，右上角复制按钮，下方可编辑代码（NodeViewContent，as=code）。
-// 语法高亮由 CodeBlockLowlight 的 PM 插件按 node.attrs.language 着色（语言经 ```lang 输入规则或旧
-// markdown 设定；本视图不提供改语言入口，仅展示）。输出 .hljs-* span，配色见 moodiary-editor.css。
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { NodeViewContent, NodeViewWrapper, nodeViewProps } from '@tiptap/vue-3'
 import IconCopy from '~icons/lucide/copy'
@@ -21,7 +18,6 @@ async function copy(): Promise<void> {
   try {
     await navigator.clipboard.writeText(text)
   } catch {
-    // webview 里 async clipboard 可能不可用，退回 execCommand。
     const ta = document.createElement('textarea')
     ta.value = text
     ta.style.position = 'fixed'
@@ -31,7 +27,6 @@ async function copy(): Promise<void> {
     try {
       document.execCommand('copy')
     } catch {
-      /* no-op */
     }
     document.body.removeChild(ta)
   }
@@ -56,7 +51,7 @@ onBeforeUnmount(() => clearTimeout(copiedTimer))
         <span>{{ copied ? '已复制' : '复制' }}</span>
       </button>
     </div>
-    <!-- NodeViewContent 自带内联 white-space: pre-wrap，经 attrs 透传覆盖成 pre：长行不折行、在 pre 内横滚。 -->
+    <!-- NodeViewContent 默认内联 white-space: pre-wrap，这里覆盖为 pre -->
     <pre><NodeViewContent as="code" style="white-space: pre" /></pre>
   </NodeViewWrapper>
 </template>

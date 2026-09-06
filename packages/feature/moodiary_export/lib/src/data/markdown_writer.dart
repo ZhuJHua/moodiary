@@ -3,38 +3,28 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'export_doc.dart';
 
 enum MarkdownDialect {
-  /// 纯 CommonMark：表格降级为缩进代码块前的纯文本行，任务列表降级为普通列表。
   commonMark,
 
-  /// GitHub 风味：表格、任务列表、删除线按 GFM 语法写。
   gfm,
 }
 
 enum MarkdownMediaMode {
-  /// `assets/<image|video|audio>/xxx` —— 与 Markdown 导入规范同一套布局，调用方负责把
-  /// 文件真的拷到对应目录。
   relative,
 
-  /// 绝对路径，只在本机有意义。
   absolute,
 }
 
 class MarkdownOptions {
   final MarkdownDialect dialect;
 
-  /// 写 YAML front matter（id / 时间 / 分类 / 天气 / 心情 / 位置 / 标签）。
-  /// 导回来时靠它还原元数据 —— 正文本身表达不了这些。
   final bool frontMatter;
 
-  /// 把标题写成一级标题。关掉适合「每篇一个文件、文件名即标题」的场景。
   final bool includeTitle;
 
-  /// 在正文前写一行日期/天气/位置摘要（给人看的，不参与导入）。
   final bool includeMetaLine;
 
   final MarkdownMediaMode mediaMode;
 
-  /// [MarkdownMediaMode.relative] 下的资源目录名。
   final String assetsDir;
 
   const MarkdownOptions({
@@ -47,11 +37,6 @@ class MarkdownOptions {
   });
 }
 
-/// [ExportDoc] → Markdown 文本。
-///
-/// 与 [MarkdownToTiptap] 互为反向但**不无损**：markdown 没有语法能表达 diaryLink 的目标 id、
-/// image 的 widthPercent、表格的合并与对齐，这几项在这里降级。front matter 兜住的是文档级
-/// 元数据，不是正文里丢的那些。
 class MarkdownWriter {
   const MarkdownWriter._();
 
@@ -81,13 +66,10 @@ class MarkdownWriter {
     return buf.toString().replaceAll(RegExp(r'\n{3,}'), '\n\n').trimRight();
   }
 
-  // ---------------------------------------------------------------- meta
-
   static void _frontMatter(ExportDoc doc, StringBuffer buf) {
     buf.writeln('---');
     buf.writeln('id: ${doc.id}');
     buf.writeln('title: ${_yamlString(doc.title)}');
-    // 带时区偏移：导回来时换了时区也还是同一时刻。
     buf.writeln('time: ${_isoWithOffset(doc.time)}');
     buf.writeln('mood: ${doc.mood.name}');
     if (doc.categoryName != null) {
@@ -95,8 +77,6 @@ class MarkdownWriter {
     }
     final weather = doc.weather;
     final place = doc.place;
-    // 两个键保持旧的定长数组形态（`[icon, temp, text]` / `[lat, lng, name]`），
-    // 缺失就整键不写。
     if (weather != null) {
       buf.writeln(
         'weather: ${_yamlList([weather.icon, weather.temp ?? '', weather.text])}',
@@ -127,7 +107,6 @@ class MarkdownWriter {
     return parts.join(' · ');
   }
 
-  /// `2026-09-06T10:30:00.000+08:00`；UTC 时刻写 `Z`。`toIso8601String` 对本地时间不带偏移。
   static String _isoWithOffset(DateTime t) {
     if (t.isUtc) return t.toIso8601String();
     final offset = t.timeZoneOffset;
@@ -142,18 +121,12 @@ class MarkdownWriter {
     return '${t.year}-${two(t.month)}-${two(t.day)} ${two(t.hour)}:${two(t.minute)}';
   }
 
-  /// YAML 标量：一律加引号并转义，避免标题里的 `:` `#` `-` 把结构写坏。
   static String _yamlString(String s) =>
       '"${s.replaceAll(r'\', r'\\').replaceAll('"', r'\"').replaceAll('\n', r'\n')}"';
 
   static String _yamlList(List<String> items) =>
       '[${items.map(_yamlString).join(', ')}]';
 
-  // -------------------------------------------------------------- blocks
-
-  /// [tight] 用于列表项内部：段落与紧随其后的嵌套列表之间不留空行，否则整个列表会被
-  /// CommonMark 判定为 loose list，渲染出多余的段落间距。顶层不能这么做 —— 段落与列表
-  /// 之间少了空行，列表可能被当作段落的延续行吞掉。
   static void _blocks(
     List<IrBlock> blocks,
     StringBuffer buf,
@@ -200,7 +173,6 @@ class MarkdownWriter {
         buf.writeln();
 
       case IrBlock_Code(:final text, :final language):
-        // 正文里出现 ``` 时用更长的围栏，否则代码块会被提前关掉。
         final fence = '`' * _fenceLength(text);
         buf.writeln('$indent$fence${language ?? ''}');
         for (final line in text.split('\n')) {
@@ -252,7 +224,6 @@ class MarkdownWriter {
           ? (item.checked! ? '[x] ' : '[ ] ')
           : '';
 
-      // 首块与标记同行，其余块按标记宽度缩进，保持嵌套结构。
       final childIndent = indent + ' ' * (marker.length + 1);
       final inner = StringBuffer();
       _blocks(item.children, inner, o, indent: '', tight: true);
@@ -277,7 +248,6 @@ class MarkdownWriter {
   }) {
     if (rows.isEmpty) return;
 
-    // GFM 简单表没有合并单元格：colspan/rowspan 只能丢，内容保留在起始格。
     if (o.dialect != .gfm) {
       for (final row in rows) {
         final cells = [for (final c in row.cells) _cellText(c, o)];
@@ -306,7 +276,6 @@ class MarkdownWriter {
     }
   }
 
-  /// 单元格压成单行：表格语法里换行会把行结构打断，`|` 必须转义。
   static String _cellText(IrCell cell, MarkdownOptions o) {
     final inner = StringBuffer();
     _blocks(cell.children, inner, o, indent: '');
@@ -324,8 +293,6 @@ class MarkdownWriter {
     return '![$alt]($target)';
   }
 
-  // -------------------------------------------------------------- inline
-
   static String _spans(List<IrSpan> spans, MarkdownOptions o) {
     final buf = StringBuffer();
     for (final span in spans) {
@@ -335,10 +302,8 @@ class MarkdownWriter {
   }
 
   static String _span(IrSpan span, MarkdownOptions o) {
-    // 双链没有 markdown 对应语法：写成 wiki 链接，目标 id 丢失（导回来只能按标题再找）。
     if (span.diaryLinkId != null) return '[[${span.text}]]';
 
-    // 行内代码里的内容不转义（转义反而会写进代码里），只需保证围栏比内容里最长的反引号长。
     if (span.code) {
       final fence = '`' * _inlineFenceLength(span.text);
       final pad = span.text.startsWith('`') || span.text.endsWith('`')
@@ -347,7 +312,6 @@ class MarkdownWriter {
       return '$fence$pad${span.text}$pad$fence';
     }
 
-    // 硬换行：CommonMark 的反斜杠形式，比行尾两个空格可见、也不会被格式化工具吃掉。
     var text = _escape(span.text).replaceAll('\n', '\\\n');
 
     if (span.bold) text = '**$text**';
@@ -358,7 +322,6 @@ class MarkdownWriter {
     return text;
   }
 
-  /// 正文转义。只转会引发语法歧义的字符 —— 全量转义会让导出的 md 满屏反斜杠。
   static String _escape(String text) {
     final buf = StringBuffer();
     for (var i = 0; i < text.length; i++) {
@@ -379,7 +342,6 @@ class MarkdownWriter {
     return buf.toString();
   }
 
-  /// URL 里的空格与括号会截断链接语法。
   static String _escapeUrl(String url) =>
       url.replaceAll(' ', '%20').replaceAll('(', '%28').replaceAll(')', '%29');
 
@@ -399,8 +361,6 @@ class MarkdownWriter {
     return longest + 1;
   }
 
-  // --------------------------------------------------------------- utils
-
   static void _writeIndented(StringBuffer buf, String text, String indent) {
     if (indent.isEmpty) {
       buf.writeln(text);
@@ -411,7 +371,6 @@ class MarkdownWriter {
     }
   }
 
-  /// 去掉尾部空行后按行切分 —— 供引用块与列表项做二次缩进。
   static List<String> _lines(String text) {
     final trimmed = text.trimRight();
     if (trimmed.isEmpty) return const [];

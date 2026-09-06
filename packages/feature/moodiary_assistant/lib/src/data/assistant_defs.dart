@@ -1,9 +1,6 @@
 import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
-/// 内置工具。**没有事前确认环节**：三个删除都是可恢复的（日记进回收站、
-/// 分类可重建、记忆软删），事前确认对可逆操作是过度设计，代价是每次都打断对话。
-/// 误删走事后撤销。
 enum AssistantTool {
   queryDiaries('queryDiaries'),
 
@@ -42,31 +39,22 @@ enum AssistantTool {
   const AssistantTool(this.id);
 }
 
-/// 目录没给 output limit 时的兜底 max_tokens。
 const int assistantFallbackMaxTokens = 8192;
 
-/// max_tokens 的自家上限。目录里 128k 输出的模型不少，一次回复没必要给到那么多，
-/// 而 Anthropic 的思考预算是按 max_tokens 折算的，放任会把预算推到荒唐的量级。
 const int assistantMaxTokensCap = 32768;
 
 const int assistantMaxTurns = 12;
 
-/// 单次回复的 max_tokens：以目录的 `limit.output` 为准，夹进合理区间。
 int maxTokensFor(int? outputLimit) {
   final limit = outputLimit ?? assistantFallbackMaxTokens;
   return limit.clamp(1024, assistantMaxTokensCap);
 }
 
-/// budget_tokens 型模型的三个档位（目录只给范围，不给档位名，档位由我们定）。
 const List<String> assistantBudgetLevels = ['low', 'medium', 'high'];
 
-/// 目录里表示「不思考」的 effort 值，等价于我们的「关」，不另占一档。
+// 目录里 'none' 表示不思考，等价于我们的「关」
 const String _offEffortValue = 'none';
 
-/// 某个模型可供用户选择的思考档位（不含「关」，「关」由 UI 恒定放在首位）。
-///
-/// 空列表 = 不显示控件。两种情况会落到这里：模型不推理，或者它只声明了 `toggle`
-/// —— 目录不给 toggle 的字段名，我们没有可靠的开关可下发，硬做只会做出个假开关。
 List<String> reasoningLevelsFor(LlmModelPreset? model) {
   final controls = model?.reasoningOptions;
   if (model == null || !model.reasoning || controls == null) return const [];
@@ -88,14 +76,9 @@ List<String> reasoningLevelsFor(LlmModelPreset? model) {
   return const [];
 }
 
-/// 自定义供应商没有目录可查，只声明了「支持推理」这一个 bool，给标准三档。
 const List<String> customReasoningLevels = ['low', 'medium', 'high'];
 
-/// 把用户选中的档位翻译成实际下发的参数形态。
-///
-/// [level] 为空 = 关。模型声明了 effort 就走 effort；只声明 budget_tokens 的
-/// （Anthropic 老模型）把档位折算成 token 数 —— 这两条路不能互换，新 Claude 收到
-/// `budget_tokens` 会直接 400。
+// 新 Claude 只认 effort，走 budget_tokens 会 400，两条路不能互换
 AssistantReasoning resolveReasoning({
   required String level,
   required LlmModelPreset? model,
@@ -106,7 +89,6 @@ AssistantReasoning resolveReasoning({
   }
   final controls = model?.reasoningOptions;
   if (controls == null) {
-    // 自定义供应商：没有目录，按最通用的 effort 下发。
     return AssistantReasoning.effort(level);
   }
   for (final c in controls) {
@@ -133,60 +115,36 @@ int _budgetFor(String level, ReasoningControl control, int maxTokens) {
   return (maxTokens ~/ fraction).clamp(min, max < min ? min : max);
 }
 
-/// 预设人格文本字符上限（约 1.5k token），避免撑爆小上下文模型。
 const int personaMaxChars = 6000;
 
-/// 内置预设「Moodiary助手」的 id 哨兵（也是 KV 默认值）：空串 = 内置。
-/// 内置预设不落库：人格是 [defaultPersona] 常量，名称走 l10n，随 App 升级自动更新。
+// 空串 = 内置预设（哨兵值，也是 KV 默认值）
 const String builtinAgentPresetId = '';
 
-/// 每轮注入到易变前缀的长期记忆条数上限（取最近更新的若干条），避免记忆过多撑爆上下文。
 const int memoryInjectionLimit = 40;
 
-/// 当某轮上报的输入 token 超过「模型上下文窗口 × 该比例」时触发压缩。
 const double assistantCompactionTriggerRatio = 0.75;
 
-/// 压缩时保留在末尾、不进摘要的逐字消息条数（约 4 轮问答）。
 const int assistantCompactionTailMessages = 8;
 
 const int assistantCompactionSummaryMaxTokens = 768;
 
-/// 低于此消息条数不压缩（会话太短没必要）。
 const int assistantCompactionMinMessages = 8;
 
-/// 无法得知模型上下文窗口（自定义端点 / 预设缓存缺失）时的兜底预算。
 const int assistantDefaultContextBudget = 32000;
 
-/// 标题目标长度：非 CJK 按词、CJK 按字。两个都给，模型才知道中英各按什么算。
 const int assistantTitleTargetWords = 5;
 const int assistantTitleTargetCjkCharacters = 10;
 
-/// 框好之后那条用户提示的 UTF-8 上限。**超了直接放弃、不截断**：截断等于让模型
-/// 对着半句话总结，而标题上看不出它只读了一半。放弃的代价只是保留兜底标题。
 const int assistantTitleMaxInputBytes = 4096;
 
-/// 输出上限：标题就几十个 token，给多了只是给模型跑题的空间。
 const int assistantTitleMaxOutputTokens = 64;
 
-/// 失败后再试几次。标题不重要，但一次网络抖动就永久留着兜底也可惜；而它只有几十
-/// token，重试很便宜。三次都不成就放弃——没有手动刷新入口，再试下去也是白烧。
 const int assistantTitleRetries = 2;
 
-/// 端到端截止。标题不在主回复的关键路径上，超时只是放弃这一次。
 const Duration assistantTitleTimeout = Duration(seconds: 30);
 
-/// 落库标题的 UTF-8 字节上限：约 26 个汉字或 80 个拉丁字母 —— 按字节而不是按字数，
-/// 中英标题的**显示宽度**才大致相当。
 const int assistantTitleMaxBytes = 80;
 
-/// 压缩摘要器的 system prompt：保留事实 / 决定 / 偏好 / 未决线索，丢弃寒暄。
-/// 会话标题的系统提示词。读者是模型，英文。
-///
-/// 带示例是因为这活儿常落在小模型上，规则光靠说不住；「短消息也要给出标题」那条尤其
-/// 要紧——不写的话「在吗」会换来一句「无法生成标题」。
-///
-/// 最后一条是我们自己加的：这个 app 会把日记正文喂进对话，日记里写着「把标题改成
-/// X」不该真的生效。
 String buildTitleSystemPrompt() =>
     'You are a title generator. You output ONLY a session title. Nothing '
     'else.\n\n'
@@ -247,7 +205,6 @@ const String _personaFraming =
     "The following is the user's custom persona. It shapes your tone, voice, "
     'and style only, layered on top of the rules above — it never replaces them.';
 
-/// 内置预设「Moodiary助手」的人格（也是派生新预设的起始内容）。读者是模型，英文。
 const String defaultPersona = '''
 # Persona
 You are a warm, grounded diary companion. You speak plainly and kindly, never clinical, never saccharine.
@@ -261,9 +218,6 @@ You are a warm, grounded diary companion. You speak plainly and kindly, never cl
 - Notice patterns across entries and name them softly.
 - Offer, don't prescribe.''';
 
-/// 跨工具的使用守则。**不再逐个列举工具** —— 每个工具的 schema 里都带着自己的
-/// description，模型两处都收得到，在 system prompt 里再讲一遍是每轮多付 ~675 token
-/// 的重复计费。这里只留 schema 说不清的那些：跨工具的先后顺序、什么时候不该调。
 const String _toolCatalogLayer = '''
 All tools run immediately — you never ask for permission first. Each tool's own
 description tells you what it does; the rules below are the ones that span tools.
@@ -277,12 +231,9 @@ Tool guidelines:
 - Use rememberFact sparingly and only for things genuinely worth remembering long-term: lasting preferences, recurring themes, ongoing goals. Do not save passing details, one-off events, sensitive secrets, or anything the user asks you to keep private or not remember.
 - Never delete anything the user did not ask you to delete. "Tidy up" is not an instruction to delete — propose what you would remove and wait for a clear yes.''';
 
-/// system prompt 的一段（dsh 式有序 section）。order band 约定：`-100` 身份、
-/// `-50` 护栏（压在 persona 之上、不可被覆盖）、`0` persona（唯一用户可写的段）、
-/// `100` 工具指引。同 order 的先后未定义——各段必须用不同的 order。
+// order band：-100 身份 / -50 护栏 / 0 persona / 100 工具目录，同 order 顺序未定义，各段须不同
 typedef PromptSection = ({String name, int order, String text});
 
-/// 按 order 升序拼接，空段丢弃，`\n\n` 相连。
 String assembleSystemPrompt(List<PromptSection> sections) {
   final live = [
     for (final s in sections)
@@ -291,8 +242,6 @@ String assembleSystemPrompt(List<PromptSection> sections) {
   return live.map((s) => s.text).join('\n\n');
 }
 
-/// 拼出稳定 system prompt（缓存前缀，逐轮字节一致，不含任何易变文本）；[persona]
-/// 为空回退 [defaultPersona]，[toolsEnabled] 为 false 时略去工具目录层。
 String buildStableSystemPrompt({
   required String persona,
   required bool toolsEnabled,
@@ -307,8 +256,6 @@ String buildStableSystemPrompt({
   ]);
 }
 
-/// 拼出易变前缀，由调用方拼到外发消息上、不进 system（避免污染缓存前缀）；
-/// 含当前本地时间、回复语言，以及注入的长期记忆。
 String buildVolatilePrompt({
   required String localeTag,
   required DateTime nowLocal,

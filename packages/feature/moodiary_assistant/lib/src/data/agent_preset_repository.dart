@@ -3,10 +3,6 @@ import 'package:injectable/injectable.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
-/// 用户自建助手预设（[AgentPreset]）的读写。仅设备本地：不进备份、不进同步。
-///
-/// 只管落库的用户行；内置预设「Moodiary助手」是虚拟的（persona 常量 + l10n 名称），
-/// 由 assistant feature 侧合成 roster——data 层不该认识提示词文本与文案。
 @lazySingleton
 class AgentPresetRepository {
   AgentPresetRepository(this._db);
@@ -24,7 +20,6 @@ class AgentPresetRepository {
     updatedAt: dbToTime(r.updatedAt),
   );
 
-  /// 全部用户预设，按创建时间正序（roster 顺序稳定，新派生的排最后）。
   Future<List<AgentPreset>> getAll() async {
     final rows = await (_db.select(
       _db.agentPresets,
