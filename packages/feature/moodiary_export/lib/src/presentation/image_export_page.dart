@@ -45,6 +45,9 @@ class _ImageExportPageState extends State<ImageExportPage> {
   Object? _error;
   bool _busy = false;
 
+  // 只在这一页有效，不写回 exportSettings；null = 跟应用当前明暗
+  Brightness? _brightness;
+
   List<ui.Image> get _bands => _preview?.bands ?? const [];
 
   @override
@@ -64,12 +67,24 @@ class _ImageExportPageState extends State<ImageExportPage> {
     _preview = null;
   }
 
+  Brightness get _effectiveBrightness =>
+      _brightness ?? Theme.of(context).brightness;
+
   ImageCardStyle _style({double? widthDp}) => ImageCardStyle.resolve(
-    brightness: _settings.image.brightness,
+    brightness: _effectiveBrightness,
     fallback: Theme.of(context).brightness,
     widthDp: widthDp ?? _settings.image.widthDp,
     watermark: _settings.image.watermark,
   );
+
+  void _toggleBrightness() {
+    setState(() {
+      _brightness = _effectiveBrightness == Brightness.dark
+          ? Brightness.light
+          : Brightness.dark;
+    });
+    _render();
+  }
 
   Future<void> _render() async {
     final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
@@ -190,6 +205,17 @@ class _ImageExportPageState extends State<ImageExportPage> {
               ? l10n.share.previewSampleTitle
               : l10n.share.previewTitle,
         ),
+        actions: [
+          IconButton(
+            onPressed: _busy ? null : _toggleBrightness,
+            tooltip: l10n.export.imageBrightness,
+            icon: Icon(
+              _effectiveBrightness == Brightness.dark
+                  ? LucideIcons.sun
+                  : LucideIcons.moon,
+            ),
+          ),
+        ],
       ),
       body: _body(l10n),
       bottomNavigationBar: SafeArea(

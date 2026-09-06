@@ -135,10 +135,8 @@ class ImageCardStyle {
     required double widthDp,
     required bool watermark,
   }) {
-    final target = brightness ?? fallback;
-    final manager = getIt<ThemeManager>();
     return ImageCardStyle.of(
-      target == Brightness.dark ? manager.darkTheme : manager.lightTheme,
+      getIt<ThemeManager>().exportTheme(brightness ?? fallback),
       widthDp: widthDp,
       watermark: watermark,
     );

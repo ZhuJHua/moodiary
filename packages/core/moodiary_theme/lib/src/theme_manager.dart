@@ -113,6 +113,11 @@ class ThemeManager {
     );
   }
 
+  ThemeData exportTheme(Brightness brightness) => buildMuiTheme(
+    brightness: brightness,
+    font: MuiFontConfig(family: fontFamily, wghtAxis: wghtAxisMap),
+  );
+
   MuiAccent resolveAccent() {
     final index = MoodiaryKVs.themeAccentMode.get()!;
     final mode = index >= 0 && index < ThemeAccentMode.values.length

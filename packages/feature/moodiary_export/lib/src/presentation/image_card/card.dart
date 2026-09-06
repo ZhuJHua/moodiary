@@ -10,7 +10,7 @@ import '../../data/export_options.dart';
 import 'blocks.dart';
 import 'card_style.dart';
 
-const double kBrandMarkSize = 18;
+const double kBrandMarkSize = 22;
 
 class ImageCard extends StatelessWidget {
   final List<ExportDoc> docs;
@@ -37,7 +37,7 @@ class ImageCard extends StatelessWidget {
       if (i > 0) children.add(_docSeparator());
       children.addAll(_doc(docs[i], renderer));
     }
-    if (style.watermark) children.add(_footer());
+    if (style.watermark && brand != null) children.add(_footer(brand!));
 
     return Container(
       width: style.widthDp,
@@ -113,7 +113,12 @@ class ImageCard extends StatelessWidget {
       ),
       Padding(
         padding: const EdgeInsets.only(top: 8),
-        child: Wrap(spacing: 10, runSpacing: 6, children: chips),
+        child: Wrap(
+          spacing: 10,
+          runSpacing: 6,
+          crossAxisAlignment: .center,
+          children: chips,
+        ),
       ),
       if (doc.tags.isNotEmpty)
         Padding(
@@ -185,35 +190,22 @@ class ImageCard extends StatelessWidget {
     ),
   );
 
-  Widget _footer() => Padding(
+  Widget _footer(ui.Image mark) => Padding(
     padding: const EdgeInsets.only(top: 22),
     child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(height: 1, color: style.hairline),
         Padding(
-          padding: const EdgeInsets.only(top: 12),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (brand case final mark?) ...[
-                RawImage(
-                  image: mark,
-                  width: kBrandMarkSize,
-                  height: kBrandMarkSize,
-                  filterQuality: FilterQuality.medium,
-                ),
-                const SizedBox(width: 7),
-              ],
-              Text(
-                'Moodiary',
-                style: style.meta.copyWith(
-                  letterSpacing: 0.5,
-                  color: style.muted,
-                ),
-              ),
-            ],
+          padding: const EdgeInsets.only(top: 14),
+          child: Center(
+            child: RawImage(
+              image: mark,
+              width: kBrandMarkSize,
+              height: kBrandMarkSize,
+              filterQuality: FilterQuality.medium,
+            ),
           ),
         ),
       ],
