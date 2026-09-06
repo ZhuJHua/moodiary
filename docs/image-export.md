@@ -356,12 +356,12 @@ class ExportOutcome {
 |---|---|
 | 删包 | `packages/feature/moodiary_share/` 整个 |
 | 迁移 | `ShareRoute` 的 builder 挪进 `exportRoutes()`，路径 `/share` 不变 |
-| 新增 | `data/image_composer.dart`、`data/image_options.dart`、`presentation/image_export_page.dart`（预览页）、`presentation/image_card/{card.dart,blocks.dart,templates.dart}`、`presentation/share_sheet.dart` |
+| 新增 | `data/image_composer.dart`、`data/image_options.dart`、`presentation/image_export_page.dart`（预览页）、`presentation/image_card/{card.dart,blocks.dart,card_style.dart}`、`presentation/share_sheet.dart` |
 | 改 | `export_options.dart`（+image）、`export_service.dart`（+`_writeImage`、+单篇样张入口）、`export_page.dart`（+图片入口）、`format_export_page.dart`（+可选 scope、+图片分组、+图片页的预览样张按钮） |
 | 新增（rust） | `fast_image`：`PngStripeWriter`（`new` / `push` / `finish`），流式写一张长 PNG（§3.2）。**Rust 侧只有这一处改动，typst 与 fast_press 一行不动** |
 | 删 | `templates/minimal_card.dart`、`note_card.dart`、复制文本 |
 | 连带 | `mobile/pubspec.yaml` 去掉 `moodiary_share`；`mobile/lib/app/router` 去掉 `shareRoutes()`；`app_lock_observer.dart` 的 `/share` 常量不动 |
-| 依赖 | `moodiary_export/pubspec.yaml` 加 `re_highlight: 0.0.3`（与 `moodiary_assistant` 同一钉版本，别漂） |
+| 依赖 | ~~`moodiary_export` 加 `re_highlight`~~ — 落地时改为复用 `moodiary_components` 的 `codeHighlighter` / `darkCodeTheme` / `lightCodeTheme`，`re_highlight: 0.0.3` 只钉在 `moodiary_components` |
 
 i18n：`share_{zh,en}.i18n.json` 保留（分享弹窗 + 预览页文案），图片格式的选项文案进 `export_*`。改完必跑 `dart tool/task.dart i18n`。
 

@@ -56,7 +56,7 @@
 
 App 那份按 **namespace 一个 feature 一份文件**：`common`（无领域含义的基础词）+
 `app` / `diary` / `assistant` / `export` / `sync` / `media` / `editor` / `ui` / `lock` /
-`share`。取串写成 `l10n.diary.searchResult`；**删 feature 就删它那两个文件**。
+`share` / `picker`。取串写成 `l10n.diary.searchResult`；**删 feature 就删它那两个文件**。
 
 **feature 包不各自装 slang**（只有 mui 例外，因为它是零 `moodiary_*` 依赖的对外叶子包）：
 namespace 已经给到分域的全部好处，不必为每个 feature 再付一份产物、一次挂载。

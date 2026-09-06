@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Moodiary — a Flutter + Rust diary app. **Layered pub-workspace monorepo**: 26 shared packages under `packages/` across four dependency layers, consumed by the single Flutter app **`mobile/`** (Android + iOS, pub name `moodiary`). The root `pubspec.yaml` is a pure coordinator (workspace + Melos config, no app code). A desktop app will be rebuilt later — the packages are already layered for it, but no desktop target exists in the tree today.
+Moodiary — a Flutter + Rust diary app. **Layered pub-workspace monorepo**: 33 shared packages under `packages/` across four dependency layers, consumed by the single Flutter app **`mobile/`** (Android + iOS, pub name `moodiary`). The root `pubspec.yaml` is a pure coordinator (workspace + Melos config, no app code). A desktop app will be rebuilt later — the packages are already layered for it, but no desktop target exists in the tree today.
 
 ## Tech Stack
 
@@ -73,22 +73,24 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
       fast_zip/              #   zip 写/解压，自带 FRB 与原生库 libfastzip（只给 moodiary_export / moodiary_sync）
       moodiary_utils/        #   pure utils + content converters (tiptap/markdown/quill)
       mui/                   #   设计系统：material_ui 的**补充**（详见下）
+      moodiary_sqlite_vec/   #   sqlite-vec 0.1.9：vendor 源码 + 构建钩子编成 code asset，供本地 RAG 向量检索
     core/                    # 无领域基建。内部次序 platform,http → storage → files → theme
       moodiary_platform/     #   应用目录/缓存目录/生物识别/网络状态/应用与设备信息
       moodiary_http/         #   IHttpClient / IHttpServer 端口，实现走 Rust
       moodiary_storage/      #   KV(MMKV) / SecureKV；数据库不在这（SQLite/drift 归 moodiary_data）
       moodiary_files/        #   文件布局 + 媒体管线 + 文件选择端口
       moodiary_theme/        #   系统取色、强调色档位、自定义字体 → ThemeData
-    feature_base/            # → core/foundation。内部次序 models → data → components,migration,preferences → picker → editor
+    feature_base/            # → core/foundation。内部次序 models,ml → data → components,migration,preferences → picker → editor
       moodiary_models/       #   domain: 纯 Freezed 模型 + DTOs + 事件类型（零存储依赖）
       moodiary_data/         #   SQLite（drift，src/db/*_tables.drift 是 schema 真源）+ repositories + controllers + 共享瞬态状态
       moodiary_components/   #   业务组件：features 共用、够不着 mui 的那部分 UI；代码高亮表与 DiaryShare 挂钩也在这
       moodiary_migration/    #   one-shot legacy migration；legacy/ 冻结旧 Isar 模型（isar_plus 最后据点）
       moodiary_preferences/  #   preference state
+      moodiary_ml/           #   本地 ML：onnxruntime_plus 嵌入/情感引擎 + 模型下载与激活（独家 own onnxruntime_plus）
       moodiary_picker/       #   相册选择器：骑 wechat_assets_picker 换皮 + image_picker 系统相机（仅 mobile 依赖）
       moodiary_editor/       #   TipTap webview 编辑器基建（EditorBody/controller/本地回环服务），被 diary 内嵌消费
     feature/                 # → feature_base/core/foundation (features never import each other)
-      moodiary_export/       #   导出 Markdown/Word/PDF/图片 + 本地备份导入；**分享也在这里**（= scope 只有一篇的导出）
+      moodiary_export/       #   导出 Markdown/Word/PDF/图片 + 本地备份与 Markdown 导入；**分享也在这里**（= scope 只有一篇的导出）
       moodiary_diary/        #   diary CRUD/search/category/calendar/map/recycle
       moodiary_sync/         #   sync engine + UI
       moodiary_assistant/    #   AI assistant (flutter_chat_ui + rig)；runJavascript 沙箱走 flutter_js 自家 fork（git 钉 commit，quickjs-ng code asset）
@@ -124,7 +126,7 @@ In-app layering within `mobile/lib` (same script): `gen → core → data → co
   storage / http / ml / data / assistant / sync / editor / theme 八包各是 micro-package，由
   `mobile/lib/app/di/di.dart` 一处挂载，**全仓只有一份 `configureDependencies`**。
 - **容器管整张对象图**：`MoodiaryDatabase`（app 的 `AppModule.database`，preResolve）、
-  13 个仓储（`@lazySingleton`，构造器注入 DB / IHttpClient）、进程级持有者（Registry /
+  14 个仓储（`@lazySingleton`，构造器注入 DB / IHttpClient）、进程级持有者（Registry /
   Tracker / Cancellation，`@singleton`）都在容器里。取用一律 `getIt<X>()`：容器内的类走
   构造器注入，Riverpod Notifier / widget 写 `late final _repo = getIt<X>()`。**Riverpod 只管
   界面状态**，不再有仓储 provider（2026-09-04 撤掉薄 provider 桥与全部静态 `.get()` 门面）。
@@ -143,7 +145,7 @@ In-app layering within `mobile/lib` (same script): `gen → core → data → co
 ### mui —— material 的补充，不是替代（主题树细节见 packages/foundation/mui/CLAUDE.md，共存期硬点见 mobile/CLAUDE.md）
 
 - **material 只经 `package:mui/mui.dart` 出，业务代码 import mui 不 import material**，
-  `tool/check_layers.dart` 零基线守住（名单 4 条，都是第三方 API 只认 legacy 类型）。
+  `tool/check_layers.dart` 零基线守住（名单随依赖迁移持续收缩，当前 1 条：`moodiary_picker` 的 `picker_theme.dart`，wechat_assets_picker 的 pickerTheme 只吃 legacy ThemeData）。
 - 组件：material_ui 够用的直接用，不够用才在 mui 里补，命名一律 `M` 开头。
 - `ColorScheme` / `TextTheme` 是配色与排版真源；**`buildMuiTheme()` 是全仓唯一构造
   `ThemeData` 的地方**（闸门钉住）；取用写法
@@ -206,5 +208,11 @@ about.toml / rust-toolchain / Cargo.lock，坑各记在自己的 CLAUDE.md：
   实际字节看 `docs/native-libs-review.md` 第四节，依赖树重叠不等于二进制重复。改了任何 `rust/Cargo.toml` 依赖必跑
   `dart tool/task.dart licenses`。
 - **zip 必须留在 Rust**（2026-09-04 复决）：局域网归档用的是 zip 条目级 AES-256，纯 Dart 只有 17 MB/s
-  且整条目进堆（实测见 `docs/native-libs-review.md` 第五节）。绕开它就得换归档格式，而换格式要 bump
-  `lanProtoVersion`、与 2.8.0 断开局域网互通 —— 想再 Dart 化，等一次可以 bump 协议的版本。
+  且整条目进堆（实测见 `docs/native-libs-review.md` 第五节）。当时的撤回判据是「让 `lanProtoVersion`
+  停在 2、与 2.8.0 互通」，**那个前提 2.8.1 里已经不成立**（`lanProtoVersion` 现为 3，见下），
+  但性能与内存那条独立成立，所以 zip 仍留在 Rust。
+- **`lanProtoVersion` 现为 3**（2.8.1，`3062d85e`）：地点重构要挡住 2.8.0 用 position 快照覆盖
+  placeId 引用，顺势 bump 并**删掉了「没带 `x-moodiary-proto` 头就当协议 2 放行」的宽容**——
+  `lan_receiver._admit` 现在要求头存在且严格等于 3，2.8.1 与 2.8.0 之间局域网传输一定 426。
+  注意 `LanPeer.compatible` 仍放行 `proto == null`，那只管发现列表的置灰：2.8.0 广播不带 TXT
+  attributes，在附近设备里是正常颜色可点的，不兼容要握手才暴露。

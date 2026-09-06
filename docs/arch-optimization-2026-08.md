@@ -56,7 +56,9 @@
 ### 0.3 CI 从不设 ISAR_TEST_DYLIB：真库测试恒 skip
 - [x] 完成（2026-08-26）
 - **问题**：`.github/workflows/quality.yml` 无任何 env；`diary_index_test` /
-  `version_migrator_test` / `db_benchmark_test` 未设变量即整组跳过。倒排索引正确性与
+  `version_migrator_test` / `db_benchmark_test` 未设变量即整组跳过。
+  （2026-08-27 SQLite 迁移后 `diary_index_test` / `db_benchmark_test` 已删除，
+  今天只剩 `version_migrator_test` 需要 `ISAR_TEST_DYLIB`。）倒排索引正确性与
   2.8.0 迁移语义在 CI **零覆盖**（记忆里「迁移零测试」的真身：测试写了但 CI 不跑）。
   而 dylib 就在 pub 包里：`isar_plus_flutter_libs-1.3.9/linux/libisar_plus.so`。
 - **改法**：Test 步骤前加一步，版本精确 find + 写 `$GITHUB_ENV`，**find 为空 exit 1**

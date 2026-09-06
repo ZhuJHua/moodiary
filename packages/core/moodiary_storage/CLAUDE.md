@@ -1,6 +1,6 @@
 ### KV —— MMKV，且是同步的
 
-2.8.0 起本地 KV 落在 **MMKV**（`mmkv: 2.4.1`），后端换掉之后接口跟着变了形：
+2.8.0 起本地 KV 落在 **MMKV**（`mmkv: 2.4.2`），后端换掉之后接口跟着变了形：
 
 **`IKVStorage.set` / `remove` / `clear` 返回 `void`，不是 `Future`。** MMKV 是 mmap +
 增量 append，没有平台通道往返可等，落盘交给内核。由此 `KVNotifier` 的监听者在赋值当帧

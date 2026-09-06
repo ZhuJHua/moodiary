@@ -16,7 +16,7 @@ http 与 llm 之间实测重复 2 MiB `.text`（整套网络底座）是 8 个�
   `CancelToken()` 这类同步构造，库没装载就构造会直接抛。`RustHttpClient` 把它折进 `_client`
   那个 Future，`RustHttpServer.start`、两个同步后端的 `_client()`、`RigAssistantService.chat`
   各自先 await；`graph.dart` 的 `layoutGraphStream` 是手写 `async*`，开流前自己 await。
-- 客户端两个坑（`http/client.rs` 文件头）：reqwest 开的是 `rustls-no-provider`，建 client 前要装
+- 客户端两个坑（`http/client.rs`）：reqwest 开的是 `rustls-no-provider`，建 client 前要装
   ring provider；**Android 换内置 webpki 根**（rustls-platform-verifier 未初始化时首个 TLS 连接
   panic），其余平台走系统信任库。**reqwest 必须保留 gzip / brotli / deflate**：和风天气无条件 gzip。
 - 服务端（`http/server.rs`）：请求体超阈值落盘到 `spool_dir`，进度回调，handler 异常折叠为 500，

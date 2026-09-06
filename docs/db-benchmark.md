@@ -1,5 +1,10 @@
 # 数据库性能基准(2.8.0 posting-list 倒排 + BM25)
 
+> ⚠️ **已过期，仅供历史参考。** 本文描述的 `SearchPosting` / `LinkPosting` / `DiaryIndexSnapshot` /
+> `fastHash` 这套 isar_plus 手写倒排，已在 2026-08-27 的 SQLite 迁移中整体退休（全仓 grep 不到），
+> `db_benchmark_test.dart` 本身也已删除。现状以 `docs/sqlite-migration.md` 为准；
+> SQLite + FTS5 之后的基准还没有补测（见 sqlite-migration.md 的 P4 待办）。
+
 > 2026-07-13 · 分支 `refactor/2.8.0/new_arch` · Apple M4 Pro / macOS 26.5.1 / isar_plus 1.3.7(native 引擎)
 > 测量对象为真实 `DiaryRepository` 代码路径(经 `forTesting` 注入独立 Isar 与替身分词器)。
 > 绝对值为桌面级 CPU,手机上会更慢;**随规模的增长曲线**才是设计关注点。

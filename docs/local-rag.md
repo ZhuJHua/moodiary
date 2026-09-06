@@ -1,5 +1,11 @@
 # 本地 RAG 设计（llamadart + sqlite-vec）
 
+> ⚠️ **推理框架那部分已作废。** `llamadart` / llama.cpp / GGUF 已被 `onnxruntime_plus` 取代，
+> 嵌入模型换成 `Qwen3-Embedding-0.6B`（int8 ONNX），不再是 bge 系列；代码在
+> `packages/feature_base/moodiary_ml`。**仍然成立的**：sqlite-vec 表结构、`EmbedIndexService`
+> 的入队制、`semanticSearchDiaries` 工具接线、分块与重嵌策略。§1.1 / §1.3 / §6.8 / §6.9
+> 里关于 llamadart 与 GGUF 的内容按作废读。
+
 > 调研结论 + 目标 schema + 嵌入管线 + 助手工具接线。输入：助手 agent 架构盘点（rig 0.42 / 工具桥 / facade 闸门）、rig-sqlite 与 sqlite3.dart hook 生态现查、llamadart 源码级核查（hook 校验 / user_defines / embedding API）、sqlite-vec 与 sqlite_vector 对比（2026-08-28 现查）。取代 2026-07 的旧 RAG 设计稿方向（candle + Isar blob 暴力余弦——DB 已迁 SQLite、推理框架改选 llamadart，该稿的分块/工具/重嵌策略仍沿用）。
 
 ## 0. 结论先行

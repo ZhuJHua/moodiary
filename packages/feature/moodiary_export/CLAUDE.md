@@ -74,4 +74,5 @@ front matter 可选，八个键与 `MarkdownWriter._frontMatter` 逐一对应。
 日记页在 `moodiary_diary`，两个都是 feature **不能互相 import**，所以经
 `moodiary_components` 的 `DiaryShare` 挂钩：组合根（`mobile/lib/main.dart`）启动时
 `DiaryShare.register(showDiaryShareSheet)`。路由 `/share` 归本包，**路径不能改**
-（`app_lock_observer` 按字面量放行它）。
+（`app_lock_observer` 的 `_skipExact` 按 `ShareRoute.path` 常量放行，改路径两边自动同步，
+但 `/share` 必须留在名单里，否则应用锁会在分享页弹出）。

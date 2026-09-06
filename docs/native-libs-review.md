@@ -153,7 +153,11 @@ regex，press 33 MB 且按需装载，不值得为它合并任何东西。text /
   两边都自称协议 2，握手过得去、报错却掉在导入深处。撤回的判据是线上兼容而不是性能：只要
   `lanProtoVersion` 还要停在 2（让 2.8.0 与 2.8.1 互通），归档格式就必须逐字节保持，而纯 Dart 的
   zip AES 扛不住这个格式，所以 zip 回 Rust（`fast_zip` / `libfastzip`，1.00 MB）。
-  **要再把 zip Dart 化，得等一次可以 bump 协议的版本，并接受那一版与 2.8.0 不能局域网同步。**
+- **⚠️ 上面那个前提在同一版就没了（2026-09-06，`3062d85e`）**：地点重构为了挡住 2.8.0 用 position
+  快照覆盖 placeId 引用，把 `lanProtoVersion` bump 到 **3** 并删掉了「没带 proto 头当 2」的宽容，
+  2.8.1 与 2.8.0 本来就不能局域网互通了。也就是说「等一次可以 bump 协议的版本」这个窗口 2.8.1
+  开过又关上了，当时没有顺势把 zip Dart 化。**现在要 Dart 化只剩性能这一条拦着**：zip 内 AES
+  17 / 19 MB/s、`archive` 对加密条目整块进堆——这条独立于协议成立，所以 zip 仍留在 Rust。
 
 ## 六、libfastpress 33 MB 里是什么（2026-09-03，Android arm64 stripped 实测）
 

@@ -4,15 +4,17 @@ Flutter 3.47 把 Material 拆成独立包 `material_ui`，SDK 内的
 `package:flutter/material.dart` 将于 2026-11 弃用。全仓的规矩因此是：
 
 **material 只经 `package:mui/mui.dart` 出。业务代码 import mui，不 import material。**
-由 `tool/check_layers.dart` 零基线守住，名单外出现一处 legacy import 就红。名单目前 4 条
-（wechat 的三个 picker 文件 + assistant 的 chat 页），都是第三方 API 只认 legacy 类型。
+由 `tool/check_layers.dart` 零基线守住，名单外出现一处 legacy import 就红。名单随依赖迁移
+持续收缩，当前 1 条（`moodiary_picker/lib/src/picker_theme.dart`，wechat_assets_picker 的
+`pickerTheme` 只吃 legacy `ThemeData`），以 `_legacyMaterialAllowlist` 为准。
 
 主题是**一棵树**：
 
 - **`ColorScheme` 是配色真源，`TextTheme` 是排版真源**，mui 不再自建色板。
   `context.theme.colors` 返回的就是 material 的 `ColorScheme` 本体。
-- `ThemeData` 装不下的东西收在单个 `MuiTokens extends ThemeExtension`：七张 token 表
-  （圆角/间距/动效/描边/投影/状态）、`onMedia`，以及 **`MuiFontConfig`**——可变字体的 wght
+- `ThemeData` 装不下的东西收在单个 `MuiTokens extends ThemeExtension`：六张 token 表
+  （圆角/间距/动效/描边/投影/状态）、`onMedia`、`success`（语义状态色，同步连接指示灯用），
+  以及 **`MuiFontConfig`**——可变字体的 wght
   轴值只有宿主读过 ttf 才知道，`ThemeData` 没有槽位放它，漏了 `.emphasized` 会静默出错字重。
 - `buildMuiTheme()` 是**全仓唯一构造 `ThemeData` 的地方**（闸门钉住），
   25 个组件子主题都在里面。

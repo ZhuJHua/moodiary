@@ -29,13 +29,12 @@
 
 ## 硬事实（错一条就是一类 bug）
 
-- **codegen provider 默认 autoDispose**；keepAlive 是例外、必须写理由（现存两处
-  都写了）。**手写 `NotifierProvider` 默认相反**（keepAlive），所以一律用 codegen。
+- **codegen provider 默认 autoDispose**；keepAlive 是例外（现存两处：`AppSettingsController`
+  持有全局主题设置、`SyncController` 要跨页面保住同步进度；理由记在这里，代码里不写注释）。**手写 `NotifierProvider` 默认相反**（keepAlive），所以一律用 codegen。
 - **SQL 关键字撞名会被 drift 静默吞列**：`key` 列必须写成 `"key"`；列名与
   `Table` 基类成员撞名（如 `text`）直接编译炸——memories 的正文列因此叫 `content`。
 - **riverpod 3 默认对非 `Error` 异常指数重试 10 次（约 38 秒）**。本仓已在
-  `mobile/lib/main.dart` 的 `ProviderScope(retry:)` 收紧为最多 2 次；
-  `Error` 与 `ProviderException` 不重试。预期内的业务失败
+  `mobile/lib/main.dart` 用 `ProviderScope(retry: (_, _) => null)` **整个关掉**，一次都不重试。预期内的业务失败
   抛 `Error` 子类（如 `StateError`），别抛 `Exception`。
 - provider 定义统一放各包 `application/`（或本包 src/ 顶层），不进 presentation。
 - **错误约定：仓储抛异常，调用方按需 catch 且至少 `logger.e`**——别让库故障

@@ -1,6 +1,6 @@
 # Moodiary — Thin Composition App Design
 
-> **STATUS: ✅ EXECUTED (all phases 0–7 shipped).** `mobile/lib` now has zero `feature/` slice; `moodiary_diary`/`moodiary_sync`/`moodiary_lock`/`moodiary_share` extracted, `moodiary_editor_host` merged into `moodiary_editor`, `user`/`web_view` deleted; the settings hub relocated to `app/settings` and the diary home to `app/home`; `tool/layer_baseline.txt` is empty (0 violations). This doc is kept as the design record; the numbered roadmap in §6 is history.
+> **STATUS: ✅ EXECUTED (all phases 0–7 shipped).** `mobile/lib` now has zero `feature/` slice; `moodiary_diary`/`moodiary_sync`/`moodiary_lock` extracted (`moodiary_share` was extracted too, then folded into `moodiary_export` on 2026-09-04 — see `docs/image-export.md`; it is no longer a package), `moodiary_editor_host` merged into `moodiary_editor`, `user`/`web_view` deleted; the settings hub relocated to `app/settings` and the diary home to `app/home`; `tool/layer_baseline.txt` is empty (0 violations). This doc is kept as the design record; the numbered roadmap in §6 is history.
 
 > **SINCE THEN (2026-07-28).** The body below is a snapshot of the state at execution time; these parts have changed and the doc was deliberately *not* rewritten:
 > - `flutter_quill` is gone from the whole repo. `merge/merge.dart` moved to `moodiary_migration` (`src/version_migrator.dart`, class `VersionMigrator`) and now validates/wraps Delta with the pure-Dart `QuillDelta` helper; legacy richText diaries render by converting to TipTap on open.

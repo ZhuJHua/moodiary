@@ -1,7 +1,11 @@
 # moodiary_rust 拆分计划（2026-09-03）
 
-> ✅ 2026-09-03 已全部落地：fast_press → fast_http → fast_llm → fast_text → fast_crypto（裸 FFI 模板）→
-> fast_graph（裸 FFI）→ fast_zip → 字体 Dart 化 + 删除 moodiary_rust，每步一个提交。以下是决策时的原文。
+> ⚠️ **本计划已被同日的回收决定部分推翻，别照着它读现状。** 当天确实按 fast_press → fast_http →
+> fast_llm → fast_text → fast_crypto → fast_graph → fast_zip → 字体 Dart 化的顺序逐步执行过，
+> 但随即又把 http / sync / llm / graph 合并回了 `moodiary_rust`——**该包今天仍然存在**，
+> `fast_http` / `fast_llm` / `fast_graph` / `fast_text` 这四个包都不在仓库里（fast_text 更名 fast_tokenizer）。
+> **终态以 `docs/native-libs-review.md` 第五节为准**：6 个原生库 = moodiary_rust + fast_image /
+> fast_press / fast_tokenizer / fast_crypto / fast_zip。以下是决策时的原文。
 > 后续变动见 docs/native-libs-review.md 第五节（同日回收成 6 个库；fast_zip 当晚改纯 Dart `archive`，
 > 次日因局域网线上兼容又改回 Rust，仍是 6 个）。
 

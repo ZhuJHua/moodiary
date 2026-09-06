@@ -33,8 +33,8 @@ L3 展示：列表 / 日历 / 媒体库 / 编辑器正文 → 只碰 L2
   够屏幕密度的一张 → 用户放大后 `tj3SetCroppingRegion` 只解可见区域。内存上界由视口决定，
   与图片分辨率无关，48MP 与 12MP 一个价。带 restart marker 的文件（相机、修图软件、libjpeg
   系导出的大多带）只熵解码覆盖视口的段并且并行；没有的整趟到底。
-- **turbojpeg 进、libwebp 出**：turbojpeg-sys（vendored libjpeg-turbo 3.1.0，静态链进现有
-  那一个 .so）负责 JPEG 的读头、缩放解码、区域解码与**派生物编码**；`image` 留着解非 JPEG；
+- **turbojpeg 进、libwebp 出**：turbojpeg-sys（vendored libjpeg-turbo 3.1.0，静态链进
+  `fast_image` 自己的 `libfastimage`，见 §2）负责 JPEG 的读头、缩放解码、区域解码与**派生物编码**；`image` 留着解非 JPEG；
   `webp` crate 摘掉。派生物改 JPEG（带 alpha 的源用 PNG），一张照片的生成从约 75ms 降到
   约 20ms，.so 实测 +1.06MB（含 rayon，减 libwebp）。
 - **派生物可丢**：`image/thumb/` 在 support 目录但不同步、不备份、不导出，删图连带删，
@@ -362,7 +362,8 @@ impl RegionDecoder {
 - 原件目录只放原件；派生物永远在子目录，永远不同步。
 - 列表里永远不解原图；看图页永远不整解原图到 1:1。
 - 缩略图按宽度缩；EXIF 方向先缩后转；编码按透明通道选 JPEG / PNG，不按源格式。
-- 单 .so：turbojpeg 静态链进 `moodiary_rust`，不另起原生库。
+- turbojpeg 静态链进 `fast_image` 的 `libfastimage`，与 `moodiary_rust` 是分开的两个原生库
+  （§0 与本条原写「单 .so 静态链进 moodiary_rust」，2026-09-03 拆包后已不成立，见 §2）。
 - restart 索引只加速不改语义：分段解码必须与整图裁剪解码逐字节一致（`restart.rs` 测试钉住）。
 - 派生物只给 `image/` 目录里的原件算；快慢路按魔数不按扩展名；派生物高不超过档位宽的 3 倍。
 - 看图页同一时刻只有当前页持有解码器与 tile 缓存。

@@ -1,5 +1,11 @@
 # Moodiary 模块化拆分计划 (v2.8.0 后续)
 
+> ⚠️ **已被后续重构整体取代。** 本文的落点是 `moodiary_core` / `moodiary_ui` /
+> `moodiary_editor_host` / `mobile/lib/feature/*`，这四样今天都不存在：core 拆成了 7 个包、
+> ui 更名 `moodiary_components`、editor_host 并入 `moodiary_editor`、`mobile/lib` 下已无
+> `feature/` 目录；`moodiary_preferences` 也在 `feature_base` 而不是本文写的 core 层。
+> 当前包名与层次以根 `CLAUDE.md` 为准，演进过程见 `docs/thin-app-architecture.md`。
+
 > 面向 `refactor/2.8.0/new_arch` 之后的架构演进。目标：把更多共享代码**下沉进 package**，让 `mobile/` 与待重建的 `desktop/` 复用；瘦身 feature 巨石；清零分层违规（尤其 `app/router` 耦合与 feature↔feature 边）。
 >
 > 本文由多代理深度调研综合而成（7 个区域读者 → 3 个不同哲学的架构方案 → 综合裁决），关键事实已核验。
