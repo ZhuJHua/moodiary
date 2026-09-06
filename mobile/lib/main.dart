@@ -46,8 +46,21 @@ Future<void> _initSystem() async {
   unawaited(_platFormOption());
 
   final themeFuture = () async {
-    final font = await getIt<FontRepository>().getActiveFont();
-    await getIt<ThemeManager>().buildTheme(customFont: font?.themeDescriptor);
+    try {
+      final font = await getIt<FontRepository>().getActiveFont();
+      await getIt<ThemeManager>().buildTheme(customFont: font?.themeDescriptor);
+    } catch (e, s) {
+      logger.e(
+        'theme init failed, fallback to default',
+        error: e,
+        stackTrace: s,
+      );
+      try {
+        await getIt<ThemeManager>().buildTheme();
+      } catch (_) {
+        // 再失败就让 lightTheme / darkTheme getter 自己回落到 buildMuiTheme()
+      }
+    }
   }();
 
   final localeFuture = () async {
