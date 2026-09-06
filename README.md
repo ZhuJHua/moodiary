@@ -1,8 +1,4 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="mobile/res/banner/social_dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="mobile/res/banner/social_light.svg">
-  <img alt="Moodiary" src="mobile/res/banner/social_light.svg">
-</picture>
+![moodiary](res/social.svg)
 <p align="center"><a href="README.zh.md">简体中文</a> | English</p>
 
 <p align="center"><a href="https://answer.moodiary.net" target="_blank">Official forum</a>丨QQ Group: <a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=xGr0TNp_X1z3XEn09_iE_iGSLolQwl6Y&jump_from=webapi&authKey=ZmSb2oEd94FSXxBXRBq53hgTjjvcfmgkQrduB3uL12XtRylPmRlO2OdFz6R25tIo">760014526</a>丨Telegram: <a target="_blank" href="https://t.me/openmoodiary">openmoodiary</a></p>
@@ -44,9 +40,9 @@
 > The application is constantly updated, and the interface may change slightly in the new version
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="mobile/res/screenshot/mobile_dark_en.webp">
-  <source media="(prefers-color-scheme: light)" srcset="mobile/res/screenshot/mobile_light_en.webp">
-  <img alt="The mobile screenshot for moodiary." src="mobile/res/screenshot/mobile_light_en.webp">
+  <source media="(prefers-color-scheme: dark)" srcset="res/screenshot/mobile_dark_en.webp">
+  <source media="(prefers-color-scheme: light)" srcset="res/screenshot/mobile_light_en.webp">
+  <img alt="The mobile screenshot for moodiary." src="res/screenshot/mobile_light_en.webp">
 </picture>
 
 ## 🚀 Installation guide
@@ -169,9 +165,9 @@ You can buy me a sandwich to keep me motivated to continue developing.
 In no particular order of amount. Leave your GitHub username in the transfer note if you want to be listed with a link.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="mobile/res/sponsor/sponsors_dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="mobile/res/sponsor/sponsors_light.svg">
-  <img alt="List of sponsors" src="mobile/res/sponsor/sponsors_light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="res/sponsor/sponsors_dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="res/sponsor/sponsors_light.svg">
+  <img alt="List of sponsors" src="res/sponsor/sponsors_light.svg">
 </picture>
 
 > The wall is generated from [`sponsors.json`](sponsors.json) by `dart tool/task.dart sponsors`; CI re-renders it whenever that file changes. Edit the JSON, never the SVG.

@@ -80,7 +80,7 @@ void main(List<String> args) {
         ..sort((a, b) => b.amount.compareTo(a.amount));
 
   for (final (name, palette) in [('light', _light), ('dark', _dark)]) {
-    final out = File('${root.path}/mobile/res/sponsor/sponsors_$name.svg');
+    final out = File('${root.path}/res/sponsor/sponsors_$name.svg');
     out.parent.createSync(recursive: true);
     out.writeAsStringSync(_render(sponsors, currency, palette));
     stdout.writeln('已生成 ${out.path}');

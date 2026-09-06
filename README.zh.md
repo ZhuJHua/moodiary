@@ -1,8 +1,4 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="mobile/res/banner/social_dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="mobile/res/banner/social_light.svg">
-  <img alt="Moodiary" src="mobile/res/banner/social_light.svg">
-</picture>
+![moodiary](res/social.svg)
 <p align="center">简体中文 | <a href="README.md">English</a></p>
 
 <p align="center"><a href="https://answer.moodiary.net" target="_blank">官方论坛</a>丨QQ群: <a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=xGr0TNp_X1z3XEn09_iE_iGSLolQwl6Y&jump_from=webapi&authKey=ZmSb2oEd94FSXxBXRBq53hgTjjvcfmgkQrduB3uL12XtRylPmRlO2OdFz6R25tIo">760014526</a>丨Telegram: <a target="_blank" href="https://t.me/openmoodiary">openmoodiary</a></p>
@@ -45,9 +41,9 @@
 > 应用持续更新中，新版本界面可能稍有变化
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="mobile/res/screenshot/mobile_dark_zh.webp">
-  <source media="(prefers-color-scheme: light)" srcset="mobile/res/screenshot/mobile_light_zh.webp">
-  <img alt="The mobile screenshot for moodiary." src="mobile/res/screenshot/mobile_light_zh.webp">
+  <source media="(prefers-color-scheme: dark)" srcset="res/screenshot/mobile_dark_zh.webp">
+  <source media="(prefers-color-scheme: light)" srcset="res/screenshot/mobile_light_zh.webp">
+  <img alt="The mobile screenshot for moodiary." src="res/screenshot/mobile_light_zh.webp">
 </picture>
 
 ## 🚀 安装指南
@@ -170,9 +166,9 @@ tool/        跨平台任务入口（task.dart）与分层 / 代码生成闸门
 不分先后，按金额排列。想在名单里带上链接的，转账备注里留个 GitHub 用户名就行。
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="mobile/res/sponsor/sponsors_dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="mobile/res/sponsor/sponsors_light.svg">
-  <img alt="捐助者名单" src="mobile/res/sponsor/sponsors_light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="res/sponsor/sponsors_dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="res/sponsor/sponsors_light.svg">
+  <img alt="捐助者名单" src="res/sponsor/sponsors_light.svg">
 </picture>
 
 > 这面墙由 [`sponsors.json`](sponsors.json) 经 `dart tool/task.dart sponsors` 生成，CI 会在该文件变动时重新渲染。改 JSON，别改 SVG。
