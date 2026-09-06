@@ -8,9 +8,9 @@ const _gap = 10.0;
 const _fontSize = 14.0;
 const _amountSize = 12.0;
 
-// 灰阶配色与 App 的 MuiAccent.neutral() 同源（SchemeMonochrome，source #000000）
+// 灰阶配色与 App 的 MuiAccent.neutral() 同源（SchemeMonochrome，source #000000）。
+// 不画底色：透明背景，跟 README 里其它几张图一致
 const _light = _Palette(
-  background: '#FFFFFF',
   chip: '#F4F4F4',
   chipTop: '#E8E8E8',
   border: '#C6C6C6',
@@ -20,7 +20,6 @@ const _light = _Palette(
 );
 
 const _dark = _Palette(
-  background: '#0E0E0E',
   chip: '#1F1F1F',
   chipTop: '#2A2A2A',
   border: '#474747',
@@ -30,7 +29,6 @@ const _dark = _Palette(
 );
 
 class _Palette {
-  final String background;
   final String chip;
   final String chipTop;
   final String border;
@@ -39,7 +37,6 @@ class _Palette {
   final String caption;
 
   const _Palette({
-    required this.background,
     required this.chip,
     required this.chipTop,
     required this.border,
@@ -123,10 +120,6 @@ String _render(List<_Sponsor> sponsors, String currency, _Palette palette) {
       'font-family="-apple-system, BlinkMacSystemFont, &#39;Segoe UI&#39;, '
       'Roboto, &#39;PingFang SC&#39;, &#39;Hiragino Sans GB&#39;, '
       '&#39;Microsoft YaHei&#39;, sans-serif">',
-    )
-    ..writeln(
-      '<rect width="${_f(canvas)}" height="${height.toInt()}" rx="12" '
-      'fill="${palette.background}"/>',
     );
 
   var y = _pad;
