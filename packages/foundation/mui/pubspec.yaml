@@ -14,11 +14,11 @@ dependencies:
     sdk: flutter
   material_ui: 1.1.1
   cupertino_ui: 1.0.2
-  lucide_icons_flutter: 3.1.17
+  lucide_icons_flutter: 3.1.18
   flutter_svg: 2.3.0
   cached_network_image_ce: 4.10.1
   material_color_utilities: 0.13.0
-  slang: 4.19.0
+  slang: 4.19.1
   slang_flutter: 4.19.0
   flutter_smart_dialog: 5.3.0
 
