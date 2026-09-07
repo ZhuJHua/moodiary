@@ -49,4 +49,6 @@
 
 如果想出现在名单上，请在赞赏备注中留下 GitHub 用户名或昵称。自选昵称须符合法律法规，否则不予展示。
 
+<!-- sponsors:start -->
 朱东杰、[dsxksss](https://github.com/dsxksss)、不对味的雪碧、[xiaoxianzi-99](https://github.com/xiaoxianzi-99)、Lucci、[Higanoneko](https://github.com/Higanoneko)
+<!-- sponsors:end -->
