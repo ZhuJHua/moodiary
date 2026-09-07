@@ -2,46 +2,56 @@
 
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [2.8.1] - 2026-09-07
+
+2.8.1 rebuilds Moodiary on new foundations: a new database, a new editor, a new
+design system and on-device AI. Everything below is stated relative to 2.7.3.
+Upgrading runs a one-time migration of your existing diaries at startup.
 
 ### 🚀 Features
 
-- *(zip)* Use rust to increase data export speed
-- *(widget)* Add utility functions to capture widget as image
-- Add code scanning to import support
-- Optimize image processing capabilities
-- Integrate Jieba for keyword extraction and search optimization
-- *(video)* Use ffmpeg as video backend (#241)
+- *(data)* SQLite replaces Isar, with FTS5 full-text search, BM25-ranked
+  results and semantic search over your diaries
+- *(editor)* A new TipTap editor with image resizing, inline video, audio
+  recording, custom fonts, first-line indent, wiki links and in-page link
+  history
+- *(diary)* Timeline and feed home layouts, categories as a filter, long-press
+  multi-select, a calendar under Me > Revisit, and a bidirectional-link
+  knowledge graph
+- *(diary)* 16 emotion and state values replace the old mood scale
+- *(diary)* Manual weather, and locations saved as reusable places
+- *(ml)* On-device models — Whisper speech-to-text, mood suggestion, and
+  embeddings for local semantic search; you can bring your own model
+- *(assistant)* A rebuilt AI assistant — any provider and model, agent presets,
+  thinking-effort levels, image input, tool calls with tiered approval, a
+  JavaScript sandbox, long-term memory and automatic context compaction
+- *(sync)* One-way LAN sync with PIN pairing, a self-hosted server backend,
+  end-to-end envelope encryption, local zip backup, and a sync console with
+  per-run logs
+- *(media)* Originals are kept untouched, with tiered thumbnails, a tiled
+  viewer for very large images, and text search over images via OCR
+- *(export)* Export to Markdown, Word, PDF and image; import Markdown; share a
+  diary as a single-entry export
+- *(theme)* Grayscale, system-wallpaper and custom colour modes, with font
+  scale following the system
+- *(ui)* A new design system throughout — unified dialogs, sheets, menus and a
+  frosted-glass bottom bar, a new video player, and the Android predictive
+  back gesture
+- *(security)* The app-lock PIN and API keys move into secure storage, with the
+  PIN stored as an Argon2id hash
 
-### 🐛 Bug Fixes
+### ⚡ Performance
 
-- *(share)* Fix capture and share methods
-- Remove workspace
-- Qweather api error
-- Qweather api error
-- *(rust)* New zip, use `std::os::unix` only in unix
-- Changelog update messages in CI configuration (#247)
+- Faster search and indexing, faster diary loading, and smoother scrolling
+  through long diaries
+- Faster app startup
+- Faster media import, export and archiving
 
-### 🚜 Refactor
+### ◀️ Removed
 
-- Optimize the code structure
-
-### 📚 Documentation
-
-- Update sponsor list
-
-### ⚙️ Miscellaneous Tasks
-
-- Fix build
-- *(ci)* Remove redundant dependency installation for Rust builder
-- Remove custom_lint to fix dart analyzer slow
-- Update rust test ci
-- Add test module to lib.rs
-- Github actions for windows
-- Update CI configuration (#243)
-- Update changelog on develop
-- Bump Flutter version to 3.32.0 (#245)
-- Update changelog on develop
+- *(scan)* QR code scanning
+- *(sync)* Local JSON import and export
+- *(theme)* The in-app font size setting; font scale now follows the system
 
 ## [2.7.3] - 2025-03-02
 

@@ -70,7 +70,7 @@ jobs:
 
       - name: Build APK
         working-directory: mobile
-        run: flutter build apk --release --obfuscate --split-debug-info=splitMap
+        run: flutter build apk --release --target-platform android-arm64 --obfuscate --split-debug-info=splitMap
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
@@ -92,18 +92,14 @@ jobs:
           name: android-apk
           path: artifacts/android
 
-      - name: Get Latest Tag
-        id: latest_tag
-        uses: actions-ecosystem/action-get-latest-tag@v1.6.0
-        with:
-          fetch-all-tags: true
-          sort-tags: true
-
-      - name: Extract Tag Version
-        id: extract_tag_version
+      - name: Read Version From Pubspec
         run: |
-          tag="${{ steps.latest_tag.outputs.tag }}"
-          version="${tag#v}"
+          version=$(sed -n 's/^version: \([0-9.]*\)+.*/\1/p' mobile/pubspec.yaml)
+          if [ -z "$version" ]; then
+            echo "could not read version from mobile/pubspec.yaml" >&2
+            exit 1
+          fi
+          echo "Version detected: $version"
           echo "VERSION=$version" >> $GITHUB_ENV
 
       - name: Rename Artifacts
@@ -111,15 +107,18 @@ jobs:
           mkdir -p renamed-artifacts
           mv artifacts/android/app-release.apk renamed-artifacts/moodiary-${{ env.VERSION }}-android-arm64.apk
 
-      - name: Generate Release Notes
-        id: release_notes
-        uses: release-drafter/release-drafter@v5
-        with:
-          config-name: release-drafter.yml
-          tag: v${{ env.VERSION }}
-          publish: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract Release Notes From Changelog
+        run: |
+          awk -v want="## [${{ env.VERSION }}]" '
+            index($0, want) == 1 { found = 1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "no [${{ env.VERSION }}] section in CHANGELOG.md" >&2
+            exit 1
+          fi
+          cat release-notes.md
 
       - name: Create Release
         uses: ncipollo/release-action@v1
@@ -127,7 +126,9 @@ jobs:
           artifacts: renamed-artifacts/*
           tag: v${{ env.VERSION }}
           name: v${{ env.VERSION }}
-          body: ${{ steps.release_notes.outputs.body }}
+          bodyFile: release-notes.md
+          commit: ${{ github.sha }}
           draft: true
           prerelease: false
+          allowUpdates: true
           token: ${{ secrets.GITHUB_TOKEN }}

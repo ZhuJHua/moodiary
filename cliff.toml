@@ -1,6 +1,3 @@
-[output]
-file = "CHANGELOG.md"
-
 [changelog]
 header = """
 # Changelog\n

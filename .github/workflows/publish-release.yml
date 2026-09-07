@@ -1,0 +1,64 @@
+name: Publish Release
+
+on:
+  pull_request:
+    types: [ closed ]
+    branches: [ develop ]
+
+jobs:
+  publish:
+    name: Publish Draft Release
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+
+      - name: Resolve Version
+        run: |
+          version="${{ github.event.pull_request.head.ref }}"
+          version="${version#release/}"
+          echo "VERSION=$version" >> $GITHUB_ENV
+
+      # draft release 尚未创建 tag，转正时才由 target 决定 tag 落在哪个提交上。
+      - name: Publish Draft At The Merge Commit
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release edit "v${{ env.VERSION }}" \
+            --draft=false \
+            --target "${{ github.event.pull_request.merge_commit_sha }}" \
+            --latest
+
+      - name: Read Release Info
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          {
+            echo "RELEASE_NOTES<<MOODIARY_EOF"
+            gh release view "v${{ env.VERSION }}" --json body --jq '.body'
+            echo "MOODIARY_EOF"
+          } >> $GITHUB_ENV
+          echo "RELEASE_URL=$(gh release view "v${{ env.VERSION }}" --json url --jq '.url')" >> $GITHUB_ENV
+
+      # GITHUB_TOKEN 触发的 release 事件不会再唤起 telegram-bot.yml，所以在这里直接发。
+      - name: Send Telegram Message
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: html
+          message: |
+            🎉 A new release is live! 🎉
+
+            Version: v${{ env.VERSION }}
+
+            Release Notes:
+            ${{ env.RELEASE_NOTES }}
+
+            🔗 View Release: ${{ env.RELEASE_URL }}
