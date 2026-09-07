@@ -12,7 +12,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  meta: 1.19.0
 
   fast_crypto: 0.0.1
   fast_image: 0.0.1
@@ -41,6 +40,7 @@ dependencies:
   path: 1.9.1
   pool: 1.5.3
   synchronized: 3.4.1+2
+  meta: 1.19.0
 
 dev_dependencies:
   flutter_test:
