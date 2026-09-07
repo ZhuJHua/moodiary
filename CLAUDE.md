@@ -2,44 +2,44 @@
 
 ## Project Overview
 
-Moodiary — a Flutter + Rust diary app. **Layered pub-workspace monorepo**: 33 shared packages under `packages/` across four dependency layers, consumed by the single Flutter app **`mobile/`** (Android + iOS, pub name `moodiary`). The root `pubspec.yaml` is a pure coordinator (workspace + Melos config, no app code). A desktop app will be rebuilt later — the packages are already layered for it, but no desktop target exists in the tree today.
+Moodiary is a Flutter + Rust diary app. **Layered pub-workspace monorepo**: 33 shared packages under `packages/` in four dependency layers, consumed by the single Flutter app **`mobile/`** (Android + iOS, pub name `moodiary`). The root `pubspec.yaml` is a pure coordinator (workspace + Melos config, no app code). A desktop app will be rebuilt later; the packages are layered for it, but no desktop target exists today.
 
 ## Tech Stack
 
-- **Flutter 3.47.2 / Dart 3.13.0** —— `.fvmrc` 钉的是 3.47.2，`mobile/pubspec.yaml` 的下限约束才是 3.47.0，别把两者混为一谈
-- **Rust 1.95.0 stable**（不是 nightly；每个原生库包的 `rust/rust-toolchain.toml` 各一份，`tool/check_generated.dart` 保证一致），`flutter_rust_bridge` 2.13.0 — 原生库经 Native Assets 构建钩子构建并打包（需要 `rustup`）
-- **Android**: AGP 9.1.0 / Gradle 9.3.1 / KGP 2.4.0，内置 Kotlin（`android.builtInKotlin=true`）；daemon JVM 由 `gradle-daemon-jvm.properties` 钉在 21
-- **Riverpod** (dev) + code gen, **go_router**, **get_it**, **SQLite**（drift + FTS5，schema 真源在 `moodiary_data` 的 `.drift` 文件），**Freezed** + **json_serializable**
+- **Flutter 3.47.2 / Dart 3.13.0**. `.fvmrc` pins 3.47.2; `>=3.47.0` in `mobile/pubspec.yaml` is only the lower bound.
+- **Rust 1.95.0 stable** (one `rust/rust-toolchain.toml` per native package, kept identical by `tool/check_generated.dart`), `flutter_rust_bridge` 2.13.0. Native libraries are built by Native Assets build hooks (needs `rustup`).
+- **Android**: AGP 9.1.0 / Gradle 9.3.1 / KGP 2.4.0, built-in Kotlin (`android.builtInKotlin=true`); daemon JVM pinned to 21 in `gradle-daemon-jvm.properties`.
+- **Riverpod** (dev) + codegen, **go_router**, **get_it**, **SQLite** (drift + FTS5; schema source of truth is the `.drift` files in `moodiary_data`), **Freezed** + **json_serializable**.
 
 ## Commands
 
 ```bash
 # Setup
 fvm use
-dart tool/task.dart setup          # flutter pub get（编辑器产物由 moodiary_editor 的构建钩子在 run/build/test 时自动构建，需要 corepack）
+dart tool/task.dart setup          # flutter pub get (the editor bundle is built by moodiary_editor's build hook on run/build/test; needs corepack)
 
-# Run & Build (targets mobile app)
+# Run & Build (mobile app)
 dart tool/task.dart run            # flutter run
-dart tool/task.dart build-apk / build-ios  # 只有 android/ios 两个目标
+dart tool/task.dart build-apk / build-ios  # the only two targets
 # Extra flutter flags go after --:  dart tool/task.dart run -- --release
 
-# Code Gen (after model/router/provider changes)
-dart tool/task.dart build-runner   # 全仓 build_runner（melos 扫所有含 build_runner 的包；只跑 mobile 会漏掉包侧注解）
-dart tool/task.dart gen-rust       # regenerate Rust FFI bindings
-dart tool/task.dart i18n           # slang 文案生成（改了 i18n/*.json 必跑）
+# Code Gen
+dart tool/task.dart build-runner   # whole workspace (running it in mobile/ alone misses package-side annotations)
+dart tool/task.dart gen-rust       # regenerate Rust FFI bindings after touching rust/src/api
+dart tool/task.dart i18n           # slang codegen after editing i18n/*.json
 dart tool/task.dart gen            # gen-rust + i18n
 
 # Lint & Test
 dart tool/task.dart analyze        # layer check + flutter analyze
-dart tool/task.dart test           # 只测受影响的包：相对 --diff=<ref>（默认 HEAD，含未提交与未跟踪文件）有改动的包及其全部依赖方，-c 4 并发（--concurrency=N 改）；根 pubspec 变了自动全仓；--all 全仓（CI 口径）；SQLite 用例零门槛，仅 migration 的旧库用例要 ISAR_TEST_DYLIB
-dart tool/task.dart test-mobile    # 只跑 mobile/ 的测试
-for d in packages/foundation/*/rust; do (cd $d && cargo clippy --all-targets -- -D warnings && cargo test); done  # 六个包，别写成 fast_*：那样会漏掉 moodiary_rust
+dart tool/task.dart test           # affected packages only: changed relative to --diff=<ref> (default HEAD, incl. uncommitted/untracked) plus transitive dependents, 4-way parallel (--concurrency=N); root pubspec change or --all runs everything (CI). Only the legacy-database migration tests need ISAR_TEST_DYLIB
+dart tool/task.dart test-mobile    # mobile/ only
+for d in packages/foundation/*/rust; do (cd $d && cargo clippy --all-targets -- -D warnings && cargo test); done  # six packages; fast_* would miss moodiary_rust
 cd packages/feature_base/moodiary_editor/editor && corepack pnpm type-check && corepack pnpm test
 ```
 
-Full-repo verification = the four blocks above (analyze + layers, `task.dart test`, Rust, editor). `flutter test` at the repo root finds nothing.
+Full-repo verification = the four blocks above. `flutter test` at the repo root finds nothing.
 
-**Melos**: `melos bootstrap` activates the workspace and regenerates IDE module files — pure, no codegen; run `dart tool/task.dart gen` separately. `melos list` / `melos run <script> --category <layer>` filter by layer.
+**Melos**: `melos bootstrap` activates the workspace and regenerates IDE module files; it runs no codegen. `melos list` / `melos run <script> --category <layer>` filter by layer.
 
 **Versions** are exact-pinned everywhere; the root `melos` caret is the only exception.
 
@@ -49,163 +49,117 @@ Full-repo verification = the four blocks above (analyze + layers, `task.dart tes
 
 ```
 moodiary/                    # root = workspace + Melos coordinator (no app code)
-  tool/                      # cross-platform task runner + layer check
-  mobile/                    # pure-mobile Flutter app (pub: moodiary)
+  tool/                      # task runner + layer check
+  mobile/                    # Flutter app (pub: moodiary)
     lib/
       app/                   # composition layer: di, router, shell, lifecycle
-        home/                # home tab (diary_home_page)
+        home/                # home tab
         settings/            # settings hub
       main.dart
   packages/
-    foundation/              # leaf layer — no internal deps
+    foundation/              # leaf layer, no internal deps
       moodiary_lint/         #   shared analyzer options
-      moodiary_di/           #   get_it 容器的唯一实例（全仓最底层）
-      moodiary_logging/      #   日志；落盘路径由组合根注入，故不认识文件布局
-      moodiary_i18n/         #   i18n：slang 文案与取串入口（见下）
+      moodiary_di/           #   the single get_it instance
+      moodiary_logging/      #   logging; on-disk path injected by the composition root
+      moodiary_i18n/         #   slang strings and lookup entry points
       moodiary_router/       #   typed route primitives over go_router
-      fast_image/            #   图片管线：派生物 / 区域解码 / 分片看图页，自带 FRB 与原生库 libfastimage
-      fast_press/            #   导出压印：IR → PDF(typst) / DOCX，自带 FRB 与原生库 libfastpress（只给 moodiary_export）
-      moodiary_rust/         #   业务库：http 客户端/服务端 → WebDAV/S3 / rig 对话（共享一套 reqwest 底座）+ 图布局，libmoodiary_rust（四个门面各有主，延迟装载）
-      fast_tokenizer/        #   jieba 分词 + HF tokenizer，自带 FRB 与原生库 libfasttokenizer（启动装载，带测试替身）
-      fast_crypto/           #   AES-GCM + Argon2id，自带 FRB 与原生库 libfastcrypto（门面自带 ensureInitialized，调用方不用 init）
-      fast_zip/              #   zip 写/解压，自带 FRB 与原生库 libfastzip（只给 moodiary_export / moodiary_sync）
+      fast_image/            #   image pipeline (derivatives / region decode / tiled viewer), native lib libfastimage
+      fast_press/            #   export typesetting IR -> PDF (typst) / DOCX, libfastpress (moodiary_export only)
+      moodiary_rust/         #   http client/server, WebDAV/S3 sync, rig chat, graph layout; libmoodiary_rust (four facades, one owner each, lazy)
+      fast_tokenizer/        #   jieba + HF tokenizer, libfasttokenizer (loaded at startup, ships a test double)
+      fast_crypto/           #   AES-GCM + Argon2id, libfastcrypto (facade self-initializes)
+      fast_zip/              #   zip write/extract, libfastzip (moodiary_export / moodiary_sync only)
       moodiary_utils/        #   pure utils + content converters (tiptap/markdown/quill)
-      mui/                   #   设计系统：material_ui 的**补充**（详见下）
-      moodiary_sqlite_vec/   #   sqlite-vec 0.1.9：vendor 源码 + 构建钩子编成 code asset，供本地 RAG 向量检索
-    core/                    # 无领域基建。内部次序 platform,http → storage → files → theme
-      moodiary_platform/     #   应用目录/缓存目录/生物识别/网络状态/应用与设备信息
-      moodiary_http/         #   IHttpClient / IHttpServer 端口，实现走 Rust
-      moodiary_storage/      #   KV(MMKV) / SecureKV；数据库不在这（SQLite/drift 归 moodiary_data）
-      moodiary_files/        #   文件布局 + 媒体管线 + 文件选择端口
-      moodiary_theme/        #   系统取色、强调色档位、自定义字体 → ThemeData
-    feature_base/            # → core/foundation。内部次序 models,ml → data → components,migration,preferences → picker → editor
-      moodiary_models/       #   domain: 纯 Freezed 模型 + DTOs + 事件类型（零存储依赖）
-      moodiary_data/         #   SQLite（drift，src/db/*_tables.drift 是 schema 真源）+ repositories + controllers + 共享瞬态状态
-      moodiary_components/   #   业务组件：features 共用、够不着 mui 的那部分 UI；代码高亮表与 DiaryShare 挂钩也在这
-      moodiary_migration/    #   one-shot legacy migration；legacy/ 冻结旧 Isar 模型（isar_plus 最后据点）
+      mui/                   #   design system, a supplement to material_ui
+      moodiary_sqlite_vec/   #   sqlite-vec 0.1.9 as a code asset, for local RAG
+    core/                    # domain-free infra. Order: platform,http -> storage -> files -> theme
+      moodiary_platform/     #   dirs / biometrics / network state / app and device info
+      moodiary_http/         #   IHttpClient / IHttpServer ports, implemented in Rust
+      moodiary_storage/      #   KV (MMKV) / SecureKV (no database here)
+      moodiary_files/        #   file layout + media pipeline + file picker port
+      moodiary_theme/        #   system color, accent tiers, custom fonts -> ThemeData
+    feature_base/            # -> core/foundation. Order: models,ml -> data -> components,migration,preferences -> picker -> editor
+      moodiary_models/       #   pure Freezed models + DTOs + event types
+      moodiary_data/         #   SQLite (drift) + repositories + controllers + shared transient state
+      moodiary_components/   #   UI shared by features that mui cannot reach; code-highlight table, DiaryShare hook
+      moodiary_migration/    #   one-shot legacy migration; legacy/ freezes the old Isar models
       moodiary_preferences/  #   preference state
-      moodiary_ml/           #   本地 ML：onnxruntime_plus 嵌入/情感引擎 + 模型下载与激活（独家 own onnxruntime_plus）
-      moodiary_picker/       #   相册选择器：骑 wechat_assets_picker 换皮 + image_picker 系统相机（仅 mobile 依赖）
-      moodiary_editor/       #   TipTap webview 编辑器基建（EditorBody/controller/本地回环服务），被 diary 内嵌消费
-    feature/                 # → feature_base/core/foundation (features never import each other)
-      moodiary_export/       #   导出 Markdown/Word/PDF/图片 + 本地备份与 Markdown 导入；**分享也在这里**（= scope 只有一篇的导出）
+      moodiary_ml/           #   local ML on onnxruntime_plus + model download/activation (sole owner of onnxruntime_plus)
+      moodiary_picker/       #   wechat_assets_picker reskinned + image_picker camera (mobile only)
+      moodiary_editor/       #   TipTap webview editor base, embedded by diary
+    feature/                 # -> feature_base/core/foundation; features never import each other
+      moodiary_export/       #   export Markdown/Word/PDF/image, local backup, Markdown import, share (= single-entry export)
       moodiary_diary/        #   diary CRUD/search/category/calendar/map/recycle
       moodiary_sync/         #   sync engine + UI
-      moodiary_assistant/    #   AI assistant (flutter_chat_ui + rig)；runJavascript 沙箱走 flutter_js 自家 fork（git 钉 commit，quickjs-ng code asset）
+      moodiary_assistant/    #   AI assistant (flutter_chat_ui + rig); runJavascript sandbox on our flutter_js fork
       moodiary_media/        #   media library
       moodiary_lock/         #   app lock
 ```
 
-Path convention: unqualified `lib/...` refers to `mobile/lib/...`; `packages/` and `tool/` are repo-root-relative.
+Unqualified `lib/...` means `mobile/lib/...`; `packages/` and `tool/` are repo-root-relative.
 
 ### Layer Dependencies
 
-Cross-package DAG is strictly upper → lower: `foundation → core → feature_base → feature → apps`. Features never import each other (zero exceptions — `moodiary_editor` was demoted to feature_base precisely to kill the last one, `diary → editor`); shared logic sinks to lower layers, cross-feature composition happens in the app layer. pub only guarantees acyclicity, so **direction is enforced by `tool/check_layers.dart`**, which reads every pubspec's `moodiary_*`/`mui` deps (no baseline — must stay at zero). Melos `categories:` are filter/grouping only.
+The DAG is strictly `foundation -> core -> feature_base -> feature -> apps`. Features never import each other; shared logic sinks a layer, cross-feature composition happens in the app. pub only guarantees acyclicity, so **direction is enforced by `tool/check_layers.dart`** at a zero baseline. Melos `categories:` are filters only.
 
-**core 与 feature_base 各有一条层内次序**（`_coreOrder` / `_featureBaseOrder`，同 tier 之间一律禁止互引）。两条边值得单记，它们都是**靠注入换来的**，改回去就会成环：
+core and feature_base each have an intra-layer order (`_coreOrder` / `_featureBaseOrder`; same-tier packages never import each other). Two edges were bought with injection and must not be reverted:
 
-- **`storage` 在 `files` 之下**：Isar 的目录与 schema 列表都由组合根传入，所以存储层不认识文件布局。反过来 `files` 在 `storage` 之上是层内既定次序，files 今天不 import storage，次序保持不动。
-- **`moodiary_logging` 能待在 foundation**，是因为 release 的落盘路径由 `AppLogger.configure` 注入。它一旦回去直接读 `AppFiles`，就得整包上浮到 core 之上，而那样几乎所有人都够不着它了。
+- **`storage` below `files`**: the database directory and schema list come from the composition root, so storage knows nothing about the file layout.
+- **`moodiary_logging` stays in foundation** because the release log path is injected via `AppLogger.configure`; reading `AppFiles` directly would float the package above core, out of reach of almost everyone.
 
-**core 一个领域词都不认识**：`Diary` / `Category` / `Font` 都不在它的依赖图里。领域相关的东西靠注入或上移放在 core 之外：schema 表在 `moodiary_models`（`moodiarySchemas`），孤儿媒体清理在 `moodiary_migration`，`FontManager` 只吐原始描述、装配成 `Font` 在 `moodiary_data`（`scanDiskFonts` / `themeDescriptor`）。
+**core knows no domain type** (`Diary` / `Category` / `Font`): schema tables live in `moodiary_models`, orphan-media cleanup in `moodiary_migration`, `Font` assembly in `moodiary_data`. `moodiary_i18n` belongs in foundation even though its namespaces carry feature names: that knowledge is JSON keys, not type dependencies.
 
-> 由此有一条会被反复重问的：**`moodiary_i18n` 的 namespace 带着 `diary` / `assistant` / `sync`
-> 这些 feature 名，但它该留在 foundation，不是 core。** 那些领域知识是**数据**（json 的键），
-> 不是**代码** —— 包本身零 `moodiary_*` 依赖，`Translations` 对 `Diary` 一无所知，删掉
-> `diary_*.i18n.json` 照样编译；而 core 里被禁的那种耦合是**类型**依赖，会把编译期的边拽出来。
-> 分层的维度是依赖方向，不是词汇纯度。反过来搬进 core 还会亏两头：破坏上面那句「一个领域词都
-> 不认识」，且 core 同 tier 禁止互引，core 自己反而再也够不着它（今天够得着，只是没人用）。
+In-app layering within `mobile/lib`: `gen -> core -> data -> component -> feature/<x> -> app -> main.dart`, zero violations.
 
-In-app layering within `mobile/lib` (same script): `gen → core → data → component → feature/<x> → app → main.dart`. Baseline is **zero violations**.
+### DI: get_it + injectable (details in mobile/CLAUDE.md)
 
-### DI —— get_it + injectable（引导编排细节见 mobile/CLAUDE.md）
+- Binding annotations go on implementation classes (`@Singleton(as:)` etc.). storage / http / ml / data / assistant / sync / editor / theme are micro-packages mounted by `mobile/lib/app/di/di.dart`; there is exactly one `configureDependencies`.
+- The container owns the whole object graph: `MoodiaryDatabase` (preResolve), the 14 repositories (`@lazySingleton`, constructor-injected), and the process-level holders (`@singleton`). Resolve with `getIt<X>()`; Riverpod Notifiers / widgets write `late final _repo = getIt<X>()`. Riverpod manages UI state only; there are no repository providers and no static `X.get()` facades (`MoodiaryKVs.x.get()` is a key accessor and stays).
+- Tests: `XxxRepository(MoodiaryDatabase.forTesting(...))` for repositories; `getIt.registerSingleton<XxxRepository>(fake)` + `tearDown(getIt.reset)` above them.
+- After changing annotations run `dart tool/task.dart build-runner` (generated files are committed). Business code never hand-writes `getIt.register*`; the one exception is the session scope opened by `activateSyncProvider()`, which exposes the `@Named(SyncProviderIds.x)` backend as the unnamed `IRemoteSyncBackend`.
+- `@PostConstruct` is deliberately unused (the watcher would wake before the migration); startup belongs to main's bootstrap, not the container.
 
-- **绑定注解落在实现类上**（`@Singleton(as:)` / `@LazySingleton(as:)` / `@Injectable(as:)`）；
-  storage / http / ml / data / assistant / sync / editor / theme 八包各是 micro-package，由
-  `mobile/lib/app/di/di.dart` 一处挂载，**全仓只有一份 `configureDependencies`**。
-- **容器管整张对象图**：`MoodiaryDatabase`（app 的 `AppModule.database`，preResolve）、
-  14 个仓储（`@lazySingleton`，构造器注入 DB / IHttpClient）、进程级持有者（Registry /
-  Tracker / Cancellation，`@singleton`）都在容器里。取用一律 `getIt<X>()`：容器内的类走
-  构造器注入，Riverpod Notifier / widget 写 `late final _repo = getIt<X>()`。**Riverpod 只管
-  界面状态**，没有仓储 provider。
-  测试：仓储自测 `XxxRepository(MoodiaryDatabase.forTesting(...))`；上层测试
-  `getIt.registerSingleton<XxxRepository>(替身)` + `tearDown(getIt.reset)`。
-  **全仓没有 `X.get()` 静态门面**；`MoodiaryKVs.x.get()`
-  是键访问器不是容器门面，保留。
-- 改了注解**必跑 `dart tool/task.dart build-runner`**（生成物是提交的）。业务代码不手写
-  `getIt.register*`，**唯一例外是会话型 scope**：injectable 的 `@Scope` 进不了 micro-package，
-  「当前同步 provider」这种会话由手写的 `activateSyncProvider()` 开 get_it scope 表达——基础层
-  各实现 `@Named(SyncProviderIds.x)`（名字与枚举 value 同源），scope 里以无名
-  `IRemoteSyncBackend` 暴露选中的那个，切换 = pop 再 push；上层只写 `getIt<IRemoteSyncBackend>()`。
-- **`@PostConstruct` 是刻意不用的**（watcher 会赶在迁移之前醒来）；启动阶段属于 main 的
-  引导编排，不属于容器。
+### mui: a supplement to material, not a replacement
 
-### mui —— material 的补充，不是替代（主题树细节见 packages/foundation/mui/CLAUDE.md，共存期硬点见 mobile/CLAUDE.md）
+- material is exported only through `package:mui/mui.dart`; business code imports mui, never material. `tool/check_layers.dart` guards it; the allowlist has one entry (`picker_theme.dart`, wechat_assets_picker needs a legacy ThemeData).
+- Use material_ui directly when it suffices; add to mui only when it does not, with an `M` prefix.
+- `ColorScheme` / `TextTheme` are the sources of truth; `buildMuiTheme()` is the only place that constructs `ThemeData`. Access via `context.theme.typography.titleSmall.emphasized.primary`; what `ThemeData` cannot hold goes in `MuiTokens` (token tables, `onMedia`, `success`, `MuiFontConfig` for variable-font weights).
+- mui has zero `moodiary_*` deps and ships its own slang strings.
 
-- **material 只经 `package:mui/mui.dart` 出，业务代码 import mui 不 import material**，
-  `tool/check_layers.dart` 零基线守住（名单随依赖迁移持续收缩，当前 1 条：`moodiary_picker` 的 `picker_theme.dart`，wechat_assets_picker 的 pickerTheme 只吃 legacy ThemeData）。
-- 组件：material_ui 够用的直接用，不够用才在 mui 里补，命名一律 `M` 开头。
-- `ColorScheme` / `TextTheme` 是配色与排版真源；**`buildMuiTheme()` 是全仓唯一构造
-  `ThemeData` 的地方**（闸门钉住）；取用写法
-  `context.theme.typography.titleSmall.emphasized.primary`，`ThemeData` 装不下的收在 `MuiTokens`。
-- mui 是零 `moodiary_*` 依赖的 foundation 叶子包，自带一份 slang 文案。
+### i18n: slang, not gen-l10n (both modes and pitfalls in packages/foundation/moodiary_i18n/CLAUDE.md)
 
-### i18n —— slang，不是 gen-l10n（两种模式与全部坑见 packages/foundation/moodiary_i18n/CLAUDE.md）
+Two unrelated slang outputs: the App (default mode, `Translations` / top-level `l10n`) and mui (`locale_handling: false` + hand-written delegate, `context.muiL10n`). **i18n** is the mechanism, **l10n** the resolved strings, **Localizations** only Flutter's chain (mui alone).
 
-全仓两份互不相干的 slang 产物：App（moodiary_i18n，默认模式，`Translations` / 顶层 `l10n`）
-与 mui（`locale_handling: false` + 手写 delegate，`context.muiL10n`）。词的分法：**i18n** 指
-机制、**l10n** 指取到的文案对象、**Localizations** 只给真走 Flutter 那条链的（全仓只有 mui）。
+- Widgets use `context.l10n.xxx` (rebuilds on language change); services / export / callbacks use top-level `l10n.xxx`. Parameters are named. Write `l10n.xxx.yyy` in full; a local alias makes analyze report the key as dead.
+- One namespace file per feature; feature packages do not install slang (mui excepted).
+- After editing `*.i18n.json` run `dart tool/task.dart i18n` (generated files are committed, nothing catches a stale one).
+- Text for the model (prompts, tool descriptions, tool results) is hardcoded English and never enters i18n; text for the user goes through slang.
+- Some Chinese literals are kept on purpose (sync log lines, font family names, legal text); check moodiary_i18n's list before translating one.
 
-- widget 里 `context.l10n.xxx`（切语言自动重建）；service / 导出 / 回调用顶层 `l10n.xxx`
-  （不重建）。参数是具名的。取串把 `l10n.xxx.yyy` 写全，存局部别名会被 analyze 误报死键。
-- namespace 一个 feature 一份文件；feature 包不各自装 slang（只有 mui 例外）。
-- 改了 `*.i18n.json` **必跑 `dart tool/task.dart i18n`**（产物是提交的，没有闸门兜底）。
-- **读者是谁决定走不走 slang**：给模型的（系统提示词 / 工具描述 / 工具返回文本）英文写死
-  不进 i18n；给用户的走 slang。两者不共用字符串。
-- 有些中文字面量是**刻意保留**的（同步日志行、字体族名、法律文本等），动手「补翻译」前先看
-  moodiary_i18n 那份 CLAUDE.md 的清单。
+### KV: MMKV, synchronous
 
-### KV —— MMKV，且是同步的（后端四点与 2.8.0 搬迁全文见 packages/core/moodiary_storage/CLAUDE.md）
+- `IKVStorage.set` / `remove` / `clear` return `void`; `init` and SecureKV stay async. Detect "no value" with `containsKey`.
+- Keys may use only int / bool / double / String / List<String>; another type fails at runtime, and a test guards it.
+- Secrets (app-lock PIN, third-party API keys) live in `MoodiarySecureKVs`. In widgets use `secretKvProvider(key)` and `ref.invalidate` after every write.
+- Never touch `password` directly; go through `AppLockPin` (Argon2id PHC string). App lock on = a credential exists (`AppLockPin.enabled`, loaded in `main.dart`).
 
-- **`IKVStorage.set` / `remove` / `clear` 返回 `void` 不是 `Future`**；`init` 与 SecureKV
-  仍是异步的。「没有值」靠 `containsKey` 判（decode 系列不返回 null）。
-- 加键只能用五种类型（int / bool / double / String / List<String>），多加一种只在运行时炸，
-  有闸门守着。
-- 机密不进明文 KV：应用锁 PIN 与两个第三方 API Key 归 `MoodiarySecureKVs`。widget 里走
-  `secretKvProvider(key)`，**写完必须 `ref.invalidate`**（SecureKV 没有通知）。
-- **PIN 别直接读写 `password`，走 `AppLockPin`**（存 Argon2id PHC 串）；「应用锁开没开」=
-  有没有凭据（`AppLockPin.enabled`，进程内 ValueListenable，`main.dart` 里 load）。
+### Rust: several `fast_*` packages, one native library each
 
-### Rust —— 若干 `fast_*` 包，各自一个原生库
+Principle: split freely, never duplicate dependencies. http / sync / llm share one network base and live in `moodiary_rust` (the only real binary duplication otherwise, 2 MiB); graph lives there too. Each package ships its own crate, native library, hook, about.toml, rust-toolchain and Cargo.lock.
 
-原则：**允许拆分，但不重复依赖**。有独立价值的
-能力各自成包；共享一套网络底座的 http / sync / llm 合在 `moodiary_rust` 里（包内 `http → sync / llm`
-分层，实测这是唯一一处真实的二进制重复，2 MiB），graph 也放那里（不值得单独一个库）。每个包自带一个 crate、一个原生库、一份 hook /
-about.toml / rust-toolchain / Cargo.lock，坑各记在自己的 CLAUDE.md：
+| Package | Owner | Loading |
+|---|---|---|
+| moodiary_rust | one owner per facade: http.dart -> moodiary_http, sync.dart -> moodiary_sync, llm.dart -> moodiary_assistant, graph.dart -> moodiary_diary (`_rustFacadeOwners`) | lazy |
+| fast_tokenizer | whole repo (ships `testing.dart` double) | startup, `FastTokenizer.ensureInitialized` |
+| fast_image | whole repo | startup, `FastImageRuntime.init` |
+| fast_press | moodiary_export (`_nativePkgOwners`) | first export |
+| fast_zip | moodiary_export / moodiary_sync (`_nativePkgOwners`) | first archive / extract |
+| fast_crypto | whole repo | facade self-initializes per call |
 
-| 包 | 桥 | 归属 | 装载 |
-|---|---|---|---|
-| moodiary_rust | FRB | 门面各有主：http.dart → moodiary_http / sync.dart → moodiary_sync / llm.dart → moodiary_assistant / graph.dart → moodiary_diary（`_rustFacadeOwners`） | 首次请求 / 起服务 / 对话 / 开图谱 |
-| fast_tokenizer | FRB | 全仓（含 `testing.dart` 替身） | 启动 `FastTokenizer.ensureInitialized` |
-| fast_image | FRB | 全仓 | 启动 `FastImageRuntime.init` |
-| fast_press | FRB | moodiary_export（`_nativePkgOwners`） | 首次导出 |
-| fast_zip | FRB | moodiary_export / moodiary_sync（`_nativePkgOwners`） | 首次打包 / 解压 |
-| fast_crypto | FRB | 全仓 | 门面每次调用自己 ensureInitialized |
-
-- **FRB 包**：每个暴露 `XxxLib` 与幂等的 `Xxx.ensureInitialized()`；不透明句柄（`CancelToken`
-  之类）跨不了 .so，每库一枚，且是同步构造——**库没装载就构造会抛**，先 await 再 new。
-  改了 `rust/src/api` 必跑 `dart tool/task.dart gen-rust`（名单 `tool/task.dart` 的 `_frbPkgDirs`）。
-- **全部走 FRB**：裸 dart:ffi 省的只是 0.3 MB 地板，不值得手写 C ABI。
-- **跨包版本一致**：没有 `[workspace.dependencies]` 了，同一 crate 在多个包里各钉一次；
-  `tool/check_generated.dart` 比对所有 `fast_*/rust/Cargo.toml` 的同名 crate、toolchain channel、
-  FRB / ffigen 的 pubspec 钉版本，漂了就红。
-- **换了 Rust 依赖 / `[patch]` / profile 之后 APK 体积没变，先怀疑钩子缓存**：hooks_runner 的缓存在
-  workspace 根的 `.dart_tool/hooks_runner/`，`flutter clean` 碰不到；各 hook 已显式登记 Cargo.toml /
-  Cargo.lock 为依赖，改动能触发重跑，仍不放心就 `dart tool/task.dart clean`。
-- 拆库是投递策略，不是省体积手段：每库地板（带 FRB 运行时）实测 619 KB；依赖树重叠不等于二进制重复。第三方许可清单
-  `mobile/assets/licenses/third_party.json` 由 `mobile/hook/build.dart` 在构建时生成（cargo-about + 编辑器 rollup 清单），本机与 CI 都要装 `cargo-about` 0.9.2。
-- **zip 必须留在 Rust**：局域网归档用的是 zip 条目级 AES-256，纯 Dart 只有 17 MB/s 且整条目进堆。
-- **`lanProtoVersion` 为 3**：2.8.0 会用 position 快照覆盖 placeId 引用，所以 `lan_receiver._admit`
-  要求 `x-moodiary-proto` 头存在且严格等于 3，与 2.8.0 之间局域网传输一定 426。
-  注意 `LanPeer.compatible` 仍放行 `proto == null`，那只管发现列表的置灰：2.8.0 广播不带 TXT
-  attributes，在附近设备里是正常颜色可点的，不兼容要握手才暴露。
+- Every package exposes `XxxLib` and an idempotent `Xxx.ensureInitialized()`. Opaque handles (`CancelToken`) cannot cross a .so, so there is one per library, constructed synchronously; construct only after the await. After touching `rust/src/api` run `dart tool/task.dart gen-rust`.
+- Everything goes through FRB; raw dart:ffi saves only the 0.3 MB floor.
+- No `[workspace.dependencies]`: the same crate is pinned per package, and `tool/check_generated.dart` fails on drift across Cargo.toml, toolchain channel and FRB / ffigen pins.
+- If APK size does not change after a Rust dependency change, suspect the hook cache under the workspace root's `.dart_tool/hooks_runner/` (`flutter clean` does not touch it; `dart tool/task.dart clean` does).
+- Splitting libraries is a delivery strategy, not a size saving (619 KB floor per library). The license manifest `mobile/assets/licenses/third_party.json` is generated at build time by `mobile/hook/build.dart`; local machines and CI need `cargo-about` 0.9.2.
+- zip stays in Rust: the LAN archive uses entry-level AES-256, and pure Dart manages 17 MB/s with the whole entry on the heap.
+- `lanProtoVersion` is 3: `lan_receiver._admit` requires the `x-moodiary-proto` header to equal 3, because 2.8.0 would overwrite placeId references with position snapshots. `LanPeer.compatible` still admits `proto == null`, so a 2.8.0 peer looks tappable and fails only at the handshake.

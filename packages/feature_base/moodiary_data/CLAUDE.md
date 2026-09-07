@@ -1,64 +1,29 @@
-# moodiary_data — 仓储与状态边界约定
+# moodiary_data: repository and state boundary conventions
 
-这个包同时装着仓储与跨 feature 的 controller，是 get_it 与 riverpod 两条通道的
-物理交汇点。三条准则 + 硬事实，新代码照此写，别再各自发明。
+This package holds both the repositories and the cross-feature controllers, so it is the physical meeting point of the get_it and riverpod channels. Three rules plus hard facts. Write new code this way, do not reinvent.
 
-## 三条准则
+## Three rules
 
-1. **get_it = 整张对象图**。`MoodiaryDatabase` 由组合根的 `AppModule.database` 打开后注册
-   （preResolve；路径来自组合根，本包不认识文件布局）；仓储是 `@lazySingleton`，
-   **构造器注入 DB**（`DiaryRepository(this._db)`），本包是 micro-package
-   （`lib/injectable.dart`）。schema 真源按领域拆在 `src/db/*_tables.drift`，具名查询
-   只给 DSL 表达不了的 SQL（FTS5，`diary.drift`），改动后跑 build_runner。
-   取用一律 `getIt<XxxRepository>()`：容器内的类（AutoSyncWatcher 一类）走构造器注入；
-   Riverpod Notifier / widget 写 `late final _repository = getIt<XxxRepository>()`
-   （late 让被 stub 的 controller 不碰容器）。消费侧真需要第二实现时在**消费侧**抽
-   窄端口（样板见 moodiary_sync 的 `sync_stores.dart`），不做全仓端口化。
-   测试：仓储自测直接 `XxxRepository(MoodiaryDatabase.forTesting(NativeDatabase.memory(...)))`
-   （setup 里开 `PRAGMA foreign_keys = ON`，级联删除靠它）；上层测试
-   `getIt.registerSingleton<XxxRepository>(替身)` + `tearDown(getIt.reset)`，替身可以是
-   mocktail 的 `Mock implements XxxRepository`。
-2. **riverpod = 与界面生命周期挂钩的读模型**，只管界面状态。provider 不 new 服务、不持有
-   服务实例，也没有仓储 provider。
-3. **进程级、跨页面、不随界面存亡的可变持有者**（OpenDiaryRegistry / SyncPendingTracker /
-   SyncDirtyTracker / SyncCancellation）是 `@singleton`，同样 `getIt<X>()` 取。
-   跨包公开的 widget 不得命令式读全局 KV——那会把正确性挂在宿主怎么包（KeyedSubtree
-   换 key）这种写不进类型的契约上；要么走 provider，要么把值提成构造参数由宿主传入。
-   widget 的反应式通道以 `ref.watch` 为准。
+1. **get_it = the whole object graph**. `MoodiaryDatabase` is opened and registered by the composition root's `AppModule.database` (preResolve; the path comes from the composition root because this package does not know the file layout), and repositories are `@lazySingleton` with the **DB injected through the constructor** (`DiaryRepository(this._db)`); this package is a micro-package (`lib/injectable.dart`). The schema source of truth is split by domain in `src/db/*_tables.drift`, named queries exist only for SQL the DSL cannot express (FTS5, `diary.drift`), and changes need build_runner. Always take dependencies with `getIt<XxxRepository>()`: classes inside the container (AutoSyncWatcher and the like) use constructor injection, while Riverpod Notifiers and widgets write `late final _repository = getIt<XxxRepository>()`, the `late` keeping a stubbed controller off the container. A consumer that really needs a second implementation defines a narrow port **on the consumer side** (`sync_stores.dart` in moodiary_sync), instead of port-ifying the whole repo. Tests: repositories use `XxxRepository(MoodiaryDatabase.forTesting(NativeDatabase.memory(...)))` with `PRAGMA foreign_keys = ON` in setup, which cascade delete depends on; higher layers use `getIt.registerSingleton<XxxRepository>(double)` + `tearDown(getIt.reset)`, and the double may be mocktail's `Mock implements XxxRepository`.
+2. **riverpod = read models tied to the UI lifecycle**, UI state only. Providers do not new up services, do not hold service instances, and there are no repository providers.
+3. **Process-wide, cross-page mutable holders that outlive any screen** (OpenDiaryRegistry / SyncPendingTracker / SyncDirtyTracker / SyncCancellation) are `@singleton` and are also taken with `getIt<X>()`. Widgets exported across packages must not read global KV imperatively, because that hangs correctness on how the host wraps them (swapping a KeyedSubtree key), a contract no type can hold; use a provider, or lift the value into a constructor parameter supplied by the host. A widget's reactive channel is `ref.watch`.
 
-## 硬事实（错一条就是一类 bug）
+## Hard facts (get one wrong and you get a class of bugs)
 
-- **codegen provider 默认 autoDispose**；keepAlive 是例外（现存两处：`AppSettingsController`
-  持有全局主题设置、`SyncController` 要跨页面保住同步进度；理由记在这里，代码里不写注释）。**手写 `NotifierProvider` 默认相反**（keepAlive），所以一律用 codegen。
-- **SQL 关键字撞名会被 drift 静默吞列**：`key` 列必须写成 `"key"`；列名与
-  `Table` 基类成员撞名（如 `text`）直接编译炸——memories 的正文列因此叫 `content`。
-- **riverpod 3 默认对非 `Error` 异常指数重试 10 次（约 38 秒）**。本仓已在
-  `mobile/lib/main.dart` 用 `ProviderScope(retry: (_, _) => null)` **整个关掉**，一次都不重试。预期内的业务失败
-  抛 `Error` 子类（如 `StateError`），别抛 `Exception`。
-- provider 定义统一放各包 `application/`（或本包 src/ 顶层），不进 presentation。
-- **错误约定：仓储抛异常，调用方按需 catch 且至少 `logger.e`**——别让库故障
-  伪装成空列表。不用 TaskEither：Left 从来没有消费端读。
+- **codegen providers are autoDispose by default**; keepAlive is the exception, currently `AppSettingsController` (holds the global theme settings) and `SyncController` (must keep sync progress across pages), whose reasons are recorded here, not in code comments. **A hand-written `NotifierProvider` defaults the other way** (keepAlive), so always use codegen.
+- **A SQL keyword collision makes drift swallow the column silently**: the `key` column must be written `"key"`. A column name colliding with a `Table` base member (such as `text`) is an outright compile error, which is why the memories body column is `content`.
+- **riverpod 3 retries non-`Error` exceptions 10 times with backoff (about 38 seconds) by default**, and this repo turns it **off entirely** in `mobile/lib/main.dart` with `ProviderScope(retry: (_, _) => null)`. Expected business failures throw an `Error` subclass (such as `StateError`), not an `Exception`.
+- Provider definitions go in each package's `application/` (or the top of this package's src/), never in presentation.
+- **Error convention: repositories throw, callers catch as needed and at least `logger.e`**, so a library failure never masquerades as an empty list. No TaskEither, because no consumer ever read a Left.
 
-## 事件通知的三种形态（按表选，别混）
+## Three shapes of change notification (pick by table, do not mix)
 
-- **大列表 / 要分页 / offset 必须与库对齐**（Diary/Category/MediaInfo）：类型化
-  领域事件 + `applyXxxEvent` 内存增量，不重查库。订阅回调在 state 还是 loading 时
-  收到事件必须置 missed 标记、首查后补一次重查（见 `LoadMoreMixin.markMissedEvent`），
-  否则启动期 pull 的写入会静默丢。聚合类消费者的 200ms 去抖保留（如今重查是索引
-  查询，去抖只是省聚合重算）。**分页对齐契约**：SQL 的 `ORDER BY ..., id DESC`
-  与 `diarySortComparator` 的字段序必须逐字段一致（id = uuid v7，按创建时刻有序）。
-- **小表**（ChatSession/LlmProvider 量级）：`Stream<void>` 信号 + 全量重查是合身
-  的，别为它造事件类型与内存增量。
-- **单对象跟随**：订阅 `diaryEvents` 按 id 过滤（getDiary provider；SQLite 无
-  行级 watch，领域事件本就语义更强）。
+- **Large lists / paging / offsets that must track the DB** (Diary/Category/MediaInfo): typed domain events plus in-memory `applyXxxEvent` increments, no re-query. A subscription that receives an event while state is still loading must set a missed flag and re-query once after the first query (`LoadMoreMixin.markMissedEvent`), or writes from the startup pull are silently lost. The 200ms debounce on aggregate consumers stays, now only to save recomputing the aggregates since re-query is an index query. **Paging alignment contract**: the SQL `ORDER BY ..., id DESC` must match `diarySortComparator`'s field order field for field (id = uuid v7, ordered by creation time).
+- **Small tables** (ChatSession/LlmProvider scale): a `Stream<void>` signal plus a full re-query is the right fit, do not build event types and in-memory increments for them.
+- **Following a single object**: subscribe to `diaryEvents` filtered by id (getDiary provider), because SQLite has no row-level watch and domain events are semantically stronger anyway.
 
-## 写路径纪律
+## Write-path discipline
 
-- `updateADiary` 的 `IndexMode`：动了 content/title → `inline`（分词先行，行 +
-  FTS + 双链**同事务原子**落库——SQLite 时代没有两段式，也没有重索引队列）；
-  **只动 show / mood / 分类等元数据 → `skip`**（索引只吃 content/title，show
-  过滤在查询期）。
-- 批量入口（云 pull / 导入）用 `insertDiaries`——整批一次分词（Rust 跨篇并行）+
-  单事务落库。
-- 用户编辑必须 bump `lastModified`；同步落库 / 迁移 / 修复等派生写入**不得** bump
-  且事件带 `fromSync`（否则 LWW 丢编辑或凭空全量上传）。
+- `updateADiary`'s `IndexMode`: content/title touched → `inline` (tokenize first, then row + FTS + backlinks land **atomically in one transaction**; the SQLite era has no two-phase write and no reindex queue); **metadata-only changes to show / mood / category → `skip`**, because the index only takes content/title and show is filtered at query time.
+- Bulk entry points (cloud pull / import) use `insertDiaries`: one tokenization pass for the batch (parallel across entries in Rust) plus a single transaction.
+- User edits must bump `lastModified`; derived writes such as sync landing, migration and repair **must not** bump it and must carry `fromSync` on the event, or LWW drops the edit or uploads everything out of nowhere.
