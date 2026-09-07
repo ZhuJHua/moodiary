@@ -56,7 +56,10 @@ void main(List<String> args) {
 
   final names = <String>{
     for (final s in sponsors)
-      if (s['github'] case final String github) github,
+      if (s['github'] case final String github)
+        '@$github'
+      else if (s['name'] case final String name)
+        name,
   }.toList()..sort();
   // 不分先后：按名单内容取种子打乱，同一份名单每次生成的顺序一致，CI 才能校验产物
   names.shuffle(Random(_seed(names.join('\n'))));
@@ -87,7 +90,7 @@ String _render(
   var used = 0.0;
 
   for (final name in names) {
-    final chipWidth = 16 + _textWidth('@$name', _fontSize) + 16;
+    final chipWidth = 16 + _textWidth(name, _fontSize) + 16;
     if (row.isNotEmpty && used + _gap + chipWidth > _width - _pad * 2) {
       rows.add(row);
       row = [];
@@ -131,7 +134,7 @@ String _render(
         ..writeln(
           '<text x="${_f(x + chipWidth / 2)}" y="${_f(y + _chipHeight / 2 + 5)}" '
           'font-size="$_fontSize" font-weight="500" text-anchor="middle" '
-          'fill="${palette.name}">@${_escape(name)}</text>',
+          'fill="${palette.name}">${_escape(name)}</text>',
         );
       x += chipWidth + _gap;
     }
