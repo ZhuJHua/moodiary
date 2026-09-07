@@ -19,7 +19,7 @@ enum GeoFailure {
   lookupFailed,
 }
 
-GeoFailure geoFailureOf(LocationFailure? failure) => switch (failure) {
+GeoFailure _geoFailureOf(LocationFailure? failure) => switch (failure) {
   LocationFailure.permissionDenied => GeoFailure.permissionDenied,
   LocationFailure.permissionDeniedForever => GeoFailure.permissionDeniedForever,
   LocationFailure.serviceOff => GeoFailure.serviceOff,
@@ -41,7 +41,7 @@ class GeoRepository {
     final lat = result.latitude;
     final lon = result.longitude;
     if (lat == null || lon == null) {
-      return (coords: null, failure: geoFailureOf(result.failure));
+      return (coords: null, failure: _geoFailureOf(result.failure));
     }
     return (coords: LatLng(lat, lon), failure: null);
   }

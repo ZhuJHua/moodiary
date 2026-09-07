@@ -111,6 +111,10 @@ core and feature_base each have an intra-layer order (`_coreOrder` / `_featureBa
 
 In-app layering within `mobile/lib`: `gen -> core -> data -> component -> feature/<x> -> app -> main.dart`, zero violations.
 
+### Package barrels: bare exports, visibility in the file
+
+A barrel exports whole `src/` files without `show`. Anything a file does not need to share gets a `_` prefix; a symbol other files in the package use but nobody outside should is `@internal` plus a `hide` on the barrel (the analyzer demands the hide); a symbol only tests use is `@visibleForTesting`. `show` stays only where a file's public surface cannot be trimmed: FRB `frb_generated.dart`, third-party re-exports (`dynamic_color`, `re_highlight`) and the picker skin.
+
 ### Routing: go_router, parameters via `extra`
 
 The app never targets the web, so routes carry no path or query parameters. A route class in `moodiary_router` holds `location` (its `static const path`) and a `params` map with snake_case keys; `push`/`go`/`replace` send it as `extra`. Each page exposes `factory X.fromRoute(GoRouterState)` and reads `state.params`. Feature packages define their `xxxRoutes()` list in the package barrel; there is no `routes.dart`. Keep `params` to JSON scalars (ids, bools): go_router falls back to `json.encode` for state restoration, and an object in the stack would be a stale snapshot.

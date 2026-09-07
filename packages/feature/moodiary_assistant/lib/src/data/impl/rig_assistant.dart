@@ -165,6 +165,7 @@ class RigAssistantService implements AssistantService {
 }
 
 @visibleForTesting
+@visibleForTesting
 Future<String> dispatchAssistantTool({
   required AssistantToolSpec? spec,
   required String toolName,

@@ -12,6 +12,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  meta: 1.19.0
 
   fast_crypto: 0.0.1
   fast_image: 0.0.1

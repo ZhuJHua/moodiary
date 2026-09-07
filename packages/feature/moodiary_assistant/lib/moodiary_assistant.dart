@@ -10,11 +10,10 @@ import 'src/presentation/assistant_provider_list_page.dart';
 import 'src/presentation/assistant_provider_picker_page.dart';
 import 'src/presentation/assistant_setting_page.dart';
 
-export 'src/data/assistant.dart' show AssistantService;
-export 'src/data/impl/rig_assistant.dart' show RigAssistantService;
-export 'src/presentation/assistant_page.dart'
-    show AssistantPage, AssistantSessionListPage;
-export 'src/presentation/assistant_summary_tile.dart' show AssistantSummaryTile;
+export 'src/data/assistant.dart';
+export 'src/data/impl/rig_assistant.dart';
+export 'src/presentation/assistant_page.dart';
+export 'src/presentation/assistant_summary_tile.dart';
 
 List<RouteBase> assistantRoutes() => [
   GoRoute(

@@ -4,8 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_lock/moodiary_lock.dart';
-import 'package:moodiary_lock/src/presentation/lock_page.dart'
-    show kLockClearDelay, kLockShakeDuration, kLockVerifyDelay;
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 import 'package:mui/mui.dart';

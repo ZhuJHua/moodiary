@@ -1,11 +1,13 @@
+import 'package:meta/meta.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/remote_lease.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 
+@visibleForTesting
 const kSyncProviderScope = 'syncProvider';
 
-Iterable<IRemoteSyncBackend> allSyncBackends() => SyncProviderType.values.map(
+Iterable<IRemoteSyncBackend> _allSyncBackends() => SyncProviderType.values.map(
   (t) => getIt<IRemoteSyncBackend>(instanceName: t.value),
 );
 
@@ -25,6 +27,6 @@ Future<void> activateSyncProvider() async {
 }
 
 Future<Set<String>> configuredCloudBackendIds() async => {
-  for (final b in allSyncBackends())
+  for (final b in _allSyncBackends())
     if (await b.isReady()) b.type.value,
 };

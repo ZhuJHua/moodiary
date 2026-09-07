@@ -91,7 +91,7 @@ abstract final class ImageComposer {
         for (var i = 0; i < bands.length; i++) {
           if (isCancelled?.call() ?? false) {
             await File(outPath).delete().catchError((_) => File(outPath));
-            throw const ImageComposeCancelled();
+            throw const _ImageComposeCancelled();
           }
           final band = bands[i];
           final image = await composition.band(band.$1, band.$2);
@@ -264,11 +264,11 @@ class _DecodedImages {
   const _DecodedImages(this.images, this.skipped);
 }
 
-class ImageComposeCancelled implements Exception {
-  const ImageComposeCancelled();
+class _ImageComposeCancelled implements Exception {
+  const _ImageComposeCancelled();
 
   @override
-  String toString() => 'ImageComposeCancelled';
+  String toString() => '_ImageComposeCancelled';
 }
 
 class _Composition {

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:meta/meta.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
@@ -24,6 +25,7 @@ import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path/path.dart' as p;
 import 'package:pool/pool.dart';
 
+@internal
 class IncrementalSyncEngine {
   final RemoteObjectStore backend;
 

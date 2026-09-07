@@ -2126,6 +2126,7 @@ class _ActiveModelActionState extends State<_ActiveModelAction> {
   }
 }
 
+@visibleForTesting
 enum SessionHistoryBucket { today, last7, earlier }
 
 typedef SessionHistoryGroup = ({
@@ -2133,6 +2134,7 @@ typedef SessionHistoryGroup = ({
   List<ChatSession> sessions,
 });
 
+@visibleForTesting
 List<SessionHistoryGroup> sessionHistoryGroups(
   List<ChatSession> sessions, {
   required DateTime now,

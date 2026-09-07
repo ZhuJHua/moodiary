@@ -19,6 +19,7 @@ dependencies:
   moodiary_http: 0.0.1
   moodiary_logging: 0.0.1
   moodiary_storage: 0.0.1
+  meta: 1.19.0
 
 dev_dependencies:
   build_runner: 2.16.1

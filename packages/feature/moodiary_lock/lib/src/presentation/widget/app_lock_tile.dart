@@ -27,15 +27,16 @@ class _AppLockTileState extends State<AppLockTile> {
     if (!confirm || !mounted) return;
     await MSheet.show<void>(
       context,
-      builder: (_) =>
-          currentlyOn ? const RemovePasswordSheet() : const SetPasswordSheet(),
+      builder: (_) => currentlyOn
+          ? const _RemovePasswordSheet()
+          : const _SetPasswordSheet(),
     );
   }
 
   Future<void> _changePassword() async {
     await MSheet.show<void>(
       context,
-      builder: (_) => const ChangePasswordSheet(),
+      builder: (_) => const _ChangePasswordSheet(),
     );
   }
 
@@ -117,7 +118,7 @@ class _AppLockTileState extends State<AppLockTile> {
   }
 }
 
-Future<bool> savePin(String pin) async {
+Future<bool> _savePin(String pin) async {
   try {
     await AppLockPin.set(pin);
     return true;
@@ -140,14 +141,14 @@ class _SheetScaffold extends StatelessWidget {
   }
 }
 
-class SetPasswordSheet extends StatefulWidget {
-  const SetPasswordSheet({super.key});
+class _SetPasswordSheet extends StatefulWidget {
+  const _SetPasswordSheet();
 
   @override
-  State<SetPasswordSheet> createState() => _SetPasswordSheetState();
+  State<_SetPasswordSheet> createState() => _SetPasswordSheetState();
 }
 
-class _SetPasswordSheetState extends State<SetPasswordSheet> {
+class _SetPasswordSheetState extends State<_SetPasswordSheet> {
   final _pad = LockPinPadController();
   String? _first;
   String? _error;
@@ -162,7 +163,7 @@ class _SetPasswordSheetState extends State<SetPasswordSheet> {
       return;
     }
     if (pin == _first) {
-      if (!await savePin(pin)) {
+      if (!await _savePin(pin)) {
         if (!mounted) return;
         setState(() {
           _first = null;
@@ -198,14 +199,14 @@ class _SetPasswordSheetState extends State<SetPasswordSheet> {
   }
 }
 
-class RemovePasswordSheet extends StatefulWidget {
-  const RemovePasswordSheet({super.key});
+class _RemovePasswordSheet extends StatefulWidget {
+  const _RemovePasswordSheet();
 
   @override
-  State<RemovePasswordSheet> createState() => _RemovePasswordSheetState();
+  State<_RemovePasswordSheet> createState() => _RemovePasswordSheetState();
 }
 
-class _RemovePasswordSheetState extends State<RemovePasswordSheet> {
+class _RemovePasswordSheetState extends State<_RemovePasswordSheet> {
   final _pad = LockPinPadController();
   String? _error;
 
@@ -252,16 +253,16 @@ class _RemovePasswordSheetState extends State<RemovePasswordSheet> {
   }
 }
 
-class ChangePasswordSheet extends StatefulWidget {
-  const ChangePasswordSheet({super.key});
+class _ChangePasswordSheet extends StatefulWidget {
+  const _ChangePasswordSheet();
 
   @override
-  State<ChangePasswordSheet> createState() => _ChangePasswordSheetState();
+  State<_ChangePasswordSheet> createState() => _ChangePasswordSheetState();
 }
 
 enum _ChangePhase { verify, enterNew, confirmNew }
 
-class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
+class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
   final _pad = LockPinPadController();
   _ChangePhase _phase = .verify;
   String? _newPin;
@@ -303,7 +304,7 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
         _pad.clear();
       case .confirmNew:
         if (pin == _newPin) {
-          if (!await savePin(pin)) {
+          if (!await _savePin(pin)) {
             if (!mounted) return;
             setState(() {
               _newPin = null;
