@@ -44,7 +44,7 @@ Full-repo verification = the four Lint & Test commands above. `flutter test` at 
 
 **Melos**: `melos bootstrap` activates the workspace and regenerates IDE module files; it runs no codegen. `melos list` / `melos run <script> --category <layer>` filter by layer.
 
-**Release**: `tool/release.dart` bumps `mobile/pubspec.yaml`, prepends a git-cliff section to `CHANGELOG.md` for review, opens the `chore(release): X.Y.Z` PR and dispatches `build.yml` from the release branch. The build reads the version from the pubspec and the notes from the changelog section, then leaves a **draft** release — no tag exists yet. Merging the PR fires `publish-release.yml`, which undrafts it, which is what creates the tag, at the squash commit. Changelog generation never runs in CI.
+**Release**: `tool/release.dart` bumps `mobile/pubspec.yaml`, prepends a git-cliff section to `CHANGELOG.md` for review, opens the `chore(release): X.Y.Z` PR and dispatches `build.yml` from the release branch. The build reads the version from the pubspec and the notes from the changelog section, then leaves a **draft** release — no tag exists yet. Merging the PR fires `publish-release.yml`, which undrafts it, which is what creates the tag, at the squash commit. Changelog generation never runs in CI. To keep a PR out of the changelog, put `Changelog: skip` in the squashed commit body, or name it with one of the skipped scopes (`chore(deps|readme|pr|pull)`); the release commit itself is skipped by `chore(release)`.
 
 **Versions** are exact-pinned everywhere; the root `melos` caret is the only exception.
 
