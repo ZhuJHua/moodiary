@@ -1,5 +1,5 @@
 name: moodiary_theme
-description: "全局主题与字体：取系统色、解析强调色档位、装载自定义字体，产出 ThemeData。"
+description: "System color, accent tiers and custom fonts resolved into ThemeData."
 version: 0.0.1
 publish_to: none
 

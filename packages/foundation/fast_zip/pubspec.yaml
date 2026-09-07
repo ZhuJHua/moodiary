@@ -1,5 +1,5 @@
 name: fast_zip
-description: "Fast zip archives — writing (optionally AES-encrypted) and extracting with cancellation, backed by its own Rust native library (libfastzip) via flutter_rust_bridge."
+description: "Zip writing with optional AES encryption and cancellable extraction in Rust (libfastzip)."
 version: 0.0.1
 publish_to: none
 

@@ -1,5 +1,5 @@
 name: fast_crypto
-description: "Fast crypto primitives — AES-256-GCM and Argon2id, backed by its own Rust native library (libfastcrypto) via flutter_rust_bridge."
+description: "AES-256-GCM and Argon2id in Rust (libfastcrypto)."
 version: 0.0.1
 publish_to: none
 

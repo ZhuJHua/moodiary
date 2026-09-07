@@ -1,5 +1,5 @@
 name: moodiary_sync
-description: "Moodiary 同步：增量引擎 + 编解码/密钥 + WebDAV/S3/本地后端 + 自动同步 + 备份 UI（两端可复用的 feature 包）。引擎与 providers 保持 widget-free（src/data + src/application）。"
+description: "Sync engine with WebDAV, S3, local and LAN backends, plus the backup and sync UI."
 version: 0.0.1
 publish_to: none
 

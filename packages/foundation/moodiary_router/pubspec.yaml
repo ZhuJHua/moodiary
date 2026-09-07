@@ -1,5 +1,5 @@
 name: moodiary_router
-description: "Moodiary routing primitives — MoodiaryRouteBase + typed nav helpers over go_router; lets feature packages define type-safe routes without depending on the app."
+description: "Typed routes over go_router. Every route class lives here."
 version: 0.0.1
 publish_to: none
 

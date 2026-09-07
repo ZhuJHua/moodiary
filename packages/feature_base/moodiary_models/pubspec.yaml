@@ -1,5 +1,5 @@
 name: moodiary_models
-description: "Moodiary domain models — Isar @Collection entities, Freezed DTOs, domain events and their field-type enums (DiaryType, AssistantProviderType)."
+description: "Freezed domain models, DTOs, events and enums."
 version: 0.0.1
 publish_to: none
 

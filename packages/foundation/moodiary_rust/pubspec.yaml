@@ -1,5 +1,5 @@
 name: moodiary_rust
-description: "Moodiary's networked Rust — reqwest client, hyper in-app server, WebDAV/S3 object access and rig LLM chat sharing one connection pool, in a single native library (libmoodiary_rust) via flutter_rust_bridge."
+description: "reqwest client, hyper server, WebDAV/S3 access, rig chat and graph layout in one Rust library (libmoodiary_rust)."
 version: 0.0.1
 publish_to: none
 

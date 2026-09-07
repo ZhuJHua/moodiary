@@ -1,5 +1,5 @@
 name: moodiary_components
-description: "Moodiary 的业务组件：features 共用、够不着 mui 的那部分 UI。"
+description: "UI shared by feature packages that does not belong in mui."
 version: 0.0.1
 publish_to: none
 

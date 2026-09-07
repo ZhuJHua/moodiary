@@ -1,5 +1,5 @@
 name: fast_press
-description: "Fast document press — renders the export IR to PDF (typst) and DOCX (OOXML), backed by its own Rust native library (libfastpress) via flutter_rust_bridge."
+description: "Renders the export IR to PDF via typst and to DOCX, in Rust (libfastpress)."
 version: 0.0.1
 publish_to: none
 

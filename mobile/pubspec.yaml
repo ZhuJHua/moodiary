@@ -1,5 +1,5 @@
 name: moodiary_mobile
-description: "A fully open source cross-platform diary app written in Flutter and Rust."
+description: "Open source diary app built with Flutter and Rust."
 publish_to: "none"
 version: 2.8.1+95
 

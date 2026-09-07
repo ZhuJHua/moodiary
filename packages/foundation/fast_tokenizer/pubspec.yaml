@@ -1,5 +1,5 @@
 name: fast_tokenizer
-description: "Fast text tokenization — jieba for search indexing and Hugging Face tokenizer.json for on-device inference, backed by its own Rust native library (libfasttokenizer) via flutter_rust_bridge."
+description: "jieba and Hugging Face tokenizers in Rust (libfasttokenizer)."
 version: 0.0.1
 publish_to: none
 

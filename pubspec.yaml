@@ -1,5 +1,5 @@
 name: moodiary_workspace
-description: "Moodiary monorepo root — pub workspace + Melos coordinator (no app code lives here; the Flutter app is in mobile/)."
+description: "Workspace and Melos coordinator for the Moodiary monorepo. The app lives in mobile/."
 publish_to: "none"
 
 environment:

@@ -1,5 +1,5 @@
 name: moodiary_logging
-description: "应用日志。落盘路径由组合根注入，故不认识文件布局，可以待在 foundation。"
+description: "App logging. The log file path is injected by the composition root."
 version: 0.0.1
 publish_to: none
 

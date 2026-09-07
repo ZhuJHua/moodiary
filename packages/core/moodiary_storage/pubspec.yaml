@@ -1,5 +1,5 @@
 name: moodiary_storage
-description: "存储：KV（MMKV）与 SecureKV（钥匙串）。不认识文件布局与领域类型；数据库（SQLite/drift）在 moodiary_data。"
+description: "Key-value storage on MMKV and secrets in the keychain."
 version: 0.0.1
 publish_to: none
 

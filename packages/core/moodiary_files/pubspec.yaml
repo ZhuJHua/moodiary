@@ -1,5 +1,5 @@
 name: moodiary_files
-description: "文件布局与媒体管线：应用目录结构、媒体存取与缩略图、文件选择端口。"
+description: "App file layout, media pipeline and the file picker port."
 version: 0.0.1
 publish_to: none
 

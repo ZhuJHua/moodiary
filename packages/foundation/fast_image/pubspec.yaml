@@ -1,5 +1,5 @@
 name: fast_image
-description: "Fast, tiled image pipeline — thumbnails, region decoding and the tiled viewer, backed by its own Rust native library (libfastimage) via flutter_rust_bridge."
+description: "Image derivatives, region decoding and a tiled viewer in Rust (libfastimage)."
 version: 0.0.1
 publish_to: none
 

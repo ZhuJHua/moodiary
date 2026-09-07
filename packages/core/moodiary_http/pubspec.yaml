@@ -1,5 +1,5 @@
 name: moodiary_http
-description: "HTTP 客户端与本地服务端口，实现走 Rust（reqwest / hyper）。"
+description: "HTTP client and local server ports, implemented in Rust."
 version: 0.0.1
 publish_to: none
 

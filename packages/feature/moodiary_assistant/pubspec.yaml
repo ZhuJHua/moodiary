@@ -1,5 +1,5 @@
 name: moodiary_assistant
-description: "Moodiary AI assistant — a self-contained feature + route module: chat UI, tool-calling agent (rig), LLM provider management, and its own routes."
+description: "AI assistant: chat UI, tool-calling agent on rig and LLM provider management."
 version: 0.0.1
 publish_to: none
 

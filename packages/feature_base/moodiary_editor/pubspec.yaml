@@ -1,5 +1,5 @@
 name: moodiary_editor
-description: "Moodiary diary editor — the complete editing feature: embeddable TipTap (webview) editor + EditController (autosave), editor body/toolbar/record, category picker and geo/weather."
+description: "TipTap webview editor with autosave, toolbar, recording, category picker and geo/weather lookup."
 version: 0.0.1
 publish_to: none
 

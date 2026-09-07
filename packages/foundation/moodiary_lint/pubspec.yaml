@@ -1,5 +1,5 @@
 name: moodiary_lint
-description: "Shared analyzer + lint configuration for the Moodiary workspace. Consumers `include: package:moodiary_lint/analysis_options.yaml`."
+description: "Shared analyzer and lint options for the workspace."
 version: 0.0.1
 publish_to: none
 

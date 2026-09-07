@@ -1,5 +1,5 @@
 name: moodiary_sqlite_vec
-description: "sqlite-vec 0.1.9 loadable 扩展：vendor 源码 + build hook 从源码编译为 code asset，loadSqliteVec() 经 sqlite3_auto_extension 注册进宿主 SQLite。"
+description: "sqlite-vec 0.1.9 built from source as a code asset and registered with the host SQLite."
 version: 0.0.1
 publish_to: none
 

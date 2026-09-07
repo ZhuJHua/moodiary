@@ -1,5 +1,5 @@
 name: moodiary_data
-description: "Moodiary data layer (infra) — repositories (diary/category/chat/llm_provider) + DiaryContentUtil over Isar."
+description: "SQLite database on drift, repositories, controllers and shared transient state."
 version: 0.0.1
 publish_to: none
 

@@ -1,5 +1,5 @@
 name: moodiary_preferences
-description: "Moodiary 应用级偏好设置状态：主题 / locale / 字体 / 缓存控制器（app-global settings），两端复用。"
+description: "App preferences: theme, locale, fonts and cache controllers."
 version: 0.0.1
 publish_to: none
 

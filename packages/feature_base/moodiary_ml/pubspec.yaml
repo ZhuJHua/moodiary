@@ -1,5 +1,5 @@
 name: moodiary_ml
-description: "本地 ML 推理：ONNX Runtime 嵌入/情感引擎 + 模型下载/激活管理。onnxruntime_plus 依赖由本包独家 own。"
+description: "Local ML on ONNX Runtime: embeddings, sentiment, model download and activation."
 version: 0.0.1
 publish_to: none
 

@@ -1,5 +1,5 @@
 name: moodiary_di
-description: "get_it 容器的唯一实例。全仓最底层：谁都可以依赖它，它谁都不依赖。"
+description: "The single get_it instance."
 version: 0.0.1
 publish_to: none
 

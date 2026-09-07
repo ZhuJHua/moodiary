@@ -1,5 +1,5 @@
 name: moodiary_media
-description: "Moodiary 媒体库：图片 / 音视频总览、清理与查看器（两端可复用的 feature 包）。"
+description: "Media library: browse, view and clean up images, audio and video."
 version: 0.0.1
 publish_to: none
 
