@@ -103,6 +103,7 @@ void main() {
       database: db,
       diaryRepository: repo,
       categoryRepository: CategoryRepository(db),
+      placeRepository: PlaceRepository(db),
       fontRepository: FontRepository(db),
       mediaInfoRepository: MediaInfoRepository(db),
       tombstoneRepository: TombstoneRepository(db),
