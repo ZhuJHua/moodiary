@@ -86,3 +86,6 @@ logs/
 
 # Xcode 自己生成，1eabbe40 已显式删过一次，别再跟。
 **/xcshareddata/swiftpm/Package.resolved
+
+# 设计稿只留本地
+/docs/
