@@ -1,11 +1,29 @@
 {
   "currency": "CNY",
   "sponsors": [
-    { "github": "Higanoneko", "amount": 100 },
-    { "name": "朱东杰", "amount": 60 },
-    { "github": "dsxksss", "amount": 50 },
-    { "name": "不对味的雪碧", "amount": 10 },
-    { "github": "xiaoxianzi-99", "amount": 10 },
-    { "name": "Lucci", "amount": 9.9 }
+    {
+      "name": "朱东杰",
+      "amount": 60
+    },
+    {
+      "github": "dsxksss",
+      "amount": 50
+    },
+    {
+      "name": "不对味的雪碧",
+      "amount": 10
+    },
+    {
+      "github": "xiaoxianzi-99",
+      "amount": 10
+    },
+    {
+      "name": "Lucci",
+      "amount": 9.9
+    },
+    {
+      "github": "Higanoneko",
+      "amount": 100
+    }
   ]
 }

@@ -60,15 +60,13 @@ void main(List<String> args) {
     (sum, s) => sum + (s['amount'] as num).toDouble(),
   );
 
-  final entries = <(String, bool)>{
+  final entries = <(String, bool)>[
     for (final s in sponsors)
       if (s['github'] case final String github)
         (github, true)
       else if (s['name'] case final String name)
         (name, false),
-  }.toList()..sort((a, b) => a.$1.compareTo(b.$1));
-  // 不分先后：按名单内容取种子打乱，同一份名单每次生成的顺序一致，CI 才能校验产物
-  entries.shuffle(Random(_seed(entries.map((e) => e.$1).join('\n'))));
+  ];
 
   for (final (name, palette) in [('light', _light), ('dark', _dark)]) {
     final out = File('${root.path}/res/sponsor/sponsors_$name.svg');
@@ -144,7 +142,10 @@ String _render(
         'height="${_chipHeight.toInt()}" rx="${(_chipHeight / 2).toInt()}" '
         'fill="${palette.chip}" stroke="${palette.border}" stroke-width="1"/>',
       );
-      var textX = x + 16;
+      // 字宽是估的，居中摆放让误差落在两侧而不是全堆在右边
+      final content =
+          (isGithub ? _iconSize + _iconGap : 0) + _textWidth(name, _fontSize);
+      var textX = x + (chipWidth - content) / 2;
       if (isGithub) {
         buffer.writeln(
           '<use href="#gh" x="${_f(textX)}" '
@@ -173,17 +174,11 @@ String _render(
   return buffer.toString();
 }
 
-// String.hashCode 不保证跨 VM 版本稳定，自己算一个
-int _seed(String text) => text.codeUnits.fold(
-  0x811c9dc5,
-  (h, c) => ((h ^ c) * 0x01000193) & 0x7fffffff,
-);
-
-// SVG 里量不到字宽：CJK 按一个字身、其余按 0.55 em 估，够排版用
+// SVG 里量不到字宽：CJK 按一个字身、其余按 0.56 em 估，够排版用
 double _textWidth(String text, double fontSize) {
   var units = 0.0;
   for (final rune in text.runes) {
-    units += rune > 0x2E80 ? 1.04 : 0.62;
+    units += rune > 0x2E80 ? 1.04 : 0.56;
   }
   return units * fontSize;
 }
