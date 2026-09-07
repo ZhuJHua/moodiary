@@ -10,7 +10,7 @@ Flutter 3.47 把 Material 拆成独立包 `material_ui`，SDK 内的
 
 主题是**一棵树**：
 
-- **`ColorScheme` 是配色真源，`TextTheme` 是排版真源**，mui 不再自建色板。
+- **`ColorScheme` 是配色真源，`TextTheme` 是排版真源**，mui 不自建色板。
   `context.theme.colors` 返回的就是 material 的 `ColorScheme` 本体。
 - `ThemeData` 装不下的东西收在单个 `MuiTokens extends ThemeExtension`：六张 token 表
   （圆角/间距/动效/描边/投影/状态）、`onMedia`、`success`（语义状态色，同步连接指示灯用），

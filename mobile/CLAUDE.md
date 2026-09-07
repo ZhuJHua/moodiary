@@ -42,7 +42,7 @@ AppModule.database，换桌面路径）、`IFilePicker`（走系统对话框）�
 `configureDependencies` 里的 `_assertRequiredBindings` 在启动第一秒报出——那份清单就是
 组合根的必填表。
 
-> **injectable 不从 `moodiary_di` barrel 导出**（问过一次）：生成物头部是生成器写死的
+> **injectable 不从 `moodiary_di` barrel 导出**：生成物头部是生成器写死的
 > `import 'package:injectable/...'`，各包的 pubspec 声明躲不掉，barrel 只能藏一行手写
 > import；generator 是 dev dep 本就每包一份。moodiary_di 只 own 运行时的 get_it 实例，
 > 注解是构建期契约——与 freezed/riverpod 注解各包自留同一处理。
@@ -61,15 +61,11 @@ AppModule.database，换桌面路径）、`IFilePicker`（走系统对话框）�
    `flutter_localizations` 的同名类：那份给出 **legacy** 类型，material_ui 的 widget
    认不得，中文下会退化并让日期选择器一类直接抛。App 自己的文案走 slang 的
    `TranslationProvider`，不在这条链上；mui 的通用词在（`GlobalMuiLocalizations.delegate`）。
-> **路由不再需要任何 workaround（go_router 18.0.0 起）。** go_router 靠
-> `findAncestorWidgetOfExactType<MaterialApp>()` 猜宿主类型，17.5.0 及以前认的是 legacy
-> `MaterialApp`，而我们挂的是 material_ui 的同名新类——类型不同，探测恒空、落到 WidgetsApp
-> 分支，于是页面被包成 `NoTransitionPage`（切页没动画）、hero 拿到不带 `createRectTween`
-> 的裸 `HeroController`（弧线退成直线）、错误页落到无样式的 widgets 版 `ErrorScreen`。
-> 18.0.0 把内部 import 换成了 `material_ui` / `cupertino_ui`，三样一起恢复正常，
-> 当年自接的 `MoodiaryGoRoute` / `MHero` / `errorPageBuilder` 已全部删除：**裸 `GoRoute`
-> 与裸 `Hero` 就是对的**。`route_error_page.dart` 留着只是因为自带那页英文写死，
-> 现在走 `errorBuilder`。
+> **裸 `GoRoute` 与裸 `Hero` 就是对的，不要再包一层。** go_router 靠
+> `findAncestorWidgetOfExactType<MaterialApp>()` 认宿主，18.0.0 起认的是 material_ui 的
+> `MaterialApp`，转场、hero 弧线、错误页都正常；17.x 只认 legacy `MaterialApp`，会整体退化到
+> WidgetsApp 分支（无转场、直线 hero、无样式错误页）。`route_error_page.dart` 存在是因为自带那页
+> 英文写死，走 `errorBuilder`。
 
 > 官方的 `dart fix --code=migrate_design_widgets` **当前不生效**：转换规则在 SDK 里
 > （`fix_data/fix_material/fix_material.yaml`），但 `material.dart` 还没标 `@Deprecated`，

@@ -78,7 +78,7 @@ List<String> reasoningLevelsFor(LlmModelPreset? model) {
 
 const List<String> customReasoningLevels = ['low', 'medium', 'high'];
 
-// 新 Claude 只认 effort，走 budget_tokens 会 400，两条路不能互换
+// effort 与 budget_tokens 按目录声明分路，发错一方 400
 AssistantReasoning resolveReasoning({
   required String level,
   required LlmModelPreset? model,

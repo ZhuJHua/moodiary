@@ -2,7 +2,7 @@
 
 分词：jieba + stemmer + CJK 分段（`jieba.rs`，搜索索引 / 关键词）与 HF tokenizer.json 封装
 （`hf.rs`，ONNX 推理侧；WordPiece / SentencePiece / BPE 通吃）。自带 FRB（入口类 `FastTokenizerLib`）
-与原生库 **libfasttokenizer**。2026-09-03 从旧 moodiary_rust 的 `text` + `hf_tokenizer` 两个 crate 拆出来（曾叫 fast_text，同日改名）。
+与原生库 **libfasttokenizer**。
 
 - 多个消费方（data / diary / assistant / ml），不进 `_nativePkgOwners`。
 - **启动时装载**（`main.dart` 的 `FastTokenizer.ensureInitialized()`）：搜索索引、迁移、心情建议都要它，

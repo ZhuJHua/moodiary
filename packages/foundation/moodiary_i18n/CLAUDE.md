@@ -13,7 +13,7 @@
 
 按这个分，**App 那份不该叫 `MoodiaryLocalizations`**：它走 slang 自己的 `TranslationProvider`，
 压根不经过 Flutter 的 `Localizations`，叫那个名字是指错实现。走那条链的全仓只有 mui。
-反过来，**枚举转显示名一类的方法也不该叫 `l10nText`**（已改名 `Language.label`）——
+反过来，**枚举转显示名一类的方法也不该叫 `l10nText`**（现名 `Language.label`）——
 返回的是一句 label，「它是本地化的」是所有 UI 文案的共性，不构成名字的一部分。
 
 全仓有**两份**互不相干的 slang 产物，各自 `slang.yaml`，**而且用的是 slang 的两种模式**：
@@ -38,9 +38,8 @@
   **不需要知道 mui 内部用了 slang**；当前语种就是 `MaterialApp.locale` 解析出来的那个。
   组件里照旧写 `context.muiL10n.ok`（extension 是手写的，不是生成的）。
 
-  **文案一律走 mui 自己这张表，别从 `MaterialLocalizations` 取。** 2026-08-20 试过一次
-  当天撤回（`ok` / `cancel` / `back` / `save` 这四个 material 确实也有，改读它能白得 116
-  个语种）——不做的理由有三条：①等于把用户可见文案的所有权交给一个我们不控制版本的上游，
+  **文案一律走 mui 自己这张表，别从 `MaterialLocalizations` 取**（`ok` / `cancel` / `back` /
+  `save` 这四个 material 也有、能白得 116 个语种，仍然不读，理由有三条）：①等于把用户可见文案的所有权交给一个我们不控制版本的上游，
   它的措辞随 SDK 变（实测我们的「确认」在 material 里是「确定」），界面会跟着静默改而没有
   闸门会报；②「这个词从哪来」从一个答案变成两个；③`MaterialLocalizations.of` 是
   `assert` + `!`，缺了直接崩，比 `MuiLocalizations.of` 的 debug 断言 + release 回落更脆
@@ -63,7 +62,7 @@ namespace 已经给到分域的全部好处，不必为每个 feature 再付一�
 
 - **取串按有没有 context 分**：widget 里用 `context.l10n.xxx`（依赖 `TranslationProvider`，
   切语言自动重建）；service / 导出 / 回调里用顶层的 `l10n.xxx`（**不会重建**）。
-- **参数是具名的**：`l10n.diarySearchResult(count: n)`。gen-l10n 时代的位置参数已全部改完。
+- **参数是具名的**：`l10n.diarySearchResult(count: n)`。
 - 改了 `*.i18n.json` **必须跑 `dart tool/task.dart i18n`**（产物是提交的，且没有闸门兜底）。
 - 查死键要开 `--full`（不开只比对语种间差集），并把源码目录指回仓库 —— 默认只扫当前包的
   `lib/`，那里一个调用点都没有。在 `moodiary_i18n` 下跑，约 9 秒：
@@ -128,5 +127,5 @@ namespace 已经给到分域的全部好处，不必为每个 feature 再付一�
 
 > slang 自带的 `dart run slang migrate arb` **不能用**：它按 camelCase 把键强行拆成嵌套路径
 > （`accentCustomTitle` → `accent.custom.title`），既改掉全部调用点，又会在
-> `accentCustom` / `accentCustomTitle` 这种前缀重叠上直接抛异常。当年是脚本平铺转的。
+> `accentCustom` / `accentCustomTitle` 这种前缀重叠上直接抛异常。
 

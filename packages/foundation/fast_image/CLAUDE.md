@@ -3,7 +3,6 @@
 图片管线：派生物（两档缩略图 + progressive JPEG 的 baseline 副本）、按需区域解码、分片看图页。
 自带 FRB（`flutter_rust_bridge.yaml`，入口类 `FastImageLib`）与原生库 **libfastimage**
 （`rust/`，单 crate：`api/` 是 FRB 门面，`codec/` 是 turbojpeg / restart / PNG / WebP 后端）。
-设计稿与分期在 `docs/image-pipeline.md`。
 
 - **foundation 叶子包，零 `moodiary_*` 依赖**：目录与日志由组合根注入（`FastImageRuntime.configure`），
   UI 只用 `flutter/widgets` 与 photo_view；看图页的壳（翻页 / hero / 保存 / 信息面板 / i18n）

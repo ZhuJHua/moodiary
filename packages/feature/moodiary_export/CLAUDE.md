@@ -1,7 +1,6 @@
 # moodiary_export
 
-导出四种格式 + 本地备份进出 + **分享**（分享 = scope 只有一篇的导出，`moodiary_share`
-2026-09-04 并进来后删除）。设计稿与决策记录在 `docs/image-export.md`。
+导出四种格式 + 本地备份进出 + **分享**（分享 = scope 只有一篇的导出）。
 
 一条链，四个 writer：`ExportScope → List<Diary> → ExportDoc(IR) → writer`。
 md 在 `MarkdownWriter`，docx / pdf 在 `fast_press`，**图片在本包的 `ImageComposer`**。

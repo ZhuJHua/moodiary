@@ -2,8 +2,7 @@
 
 AES-256-GCM 对称加密（`aes.rs`，含整文件加解密与 Argon2id 密钥派生）与 Argon2id 密码哈希
 （`password.rs`）。自带 FRB（入口类 `FastCryptoLib`）与原生库 **libfastcrypto**。
-2026-09-03 从旧 moodiary_rust 的 `crypto` crate 拆出来；曾短暂改成裸 `dart:ffi`，同日按
-「fast_* 统一走 FRB」改回（裸 FFI 省的只是 0.3 MB 地板，换来的是手写 C ABI 与 catch_unwind 纪律）。
+走 FRB 不走裸 `dart:ffi`：裸 FFI 只省 0.3 MB 地板，换来的是手写 C ABI 与 catch_unwind 纪律。
 
 - 多个消费方（moodiary_storage 的应用锁 PIN、moodiary_sync 的信封加密 / LAN 协议），不进
   `_nativePkgOwners`。

@@ -5,8 +5,7 @@
 
 ## 三条准则
 
-1. **get_it = 整张对象图**（2026-09-04 起；之前仓储是静态单例 + riverpod 薄 provider 桥，
-   已整个撤掉）。`MoodiaryDatabase` 由组合根的 `AppModule.database` 打开后注册
+1. **get_it = 整张对象图**。`MoodiaryDatabase` 由组合根的 `AppModule.database` 打开后注册
    （preResolve；路径来自组合根，本包不认识文件布局）；仓储是 `@lazySingleton`，
    **构造器注入 DB**（`DiaryRepository(this._db)`），本包是 micro-package
    （`lib/injectable.dart`）。schema 真源按领域拆在 `src/db/*_tables.drift`，具名查询
@@ -20,7 +19,7 @@
    `getIt.registerSingleton<XxxRepository>(替身)` + `tearDown(getIt.reset)`，替身可以是
    mocktail 的 `Mock implements XxxRepository`。
 2. **riverpod = 与界面生命周期挂钩的读模型**，只管界面状态。provider 不 new 服务、不持有
-   服务实例，也不再有仓储 provider。
+   服务实例，也没有仓储 provider。
 3. **进程级、跨页面、不随界面存亡的可变持有者**（OpenDiaryRegistry / SyncPendingTracker /
    SyncDirtyTracker / SyncCancellation）是 `@singleton`，同样 `getIt<X>()` 取。
    跨包公开的 widget 不得命令式读全局 KV——那会把正确性挂在宿主怎么包（KeyedSubtree
@@ -38,7 +37,7 @@
   抛 `Error` 子类（如 `StateError`），别抛 `Exception`。
 - provider 定义统一放各包 `application/`（或本包 src/ 顶层），不进 presentation。
 - **错误约定：仓储抛异常，调用方按需 catch 且至少 `logger.e`**——别让库故障
-  伪装成空列表。（TaskEither 已废弃：Left 从来没被任何消费端读过。）
+  伪装成空列表。不用 TaskEither：Left 从来没有消费端读。
 
 ## 事件通知的三种形态（按表选，别混）
 

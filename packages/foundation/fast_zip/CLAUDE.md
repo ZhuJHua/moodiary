@@ -1,8 +1,7 @@
 # fast_zip
 
 zip 归档（`archive.rs`）：写入器（逐文件 / 逐字节，可选 AES 密码、stored 不压缩）与带取消的解压。
-自带 FRB（入口类 `FastZipLib`）与原生库 **libfastzip**。2026-09-03 从 moodiary_rust 的 `archive`
-crate 拆出来。
+自带 FRB（入口类 `FastZipLib`）与原生库 **libfastzip**。
 
 - **只有 `moodiary_export`（导出打包）与 `moodiary_sync`（本地备份 / LAN 归档）能依赖它**
   （`_nativePkgOwners`）。

@@ -104,10 +104,10 @@ Cross-package DAG is strictly upper → lower: `foundation → core → feature_
 
 **core 与 feature_base 各有一条层内次序**（`_coreOrder` / `_featureBaseOrder`，同 tier 之间一律禁止互引）。两条边值得单记，它们都是**靠注入换来的**，改回去就会成环：
 
-- **`storage` 在 `files` 之下**：Isar 的目录与 schema 列表都由组合根传入，所以存储层不认识文件布局。反过来 `files` 在 `storage` 之上是历史次序（`MediaManager` 曾读 `imageOptimize`，2026-09-02 随图片优化开关一起删了），今天 files 已不 import storage，但层内次序保持不动。
+- **`storage` 在 `files` 之下**：Isar 的目录与 schema 列表都由组合根传入，所以存储层不认识文件布局。反过来 `files` 在 `storage` 之上是层内既定次序，files 今天不 import storage，次序保持不动。
 - **`moodiary_logging` 能待在 foundation**，是因为 release 的落盘路径由 `AppLogger.configure` 注入。它一旦回去直接读 `AppFiles`，就得整包上浮到 core 之上，而那样几乎所有人都够不着它了。
 
-**core 一个领域词都不认识**：`Diary` / `Category` / `Font` 都不在它的依赖图里。四个曾经的耦合点分别靠注入或上移解决了 —— schema 表进了 `moodiary_models`（`moodiarySchemas`），孤儿媒体清理进了 `moodiary_migration`，`FontManager` 只吐原始描述、装配成 `Font` 在 `moodiary_data`（`scanDiskFonts` / `themeDescriptor`）。
+**core 一个领域词都不认识**：`Diary` / `Category` / `Font` 都不在它的依赖图里。领域相关的东西靠注入或上移放在 core 之外：schema 表在 `moodiary_models`（`moodiarySchemas`），孤儿媒体清理在 `moodiary_migration`，`FontManager` 只吐原始描述、装配成 `Font` 在 `moodiary_data`（`scanDiskFonts` / `themeDescriptor`）。
 
 > 由此有一条会被反复重问的：**`moodiary_i18n` 的 namespace 带着 `diary` / `assistant` / `sync`
 > 这些 feature 名，但它该留在 foundation，不是 core。** 那些领域知识是**数据**（json 的键），
@@ -118,7 +118,7 @@ Cross-package DAG is strictly upper → lower: `foundation → core → feature_
 
 In-app layering within `mobile/lib` (same script): `gen → core → data → component → feature/<x> → app → main.dart`. Baseline is **zero violations**.
 
-### DI —— get_it + injectable（引导编排与拍板细节见 mobile/CLAUDE.md）
+### DI —— get_it + injectable（引导编排细节见 mobile/CLAUDE.md）
 
 - **绑定注解落在实现类上**（`@Singleton(as:)` / `@LazySingleton(as:)` / `@Injectable(as:)`）；
   storage / http / ml / data / assistant / sync / editor / theme 八包各是 micro-package，由
@@ -127,10 +127,10 @@ In-app layering within `mobile/lib` (same script): `gen → core → data → co
   14 个仓储（`@lazySingleton`，构造器注入 DB / IHttpClient）、进程级持有者（Registry /
   Tracker / Cancellation，`@singleton`）都在容器里。取用一律 `getIt<X>()`：容器内的类走
   构造器注入，Riverpod Notifier / widget 写 `late final _repo = getIt<X>()`。**Riverpod 只管
-  界面状态**，不再有仓储 provider（2026-09-04 撤掉薄 provider 桥与全部静态 `.get()` 门面）。
+  界面状态**，没有仓储 provider。
   测试：仓储自测 `XxxRepository(MoodiaryDatabase.forTesting(...))`；上层测试
   `getIt.registerSingleton<XxxRepository>(替身)` + `tearDown(getIt.reset)`。
-  **全仓没有 `X.get()` 静态门面**（端口的 `IHttpClient.get()` 一类也已删）；`MoodiaryKVs.x.get()`
+  **全仓没有 `X.get()` 静态门面**；`MoodiaryKVs.x.get()`
   是键访问器不是容器门面，保留。
 - 改了注解**必跑 `dart tool/task.dart build-runner`**（生成物是提交的）。业务代码不手写
   `getIt.register*`，**唯一例外是会话型 scope**：injectable 的 `@Scope` 进不了 micro-package，
@@ -178,7 +178,7 @@ In-app layering within `mobile/lib` (same script): `gen → core → data → co
 
 ### Rust —— 若干 `fast_*` 包，各自一个原生库
 
-原则（2026-09-03 拍板，账在 `docs/native-libs-review.md`）：**允许拆分，但不重复依赖**。有独立价值的
+原则：**允许拆分，但不重复依赖**。有独立价值的
 能力各自成包；共享一套网络底座的 http / sync / llm 合在 `moodiary_rust` 里（包内 `http → sync / llm`
 分层，实测这是唯一一处真实的二进制重复，2 MiB），graph 也放那里（不值得单独一个库）。每个包自带一个 crate、一个原生库、一份 hook /
 about.toml / rust-toolchain / Cargo.lock，坑各记在自己的 CLAUDE.md：
@@ -195,22 +195,17 @@ about.toml / rust-toolchain / Cargo.lock，坑各记在自己的 CLAUDE.md：
 - **FRB 包**：每个暴露 `XxxLib` 与幂等的 `Xxx.ensureInitialized()`；不透明句柄（`CancelToken`
   之类）跨不了 .so，每库一枚，且是同步构造——**库没装载就构造会抛**，先 await 再 new。
   改了 `rust/src/api` 必跑 `dart tool/task.dart gen-rust`（名单 `tool/task.dart` 的 `_frbPkgDirs`）。
-- **全部走 FRB**（2026-09-03 拍板：裸 dart:ffi 省的只是 0.3 MB 地板，不值得手写 C ABI）。
+- **全部走 FRB**：裸 dart:ffi 省的只是 0.3 MB 地板，不值得手写 C ABI。
 - **跨包版本一致**：没有 `[workspace.dependencies]` 了，同一 crate 在多个包里各钉一次；
   `tool/check_generated.dart` 比对所有 `fast_*/rust/Cargo.toml` 的同名 crate、toolchain channel、
   FRB / ffigen 的 pubspec 钉版本，漂了就红。
 - **换了 Rust 依赖 / `[patch]` / profile 之后 APK 体积没变，先怀疑钩子缓存**：hooks_runner 的缓存在
   workspace 根的 `.dart_tool/hooks_runner/`，`flutter clean` 碰不到；各 hook 已显式登记 Cargo.toml /
   Cargo.lock 为依赖，改动能触发重跑，仍不放心就 `dart tool/task.dart clean`。
-- 拆库是投递策略，不是省体积手段：每库地板（带 FRB 运行时）实测 619 KB；两库之间共享 crate 的
-  实际字节看 `docs/native-libs-review.md` 第四节，依赖树重叠不等于二进制重复。第三方许可清单
+- 拆库是投递策略，不是省体积手段：每库地板（带 FRB 运行时）实测 619 KB；依赖树重叠不等于二进制重复。第三方许可清单
   `mobile/assets/licenses/third_party.json` 由 `mobile/hook/build.dart` 在构建时生成（cargo-about + 编辑器 rollup 清单），本机与 CI 都要装 `cargo-about` 0.9.2。
-- **zip 必须留在 Rust**（2026-09-04 复决）：局域网归档用的是 zip 条目级 AES-256，纯 Dart 只有 17 MB/s
-  且整条目进堆（实测见 `docs/native-libs-review.md` 第五节）。当时的撤回判据是「让 `lanProtoVersion`
-  停在 2、与 2.8.0 互通」，**那个前提 2.8.1 里已经不成立**（`lanProtoVersion` 现为 3，见下），
-  但性能与内存那条独立成立，所以 zip 仍留在 Rust。
-- **`lanProtoVersion` 现为 3**（2.8.1，`3062d85e`）：地点重构要挡住 2.8.0 用 position 快照覆盖
-  placeId 引用，顺势 bump 并**删掉了「没带 `x-moodiary-proto` 头就当协议 2 放行」的宽容**——
-  `lan_receiver._admit` 现在要求头存在且严格等于 3，2.8.1 与 2.8.0 之间局域网传输一定 426。
+- **zip 必须留在 Rust**：局域网归档用的是 zip 条目级 AES-256，纯 Dart 只有 17 MB/s 且整条目进堆。
+- **`lanProtoVersion` 为 3**：2.8.0 会用 position 快照覆盖 placeId 引用，所以 `lan_receiver._admit`
+  要求 `x-moodiary-proto` 头存在且严格等于 3，与 2.8.0 之间局域网传输一定 426。
   注意 `LanPeer.compatible` 仍放行 `proto == null`，那只管发现列表的置灰：2.8.0 广播不带 TXT
   attributes，在附近设备里是正常颜色可点的，不兼容要握手才暴露。
