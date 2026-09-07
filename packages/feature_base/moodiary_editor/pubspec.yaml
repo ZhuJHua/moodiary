@@ -60,4 +60,5 @@ dev_dependencies:
 
 flutter:
   assets:
+    # ignore: asset_directory_does_not_exist
     - assets/editor/
