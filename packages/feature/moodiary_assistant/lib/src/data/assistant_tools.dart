@@ -74,13 +74,15 @@ abstract final class AssistantToolRegistry {
           'it browses by date and/or category. '
           'Results carry id, date, mood and a short excerpt — not the full text '
           '(use getDiary for that) — and state the total number of matches, which '
-          'may exceed what is returned. Never present the returned rows as the '
-          'complete set when the total says otherwise. '
+          'may exceed what is returned; when it does, say so instead of '
+          'presenting the rows as the complete set. '
           'Mood is one of a fixed set of emotion/state values (see the mood enum '
           'on createDiary); neutral is also the default for entries whose mood '
           'was never set, so do not over-read it. '
-          'Call this whenever the user asks about what they wrote, or to locate an '
-          'entry before editing or deleting it.',
+          'Call this when the user asks about what they wrote, or to get ids '
+          'before editing or deleting entries. If it comes back empty for a '
+          'vague or feeling-based request, try semanticSearchDiaries before '
+          'concluding nothing exists.',
       jsonSchema: {
         'type': 'object',
         'properties': {
@@ -124,9 +126,10 @@ abstract final class AssistantToolRegistry {
           'Find diaries by meaning, not exact words: describe what the entry is '
           'about in a natural sentence ("a trip where I felt lost and small") and '
           'it returns the semantically closest entries even when their wording '
-          'differs. Complements queryDiaries — use keywords there when the user '
-          'quotes concrete words, use this for vague or feeling-based '
-          'descriptions. Results carry id, date, mood and the best-matching '
+          'differs. Use queryDiaries when the user quotes concrete words and '
+          'this for vague or feeling-based descriptions; if one comes back '
+          'empty, try the other. Its ids are valid for getDiary, updateDiary '
+          'and deleteDiary. Results carry id, date, mood and the best-matching '
           'excerpt, ranked by similarity (1.00 = closest). Unavailable until the '
           'user enables the local semantic index in settings; fall back to '
           'queryDiaries then.',
@@ -170,15 +173,15 @@ abstract final class AssistantToolRegistry {
       tool: .getDiary,
       description:
           'Read the full text of diaries by id (queryDiaries returns excerpts only). '
-          'Pass every id you need in one call — never call this once per entry. '
-          'Max $_maxBatchRead per call.',
+          'Pass every id you need in one call. Max $_maxBatchRead per call.',
       jsonSchema: {
         'type': 'object',
         'properties': {
           'ids': {
             'type': 'array',
             'items': {'type': 'string'},
-            'description': 'Diary ids from queryDiaries. Max $_maxBatchRead.',
+            'description':
+                'Diary ids from queryDiaries or semanticSearchDiaries. Max $_maxBatchRead.',
           },
         },
         'required': ['ids'],
@@ -207,8 +210,8 @@ abstract final class AssistantToolRegistry {
           'items': {
             'type': 'array',
             'description':
-                'One object per diary. Pass them all in one call — never call '
-                'this once per entry. Max $_maxBatchWrite per call.',
+                'One object per diary. Pass them all in one call. '
+                'Max $_maxBatchWrite per call.',
             'items': {
               'type': 'object',
               'properties': {
@@ -239,8 +242,8 @@ abstract final class AssistantToolRegistry {
       tool: .updateDiary,
       description:
           'Edit diaries by id. Within an item, only the fields you pass change; '
-          'the rest are left alone. Pass every edit in one call — never call '
-          'this once per entry. Get the ids from queryDiaries first.',
+          'the rest are left alone. Pass every edit in one call. Get the ids '
+          'from queryDiaries or semanticSearchDiaries first.',
       jsonSchema: {
         'type': 'object',
         'properties': {
@@ -253,7 +256,8 @@ abstract final class AssistantToolRegistry {
               'properties': {
                 'id': {
                   'type': 'string',
-                  'description': 'Diary id from queryDiaries.',
+                  'description':
+                      'Diary id from queryDiaries or semanticSearchDiaries.',
                 },
                 'title': {'type': 'string', 'description': 'New title.'},
                 'content': {
@@ -283,15 +287,16 @@ abstract final class AssistantToolRegistry {
       tool: .deleteDiary,
       description:
           'Move diaries to the recycle bin by id, where the user can restore '
-          'them. Pass every id in one call — never call this once per entry. '
-          'Get the ids from queryDiaries first. Max $_maxBatchWrite per call.',
+          'them. Pass every id in one call. Get the ids from queryDiaries or '
+          'semanticSearchDiaries first. Max $_maxBatchWrite per call.',
       jsonSchema: {
         'type': 'object',
         'properties': {
           'ids': {
             'type': 'array',
             'items': {'type': 'string'},
-            'description': 'Diary ids from queryDiaries. Max $_maxBatchWrite.',
+            'description':
+                'Diary ids from queryDiaries or semanticSearchDiaries. Max $_maxBatchWrite.',
           },
         },
         'required': ['ids'],
@@ -396,8 +401,9 @@ abstract final class AssistantToolRegistry {
       tool: .rememberFact,
       description:
           'Save durable facts about the user — lasting preferences, recurring '
-          'themes, ongoing goals. Not passing details, not one-off events, and '
-          'never anything they asked you to keep private. Pass every fact in '
+          'themes, ongoing goals. Not passing details, one-off events, '
+          'sensitive secrets, or anything they asked you to keep private or '
+          'not remember. Pass every fact in '
           'one call. Max $_maxBatchWrite per call.',
       jsonSchema: {
         'type': 'object',
