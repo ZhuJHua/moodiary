@@ -275,7 +275,6 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
   },
   'gen-rust': (_) => _genRust(),
   'i18n': (_) => _i18n(),
-  'sponsors': (_) => _run('fvm', ['dart', 'run', 'tool/sponsors.dart']),
   'gen': (_) async {
     await _genRust();
     await _i18n();

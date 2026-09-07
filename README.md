@@ -52,8 +52,4 @@ If Moodiary is useful to you, you can buy me a sandwich.
 
 To be listed, leave your GitHub username or a nickname in the note of your donation. A nickname must comply with applicable laws, or it will not be shown.
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="res/sponsor/sponsors_dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="res/sponsor/sponsors_light.svg">
-  <img alt="Sponsors" src="res/sponsor/sponsors_light.svg">
-</picture>
+朱东杰, [dsxksss](https://github.com/dsxksss), 不对味的雪碧, [xiaoxianzi-99](https://github.com/xiaoxianzi-99), Lucci, [Higanoneko](https://github.com/Higanoneko)
