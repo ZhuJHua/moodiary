@@ -31,7 +31,7 @@ dart tool/task.dart gen            # gen-rust + i18n
 
 # Lint & Test
 dart tool/task.dart analyze        # layer check + flutter analyze
-dart tool/task.dart test           # 全仓 Dart 测试（CI 口径；SQLite 用例零门槛，仅 migration 的旧库用例要 ISAR_TEST_DYLIB）
+dart tool/task.dart test           # 只测受影响的包：相对 --diff=<ref>（默认 HEAD，含未提交与未跟踪文件）有改动的包及其全部依赖方，-c 4 并发（--concurrency=N 改）；根 pubspec 变了自动全仓；--all 全仓（CI 口径）；SQLite 用例零门槛，仅 migration 的旧库用例要 ISAR_TEST_DYLIB
 dart tool/task.dart test-mobile    # 只跑 mobile/ 的测试
 for d in packages/foundation/*/rust; do (cd $d && cargo clippy --all-targets -- -D warnings && cargo test); done  # 六个包，别写成 fast_*：那样会漏掉 moodiary_rust
 cd packages/feature_base/moodiary_editor/editor && corepack pnpm type-check && corepack pnpm test

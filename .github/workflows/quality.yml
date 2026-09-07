@@ -71,7 +71,7 @@ jobs:
           echo "ISAR_TEST_DYLIB=$so" >> "$GITHUB_ENV"
 
       - name: Test
-        run: melos exec --dir-exists=test --fail-fast -c 1 -- flutter test
+        run: dart tool/task.dart test --all --concurrency=4
 
   rust:
     name: Rust

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 final bool _hasFvm = () {
@@ -25,6 +26,67 @@ Future<void> _run(String cmd, List<String> args, {String? cwd}) async {
 
 Future<void> _flutter(List<String> args) =>
     _run('fvm', ['flutter', ...args], cwd: 'mobile');
+
+Future<List<String>> _capture(String cmd, List<String> args) async {
+  final r = await Process.run(cmd, args, runInShell: Platform.isWindows);
+  if (r.exitCode != 0) {
+    stderr.write(r.stderr);
+    exit(r.exitCode);
+  }
+  return const LineSplitter().convert(r.stdout as String);
+}
+
+/// 相对 [ref] 有改动（含未提交与未跟踪）的包，加上工作区里所有直接或间接依赖它们的包；
+/// 根 pubspec 变了返回 null 表示全仓。
+Future<List<String>?> _affectedPackages(String ref) async {
+  final changed = {
+    ...await _capture('git', ['diff', '--name-only', ref]),
+    ...await _capture('git', ['ls-files', '--others', '--exclude-standard']),
+  }.where((f) => f.isNotEmpty).toList();
+  if (changed.any((f) => f == 'pubspec.yaml' || f == 'pubspec.lock')) {
+    stdout.writeln('根 pubspec 有改动，测试全仓。');
+    return null;
+  }
+
+  final root = Directory.current.path;
+  final packages = (jsonDecode(
+    (await _capture('melos', ['list', '--json'])).join(),
+  ) as List).cast<Map<String, dynamic>>();
+  final graph =
+      (jsonDecode((await _capture('melos', ['list', '--graph'])).join())
+              as Map<String, dynamic>)
+          .map((k, v) => MapEntry(k, (v as List).cast<String>()));
+
+  final byDir = {
+    for (final p in packages)
+      '${(p['location'] as String).substring(root.length + 1)}/':
+          p['name'] as String,
+  };
+  final direct = <String>{};
+  for (final f in changed) {
+    for (final e in byDir.entries) {
+      if (f.startsWith(e.key)) direct.add(e.value);
+    }
+  }
+
+  final affected = {...direct};
+  var grew = true;
+  while (grew) {
+    grew = false;
+    for (final e in graph.entries) {
+      if (!affected.contains(e.key) && e.value.any(affected.contains)) {
+        affected.add(e.key);
+        grew = true;
+      }
+    }
+  }
+  final result = affected.toList()..sort();
+  stdout.writeln(
+    '改动的包：${direct.isEmpty ? '无' : (direct.toList()..sort()).join(', ')}\n'
+    '受影响的包（含依赖方）：${result.isEmpty ? '无' : result.join(', ')}',
+  );
+  return result;
+}
 
 const _frbPkgDirs = [
   'packages/foundation/fast_crypto',
@@ -159,18 +221,42 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
   },
   'check-layers': (_) => _checkLayers(),
   'deps': (rest) => _run('fvm', ['dart', 'tool/dep_graph.dart', ...rest]),
-  'test': (rest) => _run('melos', [
-    'exec',
-    '--dir-exists=test',
-    '--fail-fast',
-    '-c',
-    '1',
-    '--',
-    if (_hasFvm) 'fvm',
-    'flutter',
-    'test',
-    ...rest,
-  ]),
+  'test': (rest) async {
+    var all = false;
+    var diff = 'HEAD';
+    var concurrency = '4';
+    final flutterArgs = <String>[];
+    for (final a in rest) {
+      if (a == '--all') {
+        all = true;
+      } else if (a.startsWith('--diff=')) {
+        diff = a.substring('--diff='.length);
+      } else if (a.startsWith('--concurrency=')) {
+        concurrency = a.substring('--concurrency='.length);
+      } else {
+        flutterArgs.add(a);
+      }
+    }
+    final scopes = all ? null : await _affectedPackages(diff);
+    if (scopes != null && scopes.isEmpty) {
+      stdout.writeln('相对 $diff 没有受影响的包，跳过测试。');
+      return;
+    }
+    await _run('melos', [
+      'exec',
+      '--dir-exists=test',
+      '--fail-fast',
+      if (scopes != null)
+        for (final s in scopes) '--scope=$s',
+      '-c',
+      concurrency,
+      '--',
+      if (_hasFvm) 'fvm',
+      'flutter',
+      'test',
+      ...flutterArgs,
+    ]);
+  },
   'test-mobile': (rest) => _flutter(['test', ...rest]),
   'build-runner': (_) async {
     await _run('melos', [
