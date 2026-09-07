@@ -50,7 +50,7 @@ If Moodiary is useful to you, you can buy me a sandwich.
 
 ### Sponsors
 
-In no particular order. To be listed, leave your GitHub username or a nickname in the note of your donation. A nickname must comply with applicable laws, or it will not be shown.
+To be listed, leave your GitHub username or a nickname in the note of your donation. A nickname must comply with applicable laws, or it will not be shown.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="res/sponsor/sponsors_dark.svg">

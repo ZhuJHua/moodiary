@@ -51,7 +51,7 @@
 
 ### 捐助者
 
-排名不分先后。想出现在名单上，请在赞赏备注中留下 GitHub 用户名或昵称。自选昵称须符合法律法规，否则不予展示。
+如果想出现在名单上，请在赞赏备注中留下 GitHub 用户名或昵称。自选昵称须符合法律法规，否则不予展示。
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="res/sponsor/sponsors_dark.svg">
