@@ -4,6 +4,10 @@
   <img alt="moodiary" src="res/social_light.svg">
 </picture>
 
+<p align="center">简体中文 | <a href="README.md">English</a></p>
+
+<p align="center"><a href="https://docs.moodiary.net" target="_blank">文档</a>丨<a href="https://answer.moodiary.net" target="_blank">论坛</a>丨QQ 群：<a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=xGr0TNp_X1z3XEn09_iE_iGSLolQwl6Y&jump_from=webapi&authKey=ZmSb2oEd94FSXxBXRBq53hgTjjvcfmgkQrduB3uL12XtRylPmRlO2OdFz6R25tIo">760014526</a>丨Telegram：<a target="_blank" href="https://t.me/openmoodiary">openmoodiary</a></p>
+
 <div align="center">
   <img src="https://img.shields.io/badge/Flutter-3.47.2-blue?style=for-the-badge">
   <img src="https://img.shields.io/github/repo-size/ZhuJHua/moodiary?style=for-the-badge&color=ff7070">
@@ -11,10 +15,6 @@
   <img src="https://img.shields.io/github/v/release/ZhuJHua/moodiary?style=for-the-badge&color=4f5e7f">
   <img src="https://img.shields.io/github/license/ZhuJHua/moodiary?style=for-the-badge&color=4ac6b7">
 </div>
-
-<p align="center">简体中文 | <a href="README.md">English</a></p>
-
-<p align="center"><a href="https://docs.moodiary.net" target="_blank">文档</a>丨<a href="https://answer.moodiary.net" target="_blank">论坛</a>丨QQ 群：<a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=xGr0TNp_X1z3XEn09_iE_iGSLolQwl6Y&jump_from=webapi&authKey=ZmSb2oEd94FSXxBXRBq53hgTjjvcfmgkQrduB3uL12XtRylPmRlO2OdFz6R25tIo">760014526</a>丨Telegram：<a target="_blank" href="https://t.me/openmoodiary">openmoodiary</a></p>
 
 ## ✨ 功能
 
