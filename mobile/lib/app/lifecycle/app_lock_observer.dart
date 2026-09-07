@@ -15,15 +15,12 @@ class _AppLockObserverState extends State<AppLockObserver>
     with WidgetsBindingObserver {
   bool _locking = false;
 
-  static final Set<String> _skipExact = {
+  static const Set<String> _skip = {
     LockRoute.path,
     ShareRoute.path,
     NewDiaryRoute.path,
+    DiaryRoute.path,
   };
-
-  static final String _diaryPrefix = DiaryRoute.path
-      .split(':')
-      .first;
 
   @override
   void initState() {
@@ -47,13 +44,11 @@ class _AppLockObserverState extends State<AppLockObserver>
       return;
     }
     final location = router.routerDelegate.currentConfiguration.uri.path;
-    if (_skipExact.contains(location) || location.startsWith(_diaryPrefix)) {
-      return;
-    }
+    if (_skip.contains(location)) return;
 
     _locking = true;
     router
-        .push(const LockRoute(lockType: 'pause').location)
+        .pushRoute(const LockRoute(lockType: 'pause'))
         .whenComplete(() => _locking = false);
   }
 

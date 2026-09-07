@@ -61,7 +61,7 @@ class AccentSheet extends ConsumerWidget {
     if (mode == .custom) {
       final router = GoRouter.of(context);
       Navigator.of(context).pop();
-      router.push(const AccentRoute().location);
+      router.pushRoute(const AccentRoute());
       return;
     }
     MoodiaryKVs.themeAccentMode.set(mode.index);

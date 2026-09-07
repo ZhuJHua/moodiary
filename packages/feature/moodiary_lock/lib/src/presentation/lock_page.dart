@@ -25,6 +25,9 @@ class LockPage extends StatefulWidget {
 
   const LockPage({super.key, this.lockType});
 
+  factory LockPage.fromRoute(GoRouterState state) =>
+      LockPage(lockType: state.params['lock_type'] as String?);
+
   @override
   State<LockPage> createState() => _LockPageState();
 }

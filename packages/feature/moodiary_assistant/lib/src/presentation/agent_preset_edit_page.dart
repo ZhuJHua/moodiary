@@ -4,6 +4,7 @@ import 'package:moodiary_assistant/src/presentation/assistant_tool_ui.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_router/moodiary_router.dart';
 import 'package:mui/mui.dart';
 
 class AgentPresetEditPage extends StatefulWidget {
@@ -11,6 +12,12 @@ class AgentPresetEditPage extends StatefulWidget {
   final String? fromId;
 
   const AgentPresetEditPage({super.key, this.id, this.fromId});
+
+  factory AgentPresetEditPage.fromRoute(GoRouterState state) =>
+      AgentPresetEditPage(
+        id: state.params['id'] as String?,
+        fromId: state.params['from_id'] as String?,
+      );
 
   @override
   State<AgentPresetEditPage> createState() => _AgentPresetEditPageState();

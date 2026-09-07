@@ -24,12 +24,12 @@ import 'package:moodiary_assistant/src/presentation/assistant_tool_ui.dart';
 import 'package:moodiary_assistant/src/presentation/chat_list.dart';
 import 'package:moodiary_assistant/src/presentation/markdown_code_block.dart';
 import 'package:moodiary_assistant/src/presentation/model_picker_sheet.dart';
-import 'package:moodiary_assistant/src/routes.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
@@ -65,6 +65,9 @@ class AssistantPage extends StatefulWidget {
   final String? initialSessionId;
 
   const AssistantPage({super.key, this.initialSessionId});
+
+  factory AssistantPage.fromRoute(GoRouterState state) =>
+      AssistantPage(initialSessionId: state.params['session_id'] as String?);
 
   @override
   State<AssistantPage> createState() => _AssistantPageState();

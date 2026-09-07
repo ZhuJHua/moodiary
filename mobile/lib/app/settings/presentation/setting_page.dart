@@ -1,7 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
-import 'package:moodiary_assistant/moodiary_assistant.dart'
-    show AssistantSettingRoute;
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_lock/moodiary_lock.dart';
@@ -176,11 +174,7 @@ class _DataSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return MSliverSettingGroup(
       title: context.l10n.app.sectionData,
-      children: const [
-        DataRepairTile(),
-        ImageOptimizeTile(),
-        CacheUsageTile(),
-      ],
+      children: const [DataRepairTile(), ImageOptimizeTile(), CacheUsageTile()],
     );
   }
 }

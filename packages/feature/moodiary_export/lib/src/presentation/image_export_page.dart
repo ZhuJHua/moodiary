@@ -7,6 +7,7 @@ import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
+import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
 import 'package:path/path.dart' as p;
@@ -25,6 +26,9 @@ class ImageExportPage extends StatefulWidget {
   final ExportScope? scope;
 
   const ImageExportPage({super.key, this.diaryId}) : scope = null;
+
+  factory ImageExportPage.fromRoute(GoRouterState state) =>
+      ImageExportPage(diaryId: state.params['diary_id'] as String?);
 
   const ImageExportPage.sample({super.key, required ExportScope this.scope})
     : diaryId = null;

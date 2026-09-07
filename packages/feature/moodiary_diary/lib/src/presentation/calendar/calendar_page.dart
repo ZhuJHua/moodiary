@@ -690,8 +690,7 @@ class _EntryTile extends ConsumerWidget {
         borderRadius: const .all(.circular(14)),
         clipBehavior: .antiAlias,
         child: MInkWell(
-          onTap: () =>
-              DiaryRoute(type: diary.type, diaryId: diary.id).push(context),
+          onTap: () => DiaryRoute(diaryId: diary.id).push(context),
           child: Padding(
             padding: const .all(10),
             child: Row(

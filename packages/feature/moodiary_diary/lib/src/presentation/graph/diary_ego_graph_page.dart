@@ -13,6 +13,7 @@ import 'package:moodiary_diary/src/presentation/graph/graph_style.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_nav.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_rust/graph.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -37,6 +38,9 @@ class DiaryEgoGraphPage extends ConsumerStatefulWidget {
   final String centerId;
 
   const DiaryEgoGraphPage({super.key, required this.centerId});
+
+  factory DiaryEgoGraphPage.fromRoute(GoRouterState state) =>
+      DiaryEgoGraphPage(centerId: state.params['diary_id'] as String);
 
   @override
   ConsumerState<DiaryEgoGraphPage> createState() => _DiaryEgoGraphPageState();

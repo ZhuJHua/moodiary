@@ -13,8 +13,8 @@ void main() {
       routes: [
         GoRoute(path: '/', builder: (_, _) => const Text('home')),
         GoRoute(
-          path: '/probe/:id',
-          builder: (_, state) => _Probe(state.pathParameters['id']!),
+          path: '/probe',
+          builder: (_, state) => _Probe(state.params['id'] as String),
         ),
       ],
     );
@@ -25,12 +25,12 @@ void main() {
       ),
     );
 
-    unawaited(router.push<void>('/probe/a'));
+    unawaited(router.push<void>('/probe', extra: {'id': 'a'}));
     await tester.pumpAndSettle();
     final before = tester.state<_ProbeState>(find.byType(_Probe));
     expect(before.widget.id, 'a');
 
-    router.replace('/probe/b');
+    router.replace<void>('/probe', extra: {'id': 'b'});
     await tester.pumpAndSettle();
     final after = tester.state<_ProbeState>(find.byType(_Probe));
     expect(identical(before, after), isTrue, reason: 'State 必须跨 replace 存活');

@@ -5,8 +5,7 @@ import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-
-import '../routes.dart';
+import 'package:moodiary_router/moodiary_router.dart';
 
 class AssistantSummaryTile extends StatefulWidget {
   const AssistantSummaryTile({super.key});

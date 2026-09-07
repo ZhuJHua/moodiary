@@ -4,6 +4,7 @@ import 'package:fast_press/fast_press.dart' as press;
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
 import 'package:share_plus/share_plus.dart';
@@ -23,6 +24,9 @@ class FormatExportPage extends StatefulWidget {
   final ExportScope? lockedScope;
 
   const FormatExportPage({super.key, required this.format, this.lockedScope});
+
+  factory FormatExportPage.fromRoute(GoRouterState state) =>
+      FormatExportPage(format: .byId(state.params['format'] as String));
 
   @override
   State<FormatExportPage> createState() => _FormatExportPageState();

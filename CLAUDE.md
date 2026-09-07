@@ -62,7 +62,7 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
       moodiary_di/           #   the single get_it instance
       moodiary_logging/      #   logging; on-disk path injected by the composition root
       moodiary_i18n/         #   slang strings and lookup entry points
-      moodiary_router/       #   typed route primitives over go_router
+      moodiary_router/       #   typed route primitives over go_router; every route class lives here
       fast_image/            #   image pipeline (derivatives / region decode / tiled viewer), native lib libfastimage
       fast_press/            #   export typesetting IR -> PDF (typst) / DOCX, libfastpress (moodiary_export only)
       moodiary_rust/         #   http client/server, WebDAV/S3 sync, rig chat, graph layout; libmoodiary_rust (four facades, one owner each, lazy)
@@ -110,6 +110,10 @@ core and feature_base each have an intra-layer order (`_coreOrder` / `_featureBa
 **core knows no domain type** (`Diary` / `Category` / `Font`): schema tables live in `moodiary_models`, orphan-media cleanup in `moodiary_migration`, `Font` assembly in `moodiary_data`. `moodiary_i18n` belongs in foundation even though its namespaces carry feature names: that knowledge is JSON keys, not type dependencies.
 
 In-app layering within `mobile/lib`: `gen -> core -> data -> component -> feature/<x> -> app -> main.dart`, zero violations.
+
+### Routing: go_router, parameters via `extra`
+
+The app never targets the web, so routes carry no path or query parameters. A route class in `moodiary_router` holds `location` (its `static const path`) and a `params` map with snake_case keys; `push`/`go`/`replace` send it as `extra`. Each page exposes `factory X.fromRoute(GoRouterState)` and reads `state.params`. Feature packages define their `xxxRoutes()` list in the package barrel; there is no `routes.dart`. Keep `params` to JSON scalars (ids, bools): go_router falls back to `json.encode` for state restoration, and an object in the stack would be a stale snapshot.
 
 ### DI: get_it + injectable (details in mobile/CLAUDE.md)
 

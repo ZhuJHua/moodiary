@@ -1,5 +1,9 @@
 library;
 
+import 'package:moodiary_router/moodiary_router.dart';
+
+import 'src/presentation/editor_migration_page.dart';
+
 export 'src/application/edit_controller.dart';
 export 'src/data/editor_migration_service.dart' show EditorMigrationService;
 export 'src/data/geo_repository.dart'
@@ -22,4 +26,10 @@ export 'src/presentation/widget/category_picker_sheet.dart';
 export 'src/presentation/widget/editor_body.dart';
 export 'src/presentation/widget/moodiary_editor_view.dart';
 export 'src/presentation/widget/record_sheet.dart';
-export 'src/routes.dart' show editorRoutes;
+
+List<RouteBase> editorRoutes() => [
+  GoRoute(
+    path: EditorMigrationRoute.path,
+    builder: (_, _) => const EditorMigrationPage(),
+  ),
+];

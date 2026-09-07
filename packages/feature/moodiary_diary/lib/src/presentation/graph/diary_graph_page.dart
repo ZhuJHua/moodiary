@@ -82,7 +82,7 @@ class GraphEmptyState extends StatelessWidget {
           const SizedBox(height: 24),
           FilledButton.tonal(
             onPressed: () async {
-              await NewDiaryRoute(type: DiaryType.tiptap.value).push(context);
+              await const NewDiaryRoute().push(context);
             },
             child: Text(context.l10n.diary.graphEmptyAction),
           ),

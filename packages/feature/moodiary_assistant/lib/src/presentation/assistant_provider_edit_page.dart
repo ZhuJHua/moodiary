@@ -8,6 +8,7 @@ import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
@@ -18,6 +19,12 @@ class AssistantProviderEditPage extends ConsumerStatefulWidget {
   final String? presetId;
 
   const AssistantProviderEditPage({super.key, this.id, this.presetId});
+
+  factory AssistantProviderEditPage.fromRoute(GoRouterState state) =>
+      AssistantProviderEditPage(
+        id: state.params['id'] as String?,
+        presetId: state.params['preset_id'] as String?,
+      );
 
   @override
   ConsumerState<AssistantProviderEditPage> createState() =>

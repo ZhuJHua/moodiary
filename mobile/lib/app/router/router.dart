@@ -14,8 +14,6 @@ import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_sync/moodiary_sync.dart';
 import 'package:mui/mui.dart';
 
-export 'package:moodiary_assistant/moodiary_assistant.dart'
-    show AssistantSettingRoute;
 export 'package:moodiary_router/moodiary_router.dart';
 
 final moodiaryNavigationKey = GlobalKey<NavigatorState>();

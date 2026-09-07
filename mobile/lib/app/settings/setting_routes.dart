@@ -9,44 +9,38 @@ import 'package:moodiary_router/moodiary_router.dart';
 
 class FontRoute extends MoodiaryRouteBase {
   static const String path = '/setting/font';
-  const FontRoute();
-  @override
-  String get location => path;
+
+  const FontRoute() : super(path);
 }
 
 class AccentRoute extends MoodiaryRouteBase {
   static const String path = '/setting/accent';
-  const AccentRoute();
-  @override
-  String get location => path;
+
+  const AccentRoute() : super(path);
 }
 
 class ServicesRoute extends MoodiaryRouteBase {
   static const String path = '/setting/services';
-  const ServicesRoute();
-  @override
-  String get location => path;
+
+  const ServicesRoute() : super(path);
 }
 
 class AboutRoute extends MoodiaryRouteBase {
   static const String path = '/setting/about';
-  const AboutRoute();
-  @override
-  String get location => path;
+
+  const AboutRoute() : super(path);
 }
 
 class DiarySettingRoute extends MoodiaryRouteBase {
   static const String path = '/setting/diary_setting';
-  const DiarySettingRoute();
-  @override
-  String get location => path;
+
+  const DiarySettingRoute() : super(path);
 }
 
 class SponsorRoute extends MoodiaryRouteBase {
   static const String path = '/setting/sponsor';
-  const SponsorRoute();
-  @override
-  String get location => path;
+
+  const SponsorRoute() : super(path);
 }
 
 List<RouteBase> settingRoutes() => [

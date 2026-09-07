@@ -24,8 +24,6 @@ enum _Mode { read, edit }
 class DiaryPage extends ConsumerStatefulWidget {
   final String? diaryId;
 
-  final DiaryType initialType;
-
   final String? initialCategoryId;
 
   final bool startInEdit;
@@ -33,10 +31,15 @@ class DiaryPage extends ConsumerStatefulWidget {
   const DiaryPage({
     super.key,
     this.diaryId,
-    this.initialType = .markdown,
     this.initialCategoryId,
     this.startInEdit = false,
   });
+
+  factory DiaryPage.fromRoute(GoRouterState state) => DiaryPage(
+    diaryId: state.params['diary_id'] as String?,
+    initialCategoryId: state.params['category_id'] as String?,
+    startInEdit: state.params['edit'] as bool? ?? false,
+  );
 
   @override
   ConsumerState<DiaryPage> createState() => _DiaryPageState();
@@ -112,7 +115,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
 
   EditControllerProvider get _provider => editControllerProvider(
     widget.diaryId,
-    defaultType: widget.initialType,
+    defaultType: .tiptap,
     defaultCategoryId: widget.initialCategoryId,
   );
 
@@ -1009,10 +1012,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     );
     if (!mounted) return;
     _selfReplace = true;
-    DiaryRoute(
-      type: DiaryType.fromValue(target.type).value,
-      diaryId: target.id,
-    ).replace(context);
+    DiaryRoute(diaryId: target.id).replace(context);
   }
 }
 

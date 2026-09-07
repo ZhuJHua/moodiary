@@ -136,11 +136,7 @@ class MapPage extends ConsumerWidget {
   }
 
   void _openDiary(BuildContext context, Diary diary) {
-    final route = DiaryRoute(
-      type: DiaryType.fromValue(diary.type).value,
-      diaryId: diary.id,
-    );
-    route.push(context);
+    DiaryRoute(diaryId: diary.id).push(context);
   }
 
   LatLng _latLng(Place place) => LatLng(place.latitude, place.longitude);

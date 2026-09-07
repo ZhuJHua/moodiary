@@ -1,12 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_assistant/moodiary_assistant.dart';
 import 'package:moodiary_editor/moodiary_editor.dart'
     show EditorMigrationService;
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_mobile/app/router/route_error_page.dart';
 import 'package:moodiary_mobile/app/router/router.dart';
 import 'package:moodiary_mobile/app/settings/setting_routes.dart';
-import 'package:moodiary_models/moodiary_models.dart';
 import 'package:mui/mui.dart';
 
 void main() {
@@ -59,55 +57,42 @@ void main() {
     });
   });
 
-  group('location encoding contract', () {
+  group('route params contract', () {
     test('DiaryRoute', () {
-      expect(
-        DiaryRoute(
-          type: DiaryType.markdown.value,
-          diaryId: 'abc',
-        ).location,
-        '/diary/abc?type=markdown',
-      );
-      expect(
-        DiaryRoute(
-          type: DiaryType.richText.value,
-          diaryId: 'x',
-          edit: true,
-        ).location,
-        '/diary/x?type=richText&edit=true',
-      );
+      const route = DiaryRoute(diaryId: 'abc');
+      expect(route.location, '/diary');
+      expect(route.params, {'diary_id': 'abc', 'edit': false});
+      expect(const DiaryRoute(diaryId: 'x', edit: true).params, {
+        'diary_id': 'x',
+        'edit': true,
+      });
     });
 
-    test('NewDiaryRoute', () {
-      expect(
-        NewDiaryRoute(type: DiaryType.tiptap.value).location,
-        '/diary-new?type=tiptap',
-      );
-      expect(
-        NewDiaryRoute(type: DiaryType.markdown.value).location,
-        '/diary-new?type=markdown',
-      );
+    test('NewDiaryRoute always starts in edit', () {
+      expect(const NewDiaryRoute().location, '/diary-new');
+      expect(const NewDiaryRoute(categoryId: 'c1').params, {
+        'category_id': 'c1',
+        'edit': true,
+      });
     });
 
     test('ShareRoute', () {
       expect(const ShareRoute().location, '/share');
-      expect(const ShareRoute(diaryId: 'd2').location, '/share?diary-id=d2');
+      expect(const ShareRoute(diaryId: 'd2').params, {'diary_id': 'd2'});
     });
 
     test('LockRoute', () {
       expect(const LockRoute().location, '/lock');
-      expect(
-        const LockRoute(lockType: 'pause').location,
-        '/lock?lock-type=pause',
-      );
+      expect(const LockRoute(lockType: 'pause').params, {'lock_type': 'pause'});
     });
 
-    test('no-param routes expose their path as location', () {
+    test('no-param routes carry no extra', () {
       expect(const DiaryHomeRoute().location, '/');
       expect(const RecycleRoute().location, '/recycle');
       expect(const DiarySearchRoute().location, '/search');
       expect(const FontRoute().location, '/setting/font');
       expect(const AccentRoute().location, '/setting/accent');
+      expect(const RecycleRoute().params, isNull);
     });
 
     test('AssistantConversationRoute', () {
@@ -115,10 +100,9 @@ void main() {
         const AssistantConversationRoute().location,
         '/assistant/conversation',
       );
-      expect(
-        const AssistantConversationRoute(sessionId: 's1').location,
-        '/assistant/conversation?session-id=s1',
-      );
+      expect(const AssistantConversationRoute(sessionId: 's1').params, {
+        'session_id': 's1',
+      });
     });
   });
 }

@@ -36,10 +36,7 @@ class SearchResultCard extends StatelessWidget {
       child: MInkWell(
         onTap: () {
           onTap?.call();
-          DiaryRoute(
-            type: DiaryType.fromValue(diary.type).value,
-            diaryId: diary.id,
-          ).push(context);
+          DiaryRoute(diaryId: diary.id).push(context);
         },
         child: Padding(
           padding: const .all(14),
