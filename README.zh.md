@@ -27,16 +27,6 @@
 - **天气与地点**：天气可手选或自动获取。常去的地方可以保存下来供日记引用，并在地图上查看足迹。
 - **智能助手**：接入任意 OpenAI 或 Anthropic 兼容的供应商，提供问答、日记工具调用与心情建议。
 
-## 📸 截图
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="res/screenshot/mobile_dark_zh.webp">
-  <source media="(prefers-color-scheme: light)" srcset="res/screenshot/mobile_light_zh.webp">
-  <img alt="Moodiary 手机端截图" src="res/screenshot/mobile_light_zh.webp">
-</picture>
-
-截图可能落后于当前版本。
-
 ## 🚀 开始使用
 
 在 [Releases](https://github.com/ZhuJHua/moodiary/releases) 下载安装包。应用离线即可使用。

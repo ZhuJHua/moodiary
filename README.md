@@ -26,16 +26,6 @@
 - **Weather and places**: pick or fetch the weather, save places and reference them from entries, and view your footprints on a map.
 - **Assistant**: connect any OpenAI- or Anthropic-compatible provider for chat, diary tools and mood suggestions.
 
-## 📸 Screenshots
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="res/screenshot/mobile_dark_en.webp">
-  <source media="(prefers-color-scheme: light)" srcset="res/screenshot/mobile_light_en.webp">
-  <img alt="Moodiary on a phone." src="res/screenshot/mobile_light_en.webp">
-</picture>
-
-Screenshots may lag behind the current release.
-
 ## 🚀 Getting started
 
 Download an installer from [Releases](https://github.com/ZhuJHua/moodiary/releases). The app works offline out of the box.
