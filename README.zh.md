@@ -3,9 +3,6 @@
   <source media="(prefers-color-scheme: light)" srcset="res/social_light.svg">
   <img alt="moodiary" src="res/social_light.svg">
 </picture>
-<p align="center">简体中文 | <a href="README.md">English</a></p>
-
-<p align="center"><a href="https://docs.moodiary.net" target="_blank">文档</a>丨<a href="https://answer.moodiary.net" target="_blank">论坛</a>丨QQ 群：<a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=xGr0TNp_X1z3XEn09_iE_iGSLolQwl6Y&jump_from=webapi&authKey=ZmSb2oEd94FSXxBXRBq53hgTjjvcfmgkQrduB3uL12XtRylPmRlO2OdFz6R25tIo">760014526</a>丨Telegram：<a target="_blank" href="https://t.me/openmoodiary">openmoodiary</a></p>
 
 <div align="center">
   <img src="https://img.shields.io/badge/Flutter-3.47.2-blue?style=for-the-badge">
@@ -15,7 +12,9 @@
   <img src="https://img.shields.io/github/license/ZhuJHua/moodiary?style=for-the-badge&color=4ac6b7">
 </div>
 
-Moodiary 是一款开源日记应用，支持 Android 与 iOS。界面用 Flutter 编写，图片、排版、加密、网络与分词等计算密集的部分用 Rust 实现。除非你自己配置同步，数据只保存在本机。
+<p align="center">简体中文 | <a href="README.md">English</a></p>
+
+<p align="center"><a href="https://docs.moodiary.net" target="_blank">文档</a>丨<a href="https://answer.moodiary.net" target="_blank">论坛</a>丨QQ 群：<a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=xGr0TNp_X1z3XEn09_iE_iGSLolQwl6Y&jump_from=webapi&authKey=ZmSb2oEd94FSXxBXRBq53hgTjjvcfmgkQrduB3uL12XtRylPmRlO2OdFz6R25tIo">760014526</a>丨Telegram：<a target="_blank" href="https://t.me/openmoodiary">openmoodiary</a></p>
 
 ## ✨ 功能
 
@@ -40,9 +39,9 @@ Moodiary 是一款开源日记应用，支持 Android 与 iOS。界面用 Flutte
 
 ## 🚀 开始使用
 
-在 [Releases](https://github.com/ZhuJHua/moodiary/releases) 下载安装包。应用离线即可使用，天气、地图与助手会用你自己的密钥调用第三方服务。
+在 [Releases](https://github.com/ZhuJHua/moodiary/releases) 下载安装包。应用离线即可使用。
 
-其余内容都在文档站 [docs.moodiary.net](https://docs.moodiary.net)：需要申请哪些第三方服务、密钥填在哪里，如何准备环境与从源码构建，代码是怎样组织的，以及贡献指南。
+其余内容请参阅文档站 [docs.moodiary.net](https://docs.moodiary.net)。
 
 ## 🤝 贡献者
 
@@ -62,12 +61,10 @@ Moodiary 是一款开源日记应用，支持 Android 与 iOS。界面用 Flutte
 
 ### 捐助者
 
-不分先后。想在名单里带上链接，请在转账备注中留下 GitHub 用户名。
+不分先后。想出现在名单上，请在赞赏备注中留下 GitHub 用户名。
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="res/sponsor/sponsors_dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="res/sponsor/sponsors_light.svg">
   <img alt="捐助者名单" src="res/sponsor/sponsors_light.svg">
 </picture>
-
-这面墙由 [`sponsors.json`](sponsors.json) 经 `dart tool/task.dart sponsors` 生成，该文件变动时 CI 会重新渲染。改 JSON，不要改 SVG。

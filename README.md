@@ -3,10 +3,6 @@
   <source media="(prefers-color-scheme: light)" srcset="res/social_light.svg">
   <img alt="moodiary" src="res/social_light.svg">
 </picture>
-<p align="center"><a href="README.zh.md">简体中文</a> | English</p>
-
-<p align="center"><a href="https://docs.moodiary.net" target="_blank">Docs</a>丨<a href="https://answer.moodiary.net" target="_blank">Forum</a>丨QQ group: <a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=xGr0TNp_X1z3XEn09_iE_iGSLolQwl6Y&jump_from=webapi&authKey=ZmSb2oEd94FSXxBXRBq53hgTjjvcfmgkQrduB3uL12XtRylPmRlO2OdFz6R25tIo">760014526</a>丨Telegram: <a target="_blank" href="https://t.me/openmoodiary">openmoodiary</a></p>
-
 <div align="center">
   <img src="https://img.shields.io/badge/Flutter-3.47.2-blue?style=for-the-badge">
   <img src="https://img.shields.io/github/repo-size/ZhuJHua/moodiary?style=for-the-badge&color=ff7070">
@@ -15,7 +11,9 @@
   <img src="https://img.shields.io/github/license/ZhuJHua/moodiary?style=for-the-badge&color=4ac6b7">
 </div>
 
-Moodiary is an open-source diary app for Android and iOS. The interface is Flutter, the heavy work (images, typesetting, encryption, networking, tokenization) is Rust. Your data stays on your device unless you set up sync yourself.
+<p align="center"><a href="README.zh.md">简体中文</a> | English</p>
+
+<p align="center"><a href="https://docs.moodiary.net" target="_blank">Docs</a>丨<a href="https://answer.moodiary.net" target="_blank">Forum</a>丨QQ group: <a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=xGr0TNp_X1z3XEn09_iE_iGSLolQwl6Y&jump_from=webapi&authKey=ZmSb2oEd94FSXxBXRBq53hgTjjvcfmgkQrduB3uL12XtRylPmRlO2OdFz6R25tIo">760014526</a>丨Telegram: <a target="_blank" href="https://t.me/openmoodiary">openmoodiary</a></p>
 
 ## ✨ Features
 
@@ -40,9 +38,9 @@ Screenshots may lag behind the current release.
 
 ## 🚀 Getting started
 
-Download an installer from [Releases](https://github.com/ZhuJHua/moodiary/releases). The app works offline out of the box. Weather, the map and the assistant call third-party services with your own keys.
+Download an installer from [Releases](https://github.com/ZhuJHua/moodiary/releases). The app works offline out of the box.
 
-Everything else is in the docs at [docs.moodiary.net](https://docs.moodiary.net): which third-party services to sign up for and where to enter the keys, how to set up the environment and build from source, how the code is organized, and the contributing guide.
+Everything else is in the docs at [docs.moodiary.net](https://docs.moodiary.net).
 
 ## 🤝 Contributors
 
@@ -62,12 +60,10 @@ If Moodiary is useful to you, you can buy me a sandwich.
 
 ### Sponsors
 
-Listed in no particular order. Leave your GitHub username in the transfer note if you want a link next to your name.
+In no particular order. To be listed, leave your GitHub username in the note of your donation.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="res/sponsor/sponsors_dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="res/sponsor/sponsors_light.svg">
   <img alt="Sponsors" src="res/sponsor/sponsors_light.svg">
 </picture>
-
-The wall is rendered from [`sponsors.json`](sponsors.json) by `dart tool/task.dart sponsors`, and CI re-renders it when that file changes. Edit the JSON, not the SVG.
