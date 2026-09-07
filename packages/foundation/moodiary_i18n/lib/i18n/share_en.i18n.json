@@ -1,0 +1,22 @@
+{
+  "sheetTitle": "Share this entry",
+  "sheetSubtitle": "Export as an image or a document — this entry only",
+  "optionImage": "Image",
+  "optionImageSubtitle": "Long image · can be saved to Photos",
+  "optionMarkdownSubtitle": "Plain text + assets",
+  "optionDocxSubtitle": "Keep editing in Word",
+  "optionPdfSubtitle": "Fixed layout",
+  "optionPdfNeedFont": "Fixed layout · pick a font first",
+  "previewTitle": "Image preview",
+  "previewSampleTitle": "Sample · first entry",
+  "rendering": "Rendering…",
+  "renderFailed": "Rendering failed: {error}",
+  "empty": "Nothing to share",
+  "saveToAlbum": "Save to Photos",
+  "share": "Share",
+  "savedToAlbum": "Saved to Photos",
+  "savedToAlbumCount": "Saved {count} images to Photos",
+  "saveToAlbumFailed": "Could not save — check Photos permission",
+  "subject": "Shared from Moodiary",
+  "generating": "Generating {format}…"
+}

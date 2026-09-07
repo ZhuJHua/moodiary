@@ -1,0 +1,22 @@
+{
+  "sheetTitle": "分享这篇日记",
+  "sheetSubtitle": "导出为图片或文档，范围只有这一篇",
+  "optionImage": "图片",
+  "optionImageSubtitle": "长图 · 可存相册",
+  "optionMarkdownSubtitle": "纯文本 + 素材",
+  "optionDocxSubtitle": "可继续编辑",
+  "optionPdfSubtitle": "排版固定",
+  "optionPdfNeedFont": "排版固定 · 需先选字体",
+  "previewTitle": "图片预览",
+  "previewSampleTitle": "样张 · 第一篇",
+  "rendering": "正在生成…",
+  "renderFailed": "生成失败：{error}",
+  "empty": "没有可分享的日记",
+  "saveToAlbum": "保存到相册",
+  "share": "分享",
+  "savedToAlbum": "已保存到相册",
+  "savedToAlbumCount": "已保存 {count} 张到相册",
+  "saveToAlbumFailed": "保存失败，检查相册权限",
+  "subject": "来自 Moodiary 的分享",
+  "generating": "正在生成 {format}…"
+}

@@ -1,0 +1,3 @@
+# 分层依赖检查 baseline（存量违规，逐步清零；只许变短不许变长）。
+# 由 `dart run tool/check_layers.dart --update-baseline` 生成。
+# 格式：<相对 lib/ 的源文件> -> <目标模块>

@@ -1,0 +1,21 @@
+name: fast_crypto
+description: "AES-256-GCM and Argon2id in Rust (libfastcrypto)."
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  code_assets: 1.2.1
+  flutter:
+    sdk: flutter
+  flutter_rust_bridge: 2.13.0
+  flutter_rust_bridge_hooks: 2.13.0
+
+dev_dependencies:
+  ffigen: 21.0.0
+  moodiary_lint: 0.0.1

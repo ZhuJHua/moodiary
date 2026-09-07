@@ -1,0 +1,64 @@
+import 'diary_tables.drift';
+
+-- FTS5 维护（contentless：按 rowid 删，无需旧词文本）。
+-- 'delete-all' / rank 配置这类命令语句在 .drift 里会报虚假 lint（drift#3322），
+-- 由 database.dart 的 customStatement 执行。
+ftsDelete: DELETE FROM diary_fts WHERE rowid = :rid;
+
+ftsInsert: INSERT INTO diary_fts (rowid, title_tok, body_tok)
+  VALUES (:rid, :titleTok, :bodyTok);
+
+-- 全文搜索：MATCH 召回 + bm25 排序（rank 升序 = 最相关在前；列权重见 rank 配置行）。
+-- show / 分类 / 时间窗过滤由 $pred 下推；LIMIT -1 = 不限（SQLite 语义）。
+ftsSearchByRank:
+  SELECT d.** FROM diary_fts
+    INNER JOIN diaries d ON d.rid = diary_fts.rowid
+  WHERE diary_fts MATCH :query AND d.show = 1 AND $pred
+  ORDER BY rank, d.time DESC, d.id DESC
+  LIMIT :limitCount;
+
+ftsSearchByTime:
+  SELECT d.** FROM diary_fts
+    INNER JOIN diaries d ON d.rid = diary_fts.rowid
+  WHERE diary_fts MATCH :query AND d.show = 1 AND $pred
+  ORDER BY $order
+  LIMIT :limitCount;
+
+-- 反向链接：谁的正文链到 :toId（排除回收站，时间倒序）。
+backlinks:
+  SELECT d.** FROM diary_links l
+    INNER JOIN diaries d ON d.id = l.src_id
+  WHERE l.dst_id = :toId AND d.show = 1
+  ORDER BY d.time DESC, d.id DESC;
+
+-- 正向链接：:fromId 的正文链到谁（自链排除，与 backlinks 对称）。
+forwardLinks:
+  SELECT d.** FROM diary_links l
+    INNER JOIN diaries d ON d.id = l.dst_id
+  WHERE l.src_id = :fromId AND d.id != :fromId AND d.show = 1
+  ORDER BY d.time DESC, d.id DESC;
+
+-- 出链或入链至少一条（自链不算；不看两端可见性——与旧 hasAnyLink 语义一致，
+-- 悬空边由图装配丢弃）。
+hasAnyLink:
+  SELECT EXISTS(
+    SELECT 1 FROM diary_links
+    WHERE (src_id = :id AND dst_id != :id)
+       OR (dst_id = :id AND src_id != :id)
+  ) AS present;
+
+-- 全库图谱边：两端都存在且可见的有向边，自链丢弃。
+visibleLinkEdges:
+  SELECT l.src_id AS srcId, l.dst_id AS dstId FROM diary_links l
+    INNER JOIN diaries s ON s.id = l.src_id
+    INNER JOIN diaries t ON t.id = l.dst_id
+  WHERE s.show = 1 AND t.show = 1 AND l.src_id != l.dst_id;
+
+-- ego 图 BFS 一层：以 :ids 为端点的出链 / 入链边（不看可见性，装配时统一过滤）。
+outEdgesOf:
+  SELECT src_id AS srcId, dst_id AS dstId FROM diary_links
+  WHERE src_id IN :ids AND dst_id != src_id;
+
+inEdgesOf:
+  SELECT src_id AS srcId, dst_id AS dstId FROM diary_links
+  WHERE dst_id IN :ids AND src_id != dst_id;

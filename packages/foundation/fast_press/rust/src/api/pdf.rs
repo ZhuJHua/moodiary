@@ -1,0 +1,60 @@
+use anyhow::Result;
+use flutter_rust_bridge::frb;
+
+use crate::api::cancel::CancelToken;
+use crate::api::ir::IrDoc;
+
+pub use crate::pdf::PdfStyle;
+
+#[frb(mirror(PdfStyle))]
+pub struct _PdfStyle {
+    pub font_path: String,
+    pub font_family: String,
+    pub font_size_pt: f64,
+    pub line_spacing_em: f64,
+    pub first_line_indent: bool,
+    pub page_width_mm: f64,
+    pub page_height_mm: f64,
+    pub page_margin_mm: f64,
+    pub include_title: bool,
+    pub include_meta: bool,
+    pub video_label: String,
+    pub audio_label: String,
+}
+
+pub fn write_pdf(
+    docs: Vec<IrDoc>,
+    style: PdfStyle,
+    out_path: String,
+    cancel: &CancelToken,
+) -> Result<()> {
+    crate::pdf::write_pdf(docs, &style, out_path, &cancel.checker())
+}
+
+#[frb(opaque)]
+pub struct PdfBuilder {
+    docs: Vec<IrDoc>,
+    style: PdfStyle,
+}
+
+impl PdfBuilder {
+    pub fn new(style: PdfStyle) -> PdfBuilder {
+        PdfBuilder {
+            docs: Vec::new(),
+            style,
+        }
+    }
+
+    pub fn add(&mut self, doc: IrDoc) {
+        self.docs.push(doc);
+    }
+
+    pub fn finish(&mut self, out_path: String, cancel: &CancelToken) -> Result<()> {
+        crate::pdf::write_pdf(
+            std::mem::take(&mut self.docs),
+            &self.style,
+            out_path,
+            &cancel.checker(),
+        )
+    }
+}

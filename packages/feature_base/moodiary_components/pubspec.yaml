@@ -1,0 +1,60 @@
+name: moodiary_components
+description: "UI shared by feature packages that does not belong in mui."
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  fast_image: 0.0.1
+  moodiary_di: 0.0.1
+  moodiary_files: 0.0.1
+  moodiary_http: 0.0.1
+  moodiary_logging: 0.0.1
+  moodiary_storage: 0.0.1
+  moodiary_i18n: 0.0.1
+  moodiary_models: 0.0.1
+  moodiary_utils: 0.0.1
+  mui: 0.0.1
+  screen_brightness: 2.1.11
+  video_player: 2.14.0
+  volume_controller: 3.6.1
+
+  flutter_riverpod: 3.4.3
+  path: 1.9.1
+
+  cached_network_image_ce: 4.10.1
+
+  flutter_svg: 2.3.0
+  re_highlight: 0.0.3
+  photo_view: 0.15.0
+  dismissible_page: 1.0.2
+  audioplayers: 6.8.1
+
+dev_dependencies:
+  riverpod_annotation: 4.0.7
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1
+  build_runner: 2.16.1
+  flutter_gen_runner: 5.15.0
+
+flutter:
+  assets:
+    - assets/brand/
+
+# package_parameter_enabled 必须开：被 import 的包，产物要带 package 名，否则运行时才炸。
+flutter_gen:
+  output: lib/src/gen/
+  integrations:
+    flutter_svg: true
+  assets:
+    outputs:
+      package_parameter_enabled: true

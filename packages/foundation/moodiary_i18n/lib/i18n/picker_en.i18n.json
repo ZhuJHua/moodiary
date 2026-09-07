@@ -1,0 +1,13 @@
+{
+  "recentAlbum": "Recent",
+  "done": "Done",
+  "doneCount": "Done {count}/{max}",
+  "limitedTip": "The app can only access selected photos",
+  "limitedManage": "Manage",
+  "permissionDenied": "Grant photo library access in Settings",
+  "a11ySelect": "Select",
+  "a11yUnselect": "Deselect",
+  "capture": "Camera",
+  "record": "Record",
+  "captureFailed": "Capture failed"
+}

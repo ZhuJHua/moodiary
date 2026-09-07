@@ -17,8 +17,6 @@ jobs:
         run: |
           pr_title="${{ github.event.pull_request.title }}"
           label=""
-
-          # Match against Conventional Commits
           if [[ "$pr_title" == feat* ]]; then
             label="feat"
           elif [[ "$pr_title" == fix* ]]; then

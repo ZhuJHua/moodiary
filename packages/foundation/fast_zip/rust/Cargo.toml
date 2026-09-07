@@ -1,0 +1,24 @@
+[package]
+name = "fastzip"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+# 改名即断：native_toolchain_rust 按 lib.name 出文件名，Dart 侧按同一 stem 找库。
+name = "fastzip"
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+flutter_rust_bridge = "=2.13.0"
+anyhow = "=1.0.104"
+# 不开 zstd：省 387 KB；代价是第三方重压成 Zstd 的档导不进来。
+zip = { version = "=8.6.0", default-features = false, features = ["aes-crypto", "deflate"] }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "symbols"

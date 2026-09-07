@@ -1,0 +1,27 @@
+[package]
+name = "fasttokenizer"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+# 改名即断：native_toolchain_rust 按 lib.name 出文件名，Dart 侧按同一 stem 找库。
+name = "fasttokenizer"
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+flutter_rust_bridge = "=2.13.0"
+anyhow = "=1.0.104"
+jieba-rs = { version = "=0.10.3", default-features = false, features = ["default-dict"] }
+# 关默认避 onig C 依赖；unstable_wasm 在原生目标上只用来激活 fancy-regex 引擎。
+tokenizers = { version = "=0.23.1", default-features = false, features = ["unstable_wasm"] }
+unicode-segmentation = "=1.13.3"
+rust-stemmers = "=1.2.0"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "symbols"

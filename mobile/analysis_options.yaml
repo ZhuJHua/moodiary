@@ -1,0 +1,16 @@
+include: package:moodiary_lint/analysis_options.yaml
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "**/*.gr.dart"
+    - "**/*.mocks.dart"
+    - "build/**"
+    - "third_party/**"
+    - "ios/**"
+    - "android/**"
+    - "windows/**"
+    - "macos/**"
+    - web/**
+    - linux/**

@@ -1,0 +1,21 @@
+{
+  "title": "媒体库",
+  "typeImage": "图片",
+  "deleteUseLessFile": "清理无用文件",
+  "empty": "这里还没有媒体",
+  "cleanupScanning": "正在扫描无用文件",
+  "cleanupEmpty": "没有发现无用文件",
+  "cleanupConfirmTitle": "清理无用文件",
+  "cleanupConfirmMessage": "发现 {count} 个未被任何日记引用的文件（{size}），确认清理？此操作不可恢复。",
+  "cleanupDone": "已清理 {count} 个文件",
+  "rename": "重命名",
+  "imageCount(plural, param=count)": {
+    "other": "{count} 张照片"
+  },
+  "audioCount(plural, param=count)": {
+    "other": "{count} 段音频"
+  },
+  "videoCount(plural, param=count)": {
+    "other": "{count} 段视频"
+  }
+}

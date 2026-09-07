@@ -1,0 +1,26 @@
+name: fast_image
+description: "Image derivatives, region decoding and a tiled viewer in Rust (libfastimage)."
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  code_assets: 1.2.1
+  flutter:
+    sdk: flutter
+  flutter_rust_bridge: 2.13.0
+  flutter_rust_bridge_hooks: 2.13.0
+  path: 1.9.1
+  photo_view: 0.15.0
+  pool: 1.5.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  ffigen: 21.0.0
+  moodiary_lint: 0.0.1

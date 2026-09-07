@@ -1,0 +1,45 @@
+name: moodiary_export
+description: "Export to Markdown, Word, PDF and image, local backup, Markdown import and share."
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  fast_image: 0.0.1
+  fast_press: 0.0.1
+  fast_zip: 0.0.1
+  moodiary_files: 0.0.1
+  moodiary_logging: 0.0.1
+  moodiary_platform: 0.0.1
+  moodiary_storage: 0.0.1
+  moodiary_theme: 0.0.1
+  moodiary_models: 0.0.1
+  moodiary_data: 0.0.1
+  moodiary_di: 0.0.1
+  moodiary_i18n: 0.0.1
+  moodiary_components: 0.0.1
+  moodiary_router: 0.0.1
+  moodiary_utils: 0.0.1
+  mui: 0.0.1
+
+  crypto: 3.0.7
+  gap: 3.0.1
+  path: 1.9.1
+  share_plus: 13.3.0
+  yaml: 3.1.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1
+  build_runner: 2.16.1
+  drift: 2.34.4
+  fast_tokenizer: 0.0.1

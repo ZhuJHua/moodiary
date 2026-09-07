@@ -1,0 +1,50 @@
+accepted = [
+    "Apache-2.0",
+    "MIT",
+    "MIT-0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "MPL-2.0",
+    "BSL-1.0",
+    "CC0-1.0",
+    "Unicode-3.0",
+    "Unicode-DFS-2016",
+    "Unlicense",
+    "0BSD",
+    "NCSA",
+    "IJG",
+]
+
+targets = [
+    "aarch64-linux-android",
+    "armv7-linux-androideabi",
+    "x86_64-linux-android",
+    "aarch64-apple-ios",
+]
+
+ignore-build-dependencies = true
+ignore-dev-dependencies = true
+
+# 真正的许可证：IJG 在 README.ijg（整份），Modified BSD 在 LICENSE.md。
+["turbojpeg-sys".clarify]
+license = "IJG AND BSD-3-Clause"
+
+[["turbojpeg-sys".clarify.files]]
+path = "libjpeg-turbo/README.ijg"
+license = "IJG"
+checksum = "75815e3bf6484201a3c3d17a1bbf10f2e8e3237f84df10a2357ea896db2a81d6"
+
+[["turbojpeg-sys".clarify.files]]
+path = "libjpeg-turbo/LICENSE.md"
+license = "BSD-3-Clause"
+checksum = "96f5b328adbb78eeaaec6980d73fd558cb1e4d62560ed615646bc3cf5e532430"
+
+["libwebp-sys".clarify]
+license = "MIT AND BSD-3-Clause"
+
+[["libwebp-sys".clarify.files]]
+path = "vendor/COPYING"
+license = "BSD-3-Clause"
+checksum = "5aec868f669e384a22372a4e8a1a6cd7d44c64cd451f960ca69cc170d1e13acf"

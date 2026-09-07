@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Moodiary Editor · Dev Harness</title>
+    <style>
+      html, body { margin: 0; padding: 0; height: 100%; }
+    </style>
+  </head>
+  <body>
+    <!-- 仅开发用的预览/调参台：内嵌真实编辑器（iframe 加载 / = index.html），模拟 Flutter 宿主。
+         不进生产构建（vite build 只以 index.html 为入口）。用 `pnpm harness` 打开。 -->
+    <div id="harness"></div>
+    <script type="module" src="/dev/main.ts"></script>
+  </body>
+</html>

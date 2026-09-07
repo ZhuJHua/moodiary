@@ -1,0 +1,34 @@
+-- 基础表（分类 / 字体 / 媒体元数据），相互零引用。全库约定见 database.dart 类注释。
+
+CREATE TABLE categories (
+  id            TEXT NOT NULL PRIMARY KEY,
+  name          TEXT NOT NULL,
+  last_modified INTEGER NOT NULL,
+  parent_id     TEXT,
+  color         INTEGER
+) AS CategoryRow;
+
+CREATE TABLE fonts (
+  font_family    TEXT NOT NULL PRIMARY KEY,
+  font_file_name TEXT NOT NULL,
+  wght_axis_json TEXT NOT NULL DEFAULT '{}'
+) AS FontRow;
+
+CREATE TABLE media_infos (
+  file_name     TEXT NOT NULL PRIMARY KEY,
+  name          TEXT,
+  duration_ms   INTEGER,
+  last_modified INTEGER NOT NULL
+) AS MediaInfoRow;
+
+-- 常用地点（user_version 2 追加）。与 categories 平级、零外键：日记存的是地名快照
+-- 字符串，不引用本表的行。不建索引 —— 全表撑死几十行，全量读进内存算 Haversine
+-- 比任何索引都快，距离本来也走不了索引。
+CREATE TABLE places (
+  id            TEXT NOT NULL PRIMARY KEY,
+  name          TEXT NOT NULL,
+  latitude      REAL NOT NULL,
+  longitude     REAL NOT NULL,
+  icon          TEXT,
+  last_modified INTEGER NOT NULL
+) AS PlaceRow;

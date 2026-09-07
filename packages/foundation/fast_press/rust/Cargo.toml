@@ -1,0 +1,43 @@
+[package]
+name = "fastpress"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+# 改名即断：native_toolchain_rust 按 lib.name 出文件名，Dart 侧按同一 stem 找库。
+name = "fastpress"
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+flutter_rust_bridge = "=2.13.0"
+anyhow = "=1.0.104"
+# 自家 fork（分支 moodiary/slim，基于 v0.15.1）：关掉六个 opt-out feature，libfastpress 33 → 19 MB。
+typst = { git = "https://github.com/ZhuJHua/typst.git", rev = "237a52c41ac894a8e03e53a7e0b794d006b8701f", version = "=0.15.1", default-features = false }
+typst-pdf = { git = "https://github.com/ZhuJHua/typst.git", rev = "237a52c41ac894a8e03e53a7e0b794d006b8701f", version = "=0.15.1", default-features = false }
+docx-rs = { version = "=0.4.22", default-features = false }
+syntect = { version = "=5.3.0", default-features = false, features = [
+    "parsing",
+    "regex-fancy",
+    "plist-load",
+    "yaml-load",
+] }
+image = { version = "=0.25.10", default-features = false, features = [
+    "bmp",
+    "gif",
+    "jpeg",
+    "png",
+    "tiff",
+    "webp",
+] }
+
+[dev-dependencies]
+zip = { version = "=8.6.0", default-features = false, features = ["deflate"] }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "symbols"

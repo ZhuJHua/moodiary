@@ -1,0 +1,31 @@
+name: moodiary_storage
+description: "Key-value storage on MMKV and secrets in the keychain."
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  fast_crypto: 0.0.1
+  moodiary_di: 0.0.1
+  moodiary_logging: 0.0.1
+  moodiary_platform: 0.0.1
+  mmkv: 2.4.2
+  shared_preferences: 2.5.5
+  flutter_secure_storage: 11.0.0
+  path: 1.9.1
+  injectable: 3.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1
+  build_runner: 2.16.1
+  injectable_generator: 3.1.3

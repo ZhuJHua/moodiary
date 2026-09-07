@@ -1,0 +1,19 @@
+# 被 import 的包必须关掉：否则 TranslationProvider / LocaleSettings 类名与 App 那份相撞。
+locale_handling: false
+
+base_locale: zh
+fallback_strategy: base_locale
+
+lazy: false
+
+input_directory: lib/src/i18n
+input_file_pattern: .i18n.json
+output_directory: lib/src/i18n
+output_file_name: strings.g.dart
+
+class_name: MuiLocalizationsData
+enum_name: MuiLocale
+
+flat_map: false
+timestamp: false
+statistics: false

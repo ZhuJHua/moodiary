@@ -1,0 +1,31 @@
+accepted = [
+    "Apache-2.0",
+    "MIT",
+    "MIT-0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "MPL-2.0",
+    "BSL-1.0",
+    "CC0-1.0",
+    "Unicode-3.0",
+    "Unicode-DFS-2016",
+    "Unlicense",
+    "0BSD",
+    "NCSA",
+    "OpenSSL",
+    "CDLA-Permissive-2.0",
+]
+
+targets = [
+    "aarch64-linux-android",
+    "armv7-linux-androideabi",
+    "x86_64-linux-android",
+    "aarch64-apple-ios",
+]
+
+ignore-build-dependencies = true
+ignore-dev-dependencies = true
+
+workarounds = ["ring"]

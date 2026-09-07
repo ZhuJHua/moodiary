@@ -1,0 +1,10 @@
+-- 同步域（删除墓碑）。"key" 是 SQL 关键字必须带引号——不带会被 drift 静默吞列。
+-- 全库约定见 database.dart 类注释。
+
+CREATE TABLE tombstones (
+  "key"                TEXT NOT NULL PRIMARY KEY,
+  time_ms              INTEGER NOT NULL,
+  pushed_backends_json TEXT NOT NULL DEFAULT '[]'
+) AS TombstoneRow;
+
+CREATE INDEX idx_tombstones_time ON tombstones (time_ms);

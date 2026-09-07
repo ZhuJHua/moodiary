@@ -1,0 +1,23 @@
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    directives_ordering: true
+    use_null_aware_elements: true
+    prefer_const_constructors: true
+    prefer_const_literals_to_create_immutables: true
+    prefer_const_declarations: true
+    prefer_final_in_for_each: true
+    prefer_final_fields: true
+    prefer_final_locals: true
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "**/*.gr.dart"
+    - "**/*.mocks.dart"
+    - "build/**"
+  errors:
+    # Isar / Freezed 把注解打在工厂构造器参数上，分析器误报。
+    invalid_annotation_target: ignore

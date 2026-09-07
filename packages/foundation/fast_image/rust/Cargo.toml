@@ -1,0 +1,37 @@
+[package]
+name = "fastimage"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+# 改名即断：native_toolchain_rust 按 lib.name 出文件名，Dart 侧按同一 stem 找库。
+name = "fastimage"
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+flutter_rust_bridge = "=2.13.0"
+anyhow = "=1.0.104"
+image = { version = "=0.25.10", default-features = false, features = [
+    "bmp",
+    "gif",
+    "jpeg",
+    "png",
+    "tiff",
+    "webp",
+] }
+# 不开 require-simd：arm64 的 NEON 本就编进去，它只会让缺 NASM 的 x86_64 配置失败。
+turbojpeg-sys = { version = "=1.2.0", default-features = false, features = ["cmake"] }
+memmap2 = "=0.9.11"
+memchr = "=2.8.3"
+png = { version = "=0.18.1", default-features = false }
+libwebp-sys = { version = "=0.14.4", default-features = false, features = ["std", "neon"] }
+fast_image_resize = { version = "=6.1.0", default-features = false, features = ["image", "rayon"] }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "symbols"

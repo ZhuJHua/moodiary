@@ -1,0 +1,13 @@
+{
+  "recentAlbum": "最近",
+  "done": "完成",
+  "doneCount": "完成 {count}/{max}",
+  "limitedTip": "你只允许应用访问部分照片",
+  "limitedManage": "管理",
+  "permissionDenied": "请前往设置中开启相册权限",
+  "a11ySelect": "选择",
+  "a11yUnselect": "取消选择",
+  "capture": "拍摄",
+  "record": "录像",
+  "captureFailed": "拍摄失败"
+}

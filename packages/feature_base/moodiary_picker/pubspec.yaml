@@ -1,0 +1,31 @@
+name: moodiary_picker
+description: "Asset picker on wechat_assets_picker with the system camera via image_picker."
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  moodiary_files: 0.0.1
+  moodiary_i18n: 0.0.1
+  moodiary_logging: 0.0.1
+  moodiary_utils: 0.0.1
+  mui: 0.0.1
+
+  photo_manager: 3.12.0
+  wechat_assets_picker: 10.1.3
+  wechat_picker_library: 1.0.7
+  image_picker: 1.2.3
+  provider: 6.1.5+1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1
