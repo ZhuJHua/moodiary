@@ -38,10 +38,6 @@ Everything else is in the docs at [docs.moodiary.net](https://docs.moodiary.net)
   <img alt="Contributors" src="https://contrib.rocks/image?repo=ZhuJHua/moodiary">
 </a>
 
-## 📄 License
-
-[AGPL-3.0](LICENSE).
-
 ## 🥪 Sponsor
 
 If Moodiary is useful to you, you can buy me a sandwich.

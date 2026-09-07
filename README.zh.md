@@ -39,10 +39,6 @@
   <img alt="Contributors" src="https://contrib.rocks/image?repo=ZhuJHua/moodiary">
 </a>
 
-## 📄 许可证
-
-[AGPL-3.0](LICENSE)。
-
 ## 🥪 捐助
 
 如果 Moodiary 对你有用，可以请我吃个三明治。
