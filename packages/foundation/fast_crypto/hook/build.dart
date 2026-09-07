@@ -6,6 +6,7 @@ void main(List<String> args) async {
     // buildCodeAssets 为 false 时 input.config.code 访问即抛
     if (!input.config.buildCodeAssets) return;
     final code = input.config.code;
+    if (code.targetOS == OS.current) return;
     // *_DEPLOYMENT_TARGET 进不了 hooks_runner 环境白名单，不映射会按默认三元组链接，Xcode 26 下 ___chkstk_darwin 链接失败
     final env = switch (code.targetOS) {
       OS.iOS => {'IPHONEOS_DEPLOYMENT_TARGET': '${code.iOS.targetVersion}.0'},

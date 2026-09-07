@@ -8,6 +8,7 @@ void main(List<String> args) async {
     // buildCodeAssets 为 false 时访问 input.config.code 会抛
     if (!input.config.buildCodeAssets) return;
     final code = input.config.code;
+    if (code.targetOS == OS.current) return;
     final env = switch (code.targetOS) {
       OS.iOS => {
         'IPHONEOS_DEPLOYMENT_TARGET': '${code.iOS.targetVersion}.0',

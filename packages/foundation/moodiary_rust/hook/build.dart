@@ -6,6 +6,7 @@ void main(List<String> args) async {
     // buildCodeAssets 为 false 时 input.config.code 访问即抛
     if (!input.config.buildCodeAssets) return;
     final code = input.config.code;
+    if (code.targetOS == OS.current) return;
     // 不注入部署目标环境变量，rustc 按默认三元组链接会在 Xcode 26 下因 ___chkstk_darwin 失败
     final env = switch (code.targetOS) {
       OS.iOS => {'IPHONEOS_DEPLOYMENT_TARGET': '${code.iOS.targetVersion}.0'},

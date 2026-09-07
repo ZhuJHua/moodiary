@@ -10,6 +10,7 @@ environment:
 resolution: workspace
 
 dependencies:
+  code_assets: 1.2.1
   hooks: 2.2.0
   flutter:
     sdk: flutter

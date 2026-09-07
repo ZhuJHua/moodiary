@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:code_assets/code_assets.dart';
 import 'package:hooks/hooks.dart';
 
 const _sourceFiles = [
@@ -13,6 +14,10 @@ const _sourceFiles = [
 
 void main(List<String> args) async {
   await build(args, (input, output) async {
+    if (input.config.buildCodeAssets &&
+        input.config.code.targetOS == OS.current) {
+      return;
+    }
     final editorDir = input.packageRoot.resolve('editor/');
     final lockFile = File.fromUri(
       input.packageRoot.resolve('.dart_tool/editor_build.lock'),

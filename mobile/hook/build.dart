@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:code_assets/code_assets.dart';
 import 'package:hooks/hooks.dart';
 
 const _rustDirs = [
@@ -19,6 +20,10 @@ typedef _Entry = ({List<String> packages, String text});
 
 void main(List<String> args) async {
   await build(args, (input, output) async {
+    if (input.config.buildCodeAssets &&
+        input.config.code.targetOS == OS.current) {
+      return;
+    }
     final repoRoot = input.packageRoot.resolve('../');
     final lockFile = File.fromUri(
       input.packageRoot.resolve('.dart_tool/licenses_build.lock'),

@@ -16,7 +16,7 @@ Moodiary is a Flutter + Rust diary app. **Layered pub-workspace monorepo**: 33 s
 ```bash
 # Setup
 fvm use
-dart tool/task.dart setup          # flutter pub get (the editor bundle is built by moodiary_editor's build hook on run/build/test; needs corepack)
+dart tool/task.dart setup          # flutter pub get (the editor bundle is built by moodiary_editor's build hook on run/build; needs corepack)
 
 # Run & Build (mobile app)
 dart tool/task.dart run            # flutter run
@@ -31,7 +31,7 @@ dart tool/task.dart gen            # gen-rust + i18n
 
 # Lint & Test
 dart tool/task.dart analyze        # layer check + flutter analyze
-dart tool/task.dart test           # affected packages only: changed relative to --diff=<ref> (default HEAD, incl. uncommitted/untracked) plus transitive dependents, 4-way parallel (--concurrency=N); root pubspec change or --all runs everything (CI). Only the legacy-database migration tests need ISAR_TEST_DYLIB
+dart tool/task.dart test           # affected packages only: changed relative to --diff=<ref> (default HEAD, incl. uncommitted/untracked) plus transitive dependents, serial (melos exec would otherwise use every core and starve itself); root pubspec change or --all runs everything (CI). Only the legacy-database migration tests need ISAR_TEST_DYLIB
 dart tool/task.dart test-mobile    # mobile/ only
 for d in packages/foundation/*/rust; do (cd $d && cargo clippy --all-targets -- -D warnings && cargo test); done  # six packages; fast_* would miss moodiary_rust
 cd packages/feature_base/moodiary_editor/editor && corepack pnpm type-check && corepack pnpm test
@@ -164,6 +164,7 @@ Principle: split freely, never duplicate dependencies. http / sync / llm share o
 | fast_zip | moodiary_export / moodiary_sync (`_nativePkgOwners`) | first archive / extract |
 | fast_crypto | whole repo | facade self-initializes per call |
 
+- Every build hook returns early when the target OS is the host (`flutter test`): Dart tests never load a Rust library, the editor bundle or the license manifest; Rust and the editor are tested by their own suites. Only the sqlite_vec C hook still builds under test.
 - Every package exposes `XxxLib` and an idempotent `Xxx.ensureInitialized()`. Opaque handles (`CancelToken`) cannot cross a .so, so there is one per library, constructed synchronously; construct only after the await. After touching `rust/src/api` run `dart tool/task.dart gen-rust`.
 - Everything goes through FRB; raw dart:ffi saves only the 0.3 MB floor.
 - No `[workspace.dependencies]`: the same crate is pinned per package, and `tool/check_generated.dart` fails on drift across Cargo.toml, toolchain channel and FRB / ffigen pins.

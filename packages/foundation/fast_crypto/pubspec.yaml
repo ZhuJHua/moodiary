@@ -17,7 +17,5 @@ dependencies:
   flutter_rust_bridge_hooks: 2.13.0
 
 dev_dependencies:
-  flutter_test:
-    sdk: flutter
   ffigen: 21.0.0
   moodiary_lint: 0.0.1

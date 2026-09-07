@@ -45,6 +45,7 @@ dependencies:
   share_plus: 13.3.0
   latlong2: 0.10.1
   path: 1.9.1
+  code_assets: 1.2.1
   hooks: 2.2.0
 
 

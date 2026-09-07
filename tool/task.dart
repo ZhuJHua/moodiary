@@ -222,15 +222,12 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
   'test': (rest) async {
     var all = false;
     var diff = 'HEAD';
-    var concurrency = '4';
     final flutterArgs = <String>[];
     for (final a in rest) {
       if (a == '--all') {
         all = true;
       } else if (a.startsWith('--diff=')) {
         diff = a.substring('--diff='.length);
-      } else if (a.startsWith('--concurrency=')) {
-        concurrency = a.substring('--concurrency='.length);
       } else {
         flutterArgs.add(a);
       }
@@ -247,7 +244,7 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
       if (scopes != null)
         for (final s in scopes) '--scope=$s',
       '-c',
-      concurrency,
+      '1',
       '--',
       if (_hasFvm) 'fvm',
       'flutter',
