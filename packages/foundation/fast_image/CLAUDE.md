@@ -9,8 +9,7 @@
   UI 只用 `flutter/widgets` 与 photo_view；看图页的壳（翻页 / hero / 保存 / 信息面板 / i18n）
   留在 `moodiary_components` 的 `MImageBrowser`，它消费这里的 `FastTileImageViewer` 与
   `FastTileSource.resolve`。
-- **改了 `rust/src/api` 必跑 `dart tool/task.dart gen-rust`**（两个 FRB 包都会重生成）；改了
-  `rust/Cargo.toml` 依赖必跑 `dart tool/task.dart licenses`。
+- **改了 `rust/src/api` 必跑 `dart tool/task.dart gen-rust`**（两个 FRB 包都会重生成）。
 - **turbojpeg-sys**：只开 `cmake`，不开 `require-simd`（arm64 NEON 是 intrinsics 必然编进去，
   x86_64 CI 缺 NASM 只是没 SIMD）。构建机要有 cmake。`hook/build.dart` 多传三样：Android 从
   Flutter 给的 clang 路径推 NDK 根给 cmake-rs（`CMAKE_TOOLCHAIN_FILE_<triple>`、`ANDROID_NDK_ROOT`），

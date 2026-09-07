@@ -18,16 +18,6 @@ class $ResGen {
   $ResSponsorGen get sponsor => const $ResSponsorGen();
 }
 
-class $AssetsLicensesGen {
-  const $AssetsLicensesGen();
-
-  /// File path: assets/licenses/third_party.json
-  String get thirdParty => 'assets/licenses/third_party.json';
-
-  /// List of all assets
-  List<String> get values => [thirdParty];
-}
-
 class $ResSponsorGen {
   const $ResSponsorGen();
 
@@ -39,7 +29,6 @@ class $ResSponsorGen {
 }
 
 abstract final class Assets {
-  static const $AssetsLicensesGen licenses = $AssetsLicensesGen();
   static const $ResGen res = $ResGen();
 }
 

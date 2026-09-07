@@ -14,7 +14,7 @@
   相通。导出服务 Dart 侧的轮询（含 zip 打包那段）也只读它，所以 moodiary_export 只拿这一枚。
   只在循环边界生效——typst 整篇排版会跑完当前这一趟。
 - **改了 `rust/src/api` 必跑 `dart tool/task.dart gen-rust`**（三个 FRB 包都会重生成；`IrBlock`
-  的 freezed 产物 codegen 自己跑）；改了 `rust/Cargo.toml` 依赖必跑 `dart tool/task.dart licenses`。
+  的 freezed 产物 codegen 自己跑）。
   `IrRow` 包一层具名结构而不是 `Vec<Vec<IrCell>>`：`full_dep: true` 的 CST 编解码器生成嵌套
   列表时会漏掉内层的 fill 函数。
 - **PDF 安全要点**（机制在 `pdf.rs` 的 `string_literal()`，测试 `user_text_cannot_inject_typst_code` / `escapes_only_backslash_and_quote`）：生成的是 typst 代码模式，用户文本一律进字符串字面量，

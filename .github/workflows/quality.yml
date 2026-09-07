@@ -34,6 +34,12 @@ jobs:
         with:
           melos-version: 8.2.2
 
+      # moodiary_editor 的构建钩子在 flutter test 时用 corepack pnpm 构建编辑器产物
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
       - name: Check generated bindings
         run: dart tool/check_generated.dart
 
@@ -46,6 +52,12 @@ jobs:
       - name: Set up Rust toolchain
         working-directory: packages/foundation/fast_image/rust
         run: rustup toolchain install
+
+      # mobile 的构建钩子在 flutter test 时用 cargo-about 生成第三方许可清单
+      - name: Install cargo-about
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-about@0.9.2
 
       # 真库集成测试靠 ISAR_TEST_DYLIB 解除 skip；找不到即 exit 1，不许静默全跳过。
       - name: Locate Isar test dylib

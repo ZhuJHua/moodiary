@@ -26,37 +26,6 @@ Future<void> _run(String cmd, List<String> args, {String? cwd}) async {
 Future<void> _flutter(List<String> args) =>
     _run('fvm', ['flutter', ...args], cwd: 'mobile');
 
-Future<bool> _hasCommand(String cmd) async {
-  try {
-    final r = await Process.run(Platform.isWindows ? 'where' : 'which', [
-      cmd,
-    ], runInShell: Platform.isWindows);
-    return r.exitCode == 0;
-  } catch (_) {
-    return false;
-  }
-}
-
-Future<void> _editor() async {
-  if (!await _hasCommand('corepack')) {
-    stderr.writeln(
-      '✗ 找不到 corepack（Node ≥25 起不再随 Node 内置）。请先安装后重试：\n'
-      '    npm i -g corepack    或    brew install corepack\n'
-      '  编辑器构建用 corepack 提供 package.json 中固定版本的 pnpm。',
-    );
-    exit(1);
-  }
-  await _run('corepack', ['enable']);
-  await _run('corepack', [
-    'pnpm',
-    'install',
-  ], cwd: 'packages/feature_base/moodiary_editor/editor');
-  await _run('corepack', [
-    'pnpm',
-    'build',
-  ], cwd: 'packages/feature_base/moodiary_editor/editor');
-}
-
 const _frbPkgDirs = [
   'packages/foundation/fast_crypto',
   'packages/foundation/fast_image',
@@ -171,21 +140,16 @@ Future<void> _i18n() async {
 }
 
 final Map<String, Future<void> Function(List<String> rest)> _tasks = {
-  'editor': (_) => _editor(),
   'setup': (_) async {
-    await _editor();
     await _flutter(['pub', 'get']);
   },
   'run': (rest) async {
-    await _editor();
     await _flutter(['run', ...rest]);
   },
   'build-apk': (rest) async {
-    await _editor();
     await _flutter(['build', 'apk', ...rest]);
   },
   'build-ios': (rest) async {
-    await _editor();
     await _flutter(['build', 'ios', ...rest]);
   },
   'analyze': (_) async {
@@ -225,15 +189,10 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
   },
   'gen-rust': (_) => _genRust(),
   'i18n': (_) => _i18n(),
-  'licenses': (_) async {
-    await _editor();
-    await _run('fvm', ['dart', 'run', 'tool/licenses.dart']);
-  },
   'sponsors': (_) => _run('fvm', ['dart', 'run', 'tool/sponsors.dart']),
   'gen': (_) async {
     await _genRust();
     await _i18n();
-    await _editor();
   },
   'clean': (_) async {
     for (final path in [

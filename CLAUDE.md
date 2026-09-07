@@ -16,10 +16,10 @@ Moodiary — a Flutter + Rust diary app. **Layered pub-workspace monorepo**: 33 
 ```bash
 # Setup
 fvm use
-dart tool/task.dart setup          # flutter pub get + build editor
+dart tool/task.dart setup          # flutter pub get（编辑器产物由 moodiary_editor 的构建钩子在 run/build/test 时自动构建，需要 corepack）
 
 # Run & Build (targets mobile app)
-dart tool/task.dart run            # build editor + flutter run
+dart tool/task.dart run            # flutter run
 dart tool/task.dart build-apk / build-ios  # 只有 android/ios 两个目标
 # Extra flutter flags go after --:  dart tool/task.dart run -- --release
 
@@ -27,9 +27,7 @@ dart tool/task.dart build-apk / build-ios  # 只有 android/ios 两个目标
 dart tool/task.dart build-runner   # 全仓 build_runner（melos 扫所有含 build_runner 的包；只跑 mobile 会漏掉包侧注解）
 dart tool/task.dart gen-rust       # regenerate Rust FFI bindings
 dart tool/task.dart i18n           # slang 文案生成（改了 i18n/*.json 必跑）
-dart tool/task.dart gen            # gen-rust + i18n + rebuild editor asset
-dart tool/task.dart licenses       # 第三方许可清单（Rust crates + 编辑器 npm；改了 Cargo.toml / package.json 依赖才要跑）
-dart tool/task.dart editor         # rebuild editor asset only (needs corepack on PATH)
+dart tool/task.dart gen            # gen-rust + i18n
 
 # Lint & Test
 dart tool/task.dart analyze        # layer check + flutter analyze
@@ -205,8 +203,8 @@ about.toml / rust-toolchain / Cargo.lock，坑各记在自己的 CLAUDE.md：
   workspace 根的 `.dart_tool/hooks_runner/`，`flutter clean` 碰不到；各 hook 已显式登记 Cargo.toml /
   Cargo.lock 为依赖，改动能触发重跑，仍不放心就 `dart tool/task.dart clean`。
 - 拆库是投递策略，不是省体积手段：每库地板（带 FRB 运行时）实测 619 KB；两库之间共享 crate 的
-  实际字节看 `docs/native-libs-review.md` 第四节，依赖树重叠不等于二进制重复。改了任何 `rust/Cargo.toml` 依赖必跑
-  `dart tool/task.dart licenses`。
+  实际字节看 `docs/native-libs-review.md` 第四节，依赖树重叠不等于二进制重复。第三方许可清单
+  `mobile/assets/licenses/third_party.json` 由 `mobile/hook/build.dart` 在构建时生成（cargo-about + 编辑器 rollup 清单），本机与 CI 都要装 `cargo-about` 0.9.2。
 - **zip 必须留在 Rust**（2026-09-04 复决）：局域网归档用的是 zip 条目级 AES-256，纯 Dart 只有 17 MB/s
   且整条目进堆（实测见 `docs/native-libs-review.md` 第五节）。当时的撤回判据是「让 `lanProtoVersion`
   停在 2、与 2.8.0 互通」，**那个前提 2.8.1 里已经不成立**（`lanProtoVersion` 现为 3，见下），

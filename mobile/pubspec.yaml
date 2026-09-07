@@ -10,6 +10,7 @@ environment:
 resolution: workspace
 
 dependencies:
+  hooks: 2.2.0
   flutter:
     sdk: flutter
 
@@ -79,5 +80,8 @@ flutter:
   uses-material-design: true
 
 flutter_gen:
+  assets:
+    exclude:
+      - assets/licenses/**
   integrations:
     flutter_svg: true

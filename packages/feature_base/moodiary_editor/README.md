@@ -18,6 +18,5 @@
 
 ## Web 源与构建
 
-- web 源在 `editor/`（Vue 3 + Vite + TipTap）；`pnpm build` 经 `vite-plugin-singlefile` 输出**单文件** `../assets/editor/index.html`（gitignored）。
-- 仓库根用 `dart tool/task.dart editor` 一键构建；CI 在 `flutter build` 前需先构建。
-- 开发预览：`cd editor && pnpm harness`。
+- web 源在 `editor/`（Vue 3 + Vite + TipTap）。`hook/build.dart` 在 `flutter run` / `build` / `test` 时构建，输出平铺的 gzip 产物到 `../assets/editor/`，运行时由 `EditorLocalServer` 解压后发明文。钩子声明 `editor/src/**` 与配置文件为依赖，改了源码自动重建，要求 `corepack` 在 PATH 上。
+- 开发预览：`cd editor && corepack pnpm harness`。

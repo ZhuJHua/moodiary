@@ -24,7 +24,7 @@ http 与 llm 之间实测重复 2 MiB `.text`（整套网络底座）是 8 个�
 - llm：协议按**模型**解析（openai-completions / openai-responses / anthropic-messages）；Anthropic
   的思考走 `reasoning_mode` / `reasoning_effort`，旧的 budget_tokens 写法在新 Claude 上 400。
 - **改了 `rust/src/api` 必跑 `dart tool/task.dart gen-rust`**（`RigStreamEvent` 的 freezed 产物
-  codegen 自己跑）；改了 `rust/Cargo.toml` 依赖必跑 `dart tool/task.dart licenses`。
+  codegen 自己跑）。
 - graph（`graph/layout.rs`）：ForceAtlas2（Jacomy 2014）+ Barnes-Hut，两处刻意偏离原版——保留
   线性向心力（把不连通分量收进视野）与 forceCollide 碰撞（硬保不重叠）；`normalizeScale` 把发出的
   坐标按相连中位距归一化；帧率由 `emit_every` / `frame_delay_ms` 定，跑在 FRB 线程池上。

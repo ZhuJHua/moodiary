@@ -8,6 +8,9 @@ ios/Flutter/.last_build_id
 .flutter-plugins-dependencies
 /build/
 
+# Third-party license manifest, written by hook/build.dart
+/assets/licenses/
+
 # Native build output dirs (kept out of the per-platform .gitignore files)
 /ios/build/
 /android/build/

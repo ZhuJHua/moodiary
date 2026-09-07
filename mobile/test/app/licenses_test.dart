@@ -16,7 +16,7 @@ void main() {
     expect(
       ours.any((e) => e.packages.any((p) => p.endsWith('(Rust)'))),
       isTrue,
-      reason: 'Rust crates 没进清单，先跑 dart tool/task.dart licenses',
+      reason: 'Rust crates 没进清单',
     );
     expect(
       ours.any((e) => e.packages.any((p) => p.endsWith('(npm)'))),

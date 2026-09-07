@@ -14,5 +14,4 @@ crate 拆出来。
 - 媒体与 docx / pdf 本身都是已压缩格式，打包时传 `stored: true`，再 deflate 一遍只费时间。
 - 中途抛错到不了 `finish()`，不 `dispose()` 则 fd 一直攥着，被删的半成品要等 GC 才释放磁盘——
   而失败原因往往正是磁盘满。
-- **改了 `rust/src/api` 必跑 `dart tool/task.dart gen-rust`**；改了 `rust/Cargo.toml` 依赖必跑
-  `dart tool/task.dart licenses`。
+- **改了 `rust/src/api` 必跑 `dart tool/task.dart gen-rust`**。

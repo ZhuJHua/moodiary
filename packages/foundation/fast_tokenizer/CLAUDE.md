@@ -13,5 +13,4 @@
   批量分词走 `tokenize_batch`（实测比逐条快 6 倍）。
 - HF tokenizer 关掉 `onig`（避 C 依赖），`unstable_wasm` 只为激活 fancy-regex 引擎；
   `tests/fixtures/wordpiece_tokenizer.json` 是单测夹具。
-- **改了 `rust/src/api` 必跑 `dart tool/task.dart gen-rust`**；改了 `rust/Cargo.toml` 依赖必跑
-  `dart tool/task.dart licenses`。
+- **改了 `rust/src/api` 必跑 `dart tool/task.dart gen-rust`**。
