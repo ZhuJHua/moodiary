@@ -36,13 +36,15 @@ dart tool/task.dart test-mobile    # mobile/ only
 for d in packages/foundation/*/rust; do (cd $d && cargo clippy --all-targets -- -D warnings && cargo test); done  # six packages; fast_* would miss moodiary_rust
 cd packages/feature_base/moodiary_editor/editor && corepack pnpm type-check && corepack pnpm test
 
-# Release
-git-cliff --config cliff.toml v<prev>..HEAD --tag v<next> --prepend CHANGELOG.md  # local only, never in CI
+# Release (run on develop, clean tree, in sync with origin)
+dart tool/release.dart --bump patch     # or an explicit X.Y.Z
 ```
 
 Full-repo verification = the four Lint & Test commands above. `flutter test` at the repo root finds nothing.
 
 **Melos**: `melos bootstrap` activates the workspace and regenerates IDE module files; it runs no codegen. `melos list` / `melos run <script> --category <layer>` filter by layer.
+
+**Release**: `tool/release.dart` bumps `mobile/pubspec.yaml`, prepends a git-cliff section to `CHANGELOG.md` for review, opens the `chore(release): X.Y.Z` PR and dispatches `build.yml` from the release branch. The build reads the version from the pubspec and the notes from the changelog section, then leaves a **draft** release — no tag exists yet. Merging the PR fires `publish-release.yml`, which undrafts it, which is what creates the tag, at the squash commit. Changelog generation never runs in CI.
 
 **Versions** are exact-pinned everywhere; the root `melos` caret is the only exception.
 
