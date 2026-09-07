@@ -35,9 +35,12 @@ dart tool/task.dart test           # affected packages only: changed relative to
 dart tool/task.dart test-mobile    # mobile/ only
 for d in packages/foundation/*/rust; do (cd $d && cargo clippy --all-targets -- -D warnings && cargo test); done  # six packages; fast_* would miss moodiary_rust
 cd packages/feature_base/moodiary_editor/editor && corepack pnpm type-check && corepack pnpm test
+
+# Release
+git-cliff --config cliff.toml v<prev>..HEAD --tag v<next> --prepend CHANGELOG.md  # local only, never in CI
 ```
 
-Full-repo verification = the four blocks above. `flutter test` at the repo root finds nothing.
+Full-repo verification = the four Lint & Test commands above. `flutter test` at the repo root finds nothing.
 
 **Melos**: `melos bootstrap` activates the workspace and regenerates IDE module files; it runs no codegen. `melos list` / `melos run <script> --category <layer>` filter by layer.
 

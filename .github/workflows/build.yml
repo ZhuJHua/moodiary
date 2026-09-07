@@ -70,7 +70,7 @@ jobs:
 
       - name: Build APK
         working-directory: mobile
-        run: flutter build apk --release --obfuscate --split-debug-info=splitMap
+        run: flutter build apk --release --target-platform android-arm64 --obfuscate --split-debug-info=splitMap
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
