@@ -268,7 +268,7 @@ class _ImageComposeCancelled implements Exception {
   const _ImageComposeCancelled();
 
   @override
-  String toString() => '_ImageComposeCancelled';
+  String toString() => 'ImageComposeCancelled';
 }
 
 class _Composition {
