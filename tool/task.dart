@@ -36,8 +36,6 @@ Future<List<String>> _capture(String cmd, List<String> args) async {
   return const LineSplitter().convert(r.stdout as String);
 }
 
-/// 相对 [ref] 有改动（含未提交与未跟踪）的包，加上工作区里所有直接或间接依赖它们的包；
-/// 根 pubspec 变了返回 null 表示全仓。
 Future<List<String>?> _affectedPackages(String ref) async {
   final changed = {
     ...await _capture('git', ['diff', '--name-only', ref]),

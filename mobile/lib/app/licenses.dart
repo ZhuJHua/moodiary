@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
-// 由 hook/build.dart 生成，build_runner 时可能还不存在，所以不走 flutter_gen
+// 构建钩子生成，跑 build_runner 时可能还不存在，不走 flutter_gen
 const _manifest = 'assets/licenses/third_party.json';
 
 void registerThirdPartyLicenses() {

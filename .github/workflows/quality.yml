@@ -34,7 +34,7 @@ jobs:
         with:
           melos-version: 8.2.2
 
-      # moodiary_editor 的构建钩子在 flutter test 时用 corepack pnpm 构建编辑器产物
+      # 编辑器产物的构建钩子要 corepack
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
@@ -53,7 +53,7 @@ jobs:
         working-directory: packages/foundation/fast_image/rust
         run: rustup toolchain install
 
-      # mobile 的构建钩子在 flutter test 时用 cargo-about 生成第三方许可清单
+      # 许可清单的构建钩子要 cargo-about
       - name: Install cargo-about
         uses: taiki-e/install-action@v2
         with:
