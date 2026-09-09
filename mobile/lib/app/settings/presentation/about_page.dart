@@ -1,7 +1,10 @@
 import 'dart:io';
 
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_logging/moodiary_logging.dart';
+import 'package:moodiary_mobile/app/settings/data/app_update_repository.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -18,8 +21,11 @@ class AboutPage extends StatefulWidget {
 }
 
 class _AboutPageState extends State<AboutPage> {
+  late final _updateRepository = getIt<AppUpdateRepository>();
+
   PackageInfo? _packageInfo;
   String _systemVersion = '...';
+  bool _checkingUpdate = false;
 
   @override
   void initState() {
@@ -50,6 +56,36 @@ class _AboutPageState extends State<AboutPage> {
     return Platform.operatingSystem;
   }
 
+  Future<void> _checkUpdate() async {
+    if (_checkingUpdate) return;
+    setState(() => _checkingUpdate = true);
+    try {
+      final current =
+          _packageInfo?.version ?? (await AppInfo.getPackageInfo()).version;
+      final release = await _updateRepository.checkForUpdate(current);
+      if (!mounted) return;
+      if (release == null) {
+        toast.info(message: l10n.app.aboutUpToDate);
+        return;
+      }
+      final download = await MAlert.confirm(
+        context,
+        title: l10n.app.aboutUpdateAvailable(version: release.version),
+        content: release.notes.isEmpty
+            ? null
+            : _ReleaseNotes(notes: release.notes),
+        confirmLabel: l10n.app.aboutUpdateDownload,
+        icon: LucideIcons.download,
+      );
+      if (download) await _open(release.pageUrl);
+    } catch (error, stackTrace) {
+      logger.e('check for updates failed', error: error, stackTrace: stackTrace);
+      toast.error(message: l10n.app.aboutUpdateFailed);
+    } finally {
+      if (mounted) setState(() => _checkingUpdate = false);
+    }
+  }
+
   Future<void> _open(String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
@@ -76,22 +112,27 @@ class _AboutPageState extends State<AboutPage> {
               margin: .zero,
               child: Column(
                 children: [
-                  SettingListTile(
-                    isFirst: true,
-                    leading: Icon(
-                      LucideIcons.refreshCw,
-                      color: scheme.onSurfaceVariant,
+                  if (Platform.isAndroid)
+                    SettingListTile(
+                      isFirst: true,
+                      leading: Icon(
+                        LucideIcons.refreshCw,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                      title: context.l10n.app.aboutCheckUpdate,
+                      trailing: _checkingUpdate
+                          ? const SizedBox.square(
+                              dimension: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Icon(
+                              LucideIcons.chevronRight,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                      onTap: _checkingUpdate ? null : _checkUpdate,
                     ),
-                    title: context.l10n.app.aboutCheckUpdate,
-                    trailing: Icon(
-                      LucideIcons.chevronRight,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                    onTap: () {
-                      toast.info(message: l10n.app.aboutUpToDate);
-                    },
-                  ),
                   SettingListTile(
+                    isFirst: !Platform.isAndroid,
                     leading: Icon(
                       LucideIcons.code,
                       color: scheme.onSurfaceVariant,
@@ -138,6 +179,32 @@ class _AboutPageState extends State<AboutPage> {
             ),
             const _IcpFiling(),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ReleaseNotes extends StatelessWidget {
+  final String notes;
+
+  const _ReleaseNotes({required this.notes});
+
+  String get _plainText => notes
+      .replaceAll(RegExp(r'^#+\s*', multiLine: true), '')
+      .replaceAll('**', '')
+      .replaceAll(RegExp(r'\*([^*\n]+)\*'), r'$1')
+      .replaceAll(RegExp(r'^- ', multiLine: true), '• ')
+      .trim();
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxHeight: 240),
+      child: SingleChildScrollView(
+        child: Text(
+          _plainText,
+          style: context.theme.typography.bodyMedium.onSurfaceVariant,
         ),
       ),
     );
