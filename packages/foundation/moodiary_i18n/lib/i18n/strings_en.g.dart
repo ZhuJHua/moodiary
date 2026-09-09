@@ -16,7 +16,7 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	/// Constructing via the enum [AppLocale.build] is preferred.
 	TranslationsEn({Map<String, Node>? overrides, PluralResolver? cardinalResolver, PluralResolver? ordinalResolver, TranslationMetadata<AppLocale, Translations>? meta})
 		: assert(overrides == null, 'Set "translation_overrides: true" in order to enable this feature.'),
-		  $meta = meta ?? TranslationMetadata(
+		  _meta = meta ?? TranslationMetadata(
 		    locale: AppLocale.en,
 		    overrides: overrides ?? {},
 		    cardinalResolver: cardinalResolver,
@@ -25,7 +25,8 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 		  super(cardinalResolver: cardinalResolver, ordinalResolver: ordinalResolver);
 
 	/// Metadata for the translations of <en>.
-	@override final TranslationMetadata<AppLocale, Translations> $meta;
+	final TranslationMetadata<AppLocale, Translations> _meta;
+	@override TranslationMetadata<AppLocale, Translations> get $meta => _meta;
 
 	late final TranslationsEn _root = this; // ignore: unused_field
 
@@ -98,6 +99,9 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String homeMovedToRecycle({required Object count}) => 'Moved ${count} entries to the recycle bin';
 	@override String get aboutCheckUpdate => 'Check for updates';
 	@override String get aboutUpToDate => 'You are on the latest version';
+	@override String aboutUpdateAvailable({required Object version}) => 'Version ${version} is available';
+	@override String get aboutUpdateDownload => 'Download';
+	@override String get aboutUpdateFailed => 'Could not check for updates, try again later';
 	@override String get aboutSource => 'Source code';
 	@override String get aboutLicenses => 'Open source licenses';
 	@override String get aboutFeedback => 'Feedback and help';

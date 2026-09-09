@@ -20,7 +20,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// Constructing via the enum [AppLocale.build] is preferred.
 	Translations({Map<String, Node>? overrides, PluralResolver? cardinalResolver, PluralResolver? ordinalResolver, TranslationMetadata<AppLocale, Translations>? meta})
 		: assert(overrides == null, 'Set "translation_overrides: true" in order to enable this feature.'),
-		  $meta = meta ?? TranslationMetadata(
+		  _meta = meta ?? TranslationMetadata(
 		    locale: AppLocale.zh,
 		    overrides: overrides ?? {},
 		    cardinalResolver: cardinalResolver,
@@ -28,7 +28,8 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 		  );
 
 	/// Metadata for the translations of <zh>.
-	@override final TranslationMetadata<AppLocale, Translations> $meta;
+	final TranslationMetadata<AppLocale, Translations> _meta;
+	@override TranslationMetadata<AppLocale, Translations> get $meta => _meta;
 
 	late final Translations _root = this; // ignore: unused_field
 
@@ -188,6 +189,15 @@ class Translations$app$zh {
 
 	/// zh: '当前已是最新版本'
 	String get aboutUpToDate => '当前已是最新版本';
+
+	/// zh: '发现新版本 {version}'
+	String aboutUpdateAvailable({required Object version}) => '发现新版本 ${version}';
+
+	/// zh: '前往下载'
+	String get aboutUpdateDownload => '前往下载';
+
+	/// zh: '检查更新失败，请稍后重试'
+	String get aboutUpdateFailed => '检查更新失败，请稍后重试';
 
 	/// zh: '源码仓库'
 	String get aboutSource => '源码仓库';

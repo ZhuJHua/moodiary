@@ -23,6 +23,8 @@ import 'package:moodiary_ml/injectable.module.dart' as _i591;
 import 'package:moodiary_mobile/app/di/app_module.dart' as _i461;
 import 'package:moodiary_mobile/app/media/mobile_heif_decoder.dart' as _i845;
 import 'package:moodiary_mobile/app/picker/mobile_file_picker.dart' as _i964;
+import 'package:moodiary_mobile/app/settings/data/app_update_repository.dart'
+    as _i167;
 import 'package:moodiary_storage/injectable.module.dart' as _i295;
 import 'package:moodiary_sync/injectable.module.dart' as _i412;
 import 'package:moodiary_theme/injectable.module.dart' as _i608;
@@ -49,6 +51,9 @@ extension GetItInjectableX on _i174.GetIt {
       dispose: _i461.closeDatabase,
     );
     gh.lazySingleton<_i765.IHttpClient>(() => appModule.httpClient());
+    gh.lazySingleton<_i167.AppUpdateRepository>(
+      () => _i167.AppUpdateRepository(gh<_i765.IHttpClient>()),
+    );
     gh.lazySingleton<_i800.IHeifDecoder>(() => _i845.MobileHeifDecoder());
     gh.lazySingleton<_i800.IFilePicker>(() => _i964.MobileFilePicker());
     return this;
