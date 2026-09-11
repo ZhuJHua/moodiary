@@ -12,48 +12,48 @@ class ImageSizeManager {
 
   factory ImageSizeManager() => _instance;
 
-  final _aspectRatioCache = LRUCache<String, double>(maxSize: 1000);
+  final _sizeCache = LRUCache<String, (int, int)>(maxSize: 1000);
 
   double getAspectRatio(String imagePath) {
-    final cached = _aspectRatioCache.get(imagePath);
-    if (cached != null) return cached;
-
     final (width, height) = getSize(imagePath);
-    final aspectRatio = width / height;
-    _aspectRatioCache.put(imagePath, aspectRatio);
-    return aspectRatio;
+    return width / height;
   }
 
   (int, int) getSize(String imagePath) {
+    final cached = _sizeCache.get(imagePath);
+    if (cached != null) return cached;
+
     final size = ImageSizeGetter.getSizeResult(FileInput(File(imagePath))).size;
-    return size.needRotate
+    final result = size.needRotate
         ? (size.height, size.width)
         : (size.width, size.height);
+    _sizeCache.put(imagePath, result);
+    return result;
   }
 
   Future<double> getAspectRatioAsync(String imagePath) async {
-    final cached = _aspectRatioCache.get(imagePath);
-    if (cached != null) return cached;
-
     final (width, height) = await getSizeAsync(imagePath);
-    final aspectRatio = width / height;
-    _aspectRatioCache.put(imagePath, aspectRatio);
-    return aspectRatio;
+    return width / height;
   }
 
   Future<(int, int)> getSizeAsync(String imagePath) async {
+    final cached = _sizeCache.get(imagePath);
+    if (cached != null) return cached;
+
     final input = _AsyncFileInput(File(imagePath));
     try {
       final size = (await ImageSizeGetter.getSizeResultAsync(input)).size;
-      return size.needRotate
+      final result = size.needRotate
           ? (size.height, size.width)
           : (size.width, size.height);
+      _sizeCache.put(imagePath, result);
+      return result;
     } finally {
       await input.close();
     }
   }
 
-  void clear() => _aspectRatioCache.clear();
+  void clear() => _sizeCache.clear();
 }
 
 class _AsyncFileInput extends AsyncImageInput {
