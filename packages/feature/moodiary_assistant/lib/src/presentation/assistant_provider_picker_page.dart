@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_assistant/src/application/llm_provider_preset_controller.dart';
 import 'package:moodiary_assistant/src/data/llm_preset_repository.dart';
+import 'package:moodiary_assistant/src/presentation/catalog_error.dart';
 import 'package:moodiary_assistant/src/presentation/provider_logo.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_di/moodiary_di.dart';
@@ -27,11 +28,14 @@ class _AssistantProviderPickerPageState
     if (_refreshing) return;
     setState(() => _refreshing = true);
     try {
-      await ref.read(llmProviderPresetControllerProvider.notifier).refresh();
+      await getIt<LlmPresetRepository>().refresh();
       if (!mounted) return;
+      ref.invalidate(llmProviderPresetControllerProvider);
       toast.success(message: context.l10n.assistant.llmPickerRefreshed);
-    } catch (_) {
-      if (mounted) toast.error(message: l10n.assistant.llmPickerLoadFailed);
+    } catch (e) {
+      if (mounted) {
+        toast.error(message: assistantNetworkErrorText(e, context.l10n));
+      }
     } finally {
       if (mounted) setState(() => _refreshing = false);
     }

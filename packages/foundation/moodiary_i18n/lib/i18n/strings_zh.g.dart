@@ -781,11 +781,26 @@ class Translations$assistant$zh {
 	/// zh: '请先填写 API Key'
 	String get modelListNeedKey => '请先填写 API Key';
 
+	/// zh: '可手动填写模型'
+	String get modelListManualHint => '可手动填写模型';
+
 	/// zh: '获取到 {count} 个模型'
 	String modelListFetched({required Object count}) => '获取到 ${count} 个模型';
 
-	/// zh: '获取模型列表失败，可手动填写模型'
-	String get modelListFailed => '获取模型列表失败，可手动填写模型';
+	/// zh: '连接超时'
+	String get netTimeout => '连接超时';
+
+	/// zh: '网络不可用，请检查连接'
+	String get netUnreachable => '网络不可用，请检查连接';
+
+	/// zh: '服务端返回 {code}'
+	String netStatus({required Object code}) => '服务端返回 ${code}';
+
+	/// zh: '返回的数据无法解析'
+	String get netDecode => '返回的数据无法解析';
+
+	/// zh: '请求失败'
+	String get netUnknown => '请求失败';
 
 	/// zh: '思考强度'
 	String get reasoningEffort => '思考强度';
@@ -931,17 +946,11 @@ class Translations$assistant$zh {
 	/// zh: '查看免责声明'
 	String get disclaimerGateAction => '查看免责声明';
 
-	/// zh: '发送日记'
-	String get toolSendDiary => '发送日记';
-
 	/// zh: '发送图片'
 	String get toolSendImage => '发送图片';
 
 	/// zh: '[图片]'
 	String get imageMessageLabel => '[图片]';
-
-	/// zh: '这是我的一篇日记，请阅读后帮我分析或回应：'
-	String get sendDiaryLead => '这是我的一篇日记，请阅读后帮我分析或回应：';
 
 	/// zh: '模型供应商'
 	String get modelProviderTitle => '模型供应商';
@@ -1078,9 +1087,6 @@ class Translations$assistant$zh {
 	/// zh: '（请求失败：{error}）'
 	String requestFailed({required Object error}) => '（请求失败：${error}）';
 
-	/// zh: '[图片]'
-	String get imagePlaceholder => '[图片]';
-
 	/// zh: '默认'
 	String get modelProviderDefault => '默认';
 
@@ -1104,6 +1110,12 @@ class Translations$assistant$zh {
 
 	/// zh: '全屏编辑'
 	String get composerFullscreen => '全屏编辑';
+
+	/// zh: '参数'
+	String get toolArgs => '参数';
+
+	/// zh: '结果'
+	String get toolResult => '结果';
 
 	/// zh: '已完成'
 	String get toolDone => '已完成';
@@ -1383,15 +1395,6 @@ class Translations$diary$zh {
 
 	/// zh: '信息流'
 	String get viewModeFeed => '信息流';
-
-	/// zh: '选择日记'
-	String get assistantSelectDiaryTitle => '选择日记';
-
-	/// zh: '搜索日记'
-	String get assistantSelectDiarySearchHint => '搜索日记';
-
-	/// zh: '没有可发送的日记'
-	String get assistantSelectDiaryEmpty => '没有可发送的日记';
 
 	/// zh: '日记不存在或已删除'
 	String get linkNotFound => '日记不存在或已删除';

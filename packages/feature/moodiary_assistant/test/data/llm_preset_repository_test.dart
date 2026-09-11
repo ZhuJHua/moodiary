@@ -1,8 +1,13 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_assistant/src/data/llm_preset_repository.dart';
+import 'package:moodiary_di/moodiary_di.dart';
+import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_storage/testing.dart';
 
 String _catalog(Map<String, dynamic> providers) => jsonEncode(providers);
 
@@ -392,4 +397,122 @@ void main() {
       expect(m.cacheWriteCost, 1.25);
     });
   });
+
+  group('refresh 的失败语义', () {
+    late MemoryKVStorage kv;
+
+    setUp(() {
+      kv = MemoryKVStorage();
+      getIt.pushNewScope(init: (gi) => gi.registerSingleton<IKVStorage>(kv));
+    });
+
+    tearDown(() => getIt.popScope());
+
+    void warmCache() {
+      MoodiaryKVs.llmPresetCache.set(
+        jsonEncode(
+          parseModelsDevCatalog(
+            _catalog({'anthropic': _anthropic}),
+          ).map((e) => e.toJson()).toList(),
+        ),
+      );
+    }
+
+    test('刷新失败时如实抛错，不拿旧缓存冒充成功', () async {
+      warmCache();
+      final repo = LlmPresetRepository(
+        _StubHttp(() => throw const HttpException(.connection, 'offline')),
+      );
+      await expectLater(repo.refresh(), throwsA(isA<HttpException>()));
+    });
+
+    test('load 命中热缓存时不发请求', () async {
+      warmCache();
+      final http = _StubHttp(() => throw StateError('不该走到网络'));
+      final repo = LlmPresetRepository(http);
+      final presets = await repo.load();
+      expect(presets.single.id, 'anthropic');
+      expect(http.calls, 0);
+    });
+
+    test('缓存为空时 load 把网络错误透出去', () async {
+      final repo = LlmPresetRepository(
+        _StubHttp(() => throw const HttpException(.timeout, 'slow')),
+      );
+      await expectLater(repo.load(), throwsA(isA<HttpException>()));
+    });
+
+    test('在途的刷新会被合并成一次请求', () async {
+      final http = _StubHttp(
+        () async => _catalog({'anthropic': _anthropic}),
+      );
+      final repo = LlmPresetRepository(http);
+      final results = await Future.wait([repo.refresh(), repo.refresh()]);
+      expect(http.calls, 1);
+      expect(results.first.single.id, 'anthropic');
+      expect(results.last.single.id, 'anthropic');
+      await repo.refresh();
+      expect(http.calls, 2);
+    });
+  });
+
+}
+
+class _StubHttp extends IHttpClient {
+  _StubHttp(this._responder);
+
+  final Future<String> Function() _responder;
+
+  int calls = 0;
+
+  @override
+  Future<HttpResponse<T>> request<T>(
+    HttpMethod method,
+    String url, {
+    Map<String, dynamic>? query,
+    Map<String, dynamic>? headers,
+    HttpBody? body,
+    Duration? timeout,
+    bool silent = false,
+    bool plainText = false,
+  }) async {
+    calls++;
+    return HttpResponse<T>(statusCode: 200, data: await _responder() as T);
+  }
+
+  @override
+  Future<HttpResponse<Uint8List>> requestBytes(
+    HttpMethod method,
+    String url, {
+    Map<String, dynamic>? query,
+    Map<String, dynamic>? headers,
+    HttpBody? body,
+    Duration? timeout,
+    bool silent = false,
+    bool? throwOnStatus,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<void> downloadFile(
+    String url,
+    String destPath, {
+    Map<String, dynamic>? headers,
+    void Function(int received, int total)? onProgress,
+    Duration? timeout,
+    bool silent = false,
+    CancelToken? cancel,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<HttpResponse<Uint8List>> uploadFile(
+    String url, {
+    required String filePath,
+    HttpMethod method = .post,
+    Map<String, dynamic>? headers,
+    void Function(int sent, int total)? onProgress,
+    Duration? timeout,
+    bool silent = false,
+    bool? throwOnStatus,
+    CancelToken? cancel,
+  }) => throw UnimplementedError();
 }

@@ -52,6 +52,9 @@ int maxTokensFor(int? outputLimit) {
 
 const List<String> assistantBudgetLevels = ['low', 'medium', 'high'];
 
+// 进历史给模型看的，不能随界面语言变
+const String assistantImagePlaceholder = '[image]';
+
 // 目录里 'none' 表示不思考，等价于我们的「关」
 const String _offEffortValue = 'none';
 

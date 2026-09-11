@@ -34,11 +34,11 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
-enum _ComposerTool { diary, image }
-
 const double _kComposerControlSize = 40;
 
 const double _kComposerPadding = 8;
+
+const double _kComposerHeightEstimate = 102;
 
 const double _kTitleInset = 6;
 
@@ -64,10 +64,14 @@ Widget _codeBlock(
 class AssistantPage extends StatefulWidget {
   final String? initialSessionId;
 
-  const AssistantPage({super.key, this.initialSessionId});
+  final String? initialTitle;
 
-  factory AssistantPage.fromRoute(GoRouterState state) =>
-      AssistantPage(initialSessionId: state.params['session_id'] as String?);
+  const AssistantPage({super.key, this.initialSessionId, this.initialTitle});
+
+  factory AssistantPage.fromRoute(GoRouterState state) => AssistantPage(
+    initialSessionId: state.params['session_id'] as String?,
+    initialTitle: state.params['title'] as String?,
+  );
 
   @override
   State<AssistantPage> createState() => _AssistantPageState();
@@ -127,7 +131,7 @@ class _AssistantPageState extends State<AssistantPage> {
 
   int _contextLimit = assistantDefaultContextBudget;
 
-  double _composerHeight = 0;
+  double _composerHeight = _kComposerHeightEstimate;
 
   ChatSession? _session;
 
@@ -143,6 +147,34 @@ class _AssistantPageState extends State<AssistantPage> {
 
   bool _presetMissing = false;
 
+  bool _hasUserTurn = false;
+
+  String _lastItemId = '';
+
+  final Map<String, ({AssistantTurn turn, Widget widget})> _turnWidgets = {};
+
+  // 会话还没读出来之前先用路由带来的标题，避免恢复时先闪一下「新对话」
+  String _titleText(Translations l10n) {
+    for (final candidate in [_session?.title, widget.initialTitle]) {
+      final trimmed = candidate?.trim() ?? '';
+      if (trimmed.isNotEmpty) return trimmed;
+    }
+    return l10n.assistant.newChat;
+  }
+
+  void _onInputFocusChanged() {
+    if (_inputFocusNode.hasFocus) _listKey.currentState?.pinToBottom();
+  }
+
+  void _syncDerivedFromItems() {
+    final items = _chat.items;
+    _hasUserTurn = items.any((m) => m is AssistantTurn && m.fromUser);
+    _lastItemId = items.isEmpty ? '' : items.last.id;
+    if (_turnWidgets.isEmpty) return;
+    final live = {for (final m in items) m.id};
+    _turnWidgets.removeWhere((id, _) => !live.contains(id));
+  }
+
   @override
   void initState() {
     super.initState();
@@ -150,7 +182,8 @@ class _AssistantPageState extends State<AssistantPage> {
     _disclaimerAccepted =
         MoodiaryKVs.assistantDisclaimerAccepted.get() ?? false;
     _reasoningLevel = MoodiaryKVs.assistantReasoningEffort.get() ?? '';
-    _refreshReady();
+    _chat.addListener(_syncDerivedFromItems);
+    _inputFocusNode.addListener(_onInputFocusChanged);
     unawaited(_initStagedPreset());
     if (!_disclaimerAccepted) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -165,11 +198,17 @@ class _AssistantPageState extends State<AssistantPage> {
     if (_initialized) return;
     _initialized = true;
     final id = widget.initialSessionId;
-    if (id != null) _loadSessionById(id);
+    if (id != null) {
+      _loadSessionById(id);
+    } else {
+      unawaited(_refreshReady());
+    }
   }
 
   @override
   void dispose() {
+    _chat.removeListener(_syncDerivedFromItems);
+    _inputFocusNode.removeListener(_onInputFocusChanged);
     _inputController.dispose();
     _inputFocusNode.dispose();
     _chatScroll.dispose();
@@ -217,6 +256,14 @@ class _AssistantPageState extends State<AssistantPage> {
         if (!caps.attachment) _pendingImageName = null;
       });
     }
+  }
+
+  bool get _historyAllowsImages {
+    final model = _activeModel;
+    if (model != null) return model.acceptsImage;
+    final provider = _provider;
+    if (provider == null || provider.isPreset) return true;
+    return provider.attachment;
   }
 
   ({bool tools, bool attachment}) _capabilities(
@@ -280,6 +327,7 @@ class _AssistantPageState extends State<AssistantPage> {
     if (!mounted) return;
     if (session == null) {
       Navigator.of(context).maybePop();
+      unawaited(_refreshReady());
       return;
     }
     await _loadSession(session);
@@ -291,17 +339,18 @@ class _AssistantPageState extends State<AssistantPage> {
     _streamSub = null;
     _streamingMessage = null;
     _staleReplyIds = [];
-    await _chat.loadSession(session.id);
-    if (!mounted) return;
+    _turnWidgets.clear();
     setState(() {
       _session = session;
       _reasoningLevel = session.reasoningEffort;
       _pendingImageName = null;
       _sending = false;
     });
-    await _refreshReady();
-    if (!mounted) return;
-    await _syncPresetLabel(session);
+    await Future.wait([
+      _chat.loadSession(session.id),
+      _refreshReady(),
+      _syncPresetLabel(session),
+    ]);
     if (!mounted) return;
     _syncCompactionNotice();
     _syncModelSwitchNotices();
@@ -376,10 +425,13 @@ class _AssistantPageState extends State<AssistantPage> {
       model: _modelId,
       apiKey: key,
     );
-    if (updated == null || !mounted || _session?.id != session.id) return;
-    await getIt<ChatRepository>().upsertSession(updated);
+    final current = _session;
+    if (updated == null || !mounted || current?.id != session.id) return;
+    // 与 _maybeCompact 同理：只把标题落回当前会话，别拿旧快照覆盖模型/档位
+    final merged = current!.copyWith(title: updated.title);
+    await getIt<ChatRepository>().upsertSession(merged);
     if (!mounted || _session?.id != session.id) return;
-    setState(() => _session = updated);
+    setState(() => _session = merged);
   }
 
   Future<void> _openFullscreenComposer() async {
@@ -644,6 +696,7 @@ class _AssistantPageState extends State<AssistantPage> {
               }
               _finalizeStreaming(persist: true);
               if (mounted) setState(() => _sending = false);
+              unawaited(_maybeCompact());
             },
             onDone: () {
               if (gen != _generation) return;
@@ -661,6 +714,9 @@ class _AssistantPageState extends State<AssistantPage> {
   }
 
   List<AssistantMessage> _buildHistory() {
+    // 只有「明确知道不支持」才剥图：目录缺失时 attachment 恒 false，不能当判据
+    final allowImages = _historyAllowsImages;
+
     final raw =
         <
           ({String id, AssistantRole role, String content, String? imagePath})
@@ -668,13 +724,20 @@ class _AssistantPageState extends State<AssistantPage> {
     for (final m in _chat.items) {
       if (m is! AssistantTurn) continue;
       final hasImage = m.imageName.isNotEmpty;
-      final content = m.fromUser ? m.text : _withToolRecord(m);
-      if (content.isEmpty && !hasImage) continue;
+      var content = m.fromUser ? m.text : _withToolRecord(m);
+      if (hasImage && !allowImages) {
+        content = content.isEmpty
+            ? assistantImagePlaceholder
+            : '$assistantImagePlaceholder\n\n$content';
+      }
+      if (content.isEmpty && !(hasImage && allowImages)) continue;
       raw.add((
         id: m.id,
         role: m.fromUser ? AssistantRole.user : AssistantRole.assistant,
         content: content,
-        imagePath: hasImage ? AppFiles.getRealPath('image', m.imageName) : null,
+        imagePath: hasImage && allowImages
+            ? AppFiles.getRealPath('image', m.imageName)
+            : null,
       ));
     }
 
@@ -712,6 +775,7 @@ class _AssistantPageState extends State<AssistantPage> {
   }
 
   String _withToolRecord(AssistantTurn turn) {
+    if (!_canUseTools) return turn.text;
     final record = AssistantToolRegistry.recordOf(turn.toolCalls);
     if (record.isEmpty) return turn.text;
     return turn.text.isEmpty ? record : '$record\n\n${turn.text}';
@@ -732,7 +796,7 @@ class _AssistantPageState extends State<AssistantPage> {
           (
             id: m.id,
             fromUser: m.fromUser,
-            text: m.text.isEmpty ? l10n.assistant.imagePlaceholder : m.text,
+            text: m.text.isEmpty ? assistantImagePlaceholder : m.text,
           ),
     ];
 
@@ -745,12 +809,20 @@ class _AssistantPageState extends State<AssistantPage> {
       model: _modelId,
       apiKey: key,
     );
-    if (updated == null || !mounted || _session?.id != session.id) return null;
-    await getIt<ChatRepository>().upsertSession(updated);
+    final current = _session;
+    if (updated == null || !mounted || current?.id != session.id) return null;
+    // 只把压缩字段落回当前会话：await 期间用户可能已换了模型
+    final merged = current!.copyWith(
+      compactedSummary: updated.compactedSummary,
+      compactedUpToMessageId: updated.compactedUpToMessageId,
+      compactedAt: updated.compactedAt,
+      compactedInputTokensAtTrigger: updated.compactedInputTokensAtTrigger,
+    );
+    await getIt<ChatRepository>().upsertSession(merged);
     if (!mounted || _session?.id != session.id) return null;
-    setState(() => _session = updated);
+    setState(() => _session = merged);
     _syncCompactionNotice();
-    return updated;
+    return merged;
   }
 
   void _syncCompactionNotice() {
@@ -927,14 +999,6 @@ class _AssistantPageState extends State<AssistantPage> {
     _streamingMessage = next;
   }
 
-  Future<void> _pickAndSendDiary() async {
-    if (_sending) return;
-    _inputFocusNode.unfocus();
-    final diary = await const AssistantDiaryPickerRoute().push<Diary>(context);
-    if (diary == null || !mounted) return;
-    await _submit(_formatDiaryMessage(diary));
-  }
-
   Future<void> _pickImage() async {
     if (_sending) return;
     _inputFocusNode.unfocus();
@@ -949,15 +1013,6 @@ class _AssistantPageState extends State<AssistantPage> {
 
   void _removePendingImage() {
     setState(() => _pendingImageName = null);
-  }
-
-  String _formatDiaryMessage(Diary diary) {
-    final l10n = context.l10n;
-    final date = TimeFormat.fullDate(diary.time);
-    final title = diary.title.trim();
-    final header = title.isEmpty ? date : '$date · $title';
-    final body = diary.contentText.trim();
-    return '${l10n.assistant.sendDiaryLead}\n\n【$header】\n$body';
   }
 
   void _dismissComposer() {
@@ -990,16 +1045,26 @@ class _AssistantPageState extends State<AssistantPage> {
   }
 
   Widget _buildTurn(AssistantTurn turn) {
-    final items = _chat.items;
-    final isLast = items.isNotEmpty && items.last.id == turn.id;
+    final isLast = _lastItemId == turn.id;
+    // 定稿的历史轮只取决于 turn 自身，整页重建时直接复用上一次建好的子树
+    if (!isLast && !turn.streaming) {
+      final cached = _turnWidgets[turn.id];
+      if (cached != null && identical(cached.turn, turn)) return cached.widget;
+      final built = _composeTurn(turn, live: false);
+      _turnWidgets[turn.id] = (turn: turn, widget: built);
+      return built;
+    }
+    return _composeTurn(turn, live: !_sending && isLast);
+  }
+
+  Widget _composeTurn(AssistantTurn turn, {required bool live}) {
     if (turn.fromUser) {
       return _UserBubble(
         text: turn.text,
         imageName: turn.imageName,
-        onRetry: (!_sending && isLast) ? _regenerate : null,
+        onRetry: live ? _regenerate : null,
       );
     }
-    final hasUserTurn = items.any((m) => m is AssistantTurn && m.fromUser);
     return _AssistantBubble(
       text: turn.text,
       reasoning: turn.reasoning,
@@ -1009,7 +1074,7 @@ class _AssistantPageState extends State<AssistantPage> {
       outputTokens: turn.outputTokens,
       toolCalls: turn.toolCalls,
       streaming: turn.streaming,
-      onRegenerate: (!_sending && isLast && hasUserTurn) ? _regenerate : null,
+      onRegenerate: (live && _hasUserTurn) ? _regenerate : null,
     );
   }
 
@@ -1047,7 +1112,6 @@ class _AssistantPageState extends State<AssistantPage> {
       sending: _sending,
       onSend: () => _submit(_inputController.text),
       onStop: _stop,
-      onSendDiary: _pickAndSendDiary,
       onSendImage: _canSendImage ? _pickImage : null,
       onFullscreen: _openFullscreenComposer,
       pendingImageName: _pendingImageName,
@@ -1100,7 +1164,7 @@ class _AssistantPageState extends State<AssistantPage> {
             Padding(
               padding: const .symmetric(horizontal: _kTitleInset),
               child: Text(
-                _sessionTitle(_session, l10n),
+                _titleText(l10n),
                 maxLines: 1,
                 overflow: .ellipsis,
                 style:
@@ -1319,8 +1383,6 @@ class _AssistantComposer extends StatefulWidget {
   final VoidCallback onSend;
   final VoidCallback onStop;
 
-  final VoidCallback onSendDiary;
-
   final VoidCallback? onSendImage;
   final VoidCallback onFullscreen;
   final String? pendingImageName;
@@ -1332,7 +1394,6 @@ class _AssistantComposer extends StatefulWidget {
     required this.sending,
     required this.onSend,
     required this.onStop,
-    required this.onSendDiary,
     required this.onSendImage,
     required this.onFullscreen,
     required this.pendingImageName,
@@ -1405,35 +1466,27 @@ class _AssistantComposerState extends State<_AssistantComposer> {
                   Row(
                     mainAxisAlignment: .spaceBetween,
                     children: [
-                      MMenuButton<_ComposerTool>(
-                        tooltip: l10n.assistant.tool,
-                        entries: [
-                          MMenuEntry(
-                            value: .diary,
-                            label: l10n.assistant.toolSendDiary,
-                            icon: LucideIcons.bookOpen,
-                            enabled: !widget.sending,
-                          ),
-                          if (widget.onSendImage != null)
-                            MMenuEntry(
-                              value: .image,
-                              label: l10n.assistant.toolSendImage,
-                              icon: LucideIcons.image,
-                              enabled: !widget.sending,
+                      if (widget.onSendImage case final onSendImage?)
+                        Tooltip(
+                          message: l10n.assistant.toolSendImage,
+                          child: MInkWell(
+                            shape: const CircleBorder(),
+                            onTap: widget.sending ? null : onSendImage,
+                            child: SizedBox.square(
+                              dimension: _kComposerControlSize,
+                              child: Icon(
+                                LucideIcons.image,
+                                color: widget.sending
+                                    ? scheme.onSurfaceVariant.withValues(
+                                        alpha: 0.38,
+                                      )
+                                    : scheme.onSurfaceVariant,
+                              ),
                             ),
-                        ],
-                        onSelected: (tool) => switch (tool) {
-                          _ComposerTool.diary => widget.onSendDiary(),
-                          _ComposerTool.image => widget.onSendImage?.call(),
-                        },
-                        child: SizedBox.square(
-                          dimension: _kComposerControlSize,
-                          child: Icon(
-                            LucideIcons.plus,
-                            color: scheme.onSurfaceVariant,
                           ),
-                        ),
-                      ),
+                        )
+                      else
+                        const SizedBox.shrink(),
                       Row(
                         mainAxisSize: .min,
                         children: [
@@ -1714,6 +1767,18 @@ class _ComposerImagePreview extends StatelessWidget {
   }
 }
 
+Size? _imageBox(String path, BoxConstraints limit) {
+  try {
+    final (width, height) = ImageSizeManager().getSize(path);
+    if (width <= 0 || height <= 0) return null;
+    return limit.constrainSizeAndAttemptToPreserveAspectRatio(
+      Size(width.toDouble(), height.toDouble()),
+    );
+  } catch (_) {
+    return null;
+  }
+}
+
 Widget _brokenImage(ColorScheme scheme, double size) => Container(
   width: size,
   height: size,
@@ -1737,15 +1802,23 @@ class _UserBubble extends StatelessWidget {
 
     final parts = <Widget>[];
     if (hasImage) {
+      final path = AppFiles.getRealPath('image', imageName);
+      final limit = BoxConstraints(maxWidth: maxWidth, maxHeight: 260);
+      final box = _imageBox(path, limit);
       parts.add(
         ClipRRect(
           borderRadius: .circular(14),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: maxWidth, maxHeight: 260),
-            child: Image.file(
-              File(AppFiles.getRealPath('image', imageName)),
-              fit: .cover,
-              errorBuilder: (_, _, _) => _brokenImage(scheme, 120),
+          child: ColoredBox(
+            color: scheme.surfaceContainerHighest,
+            child: ConstrainedBox(
+              constraints: limit,
+              child: Image.file(
+                File(path),
+                width: box?.width,
+                height: box?.height,
+                fit: .cover,
+                errorBuilder: (_, _, _) => _brokenImage(scheme, 120),
+              ),
             ),
           ),
         ),
@@ -1872,6 +1945,8 @@ class _AssistantBubble extends StatelessWidget {
     final stacked = <Widget>[
       if (showThinking)
         AssistantNotice(
+          stateKey: 'thinking',
+          hideSummaryWhenExpanded: true,
           icon: thinkingActive ? null : LucideIcons.brain,
           kind: thinkingActive
               ? l10n.assistant.thinking
@@ -1963,22 +2038,21 @@ class _AssistantBubble extends StatelessWidget {
 Widget _toolNotice(BuildContext context, AssistantToolCall call) {
   final spec = AssistantToolRegistry.byId(call.name);
   final display = spec == null
-      ? call.name
-      : assistantToolDisplay(context, spec.tool).title;
+      ? null
+      : assistantToolDisplay(context, spec.tool);
+  final title = display?.title ?? call.name;
   if (!call.done) {
-    return AssistantNotice(kind: display);
+    return AssistantNotice(kind: title);
   }
   final input = _decodeArgs(call.argsJson);
   return AssistantNotice(
-    icon: LucideIcons.wrench,
-    kind: display,
+    stateKey: call.callId,
+    icon: display?.icon ?? LucideIcons.wrench,
+    kind: title,
     summary: spec?.summaryOf(input, call.result) ?? call.result,
-    detail: call.result.isEmpty
+    detail: input.isEmpty && call.result.isEmpty
         ? null
-        : (context) => SelectableText(
-            call.result,
-            style: context.theme.typography.bodySmall.onSurfaceVariant,
-          ),
+        : (context) => AssistantToolDetail(args: input, result: call.result),
   );
 }
 
@@ -2041,8 +2115,10 @@ class AssistantSessionListPage extends StatelessWidget {
         actions: const [_ActiveModelAction(), SizedBox(width: 4)],
       ),
       body: _SessionListView(
-        onSelect: (session) =>
-            AssistantConversationRoute(sessionId: session.id).push(context),
+        onSelect: (session) => AssistantConversationRoute(
+          sessionId: session.id,
+          title: session.title,
+        ).push(context),
         onDelete: (session) =>
             getIt<ChatRepository>().deleteSession(session.id),
         padding: .only(bottom: 8 + MediaQuery.paddingOf(context).bottom),

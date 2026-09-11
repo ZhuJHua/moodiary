@@ -14,7 +14,7 @@ class MuiLocalizationsData with BaseTranslations<MuiLocale, MuiLocalizationsData
 	/// Constructing via the enum [MuiLocale.build] is preferred.
 	MuiLocalizationsData({Map<String, Node>? overrides, PluralResolver? cardinalResolver, PluralResolver? ordinalResolver, TranslationMetadata<MuiLocale, MuiLocalizationsData>? meta})
 		: assert(overrides == null, 'Set "translation_overrides: true" in order to enable this feature.'),
-		  $meta = meta ?? TranslationMetadata(
+		  _meta = meta ?? TranslationMetadata(
 		    locale: MuiLocale.zh,
 		    overrides: overrides ?? {},
 		    cardinalResolver: cardinalResolver,
@@ -22,7 +22,8 @@ class MuiLocalizationsData with BaseTranslations<MuiLocale, MuiLocalizationsData
 		  );
 
 	/// Metadata for the translations of <zh>.
-	@override final TranslationMetadata<MuiLocale, MuiLocalizationsData> $meta;
+	final TranslationMetadata<MuiLocale, MuiLocalizationsData> _meta;
+	@override TranslationMetadata<MuiLocale, MuiLocalizationsData> get $meta => _meta;
 
 	late final MuiLocalizationsData _root = this; // ignore: unused_field
 

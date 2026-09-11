@@ -19,12 +19,8 @@ class LlmPresetRepository {
   int get cachedAt => MoodiaryKVs.llmPresetCacheAt.get() ?? 0;
 
   Future<List<LlmProviderPreset>> load() async {
-    final cached = MoodiaryKVs.llmPresetCache.get() ?? '';
-    if (cached.isNotEmpty) {
-      try {
-        return _decodeCache(cached);
-      } catch (_) {}
-    }
+    final cached = cachedPresets();
+    if (cached.isNotEmpty) return cached;
     return refresh();
   }
 
@@ -38,35 +34,24 @@ class LlmPresetRepository {
     }
   }
 
-  static const Duration _staleAfter = Duration(hours: 24);
+  Future<List<LlmProviderPreset>>? _inFlight;
 
-  bool get isStale =>
-      DateTime.now().millisecondsSinceEpoch - cachedAt >
-      _staleAfter.inMilliseconds;
-
-  Future<void> refreshIfStale() async {
-    if (!isStale) return;
-    try {
-      await refresh();
-    } catch (_) {}
+  /// 永远如实抛错：用户主动刷新必须能分辨「更新到了」与「连不上，还在用旧目录」。
+  /// 想要静默回退旧缓存的调用方自己 catch。
+  Future<List<LlmProviderPreset>> refresh() {
+    final running = _inFlight;
+    if (running != null) return running;
+    final future = _refresh().whenComplete(() => _inFlight = null);
+    _inFlight = future;
+    return future;
   }
 
-  Future<List<LlmProviderPreset>> refresh() async {
-    try {
-      final body = await _fetchBody();
-      final normalized = await compute(_normalize, body);
-      MoodiaryKVs.llmPresetCache.set(normalized);
-      MoodiaryKVs.llmPresetCacheAt.set(DateTime.now().millisecondsSinceEpoch);
-      return _decodeCache(normalized);
-    } catch (e) {
-      final cached = MoodiaryKVs.llmPresetCache.get() ?? '';
-      if (cached.isNotEmpty) {
-        try {
-          return _decodeCache(cached);
-        } catch (_) {}
-      }
-      rethrow;
-    }
+  Future<List<LlmProviderPreset>> _refresh() async {
+    final body = await _fetchBody();
+    final normalized = await compute(_normalize, body);
+    MoodiaryKVs.llmPresetCache.set(normalized);
+    MoodiaryKVs.llmPresetCacheAt.set(DateTime.now().millisecondsSinceEpoch);
+    return _decodeCache(normalized);
   }
 
   Future<String> _fetchBody() async {
