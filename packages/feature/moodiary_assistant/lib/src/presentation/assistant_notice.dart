@@ -16,7 +16,7 @@ class AssistantNotice extends StatefulWidget {
 
   final VoidCallback? onTap;
 
-  // 给了才把展开状态托管到列表；没给的块被重建就回到收起
+  // 给了才把展开状态托管到列表
   final String? stateKey;
 
   final bool hideSummaryWhenExpanded;
@@ -52,7 +52,6 @@ class _AssistantNoticeState extends State<AssistantNotice>
 
   AssistantChatListState? _list;
 
-  // 一个 State 至多持一份 hold：动画中途再点只是掉头，停下来才还
   String? _held;
 
   @override
@@ -158,12 +157,7 @@ class _AssistantNoticeState extends State<AssistantNotice>
       );
       if (factor < 1) {
         body = ClipRect(
-          child: Align(
-            alignment: .topLeft,
-            // 只展开高度：宽度跟着 factor 缩会让整块内容横向抽动
-            heightFactor: factor,
-            child: body,
-          ),
+          child: Align(alignment: .topLeft, heightFactor: factor, child: body),
         );
       }
     }

@@ -153,7 +153,6 @@ class _AssistantPageState extends State<AssistantPage> {
 
   final Map<String, ({AssistantTurn turn, Widget widget})> _turnWidgets = {};
 
-  // 会话还没读出来之前先用路由带来的标题，避免恢复时先闪一下「新对话」
   String _titleText(Translations l10n) {
     for (final candidate in [_session?.title, widget.initialTitle]) {
       final trimmed = candidate?.trim() ?? '';
@@ -427,7 +426,6 @@ class _AssistantPageState extends State<AssistantPage> {
     );
     final current = _session;
     if (updated == null || !mounted || current?.id != session.id) return;
-    // 与 _maybeCompact 同理：只把标题落回当前会话，别拿旧快照覆盖模型/档位
     final merged = current!.copyWith(title: updated.title);
     await getIt<ChatRepository>().upsertSession(merged);
     if (!mounted || _session?.id != session.id) return;
@@ -714,7 +712,7 @@ class _AssistantPageState extends State<AssistantPage> {
   }
 
   List<AssistantMessage> _buildHistory() {
-    // 只有「明确知道不支持」才剥图：目录缺失时 attachment 恒 false，不能当判据
+    // 目录缺失时 attachment 恒 false，不能当判据
     final allowImages = _historyAllowsImages;
 
     final raw =
@@ -811,7 +809,7 @@ class _AssistantPageState extends State<AssistantPage> {
     );
     final current = _session;
     if (updated == null || !mounted || current?.id != session.id) return null;
-    // 只把压缩字段落回当前会话：await 期间用户可能已换了模型
+    // await 期间用户可能已换了模型
     final merged = current!.copyWith(
       compactedSummary: updated.compactedSummary,
       compactedUpToMessageId: updated.compactedUpToMessageId,
@@ -1046,7 +1044,6 @@ class _AssistantPageState extends State<AssistantPage> {
 
   Widget _buildTurn(AssistantTurn turn) {
     final isLast = _lastItemId == turn.id;
-    // 定稿的历史轮只取决于 turn 自身，整页重建时直接复用上一次建好的子树
     if (!isLast && !turn.streaming) {
       final cached = _turnWidgets[turn.id];
       if (cached != null && identical(cached.turn, turn)) return cached.widget;

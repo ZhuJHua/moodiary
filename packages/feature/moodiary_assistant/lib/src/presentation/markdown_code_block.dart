@@ -12,7 +12,6 @@ typedef _SpanKey = ({
   Map<String, TextStyle> theme,
 });
 
-// 高亮是纯函数，结果跨 State 共享：条目被回收再建、离屏量高度时都不必重跑
 final _spanCache = LRUCache<_SpanKey, TextSpan>(maxSize: 200);
 
 class MarkdownCodeBlock extends StatefulWidget {

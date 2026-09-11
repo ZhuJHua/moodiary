@@ -36,8 +36,7 @@ class LlmPresetRepository {
 
   Future<List<LlmProviderPreset>>? _inFlight;
 
-  /// 永远如实抛错：用户主动刷新必须能分辨「更新到了」与「连不上，还在用旧目录」。
-  /// 想要静默回退旧缓存的调用方自己 catch。
+  /// 永远如实抛错；要回退旧缓存的调用方自己 catch
   Future<List<LlmProviderPreset>> refresh() {
     final running = _inFlight;
     if (running != null) return running;

@@ -1,8 +1,7 @@
 import 'package:flutter/rendering.dart';
 import 'package:mui/mui.dart';
 
-/// 在同一份上下文（主题、本地化、MediaQuery）下量一批组件：脚手架只搭一次，
-/// 每次 [measure] 只换被量的那棵子树。用完必须 [dispose]
+/// 脚手架只搭一次、每次 [measure] 只换子树；用完必须 [dispose]
 class OffscreenMeasurer {
   OffscreenMeasurer(this._context, {required Size viewSize})
     : _root = _MeasureRoot(
@@ -19,7 +18,6 @@ class OffscreenMeasurer {
   RenderObjectToWidgetElement<RenderBox>? _element;
 
   Size measure(Widget widget) {
-    // 每次换 key：被量的子树之间不共享 State
     _attach(_wrap(KeyedSubtree(key: UniqueKey(), child: widget)));
     _pipelineOwner.flushLayout();
     return _root.size;
@@ -39,8 +37,7 @@ class OffscreenMeasurer {
     _buildOwner.buildScope(element);
   }
 
-  // Localizations 不是 InheritedTheme，captureAll 带不过来；SelectionArea 一类
-  // 还要 Overlay 祖先，按内容定尺寸的 Overlay 对高度透明
+  // Localizations 不是 InheritedTheme；SelectionArea 一类还要 Overlay 祖先
   Widget _wrap(Widget child) {
     Widget subtree = Directionality(
       textDirection: Directionality.of(_context),

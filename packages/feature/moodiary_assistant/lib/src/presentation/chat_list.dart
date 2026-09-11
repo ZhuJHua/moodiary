@@ -14,29 +14,28 @@ typedef AssistantItemBuilder = Widget Function(
   int index,
 );
 
-// 逐帧轨迹开关。真机上排位置问题只能靠它，别删；tree-shaking 会把整个分支剔掉
+// 逐帧轨迹开关，真机排位置问题用；tree-shaking 会剔掉整个分支
 const bool _kTrace = false;
 
 void _trace(String Function() message) {
   if (_kTrace) debugPrint('CL ${message()}');
 }
 
-// 距底多近算「在底部」。比 _kStickEpsilon 宽松：这条判的是用户意图，那条判的是像素
+// 距底多近算「在底部」（用户意图，比 _kStickEpsilon 宽松）
 const double _kBottomSlack = 8;
 
 const double _kItemGap = 12;
 const double _kTopPadding = 8;
 
-// 贴底判据：只有上一帧确实停在底部才在同一帧跟到新底部
 const double _kStickEpsilon = 0.5;
 
-// 首帧还没有视口尺寸，长会话先把中心放到离尾部这么多条，让 layout 有界
+// 首帧没有视口尺寸时，长会话先把中心放到离尾部这么多条
 const int _kInitialCenterProbe = 24;
 
-// 贴底跟随时中心不动、forward 组会一直攒；超过这么多条就把中心推到已 build 的最顶
+// 贴底跟随时 forward 组攒到这么多条就把中心往前推
 const int _kForwardGroupCap = 32;
 
-// 每次离屏量高度的时间预算：跑在帧尾，量完一件超了就停，别挤掉下一帧
+// 每帧尾离屏量高度的时间预算
 const Duration _kMeasureBudget = Duration(milliseconds: 2);
 
 typedef _ExtentSignature = ({
@@ -52,8 +51,7 @@ typedef _BuildSignature = ({
   Locale? locale,
 });
 
-// 默认对没 build 的孩子按平均高度外推；聊天条目 30~2000px，平均没有意义。
-// 量过的用真值，没量过的不算——宁可边界暂时短，也不给假长度
+// 没 build 的孩子不按平均高度外推：量过的用真值，没量过的不算
 class _ExtentDelegate extends SliverChildBuilderDelegate {
   const _ExtentDelegate(
     super.builder, {
@@ -81,20 +79,17 @@ class _ExtentDelegate extends SliverChildBuilderDelegate {
   }
 }
 
-/// 跟随只由用户动作改写，永远不许有「几何」一项：程序性 jumpTo / snap / 键盘
-/// inset 常常恰好落在底部，拿它们反推意图会把刚放弃的跟随原地复活
+/// 跟随只由用户动作改写，永远不加「几何」一项：程序性落位常恰好在底部
 enum FollowCause { drag, pinRequest, blockTap, session }
 
-/// 唯一实例，runtimeType 与 controller 永不换：Scrollable 每次 MediaQuery 变化
-/// 都比这两样，不同就重建 position 并丢掉物理修正
+/// 唯一实例：Scrollable 每次 MediaQuery 变化都比 runtimeType，不同就重建 position
 class _ChatScrollPhysics extends ScrollPhysics {
-  /// 下一次 applyContentDimensions 的落点，infinity = 落底；同一帧多轮修正都落同一点
+  /// 下一次 applyContentDimensions 的落点，infinity = 落底
   final ValueGetter<double?> pendingSnap;
   final VoidCallback onSnapConsumed;
 
   final ValueGetter<bool> shouldStick;
 
-  /// forward 组总高（含底部留白），只在 layout 之后才有意义
   final ValueGetter<double?> forwardExtent;
 
   const _ChatScrollPhysics({
@@ -114,16 +109,14 @@ class _ChatScrollPhysics extends ScrollPhysics {
     parent: buildParent(ancestor),
   );
 
-  /// 真正的底。viewport 把 max 夹在 0 之上，forward 组比视口矮时底下会露空白；
-  /// 其实 px 可以为负把 reverse 组拉下来，底对齐 = F - vp
+  /// viewport 把 max 夹在 0 之上；forward 组比视口矮时底对齐其实是 F - vp
   double bottomOf(ScrollMetrics m) => chatListBottom(m, forwardExtent());
 
-  // AlwaysScrollableScrollPhysics 会盖掉基类的 allowUserScrolling，只能自己判
+  // AlwaysScrollableScrollPhysics 会盖掉 allowUserScrolling
   @override
   bool shouldAcceptUserOffset(ScrollMetrics position) =>
       bottomOf(position) - position.minScrollExtent > precisionErrorTolerance;
 
-  // 底之下的空白不许拖出来；正常状态 bottom == max，交给平台物理
   @override
   double applyBoundaryConditions(ScrollMetrics position, double value) {
     final bottom = bottomOf(position);
@@ -162,7 +155,6 @@ class _ChatScrollPhysics extends ScrollPhysics {
       isScrolling: isScrolling,
       velocity: velocity,
     );
-    // 正常状态 bottom == max，越界是 iOS 回弹在维持；只在内容撑不满时夹
     final clamped = bottom < newPosition.maxScrollExtent && adjusted > bottom
         ? bottom
         : adjusted;
@@ -243,13 +235,9 @@ class AssistantChatList extends StatefulWidget {
   State<AssistantChatList> createState() => AssistantChatListState();
 }
 
-/// 坐标系（anchor = 0）：中心线在屏幕 y = -px；R = reverse 组总高，F = forward 组
-/// 总高（含 bottomPadding）；min = -R，max = max(0, F - vp)。顶对齐 ⟺ px = min，
-/// 贴底 ⟺ px = max。min 与视口高无关，所以键盘 inset 只是一次普通的 max 变化。
-///
-/// 中心 = 所有已 build 且上沿 ≤ 0 的条目里最老的那一条（一条都没有时 = 最老一条）。
-/// 于是任何会长高的东西（流式尾部、正在展开的块）都在 forward 组，viewport 自己
-/// 冻结它上方的一切——不需要补偿。
+/// anchor = 0：中心线在屏幕 y = -px；min = -R（reverse 组高），max = max(0, F - vp)。
+/// 中心 = 已 build 且上沿 ≤ 0 的条目里最老的一条，所以会长高的东西都在 forward 组，
+/// viewport 自己冻结上方的一切。
 class AssistantChatListState extends State<AssistantChatList> {
   final _beforeCenterKey = GlobalKey();
   final _centerKey = GlobalKey();
@@ -257,8 +245,7 @@ class AssistantChatListState extends State<AssistantChatList> {
   List<AssistantChatItem> _newestFirst = const [];
   Map<String, int> _indexById = const {};
 
-  /// 中心线 = 该条目的上沿。null 只在列表为空时出现：「最老一条」必须记 id，
-  /// 否则前插历史会把中心换成另一条
+  /// 中心线 = 该条目的上沿；只在列表为空时为 null
   String? _centerId;
 
   int get _centerIndex {
@@ -292,15 +279,14 @@ class AssistantChatListState extends State<AssistantChatList> {
 
   bool _userDragging = false;
 
-  // 正在就地变高的条目，中心不得挪到它们下方；同一条可有多个块，按引用计数
+  // 正在就地变高的条目，按引用计数
   final Map<String, int> _holds = {};
-  // 可折叠块的展开状态：块被回收/重建时要能恢复，所以活在列表这一层
   final Map<String, bool> _expanded = {};
 
   bool _maintainScheduled = false;
   bool _snapClearScheduled = false;
 
-  // 条目正文高度（不含间距/顶部留白）；屏上的顺手记，其余空闲时离屏量
+  // 条目正文高度，不含间距/顶部留白
   final Map<String, double> _extents = {};
   _ExtentSignature? _extentSignature;
   _BuildSignature? _buildSignature;
@@ -409,12 +395,10 @@ class AssistantChatListState extends State<AssistantChatList> {
     return content + _kItemGap + (oldest ? _kTopPadding : 0);
   }
 
-  // 流式中、工具还在跑的条目高度还会变，不记也不量
   bool _measurable(AssistantChatItem item) =>
       item is! AssistantTurn ||
       (!item.streaming && item.toolCalls.every((c) => c.done));
 
-  // InheritedWidget 依赖只能在 build 里登记
   bool _checkExtentSignature() {
     final width = _listBox?.size.width;
     final built = _buildSignature;
@@ -480,7 +464,6 @@ class AssistantChatListState extends State<AssistantChatList> {
     return null;
   }
 
-  // post-frame 而不是 Timer：后者在测试里会成为悬着的定时器
   void _scheduleMeasure() {
     if (_measureScheduled || !mounted) return;
     if (_nextUnmeasured() == null) return;
@@ -528,14 +511,12 @@ class AssistantChatListState extends State<AssistantChatList> {
       _scheduleMeasure();
       return;
     }
-    // 滚动本身每帧 layout；只在一趟量完时标脏一次，让静止中的边界也是真的
     for (final key in [_beforeCenterKey, _centerKey]) {
       key.currentContext?.findRenderObject()?.markNeedsLayout();
     }
   }
 
-  // 列表自己的 InheritedWidget 和 slang 翻译要手工补：TranslationProvider 的 key
-  // 是按 locale 缓存的进程级 GlobalKey，不能再造一个
+  // TranslationProvider 的 key 是进程级 GlobalKey，只能补 InheritedLocaleData
   Widget _measureWidget(int index) {
     final item = _newestFirst[index];
     Widget content = _ItemScope(
@@ -580,8 +561,7 @@ class AssistantChatListState extends State<AssistantChatList> {
     _atBottom.value = distance <= _kBottomSlack;
   }
 
-  // position 首次拿到尺寸那一帧不经 physics，没被吃掉就补一次 jumpTo；
-  // 重定基的落点只在新中心 layout 时才有意义，不能在旧坐标系下补
+  // 首帧不经 physics，没被吃掉就补 jumpTo；重定基的落点不能在旧坐标系下补
   void _requestSnap(double target, {bool fallback = true}) {
     _pendingSnap = target;
     _snapConsumed = false;
@@ -606,7 +586,6 @@ class AssistantChatListState extends State<AssistantChatList> {
       _syncAtBottom();
       _scheduleMaintainCenter();
     });
-    // post-frame 回调自己不会要帧
     WidgetsBinding.instance.ensureVisualUpdate();
   }
 
@@ -644,7 +623,6 @@ class AssistantChatListState extends State<AssistantChatList> {
     }
   }
 
-  // 中心被删：趁旧布局还在，挑一个已 build 的幸存者钉在原地当新中心
   void _syncCenter(List<AssistantChatItem> previous) {
     if (_newestFirst.isEmpty) {
       _centerId = null;
@@ -657,7 +635,7 @@ class AssistantChatListState extends State<AssistantChatList> {
       return;
     }
     if (_indexById.containsKey(id)) {
-      // 顶部留白折在最老一条里：前插后旧最老矮了 8px，中心线跟着压下去
+      // 前插后旧最老少了 8px 顶部留白
       if (id == previous.last.id && id != _oldestId) {
         final px = _position?.pixels;
         if (px != null) _requestSnap(px - _kTopPadding, fallback: false);
@@ -691,7 +669,6 @@ class AssistantChatListState extends State<AssistantChatList> {
       _centerId = pick;
       _requestSnap(-top, fallback: false);
     } else if (older != null) {
-      // 视口里没有可锚的幸存者，没有「保持不动」的参照；随后 _maintainCenter 收敛
       _centerId = older;
       final olderTop = _topOfItem(older);
       if (_following.value) {
@@ -719,7 +696,6 @@ class AssistantChatListState extends State<AssistantChatList> {
     WidgetsBinding.instance.ensureVisualUpdate();
   }
 
-  // 内容一变就重记，否则条目滚出缓存区时带走的是旧高度
   void _scheduleRecordExtents() {
     if (_recordScheduled) return;
     _recordScheduled = true;
@@ -742,7 +718,7 @@ class AssistantChatListState extends State<AssistantChatList> {
     return box.localToGlobal(Offset.zero, ancestor: listBox).dy;
   }
 
-  // 只看已 build 的孩子。top 为 null = 视口顶之上没有条目 = 该退到最老并落顶
+  // top 为 null = 视口顶之上没有条目，退到最老并落顶
   ({String id, double? top})? _desiredCenter() {
     final listBox = _listBox;
     final oldest = _oldestId;
@@ -768,7 +744,7 @@ class AssistantChatListState extends State<AssistantChatList> {
       }
     }
 
-    // px > 0 时 reverse 组不可见，它还是会 build 几条，但 paint transform 没有意义
+    // px > 0 时 reverse 组的 paint transform 没有意义
     if ((_position?.pixels ?? 0) <= 0) {
       scan(_beforeCenterKey, (i) => center + 1 + i);
     }
@@ -803,8 +779,7 @@ class AssistantChatListState extends State<AssistantChatList> {
     _moveCenter(target.id, target.top);
   }
 
-  // 视觉恒等变换：px' = -b 让目标留在原地。用实测位置而不是 Δmin——min 对
-  // 未 build 的孩子是外推值。top 为 null 时新 min 精确为 0，直接落顶
+  // 用实测位置而不是 Δmin：min 对未 build 的孩子是外推值
   void _moveCenter(String target, double? top) {
     if (top == null) {
       _trace(() => 'center $_centerId -> $target, top-align');
@@ -812,7 +787,6 @@ class AssistantChatListState extends State<AssistantChatList> {
       setState(() => _centerId = target);
       return;
     }
-    // 贴底跟随中落底而不是 -b，免得同一帧尾部又长了一截
     final stickToBottom = _following.value && _atBottom.value;
     _trace(() {
       final p = _position;
@@ -834,7 +808,7 @@ class AssistantChatListState extends State<AssistantChatList> {
     _extents.remove(id);
   }
 
-  // 返回 id 给 endItemResize：块可能在动画中被回收，那时 context 已不可用
+  // 块可能在动画中被回收，那时 context 已不可用，所以回 id
   String? beginItemResize(BuildContext itemContext) {
     final id = _ItemScope.idOf(itemContext);
     if (id == null) return null;
@@ -854,15 +828,13 @@ class AssistantChatListState extends State<AssistantChatList> {
     } else {
       _holds.remove(id);
     }
-    // 可能从 dispose 里来，树是锁着的：一切推到帧尾
+    // 可能从 dispose 里来，树是锁着的
     if (mounted && _holds.isEmpty) _scheduleMaintainCenter();
   }
 
   void pinToBottom() {
     _setFollowing(true, cause: .pinRequest);
-    // 惯性余波里点按钮也要生效：松手到停下之间不发 ScrollEnd
     _userDragging = false;
-    // 长会话从高处直接跳底：先把中心拉回尾部，layout 才有界
     final id = _initialCenter();
     if (id != null && id != _centerId) setState(() => _centerId = id);
     _requestSnap(double.infinity);
@@ -871,7 +843,7 @@ class AssistantChatListState extends State<AssistantChatList> {
   }
 
   bool _onScrollNotification(Notification notification) {
-    // 它不是 ScrollNotification 的子类，得单独接
+    // 不是 ScrollNotification 的子类
     if (notification is ScrollMetricsNotification) {
       if (notification.depth == 0 && notification.metrics.axis == .vertical) {
         _syncAtBottom();
@@ -887,7 +859,6 @@ class AssistantChatListState extends State<AssistantChatList> {
       return false;
     }
     if (notification is! ScrollNotification) return false;
-    // 代码块是横向的子 scrollable
     if (notification.depth != 0 || notification.metrics.axis != .vertical) {
       return false;
     }
@@ -925,7 +896,7 @@ class AssistantChatListState extends State<AssistantChatList> {
   Widget _buildItem(BuildContext context, int index) {
     final item = _newestFirst[index];
     final chronological = _newestFirst.length - 1 - index;
-    // 顶部留白折进最老一条：独立的 padding sliver 会让 min 多出 8px 余量
+    // 顶部留白折进最老一条，独立 padding sliver 会让 min 多 8px
     final oldest = index == _newestFirst.length - 1;
     return KeyedSubtree(
       key: _ItemKey(this, item.id),
@@ -1001,7 +972,6 @@ class AssistantChatListState extends State<AssistantChatList> {
               onPointerDown: (_) => widget.onPointerDown?.call(),
               child: NotificationListener<Notification>(
                 onNotification: _onScrollNotification,
-                // 整棵树终生不变：Scrollable / ScrollPosition 从不重建
                 child: CustomScrollView(
                   controller: widget.scrollController,
                   physics: _physics,
