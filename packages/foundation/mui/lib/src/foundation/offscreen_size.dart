@@ -1,40 +1,82 @@
 import 'package:flutter/rendering.dart';
 import 'package:mui/mui.dart';
 
+/// 在同一份上下文（主题、本地化、MediaQuery）下量一批组件：脚手架只搭一次，
+/// 每次 [measure] 只换被量的那棵子树。用完必须 [dispose]
+class OffscreenMeasurer {
+  OffscreenMeasurer(this._context, {required Size viewSize})
+    : _root = _MeasureRoot(
+        BoxConstraints(maxWidth: viewSize.width, maxHeight: viewSize.height),
+      ) {
+    _pipelineOwner.rootNode = _root;
+    _root.scheduleInitialLayout();
+  }
+
+  final BuildContext _context;
+  final _MeasureRoot _root;
+  final PipelineOwner _pipelineOwner = PipelineOwner();
+  final BuildOwner _buildOwner = BuildOwner(focusManager: FocusManager());
+  RenderObjectToWidgetElement<RenderBox>? _element;
+
+  Size measure(Widget widget) {
+    // 每次换 key：被量的子树之间不共享 State
+    _attach(_wrap(KeyedSubtree(key: UniqueKey(), child: widget)));
+    _pipelineOwner.flushLayout();
+    return _root.size;
+  }
+
+  void _attach(Widget? child) {
+    final adapter = RenderObjectToWidgetAdapter<RenderBox>(
+      container: _root,
+      child: child,
+    );
+    final element = _element;
+    if (element == null) {
+      _element = adapter.attachToRenderTree(_buildOwner);
+      return;
+    }
+    adapter.attachToRenderTree(_buildOwner, element);
+    _buildOwner.buildScope(element);
+  }
+
+  // Localizations 不是 InheritedTheme，captureAll 带不过来；SelectionArea 一类
+  // 还要 Overlay 祖先，按内容定尺寸的 Overlay 对高度透明
+  Widget _wrap(Widget child) {
+    Widget subtree = Directionality(
+      textDirection: Directionality.of(_context),
+      child: MediaQuery(
+        data: MediaQuery.of(_context),
+        child: Overlay.wrap(alwaysSizeToContent: true, child: child),
+      ),
+    );
+    if (Localizations.maybeLocaleOf(_context) != null) {
+      subtree = Localizations.override(context: _context, child: subtree);
+    }
+    return InheritedTheme.captureAll(_context, subtree);
+  }
+
+  void dispose() {
+    if (_element != null) {
+      _attach(null);
+      _buildOwner.finalizeTree();
+      _element = null;
+    }
+    _pipelineOwner.rootNode = null;
+    _pipelineOwner.dispose();
+    _buildOwner.focusManager.dispose();
+  }
+}
+
 Size getWidgetSizeOffScreen({
   required BuildContext context,
   required Widget widget,
   required Size viewSize,
 }) {
-  final root = _MeasureRoot(
-    BoxConstraints(maxWidth: viewSize.width, maxHeight: viewSize.height),
-  );
-
-  final pipelineOwner = PipelineOwner();
-  final buildOwner = BuildOwner(focusManager: FocusManager());
-  pipelineOwner.rootNode = root;
-  root.scheduleInitialLayout();
-
-  final element = RenderObjectToWidgetAdapter<RenderBox>(
-    container: root,
-    child: InheritedTheme.captureAll(
-      context,
-      Directionality(
-        textDirection: Directionality.of(context),
-        child: MediaQuery(
-          data: MediaQuery.of(context),
-          child: Builder(builder: (_) => widget),
-        ),
-      ),
-    ),
-  ).attachToRenderTree(buildOwner);
-
+  final measurer = OffscreenMeasurer(context, viewSize: viewSize);
   try {
-    pipelineOwner.flushLayout();
-    return root.size;
+    return measurer.measure(widget);
   } finally {
-    element.update(RenderObjectToWidgetAdapter<RenderBox>(container: root));
-    buildOwner.finalizeTree();
+    measurer.dispose();
   }
 }
 
