@@ -50,7 +50,8 @@ CREATE TABLE chat_messages (
   image_name      TEXT,
   input_tokens    INTEGER,
   output_tokens   INTEGER,
-  model           TEXT
+  model           TEXT,
+  provider_id     TEXT
 ) AS ChatMessageRow;
 
 CREATE INDEX idx_chat_messages_session

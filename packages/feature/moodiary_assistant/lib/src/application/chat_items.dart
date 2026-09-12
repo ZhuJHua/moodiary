@@ -31,6 +31,8 @@ final class AssistantTurn extends AssistantChatItem {
 
   final String model;
 
+  final String providerId;
+
   final bool streaming;
 
   final bool thinkingActive;
@@ -47,6 +49,7 @@ final class AssistantTurn extends AssistantChatItem {
     this.outputTokens = 0,
     this.toolCalls = const [],
     this.model = '',
+    this.providerId = '',
     this.streaming = false,
     this.thinkingActive = false,
   });
@@ -68,6 +71,7 @@ final class AssistantTurn extends AssistantChatItem {
     bool streaming = false,
     DateTime? createdAt,
     String model = '',
+    String providerId = '',
   }) => AssistantTurn(
     id: uuidV7(),
     fromUser: false,
@@ -75,6 +79,7 @@ final class AssistantTurn extends AssistantChatItem {
     streaming: streaming,
     createdAt: createdAt ?? DateTime.timestamp(),
     model: model,
+    providerId: providerId,
   );
 
   factory AssistantTurn.fromRecord(ChatMessage m) => AssistantTurn(
@@ -89,6 +94,7 @@ final class AssistantTurn extends AssistantChatItem {
     outputTokens: m.outputTokens ?? 0,
     toolCalls: m.toolCalls,
     model: m.model ?? '',
+    providerId: m.providerId ?? '',
   );
 
   ChatMessage toRecord(String sessionId) => ChatMessage(
@@ -104,6 +110,7 @@ final class AssistantTurn extends AssistantChatItem {
     outputTokens: outputTokens == 0 ? null : outputTokens,
     toolCalls: toolCalls,
     model: model.isEmpty ? null : model,
+    providerId: providerId.isEmpty ? null : providerId,
   );
 
   bool get isEmpty => text.isEmpty && imageName.isEmpty && toolCalls.isEmpty;
@@ -127,6 +134,7 @@ final class AssistantTurn extends AssistantChatItem {
     createdAt: createdAt,
     imageName: imageName,
     model: model,
+    providerId: providerId,
     reasoning: reasoning ?? this.reasoning,
     thinkingMillis: thinkingMillis ?? this.thinkingMillis,
     inputTokens: inputTokens ?? this.inputTokens,
@@ -151,9 +159,12 @@ final class AssistantModelSwitchNotice extends AssistantChatItem {
 
   final String model;
 
+  final String providerId;
+
   const AssistantModelSwitchNotice({
     required this.beforeId,
     required this.model,
+    this.providerId = '',
   });
 
   @override
@@ -165,15 +176,25 @@ List<AssistantModelSwitchNotice> modelSwitchNoticesFor(
 ) {
   final notices = <AssistantModelSwitchNotice>[];
   var lastModel = '';
+  var lastProvider = '';
   for (final item in items) {
     if (item is! AssistantTurn || item.fromUser) continue;
     if (item.model.isEmpty) continue;
-    if (lastModel.isNotEmpty && item.model != lastModel) {
+    final providerChanged =
+        lastProvider.isNotEmpty &&
+        item.providerId.isNotEmpty &&
+        item.providerId != lastProvider;
+    if (lastModel.isNotEmpty && (item.model != lastModel || providerChanged)) {
       notices.add(
-        AssistantModelSwitchNotice(beforeId: item.id, model: item.model),
+        AssistantModelSwitchNotice(
+          beforeId: item.id,
+          model: item.model,
+          providerId: item.providerId,
+        ),
       );
     }
     lastModel = item.model;
+    if (item.providerId.isNotEmpty) lastProvider = item.providerId;
   }
   return notices;
 }

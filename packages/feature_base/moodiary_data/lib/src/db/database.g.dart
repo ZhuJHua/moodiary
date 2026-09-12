@@ -3676,6 +3676,17 @@ class ChatMessages extends Table with TableInfo<ChatMessages, ChatMessageRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
+  static const VerificationMeta _providerIdMeta = const VerificationMeta(
+    'providerId',
+  );
+  late final GeneratedColumn<String> providerId = GeneratedColumn<String>(
+    'provider_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3689,6 +3700,7 @@ class ChatMessages extends Table with TableInfo<ChatMessages, ChatMessageRow> {
     inputTokens,
     outputTokens,
     model,
+    providerId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3784,6 +3796,12 @@ class ChatMessages extends Table with TableInfo<ChatMessages, ChatMessageRow> {
         model.isAcceptableOrUnknown(data['model']!, _modelMeta),
       );
     }
+    if (data.containsKey('provider_id')) {
+      context.handle(
+        _providerIdMeta,
+        providerId.isAcceptableOrUnknown(data['provider_id']!, _providerIdMeta),
+      );
+    }
     return context;
   }
 
@@ -3837,6 +3855,10 @@ class ChatMessages extends Table with TableInfo<ChatMessages, ChatMessageRow> {
         DriftSqlType.string,
         data['${effectivePrefix}model'],
       ),
+      providerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}provider_id'],
+      ),
     );
   }
 
@@ -3861,6 +3883,7 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
   final int? inputTokens;
   final int? outputTokens;
   final String? model;
+  final String? providerId;
   const ChatMessageRow({
     required this.id,
     required this.sessionId,
@@ -3873,6 +3896,7 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
     this.inputTokens,
     this.outputTokens,
     this.model,
+    this.providerId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3899,6 +3923,9 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
     }
     if (!nullToAbsent || model != null) {
       map['model'] = Variable<String>(model);
+    }
+    if (!nullToAbsent || providerId != null) {
+      map['provider_id'] = Variable<String>(providerId);
     }
     return map;
   }
@@ -3928,6 +3955,9 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
       model: model == null && nullToAbsent
           ? const Value.absent()
           : Value(model),
+      providerId: providerId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(providerId),
     );
   }
 
@@ -3948,6 +3978,7 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
       inputTokens: serializer.fromJson<int?>(json['input_tokens']),
       outputTokens: serializer.fromJson<int?>(json['output_tokens']),
       model: serializer.fromJson<String?>(json['model']),
+      providerId: serializer.fromJson<String?>(json['provider_id']),
     );
   }
   @override
@@ -3965,6 +3996,7 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
       'input_tokens': serializer.toJson<int?>(inputTokens),
       'output_tokens': serializer.toJson<int?>(outputTokens),
       'model': serializer.toJson<String?>(model),
+      'provider_id': serializer.toJson<String?>(providerId),
     };
   }
 
@@ -3980,6 +4012,7 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
     Value<int?> inputTokens = const Value.absent(),
     Value<int?> outputTokens = const Value.absent(),
     Value<String?> model = const Value.absent(),
+    Value<String?> providerId = const Value.absent(),
   }) => ChatMessageRow(
     id: id ?? this.id,
     sessionId: sessionId ?? this.sessionId,
@@ -3994,6 +4027,7 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
     inputTokens: inputTokens.present ? inputTokens.value : this.inputTokens,
     outputTokens: outputTokens.present ? outputTokens.value : this.outputTokens,
     model: model.present ? model.value : this.model,
+    providerId: providerId.present ? providerId.value : this.providerId,
   );
   ChatMessageRow copyWithCompanion(ChatMessagesCompanion data) {
     return ChatMessageRow(
@@ -4014,6 +4048,9 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
           ? data.outputTokens.value
           : this.outputTokens,
       model: data.model.present ? data.model.value : this.model,
+      providerId: data.providerId.present
+          ? data.providerId.value
+          : this.providerId,
     );
   }
 
@@ -4030,7 +4067,8 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
           ..write('imageName: $imageName, ')
           ..write('inputTokens: $inputTokens, ')
           ..write('outputTokens: $outputTokens, ')
-          ..write('model: $model')
+          ..write('model: $model, ')
+          ..write('providerId: $providerId')
           ..write(')'))
         .toString();
   }
@@ -4048,6 +4086,7 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
     inputTokens,
     outputTokens,
     model,
+    providerId,
   );
   @override
   bool operator ==(Object other) =>
@@ -4063,7 +4102,8 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
           other.imageName == this.imageName &&
           other.inputTokens == this.inputTokens &&
           other.outputTokens == this.outputTokens &&
-          other.model == this.model);
+          other.model == this.model &&
+          other.providerId == this.providerId);
 }
 
 class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
@@ -4078,6 +4118,7 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
   final Value<int?> inputTokens;
   final Value<int?> outputTokens;
   final Value<String?> model;
+  final Value<String?> providerId;
   final Value<int> rowid;
   const ChatMessagesCompanion({
     this.id = const Value.absent(),
@@ -4091,6 +4132,7 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
     this.inputTokens = const Value.absent(),
     this.outputTokens = const Value.absent(),
     this.model = const Value.absent(),
+    this.providerId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ChatMessagesCompanion.insert({
@@ -4105,6 +4147,7 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
     this.inputTokens = const Value.absent(),
     this.outputTokens = const Value.absent(),
     this.model = const Value.absent(),
+    this.providerId = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        sessionId = Value(sessionId),
@@ -4123,6 +4166,7 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
     Expression<int>? inputTokens,
     Expression<int>? outputTokens,
     Expression<String>? model,
+    Expression<String>? providerId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4137,6 +4181,7 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
       if (inputTokens != null) 'input_tokens': inputTokens,
       if (outputTokens != null) 'output_tokens': outputTokens,
       if (model != null) 'model': model,
+      if (providerId != null) 'provider_id': providerId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4153,6 +4198,7 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
     Value<int?>? inputTokens,
     Value<int?>? outputTokens,
     Value<String?>? model,
+    Value<String?>? providerId,
     Value<int>? rowid,
   }) {
     return ChatMessagesCompanion(
@@ -4167,6 +4213,7 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
       inputTokens: inputTokens ?? this.inputTokens,
       outputTokens: outputTokens ?? this.outputTokens,
       model: model ?? this.model,
+      providerId: providerId ?? this.providerId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4207,6 +4254,9 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
     if (model.present) {
       map['model'] = Variable<String>(model.value);
     }
+    if (providerId.present) {
+      map['provider_id'] = Variable<String>(providerId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -4227,6 +4277,7 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
           ..write('inputTokens: $inputTokens, ')
           ..write('outputTokens: $outputTokens, ')
           ..write('model: $model, ')
+          ..write('providerId: $providerId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -10390,6 +10441,7 @@ typedef $ChatMessagesCreateCompanionBuilder = ChatMessagesCompanion Function({
   Value<int?> inputTokens,
   Value<int?> outputTokens,
   Value<String?> model,
+  Value<String?> providerId,
   Value<int> rowid,
 });
 typedef $ChatMessagesUpdateCompanionBuilder = ChatMessagesCompanion Function({
@@ -10404,6 +10456,7 @@ typedef $ChatMessagesUpdateCompanionBuilder = ChatMessagesCompanion Function({
   Value<int?> inputTokens,
   Value<int?> outputTokens,
   Value<String?> model,
+  Value<String?> providerId,
   Value<int> rowid,
 });
 
@@ -10506,6 +10559,11 @@ class $ChatMessagesFilterComposer
 
   ColumnFilters<String> get model => $composableBuilder(
     column: $table.model,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get providerId => $composableBuilder(
+    column: $table.providerId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -10617,6 +10675,11 @@ class $ChatMessagesOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get providerId => $composableBuilder(
+    column: $table.providerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $ChatSessionsOrderingComposer get sessionId {
     final $ChatSessionsOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -10685,6 +10748,11 @@ class $ChatMessagesAnnotationComposer
 
   GeneratedColumn<String> get model =>
       $composableBuilder(column: $table.model, builder: (column) => column);
+
+  GeneratedColumn<String> get providerId => $composableBuilder(
+    column: $table.providerId,
+    builder: (column) => column,
+  );
 
   $ChatSessionsAnnotationComposer get sessionId {
     final $ChatSessionsAnnotationComposer composer = $composerBuilder(
@@ -10774,6 +10842,7 @@ class $ChatMessagesTableManager
                 Value<int?> inputTokens = const Value.absent(),
                 Value<int?> outputTokens = const Value.absent(),
                 Value<String?> model = const Value.absent(),
+                Value<String?> providerId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ChatMessagesCompanion(
                 id: id,
@@ -10787,6 +10856,7 @@ class $ChatMessagesTableManager
                 inputTokens: inputTokens,
                 outputTokens: outputTokens,
                 model: model,
+                providerId: providerId,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -10802,6 +10872,7 @@ class $ChatMessagesTableManager
                 Value<int?> inputTokens = const Value.absent(),
                 Value<int?> outputTokens = const Value.absent(),
                 Value<String?> model = const Value.absent(),
+                Value<String?> providerId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ChatMessagesCompanion.insert(
                 id: id,
@@ -10815,6 +10886,7 @@ class $ChatMessagesTableManager
                 inputTokens: inputTokens,
                 outputTokens: outputTokens,
                 model: model,
+                providerId: providerId,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

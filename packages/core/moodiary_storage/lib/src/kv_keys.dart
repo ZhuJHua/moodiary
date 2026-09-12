@@ -69,7 +69,12 @@ enum MoodiaryKVs<T extends Object> {
 
   assistantDisclaimerAccepted<bool>(defaultValue: false),
 
-  assistantReasoningEffort<String>(defaultValue: ''),
+  // 三态：没设过 = 跟随模型，'none' = 关，其它 = 显式档位
+  assistantReasoningEffort<String>(),
+
+  assistantLastProviderId<String>(defaultValue: ''),
+
+  assistantLastModelId<String>(defaultValue: ''),
 
   assistantAgentPresetId<String>(defaultValue: ''),
 

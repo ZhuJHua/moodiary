@@ -54,8 +54,17 @@ const List<String> assistantBudgetLevels = ['low', 'medium', 'high'];
 
 const String assistantImagePlaceholder = '[image]';
 
-// 目录里 'none' 表示不思考，等价于我们的「关」
-const String _offEffortValue = 'none';
+// 目录里 'none' 表示不思考，也是我们「显式关闭」的存储值
+const String reasoningOffValue = 'none';
+
+String effectiveReasoningLevel({
+  required String? stored,
+  required List<String> levels,
+}) {
+  if (levels.isEmpty || stored == reasoningOffValue) return '';
+  if (stored == null || stored.isEmpty) return levels.first;
+  return levels.contains(stored) ? stored : levels.first;
+}
 
 List<String> reasoningLevelsFor(LlmModelPreset? model) {
   final controls = model?.reasoningOptions;
@@ -65,7 +74,7 @@ List<String> reasoningLevelsFor(LlmModelPreset? model) {
     if (c.type == ReasoningControlType.effort && c.values.isNotEmpty) {
       final levels = [
         for (final v in c.values)
-          if (v != _offEffortValue) v,
+          if (v != reasoningOffValue) v,
       ];
       if (levels.isNotEmpty) return levels;
     }
@@ -86,7 +95,7 @@ AssistantReasoning resolveReasoning({
   required LlmModelPreset? model,
   required int maxTokens,
 }) {
-  if (level.isEmpty || level == _offEffortValue) {
+  if (level.isEmpty || level == reasoningOffValue) {
     return const AssistantReasoning.off();
   }
   final controls = model?.reasoningOptions;

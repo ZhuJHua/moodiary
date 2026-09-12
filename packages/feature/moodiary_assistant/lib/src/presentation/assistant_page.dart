@@ -107,7 +107,9 @@ class _AssistantPageState extends State<AssistantPage> {
   bool _ready = true;
   bool _initialized = false;
 
-  String _reasoningLevel = '';
+  String? _reasoningLevel;
+
+  final Map<String, String> _providerNames = {};
 
   LlmProvider? _provider;
   String _modelId = '';
@@ -180,7 +182,7 @@ class _AssistantPageState extends State<AssistantPage> {
     _chat = AssistantChatController();
     _disclaimerAccepted =
         MoodiaryKVs.assistantDisclaimerAccepted.get() ?? false;
-    _reasoningLevel = MoodiaryKVs.assistantReasoningEffort.get() ?? '';
+    _reasoningLevel = MoodiaryKVs.assistantReasoningEffort.get();
     _chat.addListener(_syncDerivedFromItems);
     _inputFocusNode.addListener(_onInputFocusChanged);
     unawaited(_initStagedPreset());
@@ -225,11 +227,24 @@ class _AssistantPageState extends State<AssistantPage> {
     final staged = pinned != null || _stagedProviderId.isEmpty
         ? null
         : await repo.getProvider(_stagedProviderId);
-    final provider = pinned ?? staged ?? await repo.getActiveProvider();
+    final lastId = MoodiaryKVs.assistantLastProviderId.get() ?? '';
+    final last = pinned != null || staged != null || lastId.isEmpty
+        ? null
+        : await repo.getProvider(lastId);
+    final provider = pinned ?? staged ?? last ?? await repo.getActiveProvider();
+    final all = await repo.getAllProviders();
+    _providerNames
+      ..clear()
+      ..addEntries([for (final p in all) MapEntry(p.id, p.name)]);
     final key = provider == null ? null : await repo.getKey(provider.id);
+    final lastModel = MoodiaryKVs.assistantLastModelId.get() ?? '';
     final wanted = pinned != null && (session?.model.isNotEmpty ?? false)
         ? session!.model
-        : (_modelId.isEmpty ? (provider?.defaultModel ?? '') : _modelId);
+        : _modelId.isNotEmpty
+        ? _modelId
+        : last != null && lastModel.isNotEmpty
+        ? lastModel
+        : (provider?.defaultModel ?? '');
     final resolved = provider == null
         ? null
         : ModelResolver.resolve(provider, wanted);
@@ -249,9 +264,6 @@ class _AssistantPageState extends State<AssistantPage> {
         _canUseTools = caps.tools;
         _contextLimit = model?.contextLimit ?? assistantDefaultContextBudget;
         _maxTokens = maxTokensFor(model?.outputLimit);
-        if (_reasoningLevel.isNotEmpty && !levels.contains(_reasoningLevel)) {
-          _reasoningLevel = '';
-        }
         if (!caps.attachment) _pendingImageName = null;
       });
     }
@@ -298,28 +310,37 @@ class _AssistantPageState extends State<AssistantPage> {
       groups: groups,
       providerId: _provider?.id ?? '',
       modelId: _modelId,
-      level: _reasoningLevel,
+      level: _effectiveLevel,
     );
     if (choice == null || !mounted) return;
+    final level = choice.level.isEmpty ? reasoningOffValue : choice.level;
     final session = _session;
     if (session != null) {
       final updated = session.copyWith(
         providerId: choice.providerId,
         model: choice.modelId,
-        reasoningEffort: choice.level,
+        reasoningEffort: level,
       );
       await getIt<ChatRepository>().upsertSession(updated);
       if (!mounted) return;
       setState(() => _session = updated);
     }
+    final levelChanged = level != _reasoningLevel;
     setState(() {
       _stagedProviderId = choice.providerId;
       _modelId = choice.modelId;
-      _reasoningLevel = choice.level;
+      _reasoningLevel = level;
     });
-    MoodiaryKVs.assistantReasoningEffort.set(choice.level);
+    MoodiaryKVs.assistantLastProviderId.set(choice.providerId);
+    MoodiaryKVs.assistantLastModelId.set(choice.modelId);
+    if (levelChanged) MoodiaryKVs.assistantReasoningEffort.set(level);
     await _refreshReady();
   }
+
+  String get _effectiveLevel => effectiveReasoningLevel(
+    stored: _reasoningLevel,
+    levels: _reasoningLevels,
+  );
 
   Future<void> _loadSessionById(String id) async {
     final session = await getIt<ChatRepository>().getSession(id);
@@ -341,7 +362,9 @@ class _AssistantPageState extends State<AssistantPage> {
     _turnWidgets.clear();
     setState(() {
       _session = session;
-      _reasoningLevel = session.reasoningEffort;
+      _reasoningLevel = session.reasoningEffort.isEmpty
+          ? MoodiaryKVs.assistantReasoningEffort.get()
+          : session.reasoningEffort;
       _pendingImageName = null;
       _sending = false;
     });
@@ -398,7 +421,7 @@ class _AssistantPageState extends State<AssistantPage> {
     final session = ChatSession.create(
       providerId: provider.id,
       model: _modelId,
-      reasoningEffort: _reasoningLevel,
+      reasoningEffort: _reasoningLevel ?? '',
       agentPresetId: _stagedPresetId.isEmpty ? null : _stagedPresetId,
       personaSnapshot: _stagedPresetId.isEmpty ? null : persona,
       toolsSnapshot: _stagedPresetId.isEmpty ? null : tools,
@@ -495,9 +518,7 @@ class _AssistantPageState extends State<AssistantPage> {
       maxTokens: _maxTokens,
       history: history,
       reasoning: resolveReasoning(
-        level: _reasoningLevels.contains(_reasoningLevel)
-            ? _reasoningLevel
-            : '',
+        level: _effectiveLevel,
         model: _activeModel,
         maxTokens: _maxTokens,
       ),
@@ -626,6 +647,7 @@ class _AssistantPageState extends State<AssistantPage> {
       streaming: true,
       createdAt: placeholderAt,
       model: _modelId,
+      providerId: _provider?.id ?? '',
     );
     _chat.beginStreaming(placeholder);
     _streamingMessage = placeholder;
@@ -1034,9 +1056,13 @@ class _AssistantPageState extends State<AssistantPage> {
         summary: _session?.compactedSummary ?? '',
         onRestore: _restoreFullHistory,
       ),
-      AssistantModelSwitchNotice(:final model) => _ModelSwitchChip(
-        model: model,
-      ),
+      AssistantModelSwitchNotice(:final model, :final providerId) =>
+        _ModelSwitchChip(
+          model: switch (_providerNames[providerId]) {
+            final name? => '$name · $model',
+            null => model,
+          },
+        ),
     };
   }
 
@@ -1191,7 +1217,7 @@ class _AssistantPageState extends State<AssistantPage> {
                     flex: 2,
                     child: _ModelChip(
                       modelLabel: modelLabel,
-                      reasoningLevel: _reasoningLevel,
+                      reasoningLevel: _effectiveLevel,
                       onTap: _sending ? null : _pickModel,
                     ),
                   ),

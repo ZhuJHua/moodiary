@@ -70,6 +70,7 @@ class ChatRepository {
     inputTokens: r.inputTokens,
     outputTokens: r.outputTokens,
     model: r.model,
+    providerId: r.providerId,
     toolCalls: toolCalls,
   );
 
@@ -86,6 +87,7 @@ class ChatRepository {
         inputTokens: Value(m.inputTokens),
         outputTokens: Value(m.outputTokens),
         model: Value(m.model),
+        providerId: Value(m.providerId),
       );
 
   static AssistantToolCall _toToolCall(AssistantToolCallRow r) =>
