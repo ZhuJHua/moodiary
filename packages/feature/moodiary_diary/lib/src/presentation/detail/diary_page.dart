@@ -592,12 +592,20 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
                 icon: const Icon(LucideIcons.squarePen),
                 onPressed: _enterEdit,
               ),
-            if (diary != null && _mode == .read)
+            if (diary != null && _mode == .read) ...[
+              IconButton(
+                tooltip: context.l10n.diary.askAssistant,
+                icon: const Icon(LucideIcons.botMessageSquare),
+                onPressed: () =>
+                    AssistantConversationRoute(citedDiaryId: diary.id)
+                        .push(context),
+              ),
               IconButton(
                 tooltip: context.l10n.diary.share,
                 icon: const Icon(LucideIcons.share),
                 onPressed: () => DiaryShare.open(context, diary.id),
               ),
+            ],
             if (headings.isNotEmpty)
               IconButton(
                 tooltip: context.l10n.diary.outline,

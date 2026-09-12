@@ -1,3 +1,4 @@
+import 'package:moodiary_assistant/src/application/diary_citation.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart' show uuidV7;
 
@@ -29,6 +30,8 @@ final class AssistantTurn extends AssistantChatItem {
 
   final List<AssistantToolCall> toolCalls;
 
+  final List<String> citedDiaryIds;
+
   final String model;
 
   final String providerId;
@@ -48,6 +51,7 @@ final class AssistantTurn extends AssistantChatItem {
     this.inputTokens = 0,
     this.outputTokens = 0,
     this.toolCalls = const [],
+    this.citedDiaryIds = const [],
     this.model = '',
     this.providerId = '',
     this.streaming = false,
@@ -93,6 +97,7 @@ final class AssistantTurn extends AssistantChatItem {
     inputTokens: m.inputTokens ?? 0,
     outputTokens: m.outputTokens ?? 0,
     toolCalls: m.toolCalls,
+    citedDiaryIds: citedDiaryIdsOf(m.toolCalls),
     model: m.model ?? '',
     providerId: m.providerId ?? '',
   );
@@ -140,6 +145,9 @@ final class AssistantTurn extends AssistantChatItem {
     inputTokens: inputTokens ?? this.inputTokens,
     outputTokens: outputTokens ?? this.outputTokens,
     toolCalls: toolCalls ?? this.toolCalls,
+    citedDiaryIds: toolCalls == null
+        ? citedDiaryIds
+        : citedDiaryIdsOf(toolCalls),
     streaming: streaming ?? this.streaming,
     thinkingActive: thinkingActive ?? this.thinkingActive,
   );

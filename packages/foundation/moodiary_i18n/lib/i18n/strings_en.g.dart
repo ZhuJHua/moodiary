@@ -379,6 +379,7 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get disclaimerGateAction => 'View disclaimer';
 	@override String get toolSendImage => 'Send an image';
 	@override String get imageMessageLabel => '[Image]';
+	@override String citationHeader({required Object count}) => 'Read ${count} diaries';
 	@override String get modelProviderTitle => 'Model Providers';
 	@override String get modelProviderAdd => 'Add';
 	@override String get modelProviderNoKey => 'No key';
@@ -675,6 +676,8 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get goForward => 'Forward';
 	@override String get edit => 'Edit';
 	@override String get share => 'Share';
+	@override String get askAssistant => 'Ask the assistant';
+	@override String get citationRecycled => 'In the recycle bin';
 	@override String get outline => 'Outline';
 	@override String wordCount({required Object count}) => '${count} characters';
 	@override String get saving => 'Saving';

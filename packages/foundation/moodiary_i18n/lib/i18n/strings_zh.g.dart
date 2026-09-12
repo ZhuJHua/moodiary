@@ -1012,6 +1012,9 @@ class Translations$assistant$zh {
 	/// zh: '[图片]'
 	String get imageMessageLabel => '[图片]';
 
+	/// zh: '读了 {count} 篇日记'
+	String citationHeader({required Object count}) => '读了 ${count} 篇日记';
+
 	/// zh: '模型供应商'
 	String get modelProviderTitle => '模型供应商';
 
@@ -1856,6 +1859,12 @@ class Translations$diary$zh {
 
 	/// zh: '分享'
 	String get share => '分享';
+
+	/// zh: '问问助手'
+	String get askAssistant => '问问助手';
+
+	/// zh: '已在回收站'
+	String get citationRecycled => '已在回收站';
 
 	/// zh: '目录'
 	String get outline => '目录';

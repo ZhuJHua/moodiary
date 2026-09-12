@@ -130,6 +130,7 @@
   "disclaimerGateAction": "查看免责声明",
   "toolSendImage": "发送图片",
   "imageMessageLabel": "[图片]",
+  "citationHeader": "读了 {count} 篇日记",
   "modelProviderTitle": "模型供应商",
   "modelProviderAdd": "新增",
   "modelProviderNoKey": "缺少 Key",

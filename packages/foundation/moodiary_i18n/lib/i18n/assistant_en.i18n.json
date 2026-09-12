@@ -130,6 +130,7 @@
   "disclaimerGateAction": "View disclaimer",
   "toolSendImage": "Send an image",
   "imageMessageLabel": "[Image]",
+  "citationHeader": "Read {count} diaries",
   "modelProviderTitle": "Model Providers",
   "modelProviderAdd": "Add",
   "modelProviderNoKey": "No key",

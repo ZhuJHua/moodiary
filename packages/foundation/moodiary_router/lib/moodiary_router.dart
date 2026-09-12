@@ -240,13 +240,19 @@ class AssistantConversationRoute extends MoodiaryRouteBase {
 
   final String? title;
 
-  const AssistantConversationRoute({this.sessionId, this.title})
-    : super(path);
+  final String? citedDiaryId;
+
+  const AssistantConversationRoute({
+    this.sessionId,
+    this.title,
+    this.citedDiaryId,
+  }) : super(path);
 
   @override
   Map<String, dynamic> get params => {
     'session_id': sessionId,
     'title': title,
+    'cited_diary_id': citedDiaryId,
   };
 }
 

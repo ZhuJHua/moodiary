@@ -7,6 +7,7 @@ import 'package:gpt_markdown/gpt_markdown.dart';
 import 'package:moodiary_assistant/src/application/chat_controller.dart';
 import 'package:moodiary_assistant/src/application/chat_items.dart';
 import 'package:moodiary_assistant/src/application/context_compaction_controller.dart';
+import 'package:moodiary_assistant/src/application/diary_citation.dart';
 import 'package:moodiary_assistant/src/application/session_title_controller.dart';
 import 'package:moodiary_assistant/src/data/agent_preset_repository.dart';
 import 'package:moodiary_assistant/src/data/agent_preset_resolver.dart';
@@ -22,6 +23,7 @@ import 'package:moodiary_assistant/src/presentation/agent_preset_sheet.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_notice.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_tool_ui.dart';
 import 'package:moodiary_assistant/src/presentation/chat_list.dart';
+import 'package:moodiary_assistant/src/presentation/diary_citations.dart';
 import 'package:moodiary_assistant/src/presentation/markdown_code_block.dart';
 import 'package:moodiary_assistant/src/presentation/model_picker_sheet.dart';
 import 'package:moodiary_assistant/src/presentation/provider_logo.dart';
@@ -64,11 +66,19 @@ class AssistantPage extends StatefulWidget {
 
   final String? initialTitle;
 
-  const AssistantPage({super.key, this.initialSessionId, this.initialTitle});
+  final String? citedDiaryId;
+
+  const AssistantPage({
+    super.key,
+    this.initialSessionId,
+    this.initialTitle,
+    this.citedDiaryId,
+  });
 
   factory AssistantPage.fromRoute(GoRouterState state) => AssistantPage(
     initialSessionId: state.params['session_id'] as String?,
     initialTitle: state.params['title'] as String?,
+    citedDiaryId: state.params['cited_diary_id'] as String?,
   );
 
   @override
@@ -128,6 +138,8 @@ class _AssistantPageState extends State<AssistantPage> {
 
   String? _pendingImageName;
 
+  String? _citedDiaryId;
+
   final ContextCompactionController _compaction = ContextCompactionController();
   final SessionTitleController _title = SessionTitleController();
 
@@ -185,6 +197,7 @@ class _AssistantPageState extends State<AssistantPage> {
     _disclaimerAccepted =
         MoodiaryKVs.assistantDisclaimerAccepted.get() ?? false;
     _reasoningLevel = MoodiaryKVs.assistantReasoningEffort.get();
+    if (widget.initialSessionId == null) _citedDiaryId = widget.citedDiaryId;
     _chat.addListener(_syncDerivedFromItems);
     _inputFocusNode.addListener(_onInputFocusChanged);
     unawaited(_initStagedPreset());
@@ -665,8 +678,9 @@ class _AssistantPageState extends State<AssistantPage> {
     _staleReplyIds = [];
 
     final base = DateTime.timestamp();
+    final cited = _citedDiaryId;
     final userMsg = AssistantTurn.user(
-      text,
+      cited == null ? text : citeDiary(text, cited),
       imageName: imageName ?? '',
       createdAt: base,
     );
@@ -675,6 +689,7 @@ class _AssistantPageState extends State<AssistantPage> {
     setState(() {
       _sending = true;
       _pendingImageName = null;
+      _citedDiaryId = null;
     });
 
     await _generate(
@@ -717,7 +732,7 @@ class _AssistantPageState extends State<AssistantPage> {
 
     await _generate(
       gen: gen,
-      sessionSeedText: userMsg.text,
+      sessionSeedText: splitDiaryCitation(userMsg.text).text,
       userMessage: userMsg,
       placeholderAt: .timestamp(),
     );
@@ -861,7 +876,9 @@ class _AssistantPageState extends State<AssistantPage> {
     for (final m in _chat.items) {
       if (m is! AssistantTurn) continue;
       final hasImage = m.imageName.isNotEmpty;
-      var content = m.fromUser ? m.text : _withToolRecord(m);
+      var content = m.fromUser
+          ? diaryCitationForModel(m.text)
+          : _withToolRecord(m);
       if (hasImage && !allowImages) {
         content = content.isEmpty
             ? assistantImagePlaceholder
@@ -1152,6 +1169,10 @@ class _AssistantPageState extends State<AssistantPage> {
     setState(() => _pendingImageName = null);
   }
 
+  void _removeCitation() {
+    setState(() => _citedDiaryId = null);
+  }
+
   void _dismissComposer() {
     if (_inputFocusNode.hasFocus) _inputFocusNode.unfocus();
   }
@@ -1200,9 +1221,11 @@ class _AssistantPageState extends State<AssistantPage> {
 
   Widget _composeTurn(AssistantTurn turn, {required bool live}) {
     if (turn.fromUser) {
+      final (:diaryId, :text) = splitDiaryCitation(turn.text);
       return _UserBubble(
-        text: turn.text,
+        text: text,
         imageName: turn.imageName,
+        citedDiaryId: diaryId,
         onRetry: live ? _regenerate : null,
       );
     }
@@ -1214,6 +1237,7 @@ class _AssistantPageState extends State<AssistantPage> {
       inputTokens: turn.inputTokens,
       outputTokens: turn.outputTokens,
       toolCalls: turn.toolCalls,
+      citedDiaryIds: turn.citedDiaryIds,
       streaming: turn.streaming,
       onRegenerate: (live && _hasUserTurn) ? _regenerate : null,
     );
@@ -1257,6 +1281,8 @@ class _AssistantPageState extends State<AssistantPage> {
       onFullscreen: _openFullscreenComposer,
       pendingImageName: _pendingImageName,
       onRemoveImage: _removePendingImage,
+      citedDiaryId: _citedDiaryId,
+      onRemoveCitation: _removeCitation,
     );
 
     return Column(
@@ -1734,6 +1760,8 @@ class _AssistantComposer extends StatefulWidget {
   final VoidCallback onFullscreen;
   final String? pendingImageName;
   final VoidCallback onRemoveImage;
+  final String? citedDiaryId;
+  final VoidCallback onRemoveCitation;
 
   const _AssistantComposer({
     required this.controller,
@@ -1745,6 +1773,8 @@ class _AssistantComposer extends StatefulWidget {
     required this.onFullscreen,
     required this.pendingImageName,
     required this.onRemoveImage,
+    required this.citedDiaryId,
+    required this.onRemoveCitation,
   });
 
   @override
@@ -1781,6 +1811,14 @@ class _AssistantComposerState extends State<_AssistantComposer> {
                 mainAxisSize: .min,
                 crossAxisAlignment: .stretch,
                 children: [
+                  if (widget.citedDiaryId case final cited?)
+                    Padding(
+                      padding: const .fromLTRB(8, 6, 8, 2),
+                      child: DiaryCitations(
+                        ids: [cited],
+                        onRemove: widget.onRemoveCitation,
+                      ),
+                    ),
                   if (widget.pendingImageName != null)
                     _ComposerImagePreview(
                       imageName: widget.pendingImageName!,
@@ -2036,9 +2074,15 @@ Widget _brokenImage(ColorScheme scheme, double size) => Container(
 class _UserBubble extends StatelessWidget {
   final String text;
   final String imageName;
+  final String? citedDiaryId;
   final VoidCallback? onRetry;
 
-  const _UserBubble({required this.text, this.imageName = '', this.onRetry});
+  const _UserBubble({
+    required this.text,
+    this.imageName = '',
+    this.citedDiaryId,
+    this.onRetry,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -2048,6 +2092,15 @@ class _UserBubble extends StatelessWidget {
     final hasText = text.isNotEmpty;
 
     final parts = <Widget>[];
+    if (citedDiaryId case final cited?) {
+      parts.add(
+        ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxWidth, minWidth: 180),
+          child: DiaryCitations(ids: [cited]),
+        ),
+      );
+      if (hasImage || hasText) parts.add(const SizedBox(height: 6));
+    }
     if (hasImage) {
       final path = AppFiles.getRealPath('image', imageName);
       final limit = BoxConstraints(maxWidth: maxWidth, maxHeight: 260);
@@ -2146,6 +2199,7 @@ class _AssistantBubble extends StatelessWidget {
   final int inputTokens;
   final int outputTokens;
   final List<AssistantToolCall> toolCalls;
+  final List<String> citedDiaryIds;
   final bool streaming;
   final VoidCallback? onRegenerate;
 
@@ -2157,6 +2211,7 @@ class _AssistantBubble extends StatelessWidget {
     required this.inputTokens,
     required this.outputTokens,
     required this.toolCalls,
+    required this.citedDiaryIds,
     required this.streaming,
     this.onRegenerate,
   });
@@ -2210,7 +2265,17 @@ class _AssistantBubble extends StatelessWidget {
                   codeBuilder: _codeBlock,
                 ),
         ),
-      for (final (i, call) in toolCalls.indexed) _toolNotice(context, call, i),
+      for (final (i, call) in toolCalls.indexed)
+        if (!citesDiaries(call)) _toolNotice(context, call, i),
+      if (citedDiaryIds.isNotEmpty)
+        Padding(
+          padding: const .symmetric(vertical: 4),
+          child: DiaryCitations(
+            key: const ValueKey('citations'),
+            ids: citedDiaryIds,
+            header: true,
+          ),
+        ),
       ?bubble,
     ];
 
