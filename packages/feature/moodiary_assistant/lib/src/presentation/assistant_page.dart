@@ -15,6 +15,7 @@ import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/assistant_tools.dart';
 import 'package:moodiary_assistant/src/data/chat_repository.dart';
+import 'package:moodiary_assistant/src/data/llm_preset_repository.dart';
 import 'package:moodiary_assistant/src/data/llm_provider_repository.dart';
 import 'package:moodiary_assistant/src/data/memory_repository.dart';
 import 'package:moodiary_assistant/src/data/model_resolver.dart';
@@ -24,6 +25,7 @@ import 'package:moodiary_assistant/src/presentation/assistant_tool_ui.dart';
 import 'package:moodiary_assistant/src/presentation/chat_list.dart';
 import 'package:moodiary_assistant/src/presentation/markdown_code_block.dart';
 import 'package:moodiary_assistant/src/presentation/model_picker_sheet.dart';
+import 'package:moodiary_assistant/src/presentation/reasoning_label.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
@@ -289,37 +291,57 @@ class _AssistantPageState extends State<AssistantPage> {
     return (tools: provider.toolCall, attachment: provider.attachment);
   }
 
-  Future<void> _pickModel() async {
-    if (_sending) return;
+  Future<List<ProviderModels>> _providerGroups() async {
     final repo = getIt<LlmProviderRepository>();
-    final providers = await repo.getAllProviders();
     final groups = <ProviderModels>[];
-    for (final p in providers) {
-      final options = ModelResolver.optionsFor(p);
-      if (options.isEmpty) continue;
+    for (final p in await repo.getAllProviders()) {
       final key = await repo.getKey(p.id);
       groups.add((
         provider: p,
-        options: options,
+        options: ModelResolver.optionsFor(p),
         hasKey: key != null && key.isNotEmpty,
       ));
     }
-    if (groups.isEmpty || !mounted) return;
+    return groups;
+  }
+
+  Future<void> _pickModel() async {
+    if (_sending) return;
+    final groups = await _providerGroups();
+    if (!mounted) return;
+    if (groups.isEmpty) {
+      await const AssistantProvidersRoute().push(context);
+      await _refreshReady();
+      return;
+    }
     final choice = await showGlobalModelPicker(
       context,
       groups: groups,
       providerId: _provider?.id ?? '',
       modelId: _modelId,
-      level: _effectiveLevel,
+      level: _reasoningLevel,
+      catalogUpdatedAt: getIt<LlmPresetRepository>().cachedAt,
+      onDownloadCatalog: () async {
+        await getIt<LlmPresetRepository>().refresh();
+        return _providerGroups();
+      },
+      onManageProviders: () async {
+        await const AssistantProvidersRoute().push(context);
+        await _refreshReady();
+      },
+      onFillKey: (provider) async {
+        await AssistantProviderEditRoute(id: provider.id).push(context);
+        await _refreshReady();
+      },
     );
     if (choice == null || !mounted) return;
-    final level = choice.level.isEmpty ? reasoningOffValue : choice.level;
+    final level = choice.level;
     final session = _session;
     if (session != null) {
       final updated = session.copyWith(
         providerId: choice.providerId,
         model: choice.modelId,
-        reasoningEffort: level,
+        reasoningEffort: level ?? '',
       );
       await getIt<ChatRepository>().upsertSession(updated);
       if (!mounted) return;
@@ -333,7 +355,13 @@ class _AssistantPageState extends State<AssistantPage> {
     });
     MoodiaryKVs.assistantLastProviderId.set(choice.providerId);
     MoodiaryKVs.assistantLastModelId.set(choice.modelId);
-    if (levelChanged) MoodiaryKVs.assistantReasoningEffort.set(level);
+    if (levelChanged) {
+      if (level == null) {
+        MoodiaryKVs.assistantReasoningEffort.remove();
+      } else {
+        MoodiaryKVs.assistantReasoningEffort.set(level);
+      }
+    }
     await _refreshReady();
   }
 
@@ -1217,7 +1245,11 @@ class _AssistantPageState extends State<AssistantPage> {
                     flex: 2,
                     child: _ModelChip(
                       modelLabel: modelLabel,
-                      reasoningLevel: _effectiveLevel,
+                      reasoningLevel: _reasoningLevels.isEmpty
+                          ? ''
+                          : _effectiveLevel.isEmpty
+                          ? l10n.assistant.reasoningOff
+                          : reasoningLevelLabel(_effectiveLevel, l10n),
                       onTap: _sending ? null : _pickModel,
                     ),
                   ),

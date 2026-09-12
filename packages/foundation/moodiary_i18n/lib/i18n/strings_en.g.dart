@@ -311,6 +311,12 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get netUnknown => 'Request failed';
 	@override String get reasoningEffort => 'Thinking effort';
 	@override String get reasoningOff => 'No thinking';
+	@override String get reasoningAuto => 'Follow model';
+	@override String get reasoningLevelMinimal => 'Minimal';
+	@override String get reasoningLevelLow => 'Low';
+	@override String get reasoningLevelMedium => 'Medium';
+	@override String get reasoningLevelHigh => 'High';
+	@override String get reasoningLevelMax => 'Max';
 	@override String thoughtFor({required Object duration}) => 'Thought for ${duration}s';
 	@override String get tool => 'Tools';
 	@override String get toolSectionNote => 'The assistant calls these tools on its own as the conversation needs them — you are not asked each time. Note what deletion does: a diary goes to the recycle bin, a saved fact is gone for good.';
@@ -397,6 +403,12 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get modelProviderCapabilitiesHint => 'Enable what this model supports — controls tools, thinking, and image sending.';
 	@override String get modelProviderSearchModelHint => 'Search models';
 	@override String get modelProviderNoModelMatch => 'No matching models';
+	@override String get modelProviderFillKey => 'Add key';
+	@override String get modelProviderManage => 'Manage providers';
+	@override String get modelCatalogMissing => 'No model catalogue yet';
+	@override String get modelCatalogDownload => 'Download model catalogue';
+	@override String modelCatalogUpdatedAt({required Object time}) => 'Catalogue updated ${time}';
+	@override String get modelNotInCatalog => 'Not in catalogue';
 	@override String get summaryLoading => 'Loading…';
 	@override String get summaryNoProvider => 'No model provider configured';
 	@override String get summaryKeySet => 'Key set';

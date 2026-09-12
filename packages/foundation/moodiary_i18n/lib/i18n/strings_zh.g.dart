@@ -808,6 +808,24 @@ class Translations$assistant$zh {
 	/// zh: '不思考'
 	String get reasoningOff => '不思考';
 
+	/// zh: '跟随模型'
+	String get reasoningAuto => '跟随模型';
+
+	/// zh: '极低'
+	String get reasoningLevelMinimal => '极低';
+
+	/// zh: '低'
+	String get reasoningLevelLow => '低';
+
+	/// zh: '中'
+	String get reasoningLevelMedium => '中';
+
+	/// zh: '高'
+	String get reasoningLevelHigh => '高';
+
+	/// zh: '最高'
+	String get reasoningLevelMax => '最高';
+
 	/// zh: '已思考 {duration} 秒'
 	String thoughtFor({required Object duration}) => '已思考 ${duration} 秒';
 
@@ -1065,6 +1083,24 @@ class Translations$assistant$zh {
 
 	/// zh: '无匹配模型'
 	String get modelProviderNoModelMatch => '无匹配模型';
+
+	/// zh: '去填写'
+	String get modelProviderFillKey => '去填写';
+
+	/// zh: '管理供应商'
+	String get modelProviderManage => '管理供应商';
+
+	/// zh: '还没有模型目录'
+	String get modelCatalogMissing => '还没有模型目录';
+
+	/// zh: '下载模型目录'
+	String get modelCatalogDownload => '下载模型目录';
+
+	/// zh: '目录更新于 {time}'
+	String modelCatalogUpdatedAt({required Object time}) => '目录更新于 ${time}';
+
+	/// zh: '目录中已无此模型'
+	String get modelNotInCatalog => '目录中已无此模型';
 
 	/// zh: '加载中…'
 	String get summaryLoading => '加载中…';
