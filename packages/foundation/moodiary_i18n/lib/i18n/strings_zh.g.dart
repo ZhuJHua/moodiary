@@ -739,6 +739,48 @@ class Translations$assistant$zh {
 	/// zh: '新对话'
 	String get newChat => '新对话';
 
+	/// zh: '对话信息'
+	String get menuConversationInfo => '对话信息';
+
+	/// zh: '压缩历史'
+	String get menuCompactNow => '压缩历史';
+
+	/// zh: '助手设置'
+	String get menuSettings => '助手设置';
+
+	/// zh: '已压缩较早的消息'
+	String get compactedNow => '已压缩较早的消息';
+
+	/// zh: '没有可压缩的内容'
+	String get compactNothing => '没有可压缩的内容';
+
+	/// zh: '压缩失败，请稍后再试'
+	String get compactFailed => '压缩失败，请稍后再试';
+
+	/// zh: '「{name}」缺少 API Key，点此填写'
+	String providerKeyMissingBanner({required Object name}) => '「${name}」缺少 API Key，点此填写';
+
+	/// zh: '原供应商已删除，正在用「{name}」回答，点此换一个'
+	String providerMissingBanner({required Object name}) => '原供应商已删除，正在用「${name}」回答，点此换一个';
+
+	/// zh: '目录未下载'
+	String get modelCatalogOffline => '目录未下载';
+
+	/// zh: '切换模型'
+	String get modelSwitchTitle => '切换模型';
+
+	/// zh: '该模型不读图，历史中的 {count} 张图片会被跳过。'
+	String modelSwitchNoImages({required Object count}) => '该模型不读图，历史中的 ${count} 张图片会被跳过。';
+
+	/// zh: '已选的图片将被移除。'
+	String get modelSwitchDropPending => '已选的图片将被移除。';
+
+	/// zh: '该模型上下文更小，发送前会先压缩历史。'
+	String get modelSwitchSmallerContext => '该模型上下文更小，发送前会先压缩历史。';
+
+	/// zh: '仍要切换'
+	String get modelSwitchConfirm => '仍要切换';
+
 	/// zh: '还没有历史会话'
 	String get historyEmpty => '还没有历史会话';
 
@@ -990,6 +1032,9 @@ class Translations$assistant$zh {
 
 	/// zh: '确定删除「{name}」？其 API Key 也会一并清除。'
 	String modelProviderDeleteContent({required Object name}) => '确定删除「${name}」？其 API Key 也会一并清除。';
+
+	/// zh: '{count} 个会话正在用它，之后会改用默认供应商回答。'
+	String modelProviderDeleteAffects({required Object count}) => '${count} 个会话正在用它，之后会改用默认供应商回答。';
 
 	/// zh: '已删除'
 	String get modelProviderDeleted => '已删除';

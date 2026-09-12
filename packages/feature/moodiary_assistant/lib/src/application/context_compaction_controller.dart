@@ -17,29 +17,22 @@ class ContextCompactionController {
     required LlmProvider provider,
     required String model,
     required String apiKey,
+    bool force = false,
   }) async {
     if (_inFlight.contains(session.id)) return null;
 
     final budget = contextLimit > 0
         ? contextLimit
         : assistantDefaultContextBudget;
-    if (orderedMessages.length < assistantCompactionMinMessages) return null;
-    if (lastInputTokens < budget * assistantCompactionTriggerRatio) return null;
-    if (orderedMessages.length <= assistantCompactionTailMessages) return null;
-
-    final preTail = orderedMessages.sublist(
-      0,
-      orderedMessages.length - assistantCompactionTailMessages,
-    );
-    var startIdx = 0;
-    final watermark = session.compactedUpToMessageId;
-    if (watermark != null) {
-      final at = preTail.indexWhere((m) => m.id == watermark);
-      if (at >= 0) startIdx = at + 1;
+    if (!force) {
+      if (orderedMessages.length < assistantCompactionMinMessages) return null;
+      if (lastInputTokens < budget * assistantCompactionTriggerRatio) {
+        return null;
+      }
     }
-    final toSummarize = preTail.sublist(startIdx);
-    if (toSummarize.isEmpty) return null;
-    final newWatermark = preTail.last.id;
+    final pending = _pending(session, orderedMessages);
+    if (pending == null) return null;
+    final (:toSummarize, :newWatermark) = pending;
 
     _inFlight.add(session.id);
     try {
@@ -62,6 +55,31 @@ class ContextCompactionController {
     } finally {
       _inFlight.remove(session.id);
     }
+  }
+
+  bool hasPending({
+    required ChatSession session,
+    required List<CompactionMessage> orderedMessages,
+  }) => _pending(session, orderedMessages) != null;
+
+  ({List<CompactionMessage> toSummarize, String newWatermark})? _pending(
+    ChatSession session,
+    List<CompactionMessage> orderedMessages,
+  ) {
+    if (orderedMessages.length <= assistantCompactionTailMessages) return null;
+    final preTail = orderedMessages.sublist(
+      0,
+      orderedMessages.length - assistantCompactionTailMessages,
+    );
+    var startIdx = 0;
+    final watermark = session.compactedUpToMessageId;
+    if (watermark != null) {
+      final at = preTail.indexWhere((m) => m.id == watermark);
+      if (at >= 0) startIdx = at + 1;
+    }
+    final toSummarize = preTail.sublist(startIdx);
+    if (toSummarize.isEmpty) return null;
+    return (toSummarize: toSummarize, newWatermark: preTail.last.id);
   }
 
   Future<String?> _summarize({

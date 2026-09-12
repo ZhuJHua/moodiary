@@ -148,6 +148,16 @@ class ChatRepository {
     return [for (final r in rows) _toSession(r)];
   }
 
+  Future<int> countSessionsByProvider(String providerId) async {
+    final count = _db.chatSessions.id.count();
+    final row =
+        await (_db.selectOnly(_db.chatSessions)
+              ..addColumns([count])
+              ..where(_db.chatSessions.providerId.equals(providerId)))
+            .getSingle();
+    return row.read(count) ?? 0;
+  }
+
   Future<ChatSession?> getSession(String id) async {
     final row = await (_db.select(
       _db.chatSessions,

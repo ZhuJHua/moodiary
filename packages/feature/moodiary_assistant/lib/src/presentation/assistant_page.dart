@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math' as math;
 
 import 'package:flutter/services.dart';
 import 'package:gpt_markdown/gpt_markdown.dart';
@@ -25,6 +24,7 @@ import 'package:moodiary_assistant/src/presentation/assistant_tool_ui.dart';
 import 'package:moodiary_assistant/src/presentation/chat_list.dart';
 import 'package:moodiary_assistant/src/presentation/markdown_code_block.dart';
 import 'package:moodiary_assistant/src/presentation/model_picker_sheet.dart';
+import 'package:moodiary_assistant/src/presentation/provider_logo.dart';
 import 'package:moodiary_assistant/src/presentation/reasoning_label.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_di/moodiary_di.dart';
@@ -42,19 +42,15 @@ const double _kComposerPadding = 8;
 
 const double _kComposerHeightEstimate = 102;
 
-const double _kTitleInset = 6;
+const double _kContextBarHeight = 40;
 
-double _toolbarHeight(BuildContext context) {
-  final typography = context.theme.typography;
-  final scaler = MediaQuery.textScalerOf(context);
-  double lineOf(TextStyle style) =>
-      scaler.scale(style.fontSize ?? 14) * (style.height ?? 1.4);
-  final needed =
-      lineOf(typography.titleMedium.emphasized.onSurface) +
-      lineOf(typography.labelSmall.onSurfaceVariant) +
-      20;
-  return math.max(kToolbarHeight, needed);
-}
+// 大字号下预设段整体隐藏，信息移进「对话信息」
+const double _kContextBarPresetMaxScale = 1.3;
+
+// 预设段最多占上下文条的这个比例，剩下的都留给模型名
+const double _kPresetMaxShare = 0.45;
+
+enum _ConversationAction { info, compact, settings }
 
 Widget _codeBlock(
   BuildContext context,
@@ -111,7 +107,11 @@ class _AssistantPageState extends State<AssistantPage> {
 
   String? _reasoningLevel;
 
-  final Map<String, String> _providerNames = {};
+  final Map<String, LlmProvider> _providers = {};
+
+  bool _providerMissing = false;
+  bool _catalogMissing = false;
+  bool _modelMissing = false;
 
   LlmProvider? _provider;
   String _modelId = '';
@@ -234,10 +234,12 @@ class _AssistantPageState extends State<AssistantPage> {
         ? null
         : await repo.getProvider(lastId);
     final provider = pinned ?? staged ?? last ?? await repo.getActiveProvider();
+    final providerMissing =
+        session != null && session.providerId.isNotEmpty && pinned == null;
     final all = await repo.getAllProviders();
-    _providerNames
+    _providers
       ..clear()
-      ..addEntries([for (final p in all) MapEntry(p.id, p.name)]);
+      ..addEntries([for (final p in all) MapEntry(p.id, p)]);
     final key = provider == null ? null : await repo.getKey(provider.id);
     final lastModel = MoodiaryKVs.assistantLastModelId.get() ?? '';
     final wanted = pinned != null && (session?.model.isNotEmpty ?? false)
@@ -251,6 +253,16 @@ class _AssistantPageState extends State<AssistantPage> {
         ? null
         : ModelResolver.resolve(provider, wanted);
     final model = resolved?.preset;
+    final catalogMissing =
+        provider != null &&
+        provider.isPreset &&
+        getIt<LlmPresetRepository>().cachedAt == 0;
+    final modelMissing =
+        provider != null &&
+        provider.isPreset &&
+        !catalogMissing &&
+        model == null &&
+        (resolved?.modelId.isNotEmpty ?? false);
     final caps = _capabilities(provider, model);
     final levels = provider == null
         ? const <String>[]
@@ -259,6 +271,9 @@ class _AssistantPageState extends State<AssistantPage> {
       setState(() {
         _ready = provider != null && key != null && key.isNotEmpty;
         _provider = provider;
+        _providerMissing = providerMissing;
+        _catalogMissing = catalogMissing;
+        _modelMissing = modelMissing;
         _modelId = resolved?.modelId ?? '';
         _activeModel = model;
         _reasoningLevels = levels;
@@ -329,12 +344,10 @@ class _AssistantPageState extends State<AssistantPage> {
         await const AssistantProvidersRoute().push(context);
         await _refreshReady();
       },
-      onFillKey: (provider) async {
-        await AssistantProviderEditRoute(id: provider.id).push(context);
-        await _refreshReady();
-      },
+      onFillKey: (provider) => _fillKey(provider.id),
     );
     if (choice == null || !mounted) return;
+    if (!await _confirmSwitch(choice) || !mounted) return;
     final level = choice.level;
     final session = _session;
     if (session != null) {
@@ -363,6 +376,83 @@ class _AssistantPageState extends State<AssistantPage> {
       }
     }
     await _refreshReady();
+    unawaited(_maybeCompact());
+  }
+
+  Future<void> _fillKey(String providerId) async {
+    await AssistantProviderEditRoute(id: providerId).push(context);
+    await _refreshReady();
+  }
+
+  Future<bool> _confirmSwitch(GlobalModelChoice choice) async {
+    if (choice.providerId == _provider?.id && choice.modelId == _modelId) {
+      return true;
+    }
+    final provider = await getIt<LlmProviderRepository>().getProvider(
+      choice.providerId,
+    );
+    if (provider == null || !mounted) return true;
+    final resolved = ModelResolver.resolve(provider, choice.modelId);
+    final caps = _capabilities(provider, resolved.preset);
+    final l10n = context.l10n;
+    final notes = <String>[];
+    if (!caps.attachment) {
+      final images = _chat.items
+          .whereType<AssistantTurn>()
+          .where((m) => m.imageName.isNotEmpty)
+          .length;
+      if (images > 0) {
+        notes.add(l10n.assistant.modelSwitchNoImages(count: images));
+      }
+      if (_pendingImageName != null) {
+        notes.add(l10n.assistant.modelSwitchDropPending);
+      }
+    }
+    final limit =
+        resolved.preset?.contextLimit ?? assistantDefaultContextBudget;
+    if (_lastTurnInputTokens > limit * assistantCompactionTriggerRatio) {
+      notes.add(l10n.assistant.modelSwitchSmallerContext);
+    }
+    if (notes.isEmpty) return true;
+    return MAlert.confirm(
+      context,
+      icon: LucideIcons.cpu,
+      title: l10n.assistant.modelSwitchTitle,
+      message: notes.join('\n'),
+      confirmLabel: l10n.assistant.modelSwitchConfirm,
+    );
+  }
+
+  Future<void> _compactNow() async {
+    final session = _session;
+    if (_sending || session == null) return;
+    final l10n = context.l10n;
+    final pending = _compaction.hasPending(
+      session: session,
+      orderedMessages: _compactionMessages(),
+    );
+    if (!pending) {
+      toast.info(message: l10n.assistant.compactNothing);
+      return;
+    }
+    final result = await _maybeCompact(force: true);
+    if (!mounted) return;
+    if (result == null) {
+      toast.error(message: l10n.assistant.compactFailed);
+    } else {
+      toast.success(message: l10n.assistant.compactedNow);
+    }
+  }
+
+  void _onConversationAction(_ConversationAction action) {
+    switch (action) {
+      case .info:
+        _showPresetInfo();
+      case .compact:
+        unawaited(_compactNow());
+      case .settings:
+        unawaited(_openSettings());
+    }
   }
 
   String get _effectiveLevel => effectiveReasoningLevel(
@@ -828,33 +918,24 @@ class _AssistantPageState extends State<AssistantPage> {
     return turn.text.isEmpty ? record : '$record\n\n${turn.text}';
   }
 
-  Future<ChatSession?> _maybeCompact() async {
+  Future<ChatSession?> _maybeCompact({bool force = false}) async {
     final session = _session;
-    if (session == null || _lastTurnInputTokens <= 0) return null;
+    if (session == null || (!force && _lastTurnInputTokens <= 0)) return null;
     final provider = _provider;
     if (provider == null) return null;
     final key = await getIt<LlmProviderRepository>().getKey(provider.id);
     if (key == null || key.isEmpty) return null;
     if (!mounted || _session?.id != session.id) return null;
 
-    final ordered = <CompactionMessage>[
-      for (final m in _chat.items)
-        if (m is AssistantTurn && !m.isEmpty)
-          (
-            id: m.id,
-            fromUser: m.fromUser,
-            text: m.text.isEmpty ? assistantImagePlaceholder : m.text,
-          ),
-    ];
-
     final updated = await _compaction.maybeCompact(
       session: session,
-      orderedMessages: ordered,
+      orderedMessages: _compactionMessages(),
       lastInputTokens: _lastTurnInputTokens,
       contextLimit: _contextLimit,
       provider: provider,
       model: _modelId,
       apiKey: key,
+      force: force,
     );
     final current = _session;
     if (updated == null || !mounted || current?.id != session.id) return null;
@@ -870,6 +951,16 @@ class _AssistantPageState extends State<AssistantPage> {
     _syncCompactionNotice();
     return merged;
   }
+
+  List<CompactionMessage> _compactionMessages() => [
+    for (final m in _chat.items)
+      if (m is AssistantTurn && !m.isEmpty)
+        (
+          id: m.id,
+          fromUser: m.fromUser,
+          text: m.text.isEmpty ? assistantImagePlaceholder : m.text,
+        ),
+  ];
 
   void _syncCompactionNotice() {
     _chat.batch(() {
@@ -1086,8 +1177,9 @@ class _AssistantPageState extends State<AssistantPage> {
       ),
       AssistantModelSwitchNotice(:final model, :final providerId) =>
         _ModelSwitchChip(
-          model: switch (_providerNames[providerId]) {
-            final name? => '$name · $model',
+          model: switch (_providers[providerId]) {
+            final p? =>
+              '${p.name} · ${ModelResolver.resolve(p, model).preset?.name ?? model}',
             null => model,
           },
         ),
@@ -1169,7 +1261,7 @@ class _AssistantPageState extends State<AssistantPage> {
 
     return Column(
       children: [
-        if (!_ready) _NotConfiguredBanner(onTap: _openSettings),
+        ?_statusBanner(context.l10n),
         Expanded(
           child: Stack(
             children: [
@@ -1192,6 +1284,32 @@ class _AssistantPageState extends State<AssistantPage> {
     );
   }
 
+  Widget? _statusBanner(Translations l10n) {
+    final provider = _provider;
+    if (provider == null) {
+      return _StatusBanner(
+        text: l10n.assistant.notConfiguredBanner,
+        error: true,
+        onTap: _openSettings,
+      );
+    }
+    if (!_ready) {
+      return _StatusBanner(
+        text: l10n.assistant.providerKeyMissingBanner(name: provider.name),
+        error: true,
+        onTap: () => _fillKey(provider.id),
+      );
+    }
+    if (_providerMissing) {
+      return _StatusBanner(
+        text: l10n.assistant.providerMissingBanner(name: provider.name),
+        error: false,
+        onTap: _sending ? null : _pickModel,
+      );
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -1204,59 +1322,63 @@ class _AssistantPageState extends State<AssistantPage> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        toolbarHeight: _toolbarHeight(context),
-        titleSpacing: NavigationToolbar.kMiddleSpacing - _kTitleInset,
-        title: Column(
-          mainAxisSize: .min,
-          crossAxisAlignment: .start,
-          children: [
-            Padding(
-              padding: const .symmetric(horizontal: _kTitleInset),
-              child: Text(
-                _titleText(l10n),
-                maxLines: 1,
-                overflow: .ellipsis,
-                style:
-                    context.theme.typography.titleMedium.emphasized.onSurface,
+        title: Text(_titleText(l10n), maxLines: 1, overflow: .ellipsis),
+        actions: [
+          MMenuButton<_ConversationAction>(
+            tooltip: l10n.common.more,
+            entries: [
+              MMenuEntry(
+                value: .info,
+                label: l10n.assistant.menuConversationInfo,
+                icon: LucideIcons.info,
+              ),
+              MMenuEntry(
+                value: .compact,
+                label: l10n.assistant.menuCompactNow,
+                icon: LucideIcons.foldVertical,
+                enabled: _session != null && !_sending,
+              ),
+              MMenuEntry(
+                value: .settings,
+                label: l10n.assistant.menuSettings,
+                icon: LucideIcons.settings2,
+              ),
+            ],
+            onSelected: _onConversationAction,
+            child: Padding(
+              padding: const .all(12),
+              child: Icon(
+                LucideIcons.ellipsisVertical,
+                color: context.theme.colors.onSurfaceVariant,
               ),
             ),
-            Row(
-              mainAxisSize: .min,
-              children: [
-                Flexible(
-                  child: _PresetChip(
-                    label:
-                        _presetName ??
-                        (_presetMissing
-                            ? l10n.assistant.presetDeleted
-                            : l10n.assistant.presetBuiltinName),
-                    staged: _session == null,
-                    onTap: _sending
-                        ? null
-                        : (_session == null ? _pickPreset : _showPresetInfo),
-                  ),
-                ),
-                if (modelLabel.isNotEmpty) ...[
-                  Text(
-                    '·',
-                    style: context.theme.typography.labelSmall.onSurfaceVariant,
-                  ),
-                  Flexible(
-                    flex: 2,
-                    child: _ModelChip(
-                      modelLabel: modelLabel,
-                      reasoningLevel: _reasoningLevels.isEmpty
-                          ? ''
-                          : _effectiveLevel.isEmpty
-                          ? l10n.assistant.reasoningOff
-                          : reasoningLevelLabel(_effectiveLevel, l10n),
-                      onTap: _sending ? null : _pickModel,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ],
+          ),
+          const SizedBox(width: 4),
+        ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(_kContextBarHeight),
+          child: _ContextBar(
+            provider: _provider,
+            providerMissing: _providerMissing,
+            modelLabel: modelLabel,
+            modelMissing: _modelMissing,
+            catalogMissing: _catalogMissing,
+            levelLabel: _reasoningLevels.isEmpty
+                ? ''
+                : _effectiveLevel.isEmpty
+                ? l10n.assistant.reasoningOff
+                : reasoningLevelLabel(_effectiveLevel, l10n),
+            presetLabel:
+                _presetName ??
+                (_presetMissing
+                    ? l10n.assistant.presetDeleted
+                    : l10n.assistant.presetBuiltinName),
+            presetStaged: _session == null,
+            onTap: _sending ? null : _pickModel,
+            onPresetTap: _sending
+                ? null
+                : (_session == null ? _pickPreset : _showPresetInfo),
+          ),
         ),
       ),
       body: chatArea,
@@ -1397,28 +1519,200 @@ class _DisclaimerGate extends StatelessWidget {
   }
 }
 
-class _NotConfiguredBanner extends StatelessWidget {
-  final VoidCallback onTap;
+class _ContextBar extends StatelessWidget {
+  final LlmProvider? provider;
+  final bool providerMissing;
+  final String modelLabel;
+  final bool modelMissing;
+  final bool catalogMissing;
+  final String levelLabel;
+  final String presetLabel;
+  final bool presetStaged;
+  final VoidCallback? onTap;
+  final VoidCallback? onPresetTap;
 
-  const _NotConfiguredBanner({required this.onTap});
+  const _ContextBar({
+    required this.provider,
+    required this.providerMissing,
+    required this.modelLabel,
+    required this.modelMissing,
+    required this.catalogMissing,
+    required this.levelLabel,
+    required this.presetLabel,
+    required this.presetStaged,
+    required this.onTap,
+    required this.onPresetTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = context.theme.colors;
+    final typography = context.theme.typography;
+    final provider = this.provider;
+    final showPreset =
+        MediaQuery.textScalerOf(context).scale(1) < _kContextBarPresetMaxScale;
+    final muted = typography.labelMedium.onSurfaceVariant;
+    final broken = modelLabel.isEmpty || modelMissing;
+
+    return SizedBox(
+      height: _kContextBarHeight,
+      child: MInkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const .symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              if (providerMissing)
+                Icon(LucideIcons.triangleAlert, size: 16, color: scheme.error)
+              else if (provider != null)
+                ProviderLogo(
+                  logoUrl: ProviderLogo.urlOf(provider.presetId),
+                  name: provider.name,
+                  size: 18,
+                ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) => Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          modelLabel.isEmpty
+                              ? l10n.assistant.historyModelUnset
+                              : modelLabel,
+                          maxLines: 1,
+                          overflow: .ellipsis,
+                          style: broken
+                              ? typography.labelMedium.emphasized.error
+                              : typography.labelMedium.emphasized.onSurface,
+                        ),
+                      ),
+                      if (modelMissing) ...[
+                        const SizedBox(width: 6),
+                        Text(
+                          l10n.assistant.modelNotInCatalog,
+                          style: typography.labelSmall.error,
+                        ),
+                      ] else if (catalogMissing) ...[
+                        const SizedBox(width: 6),
+                        Tooltip(
+                          message: l10n.assistant.modelCatalogOffline,
+                          child: Icon(
+                            LucideIcons.cloudOff,
+                            size: 14,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                      if (levelLabel.isNotEmpty) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          width: 5,
+                          height: 5,
+                          decoration: BoxDecoration(
+                            color: scheme.primary,
+                            shape: .circle,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(levelLabel, style: muted),
+                      ],
+                      if (showPreset) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          '/',
+                          style: muted.copyWith(color: scheme.outlineVariant),
+                        ),
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: constraints.maxWidth * _kPresetMaxShare,
+                          ),
+                          child: MInkWell(
+                            shape: const StadiumBorder(),
+                            onTap: onPresetTap,
+                            child: Padding(
+                              padding: const .symmetric(
+                                horizontal: 6,
+                                vertical: 4,
+                              ),
+                              child: Row(
+                                mainAxisSize: .min,
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      presetLabel,
+                                      maxLines: 1,
+                                      overflow: .ellipsis,
+                                      style: muted,
+                                    ),
+                                  ),
+                                  if (presetStaged && onPresetTap != null)
+                                    Icon(
+                                      LucideIcons.chevronDown,
+                                      size: 14,
+                                      color: scheme.onSurfaceVariant,
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                LucideIcons.chevronsUpDown,
+                size: 15,
+                color: scheme.onSurfaceVariant,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusBanner extends StatelessWidget {
+  final String text;
+  final bool error;
+  final VoidCallback? onTap;
+
+  const _StatusBanner({
+    required this.text,
+    required this.error,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
+    final typography = context.theme.typography.bodyMedium;
     return Material(
-      color: scheme.errorContainer,
+      color: error ? scheme.errorContainer : scheme.tertiaryContainer,
       child: MInkWell(
         onTap: onTap,
         child: Padding(
           padding: const .all(12),
           child: Row(
             children: [
-              Icon(LucideIcons.triangleAlert, color: scheme.onErrorContainer),
+              Icon(
+                LucideIcons.triangleAlert,
+                color: error
+                    ? scheme.onErrorContainer
+                    : scheme.onTertiaryContainer,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  context.l10n.assistant.notConfiguredBanner,
-                  style: context.theme.typography.bodyMedium.onErrorContainer,
+                  text,
+                  style: error
+                      ? typography.onErrorContainer
+                      : typography.onTertiaryContainer,
                 ),
               ),
             ],
@@ -1657,106 +1951,6 @@ class _ScrollToBottomButton extends StatelessWidget {
       size: 36,
       elevated: true,
       icon: const Icon(LucideIcons.chevronDown),
-    );
-  }
-}
-
-class _PresetChip extends StatelessWidget {
-  final String label;
-
-  final bool staged;
-
-  final VoidCallback? onTap;
-
-  const _PresetChip({
-    required this.label,
-    required this.staged,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final typography = context.theme.typography;
-    final content = Row(
-      mainAxisSize: .min,
-      children: [
-        Flexible(
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: .ellipsis,
-            style: typography.labelSmall.onSurfaceVariant,
-          ),
-        ),
-        if (staged && onTap != null) ...[
-          const SizedBox(width: 2),
-          Icon(
-            LucideIcons.chevronDown,
-            size: 14,
-            color: context.theme.colors.onSurfaceVariant,
-          ),
-        ],
-      ],
-    );
-    const inset = EdgeInsets.symmetric(horizontal: _kTitleInset, vertical: 2);
-    if (onTap == null) return Padding(padding: inset, child: content);
-    return MInkWell(
-      shape: const StadiumBorder(),
-      onTap: onTap,
-      child: Padding(padding: inset, child: content),
-    );
-  }
-}
-
-class _ModelChip extends StatelessWidget {
-  final String modelLabel;
-  final String reasoningLevel;
-
-  final VoidCallback? onTap;
-
-  const _ModelChip({
-    required this.modelLabel,
-    required this.reasoningLevel,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final locked = onTap == null;
-    final typography = context.theme.typography;
-
-    final label = Row(
-      mainAxisSize: .min,
-      children: [
-        Flexible(
-          child: Text(
-            modelLabel,
-            maxLines: 1,
-            overflow: .ellipsis,
-            style: typography.labelSmall.onSurfaceVariant,
-          ),
-        ),
-        if (reasoningLevel.isNotEmpty) ...[
-          const SizedBox(width: 4),
-          Text(reasoningLevel, style: typography.labelSmall.onSurfaceVariant),
-        ],
-        if (!locked) ...[
-          const SizedBox(width: 2),
-          Icon(
-            LucideIcons.chevronDown,
-            size: 14,
-            color: context.theme.colors.onSurfaceVariant,
-          ),
-        ],
-      ],
-    );
-
-    const inset = EdgeInsets.symmetric(horizontal: _kTitleInset, vertical: 2);
-    if (locked) return Padding(padding: inset, child: label);
-    return MInkWell(
-      shape: const StadiumBorder(),
-      onTap: onTap,
-      child: Padding(padding: inset, child: label),
     );
   }
 }
@@ -2166,10 +2360,7 @@ class AssistantSessionListPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.assistant.settingFunctionAIAssistant),
-        actions: const [_ActiveModelAction(), SizedBox(width: 4)],
-      ),
+      appBar: AppBar(title: Text(l10n.assistant.settingFunctionAIAssistant)),
       body: _SessionListView(
         onSelect: (session) => AssistantConversationRoute(
           sessionId: session.id,
@@ -2178,81 +2369,6 @@ class AssistantSessionListPage extends StatelessWidget {
         onDelete: (session) =>
             getIt<ChatRepository>().deleteSession(session.id),
         padding: .only(bottom: 8 + MediaQuery.paddingOf(context).bottom),
-      ),
-    );
-  }
-}
-
-class _ActiveModelAction extends StatefulWidget {
-  const _ActiveModelAction();
-
-  @override
-  State<_ActiveModelAction> createState() => _ActiveModelActionState();
-}
-
-class _ActiveModelActionState extends State<_ActiveModelAction> {
-  LlmProvider? _active;
-  bool _loaded = false;
-  StreamSubscription<void>? _sub;
-
-  @override
-  void initState() {
-    super.initState();
-    _sub = getIt<LlmProviderRepository>().providerEvents.listen((_) => _load());
-    _load();
-  }
-
-  @override
-  void dispose() {
-    _sub?.cancel();
-    super.dispose();
-  }
-
-  Future<void> _load() async {
-    final active = await getIt<LlmProviderRepository>().getActiveProvider();
-    if (!mounted) return;
-    setState(() {
-      _active = active;
-      _loaded = true;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (!_loaded) return const SizedBox.shrink();
-    final l10n = context.l10n;
-    final active = _active;
-    final typography = context.theme.typography;
-    return MInkWell(
-      shape: const StadiumBorder(),
-      onTap: () async {
-        await const AssistantSettingRoute().push(context);
-        await _load();
-      },
-      child: Padding(
-        padding: const .symmetric(horizontal: 8, vertical: 8),
-        child: Row(
-          mainAxisSize: .min,
-          children: [
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 150),
-              child: Text(
-                active?.defaultModel ?? l10n.assistant.historyModelUnset,
-                maxLines: 1,
-                overflow: .ellipsis,
-                style: active == null
-                    ? typography.labelMedium.error
-                    : typography.labelMedium.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(width: 2),
-            Icon(
-              LucideIcons.chevronRight,
-              size: 15,
-              color: context.theme.colors.onSurfaceVariant,
-            ),
-          ],
-        ),
       ),
     );
   }

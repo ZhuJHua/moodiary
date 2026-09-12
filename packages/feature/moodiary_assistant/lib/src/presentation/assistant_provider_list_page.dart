@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
+import 'package:moodiary_assistant/src/data/chat_repository.dart';
 import 'package:moodiary_assistant/src/data/llm_provider_repository.dart';
 import 'package:moodiary_assistant/src/presentation/provider_logo.dart';
 import 'package:moodiary_components/moodiary_components.dart';
@@ -74,10 +75,19 @@ class _AssistantProviderListPageState extends State<AssistantProviderListPage> {
 
   Future<void> _delete(LlmProvider provider) async {
     final l10n = context.l10n;
+    final affected = await getIt<ChatRepository>().countSessionsByProvider(
+      provider.id,
+    );
+    if (!mounted) return;
+    final message = [
+      l10n.assistant.modelProviderDeleteContent(name: provider.name),
+      if (affected > 0)
+        l10n.assistant.modelProviderDeleteAffects(count: affected),
+    ].join('\n');
     final ok = await MAlert.confirm(
       context,
       title: l10n.assistant.modelProviderDeleteTitle,
-      message: l10n.assistant.modelProviderDeleteContent(name: provider.name),
+      message: message,
       confirmLabel: l10n.common.delete,
       isDestructive: true,
     );
