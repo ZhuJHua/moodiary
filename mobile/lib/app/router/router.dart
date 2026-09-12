@@ -67,8 +67,4 @@ List<RouteBase> _mobileRoutes() => [
   ...lockRoutes(),
   ...editorRoutes(),
   ...assistantRoutes(),
-  GoRoute(
-    path: AssistantDiaryPickerRoute.path,
-    builder: (_, _) => const DiarySelectPage(),
-  ),
 ];

@@ -27,6 +27,15 @@ void main() {
     expect(ImageSizeManager().getSize(pngPath), (1, 1));
   });
 
+  test('getSize caches so the sync path stays cheap on rebuilds', () async {
+    ImageSizeManager().clear();
+    expect(ImageSizeManager().getSize(pngPath), (1, 1));
+    await File(pngPath).delete();
+    expect(ImageSizeManager().getSize(pngPath), (1, 1));
+    expect(ImageSizeManager().getAspectRatio(pngPath), 1.0);
+    await File(pngPath).writeAsBytes(base64Decode(_png1x1));
+  });
+
   test('getAspectRatioAsync computes and caches', () async {
     ImageSizeManager().clear();
     expect(await ImageSizeManager().getAspectRatioAsync(pngPath), 1.0);

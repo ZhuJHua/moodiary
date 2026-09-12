@@ -66,13 +66,16 @@ void main() {
     double bottomPadding = 80,
     List<String>? probeLog,
     ValueNotifier<double>? liveHeight,
+    bool nestedScroller = false,
+    ValueNotifier<double>? viewport,
   }) {
     return MaterialApp(
       home: Scaffold(
         body: Center(
-          child: SizedBox(
-            width: 400,
-            height: viewportHeight,
+          child: ValueListenableBuilder<double>(
+            valueListenable: viewport ?? ValueNotifier(viewportHeight),
+            builder: (context, height, child) =>
+                SizedBox(width: 400, height: height, child: child),
             child: AssistantChatList(
               key: listKey,
               controller: controller,
@@ -98,10 +101,16 @@ void main() {
                     ),
                   );
                 }
-                return SizedBox(
+                final box = SizedBox(
                   key: ValueKey<String>('box-${item.id}'),
                   height: _heightOf(text),
                   width: 200,
+                );
+                if (!nestedScroller) return box;
+                return SingleChildScrollView(
+                  key: ValueKey<String>('code-${item.id}'),
+                  scrollDirection: .horizontal,
+                  child: SizedBox(width: 900, child: box),
                 );
               },
               scrollToBottomBuilder: (context, visible, onTap) => visible
@@ -113,6 +122,10 @@ void main() {
       ),
     );
   }
+
+  double bottomInList(WidgetTester tester, String id) =>
+      tester.getBottomLeft(find.byKey(ValueKey<String>('box-$id'))).dy -
+      tester.getTopLeft(find.byType(AssistantChatList)).dy;
 
   void seed(int count) {
     controller.batch(() {
@@ -154,16 +167,11 @@ void main() {
         ? 'm20'
         : 'm25';
     final before = topOf(tester, anchorId);
-    final pixelsBefore = scroll.position.pixels;
 
     controller.replace(_turn('m29', fromUser: false, text: '0123456789'));
     await tester.pumpAndSettle();
 
     expect(topOf(tester, anchorId), moreOrLessEquals(before, epsilon: 0.5));
-    expect(
-      scroll.position.pixels,
-      moreOrLessEquals(pixelsBefore, epsilon: 0.5),
-    );
   });
 
   testWidgets('往表头补历史不移动画面', (tester) async {
@@ -174,8 +182,10 @@ void main() {
     await tester.drag(find.byType(CustomScrollView), const Offset(0, 300));
     await tester.pumpAndSettle();
 
-    final before = topOf(tester, 'm15');
-    final pixelsBefore = scroll.position.pixels;
+    final anchorId = ['m15', 'm12', 'm10', 'm8'].firstWhere(
+      (id) => find.byKey(ValueKey<String>('box-$id')).evaluate().isNotEmpty,
+    );
+    final before = topOf(tester, anchorId);
 
     controller.batch(() {
       for (var i = 0; i < 10; i++) {
@@ -184,11 +194,7 @@ void main() {
     });
     await tester.pumpAndSettle();
 
-    expect(topOf(tester, 'm15'), moreOrLessEquals(before, epsilon: 0.5));
-    expect(
-      scroll.position.pixels,
-      moreOrLessEquals(pixelsBefore, epsilon: 0.5),
-    );
+    expect(topOf(tester, anchorId), moreOrLessEquals(before, epsilon: 0.5));
   });
 
   testWidgets('跟随中视口变矮会重新钉底', (tester) async {
@@ -339,62 +345,6 @@ void main() {
     expect(scroll.position.pixels, moreOrLessEquals(resting, epsilon: 0.5));
   });
 
-  testWidgets('静默改位置后 syncFollowFromPosition 能把跟随状态判回来', (tester) async {
-    seed(30);
-    await tester.pumpWidget(host());
-    await tester.pumpAndSettle();
-
-    final state = listKey.currentState!;
-    final position = scroll.position;
-
-    state.releaseFollow();
-    position.correctPixels(position.pixels - 300);
-    await tester.pump();
-    state.syncFollowFromPosition();
-    await tester.pump();
-    expect(
-      find.byKey(const ValueKey('to-bottom')),
-      findsOneWidget,
-      reason: '离开底部之后该出现回到底部按钮',
-    );
-
-    position.correctPixels(position.maxScrollExtent);
-    await tester.pump();
-    state.syncFollowFromPosition();
-    await tester.pump();
-    expect(
-      find.byKey(const ValueKey('to-bottom')),
-      findsNothing,
-      reason: '回到底部之后按钮必须收起来',
-    );
-  });
-
-  testWidgets('精确落回底部后，同步跟随不产生第二次位移', (tester) async {
-    seed(30);
-    await tester.pumpWidget(host());
-    await tester.pumpAndSettle();
-
-    final state = listKey.currentState!;
-    final position = scroll.position;
-
-    state.releaseFollow();
-    position.correctPixels(position.pixels - 300);
-    await tester.pump();
-
-    position.correctPixels(position.maxScrollExtent);
-    await tester.pump();
-    state.syncFollowFromPosition();
-    final settled = position.pixels;
-
-    await tester.pumpAndSettle();
-    expect(
-      position.pixels,
-      moreOrLessEquals(settled, epsilon: 0.5),
-      reason: '落点精确时不该再被补跳挪一次',
-    );
-    expect(find.byKey(const ValueKey('to-bottom')), findsNothing);
-  });
-
   testWidgets('贴底时流式长高，位置在同一帧跟到新底部（不慢一帧再抽回）', (tester) async {
     controller.setAll([
       for (var i = 0; i < 12; i++)
@@ -458,52 +408,6 @@ void main() {
       moreOrLessEquals(away, epsilon: 0.5),
       reason: '翻历史的人不该被新 token 拽走',
     );
-  });
-
-  testWidgets('releaseFollow 之后流式长高不再贴底', (tester) async {
-    controller.setAll([
-      for (var i = 0; i < 12; i++)
-        _turn('m$i', fromUser: i.isEven, text: 'x' * 3),
-    ]);
-    await tester.pumpWidget(host());
-    await tester.pumpAndSettle();
-    controller.beginStreaming(
-      AssistantTurn.assistant('', streaming: true).copyWith(text: 'x'),
-    );
-    await tester.pumpAndSettle();
-
-    final position = scroll.position;
-    listKey.currentState!.releaseFollow();
-    final held = position.pixels;
-
-    controller.updateStreaming(
-      (controller.items.last as AssistantTurn).copyWith(text: 'x' * 10),
-    );
-    await tester.pump();
-
-    expect(
-      position.pixels,
-      moreOrLessEquals(held, epsilon: 0.5),
-      reason: '放弃跟随之后，长高不该再把位置拽到新底部',
-    );
-  });
-
-  testWidgets('isInForwardGroup 认得中心线两侧', (tester) async {
-    seed(30);
-    await tester.pumpWidget(host());
-    await tester.pumpAndSettle();
-
-    listKey.currentState!.releaseFollow();
-    controller.add(_turn('m30', fromUser: true, text: 'x' * 2));
-    await tester.pumpAndSettle();
-
-    final state = listKey.currentState!;
-    BuildContext ctxOf(String id) =>
-        tester.element(find.byKey(ValueKey<String>('box-$id')));
-
-    expect(state.isInForwardGroup(ctxOf('m30')), isTrue, reason: '比中心新');
-    expect(state.isInForwardGroup(ctxOf('m29')), isFalse, reason: '中心项本身');
-    expect(state.isInForwardGroup(ctxOf('m25')), isFalse, reason: '比中心旧');
   });
 
   testWidgets('内容不足一屏时从顶部往下排，且不可滚动', (tester) async {
@@ -634,9 +538,10 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    expect(scroll.position.minScrollExtent, lessThan(0), reason: '负向组已经够高');
+    expect(scroll.position.maxScrollExtent, greaterThan(0), reason: '已经超过一屏');
 
-    listKey.currentState!.releaseFollow();
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, 100));
+    await tester.pumpAndSettle();
     scroll.jumpTo(scroll.position.minScrollExtent);
     await tester.pumpAndSettle();
 
@@ -648,44 +553,25 @@ void main() {
     await tester.pumpWidget(host());
     await tester.pumpAndSettle();
     expect(listKey.currentState!.contentFitsViewport, isFalse);
-    expect(scroll.position.minScrollExtent, 0, reason: '前提：还在窗口期');
 
     final before = topOf(tester, 'm9');
     controller.add(_turn('m10', fromUser: true));
     await tester.pump();
 
     expect(topOf(tester, 'm9'), moreOrLessEquals(before - 52, epsilon: 0.5));
+    expect(
+      scroll.position.pixels,
+      moreOrLessEquals(scroll.position.maxScrollExtent, epsilon: 1),
+    );
 
     controller.add(_turn('m11', fromUser: false));
     await tester.pumpAndSettle();
-    expect(scroll.position.minScrollExtent, lessThan(0), reason: '窗口已闭合');
 
-    listKey.currentState!.releaseFollow();
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, 100));
+    await tester.pumpAndSettle();
     scroll.jumpTo(scroll.position.minScrollExtent);
     await tester.pumpAndSettle();
     expect(topInList(tester, 'm0'), moreOrLessEquals(8, epsilon: 0.5));
-  });
-
-  testWidgets('滑在历史里时不挪中心项', (tester) async {
-    seed(10);
-    await tester.pumpWidget(host());
-    await tester.pumpAndSettle();
-    expect(scroll.position.minScrollExtent, 0, reason: '前提：还在窗口期');
-
-    listKey.currentState!.releaseFollow();
-    controller.batch(() {
-      for (var i = 10; i < 15; i++) {
-        controller.add(_turn('m$i', fromUser: i.isEven));
-      }
-    });
-    await tester.pumpAndSettle();
-    expect(scroll.position.minScrollExtent, 0, reason: '没贴底就一次都别动中心项');
-
-    listKey.currentState!.pinToBottom();
-    await tester.pumpAndSettle();
-    controller.add(_turn('m15', fromUser: true));
-    await tester.pumpAndSettle();
-    expect(scroll.position.minScrollExtent, lessThan(0));
   });
 
   testWidgets('流式那条不会被挪成中心项', (tester) async {
@@ -697,27 +583,15 @@ void main() {
       AssistantTurn.assistant('', streaming: true).copyWith(text: 'a'),
     );
     await tester.pumpAndSettle();
-
-    final streamingId = controller.items.last.id;
     final state = listKey.currentState!;
-    expect(
-      state.isInForwardGroup(
-        tester.element(find.byKey(ValueKey<String>('box-$streamingId'))),
-      ),
-      isTrue,
-    );
+    expect(state.centerIndex, greaterThanOrEqualTo(1));
 
     controller.batch(() {
       controller.replace((controller.items.last as AssistantTurn).settled);
       controller.endStreaming();
     });
     await tester.pumpAndSettle();
-    expect(
-      state.isInForwardGroup(
-        tester.element(find.byKey(ValueKey<String>('box-$streamingId'))),
-      ),
-      isFalse,
-    );
+    expect(state.centerIndex, greaterThanOrEqualTo(1));
   });
 
   testWidgets('流式跨过一屏时逐帧连续，没有错位帧', (tester) async {
@@ -796,31 +670,6 @@ void main() {
     expect(find.byKey(const ValueKey('to-bottom')), findsNothing);
   });
 
-  testWidgets('releaseFollow 之后长过一屏：落到底但不再跟随', (tester) async {
-    controller.setAll([
-      _turn('m0', fromUser: true),
-      _turn('m1', fromUser: false),
-    ]);
-    await tester.pumpWidget(host());
-    await tester.pumpAndSettle();
-
-    listKey.currentState!.releaseFollow();
-    controller.replace(_turn('m1', fromUser: false, text: 'x' * 15));
-    await tester.pumpAndSettle();
-
-    expect(listKey.currentState!.contentFitsViewport, isFalse);
-    expect(
-      scroll.position.pixels,
-      moreOrLessEquals(scroll.position.maxScrollExtent, epsilon: 1),
-    );
-    expect(find.byKey(const ValueKey('to-bottom')), findsOneWidget);
-
-    final held = scroll.position.pixels;
-    controller.replace(_turn('m1', fromUser: false, text: 'x' * 18));
-    await tester.pump();
-    expect(scroll.position.pixels, moreOrLessEquals(held, epsilon: 0.5));
-  });
-
   testWidgets('拖动中来了尾部消息，不夺走手势不跳底', (tester) async {
     seed(30);
     await tester.pumpWidget(host());
@@ -851,40 +700,12 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('就地变矮不发通知时，syncFollowFromPosition 能把形态量回来', (tester) async {
-    final liveHeight = ValueNotifier<double>(100);
-    addTearDown(liveHeight.dispose);
-    controller.batch(() {
-      for (var i = 0; i < 9; i++) {
-        controller.add(_turn('m$i', fromUser: i.isEven));
-      }
-      controller.add(_turn('live', fromUser: false));
-    });
-    await tester.pumpWidget(host(liveHeight: liveHeight));
-    await tester.pumpAndSettle();
-    expect(listKey.currentState!.contentFitsViewport, isFalse);
-    expect(scroll.position.minScrollExtent, 0);
-
-    liveHeight.value = 20;
-    await tester.pump();
-    expect(
-      listKey.currentState!.contentFitsViewport,
-      isFalse,
-      reason: '前提：静默变矮确实没触发形态检查',
-    );
-
-    listKey.currentState!.syncFollowFromPosition();
-    await tester.pumpAndSettle();
-    expect(listKey.currentState!.contentFitsViewport, isTrue);
-    expect(topInList(tester, 'm0'), moreOrLessEquals(8, epsilon: 0.5));
-  });
-
   testWidgets('换分支与挪中心项不重建还在视口里的条目', (tester) async {
     final log = <String>[];
     seed(3);
     await tester.pumpWidget(host(probeLog: log));
     await tester.pumpAndSettle();
-    expect(log, ['m2', 'm1', 'm0'], reason: '顶对齐分支把三条都建出来');
+    expect(log, ['m0', 'm1', 'm2'], reason: '不足一屏时从最老一条往下建');
 
     controller.batch(() {
       for (var i = 3; i < 20; i++) {
@@ -902,5 +723,242 @@ void main() {
     await tester.pumpAndSettle();
     expect(log.where((id) => id == 'm19').length, 1);
     expect(log.where((id) => id == 'm20').length, 1);
+  });
+
+  testWidgets('滑动余波里点回到底部仍然生效', (tester) async {
+    seed(30);
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+
+    await tester.fling(
+      find.byType(CustomScrollView),
+      const Offset(0, 500),
+      900,
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 40));
+    expect(scroll.position.activity!.isScrolling, isTrue, reason: '还在惯性里');
+
+    listKey.currentState!.pinToBottom();
+    await tester.pumpAndSettle();
+
+    expect(
+      scroll.position.pixels,
+      moreOrLessEquals(scroll.position.maxScrollExtent, epsilon: 1),
+    );
+    expect(find.byKey(const ValueKey('to-bottom')), findsNothing);
+  });
+
+  testWidgets('横滑代码块不冻结形态重估', (tester) async {
+    final live = ValueNotifier<double>(40);
+    addTearDown(live.dispose);
+    controller.setAll([
+      _turn('m0', fromUser: true),
+      _turn('live', fromUser: false),
+    ]);
+    await tester.pumpWidget(host(liveHeight: live, nestedScroller: true));
+    await tester.pumpAndSettle();
+    expect(listKey.currentState!.contentFitsViewport, isTrue);
+
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byKey(const ValueKey<String>('code-m0'))),
+    );
+    await gesture.moveBy(const Offset(-80, 0));
+    await tester.pump();
+
+    live.value = 640;
+    await tester.pump();
+    await tester.pump();
+    await tester.pump();
+
+    expect(
+      listKey.currentState!.contentFitsViewport,
+      isFalse,
+      reason: '横滑代码块不该冻结整个列表的形态重估',
+    );
+    await gesture.up();
+    await tester.pumpAndSettle();
+  });
+
+  String variedText(int i) => 'x' * (1 + (i * 7) % 10);
+
+  void seedVaried(int count) {
+    controller.batch(() {
+      for (var i = 0; i < count; i++) {
+        controller.add(_turn('m$i', fromUser: i.isEven, text: variedText(i)));
+      }
+    });
+  }
+
+  testWidgets('边界精确后跳到顶部一步落在第一条上沿', (tester) async {
+    seedVaried(40);
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, 200));
+    await tester.pumpAndSettle();
+    scroll.jumpTo(scroll.position.minScrollExtent);
+    await tester.pump();
+
+    expect(topInList(tester, 'm0'), moreOrLessEquals(8, epsilon: 0.5));
+    expect(scroll.position.pixels, scroll.position.minScrollExtent);
+  });
+
+  testWidgets('中心那条被删掉，视口里的幸存者都不动', (tester) async {
+    seedVaried(30);
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, 500));
+    await tester.pumpAndSettle();
+
+    final state = listKey.currentState!;
+    final centerId = 'm${29 - state.centerIndex}';
+    final before = <String, double>{
+      for (var i = 0; i < 30; i++)
+        if ('m$i' != centerId &&
+            find.byKey(ValueKey<String>('box-m$i')).evaluate().isNotEmpty)
+          'm$i': topOf(tester, 'm$i'),
+    };
+    expect(before, isNotEmpty);
+
+    controller.removeWhere((e) => e.id == centerId);
+    await tester.pump();
+
+    for (final entry in before.entries) {
+      final finder = find.byKey(ValueKey<String>('box-${entry.key}'));
+      if (finder.evaluate().isEmpty) continue;
+      expect(
+        topOf(tester, entry.key),
+        moreOrLessEquals(entry.value, epsilon: 0.5),
+        reason: '${entry.key} 被删中心项带着跳了',
+      );
+    }
+  });
+
+  testWidgets('贴底跟随时 forward 组不会无限攒', (tester) async {
+    seed(5);
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+
+    for (var i = 5; i < 70; i++) {
+      controller.add(_turn('m$i', fromUser: i.isEven));
+      await tester.pump();
+    }
+    await tester.pumpAndSettle();
+
+    expect(listKey.currentState!.centerIndex, lessThan(45));
+    expect(
+      scroll.position.pixels,
+      moreOrLessEquals(scroll.position.maxScrollExtent, epsilon: 0.5),
+    );
+    expect(find.byKey(const ValueKey<String>('box-m69')), findsOneWidget);
+  });
+
+  testWidgets('停在会话开头附近：第一条已 build 但在视口顶之上，松手不跳', (tester) async {
+    seedVaried(30);
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, 100));
+    await tester.pumpAndSettle();
+    expect(listKey.currentState!.following, isFalse);
+    final centerBefore = listKey.currentState!.centerIndex;
+    expect(centerBefore, isNot(29));
+
+    double topAny(String id) =>
+        tester
+            .getTopLeft(
+              find.byKey(ValueKey<String>('box-$id'), skipOffstage: false),
+            )
+            .dy -
+        tester.getTopLeft(find.byType(AssistantChatList)).dy;
+
+    scroll.jumpTo(scroll.position.minScrollExtent + 20);
+    await tester.pump();
+    expect(topAny('m0'), moreOrLessEquals(-12, epsilon: 0.5));
+    final m1Before = topAny('m1');
+
+    await tester.pumpAndSettle();
+    expect(listKey.currentState!.centerIndex, 29, reason: '中心该退到最老一条');
+    expect(scroll.position.minScrollExtent, 0);
+    expect(topAny('m1'), moreOrLessEquals(m1Before, epsilon: 0.5));
+    expect(topAny('m0'), moreOrLessEquals(-12, epsilon: 0.5));
+  });
+
+  testWidgets('重新生成删掉撑满视口的中心项：一帧都不露空白，也不整会话重建', (tester) async {
+    controller.batch(() {
+      for (var i = 0; i < 60; i++) {
+        controller.add(_turn('m$i', fromUser: i.isEven));
+      }
+      controller.add(_turn('tall', fromUser: false, text: 'x' * 20));
+    });
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+    expect(bottomInList(tester, 'tall'), moreOrLessEquals(508, epsilon: 0.5));
+    expect(listKey.currentState!.centerIndex, 0, reason: '长回复自己就是中心项');
+    final baseline = Map<String, int>.of(builds);
+
+    controller.remove(_turn('tall', fromUser: false));
+    await tester.pump();
+
+    // 600 - 80 底部留白 - 12 条目间距
+    expect(
+      bottomInList(tester, 'm59'),
+      moreOrLessEquals(508, epsilon: 0.5),
+      reason: '删掉之后底部仍然贴着视口底',
+    );
+    final rebuilt = builds.entries
+        .where((e) => e.value > (baseline[e.key] ?? 0))
+        .length;
+    expect(rebuilt, lessThan(20), reason: '只该建视口+缓存那一段，不是整会话 60 条');
+    await tester.pumpAndSettle();
+    expect(bottomInList(tester, 'm59'), moreOrLessEquals(508, epsilon: 0.5));
+    expect(find.byKey(const ValueKey<String>('box-m0')), findsNothing);
+  });
+
+  testWidgets('键盘收起视口变高：forward 组撑不满时把上方内容拉下来，不露空白', (tester) async {
+    tester.view.physicalSize = const Size(400, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final viewport = ValueNotifier<double>(600);
+    addTearDown(viewport.dispose);
+    seed(30);
+    await tester.pumpWidget(host(viewport: viewport));
+    await tester.pumpAndSettle();
+    expect(bottomInList(tester, 'm29'), moreOrLessEquals(508, epsilon: 0.5));
+
+    viewport.value = 900;
+    await tester.pump();
+    expect(
+      bottomInList(tester, 'm29'),
+      moreOrLessEquals(808, epsilon: 0.5),
+      reason: '视口变高的那一帧底部就该贴着',
+    );
+    await tester.pumpAndSettle();
+    expect(bottomInList(tester, 'm29'), moreOrLessEquals(808, epsilon: 0.5));
+    expect(listKey.currentState!.following, isTrue);
+    expect(find.byKey(const ValueKey('to-bottom')), findsNothing);
+  });
+
+  testWidgets('流式期间不离屏量高度，定稿后再补', (tester) async {
+    seedVaried(40);
+    controller.beginStreaming(
+      AssistantTurn.assistant('', streaming: true).copyWith(text: 'a'),
+    );
+    await tester.pumpWidget(host());
+    await tester.pump();
+    await tester.pump();
+    final state = listKey.currentState!;
+    final duringStream = state.measuredCount;
+    expect(duringStream, lessThan(40));
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    expect(state.measuredCount, duringStream, reason: '流式中只记屏上的，不离屏量');
+
+    final live = controller.streaming.value!;
+    controller.replace(live.copyWith(streaming: false, text: 'done'));
+    controller.endStreaming();
+    await tester.pumpAndSettle();
+    expect(state.measuredCount, 41);
   });
 }

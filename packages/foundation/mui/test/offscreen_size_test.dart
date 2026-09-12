@@ -78,6 +78,33 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('OffscreenMeasurer 复用脚手架连量多件，State 不跨件共享', (tester) async {
+    await pumpHost(tester);
+    final inits = <int>[];
+    final measurer = OffscreenMeasurer(
+      hostContext,
+      viewSize: const Size(400, double.infinity),
+    );
+    addTearDown(measurer.dispose);
+
+    expect(
+      measurer.measure(_InitProbe(id: 1, height: 30, log: inits)).height,
+      30,
+    );
+    expect(
+      measurer.measure(_InitProbe(id: 2, height: 70, log: inits)).height,
+      70,
+    );
+    expect(
+      measurer
+          .measure(const SelectionArea(child: SizedBox(width: 50, height: 44)))
+          .height,
+      44,
+    );
+    expect(inits, [1, 2, -1, -2], reason: '每件都该走自己的 initState，量完即释放');
+    expect(find.byType(_InitProbe), findsNothing);
+  });
+
   testWidgets('被量的子树里带 GlobalKey 会撞车（带 GlobalKey 的祖先包不进来）', (tester) async {
     final shared = GlobalKey();
     await tester.pumpWidget(
@@ -106,4 +133,33 @@ void main() {
       reason: '同一个 GlobalKey 挂两处必须炸出来，而不是悄悄错位',
     );
   });
+}
+
+class _InitProbe extends StatefulWidget {
+  const _InitProbe({required this.id, required this.height, required this.log});
+
+  final int id;
+  final double height;
+  final List<int> log;
+
+  @override
+  State<_InitProbe> createState() => _InitProbeState();
+}
+
+class _InitProbeState extends State<_InitProbe> {
+  @override
+  void initState() {
+    super.initState();
+    widget.log.add(widget.id);
+  }
+
+  @override
+  void dispose() {
+    widget.log.add(-widget.id);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      SizedBox(width: 100, height: widget.height);
 }

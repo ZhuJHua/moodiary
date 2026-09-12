@@ -238,16 +238,16 @@ class AssistantConversationRoute extends MoodiaryRouteBase {
 
   final String? sessionId;
 
-  const AssistantConversationRoute({this.sessionId}) : super(path);
+  final String? title;
+
+  const AssistantConversationRoute({this.sessionId, this.title})
+    : super(path);
 
   @override
-  Map<String, dynamic> get params => {'session_id': sessionId};
-}
-
-class AssistantDiaryPickerRoute extends MoodiaryRouteBase {
-  static const String path = '/assistant/diary_picker';
-
-  const AssistantDiaryPickerRoute() : super(path);
+  Map<String, dynamic> get params => {
+    'session_id': sessionId,
+    'title': title,
+  };
 }
 
 class AssistantProvidersRoute extends MoodiaryRouteBase {

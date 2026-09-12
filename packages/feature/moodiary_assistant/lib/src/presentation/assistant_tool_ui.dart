@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:mui/mui.dart';
@@ -89,4 +91,55 @@ import 'package:mui/mui.dart';
       description: l10n.assistant.toolForgetDes,
     ),
   };
+}
+
+class AssistantToolDetail extends StatelessWidget {
+  final Map<String, dynamic> args;
+  final String result;
+
+  const AssistantToolDetail({
+    super.key,
+    required this.args,
+    required this.result,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final typography = context.theme.typography;
+    final label = typography.labelSmall.onSurfaceVariant.copyWith(
+      color: context.theme.colors.onSurfaceVariant.withValues(alpha: 0.7),
+    );
+    final body = typography.bodySmall.onSurfaceVariant;
+    return Column(
+      crossAxisAlignment: .start,
+      mainAxisSize: .min,
+      children: [
+        if (args.isNotEmpty) ...[
+          Text(l10n.assistant.toolArgs, style: label),
+          const SizedBox(height: 2),
+          Text(formatToolArgs(args), style: body),
+        ],
+        if (args.isNotEmpty && result.isNotEmpty) const SizedBox(height: 8),
+        if (result.isNotEmpty) ...[
+          Text(l10n.assistant.toolResult, style: label),
+          const SizedBox(height: 2),
+          Text(result, style: body),
+        ],
+      ],
+    );
+  }
+}
+
+String formatToolArgs(Map<String, dynamic> args) {
+  const encoder = JsonEncoder.withIndent('  ');
+  return [
+    for (final MapEntry(:key, :value) in args.entries)
+      switch (value) {
+        String() => '$key: $value',
+        num() || bool() => '$key: $value',
+        null => '$key: null',
+        _ => '$key: ${encoder.convert(value)}',
+      },
+  ].join('\n');
 }

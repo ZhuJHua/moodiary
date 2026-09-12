@@ -302,8 +302,13 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get protocolAnthropicMessages => 'Anthropic /messages';
 	@override String get modelListFetch => 'Fetch models from endpoint';
 	@override String get modelListNeedKey => 'Enter an API key first';
+	@override String get modelListManualHint => 'You can enter a model id by hand';
 	@override String modelListFetched({required Object count}) => 'Found ${count} models';
-	@override String get modelListFailed => 'Could not fetch models — enter one manually';
+	@override String get netTimeout => 'Connection timed out';
+	@override String get netUnreachable => 'Network unavailable — check your connection';
+	@override String netStatus({required Object code}) => 'Server returned ${code}';
+	@override String get netDecode => 'Couldn\'t read the response';
+	@override String get netUnknown => 'Request failed';
 	@override String get reasoningEffort => 'Thinking effort';
 	@override String get reasoningOff => 'No thinking';
 	@override String thoughtFor({required Object duration}) => 'Thought for ${duration}s';
@@ -352,10 +357,8 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get disclaimerDecline => 'Not now';
 	@override String get disclaimerGateTitle => 'Accept the disclaimer to use the assistant';
 	@override String get disclaimerGateAction => 'View disclaimer';
-	@override String get toolSendDiary => 'Send a diary';
 	@override String get toolSendImage => 'Send an image';
 	@override String get imageMessageLabel => '[Image]';
-	@override String get sendDiaryLead => 'Here is one of my diary entries. Please read it and respond:';
 	@override String get modelProviderTitle => 'Model Providers';
 	@override String get modelProviderAdd => 'Add';
 	@override String get modelProviderNoKey => 'No key';
@@ -401,7 +404,6 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get summaryTitle => 'AI assistant setup';
 	@override String streamError({required Object error}) => '\n(error: ${error})';
 	@override String requestFailed({required Object error}) => '(request failed: ${error})';
-	@override String get imagePlaceholder => '[image]';
 	@override String get modelProviderDefault => 'Default';
 	@override String get modelProviderDefaultModel => 'Default model';
 	@override String modelListCount({required Object count}) => '${count} models';
@@ -410,6 +412,8 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get modelListEmpty => 'No models available yet';
 	@override String get modelDeprecated => 'Retired';
 	@override String get composerFullscreen => 'Full-screen editor';
+	@override String get toolArgs => 'Arguments';
+	@override String get toolResult => 'Result';
 	@override String get toolDone => 'Done';
 	@override String get toolFailed => 'Failed';
 	@override String get toolNoMatch => 'No matches';
@@ -515,9 +519,6 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get searchHistoryEmpty => 'No search history yet';
 	@override String get viewModeTimeline => 'Timeline';
 	@override String get viewModeFeed => 'Feed';
-	@override String get assistantSelectDiaryTitle => 'Select a diary';
-	@override String get assistantSelectDiarySearchHint => 'Search diaries';
-	@override String get assistantSelectDiaryEmpty => 'No diaries to send';
 	@override String get linkNotFound => 'Diary not found or deleted';
 	@override String get knowledgeGraph => 'Knowledge Graph';
 	@override String graphCount({required Object nodes, required Object edges}) => '${nodes} notes · ${edges} links';

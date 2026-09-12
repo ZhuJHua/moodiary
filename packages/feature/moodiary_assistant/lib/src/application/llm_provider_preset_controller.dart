@@ -11,12 +11,4 @@ class LlmProviderPresetController extends _$LlmProviderPresetController {
   Future<List<LlmProviderPreset>> build() {
     return getIt<LlmPresetRepository>().load();
   }
-
-  Future<void> refresh() async {
-    final result = await AsyncValue.guard(getIt<LlmPresetRepository>().refresh);
-    if (result.hasError && state.hasValue) {
-      throw result.error!;
-    }
-    state = result;
-  }
 }

@@ -5,6 +5,15 @@ import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
+typedef _SpanKey = ({
+  String code,
+  String language,
+  TextStyle base,
+  Map<String, TextStyle> theme,
+});
+
+final _spanCache = LRUCache<_SpanKey, TextSpan>(maxSize: 200);
+
 class MarkdownCodeBlock extends StatefulWidget {
   final String name;
   final String code;
@@ -18,6 +27,23 @@ class MarkdownCodeBlock extends StatefulWidget {
 class _MarkdownCodeBlockState extends State<MarkdownCodeBlock> {
   bool _copied = false;
   Timer? _copiedTimer;
+
+  TextSpan? _highlight(
+    String code,
+    String? language,
+    TextStyle base,
+    Map<String, TextStyle> theme,
+  ) {
+    if (language == null) return null;
+    final key = (code: code, language: language, base: base, theme: theme);
+    final cached = _spanCache.get(key);
+    if (cached != null) return cached;
+    final renderer = TextSpanRenderer(base, theme);
+    codeHighlighter.highlight(code: code, language: language).render(renderer);
+    final span = renderer.span;
+    if (span != null) _spanCache.put(key, span);
+    return span;
+  }
 
   @override
   void dispose() {
@@ -47,14 +73,7 @@ class _MarkdownCodeBlockState extends State<MarkdownCodeBlock> {
     );
 
     final language = resolveCodeLanguage(widget.name);
-    TextSpan? highlighted;
-    if (language != null) {
-      final renderer = TextSpanRenderer(base, theme);
-      codeHighlighter
-          .highlight(code: widget.code, language: language)
-          .render(renderer);
-      highlighted = renderer.span;
-    }
+    final highlighted = _highlight(widget.code, language, base, theme);
 
     return Material(
       color: scheme.surfaceContainerHigh,

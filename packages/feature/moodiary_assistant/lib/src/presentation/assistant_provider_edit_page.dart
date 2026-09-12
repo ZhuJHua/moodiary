@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_assistant/src/application/llm_provider_preset_controller.dart';
+import 'package:moodiary_assistant/src/data/llm_preset_repository.dart';
 import 'package:moodiary_assistant/src/data/llm_provider_repository.dart';
 import 'package:moodiary_assistant/src/data/model_catalog_repository.dart';
 import 'package:moodiary_assistant/src/data/model_resolver.dart';
+import 'package:moodiary_assistant/src/presentation/catalog_error.dart';
 import 'package:moodiary_assistant/src/presentation/model_picker_sheet.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_di/moodiary_di.dart';
@@ -126,10 +128,7 @@ class _AssistantProviderEditPageState
 
   Future<LlmProviderPreset?> _findPreset(String id) async {
     try {
-      final presets = await ref.read(
-        llmProviderPresetControllerProvider.future,
-      );
-      for (final p in presets) {
+      for (final p in await getIt<LlmPresetRepository>().load()) {
         if (p.id == id) return p;
       }
     } catch (_) {}
@@ -175,18 +174,18 @@ class _AssistantProviderEditPageState
     setState(() => _refreshingCatalog = true);
     final l10n = context.l10n;
     try {
-      await ref.read(llmProviderPresetControllerProvider.notifier).refresh();
+      final presets = await getIt<LlmPresetRepository>().refresh();
       if (!mounted) return;
-      final preset = await _findPreset(_presetId);
-      if (!mounted) return;
+      ref.invalidate(llmProviderPresetControllerProvider);
+      final preset = presets.where((p) => p.id == _presetId).firstOrNull;
       setState(() => _docUrl = preset?.docUrl ?? _docUrl);
       toast.success(
         message: l10n.assistant.modelListFetched(
           count: preset?.models.length ?? 0,
         ),
       );
-    } catch (_) {
-      if (mounted) toast.error(message: l10n.assistant.modelListFailed);
+    } catch (e) {
+      if (mounted) toast.error(message: assistantNetworkErrorText(e, l10n));
     } finally {
       if (mounted) setState(() => _refreshingCatalog = false);
     }
@@ -217,8 +216,14 @@ class _AssistantProviderEditPageState
       toast.success(
         message: l10n.assistant.modelListFetched(count: ids.length),
       );
-    } catch (_) {
-      if (mounted) toast.error(message: context.l10n.assistant.modelListFailed);
+    } catch (e) {
+      if (mounted) {
+        toast.error(
+          message:
+              '${assistantNetworkErrorText(e, l10n)} · '
+              '${l10n.assistant.modelListManualHint}',
+        );
+      }
     } finally {
       if (mounted) setState(() => _fetchingModels = false);
     }
@@ -287,7 +292,6 @@ class _AssistantProviderEditPageState
       );
     }
 
-    // 必须先写 key 再 upsert：setKey 不发事件，upsert 才广播刷新
     if (key.isNotEmpty) await _repo.setKey(id, key);
     await _repo.upsertProvider(toSave);
     if (_isNew && (MoodiaryKVs.assistantActiveProviderId.get() ?? '').isEmpty) {

@@ -102,7 +102,12 @@ void main() {
       );
       expect(const AssistantConversationRoute(sessionId: 's1').params, {
         'session_id': 's1',
+        'title': null,
       });
+      expect(
+        const AssistantConversationRoute(sessionId: 's1', title: '周三').params,
+        {'session_id': 's1', 'title': '周三'},
+      );
     });
   });
 }

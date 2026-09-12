@@ -15,7 +15,6 @@ import 'src/presentation/search/search_page.dart';
 
 export 'src/application/diary_filter.dart';
 export 'src/application/diary_selection.dart';
-export 'src/presentation/diary_select_page.dart';
 export 'src/presentation/widget/category_drawer.dart';
 export 'src/presentation/widget/feed_view.dart';
 export 'src/presentation/widget/timeline_view.dart';
