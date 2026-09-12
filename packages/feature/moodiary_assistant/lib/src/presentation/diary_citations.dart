@@ -1,7 +1,6 @@
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
-import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 
@@ -9,13 +8,15 @@ const double _kRailCardWidth = 148;
 
 class DiaryCitations extends StatefulWidget {
   final List<String> ids;
-  final bool header;
+  final String? header;
+  final bool raised;
   final VoidCallback? onRemove;
 
   const DiaryCitations({
     super.key,
     required this.ids,
-    this.header = false,
+    this.header,
+    this.raised = false,
     this.onRemove,
   });
 
@@ -71,6 +72,9 @@ class _DiaryCitationsState extends State<DiaryCitations> {
       mood: diary?.mood,
       weatherIcon: diary?.weather?.icon,
       width: width,
+      color: widget.raised
+          ? context.theme.colors.surfaceContainerHighest
+          : null,
       onRemove: widget.onRemove,
       onTap: () => DiaryRoute(diaryId: id).push(context),
     );
@@ -80,7 +84,8 @@ class _DiaryCitationsState extends State<DiaryCitations> {
   Widget build(BuildContext context) {
     final ids = widget.ids;
     if (ids.isEmpty) return const SizedBox.shrink();
-    if (!widget.header) return _card(ids.single);
+    final header = widget.header;
+    if (header == null) return _card(ids.single);
 
     final scheme = context.theme.colors;
     final typography = context.theme.typography;
@@ -99,7 +104,7 @@ class _DiaryCitationsState extends State<DiaryCitations> {
               ),
               const SizedBox(width: 6),
               Text(
-                context.l10n.assistant.citationHeader(count: ids.length),
+                header,
                 style: typography.labelMedium.emphasized.onSurfaceVariant,
               ),
             ],

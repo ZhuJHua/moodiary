@@ -1015,6 +1015,27 @@ class Translations$assistant$zh {
 	/// zh: '读了 {count} 篇日记'
 	String citationHeader({required Object count}) => '读了 ${count} 篇日记';
 
+	/// zh: '写了 {count} 篇日记'
+	String citationCreated({required Object count}) => '写了 ${count} 篇日记';
+
+	/// zh: '改了 {count} 篇日记'
+	String citationUpdated({required Object count}) => '改了 ${count} 篇日记';
+
+	/// zh: '{count} 篇移入回收站'
+	String citationDeleted({required Object count}) => '${count} 篇移入回收站';
+
+	/// zh: '早上好'
+	String get emptyGreetingMorning => '早上好';
+
+	/// zh: '下午好'
+	String get emptyGreetingAfternoon => '下午好';
+
+	/// zh: '晚上好'
+	String get emptyGreetingEvening => '晚上好';
+
+	/// zh: '问问你的日记，或者随便说点什么'
+	String get emptySubtitle => '问问你的日记，或者随便说点什么';
+
 	/// zh: '模型供应商'
 	String get modelProviderTitle => '模型供应商';
 

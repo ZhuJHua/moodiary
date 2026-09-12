@@ -380,6 +380,13 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get toolSendImage => 'Send an image';
 	@override String get imageMessageLabel => '[Image]';
 	@override String citationHeader({required Object count}) => 'Read ${count} diaries';
+	@override String citationCreated({required Object count}) => 'Wrote ${count} diaries';
+	@override String citationUpdated({required Object count}) => 'Edited ${count} diaries';
+	@override String citationDeleted({required Object count}) => '${count} moved to the recycle bin';
+	@override String get emptyGreetingMorning => 'Good morning';
+	@override String get emptyGreetingAfternoon => 'Good afternoon';
+	@override String get emptyGreetingEvening => 'Good evening';
+	@override String get emptySubtitle => 'Ask about your diary, or just say anything';
 	@override String get modelProviderTitle => 'Model Providers';
 	@override String get modelProviderAdd => 'Add';
 	@override String get modelProviderNoKey => 'No key';

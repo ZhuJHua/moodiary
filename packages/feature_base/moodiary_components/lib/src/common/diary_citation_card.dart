@@ -14,6 +14,7 @@ class DiaryCitationCard extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onRemove;
   final double? width;
+  final Color? color;
 
   const DiaryCitationCard({
     super.key,
@@ -25,6 +26,7 @@ class DiaryCitationCard extends StatelessWidget {
     this.onTap,
     this.onRemove,
     this.width,
+    this.color,
   });
 
   @override
@@ -92,7 +94,7 @@ class DiaryCitationCard extends StatelessWidget {
     return SizedBox(
       width: width,
       child: Material(
-        color: scheme.surfaceContainer,
+        color: color ?? scheme.surfaceContainer,
         borderRadius: MuiRadius.md,
         clipBehavior: .antiAlias,
         child: MInkWell(

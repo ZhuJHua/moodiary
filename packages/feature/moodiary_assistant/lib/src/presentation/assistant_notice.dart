@@ -175,7 +175,7 @@ class _AssistantNoticeState extends State<AssistantNotice>
         child: content,
       );
     }
-    return Padding(padding: const .only(bottom: 6), child: wrapped);
+    return Padding(padding: const .only(bottom: 8), child: wrapped);
   }
 
   @override

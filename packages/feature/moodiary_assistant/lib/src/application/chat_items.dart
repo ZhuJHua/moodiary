@@ -30,7 +30,7 @@ final class AssistantTurn extends AssistantChatItem {
 
   final List<AssistantToolCall> toolCalls;
 
-  final List<String> citedDiaryIds;
+  final List<DiaryCitation> diaryCitations;
 
   final String model;
 
@@ -51,7 +51,7 @@ final class AssistantTurn extends AssistantChatItem {
     this.inputTokens = 0,
     this.outputTokens = 0,
     this.toolCalls = const [],
-    this.citedDiaryIds = const [],
+    this.diaryCitations = const [],
     this.model = '',
     this.providerId = '',
     this.streaming = false,
@@ -97,7 +97,7 @@ final class AssistantTurn extends AssistantChatItem {
     inputTokens: m.inputTokens ?? 0,
     outputTokens: m.outputTokens ?? 0,
     toolCalls: m.toolCalls,
-    citedDiaryIds: citedDiaryIdsOf(m.toolCalls),
+    diaryCitations: diaryCitationsOf(m.toolCalls),
     model: m.model ?? '',
     providerId: m.providerId ?? '',
   );
@@ -145,9 +145,9 @@ final class AssistantTurn extends AssistantChatItem {
     inputTokens: inputTokens ?? this.inputTokens,
     outputTokens: outputTokens ?? this.outputTokens,
     toolCalls: toolCalls ?? this.toolCalls,
-    citedDiaryIds: toolCalls == null
-        ? citedDiaryIds
-        : citedDiaryIdsOf(toolCalls),
+    diaryCitations: toolCalls == null
+        ? diaryCitations
+        : diaryCitationsOf(toolCalls),
     streaming: streaming ?? this.streaming,
     thinkingActive: thinkingActive ?? this.thinkingActive,
   );

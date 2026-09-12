@@ -1,4 +1,6 @@
 import 'package:drift/native.dart';
+import 'package:fast_tokenizer/fast_tokenizer.dart' show TokenizeResult;
+import 'package:fast_tokenizer/testing.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_assistant/src/application/chat_items.dart';
 import 'package:moodiary_assistant/src/application/diary_citation.dart';
@@ -16,8 +18,13 @@ AssistantToolCall _call(String name, String result, {bool done = true}) =>
       done: done,
     );
 
+Future<TokenizeResult> _fakeTokenize(String text) async {
+  final words = text.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+  return TokenizeResult(cut: words, cutForSearch: words);
+}
+
 void main() {
-  group('从真实工具输出里抠 id', () {
+  group('从真实工具输出里抠日记引用', () {
     late MoodiaryDatabase db;
     late DiaryRepository repo;
     late Diary a;
@@ -38,6 +45,7 @@ void main() {
 
     setUp(() async {
       db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
+      installFakeFastTokenizer(_fakeTokenize);
       repo = DiaryRepository(db);
       getIt.registerSingleton<DiaryRepository>(repo);
       a = diary('搬家');
@@ -54,12 +62,17 @@ void main() {
     Future<String> run(AssistantTool tool, Map<String, dynamic> input) =>
         AssistantToolRegistry.byId(tool.id)!.run(input);
 
-    test('queryDiaries 列表：每篇一个 id，顺序保持，回收站不出现', () async {
+    List<String> ids(List<DiaryCitation> c) => [for (final x in c) x.id];
+
+    test('queryDiaries 列表：每篇一个 id，回收站不出现', () async {
       final out = await run(AssistantTool.queryDiaries, const {});
-      final ids = citedDiaryIdsOf([_call(AssistantTool.queryDiaries.id, out)]);
-      expect(ids, containsAll([a.id, b.id]));
-      expect(ids, isNot(contains(hidden.id)));
-      expect(ids.length, 2);
+      final cited = diaryCitationsOf([
+        _call(AssistantTool.queryDiaries.id, out),
+      ]);
+      expect(ids(cited), containsAll([a.id, b.id]));
+      expect(ids(cited), isNot(contains(hidden.id)));
+      expect(cited.length, 2);
+      expect(cited.every((c) => c.kind == .read), isTrue);
     });
 
     test('getDiary 全文：多篇合并去重，找不到的不算', () async {
@@ -67,26 +80,63 @@ void main() {
       final full = await run(AssistantTool.getDiary, {
         'ids': [a.id, hidden.id, 'nope'],
       });
-      final ids = citedDiaryIdsOf([
-        _call(AssistantTool.queryDiaries.id, query),
-        _call(AssistantTool.getDiary.id, full),
-      ]);
-      expect(ids.where((id) => id == a.id).length, 1);
-      expect(ids, isNot(contains(hidden.id)));
-      expect(ids, isNot(contains('nope')));
+      final cited = ids(
+        diaryCitationsOf([
+          _call(AssistantTool.queryDiaries.id, query),
+          _call(AssistantTool.getDiary.id, full),
+        ]),
+      );
+      expect(cited.where((id) => id == a.id).length, 1);
+      expect(cited, isNot(contains(hidden.id)));
+      expect(cited, isNot(contains('nope')));
     });
 
-    test('失败输出、没跑完的调用、非读类工具都不贡献 id', () async {
+    test('写类工具：创建、修改、删除各自成组，写优先于读', () async {
+      final created = await run(AssistantTool.createDiary, {
+        'items': [
+          {'title': '新的一篇', 'content': '正文'},
+        ],
+      });
+      final updated = await run(AssistantTool.updateDiary, {
+        'items': [
+          {'id': a.id, 'title': '搬家（改）'},
+          {'id': 'missing-id-0000000000', 'title': 'x'},
+        ],
+      });
+      final deleted = await run(AssistantTool.deleteDiary, {
+        'items': [
+          {'id': b.id},
+        ],
+      });
+      final query = await run(AssistantTool.queryDiaries, const {});
+      final cited = diaryCitationsOf([
+        _call(AssistantTool.queryDiaries.id, query),
+        _call(AssistantTool.createDiary.id, created),
+        _call(AssistantTool.updateDiary.id, updated),
+        _call(AssistantTool.deleteDiary.id, deleted),
+      ]);
+      final byId = {for (final c in cited) c.id: c.kind};
+      expect(byId[a.id], DiaryCitationKind.updated);
+      expect(byId[b.id], DiaryCitationKind.deleted);
+      expect(byId.values.where((k) => k == .created).length, 1);
+      expect(byId.containsKey('missing-id-0000000000'), isFalse);
+      expect(
+        citesDiaries(_call(AssistantTool.createDiary.id, created)),
+        isTrue,
+      );
+    });
+
+    test('失败输出、没跑完的调用、非日记工具都不贡献引用', () async {
       final full = await run(AssistantTool.getDiary, {
         'ids': ['nope'],
       });
       expect(full, startsWith('Not found'));
       final query = await run(AssistantTool.queryDiaries, const {});
       expect(
-        citedDiaryIdsOf([
+        diaryCitationsOf([
           _call(AssistantTool.getDiary.id, full),
           _call(AssistantTool.queryDiaries.id, query, done: false),
-          _call(AssistantTool.listCategories.id, 'id=cat name=旅行'),
+          _call(AssistantTool.listCategories.id, 'id=${a.id} name=旅行'),
         ]),
         isEmpty,
       );
@@ -104,16 +154,16 @@ void main() {
         toolCalls: [call],
       );
       final restored = AssistantTurn.fromRecord(record);
-      expect(restored.citedDiaryIds, containsAll([a.id, b.id]));
+      expect(ids(restored.diaryCitations), containsAll([a.id, b.id]));
       expect(restored.toRecord('s1').toolCalls, [call]);
 
       final streaming = AssistantTurn.assistant('', streaming: true);
-      expect(streaming.citedDiaryIds, isEmpty);
+      expect(streaming.diaryCitations, isEmpty);
       expect(
-        streaming.copyWith(toolCalls: [call]).citedDiaryIds,
+        ids(streaming.copyWith(toolCalls: [call]).diaryCitations),
         containsAll([a.id, b.id]),
       );
-      expect(streaming.copyWith(text: 'x').citedDiaryIds, isEmpty);
+      expect(streaming.copyWith(text: 'x').diaryCitations, isEmpty);
     });
   });
 

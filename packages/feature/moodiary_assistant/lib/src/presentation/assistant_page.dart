@@ -44,12 +44,20 @@ const double _kComposerPadding = 8;
 
 const double _kComposerHeightEstimate = 102;
 
-const double _kContextBarHeight = 40;
+const double _kCapsuleHeight = 40;
+
+// 胶囊与输入框同边距，悬浮在列表上；列表顶部空出胶囊 + 上下各一段
+const double _kCapsuleInset = 12;
+const double _kCapsuleTop = 8;
+const double _kListTopPadding = _kCapsuleTop + _kCapsuleHeight + 12;
+
+// 轮间 20，轮内 8
+const double _kTurnGap = 20;
 
 // 大字号下预设段整体隐藏，信息移进「对话信息」
-const double _kContextBarPresetMaxScale = 1.3;
+const double _kCapsulePresetMaxScale = 1.3;
 
-// 预设段最多占上下文条的这个比例，剩下的都留给模型名
+// 预设段最多占胶囊的这个比例，剩下的都留给模型名
 const double _kPresetMaxShare = 0.45;
 
 enum _ConversationAction { info, compact, settings }
@@ -1181,6 +1189,9 @@ class _AssistantPageState extends State<AssistantPage> {
   }
 
   Widget _buildChat() {
+    if (_session == null && _chat.items.isEmpty) {
+      return _EmptyConversation(bottomInset: _composerHeight);
+    }
     return AssistantChatList(
       key: _listKey,
       controller: _chat,
@@ -1188,6 +1199,8 @@ class _AssistantPageState extends State<AssistantPage> {
       itemBuilder: _buildItem,
       scrollToBottomBuilder: _buildScrollToBottom,
       onPointerDown: _dismissComposer,
+      topPadding: _kListTopPadding,
+      itemGap: _kTurnGap,
       bottomPadding: _composerHeight + 8,
     );
   }
@@ -1215,14 +1228,18 @@ class _AssistantPageState extends State<AssistantPage> {
     if (!isLast && !turn.streaming) {
       final cached = _turnWidgets[turn.id];
       if (cached != null && identical(cached.turn, turn)) return cached.widget;
-      final built = _composeTurn(turn, live: false);
+      final built = _composeTurn(turn, live: false, last: false);
       _turnWidgets[turn.id] = (turn: turn, widget: built);
       return built;
     }
-    return _composeTurn(turn, live: !_sending && isLast);
+    return _composeTurn(turn, live: !_sending && isLast, last: isLast);
   }
 
-  Widget _composeTurn(AssistantTurn turn, {required bool live}) {
+  Widget _composeTurn(
+    AssistantTurn turn, {
+    required bool live,
+    required bool last,
+  }) {
     if (turn.fromUser) {
       final (:diaryId, :text) = splitDiaryCitation(turn.text);
       return _UserBubble(
@@ -1240,8 +1257,9 @@ class _AssistantPageState extends State<AssistantPage> {
       inputTokens: turn.inputTokens,
       outputTokens: turn.outputTokens,
       toolCalls: turn.toolCalls,
-      citedDiaryIds: turn.citedDiaryIds,
+      diaryCitations: turn.diaryCitations,
       streaming: turn.streaming,
+      showUsage: last,
       onRegenerate: (live && _hasUserTurn) ? _regenerate : null,
     );
   }
@@ -1295,6 +1313,13 @@ class _AssistantPageState extends State<AssistantPage> {
           child: Stack(
             children: [
               Positioned.fill(child: _buildChat()),
+              if (_resolved)
+                Positioned(
+                  left: _kCapsuleInset,
+                  right: _kCapsuleInset,
+                  top: _kCapsuleTop,
+                  child: _buildCapsule(context.l10n),
+                ),
               Positioned(
                 left: 0,
                 right: 0,
@@ -1343,7 +1368,6 @@ class _AssistantPageState extends State<AssistantPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final modelLabel = _activeModel?.name ?? _modelId;
 
     final Widget chatArea = !_disclaimerAccepted
         ? _DisclaimerGate(onReview: _showDisclaimer)
@@ -1385,35 +1409,33 @@ class _AssistantPageState extends State<AssistantPage> {
           ),
           const SizedBox(width: 4),
         ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(_kContextBarHeight),
-          child: !_resolved
-              ? const SizedBox(height: _kContextBarHeight)
-              : _ContextBar(
-                  provider: _provider,
-                  providerMissing: _providerMissing,
-                  modelLabel: modelLabel,
-                  modelMissing: _modelMissing,
-                  catalogMissing: _catalogMissing,
-                  levelLabel: _reasoningLevels.isEmpty
-                      ? ''
-                      : _effectiveLevel.isEmpty
-                      ? l10n.assistant.reasoningOff
-                      : reasoningLevelLabel(_effectiveLevel, l10n),
-                  presetLabel:
-                      _presetName ??
-                      (_presetMissing
-                          ? l10n.assistant.presetDeleted
-                          : l10n.assistant.presetBuiltinName),
-                  presetStaged: _session == null,
-                  onTap: _sending ? null : _pickModel,
-                  onPresetTap: _sending
-                      ? null
-                      : (_session == null ? _pickPreset : _showPresetInfo),
-                ),
-        ),
       ),
       body: chatArea,
+    );
+  }
+
+  Widget _buildCapsule(Translations l10n) {
+    return _ContextCapsule(
+      provider: _provider,
+      providerMissing: _providerMissing,
+      modelLabel: _activeModel?.name ?? _modelId,
+      modelMissing: _modelMissing,
+      catalogMissing: _catalogMissing,
+      levelLabel: _reasoningLevels.isEmpty
+          ? ''
+          : _effectiveLevel.isEmpty
+          ? l10n.assistant.reasoningOff
+          : reasoningLevelLabel(_effectiveLevel, l10n),
+      presetLabel:
+          _presetName ??
+          (_presetMissing
+              ? l10n.assistant.presetDeleted
+              : l10n.assistant.presetBuiltinName),
+      presetStaged: _session == null,
+      onTap: _sending ? null : _pickModel,
+      onPresetTap: _sending
+          ? null
+          : (_session == null ? _pickPreset : _showPresetInfo),
     );
   }
 
@@ -1551,7 +1573,7 @@ class _DisclaimerGate extends StatelessWidget {
   }
 }
 
-class _ContextBar extends StatelessWidget {
+class _ContextCapsule extends StatelessWidget {
   final LlmProvider? provider;
   final bool providerMissing;
   final String modelLabel;
@@ -1563,7 +1585,7 @@ class _ContextBar extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onPresetTap;
 
-  const _ContextBar({
+  const _ContextCapsule({
     required this.provider,
     required this.providerMissing,
     required this.modelLabel,
@@ -1583,126 +1605,165 @@ class _ContextBar extends StatelessWidget {
     final typography = context.theme.typography;
     final provider = this.provider;
     final showPreset =
-        MediaQuery.textScalerOf(context).scale(1) < _kContextBarPresetMaxScale;
+        MediaQuery.textScalerOf(context).scale(1) < _kCapsulePresetMaxScale;
     final muted = typography.labelMedium.onSurfaceVariant;
     final broken = modelLabel.isEmpty || modelMissing;
 
     return SizedBox(
-      height: _kContextBarHeight,
-      child: MInkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const .symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              if (providerMissing)
-                Icon(LucideIcons.triangleAlert, size: 16, color: scheme.error)
-              else if (provider != null)
-                ProviderLogo(
-                  logoUrl: ProviderLogo.urlOf(provider.presetId),
-                  name: provider.name,
-                  size: 18,
-                ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) => Row(
-                    children: [
-                      Flexible(
+      height: _kCapsuleHeight,
+      child: MGlassSurface(
+        shape: const StadiumBorder(),
+        child: MInkWell(
+          shape: const StadiumBorder(),
+          onTap: onTap,
+          child: Padding(
+            padding: const .fromLTRB(8, 0, 10, 0),
+            child: LayoutBuilder(
+              builder: (context, constraints) => Row(
+                children: [
+                  if (providerMissing)
+                    Icon(
+                      LucideIcons.triangleAlert,
+                      size: 16,
+                      color: scheme.error,
+                    )
+                  else if (provider != null)
+                    ProviderLogo(
+                      logoUrl: ProviderLogo.urlOf(provider.presetId),
+                      name: provider.name,
+                      size: 20,
+                    ),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      modelLabel.isEmpty
+                          ? l10n.assistant.historyModelUnset
+                          : modelLabel,
+                      maxLines: 1,
+                      overflow: .ellipsis,
+                      style: broken
+                          ? typography.labelMedium.emphasized.error
+                          : typography.labelMedium.emphasized.onSurface,
+                    ),
+                  ),
+                  if (modelMissing) ...[
+                    const SizedBox(width: 6),
+                    Text(
+                      l10n.assistant.modelNotInCatalog,
+                      style: typography.labelSmall.error,
+                    ),
+                  ] else if (catalogMissing) ...[
+                    const SizedBox(width: 6),
+                    Tooltip(
+                      message: l10n.assistant.modelCatalogOffline,
+                      child: Icon(
+                        LucideIcons.cloudOff,
+                        size: 14,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                  if (levelLabel.isNotEmpty) ...[
+                    const SizedBox(width: 6),
+                    DecoratedBox(
+                      decoration: ShapeDecoration(
+                        color: scheme.surfaceContainerHighest,
+                        shape: const StadiumBorder(),
+                      ),
+                      child: Padding(
+                        padding: const .symmetric(horizontal: 6, vertical: 1),
                         child: Text(
-                          modelLabel.isEmpty
-                              ? l10n.assistant.historyModelUnset
-                              : modelLabel,
-                          maxLines: 1,
-                          overflow: .ellipsis,
-                          style: broken
-                              ? typography.labelMedium.emphasized.error
-                              : typography.labelMedium.emphasized.onSurface,
+                          levelLabel,
+                          style: typography.labelSmall.onSurfaceVariant,
                         ),
                       ),
-                      if (modelMissing) ...[
-                        const SizedBox(width: 6),
-                        Text(
-                          l10n.assistant.modelNotInCatalog,
-                          style: typography.labelSmall.error,
-                        ),
-                      ] else if (catalogMissing) ...[
-                        const SizedBox(width: 6),
-                        Tooltip(
-                          message: l10n.assistant.modelCatalogOffline,
-                          child: Icon(
-                            LucideIcons.cloudOff,
-                            size: 14,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                      if (levelLabel.isNotEmpty) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          width: 5,
-                          height: 5,
-                          decoration: BoxDecoration(
-                            color: scheme.primary,
-                            shape: .circle,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(levelLabel, style: muted),
-                      ],
-                      if (showPreset) ...[
-                        const SizedBox(width: 8),
-                        Text(
-                          '/',
-                          style: muted.copyWith(color: scheme.outlineVariant),
-                        ),
-                        ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxWidth: constraints.maxWidth * _kPresetMaxShare,
-                          ),
-                          child: MInkWell(
-                            shape: const StadiumBorder(),
-                            onTap: onPresetTap,
-                            child: Padding(
-                              padding: const .symmetric(
-                                horizontal: 6,
-                                vertical: 4,
+                    ),
+                  ],
+                  if (showPreset) ...[
+                    const SizedBox(width: 6),
+                    Text(
+                      '│',
+                      style: muted.copyWith(color: scheme.outlineVariant),
+                    ),
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: constraints.maxWidth * _kPresetMaxShare,
+                      ),
+                      child: MInkWell(
+                        shape: const StadiumBorder(),
+                        onTap: onPresetTap,
+                        child: Padding(
+                          padding: const .symmetric(horizontal: 6, vertical: 4),
+                          child: Row(
+                            mainAxisSize: .min,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  presetLabel,
+                                  maxLines: 1,
+                                  overflow: .ellipsis,
+                                  style: muted,
+                                ),
                               ),
-                              child: Row(
-                                mainAxisSize: .min,
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      presetLabel,
-                                      maxLines: 1,
-                                      overflow: .ellipsis,
-                                      style: muted,
-                                    ),
-                                  ),
-                                  if (presetStaged && onPresetTap != null)
-                                    Icon(
-                                      LucideIcons.chevronDown,
-                                      size: 14,
-                                      color: scheme.onSurfaceVariant,
-                                    ),
-                                ],
-                              ),
-                            ),
+                              if (presetStaged && onPresetTap != null)
+                                Icon(
+                                  LucideIcons.chevronDown,
+                                  size: 14,
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                            ],
                           ),
                         ),
-                      ],
-                    ],
+                      ),
+                    ),
+                  ],
+                  const Spacer(),
+                  Icon(
+                    LucideIcons.chevronsUpDown,
+                    size: 15,
+                    color: scheme.onSurfaceVariant,
                   ),
-                ),
+                ],
               ),
-              const SizedBox(width: 4),
-              Icon(
-                LucideIcons.chevronsUpDown,
-                size: 15,
-                color: scheme.onSurfaceVariant,
-              ),
-            ],
+            ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyConversation extends StatelessWidget {
+  final double bottomInset;
+
+  const _EmptyConversation({required this.bottomInset});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final hour = DateTime.now().hour;
+    final greeting = hour < 5 || hour >= 18
+        ? l10n.assistant.emptyGreetingEvening
+        : hour < 11
+        ? l10n.assistant.emptyGreetingMorning
+        : l10n.assistant.emptyGreetingAfternoon;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16, _kListTopPadding, 16, bottomInset),
+      child: Center(
+        child: Column(
+          mainAxisSize: .min,
+          children: [
+            Text(
+              greeting,
+              style: context.theme.typography.titleLarge.emphasized.onSurface,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              l10n.assistant.emptySubtitle,
+              textAlign: .center,
+              style: context.theme.typography.bodyMedium.onSurfaceVariant,
+            ),
+          ],
         ),
       ),
     );
@@ -1822,6 +1883,7 @@ class _AssistantComposerState extends State<_AssistantComposer> {
                       padding: const .fromLTRB(8, 6, 8, 2),
                       child: DiaryCitations(
                         ids: [cited],
+                        raised: true,
                         onRemove: widget.onRemoveCitation,
                       ),
                     ),
@@ -2137,7 +2199,7 @@ class _UserBubble extends StatelessWidget {
           constraints: BoxConstraints(maxWidth: maxWidth),
           padding: const .symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: scheme.primaryContainer,
+            color: scheme.surfaceContainerHigh,
             borderRadius: const .only(
               topLeft: .circular(16),
               topRight: .circular(16),
@@ -2147,7 +2209,7 @@ class _UserBubble extends StatelessWidget {
           ),
           child: SelectableText(
             text,
-            style: context.theme.typography.bodyMedium.onPrimaryContainer,
+            style: context.theme.typography.bodyMedium.onSurface,
           ),
         ),
       );
@@ -2205,8 +2267,9 @@ class _AssistantBubble extends StatelessWidget {
   final int inputTokens;
   final int outputTokens;
   final List<AssistantToolCall> toolCalls;
-  final List<String> citedDiaryIds;
+  final List<DiaryCitation> diaryCitations;
   final bool streaming;
+  final bool showUsage;
   final VoidCallback? onRegenerate;
 
   const _AssistantBubble({
@@ -2217,10 +2280,19 @@ class _AssistantBubble extends StatelessWidget {
     required this.inputTokens,
     required this.outputTokens,
     required this.toolCalls,
-    required this.citedDiaryIds,
+    required this.diaryCitations,
     required this.streaming,
+    required this.showUsage,
     this.onRegenerate,
   });
+
+  String _citationHeader(Translations l10n, DiaryCitationKind kind, int n) =>
+      switch (kind) {
+        .read => l10n.assistant.citationHeader(count: n),
+        .created => l10n.assistant.citationCreated(count: n),
+        .updated => l10n.assistant.citationUpdated(count: n),
+        .deleted => l10n.assistant.citationDeleted(count: n),
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -2273,15 +2345,17 @@ class _AssistantBubble extends StatelessWidget {
         ),
       for (final (i, call) in toolCalls.indexed)
         if (!citesDiaries(call)) _toolNotice(context, call, i),
-      if (citedDiaryIds.isNotEmpty)
-        Padding(
-          padding: const .symmetric(vertical: 4),
-          child: DiaryCitations(
-            key: const ValueKey('citations'),
-            ids: citedDiaryIds,
-            header: true,
+      for (final kind in DiaryCitationKind.values)
+        if (diaryCitations.where((c) => c.kind == kind).toList()
+            case final group when group.isNotEmpty)
+          Padding(
+            padding: const .only(bottom: 8),
+            child: DiaryCitations(
+              key: ValueKey('citations-${kind.name}'),
+              ids: [for (final c in group) c.id],
+              header: _citationHeader(l10n, kind, group.length),
+            ),
           ),
-        ),
       ?bubble,
     ];
 
@@ -2295,7 +2369,7 @@ class _AssistantBubble extends StatelessWidget {
       );
     }
 
-    final hasTokens = inputTokens > 0 || outputTokens > 0;
+    final hasTokens = showUsage && (inputTokens > 0 || outputTokens > 0);
     return _fullWidth(
       Column(
         crossAxisAlignment: .start,
