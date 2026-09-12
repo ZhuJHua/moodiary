@@ -2,7 +2,6 @@ import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 
 String assistantNetworkErrorText(Object error, Translations l10n) {
-  // 200 但结构不对（多半选错协议）
   if (error is FormatException || error is StateError) {
     return l10n.assistant.netDecode;
   }

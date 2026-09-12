@@ -1,7 +1,6 @@
 import 'package:flutter/rendering.dart';
 import 'package:mui/mui.dart';
 
-/// 脚手架只搭一次、每次 [measure] 只换子树；用完必须 [dispose]
 class OffscreenMeasurer {
   OffscreenMeasurer(this._context, {required Size viewSize})
     : _root = _MeasureRoot(
@@ -37,7 +36,6 @@ class OffscreenMeasurer {
     _buildOwner.buildScope(element);
   }
 
-  // Localizations 不是 InheritedTheme；SelectionArea 一类还要 Overlay 祖先
   Widget _wrap(Widget child) {
     Widget subtree = Directionality(
       textDirection: Directionality.of(_context),

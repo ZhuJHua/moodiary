@@ -16,7 +16,6 @@ class AssistantNotice extends StatefulWidget {
 
   final VoidCallback? onTap;
 
-  // 给了才把展开状态托管到列表
   final String? stateKey;
 
   final bool hideSummaryWhenExpanded;

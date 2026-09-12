@@ -107,7 +107,6 @@ void main() {
                   width: 200,
                 );
                 if (!nestedScroller) return box;
-                // 助手消息里的代码块就是这个形状：一个横向滚动的子 scrollable
                 return SingleChildScrollView(
                   key: ValueKey<String>('code-${item.id}'),
                   scrollDirection: .horizontal,
@@ -172,8 +171,6 @@ void main() {
     controller.replace(_turn('m29', fromUser: false, text: '0123456789'));
     await tester.pumpAndSettle();
 
-    // pixels 是坐标系的事：前插后中心会自归一到视口上沿之上，坐标系跟着变，
-    // 用户看到的是锚点没动
     expect(topOf(tester, anchorId), moreOrLessEquals(before, epsilon: 0.5));
   });
 
@@ -197,8 +194,6 @@ void main() {
     });
     await tester.pumpAndSettle();
 
-    // pixels 是坐标系的事：前插后中心会自归一到视口上沿之上，坐标系跟着变，
-    // 用户看到的是锚点没动
     expect(topOf(tester, anchorId), moreOrLessEquals(before, epsilon: 0.5));
   });
 
@@ -545,7 +540,6 @@ void main() {
 
     expect(scroll.position.maxScrollExtent, greaterThan(0), reason: '已经超过一屏');
 
-    // 先由用户手势解除跟随，否则程序跳转会被贴底粘连拉回底部
     await tester.drag(find.byType(CustomScrollView), const Offset(0, 100));
     await tester.pumpAndSettle();
     scroll.jumpTo(scroll.position.minScrollExtent);
@@ -573,7 +567,6 @@ void main() {
     controller.add(_turn('m11', fromUser: false));
     await tester.pumpAndSettle();
 
-    // 先由用户手势解除跟随，否则程序跳转会被贴底粘连拉回底部
     await tester.drag(find.byType(CustomScrollView), const Offset(0, 100));
     await tester.pumpAndSettle();
     scroll.jumpTo(scroll.position.minScrollExtent);
@@ -767,14 +760,12 @@ void main() {
     await tester.pumpAndSettle();
     expect(listKey.currentState!.contentFitsViewport, isTrue);
 
-    // 手指还按在代码块上横向拖动
     final gesture = await tester.startGesture(
       tester.getCenter(find.byKey(const ValueKey<String>('code-m0'))),
     );
     await gesture.moveBy(const Offset(-80, 0));
     await tester.pump();
 
-    // 就在这时内容长过了一屏
     live.value = 640;
     await tester.pump();
     await tester.pump();
@@ -789,7 +780,6 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  // 高度 40..400 交错：平均值对它毫无代表性
   String variedText(int i) => 'x' * (1 + (i * 7) % 10);
 
   void seedVaried(int count) {
@@ -867,7 +857,6 @@ void main() {
   testWidgets('停在会话开头附近：第一条已 build 但在视口顶之上，松手不跳', (tester) async {
     seedVaried(30);
     await tester.pumpWidget(host());
-    // 量完一趟之后 min 是精确值，跳过去正好让 m0 露出一截
     await tester.pumpAndSettle();
     await tester.drag(find.byType(CustomScrollView), const Offset(0, 100));
     await tester.pumpAndSettle();

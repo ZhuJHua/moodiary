@@ -36,7 +36,6 @@ class LlmPresetRepository {
 
   Future<List<LlmProviderPreset>>? _inFlight;
 
-  /// 永远如实抛错；要回退旧缓存的调用方自己 catch
   Future<List<LlmProviderPreset>> refresh() {
     final running = _inFlight;
     if (running != null) return running;

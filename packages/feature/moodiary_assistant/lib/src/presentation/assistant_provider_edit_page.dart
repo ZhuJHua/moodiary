@@ -292,7 +292,6 @@ class _AssistantProviderEditPageState
       );
     }
 
-    // setKey 不发事件，upsert 才广播
     if (key.isNotEmpty) await _repo.setKey(id, key);
     await _repo.upsertProvider(toSave);
     if (_isNew && (MoodiaryKVs.assistantActiveProviderId.get() ?? '').isEmpty) {

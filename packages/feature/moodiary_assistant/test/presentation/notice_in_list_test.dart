@@ -79,7 +79,6 @@ void main() {
                     }
                     if (item.id.startsWith('notice')) {
                       return AssistantNotice(
-                        // 模拟流式结束后气泡换树形：text 一变整块重建
                         key: keyByText
                             ? ValueKey((item as AssistantTurn).text)
                             : null,
@@ -122,7 +121,6 @@ void main() {
     );
   }
 
-  // min/max 对未建的子项是外推值，跳一次未必到头
   Future<void> jumpToEdge(WidgetTester tester, {required bool top}) async {
     for (var i = 0; i < 8; i++) {
       final position = scroll.position;
@@ -154,7 +152,6 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('已思考 6 秒'), findsNothing);
 
-    // 先由用户手势解除跟随，否则贴底粘连会把程序跳转拉回底部
     await tester.drag(find.byType(AssistantChatList), const Offset(0, 300));
     await tester.pumpAndSettle();
     await jumpToEdge(tester, top: true);
@@ -301,7 +298,6 @@ void main() {
     String upper,
     String lower,
   ) async {
-    // 下面那块会被推出视口底边，那时它在 sliver 里算 offstage，默认 finder 找不到
     final upperText = find.text(upper, skipOffstage: false);
     final lowerText = find.text(lower, skipOffstage: false);
     final seen = <(double?, double, double)>[];
@@ -423,7 +419,6 @@ void main() {
     final state = listKey.currentState!;
 
     await tester.tap(find.text('已思考 6 秒'));
-    // 第一帧只是让 ticker 起步，动画从第二帧才走
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 60));
     expect(state.holdCount, 1);
@@ -452,7 +447,6 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('已思考 6 秒'));
     await tester.pumpAndSettle();
-    // 展开后跟随已松开；用户自己滑到底再看
     await tester.drag(find.byType(AssistantChatList), const Offset(0, -2000));
     await tester.pumpAndSettle();
     expect(listKey.currentState!.following, isTrue);
@@ -476,8 +470,6 @@ void main() {
     seen.add(noticeBottom());
 
     final pretty = seen.map((e) => e.toStringAsFixed(1)).toList();
-    // forward 组跌破一屏、坐标系的底越过 max→负 的那一两帧，底部会短暂上抬再合上；
-    // 幅度有界、随即自愈，不是永久空白
     expect(
       seen.every((b) => b <= 508.5 && b >= 508 - 50),
       isTrue,

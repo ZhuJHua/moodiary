@@ -712,7 +712,6 @@ class _AssistantPageState extends State<AssistantPage> {
   }
 
   List<AssistantMessage> _buildHistory() {
-    // 目录缺失时 attachment 恒 false，不能当判据
     final allowImages = _historyAllowsImages;
 
     final raw =
@@ -809,7 +808,6 @@ class _AssistantPageState extends State<AssistantPage> {
     );
     final current = _session;
     if (updated == null || !mounted || current?.id != session.id) return null;
-    // await 期间用户可能已换了模型
     final merged = current!.copyWith(
       compactedSummary: updated.compactedSummary,
       compactedUpToMessageId: updated.compactedUpToMessageId,
