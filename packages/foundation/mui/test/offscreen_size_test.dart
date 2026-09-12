@@ -101,7 +101,7 @@ void main() {
           .height,
       44,
     );
-    expect(inits, [1, 2], reason: '每件都该走自己的 initState');
+    expect(inits, [1, 2, -1, -2], reason: '每件都该走自己的 initState，量完即释放');
     expect(find.byType(_InitProbe), findsNothing);
   });
 
@@ -151,6 +151,12 @@ class _InitProbeState extends State<_InitProbe> {
   void initState() {
     super.initState();
     widget.log.add(widget.id);
+  }
+
+  @override
+  void dispose() {
+    widget.log.add(-widget.id);
+    super.dispose();
   }
 
   @override

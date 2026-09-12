@@ -1940,6 +1940,7 @@ class _AssistantBubble extends StatelessWidget {
     final stacked = <Widget>[
       if (showThinking)
         AssistantNotice(
+          key: const ValueKey('thinking'),
           stateKey: 'thinking',
           hideSummaryWhenExpanded: true,
           icon: thinkingActive ? null : LucideIcons.brain,
@@ -1957,7 +1958,7 @@ class _AssistantBubble extends StatelessWidget {
                   codeBuilder: _codeBlock,
                 ),
         ),
-      for (final call in toolCalls) _toolNotice(context, call),
+      for (final (i, call) in toolCalls.indexed) _toolNotice(context, call, i),
       ?bubble,
     ];
 
@@ -2030,18 +2031,20 @@ class _AssistantBubble extends StatelessWidget {
   }
 }
 
-Widget _toolNotice(BuildContext context, AssistantToolCall call) {
+Widget _toolNotice(BuildContext context, AssistantToolCall call, int index) {
   final spec = AssistantToolRegistry.byId(call.name);
   final display = spec == null
       ? null
       : assistantToolDisplay(context, spec.tool);
   final title = display?.title ?? call.name;
+  final stateKey = call.callId.isEmpty ? 'tool#$index' : call.callId;
   if (!call.done) {
-    return AssistantNotice(kind: title);
+    return AssistantNotice(key: ValueKey(stateKey), kind: title);
   }
   final input = _decodeArgs(call.argsJson);
   return AssistantNotice(
-    stateKey: call.callId,
+    key: ValueKey(stateKey),
+    stateKey: stateKey,
     icon: display?.icon ?? LucideIcons.wrench,
     kind: title,
     summary: spec?.summaryOf(input, call.result) ?? call.result,

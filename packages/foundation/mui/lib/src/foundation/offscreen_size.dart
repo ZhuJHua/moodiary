@@ -19,6 +19,7 @@ class OffscreenMeasurer {
   Size measure(Widget widget) {
     _attach(_wrap(KeyedSubtree(key: UniqueKey(), child: widget)));
     _pipelineOwner.flushLayout();
+    _buildOwner.finalizeTree();
     return _root.size;
   }
 

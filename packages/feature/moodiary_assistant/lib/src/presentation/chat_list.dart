@@ -566,7 +566,7 @@ class AssistantChatListState extends State<AssistantChatList> {
         _trace(() => 'snap not consumed, jumpTo $leftover');
         p.jumpTo(
           leftover == double.infinity
-              ? p.maxScrollExtent
+              ? _bottomOf(p)
               : leftover.clamp(p.minScrollExtent, p.maxScrollExtent),
         );
       }
