@@ -119,6 +119,8 @@ class _AssistantPageState extends State<AssistantPage> {
 
   final Map<String, LlmProvider> _providers = {};
 
+  // 第一次解析完成前不画未配置态，免得开页闪一帧红
+  bool _resolved = false;
   bool _providerMissing = false;
   bool _catalogMissing = false;
   bool _modelMissing = false;
@@ -282,6 +284,7 @@ class _AssistantPageState extends State<AssistantPage> {
         : ModelResolver.levelsFor(provider, wanted);
     if (mounted) {
       setState(() {
+        _resolved = true;
         _ready = provider != null && key != null && key.isNotEmpty;
         _provider = provider;
         _providerMissing = providerMissing;
@@ -1311,6 +1314,7 @@ class _AssistantPageState extends State<AssistantPage> {
   }
 
   Widget? _statusBanner(Translations l10n) {
+    if (!_resolved) return null;
     final provider = _provider;
     if (provider == null) {
       return _StatusBanner(
@@ -1383,28 +1387,30 @@ class _AssistantPageState extends State<AssistantPage> {
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(_kContextBarHeight),
-          child: _ContextBar(
-            provider: _provider,
-            providerMissing: _providerMissing,
-            modelLabel: modelLabel,
-            modelMissing: _modelMissing,
-            catalogMissing: _catalogMissing,
-            levelLabel: _reasoningLevels.isEmpty
-                ? ''
-                : _effectiveLevel.isEmpty
-                ? l10n.assistant.reasoningOff
-                : reasoningLevelLabel(_effectiveLevel, l10n),
-            presetLabel:
-                _presetName ??
-                (_presetMissing
-                    ? l10n.assistant.presetDeleted
-                    : l10n.assistant.presetBuiltinName),
-            presetStaged: _session == null,
-            onTap: _sending ? null : _pickModel,
-            onPresetTap: _sending
-                ? null
-                : (_session == null ? _pickPreset : _showPresetInfo),
-          ),
+          child: !_resolved
+              ? const SizedBox(height: _kContextBarHeight)
+              : _ContextBar(
+                  provider: _provider,
+                  providerMissing: _providerMissing,
+                  modelLabel: modelLabel,
+                  modelMissing: _modelMissing,
+                  catalogMissing: _catalogMissing,
+                  levelLabel: _reasoningLevels.isEmpty
+                      ? ''
+                      : _effectiveLevel.isEmpty
+                      ? l10n.assistant.reasoningOff
+                      : reasoningLevelLabel(_effectiveLevel, l10n),
+                  presetLabel:
+                      _presetName ??
+                      (_presetMissing
+                          ? l10n.assistant.presetDeleted
+                          : l10n.assistant.presetBuiltinName),
+                  presetStaged: _session == null,
+                  onTap: _sending ? null : _pickModel,
+                  onPresetTap: _sending
+                      ? null
+                      : (_session == null ? _pickPreset : _showPresetInfo),
+                ),
         ),
       ),
       body: chatArea,
