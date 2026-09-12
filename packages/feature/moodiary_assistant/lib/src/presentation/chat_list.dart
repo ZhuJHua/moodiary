@@ -286,6 +286,9 @@ class AssistantChatListState extends State<AssistantChatList> {
   bool _maintainScheduled = false;
   bool _snapClearScheduled = false;
 
+  // 渲染树对应的中心下标：post-frame 里 _centerId 可能已被同批回调改掉
+  int _builtCenter = 0;
+
   // 条目正文高度，不含间距/顶部留白
   final Map<String, double> _extents = {};
   _ExtentSignature? _extentSignature;
@@ -419,7 +422,7 @@ class AssistantChatListState extends State<AssistantChatList> {
   void _recordBuiltExtents() {
     if (!_checkExtentSignature()) return;
     final live = widget.controller.streaming.value?.id;
-    final center = _centerIndex;
+    final center = _builtCenter;
     void scan(GlobalKey key, int Function(int sliverIndex) toListIndex) {
       final sliver = key.currentContext?.findRenderObject();
       if (sliver is! RenderSliverMultiBoxAdaptor) return;
@@ -668,20 +671,10 @@ class AssistantChatListState extends State<AssistantChatList> {
       _trace(() => 'center removed -> $pick px=${-top}');
       _centerId = pick;
       _requestSnap(-top, fallback: false);
-    } else if (older != null) {
-      _centerId = older;
-      final olderTop = _topOfItem(older);
-      if (_following.value) {
-        _requestSnap(double.infinity);
-      } else if (olderTop != null) {
-        _trace(() => 'center removed -> $older px=${-olderTop}');
-        _requestSnap(-olderTop, fallback: false);
-      } else {
-        _requestSnap(0, fallback: false);
-      }
     } else {
-      _centerId = _oldestId;
-      _requestSnap(_following.value ? double.infinity : 0);
+      // 视口里没有可锚的幸存者
+      _centerId = older ?? _oldestId;
+      _requestSnap(_following.value ? double.infinity : 0, fallback: false);
     }
     _scheduleMaintainCenter();
   }
@@ -723,7 +716,7 @@ class AssistantChatListState extends State<AssistantChatList> {
     final listBox = _listBox;
     final oldest = _oldestId;
     if (listBox == null || oldest == null) return null;
-    final center = _centerIndex;
+    final center = _builtCenter;
     var best = -1;
     double? bestTop;
     void scan(GlobalKey key, int Function(int sliverIndex) toListIndex) {
@@ -957,6 +950,7 @@ class AssistantChatListState extends State<AssistantChatList> {
   Widget build(BuildContext context) {
     final center = _centerIndex;
     final total = _newestFirst.length;
+    _builtCenter = center;
     _buildSignature = (
       scaler: MediaQuery.textScalerOf(context),
       text: context.theme.typography,
