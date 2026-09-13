@@ -4,6 +4,10 @@ import 'package:mui/mui.dart';
 
 const Duration _kReleaseDelay = Duration(milliseconds: 50);
 
+const Duration _kFadeDuration = Duration(milliseconds: 90);
+
+enum MPressFeedback { overlay, fade }
+
 abstract class _MInkWellPressedHost {
   void onDescendantPressedChanged(bool pressed);
 }
@@ -38,6 +42,8 @@ class MInkWell extends StatefulWidget {
 
   final Color? overlayColor;
 
+  final MPressFeedback feedback;
+
   const MInkWell({
     super.key,
     required this.child,
@@ -50,6 +56,7 @@ class MInkWell extends StatefulWidget {
     this.shape,
     this.enabled = true,
     this.overlayColor,
+    this.feedback = MPressFeedback.overlay,
   }) : assert(
          borderRadius == null || shape == null,
          'borderRadius 与 shape 只能给一个。',
@@ -163,11 +170,20 @@ class _MInkWellState extends State<MInkWell> implements _MInkWellPressedHost {
     _release();
   }
 
-  Widget _withOverlay(Widget child) {
+  Widget _withFeedback(Widget child) {
+    final states = context.theme.states;
+    if (widget.feedback == MPressFeedback.fade) {
+      return AnimatedOpacity(
+        opacity: _shouldRenderPressed ? states.pressedContentOpacity : 1,
+        duration: _kFadeDuration,
+        curve: Curves.easeOut,
+        child: child,
+      );
+    }
     final scheme = context.theme.colors;
     final color =
         widget.overlayColor ??
-        scheme.onSurface.withValues(alpha: context.theme.states.pressedOpacity);
+        scheme.onSurface.withValues(alpha: states.pressedOpacity);
     return Stack(
       fit: .passthrough,
       children: [
@@ -186,7 +202,7 @@ class _MInkWellState extends State<MInkWell> implements _MInkWellPressedHost {
   @override
   Widget build(BuildContext context) {
     final behavior = widget.behavior ?? HitTestBehavior.opaque;
-    Widget result = _withOverlay(widget.child);
+    Widget result = _withFeedback(widget.child);
 
     if (_isInteractive) {
       final hasTap = widget.onTap != null;

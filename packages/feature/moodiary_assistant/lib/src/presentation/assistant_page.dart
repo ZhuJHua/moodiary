@@ -1584,6 +1584,7 @@ class _ModelChip extends StatelessWidget {
 
     return MInkWell(
       shape: const StadiumBorder(),
+      feedback: .fade,
       onTap: onTap,
       child: SizedBox(
         height: _kModelChipHeight,

@@ -189,6 +189,7 @@ class MuiStateTokens with MuiValue {
     this.disabledContainerOpacity = 0.12,
     this.hoverOpacity = 0.08,
     this.pressedOpacity = 0.12,
+    this.pressedContentOpacity = 0.55,
     this.focusOpacity = 0.10,
     this.dragOpacity = 0.16,
   });
@@ -197,6 +198,7 @@ class MuiStateTokens with MuiValue {
   final double disabledContainerOpacity;
   final double hoverOpacity;
   final double pressedOpacity;
+  final double pressedContentOpacity;
   final double focusOpacity;
   final double dragOpacity;
 
@@ -206,6 +208,7 @@ class MuiStateTokens with MuiValue {
     disabledContainerOpacity,
     hoverOpacity,
     pressedOpacity,
+    pressedContentOpacity,
     focusOpacity,
     dragOpacity,
   ];
@@ -220,6 +223,11 @@ class MuiStateTokens with MuiValue {
         )!,
         hoverOpacity: lerpDouble(a.hoverOpacity, b.hoverOpacity, t)!,
         pressedOpacity: lerpDouble(a.pressedOpacity, b.pressedOpacity, t)!,
+        pressedContentOpacity: lerpDouble(
+          a.pressedContentOpacity,
+          b.pressedContentOpacity,
+          t,
+        )!,
         focusOpacity: lerpDouble(a.focusOpacity, b.focusOpacity, t)!,
         dragOpacity: lerpDouble(a.dragOpacity, b.dragOpacity, t)!,
       );
