@@ -109,6 +109,8 @@
   "toolDeleteCategoryDes": "Delete categories, only while they hold no diaries.",
   "toolListMemoriesTitle": "View memories",
   "toolListMemoriesDes": "List the long-term facts the assistant has saved about you (preferences, themes, goals).",
+  "toolRecallMemoryTitle": "Recall memory",
+  "toolRecallMemoryDes": "Look up saved long-term facts about you when they are needed.",
   "toolRememberTitle": "Remember a fact",
   "toolRememberDes": "Save durable facts about you — lasting preferences, recurring themes, ongoing goals — so they can be recalled in later chats.",
   "toolUpdateMemoryTitle": "Update a memory",

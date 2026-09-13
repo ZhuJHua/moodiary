@@ -75,6 +75,11 @@ import 'package:mui/mui.dart';
       title: l10n.assistant.toolListMemoriesTitle,
       description: l10n.assistant.toolListMemoriesDes,
     ),
+    .recallMemory => (
+      icon: LucideIcons.brain,
+      title: l10n.assistant.toolRecallMemoryTitle,
+      description: l10n.assistant.toolRecallMemoryDes,
+    ),
     .rememberFact => (
       icon: LucideIcons.bookmarkPlus,
       title: l10n.assistant.toolRememberTitle,

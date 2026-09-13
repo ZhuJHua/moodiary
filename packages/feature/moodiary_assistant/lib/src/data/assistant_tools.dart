@@ -30,12 +30,16 @@ class AssistantToolSpec {
 
   final AssistantToolSummarize? summarize;
 
+  // 结果回放进 [tools already run]，而不是一行摘要：停掉记忆注入后防反复检索
+  final bool replayResult;
+
   const AssistantToolSpec({
     required this.tool,
     required this.description,
     required this.jsonSchema,
     required this.run,
     this.summarize,
+    this.replayResult = false,
   });
 
   String summaryOf(Map<String, dynamic> input, String output) {
@@ -52,6 +56,10 @@ abstract final class AssistantToolRegistry {
   static const _defaultQueryLimit = 8;
 
   static const _maxQueryLimit = 20;
+
+  static const _defaultRecallLimit = 8;
+
+  static const _maxRecallLimit = 8;
 
   static const _maxExcerptLength = 200;
 
@@ -390,12 +398,37 @@ abstract final class AssistantToolRegistry {
     const AssistantToolSpec(
       tool: .listMemories,
       description:
-          'List the long-term facts you saved about the user, each with its id. '
-          'The facts themselves are already given to you every turn — call this '
-          'only when you need an id to revise or forget one.',
+          'List every long-term fact you saved about the user, each with its '
+          'id. Prefer recallMemory; use this only when you need the full list.',
       jsonSchema: {'type': 'object', 'properties': {}},
       run: _listMemories,
       summarize: _summarizeList,
+    ),
+    const AssistantToolSpec(
+      tool: .recallMemory,
+      description:
+          'Look up what you saved about the user in earlier conversations. '
+          'You are not given those facts otherwise — only the short profile in '
+          'your instructions. Pass a query describing what you need; leave it '
+          'out for the most recent facts. Each row carries the id you need to '
+          'revise or forget it. Do not call this for greetings or small talk.',
+      jsonSchema: {
+        'type': 'object',
+        'properties': {
+          'query': {
+            'type': 'string',
+            'description':
+                'What you are looking for. Omit for the most recent facts.',
+          },
+          'limit': {
+            'type': 'integer',
+            'description': 'Max facts to return, $_maxRecallLimit at most.',
+          },
+        },
+      },
+      run: _recallMemory,
+      summarize: _summarizeList,
+      replayResult: true,
     ),
     const AssistantToolSpec(
       tool: .rememberFact,
@@ -517,12 +550,21 @@ abstract final class AssistantToolRegistry {
     ),
   ];
 
+  static const _maxReplayChars = 600;
+
   static String recordOf(List<AssistantToolCall> calls) {
     final lines = <String>[];
     for (final call in calls) {
       if (!call.done) continue;
       final spec = byId(call.name);
       final args = call.argsJson.isEmpty ? '{}' : call.argsJson;
+      if (spec != null && spec.replayResult && call.result.isNotEmpty) {
+        final body = call.result.length > _maxReplayChars
+            ? '${call.result.substring(0, _maxReplayChars)}…'
+            : call.result;
+        lines.add('- ${call.name}($args) →\n$body');
+        continue;
+      }
       final summary = spec == null
           ? ''
           : spec.summaryOf(_decodeArgs(call.argsJson), call.result);
@@ -1183,6 +1225,28 @@ abstract final class AssistantToolRegistry {
     if (memories.isEmpty) return 'No saved facts yet.';
     final buffer = StringBuffer();
     for (final m in memories) {
+      buffer.writeln('id=${m.id} kind=${m.category} text=${m.text}');
+    }
+    return buffer.toString().trim();
+  }
+
+  static Future<String> _recallMemory(Map<String, dynamic> input) async {
+    final repo = getIt<MemoryRepository>();
+    final query = ((input['query'] as String?) ?? '').trim();
+    final limit = ((input['limit'] as num?)?.toInt() ?? _defaultRecallLimit)
+        .clamp(1, _maxRecallLimit);
+    final hits = query.isEmpty
+        ? await repo.getRecent(limit)
+        : await repo.search(query, limit: limit);
+    if (hits.isEmpty) {
+      final total = await repo.count();
+      return total == 0
+          ? 'No saved facts yet. Nothing was remembered about this user.'
+          : '0 matches among $total saved facts. Say plainly that you do not '
+                'have it rather than guessing.';
+    }
+    final buffer = StringBuffer();
+    for (final m in hits) {
       buffer.writeln('id=${m.id} kind=${m.category} text=${m.text}');
     }
     return buffer.toString().trim();

@@ -29,6 +29,7 @@ import 'package:moodiary_assistant/src/presentation/model_picker_sheet.dart';
 import 'package:moodiary_assistant/src/presentation/provider_logo.dart';
 import 'package:moodiary_assistant/src/presentation/reasoning_label.dart';
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
@@ -765,18 +766,31 @@ class _AssistantPageState extends State<AssistantPage> {
     }
     final toolsActive =
         _canUseTools && (allowedTools == null || allowedTools.isNotEmpty);
-    final memories = await getIt<MemoryRepository>().getRecent(
-      memoryInjectionLimit,
-    );
+    // 记忆随工具白名单走：摘掉 recallMemory 就是摘掉记忆
+    final memoryReachable =
+        toolsActive &&
+        (allowedTools == null || allowedTools.contains(AssistantTool.recallMemory.id));
+    final memoryRepo = getIt<MemoryRepository>();
+    final profile = memoryReachable
+        ? await memoryRepo.profileFacts(limit: memoryProfileLimit)
+        : const <MemoryEntry>[];
+    final factCount = memoryReachable ? await memoryRepo.count() : null;
+    // 没有工具通路时唯一的兜底
+    final fallback = toolsActive
+        ? const <MemoryEntry>[]
+        : await memoryRepo.getRecent(memoryToollessFallbackLimit);
     if (!mounted || gen != _generation) return;
     final systemPrompt = buildStableSystemPrompt(
       persona: persona,
       toolsEnabled: toolsActive,
+      profileFacts: [for (final m in profile) m.text],
     );
-    final volatilePrefix = buildVolatilePrompt(
+    final volatilePrefix = buildTurnContext(
       localeTag: localeTag,
       nowLocal: .now(),
-      memories: [for (final m in memories) '(${m.category}) ${m.text}'],
+      factCount: factCount,
+      semanticSearch: getIt<EmbedIndexService>().enabled,
+      fallbackFacts: [for (final m in fallback) '(${m.category}) ${m.text}'],
     );
 
     _resetThinkingState();

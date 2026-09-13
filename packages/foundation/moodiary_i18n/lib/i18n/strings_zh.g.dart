@@ -949,6 +949,12 @@ class Translations$assistant$zh {
 	/// zh: '列出助手保存的关于你的长期记忆（偏好、主题、目标等）。'
 	String get toolListMemoriesDes => '列出助手保存的关于你的长期记忆（偏好、主题、目标等）。';
 
+	/// zh: '回忆记忆'
+	String get toolRecallMemoryTitle => '回忆记忆';
+
+	/// zh: '按需查找助手保存过的关于你的长期记忆，只在需要时调用。'
+	String get toolRecallMemoryDes => '按需查找助手保存过的关于你的长期记忆，只在需要时调用。';
+
 	/// zh: '记住事实'
 	String get toolRememberTitle => '记住事实';
 

@@ -109,6 +109,8 @@
   "toolDeleteCategoryDes": "删除分类（仅当其下没有日记时）。",
   "toolListMemoriesTitle": "查看记忆",
   "toolListMemoriesDes": "列出助手保存的关于你的长期记忆（偏好、主题、目标等）。",
+  "toolRecallMemoryTitle": "回忆记忆",
+  "toolRecallMemoryDes": "按需查找助手保存过的关于你的长期记忆，只在需要时调用。",
   "toolRememberTitle": "记住事实",
   "toolRememberDes": "把关于你的长期事实（稳定偏好 / 反复出现的主题 / 持续目标）保存下来，供日后对话记起。",
   "toolUpdateMemoryTitle": "更新记忆",

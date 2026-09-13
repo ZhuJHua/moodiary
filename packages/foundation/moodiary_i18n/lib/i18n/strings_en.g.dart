@@ -358,6 +358,8 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get toolDeleteCategoryDes => 'Delete categories, only while they hold no diaries.';
 	@override String get toolListMemoriesTitle => 'View memories';
 	@override String get toolListMemoriesDes => 'List the long-term facts the assistant has saved about you (preferences, themes, goals).';
+	@override String get toolRecallMemoryTitle => 'Recall memory';
+	@override String get toolRecallMemoryDes => 'Look up saved long-term facts about you when they are needed.';
 	@override String get toolRememberTitle => 'Remember a fact';
 	@override String get toolRememberDes => 'Save durable facts about you — lasting preferences, recurring themes, ongoing goals — so they can be recalled in later chats.';
 	@override String get toolUpdateMemoryTitle => 'Update a memory';
