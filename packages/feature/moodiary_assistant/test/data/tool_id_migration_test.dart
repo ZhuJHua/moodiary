@@ -4,19 +4,19 @@ import 'package:moodiary_assistant/src/data/assistant_tools.dart';
 
 void main() {
   group('工具 id 迁移', () {
-    test('两个搜索工具都映射到 searchDiaries，且去重', () {
+    test('退役 id 各自映射，合并到同一个的去重', () {
       expect(
-        migrateAssistantToolIds(['queryDiaries', 'semanticSearchDiaries']),
-        ['searchDiaries'],
+        migrateAssistantToolIds([
+          'queryDiaries',
+          'semanticSearchDiaries',
+          'listMemories',
+          'updateMemory',
+        ]),
+        ['searchDiaries', 'recallMemory', 'rememberFact'],
       );
     });
 
-    test('listMemories → recallMemory，updateMemory → rememberFact', () {
-      expect(migrateAssistantToolIds(['listMemories']), ['recallMemory']);
-      expect(migrateAssistantToolIds(['updateMemory']), ['rememberFact']);
-    });
-
-    test('已经并存 rememberFact 时不会多出一条', () {
+    test('目标已在列表里时不会多出一条', () {
       expect(
         migrateAssistantToolIds(['rememberFact', 'updateMemory']),
         ['rememberFact'],
@@ -30,17 +30,11 @@ void main() {
       );
     });
 
-    test('映射表里的新 id 必须都真实存在', () {
+    test('映射表两端都必须对得上：新 id 活着，旧 id 已退役', () {
       final live = {for (final t in AssistantTool.values) t.id};
-      for (final target in renamedAssistantToolIds.values) {
-        expect(live, contains(target), reason: '$target 不在 AssistantTool 里');
-      }
-    });
-
-    test('映射表里的旧 id 必须都已经退役', () {
-      final live = {for (final t in AssistantTool.values) t.id};
-      for (final old in renamedAssistantToolIds.keys) {
-        expect(live, isNot(contains(old)), reason: '$old 还活着，不该出现在迁移表');
+      for (final e in renamedAssistantToolIds.entries) {
+        expect(live, contains(e.value), reason: '${e.value} 不在 AssistantTool 里');
+        expect(live, isNot(contains(e.key)), reason: '${e.key} 还活着');
       }
     });
 
@@ -52,8 +46,10 @@ void main() {
         'updateMemory',
         'getDiary',
       ]);
-      final specs = AssistantToolRegistry.specsFor(migrated);
-      expect(specs, hasLength(migrated.length));
+      expect(
+        AssistantToolRegistry.specsFor(migrated),
+        hasLength(migrated.length),
+      );
     });
   });
 }

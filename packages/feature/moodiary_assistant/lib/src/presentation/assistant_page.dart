@@ -774,7 +774,6 @@ class _AssistantPageState extends State<AssistantPage> {
         ? await memoryRepo.profileFacts(limit: memoryProfileLimit)
         : const <MemoryEntry>[];
     final factCount = memoryReachable ? await memoryRepo.count() : null;
-    // 没有工具通路时唯一的兜底
     final fallback = toolsActive
         ? const <MemoryEntry>[]
         : await memoryRepo.getRecent(memoryToollessFallbackLimit);

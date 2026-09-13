@@ -60,8 +60,7 @@ class MInkWell extends StatefulWidget {
          'borderRadius 与 shape 只能给一个。',
        );
 
-  // 自己没有底的目标（文字、图标、图标+文字）：按下只压内容透明度，
-  // 不铺遮罩，因此也不需要裁剪形状。
+  // 判据：目标有没有自己的底。没有就别铺遮罩，也就不需要裁剪形状
   const MInkWell.fade({
     super.key,
     required this.child,

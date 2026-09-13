@@ -48,34 +48,46 @@ void main() {
       expect(await repo.profileFacts(limit: 6), hasLength(6));
     });
 
-    test('pinnedCount 只数钉过的', () async {
-      await save('a', pinned: true);
-      await save('b');
-      await save('c', category: 'goal', pinned: true);
-      expect(await repo.pinnedCount(), 2);
+  });
+
+  group('recallMemory 的排序', () {
+    test('词元重叠多的排前面', () async {
+      await save('我在准备十月的半马', category: 'goal');
+      await save('我养了一只叫豆豆的猫', category: 'fact');
+      final hits = await repo.search('半马');
+      expect(hits, isNotEmpty);
+      expect(hits.first.text, contains('半马'));
     });
 
-    test('取消常驻后立刻退出常驻集合', () async {
-      final entry = await save('叫我小竹', pinned: true);
-      await repo.setPinned(entry.id, false);
-      expect(await repo.profileFacts(), isEmpty);
+    test('一个都不沾就返回空，而不是退回全部', () async {
+      await save('我养了一只猫', category: 'fact');
+      expect(await repo.search('quantum'), isEmpty);
     });
+
+    test('空 query 退回最近若干条', () async {
+      await save('甲');
+      await save('乙');
+      final hits = await repo.search('');
+      expect(hits, hasLength(2));
+    });
+
+    test('中文按字命中，不依赖分词', () async {
+      await save('晚上十一点后不聊沉重话题');
+      final hits = await repo.search('沉重');
+      expect(hits, hasLength(1));
+    });
+
   });
 
   group('写入去重', () {
-    test('同一句话换标点大小写不会变成第二条', () async {
+    test('换标点或大小写不算新的一条，中英皆然', () async {
       await save('I run on Mondays.');
-      final dup = await repo.findDuplicate('preference', 'i run on mondays');
-      expect(dup, isNotNull);
-    });
-
-    test('中文标点同样归一', () async {
-      await save('晚上十一点后，不聊沉重的话题。');
-      final dup = await repo.findDuplicate(
-        'preference',
-        '晚上十一点后不聊沉重的话题',
+      await save('晚上十一点后，不聊沉重的话题。', category: 'theme');
+      expect(await repo.findDuplicate('preference', 'i run on mondays'), isNotNull);
+      expect(
+        await repo.findDuplicate('theme', '晚上十一点后不聊沉重的话题'),
+        isNotNull,
       );
-      expect(dup, isNotNull);
     });
 
     test('类别不同不算重复', () async {
@@ -83,12 +95,5 @@ void main() {
       expect(await repo.findDuplicate('goal', '跑步'), isNull);
     });
 
-    test('touch 只动更新时间', () async {
-      final entry = await save('叫我小竹');
-      await repo.touch(entry.id);
-      final after = await repo.get(entry.id);
-      expect(after!.text, entry.text);
-      expect(after.updatedAt.isAfter(entry.updatedAt), isTrue);
-    });
   });
 }

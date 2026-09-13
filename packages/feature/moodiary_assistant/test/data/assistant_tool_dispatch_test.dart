@@ -62,7 +62,7 @@ void main() {
 
     test('查询：命中数与生效的筛选条件，不截英文结果', () {
       final line = specOf(AssistantTool.searchDiaries).summaryOf({
-        'keywords': '搬家',
+        'query': '搬家',
         'startDate': '2026-08-11',
         'endDate': '2026-08-17',
       }, '47 matches; the first 8 follow.\nid=x …');
@@ -332,13 +332,13 @@ void main() {
       final record = AssistantToolRegistry.recordOf([
         call(
           'searchDiaries',
-          '{"keywords":"搬家"}',
+          '{"query":"搬家"}',
           '47 matches; the first 8 follow.\n'
               'id=a 【2026-08-11】搬家第一天\n（此处还有两千字）',
         ),
       ]);
       expect(record, startsWith('[tools already run]'));
-      expect(record, contains('searchDiaries({"keywords":"搬家"})'));
+      expect(record, contains('searchDiaries({"query":"搬家"})'));
       expect(record, contains('→ 47 篇 · 搬家'));
       expect(record, isNot(contains('搬家第一天')));
       expect(record, isNot(contains('此处还有两千字')));

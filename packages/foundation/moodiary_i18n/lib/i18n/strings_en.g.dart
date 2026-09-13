@@ -324,7 +324,6 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String netStatus({required Object code}) => 'Server returned ${code}';
 	@override String get netDecode => 'Couldn\'t read the response';
 	@override String get netUnknown => 'Request failed';
-	@override String get reasoningEffort => 'Thinking effort';
 	@override String get reasoningOff => 'No thinking';
 	@override String get reasoningLevelMinimal => 'Minimal';
 	@override String get reasoningLevelLow => 'Low';
@@ -368,10 +367,6 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get memoryNoMatch => 'No memory matches';
 	@override String get toolSearchTitle => 'Search diaries';
 	@override String get toolSearchDes => 'Find your local diaries by keyword or by meaning, or browse them by date and category. The meaning path needs the local semantic index enabled in settings.';
-	@override String get toolQueryTitle => 'Query diaries';
-	@override String get toolQueryDes => 'Finds your local diaries by keyword, date range, or category to answer questions about past experiences and moods.';
-	@override String get toolSemanticTitle => 'Semantic search';
-	@override String get toolSemanticDes => 'Finds diaries by meaning rather than exact keywords: describe the entry in a sentence and it recalls it even with different wording. Requires the local semantic index enabled in settings.';
 	@override String get toolGetTitle => 'Read full diary';
 	@override String get toolGetDes => 'Read the full text of diaries by id, several at a time.';
 	@override String get toolOverviewTitle => 'Diary overview';
@@ -390,14 +385,10 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get toolUpdateCategoryDes => 'Rename categories.';
 	@override String get toolDeleteCategoryTitle => 'Delete category';
 	@override String get toolDeleteCategoryDes => 'Delete categories, only while they hold no diaries.';
-	@override String get toolListMemoriesTitle => 'View memories';
-	@override String get toolListMemoriesDes => 'List the long-term facts the assistant has saved about you (preferences, themes, goals).';
 	@override String get toolRecallMemoryTitle => 'Recall memory';
 	@override String get toolRecallMemoryDes => 'Look up saved long-term facts about you when they are needed.';
 	@override String get toolRememberTitle => 'Remember a fact';
 	@override String get toolRememberDes => 'Save durable facts about you — lasting preferences, recurring themes, ongoing goals — so they can be recalled in later chats.';
-	@override String get toolUpdateMemoryTitle => 'Update a memory';
-	@override String get toolUpdateMemoryDes => 'Revise saved memories.';
 	@override String get toolForgetTitle => 'Forget a memory';
 	@override String get toolForgetDes => 'Delete saved memories.';
 	@override String get toolJsTitle => 'Run script';

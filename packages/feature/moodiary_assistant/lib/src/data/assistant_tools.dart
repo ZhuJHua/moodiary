@@ -39,7 +39,6 @@ class AssistantToolSpec {
 
   final AssistantToolSummarize? summarize;
 
-  // 结果回放进 [tools already run]，而不是一行摘要：停掉记忆注入后防反复检索
   final bool replayResult;
 
   const AssistantToolSpec({
@@ -145,7 +144,7 @@ abstract final class AssistantToolRegistry {
     const AssistantToolSpec(
       tool: .getDiary,
       description:
-          'Read the full text of diaries by id (queryDiaries returns excerpts only). '
+          'Read the full text of diaries by id (searchDiaries returns excerpts only). '
           'Pass every id you need in one call. Max $_maxBatchRead per call.',
       jsonSchema: {
         'type': 'object',
@@ -154,7 +153,7 @@ abstract final class AssistantToolRegistry {
             'type': 'array',
             'items': {'type': 'string'},
             'description':
-                'Diary ids from queryDiaries or semanticSearchDiaries. Max $_maxBatchRead.',
+                'Diary ids from searchDiaries. Max $_maxBatchRead.',
           },
         },
         'required': ['ids'],
@@ -216,7 +215,7 @@ abstract final class AssistantToolRegistry {
       description:
           'Edit diaries by id. Within an item, only the fields you pass change; '
           'the rest are left alone. Pass every edit in one call. Get the ids '
-          'from queryDiaries or semanticSearchDiaries first.',
+          'from searchDiaries first.',
       jsonSchema: {
         'type': 'object',
         'properties': {
@@ -230,7 +229,7 @@ abstract final class AssistantToolRegistry {
                 'id': {
                   'type': 'string',
                   'description':
-                      'Diary id from queryDiaries or semanticSearchDiaries.',
+                      'Diary id from searchDiaries.',
                 },
                 'title': {'type': 'string', 'description': 'New title.'},
                 'content': {
@@ -260,8 +259,8 @@ abstract final class AssistantToolRegistry {
       tool: .deleteDiary,
       description:
           'Move diaries to the recycle bin by id, where the user can restore '
-          'them. Pass every id in one call. Get the ids from queryDiaries or '
-          'semanticSearchDiaries first. Max $_maxBatchWrite per call.',
+          'them. Pass every id in one call. Get the ids from searchDiaries '
+          'first. Max $_maxBatchWrite per call.',
       jsonSchema: {
         'type': 'object',
         'properties': {
@@ -269,7 +268,7 @@ abstract final class AssistantToolRegistry {
             'type': 'array',
             'items': {'type': 'string'},
             'description':
-                'Diary ids from queryDiaries or semanticSearchDiaries. Max $_maxBatchWrite.',
+                'Diary ids from searchDiaries. Max $_maxBatchWrite.',
           },
         },
         'required': ['ids'],
@@ -551,7 +550,7 @@ abstract final class AssistantToolRegistry {
     final count = int.tryParse(hit.group(1) ?? '') ?? 0;
     final parts = <String>[
       l10n.assistant.toolMatched(count: count),
-      ?_trimToNull(input['keywords']),
+      ?_trimToNull(input['query']),
       if (_trimToNull(input['startDate']) case final a?)
         _trimToNull(input['endDate']) == null ? a : '$a – ${input['endDate']}',
     ];
@@ -767,6 +766,8 @@ abstract final class AssistantToolRegistry {
     return _formatSearchRows(
       resolved,
       total: keyword.results.length + hits.length - _overlap(keyword.results, hits),
+      // 语义那边取满了 limit，真实命中只多不少
+      atLeast: needMeaning && hits.length >= limit,
     );
   }
 
@@ -814,11 +815,16 @@ abstract final class AssistantToolRegistry {
     ];
   }
 
-  static String _formatSearchRows(List<_SearchRow> rows, {required int total}) {
+  static String _formatSearchRows(
+    List<_SearchRow> rows, {
+    required int total,
+    bool atLeast = false,
+  }) {
+    final count = atLeast ? 'at least $total' : '$total';
     final buffer = StringBuffer()
       ..writeln(
-        rows.length < total
-            ? '$total matches; the first ${rows.length} follow. Raise limit or '
+        rows.length < total || atLeast
+            ? '$count matches; the first ${rows.length} follow. Raise limit or '
                   'narrow the filters for more.'
             : '$total matches:',
       );
@@ -857,7 +863,7 @@ abstract final class AssistantToolRegistry {
   static Future<String> _getDiary(Map<String, dynamic> input) async {
     final ids = _parseIds(input['ids'] ?? input['id']);
     if (ids.isEmpty) {
-      return 'Failed: no diary id given. Get ids from queryDiaries first.';
+      return 'Failed: no diary id given. Get ids from searchDiaries first.';
     }
 
     final repo = getIt<DiaryRepository>();
@@ -875,7 +881,7 @@ abstract final class AssistantToolRegistry {
     final buffer = StringBuffer();
     if (missing.isNotEmpty) {
       buffer.writeln(
-        'Not found (deleted, or the id is wrong — recheck with queryDiaries): '
+        'Not found (deleted, or the id is wrong — recheck with searchDiaries): '
         '${missing.join(', ')}',
       );
       if (chunks.isNotEmpty) buffer.writeln();
@@ -1303,7 +1309,6 @@ abstract final class AssistantToolRegistry {
       return 'Already saved ($category): ${existing.text} (id=${existing.id}).';
     }
     final rawSource = (input['source'] as String?)?.trim();
-    // 偏好决定「怎么跟我说话」，没占满就直接常驻；其余靠检索
     final pinned =
         category == 'preference' &&
         await repo.pinnedCount() < memoryProfileLimit;

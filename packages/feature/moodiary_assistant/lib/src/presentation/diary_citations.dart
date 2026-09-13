@@ -8,14 +8,12 @@ const double _kRailCardWidth = 148;
 
 class DiaryCitations extends StatefulWidget {
   final List<String> ids;
-  final String? header;
   final bool raised;
   final VoidCallback? onRemove;
 
   const DiaryCitations({
     super.key,
     required this.ids,
-    this.header,
     this.raised = false,
     this.onRemove,
   });
@@ -84,34 +82,12 @@ class _DiaryCitationsState extends State<DiaryCitations> {
   Widget build(BuildContext context) {
     final ids = widget.ids;
     if (ids.isEmpty) return const SizedBox.shrink();
-    final header = widget.header;
-    // 版式看篇数，标题看有没有传：两者各管各的
-    if (ids.length == 1 && header == null) return _card(ids.single);
+    if (ids.length == 1) return _card(ids.single);
 
-    final scheme = context.theme.colors;
-    final typography = context.theme.typography;
     return Column(
       crossAxisAlignment: .start,
       mainAxisSize: .min,
       children: [
-        if (header != null)
-          Padding(
-            padding: const .symmetric(vertical: 4),
-            child: Row(
-              children: [
-                Icon(
-                  LucideIcons.bookOpenText,
-                  size: 13,
-                  color: scheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  header,
-                  style: typography.labelMedium.emphasized.onSurfaceVariant,
-                ),
-              ],
-            ),
-          ),
         SingleChildScrollView(
           scrollDirection: .horizontal,
           clipBehavior: .none,

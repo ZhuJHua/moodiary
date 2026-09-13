@@ -149,7 +149,6 @@ const int memoryProfileMaxChars = 400;
 
 const int memoryProfileFactMaxChars = 120;
 
-// 没有工具通路时唯一的兜底：有界，且它的有界就是走工具的论据
 const int memoryToollessFallbackLimit = 10;
 
 const double assistantCompactionTriggerRatio = 0.75;

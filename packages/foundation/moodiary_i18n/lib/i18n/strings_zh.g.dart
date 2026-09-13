@@ -847,9 +847,6 @@ class Translations$assistant$zh {
 	/// zh: '请求失败'
 	String get netUnknown => '请求失败';
 
-	/// zh: '思考强度'
-	String get reasoningEffort => '思考强度';
-
 	/// zh: '不思考'
 	String get reasoningOff => '不思考';
 
@@ -979,18 +976,6 @@ class Translations$assistant$zh {
 	/// zh: '按关键词或含义查找你的本地日记，也能按时间范围和分类浏览。语义检索需先在设置中启用本地索引。'
 	String get toolSearchDes => '按关键词或含义查找你的本地日记，也能按时间范围和分类浏览。语义检索需先在设置中启用本地索引。';
 
-	/// zh: '查询日记'
-	String get toolQueryTitle => '查询日记';
-
-	/// zh: '按关键词、时间范围或分类查询你的本地日记，用于回答涉及过往经历、情绪记录的问题。'
-	String get toolQueryDes => '按关键词、时间范围或分类查询你的本地日记，用于回答涉及过往经历、情绪记录的问题。';
-
-	/// zh: '语义检索'
-	String get toolSemanticTitle => '语义检索';
-
-	/// zh: '按含义而非关键词查找日记：用一句自然语言描述要找的内容，即使措辞不同也能召回。需先在设置中启用本地语义索引。'
-	String get toolSemanticDes => '按含义而非关键词查找日记：用一句自然语言描述要找的内容，即使措辞不同也能召回。需先在设置中启用本地语义索引。';
-
 	/// zh: '读取日记全文'
 	String get toolGetTitle => '读取日记全文';
 
@@ -1045,12 +1030,6 @@ class Translations$assistant$zh {
 	/// zh: '删除分类（仅当其下没有日记时）。'
 	String get toolDeleteCategoryDes => '删除分类（仅当其下没有日记时）。';
 
-	/// zh: '查看记忆'
-	String get toolListMemoriesTitle => '查看记忆';
-
-	/// zh: '列出助手保存的关于你的长期记忆（偏好、主题、目标等）。'
-	String get toolListMemoriesDes => '列出助手保存的关于你的长期记忆（偏好、主题、目标等）。';
-
 	/// zh: '回忆记忆'
 	String get toolRecallMemoryTitle => '回忆记忆';
 
@@ -1062,12 +1041,6 @@ class Translations$assistant$zh {
 
 	/// zh: '把关于你的长期事实（稳定偏好 / 反复出现的主题 / 持续目标）保存下来，供日后对话记起。'
 	String get toolRememberDes => '把关于你的长期事实（稳定偏好 / 反复出现的主题 / 持续目标）保存下来，供日后对话记起。';
-
-	/// zh: '更新记忆'
-	String get toolUpdateMemoryTitle => '更新记忆';
-
-	/// zh: '修改已保存记忆的内容。'
-	String get toolUpdateMemoryDes => '修改已保存记忆的内容。';
 
 	/// zh: '删除记忆'
 	String get toolForgetTitle => '删除记忆';

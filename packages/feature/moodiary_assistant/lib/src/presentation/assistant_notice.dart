@@ -14,7 +14,6 @@ class AssistantNotice extends StatefulWidget {
 
   final WidgetBuilder? detail;
 
-  // 正文类详情缩进到标签下；卡片类要和整行左对齐
   final EdgeInsetsGeometry? detailPadding;
 
   final VoidCallback? onTap;

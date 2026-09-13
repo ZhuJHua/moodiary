@@ -3,6 +3,7 @@ import 'package:moodiary_assistant/src/data/memory_repository.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
 const List<String> _kCategories = ['preference', 'theme', 'goal', 'fact'];
@@ -305,7 +306,7 @@ class _MemoryTile extends StatelessWidget {
                         Flexible(
                           child: Text(
                             l10n.assistant.memoryMeta(
-                              date: _formatDate(entry.updatedAt.toLocal()),
+                              date: TimeFormat.monthDay(entry.updatedAt),
                               source: _sourceLabel(context, entry.source),
                             ),
                             maxLines: 1,
@@ -364,8 +365,6 @@ class _MemoryTile extends StatelessWidget {
       ),
     );
   }
-
-  static String _formatDate(DateTime t) => '${t.month}月${t.day}日';
 
   static String _sourceLabel(BuildContext context, String? source) =>
       source == 'user_asked'
@@ -477,13 +476,16 @@ class _MemoryEditSheetState extends State<_MemoryEditSheet> {
       icon: LucideIcons.squarePen,
       actions: [
         MAction(label: l10n.common.cancel),
+        // 打字不会重建这个面板，所以点下去的那一刻才读输入框
         MAction(
           label: l10n.common.save,
           isPrimary: true,
-          value: widget.entry.copyWith(
-            text: _text.text.trim(),
-            category: _category,
-            pinned: _pinned,
+          onPressed: () => Navigator.of(context).pop(
+            widget.entry.copyWith(
+              text: _text.text.trim(),
+              category: _category,
+              pinned: _pinned,
+            ),
           ),
         ),
       ],
