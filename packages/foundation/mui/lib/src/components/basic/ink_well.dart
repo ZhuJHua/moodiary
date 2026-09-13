@@ -6,8 +6,6 @@ const Duration _kReleaseDelay = Duration(milliseconds: 50);
 
 const Duration _kFadeDuration = Duration(milliseconds: 90);
 
-enum MPressFeedback { overlay, fade }
-
 abstract class _MInkWellPressedHost {
   void onDescendantPressedChanged(bool pressed);
 }
@@ -42,7 +40,7 @@ class MInkWell extends StatefulWidget {
 
   final Color? overlayColor;
 
-  final MPressFeedback feedback;
+  final bool _fade;
 
   const MInkWell({
     super.key,
@@ -56,11 +54,27 @@ class MInkWell extends StatefulWidget {
     this.shape,
     this.enabled = true,
     this.overlayColor,
-    this.feedback = MPressFeedback.overlay,
-  }) : assert(
+  }) : _fade = false,
+       assert(
          borderRadius == null || shape == null,
          'borderRadius 与 shape 只能给一个。',
        );
+
+  // 自己没有底的目标（文字、图标、图标+文字）：按下只压内容透明度，
+  // 不铺遮罩，因此也不需要裁剪形状。
+  const MInkWell.fade({
+    super.key,
+    required this.child,
+    this.onTap,
+    this.onLongPress,
+    this.onLongPressStart,
+    this.onLongPressUp,
+    this.behavior,
+    this.enabled = true,
+  }) : _fade = true,
+       borderRadius = null,
+       shape = null,
+       overlayColor = null;
 
   @override
   State<MInkWell> createState() => _MInkWellState();
@@ -172,7 +186,7 @@ class _MInkWellState extends State<MInkWell> implements _MInkWellPressedHost {
 
   Widget _withFeedback(Widget child) {
     final states = context.theme.states;
-    if (widget.feedback == MPressFeedback.fade) {
+    if (widget._fade) {
       return AnimatedOpacity(
         opacity: _shouldRenderPressed ? states.pressedContentOpacity : 1,
         duration: _kFadeDuration,

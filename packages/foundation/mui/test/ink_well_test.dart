@@ -48,8 +48,7 @@ void main() {
   testWidgets('fade：按下只压内容透明度，不铺遮罩', (tester) async {
     await tester.pumpWidget(
       host(
-        MInkWell(
-          feedback: .fade,
+        MInkWell.fade(
           onTap: () {},
           child: const SizedBox(width: 100, height: 40),
         ),

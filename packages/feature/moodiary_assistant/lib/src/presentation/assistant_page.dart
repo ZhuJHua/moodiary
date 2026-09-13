@@ -1582,9 +1582,7 @@ class _ModelChip extends StatelessWidget {
     final provider = this.provider;
     final broken = modelLabel.isEmpty || modelMissing;
 
-    return MInkWell(
-      shape: const StadiumBorder(),
-      feedback: .fade,
+    return MInkWell.fade(
       onTap: onTap,
       child: SizedBox(
         height: _kModelChipHeight,
