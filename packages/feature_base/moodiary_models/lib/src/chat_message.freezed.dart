@@ -16,19 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ChatMessage {
 
- String get id; String get sessionId;/// `"user"` 或 `"assistant"`。
- String get role; String get content; DateTime get createdAt;/// assistant 回复的思考 / 推理过程（思考模式开启时才有）。null 表示非思考回复。
- String? get reasoning;/// 思考耗时（毫秒）。null 表示无思考过程。
- int? get thinkingMillis;/// 随消息发送的图片文件名（存于 image 目录，用 AppFiles.getRealPath 解析）。null 表示无图。
- String? get imageName;/// 本轮（assistant 回复）消耗的输入 token 数。null 表示无用量数据。
- int? get inputTokens;/// 本轮（assistant 回复）产生的输出 token 数。null 表示无用量数据。
- int? get outputTokens;/// 生成本条 assistant 回复的模型 id。null = 旧数据或 user 消息。
-/// 相邻两条回复的 model 不同时，界面在其间合成「已切换到 X」提示。
- String? get model;/// 本轮用到的工具调用，按发生顺序。
-///
-/// **必须落库**：不落的话工具调用只在本轮可见，重开会话就没了 —— 而且模型
-/// 下一轮也看不到上一轮查到过什么（那正是它会重复调同一个工具的原因）。
- List<AssistantToolCall> get toolCalls;
+ String get id; String get sessionId; String get role; String get content; DateTime get createdAt; String? get reasoning; int? get thinkingMillis; String? get imageName; int? get inputTokens; int? get outputTokens; String? get model; String? get providerId; List<AssistantToolCall> get toolCalls;
 /// Create a copy of ChatMessage
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -42,20 +30,20 @@ $ChatMessageCopyWith<ChatMessage> get copyWith => _$ChatMessageCopyWithImpl<Chat
 @override
 bool operator ==(Object other) {
   final _this = this as ChatMessage;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatMessage&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.sessionId, _this.sessionId) || other.sessionId == _this.sessionId)&&(identical(other.role, _this.role) || other.role == _this.role)&&(identical(other.content, _this.content) || other.content == _this.content)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&(identical(other.reasoning, _this.reasoning) || other.reasoning == _this.reasoning)&&(identical(other.thinkingMillis, _this.thinkingMillis) || other.thinkingMillis == _this.thinkingMillis)&&(identical(other.imageName, _this.imageName) || other.imageName == _this.imageName)&&(identical(other.inputTokens, _this.inputTokens) || other.inputTokens == _this.inputTokens)&&(identical(other.outputTokens, _this.outputTokens) || other.outputTokens == _this.outputTokens)&&(identical(other.model, _this.model) || other.model == _this.model)&&const DeepCollectionEquality().equals(other.toolCalls, _this.toolCalls));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatMessage&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.sessionId, _this.sessionId) || other.sessionId == _this.sessionId)&&(identical(other.role, _this.role) || other.role == _this.role)&&(identical(other.content, _this.content) || other.content == _this.content)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&(identical(other.reasoning, _this.reasoning) || other.reasoning == _this.reasoning)&&(identical(other.thinkingMillis, _this.thinkingMillis) || other.thinkingMillis == _this.thinkingMillis)&&(identical(other.imageName, _this.imageName) || other.imageName == _this.imageName)&&(identical(other.inputTokens, _this.inputTokens) || other.inputTokens == _this.inputTokens)&&(identical(other.outputTokens, _this.outputTokens) || other.outputTokens == _this.outputTokens)&&(identical(other.model, _this.model) || other.model == _this.model)&&(identical(other.providerId, _this.providerId) || other.providerId == _this.providerId)&&const DeepCollectionEquality().equals(other.toolCalls, _this.toolCalls));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as ChatMessage;
-  return Object.hash(runtimeType,_this.id,_this.sessionId,_this.role,_this.content,_this.createdAt,_this.reasoning,_this.thinkingMillis,_this.imageName,_this.inputTokens,_this.outputTokens,_this.model,const DeepCollectionEquality().hash(_this.toolCalls));
+  return Object.hash(runtimeType,_this.id,_this.sessionId,_this.role,_this.content,_this.createdAt,_this.reasoning,_this.thinkingMillis,_this.imageName,_this.inputTokens,_this.outputTokens,_this.model,_this.providerId,const DeepCollectionEquality().hash(_this.toolCalls));
 }
 
 @override
 String toString() {
   final _this = this as ChatMessage;
-  return 'ChatMessage(id: ${_this.id}, sessionId: ${_this.sessionId}, role: ${_this.role}, content: ${_this.content}, createdAt: ${_this.createdAt}, reasoning: ${_this.reasoning}, thinkingMillis: ${_this.thinkingMillis}, imageName: ${_this.imageName}, inputTokens: ${_this.inputTokens}, outputTokens: ${_this.outputTokens}, model: ${_this.model}, toolCalls: ${_this.toolCalls})';
+  return 'ChatMessage(id: ${_this.id}, sessionId: ${_this.sessionId}, role: ${_this.role}, content: ${_this.content}, createdAt: ${_this.createdAt}, reasoning: ${_this.reasoning}, thinkingMillis: ${_this.thinkingMillis}, imageName: ${_this.imageName}, inputTokens: ${_this.inputTokens}, outputTokens: ${_this.outputTokens}, model: ${_this.model}, providerId: ${_this.providerId}, toolCalls: ${_this.toolCalls})';
 }
 
 
@@ -66,7 +54,7 @@ abstract mixin class $ChatMessageCopyWith<$Res>  {
   factory $ChatMessageCopyWith(ChatMessage value, $Res Function(ChatMessage) _then) = _$ChatMessageCopyWithImpl;
 @useResult
 $Res call({
- String id, String sessionId, String role, String content, DateTime createdAt, String? reasoning, int? thinkingMillis, String? imageName, int? inputTokens, int? outputTokens, String? model, List<AssistantToolCall> toolCalls
+ String id, String sessionId, String role, String content, DateTime createdAt, String? reasoning, int? thinkingMillis, String? imageName, int? inputTokens, int? outputTokens, String? model, String? providerId, List<AssistantToolCall> toolCalls
 });
 
 
@@ -83,7 +71,7 @@ class _$ChatMessageCopyWithImpl<$Res>
 
 /// Create a copy of ChatMessage
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? sessionId = null,Object? role = null,Object? content = null,Object? createdAt = null,Object? reasoning = freezed,Object? thinkingMillis = freezed,Object? imageName = freezed,Object? inputTokens = freezed,Object? outputTokens = freezed,Object? model = freezed,Object? toolCalls = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? sessionId = null,Object? role = null,Object? content = null,Object? createdAt = null,Object? reasoning = freezed,Object? thinkingMillis = freezed,Object? imageName = freezed,Object? inputTokens = freezed,Object? outputTokens = freezed,Object? model = freezed,Object? providerId = freezed,Object? toolCalls = null,}) {
   return _then(ChatMessage(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,sessionId: null == sessionId ? _self.sessionId : sessionId // ignore: cast_nullable_to_non_nullable
@@ -96,6 +84,7 @@ as int?,imageName: freezed == imageName ? _self.imageName : imageName // ignore:
 as String?,inputTokens: freezed == inputTokens ? _self.inputTokens : inputTokens // ignore: cast_nullable_to_non_nullable
 as int?,outputTokens: freezed == outputTokens ? _self.outputTokens : outputTokens // ignore: cast_nullable_to_non_nullable
 as int?,model: freezed == model ? _self.model : model // ignore: cast_nullable_to_non_nullable
+as String?,providerId: freezed == providerId ? _self.providerId : providerId // ignore: cast_nullable_to_non_nullable
 as String?,toolCalls: null == toolCalls ? _self.toolCalls : toolCalls // ignore: cast_nullable_to_non_nullable
 as List<AssistantToolCall>,
   ));
@@ -182,10 +171,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String sessionId,  String role,  String content,  DateTime createdAt,  String? reasoning,  int? thinkingMillis,  String? imageName,  int? inputTokens,  int? outputTokens,  String? model,  List<AssistantToolCall> toolCalls)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String sessionId,  String role,  String content,  DateTime createdAt,  String? reasoning,  int? thinkingMillis,  String? imageName,  int? inputTokens,  int? outputTokens,  String? model,  String? providerId,  List<AssistantToolCall> toolCalls)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ChatMessage() when $default != null:
-return $default(_that.id,_that.sessionId,_that.role,_that.content,_that.createdAt,_that.reasoning,_that.thinkingMillis,_that.imageName,_that.inputTokens,_that.outputTokens,_that.model,_that.toolCalls);case _:
+return $default(_that.id,_that.sessionId,_that.role,_that.content,_that.createdAt,_that.reasoning,_that.thinkingMillis,_that.imageName,_that.inputTokens,_that.outputTokens,_that.model,_that.providerId,_that.toolCalls);case _:
   return orElse();
 
 }
@@ -203,10 +192,10 @@ return $default(_that.id,_that.sessionId,_that.role,_that.content,_that.createdA
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String sessionId,  String role,  String content,  DateTime createdAt,  String? reasoning,  int? thinkingMillis,  String? imageName,  int? inputTokens,  int? outputTokens,  String? model,  List<AssistantToolCall> toolCalls)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String sessionId,  String role,  String content,  DateTime createdAt,  String? reasoning,  int? thinkingMillis,  String? imageName,  int? inputTokens,  int? outputTokens,  String? model,  String? providerId,  List<AssistantToolCall> toolCalls)  $default,) {final _that = this;
 switch (_that) {
 case _ChatMessage():
-return $default(_that.id,_that.sessionId,_that.role,_that.content,_that.createdAt,_that.reasoning,_that.thinkingMillis,_that.imageName,_that.inputTokens,_that.outputTokens,_that.model,_that.toolCalls);case _:
+return $default(_that.id,_that.sessionId,_that.role,_that.content,_that.createdAt,_that.reasoning,_that.thinkingMillis,_that.imageName,_that.inputTokens,_that.outputTokens,_that.model,_that.providerId,_that.toolCalls);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -223,10 +212,10 @@ return $default(_that.id,_that.sessionId,_that.role,_that.content,_that.createdA
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String sessionId,  String role,  String content,  DateTime createdAt,  String? reasoning,  int? thinkingMillis,  String? imageName,  int? inputTokens,  int? outputTokens,  String? model,  List<AssistantToolCall> toolCalls)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String sessionId,  String role,  String content,  DateTime createdAt,  String? reasoning,  int? thinkingMillis,  String? imageName,  int? inputTokens,  int? outputTokens,  String? model,  String? providerId,  List<AssistantToolCall> toolCalls)?  $default,) {final _that = this;
 switch (_that) {
 case _ChatMessage() when $default != null:
-return $default(_that.id,_that.sessionId,_that.role,_that.content,_that.createdAt,_that.reasoning,_that.thinkingMillis,_that.imageName,_that.inputTokens,_that.outputTokens,_that.model,_that.toolCalls);case _:
+return $default(_that.id,_that.sessionId,_that.role,_that.content,_that.createdAt,_that.reasoning,_that.thinkingMillis,_that.imageName,_that.inputTokens,_that.outputTokens,_that.model,_that.providerId,_that.toolCalls);case _:
   return null;
 
 }
@@ -238,37 +227,22 @@ return $default(_that.id,_that.sessionId,_that.role,_that.content,_that.createdA
 @JsonSerializable()
 
 class _ChatMessage implements ChatMessage {
-  const _ChatMessage({required this.id, required this.sessionId, required this.role, required this.content, required this.createdAt, this.reasoning, this.thinkingMillis, this.imageName, this.inputTokens, this.outputTokens, this.model,  List<AssistantToolCall> toolCalls = const <AssistantToolCall>[]}): _toolCalls = toolCalls;
+  const _ChatMessage({required this.id, required this.sessionId, required this.role, required this.content, required this.createdAt, this.reasoning, this.thinkingMillis, this.imageName, this.inputTokens, this.outputTokens, this.model, this.providerId,  List<AssistantToolCall> toolCalls = const <AssistantToolCall>[]}): _toolCalls = toolCalls;
   factory _ChatMessage.fromJson(Map<String, dynamic> json) => _$ChatMessageFromJson(json);
 
 @override final  String id;
 @override final  String sessionId;
-/// `"user"` 或 `"assistant"`。
 @override final  String role;
 @override final  String content;
 @override final  DateTime createdAt;
-/// assistant 回复的思考 / 推理过程（思考模式开启时才有）。null 表示非思考回复。
 @override final  String? reasoning;
-/// 思考耗时（毫秒）。null 表示无思考过程。
 @override final  int? thinkingMillis;
-/// 随消息发送的图片文件名（存于 image 目录，用 AppFiles.getRealPath 解析）。null 表示无图。
 @override final  String? imageName;
-/// 本轮（assistant 回复）消耗的输入 token 数。null 表示无用量数据。
 @override final  int? inputTokens;
-/// 本轮（assistant 回复）产生的输出 token 数。null 表示无用量数据。
 @override final  int? outputTokens;
-/// 生成本条 assistant 回复的模型 id。null = 旧数据或 user 消息。
-/// 相邻两条回复的 model 不同时，界面在其间合成「已切换到 X」提示。
 @override final  String? model;
-/// 本轮用到的工具调用，按发生顺序。
-///
-/// **必须落库**：不落的话工具调用只在本轮可见，重开会话就没了 —— 而且模型
-/// 下一轮也看不到上一轮查到过什么（那正是它会重复调同一个工具的原因）。
+@override final  String? providerId;
  final  List<AssistantToolCall> _toolCalls;
-/// 本轮用到的工具调用，按发生顺序。
-///
-/// **必须落库**：不落的话工具调用只在本轮可见，重开会话就没了 —— 而且模型
-/// 下一轮也看不到上一轮查到过什么（那正是它会重复调同一个工具的原因）。
 @override@JsonKey() List<AssistantToolCall> get toolCalls {
   if (_toolCalls is EqualUnmodifiableListView) return _toolCalls;
   // ignore: implicit_dynamic_type
@@ -289,18 +263,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatMessage&&(identical(other.id, id) || other.id == id)&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId)&&(identical(other.role, role) || other.role == role)&&(identical(other.content, content) || other.content == content)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.reasoning, reasoning) || other.reasoning == reasoning)&&(identical(other.thinkingMillis, thinkingMillis) || other.thinkingMillis == thinkingMillis)&&(identical(other.imageName, imageName) || other.imageName == imageName)&&(identical(other.inputTokens, inputTokens) || other.inputTokens == inputTokens)&&(identical(other.outputTokens, outputTokens) || other.outputTokens == outputTokens)&&(identical(other.model, model) || other.model == model)&&const DeepCollectionEquality().equals(other.toolCalls, _toolCalls));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatMessage&&(identical(other.id, id) || other.id == id)&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId)&&(identical(other.role, role) || other.role == role)&&(identical(other.content, content) || other.content == content)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.reasoning, reasoning) || other.reasoning == reasoning)&&(identical(other.thinkingMillis, thinkingMillis) || other.thinkingMillis == thinkingMillis)&&(identical(other.imageName, imageName) || other.imageName == imageName)&&(identical(other.inputTokens, inputTokens) || other.inputTokens == inputTokens)&&(identical(other.outputTokens, outputTokens) || other.outputTokens == outputTokens)&&(identical(other.model, model) || other.model == model)&&(identical(other.providerId, providerId) || other.providerId == providerId)&&const DeepCollectionEquality().equals(other.toolCalls, _toolCalls));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,sessionId,role,content,createdAt,reasoning,thinkingMillis,imageName,inputTokens,outputTokens,model,const DeepCollectionEquality().hash(_toolCalls));
+    return Object.hash(runtimeType,id,sessionId,role,content,createdAt,reasoning,thinkingMillis,imageName,inputTokens,outputTokens,model,providerId,const DeepCollectionEquality().hash(_toolCalls));
 }
 
 @override
 String toString() {
-    return 'ChatMessage(id: $id, sessionId: $sessionId, role: $role, content: $content, createdAt: $createdAt, reasoning: $reasoning, thinkingMillis: $thinkingMillis, imageName: $imageName, inputTokens: $inputTokens, outputTokens: $outputTokens, model: $model, toolCalls: $toolCalls)';
+    return 'ChatMessage(id: $id, sessionId: $sessionId, role: $role, content: $content, createdAt: $createdAt, reasoning: $reasoning, thinkingMillis: $thinkingMillis, imageName: $imageName, inputTokens: $inputTokens, outputTokens: $outputTokens, model: $model, providerId: $providerId, toolCalls: $toolCalls)';
 }
 
 
@@ -311,7 +285,7 @@ abstract mixin class _$ChatMessageCopyWith<$Res> implements $ChatMessageCopyWith
   factory _$ChatMessageCopyWith(_ChatMessage value, $Res Function(_ChatMessage) _then) = __$ChatMessageCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String sessionId, String role, String content, DateTime createdAt, String? reasoning, int? thinkingMillis, String? imageName, int? inputTokens, int? outputTokens, String? model, List<AssistantToolCall> toolCalls
+ String id, String sessionId, String role, String content, DateTime createdAt, String? reasoning, int? thinkingMillis, String? imageName, int? inputTokens, int? outputTokens, String? model, String? providerId, List<AssistantToolCall> toolCalls
 });
 
 
@@ -328,7 +302,7 @@ class __$ChatMessageCopyWithImpl<$Res>
 
 /// Create a copy of ChatMessage
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? sessionId = null,Object? role = null,Object? content = null,Object? createdAt = null,Object? reasoning = freezed,Object? thinkingMillis = freezed,Object? imageName = freezed,Object? inputTokens = freezed,Object? outputTokens = freezed,Object? model = freezed,Object? toolCalls = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? sessionId = null,Object? role = null,Object? content = null,Object? createdAt = null,Object? reasoning = freezed,Object? thinkingMillis = freezed,Object? imageName = freezed,Object? inputTokens = freezed,Object? outputTokens = freezed,Object? model = freezed,Object? providerId = freezed,Object? toolCalls = null,}) {
   return _then(_ChatMessage(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,sessionId: null == sessionId ? _self.sessionId : sessionId // ignore: cast_nullable_to_non_nullable
@@ -341,6 +315,7 @@ as int?,imageName: freezed == imageName ? _self.imageName : imageName // ignore:
 as String?,inputTokens: freezed == inputTokens ? _self.inputTokens : inputTokens // ignore: cast_nullable_to_non_nullable
 as int?,outputTokens: freezed == outputTokens ? _self.outputTokens : outputTokens // ignore: cast_nullable_to_non_nullable
 as int?,model: freezed == model ? _self.model : model // ignore: cast_nullable_to_non_nullable
+as String?,providerId: freezed == providerId ? _self.providerId : providerId // ignore: cast_nullable_to_non_nullable
 as String?,toolCalls: null == toolCalls ? _self._toolCalls : toolCalls // ignore: cast_nullable_to_non_nullable
 as List<AssistantToolCall>,
   ));

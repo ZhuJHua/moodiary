@@ -50,7 +50,7 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
   }
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -77,6 +77,17 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
             }
           }
         });
+      }
+      if (from < 3 && !await _hasColumn('chat_messages', 'provider_id')) {
+        await m.addColumn(chatMessages, chatMessages.providerId);
+      }
+      if (from < 4) {
+        if (!await _hasColumn('memories', 'pinned')) {
+          await m.addColumn(memories, memories.pinned);
+        }
+        if (!await _hasColumn('memories', 'source')) {
+          await m.addColumn(memories, memories.source);
+        }
       }
     },
   );

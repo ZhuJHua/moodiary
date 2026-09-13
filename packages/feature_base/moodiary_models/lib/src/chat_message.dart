@@ -31,6 +31,8 @@ abstract class ChatMessage with _$ChatMessage {
 
     String? model,
 
+    String? providerId,
+
     @Default(<AssistantToolCall>[]) List<AssistantToolCall> toolCalls,
   }) = _ChatMessage;
 

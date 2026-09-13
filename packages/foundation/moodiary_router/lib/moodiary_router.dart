@@ -215,6 +215,12 @@ class AssistantSettingRoute extends MoodiaryRouteBase {
   const AssistantSettingRoute() : super(path);
 }
 
+class AssistantMemoriesRoute extends MoodiaryRouteBase {
+  static const String path = '/setting/assistant/memories';
+
+  const AssistantMemoriesRoute() : super(path);
+}
+
 class AssistantPresetsRoute extends MoodiaryRouteBase {
   static const String path = '/setting/assistant/presets';
 
@@ -240,13 +246,19 @@ class AssistantConversationRoute extends MoodiaryRouteBase {
 
   final String? title;
 
-  const AssistantConversationRoute({this.sessionId, this.title})
-    : super(path);
+  final String? citedDiaryId;
+
+  const AssistantConversationRoute({
+    this.sessionId,
+    this.title,
+    this.citedDiaryId,
+  }) : super(path);
 
   @override
   Map<String, dynamic> get params => {
     'session_id': sessionId,
     'title': title,
+    'cited_diary_id': citedDiaryId,
   };
 }
 

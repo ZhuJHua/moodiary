@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math' as math;
 
 import 'package:flutter/services.dart';
 import 'package:gpt_markdown/gpt_markdown.dart';
 import 'package:moodiary_assistant/src/application/chat_controller.dart';
 import 'package:moodiary_assistant/src/application/chat_items.dart';
 import 'package:moodiary_assistant/src/application/context_compaction_controller.dart';
+import 'package:moodiary_assistant/src/application/diary_citation.dart';
 import 'package:moodiary_assistant/src/application/session_title_controller.dart';
 import 'package:moodiary_assistant/src/data/agent_preset_repository.dart';
 import 'package:moodiary_assistant/src/data/agent_preset_resolver.dart';
@@ -15,6 +15,7 @@ import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/assistant_tools.dart';
 import 'package:moodiary_assistant/src/data/chat_repository.dart';
+import 'package:moodiary_assistant/src/data/llm_preset_repository.dart';
 import 'package:moodiary_assistant/src/data/llm_provider_repository.dart';
 import 'package:moodiary_assistant/src/data/memory_repository.dart';
 import 'package:moodiary_assistant/src/data/model_resolver.dart';
@@ -22,8 +23,11 @@ import 'package:moodiary_assistant/src/presentation/agent_preset_sheet.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_notice.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_tool_ui.dart';
 import 'package:moodiary_assistant/src/presentation/chat_list.dart';
+import 'package:moodiary_assistant/src/presentation/diary_citations.dart';
 import 'package:moodiary_assistant/src/presentation/markdown_code_block.dart';
 import 'package:moodiary_assistant/src/presentation/model_picker_sheet.dart';
+import 'package:moodiary_assistant/src/presentation/provider_logo.dart';
+import 'package:moodiary_assistant/src/presentation/reasoning_label.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
@@ -40,19 +44,12 @@ const double _kComposerPadding = 8;
 
 const double _kComposerHeightEstimate = 102;
 
-const double _kTitleInset = 6;
+const double _kModelChipMinHeight = 32;
 
-double _toolbarHeight(BuildContext context) {
-  final typography = context.theme.typography;
-  final scaler = MediaQuery.textScalerOf(context);
-  double lineOf(TextStyle style) =>
-      scaler.scale(style.fontSize ?? 14) * (style.height ?? 1.4);
-  final needed =
-      lineOf(typography.titleMedium.emphasized.onSurface) +
-      lineOf(typography.labelSmall.onSurfaceVariant) +
-      20;
-  return math.max(kToolbarHeight, needed);
-}
+// 轮间 20，轮内 8
+const double _kTurnGap = 20;
+
+enum _ConversationAction { info, preset, compact, settings }
 
 Widget _codeBlock(
   BuildContext context,
@@ -66,11 +63,19 @@ class AssistantPage extends StatefulWidget {
 
   final String? initialTitle;
 
-  const AssistantPage({super.key, this.initialSessionId, this.initialTitle});
+  final String? citedDiaryId;
+
+  const AssistantPage({
+    super.key,
+    this.initialSessionId,
+    this.initialTitle,
+    this.citedDiaryId,
+  });
 
   factory AssistantPage.fromRoute(GoRouterState state) => AssistantPage(
     initialSessionId: state.params['session_id'] as String?,
     initialTitle: state.params['title'] as String?,
+    citedDiaryId: state.params['cited_diary_id'] as String?,
   );
 
   @override
@@ -107,7 +112,14 @@ class _AssistantPageState extends State<AssistantPage> {
   bool _ready = true;
   bool _initialized = false;
 
-  String _reasoningLevel = '';
+  String? _reasoningLevel;
+
+  final Map<String, LlmProvider> _providers = {};
+
+  bool _resolved = false;
+  bool _providerMissing = false;
+  bool _catalogMissing = false;
+  bool _modelMissing = false;
 
   LlmProvider? _provider;
   String _modelId = '';
@@ -123,6 +135,8 @@ class _AssistantPageState extends State<AssistantPage> {
   bool _canUseTools = true;
 
   String? _pendingImageName;
+
+  String? _citedDiaryId;
 
   final ContextCompactionController _compaction = ContextCompactionController();
   final SessionTitleController _title = SessionTitleController();
@@ -180,7 +194,8 @@ class _AssistantPageState extends State<AssistantPage> {
     _chat = AssistantChatController();
     _disclaimerAccepted =
         MoodiaryKVs.assistantDisclaimerAccepted.get() ?? false;
-    _reasoningLevel = MoodiaryKVs.assistantReasoningEffort.get() ?? '';
+    _reasoningLevel = MoodiaryKVs.assistantReasoningEffort.get();
+    if (widget.initialSessionId == null) _citedDiaryId = widget.citedDiaryId;
     _chat.addListener(_syncDerivedFromItems);
     _inputFocusNode.addListener(_onInputFocusChanged);
     unawaited(_initStagedPreset());
@@ -225,23 +240,54 @@ class _AssistantPageState extends State<AssistantPage> {
     final staged = pinned != null || _stagedProviderId.isEmpty
         ? null
         : await repo.getProvider(_stagedProviderId);
-    final provider = pinned ?? staged ?? await repo.getActiveProvider();
+    final lastId = MoodiaryKVs.assistantLastProviderId.get() ?? '';
+    final last = pinned != null || staged != null || lastId.isEmpty
+        ? null
+        : await repo.getProvider(lastId);
+    final provider = pinned ?? staged ?? last ?? await repo.getActiveProvider();
+    final providerMissing =
+        session != null && session.providerId.isNotEmpty && pinned == null;
+    final all = await repo.getAllProviders();
+    _providers
+      ..clear()
+      ..addEntries([for (final p in all) MapEntry(p.id, p)]);
     final key = provider == null ? null : await repo.getKey(provider.id);
+    final lastModel = MoodiaryKVs.assistantLastModelId.get() ?? '';
     final wanted = pinned != null && (session?.model.isNotEmpty ?? false)
         ? session!.model
-        : (_modelId.isEmpty ? (provider?.defaultModel ?? '') : _modelId);
+        : providerMissing
+        ? (provider?.defaultModel ?? '')
+        : _modelId.isNotEmpty
+        ? _modelId
+        : last != null && lastModel.isNotEmpty
+        ? lastModel
+        : (provider?.defaultModel ?? '');
     final resolved = provider == null
         ? null
         : ModelResolver.resolve(provider, wanted);
     final model = resolved?.preset;
+    final catalogMissing =
+        provider != null &&
+        provider.isPreset &&
+        getIt<LlmPresetRepository>().cachedAt == 0;
+    final modelMissing =
+        provider != null &&
+        provider.isPreset &&
+        !catalogMissing &&
+        model == null &&
+        (resolved?.modelId.isNotEmpty ?? false);
     final caps = _capabilities(provider, model);
     final levels = provider == null
         ? const <String>[]
         : ModelResolver.levelsFor(provider, wanted);
     if (mounted) {
       setState(() {
+        _resolved = true;
         _ready = provider != null && key != null && key.isNotEmpty;
         _provider = provider;
+        _providerMissing = providerMissing;
+        _catalogMissing = catalogMissing;
+        _modelMissing = modelMissing;
         _modelId = resolved?.modelId ?? '';
         _activeModel = model;
         _reasoningLevels = levels;
@@ -249,9 +295,6 @@ class _AssistantPageState extends State<AssistantPage> {
         _canUseTools = caps.tools;
         _contextLimit = model?.contextLimit ?? assistantDefaultContextBudget;
         _maxTokens = maxTokensFor(model?.outputLimit);
-        if (_reasoningLevel.isNotEmpty && !levels.contains(_reasoningLevel)) {
-          _reasoningLevel = '';
-        }
         if (!caps.attachment) _pendingImageName = null;
       });
     }
@@ -277,49 +320,161 @@ class _AssistantPageState extends State<AssistantPage> {
     return (tools: provider.toolCall, attachment: provider.attachment);
   }
 
-  Future<void> _pickModel() async {
-    if (_sending) return;
+  Future<List<ProviderModels>> _providerGroups() async {
     final repo = getIt<LlmProviderRepository>();
-    final providers = await repo.getAllProviders();
     final groups = <ProviderModels>[];
-    for (final p in providers) {
-      final options = ModelResolver.optionsFor(p);
-      if (options.isEmpty) continue;
+    for (final p in await repo.getAllProviders()) {
       final key = await repo.getKey(p.id);
       groups.add((
         provider: p,
-        options: options,
+        options: ModelResolver.optionsFor(p),
         hasKey: key != null && key.isNotEmpty,
       ));
     }
-    if (groups.isEmpty || !mounted) return;
+    return groups;
+  }
+
+  Future<void> _pickModel() async {
+    if (_sending) return;
+    final groups = await _providerGroups();
+    if (!mounted) return;
+    if (groups.isEmpty) {
+      await const AssistantProvidersRoute().push(context);
+      await _refreshReady();
+      return;
+    }
     final choice = await showGlobalModelPicker(
       context,
       groups: groups,
       providerId: _provider?.id ?? '',
       modelId: _modelId,
       level: _reasoningLevel,
+      catalogUpdatedAt: getIt<LlmPresetRepository>().cachedAt,
+      onDownloadCatalog: () async {
+        await getIt<LlmPresetRepository>().refresh();
+        return _providerGroups();
+      },
+      onManageProviders: () async {
+        await const AssistantProvidersRoute().push(context);
+        await _refreshReady();
+      },
+      onFillKey: (provider) => _fillKey(provider.id),
     );
     if (choice == null || !mounted) return;
+    if (!await _confirmSwitch(choice) || !mounted) return;
+    final level = choice.level;
     final session = _session;
     if (session != null) {
       final updated = session.copyWith(
         providerId: choice.providerId,
         model: choice.modelId,
-        reasoningEffort: choice.level,
+        reasoningEffort: level ?? '',
       );
       await getIt<ChatRepository>().upsertSession(updated);
       if (!mounted) return;
       setState(() => _session = updated);
     }
+    final levelChanged = level != _reasoningLevel;
     setState(() {
       _stagedProviderId = choice.providerId;
       _modelId = choice.modelId;
-      _reasoningLevel = choice.level;
+      _reasoningLevel = level;
     });
-    MoodiaryKVs.assistantReasoningEffort.set(choice.level);
+    MoodiaryKVs.assistantLastProviderId.set(choice.providerId);
+    MoodiaryKVs.assistantLastModelId.set(choice.modelId);
+    if (levelChanged) {
+      if (level == null) {
+        MoodiaryKVs.assistantReasoningEffort.remove();
+      } else {
+        MoodiaryKVs.assistantReasoningEffort.set(level);
+      }
+    }
+    await _refreshReady();
+    unawaited(_maybeCompact());
+  }
+
+  Future<void> _fillKey(String providerId) async {
+    await AssistantProviderEditRoute(id: providerId).push(context);
     await _refreshReady();
   }
+
+  Future<bool> _confirmSwitch(GlobalModelChoice choice) async {
+    if (choice.providerId == _provider?.id && choice.modelId == _modelId) {
+      return true;
+    }
+    final provider = await getIt<LlmProviderRepository>().getProvider(
+      choice.providerId,
+    );
+    if (provider == null || !mounted) return true;
+    final resolved = ModelResolver.resolve(provider, choice.modelId);
+    final caps = _capabilities(provider, resolved.preset);
+    final l10n = context.l10n;
+    final notes = <String>[];
+    if (!caps.attachment) {
+      final images = _chat.items
+          .whereType<AssistantTurn>()
+          .where((m) => m.imageName.isNotEmpty)
+          .length;
+      if (images > 0) {
+        notes.add(l10n.assistant.modelSwitchNoImages(count: images));
+      }
+      if (_pendingImageName != null) {
+        notes.add(l10n.assistant.modelSwitchDropPending);
+      }
+    }
+    final limit =
+        resolved.preset?.contextLimit ?? assistantDefaultContextBudget;
+    if (_lastTurnInputTokens > limit * assistantCompactionTriggerRatio) {
+      notes.add(l10n.assistant.modelSwitchSmallerContext);
+    }
+    if (notes.isEmpty) return true;
+    return MAlert.confirm(
+      context,
+      icon: LucideIcons.cpu,
+      title: l10n.assistant.modelSwitchTitle,
+      message: notes.join('\n'),
+      confirmLabel: l10n.assistant.modelSwitchConfirm,
+    );
+  }
+
+  Future<void> _compactNow() async {
+    final session = _session;
+    if (_sending || session == null) return;
+    final l10n = context.l10n;
+    final pending = _compaction.hasPending(
+      session: session,
+      orderedMessages: _compactionMessages(),
+    );
+    if (!pending) {
+      toast.info(message: l10n.assistant.compactNothing);
+      return;
+    }
+    final result = await _maybeCompact(force: true);
+    if (!mounted) return;
+    if (result == null) {
+      toast.error(message: l10n.assistant.compactFailed);
+    } else {
+      toast.success(message: l10n.assistant.compactedNow);
+    }
+  }
+
+  void _onConversationAction(_ConversationAction action) {
+    switch (action) {
+      case .info:
+        _showPresetInfo();
+      case .preset:
+        unawaited(_pickPreset());
+      case .compact:
+        unawaited(_compactNow());
+      case .settings:
+        unawaited(_openSettings());
+    }
+  }
+
+  String get _effectiveLevel => effectiveReasoningLevel(
+    stored: _reasoningLevel,
+    levels: _reasoningLevels,
+  );
 
   Future<void> _loadSessionById(String id) async {
     final session = await getIt<ChatRepository>().getSession(id);
@@ -341,7 +496,9 @@ class _AssistantPageState extends State<AssistantPage> {
     _turnWidgets.clear();
     setState(() {
       _session = session;
-      _reasoningLevel = session.reasoningEffort;
+      _reasoningLevel = session.reasoningEffort.isEmpty
+          ? MoodiaryKVs.assistantReasoningEffort.get()
+          : session.reasoningEffort;
       _pendingImageName = null;
       _sending = false;
     });
@@ -398,7 +555,7 @@ class _AssistantPageState extends State<AssistantPage> {
     final session = ChatSession.create(
       providerId: provider.id,
       model: _modelId,
-      reasoningEffort: _reasoningLevel,
+      reasoningEffort: _reasoningLevel ?? '',
       agentPresetId: _stagedPresetId.isEmpty ? null : _stagedPresetId,
       personaSnapshot: _stagedPresetId.isEmpty ? null : persona,
       toolsSnapshot: _stagedPresetId.isEmpty ? null : tools,
@@ -495,9 +652,7 @@ class _AssistantPageState extends State<AssistantPage> {
       maxTokens: _maxTokens,
       history: history,
       reasoning: resolveReasoning(
-        level: _reasoningLevels.contains(_reasoningLevel)
-            ? _reasoningLevel
-            : '',
+        level: _effectiveLevel,
         model: _activeModel,
         maxTokens: _maxTokens,
       ),
@@ -526,8 +681,9 @@ class _AssistantPageState extends State<AssistantPage> {
     _staleReplyIds = [];
 
     final base = DateTime.timestamp();
+    final cited = _citedDiaryId;
     final userMsg = AssistantTurn.user(
-      text,
+      cited == null ? text : citeDiary(text, cited),
       imageName: imageName ?? '',
       createdAt: base,
     );
@@ -536,6 +692,7 @@ class _AssistantPageState extends State<AssistantPage> {
     setState(() {
       _sending = true;
       _pendingImageName = null;
+      _citedDiaryId = null;
     });
 
     await _generate(
@@ -578,7 +735,7 @@ class _AssistantPageState extends State<AssistantPage> {
 
     await _generate(
       gen: gen,
-      sessionSeedText: userMsg.text,
+      sessionSeedText: splitDiaryCitation(userMsg.text).text,
       userMessage: userMsg,
       placeholderAt: .timestamp(),
     );
@@ -606,18 +763,29 @@ class _AssistantPageState extends State<AssistantPage> {
     }
     final toolsActive =
         _canUseTools && (allowedTools == null || allowedTools.isNotEmpty);
-    final memories = await getIt<MemoryRepository>().getRecent(
-      memoryInjectionLimit,
-    );
+    final memoryReachable =
+        toolsActive &&
+        (allowedTools == null || allowedTools.contains(AssistantTool.recallMemory.id));
+    final memoryRepo = getIt<MemoryRepository>();
+    final profile = memoryReachable
+        ? await memoryRepo.profileFacts(limit: memoryProfileLimit)
+        : const <MemoryEntry>[];
+    final factCount = memoryReachable ? await memoryRepo.count() : null;
+    final fallback = toolsActive
+        ? const <MemoryEntry>[]
+        : await memoryRepo.getRecent(memoryToollessFallbackLimit);
     if (!mounted || gen != _generation) return;
     final systemPrompt = buildStableSystemPrompt(
       persona: persona,
       toolsEnabled: toolsActive,
+      profileFacts: [for (final m in profile) m.text],
     );
-    final volatilePrefix = buildVolatilePrompt(
+    final volatilePrefix = buildTurnContext(
       localeTag: localeTag,
       nowLocal: .now(),
-      memories: [for (final m in memories) '(${m.category}) ${m.text}'],
+      factCount: factCount,
+      semanticSearch: AssistantToolRegistry.semanticAvailable,
+      fallbackFacts: [for (final m in fallback) '(${m.category}) ${m.text}'],
     );
 
     _resetThinkingState();
@@ -626,6 +794,7 @@ class _AssistantPageState extends State<AssistantPage> {
       streaming: true,
       createdAt: placeholderAt,
       model: _modelId,
+      providerId: _provider?.id ?? '',
     );
     _chat.beginStreaming(placeholder);
     _streamingMessage = placeholder;
@@ -721,7 +890,9 @@ class _AssistantPageState extends State<AssistantPage> {
     for (final m in _chat.items) {
       if (m is! AssistantTurn) continue;
       final hasImage = m.imageName.isNotEmpty;
-      var content = m.fromUser ? m.text : _withToolRecord(m);
+      var content = m.fromUser
+          ? diaryCitationForModel(m.text)
+          : _withToolRecord(m);
       if (hasImage && !allowImages) {
         content = content.isEmpty
             ? assistantImagePlaceholder
@@ -778,33 +949,24 @@ class _AssistantPageState extends State<AssistantPage> {
     return turn.text.isEmpty ? record : '$record\n\n${turn.text}';
   }
 
-  Future<ChatSession?> _maybeCompact() async {
+  Future<ChatSession?> _maybeCompact({bool force = false}) async {
     final session = _session;
-    if (session == null || _lastTurnInputTokens <= 0) return null;
+    if (session == null || (!force && _lastTurnInputTokens <= 0)) return null;
     final provider = _provider;
     if (provider == null) return null;
     final key = await getIt<LlmProviderRepository>().getKey(provider.id);
     if (key == null || key.isEmpty) return null;
     if (!mounted || _session?.id != session.id) return null;
 
-    final ordered = <CompactionMessage>[
-      for (final m in _chat.items)
-        if (m is AssistantTurn && !m.isEmpty)
-          (
-            id: m.id,
-            fromUser: m.fromUser,
-            text: m.text.isEmpty ? assistantImagePlaceholder : m.text,
-          ),
-    ];
-
     final updated = await _compaction.maybeCompact(
       session: session,
-      orderedMessages: ordered,
+      orderedMessages: _compactionMessages(),
       lastInputTokens: _lastTurnInputTokens,
       contextLimit: _contextLimit,
       provider: provider,
       model: _modelId,
       apiKey: key,
+      force: force,
     );
     final current = _session;
     if (updated == null || !mounted || current?.id != session.id) return null;
@@ -820,6 +982,16 @@ class _AssistantPageState extends State<AssistantPage> {
     _syncCompactionNotice();
     return merged;
   }
+
+  List<CompactionMessage> _compactionMessages() => [
+    for (final m in _chat.items)
+      if (m is AssistantTurn && !m.isEmpty)
+        (
+          id: m.id,
+          fromUser: m.fromUser,
+          text: m.text.isEmpty ? assistantImagePlaceholder : m.text,
+        ),
+  ];
 
   void _syncCompactionNotice() {
     _chat.batch(() {
@@ -1011,11 +1183,18 @@ class _AssistantPageState extends State<AssistantPage> {
     setState(() => _pendingImageName = null);
   }
 
+  void _removeCitation() {
+    setState(() => _citedDiaryId = null);
+  }
+
   void _dismissComposer() {
     if (_inputFocusNode.hasFocus) _inputFocusNode.unfocus();
   }
 
   Widget _buildChat() {
+    if (_session == null && _chat.items.isEmpty) {
+      return _EmptyConversation(bottomInset: _composerHeight);
+    }
     return AssistantChatList(
       key: _listKey,
       controller: _chat,
@@ -1023,6 +1202,7 @@ class _AssistantPageState extends State<AssistantPage> {
       itemBuilder: _buildItem,
       scrollToBottomBuilder: _buildScrollToBottom,
       onPointerDown: _dismissComposer,
+      itemGap: _kTurnGap,
       bottomPadding: _composerHeight + 8,
     );
   }
@@ -1034,9 +1214,14 @@ class _AssistantPageState extends State<AssistantPage> {
         summary: _session?.compactedSummary ?? '',
         onRestore: _restoreFullHistory,
       ),
-      AssistantModelSwitchNotice(:final model) => _ModelSwitchChip(
-        model: model,
-      ),
+      AssistantModelSwitchNotice(:final model, :final providerId) =>
+        _ModelSwitchChip(
+          model: switch (_providers[providerId]) {
+            final p? =>
+              '${p.name} · ${ModelResolver.resolve(p, model).preset?.name ?? model}',
+            null => model,
+          },
+        ),
     };
   }
 
@@ -1045,18 +1230,24 @@ class _AssistantPageState extends State<AssistantPage> {
     if (!isLast && !turn.streaming) {
       final cached = _turnWidgets[turn.id];
       if (cached != null && identical(cached.turn, turn)) return cached.widget;
-      final built = _composeTurn(turn, live: false);
+      final built = _composeTurn(turn, live: false, last: false);
       _turnWidgets[turn.id] = (turn: turn, widget: built);
       return built;
     }
-    return _composeTurn(turn, live: !_sending && isLast);
+    return _composeTurn(turn, live: !_sending && isLast, last: isLast);
   }
 
-  Widget _composeTurn(AssistantTurn turn, {required bool live}) {
+  Widget _composeTurn(
+    AssistantTurn turn, {
+    required bool live,
+    required bool last,
+  }) {
     if (turn.fromUser) {
+      final (:diaryId, :text) = splitDiaryCitation(turn.text);
       return _UserBubble(
-        text: turn.text,
+        text: text,
         imageName: turn.imageName,
+        citedDiaryId: diaryId,
         onRetry: live ? _regenerate : null,
       );
     }
@@ -1068,7 +1259,9 @@ class _AssistantPageState extends State<AssistantPage> {
       inputTokens: turn.inputTokens,
       outputTokens: turn.outputTokens,
       toolCalls: turn.toolCalls,
+      diaryCitations: turn.diaryCitations,
       streaming: turn.streaming,
+      showUsage: last,
       onRegenerate: (live && _hasUserTurn) ? _regenerate : null,
     );
   }
@@ -1111,11 +1304,14 @@ class _AssistantPageState extends State<AssistantPage> {
       onFullscreen: _openFullscreenComposer,
       pendingImageName: _pendingImageName,
       onRemoveImage: _removePendingImage,
+      citedDiaryId: _citedDiaryId,
+      onRemoveCitation: _removeCitation,
+      modelChip: _resolved ? _buildModelChip(context.l10n) : null,
     );
 
     return Column(
       children: [
-        if (!_ready) _NotConfiguredBanner(onTap: _openSettings),
+        ?_statusBanner(context.l10n),
         Expanded(
           child: Stack(
             children: [
@@ -1138,10 +1334,36 @@ class _AssistantPageState extends State<AssistantPage> {
     );
   }
 
+  Widget? _statusBanner(Translations l10n) {
+    if (!_resolved) return null;
+    final provider = _provider;
+    if (provider == null) {
+      return _StatusBanner(
+        text: l10n.assistant.notConfiguredBanner,
+        error: true,
+        onTap: _openSettings,
+      );
+    }
+    if (!_ready) {
+      return _StatusBanner(
+        text: l10n.assistant.providerKeyMissingBanner(name: provider.name),
+        error: true,
+        onTap: () => _fillKey(provider.id),
+      );
+    }
+    if (_providerMissing) {
+      return _StatusBanner(
+        text: l10n.assistant.providerMissingBanner(name: provider.name),
+        error: false,
+        onTap: _sending ? null : _pickModel,
+      );
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final modelLabel = _activeModel?.name ?? _modelId;
 
     final Widget chatArea = !_disclaimerAccepted
         ? _DisclaimerGate(onReview: _showDisclaimer)
@@ -1150,58 +1372,64 @@ class _AssistantPageState extends State<AssistantPage> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        toolbarHeight: _toolbarHeight(context),
-        titleSpacing: NavigationToolbar.kMiddleSpacing - _kTitleInset,
-        title: Column(
-          mainAxisSize: .min,
-          crossAxisAlignment: .start,
-          children: [
-            Padding(
-              padding: const .symmetric(horizontal: _kTitleInset),
-              child: Text(
-                _titleText(l10n),
-                maxLines: 1,
-                overflow: .ellipsis,
-                style:
-                    context.theme.typography.titleMedium.emphasized.onSurface,
+        title: Text(_titleText(l10n), maxLines: 1, overflow: .ellipsis),
+        actions: [
+          MMenuButton<_ConversationAction>(
+            tooltip: l10n.common.more,
+            entries: [
+              MMenuEntry(
+                value: .info,
+                label: l10n.assistant.menuConversationInfo,
+                icon: LucideIcons.info,
+              ),
+              if (_session == null)
+                MMenuEntry(
+                  value: .preset,
+                  label: l10n.assistant.menuPickPreset,
+                  icon: LucideIcons.sparkles,
+                  enabled: !_sending,
+                ),
+              MMenuEntry(
+                value: .compact,
+                label: l10n.assistant.menuCompactNow,
+                icon: LucideIcons.foldVertical,
+                enabled: _session != null && !_sending,
+              ),
+              MMenuEntry(
+                value: .settings,
+                label: l10n.assistant.menuSettings,
+                icon: LucideIcons.settings2,
+              ),
+            ],
+            onSelected: _onConversationAction,
+            child: Padding(
+              padding: const .all(12),
+              child: Icon(
+                LucideIcons.ellipsisVertical,
+                color: context.theme.colors.onSurfaceVariant,
               ),
             ),
-            Row(
-              mainAxisSize: .min,
-              children: [
-                Flexible(
-                  child: _PresetChip(
-                    label:
-                        _presetName ??
-                        (_presetMissing
-                            ? l10n.assistant.presetDeleted
-                            : l10n.assistant.presetBuiltinName),
-                    staged: _session == null,
-                    onTap: _sending
-                        ? null
-                        : (_session == null ? _pickPreset : _showPresetInfo),
-                  ),
-                ),
-                if (modelLabel.isNotEmpty) ...[
-                  Text(
-                    '·',
-                    style: context.theme.typography.labelSmall.onSurfaceVariant,
-                  ),
-                  Flexible(
-                    flex: 2,
-                    child: _ModelChip(
-                      modelLabel: modelLabel,
-                      reasoningLevel: _reasoningLevel,
-                      onTap: _sending ? null : _pickModel,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(width: 4),
+        ],
       ),
       body: chatArea,
+    );
+  }
+
+  Widget _buildModelChip(Translations l10n) {
+    return _ModelChip(
+      provider: _provider,
+      providerMissing: _providerMissing,
+      modelLabel: _activeModel?.name ?? _modelId,
+      modelMissing: _modelMissing,
+      catalogMissing: _catalogMissing,
+      levelLabel: _reasoningLevels.isEmpty
+          ? ''
+          : _effectiveLevel.isEmpty
+          ? l10n.assistant.reasoningOff
+          : reasoningLevelLabel(_effectiveLevel, l10n),
+      onTap: _sending ? null : _pickModel,
     );
   }
 
@@ -1339,28 +1567,165 @@ class _DisclaimerGate extends StatelessWidget {
   }
 }
 
-class _NotConfiguredBanner extends StatelessWidget {
-  final VoidCallback onTap;
+class _ModelChip extends StatelessWidget {
+  final LlmProvider? provider;
+  final bool providerMissing;
+  final String modelLabel;
+  final bool modelMissing;
+  final bool catalogMissing;
+  final String levelLabel;
+  final VoidCallback? onTap;
 
-  const _NotConfiguredBanner({required this.onTap});
+  const _ModelChip({
+    required this.provider,
+    required this.providerMissing,
+    required this.modelLabel,
+    required this.modelMissing,
+    required this.catalogMissing,
+    required this.levelLabel,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = context.theme.colors;
+    final typography = context.theme.typography;
+    final provider = this.provider;
+    final broken = modelLabel.isEmpty || modelMissing;
+
+    return MInkWell.fade(
+      onTap: onTap,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: _kModelChipMinHeight),
+        child: Padding(
+          padding: const .symmetric(horizontal: 8),
+          child: Row(
+            mainAxisSize: .min,
+            children: [
+              if (providerMissing)
+                Icon(LucideIcons.triangleAlert, size: 16, color: scheme.error)
+              else if (provider != null)
+                ProviderLogo(
+                  logoUrl: ProviderLogo.urlOf(provider.presetId),
+                  name: provider.name,
+                  size: 18,
+                ),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  modelLabel.isEmpty
+                      ? l10n.assistant.historyModelUnset
+                      : modelLabel,
+                  maxLines: 1,
+                  overflow: .ellipsis,
+                  style: broken
+                      ? typography.labelSmall.error
+                      : typography.labelSmall.onSurface,
+                ),
+              ),
+              if (modelMissing) ...[
+                const SizedBox(width: 6),
+                Text(
+                  l10n.assistant.modelNotInCatalog,
+                  style: typography.labelSmall.error,
+                ),
+              ] else if (catalogMissing) ...[
+                const SizedBox(width: 6),
+                Icon(
+                  LucideIcons.cloudOff,
+                  size: 14,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ],
+              if (levelLabel.isNotEmpty) ...[
+                const SizedBox(width: 6),
+                Text(
+                  '· $levelLabel',
+                  style: typography.labelSmall.onSurfaceVariant,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyConversation extends StatelessWidget {
+  final double bottomInset;
+
+  const _EmptyConversation({required this.bottomInset});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final hour = DateTime.now().hour;
+    final greeting = hour < 5 || hour >= 18
+        ? l10n.assistant.emptyGreetingEvening
+        : hour < 11
+        ? l10n.assistant.emptyGreetingMorning
+        : l10n.assistant.emptyGreetingAfternoon;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16, 16, 16, bottomInset),
+      child: Center(
+        child: Column(
+          mainAxisSize: .min,
+          children: [
+            Text(
+              greeting,
+              style: context.theme.typography.titleLarge.emphasized.onSurface,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              l10n.assistant.emptySubtitle,
+              textAlign: .center,
+              style: context.theme.typography.bodyMedium.onSurfaceVariant,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusBanner extends StatelessWidget {
+  final String text;
+  final bool error;
+  final VoidCallback? onTap;
+
+  const _StatusBanner({
+    required this.text,
+    required this.error,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
+    final typography = context.theme.typography.bodyMedium;
     return Material(
-      color: scheme.errorContainer,
+      color: error ? scheme.errorContainer : scheme.secondaryContainer,
       child: MInkWell(
         onTap: onTap,
         child: Padding(
           padding: const .all(12),
           child: Row(
             children: [
-              Icon(LucideIcons.triangleAlert, color: scheme.onErrorContainer),
+              Icon(
+                LucideIcons.triangleAlert,
+                color: error
+                    ? scheme.onErrorContainer
+                    : scheme.onSecondaryContainer,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  context.l10n.assistant.notConfiguredBanner,
-                  style: context.theme.typography.bodyMedium.onErrorContainer,
+                  text,
+                  style: error
+                      ? typography.onErrorContainer
+                      : typography.onSecondaryContainer,
                 ),
               ),
             ],
@@ -1382,6 +1747,9 @@ class _AssistantComposer extends StatefulWidget {
   final VoidCallback onFullscreen;
   final String? pendingImageName;
   final VoidCallback onRemoveImage;
+  final String? citedDiaryId;
+  final VoidCallback onRemoveCitation;
+  final Widget? modelChip;
 
   const _AssistantComposer({
     required this.controller,
@@ -1393,6 +1761,9 @@ class _AssistantComposer extends StatefulWidget {
     required this.onFullscreen,
     required this.pendingImageName,
     required this.onRemoveImage,
+    required this.citedDiaryId,
+    required this.onRemoveCitation,
+    required this.modelChip,
   });
 
   @override
@@ -1429,6 +1800,15 @@ class _AssistantComposerState extends State<_AssistantComposer> {
                 mainAxisSize: .min,
                 crossAxisAlignment: .stretch,
                 children: [
+                  if (widget.citedDiaryId case final cited?)
+                    Padding(
+                      padding: const .fromLTRB(8, 6, 8, 2),
+                      child: DiaryCitations(
+                        ids: [cited],
+                        raised: true,
+                        onRemove: widget.onRemoveCitation,
+                      ),
+                    ),
                   if (widget.pendingImageName != null)
                     _ComposerImagePreview(
                       imageName: widget.pendingImageName!,
@@ -1464,8 +1844,7 @@ class _AssistantComposerState extends State<_AssistantComposer> {
                       if (widget.onSendImage case final onSendImage?)
                         Tooltip(
                           message: l10n.assistant.toolSendImage,
-                          child: MInkWell(
-                            shape: const CircleBorder(),
+                          child: MInkWell.fade(
                             onTap: widget.sending ? null : onSendImage,
                             child: SizedBox.square(
                               dimension: _kComposerControlSize,
@@ -1482,49 +1861,54 @@ class _AssistantComposerState extends State<_AssistantComposer> {
                         )
                       else
                         const SizedBox.shrink(),
-                      Row(
-                        mainAxisSize: .min,
-                        children: [
-                          if (_overflowing) ...[
-                            Tooltip(
-                              message: l10n.assistant.composerFullscreen,
-                              child: MInkWell(
-                                shape: const CircleBorder(),
-                                onTap: widget.onFullscreen,
-                                child: SizedBox.square(
-                                  dimension: _kComposerControlSize,
-                                  child: Icon(
-                                    LucideIcons.maximize2,
-                                    color: scheme.onSurfaceVariant,
+                      Expanded(
+                        child: Row(
+                          mainAxisAlignment: .end,
+                          children: [
+                            if (_overflowing) ...[
+                              Tooltip(
+                                message: l10n.assistant.composerFullscreen,
+                                child: MInkWell.fade(
+                                  onTap: widget.onFullscreen,
+                                  child: SizedBox.square(
+                                    dimension: _kComposerControlSize,
+                                    child: Icon(
+                                      LucideIcons.maximize2,
+                                      color: scheme.onSurfaceVariant,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 4),
-                          ],
-                          ValueListenableBuilder<TextEditingValue>(
-                            valueListenable: widget.controller,
-                            builder: (context, value, _) {
-                              if (widget.sending) {
+                              const SizedBox(width: 4),
+                            ],
+                            if (widget.modelChip case final chip?) ...[
+                              Flexible(child: chip),
+                              const SizedBox(width: 8),
+                            ],
+                            ValueListenableBuilder<TextEditingValue>(
+                              valueListenable: widget.controller,
+                              builder: (context, value, _) {
+                                if (widget.sending) {
+                                  return MCircleButton(
+                                    tooltip: l10n.assistant.stop,
+                                    onPressed: widget.onStop,
+                                    size: _kComposerControlSize,
+                                    icon: const Icon(LucideIcons.square),
+                                  );
+                                }
+                                final canSend =
+                                    value.text.trim().isNotEmpty ||
+                                    widget.pendingImageName != null;
                                 return MCircleButton(
-                                  tooltip: l10n.assistant.stop,
-                                  onPressed: widget.onStop,
+                                  tooltip: l10n.assistant.send,
+                                  onPressed: canSend ? widget.onSend : null,
                                   size: _kComposerControlSize,
-                                  icon: const Icon(LucideIcons.square),
+                                  icon: const Icon(LucideIcons.arrowUp),
                                 );
-                              }
-                              final canSend =
-                                  value.text.trim().isNotEmpty ||
-                                  widget.pendingImageName != null;
-                              return MCircleButton(
-                                tooltip: l10n.assistant.send,
-                                onPressed: canSend ? widget.onSend : null,
-                                size: _kComposerControlSize,
-                                icon: const Icon(LucideIcons.arrowUp),
-                              );
-                            },
-                          ),
-                        ],
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -1599,106 +1983,6 @@ class _ScrollToBottomButton extends StatelessWidget {
       size: 36,
       elevated: true,
       icon: const Icon(LucideIcons.chevronDown),
-    );
-  }
-}
-
-class _PresetChip extends StatelessWidget {
-  final String label;
-
-  final bool staged;
-
-  final VoidCallback? onTap;
-
-  const _PresetChip({
-    required this.label,
-    required this.staged,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final typography = context.theme.typography;
-    final content = Row(
-      mainAxisSize: .min,
-      children: [
-        Flexible(
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: .ellipsis,
-            style: typography.labelSmall.onSurfaceVariant,
-          ),
-        ),
-        if (staged && onTap != null) ...[
-          const SizedBox(width: 2),
-          Icon(
-            LucideIcons.chevronDown,
-            size: 14,
-            color: context.theme.colors.onSurfaceVariant,
-          ),
-        ],
-      ],
-    );
-    const inset = EdgeInsets.symmetric(horizontal: _kTitleInset, vertical: 2);
-    if (onTap == null) return Padding(padding: inset, child: content);
-    return MInkWell(
-      shape: const StadiumBorder(),
-      onTap: onTap,
-      child: Padding(padding: inset, child: content),
-    );
-  }
-}
-
-class _ModelChip extends StatelessWidget {
-  final String modelLabel;
-  final String reasoningLevel;
-
-  final VoidCallback? onTap;
-
-  const _ModelChip({
-    required this.modelLabel,
-    required this.reasoningLevel,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final locked = onTap == null;
-    final typography = context.theme.typography;
-
-    final label = Row(
-      mainAxisSize: .min,
-      children: [
-        Flexible(
-          child: Text(
-            modelLabel,
-            maxLines: 1,
-            overflow: .ellipsis,
-            style: typography.labelSmall.onSurfaceVariant,
-          ),
-        ),
-        if (reasoningLevel.isNotEmpty) ...[
-          const SizedBox(width: 4),
-          Text(reasoningLevel, style: typography.labelSmall.onSurfaceVariant),
-        ],
-        if (!locked) ...[
-          const SizedBox(width: 2),
-          Icon(
-            LucideIcons.chevronDown,
-            size: 14,
-            color: context.theme.colors.onSurfaceVariant,
-          ),
-        ],
-      ],
-    );
-
-    const inset = EdgeInsets.symmetric(horizontal: _kTitleInset, vertical: 2);
-    if (locked) return Padding(padding: inset, child: label);
-    return MInkWell(
-      shape: const StadiumBorder(),
-      onTap: onTap,
-      child: Padding(padding: inset, child: label),
     );
   }
 }
@@ -1784,9 +2068,15 @@ Widget _brokenImage(ColorScheme scheme, double size) => Container(
 class _UserBubble extends StatelessWidget {
   final String text;
   final String imageName;
+  final String? citedDiaryId;
   final VoidCallback? onRetry;
 
-  const _UserBubble({required this.text, this.imageName = '', this.onRetry});
+  const _UserBubble({
+    required this.text,
+    this.imageName = '',
+    this.citedDiaryId,
+    this.onRetry,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1796,6 +2086,15 @@ class _UserBubble extends StatelessWidget {
     final hasText = text.isNotEmpty;
 
     final parts = <Widget>[];
+    if (citedDiaryId case final cited?) {
+      parts.add(
+        ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxWidth, minWidth: 180),
+          child: DiaryCitations(ids: [cited]),
+        ),
+      );
+      if (hasImage || hasText) parts.add(const SizedBox(height: 6));
+    }
     if (hasImage) {
       final path = AppFiles.getRealPath('image', imageName);
       final limit = BoxConstraints(maxWidth: maxWidth, maxHeight: 260);
@@ -1826,7 +2125,7 @@ class _UserBubble extends StatelessWidget {
           constraints: BoxConstraints(maxWidth: maxWidth),
           padding: const .symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: scheme.primaryContainer,
+            color: scheme.surfaceContainerHigh,
             borderRadius: const .only(
               topLeft: .circular(16),
               topRight: .circular(16),
@@ -1836,7 +2135,7 @@ class _UserBubble extends StatelessWidget {
           ),
           child: SelectableText(
             text,
-            style: context.theme.typography.bodyMedium.onPrimaryContainer,
+            style: context.theme.typography.bodyMedium.onSurface,
           ),
         ),
       );
@@ -1894,7 +2193,9 @@ class _AssistantBubble extends StatelessWidget {
   final int inputTokens;
   final int outputTokens;
   final List<AssistantToolCall> toolCalls;
+  final List<DiaryCitation> diaryCitations;
   final bool streaming;
+  final bool showUsage;
   final VoidCallback? onRegenerate;
 
   const _AssistantBubble({
@@ -1905,9 +2206,26 @@ class _AssistantBubble extends StatelessWidget {
     required this.inputTokens,
     required this.outputTokens,
     required this.toolCalls,
+    required this.diaryCitations,
     required this.streaming,
+    required this.showUsage,
     this.onRegenerate,
   });
+
+  String _citationLabel(Translations l10n, DiaryCitationKind kind) =>
+      switch (kind) {
+        .read => l10n.assistant.citationRead,
+        .created => l10n.assistant.citationCreated,
+        .updated => l10n.assistant.citationUpdated,
+        .deleted => l10n.assistant.citationDeleted,
+      };
+
+  IconData _citationIcon(DiaryCitationKind kind) => switch (kind) {
+    .read => LucideIcons.bookOpenText,
+    .created => LucideIcons.filePlus2,
+    .updated => LucideIcons.filePenLine,
+    .deleted => LucideIcons.trash2,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -1958,7 +2276,21 @@ class _AssistantBubble extends StatelessWidget {
                   codeBuilder: _codeBlock,
                 ),
         ),
-      for (final (i, call) in toolCalls.indexed) _toolNotice(context, call, i),
+      for (final (i, call) in toolCalls.indexed)
+        if (!citesDiaries(call)) _toolNotice(context, call, i),
+      for (final kind in DiaryCitationKind.values)
+        if (diaryCitations.where((c) => c.kind == kind).toList()
+            case final group when group.isNotEmpty)
+          AssistantNotice(
+            key: ValueKey('citations-${kind.name}'),
+            stateKey: 'citations-${kind.name}',
+            icon: _citationIcon(kind),
+            kind: _citationLabel(l10n, kind),
+            summary: l10n.assistant.citationCount(count: group.length),
+            detailPadding: const .fromLTRB(0, 2, 0, 6),
+            detail: (context) =>
+                DiaryCitations(ids: [for (final c in group) c.id]),
+          ),
       ?bubble,
     ];
 
@@ -1972,7 +2304,7 @@ class _AssistantBubble extends StatelessWidget {
       );
     }
 
-    final hasTokens = inputTokens > 0 || outputTokens > 0;
+    final hasTokens = showUsage && (inputTokens > 0 || outputTokens > 0);
     return _fullWidth(
       Column(
         crossAxisAlignment: .start,
@@ -2080,8 +2412,7 @@ class _BubbleActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
-    return MInkWell(
-      borderRadius: .circular(8),
+    return MInkWell.fade(
       onTap: onTap,
       child: Padding(
         padding: const .symmetric(horizontal: 6, vertical: 4),
@@ -2108,10 +2439,7 @@ class AssistantSessionListPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.assistant.settingFunctionAIAssistant),
-        actions: const [_ActiveModelAction(), SizedBox(width: 4)],
-      ),
+      appBar: AppBar(title: Text(l10n.assistant.settingFunctionAIAssistant)),
       body: _SessionListView(
         onSelect: (session) => AssistantConversationRoute(
           sessionId: session.id,
@@ -2120,81 +2448,6 @@ class AssistantSessionListPage extends StatelessWidget {
         onDelete: (session) =>
             getIt<ChatRepository>().deleteSession(session.id),
         padding: .only(bottom: 8 + MediaQuery.paddingOf(context).bottom),
-      ),
-    );
-  }
-}
-
-class _ActiveModelAction extends StatefulWidget {
-  const _ActiveModelAction();
-
-  @override
-  State<_ActiveModelAction> createState() => _ActiveModelActionState();
-}
-
-class _ActiveModelActionState extends State<_ActiveModelAction> {
-  LlmProvider? _active;
-  bool _loaded = false;
-  StreamSubscription<void>? _sub;
-
-  @override
-  void initState() {
-    super.initState();
-    _sub = getIt<LlmProviderRepository>().providerEvents.listen((_) => _load());
-    _load();
-  }
-
-  @override
-  void dispose() {
-    _sub?.cancel();
-    super.dispose();
-  }
-
-  Future<void> _load() async {
-    final active = await getIt<LlmProviderRepository>().getActiveProvider();
-    if (!mounted) return;
-    setState(() {
-      _active = active;
-      _loaded = true;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (!_loaded) return const SizedBox.shrink();
-    final l10n = context.l10n;
-    final active = _active;
-    final typography = context.theme.typography;
-    return MInkWell(
-      shape: const StadiumBorder(),
-      onTap: () async {
-        await const AssistantSettingRoute().push(context);
-        await _load();
-      },
-      child: Padding(
-        padding: const .symmetric(horizontal: 8, vertical: 8),
-        child: Row(
-          mainAxisSize: .min,
-          children: [
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 150),
-              child: Text(
-                active?.defaultModel ?? l10n.assistant.historyModelUnset,
-                maxLines: 1,
-                overflow: .ellipsis,
-                style: active == null
-                    ? typography.labelMedium.error
-                    : typography.labelMedium.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(width: 2),
-            Icon(
-              LucideIcons.chevronRight,
-              size: 15,
-              color: context.theme.colors.onSurfaceVariant,
-            ),
-          ],
-        ),
       ),
     );
   }

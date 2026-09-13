@@ -206,6 +206,10 @@ class AssistantChatList extends StatefulWidget {
 
   final double bottomPadding;
 
+  final double topPadding;
+
+  final double itemGap;
+
   final Widget Function(BuildContext context, bool visible, VoidCallback onTap)
   scrollToBottomBuilder;
 
@@ -221,6 +225,8 @@ class AssistantChatList extends StatefulWidget {
     required this.scrollController,
     required this.scrollToBottomBuilder,
     this.bottomPadding = 8,
+    this.topPadding = _kTopPadding,
+    this.itemGap = _kItemGap,
     this.onPointerDown,
   });
 
@@ -381,7 +387,7 @@ class AssistantChatListState extends State<AssistantChatList> {
     final content = _extents[_newestFirst[index].id];
     if (content == null) return null;
     final oldest = index == _newestFirst.length - 1;
-    return content + _kItemGap + (oldest ? _kTopPadding : 0);
+    return content + widget.itemGap + (oldest ? widget.topPadding : 0);
   }
 
   bool _measurable(AssistantChatItem item) =>
@@ -425,7 +431,9 @@ class AssistantChatListState extends State<AssistantChatList> {
         if (!_measurable(item)) continue;
         final oldest = index == _newestFirst.length - 1;
         _extents[item.id] =
-            child.size.height - _kItemGap - (oldest ? _kTopPadding : 0);
+            child.size.height -
+            widget.itemGap -
+            (oldest ? widget.topPadding : 0);
       }
     }
 
@@ -624,7 +632,7 @@ class AssistantChatListState extends State<AssistantChatList> {
     if (_indexById.containsKey(id)) {
       if (id == previous.last.id && id != _oldestId) {
         final px = _position?.pixels;
-        if (px != null) _requestSnap(px - _kTopPadding, fallback: false);
+        if (px != null) _requestSnap(px - widget.topPadding, fallback: false);
       }
       _scheduleMaintainCenter();
       return;
@@ -873,9 +881,9 @@ class AssistantChatListState extends State<AssistantChatList> {
         child: Padding(
           padding: EdgeInsets.fromLTRB(
             16,
-            oldest ? _kTopPadding : 0,
+            oldest ? widget.topPadding : 0,
             16,
-            _kItemGap,
+            widget.itemGap,
           ),
           child: item is AssistantTurn && item.streaming
               ? ValueListenableBuilder<AssistantTurn?>(

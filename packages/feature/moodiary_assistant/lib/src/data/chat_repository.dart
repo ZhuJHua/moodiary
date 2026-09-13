@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:drift/drift.dart';
 import 'package:injectable/injectable.dart';
+import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -19,6 +20,9 @@ class ChatRepository {
 
   Stream<void> get sessionEvents => _events.stream;
 
+  static List<String>? _migratedTools(List<String>? ids) =>
+      ids == null ? null : migrateAssistantToolIds(ids);
+
   static ChatSession _toSession(ChatSessionRow r) => ChatSession(
     id: r.id,
     title: r.title,
@@ -34,7 +38,7 @@ class ChatRepository {
     agentPresetId: r.agentPresetId,
     personaSnapshot: r.personaSnapshot,
     // null（不限）与 '[]'（一个都不挂）语义不同，不能塌成空列表。
-    toolsSnapshot: dbToStringListOrNull(r.toolsSnapshotJson),
+    toolsSnapshot: _migratedTools(dbToStringListOrNull(r.toolsSnapshotJson)),
   );
 
   static ChatSessionsCompanion _toSessionCompanion(ChatSession s) =>
@@ -70,6 +74,7 @@ class ChatRepository {
     inputTokens: r.inputTokens,
     outputTokens: r.outputTokens,
     model: r.model,
+    providerId: r.providerId,
     toolCalls: toolCalls,
   );
 
@@ -86,6 +91,7 @@ class ChatRepository {
         inputTokens: Value(m.inputTokens),
         outputTokens: Value(m.outputTokens),
         model: Value(m.model),
+        providerId: Value(m.providerId),
       );
 
   static AssistantToolCall _toToolCall(AssistantToolCallRow r) =>
@@ -144,6 +150,16 @@ class ChatRepository {
       _db.chatSessions,
     )..orderBy([(s) => OrderingTerm.desc(s.updatedAt)])).get();
     return [for (final r in rows) _toSession(r)];
+  }
+
+  Future<int> countSessionsByProvider(String providerId) async {
+    final count = _db.chatSessions.id.count();
+    final row =
+        await (_db.selectOnly(_db.chatSessions)
+              ..addColumns([count])
+              ..where(_db.chatSessions.providerId.equals(providerId)))
+            .getSingle();
+    return row.read(count) ?? 0;
   }
 
   Future<ChatSession?> getSession(String id) async {

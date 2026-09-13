@@ -80,6 +80,35 @@ void main() {
     });
   });
 
+  group('effectiveReasoningLevel', () {
+    const levels = ['low', 'medium', 'high'];
+
+    test('没设过 = 跟随模型，取目录第一档', () {
+      expect(effectiveReasoningLevel(stored: null, levels: levels), 'low');
+      expect(effectiveReasoningLevel(stored: '', levels: levels), 'low');
+    });
+
+    test('显式关闭什么都不发', () {
+      expect(
+        effectiveReasoningLevel(stored: reasoningOffValue, levels: levels),
+        '',
+      );
+    });
+
+    test('显式档位原样用', () {
+      expect(effectiveReasoningLevel(stored: 'high', levels: levels), 'high');
+    });
+
+    test('新模型不支持这一档时回落到自动档，而不是回落到关', () {
+      expect(effectiveReasoningLevel(stored: 'xhigh', levels: levels), 'low');
+    });
+
+    test('模型不可控推理时无论存了什么都不发', () {
+      expect(effectiveReasoningLevel(stored: 'high', levels: const []), '');
+      expect(effectiveReasoningLevel(stored: null, levels: const []), '');
+    });
+  });
+
   group('resolveReasoning', () {
     test('空档位 = 关，不注入任何参数', () {
       final r = resolveReasoning(level: '', model: _model(), maxTokens: 8192);

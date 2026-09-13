@@ -2,9 +2,7 @@ import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 enum AssistantTool {
-  queryDiaries('queryDiaries'),
-
-  semanticSearchDiaries('semanticSearchDiaries'),
+  searchDiaries('searchDiaries'),
 
   getDiary('getDiary'),
 
@@ -24,11 +22,9 @@ enum AssistantTool {
 
   deleteCategory('deleteCategory'),
 
-  listMemories('listMemories'),
+  recallMemory('recallMemory'),
 
   rememberFact('rememberFact'),
-
-  updateMemory('updateMemory'),
 
   forgetFact('forgetFact'),
 
@@ -54,8 +50,17 @@ const List<String> assistantBudgetLevels = ['low', 'medium', 'high'];
 
 const String assistantImagePlaceholder = '[image]';
 
-// 目录里 'none' 表示不思考，等价于我们的「关」
-const String _offEffortValue = 'none';
+// 目录里 'none' 表示不思考，也是我们「显式关闭」的存储值
+const String reasoningOffValue = 'none';
+
+String effectiveReasoningLevel({
+  required String? stored,
+  required List<String> levels,
+}) {
+  if (levels.isEmpty || stored == reasoningOffValue) return '';
+  if (stored == null || stored.isEmpty) return levels.first;
+  return levels.contains(stored) ? stored : levels.first;
+}
 
 List<String> reasoningLevelsFor(LlmModelPreset? model) {
   final controls = model?.reasoningOptions;
@@ -65,7 +70,7 @@ List<String> reasoningLevelsFor(LlmModelPreset? model) {
     if (c.type == ReasoningControlType.effort && c.values.isNotEmpty) {
       final levels = [
         for (final v in c.values)
-          if (v != _offEffortValue) v,
+          if (v != reasoningOffValue) v,
       ];
       if (levels.isNotEmpty) return levels;
     }
@@ -86,7 +91,7 @@ AssistantReasoning resolveReasoning({
   required LlmModelPreset? model,
   required int maxTokens,
 }) {
-  if (level.isEmpty || level == _offEffortValue) {
+  if (level.isEmpty || level == reasoningOffValue) {
     return const AssistantReasoning.off();
   }
   final controls = model?.reasoningOptions;
@@ -117,12 +122,34 @@ int _budgetFor(String level, ReasoningControl control, int maxTokens) {
   return (maxTokens ~/ fraction).clamp(min, max < min ? min : max);
 }
 
+const Map<String, String> renamedAssistantToolIds = {
+  'queryDiaries': 'searchDiaries',
+  'semanticSearchDiaries': 'searchDiaries',
+  'listMemories': 'recallMemory',
+  'updateMemory': 'rememberFact',
+};
+
+List<String> migrateAssistantToolIds(List<String> ids) {
+  final out = <String>[];
+  for (final id in ids) {
+    final mapped = renamedAssistantToolIds[id] ?? id;
+    if (!out.contains(mapped)) out.add(mapped);
+  }
+  return out;
+}
+
 const int personaMaxChars = 6000;
 
 // 空串 = 内置预设（哨兵值，也是 KV 默认值）
 const String builtinAgentPresetId = '';
 
-const int memoryInjectionLimit = 40;
+const int memoryProfileLimit = 6;
+
+const int memoryProfileMaxChars = 400;
+
+const int memoryProfileFactMaxChars = 120;
+
+const int memoryToollessFallbackLimit = 10;
 
 const double assistantCompactionTriggerRatio = 0.75;
 
@@ -214,6 +241,22 @@ You are a warm, grounded diary companion. You speak plainly and kindly, never cl
 - Notice patterns across entries and name them softly.
 - Offer, don't prescribe.''';
 
+const String _retrievalPolicyLayer = '''
+Memory and retrieval policy (all personas):
+- Between conversations you remember only the profile block below. Never state a saved fact you did not read there or recall here.
+- Before any claim about the user's past entries or moods, search the diaries. You cannot see them otherwise.
+- Call recallMemory when the user refers to an earlier conversation, asks what you remember, or when advice needs what you know. One recall per question; if empty, say so.
+- Never retrieve for greetings, thanks or small talk.
+- Retrieving is not surfacing. Mention a recalled fact or an entry only when it answers the question; never open a reply with what you remember.
+- Save a fact only when the user says something durable about themselves or asks you to. Never mine a diary or tool result. Never save health, beliefs, legal or financial details, whatever the persona says.''';
+
+const String _profileFraming = 'What you know about this user:';
+
+const String _profileClosing =
+    'Let these shape how you reply. Do not bring them up or list them unless '
+    'the user asks or the message is actually about one of them. Anything else '
+    'you have saved is not shown here — reach it with recallMemory.';
+
 const String _toolCatalogLayer = '''
 Each tool's description is the contract for that tool. The rules below span tools.
 
@@ -222,7 +265,7 @@ Tool guidelines:
 - Your earlier turns may start with a "[tools already run]" block. That is a record of the tools you already ran in that turn, with their arguments and a one-line result summary, not something the user wrote. Use it to avoid repeating a lookup you already did; when you need the details again, call the tool again.
 - Never delete anything the user did not ask you to delete. "Tidy up" is not an instruction to delete: propose what you would remove and wait for a clear yes.''';
 
-// order band：-100 身份 / -50 护栏 / 0 persona / 100 工具目录，同 order 顺序未定义，各段须不同
+// order band：-100 身份 / -50 护栏 / -25 检索策略 / 0 persona / 50 常驻记忆 / 100 工具目录，同 order 顺序未定义，各段须不同
 typedef PromptSection = ({String name, int order, String text});
 
 String assembleSystemPrompt(List<PromptSection> sections) {
@@ -236,21 +279,45 @@ String assembleSystemPrompt(List<PromptSection> sections) {
 String buildStableSystemPrompt({
   required String persona,
   required bool toolsEnabled,
+  List<String> profileFacts = const [],
 }) {
   final effective = persona.trim().isEmpty ? defaultPersona : persona.trim();
   return assembleSystemPrompt([
     (name: 'harness:identity', order: -100, text: _identityLayer),
     (name: 'harness:guardrails', order: -50, text: _guardrailsLayer),
+    if (toolsEnabled)
+      (name: 'harness:retrieval_policy', order: -25, text: _retrievalPolicyLayer),
     (name: 'preset:persona', order: 0, text: '$_personaFraming\n\n$effective'),
+    (name: 'memory:profile', order: 50, text: buildProfileBlock(profileFacts)),
     if (toolsEnabled)
       (name: 'tools:catalog', order: 100, text: _toolCatalogLayer),
   ]);
 }
 
-String buildVolatilePrompt({
+String buildProfileBlock(List<String> facts) {
+  if (facts.isEmpty) return '';
+  final lines = <String>[];
+  var budget = memoryProfileMaxChars;
+  for (final raw in facts.take(memoryProfileLimit)) {
+    final fact = raw.trim();
+    if (fact.isEmpty) continue;
+    final clipped = fact.length > memoryProfileFactMaxChars
+        ? '${fact.substring(0, memoryProfileFactMaxChars - 1)}…'
+        : fact;
+    if (clipped.length > budget) continue;
+    budget -= clipped.length;
+    lines.add('- $clipped');
+  }
+  if (lines.isEmpty) return '';
+  return '$_profileFraming\n${lines.join('\n')}\n\n$_profileClosing';
+}
+
+String buildTurnContext({
   required String localeTag,
   required DateTime nowLocal,
-  List<String> memories = const [],
+  int? factCount,
+  bool semanticSearch = false,
+  List<String> fallbackFacts = const [],
 }) {
   final buffer = StringBuffer()
     ..write("(Context for this turn — not part of the user's message.)\n")
@@ -261,11 +328,21 @@ String buildVolatilePrompt({
       "Always write your reply in the user's language (locale: $localeTag), "
       'regardless of the language used in tool results, diary content, or your instructions.',
     );
-  if (memories.isNotEmpty) {
+  if (factCount != null) {
+    buffer
+      ..write('\nSaved facts: ')
+      ..write(factCount)
+      ..write(' · semantic diary search: ')
+      ..write(semanticSearch ? 'on' : 'off (keyword search only)')
+      ..write('.');
+  }
+  if (fallbackFacts.isNotEmpty) {
     buffer.write(
-      '\n\nKnown facts about the user (from earlier conversations):',
+      '\n\nYou have no tools in this conversation, so these saved facts are '
+      'included directly. Do not bring them up unless the message is about one '
+      'of them:',
     );
-    for (final m in memories) {
+    for (final m in fallbackFacts) {
       buffer
         ..write('\n- ')
         ..write(m);

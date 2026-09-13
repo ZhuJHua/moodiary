@@ -50,7 +50,8 @@ CREATE TABLE chat_messages (
   image_name      TEXT,
   input_tokens    INTEGER,
   output_tokens   INTEGER,
-  model           TEXT
+  model           TEXT,
+  provider_id     TEXT
 ) AS ChatMessageRow;
 
 CREATE INDEX idx_chat_messages_session
@@ -74,7 +75,9 @@ CREATE TABLE memories (
   category   TEXT NOT NULL,
   content    TEXT NOT NULL,
   created_at INTEGER NOT NULL,
-  updated_at INTEGER NOT NULL
+  updated_at INTEGER NOT NULL,
+  pinned     BOOLEAN NOT NULL DEFAULT 0,
+  source     TEXT
 ) AS MemoryRow;
 
 CREATE INDEX idx_memories_updated ON memories (updated_at DESC);

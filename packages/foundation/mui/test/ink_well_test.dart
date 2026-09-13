@@ -45,6 +45,38 @@ void main() {
     expect(isPressed(tester, finder), isFalse);
   });
 
+  testWidgets('fade：按下只压内容透明度，不铺遮罩', (tester) async {
+    await tester.pumpWidget(
+      host(
+        MInkWell.fade(
+          onTap: () {},
+          child: const SizedBox(width: 100, height: 40),
+        ),
+      ),
+    );
+    final finder = find.byType(MInkWell);
+    double opacity() => tester
+        .widget<AnimatedOpacity>(
+          find.descendant(of: finder, matching: find.byType(AnimatedOpacity)),
+        )
+        .opacity;
+
+    expect(
+      find.descendant(of: finder, matching: find.byType(ColoredBox)),
+      findsNothing,
+    );
+    expect(opacity(), 1);
+
+    final gesture = await tester.startGesture(tester.getCenter(finder));
+    await tester.pump();
+    expect(opacity(), lessThan(1));
+
+    await gesture.up();
+    await tester.pump(const Duration(milliseconds: 80));
+    await tester.pumpAndSettle();
+    expect(opacity(), 1);
+  });
+
   testWidgets('没有祖先 Material 也能出反馈', (tester) async {
     await tester.pumpWidget(
       MuiTheme(

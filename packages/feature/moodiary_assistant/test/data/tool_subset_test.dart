@@ -15,13 +15,13 @@ void main() {
     test('子集按 specs 原顺序过滤，与传入顺序无关', () {
       final allowed = [
         AssistantTool.rememberFact.id,
-        AssistantTool.queryDiaries.id,
+        AssistantTool.searchDiaries.id,
       ];
       final ids = [
         for (final s in AssistantToolRegistry.specsFor(allowed)) s.id,
       ];
       expect(ids, [
-        AssistantTool.queryDiaries.id,
+        AssistantTool.searchDiaries.id,
         AssistantTool.rememberFact.id,
       ]);
     });

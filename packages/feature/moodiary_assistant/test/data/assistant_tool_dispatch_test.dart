@@ -61,8 +61,8 @@ void main() {
         AssistantToolRegistry.byId(t.id)!;
 
     test('查询：命中数与生效的筛选条件，不截英文结果', () {
-      final line = specOf(AssistantTool.queryDiaries).summaryOf({
-        'keywords': '搬家',
+      final line = specOf(AssistantTool.searchDiaries).summaryOf({
+        'query': '搬家',
         'startDate': '2026-08-11',
         'endDate': '2026-08-17',
       }, '47 matches; the first 8 follow.\nid=x …');
@@ -83,7 +83,7 @@ void main() {
     });
 
     test('查询无结果', () {
-      final line = specOf(AssistantTool.queryDiaries)
+      final line = specOf(AssistantTool.searchDiaries)
           .summaryOf(const {}, 'No diaries yet.');
       expect(line, '无结果');
     });
@@ -331,14 +331,14 @@ void main() {
     test('带上入参与一行摘要，不重放完整结果', () {
       final record = AssistantToolRegistry.recordOf([
         call(
-          'queryDiaries',
-          '{"keywords":"搬家"}',
+          'searchDiaries',
+          '{"query":"搬家"}',
           '47 matches; the first 8 follow.\n'
               'id=a 【2026-08-11】搬家第一天\n（此处还有两千字）',
         ),
       ]);
       expect(record, startsWith('[tools already run]'));
-      expect(record, contains('queryDiaries({"keywords":"搬家"})'));
+      expect(record, contains('searchDiaries({"query":"搬家"})'));
       expect(record, contains('→ 47 篇 · 搬家'));
       expect(record, isNot(contains('搬家第一天')));
       expect(record, isNot(contains('此处还有两千字')));
@@ -346,7 +346,7 @@ void main() {
 
     test('没跑完的调用不进记录', () {
       final record = AssistantToolRegistry.recordOf(const [
-        AssistantToolCall(callId: 'x', name: 'queryDiaries'),
+        AssistantToolCall(callId: 'x', name: 'searchDiaries'),
       ]);
       expect(record, isEmpty);
     });
@@ -357,7 +357,7 @@ void main() {
 
     test('多次调用逐行列出', () {
       final record = AssistantToolRegistry.recordOf([
-        call('queryDiaries', '{}', '3 matches:'),
+        call('searchDiaries', '{}', '3 matches:'),
         call('getDiary', '{"ids":["a","b"]}', 'id=a …'),
       ]);
       expect(record.split('\n').length, 3);

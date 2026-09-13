@@ -12,6 +12,8 @@ _MemoryEntry _$MemoryEntryFromJson(Map<String, dynamic> json) => _MemoryEntry(
   text: json['text'] as String,
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
+  pinned: json['pinned'] as bool? ?? false,
+  source: json['source'] as String?,
 );
 
 Map<String, dynamic> _$MemoryEntryToJson(_MemoryEntry instance) =>
@@ -21,4 +23,6 @@ Map<String, dynamic> _$MemoryEntryToJson(_MemoryEntry instance) =>
       'text': instance.text,
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
+      'pinned': instance.pinned,
+      'source': instance.source,
     };

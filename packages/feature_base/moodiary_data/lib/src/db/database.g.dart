@@ -3676,6 +3676,17 @@ class ChatMessages extends Table with TableInfo<ChatMessages, ChatMessageRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
+  static const VerificationMeta _providerIdMeta = const VerificationMeta(
+    'providerId',
+  );
+  late final GeneratedColumn<String> providerId = GeneratedColumn<String>(
+    'provider_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3689,6 +3700,7 @@ class ChatMessages extends Table with TableInfo<ChatMessages, ChatMessageRow> {
     inputTokens,
     outputTokens,
     model,
+    providerId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3784,6 +3796,12 @@ class ChatMessages extends Table with TableInfo<ChatMessages, ChatMessageRow> {
         model.isAcceptableOrUnknown(data['model']!, _modelMeta),
       );
     }
+    if (data.containsKey('provider_id')) {
+      context.handle(
+        _providerIdMeta,
+        providerId.isAcceptableOrUnknown(data['provider_id']!, _providerIdMeta),
+      );
+    }
     return context;
   }
 
@@ -3837,6 +3855,10 @@ class ChatMessages extends Table with TableInfo<ChatMessages, ChatMessageRow> {
         DriftSqlType.string,
         data['${effectivePrefix}model'],
       ),
+      providerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}provider_id'],
+      ),
     );
   }
 
@@ -3861,6 +3883,7 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
   final int? inputTokens;
   final int? outputTokens;
   final String? model;
+  final String? providerId;
   const ChatMessageRow({
     required this.id,
     required this.sessionId,
@@ -3873,6 +3896,7 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
     this.inputTokens,
     this.outputTokens,
     this.model,
+    this.providerId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3899,6 +3923,9 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
     }
     if (!nullToAbsent || model != null) {
       map['model'] = Variable<String>(model);
+    }
+    if (!nullToAbsent || providerId != null) {
+      map['provider_id'] = Variable<String>(providerId);
     }
     return map;
   }
@@ -3928,6 +3955,9 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
       model: model == null && nullToAbsent
           ? const Value.absent()
           : Value(model),
+      providerId: providerId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(providerId),
     );
   }
 
@@ -3948,6 +3978,7 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
       inputTokens: serializer.fromJson<int?>(json['input_tokens']),
       outputTokens: serializer.fromJson<int?>(json['output_tokens']),
       model: serializer.fromJson<String?>(json['model']),
+      providerId: serializer.fromJson<String?>(json['provider_id']),
     );
   }
   @override
@@ -3965,6 +3996,7 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
       'input_tokens': serializer.toJson<int?>(inputTokens),
       'output_tokens': serializer.toJson<int?>(outputTokens),
       'model': serializer.toJson<String?>(model),
+      'provider_id': serializer.toJson<String?>(providerId),
     };
   }
 
@@ -3980,6 +4012,7 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
     Value<int?> inputTokens = const Value.absent(),
     Value<int?> outputTokens = const Value.absent(),
     Value<String?> model = const Value.absent(),
+    Value<String?> providerId = const Value.absent(),
   }) => ChatMessageRow(
     id: id ?? this.id,
     sessionId: sessionId ?? this.sessionId,
@@ -3994,6 +4027,7 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
     inputTokens: inputTokens.present ? inputTokens.value : this.inputTokens,
     outputTokens: outputTokens.present ? outputTokens.value : this.outputTokens,
     model: model.present ? model.value : this.model,
+    providerId: providerId.present ? providerId.value : this.providerId,
   );
   ChatMessageRow copyWithCompanion(ChatMessagesCompanion data) {
     return ChatMessageRow(
@@ -4014,6 +4048,9 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
           ? data.outputTokens.value
           : this.outputTokens,
       model: data.model.present ? data.model.value : this.model,
+      providerId: data.providerId.present
+          ? data.providerId.value
+          : this.providerId,
     );
   }
 
@@ -4030,7 +4067,8 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
           ..write('imageName: $imageName, ')
           ..write('inputTokens: $inputTokens, ')
           ..write('outputTokens: $outputTokens, ')
-          ..write('model: $model')
+          ..write('model: $model, ')
+          ..write('providerId: $providerId')
           ..write(')'))
         .toString();
   }
@@ -4048,6 +4086,7 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
     inputTokens,
     outputTokens,
     model,
+    providerId,
   );
   @override
   bool operator ==(Object other) =>
@@ -4063,7 +4102,8 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
           other.imageName == this.imageName &&
           other.inputTokens == this.inputTokens &&
           other.outputTokens == this.outputTokens &&
-          other.model == this.model);
+          other.model == this.model &&
+          other.providerId == this.providerId);
 }
 
 class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
@@ -4078,6 +4118,7 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
   final Value<int?> inputTokens;
   final Value<int?> outputTokens;
   final Value<String?> model;
+  final Value<String?> providerId;
   final Value<int> rowid;
   const ChatMessagesCompanion({
     this.id = const Value.absent(),
@@ -4091,6 +4132,7 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
     this.inputTokens = const Value.absent(),
     this.outputTokens = const Value.absent(),
     this.model = const Value.absent(),
+    this.providerId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ChatMessagesCompanion.insert({
@@ -4105,6 +4147,7 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
     this.inputTokens = const Value.absent(),
     this.outputTokens = const Value.absent(),
     this.model = const Value.absent(),
+    this.providerId = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        sessionId = Value(sessionId),
@@ -4123,6 +4166,7 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
     Expression<int>? inputTokens,
     Expression<int>? outputTokens,
     Expression<String>? model,
+    Expression<String>? providerId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4137,6 +4181,7 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
       if (inputTokens != null) 'input_tokens': inputTokens,
       if (outputTokens != null) 'output_tokens': outputTokens,
       if (model != null) 'model': model,
+      if (providerId != null) 'provider_id': providerId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4153,6 +4198,7 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
     Value<int?>? inputTokens,
     Value<int?>? outputTokens,
     Value<String?>? model,
+    Value<String?>? providerId,
     Value<int>? rowid,
   }) {
     return ChatMessagesCompanion(
@@ -4167,6 +4213,7 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
       inputTokens: inputTokens ?? this.inputTokens,
       outputTokens: outputTokens ?? this.outputTokens,
       model: model ?? this.model,
+      providerId: providerId ?? this.providerId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4207,6 +4254,9 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
     if (model.present) {
       map['model'] = Variable<String>(model.value);
     }
+    if (providerId.present) {
+      map['provider_id'] = Variable<String>(providerId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -4227,6 +4277,7 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
           ..write('inputTokens: $inputTokens, ')
           ..write('outputTokens: $outputTokens, ')
           ..write('model: $model, ')
+          ..write('providerId: $providerId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4745,6 +4796,25 @@ class Memories extends Table with TableInfo<Memories, MemoryRow> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
+  static const VerificationMeta _pinnedMeta = const VerificationMeta('pinned');
+  late final GeneratedColumn<bool> pinned = GeneratedColumn<bool>(
+    'pinned',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0',
+    defaultValue: const CustomExpression('0'),
+  );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -4752,6 +4822,8 @@ class Memories extends Table with TableInfo<Memories, MemoryRow> {
     content,
     createdAt,
     updatedAt,
+    pinned,
+    source,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4802,6 +4874,18 @@ class Memories extends Table with TableInfo<Memories, MemoryRow> {
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
+    if (data.containsKey('pinned')) {
+      context.handle(
+        _pinnedMeta,
+        pinned.isAcceptableOrUnknown(data['pinned']!, _pinnedMeta),
+      );
+    }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    }
     return context;
   }
 
@@ -4831,6 +4915,14 @@ class Memories extends Table with TableInfo<Memories, MemoryRow> {
         DriftSqlType.int,
         data['${effectivePrefix}updated_at'],
       )!,
+      pinned: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}pinned'],
+      )!,
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      ),
     );
   }
 
@@ -4849,12 +4941,16 @@ class MemoryRow extends DataClass implements Insertable<MemoryRow> {
   final String content;
   final int createdAt;
   final int updatedAt;
+  final bool pinned;
+  final String? source;
   const MemoryRow({
     required this.id,
     required this.category,
     required this.content,
     required this.createdAt,
     required this.updatedAt,
+    required this.pinned,
+    this.source,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4864,6 +4960,10 @@ class MemoryRow extends DataClass implements Insertable<MemoryRow> {
     map['content'] = Variable<String>(content);
     map['created_at'] = Variable<int>(createdAt);
     map['updated_at'] = Variable<int>(updatedAt);
+    map['pinned'] = Variable<bool>(pinned);
+    if (!nullToAbsent || source != null) {
+      map['source'] = Variable<String>(source);
+    }
     return map;
   }
 
@@ -4874,6 +4974,10 @@ class MemoryRow extends DataClass implements Insertable<MemoryRow> {
       content: Value(content),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      pinned: Value(pinned),
+      source: source == null && nullToAbsent
+          ? const Value.absent()
+          : Value(source),
     );
   }
 
@@ -4888,6 +4992,8 @@ class MemoryRow extends DataClass implements Insertable<MemoryRow> {
       content: serializer.fromJson<String>(json['content']),
       createdAt: serializer.fromJson<int>(json['created_at']),
       updatedAt: serializer.fromJson<int>(json['updated_at']),
+      pinned: serializer.fromJson<bool>(json['pinned']),
+      source: serializer.fromJson<String?>(json['source']),
     );
   }
   @override
@@ -4899,6 +5005,8 @@ class MemoryRow extends DataClass implements Insertable<MemoryRow> {
       'content': serializer.toJson<String>(content),
       'created_at': serializer.toJson<int>(createdAt),
       'updated_at': serializer.toJson<int>(updatedAt),
+      'pinned': serializer.toJson<bool>(pinned),
+      'source': serializer.toJson<String?>(source),
     };
   }
 
@@ -4908,12 +5016,16 @@ class MemoryRow extends DataClass implements Insertable<MemoryRow> {
     String? content,
     int? createdAt,
     int? updatedAt,
+    bool? pinned,
+    Value<String?> source = const Value.absent(),
   }) => MemoryRow(
     id: id ?? this.id,
     category: category ?? this.category,
     content: content ?? this.content,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
+    pinned: pinned ?? this.pinned,
+    source: source.present ? source.value : this.source,
   );
   MemoryRow copyWithCompanion(MemoriesCompanion data) {
     return MemoryRow(
@@ -4922,6 +5034,8 @@ class MemoryRow extends DataClass implements Insertable<MemoryRow> {
       content: data.content.present ? data.content.value : this.content,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      pinned: data.pinned.present ? data.pinned.value : this.pinned,
+      source: data.source.present ? data.source.value : this.source,
     );
   }
 
@@ -4932,13 +5046,16 @@ class MemoryRow extends DataClass implements Insertable<MemoryRow> {
           ..write('category: $category, ')
           ..write('content: $content, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('pinned: $pinned, ')
+          ..write('source: $source')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, category, content, createdAt, updatedAt);
+  int get hashCode =>
+      Object.hash(id, category, content, createdAt, updatedAt, pinned, source);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4947,7 +5064,9 @@ class MemoryRow extends DataClass implements Insertable<MemoryRow> {
           other.category == this.category &&
           other.content == this.content &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.pinned == this.pinned &&
+          other.source == this.source);
 }
 
 class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
@@ -4956,6 +5075,8 @@ class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
   final Value<String> content;
   final Value<int> createdAt;
   final Value<int> updatedAt;
+  final Value<bool> pinned;
+  final Value<String?> source;
   final Value<int> rowid;
   const MemoriesCompanion({
     this.id = const Value.absent(),
@@ -4963,6 +5084,8 @@ class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
     this.content = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.pinned = const Value.absent(),
+    this.source = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MemoriesCompanion.insert({
@@ -4971,6 +5094,8 @@ class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
     required String content,
     required int createdAt,
     required int updatedAt,
+    this.pinned = const Value.absent(),
+    this.source = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        category = Value(category),
@@ -4983,6 +5108,8 @@ class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
     Expression<String>? content,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
+    Expression<bool>? pinned,
+    Expression<String>? source,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4991,6 +5118,8 @@ class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
       if (content != null) 'content': content,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (pinned != null) 'pinned': pinned,
+      if (source != null) 'source': source,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -5001,6 +5130,8 @@ class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
     Value<String>? content,
     Value<int>? createdAt,
     Value<int>? updatedAt,
+    Value<bool>? pinned,
+    Value<String?>? source,
     Value<int>? rowid,
   }) {
     return MemoriesCompanion(
@@ -5009,6 +5140,8 @@ class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
       content: content ?? this.content,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      pinned: pinned ?? this.pinned,
+      source: source ?? this.source,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -5031,6 +5164,12 @@ class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<int>(updatedAt.value);
     }
+    if (pinned.present) {
+      map['pinned'] = Variable<bool>(pinned.value);
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -5045,6 +5184,8 @@ class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
           ..write('content: $content, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('pinned: $pinned, ')
+          ..write('source: $source, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -10390,6 +10531,7 @@ typedef $ChatMessagesCreateCompanionBuilder = ChatMessagesCompanion Function({
   Value<int?> inputTokens,
   Value<int?> outputTokens,
   Value<String?> model,
+  Value<String?> providerId,
   Value<int> rowid,
 });
 typedef $ChatMessagesUpdateCompanionBuilder = ChatMessagesCompanion Function({
@@ -10404,6 +10546,7 @@ typedef $ChatMessagesUpdateCompanionBuilder = ChatMessagesCompanion Function({
   Value<int?> inputTokens,
   Value<int?> outputTokens,
   Value<String?> model,
+  Value<String?> providerId,
   Value<int> rowid,
 });
 
@@ -10506,6 +10649,11 @@ class $ChatMessagesFilterComposer
 
   ColumnFilters<String> get model => $composableBuilder(
     column: $table.model,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get providerId => $composableBuilder(
+    column: $table.providerId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -10617,6 +10765,11 @@ class $ChatMessagesOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get providerId => $composableBuilder(
+    column: $table.providerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $ChatSessionsOrderingComposer get sessionId {
     final $ChatSessionsOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -10685,6 +10838,11 @@ class $ChatMessagesAnnotationComposer
 
   GeneratedColumn<String> get model =>
       $composableBuilder(column: $table.model, builder: (column) => column);
+
+  GeneratedColumn<String> get providerId => $composableBuilder(
+    column: $table.providerId,
+    builder: (column) => column,
+  );
 
   $ChatSessionsAnnotationComposer get sessionId {
     final $ChatSessionsAnnotationComposer composer = $composerBuilder(
@@ -10774,6 +10932,7 @@ class $ChatMessagesTableManager
                 Value<int?> inputTokens = const Value.absent(),
                 Value<int?> outputTokens = const Value.absent(),
                 Value<String?> model = const Value.absent(),
+                Value<String?> providerId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ChatMessagesCompanion(
                 id: id,
@@ -10787,6 +10946,7 @@ class $ChatMessagesTableManager
                 inputTokens: inputTokens,
                 outputTokens: outputTokens,
                 model: model,
+                providerId: providerId,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -10802,6 +10962,7 @@ class $ChatMessagesTableManager
                 Value<int?> inputTokens = const Value.absent(),
                 Value<int?> outputTokens = const Value.absent(),
                 Value<String?> model = const Value.absent(),
+                Value<String?> providerId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ChatMessagesCompanion.insert(
                 id: id,
@@ -10815,6 +10976,7 @@ class $ChatMessagesTableManager
                 inputTokens: inputTokens,
                 outputTokens: outputTokens,
                 model: model,
+                providerId: providerId,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -11273,6 +11435,8 @@ typedef $MemoriesCreateCompanionBuilder = MemoriesCompanion Function({
   required String content,
   required int createdAt,
   required int updatedAt,
+  Value<bool> pinned,
+  Value<String?> source,
   Value<int> rowid,
 });
 typedef $MemoriesUpdateCompanionBuilder = MemoriesCompanion Function({
@@ -11281,6 +11445,8 @@ typedef $MemoriesUpdateCompanionBuilder = MemoriesCompanion Function({
   Value<String> content,
   Value<int> createdAt,
   Value<int> updatedAt,
+  Value<bool> pinned,
+  Value<String?> source,
   Value<int> rowid,
 });
 
@@ -11314,6 +11480,16 @@ class $MemoriesFilterComposer extends Composer<_$MoodiaryDatabase, Memories> {
 
   ColumnFilters<int> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get pinned => $composableBuilder(
+    column: $table.pinned,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -11350,6 +11526,16 @@ class $MemoriesOrderingComposer extends Composer<_$MoodiaryDatabase, Memories> {
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get pinned => $composableBuilder(
+    column: $table.pinned,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $MemoriesAnnotationComposer
@@ -11375,6 +11561,12 @@ class $MemoriesAnnotationComposer
 
   GeneratedColumn<int> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get pinned =>
+      $composableBuilder(column: $table.pinned, builder: (column) => column);
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
 }
 
 class $MemoriesTableManager
@@ -11410,6 +11602,8 @@ class $MemoriesTableManager
                 Value<String> content = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
+                Value<bool> pinned = const Value.absent(),
+                Value<String?> source = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MemoriesCompanion(
                 id: id,
@@ -11417,6 +11611,8 @@ class $MemoriesTableManager
                 content: content,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                pinned: pinned,
+                source: source,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -11426,6 +11622,8 @@ class $MemoriesTableManager
                 required String content,
                 required int createdAt,
                 required int updatedAt,
+                Value<bool> pinned = const Value.absent(),
+                Value<String?> source = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MemoriesCompanion.insert(
                 id: id,
@@ -11433,6 +11631,8 @@ class $MemoriesTableManager
                 content: content,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                pinned: pinned,
+                source: source,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
