@@ -151,18 +151,21 @@ class _AssistantNoticeState extends State<AssistantNotice>
 
     Widget? body;
     if (_expandable && factor > 0) {
-      body = SelectionArea(
-        child: Padding(
-          padding:
-              widget.detailPadding ?? const EdgeInsets.fromLTRB(22, 1, 0, 6),
-          child: Builder(builder: widget.detail!),
+      // 包法不随 factor 变：动画收尾时换掉这层会让整棵详情子树重建，状态全丢
+      body = ClipRect(
+        child: Align(
+          alignment: .topLeft,
+          heightFactor: factor,
+          child: SelectionArea(
+            child: Padding(
+              padding:
+                  widget.detailPadding ??
+                  const EdgeInsets.fromLTRB(22, 1, 0, 6),
+              child: Builder(builder: widget.detail!),
+            ),
+          ),
         ),
       );
-      if (factor < 1) {
-        body = ClipRect(
-          child: Align(alignment: .topLeft, heightFactor: factor, child: body),
-        );
-      }
     }
 
     final content = Column(
