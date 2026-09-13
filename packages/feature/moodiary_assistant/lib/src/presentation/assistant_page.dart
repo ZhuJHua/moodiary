@@ -1582,64 +1582,59 @@ class _ModelChip extends StatelessWidget {
     final provider = this.provider;
     final broken = modelLabel.isEmpty || modelMissing;
 
-    return Material(
-      color: scheme.surfaceContainerHighest,
+    return MInkWell(
       shape: const StadiumBorder(),
-      clipBehavior: .antiAlias,
-      child: MInkWell(
-        shape: const StadiumBorder(),
-        onTap: onTap,
-        child: SizedBox(
-          height: _kModelChipHeight,
-          child: Padding(
-            padding: const .fromLTRB(7, 0, 10, 0),
-            child: Row(
-              mainAxisSize: .min,
-              children: [
-                if (providerMissing)
-                  Icon(LucideIcons.triangleAlert, size: 16, color: scheme.error)
-                else if (provider != null)
-                  ProviderLogo(
-                    logoUrl: ProviderLogo.urlOf(provider.presetId),
-                    name: provider.name,
-                    size: 18,
-                  ),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    modelLabel.isEmpty
-                        ? l10n.assistant.historyModelUnset
-                        : modelLabel,
-                    maxLines: 1,
-                    overflow: .ellipsis,
-                    style: broken
-                        ? typography.labelMedium.emphasized.error
-                        : typography.labelMedium.emphasized.onSurface,
-                  ),
+      onTap: onTap,
+      child: SizedBox(
+        height: _kModelChipHeight,
+        child: Padding(
+          padding: const .symmetric(horizontal: 8),
+          child: Row(
+            mainAxisSize: .min,
+            children: [
+              if (providerMissing)
+                Icon(LucideIcons.triangleAlert, size: 16, color: scheme.error)
+              else if (provider != null)
+                ProviderLogo(
+                  logoUrl: ProviderLogo.urlOf(provider.presetId),
+                  name: provider.name,
+                  size: 18,
                 ),
-                if (modelMissing) ...[
-                  const SizedBox(width: 6),
-                  Text(
-                    l10n.assistant.modelNotInCatalog,
-                    style: typography.labelSmall.error,
-                  ),
-                ] else if (catalogMissing) ...[
-                  const SizedBox(width: 6),
-                  Icon(
-                    LucideIcons.cloudOff,
-                    size: 14,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ],
-                if (levelLabel.isNotEmpty) ...[
-                  const SizedBox(width: 6),
-                  Text(
-                    '· $levelLabel',
-                    style: typography.labelMedium.onSurfaceVariant,
-                  ),
-                ],
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  modelLabel.isEmpty
+                      ? l10n.assistant.historyModelUnset
+                      : modelLabel,
+                  maxLines: 1,
+                  overflow: .ellipsis,
+                  style: broken
+                      ? typography.labelMedium.emphasized.error
+                      : typography.labelMedium.emphasized.onSurface,
+                ),
+              ),
+              if (modelMissing) ...[
+                const SizedBox(width: 6),
+                Text(
+                  l10n.assistant.modelNotInCatalog,
+                  style: typography.labelSmall.error,
+                ),
+              ] else if (catalogMissing) ...[
+                const SizedBox(width: 6),
+                Icon(
+                  LucideIcons.cloudOff,
+                  size: 14,
+                  color: scheme.onSurfaceVariant,
+                ),
               ],
-            ),
+              if (levelLabel.isNotEmpty) ...[
+                const SizedBox(width: 6),
+                Text(
+                  '· $levelLabel',
+                  style: typography.labelMedium.onSurfaceVariant,
+                ),
+              ],
+            ],
           ),
         ),
       ),
