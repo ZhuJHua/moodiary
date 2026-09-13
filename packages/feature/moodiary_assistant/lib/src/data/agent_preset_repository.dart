@@ -19,7 +19,6 @@ class AgentPresetRepository {
     description: r.description,
     persona: r.persona,
     // null（全部，含未来新增）与 '[]'（一个都不挂）语义不同，不能塌成空列表。
-    // null（全部工具）不能塌成 []，且旧 id 必须映射：specsFor 丢未知 id 是静默的
     tools: _migrated(dbToStringListOrNull(r.toolsJson)),
     createdAt: dbToTime(r.createdAt),
     updatedAt: dbToTime(r.updatedAt),

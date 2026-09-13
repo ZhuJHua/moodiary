@@ -29,7 +29,7 @@ void main() {
   }
 
   group('常驻集合只认 pinned', () {
-    test('没钉过的 preference 不进常驻——老数据的类别是旧规则下随手打的', () async {
+    test('没钉过的 preference 不进常驻', () async {
       await save('叫我小竹');
       expect(await repo.profileFacts(), isEmpty);
     });
@@ -59,7 +59,7 @@ void main() {
       expect(hits.first.text, contains('半马'));
     });
 
-    test('一个都不沾就返回空，而不是退回全部', () async {
+    test('一个都不沾返回空', () async {
       await save('我养了一只猫', category: 'fact');
       expect(await repo.search('quantum'), isEmpty);
     });
@@ -71,7 +71,7 @@ void main() {
       expect(hits, hasLength(2));
     });
 
-    test('中文按字命中，不依赖分词', () async {
+    test('中文按字命中', () async {
       await save('晚上十一点后不聊沉重话题');
       final hits = await repo.search('沉重');
       expect(hits, hasLength(1));
@@ -80,7 +80,7 @@ void main() {
   });
 
   group('写入去重', () {
-    test('换标点或大小写不算新的一条，中英皆然', () async {
+    test('换标点或大小写不算新的一条', () async {
       await save('I run on Mondays.');
       await save('晚上十一点后，不聊沉重的话题。', category: 'theme');
       expect(await repo.findDuplicate('preference', 'i run on mondays'), isNotNull);

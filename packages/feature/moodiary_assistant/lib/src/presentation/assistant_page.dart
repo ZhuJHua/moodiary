@@ -116,7 +116,6 @@ class _AssistantPageState extends State<AssistantPage> {
 
   final Map<String, LlmProvider> _providers = {};
 
-  // 第一次解析完成前不画未配置态，免得开页闪一帧红
   bool _resolved = false;
   bool _providerMissing = false;
   bool _catalogMissing = false;
@@ -254,7 +253,6 @@ class _AssistantPageState extends State<AssistantPage> {
       ..addEntries([for (final p in all) MapEntry(p.id, p)]);
     final key = provider == null ? null : await repo.getKey(provider.id);
     final lastModel = MoodiaryKVs.assistantLastModelId.get() ?? '';
-    // 原供应商已删：它的模型 id 在回落的这家多半不存在，别带过去
     final wanted = pinned != null && (session?.model.isNotEmpty ?? false)
         ? session!.model
         : providerMissing
@@ -765,7 +763,6 @@ class _AssistantPageState extends State<AssistantPage> {
     }
     final toolsActive =
         _canUseTools && (allowedTools == null || allowedTools.isNotEmpty);
-    // 记忆随工具白名单走：摘掉 recallMemory 就是摘掉记忆
     final memoryReachable =
         toolsActive &&
         (allowedTools == null || allowedTools.contains(AssistantTool.recallMemory.id));

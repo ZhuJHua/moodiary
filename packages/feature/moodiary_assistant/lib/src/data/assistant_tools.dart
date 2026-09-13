@@ -489,7 +489,6 @@ abstract final class AssistantToolRegistry {
 
   static const _maxReplayChars = 600;
 
-  // 语义检索是可选能力：没装索引服务就等同没启用，别让它把整条搜索拖垮
   static bool get semanticAvailable =>
       getIt.isRegistered<EmbedIndexService>() &&
       getIt<EmbedIndexService>().enabled;
@@ -718,7 +717,6 @@ abstract final class AssistantToolRegistry {
             )?.add(const Duration(days: 1)),
           );
 
-    // 关键词已经够了就不必唤醒嵌入引擎
     final needMeaning =
         wantMeaning && (mode == 'meaning' || keyword.results.length < limit);
     final hits = needMeaning
@@ -766,7 +764,6 @@ abstract final class AssistantToolRegistry {
     return _formatSearchRows(
       resolved,
       total: keyword.results.length + hits.length - _overlap(keyword.results, hits),
-      // 语义那边取满了 limit，真实命中只多不少
       atLeast: needMeaning && hits.length >= limit,
     );
   }
@@ -780,7 +777,6 @@ abstract final class AssistantToolRegistry {
     return n;
   }
 
-  // 倒数排名融合：两条路各自的名次都算数，不必把分数标到同一量纲
   static List<({String id, Diary? diary, bool keyword, bool meaning, double? score})>
   _fuse(List<Diary> keyword, List<SemanticHit> hits, {required int limit}) {
     const k = 60;

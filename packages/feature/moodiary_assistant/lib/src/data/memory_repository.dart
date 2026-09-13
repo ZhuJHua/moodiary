@@ -19,7 +19,6 @@ class MemoryRepository {
     source: r.source,
   );
 
-  // 去重键：同一句话换个标点或大小写不该变成第二条
   static String normalizeFact(String text) {
     final buffer = StringBuffer();
     var space = false;

@@ -47,13 +47,13 @@ void main() {
   }
 
   group('版式由篇数决定', () {
-    testWidgets('多篇：走横向轨，不再拿 single 取值', (tester) async {
+    testWidgets('多篇走横向轨', (tester) async {
       await pump(tester, const DiaryCitations(ids: ['a', 'b']));
       expect(tester.takeException(), isNull);
       expect(find.byType(SingleChildScrollView), findsOneWidget);
     });
 
-    testWidgets('单篇：整卡，不套滚动', (tester) async {
+    testWidgets('单篇走整卡', (tester) async {
       await pump(tester, const DiaryCitations(ids: ['a']));
       expect(tester.takeException(), isNull);
       expect(find.byType(SingleChildScrollView), findsNothing);

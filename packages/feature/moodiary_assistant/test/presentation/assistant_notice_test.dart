@@ -131,7 +131,7 @@ void main() {
       'm: {\n  "k": 1\n}',
     );
   });
-  testWidgets('展开全程详情只建一次：动画收尾不得重建子树', (tester) async {
+  testWidgets('展开全程详情只建一次', (tester) async {
     _detailInits = 0;
     await tester.pumpWidget(
       host(
@@ -149,10 +149,10 @@ void main() {
     for (var i = 0; i < 12; i++) {
       await tester.pump(const Duration(milliseconds: 20));
     }
-    expect(_detailInits, 1, reason: '动画途中详情反复重建');
+    expect(_detailInits, 1, reason: '动画途中');
 
     await tester.pumpAndSettle();
-    expect(_detailInits, 1, reason: '动画收尾时详情被重建了一次');
+    expect(_detailInits, 1, reason: '动画收尾');
   });
 }
 

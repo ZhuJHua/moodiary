@@ -151,7 +151,6 @@ class _AssistantNoticeState extends State<AssistantNotice>
 
     Widget? body;
     if (_expandable && factor > 0) {
-      // 包法不随 factor 变：动画收尾时换掉这层会让整棵详情子树重建，状态全丢
       body = ClipRect(
         child: Align(
           alignment: .topLeft,

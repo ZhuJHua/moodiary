@@ -8,7 +8,7 @@ void main() {
       AssistantToolRegistry.byId(tool.id)!.summaryOf(input, 'ok');
 
   group('工具卡片摘要', () {
-    test('保存事实报事实原文，不是「已删除」', () {
+    test('保存事实报事实原文', () {
       expect(
         summaryOf(.rememberFact, {
           'items': [
@@ -19,7 +19,7 @@ void main() {
       );
     });
 
-    test('每个写类工具都不会落进删除分支', () {
+    test('写类工具不落进删除分支', () {
       const writeTools = [
         AssistantTool.createDiary,
         AssistantTool.updateDiary,

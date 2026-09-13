@@ -476,7 +476,6 @@ class _MemoryEditSheetState extends State<_MemoryEditSheet> {
       icon: LucideIcons.squarePen,
       actions: [
         MAction(label: l10n.common.cancel),
-        // 打字不会重建这个面板，所以点下去的那一刻才读输入框
         MAction(
           label: l10n.common.save,
           isPrimary: true,

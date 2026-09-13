@@ -529,7 +529,6 @@ class _LevelChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    // 没显式选过时选中的是该模型的第一档，与真正发出去的一致
     final effective = effectiveReasoningLevel(stored: stored, levels: levels);
     final off = stored == reasoningOffValue;
     return Padding(

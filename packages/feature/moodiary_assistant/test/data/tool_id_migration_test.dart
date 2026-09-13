@@ -4,7 +4,7 @@ import 'package:moodiary_assistant/src/data/assistant_tools.dart';
 
 void main() {
   group('工具 id 迁移', () {
-    test('退役 id 各自映射，合并到同一个的去重', () {
+    test('退役 id 各自映射并去重', () {
       expect(
         migrateAssistantToolIds([
           'queryDiaries',
@@ -23,14 +23,14 @@ void main() {
       );
     });
 
-    test('保持顺序，未知 id 原样留着交给 specsFor 处理', () {
+    test('保持顺序，未知 id 原样留着', () {
       expect(
         migrateAssistantToolIds(['getDiary', 'queryDiaries', 'whatIsThis']),
         ['getDiary', 'searchDiaries', 'whatIsThis'],
       );
     });
 
-    test('映射表两端都必须对得上：新 id 活着，旧 id 已退役', () {
+    test('映射表两端：新 id 活着，旧 id 已退役', () {
       final live = {for (final t in AssistantTool.values) t.id};
       for (final e in renamedAssistantToolIds.entries) {
         expect(live, contains(e.value), reason: '${e.value} 不在 AssistantTool 里');
@@ -38,7 +38,7 @@ void main() {
       }
     });
 
-    test('迁移后的 id 都能被 specsFor 认出来，不会静默变成空工具', () {
+    test('迁移后的 id 都能被 specsFor 认出', () {
       final migrated = migrateAssistantToolIds([
         'queryDiaries',
         'semanticSearchDiaries',
