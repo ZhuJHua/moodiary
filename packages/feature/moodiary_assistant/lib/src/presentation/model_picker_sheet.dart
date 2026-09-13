@@ -355,8 +355,7 @@ class _GlobalModelPickerBodyState extends State<_GlobalModelPickerBody> {
                     style: typography.labelSmall.onSurfaceVariant,
                   ),
                 ),
-                MInkWell(
-                  shape: const StadiumBorder(),
+                MInkWell.fade(
                   onTap: () => _leave(widget.onManageProviders),
                   child: Padding(
                     padding: const .symmetric(horizontal: 8, vertical: 6),
@@ -494,8 +493,7 @@ class _ProviderHeader extends StatelessWidget {
               icon: LucideIcons.keyRound,
               text: l10n.assistant.modelProviderNoKey,
             ),
-            MInkWell(
-              shape: const StadiumBorder(),
+            MInkWell.fade(
               onTap: onFillKey,
               child: Padding(
                 padding: const .symmetric(horizontal: 6, vertical: 4),

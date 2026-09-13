@@ -1832,8 +1832,7 @@ class _AssistantComposerState extends State<_AssistantComposer> {
                       if (widget.onSendImage case final onSendImage?)
                         Tooltip(
                           message: l10n.assistant.toolSendImage,
-                          child: MInkWell(
-                            shape: const CircleBorder(),
+                          child: MInkWell.fade(
                             onTap: widget.sending ? null : onSendImage,
                             child: SizedBox.square(
                               dimension: _kComposerControlSize,
@@ -1857,8 +1856,7 @@ class _AssistantComposerState extends State<_AssistantComposer> {
                             if (_overflowing) ...[
                               Tooltip(
                                 message: l10n.assistant.composerFullscreen,
-                                child: MInkWell(
-                                  shape: const CircleBorder(),
+                                child: MInkWell.fade(
                                   onTap: widget.onFullscreen,
                                   child: SizedBox.square(
                                     dimension: _kComposerControlSize,
@@ -2393,8 +2391,7 @@ class _BubbleActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
-    return MInkWell(
-      borderRadius: .circular(8),
+    return MInkWell.fade(
       onTap: onTap,
       child: Padding(
         padding: const .symmetric(horizontal: 6, vertical: 4),

@@ -111,7 +111,7 @@ class DiaryCitationCard extends StatelessWidget {
                   ),
                 ),
                 if (onRemove case final remove?)
-                  MInkWell(
+                  MInkWell.fade(
                     onTap: remove,
                     child: Padding(
                       padding: const .symmetric(horizontal: 10),
