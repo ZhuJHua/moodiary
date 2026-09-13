@@ -15,6 +15,34 @@ class MemoryRepository {
     text: r.content,
     createdAt: dbToTime(r.createdAt),
     updatedAt: dbToTime(r.updatedAt),
+    pinned: r.pinned,
+    source: r.source,
+  );
+
+  // 去重键：同一句话换个标点或大小写不该变成第二条
+  static String normalizeFact(String text) {
+    final buffer = StringBuffer();
+    var space = false;
+    for (final rune in text.toLowerCase().runes) {
+      final ch = String.fromCharCode(rune);
+      if (_spaceRe.hasMatch(ch)) {
+        space = true;
+        continue;
+      }
+      if (_punctRe.hasMatch(ch)) continue;
+      if (space && buffer.isNotEmpty) buffer.write(' ');
+      space = false;
+      buffer.write(ch);
+    }
+    return buffer.toString();
+  }
+
+  static final _spaceRe = RegExp(r'\s');
+
+  static final _punctRe = RegExp(
+    '[.,;:!?()\\[\\]-]|[\u3001\u3002\uFF0C\uFF1B\uFF1A\uFF01\uFF1F'
+    '\u2026\u00B7\u300C\u300D\u300E\u300F\uFF08\uFF09\u3010\u3011'
+    '\u201C\u201D\u2018\u2019\u0022\u0027]',
   );
 
   Future<List<MemoryEntry>> getAll() async {
@@ -36,15 +64,55 @@ class MemoryRepository {
   Future<List<MemoryEntry>> profileFacts({int limit = 6}) async {
     final rows =
         await (_db.select(_db.memories)
-              ..where((m) => m.category.equals('preference'))
-              ..orderBy([(m) => OrderingTerm.desc(m.updatedAt)])
+              ..where(
+                (m) => m.pinned.equals(true) | m.category.equals('preference'),
+              )
+              ..orderBy([
+                (m) => OrderingTerm.desc(m.pinned),
+                (m) => OrderingTerm.desc(m.updatedAt),
+              ])
               ..limit(limit))
             .get();
     return [for (final r in rows) _toEntry(r)];
   }
 
+  Future<int> pinnedCount() async {
+    final q = _db.selectOnly(_db.memories)
+      ..addColumns([_db.memories.id.count()])
+      ..where(_db.memories.pinned.equals(true));
+    final row = await q.getSingle();
+    return row.read(_db.memories.id.count()) ?? 0;
+  }
+
+  Future<MemoryEntry?> findDuplicate(String category, String text) async {
+    final key = normalizeFact(text);
+    if (key.isEmpty) return null;
+    final rows = await (_db.select(
+      _db.memories,
+    )..where((m) => m.category.equals(category))).get();
+    for (final r in rows) {
+      if (normalizeFact(r.content) == key) return _toEntry(r);
+    }
+    return null;
+  }
+
+  Future<void> touch(String id) async {
+    await (_db.update(_db.memories)..where((m) => m.id.equals(id))).write(
+      MemoriesCompanion(updatedAt: Value(dbTime(DateTime.timestamp()))),
+    );
+  }
+
+  Future<void> setPinned(String id, bool pinned) async {
+    await (_db.update(_db.memories)..where((m) => m.id.equals(id))).write(
+      MemoriesCompanion(pinned: Value(pinned)),
+    );
+  }
+
+  Future<int> clearAll() async => _db.delete(_db.memories).go();
+
   Future<int> count() async {
-    final q = _db.selectOnly(_db.memories)..addColumns([_db.memories.id.count()]);
+    final q = _db.selectOnly(_db.memories)
+      ..addColumns([_db.memories.id.count()]);
     final row = await q.getSingle();
     return row.read(_db.memories.id.count()) ?? 0;
   }
@@ -100,6 +168,8 @@ class MemoryRepository {
             content: entry.text,
             createdAt: dbTime(entry.createdAt),
             updatedAt: dbTime(entry.updatedAt),
+            pinned: Value(entry.pinned),
+            source: Value(entry.source),
           ),
         );
   }

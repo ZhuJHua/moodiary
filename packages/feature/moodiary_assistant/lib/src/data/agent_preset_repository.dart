@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:injectable/injectable.dart';
+import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
@@ -9,13 +10,17 @@ class AgentPresetRepository {
 
   final MoodiaryDatabase _db;
 
+  static List<String>? _migrated(List<String>? ids) =>
+      ids == null ? null : migrateAssistantToolIds(ids);
+
   static AgentPreset _toPreset(AgentPresetRow r) => AgentPreset(
     id: r.id,
     name: r.name,
     description: r.description,
     persona: r.persona,
     // null（全部，含未来新增）与 '[]'（一个都不挂）语义不同，不能塌成空列表。
-    tools: dbToStringListOrNull(r.toolsJson),
+    // null（全部工具）不能塌成 []，且旧 id 必须映射：specsFor 丢未知 id 是静默的
+    tools: _migrated(dbToStringListOrNull(r.toolsJson)),
     createdAt: dbToTime(r.createdAt),
     updatedAt: dbToTime(r.updatedAt),
   );

@@ -11,8 +11,7 @@ enum DiaryCitationKind { read, created, updated, deleted }
 typedef DiaryCitation = ({String id, DiaryCitationKind kind});
 
 final Map<String, DiaryCitationKind> _kindByTool = {
-  AssistantTool.queryDiaries.id: .read,
-  AssistantTool.semanticSearchDiaries.id: .read,
+  AssistantTool.searchDiaries.id: .read,
   AssistantTool.getDiary.id: .read,
   AssistantTool.createDiary.id: .created,
   AssistantTool.updateDiary.id: .updated,

@@ -64,10 +64,10 @@ void main() {
 
     List<String> ids(List<DiaryCitation> c) => [for (final x in c) x.id];
 
-    test('queryDiaries 列表：每篇一个 id，回收站不出现', () async {
-      final out = await run(AssistantTool.queryDiaries, const {});
+    test('searchDiaries 列表：每篇一个 id，回收站不出现', () async {
+      final out = await run(AssistantTool.searchDiaries, const {});
       final cited = diaryCitationsOf([
-        _call(AssistantTool.queryDiaries.id, out),
+        _call(AssistantTool.searchDiaries.id, out),
       ]);
       expect(ids(cited), containsAll([a.id, b.id]));
       expect(ids(cited), isNot(contains(hidden.id)));
@@ -76,13 +76,13 @@ void main() {
     });
 
     test('getDiary 全文：多篇合并去重，找不到的不算', () async {
-      final query = await run(AssistantTool.queryDiaries, const {});
+      final query = await run(AssistantTool.searchDiaries, const {});
       final full = await run(AssistantTool.getDiary, {
         'ids': [a.id, hidden.id, 'nope'],
       });
       final cited = ids(
         diaryCitationsOf([
-          _call(AssistantTool.queryDiaries.id, query),
+          _call(AssistantTool.searchDiaries.id, query),
           _call(AssistantTool.getDiary.id, full),
         ]),
       );
@@ -108,9 +108,9 @@ void main() {
           {'id': b.id},
         ],
       });
-      final query = await run(AssistantTool.queryDiaries, const {});
+      final query = await run(AssistantTool.searchDiaries, const {});
       final cited = diaryCitationsOf([
-        _call(AssistantTool.queryDiaries.id, query),
+        _call(AssistantTool.searchDiaries.id, query),
         _call(AssistantTool.createDiary.id, created),
         _call(AssistantTool.updateDiary.id, updated),
         _call(AssistantTool.deleteDiary.id, deleted),
@@ -131,11 +131,11 @@ void main() {
         'ids': ['nope'],
       });
       expect(full, startsWith('Not found'));
-      final query = await run(AssistantTool.queryDiaries, const {});
+      final query = await run(AssistantTool.searchDiaries, const {});
       expect(
         diaryCitationsOf([
           _call(AssistantTool.getDiary.id, full),
-          _call(AssistantTool.queryDiaries.id, query, done: false),
+          _call(AssistantTool.searchDiaries.id, query, done: false),
           _call(AssistantTool.listCategories.id, 'id=${a.id} name=旅行'),
         ]),
         isEmpty,
@@ -143,8 +143,8 @@ void main() {
     });
 
     test('AssistantTurn 在恢复与工具完成两处派生，不落库', () async {
-      final query = await run(AssistantTool.queryDiaries, const {});
-      final call = _call(AssistantTool.queryDiaries.id, query);
+      final query = await run(AssistantTool.searchDiaries, const {});
+      final call = _call(AssistantTool.searchDiaries.id, query);
       final record = ChatMessage(
         id: 'm1',
         sessionId: 's1',

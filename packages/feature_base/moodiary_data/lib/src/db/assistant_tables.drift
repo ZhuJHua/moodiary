@@ -75,7 +75,9 @@ CREATE TABLE memories (
   category   TEXT NOT NULL,
   content    TEXT NOT NULL,
   created_at INTEGER NOT NULL,
-  updated_at INTEGER NOT NULL
+  updated_at INTEGER NOT NULL,
+  pinned     BOOLEAN NOT NULL DEFAULT 0,
+  source     TEXT
 ) AS MemoryRow;
 
 CREATE INDEX idx_memories_updated ON memories (updated_at DESC);

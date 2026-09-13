@@ -159,6 +159,13 @@ class _PresetSectionState extends State<_PresetSection> {
             await _load();
           },
         ),
+        SettingListTile(
+          title: l10n.assistant.memoryTitle,
+          subtitle: l10n.assistant.memoryTileSubtitle,
+          leading: const Icon(LucideIcons.brain),
+          trailing: const Icon(LucideIcons.chevronRight),
+          onTap: () => const AssistantMemoriesRoute().push(context),
+        ),
       ],
     );
   }

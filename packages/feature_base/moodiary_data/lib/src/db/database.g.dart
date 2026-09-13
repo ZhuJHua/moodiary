@@ -4796,6 +4796,25 @@ class Memories extends Table with TableInfo<Memories, MemoryRow> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
+  static const VerificationMeta _pinnedMeta = const VerificationMeta('pinned');
+  late final GeneratedColumn<bool> pinned = GeneratedColumn<bool>(
+    'pinned',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0',
+    defaultValue: const CustomExpression('0'),
+  );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -4803,6 +4822,8 @@ class Memories extends Table with TableInfo<Memories, MemoryRow> {
     content,
     createdAt,
     updatedAt,
+    pinned,
+    source,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4853,6 +4874,18 @@ class Memories extends Table with TableInfo<Memories, MemoryRow> {
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
+    if (data.containsKey('pinned')) {
+      context.handle(
+        _pinnedMeta,
+        pinned.isAcceptableOrUnknown(data['pinned']!, _pinnedMeta),
+      );
+    }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    }
     return context;
   }
 
@@ -4882,6 +4915,14 @@ class Memories extends Table with TableInfo<Memories, MemoryRow> {
         DriftSqlType.int,
         data['${effectivePrefix}updated_at'],
       )!,
+      pinned: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}pinned'],
+      )!,
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      ),
     );
   }
 
@@ -4900,12 +4941,16 @@ class MemoryRow extends DataClass implements Insertable<MemoryRow> {
   final String content;
   final int createdAt;
   final int updatedAt;
+  final bool pinned;
+  final String? source;
   const MemoryRow({
     required this.id,
     required this.category,
     required this.content,
     required this.createdAt,
     required this.updatedAt,
+    required this.pinned,
+    this.source,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4915,6 +4960,10 @@ class MemoryRow extends DataClass implements Insertable<MemoryRow> {
     map['content'] = Variable<String>(content);
     map['created_at'] = Variable<int>(createdAt);
     map['updated_at'] = Variable<int>(updatedAt);
+    map['pinned'] = Variable<bool>(pinned);
+    if (!nullToAbsent || source != null) {
+      map['source'] = Variable<String>(source);
+    }
     return map;
   }
 
@@ -4925,6 +4974,10 @@ class MemoryRow extends DataClass implements Insertable<MemoryRow> {
       content: Value(content),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      pinned: Value(pinned),
+      source: source == null && nullToAbsent
+          ? const Value.absent()
+          : Value(source),
     );
   }
 
@@ -4939,6 +4992,8 @@ class MemoryRow extends DataClass implements Insertable<MemoryRow> {
       content: serializer.fromJson<String>(json['content']),
       createdAt: serializer.fromJson<int>(json['created_at']),
       updatedAt: serializer.fromJson<int>(json['updated_at']),
+      pinned: serializer.fromJson<bool>(json['pinned']),
+      source: serializer.fromJson<String?>(json['source']),
     );
   }
   @override
@@ -4950,6 +5005,8 @@ class MemoryRow extends DataClass implements Insertable<MemoryRow> {
       'content': serializer.toJson<String>(content),
       'created_at': serializer.toJson<int>(createdAt),
       'updated_at': serializer.toJson<int>(updatedAt),
+      'pinned': serializer.toJson<bool>(pinned),
+      'source': serializer.toJson<String?>(source),
     };
   }
 
@@ -4959,12 +5016,16 @@ class MemoryRow extends DataClass implements Insertable<MemoryRow> {
     String? content,
     int? createdAt,
     int? updatedAt,
+    bool? pinned,
+    Value<String?> source = const Value.absent(),
   }) => MemoryRow(
     id: id ?? this.id,
     category: category ?? this.category,
     content: content ?? this.content,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
+    pinned: pinned ?? this.pinned,
+    source: source.present ? source.value : this.source,
   );
   MemoryRow copyWithCompanion(MemoriesCompanion data) {
     return MemoryRow(
@@ -4973,6 +5034,8 @@ class MemoryRow extends DataClass implements Insertable<MemoryRow> {
       content: data.content.present ? data.content.value : this.content,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      pinned: data.pinned.present ? data.pinned.value : this.pinned,
+      source: data.source.present ? data.source.value : this.source,
     );
   }
 
@@ -4983,13 +5046,16 @@ class MemoryRow extends DataClass implements Insertable<MemoryRow> {
           ..write('category: $category, ')
           ..write('content: $content, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('pinned: $pinned, ')
+          ..write('source: $source')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, category, content, createdAt, updatedAt);
+  int get hashCode =>
+      Object.hash(id, category, content, createdAt, updatedAt, pinned, source);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4998,7 +5064,9 @@ class MemoryRow extends DataClass implements Insertable<MemoryRow> {
           other.category == this.category &&
           other.content == this.content &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.pinned == this.pinned &&
+          other.source == this.source);
 }
 
 class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
@@ -5007,6 +5075,8 @@ class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
   final Value<String> content;
   final Value<int> createdAt;
   final Value<int> updatedAt;
+  final Value<bool> pinned;
+  final Value<String?> source;
   final Value<int> rowid;
   const MemoriesCompanion({
     this.id = const Value.absent(),
@@ -5014,6 +5084,8 @@ class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
     this.content = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.pinned = const Value.absent(),
+    this.source = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MemoriesCompanion.insert({
@@ -5022,6 +5094,8 @@ class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
     required String content,
     required int createdAt,
     required int updatedAt,
+    this.pinned = const Value.absent(),
+    this.source = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        category = Value(category),
@@ -5034,6 +5108,8 @@ class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
     Expression<String>? content,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
+    Expression<bool>? pinned,
+    Expression<String>? source,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -5042,6 +5118,8 @@ class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
       if (content != null) 'content': content,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (pinned != null) 'pinned': pinned,
+      if (source != null) 'source': source,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -5052,6 +5130,8 @@ class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
     Value<String>? content,
     Value<int>? createdAt,
     Value<int>? updatedAt,
+    Value<bool>? pinned,
+    Value<String?>? source,
     Value<int>? rowid,
   }) {
     return MemoriesCompanion(
@@ -5060,6 +5140,8 @@ class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
       content: content ?? this.content,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      pinned: pinned ?? this.pinned,
+      source: source ?? this.source,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -5082,6 +5164,12 @@ class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<int>(updatedAt.value);
     }
+    if (pinned.present) {
+      map['pinned'] = Variable<bool>(pinned.value);
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -5096,6 +5184,8 @@ class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
           ..write('content: $content, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('pinned: $pinned, ')
+          ..write('source: $source, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -11345,6 +11435,8 @@ typedef $MemoriesCreateCompanionBuilder = MemoriesCompanion Function({
   required String content,
   required int createdAt,
   required int updatedAt,
+  Value<bool> pinned,
+  Value<String?> source,
   Value<int> rowid,
 });
 typedef $MemoriesUpdateCompanionBuilder = MemoriesCompanion Function({
@@ -11353,6 +11445,8 @@ typedef $MemoriesUpdateCompanionBuilder = MemoriesCompanion Function({
   Value<String> content,
   Value<int> createdAt,
   Value<int> updatedAt,
+  Value<bool> pinned,
+  Value<String?> source,
   Value<int> rowid,
 });
 
@@ -11386,6 +11480,16 @@ class $MemoriesFilterComposer extends Composer<_$MoodiaryDatabase, Memories> {
 
   ColumnFilters<int> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get pinned => $composableBuilder(
+    column: $table.pinned,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -11422,6 +11526,16 @@ class $MemoriesOrderingComposer extends Composer<_$MoodiaryDatabase, Memories> {
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get pinned => $composableBuilder(
+    column: $table.pinned,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $MemoriesAnnotationComposer
@@ -11447,6 +11561,12 @@ class $MemoriesAnnotationComposer
 
   GeneratedColumn<int> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get pinned =>
+      $composableBuilder(column: $table.pinned, builder: (column) => column);
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
 }
 
 class $MemoriesTableManager
@@ -11482,6 +11602,8 @@ class $MemoriesTableManager
                 Value<String> content = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
+                Value<bool> pinned = const Value.absent(),
+                Value<String?> source = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MemoriesCompanion(
                 id: id,
@@ -11489,6 +11611,8 @@ class $MemoriesTableManager
                 content: content,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                pinned: pinned,
+                source: source,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -11498,6 +11622,8 @@ class $MemoriesTableManager
                 required String content,
                 required int createdAt,
                 required int updatedAt,
+                Value<bool> pinned = const Value.absent(),
+                Value<String?> source = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MemoriesCompanion.insert(
                 id: id,
@@ -11505,6 +11631,8 @@ class $MemoriesTableManager
                 content: content,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                pinned: pinned,
+                source: source,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

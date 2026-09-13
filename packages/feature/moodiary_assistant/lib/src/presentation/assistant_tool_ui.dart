@@ -15,15 +15,10 @@ import 'package:mui/mui.dart';
       title: l10n.assistant.toolJsTitle,
       description: l10n.assistant.toolJsDes,
     ),
-    .queryDiaries => (
+    .searchDiaries => (
       icon: LucideIcons.textSearch,
-      title: l10n.assistant.toolQueryTitle,
-      description: l10n.assistant.toolQueryDes,
-    ),
-    .semanticSearchDiaries => (
-      icon: LucideIcons.sparkles,
-      title: l10n.assistant.toolSemanticTitle,
-      description: l10n.assistant.toolSemanticDes,
+      title: l10n.assistant.toolSearchTitle,
+      description: l10n.assistant.toolSearchDes,
     ),
     .getDiary => (
       icon: LucideIcons.fileText,
@@ -70,11 +65,6 @@ import 'package:mui/mui.dart';
       title: l10n.assistant.toolDeleteCategoryTitle,
       description: l10n.assistant.toolDeleteCategoryDes,
     ),
-    .listMemories => (
-      icon: LucideIcons.brain,
-      title: l10n.assistant.toolListMemoriesTitle,
-      description: l10n.assistant.toolListMemoriesDes,
-    ),
     .recallMemory => (
       icon: LucideIcons.brain,
       title: l10n.assistant.toolRecallMemoryTitle,
@@ -84,11 +74,6 @@ import 'package:mui/mui.dart';
       icon: LucideIcons.bookmarkPlus,
       title: l10n.assistant.toolRememberTitle,
       description: l10n.assistant.toolRememberDes,
-    ),
-    .updateMemory => (
-      icon: LucideIcons.filePenLine,
-      title: l10n.assistant.toolUpdateMemoryTitle,
-      description: l10n.assistant.toolUpdateMemoryDes,
     ),
     .forgetFact => (
       icon: LucideIcons.eraser,

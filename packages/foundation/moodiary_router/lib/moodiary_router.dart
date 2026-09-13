@@ -215,6 +215,12 @@ class AssistantSettingRoute extends MoodiaryRouteBase {
   const AssistantSettingRoute() : super(path);
 }
 
+class AssistantMemoriesRoute extends MoodiaryRouteBase {
+  static const String path = '/setting/assistant/memories';
+
+  const AssistantMemoriesRoute() : super(path);
+}
+
 class AssistantPresetsRoute extends MoodiaryRouteBase {
   static const String path = '/setting/assistant/presets';
 

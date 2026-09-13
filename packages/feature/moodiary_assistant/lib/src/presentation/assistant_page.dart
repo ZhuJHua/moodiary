@@ -789,7 +789,7 @@ class _AssistantPageState extends State<AssistantPage> {
       localeTag: localeTag,
       nowLocal: .now(),
       factCount: factCount,
-      semanticSearch: getIt<EmbedIndexService>().enabled,
+      semanticSearch: AssistantToolRegistry.semanticAvailable,
       fallbackFacts: [for (final m in fallback) '(${m.category}) ${m.text}'],
     );
 

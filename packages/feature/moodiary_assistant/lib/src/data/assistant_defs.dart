@@ -2,9 +2,7 @@ import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 enum AssistantTool {
-  queryDiaries('queryDiaries'),
-
-  semanticSearchDiaries('semanticSearchDiaries'),
+  searchDiaries('searchDiaries'),
 
   getDiary('getDiary'),
 
@@ -24,13 +22,9 @@ enum AssistantTool {
 
   deleteCategory('deleteCategory'),
 
-  listMemories('listMemories'),
-
   recallMemory('recallMemory'),
 
   rememberFact('rememberFact'),
-
-  updateMemory('updateMemory'),
 
   forgetFact('forgetFact'),
 
@@ -126,6 +120,22 @@ int _budgetFor(String level, ReasoningControl control, int maxTokens) {
   final min = control.min ?? 1024;
   final max = control.max ?? (maxTokens - 1).clamp(min, assistantMaxTokensCap);
   return (maxTokens ~/ fraction).clamp(min, max < min ? min : max);
+}
+
+const Map<String, String> renamedAssistantToolIds = {
+  'queryDiaries': 'searchDiaries',
+  'semanticSearchDiaries': 'searchDiaries',
+  'listMemories': 'recallMemory',
+  'updateMemory': 'rememberFact',
+};
+
+List<String> migrateAssistantToolIds(List<String> ids) {
+  final out = <String>[];
+  for (final id in ids) {
+    final mapped = renamedAssistantToolIds[id] ?? id;
+    if (!out.contains(mapped)) out.add(mapped);
+  }
+  return out;
 }
 
 const int personaMaxChars = 6000;

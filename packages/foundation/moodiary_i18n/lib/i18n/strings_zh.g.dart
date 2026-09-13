@@ -877,6 +877,111 @@ class Translations$assistant$zh {
 	/// zh: '助手会根据对话内容自动调用下列工具，无需你逐次确认。删除类操作请留意：日记会进回收站，记忆则是永久删除。'
 	String get toolSectionNote => '助手会根据对话内容自动调用下列工具，无需你逐次确认。删除类操作请留意：日记会进回收站，记忆则是永久删除。';
 
+	/// zh: '助手记忆'
+	String get memoryTitle => '助手记忆';
+
+	/// zh: '查看和管理助手记下的事'
+	String get memoryTileSubtitle => '查看和管理助手记下的事';
+
+	/// zh: '助手记下的关于你的事。只存在这台设备上，不会同步也不会进导出。'
+	String get memoryLede => '助手记下的关于你的事。只存在这台设备上，不会同步也不会进导出。';
+
+	/// zh: '搜索记忆'
+	String get memorySearchHint => '搜索记忆';
+
+	/// zh: '常驻'
+	String get memoryResident => '常驻';
+
+	/// zh: '每次对话都会带上，用来决定助手怎么跟你说话。'
+	String get memoryResidentDes => '每次对话都会带上，用来决定助手怎么跟你说话。';
+
+	/// zh: '其余'
+	String get memoryRest => '其余';
+
+	/// zh: '助手觉得跟当下这句话有关时才会去查。'
+	String get memoryRestDes => '助手觉得跟当下这句话有关时才会去查。';
+
+	/// zh: '{count} 条'
+	String memoryCount({required Object count}) => '${count} 条';
+
+	/// zh: '{date} · {source}'
+	String memoryMeta({required Object date, required Object source}) => '${date} · ${source}';
+
+	/// zh: '你说的'
+	String get memorySourceSaid => '你说的';
+
+	/// zh: '你让我记的'
+	String get memorySourceAsked => '你让我记的';
+
+	/// zh: '偏好'
+	String get memoryKindPreference => '偏好';
+
+	/// zh: '主题'
+	String get memoryKindTheme => '主题';
+
+	/// zh: '目标'
+	String get memoryKindGoal => '目标';
+
+	/// zh: '事实'
+	String get memoryKindFact => '事实';
+
+	/// zh: '设为常驻'
+	String get memoryPin => '设为常驻';
+
+	/// zh: '取消常驻'
+	String get memoryUnpin => '取消常驻';
+
+	/// zh: '每次对话都带上，最多 {count} 条'
+	String memoryPinDes({required Object count}) => '每次对话都带上，最多 ${count} 条';
+
+	/// zh: '常驻已有 {count} 条，先取消一条再设'
+	String memoryPinFull({required Object count}) => '常驻已有 ${count} 条，先取消一条再设';
+
+	/// zh: '忘掉'
+	String get memoryForget => '忘掉';
+
+	/// zh: '忘掉这条记忆？'
+	String get memoryForgetTitle => '忘掉这条记忆？';
+
+	/// zh: '「{text}」会被永久删除，助手之后不会再记得它。'
+	String memoryForgetMessage({required Object text}) => '「${text}」会被永久删除，助手之后不会再记得它。';
+
+	/// zh: '清空全部记忆？'
+	String get memoryClearTitle => '清空全部记忆？';
+
+	/// zh: '助手记下的所有事都会被永久删除，无法恢复。'
+	String get memoryClearMessage => '助手记下的所有事都会被永久删除，无法恢复。';
+
+	/// zh: '全部清空'
+	String get memoryClearConfirm => '全部清空';
+
+	/// zh: '编辑'
+	String get memoryEdit => '编辑';
+
+	/// zh: '编辑记忆'
+	String get memoryEditTitle => '编辑记忆';
+
+	/// zh: '内容'
+	String get memoryFieldText => '内容';
+
+	/// zh: '类别'
+	String get memoryFieldKind => '类别';
+
+	/// zh: '还没有记忆'
+	String get memoryEmpty => '还没有记忆';
+
+	/// zh: '聊天时说一句「记住……」，或者告诉助手你的习惯，它就会存下来。'
+	String get memoryEmptyDes => '聊天时说一句「记住……」，或者告诉助手你的习惯，它就会存下来。';
+
+	/// zh: '没有匹配的记忆'
+	String get memoryNoMatch => '没有匹配的记忆';
+
+	/// zh: '查找日记'
+	String get toolSearchTitle => '查找日记';
+
+	/// zh: '按关键词或含义查找你的本地日记，也能按时间范围和分类浏览。语义检索需先在设置中启用本地索引。'
+	String get toolSearchDes => '按关键词或含义查找你的本地日记，也能按时间范围和分类浏览。语义检索需先在设置中启用本地索引。';
+
 	/// zh: '查询日记'
 	String get toolQueryTitle => '查询日记';
 

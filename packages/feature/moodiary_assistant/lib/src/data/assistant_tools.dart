@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:math';
 
 import 'package:fast_tokenizer/fast_tokenizer.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
@@ -13,6 +12,16 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 typedef AssistantToolRun = Future<String> Function(Map<String, dynamic> input);
+
+typedef _KeywordSearch = ({
+  List<Diary> results,
+  List<String> keywords,
+  String? categoryId,
+  DateTime? start,
+  DateTime? endExclusive,
+});
+
+typedef _SearchRow = ({Diary diary, bool keyword, bool meaning, double? score});
 
 const String _failurePrefix = 'Failed:';
 
@@ -67,36 +76,35 @@ abstract final class AssistantToolRegistry {
 
   static const _maxBatchRead = 10;
 
-  static const _defaultSemanticLimit = 5;
-
-  static const _maxSemanticLimit = 10;
-
   static const _maxBatchWrite = _maxQueryLimit;
 
   static final List<AssistantToolSpec> specs = [
     const AssistantToolSpec(
-      tool: .queryDiaries,
+      tool: .searchDiaries,
       description:
-          'Search or browse the diaries stored on this device. Every argument is '
-          'an optional filter; with keywords it ranks by relevance, without them '
-          'it browses by date and/or category. '
-          'Results carry id, date, mood and a short excerpt — not the full text '
-          '(use getDiary for that) — and state the total number of matches, which '
-          'may exceed what is returned; when it does, say so instead of '
-          'presenting the rows as the complete set. '
-          'Mood is one of a fixed set of emotion/state values (see the mood enum '
-          'on createDiary); neutral is also the default for entries whose mood '
-          'was never set, so do not over-read it. '
-          'Call this when the user asks about what they wrote, or to get ids '
-          'before editing or deleting entries. If it comes back empty for a '
-          'vague or feeling-based request, try semanticSearchDiaries before '
-          'concluding nothing exists.',
+          'Search or browse the diaries stored on this device. Every argument '
+          'is an optional filter. Give a query to search and it runs both the '
+          'keyword path and, where the local semantic index is on, a '
+          'meaning-based one, merged into a single ranking; leave it out to '
+          'browse by date and/or category. Each row says how it was found '
+          '(via=keyword, meaning, or both). '
+          'Results carry id, date, mood and a short excerpt — not the full '
+          'text (use getDiary for that) — and state the total number of '
+          'matches, which may exceed what is returned; when it does, say so '
+          'instead of presenting the rows as the complete set. '
+          'Mood is one of a fixed set of emotion/state values (see the mood '
+          'enum on createDiary); neutral is also the default for entries whose '
+          'mood was never set, so do not over-read it. '
+          'Call this whenever the user asks about what they wrote, and to get '
+          'ids before editing or deleting entries.',
       jsonSchema: {
         'type': 'object',
         'properties': {
-          'keywords': {
+          'query': {
             'type': 'string',
-            'description': 'Space-separated search terms. Omit to browse by the filters below.',
+            'description':
+                'What to look for: keywords, or a sentence describing the '
+                'entry. Omit to browse by the filters below.',
           },
           'categoryId': {
             'type': 'string',
@@ -115,7 +123,13 @@ abstract final class AssistantToolRegistry {
             'type': 'string',
             'enum': ['newest', 'oldest', 'modified', 'relevance'],
             'description':
-                'Defaults to newest. relevance applies only with keywords.',
+                'Defaults to newest. relevance applies only with a query.',
+          },
+          'mode': {
+            'type': 'string',
+            'enum': ['auto', 'keyword', 'meaning'],
+            'description':
+                'Defaults to auto. Force one path only when you have a reason.',
           },
           'limit': {
             'type': 'integer',
@@ -125,57 +139,8 @@ abstract final class AssistantToolRegistry {
           },
         },
       },
-      run: _queryDiaries,
+      run: _searchDiaries,
       summarize: _summarizeQuery,
-    ),
-    const AssistantToolSpec(
-      tool: .semanticSearchDiaries,
-      description:
-          'Find diaries by meaning, not exact words: describe what the entry is '
-          'about in a natural sentence ("a trip where I felt lost and small") and '
-          'it returns the semantically closest entries even when their wording '
-          'differs. Use queryDiaries when the user quotes concrete words and '
-          'this for vague or feeling-based descriptions; if one comes back '
-          'empty, try the other. Its ids are valid for getDiary, updateDiary '
-          'and deleteDiary. Results carry id, date, mood and the best-matching '
-          'excerpt, ranked by similarity (1.00 = closest). Unavailable until the '
-          'user enables the local semantic index in settings; fall back to '
-          'queryDiaries then.',
-      jsonSchema: {
-        'type': 'object',
-        'properties': {
-          'query': {
-            'type': 'string',
-            'description':
-                'A natural-language description of the entries to find. '
-                'A full sentence works better than bare keywords.',
-          },
-          'categoryId': {
-            'type': 'string',
-            'description': 'Restrict to one category (id from listCategories).',
-          },
-          'startDate': {
-            'type': 'string',
-            'description':
-                'Inclusive start, YYYY-MM-DD in the user local time.',
-          },
-          'endDate': {
-            'type': 'string',
-            'description': 'Inclusive end, YYYY-MM-DD in the user local time.',
-          },
-          'limit': {
-            'type': 'integer',
-            'description':
-                'How many entries to return. Default '
-                '$_defaultSemanticLimit, max $_maxSemanticLimit.',
-            'minimum': 1,
-            'maximum': _maxSemanticLimit,
-          },
-        },
-        'required': ['query'],
-      },
-      run: _semanticSearchDiaries,
-      summarize: _summarizeSemantic,
     ),
     const AssistantToolSpec(
       tool: .getDiary,
@@ -396,15 +361,6 @@ abstract final class AssistantToolRegistry {
       summarize: _summarizeWrite,
     ),
     const AssistantToolSpec(
-      tool: .listMemories,
-      description:
-          'List every long-term fact you saved about the user, each with its '
-          'id. Prefer recallMemory; use this only when you need the full list.',
-      jsonSchema: {'type': 'object', 'properties': {}},
-      run: _listMemories,
-      summarize: _summarizeList,
-    ),
-    const AssistantToolSpec(
       tool: .recallMemory,
       description:
           'Look up what you saved about the user in earlier conversations. '
@@ -434,16 +390,19 @@ abstract final class AssistantToolRegistry {
       tool: .rememberFact,
       description:
           'Save durable facts about the user — lasting preferences, recurring '
-          'themes, ongoing goals. Not passing details, one-off events, '
-          'sensitive secrets, or anything they asked you to keep private or '
-          'not remember. Pass every fact in '
-          'one call. Max $_maxBatchWrite per call.',
+          'themes, ongoing goals. Only from what the user says about '
+          'themselves or asks you to remember: never from a diary you read or '
+          'any other tool result. Not passing details, one-off events, '
+          'health, beliefs, legal or financial specifics, or anything they '
+          'asked you to keep private or not remember. Pass every fact in '
+          'one call. Pass an id to revise a fact instead of adding one. '
+          'Max $_maxBatchWrite per call.',
       jsonSchema: {
         'type': 'object',
         'properties': {
           'items': {
             'type': 'array',
-            'description': 'One object per fact to save.',
+            'description': 'One object per fact to save or revise.',
             'items': {
               'type': 'object',
               'properties': {
@@ -456,6 +415,19 @@ abstract final class AssistantToolRegistry {
                   'type': 'string',
                   'description': 'The fact, stated in one plain sentence.',
                 },
+                'id': {
+                  'type': 'string',
+                  'description':
+                      'Only when revising a fact you got from recallMemory. '
+                      'Leave it out to save a new one.',
+                },
+                'source': {
+                  'type': 'string',
+                  'enum': ['user_said', 'user_asked'],
+                  'description':
+                      'user_asked when they told you to remember it, '
+                      'user_said when they simply stated it.',
+                },
               },
               'required': ['category', 'text'],
             },
@@ -467,43 +439,9 @@ abstract final class AssistantToolRegistry {
       summarize: _summarizeWrite,
     ),
     const AssistantToolSpec(
-      tool: .updateMemory,
-      description:
-          'Revise saved facts by id (from listMemories). Pass every revision in '
-          'one call. Max $_maxBatchWrite per call.',
-      jsonSchema: {
-        'type': 'object',
-        'properties': {
-          'items': {
-            'type': 'array',
-            'description': 'One object per fact to revise.',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'id': {
-                  'type': 'string',
-                  'description': 'Memory id from listMemories.',
-                },
-                'text': {'type': 'string', 'description': 'The revised fact.'},
-                'category': {
-                  'type': 'string',
-                  'enum': ['preference', 'theme', 'goal', 'fact'],
-                  'description': 'New kind, if it changed.',
-                },
-              },
-              'required': ['id', 'text'],
-            },
-          },
-        },
-        'required': ['items'],
-      },
-      run: _updateMemory,
-      summarize: _summarizeWrite,
-    ),
-    const AssistantToolSpec(
       tool: .forgetFact,
       description:
-          'Delete saved facts by id (from listMemories). This is permanent — '
+          'Delete saved facts by id (from recallMemory). This is permanent — '
           'there is no recycle bin for memories. Pass every id in one call. '
           'Max $_maxBatchWrite per call.',
       jsonSchema: {
@@ -512,7 +450,7 @@ abstract final class AssistantToolRegistry {
           'ids': {
             'type': 'array',
             'items': {'type': 'string'},
-            'description': 'Memory ids from listMemories.',
+            'description': 'Memory ids from recallMemory.',
           },
         },
         'required': ['ids'],
@@ -551,6 +489,11 @@ abstract final class AssistantToolRegistry {
   ];
 
   static const _maxReplayChars = 600;
+
+  // 语义检索是可选能力：没装索引服务就等同没启用，别让它把整条搜索拖垮
+  static bool get semanticAvailable =>
+      getIt.isRegistered<EmbedIndexService>() &&
+      getIt<EmbedIndexService>().enabled;
 
   static String recordOf(List<AssistantToolCall> calls) {
     final lines = <String>[];
@@ -674,14 +617,15 @@ abstract final class AssistantToolRegistry {
       .createCategory ||
       .updateCategory => _trimToNull(item['name']) ?? l10n.assistant.toolDone,
       .rememberFact ||
-      .updateMemory => _trimToNull(item['text']) ?? l10n.assistant.toolDone,
       .deleteCategory || .forgetFact => l10n.assistant.toolDeleted,
       _ => l10n.assistant.toolUpdated,
     };
   }
 
-  static Future<String> _queryDiaries(Map<String, dynamic> input) async {
-    final rawKeywords = ((input['keywords'] as String?) ?? '').trim();
+  static Future<_KeywordSearch> _keywordSearch(
+    Map<String, dynamic> input,
+  ) async {
+    final rawKeywords = ((input['query'] as String?) ?? '').trim();
     final keywordsForDisplay = rawKeywords
         .split(RegExp(r'\s+'))
         .where((e) => e.isNotEmpty)
@@ -725,102 +669,189 @@ abstract final class AssistantToolRegistry {
       );
     }
 
-    if (results.isEmpty) {
-      return await _emptyQueryMessage(
-        keywordsForDisplay,
-        categoryId,
-        start,
-        endExclusive,
-      );
-    }
-    return _formatDiaryList(results.take(limit), total: results.length);
+    return (
+      results: results,
+      keywords: keywordsForDisplay,
+      categoryId: categoryId,
+      start: start,
+      endExclusive: endExclusive,
+    );
   }
 
-  static Future<String> _semanticSearchDiaries(
-    Map<String, dynamic> input,
-  ) async {
+  static Future<List<SemanticHit>> _semanticHits(
+    Map<String, dynamic> input, {
+    required int limit,
+  }) async {
     final query = ((input['query'] as String?) ?? '').trim();
-    if (query.isEmpty) {
-      return 'Failed: query must not be empty.';
-    }
+    if (query.isEmpty) return const [];
+    if (!semanticAvailable) return const [];
     final index = getIt<EmbedIndexService>();
-    if (!index.enabled) {
-      return 'Semantic search is not available: the local embedding model is '
-          'not enabled on this device. Use queryDiaries with keywords instead.';
-    }
     final categoryId = _trimToNull(input['categoryId']);
-    final limit = ((input['limit'] as num?)?.toInt() ?? _defaultSemanticLimit)
-        .clamp(1, _maxSemanticLimit);
     final start = _parseDate(input['startDate']);
     final endExclusive = _parseDate(input['endDate'])
         ?.add(const Duration(days: 1));
-
-    final hits = await index.search(
+    return index.search(
       query,
       limit: limit,
       categoryId: categoryId,
       start: start,
       endExclusive: endExclusive,
     );
-    if (hits.isEmpty) {
-      return '0 matches. The semantic index may still be building, or nothing '
-          'is similar — try queryDiaries with keywords before concluding '
-          'nothing exists.';
-    }
+  }
 
+  static Future<String> _searchDiaries(Map<String, dynamic> input) async {
+    final mode = (input['mode'] as String?)?.trim() ?? 'auto';
+    final limit = _parseLimit(input['limit']);
+    final hasQuery = ((input['query'] as String?) ?? '').trim().isNotEmpty;
+    final semanticOn = hasQuery && semanticAvailable;
+    final wantKeyword = mode != 'meaning';
+    final wantMeaning = mode != 'keyword' && hasQuery && semanticOn;
+
+    final keyword = wantKeyword
+        ? await _keywordSearch(input)
+        : (
+            results: <Diary>[],
+            keywords: <String>[],
+            categoryId: _trimToNull(input['categoryId']),
+            start: _parseDate(input['startDate']),
+            endExclusive: _parseDate(
+              input['endDate'],
+            )?.add(const Duration(days: 1)),
+          );
+
+    // 关键词已经够了就不必唤醒嵌入引擎
+    final needMeaning =
+        wantMeaning && (mode == 'meaning' || keyword.results.length < limit);
+    final hits = needMeaning
+        ? await _semanticHits(input, limit: limit)
+        : const <SemanticHit>[];
+
+    final rows = _fuse(keyword.results, hits, limit: limit);
+    if (rows.isEmpty) {
+      final base = await _emptyQueryMessage(
+        keyword.keywords,
+        keyword.categoryId,
+        keyword.start,
+        keyword.endExclusive,
+      );
+      final how = !hasQuery
+          ? ''
+          : needMeaning
+          ? ' Both the keyword and the meaning path ran.'
+          : semanticOn
+          ? ' Only the keyword path ran.'
+          : ' Only the keyword path ran; the semantic index is off.';
+      return '$base$how';
+    }
     final repo = getIt<DiaryRepository>();
+    final resolved = <_SearchRow>[];
+    for (final row in rows) {
+      if (row.diary != null) {
+        resolved.add((
+          diary: row.diary!,
+          keyword: row.keyword,
+          meaning: row.meaning,
+          score: row.score,
+        ));
+        continue;
+      }
+      final diary = await repo.getDiaryByBusinessId(row.id);
+      if (diary == null) continue;
+      resolved.add((
+        diary: diary,
+        keyword: row.keyword,
+        meaning: row.meaning,
+        score: row.score,
+      ));
+    }
+    return _formatSearchRows(
+      resolved,
+      total: keyword.results.length + hits.length - _overlap(keyword.results, hits),
+    );
+  }
+
+  static int _overlap(List<Diary> diaries, List<SemanticHit> hits) {
+    final ids = {for (final d in diaries) d.id};
+    var n = 0;
+    for (final h in hits) {
+      if (ids.contains(h.diaryId)) n++;
+    }
+    return n;
+  }
+
+  // 倒数排名融合：两条路各自的名次都算数，不必把分数标到同一量纲
+  static List<({String id, Diary? diary, bool keyword, bool meaning, double? score})>
+  _fuse(List<Diary> keyword, List<SemanticHit> hits, {required int limit}) {
+    const k = 60;
+    final score = <String, double>{};
+    final byId = <String, Diary>{};
+    final fromKeyword = <String>{};
+    final fromMeaning = <String>{};
+    final similarity = <String, double>{};
+    for (var i = 0; i < keyword.length; i++) {
+      final d = keyword[i];
+      byId[d.id] = d;
+      fromKeyword.add(d.id);
+      score[d.id] = (score[d.id] ?? 0) + 1 / (k + i + 1);
+    }
+    for (var i = 0; i < hits.length; i++) {
+      final h = hits[i];
+      fromMeaning.add(h.diaryId);
+      similarity[h.diaryId] = (1 - h.distance).clamp(-1.0, 1.0);
+      score[h.diaryId] = (score[h.diaryId] ?? 0) + 1 / (k + i + 1);
+    }
+    final ids = score.keys.toList()
+      ..sort((a, b) => score[b]!.compareTo(score[a]!));
+    return [
+      for (final id in ids.take(limit))
+        (
+          id: id,
+          diary: byId[id],
+          keyword: fromKeyword.contains(id),
+          meaning: fromMeaning.contains(id),
+          score: similarity[id],
+        ),
+    ];
+  }
+
+  static String _formatSearchRows(List<_SearchRow> rows, {required int total}) {
     final buffer = StringBuffer()
       ..writeln(
-        '${hits.length} semantically similar entries, best match first '
-        '(similarity 1.00 = closest):',
+        rows.length < total
+            ? '$total matches; the first ${rows.length} follow. Raise limit or '
+                  'narrow the filters for more.'
+            : '$total matches:',
       );
-    for (final hit in hits) {
-      final diary = await repo.getDiaryByBusinessId(hit.diaryId);
-      if (diary == null) continue;
+    for (final row in rows) {
+      final diary = row.diary;
       final title = diary.title.trim().isEmpty
           ? 'Untitled'
           : diary.title.trim();
       final cat = diary.categoryId;
       final catPart = (cat != null && cat.isNotEmpty) ? ' categoryId=$cat' : '';
-      final similarity = (1 - hit.distance).clamp(-1.0, 1.0);
+      final via = row.keyword && row.meaning
+          ? 'keyword+meaning'
+          : row.meaning
+          ? 'meaning'
+          : 'keyword';
+      final sim = row.meaning && row.score != null
+          ? ' similarity=${row.score!.toStringAsFixed(2)}'
+          : '';
       buffer.writeln(
         'id=${diary.id} 【${TimeFormat.isoDate(diary.time)}】$title '
-        'mood=${diary.mood.name} '
-        'similarity=${similarity.toStringAsFixed(2)}$catPart',
+        'mood=${diary.mood.name} via=$via$sim$catPart',
       );
-      final excerpt = _semanticExcerpt(diary, hit);
-      if (excerpt.isNotEmpty) buffer.writeln(excerpt);
+      final text = diary.contentText.trim();
+      if (text.isNotEmpty) {
+        buffer.writeln(
+          text.length > _maxExcerptLength
+              ? '${text.substring(0, _maxExcerptLength)}… (excerpt; full text via getDiary)'
+              : text,
+        );
+      }
       buffer.writeln();
     }
     return buffer.toString().trim();
-  }
-
-  static String _semanticExcerpt(Diary diary, SemanticHit hit) {
-    if (hit.startOff < 0) return '(matched the title)';
-    final text = diary.contentText;
-    if (text.isEmpty || hit.startOff >= text.length) return '';
-    final end = min(hit.startOff + hit.len, text.length);
-    var excerpt = text.substring(hit.startOff, end).trim();
-    if (excerpt.length > _maxExcerptLength) {
-      excerpt =
-          '${excerpt.substring(0, _maxExcerptLength)}… '
-          '(excerpt; full text via getDiary)';
-    }
-    return excerpt;
-  }
-
-  static String _summarizeSemantic(
-    AssistantTool _,
-    Map<String, dynamic> input,
-    String output,
-  ) {
-    final hit = RegExp(r'^(\d+) semantically').firstMatch(output);
-    if (hit == null) return l10n.assistant.toolNoMatch;
-    final count = int.tryParse(hit.group(1) ?? '') ?? 0;
-    return [
-      l10n.assistant.toolMatched(count: count),
-      ?_trimToNull(input['query']),
-    ].join(' · ');
   }
 
   static Future<String> _getDiary(Map<String, dynamic> input) async {
@@ -1218,17 +1249,9 @@ abstract final class AssistantToolRegistry {
         : 'Failed: the category does not exist, or it still holds diaries — refile them first.';
   }
 
-  static const _validMemoryCategories = {'preference', 'theme', 'goal', 'fact'};
+  static const _validMemorySources = {'user_said', 'user_asked'};
 
-  static Future<String> _listMemories(Map<String, dynamic> input) async {
-    final memories = await getIt<MemoryRepository>().getAll();
-    if (memories.isEmpty) return 'No saved facts yet.';
-    final buffer = StringBuffer();
-    for (final m in memories) {
-      buffer.writeln('id=${m.id} kind=${m.category} text=${m.text}');
-    }
-    return buffer.toString().trim();
-  }
+  static const _validMemoryCategories = {'preference', 'theme', 'goal', 'fact'};
 
   static Future<String> _recallMemory(Map<String, dynamic> input) async {
     final repo = getIt<MemoryRepository>();
@@ -1260,35 +1283,33 @@ abstract final class AssistantToolRegistry {
     if (text.isEmpty) return 'Failed: the fact cannot be empty.';
     final rawCat = (input['category'] as String?)?.trim() ?? 'fact';
     final category = _validMemoryCategories.contains(rawCat) ? rawCat : 'fact';
-    final entry = MemoryEntry.create(category: category, text: text);
-    await getIt<MemoryRepository>().put(entry);
-    return 'Remembered ($category): $text (id=${entry.id}).';
-  }
-
-  static Future<String> _updateMemory(Map<String, dynamic> input) =>
-      runBatch(input, each: _updateOneMemory);
-
-  static Future<String> _updateOneMemory(Map<String, dynamic> input) async {
-    final id = (input['id'] as String?)?.trim() ?? '';
-    final text = (input['text'] as String?)?.trim() ?? '';
-    if (id.isEmpty || text.isEmpty) {
-      return 'Failed: memory id and text are both required.';
-    }
     final repo = getIt<MemoryRepository>();
-    final existing = await repo.get(id);
-    if (existing == null) return 'Failed: no memory with id=$id.';
-    final rawCat = (input['category'] as String?)?.trim();
-    final category = (rawCat != null && _validMemoryCategories.contains(rawCat))
-        ? rawCat
-        : existing.category;
-    await repo.put(
-      existing.copyWith(
-        text: text,
-        category: category,
-        updatedAt: .timestamp(),
-      ),
+    final id = (input['id'] as String?)?.trim() ?? '';
+    if (id.isNotEmpty) {
+      final current = await repo.get(id);
+      if (current == null) return 'Failed: no memory with id=$id.';
+      await repo.put(
+        current.copyWith(
+          text: text,
+          category: category,
+          updatedAt: .timestamp(),
+        ),
+      );
+      return 'Revised the memory (id=$id): $text.';
+    }
+    final existing = await repo.findDuplicate(category, text);
+    if (existing != null) {
+      await repo.touch(existing.id);
+      return 'Already saved ($category): ${existing.text} (id=${existing.id}).';
+    }
+    final rawSource = (input['source'] as String?)?.trim();
+    final entry = MemoryEntry.create(
+      category: category,
+      text: text,
+      source: _validMemorySources.contains(rawSource) ? rawSource : 'user_said',
     );
-    return 'Updated the memory (id=$id): $text.';
+    await repo.put(entry);
+    return 'Remembered ($category): $text (id=${entry.id}).';
   }
 
   static Future<String> _runJavascript(Map<String, dynamic> input) async {
@@ -1404,41 +1425,6 @@ abstract final class AssistantToolRegistry {
         'modified' => (a, b) => b.lastModified.compareTo(a.lastModified),
         _ => (a, b) => b.time.compareTo(a.time),
       };
-
-  static String _formatDiaryList(
-    Iterable<Diary> diaries, {
-    required int total,
-  }) {
-    final shown = diaries.length;
-    final buffer = StringBuffer();
-    buffer.writeln(
-      shown < total
-          ? '$total matches; the first $shown follow. Raise limit or narrow the '
-                'filters for more.'
-          : '$total matches:',
-    );
-    for (final diary in diaries) {
-      final title = diary.title.trim().isEmpty
-          ? 'Untitled'
-          : diary.title.trim();
-      final cat = diary.categoryId;
-      final catPart = (cat != null && cat.isNotEmpty) ? ' categoryId=$cat' : '';
-      buffer.writeln(
-        'id=${diary.id} 【${TimeFormat.isoDate(diary.time)}】$title '
-        'mood=${diary.mood.name}$catPart',
-      );
-      final text = diary.contentText.trim();
-      if (text.isNotEmpty) {
-        buffer.writeln(
-          text.length > _maxExcerptLength
-              ? '${text.substring(0, _maxExcerptLength)}… (excerpt; full text via getDiary)'
-              : text,
-        );
-      }
-      buffer.writeln();
-    }
-    return buffer.toString().trim();
-  }
 
   static Future<String> _emptyQueryMessage(
     List<String> keywords,
