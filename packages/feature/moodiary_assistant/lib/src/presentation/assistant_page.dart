@@ -1697,7 +1697,7 @@ class _StatusBanner extends StatelessWidget {
     final scheme = context.theme.colors;
     final typography = context.theme.typography.bodyMedium;
     return Material(
-      color: error ? scheme.errorContainer : scheme.tertiaryContainer,
+      color: error ? scheme.errorContainer : scheme.secondaryContainer,
       child: MInkWell(
         onTap: onTap,
         child: Padding(
@@ -1708,7 +1708,7 @@ class _StatusBanner extends StatelessWidget {
                 LucideIcons.triangleAlert,
                 color: error
                     ? scheme.onErrorContainer
-                    : scheme.onTertiaryContainer,
+                    : scheme.onSecondaryContainer,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1716,7 +1716,7 @@ class _StatusBanner extends StatelessWidget {
                   text,
                   style: error
                       ? typography.onErrorContainer
-                      : typography.onTertiaryContainer,
+                      : typography.onSecondaryContainer,
                 ),
               ),
             ],
