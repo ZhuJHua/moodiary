@@ -937,14 +937,11 @@ class Translations$assistant$zh {
 	/// zh: '常驻已有 {count} 条，先取消一条再设'
 	String memoryPinFull({required Object count}) => '常驻已有 ${count} 条，先取消一条再设';
 
-	/// zh: '忘掉'
-	String get memoryForget => '忘掉';
-
-	/// zh: '忘掉这条记忆？'
-	String get memoryForgetTitle => '忘掉这条记忆？';
+	/// zh: '删除这条记忆？'
+	String get memoryDeleteTitle => '删除这条记忆？';
 
 	/// zh: '「{text}」会被永久删除，助手之后不会再记得它。'
-	String memoryForgetMessage({required Object text}) => '「${text}」会被永久删除，助手之后不会再记得它。';
+	String memoryDeleteMessage({required Object text}) => '「${text}」会被永久删除，助手之后不会再记得它。';
 
 	/// zh: '清空全部记忆？'
 	String get memoryClearTitle => '清空全部记忆？';
@@ -1123,17 +1120,20 @@ class Translations$assistant$zh {
 	/// zh: '[图片]'
 	String get imageMessageLabel => '[图片]';
 
-	/// zh: '读了 {count} 篇日记'
-	String citationHeader({required Object count}) => '读了 ${count} 篇日记';
+	/// zh: '查看日记'
+	String get citationRead => '查看日记';
 
-	/// zh: '写了 {count} 篇日记'
-	String citationCreated({required Object count}) => '写了 ${count} 篇日记';
+	/// zh: '创建日记'
+	String get citationCreated => '创建日记';
 
-	/// zh: '改了 {count} 篇日记'
-	String citationUpdated({required Object count}) => '改了 ${count} 篇日记';
+	/// zh: '修改日记'
+	String get citationUpdated => '修改日记';
 
-	/// zh: '{count} 篇移入回收站'
-	String citationDeleted({required Object count}) => '${count} 篇移入回收站';
+	/// zh: '删除日记'
+	String get citationDeleted => '删除日记';
+
+	/// zh: '{count} 篇'
+	String citationCount({required Object count}) => '${count} 篇';
 
 	/// zh: '早上好'
 	String get emptyGreetingMorning => '早上好';

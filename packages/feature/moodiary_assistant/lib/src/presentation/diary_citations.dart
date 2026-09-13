@@ -85,7 +85,8 @@ class _DiaryCitationsState extends State<DiaryCitations> {
     final ids = widget.ids;
     if (ids.isEmpty) return const SizedBox.shrink();
     final header = widget.header;
-    if (header == null) return _card(ids.single);
+    // 版式看篇数，标题看有没有传：两者各管各的
+    if (ids.length == 1 && header == null) return _card(ids.single);
 
     final scheme = context.theme.colors;
     final typography = context.theme.typography;
@@ -93,23 +94,24 @@ class _DiaryCitationsState extends State<DiaryCitations> {
       crossAxisAlignment: .start,
       mainAxisSize: .min,
       children: [
-        Padding(
-          padding: const .symmetric(vertical: 4),
-          child: Row(
-            children: [
-              Icon(
-                LucideIcons.bookOpenText,
-                size: 13,
-                color: scheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                header,
-                style: typography.labelMedium.emphasized.onSurfaceVariant,
-              ),
-            ],
+        if (header != null)
+          Padding(
+            padding: const .symmetric(vertical: 4),
+            child: Row(
+              children: [
+                Icon(
+                  LucideIcons.bookOpenText,
+                  size: 13,
+                  color: scheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  header,
+                  style: typography.labelMedium.emphasized.onSurfaceVariant,
+                ),
+              ],
+            ),
           ),
-        ),
         SingleChildScrollView(
           scrollDirection: .horizontal,
           clipBehavior: .none,

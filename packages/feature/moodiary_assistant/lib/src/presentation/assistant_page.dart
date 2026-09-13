@@ -2216,13 +2216,20 @@ class _AssistantBubble extends StatelessWidget {
     this.onRegenerate,
   });
 
-  String _citationHeader(Translations l10n, DiaryCitationKind kind, int n) =>
+  String _citationLabel(Translations l10n, DiaryCitationKind kind) =>
       switch (kind) {
-        .read => l10n.assistant.citationHeader(count: n),
-        .created => l10n.assistant.citationCreated(count: n),
-        .updated => l10n.assistant.citationUpdated(count: n),
-        .deleted => l10n.assistant.citationDeleted(count: n),
+        .read => l10n.assistant.citationRead,
+        .created => l10n.assistant.citationCreated,
+        .updated => l10n.assistant.citationUpdated,
+        .deleted => l10n.assistant.citationDeleted,
       };
+
+  IconData _citationIcon(DiaryCitationKind kind) => switch (kind) {
+    .read => LucideIcons.bookOpenText,
+    .created => LucideIcons.filePlus2,
+    .updated => LucideIcons.filePenLine,
+    .deleted => LucideIcons.trash2,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -2278,13 +2285,14 @@ class _AssistantBubble extends StatelessWidget {
       for (final kind in DiaryCitationKind.values)
         if (diaryCitations.where((c) => c.kind == kind).toList()
             case final group when group.isNotEmpty)
-          Padding(
-            padding: const .only(bottom: 8),
-            child: DiaryCitations(
-              key: ValueKey('citations-${kind.name}'),
-              ids: [for (final c in group) c.id],
-              header: _citationHeader(l10n, kind, group.length),
-            ),
+          AssistantNotice(
+            key: ValueKey('citations-${kind.name}'),
+            stateKey: 'citations-${kind.name}',
+            icon: _citationIcon(kind),
+            kind: _citationLabel(l10n, kind),
+            summary: l10n.assistant.citationCount(count: group.length),
+            detail: (context) =>
+                DiaryCitations(ids: [for (final c in group) c.id]),
           ),
       ?bubble,
     ];

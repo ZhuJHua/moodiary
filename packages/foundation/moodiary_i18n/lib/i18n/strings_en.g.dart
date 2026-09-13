@@ -354,9 +354,8 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get memoryUnpin => 'Stop keeping it on';
 	@override String memoryPinDes({required Object count}) => 'Sent with every conversation, up to ${count}';
 	@override String memoryPinFull({required Object count}) => 'Already ${count} kept on; turn one off first';
-	@override String get memoryForget => 'Forget';
-	@override String get memoryForgetTitle => 'Forget this?';
-	@override String memoryForgetMessage({required Object text}) => '“${text}” is deleted for good and the assistant will not recall it again.';
+	@override String get memoryDeleteTitle => 'Delete this memory?';
+	@override String memoryDeleteMessage({required Object text}) => '“${text}” is deleted for good and the assistant will not recall it again.';
 	@override String get memoryClearTitle => 'Clear every memory?';
 	@override String get memoryClearMessage => 'Everything the assistant saved is deleted for good. This cannot be undone.';
 	@override String get memoryClearConfirm => 'Clear all';
@@ -416,10 +415,11 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get disclaimerGateAction => 'View disclaimer';
 	@override String get toolSendImage => 'Send an image';
 	@override String get imageMessageLabel => '[Image]';
-	@override String citationHeader({required Object count}) => 'Read ${count} diaries';
-	@override String citationCreated({required Object count}) => 'Wrote ${count} diaries';
-	@override String citationUpdated({required Object count}) => 'Edited ${count} diaries';
-	@override String citationDeleted({required Object count}) => '${count} moved to the recycle bin';
+	@override String get citationRead => 'View diaries';
+	@override String get citationCreated => 'Create diary';
+	@override String get citationUpdated => 'Edit diary';
+	@override String get citationDeleted => 'Delete diary';
+	@override String citationCount({required Object count}) => '${count}';
 	@override String get emptyGreetingMorning => 'Good morning';
 	@override String get emptyGreetingAfternoon => 'Good afternoon';
 	@override String get emptyGreetingEvening => 'Good evening';

@@ -77,9 +77,9 @@ class _MemoryListPageState extends State<MemoryListPage> {
     final l10n = context.l10n;
     final ok = await MAlert.confirm(
       context,
-      title: l10n.assistant.memoryForgetTitle,
-      message: l10n.assistant.memoryForgetMessage(text: m.text),
-      confirmLabel: l10n.assistant.memoryForget,
+      title: l10n.assistant.memoryDeleteTitle,
+      message: l10n.assistant.memoryDeleteMessage(text: m.text),
+      confirmLabel: l10n.common.delete,
       isDestructive: true,
       icon: LucideIcons.trash2,
     );
@@ -345,7 +345,7 @@ class _MemoryTile extends StatelessWidget {
                   ),
                   MMenuEntry(
                     value: 'forget',
-                    label: l10n.assistant.memoryForget,
+                    label: l10n.common.delete,
                     icon: LucideIcons.trash2,
                     isDestructive: true,
                   ),
