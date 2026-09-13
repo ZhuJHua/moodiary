@@ -44,23 +44,12 @@ const double _kComposerPadding = 8;
 
 const double _kComposerHeightEstimate = 102;
 
-const double _kCapsuleHeight = 40;
-
-// 胶囊与输入框同边距，悬浮在列表上；列表顶部空出胶囊 + 上下各一段
-const double _kCapsuleInset = 12;
-const double _kCapsuleTop = 8;
-const double _kListTopPadding = _kCapsuleTop + _kCapsuleHeight + 12;
+const double _kModelChipHeight = 32;
 
 // 轮间 20，轮内 8
 const double _kTurnGap = 20;
 
-// 大字号下预设段整体隐藏，信息移进「对话信息」
-const double _kCapsulePresetMaxScale = 1.3;
-
-// 预设段最多占胶囊的这个比例，剩下的都留给模型名
-const double _kPresetMaxShare = 0.45;
-
-enum _ConversationAction { info, compact, settings }
+enum _ConversationAction { info, preset, compact, settings }
 
 Widget _codeBlock(
   BuildContext context,
@@ -472,6 +461,8 @@ class _AssistantPageState extends State<AssistantPage> {
     switch (action) {
       case .info:
         _showPresetInfo();
+      case .preset:
+        unawaited(_pickPreset());
       case .compact:
         unawaited(_compactNow());
       case .settings:
@@ -1199,7 +1190,6 @@ class _AssistantPageState extends State<AssistantPage> {
       itemBuilder: _buildItem,
       scrollToBottomBuilder: _buildScrollToBottom,
       onPointerDown: _dismissComposer,
-      topPadding: _kListTopPadding,
       itemGap: _kTurnGap,
       bottomPadding: _composerHeight + 8,
     );
@@ -1304,6 +1294,7 @@ class _AssistantPageState extends State<AssistantPage> {
       onRemoveImage: _removePendingImage,
       citedDiaryId: _citedDiaryId,
       onRemoveCitation: _removeCitation,
+      modelChip: _resolved ? _buildModelChip(context.l10n) : null,
     );
 
     return Column(
@@ -1313,13 +1304,6 @@ class _AssistantPageState extends State<AssistantPage> {
           child: Stack(
             children: [
               Positioned.fill(child: _buildChat()),
-              if (_resolved)
-                Positioned(
-                  left: _kCapsuleInset,
-                  right: _kCapsuleInset,
-                  top: _kCapsuleTop,
-                  child: _buildCapsule(context.l10n),
-                ),
               Positioned(
                 left: 0,
                 right: 0,
@@ -1386,6 +1370,13 @@ class _AssistantPageState extends State<AssistantPage> {
                 label: l10n.assistant.menuConversationInfo,
                 icon: LucideIcons.info,
               ),
+              if (_session == null)
+                MMenuEntry(
+                  value: .preset,
+                  label: l10n.assistant.menuPickPreset,
+                  icon: LucideIcons.sparkles,
+                  enabled: !_sending,
+                ),
               MMenuEntry(
                 value: .compact,
                 label: l10n.assistant.menuCompactNow,
@@ -1414,8 +1405,8 @@ class _AssistantPageState extends State<AssistantPage> {
     );
   }
 
-  Widget _buildCapsule(Translations l10n) {
-    return _ContextCapsule(
+  Widget _buildModelChip(Translations l10n) {
+    return _ModelChip(
       provider: _provider,
       providerMissing: _providerMissing,
       modelLabel: _activeModel?.name ?? _modelId,
@@ -1426,16 +1417,7 @@ class _AssistantPageState extends State<AssistantPage> {
           : _effectiveLevel.isEmpty
           ? l10n.assistant.reasoningOff
           : reasoningLevelLabel(_effectiveLevel, l10n),
-      presetLabel:
-          _presetName ??
-          (_presetMissing
-              ? l10n.assistant.presetDeleted
-              : l10n.assistant.presetBuiltinName),
-      presetStaged: _session == null,
       onTap: _sending ? null : _pickModel,
-      onPresetTap: _sending
-          ? null
-          : (_session == null ? _pickPreset : _showPresetInfo),
     );
   }
 
@@ -1573,29 +1555,23 @@ class _DisclaimerGate extends StatelessWidget {
   }
 }
 
-class _ContextCapsule extends StatelessWidget {
+class _ModelChip extends StatelessWidget {
   final LlmProvider? provider;
   final bool providerMissing;
   final String modelLabel;
   final bool modelMissing;
   final bool catalogMissing;
   final String levelLabel;
-  final String presetLabel;
-  final bool presetStaged;
   final VoidCallback? onTap;
-  final VoidCallback? onPresetTap;
 
-  const _ContextCapsule({
+  const _ModelChip({
     required this.provider,
     required this.providerMissing,
     required this.modelLabel,
     required this.modelMissing,
     required this.catalogMissing,
     required this.levelLabel,
-    required this.presetLabel,
-    required this.presetStaged,
     required this.onTap,
-    required this.onPresetTap,
   });
 
   @override
@@ -1604,127 +1580,65 @@ class _ContextCapsule extends StatelessWidget {
     final scheme = context.theme.colors;
     final typography = context.theme.typography;
     final provider = this.provider;
-    final showPreset =
-        MediaQuery.textScalerOf(context).scale(1) < _kCapsulePresetMaxScale;
-    final muted = typography.labelMedium.onSurfaceVariant;
     final broken = modelLabel.isEmpty || modelMissing;
 
-    return SizedBox(
-      height: _kCapsuleHeight,
-      child: MGlassSurface(
+    return Material(
+      color: scheme.surfaceContainerHighest,
+      shape: const StadiumBorder(),
+      clipBehavior: .antiAlias,
+      child: MInkWell(
         shape: const StadiumBorder(),
-        child: MInkWell(
-          shape: const StadiumBorder(),
-          onTap: onTap,
+        onTap: onTap,
+        child: SizedBox(
+          height: _kModelChipHeight,
           child: Padding(
-            padding: const .fromLTRB(8, 0, 10, 0),
-            child: LayoutBuilder(
-              builder: (context, constraints) => Row(
-                children: [
-                  if (providerMissing)
-                    Icon(
-                      LucideIcons.triangleAlert,
-                      size: 16,
-                      color: scheme.error,
-                    )
-                  else if (provider != null)
-                    ProviderLogo(
-                      logoUrl: ProviderLogo.urlOf(provider.presetId),
-                      name: provider.name,
-                      size: 20,
-                    ),
-                  const SizedBox(width: 6),
-                  Flexible(
-                    child: Text(
-                      modelLabel.isEmpty
-                          ? l10n.assistant.historyModelUnset
-                          : modelLabel,
-                      maxLines: 1,
-                      overflow: .ellipsis,
-                      style: broken
-                          ? typography.labelMedium.emphasized.error
-                          : typography.labelMedium.emphasized.onSurface,
-                    ),
+            padding: const .fromLTRB(7, 0, 10, 0),
+            child: Row(
+              mainAxisSize: .min,
+              children: [
+                if (providerMissing)
+                  Icon(LucideIcons.triangleAlert, size: 16, color: scheme.error)
+                else if (provider != null)
+                  ProviderLogo(
+                    logoUrl: ProviderLogo.urlOf(provider.presetId),
+                    name: provider.name,
+                    size: 18,
                   ),
-                  if (modelMissing) ...[
-                    const SizedBox(width: 6),
-                    Text(
-                      l10n.assistant.modelNotInCatalog,
-                      style: typography.labelSmall.error,
-                    ),
-                  ] else if (catalogMissing) ...[
-                    const SizedBox(width: 6),
-                    Tooltip(
-                      message: l10n.assistant.modelCatalogOffline,
-                      child: Icon(
-                        LucideIcons.cloudOff,
-                        size: 14,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                  if (levelLabel.isNotEmpty) ...[
-                    const SizedBox(width: 6),
-                    DecoratedBox(
-                      decoration: ShapeDecoration(
-                        color: scheme.surfaceContainerHighest,
-                        shape: const StadiumBorder(),
-                      ),
-                      child: Padding(
-                        padding: const .symmetric(horizontal: 6, vertical: 1),
-                        child: Text(
-                          levelLabel,
-                          style: typography.labelSmall.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                  ],
-                  if (showPreset) ...[
-                    const SizedBox(width: 6),
-                    Text(
-                      '│',
-                      style: muted.copyWith(color: scheme.outlineVariant),
-                    ),
-                    ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: constraints.maxWidth * _kPresetMaxShare,
-                      ),
-                      child: MInkWell(
-                        shape: const StadiumBorder(),
-                        onTap: onPresetTap,
-                        child: Padding(
-                          padding: const .symmetric(horizontal: 6, vertical: 4),
-                          child: Row(
-                            mainAxisSize: .min,
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  presetLabel,
-                                  maxLines: 1,
-                                  overflow: .ellipsis,
-                                  style: muted,
-                                ),
-                              ),
-                              if (presetStaged && onPresetTap != null)
-                                Icon(
-                                  LucideIcons.chevronDown,
-                                  size: 14,
-                                  color: scheme.onSurfaceVariant,
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                  const Spacer(),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    modelLabel.isEmpty
+                        ? l10n.assistant.historyModelUnset
+                        : modelLabel,
+                    maxLines: 1,
+                    overflow: .ellipsis,
+                    style: broken
+                        ? typography.labelMedium.emphasized.error
+                        : typography.labelMedium.emphasized.onSurface,
+                  ),
+                ),
+                if (modelMissing) ...[
+                  const SizedBox(width: 6),
+                  Text(
+                    l10n.assistant.modelNotInCatalog,
+                    style: typography.labelSmall.error,
+                  ),
+                ] else if (catalogMissing) ...[
+                  const SizedBox(width: 6),
                   Icon(
-                    LucideIcons.chevronsUpDown,
-                    size: 15,
+                    LucideIcons.cloudOff,
+                    size: 14,
                     color: scheme.onSurfaceVariant,
                   ),
                 ],
-              ),
+                if (levelLabel.isNotEmpty) ...[
+                  const SizedBox(width: 6),
+                  Text(
+                    '· $levelLabel',
+                    style: typography.labelMedium.onSurfaceVariant,
+                  ),
+                ],
+              ],
             ),
           ),
         ),
@@ -1748,7 +1662,7 @@ class _EmptyConversation extends StatelessWidget {
         ? l10n.assistant.emptyGreetingMorning
         : l10n.assistant.emptyGreetingAfternoon;
     return Padding(
-      padding: EdgeInsets.fromLTRB(16, _kListTopPadding, 16, bottomInset),
+      padding: EdgeInsets.fromLTRB(16, 16, 16, bottomInset),
       child: Center(
         child: Column(
           mainAxisSize: .min,
@@ -1829,6 +1743,7 @@ class _AssistantComposer extends StatefulWidget {
   final VoidCallback onRemoveImage;
   final String? citedDiaryId;
   final VoidCallback onRemoveCitation;
+  final Widget? modelChip;
 
   const _AssistantComposer({
     required this.controller,
@@ -1842,6 +1757,7 @@ class _AssistantComposer extends StatefulWidget {
     required this.onRemoveImage,
     required this.citedDiaryId,
     required this.onRemoveCitation,
+    required this.modelChip,
   });
 
   @override
@@ -1940,49 +1856,55 @@ class _AssistantComposerState extends State<_AssistantComposer> {
                         )
                       else
                         const SizedBox.shrink(),
-                      Row(
-                        mainAxisSize: .min,
-                        children: [
-                          if (_overflowing) ...[
-                            Tooltip(
-                              message: l10n.assistant.composerFullscreen,
-                              child: MInkWell(
-                                shape: const CircleBorder(),
-                                onTap: widget.onFullscreen,
-                                child: SizedBox.square(
-                                  dimension: _kComposerControlSize,
-                                  child: Icon(
-                                    LucideIcons.maximize2,
-                                    color: scheme.onSurfaceVariant,
+                      Expanded(
+                        child: Row(
+                          mainAxisAlignment: .end,
+                          children: [
+                            if (_overflowing) ...[
+                              Tooltip(
+                                message: l10n.assistant.composerFullscreen,
+                                child: MInkWell(
+                                  shape: const CircleBorder(),
+                                  onTap: widget.onFullscreen,
+                                  child: SizedBox.square(
+                                    dimension: _kComposerControlSize,
+                                    child: Icon(
+                                      LucideIcons.maximize2,
+                                      color: scheme.onSurfaceVariant,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 4),
-                          ],
-                          ValueListenableBuilder<TextEditingValue>(
-                            valueListenable: widget.controller,
-                            builder: (context, value, _) {
-                              if (widget.sending) {
+                              const SizedBox(width: 4),
+                            ],
+                            if (widget.modelChip case final chip?) ...[
+                              Flexible(child: chip),
+                              const SizedBox(width: 8),
+                            ],
+                            ValueListenableBuilder<TextEditingValue>(
+                              valueListenable: widget.controller,
+                              builder: (context, value, _) {
+                                if (widget.sending) {
+                                  return MCircleButton(
+                                    tooltip: l10n.assistant.stop,
+                                    onPressed: widget.onStop,
+                                    size: _kComposerControlSize,
+                                    icon: const Icon(LucideIcons.square),
+                                  );
+                                }
+                                final canSend =
+                                    value.text.trim().isNotEmpty ||
+                                    widget.pendingImageName != null;
                                 return MCircleButton(
-                                  tooltip: l10n.assistant.stop,
-                                  onPressed: widget.onStop,
+                                  tooltip: l10n.assistant.send,
+                                  onPressed: canSend ? widget.onSend : null,
                                   size: _kComposerControlSize,
-                                  icon: const Icon(LucideIcons.square),
+                                  icon: const Icon(LucideIcons.arrowUp),
                                 );
-                              }
-                              final canSend =
-                                  value.text.trim().isNotEmpty ||
-                                  widget.pendingImageName != null;
-                              return MCircleButton(
-                                tooltip: l10n.assistant.send,
-                                onPressed: canSend ? widget.onSend : null,
-                                size: _kComposerControlSize,
-                                icon: const Icon(LucideIcons.arrowUp),
-                              );
-                            },
-                          ),
-                        ],
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),

@@ -742,6 +742,9 @@ class Translations$assistant$zh {
 	/// zh: '对话信息'
 	String get menuConversationInfo => '对话信息';
 
+	/// zh: '选择预设'
+	String get menuPickPreset => '选择预设';
+
 	/// zh: '压缩历史'
 	String get menuCompactNow => '压缩历史';
 

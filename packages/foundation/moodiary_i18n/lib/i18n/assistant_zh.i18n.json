@@ -40,6 +40,7 @@
   "copyTooltip": "复制",
   "newChat": "新对话",
   "menuConversationInfo": "对话信息",
+  "menuPickPreset": "选择预设",
   "menuCompactNow": "压缩历史",
   "menuSettings": "助手设置",
   "compactedNow": "已压缩较早的消息",

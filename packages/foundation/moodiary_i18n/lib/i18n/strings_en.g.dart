@@ -289,6 +289,7 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get copyTooltip => 'Copy';
 	@override String get newChat => 'New chat';
 	@override String get menuConversationInfo => 'Conversation info';
+	@override String get menuPickPreset => 'Choose a preset';
 	@override String get menuCompactNow => 'Compact history';
 	@override String get menuSettings => 'Assistant settings';
 	@override String get compactedNow => 'Earlier messages compacted';
