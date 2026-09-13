@@ -14,6 +14,9 @@ class AssistantNotice extends StatefulWidget {
 
   final WidgetBuilder? detail;
 
+  // 正文类详情缩进到标签下；卡片类要和整行左对齐
+  final EdgeInsetsGeometry? detailPadding;
+
   final VoidCallback? onTap;
 
   final String? stateKey;
@@ -26,6 +29,7 @@ class AssistantNotice extends StatefulWidget {
     required this.kind,
     this.summary = '',
     this.detail,
+    this.detailPadding,
     this.onTap,
     this.stateKey,
     this.hideSummaryWhenExpanded = false,
@@ -150,7 +154,8 @@ class _AssistantNoticeState extends State<AssistantNotice>
     if (_expandable && factor > 0) {
       body = SelectionArea(
         child: Padding(
-          padding: const .fromLTRB(22, 1, 0, 6),
+          padding:
+              widget.detailPadding ?? const EdgeInsets.fromLTRB(22, 1, 0, 6),
           child: Builder(builder: widget.detail!),
         ),
       );

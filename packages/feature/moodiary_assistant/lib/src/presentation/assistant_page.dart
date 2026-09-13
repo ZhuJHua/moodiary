@@ -2291,6 +2291,7 @@ class _AssistantBubble extends StatelessWidget {
             icon: _citationIcon(kind),
             kind: _citationLabel(l10n, kind),
             summary: l10n.assistant.citationCount(count: group.length),
+            detailPadding: const .fromLTRB(0, 2, 0, 6),
             detail: (context) =>
                 DiaryCitations(ids: [for (final c in group) c.id]),
           ),

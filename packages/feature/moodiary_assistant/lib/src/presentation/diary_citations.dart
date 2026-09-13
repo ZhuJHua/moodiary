@@ -24,6 +24,9 @@ class DiaryCitations extends StatefulWidget {
   State<DiaryCitations> createState() => _DiaryCitationsState();
 }
 
+// 折叠行每次展开都重建这个 widget，没有缓存就每次闪一帧 loading
+final Map<String, Diary?> _diaryCache = {};
+
 class _DiaryCitationsState extends State<DiaryCitations> {
   final Map<String, Diary?> _diaries = {};
   bool _loaded = false;
@@ -31,6 +34,10 @@ class _DiaryCitationsState extends State<DiaryCitations> {
   @override
   void initState() {
     super.initState();
+    for (final id in widget.ids) {
+      if (_diaryCache.containsKey(id)) _diaries[id] = _diaryCache[id];
+    }
+    _loaded = widget.ids.every(_diaries.containsKey);
     _load();
   }
 
@@ -42,18 +49,17 @@ class _DiaryCitationsState extends State<DiaryCitations> {
 
   Future<void> _load() async {
     final repo = getIt<DiaryRepository>();
-    final missing = [
-      for (final id in widget.ids)
-        if (!_diaries.containsKey(id)) id,
-    ];
-    final found = await Future.wait(missing.map(repo.getDiaryByBusinessId));
+    final ids = widget.ids;
+    final found = await Future.wait(ids.map(repo.getDiaryByBusinessId));
     if (!mounted) return;
-    setState(() {
-      for (final (i, id) in missing.indexed) {
-        _diaries[id] = found[i];
-      }
-      _loaded = true;
-    });
+    var changed = !_loaded;
+    for (final (i, id) in ids.indexed) {
+      _diaryCache[id] = found[i];
+      if (_diaries[id] != found[i]) changed = true;
+      _diaries[id] = found[i];
+    }
+    if (!changed) return;
+    setState(() => _loaded = true);
   }
 
   Widget _card(String id, {double? width}) {
