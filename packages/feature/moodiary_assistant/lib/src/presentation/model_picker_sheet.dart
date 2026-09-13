@@ -529,7 +529,8 @@ class _LevelChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final explicit = stored != null && levels.contains(stored);
+    // 没显式选过时选中的是该模型的第一档，与真正发出去的一致
+    final effective = effectiveReasoningLevel(stored: stored, levels: levels);
     final off = stored == reasoningOffValue;
     return Padding(
       padding: const .only(top: 8),
@@ -537,15 +538,10 @@ class _LevelChips extends StatelessWidget {
         spacing: 6,
         runSpacing: 6,
         children: [
-          _LevelChip(
-            label: l10n.assistant.reasoningAuto,
-            selected: !explicit && !off,
-            onTap: () => onChanged(null),
-          ),
           for (final level in levels)
             _LevelChip(
               label: reasoningLevelLabel(level, l10n),
-              selected: explicit && level == stored,
+              selected: !off && level == effective,
               onTap: () => onChanged(level),
             ),
           _LevelChip(

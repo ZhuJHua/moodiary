@@ -111,8 +111,10 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
-    expect(find.text('跟随模型'), findsOneWidget);
+    // 没显式选过档位时，选中的是该模型的第一档
     expect(find.text('低'), findsOneWidget);
+    expect(find.text('高'), findsOneWidget);
+    expect(find.text('跟随模型'), findsNothing);
     await tester.tap(find.text('不思考'));
     await tester.pumpAndSettle();
     expect(choice, isNull);
@@ -120,11 +122,11 @@ void main() {
     // b 没有档位表，选中它之后 chip 整组消失
     await tester.tap(find.text('b'));
     await tester.pumpAndSettle();
-    expect(find.text('跟随模型'), findsNothing);
+    expect(find.text('不思考'), findsNothing);
 
     await tester.tap(find.text('a'));
     await tester.pumpAndSettle();
-    expect(find.text('跟随模型'), findsOneWidget);
+    expect(find.text('不思考'), findsOneWidget);
 
     await tester.tap(find.text('确认'));
     await tester.pumpAndSettle();

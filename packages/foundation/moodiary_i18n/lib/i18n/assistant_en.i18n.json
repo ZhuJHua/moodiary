@@ -77,7 +77,6 @@
   "netUnknown": "Request failed",
   "reasoningEffort": "Thinking effort",
   "reasoningOff": "No thinking",
-  "reasoningAuto": "Follow model",
   "reasoningLevelMinimal": "Minimal",
   "reasoningLevelLow": "Low",
   "reasoningLevelMedium": "Medium",

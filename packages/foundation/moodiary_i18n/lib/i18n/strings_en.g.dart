@@ -326,7 +326,6 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get netUnknown => 'Request failed';
 	@override String get reasoningEffort => 'Thinking effort';
 	@override String get reasoningOff => 'No thinking';
-	@override String get reasoningAuto => 'Follow model';
 	@override String get reasoningLevelMinimal => 'Minimal';
 	@override String get reasoningLevelLow => 'Low';
 	@override String get reasoningLevelMedium => 'Medium';

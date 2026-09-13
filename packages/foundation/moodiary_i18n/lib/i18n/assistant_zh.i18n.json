@@ -77,7 +77,6 @@
   "netUnknown": "请求失败",
   "reasoningEffort": "思考强度",
   "reasoningOff": "不思考",
-  "reasoningAuto": "跟随模型",
   "reasoningLevelMinimal": "极低",
   "reasoningLevelLow": "低",
   "reasoningLevelMedium": "中",

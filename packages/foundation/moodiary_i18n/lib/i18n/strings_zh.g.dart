@@ -853,9 +853,6 @@ class Translations$assistant$zh {
 	/// zh: '不思考'
 	String get reasoningOff => '不思考';
 
-	/// zh: '跟随模型'
-	String get reasoningAuto => '跟随模型';
-
 	/// zh: '极低'
 	String get reasoningLevelMinimal => '极低';
 
