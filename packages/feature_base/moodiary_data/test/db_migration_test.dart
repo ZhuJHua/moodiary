@@ -59,12 +59,37 @@ void main() {
     [id, time, lat, lon, placeName],
   );
 
-  test('新库直接建到 v3，places 与 provider_id 就位', () async {
+  test('新库直接建到 v4，places、provider_id 与 memories 新列就位', () async {
     final db = await open();
-    expect(await userVersion(db), 3);
+    expect(await userVersion(db), 4);
     expect(await PlaceRepository(db).getAllPlaces(), isEmpty);
     expect(await columns(db, 'diaries'), isNot(contains('latitude')));
     expect(await columns(db, 'chat_messages'), contains('provider_id'));
+    expect(await columns(db, 'memories'), contains('pinned'));
+    expect(await columns(db, 'memories'), contains('source'));
+    await db.close();
+  });
+
+  test('v3 老库升级：memories 补 pinned 与 source，旧行不常驻、来源留空', () async {
+    var db = await open();
+    await db.customStatement(
+      "INSERT INTO memories (id, category, content, created_at, updated_at) "
+      "VALUES ('f1', 'preference', 'call me 小竹', 0, 0)",
+    );
+    await db.customStatement('ALTER TABLE memories DROP COLUMN pinned');
+    await db.customStatement('ALTER TABLE memories DROP COLUMN source');
+    await db.customStatement('PRAGMA user_version = 3');
+    await db.close();
+
+    db = await open();
+    expect(await userVersion(db), 4);
+    expect(await columns(db, 'memories'), contains('pinned'));
+    expect(await columns(db, 'memories'), contains('source'));
+    final row = await db
+        .customSelect("SELECT pinned, source FROM memories WHERE id = 'f1'")
+        .getSingle();
+    expect(row.read<int>('pinned'), 0);
+    expect(row.read<String?>('source'), isNull);
     await db.close();
   });
 
@@ -85,7 +110,7 @@ void main() {
     await db.close();
 
     db = await open();
-    expect(await userVersion(db), 3);
+    expect(await userVersion(db), 4);
     expect(await columns(db, 'chat_messages'), contains('provider_id'));
     final row = await db
         .customSelect("SELECT provider_id FROM chat_messages WHERE id = 'm1'")
@@ -132,7 +157,7 @@ void main() {
     await db.close();
 
     db = await open();
-    expect(await userVersion(db), 3);
+    expect(await userVersion(db), 4);
     expect(await columns(db, 'diaries'), isNot(contains('latitude')));
     final places = await PlaceRepository(db).getAllPlaces();
     expect(places, hasLength(2));
@@ -170,7 +195,7 @@ void main() {
     await db.close();
 
     db = await open();
-    expect(await userVersion(db), 3);
+    expect(await userVersion(db), 4);
     expect(await columns(db, 'diaries'), isNot(contains('latitude')));
     final place = (await PlaceRepository(db).getAllPlaces()).single;
     expect(place.name, '公司');
@@ -189,7 +214,7 @@ void main() {
     await db.close();
 
     db = await open();
-    expect(await userVersion(db), 3);
+    expect(await userVersion(db), 4);
     expect(await PlaceRepository(db).getAllPlaces(), hasLength(1));
     await db.close();
   });
