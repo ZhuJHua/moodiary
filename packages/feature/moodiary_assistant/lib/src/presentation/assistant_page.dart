@@ -44,7 +44,7 @@ const double _kComposerPadding = 8;
 
 const double _kComposerHeightEstimate = 102;
 
-const double _kModelChipHeight = 32;
+const double _kModelChipMinHeight = 32;
 
 // 轮间 20，轮内 8
 const double _kTurnGap = 20;
@@ -1587,8 +1587,8 @@ class _ModelChip extends StatelessWidget {
 
     return MInkWell.fade(
       onTap: onTap,
-      child: SizedBox(
-        height: _kModelChipHeight,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: _kModelChipMinHeight),
         child: Padding(
           padding: const .symmetric(horizontal: 8),
           child: Row(
