@@ -156,13 +156,10 @@ class _AssistantNoticeState extends State<AssistantNotice>
         child: Align(
           alignment: .topLeft,
           heightFactor: factor,
-          child: SelectionArea(
-            child: Padding(
-              padding:
-                  widget.detailPadding ??
-                  const EdgeInsets.fromLTRB(22, 1, 0, 6),
-              child: Builder(builder: widget.detail!),
-            ),
+          child: Padding(
+            padding:
+                widget.detailPadding ?? const EdgeInsets.fromLTRB(22, 1, 0, 6),
+            child: Builder(builder: widget.detail!),
           ),
         ),
       );
