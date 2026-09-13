@@ -1609,8 +1609,8 @@ class _ModelChip extends StatelessWidget {
                   maxLines: 1,
                   overflow: .ellipsis,
                   style: broken
-                      ? typography.labelMedium.emphasized.error
-                      : typography.labelMedium.emphasized.onSurface,
+                      ? typography.labelSmall.error
+                      : typography.labelSmall.onSurface,
                 ),
               ),
               if (modelMissing) ...[
@@ -1631,7 +1631,7 @@ class _ModelChip extends StatelessWidget {
                 const SizedBox(width: 6),
                 Text(
                   '· $levelLabel',
-                  style: typography.labelMedium.onSurfaceVariant,
+                  style: typography.labelSmall.onSurfaceVariant,
                 ),
               ],
             ],
