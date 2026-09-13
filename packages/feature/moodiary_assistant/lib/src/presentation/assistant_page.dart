@@ -254,8 +254,11 @@ class _AssistantPageState extends State<AssistantPage> {
       ..addEntries([for (final p in all) MapEntry(p.id, p)]);
     final key = provider == null ? null : await repo.getKey(provider.id);
     final lastModel = MoodiaryKVs.assistantLastModelId.get() ?? '';
+    // 原供应商已删：它的模型 id 在回落的这家多半不存在，别带过去
     final wanted = pinned != null && (session?.model.isNotEmpty ?? false)
         ? session!.model
+        : providerMissing
+        ? (provider?.defaultModel ?? '')
         : _modelId.isNotEmpty
         ? _modelId
         : last != null && lastModel.isNotEmpty
