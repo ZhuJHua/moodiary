@@ -29,7 +29,6 @@ import 'package:moodiary_assistant/src/presentation/model_picker_sheet.dart';
 import 'package:moodiary_assistant/src/presentation/provider_logo.dart';
 import 'package:moodiary_assistant/src/presentation/reasoning_label.dart';
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';

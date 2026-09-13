@@ -64,13 +64,8 @@ class MemoryRepository {
   Future<List<MemoryEntry>> profileFacts({int limit = 6}) async {
     final rows =
         await (_db.select(_db.memories)
-              ..where(
-                (m) => m.pinned.equals(true) | m.category.equals('preference'),
-              )
-              ..orderBy([
-                (m) => OrderingTerm.desc(m.pinned),
-                (m) => OrderingTerm.desc(m.updatedAt),
-              ])
+              ..where((m) => m.pinned.equals(true))
+              ..orderBy([(m) => OrderingTerm.desc(m.updatedAt)])
               ..limit(limit))
             .get();
     return [for (final r in rows) _toEntry(r)];

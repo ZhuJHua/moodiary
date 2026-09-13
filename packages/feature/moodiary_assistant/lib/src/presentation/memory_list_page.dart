@@ -38,7 +38,7 @@ class _MemoryListPageState extends State<MemoryListPage> {
     setState(() => _all = all);
   }
 
-  bool _isResident(MemoryEntry m) => m.pinned || m.category == 'preference';
+  bool _isResident(MemoryEntry m) => m.pinned;
 
   List<MemoryEntry> get _matched {
     final all = _all ?? const <MemoryEntry>[];
@@ -203,10 +203,8 @@ class _MemoryListPageState extends State<MemoryListPage> {
     );
   }
 
-  static int _byPinnedThenTime(MemoryEntry a, MemoryEntry b) {
-    if (a.pinned != b.pinned) return a.pinned ? -1 : 1;
-    return b.updatedAt.compareTo(a.updatedAt);
-  }
+  static int _byPinnedThenTime(MemoryEntry a, MemoryEntry b) =>
+      b.updatedAt.compareTo(a.updatedAt);
 
   Widget _tile(MemoryEntry m) => _MemoryTile(
     entry: m,

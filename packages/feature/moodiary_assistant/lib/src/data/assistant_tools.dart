@@ -616,7 +616,7 @@ abstract final class AssistantToolRegistry {
       .createDiary => _trimToNull(item['title']) ?? l10n.assistant.toolUntitled,
       .createCategory ||
       .updateCategory => _trimToNull(item['name']) ?? l10n.assistant.toolDone,
-      .rememberFact ||
+      .rememberFact => _trimToNull(item['text']) ?? l10n.assistant.toolDone,
       .deleteCategory || .forgetFact => l10n.assistant.toolDeleted,
       _ => l10n.assistant.toolUpdated,
     };
@@ -1303,11 +1303,15 @@ abstract final class AssistantToolRegistry {
       return 'Already saved ($category): ${existing.text} (id=${existing.id}).';
     }
     final rawSource = (input['source'] as String?)?.trim();
+    // 偏好决定「怎么跟我说话」，没占满就直接常驻；其余靠检索
+    final pinned =
+        category == 'preference' &&
+        await repo.pinnedCount() < memoryProfileLimit;
     final entry = MemoryEntry.create(
       category: category,
       text: text,
       source: _validMemorySources.contains(rawSource) ? rawSource : 'user_said',
-    );
+    ).copyWith(pinned: pinned);
     await repo.put(entry);
     return 'Remembered ($category): $text (id=${entry.id}).';
   }
