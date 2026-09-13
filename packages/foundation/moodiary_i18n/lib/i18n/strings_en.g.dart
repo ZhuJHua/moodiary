@@ -386,7 +386,7 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get emptyGreetingMorning => 'Good morning';
 	@override String get emptyGreetingAfternoon => 'Good afternoon';
 	@override String get emptyGreetingEvening => 'Good evening';
-	@override String get emptySubtitle => 'Ask about your diary, or just say anything';
+	@override String get emptySubtitle => 'What do you want to write down?';
 	@override String get modelProviderTitle => 'Model Providers';
 	@override String get modelProviderAdd => 'Add';
 	@override String get modelProviderNoKey => 'No key';

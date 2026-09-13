@@ -1033,8 +1033,8 @@ class Translations$assistant$zh {
 	/// zh: '晚上好'
 	String get emptyGreetingEvening => '晚上好';
 
-	/// zh: '问问你的日记，或者随便说点什么'
-	String get emptySubtitle => '问问你的日记，或者随便说点什么';
+	/// zh: '想记录些什么？'
+	String get emptySubtitle => '想记录些什么？';
 
 	/// zh: '模型供应商'
 	String get modelProviderTitle => '模型供应商';

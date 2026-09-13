@@ -137,7 +137,7 @@
   "emptyGreetingMorning": "Good morning",
   "emptyGreetingAfternoon": "Good afternoon",
   "emptyGreetingEvening": "Good evening",
-  "emptySubtitle": "Ask about your diary, or just say anything",
+  "emptySubtitle": "What do you want to write down?",
   "modelProviderTitle": "Model Providers",
   "modelProviderAdd": "Add",
   "modelProviderNoKey": "No key",
