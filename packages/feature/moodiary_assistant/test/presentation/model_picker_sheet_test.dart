@@ -89,20 +89,24 @@ void main() {
     );
   }
 
-  testWidgets('点模型行即提交并关闭，档位原样带回', (tester) async {
+  testWidgets('点模型行只是选中，确认后才带回；档位原样保留', (tester) async {
     await tester.pumpWidget(host(modelId: 'a', level: 'high'));
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('b'));
     await tester.pumpAndSettle();
-
     expect(opened, isTrue);
+    expect(choice, isNull);
+    expect(find.text('b'), findsOneWidget);
+
+    await tester.tap(find.text('确认'));
+    await tester.pumpAndSettle();
     expect(choice, (providerId: alpha.id, modelId: 'b', level: 'high'));
     expect(find.text('b'), findsNothing);
   });
 
-  testWidgets('档位 chip 只挂在当前行下，点了即提交', (tester) async {
+  testWidgets('档位 chip 跟着选中的行走，点了也不关', (tester) async {
     await tester.pumpWidget(host(modelId: 'a', level: null));
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
@@ -111,12 +115,36 @@ void main() {
     expect(find.text('低'), findsOneWidget);
     await tester.tap(find.text('不思考'));
     await tester.pumpAndSettle();
+    expect(choice, isNull);
 
+    // b 没有档位表，选中它之后 chip 整组消失
+    await tester.tap(find.text('b'));
+    await tester.pumpAndSettle();
+    expect(find.text('跟随模型'), findsNothing);
+
+    await tester.tap(find.text('a'));
+    await tester.pumpAndSettle();
+    expect(find.text('跟随模型'), findsOneWidget);
+
+    await tester.tap(find.text('确认'));
+    await tester.pumpAndSettle();
     expect(choice, (
       providerId: alpha.id,
       modelId: 'a',
       level: reasoningOffValue,
     ));
+  });
+
+  testWidgets('取消不带回任何选择', (tester) async {
+    await tester.pumpWidget(host(modelId: 'a', level: 'high'));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('b'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('取消'));
+    await tester.pumpAndSettle();
+    expect(choice, isNull);
   });
 
   testWidgets('缺 Key 的供应商给出去填写的路，模型行不可点', (tester) async {
@@ -139,6 +167,8 @@ void main() {
     expect(find.text('gone'), findsOneWidget);
     expect(find.text('目录中已无此模型'), findsOneWidget);
     await tester.tap(find.text('a'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('确认'));
     await tester.pumpAndSettle();
     expect(choice?.modelId, 'a');
   });

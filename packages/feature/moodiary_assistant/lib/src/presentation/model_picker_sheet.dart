@@ -102,6 +102,9 @@ class _GlobalModelPickerBodyState extends State<_GlobalModelPickerBody> {
 
   late List<ProviderModels> _groups = widget.groups;
   late int _catalogUpdatedAt = widget.catalogUpdatedAt;
+  late String _providerId = widget.providerId;
+  late String _modelId = widget.modelId;
+  late String? _level = widget.level;
   String _query = '';
   bool _downloading = false;
   String? _downloadError;
@@ -134,11 +137,11 @@ class _GlobalModelPickerBodyState extends State<_GlobalModelPickerBody> {
     return n;
   }
 
-  ModelOption? get _current {
+  ModelOption? _optionOf(String providerId, String modelId) {
     for (final g in _groups) {
-      if (g.provider.id != widget.providerId) continue;
+      if (g.provider.id != providerId) continue;
       for (final o in g.options) {
-        if (o.id == widget.modelId) return o;
+        if (o.id == modelId) return o;
       }
     }
     return null;
@@ -160,7 +163,7 @@ class _GlobalModelPickerBodyState extends State<_GlobalModelPickerBody> {
       final pinnedMissing =
           isCurrentProvider &&
           widget.modelId.isNotEmpty &&
-          _current == null &&
+          _optionOf(widget.providerId, widget.modelId) == null &&
           matches(
             ModelOption(
               id: widget.modelId,
@@ -202,19 +205,14 @@ class _GlobalModelPickerBodyState extends State<_GlobalModelPickerBody> {
   }
 
   void _pick(LlmProvider provider, ModelOption option) {
-    Navigator.of(context).pop<GlobalModelChoice>((
-      providerId: provider.id,
-      modelId: option.id,
-      level: widget.level,
-    ));
+    setState(() {
+      _providerId = provider.id;
+      _modelId = option.id;
+    });
   }
 
   void _pickLevel(String? level) {
-    Navigator.of(context).pop<GlobalModelChoice>((
-      providerId: widget.providerId,
-      modelId: widget.modelId,
-      level: level,
-    ));
+    setState(() => _level = level);
   }
 
   Future<void> _download() async {
@@ -250,12 +248,19 @@ class _GlobalModelPickerBodyState extends State<_GlobalModelPickerBody> {
     final l10n = context.l10n;
     final typography = context.theme.typography;
     final rows = _rows;
-    final levels = _current?.levels ?? const <String>[];
+    final levels = _optionOf(_providerId, _modelId)?.levels ?? const <String>[];
 
     return MSheetScaffold<GlobalModelChoice>(
       title: l10n.assistant.modelProviderPickModel,
       icon: LucideIcons.cpu,
-      actions: [MAction(label: l10n.common.cancel)],
+      actions: [
+        MAction(label: l10n.common.cancel),
+        MAction(
+          label: l10n.common.ok,
+          isPrimary: true,
+          value: (providerId: _providerId, modelId: _modelId, level: _level),
+        ),
+      ],
       child: Column(
         crossAxisAlignment: .stretch,
         mainAxisSize: .min,
@@ -302,19 +307,19 @@ class _GlobalModelPickerBodyState extends State<_GlobalModelPickerBody> {
                                 : null,
                             option: option,
                             selected:
-                                row.provider.id == widget.providerId &&
-                                option.id == widget.modelId,
+                                row.provider.id == _providerId &&
+                                option.id == _modelId,
                             missing: row.missing,
                             onTap: row.hasKey
                                 ? () => _pick(row.provider, option)
                                 : null,
                             below:
-                                row.provider.id == widget.providerId &&
-                                    option.id == widget.modelId &&
+                                row.provider.id == _providerId &&
+                                    option.id == _modelId &&
                                     levels.isNotEmpty
                                 ? _LevelChips(
                                     levels: levels,
-                                    stored: widget.level,
+                                    stored: _level,
                                     onChanged: _pickLevel,
                                   )
                                 : null,
