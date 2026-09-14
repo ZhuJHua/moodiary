@@ -16,9 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Diary {
 
- String get id; String? get categoryId; String get title; String get content; String get contentText;@UtcDateTimeConverter() DateTime get time;@UtcDateTimeConverter() DateTime get lastModified; bool get show;@JsonKey(unknownEnumValue: DiaryMood.neutral) DiaryMood get mood; DiaryWeather? get weather; List<String> get imageName; List<String> get audioName; List<String> get videoName; List<String> get tags;/// 常用地点 id（与 [categoryId] 同一套语义：引用、不是快照——改名 / 挪坐标全体
-/// 日记跟着变，有日记引用的地点不能删）。
- String? get placeId; String get type; double? get aspect;
+ String get id; String? get categoryId; String get title; String get content; String get contentText;@UtcDateTimeConverter() DateTime get time;@UtcDateTimeConverter() DateTime get lastModified; bool get show;@JsonKey(unknownEnumValue: DiaryMood.neutral) DiaryMood get mood; DiaryWeather? get weather; List<String> get imageName; List<String> get audioName; List<String> get videoName; List<String> get tags; String? get placeId; String get type; double? get aspect;
 /// Create a copy of Diary
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -286,8 +284,6 @@ class _Diary extends Diary {
   return EqualUnmodifiableListView(_tags);
 }
 
-/// 常用地点 id（与 [categoryId] 同一套语义：引用、不是快照——改名 / 挪坐标全体
-/// 日记跟着变，有日记引用的地点不能删）。
 @override final  String? placeId;
 @override final  String type;
 @override final  double? aspect;

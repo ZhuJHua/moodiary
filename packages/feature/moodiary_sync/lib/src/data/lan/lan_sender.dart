@@ -10,12 +10,7 @@ import 'package:moodiary_sync/src/data/lan/lan_protocol.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 
-enum LanSendPhase {
-  connecting,
-  packing,
-  uploading,
-  applying,
-}
+enum LanSendPhase { connecting, packing, uploading, applying }
 
 class LanSendProgress {
   final LanSendPhase phase;

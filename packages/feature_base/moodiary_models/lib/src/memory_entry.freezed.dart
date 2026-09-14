@@ -16,8 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$MemoryEntry {
 
- String get id;/// 记忆类别：`preference`（偏好）| `theme`（反复出现的主题）| `goal`（目标）| `fact`（事实）。
- String get category; String get text; DateTime get createdAt; DateTime get updatedAt;
+ String get id; String get category; String get text; DateTime get createdAt; DateTime get updatedAt;
 /// Create a copy of MemoryEntry
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -224,7 +223,6 @@ class _MemoryEntry implements MemoryEntry {
   factory _MemoryEntry.fromJson(Map<String, dynamic> json) => _$MemoryEntryFromJson(json);
 
 @override final  String id;
-/// 记忆类别：`preference`（偏好）| `theme`（反复出现的主题）| `goal`（目标）| `fact`（事实）。
 @override final  String category;
 @override final  String text;
 @override final  DateTime createdAt;

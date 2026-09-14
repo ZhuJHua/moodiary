@@ -16,14 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$LlmModelPreset {
 
- String get id; String get name;/// 这一款模型实际要走的协议。
- AssistantProviderType get protocol;/// 这一款模型实际要打的 baseUrl。空串表示走该协议官方端点。
- String get baseUrl; String get description; bool get toolCall; bool get reasoning; bool? get structuredOutput;/// 温度是否可调（gpt-5 一类是 false）。
- bool? get temperature;/// 思考控制能力。null = 目录没标；空列表 = 模型会思考但调用方无控制。
- List<ReasoningControl>? get reasoningOptions;/// 交错思考的回传字段名（`reasoning_content` / `reasoning_details`）。
- String? get interleavedField; int? get contextLimit;/// 最大输入 token。与 [contextLimit] 不是一回事：后者含输出。
- int? get inputLimit; int? get outputLimit; List<String> get inputModalities; num? get inputCost; num? get outputCost; num? get reasoningCost; num? get cacheReadCost; num? get cacheWriteCost; String? get releaseDate;/// `alpha` / `beta` / `deprecated`。null 表示正常在服。
- String? get status;
+ String get id; String get name; AssistantProviderType get protocol; String get baseUrl; String get description; bool get toolCall; bool get reasoning; bool? get structuredOutput; bool? get temperature; List<ReasoningControl>? get reasoningOptions; String? get interleavedField; int? get contextLimit; int? get inputLimit; int? get outputLimit; List<String> get inputModalities; num? get inputCost; num? get outputCost; num? get reasoningCost; num? get cacheReadCost; num? get cacheWriteCost; String? get releaseDate; String? get status;
 /// Create a copy of LlmModelPreset
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -248,19 +241,14 @@ class _LlmModelPreset extends LlmModelPreset {
 
 @override final  String id;
 @override final  String name;
-/// 这一款模型实际要走的协议。
 @override final  AssistantProviderType protocol;
-/// 这一款模型实际要打的 baseUrl。空串表示走该协议官方端点。
 @override final  String baseUrl;
 @override@JsonKey() final  String description;
 @override@JsonKey() final  bool toolCall;
 @override@JsonKey() final  bool reasoning;
 @override final  bool? structuredOutput;
-/// 温度是否可调（gpt-5 一类是 false）。
 @override final  bool? temperature;
-/// 思考控制能力。null = 目录没标；空列表 = 模型会思考但调用方无控制。
  final  List<ReasoningControl>? _reasoningOptions;
-/// 思考控制能力。null = 目录没标；空列表 = 模型会思考但调用方无控制。
 @override List<ReasoningControl>? get reasoningOptions {
   final value = _reasoningOptions;
   if (value == null) return null;
@@ -269,10 +257,8 @@ class _LlmModelPreset extends LlmModelPreset {
   return EqualUnmodifiableListView(value);
 }
 
-/// 交错思考的回传字段名（`reasoning_content` / `reasoning_details`）。
 @override final  String? interleavedField;
 @override final  int? contextLimit;
-/// 最大输入 token。与 [contextLimit] 不是一回事：后者含输出。
 @override final  int? inputLimit;
 @override final  int? outputLimit;
  final  List<String> _inputModalities;
@@ -288,7 +274,6 @@ class _LlmModelPreset extends LlmModelPreset {
 @override final  num? cacheReadCost;
 @override final  num? cacheWriteCost;
 @override final  String? releaseDate;
-/// `alpha` / `beta` / `deprecated`。null 表示正常在服。
 @override final  String? status;
 
 /// Create a copy of LlmModelPreset

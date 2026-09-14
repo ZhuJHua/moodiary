@@ -42,13 +42,7 @@ class ExportOutcome {
 
 enum ExportError { emptyScope, cancelled }
 
-enum ExportPhase {
-  converting,
-
-  writing,
-
-  serializing,
-}
+enum ExportPhase { converting, writing, serializing }
 
 class ExportProgress {
   final ExportPhase phase;
@@ -599,8 +593,7 @@ class ExportService {
   static Future<void> _deleteQuietly(Directory dir) async {
     try {
       if (dir.existsSync()) await dir.delete(recursive: true);
-    } catch (_) {
-    }
+    } catch (_) {}
   }
 
   static Future<void> clearWorkspace() async {

@@ -2,17 +2,9 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 
 import 'export_doc.dart';
 
-enum MarkdownDialect {
-  commonMark,
+enum MarkdownDialect { commonMark, gfm }
 
-  gfm,
-}
-
-enum MarkdownMediaMode {
-  relative,
-
-  absolute,
-}
+enum MarkdownMediaMode { relative, absolute }
 
 class MarkdownOptions {
   final MarkdownDialect dialect;

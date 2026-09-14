@@ -1,12 +1,6 @@
 import 'package:mui/mui.dart';
 
-enum MCircleButtonTone {
-  filled,
-
-  tonal,
-
-  plain,
-}
+enum MCircleButtonTone { filled, tonal, plain }
 
 class MCircleButton extends StatelessWidget {
   final Widget icon;

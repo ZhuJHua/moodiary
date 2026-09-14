@@ -237,7 +237,6 @@ class RemoteLease {
           payload: {'backendId': backendId},
         );
       }
-    } catch (_) {
-    }
+    } catch (_) {}
   }
 }

@@ -19,8 +19,7 @@ class TiptapContent {
     try {
       final obj = jsonDecode(content);
       if (obj is Map<String, dynamic> && obj['type'] == 'doc') return obj;
-    } catch (_) {
-    }
+    } catch (_) {}
     return null;
   }
 

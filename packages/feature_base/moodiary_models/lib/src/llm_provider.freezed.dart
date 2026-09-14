@@ -16,17 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$LlmProvider {
 
- String get id; String get name;/// 仅自定义供应商：[AssistantProviderType.id]。
- String get type;/// 仅自定义供应商：端点根地址。
- String get baseUrl;/// 新会话默认选中的模型 id。
- String get defaultModel; DateTime get createdAt; int get sortOrder;/// 这一条是从哪个 models.dev 预设建出来的（`LlmProviderPreset.id`，如 `deepseek`）。
-/// **自定义供应商恒为空串**，全仓靠 `isEmpty` 区分两类：空 = 不查在线目录、
-/// 不拉 logo、baseUrl 与协议可改。它不是键，重复不要紧 —— 身份是 [id]（uuid v7）。
- String get presetId;/// 仅自定义供应商：可选模型 id 列表（`GET {base}/models` 拉到的 + 手工补的）。
-/// 落库是为了让选择器离线可用 —— 每次开都联网拉一遍不可接受。
- List<String> get models;/// 模型能力标记。preset 供应商以在线目录为准（逐模型），这里仅对**自定义**供应商
-/// 生效且对其下所有模型一视同仁。三者都默认 false（opt-in）。
- bool get toolCall; bool get reasoning; bool get attachment;
+ String get id; String get name; String get type; String get baseUrl; String get defaultModel; DateTime get createdAt; int get sortOrder; String get presetId; List<String> get models; bool get toolCall; bool get reasoning; bool get attachment;
 /// Create a copy of LlmProvider
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -241,31 +231,19 @@ class _LlmProvider extends LlmProvider {
 
 @override final  String id;
 @override final  String name;
-/// 仅自定义供应商：[AssistantProviderType.id]。
 @override final  String type;
-/// 仅自定义供应商：端点根地址。
 @override final  String baseUrl;
-/// 新会话默认选中的模型 id。
 @override final  String defaultModel;
 @override final  DateTime createdAt;
 @override final  int sortOrder;
-/// 这一条是从哪个 models.dev 预设建出来的（`LlmProviderPreset.id`，如 `deepseek`）。
-/// **自定义供应商恒为空串**，全仓靠 `isEmpty` 区分两类：空 = 不查在线目录、
-/// 不拉 logo、baseUrl 与协议可改。它不是键，重复不要紧 —— 身份是 [id]（uuid v7）。
 @override@JsonKey() final  String presetId;
-/// 仅自定义供应商：可选模型 id 列表（`GET {base}/models` 拉到的 + 手工补的）。
-/// 落库是为了让选择器离线可用 —— 每次开都联网拉一遍不可接受。
  final  List<String> _models;
-/// 仅自定义供应商：可选模型 id 列表（`GET {base}/models` 拉到的 + 手工补的）。
-/// 落库是为了让选择器离线可用 —— 每次开都联网拉一遍不可接受。
 @override@JsonKey() List<String> get models {
   if (_models is EqualUnmodifiableListView) return _models;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_models);
 }
 
-/// 模型能力标记。preset 供应商以在线目录为准（逐模型），这里仅对**自定义**供应商
-/// 生效且对其下所有模型一视同仁。三者都默认 false（opt-in）。
 @override@JsonKey() final  bool toolCall;
 @override@JsonKey() final  bool reasoning;
 @override@JsonKey() final  bool attachment;

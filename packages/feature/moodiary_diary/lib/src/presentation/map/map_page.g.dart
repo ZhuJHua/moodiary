@@ -8,12 +8,9 @@ part of 'map_page.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 日记引用常用地点，足迹 = 有日记的地点各打一个点，同一地点的日记挂在一起。
 
 @ProviderFor(mapData)
 final mapDataProvider = MapDataProvider._();
-
-/// 日记引用常用地点，足迹 = 有日记的地点各打一个点，同一地点的日记挂在一起。
 
 final class MapDataProvider
     extends
@@ -25,7 +22,6 @@ final class MapDataProvider
     with
         $FutureModifier<({List<PlacePin> pins, String tiandituKey})>,
         $FutureProvider<({List<PlacePin> pins, String tiandituKey})> {
-  /// 日记引用常用地点，足迹 = 有日记的地点各打一个点，同一地点的日记挂在一起。
   MapDataProvider._()
     : super(
         from: null,

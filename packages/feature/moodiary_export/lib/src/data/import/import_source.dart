@@ -100,7 +100,6 @@ class MarkdownImportSource {
   static Future<void> _deleteQuietly(Directory dir) async {
     try {
       if (dir.existsSync()) await dir.delete(recursive: true);
-    } catch (_) {
-    }
+    } catch (_) {}
   }
 }

@@ -1,7 +1,1 @@
-enum ThemeAccentMode {
-  neutral,
-
-  system,
-
-  custom,
-}
+enum ThemeAccentMode { neutral, system, custom }

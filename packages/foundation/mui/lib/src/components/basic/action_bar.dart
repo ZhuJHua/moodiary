@@ -28,11 +28,7 @@ class MAction<T> {
   });
 }
 
-enum MActionsLayout {
-  auto,
-  horizontal,
-  vertical,
-}
+enum MActionsLayout { auto, horizontal, vertical }
 
 class MActionBar<T> extends StatefulWidget {
   final List<MAction<T>> actions;

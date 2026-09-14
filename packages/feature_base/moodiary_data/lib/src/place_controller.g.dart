@@ -8,15 +8,12 @@ part of 'place_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 订阅 [PlaceRepository.placeEvents]，按事件原地增量更新，无需重查库。
 
 @ProviderFor(PlaceController)
 final placeControllerProvider = PlaceControllerProvider._();
 
-/// 订阅 [PlaceRepository.placeEvents]，按事件原地增量更新，无需重查库。
 final class PlaceControllerProvider
     extends $AsyncNotifierProvider<PlaceController, List<Place>> {
-  /// 订阅 [PlaceRepository.placeEvents]，按事件原地增量更新，无需重查库。
   PlaceControllerProvider._()
     : super(
         from: null,
@@ -37,8 +34,6 @@ final class PlaceControllerProvider
 }
 
 String _$placeControllerHash() => r'cd27cb9c32dbfb384292d4d96a60017a1e3cdd15';
-
-/// 订阅 [PlaceRepository.placeEvents]，按事件原地增量更新，无需重查库。
 
 abstract class _$PlaceController extends $AsyncNotifier<List<Place>> {
   FutureOr<List<Place>> build();
@@ -182,12 +177,8 @@ final class PlaceByIdFamily extends $Family
   String toString() => r'placeByIdProvider';
 }
 
-/// 「这个地点写过几篇」。同 `categoryDiaryCounts`：日记事件去抖后重查。
-
 @ProviderFor(placeDiaryCounts)
 final placeDiaryCountsProvider = PlaceDiaryCountsProvider._();
-
-/// 「这个地点写过几篇」。同 `categoryDiaryCounts`：日记事件去抖后重查。
 
 final class PlaceDiaryCountsProvider
     extends
@@ -197,7 +188,6 @@ final class PlaceDiaryCountsProvider
           FutureOr<Map<String, int>>
         >
     with $FutureModifier<Map<String, int>>, $FutureProvider<Map<String, int>> {
-  /// 「这个地点写过几篇」。同 `categoryDiaryCounts`：日记事件去抖后重查。
   PlaceDiaryCountsProvider._()
     : super(
         from: null,

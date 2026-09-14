@@ -292,11 +292,7 @@ class IrBlockRenderer {
                   color: style.mediaScrim,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  LucideIcons.play,
-                  size: 20,
-                  color: style.onMedia,
-                ),
+                child: Icon(LucideIcons.play, size: 20, color: style.onMedia),
               ),
             ],
           ),

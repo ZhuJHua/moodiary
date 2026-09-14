@@ -16,8 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Category {
 
-@Id() String get id; String get categoryName;@UtcDateTimeConverter() DateTime get lastModified; String? get parentId;/// 卡片/标签用的 ARGB 颜色；null = 未设置（由 categoryColorOf 回退到派生色）。
- int? get color;
+@Id() String get id; String get categoryName;@UtcDateTimeConverter() DateTime get lastModified; String? get parentId; int? get color;
 /// Create a copy of Category
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -227,7 +226,6 @@ class _Category extends Category {
 @override final  String categoryName;
 @override@UtcDateTimeConverter() final  DateTime lastModified;
 @override final  String? parentId;
-/// 卡片/标签用的 ARGB 颜色；null = 未设置（由 categoryColorOf 回退到派生色）。
 @override final  int? color;
 
 /// Create a copy of Category

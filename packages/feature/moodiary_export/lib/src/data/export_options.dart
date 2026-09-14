@@ -16,13 +16,7 @@ enum ExportFormat {
       ExportFormat.values.firstWhere((f) => f.id == id, orElse: () => markdown);
 }
 
-enum ExportMediaPolicy {
-  embed,
-
-  placeholder,
-
-  none,
-}
+enum ExportMediaPolicy { embed, placeholder, none }
 
 enum ExportPaper {
   a4('A4', 11906, 16838),
