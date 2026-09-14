@@ -16,10 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$DiaryWeather {
 
-/// 和风天气图标码（如 `"100"`）。
- String get icon;/// 摄氏温度的数字字符串；null = 手选天气，没有温度。
- String? get temp;/// 文字描述（如「晴」/「多云」）。
- String get text;
+ String get icon; String? get temp; String get text;
 /// Create a copy of DiaryWeather
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -223,11 +220,8 @@ class _DiaryWeather implements DiaryWeather {
   const _DiaryWeather({required this.icon, this.temp, required this.text});
   factory _DiaryWeather.fromJson(Map<String, dynamic> json) => _$DiaryWeatherFromJson(json);
 
-/// 和风天气图标码（如 `"100"`）。
 @override final  String icon;
-/// 摄氏温度的数字字符串；null = 手选天气，没有温度。
 @override final  String? temp;
-/// 文字描述（如「晴」/「多云」）。
 @override final  String text;
 
 /// Create a copy of DiaryWeather

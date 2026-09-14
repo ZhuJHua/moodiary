@@ -8,20 +8,9 @@ part of 'timeline_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 月份 -> 该月可见日记篇数（月首零点为键，本地时区）。
-///
-/// 走独立的聚合查询而不是数首页那条分页列表：列表一次只加载 30 条，从中数出来的是
-/// 「加载到哪儿了」，不是这个月写了多少篇。[sort] 决定分桶字段，必须与时间线的分组键
-/// 保持一致，否则表头数字会和它下面的条目对不上。
 
 @ProviderFor(timelineMonthCounts)
 final timelineMonthCountsProvider = TimelineMonthCountsFamily._();
-
-/// 月份 -> 该月可见日记篇数（月首零点为键，本地时区）。
-///
-/// 走独立的聚合查询而不是数首页那条分页列表：列表一次只加载 30 条，从中数出来的是
-/// 「加载到哪儿了」，不是这个月写了多少篇。[sort] 决定分桶字段，必须与时间线的分组键
-/// 保持一致，否则表头数字会和它下面的条目对不上。
 
 final class TimelineMonthCountsProvider
     extends
@@ -33,11 +22,6 @@ final class TimelineMonthCountsProvider
     with
         $FutureModifier<Map<DateTime, int>>,
         $FutureProvider<Map<DateTime, int>> {
-  /// 月份 -> 该月可见日记篇数（月首零点为键，本地时区）。
-  ///
-  /// 走独立的聚合查询而不是数首页那条分页列表：列表一次只加载 30 条，从中数出来的是
-  /// 「加载到哪儿了」，不是这个月写了多少篇。[sort] 决定分桶字段，必须与时间线的分组键
-  /// 保持一致，否则表头数字会和它下面的条目对不上。
   TimelineMonthCountsProvider._({
     required TimelineMonthCountsFamily super.from,
     required ({String? categoryId, bool uncategorized, DiarySort sort})
@@ -93,12 +77,6 @@ final class TimelineMonthCountsProvider
 String _$timelineMonthCountsHash() =>
     r'274bc4691bf8e2f2da8b8e155f0b86761179a5ba';
 
-/// 月份 -> 该月可见日记篇数（月首零点为键，本地时区）。
-///
-/// 走独立的聚合查询而不是数首页那条分页列表：列表一次只加载 30 条，从中数出来的是
-/// 「加载到哪儿了」，不是这个月写了多少篇。[sort] 决定分桶字段，必须与时间线的分组键
-/// 保持一致，否则表头数字会和它下面的条目对不上。
-
 final class TimelineMonthCountsFamily extends $Family
     with
         $FunctionalFamilyOverride<
@@ -113,12 +91,6 @@ final class TimelineMonthCountsFamily extends $Family
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
-
-  /// 月份 -> 该月可见日记篇数（月首零点为键，本地时区）。
-  ///
-  /// 走独立的聚合查询而不是数首页那条分页列表：列表一次只加载 30 条，从中数出来的是
-  /// 「加载到哪儿了」，不是这个月写了多少篇。[sort] 决定分桶字段，必须与时间线的分组键
-  /// 保持一致，否则表头数字会和它下面的条目对不上。
 
   TimelineMonthCountsProvider call({
     String? categoryId,

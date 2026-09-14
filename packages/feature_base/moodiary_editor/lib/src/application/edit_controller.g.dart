@@ -8,18 +8,12 @@ part of 'edit_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 编辑页状态机。`changeXxx` 改本地 `state`，落库走 [autoSave]。新建延迟落库：
-/// 空白不创建，有内容才 insert，写了又清空则丢弃。
 
 @ProviderFor(EditController)
 final editControllerProvider = EditControllerFamily._();
 
-/// 编辑页状态机。`changeXxx` 改本地 `state`，落库走 [autoSave]。新建延迟落库：
-/// 空白不创建，有内容才 insert，写了又清空则丢弃。
 final class EditControllerProvider
     extends $AsyncNotifierProvider<EditController, Diary> {
-  /// 编辑页状态机。`changeXxx` 改本地 `state`，落库走 [autoSave]。新建延迟落库：
-  /// 空白不创建，有内容才 insert，写了又清空则丢弃。
   EditControllerProvider._({
     required EditControllerFamily super.from,
     required (String?, {DiaryType? defaultType, String? defaultCategoryId})
@@ -57,10 +51,7 @@ final class EditControllerProvider
   }
 }
 
-String _$editControllerHash() => r'85242fcdc114e535fdab1b7f24fd881f46df1b90';
-
-/// 编辑页状态机。`changeXxx` 改本地 `state`，落库走 [autoSave]。新建延迟落库：
-/// 空白不创建，有内容才 insert，写了又清空则丢弃。
+String _$editControllerHash() => r'51a8100c8469b3c9479dd97f2b370797694a4887';
 
 final class EditControllerFamily extends $Family
     with
@@ -80,9 +71,6 @@ final class EditControllerFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// 编辑页状态机。`changeXxx` 改本地 `state`，落库走 [autoSave]。新建延迟落库：
-  /// 空白不创建，有内容才 insert，写了又清空则丢弃。
-
   EditControllerProvider call(
     String? diaryId, {
     DiaryType? defaultType,
@@ -99,9 +87,6 @@ final class EditControllerFamily extends $Family
   @override
   String toString() => r'editControllerProvider';
 }
-
-/// 编辑页状态机。`changeXxx` 改本地 `state`，落库走 [autoSave]。新建延迟落库：
-/// 空白不创建，有内容才 insert，写了又清空则丢弃。
 
 abstract class _$EditController extends $AsyncNotifier<Diary> {
   late final _$args =

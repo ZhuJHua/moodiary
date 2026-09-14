@@ -11,13 +11,7 @@ import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_keyfile.dart';
 
-enum RemoteKeyfileCheck {
-  safe,
-
-  conflict,
-
-  unknown,
-}
+enum RemoteKeyfileCheck { safe, conflict, unknown }
 
 typedef DeriveKeyFn = Future<List<int>> Function({
   required String salt,

@@ -8,18 +8,9 @@ part of 'diary_graph_page.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 知识图谱数据（只含有双链的日记）。订阅 [DiaryRepository.diaryEvents]，任何日记增删改都
-/// 令其失效重建；从双链快照直接装配，免解析 content。
-///
-/// 事件做 400ms 防抖：同步拉取 / 批量编辑会连续触发多次，不防抖就是连续多次全量重建。
 
 @ProviderFor(diaryGraph)
 final diaryGraphProvider = DiaryGraphProvider._();
-
-/// 知识图谱数据（只含有双链的日记）。订阅 [DiaryRepository.diaryEvents]，任何日记增删改都
-/// 令其失效重建；从双链快照直接装配，免解析 content。
-///
-/// 事件做 400ms 防抖：同步拉取 / 批量编辑会连续触发多次，不防抖就是连续多次全量重建。
 
 final class DiaryGraphProvider
     extends
@@ -29,10 +20,6 @@ final class DiaryGraphProvider
           FutureOr<DiaryGraphData>
         >
     with $FutureModifier<DiaryGraphData>, $FutureProvider<DiaryGraphData> {
-  /// 知识图谱数据（只含有双链的日记）。订阅 [DiaryRepository.diaryEvents]，任何日记增删改都
-  /// 令其失效重建；从双链快照直接装配，免解析 content。
-  ///
-  /// 事件做 400ms 防抖：同步拉取 / 批量编辑会连续触发多次，不防抖就是连续多次全量重建。
   DiaryGraphProvider._()
     : super(
         from: null,

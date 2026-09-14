@@ -87,10 +87,26 @@ ImageFilter _backdropFilter(MGlassConfig config) {
 ColorFilter _saturate(double s) {
   const lumR = 0.213, lumG = 0.715, lumB = 0.072;
   return .matrix(<double>[
-    lumR + s * (1 - lumR), lumG * (1 - s), lumB * (1 - s), 0, 0,
-    lumR * (1 - s), lumG + s * (1 - lumG), lumB * (1 - s), 0, 0,
-    lumR * (1 - s), lumG * (1 - s), lumB + s * (1 - lumB), 0, 0,
-    0, 0, 0, 1, 0,
+    lumR + s * (1 - lumR),
+    lumG * (1 - s),
+    lumB * (1 - s),
+    0,
+    0,
+    lumR * (1 - s),
+    lumG + s * (1 - lumG),
+    lumB * (1 - s),
+    0,
+    0,
+    lumR * (1 - s),
+    lumG * (1 - s),
+    lumB + s * (1 - lumB),
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
   ]);
 }
 

@@ -195,8 +195,7 @@ class ImportMediaStage {
     final degraded = m.group(1) == '!' ? '[${m.group(2)}]($raw)' : null;
     try {
       target = Uri.decodeComponent(target);
-    } catch (_) {
-    }
+    } catch (_) {}
     if (p.isAbsolute(target)) return degraded;
 
     final resolved = p.normalize(p.join(dir, target));

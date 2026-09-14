@@ -229,7 +229,12 @@ impl S3Client {
         crate::http::client::read_body(resp)
             .await
             .map(Some)
-            .map_err(|e| tagged(kind_of_reqwest(&e), format!("Failed to read object content: {e}")))
+            .map_err(|e| {
+                tagged(
+                    kind_of_reqwest(&e),
+                    format!("Failed to read object content: {e}"),
+                )
+            })
     }
 
     pub async fn write_object(&self, key: String, data: Vec<u8>) -> Result<()> {

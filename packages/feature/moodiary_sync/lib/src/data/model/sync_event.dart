@@ -1,13 +1,6 @@
 enum SyncEventLevel { info, warn, error }
 
-enum SyncTrigger {
-  manual,
-  change,
-  close,
-  poll,
-  resume,
-  network,
-}
+enum SyncTrigger { manual, change, close, poll, resume, network }
 
 enum SyncEventKind {
   syncStart,

@@ -8,19 +8,13 @@ part of 'media_info_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 订阅 [MediaInfoRepository.mediaInfoEvents]，按事件原地增量更新，无需重查库。
-/// 以 fileName 为键——消费方（媒体库 / 播放页）都按文件名点查。
 
 @ProviderFor(MediaInfoController)
 final mediaInfoControllerProvider = MediaInfoControllerProvider._();
 
-/// 订阅 [MediaInfoRepository.mediaInfoEvents]，按事件原地增量更新，无需重查库。
-/// 以 fileName 为键——消费方（媒体库 / 播放页）都按文件名点查。
 final class MediaInfoControllerProvider
     extends
         $AsyncNotifierProvider<MediaInfoController, Map<String, MediaInfo>> {
-  /// 订阅 [MediaInfoRepository.mediaInfoEvents]，按事件原地增量更新，无需重查库。
-  /// 以 fileName 为键——消费方（媒体库 / 播放页）都按文件名点查。
   MediaInfoControllerProvider._()
     : super(
         from: null,
@@ -42,9 +36,6 @@ final class MediaInfoControllerProvider
 
 String _$mediaInfoControllerHash() =>
     r'9a34ce566e2c93530d6afa09b8f6c4f0261b399a';
-
-/// 订阅 [MediaInfoRepository.mediaInfoEvents]，按事件原地增量更新，无需重查库。
-/// 以 fileName 为键——消费方（媒体库 / 播放页）都按文件名点查。
 
 abstract class _$MediaInfoController
     extends $AsyncNotifier<Map<String, MediaInfo>> {

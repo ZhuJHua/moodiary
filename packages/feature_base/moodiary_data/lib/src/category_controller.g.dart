@@ -8,15 +8,12 @@ part of 'category_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 订阅 [CategoryRepository.categoryEvents]，按事件原地增量更新，无需重查库。
 
 @ProviderFor(CategoryController)
 final categoryControllerProvider = CategoryControllerProvider._();
 
-/// 订阅 [CategoryRepository.categoryEvents]，按事件原地增量更新，无需重查库。
 final class CategoryControllerProvider
     extends $AsyncNotifierProvider<CategoryController, List<Category>> {
-  /// 订阅 [CategoryRepository.categoryEvents]，按事件原地增量更新，无需重查库。
   CategoryControllerProvider._()
     : super(
         from: null,
@@ -38,8 +35,6 @@ final class CategoryControllerProvider
 
 String _$categoryControllerHash() =>
     r'8502dfc8f45b6f6e845833e92ad527ebb813b9e7';
-
-/// 订阅 [CategoryRepository.categoryEvents]，按事件原地增量更新，无需重查库。
 
 abstract class _$CategoryController extends $AsyncNotifier<List<Category>> {
   FutureOr<List<Category>> build();

@@ -52,8 +52,7 @@ Future<bool> applyUserKeyChange({
           await SyncKeyManager.writeRemoteKeyfile(backend, keyfile);
           final id = backend.persistentBackendId;
           if (id != null) await SyncKeyManager.clearPendingUpload(id);
-        } catch (_) {
-        }
+        } catch (_) {}
       }
     }
     if (context.mounted) {
@@ -203,8 +202,7 @@ Future<bool> applyUserKeyChange({
     }
     try {
       await SyncKeyManager.deleteRemoteKeyfile(backend);
-    } catch (_) {
-    }
+    } catch (_) {}
   }
   await SyncKeyManager.clearDek();
   if (context.mounted) ref.invalidate(syncDekControllerProvider);
@@ -212,13 +210,7 @@ Future<bool> applyUserKeyChange({
   return true;
 }
 
-enum _AdoptOutcome {
-  unlocked,
-
-  cancelled,
-
-  discardRemote,
-}
+enum _AdoptOutcome { unlocked, cancelled, discardRemote }
 
 Future<_AdoptOutcome> _adoptRemoteKey({
   required BuildContext context,

@@ -16,10 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ReasoningControl {
 
- ReasoningControlType get type;/// effort 型的档位。取值来自 models.dev，可能含
-/// `null` / `none` / `minimal` / `low` / `medium` / `high` / `xhigh` / `max` / `default`。
- List<String> get values;/// budget_tokens 型的下界 / 上界（目录只在核实过时才给）。
- int? get min; int? get max;
+ ReasoningControlType get type; List<String> get values; int? get min; int? get max;
 /// Create a copy of ReasoningControl
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -225,18 +222,13 @@ class _ReasoningControl extends ReasoningControl {
   factory _ReasoningControl.fromJson(Map<String, dynamic> json) => _$ReasoningControlFromJson(json);
 
 @override final  ReasoningControlType type;
-/// effort 型的档位。取值来自 models.dev，可能含
-/// `null` / `none` / `minimal` / `low` / `medium` / `high` / `xhigh` / `max` / `default`。
  final  List<String> _values;
-/// effort 型的档位。取值来自 models.dev，可能含
-/// `null` / `none` / `minimal` / `low` / `medium` / `high` / `xhigh` / `max` / `default`。
 @override@JsonKey() List<String> get values {
   if (_values is EqualUnmodifiableListView) return _values;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_values);
 }
 
-/// budget_tokens 型的下界 / 上界（目录只在核实过时才给）。
 @override final  int? min;
 @override final  int? max;
 

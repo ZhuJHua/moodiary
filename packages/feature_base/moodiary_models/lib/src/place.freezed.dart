@@ -16,9 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Place {
 
- String get id; String get name; double get latitude; double get longitude;/// lucide 图标名；null = 回退 `map-pin`。地点不给用户选颜色——图标已经承担了
-/// 辨识，方块底色按 id 自动取。
- String? get icon;@UtcDateTimeConverter() DateTime get lastModified;
+ String get id; String get name; double get latitude; double get longitude; String? get icon;@UtcDateTimeConverter() DateTime get lastModified;
 /// Create a copy of Place
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -229,8 +227,6 @@ class _Place extends Place {
 @override final  String name;
 @override final  double latitude;
 @override final  double longitude;
-/// lucide 图标名；null = 回退 `map-pin`。地点不给用户选颜色——图标已经承担了
-/// 辨识，方块底色按 id 自动取。
 @override final  String? icon;
 @override@UtcDateTimeConverter() final  DateTime lastModified;
 

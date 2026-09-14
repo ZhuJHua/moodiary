@@ -411,9 +411,9 @@ void main() {
     void warmCache() {
       MoodiaryKVs.llmPresetCache.set(
         jsonEncode(
-          parseModelsDevCatalog(
-            _catalog({'anthropic': _anthropic}),
-          ).map((e) => e.toJson()).toList(),
+          parseModelsDevCatalog(_catalog({'anthropic': _anthropic}))
+              .map((e) => e.toJson())
+              .toList(),
         ),
       );
     }
@@ -443,9 +443,7 @@ void main() {
     });
 
     test('在途的刷新会被合并成一次请求', () async {
-      final http = _StubHttp(
-        () async => _catalog({'anthropic': _anthropic}),
-      );
+      final http = _StubHttp(() async => _catalog({'anthropic': _anthropic}));
       final repo = LlmPresetRepository(http);
       final results = await Future.wait([repo.refresh(), repo.refresh()]);
       expect(http.calls, 1);
@@ -455,7 +453,6 @@ void main() {
       expect(http.calls, 2);
     });
   });
-
 }
 
 class _StubHttp extends IHttpClient {

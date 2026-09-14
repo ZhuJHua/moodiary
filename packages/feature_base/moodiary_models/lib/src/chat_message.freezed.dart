@@ -16,19 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ChatMessage {
 
- String get id; String get sessionId;/// `"user"` 或 `"assistant"`。
- String get role; String get content; DateTime get createdAt;/// assistant 回复的思考 / 推理过程（思考模式开启时才有）。null 表示非思考回复。
- String? get reasoning;/// 思考耗时（毫秒）。null 表示无思考过程。
- int? get thinkingMillis;/// 随消息发送的图片文件名（存于 image 目录，用 AppFiles.getRealPath 解析）。null 表示无图。
- String? get imageName;/// 本轮（assistant 回复）消耗的输入 token 数。null 表示无用量数据。
- int? get inputTokens;/// 本轮（assistant 回复）产生的输出 token 数。null 表示无用量数据。
- int? get outputTokens;/// 生成本条 assistant 回复的模型 id。null = 旧数据或 user 消息。
-/// 相邻两条回复的 model 不同时，界面在其间合成「已切换到 X」提示。
- String? get model;/// 本轮用到的工具调用，按发生顺序。
-///
-/// **必须落库**：不落的话工具调用只在本轮可见，重开会话就没了 —— 而且模型
-/// 下一轮也看不到上一轮查到过什么（那正是它会重复调同一个工具的原因）。
- List<AssistantToolCall> get toolCalls;
+ String get id; String get sessionId; String get role; String get content; DateTime get createdAt; String? get reasoning; int? get thinkingMillis; String? get imageName; int? get inputTokens; int? get outputTokens; String? get model; List<AssistantToolCall> get toolCalls;
 /// Create a copy of ChatMessage
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -243,32 +231,16 @@ class _ChatMessage implements ChatMessage {
 
 @override final  String id;
 @override final  String sessionId;
-/// `"user"` 或 `"assistant"`。
 @override final  String role;
 @override final  String content;
 @override final  DateTime createdAt;
-/// assistant 回复的思考 / 推理过程（思考模式开启时才有）。null 表示非思考回复。
 @override final  String? reasoning;
-/// 思考耗时（毫秒）。null 表示无思考过程。
 @override final  int? thinkingMillis;
-/// 随消息发送的图片文件名（存于 image 目录，用 AppFiles.getRealPath 解析）。null 表示无图。
 @override final  String? imageName;
-/// 本轮（assistant 回复）消耗的输入 token 数。null 表示无用量数据。
 @override final  int? inputTokens;
-/// 本轮（assistant 回复）产生的输出 token 数。null 表示无用量数据。
 @override final  int? outputTokens;
-/// 生成本条 assistant 回复的模型 id。null = 旧数据或 user 消息。
-/// 相邻两条回复的 model 不同时，界面在其间合成「已切换到 X」提示。
 @override final  String? model;
-/// 本轮用到的工具调用，按发生顺序。
-///
-/// **必须落库**：不落的话工具调用只在本轮可见，重开会话就没了 —— 而且模型
-/// 下一轮也看不到上一轮查到过什么（那正是它会重复调同一个工具的原因）。
  final  List<AssistantToolCall> _toolCalls;
-/// 本轮用到的工具调用，按发生顺序。
-///
-/// **必须落库**：不落的话工具调用只在本轮可见，重开会话就没了 —— 而且模型
-/// 下一轮也看不到上一轮查到过什么（那正是它会重复调同一个工具的原因）。
 @override@JsonKey() List<AssistantToolCall> get toolCalls {
   if (_toolCalls is EqualUnmodifiableListView) return _toolCalls;
   // ignore: implicit_dynamic_type

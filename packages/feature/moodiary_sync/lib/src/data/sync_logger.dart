@@ -86,8 +86,7 @@ class SyncLogger {
     try {
       await _ensureSink(event.at);
       _sink?.writeln(jsonEncode(event.toJson()));
-    } catch (_) {
-    }
+    } catch (_) {}
   }
 
   Future<void> _ensureSink(DateTime at) async {

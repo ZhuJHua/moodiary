@@ -79,7 +79,11 @@ class _AboutPageState extends State<AboutPage> {
       );
       if (download) await _open(release.pageUrl);
     } catch (error, stackTrace) {
-      logger.e('check for updates failed', error: error, stackTrace: stackTrace);
+      logger.e(
+        'check for updates failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       toast.error(message: l10n.app.aboutUpdateFailed);
     } finally {
       if (mounted) setState(() => _checkingUpdate = false);

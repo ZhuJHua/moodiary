@@ -8,30 +8,12 @@ part of 'media_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 媒体库分页数据源：按 [MediaType] 分页加载**媒体条目**（一页 [pageSize] 个文件，
-/// 日记时间倒序）。每类一个 family 实例，各自维护 offset / noMore。
-///
-/// 订阅 [DiaryRepository.diaryEvents] 按事件原地增量更新：一篇日记的变更 = 先摘掉它
-/// 已加载的全部条目，再把新条目按序插回（只在已加载窗口内；比窗口末尾还旧且还有下一页
-/// 时不插，翻页自然带来）。
 
 @ProviderFor(MediaItems)
 final mediaItemsProvider = MediaItemsFamily._();
 
-/// 媒体库分页数据源：按 [MediaType] 分页加载**媒体条目**（一页 [pageSize] 个文件，
-/// 日记时间倒序）。每类一个 family 实例，各自维护 offset / noMore。
-///
-/// 订阅 [DiaryRepository.diaryEvents] 按事件原地增量更新：一篇日记的变更 = 先摘掉它
-/// 已加载的全部条目，再把新条目按序插回（只在已加载窗口内；比窗口末尾还旧且还有下一页
-/// 时不插，翻页自然带来）。
 final class MediaItemsProvider
     extends $AsyncNotifierProvider<MediaItems, List<MediaItem>> {
-  /// 媒体库分页数据源：按 [MediaType] 分页加载**媒体条目**（一页 [pageSize] 个文件，
-  /// 日记时间倒序）。每类一个 family 实例，各自维护 offset / noMore。
-  ///
-  /// 订阅 [DiaryRepository.diaryEvents] 按事件原地增量更新：一篇日记的变更 = 先摘掉它
-  /// 已加载的全部条目，再把新条目按序插回（只在已加载窗口内；比窗口末尾还旧且还有下一页
-  /// 时不插，翻页自然带来）。
   MediaItemsProvider._({
     required MediaItemsFamily super.from,
     required MediaType super.argument,
@@ -70,13 +52,6 @@ final class MediaItemsProvider
 
 String _$mediaItemsHash() => r'edbb801306abd0254b08319471e4057f6fb0584b';
 
-/// 媒体库分页数据源：按 [MediaType] 分页加载**媒体条目**（一页 [pageSize] 个文件，
-/// 日记时间倒序）。每类一个 family 实例，各自维护 offset / noMore。
-///
-/// 订阅 [DiaryRepository.diaryEvents] 按事件原地增量更新：一篇日记的变更 = 先摘掉它
-/// 已加载的全部条目，再把新条目按序插回（只在已加载窗口内；比窗口末尾还旧且还有下一页
-/// 时不插，翻页自然带来）。
-
 final class MediaItemsFamily extends $Family
     with
         $ClassFamilyOverride<
@@ -95,26 +70,12 @@ final class MediaItemsFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// 媒体库分页数据源：按 [MediaType] 分页加载**媒体条目**（一页 [pageSize] 个文件，
-  /// 日记时间倒序）。每类一个 family 实例，各自维护 offset / noMore。
-  ///
-  /// 订阅 [DiaryRepository.diaryEvents] 按事件原地增量更新：一篇日记的变更 = 先摘掉它
-  /// 已加载的全部条目，再把新条目按序插回（只在已加载窗口内；比窗口末尾还旧且还有下一页
-  /// 时不插，翻页自然带来）。
-
   MediaItemsProvider call({required MediaType type}) =>
       MediaItemsProvider._(argument: type, from: this);
 
   @override
   String toString() => r'mediaItemsProvider';
 }
-
-/// 媒体库分页数据源：按 [MediaType] 分页加载**媒体条目**（一页 [pageSize] 个文件，
-/// 日记时间倒序）。每类一个 family 实例，各自维护 offset / noMore。
-///
-/// 订阅 [DiaryRepository.diaryEvents] 按事件原地增量更新：一篇日记的变更 = 先摘掉它
-/// 已加载的全部条目，再把新条目按序插回（只在已加载窗口内；比窗口末尾还旧且还有下一页
-/// 时不插，翻页自然带来）。
 
 abstract class _$MediaItems extends $AsyncNotifier<List<MediaItem>> {
   late final _$args = ref.$arg as MediaType;
@@ -137,21 +98,11 @@ abstract class _$MediaItems extends $AsyncNotifier<List<MediaItem>> {
   }
 }
 
-/// 媒体清理：找出 / 删除未被任何日记引用的孤儿媒体文件。[scan] 只扫描不删除；
-/// [clean] 只删文件——刷新（失效 [mediaItemsProvider]）由调用方用自身有效 ref 触发，
-/// 因本 controller 是 autoDispose，其 ref 会在确认弹窗 await 期间被回收。
-
 @ProviderFor(MediaCleanupController)
 final mediaCleanupControllerProvider = MediaCleanupControllerProvider._();
 
-/// 媒体清理：找出 / 删除未被任何日记引用的孤儿媒体文件。[scan] 只扫描不删除；
-/// [clean] 只删文件——刷新（失效 [mediaItemsProvider]）由调用方用自身有效 ref 触发，
-/// 因本 controller 是 autoDispose，其 ref 会在确认弹窗 await 期间被回收。
 final class MediaCleanupControllerProvider
     extends $NotifierProvider<MediaCleanupController, void> {
-  /// 媒体清理：找出 / 删除未被任何日记引用的孤儿媒体文件。[scan] 只扫描不删除；
-  /// [clean] 只删文件——刷新（失效 [mediaItemsProvider]）由调用方用自身有效 ref 触发，
-  /// 因本 controller 是 autoDispose，其 ref 会在确认弹窗 await 期间被回收。
   MediaCleanupControllerProvider._()
     : super(
         from: null,
@@ -181,10 +132,6 @@ final class MediaCleanupControllerProvider
 
 String _$mediaCleanupControllerHash() =>
     r'64e5cff97a19df503a65ea26778e9bf4552d846a';
-
-/// 媒体清理：找出 / 删除未被任何日记引用的孤儿媒体文件。[scan] 只扫描不删除；
-/// [clean] 只删文件——刷新（失效 [mediaItemsProvider]）由调用方用自身有效 ref 触发，
-/// 因本 controller 是 autoDispose，其 ref 会在确认弹窗 await 期间被回收。
 
 abstract class _$MediaCleanupController extends $Notifier<void> {
   void build();

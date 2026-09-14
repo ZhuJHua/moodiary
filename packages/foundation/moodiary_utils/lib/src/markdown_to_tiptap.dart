@@ -6,9 +6,25 @@ class MarkdownToTiptap {
   const MarkdownToTiptap._();
 
   static const Set<String> _blockTags = {
-    'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-    'ul', 'ol', 'li', 'blockquote', 'pre', 'hr',
-    'table', 'thead', 'tbody', 'tr', 'th', 'td',
+    'p',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'ul',
+    'ol',
+    'li',
+    'blockquote',
+    'pre',
+    'hr',
+    'table',
+    'thead',
+    'tbody',
+    'tr',
+    'th',
+    'td',
   };
 
   static String? convert(String markdown) {

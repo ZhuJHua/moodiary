@@ -55,8 +55,7 @@ void main() {
   setUpAll(() {
     try {
       PlatformService.get().applicationSupportPath = '/tmp/moodiary-test';
-    } catch (_) {
-    }
+    } catch (_) {}
   });
 
   testWidgets('renders text-only entry inside a ListView without error', (

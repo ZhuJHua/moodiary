@@ -16,10 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AgentPreset {
 
- String get id; String get name; String get description;/// 人格文本（system prompt 的 order-0 段），上限由写入方截断。
- String get persona;/// 本预设挂载的工具 id 子集（dsh：预设声明它 mount 哪些工具）。
-/// null = 全部（跟随出厂全集，含未来新增）；空列表 = 一个工具都不挂。
- List<String>? get tools; DateTime get createdAt; DateTime get updatedAt;
+ String get id; String get name; String get description; String get persona; List<String>? get tools; DateTime get createdAt; DateTime get updatedAt;
 /// Create a copy of AgentPreset
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -230,13 +227,8 @@ class _AgentPreset implements AgentPreset {
 @override final  String id;
 @override final  String name;
 @override@JsonKey() final  String description;
-/// 人格文本（system prompt 的 order-0 段），上限由写入方截断。
 @override final  String persona;
-/// 本预设挂载的工具 id 子集（dsh：预设声明它 mount 哪些工具）。
-/// null = 全部（跟随出厂全集，含未来新增）；空列表 = 一个工具都不挂。
  final  List<String>? _tools;
-/// 本预设挂载的工具 id 子集（dsh：预设声明它 mount 哪些工具）。
-/// null = 全部（跟随出厂全集，含未来新增）；空列表 = 一个工具都不挂。
 @override List<String>? get tools {
   final value = _tools;
   if (value == null) return null;

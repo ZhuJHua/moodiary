@@ -3,11 +3,7 @@ import 'package:mui/mui.dart';
 
 const double kMoodiaryFieldHeight = 48;
 
-enum MFieldVariant {
-  filled,
-
-  plain,
-}
+enum MFieldVariant { filled, plain }
 
 class MField extends StatefulWidget {
   final TextEditingController controller;

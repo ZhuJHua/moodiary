@@ -16,12 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AssistantToolCall {
 
-/// rig 生成的关联 id，用来把「开始」与「结果」两个事件配成一对。
- String get callId;/// 工具 id（与 `AssistantTool.id` 一致）。
- String get name;/// 模型传的入参，原样 JSON。
- String get argsJson;/// 工具返回的文本。[done] 为 false 时无意义。
- String get result;/// 是否已拿到结果。流式期间先是 false（转圈），拿到结果才置真。
- bool get done;
+ String get callId; String get name; String get argsJson; String get result; bool get done;
 /// Create a copy of AssistantToolCall
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -227,15 +222,10 @@ class _AssistantToolCall extends AssistantToolCall {
   const _AssistantToolCall({required this.callId, required this.name, this.argsJson = '', this.result = '', this.done = false}): super._();
   factory _AssistantToolCall.fromJson(Map<String, dynamic> json) => _$AssistantToolCallFromJson(json);
 
-/// rig 生成的关联 id，用来把「开始」与「结果」两个事件配成一对。
 @override final  String callId;
-/// 工具 id（与 `AssistantTool.id` 一致）。
 @override final  String name;
-/// 模型传的入参，原样 JSON。
 @override@JsonKey() final  String argsJson;
-/// 工具返回的文本。[done] 为 false 时无意义。
 @override@JsonKey() final  String result;
-/// 是否已拿到结果。流式期间先是 false（转圈），拿到结果才置真。
 @override@JsonKey() final  bool done;
 
 /// Create a copy of AssistantToolCall

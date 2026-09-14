@@ -8,14 +8,9 @@ part of 'diary_ego_graph_page.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 以某篇日记为中心的 k 跳邻域。全程主键批量 get（见 [DiaryRepository.buildEgoGraph]），
-/// 成本随邻域规模增长、与总日记数无关，所以详情页高频进出也不心疼。
 
 @ProviderFor(diaryEgoGraph)
 final diaryEgoGraphProvider = DiaryEgoGraphFamily._();
-
-/// 以某篇日记为中心的 k 跳邻域。全程主键批量 get（见 [DiaryRepository.buildEgoGraph]），
-/// 成本随邻域规模增长、与总日记数无关，所以详情页高频进出也不心疼。
 
 final class DiaryEgoGraphProvider
     extends
@@ -25,8 +20,6 @@ final class DiaryEgoGraphProvider
           FutureOr<DiaryGraphData>
         >
     with $FutureModifier<DiaryGraphData>, $FutureProvider<DiaryGraphData> {
-  /// 以某篇日记为中心的 k 跳邻域。全程主键批量 get（见 [DiaryRepository.buildEgoGraph]），
-  /// 成本随邻域规模增长、与总日记数无关，所以详情页高频进出也不心疼。
   DiaryEgoGraphProvider._({
     required DiaryEgoGraphFamily super.from,
     required String super.argument,
@@ -73,9 +66,6 @@ final class DiaryEgoGraphProvider
 
 String _$diaryEgoGraphHash() => r'c4ec6f6ae3460d92b203a52b917797d222d85f59';
 
-/// 以某篇日记为中心的 k 跳邻域。全程主键批量 get（见 [DiaryRepository.buildEgoGraph]），
-/// 成本随邻域规模增长、与总日记数无关，所以详情页高频进出也不心疼。
-
 final class DiaryEgoGraphFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<DiaryGraphData>, String> {
   DiaryEgoGraphFamily._()
@@ -86,9 +76,6 @@ final class DiaryEgoGraphFamily extends $Family
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
-
-  /// 以某篇日记为中心的 k 跳邻域。全程主键批量 get（见 [DiaryRepository.buildEgoGraph]），
-  /// 成本随邻域规模增长、与总日记数无关，所以详情页高频进出也不心疼。
 
   DiaryEgoGraphProvider call({required String diaryId}) =>
       DiaryEgoGraphProvider._(argument: diaryId, from: this);
