@@ -7,7 +7,6 @@ import '../frb_generated.dart';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-/// Argon2id 派生 32 字节密钥。成本参数不传用默认值（64 MiB / 3 / 4）。
 Future<Uint8List> aesDeriveKey({
   required String salt,
   required String userKey,
@@ -35,7 +34,6 @@ Future<Uint8List> aesDecrypt({
   encryptedData: encryptedData,
 );
 
-/// 整文件加密，产物以 `prefix`（魔数）开头。
 Future<void> aesEncryptFile({
   required List<int> key,
   required String inPath,
@@ -48,7 +46,6 @@ Future<void> aesEncryptFile({
   prefix: prefix,
 );
 
-/// 整文件解密，跳过开头 `skip_prefix` 个字节的魔数（u32 就够：Dart 侧拿 int 不用 BigInt）。
 Future<void> aesDecryptFile({
   required List<int> key,
   required String inPath,
@@ -61,7 +58,6 @@ Future<void> aesDecryptFile({
   skipPrefix: skipPrefix,
 );
 
-/// Argon2id 密码哈希（PHC 串）。
 Future<String> argon2Hash({required String password}) =>
     FastCryptoLib.instance.api.crateApiCryptoArgon2Hash(password: password);
 

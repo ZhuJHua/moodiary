@@ -34,8 +34,6 @@ abstract class PdfBuilder implements RustOpaqueInterface {
 
 class PdfStyle {
   final String fontPath;
-
-  /// 留空则用字体文件自报的家族名。
   final String fontFamily;
   final double fontSizePt;
   final double lineSpacingEm;
@@ -45,8 +43,6 @@ class PdfStyle {
   final double pageMarginMm;
   final bool includeTitle;
   final bool includeMeta;
-
-  /// 音视频占位行的类型词，已本地化（这一侧没有 l10n）。
   final String videoLabel;
   final String audioLabel;
 

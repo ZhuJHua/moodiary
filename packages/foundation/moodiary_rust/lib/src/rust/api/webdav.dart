@@ -9,9 +9,6 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DavClient>>
 abstract class DavClient implements RustOpaqueInterface {
-  /// 条件创建：仅当远端不存在时写入（`If-None-Match: *`）。返回 true=创建成功，
-  /// false=远端已存在（412）。不支持条件 PUT 的服务器会忽略该头、直接覆盖并返回 true ——
-  /// 调用方（Dart 租约层）必须用「写后回读校验」兜底。
   Future<bool> createExclusive({required String key, required List<int> data});
 
   Future<void> deleteObject({required String key});
@@ -29,7 +26,6 @@ abstract class DavClient implements RustOpaqueInterface {
 
   Future<Uint8List?> readObject({required String key});
 
-  /// 落盘版读取，整份不进内存。远端不存在返回 false 且不建文件。
   Future<bool> readObjectToFile({
     required String key,
     required String filePath,
@@ -41,6 +37,5 @@ abstract class DavClient implements RustOpaqueInterface {
 
   Future<void> writeObject({required String key, required List<int> data});
 
-  /// 文件版写入，整份不进内存。
   Future<void> writeObjectFile({required String key, required String filePath});
 }

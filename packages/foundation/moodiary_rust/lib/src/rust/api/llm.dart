@@ -9,10 +9,6 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'llm.freezed.dart';
 
-/// Dart 取消订阅会令 `sink.add` 失败，循环随即中断并取消在途请求。
-///
-/// 失败必须经 `sink.add_error` 下发：流函数的 `Err` 返回值走另一条 port，Dart 生成码
-/// 把它 `unawaited` 掉，`await for` 只会正常结束。
 Stream<RigStreamEvent> rigChatStream({
   required RigProviderConfig config,
   required String systemPrompt,
@@ -30,11 +26,8 @@ Stream<RigStreamEvent> rigChatStream({
 );
 
 class RigChatMessage {
-  /// `"user"` 或 `"assistant"`。
   final String role;
   final String content;
-
-  /// base64，不含 data URL 前缀。空表示无图；仅 user 消息使用。
   final String imageBase64;
   final String imageMime;
 
@@ -64,22 +57,13 @@ class RigChatMessage {
 }
 
 class RigProviderConfig {
-  /// `"openai-completions"` / `"openai-responses"` / `"anthropic-messages"`。
   final String protocol;
   final String apiKey;
-
-  /// 留空表示该协议官方端点。
   final String baseUrl;
   final String model;
   final int maxTokens;
-
-  /// `"off"` / `"effort"` / `"budget"`。rig 不会自动开启思考，一律由 Rust 按协议注入。
   final String reasoningMode;
-
-  /// effort 模式的档位，取值来自 models.dev 的 `reasoning_options`。
   final String reasoningEffort;
-
-  /// budget 模式的思考 token 预算（Anthropic 老模型专用）。
   final int reasoningBudget;
 
   const RigProviderConfig({
@@ -127,8 +111,6 @@ sealed class RigStreamEvent with _$RigStreamEvent {
       RigStreamEvent_TextDelta;
   const factory RigStreamEvent.reasoningDelta(String field0) =
       RigStreamEvent_ReasoningDelta;
-
-  /// 只作「思考阶段结束」的信号；要展示工具调用请用下面两个。
   const factory RigStreamEvent.toolCall(String field0) =
       RigStreamEvent_ToolCall;
   const factory RigStreamEvent.toolStarted({
@@ -149,12 +131,8 @@ sealed class RigStreamEvent with _$RigStreamEvent {
 }
 
 class RigToolDef {
-  /// 须与 Dart 工具路由表里的 key 一致。
   final String name;
   final String description;
-
-  /// 入参 JSON Schema（字符串，须是 `type: object`）。FRB 的 serde_json::Value 只支持
-  /// 函数参数/返回值，放进 mirror 结构体字段会缺 IntoIntoDart，所以这里仍走字符串。
   final String parametersJson;
 
   const RigToolDef({

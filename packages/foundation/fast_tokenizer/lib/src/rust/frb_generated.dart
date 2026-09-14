@@ -961,7 +961,6 @@ class HfTokenizerImpl extends RustOpaque implements HfTokenizer {
         .rust_arc_decrement_strong_count_HfTokenizerPtr,
   );
 
-  /// 含特殊 token（CLS/SEP 随 json 的 post-processor）。
   Future<Uint32List> encode({required String text}) => FastTokenizerLib
       .instance
       .api

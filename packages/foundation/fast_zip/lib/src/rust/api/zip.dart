@@ -16,7 +16,6 @@ abstract class Zip implements RustOpaqueInterface {
     String? password,
   });
 
-  /// [stored] 为 true 时不压缩直接存储（媒体等已压缩格式），并允许单文件 >= 4GiB。
   Future<void> addFile({
     required String filePath,
     required String zipPath,

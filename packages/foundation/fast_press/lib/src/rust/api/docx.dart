@@ -33,26 +33,17 @@ abstract class DocxBuilder implements RustOpaqueInterface {
 }
 
 class DocxStyle {
-  /// 写进 `w:rFonts` 的 `eastAsia`。
   final String eastAsiaFont;
-
-  /// 写进 `ascii` / `hAnsi`。
   final String asciiFont;
   final double fontSizePt;
-
-  /// 行距倍数（1.0 = 单倍）。
   final double lineSpacing;
   final bool firstLineIndent;
-
-  /// 单位 twip（1/1440 英寸）。A4 = 11906 × 16838。
   final int pageWidth;
   final int pageHeight;
   final int pageMargin;
   final bool includeTitle;
   final bool includeMeta;
   final bool pageBreakBetween;
-
-  /// 音视频占位行的类型词，已本地化（这一侧没有 l10n）。
   final String videoLabel;
   final String audioLabel;
 

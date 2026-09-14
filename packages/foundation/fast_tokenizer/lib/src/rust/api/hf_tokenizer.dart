@@ -9,12 +9,10 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<HfTokenizer>>
 abstract class HfTokenizer implements RustOpaqueInterface {
-  /// 含特殊 token（CLS/SEP 随 json 的 post-processor）。
   Future<Uint32List> encode({required String text});
 
   Future<List<Uint32List>> encodeBatch({required List<String> texts});
 
-  /// [max_tokens] 含特殊 token，超出按 LongestFirst 截断。
   static Future<HfTokenizer> fromFile({required String path, int? maxTokens}) =>
       FastTokenizerLib.instance.api.crateApiHfTokenizerHfTokenizerFromFile(
         path: path,

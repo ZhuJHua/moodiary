@@ -627,9 +627,7 @@ class IrBlock_Image extends IrBlock {
 
  final  String path;
  final  String? alt;
-/// 正文列宽百分比上限（25/50/75/100）。
  final  int? widthPercent;
-/// 粘贴进来的外链图，导出时不下载、只当链接处理。
  final  bool isExternal;
 
 /// Create a copy of IrBlock

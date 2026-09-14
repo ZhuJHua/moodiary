@@ -12,8 +12,6 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<HttpClient>>
 abstract class HttpClient implements RustOpaqueInterface {
-  /// 流式下载到本地文件（不整块进内存）。进度经 [sink] 回报，最后一条 `done=true`；
-  /// 取消或失败删除半成品，错误经 `sink.add_error` 下发。
   Stream<DownloadEvent> downloadFile({
     required RequestOptions options,
     required String destPath,
@@ -29,8 +27,6 @@ abstract class HttpClient implements RustOpaqueInterface {
     Uint8List? body,
   });
 
-  /// 流式上传本地文件（不整块进内存）。进度经 [sink] 回报（`response` 为 None），
-  /// 最后一条事件携带最终响应。
   Stream<UploadEvent> uploadFile({
     required RequestOptions options,
     required String filePath,
@@ -43,11 +39,7 @@ class ClientSettings {
   final int? connectTimeoutMs;
   final int? timeoutMs;
   final String? userAgent;
-
-  /// None=reqwest 默认(最多 10 跳)，Some(0)=不跟随重定向，Some(n)=最多 n 跳。
   final int? maxRedirects;
-
-  /// 为 true 时非 2xx 响应抛 [HttpErrorKind::Status]（对齐旧 Dio 行为）。
   final bool throwOnStatus;
 
   const ClientSettings({
@@ -81,7 +73,6 @@ class ClientSettings {
           throwOnStatus == other.throwOnStatus;
 }
 
-/// 文件下载进度；[total] 为 -1 表示服务端未给 content-length。
 class DownloadEvent {
   final PlatformInt64 received;
   final PlatformInt64 total;
@@ -126,9 +117,6 @@ class HttpError implements FrbException {
           message == other.message;
 }
 
-/// 错误类型必须由桥 crate 自己声明、不能 mirror 子 crate 的：DCO 编解码下
-/// `transform_result_dco::<_, _, E>` 要的是裸类型的 `DartCObject: From<E>`，而孤儿规则
-/// 不允许我们给别的 crate 的类型 impl 外部 trait。形状与 [moodiary_http] 的一致。
 enum HttpErrorKind {
   timeout,
   connect,
@@ -165,8 +153,6 @@ class HttpResponse {
           body == other.body;
 }
 
-/// 有序键值对，用于 query / 请求头 / 响应头。用结构体而非 map 以保留顺序与重复键
-/// （响应头如 set-cookie 可重复）。
 class KeyValue {
   final String key;
   final String value;
@@ -191,8 +177,6 @@ class RequestOptions {
   final List<KeyValue> query;
   final List<KeyValue> headers;
   final int? timeoutMs;
-
-  /// 覆盖 client 级 throw_on_status；None 沿用。
   final bool? throwOnStatus;
 
   const RequestOptions({
@@ -226,7 +210,6 @@ class RequestOptions {
           throwOnStatus == other.throwOnStatus;
 }
 
-/// 文件上传过程事件：进度事件 [response] 为 None，最后一条携带最终响应。
 class UploadEvent {
   final PlatformInt64 sent;
   final PlatformInt64 total;

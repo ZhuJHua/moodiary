@@ -1839,11 +1839,9 @@ class FastPngWriterImpl extends RustOpaque implements FastPngWriter {
         .rust_arc_decrement_strong_count_FastPngWriterPtr,
   );
 
-  /// 收尾。行数不够会报错，不会留下一张被截断的图。
   Future<void> finish() =>
       FastImageLib.instance.api.crateApiImageFastPngWriterFinish(that: this);
 
-  /// 追加若干整行像素；长度必须是 `width * 4` 的整数倍。
   Future<void> push({required List<int> rgba}) => FastImageLib.instance.api
       .crateApiImageFastPngWriterPush(that: this, rgba: rgba);
 }
@@ -1875,8 +1873,6 @@ class FastRegionDecoderImpl extends RustOpaque implements FastRegionDecoder {
         .rust_arc_decrement_strong_count_FastRegionDecoderPtr,
   );
 
-  /// `x/y/width/height` 是转正后源像素坐标，`denom` 是 1..=8 的缩放分母。
-  /// 返回实际覆盖的矩形（对齐 iMCU 后可能比请求大）与转正后的 RGBA。
   Future<FastTilePixels> decodeTile({
     required int x,
     required int y,
@@ -1892,8 +1888,6 @@ class FastRegionDecoderImpl extends RustOpaque implements FastRegionDecoder {
     denom: denom,
   );
 
-  /// 一批同 denom 的 tile：并集一次解出来当带，再逐块切。视口里的可见 tile 一次全要，
-  /// 313MB 的图就只跑一趟熵解码。
   Future<List<FastTilePixels>> decodeTiles({
     required List<FastTileRect> rects,
     required int denom,
@@ -1906,7 +1900,6 @@ class FastRegionDecoderImpl extends RustOpaque implements FastRegionDecoder {
   FastImageProbe probe() =>
       FastImageLib.instance.api.crateApiImageFastRegionDecoderProbe(that: this);
 
-  /// 文件带对齐的 restart marker：tile 只解覆盖它的段、还能并行。第一次调用会扫一遍文件。
   Future<bool> randomAccess() => FastImageLib.instance.api
       .crateApiImageFastRegionDecoderRandomAccess(that: this);
 }

@@ -4186,9 +4186,6 @@ class DavClientImpl extends RustOpaque implements DavClient {
         RustLib.instance.api.rust_arc_decrement_strong_count_DavClientPtr,
   );
 
-  /// 条件创建：仅当远端不存在时写入（`If-None-Match: *`）。返回 true=创建成功，
-  /// false=远端已存在（412）。不支持条件 PUT 的服务器会忽略该头、直接覆盖并返回 true ——
-  /// 调用方（Dart 租约层）必须用「写后回读校验」兜底。
   Future<bool> createExclusive({
     required String key,
     required List<int> data,
@@ -4204,7 +4201,6 @@ class DavClientImpl extends RustOpaque implements DavClient {
   Future<Uint8List?> readObject({required String key}) => RustLib.instance.api
       .crateApiWebdavDavClientReadObject(that: this, key: key);
 
-  /// 落盘版读取，整份不进内存。远端不存在返回 false 且不建文件。
   Future<bool> readObjectToFile({
     required String key,
     required String filePath,
@@ -4227,7 +4223,6 @@ class DavClientImpl extends RustOpaque implements DavClient {
         data: data,
       );
 
-  /// 文件版写入，整份不进内存。
   Future<void> writeObjectFile({
     required String key,
     required String filePath,
@@ -4257,8 +4252,6 @@ class HttpClientImpl extends RustOpaque implements HttpClient {
         RustLib.instance.api.rust_arc_decrement_strong_count_HttpClientPtr,
   );
 
-  /// 流式下载到本地文件（不整块进内存）。进度经 [sink] 回报，最后一条 `done=true`；
-  /// 取消或失败删除半成品，错误经 `sink.add_error` 下发。
   Stream<DownloadEvent> downloadFile({
     required RequestOptions options,
     required String destPath,
@@ -4279,8 +4272,6 @@ class HttpClientImpl extends RustOpaque implements HttpClient {
     body: body,
   );
 
-  /// 流式上传本地文件（不整块进内存）。进度经 [sink] 回报（`response` 为 None），
-  /// 最后一条事件携带最终响应。
   Stream<UploadEvent> uploadFile({
     required RequestOptions options,
     required String filePath,
@@ -4338,9 +4329,6 @@ class S3ClientImpl extends RustOpaque implements S3Client {
         RustLib.instance.api.rust_arc_decrement_strong_count_S3ClientPtr,
   );
 
-  /// 条件创建：仅当远端不存在时写入（`If-None-Match: *`）。返回 true=创建成功，
-  /// false=远端已存在（412）。不支持条件 PUT 的实现会忽略该头、直接覆盖并返回 true ——
-  /// 调用方（Dart 租约层）必须用「写后回读校验」兜底。
   Future<bool> createExclusive({
     required String key,
     required List<int> data,
@@ -4350,16 +4338,12 @@ class S3ClientImpl extends RustOpaque implements S3Client {
     data: data,
   );
 
-  /// 「不存在」视为成功；其它错误如实上抛 —— 引擎依赖删除结果决定 tombstone 是否已被远端接收。
   Future<void> deleteObject({required String key}) =>
       RustLib.instance.api.crateApiS3S3ClientDeleteObject(that: this, key: key);
 
-  /// 仅「不存在」（404）返回空 Vec；其它错误如实上抛 —— 调用方（同步引擎）
-  /// 必须能区分「不存在」与「读取失败」，否则 push 会在网络抖动时把 manifest 从零重建。
   Future<Uint8List?> readObject({required String key}) =>
       RustLib.instance.api.crateApiS3S3ClientReadObject(that: this, key: key);
 
-  /// 落盘版读取，整份不进内存。远端不存在返回 false 且不建文件。
   Future<bool> readObjectToFile({
     required String key,
     required String filePath,
@@ -4369,7 +4353,6 @@ class S3ClientImpl extends RustOpaque implements S3Client {
     filePath: filePath,
   );
 
-  /// HEAD 请求取 Last-Modified，不存在返回空字符串。调用方只判空/非空，不解析格式。
   Future<String> statObject({required String key}) =>
       RustLib.instance.api.crateApiS3S3ClientStatObject(that: this, key: key);
 
@@ -4383,7 +4366,6 @@ class S3ClientImpl extends RustOpaque implements S3Client {
         data: data,
       );
 
-  /// 文件版写入，整份不进内存。
   Future<void> writeObjectFile({
     required String key,
     required String filePath,

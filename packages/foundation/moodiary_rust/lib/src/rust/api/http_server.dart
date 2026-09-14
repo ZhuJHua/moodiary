@@ -37,11 +37,7 @@ class HttpServerRequest {
   final String path;
   final List<KeyValue> query;
   final List<KeyValue> headers;
-
-  /// 小请求体内联；已落盘时为空、见 [Self::body_file_path]。
   final Uint8List body;
-
-  /// 大请求体流式落盘的临时文件。仅在 handler 执行期间有效，返回后由服务器删除。
   final String? bodyFilePath;
 
   const HttpServerRequest({
@@ -75,8 +71,6 @@ class HttpServerRequest {
           bodyFilePath == other.bodyFilePath;
 }
 
-/// handler 返回的响应。[Self::body_file_path] 非空时从磁盘流式发送并自动支持
-/// Range（此时 [Self::body] 被忽略）。
 class HttpServerResponse {
   final int status;
   final List<KeyValue> headers;

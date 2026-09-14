@@ -11,7 +11,6 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FastImageCodec>>
 abstract class FastImageCodec implements RustOpaqueInterface {
-  /// 导出用：整图转正、按 spec 定尺寸、编成 JPEG / PNG。
   static Future<void> containToFile({
     required String filePath,
     required String outputPath,
@@ -22,8 +21,6 @@ abstract class FastImageCodec implements RustOpaqueInterface {
     spec: spec,
   );
 
-  /// 一次解码、链式缩出多个宽度档位；不比档位宽的档位跳过不写。派生物后缀按内容定
-  /// （`jpg`，带 alpha 的源 `png`），写在返回的 `ext` 里。
   static Future<FastImageMeta> makeThumbnails({
     required String filePath,
     required List<FastThumbnailTarget> targets,
@@ -34,14 +31,11 @@ abstract class FastImageCodec implements RustOpaqueInterface {
     quality: quality,
   );
 
-  /// 只读头不解像素：格式、转正后宽高、是否能走 turbojpeg 缩放 / 区域解码。
   static Future<FastImageProbe> probe({required String filePath}) =>
       FastImageLib.instance.api.crateApiImageFastImageCodecProbe(
         filePath: filePath,
       );
 
-  /// progressive JPEG 无损转 baseline（带 restart marker）落盘，给看图页 tile 用；
-  /// 超过 64MP 的报错（要整幅系数缓冲）。先写 `.part` 再 rename。
   static Future<void> toBaselineFile({
     required String filePath,
     required String outputPath,
@@ -63,17 +57,13 @@ abstract class FastPngWriter implements RustOpaqueInterface {
     height: height,
   );
 
-  /// 收尾。行数不够会报错，不会留下一张被截断的图。
   Future<void> finish();
 
-  /// 追加若干整行像素；长度必须是 `width * 4` 的整数倍。
   Future<void> push({required List<int> rgba});
 }
 
 // Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FastRegionDecoder>>
 abstract class FastRegionDecoder implements RustOpaqueInterface {
-  /// `x/y/width/height` 是转正后源像素坐标，`denom` 是 1..=8 的缩放分母。
-  /// 返回实际覆盖的矩形（对齐 iMCU 后可能比请求大）与转正后的 RGBA。
   Future<FastTilePixels> decodeTile({
     required int x,
     required int y,
@@ -82,8 +72,6 @@ abstract class FastRegionDecoder implements RustOpaqueInterface {
     required int denom,
   });
 
-  /// 一批同 denom 的 tile：并集一次解出来当带，再逐块切。视口里的可见 tile 一次全要，
-  /// 313MB 的图就只跑一趟熵解码。
   Future<List<FastTilePixels>> decodeTiles({
     required List<FastTileRect> rects,
     required int denom,
@@ -96,7 +84,6 @@ abstract class FastRegionDecoder implements RustOpaqueInterface {
 
   FastImageProbe probe();
 
-  /// 文件带对齐的 restart marker：tile 只解覆盖它的段、还能并行。第一次调用会扫一遍文件。
   Future<bool> randomAccess();
 }
 
@@ -271,7 +258,6 @@ class FastTilePixels {
           rgba == other.rgba;
 }
 
-/// 转正后源像素坐标里的一个 tile 矩形。
 class FastTileRect {
   final int x;
   final int y;
