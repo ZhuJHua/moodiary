@@ -9,12 +9,8 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<S3Client>>
 abstract class S3Client implements RustOpaqueInterface {
-  /// 条件创建：仅当远端不存在时写入（`If-None-Match: *`）。返回 true=创建成功，
-  /// false=远端已存在（412）。不支持条件 PUT 的实现会忽略该头、直接覆盖并返回 true ——
-  /// 调用方（Dart 租约层）必须用「写后回读校验」兜底。
   Future<bool> createExclusive({required String key, required List<int> data});
 
-  /// 「不存在」视为成功；其它错误如实上抛 —— 引擎依赖删除结果决定 tombstone 是否已被远端接收。
   Future<void> deleteObject({required String key});
 
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
@@ -34,23 +30,18 @@ abstract class S3Client implements RustOpaqueInterface {
     region: region,
   );
 
-  /// 仅「不存在」（404）返回空 Vec；其它错误如实上抛 —— 调用方（同步引擎）
-  /// 必须能区分「不存在」与「读取失败」，否则 push 会在网络抖动时把 manifest 从零重建。
   Future<Uint8List?> readObject({required String key});
 
-  /// 落盘版读取，整份不进内存。远端不存在返回 false 且不建文件。
   Future<bool> readObjectToFile({
     required String key,
     required String filePath,
   });
 
-  /// HEAD 请求取 Last-Modified，不存在返回空字符串。调用方只判空/非空，不解析格式。
   Future<String> statObject({required String key});
 
   Future<bool> testConnection();
 
   Future<void> writeObject({required String key, required List<int> data});
 
-  /// 文件版写入，整份不进内存。
   Future<void> writeObjectFile({required String key, required String filePath});
 }

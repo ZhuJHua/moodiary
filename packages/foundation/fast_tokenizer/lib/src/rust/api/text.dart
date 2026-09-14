@@ -12,7 +12,6 @@ abstract class Tokenizer implements RustOpaqueInterface {
   static Future<TokenizeResult> tokenize({required String text}) =>
       FastTokenizerLib.instance.api.crateApiTextTokenizerTokenize(text: text);
 
-  /// 一次过桥处理整批，跨篇并行铺满多核。全量重建索引 / 批量导入走这条。
   static Future<List<TokenizeResult>> tokenizeBatch({
     required List<String> texts,
   }) => FastTokenizerLib.instance.api.crateApiTextTokenizerTokenizeBatch(
@@ -20,7 +19,6 @@ abstract class Tokenizer implements RustOpaqueInterface {
   );
 }
 
-/// `cut`（高精度）与 `cut_for_search`（高召回）两组分词结果。
 class TokenizeResult {
   final List<String> cut;
   final List<String> cutForSearch;

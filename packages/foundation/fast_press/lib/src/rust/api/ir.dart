@@ -32,11 +32,7 @@ sealed class IrBlock with _$IrBlock {
   const factory IrBlock.image({
     required String path,
     String? alt,
-
-    /// 正文列宽百分比上限（25/50/75/100）。
     int? widthPercent,
-
-    /// 粘贴进来的外链图，导出时不下载、只当链接处理。
     required bool isExternal,
   }) = IrBlock_Image;
   const factory IrBlock.media({
@@ -132,8 +128,6 @@ class IrDoc {
 
 class IrListItem {
   final List<IrBlock> children;
-
-  /// 非空表示这是任务项。
   final bool? checked;
 
   const IrListItem({required this.children, this.checked});
@@ -150,8 +144,6 @@ class IrListItem {
           checked == other.checked;
 }
 
-/// 表格的一行。包一层具名结构而不是 `Vec<Vec<IrCell>>` —— FRB 的 CST 编解码器
-/// 生成嵌套列表时会漏掉内层的 fill 函数。
 class IrRow {
   final List<IrCell> cells;
 
@@ -176,8 +168,6 @@ class IrSpan {
   final bool underline;
   final bool code;
   final String? href;
-
-  /// 双链目标日记 id；非空时 [text] 是链接标签。
   final String? diaryLinkId;
 
   const IrSpan({
