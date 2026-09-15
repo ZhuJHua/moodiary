@@ -14,7 +14,6 @@ dependencies:
     sdk: flutter
 
   fast_image: 0.0.1
-  fast_tokenizer: 0.0.1
   moodiary_components: 0.0.1
   moodiary_data: 0.0.1
   moodiary_di: 0.0.1
@@ -39,7 +38,6 @@ dependencies:
   collection: 1.19.1
   flutter_map: 8.3.2
   latlong2: 0.10.1
-  substring_highlight: 1.0.33
 
 dev_dependencies:
   flutter_test:
@@ -48,3 +46,4 @@ dev_dependencies:
   build_runner: 2.16.1
   freezed: 4.0.1
   riverpod_generator: 4.0.9
+  drift: 2.35.0

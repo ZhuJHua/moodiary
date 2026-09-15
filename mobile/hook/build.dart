@@ -12,6 +12,10 @@ const _rustDirs = [
   'packages/foundation/fast_zip/rust',
   'packages/foundation/moodiary_rust/rust',
 ];
+
+/// Dependencies whose third-party licenses cargo-about cannot see, because the
+/// sources are not Rust. Each ships the entries as `third_party.json` at its root.
+const _externalLicensePackages = ['sqlite3_simple'];
 const _editorDir = 'packages/feature_base/moodiary_editor/editor';
 const _npmManifest = '$_editorDir/build/third-party-licenses.json';
 const _outPath = 'assets/licenses/third_party.json';
@@ -25,6 +29,8 @@ void main(List<String> args) async {
       return;
     }
     final repoRoot = input.packageRoot.resolve('../');
+    final rustDirs = [for (final dir in _rustDirs) repoRoot.resolve(dir)];
+    final externalManifests = _externalLicenseManifests(repoRoot);
     final lockFile = File.fromUri(
       input.packageRoot.resolve('.dart_tool/licenses_build.lock'),
     )..createSync(recursive: true);
@@ -33,6 +39,8 @@ void main(List<String> args) async {
     try {
       await _generate(
         repoRoot,
+        rustDirs,
+        externalManifests,
         File.fromUri(input.packageRoot.resolve(_outPath)),
       );
     } finally {
@@ -40,20 +48,75 @@ void main(List<String> args) async {
       await lock.close();
     }
     output.dependencies.addAll([
-      for (final dir in _rustDirs) ...[
-        repoRoot.resolve('$dir/Cargo.lock'),
-        repoRoot.resolve('$dir/about.toml'),
+      for (final dir in rustDirs) ...[
+        dir.resolve('Cargo.lock'),
+        dir.resolve('about.toml'),
       ],
+      ...externalManifests,
       repoRoot.resolve('$_editorDir/package.json'),
       repoRoot.resolve('$_editorDir/pnpm-lock.yaml'),
     ]);
   });
 }
 
-Future<void> _generate(Uri repoRoot, File out) async {
+List<Uri> _externalLicenseManifests(Uri repoRoot) {
+  final config = File.fromUri(
+    repoRoot.resolve('.dart_tool/package_config.json'),
+  );
+  if (!config.existsSync()) {
+    throw StateError(
+      '${config.path} is missing; run `dart tool/task.dart setup` first.',
+    );
+  }
+  final packages =
+      (jsonDecode(config.readAsStringSync())
+              as Map<String, dynamic>)['packages']
+          as List;
+  return [
+    for (final name in _externalLicensePackages)
+      () {
+        final entry = packages.cast<Map<String, dynamic>>().firstWhere(
+          (p) => p['name'] == name,
+          orElse: () => throw StateError(
+            '$name is not in the package config; the license manifest cannot '
+            'cover its third-party sources.',
+          ),
+        );
+        return config.parent.uri
+            .resolve('${entry['rootUri']}/')
+            .resolve('third_party.json');
+      }(),
+  ];
+}
+
+List<_Entry> _externalEntries(File manifest) {
+  if (!manifest.existsSync()) {
+    throw StateError(
+      '${manifest.path} is missing; the license manifest cannot cover it.',
+    );
+  }
+  return [
+    for (final e in jsonDecode(manifest.readAsStringSync()) as List)
+      (
+        packages: [
+          for (final p in (e as Map<String, dynamic>)['packages'] as List)
+            p as String,
+        ],
+        text: e['text'] as String,
+      ),
+  ];
+}
+
+Future<void> _generate(
+  Uri repoRoot,
+  List<Uri> rustDirs,
+  List<Uri> externalManifests,
+  File out,
+) async {
   final texts = <String, Set<String>>{};
   for (final e in [
-    for (final dir in _rustDirs) ...await _rust(repoRoot.resolve(dir)),
+    for (final dir in rustDirs) ...await _rust(dir),
+    for (final uri in externalManifests) ..._externalEntries(File.fromUri(uri)),
     ..._npm(File.fromUri(repoRoot.resolve(_npmManifest))),
   ]) {
     texts.putIfAbsent(e.text, () => <String>{}).addAll(e.packages);

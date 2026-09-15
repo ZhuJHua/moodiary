@@ -3,8 +3,6 @@ import 'dart:io';
 
 import 'package:drift/drift.dart' show countAll;
 import 'package:drift/native.dart';
-import 'package:fast_tokenizer/fast_tokenizer.dart' show TokenizeResult;
-import 'package:fast_tokenizer/testing.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_data/moodiary_data.dart';
@@ -14,11 +12,6 @@ import 'package:moodiary_migration/src/legacy/legacy_models.dart' as legacy;
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
-
-Future<TokenizeResult> fakeTokenize(String text) async {
-  final words = text.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
-  return TokenizeResult(cut: words, cutForSearch: words);
-}
 
 String tiptapDoc(String text, {List<String> linkTo = const []}) => jsonEncode({
   'type': 'doc',
@@ -86,7 +79,6 @@ void main() {
 
   setUp(() {
     dir = Directory.systemTemp.createTempSync('engine_migration_test');
-    installFakeFastTokenizer(fakeTokenize);
     db = MoodiaryDatabase.forTesting(
       NativeDatabase.memory(
         setup: (raw) => raw.execute('PRAGMA foreign_keys = ON'),
@@ -256,11 +248,8 @@ void main() {
     expect(await PlaceRepository(db).getAllPlaces(), hasLength(2));
     expect((await repo.getRecycleBinDiaries()).single.id, 'd-recycled');
 
-    final hits = await repo.searchDiaries(
-      cutTokens: const ['苹果'],
-      cutForSearchTokens: const [],
-    );
-    expect(hits.map((d) => d.id), ['d-full']);
+    final hits = await repo.searchDiaries(query: '苹果');
+    expect(hits.map((h) => h.diary.id), ['d-full']);
     expect((await repo.getBacklinks('d-full')).map((d) => d.id), ['d-linked']);
 
     expect(await repo.hasLegacyFormatDiaries(), isTrue);

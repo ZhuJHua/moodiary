@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:fast_tokenizer/fast_tokenizer.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/js_sandbox.dart';
@@ -88,7 +87,11 @@ abstract final class AssistantToolRegistry {
         'properties': {
           'keywords': {
             'type': 'string',
-            'description': 'Space-separated search terms. Omit to browse by the filters below.',
+            'description':
+                'Space-separated search terms, combined with AND — every term '
+                'must appear, so prefer one or two specific words over a list '
+                'of synonyms. Pinyin and initials match Chinese text. Omit to '
+                'browse by the filters below.',
           },
           'categoryId': {
             'type': 'string',
@@ -654,16 +657,14 @@ abstract final class AssistantToolRegistry {
     final repo = getIt<DiaryRepository>();
     List<Diary> results;
     if (rawKeywords.isNotEmpty) {
-      // 关键词必须走与建索引同一套 jieba 分词
-      final tokenized = await Tokenizer.tokenize(text: rawKeywords);
-      results = await repo.searchDiaries(
-        cutTokens: tokenized.cut,
-        cutForSearchTokens: tokenized.cutForSearch,
+      final hits = await repo.searchDiaries(
+        query: rawKeywords,
         categoryId: categoryId,
         start: start,
         end: endExclusive,
         sort: _toSearchSort(sortName),
       );
+      results = [for (final hit in hits) hit.diary];
     } else if (start != null || endExclusive != null) {
       final ranged = await repo.getDiariesByDateRange(
         start ?? .fromMillisecondsSinceEpoch(0),

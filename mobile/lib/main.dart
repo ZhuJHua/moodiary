@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:fast_image/fast_image.dart';
-import 'package:fast_tokenizer/fast_tokenizer.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -31,7 +30,6 @@ import 'package:moodiary_utils/moodiary_utils.dart';
 
 Future<void> _initSystem() async {
   await FastImageRuntime.init();
-  await FastTokenizer.ensureInitialized();
 
   await bootstrapPlatform();
   await configureDependencies();

@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$DiarySearchState {
 
- List<Diary> get results; List<String> get queryList; bool get isSearching; Duration? get elapsed; String get query; String? get categoryId; DateRangePreset get datePreset; DateTime? get customStart; DateTime? get customEnd; SearchSort get sort;
+ List<DiarySearchHit> get results; int get totalCount; bool get isSearching; bool get isLoadingMore; Duration? get elapsed; String get query; String? get categoryId; DateRangePreset get datePreset; DateTime? get customStart; DateTime? get customEnd; SearchSort get sort;
 /// Create a copy of DiarySearchState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $DiarySearchStateCopyWith<DiarySearchState> get copyWith => _$DiarySearchStateCo
 @override
 bool operator ==(Object other) {
   final _this = this as DiarySearchState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiarySearchState&&const DeepCollectionEquality().equals(other.results, _this.results)&&const DeepCollectionEquality().equals(other.queryList, _this.queryList)&&(identical(other.isSearching, _this.isSearching) || other.isSearching == _this.isSearching)&&(identical(other.elapsed, _this.elapsed) || other.elapsed == _this.elapsed)&&(identical(other.query, _this.query) || other.query == _this.query)&&(identical(other.categoryId, _this.categoryId) || other.categoryId == _this.categoryId)&&(identical(other.datePreset, _this.datePreset) || other.datePreset == _this.datePreset)&&(identical(other.customStart, _this.customStart) || other.customStart == _this.customStart)&&(identical(other.customEnd, _this.customEnd) || other.customEnd == _this.customEnd)&&(identical(other.sort, _this.sort) || other.sort == _this.sort));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiarySearchState&&const DeepCollectionEquality().equals(other.results, _this.results)&&(identical(other.totalCount, _this.totalCount) || other.totalCount == _this.totalCount)&&(identical(other.isSearching, _this.isSearching) || other.isSearching == _this.isSearching)&&(identical(other.isLoadingMore, _this.isLoadingMore) || other.isLoadingMore == _this.isLoadingMore)&&(identical(other.elapsed, _this.elapsed) || other.elapsed == _this.elapsed)&&(identical(other.query, _this.query) || other.query == _this.query)&&(identical(other.categoryId, _this.categoryId) || other.categoryId == _this.categoryId)&&(identical(other.datePreset, _this.datePreset) || other.datePreset == _this.datePreset)&&(identical(other.customStart, _this.customStart) || other.customStart == _this.customStart)&&(identical(other.customEnd, _this.customEnd) || other.customEnd == _this.customEnd)&&(identical(other.sort, _this.sort) || other.sort == _this.sort));
 }
 
 
 @override
 int get hashCode {
   final _this = this as DiarySearchState;
-  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.results),const DeepCollectionEquality().hash(_this.queryList),_this.isSearching,_this.elapsed,_this.query,_this.categoryId,_this.datePreset,_this.customStart,_this.customEnd,_this.sort);
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.results),_this.totalCount,_this.isSearching,_this.isLoadingMore,_this.elapsed,_this.query,_this.categoryId,_this.datePreset,_this.customStart,_this.customEnd,_this.sort);
 }
 
 @override
 String toString() {
   final _this = this as DiarySearchState;
-  return 'DiarySearchState(results: ${_this.results}, queryList: ${_this.queryList}, isSearching: ${_this.isSearching}, elapsed: ${_this.elapsed}, query: ${_this.query}, categoryId: ${_this.categoryId}, datePreset: ${_this.datePreset}, customStart: ${_this.customStart}, customEnd: ${_this.customEnd}, sort: ${_this.sort})';
+  return 'DiarySearchState(results: ${_this.results}, totalCount: ${_this.totalCount}, isSearching: ${_this.isSearching}, isLoadingMore: ${_this.isLoadingMore}, elapsed: ${_this.elapsed}, query: ${_this.query}, categoryId: ${_this.categoryId}, datePreset: ${_this.datePreset}, customStart: ${_this.customStart}, customEnd: ${_this.customEnd}, sort: ${_this.sort})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $DiarySearchStateCopyWith<$Res>  {
   factory $DiarySearchStateCopyWith(DiarySearchState value, $Res Function(DiarySearchState) _then) = _$DiarySearchStateCopyWithImpl;
 @useResult
 $Res call({
- List<Diary> results, List<String> queryList, bool isSearching, Duration? elapsed, String query, String? categoryId, DateRangePreset datePreset, DateTime? customStart, DateTime? customEnd, SearchSort sort
+ List<DiarySearchHit> results, int totalCount, bool isSearching, bool isLoadingMore, Duration? elapsed, String query, String? categoryId, DateRangePreset datePreset, DateTime? customStart, DateTime? customEnd, SearchSort sort
 });
 
 
@@ -68,11 +68,12 @@ class _$DiarySearchStateCopyWithImpl<$Res>
 
 /// Create a copy of DiarySearchState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? results = null,Object? queryList = null,Object? isSearching = null,Object? elapsed = freezed,Object? query = null,Object? categoryId = freezed,Object? datePreset = null,Object? customStart = freezed,Object? customEnd = freezed,Object? sort = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? results = null,Object? totalCount = null,Object? isSearching = null,Object? isLoadingMore = null,Object? elapsed = freezed,Object? query = null,Object? categoryId = freezed,Object? datePreset = null,Object? customStart = freezed,Object? customEnd = freezed,Object? sort = null,}) {
   return _then(DiarySearchState(
 results: null == results ? _self.results : results // ignore: cast_nullable_to_non_nullable
-as List<Diary>,queryList: null == queryList ? _self.queryList : queryList // ignore: cast_nullable_to_non_nullable
-as List<String>,isSearching: null == isSearching ? _self.isSearching : isSearching // ignore: cast_nullable_to_non_nullable
+as List<DiarySearchHit>,totalCount: null == totalCount ? _self.totalCount : totalCount // ignore: cast_nullable_to_non_nullable
+as int,isSearching: null == isSearching ? _self.isSearching : isSearching // ignore: cast_nullable_to_non_nullable
+as bool,isLoadingMore: null == isLoadingMore ? _self.isLoadingMore : isLoadingMore // ignore: cast_nullable_to_non_nullable
 as bool,elapsed: freezed == elapsed ? _self.elapsed : elapsed // ignore: cast_nullable_to_non_nullable
 as Duration?,query: null == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
 as String,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
@@ -165,10 +166,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<Diary> results,  List<String> queryList,  bool isSearching,  Duration? elapsed,  String query,  String? categoryId,  DateRangePreset datePreset,  DateTime? customStart,  DateTime? customEnd,  SearchSort sort)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<DiarySearchHit> results,  int totalCount,  bool isSearching,  bool isLoadingMore,  Duration? elapsed,  String query,  String? categoryId,  DateRangePreset datePreset,  DateTime? customStart,  DateTime? customEnd,  SearchSort sort)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _DiarySearchState() when $default != null:
-return $default(_that.results,_that.queryList,_that.isSearching,_that.elapsed,_that.query,_that.categoryId,_that.datePreset,_that.customStart,_that.customEnd,_that.sort);case _:
+return $default(_that.results,_that.totalCount,_that.isSearching,_that.isLoadingMore,_that.elapsed,_that.query,_that.categoryId,_that.datePreset,_that.customStart,_that.customEnd,_that.sort);case _:
   return orElse();
 
 }
@@ -186,10 +187,10 @@ return $default(_that.results,_that.queryList,_that.isSearching,_that.elapsed,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<Diary> results,  List<String> queryList,  bool isSearching,  Duration? elapsed,  String query,  String? categoryId,  DateRangePreset datePreset,  DateTime? customStart,  DateTime? customEnd,  SearchSort sort)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<DiarySearchHit> results,  int totalCount,  bool isSearching,  bool isLoadingMore,  Duration? elapsed,  String query,  String? categoryId,  DateRangePreset datePreset,  DateTime? customStart,  DateTime? customEnd,  SearchSort sort)  $default,) {final _that = this;
 switch (_that) {
 case _DiarySearchState():
-return $default(_that.results,_that.queryList,_that.isSearching,_that.elapsed,_that.query,_that.categoryId,_that.datePreset,_that.customStart,_that.customEnd,_that.sort);case _:
+return $default(_that.results,_that.totalCount,_that.isSearching,_that.isLoadingMore,_that.elapsed,_that.query,_that.categoryId,_that.datePreset,_that.customStart,_that.customEnd,_that.sort);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -206,10 +207,10 @@ return $default(_that.results,_that.queryList,_that.isSearching,_that.elapsed,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<Diary> results,  List<String> queryList,  bool isSearching,  Duration? elapsed,  String query,  String? categoryId,  DateRangePreset datePreset,  DateTime? customStart,  DateTime? customEnd,  SearchSort sort)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<DiarySearchHit> results,  int totalCount,  bool isSearching,  bool isLoadingMore,  Duration? elapsed,  String query,  String? categoryId,  DateRangePreset datePreset,  DateTime? customStart,  DateTime? customEnd,  SearchSort sort)?  $default,) {final _that = this;
 switch (_that) {
 case _DiarySearchState() when $default != null:
-return $default(_that.results,_that.queryList,_that.isSearching,_that.elapsed,_that.query,_that.categoryId,_that.datePreset,_that.customStart,_that.customEnd,_that.sort);case _:
+return $default(_that.results,_that.totalCount,_that.isSearching,_that.isLoadingMore,_that.elapsed,_that.query,_that.categoryId,_that.datePreset,_that.customStart,_that.customEnd,_that.sort);case _:
   return null;
 
 }
@@ -221,24 +222,19 @@ return $default(_that.results,_that.queryList,_that.isSearching,_that.elapsed,_t
 
 
 class _DiarySearchState extends DiarySearchState {
-  const _DiarySearchState({ List<Diary> results = const [],  List<String> queryList = const [], this.isSearching = false, this.elapsed, this.query = '', this.categoryId, this.datePreset = DateRangePreset.all, this.customStart, this.customEnd, this.sort = SearchSort.relevance}): _results = results,_queryList = queryList,super._();
+  const _DiarySearchState({ List<DiarySearchHit> results = const [], this.totalCount = 0, this.isSearching = false, this.isLoadingMore = false, this.elapsed, this.query = '', this.categoryId, this.datePreset = DateRangePreset.all, this.customStart, this.customEnd, this.sort = SearchSort.relevance}): _results = results,super._();
   
 
- final  List<Diary> _results;
-@override@JsonKey() List<Diary> get results {
+ final  List<DiarySearchHit> _results;
+@override@JsonKey() List<DiarySearchHit> get results {
   if (_results is EqualUnmodifiableListView) return _results;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_results);
 }
 
- final  List<String> _queryList;
-@override@JsonKey() List<String> get queryList {
-  if (_queryList is EqualUnmodifiableListView) return _queryList;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_queryList);
-}
-
+@override@JsonKey() final  int totalCount;
 @override@JsonKey() final  bool isSearching;
+@override@JsonKey() final  bool isLoadingMore;
 @override final  Duration? elapsed;
 @override@JsonKey() final  String query;
 @override final  String? categoryId;
@@ -257,18 +253,18 @@ _$DiarySearchStateCopyWith<_DiarySearchState> get copyWith => __$DiarySearchStat
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DiarySearchState&&const DeepCollectionEquality().equals(other.results, _results)&&const DeepCollectionEquality().equals(other.queryList, _queryList)&&(identical(other.isSearching, isSearching) || other.isSearching == isSearching)&&(identical(other.elapsed, elapsed) || other.elapsed == elapsed)&&(identical(other.query, query) || other.query == query)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.datePreset, datePreset) || other.datePreset == datePreset)&&(identical(other.customStart, customStart) || other.customStart == customStart)&&(identical(other.customEnd, customEnd) || other.customEnd == customEnd)&&(identical(other.sort, sort) || other.sort == sort));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DiarySearchState&&const DeepCollectionEquality().equals(other.results, _results)&&(identical(other.totalCount, totalCount) || other.totalCount == totalCount)&&(identical(other.isSearching, isSearching) || other.isSearching == isSearching)&&(identical(other.isLoadingMore, isLoadingMore) || other.isLoadingMore == isLoadingMore)&&(identical(other.elapsed, elapsed) || other.elapsed == elapsed)&&(identical(other.query, query) || other.query == query)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.datePreset, datePreset) || other.datePreset == datePreset)&&(identical(other.customStart, customStart) || other.customStart == customStart)&&(identical(other.customEnd, customEnd) || other.customEnd == customEnd)&&(identical(other.sort, sort) || other.sort == sort));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_results),const DeepCollectionEquality().hash(_queryList),isSearching,elapsed,query,categoryId,datePreset,customStart,customEnd,sort);
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_results),totalCount,isSearching,isLoadingMore,elapsed,query,categoryId,datePreset,customStart,customEnd,sort);
 }
 
 @override
 String toString() {
-    return 'DiarySearchState(results: $results, queryList: $queryList, isSearching: $isSearching, elapsed: $elapsed, query: $query, categoryId: $categoryId, datePreset: $datePreset, customStart: $customStart, customEnd: $customEnd, sort: $sort)';
+    return 'DiarySearchState(results: $results, totalCount: $totalCount, isSearching: $isSearching, isLoadingMore: $isLoadingMore, elapsed: $elapsed, query: $query, categoryId: $categoryId, datePreset: $datePreset, customStart: $customStart, customEnd: $customEnd, sort: $sort)';
 }
 
 
@@ -279,7 +275,7 @@ abstract mixin class _$DiarySearchStateCopyWith<$Res> implements $DiarySearchSta
   factory _$DiarySearchStateCopyWith(_DiarySearchState value, $Res Function(_DiarySearchState) _then) = __$DiarySearchStateCopyWithImpl;
 @override @useResult
 $Res call({
- List<Diary> results, List<String> queryList, bool isSearching, Duration? elapsed, String query, String? categoryId, DateRangePreset datePreset, DateTime? customStart, DateTime? customEnd, SearchSort sort
+ List<DiarySearchHit> results, int totalCount, bool isSearching, bool isLoadingMore, Duration? elapsed, String query, String? categoryId, DateRangePreset datePreset, DateTime? customStart, DateTime? customEnd, SearchSort sort
 });
 
 
@@ -296,11 +292,12 @@ class __$DiarySearchStateCopyWithImpl<$Res>
 
 /// Create a copy of DiarySearchState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? results = null,Object? queryList = null,Object? isSearching = null,Object? elapsed = freezed,Object? query = null,Object? categoryId = freezed,Object? datePreset = null,Object? customStart = freezed,Object? customEnd = freezed,Object? sort = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? results = null,Object? totalCount = null,Object? isSearching = null,Object? isLoadingMore = null,Object? elapsed = freezed,Object? query = null,Object? categoryId = freezed,Object? datePreset = null,Object? customStart = freezed,Object? customEnd = freezed,Object? sort = null,}) {
   return _then(_DiarySearchState(
 results: null == results ? _self._results : results // ignore: cast_nullable_to_non_nullable
-as List<Diary>,queryList: null == queryList ? _self._queryList : queryList // ignore: cast_nullable_to_non_nullable
-as List<String>,isSearching: null == isSearching ? _self.isSearching : isSearching // ignore: cast_nullable_to_non_nullable
+as List<DiarySearchHit>,totalCount: null == totalCount ? _self.totalCount : totalCount // ignore: cast_nullable_to_non_nullable
+as int,isSearching: null == isSearching ? _self.isSearching : isSearching // ignore: cast_nullable_to_non_nullable
+as bool,isLoadingMore: null == isLoadingMore ? _self.isLoadingMore : isLoadingMore // ignore: cast_nullable_to_non_nullable
 as bool,elapsed: freezed == elapsed ? _self.elapsed : elapsed // ignore: cast_nullable_to_non_nullable
 as Duration?,query: null == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
 as String,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable

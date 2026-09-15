@@ -15,6 +15,7 @@ abstract class AppModule {
   Future<MoodiaryDatabase> database() async {
     final db = await MoodiaryDatabase.open(
       path: AppFiles.getRealPath('database', 'moodiary.db'),
+      jiebaDictDir: AppFiles.getRealPath('database', 'jieba'),
     );
     return db;
   }

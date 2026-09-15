@@ -4,7 +4,6 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'api/hf_tokenizer.dart';
-import 'api/text.dart';
 
 import 'dart:async';
 import 'dart:convert';
@@ -27,22 +26,12 @@ abstract class FastTokenizerLibApiImplPlatform
   get rust_arc_decrement_strong_count_HfTokenizerPtr => wire
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizerPtr;
 
-  CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_TokenizerPtr => wire
-      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizerPtr;
-
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw);
 
   @protected
   HfTokenizer
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
-    dynamic raw,
-  );
-
-  @protected
-  Tokenizer
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer(
     dynamic raw,
   );
 
@@ -55,12 +44,6 @@ abstract class FastTokenizerLibApiImplPlatform
   @protected
   HfTokenizer
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
-    dynamic raw,
-  );
-
-  @protected
-  Tokenizer
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer(
     dynamic raw,
   );
 
@@ -83,13 +66,7 @@ abstract class FastTokenizerLibApiImplPlatform
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
-  List<TokenizeResult> dco_decode_list_tokenize_result(dynamic raw);
-
-  @protected
   int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
-
-  @protected
-  TokenizeResult dco_decode_tokenize_result(dynamic raw);
 
   @protected
   int dco_decode_u_32(dynamic raw);
@@ -113,12 +90,6 @@ abstract class FastTokenizerLibApiImplPlatform
   );
 
   @protected
-  Tokenizer
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   HfTokenizer
   sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
     SseDeserializer deserializer,
@@ -127,12 +98,6 @@ abstract class FastTokenizerLibApiImplPlatform
   @protected
   HfTokenizer
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  Tokenizer
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer(
     SseDeserializer deserializer,
   );
 
@@ -157,15 +122,7 @@ abstract class FastTokenizerLibApiImplPlatform
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
-  List<TokenizeResult> sse_decode_list_tokenize_result(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
-
-  @protected
-  TokenizeResult sse_decode_tokenize_result(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_32(SseDeserializer deserializer);
@@ -247,18 +204,6 @@ abstract class FastTokenizerLibApiImplPlatform
   }
 
   @protected
-  ffi.Pointer<wire_cst_list_tokenize_result> cst_encode_list_tokenize_result(
-    List<TokenizeResult> raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    final ans = wire.cst_new_list_tokenize_result(raw.length);
-    for (var i = 0; i < raw.length; ++i) {
-      cst_api_fill_to_wire_tokenize_result(raw[i], ans.ref.ptr[i]);
-    }
-    return ans;
-  }
-
-  @protected
   ffi.Pointer<ffi.Uint32> cst_encode_opt_box_autoadd_u_32(int? raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw == null ? ffi.nullptr : cst_encode_box_autoadd_u_32(raw);
@@ -271,24 +216,9 @@ abstract class FastTokenizerLibApiImplPlatform
   }
 
   @protected
-  void cst_api_fill_to_wire_tokenize_result(
-    TokenizeResult apiObj,
-    wire_cst_tokenize_result wireObj,
-  ) {
-    wireObj.cut = cst_encode_list_String(apiObj.cut);
-    wireObj.cut_for_search = cst_encode_list_String(apiObj.cutForSearch);
-  }
-
-  @protected
   int
   cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
     HfTokenizer raw,
-  );
-
-  @protected
-  int
-  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer(
-    Tokenizer raw,
   );
 
   @protected
@@ -301,12 +231,6 @@ abstract class FastTokenizerLibApiImplPlatform
   int
   cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
     HfTokenizer raw,
-  );
-
-  @protected
-  int
-  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer(
-    Tokenizer raw,
   );
 
   @protected
@@ -333,13 +257,6 @@ abstract class FastTokenizerLibApiImplPlatform
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer(
-    Tokenizer self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
   sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
     HfTokenizer self,
     SseSerializer serializer,
@@ -349,13 +266,6 @@ abstract class FastTokenizerLibApiImplPlatform
   void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
     HfTokenizer self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer(
-    Tokenizer self,
     SseSerializer serializer,
   );
 
@@ -387,19 +297,7 @@ abstract class FastTokenizerLibApiImplPlatform
   );
 
   @protected
-  void sse_encode_list_tokenize_result(
-    List<TokenizeResult> self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_tokenize_result(
-    TokenizeResult self,
-    SseSerializer serializer,
-  );
 
   @protected
   void sse_encode_u_32(int self, SseSerializer serializer);
@@ -517,21 +415,6 @@ class FastTokenizerLibWire implements BaseWire {
   late final _cst_new_list_prim_u_8_strict = _cst_new_list_prim_u_8_strictPtr
       .asFunction<ffi.Pointer<wire_cst_list_prim_u_8_strict> Function(int)>();
 
-  ffi.Pointer<wire_cst_list_tokenize_result> cst_new_list_tokenize_result(
-    int len,
-  ) {
-    return _cst_new_list_tokenize_result(len);
-  }
-
-  late final _cst_new_list_tokenize_resultPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Pointer<wire_cst_list_tokenize_result> Function(ffi.Int32)
-        >
-      >('frbgen_fast_tokenizer_cst_new_list_tokenize_result');
-  late final _cst_new_list_tokenize_result = _cst_new_list_tokenize_resultPtr
-      .asFunction<ffi.Pointer<wire_cst_list_tokenize_result> Function(int)>();
-
   int dummy_method_to_enforce_bundling() {
     return _dummy_method_to_enforce_bundling();
   }
@@ -561,23 +444,6 @@ class FastTokenizerLibWire implements BaseWire {
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizerPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_fast_tokenizer_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer',
-      );
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer =
-      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizerPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
   rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
     ffi.Pointer<ffi.Void> ptr,
   ) {
@@ -592,23 +458,6 @@ class FastTokenizerLibWire implements BaseWire {
       );
   late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer =
       _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizerPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizerPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_fast_tokenizer_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer',
-      );
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer =
-      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizerPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void store_dart_post_cobject(DartPostCObjectFnType ptr) {
@@ -745,47 +594,6 @@ class FastTokenizerLibWire implements BaseWire {
           .asFunction<
             void Function(int, int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
           >();
-
-  void wire__crate__api__text__Tokenizer_tokenize(
-    int port_,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> text,
-  ) {
-    return _wire__crate__api__text__Tokenizer_tokenize(port_, text);
-  }
-
-  late final _wire__crate__api__text__Tokenizer_tokenizePtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-          )
-        >
-      >('frbgen_fast_tokenizer_wire__crate__api__text__Tokenizer_tokenize');
-  late final _wire__crate__api__text__Tokenizer_tokenize =
-      _wire__crate__api__text__Tokenizer_tokenizePtr
-          .asFunction<
-            void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
-          >();
-
-  void wire__crate__api__text__Tokenizer_tokenize_batch(
-    int port_,
-    ffi.Pointer<wire_cst_list_String> texts,
-  ) {
-    return _wire__crate__api__text__Tokenizer_tokenize_batch(port_, texts);
-  }
-
-  late final _wire__crate__api__text__Tokenizer_tokenize_batchPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(ffi.Int64, ffi.Pointer<wire_cst_list_String>)
-        >
-      >(
-        'frbgen_fast_tokenizer_wire__crate__api__text__Tokenizer_tokenize_batch',
-      );
-  late final _wire__crate__api__text__Tokenizer_tokenize_batch =
-      _wire__crate__api__text__Tokenizer_tokenize_batchPtr
-          .asFunction<void Function(int, ffi.Pointer<wire_cst_list_String>)>();
 }
 
 typedef DartPort = ffi.Int64;
@@ -859,33 +667,4 @@ final class wire_cst_list_prim_u_8_strict extends ffi.Struct {
   }) => $allocator<wire_cst_list_prim_u_8_strict>()
     ..ref.ptr = ptr
     ..ref.len = len;
-}
-
-final class wire_cst_list_tokenize_result extends ffi.Struct {
-  external ffi.Pointer<wire_cst_tokenize_result> ptr;
-
-  @ffi.Int32()
-  external int len;
-
-  static ffi.Pointer<wire_cst_list_tokenize_result> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<wire_cst_tokenize_result> ptr,
-    required int len,
-  }) => $allocator<wire_cst_list_tokenize_result>()
-    ..ref.ptr = ptr
-    ..ref.len = len;
-}
-
-final class wire_cst_tokenize_result extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_String> cut;
-
-  external ffi.Pointer<wire_cst_list_String> cut_for_search;
-
-  static ffi.Pointer<wire_cst_tokenize_result> $allocate(
-    ffi.Allocator $allocator, {
-    required ffi.Pointer<wire_cst_list_String> cut,
-    required ffi.Pointer<wire_cst_list_String> cut_for_search,
-  }) => $allocator<wire_cst_tokenize_result>()
-    ..ref.cut = cut
-    ..ref.cut_for_search = cut_for_search;
 }

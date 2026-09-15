@@ -2,8 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/native.dart';
-import 'package:fast_tokenizer/fast_tokenizer.dart' show TokenizeResult;
-import 'package:fast_tokenizer/testing.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
@@ -12,11 +10,6 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 import 'package:path/path.dart' as p;
-
-Future<TokenizeResult> _fakeTokenize(String text) async {
-  final words = text.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
-  return TokenizeResult(cut: words, cutForSearch: words);
-}
 
 class _FakeStore implements ImportMediaStore {
   var _n = 0;
@@ -50,7 +43,6 @@ void main() {
         setup: (raw) => raw.execute('PRAGMA foreign_keys = ON'),
       ),
     );
-    installFakeFastTokenizer(_fakeTokenize);
     diaries = DiaryRepository(db);
     categories = CategoryRepository(db);
     places = PlaceRepository(db);

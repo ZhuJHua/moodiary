@@ -2,8 +2,7 @@
 -- 改 schema = 追加 user_version 迁移档，不改已发布的建表语句。
 
 -- 日记本体。主键即业务 uuid；rid 是显式 rowid 别名，**唯一用途是 FTS5 对齐**
--- （contentless FTS5 的行地址必须是整数 rowid，且隐式 rowid 会被 VACUUM 挪动），
--- 不出仓储层、不被任何子表引用。
+-- （隐式 rowid 会被 VACUUM 挪动），不出仓储层、不被任何子表引用。
 CREATE TABLE diaries (
   rid           INTEGER PRIMARY KEY,
   id            TEXT NOT NULL UNIQUE,
@@ -61,16 +60,30 @@ CREATE TABLE diary_links (
 
 CREATE INDEX idx_diary_links_dst ON diary_links (dst_id);
 
--- 全文搜索：预分词 contentless FTS5，rowid = diaries.rid。索引侧写 jieba
--- cut_for_search（高召回）空格拼接，查询侧用 cut（高精度）。列权重（标题 1.5）
--- 由 onCreate 里的 rank 配置行持久化。
+-- 分词器 simple 由 sqlite3_simple 注册，中文按字切并额外产出拼音同位 token。
 CREATE VIRTUAL TABLE diary_fts USING fts5(
-  title_tok,
-  body_tok,
-  content='',
-  contentless_delete=1,
-  tokenize='unicode61',
-  prefix='2',
-  detail=full,
-  columnsize=1
+  title,
+  content_text,
+  content='diaries',
+  content_rowid='rid',
+  tokenize='simple'
 );
+
+CREATE TRIGGER diary_fts_ai AFTER INSERT ON diaries BEGIN
+  INSERT INTO diary_fts (rowid, title, content_text)
+    VALUES (new.rid, new.title, new.content_text);
+END;
+
+CREATE TRIGGER diary_fts_ad AFTER DELETE ON diaries BEGIN
+  INSERT INTO diary_fts (diary_fts, rowid, title, content_text)
+    VALUES ('delete', old.rid, old.title, old.content_text);
+END;
+
+CREATE TRIGGER diary_fts_au AFTER UPDATE OF title, content_text ON diaries
+WHEN old.title IS NOT new.title OR old.content_text IS NOT new.content_text
+BEGIN
+  INSERT INTO diary_fts (diary_fts, rowid, title, content_text)
+    VALUES ('delete', old.rid, old.title, old.content_text);
+  INSERT INTO diary_fts (rowid, title, content_text)
+    VALUES (new.rid, new.title, new.content_text);
+END;

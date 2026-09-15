@@ -4,7 +4,6 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'api/hf_tokenizer.dart';
-import 'api/text.dart';
 
 import 'dart:async';
 import 'dart:convert';
@@ -74,7 +73,7 @@ class FastTokenizerLib
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 1273308536;
+  int get rustContentHash => 1207701182;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -106,12 +105,6 @@ abstract class FastTokenizerLibApi extends BaseApi {
     required String token,
   });
 
-  Future<TokenizeResult> crateApiTextTokenizerTokenize({required String text});
-
-  Future<List<TokenizeResult>> crateApiTextTokenizerTokenizeBatch({
-    required List<String> texts,
-  });
-
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_HfTokenizer;
 
@@ -119,14 +112,6 @@ abstract class FastTokenizerLibApi extends BaseApi {
   get rust_arc_decrement_strong_count_HfTokenizer;
 
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_HfTokenizerPtr;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_Tokenizer;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_Tokenizer;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_TokenizerPtr;
 }
 
 class FastTokenizerLibApiImpl extends FastTokenizerLibApiImplPlatform
@@ -280,58 +265,6 @@ class FastTokenizerLibApiImpl extends FastTokenizerLibApiImplPlatform
         argNames: ["that", "token"],
       );
 
-  @override
-  Future<TokenizeResult> crateApiTextTokenizerTokenize({required String text}) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 = cst_encode_String(text);
-          return wire.wire__crate__api__text__Tokenizer_tokenize(port_, arg0);
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_tokenize_result,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiTextTokenizerTokenizeConstMeta,
-        argValues: [text],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiTextTokenizerTokenizeConstMeta =>
-      const TaskConstMeta(debugName: "Tokenizer_tokenize", argNames: ["text"]);
-
-  @override
-  Future<List<TokenizeResult>> crateApiTextTokenizerTokenizeBatch({
-    required List<String> texts,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 = cst_encode_list_String(texts);
-          return wire.wire__crate__api__text__Tokenizer_tokenize_batch(
-            port_,
-            arg0,
-          );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_list_tokenize_result,
-          decodeErrorData: dco_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiTextTokenizerTokenizeBatchConstMeta,
-        argValues: [texts],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiTextTokenizerTokenizeBatchConstMeta =>
-      const TaskConstMeta(
-        debugName: "Tokenizer_tokenize_batch",
-        argNames: ["texts"],
-      );
-
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_HfTokenizer => wire
       .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer;
@@ -339,14 +272,6 @@ class FastTokenizerLibApiImpl extends FastTokenizerLibApiImplPlatform
   RustArcDecrementStrongCountFnType
   get rust_arc_decrement_strong_count_HfTokenizer => wire
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_Tokenizer => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_Tokenizer => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer;
 
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw) {
@@ -361,15 +286,6 @@ class FastTokenizerLibApiImpl extends FastTokenizerLibApiImplPlatform
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return HfTokenizerImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  Tokenizer
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return TokenizerImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -388,15 +304,6 @@ class FastTokenizerLibApiImpl extends FastTokenizerLibApiImplPlatform
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return HfTokenizerImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  Tokenizer
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return TokenizerImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -438,27 +345,9 @@ class FastTokenizerLibApiImpl extends FastTokenizerLibApiImplPlatform
   }
 
   @protected
-  List<TokenizeResult> dco_decode_list_tokenize_result(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return (raw as List<dynamic>).map(dco_decode_tokenize_result).toList();
-  }
-
-  @protected
   int? dco_decode_opt_box_autoadd_u_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_u_32(raw);
-  }
-
-  @protected
-  TokenizeResult dco_decode_tokenize_result(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-    return TokenizeResult(
-      cut: dco_decode_list_String(arr[0]),
-      cutForSearch: dco_decode_list_String(arr[1]),
-    );
   }
 
   @protected
@@ -505,18 +394,6 @@ class FastTokenizerLibApiImpl extends FastTokenizerLibApiImplPlatform
   }
 
   @protected
-  Tokenizer
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return TokenizerImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
   HfTokenizer
   sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
     SseDeserializer deserializer,
@@ -535,18 +412,6 @@ class FastTokenizerLibApiImpl extends FastTokenizerLibApiImplPlatform
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return HfTokenizerImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  Tokenizer
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return TokenizerImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -606,20 +471,6 @@ class FastTokenizerLibApiImpl extends FastTokenizerLibApiImplPlatform
   }
 
   @protected
-  List<TokenizeResult> sse_decode_list_tokenize_result(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    var len_ = sse_decode_i_32(deserializer);
-    var ans_ = <TokenizeResult>[];
-    for (var idx_ = 0; idx_ < len_; ++idx_) {
-      ans_.add(sse_decode_tokenize_result(deserializer));
-    }
-    return ans_;
-  }
-
-  @protected
   int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -628,14 +479,6 @@ class FastTokenizerLibApiImpl extends FastTokenizerLibApiImplPlatform
     } else {
       return null;
     }
-  }
-
-  @protected
-  TokenizeResult sse_decode_tokenize_result(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_cut = sse_decode_list_String(deserializer);
-    var var_cutForSearch = sse_decode_list_String(deserializer);
-    return TokenizeResult(cut: var_cut, cutForSearch: var_cutForSearch);
   }
 
   @protected
@@ -685,16 +528,6 @@ class FastTokenizerLibApiImpl extends FastTokenizerLibApiImplPlatform
 
   @protected
   int
-  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer(
-    Tokenizer raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as TokenizerImpl).frbInternalCstEncode(move: true);
-  }
-
-  @protected
-  int
   cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
     HfTokenizer raw,
   ) {
@@ -711,16 +544,6 @@ class FastTokenizerLibApiImpl extends FastTokenizerLibApiImplPlatform
     // Codec=Cst (C-struct based), see doc to use other codecs
     // ignore: invalid_use_of_internal_member
     return (raw as HfTokenizerImpl).frbInternalCstEncode();
-  }
-
-  @protected
-  int
-  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer(
-    Tokenizer raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    // ignore: invalid_use_of_internal_member
-    return (raw as TokenizerImpl).frbInternalCstEncode();
   }
 
   @protected
@@ -765,19 +588,6 @@ class FastTokenizerLibApiImpl extends FastTokenizerLibApiImplPlatform
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer(
-    Tokenizer self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as TokenizerImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
   sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
     HfTokenizer self,
     SseSerializer serializer,
@@ -798,19 +608,6 @@ class FastTokenizerLibApiImpl extends FastTokenizerLibApiImplPlatform
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as HfTokenizerImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer(
-    Tokenizer self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as TokenizerImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
@@ -869,18 +666,6 @@ class FastTokenizerLibApiImpl extends FastTokenizerLibApiImplPlatform
   }
 
   @protected
-  void sse_encode_list_tokenize_result(
-    List<TokenizeResult> self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.length, serializer);
-    for (final item in self) {
-      sse_encode_tokenize_result(item, serializer);
-    }
-  }
-
-  @protected
   void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -888,16 +673,6 @@ class FastTokenizerLibApiImpl extends FastTokenizerLibApiImplPlatform
     if (self != null) {
       sse_encode_box_autoadd_u_32(self, serializer);
     }
-  }
-
-  @protected
-  void sse_encode_tokenize_result(
-    TokenizeResult self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_list_String(self.cut, serializer);
-    sse_encode_list_String(self.cutForSearch, serializer);
   }
 
   @protected
@@ -974,26 +749,4 @@ class HfTokenizerImpl extends RustOpaque implements HfTokenizer {
 
   Future<int?> tokenId({required String token}) => FastTokenizerLib.instance.api
       .crateApiHfTokenizerHfTokenizerTokenId(that: this, token: token);
-}
-
-@sealed
-class TokenizerImpl extends RustOpaque implements Tokenizer {
-  // Not to be used by end users
-  TokenizerImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  TokenizerImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        FastTokenizerLib.instance.api.rust_arc_increment_strong_count_Tokenizer,
-    rustArcDecrementStrongCount:
-        FastTokenizerLib.instance.api.rust_arc_decrement_strong_count_Tokenizer,
-    rustArcDecrementStrongCountPtr: FastTokenizerLib
-        .instance
-        .api
-        .rust_arc_decrement_strong_count_TokenizerPtr,
-  );
 }

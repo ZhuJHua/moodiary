@@ -262,11 +262,14 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
   Future<List<DiaryLinkCandidate>> _linkCandidates(String query) async {
     final q = query.trim();
     if (q.isEmpty) return const [];
-    final diaries = await getIt<DiaryRepository>().searchDiariesByText(
-      q,
+    final hits = await getIt<DiaryRepository>().searchDiaries(
+      query: q,
       limit: 12,
     );
-    return [for (final d in diaries) (id: d.id, label: _candidateLabel(d))];
+    return [
+      for (final hit in hits)
+        (id: hit.diary.id, label: _candidateLabel(hit.diary)),
+    ];
   }
 
   String _candidateLabel(Diary d) {

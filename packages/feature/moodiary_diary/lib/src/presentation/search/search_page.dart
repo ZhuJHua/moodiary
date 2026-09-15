@@ -279,15 +279,25 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
         key: const ValueKey('list'),
         children: [
           Positioned.fill(
-            child: ListView.separated(
-              itemCount: state.results.length,
-              padding: const .all(12),
-              itemBuilder: (context, index) => SearchResultCard(
-                diary: state.results[index],
-                queryList: state.queryList,
-                onTap: _controller.recordHistory,
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (n) {
+                if (n.metrics.extentAfter < 400) _controller.loadMore();
+                return false;
+              },
+              child: ListView.separated(
+                itemCount: state.results.length + (state.hasMore ? 1 : 0),
+                padding: const .all(12),
+                itemBuilder: (context, index) => index == state.results.length
+                    ? const Padding(
+                        padding: .symmetric(vertical: 16),
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    : SearchResultCard(
+                        hit: state.results[index],
+                        onTap: _controller.recordHistory,
+                      ),
+                separatorBuilder: (_, _) => const SizedBox(height: 10),
               ),
-              separatorBuilder: (_, _) => const SizedBox(height: 10),
             ),
           ),
           if (state.isSearching)

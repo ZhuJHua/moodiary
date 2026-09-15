@@ -3,235 +3,6 @@
 part of 'database.dart';
 
 // ignore_for_file: type=lint
-class DiaryFts extends Table
-    with TableInfo<DiaryFts, DiaryFt>, VirtualTableInfo<DiaryFts, DiaryFt> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  DiaryFts(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _titleTokMeta = const VerificationMeta(
-    'titleTok',
-  );
-  late final GeneratedColumn<String> titleTok = GeneratedColumn<String>(
-    'title_tok',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    $customConstraints: '',
-  );
-  static const VerificationMeta _bodyTokMeta = const VerificationMeta(
-    'bodyTok',
-  );
-  late final GeneratedColumn<String> bodyTok = GeneratedColumn<String>(
-    'body_tok',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    $customConstraints: '',
-  );
-  @override
-  List<GeneratedColumn> get $columns => [titleTok, bodyTok];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'diary_fts';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<DiaryFt> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('title_tok')) {
-      context.handle(
-        _titleTokMeta,
-        titleTok.isAcceptableOrUnknown(data['title_tok']!, _titleTokMeta),
-      );
-    }
-    if (data.containsKey('body_tok')) {
-      context.handle(
-        _bodyTokMeta,
-        bodyTok.isAcceptableOrUnknown(data['body_tok']!, _bodyTokMeta),
-      );
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => const {};
-  @override
-  DiaryFt map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return DiaryFt(
-      titleTok: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}title_tok'],
-      ),
-      bodyTok: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}body_tok'],
-      ),
-    );
-  }
-
-  @override
-  DiaryFts createAlias(String alias) {
-    return DiaryFts(attachedDatabase, alias);
-  }
-
-  @override
-  bool get dontWriteConstraints => true;
-  @override
-  String get moduleAndArgs =>
-      'fts5(title_tok, body_tok, content=\'\', contentless_delete=1, tokenize=\'unicode61\', prefix=\'2\', detail=full, columnsize=1)';
-}
-
-class DiaryFt extends DataClass implements Insertable<DiaryFt> {
-  final String? titleTok;
-  final String? bodyTok;
-  const DiaryFt({this.titleTok, this.bodyTok});
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (!nullToAbsent || titleTok != null) {
-      map['title_tok'] = Variable<String>(titleTok);
-    }
-    if (!nullToAbsent || bodyTok != null) {
-      map['body_tok'] = Variable<String>(bodyTok);
-    }
-    return map;
-  }
-
-  DiaryFtsCompanion toCompanion(bool nullToAbsent) {
-    return DiaryFtsCompanion(
-      titleTok: titleTok == null && nullToAbsent
-          ? const Value.absent()
-          : Value(titleTok),
-      bodyTok: bodyTok == null && nullToAbsent
-          ? const Value.absent()
-          : Value(bodyTok),
-    );
-  }
-
-  factory DiaryFt.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return DiaryFt(
-      titleTok: serializer.fromJson<String?>(json['title_tok']),
-      bodyTok: serializer.fromJson<String?>(json['body_tok']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'title_tok': serializer.toJson<String?>(titleTok),
-      'body_tok': serializer.toJson<String?>(bodyTok),
-    };
-  }
-
-  DiaryFt copyWith({
-    Value<String?> titleTok = const Value.absent(),
-    Value<String?> bodyTok = const Value.absent(),
-  }) => DiaryFt(
-    titleTok: titleTok.present ? titleTok.value : this.titleTok,
-    bodyTok: bodyTok.present ? bodyTok.value : this.bodyTok,
-  );
-  DiaryFt copyWithCompanion(DiaryFtsCompanion data) {
-    return DiaryFt(
-      titleTok: data.titleTok.present ? data.titleTok.value : this.titleTok,
-      bodyTok: data.bodyTok.present ? data.bodyTok.value : this.bodyTok,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('DiaryFt(')
-          ..write('titleTok: $titleTok, ')
-          ..write('bodyTok: $bodyTok')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(titleTok, bodyTok);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is DiaryFt &&
-          other.titleTok == this.titleTok &&
-          other.bodyTok == this.bodyTok);
-}
-
-class DiaryFtsCompanion extends UpdateCompanion<DiaryFt> {
-  final Value<String?> titleTok;
-  final Value<String?> bodyTok;
-  final Value<int> rowid;
-  const DiaryFtsCompanion({
-    this.titleTok = const Value.absent(),
-    this.bodyTok = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  DiaryFtsCompanion.insert({
-    this.titleTok = const Value.absent(),
-    this.bodyTok = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  static Insertable<DiaryFt> custom({
-    Expression<String>? titleTok,
-    Expression<String>? bodyTok,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (titleTok != null) 'title_tok': titleTok,
-      if (bodyTok != null) 'body_tok': bodyTok,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  DiaryFtsCompanion copyWith({
-    Value<String?>? titleTok,
-    Value<String?>? bodyTok,
-    Value<int>? rowid,
-  }) {
-    return DiaryFtsCompanion(
-      titleTok: titleTok ?? this.titleTok,
-      bodyTok: bodyTok ?? this.bodyTok,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (titleTok.present) {
-      map['title_tok'] = Variable<String>(titleTok.value);
-    }
-    if (bodyTok.present) {
-      map['body_tok'] = Variable<String>(bodyTok.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('DiaryFtsCompanion(')
-          ..write('titleTok: $titleTok, ')
-          ..write('bodyTok: $bodyTok, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
 class Diaries extends Table with TableInfo<Diaries, DiaryRow> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -7765,10 +7536,241 @@ class DiaryTagsCompanion extends UpdateCompanion<DiaryTagRow> {
   }
 }
 
+class DiaryFts extends Table
+    with TableInfo<DiaryFts, DiaryFt>, VirtualTableInfo<DiaryFts, DiaryFt> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  DiaryFts(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _contentTextMeta = const VerificationMeta(
+    'contentText',
+  );
+  late final GeneratedColumn<String> contentText = GeneratedColumn<String>(
+    'content_text',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [title, contentText];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'diary_fts';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DiaryFt> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    }
+    if (data.containsKey('content_text')) {
+      context.handle(
+        _contentTextMeta,
+        contentText.isAcceptableOrUnknown(
+          data['content_text']!,
+          _contentTextMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => const {};
+  @override
+  DiaryFt map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DiaryFt(
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      ),
+      contentText: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}content_text'],
+      ),
+    );
+  }
+
+  @override
+  DiaryFts createAlias(String alias) {
+    return DiaryFts(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+  @override
+  String get moduleAndArgs =>
+      'fts5(title, content_text, content=\'diaries\', content_rowid=\'rid\', tokenize=\'simple\')';
+}
+
+class DiaryFt extends DataClass implements Insertable<DiaryFt> {
+  final String? title;
+  final String? contentText;
+  const DiaryFt({this.title, this.contentText});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (!nullToAbsent || title != null) {
+      map['title'] = Variable<String>(title);
+    }
+    if (!nullToAbsent || contentText != null) {
+      map['content_text'] = Variable<String>(contentText);
+    }
+    return map;
+  }
+
+  DiaryFtsCompanion toCompanion(bool nullToAbsent) {
+    return DiaryFtsCompanion(
+      title: title == null && nullToAbsent
+          ? const Value.absent()
+          : Value(title),
+      contentText: contentText == null && nullToAbsent
+          ? const Value.absent()
+          : Value(contentText),
+    );
+  }
+
+  factory DiaryFt.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DiaryFt(
+      title: serializer.fromJson<String?>(json['title']),
+      contentText: serializer.fromJson<String?>(json['content_text']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'title': serializer.toJson<String?>(title),
+      'content_text': serializer.toJson<String?>(contentText),
+    };
+  }
+
+  DiaryFt copyWith({
+    Value<String?> title = const Value.absent(),
+    Value<String?> contentText = const Value.absent(),
+  }) => DiaryFt(
+    title: title.present ? title.value : this.title,
+    contentText: contentText.present ? contentText.value : this.contentText,
+  );
+  DiaryFt copyWithCompanion(DiaryFtsCompanion data) {
+    return DiaryFt(
+      title: data.title.present ? data.title.value : this.title,
+      contentText: data.contentText.present
+          ? data.contentText.value
+          : this.contentText,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DiaryFt(')
+          ..write('title: $title, ')
+          ..write('contentText: $contentText')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(title, contentText);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DiaryFt &&
+          other.title == this.title &&
+          other.contentText == this.contentText);
+}
+
+class DiaryFtsCompanion extends UpdateCompanion<DiaryFt> {
+  final Value<String?> title;
+  final Value<String?> contentText;
+  final Value<int> rowid;
+  const DiaryFtsCompanion({
+    this.title = const Value.absent(),
+    this.contentText = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DiaryFtsCompanion.insert({
+    this.title = const Value.absent(),
+    this.contentText = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  static Insertable<DiaryFt> custom({
+    Expression<String>? title,
+    Expression<String>? contentText,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (title != null) 'title': title,
+      if (contentText != null) 'content_text': contentText,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DiaryFtsCompanion copyWith({
+    Value<String?>? title,
+    Value<String?>? contentText,
+    Value<int>? rowid,
+  }) {
+    return DiaryFtsCompanion(
+      title: title ?? this.title,
+      contentText: contentText ?? this.contentText,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (contentText.present) {
+      map['content_text'] = Variable<String>(contentText.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DiaryFtsCompanion(')
+          ..write('title: $title, ')
+          ..write('contentText: $contentText, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$MoodiaryDatabase extends GeneratedDatabase {
   _$MoodiaryDatabase(QueryExecutor e) : super(e);
   $MoodiaryDatabaseManager get managers => $MoodiaryDatabaseManager(this);
-  late final DiaryFts diaryFts = DiaryFts(this);
   late final Diaries diaries = Diaries(this);
   late final DiaryLinks diaryLinks = DiaryLinks(this);
   late final DiaryChunks diaryChunks = DiaryChunks(this);
@@ -7838,95 +7840,19 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
     'idx_diary_links_dst',
     'CREATE INDEX idx_diary_links_dst ON diary_links (dst_id)',
   );
-  Future<int> ftsDelete(int rid) {
-    return customUpdate(
-      'DELETE FROM diary_fts WHERE "rowid" = ?1',
-      variables: [Variable<int>(rid)],
-      updates: {this.diaryFts},
-      updateKind: UpdateKind.delete,
-    );
-  }
-
-  Future<int> ftsInsert(int rid, String? titleTok, String? bodyTok) {
-    return customInsert(
-      'INSERT INTO diary_fts ("rowid", title_tok, body_tok) VALUES (?1, ?2, ?3)',
-      variables: [
-        Variable<int>(rid),
-        Variable<String>(titleTok),
-        Variable<String>(bodyTok),
-      ],
-      updates: {this.diaryFts},
-    );
-  }
-
-  Selectable<FtsSearchByRankResult> ftsSearchByRank(
-    String query,
-    FtsSearchByRank$pred pred,
-    int limitCount,
-  ) {
-    var $arrayStartIndex = 3;
-    final generatedpred = $write(
-      pred(this.diaryFts, alias(this.diaries, 'd')),
-      hasMultipleTables: true,
-      startIndex: $arrayStartIndex,
-    );
-    $arrayStartIndex += generatedpred.amountOfVariables;
-    return customSelect(
-      'SELECT"d"."rid" AS "nested_0.rid", "d"."id" AS "nested_0.id", "d"."category_id" AS "nested_0.category_id", "d"."title" AS "nested_0.title", "d"."content" AS "nested_0.content", "d"."content_text" AS "nested_0.content_text", "d"."time" AS "nested_0.time", "d"."last_modified" AS "nested_0.last_modified", "d"."show" AS "nested_0.show", "d"."mood" AS "nested_0.mood", "d"."type" AS "nested_0.type", "d"."aspect" AS "nested_0.aspect", "d"."place_id" AS "nested_0.place_id", "d"."weather_icon" AS "nested_0.weather_icon", "d"."weather_temp" AS "nested_0.weather_temp", "d"."weather_text" AS "nested_0.weather_text" FROM diary_fts INNER JOIN diaries AS d ON d.rid = diary_fts."rowid" WHERE diary_fts MATCH ?1 AND d.show = 1 AND ${generatedpred.sql} ORDER BY rank, d.time DESC, d.id DESC LIMIT ?2',
-      variables: [
-        Variable<String>(query),
-        Variable<int>(limitCount),
-        ...generatedpred.introducedVariables,
-      ],
-      readsFrom: {this.diaryFts, this.diaries, ...generatedpred.watchedTables},
-    ).asyncMap(
-      (QueryRow row) async => FtsSearchByRankResult(
-        d: await this.diaries.mapFromRow(row, tablePrefix: 'nested_0'),
-      ),
-    );
-  }
-
-  Selectable<FtsSearchByTimeResult> ftsSearchByTime(
-    String query,
-    FtsSearchByTime$pred pred,
-    FtsSearchByTime$order order,
-    int limitCount,
-  ) {
-    var $arrayStartIndex = 3;
-    final generatedpred = $write(
-      pred(this.diaryFts, alias(this.diaries, 'd')),
-      hasMultipleTables: true,
-      startIndex: $arrayStartIndex,
-    );
-    $arrayStartIndex += generatedpred.amountOfVariables;
-    final generatedorder = $write(
-      order?.call(this.diaryFts, alias(this.diaries, 'd')) ??
-          const OrderBy.nothing(),
-      hasMultipleTables: true,
-      startIndex: $arrayStartIndex,
-    );
-    $arrayStartIndex += generatedorder.amountOfVariables;
-    return customSelect(
-      'SELECT"d"."rid" AS "nested_0.rid", "d"."id" AS "nested_0.id", "d"."category_id" AS "nested_0.category_id", "d"."title" AS "nested_0.title", "d"."content" AS "nested_0.content", "d"."content_text" AS "nested_0.content_text", "d"."time" AS "nested_0.time", "d"."last_modified" AS "nested_0.last_modified", "d"."show" AS "nested_0.show", "d"."mood" AS "nested_0.mood", "d"."type" AS "nested_0.type", "d"."aspect" AS "nested_0.aspect", "d"."place_id" AS "nested_0.place_id", "d"."weather_icon" AS "nested_0.weather_icon", "d"."weather_temp" AS "nested_0.weather_temp", "d"."weather_text" AS "nested_0.weather_text" FROM diary_fts INNER JOIN diaries AS d ON d.rid = diary_fts."rowid" WHERE diary_fts MATCH ?1 AND d.show = 1 AND ${generatedpred.sql} ${generatedorder.sql} LIMIT ?2',
-      variables: [
-        Variable<String>(query),
-        Variable<int>(limitCount),
-        ...generatedpred.introducedVariables,
-        ...generatedorder.introducedVariables,
-      ],
-      readsFrom: {
-        this.diaryFts,
-        this.diaries,
-        ...generatedpred.watchedTables,
-        ...generatedorder.watchedTables,
-      },
-    ).asyncMap(
-      (QueryRow row) async => FtsSearchByTimeResult(
-        d: await this.diaries.mapFromRow(row, tablePrefix: 'nested_0'),
-      ),
-    );
-  }
-
+  late final DiaryFts diaryFts = DiaryFts(this);
+  late final Trigger diaryFtsAi = Trigger(
+    'CREATE TRIGGER diary_fts_ai AFTER INSERT ON diaries BEGIN INSERT INTO diary_fts ("rowid", title, content_text) VALUES (new.rid, new.title, new.content_text);END',
+    'diary_fts_ai',
+  );
+  late final Trigger diaryFtsAd = Trigger(
+    'CREATE TRIGGER diary_fts_ad AFTER DELETE ON diaries BEGIN INSERT INTO diary_fts (diary_fts, "rowid", title, content_text) VALUES (\'delete\', old.rid, old.title, old.content_text);END',
+    'diary_fts_ad',
+  );
+  late final Trigger diaryFtsAu = Trigger(
+    'CREATE TRIGGER diary_fts_au AFTER UPDATE OF title, content_text ON diaries WHEN old.title IS NOT new.title OR old.content_text IS NOT new.content_text BEGIN INSERT INTO diary_fts (diary_fts, "rowid", title, content_text) VALUES (\'delete\', old.rid, old.title, old.content_text);INSERT INTO diary_fts ("rowid", title, content_text) VALUES (new.rid, new.title, new.content_text);END',
+    'diary_fts_au',
+  );
   Selectable<BacklinksResult> backlinks(String toId) {
     return customSelect(
       'SELECT"d"."rid" AS "nested_0.rid", "d"."id" AS "nested_0.id", "d"."category_id" AS "nested_0.category_id", "d"."title" AS "nested_0.title", "d"."content" AS "nested_0.content", "d"."content_text" AS "nested_0.content_text", "d"."time" AS "nested_0.time", "d"."last_modified" AS "nested_0.last_modified", "d"."show" AS "nested_0.show", "d"."mood" AS "nested_0.mood", "d"."type" AS "nested_0.type", "d"."aspect" AS "nested_0.aspect", "d"."place_id" AS "nested_0.place_id", "d"."weather_icon" AS "nested_0.weather_icon", "d"."weather_temp" AS "nested_0.weather_temp", "d"."weather_text" AS "nested_0.weather_text" FROM diary_links AS l INNER JOIN diaries AS d ON d.id = l.src_id WHERE l.dst_id = ?1 AND d.show = 1 ORDER BY d.time DESC, d.id DESC',
@@ -8009,7 +7935,6 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
-    diaryFts,
     diaries,
     diaryLinks,
     diaryChunks,
@@ -8040,6 +7965,10 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
     diaryTags,
     idxDiaryTagsTag,
     idxDiaryLinksDst,
+    diaryFts,
+    diaryFtsAi,
+    diaryFtsAd,
+    diaryFtsAu,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -8078,151 +8007,30 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
       ),
       result: [TableUpdate('diary_tags', kind: UpdateKind.delete)],
     ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'diaries',
+        limitUpdateKind: UpdateKind.insert,
+      ),
+      result: [TableUpdate('diary_fts', kind: UpdateKind.insert)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'diaries',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('diary_fts', kind: UpdateKind.insert)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'diaries',
+        limitUpdateKind: UpdateKind.update,
+      ),
+      result: [TableUpdate('diary_fts', kind: UpdateKind.insert)],
+    ),
   ]);
 }
 
-typedef $DiaryFtsCreateCompanionBuilder = DiaryFtsCompanion Function({
-  Value<String?> titleTok,
-  Value<String?> bodyTok,
-  Value<int> rowid,
-});
-typedef $DiaryFtsUpdateCompanionBuilder = DiaryFtsCompanion Function({
-  Value<String?> titleTok,
-  Value<String?> bodyTok,
-  Value<int> rowid,
-});
-
-class $DiaryFtsFilterComposer extends Composer<_$MoodiaryDatabase, DiaryFts> {
-  $DiaryFtsFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get titleTok => $composableBuilder(
-    column: $table.titleTok,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get bodyTok => $composableBuilder(
-    column: $table.bodyTok,
-    builder: (column) => ColumnFilters(column),
-  );
-}
-
-class $DiaryFtsOrderingComposer extends Composer<_$MoodiaryDatabase, DiaryFts> {
-  $DiaryFtsOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get titleTok => $composableBuilder(
-    column: $table.titleTok,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get bodyTok => $composableBuilder(
-    column: $table.bodyTok,
-    builder: (column) => ColumnOrderings(column),
-  );
-}
-
-class $DiaryFtsAnnotationComposer
-    extends Composer<_$MoodiaryDatabase, DiaryFts> {
-  $DiaryFtsAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get titleTok =>
-      $composableBuilder(column: $table.titleTok, builder: (column) => column);
-
-  GeneratedColumn<String> get bodyTok =>
-      $composableBuilder(column: $table.bodyTok, builder: (column) => column);
-}
-
-class $DiaryFtsTableManager
-    extends
-        RootTableManager<
-          _$MoodiaryDatabase,
-          DiaryFts,
-          DiaryFt,
-          $DiaryFtsFilterComposer,
-          $DiaryFtsOrderingComposer,
-          $DiaryFtsAnnotationComposer,
-          $DiaryFtsCreateCompanionBuilder,
-          $DiaryFtsUpdateCompanionBuilder,
-          (DiaryFt, BaseReferences<_$MoodiaryDatabase, DiaryFts, DiaryFt>),
-          DiaryFt,
-          PrefetchHooks Function()
-        > {
-  $DiaryFtsTableManager(_$MoodiaryDatabase db, DiaryFts table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $DiaryFtsFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $DiaryFtsOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $DiaryFtsAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String?> titleTok = const Value.absent(),
-                Value<String?> bodyTok = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => DiaryFtsCompanion(
-                titleTok: titleTok,
-                bodyTok: bodyTok,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                Value<String?> titleTok = const Value.absent(),
-                Value<String?> bodyTok = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => DiaryFtsCompanion.insert(
-                titleTok: titleTok,
-                bodyTok: bodyTok,
-                rowid: rowid,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable<DiaryFts, DiaryFt>(table),
-                  BaseReferences<_$MoodiaryDatabase, DiaryFts, DiaryFt>(
-                    db,
-                    table,
-                    e,
-                  ),
-                ),
-              )
-              .toList(),
-          prefetchHooksCallback: null,
-        ),
-      );
-}
-
-typedef $DiaryFtsProcessedTableManager =
-    ProcessedTableManager<
-      _$MoodiaryDatabase,
-      DiaryFts,
-      DiaryFt,
-      $DiaryFtsFilterComposer,
-      $DiaryFtsOrderingComposer,
-      $DiaryFtsAnnotationComposer,
-      $DiaryFtsCreateCompanionBuilder,
-      $DiaryFtsUpdateCompanionBuilder,
-      (DiaryFt, BaseReferences<_$MoodiaryDatabase, DiaryFts, DiaryFt>),
-      DiaryFt,
-      PrefetchHooks Function()
-    >;
 typedef $DiariesCreateCompanionBuilder = DiariesCompanion Function({
   Value<int> rid,
   required String id,
@@ -13238,12 +13046,154 @@ typedef $DiaryTagsProcessedTableManager =
       DiaryTagRow,
       PrefetchHooks Function({bool diaryId})
     >;
+typedef $DiaryFtsCreateCompanionBuilder = DiaryFtsCompanion Function({
+  Value<String?> title,
+  Value<String?> contentText,
+  Value<int> rowid,
+});
+typedef $DiaryFtsUpdateCompanionBuilder = DiaryFtsCompanion Function({
+  Value<String?> title,
+  Value<String?> contentText,
+  Value<int> rowid,
+});
+
+class $DiaryFtsFilterComposer extends Composer<_$MoodiaryDatabase, DiaryFts> {
+  $DiaryFtsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get contentText => $composableBuilder(
+    column: $table.contentText,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $DiaryFtsOrderingComposer extends Composer<_$MoodiaryDatabase, DiaryFts> {
+  $DiaryFtsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get contentText => $composableBuilder(
+    column: $table.contentText,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $DiaryFtsAnnotationComposer
+    extends Composer<_$MoodiaryDatabase, DiaryFts> {
+  $DiaryFtsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get contentText => $composableBuilder(
+    column: $table.contentText,
+    builder: (column) => column,
+  );
+}
+
+class $DiaryFtsTableManager
+    extends
+        RootTableManager<
+          _$MoodiaryDatabase,
+          DiaryFts,
+          DiaryFt,
+          $DiaryFtsFilterComposer,
+          $DiaryFtsOrderingComposer,
+          $DiaryFtsAnnotationComposer,
+          $DiaryFtsCreateCompanionBuilder,
+          $DiaryFtsUpdateCompanionBuilder,
+          (DiaryFt, BaseReferences<_$MoodiaryDatabase, DiaryFts, DiaryFt>),
+          DiaryFt,
+          PrefetchHooks Function()
+        > {
+  $DiaryFtsTableManager(_$MoodiaryDatabase db, DiaryFts table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $DiaryFtsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $DiaryFtsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $DiaryFtsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String?> title = const Value.absent(),
+                Value<String?> contentText = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DiaryFtsCompanion(
+                title: title,
+                contentText: contentText,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String?> title = const Value.absent(),
+                Value<String?> contentText = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DiaryFtsCompanion.insert(
+                title: title,
+                contentText: contentText,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<DiaryFts, DiaryFt>(table),
+                  BaseReferences<_$MoodiaryDatabase, DiaryFts, DiaryFt>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $DiaryFtsProcessedTableManager =
+    ProcessedTableManager<
+      _$MoodiaryDatabase,
+      DiaryFts,
+      DiaryFt,
+      $DiaryFtsFilterComposer,
+      $DiaryFtsOrderingComposer,
+      $DiaryFtsAnnotationComposer,
+      $DiaryFtsCreateCompanionBuilder,
+      $DiaryFtsUpdateCompanionBuilder,
+      (DiaryFt, BaseReferences<_$MoodiaryDatabase, DiaryFts, DiaryFt>),
+      DiaryFt,
+      PrefetchHooks Function()
+    >;
 
 class $MoodiaryDatabaseManager {
   final _$MoodiaryDatabase _db;
   $MoodiaryDatabaseManager(this._db);
-  $DiaryFtsTableManager get diaryFts =>
-      $DiaryFtsTableManager(_db, _db.diaryFts);
   $DiariesTableManager get diaries => $DiariesTableManager(_db, _db.diaries);
   $DiaryLinksTableManager get diaryLinks =>
       $DiaryLinksTableManager(_db, _db.diaryLinks);
@@ -13275,28 +13225,9 @@ class $MoodiaryDatabaseManager {
       $DiaryMediaTableManager(_db, _db.diaryMedia);
   $DiaryTagsTableManager get diaryTags =>
       $DiaryTagsTableManager(_db, _db.diaryTags);
+  $DiaryFtsTableManager get diaryFts =>
+      $DiaryFtsTableManager(_db, _db.diaryFts);
 }
-
-class FtsSearchByRankResult {
-  final DiaryRow d;
-  FtsSearchByRankResult({required this.d});
-}
-
-typedef FtsSearchByRank$pred = Expression<bool> Function(
-  DiaryFts diary_fts,
-  Diaries d,
-);
-
-class FtsSearchByTimeResult {
-  final DiaryRow d;
-  FtsSearchByTimeResult({required this.d});
-}
-
-typedef FtsSearchByTime$pred = Expression<bool> Function(
-  DiaryFts diary_fts,
-  Diaries d,
-);
-typedef FtsSearchByTime$order = OrderBy Function(DiaryFts diary_fts, Diaries d);
 
 class BacklinksResult {
   final DiaryRow d;

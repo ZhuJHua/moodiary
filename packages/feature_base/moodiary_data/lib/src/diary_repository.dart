@@ -3,7 +3,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:drift/drift.dart';
-import 'package:fast_tokenizer/fast_tokenizer.dart';
+import 'package:drift/extensions/fts5.dart';
 import 'package:injectable/injectable.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -16,20 +16,11 @@ import 'media_item.dart';
 
 enum IndexMode { inline, skip }
 
-typedef _IndexEntry = ({
-  String id,
-  List<String> bodyTokens,
-  List<String> titleTokens,
-  List<String> links,
-});
-
 @lazySingleton
 class DiaryRepository {
   DiaryRepository(this._db);
 
   final MoodiaryDatabase _db;
-
-  static const int _tokenizeChunk = 128;
 
   // SQLite 变量数上限 32766，留足余量
   static const int _inChunk = 5000;
@@ -134,77 +125,6 @@ class DiaryRepository {
   Future<Diary?> _assembleOne(DiaryRow? row) async =>
       row == null ? null : (await _assemble([row])).first;
 
-  Future<TokenizeResult?> _tokenize(String text) async {
-    if (text.isEmpty) return null;
-    try {
-      return await Tokenizer.tokenize(text: text);
-    } catch (_) {
-      return null;
-    }
-  }
-
-  Future<_IndexEntry> _buildEntry(Diary diary) async {
-    final tokens = await _tokenize(diary.contentText.trim());
-    final title = await _tokenize(diary.title.trim());
-    return (
-      id: diary.id,
-      bodyTokens: tokens?.cutForSearch ?? const [],
-      titleTokens: title?.cutForSearch ?? const [],
-      links: DiaryContent.of(diary).links,
-    );
-  }
-
-  Future<List<_IndexEntry>> _buildEntries(List<Diary> diaries) async {
-    if (diaries.length <= 1) {
-      return [for (final diary in diaries) await _buildEntry(diary)];
-    }
-    final texts = <String>[];
-    final slots = <int>[];
-    for (var i = 0; i < diaries.length; i++) {
-      final content = diaries[i].contentText.trim();
-      if (content.isNotEmpty) {
-        texts.add(content);
-        slots.add(i * 2);
-      }
-      final title = diaries[i].title.trim();
-      if (title.isNotEmpty) {
-        texts.add(title);
-        slots.add(i * 2 + 1);
-      }
-    }
-    List<TokenizeResult>? results;
-    if (texts.isNotEmpty) {
-      try {
-        final out = await Tokenizer.tokenizeBatch(texts: texts);
-        results = out.length == texts.length ? out : null;
-      } catch (_) {
-        results = null;
-      }
-      if (results == null) {
-        return [for (final diary in diaries) await _buildEntry(diary)];
-      }
-    }
-    final bodyTokens = List<List<String>?>.filled(diaries.length, null);
-    final titleTokens = List<List<String>?>.filled(diaries.length, null);
-    for (var k = 0; k < slots.length; k++) {
-      final slot = slots[k];
-      if (slot.isEven) {
-        bodyTokens[slot ~/ 2] = results![k].cutForSearch;
-      } else {
-        titleTokens[slot ~/ 2] = results![k].cutForSearch;
-      }
-    }
-    return [
-      for (var i = 0; i < diaries.length; i++)
-        (
-          id: diaries[i].id,
-          bodyTokens: bodyTokens[i] ?? const <String>[],
-          titleTokens: titleTokens[i] ?? const <String>[],
-          links: DiaryContent.of(diaries[i]).links,
-        ),
-    ];
-  }
-
   Future<int> _upsertRow(Diary d) async {
     final row = await _db
         .into(_db.diaries)
@@ -247,24 +167,15 @@ class DiaryRepository {
     });
   }
 
-  Future<void> _applyIndex(int rid, String id, _IndexEntry e) async {
-    await _db.ftsDelete(rid);
-    if (e.bodyTokens.isNotEmpty || e.titleTokens.isNotEmpty) {
-      await _db.ftsInsert(
-        rid,
-        e.titleTokens.isEmpty ? null : e.titleTokens.join(' '),
-        e.bodyTokens.isEmpty ? null : e.bodyTokens.join(' '),
-      );
-    }
+  Future<void> _applyLinks(String id, List<String> links) async {
     await (_db.delete(_db.diaryLinks)..where((l) => l.srcId.equals(id))).go();
-    if (e.links.isNotEmpty) {
-      await _db.batch((b) {
-        b.insertAll(_db.diaryLinks, [
-          for (final dst in e.links)
-            DiaryLinksCompanion.insert(srcId: id, dstId: dst),
-        ]);
-      });
-    }
+    if (links.isEmpty) return;
+    await _db.batch((b) {
+      b.insertAll(_db.diaryLinks, [
+        for (final dst in links)
+          DiaryLinksCompanion.insert(srcId: id, dstId: dst),
+      ]);
+    });
   }
 
   Future<void> insertADiary(
@@ -279,19 +190,13 @@ class DiaryRepository {
     IndexMode index = .inline,
   }) async {
     if (diaries.isEmpty) return;
-    final entries = <_IndexEntry>[];
-    if (index == .inline) {
-      for (var start = 0; start < diaries.length; start += _tokenizeChunk) {
-        final end = min(start + _tokenizeChunk, diaries.length);
-        entries.addAll(await _buildEntries(diaries.sublist(start, end)));
-      }
-    }
     await _db.transaction(() async {
-      for (var i = 0; i < diaries.length; i++) {
-        final diary = diaries[i];
-        final rid = await _upsertRow(diary);
+      for (final diary in diaries) {
+        await _upsertRow(diary);
         await _syncChildren(diary);
-        if (index == .inline) await _applyIndex(rid, diary.id, entries[i]);
+        if (index == .inline) {
+          await _applyLinks(diary.id, DiaryContent.of(diary).links);
+        }
       }
       await (_db.delete(_db.tombstones)..where(
             (t) => t.key.isIn([
@@ -320,12 +225,11 @@ class DiaryRepository {
           _sameNameSet(newDiary.videoName, derived.videos) &&
           _sameNameSet(newDiary.audioName, derived.audios);
     }(), '媒体三列与正文引用不一致：写入方漏了 withDerivedMedia（见 diary_derive.dart）');
-    final entry = index == .inline ? await _buildEntry(newDiary) : null;
     await _db.transaction(() async {
-      final rid = await _upsertRow(newDiary);
+      await _upsertRow(newDiary);
       await _syncChildren(newDiary);
-      if (entry != null) {
-        await _applyIndex(rid, newDiary.id, entry);
+      if (index == .inline) {
+        await _applyLinks(newDiary.id, DiaryContent.of(newDiary).links);
         await _enqueueEmbed([newDiary.id]);
       }
     });
@@ -356,7 +260,7 @@ class DiaryRepository {
   }) async {
     final tombstone = SyncTombstone.forDiary(diary.id, at: .timestamp());
     await _db.transaction(() async {
-      await _deleteRowAndIndex(diary.id);
+      await _deleteRow(diary.id);
       await _db
           .into(_db.tombstones)
           .insertOnConflictUpdate(_tombstoneCompanion(tombstone));
@@ -372,13 +276,11 @@ class DiaryRepository {
         pushedBackendsJson: Value(dbStringList(t.pushedBackends)),
       );
 
-  Future<void> _deleteRowAndIndex(String id) async {
-    final row = await (_db.select(
+  Future<void> _deleteRow(String id) async {
+    final deleted = await (_db.delete(
       _db.diaries,
-    )..where((d) => d.id.equals(id))).getSingleOrNull();
-    if (row == null) return;
-    await _db.ftsDelete(row.rid);
-    await (_db.delete(_db.diaries)..where((d) => d.rid.equals(row.rid))).go();
+    )..where((d) => d.id.equals(id))).go();
+    if (deleted == 0) return;
     await _enqueueEmbed([id]);
   }
 
@@ -396,7 +298,7 @@ class DiaryRepository {
     if (ids.isEmpty) return;
     await _db.transaction(() async {
       for (final id in ids) {
-        await _deleteRowAndIndex(id);
+        await _deleteRow(id);
       }
     });
     for (final id in ids) {
@@ -693,83 +595,115 @@ class DiaryRepository {
     return (images: images, audios: audios, videos: videos);
   }
 
-  static String _matchQuery(Iterable<String> tokens) =>
-      tokens.map((t) => '"${t.replaceAll('"', '""')}"').join(' OR ');
+  static const _ftsRowId = CustomExpression<int>('${DiaryFts.$name}.rowid');
 
-  Future<List<Diary>> searchDiaries({
-    required List<String> cutTokens,
-    required List<String> cutForSearchTokens,
+  /// 汉字切成词短语、拉丁串展开成拼音候选，多个词之间是 AND。
+  Future<String> _matchExpression(String query) async {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return '';
+    final row = await _db
+        .customSelect(
+          'SELECT jieba_query(?) AS q',
+          variables: [Variable<String>(trimmed)],
+        )
+        .getSingle();
+    return row.read<String?>('q') ?? '';
+  }
+
+  /// 首次查询要现构造分词器，是百毫秒级的，所以搜索页打开时先热一次。
+  Future<void> warmUpSearch() =>
+      _db.customSelect("SELECT jieba_query('预热')").getSingle();
+
+  Expression<bool> _searchPredicate(
+    DiaryFts fts,
+    Diaries d,
+    String match,
+    String? categoryId,
+    DateTime? start,
+    DateTime? end,
+  ) {
+    var where = fts.match(match) & d.show.equals(1);
+    if (categoryId != null) where = where & d.categoryId.equals(categoryId);
+    if (start != null) {
+      where = where & d.time.isBiggerOrEqualValue(dbTime(start));
+    }
+    if (end != null) where = where & d.time.isSmallerThanValue(dbTime(end));
+    return where;
+  }
+
+  /// 不取 highlight / snippet，所以可以对全量算。
+  Future<int> countSearchDiaries({
+    required String query,
+    String? categoryId,
+    DateTime? start,
+    DateTime? end,
+  }) async {
+    final match = await _matchExpression(query);
+    if (match.isEmpty) return 0;
+    final fts = _db.diaryFts;
+    final d = _db.diaries;
+    final count = countAll();
+    final select = _db.selectOnly(fts)
+      ..addColumns([count])
+      ..join([innerJoin(d, d.rid.equalsExp(_ftsRowId), useColumns: false)])
+      ..where(_searchPredicate(fts, d, match, categoryId, start, end));
+    return (await select.getSingle()).read(count) ?? 0;
+  }
+
+  /// highlight / snippet 要重新分词，成本按返回行数走，所以只给当前页算。
+  Future<List<DiarySearchHit>> searchDiaries({
+    required String query,
     String? categoryId,
     DateTime? start,
     DateTime? end,
     SearchSort sort = .relevance,
     int limit = -1,
+    int offset = 0,
   }) async {
-    final tokens = {...cutTokens, ...cutForSearchTokens}
-      ..removeWhere((t) => t.trim().isEmpty);
-    if (tokens.isEmpty) return const [];
-    final match = _matchQuery(tokens);
+    final match = await _matchExpression(query);
+    if (match.isEmpty) return const [];
 
-    Expression<bool> pred(DiaryFts fts, Diaries d) {
-      Expression<bool> e = const Constant(true);
-      if (categoryId != null) e = e & d.categoryId.equals(categoryId);
-      if (start != null) e = e & d.time.isBiggerOrEqualValue(dbTime(start));
-      if (end != null) e = e & d.time.isSmallerThanValue(dbTime(end));
-      return e;
-    }
-
-    final rows = switch (sort) {
-      .relevance => [
-        for (final r in await _db.ftsSearchByRank(match, pred, limit).get())
-          r.d,
-      ],
-      .timeDesc => [
-        for (final r
-            in await _db
-                .ftsSearchByTime(
-                  match,
-                  pred,
-                  (fts, d) => OrderBy([
-                    OrderingTerm.desc(d.time),
-                    OrderingTerm.desc(d.id),
-                  ]),
-                  limit,
-                )
-                .get())
-          r.d,
-      ],
-      .timeAsc => [
-        for (final r
-            in await _db
-                .ftsSearchByTime(
-                  match,
-                  pred,
-                  (fts, d) => OrderBy([
-                    OrderingTerm.asc(d.time),
-                    OrderingTerm.asc(d.id),
-                  ]),
-                  limit,
-                )
-                .get())
-          r.d,
-      ],
-    };
-    return _assemble(rows);
-  }
-
-  Future<List<Diary>> searchDiariesByText(
-    String query, {
-    SearchSort sort = .relevance,
-    int limit = 12,
-  }) async {
-    final result = await _tokenize(query.trim());
-    if (result == null) return const [];
-    return searchDiaries(
-      cutTokens: result.cut,
-      cutForSearchTokens: result.cutForSearch,
-      sort: sort,
-      limit: limit,
+    final fts = _db.diaryFts;
+    final d = _db.diaries;
+    final titleHit = fts.highlight(
+      fts.title,
+      before: searchHitStart,
+      after: searchHitEnd,
     );
+    final bodyHit = fts.snippet(
+      fts.contentText,
+      before: searchHitStart,
+      after: searchHitEnd,
+      ellipsis: '…',
+      tokenCount: 24,
+    );
+
+    final select = _db.selectOnly(fts)
+      ..addColumns([titleHit, bodyHit])
+      ..join([innerJoin(d, d.rid.equalsExp(_ftsRowId), useColumns: true)])
+      ..where(_searchPredicate(fts, d, match, categoryId, start, end));
+
+    select.orderBy(switch (sort) {
+      .relevance => [
+        OrderingTerm.asc(fts.bm25(weights: const [1.5, 1.0])),
+        OrderingTerm.desc(d.time),
+        OrderingTerm.desc(d.id),
+      ],
+      .timeDesc => [OrderingTerm.desc(d.time), OrderingTerm.desc(d.id)],
+      .timeAsc => [OrderingTerm.asc(d.time), OrderingTerm.asc(d.id)],
+    });
+    if (limit >= 0 || offset > 0) select.limit(limit, offset: offset);
+
+    final rows = await select.get();
+    final diaries = await _assemble([for (final r in rows) r.readTable(d)]);
+    return [
+      for (var i = 0; i < diaries.length; i++)
+        DiarySearchHit(
+          diary: diaries[i],
+          titleHighlight: rows[i].read(titleHit) ?? diaries[i].title,
+          excerpt: rows[i].read(bodyHit) ?? '',
+        ),
+    ];
   }
 
   Future<List<Diary>> getBacklinks(String toId) async {
@@ -934,40 +868,25 @@ class DiaryRepository {
   }
 
   Future<int> rebuildAllIndexes() async {
-    final rows = await _db.select(_db.diaries).get();
-    final ridOf = {for (final r in rows) r.id: r.rid};
-    final diaries = await _assemble(rows);
-    final entries = <_IndexEntry>[];
-    for (var start = 0; start < diaries.length; start += _tokenizeChunk) {
-      final end = min(start + _tokenizeChunk, diaries.length);
-      entries.addAll(await _buildEntries(diaries.sublist(start, end)));
-    }
+    final diaries = await _assemble(await _db.select(_db.diaries).get());
     await _db.transaction(() async {
-      await _db.customStatement(
-        "INSERT INTO diary_fts(diary_fts) VALUES('delete-all')",
-      );
       await _db.delete(_db.diaryLinks).go();
-      for (final e in entries) {
-        final rid = ridOf[e.id]!;
-        if (e.bodyTokens.isNotEmpty || e.titleTokens.isNotEmpty) {
-          await _db.ftsInsert(
-            rid,
-            e.titleTokens.isEmpty ? null : e.titleTokens.join(' '),
-            e.bodyTokens.isEmpty ? null : e.bodyTokens.join(' '),
-          );
-        }
-        if (e.links.isNotEmpty) {
-          await _db.batch((b) {
-            b.insertAll(_db.diaryLinks, [
-              for (final dst in e.links)
-                DiaryLinksCompanion.insert(srcId: e.id, dstId: dst),
-            ]);
-          });
-        }
+      for (final diary in diaries) {
+        final links = DiaryContent.of(diary).links;
+        if (links.isEmpty) continue;
+        await _db.batch((b) {
+          b.insertAll(_db.diaryLinks, [
+            for (final dst in links)
+              DiaryLinksCompanion.insert(srcId: diary.id, dstId: dst),
+          ]);
+        });
       }
+      await _db.customStatement(
+        "INSERT INTO diary_fts(diary_fts) VALUES('rebuild')",
+      );
     });
     MoodiaryKVs.searchIndexBackfilled.set(true);
-    return entries.length;
+    return diaries.length;
   }
 
   Future<DiaryRepairReport> repairData() async {
