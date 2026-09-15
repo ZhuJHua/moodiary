@@ -2,19 +2,12 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
-import 'package:fast_tokenizer/fast_tokenizer.dart' show TokenizeResult;
-import 'package:fast_tokenizer/testing.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
-
-Future<TokenizeResult> fakeTokenize(String text) async {
-  final words = text.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
-  return TokenizeResult(cut: words, cutForSearch: words);
-}
 
 Diary makeDiary(
   String id,
@@ -75,6 +68,8 @@ Diary makeDiary(
   );
 }
 
+String marked(String word) => '$searchHitStart$word$searchHitEnd';
+
 void main() {
   late MoodiaryDatabase db;
   late DiaryRepository repo;
@@ -89,7 +84,6 @@ void main() {
         setup: (raw) => raw.execute('PRAGMA foreign_keys = ON'),
       ),
     );
-    installFakeFastTokenizer(fakeTokenize);
     repo = DiaryRepository(db);
   });
 
@@ -97,27 +91,28 @@ void main() {
     await db.close();
   });
 
-  Future<List<Diary>> search(String word) =>
-      repo.searchDiaries(cutTokens: [word], cutForSearchTokens: const []);
+  Future<List<Diary>> search(String word) async => [
+    for (final hit in await repo.searchDiaries(query: word)) hit.diary,
+  ];
 
   group('检索', () {
-    test('插入后可按分词搜索到', () async {
-      await repo.insertADiary(makeDiary('d1', '苹果 香蕉'));
-      expect((await search('苹果')).map((d) => d.id), ['d1']);
-      expect(await search('梨子'), isEmpty);
-    });
-
-    test('OR 召回：任一词命中即入选', () async {
+    test('多词是 AND：每个词都要命中', () async {
       await repo.insertDiaries([
         makeDiary('d1', '苹果'),
         makeDiary('d2', '香蕉'),
-        makeDiary('d3', '梨子'),
+        makeDiary('both', '苹果 香蕉'),
       ]);
-      final hits = await repo.searchDiaries(
-        cutTokens: const ['苹果', '香蕉'],
-        cutForSearchTokens: const [],
-      );
-      expect(hits.map((d) => d.id).toSet(), {'d1', 'd2'});
+      final hits = await repo.searchDiaries(query: '苹果 香蕉');
+      expect(hits.map((h) => h.diary.id).toSet(), {'both'});
+    });
+
+    test('拼音与首字母命中中文，高亮落在原文上', () async {
+      await repo.insertDiaries([makeDiary('d1', '今天吃了苹果')]);
+      for (final q in ['pingguo', 'pg']) {
+        final hit = (await repo.searchDiaries(query: q)).single;
+        expect(hit.diary.id, 'd1', reason: q);
+        expect(hit.excerpt, contains(marked('苹果')), reason: q);
+      }
     });
 
     test('词频参与排序：重复越多越靠前', () async {
@@ -142,19 +137,14 @@ void main() {
         makeDiary('b', '苹果', categoryId: 'c2', time: DateTime.utc(2026, 2, 1)),
         makeDiary('c', '苹果', categoryId: 'c1', time: DateTime.utc(2026, 3, 1)),
       ]);
-      final byCat = await repo.searchDiaries(
-        cutTokens: const ['苹果'],
-        cutForSearchTokens: const [],
-        categoryId: 'c1',
-      );
-      expect(byCat.map((d) => d.id).toSet(), {'a', 'c'});
+      final byCat = await repo.searchDiaries(query: '苹果', categoryId: 'c1');
+      expect(byCat.map((h) => h.diary.id).toSet(), {'a', 'c'});
       final byTime = await repo.searchDiaries(
-        cutTokens: const ['苹果'],
-        cutForSearchTokens: const [],
+        query: '苹果',
         start: DateTime.utc(2026, 1, 15),
         end: DateTime.utc(2026, 2, 15),
       );
-      expect(byTime.map((d) => d.id), ['b']);
+      expect(byTime.map((h) => h.diary.id), ['b']);
     });
 
     test('timeDesc/timeAsc 排序忽略相关性', () async {
@@ -162,29 +152,24 @@ void main() {
         makeDiary('old', '苹果 苹果 苹果', time: DateTime.utc(2026, 1, 1)),
         makeDiary('new', '苹果', time: DateTime.utc(2026, 5, 1)),
       ]);
-      final desc = await repo.searchDiaries(
-        cutTokens: const ['苹果'],
-        cutForSearchTokens: const [],
-        sort: .timeDesc,
-      );
-      expect(desc.map((d) => d.id), ['new', 'old']);
-      final asc = await repo.searchDiaries(
-        cutTokens: const ['苹果'],
-        cutForSearchTokens: const [],
-        sort: .timeAsc,
-      );
-      expect(asc.map((d) => d.id), ['old', 'new']);
+      final desc = await repo.searchDiaries(query: '苹果', sort: .timeDesc);
+      expect(desc.map((h) => h.diary.id), ['new', 'old']);
+      final asc = await repo.searchDiaries(query: '苹果', sort: .timeAsc);
+      expect(asc.map((h) => h.diary.id), ['old', 'new']);
     });
 
-    test('searchDiariesByText 走同一分词并截断', () async {
-      await repo.insertDiaries([
-        for (var i = 0; i < 5; i++) makeDiary('d$i', '苹果 编号 $i'),
-      ]);
-      final hits = await repo.searchDiariesByText('苹果', limit: 3);
-      expect(hits, hasLength(3));
+    test('整句查询切成词，命中处给出高亮与摘要', () async {
+      await repo.insertADiary(
+        makeDiary('d1', '早上吃了一个苹果，味道不错，然后去上班了', title: '关于苹果的日记'),
+      );
+      final hit = (await repo.searchDiaries(query: '苹果')).single;
+      expect(hit.diary.id, 'd1');
+      expect(hit.titleHighlight, '关于${marked('苹果')}的日记');
+      expect(hit.excerpt, contains(marked('苹果')));
+      expect(hit.excerpt, contains('味道'), reason: '摘要取自原文而非词串');
     });
 
-    test('更新替换索引：旧词摘除、新词可搜', () async {
+    test('更新换索引：旧词摘除、新词可搜', () async {
       final d = makeDiary('d1', '苹果');
       await repo.insertADiary(d);
       await repo.updateADiary(
@@ -194,7 +179,7 @@ void main() {
       expect((await search('香蕉')).map((e) => e.id), ['d1']);
     });
 
-    test('skip 模式不动索引（软删走查询期过滤）', () async {
+    test('软删走查询期过滤，恢复后可搜', () async {
       final d = makeDiary('d1', '苹果');
       await repo.insertADiary(d);
       await repo.setVisibility(d, show: false);
@@ -202,6 +187,27 @@ void main() {
       final restored = (await repo.getRecycleBinDiaries()).single;
       await repo.setVisibility(restored, show: true);
       expect((await search('苹果')).map((e) => e.id), ['d1']);
+    });
+
+    test('分页：总数不受页大小影响，翻页不重不漏', () async {
+      await repo.insertDiaries([
+        for (var i = 0; i < 7; i++)
+          makeDiary('d$i', '苹果 第$i篇', time: DateTime.utc(2026, 1, i + 1)),
+      ]);
+      expect(await repo.countSearchDiaries(query: '苹果'), 7);
+
+      final first = await repo.searchDiaries(query: '苹果', limit: 3);
+      final second = await repo.searchDiaries(query: '苹果', limit: 3, offset: 3);
+      final rest = await repo.searchDiaries(query: '苹果', limit: 3, offset: 6);
+      expect([first, second, rest].map((p) => p.length), [3, 3, 1]);
+
+      final ids = [
+        for (final page in [first, second, rest])
+          for (final hit in page) hit.diary.id,
+      ];
+      expect(ids.toSet(), hasLength(7));
+      final whole = await repo.searchDiaries(query: '苹果');
+      expect(ids, [for (final hit in whole) hit.diary.id], reason: '与不分页同序');
     });
 
     test('同 id 重复插入不产生重复行/重复命中', () async {

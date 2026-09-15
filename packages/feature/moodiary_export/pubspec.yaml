@@ -41,5 +41,4 @@ dev_dependencies:
     sdk: flutter
   moodiary_lint: 0.0.1
   build_runner: 2.16.1
-  drift: 2.34.4
-  fast_tokenizer: 0.0.1
+  drift: 2.35.0

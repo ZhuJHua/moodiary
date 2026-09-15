@@ -9,7 +9,7 @@ Moodiary is a Flutter + Rust diary app. **Layered pub-workspace monorepo**: 33 s
 - **Flutter 3.47.2 / Dart 3.13.0**. `.fvmrc` pins 3.47.2; `>=3.47.0` in `mobile/pubspec.yaml` is only the lower bound.
 - **Rust 1.95.0 stable** (one `rust/rust-toolchain.toml` per native package, kept identical by `tool/check_generated.dart`), `flutter_rust_bridge` 2.13.0. Native libraries are built by Native Assets build hooks (needs `rustup`).
 - **Android**: AGP 9.1.0 / Gradle 9.3.1 / KGP 2.4.0, built-in Kotlin (`android.builtInKotlin=true`); daemon JVM pinned to 21 in `gradle-daemon-jvm.properties`.
-- **Riverpod** (dev) + codegen, **go_router**, **get_it**, **SQLite** (drift + FTS5; schema source of truth is the `.drift` files in `moodiary_data`), **Freezed** + **json_serializable**.
+- **Riverpod** (dev) + codegen, **go_router**, **get_it**, **SQLite** (drift + FTS5 external content over the `simple` tokenizer from `sqlite3_simple`; schema source of truth is the `.drift` files in `moodiary_data`), **Freezed** + **json_serializable**.
 
 ## Commands
 
@@ -74,7 +74,7 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
       fast_image/            #   image pipeline (derivatives / region decode / tiled viewer), native lib libfastimage
       fast_press/            #   export typesetting IR -> PDF (typst) / DOCX, libfastpress (moodiary_export only)
       moodiary_rust/         #   http client/server, WebDAV/S3 sync, rig chat, graph layout; libmoodiary_rust (four facades, one owner each, lazy)
-      fast_tokenizer/        #   jieba + HF tokenizer, libfasttokenizer (loaded at startup, ships a test double)
+      fast_tokenizer/        #   Hugging Face tokenizer for the ONNX models, libfasttokenizer
       fast_crypto/           #   AES-GCM + Argon2id, libfastcrypto (facade self-initializes)
       fast_zip/              #   zip write/extract, libfastzip (moodiary_export / moodiary_sync only)
       moodiary_utils/        #   pure utils + content converters (tiptap/markdown/quill)
@@ -159,6 +159,28 @@ Two unrelated slang outputs: the App (default mode, `Translations` / top-level `
 - Secrets (app-lock PIN, third-party API keys) live in `MoodiarySecureKVs`. In widgets use `secretKvProvider(key)` and `ref.invalidate` after every write.
 - Never touch `password` directly; go through `AppLockPin` (Argon2id PHC string). App lock on = a credential exists (`AppLockPin.enabled`, loaded in `main.dart`).
 
+### Full-text search lives in `sqlite3_simple`, a git dependency
+
+`diary_fts` is external content over `diaries` with `tokenize='simple'`, maintained by three triggers
+in `diary_tables.drift`. The tokenizer is **not in this repo**: it is
+[`sqlite3_simple`](https://github.com/ZhuJHua/sqlite3_simple), our fork of
+[wangfenjin/simple](https://github.com/wangfenjin/simple) rebuilt as a pure Dart package that
+compiles the C++ sources through a build hook. It is pinned by commit sha, not published to pub.
+An FTS5 tokenizer has to be a C-ABI loadable extension — `fts5_api` is only reachable through
+`SELECT fts5(?1)` + `sqlite3_bind_pointer` from inside one — so it is the one native library here
+that does not go through FRB.
+
+`loadSimpleExtension(jiebaDictDir: ...)` runs in `MoodiaryDatabase.open` (and `installJiebaDict()`
+in `.forTesting`) before any connection is created. Both the `sqlite3_auto_extension` registration
+and the dictionary path are process-level native state, so one call covers the background isolate
+and every connection in `readPool`. **The dictionary install is not optional**: cppjieba reads its
+dictionaries as real files and aborts the process on a missing one, so a `jieba_query()` without it
+does not fail, it crashes.
+
+Han text is indexed per character with pinyin variants as colocated tokens, which is what makes
+`pingguo` and `pg` find 苹果. Queries go through `jieba_query(text)`, which returns a finished
+MATCH expression — word phrases for Han, pinyin candidate groups for latin, **AND between terms**.
+
 ### Rust: several `fast_*` packages, one native library each
 
 Principle: split freely, never duplicate dependencies. http / sync / llm share one network base and live in `moodiary_rust` (the only real binary duplication otherwise, 2 MiB); graph lives there too. Each package ships its own crate, native library, hook, about.toml, rust-toolchain and Cargo.lock.
@@ -166,17 +188,17 @@ Principle: split freely, never duplicate dependencies. http / sync / llm share o
 | Package | Owner | Loading |
 |---|---|---|
 | moodiary_rust | one owner per facade: http.dart -> moodiary_http, sync.dart -> moodiary_sync, llm.dart -> moodiary_assistant, graph.dart -> moodiary_diary (`_rustFacadeOwners`) | lazy |
-| fast_tokenizer | whole repo (ships `testing.dart` double) | startup, `FastTokenizer.ensureInitialized` |
+| fast_tokenizer | moodiary_ml | first ONNX model load, `FastTokenizer.ensureInitialized` |
 | fast_image | whole repo | startup, `FastImageRuntime.init` |
 | fast_press | moodiary_export (`_nativePkgOwners`) | first export |
 | fast_zip | moodiary_export / moodiary_sync (`_nativePkgOwners`) | first archive / extract |
 | fast_crypto | whole repo | facade self-initializes per call |
 
-- Every build hook returns early when the target OS is the host (`flutter test`): Dart tests never load a Rust library, the editor bundle or the license manifest; Rust and the editor are tested by their own suites. Only the sqlite_vec C hook still builds under test.
+- Every build hook returns early when the target OS is the host (`flutter test`): Dart tests never load a Rust library, the editor bundle or the license manifest; Rust and the editor are tested by their own suites. **The SQLite extensions are the exception** — `moodiary_sqlite_vec` and `sqlite3_simple` build for the host too, because `diary_fts` cannot even be created without the `simple` tokenizer and every DB test would fail.
 - Every package exposes `XxxLib` and an idempotent `Xxx.ensureInitialized()`. Opaque handles (`CancelToken`) cannot cross a .so, so there is one per library, constructed synchronously; construct only after the await. After touching `rust/src/api` run `dart tool/task.dart gen-rust`.
 - Everything goes through FRB; raw dart:ffi saves only the 0.3 MB floor.
 - No `[workspace.dependencies]`: the same crate is pinned per package, and `tool/check_generated.dart` fails on drift across Cargo.toml, toolchain channel and FRB / ffigen pins.
 - If APK size does not change after a Rust dependency change, suspect the hook cache under the workspace root's `.dart_tool/hooks_runner/` (`flutter clean` does not touch it; `dart tool/task.dart clean` does).
-- Splitting libraries is a delivery strategy, not a size saving (619 KB floor per library). The license manifest `mobile/assets/licenses/third_party.json` is generated at build time by `mobile/hook/build.dart`; local machines and CI need `cargo-about` 0.9.2.
+- Splitting libraries is a delivery strategy, not a size saving (619 KB floor per library). The license manifest `mobile/assets/licenses/third_party.json` is generated at build time by `mobile/hook/build.dart`; local machines and CI need `cargo-about` 0.9.2. It scans the in-repo crates, and merges the `third_party.json` that each package in `_externalLicensePackages` (`sqlite3_simple`, whose vendored C++ cargo-about cannot see) ships at its root, resolved through `.dart_tool/package_config.json`.
 - zip stays in Rust: the LAN archive uses entry-level AES-256, and pure Dart manages 17 MB/s with the whole entry on the heap.
 - `lanProtoVersion` is 3: `lan_receiver._admit` requires the `x-moodiary-proto` header to equal 3, because 2.8.0 would overwrite placeId references with position snapshots. `LanPeer.compatible` still admits `proto == null`, so a 2.8.0 peer looks tappable and fails only at the handshake.

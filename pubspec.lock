@@ -509,18 +509,18 @@ packages:
     dependency: transitive
     description:
       name: drift
-      sha256: bab55d542d63765f6250ee3e2c62e11bfa1145d4ec2ffa05353c8fb4e10b52c1
+      sha256: e3b6352aa02e60bed6ffc3cc9894c421578dad5fbef21b1f7f57cdc0e4edabcb
       url: "https://pub.dev"
     source: hosted
-    version: "2.34.4"
+    version: "2.35.0"
   drift_dev:
     dependency: transitive
     description:
       name: drift_dev
-      sha256: aa824b21ac7c43e417e1e481d114c60546ec4b585dcc0f98e7a556d1d0adb476
+      sha256: fbad5c1e3a73820cdb1f32161eb2f40bb5e5f03c0c1a3d236595725aec7efc6d
       url: "https://pub.dev"
     source: hosted
-    version: "2.34.6"
+    version: "2.35.0"
   dynamic_color:
     dependency: transitive
     description:
@@ -2187,6 +2187,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.5.2"
+  sqlite3_simple:
+    dependency: transitive
+    description:
+      path: "."
+      ref: b69cb32
+      resolved-ref: b69cb3288bf9ec80b90f417dd86bff3afe268c00
+      url: "https://github.com/ZhuJHua/sqlite3_simple.git"
+    source: git
+    version: "3.0.0"
   sqlparser:
     dependency: transitive
     description:
@@ -2235,14 +2244,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.1"
-  substring_highlight:
-    dependency: transitive
-    description:
-      name: substring_highlight
-      sha256: "96c61e8316098831f6bee87d2386617e4be6aaf87fbc89402dc049d371b67efb"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.33"
   sync_http:
     dependency: transitive
     description:

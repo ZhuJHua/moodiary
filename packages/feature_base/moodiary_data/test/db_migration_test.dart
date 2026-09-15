@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
+String marked(String word) => '$searchHitStart$word$searchHitEnd';
+
 void main() {
   late Directory dir;
   late String path;
@@ -36,7 +38,24 @@ void main() {
     return [for (final r in rows) r.read<String>('name')];
   }
 
+  Future<void> downgradeFtsToV2(MoodiaryDatabase db) async {
+    for (final name in ['diary_fts_ai', 'diary_fts_ad', 'diary_fts_au']) {
+      await db.customStatement('DROP TRIGGER $name');
+    }
+    await db.customStatement('DROP TABLE diary_fts');
+    await db.customStatement(
+      'CREATE VIRTUAL TABLE diary_fts USING fts5('
+      "title_tok, body_tok, content='', contentless_delete=1, "
+      "tokenize='unicode61', prefix='2', detail=full, columnsize=1)",
+    );
+    await db.customStatement(
+      "INSERT INTO diary_fts(diary_fts, rank) VALUES('rank', 'bm25(1.5, 1.0)')",
+    );
+    await db.customStatement('PRAGMA user_version = 2');
+  }
+
   Future<void> downgradeToV1(MoodiaryDatabase db) async {
+    await downgradeFtsToV2(db);
     await db.customStatement('DROP TABLE places');
     await db.customStatement('ALTER TABLE diaries DROP COLUMN place_id');
     await db.customStatement('ALTER TABLE diaries ADD COLUMN latitude REAL');
@@ -59,9 +78,9 @@ void main() {
     [id, time, lat, lon, placeName],
   );
 
-  test('新库直接建到 v2，places 就位', () async {
+  test('新库直接建到 v3，places 就位', () async {
     final db = await open();
-    expect(await userVersion(db), 2);
+    expect(await userVersion(db), 3);
     expect(await PlaceRepository(db).getAllPlaces(), isEmpty);
     expect(await columns(db, 'diaries'), isNot(contains('latitude')));
     await db.close();
@@ -105,7 +124,7 @@ void main() {
     await db.close();
 
     db = await open();
-    expect(await userVersion(db), 2);
+    expect(await userVersion(db), 3);
     expect(await columns(db, 'diaries'), isNot(contains('latitude')));
     final places = await PlaceRepository(db).getAllPlaces();
     expect(places, hasLength(2));
@@ -143,7 +162,7 @@ void main() {
     await db.close();
 
     db = await open();
-    expect(await userVersion(db), 2);
+    expect(await userVersion(db), 3);
     expect(await columns(db, 'diaries'), isNot(contains('latitude')));
     final place = (await PlaceRepository(db).getAllPlaces()).single;
     expect(place.name, '公司');
@@ -154,7 +173,26 @@ void main() {
     await db.close();
   });
 
-  test('已是 v2 的库重开不重复建表', () async {
+  test('v2 老库升级：索引换成 simple external content，老数据重建后可搜', () async {
+    var db = await open();
+    await db.customStatement(
+      "INSERT INTO diaries (id, title, content, content_text, time, "
+      "last_modified, show, mood, type) "
+      "VALUES ('d1', '关于苹果的日记', '', '早上吃了一个苹果，味道不错', 1, 0, 1, "
+      "'neutral', 'tiptap')",
+    );
+    await downgradeFtsToV2(db);
+    await db.close();
+
+    db = await open();
+    expect(await userVersion(db), 3);
+    final hit = (await DiaryRepository(db).searchDiaries(query: '苹果')).single;
+    expect(hit.diary.id, 'd1', reason: "'rebuild' 从 diaries 重灌了整个索引");
+    expect(hit.titleHighlight, '关于${marked('苹果')}的日记');
+    await db.close();
+  });
+
+  test('已是 v3 的库重开不重复建表', () async {
     var db = await open();
     await PlaceRepository(
       db,
@@ -162,7 +200,7 @@ void main() {
     await db.close();
 
     db = await open();
-    expect(await userVersion(db), 2);
+    expect(await userVersion(db), 3);
     expect(await PlaceRepository(db).getAllPlaces(), hasLength(1));
     await db.close();
   });

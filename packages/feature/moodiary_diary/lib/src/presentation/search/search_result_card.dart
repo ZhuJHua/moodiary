@@ -3,31 +3,30 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
-import 'package:substring_highlight/substring_highlight.dart';
 
 class SearchResultCard extends StatelessWidget {
-  const SearchResultCard({
-    super.key,
-    required this.diary,
-    required this.queryList,
-    this.onTap,
-  });
+  const SearchResultCard({super.key, required this.hit, this.onTap});
 
-  final Diary diary;
-  final List<String> queryList;
+  final DiarySearchHit hit;
 
   final VoidCallback? onTap;
+
+  static TextSpan _spans(String marked, TextStyle base, TextStyle highlight) =>
+      TextSpan(
+        children: [
+          for (final (text, isHit) in splitSearchHighlight(marked))
+            TextSpan(text: text, style: isHit ? highlight : base),
+        ],
+      );
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
     final scheme = theme.colors;
     final typography = theme.typography;
-    final contentText = getHighlightedExcerpt(
-      diary.contentText.trim().removeLineBreaks(),
-      queryList,
-    );
-    final title = diary.title.removeLineBreaks();
+    final diary = hit.diary;
+    final title = hit.titleHighlight.removeLineBreaks();
+    final excerpt = hit.excerpt.removeLineBreaks();
 
     return Material(
       color: scheme.surfaceContainerHigh,
@@ -44,33 +43,29 @@ class SearchResultCard extends StatelessWidget {
             crossAxisAlignment: .start,
             children: [
               if (title.trim().isNotEmpty) ...[
-                SubstringHighlight(
-                  text: title,
-                  terms: queryList,
+                Text.rich(
+                  _spans(
+                    title,
+                    typography.titleMedium.emphasized.onSurface,
+                    typography.titleMedium.emphasized.onPrimaryContainer
+                        .copyWith(backgroundColor: scheme.primaryContainer),
+                  ),
                   maxLines: 1,
                   overflow: .ellipsis,
-                  textStyle: typography.titleMedium.emphasized.onSurface,
-                  textStyleHighlight: typography
-                      .titleMedium
-                      .emphasized
-                      .onPrimaryContainer
-                      .copyWith(backgroundColor: scheme.primaryContainer),
                 ),
                 const SizedBox(height: 6),
               ],
-              SubstringHighlight(
-                text: contentText,
-                terms: queryList,
+              Text.rich(
+                _spans(
+                  excerpt,
+                  typography.bodyMedium.onSurfaceVariant.copyWith(height: 1.4),
+                  typography.bodyMedium.onPrimaryContainer.copyWith(
+                    height: 1.4,
+                    backgroundColor: scheme.primaryContainer,
+                  ),
+                ),
                 maxLines: 3,
                 overflow: .ellipsis,
-                textStyle: typography.bodyMedium.onSurfaceVariant.copyWith(
-                  height: 1.4,
-                ),
-                textStyleHighlight: typography.bodyMedium.onPrimaryContainer
-                    .copyWith(
-                      height: 1.4,
-                      backgroundColor: scheme.primaryContainer,
-                    ),
               ),
               const SizedBox(height: 10),
               Row(

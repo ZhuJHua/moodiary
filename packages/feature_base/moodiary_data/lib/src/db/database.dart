@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_sqlite_vec/moodiary_sqlite_vec.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite3;
+import 'package:sqlite3_simple/sqlite3_simple.dart';
 
 import 'db_codec.dart';
 
@@ -27,11 +28,19 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
   int? upgradedFrom;
 
   @visibleForTesting
-  MoodiaryDatabase.forTesting(super.e);
+  MoodiaryDatabase.forTesting(super.e) {
+    loadSimpleExtension();
+    installJiebaDict();
+  }
 
-  static Future<MoodiaryDatabase> open({required String path}) async {
-    // sqlite-vec 必须在任何连接创建前用 sqlite3_auto_extension 注册（进程级状态）
+  static Future<MoodiaryDatabase> open({
+    required String path,
+    required String jiebaDictDir,
+  }) async {
+    // 扩展注册与词典路径都是进程级的，装一次覆盖后台 isolate 和整个读连接池，
+    // 但必须赶在第一条连接之前；缺词典时首次查询是 abort 而不是报错。
     loadSqliteVec();
+    loadSimpleExtension(jiebaDictDir: jiebaDictDir);
     final executor = NativeDatabase.createInBackground(
       File(path),
       readPool: 3,
@@ -50,16 +59,12 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
   }
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) async {
       await m.createAll();
-      // bm25(1.5, 1.0): title/body 权重；写在 .drift 会触发 drift#3322 误报
-      await customStatement(
-        "INSERT INTO diary_fts(diary_fts, rank) VALUES('rank', 'bm25(1.5, 1.0)')",
-      );
     },
     // drift 不把 onUpgrade 包进事务
     onUpgrade: (m, from, to) async {
@@ -76,6 +81,18 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
               await customStatement('ALTER TABLE diaries DROP COLUMN $column');
             }
           }
+        });
+      }
+      if (from < 3) {
+        await transaction(() async {
+          await customStatement('DROP TABLE IF EXISTS diary_fts');
+          await m.createTable(diaryFts);
+          for (final trigger in [diaryFtsAi, diaryFtsAd, diaryFtsAu]) {
+            await m.create(trigger);
+          }
+          await customStatement(
+            "INSERT INTO diary_fts(diary_fts) VALUES('rebuild')",
+          );
         });
       }
     },
@@ -134,11 +151,10 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
     await transaction(() async {
       await customStatement('PRAGMA defer_foreign_keys = ON');
       for (final table in allTables) {
+        // 虚表由 SQLite 自己维护（diary_fts 靠 diaries 上的删除触发器清空）
+        if (table is VirtualTableInfo) continue;
         await delete(table).go();
       }
-      await customStatement(
-        "INSERT INTO diary_fts(diary_fts) VALUES('delete-all')",
-      );
       // vec0 虚表不在 allTables（非 drift 管理）
       final vec = await customSelect(
         "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",

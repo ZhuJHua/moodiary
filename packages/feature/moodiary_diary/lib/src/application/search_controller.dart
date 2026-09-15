@@ -1,4 +1,5 @@
-import 'package:fast_tokenizer/fast_tokenizer.dart';
+import 'dart:async';
+
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
@@ -12,9 +13,10 @@ part 'search_controller.g.dart';
 @freezed
 abstract class DiarySearchState with _$DiarySearchState {
   const factory DiarySearchState({
-    @Default([]) List<Diary> results,
-    @Default([]) List<String> queryList,
+    @Default([]) List<DiarySearchHit> results,
+    @Default(0) int totalCount,
     @Default(false) bool isSearching,
+    @Default(false) bool isLoadingMore,
     Duration? elapsed,
     @Default('') String query,
     String? categoryId,
@@ -26,17 +28,20 @@ abstract class DiarySearchState with _$DiarySearchState {
 
   const DiarySearchState._();
 
-  int get totalCount => results.length;
+  bool get hasMore => results.length < totalCount;
 }
 
 @riverpod
 class DiarySearchController extends _$DiarySearchController {
+  static const _pageSize = 30;
+
   late final _repository = getIt<DiaryRepository>();
 
   int _seq = 0;
 
   @override
   DiarySearchState build() {
+    unawaited(_repository.warmUpSearch());
     return const DiarySearchState();
   }
 
@@ -107,37 +112,62 @@ class DiarySearchController extends _$DiarySearchController {
       if (!ref.mounted) return;
       state = state.copyWith(
         results: [],
-        queryList: [],
+        totalCount: 0,
         isSearching: false,
+        isLoadingMore: false,
         elapsed: null,
       );
       return;
     }
     final seq = ++_seq;
-    state = state.copyWith(isSearching: true);
+    // 换一次查询就作废在途的 loadMore：它会在 seq 检查处退出，不会自己把标志清掉
+    state = state.copyWith(isSearching: true, isLoadingMore: false);
     final stopwatch = Stopwatch()..start();
-    final tokenizeResult = await Tokenizer.tokenize(text: trimmed);
     final range = _resolveRange();
-    if (!ref.mounted) return;
-    final results = await _repository.searchDiaries(
-      cutTokens: tokenizeResult.cut,
-      cutForSearchTokens: tokenizeResult.cutForSearch,
+    final (total, results) = await (
+      _repository.countSearchDiaries(
+        query: trimmed,
+        categoryId: state.categoryId,
+        start: range.start,
+        end: range.end,
+      ),
+      _repository.searchDiaries(
+        query: trimmed,
+        categoryId: state.categoryId,
+        start: range.start,
+        end: range.end,
+        sort: state.sort,
+        limit: _pageSize,
+      ),
+    ).wait;
+    stopwatch.stop();
+    if (!ref.mounted || seq != _seq) return;
+    state = state.copyWith(
+      results: results,
+      totalCount: total,
+      isSearching: false,
+      elapsed: stopwatch.elapsed,
+    );
+  }
+
+  Future<void> loadMore() async {
+    if (state.isSearching || state.isLoadingMore || !state.hasMore) return;
+    final seq = _seq;
+    state = state.copyWith(isLoadingMore: true);
+    final range = _resolveRange();
+    final next = await _repository.searchDiaries(
+      query: state.query,
       categoryId: state.categoryId,
       start: range.start,
       end: range.end,
       sort: state.sort,
+      limit: _pageSize,
+      offset: state.results.length,
     );
-    stopwatch.stop();
     if (!ref.mounted || seq != _seq) return;
-    final queryList = {
-      ...tokenizeResult.cut,
-      ...tokenizeResult.cutForSearch,
-    }.toList();
     state = state.copyWith(
-      results: results,
-      queryList: queryList,
-      isSearching: false,
-      elapsed: stopwatch.elapsed,
+      results: [...state.results, ...next],
+      isLoadingMore: false,
     );
   }
 

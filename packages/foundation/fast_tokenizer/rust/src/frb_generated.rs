@@ -28,7 +28,6 @@
 // Section: imports
 
 use crate::api::hf_tokenizer::*;
-use crate::api::text::*;
 use flutter_rust_bridge::for_generated::byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
 use flutter_rust_bridge::for_generated::{Lifetimeable, Lockable, transform_result_dco};
 use flutter_rust_bridge::{Handler, IntoIntoDart};
@@ -41,7 +40,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1273308536;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1207701182;
 
 // Section: executor
 
@@ -207,61 +206,6 @@ fn wire__crate__api__hf_tokenizer__HfTokenizer_token_id_impl(
         },
     )
 }
-fn wire__crate__api__text__Tokenizer_tokenize_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    text: impl CstDecode<String>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "Tokenizer_tokenize",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_text = text.cst_decode();
-            move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
-                    (move || {
-                        let output_ok = crate::api::text::Tokenizer::tokenize(api_text)?;
-                        std::result::Result::Ok(output_ok)
-                    })(),
-                )
-            }
-        },
-    )
-}
-fn wire__crate__api__text__Tokenizer_tokenize_batch_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    texts: impl CstDecode<Vec<String>>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "Tokenizer_tokenize_batch",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_texts = texts.cst_decode();
-            move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
-                    (move || {
-                        let output_ok = crate::api::text::Tokenizer::tokenize_batch(api_texts)?;
-                        std::result::Result::Ok(output_ok)
-                    })(),
-                )
-            }
-        },
-    )
-}
-
-// Section: static_checks
-
-#[allow(clippy::unnecessary_literal_unwrap)]
-const _: fn() = || {
-    let TokenizeResult = None::<crate::api::text::TokenizeResult>.unwrap();
-    let _: Vec<String> = TokenizeResult.cut;
-    let _: Vec<String> = TokenizeResult.cut_for_search;
-};
 
 // Section: dart2rust
 
@@ -301,28 +245,8 @@ impl SseDecode for HfTokenizer {
     }
 }
 
-impl SseDecode for Tokenizer {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <RustOpaqueNom<
-            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Tokenizer>,
-        >>::sse_decode(deserializer);
-        return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
-    }
-}
-
 impl SseDecode
     for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<HfTokenizer>>
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <usize>::sse_decode(deserializer);
-        return unsafe { decode_rust_opaque_nom(inner) };
-    }
-}
-
-impl SseDecode
-    for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Tokenizer>>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -387,18 +311,6 @@ impl SseDecode for Vec<u8> {
     }
 }
 
-impl SseDecode for Vec<crate::api::text::TokenizeResult> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut len_ = <i32>::sse_decode(deserializer);
-        let mut ans_ = Vec::with_capacity(len_ as usize);
-        for idx_ in 0..len_ {
-            ans_.push(<crate::api::text::TokenizeResult>::sse_decode(deserializer));
-        }
-        return ans_;
-    }
-}
-
 impl SseDecode for Option<u32> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -407,18 +319,6 @@ impl SseDecode for Option<u32> {
         } else {
             return None;
         }
-    }
-}
-
-impl SseDecode for crate::api::text::TokenizeResult {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_cut = <Vec<String>>::sse_decode(deserializer);
-        let mut var_cutForSearch = <Vec<String>>::sse_decode(deserializer);
-        return crate::api::text::TokenizeResult {
-            cut: var_cut,
-            cut_for_search: var_cutForSearch,
-        };
     }
 }
 
@@ -504,43 +404,6 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<HfTokenizer>> for HfTokenizer 
     }
 }
 
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<Tokenizer> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, StdArc<_>>(self.0)
-            .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<Tokenizer> {}
-
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<Tokenizer>> for Tokenizer {
-    fn into_into_dart(self) -> FrbWrapper<Tokenizer> {
-        self.into()
-    }
-}
-
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::text::TokenizeResult> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.0.cut.into_into_dart().into_dart(),
-            self.0.cut_for_search.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crate::api::text::TokenizeResult>
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::text::TokenizeResult>>
-    for crate::api::text::TokenizeResult
-{
-    fn into_into_dart(self) -> FrbWrapper<crate::api::text::TokenizeResult> {
-        self.into()
-    }
-}
-
 impl SseEncode for flutter_rust_bridge::for_generated::anyhow::Error {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -555,26 +418,8 @@ impl SseEncode for HfTokenizer {
     }
 }
 
-impl SseEncode for Tokenizer {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Tokenizer>>>::sse_encode(flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, StdArc<_>>(self), serializer);
-    }
-}
-
 impl SseEncode
     for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<HfTokenizer>>
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        let (ptr, size) = self.sse_encode_raw();
-        <usize>::sse_encode(ptr, serializer);
-        <i32>::sse_encode(size, serializer);
-    }
-}
-
-impl SseEncode
-    for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Tokenizer>>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -631,16 +476,6 @@ impl SseEncode for Vec<u8> {
     }
 }
 
-impl SseEncode for Vec<crate::api::text::TokenizeResult> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(self.len() as _, serializer);
-        for item in self {
-            <crate::api::text::TokenizeResult>::sse_encode(item, serializer);
-        }
-    }
-}
-
 impl SseEncode for Option<u32> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -648,14 +483,6 @@ impl SseEncode for Option<u32> {
         if let Some(value) = self {
             <u32>::sse_encode(value, serializer);
         }
-    }
-}
-
-impl SseEncode for crate::api::text::TokenizeResult {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <Vec<String>>::sse_encode(self.cut, serializer);
-        <Vec<String>>::sse_encode(self.cut_for_search, serializer);
     }
 }
 
@@ -711,7 +538,6 @@ mod io {
 
     use super::*;
     use crate::api::hf_tokenizer::*;
-    use crate::api::text::*;
     use flutter_rust_bridge::for_generated::byteorder::{
         NativeEndian, ReadBytesExt, WriteBytesExt,
     };
@@ -742,16 +568,6 @@ mod io {
             ))
         }
     }
-    impl CstDecode<Tokenizer> for usize {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Tokenizer {
-            flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(CstDecode::<
-                RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Tokenizer>>,
-            >::cst_decode(
-                self
-            ))
-        }
-    }
     impl
         CstDecode<
             RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<HfTokenizer>>,
@@ -761,18 +577,6 @@ mod io {
         fn cst_decode(
             self,
         ) -> RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<HfTokenizer>>
-        {
-            unsafe { decode_rust_opaque_nom(self as _) }
-        }
-    }
-    impl
-        CstDecode<RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Tokenizer>>>
-        for usize
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(
-            self,
-        ) -> RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Tokenizer>>
         {
             unsafe { decode_rust_opaque_nom(self as _) }
         }
@@ -828,38 +632,6 @@ mod io {
             }
         }
     }
-    impl CstDecode<Vec<crate::api::text::TokenizeResult>> for *mut wire_cst_list_tokenize_result {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<crate::api::text::TokenizeResult> {
-            let vec = unsafe {
-                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
-                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
-            };
-            vec.into_iter().map(CstDecode::cst_decode).collect()
-        }
-    }
-    impl CstDecode<crate::api::text::TokenizeResult> for wire_cst_tokenize_result {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::text::TokenizeResult {
-            crate::api::text::TokenizeResult {
-                cut: self.cut.cst_decode(),
-                cut_for_search: self.cut_for_search.cst_decode(),
-            }
-        }
-    }
-    impl NewWithNullPtr for wire_cst_tokenize_result {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                cut: core::ptr::null_mut(),
-                cut_for_search: core::ptr::null_mut(),
-            }
-        }
-    }
-    impl Default for wire_cst_tokenize_result {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
 
     #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_fast_tokenizer_wire__crate__api__hf_tokenizer__HfTokenizer_encode(
@@ -898,22 +670,6 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_fast_tokenizer_wire__crate__api__text__Tokenizer_tokenize(
-        port_: i64,
-        text: *mut wire_cst_list_prim_u_8_strict,
-    ) {
-        wire__crate__api__text__Tokenizer_tokenize_impl(port_, text)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_fast_tokenizer_wire__crate__api__text__Tokenizer_tokenize_batch(
-        port_: i64,
-        texts: *mut wire_cst_list_String,
-    ) {
-        wire__crate__api__text__Tokenizer_tokenize_batch_impl(port_, texts)
-    }
-
-    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_fast_tokenizer_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHfTokenizer(
         ptr: *const std::ffi::c_void,
     ) {
@@ -928,24 +684,6 @@ mod io {
     ) {
         unsafe {
             StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<HfTokenizer>>::decrement_strong_count(ptr as _);
-        }
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_fast_tokenizer_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer(
-        ptr: *const std::ffi::c_void,
-    ) {
-        unsafe {
-            StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Tokenizer>>::increment_strong_count(ptr as _);
-        }
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_fast_tokenizer_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer(
-        ptr: *const std::ffi::c_void,
-    ) {
-        unsafe {
-            StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Tokenizer>>::decrement_strong_count(ptr as _);
         }
     }
 
@@ -1004,20 +742,6 @@ mod io {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(ans)
     }
 
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_fast_tokenizer_cst_new_list_tokenize_result(
-        len: i32,
-    ) -> *mut wire_cst_list_tokenize_result {
-        let wrap = wire_cst_list_tokenize_result {
-            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
-                <wire_cst_tokenize_result>::new_with_null_ptr(),
-                len,
-            ),
-            len,
-        };
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
-    }
-
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub struct wire_cst_list_String {
@@ -1041,18 +765,6 @@ mod io {
     pub struct wire_cst_list_prim_u_8_strict {
         ptr: *mut u8,
         len: i32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_list_tokenize_result {
-        ptr: *mut wire_cst_tokenize_result,
-        len: i32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_tokenize_result {
-        cut: *mut wire_cst_list_String,
-        cut_for_search: *mut wire_cst_list_String,
     }
 }
 #[cfg(not(target_family = "wasm"))]
