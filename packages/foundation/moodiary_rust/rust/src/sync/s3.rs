@@ -334,16 +334,20 @@ impl S3Client {
             400 => {
                 let body = resp.text().await.unwrap_or_default();
                 if is_conditional_put_not_implemented(400, &body) {
+                    if self.read_object(key.clone()).await?.is_some() {
+                        return Ok(false);
+                    }
                     let fallback = self
                         .send(
                             reqwest::Method::PUT,
                             |b| b.put_object(Some(&self.creds), &key).sign(SIGN_TTL),
                             &[],
-                            Some(data.into()),
+                            Some(data.clone().into()),
                         )
                         .await?;
                     if fallback.status().is_success() {
-                        return Ok(true);
+                        let written = self.read_object(key.clone()).await?;
+                        return Ok(written.as_deref() == Some(data.as_slice()));
                     }
                     return Err(Self::fail(&format!("Create {key}"), fallback).await);
                 }
