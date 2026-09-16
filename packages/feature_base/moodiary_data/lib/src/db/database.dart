@@ -4,9 +4,9 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_sqlite_vec/moodiary_sqlite_vec.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite3;
 import 'package:sqlite3_simple/sqlite3_simple.dart';
+import 'package:sqlite3_vec/sqlite3_vec.dart';
 
 import 'db_codec.dart';
 

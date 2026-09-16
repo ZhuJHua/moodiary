@@ -7,9 +7,9 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_ml/moodiary_ml.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_sqlite_vec/moodiary_sqlite_vec.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
+import 'package:sqlite3_vec/sqlite3_vec.dart';
 
 final class FakeEmbedder implements SemanticEmbedder {
   @override

@@ -29,7 +29,7 @@ dependencies:
   moodiary_logging: 0.0.1
   moodiary_ml: 0.0.1
   moodiary_models: 0.0.1
-  moodiary_sqlite_vec: 0.0.1
+  sqlite3_vec: 0.1.2
   moodiary_utils: 0.0.1
 
   meta: 1.19.0

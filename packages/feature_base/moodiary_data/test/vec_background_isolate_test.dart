@@ -5,7 +5,7 @@ import 'package:drift/drift.dart' show Variable;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_sqlite_vec/moodiary_sqlite_vec.dart';
+import 'package:sqlite3_vec/sqlite3_vec.dart';
 
 Uint8List _f32(List<double> v) => Float32List.fromList(v).buffer.asUint8List();
 

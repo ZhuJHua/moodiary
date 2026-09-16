@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Moodiary is a Flutter + Rust diary app. **Layered pub-workspace monorepo**: 33 shared packages under `packages/` in four dependency layers, consumed by the single Flutter app **`mobile/`** (Android + iOS, pub name `moodiary`). The root `pubspec.yaml` is a pure coordinator (workspace + Melos config, no app code). A desktop app will be rebuilt later; the packages are layered for it, but no desktop target exists today.
+Moodiary is a Flutter + Rust diary app. **Layered pub-workspace monorepo**: 32 shared packages under `packages/` in four dependency layers, consumed by the single Flutter app **`mobile/`** (Android + iOS, pub name `moodiary`). The root `pubspec.yaml` is a pure coordinator (workspace + Melos config, no app code). A desktop app will be rebuilt later; the packages are layered for it, but no desktop target exists today.
 
 ## Tech Stack
 
@@ -79,7 +79,6 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
       fast_zip/              #   zip write/extract, libfastzip (moodiary_export / moodiary_sync only)
       moodiary_utils/        #   pure utils + content converters (tiptap/markdown/quill)
       mui/                   #   design system, a supplement to material_ui
-      moodiary_sqlite_vec/   #   sqlite-vec 0.1.9 as a code asset, for local RAG
     core/                    # domain-free infra. Order: platform,http -> storage -> files -> theme
       moodiary_platform/     #   dirs / biometrics / network state / app and device info
       moodiary_http/         #   IHttpClient / IHttpServer ports, implemented in Rust
@@ -194,11 +193,11 @@ Principle: split freely, never duplicate dependencies. http / sync / llm share o
 | fast_zip | moodiary_export / moodiary_sync (`_nativePkgOwners`) | first archive / extract |
 | fast_crypto | whole repo | facade self-initializes per call |
 
-- Every build hook returns early when the target OS is the host (`flutter test`): Dart tests never load a Rust library, the editor bundle or the license manifest; Rust and the editor are tested by their own suites. **The SQLite extensions are the exception** — `moodiary_sqlite_vec` and `sqlite3_simple` build for the host too, because `diary_fts` cannot even be created without the `simple` tokenizer and every DB test would fail.
+- Every build hook returns early when the target OS is the host (`flutter test`): Dart tests never load a Rust library, the editor bundle or the license manifest; Rust and the editor are tested by their own suites. **The SQLite extensions are the exception** — `sqlite3_vec` and `sqlite3_simple` build for the host too, because `diary_fts` cannot even be created without the `simple` tokenizer and every DB test would fail.
 - Every package exposes `XxxLib` and an idempotent `Xxx.ensureInitialized()`. Opaque handles (`CancelToken`) cannot cross a .so, so there is one per library, constructed synchronously; construct only after the await. After touching `rust/src/api` run `dart tool/task.dart gen-rust`.
 - Everything goes through FRB; raw dart:ffi saves only the 0.3 MB floor.
 - No `[workspace.dependencies]`: the same crate is pinned per package, and `tool/check_generated.dart` fails on drift across Cargo.toml, toolchain channel and FRB / ffigen pins.
 - If APK size does not change after a Rust dependency change, suspect the hook cache under the workspace root's `.dart_tool/hooks_runner/` (`flutter clean` does not touch it; `dart tool/task.dart clean` does).
-- Splitting libraries is a delivery strategy, not a size saving (619 KB floor per library). The license manifest `mobile/assets/licenses/third_party.json` is generated at build time by `mobile/hook/build.dart`; local machines and CI need `cargo-about` 0.9.2. It scans the in-repo crates, and merges the `third_party.json` that each package in `_externalLicensePackages` (`sqlite3_simple`, whose vendored C++ cargo-about cannot see) ships at its root, resolved through `.dart_tool/package_config.json`.
+- Splitting libraries is a delivery strategy, not a size saving (619 KB floor per library). The license manifest `mobile/assets/licenses/third_party.json` is generated at build time by `mobile/hook/build.dart`; local machines and CI need `cargo-about` 0.9.2. It scans the in-repo crates, and merges the `third_party.json` that each package in `_externalLicensePackages` (`sqlite3_simple`, `sqlite3_vec` — vendored C/C++ that cargo-about cannot see) ships at its root, resolved through `.dart_tool/package_config.json`.
 - zip stays in Rust: the LAN archive uses entry-level AES-256, and pure Dart manages 17 MB/s with the whole entry on the heap.
 - `lanProtoVersion` is 3: `lan_receiver._admit` requires the `x-moodiary-proto` header to equal 3, because 2.8.0 would overwrite placeId references with position snapshots. `LanPeer.compatible` still admits `proto == null`, so a 2.8.0 peer looks tappable and fails only at the handshake.
