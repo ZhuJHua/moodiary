@@ -9,6 +9,18 @@ use crate::http::client::shared as shared_http_client;
 
 const SIGN_TTL: Duration = Duration::from_secs(300);
 
+fn is_conditional_put_not_implemented(status: u16, body: &str) -> bool {
+    if status != 400 {
+        return false;
+    }
+    body.contains("<Code>NotImplemented</Code>")
+        && (body.contains("If-Modified-Since")
+            || body.contains("If-Unmodified-Since")
+            || body.contains("If-Match")
+            || body.contains("If-None-Match")
+            || body.contains("A header you provided implies functionality that is not implemented"))
+}
+
 fn effective_style(url: &url::Url, bucket: &str, https: bool) -> UrlStyle {
     let host_forces_path = match url.host() {
         Some(url::Host::Domain(h)) => h.eq_ignore_ascii_case("localhost"),
@@ -313,12 +325,34 @@ impl S3Client {
                     action.sign(SIGN_TTL)
                 },
                 &[("if-none-match", "*")],
-                Some(data.into()),
+                Some(data.clone().into()),
             )
             .await?;
         match resp.status().as_u16() {
             412 => Ok(false),
             200..=299 => Ok(true),
+            400 => {
+                let body = resp.text().await.unwrap_or_default();
+                if is_conditional_put_not_implemented(400, &body) {
+                    let fallback = self
+                        .send(
+                            reqwest::Method::PUT,
+                            |b| b.put_object(Some(&self.creds), &key).sign(SIGN_TTL),
+                            &[],
+                            Some(data.into()),
+                        )
+                        .await?;
+                    if fallback.status().is_success() {
+                        return Ok(true);
+                    }
+                    return Err(Self::fail(&format!("Create {key}"), fallback).await);
+                }
+                let body: String = body.chars().take(512).collect();
+                Err(tagged(
+                    kind_of_status(400),
+                    format!("Create {key} failed: HTTP 400 {body}"),
+                ))
+            }
             _ => Err(Self::fail(&format!("Create {key}"), resp).await),
         }
     }
@@ -476,5 +510,21 @@ mod tests {
             "https://moodiary.s3.eu-west-1.amazonaws.com/"
         );
         assert_eq!(client.bucket.region(), "eu-west-1");
+    }
+
+    #[test]
+    fn detects_conditional_put_not_implemented() {
+        let body = r#"<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>NotImplemented</Code>
+  <Message>A header you provided implies functionality that is not implemented.</Message>
+  <Header>If-Modified-Since</Header>
+</Error>"#;
+        assert!(is_conditional_put_not_implemented(400, body));
+        assert!(!is_conditional_put_not_implemented(412, body));
+        assert!(!is_conditional_put_not_implemented(
+            400,
+            "<Error><Code>AccessDenied</Code></Error>"
+        ));
     }
 }
