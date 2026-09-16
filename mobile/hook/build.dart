@@ -15,7 +15,7 @@ const _rustDirs = [
 
 /// Dependencies whose third-party licenses cargo-about cannot see, because the
 /// sources are not Rust. Each ships the entries as `third_party.json` at its root.
-const _externalLicensePackages = ['sqlite3_simple'];
+const _externalLicensePackages = ['sqlite3_simple', 'sqlite3_vec'];
 const _editorDir = 'packages/feature_base/moodiary_editor/editor';
 const _npmManifest = '$_editorDir/build/third-party-licenses.json';
 const _outPath = 'assets/licenses/third_party.json';

@@ -2196,6 +2196,14 @@ packages:
       url: "https://github.com/ZhuJHua/sqlite3_simple.git"
     source: git
     version: "3.0.0"
+  sqlite3_vec:
+    dependency: transitive
+    description:
+      name: sqlite3_vec
+      sha256: db8dae14b1db884a473a0bebee086bda3c8424e96ebcc75ca99972526e16a51f
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.0"
   sqlparser:
     dependency: transitive
     description:
