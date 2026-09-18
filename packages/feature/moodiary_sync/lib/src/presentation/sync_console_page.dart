@@ -195,8 +195,7 @@ class _SyncConsolePageState extends ConsumerState<SyncConsolePage> {
             sliver: SliverToBoxAdapter(
               child: Row(
                 children: [
-                  MInkWell(
-                    borderRadius: .circular(8),
+                  MInkWell.fade(
                     onTap: _pickDay,
                     child: Padding(
                       padding: const .symmetric(horizontal: 4, vertical: 4),
