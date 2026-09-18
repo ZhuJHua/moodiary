@@ -13,7 +13,6 @@ import 'package:moodiary_assistant/src/application/tool_approval.dart';
 import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/assistant_tools.dart';
-import 'package:moodiary_assistant/src/data/assistant_trace_repository.dart';
 import 'package:moodiary_assistant/src/data/chat_repository.dart';
 import 'package:moodiary_assistant/src/data/llm_preset_repository.dart';
 import 'package:moodiary_assistant/src/data/llm_provider_repository.dart';
@@ -51,7 +50,7 @@ const double _kModelChipMinHeight = 32;
 // 轮间 20，轮内 8
 const double _kTurnGap = 20;
 
-enum _ConversationAction { permission, compact, exportTrace, settings }
+enum _ConversationAction { permission, compact, settings }
 
 Widget _codeBlock(
   BuildContext context,
@@ -149,7 +148,6 @@ class _AssistantPageState extends State<AssistantPage> {
   AssistantPermissionMode? _sessionPermission;
   String? _queuedText;
 
-  List<AssistantTraceTurn> _turns = [];
   bool _truncated = false;
 
   int _lastTurnInputTokens = 0;
@@ -241,17 +239,6 @@ class _AssistantPageState extends State<AssistantPage> {
       subtitle: context.l10n.assistant.permissionSessionOnly,
     );
     if (mode != null && mounted) setState(() => _sessionPermission = mode);
-  }
-
-  Future<void> _exportTrace() async {
-    final session = _session;
-    if (session == null) return;
-    final l10n = context.l10n;
-    final json = await getIt<AssistantTraceRepository>().exportSession(
-      session.id,
-    );
-    await Clipboard.setData(ClipboardData(text: json));
-    toast.success(message: l10n.assistant.traceCopied);
   }
 
   void _syncDerivedFromItems() {
@@ -539,8 +526,6 @@ class _AssistantPageState extends State<AssistantPage> {
         unawaited(_pickPermission());
       case .compact:
         unawaited(_compactNow());
-      case .exportTrace:
-        unawaited(_exportTrace());
       case .settings:
         unawaited(_openSettings());
     }
@@ -831,7 +816,6 @@ class _AssistantPageState extends State<AssistantPage> {
     );
 
     _resetThinkingState();
-    _turns = [];
     _truncated = false;
     _lastTurnInputTokens = 0;
     final placeholder = AssistantTurn.assistant(
@@ -895,7 +879,7 @@ class _AssistantPageState extends State<AssistantPage> {
                 case .turn:
                   _applyTurn(event);
                 case .turnDiscarded:
-                  _discardTurn(event.turn);
+                  _discardTurn();
               }
             },
             onError: (Object e) {
@@ -1122,45 +1106,19 @@ class _AssistantPageState extends State<AssistantPage> {
         _chat.endStreaming();
       });
       if (persist) {
-        unawaited(_chat.persist(settled).then((_) => _persistTrace(settled)));
+        unawaited(_chat.persist(settled));
         _purgeStaleReplies();
       }
     }
     _syncModelSwitchNotices();
   }
 
-  Future<void> _persistTrace(AssistantTurn settled) async {
-    final session = _session;
-    if (session == null || _turns.isEmpty) return;
-    await getIt<AssistantTraceRepository>().put(
-      messageId: settled.id,
-      sessionId: session.id,
-      promptVersion: assistantPromptVersion,
-      turns: _turns,
-    );
-  }
-
   void _applyTurn(AssistantStreamEvent event) {
-    _turns = [
-      ..._turns,
-      (
-        turn: event.turn,
-        finishReason: event.finishReason,
-        requestId: event.requestId,
-        inputTokens: event.inputTokens,
-        outputTokens: event.outputTokens,
-        cachedInputTokens: event.cachedInputTokens,
-      ),
-    ];
     _truncated = event.finishReason == 'length';
     if (event.inputTokens > 0) _lastTurnInputTokens = event.inputTokens;
   }
 
-  void _discardTurn(int turn) {
-    _turns = [
-      for (final t in _turns)
-        if (t.turn < turn) t,
-    ];
+  void _discardTurn() {
     final cur = _streamingMessage;
     if (cur == null) return;
     _streamingReasoning = '';
@@ -1502,12 +1460,6 @@ class _AssistantPageState extends State<AssistantPage> {
                 label: l10n.assistant.menuCompactNow,
                 icon: LucideIcons.foldVertical,
                 enabled: _session != null && !_sending,
-              ),
-              MMenuEntry(
-                value: .exportTrace,
-                label: l10n.assistant.menuExportTrace,
-                icon: LucideIcons.bug,
-                enabled: _session != null,
               ),
               MMenuEntry(
                 value: .settings,

@@ -133,8 +133,6 @@ class RigAssistantService implements AssistantService {
         rust.RigStreamEvent_Turn(
           :final turn,
           :final finishReason,
-          :final responseId,
-          :final providerRequestId,
           :final inputTokens,
           :final outputTokens,
           :final cachedInputTokens,
@@ -142,8 +140,6 @@ class RigAssistantService implements AssistantService {
           AssistantStreamEvent.turn(
             turn: turn,
             finishReason: finishReason,
-            responseId: responseId,
-            requestId: providerRequestId,
             inputTokens: inputTokens,
             outputTokens: outputTokens,
             cachedInputTokens: cachedInputTokens,

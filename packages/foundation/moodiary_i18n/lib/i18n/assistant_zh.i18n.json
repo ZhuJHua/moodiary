@@ -205,8 +205,6 @@
   "permissionFull": "完全访问",
   "permissionFullDes": "所有操作直接执行，不再询问",
   "permissionSessionOnly": "只影响本次对话",
-  "menuExportTrace": "导出诊断",
-  "traceCopied": "诊断信息已复制",
   "approvalSkip": "跳过",
   "approvalOrReply": "或者直接回复",
   "approvalConfirmCreate": "确认新建",

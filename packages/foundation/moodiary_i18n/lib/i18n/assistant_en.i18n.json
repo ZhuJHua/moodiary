@@ -205,8 +205,6 @@
   "permissionFull": "Full access",
   "permissionFullDes": "Runs everything without asking",
   "permissionSessionOnly": "Only for this conversation",
-  "menuExportTrace": "Export diagnostics",
-  "traceCopied": "Diagnostics copied",
   "approvalSkip": "Skip",
   "approvalOrReply": "or just reply",
   "approvalConfirmCreate": "Create",

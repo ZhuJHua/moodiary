@@ -35,8 +35,6 @@ enum AssistantTool {
   const AssistantTool(this.id);
 }
 
-const int assistantPromptVersion = 3;
-
 enum AssistantPermissionMode {
   confirm('confirm'),
   auto('auto'),

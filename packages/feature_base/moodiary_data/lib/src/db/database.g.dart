@@ -4338,385 +4338,6 @@ class AssistantToolCallsCompanion
   }
 }
 
-class AssistantTraces extends Table
-    with TableInfo<AssistantTraces, AssistantTraceRow> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  AssistantTraces(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _messageIdMeta = const VerificationMeta(
-    'messageId',
-  );
-  late final GeneratedColumn<String> messageId = GeneratedColumn<String>(
-    'message_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints:
-        'NOT NULL PRIMARY KEY REFERENCES chat_messages(id)ON DELETE CASCADE',
-  );
-  static const VerificationMeta _sessionIdMeta = const VerificationMeta(
-    'sessionId',
-  );
-  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
-    'session_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints:
-        'NOT NULL REFERENCES chat_sessions(id)ON DELETE CASCADE',
-  );
-  static const VerificationMeta _promptVersionMeta = const VerificationMeta(
-    'promptVersion',
-  );
-  late final GeneratedColumn<int> promptVersion = GeneratedColumn<int>(
-    'prompt_version',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  static const VerificationMeta _turnsJsonMeta = const VerificationMeta(
-    'turnsJson',
-  );
-  late final GeneratedColumn<String> turnsJson = GeneratedColumn<String>(
-    'turns_json',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
-  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  @override
-  List<GeneratedColumn> get $columns => [
-    messageId,
-    sessionId,
-    promptVersion,
-    turnsJson,
-    createdAt,
-  ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'assistant_traces';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<AssistantTraceRow> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('message_id')) {
-      context.handle(
-        _messageIdMeta,
-        messageId.isAcceptableOrUnknown(data['message_id']!, _messageIdMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_messageIdMeta);
-    }
-    if (data.containsKey('session_id')) {
-      context.handle(
-        _sessionIdMeta,
-        sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_sessionIdMeta);
-    }
-    if (data.containsKey('prompt_version')) {
-      context.handle(
-        _promptVersionMeta,
-        promptVersion.isAcceptableOrUnknown(
-          data['prompt_version']!,
-          _promptVersionMeta,
-        ),
-      );
-    } else if (isInserting) {
-      context.missing(_promptVersionMeta);
-    }
-    if (data.containsKey('turns_json')) {
-      context.handle(
-        _turnsJsonMeta,
-        turnsJson.isAcceptableOrUnknown(data['turns_json']!, _turnsJsonMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_turnsJsonMeta);
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_createdAtMeta);
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {messageId};
-  @override
-  AssistantTraceRow map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return AssistantTraceRow(
-      messageId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}message_id'],
-      )!,
-      sessionId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}session_id'],
-      )!,
-      promptVersion: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}prompt_version'],
-      )!,
-      turnsJson: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}turns_json'],
-      )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}created_at'],
-      )!,
-    );
-  }
-
-  @override
-  AssistantTraces createAlias(String alias) {
-    return AssistantTraces(attachedDatabase, alias);
-  }
-
-  @override
-  bool get dontWriteConstraints => true;
-}
-
-class AssistantTraceRow extends DataClass
-    implements Insertable<AssistantTraceRow> {
-  final String messageId;
-  final String sessionId;
-  final int promptVersion;
-  final String turnsJson;
-  final int createdAt;
-  const AssistantTraceRow({
-    required this.messageId,
-    required this.sessionId,
-    required this.promptVersion,
-    required this.turnsJson,
-    required this.createdAt,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['message_id'] = Variable<String>(messageId);
-    map['session_id'] = Variable<String>(sessionId);
-    map['prompt_version'] = Variable<int>(promptVersion);
-    map['turns_json'] = Variable<String>(turnsJson);
-    map['created_at'] = Variable<int>(createdAt);
-    return map;
-  }
-
-  AssistantTracesCompanion toCompanion(bool nullToAbsent) {
-    return AssistantTracesCompanion(
-      messageId: Value(messageId),
-      sessionId: Value(sessionId),
-      promptVersion: Value(promptVersion),
-      turnsJson: Value(turnsJson),
-      createdAt: Value(createdAt),
-    );
-  }
-
-  factory AssistantTraceRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return AssistantTraceRow(
-      messageId: serializer.fromJson<String>(json['message_id']),
-      sessionId: serializer.fromJson<String>(json['session_id']),
-      promptVersion: serializer.fromJson<int>(json['prompt_version']),
-      turnsJson: serializer.fromJson<String>(json['turns_json']),
-      createdAt: serializer.fromJson<int>(json['created_at']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'message_id': serializer.toJson<String>(messageId),
-      'session_id': serializer.toJson<String>(sessionId),
-      'prompt_version': serializer.toJson<int>(promptVersion),
-      'turns_json': serializer.toJson<String>(turnsJson),
-      'created_at': serializer.toJson<int>(createdAt),
-    };
-  }
-
-  AssistantTraceRow copyWith({
-    String? messageId,
-    String? sessionId,
-    int? promptVersion,
-    String? turnsJson,
-    int? createdAt,
-  }) => AssistantTraceRow(
-    messageId: messageId ?? this.messageId,
-    sessionId: sessionId ?? this.sessionId,
-    promptVersion: promptVersion ?? this.promptVersion,
-    turnsJson: turnsJson ?? this.turnsJson,
-    createdAt: createdAt ?? this.createdAt,
-  );
-  AssistantTraceRow copyWithCompanion(AssistantTracesCompanion data) {
-    return AssistantTraceRow(
-      messageId: data.messageId.present ? data.messageId.value : this.messageId,
-      sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
-      promptVersion: data.promptVersion.present
-          ? data.promptVersion.value
-          : this.promptVersion,
-      turnsJson: data.turnsJson.present ? data.turnsJson.value : this.turnsJson,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('AssistantTraceRow(')
-          ..write('messageId: $messageId, ')
-          ..write('sessionId: $sessionId, ')
-          ..write('promptVersion: $promptVersion, ')
-          ..write('turnsJson: $turnsJson, ')
-          ..write('createdAt: $createdAt')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode =>
-      Object.hash(messageId, sessionId, promptVersion, turnsJson, createdAt);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is AssistantTraceRow &&
-          other.messageId == this.messageId &&
-          other.sessionId == this.sessionId &&
-          other.promptVersion == this.promptVersion &&
-          other.turnsJson == this.turnsJson &&
-          other.createdAt == this.createdAt);
-}
-
-class AssistantTracesCompanion extends UpdateCompanion<AssistantTraceRow> {
-  final Value<String> messageId;
-  final Value<String> sessionId;
-  final Value<int> promptVersion;
-  final Value<String> turnsJson;
-  final Value<int> createdAt;
-  final Value<int> rowid;
-  const AssistantTracesCompanion({
-    this.messageId = const Value.absent(),
-    this.sessionId = const Value.absent(),
-    this.promptVersion = const Value.absent(),
-    this.turnsJson = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  AssistantTracesCompanion.insert({
-    required String messageId,
-    required String sessionId,
-    required int promptVersion,
-    required String turnsJson,
-    required int createdAt,
-    this.rowid = const Value.absent(),
-  }) : messageId = Value(messageId),
-       sessionId = Value(sessionId),
-       promptVersion = Value(promptVersion),
-       turnsJson = Value(turnsJson),
-       createdAt = Value(createdAt);
-  static Insertable<AssistantTraceRow> custom({
-    Expression<String>? messageId,
-    Expression<String>? sessionId,
-    Expression<int>? promptVersion,
-    Expression<String>? turnsJson,
-    Expression<int>? createdAt,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (messageId != null) 'message_id': messageId,
-      if (sessionId != null) 'session_id': sessionId,
-      if (promptVersion != null) 'prompt_version': promptVersion,
-      if (turnsJson != null) 'turns_json': turnsJson,
-      if (createdAt != null) 'created_at': createdAt,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  AssistantTracesCompanion copyWith({
-    Value<String>? messageId,
-    Value<String>? sessionId,
-    Value<int>? promptVersion,
-    Value<String>? turnsJson,
-    Value<int>? createdAt,
-    Value<int>? rowid,
-  }) {
-    return AssistantTracesCompanion(
-      messageId: messageId ?? this.messageId,
-      sessionId: sessionId ?? this.sessionId,
-      promptVersion: promptVersion ?? this.promptVersion,
-      turnsJson: turnsJson ?? this.turnsJson,
-      createdAt: createdAt ?? this.createdAt,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (messageId.present) {
-      map['message_id'] = Variable<String>(messageId.value);
-    }
-    if (sessionId.present) {
-      map['session_id'] = Variable<String>(sessionId.value);
-    }
-    if (promptVersion.present) {
-      map['prompt_version'] = Variable<int>(promptVersion.value);
-    }
-    if (turnsJson.present) {
-      map['turns_json'] = Variable<String>(turnsJson.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<int>(createdAt.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('AssistantTracesCompanion(')
-          ..write('messageId: $messageId, ')
-          ..write('sessionId: $sessionId, ')
-          ..write('promptVersion: $promptVersion, ')
-          ..write('turnsJson: $turnsJson, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
 class Memories extends Table with TableInfo<Memories, MemoryRow> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -7633,11 +7254,6 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
     'CREATE INDEX idx_chat_messages_session ON chat_messages (session_id, created_at)',
   );
   late final AssistantToolCalls assistantToolCalls = AssistantToolCalls(this);
-  late final AssistantTraces assistantTraces = AssistantTraces(this);
-  late final Index idxAssistantTracesSession = Index(
-    'idx_assistant_traces_session',
-    'CREATE INDEX idx_assistant_traces_session ON assistant_traces (session_id)',
-  );
   late final Memories memories = Memories(this);
   late final Index idxMemoriesUpdated = Index(
     'idx_memories_updated',
@@ -7789,8 +7405,6 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
     chatMessages,
     idxChatMessagesSession,
     assistantToolCalls,
-    assistantTraces,
-    idxAssistantTracesSession,
     memories,
     idxMemoriesUpdated,
     tombstones,
@@ -7835,20 +7449,6 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('assistant_tool_calls', kind: UpdateKind.delete)],
-    ),
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'chat_messages',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('assistant_traces', kind: UpdateKind.delete)],
-    ),
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'chat_sessions',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('assistant_traces', kind: UpdateKind.delete)],
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
@@ -9604,27 +9204,6 @@ final class $ChatSessionsReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
-
-  static MultiTypedResultKey<AssistantTraces, List<AssistantTraceRow>>
-  _assistantTracesRefsTable(_$MoodiaryDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.assistantTraces,
-        aliasName: 'chat_sessions__id__assistant_traces__session_id',
-      );
-
-  $AssistantTracesProcessedTableManager get assistantTracesRefs {
-    final manager = $AssistantTracesTableManager(
-      $_db,
-      $_db.assistantTraces,
-    ).filter((f) => f.sessionId.id.sqlEquals($_itemColumn<String>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(
-      _assistantTracesRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
 }
 
 class $ChatSessionsFilterComposer
@@ -9707,31 +9286,6 @@ class $ChatSessionsFilterComposer
           }) => $ChatMessagesFilterComposer(
             $db: $db,
             $table: $db.chatMessages,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
-  Expression<bool> assistantTracesRefs(
-    Expression<bool> Function($AssistantTracesFilterComposer f) f,
-  ) {
-    final $AssistantTracesFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.assistantTraces,
-      getReferencedColumn: (t) => t.sessionId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $AssistantTracesFilterComposer(
-            $db: $db,
-            $table: $db.assistantTraces,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -9885,31 +9439,6 @@ class $ChatSessionsAnnotationComposer
     );
     return f(composer);
   }
-
-  Expression<T> assistantTracesRefs<T extends Object>(
-    Expression<T> Function($AssistantTracesAnnotationComposer a) f,
-  ) {
-    final $AssistantTracesAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.assistantTraces,
-      getReferencedColumn: (t) => t.sessionId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $AssistantTracesAnnotationComposer(
-            $db: $db,
-            $table: $db.assistantTraces,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
 }
 
 class $ChatSessionsTableManager
@@ -9925,10 +9454,7 @@ class $ChatSessionsTableManager
           $ChatSessionsUpdateCompanionBuilder,
           (ChatSessionRow, $ChatSessionsReferences),
           ChatSessionRow,
-          PrefetchHooks Function({
-            bool chatMessagesRefs,
-            bool assistantTracesRefs,
-          })
+          PrefetchHooks Function({bool chatMessagesRefs})
         > {
   $ChatSessionsTableManager(_$MoodiaryDatabase db, ChatSessions table)
     : super(
@@ -10007,63 +9533,35 @@ class $ChatSessionsTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback:
-              ({chatMessagesRefs = false, assistantTracesRefs = false}) {
-                return PrefetchHooks(
-                  db: db,
-                  explicitlyWatchedTables: [
-                    if (chatMessagesRefs) db.chatMessages,
-                    if (assistantTracesRefs) db.assistantTraces,
-                  ],
-                  addJoins: null,
-                  getPrefetchedDataCallback: (items) async {
-                    return [
-                      if (chatMessagesRefs)
-                        await $_getPrefetchedData<
-                          ChatSessionRow,
-                          ChatSessions,
-                          ChatMessageRow
-                        >(
-                          currentTable: table,
-                          referencedTable: $ChatSessionsReferences
-                              ._chatMessagesRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $ChatSessionsReferences(
-                                db,
-                                table,
-                                p0,
-                              ).chatMessagesRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.sessionId == item.id,
-                              ),
-                          typedResults: items,
-                        ),
-                      if (assistantTracesRefs)
-                        await $_getPrefetchedData<
-                          ChatSessionRow,
-                          ChatSessions,
-                          AssistantTraceRow
-                        >(
-                          currentTable: table,
-                          referencedTable: $ChatSessionsReferences
-                              ._assistantTracesRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $ChatSessionsReferences(
-                                db,
-                                table,
-                                p0,
-                              ).assistantTracesRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.sessionId == item.id,
-                              ),
-                          typedResults: items,
-                        ),
-                    ];
-                  },
-                );
+          prefetchHooksCallback: ({chatMessagesRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (chatMessagesRefs) db.chatMessages],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (chatMessagesRefs)
+                    await $_getPrefetchedData<
+                      ChatSessionRow,
+                      ChatSessions,
+                      ChatMessageRow
+                    >(
+                      currentTable: table,
+                      referencedTable: $ChatSessionsReferences
+                          ._chatMessagesRefsTable(db),
+                      managerFromTypedResult: (p0) => $ChatSessionsReferences(
+                        db,
+                        table,
+                        p0,
+                      ).chatMessagesRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.sessionId == item.id),
+                      typedResults: items,
+                    ),
+                ];
               },
+            );
+          },
         ),
       );
 }
@@ -10080,7 +9578,7 @@ typedef $ChatSessionsProcessedTableManager =
       $ChatSessionsUpdateCompanionBuilder,
       (ChatSessionRow, $ChatSessionsReferences),
       ChatSessionRow,
-      PrefetchHooks Function({bool chatMessagesRefs, bool assistantTracesRefs})
+      PrefetchHooks Function({bool chatMessagesRefs})
     >;
 typedef $ChatMessagesCreateCompanionBuilder = ChatMessagesCompanion Function({
   required String id,
@@ -10149,27 +9647,6 @@ final class $ChatMessagesReferences
 
     final cache = $_typedResult.readTableOrNull(
       _assistantToolCallsRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-
-  static MultiTypedResultKey<AssistantTraces, List<AssistantTraceRow>>
-  _assistantTracesRefsTable(_$MoodiaryDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.assistantTraces,
-        aliasName: 'chat_messages__id__assistant_traces__message_id',
-      );
-
-  $AssistantTracesProcessedTableManager get assistantTracesRefs {
-    final manager = $AssistantTracesTableManager(
-      $_db,
-      $_db.assistantTraces,
-    ).filter((f) => f.messageId.id.sqlEquals($_itemColumn<String>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(
-      _assistantTracesRefsTable($_db),
     );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
@@ -10280,31 +9757,6 @@ class $ChatMessagesFilterComposer
           }) => $AssistantToolCallsFilterComposer(
             $db: $db,
             $table: $db.assistantToolCalls,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
-  Expression<bool> assistantTracesRefs(
-    Expression<bool> Function($AssistantTracesFilterComposer f) f,
-  ) {
-    final $AssistantTracesFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.assistantTraces,
-      getReferencedColumn: (t) => t.messageId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $AssistantTracesFilterComposer(
-            $db: $db,
-            $table: $db.assistantTraces,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -10500,31 +9952,6 @@ class $ChatMessagesAnnotationComposer
     );
     return f(composer);
   }
-
-  Expression<T> assistantTracesRefs<T extends Object>(
-    Expression<T> Function($AssistantTracesAnnotationComposer a) f,
-  ) {
-    final $AssistantTracesAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.assistantTraces,
-      getReferencedColumn: (t) => t.messageId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $AssistantTracesAnnotationComposer(
-            $db: $db,
-            $table: $db.assistantTraces,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
 }
 
 class $ChatMessagesTableManager
@@ -10540,11 +9967,7 @@ class $ChatMessagesTableManager
           $ChatMessagesUpdateCompanionBuilder,
           (ChatMessageRow, $ChatMessagesReferences),
           ChatMessageRow,
-          PrefetchHooks Function({
-            bool sessionId,
-            bool assistantToolCallsRefs,
-            bool assistantTracesRefs,
-          })
+          PrefetchHooks Function({bool sessionId, bool assistantToolCallsRefs})
         > {
   $ChatMessagesTableManager(_$MoodiaryDatabase db, ChatMessages table)
     : super(
@@ -10626,16 +10049,11 @@ class $ChatMessagesTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({
-                sessionId = false,
-                assistantToolCallsRefs = false,
-                assistantTracesRefs = false,
-              }) {
+              ({sessionId = false, assistantToolCallsRefs = false}) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (assistantToolCallsRefs) db.assistantToolCalls,
-                    if (assistantTracesRefs) db.assistantTraces,
                   ],
                   addJoins:
                       <
@@ -10690,27 +10108,6 @@ class $ChatMessagesTableManager
                               ),
                           typedResults: items,
                         ),
-                      if (assistantTracesRefs)
-                        await $_getPrefetchedData<
-                          ChatMessageRow,
-                          ChatMessages,
-                          AssistantTraceRow
-                        >(
-                          currentTable: table,
-                          referencedTable: $ChatMessagesReferences
-                              ._assistantTracesRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $ChatMessagesReferences(
-                                db,
-                                table,
-                                p0,
-                              ).assistantTracesRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.messageId == item.id,
-                              ),
-                          typedResults: items,
-                        ),
                     ];
                   },
                 );
@@ -10731,11 +10128,7 @@ typedef $ChatMessagesProcessedTableManager =
       $ChatMessagesUpdateCompanionBuilder,
       (ChatMessageRow, $ChatMessagesReferences),
       ChatMessageRow,
-      PrefetchHooks Function({
-        bool sessionId,
-        bool assistantToolCallsRefs,
-        bool assistantTracesRefs,
-      })
+      PrefetchHooks Function({bool sessionId, bool assistantToolCallsRefs})
     >;
 typedef $AssistantToolCallsCreateCompanionBuilder =
     AssistantToolCallsCompanion Function({
@@ -11096,408 +10489,6 @@ typedef $AssistantToolCallsProcessedTableManager =
       (AssistantToolCallRow, $AssistantToolCallsReferences),
       AssistantToolCallRow,
       PrefetchHooks Function({bool messageId})
-    >;
-typedef $AssistantTracesCreateCompanionBuilder =
-    AssistantTracesCompanion Function({
-      required String messageId,
-      required String sessionId,
-      required int promptVersion,
-      required String turnsJson,
-      required int createdAt,
-      Value<int> rowid,
-    });
-typedef $AssistantTracesUpdateCompanionBuilder =
-    AssistantTracesCompanion Function({
-      Value<String> messageId,
-      Value<String> sessionId,
-      Value<int> promptVersion,
-      Value<String> turnsJson,
-      Value<int> createdAt,
-      Value<int> rowid,
-    });
-
-final class $AssistantTracesReferences
-    extends
-        BaseReferences<_$MoodiaryDatabase, AssistantTraces, AssistantTraceRow> {
-  $AssistantTracesReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static ChatMessages _messageIdTable(_$MoodiaryDatabase db) => db.chatMessages
-      .createAlias('assistant_traces__message_id__chat_messages__id');
-
-  $ChatMessagesProcessedTableManager get messageId {
-    final $_column = $_itemColumn<String>('message_id')!;
-
-    final manager = $ChatMessagesTableManager(
-      $_db,
-      $_db.chatMessages,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_messageIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-
-  static ChatSessions _sessionIdTable(_$MoodiaryDatabase db) => db.chatSessions
-      .createAlias('assistant_traces__session_id__chat_sessions__id');
-
-  $ChatSessionsProcessedTableManager get sessionId {
-    final $_column = $_itemColumn<String>('session_id')!;
-
-    final manager = $ChatSessionsTableManager(
-      $_db,
-      $_db.chatSessions,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_sessionIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-}
-
-class $AssistantTracesFilterComposer
-    extends Composer<_$MoodiaryDatabase, AssistantTraces> {
-  $AssistantTracesFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<int> get promptVersion => $composableBuilder(
-    column: $table.promptVersion,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get turnsJson => $composableBuilder(
-    column: $table.turnsJson,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  $ChatMessagesFilterComposer get messageId {
-    final $ChatMessagesFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.messageId,
-      referencedTable: $db.chatMessages,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ChatMessagesFilterComposer(
-            $db: $db,
-            $table: $db.chatMessages,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-
-  $ChatSessionsFilterComposer get sessionId {
-    final $ChatSessionsFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.sessionId,
-      referencedTable: $db.chatSessions,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ChatSessionsFilterComposer(
-            $db: $db,
-            $table: $db.chatSessions,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $AssistantTracesOrderingComposer
-    extends Composer<_$MoodiaryDatabase, AssistantTraces> {
-  $AssistantTracesOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<int> get promptVersion => $composableBuilder(
-    column: $table.promptVersion,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get turnsJson => $composableBuilder(
-    column: $table.turnsJson,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  $ChatMessagesOrderingComposer get messageId {
-    final $ChatMessagesOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.messageId,
-      referencedTable: $db.chatMessages,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ChatMessagesOrderingComposer(
-            $db: $db,
-            $table: $db.chatMessages,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-
-  $ChatSessionsOrderingComposer get sessionId {
-    final $ChatSessionsOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.sessionId,
-      referencedTable: $db.chatSessions,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ChatSessionsOrderingComposer(
-            $db: $db,
-            $table: $db.chatSessions,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $AssistantTracesAnnotationComposer
-    extends Composer<_$MoodiaryDatabase, AssistantTraces> {
-  $AssistantTracesAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<int> get promptVersion => $composableBuilder(
-    column: $table.promptVersion,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get turnsJson =>
-      $composableBuilder(column: $table.turnsJson, builder: (column) => column);
-
-  GeneratedColumn<int> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
-
-  $ChatMessagesAnnotationComposer get messageId {
-    final $ChatMessagesAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.messageId,
-      referencedTable: $db.chatMessages,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ChatMessagesAnnotationComposer(
-            $db: $db,
-            $table: $db.chatMessages,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-
-  $ChatSessionsAnnotationComposer get sessionId {
-    final $ChatSessionsAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.sessionId,
-      referencedTable: $db.chatSessions,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ChatSessionsAnnotationComposer(
-            $db: $db,
-            $table: $db.chatSessions,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $AssistantTracesTableManager
-    extends
-        RootTableManager<
-          _$MoodiaryDatabase,
-          AssistantTraces,
-          AssistantTraceRow,
-          $AssistantTracesFilterComposer,
-          $AssistantTracesOrderingComposer,
-          $AssistantTracesAnnotationComposer,
-          $AssistantTracesCreateCompanionBuilder,
-          $AssistantTracesUpdateCompanionBuilder,
-          (AssistantTraceRow, $AssistantTracesReferences),
-          AssistantTraceRow,
-          PrefetchHooks Function({bool messageId, bool sessionId})
-        > {
-  $AssistantTracesTableManager(_$MoodiaryDatabase db, AssistantTraces table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $AssistantTracesFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $AssistantTracesOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $AssistantTracesAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> messageId = const Value.absent(),
-                Value<String> sessionId = const Value.absent(),
-                Value<int> promptVersion = const Value.absent(),
-                Value<String> turnsJson = const Value.absent(),
-                Value<int> createdAt = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => AssistantTracesCompanion(
-                messageId: messageId,
-                sessionId: sessionId,
-                promptVersion: promptVersion,
-                turnsJson: turnsJson,
-                createdAt: createdAt,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String messageId,
-                required String sessionId,
-                required int promptVersion,
-                required String turnsJson,
-                required int createdAt,
-                Value<int> rowid = const Value.absent(),
-              }) => AssistantTracesCompanion.insert(
-                messageId: messageId,
-                sessionId: sessionId,
-                promptVersion: promptVersion,
-                turnsJson: turnsJson,
-                createdAt: createdAt,
-                rowid: rowid,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable<AssistantTraces, AssistantTraceRow>(table),
-                  $AssistantTracesReferences(db, table, e),
-                ),
-              )
-              .toList(),
-          prefetchHooksCallback: ({messageId = false, sessionId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (messageId) {
-                      state = state.withJoin(
-                        currentTable: table,
-                        currentColumn: table.messageId,
-                        referencedTable: $AssistantTracesReferences
-                            ._messageIdTable(db),
-                        referencedColumn: $AssistantTracesReferences
-                            ._messageIdTable(db)
-                            .id,
-                      ) as T;
-                    }
-                    if (sessionId) {
-                      state = state.withJoin(
-                        currentTable: table,
-                        currentColumn: table.sessionId,
-                        referencedTable: $AssistantTracesReferences
-                            ._sessionIdTable(db),
-                        referencedColumn: $AssistantTracesReferences
-                            ._sessionIdTable(db)
-                            .id,
-                      ) as T;
-                    }
-
-                    return state;
-                  },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
-        ),
-      );
-}
-
-typedef $AssistantTracesProcessedTableManager =
-    ProcessedTableManager<
-      _$MoodiaryDatabase,
-      AssistantTraces,
-      AssistantTraceRow,
-      $AssistantTracesFilterComposer,
-      $AssistantTracesOrderingComposer,
-      $AssistantTracesAnnotationComposer,
-      $AssistantTracesCreateCompanionBuilder,
-      $AssistantTracesUpdateCompanionBuilder,
-      (AssistantTraceRow, $AssistantTracesReferences),
-      AssistantTraceRow,
-      PrefetchHooks Function({bool messageId, bool sessionId})
     >;
 typedef $MemoriesCreateCompanionBuilder = MemoriesCompanion Function({
   required String id,
@@ -13405,8 +12396,6 @@ class $MoodiaryDatabaseManager {
       $ChatMessagesTableManager(_db, _db.chatMessages);
   $AssistantToolCallsTableManager get assistantToolCalls =>
       $AssistantToolCallsTableManager(_db, _db.assistantToolCalls);
-  $AssistantTracesTableManager get assistantTraces =>
-      $AssistantTracesTableManager(_db, _db.assistantTraces);
   $MemoriesTableManager get memories =>
       $MemoriesTableManager(_db, _db.memories);
   $TombstonesTableManager get tombstones =>

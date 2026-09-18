@@ -933,112 +933,6 @@
     },
     {
       "id": 12,
-      "references": [
-        9,
-        7
-      ],
-      "type": "table",
-      "data": {
-        "name": "assistant_traces",
-        "was_declared_in_moor": true,
-        "columns": [
-          {
-            "name": "message_id",
-            "getter_name": "messageId",
-            "moor_type": "string",
-            "nullable": false,
-            "customConstraints": "NOT NULL PRIMARY KEY REFERENCES chat_messages(id)ON DELETE CASCADE",
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": [
-              "primary-key",
-              {
-                "foreign_key": {
-                  "to": {
-                    "table": "chat_messages",
-                    "column": "id"
-                  },
-                  "initially_deferred": false,
-                  "on_update": null,
-                  "on_delete": "cascade"
-                }
-              }
-            ]
-          },
-          {
-            "name": "session_id",
-            "getter_name": "sessionId",
-            "moor_type": "string",
-            "nullable": false,
-            "customConstraints": "NOT NULL REFERENCES chat_sessions(id)ON DELETE CASCADE",
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": [
-              {
-                "foreign_key": {
-                  "to": {
-                    "table": "chat_sessions",
-                    "column": "id"
-                  },
-                  "initially_deferred": false,
-                  "on_update": null,
-                  "on_delete": "cascade"
-                }
-              }
-            ]
-          },
-          {
-            "name": "prompt_version",
-            "getter_name": "promptVersion",
-            "moor_type": "int",
-            "nullable": false,
-            "customConstraints": "NOT NULL",
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "turns_json",
-            "getter_name": "turnsJson",
-            "moor_type": "string",
-            "nullable": false,
-            "customConstraints": "NOT NULL",
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "created_at",
-            "getter_name": "createdAt",
-            "moor_type": "int",
-            "nullable": false,
-            "customConstraints": "NOT NULL",
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          }
-        ],
-        "is_virtual": false,
-        "without_rowid": false,
-        "constraints": []
-      }
-    },
-    {
-      "id": 13,
-      "references": [
-        12
-      ],
-      "type": "index",
-      "data": {
-        "on": 12,
-        "name": "idx_assistant_traces_session",
-        "sql": "CREATE INDEX idx_assistant_traces_session ON assistant_traces (session_id);",
-        "unique": false,
-        "columns": []
-      }
-    },
-    {
-      "id": 14,
       "references": [],
       "type": "table",
       "data": {
@@ -1114,13 +1008,13 @@
       }
     },
     {
-      "id": 15,
+      "id": 13,
       "references": [
-        14
+        12
       ],
       "type": "index",
       "data": {
-        "on": 14,
+        "on": 12,
         "name": "idx_memories_updated",
         "sql": "CREATE INDEX idx_memories_updated ON memories (updated_at DESC);",
         "unique": false,
@@ -1128,7 +1022,7 @@
       }
     },
     {
-      "id": 16,
+      "id": 14,
       "references": [],
       "type": "table",
       "data": {
@@ -1174,13 +1068,13 @@
       }
     },
     {
-      "id": 17,
+      "id": 15,
       "references": [
-        16
+        14
       ],
       "type": "index",
       "data": {
-        "on": 16,
+        "on": 14,
         "name": "idx_tombstones_time",
         "sql": "CREATE INDEX idx_tombstones_time ON tombstones (time_ms);",
         "unique": false,
@@ -1188,7 +1082,7 @@
       }
     },
     {
-      "id": 18,
+      "id": 16,
       "references": [],
       "type": "table",
       "data": {
@@ -1254,7 +1148,7 @@
       }
     },
     {
-      "id": 19,
+      "id": 17,
       "references": [],
       "type": "table",
       "data": {
@@ -1300,7 +1194,7 @@
       }
     },
     {
-      "id": 20,
+      "id": 18,
       "references": [],
       "type": "table",
       "data": {
@@ -1356,7 +1250,7 @@
       }
     },
     {
-      "id": 21,
+      "id": 19,
       "references": [],
       "type": "table",
       "data": {
@@ -1432,7 +1326,7 @@
       }
     },
     {
-      "id": 22,
+      "id": 20,
       "references": [
         0
       ],
@@ -1446,7 +1340,7 @@
       }
     },
     {
-      "id": 23,
+      "id": 21,
       "references": [
         0
       ],
@@ -1460,7 +1354,7 @@
       }
     },
     {
-      "id": 24,
+      "id": 22,
       "references": [
         0
       ],
@@ -1474,7 +1368,7 @@
       }
     },
     {
-      "id": 25,
+      "id": 23,
       "references": [
         0
       ],
@@ -1549,13 +1443,13 @@
       }
     },
     {
-      "id": 26,
+      "id": 24,
       "references": [
-        25
+        23
       ],
       "type": "index",
       "data": {
-        "on": 25,
+        "on": 23,
         "name": "idx_diary_media_kind",
         "sql": "CREATE INDEX idx_diary_media_kind ON diary_media (kind, diary_id);",
         "unique": false,
@@ -1563,13 +1457,13 @@
       }
     },
     {
-      "id": 27,
+      "id": 25,
       "references": [
-        25
+        23
       ],
       "type": "index",
       "data": {
-        "on": 25,
+        "on": 23,
         "name": "idx_diary_media_file",
         "sql": "CREATE INDEX idx_diary_media_file ON diary_media (file_name);",
         "unique": false,
@@ -1577,7 +1471,7 @@
       }
     },
     {
-      "id": 28,
+      "id": 26,
       "references": [
         0
       ],
@@ -1641,13 +1535,13 @@
       }
     },
     {
-      "id": 29,
+      "id": 27,
       "references": [
-        28
+        26
       ],
       "type": "index",
       "data": {
-        "on": 28,
+        "on": 26,
         "name": "idx_diary_tags_tag",
         "sql": "CREATE INDEX idx_diary_tags_tag ON diary_tags (tag);",
         "unique": false,
@@ -1655,7 +1549,7 @@
       }
     },
     {
-      "id": 30,
+      "id": 28,
       "references": [
         1
       ],
@@ -1669,7 +1563,7 @@
       }
     },
     {
-      "id": 31,
+      "id": 29,
       "references": [
         0
       ],
@@ -1706,51 +1600,51 @@
       }
     },
     {
-      "id": 32,
+      "id": 30,
       "references": [
         0,
-        31
+        29
       ],
       "type": "trigger",
       "data": {
         "on": 0,
         "references_in_body": [
           0,
-          31
+          29
         ],
         "name": "diary_fts_ai",
         "sql": "CREATE TRIGGER diary_fts_ai AFTER INSERT ON diaries BEGIN\n  INSERT INTO diary_fts (rowid, title, content_text)\n    VALUES (new.rid, new.title, new.content_text);\nEND;"
       }
     },
     {
-      "id": 33,
+      "id": 31,
       "references": [
         0,
-        31
+        29
       ],
       "type": "trigger",
       "data": {
         "on": 0,
         "references_in_body": [
           0,
-          31
+          29
         ],
         "name": "diary_fts_ad",
         "sql": "CREATE TRIGGER diary_fts_ad AFTER DELETE ON diaries BEGIN\n  INSERT INTO diary_fts (diary_fts, rowid, title, content_text)\n    VALUES ('delete', old.rid, old.title, old.content_text);\nEND;"
       }
     },
     {
-      "id": 34,
+      "id": 32,
       "references": [
         0,
-        31
+        29
       ],
       "type": "trigger",
       "data": {
         "on": 0,
         "references_in_body": [
           0,
-          31
+          29
         ],
         "name": "diary_fts_au",
         "sql": "CREATE TRIGGER diary_fts_au AFTER UPDATE OF title, content_text ON diaries\nWHEN old.title IS NOT new.title OR old.content_text IS NOT new.content_text\nBEGIN\n  INSERT INTO diary_fts (diary_fts, rowid, title, content_text)\n    VALUES ('delete', old.rid, old.title, old.content_text);\n  INSERT INTO diary_fts (rowid, title, content_text)\n    VALUES (new.rid, new.title, new.content_text);\nEND;"
@@ -1863,24 +1757,6 @@
         {
           "dialect": "sqlite",
           "sql": "CREATE TABLE IF NOT EXISTS \"assistant_tool_calls\" (\"message_id\" TEXT NOT NULL REFERENCES chat_messages(id)ON DELETE CASCADE, \"seq\" INTEGER NOT NULL, \"call_id\" TEXT NOT NULL, \"name\" TEXT NOT NULL, \"args_json\" TEXT NOT NULL DEFAULT '', \"result\" TEXT NOT NULL DEFAULT '', \"done\" INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(message_id, seq));"
-        }
-      ]
-    },
-    {
-      "name": "assistant_traces",
-      "sql": [
-        {
-          "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"assistant_traces\" (\"message_id\" TEXT NOT NULL PRIMARY KEY REFERENCES chat_messages(id)ON DELETE CASCADE, \"session_id\" TEXT NOT NULL REFERENCES chat_sessions(id)ON DELETE CASCADE, \"prompt_version\" INTEGER NOT NULL, \"turns_json\" TEXT NOT NULL, \"created_at\" INTEGER NOT NULL);"
-        }
-      ]
-    },
-    {
-      "name": "idx_assistant_traces_session",
-      "sql": [
-        {
-          "dialect": "sqlite",
-          "sql": "CREATE INDEX idx_assistant_traces_session ON assistant_traces (session_id)"
         }
       ]
     },

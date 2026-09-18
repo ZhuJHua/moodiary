@@ -68,10 +68,6 @@ class AssistantStreamEvent {
 
   final String finishReason;
 
-  final String responseId;
-
-  final String requestId;
-
   const AssistantStreamEvent(
     this.kind,
     this.text, {
@@ -83,15 +79,11 @@ class AssistantStreamEvent {
     this.argsJson = '',
     this.turn = 0,
     this.finishReason = '',
-    this.responseId = '',
-    this.requestId = '',
   });
 
   const AssistantStreamEvent.turn({
     required this.turn,
     required this.finishReason,
-    required this.responseId,
-    required this.requestId,
     required this.inputTokens,
     required this.outputTokens,
     required this.cachedInputTokens,
@@ -110,9 +102,7 @@ class AssistantStreamEvent {
       cacheWriteTokens = 0,
       callId = '',
       argsJson = '',
-      finishReason = '',
-      responseId = '',
-      requestId = '';
+      finishReason = '';
 
   const AssistantStreamEvent.text(this.text)
     : kind = .text,
@@ -123,9 +113,7 @@ class AssistantStreamEvent {
       callId = '',
       argsJson = '',
       turn = 0,
-      finishReason = '',
-      responseId = '',
-      requestId = '';
+      finishReason = '';
 
   const AssistantStreamEvent.reasoning(this.text)
     : kind = .reasoning,
@@ -136,9 +124,7 @@ class AssistantStreamEvent {
       callId = '',
       argsJson = '',
       turn = 0,
-      finishReason = '',
-      responseId = '',
-      requestId = '';
+      finishReason = '';
 
   const AssistantStreamEvent.tool(this.text)
     : kind = .tool,
@@ -149,9 +135,7 @@ class AssistantStreamEvent {
       callId = '',
       argsJson = '',
       turn = 0,
-      finishReason = '',
-      responseId = '',
-      requestId = '';
+      finishReason = '';
 
   const AssistantStreamEvent.toolStarted({
     required this.callId,
@@ -163,9 +147,7 @@ class AssistantStreamEvent {
        cachedInputTokens = 0,
        cacheWriteTokens = 0,
        turn = 0,
-       finishReason = '',
-       responseId = '',
-       requestId = '';
+       finishReason = '';
 
   const AssistantStreamEvent.toolFinished({
     required this.callId,
@@ -177,9 +159,7 @@ class AssistantStreamEvent {
        cachedInputTokens = 0,
        cacheWriteTokens = 0,
        turn = 0,
-       finishReason = '',
-       responseId = '',
-       requestId = '';
+       finishReason = '';
 
   const AssistantStreamEvent.usage(
     this.inputTokens,
@@ -191,9 +171,7 @@ class AssistantStreamEvent {
        callId = '',
        argsJson = '',
        turn = 0,
-       finishReason = '',
-       responseId = '',
-       requestId = '';
+       finishReason = '';
 }
 
 class AssistantMessage {

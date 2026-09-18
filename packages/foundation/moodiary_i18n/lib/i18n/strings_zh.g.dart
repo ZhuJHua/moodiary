@@ -1237,12 +1237,6 @@ class Translations$assistant$zh {
 	/// zh: '只影响本次对话'
 	String get permissionSessionOnly => '只影响本次对话';
 
-	/// zh: '导出诊断'
-	String get menuExportTrace => '导出诊断';
-
-	/// zh: '诊断信息已复制'
-	String get traceCopied => '诊断信息已复制';
-
 	/// zh: '跳过'
 	String get approvalSkip => '跳过';
 

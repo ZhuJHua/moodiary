@@ -1405,8 +1405,6 @@ final class Schema3 extends i0.VersionedSchema {
     chatMessages,
     idxChatMessagesSession,
     assistantToolCalls,
-    assistantTraces,
-    idxAssistantTracesSession,
     memories,
     idxMemoriesUpdated,
     tombstones,
@@ -1600,22 +1598,7 @@ final class Schema3 extends i0.VersionedSchema {
     ),
     alias: null,
   );
-  late final Shape20 assistantTraces = Shape20(
-    source: i0.VersionedTable(
-      entityName: 'assistant_traces',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [],
-      columns: [_column_86, _column_50, _column_87, _column_88, _column_31],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  final i1.Index idxAssistantTracesSession = i1.Index(
-    'idx_assistant_traces_session',
-    'CREATE INDEX idx_assistant_traces_session ON assistant_traces (session_id)',
-  );
-  late final Shape21 memories = Shape21(
+  late final Shape20 memories = Shape20(
     source: i0.VersionedTable(
       entityName: 'memories',
       withoutRowId: false,
@@ -1627,7 +1610,7 @@ final class Schema3 extends i0.VersionedSchema {
         _column_6,
         _column_31,
         _column_41,
-        _column_89,
+        _column_86,
       ],
       attachedDatabase: database,
     ),
@@ -1753,11 +1736,11 @@ final class Schema3 extends i0.VersionedSchema {
     'idx_diary_links_dst',
     'CREATE INDEX idx_diary_links_dst ON diary_links (dst_id)',
   );
-  late final Shape22 diaryFts = Shape22(
+  late final Shape21 diaryFts = Shape21(
     source: i0.VersionedVirtualTable(
       entityName: 'diary_fts',
       moduleAndArgs: 'fts5(title, content_text, content=\'diaries\', content_rowid=\'rid\', tokenize=\'simple\')',
-      columns: [_column_90, _column_91],
+      columns: [_column_87, _column_88],
       attachedDatabase: database,
     ),
     alias: null,
@@ -1831,46 +1814,6 @@ i1.GeneratedColumn<String> _column_85(String aliasedName) =>
 
 class Shape20 extends i0.VersionedTable {
   Shape20({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get messageId =>
-      columnsByName['message_id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<String> get sessionId =>
-      columnsByName['session_id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get promptVersion =>
-      columnsByName['prompt_version']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get turnsJson =>
-      columnsByName['turns_json']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get createdAt =>
-      columnsByName['created_at']! as i1.GeneratedColumn<int>;
-}
-
-i1.GeneratedColumn<String> _column_86(String aliasedName) =>
-    i1.GeneratedColumn<String>(
-      'message_id',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.string,
-      $customConstraints:
-          'NOT NULL PRIMARY KEY REFERENCES chat_messages(id)ON DELETE CASCADE',
-    );
-i1.GeneratedColumn<int> _column_87(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'prompt_version',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NOT NULL',
-    );
-i1.GeneratedColumn<String> _column_88(String aliasedName) =>
-    i1.GeneratedColumn<String>(
-      'turns_json',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.string,
-      $customConstraints: 'NOT NULL',
-    );
-
-class Shape21 extends i0.VersionedTable {
-  Shape21({required super.source, required super.alias}) : super.aliased();
   i1.GeneratedColumn<String> get id =>
       columnsByName['id']! as i1.GeneratedColumn<String>;
   i1.GeneratedColumn<String> get category =>
@@ -1885,7 +1828,7 @@ class Shape21 extends i0.VersionedTable {
       columnsByName['source']! as i1.GeneratedColumn<String>;
 }
 
-i1.GeneratedColumn<String> _column_89(String aliasedName) =>
+i1.GeneratedColumn<String> _column_86(String aliasedName) =>
     i1.GeneratedColumn<String>(
       'source',
       aliasedName,
@@ -1894,15 +1837,15 @@ i1.GeneratedColumn<String> _column_89(String aliasedName) =>
       $customConstraints: '',
     );
 
-class Shape22 extends i0.VersionedVirtualTable {
-  Shape22({required super.source, required super.alias}) : super.aliased();
+class Shape21 extends i0.VersionedVirtualTable {
+  Shape21({required super.source, required super.alias}) : super.aliased();
   i1.GeneratedColumn<String> get title =>
       columnsByName['title']! as i1.GeneratedColumn<String>;
   i1.GeneratedColumn<String> get contentText =>
       columnsByName['content_text']! as i1.GeneratedColumn<String>;
 }
 
-i1.GeneratedColumn<String> _column_90(String aliasedName) =>
+i1.GeneratedColumn<String> _column_87(String aliasedName) =>
     i1.GeneratedColumn<String>(
       'title',
       aliasedName,
@@ -1910,7 +1853,7 @@ i1.GeneratedColumn<String> _column_90(String aliasedName) =>
       type: i1.DriftSqlType.string,
       $customConstraints: '',
     );
-i1.GeneratedColumn<String> _column_91(String aliasedName) =>
+i1.GeneratedColumn<String> _column_88(String aliasedName) =>
     i1.GeneratedColumn<String>(
       'content_text',
       aliasedName,

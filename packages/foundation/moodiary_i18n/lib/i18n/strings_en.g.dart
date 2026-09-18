@@ -454,8 +454,6 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get permissionFull => 'Full access';
 	@override String get permissionFullDes => 'Runs everything without asking';
 	@override String get permissionSessionOnly => 'Only for this conversation';
-	@override String get menuExportTrace => 'Export diagnostics';
-	@override String get traceCopied => 'Diagnostics copied';
 	@override String get approvalSkip => 'Skip';
 	@override String get approvalOrReply => 'or just reply';
 	@override String get approvalConfirmCreate => 'Create';

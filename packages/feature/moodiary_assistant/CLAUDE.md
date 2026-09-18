@@ -33,10 +33,6 @@ The decision is Dart's but the pause is rig's: `ToolObserver.on_tool_call` emits
 
 `on_invalid_tool_call` normalises the emitted name (strips `default_api.` / `functions.` prefixes, case-insensitive) against the turn's allowed tools and repairs it without a model call; otherwise it asks for a retry with feedback and emits `TurnDiscarded` so the page drops that turn's deltas — rig's `max_invalid_tool_call_retries(1)` is the only budget. Run errors cross the bridge as `<code>: <message>` (`max_turns`, `cancelled`, `unknown_tool`, `completion`); Dart maps the code to l10n and never matches English text.
 
-## Traces
-
-Every persisted reply writes an `assistant_traces` row (prompt version, per-call finish reason, request id, usage); the table cascades from `chat_messages` and `chat_sessions`. "Export diagnostics" in the conversation menu copies the session's rows as JSON. Bump `assistantPromptVersion` whenever a prompt section changes.
-
 ## Deliberately not used
 
 `dynamic_context`, `ConversationMemory` / `rig-memory` / `rig-sqlite`, `extractor` / `OutputMode`, `retrieved_tools`, `tool_concurrency`, `on_completion_response` (never fires on the streaming driver), automatic max-tokens retry, `tracing`, `rig-ecs`, a code-level router in front of the model, tool or step caps sized for on-device models.

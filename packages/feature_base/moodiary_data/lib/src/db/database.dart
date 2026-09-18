@@ -96,8 +96,6 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
               ]) {
                 await m.dropColumn(schema.chatSessions, column);
               }
-              await m.createTable(schema.assistantTraces);
-              await m.create(schema.idxAssistantTracesSession);
               await customStatement('DROP TABLE diary_fts');
               await m.createTable(schema.diaryFts);
               for (final trigger in [diaryFtsAi, diaryFtsAd, diaryFtsAu]) {

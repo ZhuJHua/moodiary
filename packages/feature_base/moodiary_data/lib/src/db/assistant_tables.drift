@@ -67,18 +67,6 @@ CREATE TABLE assistant_tool_calls (
   PRIMARY KEY (message_id, seq)
 ) AS AssistantToolCallRow;
 
-CREATE TABLE assistant_traces (
-  message_id     TEXT NOT NULL PRIMARY KEY
-    REFERENCES chat_messages (id) ON DELETE CASCADE,
-  session_id     TEXT NOT NULL
-    REFERENCES chat_sessions (id) ON DELETE CASCADE,
-  prompt_version INTEGER NOT NULL,
-  turns_json     TEXT NOT NULL,
-  created_at     INTEGER NOT NULL
-) AS AssistantTraceRow;
-
-CREATE INDEX idx_assistant_traces_session ON assistant_traces (session_id);
-
 CREATE TABLE memories (
   id         TEXT NOT NULL PRIMARY KEY,
   category   TEXT NOT NULL,

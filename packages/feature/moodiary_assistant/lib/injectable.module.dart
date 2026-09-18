@@ -8,8 +8,6 @@ import 'dart:async' as _i687;
 
 import 'package:injectable/injectable.dart' as _i526;
 import 'package:moodiary_assistant/src/data/assistant.dart' as _i808;
-import 'package:moodiary_assistant/src/data/assistant_trace_repository.dart'
-    as _i308;
 import 'package:moodiary_assistant/src/data/chat_repository.dart' as _i349;
 import 'package:moodiary_assistant/src/data/impl/rig_assistant.dart' as _i192;
 import 'package:moodiary_assistant/src/data/llm_preset_repository.dart'
@@ -39,9 +37,6 @@ class MoodiaryAssistantPackageModule extends _i526.MicroPackageModule {
         gh<_i691.MoodiaryDatabase>(),
         gh<_i877.ISecureKVStorage>(),
       ),
-    );
-    gh.lazySingleton<_i308.AssistantTraceRepository>(
-      () => _i308.AssistantTraceRepository(gh<_i691.MoodiaryDatabase>()),
     );
     gh.lazySingleton<_i349.ChatRepository>(
       () => _i349.ChatRepository(gh<_i691.MoodiaryDatabase>()),
