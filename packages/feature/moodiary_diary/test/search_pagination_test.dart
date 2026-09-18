@@ -53,6 +53,9 @@ void main() {
     expect(state.results, hasLength(30));
 
     await controller.loadMore();
-    expect(container.read(diarySearchControllerProvider).results, hasLength(40));
+    expect(
+      container.read(diarySearchControllerProvider).results,
+      hasLength(40),
+    );
   });
 }

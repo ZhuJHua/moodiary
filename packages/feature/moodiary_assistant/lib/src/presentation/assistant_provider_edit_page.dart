@@ -162,10 +162,9 @@ class _AssistantProviderEditPageState
       providerName: _name.text.trim(),
       options: options,
       modelId: _defaultModel,
-      showEffort: false,
     );
     if (choice != null && mounted) {
-      setState(() => _defaultModel = choice.modelId);
+      setState(() => _defaultModel = choice);
     }
   }
 

@@ -215,22 +215,16 @@ class AssistantSettingRoute extends MoodiaryRouteBase {
   const AssistantSettingRoute() : super(path);
 }
 
-class AssistantPresetsRoute extends MoodiaryRouteBase {
-  static const String path = '/setting/assistant/presets';
+class AssistantMemoriesRoute extends MoodiaryRouteBase {
+  static const String path = '/setting/assistant/memories';
 
-  const AssistantPresetsRoute() : super(path);
+  const AssistantMemoriesRoute() : super(path);
 }
 
-class AssistantPresetEditRoute extends MoodiaryRouteBase {
-  static const String path = '/setting/assistant/preset_edit';
+class AssistantNotesRoute extends MoodiaryRouteBase {
+  static const String path = '/setting/assistant/notes';
 
-  final String? id;
-  final String? fromId;
-
-  const AssistantPresetEditRoute({this.id, this.fromId}) : super(path);
-
-  @override
-  Map<String, dynamic> get params => {'id': id, 'from_id': fromId};
+  const AssistantNotesRoute() : super(path);
 }
 
 class AssistantConversationRoute extends MoodiaryRouteBase {
@@ -240,10 +234,20 @@ class AssistantConversationRoute extends MoodiaryRouteBase {
 
   final String? title;
 
-  const AssistantConversationRoute({this.sessionId, this.title}) : super(path);
+  final String? citedDiaryId;
+
+  const AssistantConversationRoute({
+    this.sessionId,
+    this.title,
+    this.citedDiaryId,
+  }) : super(path);
 
   @override
-  Map<String, dynamic> get params => {'session_id': sessionId, 'title': title};
+  Map<String, dynamic> get params => {
+    'session_id': sessionId,
+    'title': title,
+    'cited_diary_id': citedDiaryId,
+  };
 }
 
 class AssistantProvidersRoute extends MoodiaryRouteBase {

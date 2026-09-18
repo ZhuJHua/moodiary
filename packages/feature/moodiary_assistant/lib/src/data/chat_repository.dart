@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:drift/drift.dart';
 import 'package:injectable/injectable.dart';
+import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -31,10 +32,6 @@ class ChatRepository {
     compactedUpToMessageId: r.compactedUpToMessageId,
     compactedAt: dbToTimeOrNull(r.compactedAt),
     compactedInputTokensAtTrigger: r.compactedInputTokensAtTrigger,
-    agentPresetId: r.agentPresetId,
-    personaSnapshot: r.personaSnapshot,
-    // null（不限）与 '[]'（一个都不挂）语义不同，不能塌成空列表。
-    toolsSnapshot: dbToStringListOrNull(r.toolsSnapshotJson),
   );
 
   static ChatSessionsCompanion _toSessionCompanion(ChatSession s) =>
@@ -50,9 +47,6 @@ class ChatRepository {
         compactedUpToMessageId: Value(s.compactedUpToMessageId),
         compactedAt: Value(dbTimeOrNull(s.compactedAt)),
         compactedInputTokensAtTrigger: Value(s.compactedInputTokensAtTrigger),
-        agentPresetId: Value(s.agentPresetId),
-        personaSnapshot: Value(s.personaSnapshot),
-        toolsSnapshotJson: Value(dbStringListOrNull(s.toolsSnapshot)),
       );
 
   static ChatMessage _toMessage(
@@ -70,6 +64,7 @@ class ChatRepository {
     inputTokens: r.inputTokens,
     outputTokens: r.outputTokens,
     model: r.model,
+    providerId: r.providerId,
     toolCalls: toolCalls,
   );
 
@@ -86,12 +81,13 @@ class ChatRepository {
         inputTokens: Value(m.inputTokens),
         outputTokens: Value(m.outputTokens),
         model: Value(m.model),
+        providerId: Value(m.providerId),
       );
 
   static AssistantToolCall _toToolCall(AssistantToolCallRow r) =>
       AssistantToolCall(
         callId: r.callId,
-        name: r.name,
+        name: renamedAssistantToolIds[r.name] ?? r.name,
         argsJson: r.argsJson,
         result: r.result,
         done: r.done != 0,
@@ -144,6 +140,16 @@ class ChatRepository {
       _db.chatSessions,
     )..orderBy([(s) => OrderingTerm.desc(s.updatedAt)])).get();
     return [for (final r in rows) _toSession(r)];
+  }
+
+  Future<int> countSessionsByProvider(String providerId) async {
+    final count = _db.chatSessions.id.count();
+    final row =
+        await (_db.selectOnly(_db.chatSessions)
+              ..addColumns([count])
+              ..where(_db.chatSessions.providerId.equals(providerId)))
+            .getSingle();
+    return row.read(count) ?? 0;
   }
 
   Future<ChatSession?> getSession(String id) async {

@@ -1350,12 +1350,9 @@ fn wire__crate__api__llm__rig_chat_stream_impl(
     sink: impl CstDecode<
         StreamSink<crate::api::llm::RigStreamEvent, flutter_rust_bridge::for_generated::DcoCodec>,
     >,
-    config: impl CstDecode<crate::api::llm::RigProviderConfig>,
-    system_prompt: impl CstDecode<String>,
-    history: impl CstDecode<Vec<crate::api::llm::RigChatMessage>>,
-    tools: impl CstDecode<Vec<crate::api::llm::RigToolDef>>,
-    max_turns: impl CstDecode<u32>,
+    input: impl CstDecode<crate::api::llm::RigChatInput>,
     tool_dispatch: impl CstDecode<flutter_rust_bridge::DartOpaque>,
+    tool_gate: impl CstDecode<flutter_rust_bridge::DartOpaque>,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
@@ -1365,26 +1362,23 @@ fn wire__crate__api__llm__rig_chat_stream_impl(
         },
         move || {
             let api_sink = sink.cst_decode();
-            let api_config = config.cst_decode();
-            let api_system_prompt = system_prompt.cst_decode();
-            let api_history = history.cst_decode();
-            let api_tools = tools.cst_decode();
-            let api_max_turns = max_turns.cst_decode();
+            let api_input = input.cst_decode();
             let api_tool_dispatch =
                 decode_DartFn_Inputs_String_String_Output_String_AnyhowException(
                     tool_dispatch.cst_decode(),
+                );
+            let api_tool_gate =
+                decode_DartFn_Inputs_String_String_String_Output_String_AnyhowException(
+                    tool_gate.cst_decode(),
                 );
             move |context| async move {
                 transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || async move {
                         let output_ok = crate::api::llm::rig_chat_stream(
                             api_sink,
-                            api_config,
-                            api_system_prompt,
-                            api_history,
-                            api_tools,
-                            api_max_turns,
+                            api_input,
                             api_tool_dispatch,
+                            api_tool_gate,
                         )
                         .await?;
                         std::result::Result::Ok(output_ok)
@@ -1463,6 +1457,14 @@ const _: fn() = || {
         let _: Option<bool> = RequestOptions.throw_on_status;
     }
     {
+        let RigChatInput = None::<crate::api::llm::RigChatInput>.unwrap();
+        let _: crate::api::llm::RigProviderConfig = RigChatInput.config;
+        let _: String = RigChatInput.system_prompt;
+        let _: Vec<crate::api::llm::RigChatMessage> = RigChatInput.history;
+        let _: Vec<crate::api::llm::RigToolDef> = RigChatInput.tools;
+        let _: u32 = RigChatInput.max_turns;
+    }
+    {
         let RigChatMessage = None::<crate::api::llm::RigChatMessage>.unwrap();
         let _: String = RigChatMessage.role;
         let _: String = RigChatMessage.content;
@@ -1513,6 +1515,26 @@ const _: fn() = || {
             let _: u32 = output_tokens;
             let _: u32 = cached_input_tokens;
             let _: u32 = cache_write_tokens;
+        }
+        crate::api::llm::RigStreamEvent::Turn {
+            turn,
+            finish_reason,
+            response_id,
+            provider_request_id,
+            input_tokens,
+            output_tokens,
+            cached_input_tokens,
+        } => {
+            let _: u32 = turn;
+            let _: String = finish_reason;
+            let _: String = response_id;
+            let _: String = provider_request_id;
+            let _: u32 = input_tokens;
+            let _: u32 = output_tokens;
+            let _: u32 = cached_input_tokens;
+        }
+        crate::api::llm::RigStreamEvent::TurnDiscarded { turn } => {
+            let _: u32 = turn;
         }
     }
     {
@@ -1572,6 +1594,54 @@ fn decode_DartFn_Inputs_String_String_Output_String_AnyhowException(
             dart_opaque.clone(),
             arg0,
             arg1,
+        ))
+    }
+}
+fn decode_DartFn_Inputs_String_String_String_Output_String_AnyhowException(
+    dart_opaque: flutter_rust_bridge::DartOpaque,
+) -> impl Fn(
+    String,
+    String,
+    String,
+) -> flutter_rust_bridge::DartFnFuture<
+    std::result::Result<String, flutter_rust_bridge::for_generated::anyhow::Error>,
+> {
+    use flutter_rust_bridge::IntoDart;
+
+    async fn body(
+        dart_opaque: flutter_rust_bridge::DartOpaque,
+        arg0: String,
+        arg1: String,
+        arg2: String,
+    ) -> std::result::Result<String, flutter_rust_bridge::for_generated::anyhow::Error> {
+        let args = vec![
+            arg0.into_into_dart().into_dart(),
+            arg1.into_into_dart().into_dart(),
+            arg2.into_into_dart().into_dart(),
+        ];
+        let message = FLUTTER_RUST_BRIDGE_HANDLER
+            .dart_fn_invoke(dart_opaque, args)
+            .await;
+
+        let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+        let action = deserializer.cursor.read_u8().unwrap();
+        let ans = match action {
+            0 => std::result::Result::Ok(<String>::sse_decode(&mut deserializer)),
+            1 => std::result::Result::Err(
+                <flutter_rust_bridge::for_generated::anyhow::Error>::sse_decode(&mut deserializer),
+            ),
+            _ => unreachable!(),
+        };
+        deserializer.end();
+        ans
+    }
+
+    move |arg0: String, arg1: String, arg2: String| {
+        flutter_rust_bridge::for_generated::convert_into_dart_fn_future(body(
+            dart_opaque.clone(),
+            arg0,
+            arg1,
+            arg2,
         ))
     }
 }
@@ -2287,6 +2357,24 @@ impl SseDecode for crate::api::http::RequestOptions {
     }
 }
 
+impl SseDecode for crate::api::llm::RigChatInput {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_config = <crate::api::llm::RigProviderConfig>::sse_decode(deserializer);
+        let mut var_systemPrompt = <String>::sse_decode(deserializer);
+        let mut var_history = <Vec<crate::api::llm::RigChatMessage>>::sse_decode(deserializer);
+        let mut var_tools = <Vec<crate::api::llm::RigToolDef>>::sse_decode(deserializer);
+        let mut var_maxTurns = <u32>::sse_decode(deserializer);
+        return crate::api::llm::RigChatInput {
+            config: var_config,
+            system_prompt: var_systemPrompt,
+            history: var_history,
+            tools: var_tools,
+            max_turns: var_maxTurns,
+        };
+    }
+}
+
 impl SseDecode for crate::api::llm::RigChatMessage {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2373,6 +2461,28 @@ impl SseDecode for crate::api::llm::RigStreamEvent {
                     cached_input_tokens: var_cachedInputTokens,
                     cache_write_tokens: var_cacheWriteTokens,
                 };
+            }
+            6 => {
+                let mut var_turn = <u32>::sse_decode(deserializer);
+                let mut var_finishReason = <String>::sse_decode(deserializer);
+                let mut var_responseId = <String>::sse_decode(deserializer);
+                let mut var_providerRequestId = <String>::sse_decode(deserializer);
+                let mut var_inputTokens = <u32>::sse_decode(deserializer);
+                let mut var_outputTokens = <u32>::sse_decode(deserializer);
+                let mut var_cachedInputTokens = <u32>::sse_decode(deserializer);
+                return crate::api::llm::RigStreamEvent::Turn {
+                    turn: var_turn,
+                    finish_reason: var_finishReason,
+                    response_id: var_responseId,
+                    provider_request_id: var_providerRequestId,
+                    input_tokens: var_inputTokens,
+                    output_tokens: var_outputTokens,
+                    cached_input_tokens: var_cachedInputTokens,
+                };
+            }
+            7 => {
+                let mut var_turn = <u32>::sse_decode(deserializer);
+                return crate::api::llm::RigStreamEvent::TurnDiscarded { turn: var_turn };
             }
             _ => {
                 unimplemented!("");
@@ -2812,6 +2922,30 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::http::RequestOptio
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::llm::RigChatInput> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.0.config.into_into_dart().into_dart(),
+            self.0.system_prompt.into_into_dart().into_dart(),
+            self.0.history.into_into_dart().into_dart(),
+            self.0.tools.into_into_dart().into_dart(),
+            self.0.max_turns.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crate::api::llm::RigChatInput>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::llm::RigChatInput>>
+    for crate::api::llm::RigChatInput
+{
+    fn into_into_dart(self) -> FrbWrapper<crate::api::llm::RigChatInput> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::llm::RigChatMessage> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -2904,6 +3038,28 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::llm::RigStreamEven
                 cache_write_tokens.into_into_dart().into_dart(),
             ]
             .into_dart(),
+            crate::api::llm::RigStreamEvent::Turn {
+                turn,
+                finish_reason,
+                response_id,
+                provider_request_id,
+                input_tokens,
+                output_tokens,
+                cached_input_tokens,
+            } => [
+                6.into_dart(),
+                turn.into_into_dart().into_dart(),
+                finish_reason.into_into_dart().into_dart(),
+                response_id.into_into_dart().into_dart(),
+                provider_request_id.into_into_dart().into_dart(),
+                input_tokens.into_into_dart().into_dart(),
+                output_tokens.into_into_dart().into_dart(),
+                cached_input_tokens.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::api::llm::RigStreamEvent::TurnDiscarded { turn } => {
+                [7.into_dart(), turn.into_into_dart().into_dart()].into_dart()
+            }
             _ => {
                 unimplemented!("");
             }
@@ -3412,6 +3568,17 @@ impl SseEncode for crate::api::http::RequestOptions {
     }
 }
 
+impl SseEncode for crate::api::llm::RigChatInput {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <crate::api::llm::RigProviderConfig>::sse_encode(self.config, serializer);
+        <String>::sse_encode(self.system_prompt, serializer);
+        <Vec<crate::api::llm::RigChatMessage>>::sse_encode(self.history, serializer);
+        <Vec<crate::api::llm::RigToolDef>>::sse_encode(self.tools, serializer);
+        <u32>::sse_encode(self.max_turns, serializer);
+    }
+}
+
 impl SseEncode for crate::api::llm::RigChatMessage {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -3478,6 +3645,28 @@ impl SseEncode for crate::api::llm::RigStreamEvent {
                 <u32>::sse_encode(output_tokens, serializer);
                 <u32>::sse_encode(cached_input_tokens, serializer);
                 <u32>::sse_encode(cache_write_tokens, serializer);
+            }
+            crate::api::llm::RigStreamEvent::Turn {
+                turn,
+                finish_reason,
+                response_id,
+                provider_request_id,
+                input_tokens,
+                output_tokens,
+                cached_input_tokens,
+            } => {
+                <i32>::sse_encode(6, serializer);
+                <u32>::sse_encode(turn, serializer);
+                <String>::sse_encode(finish_reason, serializer);
+                <String>::sse_encode(response_id, serializer);
+                <String>::sse_encode(provider_request_id, serializer);
+                <u32>::sse_encode(input_tokens, serializer);
+                <u32>::sse_encode(output_tokens, serializer);
+                <u32>::sse_encode(cached_input_tokens, serializer);
+            }
+            crate::api::llm::RigStreamEvent::TurnDiscarded { turn } => {
+                <i32>::sse_encode(7, serializer);
+                <u32>::sse_encode(turn, serializer);
             }
             _ => {
                 unimplemented!("");
@@ -3789,11 +3978,11 @@ mod io {
             CstDecode::<crate::api::http::RequestOptions>::cst_decode(*wrap).into()
         }
     }
-    impl CstDecode<crate::api::llm::RigProviderConfig> for *mut wire_cst_rig_provider_config {
+    impl CstDecode<crate::api::llm::RigChatInput> for *mut wire_cst_rig_chat_input {
         // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::llm::RigProviderConfig {
+        fn cst_decode(self) -> crate::api::llm::RigChatInput {
             let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::api::llm::RigProviderConfig>::cst_decode(*wrap).into()
+            CstDecode::<crate::api::llm::RigChatInput>::cst_decode(*wrap).into()
         }
     }
     impl CstDecode<u16> for *mut u16 {
@@ -4002,6 +4191,18 @@ mod io {
             }
         }
     }
+    impl CstDecode<crate::api::llm::RigChatInput> for wire_cst_rig_chat_input {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::api::llm::RigChatInput {
+            crate::api::llm::RigChatInput {
+                config: self.config.cst_decode(),
+                system_prompt: self.system_prompt.cst_decode(),
+                history: self.history.cst_decode(),
+                tools: self.tools.cst_decode(),
+                max_turns: self.max_turns.cst_decode(),
+            }
+        }
+    }
     impl CstDecode<crate::api::llm::RigChatMessage> for wire_cst_rig_chat_message {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::api::llm::RigChatMessage {
@@ -4066,6 +4267,24 @@ mod io {
                         output_tokens: ans.output_tokens.cst_decode(),
                         cached_input_tokens: ans.cached_input_tokens.cst_decode(),
                         cache_write_tokens: ans.cache_write_tokens.cst_decode(),
+                    }
+                }
+                6 => {
+                    let ans = unsafe { self.kind.Turn };
+                    crate::api::llm::RigStreamEvent::Turn {
+                        turn: ans.turn.cst_decode(),
+                        finish_reason: ans.finish_reason.cst_decode(),
+                        response_id: ans.response_id.cst_decode(),
+                        provider_request_id: ans.provider_request_id.cst_decode(),
+                        input_tokens: ans.input_tokens.cst_decode(),
+                        output_tokens: ans.output_tokens.cst_decode(),
+                        cached_input_tokens: ans.cached_input_tokens.cst_decode(),
+                    }
+                }
+                7 => {
+                    let ans = unsafe { self.kind.TurnDiscarded };
+                    crate::api::llm::RigStreamEvent::TurnDiscarded {
+                        turn: ans.turn.cst_decode(),
                     }
                 }
                 _ => unreachable!(),
@@ -4234,6 +4453,22 @@ mod io {
         }
     }
     impl Default for wire_cst_request_options {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+    impl NewWithNullPtr for wire_cst_rig_chat_input {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                config: Default::default(),
+                system_prompt: core::ptr::null_mut(),
+                history: core::ptr::null_mut(),
+                tools: core::ptr::null_mut(),
+                max_turns: Default::default(),
+            }
+        }
+    }
+    impl Default for wire_cst_rig_chat_input {
         fn default() -> Self {
             Self::new_with_null_ptr()
         }
@@ -4611,23 +4846,11 @@ mod io {
     pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__llm__rig_chat_stream(
         port_: i64,
         sink: *mut wire_cst_list_prim_u_8_strict,
-        config: *mut wire_cst_rig_provider_config,
-        system_prompt: *mut wire_cst_list_prim_u_8_strict,
-        history: *mut wire_cst_list_rig_chat_message,
-        tools: *mut wire_cst_list_rig_tool_def,
-        max_turns: u32,
+        input: *mut wire_cst_rig_chat_input,
         tool_dispatch: *const std::ffi::c_void,
+        tool_gate: *const std::ffi::c_void,
     ) {
-        wire__crate__api__llm__rig_chat_stream_impl(
-            port_,
-            sink,
-            config,
-            system_prompt,
-            history,
-            tools,
-            max_turns,
-            tool_dispatch,
-        )
+        wire__crate__api__llm__rig_chat_stream_impl(port_, sink, input, tool_dispatch, tool_gate)
     }
 
     #[unsafe(no_mangle)]
@@ -4758,10 +4981,10 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_rig_provider_config()
-    -> *mut wire_cst_rig_provider_config {
+    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_rig_chat_input()
+    -> *mut wire_cst_rig_chat_input {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
-            wire_cst_rig_provider_config::new_with_null_ptr(),
+            wire_cst_rig_chat_input::new_with_null_ptr(),
         )
     }
 
@@ -5022,6 +5245,15 @@ mod io {
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
+    pub struct wire_cst_rig_chat_input {
+        config: wire_cst_rig_provider_config,
+        system_prompt: *mut wire_cst_list_prim_u_8_strict,
+        history: *mut wire_cst_list_rig_chat_message,
+        tools: *mut wire_cst_list_rig_tool_def,
+        max_turns: u32,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
     pub struct wire_cst_rig_chat_message {
         role: *mut wire_cst_list_prim_u_8_strict,
         content: *mut wire_cst_list_prim_u_8_strict,
@@ -5055,6 +5287,8 @@ mod io {
         ToolStarted: wire_cst_RigStreamEvent_ToolStarted,
         ToolFinished: wire_cst_RigStreamEvent_ToolFinished,
         Usage: wire_cst_RigStreamEvent_Usage,
+        Turn: wire_cst_RigStreamEvent_Turn,
+        TurnDiscarded: wire_cst_RigStreamEvent_TurnDiscarded,
         nil__: (),
     }
     #[repr(C)]
@@ -5092,6 +5326,22 @@ mod io {
         output_tokens: u32,
         cached_input_tokens: u32,
         cache_write_tokens: u32,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_RigStreamEvent_Turn {
+        turn: u32,
+        finish_reason: *mut wire_cst_list_prim_u_8_strict,
+        response_id: *mut wire_cst_list_prim_u_8_strict,
+        provider_request_id: *mut wire_cst_list_prim_u_8_strict,
+        input_tokens: u32,
+        output_tokens: u32,
+        cached_input_tokens: u32,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_RigStreamEvent_TurnDiscarded {
+        turn: u32,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

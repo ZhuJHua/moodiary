@@ -15,18 +15,18 @@ void main() {
     test('子集按 specs 原顺序过滤，与传入顺序无关', () {
       final allowed = [
         AssistantTool.rememberFact.id,
-        AssistantTool.queryDiaries.id,
+        AssistantTool.searchDiaries.id,
       ];
       final ids = [
         for (final s in AssistantToolRegistry.specsFor(allowed)) s.id,
       ];
       expect(ids, [
-        AssistantTool.queryDiaries.id,
+        AssistantTool.searchDiaries.id,
         AssistantTool.rememberFact.id,
       ]);
     });
 
-    test('未知 id 静默忽略（预设可能存着已下线工具的 id）', () {
+    test('未知 id 静默忽略', () {
       final specs = AssistantToolRegistry.specsFor([
         'gone-tool',
         AssistantTool.getDiary.id,

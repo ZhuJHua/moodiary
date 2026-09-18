@@ -10,20 +10,49 @@ import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'llm.freezed.dart';
 
 Stream<RigStreamEvent> rigChatStream({
-  required RigProviderConfig config,
-  required String systemPrompt,
-  required List<RigChatMessage> history,
-  required List<RigToolDef> tools,
-  required int maxTurns,
+  required RigChatInput input,
   required FutureOr<String> Function(String, String) toolDispatch,
+  required FutureOr<String> Function(String, String, String) toolGate,
 }) => RustLib.instance.api.crateApiLlmRigChatStream(
-  config: config,
-  systemPrompt: systemPrompt,
-  history: history,
-  tools: tools,
-  maxTurns: maxTurns,
+  input: input,
   toolDispatch: toolDispatch,
+  toolGate: toolGate,
 );
+
+class RigChatInput {
+  final RigProviderConfig config;
+  final String systemPrompt;
+  final List<RigChatMessage> history;
+  final List<RigToolDef> tools;
+  final int maxTurns;
+
+  const RigChatInput({
+    required this.config,
+    required this.systemPrompt,
+    required this.history,
+    required this.tools,
+    required this.maxTurns,
+  });
+
+  @override
+  int get hashCode =>
+      config.hashCode ^
+      systemPrompt.hashCode ^
+      history.hashCode ^
+      tools.hashCode ^
+      maxTurns.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RigChatInput &&
+          runtimeType == other.runtimeType &&
+          config == other.config &&
+          systemPrompt == other.systemPrompt &&
+          history == other.history &&
+          tools == other.tools &&
+          maxTurns == other.maxTurns;
+}
 
 class RigChatMessage {
   final String role;
@@ -128,6 +157,17 @@ sealed class RigStreamEvent with _$RigStreamEvent {
     required int cachedInputTokens,
     required int cacheWriteTokens,
   }) = RigStreamEvent_Usage;
+  const factory RigStreamEvent.turn({
+    required int turn,
+    required String finishReason,
+    required String responseId,
+    required String providerRequestId,
+    required int inputTokens,
+    required int outputTokens,
+    required int cachedInputTokens,
+  }) = RigStreamEvent_Turn;
+  const factory RigStreamEvent.turnDiscarded({required int turn}) =
+      RigStreamEvent_TurnDiscarded;
 }
 
 class RigToolDef {

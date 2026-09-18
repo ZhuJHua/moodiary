@@ -23,35 +23,102 @@ void main() {
   });
 
   group('buildStableSystemPrompt', () {
-    test('分层顺序：身份 → 护栏 → 人格 → 工具目录', () {
-      final prompt = buildStableSystemPrompt(
-        persona: 'PERSONA-MARK',
-        toolsEnabled: true,
-      );
-      final identity = prompt.indexOf('built-in AI assistant of Moodiary');
-      final guardrails = prompt.indexOf('Ground rules');
-      final persona = prompt.indexOf('PERSONA-MARK');
-      final tools = prompt.indexOf('Tool guidelines:');
-      expect(identity, greaterThanOrEqualTo(0));
-      expect(guardrails, greaterThan(identity));
-      expect(persona, greaterThan(guardrails));
-      expect(tools, greaterThan(persona));
+    String build({
+      bool tools = true,
+      bool memory = true,
+      String notes = '',
+      bool confirms = false,
+    }) => buildStableSystemPrompt(
+      toolsEnabled: tools,
+      memoryEnabled: memory,
+      userNotes: notes,
+      confirmsWrites: confirms,
+    );
+
+    test('分层顺序：身份 → 护栏 → 检索策略 → 人格 → 说明 → 工具目录', () {
+      final prompt = build(notes: 'NOTES-MARK');
+      final marks = [
+        'built-in AI assistant of Moodiary',
+        'Ground rules',
+        'Memory and retrieval policy',
+        '# Persona',
+        'NOTES-MARK',
+        'Tool guidelines:',
+      ];
+      final offsets = [for (final m in marks) prompt.indexOf(m)];
+      expect(offsets.every((o) => o >= 0), isTrue);
+      expect(offsets, [...offsets]..sort());
     });
 
-    test('toolsEnabled=false 时没有工具目录层', () {
-      final prompt = buildStableSystemPrompt(persona: 'P', toolsEnabled: false);
+    test('说明为空时整段消失，人格始终内建', () {
+      final prompt = build();
+      expect(prompt.contains('The user wrote these notes'), isFalse);
+      expect(prompt, contains('# Persona'));
+    });
+
+    test('记忆关闭时策略段告诉模型去哪开，且不提 recallMemory', () {
+      final off = build(memory: false);
+      expect(off, contains('turned off in the app settings'));
+      expect(off.contains('recallMemory'), isFalse);
+      expect(build(memory: true), contains('recallMemory'));
+    });
+
+    test('toolsEnabled=false 时没有检索策略和工具目录', () {
+      final prompt = build(tools: false);
       expect(prompt.contains('Tool guidelines:'), isFalse);
+      expect(prompt.contains('Memory and retrieval policy'), isFalse);
     });
 
-    test('空 persona 回退内置人格', () {
-      final prompt = buildStableSystemPrompt(persona: '  ', toolsEnabled: true);
-      expect(prompt, contains(defaultPersona));
+    test('护栏里的工具句跟着权限模式走，其余字节不变', () {
+      final free = build();
+      final gated = build(confirms: true);
+      expect(free, contains('Every tool runs immediately'));
+      expect(gated, isNot(contains('Every tool runs immediately')));
+      expect(gated, contains(assistantToolSkippedPrefix));
+      expect(
+        gated.split('Ground rules').first,
+        free.split('Ground rules').first,
+      );
     });
 
-    test('同参数逐次调用字节一致（缓存前缀）', () {
-      String build() =>
-          buildStableSystemPrompt(persona: 'P', toolsEnabled: true);
-      expect(build(), build());
+    test('检索策略段不超过 150 词', () {
+      final prompt = build();
+      final start = prompt.indexOf('Memory and retrieval policy');
+      final end = prompt.indexOf('# Persona');
+      final words = prompt
+          .substring(start, end)
+          .split(RegExp(r'\s+'))
+          .where((w) => w.isNotEmpty)
+          .length;
+      expect(words, lessThanOrEqualTo(150));
     });
+  });
+
+  group('buildTurnContext', () {
+    final at = DateTime(2026, 9, 13, 14, 5);
+
+    test('只报数量，不带事实正文', () {
+      final text = buildTurnContext(
+        localeTag: 'zh-CN',
+        nowLocal: at,
+        factCount: 23,
+        semanticSearch: true,
+      );
+      expect(text, contains('Saved facts: 23'));
+      expect(text, contains('semantic diary search: on'));
+    });
+
+    test('记忆关闭时连账本都不出现', () {
+      final text = buildTurnContext(localeTag: 'zh-CN', nowLocal: at);
+      expect(text.contains('Saved facts'), isFalse);
+      expect(text, contains('2026-09-13 14:05'));
+    });
+  });
+
+  test('记忆关闭时下发的工具集不含记忆工具', () {
+    final ids = toolIdsWithoutMemory();
+    expect(ids, isNot(contains(AssistantTool.recallMemory.id)));
+    expect(ids, contains(AssistantTool.searchDiaries.id));
+    expect(ids, hasLength(AssistantTool.values.length - memoryTools.length));
   });
 }

@@ -14,6 +14,8 @@ class AssistantNotice extends StatefulWidget {
 
   final WidgetBuilder? detail;
 
+  final EdgeInsetsGeometry? detailPadding;
+
   final VoidCallback? onTap;
 
   final String? stateKey;
@@ -26,6 +28,7 @@ class AssistantNotice extends StatefulWidget {
     required this.kind,
     this.summary = '',
     this.detail,
+    this.detailPadding,
     this.onTap,
     this.stateKey,
     this.hideSummaryWhenExpanded = false,
@@ -148,17 +151,17 @@ class _AssistantNoticeState extends State<AssistantNotice>
 
     Widget? body;
     if (_expandable && factor > 0) {
-      body = SelectionArea(
-        child: Padding(
-          padding: const .fromLTRB(22, 1, 0, 6),
-          child: Builder(builder: widget.detail!),
+      body = ClipRect(
+        child: Align(
+          alignment: .topLeft,
+          heightFactor: factor,
+          child: Padding(
+            padding:
+                widget.detailPadding ?? const EdgeInsets.fromLTRB(22, 1, 0, 6),
+            child: Builder(builder: widget.detail!),
+          ),
         ),
       );
-      if (factor < 1) {
-        body = ClipRect(
-          child: Align(alignment: .topLeft, heightFactor: factor, child: body),
-        );
-      }
     }
 
     final content = Column(
@@ -175,7 +178,7 @@ class _AssistantNoticeState extends State<AssistantNotice>
         child: content,
       );
     }
-    return Padding(padding: const .only(bottom: 6), child: wrapped);
+    return Padding(padding: const .only(bottom: 8), child: wrapped);
   }
 
   @override

@@ -1,3 +1,4 @@
+import 'package:moodiary_assistant/src/application/diary_citation.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart' show uuidV7;
 
@@ -29,11 +30,17 @@ final class AssistantTurn extends AssistantChatItem {
 
   final List<AssistantToolCall> toolCalls;
 
+  final List<DiaryCitation> diaryCitations;
+
   final String model;
+
+  final String providerId;
 
   final bool streaming;
 
   final bool thinkingActive;
+
+  final bool truncated;
 
   const AssistantTurn({
     required this.id,
@@ -46,9 +53,12 @@ final class AssistantTurn extends AssistantChatItem {
     this.inputTokens = 0,
     this.outputTokens = 0,
     this.toolCalls = const [],
+    this.diaryCitations = const [],
     this.model = '',
+    this.providerId = '',
     this.streaming = false,
     this.thinkingActive = false,
+    this.truncated = false,
   });
 
   factory AssistantTurn.user(
@@ -68,6 +78,7 @@ final class AssistantTurn extends AssistantChatItem {
     bool streaming = false,
     DateTime? createdAt,
     String model = '',
+    String providerId = '',
   }) => AssistantTurn(
     id: uuidV7(),
     fromUser: false,
@@ -75,6 +86,7 @@ final class AssistantTurn extends AssistantChatItem {
     streaming: streaming,
     createdAt: createdAt ?? DateTime.timestamp(),
     model: model,
+    providerId: providerId,
   );
 
   factory AssistantTurn.fromRecord(ChatMessage m) => AssistantTurn(
@@ -88,7 +100,9 @@ final class AssistantTurn extends AssistantChatItem {
     inputTokens: m.inputTokens ?? 0,
     outputTokens: m.outputTokens ?? 0,
     toolCalls: m.toolCalls,
+    diaryCitations: diaryCitationsOf(m.toolCalls),
     model: m.model ?? '',
+    providerId: m.providerId ?? '',
   );
 
   ChatMessage toRecord(String sessionId) => ChatMessage(
@@ -104,6 +118,7 @@ final class AssistantTurn extends AssistantChatItem {
     outputTokens: outputTokens == 0 ? null : outputTokens,
     toolCalls: toolCalls,
     model: model.isEmpty ? null : model,
+    providerId: providerId.isEmpty ? null : providerId,
   );
 
   bool get isEmpty => text.isEmpty && imageName.isEmpty && toolCalls.isEmpty;
@@ -120,6 +135,7 @@ final class AssistantTurn extends AssistantChatItem {
     List<AssistantToolCall>? toolCalls,
     bool? streaming,
     bool? thinkingActive,
+    bool? truncated,
   }) => AssistantTurn(
     id: id,
     fromUser: fromUser,
@@ -127,13 +143,18 @@ final class AssistantTurn extends AssistantChatItem {
     createdAt: createdAt,
     imageName: imageName,
     model: model,
+    providerId: providerId,
     reasoning: reasoning ?? this.reasoning,
     thinkingMillis: thinkingMillis ?? this.thinkingMillis,
     inputTokens: inputTokens ?? this.inputTokens,
     outputTokens: outputTokens ?? this.outputTokens,
     toolCalls: toolCalls ?? this.toolCalls,
+    diaryCitations: toolCalls == null
+        ? diaryCitations
+        : diaryCitationsOf(toolCalls),
     streaming: streaming ?? this.streaming,
     thinkingActive: thinkingActive ?? this.thinkingActive,
+    truncated: truncated ?? this.truncated,
   );
 }
 
@@ -151,9 +172,12 @@ final class AssistantModelSwitchNotice extends AssistantChatItem {
 
   final String model;
 
+  final String providerId;
+
   const AssistantModelSwitchNotice({
     required this.beforeId,
     required this.model,
+    this.providerId = '',
   });
 
   @override
@@ -165,15 +189,25 @@ List<AssistantModelSwitchNotice> modelSwitchNoticesFor(
 ) {
   final notices = <AssistantModelSwitchNotice>[];
   var lastModel = '';
+  var lastProvider = '';
   for (final item in items) {
     if (item is! AssistantTurn || item.fromUser) continue;
     if (item.model.isEmpty) continue;
-    if (lastModel.isNotEmpty && item.model != lastModel) {
+    final providerChanged =
+        lastProvider.isNotEmpty &&
+        item.providerId.isNotEmpty &&
+        item.providerId != lastProvider;
+    if (lastModel.isNotEmpty && (item.model != lastModel || providerChanged)) {
       notices.add(
-        AssistantModelSwitchNotice(beforeId: item.id, model: item.model),
+        AssistantModelSwitchNotice(
+          beforeId: item.id,
+          model: item.model,
+          providerId: item.providerId,
+        ),
       );
     }
     lastModel = item.model;
+    if (item.providerId.isNotEmpty) lastProvider = item.providerId;
   }
   return notices;
 }

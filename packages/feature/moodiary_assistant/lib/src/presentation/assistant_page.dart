@@ -1,29 +1,35 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math' as math;
 
 import 'package:flutter/services.dart';
 import 'package:gpt_markdown/gpt_markdown.dart';
 import 'package:moodiary_assistant/src/application/chat_controller.dart';
 import 'package:moodiary_assistant/src/application/chat_items.dart';
 import 'package:moodiary_assistant/src/application/context_compaction_controller.dart';
+import 'package:moodiary_assistant/src/application/diary_citation.dart';
 import 'package:moodiary_assistant/src/application/session_title_controller.dart';
-import 'package:moodiary_assistant/src/data/agent_preset_repository.dart';
-import 'package:moodiary_assistant/src/data/agent_preset_resolver.dart';
+import 'package:moodiary_assistant/src/application/tool_approval.dart';
 import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/assistant_tools.dart';
+import 'package:moodiary_assistant/src/data/assistant_trace_repository.dart';
 import 'package:moodiary_assistant/src/data/chat_repository.dart';
+import 'package:moodiary_assistant/src/data/llm_preset_repository.dart';
 import 'package:moodiary_assistant/src/data/llm_provider_repository.dart';
 import 'package:moodiary_assistant/src/data/memory_repository.dart';
 import 'package:moodiary_assistant/src/data/model_resolver.dart';
-import 'package:moodiary_assistant/src/presentation/agent_preset_sheet.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_notice.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_tool_ui.dart';
 import 'package:moodiary_assistant/src/presentation/chat_list.dart';
+import 'package:moodiary_assistant/src/presentation/diary_citations.dart';
 import 'package:moodiary_assistant/src/presentation/markdown_code_block.dart';
 import 'package:moodiary_assistant/src/presentation/model_picker_sheet.dart';
+import 'package:moodiary_assistant/src/presentation/permission_mode_sheet.dart';
+import 'package:moodiary_assistant/src/presentation/provider_logo.dart';
+import 'package:moodiary_assistant/src/presentation/reasoning_label.dart';
+import 'package:moodiary_assistant/src/presentation/tool_approval_card.dart';
+import 'package:moodiary_assistant/src/presentation/tool_approval_preview.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
@@ -40,19 +46,12 @@ const double _kComposerPadding = 8;
 
 const double _kComposerHeightEstimate = 102;
 
-const double _kTitleInset = 6;
+const double _kModelChipMinHeight = 32;
 
-double _toolbarHeight(BuildContext context) {
-  final typography = context.theme.typography;
-  final scaler = MediaQuery.textScalerOf(context);
-  double lineOf(TextStyle style) =>
-      scaler.scale(style.fontSize ?? 14) * (style.height ?? 1.4);
-  final needed =
-      lineOf(typography.titleMedium.emphasized.onSurface) +
-      lineOf(typography.labelSmall.onSurfaceVariant) +
-      20;
-  return math.max(kToolbarHeight, needed);
-}
+// 轮间 20，轮内 8
+const double _kTurnGap = 20;
+
+enum _ConversationAction { permission, compact, exportTrace, settings }
 
 Widget _codeBlock(
   BuildContext context,
@@ -66,11 +65,19 @@ class AssistantPage extends StatefulWidget {
 
   final String? initialTitle;
 
-  const AssistantPage({super.key, this.initialSessionId, this.initialTitle});
+  final String? citedDiaryId;
+
+  const AssistantPage({
+    super.key,
+    this.initialSessionId,
+    this.initialTitle,
+    this.citedDiaryId,
+  });
 
   factory AssistantPage.fromRoute(GoRouterState state) => AssistantPage(
     initialSessionId: state.params['session_id'] as String?,
     initialTitle: state.params['title'] as String?,
+    citedDiaryId: state.params['cited_diary_id'] as String?,
   );
 
   @override
@@ -107,7 +114,14 @@ class _AssistantPageState extends State<AssistantPage> {
   bool _ready = true;
   bool _initialized = false;
 
-  String _reasoningLevel = '';
+  String? _reasoningLevel;
+
+  final Map<String, LlmProvider> _providers = {};
+
+  bool _resolved = false;
+  bool _providerMissing = false;
+  bool _catalogMissing = false;
+  bool _modelMissing = false;
 
   LlmProvider? _provider;
   String _modelId = '';
@@ -124,8 +138,19 @@ class _AssistantPageState extends State<AssistantPage> {
 
   String? _pendingImageName;
 
+  String? _citedDiaryId;
+
   final ContextCompactionController _compaction = ContextCompactionController();
   final SessionTitleController _title = SessionTitleController();
+  final ToolApprovalGate _approvalGate = ToolApprovalGate();
+
+  ToolApprovalRequest? _approval;
+  ToolApprovalPreview? _approvalPreview;
+  AssistantPermissionMode? _sessionPermission;
+  String? _queuedText;
+
+  List<AssistantTraceTurn> _turns = [];
+  bool _truncated = false;
 
   int _lastTurnInputTokens = 0;
 
@@ -138,14 +163,6 @@ class _AssistantPageState extends State<AssistantPage> {
   bool _disclaimerAccepted = false;
 
   String _stagedProviderId = '';
-
-  String _stagedPresetId = builtinAgentPresetId;
-
-  bool _presetPickedExplicitly = false;
-
-  String? _presetName;
-
-  bool _presetMissing = false;
 
   bool _hasUserTurn = false;
 
@@ -165,6 +182,78 @@ class _AssistantPageState extends State<AssistantPage> {
     if (_inputFocusNode.hasFocus) _listKey.currentState?.pinToBottom();
   }
 
+  AssistantPermissionMode get _permissionMode =>
+      _sessionPermission ??
+      AssistantPermissionMode.fromId(MoodiaryKVs.assistantPermissionMode.get());
+
+  Future<bool> _gateTool(String callId, String name, String argsJson) async {
+    final spec = AssistantToolRegistry.byId(name);
+    if (spec == null) return true;
+    final args = _decodeArgs(argsJson);
+    final tier = assistantToolTier(spec.tool, args);
+    if (!assistantToolNeedsConfirmation(_permissionMode, tier)) return true;
+    if (!mounted) return false;
+    final request = ToolApprovalRequest(
+      callId: callId,
+      tool: spec.tool,
+      args: args,
+      tier: tier,
+    );
+    final l10n = context.l10n;
+    setState(() {
+      _approval = request;
+      _approvalPreview = null;
+    });
+    unawaited(
+      buildToolApprovalPreview(request, l10n)
+          .catchError(
+            (Object _) => ToolApprovalPreview(
+              subtitle: '',
+              lines: const [],
+              confirmLabel: l10n.common.ok,
+            ),
+          )
+          .then((preview) {
+            if (mounted && _approval?.callId == callId) {
+              setState(() => _approvalPreview = preview);
+            }
+          }),
+    );
+    final approved = await _approvalGate.request(callId);
+    if (mounted && _approval?.callId == callId) {
+      setState(() {
+        _approval = null;
+        _approvalPreview = null;
+      });
+    }
+    return approved;
+  }
+
+  void _resolveApproval(bool approved) {
+    final id = _approval?.callId;
+    if (id != null) _approvalGate.resolve(id, approved);
+  }
+
+  Future<void> _pickPermission() async {
+    final mode = await showPermissionModePicker(
+      context,
+      selected: _permissionMode,
+      subtitle: context.l10n.assistant.permissionSessionOnly,
+    );
+    if (mode != null && mounted) setState(() => _sessionPermission = mode);
+  }
+
+  Future<void> _exportTrace() async {
+    final session = _session;
+    if (session == null) return;
+    final l10n = context.l10n;
+    final json = await getIt<AssistantTraceRepository>().exportSession(
+      session.id,
+    );
+    await Clipboard.setData(ClipboardData(text: json));
+    toast.success(message: l10n.assistant.traceCopied);
+  }
+
   void _syncDerivedFromItems() {
     final items = _chat.items;
     _hasUserTurn = items.any((m) => m is AssistantTurn && m.fromUser);
@@ -180,10 +269,10 @@ class _AssistantPageState extends State<AssistantPage> {
     _chat = AssistantChatController();
     _disclaimerAccepted =
         MoodiaryKVs.assistantDisclaimerAccepted.get() ?? false;
-    _reasoningLevel = MoodiaryKVs.assistantReasoningEffort.get() ?? '';
+    _reasoningLevel = MoodiaryKVs.assistantReasoningEffort.get();
+    if (widget.initialSessionId == null) _citedDiaryId = widget.citedDiaryId;
     _chat.addListener(_syncDerivedFromItems);
     _inputFocusNode.addListener(_onInputFocusChanged);
-    unawaited(_initStagedPreset());
     if (!_disclaimerAccepted) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _showDisclaimer();
@@ -206,6 +295,7 @@ class _AssistantPageState extends State<AssistantPage> {
 
   @override
   void dispose() {
+    _approvalGate.declineAll();
     _chat.removeListener(_syncDerivedFromItems);
     _inputFocusNode.removeListener(_onInputFocusChanged);
     _inputController.dispose();
@@ -225,23 +315,54 @@ class _AssistantPageState extends State<AssistantPage> {
     final staged = pinned != null || _stagedProviderId.isEmpty
         ? null
         : await repo.getProvider(_stagedProviderId);
-    final provider = pinned ?? staged ?? await repo.getActiveProvider();
+    final lastId = MoodiaryKVs.assistantLastProviderId.get() ?? '';
+    final last = pinned != null || staged != null || lastId.isEmpty
+        ? null
+        : await repo.getProvider(lastId);
+    final provider = pinned ?? staged ?? last ?? await repo.getActiveProvider();
+    final providerMissing =
+        session != null && session.providerId.isNotEmpty && pinned == null;
+    final all = await repo.getAllProviders();
+    _providers
+      ..clear()
+      ..addEntries([for (final p in all) MapEntry(p.id, p)]);
     final key = provider == null ? null : await repo.getKey(provider.id);
+    final lastModel = MoodiaryKVs.assistantLastModelId.get() ?? '';
     final wanted = pinned != null && (session?.model.isNotEmpty ?? false)
         ? session!.model
-        : (_modelId.isEmpty ? (provider?.defaultModel ?? '') : _modelId);
+        : providerMissing
+        ? (provider?.defaultModel ?? '')
+        : _modelId.isNotEmpty
+        ? _modelId
+        : last != null && lastModel.isNotEmpty
+        ? lastModel
+        : (provider?.defaultModel ?? '');
     final resolved = provider == null
         ? null
         : ModelResolver.resolve(provider, wanted);
     final model = resolved?.preset;
+    final catalogMissing =
+        provider != null &&
+        provider.isPreset &&
+        getIt<LlmPresetRepository>().cachedAt == 0;
+    final modelMissing =
+        provider != null &&
+        provider.isPreset &&
+        !catalogMissing &&
+        model == null &&
+        (resolved?.modelId.isNotEmpty ?? false);
     final caps = _capabilities(provider, model);
     final levels = provider == null
         ? const <String>[]
         : ModelResolver.levelsFor(provider, wanted);
     if (mounted) {
       setState(() {
+        _resolved = true;
         _ready = provider != null && key != null && key.isNotEmpty;
         _provider = provider;
+        _providerMissing = providerMissing;
+        _catalogMissing = catalogMissing;
+        _modelMissing = modelMissing;
         _modelId = resolved?.modelId ?? '';
         _activeModel = model;
         _reasoningLevels = levels;
@@ -249,9 +370,6 @@ class _AssistantPageState extends State<AssistantPage> {
         _canUseTools = caps.tools;
         _contextLimit = model?.contextLimit ?? assistantDefaultContextBudget;
         _maxTokens = maxTokensFor(model?.outputLimit);
-        if (_reasoningLevel.isNotEmpty && !levels.contains(_reasoningLevel)) {
-          _reasoningLevel = '';
-        }
         if (!caps.attachment) _pendingImageName = null;
       });
     }
@@ -277,49 +395,161 @@ class _AssistantPageState extends State<AssistantPage> {
     return (tools: provider.toolCall, attachment: provider.attachment);
   }
 
-  Future<void> _pickModel() async {
-    if (_sending) return;
+  Future<List<ProviderModels>> _providerGroups() async {
     final repo = getIt<LlmProviderRepository>();
     final providers = await repo.getAllProviders();
-    final groups = <ProviderModels>[];
-    for (final p in providers) {
-      final options = ModelResolver.optionsFor(p);
-      if (options.isEmpty) continue;
-      final key = await repo.getKey(p.id);
-      groups.add((
-        provider: p,
-        options: options,
-        hasKey: key != null && key.isNotEmpty,
-      ));
+    final keys = await Future.wait(providers.map((p) => repo.getKey(p.id)));
+    return [
+      for (final (i, p) in providers.indexed)
+        (
+          provider: p,
+          options: ModelResolver.optionsFor(p),
+          hasKey: keys[i]?.isNotEmpty ?? false,
+        ),
+    ];
+  }
+
+  Future<void> _pickModel() async {
+    if (_sending) return;
+    final groups = await _providerGroups();
+    if (!mounted) return;
+    if (groups.isEmpty) {
+      await const AssistantProvidersRoute().push(context);
+      await _refreshReady();
+      return;
     }
-    if (groups.isEmpty || !mounted) return;
     final choice = await showGlobalModelPicker(
       context,
       groups: groups,
       providerId: _provider?.id ?? '',
       modelId: _modelId,
       level: _reasoningLevel,
+      catalogUpdatedAt: getIt<LlmPresetRepository>().cachedAt,
+      onDownloadCatalog: () async {
+        await getIt<LlmPresetRepository>().refresh();
+        return _providerGroups();
+      },
+      onManageProviders: () async {
+        await const AssistantProvidersRoute().push(context);
+        await _refreshReady();
+      },
+      onFillKey: (provider) => _fillKey(provider.id),
     );
     if (choice == null || !mounted) return;
+    if (!await _confirmSwitch(choice) || !mounted) return;
+    final level = choice.level;
     final session = _session;
     if (session != null) {
       final updated = session.copyWith(
         providerId: choice.providerId,
         model: choice.modelId,
-        reasoningEffort: choice.level,
+        reasoningEffort: level ?? reasoningFollowValue,
       );
       await getIt<ChatRepository>().upsertSession(updated);
       if (!mounted) return;
       setState(() => _session = updated);
     }
+    final levelChanged = level != _reasoningLevel;
     setState(() {
       _stagedProviderId = choice.providerId;
       _modelId = choice.modelId;
-      _reasoningLevel = choice.level;
+      _reasoningLevel = level;
     });
-    MoodiaryKVs.assistantReasoningEffort.set(choice.level);
+    MoodiaryKVs.assistantLastProviderId.set(choice.providerId);
+    MoodiaryKVs.assistantLastModelId.set(choice.modelId);
+    if (levelChanged) {
+      if (level == null) {
+        MoodiaryKVs.assistantReasoningEffort.remove();
+      } else {
+        MoodiaryKVs.assistantReasoningEffort.set(level);
+      }
+    }
+    await _refreshReady();
+    unawaited(_maybeCompact());
+  }
+
+  Future<void> _fillKey(String providerId) async {
+    await AssistantProviderEditRoute(id: providerId).push(context);
     await _refreshReady();
   }
+
+  Future<bool> _confirmSwitch(GlobalModelChoice choice) async {
+    if (choice.providerId == _provider?.id && choice.modelId == _modelId) {
+      return true;
+    }
+    final provider = await getIt<LlmProviderRepository>().getProvider(
+      choice.providerId,
+    );
+    if (provider == null || !mounted) return true;
+    final resolved = ModelResolver.resolve(provider, choice.modelId);
+    final caps = _capabilities(provider, resolved.preset);
+    final l10n = context.l10n;
+    final notes = <String>[];
+    if (!caps.attachment) {
+      final images = _chat.items
+          .whereType<AssistantTurn>()
+          .where((m) => m.imageName.isNotEmpty)
+          .length;
+      if (images > 0) {
+        notes.add(l10n.assistant.modelSwitchNoImages(count: images));
+      }
+      if (_pendingImageName != null) {
+        notes.add(l10n.assistant.modelSwitchDropPending);
+      }
+    }
+    final limit =
+        resolved.preset?.contextLimit ?? assistantDefaultContextBudget;
+    if (_lastTurnInputTokens > limit * assistantCompactionTriggerRatio) {
+      notes.add(l10n.assistant.modelSwitchSmallerContext);
+    }
+    if (notes.isEmpty) return true;
+    return MAlert.confirm(
+      context,
+      icon: LucideIcons.cpu,
+      title: l10n.assistant.modelSwitchTitle,
+      message: notes.join('\n'),
+      confirmLabel: l10n.assistant.modelSwitchConfirm,
+    );
+  }
+
+  Future<void> _compactNow() async {
+    final session = _session;
+    if (_sending || session == null) return;
+    final l10n = context.l10n;
+    final pending = _compaction.hasPending(
+      session: session,
+      orderedMessages: _compactionMessages(),
+    );
+    if (!pending) {
+      toast.info(message: l10n.assistant.compactNothing);
+      return;
+    }
+    final result = await _maybeCompact(force: true);
+    if (!mounted) return;
+    if (result == null) {
+      toast.error(message: l10n.assistant.compactFailed);
+    } else {
+      toast.success(message: l10n.assistant.compactedNow);
+    }
+  }
+
+  void _onConversationAction(_ConversationAction action) {
+    switch (action) {
+      case .permission:
+        unawaited(_pickPermission());
+      case .compact:
+        unawaited(_compactNow());
+      case .exportTrace:
+        unawaited(_exportTrace());
+      case .settings:
+        unawaited(_openSettings());
+    }
+  }
+
+  String get _effectiveLevel => effectiveReasoningLevel(
+    stored: _reasoningLevel,
+    levels: _reasoningLevels,
+  );
 
   Future<void> _loadSessionById(String id) async {
     final session = await getIt<ChatRepository>().getSession(id);
@@ -341,56 +571,18 @@ class _AssistantPageState extends State<AssistantPage> {
     _turnWidgets.clear();
     setState(() {
       _session = session;
-      _reasoningLevel = session.reasoningEffort;
+      _reasoningLevel = storedReasoningLevel(session.reasoningEffort);
       _pendingImageName = null;
       _sending = false;
     });
-    await Future.wait([
-      _chat.loadSession(session.id),
-      _refreshReady(),
-      _syncPresetLabel(session),
-    ]);
+    await Future.wait([_chat.loadSession(session.id), _refreshReady()]);
     if (!mounted) return;
     _syncCompactionNotice();
     _syncModelSwitchNotices();
     _listKey.currentState?.pinToBottom();
   }
 
-  Future<void> _initStagedPreset() async {
-    final id = await AgentPresetResolver.defaultId();
-    if (!mounted || _session != null) return;
-    final preset = id == builtinAgentPresetId
-        ? null
-        : await getIt<AgentPresetRepository>().get(id);
-    if (!mounted || _session != null) return;
-    setState(() {
-      _stagedPresetId = preset == null ? builtinAgentPresetId : preset.id;
-      _presetName = preset?.name;
-    });
-  }
-
-  Future<void> _syncPresetLabel(ChatSession session) async {
-    final id = session.agentPresetId;
-    if (id == null || id.isEmpty) {
-      setState(() {
-        _presetName = null;
-        _presetMissing = false;
-      });
-      return;
-    }
-    final preset = await getIt<AgentPresetRepository>().get(id);
-    if (!mounted || _session?.id != session.id) return;
-    setState(() {
-      _presetName = preset?.name;
-      _presetMissing = preset == null;
-    });
-  }
-
-  Future<ChatSession?> _ensureSession(
-    String firstUserText, {
-    required String persona,
-    List<String>? tools,
-  }) async {
+  Future<ChatSession?> _ensureSession(String firstUserText) async {
     final existing = _session;
     if (existing != null) return existing;
     final provider = _provider;
@@ -398,10 +590,7 @@ class _AssistantPageState extends State<AssistantPage> {
     final session = ChatSession.create(
       providerId: provider.id,
       model: _modelId,
-      reasoningEffort: _reasoningLevel,
-      agentPresetId: _stagedPresetId.isEmpty ? null : _stagedPresetId,
-      personaSnapshot: _stagedPresetId.isEmpty ? null : persona,
-      toolsSnapshot: _stagedPresetId.isEmpty ? null : tools,
+      reasoningEffort: _reasoningLevel ?? reasoningFollowValue,
     );
     await getIt<ChatRepository>().upsertSession(session);
     _chat.sessionId = session.id;
@@ -449,9 +638,6 @@ class _AssistantPageState extends State<AssistantPage> {
   Future<void> _openSettings() async {
     await const AssistantSettingRoute().push(context);
     await _refreshReady();
-    if (_session == null && !_presetPickedExplicitly) {
-      await _initStagedPreset();
-    }
   }
 
   Future<void> _showDisclaimer() async {
@@ -479,6 +665,7 @@ class _AssistantPageState extends State<AssistantPage> {
     required String volatilePrefix,
     required bool toolsActive,
     List<String>? allowedTools,
+    AssistantToolGate? toolGate,
   }) async {
     final provider = _provider;
     if (provider == null) return null;
@@ -495,14 +682,13 @@ class _AssistantPageState extends State<AssistantPage> {
       maxTokens: _maxTokens,
       history: history,
       reasoning: resolveReasoning(
-        level: _reasoningLevels.contains(_reasoningLevel)
-            ? _reasoningLevel
-            : '',
+        level: _effectiveLevel,
         model: _activeModel,
         maxTokens: _maxTokens,
       ),
       tools: toolsActive,
       allowedTools: allowedTools,
+      toolGate: toolGate,
     );
   }
 
@@ -516,6 +702,12 @@ class _AssistantPageState extends State<AssistantPage> {
   Future<void> _submit(String text) async {
     text = text.trim();
     final imageName = _pendingImageName;
+    if (_approval != null && text.isNotEmpty) {
+      _queuedText = text;
+      _inputController.clear();
+      _resolveApproval(false);
+      return;
+    }
     if ((text.isEmpty && imageName == null) ||
         _sending ||
         !_disclaimerAccepted) {
@@ -526,8 +718,9 @@ class _AssistantPageState extends State<AssistantPage> {
     _staleReplyIds = [];
 
     final base = DateTime.timestamp();
+    final cited = _citedDiaryId;
     final userMsg = AssistantTurn.user(
-      text,
+      cited == null ? text : citeDiary(text, cited),
       imageName: imageName ?? '',
       createdAt: base,
     );
@@ -536,6 +729,7 @@ class _AssistantPageState extends State<AssistantPage> {
     setState(() {
       _sending = true;
       _pendingImageName = null;
+      _citedDiaryId = null;
     });
 
     await _generate(
@@ -578,10 +772,32 @@ class _AssistantPageState extends State<AssistantPage> {
 
     await _generate(
       gen: gen,
-      sessionSeedText: userMsg.text,
+      sessionSeedText: splitDiaryCitation(userMsg.text).text,
       userMessage: userMsg,
       placeholderAt: .timestamp(),
     );
+  }
+
+  Future<void> _continueTurn() async {
+    if (_sending || !_disclaimerAccepted || _session == null) return;
+    final gen = ++_generation;
+    _staleReplyIds = [];
+    final base = DateTime.timestamp();
+    final userMsg = AssistantTurn.user(continueTurnMarker, createdAt: base);
+    _chat.add(userMsg);
+    setState(() => _sending = true);
+    await _generate(
+      gen: gen,
+      sessionSeedText: '',
+      userMessage: userMsg,
+      placeholderAt: base.add(const Duration(milliseconds: 1)),
+    );
+  }
+
+  void _flushQueued() {
+    final queued = _queuedText;
+    _queuedText = null;
+    if (queued != null && mounted) unawaited(_submit(queued));
   }
 
   Future<void> _generate({
@@ -593,39 +809,37 @@ class _AssistantPageState extends State<AssistantPage> {
     _listKey.currentState?.pinToBottom();
     final l10n = context.l10n;
     final localeTag = Localizations.localeOf(context).toLanguageTag();
-    final currentSession = _session;
-    final String persona;
-    final List<String>? allowedTools;
-    if (currentSession != null) {
-      persona = currentSession.personaSnapshot ?? defaultPersona;
-      allowedTools = currentSession.toolsSnapshot;
-    } else {
-      final mount = await AgentPresetResolver.mountFor(_stagedPresetId);
-      persona = mount.persona;
-      allowedTools = mount.tools;
-    }
-    final toolsActive =
-        _canUseTools && (allowedTools == null || allowedTools.isNotEmpty);
-    final memories = await getIt<MemoryRepository>().getRecent(
-      memoryInjectionLimit,
-    );
+    final toolsActive = _canUseTools;
+    final memoryEnabled =
+        toolsActive && (MoodiaryKVs.assistantMemoryEnabled.get() ?? false);
+    final allowedTools = memoryEnabled ? null : toolIdsWithoutMemory();
+    final factCount = memoryEnabled
+        ? await getIt<MemoryRepository>().count()
+        : null;
     if (!mounted || gen != _generation) return;
     final systemPrompt = buildStableSystemPrompt(
-      persona: persona,
       toolsEnabled: toolsActive,
+      memoryEnabled: memoryEnabled,
+      userNotes: MoodiaryKVs.assistantUserNotes.get() ?? '',
+      confirmsWrites: toolsActive && _permissionMode.confirmsWrites,
     );
-    final volatilePrefix = buildVolatilePrompt(
+    final volatilePrefix = buildTurnContext(
       localeTag: localeTag,
       nowLocal: .now(),
-      memories: [for (final m in memories) '(${m.category}) ${m.text}'],
+      factCount: factCount,
+      semanticSearch: AssistantToolRegistry.semanticAvailable,
     );
 
     _resetThinkingState();
+    _turns = [];
+    _truncated = false;
+    _lastTurnInputTokens = 0;
     final placeholder = AssistantTurn.assistant(
       '',
       streaming: true,
       createdAt: placeholderAt,
       model: _modelId,
+      providerId: _provider?.id ?? '',
     );
     _chat.beginStreaming(placeholder);
     _streamingMessage = placeholder;
@@ -639,6 +853,7 @@ class _AssistantPageState extends State<AssistantPage> {
       volatilePrefix: volatilePrefix,
       toolsActive: toolsActive,
       allowedTools: allowedTools,
+      toolGate: _gateTool,
     );
     if (!mounted || gen != _generation) return;
     if (request == null) {
@@ -649,11 +864,7 @@ class _AssistantPageState extends State<AssistantPage> {
       return;
     }
 
-    final session = await _ensureSession(
-      sessionSeedText,
-      persona: persona,
-      tools: allowedTools,
-    );
+    final session = await _ensureSession(sessionSeedText);
     if (!mounted || gen != _generation) return;
     if (session != null) {
       await _chat.persist(userMessage);
@@ -681,6 +892,10 @@ class _AssistantPageState extends State<AssistantPage> {
                   _applyToolFinished(event.callId, event.text);
                 case .usage:
                   _applyUsage(event.inputTokens, event.outputTokens);
+                case .turn:
+                  _applyTurn(event);
+                case .turnDiscarded:
+                  _discardTurn(event.turn);
               }
             },
             onError: (Object e) {
@@ -690,11 +905,14 @@ class _AssistantPageState extends State<AssistantPage> {
                 _appendDelta(needApiKeyText);
                 _refreshReady();
               } else {
-                _appendDelta(l10n.assistant.streamError(error: '$e'));
+                _appendDelta(
+                  l10n.assistant.streamError(error: _errorText(l10n, e)),
+                );
               }
               _finalizeStreaming(persist: true);
               if (mounted) setState(() => _sending = false);
               unawaited(_maybeCompact());
+              _flushQueued();
             },
             onDone: () {
               if (gen != _generation) return;
@@ -702,6 +920,7 @@ class _AssistantPageState extends State<AssistantPage> {
               _finalizeStreaming(persist: true);
               if (mounted) setState(() => _sending = false);
               unawaited(_maybeCompact());
+              _flushQueued();
             },
           );
     } catch (e) {
@@ -721,7 +940,11 @@ class _AssistantPageState extends State<AssistantPage> {
     for (final m in _chat.items) {
       if (m is! AssistantTurn) continue;
       final hasImage = m.imageName.isNotEmpty;
-      var content = m.fromUser ? m.text : _withToolRecord(m);
+      var content = !m.fromUser
+          ? _withToolRecord(m)
+          : m.text == continueTurnMarker
+          ? continueTurnForModel
+          : diaryCitationForModel(m.text);
       if (hasImage && !allowImages) {
         content = content.isEmpty
             ? assistantImagePlaceholder
@@ -771,6 +994,14 @@ class _AssistantPageState extends State<AssistantPage> {
     return result;
   }
 
+  String _errorText(Translations l10n, Object error) =>
+      switch (assistantErrorCode(error)) {
+        'max_turns' => l10n.assistant.errorMaxTurns,
+        'unknown_tool' => l10n.assistant.errorUnknownTool,
+        'cancelled' => l10n.assistant.errorCancelled,
+        _ => '$error',
+      };
+
   String _withToolRecord(AssistantTurn turn) {
     if (!_canUseTools) return turn.text;
     final record = AssistantToolRegistry.recordOf(turn.toolCalls);
@@ -778,33 +1009,24 @@ class _AssistantPageState extends State<AssistantPage> {
     return turn.text.isEmpty ? record : '$record\n\n${turn.text}';
   }
 
-  Future<ChatSession?> _maybeCompact() async {
+  Future<ChatSession?> _maybeCompact({bool force = false}) async {
     final session = _session;
-    if (session == null || _lastTurnInputTokens <= 0) return null;
+    if (session == null || (!force && _lastTurnInputTokens <= 0)) return null;
     final provider = _provider;
     if (provider == null) return null;
     final key = await getIt<LlmProviderRepository>().getKey(provider.id);
     if (key == null || key.isEmpty) return null;
     if (!mounted || _session?.id != session.id) return null;
 
-    final ordered = <CompactionMessage>[
-      for (final m in _chat.items)
-        if (m is AssistantTurn && !m.isEmpty)
-          (
-            id: m.id,
-            fromUser: m.fromUser,
-            text: m.text.isEmpty ? assistantImagePlaceholder : m.text,
-          ),
-    ];
-
     final updated = await _compaction.maybeCompact(
       session: session,
-      orderedMessages: ordered,
+      orderedMessages: _compactionMessages(),
       lastInputTokens: _lastTurnInputTokens,
       contextLimit: _contextLimit,
       provider: provider,
       model: _modelId,
       apiKey: key,
+      force: force,
     );
     final current = _session;
     if (updated == null || !mounted || current?.id != session.id) return null;
@@ -820,6 +1042,16 @@ class _AssistantPageState extends State<AssistantPage> {
     _syncCompactionNotice();
     return merged;
   }
+
+  List<CompactionMessage> _compactionMessages() => [
+    for (final m in _chat.items)
+      if (m is AssistantTurn && !m.isEmpty)
+        (
+          id: m.id,
+          fromUser: m.fromUser,
+          text: m.text.isEmpty ? assistantImagePlaceholder : m.text,
+        ),
+  ];
 
   void _syncCompactionNotice() {
     _chat.batch(() {
@@ -860,6 +1092,10 @@ class _AssistantPageState extends State<AssistantPage> {
 
   void _stop() {
     if (!_sending) return;
+    final queued = _queuedText;
+    _queuedText = null;
+    if (queued != null) _inputController.text = queued;
+    _approvalGate.declineAll();
     _generation++;
     _streamSub?.cancel();
     _streamSub = null;
@@ -868,6 +1104,9 @@ class _AssistantPageState extends State<AssistantPage> {
   }
 
   void _finalizeStreaming({required bool persist}) {
+    _approvalGate.declineAll();
+    _approval = null;
+    _approvalPreview = null;
     final cur = _streamingMessage;
     _streamingMessage = null;
     if (cur == null) return;
@@ -877,17 +1116,55 @@ class _AssistantPageState extends State<AssistantPage> {
         _chat.endStreaming();
       });
     } else {
-      final settled = cur.settled;
+      final settled = cur.settled.copyWith(truncated: _truncated);
       _chat.batch(() {
         _chat.replace(settled);
         _chat.endStreaming();
       });
       if (persist) {
-        _chat.persist(settled);
+        unawaited(_chat.persist(settled).then((_) => _persistTrace(settled)));
         _purgeStaleReplies();
       }
     }
     _syncModelSwitchNotices();
+  }
+
+  Future<void> _persistTrace(AssistantTurn settled) async {
+    final session = _session;
+    if (session == null || _turns.isEmpty) return;
+    await getIt<AssistantTraceRepository>().put(
+      messageId: settled.id,
+      sessionId: session.id,
+      promptVersion: assistantPromptVersion,
+      turns: _turns,
+    );
+  }
+
+  void _applyTurn(AssistantStreamEvent event) {
+    _turns = [
+      ..._turns,
+      (
+        turn: event.turn,
+        finishReason: event.finishReason,
+        requestId: event.requestId,
+        inputTokens: event.inputTokens,
+        outputTokens: event.outputTokens,
+        cachedInputTokens: event.cachedInputTokens,
+      ),
+    ];
+    _truncated = event.finishReason == 'length';
+    if (event.inputTokens > 0) _lastTurnInputTokens = event.inputTokens;
+  }
+
+  void _discardTurn(int turn) {
+    _turns = [
+      for (final t in _turns)
+        if (t.turn < turn) t,
+    ];
+    final cur = _streamingMessage;
+    if (cur == null) return;
+    _streamingReasoning = '';
+    _syncReasoning(cur.copyWith(text: ''));
   }
 
   void _purgeStaleReplies() {
@@ -944,11 +1221,12 @@ class _AssistantPageState extends State<AssistantPage> {
   }
 
   void _applyUsage(int inputTokens, int outputTokens) {
-    if (inputTokens > 0) _lastTurnInputTokens = inputTokens;
     final cur = _streamingMessage;
     if (cur == null || (inputTokens <= 0 && outputTokens <= 0)) return;
     final next = cur.copyWith(
-      inputTokens: inputTokens,
+      inputTokens: _lastTurnInputTokens > 0
+          ? _lastTurnInputTokens
+          : inputTokens,
       outputTokens: outputTokens,
     );
     _chat.updateStreaming(next);
@@ -1011,11 +1289,18 @@ class _AssistantPageState extends State<AssistantPage> {
     setState(() => _pendingImageName = null);
   }
 
+  void _removeCitation() {
+    setState(() => _citedDiaryId = null);
+  }
+
   void _dismissComposer() {
     if (_inputFocusNode.hasFocus) _inputFocusNode.unfocus();
   }
 
   Widget _buildChat() {
+    if (_session == null && _chat.items.isEmpty) {
+      return _EmptyConversation(bottomInset: _composerHeight);
+    }
     return AssistantChatList(
       key: _listKey,
       controller: _chat,
@@ -1023,6 +1308,7 @@ class _AssistantPageState extends State<AssistantPage> {
       itemBuilder: _buildItem,
       scrollToBottomBuilder: _buildScrollToBottom,
       onPointerDown: _dismissComposer,
+      itemGap: _kTurnGap,
       bottomPadding: _composerHeight + 8,
     );
   }
@@ -1034,9 +1320,14 @@ class _AssistantPageState extends State<AssistantPage> {
         summary: _session?.compactedSummary ?? '',
         onRestore: _restoreFullHistory,
       ),
-      AssistantModelSwitchNotice(:final model) => _ModelSwitchChip(
-        model: model,
-      ),
+      AssistantModelSwitchNotice(:final model, :final providerId) =>
+        _ModelSwitchChip(
+          model: switch (_providers[providerId]) {
+            final p? =>
+              '${p.name} · ${ModelResolver.resolve(p, model).preset?.name ?? model}',
+            null => model,
+          },
+        ),
     };
   }
 
@@ -1045,18 +1336,26 @@ class _AssistantPageState extends State<AssistantPage> {
     if (!isLast && !turn.streaming) {
       final cached = _turnWidgets[turn.id];
       if (cached != null && identical(cached.turn, turn)) return cached.widget;
-      final built = _composeTurn(turn, live: false);
+      final built = _composeTurn(turn, live: false, last: false);
       _turnWidgets[turn.id] = (turn: turn, widget: built);
       return built;
     }
-    return _composeTurn(turn, live: !_sending && isLast);
+    return _composeTurn(turn, live: !_sending && isLast, last: isLast);
   }
 
-  Widget _composeTurn(AssistantTurn turn, {required bool live}) {
+  Widget _composeTurn(
+    AssistantTurn turn, {
+    required bool live,
+    required bool last,
+  }) {
     if (turn.fromUser) {
+      final (:diaryId, :text) = splitDiaryCitation(turn.text);
       return _UserBubble(
-        text: turn.text,
+        text: text == continueTurnMarker
+            ? context.l10n.assistant.continueTurn
+            : text,
         imageName: turn.imageName,
+        citedDiaryId: diaryId,
         onRetry: live ? _regenerate : null,
       );
     }
@@ -1068,8 +1367,12 @@ class _AssistantPageState extends State<AssistantPage> {
       inputTokens: turn.inputTokens,
       outputTokens: turn.outputTokens,
       toolCalls: turn.toolCalls,
+      diaryCitations: turn.diaryCitations,
       streaming: turn.streaming,
+      showUsage: last,
+      awaitingCallId: turn.streaming ? _approval?.callId : null,
       onRegenerate: (live && _hasUserTurn) ? _regenerate : null,
+      onContinue: live && turn.truncated ? _continueTurn : null,
     );
   }
 
@@ -1111,11 +1414,18 @@ class _AssistantPageState extends State<AssistantPage> {
       onFullscreen: _openFullscreenComposer,
       pendingImageName: _pendingImageName,
       onRemoveImage: _removePendingImage,
+      citedDiaryId: _citedDiaryId,
+      onRemoveCitation: _removeCitation,
+      modelChip: _resolved ? _buildModelChip(context.l10n) : null,
+      approval: _approval,
+      approvalPreview: _approvalPreview,
+      onApprove: () => _resolveApproval(true),
+      onSkip: () => _resolveApproval(false),
     );
 
     return Column(
       children: [
-        if (!_ready) _NotConfiguredBanner(onTap: _openSettings),
+        ?_statusBanner(context.l10n),
         Expanded(
           child: Stack(
             children: [
@@ -1138,10 +1448,36 @@ class _AssistantPageState extends State<AssistantPage> {
     );
   }
 
+  Widget? _statusBanner(Translations l10n) {
+    if (!_resolved) return null;
+    final provider = _provider;
+    if (provider == null) {
+      return _StatusBanner(
+        text: l10n.assistant.notConfiguredBanner,
+        error: true,
+        onTap: _openSettings,
+      );
+    }
+    if (!_ready) {
+      return _StatusBanner(
+        text: l10n.assistant.providerKeyMissingBanner(name: provider.name),
+        error: true,
+        onTap: () => _fillKey(provider.id),
+      );
+    }
+    if (_providerMissing) {
+      return _StatusBanner(
+        text: l10n.assistant.providerMissingBanner(name: provider.name),
+        error: false,
+        onTap: _sending ? null : _pickModel,
+      );
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final modelLabel = _activeModel?.name ?? _modelId;
 
     final Widget chatArea = !_disclaimerAccepted
         ? _DisclaimerGate(onReview: _showDisclaimer)
@@ -1150,87 +1486,64 @@ class _AssistantPageState extends State<AssistantPage> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        toolbarHeight: _toolbarHeight(context),
-        titleSpacing: NavigationToolbar.kMiddleSpacing - _kTitleInset,
-        title: Column(
-          mainAxisSize: .min,
-          crossAxisAlignment: .start,
-          children: [
-            Padding(
-              padding: const .symmetric(horizontal: _kTitleInset),
-              child: Text(
-                _titleText(l10n),
-                maxLines: 1,
-                overflow: .ellipsis,
-                style:
-                    context.theme.typography.titleMedium.emphasized.onSurface,
+        title: Text(_titleText(l10n), maxLines: 1, overflow: .ellipsis),
+        actions: [
+          MMenuButton<_ConversationAction>(
+            tooltip: l10n.common.more,
+            entries: [
+              MMenuEntry(
+                value: .permission,
+                label: l10n.assistant.permissionTitle,
+                icon: LucideIcons.shieldCheck,
+                enabled: !_sending,
+              ),
+              MMenuEntry(
+                value: .compact,
+                label: l10n.assistant.menuCompactNow,
+                icon: LucideIcons.foldVertical,
+                enabled: _session != null && !_sending,
+              ),
+              MMenuEntry(
+                value: .exportTrace,
+                label: l10n.assistant.menuExportTrace,
+                icon: LucideIcons.bug,
+                enabled: _session != null,
+              ),
+              MMenuEntry(
+                value: .settings,
+                label: l10n.assistant.menuSettings,
+                icon: LucideIcons.settings2,
+              ),
+            ],
+            onSelected: _onConversationAction,
+            child: Padding(
+              padding: const .all(12),
+              child: Icon(
+                LucideIcons.ellipsisVertical,
+                color: context.theme.colors.onSurfaceVariant,
               ),
             ),
-            Row(
-              mainAxisSize: .min,
-              children: [
-                Flexible(
-                  child: _PresetChip(
-                    label:
-                        _presetName ??
-                        (_presetMissing
-                            ? l10n.assistant.presetDeleted
-                            : l10n.assistant.presetBuiltinName),
-                    staged: _session == null,
-                    onTap: _sending
-                        ? null
-                        : (_session == null ? _pickPreset : _showPresetInfo),
-                  ),
-                ),
-                if (modelLabel.isNotEmpty) ...[
-                  Text(
-                    '·',
-                    style: context.theme.typography.labelSmall.onSurfaceVariant,
-                  ),
-                  Flexible(
-                    flex: 2,
-                    child: _ModelChip(
-                      modelLabel: modelLabel,
-                      reasoningLevel: _reasoningLevel,
-                      onTap: _sending ? null : _pickModel,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(width: 4),
+        ],
       ),
       body: chatArea,
     );
   }
 
-  Future<void> _pickPreset() async {
-    if (_sending || _session != null) return;
-    final choice = await showAgentPresetPicker(
-      context,
-      selectedId: _stagedPresetId,
-    );
-    if (choice == null || !mounted || _session != null) return;
-    setState(() {
-      _stagedPresetId = choice.id;
-      _presetName = choice.name;
-      _presetMissing = false;
-      _presetPickedExplicitly = true;
-    });
-  }
-
-  void _showPresetInfo() {
-    final l10n = context.l10n;
-    showAgentPresetInfo(
-      context,
-      name:
-          _presetName ??
-          (_presetMissing
-              ? l10n.assistant.presetDeleted
-              : l10n.assistant.presetBuiltinName),
-      persona: _session?.personaSnapshot ?? defaultPersona,
-      tools: _session?.toolsSnapshot,
+  Widget _buildModelChip(Translations l10n) {
+    return _ModelChip(
+      provider: _provider,
+      providerMissing: _providerMissing,
+      modelLabel: _activeModel?.name ?? _modelId,
+      modelMissing: _modelMissing,
+      catalogMissing: _catalogMissing,
+      levelLabel: _reasoningLevels.isEmpty
+          ? ''
+          : _effectiveLevel.isEmpty
+          ? l10n.assistant.reasoningOff
+          : reasoningLevelLabel(_effectiveLevel, l10n),
+      onTap: _sending ? null : _pickModel,
     );
   }
 }
@@ -1339,28 +1652,165 @@ class _DisclaimerGate extends StatelessWidget {
   }
 }
 
-class _NotConfiguredBanner extends StatelessWidget {
-  final VoidCallback onTap;
+class _ModelChip extends StatelessWidget {
+  final LlmProvider? provider;
+  final bool providerMissing;
+  final String modelLabel;
+  final bool modelMissing;
+  final bool catalogMissing;
+  final String levelLabel;
+  final VoidCallback? onTap;
 
-  const _NotConfiguredBanner({required this.onTap});
+  const _ModelChip({
+    required this.provider,
+    required this.providerMissing,
+    required this.modelLabel,
+    required this.modelMissing,
+    required this.catalogMissing,
+    required this.levelLabel,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = context.theme.colors;
+    final typography = context.theme.typography;
+    final provider = this.provider;
+    final broken = modelLabel.isEmpty || modelMissing;
+
+    return MInkWell.fade(
+      onTap: onTap,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: _kModelChipMinHeight),
+        child: Padding(
+          padding: const .symmetric(horizontal: 8),
+          child: Row(
+            mainAxisSize: .min,
+            children: [
+              if (providerMissing)
+                Icon(LucideIcons.triangleAlert, size: 16, color: scheme.error)
+              else if (provider != null)
+                ProviderLogo(
+                  logoUrl: ProviderLogo.urlOf(provider.presetId),
+                  name: provider.name,
+                  size: 18,
+                ),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  modelLabel.isEmpty
+                      ? l10n.assistant.historyModelUnset
+                      : modelLabel,
+                  maxLines: 1,
+                  overflow: .ellipsis,
+                  style: broken
+                      ? typography.labelSmall.error
+                      : typography.labelSmall.onSurface,
+                ),
+              ),
+              if (modelMissing) ...[
+                const SizedBox(width: 6),
+                Text(
+                  l10n.assistant.modelNotInCatalog,
+                  style: typography.labelSmall.error,
+                ),
+              ] else if (catalogMissing) ...[
+                const SizedBox(width: 6),
+                Icon(
+                  LucideIcons.cloudOff,
+                  size: 14,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ],
+              if (levelLabel.isNotEmpty) ...[
+                const SizedBox(width: 6),
+                Text(
+                  '· $levelLabel',
+                  style: typography.labelSmall.onSurfaceVariant,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyConversation extends StatelessWidget {
+  final double bottomInset;
+
+  const _EmptyConversation({required this.bottomInset});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final hour = DateTime.now().hour;
+    final greeting = hour < 5 || hour >= 18
+        ? l10n.assistant.emptyGreetingEvening
+        : hour < 11
+        ? l10n.assistant.emptyGreetingMorning
+        : l10n.assistant.emptyGreetingAfternoon;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16, 16, 16, bottomInset),
+      child: Center(
+        child: Column(
+          mainAxisSize: .min,
+          children: [
+            Text(
+              greeting,
+              style: context.theme.typography.titleLarge.emphasized.onSurface,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              l10n.assistant.emptySubtitle,
+              textAlign: .center,
+              style: context.theme.typography.bodyMedium.onSurfaceVariant,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusBanner extends StatelessWidget {
+  final String text;
+  final bool error;
+  final VoidCallback? onTap;
+
+  const _StatusBanner({
+    required this.text,
+    required this.error,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
+    final typography = context.theme.typography.bodyMedium;
     return Material(
-      color: scheme.errorContainer,
+      color: error ? scheme.errorContainer : scheme.secondaryContainer,
       child: MInkWell(
         onTap: onTap,
         child: Padding(
           padding: const .all(12),
           child: Row(
             children: [
-              Icon(LucideIcons.triangleAlert, color: scheme.onErrorContainer),
+              Icon(
+                LucideIcons.triangleAlert,
+                color: error
+                    ? scheme.onErrorContainer
+                    : scheme.onSecondaryContainer,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  context.l10n.assistant.notConfiguredBanner,
-                  style: context.theme.typography.bodyMedium.onErrorContainer,
+                  text,
+                  style: error
+                      ? typography.onErrorContainer
+                      : typography.onSecondaryContainer,
                 ),
               ),
             ],
@@ -1382,6 +1832,13 @@ class _AssistantComposer extends StatefulWidget {
   final VoidCallback onFullscreen;
   final String? pendingImageName;
   final VoidCallback onRemoveImage;
+  final String? citedDiaryId;
+  final VoidCallback onRemoveCitation;
+  final Widget? modelChip;
+  final ToolApprovalRequest? approval;
+  final ToolApprovalPreview? approvalPreview;
+  final VoidCallback onApprove;
+  final VoidCallback onSkip;
 
   const _AssistantComposer({
     required this.controller,
@@ -1393,6 +1850,13 @@ class _AssistantComposer extends StatefulWidget {
     required this.onFullscreen,
     required this.pendingImageName,
     required this.onRemoveImage,
+    required this.citedDiaryId,
+    required this.onRemoveCitation,
+    required this.modelChip,
+    required this.approval,
+    required this.approvalPreview,
+    required this.onApprove,
+    required this.onSkip,
   });
 
   @override
@@ -1414,6 +1878,8 @@ class _AssistantComposerState extends State<_AssistantComposer> {
     final scheme = context.theme.colors;
     final l10n = context.l10n;
     const radius = MuiRadius.xl;
+    final approval = widget.approval;
+    final inputEnabled = !widget.sending || approval != null;
     return SafeArea(
       top: false,
       bottom: false,
@@ -1421,116 +1887,145 @@ class _AssistantComposerState extends State<_AssistantComposer> {
         padding: .fromLTRB(12, 0, 12, 8 + MediaQuery.paddingOf(context).bottom),
         child: GestureDetector(
           behavior: .opaque,
-          child: MGlassSurface(
-            shape: const RoundedRectangleBorder(borderRadius: radius),
-            child: Padding(
-              padding: const .all(_kComposerPadding),
-              child: Column(
-                mainAxisSize: .min,
-                crossAxisAlignment: .stretch,
-                children: [
-                  if (widget.pendingImageName != null)
-                    _ComposerImagePreview(
-                      imageName: widget.pendingImageName!,
-                      onRemove: widget.onRemoveImage,
-                    ),
-                  Padding(
-                    padding: const .fromLTRB(8, 8, 8, 6),
-                    child: NotificationListener<ScrollMetricsNotification>(
-                      onNotification: (notification) {
-                        final overflowing =
-                            notification.metrics.maxScrollExtent > 0;
-                        if (overflowing != _overflowing) {
-                          setState(() => _overflowing = overflowing);
-                        }
-                        return false;
-                      },
-                      child: MField(
-                        controller: widget.controller,
-                        focusNode: widget.focusNode,
-                        enabled: !widget.sending,
-                        maxLines: _maxLines(context),
-                        variant: .plain,
-                        showClear: false,
-                        textInputAction: .send,
-                        hintText: l10n.assistant.inputHint,
-                        onSubmitted: (_) => widget.onSend(),
-                      ),
-                    ),
-                  ),
-                  Row(
-                    mainAxisAlignment: .spaceBetween,
+          child: Column(
+            mainAxisSize: .min,
+            crossAxisAlignment: .stretch,
+            children: [
+              if (approval != null) ...[
+                ToolApprovalCard(
+                  request: approval,
+                  preview: widget.approvalPreview,
+                  onApprove: widget.onApprove,
+                  onSkip: widget.onSkip,
+                ),
+                const SizedBox(height: 8),
+              ],
+              MGlassSurface(
+                shape: const RoundedRectangleBorder(borderRadius: radius),
+                child: Padding(
+                  padding: const .all(_kComposerPadding),
+                  child: Column(
+                    mainAxisSize: .min,
+                    crossAxisAlignment: .stretch,
                     children: [
-                      if (widget.onSendImage case final onSendImage?)
-                        Tooltip(
-                          message: l10n.assistant.toolSendImage,
-                          child: MInkWell(
-                            shape: const CircleBorder(),
-                            onTap: widget.sending ? null : onSendImage,
-                            child: SizedBox.square(
-                              dimension: _kComposerControlSize,
-                              child: Icon(
-                                LucideIcons.image,
-                                color: widget.sending
-                                    ? scheme.onSurfaceVariant.withValues(
-                                        alpha: 0.38,
-                                      )
-                                    : scheme.onSurfaceVariant,
-                              ),
-                            ),
+                      if (widget.citedDiaryId case final cited?)
+                        Padding(
+                          padding: const .fromLTRB(8, 6, 8, 2),
+                          child: DiaryCitations(
+                            ids: [cited],
+                            raised: true,
+                            onRemove: widget.onRemoveCitation,
                           ),
-                        )
-                      else
-                        const SizedBox.shrink(),
+                        ),
+                      if (widget.pendingImageName != null)
+                        _ComposerImagePreview(
+                          imageName: widget.pendingImageName!,
+                          onRemove: widget.onRemoveImage,
+                        ),
+                      Padding(
+                        padding: const .fromLTRB(8, 8, 8, 6),
+                        child: NotificationListener<ScrollMetricsNotification>(
+                          onNotification: (notification) {
+                            final overflowing =
+                                notification.metrics.maxScrollExtent > 0;
+                            if (overflowing != _overflowing) {
+                              setState(() => _overflowing = overflowing);
+                            }
+                            return false;
+                          },
+                          child: MField(
+                            controller: widget.controller,
+                            focusNode: widget.focusNode,
+                            enabled: inputEnabled,
+                            maxLines: _maxLines(context),
+                            variant: .plain,
+                            showClear: false,
+                            textInputAction: .send,
+                            hintText: l10n.assistant.inputHint,
+                            onSubmitted: (_) => widget.onSend(),
+                          ),
+                        ),
+                      ),
                       Row(
-                        mainAxisSize: .min,
+                        mainAxisAlignment: .spaceBetween,
                         children: [
-                          if (_overflowing) ...[
+                          if (widget.onSendImage case final onSendImage?)
                             Tooltip(
-                              message: l10n.assistant.composerFullscreen,
-                              child: MInkWell(
-                                shape: const CircleBorder(),
-                                onTap: widget.onFullscreen,
+                              message: l10n.assistant.toolSendImage,
+                              child: MInkWell.fade(
+                                onTap: widget.sending ? null : onSendImage,
                                 child: SizedBox.square(
                                   dimension: _kComposerControlSize,
                                   child: Icon(
-                                    LucideIcons.maximize2,
-                                    color: scheme.onSurfaceVariant,
+                                    LucideIcons.image,
+                                    color: widget.sending
+                                        ? scheme.onSurfaceVariant.withValues(
+                                            alpha: 0.38,
+                                          )
+                                        : scheme.onSurfaceVariant,
                                   ),
                                 ),
                               ),
+                            )
+                          else
+                            const SizedBox.shrink(),
+                          Expanded(
+                            child: Row(
+                              mainAxisAlignment: .end,
+                              children: [
+                                if (_overflowing) ...[
+                                  Tooltip(
+                                    message: l10n.assistant.composerFullscreen,
+                                    child: MInkWell.fade(
+                                      onTap: widget.onFullscreen,
+                                      child: SizedBox.square(
+                                        dimension: _kComposerControlSize,
+                                        child: Icon(
+                                          LucideIcons.maximize2,
+                                          color: scheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                ],
+                                if (widget.modelChip case final chip?) ...[
+                                  Flexible(child: chip),
+                                  const SizedBox(width: 8),
+                                ],
+                                ValueListenableBuilder<TextEditingValue>(
+                                  valueListenable: widget.controller,
+                                  builder: (context, value, _) {
+                                    if (widget.sending && approval == null) {
+                                      return MCircleButton(
+                                        tooltip: l10n.assistant.stop,
+                                        onPressed: widget.onStop,
+                                        size: _kComposerControlSize,
+                                        icon: const Icon(LucideIcons.square),
+                                      );
+                                    }
+                                    final canSend =
+                                        value.text.trim().isNotEmpty ||
+                                        (approval == null &&
+                                            widget.pendingImageName != null);
+                                    return MCircleButton(
+                                      tooltip: l10n.assistant.send,
+                                      onPressed: canSend ? widget.onSend : null,
+                                      size: _kComposerControlSize,
+                                      icon: const Icon(LucideIcons.arrowUp),
+                                    );
+                                  },
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 4),
-                          ],
-                          ValueListenableBuilder<TextEditingValue>(
-                            valueListenable: widget.controller,
-                            builder: (context, value, _) {
-                              if (widget.sending) {
-                                return MCircleButton(
-                                  tooltip: l10n.assistant.stop,
-                                  onPressed: widget.onStop,
-                                  size: _kComposerControlSize,
-                                  icon: const Icon(LucideIcons.square),
-                                );
-                              }
-                              final canSend =
-                                  value.text.trim().isNotEmpty ||
-                                  widget.pendingImageName != null;
-                              return MCircleButton(
-                                tooltip: l10n.assistant.send,
-                                onPressed: canSend ? widget.onSend : null,
-                                size: _kComposerControlSize,
-                                icon: const Icon(LucideIcons.arrowUp),
-                              );
-                            },
                           ),
                         ],
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),
@@ -1599,106 +2094,6 @@ class _ScrollToBottomButton extends StatelessWidget {
       size: 36,
       elevated: true,
       icon: const Icon(LucideIcons.chevronDown),
-    );
-  }
-}
-
-class _PresetChip extends StatelessWidget {
-  final String label;
-
-  final bool staged;
-
-  final VoidCallback? onTap;
-
-  const _PresetChip({
-    required this.label,
-    required this.staged,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final typography = context.theme.typography;
-    final content = Row(
-      mainAxisSize: .min,
-      children: [
-        Flexible(
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: .ellipsis,
-            style: typography.labelSmall.onSurfaceVariant,
-          ),
-        ),
-        if (staged && onTap != null) ...[
-          const SizedBox(width: 2),
-          Icon(
-            LucideIcons.chevronDown,
-            size: 14,
-            color: context.theme.colors.onSurfaceVariant,
-          ),
-        ],
-      ],
-    );
-    const inset = EdgeInsets.symmetric(horizontal: _kTitleInset, vertical: 2);
-    if (onTap == null) return Padding(padding: inset, child: content);
-    return MInkWell(
-      shape: const StadiumBorder(),
-      onTap: onTap,
-      child: Padding(padding: inset, child: content),
-    );
-  }
-}
-
-class _ModelChip extends StatelessWidget {
-  final String modelLabel;
-  final String reasoningLevel;
-
-  final VoidCallback? onTap;
-
-  const _ModelChip({
-    required this.modelLabel,
-    required this.reasoningLevel,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final locked = onTap == null;
-    final typography = context.theme.typography;
-
-    final label = Row(
-      mainAxisSize: .min,
-      children: [
-        Flexible(
-          child: Text(
-            modelLabel,
-            maxLines: 1,
-            overflow: .ellipsis,
-            style: typography.labelSmall.onSurfaceVariant,
-          ),
-        ),
-        if (reasoningLevel.isNotEmpty) ...[
-          const SizedBox(width: 4),
-          Text(reasoningLevel, style: typography.labelSmall.onSurfaceVariant),
-        ],
-        if (!locked) ...[
-          const SizedBox(width: 2),
-          Icon(
-            LucideIcons.chevronDown,
-            size: 14,
-            color: context.theme.colors.onSurfaceVariant,
-          ),
-        ],
-      ],
-    );
-
-    const inset = EdgeInsets.symmetric(horizontal: _kTitleInset, vertical: 2);
-    if (locked) return Padding(padding: inset, child: label);
-    return MInkWell(
-      shape: const StadiumBorder(),
-      onTap: onTap,
-      child: Padding(padding: inset, child: label),
     );
   }
 }
@@ -1784,9 +2179,15 @@ Widget _brokenImage(ColorScheme scheme, double size) => Container(
 class _UserBubble extends StatelessWidget {
   final String text;
   final String imageName;
+  final String? citedDiaryId;
   final VoidCallback? onRetry;
 
-  const _UserBubble({required this.text, this.imageName = '', this.onRetry});
+  const _UserBubble({
+    required this.text,
+    this.imageName = '',
+    this.citedDiaryId,
+    this.onRetry,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1796,6 +2197,15 @@ class _UserBubble extends StatelessWidget {
     final hasText = text.isNotEmpty;
 
     final parts = <Widget>[];
+    if (citedDiaryId case final cited?) {
+      parts.add(
+        ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxWidth, minWidth: 180),
+          child: DiaryCitations(ids: [cited]),
+        ),
+      );
+      if (hasImage || hasText) parts.add(const SizedBox(height: 6));
+    }
     if (hasImage) {
       final path = AppFiles.getRealPath('image', imageName);
       final limit = BoxConstraints(maxWidth: maxWidth, maxHeight: 260);
@@ -1826,7 +2236,7 @@ class _UserBubble extends StatelessWidget {
           constraints: BoxConstraints(maxWidth: maxWidth),
           padding: const .symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: scheme.primaryContainer,
+            color: scheme.surfaceContainerHigh,
             borderRadius: const .only(
               topLeft: .circular(16),
               topRight: .circular(16),
@@ -1836,7 +2246,7 @@ class _UserBubble extends StatelessWidget {
           ),
           child: SelectableText(
             text,
-            style: context.theme.typography.bodyMedium.onPrimaryContainer,
+            style: context.theme.typography.bodyMedium.onSurface,
           ),
         ),
       );
@@ -1894,8 +2304,14 @@ class _AssistantBubble extends StatelessWidget {
   final int inputTokens;
   final int outputTokens;
   final List<AssistantToolCall> toolCalls;
+  final List<DiaryCitation> diaryCitations;
   final bool streaming;
+  final bool showUsage;
   final VoidCallback? onRegenerate;
+
+  final String? awaitingCallId;
+
+  final VoidCallback? onContinue;
 
   const _AssistantBubble({
     required this.text,
@@ -1905,9 +2321,65 @@ class _AssistantBubble extends StatelessWidget {
     required this.inputTokens,
     required this.outputTokens,
     required this.toolCalls,
+    required this.diaryCitations,
     required this.streaming,
+    required this.showUsage,
     this.onRegenerate,
+    this.awaitingCallId,
+    this.onContinue,
   });
+
+  String _citationLabel(Translations l10n, DiaryCitationKind kind) =>
+      switch (kind) {
+        .read => l10n.assistant.citationRead,
+        .created => l10n.assistant.citationCreated,
+        .updated => l10n.assistant.citationUpdated,
+        .deleted => l10n.assistant.citationDeleted,
+      };
+
+  IconData _citationIcon(DiaryCitationKind kind) => switch (kind) {
+    .read => LucideIcons.bookOpenText,
+    .created => LucideIcons.filePlus2,
+    .updated => LucideIcons.filePenLine,
+    .deleted => LucideIcons.trash2,
+  };
+
+  List<Widget> _toolRows(BuildContext context, Translations l10n) {
+    final rows = <Widget>[];
+    final placed = <DiaryCitationKind>{};
+    for (final (i, call) in toolCalls.indexed) {
+      if (!citesDiaries(call)) {
+        rows.add(
+          _toolNotice(
+            context,
+            call,
+            i,
+            awaiting: call.callId == awaitingCallId,
+          ),
+        );
+        continue;
+      }
+      final kind = diaryCitationKindOf(call.name)!;
+      if (!placed.add(kind)) continue;
+      final group = [
+        for (final c in diaryCitations)
+          if (c.kind == kind) c.id,
+      ];
+      if (group.isEmpty) continue;
+      rows.add(
+        AssistantNotice(
+          key: ValueKey('citations-${kind.name}'),
+          stateKey: 'citations-${kind.name}',
+          icon: _citationIcon(kind),
+          kind: _citationLabel(l10n, kind),
+          summary: l10n.assistant.citationCount(count: group.length),
+          detailPadding: const .fromLTRB(0, 2, 0, 6),
+          detail: (context) => DiaryCitations(ids: group),
+        ),
+      );
+    }
+    return rows;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1958,7 +2430,7 @@ class _AssistantBubble extends StatelessWidget {
                   codeBuilder: _codeBlock,
                 ),
         ),
-      for (final (i, call) in toolCalls.indexed) _toolNotice(context, call, i),
+      ..._toolRows(context, l10n),
       ?bubble,
     ];
 
@@ -1972,7 +2444,7 @@ class _AssistantBubble extends StatelessWidget {
       );
     }
 
-    final hasTokens = inputTokens > 0 || outputTokens > 0;
+    final hasTokens = showUsage && (inputTokens > 0 || outputTokens > 0);
     return _fullWidth(
       Column(
         crossAxisAlignment: .start,
@@ -1996,6 +2468,20 @@ class _AssistantBubble extends StatelessWidget {
                   label: l10n.assistant.regenerate,
                   onTap: onRegenerate!,
                 ),
+              if (onContinue case final onContinue?) ...[
+                Padding(
+                  padding: const .symmetric(horizontal: 6, vertical: 4),
+                  child: Text(
+                    l10n.assistant.truncatedNotice,
+                    style: context.theme.typography.labelSmall.onSurfaceVariant,
+                  ),
+                ),
+                _BubbleActionButton(
+                  icon: LucideIcons.arrowRight,
+                  label: l10n.assistant.continueTurn,
+                  onTap: onContinue,
+                ),
+              ],
               if (hasTokens)
                 Padding(
                   padding: const .symmetric(horizontal: 6, vertical: 4),
@@ -2031,13 +2517,26 @@ class _AssistantBubble extends StatelessWidget {
   }
 }
 
-Widget _toolNotice(BuildContext context, AssistantToolCall call, int index) {
+Widget _toolNotice(
+  BuildContext context,
+  AssistantToolCall call,
+  int index, {
+  bool awaiting = false,
+}) {
   final spec = AssistantToolRegistry.byId(call.name);
   final display = spec == null
       ? null
       : assistantToolDisplay(context, spec.tool);
   final title = display?.title ?? call.name;
   final stateKey = call.callId.isEmpty ? 'tool#$index' : call.callId;
+  if (awaiting) {
+    return AssistantNotice(
+      key: ValueKey(stateKey),
+      icon: display?.icon ?? LucideIcons.wrench,
+      kind: title,
+      summary: context.l10n.assistant.toolAwaitingConfirm,
+    );
+  }
   if (!call.done) {
     return AssistantNotice(key: ValueKey(stateKey), kind: title);
   }
@@ -2080,8 +2579,7 @@ class _BubbleActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
-    return MInkWell(
-      borderRadius: .circular(8),
+    return MInkWell.fade(
       onTap: onTap,
       child: Padding(
         padding: const .symmetric(horizontal: 6, vertical: 4),
@@ -2110,7 +2608,13 @@ class AssistantSessionListPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.assistant.settingFunctionAIAssistant),
-        actions: const [_ActiveModelAction(), SizedBox(width: 4)],
+        actions: [
+          IconButton(
+            tooltip: l10n.assistant.menuSettings,
+            icon: const Icon(LucideIcons.settings2),
+            onPressed: () => const AssistantSettingRoute().push(context),
+          ),
+        ],
       ),
       body: _SessionListView(
         onSelect: (session) => AssistantConversationRoute(
@@ -2120,81 +2624,6 @@ class AssistantSessionListPage extends StatelessWidget {
         onDelete: (session) =>
             getIt<ChatRepository>().deleteSession(session.id),
         padding: .only(bottom: 8 + MediaQuery.paddingOf(context).bottom),
-      ),
-    );
-  }
-}
-
-class _ActiveModelAction extends StatefulWidget {
-  const _ActiveModelAction();
-
-  @override
-  State<_ActiveModelAction> createState() => _ActiveModelActionState();
-}
-
-class _ActiveModelActionState extends State<_ActiveModelAction> {
-  LlmProvider? _active;
-  bool _loaded = false;
-  StreamSubscription<void>? _sub;
-
-  @override
-  void initState() {
-    super.initState();
-    _sub = getIt<LlmProviderRepository>().providerEvents.listen((_) => _load());
-    _load();
-  }
-
-  @override
-  void dispose() {
-    _sub?.cancel();
-    super.dispose();
-  }
-
-  Future<void> _load() async {
-    final active = await getIt<LlmProviderRepository>().getActiveProvider();
-    if (!mounted) return;
-    setState(() {
-      _active = active;
-      _loaded = true;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (!_loaded) return const SizedBox.shrink();
-    final l10n = context.l10n;
-    final active = _active;
-    final typography = context.theme.typography;
-    return MInkWell(
-      shape: const StadiumBorder(),
-      onTap: () async {
-        await const AssistantSettingRoute().push(context);
-        await _load();
-      },
-      child: Padding(
-        padding: const .symmetric(horizontal: 8, vertical: 8),
-        child: Row(
-          mainAxisSize: .min,
-          children: [
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 150),
-              child: Text(
-                active?.defaultModel ?? l10n.assistant.historyModelUnset,
-                maxLines: 1,
-                overflow: .ellipsis,
-                style: active == null
-                    ? typography.labelMedium.error
-                    : typography.labelMedium.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(width: 2),
-            Icon(
-              LucideIcons.chevronRight,
-              size: 15,
-              color: context.theme.colors.onSurfaceVariant,
-            ),
-          ],
-        ),
       ),
     );
   }

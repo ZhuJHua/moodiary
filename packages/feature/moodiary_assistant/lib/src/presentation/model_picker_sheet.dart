@@ -1,13 +1,20 @@
 library;
 
+import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/model_resolver.dart';
+import 'package:moodiary_assistant/src/presentation/catalog_error.dart';
+import 'package:moodiary_assistant/src/presentation/provider_logo.dart';
+import 'package:moodiary_assistant/src/presentation/reasoning_label.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
-typedef ModelChoice = ({String modelId, String level});
-
-typedef GlobalModelChoice = ({String providerId, String modelId, String level});
+typedef GlobalModelChoice = ({
+  String providerId,
+  String modelId,
+  String? level,
+});
 
 typedef ProviderModels = ({
   LlmProvider provider,
@@ -15,22 +22,18 @@ typedef ProviderModels = ({
   bool hasKey,
 });
 
-Future<ModelChoice?> showModelPicker(
+Future<String?> showModelPicker(
   BuildContext context, {
   required String providerName,
   required List<ModelOption> options,
   required String modelId,
-  String level = '',
-  bool showEffort = true,
 }) {
-  return MSheet.show<ModelChoice>(
+  return MSheet.show<String>(
     context,
     builder: (sheetContext) => _ModelPickerBody(
       providerName: providerName,
       options: options,
       modelId: modelId,
-      level: level,
-      showEffort: showEffort,
     ),
   );
 }
@@ -40,7 +43,11 @@ Future<GlobalModelChoice?> showGlobalModelPicker(
   required List<ProviderModels> groups,
   required String providerId,
   required String modelId,
-  String level = '',
+  required String? level,
+  required int catalogUpdatedAt,
+  required Future<List<ProviderModels>> Function() onDownloadCatalog,
+  required VoidCallback onManageProviders,
+  required ValueChanged<LlmProvider> onFillKey,
 }) {
   return MSheet.show<GlobalModelChoice>(
     context,
@@ -49,6 +56,10 @@ Future<GlobalModelChoice?> showGlobalModelPicker(
       providerId: providerId,
       modelId: modelId,
       level: level,
+      catalogUpdatedAt: catalogUpdatedAt,
+      onDownloadCatalog: onDownloadCatalog,
+      onManageProviders: onManageProviders,
+      onFillKey: onFillKey,
     ),
   );
 }
@@ -57,28 +68,57 @@ class _GlobalModelPickerBody extends StatefulWidget {
   final List<ProviderModels> groups;
   final String providerId;
   final String modelId;
-  final String level;
+  final String? level;
+  final int catalogUpdatedAt;
+  final Future<List<ProviderModels>> Function() onDownloadCatalog;
+  final VoidCallback onManageProviders;
+  final ValueChanged<LlmProvider> onFillKey;
 
   const _GlobalModelPickerBody({
     required this.groups,
     required this.providerId,
     required this.modelId,
     required this.level,
+    required this.catalogUpdatedAt,
+    required this.onDownloadCatalog,
+    required this.onManageProviders,
+    required this.onFillKey,
   });
 
   @override
   State<_GlobalModelPickerBody> createState() => _GlobalModelPickerBodyState();
 }
 
-typedef _GlobalRow = ({LlmProvider provider, bool hasKey, ModelOption? option});
+typedef _Row = ({
+  LlmProvider provider,
+  bool hasKey,
+  ModelOption? option,
+  bool missing,
+});
 
 class _GlobalModelPickerBodyState extends State<_GlobalModelPickerBody> {
   final _search = TextEditingController();
+  final _currentKey = GlobalKey();
 
+  late List<ProviderModels> _groups = widget.groups;
+  late int _catalogUpdatedAt = widget.catalogUpdatedAt;
   late String _providerId = widget.providerId;
   late String _modelId = widget.modelId;
-  late String _level = widget.level;
+  late String? _level = widget.level;
   String _query = '';
+  bool _downloading = false;
+  String? _downloadError;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = _currentKey.currentContext;
+      if (context != null && mounted) {
+        Scrollable.ensureVisible(context, alignment: 0.2);
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -86,40 +126,79 @@ class _GlobalModelPickerBodyState extends State<_GlobalModelPickerBody> {
     super.dispose();
   }
 
-  ModelOption? get _current {
-    for (final g in widget.groups) {
-      if (g.provider.id != _providerId) continue;
-      for (final o in g.options) {
-        if (o.id == _modelId) return o;
-      }
-    }
-    return null;
-  }
+  bool get _catalogMissing =>
+      _groups.any((g) => g.provider.isPreset && g.options.isEmpty);
 
   int get _totalOptions {
     var n = 0;
-    for (final g in widget.groups) {
+    for (final g in _groups) {
       n += g.options.length;
     }
     return n;
   }
 
-  List<_GlobalRow> get _rows {
+  ModelOption? _optionOf(String providerId, String modelId) {
+    for (final g in _groups) {
+      if (g.provider.id != providerId) continue;
+      for (final o in g.options) {
+        if (o.id == modelId) return o;
+      }
+    }
+    return null;
+  }
+
+  List<_Row> get _rows {
     final q = _query.trim().toLowerCase();
-    final rows = <_GlobalRow>[];
-    for (final g in widget.groups) {
-      final matched = q.isEmpty
-          ? g.options
-          : [
-              for (final o in g.options)
-                if (o.id.toLowerCase().contains(q) ||
-                    o.label.toLowerCase().contains(q))
-                  o,
-            ];
-      if (matched.isEmpty) continue;
-      rows.add((provider: g.provider, hasKey: g.hasKey, option: null));
+    bool matches(ModelOption o) =>
+        q.isEmpty ||
+        o.id.toLowerCase().contains(q) ||
+        o.label.toLowerCase().contains(q);
+    final rows = <_Row>[];
+    for (final g in _groups) {
+      final isCurrentProvider = g.provider.id == widget.providerId;
+      final matched = [
+        for (final o in g.options)
+          if (matches(o)) o,
+      ];
+      final pinnedMissing =
+          isCurrentProvider &&
+          widget.modelId.isNotEmpty &&
+          _optionOf(widget.providerId, widget.modelId) == null &&
+          matches(
+            ModelOption(
+              id: widget.modelId,
+              label: widget.modelId,
+              preset: null,
+              levels: const [],
+            ),
+          );
+      if (matched.isEmpty && !pinnedMissing && q.isNotEmpty) continue;
+      rows.add((
+        provider: g.provider,
+        hasKey: g.hasKey,
+        option: null,
+        missing: false,
+      ));
+      if (pinnedMissing) {
+        rows.add((
+          provider: g.provider,
+          hasKey: g.hasKey,
+          option: ModelOption(
+            id: widget.modelId,
+            label: widget.modelId,
+            preset: null,
+            levels: const [],
+          ),
+          missing: true,
+        ));
+      }
       for (final o in matched) {
-        rows.add((provider: g.provider, hasKey: g.hasKey, option: o));
+        rows.add((
+          provider: g.provider,
+          hasKey: g.hasKey,
+          option: o,
+          missing: false,
+        ));
       }
     }
     return rows;
@@ -129,8 +208,39 @@ class _GlobalModelPickerBodyState extends State<_GlobalModelPickerBody> {
     setState(() {
       _providerId = provider.id;
       _modelId = option.id;
-      if (_level.isNotEmpty && !option.levels.contains(_level)) _level = '';
     });
+  }
+
+  void _pickLevel(String? level) {
+    setState(() => _level = level);
+  }
+
+  Future<void> _download() async {
+    if (_downloading) return;
+    setState(() {
+      _downloading = true;
+      _downloadError = null;
+    });
+    final l10n = context.l10n;
+    try {
+      final groups = await widget.onDownloadCatalog();
+      if (!mounted) return;
+      setState(() {
+        _groups = groups;
+        _catalogUpdatedAt = DateTime.now().millisecondsSinceEpoch;
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() => _downloadError = assistantNetworkErrorText(e, l10n));
+      }
+    } finally {
+      if (mounted) setState(() => _downloading = false);
+    }
+  }
+
+  void _leave(VoidCallback then) {
+    Navigator.of(context).pop();
+    then();
   }
 
   @override
@@ -138,7 +248,7 @@ class _GlobalModelPickerBodyState extends State<_GlobalModelPickerBody> {
     final l10n = context.l10n;
     final typography = context.theme.typography;
     final rows = _rows;
-    final levels = _current?.levels ?? const <String>[];
+    final levels = _optionOf(_providerId, _modelId)?.levels ?? const <String>[];
 
     return MSheetScaffold<GlobalModelChoice>(
       title: l10n.assistant.modelProviderPickModel,
@@ -147,9 +257,8 @@ class _GlobalModelPickerBodyState extends State<_GlobalModelPickerBody> {
         MAction(label: l10n.common.cancel),
         MAction(
           label: l10n.common.ok,
-          value: (providerId: _providerId, modelId: _modelId, level: _level),
           isPrimary: true,
-          enabled: _modelId.isNotEmpty,
+          value: (providerId: _providerId, modelId: _modelId, level: _level),
         ),
       ],
       child: Column(
@@ -165,9 +274,15 @@ class _GlobalModelPickerBodyState extends State<_GlobalModelPickerBody> {
                 onChanged: (v) => setState(() => _query = v),
               ),
             ),
+          if (_catalogMissing)
+            _CatalogRow(
+              busy: _downloading,
+              error: _downloadError,
+              onDownload: _download,
+            ),
           ConstrainedBox(
             constraints: BoxConstraints(
-              maxHeight: MediaQuery.sizeOf(context).height * 0.42,
+              maxHeight: MediaQuery.sizeOf(context).height * 0.62,
             ),
             child: rows.isEmpty
                 ? Padding(
@@ -179,47 +294,174 @@ class _GlobalModelPickerBodyState extends State<_GlobalModelPickerBody> {
                       ),
                     ),
                   )
-                : ListView.builder(
+                : ListView(
                     shrinkWrap: true,
-                    itemCount: rows.length,
-                    itemBuilder: (context, index) {
-                      final row = rows[index];
-                      final option = row.option;
-                      if (option == null) {
-                        return _ProviderHeader(
-                          name: row.provider.name,
-                          hasKey: row.hasKey,
-                        );
-                      }
-                      return _ModelTile(
-                        option: option,
-                        selected:
-                            row.provider.id == _providerId &&
-                            option.id == _modelId,
-                        onTap: row.hasKey
-                            ? () => _pick(row.provider, option)
-                            : null,
-                      );
-                    },
+                    children: [
+                      for (final row in rows)
+                        if (row.option case final option?)
+                          _ModelTile(
+                            key:
+                                option.id == widget.modelId &&
+                                    row.provider.id == widget.providerId
+                                ? _currentKey
+                                : null,
+                            option: option,
+                            selected:
+                                row.provider.id == _providerId &&
+                                option.id == _modelId,
+                            missing: row.missing,
+                            onTap: row.hasKey
+                                ? () => _pick(row.provider, option)
+                                : null,
+                            below:
+                                row.provider.id == _providerId &&
+                                    option.id == _modelId &&
+                                    levels.isNotEmpty
+                                ? _LevelChips(
+                                    levels: levels,
+                                    stored: _level,
+                                    onChanged: _pickLevel,
+                                  )
+                                : null,
+                          )
+                        else
+                          _ProviderHeader(
+                            provider: row.provider,
+                            hasKey: row.hasKey,
+                            empty: _groups
+                                .firstWhere(
+                                  (g) => g.provider.id == row.provider.id,
+                                )
+                                .options
+                                .isEmpty,
+                            onFillKey: () =>
+                                _leave(() => widget.onFillKey(row.provider)),
+                          ),
+                    ],
                   ),
           ),
-          if (levels.isNotEmpty)
-            _EffortSlider(
-              levels: levels,
-              level: _level,
-              onChanged: (v) => setState(() => _level = v),
+          Padding(
+            padding: const .only(top: 10),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _catalogUpdatedAt > 0
+                        ? l10n.assistant.modelCatalogUpdatedAt(
+                            time: TimeFormat.listDateTime(
+                              DateTime.fromMillisecondsSinceEpoch(
+                                _catalogUpdatedAt,
+                              ),
+                            ),
+                          )
+                        : l10n.assistant.llmPickerDataSource,
+                    maxLines: 1,
+                    overflow: .ellipsis,
+                    style: typography.labelSmall.onSurfaceVariant,
+                  ),
+                ),
+                MInkWell.fade(
+                  onTap: () => _leave(widget.onManageProviders),
+                  child: Padding(
+                    padding: const .symmetric(horizontal: 8, vertical: 6),
+                    child: Text(
+                      '${l10n.assistant.modelProviderManage} →',
+                      style: typography.labelMedium.emphasized.primary,
+                    ),
+                  ),
+                ),
+              ],
             ),
+          ),
         ],
       ),
     );
   }
 }
 
-class _ProviderHeader extends StatelessWidget {
-  final String name;
-  final bool hasKey;
+class _CatalogRow extends StatelessWidget {
+  final bool busy;
+  final String? error;
+  final VoidCallback onDownload;
 
-  const _ProviderHeader({required this.name, required this.hasKey});
+  const _CatalogRow({
+    required this.busy,
+    required this.error,
+    required this.onDownload,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = context.theme.colors;
+    final typography = context.theme.typography;
+    return Padding(
+      padding: const .only(bottom: 8),
+      child: Material(
+        color: scheme.surfaceContainerHigh,
+        borderRadius: MuiRadius.md,
+        clipBehavior: .antiAlias,
+        child: MInkWell(
+          onTap: busy ? null : onDownload,
+          child: Padding(
+            padding: const .symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                if (busy)
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  )
+                else
+                  Icon(
+                    LucideIcons.cloudDownload,
+                    size: 18,
+                    color: scheme.primary,
+                  ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: .start,
+                    mainAxisSize: .min,
+                    children: [
+                      Text(
+                        l10n.assistant.modelCatalogDownload,
+                        style: typography.labelLarge.emphasized.onSurface,
+                      ),
+                      Text(
+                        error ?? l10n.assistant.modelCatalogMissing,
+                        style: error == null
+                            ? typography.bodySmall.onSurfaceVariant
+                            : typography.bodySmall.error,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ProviderHeader extends StatelessWidget {
+  final LlmProvider provider;
+  final bool hasKey;
+  final bool empty;
+  final VoidCallback onFillKey;
+
+  const _ProviderHeader({
+    required this.provider,
+    required this.hasKey,
+    required this.empty,
+    required this.onFillKey,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -229,22 +471,119 @@ class _ProviderHeader extends StatelessWidget {
       padding: const .only(top: 8, bottom: 6, left: 2),
       child: Row(
         children: [
+          ProviderLogo(
+            logoUrl: ProviderLogo.urlOf(provider.presetId),
+            name: provider.name,
+            size: 20,
+          ),
+          const SizedBox(width: 8),
           Flexible(
             child: Text(
-              name,
+              provider.name,
               maxLines: 1,
               overflow: .ellipsis,
               style: typography.labelLarge.emphasized.onSurfaceVariant,
             ),
           ),
+          if (empty && !provider.isPreset) ...[
+            const SizedBox(width: 6),
+            Text(
+              l10n.assistant.modelListEmpty,
+              style: typography.labelSmall.onSurfaceVariant,
+            ),
+          ],
           if (!hasKey) ...[
             const SizedBox(width: 6),
             _Badge(
               icon: LucideIcons.keyRound,
               text: l10n.assistant.modelProviderNoKey,
             ),
+            MInkWell.fade(
+              onTap: onFillKey,
+              child: Padding(
+                padding: const .symmetric(horizontal: 6, vertical: 4),
+                child: Text(
+                  '${l10n.assistant.modelProviderFillKey} →',
+                  style: typography.labelSmall.emphasized.primary,
+                ),
+              ),
+            ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _LevelChips extends StatelessWidget {
+  final List<String> levels;
+  final String? stored;
+  final ValueChanged<String?> onChanged;
+
+  const _LevelChips({
+    required this.levels,
+    required this.stored,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final effective = effectiveReasoningLevel(stored: stored, levels: levels);
+    final off = stored == reasoningOffValue;
+    return Padding(
+      padding: const .only(top: 8),
+      child: Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        children: [
+          for (final level in levels)
+            _LevelChip(
+              label: reasoningLevelLabel(level, l10n),
+              selected: !off && level == effective,
+              onTap: () => onChanged(level),
+            ),
+          _LevelChip(
+            label: l10n.assistant.reasoningOff,
+            selected: off,
+            onTap: () => onChanged(reasoningOffValue),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LevelChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _LevelChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.theme.colors;
+    final typography = context.theme.typography;
+    return Material(
+      color: selected ? scheme.primary : scheme.surfaceContainerHighest,
+      shape: const StadiumBorder(),
+      clipBehavior: .antiAlias,
+      child: MInkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const .symmetric(horizontal: 10, vertical: 5),
+          child: Text(
+            label,
+            style: selected
+                ? typography.labelMedium.emphasized.onPrimary
+                : typography.labelMedium.onSurfaceVariant,
+          ),
+        ),
       ),
     );
   }
@@ -254,15 +593,11 @@ class _ModelPickerBody extends StatefulWidget {
   final String providerName;
   final List<ModelOption> options;
   final String modelId;
-  final String level;
-  final bool showEffort;
 
   const _ModelPickerBody({
     required this.providerName,
     required this.options,
     required this.modelId,
-    required this.level,
-    required this.showEffort,
   });
 
   @override
@@ -271,22 +606,12 @@ class _ModelPickerBody extends StatefulWidget {
 
 class _ModelPickerBodyState extends State<_ModelPickerBody> {
   final _search = TextEditingController();
-
-  late String _modelId = widget.modelId;
-  late String _level = widget.level;
   String _query = '';
 
   @override
   void dispose() {
     _search.dispose();
     super.dispose();
-  }
-
-  ModelOption? get _current {
-    for (final o in widget.options) {
-      if (o.id == _modelId) return o;
-    }
-    return null;
   }
 
   List<ModelOption> get _visible {
@@ -299,35 +624,17 @@ class _ModelPickerBodyState extends State<_ModelPickerBody> {
     ];
   }
 
-  void _pickModel(ModelOption option) {
-    setState(() {
-      _modelId = option.id;
-      if (_level.isNotEmpty && !option.levels.contains(_level)) _level = '';
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final typography = context.theme.typography;
     final visible = _visible;
-    final levels = widget.showEffort
-        ? (_current?.levels ?? const <String>[])
-        : const <String>[];
 
-    return MSheetScaffold<ModelChoice>(
+    return MSheetScaffold<String>(
       title: l10n.assistant.modelProviderPickModel,
       subtitle: widget.providerName,
       icon: LucideIcons.cpu,
-      actions: [
-        MAction(label: l10n.common.cancel),
-        MAction(
-          label: l10n.common.ok,
-          value: (modelId: _modelId, level: _level),
-          isPrimary: true,
-          enabled: _modelId.isNotEmpty,
-        ),
-      ],
+      actions: [MAction(label: l10n.common.cancel)],
       child: Column(
         crossAxisAlignment: .stretch,
         mainAxisSize: .min,
@@ -343,7 +650,7 @@ class _ModelPickerBodyState extends State<_ModelPickerBody> {
             ),
           ConstrainedBox(
             constraints: BoxConstraints(
-              maxHeight: MediaQuery.sizeOf(context).height * 0.42,
+              maxHeight: MediaQuery.sizeOf(context).height * 0.62,
             ),
             child: visible.isEmpty
                 ? Padding(
@@ -362,72 +669,16 @@ class _ModelPickerBodyState extends State<_ModelPickerBody> {
                       final option = visible[index];
                       return _ModelTile(
                         option: option,
-                        selected: option.id == _modelId,
-                        onTap: () => _pickModel(option),
+                        selected: option.id == widget.modelId,
+                        missing: false,
+                        onTap: () => Navigator.of(context).pop(option.id),
+                        below: null,
                       );
                     },
                   ),
           ),
-          if (levels.isNotEmpty)
-            _EffortSlider(
-              levels: levels,
-              level: _level,
-              onChanged: (v) => setState(() => _level = v),
-            ),
         ],
       ),
-    );
-  }
-}
-
-class _EffortSlider extends StatelessWidget {
-  final List<String> levels;
-  final String level;
-  final ValueChanged<String> onChanged;
-
-  const _EffortSlider({
-    required this.levels,
-    required this.level,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final scheme = context.theme.colors;
-    final typography = context.theme.typography;
-    return Column(
-      crossAxisAlignment: .stretch,
-      mainAxisSize: .min,
-      children: [
-        const SizedBox(height: 4),
-        Divider(height: 17, color: scheme.outlineVariant),
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                l10n.assistant.reasoningEffort,
-                style: typography.labelLarge.onSurfaceVariant,
-              ),
-            ),
-            Text(
-              level.isEmpty ? l10n.assistant.reasoningOff : level,
-              style: typography.labelLarge.emphasized.primary,
-            ),
-          ],
-        ),
-        Slider(
-          value: (level.isEmpty ? 0 : levels.indexOf(level) + 1)
-              .toDouble()
-              .clamp(0, levels.length.toDouble()),
-          max: levels.length.toDouble(),
-          divisions: levels.length,
-          onChanged: (v) {
-            final index = v.round();
-            onChanged(index <= 0 ? '' : levels[index - 1]);
-          },
-        ),
-      ],
     );
   }
 }
@@ -435,13 +686,17 @@ class _EffortSlider extends StatelessWidget {
 class _ModelTile extends StatelessWidget {
   final ModelOption option;
   final bool selected;
-
+  final bool missing;
   final VoidCallback? onTap;
+  final Widget? below;
 
   const _ModelTile({
+    super.key,
     required this.option,
     required this.selected,
+    required this.missing,
     required this.onTap,
+    required this.below,
   });
 
   @override
@@ -485,61 +740,75 @@ class _ModelTile extends StatelessWidget {
             onTap: onTap,
             child: Padding(
               padding: const .symmetric(horizontal: 12, vertical: 10),
-              child: Row(
+              child: Column(
                 crossAxisAlignment: .start,
+                mainAxisSize: .min,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: .start,
-                      mainAxisSize: .min,
-                      children: [
-                        Row(
+                  Row(
+                    crossAxisAlignment: .start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: .start,
+                          mainAxisSize: .min,
                           children: [
-                            Flexible(
-                              child: Text(
-                                option.label,
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    option.label,
+                                    maxLines: 1,
+                                    overflow: .ellipsis,
+                                    style: selected
+                                        ? typography
+                                              .titleSmall
+                                              .emphasized
+                                              .onSecondaryContainer
+                                        : typography.titleSmall.onSurface,
+                                  ),
+                                ),
+                                if (missing) ...[
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    l10n.assistant.modelNotInCatalog,
+                                    style: typography.labelSmall.error,
+                                  ),
+                                ] else if (option.deprecated) ...[
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    l10n.assistant.modelDeprecated,
+                                    style:
+                                        typography.labelSmall.onSurfaceVariant,
+                                  ),
+                                ],
+                              ],
+                            ),
+                            if (option.label != option.id)
+                              Text(
+                                option.id,
                                 maxLines: 1,
                                 overflow: .ellipsis,
-                                style: selected
-                                    ? typography
-                                          .titleSmall
-                                          .emphasized
-                                          .onSecondaryContainer
-                                    : typography.titleSmall.onSurface,
-                              ),
-                            ),
-                            if (option.deprecated) ...[
-                              const SizedBox(width: 6),
-                              Text(
-                                l10n.assistant.modelDeprecated,
                                 style: typography.labelSmall.onSurfaceVariant,
                               ),
+                            if (badges.isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              Wrap(spacing: 6, runSpacing: 4, children: badges),
                             ],
                           ],
                         ),
-                        if (option.label != option.id)
-                          Text(
-                            option.id,
-                            maxLines: 1,
-                            overflow: .ellipsis,
-                            style: typography.labelSmall.onSurfaceVariant,
-                          ),
-                        if (badges.isNotEmpty) ...[
-                          const SizedBox(height: 6),
-                          Wrap(spacing: 6, runSpacing: 4, children: badges),
-                        ],
-                      ],
-                    ),
-                  ),
-                  if (selected)
-                    Padding(
-                      padding: const .only(left: 8, top: 2),
-                      child: Icon(
-                        LucideIcons.circleCheck,
-                        size: 18,
-                        color: scheme.onSecondaryContainer,
                       ),
-                    ),
+                      if (selected)
+                        Padding(
+                          padding: const .only(left: 8, top: 2),
+                          child: Icon(
+                            LucideIcons.circleCheck,
+                            size: 18,
+                            color: scheme.onSecondaryContainer,
+                          ),
+                        ),
+                    ],
+                  ),
+                  ?below,
                 ],
               ),
             ),

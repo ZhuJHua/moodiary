@@ -8,6 +8,9 @@ import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/assistant_tools.dart';
 import 'package:moodiary_rust/llm.dart' as rust;
 
+const String _gateRun = 'run';
+const String _gateSkip = 'skip:';
+
 @LazySingleton(as: AssistantService)
 class RigAssistantService implements AssistantService {
   @override
@@ -48,15 +51,27 @@ class RigAssistantService implements AssistantService {
       );
     }
     if (request.volatilePrefix.isNotEmpty && history.isNotEmpty) {
-      final last = history.last;
-      history[history.length - 1] = rust.RigChatMessage(
-        role: last.role,
-        content: last.content.isEmpty
-            ? request.volatilePrefix
-            : '${request.volatilePrefix}\n\n${last.content}',
-        imageBase64: last.imageBase64,
-        imageMime: last.imageMime,
-      );
+      if (request.type == .anthropicMessages) {
+        final last = history.last;
+        history[history.length - 1] = rust.RigChatMessage(
+          role: last.role,
+          content: last.content.isEmpty
+              ? request.volatilePrefix
+              : '${request.volatilePrefix}\n\n${last.content}',
+          imageBase64: last.imageBase64,
+          imageMime: last.imageMime,
+        );
+      } else {
+        history.insert(
+          history.length - 1,
+          rust.RigChatMessage(
+            role: 'system',
+            content: request.volatilePrefix,
+            imageBase64: '',
+            imageMime: '',
+          ),
+        );
+      }
     }
     final config = rust.RigProviderConfig(
       protocol: request.type.id,
@@ -71,12 +86,16 @@ class RigAssistantService implements AssistantService {
 
     await rust.MoodiaryRust.ensureInitialized();
     final stream = rust.rigChatStream(
-      config: config,
-      systemPrompt: request.systemPrompt,
-      history: history,
-      tools: tools,
-      maxTurns: assistantMaxTurns,
+      input: rust.RigChatInput(
+        config: config,
+        systemPrompt: request.systemPrompt,
+        history: history,
+        tools: tools,
+        maxTurns: assistantMaxTurns,
+      ),
       toolDispatch: (name, argsJson) => _dispatch(request, name, argsJson),
+      toolGate: (callId, name, argsJson) =>
+          _gate(request, callId, name, argsJson),
     );
 
     await for (final event in stream) {
@@ -111,6 +130,26 @@ class RigAssistantService implements AssistantService {
             cachedInputTokens: cachedInputTokens,
             cacheWriteTokens: cacheWriteTokens,
           ),
+        rust.RigStreamEvent_Turn(
+          :final turn,
+          :final finishReason,
+          :final responseId,
+          :final providerRequestId,
+          :final inputTokens,
+          :final outputTokens,
+          :final cachedInputTokens,
+        ) =>
+          AssistantStreamEvent.turn(
+            turn: turn,
+            finishReason: finishReason,
+            responseId: responseId,
+            requestId: providerRequestId,
+            inputTokens: inputTokens,
+            outputTokens: outputTokens,
+            cachedInputTokens: cachedInputTokens,
+          ),
+        rust.RigStreamEvent_TurnDiscarded(:final turn) =>
+          AssistantStreamEvent.turnDiscarded(turn),
       };
     }
   }
@@ -145,6 +184,17 @@ class RigAssistantService implements AssistantService {
     if (p.endsWith('.webp')) return 'image/webp';
     if (p.endsWith('.gif')) return 'image/gif';
     return 'image/jpeg';
+  }
+
+  Future<String> _gate(
+    AssistantChatRequest request,
+    String callId,
+    String name,
+    String argsJson,
+  ) async {
+    final gate = request.toolGate;
+    if (gate == null || await gate(callId, name, argsJson)) return _gateRun;
+    return '$_gateSkip${assistantToolSkippedResult(name)}';
   }
 
   Future<String> _dispatch(

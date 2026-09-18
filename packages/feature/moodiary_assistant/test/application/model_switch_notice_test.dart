@@ -9,13 +9,15 @@ void main() {
     createdAt: DateTime.utc(2026, 8, 19),
   );
 
-  AssistantTurn reply(String id, {String model = ''}) => AssistantTurn(
-    id: id,
-    fromUser: false,
-    text: '答',
-    createdAt: DateTime.utc(2026, 8, 19),
-    model: model,
-  );
+  AssistantTurn reply(String id, {String model = '', String provider = ''}) =>
+      AssistantTurn(
+        id: id,
+        fromUser: false,
+        text: '答',
+        createdAt: DateTime.utc(2026, 8, 19),
+        model: model,
+        providerId: provider,
+      );
 
   group('modelSwitchNoticesFor', () {
     test('模型没变就没有提示', () {
@@ -54,6 +56,24 @@ void main() {
         reply('a1', model: 'm1'),
         reply('a2'),
         reply('a3', model: 'm1'),
+      ]);
+      expect(notices, isEmpty);
+    });
+
+    test('只换供应商不换模型也要留痕', () {
+      final notices = modelSwitchNoticesFor([
+        reply('a1', model: 'gpt', provider: 'openai'),
+        reply('a2', model: 'gpt', provider: 'proxy'),
+      ]);
+      expect(notices.single.beforeId, 'a2');
+      expect(notices.single.providerId, 'proxy');
+    });
+
+    test('旧记录没有 provider_id：只按模型判，不把它当成切换', () {
+      final notices = modelSwitchNoticesFor([
+        reply('a1', model: 'gpt'),
+        reply('a2', model: 'gpt', provider: 'openai'),
+        reply('a3', model: 'gpt'),
       ]);
       expect(notices, isEmpty);
     });

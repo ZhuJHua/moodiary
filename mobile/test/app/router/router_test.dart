@@ -103,11 +103,17 @@ void main() {
       expect(const AssistantConversationRoute(sessionId: 's1').params, {
         'session_id': 's1',
         'title': null,
+        'cited_diary_id': null,
       });
       expect(
         const AssistantConversationRoute(sessionId: 's1', title: '周三').params,
-        {'session_id': 's1', 'title': '周三'},
+        {'session_id': 's1', 'title': '周三', 'cited_diary_id': null},
       );
+      expect(const AssistantConversationRoute(citedDiaryId: 'd1').params, {
+        'session_id': null,
+        'title': null,
+        'cited_diary_id': 'd1',
+      });
     });
   });
 }
