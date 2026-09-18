@@ -67,7 +67,6 @@ class EngineMigrationService {
       final sessionCount = await isar.chatSessions.where().countAsync();
       final messageCount = await isar.chatMessages.where().countAsync();
       final memoryCount = await isar.memories.where().countAsync();
-      final presetCount = await isar.agentPresets.where().countAsync();
       final total =
           diaryCount +
           categoryCount +
@@ -77,8 +76,7 @@ class EngineMigrationService {
           providerCount +
           sessionCount +
           messageCount +
-          memoryCount +
-          presetCount;
+          memoryCount;
       var done = 0;
       void tick(int n) {
         done += n;
@@ -258,9 +256,6 @@ class EngineMigrationService {
                   compactedInputTokensAtTrigger: Value(
                     s.compactedInputTokensAtTrigger,
                   ),
-                  agentPresetId: Value(s.agentPresetId),
-                  personaSnapshot: Value(s.personaSnapshot),
-                  toolsSnapshotJson: Value(dbStringListOrNull(s.toolsSnapshot)),
                 ),
               );
         }
@@ -331,23 +326,6 @@ class EngineMigrationService {
         tick(1);
       }
 
-      for (final a in await isar.agentPresets.where().findAllAsync()) {
-        await db
-            .into(db.agentPresets)
-            .insertOnConflictUpdate(
-              AgentPresetsCompanion.insert(
-                id: a.id,
-                name: a.name,
-                description: Value(a.description),
-                persona: a.persona,
-                toolsJson: Value(dbStringListOrNull(a.tools)),
-                createdAt: dbTime(a.createdAt),
-                updatedAt: dbTime(a.updatedAt),
-              ),
-            );
-        tick(1);
-      }
-
       Future<int> sqliteCount(TableInfo table) => _rowCount(db, table);
 
       final checks = <String, (int, int)>{
@@ -364,7 +342,6 @@ class EngineMigrationService {
           await sqliteCount(db.chatMessages),
         ),
         'memories': (memoryCount, await sqliteCount(db.memories)),
-        'agent_presets': (presetCount, await sqliteCount(db.agentPresets)),
       };
       for (final MapEntry(key: table, value: (expected, actual))
           in checks.entries) {

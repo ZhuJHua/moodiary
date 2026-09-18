@@ -8,6 +8,7 @@ import 'package:sqlite3/sqlite3.dart' as sqlite3;
 import 'package:sqlite3_simple/sqlite3_simple.dart';
 import 'package:sqlite3_vec/sqlite3_vec.dart';
 
+import 'database.steps.dart';
 import 'db_codec.dart';
 
 part 'database.g.dart';
@@ -66,42 +67,51 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
     onCreate: (m) async {
       await m.createAll();
     },
-    // drift 不把 onUpgrade 包进事务
-    onUpgrade: (m, from, to) async {
+    onUpgrade: (m, from, to) {
       upgradedFrom = from;
-      if (from < 2) {
-        await transaction(() async {
-          await m.createTable(places);
-          if (!await _hasColumn('diaries', 'place_id')) {
-            await m.addColumn(diaries, diaries.placeId);
-          }
-          if (await _hasColumn('diaries', 'latitude')) {
-            await _migratePositionsToPlaces();
-            for (final column in ['latitude', 'longitude', 'place_name']) {
-              await customStatement('ALTER TABLE diaries DROP COLUMN $column');
-            }
-          }
-        });
-      }
-      if (from < 3) {
-        await transaction(() async {
-          await customStatement('DROP TABLE IF EXISTS diary_fts');
-          await m.createTable(diaryFts);
-          for (final trigger in [diaryFtsAi, diaryFtsAd, diaryFtsAu]) {
-            await m.create(trigger);
-          }
-          await customStatement(
-            "INSERT INTO diary_fts(diary_fts) VALUES('rebuild')",
-          );
-        });
-      }
+      return transaction(
+        () => m.runMigrationSteps(
+          from: from,
+          to: to,
+          steps: migrationSteps(
+            from1To2: (m, schema) async {
+              await m.createTable(schema.places);
+              await m.addColumn(schema.diaries, schema.diaries.placeId);
+              await _migratePositionsToPlaces();
+              for (final column in ['latitude', 'longitude', 'place_name']) {
+                await m.dropColumn(schema.diaries, column);
+              }
+            },
+            from2To3: (m, schema) async {
+              await m.addColumn(
+                schema.chatMessages,
+                schema.chatMessages.providerId,
+              );
+              await m.addColumn(schema.memories, schema.memories.source);
+              await customStatement('DROP TABLE agent_presets');
+              for (final column in [
+                'agent_preset_id',
+                'persona_snapshot',
+                'tools_snapshot_json',
+              ]) {
+                await m.dropColumn(schema.chatSessions, column);
+              }
+              await m.createTable(schema.assistantTraces);
+              await m.create(schema.idxAssistantTracesSession);
+              await customStatement('DROP TABLE diary_fts');
+              await m.createTable(schema.diaryFts);
+              for (final trigger in [diaryFtsAi, diaryFtsAd, diaryFtsAu]) {
+                await m.create(trigger);
+              }
+              await customStatement(
+                "INSERT INTO diary_fts(diary_fts) VALUES('rebuild')",
+              );
+            },
+          ),
+        ),
+      );
     },
   );
-
-  Future<bool> _hasColumn(String table, String column) async {
-    final rows = await customSelect('PRAGMA table_info($table)').get();
-    return rows.any((r) => r.read<String>('name') == column);
-  }
 
   Future<void> _migratePositionsToPlaces() async {
     final rows = await customSelect(

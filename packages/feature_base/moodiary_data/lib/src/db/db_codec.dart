@@ -14,9 +14,3 @@ String dbStringList(List<String> values) => jsonEncode(values);
 
 List<String> dbToStringList(String json) =>
     (jsonDecode(json) as List).cast<String>();
-
-String? dbStringListOrNull(List<String>? values) =>
-    values == null ? null : jsonEncode(values);
-
-List<String>? dbToStringListOrNull(String? json) =>
-    json == null ? null : dbToStringList(json);

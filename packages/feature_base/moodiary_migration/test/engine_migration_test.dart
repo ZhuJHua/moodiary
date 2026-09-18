@@ -158,7 +158,6 @@ void main() {
           model: 'deepseek-chat',
           createdAt: now,
           updatedAt: now,
-          toolsSnapshot: const [],
         ),
       );
       isar.chatMessages.putAll([
@@ -191,16 +190,6 @@ void main() {
           id: 'mem1',
           category: 'fact',
           text: '住在厦门',
-          createdAt: now,
-          updatedAt: now,
-        ),
-      );
-      isar.agentPresets.put(
-        legacy.AgentPreset(
-          id: 'ap1',
-          name: '写作助手',
-          persona: 'You are a writer.',
-          tools: null,
           createdAt: now,
           updatedAt: now,
         ),
@@ -268,7 +257,7 @@ void main() {
     final session = await (db.select(
       db.chatSessions,
     )..where((s) => s.id.equals('s1'))).getSingle();
-    expect(session.toolsSnapshotJson, '[]', reason: '空列表 ≠ null（工具快照语义）');
+    expect(session.model, isNotEmpty);
     final calls = await db.select(db.assistantToolCalls).get();
     expect(calls.single.callId, 'call-1');
     expect(calls.single.done, 1);
@@ -276,8 +265,6 @@ void main() {
     expect(messages.map((m) => m.id), ['m1'], reason: '悬挂消息被跳过');
     final memory = await db.select(db.memories).get();
     expect(memory.single.content, '住在厦门');
-    final preset = await db.select(db.agentPresets).get();
-    expect(preset.single.toolsJson, isNull, reason: 'null = 全部工具');
   });
 
   test('可重入：中途重来（重复 migrate）结果一致', () async {

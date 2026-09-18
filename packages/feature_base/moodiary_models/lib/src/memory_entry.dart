@@ -16,9 +16,15 @@ abstract class MemoryEntry with _$MemoryEntry {
     required DateTime createdAt,
 
     required DateTime updatedAt,
+
+    String? source,
   }) = _MemoryEntry;
 
-  factory MemoryEntry.create({required String category, required String text}) {
+  factory MemoryEntry.create({
+    required String category,
+    required String text,
+    String? source,
+  }) {
     final now = DateTime.timestamp();
     return MemoryEntry(
       id: uuidV7(),
@@ -26,6 +32,7 @@ abstract class MemoryEntry with _$MemoryEntry {
       text: text,
       createdAt: now,
       updatedAt: now,
+      source: source,
     );
   }
 
