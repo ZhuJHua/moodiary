@@ -793,7 +793,6 @@ class _AssistantPageState extends State<AssistantPage> {
   }) async {
     _listKey.currentState?.pinToBottom();
     final l10n = context.l10n;
-    final localeTag = Localizations.localeOf(context).toLanguageTag();
     final toolsActive = _canUseTools;
     final memoryEnabled =
         toolsActive && (MoodiaryKVs.assistantMemoryEnabled.get() ?? true);
@@ -809,7 +808,6 @@ class _AssistantPageState extends State<AssistantPage> {
       confirmsWrites: toolsActive && _permissionMode.confirmsWrites,
     );
     final volatilePrefix = buildTurnContext(
-      localeTag: localeTag,
       nowLocal: .now(),
       factCount: factCount,
       semanticSearch: AssistantToolRegistry.semanticAvailable,

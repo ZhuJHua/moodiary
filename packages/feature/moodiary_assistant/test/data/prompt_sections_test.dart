@@ -38,10 +38,10 @@ void main() {
     test('分层顺序：身份 → 护栏 → 检索策略 → 人格 → 说明 → 工具目录', () {
       final prompt = build(notes: 'NOTES-MARK');
       final marks = [
-        'built-in AI assistant of Moodiary',
+        'built-in assistant of Moodiary',
         'Ground rules',
         'Memory and retrieval policy',
-        '# Persona',
+        'You are a warm, grounded companion',
         'NOTES-MARK',
         'Tool guidelines:',
       ];
@@ -53,7 +53,7 @@ void main() {
     test('说明为空时整段消失，人格始终内建', () {
       final prompt = build();
       expect(prompt.contains('The user wrote these notes'), isFalse);
-      expect(prompt, contains('# Persona'));
+      expect(prompt, contains('You are a warm, grounded companion'));
     });
 
     test('记忆关闭时策略段告诉模型去哪开，且不提 recallMemory', () {
@@ -84,7 +84,7 @@ void main() {
     test('检索策略段不超过 150 词', () {
       final prompt = build();
       final start = prompt.indexOf('Memory and retrieval policy');
-      final end = prompt.indexOf('# Persona');
+      final end = prompt.indexOf('You are a warm, grounded companion');
       final words = prompt
           .substring(start, end)
           .split(RegExp(r'\s+'))
@@ -99,7 +99,6 @@ void main() {
 
     test('只报数量，不带事实正文', () {
       final text = buildTurnContext(
-        localeTag: 'zh-CN',
         nowLocal: at,
         factCount: 23,
         semanticSearch: true,
@@ -109,7 +108,7 @@ void main() {
     });
 
     test('记忆关闭时连账本都不出现', () {
-      final text = buildTurnContext(localeTag: 'zh-CN', nowLocal: at);
+      final text = buildTurnContext(nowLocal: at);
       expect(text.contains('Saved facts'), isFalse);
       expect(text, contains('2026-09-13 14:05'));
     });
