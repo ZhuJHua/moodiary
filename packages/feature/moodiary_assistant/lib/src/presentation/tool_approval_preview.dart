@@ -1,4 +1,5 @@
 import 'package:moodiary_assistant/src/application/tool_approval.dart';
+import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/memory_repository.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
@@ -28,8 +29,8 @@ Future<ToolApprovalPreview> buildToolApprovalPreview(
   ToolApprovalRequest request,
   Translations l10n,
 ) {
-  final items = _items(request.args);
-  final ids = _ids(request.args);
+  final items = assistantToolItems(request.args);
+  final ids = assistantToolIds(request.args);
   return switch (request.tool) {
     .createDiary => _createDiary(l10n, items),
     .updateDiary => _updateDiary(l10n, items),
@@ -72,21 +73,6 @@ Future<ToolApprovalPreview> buildToolApprovalPreview(
       ),
     ),
   };
-}
-
-List<Map<String, dynamic>> _items(Map<String, dynamic> args) {
-  final raw = args['items'];
-  if (raw is! List) return const [];
-  return [
-    for (final e in raw)
-      if (e is Map) e.cast<String, dynamic>(),
-  ];
-}
-
-List<String> _ids(Map<String, dynamic> args) {
-  final raw = args['ids'];
-  if (raw is! List) return const [];
-  return [for (final e in raw) '$e'];
 }
 
 String _str(Object? v) => v?.toString().trim() ?? '';

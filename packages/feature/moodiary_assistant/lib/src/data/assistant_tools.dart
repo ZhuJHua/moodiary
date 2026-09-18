@@ -14,6 +14,7 @@ typedef AssistantToolRun = Future<String> Function(Map<String, dynamic> input);
 
 typedef _KeywordSearch = ({
   List<Diary> results,
+  int total,
   List<String> keywords,
   String? categoryId,
   DateTime? start,
@@ -563,9 +564,7 @@ abstract final class AssistantToolRegistry {
     AssistantTool _,
     Map<String, dynamic> input,
     String _,
-  ) => l10n.assistant.toolRead(
-    count: _parseIds(input['ids'] ?? input['id']).length,
-  );
+  ) => l10n.assistant.toolRead(count: assistantToolIds(input).length);
 
   static String _summarizeOverview(
     AssistantTool _,
@@ -593,7 +592,7 @@ abstract final class AssistantToolRegistry {
     Map<String, dynamic> input,
     String _,
   ) {
-    final count = _parseItems(input).length;
+    final count = assistantToolItems(input).length;
     return count <= 1
         ? l10n.assistant.toolTrashed
         : l10n.assistant.toolTrashedCount(count: count);
@@ -604,7 +603,7 @@ abstract final class AssistantToolRegistry {
     Map<String, dynamic> input,
     String output,
   ) {
-    final items = _parseItems(input);
+    final items = assistantToolItems(input);
     if (items.length > 1) {
       return switch (tool) {
         .createDiary ||
@@ -640,6 +639,7 @@ abstract final class AssistantToolRegistry {
 
     final repo = getIt<DiaryRepository>();
     List<Diary> results;
+    int? total;
     if (rawKeywords.isNotEmpty) {
       final hits = await repo.searchDiaries(
         query: rawKeywords,
@@ -647,8 +647,17 @@ abstract final class AssistantToolRegistry {
         start: start,
         end: endExclusive,
         sort: _toSearchSort(sortName),
+        limit: limit,
       );
       results = [for (final hit in hits) hit.diary];
+      if (results.length >= limit) {
+        total = await repo.countSearchDiaries(
+          query: rawKeywords,
+          categoryId: categoryId,
+          start: start,
+          end: endExclusive,
+        );
+      }
     } else if (start != null || endExclusive != null) {
       final ranged = await repo.getDiariesByDateRange(
         start ?? .fromMillisecondsSinceEpoch(0),
@@ -670,6 +679,7 @@ abstract final class AssistantToolRegistry {
 
     return (
       results: results,
+      total: total ?? results.length,
       keywords: keywordsForDisplay,
       categoryId: categoryId,
       start: start,
@@ -710,6 +720,7 @@ abstract final class AssistantToolRegistry {
         ? await _keywordSearch(input)
         : (
             results: <Diary>[],
+            total: 0,
             keywords: <String>[],
             categoryId: _trimToNull(input['categoryId']),
             start: _parseDate(input['startDate']),
@@ -761,10 +772,7 @@ abstract final class AssistantToolRegistry {
     }
     return _formatSearchRows(
       resolved,
-      total:
-          keyword.results.length +
-          hits.length -
-          _overlap(keyword.results, hits),
+      total: keyword.total + hits.length - _overlap(keyword.results, hits),
       atLeast: wantMeaning && hits.length >= limit,
     );
   }
@@ -860,7 +868,7 @@ abstract final class AssistantToolRegistry {
   }
 
   static Future<String> _getDiary(Map<String, dynamic> input) async {
-    final ids = _parseIds(input['ids'] ?? input['id']);
+    final ids = assistantToolIds(input);
     if (ids.isEmpty) {
       return 'Failed: no diary id given. Get ids from searchDiaries first.';
     }
@@ -923,32 +931,13 @@ abstract final class AssistantToolRegistry {
     return buffer.toString().trim();
   }
 
-  static List<Map<String, dynamic>> _parseItems(Map<String, dynamic> input) {
-    final raw = input['items'];
-    if (raw is List) {
-      return [
-        for (final e in raw)
-          if (e is Map) e.cast<String, dynamic>(),
-      ];
-    }
-    if (raw is Map) return [raw.cast<String, dynamic>()];
-    final ids = _parseIds(input['ids']);
-    if (ids.isNotEmpty) {
-      final shared = {...input}..remove('ids');
-      return [
-        for (final id in ids) {...shared, 'id': id},
-      ];
-    }
-    return [input];
-  }
-
   @visibleForTesting
   static Future<String> runBatch(
     Map<String, dynamic> input, {
     required Future<String> Function(Map<String, dynamic> item) each,
     int cap = _maxBatchWrite,
   }) async {
-    final items = _parseItems(input);
+    final items = assistantToolItems(input);
     if (items.isEmpty) return '$_failurePrefix no items given.';
     final done = <String>[];
     final failed = <String>[];
@@ -996,20 +985,6 @@ abstract final class AssistantToolRegistry {
   static String _stripFailure(String line) => line.startsWith(_failurePrefix)
       ? line.substring(_failurePrefix.length).trim()
       : line;
-
-  static List<String> _parseIds(Object? raw) {
-    final out = <String>{};
-    if (raw is String) {
-      final t = raw.trim();
-      if (t.isNotEmpty) out.add(t);
-    } else if (raw is List) {
-      for (final e in raw) {
-        final t = '$e'.trim();
-        if (t.isNotEmpty) out.add(t);
-      }
-    }
-    return out.toList();
-  }
 
   static Future<String> _diaryOverview(Map<String, dynamic> input) async {
     final repo = getIt<DiaryRepository>();

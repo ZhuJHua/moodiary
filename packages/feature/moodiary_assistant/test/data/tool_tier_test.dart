@@ -22,6 +22,31 @@ void main() {
       );
     });
 
+    test('档位按执行器接受的每种参数形态判', () {
+      expect(
+        assistantToolTier(.updateDiary, {
+          'items': {'id': 'd', 'content': '重写'},
+        }),
+        AssistantToolTier.destructive,
+      );
+      expect(
+        assistantToolTier(.updateDiary, {'id': 'd', 'content': '重写'}),
+        AssistantToolTier.destructive,
+      );
+      expect(
+        assistantToolTier(.updateDiary, {
+          'ids': ['a', 'b'],
+          'content': '重写',
+        }),
+        AssistantToolTier.destructive,
+      );
+      expect(assistantToolIds({'id': 'x'}), ['x']);
+      expect(assistantToolIds({'ids': 'x'}), ['x']);
+      expect(assistantToolItems({'text': 't'}), [
+        {'text': 't'},
+      ]);
+    });
+
     test('删日记进回收站算可逆，删分类和删记忆不可逆', () {
       expect(
         assistantToolTier(.deleteDiary, const {}),

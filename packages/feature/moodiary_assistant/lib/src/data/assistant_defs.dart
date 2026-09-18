@@ -71,9 +71,41 @@ AssistantToolTier assistantToolTier(
   .deleteCategory || .forgetFact => .destructive,
 };
 
-bool _rewritesContent(Map<String, dynamic> args) {
-  final items = args['items'];
-  return items is List && items.any((e) => e is Map && e['content'] != null);
+bool _rewritesContent(Map<String, dynamic> args) =>
+    assistantToolItems(args).any((e) => e['content'] != null);
+
+List<Map<String, dynamic>> assistantToolItems(Map<String, dynamic> input) {
+  final raw = input['items'];
+  if (raw is List) {
+    return [
+      for (final e in raw)
+        if (e is Map) e.cast<String, dynamic>(),
+    ];
+  }
+  if (raw is Map) return [raw.cast<String, dynamic>()];
+  final ids = assistantToolIds(input);
+  if (ids.isNotEmpty) {
+    final shared = {...input}..remove('ids');
+    return [
+      for (final id in ids) {...shared, 'id': id},
+    ];
+  }
+  return [input];
+}
+
+List<String> assistantToolIds(Map<String, dynamic> input) {
+  final raw = input['ids'] ?? input['id'];
+  final out = <String>{};
+  if (raw is String) {
+    final t = raw.trim();
+    if (t.isNotEmpty) out.add(t);
+  } else if (raw is List) {
+    for (final e in raw) {
+      final t = '$e'.trim();
+      if (t.isNotEmpty) out.add(t);
+    }
+  }
+  return out.toList();
 }
 
 bool assistantToolNeedsConfirmation(
