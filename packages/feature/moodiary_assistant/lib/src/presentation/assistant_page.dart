@@ -688,7 +688,7 @@ class _AssistantPageState extends State<AssistantPage> {
     text = text.trim();
     final imageName = _pendingImageName;
     if (_approval != null && text.isNotEmpty) {
-      _queuedText = text;
+      _queuedText = [?_queuedText, text].join('\n');
       _inputController.clear();
       _resolveApproval(false);
       return;
@@ -796,7 +796,7 @@ class _AssistantPageState extends State<AssistantPage> {
     final localeTag = Localizations.localeOf(context).toLanguageTag();
     final toolsActive = _canUseTools;
     final memoryEnabled =
-        toolsActive && (MoodiaryKVs.assistantMemoryEnabled.get() ?? false);
+        toolsActive && (MoodiaryKVs.assistantMemoryEnabled.get() ?? true);
     final allowedTools = memoryEnabled ? null : toolIdsWithoutMemory();
     final factCount = memoryEnabled
         ? await getIt<MemoryRepository>().count()

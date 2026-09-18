@@ -121,7 +121,7 @@ class _PersonalSectionState extends State<_PersonalSection> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final notes = (MoodiaryKVs.assistantUserNotes.get() ?? '').trim();
-    final memoryOn = MoodiaryKVs.assistantMemoryEnabled.get() ?? false;
+    final memoryOn = MoodiaryKVs.assistantMemoryEnabled.get() ?? true;
     return MSliverSettingGroup(
       title: l10n.assistant.personalSectionTitle,
       children: [
