@@ -127,7 +127,8 @@ abstract final class AssistantToolRegistry {
             'type': 'string',
             'enum': ['newest', 'oldest', 'modified', 'relevance'],
             'description':
-                'Defaults to newest. relevance applies only with a query.',
+                'Defaults to relevance with a query, newest without one. '
+                'relevance needs a query; modified applies only without one.',
           },
           'mode': {
             'type': 'string',
@@ -716,9 +717,7 @@ abstract final class AssistantToolRegistry {
                 ?.add(const Duration(days: 1)),
           );
 
-    final needMeaning =
-        wantMeaning && (mode == 'meaning' || keyword.results.length < limit);
-    final hits = needMeaning
+    final hits = wantMeaning
         ? await _semanticHits(input, limit: limit)
         : const <SemanticHit>[];
 
@@ -732,7 +731,7 @@ abstract final class AssistantToolRegistry {
       );
       final how = !hasQuery
           ? ''
-          : needMeaning
+          : wantMeaning
           ? ' Both the keyword and the meaning path ran.'
           : semanticOn
           ? ' Only the keyword path ran.'
@@ -766,7 +765,7 @@ abstract final class AssistantToolRegistry {
           keyword.results.length +
           hits.length -
           _overlap(keyword.results, hits),
-      atLeast: needMeaning && hits.length >= limit,
+      atLeast: wantMeaning && hits.length >= limit,
     );
   }
 
