@@ -1,11 +1,10 @@
 import 'dart:async';
 
 import 'package:gap/gap.dart';
-import 'package:moodiary_assistant/src/data/agent_preset_repository.dart';
-import 'package:moodiary_assistant/src/data/agent_preset_resolver.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/llm_provider_repository.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_tool_ui.dart';
+import 'package:moodiary_assistant/src/presentation/permission_mode_sheet.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
@@ -26,7 +25,7 @@ class AssistantSettingPage extends StatelessWidget {
         child: CustomScrollView(
           slivers: [
             const _ProviderSection(),
-            const _PresetSection(),
+            const _PersonalSection(),
             const _ToolSection(),
             SliverGap(context.safeBottom),
           ],
@@ -110,54 +109,48 @@ class _ProviderEntryTileState extends State<_ProviderEntryTile> {
   }
 }
 
-class _PresetSection extends StatefulWidget {
-  const _PresetSection();
+class _PersonalSection extends StatefulWidget {
+  const _PersonalSection();
 
   @override
-  State<_PresetSection> createState() => _PresetSectionState();
+  State<_PersonalSection> createState() => _PersonalSectionState();
 }
 
-class _PresetSectionState extends State<_PresetSection> {
-  String? _defaultName;
-  bool _loaded = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    final id = await AgentPresetResolver.defaultId();
-    final preset = id == builtinAgentPresetId
-        ? null
-        : await getIt<AgentPresetRepository>().get(id);
-    if (mounted) {
-      setState(() {
-        _defaultName = preset?.name;
-        _loaded = true;
-      });
-    }
-  }
-
+class _PersonalSectionState extends State<_PersonalSection> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final subtitle = !_loaded
-        ? ''
-        : (_defaultName ?? l10n.assistant.presetBuiltinName);
+    final notes = (MoodiaryKVs.assistantUserNotes.get() ?? '').trim();
+    final memoryOn = MoodiaryKVs.assistantMemoryEnabled.get() ?? true;
     return MSliverSettingGroup(
-      title: l10n.assistant.presetSectionTitle,
+      title: l10n.assistant.personalSectionTitle,
       children: [
         SettingListTile(
-          title: l10n.assistant.presetTileTitle,
-          subtitle: subtitle,
-          leading: const Icon(LucideIcons.venetianMask),
+          title: l10n.assistant.notesTitle,
+          subtitle: notes.isEmpty
+              ? l10n.assistant.notesEmpty
+              : notes.split('\n').first,
+          leading: const Icon(LucideIcons.notebookPen),
           trailing: const Icon(LucideIcons.chevronRight),
           onTap: () async {
-            await const AssistantPresetsRoute().push(context);
-            await _load();
+            await const AssistantNotesRoute().push(context);
+            if (mounted) setState(() {});
           },
+        ),
+        SettingListTile(
+          title: l10n.assistant.memoryTitle,
+          subtitle: l10n.assistant.memoryTileSubtitle,
+          leading: const Icon(LucideIcons.brain),
+          trailing: Switch(
+            value: memoryOn,
+            onChanged: (v) {
+              MoodiaryKVs.assistantMemoryEnabled.set(v);
+              setState(() {});
+            },
+          ),
+          onTap: memoryOn
+              ? () => const AssistantMemoriesRoute().push(context)
+              : null,
         ),
       ],
     );
@@ -172,6 +165,16 @@ class _ToolSection extends StatefulWidget {
 }
 
 class _ToolSectionState extends State<_ToolSection> {
+  AssistantPermissionMode get _mode =>
+      AssistantPermissionMode.fromId(MoodiaryKVs.assistantPermissionMode.get());
+
+  Future<void> _pickMode() async {
+    final mode = await showPermissionModePicker(context, selected: _mode);
+    if (mode == null) return;
+    MoodiaryKVs.assistantPermissionMode.set(mode.id);
+    if (mounted) setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -180,6 +183,13 @@ class _ToolSectionState extends State<_ToolSection> {
         MSliverSettingGroup(
           title: l10n.assistant.tool,
           children: [
+            SettingListTile(
+              title: l10n.assistant.permissionTitle,
+              subtitle: permissionModeLabel(l10n, _mode),
+              leading: const Icon(LucideIcons.shieldCheck),
+              trailing: const Icon(LucideIcons.chevronRight),
+              onTap: _pickMode,
+            ),
             for (final tool in AssistantTool.values) _toolTile(context, tool),
           ],
         ),

@@ -233,12 +233,9 @@ abstract class RustLibApi extends BaseApi {
   });
 
   Stream<RigStreamEvent> crateApiLlmRigChatStream({
-    required RigProviderConfig config,
-    required String systemPrompt,
-    required List<RigChatMessage> history,
-    required List<RigToolDef> tools,
-    required int maxTurns,
+    required RigChatInput input,
     required FutureOr<String> Function(String, String) toolDispatch,
+    required FutureOr<String> Function(String, String, String) toolGate,
   });
 
   RustArcIncrementStrongCountFnType
@@ -1370,12 +1367,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @override
   Stream<RigStreamEvent> crateApiLlmRigChatStream({
-    required RigProviderConfig config,
-    required String systemPrompt,
-    required List<RigChatMessage> history,
-    required List<RigToolDef> tools,
-    required int maxTurns,
+    required RigChatInput input,
     required FutureOr<String> Function(String, String) toolDispatch,
+    required FutureOr<String> Function(String, String, String) toolGate,
   }) {
     final sink = RustStreamSink<RigStreamEvent>();
     unawaited(
@@ -1383,14 +1377,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         NormalTask(
           callFfi: (port_) {
             var arg0 = cst_encode_StreamSink_rig_stream_event_Dco(sink);
-            var arg1 = cst_encode_box_autoadd_rig_provider_config(config);
-            var arg2 = cst_encode_String(systemPrompt);
-            var arg3 = cst_encode_list_rig_chat_message(history);
-            var arg4 = cst_encode_list_rig_tool_def(tools);
-            var arg5 = cst_encode_u_32(maxTurns);
-            var arg6 =
+            var arg1 = cst_encode_box_autoadd_rig_chat_input(input);
+            var arg2 =
                 cst_encode_DartFn_Inputs_String_String_Output_String_AnyhowException(
                   toolDispatch,
+                );
+            var arg3 =
+                cst_encode_DartFn_Inputs_String_String_String_Output_String_AnyhowException(
+                  toolGate,
                 );
             return wire.wire__crate__api__llm__rig_chat_stream(
               port_,
@@ -1398,9 +1392,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
               arg1,
               arg2,
               arg3,
-              arg4,
-              arg5,
-              arg6,
             );
           },
           codec: DcoCodec(
@@ -1408,15 +1399,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             decodeErrorData: dco_decode_AnyhowException,
           ),
           constMeta: kCrateApiLlmRigChatStreamConstMeta,
-          argValues: [
-            sink,
-            config,
-            systemPrompt,
-            history,
-            tools,
-            maxTurns,
-            toolDispatch,
-          ],
+          argValues: [sink, input, toolDispatch, toolGate],
           apiImpl: this,
         ),
       ),
@@ -1426,15 +1409,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiLlmRigChatStreamConstMeta => const TaskConstMeta(
     debugName: "rig_chat_stream",
-    argNames: [
-      "sink",
-      "config",
-      "systemPrompt",
-      "history",
-      "tools",
-      "maxTurns",
-      "toolDispatch",
-    ],
+    argNames: ["sink", "input", "toolDispatch", "toolGate"],
   );
 
   Future<void> Function(int, dynamic, dynamic)
@@ -1449,6 +1424,43 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       Box<AnyhowException>? rawError;
       try {
         rawOutput = Box(await raw(arg0, arg1));
+      } catch (e, s) {
+        rawError = Box(AnyhowException("$e\n\n$s"));
+      }
+
+      final serializer = SseSerializer(generalizedFrbRustBinding);
+      assert((rawOutput != null) ^ (rawError != null));
+      if (rawOutput != null) {
+        serializer.buffer.putUint8(0);
+        sse_encode_String(rawOutput.value, serializer);
+      } else {
+        serializer.buffer.putUint8(1);
+        sse_encode_AnyhowException(rawError!.value, serializer);
+      }
+      final output = serializer.intoRaw();
+
+      generalizedFrbRustBinding.dartFnDeliverOutput(
+        callId: callId,
+        ptr: output.ptr,
+        rustVecLen: output.rustVecLen,
+        dataLen: output.dataLen,
+      );
+    };
+  }
+
+  Future<void> Function(int, dynamic, dynamic, dynamic)
+  encode_DartFn_Inputs_String_String_String_Output_String_AnyhowException(
+    FutureOr<String> Function(String, String, String) raw,
+  ) {
+    return (callId, rawArg0, rawArg1, rawArg2) async {
+      final arg0 = dco_decode_String(rawArg0);
+      final arg1 = dco_decode_String(rawArg1);
+      final arg2 = dco_decode_String(rawArg2);
+
+      Box<String>? rawOutput;
+      Box<AnyhowException>? rawError;
+      try {
+        rawOutput = Box(await raw(arg0, arg1, arg2));
       } catch (e, s) {
         rawError = Box(AnyhowException("$e\n\n$s"));
       }
@@ -1699,6 +1711,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  FutureOr<String> Function(String, String, String)
+  dco_decode_DartFn_Inputs_String_String_String_Output_String_AnyhowException(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError('');
+  }
+
+  @protected
   FutureOr<HttpServerResponse> Function(HttpServerRequest)
   dco_decode_DartFn_Inputs_http_server_request_Output_http_server_response_AnyhowException(
     dynamic raw,
@@ -1840,9 +1861,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  RigProviderConfig dco_decode_box_autoadd_rig_provider_config(dynamic raw) {
+  RigChatInput dco_decode_box_autoadd_rig_chat_input(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_rig_provider_config(raw);
+    return dco_decode_rig_chat_input(raw);
   }
 
   @protected
@@ -2121,6 +2142,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  RigChatInput dco_decode_rig_chat_input(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return RigChatInput(
+      config: dco_decode_rig_provider_config(arr[0]),
+      systemPrompt: dco_decode_String(arr[1]),
+      history: dco_decode_list_rig_chat_message(arr[2]),
+      tools: dco_decode_list_rig_tool_def(arr[3]),
+      maxTurns: dco_decode_u_32(arr[4]),
+    );
+  }
+
+  @protected
   RigChatMessage dco_decode_rig_chat_message(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -2180,6 +2216,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           cachedInputTokens: dco_decode_u_32(raw[3]),
           cacheWriteTokens: dco_decode_u_32(raw[4]),
         );
+      case 6:
+        return RigStreamEvent_Turn(
+          turn: dco_decode_u_32(raw[1]),
+          finishReason: dco_decode_String(raw[2]),
+          responseId: dco_decode_String(raw[3]),
+          providerRequestId: dco_decode_String(raw[4]),
+          inputTokens: dco_decode_u_32(raw[5]),
+          outputTokens: dco_decode_u_32(raw[6]),
+          cachedInputTokens: dco_decode_u_32(raw[7]),
+        );
+      case 7:
+        return RigStreamEvent_TurnDiscarded(turn: dco_decode_u_32(raw[1]));
       default:
         throw Exception("unreachable");
     }
@@ -2531,11 +2579,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  RigProviderConfig sse_decode_box_autoadd_rig_provider_config(
+  RigChatInput sse_decode_box_autoadd_rig_chat_input(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_rig_provider_config(deserializer));
+    return (sse_decode_rig_chat_input(deserializer));
   }
 
   @protected
@@ -2893,6 +2941,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  RigChatInput sse_decode_rig_chat_input(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_config = sse_decode_rig_provider_config(deserializer);
+    var var_systemPrompt = sse_decode_String(deserializer);
+    var var_history = sse_decode_list_rig_chat_message(deserializer);
+    var var_tools = sse_decode_list_rig_tool_def(deserializer);
+    var var_maxTurns = sse_decode_u_32(deserializer);
+    return RigChatInput(
+      config: var_config,
+      systemPrompt: var_systemPrompt,
+      history: var_history,
+      tools: var_tools,
+      maxTurns: var_maxTurns,
+    );
+  }
+
+  @protected
   RigChatMessage sse_decode_rig_chat_message(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_role = sse_decode_String(deserializer);
@@ -2974,6 +3039,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           cachedInputTokens: var_cachedInputTokens,
           cacheWriteTokens: var_cacheWriteTokens,
         );
+      case 6:
+        var var_turn = sse_decode_u_32(deserializer);
+        var var_finishReason = sse_decode_String(deserializer);
+        var var_responseId = sse_decode_String(deserializer);
+        var var_providerRequestId = sse_decode_String(deserializer);
+        var var_inputTokens = sse_decode_u_32(deserializer);
+        var var_outputTokens = sse_decode_u_32(deserializer);
+        var var_cachedInputTokens = sse_decode_u_32(deserializer);
+        return RigStreamEvent_Turn(
+          turn: var_turn,
+          finishReason: var_finishReason,
+          responseId: var_responseId,
+          providerRequestId: var_providerRequestId,
+          inputTokens: var_inputTokens,
+          outputTokens: var_outputTokens,
+          cachedInputTokens: var_cachedInputTokens,
+        );
+      case 7:
+        var var_turn = sse_decode_u_32(deserializer);
+        return RigStreamEvent_TurnDiscarded(turn: var_turn);
       default:
         throw UnimplementedError('');
     }
@@ -3152,6 +3237,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return cst_encode_DartOpaque(
       encode_DartFn_Inputs_String_String_Output_String_AnyhowException(raw),
+    );
+  }
+
+  @protected
+  PlatformPointer
+  cst_encode_DartFn_Inputs_String_String_String_Output_String_AnyhowException(
+    FutureOr<String> Function(String, String, String) raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return cst_encode_DartOpaque(
+      encode_DartFn_Inputs_String_String_String_Output_String_AnyhowException(
+        raw,
+      ),
     );
   }
 
@@ -3459,6 +3557,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
+  sse_encode_DartFn_Inputs_String_String_String_Output_String_AnyhowException(
+    FutureOr<String> Function(String, String, String) self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_DartOpaque(
+      encode_DartFn_Inputs_String_String_String_Output_String_AnyhowException(
+        self,
+      ),
+      serializer,
+    );
+  }
+
+  @protected
+  void
   sse_encode_DartFn_Inputs_http_server_request_Output_http_server_response_AnyhowException(
     FutureOr<HttpServerResponse> Function(HttpServerRequest) self,
     SseSerializer serializer,
@@ -3687,12 +3800,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_box_autoadd_rig_provider_config(
-    RigProviderConfig self,
+  void sse_encode_box_autoadd_rig_chat_input(
+    RigChatInput self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_rig_provider_config(self, serializer);
+    sse_encode_rig_chat_input(self, serializer);
   }
 
   @protected
@@ -4022,6 +4135,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_rig_chat_input(RigChatInput self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_rig_provider_config(self.config, serializer);
+    sse_encode_String(self.systemPrompt, serializer);
+    sse_encode_list_rig_chat_message(self.history, serializer);
+    sse_encode_list_rig_tool_def(self.tools, serializer);
+    sse_encode_u_32(self.maxTurns, serializer);
+  }
+
+  @protected
   void sse_encode_rig_chat_message(
     RigChatMessage self,
     SseSerializer serializer,
@@ -4092,6 +4215,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_u_32(outputTokens, serializer);
         sse_encode_u_32(cachedInputTokens, serializer);
         sse_encode_u_32(cacheWriteTokens, serializer);
+      case RigStreamEvent_Turn(
+        turn: final turn,
+        finishReason: final finishReason,
+        responseId: final responseId,
+        providerRequestId: final providerRequestId,
+        inputTokens: final inputTokens,
+        outputTokens: final outputTokens,
+        cachedInputTokens: final cachedInputTokens,
+      ):
+        sse_encode_i_32(6, serializer);
+        sse_encode_u_32(turn, serializer);
+        sse_encode_String(finishReason, serializer);
+        sse_encode_String(responseId, serializer);
+        sse_encode_String(providerRequestId, serializer);
+        sse_encode_u_32(inputTokens, serializer);
+        sse_encode_u_32(outputTokens, serializer);
+        sse_encode_u_32(cachedInputTokens, serializer);
+      case RigStreamEvent_TurnDiscarded(turn: final turn):
+        sse_encode_i_32(7, serializer);
+        sse_encode_u_32(turn, serializer);
     }
   }
 

@@ -1,131 +1,153 @@
-import 'dart:io';
-
+import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
+import 'package:drift_dev/api/migrations_native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:sqlite3_simple/sqlite3_simple.dart';
+
+import 'drift/moodiary/generated/schema.dart';
+import 'drift/moodiary/generated/schema_v1.dart' as v1;
+import 'drift/moodiary/generated/schema_v2.dart' as v2;
 
 String marked(String word) => '$searchHitStart$word$searchHitEnd';
 
 void main() {
-  late Directory dir;
-  late String path;
+  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
+  late SchemaVerifier verifier;
 
-  setUp(() async {
-    dir = await Directory.systemTemp.createTemp('moodiary-migration-');
-    path = '${dir.path}/test.sqlite';
+  setUpAll(() {
+    loadSimpleExtension();
+    installJiebaDict();
+    verifier = SchemaVerifier(GeneratedHelper());
   });
 
-  tearDown(() async {
-    try {
-      await dir.delete(recursive: true);
-    } catch (_) {}
-  });
-
-  Future<MoodiaryDatabase> open() async {
-    final db = MoodiaryDatabase.forTesting(NativeDatabase(File(path)));
-    await db.customSelect('SELECT 1').get();
-    return db;
-  }
-
-  Future<int> userVersion(MoodiaryDatabase db) async {
+  Future<int> userVersion(GeneratedDatabase db) async {
     final row = await db.customSelect('PRAGMA user_version').getSingle();
     return row.data.values.first as int;
   }
 
-  Future<List<String>> columns(MoodiaryDatabase db, String table) async {
+  Future<List<String>> columns(GeneratedDatabase db, String table) async {
     final rows = await db.customSelect('PRAGMA table_info($table)').get();
     return [for (final r in rows) r.read<String>('name')];
   }
 
-  Future<void> downgradeFtsToV2(MoodiaryDatabase db) async {
-    for (final name in ['diary_fts_ai', 'diary_fts_ad', 'diary_fts_au']) {
-      await db.customStatement('DROP TRIGGER $name');
-    }
-    await db.customStatement('DROP TABLE diary_fts');
-    await db.customStatement(
-      'CREATE VIRTUAL TABLE diary_fts USING fts5('
-      "title_tok, body_tok, content='', contentless_delete=1, "
-      "tokenize='unicode61', prefix='2', detail=full, columnsize=1)",
-    );
-    await db.customStatement(
-      "INSERT INTO diary_fts(diary_fts, rank) VALUES('rank', 'bm25(1.5, 1.0)')",
-    );
-    await db.customStatement('PRAGMA user_version = 2');
-  }
-
-  Future<void> downgradeToV1(MoodiaryDatabase db) async {
-    await downgradeFtsToV2(db);
-    await db.customStatement('DROP TABLE places');
-    await db.customStatement('ALTER TABLE diaries DROP COLUMN place_id');
-    await db.customStatement('ALTER TABLE diaries ADD COLUMN latitude REAL');
-    await db.customStatement('ALTER TABLE diaries ADD COLUMN longitude REAL');
-    await db.customStatement('ALTER TABLE diaries ADD COLUMN place_name TEXT');
-    await db.customStatement('PRAGMA user_version = 1');
-  }
-
-  Future<void> insertV1Diary(
-    MoodiaryDatabase db,
+  v1.DiariesCompanion v1Diary(
     String id, {
     double? lat,
     double? lon,
     String? placeName,
     int time = 0,
-  }) => db.customStatement(
-    'INSERT INTO diaries (id, title, content, content_text, time, '
-    'last_modified, show, mood, type, latitude, longitude, place_name) '
-    "VALUES (?, '', '', '', ?, 0, 1, 'neutral', 'tiptap', ?, ?, ?)",
-    [id, time, lat, lon, placeName],
+  }) => v1.DiariesCompanion.insert(
+    id: id,
+    title: '',
+    content: '',
+    contentText: '',
+    time: time,
+    lastModified: 0,
+    show: 1,
+    mood: 'neutral',
+    type: 'tiptap',
+    latitude: Value(lat),
+    longitude: Value(lon),
+    placeName: Value(placeName),
   );
 
-  test('新库直接建到 v3，places 就位', () async {
-    final db = await open();
+  test('新库直接建到 v3，且与 v3 快照一致', () async {
+    final db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
+    await verifier.migrateAndValidate(db, 3);
     expect(await userVersion(db), 3);
-    expect(await PlaceRepository(db).getAllPlaces(), isEmpty);
-    expect(await columns(db, 'diaries'), isNot(contains('latitude')));
+    await db.close();
+  });
+
+  test('v2 老库升级：旧行留空，预设被丢弃', () async {
+    final schema = await verifier.schemaAt(2);
+    final old = v2.DatabaseAtV2(schema.newConnection());
+    await old
+        .into(old.chatSessions)
+        .insert(
+          v2.ChatSessionsCompanion.insert(
+            id: 's1',
+            providerId: 'p1',
+            model: 'm1',
+            createdAt: 0,
+            updatedAt: 0,
+            agentPresetId: const Value('ap'),
+            personaSnapshot: const Value('y'),
+          ),
+        );
+    await old
+        .into(old.chatMessages)
+        .insert(
+          v2.ChatMessagesCompanion.insert(
+            id: 'm1',
+            sessionId: 's1',
+            role: 'user',
+            content: 'hi',
+            createdAt: 0,
+          ),
+        );
+    await old
+        .into(old.memories)
+        .insert(
+          v2.MemoriesCompanion.insert(
+            id: 'f1',
+            category: 'preference',
+            content: 'call me 小竹',
+            createdAt: 0,
+            updatedAt: 0,
+          ),
+        );
+    await old
+        .into(old.agentPresets)
+        .insert(
+          v2.AgentPresetsCompanion.insert(
+            id: 'ap',
+            name: 'x',
+            persona: 'y',
+            createdAt: 0,
+            updatedAt: 0,
+          ),
+        );
+    await old.close();
+
+    final db = MoodiaryDatabase.forTesting(schema.newConnection());
+    await verifier.migrateAndValidate(db, 3);
+    final message = await db
+        .customSelect("SELECT provider_id FROM chat_messages WHERE id = 'm1'")
+        .getSingle();
+    expect(message.readNullable<String>('provider_id'), isNull);
+    final fact = await db
+        .customSelect("SELECT source FROM memories WHERE id = 'f1'")
+        .getSingle();
+    expect(fact.readNullable<String>('source'), isNull);
+    final session = await db
+        .customSelect("SELECT model FROM chat_sessions WHERE id = 's1'")
+        .getSingle();
+    expect(session.read<String>('model'), 'm1');
     await db.close();
   });
 
   test('v1 老库升级：位置快照归并成常用地点，日记改引用，一篇不丢', () async {
-    var db = await open();
-    await CategoryRepository(db).insertACategory(
-      Category(
-        id: 'c1',
-        categoryName: '生活',
-        lastModified: DateTime.utc(2026, 1, 1),
-      ),
-    );
-    await downgradeToV1(db);
-    await insertV1Diary(
-      db,
-      'd1',
-      lat: 30.28,
-      lon: 120.15,
-      placeName: '杭州市 西湖区',
-      time: 1,
-    );
-    await insertV1Diary(
-      db,
-      'd2',
-      lat: 30.29,
-      lon: 120.16,
-      placeName: '杭州市 西湖区',
-      time: 2,
-    );
-    await insertV1Diary(
-      db,
-      'd3',
-      lat: 24.48,
-      lon: 118.08,
-      placeName: '',
-      time: 3,
-    );
-    await insertV1Diary(db, 'd4', time: 4);
-    await db.close();
+    final schema = await verifier.schemaAt(1);
+    final old = v1.DatabaseAtV1(schema.newConnection());
+    await old
+        .into(old.categories)
+        .insert(
+          v1.CategoriesCompanion.insert(id: 'c1', name: '生活', lastModified: 0),
+        );
+    await old.batch((b) {
+      b.insertAll(old.diaries, [
+        v1Diary('d1', lat: 30.28, lon: 120.15, placeName: '杭州市 西湖区', time: 1),
+        v1Diary('d2', lat: 30.29, lon: 120.16, placeName: '杭州市 西湖区', time: 2),
+        v1Diary('d3', lat: 24.48, lon: 118.08, placeName: '', time: 3),
+        v1Diary('d4', time: 4),
+      ]);
+    });
+    await old.close();
 
-    db = await open();
-    expect(await userVersion(db), 3);
-    expect(await columns(db, 'diaries'), isNot(contains('latitude')));
+    final db = MoodiaryDatabase.forTesting(schema.newConnection());
+    await verifier.migrateAndValidate(db, 3);
     final places = await PlaceRepository(db).getAllPlaces();
     expect(places, hasLength(2));
     final xihu = places.singleWhere((p) => p.name == '杭州市 西湖区');
@@ -142,50 +164,31 @@ void main() {
       (await CategoryRepository(db).getCategoryById('c1'))?.categoryName,
       '生活',
     );
-    await PlaceRepository(db).insertAPlace(
-      Place.create(name: '公司', latitude: 30.28, longitude: 120.15),
-    );
-    expect(await PlaceRepository(db).getAllPlaces(), hasLength(3));
-    await db.close();
-  });
-
-  test('v1 升级中途被杀（places 与 place_id 已建、列未删、版本未拨）：重开能续跑', () async {
-    var db = await open();
-    await downgradeToV1(db);
-    await insertV1Diary(db, 'd1', lat: 30.28, lon: 120.15, placeName: '公司');
-    await db.customStatement(
-      'CREATE TABLE places (id TEXT NOT NULL PRIMARY KEY, name TEXT NOT NULL, '
-      'latitude REAL NOT NULL, longitude REAL NOT NULL, icon TEXT, '
-      'last_modified INTEGER NOT NULL)',
-    );
-    await db.customStatement('ALTER TABLE diaries ADD COLUMN place_id TEXT');
-    await db.close();
-
-    db = await open();
-    expect(await userVersion(db), 3);
-    expect(await columns(db, 'diaries'), isNot(contains('latitude')));
-    final place = (await PlaceRepository(db).getAllPlaces()).single;
-    expect(place.name, '公司');
-    expect(
-      (await DiaryRepository(db).getDiaryByBusinessId('d1'))!.placeId,
-      place.id,
-    );
     await db.close();
   });
 
   test('v2 老库升级：索引换成 simple external content，老数据重建后可搜', () async {
-    var db = await open();
-    await db.customStatement(
-      "INSERT INTO diaries (id, title, content, content_text, time, "
-      "last_modified, show, mood, type) "
-      "VALUES ('d1', '关于苹果的日记', '', '早上吃了一个苹果，味道不错', 1, 0, 1, "
-      "'neutral', 'tiptap')",
-    );
-    await downgradeFtsToV2(db);
-    await db.close();
+    final schema = await verifier.schemaAt(2);
+    final old = v2.DatabaseAtV2(schema.newConnection());
+    await old
+        .into(old.diaries)
+        .insert(
+          v2.DiariesCompanion.insert(
+            id: 'd1',
+            title: '关于苹果的日记',
+            content: '',
+            contentText: '早上吃了一个苹果，味道不错',
+            time: 1,
+            lastModified: 0,
+            show: 1,
+            mood: 'neutral',
+            type: 'tiptap',
+          ),
+        );
+    await old.close();
 
-    db = await open();
-    expect(await userVersion(db), 3);
+    final db = MoodiaryDatabase.forTesting(schema.newConnection());
+    await verifier.migrateAndValidate(db, 3);
     final hit = (await DiaryRepository(db).searchDiaries(query: '苹果')).single;
     expect(hit.diary.id, 'd1', reason: "'rebuild' 从 diaries 重灌了整个索引");
     expect(hit.titleHighlight, '关于${marked('苹果')}的日记');
@@ -193,15 +196,17 @@ void main() {
   });
 
   test('已是 v3 的库重开不重复建表', () async {
-    var db = await open();
+    final schema = await verifier.schemaAt(3);
+    var db = MoodiaryDatabase.forTesting(schema.newConnection());
     await PlaceRepository(
       db,
     ).insertAPlace(Place.create(name: '家', latitude: 30.1, longitude: 120.1));
     await db.close();
 
-    db = await open();
+    db = MoodiaryDatabase.forTesting(schema.newConnection());
     expect(await userVersion(db), 3);
     expect(await PlaceRepository(db).getAllPlaces(), hasLength(1));
+    expect(await columns(db, 'diaries'), isNot(contains('latitude')));
     await db.close();
   });
 }

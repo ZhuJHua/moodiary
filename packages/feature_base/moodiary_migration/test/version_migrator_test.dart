@@ -3,10 +3,13 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_plus/isar_plus.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
 import 'package:moodiary_migration/src/legacy/legacy_models.dart';
 import 'package:moodiary_models/moodiary_models.dart'
     hide Category, Diary, Font;
+import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_storage/testing.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 Diary _legacyDiary(
@@ -55,11 +58,44 @@ void main() {
     });
   });
 
-  group('merge 在 2.8.0 及以上是纯 no-op', () {
+  group('merge 在 2.8.2 及以上是纯 no-op', () {
     test('正式版与 beta 版都直接返回', () async {
-      await VersionMigrator.merge(lastAppVersion: '2.8.0+94');
-      await VersionMigrator.merge(lastAppVersion: '2.8.0-beta+94');
+      await VersionMigrator.merge(lastAppVersion: '2.8.2+96');
+      await VersionMigrator.merge(lastAppVersion: '2.8.2-beta+96');
       await VersionMigrator.merge(lastAppVersion: '2.9.1+120');
+    });
+  });
+
+  group('2.8.2：思考档位从空串变成显式关闭', () {
+    late MemoryKVStorage kv;
+
+    setUp(() {
+      kv = MemoryKVStorage();
+      getIt.registerSingleton<IKVStorage>(kv);
+    });
+
+    tearDown(getIt.reset);
+
+    test('旧版写进去的空串变成 none', () async {
+      kv.set<String>(MoodiaryKVs.assistantReasoningEffort.name, '');
+      await VersionMigrator.merge(lastAppVersion: '2.8.1+95');
+      expect(MoodiaryKVs.assistantReasoningEffort.get(), 'none');
+    });
+
+    test('显式档位与显式关闭原样保留', () async {
+      kv.set<String>(MoodiaryKVs.assistantReasoningEffort.name, 'high');
+      await VersionMigrator.merge(lastAppVersion: '2.8.1+95');
+      expect(MoodiaryKVs.assistantReasoningEffort.get(), 'high');
+
+      kv.set<String>(MoodiaryKVs.assistantReasoningEffort.name, 'none');
+      await VersionMigrator.merge(lastAppVersion: '2.8.1+95');
+      expect(MoodiaryKVs.assistantReasoningEffort.get(), 'none');
+    });
+
+    test('2.8.2 之后不再碰这个键', () async {
+      kv.set<String>(MoodiaryKVs.assistantReasoningEffort.name, '');
+      await VersionMigrator.merge(lastAppVersion: '2.8.2+96');
+      expect(MoodiaryKVs.assistantReasoningEffort.get(), '');
     });
   });
 

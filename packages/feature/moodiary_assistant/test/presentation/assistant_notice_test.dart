@@ -4,6 +4,26 @@ import 'package:moodiary_assistant/src/presentation/assistant_tool_ui.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 
+int _detailInits = 0;
+
+class _CountingDetail extends StatefulWidget {
+  const _CountingDetail();
+
+  @override
+  State<_CountingDetail> createState() => _CountingDetailState();
+}
+
+class _CountingDetailState extends State<_CountingDetail> {
+  @override
+  void initState() {
+    super.initState();
+    _detailInits++;
+  }
+
+  @override
+  Widget build(BuildContext context) => const SizedBox(height: 120);
+}
+
 void main() {
   Widget host(Widget child) {
     final data = buildMuiTheme(brightness: Brightness.light);
@@ -111,4 +131,29 @@ void main() {
       'm: {\n  "k": 1\n}',
     );
   });
+  testWidgets('展开全程详情只建一次', (tester) async {
+    _detailInits = 0;
+    await tester.pumpWidget(
+      host(
+        const AssistantNotice(
+          icon: LucideIcons.bookOpenText,
+          kind: '查看日记',
+          summary: '2 篇',
+          detail: _buildCountingDetail,
+        ),
+      ),
+    );
+    expect(_detailInits, 0);
+
+    await tester.tap(find.text('查看日记'));
+    for (var i = 0; i < 12; i++) {
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+    expect(_detailInits, 1, reason: '动画途中');
+
+    await tester.pumpAndSettle();
+    expect(_detailInits, 1, reason: '动画收尾');
+  });
 }
+
+Widget _buildCountingDetail(BuildContext context) => const _CountingDetail();

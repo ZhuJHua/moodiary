@@ -21,11 +21,6 @@ _ChatSession _$ChatSessionFromJson(Map<String, dynamic> json) => _ChatSession(
       : DateTime.parse(json['compactedAt'] as String),
   compactedInputTokensAtTrigger: (json['compactedInputTokensAtTrigger'] as num?)
       ?.toInt(),
-  agentPresetId: json['agentPresetId'] as String?,
-  personaSnapshot: json['personaSnapshot'] as String?,
-  toolsSnapshot: (json['toolsSnapshot'] as List<dynamic>?)
-      ?.map((e) => e as String)
-      .toList(),
 );
 
 Map<String, dynamic> _$ChatSessionToJson(_ChatSession instance) =>
@@ -41,7 +36,4 @@ Map<String, dynamic> _$ChatSessionToJson(_ChatSession instance) =>
       'compactedUpToMessageId': instance.compactedUpToMessageId,
       'compactedAt': instance.compactedAt?.toIso8601String(),
       'compactedInputTokensAtTrigger': instance.compactedInputTokensAtTrigger,
-      'agentPresetId': instance.agentPresetId,
-      'personaSnapshot': instance.personaSnapshot,
-      'toolsSnapshot': instance.toolsSnapshot,
     };

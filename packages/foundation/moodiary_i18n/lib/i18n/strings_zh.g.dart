@@ -646,81 +646,6 @@ class Translations$assistant$zh {
 	/// zh: 'AI 助手配置'
 	String get settingTitle => 'AI 助手配置';
 
-	/// zh: '助手基于 rig 构建。在「模型供应商」里自定义任意数量的服务商（OpenAI / Anthropic 兼容端点），自由切换激活项。API Key 仅保存在本机安全存储。'
-	String get settingNote => '助手基于 rig 构建。在「模型供应商」里自定义任意数量的服务商（OpenAI / Anthropic 兼容端点），自由切换激活项。API Key 仅保存在本机安全存储。';
-
-	/// zh: '助手预设'
-	String get presetSectionTitle => '助手预设';
-
-	/// zh: '助手预设'
-	String get presetTileTitle => '助手预设';
-
-	/// zh: '助手预设'
-	String get presetPageTitle => '助手预设';
-
-	/// zh: 'Moodiary助手'
-	String get presetBuiltinName => 'Moodiary助手';
-
-	/// zh: '出厂预设：温和、克制的日记伙伴。只读，可派生副本后自由修改。'
-	String get presetBuiltinDes => '出厂预设：温和、克制的日记伙伴。只读，可派生副本后自由修改。';
-
-	/// zh: '内置'
-	String get presetBuiltinBadge => '内置';
-
-	/// zh: '默认'
-	String get presetDefaultBadge => '默认';
-
-	/// zh: '设为默认'
-	String get presetSetDefault => '设为默认';
-
-	/// zh: '派生副本'
-	String get presetDerive => '派生副本';
-
-	/// zh: '{name} 副本'
-	String presetCopyName({required Object name}) => '${name} 副本';
-
-	/// zh: '编辑预设'
-	String get presetEditTitle => '编辑预设';
-
-	/// zh: '名称'
-	String get presetNameLabel => '名称';
-
-	/// zh: '简介'
-	String get presetDescriptionLabel => '简介';
-
-	/// zh: '人格'
-	String get presetPersonaLabel => '人格';
-
-	/// zh: '已保存预设'
-	String get presetSaved => '已保存预设';
-
-	/// zh: '删除预设'
-	String get presetDeleteTitle => '删除预设';
-
-	/// zh: '删除「{name}」？已用它创建的会话不受影响（人格已定格在会话里）。'
-	String presetDeleteMessage({required Object name}) => '删除「${name}」？已用它创建的会话不受影响（人格已定格在会话里）。';
-
-	/// zh: '已删除的预设'
-	String get presetDeleted => '已删除的预设';
-
-	/// zh: '选择预设'
-	String get presetPickerTitle => '选择预设';
-
-	/// zh: '本会话的配置已在创建时定格'
-	String get presetInfoSubtitle => '本会话的配置已在创建时定格';
-
-	/// zh: '自定义工具集'
-	String get presetCustomTools => '自定义工具集';
-
-	/// zh: '{count} 个工具'
-	String presetToolCount({required Object count}) => '${count} 个工具';
-
-	/// zh: '全部工具'
-	String get presetToolsAll => '全部工具';
-
-	/// zh: '不挂载工具'
-	String get presetToolsNone => '不挂载工具';
-
 	/// zh: '已切换到 {model}'
 	String modelSwitched({required Object model}) => '已切换到 ${model}';
 
@@ -738,6 +663,42 @@ class Translations$assistant$zh {
 
 	/// zh: '新对话'
 	String get newChat => '新对话';
+
+	/// zh: '压缩历史'
+	String get menuCompactNow => '压缩历史';
+
+	/// zh: '助手设置'
+	String get menuSettings => '助手设置';
+
+	/// zh: '已压缩较早的消息'
+	String get compactedNow => '已压缩较早的消息';
+
+	/// zh: '没有可压缩的内容'
+	String get compactNothing => '没有可压缩的内容';
+
+	/// zh: '压缩失败，请稍后再试'
+	String get compactFailed => '压缩失败，请稍后再试';
+
+	/// zh: '「{name}」缺少 API Key，点此填写'
+	String providerKeyMissingBanner({required Object name}) => '「${name}」缺少 API Key，点此填写';
+
+	/// zh: '原供应商已删除，正在用「{name}」回答，点此换一个'
+	String providerMissingBanner({required Object name}) => '原供应商已删除，正在用「${name}」回答，点此换一个';
+
+	/// zh: '切换模型'
+	String get modelSwitchTitle => '切换模型';
+
+	/// zh: '该模型不读图，历史中的 {count} 张图片会被跳过。'
+	String modelSwitchNoImages({required Object count}) => '该模型不读图，历史中的 ${count} 张图片会被跳过。';
+
+	/// zh: '已选的图片将被移除。'
+	String get modelSwitchDropPending => '已选的图片将被移除。';
+
+	/// zh: '该模型上下文更小，发送前会先压缩历史。'
+	String get modelSwitchSmallerContext => '该模型上下文更小，发送前会先压缩历史。';
+
+	/// zh: '仍要切换'
+	String get modelSwitchConfirm => '仍要切换';
 
 	/// zh: '还没有历史会话'
 	String get historyEmpty => '还没有历史会话';
@@ -802,11 +763,23 @@ class Translations$assistant$zh {
 	/// zh: '请求失败'
 	String get netUnknown => '请求失败';
 
-	/// zh: '思考强度'
-	String get reasoningEffort => '思考强度';
-
 	/// zh: '不思考'
 	String get reasoningOff => '不思考';
+
+	/// zh: '极低'
+	String get reasoningLevelMinimal => '极低';
+
+	/// zh: '低'
+	String get reasoningLevelLow => '低';
+
+	/// zh: '中'
+	String get reasoningLevelMedium => '中';
+
+	/// zh: '高'
+	String get reasoningLevelHigh => '高';
+
+	/// zh: '最高'
+	String get reasoningLevelMax => '最高';
 
 	/// zh: '已思考 {duration} 秒'
 	String thoughtFor({required Object duration}) => '已思考 ${duration} 秒';
@@ -814,20 +787,101 @@ class Translations$assistant$zh {
 	/// zh: '工具'
 	String get tool => '工具';
 
-	/// zh: '助手会根据对话内容自动调用下列工具，无需你逐次确认。删除类操作请留意：日记会进回收站，记忆则是永久删除。'
-	String get toolSectionNote => '助手会根据对话内容自动调用下列工具，无需你逐次确认。删除类操作请留意：日记会进回收站，记忆则是永久删除。';
+	/// zh: '工具按权限模式执行：读取直接跑，写入按模式确认。删除类操作请留意：日记会进回收站，记忆则是永久删除。'
+	String get toolSectionNote => '工具按权限模式执行：读取直接跑，写入按模式确认。删除类操作请留意：日记会进回收站，记忆则是永久删除。';
 
-	/// zh: '查询日记'
-	String get toolQueryTitle => '查询日记';
+	/// zh: '个性化'
+	String get personalSectionTitle => '个性化';
 
-	/// zh: '按关键词、时间范围或分类查询你的本地日记，用于回答涉及过往经历、情绪记录的问题。'
-	String get toolQueryDes => '按关键词、时间范围或分类查询你的本地日记，用于回答涉及过往经历、情绪记录的问题。';
+	/// zh: '助手说明'
+	String get notesTitle => '助手说明';
 
-	/// zh: '语义检索'
-	String get toolSemanticTitle => '语义检索';
+	/// zh: '未填写'
+	String get notesEmpty => '未填写';
 
-	/// zh: '按含义而非关键词查找日记：用一句自然语言描述要找的内容，即使措辞不同也能召回。需先在设置中启用本地语义索引。'
-	String get toolSemanticDes => '按含义而非关键词查找日记：用一句自然语言描述要找的内容，即使措辞不同也能召回。需先在设置中启用本地语义索引。';
+	/// zh: '写给助手的话，每次对话都会带上：怎么称呼你、偏好、忌讳。'
+	String get notesLede => '写给助手的话，每次对话都会带上：怎么称呼你、偏好、忌讳。';
+
+	/// zh: '说明'
+	String get notesFieldLabel => '说明';
+
+	/// zh: '已保存'
+	String get notesSaved => '已保存';
+
+	/// zh: '助手记忆'
+	String get memoryTitle => '助手记忆';
+
+	/// zh: '开启后助手才会记住你告诉它的事，只存在这台设备上'
+	String get memoryTileSubtitle => '开启后助手才会记住你告诉它的事，只存在这台设备上';
+
+	/// zh: '助手记下的关于你的事。只存在这台设备上，不会同步也不会进导出。'
+	String get memoryLede => '助手记下的关于你的事。只存在这台设备上，不会同步也不会进导出。';
+
+	/// zh: '搜索记忆'
+	String get memorySearchHint => '搜索记忆';
+
+	/// zh: '{date} · {source}'
+	String memoryMeta({required Object date, required Object source}) => '${date} · ${source}';
+
+	/// zh: '你说的'
+	String get memorySourceSaid => '你说的';
+
+	/// zh: '你让我记的'
+	String get memorySourceAsked => '你让我记的';
+
+	/// zh: '偏好'
+	String get memoryKindPreference => '偏好';
+
+	/// zh: '主题'
+	String get memoryKindTheme => '主题';
+
+	/// zh: '目标'
+	String get memoryKindGoal => '目标';
+
+	/// zh: '事实'
+	String get memoryKindFact => '事实';
+
+	/// zh: '删除这条记忆？'
+	String get memoryDeleteTitle => '删除这条记忆？';
+
+	/// zh: '「{text}」会被永久删除，助手之后不会再记得它。'
+	String memoryDeleteMessage({required Object text}) => '「${text}」会被永久删除，助手之后不会再记得它。';
+
+	/// zh: '清空全部记忆？'
+	String get memoryClearTitle => '清空全部记忆？';
+
+	/// zh: '助手记下的所有事都会被永久删除，无法恢复。'
+	String get memoryClearMessage => '助手记下的所有事都会被永久删除，无法恢复。';
+
+	/// zh: '全部清空'
+	String get memoryClearConfirm => '全部清空';
+
+	/// zh: '编辑'
+	String get memoryEdit => '编辑';
+
+	/// zh: '编辑记忆'
+	String get memoryEditTitle => '编辑记忆';
+
+	/// zh: '内容'
+	String get memoryFieldText => '内容';
+
+	/// zh: '类别'
+	String get memoryFieldKind => '类别';
+
+	/// zh: '还没有记忆'
+	String get memoryEmpty => '还没有记忆';
+
+	/// zh: '聊天时说一句「记住……」，或者告诉助手你的习惯，它就会存下来。'
+	String get memoryEmptyDes => '聊天时说一句「记住……」，或者告诉助手你的习惯，它就会存下来。';
+
+	/// zh: '没有匹配的记忆'
+	String get memoryNoMatch => '没有匹配的记忆';
+
+	/// zh: '查找日记'
+	String get toolSearchTitle => '查找日记';
+
+	/// zh: '按关键词或含义查找你的本地日记，也能按时间范围和分类浏览。语义检索需先在设置中启用本地索引。'
+	String get toolSearchDes => '按关键词或含义查找你的本地日记，也能按时间范围和分类浏览。语义检索需先在设置中启用本地索引。';
 
 	/// zh: '读取日记全文'
 	String get toolGetTitle => '读取日记全文';
@@ -883,23 +937,17 @@ class Translations$assistant$zh {
 	/// zh: '删除分类（仅当其下没有日记时）。'
 	String get toolDeleteCategoryDes => '删除分类（仅当其下没有日记时）。';
 
-	/// zh: '查看记忆'
-	String get toolListMemoriesTitle => '查看记忆';
+	/// zh: '回忆记忆'
+	String get toolRecallMemoryTitle => '回忆记忆';
 
-	/// zh: '列出助手保存的关于你的长期记忆（偏好、主题、目标等）。'
-	String get toolListMemoriesDes => '列出助手保存的关于你的长期记忆（偏好、主题、目标等）。';
+	/// zh: '按需查找助手保存过的关于你的长期记忆，只在需要时调用。'
+	String get toolRecallMemoryDes => '按需查找助手保存过的关于你的长期记忆，只在需要时调用。';
 
 	/// zh: '记住事实'
 	String get toolRememberTitle => '记住事实';
 
 	/// zh: '把关于你的长期事实（稳定偏好 / 反复出现的主题 / 持续目标）保存下来，供日后对话记起。'
 	String get toolRememberDes => '把关于你的长期事实（稳定偏好 / 反复出现的主题 / 持续目标）保存下来，供日后对话记起。';
-
-	/// zh: '更新记忆'
-	String get toolUpdateMemoryTitle => '更新记忆';
-
-	/// zh: '修改已保存记忆的内容。'
-	String get toolUpdateMemoryDes => '修改已保存记忆的内容。';
 
 	/// zh: '删除记忆'
 	String get toolForgetTitle => '删除记忆';
@@ -952,6 +1000,33 @@ class Translations$assistant$zh {
 	/// zh: '[图片]'
 	String get imageMessageLabel => '[图片]';
 
+	/// zh: '查看日记'
+	String get citationRead => '查看日记';
+
+	/// zh: '创建日记'
+	String get citationCreated => '创建日记';
+
+	/// zh: '修改日记'
+	String get citationUpdated => '修改日记';
+
+	/// zh: '删除日记'
+	String get citationDeleted => '删除日记';
+
+	/// zh: '{count} 篇'
+	String citationCount({required Object count}) => '${count} 篇';
+
+	/// zh: '早上好'
+	String get emptyGreetingMorning => '早上好';
+
+	/// zh: '下午好'
+	String get emptyGreetingAfternoon => '下午好';
+
+	/// zh: '晚上好'
+	String get emptyGreetingEvening => '晚上好';
+
+	/// zh: '想记录些什么？'
+	String get emptySubtitle => '想记录些什么？';
+
 	/// zh: '模型供应商'
 	String get modelProviderTitle => '模型供应商';
 
@@ -972,6 +1047,9 @@ class Translations$assistant$zh {
 
 	/// zh: '确定删除「{name}」？其 API Key 也会一并清除。'
 	String modelProviderDeleteContent({required Object name}) => '确定删除「${name}」？其 API Key 也会一并清除。';
+
+	/// zh: '{count} 个会话正在用它，之后会改用默认供应商回答。'
+	String modelProviderDeleteAffects({required Object count}) => '${count} 个会话正在用它，之后会改用默认供应商回答。';
 
 	/// zh: '已删除'
 	String get modelProviderDeleted => '已删除';
@@ -1066,6 +1144,24 @@ class Translations$assistant$zh {
 	/// zh: '无匹配模型'
 	String get modelProviderNoModelMatch => '无匹配模型';
 
+	/// zh: '去填写'
+	String get modelProviderFillKey => '去填写';
+
+	/// zh: '管理供应商'
+	String get modelProviderManage => '管理供应商';
+
+	/// zh: '还没有模型目录'
+	String get modelCatalogMissing => '还没有模型目录';
+
+	/// zh: '下载模型目录'
+	String get modelCatalogDownload => '下载模型目录';
+
+	/// zh: '目录更新于 {time}'
+	String modelCatalogUpdatedAt({required Object time}) => '目录更新于 ${time}';
+
+	/// zh: '目录中已无此模型'
+	String get modelNotInCatalog => '目录中已无此模型';
+
 	/// zh: '加载中…'
 	String get summaryLoading => '加载中…';
 
@@ -1116,6 +1212,117 @@ class Translations$assistant$zh {
 
 	/// zh: '结果'
 	String get toolResult => '结果';
+
+	/// zh: '权限'
+	String get permissionTitle => '权限';
+
+	/// zh: '变更前确认'
+	String get permissionConfirm => '变更前确认';
+
+	/// zh: '新建、修改、删除前都会先问你'
+	String get permissionConfirmDes => '新建、修改、删除前都会先问你';
+
+	/// zh: '自动编辑'
+	String get permissionAuto => '自动编辑';
+
+	/// zh: '只在覆盖正文和永久删除前问你'
+	String get permissionAutoDes => '只在覆盖正文和永久删除前问你';
+
+	/// zh: '完全访问'
+	String get permissionFull => '完全访问';
+
+	/// zh: '所有操作直接执行，不再询问'
+	String get permissionFullDes => '所有操作直接执行，不再询问';
+
+	/// zh: '只影响本次对话'
+	String get permissionSessionOnly => '只影响本次对话';
+
+	/// zh: '跳过'
+	String get approvalSkip => '跳过';
+
+	/// zh: '或者直接回复'
+	String get approvalOrReply => '或者直接回复';
+
+	/// zh: '确认新建'
+	String get approvalConfirmCreate => '确认新建';
+
+	/// zh: '确认修改'
+	String get approvalConfirmUpdate => '确认修改';
+
+	/// zh: '确认修改 {count} 项'
+	String approvalConfirmUpdateCount({required Object count}) => '确认修改 ${count} 项';
+
+	/// zh: '覆盖正文'
+	String get approvalOverwrite => '覆盖正文';
+
+	/// zh: '移入回收站'
+	String get approvalConfirmTrash => '移入回收站';
+
+	/// zh: '删除'
+	String get approvalConfirmDelete => '删除';
+
+	/// zh: '记住'
+	String get approvalConfirmRemember => '记住';
+
+	/// zh: '标题'
+	String get approvalFieldTitle => '标题';
+
+	/// zh: '分类'
+	String get approvalFieldCategory => '分类';
+
+	/// zh: '正文'
+	String get approvalFieldContent => '正文';
+
+	/// zh: '名称'
+	String get approvalFieldName => '名称';
+
+	/// zh: '未分类'
+	String get approvalNoCategory => '未分类';
+
+	/// zh: '约 {count} 字'
+	String approvalContentNew({required Object count}) => '约 ${count} 字';
+
+	/// zh: '整篇重写，约 {from} 字 → {to} 字'
+	String approvalContentRewrite({required Object from, required Object to}) => '整篇重写，约 ${from} 字 → ${to} 字';
+
+	/// zh: '会覆盖现在的正文，没有历史版本可以退回'
+	String get approvalOverwriteWarning => '会覆盖现在的正文，没有历史版本可以退回';
+
+	/// zh: '删了就找不回来'
+	String get approvalIrreversible => '删了就找不回来';
+
+	/// zh: '{count} 篇'
+	String approvalDiaryCount({required Object count}) => '${count} 篇';
+
+	/// zh: '{count} 项'
+	String approvalItemCount({required Object count}) => '${count} 项';
+
+	/// zh: '分类改为 {name}'
+	String approvalCategoryTo({required Object name}) => '分类改为 ${name}';
+
+	/// zh: '还有 {count} 条'
+	String approvalMore({required Object count}) => '还有 ${count} 条';
+
+	/// zh: '等你确认'
+	String get toolAwaitingConfirm => '等你确认';
+
+	/// zh: '已跳过'
+	String get toolSkipped => '已跳过';
+
+	/// zh: '回复被截断'
+	String get truncatedNotice => '回复被截断';
+
+	/// zh: '继续'
+	String get continueTurn => '继续';
+
+	/// zh: '工具调用轮数用完了，换个问法或缩小范围再试'
+	String get errorMaxTurns => '工具调用轮数用完了，换个问法或缩小范围再试';
+
+	/// zh: '模型调用了一个不存在的工具'
+	String get errorUnknownTool => '模型调用了一个不存在的工具';
+
+	/// zh: '已停止'
+	String get errorCancelled => '已停止';
 
 	/// zh: '已完成'
 	String get toolDone => '已完成';
@@ -1775,6 +1982,12 @@ class Translations$diary$zh {
 
 	/// zh: '分享'
 	String get share => '分享';
+
+	/// zh: '问问助手'
+	String get askAssistant => '问问助手';
+
+	/// zh: '已在回收站'
+	String get citationRecycled => '已在回收站';
 
 	/// zh: '目录'
 	String get outline => '目录';

@@ -27,6 +27,7 @@ dart tool/task.dart build-apk / build-ios  # the only two targets
 dart tool/task.dart build-runner   # whole workspace (running it in mobile/ alone misses package-side annotations)
 dart tool/task.dart gen-rust       # regenerate Rust FFI bindings after touching rust/src/api
 dart tool/task.dart i18n           # slang codegen after editing i18n/*.json
+dart tool/task.dart migrations     # drift schema snapshot + step-by-step migration codegen, after bumping schemaVersion
 dart tool/task.dart gen            # gen-rust + i18n
 
 # Lint & Test

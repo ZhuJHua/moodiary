@@ -69,9 +69,17 @@ enum MoodiaryKVs<T extends Object> {
 
   assistantDisclaimerAccepted<bool>(defaultValue: false),
 
-  assistantReasoningEffort<String>(defaultValue: ''),
+  assistantReasoningEffort<String>(),
 
-  assistantAgentPresetId<String>(defaultValue: ''),
+  assistantLastProviderId<String>(defaultValue: ''),
+
+  assistantLastModelId<String>(defaultValue: ''),
+
+  assistantPermissionMode<String>(defaultValue: 'confirm'),
+
+  assistantUserNotes<String>(defaultValue: ''),
+
+  assistantMemoryEnabled<bool>(defaultValue: true),
 
   llmPresetCache<String>(defaultValue: ''),
 

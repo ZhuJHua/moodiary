@@ -87,6 +87,9 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
 
   Diary? _hopTarget;
 
+  String? _shownContent;
+  String? _shownTitle;
+
   List<Diary> _outLinks = const [];
   List<Diary> _inLinks = const [];
   StreamSubscription<DiaryEvent>? _linksSub;
@@ -143,9 +146,10 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
         }
       });
     }
-    _linksSub = getIt<DiaryRepository>().diaryEvents.listen((_) {
+    _linksSub = getIt<DiaryRepository>().diaryEvents.listen((event) {
       _linksDebounce?.cancel();
       _linksDebounce = Timer(const Duration(milliseconds: 400), _loadLinks);
+      if (event is DiaryUpdated) _followExternalEdit(event.diary);
     });
   }
 
@@ -221,9 +225,24 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     final target = await getIt<DiaryRepository>().getDiaryByBusinessId(id);
     if (!mounted || target == null) return;
     setState(() => _hopTarget = target);
+    _shownContent = target.content;
+    _shownTitle = target.title;
     await _editorController.swapDocument(
       content: target.content,
       title: target.title,
+    );
+  }
+
+  void _followExternalEdit(Diary diary) {
+    if (_mode != .read || diary.id != _guardId) return;
+    if (diary.content == _shownContent && diary.title == _shownTitle) return;
+    _shownContent = diary.content;
+    _shownTitle = diary.title;
+    unawaited(
+      _editorController.swapDocument(
+        content: diary.content,
+        title: diary.title,
+      ),
     );
   }
 
@@ -260,12 +279,14 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   }
 
   void _onContentChanged(String content, String plain) {
+    _shownContent = content;
     ref.read(_provider.notifier).changeContent(content, contentText: plain);
     _dirty = true;
     _scheduleAutoSave();
   }
 
   void _onTitleChanged(String value) {
+    _shownTitle = value;
     ref.read(_provider.notifier).changeTitle(value);
     _dirty = true;
     _scheduleAutoSave();
@@ -592,12 +613,20 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
                 icon: const Icon(LucideIcons.squarePen),
                 onPressed: _enterEdit,
               ),
-            if (diary != null && _mode == .read)
+            if (diary != null && _mode == .read) ...[
+              IconButton(
+                tooltip: context.l10n.diary.askAssistant,
+                icon: const Icon(LucideIcons.botMessageSquare),
+                onPressed: () =>
+                    AssistantConversationRoute(citedDiaryId: diary.id)
+                        .push(context),
+              ),
               IconButton(
                 tooltip: context.l10n.diary.share,
                 icon: const Icon(LucideIcons.share),
                 onPressed: () => DiaryShare.open(context, diary.id),
               ),
+            ],
             if (headings.isNotEmpty)
               IconButton(
                 tooltip: context.l10n.diary.outline,
@@ -752,6 +781,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
 
   Widget _buildBody(Diary diary) {
     _ensureLinksLoaded(diary.id);
+    _shownContent ??= diary.content;
+    _shownTitle ??= diary.title;
     return EditorBody(
       key: const ValueKey('diary-editor'),
       type: .fromValue(diary.type),
@@ -1005,6 +1036,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       _mode = .read;
       _hopTarget = target;
     });
+    _shownContent = target.content;
+    _shownTitle = target.title;
     await _editorController.swapDocument(
       content: target.content,
       title: target.title,

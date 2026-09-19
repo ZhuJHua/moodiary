@@ -2,13 +2,13 @@ library;
 
 import 'package:moodiary_router/moodiary_router.dart';
 
-import 'src/presentation/agent_preset_edit_page.dart';
-import 'src/presentation/agent_preset_list_page.dart';
+import 'src/presentation/assistant_notes_page.dart';
 import 'src/presentation/assistant_page.dart';
 import 'src/presentation/assistant_provider_edit_page.dart';
 import 'src/presentation/assistant_provider_list_page.dart';
 import 'src/presentation/assistant_provider_picker_page.dart';
 import 'src/presentation/assistant_setting_page.dart';
+import 'src/presentation/memory_list_page.dart';
 
 export 'src/data/assistant.dart';
 export 'src/data/impl/rig_assistant.dart';
@@ -21,12 +21,12 @@ List<RouteBase> assistantRoutes() => [
     builder: (_, _) => const AssistantSettingPage(),
   ),
   GoRoute(
-    path: AssistantPresetsRoute.path,
-    builder: (_, _) => const AgentPresetListPage(),
+    path: AssistantMemoriesRoute.path,
+    builder: (_, _) => const MemoryListPage(),
   ),
   GoRoute(
-    path: AssistantPresetEditRoute.path,
-    builder: (_, state) => AgentPresetEditPage.fromRoute(state),
+    path: AssistantNotesRoute.path,
+    builder: (_, _) => const AssistantNotesPage(),
   ),
   GoRoute(
     path: AssistantProvidersRoute.path,

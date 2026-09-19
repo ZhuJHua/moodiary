@@ -358,8 +358,7 @@ class _IconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MInkWell(
-      shape: const CircleBorder(),
+    return MInkWell.fade(
       onTap: onTap,
       child: SizedBox(
         width: size,

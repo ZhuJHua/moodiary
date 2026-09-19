@@ -3,17 +3,18 @@ use std::sync::Arc;
 use anyhow::Result;
 use futures::StreamExt;
 use rig::client::completion::CompletionClient;
-use rig::completion::Message;
 use rig::completion::message::{ImageMediaType, MimeType, UserContent};
+use rig::completion::{FinishReason, Message};
 use rig::providers::{anthropic, openai};
 use rig::streaming::StreamedAssistantContent;
 use rig::wasm_compat::WasmCompatSend;
 use rig_agent::agent::hook::{
-    AgentHook, HookContext, ToolCall as HookToolCall, ToolCallAction, ToolResultAction,
-    ToolResultEvent,
+    AgentHook, HookContext, InvalidToolCallAction, InvalidToolCallContext,
+    ToolCall as HookToolCall, ToolCallAction, ToolResultAction, ToolResultEvent,
 };
-use rig_agent::agent::{Agent, AgentBuilder, MultiTurnStreamItem};
+use rig_agent::agent::{Agent, AgentBuilder, MultiTurnStreamItem, StreamingError};
 use rig_agent::client::AgentClientExt;
+use rig_agent::completion::PromptError;
 use rig_agent::streaming::StreamingChat;
 use rig_agent::tool::{DynamicTool, ToolExecutionError, ToolOutput};
 use std::future::Future;
@@ -25,6 +26,14 @@ pub const PROTOCOL_ANTHROPIC_MESSAGES: &str = "anthropic-messages";
 pub const REASONING_OFF: &str = "off";
 pub const REASONING_EFFORT: &str = "effort";
 pub const REASONING_BUDGET: &str = "budget";
+
+pub const GATE_RUN: &str = "run";
+pub const GATE_SKIP_PREFIX: &str = "skip:";
+
+pub const ERR_MAX_TURNS: &str = "max_turns";
+pub const ERR_CANCELLED: &str = "cancelled";
+pub const ERR_UNKNOWN_TOOL: &str = "unknown_tool";
+pub const ERR_COMPLETION: &str = "completion";
 
 pub struct RigProviderConfig {
     pub protocol: String,
@@ -50,6 +59,14 @@ pub struct RigToolDef {
     pub parameters_json: String,
 }
 
+pub struct RigChatInput {
+    pub config: RigProviderConfig,
+    pub system_prompt: String,
+    pub history: Vec<RigChatMessage>,
+    pub tools: Vec<RigToolDef>,
+    pub max_turns: u32,
+}
+
 pub enum RigStreamEvent {
     TextDelta(String),
     ReasoningDelta(String),
@@ -69,10 +86,25 @@ pub enum RigStreamEvent {
         cached_input_tokens: u32,
         cache_write_tokens: u32,
     },
+    Turn {
+        turn: u32,
+        finish_reason: String,
+        response_id: String,
+        provider_request_id: String,
+        input_tokens: u32,
+        output_tokens: u32,
+        cached_input_tokens: u32,
+    },
+    TurnDiscarded {
+        turn: u32,
+    },
 }
 
 pub type ToolDispatch =
     Arc<dyn Fn(String, String) -> futures::future::BoxFuture<'static, String> + Send + Sync>;
+pub type ToolGate = Arc<
+    dyn Fn(String, String, String) -> futures::future::BoxFuture<'static, String> + Send + Sync,
+>;
 pub type EmitFn = Arc<dyn Fn(RigStreamEvent) -> bool + Send + Sync>;
 
 fn build_tools(tools: Vec<RigToolDef>, dispatch: &ToolDispatch) -> Vec<DynamicTool> {
@@ -101,6 +133,43 @@ fn build_tools(tools: Vec<RigToolDef>, dispatch: &ToolDispatch) -> Vec<DynamicTo
 
 struct ToolObserver {
     emit: EmitFn,
+    gate: ToolGate,
+}
+
+fn repair_tool_name(emitted: &str, available: &[String]) -> Option<String> {
+    let bare = emitted.rsplit(['.', ':', '/']).next().unwrap_or(emitted);
+    let mut hits = available
+        .iter()
+        .filter(|name| name.eq_ignore_ascii_case(bare));
+    let hit = hits.next()?;
+    if hits.next().is_some() || hit == emitted {
+        return None;
+    }
+    Some(hit.clone())
+}
+
+fn finish_reason_str(reason: Option<&FinishReason>) -> String {
+    match reason {
+        Some(FinishReason::Stop) => "stop".into(),
+        Some(FinishReason::Length) => "length".into(),
+        Some(FinishReason::ToolCalls) => "tool_calls".into(),
+        Some(FinishReason::ContentFilter) => "content_filter".into(),
+        Some(FinishReason::Other(other)) => other.clone(),
+        None => String::new(),
+    }
+}
+
+fn classify(error: StreamingError) -> anyhow::Error {
+    let code = match &error {
+        StreamingError::Prompt(prompt) => match prompt.as_ref() {
+            PromptError::MaxTurnsError { .. } => ERR_MAX_TURNS,
+            PromptError::PromptCancelled { .. } => ERR_CANCELLED,
+            PromptError::UnknownToolCall { .. } => ERR_UNKNOWN_TOOL,
+            PromptError::CompletionError(_) | PromptError::MemoryError(_) => ERR_COMPLETION,
+        },
+        StreamingError::Completion(_) => ERR_COMPLETION,
+    };
+    anyhow::anyhow!("{code}: {error}")
 }
 
 impl AgentHook for ToolObserver {
@@ -109,16 +178,48 @@ impl AgentHook for ToolObserver {
         _ctx: &HookContext,
         event: HookToolCall<'_>,
     ) -> impl Future<Output = ToolCallAction> + WasmCompatSend {
+        let call_id = event.internal_call_id.to_string();
+        let name = event.tool_name.to_string();
+        let args = event.args.to_string();
         let alive = (self.emit)(RigStreamEvent::ToolStarted {
-            call_id: event.internal_call_id.to_string(),
-            name: event.tool_name.to_string(),
-            args_json: event.args.to_string(),
+            call_id: call_id.clone(),
+            name: name.clone(),
+            args_json: args.clone(),
         });
+        let gate = self.gate.clone();
         async move {
-            if alive {
-                ToolCallAction::Run
-            } else {
-                ToolCallAction::Stop("client unsubscribed".into())
+            if !alive {
+                return ToolCallAction::Stop("client unsubscribed".into());
+            }
+            let verdict = gate(call_id, name, args).await;
+            if verdict == GATE_RUN {
+                return ToolCallAction::Run;
+            }
+            let reason = verdict.strip_prefix(GATE_SKIP_PREFIX).unwrap_or(&verdict);
+            ToolCallAction::Skip(reason.to_string())
+        }
+    }
+
+    fn on_invalid_tool_call(
+        &self,
+        ctx: &HookContext,
+        event: &InvalidToolCallContext,
+    ) -> impl Future<Output = Option<InvalidToolCallAction>> + WasmCompatSend {
+        let repaired = repair_tool_name(&event.tool_name, &event.allowed_tools);
+        let feedback = format!(
+            "Unknown tool `{}`. Available tools: {}.",
+            event.tool_name,
+            event.allowed_tools.join(", ")
+        );
+        if repaired.is_none() {
+            (self.emit)(RigStreamEvent::TurnDiscarded {
+                turn: ctx.turn() as u32,
+            });
+        }
+        async move {
+            match repaired {
+                Some(name) => Some(InvalidToolCallAction::repair(name)),
+                None => Some(InvalidToolCallAction::retry(feedback)),
             }
         }
     }
@@ -142,9 +243,12 @@ impl AgentHook for ToolObserver {
     }
 }
 
-fn finish(builder: AgentBuilder, tools: Vec<DynamicTool>, emit: &EmitFn) -> Agent {
+fn finish(builder: AgentBuilder, tools: Vec<DynamicTool>, emit: &EmitFn, gate: &ToolGate) -> Agent {
     builder
-        .add_hook(ToolObserver { emit: emit.clone() })
+        .add_hook(ToolObserver {
+            emit: emit.clone(),
+            gate: gate.clone(),
+        })
         .dynamic_tools(tools)
         .build()
 }
@@ -159,6 +263,9 @@ fn split_history(history: Vec<RigChatMessage>) -> Result<(Message, Vec<Message>)
 }
 
 fn to_message(m: RigChatMessage) -> Message {
+    if m.role == "system" {
+        return Message::System { content: m.content };
+    }
     if m.role != "user" {
         return Message::assistant(m.content);
     }
@@ -219,13 +326,17 @@ fn clamp_thinking_budget(requested: u32, max_tokens: u32) -> u32 {
 
 pub async fn rig_chat_stream(
     emit: EmitFn,
-    config: RigProviderConfig,
-    system_prompt: String,
-    history: Vec<RigChatMessage>,
-    tools: Vec<RigToolDef>,
-    max_turns: u32,
+    input: RigChatInput,
     dispatch: ToolDispatch,
+    gate: ToolGate,
 ) -> Result<()> {
+    let RigChatInput {
+        config,
+        system_prompt,
+        history,
+        tools,
+        max_turns,
+    } = input;
     let boxed_tools = build_tools(tools, &dispatch);
     let (prompt, prior) = split_history(history)?;
     let http_client = crate::http::client::shared()?;
@@ -251,7 +362,7 @@ pub async fn rig_chat_stream(
                 ab = ab.additional_params(params);
             }
             drive(
-                finish(ab, boxed_tools, &emit),
+                finish(ab, boxed_tools, &emit, &gate),
                 prompt,
                 prior,
                 &emit,
@@ -276,7 +387,7 @@ pub async fn rig_chat_stream(
                 ab = ab.additional_params(params);
             }
             drive(
-                finish(ab, boxed_tools, &emit),
+                finish(ab, boxed_tools, &emit, &gate),
                 prompt,
                 prior,
                 &emit,
@@ -301,7 +412,7 @@ pub async fn rig_chat_stream(
                 ab = ab.additional_params(params);
             }
             drive(
-                finish(ab, boxed_tools, &emit),
+                finish(ab, boxed_tools, &emit, &gate),
                 prompt,
                 prior,
                 &emit,
@@ -322,6 +433,7 @@ async fn drive(
     let mut stream = agent
         .stream_chat(prompt, history)
         .max_turns(max_turns as usize)
+        .max_invalid_tool_call_retries(1)
         .await;
 
     while let Some(item) = stream.next().await {
@@ -346,6 +458,26 @@ async fn drive(
                     break;
                 }
             }
+            Ok(MultiTurnStreamItem::CompletionCall(call)) => {
+                let usage = &call.usage;
+                let alive = emit(RigStreamEvent::Turn {
+                    turn: call.call_index as u32 + 1,
+                    finish_reason: finish_reason_str(call.finish_reason.as_ref()),
+                    response_id: call.response_id.clone().unwrap_or_default(),
+                    provider_request_id: call.provider_request_id.clone().unwrap_or_default(),
+                    input_tokens: usage.input_tokens as u32,
+                    output_tokens: usage.output_tokens as u32,
+                    cached_input_tokens: usage.cached_input_tokens as u32,
+                });
+                if !alive {
+                    break;
+                }
+            }
+            Ok(MultiTurnStreamItem::ModelTurnRetried { turn }) => {
+                if !emit(RigStreamEvent::TurnDiscarded { turn: turn as u32 }) {
+                    break;
+                }
+            }
             Ok(MultiTurnStreamItem::FinalResponse(final_resp)) => {
                 let usage = final_resp.usage();
                 let _ = emit(RigStreamEvent::Usage {
@@ -357,7 +489,7 @@ async fn drive(
                 break;
             }
             Ok(_) => {}
-            Err(e) => return Err(anyhow::anyhow!("rig stream error: {e}")),
+            Err(e) => return Err(classify(e)),
         }
     }
     Ok(())
@@ -413,6 +545,21 @@ mod tests {
             openai_responses_reasoning_params(&config(REASONING_EFFORT, "medium", 0)).unwrap();
         assert_eq!(params["reasoning"]["effort"], "medium");
         assert_eq!(params["reasoning"]["summary"], "auto");
+    }
+
+    #[test]
+    fn repair_strips_namespace_and_case_but_needs_one_match() {
+        let tools = vec!["searchDiaries".to_string(), "getDiary".to_string()];
+        assert_eq!(
+            repair_tool_name("default_api.searchdiaries", &tools).as_deref(),
+            Some("searchDiaries")
+        );
+        assert_eq!(
+            repair_tool_name("functions:getDiary", &tools).as_deref(),
+            Some("getDiary")
+        );
+        assert_eq!(repair_tool_name("searchDiaries", &tools), None);
+        assert_eq!(repair_tool_name("deleteEverything", &tools), None);
     }
 
     #[test]

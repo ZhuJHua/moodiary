@@ -4,6 +4,8 @@ import 'package:mui/mui.dart';
 
 const Duration _kReleaseDelay = Duration(milliseconds: 50);
 
+const Duration _kFadeDuration = Duration(milliseconds: 90);
+
 abstract class _MInkWellPressedHost {
   void onDescendantPressedChanged(bool pressed);
 }
@@ -38,6 +40,8 @@ class MInkWell extends StatefulWidget {
 
   final Color? overlayColor;
 
+  final bool _fade;
+
   const MInkWell({
     super.key,
     required this.child,
@@ -50,10 +54,25 @@ class MInkWell extends StatefulWidget {
     this.shape,
     this.enabled = true,
     this.overlayColor,
-  }) : assert(
+  }) : _fade = false,
+       assert(
          borderRadius == null || shape == null,
          'borderRadius 与 shape 只能给一个。',
        );
+
+  const MInkWell.fade({
+    super.key,
+    required this.child,
+    this.onTap,
+    this.onLongPress,
+    this.onLongPressStart,
+    this.onLongPressUp,
+    this.behavior,
+    this.enabled = true,
+  }) : _fade = true,
+       borderRadius = null,
+       shape = null,
+       overlayColor = null;
 
   @override
   State<MInkWell> createState() => _MInkWellState();
@@ -163,11 +182,20 @@ class _MInkWellState extends State<MInkWell> implements _MInkWellPressedHost {
     _release();
   }
 
-  Widget _withOverlay(Widget child) {
+  Widget _withFeedback(Widget child) {
+    final states = context.theme.states;
+    if (widget._fade) {
+      return AnimatedOpacity(
+        opacity: _shouldRenderPressed ? states.pressedContentOpacity : 1,
+        duration: _kFadeDuration,
+        curve: Curves.easeOut,
+        child: child,
+      );
+    }
     final scheme = context.theme.colors;
     final color =
         widget.overlayColor ??
-        scheme.onSurface.withValues(alpha: context.theme.states.pressedOpacity);
+        scheme.onSurface.withValues(alpha: states.pressedOpacity);
     return Stack(
       fit: .passthrough,
       children: [
@@ -186,7 +214,7 @@ class _MInkWellState extends State<MInkWell> implements _MInkWellPressedHost {
   @override
   Widget build(BuildContext context) {
     final behavior = widget.behavior ?? HitTestBehavior.opaque;
-    Widget result = _withOverlay(widget.child);
+    Widget result = _withFeedback(widget.child);
 
     if (_isInteractive) {
       final hasTap = widget.onTap != null;

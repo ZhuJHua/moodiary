@@ -123,6 +123,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  FutureOr<String> Function(String, String, String)
+  dco_decode_DartFn_Inputs_String_String_String_Output_String_AnyhowException(
+    dynamic raw,
+  );
+
+  @protected
   FutureOr<HttpServerResponse> Function(HttpServerRequest)
   dco_decode_DartFn_Inputs_http_server_request_Output_http_server_response_AnyhowException(
     dynamic raw,
@@ -207,7 +213,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RequestOptions dco_decode_box_autoadd_request_options(dynamic raw);
 
   @protected
-  RigProviderConfig dco_decode_box_autoadd_rig_provider_config(dynamic raw);
+  RigChatInput dco_decode_box_autoadd_rig_chat_input(dynamic raw);
 
   @protected
   int dco_decode_box_autoadd_u_16(dynamic raw);
@@ -304,6 +310,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RequestOptions dco_decode_request_options(dynamic raw);
+
+  @protected
+  RigChatInput dco_decode_rig_chat_input(dynamic raw);
 
   @protected
   RigChatMessage dco_decode_rig_chat_message(dynamic raw);
@@ -487,7 +496,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  RigProviderConfig sse_decode_box_autoadd_rig_provider_config(
+  RigChatInput sse_decode_box_autoadd_rig_chat_input(
     SseDeserializer deserializer,
   );
 
@@ -596,6 +605,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RequestOptions sse_decode_request_options(SseDeserializer deserializer);
+
+  @protected
+  RigChatInput sse_decode_rig_chat_input(SseDeserializer deserializer);
 
   @protected
   RigChatMessage sse_decode_rig_chat_message(SseDeserializer deserializer);
@@ -749,11 +761,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  ffi.Pointer<wire_cst_rig_provider_config>
-  cst_encode_box_autoadd_rig_provider_config(RigProviderConfig raw) {
+  ffi.Pointer<wire_cst_rig_chat_input> cst_encode_box_autoadd_rig_chat_input(
+    RigChatInput raw,
+  ) {
     // Codec=Cst (C-struct based), see doc to use other codecs
-    final ptr = wire.cst_new_box_autoadd_rig_provider_config();
-    cst_api_fill_to_wire_rig_provider_config(raw, ptr.ref);
+    final ptr = wire.cst_new_box_autoadd_rig_chat_input();
+    cst_api_fill_to_wire_rig_chat_input(raw, ptr.ref);
     return ptr;
   }
 
@@ -959,11 +972,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  void cst_api_fill_to_wire_box_autoadd_rig_provider_config(
-    RigProviderConfig apiObj,
-    ffi.Pointer<wire_cst_rig_provider_config> wireObj,
+  void cst_api_fill_to_wire_box_autoadd_rig_chat_input(
+    RigChatInput apiObj,
+    ffi.Pointer<wire_cst_rig_chat_input> wireObj,
   ) {
-    cst_api_fill_to_wire_rig_provider_config(apiObj, wireObj.ref);
+    cst_api_fill_to_wire_rig_chat_input(apiObj, wireObj.ref);
   }
 
   @protected
@@ -1083,6 +1096,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_rig_chat_input(
+    RigChatInput apiObj,
+    wire_cst_rig_chat_input wireObj,
+  ) {
+    cst_api_fill_to_wire_rig_provider_config(apiObj.config, wireObj.config);
+    wireObj.system_prompt = cst_encode_String(apiObj.systemPrompt);
+    wireObj.history = cst_encode_list_rig_chat_message(apiObj.history);
+    wireObj.tools = cst_encode_list_rig_tool_def(apiObj.tools);
+    wireObj.max_turns = cst_encode_u_32(apiObj.maxTurns);
+  }
+
+  @protected
   void cst_api_fill_to_wire_rig_chat_message(
     RigChatMessage apiObj,
     wire_cst_rig_chat_message wireObj,
@@ -1159,6 +1184,30 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.kind.Usage.output_tokens = pre_output_tokens;
       wireObj.kind.Usage.cached_input_tokens = pre_cached_input_tokens;
       wireObj.kind.Usage.cache_write_tokens = pre_cache_write_tokens;
+      return;
+    }
+    if (apiObj is RigStreamEvent_Turn) {
+      var pre_turn = cst_encode_u_32(apiObj.turn);
+      var pre_finish_reason = cst_encode_String(apiObj.finishReason);
+      var pre_response_id = cst_encode_String(apiObj.responseId);
+      var pre_provider_request_id = cst_encode_String(apiObj.providerRequestId);
+      var pre_input_tokens = cst_encode_u_32(apiObj.inputTokens);
+      var pre_output_tokens = cst_encode_u_32(apiObj.outputTokens);
+      var pre_cached_input_tokens = cst_encode_u_32(apiObj.cachedInputTokens);
+      wireObj.tag = 6;
+      wireObj.kind.Turn.turn = pre_turn;
+      wireObj.kind.Turn.finish_reason = pre_finish_reason;
+      wireObj.kind.Turn.response_id = pre_response_id;
+      wireObj.kind.Turn.provider_request_id = pre_provider_request_id;
+      wireObj.kind.Turn.input_tokens = pre_input_tokens;
+      wireObj.kind.Turn.output_tokens = pre_output_tokens;
+      wireObj.kind.Turn.cached_input_tokens = pre_cached_input_tokens;
+      return;
+    }
+    if (apiObj is RigStreamEvent_TurnDiscarded) {
+      var pre_turn = cst_encode_u_32(apiObj.turn);
+      wireObj.tag = 7;
+      wireObj.kind.TurnDiscarded.turn = pre_turn;
       return;
     }
   }
@@ -1255,6 +1304,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformPointer
   cst_encode_DartFn_Inputs_String_String_Output_String_AnyhowException(
     FutureOr<String> Function(String, String) raw,
+  );
+
+  @protected
+  PlatformPointer
+  cst_encode_DartFn_Inputs_String_String_String_Output_String_AnyhowException(
+    FutureOr<String> Function(String, String, String) raw,
   );
 
   @protected
@@ -1420,6 +1475,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
+  sse_encode_DartFn_Inputs_String_String_String_Output_String_AnyhowException(
+    FutureOr<String> Function(String, String, String) self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
   sse_encode_DartFn_Inputs_http_server_request_Output_http_server_response_AnyhowException(
     FutureOr<HttpServerResponse> Function(HttpServerRequest) self,
     SseSerializer serializer,
@@ -1527,8 +1589,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_box_autoadd_rig_provider_config(
-    RigProviderConfig self,
+  void sse_encode_box_autoadd_rig_chat_input(
+    RigChatInput self,
     SseSerializer serializer,
   );
 
@@ -1671,6 +1733,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_rig_chat_input(RigChatInput self, SseSerializer serializer);
+
+  @protected
   void sse_encode_rig_chat_message(
     RigChatMessage self,
     SseSerializer serializer,
@@ -1796,18 +1861,17 @@ class RustLibWire implements BaseWire {
       _cst_new_box_autoadd_request_optionsPtr
           .asFunction<ffi.Pointer<wire_cst_request_options> Function()>();
 
-  ffi.Pointer<wire_cst_rig_provider_config>
-  cst_new_box_autoadd_rig_provider_config() {
-    return _cst_new_box_autoadd_rig_provider_config();
+  ffi.Pointer<wire_cst_rig_chat_input> cst_new_box_autoadd_rig_chat_input() {
+    return _cst_new_box_autoadd_rig_chat_input();
   }
 
-  late final _cst_new_box_autoadd_rig_provider_configPtr =
+  late final _cst_new_box_autoadd_rig_chat_inputPtr =
       _lookup<
-        ffi.NativeFunction<ffi.Pointer<wire_cst_rig_provider_config> Function()>
-      >('frbgen_moodiary_rust_cst_new_box_autoadd_rig_provider_config');
-  late final _cst_new_box_autoadd_rig_provider_config =
-      _cst_new_box_autoadd_rig_provider_configPtr
-          .asFunction<ffi.Pointer<wire_cst_rig_provider_config> Function()>();
+        ffi.NativeFunction<ffi.Pointer<wire_cst_rig_chat_input> Function()>
+      >('frbgen_moodiary_rust_cst_new_box_autoadd_rig_chat_input');
+  late final _cst_new_box_autoadd_rig_chat_input =
+      _cst_new_box_autoadd_rig_chat_inputPtr
+          .asFunction<ffi.Pointer<wire_cst_rig_chat_input> Function()>();
 
   ffi.Pointer<ffi.Uint16> cst_new_box_autoadd_u_16(int value) {
     return _cst_new_box_autoadd_u_16(value);
@@ -2458,22 +2522,16 @@ class RustLibWire implements BaseWire {
   void wire__crate__api__llm__rig_chat_stream(
     int port_,
     ffi.Pointer<wire_cst_list_prim_u_8_strict> sink,
-    ffi.Pointer<wire_cst_rig_provider_config> config,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> system_prompt,
-    ffi.Pointer<wire_cst_list_rig_chat_message> history,
-    ffi.Pointer<wire_cst_list_rig_tool_def> tools,
-    int max_turns,
+    ffi.Pointer<wire_cst_rig_chat_input> input,
     ffi.Pointer<ffi.Void> tool_dispatch,
+    ffi.Pointer<ffi.Void> tool_gate,
   ) {
     return _wire__crate__api__llm__rig_chat_stream(
       port_,
       sink,
-      config,
-      system_prompt,
-      history,
-      tools,
-      max_turns,
+      input,
       tool_dispatch,
+      tool_gate,
     );
   }
 
@@ -2483,11 +2541,8 @@ class RustLibWire implements BaseWire {
           ffi.Void Function(
             ffi.Int64,
             ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Pointer<wire_cst_rig_provider_config>,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-            ffi.Pointer<wire_cst_list_rig_chat_message>,
-            ffi.Pointer<wire_cst_list_rig_tool_def>,
-            ffi.Uint32,
+            ffi.Pointer<wire_cst_rig_chat_input>,
+            ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
           )
         >
@@ -2498,11 +2553,8 @@ class RustLibWire implements BaseWire {
             void Function(
               int,
               ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<wire_cst_rig_provider_config>,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<wire_cst_list_rig_chat_message>,
-              ffi.Pointer<wire_cst_list_rig_tool_def>,
-              int,
+              ffi.Pointer<wire_cst_rig_chat_input>,
+              ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,
             )
           >();
@@ -3085,6 +3137,10 @@ final class RigStreamEventKind extends ffi.Union {
   external wire_cst_RigStreamEvent_ToolFinished ToolFinished;
 
   external wire_cst_RigStreamEvent_Usage Usage;
+
+  external wire_cst_RigStreamEvent_Turn Turn;
+
+  external wire_cst_RigStreamEvent_TurnDiscarded TurnDiscarded;
 }
 
 final class wire_cst_RigStreamEvent_ReasoningDelta extends ffi.Struct {
@@ -3145,6 +3201,54 @@ final class wire_cst_RigStreamEvent_ToolStarted extends ffi.Struct {
     ..ref.call_id = call_id
     ..ref.name = name
     ..ref.args_json = args_json;
+}
+
+final class wire_cst_RigStreamEvent_Turn extends ffi.Struct {
+  @ffi.Uint32()
+  external int turn;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> finish_reason;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> response_id;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> provider_request_id;
+
+  @ffi.Uint32()
+  external int input_tokens;
+
+  @ffi.Uint32()
+  external int output_tokens;
+
+  @ffi.Uint32()
+  external int cached_input_tokens;
+
+  static ffi.Pointer<wire_cst_RigStreamEvent_Turn> $allocate(
+    ffi.Allocator $allocator, {
+    required int turn,
+    required ffi.Pointer<wire_cst_list_prim_u_8_strict> finish_reason,
+    required ffi.Pointer<wire_cst_list_prim_u_8_strict> response_id,
+    required ffi.Pointer<wire_cst_list_prim_u_8_strict> provider_request_id,
+    required int input_tokens,
+    required int output_tokens,
+    required int cached_input_tokens,
+  }) => $allocator<wire_cst_RigStreamEvent_Turn>()
+    ..ref.turn = turn
+    ..ref.finish_reason = finish_reason
+    ..ref.response_id = response_id
+    ..ref.provider_request_id = provider_request_id
+    ..ref.input_tokens = input_tokens
+    ..ref.output_tokens = output_tokens
+    ..ref.cached_input_tokens = cached_input_tokens;
+}
+
+final class wire_cst_RigStreamEvent_TurnDiscarded extends ffi.Struct {
+  @ffi.Uint32()
+  external int turn;
+
+  static ffi.Pointer<wire_cst_RigStreamEvent_TurnDiscarded> $allocate(
+    ffi.Allocator $allocator, {
+    required int turn,
+  }) => $allocator<wire_cst_RigStreamEvent_TurnDiscarded>()..ref.turn = turn;
 }
 
 final class wire_cst_RigStreamEvent_Usage extends ffi.Struct {
@@ -3570,6 +3674,19 @@ final class wire_cst_request_options extends ffi.Struct {
     ..ref.headers = headers
     ..ref.timeout_ms = timeout_ms
     ..ref.throw_on_status = throw_on_status;
+}
+
+final class wire_cst_rig_chat_input extends ffi.Struct {
+  external wire_cst_rig_provider_config config;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> system_prompt;
+
+  external ffi.Pointer<wire_cst_list_rig_chat_message> history;
+
+  external ffi.Pointer<wire_cst_list_rig_tool_def> tools;
+
+  @ffi.Uint32()
+  external int max_turns;
 }
 
 final class wire_cst_rig_chat_message extends ffi.Struct {

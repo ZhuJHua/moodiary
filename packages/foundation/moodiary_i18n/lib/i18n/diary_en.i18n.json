@@ -149,6 +149,8 @@
   "goForward": "Forward",
   "edit": "Edit",
   "share": "Share",
+  "askAssistant": "Ask the assistant",
+  "citationRecycled": "In the recycle bin",
   "outline": "Outline",
   "wordCount": "{count} characters",
   "saving": "Saving",

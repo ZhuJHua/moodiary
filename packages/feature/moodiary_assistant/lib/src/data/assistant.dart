@@ -40,7 +40,15 @@ enum AssistantStreamKind {
   toolStarted,
   toolFinished,
   usage,
+  turn,
+  turnDiscarded,
 }
+
+typedef AssistantToolGate = Future<bool> Function(
+  String callId,
+  String name,
+  String argsJson,
+);
 
 class AssistantStreamEvent {
   final AssistantStreamKind kind;
@@ -56,6 +64,10 @@ class AssistantStreamEvent {
 
   final String argsJson;
 
+  final int turn;
+
+  final String finishReason;
+
   const AssistantStreamEvent(
     this.kind,
     this.text, {
@@ -65,7 +77,32 @@ class AssistantStreamEvent {
     this.cacheWriteTokens = 0,
     this.callId = '',
     this.argsJson = '',
+    this.turn = 0,
+    this.finishReason = '',
   });
+
+  const AssistantStreamEvent.turn({
+    required this.turn,
+    required this.finishReason,
+    required this.inputTokens,
+    required this.outputTokens,
+    required this.cachedInputTokens,
+  }) : kind = .turn,
+       text = '',
+       cacheWriteTokens = 0,
+       callId = '',
+       argsJson = '';
+
+  const AssistantStreamEvent.turnDiscarded(this.turn)
+    : kind = .turnDiscarded,
+      text = '',
+      inputTokens = 0,
+      outputTokens = 0,
+      cachedInputTokens = 0,
+      cacheWriteTokens = 0,
+      callId = '',
+      argsJson = '',
+      finishReason = '';
 
   const AssistantStreamEvent.text(this.text)
     : kind = .text,
@@ -74,7 +111,9 @@ class AssistantStreamEvent {
       cachedInputTokens = 0,
       cacheWriteTokens = 0,
       callId = '',
-      argsJson = '';
+      argsJson = '',
+      turn = 0,
+      finishReason = '';
 
   const AssistantStreamEvent.reasoning(this.text)
     : kind = .reasoning,
@@ -83,7 +122,9 @@ class AssistantStreamEvent {
       cachedInputTokens = 0,
       cacheWriteTokens = 0,
       callId = '',
-      argsJson = '';
+      argsJson = '',
+      turn = 0,
+      finishReason = '';
 
   const AssistantStreamEvent.tool(this.text)
     : kind = .tool,
@@ -92,7 +133,9 @@ class AssistantStreamEvent {
       cachedInputTokens = 0,
       cacheWriteTokens = 0,
       callId = '',
-      argsJson = '';
+      argsJson = '',
+      turn = 0,
+      finishReason = '';
 
   const AssistantStreamEvent.toolStarted({
     required this.callId,
@@ -102,7 +145,9 @@ class AssistantStreamEvent {
        inputTokens = 0,
        outputTokens = 0,
        cachedInputTokens = 0,
-       cacheWriteTokens = 0;
+       cacheWriteTokens = 0,
+       turn = 0,
+       finishReason = '';
 
   const AssistantStreamEvent.toolFinished({
     required this.callId,
@@ -112,7 +157,9 @@ class AssistantStreamEvent {
        inputTokens = 0,
        outputTokens = 0,
        cachedInputTokens = 0,
-       cacheWriteTokens = 0;
+       cacheWriteTokens = 0,
+       turn = 0,
+       finishReason = '';
 
   const AssistantStreamEvent.usage(
     this.inputTokens,
@@ -122,7 +169,9 @@ class AssistantStreamEvent {
   }) : kind = .usage,
        text = '',
        callId = '',
-       argsJson = '';
+       argsJson = '',
+       turn = 0,
+       finishReason = '';
 }
 
 class AssistantMessage {
@@ -170,6 +219,8 @@ class AssistantChatRequest {
 
   final List<String>? allowedTools;
 
+  final AssistantToolGate? toolGate;
+
   const AssistantChatRequest({
     required this.type,
     required this.baseUrl,
@@ -182,6 +233,7 @@ class AssistantChatRequest {
     this.reasoning = const AssistantReasoning.off(),
     this.tools = true,
     this.allowedTools,
+    this.toolGate,
   });
 }
 

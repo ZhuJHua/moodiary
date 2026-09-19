@@ -56,7 +56,7 @@ extension RigStreamEventPatterns on RigStreamEvent {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( RigStreamEvent_TextDelta value)?  textDelta,TResult Function( RigStreamEvent_ReasoningDelta value)?  reasoningDelta,TResult Function( RigStreamEvent_ToolCall value)?  toolCall,TResult Function( RigStreamEvent_ToolStarted value)?  toolStarted,TResult Function( RigStreamEvent_ToolFinished value)?  toolFinished,TResult Function( RigStreamEvent_Usage value)?  usage,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( RigStreamEvent_TextDelta value)?  textDelta,TResult Function( RigStreamEvent_ReasoningDelta value)?  reasoningDelta,TResult Function( RigStreamEvent_ToolCall value)?  toolCall,TResult Function( RigStreamEvent_ToolStarted value)?  toolStarted,TResult Function( RigStreamEvent_ToolFinished value)?  toolFinished,TResult Function( RigStreamEvent_Usage value)?  usage,TResult Function( RigStreamEvent_Turn value)?  turn,TResult Function( RigStreamEvent_TurnDiscarded value)?  turnDiscarded,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case RigStreamEvent_TextDelta() when textDelta != null:
@@ -65,7 +65,9 @@ return reasoningDelta(_that);case RigStreamEvent_ToolCall() when toolCall != nul
 return toolCall(_that);case RigStreamEvent_ToolStarted() when toolStarted != null:
 return toolStarted(_that);case RigStreamEvent_ToolFinished() when toolFinished != null:
 return toolFinished(_that);case RigStreamEvent_Usage() when usage != null:
-return usage(_that);case _:
+return usage(_that);case RigStreamEvent_Turn() when turn != null:
+return turn(_that);case RigStreamEvent_TurnDiscarded() when turnDiscarded != null:
+return turnDiscarded(_that);case _:
   return orElse();
 
 }
@@ -83,7 +85,7 @@ return usage(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( RigStreamEvent_TextDelta value)  textDelta,required TResult Function( RigStreamEvent_ReasoningDelta value)  reasoningDelta,required TResult Function( RigStreamEvent_ToolCall value)  toolCall,required TResult Function( RigStreamEvent_ToolStarted value)  toolStarted,required TResult Function( RigStreamEvent_ToolFinished value)  toolFinished,required TResult Function( RigStreamEvent_Usage value)  usage,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( RigStreamEvent_TextDelta value)  textDelta,required TResult Function( RigStreamEvent_ReasoningDelta value)  reasoningDelta,required TResult Function( RigStreamEvent_ToolCall value)  toolCall,required TResult Function( RigStreamEvent_ToolStarted value)  toolStarted,required TResult Function( RigStreamEvent_ToolFinished value)  toolFinished,required TResult Function( RigStreamEvent_Usage value)  usage,required TResult Function( RigStreamEvent_Turn value)  turn,required TResult Function( RigStreamEvent_TurnDiscarded value)  turnDiscarded,}){
 final _that = this;
 switch (_that) {
 case RigStreamEvent_TextDelta():
@@ -92,7 +94,9 @@ return reasoningDelta(_that);case RigStreamEvent_ToolCall():
 return toolCall(_that);case RigStreamEvent_ToolStarted():
 return toolStarted(_that);case RigStreamEvent_ToolFinished():
 return toolFinished(_that);case RigStreamEvent_Usage():
-return usage(_that);}
+return usage(_that);case RigStreamEvent_Turn():
+return turn(_that);case RigStreamEvent_TurnDiscarded():
+return turnDiscarded(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -106,7 +110,7 @@ return usage(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( RigStreamEvent_TextDelta value)?  textDelta,TResult? Function( RigStreamEvent_ReasoningDelta value)?  reasoningDelta,TResult? Function( RigStreamEvent_ToolCall value)?  toolCall,TResult? Function( RigStreamEvent_ToolStarted value)?  toolStarted,TResult? Function( RigStreamEvent_ToolFinished value)?  toolFinished,TResult? Function( RigStreamEvent_Usage value)?  usage,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( RigStreamEvent_TextDelta value)?  textDelta,TResult? Function( RigStreamEvent_ReasoningDelta value)?  reasoningDelta,TResult? Function( RigStreamEvent_ToolCall value)?  toolCall,TResult? Function( RigStreamEvent_ToolStarted value)?  toolStarted,TResult? Function( RigStreamEvent_ToolFinished value)?  toolFinished,TResult? Function( RigStreamEvent_Usage value)?  usage,TResult? Function( RigStreamEvent_Turn value)?  turn,TResult? Function( RigStreamEvent_TurnDiscarded value)?  turnDiscarded,}){
 final _that = this;
 switch (_that) {
 case RigStreamEvent_TextDelta() when textDelta != null:
@@ -115,7 +119,9 @@ return reasoningDelta(_that);case RigStreamEvent_ToolCall() when toolCall != nul
 return toolCall(_that);case RigStreamEvent_ToolStarted() when toolStarted != null:
 return toolStarted(_that);case RigStreamEvent_ToolFinished() when toolFinished != null:
 return toolFinished(_that);case RigStreamEvent_Usage() when usage != null:
-return usage(_that);case _:
+return usage(_that);case RigStreamEvent_Turn() when turn != null:
+return turn(_that);case RigStreamEvent_TurnDiscarded() when turnDiscarded != null:
+return turnDiscarded(_that);case _:
   return null;
 
 }
@@ -132,7 +138,7 @@ return usage(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String field0)?  textDelta,TResult Function( String field0)?  reasoningDelta,TResult Function( String field0)?  toolCall,TResult Function( String callId,  String name,  String argsJson)?  toolStarted,TResult Function( String callId,  String result)?  toolFinished,TResult Function( int inputTokens,  int outputTokens,  int cachedInputTokens,  int cacheWriteTokens)?  usage,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String field0)?  textDelta,TResult Function( String field0)?  reasoningDelta,TResult Function( String field0)?  toolCall,TResult Function( String callId,  String name,  String argsJson)?  toolStarted,TResult Function( String callId,  String result)?  toolFinished,TResult Function( int inputTokens,  int outputTokens,  int cachedInputTokens,  int cacheWriteTokens)?  usage,TResult Function( int turn,  String finishReason,  String responseId,  String providerRequestId,  int inputTokens,  int outputTokens,  int cachedInputTokens)?  turn,TResult Function( int turn)?  turnDiscarded,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case RigStreamEvent_TextDelta() when textDelta != null:
 return textDelta(_that.field0);case RigStreamEvent_ReasoningDelta() when reasoningDelta != null:
@@ -140,7 +146,9 @@ return reasoningDelta(_that.field0);case RigStreamEvent_ToolCall() when toolCall
 return toolCall(_that.field0);case RigStreamEvent_ToolStarted() when toolStarted != null:
 return toolStarted(_that.callId,_that.name,_that.argsJson);case RigStreamEvent_ToolFinished() when toolFinished != null:
 return toolFinished(_that.callId,_that.result);case RigStreamEvent_Usage() when usage != null:
-return usage(_that.inputTokens,_that.outputTokens,_that.cachedInputTokens,_that.cacheWriteTokens);case _:
+return usage(_that.inputTokens,_that.outputTokens,_that.cachedInputTokens,_that.cacheWriteTokens);case RigStreamEvent_Turn() when turn != null:
+return turn(_that.turn,_that.finishReason,_that.responseId,_that.providerRequestId,_that.inputTokens,_that.outputTokens,_that.cachedInputTokens);case RigStreamEvent_TurnDiscarded() when turnDiscarded != null:
+return turnDiscarded(_that.turn);case _:
   return orElse();
 
 }
@@ -158,7 +166,7 @@ return usage(_that.inputTokens,_that.outputTokens,_that.cachedInputTokens,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String field0)  textDelta,required TResult Function( String field0)  reasoningDelta,required TResult Function( String field0)  toolCall,required TResult Function( String callId,  String name,  String argsJson)  toolStarted,required TResult Function( String callId,  String result)  toolFinished,required TResult Function( int inputTokens,  int outputTokens,  int cachedInputTokens,  int cacheWriteTokens)  usage,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String field0)  textDelta,required TResult Function( String field0)  reasoningDelta,required TResult Function( String field0)  toolCall,required TResult Function( String callId,  String name,  String argsJson)  toolStarted,required TResult Function( String callId,  String result)  toolFinished,required TResult Function( int inputTokens,  int outputTokens,  int cachedInputTokens,  int cacheWriteTokens)  usage,required TResult Function( int turn,  String finishReason,  String responseId,  String providerRequestId,  int inputTokens,  int outputTokens,  int cachedInputTokens)  turn,required TResult Function( int turn)  turnDiscarded,}) {final _that = this;
 switch (_that) {
 case RigStreamEvent_TextDelta():
 return textDelta(_that.field0);case RigStreamEvent_ReasoningDelta():
@@ -166,7 +174,9 @@ return reasoningDelta(_that.field0);case RigStreamEvent_ToolCall():
 return toolCall(_that.field0);case RigStreamEvent_ToolStarted():
 return toolStarted(_that.callId,_that.name,_that.argsJson);case RigStreamEvent_ToolFinished():
 return toolFinished(_that.callId,_that.result);case RigStreamEvent_Usage():
-return usage(_that.inputTokens,_that.outputTokens,_that.cachedInputTokens,_that.cacheWriteTokens);}
+return usage(_that.inputTokens,_that.outputTokens,_that.cachedInputTokens,_that.cacheWriteTokens);case RigStreamEvent_Turn():
+return turn(_that.turn,_that.finishReason,_that.responseId,_that.providerRequestId,_that.inputTokens,_that.outputTokens,_that.cachedInputTokens);case RigStreamEvent_TurnDiscarded():
+return turnDiscarded(_that.turn);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -180,7 +190,7 @@ return usage(_that.inputTokens,_that.outputTokens,_that.cachedInputTokens,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String field0)?  textDelta,TResult? Function( String field0)?  reasoningDelta,TResult? Function( String field0)?  toolCall,TResult? Function( String callId,  String name,  String argsJson)?  toolStarted,TResult? Function( String callId,  String result)?  toolFinished,TResult? Function( int inputTokens,  int outputTokens,  int cachedInputTokens,  int cacheWriteTokens)?  usage,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String field0)?  textDelta,TResult? Function( String field0)?  reasoningDelta,TResult? Function( String field0)?  toolCall,TResult? Function( String callId,  String name,  String argsJson)?  toolStarted,TResult? Function( String callId,  String result)?  toolFinished,TResult? Function( int inputTokens,  int outputTokens,  int cachedInputTokens,  int cacheWriteTokens)?  usage,TResult? Function( int turn,  String finishReason,  String responseId,  String providerRequestId,  int inputTokens,  int outputTokens,  int cachedInputTokens)?  turn,TResult? Function( int turn)?  turnDiscarded,}) {final _that = this;
 switch (_that) {
 case RigStreamEvent_TextDelta() when textDelta != null:
 return textDelta(_that.field0);case RigStreamEvent_ReasoningDelta() when reasoningDelta != null:
@@ -188,7 +198,9 @@ return reasoningDelta(_that.field0);case RigStreamEvent_ToolCall() when toolCall
 return toolCall(_that.field0);case RigStreamEvent_ToolStarted() when toolStarted != null:
 return toolStarted(_that.callId,_that.name,_that.argsJson);case RigStreamEvent_ToolFinished() when toolFinished != null:
 return toolFinished(_that.callId,_that.result);case RigStreamEvent_Usage() when usage != null:
-return usage(_that.inputTokens,_that.outputTokens,_that.cachedInputTokens,_that.cacheWriteTokens);case _:
+return usage(_that.inputTokens,_that.outputTokens,_that.cachedInputTokens,_that.cacheWriteTokens);case RigStreamEvent_Turn() when turn != null:
+return turn(_that.turn,_that.finishReason,_that.responseId,_that.providerRequestId,_that.inputTokens,_that.outputTokens,_that.cachedInputTokens);case RigStreamEvent_TurnDiscarded() when turnDiscarded != null:
+return turnDiscarded(_that.turn);case _:
   return null;
 
 }
@@ -609,6 +621,154 @@ inputTokens: null == inputTokens ? _self.inputTokens : inputTokens // ignore: ca
 as int,outputTokens: null == outputTokens ? _self.outputTokens : outputTokens // ignore: cast_nullable_to_non_nullable
 as int,cachedInputTokens: null == cachedInputTokens ? _self.cachedInputTokens : cachedInputTokens // ignore: cast_nullable_to_non_nullable
 as int,cacheWriteTokens: null == cacheWriteTokens ? _self.cacheWriteTokens : cacheWriteTokens // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class RigStreamEvent_Turn extends RigStreamEvent {
+  const RigStreamEvent_Turn({required this.turn, required this.finishReason, required this.responseId, required this.providerRequestId, required this.inputTokens, required this.outputTokens, required this.cachedInputTokens}): super._();
+  
+
+ final  int turn;
+ final  String finishReason;
+ final  String responseId;
+ final  String providerRequestId;
+ final  int inputTokens;
+ final  int outputTokens;
+ final  int cachedInputTokens;
+
+/// Create a copy of RigStreamEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$RigStreamEvent_TurnCopyWith<RigStreamEvent_Turn> get copyWith => _$RigStreamEvent_TurnCopyWithImpl<RigStreamEvent_Turn>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is RigStreamEvent_Turn&&(identical(other.turn, turn) || other.turn == turn)&&(identical(other.finishReason, finishReason) || other.finishReason == finishReason)&&(identical(other.responseId, responseId) || other.responseId == responseId)&&(identical(other.providerRequestId, providerRequestId) || other.providerRequestId == providerRequestId)&&(identical(other.inputTokens, inputTokens) || other.inputTokens == inputTokens)&&(identical(other.outputTokens, outputTokens) || other.outputTokens == outputTokens)&&(identical(other.cachedInputTokens, cachedInputTokens) || other.cachedInputTokens == cachedInputTokens));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,turn,finishReason,responseId,providerRequestId,inputTokens,outputTokens,cachedInputTokens);
+}
+
+@override
+String toString() {
+    return 'RigStreamEvent.turn(turn: $turn, finishReason: $finishReason, responseId: $responseId, providerRequestId: $providerRequestId, inputTokens: $inputTokens, outputTokens: $outputTokens, cachedInputTokens: $cachedInputTokens)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $RigStreamEvent_TurnCopyWith<$Res> implements $RigStreamEventCopyWith<$Res> {
+  factory $RigStreamEvent_TurnCopyWith(RigStreamEvent_Turn value, $Res Function(RigStreamEvent_Turn) _then) = _$RigStreamEvent_TurnCopyWithImpl;
+@useResult
+$Res call({
+ int turn, String finishReason, String responseId, String providerRequestId, int inputTokens, int outputTokens, int cachedInputTokens
+});
+
+
+
+
+}
+/// @nodoc
+class _$RigStreamEvent_TurnCopyWithImpl<$Res>
+    implements $RigStreamEvent_TurnCopyWith<$Res> {
+  _$RigStreamEvent_TurnCopyWithImpl(this._self, this._then);
+
+  final RigStreamEvent_Turn _self;
+  final $Res Function(RigStreamEvent_Turn) _then;
+
+/// Create a copy of RigStreamEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? turn = null,Object? finishReason = null,Object? responseId = null,Object? providerRequestId = null,Object? inputTokens = null,Object? outputTokens = null,Object? cachedInputTokens = null,}) {
+  return _then(RigStreamEvent_Turn(
+turn: null == turn ? _self.turn : turn // ignore: cast_nullable_to_non_nullable
+as int,finishReason: null == finishReason ? _self.finishReason : finishReason // ignore: cast_nullable_to_non_nullable
+as String,responseId: null == responseId ? _self.responseId : responseId // ignore: cast_nullable_to_non_nullable
+as String,providerRequestId: null == providerRequestId ? _self.providerRequestId : providerRequestId // ignore: cast_nullable_to_non_nullable
+as String,inputTokens: null == inputTokens ? _self.inputTokens : inputTokens // ignore: cast_nullable_to_non_nullable
+as int,outputTokens: null == outputTokens ? _self.outputTokens : outputTokens // ignore: cast_nullable_to_non_nullable
+as int,cachedInputTokens: null == cachedInputTokens ? _self.cachedInputTokens : cachedInputTokens // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class RigStreamEvent_TurnDiscarded extends RigStreamEvent {
+  const RigStreamEvent_TurnDiscarded({required this.turn}): super._();
+  
+
+ final  int turn;
+
+/// Create a copy of RigStreamEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$RigStreamEvent_TurnDiscardedCopyWith<RigStreamEvent_TurnDiscarded> get copyWith => _$RigStreamEvent_TurnDiscardedCopyWithImpl<RigStreamEvent_TurnDiscarded>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is RigStreamEvent_TurnDiscarded&&(identical(other.turn, turn) || other.turn == turn));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,turn);
+}
+
+@override
+String toString() {
+    return 'RigStreamEvent.turnDiscarded(turn: $turn)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $RigStreamEvent_TurnDiscardedCopyWith<$Res> implements $RigStreamEventCopyWith<$Res> {
+  factory $RigStreamEvent_TurnDiscardedCopyWith(RigStreamEvent_TurnDiscarded value, $Res Function(RigStreamEvent_TurnDiscarded) _then) = _$RigStreamEvent_TurnDiscardedCopyWithImpl;
+@useResult
+$Res call({
+ int turn
+});
+
+
+
+
+}
+/// @nodoc
+class _$RigStreamEvent_TurnDiscardedCopyWithImpl<$Res>
+    implements $RigStreamEvent_TurnDiscardedCopyWith<$Res> {
+  _$RigStreamEvent_TurnDiscardedCopyWithImpl(this._self, this._then);
+
+  final RigStreamEvent_TurnDiscarded _self;
+  final $Res Function(RigStreamEvent_TurnDiscarded) _then;
+
+/// Create a copy of RigStreamEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? turn = null,}) {
+  return _then(RigStreamEvent_TurnDiscarded(
+turn: null == turn ? _self.turn : turn // ignore: cast_nullable_to_non_nullable
 as int,
   ));
 }

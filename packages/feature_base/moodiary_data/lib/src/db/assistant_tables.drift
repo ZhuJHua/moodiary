@@ -30,10 +30,7 @@ CREATE TABLE chat_sessions (
   compacted_summary  TEXT,
   compacted_up_to_message_id TEXT,
   compacted_at       INTEGER,
-  compacted_input_tokens_at_trigger INTEGER,
-  agent_preset_id    TEXT,
-  persona_snapshot   TEXT,
-  tools_snapshot_json TEXT
+  compacted_input_tokens_at_trigger INTEGER
 ) AS ChatSessionRow;
 
 CREATE INDEX idx_chat_sessions_updated ON chat_sessions (updated_at DESC);
@@ -50,7 +47,8 @@ CREATE TABLE chat_messages (
   image_name      TEXT,
   input_tokens    INTEGER,
   output_tokens   INTEGER,
-  model           TEXT
+  model           TEXT,
+  provider_id     TEXT
 ) AS ChatMessageRow;
 
 CREATE INDEX idx_chat_messages_session
@@ -74,17 +72,8 @@ CREATE TABLE memories (
   category   TEXT NOT NULL,
   content    TEXT NOT NULL,
   created_at INTEGER NOT NULL,
-  updated_at INTEGER NOT NULL
+  updated_at INTEGER NOT NULL,
+  source     TEXT
 ) AS MemoryRow;
 
 CREATE INDEX idx_memories_updated ON memories (updated_at DESC);
-
-CREATE TABLE agent_presets (
-  id          TEXT NOT NULL PRIMARY KEY,
-  name        TEXT NOT NULL,
-  description TEXT NOT NULL DEFAULT '',
-  persona     TEXT NOT NULL,
-  tools_json  TEXT,
-  created_at  INTEGER NOT NULL,
-  updated_at  INTEGER NOT NULL
-) AS AgentPresetRow;

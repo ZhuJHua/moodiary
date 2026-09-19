@@ -18,6 +18,7 @@ _ChatMessage _$ChatMessageFromJson(Map<String, dynamic> json) => _ChatMessage(
   inputTokens: (json['inputTokens'] as num?)?.toInt(),
   outputTokens: (json['outputTokens'] as num?)?.toInt(),
   model: json['model'] as String?,
+  providerId: json['providerId'] as String?,
   toolCalls:
       (json['toolCalls'] as List<dynamic>?)
           ?.map((e) => AssistantToolCall.fromJson(e as Map<String, dynamic>))
@@ -38,5 +39,6 @@ Map<String, dynamic> _$ChatMessageToJson(_ChatMessage instance) =>
       'inputTokens': instance.inputTokens,
       'outputTokens': instance.outputTokens,
       'model': instance.model,
+      'providerId': instance.providerId,
       'toolCalls': instance.toolCalls,
     };

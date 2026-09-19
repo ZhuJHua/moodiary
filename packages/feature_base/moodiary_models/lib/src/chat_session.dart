@@ -28,21 +28,12 @@ abstract class ChatSession with _$ChatSession {
     DateTime? compactedAt,
 
     int? compactedInputTokensAtTrigger,
-
-    String? agentPresetId,
-
-    String? personaSnapshot,
-
-    List<String>? toolsSnapshot,
   }) = _ChatSession;
 
   factory ChatSession.create({
     required String providerId,
     required String model,
     String reasoningEffort = '',
-    String? agentPresetId,
-    String? personaSnapshot,
-    List<String>? toolsSnapshot,
   }) {
     final now = DateTime.timestamp();
     return ChatSession(
@@ -52,9 +43,6 @@ abstract class ChatSession with _$ChatSession {
       createdAt: now,
       updatedAt: now,
       reasoningEffort: reasoningEffort,
-      agentPresetId: agentPresetId,
-      personaSnapshot: personaSnapshot,
-      toolsSnapshot: toolsSnapshot,
     );
   }
 

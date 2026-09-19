@@ -91,6 +91,10 @@ class VersionMigrator {
         await compute(_mergeToV2_8_0, dir());
       }
     }
+
+    if (below('2.8.2') && MoodiaryKVs.assistantReasoningEffort.get() == '') {
+      MoodiaryKVs.assistantReasoningEffort.set('none');
+    }
   }
 
   @visibleForTesting

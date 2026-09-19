@@ -2564,40 +2564,6 @@ class ChatSessions extends Table with TableInfo<ChatSessions, ChatSessionRow> {
         requiredDuringInsert: false,
         $customConstraints: '',
       );
-  static const VerificationMeta _agentPresetIdMeta = const VerificationMeta(
-    'agentPresetId',
-  );
-  late final GeneratedColumn<String> agentPresetId = GeneratedColumn<String>(
-    'agent_preset_id',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    $customConstraints: '',
-  );
-  static const VerificationMeta _personaSnapshotMeta = const VerificationMeta(
-    'personaSnapshot',
-  );
-  late final GeneratedColumn<String> personaSnapshot = GeneratedColumn<String>(
-    'persona_snapshot',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    $customConstraints: '',
-  );
-  static const VerificationMeta _toolsSnapshotJsonMeta = const VerificationMeta(
-    'toolsSnapshotJson',
-  );
-  late final GeneratedColumn<String> toolsSnapshotJson =
-      GeneratedColumn<String>(
-        'tools_snapshot_json',
-        aliasedName,
-        true,
-        type: DriftSqlType.string,
-        requiredDuringInsert: false,
-        $customConstraints: '',
-      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2611,9 +2577,6 @@ class ChatSessions extends Table with TableInfo<ChatSessions, ChatSessionRow> {
     compactedUpToMessageId,
     compactedAt,
     compactedInputTokensAtTrigger,
-    agentPresetId,
-    personaSnapshot,
-    toolsSnapshotJson,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2715,33 +2678,6 @@ class ChatSessions extends Table with TableInfo<ChatSessions, ChatSessionRow> {
         ),
       );
     }
-    if (data.containsKey('agent_preset_id')) {
-      context.handle(
-        _agentPresetIdMeta,
-        agentPresetId.isAcceptableOrUnknown(
-          data['agent_preset_id']!,
-          _agentPresetIdMeta,
-        ),
-      );
-    }
-    if (data.containsKey('persona_snapshot')) {
-      context.handle(
-        _personaSnapshotMeta,
-        personaSnapshot.isAcceptableOrUnknown(
-          data['persona_snapshot']!,
-          _personaSnapshotMeta,
-        ),
-      );
-    }
-    if (data.containsKey('tools_snapshot_json')) {
-      context.handle(
-        _toolsSnapshotJsonMeta,
-        toolsSnapshotJson.isAcceptableOrUnknown(
-          data['tools_snapshot_json']!,
-          _toolsSnapshotJsonMeta,
-        ),
-      );
-    }
     return context;
   }
 
@@ -2795,18 +2731,6 @@ class ChatSessions extends Table with TableInfo<ChatSessions, ChatSessionRow> {
         DriftSqlType.int,
         data['${effectivePrefix}compacted_input_tokens_at_trigger'],
       ),
-      agentPresetId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}agent_preset_id'],
-      ),
-      personaSnapshot: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}persona_snapshot'],
-      ),
-      toolsSnapshotJson: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}tools_snapshot_json'],
-      ),
     );
   }
 
@@ -2831,9 +2755,6 @@ class ChatSessionRow extends DataClass implements Insertable<ChatSessionRow> {
   final String? compactedUpToMessageId;
   final int? compactedAt;
   final int? compactedInputTokensAtTrigger;
-  final String? agentPresetId;
-  final String? personaSnapshot;
-  final String? toolsSnapshotJson;
   const ChatSessionRow({
     required this.id,
     required this.title,
@@ -2846,9 +2767,6 @@ class ChatSessionRow extends DataClass implements Insertable<ChatSessionRow> {
     this.compactedUpToMessageId,
     this.compactedAt,
     this.compactedInputTokensAtTrigger,
-    this.agentPresetId,
-    this.personaSnapshot,
-    this.toolsSnapshotJson,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2876,15 +2794,6 @@ class ChatSessionRow extends DataClass implements Insertable<ChatSessionRow> {
         compactedInputTokensAtTrigger,
       );
     }
-    if (!nullToAbsent || agentPresetId != null) {
-      map['agent_preset_id'] = Variable<String>(agentPresetId);
-    }
-    if (!nullToAbsent || personaSnapshot != null) {
-      map['persona_snapshot'] = Variable<String>(personaSnapshot);
-    }
-    if (!nullToAbsent || toolsSnapshotJson != null) {
-      map['tools_snapshot_json'] = Variable<String>(toolsSnapshotJson);
-    }
     return map;
   }
 
@@ -2910,15 +2819,6 @@ class ChatSessionRow extends DataClass implements Insertable<ChatSessionRow> {
           compactedInputTokensAtTrigger == null && nullToAbsent
           ? const Value.absent()
           : Value(compactedInputTokensAtTrigger),
-      agentPresetId: agentPresetId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(agentPresetId),
-      personaSnapshot: personaSnapshot == null && nullToAbsent
-          ? const Value.absent()
-          : Value(personaSnapshot),
-      toolsSnapshotJson: toolsSnapshotJson == null && nullToAbsent
-          ? const Value.absent()
-          : Value(toolsSnapshotJson),
     );
   }
 
@@ -2943,11 +2843,6 @@ class ChatSessionRow extends DataClass implements Insertable<ChatSessionRow> {
       compactedInputTokensAtTrigger: serializer.fromJson<int?>(
         json['compacted_input_tokens_at_trigger'],
       ),
-      agentPresetId: serializer.fromJson<String?>(json['agent_preset_id']),
-      personaSnapshot: serializer.fromJson<String?>(json['persona_snapshot']),
-      toolsSnapshotJson: serializer.fromJson<String?>(
-        json['tools_snapshot_json'],
-      ),
     );
   }
   @override
@@ -2969,9 +2864,6 @@ class ChatSessionRow extends DataClass implements Insertable<ChatSessionRow> {
       'compacted_input_tokens_at_trigger': serializer.toJson<int?>(
         compactedInputTokensAtTrigger,
       ),
-      'agent_preset_id': serializer.toJson<String?>(agentPresetId),
-      'persona_snapshot': serializer.toJson<String?>(personaSnapshot),
-      'tools_snapshot_json': serializer.toJson<String?>(toolsSnapshotJson),
     };
   }
 
@@ -2987,9 +2879,6 @@ class ChatSessionRow extends DataClass implements Insertable<ChatSessionRow> {
     Value<String?> compactedUpToMessageId = const Value.absent(),
     Value<int?> compactedAt = const Value.absent(),
     Value<int?> compactedInputTokensAtTrigger = const Value.absent(),
-    Value<String?> agentPresetId = const Value.absent(),
-    Value<String?> personaSnapshot = const Value.absent(),
-    Value<String?> toolsSnapshotJson = const Value.absent(),
   }) => ChatSessionRow(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -3008,15 +2897,6 @@ class ChatSessionRow extends DataClass implements Insertable<ChatSessionRow> {
     compactedInputTokensAtTrigger: compactedInputTokensAtTrigger.present
         ? compactedInputTokensAtTrigger.value
         : this.compactedInputTokensAtTrigger,
-    agentPresetId: agentPresetId.present
-        ? agentPresetId.value
-        : this.agentPresetId,
-    personaSnapshot: personaSnapshot.present
-        ? personaSnapshot.value
-        : this.personaSnapshot,
-    toolsSnapshotJson: toolsSnapshotJson.present
-        ? toolsSnapshotJson.value
-        : this.toolsSnapshotJson,
   );
   ChatSessionRow copyWithCompanion(ChatSessionsCompanion data) {
     return ChatSessionRow(
@@ -3043,15 +2923,6 @@ class ChatSessionRow extends DataClass implements Insertable<ChatSessionRow> {
       compactedInputTokensAtTrigger: data.compactedInputTokensAtTrigger.present
           ? data.compactedInputTokensAtTrigger.value
           : this.compactedInputTokensAtTrigger,
-      agentPresetId: data.agentPresetId.present
-          ? data.agentPresetId.value
-          : this.agentPresetId,
-      personaSnapshot: data.personaSnapshot.present
-          ? data.personaSnapshot.value
-          : this.personaSnapshot,
-      toolsSnapshotJson: data.toolsSnapshotJson.present
-          ? data.toolsSnapshotJson.value
-          : this.toolsSnapshotJson,
     );
   }
 
@@ -3069,11 +2940,8 @@ class ChatSessionRow extends DataClass implements Insertable<ChatSessionRow> {
           ..write('compactedUpToMessageId: $compactedUpToMessageId, ')
           ..write('compactedAt: $compactedAt, ')
           ..write(
-            'compactedInputTokensAtTrigger: $compactedInputTokensAtTrigger, ',
+            'compactedInputTokensAtTrigger: $compactedInputTokensAtTrigger',
           )
-          ..write('agentPresetId: $agentPresetId, ')
-          ..write('personaSnapshot: $personaSnapshot, ')
-          ..write('toolsSnapshotJson: $toolsSnapshotJson')
           ..write(')'))
         .toString();
   }
@@ -3091,9 +2959,6 @@ class ChatSessionRow extends DataClass implements Insertable<ChatSessionRow> {
     compactedUpToMessageId,
     compactedAt,
     compactedInputTokensAtTrigger,
-    agentPresetId,
-    personaSnapshot,
-    toolsSnapshotJson,
   );
   @override
   bool operator ==(Object other) =>
@@ -3110,10 +2975,7 @@ class ChatSessionRow extends DataClass implements Insertable<ChatSessionRow> {
           other.compactedUpToMessageId == this.compactedUpToMessageId &&
           other.compactedAt == this.compactedAt &&
           other.compactedInputTokensAtTrigger ==
-              this.compactedInputTokensAtTrigger &&
-          other.agentPresetId == this.agentPresetId &&
-          other.personaSnapshot == this.personaSnapshot &&
-          other.toolsSnapshotJson == this.toolsSnapshotJson);
+              this.compactedInputTokensAtTrigger);
 }
 
 class ChatSessionsCompanion extends UpdateCompanion<ChatSessionRow> {
@@ -3128,9 +2990,6 @@ class ChatSessionsCompanion extends UpdateCompanion<ChatSessionRow> {
   final Value<String?> compactedUpToMessageId;
   final Value<int?> compactedAt;
   final Value<int?> compactedInputTokensAtTrigger;
-  final Value<String?> agentPresetId;
-  final Value<String?> personaSnapshot;
-  final Value<String?> toolsSnapshotJson;
   final Value<int> rowid;
   const ChatSessionsCompanion({
     this.id = const Value.absent(),
@@ -3144,9 +3003,6 @@ class ChatSessionsCompanion extends UpdateCompanion<ChatSessionRow> {
     this.compactedUpToMessageId = const Value.absent(),
     this.compactedAt = const Value.absent(),
     this.compactedInputTokensAtTrigger = const Value.absent(),
-    this.agentPresetId = const Value.absent(),
-    this.personaSnapshot = const Value.absent(),
-    this.toolsSnapshotJson = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ChatSessionsCompanion.insert({
@@ -3161,9 +3017,6 @@ class ChatSessionsCompanion extends UpdateCompanion<ChatSessionRow> {
     this.compactedUpToMessageId = const Value.absent(),
     this.compactedAt = const Value.absent(),
     this.compactedInputTokensAtTrigger = const Value.absent(),
-    this.agentPresetId = const Value.absent(),
-    this.personaSnapshot = const Value.absent(),
-    this.toolsSnapshotJson = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        providerId = Value(providerId),
@@ -3182,9 +3035,6 @@ class ChatSessionsCompanion extends UpdateCompanion<ChatSessionRow> {
     Expression<String>? compactedUpToMessageId,
     Expression<int>? compactedAt,
     Expression<int>? compactedInputTokensAtTrigger,
-    Expression<String>? agentPresetId,
-    Expression<String>? personaSnapshot,
-    Expression<String>? toolsSnapshotJson,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -3201,9 +3051,6 @@ class ChatSessionsCompanion extends UpdateCompanion<ChatSessionRow> {
       if (compactedAt != null) 'compacted_at': compactedAt,
       if (compactedInputTokensAtTrigger != null)
         'compacted_input_tokens_at_trigger': compactedInputTokensAtTrigger,
-      if (agentPresetId != null) 'agent_preset_id': agentPresetId,
-      if (personaSnapshot != null) 'persona_snapshot': personaSnapshot,
-      if (toolsSnapshotJson != null) 'tools_snapshot_json': toolsSnapshotJson,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3220,9 +3067,6 @@ class ChatSessionsCompanion extends UpdateCompanion<ChatSessionRow> {
     Value<String?>? compactedUpToMessageId,
     Value<int?>? compactedAt,
     Value<int?>? compactedInputTokensAtTrigger,
-    Value<String?>? agentPresetId,
-    Value<String?>? personaSnapshot,
-    Value<String?>? toolsSnapshotJson,
     Value<int>? rowid,
   }) {
     return ChatSessionsCompanion(
@@ -3239,9 +3083,6 @@ class ChatSessionsCompanion extends UpdateCompanion<ChatSessionRow> {
       compactedAt: compactedAt ?? this.compactedAt,
       compactedInputTokensAtTrigger:
           compactedInputTokensAtTrigger ?? this.compactedInputTokensAtTrigger,
-      agentPresetId: agentPresetId ?? this.agentPresetId,
-      personaSnapshot: personaSnapshot ?? this.personaSnapshot,
-      toolsSnapshotJson: toolsSnapshotJson ?? this.toolsSnapshotJson,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3286,15 +3127,6 @@ class ChatSessionsCompanion extends UpdateCompanion<ChatSessionRow> {
         compactedInputTokensAtTrigger.value,
       );
     }
-    if (agentPresetId.present) {
-      map['agent_preset_id'] = Variable<String>(agentPresetId.value);
-    }
-    if (personaSnapshot.present) {
-      map['persona_snapshot'] = Variable<String>(personaSnapshot.value);
-    }
-    if (toolsSnapshotJson.present) {
-      map['tools_snapshot_json'] = Variable<String>(toolsSnapshotJson.value);
-    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3317,9 +3149,6 @@ class ChatSessionsCompanion extends UpdateCompanion<ChatSessionRow> {
           ..write(
             'compactedInputTokensAtTrigger: $compactedInputTokensAtTrigger, ',
           )
-          ..write('agentPresetId: $agentPresetId, ')
-          ..write('personaSnapshot: $personaSnapshot, ')
-          ..write('toolsSnapshotJson: $toolsSnapshotJson, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3447,6 +3276,17 @@ class ChatMessages extends Table with TableInfo<ChatMessages, ChatMessageRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
+  static const VerificationMeta _providerIdMeta = const VerificationMeta(
+    'providerId',
+  );
+  late final GeneratedColumn<String> providerId = GeneratedColumn<String>(
+    'provider_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3460,6 +3300,7 @@ class ChatMessages extends Table with TableInfo<ChatMessages, ChatMessageRow> {
     inputTokens,
     outputTokens,
     model,
+    providerId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3555,6 +3396,12 @@ class ChatMessages extends Table with TableInfo<ChatMessages, ChatMessageRow> {
         model.isAcceptableOrUnknown(data['model']!, _modelMeta),
       );
     }
+    if (data.containsKey('provider_id')) {
+      context.handle(
+        _providerIdMeta,
+        providerId.isAcceptableOrUnknown(data['provider_id']!, _providerIdMeta),
+      );
+    }
     return context;
   }
 
@@ -3608,6 +3455,10 @@ class ChatMessages extends Table with TableInfo<ChatMessages, ChatMessageRow> {
         DriftSqlType.string,
         data['${effectivePrefix}model'],
       ),
+      providerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}provider_id'],
+      ),
     );
   }
 
@@ -3632,6 +3483,7 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
   final int? inputTokens;
   final int? outputTokens;
   final String? model;
+  final String? providerId;
   const ChatMessageRow({
     required this.id,
     required this.sessionId,
@@ -3644,6 +3496,7 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
     this.inputTokens,
     this.outputTokens,
     this.model,
+    this.providerId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3670,6 +3523,9 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
     }
     if (!nullToAbsent || model != null) {
       map['model'] = Variable<String>(model);
+    }
+    if (!nullToAbsent || providerId != null) {
+      map['provider_id'] = Variable<String>(providerId);
     }
     return map;
   }
@@ -3699,6 +3555,9 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
       model: model == null && nullToAbsent
           ? const Value.absent()
           : Value(model),
+      providerId: providerId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(providerId),
     );
   }
 
@@ -3719,6 +3578,7 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
       inputTokens: serializer.fromJson<int?>(json['input_tokens']),
       outputTokens: serializer.fromJson<int?>(json['output_tokens']),
       model: serializer.fromJson<String?>(json['model']),
+      providerId: serializer.fromJson<String?>(json['provider_id']),
     );
   }
   @override
@@ -3736,6 +3596,7 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
       'input_tokens': serializer.toJson<int?>(inputTokens),
       'output_tokens': serializer.toJson<int?>(outputTokens),
       'model': serializer.toJson<String?>(model),
+      'provider_id': serializer.toJson<String?>(providerId),
     };
   }
 
@@ -3751,6 +3612,7 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
     Value<int?> inputTokens = const Value.absent(),
     Value<int?> outputTokens = const Value.absent(),
     Value<String?> model = const Value.absent(),
+    Value<String?> providerId = const Value.absent(),
   }) => ChatMessageRow(
     id: id ?? this.id,
     sessionId: sessionId ?? this.sessionId,
@@ -3765,6 +3627,7 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
     inputTokens: inputTokens.present ? inputTokens.value : this.inputTokens,
     outputTokens: outputTokens.present ? outputTokens.value : this.outputTokens,
     model: model.present ? model.value : this.model,
+    providerId: providerId.present ? providerId.value : this.providerId,
   );
   ChatMessageRow copyWithCompanion(ChatMessagesCompanion data) {
     return ChatMessageRow(
@@ -3785,6 +3648,9 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
           ? data.outputTokens.value
           : this.outputTokens,
       model: data.model.present ? data.model.value : this.model,
+      providerId: data.providerId.present
+          ? data.providerId.value
+          : this.providerId,
     );
   }
 
@@ -3801,7 +3667,8 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
           ..write('imageName: $imageName, ')
           ..write('inputTokens: $inputTokens, ')
           ..write('outputTokens: $outputTokens, ')
-          ..write('model: $model')
+          ..write('model: $model, ')
+          ..write('providerId: $providerId')
           ..write(')'))
         .toString();
   }
@@ -3819,6 +3686,7 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
     inputTokens,
     outputTokens,
     model,
+    providerId,
   );
   @override
   bool operator ==(Object other) =>
@@ -3834,7 +3702,8 @@ class ChatMessageRow extends DataClass implements Insertable<ChatMessageRow> {
           other.imageName == this.imageName &&
           other.inputTokens == this.inputTokens &&
           other.outputTokens == this.outputTokens &&
-          other.model == this.model);
+          other.model == this.model &&
+          other.providerId == this.providerId);
 }
 
 class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
@@ -3849,6 +3718,7 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
   final Value<int?> inputTokens;
   final Value<int?> outputTokens;
   final Value<String?> model;
+  final Value<String?> providerId;
   final Value<int> rowid;
   const ChatMessagesCompanion({
     this.id = const Value.absent(),
@@ -3862,6 +3732,7 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
     this.inputTokens = const Value.absent(),
     this.outputTokens = const Value.absent(),
     this.model = const Value.absent(),
+    this.providerId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ChatMessagesCompanion.insert({
@@ -3876,6 +3747,7 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
     this.inputTokens = const Value.absent(),
     this.outputTokens = const Value.absent(),
     this.model = const Value.absent(),
+    this.providerId = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        sessionId = Value(sessionId),
@@ -3894,6 +3766,7 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
     Expression<int>? inputTokens,
     Expression<int>? outputTokens,
     Expression<String>? model,
+    Expression<String>? providerId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -3908,6 +3781,7 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
       if (inputTokens != null) 'input_tokens': inputTokens,
       if (outputTokens != null) 'output_tokens': outputTokens,
       if (model != null) 'model': model,
+      if (providerId != null) 'provider_id': providerId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3924,6 +3798,7 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
     Value<int?>? inputTokens,
     Value<int?>? outputTokens,
     Value<String?>? model,
+    Value<String?>? providerId,
     Value<int>? rowid,
   }) {
     return ChatMessagesCompanion(
@@ -3938,6 +3813,7 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
       inputTokens: inputTokens ?? this.inputTokens,
       outputTokens: outputTokens ?? this.outputTokens,
       model: model ?? this.model,
+      providerId: providerId ?? this.providerId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3978,6 +3854,9 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
     if (model.present) {
       map['model'] = Variable<String>(model.value);
     }
+    if (providerId.present) {
+      map['provider_id'] = Variable<String>(providerId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3998,6 +3877,7 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessageRow> {
           ..write('inputTokens: $inputTokens, ')
           ..write('outputTokens: $outputTokens, ')
           ..write('model: $model, ')
+          ..write('providerId: $providerId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4516,6 +4396,15 @@ class Memories extends Table with TableInfo<Memories, MemoryRow> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -4523,6 +4412,7 @@ class Memories extends Table with TableInfo<Memories, MemoryRow> {
     content,
     createdAt,
     updatedAt,
+    source,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4573,6 +4463,12 @@ class Memories extends Table with TableInfo<Memories, MemoryRow> {
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    }
     return context;
   }
 
@@ -4602,6 +4498,10 @@ class Memories extends Table with TableInfo<Memories, MemoryRow> {
         DriftSqlType.int,
         data['${effectivePrefix}updated_at'],
       )!,
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      ),
     );
   }
 
@@ -4620,12 +4520,14 @@ class MemoryRow extends DataClass implements Insertable<MemoryRow> {
   final String content;
   final int createdAt;
   final int updatedAt;
+  final String? source;
   const MemoryRow({
     required this.id,
     required this.category,
     required this.content,
     required this.createdAt,
     required this.updatedAt,
+    this.source,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4635,6 +4537,9 @@ class MemoryRow extends DataClass implements Insertable<MemoryRow> {
     map['content'] = Variable<String>(content);
     map['created_at'] = Variable<int>(createdAt);
     map['updated_at'] = Variable<int>(updatedAt);
+    if (!nullToAbsent || source != null) {
+      map['source'] = Variable<String>(source);
+    }
     return map;
   }
 
@@ -4645,6 +4550,9 @@ class MemoryRow extends DataClass implements Insertable<MemoryRow> {
       content: Value(content),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      source: source == null && nullToAbsent
+          ? const Value.absent()
+          : Value(source),
     );
   }
 
@@ -4659,6 +4567,7 @@ class MemoryRow extends DataClass implements Insertable<MemoryRow> {
       content: serializer.fromJson<String>(json['content']),
       createdAt: serializer.fromJson<int>(json['created_at']),
       updatedAt: serializer.fromJson<int>(json['updated_at']),
+      source: serializer.fromJson<String?>(json['source']),
     );
   }
   @override
@@ -4670,6 +4579,7 @@ class MemoryRow extends DataClass implements Insertable<MemoryRow> {
       'content': serializer.toJson<String>(content),
       'created_at': serializer.toJson<int>(createdAt),
       'updated_at': serializer.toJson<int>(updatedAt),
+      'source': serializer.toJson<String?>(source),
     };
   }
 
@@ -4679,12 +4589,14 @@ class MemoryRow extends DataClass implements Insertable<MemoryRow> {
     String? content,
     int? createdAt,
     int? updatedAt,
+    Value<String?> source = const Value.absent(),
   }) => MemoryRow(
     id: id ?? this.id,
     category: category ?? this.category,
     content: content ?? this.content,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
+    source: source.present ? source.value : this.source,
   );
   MemoryRow copyWithCompanion(MemoriesCompanion data) {
     return MemoryRow(
@@ -4693,6 +4605,7 @@ class MemoryRow extends DataClass implements Insertable<MemoryRow> {
       content: data.content.present ? data.content.value : this.content,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      source: data.source.present ? data.source.value : this.source,
     );
   }
 
@@ -4703,13 +4616,15 @@ class MemoryRow extends DataClass implements Insertable<MemoryRow> {
           ..write('category: $category, ')
           ..write('content: $content, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('source: $source')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, category, content, createdAt, updatedAt);
+  int get hashCode =>
+      Object.hash(id, category, content, createdAt, updatedAt, source);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4718,7 +4633,8 @@ class MemoryRow extends DataClass implements Insertable<MemoryRow> {
           other.category == this.category &&
           other.content == this.content &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.source == this.source);
 }
 
 class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
@@ -4727,6 +4643,7 @@ class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
   final Value<String> content;
   final Value<int> createdAt;
   final Value<int> updatedAt;
+  final Value<String?> source;
   final Value<int> rowid;
   const MemoriesCompanion({
     this.id = const Value.absent(),
@@ -4734,6 +4651,7 @@ class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
     this.content = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.source = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MemoriesCompanion.insert({
@@ -4742,6 +4660,7 @@ class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
     required String content,
     required int createdAt,
     required int updatedAt,
+    this.source = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        category = Value(category),
@@ -4754,6 +4673,7 @@ class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
     Expression<String>? content,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
+    Expression<String>? source,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4762,6 +4682,7 @@ class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
       if (content != null) 'content': content,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (source != null) 'source': source,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4772,6 +4693,7 @@ class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
     Value<String>? content,
     Value<int>? createdAt,
     Value<int>? updatedAt,
+    Value<String?>? source,
     Value<int>? rowid,
   }) {
     return MemoriesCompanion(
@@ -4780,6 +4702,7 @@ class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
       content: content ?? this.content,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      source: source ?? this.source,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4802,6 +4725,9 @@ class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<int>(updatedAt.value);
     }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -4816,474 +4742,7 @@ class MemoriesCompanion extends UpdateCompanion<MemoryRow> {
           ..write('content: $content, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class AgentPresets extends Table with TableInfo<AgentPresets, AgentPresetRow> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  AgentPresets(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  late final GeneratedColumn<String> id = GeneratedColumn<String>(
-    'id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL PRIMARY KEY',
-  );
-  static const VerificationMeta _nameMeta = const VerificationMeta('name');
-  late final GeneratedColumn<String> name = GeneratedColumn<String>(
-    'name',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  static const VerificationMeta _descriptionMeta = const VerificationMeta(
-    'description',
-  );
-  late final GeneratedColumn<String> description = GeneratedColumn<String>(
-    'description',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    $customConstraints: 'NOT NULL DEFAULT \'\'',
-    defaultValue: const CustomExpression('\'\''),
-  );
-  static const VerificationMeta _personaMeta = const VerificationMeta(
-    'persona',
-  );
-  late final GeneratedColumn<String> persona = GeneratedColumn<String>(
-    'persona',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  static const VerificationMeta _toolsJsonMeta = const VerificationMeta(
-    'toolsJson',
-  );
-  late final GeneratedColumn<String> toolsJson = GeneratedColumn<String>(
-    'tools_json',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    $customConstraints: '',
-  );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
-  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
-  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
-    'updated_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    name,
-    description,
-    persona,
-    toolsJson,
-    createdAt,
-    updatedAt,
-  ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'agent_presets';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<AgentPresetRow> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    } else if (isInserting) {
-      context.missing(_idMeta);
-    }
-    if (data.containsKey('name')) {
-      context.handle(
-        _nameMeta,
-        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_nameMeta);
-    }
-    if (data.containsKey('description')) {
-      context.handle(
-        _descriptionMeta,
-        description.isAcceptableOrUnknown(
-          data['description']!,
-          _descriptionMeta,
-        ),
-      );
-    }
-    if (data.containsKey('persona')) {
-      context.handle(
-        _personaMeta,
-        persona.isAcceptableOrUnknown(data['persona']!, _personaMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_personaMeta);
-    }
-    if (data.containsKey('tools_json')) {
-      context.handle(
-        _toolsJsonMeta,
-        toolsJson.isAcceptableOrUnknown(data['tools_json']!, _toolsJsonMeta),
-      );
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_createdAtMeta);
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_updatedAtMeta);
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  AgentPresetRow map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return AgentPresetRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      name: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}name'],
-      )!,
-      description: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}description'],
-      )!,
-      persona: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}persona'],
-      )!,
-      toolsJson: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}tools_json'],
-      ),
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}created_at'],
-      )!,
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}updated_at'],
-      )!,
-    );
-  }
-
-  @override
-  AgentPresets createAlias(String alias) {
-    return AgentPresets(attachedDatabase, alias);
-  }
-
-  @override
-  bool get dontWriteConstraints => true;
-}
-
-class AgentPresetRow extends DataClass implements Insertable<AgentPresetRow> {
-  final String id;
-  final String name;
-  final String description;
-  final String persona;
-  final String? toolsJson;
-  final int createdAt;
-  final int updatedAt;
-  const AgentPresetRow({
-    required this.id,
-    required this.name,
-    required this.description,
-    required this.persona,
-    this.toolsJson,
-    required this.createdAt,
-    required this.updatedAt,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<String>(id);
-    map['name'] = Variable<String>(name);
-    map['description'] = Variable<String>(description);
-    map['persona'] = Variable<String>(persona);
-    if (!nullToAbsent || toolsJson != null) {
-      map['tools_json'] = Variable<String>(toolsJson);
-    }
-    map['created_at'] = Variable<int>(createdAt);
-    map['updated_at'] = Variable<int>(updatedAt);
-    return map;
-  }
-
-  AgentPresetsCompanion toCompanion(bool nullToAbsent) {
-    return AgentPresetsCompanion(
-      id: Value(id),
-      name: Value(name),
-      description: Value(description),
-      persona: Value(persona),
-      toolsJson: toolsJson == null && nullToAbsent
-          ? const Value.absent()
-          : Value(toolsJson),
-      createdAt: Value(createdAt),
-      updatedAt: Value(updatedAt),
-    );
-  }
-
-  factory AgentPresetRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return AgentPresetRow(
-      id: serializer.fromJson<String>(json['id']),
-      name: serializer.fromJson<String>(json['name']),
-      description: serializer.fromJson<String>(json['description']),
-      persona: serializer.fromJson<String>(json['persona']),
-      toolsJson: serializer.fromJson<String?>(json['tools_json']),
-      createdAt: serializer.fromJson<int>(json['created_at']),
-      updatedAt: serializer.fromJson<int>(json['updated_at']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<String>(id),
-      'name': serializer.toJson<String>(name),
-      'description': serializer.toJson<String>(description),
-      'persona': serializer.toJson<String>(persona),
-      'tools_json': serializer.toJson<String?>(toolsJson),
-      'created_at': serializer.toJson<int>(createdAt),
-      'updated_at': serializer.toJson<int>(updatedAt),
-    };
-  }
-
-  AgentPresetRow copyWith({
-    String? id,
-    String? name,
-    String? description,
-    String? persona,
-    Value<String?> toolsJson = const Value.absent(),
-    int? createdAt,
-    int? updatedAt,
-  }) => AgentPresetRow(
-    id: id ?? this.id,
-    name: name ?? this.name,
-    description: description ?? this.description,
-    persona: persona ?? this.persona,
-    toolsJson: toolsJson.present ? toolsJson.value : this.toolsJson,
-    createdAt: createdAt ?? this.createdAt,
-    updatedAt: updatedAt ?? this.updatedAt,
-  );
-  AgentPresetRow copyWithCompanion(AgentPresetsCompanion data) {
-    return AgentPresetRow(
-      id: data.id.present ? data.id.value : this.id,
-      name: data.name.present ? data.name.value : this.name,
-      description: data.description.present
-          ? data.description.value
-          : this.description,
-      persona: data.persona.present ? data.persona.value : this.persona,
-      toolsJson: data.toolsJson.present ? data.toolsJson.value : this.toolsJson,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('AgentPresetRow(')
-          ..write('id: $id, ')
-          ..write('name: $name, ')
-          ..write('description: $description, ')
-          ..write('persona: $persona, ')
-          ..write('toolsJson: $toolsJson, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(
-    id,
-    name,
-    description,
-    persona,
-    toolsJson,
-    createdAt,
-    updatedAt,
-  );
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is AgentPresetRow &&
-          other.id == this.id &&
-          other.name == this.name &&
-          other.description == this.description &&
-          other.persona == this.persona &&
-          other.toolsJson == this.toolsJson &&
-          other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
-}
-
-class AgentPresetsCompanion extends UpdateCompanion<AgentPresetRow> {
-  final Value<String> id;
-  final Value<String> name;
-  final Value<String> description;
-  final Value<String> persona;
-  final Value<String?> toolsJson;
-  final Value<int> createdAt;
-  final Value<int> updatedAt;
-  final Value<int> rowid;
-  const AgentPresetsCompanion({
-    this.id = const Value.absent(),
-    this.name = const Value.absent(),
-    this.description = const Value.absent(),
-    this.persona = const Value.absent(),
-    this.toolsJson = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  AgentPresetsCompanion.insert({
-    required String id,
-    required String name,
-    this.description = const Value.absent(),
-    required String persona,
-    this.toolsJson = const Value.absent(),
-    required int createdAt,
-    required int updatedAt,
-    this.rowid = const Value.absent(),
-  }) : id = Value(id),
-       name = Value(name),
-       persona = Value(persona),
-       createdAt = Value(createdAt),
-       updatedAt = Value(updatedAt);
-  static Insertable<AgentPresetRow> custom({
-    Expression<String>? id,
-    Expression<String>? name,
-    Expression<String>? description,
-    Expression<String>? persona,
-    Expression<String>? toolsJson,
-    Expression<int>? createdAt,
-    Expression<int>? updatedAt,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (name != null) 'name': name,
-      if (description != null) 'description': description,
-      if (persona != null) 'persona': persona,
-      if (toolsJson != null) 'tools_json': toolsJson,
-      if (createdAt != null) 'created_at': createdAt,
-      if (updatedAt != null) 'updated_at': updatedAt,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  AgentPresetsCompanion copyWith({
-    Value<String>? id,
-    Value<String>? name,
-    Value<String>? description,
-    Value<String>? persona,
-    Value<String?>? toolsJson,
-    Value<int>? createdAt,
-    Value<int>? updatedAt,
-    Value<int>? rowid,
-  }) {
-    return AgentPresetsCompanion(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      description: description ?? this.description,
-      persona: persona ?? this.persona,
-      toolsJson: toolsJson ?? this.toolsJson,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<String>(id.value);
-    }
-    if (name.present) {
-      map['name'] = Variable<String>(name.value);
-    }
-    if (description.present) {
-      map['description'] = Variable<String>(description.value);
-    }
-    if (persona.present) {
-      map['persona'] = Variable<String>(persona.value);
-    }
-    if (toolsJson.present) {
-      map['tools_json'] = Variable<String>(toolsJson.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<int>(createdAt.value);
-    }
-    if (updatedAt.present) {
-      map['updated_at'] = Variable<int>(updatedAt.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('AgentPresetsCompanion(')
-          ..write('id: $id, ')
-          ..write('name: $name, ')
-          ..write('description: $description, ')
-          ..write('persona: $persona, ')
-          ..write('toolsJson: $toolsJson, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt, ')
+          ..write('source: $source, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -7800,7 +7259,6 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
     'idx_memories_updated',
     'CREATE INDEX idx_memories_updated ON memories (updated_at DESC)',
   );
-  late final AgentPresets agentPresets = AgentPresets(this);
   late final Tombstones tombstones = Tombstones(this);
   late final Index idxTombstonesTime = Index(
     'idx_tombstones_time',
@@ -7949,7 +7407,6 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
     assistantToolCalls,
     memories,
     idxMemoriesUpdated,
-    agentPresets,
     tombstones,
     idxTombstonesTime,
     categories,
@@ -9708,9 +9165,6 @@ typedef $ChatSessionsCreateCompanionBuilder = ChatSessionsCompanion Function({
   Value<String?> compactedUpToMessageId,
   Value<int?> compactedAt,
   Value<int?> compactedInputTokensAtTrigger,
-  Value<String?> agentPresetId,
-  Value<String?> personaSnapshot,
-  Value<String?> toolsSnapshotJson,
   Value<int> rowid,
 });
 typedef $ChatSessionsUpdateCompanionBuilder = ChatSessionsCompanion Function({
@@ -9725,9 +9179,6 @@ typedef $ChatSessionsUpdateCompanionBuilder = ChatSessionsCompanion Function({
   Value<String?> compactedUpToMessageId,
   Value<int?> compactedAt,
   Value<int?> compactedInputTokensAtTrigger,
-  Value<String?> agentPresetId,
-  Value<String?> personaSnapshot,
-  Value<String?> toolsSnapshotJson,
   Value<int> rowid,
 });
 
@@ -9816,21 +9267,6 @@ class $ChatSessionsFilterComposer
 
   ColumnFilters<int> get compactedInputTokensAtTrigger => $composableBuilder(
     column: $table.compactedInputTokensAtTrigger,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get agentPresetId => $composableBuilder(
-    column: $table.agentPresetId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get personaSnapshot => $composableBuilder(
-    column: $table.personaSnapshot,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get toolsSnapshotJson => $composableBuilder(
-    column: $table.toolsSnapshotJson,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9923,21 +9359,6 @@ class $ChatSessionsOrderingComposer
     column: $table.compactedInputTokensAtTrigger,
     builder: (column) => ColumnOrderings(column),
   );
-
-  ColumnOrderings<String> get agentPresetId => $composableBuilder(
-    column: $table.agentPresetId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get personaSnapshot => $composableBuilder(
-    column: $table.personaSnapshot,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get toolsSnapshotJson => $composableBuilder(
-    column: $table.toolsSnapshotJson,
-    builder: (column) => ColumnOrderings(column),
-  );
 }
 
 class $ChatSessionsAnnotationComposer
@@ -9991,21 +9412,6 @@ class $ChatSessionsAnnotationComposer
 
   GeneratedColumn<int> get compactedInputTokensAtTrigger => $composableBuilder(
     column: $table.compactedInputTokensAtTrigger,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get agentPresetId => $composableBuilder(
-    column: $table.agentPresetId,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get personaSnapshot => $composableBuilder(
-    column: $table.personaSnapshot,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get toolsSnapshotJson => $composableBuilder(
-    column: $table.toolsSnapshotJson,
     builder: (column) => column,
   );
 
@@ -10075,9 +9481,6 @@ class $ChatSessionsTableManager
                 Value<int?> compactedAt = const Value.absent(),
                 Value<int?> compactedInputTokensAtTrigger =
                     const Value.absent(),
-                Value<String?> agentPresetId = const Value.absent(),
-                Value<String?> personaSnapshot = const Value.absent(),
-                Value<String?> toolsSnapshotJson = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ChatSessionsCompanion(
                 id: id,
@@ -10091,9 +9494,6 @@ class $ChatSessionsTableManager
                 compactedUpToMessageId: compactedUpToMessageId,
                 compactedAt: compactedAt,
                 compactedInputTokensAtTrigger: compactedInputTokensAtTrigger,
-                agentPresetId: agentPresetId,
-                personaSnapshot: personaSnapshot,
-                toolsSnapshotJson: toolsSnapshotJson,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -10110,9 +9510,6 @@ class $ChatSessionsTableManager
                 Value<int?> compactedAt = const Value.absent(),
                 Value<int?> compactedInputTokensAtTrigger =
                     const Value.absent(),
-                Value<String?> agentPresetId = const Value.absent(),
-                Value<String?> personaSnapshot = const Value.absent(),
-                Value<String?> toolsSnapshotJson = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ChatSessionsCompanion.insert(
                 id: id,
@@ -10126,9 +9523,6 @@ class $ChatSessionsTableManager
                 compactedUpToMessageId: compactedUpToMessageId,
                 compactedAt: compactedAt,
                 compactedInputTokensAtTrigger: compactedInputTokensAtTrigger,
-                agentPresetId: agentPresetId,
-                personaSnapshot: personaSnapshot,
-                toolsSnapshotJson: toolsSnapshotJson,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -10198,6 +9592,7 @@ typedef $ChatMessagesCreateCompanionBuilder = ChatMessagesCompanion Function({
   Value<int?> inputTokens,
   Value<int?> outputTokens,
   Value<String?> model,
+  Value<String?> providerId,
   Value<int> rowid,
 });
 typedef $ChatMessagesUpdateCompanionBuilder = ChatMessagesCompanion Function({
@@ -10212,6 +9607,7 @@ typedef $ChatMessagesUpdateCompanionBuilder = ChatMessagesCompanion Function({
   Value<int?> inputTokens,
   Value<int?> outputTokens,
   Value<String?> model,
+  Value<String?> providerId,
   Value<int> rowid,
 });
 
@@ -10314,6 +9710,11 @@ class $ChatMessagesFilterComposer
 
   ColumnFilters<String> get model => $composableBuilder(
     column: $table.model,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get providerId => $composableBuilder(
+    column: $table.providerId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -10425,6 +9826,11 @@ class $ChatMessagesOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get providerId => $composableBuilder(
+    column: $table.providerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $ChatSessionsOrderingComposer get sessionId {
     final $ChatSessionsOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -10493,6 +9899,11 @@ class $ChatMessagesAnnotationComposer
 
   GeneratedColumn<String> get model =>
       $composableBuilder(column: $table.model, builder: (column) => column);
+
+  GeneratedColumn<String> get providerId => $composableBuilder(
+    column: $table.providerId,
+    builder: (column) => column,
+  );
 
   $ChatSessionsAnnotationComposer get sessionId {
     final $ChatSessionsAnnotationComposer composer = $composerBuilder(
@@ -10582,6 +9993,7 @@ class $ChatMessagesTableManager
                 Value<int?> inputTokens = const Value.absent(),
                 Value<int?> outputTokens = const Value.absent(),
                 Value<String?> model = const Value.absent(),
+                Value<String?> providerId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ChatMessagesCompanion(
                 id: id,
@@ -10595,6 +10007,7 @@ class $ChatMessagesTableManager
                 inputTokens: inputTokens,
                 outputTokens: outputTokens,
                 model: model,
+                providerId: providerId,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -10610,6 +10023,7 @@ class $ChatMessagesTableManager
                 Value<int?> inputTokens = const Value.absent(),
                 Value<int?> outputTokens = const Value.absent(),
                 Value<String?> model = const Value.absent(),
+                Value<String?> providerId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ChatMessagesCompanion.insert(
                 id: id,
@@ -10623,6 +10037,7 @@ class $ChatMessagesTableManager
                 inputTokens: inputTokens,
                 outputTokens: outputTokens,
                 model: model,
+                providerId: providerId,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -11081,6 +10496,7 @@ typedef $MemoriesCreateCompanionBuilder = MemoriesCompanion Function({
   required String content,
   required int createdAt,
   required int updatedAt,
+  Value<String?> source,
   Value<int> rowid,
 });
 typedef $MemoriesUpdateCompanionBuilder = MemoriesCompanion Function({
@@ -11089,6 +10505,7 @@ typedef $MemoriesUpdateCompanionBuilder = MemoriesCompanion Function({
   Value<String> content,
   Value<int> createdAt,
   Value<int> updatedAt,
+  Value<String?> source,
   Value<int> rowid,
 });
 
@@ -11122,6 +10539,11 @@ class $MemoriesFilterComposer extends Composer<_$MoodiaryDatabase, Memories> {
 
   ColumnFilters<int> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -11158,6 +10580,11 @@ class $MemoriesOrderingComposer extends Composer<_$MoodiaryDatabase, Memories> {
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $MemoriesAnnotationComposer
@@ -11183,6 +10610,9 @@ class $MemoriesAnnotationComposer
 
   GeneratedColumn<int> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
 }
 
 class $MemoriesTableManager
@@ -11218,6 +10648,7 @@ class $MemoriesTableManager
                 Value<String> content = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
+                Value<String?> source = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MemoriesCompanion(
                 id: id,
@@ -11225,6 +10656,7 @@ class $MemoriesTableManager
                 content: content,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                source: source,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -11234,6 +10666,7 @@ class $MemoriesTableManager
                 required String content,
                 required int createdAt,
                 required int updatedAt,
+                Value<String?> source = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MemoriesCompanion.insert(
                 id: id,
@@ -11241,6 +10674,7 @@ class $MemoriesTableManager
                 content: content,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                source: source,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -11272,253 +10706,6 @@ typedef $MemoriesProcessedTableManager =
       $MemoriesUpdateCompanionBuilder,
       (MemoryRow, BaseReferences<_$MoodiaryDatabase, Memories, MemoryRow>),
       MemoryRow,
-      PrefetchHooks Function()
-    >;
-typedef $AgentPresetsCreateCompanionBuilder = AgentPresetsCompanion Function({
-  required String id,
-  required String name,
-  Value<String> description,
-  required String persona,
-  Value<String?> toolsJson,
-  required int createdAt,
-  required int updatedAt,
-  Value<int> rowid,
-});
-typedef $AgentPresetsUpdateCompanionBuilder = AgentPresetsCompanion Function({
-  Value<String> id,
-  Value<String> name,
-  Value<String> description,
-  Value<String> persona,
-  Value<String?> toolsJson,
-  Value<int> createdAt,
-  Value<int> updatedAt,
-  Value<int> rowid,
-});
-
-class $AgentPresetsFilterComposer
-    extends Composer<_$MoodiaryDatabase, AgentPresets> {
-  $AgentPresetsFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get description => $composableBuilder(
-    column: $table.description,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get persona => $composableBuilder(
-    column: $table.persona,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get toolsJson => $composableBuilder(
-    column: $table.toolsJson,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-}
-
-class $AgentPresetsOrderingComposer
-    extends Composer<_$MoodiaryDatabase, AgentPresets> {
-  $AgentPresetsOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get description => $composableBuilder(
-    column: $table.description,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get persona => $composableBuilder(
-    column: $table.persona,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get toolsJson => $composableBuilder(
-    column: $table.toolsJson,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-}
-
-class $AgentPresetsAnnotationComposer
-    extends Composer<_$MoodiaryDatabase, AgentPresets> {
-  $AgentPresetsAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
-
-  GeneratedColumn<String> get description => $composableBuilder(
-    column: $table.description,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get persona =>
-      $composableBuilder(column: $table.persona, builder: (column) => column);
-
-  GeneratedColumn<String> get toolsJson =>
-      $composableBuilder(column: $table.toolsJson, builder: (column) => column);
-
-  GeneratedColumn<int> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
-
-  GeneratedColumn<int> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-}
-
-class $AgentPresetsTableManager
-    extends
-        RootTableManager<
-          _$MoodiaryDatabase,
-          AgentPresets,
-          AgentPresetRow,
-          $AgentPresetsFilterComposer,
-          $AgentPresetsOrderingComposer,
-          $AgentPresetsAnnotationComposer,
-          $AgentPresetsCreateCompanionBuilder,
-          $AgentPresetsUpdateCompanionBuilder,
-          (
-            AgentPresetRow,
-            BaseReferences<_$MoodiaryDatabase, AgentPresets, AgentPresetRow>,
-          ),
-          AgentPresetRow,
-          PrefetchHooks Function()
-        > {
-  $AgentPresetsTableManager(_$MoodiaryDatabase db, AgentPresets table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $AgentPresetsFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $AgentPresetsOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $AgentPresetsAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> id = const Value.absent(),
-                Value<String> name = const Value.absent(),
-                Value<String> description = const Value.absent(),
-                Value<String> persona = const Value.absent(),
-                Value<String?> toolsJson = const Value.absent(),
-                Value<int> createdAt = const Value.absent(),
-                Value<int> updatedAt = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => AgentPresetsCompanion(
-                id: id,
-                name: name,
-                description: description,
-                persona: persona,
-                toolsJson: toolsJson,
-                createdAt: createdAt,
-                updatedAt: updatedAt,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String id,
-                required String name,
-                Value<String> description = const Value.absent(),
-                required String persona,
-                Value<String?> toolsJson = const Value.absent(),
-                required int createdAt,
-                required int updatedAt,
-                Value<int> rowid = const Value.absent(),
-              }) => AgentPresetsCompanion.insert(
-                id: id,
-                name: name,
-                description: description,
-                persona: persona,
-                toolsJson: toolsJson,
-                createdAt: createdAt,
-                updatedAt: updatedAt,
-                rowid: rowid,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable<AgentPresets, AgentPresetRow>(table),
-                  BaseReferences<
-                    _$MoodiaryDatabase,
-                    AgentPresets,
-                    AgentPresetRow
-                  >(db, table, e),
-                ),
-              )
-              .toList(),
-          prefetchHooksCallback: null,
-        ),
-      );
-}
-
-typedef $AgentPresetsProcessedTableManager =
-    ProcessedTableManager<
-      _$MoodiaryDatabase,
-      AgentPresets,
-      AgentPresetRow,
-      $AgentPresetsFilterComposer,
-      $AgentPresetsOrderingComposer,
-      $AgentPresetsAnnotationComposer,
-      $AgentPresetsCreateCompanionBuilder,
-      $AgentPresetsUpdateCompanionBuilder,
-      (
-        AgentPresetRow,
-        BaseReferences<_$MoodiaryDatabase, AgentPresets, AgentPresetRow>,
-      ),
-      AgentPresetRow,
       PrefetchHooks Function()
     >;
 typedef $TombstonesCreateCompanionBuilder = TombstonesCompanion Function({
@@ -13211,8 +12398,6 @@ class $MoodiaryDatabaseManager {
       $AssistantToolCallsTableManager(_db, _db.assistantToolCalls);
   $MemoriesTableManager get memories =>
       $MemoriesTableManager(_db, _db.memories);
-  $AgentPresetsTableManager get agentPresets =>
-      $AgentPresetsTableManager(_db, _db.agentPresets);
   $TombstonesTableManager get tombstones =>
       $TombstonesTableManager(_db, _db.tombstones);
   $CategoriesTableManager get categories =>

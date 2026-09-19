@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$MemoryEntry {
 
- String get id; String get category; String get text; DateTime get createdAt; DateTime get updatedAt;
+ String get id; String get category; String get text; DateTime get createdAt; DateTime get updatedAt; String? get source;
 /// Create a copy of MemoryEntry
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,20 +30,20 @@ $MemoryEntryCopyWith<MemoryEntry> get copyWith => _$MemoryEntryCopyWithImpl<Memo
 @override
 bool operator ==(Object other) {
   final _this = this as MemoryEntry;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MemoryEntry&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.category, _this.category) || other.category == _this.category)&&(identical(other.text, _this.text) || other.text == _this.text)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&(identical(other.updatedAt, _this.updatedAt) || other.updatedAt == _this.updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MemoryEntry&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.category, _this.category) || other.category == _this.category)&&(identical(other.text, _this.text) || other.text == _this.text)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&(identical(other.updatedAt, _this.updatedAt) || other.updatedAt == _this.updatedAt)&&(identical(other.source, _this.source) || other.source == _this.source));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as MemoryEntry;
-  return Object.hash(runtimeType,_this.id,_this.category,_this.text,_this.createdAt,_this.updatedAt);
+  return Object.hash(runtimeType,_this.id,_this.category,_this.text,_this.createdAt,_this.updatedAt,_this.source);
 }
 
 @override
 String toString() {
   final _this = this as MemoryEntry;
-  return 'MemoryEntry(id: ${_this.id}, category: ${_this.category}, text: ${_this.text}, createdAt: ${_this.createdAt}, updatedAt: ${_this.updatedAt})';
+  return 'MemoryEntry(id: ${_this.id}, category: ${_this.category}, text: ${_this.text}, createdAt: ${_this.createdAt}, updatedAt: ${_this.updatedAt}, source: ${_this.source})';
 }
 
 
@@ -54,7 +54,7 @@ abstract mixin class $MemoryEntryCopyWith<$Res>  {
   factory $MemoryEntryCopyWith(MemoryEntry value, $Res Function(MemoryEntry) _then) = _$MemoryEntryCopyWithImpl;
 @useResult
 $Res call({
- String id, String category, String text, DateTime createdAt, DateTime updatedAt
+ String id, String category, String text, DateTime createdAt, DateTime updatedAt, String? source
 });
 
 
@@ -71,14 +71,15 @@ class _$MemoryEntryCopyWithImpl<$Res>
 
 /// Create a copy of MemoryEntry
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? category = null,Object? text = null,Object? createdAt = null,Object? updatedAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? category = null,Object? text = null,Object? createdAt = null,Object? updatedAt = null,Object? source = freezed,}) {
   return _then(MemoryEntry(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,category: null == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
 as String,text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,source: freezed == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -163,10 +164,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String category,  String text,  DateTime createdAt,  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String category,  String text,  DateTime createdAt,  DateTime updatedAt,  String? source)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MemoryEntry() when $default != null:
-return $default(_that.id,_that.category,_that.text,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.category,_that.text,_that.createdAt,_that.updatedAt,_that.source);case _:
   return orElse();
 
 }
@@ -184,10 +185,10 @@ return $default(_that.id,_that.category,_that.text,_that.createdAt,_that.updated
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String category,  String text,  DateTime createdAt,  DateTime updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String category,  String text,  DateTime createdAt,  DateTime updatedAt,  String? source)  $default,) {final _that = this;
 switch (_that) {
 case _MemoryEntry():
-return $default(_that.id,_that.category,_that.text,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.category,_that.text,_that.createdAt,_that.updatedAt,_that.source);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -204,10 +205,10 @@ return $default(_that.id,_that.category,_that.text,_that.createdAt,_that.updated
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String category,  String text,  DateTime createdAt,  DateTime updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String category,  String text,  DateTime createdAt,  DateTime updatedAt,  String? source)?  $default,) {final _that = this;
 switch (_that) {
 case _MemoryEntry() when $default != null:
-return $default(_that.id,_that.category,_that.text,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.category,_that.text,_that.createdAt,_that.updatedAt,_that.source);case _:
   return null;
 
 }
@@ -219,7 +220,7 @@ return $default(_that.id,_that.category,_that.text,_that.createdAt,_that.updated
 @JsonSerializable()
 
 class _MemoryEntry implements MemoryEntry {
-  const _MemoryEntry({required this.id, required this.category, required this.text, required this.createdAt, required this.updatedAt});
+  const _MemoryEntry({required this.id, required this.category, required this.text, required this.createdAt, required this.updatedAt, this.source});
   factory _MemoryEntry.fromJson(Map<String, dynamic> json) => _$MemoryEntryFromJson(json);
 
 @override final  String id;
@@ -227,6 +228,7 @@ class _MemoryEntry implements MemoryEntry {
 @override final  String text;
 @override final  DateTime createdAt;
 @override final  DateTime updatedAt;
+@override final  String? source;
 
 /// Create a copy of MemoryEntry
 /// with the given fields replaced by the non-null parameter values.
@@ -241,18 +243,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MemoryEntry&&(identical(other.id, id) || other.id == id)&&(identical(other.category, category) || other.category == category)&&(identical(other.text, text) || other.text == text)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MemoryEntry&&(identical(other.id, id) || other.id == id)&&(identical(other.category, category) || other.category == category)&&(identical(other.text, text) || other.text == text)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.source, source) || other.source == source));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,category,text,createdAt,updatedAt);
+    return Object.hash(runtimeType,id,category,text,createdAt,updatedAt,source);
 }
 
 @override
 String toString() {
-    return 'MemoryEntry(id: $id, category: $category, text: $text, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'MemoryEntry(id: $id, category: $category, text: $text, createdAt: $createdAt, updatedAt: $updatedAt, source: $source)';
 }
 
 
@@ -263,7 +265,7 @@ abstract mixin class _$MemoryEntryCopyWith<$Res> implements $MemoryEntryCopyWith
   factory _$MemoryEntryCopyWith(_MemoryEntry value, $Res Function(_MemoryEntry) _then) = __$MemoryEntryCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String category, String text, DateTime createdAt, DateTime updatedAt
+ String id, String category, String text, DateTime createdAt, DateTime updatedAt, String? source
 });
 
 
@@ -280,14 +282,15 @@ class __$MemoryEntryCopyWithImpl<$Res>
 
 /// Create a copy of MemoryEntry
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? category = null,Object? text = null,Object? createdAt = null,Object? updatedAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? category = null,Object? text = null,Object? createdAt = null,Object? updatedAt = null,Object? source = freezed,}) {
   return _then(_MemoryEntry(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,category: null == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
 as String,text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,source: freezed == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
