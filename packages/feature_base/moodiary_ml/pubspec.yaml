@@ -1,5 +1,5 @@
 name: moodiary_ml
-description: "Local ML on ONNX Runtime: embeddings, sentiment, model download and activation."
+description: "Local ML on ONNX Runtime: embeddings, model download and activation."
 version: 0.0.1
 publish_to: none
 
@@ -13,8 +13,7 @@ dependencies:
   flutter:
     sdk: flutter
   injectable: 3.0.0
-  onnxruntime_plus: 1.5.0
-  meta: 1.19.0
+  flutter_onnxruntime: 1.8.5
   fast_tokenizer: 0.0.1
   moodiary_files: 0.0.1
   moodiary_http: 0.0.1

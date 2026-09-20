@@ -92,7 +92,7 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
       moodiary_components/   #   UI shared by features that mui cannot reach; code-highlight table, DiaryShare hook
       moodiary_migration/    #   one-shot legacy migration; legacy/ freezes the old Isar models
       moodiary_preferences/  #   preference state
-      moodiary_ml/           #   local ML on onnxruntime_plus + model download/activation (sole owner of onnxruntime_plus)
+      moodiary_ml/           #   embeddings for local RAG on flutter_onnxruntime + model download/activation (sole owner of flutter_onnxruntime)
       moodiary_picker/       #   wechat_assets_picker reskinned + image_picker camera (mobile only)
       moodiary_editor/       #   TipTap webview editor base, embedded by diary
     feature/                 # -> feature_base/core/foundation; features never import each other
