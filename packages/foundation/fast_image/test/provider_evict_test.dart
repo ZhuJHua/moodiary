@@ -1,6 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
-import 'dart:ui' as ui;
 
 import 'package:fast_image/fast_image.dart';
 import 'package:flutter/widgets.dart';
@@ -35,16 +35,12 @@ void main() {
         reason: '失败后 pending 条目应被踢出，否则永远拿到同一次失败',
       );
 
-      await File(provider.path).writeAsBytes(await _onePixelPng());
+      await File(provider.path).writeAsBytes(_onePixelPng);
       expect(await attempt(), isNull);
     });
   });
 }
 
-Future<List<int>> _onePixelPng() async {
-  final recorder = ui.PictureRecorder();
-  ui.Canvas(recorder).drawRect(const ui.Rect.fromLTWH(0, 0, 1, 1), ui.Paint());
-  final image = await recorder.endRecording().toImage(1, 1);
-  final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-  return bytes!.buffer.asUint8List();
-}
+final _onePixelPng = base64Decode(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mNgAAIAAAUAAen63NgAAAAASUVORK5CYII=',
+);

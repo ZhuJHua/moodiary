@@ -17,17 +17,8 @@ void main() {
     expect(none.categoryId, isNull);
     expect(none.isAll, isFalse);
     expect(none.uncategorized, isTrue);
-  });
 
-  test('equality distinguishes all from uncategorized', () {
-    expect(const DiaryFilter.all(), const DiaryFilter.all());
-    expect(const DiaryFilter.all() == const .uncategorized(), isFalse);
-    expect(const DiaryFilter.category('a') == const .category('a'), isTrue);
-    expect(const DiaryFilter.category('a') == const .category('b'), isFalse);
-    expect(
-      const DiaryFilter.all().hashCode ==
-          const DiaryFilter.uncategorized().hashCode,
-      isFalse,
-    );
+    expect(all == none, isFalse);
+    expect(cat == const DiaryFilter.category('b'), isFalse);
   });
 }

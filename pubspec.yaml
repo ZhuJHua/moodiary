@@ -38,6 +38,10 @@ melos:
 
 dev_dependencies:
   melos: 8.6.0
+  flutter_test:
+    sdk: flutter
+  moodiary_data: 0.0.1
+  moodiary_assistant: 0.0.1
 
 dependency_overrides:
   cli_util: 0.5.2

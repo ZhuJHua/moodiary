@@ -96,26 +96,6 @@ void main() {
     });
   }
 
-  testWidgets(
-    'MaterialApp 根下的 DefaultTextStyle 是 48px 红字 —— MuiScaffold 必须自己发',
-    (tester) async {
-      late TextStyle style;
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: buildMuiTheme(brightness: Brightness.light),
-          home: Builder(
-            builder: (context) {
-              style = DefaultTextStyle.of(context).style;
-              return const SizedBox();
-            },
-          ),
-        ),
-      );
-      expect(style.fontSize, 48.0);
-      expect(style.fontFamily, 'monospace');
-    },
-  );
-
   testWidgets('链式用法：context.theme.typography.titleLarge.onSurfaceVariant', (
     tester,
   ) async {

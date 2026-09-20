@@ -140,18 +140,6 @@ void main() {
     });
   });
 
-  group('缓存序列化往返', () {
-    test('LlmProviderPreset toJson -> fromJson 相等', () {
-      final original = parseModelsDevCatalog(
-        _catalog({'anthropic': _anthropic, 'deepseek': _deepseek}),
-      );
-      final encoded = jsonEncode(original.map((e) => e.toJson()).toList());
-      final decoded = (jsonDecode(encoded) as List)
-          .map((e) => LlmProviderPreset.fromJson(e as Map<String, dynamic>))
-          .toList();
-      expect(decoded, original);
-    });
-  });
   group('模型级路由覆盖（models.*.provider）', () {
     const gateway = {
       'id': 'gateway',

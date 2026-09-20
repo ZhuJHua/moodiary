@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Moodiary is a Flutter + Rust diary app. **Layered pub-workspace monorepo**: 32 shared packages under `packages/` in four dependency layers, consumed by the single Flutter app **`mobile/`** (Android + iOS, pub name `moodiary`). The root `pubspec.yaml` is a pure coordinator (workspace + Melos config, no app code). A desktop app will be rebuilt later; the packages are layered for it, but no desktop target exists today.
+Moodiary is a Flutter + Rust diary app. **Layered pub-workspace monorepo**: 32 shared packages under `packages/` in four dependency layers, consumed by the single Flutter app **`mobile/`** (Android + iOS, pub name `moodiary`). The root `pubspec.yaml` is the workspace + Melos coordinator, with no app code and no dependencies beyond what the test run needs. A desktop app will be rebuilt later; the packages are layered for it, but no desktop target exists today.
 
 ## Tech Stack
 
@@ -32,7 +32,7 @@ dart tool/task.dart gen            # gen-rust + i18n
 
 # Lint & Test
 dart tool/task.dart analyze        # layer check + flutter analyze
-dart tool/task.dart test           # affected packages only: changed relative to --diff=<ref> (default HEAD, incl. uncommitted/untracked) plus transitive dependents, serial (melos exec would otherwise use every core and starve itself); root pubspec change or --all runs everything (CI). Only the legacy-database migration tests need ISAR_TEST_DYLIB
+dart tool/task.dart test           # affected packages only: changed vs --diff=<ref> (default: the merge-base with origin/develop, so the whole branch, plus uncommitted and untracked) plus transitive dependents; root pubspec change or --all runs everything (CI). Only the legacy-database migration tests need ISAR_TEST_DYLIB
 dart tool/task.dart test-mobile    # mobile/ only
 for d in packages/foundation/*/rust; do (cd $d && cargo clippy --all-targets -- -D warnings && cargo test); done  # six packages; fast_* would miss moodiary_rust
 cd packages/feature_base/moodiary_editor/editor && corepack pnpm type-check && corepack pnpm test
@@ -44,7 +44,13 @@ dart tool/release.dart --bump patch     # or an explicit X.Y.Z
 dart tool/sponsor.dart <@github | nickname> ...  # appends to both READMEs between the sponsors markers, opens a [skip ci] PR to merge by hand
 ```
 
-Full-repo verification = the four Lint & Test commands above. `flutter test` at the repo root finds nothing.
+Full-repo verification = the four Lint & Test commands above.
+
+**Tests are one process**: one `flutter test` at the repo root over the affected packages' `test/` dirs, so hooks and the frontend compiler run once, not once per package (280s -> 38s).
+
+- The root dev-depends on `moodiary_data` / `moodiary_assistant` only to pull `sqlite3_simple` / `sqlite3_vec` / `flutter_js` into the hook tree: a hook runs only for the cwd package's deps.
+- cwd is the repo root, so tests read repo files through `repoRoot` (`moodiary_lint/testing.dart`) and write only into their own `createTempSync` dir.
+- Per-file isolate load (~1.5s) dominates, so new cases go in an existing file.
 
 **Melos**: `melos bootstrap` activates the workspace and regenerates IDE module files; it runs no codegen. `melos list` / `melos run <script> --category <layer>` filter by layer.
 
@@ -67,7 +73,7 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
       main.dart
   packages/
     foundation/              # leaf layer, no internal deps
-      moodiary_lint/         #   shared analyzer options
+      moodiary_lint/         #   shared analyzer options; testing.dart carries repoRoot for tests that read repo files
       moodiary_di/           #   the single get_it instance
       moodiary_logging/      #   logging; on-disk path injected by the composition root
       moodiary_i18n/         #   slang strings and lookup entry points
@@ -194,7 +200,7 @@ Principle: split freely, never duplicate dependencies. http / sync / llm share o
 | fast_zip | moodiary_export / moodiary_sync (`_nativePkgOwners`) | first archive / extract |
 | fast_crypto | whole repo | facade self-initializes per call |
 
-- Every build hook returns early when the target OS is the host (`flutter test`): Dart tests never load a Rust library, the editor bundle or the license manifest; Rust and the editor are tested by their own suites. **The SQLite extensions are the exception** — `sqlite3_vec` and `sqlite3_simple` build for the host too, because `diary_fts` cannot even be created without the `simple` tokenizer and every DB test would fail.
+- Every build hook returns early when the target OS is the host (`flutter test`): Dart tests never load a Rust library, the editor bundle or the license manifest; Rust and the editor are tested by their own suites. **Three third-party code assets are the exception** — `sqlite3_vec`, `sqlite3_simple` and `flutter_js` build for the host too, which is why the root pubspec dev-depends on their owners.
 - Every package exposes `XxxLib` and an idempotent `Xxx.ensureInitialized()`. Opaque handles (`CancelToken`) cannot cross a .so, so there is one per library, constructed synchronously; construct only after the await. After touching `rust/src/api` run `dart tool/task.dart gen-rust`.
 - Everything goes through FRB; raw dart:ffi saves only the 0.3 MB floor.
 - No `[workspace.dependencies]`: the same crate is pinned per package, and `tool/check_generated.dart` fails on drift across Cargo.toml, toolchain channel and FRB / ffigen pins.

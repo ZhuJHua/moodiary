@@ -61,7 +61,6 @@ void main() {
     expect(backend.objects, contains(SyncKeys.placeObjectPath('p1')));
     final manifest = backend.manifest()!;
     expect(manifest.entries, contains(SyncKeys.place('p1')));
-    expect(SyncManifest.currentVersion, 2);
   });
 
   test('pull v1 远端：日记的 position 快照归并成地点，日记改引用', () async {

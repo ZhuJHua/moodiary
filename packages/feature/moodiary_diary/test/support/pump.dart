@@ -10,6 +10,8 @@ Widget muiTestApp(
   List<Override> overrides = const [],
   Locale locale = const Locale('zh'),
   bool wrapScaffold = true,
+  Widget? drawer,
+  Key? scaffoldKey,
 }) {
   return ProviderScope(
     overrides: overrides,
@@ -24,7 +26,9 @@ Widget muiTestApp(
           ],
           supportedLocales: AppLocaleUtils.supportedLocales,
           locale: locale,
-          home: wrapScaffold ? Scaffold(body: child) : child,
+          home: wrapScaffold
+              ? Scaffold(key: scaffoldKey, drawer: drawer, body: child)
+              : child,
         ),
       ),
     ),

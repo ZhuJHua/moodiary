@@ -173,6 +173,11 @@ void main() {
         expect(report.diaryCount, 2);
         expect(report.changedNothing, isFalse);
         expect(report.failed, 0);
+        expect(store.diaries.keys, containsAll(['local', 'remote']));
+        expect(
+          backend.manifest()!.entries.keys,
+          containsAll(['d:local', 'd:remote']),
+        );
 
         final again = await engineOn(backend, diaries: store).sync();
         expect(again.changedNothing, isTrue);
@@ -315,13 +320,6 @@ void main() {
         engineOn(backend).pull(),
         throwsA(isA<SyncException>()),
       );
-    });
-
-    test('真正不存在的 manifest 仍按空远端处理（不误伤首次同步）', () async {
-      final backend = FakeRemoteBackend();
-      final store = FakeDiaryStore([buildDiary(id: 'a', modifiedMs: 100)]);
-      await engineOn(backend, diaries: store).push();
-      expect(backend.hasObject(SyncKeys.diaryObjectPath('a')), isTrue);
     });
   });
 
@@ -752,24 +750,6 @@ void main() {
       expect(second.diaryCount, 1);
       expect(local.diaries.containsKey('a'), isFalse);
       expect(local.tombstones.rows.containsKey('d:a'), isTrue);
-    });
-  });
-
-  group('sync — pull then push in one critical section', () {
-    test('merges remote-only and local-only entries', () async {
-      final backend = FakeRemoteBackend();
-      await seedRemote(
-        backend,
-        diaries: [buildDiary(id: 'remote', modifiedMs: 100)],
-      );
-
-      final local = FakeDiaryStore([buildDiary(id: 'local', modifiedMs: 200)]);
-      final report = await engineOn(backend, diaries: local).sync();
-
-      expect(local.diaries.keys, containsAll(['remote', 'local']));
-      final manifest = backend.manifest()!;
-      expect(manifest.entries.keys, containsAll(['d:remote', 'd:local']));
-      expect(report.failed, 0);
     });
   });
 

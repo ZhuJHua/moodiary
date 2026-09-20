@@ -14,6 +14,9 @@ import 'package:path/path.dart' as p;
 class SyncLogger {
   SyncLogger._();
 
+  @visibleForTesting
+  factory SyncLogger.memory() = SyncLogger._;
+
   static const int _bufferLimit = 500;
 
   static const int _retentionDays = 7;

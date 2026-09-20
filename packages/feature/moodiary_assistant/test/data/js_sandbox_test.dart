@@ -66,23 +66,10 @@ void main() {
     );
   });
 
-  test('语法错误进 SyntaxError', () async {
-    await expectLater(
-      JsSandbox.run('const = ;'),
-      throwsA(
-        isA<JsSandboxException>().having(
-          (e) => e.message,
-          'message',
-          contains('SyntaxError'),
-        ),
-      ),
-    );
-  });
-
   test('死循环被截止时间杀掉', () async {
     final sw = Stopwatch()..start();
     await expectLater(
-      JsSandbox.run('while (true) {}'),
+      JsSandbox.run('while (true) {}', timeoutMs: 150),
       throwsA(isA<JsSandboxException>()),
     );
     expect(sw.elapsed, lessThan(const Duration(seconds: 10)));

@@ -25,12 +25,14 @@ class _FakeStore implements ImportMediaStore {
 
 void main() {
   late Directory root;
+  late Directory outsideRoot;
   late String md;
   late _FakeStore store;
   late ImportMediaStage stage;
 
   setUp(() {
     root = Directory.systemTemp.createTempSync('md-import');
+    outsideRoot = Directory.systemTemp.createTempSync('md-import-outside');
     md = p.join(root.path, 'a.md');
     File(md).writeAsStringSync('');
     for (final rel in [
@@ -44,15 +46,14 @@ void main() {
         ..createSync(recursive: true)
         ..writeAsBytesSync([0]);
     }
-    File(p.join(root.parent.path, 'outside.jpg')).writeAsBytesSync([0]);
+    File(p.join(outsideRoot.path, 'outside.jpg')).writeAsBytesSync([0]);
     store = _FakeStore();
     stage = ImportMediaStage(root, store);
   });
 
   tearDown(() {
     root.deleteSync(recursive: true);
-    final outside = File(p.join(root.parent.path, 'outside.jpg'));
-    if (outside.existsSync()) outside.deleteSync();
+    outsideRoot.deleteSync(recursive: true);
   });
 
   test('三类媒体改写成入库名，视频 / 音频统一为图片语法', () async {
@@ -81,14 +82,15 @@ void main() {
   });
 
   test('外链与锚点原样；越界 / 绝对路径 / 非媒体的图片语法降成链接，不计缺失', () async {
-    const source =
+    final outside = '../${p.basename(outsideRoot.path)}/outside.jpg';
+    final source =
         '![x](https://example.com/x.png) [y](#top) '
-        '![z](../outside.jpg) [doc](assets/doc.pdf) ![abs](/etc/pic.jpg)';
+        '![z]($outside) [doc](assets/doc.pdf) ![abs](/etc/pic.jpg)';
     final out = await stage.rewrite(source, md);
     expect(
       out,
       '![x](https://example.com/x.png) [y](#top) '
-      '[z](../outside.jpg) [doc](assets/doc.pdf) [abs](/etc/pic.jpg)',
+      '[z]($outside) [doc](assets/doc.pdf) [abs](/etc/pic.jpg)',
     );
     expect(store.calls, isEmpty);
     expect(stage.missing, 0);

@@ -20,9 +20,6 @@ void main() {
       expect(monthGeometry(DateTime(2026, 8)).days, 31);
       expect(monthGeometry(DateTime(2026, 2)).days, 28);
       expect(monthGeometry(DateTime(2028, 2)).days, 29);
-    });
-
-    test('12 月不会越界到下一年', () {
       expect(monthGeometry(DateTime(2026, 12)).days, 31);
     });
 
@@ -48,17 +45,7 @@ void main() {
       expect(monthForPage(anchor, page), DateTime(2026, 12));
       expect(monthForPage(anchor, page + 1), DateTime(2027, 1));
       expect(monthForPage(anchor, page - 12), DateTime(2025, 12));
-    });
-
-    test('往锚点之前翻不会差一整年', () {
-      expect(
-        monthForPage(anchor, pageForMonth(anchor, anchor) - 8),
-        DateTime(2025, 12),
-      );
-      expect(
-        monthForPage(anchor, pageForMonth(anchor, anchor) - 20),
-        DateTime(2024, 12),
-      );
+      expect(monthForPage(anchor, page - 24), DateTime(2024, 12));
     });
   });
 }

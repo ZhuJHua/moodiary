@@ -53,10 +53,7 @@ void main() {
             reason: 'L$i 与 L${i + 1} 挨得太近，梯度会读成一片',
           );
         }
-      });
 
-      testWidgets('$brightness · $name 档色阶单调', (tester) async {
-        final ramp = await _rampOf(tester, brightness, accent);
         final lum = ramp.map((c) => c.computeLuminance()).toList();
         final rising = lum.last > lum.first;
         for (var i = 0; i < lum.length - 1; i++) {

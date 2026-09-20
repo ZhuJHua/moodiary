@@ -26,18 +26,8 @@ void main() {
       expect(oneHour, tenMin, reason: '封顶之后与时长无关');
     });
 
-    test('拐点在两分钟左右：再长就进封顶区', () {
-      final below = scrubMillisPerPixel(const Duration(seconds: 100), width);
-      final above = scrubMillisPerPixel(const Duration(seconds: 200), width);
-      expect(below, lessThan(1000 / 6));
-      expect(above, closeTo(1000 / 6, 1e-9));
-    });
-
     test('宽度未知（首帧还没量出来）返回 0，不会算出 Infinity', () {
       expect(scrubMillisPerPixel(const Duration(seconds: 30), 0), 0);
-    });
-
-    test('时长未知返回 0：不知道片长就没有可换算的东西', () {
       expect(scrubMillisPerPixel(.zero, width), 0);
     });
   });

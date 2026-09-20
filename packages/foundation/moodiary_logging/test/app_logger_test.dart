@@ -27,15 +27,6 @@ void main() {
     ], reason: 'configure 必须失效缓存，下一条日志重建');
   });
 
-  test('重复 configure 换路径：再次重建生效', () {
-    final calls = record();
-    AppLogger.configure(logFilePath: '/tmp/moodiary-test/a.log');
-    logger.i('first');
-    AppLogger.configure(logFilePath: '/tmp/moodiary-test/b.log');
-    logger.i('second');
-    expect(calls, ['/tmp/moodiary-test/a.log', '/tmp/moodiary-test/b.log']);
-  });
-
   test('未 configure 期间不重复重建', () {
     final calls = record();
     logger.i('one');

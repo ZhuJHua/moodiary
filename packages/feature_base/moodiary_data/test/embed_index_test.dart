@@ -74,21 +74,22 @@ void main() {
   setUpAll(() {
     loadSqliteVec();
     getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
-  });
-
-  setUp(() async {
-    MoodiaryKVs.embeddingIndexStale.remove();
     db = MoodiaryDatabase.forTesting(
       NativeDatabase.memory(
         setup: (raw) => raw.execute('PRAGMA foreign_keys = ON'),
       ),
     );
     repo = DiaryRepository(db);
+  });
+
+  setUp(() async {
+    MoodiaryKVs.embeddingIndexStale.remove();
+    await db.clearAll();
     embedder = FakeEmbedder();
     index = EmbedIndexService(db, embedder);
   });
 
-  tearDown(() async {
+  tearDownAll(() async {
     await db.close();
   });
 

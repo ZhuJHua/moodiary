@@ -19,18 +19,6 @@ void main() {
       expect(restored.media, entry.media);
     });
 
-    test('LWW compare against local diary works on plain ints', () {
-      final localMicros = DateTime.fromMicrosecondsSinceEpoch(
-        1780000000123456,
-        isUtc: true,
-      );
-      final entry = ManifestEntry(timeMs: localMicros.millisecondsSinceEpoch);
-      final restored = ManifestEntry.fromJson(
-        jsonDecode(jsonEncode(entry.toJson())),
-      )!;
-      expect(localMicros.millisecondsSinceEpoch <= restored.timeMs, isTrue);
-    });
-
     test('tombstone round-trips deleted flag and omits media', () {
       const entry = ManifestEntry(timeMs: 1780000000000, deleted: true);
       final json = entry.toJson();

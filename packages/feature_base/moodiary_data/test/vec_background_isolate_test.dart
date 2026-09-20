@@ -1,13 +1,22 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:drift/drift.dart' show Variable;
+import 'package:drift/drift.dart' show GeneratedDatabase, TableInfo, Variable;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_data/moodiary_data.dart';
 import 'package:sqlite3_vec/sqlite3_vec.dart';
 
 Uint8List _f32(List<double> v) => Float32List.fromList(v).buffer.asUint8List();
+
+class _BareDatabase extends GeneratedDatabase {
+  _BareDatabase(super.e);
+
+  @override
+  Iterable<TableInfo> get allTables => const [];
+
+  @override
+  int get schemaVersion => 1;
+}
 
 void main() {
   test('vec0 在后台 isolate 连接（含 readPool 读连接）上可用', () async {
@@ -16,7 +25,7 @@ void main() {
 
     final dir = await Directory.systemTemp.createTemp('vec_bg_test');
     addTearDown(() => dir.delete(recursive: true));
-    final db = MoodiaryDatabase.forTesting(
+    final db = _BareDatabase(
       NativeDatabase.createInBackground(
         File('${dir.path}/test.db'),
         readPool: 2,

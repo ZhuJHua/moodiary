@@ -24,8 +24,9 @@ Future<void> _run(String cmd, List<String> args, {String? cwd}) async {
   if (code != 0) exit(code);
 }
 
-Future<void> _flutter(List<String> args) =>
-    _run('fvm', ['flutter', ...args], cwd: 'mobile');
+Future<void> _flutter(List<String> args, {String? cwd = 'mobile'}) => _hasFvm
+    ? _run('fvm', ['flutter', ...args], cwd: cwd)
+    : _run('flutter', args, cwd: cwd);
 
 Future<List<String>> _capture(String cmd, List<String> args) async {
   final r = await Process.run(cmd, args, runInShell: Platform.isWindows);
@@ -34,6 +35,23 @@ Future<List<String>> _capture(String cmd, List<String> args) async {
     exit(r.exitCode);
   }
   return const LineSplitter().convert(r.stdout as String);
+}
+
+Future<String> _branchBase() async {
+  final r = await Process.run('git', ['merge-base', 'origin/develop', 'HEAD']);
+  if (r.exitCode != 0) return 'HEAD';
+  return (r.stdout as String).trim();
+}
+
+Future<Map<String, String>> _packageDirs() async {
+  final root = Directory.current.path;
+  final packages = (jsonDecode(
+    (await _capture('melos', ['list', '--json'])).join(),
+  ) as List).cast<Map<String, dynamic>>();
+  return {
+    for (final p in packages)
+      p['name'] as String: (p['location'] as String).substring(root.length + 1),
+  };
 }
 
 Future<List<String>?> _affectedPackages(String ref) async {
@@ -46,24 +64,16 @@ Future<List<String>?> _affectedPackages(String ref) async {
     return null;
   }
 
-  final root = Directory.current.path;
-  final packages = (jsonDecode(
-    (await _capture('melos', ['list', '--json'])).join(),
-  ) as List).cast<Map<String, dynamic>>();
+  final dirs = await _packageDirs();
   final graph =
       (jsonDecode((await _capture('melos', ['list', '--graph'])).join())
               as Map<String, dynamic>)
           .map((k, v) => MapEntry(k, (v as List).cast<String>()));
 
-  final byDir = {
-    for (final p in packages)
-      '${(p['location'] as String).substring(root.length + 1)}/':
-          p['name'] as String,
-  };
   final direct = <String>{};
   for (final f in changed) {
-    for (final e in byDir.entries) {
-      if (f.startsWith(e.key)) direct.add(e.value);
+    for (final e in dirs.entries) {
+      if (f.startsWith('${e.value}/')) direct.add(e.key);
     }
   }
 
@@ -221,7 +231,7 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
   'deps': (rest) => _run('fvm', ['dart', 'tool/dep_graph.dart', ...rest]),
   'test': (rest) async {
     var all = false;
-    var diff = 'HEAD';
+    String? diff;
     final flutterArgs = <String>[];
     for (final a in rest) {
       if (a == '--all') {
@@ -232,25 +242,22 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
         flutterArgs.add(a);
       }
     }
+    diff ??= await _branchBase();
     final scopes = all ? null : await _affectedPackages(diff);
     if (scopes != null && scopes.isEmpty) {
       stdout.writeln('相对 $diff 没有受影响的包，跳过测试。');
       return;
     }
-    await _run('melos', [
-      'exec',
-      '--dir-exists=test',
-      '--fail-fast',
-      if (scopes != null)
-        for (final s in scopes) '--scope=$s',
-      '-c',
-      '1',
-      '--',
-      if (_hasFvm) 'fvm',
-      'flutter',
-      'test',
-      ...flutterArgs,
-    ]);
+    final dirs = await _packageDirs();
+    final testDirs = [
+      for (final name in (scopes ?? dirs.keys.toList())..sort())
+        if (Directory('${dirs[name]}/test').existsSync()) '${dirs[name]}/test',
+    ];
+    if (testDirs.isEmpty) {
+      stdout.writeln('受影响的包里没有测试，跳过。');
+      return;
+    }
+    await _flutter(['test', ...testDirs, ...flutterArgs], cwd: null);
   },
   'test-mobile': (rest) => _flutter(['test', ...rest]),
   'build-runner': (_) async {

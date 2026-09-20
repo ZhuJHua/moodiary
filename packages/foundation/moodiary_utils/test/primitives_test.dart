@@ -2,6 +2,39 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 void main() {
+  test('lru cache test', () {
+    final lru = LRUCache<int, int>(maxSize: 3);
+    lru.put(1, 1);
+    lru.put(2, 2);
+    lru.put(3, 3);
+    expect(lru.size(), 3);
+    lru.put(4, 4);
+    expect(lru.size(), 3);
+    expect(lru.get(1), null);
+    expect(lru.get(2), 2);
+    lru.put(5, 5);
+    expect(lru.size(), 3);
+    expect(lru.get(3), null);
+    expect(lru.get(4), 4);
+    expect(lru.get(5), 5);
+  });
+
+  test('uuidV7 前 48 位是毫秒时间戳（extractDateFromUUID 依赖此布局）', () {
+    final before = DateTime.now().millisecondsSinceEpoch;
+    final id = uuidV7();
+    final after = DateTime.now().millisecondsSinceEpoch;
+    expect(
+      id,
+      matches(
+        RegExp(
+          r'^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}$',
+        ),
+      ),
+    );
+    final ms = int.parse(id.replaceAll('-', '').substring(0, 12), radix: 16);
+    expect(ms, inInclusiveRange(before, after));
+  });
+
   group('TimeFormat', () {
     test('isoDate 补零且不随语言变化', () {
       expect(TimeFormat.isoDate(DateTime(2026, 7, 4)), '2026-07-04');

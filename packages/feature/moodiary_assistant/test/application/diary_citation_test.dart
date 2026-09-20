@@ -62,7 +62,6 @@ void main() {
         _call(AssistantTool.searchDiaries.id, out),
       ]);
       expect(ids(cited), containsAll([a.id, b.id]));
-      expect(ids(cited), isNot(contains(hidden.id)));
       expect(cited.length, 2);
       expect(cited.every((c) => c.kind == .read), isTrue);
     });

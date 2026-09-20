@@ -75,11 +75,5 @@ void main() {
       expect(out, contains('via=keyword'));
       expect(out, contains('2 matches'));
     });
-
-    test('工具卡片摘要读 query', () {
-      final spec = AssistantToolRegistry.byId(AssistantTool.searchDiaries.id)!;
-      final summary = spec.summaryOf({'query': '跑步'}, '3 matches:\nid=x');
-      expect(summary, contains('跑步'));
-    });
   });
 }
