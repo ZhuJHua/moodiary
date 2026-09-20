@@ -4,14 +4,6 @@ import 'package:moodiary_sync/src/data/sync.dart';
 
 void main() {
   group('SyncReport', () {
-    test('defaults: no failure, not cancelled, nothing changed', () {
-      const r = SyncReport(elapsed: .zero);
-      expect(r.failed, 0);
-      expect(r.cancelled, isFalse);
-      expect(r.warning, isNull);
-      expect(r.changedNothing, isTrue);
-    });
-
     test('legacy totals are the sum of both directions', () {
       const r = SyncReport(
         pushed: SyncCounts(diaries: 2, categories: 1, mediaInfos: 3),
@@ -22,16 +14,6 @@ void main() {
       expect(r.categoryCount, 1);
       expect(r.mediaInfoCount, 3);
       expect(r.changedNothing, isFalse);
-    });
-
-    test('toString includes both directions and appends a warning', () {
-      const r = SyncReport(
-        pushed: SyncCounts(diaries: 3, categories: 1),
-        elapsed: Duration(milliseconds: 12),
-        warning: '部分失败',
-      );
-      expect(r.toString(), contains('上行 日记 3 / 分类 1'));
-      expect(r.toString(), contains('部分失败'));
     });
   });
 

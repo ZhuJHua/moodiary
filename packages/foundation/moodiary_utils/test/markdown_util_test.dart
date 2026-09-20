@@ -25,12 +25,9 @@ void main() {
       expect(MarkdownConverter.convert('snake_case_name'), 'snake_case_name');
     });
 
-    test('空 alt 图片不留下残留的感叹号', () {
-      expect(MarkdownConverter.convert('![](image-abc.jpg)'), '');
-    });
-
     test('带 alt 图片保留 alt', () {
       expect(MarkdownConverter.convert('![一只猫](image-cat.jpg)'), '一只猫');
+      expect(MarkdownConverter.convert('![](image-abc.jpg)'), '');
     });
 
     test('链接保留显示文本丢弃 URL', () {

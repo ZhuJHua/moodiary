@@ -1,7 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moodiary_lint/testing.dart';
 import 'package:moodiary_theme/src/font_tables.dart';
 
-const _fonts = '../../foundation/mui/assets/fonts';
+final _fonts = '$repoRoot/packages/foundation/mui/assets/fonts';
 
 void main() {
   test('可变字体：全名 + wght 轴默认值与命名实例（与旧 Rust 实现同值）', () async {

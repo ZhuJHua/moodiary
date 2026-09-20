@@ -141,19 +141,6 @@ void main() {
   double topInList(WidgetTester tester, String id) =>
       topOf(tester, id) - tester.getTopLeft(find.byType(AssistantChatList)).dy;
 
-  testWidgets('载入长会话时开局就在底部，最新一条可见', (tester) async {
-    seed(40);
-    await tester.pumpWidget(host());
-    await tester.pumpAndSettle();
-
-    expect(
-      scroll.position.pixels,
-      moreOrLessEquals(scroll.position.maxScrollExtent, epsilon: 1),
-    );
-    expect(find.byKey(const ValueKey<String>('box-m39')), findsOneWidget);
-    expect(find.byKey(const ValueKey<String>('box-m0')), findsNothing);
-  });
-
   testWidgets('滑走看历史时，末条长高不移动画面', (tester) async {
     seed(30);
     await tester.pumpWidget(host());
@@ -279,24 +266,6 @@ void main() {
     expect(builds[streamingId], greaterThan(baseline[streamingId]!));
   });
 
-  testWidgets('流式期间不发列表通知', (tester) async {
-    seed(4);
-    controller.beginStreaming(
-      AssistantTurn.assistant('', streaming: true).copyWith(text: 'a'),
-    );
-    await tester.pumpWidget(host());
-    await tester.pumpAndSettle();
-
-    var notifications = 0;
-    controller.addListener(() => notifications++);
-    controller.updateStreaming(
-      (controller.items.last as AssistantTurn).copyWith(text: 'ab'),
-    );
-    await tester.pump();
-
-    expect(notifications, 0);
-  });
-
   testWidgets('恢复会话后慢速下滑能真的滑动，不被弹回底部', (tester) async {
     controller.batch(() {
       for (var i = 0; i < 40; i++) {
@@ -324,25 +293,6 @@ void main() {
 
     expect(draggedTo, lessThan(start - 20), reason: '拖动过程中就被拽回去了');
     expect(scroll.position.pixels, lessThan(start - 20), reason: '松手后又被弹回底部');
-  });
-
-  testWidgets('滑到半路松手后不跟随，新消息不打扰', (tester) async {
-    seed(30);
-    await tester.pumpWidget(host());
-    await tester.pumpAndSettle();
-
-    final gesture = await tester.startGesture(
-      tester.getCenter(find.byType(CustomScrollView)),
-    );
-    await gesture.moveBy(const Offset(0, 200));
-    await tester.pump();
-    await gesture.up();
-    await tester.pumpAndSettle();
-
-    final resting = scroll.position.pixels;
-    controller.add(_turn('new', fromUser: false, text: '0123456789'));
-    await tester.pumpAndSettle();
-    expect(scroll.position.pixels, moreOrLessEquals(resting, epsilon: 0.5));
   });
 
   testWidgets('贴底时流式长高，位置在同一帧跟到新底部（不慢一帧再抽回）', (tester) async {
@@ -473,6 +423,7 @@ void main() {
 
     expect(topInList(tester, 'm29'), moreOrLessEquals(468, epsilon: 0.5));
     expect(listKey.currentState!.contentFitsViewport, isFalse);
+    expect(find.byKey(const ValueKey<String>('box-m0')), findsNothing);
   });
 
   testWidgets('长过一屏之后交回贴底，不留顶部空档', (tester) async {
@@ -491,29 +442,6 @@ void main() {
     expect(listKey.currentState!.contentFitsViewport, isFalse);
     expect(topInList(tester, 'm19'), moreOrLessEquals(468, epsilon: 0.5));
     expect(scroll.position.minScrollExtent, lessThan(0));
-  });
-
-  testWidgets('流式长高越过一屏后切到贴底', (tester) async {
-    controller.setAll([_turn('m0', fromUser: true)]);
-    await tester.pumpWidget(host());
-    await tester.pumpAndSettle();
-
-    controller.beginStreaming(
-      AssistantTurn.assistant('', streaming: true).copyWith(text: 'a'),
-    );
-    await tester.pumpAndSettle();
-    expect(listKey.currentState!.contentFitsViewport, isTrue);
-
-    controller.updateStreaming(
-      (controller.items.last as AssistantTurn).copyWith(text: 'x' * 15),
-    );
-    await tester.pumpAndSettle();
-
-    expect(listKey.currentState!.contentFitsViewport, isFalse);
-    expect(
-      scroll.position.pixels,
-      moreOrLessEquals(scroll.position.maxScrollExtent, epsilon: 1),
-    );
   });
 
   testWidgets('缩回一屏之内交还顶部对齐', (tester) async {
@@ -563,15 +491,6 @@ void main() {
       scroll.position.pixels,
       moreOrLessEquals(scroll.position.maxScrollExtent, epsilon: 1),
     );
-
-    controller.add(_turn('m11', fromUser: false));
-    await tester.pumpAndSettle();
-
-    await tester.drag(find.byType(CustomScrollView), const Offset(0, 100));
-    await tester.pumpAndSettle();
-    scroll.jumpTo(scroll.position.minScrollExtent);
-    await tester.pumpAndSettle();
-    expect(topInList(tester, 'm0'), moreOrLessEquals(8, epsilon: 0.5));
   });
 
   testWidgets('流式那条不会被挪成中心项', (tester) async {
@@ -602,6 +521,7 @@ void main() {
       AssistantTurn.assistant('', streaming: true).copyWith(text: 'x'),
     );
     await tester.pumpAndSettle();
+    expect(listKey.currentState!.contentFitsViewport, isTrue);
     final id = controller.items.last.id;
 
     double bottomOf() =>

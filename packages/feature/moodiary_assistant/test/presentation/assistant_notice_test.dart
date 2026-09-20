@@ -1,7 +1,11 @@
+import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_notice.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_tool_ui.dart';
+import 'package:moodiary_assistant/src/presentation/diary_citations.dart';
 import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 
 int _detailInits = 0;
@@ -153,6 +157,34 @@ void main() {
 
     await tester.pumpAndSettle();
     expect(_detailInits, 1, reason: '动画收尾');
+  });
+
+  group('版式由篇数决定', () {
+    late MoodiaryDatabase db;
+
+    setUp(() {
+      db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
+      getIt.registerSingleton<DiaryRepository>(DiaryRepository(db));
+    });
+
+    tearDown(() async {
+      await getIt.reset();
+      await db.close();
+    });
+
+    testWidgets('多篇走横向轨', (tester) async {
+      await tester.pumpWidget(host(const DiaryCitations(ids: ['a', 'b'])));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      expect(find.byType(SingleChildScrollView), findsOneWidget);
+    });
+
+    testWidgets('单篇走整卡', (tester) async {
+      await tester.pumpWidget(host(const DiaryCitations(ids: ['a'])));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      expect(find.byType(SingleChildScrollView), findsNothing);
+    });
   });
 }
 

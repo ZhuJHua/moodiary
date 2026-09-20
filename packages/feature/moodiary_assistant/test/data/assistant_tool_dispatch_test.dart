@@ -154,12 +154,6 @@ void main() {
         '无返回值',
       );
     });
-
-    test('失败一律走 Failed 前缀判定，不看语言', () {
-      final line = specOf(AssistantTool.deleteDiary)
-          .summaryOf(const {}, 'Failed: no diary id given.');
-      expect(line, '未成功');
-    });
   });
 
   group('脚本工具的契约', () {

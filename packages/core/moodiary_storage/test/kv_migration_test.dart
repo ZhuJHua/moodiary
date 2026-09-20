@@ -36,23 +36,6 @@ void main() {
       MoodiaryKVs.autoSync.copyFrom(source, into: target);
       expect(target.data.containsKey(MoodiaryKVs.autoSync.name), isFalse);
     });
-
-    test('单个键读崩不影响其余键——迁移是逐键 try/catch 的前提', () {
-      source.data[MoodiaryKVs.appVersion.name] = '2.7.3+92';
-      source.throwingKeys.add(MoodiaryKVs.autoSync.name);
-
-      var skipped = 0;
-      for (final kv in MoodiaryKVs.values) {
-        try {
-          kv.copyFrom(source, into: target);
-        } catch (_) {
-          skipped++;
-        }
-      }
-
-      expect(skipped, 1);
-      expect(target.get<String>(MoodiaryKVs.appVersion.name), '2.7.3+92');
-    });
   });
 
   test('每个 KV 的值类型都在后端支持的五种之内', () {

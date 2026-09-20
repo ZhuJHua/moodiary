@@ -27,11 +27,6 @@ void main() {
     return row.data.values.first as int;
   }
 
-  Future<List<String>> columns(GeneratedDatabase db, String table) async {
-    final rows = await db.customSelect('PRAGMA table_info($table)').get();
-    return [for (final r in rows) r.read<String>('name')];
-  }
-
   v1.DiariesCompanion v1Diary(
     String id, {
     double? lat,
@@ -195,18 +190,16 @@ void main() {
     await db.close();
   });
 
-  test('已是 v3 的库重开不重复建表', () async {
-    final schema = await verifier.schemaAt(3);
-    var db = MoodiaryDatabase.forTesting(schema.newConnection());
-    await PlaceRepository(
-      db,
-    ).insertAPlace(Place.create(name: '家', latitude: 30.1, longitude: 120.1));
-    await db.close();
-
-    db = MoodiaryDatabase.forTesting(schema.newConnection());
-    expect(await userVersion(db), 3);
-    expect(await PlaceRepository(db).getAllPlaces(), hasLength(1));
-    expect(await columns(db, 'diaries'), isNot(contains('latitude')));
-    await db.close();
+  group('逐档迁移', () {
+    const versions = GeneratedHelper.versions;
+    for (var i = 0; i + 1 < versions.length; i++) {
+      final (from, to) = (versions[i], versions[i + 1]);
+      test('v$from → v$to 落在下一档快照上', () async {
+        final schema = await verifier.schemaAt(from);
+        final db = MoodiaryDatabase.forTesting(schema.newConnection());
+        await verifier.migrateAndValidate(db, to);
+        await db.close();
+      });
+    }
   });
 }

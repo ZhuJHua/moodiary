@@ -25,12 +25,6 @@ void main() {
     addTearDown(c.dispose);
     await c.read(categoryControllerProvider.future);
     expect(c.read(categoryByIdProvider('b'))?.categoryName, 'life');
-  });
-
-  test('returns null for null id or missing id', () async {
-    final c = containerWith([cat('a', 'work')]);
-    addTearDown(c.dispose);
-    await c.read(categoryControllerProvider.future);
     expect(c.read(categoryByIdProvider(null)), isNull);
     expect(c.read(categoryByIdProvider('zzz')), isNull);
   });

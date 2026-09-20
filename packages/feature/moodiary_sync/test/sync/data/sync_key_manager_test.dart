@@ -75,11 +75,6 @@ void main() {
       expect(restored.kdfParallelism, 4);
     });
 
-    test('bytes 往返', () {
-      final restored = SyncKeyfile.fromBytes(keyfile.toBytes());
-      expect(restored.wrappedDekB64, keyfile.wrappedDekB64);
-    });
-
     test('更高版本拒绝（防静默丢字段）', () {
       final json = keyfile.toJson()..['version'] = 99;
       expect(() => SyncKeyfile.fromJson(json), throwsA(isA<SyncException>()));

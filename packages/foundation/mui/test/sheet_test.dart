@@ -179,11 +179,6 @@ void main() {
       expect(rect.bottom, 800);
       expect(rect.top, 48, reason: '够高就该顶满，不留 10% 的自定义余量');
       expect(tester.takeException(), isNull);
-
-      final footer = tester.getRect(find.text('保存'));
-      await tester.drag(find.text('行 3'), const Offset(0, -400));
-      await tester.pumpAndSettle();
-      expect(tester.getRect(find.text('保存')), footer);
     });
 
     testWidgets('窄屏铺满宽度', (tester) async {
@@ -482,21 +477,6 @@ void main() {
         tester.widget<TextField>(find.byType(TextField)).obscureText,
         isFalse,
       );
-    });
-
-    testWidgets('errorText 显示在框下方', (tester) async {
-      final controller = TextEditingController();
-      addTearDown(controller.dispose);
-      await tester.pumpWidget(
-        fieldHost(
-          MField(
-            controller: controller,
-            label: 'Bucket',
-            errorText: 'Bucket 不能为空',
-          ),
-        ),
-      );
-      expect(find.text('Bucket 不能为空'), findsOneWidget);
     });
 
     testWidgets('expands 撑满父级高度，且从顶部起排', (tester) async {

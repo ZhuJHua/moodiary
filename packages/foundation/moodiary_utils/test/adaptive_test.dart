@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('fullscreenOrientationsFor', () {
     test('横拍锁横，两个横向都给（用户左右手持都行）', () {
       expect(fullscreenOrientationsFor(16 / 9), const [
@@ -22,12 +24,9 @@ void main() {
       expect(fullscreenOrientationsFor(4 / 5), const [
         DeviceOrientation.portraitUp,
       ]);
-    });
-
-    test('正方形按竖处理 —— 1:1 放进横屏两侧留白过大', () {
       expect(fullscreenOrientationsFor(1.0), const [
         DeviceOrientation.portraitUp,
-      ]);
+      ], reason: '正方形按竖处理：1:1 放进横屏两侧留白过大');
     });
   });
 
@@ -53,7 +52,7 @@ void main() {
     List<String> orientationsOf(MethodCall call) =>
         (call.arguments as List).cast<String>();
 
-    testWidgets('锁到指定方向，恢复函数把全局策略应用回来', (tester) async {
+    test('锁到指定方向，恢复函数把全局策略应用回来', () {
       final release = lockOrientationsTemporarily(const [
         .landscapeLeft,
         .landscapeRight,
@@ -69,35 +68,25 @@ void main() {
       expect(orientationsOf(calls.last), isNotEmpty);
     });
 
-    testWidgets('恢复函数报告「是否真的恢复了」—— 调用方据此决定要不要等旋转', (tester) async {
+    test('恢复函数报告「是否真的恢复了」—— 调用方据此决定要不要等旋转', () {
       final outer = lockOrientationsTemporarily(const [.portraitUp]);
       final inner = lockOrientationsTemporarily(const [.landscapeLeft]);
+      expect(calls, hasLength(2));
+
       expect(inner(), isFalse, reason: '计数未归零，没有下发方向');
+      expect(calls, hasLength(2), reason: '内层释放时外层还持有，不该恢复');
+
       expect(outer(), isTrue, reason: '归零才真的把全局策略应用回去');
+      expect(calls, hasLength(3));
     });
 
-    testWidgets('恢复函数可重复调用，只生效一次', (tester) async {
+    test('恢复函数可重复调用，只生效一次', () {
       final release = lockOrientationsTemporarily(const [.portraitUp]);
       release();
       final afterFirst = calls.length;
       release();
       release();
       expect(calls.length, afterFirst);
-    });
-
-    testWidgets('嵌套锁：内层释放不恢复，外层释放才恢复', (tester) async {
-      final outer = lockOrientationsTemporarily(const [.portraitUp]);
-      final inner = lockOrientationsTemporarily(const [
-        .landscapeLeft,
-        .landscapeRight,
-      ]);
-      expect(calls, hasLength(2));
-
-      inner();
-      expect(calls, hasLength(2), reason: '内层释放时外层还持有，不该恢复');
-
-      outer();
-      expect(calls, hasLength(3));
     });
   });
 
@@ -122,7 +111,7 @@ void main() {
       resetImmersiveOverridesForTest();
     });
 
-    testWidgets('进入沉浸走 immersiveSticky', (tester) async {
+    test('进入沉浸走 immersiveSticky', () {
       final release = enterImmersiveTemporarily();
       expect(calls, hasLength(1));
       expect(calls.single.method, 'SystemChrome.setEnabledSystemUIMode');
@@ -130,7 +119,7 @@ void main() {
       release();
     });
 
-    testWidgets('恢复必须先 manual 点亮两条栏，再回 edgeToEdge', (tester) async {
+    test('恢复必须先 manual 点亮两条栏，再回 edgeToEdge', () {
       final release = enterImmersiveTemporarily();
       calls.clear();
 
@@ -145,7 +134,7 @@ void main() {
       expect(calls.last.arguments, 'SystemUiMode.edgeToEdge');
     });
 
-    testWidgets('嵌套安全：计数没归零不恢复', (tester) async {
+    test('嵌套安全：计数没归零不恢复', () {
       final a = enterImmersiveTemporarily();
       final b = enterImmersiveTemporarily();
       calls.clear();
@@ -156,7 +145,7 @@ void main() {
       expect(calls, hasLength(2));
     });
 
-    testWidgets('恢复器幂等：重复调用不会把计数扣穿', (tester) async {
+    test('恢复器幂等：重复调用不会把计数扣穿', () {
       final release = enterImmersiveTemporarily();
       release();
       calls.clear();

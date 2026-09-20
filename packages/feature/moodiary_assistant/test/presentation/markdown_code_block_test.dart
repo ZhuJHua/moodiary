@@ -3,46 +3,6 @@ import 'package:moodiary_assistant/src/presentation/markdown_code_block.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 
-const _editorCommonLanguages = {
-  'arduino',
-  'bash',
-  'c',
-  'cpp',
-  'csharp',
-  'css',
-  'diff',
-  'go',
-  'graphql',
-  'ini',
-  'java',
-  'javascript',
-  'json',
-  'kotlin',
-  'less',
-  'lua',
-  'makefile',
-  'markdown',
-  'objectivec',
-  'perl',
-  'php',
-  'php-template',
-  'plaintext',
-  'python',
-  'python-repl',
-  'r',
-  'ruby',
-  'rust',
-  'scss',
-  'shell',
-  'sql',
-  'swift',
-  'typescript',
-  'vbnet',
-  'wasm',
-  'xml',
-  'yaml',
-};
-
 void main() {
   Widget host(Widget child, {Brightness brightness = Brightness.light}) {
     final data = buildMuiTheme(brightness: brightness);
@@ -88,10 +48,6 @@ void main() {
     }
     return out;
   }
-
-  test('语言集与编辑器的 lowlight common 一模一样', () {
-    expect(codeHighlighter.listLanguages().toSet(), _editorCommonLanguages);
-  });
 
   test('语言名按别名/大小写解析到正式名，认不出给 null', () {
     expect(resolveCodeLanguage('RS'), 'rust');

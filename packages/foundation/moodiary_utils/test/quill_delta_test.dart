@@ -11,20 +11,13 @@ void main() {
         {
           'insert': {'image': 'image-1.png'},
         },
-        {'insert': 'world\n'},
-      ]);
-      expect(QuillDelta.plainText(delta), 'hello world\n');
-    });
-
-    test('保留行内属性文本，属性本身不产出字符', () {
-      final delta = jsonEncode([
         {
-          'insert': '粗体',
+          'insert': 'world',
           'attributes': {'bold': true},
         },
-        {'insert': '普通\n'},
+        {'insert': '\n'},
       ]);
-      expect(QuillDelta.plainText(delta), '粗体普通\n');
+      expect(QuillDelta.plainText(delta), 'hello world\n');
     });
 
     test('非法 JSON / 顶层非数组返回 null，由调用方回退原文', () {

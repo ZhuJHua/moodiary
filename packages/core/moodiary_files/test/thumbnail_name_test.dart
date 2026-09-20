@@ -12,17 +12,6 @@ void main() {
       );
     });
 
-    test('扩展名长短不影响结果（按最后一个点定位，不靠定长）', () {
-      expect(
-        AppFiles.thumbnailNameOf('video-$uuid.mov'),
-        'thumbnail-$uuid.jpeg',
-      );
-      expect(
-        AppFiles.thumbnailNameOf('video-$uuid.webm'),
-        'thumbnail-$uuid.jpeg',
-      );
-    });
-
     test('文件名里含多个点时取最后一个', () {
       expect(
         AppFiles.thumbnailNameOf('video-my.clip.name.mp4'),

@@ -8,6 +8,8 @@ void main() {
       expect(h.length, 1);
       expect(h.atRoot, isTrue);
       expect(h.current?.diaryId, 'a');
+      expect(h.peek(-1), isNull);
+      expect(h.peek(1), isNull);
     });
 
     test('push 追加并前移游标', () {
@@ -27,7 +29,7 @@ void main() {
         ..push('b')
         ..push('c')
         ..move(-1)
-        ..move(-1); // 回到 a
+        ..move(-1);
       h.push('d');
       expect(h.length, 2);
       expect(h.current?.diaryId, 'd');
@@ -51,17 +53,11 @@ void main() {
       expect(h.current?.diaryId, 'b');
     });
 
-    test('peek 越界返回 null', () {
-      final h = HopHistory()..reset('a');
-      expect(h.peek(-1), isNull);
-      expect(h.peek(1), isNull);
-    });
-
     test('dropNext 向后剔除并校正游标', () {
       final h = HopHistory()
         ..reset('a')
         ..push('b')
-        ..push('c'); // cursor=2
+        ..push('c');
       h.dropNext(-1); // b 已删
       expect(h.length, 2);
       expect(h.cursor, 1);

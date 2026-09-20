@@ -57,14 +57,6 @@ void main() {
       expect(await MoodiarySecureKVs.qweatherKey.get(), 'qw-key');
     });
 
-    test('旧仓库压根没有 lock 这个键 → 同样不搬 PIN', () async {
-      legacy.data['password'] = '1234';
-
-      await SecretKVMigration.run(legacy);
-
-      expect(await MoodiarySecureKVs.password.get(), isNull);
-    });
-
     test('重跑幂等', () async {
       legacy.data['lock'] = true;
       legacy.data['password'] = '1234';

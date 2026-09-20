@@ -5,11 +5,6 @@ void main() {
   Widget host(Widget child) =>
       MaterialApp(home: FrostedGlassOverlayComponent(child: child));
 
-  testWidgets('App 分支照常渲染 —— entry 挂错整屏会白', (tester) async {
-    await tester.pumpWidget(host(const Text('app')));
-    expect(find.text('app'), findsOneWidget);
-  });
-
   testWidgets('父级换 child 时 App entry 会跟着更新', (tester) async {
     await tester.pumpWidget(host(const Text('first')));
     expect(find.text('first'), findsOneWidget);

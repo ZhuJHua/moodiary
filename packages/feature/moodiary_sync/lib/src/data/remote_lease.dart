@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:meta/meta.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -79,6 +80,9 @@ class RemoteLease {
   static final Map<String, bool> _casVerified = {};
 
   static void resetCasProbeCache() => _casVerified.clear();
+
+  @visibleForTesting
+  static Duration? readbackSettleDelay;
 
   static Future<String> _ensureDeviceId() async {
     final existing = MoodiaryKVs.syncDeviceId.get();
@@ -167,7 +171,8 @@ class RemoteLease {
           return;
         }
         await Future.delayed(
-          Duration(milliseconds: 150 + _random.nextInt(250)),
+          readbackSettleDelay ??
+              Duration(milliseconds: 150 + _random.nextInt(250)),
         );
         final verify = await _read(backend);
         if (verify != null && verify.owner == owner) {

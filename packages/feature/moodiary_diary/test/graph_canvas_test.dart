@@ -77,27 +77,34 @@ Future<void> _pumpCanvas(
   required GraphScene scene,
   required GraphFrame frame,
   int? selected,
+  ValueNotifier<int?>? selection,
   List<EgoDirection?>? dirs,
   double? extent,
   bool dark = false,
   bool showLabels = true,
 }) async {
   final mui = buildMuiTheme(brightness: dark ? .dark : .light);
+  GraphCanvas canvas(int? selected) => GraphCanvas(
+    scene: scene,
+    frame: frame,
+    palette: .of(mui.colorScheme, edgeCount: scene.edgeCount),
+    selected: selected,
+    showLabels: showLabels,
+    egoDirections: dirs,
+    preferredExtent: extent,
+    onSelect: (_) {},
+  );
   await tester.pumpWidget(
     MaterialApp(
       theme: mui,
       builder: (context, child) => MuiTheme(data: mui, child: child!),
       home: Scaffold(
-        body: GraphCanvas(
-          scene: scene,
-          frame: frame,
-          palette: .of(mui.colorScheme, edgeCount: scene.edgeCount),
-          selected: selected,
-          showLabels: showLabels,
-          egoDirections: dirs,
-          preferredExtent: extent,
-          onSelect: (_) {},
-        ),
+        body: selection == null
+            ? canvas(selected)
+            : ValueListenableBuilder<int?>(
+                valueListenable: selection,
+                builder: (_, value, _) => canvas(value),
+              ),
       ),
     ),
   );
@@ -387,21 +394,30 @@ void main() {
       final scene = _scene(data);
       final frame = GraphFrame();
       frame.push(seedByBfs(scene, 63), settled: true);
-      await _pumpCanvas(tester, scene: scene, frame: frame);
-      await _pumpCanvas(tester, scene: scene, frame: frame, selected: 0);
+      final selection = ValueNotifier<int?>(null);
+      await _pumpCanvas(
+        tester,
+        scene: scene,
+        frame: frame,
+        selection: selection,
+      );
+      selection.value = 0;
+      await tester.pump();
       for (var i = 0; i < 12; i++) {
         await tester.pump(const Duration(milliseconds: 20));
         expect(tester.takeException(), isNull);
       }
       await tester.pump(const Duration(milliseconds: 300));
       expect(tester.takeException(), isNull);
-      await _pumpCanvas(tester, scene: scene, frame: frame);
+      selection.value = null;
+      await tester.pump();
       for (var i = 0; i < 12; i++) {
         await tester.pump(const Duration(milliseconds: 20));
         expect(tester.takeException(), isNull);
       }
       await tester.pump(const Duration(milliseconds: 300));
       expect(tester.takeException(), isNull);
+      selection.dispose();
       frame.dispose();
     });
 
@@ -453,20 +469,30 @@ void main() {
         _graph(n: 12, edges: [for (var i = 1; i < 12; i++) (0, i), (3, 5)]),
       );
       final frame = GraphFrame()..push(seedByBfs(scene, 63), settled: true);
-      await _pumpCanvas(tester, scene: scene, frame: frame, selected: 3);
+      final selection = ValueNotifier<int?>(3);
+      await _pumpCanvas(
+        tester,
+        scene: scene,
+        frame: frame,
+        selection: selection,
+      );
       await tester.pump(const Duration(milliseconds: 400));
-      await _pumpCanvas(tester, scene: scene, frame: frame, selected: 5);
+      selection.value = 5;
+      await tester.pump();
       for (var i = 0; i < 12; i++) {
         await tester.pump(const Duration(milliseconds: 20));
         expect(tester.takeException(), isNull);
       }
       await tester.pump(const Duration(milliseconds: 400));
       expect(tester.takeException(), isNull);
-      await _pumpCanvas(tester, scene: scene, frame: frame, selected: 7);
+      selection.value = 7;
+      await tester.pump();
       await tester.pump(const Duration(milliseconds: 40));
-      await _pumpCanvas(tester, scene: scene, frame: frame, selected: 2);
+      selection.value = 2;
+      await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
       expect(tester.takeException(), isNull);
+      selection.dispose();
       frame.dispose();
     });
 

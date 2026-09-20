@@ -195,48 +195,34 @@ void main() {
     addTearDown(t.view.reset);
 
     const long = '夏天的第一杯冰美式与午后的碎碎念';
-    for (final images in [
-      const <String>[],
-      const ['1.jpg'],
-      const ['1.jpg', '2.jpg', '3.jpg'],
+    for (final (images, scale) in [
+      (const <String>[], 1.0),
+      (const ['1.jpg'], 1.0),
+      (const ['1.jpg', '2.jpg', '3.jpg'], 1.0),
+      (const ['1.jpg'], 1.3),
     ]) {
       await t.pumpWidget(
-        wrap(
-          DiaryFeedTile(
-            diary: diary(
-              images: images,
-              tags: const [long, long],
-              weather: const DiaryWeather(icon: '100', temp: '26', text: '晴'),
+        MediaQuery(
+          data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+          child: wrap(
+            DiaryFeedTile(
+              diary: diary(
+                images: images,
+                tags: const [long, long],
+                weather: const DiaryWeather(icon: '100', temp: '26', text: '晴'),
+              ),
+              place: place(),
+              category: cat(),
             ),
-            place: place(),
-            category: cat(),
           ),
         ),
       );
-      expect(t.takeException(), isNull, reason: '图片数=${images.length}');
+      expect(
+        t.takeException(),
+        isNull,
+        reason: '图片数=${images.length} 字号=$scale',
+      );
     }
-  });
-
-  testWidgets('long tags survive a larger text scale too', (t) async {
-    t.view.physicalSize = const Size(360 * 3, 800 * 3);
-    t.view.devicePixelRatio = 3.0;
-    addTearDown(t.view.reset);
-
-    await t.pumpWidget(
-      MediaQuery(
-        data: const MediaQueryData(textScaler: .linear(1.3)),
-        child: wrap(
-          DiaryFeedTile(
-            diary: diary(
-              images: const ['1.jpg'],
-              tags: const ['一个相当长的标签名字', '另一个也不短的标签'],
-            ),
-            category: cat(),
-          ),
-        ),
-      ),
-    );
-    expect(t.takeException(), isNull);
   });
 
   testWidgets('audio stays visible when the entry also has images', (t) async {

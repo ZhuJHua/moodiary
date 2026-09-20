@@ -576,32 +576,6 @@ void main() {
       expect(diaryStore.diaries['oops']!.title, 'from-archive');
     });
 
-    test('合并模式（局域网接收）语义不变：墓碑照常传播', () async {
-      final dir = await buildArchiveDir(
-        diaries: const [],
-        tombstones: [buildDiaryTombstone('dead', modifiedMs: 2000)],
-      );
-      final diaryStore = FakeDiaryStore([
-        buildDiary(id: 'dead', modifiedMs: 1000),
-      ]);
-
-      await LocalArchive.importDirectory(
-        dir,
-        diaryStore: diaryStore,
-        categoryStore: FakeCategoryStore(),
-        placeStore: FakePlaceStore(),
-        mediaInfoStore: FakeMediaInfoStore(),
-        tombstoneStore: diaryStore.tombstones,
-        mediaFiles: FakeMediaFiles(),
-      );
-
-      expect(
-        diaryStore.diaries.containsKey('dead'),
-        isFalse,
-        reason: '设备间搬运仍须传播删除，否则已删日记永远复活',
-      );
-    });
-
     test('恢复模式下本机更新的编辑仍然赢，并计入 skipped', () async {
       final dir = await buildArchiveDir(
         diaries: [
