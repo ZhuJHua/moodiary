@@ -1,6 +1,7 @@
 use super::{kind_of_reqwest, kind_of_status, tagged};
+use crate::api::ExclusiveCreate;
 use anyhow::Result;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use std::time::Duration;
 
 use rusty_s3::{Bucket, Credentials, S3Action, UrlStyle};
@@ -8,6 +9,44 @@ use rusty_s3::{Bucket, Credentials, S3Action, UrlStyle};
 use crate::http::client::shared as shared_http_client;
 
 const SIGN_TTL: Duration = Duration::from_secs(300);
+
+const CAS_UNKNOWN: u8 = 0;
+const CAS_IF_NONE_MATCH: u8 = 1;
+const CAS_OSS_FORBID: u8 = 2;
+const CAS_COS_FORBID: u8 = 3;
+const CAS_NONE: u8 = 4;
+
+fn cas_header(mode: u8) -> Option<(&'static str, &'static str)> {
+    match mode {
+        CAS_IF_NONE_MATCH => Some(("if-none-match", "*")),
+        CAS_OSS_FORBID => Some(("x-oss-forbid-overwrite", "true")),
+        CAS_COS_FORBID => Some(("x-cos-forbid-overwrite", "true")),
+        _ => None,
+    }
+}
+
+fn rejects_header(status: u16, body: &str, header: &str) -> bool {
+    if status == 501 {
+        return true;
+    }
+    if status != 400 {
+        return false;
+    }
+    let body = body.to_ascii_lowercase();
+    body.contains("notimplemented") || body.contains("not implemented") || body.contains(header)
+}
+
+fn vendor_cas_mode(server: &str, host: &str) -> u8 {
+    let server = server.to_ascii_lowercase();
+    let host = host.to_ascii_lowercase();
+    if server.contains("aliyunoss") || host.ends_with(".aliyuncs.com") {
+        CAS_OSS_FORBID
+    } else if server.contains("tencent-cos") || host.ends_with(".myqcloud.com") {
+        CAS_COS_FORBID
+    } else {
+        CAS_NONE
+    }
+}
 
 fn effective_style(url: &url::Url, bucket: &str, https: bool) -> UrlStyle {
     let host_forces_path = match url.host() {
@@ -73,6 +112,7 @@ pub struct S3Client {
     fell_back: AtomicBool,
     creds: Credentials,
     bucket_ensured: AtomicBool,
+    cas_mode: AtomicU8,
 }
 
 impl S3Client {
@@ -109,6 +149,7 @@ impl S3Client {
             fell_back: AtomicBool::new(false),
             creds: Credentials::new(access_key, secret_key),
             bucket_ensured: AtomicBool::new(false),
+            cas_mode: AtomicU8::new(CAS_UNKNOWN),
         })
     }
 
@@ -159,10 +200,19 @@ impl S3Client {
         }
     }
 
-    async fn fail(op: &str, resp: reqwest::Response) -> anyhow::Error {
+    async fn response_parts(resp: reqwest::Response) -> (u16, String, String) {
         let status = resp.status().as_u16();
+        let server = resp
+            .headers()
+            .get(reqwest::header::SERVER)
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or_default()
+            .to_owned();
         let body = resp.text().await.unwrap_or_default();
-        let body: String = body.chars().take(512).collect();
+        (status, server, body.chars().take(512).collect())
+    }
+
+    fn fail_parts(op: &str, status: u16, body: &str) -> anyhow::Error {
         let hint = if body.contains("AuthorizationHeaderMalformed") {
             "（若服务端有固定区域，请在同步设置里填写正确的 region）"
         } else if status == 403 {
@@ -174,6 +224,11 @@ impl S3Client {
             kind_of_status(status),
             format!("{op} failed: HTTP {status} {body}{hint}"),
         )
+    }
+
+    async fn fail(op: &str, resp: reqwest::Response) -> anyhow::Error {
+        let (status, _, body) = Self::response_parts(resp).await;
+        Self::fail_parts(op, status, &body)
     }
 
     pub async fn test_connection(&self) -> Result<bool> {
@@ -302,25 +357,54 @@ impl S3Client {
         Ok(())
     }
 
-    pub async fn create_exclusive(&self, key: String, data: Vec<u8>) -> Result<bool> {
+    pub async fn create_exclusive(&self, key: String, data: Vec<u8>) -> Result<ExclusiveCreate> {
         self.ensure_bucket().await?;
-        let resp = self
-            .send(
-                reqwest::Method::PUT,
-                |b| {
-                    let mut action = b.put_object(Some(&self.creds), &key);
-                    action.headers_mut().insert("if-none-match", "*");
-                    action.sign(SIGN_TTL)
-                },
-                &[("if-none-match", "*")],
-                Some(data.into()),
-            )
-            .await?;
-        match resp.status().as_u16() {
-            412 => Ok(false),
-            200..=299 => Ok(true),
-            _ => Err(Self::fail(&format!("Create {key}"), resp).await),
+        let mut mode = match self.cas_mode.load(Ordering::Relaxed) {
+            CAS_UNKNOWN => CAS_IF_NONE_MATCH,
+            cached => cached,
+        };
+        while let Some((header, value)) = cas_header(mode) {
+            let resp = self
+                .send(
+                    reqwest::Method::PUT,
+                    |b| {
+                        let mut action = b.put_object(Some(&self.creds), &key);
+                        action.headers_mut().insert(header, value);
+                        action.sign(SIGN_TTL)
+                    },
+                    &[(header, value)],
+                    Some(data.clone().into()),
+                )
+                .await?;
+            match resp.status().as_u16() {
+                409 | 412 => {
+                    self.cas_mode.store(mode, Ordering::Relaxed);
+                    return Ok(ExclusiveCreate::Exists);
+                }
+                200..=299 => {
+                    self.cas_mode.store(mode, Ordering::Relaxed);
+                    return Ok(ExclusiveCreate::Created);
+                }
+                _ => {}
+            }
+            let (status, server, body) = Self::response_parts(resp).await;
+            if !rejects_header(status, &body, header) {
+                return Err(Self::fail_parts(&format!("Create {key}"), status, &body));
+            }
+            mode = if mode == CAS_IF_NONE_MATCH {
+                let host = self
+                    .active_bucket()
+                    .base_url()
+                    .host_str()
+                    .unwrap_or_default()
+                    .to_owned();
+                vendor_cas_mode(&server, &host)
+            } else {
+                CAS_NONE
+            };
         }
+        self.cas_mode.store(CAS_NONE, Ordering::Relaxed);
+        Ok(ExclusiveCreate::Unsupported)
     }
 
     pub async fn delete_object(&self, key: String) -> Result<()> {
@@ -431,6 +515,65 @@ mod tests {
             "virtual"
         );
         assert_eq!(style(aws, &format!("a{}b", "c".repeat(62)), false), "path");
+    }
+
+    #[test]
+    fn a_rejected_conditional_header_is_recognised() {
+        assert!(rejects_header(
+            400,
+            "<Error><Code>NotImplemented</Code><Header>If-None-Match</Header></Error>",
+            "if-none-match"
+        ));
+        assert!(rejects_header(501, "", "if-none-match"));
+        assert!(rejects_header(
+            400,
+            "<Error><Code>InvalidArgument</Code><Message>x-oss-forbid-overwrite</Message></Error>",
+            "x-oss-forbid-overwrite"
+        ));
+        assert!(!rejects_header(
+            400,
+            "<Error><Code>AuthorizationHeaderMalformed</Code></Error>",
+            "if-none-match"
+        ));
+        assert!(!rejects_header(403, "NotImplemented", "if-none-match"));
+        assert!(!rejects_header(412, "", "if-none-match"));
+    }
+
+    #[test]
+    fn vendor_fallbacks_need_a_recognised_vendor() {
+        assert_eq!(
+            vendor_cas_mode("AliyunOSS", "x.example.com"),
+            CAS_OSS_FORBID
+        );
+        assert_eq!(
+            vendor_cas_mode("", "bucket.oss-cn-hangzhou.aliyuncs.com"),
+            CAS_OSS_FORBID
+        );
+        assert_eq!(
+            vendor_cas_mode("tencent-cos", "x.example.com"),
+            CAS_COS_FORBID
+        );
+        assert_eq!(
+            vendor_cas_mode("", "bucket.cos.ap-guangzhou.myqcloud.com"),
+            CAS_COS_FORBID
+        );
+        assert_eq!(vendor_cas_mode("MinIO", "minio.example.com"), CAS_NONE);
+        assert_eq!(vendor_cas_mode("", "aliyuncs.com.evil.example"), CAS_NONE);
+    }
+
+    #[test]
+    fn cas_headers_cover_every_rung() {
+        assert_eq!(cas_header(CAS_IF_NONE_MATCH), Some(("if-none-match", "*")));
+        assert_eq!(
+            cas_header(CAS_OSS_FORBID),
+            Some(("x-oss-forbid-overwrite", "true"))
+        );
+        assert_eq!(
+            cas_header(CAS_COS_FORBID),
+            Some(("x-cos-forbid-overwrite", "true"))
+        );
+        assert_eq!(cas_header(CAS_NONE), None);
+        assert_eq!(cas_header(CAS_UNKNOWN), None);
     }
 
     #[test]

@@ -21,7 +21,11 @@ impl DavClient {
         self.inner.read_object(key).await
     }
 
-    pub async fn create_exclusive(&self, key: String, data: Vec<u8>) -> Result<bool> {
+    pub async fn create_exclusive(
+        &self,
+        key: String,
+        data: Vec<u8>,
+    ) -> Result<crate::api::ExclusiveCreate> {
         self.inner.create_exclusive(key, data).await
     }
 

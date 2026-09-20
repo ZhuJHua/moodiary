@@ -927,6 +927,48 @@ void main() {
       },
     );
 
+    test('别人先写 → 提交前校验拦住整份覆盖，对方的 manifest 原样保留', () async {
+      final backend = FakeRemoteBackend();
+      await seedRemote(
+        backend,
+        diaries: [buildDiary(id: 'a', modifiedMs: 100)],
+      );
+
+      backend.beforeOp = (op, key) {
+        if (op == 'write' && key == SyncKeys.diaryObjectPath('b')) {
+          backend.objects[SyncKeys.manifestPath] = foreignManifest();
+        }
+      };
+
+      await expectLater(
+        engineOn(
+          backend,
+          diaries: FakeDiaryStore([
+            buildDiary(id: 'a', modifiedMs: 100),
+            buildDiary(id: 'b', modifiedMs: 300),
+          ]),
+        ).push(),
+        throwsA(
+          isA<SyncException>().having(
+            (e) => e.kind,
+            'kind',
+            SyncErrorKind.manifestRace,
+          ),
+        ),
+      );
+
+      expect(
+        backend.manifest()!.writeToken,
+        'another-device',
+        reason: '基线已变，不得用本机快照整份覆盖对方的索引',
+      );
+      expect(
+        backend.manifest()!.entries.containsKey('d:b'),
+        isFalse,
+        reason: '对方的 manifest 不含本机新条目，说明没有被覆盖',
+      );
+    });
+
     test(
       'normal push succeeds when readback token matches (deferred deletes run)',
       () async {

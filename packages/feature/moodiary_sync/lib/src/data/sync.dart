@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 
+enum ExclusiveCreate { created, exists, unsupported }
+
 abstract class RemoteObjectStore {
   String get displayName;
 
@@ -18,7 +20,7 @@ abstract class RemoteObjectStore {
 
   Future<void> writeObjectFile(String key, String filePath);
 
-  Future<bool> tryCreateExclusive(String key, Uint8List bytes);
+  Future<ExclusiveCreate> tryCreateExclusive(String key, Uint8List bytes);
 
   Future<void> deleteObject(String key);
 

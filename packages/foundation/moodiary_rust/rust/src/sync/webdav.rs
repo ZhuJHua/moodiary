@@ -1,9 +1,13 @@
 use super::{kind_of_reqwest, kind_of_status, tagged};
+use crate::api::ExclusiveCreate;
 use anyhow::Result;
 use reqwest_dav::re_exports::reqwest::Method;
 use reqwest_dav::{Auth, ClientBuilder, Dav2xx, Depth};
 use std::collections::HashSet;
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, Ordering};
+
+const OCTET_STREAM: &str = "application/octet-stream";
 
 fn dav_status(e: &reqwest_dav::Error) -> Option<u16> {
     match e {
@@ -40,6 +44,7 @@ pub struct DavClient {
     client: reqwest_dav::Client,
     root: String,
     created_dirs: Mutex<HashSet<String>>,
+    cas_unsupported: AtomicBool,
 }
 
 impl DavClient {
@@ -55,6 +60,7 @@ impl DavClient {
             client,
             root: "moodiary".to_string(),
             created_dirs: Mutex::new(HashSet::new()),
+            cas_unsupported: AtomicBool::new(false),
         })
     }
 
@@ -157,17 +163,21 @@ impl DavClient {
                 .await
                 .map_err(|e| dav_err(e, "Failed to build request"))?,
         };
-        req.header(reqwest::header::CONTENT_LENGTH, len)
+        req.header(reqwest::header::CONTENT_TYPE, OCTET_STREAM)
+            .header(reqwest::header::CONTENT_LENGTH, len)
             .body(body)
             .send()
             .await
             .map_err(|e| req_err(e, format!("Failed to write {path}")))
     }
 
-    pub async fn create_exclusive(&self, key: String, data: Vec<u8>) -> Result<bool> {
+    pub async fn create_exclusive(&self, key: String, data: Vec<u8>) -> Result<ExclusiveCreate> {
         let path = self.full_path(&key);
         if let Some(pos) = path.rfind('/') {
             self.ensure_dir_cached(&path[..pos]).await?;
+        }
+        if self.cas_unsupported.load(Ordering::Relaxed) {
+            return Ok(ExclusiveCreate::Unsupported);
         }
         let req = self
             .client
@@ -175,18 +185,24 @@ impl DavClient {
             .await
             .map_err(|e| dav_err(e, "Failed to build request"))?;
         let resp = req
+            .header(reqwest::header::CONTENT_TYPE, OCTET_STREAM)
             .header("If-None-Match", "*")
             .body(data)
             .send()
             .await
             .map_err(|e| req_err(e, format!("Failed to create {key}")))?;
-        if resp.status().as_u16() == 412 {
-            return Ok(false);
+        match resp.status().as_u16() {
+            412 => return Ok(ExclusiveCreate::Exists),
+            400 | 405 | 501 => {
+                self.cas_unsupported.store(true, Ordering::Relaxed);
+                return Ok(ExclusiveCreate::Unsupported);
+            }
+            _ => {}
         }
         resp.dav2xx()
             .await
             .map_err(|e| dav_err(e, format!("Failed to create {key}")))?;
-        Ok(true)
+        Ok(ExclusiveCreate::Created)
     }
 
     pub async fn write_object(&self, key: String, data: Vec<u8>) -> Result<()> {

@@ -3,6 +3,7 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
+import 'api.dart';
 import 'api/cancel.dart';
 import 'api/graph_layout.dart';
 import 'api/http.dart';
@@ -226,6 +227,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   DownloadEvent dco_decode_download_event(dynamic raw);
+
+  @protected
+  ExclusiveCreate dco_decode_exclusive_create(dynamic raw);
 
   @protected
   double dco_decode_f_32(dynamic raw);
@@ -511,6 +515,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   DownloadEvent sse_decode_download_event(SseDeserializer deserializer);
+
+  @protected
+  ExclusiveCreate sse_decode_exclusive_create(SseDeserializer deserializer);
 
   @protected
   double sse_decode_f_32(SseDeserializer deserializer);
@@ -1361,6 +1368,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool cst_encode_bool(bool raw);
 
   @protected
+  int cst_encode_exclusive_create(ExclusiveCreate raw);
+
+  @protected
   double cst_encode_f_32(double raw);
 
   @protected
@@ -1608,6 +1618,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_download_event(DownloadEvent self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_exclusive_create(
+    ExclusiveCreate self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_f_32(double self, SseSerializer serializer);

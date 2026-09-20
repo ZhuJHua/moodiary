@@ -42,7 +42,11 @@ impl S3Client {
         self.inner.write_object_file(key, file_path).await
     }
 
-    pub async fn create_exclusive(&self, key: String, data: Vec<u8>) -> Result<bool> {
+    pub async fn create_exclusive(
+        &self,
+        key: String,
+        data: Vec<u8>,
+    ) -> Result<crate::api::ExclusiveCreate> {
         self.inner.create_exclusive(key, data).await
     }
 

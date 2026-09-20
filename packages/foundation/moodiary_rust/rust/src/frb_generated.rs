@@ -1744,6 +1744,17 @@ impl CstDecode<bool> for bool {
         self
     }
 }
+impl CstDecode<crate::api::ExclusiveCreate> for i32 {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::api::ExclusiveCreate {
+        match self {
+            0 => crate::api::ExclusiveCreate::Created,
+            1 => crate::api::ExclusiveCreate::Exists,
+            2 => crate::api::ExclusiveCreate::Unsupported,
+            _ => unreachable!("Invalid variant for ExclusiveCreate: {}", self),
+        }
+    }
+}
 impl CstDecode<f32> for f32 {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> f32 {
@@ -2021,6 +2032,19 @@ impl SseDecode for crate::api::http::DownloadEvent {
             received: var_received,
             total: var_total,
             done: var_done,
+        };
+    }
+}
+
+impl SseDecode for crate::api::ExclusiveCreate {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::api::ExclusiveCreate::Created,
+            1 => crate::api::ExclusiveCreate::Exists,
+            2 => crate::api::ExclusiveCreate::Unsupported,
+            _ => unreachable!("Invalid variant for ExclusiveCreate: {}", inner),
         };
     }
 }
@@ -2702,6 +2726,25 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::http::DownloadEvent>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::ExclusiveCreate {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::Created => 0.into_dart(),
+            Self::Exists => 1.into_dart(),
+            Self::Unsupported => 2.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::ExclusiveCreate {}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::ExclusiveCreate>
+    for crate::api::ExclusiveCreate
+{
+    fn into_into_dart(self) -> crate::api::ExclusiveCreate {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::graph_layout::GraphLayoutParams> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -3292,6 +3335,23 @@ impl SseEncode for crate::api::http::DownloadEvent {
         <i64>::sse_encode(self.received, serializer);
         <i64>::sse_encode(self.total, serializer);
         <bool>::sse_encode(self.done, serializer);
+    }
+}
+
+impl SseEncode for crate::api::ExclusiveCreate {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::api::ExclusiveCreate::Created => 0,
+                crate::api::ExclusiveCreate::Exists => 1,
+                crate::api::ExclusiveCreate::Unsupported => 2,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
     }
 }
 

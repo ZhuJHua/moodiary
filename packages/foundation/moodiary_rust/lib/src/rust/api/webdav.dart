@@ -3,13 +3,17 @@
 
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
+import '../api.dart';
 import '../frb_generated.dart';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DavClient>>
 abstract class DavClient implements RustOpaqueInterface {
-  Future<bool> createExclusive({required String key, required List<int> data});
+  Future<ExclusiveCreate> createExclusive({
+    required String key,
+    required List<int> data,
+  });
 
   Future<void> deleteObject({required String key});
 

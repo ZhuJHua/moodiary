@@ -602,6 +602,9 @@ class IncrementalSyncEngine {
       final manifestBytes = await (await _cipher()).encode(
         updated.withWriteToken(token).toJson(),
       );
+      if (((await _readManifest())?.writeToken ?? '') != manifest.writeToken) {
+        throw SyncException(l10n.sync.errManifestRacePush, kind: .manifestRace);
+      }
       await backend.writeObject(SyncKeys.manifestPath, manifestBytes);
       final readback = await _readManifest();
       if (readback?.writeToken != token) {
@@ -893,7 +896,7 @@ class _GatedBackend implements RemoteObjectStore {
       _gate.withResource(() => _inner.writeObjectFile(key, filePath));
 
   @override
-  Future<bool> tryCreateExclusive(String key, Uint8List bytes) =>
+  Future<ExclusiveCreate> tryCreateExclusive(String key, Uint8List bytes) =>
       _gate.withResource(() => _inner.tryCreateExclusive(key, bytes));
 
   @override
