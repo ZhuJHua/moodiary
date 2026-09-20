@@ -130,7 +130,9 @@ Future<bool> applyUserKeyChange({
     await SyncKeyManager.markPendingUpload(await configuredCloudBackendIds());
     if (backendReady) {
       try {
-        await SyncKeyManager.writeRemoteKeyfile(backend, keyfile);
+        if (!await SyncKeyManager.claimRemoteKeyfile(backend, keyfile)) {
+          throw SyncKeyConflictException(l10n.sync.errKeyConflict);
+        }
         final id = backend.persistentBackendId;
         if (id != null) {
           await SyncKeyManager.clearPendingUpload(id);

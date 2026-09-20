@@ -108,6 +108,11 @@ class SyncCipher {
     return true;
   }
 
+  static Future<bool> isCipherFile(String path) async {
+    final magicBytes = utf8.encode(magic);
+    return _startsWith(await _readHead(path, magicBytes.length), magicBytes);
+  }
+
   static bool isCipherText(Uint8List bytes) {
     final magicBytes = utf8.encode(magic);
     if (bytes.length <= magicBytes.length) return false;
