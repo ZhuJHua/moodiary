@@ -313,7 +313,7 @@ void main() {
     expect(builderGotManifest!.updatedAtMs, 42);
     expect(builderGotManifest!.entries['d:existing']!.timeMs, 12345);
     expect(builderGotPassword, applierGotPassword);
-    expect(applierGotBytes, archiveBytes);
+    expect(listEquals(applierGotBytes, archiveBytes), isTrue);
     expect(result.entryCount, 4);
     expect(result.diaryCount, 3);
     expect(result.categoryCount, 1);

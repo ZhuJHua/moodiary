@@ -78,24 +78,36 @@ void main() {
     getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
   });
 
-  setUp(() async {
-    db = MoodiaryDatabase.forTesting(
-      NativeDatabase.memory(
-        setup: (raw) => raw.execute('PRAGMA foreign_keys = ON'),
-      ),
-    );
-    repo = DiaryRepository(db);
-  });
+  MoodiaryDatabase openDb() => MoodiaryDatabase.forTesting(
+    NativeDatabase.memory(
+      setup: (raw) => raw.execute('PRAGMA foreign_keys = ON'),
+    ),
+  );
 
-  tearDown(() async {
-    await db.close();
-  });
+  void freshDatabasePerTest() {
+    setUp(() {
+      db = openDb();
+      repo = DiaryRepository(db);
+    });
+    tearDown(() => db.close());
+  }
+
+  void oneDatabaseForGroup() {
+    setUpAll(() {
+      db = openDb();
+      repo = DiaryRepository(db);
+    });
+    setUp(() => db.clearAll());
+    tearDownAll(() => db.close());
+  }
 
   Future<List<Diary>> search(String word) async => [
     for (final hit in await repo.searchDiaries(query: word)) hit.diary,
   ];
 
   group('检索', () {
+    freshDatabasePerTest();
+
     test('多词是 AND：每个词都要命中', () async {
       await repo.insertDiaries([
         makeDiary('d1', '苹果'),
@@ -220,6 +232,8 @@ void main() {
   });
 
   group('子表装配', () {
+    oneDatabaseForGroup();
+
     test('媒体三列与标签保序往返', () async {
       final d = makeDiary(
         'd1',
@@ -338,6 +352,8 @@ void main() {
   });
 
   group('删除与墓碑', () {
+    freshDatabasePerTest();
+
     test('永久删除：行硬删 + 墓碑 + 索引摘除', () async {
       await repo.insertADiary(makeDiary('d1', '苹果'));
       expect(await repo.deleteADiary('d1'), isTrue);
@@ -377,6 +393,8 @@ void main() {
   });
 
   group('双链与图谱', () {
+    oneDatabaseForGroup();
+
     test('正反链 + hasAnyLink + 自链排除', () async {
       await repo.insertDiaries([
         makeDiary('b', '目标'),
@@ -451,6 +469,8 @@ void main() {
   });
 
   group('列表与统计', () {
+    oneDatabaseForGroup();
+
     test('分页顺序与 diarySortComparator 逐字段一致（同 time 按 id 兜底）', () async {
       final t = DateTime.utc(2026, 1, 1);
       final diaries = [
@@ -513,6 +533,8 @@ void main() {
   });
 
   group('重建与修复', () {
+    freshDatabasePerTest();
+
     test('rebuildAllIndexes 幂等重灌', () async {
       await repo.insertDiaries([
         makeDiary('a', '苹果', linkTo: ['b']),
@@ -539,6 +561,9 @@ void main() {
   });
 
   test('clearAll 清空后句柄仍可用', () async {
+    db = openDb();
+    addTearDown(db.close);
+    repo = DiaryRepository(db);
     await repo.insertADiary(makeDiary('d1', '苹果'));
     await db.clearAll();
     expect(await repo.getAllDiaries(), isEmpty);

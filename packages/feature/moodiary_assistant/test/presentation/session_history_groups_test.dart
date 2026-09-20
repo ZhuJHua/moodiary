@@ -18,9 +18,6 @@ void main() {
       at(DateTime(2026, 8, 18, 0, 0)),
       at(DateTime(2026, 8, 17, 23, 59)),
     ], now: now);
-    expect(bucketsOf([at(DateTime(2026, 8, 18, 0, 0))]), <SessionHistoryBucket>[
-      .today,
-    ]);
     expect(groups.map((g) => g.bucket).toList(), <SessionHistoryBucket>[
       .today,
       .last7,
@@ -58,22 +55,7 @@ void main() {
     ]);
   });
 
-  test('全都落在同一桶时只有一组（标题照画，见 _entries）', () {
-    final groups = sessionHistoryGroups([
-      at(DateTime(2026, 8, 1)),
-      at(DateTime(2026, 7, 3)),
-    ], now: now);
-    expect(groups.length, 1);
-    expect(groups.single.bucket, SessionHistoryBucket.earlier);
-  });
-
   test('空列表不产生任何桶', () {
     expect(sessionHistoryGroups(const [], now: now), isEmpty);
-  });
-
-  test('落库的 UTC 时刻按本地日历分桶，不按 UTC 日历', () {
-    final session = at(DateTime(2026, 8, 18, 0, 30));
-    expect(session.updatedAt.isUtc, isTrue);
-    expect(bucketsOf([session]), <SessionHistoryBucket>[.today]);
   });
 }

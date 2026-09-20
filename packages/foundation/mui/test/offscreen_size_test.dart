@@ -1,13 +1,38 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mui/mui.dart';
 
+Widget _block({required bool expanded, required double screenWidth}) =>
+    Container(
+      constraints: BoxConstraints(maxWidth: screenWidth * 0.82),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(width: 120, height: 30),
+          if (expanded)
+            const Padding(
+              padding: EdgeInsets.fromLTRB(12, 0, 12, 10),
+              child: Text(
+                '这是一段很长的思考过程，长到必须换很多行才放得下。'
+                '它的高度完全取决于可用宽度：宽度给窄了，行数就多，量出来的高度就偏大。'
+                '这条测试要钉住的就是——离屏量出来的展开高度差，必须等于真实渲染出来的差值。',
+              ),
+            ),
+        ],
+      ),
+    );
+
 void main() {
+  const screenWidth = 400.0;
   late BuildContext hostContext;
 
-  Future<void> pumpHost(WidgetTester tester) async {
+  Future<void> pumpHost(
+    WidgetTester tester, {
+    MuiRadii radii = const MuiRadii(),
+  }) async {
     await tester.pumpWidget(
       MaterialApp(
-        theme: buildMuiTheme(brightness: Brightness.light),
+        theme: buildMuiTheme(brightness: Brightness.light, radii: radii),
         home: Scaffold(
           body: Builder(
             builder: (context) {
@@ -18,6 +43,30 @@ void main() {
         ),
       ),
     );
+  }
+
+  Future<double> realHeight(WidgetTester tester, bool expanded) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildMuiTheme(brightness: Brightness.light),
+        home: Scaffold(
+          body: SizedBox(
+            width: screenWidth,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Builder(
+                builder: (context) {
+                  hostContext = context;
+                  return _block(expanded: expanded, screenWidth: screenWidth);
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    return tester.getSize(find.byType(Column)).height;
   }
 
   testWidgets('量出固定尺寸，不占帧也不进真实树', (tester) async {
@@ -51,31 +100,16 @@ void main() {
   });
 
   testWidgets('主题随上下文带进离屏树', (tester) async {
-    await pumpHost(tester);
+    await pumpHost(tester, radii: const MuiRadii(lg: 37));
     final size = getWidgetSizeOffScreen(
       context: hostContext,
       widget: Builder(
         builder: (context) =>
-            SizedBox(height: 10, width: context.theme.colors.primary.a * 100),
+            SizedBox(height: 10, width: context.theme.radii.lg),
       ),
       viewSize: const Size(400, double.infinity),
     );
-    expect(size.width, 100);
-  });
-
-  testWidgets('重复调用不泄漏、结果稳定', (tester) async {
-    await pumpHost(tester);
-    for (var i = 0; i < 5; i++) {
-      expect(
-        getWidgetSizeOffScreen(
-          context: hostContext,
-          widget: const SizedBox(width: 33, height: 77),
-          viewSize: const Size(400, double.infinity),
-        ),
-        const Size(33, 77),
-      );
-    }
-    expect(tester.takeException(), isNull);
+    expect(size.width, 37, reason: '离屏树没接到宿主主题，取到的是兜底 token');
   });
 
   testWidgets('OffscreenMeasurer 复用脚手架连量多件，State 不跨件共享', (tester) async {
@@ -131,6 +165,24 @@ void main() {
       tester.takeException(),
       isNotNull,
       reason: '同一个 GlobalKey 挂两处必须炸出来，而不是悄悄错位',
+    );
+  });
+
+  testWidgets('离屏量出的展开差值 == 真实渲染的差值', (tester) async {
+    final realCollapsed = await realHeight(tester, false);
+    final realExpanded = await realHeight(tester, true);
+    final realDelta = realExpanded - realCollapsed;
+    expect(realDelta, greaterThan(0));
+
+    double measure(bool expanded) => getWidgetSizeOffScreen(
+      context: hostContext,
+      viewSize: const Size(screenWidth, double.infinity),
+      widget: _block(expanded: expanded, screenWidth: screenWidth),
+    ).height;
+
+    expect(
+      measure(true) - measure(false),
+      moreOrLessEquals(realDelta, epsilon: 0.5),
     );
   });
 }

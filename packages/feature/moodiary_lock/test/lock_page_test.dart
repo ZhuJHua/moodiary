@@ -99,9 +99,9 @@ void main() {
     await enterPin(t, '2222');
     expect(verifyCalls, 5, reason: '冷却期输入必须被挡住');
 
-    for (var s = 0; s < 30; s++) {
-      await t.pump(const Duration(seconds: 1));
-    }
+    await t.pump(
+      const Duration(seconds: 30) + const Duration(milliseconds: 20),
+    );
     await t.pump();
     expect(find.textContaining('尝试次数过多'), findsNothing);
 

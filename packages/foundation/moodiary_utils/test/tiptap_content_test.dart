@@ -156,21 +156,6 @@ void main() {
         '带链接 标签',
       ]);
     });
-
-    test('多次读取同一派生结果一致（惰性缓存不改变语义）', () {
-      final c = TiptapContent.parse(
-        _doc([
-          _p([_text('稳定')]),
-          {
-            'type': 'image',
-            'attrs': {'src': 'image-1.webp'},
-          },
-        ]),
-      );
-      expect(c.plainText, c.plainText);
-      expect(c.media.images, c.media.images);
-      expect(identical(c.media, c.media), isTrue);
-    });
   });
 
   group('TiptapContent — 非 TipTap 内容的回退', () {

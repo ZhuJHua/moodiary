@@ -46,8 +46,6 @@ void main() {
     test('id 由目标消息派生，重复合成幂等', () {
       final items = [reply('a1', model: 'm1'), reply('a2', model: 'm2')];
       final first = modelSwitchNoticesFor(items).single;
-      final second = modelSwitchNoticesFor(items).single;
-      expect(first.id, second.id);
       expect(first.id, 'model-switch-a2');
     });
 

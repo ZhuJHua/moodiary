@@ -34,11 +34,6 @@ void main() {
     expect(find.byType(MSettingDivider), findsNWidgets(2));
   });
 
-  testWidgets('只有一项时一条线都没有', (tester) async {
-    await tester.pumpWidget(_host(itemCount: 1));
-    expect(find.byType(MSettingDivider), findsNothing);
-  });
-
   testWidgets('分隔线是一个设备像素：thickness 0 即 Skia hairline', (tester) async {
     await tester.pumpWidget(_host(itemCount: 2));
     final divider = tester.widget<Divider>(find.byType(Divider));

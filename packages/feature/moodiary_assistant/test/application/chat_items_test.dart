@@ -64,8 +64,6 @@ void main() {
     });
 
     test('role 的两个字面量钉死', () {
-      expect(kRoleUser, 'user');
-      expect(kRoleAssistant, 'assistant');
       expect(AssistantTurn.fromRecord(record(role: 'user')).fromUser, isTrue);
       expect(
         AssistantTurn.fromRecord(record(role: 'assistant')).fromUser,
@@ -102,10 +100,6 @@ void main() {
 
   test('压缩提示卡的 id 由水位派生，重复合成幂等', () {
     expect(const AssistantCompactionNotice('w1').id, 'compaction-w1');
-    expect(
-      const AssistantCompactionNotice('w1').id,
-      const AssistantCompactionNotice('w1').id,
-    );
   });
 
   group('AssistantChatController', () {

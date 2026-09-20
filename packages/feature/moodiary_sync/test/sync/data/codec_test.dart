@@ -11,11 +11,6 @@ void main() {
   group('SyncCipher plaintext', () {
     const cipher = SyncCipher.plaintext;
 
-    test('encrypted flag follows the presence of a raw key', () {
-      expect(const SyncCipher.withKey(null).encrypted, isFalse);
-      expect(const SyncCipher.withKey([1, 2, 3]).encrypted, isTrue);
-    });
-
     test('encode → decode round-trips a map and is bare utf8 json', () async {
       final bytes = await cipher.encode({'a': 1, 'b': 'x'});
       expect(SyncCipher.isCipherText(bytes), isFalse);

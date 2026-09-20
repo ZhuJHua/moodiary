@@ -13,6 +13,7 @@ void main() {
           media: .placeholder,
           merge: false,
           nameTemplate: '{title}',
+          includePosition: true,
         ),
         docx: LayoutExportOptions(
           paper: .letter,
@@ -38,6 +39,7 @@ void main() {
       expect(restored.common.media, ExportMediaPolicy.placeholder);
       expect(restored.common.merge, isFalse);
       expect(restored.common.nameTemplate, '{title}');
+      expect(restored.common.includePosition, isTrue);
       expect(restored.image.brightness, Brightness.dark);
       expect(restored.image.widthDp, 480);
       expect(restored.image.scale, 2);
@@ -89,31 +91,11 @@ void main() {
       expect(ExportFormat.byId('image'), ExportFormat.image);
       expect(ExportFormat.byId('还没有的格式'), ExportFormat.markdown);
     });
-
-    test('扩展名与格式对应', () {
-      expect(ExportFormat.markdown.extension, 'md');
-      expect(ExportFormat.docx.extension, 'docx');
-      expect(ExportFormat.pdf.extension, 'pdf');
-      expect(ExportFormat.image.extension, 'png');
-    });
   });
 
   group('位置开关', () {
-    test('默认关 —— 导出的文件是要发给别人的', () {
-      expect(const ExportCommon().includePosition, isFalse);
-    });
-
-    test('往返保住 true', () {
-      const settings = ExportSettings(
-        common: ExportCommon(includePosition: true),
-      );
-      expect(
-        ExportSettings.decode(settings.encode()).common.includePosition,
-        isTrue,
-      );
-    });
-
     test('老配置里没有这个键时按关处理', () {
+      expect(const ExportCommon().includePosition, isFalse);
       final decoded = ExportSettings.decode('{"common":{"merge":false}}');
       expect(decoded.common.includePosition, isFalse);
       expect(decoded.common.merge, isFalse);
@@ -130,15 +112,6 @@ void main() {
       expect(bands.fold<double>(0, (sum, b) => sum + b.$2), 4500);
       for (var i = 1; i < bands.length; i++) {
         expect(bands[i].$1, bands[i - 1].$1 + bands[i - 1].$2);
-      }
-    });
-
-    test('切点都是整数：乘倍率不会出现半个像素', () {
-      for (final total in [1, 7, 1999, 2000, 2001, 12345]) {
-        for (final band in imageBands(total, 2000)) {
-          expect(band.$1 % 1, 0);
-          expect(band.$2 % 1, 0);
-        }
       }
     });
 

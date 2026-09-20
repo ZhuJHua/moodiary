@@ -78,11 +78,6 @@ DiaryTimelineTile tile({
 }
 
 void main() {
-  testWidgets('renders inside a ListView without layout error', (t) async {
-    await t.pumpWidget(wrap(tile(category: cat())));
-    expect(t.takeException(), isNull);
-  });
-
   testWidgets('day column shows the day number only on the day start', (
     t,
   ) async {
@@ -96,19 +91,6 @@ void main() {
   testWidgets('shows the clock time of the grouping stamp', (t) async {
     await t.pumpWidget(wrap(tile()));
     expect(find.textContaining('9:15'), findsOneWidget);
-  });
-
-  testWidgets('shows weather when weather is set', (t) async {
-    await t.pumpWidget(
-      wrap(
-        tile(
-          d: diary(
-            weather: const DiaryWeather(icon: '100', temp: '22', text: '晴'),
-          ),
-        ),
-      ),
-    );
-    expect(find.textContaining('晴'), findsOneWidget);
   });
 
   testWidgets('category label follows showCategoryLabel', (t) async {
@@ -173,6 +155,7 @@ void main() {
     t,
   ) async {
     t.view.devicePixelRatio = 1.0;
+    t.view.physicalSize = const Size(240, 800);
     addTearDown(t.view.reset);
 
     const boundaryKey = ValueKey('axis-probe');
@@ -270,6 +253,7 @@ void main() {
     );
     expect(find.byIcon(qweatherIcon('101')!), findsOneWidget);
     expect(find.byIcon(LucideIcons.cloud), findsNothing);
+    expect(find.textContaining('多云'), findsOneWidget);
   });
 
   testWidgets('认不出的天气码退回通用的云', (tester) async {

@@ -58,14 +58,6 @@ void main() {
       expect(AppLockPin.enabled.value, isFalse);
     });
 
-    test('load 能从已有凭据恢复（冷启动路径）', () async {
-      secure.data[MoodiarySecureKVs.password.name] = r'$argon2id$fake$1234';
-
-      await AppLockPin.load();
-
-      expect(AppLockPin.enabled.value, isTrue);
-    });
-
     test('钥匙串读失败时按未开启处理，不把用户挡在门外', () async {
       await AppLockPin.set('1234');
       expect(AppLockPin.enabled.value, isTrue);

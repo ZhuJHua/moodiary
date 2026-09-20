@@ -431,7 +431,7 @@ setUpSyncEnv() async {
   final secure = MemorySecureKVStorage();
   getIt.registerSingleton<IKVStorage>(kv);
   getIt.registerSingleton<ISecureKVStorage>(secure);
-  final logger = await SyncLogger.create();
+  final logger = SyncLogger.memory();
   getIt.registerSingleton<SyncLogger>(logger);
   getIt.registerLazySingleton<SecureOptions>(
     () => SecureOptions(.webDavOption),
@@ -457,12 +457,14 @@ setUpSyncEnv() async {
   getIt.registerSingleton<SyncCancellation>(SyncCancellation());
   MoodiaryKVs.syncDeviceId.set('test-device');
   RemoteLease.resetCasProbeCache();
+  RemoteLease.readbackSettleDelay = Duration.zero;
   SyncKeyManager.resetForTest();
   return (kv: kv, secure: secure, logger: logger);
 }
 
 Future<void> tearDownSyncEnv() async {
   RemoteLease.resetCasProbeCache();
+  RemoteLease.readbackSettleDelay = null;
   SyncKeyManager.resetForTest();
   await getIt.reset();
 }

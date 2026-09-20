@@ -49,12 +49,15 @@ void main() {
     await tester.pumpWidget(host());
     await open(tester);
 
+    await pick(tester, '信息流');
     await pick(tester, '最早在前');
     expect(storedSort(), isNull, reason: '只是暂存，还没写 KV');
+    expect(kv.data[MoodiaryKVs.homeViewMode.name], isNull);
 
     await tester.tap(find.text('确认'));
     await tester.pumpAndSettle();
     expect(storedSort(), DiarySort.timeAsc.number);
+    expect(kv.data[MoodiaryKVs.homeViewMode.name], ViewModeType.feed.number);
   });
 
   testWidgets('取消是真的取消', (tester) async {
@@ -67,18 +70,6 @@ void main() {
 
     expect(storedSort(), isNull);
     expect(find.text('最早在前'), findsNothing, reason: '弹窗已关');
-  });
-
-  testWidgets('视图模式同样是暂存，确定才落盘', (tester) async {
-    await tester.pumpWidget(host());
-    await open(tester);
-
-    await pick(tester, '信息流');
-    expect(kv.data[MoodiaryKVs.homeViewMode.name], isNull);
-
-    await tester.tap(find.text('确认'));
-    await tester.pumpAndSettle();
-    expect(kv.data[MoodiaryKVs.homeViewMode.name], ViewModeType.feed.number);
   });
 
   testWidgets('打开时归一旧组合：时间线 + 最近修改在前 → 最新在前', (tester) async {

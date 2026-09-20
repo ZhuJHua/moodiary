@@ -8,21 +8,21 @@
 
 ```
 SyncController (Riverpod)        UI 状态机 idle → syncing → success/error
-AutoSyncWatcher                  单开关 autoSync：变更去抖 5s 后 push + 定时轮询 syncAll（间隔可配，默认 30s）
+AutoSyncWatcher                  单开关 autoSync：变更去抖 5s 后 push + 定时轮询 sync（间隔可配，默认 30s）
                                  轮询先 HEAD manifest 做空转短路（指纹缓存 + 本地待推标记，
                                  未变则跳过整套租约+同步；>10 周期强制全量兜底秒级粒度）；
                                  云 pull 落库事件带 fromSync，不标脏不回声推送（归档/局域网除外）
         │
 IRemoteSyncBackend               后端抽象（webdav / s3，DI 单注册，可插拔）
-        │  pushAll / pullAll / syncAll
+        │  readObject / writeObject / deleteObject / statObject
 IncrementalSyncEngine            增量引擎（按操作构造）
-        │  ├─ _lock (synchronized)        进程内互斥：push/pull/re-cipher 同时只跑一个
+        │  ├─ runSyncExclusive             进程内互斥：push/pull/re-cipher/归档 同时只跑一个
         │  ├─ RemoteLease (sync.lock)     跨设备互斥：租约 + TTL + 续租 + deviceId 接管
         │  ├─ _GatedBackend (Pool)        网络请求并发上限（KV syncConcurrency，默认 8）
         │  ├─ _mediaGate (Pool)           媒体「读+加解密+传输」流水线并发上限（限内存）
         │  └─ SyncCipher                  AES-256-GCM，持有原始 DEK；信封加密见 SyncKeyManager
         │
-SyncManifest (v4)                远端清单：结构化条目 + 媒体清单 + 毫秒时间戳
+SyncManifest (v2)                远端清单：结构化条目 + 媒体清单 + 毫秒时间戳
 SyncKeyManager / keys.json       信封加密：随机 32B DEK 加密全部对象（只存本机
                                  SecureKV）；用户密码 + 随机盐经 Argon2id 派生 KEK，
                                  KEK 只用来包 DEK，包好的信封存远端明文 keys.json
@@ -38,12 +38,13 @@ SyncLogger                       事件流（UI 实时）+ 按天 jsonl 滚动�
 ```
 
 **远端布局**：`manifest.json` + `sync.lock` + `keys.json`（加密开启时）+
-`diary/<id>.json` + `category/<id>.json` + `media/<type>/<filename>`。
+`diary/<id>.json` + `category/<id>.json` + `place/<id>.json` +
+`mediainfo/<type>/<filename>.json` + `media/<type>/<filename>`。
 
 **同步流程**（`sync()` = 同一临界区内先 pull 后 push；pull 零落库零失败时把
 manifest 快照直接复用给 push，空转热路径少一次 GET+解密——有实际变更仍重读，
 不放大「读取→写回」基线窗口）：
-- **pull**：读 manifest → 条目级 `_runPooled` 并发；每条按毫秒时间戳 LWW，
+- **pull**：读 manifest → 条目级 `runPooled` 并发；每条按毫秒时间戳 LWW，
   写入本地前**重读**当前版本做最终比较（防长 pull 期间用户编辑被覆盖）；
   tombstone 硬删本地行 + 落墓碑行（媒体连删）；下载日记后连带下载缺失媒体；
   对 LWW 跳过的条目也补拉缺失媒体（媒体下载失败可在后续 pull 自愈）。
@@ -67,17 +68,17 @@ manifest 快照直接复用给 push，空转热路径少一次 GET+解密——�
    不静默当空清单 / 不抛裸 TypeError。
 2. **LWW 全程比毫秒整数**：`ManifestEntry.timeMs` 是纯 int；引擎所有比较
    两侧都取 `lastModified.millisecondsSinceEpoch`。**禁止**改回 DateTime
-   `isAfter` 对象比较 —— 本地 lastModified（Isar 按微秒存）的微秒尾数会让
+   `isAfter` 对象比较 —— 本地 lastModified（SQLite 按微秒存）的微秒尾数会让
    「本地 > 远端」恒成立、每次 push 全量重传（有回归测试钉住）。
    **删除路径同样走 LWW（日记与分类都要）**：push tombstone 前若远端仍是普通条目
    且 `remoteEntry.timeMs >= 本地删除时间` → 跳过删除（不标记 pushed / 不安排硬删）。
    旧删除不得抹掉远端更新内容（多半来自别的设备），与普通更新路径对称；
    下次 pull 会按 LWW 把更新的远端版本拉回、本地复活（日记 / 分类各有回归测试钉住）。
-   对称地，**pull 下载写库失败必须计入 `failed`**（日记写抛异常被 catch；分类写
-   经仓库映射成 `false`，须显式 `else failed++`）—— 否则谎报成功、错误推进 lastSyncTime。
-3. **manifest v4 版本守卫**：`version != 4` 一律抛 `SyncException`（含更高
-   版本 —— 静默丢条目会诱发 manifest 重建式数据丢失）；单条损坏的 entry
-   只丢弃该条。开发期无历史兼容负担，格式变更直接改、不留兼容路径。
+   对称地，**pull 下载写库失败必须计入 `failed`**（各条目写入抛出的异常由条目级
+   catch 统一 `failed++`）—— 否则谎报成功、错误推进 lastSyncTime。
+3. **manifest 版本守卫**：`version` 非 2（当前）或 1（2.8.0 遗留，读入后按 v2
+   写回）一律抛 `SyncException`（含更高版本 —— 静默丢条目会诱发 manifest
+   重建式数据丢失）；单条损坏的 entry 只丢弃该条。
 4. **媒体清单只记确认存在的引用**：`ManifestEntry.media` 来自
    `_pushDiaryMedia` 的返回值（集合命中 / stat 命中 / 上传成功）；本地缺失
    而跳过的引用**不得**写入，否则谎报存在、该文件永远失去补传机会。
@@ -126,7 +127,7 @@ manifest 快照直接复用给 push，空转热路径少一次 GET+解密——�
 - **pull 删除 vs 并发编辑的残余竞态**：长 pull 删除某日记时，若用户恰在
   `_deleteLocalMedia`（写 tombstone 之后）期间提交了更新，编辑后的活跃记录会
   存活、但其中沿用旧文件名的媒体可能已被删 → 破图。彻底修复需 repo 提供
-  按 `lastModified` 的 compare-and-swap 写入（当前 Isar `put` 无此语义）。
+  按 `lastModified` 的 compare-and-swap 写入（当前仓储的 upsert 无此语义）。
   已通过「先写记录后删媒体 + 紧邻重读」把窗口压到最小。
 
 ## 四、开放问题 / 待办
@@ -144,13 +145,13 @@ manifest 快照直接复用给 push，空转热路径少一次 GET+解密——�
 
 ## 五、测试
 
-测试镜像 `lib/` 结构放在 `test/feature/sync/`。引擎通过端口（`sync_stores.dart`
-的 `SyncDiaryStore`/`SyncCategoryStore`/`SyncTombstoneStore`/`SyncMediaFiles`）+ 可注入 cipher/logger/
-concurrency 解耦，单测全用内存假实现（`sync_test_harness.dart`），不碰 Isar /
-文件系统 / Rust / 网络，确定性运行。生产实现只是转发到 repository / FileUtil，
+测试镜像 `lib/` 结构放在 `test/sync/`。引擎通过端口（`sync_stores.dart`
+的 `SyncDiaryStore`/`SyncCategoryStore`/`SyncPlaceStore`/`SyncMediaInfoStore`/`SyncTombstoneStore`/`SyncMediaFiles`）+ 可注入 cipher/logger/
+concurrency 解耦，单测全用内存假实现（`sync_test_harness.dart`），不碰数据库 /
+文件系统 / Rust / 网络，确定性运行。生产实现只是转发到 repository / `package:file`，
 行为不变。
 
-- `data/model/manifest_test.dart`：v4 序列化往返、版本守卫（旧/新/缺失均拒绝）、
+- `data/model/manifest_test.dart`：v2 序列化往返、版本守卫（v1 接受，更旧/更新/缺失拒绝）、
   损坏条目丢弃、媒体并集排除 tombstone、`copyForUpdate` 隔离、**毫秒 int LWW 回归**。
 - `data/remote_lease_test.dart`：租约 payload 往返、损坏容错、过期判定边界。
 - `data/remote_lease_protect_test.dart`（fake_async）：抢占→执行→释放、接管本机
@@ -166,7 +167,7 @@ concurrency 解耦，单测全用内存假实现（`sync_test_harness.dart`）�
   删除先写墓碑后删媒体、过期删除不覆盖更新远端、**并发 manifest 覆盖→写后回读校验
   中止且墓碑行零破坏**）。
 - `data/codec_test.dart`（明文路径）、
-  `data/sync_registry_test.dart`（多后端 configured 集合 / 切换重注册）、
+  `data/sync_provider_scope_test.dart`（多后端 configured 集合 / 切换重注册）、
   `data/sync_stores_test.dart`（用 `package:file` 的 `MemoryFileSystem` 测真正的
   `DiskSyncMediaFiles`）、`data/sync_test.dart`、`data/model/sync_provider_test.dart`、
   `data/model/sync_event_test.dart`。

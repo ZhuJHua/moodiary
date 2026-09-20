@@ -25,7 +25,7 @@
 - **Export, import and share**: export to Markdown, Word, PDF or a long image, and import from a Markdown zip or a local backup.
 - **Backup and sync**: WebDAV, S3 / MinIO and LAN sync, with optional end-to-end encryption.
 - **Weather and places**: pick or fetch the weather, save places and reference them from entries, and view your footprints on a map.
-- **Assistant**: connect any OpenAI- or Anthropic-compatible provider for chat, diary tools and mood suggestions.
+- **Assistant**: connect any OpenAI- or Anthropic-compatible provider for chat and diary tools.
 
 ## 🚀 Getting started
 

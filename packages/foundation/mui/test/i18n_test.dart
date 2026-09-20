@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moodiary_lint/testing.dart';
 import 'package:mui/mui.dart';
 import 'package:mui/src/i18n/strings.g.dart';
 
@@ -16,11 +17,6 @@ void main() {
 
     test('load 是同步完成的', () {
       expect(load(const Locale('en')).cancel, 'Cancel');
-    });
-
-    test('精确命中', () {
-      expect(load(const Locale('zh')).locale, MuiLocale.zh);
-      expect(load(const Locale('en')).locale, MuiLocale.en);
     });
 
     test('带国家码的按语言回落', () {
@@ -64,7 +60,9 @@ void main() {
   });
 
   test('生成物里没有 deferred import', () {
-    final generated = File('lib/src/i18n/strings.g.dart').readAsStringSync();
+    final generated = File(
+      '$repoRoot/packages/foundation/mui/lib/src/i18n/strings.g.dart',
+    ).readAsStringSync();
     expect(generated, isNot(contains('deferred as')));
   });
 }

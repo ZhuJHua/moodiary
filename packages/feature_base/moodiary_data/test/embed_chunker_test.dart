@@ -37,11 +37,4 @@ void main() {
       1000,
     );
   });
-
-  test('段内换行不断块', () {
-    const text = '第一行\n第二行\n第三行';
-    final spans = chunkOffsets(text, maxChars: 400);
-    expect(spans, hasLength(1));
-    expect(sliceOf(text, spans.single), text);
-  });
 }

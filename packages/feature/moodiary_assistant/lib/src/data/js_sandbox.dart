@@ -33,10 +33,12 @@ abstract final class JsSandbox {
 
   static const int maxOutputChars = 4000;
 
-  static Future<JsOutcome> run(String code) =>
-      Isolate.run(() => _run(code), debugName: 'JsSandbox');
+  static Future<JsOutcome> run(
+    String code, {
+    int timeoutMs = JsSandbox.timeoutMs,
+  }) => Isolate.run(() => _run(code, timeoutMs), debugName: 'JsSandbox');
 
-  static JsOutcome _run(String code) {
+  static JsOutcome _run(String code, int timeoutMs) {
     final runtime = QuickJsRuntime2(
       stackSize: stackSizeBytes,
       timeout: timeoutMs,

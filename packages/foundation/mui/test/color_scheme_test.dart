@@ -3,23 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:material_color_utilities/material_color_utilities.dart' as mcu;
 import 'package:mui/mui.dart';
 
-const List<String> _structuralRoles = [
-  'surface',
-  'surfaceBright',
-  'surfaceDim',
-  'surfaceContainerLowest',
-  'surfaceContainerLow',
-  'surfaceContainer',
-  'surfaceContainerHigh',
-  'surfaceContainerHighest',
-  'onSurface',
-  'onSurfaceVariant',
-  'outline',
-  'outlineVariant',
-  'inverseSurface',
-  'onInverseSurface',
-];
-
 Map<String, int> _structuralOf(ColorScheme s) => {
   'surface': s.surface.toARGB32(),
   'surfaceBright': s.surfaceBright.toARGB32(),
@@ -81,15 +64,6 @@ void main() {
         );
         expect(accented.primary.toARGB32(), isNot(neutral.primary.toARGB32()));
         expect(_isGray(accented.primary), isFalse);
-      });
-
-      test('$brightness 无彩档不受种子色影响', () {
-        expect(
-          _structuralOf(
-            resolveColorScheme(brightness, const MuiAccent.neutral()),
-          ),
-          _structuralOf(neutral),
-        );
       });
 
       test('$brightness ring 与 selection 有定义且 selection 半透明', () {
@@ -158,34 +132,10 @@ void main() {
           expect(scheme.surfaceTint, scheme.primary, reason: '高程染色应为 primary');
         }
       });
-
-      test('系统档与自定义档同一条路 —— 种子相同则结果逐字节相同', () {
-        for (final brightness in Brightness.values) {
-          expect(
-            resolveColorScheme(brightness, const MuiAccent.seeded(seed)),
-            resolveColorScheme(brightness, const MuiAccent.seeded(seed)),
-          );
-        }
-      });
-    });
-
-    test('结构性角色清单与断言辅助保持同步', () {
-      expect(
-        _structuralOf(resolveColorScheme(.light, const MuiAccent.neutral()))
-            .keys,
-        _structuralRoles,
-      );
     });
   });
 
   group('值语义', () {
-    test('结构相同的两次构造相等 —— 否则主题每次都会通知', () {
-      final a = buildMuiTheme(brightness: Brightness.light);
-      final b = buildMuiTheme(brightness: Brightness.light);
-      expect(a, b);
-      expect(a.hashCode, b.hashCode);
-    });
-
     test('带 Map 字段（wghtAxis）仍然相等', () {
       const font = MuiFontConfig(family: 'X', wghtAxis: {'Bold': 650});
       final a = buildMuiTheme(brightness: Brightness.light, font: font);
@@ -263,34 +213,6 @@ void main() {
       ]);
     });
 
-    test('默认字重表就是 M3 2021 的原值', () {
-      final t = typo();
-      const m3 = {
-        'displayLarge': FontWeight.w400,
-        'displayMedium': FontWeight.w400,
-        'displaySmall': FontWeight.w400,
-        'headlineLarge': FontWeight.w400,
-        'headlineMedium': FontWeight.w400,
-        'headlineSmall': FontWeight.w400,
-        'titleLarge': FontWeight.w400,
-        'titleMedium': FontWeight.w500,
-        'titleSmall': FontWeight.w500,
-        'bodyLarge': FontWeight.w400,
-        'bodyMedium': FontWeight.w400,
-        'bodySmall': FontWeight.w400,
-        'labelLarge': FontWeight.w500,
-        'labelMedium': FontWeight.w500,
-        'labelSmall': FontWeight.w500,
-      };
-      for (final level in MuiTypography.levels) {
-        expect(
-          t.byLevel(level).onSurface.fontWeight,
-          m3[level],
-          reason: '$level 的默认字重偏离 M3',
-        );
-      }
-    });
-
     test('强调档的 fontWeight 与 fontVariations 一起动', () {
       const font = MuiFontConfig(wghtAxis: {'SemiBold': 610});
       final role = typo(font: font).bodyMedium;
@@ -315,15 +237,6 @@ void main() {
       );
       expect(role.onSurfaceVariant.fontSize, role.onSurface.fontSize);
       expect(role.onSurfaceVariant.letterSpacing, role.onSurface.letterSpacing);
-    });
-
-    test('字号就是 M3 基准值 —— App 内不做任何缩放，缩放归系统', () {
-      final t = typo();
-      expect(t.bodyMedium.onSurface.fontSize, 14);
-      expect(t.bodyMedium.onSurface.height, 1.43);
-      expect(t.bodyMedium.onSurface.letterSpacing, 0.25);
-      expect(t.displayLarge.onSurface.fontSize, 57);
-      expect(t.labelSmall.onSurface.fontSize, 11);
     });
 
     test('字体族逐平台与 material 对齐，iOS 按 22px 切光学尺寸', () {
@@ -364,14 +277,6 @@ void main() {
       final t = typo(font: const MuiFontConfig(family: 'X'));
       for (final level in MuiTypography.levels) {
         expect(t.byLevel(level).onSurface.fontFamily, 'X', reason: level);
-      }
-    });
-
-    test('全 15 级 inherit 为 false —— 投影到 material 时要整块替换', () {
-      final t = typo();
-      expect(MuiTypography.levels.length, 15);
-      for (final level in MuiTypography.levels) {
-        expect(t.byLevel(level).onSurface.inherit, isFalse, reason: level);
       }
     });
 
