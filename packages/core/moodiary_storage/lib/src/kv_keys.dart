@@ -93,8 +93,6 @@ enum MoodiaryKVs<T extends Object> {
 
   modelDownloadMirror<bool>(defaultValue: true),
 
-  moodLlmModelId<String>(defaultValue: ''),
-
   getWeather<bool>(defaultValue: false),
 
   autoWeather<bool>(defaultValue: false),
