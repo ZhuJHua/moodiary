@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:meta/meta.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
@@ -164,10 +165,10 @@ class IncrementalSyncEngine {
 
   Future<SyncReport> _pull() async => (await _pullCore()).$1;
 
-  Future<(SyncReport, SyncManifest?)> _pullCore() async {
+  Future<(SyncReport, SyncManifest?, Uint8List?)> _pullCore() async {
     await _uploadPendingKeyfile();
     final sw = Stopwatch()..start();
-    final manifest = await _readManifest();
+    final (manifest, manifestBytes) = await _readManifestBytes();
     if (manifest == null) {
       sw.stop();
       _logger.info(
@@ -189,6 +190,7 @@ class IncrementalSyncEngine {
       return (
         SyncReport(elapsed: sw.elapsed, warning: l10n.sync.warnRemoteEmpty),
         null,
+        null,
       );
     }
     _logger.info(.manifestRead, payload: {'entries': manifest.entries.length});
@@ -209,7 +211,7 @@ class IncrementalSyncEngine {
       cancellation: _cancellation,
       trigger: _trigger,
     ).apply(manifest);
-    return (report, manifest);
+    return (report, manifest, manifestBytes);
   }
 
   Future<SyncReport> push() async {
@@ -221,7 +223,7 @@ class IncrementalSyncEngine {
   Future<SyncReport> sync() async {
     final report = await _exclusive(() async {
       final sw = Stopwatch()..start();
-      final (pulled, manifest) = await _pullCore();
+      final (pulled, manifest, manifestBytes) = await _pullCore();
       if (pulled.cancelled) {
         sw.stop();
         return SyncReport(
@@ -236,7 +238,10 @@ class IncrementalSyncEngine {
           manifest != null &&
           !pulled.pulled.hasEntryChanges &&
           pulled.failed == 0;
-      final pushed = await _push(preloaded: reuse ? manifest : null);
+      final pushed = await _push(
+        preloaded: reuse ? manifest : null,
+        preloadedBytes: reuse ? manifestBytes : null,
+      );
       sw.stop();
       final warnings = [
         pulled.warning,
@@ -266,7 +271,10 @@ class IncrementalSyncEngine {
     return '$id:${DateTime.now().microsecondsSinceEpoch}:${_writeSeq++}';
   }
 
-  Future<SyncReport> _push({SyncManifest? preloaded}) async {
+  Future<SyncReport> _push({
+    SyncManifest? preloaded,
+    Uint8List? preloadedBytes,
+  }) async {
     await _uploadPendingKeyfile();
     _distrustRemoteMedia = SyncKeyManager.hasForceMediaReupload(
       backend.persistentBackendId,
@@ -278,9 +286,10 @@ class IncrementalSyncEngine {
       payload: {..._backendPayload(), 'direction': 'push'},
     );
     SyncManifest? read = preloaded;
+    var baseBytes = preloadedBytes;
     var virginRemote = false;
     if (read == null) {
-      read = await _readManifest();
+      (read, baseBytes) = await _readManifestBytes();
       virginRemote = read == null;
     }
     final manifest = read ?? .empty();
@@ -602,6 +611,12 @@ class IncrementalSyncEngine {
       final manifestBytes = await (await _cipher()).encode(
         updated.withWriteToken(token).toJson(),
       );
+      if (!listEquals(
+        await backend.readObject(SyncKeys.manifestPath),
+        baseBytes,
+      )) {
+        throw SyncException(l10n.sync.errManifestRacePush, kind: .manifestRace);
+      }
       await backend.writeObject(SyncKeys.manifestPath, manifestBytes);
       final readback = await _readManifest();
       if (readback?.writeToken != token) {
@@ -711,9 +726,18 @@ class IncrementalSyncEngine {
     }
   }
 
+  Future<(SyncManifest?, Uint8List?)> _readManifestBytes() async {
+    final bytes = await backend.readObject(SyncKeys.manifestPath);
+    return (bytes == null ? null : await _decodeManifest(bytes), bytes);
+  }
+
   Future<SyncManifest?> _readManifest() async {
     final bytes = await backend.readObject(SyncKeys.manifestPath);
     if (bytes == null) return null;
+    return _decodeManifest(bytes);
+  }
+
+  Future<SyncManifest> _decodeManifest(Uint8List bytes) async {
     final decoded = await (await _cipher()).decode(bytes);
     if (decoded is! Map<String, dynamic>) {
       throw SyncException(l10n.sync.errManifestCorrupt, kind: .manifestCorrupt);
@@ -893,7 +917,7 @@ class _GatedBackend implements RemoteObjectStore {
       _gate.withResource(() => _inner.writeObjectFile(key, filePath));
 
   @override
-  Future<bool> tryCreateExclusive(String key, Uint8List bytes) =>
+  Future<ExclusiveCreate> tryCreateExclusive(String key, Uint8List bytes) =>
       _gate.withResource(() => _inner.tryCreateExclusive(key, bytes));
 
   @override

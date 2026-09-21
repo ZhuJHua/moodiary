@@ -138,10 +138,15 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
   }
 
   @override
-  Future<bool> tryCreateExclusive(String key, Uint8List bytes) async {
+  Future<ExclusiveCreate> tryCreateExclusive(String key, Uint8List bytes) async {
     try {
       final client = await _client();
-      return await client.createExclusive(key: key, data: bytes);
+      final result = await client.createExclusive(key: key, data: bytes);
+      return switch (result) {
+        rust.ExclusiveCreate.created => .created,
+        rust.ExclusiveCreate.exists => .exists,
+        rust.ExclusiveCreate.unsupported => .unsupported,
+      };
     } catch (e) {
       throw SyncException.wrap(
         e,

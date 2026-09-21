@@ -927,6 +927,88 @@ void main() {
       },
     );
 
+    test('双方都是无 writeToken 的旧 manifest：按字节比对仍拦得住', () async {
+      final backend = FakeRemoteBackend();
+      Uint8List legacy(String id) => jsonBytes({
+        'version': SyncManifest.currentVersion,
+        'updatedAt': 1,
+        'entries': {
+          'd:$id': {'t': atMs(100).millisecondsSinceEpoch},
+        },
+      });
+      backend.objects[SyncKeys.manifestPath] = legacy('a');
+
+      backend.beforeOp = (op, key) {
+        if (op == 'write' && key == SyncKeys.diaryObjectPath('b')) {
+          backend.objects[SyncKeys.manifestPath] = legacy('c');
+        }
+      };
+
+      await expectLater(
+        engineOn(
+          backend,
+          diaries: FakeDiaryStore([
+            buildDiary(id: 'a', modifiedMs: 100),
+            buildDiary(id: 'b', modifiedMs: 300),
+          ]),
+        ).push(),
+        throwsA(
+          isA<SyncException>().having(
+            (e) => e.kind,
+            'kind',
+            SyncErrorKind.manifestRace,
+          ),
+        ),
+      );
+      expect(
+        backend.manifest()!.entries.keys,
+        ['d:c'],
+        reason: '两边 writeToken 都是空串，只有按字节比对才能发现基线已变',
+      );
+    });
+
+    test('别人先写 → 提交前校验拦住整份覆盖，对方的 manifest 原样保留', () async {
+      final backend = FakeRemoteBackend();
+      await seedRemote(
+        backend,
+        diaries: [buildDiary(id: 'a', modifiedMs: 100)],
+      );
+
+      backend.beforeOp = (op, key) {
+        if (op == 'write' && key == SyncKeys.diaryObjectPath('b')) {
+          backend.objects[SyncKeys.manifestPath] = foreignManifest();
+        }
+      };
+
+      await expectLater(
+        engineOn(
+          backend,
+          diaries: FakeDiaryStore([
+            buildDiary(id: 'a', modifiedMs: 100),
+            buildDiary(id: 'b', modifiedMs: 300),
+          ]),
+        ).push(),
+        throwsA(
+          isA<SyncException>().having(
+            (e) => e.kind,
+            'kind',
+            SyncErrorKind.manifestRace,
+          ),
+        ),
+      );
+
+      expect(
+        backend.manifest()!.writeToken,
+        'another-device',
+        reason: '基线已变，不得用本机快照整份覆盖对方的索引',
+      );
+      expect(
+        backend.manifest()!.entries.containsKey('d:b'),
+        isFalse,
+        reason: '对方的 manifest 不含本机新条目，说明没有被覆盖',
+      );
+    });
+
     test(
       'normal push succeeds when readback token matches (deferred deletes run)',
       () async {

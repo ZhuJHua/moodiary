@@ -3,6 +3,7 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
+import 'api.dart';
 import 'api/cancel.dart';
 import 'api/graph_layout.dart';
 import 'api/http.dart';
@@ -91,7 +92,7 @@ abstract class RustLibApi extends BaseApi {
 
   CancelToken crateApiCancelCancelTokenNew();
 
-  Future<bool> crateApiWebdavDavClientCreateExclusive({
+  Future<ExclusiveCreate> crateApiWebdavDavClientCreateExclusive({
     required DavClient that,
     required String key,
     required List<int> data,
@@ -175,7 +176,7 @@ abstract class RustLibApi extends BaseApi {
 
   void crateApiHttpServerHttpServerStop({required HttpServer that});
 
-  Future<bool> crateApiS3S3ClientCreateExclusive({
+  Future<ExclusiveCreate> crateApiS3S3ClientCreateExclusive({
     required S3Client that,
     required String key,
     required List<int> data,
@@ -363,7 +364,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "CancelToken_new", argNames: []);
 
   @override
-  Future<bool> crateApiWebdavDavClientCreateExclusive({
+  Future<ExclusiveCreate> crateApiWebdavDavClientCreateExclusive({
     required DavClient that,
     required String key,
     required List<int> data,
@@ -385,7 +386,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: DcoCodec(
-          decodeSuccessData: dco_decode_bool,
+          decodeSuccessData: dco_decode_exclusive_create,
           decodeErrorData: dco_decode_AnyhowException,
         ),
         constMeta: kCrateApiWebdavDavClientCreateExclusiveConstMeta,
@@ -974,7 +975,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "HttpServer_stop", argNames: ["that"]);
 
   @override
-  Future<bool> crateApiS3S3ClientCreateExclusive({
+  Future<ExclusiveCreate> crateApiS3S3ClientCreateExclusive({
     required S3Client that,
     required String key,
     required List<int> data,
@@ -996,7 +997,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: DcoCodec(
-          decodeSuccessData: dco_decode_bool,
+          decodeSuccessData: dco_decode_exclusive_create,
           decodeErrorData: dco_decode_AnyhowException,
         ),
         constMeta: kCrateApiS3S3ClientCreateExclusiveConstMeta,
@@ -1908,6 +1909,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ExclusiveCreate dco_decode_exclusive_create(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return ExclusiveCreate.values[raw as int];
+  }
+
+  @protected
   double dco_decode_f_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as double;
@@ -2631,6 +2638,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ExclusiveCreate sse_decode_exclusive_create(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return ExclusiveCreate.values[inner];
+  }
+
+  @protected
   double sse_decode_f_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getFloat32();
@@ -3344,6 +3358,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  int cst_encode_exclusive_create(ExclusiveCreate raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return cst_encode_i_32(raw.index);
+  }
+
+  @protected
   double cst_encode_f_32(double raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw;
@@ -3843,6 +3863,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_exclusive_create(
+    ExclusiveCreate self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
   void sse_encode_f_32(double self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putFloat32(self);
@@ -4329,7 +4358,7 @@ class DavClientImpl extends RustOpaque implements DavClient {
         RustLib.instance.api.rust_arc_decrement_strong_count_DavClientPtr,
   );
 
-  Future<bool> createExclusive({
+  Future<ExclusiveCreate> createExclusive({
     required String key,
     required List<int> data,
   }) => RustLib.instance.api.crateApiWebdavDavClientCreateExclusive(
@@ -4472,7 +4501,7 @@ class S3ClientImpl extends RustOpaque implements S3Client {
         RustLib.instance.api.rust_arc_decrement_strong_count_S3ClientPtr,
   );
 
-  Future<bool> createExclusive({
+  Future<ExclusiveCreate> createExclusive({
     required String key,
     required List<int> data,
   }) => RustLib.instance.api.crateApiS3S3ClientCreateExclusive(

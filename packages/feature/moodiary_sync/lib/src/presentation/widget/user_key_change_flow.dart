@@ -8,6 +8,7 @@ import 'package:moodiary_sync/src/application/re_cipher.dart';
 import 'package:moodiary_sync/src/application/user_key_controller.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
+import 'package:moodiary_sync/src/data/remote_lease.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/sync_keyfile.dart';
@@ -80,8 +81,10 @@ Future<bool> applyUserKeyChange({
         remoteManifest != null &&
         remoteManifest.isNotEmpty &&
         !SyncCipher.isCipherText(remoteManifest);
+    var staleEnvelope = false;
     if (remoteKeyfile != null && remoteIsPlaintext) {
       remoteKeyfile = null;
+      staleEnvelope = true;
     }
 
     if (remoteKeyfile != null) {
@@ -129,8 +132,17 @@ Future<bool> applyUserKeyChange({
     );
     await SyncKeyManager.markPendingUpload(await configuredCloudBackendIds());
     if (backendReady) {
+      final remote = backend;
       try {
-        await SyncKeyManager.writeRemoteKeyfile(backend, keyfile);
+        await RemoteLease.protect(remote, () async {
+          if (!await SyncKeyManager.claimRemoteKeyfile(
+            remote,
+            keyfile,
+            replaceStale: staleEnvelope,
+          )) {
+            throw SyncKeyConflictException(l10n.sync.errKeyConflict);
+          }
+        });
         final id = backend.persistentBackendId;
         if (id != null) {
           await SyncKeyManager.clearPendingUpload(id);

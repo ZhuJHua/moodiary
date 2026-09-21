@@ -35,6 +35,8 @@ final class FakeRemoteBackend implements IRemoteSyncBackend {
 
   bool conditionalPutHonored = true;
 
+  bool conditionalPutSupported = true;
+
   static const String _mtime = '2026-01-01T00:00:00.000Z';
 
   @override
@@ -101,12 +103,13 @@ final class FakeRemoteBackend implements IRemoteSyncBackend {
   }
 
   @override
-  Future<bool> tryCreateExclusive(String key, Uint8List bytes) async {
+  Future<ExclusiveCreate> tryCreateExclusive(String key, Uint8List bytes) async {
     ops.add('create $key');
     beforeOp?.call('create', key);
-    if (objects.containsKey(key) && conditionalPutHonored) return false;
+    if (!conditionalPutSupported) return .unsupported;
+    if (objects.containsKey(key) && conditionalPutHonored) return .exists;
     objects[key] = bytes;
-    return true;
+    return .created;
   }
 
   @override

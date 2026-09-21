@@ -109,39 +109,81 @@ class RemoteLease {
 
     Timer? renewTimer;
     Future<void>? pendingRenew;
+    var held = true;
     try {
       renewTimer = .periodic(renewInterval, (_) {
-        pendingRenew = backend
-            .writeObject(
-              SyncKeys.lockPath,
-              LeasePayload(
-                owner: owner,
-                acquiredAt: .timestamp(),
-                ttl: ttl,
-              ).toBytes(),
-            )
-            .catchError((Object e) {
-              log.warn(
-                .lockRelease,
-                reason: .renewFailed,
-                payload: {'detail': e.toString()},
-              );
-            });
+        pendingRenew = _renew(backend, owner, log).then((kept) {
+          if (!kept) {
+            held = false;
+            renewTimer?.cancel();
+          }
+        });
       });
       return await body();
     } finally {
       renewTimer?.cancel();
       await pendingRenew;
-      try {
-        await backend.deleteObject(SyncKeys.lockPath);
-        log.info(.lockRelease);
-      } catch (e) {
+      if (held) await _release(backend, owner, log);
+    }
+  }
+
+  static Future<bool> _renew(
+    RemoteObjectStore backend,
+    String owner,
+    SyncLogger log,
+  ) async {
+    try {
+      final current = await _read(backend);
+      if (current != null && current.owner != owner) {
+        log.warn(
+          .lockRelease,
+          reason: .renewFailed,
+          payload: {'holder': current.owner},
+        );
+        return false;
+      }
+      await backend.writeObject(
+        SyncKeys.lockPath,
+        LeasePayload(
+          owner: owner,
+          acquiredAt: DateTime.timestamp(),
+          ttl: ttl,
+        ).toBytes(),
+      );
+      return true;
+    } catch (e) {
+      log.warn(
+        .lockRelease,
+        reason: .renewFailed,
+        payload: {'detail': e.toString()},
+      );
+      return true;
+    }
+  }
+
+  static Future<void> _release(
+    RemoteObjectStore backend,
+    String owner,
+    SyncLogger log,
+  ) async {
+    try {
+      final current = await _read(backend);
+      if (current != null && current.owner != owner) {
         log.warn(
           .lockRelease,
           reason: .releaseFailed,
-          payload: {'detail': e.toString()},
+          payload: {'holder': current.owner},
         );
+        return;
       }
+      await backend.deleteObject(SyncKeys.lockPath);
+      log.info(.lockRelease);
+    } catch (e) {
+      log.warn(
+        .lockRelease,
+        reason: .releaseFailed,
+        payload: {'detail': e.toString()},
+      );
     }
   }
 
@@ -150,18 +192,17 @@ class RemoteLease {
     String owner,
     SyncLogger log,
   ) async {
+    final backendId = backend.persistentBackendId;
+    var unreadable = 0;
     for (var attempt = 1; attempt <= _maxAttempts; attempt++) {
       final payload = LeasePayload(
         owner: owner,
         acquiredAt: .timestamp(),
         ttl: ttl,
       );
-      final created = await backend.tryCreateExclusive(
-        SyncKeys.lockPath,
-        payload.toBytes(),
-      );
-      if (created) {
-        final backendId = backend.persistentBackendId;
+      final outcome = await _claim(backend, payload, backendId, log);
+      if (outcome == .created) {
+        unreadable = 0;
         if (backendId != null && _casVerified[backendId] == true) {
           log.info(
             .lockAcquire,
@@ -185,25 +226,34 @@ class RemoteLease {
       } else {
         final existing = await _read(backend);
         if (existing == null) {
-          await backend.deleteObject(SyncKeys.lockPath);
-          continue;
-        }
-        if (existing.owner == owner) {
-          await backend.writeObject(SyncKeys.lockPath, payload.toBytes());
-          log.info(.lockAcquire, reason: .takeover, payload: {'owner': owner});
-          return;
-        }
-        if (existing.isExpired(.timestamp())) {
-          log.warn(
-            .lockAcquire,
-            reason: .expiredLock,
-            payload: {
-              'holder': existing.owner,
-              'acquiredAt': existing.acquiredAt.toIso8601String(),
-            },
-          );
-          await backend.deleteObject(SyncKeys.lockPath);
-          continue;
+          unreadable++;
+          if (unreadable >= 2) {
+            unreadable = 0;
+            await backend.deleteObject(SyncKeys.lockPath);
+          }
+        } else {
+          unreadable = 0;
+          if (existing.owner == owner) {
+            await backend.writeObject(SyncKeys.lockPath, payload.toBytes());
+            log.info(
+              .lockAcquire,
+              reason: .takeover,
+              payload: {'owner': owner},
+            );
+            return;
+          }
+          if (existing.isExpired(.timestamp())) {
+            log.warn(
+              .lockAcquire,
+              reason: .expiredLock,
+              payload: {
+                'holder': existing.owner,
+                'acquiredAt': existing.acquiredAt.toIso8601String(),
+              },
+            );
+            await backend.deleteObject(SyncKeys.lockPath);
+            continue;
+          }
         }
       }
       if (attempt < _maxAttempts) {
@@ -220,7 +270,7 @@ class RemoteLease {
     SyncLogger log,
   ) async {
     try {
-      final overwrote = await backend.tryCreateExclusive(
+      final outcome = await backend.tryCreateExclusive(
         SyncKeys.lockPath,
         LeasePayload(
           owner: owner,
@@ -228,8 +278,9 @@ class RemoteLease {
           ttl: ttl,
         ).toBytes(),
       );
-      _casVerified[backendId] = !overwrote;
-      if (overwrote) {
+      final atomic = outcome == ExclusiveCreate.exists;
+      _casVerified[backendId] = atomic;
+      if (!atomic) {
         log.warn(
           .lockAcquire,
           reason: .casUnsupported,
@@ -243,5 +294,34 @@ class RemoteLease {
         );
       }
     } catch (_) {}
+  }
+
+  static Future<ExclusiveCreate> _claim(
+    RemoteObjectStore backend,
+    LeasePayload payload,
+    String? backendId,
+    SyncLogger log,
+  ) async {
+    final bytes = payload.toBytes();
+    if (backendId != null && _casVerified[backendId] == true) {
+      return backend.tryCreateExclusive(SyncKeys.lockPath, bytes);
+    }
+    if (await backend.readObject(SyncKeys.lockPath) != null) return .exists;
+    if (backendId != null && _casVerified[backendId] == false) {
+      await backend.writeObject(SyncKeys.lockPath, bytes);
+      return .created;
+    }
+    final outcome = await backend.tryCreateExclusive(SyncKeys.lockPath, bytes);
+    if (outcome != ExclusiveCreate.unsupported) return outcome;
+    await backend.writeObject(SyncKeys.lockPath, bytes);
+    if (backendId != null) {
+      log.warn(
+        .lockAcquire,
+        reason: .casUnsupported,
+        payload: {'backendId': backendId},
+      );
+      _casVerified[backendId] = false;
+    }
+    return .created;
   }
 }

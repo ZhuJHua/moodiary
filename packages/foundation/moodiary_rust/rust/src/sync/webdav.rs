@@ -1,9 +1,13 @@
 use super::{kind_of_reqwest, kind_of_status, tagged};
+use crate::api::ExclusiveCreate;
 use anyhow::Result;
+use bytes::Bytes;
 use reqwest_dav::re_exports::reqwest::Method;
 use reqwest_dav::{Auth, ClientBuilder, Dav2xx, Depth};
 use std::collections::HashSet;
-use std::sync::Mutex;
+use tokio::sync::Mutex;
+
+const OCTET_STREAM: &str = "application/octet-stream";
 
 fn dav_status(e: &reqwest_dav::Error) -> Option<u16> {
     match e {
@@ -18,6 +22,10 @@ fn dav_status(e: &reqwest_dav::Error) -> Option<u16> {
 
 fn dav_is_not_found(e: &reqwest_dav::Error) -> bool {
     dav_status(e) == Some(404)
+}
+
+fn wants_repair(status: Option<u16>) -> bool {
+    matches!(status, Some(404) | Some(409))
 }
 
 fn dav_kind(e: &reqwest_dav::Error) -> &'static str {
@@ -62,28 +70,43 @@ impl DavClient {
         format!("{}/{}", self.root, key)
     }
 
-    async fn ensure_dir_cached(&self, dir: &str) -> Result<()> {
-        let parts: Vec<&str> = dir.split('/').filter(|s| !s.is_empty()).collect();
+    async fn ensure_dir(&self, dir: &str, force: bool) -> bool {
+        let mut known = self.created_dirs.lock().await;
         let mut current = String::new();
-        for (i, part) in parts.iter().enumerate() {
+        let mut created = false;
+        for (i, part) in dir.split('/').filter(|s| !s.is_empty()).enumerate() {
             if i > 0 {
                 current.push('/');
             }
             current.push_str(part);
-            let known = self.created_dirs.lock().unwrap().contains(&current);
-            if known {
+            if force {
+                known.remove(&current);
+            } else if known.contains(&current) {
                 continue;
             }
-            if let Err(e) = self.client.mkcol(&format!("{current}/")).await {
-                let exists = dav_status(&e) == Some(405)
-                    || self.client.list(&current, Depth::Number(0)).await.is_ok();
-                if !exists {
-                    return Err(dav_err(e, format!("Failed to create dir {current}")));
+            match self.client.mkcol(&format!("{current}/")).await {
+                Ok(_) => {
+                    created = true;
+                    known.insert(current.clone());
+                }
+                Err(e) if dav_status(&e) == Some(405) => {
+                    known.insert(current.clone());
+                }
+                Err(_) => {
+                    if self.client.list(&current, Depth::Number(0)).await.is_ok() {
+                        known.insert(current.clone());
+                    }
                 }
             }
-            self.created_dirs.lock().unwrap().insert(current.clone());
         }
-        Ok(())
+        created
+    }
+
+    fn parent_dir(path: &str) -> &str {
+        match path.rfind('/') {
+            Some(pos) => &path[..pos],
+            None => "",
+        }
     }
 
     pub async fn test_connection(&self) -> Result<bool> {
@@ -125,10 +148,12 @@ impl DavClient {
 
     pub async fn write_object_file(&self, key: String, file_path: String) -> Result<()> {
         let path = self.full_path(&key);
-        if let Some(pos) = path.rfind('/') {
-            self.ensure_dir_cached(&path[..pos]).await?;
+        let dir = Self::parent_dir(&path).to_owned();
+        self.ensure_dir(&dir, false).await;
+        let mut resp = self.put_file_once(&path, &file_path, None).await?;
+        if wants_repair(Some(resp.status().as_u16())) && self.ensure_dir(&dir, true).await {
+            resp = self.put_file_once(&path, &file_path, None).await?;
         }
-        let resp = self.put_file_once(&path, &file_path, None).await?;
         let resp = match redirect_target(&resp) {
             Some(location) => {
                 self.put_file_once(&path, &file_path, Some(&location))
@@ -157,48 +182,67 @@ impl DavClient {
                 .await
                 .map_err(|e| dav_err(e, "Failed to build request"))?,
         };
-        req.header(reqwest::header::CONTENT_LENGTH, len)
+        req.header(reqwest::header::CONTENT_TYPE, OCTET_STREAM)
+            .header(reqwest::header::CONTENT_LENGTH, len)
             .body(body)
             .send()
             .await
             .map_err(|e| req_err(e, format!("Failed to write {path}")))
     }
 
-    pub async fn create_exclusive(&self, key: String, data: Vec<u8>) -> Result<bool> {
-        let path = self.full_path(&key);
-        if let Some(pos) = path.rfind('/') {
-            self.ensure_dir_cached(&path[..pos]).await?;
-        }
+    async fn put_conditional(
+        &self,
+        path: &str,
+        body: Bytes,
+        key: &str,
+    ) -> Result<reqwest::Response> {
         let req = self
             .client
-            .start_request(Method::PUT, &path)
+            .start_request(Method::PUT, path)
             .await
             .map_err(|e| dav_err(e, "Failed to build request"))?;
-        let resp = req
+        req.header(reqwest::header::CONTENT_TYPE, OCTET_STREAM)
             .header("If-None-Match", "*")
-            .body(data)
+            .body(body)
             .send()
             .await
-            .map_err(|e| req_err(e, format!("Failed to create {key}")))?;
-        if resp.status().as_u16() == 412 {
-            return Ok(false);
+            .map_err(|e| req_err(e, format!("Failed to create {key}")))
+    }
+
+    pub async fn create_exclusive(&self, key: String, data: Vec<u8>) -> Result<ExclusiveCreate> {
+        let path = self.full_path(&key);
+        let dir = Self::parent_dir(&path).to_owned();
+        self.ensure_dir(&dir, false).await;
+        let body = Bytes::from(data);
+        let mut resp = self.put_conditional(&path, body.clone(), &key).await?;
+        if wants_repair(Some(resp.status().as_u16())) && self.ensure_dir(&dir, true).await {
+            resp = self.put_conditional(&path, body, &key).await?;
+        }
+        match resp.status().as_u16() {
+            412 => return Ok(ExclusiveCreate::Exists),
+            400 | 405 | 501 => return Ok(ExclusiveCreate::Unsupported),
+            _ => {}
         }
         resp.dav2xx()
             .await
             .map_err(|e| dav_err(e, format!("Failed to create {key}")))?;
-        Ok(true)
+        Ok(ExclusiveCreate::Created)
     }
 
     pub async fn write_object(&self, key: String, data: Vec<u8>) -> Result<()> {
         let path = self.full_path(&key);
-        if let Some(pos) = path.rfind('/') {
-            self.ensure_dir_cached(&path[..pos]).await?;
+        let dir = Self::parent_dir(&path).to_owned();
+        self.ensure_dir(&dir, false).await;
+        let body = Bytes::from(data);
+        match self.client.put(&path, body.clone()).await {
+            Ok(_) => Ok(()),
+            Err(e) if wants_repair(dav_status(&e)) && self.ensure_dir(&dir, true).await => self
+                .client
+                .put(&path, body)
+                .await
+                .map_err(|e| dav_err(e, format!("Failed to write {key}"))),
+            Err(e) => Err(dav_err(e, format!("Failed to write {key}"))),
         }
-        self.client
-            .put(&path, data)
-            .await
-            .map_err(|e| dav_err(e, format!("Failed to write {key}")))?;
-        Ok(())
     }
 
     pub async fn delete_object(&self, key: String) -> Result<()> {
@@ -248,4 +292,187 @@ fn redirect_target(resp: &reqwest::Response) -> Option<String> {
         .to_str()
         .ok()
         .map(str::to_owned)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::http::server::{HandlerFn, HttpServer, HttpServerRequest, HttpServerResponse};
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    struct FakeDav {
+        collections: Mutex<HashSet<String>>,
+        mkcols: AtomicUsize,
+    }
+
+    impl FakeDav {
+        fn new() -> Arc<FakeDav> {
+            Arc::new(FakeDav {
+                collections: Mutex::new(HashSet::new()),
+                mkcols: AtomicUsize::new(0),
+            })
+        }
+
+        fn handler(state: Arc<FakeDav>) -> HandlerFn {
+            Arc::new(move |req: HttpServerRequest| {
+                let state = state.clone();
+                Box::pin(async move {
+                    let path = req.path.trim_matches('/').to_string();
+                    let status = match req.method.as_str() {
+                        "MKCOL" => {
+                            state.mkcols.fetch_add(1, Ordering::Relaxed);
+                            if state.collections.lock().await.insert(path) {
+                                201
+                            } else {
+                                405
+                            }
+                        }
+                        "PUT" => {
+                            let parent = DavClient::parent_dir(&path).to_string();
+                            if state.collections.lock().await.contains(&parent) {
+                                201
+                            } else {
+                                409
+                            }
+                        }
+                        _ => 200,
+                    };
+                    HttpServerResponse {
+                        status,
+                        headers: vec![],
+                        body: vec![],
+                        body_file_path: None,
+                    }
+                })
+            })
+        }
+    }
+
+    async fn serve(handler: HandlerFn, tag: &str) -> (HttpServer, DavClient) {
+        let dir = std::env::temp_dir().join(format!("moodiary-dav-{tag}-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let server = HttpServer::start(
+            0,
+            true,
+            dir.to_string_lossy().into_owned(),
+            handler,
+            Arc::new(|_, _| Box::pin(async {})),
+        )
+        .await
+        .unwrap();
+        let client = DavClient::new(
+            format!("http://127.0.0.1:{}", server.port()),
+            "u".into(),
+            "p".into(),
+        )
+        .unwrap();
+        (server, client)
+    }
+
+    #[tokio::test]
+    async fn concurrent_first_writes_share_one_ladder() {
+        let state = FakeDav::new();
+        let (mut server, client) = serve(FakeDav::handler(state.clone()), "ladder").await;
+        let client = Arc::new(client);
+        let mut tasks = Vec::new();
+        for i in 0..8 {
+            let client = client.clone();
+            tasks.push(tokio::spawn(async move {
+                client
+                    .write_object(format!("diary/{i}.json"), vec![1])
+                    .await
+            }));
+        }
+        for t in tasks {
+            t.await.unwrap().unwrap();
+        }
+        assert_eq!(state.mkcols.load(Ordering::Relaxed), 2);
+        server.stop();
+    }
+
+    #[tokio::test]
+    async fn a_collection_dropped_on_the_server_is_rebuilt() {
+        let state = FakeDav::new();
+        let (mut server, client) = serve(FakeDav::handler(state.clone()), "rebuild").await;
+        client
+            .write_object("diary/a.json".into(), vec![1])
+            .await
+            .unwrap();
+        state.collections.lock().await.clear();
+        client
+            .write_object("diary/b.json".into(), vec![1])
+            .await
+            .unwrap();
+        server.stop();
+    }
+
+    #[tokio::test]
+    async fn a_collection_that_refuses_mkcol_is_cached_once_confirmed() {
+        let mkcols = Arc::new(AtomicUsize::new(0));
+        let seen = mkcols.clone();
+        let handler: HandlerFn = Arc::new(move |req: HttpServerRequest| {
+            let seen = seen.clone();
+            Box::pin(async move {
+                let (status, body) = match req.method.as_str() {
+                    "MKCOL" => {
+                        seen.fetch_add(1, Ordering::Relaxed);
+                        (403, String::new())
+                    }
+                    "PROPFIND" => (
+                        207,
+                        format!(
+                            r#"<?xml version="1.0" encoding="utf-8"?>
+<multistatus xmlns="DAV:"><response><href>{}</href><propstat>
+<status>HTTP/1.1 200 OK</status>
+<prop><getlastmodified>Mon, 01 Jan 2024 00:00:00 GMT</getlastmodified>
+<resourcetype><collection/></resourcetype>
+<getetag>"x"</getetag><getcontenttype>httpd/unix-directory</getcontenttype>
+</prop></propstat></response></multistatus>"#,
+                            req.path
+                        ),
+                    ),
+                    _ => (201, String::new()),
+                };
+                HttpServerResponse {
+                    status,
+                    headers: vec![],
+                    body: body.into_bytes(),
+                    body_file_path: None,
+                }
+            })
+        });
+        let (mut server, client) = serve(handler, "cached").await;
+        client
+            .write_object("diary/a.json".into(), vec![1])
+            .await
+            .unwrap();
+        let after_first = mkcols.load(Ordering::Relaxed);
+        client
+            .write_object("diary/b.json".into(), vec![1])
+            .await
+            .unwrap();
+        assert_eq!(mkcols.load(Ordering::Relaxed), after_first);
+        server.stop();
+    }
+
+    #[tokio::test]
+    async fn a_server_that_refuses_mkcol_can_still_write() {
+        let handler: HandlerFn = Arc::new(move |req: HttpServerRequest| {
+            Box::pin(async move {
+                HttpServerResponse {
+                    status: if req.method == "MKCOL" { 403 } else { 201 },
+                    headers: vec![],
+                    body: vec![],
+                    body_file_path: None,
+                }
+            })
+        });
+        let (mut server, client) = serve(handler, "nomkcol").await;
+        client
+            .write_object("diary/a.json".into(), vec![1])
+            .await
+            .unwrap();
+        server.stop();
+    }
 }

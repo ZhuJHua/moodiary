@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
@@ -152,6 +153,11 @@ class CloudReCipher {
     }) async {
       final bytes = await backend.readObject(path);
       if (bytes == null) return null;
+      if (_alreadyConverted(SyncCipher.isCipherText(bytes), from, to)) {
+        final converted = await to.decode(bytes);
+        if (converted is Map<String, dynamic>) onDecoded?.call(converted);
+        return null;
+      }
       final Object? decoded;
       try {
         decoded = await from.decode(bytes);
@@ -273,6 +279,12 @@ class CloudReCipher {
         '${DateTime.now().microsecondsSinceEpoch}:${_seq++}';
     final updated = manifest.copyForUpdate().withWriteToken(token);
     final newMfBytes = await to.encode(updated.toJson());
+    if (!listEquals(
+      await backend.readObject(SyncKeys.manifestPath),
+      mfBytes,
+    )) {
+      throw SyncException(l10n.sync.errManifestRace, kind: .manifestRace);
+    }
     await backend.writeObject(SyncKeys.manifestPath, newMfBytes);
     final verifyBytes = await backend.readObject(SyncKeys.manifestPath);
     final verifyDecoded = verifyBytes == null
@@ -282,7 +294,7 @@ class CloudReCipher {
         ? SyncManifest.fromJson(verifyDecoded).writeToken
         : null;
     if (verifyToken != token) {
-      throw SyncException(l10n.sync.errManifestRace);
+      throw SyncException(l10n.sync.errManifestRace, kind: .manifestRace);
     }
 
     sw.stop();
@@ -321,6 +333,13 @@ class CloudReCipher {
     final out = await _tempFile('rc-out');
     try {
       if (!await backend.readObjectToFile(path, src.path)) return false;
+      if (_alreadyConverted(
+        await SyncCipher.isCipherFile(src.path),
+        from,
+        to,
+      )) {
+        return false;
+      }
       try {
         await from.decryptFileTo(src.path, plain.path);
       } on SyncException {
@@ -346,6 +365,9 @@ class CloudReCipher {
   ) async {
     final bytes = await backend.readObject(path);
     if (bytes == null) return false;
+    if (_alreadyConverted(SyncCipher.isCipherText(bytes), from, to)) {
+      return false;
+    }
     final Uint8List plain;
     try {
       plain = await from.decryptBytes(bytes);
@@ -356,6 +378,12 @@ class CloudReCipher {
     await backend.writeObject(path, await to.encryptBytes(plain));
     return true;
   }
+
+  static bool _alreadyConverted(
+    bool isCipher,
+    SyncCipher from,
+    SyncCipher to,
+  ) => from.encrypted != to.encrypted && isCipher == to.encrypted;
 
   Future<File> _tempFile(String tag) async {
     final dir = Directory(

@@ -57,6 +57,73 @@ void main() {
 
   tearDown(tearDownSyncEnv);
 
+  group('claimRemoteKeyfile', () {
+    const mine = SyncKeyfile(
+      kdfMemoryKiB: 65536,
+      kdfIterations: 3,
+      kdfParallelism: 4,
+      saltB64: 'bWluZQ==',
+      wrappedDekB64: 'bWluZQ==',
+    );
+    const theirs = SyncKeyfile(
+      kdfMemoryKiB: 65536,
+      kdfIterations: 3,
+      kdfParallelism: 4,
+      saltB64: 'dGhlaXJz',
+      wrappedDekB64: 'dGhlaXJz',
+    );
+
+    test('虚拟远端 → 占位成功', () async {
+      final backend = FakeRemoteBackend();
+      expect(await SyncKeyManager.claimRemoteKeyfile(backend, mine), isTrue);
+      expect(
+        SyncKeyfile.fromBytes(backend.objects[SyncKeys.keysPath]!).saltB64,
+        mine.saltB64,
+      );
+    });
+
+    test('被别的设备抢先 → 占位失败且不覆盖对方的信封', () async {
+      final backend = FakeRemoteBackend();
+      backend.beforeOp = (op, key) {
+        if (op == 'create' && key == SyncKeys.keysPath) {
+          backend.objects[key] = theirs.toBytes();
+        }
+      };
+      expect(await SyncKeyManager.claimRemoteKeyfile(backend, mine), isFalse);
+      expect(
+        SyncKeyfile.fromBytes(backend.objects[SyncKeys.keysPath]!).saltB64,
+        theirs.saltB64,
+      );
+    });
+
+    test('远端数据已是明文时，陈旧信封要被顶掉（否则加密再也开不回来）', () async {
+      final backend = FakeRemoteBackend();
+      backend.objects[SyncKeys.keysPath] = theirs.toBytes();
+      expect(
+        await SyncKeyManager.claimRemoteKeyfile(
+          backend,
+          mine,
+          replaceStale: true,
+        ),
+        isTrue,
+      );
+      expect(
+        SyncKeyfile.fromBytes(backend.objects[SyncKeys.keysPath]!).saltB64,
+        mine.saltB64,
+      );
+    });
+
+    test('服务端不支持条件写 → 仍不覆盖已有信封', () async {
+      final backend = FakeRemoteBackend()..conditionalPutSupported = false;
+      backend.objects[SyncKeys.keysPath] = theirs.toBytes();
+      expect(await SyncKeyManager.claimRemoteKeyfile(backend, mine), isFalse);
+      expect(
+        SyncKeyfile.fromBytes(backend.objects[SyncKeys.keysPath]!).saltB64,
+        theirs.saltB64,
+      );
+    });
+  });
+
   group('SyncKeyfile JSON', () {
     const keyfile = SyncKeyfile(
       kdfMemoryKiB: 65536,
