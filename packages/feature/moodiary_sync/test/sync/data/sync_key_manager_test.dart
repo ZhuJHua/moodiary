@@ -96,6 +96,23 @@ void main() {
       );
     });
 
+    test('远端数据已是明文时，陈旧信封要被顶掉（否则加密再也开不回来）', () async {
+      final backend = FakeRemoteBackend();
+      backend.objects[SyncKeys.keysPath] = theirs.toBytes();
+      expect(
+        await SyncKeyManager.claimRemoteKeyfile(
+          backend,
+          mine,
+          replaceStale: true,
+        ),
+        isTrue,
+      );
+      expect(
+        SyncKeyfile.fromBytes(backend.objects[SyncKeys.keysPath]!).saltB64,
+        mine.saltB64,
+      );
+    });
+
     test('服务端不支持条件写 → 仍不覆盖已有信封', () async {
       final backend = FakeRemoteBackend()..conditionalPutSupported = false;
       backend.objects[SyncKeys.keysPath] = theirs.toBytes();

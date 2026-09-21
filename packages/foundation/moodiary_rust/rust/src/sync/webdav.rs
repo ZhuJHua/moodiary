@@ -5,7 +5,6 @@ use bytes::Bytes;
 use reqwest_dav::re_exports::reqwest::Method;
 use reqwest_dav::{Auth, ClientBuilder, Dav2xx, Depth};
 use std::collections::HashSet;
-use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::Mutex;
 
 const OCTET_STREAM: &str = "application/octet-stream";
@@ -49,7 +48,6 @@ pub struct DavClient {
     client: reqwest_dav::Client,
     root: String,
     created_dirs: Mutex<HashSet<String>>,
-    cas_unsupported: AtomicBool,
 }
 
 impl DavClient {
@@ -65,7 +63,6 @@ impl DavClient {
             client,
             root: "moodiary".to_string(),
             created_dirs: Mutex::new(HashSet::new()),
-            cas_unsupported: AtomicBool::new(false),
         })
     }
 
@@ -95,7 +92,11 @@ impl DavClient {
                 Err(e) if dav_status(&e) == Some(405) => {
                     known.insert(current.clone());
                 }
-                Err(_) => {}
+                Err(_) => {
+                    if self.client.list(&current, Depth::Number(0)).await.is_ok() {
+                        known.insert(current.clone());
+                    }
+                }
             }
         }
         created
@@ -212,9 +213,6 @@ impl DavClient {
         let path = self.full_path(&key);
         let dir = Self::parent_dir(&path).to_owned();
         self.ensure_dir(&dir, false).await;
-        if self.cas_unsupported.load(Ordering::Relaxed) {
-            return Ok(ExclusiveCreate::Unsupported);
-        }
         let body = Bytes::from(data);
         let mut resp = self.put_conditional(&path, body.clone(), &key).await?;
         if wants_repair(Some(resp.status().as_u16())) && self.ensure_dir(&dir, true).await {
@@ -222,10 +220,7 @@ impl DavClient {
         }
         match resp.status().as_u16() {
             412 => return Ok(ExclusiveCreate::Exists),
-            400 | 405 | 501 => {
-                self.cas_unsupported.store(true, Ordering::Relaxed);
-                return Ok(ExclusiveCreate::Unsupported);
-            }
+            400 | 405 | 501 => return Ok(ExclusiveCreate::Unsupported),
             _ => {}
         }
         resp.dav2xx()
@@ -304,7 +299,7 @@ mod tests {
     use super::*;
     use crate::http::server::{HandlerFn, HttpServer, HttpServerRequest, HttpServerResponse};
     use std::sync::Arc;
-    use std::sync::atomic::AtomicUsize;
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     struct FakeDav {
         collections: Mutex<HashSet<String>>,
@@ -409,6 +404,55 @@ mod tests {
             .write_object("diary/b.json".into(), vec![1])
             .await
             .unwrap();
+        server.stop();
+    }
+
+    #[tokio::test]
+    async fn a_collection_that_refuses_mkcol_is_cached_once_confirmed() {
+        let mkcols = Arc::new(AtomicUsize::new(0));
+        let seen = mkcols.clone();
+        let handler: HandlerFn = Arc::new(move |req: HttpServerRequest| {
+            let seen = seen.clone();
+            Box::pin(async move {
+                let (status, body) = match req.method.as_str() {
+                    "MKCOL" => {
+                        seen.fetch_add(1, Ordering::Relaxed);
+                        (403, String::new())
+                    }
+                    "PROPFIND" => (
+                        207,
+                        format!(
+                            r#"<?xml version="1.0" encoding="utf-8"?>
+<multistatus xmlns="DAV:"><response><href>{}</href><propstat>
+<status>HTTP/1.1 200 OK</status>
+<prop><getlastmodified>Mon, 01 Jan 2024 00:00:00 GMT</getlastmodified>
+<resourcetype><collection/></resourcetype>
+<getetag>"x"</getetag><getcontenttype>httpd/unix-directory</getcontenttype>
+</prop></propstat></response></multistatus>"#,
+                            req.path
+                        ),
+                    ),
+                    _ => (201, String::new()),
+                };
+                HttpServerResponse {
+                    status,
+                    headers: vec![],
+                    body: body.into_bytes(),
+                    body_file_path: None,
+                }
+            })
+        });
+        let (mut server, client) = serve(handler, "cached").await;
+        client
+            .write_object("diary/a.json".into(), vec![1])
+            .await
+            .unwrap();
+        let after_first = mkcols.load(Ordering::Relaxed);
+        client
+            .write_object("diary/b.json".into(), vec![1])
+            .await
+            .unwrap();
+        assert_eq!(mkcols.load(Ordering::Relaxed), after_first);
         server.stop();
     }
 

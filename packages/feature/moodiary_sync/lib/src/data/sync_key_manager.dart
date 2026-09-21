@@ -238,9 +238,11 @@ class SyncKeyManager {
 
   static Future<bool> claimRemoteKeyfile(
     RemoteObjectStore backend,
-    SyncKeyfile keyfile,
-  ) async {
+    SyncKeyfile keyfile, {
+    bool replaceStale = false,
+  }) async {
     final bytes = keyfile.toBytes();
+    if (replaceStale) await backend.deleteObject(SyncKeys.keysPath);
     final outcome = await backend.tryCreateExclusive(SyncKeys.keysPath, bytes);
     if (outcome == ExclusiveCreate.unsupported) {
       if (await backend.readObject(SyncKeys.keysPath) != null) return false;

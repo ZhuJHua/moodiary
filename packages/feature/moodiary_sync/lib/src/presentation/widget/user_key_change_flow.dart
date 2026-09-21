@@ -81,8 +81,10 @@ Future<bool> applyUserKeyChange({
         remoteManifest != null &&
         remoteManifest.isNotEmpty &&
         !SyncCipher.isCipherText(remoteManifest);
+    var staleEnvelope = false;
     if (remoteKeyfile != null && remoteIsPlaintext) {
       remoteKeyfile = null;
+      staleEnvelope = true;
     }
 
     if (remoteKeyfile != null) {
@@ -133,7 +135,11 @@ Future<bool> applyUserKeyChange({
       final remote = backend;
       try {
         await RemoteLease.protect(remote, () async {
-          if (!await SyncKeyManager.claimRemoteKeyfile(remote, keyfile)) {
+          if (!await SyncKeyManager.claimRemoteKeyfile(
+            remote,
+            keyfile,
+            replaceStale: staleEnvelope,
+          )) {
             throw SyncKeyConflictException(l10n.sync.errKeyConflict);
           }
         });
