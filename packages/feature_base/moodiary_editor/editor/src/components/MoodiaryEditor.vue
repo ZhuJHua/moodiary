@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import type { Transaction } from '@tiptap/pm/state'
 import { EditorContent, useEditor } from '@tiptap/vue-3'
 import { createEditorKit } from '../editor/tiptap'
 import { bindApi, emitChange, markReady } from '../bridge'
@@ -13,6 +14,7 @@ import EditorMetaHeader from './EditorMetaHeader.vue'
 import EditorLinksPanel from './EditorLinksPanel.vue'
 import { openSearch } from '../editor/search'
 import { useI18n } from 'vue-i18n'
+import { wordCountOf } from '../editor/word-count'
 
 const props = defineProps<{
   editable: boolean
@@ -39,10 +41,24 @@ const editor = useEditor({
     bindApi(kit.api)
     markReady()
     instance.on('transaction', onViewportScroll)
+    instance.on('transaction', onDocTransaction)
+    wordCount.value = wordCountOf(instance.state.doc)
   },
 })
 
 const showToolbar = computed(() => editable.value)
+
+const wordCount = ref(0)
+function refreshWordCount(): void {
+  const ed = editor.value
+  wordCount.value = ed ? wordCountOf(ed.state.doc) : 0
+}
+function onDocTransaction({ transaction }: { transaction: Transaction }): void {
+  if (transaction.docChanged && !editable.value) refreshWordCount()
+}
+watch(editable, (v) => {
+  if (!v) refreshWordCount()
+})
 
 const showLinks = computed(
   () =>
@@ -179,7 +195,7 @@ onBeforeUnmount(() => {
     <EditorSearchBar v-if="platform === 'desktop'" :platform="platform" />
     <div class="moodiary-editor-scroll">
       <div ref="viewportEl" class="moodiary-editor-viewport">
-        <EditorMetaHeader v-if="meta" :meta="meta" :editable="editable" />
+        <EditorMetaHeader v-if="meta" :meta="meta" :editable="editable" :word-count="wordCount" />
         <textarea
           ref="titleEl"
           v-show="titleVisible"
