@@ -1,5 +1,8 @@
 import { createApp } from 'vue'
 import App from './App.vue'
+import { readBoot } from './bridge/boot'
+import { i18n, setLocale } from './i18n'
 import './styles/moodiary-editor.css'
 
-createApp(App).mount('#app')
+setLocale(readBoot().locale)
+createApp(App).use(i18n).mount('#app')

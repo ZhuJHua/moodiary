@@ -26,7 +26,7 @@ dart tool/task.dart build-apk / build-ios  # the only two targets
 # Code Gen
 dart tool/task.dart build-runner   # whole workspace
 dart tool/task.dart gen-rust       # regenerate Rust FFI bindings after touching rust/src/api
-dart tool/task.dart i18n           # slang codegen after editing i18n/*.json
+dart tool/task.dart i18n           # slang codegen after editing i18n/flutter (i18n/web needs no codegen)
 dart tool/task.dart migrations     # drift schema snapshot + step-by-step migration codegen, after bumping schemaVersion
 dart tool/task.dart gen            # gen-rust + i18n
 
@@ -65,6 +65,7 @@ Full-repo verification = the four Lint & Test commands above.
 ```
 moodiary/                    # root = workspace + Melos coordinator (no app code)
   tool/                      # task runner + layer check
+  i18n/                      # every translation json: flutter/ (slang) and web/ (editor page, bundled by unplugin-vue-i18n); a string both need is duplicated
   mobile/                    # Flutter app (pub: moodiary_mobile)
     lib/
       app/                   # composition layer: di, router, shell, lifecycle
@@ -76,7 +77,7 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
       moodiary_lint/         #   shared analyzer options; testing.dart carries repoRoot for tests that read repo files
       moodiary_di/           #   the single get_it instance
       moodiary_logging/      #   logging; on-disk path injected by the composition root
-      moodiary_i18n/         #   slang strings and lookup entry points
+      moodiary_i18n/         #   slang codegen + lookup entry points
       moodiary_router/       #   typed route primitives over go_router; every route class lives here
       fast_image/            #   image pipeline (derivatives / region decode / tiled viewer), native lib libfastimage
       fast_press/            #   export typesetting IR -> PDF (typst) / DOCX, libfastpress (moodiary_export only)
@@ -153,8 +154,8 @@ Routes carry no path or query parameters, because the app never targets the web.
 Two unrelated slang outputs: the App (default mode, `Translations` / top-level `l10n`) and mui (`locale_handling: false` + hand-written delegate, `context.muiL10n`). **i18n** is the mechanism, **l10n** the resolved strings, **Localizations** only Flutter's chain (mui alone).
 
 - Widgets use `context.l10n.xxx` (rebuilds on language change); services / export / callbacks use top-level `l10n.xxx`. Parameters are named. Write `l10n.xxx.yyy` in full.
-- One namespace file per feature; feature packages do not install slang (mui excepted).
-- After editing `*.i18n.json` run `dart tool/task.dart i18n` (generated files are committed).
+- One namespace file per feature, under `i18n/flutter` (Dart) or `i18n/web` (editor page); feature packages do not install slang (mui excepted).
+- After editing `i18n/flutter/*.i18n.json` run `dart tool/task.dart i18n` (generated files are committed). `i18n/web/{zh,en}.json` is compiled into the editor bundle by unplugin-vue-i18n, so it needs no codegen step.
 - Text for the model (prompts, tool descriptions, tool results) is hardcoded English and never enters i18n; text for the user goes through slang.
 - Some Chinese literals are kept on purpose (sync log lines, font family names, legal text); check moodiary_i18n's list before translating one.
 

@@ -1,3 +1,5 @@
+import { i18n } from '../i18n'
+
 const LEGACY_PREFIX = 'moodiary-media://media/'
 
 let mediaPrefix = LEGACY_PREFIX
@@ -12,18 +14,13 @@ export function mediaUrl(name: string, opts?: { poster?: boolean }): string {
 }
 
 let mediaInfoPrefix = ''
-let fallbackAudioName = '音频'
 
 export function setMediaInfoPrefix(base: string): void {
   if (base) mediaInfoPrefix = base.endsWith('/') ? base : `${base}/`
 }
 
-export function setAudioDefaultName(name: string): void {
-  if (name) fallbackAudioName = name
-}
-
 export function audioDefaultName(): string {
-  return fallbackAudioName
+  return i18n.global.t('audio.defaultName')
 }
 
 export async function fetchMediaName(name: string): Promise<string | null> {

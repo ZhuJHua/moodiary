@@ -37,11 +37,20 @@ import IconTrees from '~icons/lucide/trees'
 import IconHospital from '~icons/lucide/hospital'
 import qiFontUrl from 'qweather-icons/font/fonts/qweather-icons.woff2?url'
 import qiCodepoints from 'qweather-icons/font/qweather-icons.json'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{
   meta: EditorMeta
   editable: boolean
 }>()
+
+const { t } = useI18n()
+
+const subLine = computed(() =>
+  props.editable
+    ? props.meta.subText
+    : `${props.meta.subText} · ${t('wordCount', { count: props.meta.wordCount })}`,
+)
 
 const MOOD_ICONS: Record<string, Component> = {
   smile: IconSmile,
@@ -160,7 +169,7 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
         @mousedown.prevent
         @click="editable && post('pickTime')"
       >
-        {{ editable ? meta.subText : meta.subTextRead }}
+        {{ subLine }}
       </button>
       <IconChevronDown v-if="editable" class="meta-date-chevron" />
     </div>

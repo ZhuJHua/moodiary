@@ -289,8 +289,6 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
     return MoodiaryEditor(
       controller: _controller,
       readOnly: !widget.editable,
-      placeholder: context.l10n.editor.content,
-      titlePlaceholder: context.l10n.editor.titlePlaceholder,
       initialContent: widget.initialContent,
       initialTitle: widget.initialTitle,
       onChanged: widget.onChanged,
@@ -331,7 +329,6 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       mediaNameResolver: (name) async =>
           (await getIt<MediaInfoRepository>().getMediaInfoByFileName(name))
               ?.name,
-      audioDefaultName: context.l10n.common.audio,
       loadingBuilder: (_) => const MLoading(),
     );
   }

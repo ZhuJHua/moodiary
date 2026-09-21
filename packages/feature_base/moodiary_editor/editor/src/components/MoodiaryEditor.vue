@@ -12,19 +12,20 @@ import EditorSearchBar from './EditorSearchBar.vue'
 import EditorMetaHeader from './EditorMetaHeader.vue'
 import EditorLinksPanel from './EditorLinksPanel.vue'
 import { openSearch } from '../editor/search'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{
   editable: boolean
-  placeholder: string
-  titlePlaceholder: string
   platform: 'mobile' | 'desktop'
 }>()
+
+const { t } = useI18n()
 
 const editable = ref(props.editable)
 
 const kit = createEditorKit({
   editable: props.editable,
-  placeholder: props.placeholder,
+  placeholder: t('content'),
   onChange: emitChange,
   onEditableChange: (value) => {
     editable.value = value
@@ -185,7 +186,7 @@ onBeforeUnmount(() => {
           class="moodiary-title"
           rows="1"
           :readonly="!editable"
-          :placeholder="editable ? titlePlaceholder : ''"
+          :placeholder="editable ? t('titlePlaceholder') : ''"
           @input="onTitleInput"
           @compositionstart="onTitleCompositionStart"
           @compositionend="onTitleCompositionEnd"

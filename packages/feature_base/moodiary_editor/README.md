@@ -19,4 +19,5 @@
 ## Web 源与构建
 
 - web 源在 `editor/`（Vue 3 + Vite + TipTap）。`hook/build.dart` 在 `flutter run` / `build` 时构建（目标系统等于宿主时直接返回，`flutter test` 不构建），输出平铺的 gzip 产物到 `../assets/editor/`，运行时由 `EditorLocalServer` 解压后发明文。钩子声明 `editor/src/**` 与配置文件为依赖，改了源码自动重建，要求 `corepack` 在 PATH 上。
+- 页面文案是仓库根的 `i18n/web/{zh,en}.json`（slang 不读这里，两边都要的串各存一份）：由 `@intlify/unplugin-vue-i18n` 的 `include` 预编译进产物，运行时交给 vue-i18n，无需额外 codegen；boot 只下发 `locale`，钩子把该目录也声明为依赖。
 - 开发预览：`cd editor && corepack pnpm harness`。

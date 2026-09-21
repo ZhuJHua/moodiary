@@ -1,7 +1,7 @@
 base_locale: zh
 fallback_strategy: base_locale
 
-input_directory: lib/i18n
+input_directory: ../../../i18n/flutter
 namespaces: true
 input_file_pattern: .i18n.json
 output_directory: lib/i18n

@@ -1,0 +1,83 @@
+{
+  "content": "Text",
+  "wordCount": "{count} characters",
+  "titlePlaceholder": "Title",
+  "toolbar": {
+    "undo": "Undo",
+    "redo": "Redo",
+    "insertImage": "Insert image",
+    "insertAudio": "Insert audio",
+    "insertVideo": "Insert video",
+    "insertDiaryLink": "Insert diary link",
+    "heading": "Heading",
+    "insertTable": "Insert table",
+    "findReplace": "Find and replace",
+    "bold": "Bold",
+    "italic": "Italic",
+    "underline": "Underline",
+    "strike": "Strikethrough",
+    "code": "Inline code",
+    "bulletList": "Bulleted list",
+    "orderedList": "Numbered list",
+    "taskList": "Task list",
+    "quote": "Quote",
+    "codeBlock": "Code block",
+    "paragraph": "Body text",
+    "heading1": "Heading 1",
+    "heading2": "Heading 2",
+    "heading3": "Heading 3",
+    "rowAfterLabel": "+Row",
+    "rowAfter": "Insert row below",
+    "deleteRowLabel": "−Row",
+    "deleteRow": "Delete this row",
+    "columnAfterLabel": "+Col",
+    "columnAfter": "Insert column right",
+    "deleteColumnLabel": "−Col",
+    "deleteColumn": "Delete this column",
+    "deleteTableLabel": "Table",
+    "deleteTable": "Delete table"
+  },
+  "search": {
+    "findPlaceholder": "Find",
+    "replacePlaceholder": "Replace with",
+    "matchCase": "Match case",
+    "previous": "Previous match",
+    "next": "Next match",
+    "close": "Close",
+    "replace": "Replace",
+    "replaceAll": "All"
+  },
+  "image": {
+    "size": "Image size",
+    "width": "Width",
+    "widthSlider": "Image width",
+    "defaultWidth": "Default",
+    "reset": "Reset to default"
+  },
+  "video": {
+    "play": "Play",
+    "pause": "Pause",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "progressLabel": "Video progress",
+    "fullscreen": "Fullscreen"
+  },
+  "audio": {
+    "play": "Play",
+    "pause": "Pause",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "progressLabel": "Audio progress",
+    "defaultName": "Audio"
+  },
+  "code": {
+    "plainText": "Plain text",
+    "copy": "Copy",
+    "copied": "Copied"
+  },
+  "link": {
+    "searching": "Searching…",
+    "prompt": "Type a keyword to search diaries…",
+    "empty": "No matching diary"
+  }
+}

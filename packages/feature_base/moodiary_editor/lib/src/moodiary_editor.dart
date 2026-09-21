@@ -37,10 +37,6 @@ class MoodiaryEditor extends StatefulWidget {
 
   final bool readOnly;
 
-  final String placeholder;
-
-  final String titlePlaceholder;
-
   final ValueChanged<String>? onChanged;
 
   final ValueChanged<String>? onTitleChanged;
@@ -112,8 +108,6 @@ class MoodiaryEditor extends StatefulWidget {
 
   final Future<String?> Function(String name)? mediaNameResolver;
 
-  final String audioDefaultName;
-
   final WidgetBuilder? loadingBuilder;
 
   const MoodiaryEditor({
@@ -122,8 +116,6 @@ class MoodiaryEditor extends StatefulWidget {
     this.initialContent = '',
     this.initialTitle = '',
     this.readOnly = false,
-    this.placeholder = '',
-    this.titlePlaceholder = '',
     this.onChanged,
     this.onTitleChanged,
     this.onActiveHeadingChanged,
@@ -161,7 +153,6 @@ class MoodiaryEditor extends StatefulWidget {
     this.fontResolver,
     this.mediaResolver,
     this.mediaNameResolver,
-    this.audioDefaultName = '',
     this.loadingBuilder,
   });
 
@@ -252,8 +243,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     final boot = <String, dynamic>{
       'platform': (Platform.isAndroid || Platform.isIOS) ? 'mobile' : 'desktop',
       'editable': !widget.readOnly,
-      'placeholder': widget.placeholder,
-      'titlePlaceholder': widget.titlePlaceholder,
+      'locale': LocaleSettings.currentLocale.languageCode,
       'saveStatus': widget.saveStatus,
       'theme': _themePayload(),
     };
@@ -272,7 +262,6 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     boot['mediaBase'] = server.mediaBase;
     boot['fontBase'] = server.fontBase;
     boot['mediaInfoBase'] = server.mediaInfoBase;
-    boot['audioDefaultName'] = widget.audioDefaultName;
     try {
       await _buildController(server.pageUri(boot));
     } catch (e, s) {

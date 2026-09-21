@@ -3,14 +3,12 @@ import type { EditorTheme } from './theme'
 export interface EditorBoot {
   platform?: 'mobile' | 'desktop'
   editable?: boolean
-  placeholder?: string
-  titlePlaceholder?: string
+  locale?: string
   theme?: EditorTheme | null
   saveStatus?: string
   mediaBase?: string
   fontBase?: string
   mediaInfoBase?: string
-  audioDefaultName?: string
 }
 
 let cached: EditorBoot | null = null

@@ -57,7 +57,7 @@ const SAMPLES: Record<string, string> = {
     '',
     '本地图片需在 Flutter 内运行才有媒体服务；dev 下用外链演示。',
   ].join('\n'),
-  '空（看 placeholder）': '',
+  '空（看占位符）': '',
 }
 
 const device = ref<Device>('phone')
@@ -66,7 +66,7 @@ const seed = ref('#805610')
 const variant = ref<Variant>('tonalSpot')
 const contrast = ref(0)
 const editable = ref(true)
-const placeholder = ref('记录此刻…')
+const locale = ref('zh')
 const sampleKey = ref('基础排版')
 const inputMd = ref(SAMPLES['基础排版'])
 const outputMd = ref('')
@@ -130,7 +130,7 @@ function bootParam(): string {
   const boot = {
     platform: device.value === 'phone' ? 'mobile' : 'desktop',
     editable: editable.value,
-    placeholder: placeholder.value,
+    locale: locale.value,
     theme: theme(),
   }
   const bytes = new TextEncoder().encode(JSON.stringify(boot))
@@ -218,8 +218,7 @@ watch(inputMd, (v) => {
   mdTimer = window.setTimeout(() => bridge()?.setContent(v), 250)
 })
 
-// placeholder 无运行时 setter，只能通过重载 iframe 生效
-watch(placeholder, () => reloadIframe())
+watch(locale, () => reloadIframe())
 // platform 也只在 boot 里定，切设备需重载 iframe
 watch(device, () => reloadIframe())
 
@@ -312,8 +311,11 @@ onMounted(() => reloadIframe())
         </div>
 
         <label class="block">
-          <span class="mb-1 block text-sm">占位符 <span class="text-xs opacity-60">(改动重载)</span></span>
-          <input type="text" v-model="placeholder" class="input input-sm w-full" />
+          <span class="mb-1 block text-sm">语言 <span class="text-xs opacity-60">(改动重载)</span></span>
+          <select v-model="locale" class="select select-sm w-full">
+            <option value="zh">中文</option>
+            <option value="en">English</option>
+          </select>
         </label>
 
         <div class="divider my-1 text-xs opacity-60">内容</div>

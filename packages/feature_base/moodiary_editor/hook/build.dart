@@ -12,6 +12,8 @@ const _sourceFiles = [
   'vite.config.ts',
 ];
 
+const _i18nWebDir = 'i18n/web/';
+
 void main(List<String> args) async {
   await build(args, (input, output) async {
     if (input.config.buildCodeAssets &&
@@ -31,15 +33,20 @@ void main(List<String> args) async {
       await lock.unlock();
       await lock.close();
     }
+    final repoRoot = input.packageRoot.resolve('../../../');
     output.dependencies.addAll([
       for (final name in _sourceFiles) editorDir.resolve(name),
-      ...Directory.fromUri(editorDir.resolve('src/'))
-          .listSync(recursive: true)
-          .whereType<File>()
-          .map((f) => f.uri),
+      ..._filesIn(repoRoot.resolve(_i18nWebDir)),
+      ..._filesIn(editorDir.resolve('src/'), recursive: true),
     ]);
   });
 }
+
+Iterable<Uri> _filesIn(Uri dir, {bool recursive = false}) =>
+    Directory.fromUri(dir)
+        .listSync(recursive: recursive)
+        .whereType<File>()
+        .map((f) => f.uri);
 
 Future<void> _pnpm(List<String> args, Uri cwd) async {
   final ProcessResult result;

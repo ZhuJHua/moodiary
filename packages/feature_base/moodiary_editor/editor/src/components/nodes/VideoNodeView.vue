@@ -9,8 +9,11 @@ import IconFullscreen from '~icons/lucide/maximize'
 import { post } from '../../bridge/post'
 import { mediaUrl } from '../../editor/media'
 import { formatTime, useMediaControls } from '../../editor/use-media'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps(nodeViewProps)
+
+const { t } = useI18n()
 
 const filename = computed(() => (props.node.attrs.filename as string | null) ?? '')
 const src = computed(() => (filename.value ? mediaUrl(filename.value) : ''))
@@ -179,7 +182,7 @@ onBeforeUnmount(() => {
         <button
           class="moodiary-video__key"
           type="button"
-          :title="playing ? '暂停' : '播放'"
+          :title="playing ? t('video.pause') : t('video.play')"
           @click="toggle"
         >
           <component :is="playing ? IconPause : IconPlay" class="size-5" />
@@ -190,7 +193,7 @@ onBeforeUnmount(() => {
           class="moodiary-video__track"
           :class="{ 'is-pressed': dragging }"
           role="slider"
-          aria-label="视频进度"
+          :aria-label="t('video.progressLabel')"
           :aria-valuemin="0"
           :aria-valuemax="Math.round(duration)"
           :aria-valuenow="Math.round(sliderValue)"
@@ -214,7 +217,7 @@ onBeforeUnmount(() => {
         <button
           class="moodiary-video__key"
           type="button"
-          :title="muted ? '取消静音' : '静音'"
+          :title="muted ? t('video.unmute') : t('video.mute')"
           @click="toggleMute"
         >
           <component :is="muted ? IconMuted : IconVolume" class="size-5" />
@@ -222,7 +225,7 @@ onBeforeUnmount(() => {
         <button
           class="moodiary-video__key"
           type="button"
-          title="全屏播放"
+          :title="t('video.fullscreen')"
           @click="handOffToNative"
         >
           <IconFullscreen class="size-5" />

@@ -2022,12 +2022,6 @@ class Translations$editor$zh {
 	/// zh: '音频文件'
 	String get pickAudioFromFile => '音频文件';
 
-	/// zh: '正文'
-	String get content => '正文';
-
-	/// zh: '标题'
-	String get titlePlaceholder => '标题';
-
 	/// zh: '当前平台暂不支持编辑器'
 	String get unsupportedPlatform => '当前平台暂不支持编辑器';
 

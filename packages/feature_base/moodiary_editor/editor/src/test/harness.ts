@@ -5,6 +5,7 @@ import type { App, AppContext, ComponentInternalInstance } from 'vue'
 import { expect, vi } from 'vitest'
 import { linkSuggestion } from '../editor/diary-link'
 import { createEditorKit } from '../editor/tiptap'
+import { i18n } from '../i18n'
 import type { EditorApi } from '../editor/tiptap'
 
 function attachVueRuntime(editor: Editor): App {
@@ -19,6 +20,7 @@ function attachVueRuntime(editor: Editor): App {
   )
   const mountPoint = document.createElement('div')
   document.body.appendChild(mountPoint)
+  app.use(i18n)
   app.mount(mountPoint)
   if (instance) {
     const found = instance as ComponentInternalInstance

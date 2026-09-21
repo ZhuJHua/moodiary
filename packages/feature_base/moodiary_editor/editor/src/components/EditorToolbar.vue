@@ -27,6 +27,7 @@ import { openSearch } from '../editor/search'
 import TableGridPicker from './TableGridPicker.vue'
 import PopupMenu from './PopupMenu.vue'
 import type { PopupMenuItem } from './PopupMenu.vue'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{
   editor: Editor
@@ -38,6 +39,8 @@ const emit = defineEmits<{
   (e: 'pick-audio'): void
   (e: 'pick-video'): void
 }>()
+
+const { t } = useI18n()
 
 const btnClass = computed(
   () => `btn btn-ghost shrink-0 ${props.platform === 'mobile' ? 'btn-md' : 'btn-sm'}`,
@@ -79,18 +82,18 @@ interface Tool {
   active: () => boolean
 }
 
-const tools: Tool[] = [
-  { key: 'bold', title: '加粗', icon: IconBold, run: () => chain().toggleBold().run(), active: () => isActive('bold') },
-  { key: 'italic', title: '斜体', icon: IconItalic, run: () => chain().toggleItalic().run(), active: () => isActive('italic') },
-  { key: 'underline', title: '下划线', icon: IconUnderline, run: () => chain().toggleUnderline().run(), active: () => isActive('underline') },
-  { key: 'strike', title: '删除线', icon: IconStrike, run: () => chain().toggleStrike().run(), active: () => isActive('strike') },
-  { key: 'code', title: '行内代码', icon: IconCode, run: () => chain().toggleCode().run(), active: () => isActive('code') },
-  { key: 'bullet', title: '无序列表', icon: IconBullet, run: () => chain().toggleBulletList().run(), active: () => isActive('bulletList') },
-  { key: 'ordered', title: '有序列表', icon: IconOrdered, run: () => chain().toggleOrderedList().run(), active: () => isActive('orderedList') },
-  { key: 'task', title: '任务列表', icon: IconChecklist, run: () => chain().toggleTaskList().run(), active: () => isActive('taskList') },
-  { key: 'quote', title: '引用', icon: IconQuote, run: () => chain().toggleBlockquote().run(), active: () => isActive('blockquote') },
-  { key: 'codeBlock', title: '代码块', icon: IconCodeBlock, run: () => chain().toggleCodeBlock().run(), active: () => isActive('codeBlock') },
-]
+const tools = computed<Tool[]>(() => [
+  { key: 'bold', title: t('toolbar.bold'), icon: IconBold, run: () => chain().toggleBold().run(), active: () => isActive('bold') },
+  { key: 'italic', title: t('toolbar.italic'), icon: IconItalic, run: () => chain().toggleItalic().run(), active: () => isActive('italic') },
+  { key: 'underline', title: t('toolbar.underline'), icon: IconUnderline, run: () => chain().toggleUnderline().run(), active: () => isActive('underline') },
+  { key: 'strike', title: t('toolbar.strike'), icon: IconStrike, run: () => chain().toggleStrike().run(), active: () => isActive('strike') },
+  { key: 'code', title: t('toolbar.code'), icon: IconCode, run: () => chain().toggleCode().run(), active: () => isActive('code') },
+  { key: 'bullet', title: t('toolbar.bulletList'), icon: IconBullet, run: () => chain().toggleBulletList().run(), active: () => isActive('bulletList') },
+  { key: 'ordered', title: t('toolbar.orderedList'), icon: IconOrdered, run: () => chain().toggleOrderedList().run(), active: () => isActive('orderedList') },
+  { key: 'task', title: t('toolbar.taskList'), icon: IconChecklist, run: () => chain().toggleTaskList().run(), active: () => isActive('taskList') },
+  { key: 'quote', title: t('toolbar.quote'), icon: IconQuote, run: () => chain().toggleBlockquote().run(), active: () => isActive('blockquote') },
+  { key: 'codeBlock', title: t('toolbar.codeBlock'), icon: IconCodeBlock, run: () => chain().toggleCodeBlock().run(), active: () => isActive('codeBlock') },
+])
 
 const inTable = (): boolean => isActive('table')
 
@@ -116,20 +119,20 @@ function onPickTable(rows: number, cols: number): void {
   chain().insertTable({ rows, cols, withHeaderRow: true }).run()
   tableOpen.value = false
 }
-const tableOps: { key: string; label: string; title: string; run: () => void }[] = [
-  { key: 'rowAfter', label: '+行', title: '下方插入行', run: () => chain().addRowAfter().run() },
-  { key: 'delRow', label: '−行', title: '删除当前行', run: () => chain().deleteRow().run() },
-  { key: 'colAfter', label: '+列', title: '右侧插入列', run: () => chain().addColumnAfter().run() },
-  { key: 'delCol', label: '−列', title: '删除当前列', run: () => chain().deleteColumn().run() },
-  { key: 'delTable', label: '删表', title: '删除表格', run: () => chain().deleteTable().run() },
-]
+const tableOps = computed<{ key: string; label: string; title: string; run: () => void }[]>(() => [
+  { key: 'rowAfter', label: t('toolbar.rowAfterLabel'), title: t('toolbar.rowAfter'), run: () => chain().addRowAfter().run() },
+  { key: 'delRow', label: t('toolbar.deleteRowLabel'), title: t('toolbar.deleteRow'), run: () => chain().deleteRow().run() },
+  { key: 'colAfter', label: t('toolbar.columnAfterLabel'), title: t('toolbar.columnAfter'), run: () => chain().addColumnAfter().run() },
+  { key: 'delCol', label: t('toolbar.deleteColumnLabel'), title: t('toolbar.deleteColumn'), run: () => chain().deleteColumn().run() },
+  { key: 'delTable', label: t('toolbar.deleteTableLabel'), title: t('toolbar.deleteTable'), run: () => chain().deleteTable().run() },
+])
 
 const headingMenuOpen = ref(false)
 const headingItems = computed<PopupMenuItem[]>(() => [
-  { key: 'paragraph', label: '正文', icon: IconParagraph, active: !isActive('heading') },
-  { key: 'h1', label: '一级标题', icon: IconH1, active: isActive('heading', { level: 1 }) },
-  { key: 'h2', label: '二级标题', icon: IconH2, active: isActive('heading', { level: 2 }) },
-  { key: 'h3', label: '三级标题', icon: IconH3, active: isActive('heading', { level: 3 }) },
+  { key: 'paragraph', label: t('toolbar.paragraph'), icon: IconParagraph, active: !isActive('heading') },
+  { key: 'h1', label: t('toolbar.heading1'), icon: IconH1, active: isActive('heading', { level: 1 }) },
+  { key: 'h2', label: t('toolbar.heading2'), icon: IconH2, active: isActive('heading', { level: 2 }) },
+  { key: 'h3', label: t('toolbar.heading3'), icon: IconH3, active: isActive('heading', { level: 3 }) },
 ])
 function onHeadingSelect(key: string): void {
   if (key === 'paragraph') {
@@ -159,7 +162,7 @@ function onHeadingSelect(key: string): void {
     <button
       :class="[btnClass, 'btn-square']"
       type="button"
-      title="撤销"
+      :title="t('toolbar.undo')"
       data-testid="undo"
       :disabled="!canUndo()"
       @mousedown.prevent
@@ -170,7 +173,7 @@ function onHeadingSelect(key: string): void {
     <button
       :class="[btnClass, 'btn-square']"
       type="button"
-      title="重做"
+      :title="t('toolbar.redo')"
       data-testid="redo"
       :disabled="!canRedo()"
       @mousedown.prevent
@@ -180,16 +183,16 @@ function onHeadingSelect(key: string): void {
     </button>
     <span class="mx-1 h-5 w-px shrink-0 bg-base-300" />
 
-    <button :class="[btnClass, 'btn-square']" type="button" title="插入图片" @mousedown.prevent @click="emit('pick-image')">
+    <button :class="[btnClass, 'btn-square']" type="button" :title="t('toolbar.insertImage')" @mousedown.prevent @click="emit('pick-image')">
       <IconImage class="size-5" />
     </button>
-    <button :class="[btnClass, 'btn-square']" type="button" title="插入音频" @mousedown.prevent @click="emit('pick-audio')">
+    <button :class="[btnClass, 'btn-square']" type="button" :title="t('toolbar.insertAudio')" @mousedown.prevent @click="emit('pick-audio')">
       <IconAudio class="size-5" />
     </button>
-    <button :class="[btnClass, 'btn-square']" type="button" title="插入视频" @mousedown.prevent @click="emit('pick-video')">
+    <button :class="[btnClass, 'btn-square']" type="button" :title="t('toolbar.insertVideo')" @mousedown.prevent @click="emit('pick-video')">
       <IconVideo class="size-5" />
     </button>
-    <button :class="[btnClass, 'btn-square']" type="button" title="插入日记链接" @mousedown.prevent @click="insertLink">
+    <button :class="[btnClass, 'btn-square']" type="button" :title="t('toolbar.insertDiaryLink')" @mousedown.prevent @click="insertLink">
       <IconLink class="size-5" />
     </button>
     <span class="mx-1 h-5 w-px shrink-0 bg-base-300" />
@@ -202,7 +205,7 @@ function onHeadingSelect(key: string): void {
             isActive('heading') ? 'btn-active text-primary' : '',
           ]"
           type="button"
-          title="标题"
+          :title="t('toolbar.heading')"
           @mousedown.prevent
         >
           <IconH1 v-if="isActive('heading', { level: 1 })" class="size-5" />
@@ -213,20 +216,20 @@ function onHeadingSelect(key: string): void {
       </template>
     </PopupMenu>
     <button
-      v-for="t in tools"
-      :key="t.key"
-      :class="[btnClass, t.icon ? 'btn-square' : 'px-2', t.active() ? 'btn-active text-primary' : '']"
+      v-for="tool in tools"
+      :key="tool.key"
+      :class="[btnClass, tool.icon ? 'btn-square' : 'px-2', tool.active() ? 'btn-active text-primary' : '']"
       type="button"
-      :title="t.title"
+      :title="tool.title"
       @mousedown.prevent
-      @click="t.run()"
+      @click="tool.run()"
     >
-      <component :is="t.icon" v-if="t.icon" class="size-5" />
-      <span v-else class="text-sm font-semibold leading-none">{{ t.label }}</span>
+      <component :is="tool.icon" v-if="tool.icon" class="size-5" />
+      <span v-else class="text-sm font-semibold leading-none">{{ tool.label }}</span>
     </button>
 
     <span class="mx-1 h-5 w-px shrink-0 bg-base-300" />
-    <button :class="[btnClass, 'btn-square']" type="button" title="插入表格" @mousedown.prevent @click="openTablePicker">
+    <button :class="[btnClass, 'btn-square']" type="button" :title="t('toolbar.insertTable')" @mousedown.prevent @click="openTablePicker">
       <IconTable class="size-5" />
     </button>
     <template v-if="inTable()">
@@ -244,7 +247,7 @@ function onHeadingSelect(key: string): void {
     </template>
 
     <span class="mx-1 h-5 w-px shrink-0 bg-base-300" />
-    <button :class="[btnClass, 'btn-square']" type="button" title="查找替换" @mousedown.prevent @click="openSearch">
+    <button :class="[btnClass, 'btn-square']" type="button" :title="t('toolbar.findReplace')" @mousedown.prevent @click="openSearch">
       <IconSearch class="size-5" />
     </button>
 
