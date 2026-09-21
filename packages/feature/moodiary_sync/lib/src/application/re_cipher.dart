@@ -154,6 +154,8 @@ class CloudReCipher {
       final bytes = await backend.readObject(path);
       if (bytes == null) return null;
       if (_alreadyConverted(SyncCipher.isCipherText(bytes), from, to)) {
+        final converted = await to.decode(bytes);
+        if (converted is Map<String, dynamic>) onDecoded?.call(converted);
         return null;
       }
       final Object? decoded;

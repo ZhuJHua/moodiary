@@ -8,6 +8,7 @@ import 'package:moodiary_sync/src/application/re_cipher.dart';
 import 'package:moodiary_sync/src/application/user_key_controller.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
+import 'package:moodiary_sync/src/data/remote_lease.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/sync_keyfile.dart';
@@ -129,10 +130,13 @@ Future<bool> applyUserKeyChange({
     );
     await SyncKeyManager.markPendingUpload(await configuredCloudBackendIds());
     if (backendReady) {
+      final remote = backend;
       try {
-        if (!await SyncKeyManager.claimRemoteKeyfile(backend, keyfile)) {
-          throw SyncKeyConflictException(l10n.sync.errKeyConflict);
-        }
+        await RemoteLease.protect(remote, () async {
+          if (!await SyncKeyManager.claimRemoteKeyfile(remote, keyfile)) {
+            throw SyncKeyConflictException(l10n.sync.errKeyConflict);
+          }
+        });
         final id = backend.persistentBackendId;
         if (id != null) {
           await SyncKeyManager.clearPendingUpload(id);

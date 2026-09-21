@@ -200,21 +200,7 @@ class RemoteLease {
         acquiredAt: .timestamp(),
         ttl: ttl,
       );
-      var outcome = await backend.tryCreateExclusive(
-        SyncKeys.lockPath,
-        payload.toBytes(),
-      );
-      if (outcome == .unsupported) {
-        outcome = await _emulateCreate(backend, payload);
-        if (backendId != null && !_casVerified.containsKey(backendId)) {
-          log.warn(
-            .lockAcquire,
-            reason: .casUnsupported,
-            payload: {'backendId': backendId},
-          );
-        }
-        if (backendId != null) _casVerified[backendId] = false;
-      }
+      final outcome = await _claim(backend, payload, backendId, log);
       if (outcome == .created) {
         unreadable = 0;
         if (backendId != null && _casVerified[backendId] == true) {
@@ -310,12 +296,32 @@ class RemoteLease {
     } catch (_) {}
   }
 
-  static Future<ExclusiveCreate> _emulateCreate(
+  static Future<ExclusiveCreate> _claim(
     RemoteObjectStore backend,
     LeasePayload payload,
+    String? backendId,
+    SyncLogger log,
   ) async {
+    final bytes = payload.toBytes();
+    if (backendId != null && _casVerified[backendId] == true) {
+      return backend.tryCreateExclusive(SyncKeys.lockPath, bytes);
+    }
     if (await backend.readObject(SyncKeys.lockPath) != null) return .exists;
-    await backend.writeObject(SyncKeys.lockPath, payload.toBytes());
+    if (backendId != null && _casVerified[backendId] == false) {
+      await backend.writeObject(SyncKeys.lockPath, bytes);
+      return .created;
+    }
+    final outcome = await backend.tryCreateExclusive(SyncKeys.lockPath, bytes);
+    if (outcome != ExclusiveCreate.unsupported) return outcome;
+    await backend.writeObject(SyncKeys.lockPath, bytes);
+    if (backendId != null) {
+      log.warn(
+        .lockAcquire,
+        reason: .casUnsupported,
+        payload: {'backendId': backendId},
+      );
+      _casVerified[backendId] = false;
+    }
     return .created;
   }
 }

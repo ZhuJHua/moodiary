@@ -171,6 +171,35 @@ void main() {
     });
   });
 
+  test('静默覆盖型服务器：能力未知时也不得盲写抢走他人的活锁', () {
+    fakeAsync((async) {
+      final backend = FakeRemoteBackend()..conditionalPutHonored = false;
+      backend.objects[SyncKeys.lockPath] = LeasePayload(
+        owner: 'other-device',
+        acquiredAt: DateTime.now().toUtc(),
+        ttl: RemoteLease.ttl,
+      ).toBytes();
+
+      Object? error;
+      var bodyRan = false;
+      RemoteLease.protect(backend, () async {
+        bodyRan = true;
+        return 0;
+      }, logger: logger).catchError((Object e) {
+        error = e;
+        return 0;
+      });
+
+      async.elapse(const Duration(seconds: 20));
+      expect(bodyRan, isFalse);
+      expect(error, isA<SyncException>());
+      expect(
+        LeasePayload.fromBytes(backend.objects[SyncKeys.lockPath]!)!.owner,
+        'other-device',
+      );
+    });
+  });
+
   group('conditional-put probe', () {
     test('探测通过（合规服务器）→ 第二次抢占免回读、不再重复探测', () {
       fakeAsync((async) {
@@ -179,8 +208,8 @@ void main() {
         async.elapse(const Duration(seconds: 1));
         expect(
           backend.opCount('read', SyncKeys.lockPath),
-          2,
-          reason: '首次抢占一次回读校验，释放前再确认一次归属',
+          3,
+          reason: '能力未知时先读一次，再回读校验，释放前再确认归属',
         );
         expect(
           backend.opCount('create', SyncKeys.lockPath),
@@ -192,8 +221,8 @@ void main() {
         async.elapse(const Duration(seconds: 1));
         expect(
           backend.opCount('read', SyncKeys.lockPath),
-          3,
-          reason: '探测通过后免回读，只剩释放前的归属确认',
+          4,
+          reason: '探测通过后免预读也免回读，只剩释放前的归属确认',
         );
         expect(
           backend.opCount('create', SyncKeys.lockPath),
@@ -209,14 +238,14 @@ void main() {
         final backend = FakeRemoteBackend()..conditionalPutHonored = false;
         RemoteLease.protect(backend, () async {}, logger: logger);
         async.elapse(const Duration(seconds: 1));
-        expect(backend.opCount('read', SyncKeys.lockPath), 2);
+        expect(backend.opCount('read', SyncKeys.lockPath), 3);
 
         RemoteLease.protect(backend, () async {}, logger: logger);
         async.elapse(const Duration(seconds: 1));
         expect(
           backend.opCount('read', SyncKeys.lockPath),
-          4,
-          reason: '不合规服务器不得免除回读',
+          6,
+          reason: '不合规服务器不得免除预读与回读',
         );
         expect(
           backend.hasObject(SyncKeys.lockPath),
@@ -244,8 +273,8 @@ void main() {
         expect(backend.hasObject(SyncKeys.lockPath), isFalse);
         expect(
           backend.opCount('create', SyncKeys.lockPath),
-          2,
-          reason: '降级后每轮一次条件写，不再追加探测',
+          1,
+          reason: '降级结论缓存后不再发注定失败的条件写',
         );
         expect(
           events
