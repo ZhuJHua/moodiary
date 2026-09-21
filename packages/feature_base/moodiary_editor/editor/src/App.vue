@@ -7,22 +7,14 @@ import { readBoot } from './bridge/boot'
 import { applyTheme, setFontBase } from './bridge/theme'
 import { setSaveStatus } from './bridge/save-status'
 import { post } from './bridge/post'
-import {
-  setAudioDefaultName,
-  setMediaInfoPrefix,
-  setMediaPrefix,
-  unproxyMedia,
-} from './editor/media'
+import { setMediaInfoPrefix, setMediaPrefix, unproxyMedia } from './editor/media'
 
 const boot = readBoot()
 if (boot.mediaBase) setMediaPrefix(boot.mediaBase)
 if (boot.mediaInfoBase) setMediaInfoPrefix(boot.mediaInfoBase)
-if (boot.audioDefaultName) setAudioDefaultName(boot.audioDefaultName)
 // 字体文件基址须先于 applyTheme 注入：applyTheme 里用它拼 @font-face 的 src。
 if (boot.fontBase) setFontBase(boot.fontBase)
 const initialEditable = boot.editable ?? true
-const placeholder = boot.placeholder ?? ''
-const titlePlaceholder = boot.titlePlaceholder ?? ''
 const platform = boot.platform ?? 'desktop'
 
 installBridge()
@@ -66,8 +58,6 @@ onBeforeUnmount(() => shell.value?.removeEventListener('click', onClick))
   <div ref="shell" class="editor-shell">
     <MoodiaryEditor
       :editable="initialEditable"
-      :placeholder="placeholder"
-      :title-placeholder="titlePlaceholder"
       :platform="platform"
     />
     <DiaryLinkSuggestion />

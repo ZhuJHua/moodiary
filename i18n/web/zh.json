@@ -1,0 +1,83 @@
+{
+  "content": "正文",
+  "wordCount": "{count} 字",
+  "titlePlaceholder": "标题",
+  "toolbar": {
+    "undo": "撤销",
+    "redo": "重做",
+    "insertImage": "插入图片",
+    "insertAudio": "插入音频",
+    "insertVideo": "插入视频",
+    "insertDiaryLink": "插入日记链接",
+    "heading": "标题",
+    "insertTable": "插入表格",
+    "findReplace": "查找替换",
+    "bold": "加粗",
+    "italic": "斜体",
+    "underline": "下划线",
+    "strike": "删除线",
+    "code": "行内代码",
+    "bulletList": "无序列表",
+    "orderedList": "有序列表",
+    "taskList": "任务列表",
+    "quote": "引用",
+    "codeBlock": "代码块",
+    "paragraph": "正文",
+    "heading1": "一级标题",
+    "heading2": "二级标题",
+    "heading3": "三级标题",
+    "rowAfterLabel": "+行",
+    "rowAfter": "下方插入行",
+    "deleteRowLabel": "−行",
+    "deleteRow": "删除当前行",
+    "columnAfterLabel": "+列",
+    "columnAfter": "右侧插入列",
+    "deleteColumnLabel": "−列",
+    "deleteColumn": "删除当前列",
+    "deleteTableLabel": "删表",
+    "deleteTable": "删除表格"
+  },
+  "search": {
+    "findPlaceholder": "查找",
+    "replacePlaceholder": "替换为",
+    "matchCase": "区分大小写",
+    "previous": "上一个",
+    "next": "下一个",
+    "close": "关闭",
+    "replace": "替换",
+    "replaceAll": "全部"
+  },
+  "image": {
+    "size": "图片尺寸",
+    "width": "宽度",
+    "widthSlider": "图片宽度",
+    "defaultWidth": "默认",
+    "reset": "恢复默认"
+  },
+  "video": {
+    "play": "播放",
+    "pause": "暂停",
+    "mute": "静音",
+    "unmute": "取消静音",
+    "progressLabel": "视频进度",
+    "fullscreen": "全屏播放"
+  },
+  "audio": {
+    "play": "播放",
+    "pause": "暂停",
+    "mute": "静音",
+    "unmute": "取消静音",
+    "progressLabel": "音频进度",
+    "defaultName": "音频"
+  },
+  "code": {
+    "plainText": "纯文本",
+    "copy": "复制",
+    "copied": "已复制"
+  },
+  "link": {
+    "searching": "搜索中…",
+    "prompt": "输入关键词搜索日记…",
+    "empty": "无匹配的日记"
+  }
+}

@@ -10,8 +10,11 @@ import {
   snapWidthPercent,
 } from '../../editor/image-node'
 import { displaySrc } from '../../editor/media'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps(nodeViewProps)
+
+const { t } = useI18n()
 
 const menuOpen = ref(false)
 const draft = ref<number | null>(null)
@@ -33,7 +36,9 @@ const wrapperStyle = computed(() =>
   shown.value === null ? undefined : { maxWidth: `${shown.value}%` },
 )
 const sliderValue = computed(() => shown.value ?? 100)
-const readout = computed(() => (shown.value === null ? '默认' : `${shown.value}%`))
+const readout = computed(() =>
+  shown.value === null ? t('image.defaultWidth') : `${shown.value}%`,
+)
 
 function commit(value: number | null): void {
   draft.value = null
@@ -63,7 +68,7 @@ watch(menuOpen, (open) => {
     <img class="moodiary-image__img" :src="src" :alt="alt" :title="title" draggable="false" />
     <PopupMenu v-if="editable" v-model="menuOpen" class="moodiary-image__menu">
       <template #trigger>
-        <button class="moodiary-image__badge" type="button" title="图片尺寸" @mousedown.prevent>
+        <button class="moodiary-image__badge" type="button" :title="t('image.size')" @mousedown.prevent>
           <span class="moodiary-image__chip"><IconAspectRatio class="size-[18px]" /></span>
         </button>
       </template>
@@ -71,7 +76,7 @@ watch(menuOpen, (open) => {
       <template #panel>
         <div class="moodiary-image__panel flex w-52 flex-col px-2 py-1">
           <div class="flex items-baseline justify-between">
-            <span class="text-xs opacity-70">宽度</span>
+            <span class="text-xs opacity-70">{{ t('image.width') }}</span>
             <span class="text-sm font-medium tabular-nums">{{ readout }}</span>
           </div>
 
@@ -82,7 +87,7 @@ watch(menuOpen, (open) => {
             max="100"
             step="1"
             :value="sliderValue"
-            aria-label="图片宽度"
+            :aria-label="t('image.widthSlider')"
             @input="onSlide"
             @change="onSlideEnd"
           />
@@ -112,7 +117,7 @@ watch(menuOpen, (open) => {
             @mousedown.prevent
             @click="commit(null)"
           >
-            恢复默认
+            {{ t('image.reset') }}
           </button>
         </div>
       </template>

@@ -833,14 +833,10 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     if (fix != null) {
       placeRows.sort((a, b) => a.meters!.compareTo(b.meters!));
     }
-    final sub = TimeFormat.weekdayTimeHms(diary.time);
-    final words = context.l10n.diary.wordCount(
-      count: diary.contentText.runes.length,
-    );
     return jsonEncode({
       'dateText': TimeFormat.anchorDate(diary.time),
-      'subText': sub,
-      'subTextRead': '$sub · $words',
+      'subText': TimeFormat.weekdayTimeHms(diary.time),
+      'wordCount': diary.contentText.runes.length,
       'mood': diary.mood.name,
       'moods': [
         for (final mood in DiaryMood.values)

@@ -7,8 +7,11 @@ import IconVolume from '~icons/lucide/volume-2'
 import IconMuted from '~icons/lucide/volume-x'
 import { audioDefaultName, fetchMediaName, mediaUrl } from '../../editor/media'
 import { formatTime, useMediaControls } from '../../editor/use-media'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps(nodeViewProps)
+
+const { t } = useI18n()
 
 const filename = computed(() => (props.node.attrs.filename as string | null) ?? '')
 const src = computed(() => (filename.value ? mediaUrl(filename.value) : ''))
@@ -37,7 +40,7 @@ const { playing, duration, muted, sliderValue, toggle, toggleMute, onSeekInput, 
       <button
         class="btn btn-circle btn-sm btn-primary shrink-0"
         type="button"
-        :title="playing ? '暂停' : '播放'"
+        :title="playing ? t('audio.pause') : t('audio.play')"
         @click="toggle"
       >
         <component :is="playing ? IconPause : IconPlay" class="size-5" />
@@ -48,7 +51,7 @@ const { playing, duration, muted, sliderValue, toggle, toggleMute, onSeekInput, 
           <button
             class="btn btn-circle btn-ghost btn-xs shrink-0"
             type="button"
-            :title="muted ? '取消静音' : '静音'"
+            :title="muted ? t('audio.unmute') : t('audio.mute')"
             @click="toggleMute"
           >
             <component :is="muted ? IconMuted : IconVolume" class="size-4" />
@@ -62,7 +65,7 @@ const { playing, duration, muted, sliderValue, toggle, toggleMute, onSeekInput, 
             :max="duration || 0"
             step="any"
             :value="sliderValue"
-            aria-label="音频进度"
+            :aria-label="t('audio.progressLabel')"
             @input="onSeekInput"
             @change="onSeekChange"
           />

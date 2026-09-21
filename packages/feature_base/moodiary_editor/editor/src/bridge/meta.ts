@@ -22,7 +22,7 @@ export interface EditorMetaWeatherOption {
 export interface EditorMeta {
   dateText: string
   subText: string
-  subTextRead: string
+  wordCount: number
   mood: string
   moods: EditorMetaMoodOption[]
   category?: string | null

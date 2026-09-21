@@ -14,8 +14,11 @@ import {
 import IconUp from '~icons/lucide/chevron-up'
 import IconDown from '~icons/lucide/chevron-down'
 import IconClose from '~icons/lucide/x'
+import { useI18n } from 'vue-i18n'
 
 defineProps<{ platform: 'mobile' | 'desktop' }>()
+
+const { t } = useI18n()
 
 const findInput = ref<HTMLInputElement | null>(null)
 
@@ -52,7 +55,7 @@ function onFindKey(e: KeyboardEvent): void {
         ref="findInput"
         :value="editorSearch.term"
         type="text"
-        placeholder="查找"
+        :placeholder="t('search.findPlaceholder')"
         class="input input-xs w-full rounded-md"
         @input="setTerm(($event.target as HTMLInputElement).value)"
         @keydown="onFindKey"
@@ -65,19 +68,19 @@ function onFindKey(e: KeyboardEvent): void {
           class="btn btn-ghost btn-xs btn-square rounded-md"
           :class="{ 'btn-active text-primary': editorSearch.caseSensitive }"
           type="button"
-          title="区分大小写"
+          :title="t('search.matchCase')"
           @mousedown.prevent
           @click="toggleCase"
         >
           <span class="text-[11px] font-bold">Aa</span>
         </button>
-        <button class="btn btn-ghost btn-xs btn-square rounded-md" type="button" title="上一个" @mousedown.prevent @click="prevMatch">
+        <button class="btn btn-ghost btn-xs btn-square rounded-md" type="button" :title="t('search.previous')" @mousedown.prevent @click="prevMatch">
           <IconUp class="size-4" />
         </button>
-        <button class="btn btn-ghost btn-xs btn-square rounded-md" type="button" title="下一个" @mousedown.prevent @click="nextMatch">
+        <button class="btn btn-ghost btn-xs btn-square rounded-md" type="button" :title="t('search.next')" @mousedown.prevent @click="nextMatch">
           <IconDown class="size-4" />
         </button>
-        <button class="btn btn-ghost btn-xs btn-square rounded-md" type="button" title="关闭" @mousedown.prevent @click="closeSearch">
+        <button class="btn btn-ghost btn-xs btn-square rounded-md" type="button" :title="t('search.close')" @mousedown.prevent @click="closeSearch">
           <IconClose class="size-4" />
         </button>
       </div>
@@ -85,13 +88,13 @@ function onFindKey(e: KeyboardEvent): void {
       <input
         :value="editorSearch.replace"
         type="text"
-        placeholder="替换为"
+        :placeholder="t('search.replacePlaceholder')"
         class="input input-xs w-full rounded-md"
         @input="setReplace(($event.target as HTMLInputElement).value)"
       />
       <div class="flex items-center justify-end gap-0.5">
-        <button class="btn btn-ghost btn-xs rounded-md" type="button" @mousedown.prevent @click="replaceOne">替换</button>
-        <button class="btn btn-ghost btn-xs rounded-md" type="button" @mousedown.prevent @click="replaceAllMatches">全部</button>
+        <button class="btn btn-ghost btn-xs rounded-md" type="button" @mousedown.prevent @click="replaceOne">{{ t('search.replace') }}</button>
+        <button class="btn btn-ghost btn-xs rounded-md" type="button" @mousedown.prevent @click="replaceAllMatches">{{ t('search.replaceAll') }}</button>
       </div>
     </div>
   </div>

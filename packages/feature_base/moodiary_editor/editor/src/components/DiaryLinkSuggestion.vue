@@ -10,6 +10,9 @@ import {
   type CSSProperties,
 } from 'vue'
 import { linkSuggestion, selectCandidate } from '../editor/diary-link'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const box = ref<HTMLElement | null>(null)
 const pos = reactive<{
@@ -106,19 +109,19 @@ const style = computed<CSSProperties>(() => ({
       class="flex items-center gap-2 px-2 py-2 text-sm opacity-70"
     >
       <span class="loading loading-spinner loading-xs" />
-      <span>搜索中…</span>
+      <span>{{ t('link.searching') }}</span>
     </div>
     <div
       v-else-if="!linkSuggestion.query.trim()"
       class="px-2 py-2 text-sm opacity-60"
     >
-      输入关键词搜索日记…
+      {{ t('link.prompt') }}
     </div>
     <div
       v-else-if="!linkSuggestion.items.length"
       class="px-2 py-2 text-sm opacity-60"
     >
-      无匹配的日记
+      {{ t('link.empty') }}
     </div>
     <button
       v-for="(it, i) in linkSuggestion.items"

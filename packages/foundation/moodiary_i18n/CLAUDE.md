@@ -14,7 +14,7 @@ Two unrelated slang outputs:
 
 | | Source | Mode | Symbols |
 |---|---|---|---|
-| App | `moodiary_i18n/lib/i18n/<ns>_{zh,en}.i18n.json` | default (`LocaleSettings` + `TranslationProvider`) | `Translations` / `AppLocale` / `l10n` |
+| App | `i18n/flutter/<ns>_{zh,en}.i18n.json` | default (`LocaleSettings` + `TranslationProvider`) | `Translations` / `AppLocale` / `l10n` |
 | mui | `mui/lib/src/i18n/{zh,en}.i18n.json` | `locale_handling: false` + hand-written delegate | `MuiLocalizationsData` / `MuiLocale` / `context.muiL10n` |
 
 - **App**: `TranslationProvider` is mounted in `runApp`; `applyStoredLanguage()` calls `LocaleSettings.setLocale` once. KV stores only the preference enum; `MaterialApp.locale` comes from `TranslationProvider.of(context).flutterLocale`.
@@ -23,9 +23,11 @@ Two unrelated slang outputs:
 
 App namespaces: one file per feature, `common` plus `app` / `diary` / `assistant` / `export` / `sync` / `media` / `editor` / `ui` / `lock` / `share` / `picker`. Read as `l10n.diary.searchResult`; deleting a feature deletes its two files. Feature packages do not install slang (mui excepted).
 
+`i18n/web/{zh,en}.json` belongs to the editor page alone (vue-i18n, bundled by unplugin-vue-i18n's `include`) and slang never reads it; a string both sides need is duplicated in both trees. `dart tool/task.dart i18n` is slang only.
+
 - Widgets use `context.l10n.xxx` (rebuilds on language change); services / export / callbacks use top-level `l10n.xxx` (does not rebuild). Parameters are named.
 - After editing `*.i18n.json` run `dart tool/task.dart i18n` (output is committed).
-- Dead-key check, inside `moodiary_i18n` (~9 s): `dart run slang analyze --full --source-dirs=../../../packages,../../../mobile`. Always write `l10n.xxx.yyy` in full, and do not end other variables with `translate_var`.
+- Dead-key check, inside `moodiary_i18n` (~9 s): `dart run slang analyze --full --source-dirs=../../../packages,../../../mobile`; it only sees `i18n/flutter`. Always write `l10n.xxx.yyy` in full, and do not end other variables with `translate_var`.
 - mui's barrel only does `show MuiLocalizationsData`.
 - Plural keys must have the same node shape in every locale, so Chinese sides are plural nodes with only `other`. `setupPluralResolvers()` (before `runApp`) says zh always takes `other`. A future plural key in mui goes through the delegate's `buildSync(cardinalResolver: ...)`.
 - Non-base locales are deferred imports (`lazy: true`), so the App uses async `setLocale`, never `setLocaleSync`. mui pins `lazy: false` because its delegate returns a `SynchronousFuture` from `buildSync`. Gate: `mui/test/i18n_test.dart` checks for no `deferred as`.

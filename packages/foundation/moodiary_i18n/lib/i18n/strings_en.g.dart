@@ -736,8 +736,6 @@ class _Translations$editor$en extends Translations$editor$zh {
 	@override String get pickAudio => 'Select audio';
 	@override String get pickAudioFromRecord => 'Recording';
 	@override String get pickAudioFromFile => 'File Audio';
-	@override String get content => 'Text';
-	@override String get titlePlaceholder => 'Title';
 	@override String get unsupportedPlatform => 'The editor is not supported on this platform';
 	@override String loadFailed({required Object error}) => 'Failed to load the editor\n${error}';
 	@override String get pickCategory => 'Pick a category';

@@ -3,12 +3,15 @@ import { computed, onBeforeUnmount, ref } from 'vue'
 import { NodeViewContent, NodeViewWrapper, nodeViewProps } from '@tiptap/vue-3'
 import IconCopy from '~icons/lucide/copy'
 import IconCheck from '~icons/lucide/check'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps(nodeViewProps)
 
+const { t } = useI18n()
+
 const language = computed(() => {
   const l = props.node.attrs.language as string | null
-  return l && l.length ? l : '纯文本'
+  return l && l.length ? l : t('code.plainText')
 })
 
 const copied = ref(false)
@@ -44,11 +47,11 @@ onBeforeUnmount(() => clearTimeout(copiedTimer))
       <button
         class="moodiary-code-block__copy"
         type="button"
-        :title="copied ? '已复制' : '复制'"
+        :title="copied ? t('code.copied') : t('code.copy')"
         @click="copy"
       >
         <component :is="copied ? IconCheck : IconCopy" class="size-4" />
-        <span>{{ copied ? '已复制' : '复制' }}</span>
+        <span>{{ copied ? t('code.copied') : t('code.copy') }}</span>
       </button>
     </div>
     <!-- NodeViewContent 默认内联 white-space: pre-wrap，这里覆盖为 pre -->

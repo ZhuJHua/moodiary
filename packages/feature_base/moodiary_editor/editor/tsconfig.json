@@ -10,7 +10,7 @@
     "lib": ["ES2019", "DOM", "DOM.Iterable"],
     "jsx": "preserve",
     "jsxImportSource": "vue",
-    "types": ["vite/client"]
+    "types": ["vite/client", "@intlify/unplugin-vue-i18n/messages"]
   },
   "include": ["src", "dev"]
 }

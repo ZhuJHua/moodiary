@@ -1,6 +1,6 @@
 /// Generated file. Do not edit.
 ///
-/// Source: lib/i18n
+/// Source: ../../../i18n/flutter
 /// To regenerate, run: `dart run slang`
 
 // coverage:ignore-file
