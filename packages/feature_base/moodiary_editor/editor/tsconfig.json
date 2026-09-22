@@ -7,7 +7,7 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "lib": ["ES2019", "DOM", "DOM.Iterable"],
+    "lib": ["ES2019", "ES2022.Intl", "DOM", "DOM.Iterable"],
     "jsx": "preserve",
     "jsxImportSource": "vue",
     "types": ["vite/client", "@intlify/unplugin-vue-i18n/messages"]

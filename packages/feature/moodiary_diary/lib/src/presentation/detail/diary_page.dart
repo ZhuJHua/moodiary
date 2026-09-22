@@ -836,7 +836,6 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     return jsonEncode({
       'dateText': TimeFormat.anchorDate(diary.time),
       'subText': TimeFormat.weekdayTimeHms(diary.time),
-      'wordCount': diary.contentText.runes.length,
       'mood': diary.mood.name,
       'moods': [
         for (final mood in DiaryMood.values)

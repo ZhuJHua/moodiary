@@ -42,6 +42,7 @@ import { useI18n } from 'vue-i18n'
 const props = defineProps<{
   meta: EditorMeta
   editable: boolean
+  wordCount: number
 }>()
 
 const { t } = useI18n()
@@ -49,7 +50,7 @@ const { t } = useI18n()
 const subLine = computed(() =>
   props.editable
     ? props.meta.subText
-    : `${props.meta.subText} · ${t('wordCount', { count: props.meta.wordCount })}`,
+    : `${props.meta.subText} · ${t('wordCount', { count: props.wordCount })}`,
 )
 
 const MOOD_ICONS: Record<string, Component> = {
