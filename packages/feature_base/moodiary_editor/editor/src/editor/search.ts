@@ -139,6 +139,9 @@ export const SearchExtension = Extension.create({
   onCreate() {
     boundEditor = this.editor
   },
+  onTransaction({ transaction }) {
+    if (transaction.docChanged && editorSearch.open) updateCounts()
+  },
   onDestroy() {
     if (boundEditor === this.editor) boundEditor = null
   },

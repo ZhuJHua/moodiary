@@ -6,6 +6,8 @@ import IconPause from '~icons/lucide/pause'
 import IconVolume from '~icons/lucide/volume-2'
 import IconMuted from '~icons/lucide/volume-x'
 import IconFullscreen from '~icons/lucide/maximize'
+import MediaSizeMenu from './MediaSizeMenu.vue'
+import { editable } from '../../editor/editable'
 import { post } from '../../bridge/post'
 import { mediaUrl } from '../../editor/media'
 import { formatTime, useMediaControls } from '../../editor/use-media'
@@ -17,6 +19,19 @@ const { t } = useI18n()
 
 const filename = computed(() => (props.node.attrs.filename as string | null) ?? '')
 const src = computed(() => (filename.value ? mediaUrl(filename.value) : ''))
+
+const draft = ref<number | null>(null)
+const widthPercent = computed(() => {
+  const v = props.node.attrs.widthPercent
+  return typeof v === 'number' ? v : null
+})
+const shown = computed(() => draft.value ?? widthPercent.value)
+const wrapperStyle = computed(() =>
+  shown.value === null ? undefined : { maxWidth: `${shown.value}%` },
+)
+function commitWidth(value: number | null): void {
+  props.updateAttributes({ widthPercent: value })
+}
 const poster = computed(() =>
   filename.value ? mediaUrl(filename.value, { poster: true }) : '',
 )
@@ -153,6 +168,7 @@ onBeforeUnmount(() => {
   <NodeViewWrapper
     class="moodiary-media moodiary-media--video"
     :class="{ 'is-selected': selected }"
+    :style="wrapperStyle"
     contenteditable="false"
   >
     <div
@@ -231,6 +247,14 @@ onBeforeUnmount(() => {
           <IconFullscreen class="size-5" />
         </button>
       </div>
+
+      <MediaSizeMenu
+        v-if="editable"
+        :model-value="widthPercent"
+        :title="t('video.size')"
+        @update:model-value="commitWidth"
+        @preview="draft = $event"
+      />
     </div>
   </NodeViewWrapper>
 </template>

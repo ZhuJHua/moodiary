@@ -48,9 +48,10 @@
     "replaceAll": "全部"
   },
   "image": {
-    "size": "图片尺寸",
+    "size": "图片尺寸"
+  },
+  "mediaSize": {
     "width": "宽度",
-    "widthSlider": "图片宽度",
     "defaultWidth": "默认",
     "reset": "恢复默认"
   },
@@ -60,7 +61,8 @@
     "mute": "静音",
     "unmute": "取消静音",
     "progressLabel": "视频进度",
-    "fullscreen": "全屏播放"
+    "fullscreen": "全屏播放",
+    "size": "视频尺寸"
   },
   "audio": {
     "play": "播放",

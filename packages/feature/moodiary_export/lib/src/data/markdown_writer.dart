@@ -1,4 +1,5 @@
 import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
 import 'export_doc.dart';
 
@@ -293,8 +294,16 @@ class MarkdownWriter {
     return buf.toString();
   }
 
+  static final RegExp _linkLabelEscape = RegExp(r'[\\\[\]]');
+
   static String _span(IrSpan span, MarkdownOptions o) {
-    if (span.diaryLinkId != null) return '[[${span.text}]]';
+    if (span.diaryLinkId != null) {
+      final label = span.text.replaceAllMapped(
+        _linkLabelEscape,
+        (m) => '\\${m[0]}',
+      );
+      return '[[$label]]($diaryLinkScheme${span.diaryLinkId})';
+    }
 
     if (span.code) {
       final fence = '`' * _inlineFenceLength(span.text);

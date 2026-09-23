@@ -92,15 +92,21 @@ class _EditorBodyState extends State<EditorBody> {
   }
 
   String _resolveContent() {
-    if (widget.type != .richText) return widget.initialContent;
-    final converted = QuillDeltaToTiptap.convert(widget.initialContent);
-    if (converted != null) return converted;
-    var plain =
-        QuillDelta.plainText(widget.initialContent) ?? widget.initialContent;
-    if (plain.trim().isEmpty && widget.initialContent.trim().isNotEmpty) {
-      plain = widget.initialContent;
+    final content = widget.initialContent;
+    switch (widget.type) {
+      case .tiptap:
+        return content;
+      case .markdown:
+        return MarkdownToTiptap.convert(content) ??
+            TiptapContent.wrapPlainText(content);
+      case .richText:
+        final converted = QuillDeltaToTiptap.convert(content);
+        if (converted != null) return converted;
+        var plain = QuillDelta.plainText(content) ?? content;
+        if (plain.trim().isEmpty && content.trim().isNotEmpty) plain = content;
+        return MarkdownToTiptap.convert(plain) ??
+            TiptapContent.wrapPlainText(plain);
     }
-    return MarkdownToTiptap.convert(plain) ?? plain;
   }
 
   @override

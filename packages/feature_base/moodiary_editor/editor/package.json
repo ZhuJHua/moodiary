@@ -18,12 +18,14 @@
   "dependencies": {
     "@tiptap/core": "3.31.3",
     "@tiptap/extension-code-block-lowlight": "3.31.3",
+    "@tiptap/extension-file-handler": "3.31.3",
     "@tiptap/extension-image": "3.31.3",
     "@tiptap/extension-mention": "3.31.3",
     "@tiptap/extension-table": "3.31.3",
     "@tiptap/extension-task-item": "3.31.3",
     "@tiptap/extension-task-list": "3.31.3",
     "@tiptap/extensions": "3.31.3",
+    "@tiptap/markdown": "3.31.3",
     "@tiptap/pm": "3.31.3",
     "@tiptap/starter-kit": "3.31.3",
     "@tiptap/suggestion": "3.31.3",
@@ -31,7 +33,6 @@
     "lowlight": "3.3.0",
     "prosemirror-search": "1.1.1",
     "qweather-icons": "1.8.0",
-    "tiptap-markdown": "0.9.0",
     "vue": "3.5.42",
     "vue-i18n": "11.4.12"
   },
