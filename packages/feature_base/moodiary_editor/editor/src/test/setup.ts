@@ -19,3 +19,12 @@ Range.prototype.getBoundingClientRect = () => zeroRect
 Range.prototype.getClientRects = () =>
   ({ length: 0, item: () => null, *[Symbol.iterator]() {} }) as unknown as DOMRectList
 document.elementFromPoint = () => null
+
+// jsdom 无选区时 collapseToEnd 会抛
+const selectionProto = window.Selection?.prototype
+if (selectionProto) {
+  const collapseToEnd = selectionProto.collapseToEnd
+  selectionProto.collapseToEnd = function (this: Selection) {
+    if (this.rangeCount > 0) collapseToEnd.call(this)
+  }
+}

@@ -200,4 +200,51 @@ void main() {
       expect(_find(doc, 'image').single['attrs']['src'], 'image-y.png');
     });
   });
+
+  group('MarkdownToTiptap — 与编辑器 markdown 规范对齐', () {
+    test('[[label]](moodiary://diary/<id>) 还原为双链节点，裸 [[label]] 留作文本', () {
+      final doc = _parse(
+        MarkdownToTiptap.convert('看 [[那天]](moodiary://diary/d1) 和 [[没id]] 吧'),
+      );
+      final inline = (doc['content'] as List)[0]['content'] as List;
+      expect(inline.map((n) => n['type']).toList(), [
+        'text',
+        'diaryLink',
+        'text',
+      ]);
+      expect(inline[1]['attrs'], {'id': 'd1', 'label': '那天'});
+      expect(inline[2]['text'], ' 和 [[没id]] 吧');
+    });
+
+    test('标签里的方括号与反斜杠按导出器的转义还原', () {
+      final doc = _parse(
+        MarkdownToTiptap.convert(r'看 [[\[游记\] 杭州\\西湖]](moodiary://diary/d2) 吧'),
+      );
+      final inline = (doc['content'] as List)[0]['content'] as List;
+      expect(inline[1]['attrs'], {'id': 'd2', 'label': r'[游记] 杭州\西湖'});
+      expect(inline[2]['text'], ' 吧');
+    });
+
+    test('表格列对齐进 align 属性', () {
+      final doc = _parse(
+        MarkdownToTiptap.convert('| a | b | c |\n|:--|--:|---|\n| 1 | 2 | 3 |'),
+      );
+      final header =
+          (doc['content'] as List)[0]['content'][0]['content'] as List;
+      expect(header.map((c) => (c['attrs'] as Map?)?['align']).toList(), [
+        'left',
+        'right',
+        null,
+      ]);
+    });
+
+    test('图片 title 保留', () {
+      final doc = _parse(MarkdownToTiptap.convert('![alt](image-1.png "标题")'));
+      expect((doc['content'] as List)[0]['attrs'], {
+        'src': 'image-1.png',
+        'alt': 'alt',
+        'title': '标题',
+      });
+    });
+  });
 }

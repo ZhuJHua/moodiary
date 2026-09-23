@@ -107,8 +107,29 @@ describe('diary link suggestion', () => {
 
     selectCandidate(linkSuggestion.items[0])
     await vi.advanceTimersByTimeAsync(0)
-    expect(h.findNode('diaryLink')?.attrs).toMatchObject({ id: 'd9', label: '天空' })
+    expect(h.findNode('diaryLink')?.attrs).toEqual({ id: 'd9', label: '天空' })
     expect(linkSuggestion.open).toBe(false)
+  })
+
+  it('inserting before an existing space does not double it (Mention default command)', async () => {
+    await h.type('前 后')
+    h.editor.commands.setTextSelection(2)
+    await h.type('[[天')
+    await h.respond([{ id: 'd9', label: '天空' }])
+    selectCandidate(linkSuggestion.items[0])
+    await vi.advanceTimersByTimeAsync(0)
+    expect(h.editor.getText()).toBe('前[[天空]] 后')
+  })
+
+  it('Backspace after the chip removes it without leaving a trigger character behind', async () => {
+    await h.type('前[[天')
+    await h.respond([{ id: 'd9', label: '天空' }])
+    selectCandidate(linkSuggestion.items[0])
+    await vi.advanceTimersByTimeAsync(0)
+    h.editor.commands.setTextSelection(3)
+    await h.press('Backspace')
+    expect(h.findNode('diaryLink')).toBeUndefined()
+    expect(h.editor.getText()).toBe('前 ')
   })
 
   it('Escape closes the panel without inserting', async () => {

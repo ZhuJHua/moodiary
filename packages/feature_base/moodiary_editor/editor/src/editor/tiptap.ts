@@ -2,8 +2,8 @@ import type { Editor, EditorOptions, JSONContent } from '@tiptap/core'
 import { history } from '@tiptap/pm/history'
 import { NodeSelection } from '@tiptap/pm/state'
 import StarterKit from '@tiptap/starter-kit'
-import { Placeholder, CharacterCount } from '@tiptap/extensions'
-import { Markdown } from 'tiptap-markdown'
+import { Placeholder, Selection } from '@tiptap/extensions'
+import FileHandler from '@tiptap/extension-file-handler'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import { TableKit } from '@tiptap/extension-table'
 import { TaskList } from '@tiptap/extension-task-list'
@@ -17,7 +17,7 @@ import { SearchExtension } from './search'
 import { post } from '../bridge/post'
 import { setEditableState } from './editable'
 import { MediaImage } from './image-node'
-import { stripMediaPrefix } from './media'
+import { MoodiaryMarkdown } from './markdown'
 import { Audio, Video } from './media-nodes'
 
 const lowlight = createLowlight(common)
@@ -59,10 +59,28 @@ function parseDoc(content: string): JSONContent | null {
   if (!trimmed.startsWith('{')) return null
   try {
     const obj = JSON.parse(content)
-    return obj && typeof obj === 'object' && obj.type === 'doc' ? (obj as JSONContent) : null
+    if (!obj || typeof obj !== 'object' || obj.type !== 'doc') return null
+    const doc = obj as JSONContent
+    if (!Array.isArray(doc.content) || doc.content.length === 0) {
+      doc.content = [{ type: 'paragraph' }]
+    }
+    return doc
   } catch {
     return null
   }
+}
+
+export function wrapPlainText(text: string): JSONContent {
+  const content = text.split(/\r?\n/).map((line) => ({
+    type: 'paragraph',
+    ...(line ? { content: [{ type: 'text', text: line }] } : {}),
+  }))
+  return { type: 'doc', content: content.length ? content : [{ type: 'paragraph' }] }
+}
+
+const isBlankDoc = (doc: JSONContent): boolean => {
+  const content = doc.content ?? []
+  return content.length === 0 || (content.length === 1 && content[0].type === 'paragraph' && !content[0].content?.length)
 }
 
 export function createEditorKit(opts: EditorKitOptions): EditorKit {
@@ -91,22 +109,22 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
     insertBlock({ type: 'image', attrs: { src: name, alt } })
   }
 
-  const handleFiles = (files: FileList | null | undefined): boolean => {
-    const images = files ? Array.from(files).filter((f) => f.type.startsWith('image/')) : []
-    if (images.length === 0) return false
-    for (const file of images) {
+  const uploadFiles = (files: File[], pos?: number): void => {
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) continue
       const reader = new FileReader()
       reader.onload = () => {
         const dataUri = String(reader.result)
         const id = `up-${++uploadSeq}`
         pendingUploads.set(id, (name) => {
-          if (name) insertImage(name)
+          if (!name) return
+          if (pos != null) editor?.commands.setTextSelection(pos)
+          insertImage(name)
         })
         post('saveImage', { id, dataUri, name: file.name })
       }
       reader.readAsDataURL(file)
     }
-    return true
   }
 
   const withoutEmit = (fn: () => void): void => {
@@ -118,12 +136,16 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
   const loadContent = (content: string): void => {
     const ed = editor
     if (!ed) return
-    const doc = parseDoc(content)
+    const doc = parseDoc(content) ?? wrapPlainText(content)
     withoutEmit(() => {
-      if (doc) {
+      try {
+        ed.commands.setContent(doc, { emitUpdate: false, errorOnInvalidContent: true })
+      } catch (e) {
         ed.commands.setContent(doc, { emitUpdate: false })
-      } else {
-        ed.commands.setContent(stripMediaPrefix(content), { emitUpdate: false })
+        post('contentError', {
+          message: String((e as { cause?: unknown }).cause ?? e),
+          lost: ed.isEmpty && !isBlankDoc(doc),
+        })
       }
       // 不可用 view.updateState()：会绕过 dispatchTransaction 导致 history 复活，撤销后内容变空
       ed.unregisterPlugin('history')
@@ -136,7 +158,7 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
     content: '',
     extensions: [
       // 两者节点同名，须关掉 StarterKit 自带 codeBlock 才能换成 CodeBlockLowlight
-      StarterKit.configure({ codeBlock: false }),
+      StarterKit.configure({ codeBlock: false, link: { openOnClick: false } }),
       CodeBlockLowlight.configure({ lowlight }).extend({
         addNodeView() {
           return VueNodeViewRenderer(CodeBlockNodeView)
@@ -149,14 +171,25 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
       TaskList,
       TaskItem.configure({ nested: true }),
       DiaryLink,
-      CharacterCount,
+      Selection,
+      MoodiaryMarkdown,
+      FileHandler.configure({
+        onPaste: (_editor, files) => uploadFiles(files),
+        onDrop: (_editor, files, pos) => uploadFiles(files, pos),
+      }),
       SearchExtension,
       Placeholder.configure({ placeholder }),
-      Markdown.configure({ html: false, linkify: false, breaks: false, transformPastedText: true }),
     ],
     editorProps: {
-      handlePaste: (_view, event) => handleFiles(event.clipboardData?.files),
-      handleDrop: (_view, event) => handleFiles(event.dataTransfer?.files),
+      handlePaste: (_view, event) => {
+        const data = event.clipboardData
+        const ed = editor
+        if (!ed || !data || data.files.length > 0 || data.types.includes('text/html')) return false
+        const text = data.getData('text/plain')
+        if (!text) return false
+        ed.commands.insertContent(text, { contentType: 'markdown' })
+        return true
+      },
     },
     onUpdate: ({ editor }) => {
       if (!suppress) onChange(JSON.stringify(editor.getJSON()))
@@ -199,10 +232,10 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
     resumeVideo: (name, seconds) => {
       const ed = editor
       if (!ed || !name) return
-      const els = Array.from(
-        ed.view.dom.querySelectorAll<HTMLVideoElement>('video.moodiary-video__el'),
-      )
-      const el = els.find((v) => v.src.endsWith(name))
+      // NodePos.element 对原子块返回父容器
+      const hit = ed.$nodes('video')?.find((p) => p.node.attrs.filename === name)
+      const host = hit ? (ed.view.nodeDOM(hit.pos) as HTMLElement | null) : null
+      const el = host?.querySelector<HTMLVideoElement>('video.moodiary-video__el') ?? null
       if (!el) return
       const apply = (): void => {
         try {

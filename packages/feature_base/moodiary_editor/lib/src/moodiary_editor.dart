@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:mui/mui.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'editor_local_server.dart';
 import 'media.dart';
@@ -174,6 +175,8 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
 
   late String _lastContent = widget.initialContent;
 
+  bool _contentLocked = false;
+
   EditorFocusTarget _focusTarget = .none;
 
   @override
@@ -323,6 +326,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
         if (!_fontReady.isCompleted) _fontReady.complete();
         return;
       case 'change':
+        if (_contentLocked) return;
         final content = payload is String ? payload : '';
         _lastContent = content;
         widget.onChanged?.call(content);
@@ -345,6 +349,22 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
         return;
       case 'error':
         _log('JS error: $payload', level: 1000);
+        return;
+      case 'contentError':
+        final lost = payload is Map && payload['lost'] == true;
+        _contentLocked = lost;
+        _log(
+          'editor rejected the document (lost: $lost): '
+          '${payload is Map ? payload['message'] : payload}',
+          level: lost ? 1000 : 900,
+        );
+        return;
+      case 'urlTap':
+        final url = payload is Map ? payload['url'] : null;
+        final uri = url is String ? Uri.tryParse(url) : null;
+        if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
+          unawaited(_openUrl(uri));
+        }
         return;
       case 'pickImage':
         widget.onPickImage?.call();
@@ -622,8 +642,18 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     );
   }
 
+  Future<void> _openUrl(Uri uri) async {
+    try {
+      final ok = await launchUrl(uri, mode: .externalApplication);
+      if (!ok) _log('urlTap: no handler for $uri', level: 900);
+    } catch (e, s) {
+      _log('urlTap failed: $uri', error: e, stack: s, level: 1000);
+    }
+  }
+
   Future<void> _setContent(String content) async {
     _lastContent = content;
+    _contentLocked = false;
     await _run('window.MoodiaryBridge.setContent(${jsonEncode(content)})');
   }
 

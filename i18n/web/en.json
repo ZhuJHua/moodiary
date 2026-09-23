@@ -48,9 +48,10 @@
     "replaceAll": "All"
   },
   "image": {
-    "size": "Image size",
+    "size": "Image size"
+  },
+  "mediaSize": {
     "width": "Width",
-    "widthSlider": "Image width",
     "defaultWidth": "Default",
     "reset": "Reset to default"
   },
@@ -60,7 +61,8 @@
     "mute": "Mute",
     "unmute": "Unmute",
     "progressLabel": "Video progress",
-    "fullscreen": "Fullscreen"
+    "fullscreen": "Fullscreen",
+    "size": "Video size"
   },
   "audio": {
     "play": "Play",

@@ -3,6 +3,7 @@ import Mention from '@tiptap/extension-mention'
 import type { SuggestionKeyDownProps, SuggestionProps } from '@tiptap/suggestion'
 import { reactive } from 'vue'
 import { post } from '../bridge/post'
+import { diaryLinkMarkdownSpec } from './markdown'
 
 export interface DiaryCandidate {
   id: string
@@ -27,16 +28,19 @@ export function selectCandidate(item: DiaryCandidate): void {
 const resolvers = new Map<string, (list: DiaryCandidate[]) => void>()
 let reqSeq = 0
 
-function requestCandidates(query: string): Promise<DiaryCandidate[]> {
+function requestCandidates(query: string, signal?: AbortSignal): Promise<DiaryCandidate[]> {
   return new Promise<DiaryCandidate[]>((resolve) => {
     const reqId = `lc-${++reqSeq}`
-    const timer = window.setTimeout(() => {
-      if (resolvers.delete(reqId)) resolve([])
-    }, 4000)
-    resolvers.set(reqId, (list) => {
+    const finish = (list: DiaryCandidate[]): void => {
       window.clearTimeout(timer)
+      signal?.removeEventListener('abort', onAbort)
+      resolvers.delete(reqId)
       resolve(list)
-    })
+    }
+    const onAbort = (): void => finish([])
+    const timer = window.setTimeout(() => finish([]), 4000)
+    signal?.addEventListener('abort', onAbort, { once: true })
+    resolvers.set(reqId, finish)
     post('requestLinkCandidates', { reqId, query })
   })
 }
@@ -44,7 +48,6 @@ function requestCandidates(query: string): Promise<DiaryCandidate[]> {
 export function resolveLinkCandidates(reqId: string, json: string): void {
   const r = resolvers.get(reqId)
   if (!r) return
-  resolvers.delete(reqId)
   let list: DiaryCandidate[] = []
   try {
     const parsed = JSON.parse(json)
@@ -58,58 +61,24 @@ export function resolveLinkCandidates(reqId: string, json: string): void {
   r(list)
 }
 
-let searchSeq = 0
-let debounceTimer = 0
-
 function close(): void {
   linkSuggestion.open = false
   linkSuggestion.loading = false
   linkSuggestion.items = []
   linkSuggestion.query = ''
-  window.clearTimeout(debounceTimer)
-  searchSeq++
   currentCommand = null
 }
 
-function setRect(props: SuggestionProps<DiaryCandidate>): void {
+function sync(props: SuggestionProps<DiaryCandidate>): void {
+  currentCommand = props.command
   const r = props.clientRect?.()
   if (r) linkSuggestion.rect = { left: r.left, top: r.top, bottom: r.bottom }
-}
-
-function runSearch(query: string): void {
-  linkSuggestion.query = query
-  linkSuggestion.index = 0
-  window.clearTimeout(debounceTimer)
-  const q = query.trim()
-  if (!q) {
-    searchSeq++
-    linkSuggestion.loading = false
-    linkSuggestion.items = []
-    return
+  linkSuggestion.query = props.query ?? ''
+  linkSuggestion.loading = props.loading
+  if (linkSuggestion.items !== props.items) {
+    linkSuggestion.items = props.items
+    linkSuggestion.index = 0
   }
-  linkSuggestion.loading = true
-  const seq = ++searchSeq
-  debounceTimer = window.setTimeout(() => {
-    requestCandidates(q).then((list) => {
-      if (seq !== searchSeq) return
-      linkSuggestion.items = list
-      linkSuggestion.index = 0
-      linkSuggestion.loading = false
-    })
-  }, 250)
-}
-
-function handleStart(props: SuggestionProps<DiaryCandidate>): void {
-  linkSuggestion.open = true
-  currentCommand = props.command
-  setRect(props)
-  runSearch(props.query ?? '')
-}
-
-function handleUpdate(props: SuggestionProps<DiaryCandidate>): void {
-  currentCommand = props.command
-  setRect(props)
-  if ((props.query ?? '') !== linkSuggestion.query) runSearch(props.query ?? '')
 }
 
 function handleKey(e: KeyboardEvent): boolean {
@@ -136,8 +105,19 @@ function handleKey(e: KeyboardEvent): boolean {
   return false
 }
 
-export const DiaryLink = Mention.extend({ name: 'diaryLink' }).configure({
+export const DiaryLink = Mention.extend({
+  name: 'diaryLink',
+  addAttributes() {
+    const { mentionSuggestionChar: _c, ...parent } = (this.parent?.() ?? {}) as Record<
+      string,
+      unknown
+    >
+    return parent
+  },
+  ...diaryLinkMarkdownSpec,
+}).configure({
   HTMLAttributes: { class: 'moodiary-link' },
+  deleteTriggerWithBackspace: true,
   renderHTML: ({ options, node }) => [
     'span',
     mergeAttributes(
@@ -156,21 +136,18 @@ export const DiaryLink = Mention.extend({ name: 'diaryLink' }).configure({
     allowSpaces: true,
     // 默认 allowedPrefixes 要求触发符前为空格/行首，这里关掉以支持任意位置触发
     allowedPrefixes: null,
-    items: () => [],
-    command: ({ editor, range, props }) => {
-      const item = props as unknown as DiaryCandidate
-      editor
-        .chain()
-        .focus()
-        .insertContentAt(range, [
-          { type: 'diaryLink', attrs: { id: item.id, label: item.label } },
-          { type: 'text', text: ' ' },
-        ])
-        .run()
+    minQueryLength: 1,
+    debounce: 250,
+    items: ({ query, signal }) => {
+      const q = query.trim()
+      return q ? requestCandidates(q, signal) : Promise.resolve([])
     },
     render: () => ({
-      onStart: (props: SuggestionProps<DiaryCandidate>) => handleStart(props),
-      onUpdate: (props: SuggestionProps<DiaryCandidate>) => handleUpdate(props),
+      onStart: (props: SuggestionProps<DiaryCandidate>) => {
+        linkSuggestion.open = true
+        sync(props)
+      },
+      onUpdate: (props: SuggestionProps<DiaryCandidate>) => sync(props),
       onKeyDown: (props: SuggestionKeyDownProps) => handleKey(props.event),
       onExit: () => close(),
     }),

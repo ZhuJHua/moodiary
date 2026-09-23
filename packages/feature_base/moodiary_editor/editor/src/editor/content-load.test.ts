@@ -66,3 +66,54 @@ describe('loadContent resets the undo stack', () => {
     expect(h.editor.getText()).toContain('正文')
   })
 })
+
+describe('content check on load', () => {
+  it('drops legacy attributes silently and reports nothing', () => {
+    h.api.setContent(
+      JSON.stringify({
+        type: 'doc',
+        content: [
+          { type: 'image', attrs: { src: 'image-1.png', width: null, height: null, widthPercent: 50 } },
+          {
+            type: 'paragraph',
+            content: [{ type: 'diaryLink', attrs: { id: 'd1', label: 'x', mentionSuggestionChar: '@' } }],
+          },
+          { type: 'audio', attrs: { filename: 'audio-1.m4a' } },
+        ],
+      }),
+    )
+    expect(h.lastPost('contentError')).toBeUndefined()
+    expect(h.findNode('image')?.attrs).toEqual({ src: 'image-1.png', alt: null, title: null, widthPercent: 50 })
+    expect(h.findNode('diaryLink')?.attrs).toEqual({ id: 'd1', label: 'x' })
+    expect(h.findNode('audio')?.attrs).toEqual({ filename: 'audio-1.m4a' })
+  })
+
+  it('reports an unknown node type and flags the content as lost', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    h.api.setContent(
+      JSON.stringify({
+        type: 'doc',
+        content: [{ type: 'paragraph', content: [{ type: 'text', text: 'x' }] }, { type: 'mysteryBlock' }],
+      }),
+    )
+    warn.mockRestore()
+    expect(h.lastPost('contentError')?.payload).toMatchObject({ lost: true })
+  })
+
+  it('reports a structural mismatch but keeps the content, so editing stays allowed', () => {
+    h.api.setContent(
+      JSON.stringify({
+        type: 'doc',
+        content: [{ type: 'bulletList', content: [{ type: 'listItem', content: [{ type: 'text', text: 'loose' }] }] }],
+      }),
+    )
+    expect(h.lastPost('contentError')?.payload).toMatchObject({ lost: false })
+    expect(h.editor.getText()).toContain('loose')
+  })
+
+  it('an empty document loads without complaint', () => {
+    h.api.setContent('{"type":"doc","content":[]}')
+    expect(h.lastPost('contentError')).toBeUndefined()
+    expect(h.editor.isEmpty).toBe(true)
+  })
+})

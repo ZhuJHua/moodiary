@@ -7,6 +7,7 @@ import { readBoot } from './bridge/boot'
 import { applyTheme, setFontBase } from './bridge/theme'
 import { setSaveStatus } from './bridge/save-status'
 import { post } from './bridge/post'
+import { editable } from './editor/editable'
 import { setMediaInfoPrefix, setMediaPrefix, unproxyMedia } from './editor/media'
 
 const boot = readBoot()
@@ -32,6 +33,13 @@ function onClick(e: MouseEvent): void {
       e.preventDefault()
       post('linkTap', { id })
     }
+    return
+  }
+  const anchor = target?.closest('a[href]') as HTMLAnchorElement | null
+  if (anchor && anchor.closest('.ProseMirror')) {
+    e.preventDefault()
+    const url = anchor.getAttribute('href') ?? ''
+    if (!editable.value && /^https?:\/\//i.test(url)) post('urlTap', { url })
     return
   }
   const img = target?.closest('img')

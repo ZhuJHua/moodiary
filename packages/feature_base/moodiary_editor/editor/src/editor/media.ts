@@ -57,11 +57,3 @@ export function unproxyMedia(url: string): string {
   if (url.startsWith(mediaPrefix)) return url.slice(mediaPrefix.length)
   return url.startsWith(LEGACY_PREFIX) ? url.slice(LEGACY_PREFIX.length) : url
 }
-
-// 构建目标 es2019，老 Android WebView 无 String.replaceAll，用 split/join 代替
-export function stripMediaPrefix(markdown: string): string {
-  const stripped = markdown.split(mediaPrefix).join('')
-  return mediaPrefix === LEGACY_PREFIX
-    ? stripped
-    : stripped.split(LEGACY_PREFIX).join('')
-}

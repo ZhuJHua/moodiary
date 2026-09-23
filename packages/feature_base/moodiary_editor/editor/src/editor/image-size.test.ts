@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 import { setupEditor } from '../test/harness'
 import type { EditorHarness } from '../test/harness'
-import { clampWidthPercent, IMAGE_SIZE_STOPS, snapWidthPercent } from './image-node'
+import { clampWidthPercent, snapWidthPercent, WIDTH_PERCENT_STOPS } from './media-size'
 import { setMediaPrefix } from './media'
 
 const PREFIX = 'http://127.0.0.1:5321/tok/media/'
@@ -30,11 +30,11 @@ const imageNodes = (): Array<Record<string, unknown>> => {
   return out
 }
 const wrapper = (): HTMLElement | null => h.editor.view.dom.querySelector('.moodiary-image')
-const badge = (): HTMLElement | null => h.editor.view.dom.querySelector('.moodiary-image__badge')
-const menuHost = (): HTMLElement | null => h.editor.view.dom.querySelector('.moodiary-image__menu')
-const panel = (): HTMLElement | null => document.body.querySelector('.moodiary-image__panel')
+const badge = (): HTMLElement | null => h.editor.view.dom.querySelector('.moodiary-size__badge')
+const menuHost = (): HTMLElement | null => h.editor.view.dom.querySelector('.moodiary-size__menu')
+const panel = (): HTMLElement | null => document.body.querySelector('.moodiary-size__panel')
 const slider = (): HTMLInputElement | null =>
-  document.body.querySelector('.moodiary-image__panel input[type="range"]')
+  document.body.querySelector('.moodiary-size__panel input[type="range"]')
 
 const openPanel = async (): Promise<void> => {
   if (!panel()) {
@@ -164,8 +164,8 @@ describe('size badge', () => {
     expect(range?.max).toBe('100')
     expect(range?.step).toBe('1')
 
-    const stops = Array.from(document.body.querySelectorAll<HTMLElement>('.moodiary-image__stop'))
-    expect(stops.map((el) => Number(el.textContent?.trim()))).toEqual([...IMAGE_SIZE_STOPS])
+    const stops = Array.from(document.body.querySelectorAll<HTMLElement>('.moodiary-size__stop'))
+    expect(stops.map((el) => Number(el.textContent?.trim()))).toEqual([...WIDTH_PERCENT_STOPS])
   })
 
   it('previews while dragging and only writes the attribute on release', async () => {
@@ -193,14 +193,14 @@ describe('size badge', () => {
     drag('40')
     await nextTick()
 
-    menuHost()?.querySelector<HTMLElement>('.moodiary-image__badge')?.click()
+    menuHost()?.querySelector<HTMLElement>('.moodiary-size__badge')?.click()
     await nextTick()
     expect(imageNode()?.attrs).toMatchObject({ widthPercent: 40 })
   })
 
   it('jumps to a stop when its tick label is tapped', async () => {
     await openPanel()
-    document.body.querySelectorAll<HTMLElement>('.moodiary-image__stop')[2].click()
+    document.body.querySelectorAll<HTMLElement>('.moodiary-size__stop')[2].click()
     await nextTick()
     expect(imageNode()?.attrs).toMatchObject({ widthPercent: 75 })
   })
@@ -229,12 +229,12 @@ describe('targets the right node', () => {
     await nextTick()
 
     h.editor.commands.setNodeSelection(0)
-    const badges = h.editor.view.dom.querySelectorAll<HTMLElement>('.moodiary-image__badge')
+    const badges = h.editor.view.dom.querySelectorAll<HTMLElement>('.moodiary-size__badge')
     expect(badges.length).toBe(2)
     badges[1].click()
     await nextTick()
 
-    document.body.querySelectorAll<HTMLElement>('.moodiary-image__stop')[1].click()
+    document.body.querySelectorAll<HTMLElement>('.moodiary-size__stop')[1].click()
     await nextTick()
 
     expect(imageNodes().map((a) => a.widthPercent)).toEqual([null, 50])
@@ -284,8 +284,27 @@ describe('HTML parsing (clipboard)', () => {
   it('drops width/height so they cannot fight widthPercent', () => {
     paste('<img src="image-4.jpg" width="300" height="200">')
     const pasted = imageNodes().find((a) => a.src === 'image-4.jpg')
-    expect(pasted?.width).toBeNull()
-    expect(pasted?.height).toBeNull()
+    expect(pasted).not.toHaveProperty('width')
+    expect(pasted).not.toHaveProperty('height')
     expect(h.editor.getHTML()).not.toContain('width="300"')
+  })
+})
+
+describe('video widthPercent', () => {
+  it('stores the percent on the video node and narrows the wrapper', async () => {
+    h.api.insertVideo('video-1.mp4')
+    h.editor.commands.updateAttributes('video', { widthPercent: 50 })
+    await nextTick()
+    const wrapper = h.editor.view.dom.querySelector<HTMLElement>('.moodiary-media--video')
+    expect(wrapper?.style.maxWidth).toBe('50%')
+    expect(wrapper?.querySelector('.moodiary-size__badge')).not.toBeNull()
+    expect(h.findNode('video')?.attrs).toEqual({ filename: 'video-1.mp4', widthPercent: 50 })
+  })
+
+  it('audio has no size control and no size attribute', async () => {
+    h.api.insertAudio('audio-1.m4a')
+    await nextTick()
+    expect(h.editor.view.dom.querySelector('.moodiary-media--audio .moodiary-size__badge')).toBeNull()
+    expect(h.findNode('audio')?.attrs).toEqual({ filename: 'audio-1.m4a' })
   })
 })

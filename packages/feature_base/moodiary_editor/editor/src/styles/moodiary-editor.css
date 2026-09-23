@@ -417,7 +417,7 @@ body {
    上固定 44px 会吃掉近半张图，而角标不是 <img>，那片区域点不出全屏画廊。
    锚在顶部而非底部：长图要滚一屏多才够得着底边，且改尺寸时顶边不动，视口不会跳。
    尺寸落在 host 上（它的包含块是 .moodiary-image，百分比才有确定参照），按钮再撑满。 */
-.moodiary-image__menu {
+.moodiary-size__menu {
   position: absolute;
   right: 0;
   top: 0;
@@ -425,7 +425,7 @@ body {
   width: min(44px, 40%);
   height: min(44px, 40%);
 }
-.moodiary-image__badge {
+.moodiary-size__badge {
   display: grid;
   place-items: center;
   width: 100%;
@@ -436,7 +436,7 @@ body {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.moodiary-image__chip {
+.moodiary-size__chip {
   display: grid;
   place-items: center;
   width: min(30px, 100%);
@@ -448,11 +448,11 @@ body {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
   transition: transform 0.14s ease;
 }
-.moodiary-image__badge:active .moodiary-image__chip {
+.moodiary-size__badge:active .moodiary-size__chip {
   transform: scale(0.9);
 }
 /* 尺寸面板里的档位标签：点即跳到该档，当前档高亮。面板 Teleport 到 body，故样式必须是全局的。 */
-.moodiary-image__stop {
+.moodiary-size__stop {
   padding: 2px 6px;
   border: none;
   border-radius: 6px;
@@ -463,7 +463,7 @@ body {
   font-variant-numeric: tabular-nums;
   -webkit-tap-highlight-color: transparent;
 }
-.moodiary-image__stop.is-active {
+.moodiary-size__stop.is-active {
   color: var(--app-primary);
   font-weight: 600;
   opacity: 1;
@@ -473,6 +473,9 @@ body {
    控件外观全部用 daisyUI（btn / range）+ Tailwind 工具类,见组件模板;这里只留外边距与选中描边。 —— */
 .moodiary-media {
   margin: 0.8em 0;
+}
+.moodiary-media--video {
+  margin-inline: auto;
 }
 /* 选中（NodeSelection）描边，复刻旧节点视图观感；仅编辑态（阅读态 contenteditable=false 不描边）。 */
 .moodiary-editor .ProseMirror[contenteditable='true'] .moodiary-media.is-selected {
