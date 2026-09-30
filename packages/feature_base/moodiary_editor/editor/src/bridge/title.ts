@@ -1,9 +1,9 @@
-import { ref } from 'vue'
+import { createStore } from '../lib/store'
 
-export const title = ref('')
+export const title = createStore('')
 
 export function setTitle(value: string): void {
-  title.value = value ?? ''
+  title.set(value ?? '')
 }
 
 let focusHandler: (() => void) | null = null

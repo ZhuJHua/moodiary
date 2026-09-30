@@ -1,4 +1,4 @@
-import { reactive } from 'vue'
+import { createStore } from '../lib/store'
 
 export type BlockKind = 'image' | 'video' | 'audio'
 
@@ -9,7 +9,7 @@ export interface BlockTarget {
   getPos: () => number | undefined
 }
 
-export const blockMenu = reactive<{ owner: symbol | null; previewWidth: number | null }>({
+export const blockMenu = createStore<{ owner: symbol | null; previewWidth: number | null }>({
   owner: null,
   previewWidth: null,
 })

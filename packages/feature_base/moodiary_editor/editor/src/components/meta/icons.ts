@@ -1,67 +1,69 @@
-import type { Component } from 'vue'
-import IconSmile from '~icons/lucide/smile'
-import IconMeh from '~icons/lucide/meh'
-import IconFrown from '~icons/lucide/frown'
-import IconSparkles from '~icons/lucide/sparkles'
-import IconAngry from '~icons/lucide/angry'
-import IconTornado from '~icons/lucide/tornado'
-import IconBatteryLow from '~icons/lucide/battery-low'
-import IconAnnoyed from '~icons/lucide/annoyed'
-import IconHeart from '~icons/lucide/heart'
-import IconBookOpen from '~icons/lucide/book-open'
-import IconFish from '~icons/lucide/fish'
-import IconUtensils from '~icons/lucide/utensils'
-import IconBriefcase from '~icons/lucide/briefcase'
-import IconPlane from '~icons/lucide/plane'
-import IconDumbbell from '~icons/lucide/dumbbell'
-import IconThermometer from '~icons/lucide/thermometer'
-import IconMapPin from '~icons/lucide/map-pin'
-import IconHouse from '~icons/lucide/house'
-import IconBuilding from '~icons/lucide/building-2'
-import IconSchool from '~icons/lucide/school'
-import IconCoffee from '~icons/lucide/coffee'
-import IconTrees from '~icons/lucide/trees'
-import IconHospital from '~icons/lucide/hospital'
+import {
+  Angry,
+  Annoyed,
+  BatteryLow,
+  BookOpen,
+  Briefcase,
+  Building2,
+  Coffee,
+  Dumbbell,
+  Fish,
+  Frown,
+  Heart,
+  Hospital,
+  House,
+  MapPin,
+  Meh,
+  Plane,
+  School,
+  Smile,
+  Sparkles,
+  Thermometer,
+  Tornado,
+  Trees,
+  Utensils,
+  type LucideIcon,
+} from 'lucide-react'
 import qiFontUrl from 'qweather-icons/font/fonts/qweather-icons.woff2?url'
 import qiCodepoints from 'qweather-icons/font/qweather-icons.json'
 
-const MOOD_ICONS: Record<string, Component> = {
-  smile: IconSmile,
-  meh: IconMeh,
-  frown: IconFrown,
-  sparkles: IconSparkles,
-  angry: IconAngry,
-  tornado: IconTornado,
-  'battery-low': IconBatteryLow,
-  annoyed: IconAnnoyed,
-  heart: IconHeart,
-  'book-open': IconBookOpen,
-  fish: IconFish,
-  utensils: IconUtensils,
-  briefcase: IconBriefcase,
-  plane: IconPlane,
-  dumbbell: IconDumbbell,
-  thermometer: IconThermometer,
+const MOOD_ICONS: Record<string, LucideIcon> = {
+  smile: Smile,
+  meh: Meh,
+  frown: Frown,
+  sparkles: Sparkles,
+  angry: Angry,
+  tornado: Tornado,
+  'battery-low': BatteryLow,
+  annoyed: Annoyed,
+  heart: Heart,
+  'book-open': BookOpen,
+  fish: Fish,
+  utensils: Utensils,
+  briefcase: Briefcase,
+  plane: Plane,
+  dumbbell: Dumbbell,
+  thermometer: Thermometer,
 }
 
-const PLACE_ICONS: Record<string, Component> = {
-  house: IconHouse,
-  'building-2': IconBuilding,
-  school: IconSchool,
-  coffee: IconCoffee,
-  dumbbell: IconDumbbell,
-  trees: IconTrees,
-  hospital: IconHospital,
-  plane: IconPlane,
-  'map-pin': IconMapPin,
+const PLACE_ICONS: Record<string, LucideIcon> = {
+  house: House,
+  'building-2': Building2,
+  school: School,
+  coffee: Coffee,
+  dumbbell: Dumbbell,
+  trees: Trees,
+  hospital: Hospital,
+  plane: Plane,
+  'map-pin': MapPin,
 }
 
-export function moodIcon(name: string | undefined): Component {
-  return MOOD_ICONS[name ?? ''] ?? IconMeh
+export function moodIcon(name: string | undefined): LucideIcon {
+  return MOOD_ICONS[name ?? ''] ?? Meh
 }
 
-export function placeIcon(name: string | undefined): Component {
-  return PLACE_ICONS[name ?? ''] ?? IconMapPin
+export function placeIcon(name: string | undefined): LucideIcon {
+  return PLACE_ICONS[name ?? ''] ?? MapPin
 }
 
 const qiFace = new FontFace('qweather-icons', `url('${qiFontUrl}')`)

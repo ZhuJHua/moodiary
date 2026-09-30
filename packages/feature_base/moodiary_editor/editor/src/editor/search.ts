@@ -11,9 +11,18 @@ import {
   search,
   setSearchState,
 } from 'prosemirror-search'
-import { reactive } from 'vue'
+import { createStore } from '../lib/store'
 
-export const editorSearch = reactive({
+export interface EditorSearchState {
+  open: boolean
+  term: string
+  replace: string
+  caseSensitive: boolean
+  count: number
+  current: number
+}
+
+export const editorSearch = createStore<EditorSearchState>({
   open: false,
   term: '',
   replace: '',
@@ -25,11 +34,8 @@ export const editorSearch = reactive({
 let boundEditor: Editor | null = null
 
 function buildQuery(): SearchQuery {
-  return new SearchQuery({
-    search: editorSearch.term,
-    caseSensitive: editorSearch.caseSensitive,
-    replace: editorSearch.replace,
-  })
+  const s = editorSearch.get()
+  return new SearchQuery({ search: s.term, caseSensitive: s.caseSensitive, replace: s.replace })
 }
 
 function applyQuery(): void {
@@ -41,16 +47,14 @@ function applyQuery(): void {
 
 function updateCounts(): void {
   const editor = boundEditor
-  if (!editor || !editorSearch.term) {
-    editorSearch.count = 0
-    editorSearch.current = 0
+  if (!editor || !editorSearch.get().term) {
+    editorSearch.patch({ count: 0, current: 0 })
     return
   }
   const state = editor.state
   const ss = getSearchState(state)
   if (!ss || !ss.query.valid) {
-    editorSearch.count = 0
-    editorSearch.current = 0
+    editorSearch.patch({ count: 0, current: 0 })
     return
   }
   const query = ss.query
@@ -67,8 +71,7 @@ function updateCounts(): void {
     if (m.from === sel.from && m.to === sel.to) current = count
     from = m.to > m.from ? m.to : m.to + 1 // 防零宽匹配死循环
   }
-  editorSearch.count = count
-  editorSearch.current = current
+  editorSearch.patch({ count, current })
 }
 
 function runCmd(cmd: Command): void {
@@ -86,19 +89,20 @@ function applyDebounced(): void {
 
 export function openSearch(): void {
   const editor = boundEditor
-  editorSearch.open = true
+  const next: Partial<EditorSearchState> = { open: true }
   if (editor) {
     const { from, to } = editor.state.selection
     if (to > from) {
       const text = editor.state.doc.textBetween(from, to, ' ')
-      if (text && !text.includes('\n')) editorSearch.term = text
+      if (text && !text.includes('\n')) next.term = text
     }
   }
+  editorSearch.patch(next)
   applyQuery()
 }
 
 export function closeSearch(): void {
-  editorSearch.open = false
+  editorSearch.patch({ open: false })
   const editor = boundEditor
   if (editor) {
     editor.view.dispatch(setSearchState(editor.state.tr, new SearchQuery({ search: '' })))
@@ -107,14 +111,14 @@ export function closeSearch(): void {
 }
 
 export function setTerm(value: string): void {
-  editorSearch.term = value
+  editorSearch.patch({ term: value })
   applyDebounced()
 }
 export function setReplace(value: string): void {
-  editorSearch.replace = value
+  editorSearch.patch({ replace: value })
 }
 export function toggleCase(): void {
-  editorSearch.caseSensitive = !editorSearch.caseSensitive
+  editorSearch.patch({ caseSensitive: !editorSearch.get().caseSensitive })
   applyQuery()
 }
 export function nextMatch(): void {
@@ -140,7 +144,7 @@ export const SearchExtension = Extension.create({
     boundEditor = this.editor
   },
   onTransaction({ transaction }) {
-    if (transaction.docChanged && editorSearch.open) updateCounts()
+    if (transaction.docChanged && editorSearch.get().open) updateCounts()
   },
   onDestroy() {
     if (boundEditor === this.editor) boundEditor = null

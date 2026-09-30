@@ -1,41 +1,12 @@
-import { Editor } from '@tiptap/vue-3'
+import { createElement } from 'react'
+import { act } from 'react'
+import { createRoot, type Root } from 'react-dom/client'
+import { Editor, EditorContent } from '@tiptap/react'
 import type { JSONContent } from '@tiptap/core'
-import { createApp, defineComponent, getCurrentInstance } from 'vue'
-import type { App, AppContext, ComponentInternalInstance } from 'vue'
 import { expect, vi } from 'vitest'
 import { linkSuggestion } from '../editor/diary-link'
 import { createEditorKit } from '../editor/tiptap'
-import { i18n } from '../i18n'
 import type { EditorApi } from '../editor/tiptap'
-
-function attachVueRuntime(editor: Editor): App {
-  let instance: ComponentInternalInstance | null = null
-  const app = createApp(
-    defineComponent({
-      setup: () => {
-        instance = getCurrentInstance()
-        return () => null
-      },
-    }),
-  )
-  const mountPoint = document.createElement('div')
-  document.body.appendChild(mountPoint)
-  app.use(i18n)
-  app.mount(mountPoint)
-  if (instance) {
-    const found = instance as ComponentInternalInstance
-    editor.contentComponent = found as NonNullable<Editor['contentComponent']>
-    editor.appContext = {
-      ...found.appContext,
-      provides: (found as unknown as { provides: AppContext['provides'] }).provides,
-    }
-  }
-  editor.createNodeViews()
-  if (!editor.contentComponent) {
-    throw new Error('harness: contentComponent 未注入，node view 会静默回退成裸 renderHTML')
-  }
-  return app
-}
 
 export interface Posted {
   type: string
@@ -51,7 +22,20 @@ export interface EditorHarness {
   respond(items: Array<{ id: string; label: string }>): Promise<void>
   press(key: string): Promise<void>
   findNode(type: string): JSONContent | undefined
+  flush(): Promise<void>
   destroy(): void
+}
+
+// React 节点视图经 EditorContent 的 portal 渲染，harness 必须挂一个真实的 EditorContent
+function mountContent(editor: Editor): Root {
+  const host = document.createElement('div')
+  document.body.appendChild(host)
+  const root = createRoot(host)
+  act(() => root.render(createElement(EditorContent, { editor })))
+  if (!(editor as { contentComponent?: unknown }).contentComponent) {
+    throw new Error('harness: contentComponent 未注入，node view 会静默回退成裸 renderHTML')
+  }
+  return root
 }
 
 export function setupEditor(): EditorHarness {
@@ -61,46 +45,45 @@ export function setupEditor(): EditorHarness {
       posted.push(JSON.parse(raw) as Posted)
     },
   }
-  Object.assign(linkSuggestion, {
-    open: false,
-    loading: false,
-    query: '',
-    items: [],
-    index: 0,
-    rect: null,
-  })
+  linkSuggestion.set({ open: false, loading: false, query: '', items: [], index: 0, rect: null })
 
   const kit = createEditorKit({ editable: true, placeholder: '', onChange: () => {} })
-  const host = document.createElement('div')
-  document.body.appendChild(host)
-  const editor = new Editor({ ...kit.options, element: host })
+  const editor = new Editor({ ...kit.options })
   kit.attach(editor)
-  const app = attachVueRuntime(editor)
+  const root = mountContent(editor)
 
   const lastPost = (type: string): Posted | undefined =>
     [...posted].reverse().find((m) => m.type === type)
+  const flush = async (): Promise<void> => {
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+  }
 
   return {
     editor,
     api: kit.api,
     posted,
     lastPost,
+    flush,
     type: async (text) => {
       editor.commands.insertContent(text)
-      await vi.advanceTimersByTimeAsync(0)
+      await flush()
     },
     respond: async (items) => {
-      await vi.advanceTimersByTimeAsync(250)
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(250)
+      })
       const req = lastPost('requestLinkCandidates')
       expect(req).toBeDefined()
       kit.api.resolveLinkCandidates(req!.payload!.reqId, JSON.stringify(items))
-      await vi.advanceTimersByTimeAsync(0)
+      await flush()
     },
     press: async (key) => {
       editor.view.dom.dispatchEvent(
         new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }),
       )
-      await vi.advanceTimersByTimeAsync(0)
+      await flush()
     },
     findNode: (type) => {
       const walk = (n: JSONContent): JSONContent | undefined => {
@@ -114,8 +97,8 @@ export function setupEditor(): EditorHarness {
       return walk(editor.getJSON() as JSONContent)
     },
     destroy: () => {
+      act(() => root.unmount())
       editor.destroy()
-      app.unmount()
       document.body.innerHTML = ''
       delete window.MoodiaryEditor
     },

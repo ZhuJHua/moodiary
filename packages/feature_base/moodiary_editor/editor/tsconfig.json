@@ -4,13 +4,15 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "strict": true,
+    "noEmit": true,
+    "isolatedModules": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "lib": ["ES2019", "ES2022.Intl", "DOM", "DOM.Iterable"],
-    "jsx": "preserve",
-    "jsxImportSource": "vue",
-    "types": ["vite/client", "@intlify/unplugin-vue-i18n/messages"]
+    "jsx": "react-jsx",
+    "types": ["vite/client"],
+    "paths": { "@/*": ["./src/*"] }
   },
   "include": ["src", "dev"]
 }

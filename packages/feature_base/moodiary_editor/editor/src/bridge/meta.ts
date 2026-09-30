@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { createStore } from '../lib/store'
 
 export interface EditorMetaMoodOption {
   value: string
@@ -65,22 +65,22 @@ export interface EditorLinks {
   incoming: EditorLinkItem[]
 }
 
-export const meta = ref<EditorMeta | null>(null)
+export const meta = createStore<EditorMeta | null>(null)
 
-export const links = ref<EditorLinks | null>(null)
+export const links = createStore<EditorLinks | null>(null)
 
 export function setMeta(json: string): void {
   try {
-    meta.value = json ? (JSON.parse(json) as EditorMeta) : null
+    meta.set(json ? (JSON.parse(json) as EditorMeta) : null)
   } catch {
-    meta.value = null
+    meta.set(null)
   }
 }
 
 export function setLinks(json: string): void {
   try {
-    links.value = json ? (JSON.parse(json) as EditorLinks) : null
+    links.set(json ? (JSON.parse(json) as EditorLinks) : null)
   } catch {
-    links.value = null
+    links.set(null)
   }
 }

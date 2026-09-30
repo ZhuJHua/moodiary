@@ -11,68 +11,63 @@
  */
 
 @import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
 
-/* 关掉 daisyUI 内置主题，只用下方两套指向 --app-* 的自定义主题。 */
-@plugin "daisyui" {
-  themes: false;
+/* Flutter 只下发 dark: bool，写在 <html data-theme>；shadcn 组件里的 dark: 变体绑到它 */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/* shadcn token 全部指向 --app-*（运行期由 bridge/theme.ts 按 Flutter 下发的 roles 重算，明暗各一套） */
+@theme inline {
+  --font-sans: var(--app-font-sans);
+  --font-mono: var(--app-font-mono);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* 浅色主题（默认）：所有 --color-* 指向 --app-*（运行期由 theme.ts 按种子色重算）。 */
-@plugin "daisyui/theme" {
-  name: 'light';
-  default: true;
-  color-scheme: light;
-  --color-base-100: var(--app-background);
-  --color-base-200: var(--app-surface);
-  --color-base-300: var(--app-hover);
-  --color-base-content: var(--app-on-background);
-  --color-primary: var(--app-primary);
-  --color-primary-content: var(--app-on-primary);
-  --color-secondary: var(--app-secondary);
-  --color-secondary-content: var(--app-on-secondary);
-  --color-accent: var(--app-primary);
-  --color-accent-content: var(--app-on-primary);
-  --color-neutral: var(--app-inverse);
-  --color-neutral-content: var(--app-on-inverse);
-  --color-error: var(--app-error);
-  --color-error-content: var(--app-background);
-  --radius-selector: 0.5rem;
-  --radius-field: 0.5rem;
-  --radius-box: 0.75rem;
-  --size-selector: 0.25rem;
-  --size-field: 0.25rem;
-  --border: 1px;
-  --depth: 0;
-  --noise: 0;
-}
-
-/* 深色主题：仅 color-scheme 不同；色值同样指向 --app-*（theme.ts 已把它们重算为暗色）。 */
-@plugin "daisyui/theme" {
-  name: 'dark';
-  prefersdark: true;
-  color-scheme: dark;
-  --color-base-100: var(--app-background);
-  --color-base-200: var(--app-surface);
-  --color-base-300: var(--app-hover);
-  --color-base-content: var(--app-on-background);
-  --color-primary: var(--app-primary);
-  --color-primary-content: var(--app-on-primary);
-  --color-secondary: var(--app-secondary);
-  --color-secondary-content: var(--app-on-secondary);
-  --color-accent: var(--app-primary);
-  --color-accent-content: var(--app-on-primary);
-  --color-neutral: var(--app-inverse);
-  --color-neutral-content: var(--app-on-inverse);
-  --color-error: var(--app-error);
-  --color-error-content: var(--app-background);
-  --radius-selector: 0.5rem;
-  --radius-field: 0.5rem;
-  --radius-box: 0.75rem;
-  --size-selector: 0.25rem;
-  --size-field: 0.25rem;
-  --border: 1px;
-  --depth: 0;
-  --noise: 0;
+:root {
+  --background: var(--app-background);
+  --foreground: var(--app-on-background);
+  --card: var(--app-surface);
+  --card-foreground: var(--app-on-surface);
+  --popover: var(--app-hover);
+  --popover-foreground: var(--app-on-surface);
+  --primary: var(--app-primary);
+  --primary-foreground: var(--app-on-primary);
+  --secondary: var(--app-secondary);
+  --secondary-foreground: var(--app-on-secondary);
+  --muted: var(--app-surface);
+  --muted-foreground: var(--app-on-surface-variant);
+  --accent: var(--app-selected);
+  --accent-foreground: var(--app-on-surface);
+  --destructive: var(--app-error);
+  --border: var(--app-outline);
+  --input: var(--app-outline);
+  --ring: var(--app-primary);
+  --radius: 0.75rem;
 }
 
 /* —— --app-* 兜底值：仅首帧生效，applyTheme 用 inline style 注入后即被覆盖（优先级更高） —— */
