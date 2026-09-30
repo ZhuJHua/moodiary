@@ -1,6 +1,7 @@
 import type { Editor, EditorOptions, JSONContent } from '@tiptap/core'
 import { history } from '@tiptap/pm/history'
 import { NodeSelection } from '@tiptap/pm/state'
+import type { EditorView } from '@tiptap/pm/view'
 import StarterKit from '@tiptap/starter-kit'
 import { Placeholder, Selection } from '@tiptap/extensions'
 import FileHandler from '@tiptap/extension-file-handler'
@@ -15,7 +16,9 @@ import { DiaryLink, resolveLinkCandidates as applyLinkCandidates } from './diary
 import { SearchExtension } from './search'
 
 import { post } from '../bridge/post'
+import { caretAfter, caretBefore } from './block-caret'
 import { setEditableState } from './editable'
+import { hideUndoToast } from './undo-toast'
 import { MediaImage } from './image-node'
 import { MoodiaryMarkdown } from './markdown'
 import { Audio, Video } from './media-nodes'
@@ -24,6 +27,15 @@ const lowlight = createLowlight(common)
 
 // HISTORY_OPTIONS 须与 StarterKit 内置 UndoRedo 的默认值一致，参数不同等于改了撤销行为
 const HISTORY_OPTIONS = { depth: 100, newGroupDelay: 500 }
+
+const BLOCK = '.moodiary-image, .moodiary-media'
+const BLOCK_BODY = '.moodiary-block__body'
+const BLOCK_CONTROL =
+  'button, input, a, [role="button"], [role="slider"], .moodiary-video__el, .moodiary-video__bar'
+const TAP_SLOP = 10
+const LONG_PRESS = 500
+const FLING_STOP = 100
+const SCROLL_MARGIN = 8
 
 export interface EditorApi {
   setContent(content: string): void
@@ -39,6 +51,8 @@ export interface EditorApi {
   resolveLinkCandidates(reqId: string, json: string): void
   scrollToHeading(index: number): void
   resumeVideo(name: string, seconds: number): void
+  imageSources(): string[]
+  previewImage(name: string): void
 }
 
 export interface EditorKitOptions {
@@ -83,6 +97,23 @@ const isBlankDoc = (doc: JSONContent): boolean => {
   return content.length === 0 || (content.length === 1 && content[0].type === 'paragraph' && !content[0].content?.length)
 }
 
+// prosemirror-view 对高于视口的矩形会把顶边滚到视口外 margin 处，反复调用就来回翻
+function scrollNodeSelection(view: EditorView): boolean {
+  const { selection } = view.state
+  if (!(selection instanceof NodeSelection)) return false
+  const dom = view.nodeDOM(selection.from)
+  const scroller = view.dom.closest('.moodiary-editor-viewport')
+  if (!(dom instanceof HTMLElement) || !(scroller instanceof HTMLElement)) return true
+  const rect = dom.getBoundingClientRect()
+  const bounds = scroller.getBoundingClientRect()
+  if (rect.bottom > bounds.top && rect.top < bounds.bottom) return true
+  scroller.scrollTop +=
+    rect.top < bounds.top
+      ? rect.top - bounds.top - SCROLL_MARGIN
+      : Math.min(rect.bottom - bounds.bottom + SCROLL_MARGIN, rect.top - bounds.top - SCROLL_MARGIN)
+  return true
+}
+
 export function createEditorKit(opts: EditorKitOptions): EditorKit {
   const { editable, placeholder, onChange, onEditableChange } = opts
 
@@ -90,19 +121,39 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
   let suppress = false
   const pendingUploads = new Map<string, (name: string) => void>()
   let uploadSeq = 0
+  let touchOrigin: { x: number; y: number; at: number } | null = null
+  let lastScrollAt = -Infinity
+  const markScroll = (): void => {
+    lastScrollAt = Date.now()
+  }
 
-  // NodeSelection 上直接 insertContent 会替换该节点，需改用 insertContentAt(selection.to)
+  // 没聚焦时 PM 不滚动选区
+  const revealInserted = (ed: Editor): void => {
+    const $caret = ed.state.selection.$from
+    const block = ed.state.doc.resolve($caret.before()).nodeBefore
+    if (!block) return
+    const dom = ed.view.nodeDOM($caret.before() - block.nodeSize)
+    if (dom instanceof HTMLElement) dom.scrollIntoView?.({ block: 'nearest' })
+  }
+
   const insertBlock = (content: JSONContent): void => {
     const ed = editor
     if (!ed) return
     const { selection } = ed.state
-    const chain = ed.chain().focus()
+    const chain = ed.chain()
     if (selection instanceof NodeSelection) {
       chain.insertContentAt(selection.to, content)
     } else {
       chain.insertContent(content)
     }
-    chain.run()
+    chain
+      .command(({ tr, dispatch }) => {
+        if (dispatch && tr.selection instanceof NodeSelection) caretAfter(tr, tr.selection.to)
+        return true
+      })
+      .scrollIntoView()
+      .run()
+    if (!ed.view.hasFocus()) revealInserted(ed)
   }
 
   const insertImage = (name: string, alt?: string): void => {
@@ -136,6 +187,7 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
   const loadContent = (content: string): void => {
     const ed = editor
     if (!ed) return
+    hideUndoToast()
     const doc = parseDoc(content) ?? wrapPlainText(content)
     withoutEmit(() => {
       try {
@@ -152,6 +204,9 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
       ed.registerPlugin(history(HISTORY_OPTIONS))
     })
   }
+
+  const blockAt = (el: Element): Element | null =>
+    el.closest(BLOCK_CONTROL) ? null : el.closest(BLOCK)
 
   const options: Partial<EditorOptions> = {
     editable,
@@ -181,6 +236,7 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
       Placeholder.configure({ placeholder }),
     ],
     editorProps: {
+      handleScrollToSelection: scrollNodeSelection,
       handlePaste: (_view, event) => {
         const data = event.clipboardData
         const ed = editor
@@ -189,6 +245,51 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
         if (!text) return false
         ed.commands.insertContent(text, { contentType: 'markdown' })
         return true
+      },
+      handleDOMEvents: {
+        // touchstart 会被块节点视图的 stopEvent 吞掉，触点只能在 pointerdown 记
+        pointerdown: (_view, event) => {
+          const target = event.target instanceof Element ? event.target : null
+          const block = target ? blockAt(target) : null
+          const now = Date.now()
+          touchOrigin =
+            block && event.pointerType !== 'mouse' && now - lastScrollAt > FLING_STOP
+              ? { x: event.clientX, y: event.clientY, at: now }
+              : null
+          return false
+        },
+        pointercancel: () => {
+          touchOrigin = null
+          return false
+        },
+        // 吃掉合成 mousedown/click：iOS 的合成 click 会重新聚焦并落光标
+        touchend: (view, event) => {
+          const origin = touchOrigin
+          touchOrigin = null
+          if (!origin || !view.editable) return false
+          if (event.touches.length > 0 || event.changedTouches.length !== 1) return false
+          const t = event.changedTouches[0]
+          if (Math.hypot(t.clientX - origin.x, t.clientY - origin.y) > TAP_SLOP) return false
+          if (Date.now() - origin.at > LONG_PRESS || origin.at < lastScrollAt) return false
+          const target = event.target instanceof Element ? event.target : null
+          const block = target ? blockAt(target) : null
+          if (!block) return false
+          const pos = view.posAtDOM(block, 0)
+          const node = view.nodeDOM(pos) === block ? view.state.doc.nodeAt(pos) : null
+          if (!node?.isAtom) return false
+          event.preventDefault()
+          const body = block.querySelector(BLOCK_BODY)?.getBoundingClientRect()
+          if (body && (t.clientY < body.top || t.clientY > body.bottom)) {
+            const tr = view.state.tr
+            if (t.clientY < body.top) caretBefore(tr, pos)
+            else caretAfter(tr, pos + node.nodeSize)
+            view.dispatch(tr.scrollIntoView())
+            view.focus()
+            return true
+          }
+          if (node.type.name === 'image') api.previewImage(String(node.attrs.src ?? ''))
+          return true
+        },
       },
     },
     onUpdate: ({ editor }) => {
@@ -202,6 +303,7 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
     setContent: (content) => loadContent(content ?? ''),
     getContent: () => (editor ? JSON.stringify(editor.getJSON()) : ''),
     setEditable: (value) => {
+      if (!value) hideUndoToast()
       editor?.setEditable(value, false)
       // setEditable(value, false) 不触发 onUpdate，需显式回调驱动 UI
       setEditableState(value)
@@ -216,6 +318,7 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
     reset: () => {
       const ed = editor
       if (!ed) return
+      hideUndoToast()
       withoutEmit(() => ed.commands.setContent('', { emitUpdate: false }))
     },
     insertMedia: (name, alt) => insertImage(name, alt),
@@ -260,6 +363,16 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
       const dom = ed.view.nodeDOM(pos) as HTMLElement | null
       dom?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
     },
+    imageSources: () =>
+      (editor?.$nodes('image') ?? [])
+        .map((p) => String(p.node.attrs.src ?? ''))
+        .filter((s) => s && !s.startsWith('data:')),
+    previewImage: (name) => {
+      if (!name || name.startsWith('data:')) return
+      const srcs = api.imageSources()
+      const index = srcs.indexOf(name)
+      post('imageTap', { src: name, srcs: srcs.length ? srcs : [name], index: index < 0 ? 0 : index })
+    },
   }
 
   return {
@@ -267,6 +380,8 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
     api,
     attach: (e) => {
       editor = e
+      document.addEventListener('scroll', markScroll, { capture: true, passive: true })
+      e.on('destroy', () => document.removeEventListener('scroll', markScroll, { capture: true }))
       // 初始值须显式推入，否则只读态会被当成可编辑（共享模块级状态）
       setEditableState(editable)
     },

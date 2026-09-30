@@ -21,163 +21,58 @@ function onOpen(item: EditorLinkItem): void {
 </script>
 
 <template>
-  <div class="links-panel">
-    <div class="links-head">
-      <IconLink class="links-head-icon" />
-      <span class="links-head-title">{{ links.title }}</span>
-      <span class="links-count">{{ links.outgoing.length + links.incoming.length }}</span>
-      <span class="links-spacer" />
-      <button
-        type="button"
-        class="links-graph-btn"
-        :title="links.graphTip"
-        @mousedown.prevent
-        @click="post('openGraph')"
-      >
-        <IconWaypoints class="size-5" />
-      </button>
+  <div class="links-panel card mx-4 my-6 bg-base-200">
+    <div class="card-body gap-1 p-3 pl-3.5">
+      <div class="flex items-center gap-2">
+        <IconLink class="size-4 opacity-60" />
+        <span class="text-sm font-semibold">{{ links.title }}</span>
+        <span class="badge badge-sm badge-ghost">{{ links.outgoing.length + links.incoming.length }}</span>
+        <span class="flex-1" />
+        <button
+          type="button"
+          class="btn btn-ghost btn-sm btn-square"
+          :title="links.graphTip"
+          @mousedown.prevent
+          @click="post('openGraph')"
+        >
+          <IconWaypoints class="size-5" />
+        </button>
+      </div>
+      <template v-for="section in sections" :key="section.label">
+        <template v-if="section.items.length">
+          <div class="mt-2 px-1 text-xs opacity-60">{{ section.label }}</div>
+          <ul class="list">
+            <li v-for="item in section.items" :key="item.id">
+              <button
+                type="button"
+                class="list-row w-full items-center rounded-field px-1 py-2 text-left active:bg-base-300"
+                @mousedown.prevent
+                @click="onOpen(item)"
+              >
+                <span
+                  class="grid size-8 place-items-center rounded-full"
+                  :class="section.outgoing ? 'bg-primary/15 text-primary' : 'bg-base-300'"
+                >
+                  <IconArrowUpRight v-if="section.outgoing" class="size-[18px]" />
+                  <IconCornerDownLeft v-else class="size-[18px]" />
+                </span>
+                <span class="list-col-grow min-w-0">
+                  <span class="block truncate text-sm font-medium">{{ item.title }}</span>
+                  <span v-if="item.subtitle" class="block truncate text-xs opacity-60">{{ item.subtitle }}</span>
+                </span>
+                <IconChevronRight class="size-4 opacity-40" />
+              </button>
+            </li>
+          </ul>
+        </template>
+      </template>
     </div>
-    <template v-for="section in sections" :key="section.label">
-      <div v-if="section.items.length" class="links-section-label">{{ section.label }}</div>
-      <button
-        v-for="item in section.items"
-        :key="item.id"
-        type="button"
-        class="links-item"
-        @mousedown.prevent
-        @click="onOpen(item)"
-      >
-        <span class="links-item-leading" :class="{ 'links-item-leading--out': section.outgoing }">
-          <IconArrowUpRight v-if="section.outgoing" class="size-[18px]" />
-          <IconCornerDownLeft v-else class="size-[18px]" />
-        </span>
-        <span class="links-item-body">
-          <span class="links-item-title">{{ item.title }}</span>
-          <span v-if="item.subtitle" class="links-item-subtitle">{{ item.subtitle }}</span>
-        </span>
-        <IconChevronRight class="links-item-chevron" />
-      </button>
-    </template>
   </div>
 </template>
 
 <style scoped>
 .links-panel {
   flex: 0 0 auto;
-  margin: 24px 16px 24px;
-  padding: 12px 8px 8px 14px;
-  border-radius: 16px;
-  background: var(--app-surface-low);
   font-family: var(--app-font-sans);
-  display: flex;
-  flex-direction: column;
-}
-
-.links-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding-right: 4px;
-}
-.links-head-icon {
-  width: 18px;
-  height: 18px;
-  color: var(--app-primary);
-  flex: none;
-}
-.links-head-title {
-  color: var(--app-on-surface);
-  font-size: calc(14px * var(--app-font-scale, 1));
-  font-weight: 600;
-}
-.links-count {
-  padding: 1px 7px;
-  border-radius: 999px;
-  background: var(--app-selected);
-  color: var(--app-on-surface-variant);
-  font-size: calc(11px * var(--app-font-scale, 1));
-}
-.links-spacer {
-  flex: 1;
-}
-.links-graph-btn {
-  margin: 0;
-  padding: 8px;
-  border: none;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--app-on-surface);
-  cursor: pointer;
-  outline: none;
-  -webkit-tap-highlight-color: transparent;
-}
-.links-graph-btn:hover {
-  background: var(--app-hover);
-}
-
-.links-section-label {
-  padding: 8px 0 2px 6px;
-  color: var(--app-on-surface-variant);
-  font-size: calc(11px * var(--app-font-scale, 1));
-}
-
-.links-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 0;
-  padding: 8px 6px;
-  border: none;
-  border-radius: 12px;
-  background: transparent;
-  font-family: inherit;
-  text-align: left;
-  cursor: pointer;
-  outline: none;
-  -webkit-tap-highlight-color: transparent;
-  min-width: 0;
-}
-.links-item:hover {
-  background: var(--app-hover);
-}
-.links-item-leading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: var(--app-selected);
-  color: var(--app-on-surface-variant);
-  flex: none;
-}
-.links-item-leading--out {
-  color: var(--app-primary);
-}
-.links-item-body {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  flex: 1;
-}
-.links-item-title {
-  color: var(--app-on-surface);
-  font-size: calc(14px * var(--app-font-scale, 1));
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.links-item-subtitle {
-  color: var(--app-on-surface-variant);
-  font-size: calc(12px * var(--app-font-scale, 1));
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.links-item-chevron {
-  width: 18px;
-  height: 18px;
-  color: var(--app-on-surface-variant);
-  flex: none;
 }
 </style>

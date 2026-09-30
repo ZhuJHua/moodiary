@@ -5,12 +5,17 @@ import { setSaveStatus } from './save-status'
 import { getScrollY, setScrollY } from './scroll'
 import { focusTitle, setTitle } from './title'
 import type { EditorApi } from '../editor/tiptap'
+import { dismissOverlay } from '../editor/overlay'
 
 let api: EditorApi | null = null
 let ready = false
 
 export function bindApi(value: EditorApi): void {
   api = value
+}
+
+export function boundApi(): EditorApi | null {
+  return api
 }
 
 export function markReady(): void {
@@ -49,6 +54,7 @@ export function installBridge(): void {
     scrollToHeading: (index: number) => api?.scrollToHeading(index),
     resumeVideo: (name: string, seconds: number) =>
       api?.resumeVideo(name ?? '', Number(seconds) || 0),
+    dismissOverlay: () => dismissOverlay(),
     getScrollY: () => getScrollY(),
     setScrollY: (y: number) => setScrollY(y),
   }

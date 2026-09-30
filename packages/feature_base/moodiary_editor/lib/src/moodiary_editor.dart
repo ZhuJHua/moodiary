@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:mui/mui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -50,7 +51,8 @@ class MoodiaryEditor extends StatefulWidget {
 
   final VoidCallback? onPickImage;
 
-  final VoidCallback? onPickAudio;
+  final VoidCallback? onPickAudioFile;
+  final VoidCallback? onRecordAudio;
   final VoidCallback? onPickVideo;
 
   final Future<Duration?> Function(String name, Duration position)?
@@ -67,11 +69,11 @@ class MoodiaryEditor extends StatefulWidget {
 
   final String? linksJson;
 
-  final VoidCallback? onPickDate;
-  final VoidCallback? onPickTime;
-  final VoidCallback? onPickCategory;
-  final VoidCallback? onAddTag;
-  final ValueChanged<int>? onRemoveTag;
+  final ValueChanged<DateTime>? onChangeDate;
+  final ValueChanged<TimeOfDay>? onChangeTime;
+  final ValueChanged<String?>? onChangeCategory;
+  final ValueChanged<String>? onAddTag;
+  final ValueChanged<String>? onRemoveTag;
 
   final ValueChanged<String>? onChangeMood;
 
@@ -94,6 +96,8 @@ class MoodiaryEditor extends StatefulWidget {
   final VoidCallback? onClearPosition;
 
   final VoidCallback? onOpenGraph;
+
+  final ValueChanged<bool>? onOverlayChanged;
 
   final String saveStatus;
 
@@ -123,7 +127,8 @@ class MoodiaryEditor extends StatefulWidget {
     this.onReady,
     this.onImageTap,
     this.onPickImage,
-    this.onPickAudio,
+    this.onPickAudioFile,
+    this.onRecordAudio,
     this.onPickVideo,
     this.onVideoFullscreen,
     this.onSaveImage,
@@ -131,9 +136,9 @@ class MoodiaryEditor extends StatefulWidget {
     this.onOpenDiaryLink,
     this.metaJson,
     this.linksJson,
-    this.onPickDate,
-    this.onPickTime,
-    this.onPickCategory,
+    this.onChangeDate,
+    this.onChangeTime,
+    this.onChangeCategory,
     this.onAddTag,
     this.onRemoveTag,
     this.onChangeMood,
@@ -147,6 +152,7 @@ class MoodiaryEditor extends StatefulWidget {
     this.onManagePlaces,
     this.onClearPosition,
     this.onOpenGraph,
+    this.onOverlayChanged,
     this.saveStatus = 'idle',
     this.firstLineIndent = false,
     this.fontScale = 1.0,
@@ -161,7 +167,8 @@ class MoodiaryEditor extends StatefulWidget {
   State<MoodiaryEditor> createState() => _MoodiaryEditorState();
 }
 
-class _MoodiaryEditorState extends State<MoodiaryEditor> {
+class _MoodiaryEditorState extends State<MoodiaryEditor>
+    with SoftKeyboardObserver {
   EditorTransport? _transport;
   bool _jsReady = false;
   bool _activated = false;
@@ -183,6 +190,15 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
   void initState() {
     super.initState();
     widget.controller?._bind(this);
+  }
+
+  // iOS 的 WebKit 收键盘时自己 blur；Android 收起键盘后焦点还留在网页里
+  @override
+  void didChangeSoftKeyboardVisibility(bool visible) {
+    if (visible || !Platform.isAndroid) return;
+    if (_focusTarget == .none || !_activated) return;
+    if (WidgetsBinding.instance.lifecycleState != .resumed) return;
+    unawaited(_blur());
   }
 
   @override
@@ -369,8 +385,14 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
       case 'pickImage':
         widget.onPickImage?.call();
         return;
-      case 'pickAudio':
-        widget.onPickAudio?.call();
+      case 'pickAudioFile':
+        widget.onPickAudioFile?.call();
+        return;
+      case 'recordAudio':
+        widget.onRecordAudio?.call();
+        return;
+      case 'overlay':
+        widget.onOverlayChanged?.call(payload == true);
         return;
       case 'pickVideo':
         widget.onPickVideo?.call();
@@ -419,23 +441,44 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
           if (id is String && id.isNotEmpty) widget.onOpenDiaryLink?.call(id);
         }
         return;
-      case 'pickDate':
-        widget.onPickDate?.call();
+      case 'changeDate':
+        if (payload is Map) {
+          final y = payload['year'];
+          final m = payload['month'];
+          final d = payload['day'];
+          if (y is num && m is num && d is num) {
+            widget.onChangeDate?.call(
+              DateTime(y.toInt(), m.toInt(), d.toInt()),
+            );
+          }
+        }
         return;
-      case 'pickTime':
-        widget.onPickTime?.call();
+      case 'changeTime':
+        if (payload is Map) {
+          final h = payload['hour'];
+          final m = payload['minute'];
+          if (h is num && m is num) {
+            widget.onChangeTime?.call(
+              TimeOfDay(hour: h.toInt(), minute: m.toInt()),
+            );
+          }
+        }
         return;
-      case 'pickCategory':
-        widget.onPickCategory?.call();
+      case 'changeCategory':
+        final id = payload is Map ? payload['id'] : null;
+        widget.onChangeCategory?.call(
+          id is String && id.isNotEmpty ? id : null,
+        );
         return;
       case 'addTag':
-        widget.onAddTag?.call();
+        final name = payload is Map ? payload['name'] : null;
+        if (name is String && name.trim().isNotEmpty) {
+          widget.onAddTag?.call(name.trim());
+        }
         return;
       case 'removeTag':
-        if (payload is Map) {
-          final index = payload['index'];
-          if (index is num) widget.onRemoveTag?.call(index.toInt());
-        }
+        final name = payload is Map ? payload['name'] : null;
+        if (name is String) widget.onRemoveTag?.call(name);
         return;
       case 'changeMood':
         if (payload is Map) {
@@ -696,6 +739,10 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     await _run('window.MoodiaryBridge.focusTitle()');
   }
 
+  Future<void> _dismissOverlay() async {
+    await _run('window.MoodiaryBridge.dismissOverlay()');
+  }
+
   Future<void> _insertMedia(String name, [String alt = '']) async {
     await _run(
       'window.MoodiaryBridge.insertMedia('
@@ -781,6 +828,10 @@ class MoodiaryEditorController {
 
   Future<void> focusTitle() async {
     await _state?._focusTitle();
+  }
+
+  Future<void> dismissOverlay() async {
+    await _state?._dismissOverlay();
   }
 
   EditorFocusTarget get focusTarget => _state?._focusTarget ?? .none;

@@ -61,6 +61,10 @@ export function resolveLinkCandidates(reqId: string, json: string): void {
   r(list)
 }
 
+export function dismissSuggestion(): void {
+  close()
+}
+
 function close(): void {
   linkSuggestion.open = false
   linkSuggestion.loading = false

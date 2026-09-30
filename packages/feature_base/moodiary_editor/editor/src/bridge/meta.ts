@@ -19,12 +19,23 @@ export interface EditorMetaWeatherOption {
   label: string
 }
 
+export interface EditorMetaCategory {
+  id: string
+  name: string
+}
+
 export interface EditorMeta {
   dateText: string
   subText: string
+  time?: string
+  minDate?: string
+  firstDayOfWeek?: number
+  use24h?: boolean
   mood: string
   moods: EditorMetaMoodOption[]
   category?: string | null
+  categoryId?: string | null
+  categories?: EditorMetaCategory[]
   weather?: { icon: string; text: string } | null
   weatherOptions: EditorMetaWeatherOption[]
   weatherAutoLabel?: string | null
@@ -37,7 +48,6 @@ export interface EditorMeta {
   positionManageLabel: string
   positionClearLabel: string
   tags: string[]
-  deleteLabel: string
 }
 
 export interface EditorLinkItem {

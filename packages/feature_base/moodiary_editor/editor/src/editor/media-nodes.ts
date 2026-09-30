@@ -1,8 +1,8 @@
 import { Node, mergeAttributes } from '@tiptap/core'
-import { VueNodeViewRenderer } from '@tiptap/vue-3'
 import type { Component } from 'vue'
 import AudioNodeView from '../components/nodes/AudioNodeView.vue'
 import VideoNodeView from '../components/nodes/VideoNodeView.vue'
+import { blockNodeView } from './block-node-view'
 import { mediaMarkdownSpec } from './markdown'
 import { widthPercentAttribute } from './media-size'
 
@@ -35,7 +35,7 @@ function createMediaNode(opts: {
     },
     ...mediaMarkdownSpec,
     addNodeView() {
-      return VueNodeViewRenderer(opts.view)
+      return blockNodeView(opts.view)
     },
   })
 }

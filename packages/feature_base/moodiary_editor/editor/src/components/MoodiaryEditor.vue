@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import type { Transaction } from '@tiptap/pm/state'
+import { NodeSelection, type Transaction } from '@tiptap/pm/state'
 import { EditorContent, useEditor } from '@tiptap/vue-3'
 import { createEditorKit } from '../editor/tiptap'
 import { bindApi, emitChange, markReady } from '../bridge'
@@ -12,6 +12,9 @@ import EditorToolbar from './EditorToolbar.vue'
 import EditorSearchBar from './EditorSearchBar.vue'
 import EditorMetaHeader from './EditorMetaHeader.vue'
 import EditorLinksPanel from './EditorLinksPanel.vue'
+import BlockMenu from './block/BlockMenu.vue'
+import UndoToast from './ui/UndoToast.vue'
+import { dismissKeyboard } from '../editor/keyboard'
 import { openSearch } from '../editor/search'
 import { useI18n } from 'vue-i18n'
 import { wordCountOf } from '../editor/word-count'
@@ -139,20 +142,24 @@ function onViewportScroll(): void {
   spyRaf = requestAnimationFrame(computeActiveHeading)
 }
 
-function onPickImage(): void {
-  post('pickImage')
-}
-function onPickAudio(): void {
-  post('pickAudio')
-}
-function onPickVideo(): void {
-  post('pickVideo')
+function pick(type: string): void {
+  dismissKeyboard()
+  post(type)
 }
 
 let scrollRaf = 0
+let viewportBottom = Infinity
 function onViewportResize(): void {
   const ed = editor.value
+  const vp = viewportEl.value
+  if (!vp) return
+  const bounds = vp.getBoundingClientRect()
+  const bottomBefore = viewportBottom
+  viewportBottom = bounds.bottom
   if (!ed || !ed.isEditable || !ed.isFocused) return
+  const { selection } = ed.state
+  const caret = ed.view.coordsAtPos(selection instanceof NodeSelection ? selection.from : selection.head)
+  if (caret.bottom < bounds.top || caret.top > bottomBefore) return
   cancelAnimationFrame(scrollRaf)
   scrollRaf = requestAnimationFrame(() => ed.commands.scrollIntoView())
 }
@@ -168,6 +175,7 @@ onMounted(() => {
   registerTitleFocus(() => titleEl.value?.focus())
   bindScrollViewport(viewportEl.value ?? null)
   viewportEl.value?.addEventListener('scroll', onViewportScroll, { passive: true })
+  viewportBottom = viewportEl.value?.getBoundingClientRect().bottom ?? Infinity
   if (props.platform === 'mobile') window.addEventListener('resize', onViewportResize)
   window.addEventListener('keydown', onKeydown)
 })
@@ -188,9 +196,7 @@ onBeforeUnmount(() => {
       v-if="editor && showToolbar && platform === 'desktop'"
       :editor="editor"
       :platform="platform"
-      @pick-image="onPickImage"
-      @pick-audio="onPickAudio"
-      @pick-video="onPickVideo"
+      @pick="pick"
     />
     <EditorSearchBar v-if="platform === 'desktop'" :platform="platform" />
     <div class="moodiary-editor-scroll">
@@ -215,13 +221,13 @@ onBeforeUnmount(() => {
       </div>
     </div>
     <EditorSearchBar v-if="platform === 'mobile'" :platform="platform" />
+    <UndoToast />
     <EditorToolbar
       v-if="editor && showToolbar && platform === 'mobile'"
       :editor="editor"
       :platform="platform"
-      @pick-image="onPickImage"
-      @pick-audio="onPickAudio"
-      @pick-video="onPickVideo"
+      @pick="pick"
     />
+    <BlockMenu v-if="editor && editable" :editor="editor" />
   </div>
 </template>

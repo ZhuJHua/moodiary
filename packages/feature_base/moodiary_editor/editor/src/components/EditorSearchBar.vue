@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { nextTick, ref, watch } from 'vue'
+import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { closeOverlay, openOverlay, type Overlay } from '../editor/overlay'
 import {
   closeSearch,
   editorSearch,
@@ -22,9 +23,14 @@ const { t } = useI18n()
 
 const findInput = ref<HTMLInputElement | null>(null)
 
+const overlay: Overlay = { dismiss: () => closeSearch() }
+onBeforeUnmount(() => closeOverlay(overlay))
+
 watch(
   () => editorSearch.open,
   (open) => {
+    if (open) openOverlay(overlay)
+    else closeOverlay(overlay)
     if (open)
       nextTick(() => {
         findInput.value?.focus()

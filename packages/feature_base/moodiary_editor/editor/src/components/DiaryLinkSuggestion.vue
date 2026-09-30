@@ -9,7 +9,8 @@ import {
   watch,
   type CSSProperties,
 } from 'vue'
-import { linkSuggestion, selectCandidate } from '../editor/diary-link'
+import { dismissSuggestion, linkSuggestion, selectCandidate } from '../editor/diary-link'
+import { closeOverlay, openOverlay, type Overlay } from '../editor/overlay'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -75,6 +76,12 @@ watch(
   },
 )
 
+const overlay: Overlay = { dismiss: dismissSuggestion }
+watch(
+  () => linkSuggestion.open,
+  (open) => (open ? openOverlay(overlay) : closeOverlay(overlay)),
+)
+
 function onWin(): void {
   if (linkSuggestion.open) place()
 }
@@ -83,6 +90,7 @@ onMounted(() => {
   window.addEventListener('scroll', onWin, true)
 })
 onBeforeUnmount(() => {
+  closeOverlay(overlay)
   window.removeEventListener('resize', onWin)
   window.removeEventListener('scroll', onWin, true)
 })

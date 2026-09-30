@@ -47,9 +47,6 @@
     "replace": "替换",
     "replaceAll": "全部"
   },
-  "image": {
-    "size": "图片尺寸"
-  },
   "mediaSize": {
     "width": "宽度",
     "defaultWidth": "默认",
@@ -61,8 +58,7 @@
     "mute": "静音",
     "unmute": "取消静音",
     "progressLabel": "视频进度",
-    "fullscreen": "全屏播放",
-    "size": "视频尺寸"
+    "fullscreen": "全屏播放"
   },
   "audio": {
     "play": "播放",
@@ -70,7 +66,9 @@
     "mute": "静音",
     "unmute": "取消静音",
     "progressLabel": "音频进度",
-    "defaultName": "音频"
+    "defaultName": "音频",
+    "fromRecord": "录音",
+    "fromFile": "从文件选择"
   },
   "code": {
     "plainText": "纯文本",
@@ -81,5 +79,33 @@
     "searching": "搜索中…",
     "prompt": "输入关键词搜索日记…",
     "empty": "无匹配的日记"
+  },
+  "meta": {
+    "date": "选择日期",
+    "time": "选择时间",
+    "mood": "心情",
+    "category": "分类",
+    "noCategory": "无分类",
+    "weather": "天气",
+    "place": "位置",
+    "tagPlaceholder": "新标签",
+    "addTag": "添加",
+    "removeTag": "删除标签",
+    "prevMonth": "上个月",
+    "nextMonth": "下个月",
+    "am": "上午",
+    "pm": "下午",
+    "period": "上午或下午",
+    "hour": "小时",
+    "minute": "分钟",
+    "confirm": "确定"
+  },
+  "block": {
+    "more": "更多操作",
+    "insertAbove": "在上方插入文字",
+    "insertBelow": "在下方插入文字",
+    "delete": "删除",
+    "deleted": "已删除",
+    "undo": "撤销"
   }
 }

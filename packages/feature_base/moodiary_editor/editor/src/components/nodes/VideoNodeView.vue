@@ -6,7 +6,8 @@ import IconPause from '~icons/lucide/pause'
 import IconVolume from '~icons/lucide/volume-2'
 import IconMuted from '~icons/lucide/volume-x'
 import IconFullscreen from '~icons/lucide/maximize'
-import MediaSizeMenu from './MediaSizeMenu.vue'
+import BlockHandle from './BlockHandle.vue'
+import { blockMenu, openBlockMenu } from '../../editor/block-menu'
 import { editable } from '../../editor/editable'
 import { post } from '../../bridge/post'
 import { mediaUrl } from '../../editor/media'
@@ -20,17 +21,20 @@ const { t } = useI18n()
 const filename = computed(() => (props.node.attrs.filename as string | null) ?? '')
 const src = computed(() => (filename.value ? mediaUrl(filename.value) : ''))
 
-const draft = ref<number | null>(null)
+const owner = Symbol('video')
+const menuOpen = computed(() => blockMenu.owner === owner)
 const widthPercent = computed(() => {
   const v = props.node.attrs.widthPercent
   return typeof v === 'number' ? v : null
 })
-const shown = computed(() => draft.value ?? widthPercent.value)
+const shown = computed(() =>
+  menuOpen.value && blockMenu.previewWidth !== null ? blockMenu.previewWidth : widthPercent.value,
+)
 const wrapperStyle = computed(() =>
   shown.value === null ? undefined : { maxWidth: `${shown.value}%` },
 )
-function commitWidth(value: number | null): void {
-  props.updateAttributes({ widthPercent: value })
+function openMenu(anchor: HTMLElement): void {
+  openBlockMenu({ owner, kind: 'video', anchor, getPos: () => props.getPos() })
 }
 const poster = computed(() =>
   filename.value ? mediaUrl(filename.value, { poster: true }) : '',
@@ -167,12 +171,12 @@ onBeforeUnmount(() => {
 <template>
   <NodeViewWrapper
     class="moodiary-media moodiary-media--video"
-    :class="{ 'is-selected': selected }"
+    :class="{ 'is-selected': selected, 'is-menu-open': menuOpen }"
     :style="wrapperStyle"
     contenteditable="false"
   >
     <div
-      class="moodiary-video__frame moodiary-video__frame--boxed rounded-box overflow-hidden"
+      class="moodiary-video__frame moodiary-video__frame--boxed moodiary-block__body rounded-box overflow-hidden"
       :style="{ '--video-ratio': frameRatio }"
     >
       <div
@@ -187,12 +191,14 @@ onBeforeUnmount(() => {
         :src="src"
         :poster="poster"
         preload="metadata"
+        @mousedown.prevent
         @click="onPictureTap"
       ></video>
 
       <div
         class="moodiary-video__bar absolute inset-x-0 bottom-0 flex items-center gap-1"
         :class="{ 'is-hidden': !controlsVisible, 'is-scrubbing': dragging }"
+        @mousedown.prevent
         @pointerdown="keepControls"
       >
         <button
@@ -248,13 +254,7 @@ onBeforeUnmount(() => {
         </button>
       </div>
 
-      <MediaSizeMenu
-        v-if="editable"
-        :model-value="widthPercent"
-        :title="t('video.size')"
-        @update:model-value="commitWidth"
-        @preview="draft = $event"
-      />
+      <BlockHandle v-if="editable" variant="corner" @open="openMenu" />
     </div>
   </NodeViewWrapper>
 </template>

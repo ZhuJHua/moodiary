@@ -1,42 +1,21 @@
 <script setup lang="ts">
-import { computed, ref, type Component } from 'vue'
+import { computed, ref } from 'vue'
 import { post } from '../bridge/post'
 import type { EditorMeta } from '../bridge/meta'
-import PopupMenu, { type PopupMenuItem } from './PopupMenu.vue'
 import IconChevronDown from '~icons/lucide/chevron-down'
-import IconSmile from '~icons/lucide/smile'
-import IconMeh from '~icons/lucide/meh'
-import IconFrown from '~icons/lucide/frown'
-import IconSparkles from '~icons/lucide/sparkles'
-import IconAngry from '~icons/lucide/angry'
-import IconTornado from '~icons/lucide/tornado'
-import IconBatteryLow from '~icons/lucide/battery-low'
-import IconAnnoyed from '~icons/lucide/annoyed'
-import IconHeart from '~icons/lucide/heart'
-import IconBookOpen from '~icons/lucide/book-open'
-import IconFish from '~icons/lucide/fish'
-import IconUtensils from '~icons/lucide/utensils'
-import IconBriefcase from '~icons/lucide/briefcase'
-import IconPlane from '~icons/lucide/plane'
-import IconDumbbell from '~icons/lucide/dumbbell'
-import IconThermometer from '~icons/lucide/thermometer'
 import IconFolder from '~icons/lucide/folder'
 import IconMapPin from '~icons/lucide/map-pin'
 import IconPlus from '~icons/lucide/plus'
-import IconTrash from '~icons/lucide/trash-2'
 import IconCloud from '~icons/lucide/cloud'
-import IconRefresh from '~icons/lucide/refresh-cw'
-import IconX from '~icons/lucide/x'
-import IconLocateFixed from '~icons/lucide/locate-fixed'
-import IconSettings from '~icons/lucide/settings'
-import IconHouse from '~icons/lucide/house'
-import IconBuilding from '~icons/lucide/building-2'
-import IconSchool from '~icons/lucide/school'
-import IconCoffee from '~icons/lucide/coffee'
-import IconTrees from '~icons/lucide/trees'
-import IconHospital from '~icons/lucide/hospital'
-import qiFontUrl from 'qweather-icons/font/fonts/qweather-icons.woff2?url'
-import qiCodepoints from 'qweather-icons/font/qweather-icons.json'
+import IconTrash from '~icons/lucide/trash-2'
+import Popover from './ui/Popover.vue'
+import MoodPicker from './meta/MoodPicker.vue'
+import WeatherPicker from './meta/WeatherPicker.vue'
+import PlacePicker from './meta/PlacePicker.vue'
+import CategoryPicker from './meta/CategoryPicker.vue'
+import DatePicker from './meta/DatePicker.vue'
+import TimePicker from './meta/TimePicker.vue'
+import { moodIcon, weatherGlyph } from './meta/icons'
 import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{
@@ -53,96 +32,45 @@ const subLine = computed(() =>
     : `${props.meta.subText} · ${t('wordCount', { count: props.wordCount })}`,
 )
 
-const MOOD_ICONS: Record<string, Component> = {
-  smile: IconSmile,
-  meh: IconMeh,
-  frown: IconFrown,
-  sparkles: IconSparkles,
-  angry: IconAngry,
-  tornado: IconTornado,
-  'battery-low': IconBatteryLow,
-  annoyed: IconAnnoyed,
-  heart: IconHeart,
-  'book-open': IconBookOpen,
-  fish: IconFish,
-  utensils: IconUtensils,
-  briefcase: IconBriefcase,
-  plane: IconPlane,
-  dumbbell: IconDumbbell,
-  thermometer: IconThermometer,
-}
-
-const PLACE_ICONS: Record<string, Component> = {
-  house: IconHouse,
-  'building-2': IconBuilding,
-  school: IconSchool,
-  coffee: IconCoffee,
-  dumbbell: IconDumbbell,
-  trees: IconTrees,
-  hospital: IconHospital,
-  plane: IconPlane,
-  'map-pin': IconMapPin,
-}
-
 const currentMood = computed(
   () => props.meta.moods.find((m) => m.value === props.meta.mood) ?? props.meta.moods[0],
 )
-const moodIcon = computed(() => MOOD_ICONS[currentMood.value?.icon ?? ''] ?? IconMeh)
+const weatherIcon = computed(() => weatherGlyph(props.meta.weather?.icon))
 
-const moodMenuOpen = ref(false)
-function onMoodSelect(key: string): void {
-  moodMenuOpen.value = false
-  post('changeMood', { mood: key })
+const moodPicker = ref<InstanceType<typeof MoodPicker>>()
+const weatherPicker = ref<InstanceType<typeof WeatherPicker>>()
+const placePicker = ref<InstanceType<typeof PlacePicker>>()
+const categoryPicker = ref<InstanceType<typeof CategoryPicker>>()
+const datePicker = ref<InstanceType<typeof DatePicker>>()
+const timePicker = ref<InstanceType<typeof TimePicker>>()
+const tagMenu = ref<InstanceType<typeof Popover>>()
+const tagTarget = ref('')
+const tagDraft = ref('')
+
+const anchorOf = (e: Event): HTMLElement => e.currentTarget as HTMLElement
+
+function openTag(tag: string, e: Event): void {
+  tagTarget.value = tag
+  tagMenu.value?.open(anchorOf(e))
 }
 
-const qiFace = new FontFace('qweather-icons', `url('${qiFontUrl}')`)
-document.fonts.add(qiFace)
-void qiFace.load().catch(() => {})
-
-function glyphOf(code: string | undefined | null): string {
-  if (!code) return ''
-  const cp = (qiCodepoints as Record<string, number>)[code]
-  return cp ? String.fromCodePoint(cp) : ''
+function removeTag(): void {
+  tagMenu.value?.close()
+  post('removeTag', { name: tagTarget.value })
 }
 
-const weatherGlyph = computed(() => glyphOf(props.meta.weather?.icon))
-
-const weatherMenuOpen = ref(false)
-function onWeatherSelect(code: string): void {
-  weatherMenuOpen.value = false
-  post('changeWeather', { code })
-}
-function onWeatherAuto(): void {
-  weatherMenuOpen.value = false
-  post('fetchWeather')
-}
-function onWeatherClear(): void {
-  weatherMenuOpen.value = false
-  post('clearWeather')
+function onTagInput(e: Event): void {
+  tagDraft.value = (e.target as HTMLInputElement).value
 }
 
-const positionMenuOpen = ref(false)
-function onPositionMenuToggle(open: boolean): void {
-  positionMenuOpen.value = open
-  if (open) post('locateForPlaces')
-}
-function onPositionAction(type: string, payload?: unknown): void {
-  positionMenuOpen.value = false
-  post(type, payload)
-}
-
-const tagMenuIndex = ref(-1)
-const tagMenuItems = computed<PopupMenuItem[]>(() => [
-  {
-    key: 'delete',
-    label: props.meta.deleteLabel,
-    icon: IconTrash,
-    active: false,
-    destructive: true,
-  },
-])
-function onTagSelect(index: number): void {
-  post('removeTag', { index })
+function onTagEnter(e: KeyboardEvent): void {
+  if (e.isComposing) return
+  e.preventDefault()
+  const input = e.target as HTMLInputElement
+  const name = input.value.trim()
+  input.value = ''
+  tagDraft.value = ''
+  if (name && !props.meta.tags.includes(name)) post('addTag', { name })
 }
 
 const showCategory = computed(() => props.editable || props.meta.category)
@@ -159,7 +87,7 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
         class="meta-plain-btn meta-date-anchor"
         :disabled="!editable"
         @mousedown.prevent
-        @click="editable && post('pickDate')"
+        @click="datePicker?.open(anchorOf($event))"
       >
         {{ meta.dateText }}
       </button>
@@ -168,7 +96,7 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
         class="meta-plain-btn meta-date-sub"
         :disabled="!editable"
         @mousedown.prevent
-        @click="editable && post('pickTime')"
+        @click="timePicker?.open(anchorOf($event))"
       >
         {{ subLine }}
       </button>
@@ -176,244 +104,92 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
     </div>
 
     <div class="meta-fn-row">
-      <PopupMenu
-        v-if="editable"
-        class="meta-fn-mood"
-        :model-value="moodMenuOpen"
-        @update:model-value="(v) => (moodMenuOpen = v)"
-      >
-        <template #trigger>
-          <span
-            class="meta-mood-chip"
-            :style="{ color: currentMood?.color, background: `${currentMood?.color}26` }"
-          >
-            <component :is="moodIcon" class="size-4" />
-            <span class="meta-mood-label">{{ currentMood?.label }}</span>
-          </span>
-        </template>
-        <template #panel>
-          <div class="mood-panel">
-            <div class="mood-grid">
-              <button
-                v-for="m in meta.moods"
-                :key="m.value"
-                type="button"
-                class="mood-cell"
-                :class="{ 'mood-cell--active': m.value === meta.mood }"
-                :style="
-                  m.value === meta.mood
-                    ? { color: m.color, background: `${m.color}26` }
-                    : undefined
-                "
-                @mousedown.prevent
-                @click.stop="onMoodSelect(m.value)"
-              >
-                <component :is="MOOD_ICONS[m.icon] ?? IconMeh" class="mood-cell-icon" />
-                <span class="mood-cell-label">{{ m.label }}</span>
-              </button>
-            </div>
-          </div>
-        </template>
-      </PopupMenu>
-      <span
-        v-else
-        class="meta-fn-mood meta-mood-chip"
+      <button
+        type="button"
+        class="meta-plain-btn meta-fn-mood meta-mood-chip"
         :style="{ color: currentMood?.color, background: `${currentMood?.color}26` }"
+        :disabled="!editable"
+        @mousedown.prevent
+        @click="moodPicker?.open(anchorOf($event))"
       >
-        <component :is="moodIcon" class="size-4" />
+        <component :is="moodIcon(currentMood?.icon)" class="size-4" />
         <span class="meta-mood-label">{{ currentMood?.label }}</span>
-      </span>
+      </button>
       <button
         v-if="showCategory"
         type="button"
         class="meta-plain-btn meta-fn-item"
         :disabled="!editable"
         @mousedown.prevent
-        @click="editable && post('pickCategory')"
+        @click="categoryPicker?.open(anchorOf($event))"
       >
         <IconFolder class="meta-fn-icon" :class="{ 'meta-fn-icon--unset': !meta.category }" />
         <span v-if="meta.category" class="meta-fn-label">{{ meta.category }}</span>
       </button>
-      <PopupMenu
-        v-if="editable && showWeather"
-        class="meta-fn-weather"
-        :model-value="weatherMenuOpen"
-        @update:model-value="(v) => (weatherMenuOpen = v)"
+      <button
+        v-if="showWeather"
+        type="button"
+        class="meta-plain-btn meta-fn-item meta-fn-item--shrink"
+        :disabled="!editable"
+        @mousedown.prevent
+        @click="weatherPicker?.open(anchorOf($event))"
       >
-        <template #trigger>
-          <span class="meta-fn-item" @mousedown.prevent>
-            <span v-if="weatherGlyph" class="meta-fn-icon meta-fn-qi">{{ weatherGlyph }}</span>
-            <IconCloud
-              v-else
-              class="meta-fn-icon"
-              :class="{ 'meta-fn-icon--unset': !meta.weather }"
-            />
-            <span v-if="meta.weather" class="meta-fn-label">{{ meta.weather.text }}</span>
-          </span>
-        </template>
-        <template #panel>
-          <div class="weather-panel">
-            <div class="weather-grid">
-              <button
-                v-for="w in meta.weatherOptions"
-                :key="w.code"
-                type="button"
-                class="weather-cell"
-                :class="{ 'weather-cell--active': w.code === meta.weather?.icon }"
-                @mousedown.prevent
-                @click.stop="onWeatherSelect(w.code)"
-              >
-                <span class="weather-cell-icon">{{ glyphOf(w.code) }}</span>
-                <span class="weather-cell-label">{{ w.label }}</span>
-              </button>
-            </div>
-            <template v-if="meta.weatherAutoLabel || meta.weather">
-              <div class="weather-divider"></div>
-              <button
-                v-if="meta.weatherAutoLabel"
-                type="button"
-                class="weather-action"
-                @mousedown.prevent
-                @click.stop="onWeatherAuto()"
-              >
-                <IconRefresh class="weather-action-icon" />
-                <span>{{ meta.weatherAutoLabel }}</span>
-              </button>
-              <button
-                v-if="meta.weather"
-                type="button"
-                class="weather-action weather-action--dim"
-                @mousedown.prevent
-                @click.stop="onWeatherClear()"
-              >
-                <IconX class="weather-action-icon" />
-                <span>{{ meta.weatherClearLabel }}</span>
-              </button>
-            </template>
-          </div>
-        </template>
-      </PopupMenu>
-      <span v-else-if="showWeather" class="meta-fn-item">
-        <span v-if="weatherGlyph" class="meta-fn-icon meta-fn-qi">{{ weatherGlyph }}</span>
-        <IconCloud v-else class="meta-fn-icon meta-fn-icon--unset" />
+        <span v-if="weatherIcon" class="meta-fn-icon meta-fn-qi">{{ weatherIcon }}</span>
+        <IconCloud v-else class="meta-fn-icon" :class="{ 'meta-fn-icon--unset': !meta.weather }" />
         <span v-if="meta.weather" class="meta-fn-label">{{ meta.weather.text }}</span>
-      </span>
-      <PopupMenu
-        v-if="editable && showPosition"
-        class="meta-fn-position"
-        :model-value="positionMenuOpen"
-        @update:model-value="onPositionMenuToggle"
+      </button>
+      <button
+        v-if="showPosition"
+        type="button"
+        class="meta-plain-btn meta-fn-item meta-fn-item--shrink"
+        :disabled="!editable"
+        @mousedown.prevent
+        @click="placePicker?.open(anchorOf($event))"
       >
-        <template #trigger>
-          <span class="meta-fn-item meta-fn-item--shrink" @mousedown.prevent>
-            <IconMapPin
-              class="meta-fn-icon"
-              :class="{ 'meta-fn-icon--unset': !meta.position }"
-            />
-            <span v-if="meta.position" class="meta-fn-label">{{ meta.position }}</span>
-          </span>
-        </template>
-        <template #panel>
-          <div class="place-panel">
-            <button
-              v-if="meta.positionAutoLabel"
-              type="button"
-              class="place-action"
-              @mousedown.prevent
-              @click.stop="onPositionAction('fetchPosition')"
-            >
-              <IconLocateFixed class="place-action-icon" />
-              <span>{{ meta.positionAutoLabel }}</span>
-            </button>
-            <template v-if="meta.places.length > 0">
-              <div v-if="meta.positionAutoLabel" class="place-divider"></div>
-              <div class="place-list">
-                <button
-                  v-for="place in meta.places"
-                  :key="place.id"
-                  type="button"
-                  class="place-row"
-                  :class="{ 'place-row--active': place.id === meta.positionId }"
-                  @mousedown.prevent
-                  @click.stop="onPositionAction('pickPlace', { id: place.id })"
-                >
-                  <component
-                    :is="PLACE_ICONS[place.icon] ?? IconMapPin"
-                    class="place-row-icon"
-                  />
-                  <span class="place-row-name">{{ place.name }}</span>
-                  <span v-if="place.distance" class="place-row-distance">
-                    {{ place.distance }}
-                  </span>
-                </button>
-              </div>
-            </template>
-            <div
-              v-if="meta.positionAutoLabel || meta.places.length > 0"
-              class="place-divider"
-            ></div>
-            <button
-              type="button"
-              class="place-action"
-              @mousedown.prevent
-              @click.stop="onPositionAction('newPlace')"
-            >
-              <IconPlus class="place-action-icon" />
-              <span>{{ meta.positionNewPlaceLabel }}</span>
-            </button>
-            <button
-              type="button"
-              class="place-action place-action--dim"
-              @mousedown.prevent
-              @click.stop="onPositionAction('managePlaces')"
-            >
-              <IconSettings class="place-action-icon" />
-              <span>{{ meta.positionManageLabel }}</span>
-            </button>
-            <button
-              v-if="meta.position"
-              type="button"
-              class="place-action place-action--dim"
-              @mousedown.prevent
-              @click.stop="onPositionAction('clearPosition')"
-            >
-              <IconX class="place-action-icon" />
-              <span>{{ meta.positionClearLabel }}</span>
-            </button>
-          </div>
-        </template>
-      </PopupMenu>
-      <span v-else-if="showPosition" class="meta-fn-item meta-fn-item--shrink">
-        <IconMapPin class="meta-fn-icon meta-fn-icon--unset" />
+        <IconMapPin class="meta-fn-icon" :class="{ 'meta-fn-icon--unset': !meta.position }" />
         <span v-if="meta.position" class="meta-fn-label">{{ meta.position }}</span>
-      </span>
+      </button>
     </div>
 
     <div v-if="showTagsRow" class="meta-tags-row">
-      <template v-for="(tag, i) in meta.tags" :key="`${i}-${tag}`">
-        <PopupMenu
-          v-if="editable"
-          :items="tagMenuItems"
-          :model-value="tagMenuIndex === i"
-          @update:model-value="(v) => (tagMenuIndex = v ? i : -1)"
-          @select="() => onTagSelect(i)"
-        >
-          <template #trigger>
-            <span class="meta-tag">#{{ tag }}</span>
-          </template>
-        </PopupMenu>
-        <span v-else class="meta-tag">#{{ tag }}</span>
-      </template>
       <button
-        v-if="editable"
+        v-for="(tag, i) in meta.tags"
+        :key="`${i}-${tag}`"
         type="button"
-        class="meta-plain-btn meta-tag-add"
+        class="meta-plain-btn meta-tag"
+        :disabled="!editable"
         @mousedown.prevent
-        @click="post('addTag')"
+        @click="openTag(tag, $event)"
       >
-        <IconPlus class="size-3.5" />
+        #{{ tag }}
       </button>
+      <label v-if="editable" class="meta-tag-new" :class="{ 'is-filled': tagDraft }">
+        <IconPlus class="meta-tag-new-icon" />
+        <input
+          class="meta-tag-input"
+          type="text"
+          enterkeyhint="done"
+          :placeholder="t('meta.tagPlaceholder')"
+          :aria-label="t('meta.addTag')"
+          @input="onTagInput"
+          @keydown.enter="onTagEnter"
+        />
+      </label>
     </div>
+
+    <template v-if="editable">
+      <DatePicker ref="datePicker" :meta="meta" />
+      <TimePicker ref="timePicker" :meta="meta" />
+      <MoodPicker ref="moodPicker" :meta="meta" />
+      <CategoryPicker ref="categoryPicker" :meta="meta" />
+      <WeatherPicker ref="weatherPicker" :meta="meta" />
+      <PlacePicker ref="placePicker" :meta="meta" />
+      <Popover ref="tagMenu" panel-class="min-w-42">
+        <button type="button" class="moodiary-pop-item is-danger" @click="removeTag">
+          <IconTrash />{{ t('meta.removeTag') }}
+        </button>
+      </Popover>
+    </template>
   </div>
 </template>
 
@@ -486,209 +262,10 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
   font-size: calc(12px * var(--app-font-scale, 1));
   font-weight: 600;
   white-space: nowrap;
-  cursor: inherit;
 }
 .meta-fn-mood {
   flex: none;
   margin-right: 10px;
-}
-.meta-fn-weather,
-.meta-fn-position {
-  flex: 0 1 auto;
-  min-width: 0;
-}
-
-.mood-panel {
-  width: 276px;
-  padding-top: 4px;
-}
-.mood-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 2px;
-}
-.mood-cell {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 2px 6px;
-  border: none;
-  border-radius: 12px;
-  background: transparent;
-  color: var(--app-on-surface);
-  font-family: inherit;
-  cursor: pointer;
-  outline: none;
-  -webkit-tap-highlight-color: transparent;
-}
-.mood-cell:hover {
-  background: var(--app-selected);
-}
-.mood-cell--active {
-  font-weight: 600;
-}
-.mood-cell-icon {
-  width: 20px;
-  height: 20px;
-}
-.mood-cell-label {
-  font-size: 11px;
-  white-space: nowrap;
-}
-
-.weather-panel {
-  width: 276px;
-  padding-top: 4px;
-}
-.weather-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 2px;
-}
-.weather-cell {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 2px 6px;
-  border: none;
-  border-radius: 12px;
-  background: transparent;
-  color: var(--app-on-surface);
-  font-family: inherit;
-  cursor: pointer;
-  outline: none;
-  -webkit-tap-highlight-color: transparent;
-}
-.weather-cell:hover {
-  background: var(--app-selected);
-}
-.weather-cell--active {
-  background: var(--app-secondary);
-  color: var(--app-on-secondary);
-  font-weight: 600;
-}
-.weather-cell--active:hover {
-  background: var(--app-secondary);
-}
-.weather-cell-icon {
-  font-family: 'qweather-icons';
-  font-size: 20px;
-  line-height: 1;
-  font-style: normal;
-  font-weight: 400;
-}
-.weather-cell-label {
-  font-size: 11px;
-  white-space: nowrap;
-}
-.weather-divider {
-  height: 1px;
-  background: var(--app-outline);
-  margin: 5px 10px;
-}
-.weather-action {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 10px 12px;
-  border: none;
-  border-radius: 12px;
-  background: transparent;
-  color: var(--app-on-surface);
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  text-align: left;
-  cursor: pointer;
-  outline: none;
-  -webkit-tap-highlight-color: transparent;
-}
-.weather-action:hover {
-  background: var(--app-selected);
-}
-.weather-action--dim {
-  color: var(--app-on-surface-variant);
-}
-.weather-action-icon {
-  width: 19px;
-  height: 19px;
-  flex: none;
-}
-
-.place-panel {
-  width: 236px;
-  padding-top: 2px;
-}
-.place-list {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  max-height: 200px;
-  overflow-y: auto;
-}
-.place-row,
-.place-action {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 9px 12px;
-  border: none;
-  border-radius: 12px;
-  background: transparent;
-  color: var(--app-on-surface);
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  text-align: left;
-  cursor: pointer;
-  outline: none;
-  -webkit-tap-highlight-color: transparent;
-}
-.place-row:hover,
-.place-action:hover {
-  background: var(--app-selected);
-}
-.place-row--active {
-  background: var(--app-secondary);
-  color: var(--app-on-secondary);
-}
-.place-row--active:hover {
-  background: var(--app-secondary);
-}
-.place-row-icon,
-.place-action-icon {
-  width: 19px;
-  height: 19px;
-  flex: none;
-}
-.place-row-name {
-  flex: 1 1 auto;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.place-row-distance {
-  flex: none;
-  font-size: 12px;
-  font-weight: 400;
-  font-variant-numeric: tabular-nums;
-  color: var(--app-on-surface-variant);
-}
-.place-row--active .place-row-distance {
-  color: inherit;
-}
-.place-action--dim {
-  color: var(--app-on-surface-variant);
-}
-.place-divider {
-  height: 1px;
-  background: var(--app-outline);
-  margin: 5px 10px;
 }
 
 .meta-fn-row {
@@ -719,8 +296,8 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
   opacity: 1;
 }
 .meta-fn-qi {
-  width: auto;
-  height: auto;
+  display: grid;
+  place-items: center;
   font-family: 'qweather-icons';
   font-size: 15px;
   line-height: 1;
@@ -730,6 +307,7 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
 .meta-fn-label {
   color: var(--app-on-surface-variant);
   font-size: calc(12px * var(--app-font-scale, 1));
+  line-height: 15px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -749,12 +327,39 @@ const showTagsRow = computed(() => props.editable || props.meta.tags.length > 0)
   color: var(--app-on-surface-variant);
   opacity: 0.75;
   font-size: calc(12px * var(--app-font-scale, 1));
-  cursor: inherit;
 }
-.meta-tag-add {
+.meta-tag-new {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  padding: 6px;
+  color: var(--app-outline);
+}
+.meta-tag-new-icon {
+  position: absolute;
+  left: 6px;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+.meta-tag-input {
+  width: 26px;
+  padding: 6px 0 6px 24px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--app-on-surface-variant);
+  font: inherit;
+  font-size: calc(12px * var(--app-font-scale, 1));
+  transition: width 0.15s ease;
+}
+.meta-tag-input::placeholder {
+  color: transparent;
+}
+.meta-tag-input:focus,
+.meta-tag-new.is-filled .meta-tag-input {
+  width: 8rem;
+}
+.meta-tag-input:focus::placeholder {
   color: var(--app-outline);
 }
 </style>

@@ -384,17 +384,17 @@ body {
   border-radius: 8px;
 }
 
-/* —— 图片节点视图（components/nodes/ImageNodeView.vue）：外层承载宽度，<img> 撑满外层 ——
-   宽度必须落在外层：它的包含块是正文列，widthPercent 才有确定的百分比参照。未设时外层缩到
-   图片原始宽度（fit-content），角标才贴在图的角上而不是正文列的角上。 */
+.moodiary-editor .ProseMirror {
+  --block-gap: 12px;
+}
+/* 宽度落在外层：包含块是正文列，widthPercent 才有百分比参照 */
 .moodiary-editor .ProseMirror .moodiary-image {
   position: relative;
   width: -webkit-fit-content;
   width: fit-content;
   max-width: 100%;
-  /* 居中：外层是 fit-content，auto 左右外边距即把它摆在正文列中间。满栏图看不出差别，
-     调窄过的图和小图不再贴着左边。 */
-  margin: 0.4em auto;
+  margin: 0 auto;
+  padding-block: var(--block-gap);
   /* 既有护栏 [draggable][contenteditable='false'] 对图片已失配（draggable 落在内层 <img>，
      contenteditable 落在外层），iOS 长按会起选择手柄 / 「存储图像」callout 并吞掉点击。 */
   user-select: none;
@@ -405,83 +405,68 @@ body {
   width: 100%;
   margin: 0;
 }
-/* 选中（NodeSelection）描边，复刻音视频观感；仅编辑态。 */
-.moodiary-editor
-  .ProseMirror[contenteditable='true']
-  .moodiary-image.is-selected
-  .moodiary-image__img {
+.moodiary-media {
+  margin: 0;
+  padding-block: var(--block-gap);
+}
+.moodiary-media--video {
+  margin-inline: auto;
+}
+.moodiary-editor .ProseMirror[contenteditable='true'] .is-menu-open > .moodiary-block__body {
   outline: 2px solid var(--app-primary);
   outline-offset: 2px;
 }
-/* 尺寸角标：命中区 44×44，但不超过图片的 40% —— 小图（头像 / 贴纸 / 二维码常在 100px 量级）
-   上固定 44px 会吃掉近半张图，而角标不是 <img>，那片区域点不出全屏画廊。
-   锚在顶部而非底部：长图要滚一屏多才够得着底边，且改尺寸时顶边不动，视口不会跳。
-   尺寸落在 host 上（它的包含块是 .moodiary-image，百分比才有确定参照），按钮再撑满。 */
-.moodiary-size__menu {
-  position: absolute;
-  right: 0;
-  top: 0;
-  display: grid;
-  width: min(44px, 40%);
-  height: min(44px, 40%);
+.moodiary-editor .ProseMirror[contenteditable='true'] .is-selected > .moodiary-block__body {
+  outline: 1px solid var(--app-primary);
+  outline-offset: 2px;
 }
-.moodiary-size__badge {
+
+/* 手柄不超过块的 40%：小图上固定 44px 会盖掉大半张图 */
+.moodiary-block__handle {
   display: grid;
   place-items: center;
-  width: 100%;
-  height: 100%;
   padding: 0;
   border: none;
   background: transparent;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.moodiary-size__chip {
+.moodiary-block__handle--corner {
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 1;
+  width: min(44px, 40%);
+  height: min(44px, 40%);
+}
+.moodiary-image > .moodiary-block__handle--corner {
+  top: var(--block-gap);
+}
+.moodiary-block__handle--inline {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  margin: -4px -6px -4px 0;
+}
+.moodiary-block__chip {
   display: grid;
   place-items: center;
   width: min(30px, 100%);
   height: min(30px, 100%);
   border-radius: 9px;
-  /* 走主题反色而非硬编码黑：压在夜景照 / 黑底截图上时按钮轮廓不会整个消失。 */
+  /* 走主题反色而非硬编码黑：压在夜景照 / 黑底截图上时按钮轮廓不会整个消失 */
   background: var(--app-inverse);
   color: var(--app-on-inverse);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
   transition: transform 0.14s ease;
 }
-.moodiary-size__badge:active .moodiary-size__chip {
-  transform: scale(0.9);
-}
-/* 尺寸面板里的档位标签：点即跳到该档，当前档高亮。面板 Teleport 到 body，故样式必须是全局的。 */
-.moodiary-size__stop {
-  padding: 2px 6px;
-  border: none;
-  border-radius: 6px;
+.moodiary-block__handle--inline .moodiary-block__chip {
   background: transparent;
-  color: var(--app-on-surface);
-  opacity: 0.6;
-  cursor: pointer;
-  font-variant-numeric: tabular-nums;
-  -webkit-tap-highlight-color: transparent;
+  color: var(--app-on-surface-variant);
+  box-shadow: none;
 }
-.moodiary-size__stop.is-active {
-  color: var(--app-primary);
-  font-weight: 600;
-  opacity: 1;
-}
-
-/* —— 音频 / 视频：webview 内原生 <audio>/<video> + daisyUI 自绘控件（components/nodes/*）。
-   控件外观全部用 daisyUI（btn / range）+ Tailwind 工具类,见组件模板;这里只留外边距与选中描边。 —— */
-.moodiary-media {
-  margin: 0.8em 0;
-}
-.moodiary-media--video {
-  margin-inline: auto;
-}
-/* 选中（NodeSelection）描边，复刻旧节点视图观感；仅编辑态（阅读态 contenteditable=false 不描边）。 */
-.moodiary-editor .ProseMirror[contenteditable='true'] .moodiary-media.is-selected {
-  outline: 2px solid var(--app-primary);
-  outline-offset: 2px;
-  border-radius: var(--radius-box, 0.75rem);
+.moodiary-block__handle:active .moodiary-block__chip {
+  transform: scale(0.9);
 }
 
 /* —— 视频容器：比例由 node view 夹取后经 --video-ratio 注入（见 VideoNodeView），画面
@@ -1043,4 +1028,209 @@ body {
   ::-webkit-scrollbar-thumb:hover {
     background-color: var(--app-scrollbar-hover);
   }
+}
+
+.moodiary-qi {
+  font-family: 'qweather-icons';
+  font-style: normal;
+  font-weight: 400;
+}
+
+/* 浮层 Teleport 到 body，样式只能是全局的；放进 components 层好让 Tailwind 工具类能覆盖 */
+@layer components {
+.moodiary-popover {
+  position: fixed;
+  z-index: 71;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: calc(100vw - 16px);
+  padding: 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: 16px;
+  background: var(--app-hover);
+  color: var(--app-on-surface);
+  font-family: var(--app-font-sans);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.2),
+    0 2px 4px rgba(0, 0, 0, 0.14);
+  animation: moodiary-popover-in 0.2s cubic-bezier(0.33, 1, 0.68, 1);
+}
+@keyframes moodiary-popover-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.moodiary-pop-item,
+.moodiary-pop-cell,
+.moodiary-pop-icon {
+  margin: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.12s ease;
+}
+.moodiary-pop-item {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+}
+.moodiary-pop-item > svg {
+  width: 19px;
+  height: 19px;
+  flex: none;
+}
+.moodiary-pop-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 2px 6px;
+  border-radius: 12px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.moodiary-pop-cell > svg,
+.moodiary-pop-cell > .moodiary-qi {
+  width: 20px;
+  height: 20px;
+  font-size: 20px;
+  line-height: 20px;
+}
+.moodiary-pop-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+}
+.moodiary-pop-icon > svg {
+  width: 18px;
+  height: 18px;
+}
+.moodiary-pop-item:active,
+.moodiary-pop-cell:active,
+.moodiary-pop-icon:active {
+  background: var(--app-selected);
+}
+@media (hover: hover) {
+  .moodiary-pop-item:hover,
+  .moodiary-pop-cell:hover,
+  .moodiary-pop-icon:hover {
+    background: var(--app-selected);
+  }
+}
+.moodiary-pop-icon.is-today {
+  box-shadow: inset 0 0 0 1px var(--app-outline);
+}
+.moodiary-pop-item.is-active,
+.moodiary-pop-cell.is-active,
+.moodiary-pop-icon.is-active {
+  background: var(--app-secondary);
+  color: var(--app-on-secondary);
+  font-weight: 600;
+  box-shadow: none;
+}
+.moodiary-pop-item.is-dim {
+  color: var(--app-on-surface-variant);
+}
+.moodiary-pop-item.is-danger {
+  color: var(--app-error);
+}
+.moodiary-pop-item:disabled,
+.moodiary-pop-cell:disabled,
+.moodiary-pop-icon:disabled {
+  background: transparent;
+  opacity: 0.35;
+  cursor: default;
+}
+.moodiary-pop-divider {
+  flex: none;
+  height: 1px;
+  margin: 4px 10px;
+  background: var(--app-outline);
+  opacity: 0.4;
+}
+
+.moodiary-width__stops {
+  position: relative;
+  height: 28px;
+  margin: 0 10px;
+}
+.moodiary-width__stop {
+  position: absolute;
+  top: 0;
+  min-width: 36px;
+  height: 28px;
+  padding: 0 4px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--app-on-surface-variant);
+  font-family: inherit;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  transform: translateX(-50%);
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.moodiary-width__stop:active {
+  background: var(--app-selected);
+}
+.moodiary-width__stop.is-active {
+  color: var(--app-primary);
+  font-weight: 600;
+}
+}
+.moodiary-wheel {
+  position: relative;
+  height: 200px;
+}
+.moodiary-wheel__band {
+  position: absolute;
+  inset: 80px 0;
+  border-radius: 12px;
+  background: var(--app-selected);
+  pointer-events: none;
+}
+.moodiary-wheel__list {
+  position: relative;
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+  padding-block: 80px;
+  -webkit-mask-image: linear-gradient(transparent, #000 30%, #000 70%, transparent);
+  mask-image: linear-gradient(transparent, #000 30%, #000 70%, transparent);
+}
+.moodiary-wheel__list::-webkit-scrollbar {
+  display: none;
+}
+.moodiary-wheel__item {
+  display: grid;
+  place-items: center;
+  height: 40px;
+  scroll-snap-align: center;
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
 }

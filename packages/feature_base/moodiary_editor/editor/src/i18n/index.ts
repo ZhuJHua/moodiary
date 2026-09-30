@@ -14,6 +14,14 @@ export const i18n = createI18n({
   messages,
 })
 
+let intlLocale = 'zh-CN'
+
 export function setLocale(locale?: string): void {
-  i18n.global.locale.value = locale?.toLowerCase().startsWith('en') ? 'en' : 'zh'
+  const en = locale?.toLowerCase().startsWith('en') ?? false
+  i18n.global.locale.value = en ? 'en' : 'zh'
+  intlLocale = locale ? locale.replace('_', '-') : en ? 'en-US' : 'zh-CN'
+}
+
+export function dateLocale(): string {
+  return intlLocale
 }

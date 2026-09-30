@@ -5,6 +5,9 @@ import IconPlay from '~icons/lucide/play'
 import IconPause from '~icons/lucide/pause'
 import IconVolume from '~icons/lucide/volume-2'
 import IconMuted from '~icons/lucide/volume-x'
+import BlockHandle from './BlockHandle.vue'
+import { blockMenu, openBlockMenu } from '../../editor/block-menu'
+import { editable } from '../../editor/editable'
 import { audioDefaultName, fetchMediaName, mediaUrl } from '../../editor/media'
 import { formatTime, useMediaControls } from '../../editor/use-media'
 import { useI18n } from 'vue-i18n'
@@ -23,6 +26,12 @@ onMounted(async () => {
   if (name) displayName.value = name
 })
 
+const owner = Symbol('audio')
+const menuOpen = computed(() => blockMenu.owner === owner)
+function openMenu(anchor: HTMLElement): void {
+  openBlockMenu({ owner, kind: 'audio', anchor, getPos: () => props.getPos() })
+}
+
 const audioEl = ref<HTMLAudioElement | null>(null)
 const { playing, duration, muted, sliderValue, toggle, toggleMute, onSeekInput, onSeekChange } =
   useMediaControls(audioEl)
@@ -31,16 +40,17 @@ const { playing, duration, muted, sliderValue, toggle, toggleMute, onSeekInput, 
 <template>
   <NodeViewWrapper
     class="moodiary-media moodiary-media--audio"
-    :class="{ 'is-selected': selected }"
+    :class="{ 'is-selected': selected, 'is-menu-open': menuOpen }"
     contenteditable="false"
   >
     <div
-      class="flex items-center gap-3 rounded-box border border-base-300 bg-base-200 px-3 py-2.5"
+      class="moodiary-block__body flex items-center gap-3 rounded-box border border-base-300 bg-base-200 px-3 py-2.5"
     >
       <button
         class="btn btn-circle btn-sm btn-primary shrink-0"
         type="button"
         :title="playing ? t('audio.pause') : t('audio.play')"
+        @mousedown.prevent
         @click="toggle"
       >
         <component :is="playing ? IconPause : IconPlay" class="size-5" />
@@ -52,10 +62,12 @@ const { playing, duration, muted, sliderValue, toggle, toggleMute, onSeekInput, 
             class="btn btn-circle btn-ghost btn-xs shrink-0"
             type="button"
             :title="muted ? t('audio.unmute') : t('audio.mute')"
+            @mousedown.prevent
             @click="toggleMute"
           >
             <component :is="muted ? IconMuted : IconVolume" class="size-4" />
           </button>
+          <BlockHandle v-if="editable" variant="inline" @open="openMenu" />
         </div>
         <div class="flex items-center gap-2">
           <input

@@ -26,11 +26,11 @@ class EditorBody extends StatefulWidget {
 
   final String? metaJson;
   final String? linksJson;
-  final VoidCallback? onPickDate;
-  final VoidCallback? onPickTime;
-  final VoidCallback? onPickCategory;
-  final VoidCallback? onAddTag;
-  final ValueChanged<int>? onRemoveTag;
+  final ValueChanged<DateTime>? onChangeDate;
+  final ValueChanged<TimeOfDay>? onChangeTime;
+  final ValueChanged<String?>? onChangeCategory;
+  final ValueChanged<String>? onAddTag;
+  final ValueChanged<String>? onRemoveTag;
   final ValueChanged<String>? onChangeMood;
   final ValueChanged<String>? onChangeWeather;
   final VoidCallback? onClearWeather;
@@ -42,6 +42,7 @@ class EditorBody extends StatefulWidget {
   final VoidCallback? onManagePlaces;
   final VoidCallback? onClearPosition;
   final VoidCallback? onOpenGraph;
+  final ValueChanged<bool>? onOverlayChanged;
 
   const EditorBody({
     super.key,
@@ -57,9 +58,9 @@ class EditorBody extends StatefulWidget {
     this.saveStatus = 'idle',
     this.metaJson,
     this.linksJson,
-    this.onPickDate,
-    this.onPickTime,
-    this.onPickCategory,
+    this.onChangeDate,
+    this.onChangeTime,
+    this.onChangeCategory,
     this.onAddTag,
     this.onRemoveTag,
     this.onChangeMood,
@@ -73,6 +74,7 @@ class EditorBody extends StatefulWidget {
     this.onManagePlaces,
     this.onClearPosition,
     this.onOpenGraph,
+    this.onOverlayChanged,
   });
 
   @override
@@ -130,9 +132,9 @@ class _EditorBodyState extends State<EditorBody> {
         onOpenDiaryLink: widget.onOpenDiaryLink,
         metaJson: widget.metaJson,
         linksJson: widget.linksJson,
-        onPickDate: widget.onPickDate,
-        onPickTime: widget.onPickTime,
-        onPickCategory: widget.onPickCategory,
+        onChangeDate: widget.onChangeDate,
+        onChangeTime: widget.onChangeTime,
+        onChangeCategory: widget.onChangeCategory,
         onAddTag: widget.onAddTag,
         onRemoveTag: widget.onRemoveTag,
         onChangeMood: widget.onChangeMood,
@@ -146,6 +148,7 @@ class _EditorBodyState extends State<EditorBody> {
         onManagePlaces: widget.onManagePlaces,
         onClearPosition: widget.onClearPosition,
         onOpenGraph: widget.onOpenGraph,
+        onOverlayChanged: widget.onOverlayChanged,
       ),
     );
   }
