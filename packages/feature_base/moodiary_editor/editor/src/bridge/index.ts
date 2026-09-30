@@ -19,6 +19,7 @@ export function boundApi(): EditorApi | null {
 }
 
 export function markReady(): void {
+  if (ready) return
   ready = true
   post('ready')
 }
