@@ -1,7 +1,7 @@
-import { ref } from 'vue'
+import { createStore } from '../lib/store'
 
-export const saveStatus = ref('idle')
+export const saveStatus = createStore('idle')
 
 export function setSaveStatus(status: string): void {
-  saveStatus.value = status || 'idle'
+  saveStatus.set(status || 'idle')
 }

@@ -9,9 +9,9 @@ import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import { TableKit } from '@tiptap/extension-table'
 import { TaskList } from '@tiptap/extension-task-list'
 import { TaskItem } from '@tiptap/extension-task-item'
-import { VueNodeViewRenderer } from '@tiptap/vue-3'
+import { ReactNodeViewRenderer } from '@tiptap/react'
 import { common, createLowlight } from 'lowlight'
-import CodeBlockNodeView from '../components/nodes/CodeBlockNodeView.vue'
+import CodeBlockNodeView from '../components/nodes/CodeBlockNodeView'
 import { DiaryLink, resolveLinkCandidates as applyLinkCandidates } from './diary-link'
 import { SearchExtension } from './search'
 
@@ -216,7 +216,7 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
       StarterKit.configure({ codeBlock: false, link: { openOnClick: false } }),
       CodeBlockLowlight.configure({ lowlight }).extend({
         addNodeView() {
-          return VueNodeViewRenderer(CodeBlockNodeView)
+          return ReactNodeViewRenderer(CodeBlockNodeView)
         },
       }),
       MediaImage,

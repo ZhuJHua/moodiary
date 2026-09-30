@@ -1,93 +1,109 @@
-import { computed, onBeforeUnmount, onMounted, ref, type Ref } from 'vue'
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 
-export function useMediaControls(mediaRef: Ref<HTMLMediaElement | null>) {
-  const playing = ref(false)
-  const current = ref(0)
-  const duration = ref(0)
-  const muted = ref(false)
-  const buffering = ref(false)
+export interface MediaControls {
+  playing: boolean
+  current: number
+  duration: number
+  muted: boolean
+  buffering: boolean
+  dragging: boolean
+  sliderValue: number
+  toggle(): void
+  toggleMute(): void
+  seekTo(seconds: number): void
+  endSeek(seconds: number): void
+  onSeekInput(e: { target: EventTarget | null }): void
+  onSeekChange(e: { target: EventTarget | null }): void
+}
 
-  const dragging = ref(false)
-  const dragValue = ref(0)
-  const sliderValue = computed(() => (dragging.value ? dragValue.value : current.value))
+export function useMediaControls(mediaRef: RefObject<HTMLMediaElement | null>): MediaControls {
+  const [playing, setPlaying] = useState(false)
+  const [current, setCurrent] = useState(0)
+  const [duration, setDuration] = useState(0)
+  const [muted, setMuted] = useState(false)
+  const [buffering, setBuffering] = useState(false)
+  const [dragging, setDragging] = useState(false)
+  const [dragValue, setDragValue] = useState(0)
+  const draggingRef = useRef(false)
 
-  let el: HTMLMediaElement | null = null
-
-  const onPlay = () => (playing.value = true)
-  const onPause = () => (playing.value = false)
-  const onTime = () => {
-    if (el && !dragging.value) current.value = el.currentTime
-  }
-  const onMeta = () => {
-    if (el) duration.value = Number.isFinite(el.duration) ? el.duration : 0
-  }
-  const onEnded = () => {
-    playing.value = false
-    current.value = 0
-  }
-  const onWaiting = () => (buffering.value = true)
-  const onPlaying = () => (buffering.value = false)
-  const onVolume = () => {
-    if (el) muted.value = el.muted
-  }
-
-  const events: Array<[string, EventListener]> = [
-    ['play', onPlay],
-    ['pause', onPause],
-    ['timeupdate', onTime],
-    ['loadedmetadata', onMeta],
-    ['durationchange', onMeta],
-    ['ended', onEnded],
-    ['waiting', onWaiting],
-    ['playing', onPlaying],
-    ['canplay', onPlaying],
-    ['volumechange', onVolume],
-  ]
-
-  onMounted(() => {
-    el = mediaRef.value
+  useEffect(() => {
+    const el = mediaRef.current
     if (!el) return
+    const onPlay = (): void => setPlaying(true)
+    const onPause = (): void => setPlaying(false)
+    const onTime = (): void => {
+      if (!draggingRef.current) setCurrent(el.currentTime)
+    }
+    const onMeta = (): void => setDuration(Number.isFinite(el.duration) ? el.duration : 0)
+    const onEnded = (): void => {
+      setPlaying(false)
+      setCurrent(0)
+    }
+    const onWaiting = (): void => setBuffering(true)
+    const onPlaying = (): void => setBuffering(false)
+    const onVolume = (): void => setMuted(el.muted)
+    const events: Array<[string, EventListener]> = [
+      ['play', onPlay],
+      ['pause', onPause],
+      ['timeupdate', onTime],
+      ['loadedmetadata', onMeta],
+      ['durationchange', onMeta],
+      ['ended', onEnded],
+      ['waiting', onWaiting],
+      ['playing', onPlaying],
+      ['canplay', onPlaying],
+      ['volumechange', onVolume],
+    ]
     for (const [name, fn] of events) el.addEventListener(name, fn)
     onMeta()
     onVolume()
-  })
-
-  onBeforeUnmount(() => {
-    if (!el) return
-    try {
-      el.pause()
-    } catch {
-      /* no-op */
+    return () => {
+      try {
+        el.pause()
+      } catch {
+      }
+      for (const [name, fn] of events) el.removeEventListener(name, fn)
     }
-    for (const [name, fn] of events) el.removeEventListener(name, fn)
-    el = null
-  })
+  }, [mediaRef])
 
-  function toggle(): void {
+  const toggle = useCallback((): void => {
+    const el = mediaRef.current
     if (!el) return
     if (el.paused) el.play().catch(() => {})
     else el.pause()
-  }
-  function toggleMute(): void {
+  }, [mediaRef])
+  const toggleMute = useCallback((): void => {
+    const el = mediaRef.current
     if (el) el.muted = !el.muted
-  }
-  function seekTo(seconds: number): void {
-    dragging.value = true
-    dragValue.value = seconds
-    if (el) el.currentTime = seconds
-  }
-  function endSeek(seconds: number): void {
-    if (el) el.currentTime = seconds
-    current.value = seconds
-    dragging.value = false
-  }
-
-  function onSeekInput(e: Event): void {
-    seekTo(Number((e.target as HTMLInputElement).value))
-  }
-  function onSeekChange(e: Event): void {
-    endSeek(Number((e.target as HTMLInputElement).value))
-  }
+  }, [mediaRef])
+  const seekTo = useCallback(
+    (seconds: number): void => {
+      draggingRef.current = true
+      setDragging(true)
+      setDragValue(seconds)
+      const el = mediaRef.current
+      if (el) el.currentTime = seconds
+    },
+    [mediaRef],
+  )
+  const endSeek = useCallback(
+    (seconds: number): void => {
+      const el = mediaRef.current
+      if (el) el.currentTime = seconds
+      setCurrent(seconds)
+      draggingRef.current = false
+      setDragging(false)
+    },
+    [mediaRef],
+  )
+  const onSeekInput = useCallback(
+    (e: { target: EventTarget | null }): void => seekTo(Number((e.target as HTMLInputElement).value)),
+    [seekTo],
+  )
+  const onSeekChange = useCallback(
+    (e: { target: EventTarget | null }): void => endSeek(Number((e.target as HTMLInputElement).value)),
+    [endSeek],
+  )
 
   return {
     playing,
@@ -95,8 +111,8 @@ export function useMediaControls(mediaRef: Ref<HTMLMediaElement | null>) {
     duration,
     muted,
     buffering,
-    sliderValue,
     dragging,
+    sliderValue: dragging ? dragValue : current,
     toggle,
     toggleMute,
     seekTo,

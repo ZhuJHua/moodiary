@@ -1,4 +1,4 @@
-import { i18n } from '../i18n'
+import { t } from '../i18n'
 
 const LEGACY_PREFIX = 'moodiary-media://media/'
 
@@ -20,7 +20,7 @@ export function setMediaInfoPrefix(base: string): void {
 }
 
 export function audioDefaultName(): string {
-  return i18n.global.t('audio.defaultName')
+  return t('audio.defaultName')
 }
 
 export async function fetchMediaName(name: string): Promise<string | null> {

@@ -1,7 +1,7 @@
 import { mergeAttributes } from '@tiptap/core'
 import Mention from '@tiptap/extension-mention'
 import type { SuggestionKeyDownProps, SuggestionProps } from '@tiptap/suggestion'
-import { reactive } from 'vue'
+import { createStore } from '../lib/store'
 import { post } from '../bridge/post'
 import { diaryLinkMarkdownSpec } from './markdown'
 
@@ -10,14 +10,23 @@ export interface DiaryCandidate {
   label: string
 }
 
-export const linkSuggestion = reactive<{
+export interface LinkSuggestionState {
   open: boolean
   loading: boolean
   query: string
   items: DiaryCandidate[]
   index: number
   rect: { left: number; top: number; bottom: number } | null
-}>({ open: false, loading: false, query: '', items: [], index: 0, rect: null })
+}
+
+export const linkSuggestion = createStore<LinkSuggestionState>({
+  open: false,
+  loading: false,
+  query: '',
+  items: [],
+  index: 0,
+  rect: null,
+})
 
 let currentCommand: ((item: DiaryCandidate) => void) | null = null
 
@@ -66,43 +75,44 @@ export function dismissSuggestion(): void {
 }
 
 function close(): void {
-  linkSuggestion.open = false
-  linkSuggestion.loading = false
-  linkSuggestion.items = []
-  linkSuggestion.query = ''
+  linkSuggestion.patch({ open: false, loading: false, items: [], query: '' })
   currentCommand = null
 }
 
 function sync(props: SuggestionProps<DiaryCandidate>): void {
   currentCommand = props.command
   const r = props.clientRect?.()
-  if (r) linkSuggestion.rect = { left: r.left, top: r.top, bottom: r.bottom }
-  linkSuggestion.query = props.query ?? ''
-  linkSuggestion.loading = props.loading
-  if (linkSuggestion.items !== props.items) {
-    linkSuggestion.items = props.items
-    linkSuggestion.index = 0
+  const next: Partial<LinkSuggestionState> = {
+    query: props.query ?? '',
+    loading: props.loading,
   }
+  if (r) next.rect = { left: r.left, top: r.top, bottom: r.bottom }
+  if (linkSuggestion.get().items !== props.items) {
+    next.items = props.items
+    next.index = 0
+  }
+  linkSuggestion.patch(next)
 }
 
 function handleKey(e: KeyboardEvent): boolean {
-  if (!linkSuggestion.open) return false
+  const s = linkSuggestion.get()
+  if (!s.open) return false
   if (e.key === 'Escape') {
     close()
     return true
   }
-  const n = linkSuggestion.items.length
+  const n = s.items.length
   if (n === 0) return false
   if (e.key === 'ArrowDown') {
-    linkSuggestion.index = (linkSuggestion.index + 1) % n
+    linkSuggestion.patch({ index: (s.index + 1) % n })
     return true
   }
   if (e.key === 'ArrowUp') {
-    linkSuggestion.index = (linkSuggestion.index - 1 + n) % n
+    linkSuggestion.patch({ index: (s.index - 1 + n) % n })
     return true
   }
   if (e.key === 'Enter') {
-    const it = linkSuggestion.items[linkSuggestion.index]
+    const it = s.items[s.index]
     if (it) currentCommand?.(it)
     return true
   }
@@ -148,7 +158,7 @@ export const DiaryLink = Mention.extend({
     },
     render: () => ({
       onStart: (props: SuggestionProps<DiaryCandidate>) => {
-        linkSuggestion.open = true
+        linkSuggestion.patch({ open: true })
         sync(props)
       },
       onUpdate: (props: SuggestionProps<DiaryCandidate>) => sync(props),

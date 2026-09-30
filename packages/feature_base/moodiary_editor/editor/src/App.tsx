@@ -1,7 +1,6 @@
-<script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
-import MoodiaryEditor from './components/MoodiaryEditor.vue'
-import DiaryLinkSuggestion from './components/DiaryLinkSuggestion.vue'
+import { useEffect, useRef } from 'react'
+import MoodiaryEditor from './components/MoodiaryEditor'
+import DiaryLinkSuggestion from './components/DiaryLinkSuggestion'
 import { boundApi, installBridge } from './bridge'
 import { readBoot } from './bridge/boot'
 import { applyTheme, setFontBase } from './bridge/theme'
@@ -22,8 +21,6 @@ installBridge()
 if (boot.theme) applyTheme(boot.theme)
 if (boot.saveStatus) setSaveStatus(boot.saveStatus)
 
-const shell = ref<HTMLElement>()
-
 function onClick(e: MouseEvent): void {
   const target = e.target as HTMLElement | null
   const link = target?.closest('[data-type="diaryLink"]') as HTMLElement | null
@@ -39,12 +36,12 @@ function onClick(e: MouseEvent): void {
   if (anchor && anchor.closest('.ProseMirror')) {
     e.preventDefault()
     const url = anchor.getAttribute('href') ?? ''
-    if (!editable.value && /^https?:\/\//i.test(url)) post('urlTap', { url })
+    if (!editable.get() && /^https?:\/\//i.test(url)) post('urlTap', { url })
     return
   }
   const img = target?.closest('img')
   if (!img) return
-  const src = (img as HTMLImageElement).getAttribute('src')
+  const src = img.getAttribute('src')
   if (!src || src.startsWith('data:')) return
   e.preventDefault()
   const name = unproxyMedia(src)
@@ -53,16 +50,17 @@ function onClick(e: MouseEvent): void {
   else post('imageTap', { src: name, srcs: [name], index: 0 })
 }
 
-onMounted(() => shell.value?.addEventListener('click', onClick))
-onBeforeUnmount(() => shell.value?.removeEventListener('click', onClick))
-</script>
-
-<template>
-  <div ref="shell" class="editor-shell">
-    <MoodiaryEditor
-      :editable="initialEditable"
-      :platform="platform"
-    />
-    <DiaryLinkSuggestion />
-  </div>
-</template>
+export default function App() {
+  const shell = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = shell.current
+    el?.addEventListener('click', onClick)
+    return () => el?.removeEventListener('click', onClick)
+  }, [])
+  return (
+    <div ref={shell} className="editor-shell">
+      <MoodiaryEditor editable={initialEditable} platform={platform} />
+      <DiaryLinkSuggestion />
+    </div>
+  )
+}

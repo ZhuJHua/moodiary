@@ -1,6 +1,6 @@
 import { mergeAttributes } from '@tiptap/core'
 import Image from '@tiptap/extension-image'
-import ImageNodeView from '../components/nodes/ImageNodeView.vue'
+import ImageNodeView from '../components/nodes/ImageNodeView'
 import { blockNodeView } from './block-node-view'
 import { mediaNodeFor } from './markdown'
 import { displaySrc, unproxyMedia } from './media'

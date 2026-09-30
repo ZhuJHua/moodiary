@@ -1,8 +1,3 @@
-import { config } from '@vue/test-utils'
-import { i18n } from '../i18n'
-
-config.global.plugins = [i18n]
-
 const zeroRect = {
   x: 0,
   y: 0,
@@ -36,5 +31,5 @@ class FontFaceStub {
     return Promise.resolve(this)
   }
 }
-Object.assign(globalThis, { FontFace: FontFaceStub })
+Object.assign(globalThis, { FontFace: FontFaceStub, IS_REACT_ACT_ENVIRONMENT: true })
 Object.defineProperty(document, 'fonts', { value: { add: () => {} }, configurable: true })
