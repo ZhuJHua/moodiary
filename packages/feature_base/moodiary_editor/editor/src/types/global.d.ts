@@ -28,6 +28,7 @@ declare global {
       resolveLinkCandidates: (reqId: string, json: string) => void
       scrollToHeading: (index: number) => void
       resumeVideo: (name: string, seconds: number) => void
+      dismissOverlay: () => void
       getScrollY: () => number
       setScrollY: (y: number) => void
     }

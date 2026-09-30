@@ -1,7 +1,7 @@
 import { mergeAttributes } from '@tiptap/core'
 import Image from '@tiptap/extension-image'
-import { VueNodeViewRenderer } from '@tiptap/vue-3'
 import ImageNodeView from '../components/nodes/ImageNodeView.vue'
+import { blockNodeView } from './block-node-view'
 import { mediaNodeFor } from './markdown'
 import { displaySrc, unproxyMedia } from './media'
 import { widthPercentAttribute } from './media-size'
@@ -39,6 +39,6 @@ export const MediaImage = Image.extend({
   },
 
   addNodeView() {
-    return VueNodeViewRenderer(ImageNodeView)
+    return blockNodeView(ImageNodeView)
   },
 })

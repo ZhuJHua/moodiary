@@ -1836,15 +1836,6 @@ class Translations$diary$zh {
 	/// zh: '地图加载失败'
 	String get mapLoadFailed => '地图加载失败';
 
-	/// zh: '添加标签'
-	String get addTag => '添加标签';
-
-	/// zh: '标签名'
-	String get tagNameHint => '标签名';
-
-	/// zh: '添加'
-	String get add => '添加';
-
 	/// zh: '获取天气失败，请稍后重试'
 	String get weatherFailed => '获取天气失败，请稍后重试';
 
@@ -2034,26 +2025,11 @@ class Translations$editor$zh {
 	/// zh: '音频文件错误'
 	String get audioFileError => '音频文件错误';
 
-	/// zh: '选择音频'
-	String get pickAudio => '选择音频';
-
-	/// zh: '录音'
-	String get pickAudioFromRecord => '录音';
-
-	/// zh: '音频文件'
-	String get pickAudioFromFile => '音频文件';
-
 	/// zh: '当前平台暂不支持编辑器'
 	String get unsupportedPlatform => '当前平台暂不支持编辑器';
 
 	/// zh: '编辑器加载失败 {error}'
 	String loadFailed({required Object error}) => '编辑器加载失败\n${error}';
-
-	/// zh: '选择分类'
-	String get pickCategory => '选择分类';
-
-	/// zh: '不分类'
-	String get noCategory => '不分类';
 
 	/// zh: '升级数据迁移'
 	String get migrationTitle => '升级数据迁移';

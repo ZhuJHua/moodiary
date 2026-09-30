@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { TextSelection } from '@tiptap/pm/state'
 import { setupEditor } from '../test/harness'
 import type { EditorHarness } from '../test/harness'
 
@@ -45,5 +46,19 @@ describe('insert media blocks', () => {
     h.api.insertMedia('a.jpg')
     expect(h.editor.getText()).toContain('今天')
     expect(mediaNames(h)).toEqual(['a.jpg'])
+  })
+
+  it('does not raise the keyboard and leaves the caret after the block', async () => {
+    await h.type('开头')
+    h.editor.view.dom.blur()
+    h.api.insertMedia('a.jpg')
+    h.api.insertMedia('b.jpg')
+    expect(h.editor.view.hasFocus()).toBe(false)
+    expect(h.editor.state.selection).toBeInstanceOf(TextSelection)
+    await h.type('然后')
+    const blocks = h.editor
+      .getJSON()
+      .content!.map((n) => n.type + (n.attrs?.src ?? '') + ((n.content?.[0] as { text?: string } | undefined)?.text ?? ''))
+    expect(blocks).toEqual(['paragraph开头', 'imagea.jpg', 'imageb.jpg', 'paragraph然后'])
   })
 })

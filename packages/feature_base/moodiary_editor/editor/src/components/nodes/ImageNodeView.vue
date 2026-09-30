@@ -1,16 +1,15 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { NodeViewWrapper, nodeViewProps } from '@tiptap/vue-3'
-import MediaSizeMenu from './MediaSizeMenu.vue'
+import BlockHandle from './BlockHandle.vue'
+import { blockMenu, openBlockMenu } from '../../editor/block-menu'
 import { editable } from '../../editor/editable'
 import { displaySrc } from '../../editor/media'
-import { useI18n } from 'vue-i18n'
 
 const props = defineProps(nodeViewProps)
 
-const { t } = useI18n()
-
-const draft = ref<number | null>(null)
+const owner = Symbol('image')
+const menuOpen = computed(() => blockMenu.owner === owner)
 
 const src = computed(() => {
   const raw = props.node.attrs.src
@@ -23,31 +22,33 @@ const widthPercent = computed(() => {
   const v = props.node.attrs.widthPercent
   return typeof v === 'number' ? v : null
 })
-const shown = computed(() => draft.value ?? widthPercent.value)
+const shown = computed(() =>
+  menuOpen.value && blockMenu.previewWidth !== null ? blockMenu.previewWidth : widthPercent.value,
+)
 
 const wrapperStyle = computed(() =>
   shown.value === null ? undefined : { maxWidth: `${shown.value}%` },
 )
 
-function commit(value: number | null): void {
-  props.updateAttributes({ widthPercent: value })
+function openMenu(anchor: HTMLElement): void {
+  openBlockMenu({ owner, kind: 'image', anchor, getPos: () => props.getPos() })
 }
 </script>
 
 <template>
   <NodeViewWrapper
     class="moodiary-image"
-    :class="{ 'is-selected': selected }"
+    :class="{ 'is-selected': selected, 'is-menu-open': menuOpen }"
     :style="wrapperStyle"
     contenteditable="false"
   >
-    <img class="moodiary-image__img" :src="src" :alt="alt" :title="title" draggable="false" />
-    <MediaSizeMenu
-      v-if="editable"
-      :model-value="widthPercent"
-      :title="t('image.size')"
-      @update:model-value="commit"
-      @preview="draft = $event"
+    <img
+      class="moodiary-image__img moodiary-block__body"
+      :src="src"
+      :alt="alt"
+      :title="title"
+      draggable="false"
     />
+    <BlockHandle v-if="editable" variant="corner" @open="openMenu" />
   </NodeViewWrapper>
 </template>

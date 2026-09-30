@@ -13,7 +13,6 @@ export 'src/editor_local_server.dart';
 export 'src/media.dart';
 export 'src/moodiary_editor.dart';
 export 'src/presentation/editor_migration_page.dart';
-export 'src/presentation/widget/category_picker_sheet.dart';
 export 'src/presentation/widget/editor_body.dart';
 export 'src/presentation/widget/moodiary_editor_view.dart';
 export 'src/presentation/widget/record_sheet.dart';

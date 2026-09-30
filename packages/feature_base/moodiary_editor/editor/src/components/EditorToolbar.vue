@@ -5,6 +5,8 @@ import IconUndo from '~icons/lucide/undo-2'
 import IconRedo from '~icons/lucide/redo-2'
 import IconImage from '~icons/lucide/image'
 import IconAudio from '~icons/lucide/music'
+import IconMic from '~icons/lucide/mic'
+import IconFileAudio from '~icons/lucide/file-audio'
 import IconVideo from '~icons/lucide/video'
 import IconBold from '~icons/lucide/bold'
 import IconItalic from '~icons/lucide/italic'
@@ -35,9 +37,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'pick-image'): void
-  (e: 'pick-audio'): void
-  (e: 'pick-video'): void
+  (e: 'pick', type: 'pickImage' | 'pickVideo' | 'recordAudio' | 'pickAudioFile'): void
 }>()
 
 const { t } = useI18n()
@@ -127,6 +127,12 @@ const tableOps = computed<{ key: string; label: string; title: string; run: () =
   { key: 'delTable', label: t('toolbar.deleteTableLabel'), title: t('toolbar.deleteTable'), run: () => chain().deleteTable().run() },
 ])
 
+const audioMenuOpen = ref(false)
+const audioItems = computed<PopupMenuItem[]>(() => [
+  { key: 'recordAudio', label: t('audio.fromRecord'), icon: IconMic, active: false },
+  { key: 'pickAudioFile', label: t('audio.fromFile'), icon: IconFileAudio, active: false },
+])
+
 const headingMenuOpen = ref(false)
 const headingItems = computed<PopupMenuItem[]>(() => [
   { key: 'paragraph', label: t('toolbar.paragraph'), icon: IconParagraph, active: !isActive('heading') },
@@ -183,13 +189,17 @@ function onHeadingSelect(key: string): void {
     </button>
     <span class="mx-1 h-5 w-px shrink-0 bg-base-300" />
 
-    <button :class="[btnClass, 'btn-square']" type="button" :title="t('toolbar.insertImage')" @mousedown.prevent @click="emit('pick-image')">
+    <button :class="[btnClass, 'btn-square']" type="button" :title="t('toolbar.insertImage')" @mousedown.prevent @click="emit('pick', 'pickImage')">
       <IconImage class="size-5" />
     </button>
-    <button :class="[btnClass, 'btn-square']" type="button" :title="t('toolbar.insertAudio')" @mousedown.prevent @click="emit('pick-audio')">
-      <IconAudio class="size-5" />
-    </button>
-    <button :class="[btnClass, 'btn-square']" type="button" :title="t('toolbar.insertVideo')" @mousedown.prevent @click="emit('pick-video')">
+    <PopupMenu v-model="audioMenuOpen" :items="audioItems" @select="(key) => emit('pick', key as 'recordAudio' | 'pickAudioFile')">
+      <template #trigger>
+        <button :class="[btnClass, 'btn-square']" type="button" :title="t('toolbar.insertAudio')" @mousedown.prevent>
+          <IconAudio class="size-5" />
+        </button>
+      </template>
+    </PopupMenu>
+    <button :class="[btnClass, 'btn-square']" type="button" :title="t('toolbar.insertVideo')" @mousedown.prevent @click="emit('pick', 'pickVideo')">
       <IconVideo class="size-5" />
     </button>
     <button :class="[btnClass, 'btn-square']" type="button" :title="t('toolbar.insertDiaryLink')" @mousedown.prevent @click="insertLink">

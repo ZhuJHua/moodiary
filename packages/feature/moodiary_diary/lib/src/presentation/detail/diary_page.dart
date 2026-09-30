@@ -46,7 +46,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     with WidgetsBindingObserver, RouteAware {
   static const _autoSaveDebounce = Duration(seconds: 2);
 
-  EditorFocusTarget _restoreFocusTarget = .none;
+  bool _editorOverlay = false;
 
   _Mode _mode = .read;
 
@@ -155,23 +155,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
 
   @override
   void didPushNext() {
-    _restoreFocusTarget = _mode == .edit
-        ? _editorController.focusTarget
-        : .none;
     unawaited(_editorController.blur());
     FocusManager.instance.primaryFocus?.unfocus();
-  }
-
-  @override
-  void didPopNext() {
-    final target = _restoreFocusTarget;
-    _restoreFocusTarget = .none;
-    if (target == .none || _mode != .edit) return;
-    unawaited(
-      target == .title
-          ? _editorController.focusTitle()
-          : _editorController.focus(),
-    );
   }
 
   @override
@@ -305,62 +290,36 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     }
   }
 
-  Future<void> _onPickDate(Diary current) async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: current.time.toLocal(),
-      firstDate: DateTime(1949, 10, 1),
-      lastDate: .now(),
-      switchToInputEntryModeIcon: const Icon(LucideIcons.keyboard),
-      switchToCalendarEntryModeIcon: const Icon(LucideIcons.calendarDays),
-    );
-    if (picked == null || !mounted) return;
-    ref.read(_provider.notifier).changeDate(picked);
+  void _onChangeDate(DateTime date) {
+    ref.read(_provider.notifier).changeDate(date);
     _dirty = true;
     _scheduleAutoSave();
   }
 
-  Future<void> _onPickTime(Diary current) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: .fromDateTime(current.time.toLocal()),
-      switchToInputEntryModeIcon: const Icon(LucideIcons.keyboard),
-      switchToTimerEntryModeIcon: const Icon(LucideIcons.clock),
-    );
-    if (picked == null || !mounted) return;
-    ref.read(_provider.notifier).changeTime(picked);
+  void _onChangeTime(TimeOfDay time) {
+    ref.read(_provider.notifier).changeTime(time);
     _dirty = true;
     _scheduleAutoSave();
   }
 
-  Future<void> _onPickCategory(Diary current) async {
-    final (picked, category) = await CategoryPickerSheet.show(
-      context: context,
-      currentCategoryId: current.categoryId,
-    );
-    if (!picked || !mounted) return;
-    ref.read(_provider.notifier).changeCategory(category?.id);
+  void _onChangeCategory(String? categoryId) {
+    ref.read(_provider.notifier).changeCategory(categoryId);
     _dirty = true;
     _scheduleAutoSave();
   }
 
-  Future<void> _onAddTag(Diary current) async {
-    final tag = await MAlert.prompt(
-      context,
-      title: l10n.diary.addTag,
-      hintText: l10n.diary.tagNameHint,
-      confirmLabel: l10n.diary.add,
-    );
-    if (tag == null || tag.isEmpty || !mounted) return;
+  void _onAddTag(Diary current, String tag) {
     if (current.tags.contains(tag)) return;
     ref.read(_provider.notifier).changeTags([...current.tags, tag]);
     _dirty = true;
     _scheduleAutoSave();
   }
 
-  void _onRemoveTag(Diary current, int index) {
-    final next = [...current.tags]..removeAt(index);
-    ref.read(_provider.notifier).changeTags(next);
+  void _onRemoveTag(Diary current, String tag) {
+    if (!current.tags.contains(tag)) return;
+    ref.read(_provider.notifier).changeTags([
+      ...current.tags.where((t) => t != tag),
+    ]);
     _dirty = true;
     _scheduleAutoSave();
   }
@@ -538,9 +497,15 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
         ? const <({int level, String text})>[]
         : _headingsOf(diary.content);
     return PopScope(
-      canPop: _hops.atRoot,
+      canPop: _hops.atRoot && !_editorOverlay,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _goHistory(-1);
+        if (didPop) return;
+        if (_editorOverlay) {
+          unawaited(_editorController.dismissOverlay());
+          setState(() => _editorOverlay = false);
+          return;
+        }
+        _goHistory(-1);
       },
       child: Scaffold(
         key: _scaffoldKey,
@@ -770,10 +735,10 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       onOpenDiaryLink: _openLinkedDiary,
       metaJson: _metaJson(diary),
       linksJson: _linksJson(),
-      onPickDate: () => _onPickDate(diary),
-      onPickTime: () => _onPickTime(diary),
-      onPickCategory: () => _onPickCategory(diary),
-      onAddTag: () => _onAddTag(diary),
+      onChangeDate: _onChangeDate,
+      onChangeTime: _onChangeTime,
+      onChangeCategory: _onChangeCategory,
+      onAddTag: (tag) => _onAddTag(diary, tag),
       onRemoveTag: (i) => _onRemoveTag(diary, i),
       onChangeMood: _onChangeMoodName,
       onChangeWeather: _onChangeWeather,
@@ -786,6 +751,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       onManagePlaces: () => const PlaceManagerRoute().push(context),
       onClearPosition: _onClearPosition,
       onOpenGraph: () => DiaryGraphRoute(diaryId: diary.id).push(context),
+      onOverlayChanged: (open) => setState(() => _editorOverlay = open),
     );
   }
 
@@ -813,8 +779,16 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     final qweatherReady =
         (qweatherHost?.isNotEmpty ?? false) &&
         (qweatherKey?.isNotEmpty ?? false);
+    final categories =
+        ref.watch(orderedCategoriesProvider).value ?? const <Category>[];
     final places = ref.watch(orderedPlacesProvider).value ?? const <Place>[];
     final place = places.where((p) => p.id == diary.placeId).firstOrNull;
+    final localizations = MaterialLocalizations.of(context);
+    final hour = hourFormat(
+      of: localizations.timeOfDayFormat(
+        alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context),
+      ),
+    );
     final fix = _fix;
     final placeRows = [
       for (final p in places)
@@ -836,6 +810,10 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     return jsonEncode({
       'dateText': TimeFormat.anchorDate(diary.time),
       'subText': TimeFormat.weekdayTimeHms(diary.time),
+      'time': diary.time.toLocal().toIso8601String(),
+      'minDate': TimeFormat.isoDate(_firstDate),
+      'firstDayOfWeek': localizations.firstDayOfWeekIndex,
+      'use24h': hour != .h,
       'mood': diary.mood.name,
       'moods': [
         for (final mood in DiaryMood.values)
@@ -847,6 +825,10 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
           },
       ],
       'category': categoryLabel,
+      'categoryId': diary.categoryId,
+      'categories': [
+        for (final c in categories) {'id': c.id, 'name': c.categoryName},
+      ],
       'weather': weather == null
           ? null
           : {'icon': weather.icon, 'text': weather.displayText},
@@ -876,9 +858,10 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       'positionManageLabel': context.l10n.diary.positionManagePlaces,
       'positionClearLabel': context.l10n.diary.positionClear,
       'tags': diary.tags,
-      'deleteLabel': context.l10n.common.delete,
     });
   }
+
+  static final _firstDate = DateTime(1949, 10, 1);
 
   static String _hexColor(Color c) =>
       '#${(c.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}';

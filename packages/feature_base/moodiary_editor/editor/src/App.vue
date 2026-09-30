@@ -2,7 +2,7 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import MoodiaryEditor from './components/MoodiaryEditor.vue'
 import DiaryLinkSuggestion from './components/DiaryLinkSuggestion.vue'
-import { installBridge } from './bridge'
+import { boundApi, installBridge } from './bridge'
 import { readBoot } from './bridge/boot'
 import { applyTheme, setFontBase } from './bridge/theme'
 import { setSaveStatus } from './bridge/save-status'
@@ -47,15 +47,10 @@ function onClick(e: MouseEvent): void {
   const src = (img as HTMLImageElement).getAttribute('src')
   if (!src || src.startsWith('data:')) return
   e.preventDefault()
-  const all = (
-    Array.from(shell.value?.querySelectorAll('.ProseMirror img') ?? []) as HTMLImageElement[]
-  ).filter((el) => {
-    const s = el.getAttribute('src')
-    return s && !s.startsWith('data:')
-  })
-  const srcs = all.map((el) => unproxyMedia(el.getAttribute('src') as string))
-  const index = all.indexOf(img as HTMLImageElement)
-  post('imageTap', { src: unproxyMedia(src), srcs, index: index < 0 ? 0 : index })
+  const name = unproxyMedia(src)
+  const api = boundApi()
+  if (api) api.previewImage(name)
+  else post('imageTap', { src: name, srcs: [name], index: 0 })
 }
 
 onMounted(() => shell.value?.addEventListener('click', onClick))
