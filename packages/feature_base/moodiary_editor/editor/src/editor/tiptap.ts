@@ -275,7 +275,9 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
           const block = target ? blockAt(target) : null
           if (!block) return false
           const pos = view.posAtDOM(block, 0)
-          const node = view.nodeDOM(pos) === block ? view.state.doc.nodeAt(pos) : null
+          // ReactNodeViewRenderer 把节点视图包在 div.react-renderer 里，nodeDOM 返回的是外壳
+          const host = view.nodeDOM(pos)
+          const node = host instanceof Node && host.contains(block) ? view.state.doc.nodeAt(pos) : null
           if (!node?.isAtom) return false
           event.preventDefault()
           const body = block.querySelector(BLOCK_BODY)?.getBoundingClientRect()

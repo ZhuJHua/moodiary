@@ -58,7 +58,7 @@ Full-repo verification = the four Lint & Test commands above. CI (`quality.yml`)
 
 ### Layout notes
 
-Package roles are each pubspec's `description`; layer = directory. `i18n/flutter` (slang) and `i18n/web` (editor page, bundled by unplugin-vue-i18n) hold every translation json; a string both need is duplicated. `moodiary_ml` is the sole owner of `flutter_onnxruntime`.
+Package roles are each pubspec's `description`; layer = directory. `i18n/flutter` (slang) and `i18n/web` (editor page, imported by its typed `t()`) hold every translation json; a string both need is duplicated. `moodiary_ml` is the sole owner of `flutter_onnxruntime`.
 
 Unqualified `lib/...` means `mobile/lib/...`; `packages/` and `tool/` are repo-root-relative.
 
@@ -104,7 +104,7 @@ Two unrelated slang outputs: the App (default mode, `Translations` / top-level `
 
 - Widgets use `context.l10n.xxx` (rebuilds on language change); services / export / callbacks use top-level `l10n.xxx`. Parameters are named. Write `l10n.xxx.yyy` in full.
 - One namespace file per feature, under `i18n/flutter` (Dart) or `i18n/web` (editor page); feature packages do not install slang (mui excepted).
-- After editing `i18n/flutter/*.i18n.json` run `dart tool/task.dart i18n` (generated files are committed). `i18n/web/{zh,en}.json` is compiled into the editor bundle by unplugin-vue-i18n, so it needs no codegen step.
+- After editing `i18n/flutter/*.i18n.json` run `dart tool/task.dart i18n` (generated files are committed). `i18n/web/{zh,en}.json` is imported straight into the editor bundle by its typed `t()`, so it needs no codegen step.
 - Text for the model (prompts, tool descriptions, tool results) is hardcoded English and never enters i18n; text for the user goes through slang.
 - Some Chinese literals are kept on purpose (sync log lines, font family names, legal text); check moodiary_i18n's list before translating one.
 

@@ -43,6 +43,7 @@ export default function CodeBlockNodeView({ node }: NodeViewProps) {
           className="moodiary-code-block__copy"
           type="button"
           title={copied ? t('code.copied') : t('code.copy')}
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => void copy()}
         >
           <Icon className="size-4" />
