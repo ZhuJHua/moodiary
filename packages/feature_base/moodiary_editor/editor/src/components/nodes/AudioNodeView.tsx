@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
 import { Pause, Play, Volume2, VolumeX } from 'lucide-react'
+import { cn } from 'cn'
 import BlockHandle from './BlockHandle'
 import { blockMenu, openBlockMenu } from '../../editor/block-menu'
 import { editable } from '../../editor/editable'
@@ -79,7 +80,7 @@ export default function AudioNodeView({ node, selected, getPos }: NodeViewProps)
           </div>
           <div className="flex items-center gap-2">
             <input
-              className={`${rangeClass} h-1.5 flex-1`}
+              className={cn(rangeClass, 'h-1.5 flex-1')}
               type="range"
               min={0}
               max={duration || 0}
@@ -89,6 +90,7 @@ export default function AudioNodeView({ node, selected, getPos }: NodeViewProps)
               onChange={(e) => seekTo(Number(e.currentTarget.value))}
               onPointerUp={(e) => endSeek(Number(e.currentTarget.value))}
               onPointerCancel={(e) => endSeek(Number(e.currentTarget.value))}
+              onKeyUp={(e) => endSeek(Number(e.currentTarget.value))}
             />
             <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
               {formatTime(sliderValue)} / {formatTime(duration)}

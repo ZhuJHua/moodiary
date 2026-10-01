@@ -10,6 +10,7 @@
  */
 
 @import 'tailwindcss';
+@source not '../../dev';
 @import 'shadcn/tailwind.css';
 
 /* Flutter 只下发 dark: bool，写在 <html data-theme>；shadcn 组件里的 dark: 变体绑到它 */
@@ -261,7 +262,8 @@ body {
 }
 
 /* —— 正文排版 —— */
-.moodiary-editor .ProseMirror > :first-child {
+.moodiary-editor .ProseMirror > :first-child,
+.moodiary-editor .ProseMirror > .react-renderer:first-child > :first-child {
   margin-top: 0;
 }
 .moodiary-editor .ProseMirror p {

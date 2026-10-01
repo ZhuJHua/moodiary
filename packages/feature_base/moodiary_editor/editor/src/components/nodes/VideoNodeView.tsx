@@ -17,9 +17,9 @@ const CONTROLS_HIDE_DELAY = 3000
 export default function VideoNodeView({ node, selected, getPos }: NodeViewProps) {
   const t = useT()
   const [owner] = useState(() => Symbol('video'))
-  const menu = useStore(blockMenu)
+  const menuOpen = useStore(blockMenu, (s) => s.owner === owner)
+  const previewWidth = useStore(blockMenu, (s) => (s.owner === owner ? s.previewWidth : null))
   const canEdit = useStore(editable)
-  const menuOpen = menu.owner === owner
 
   const filename = (node.attrs.filename as string | null) ?? ''
   const src = filename ? mediaUrl(filename) : undefined
@@ -27,7 +27,7 @@ export default function VideoNodeView({ node, selected, getPos }: NodeViewProps)
 
   const v = node.attrs.widthPercent
   const widthPercent = typeof v === 'number' ? v : null
-  const shown = menuOpen && menu.previewWidth !== null ? menu.previewWidth : widthPercent
+  const shown = previewWidth ?? widthPercent
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const { playing, duration, muted, sliderValue, dragging, toggle, toggleMute, seekTo, endSeek } =
