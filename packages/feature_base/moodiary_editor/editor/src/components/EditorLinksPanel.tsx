@@ -16,7 +16,7 @@ export default function EditorLinksPanel({ links }: { links: EditorLinks }) {
   }
 
   return (
-    <div className="links-panel mx-4 my-6 flex-none rounded-lg bg-muted font-(--app-font-sans)">
+    <div className="links-panel mx-4 my-6 flex-none rounded-lg bg-muted font-(family-name:--app-font-sans)">
       <div className="flex flex-col gap-1 p-3 pl-3.5">
         <div className="flex items-center gap-2">
           <Link className="size-4 text-muted-foreground" />

@@ -8,9 +8,9 @@ import { useStore } from '../../lib/store'
 
 export default function ImageNodeView({ node, selected, getPos }: NodeViewProps) {
   const [owner] = useState(() => Symbol('image'))
-  const menu = useStore(blockMenu)
+  const menuOpen = useStore(blockMenu, (s) => s.owner === owner)
+  const previewWidth = useStore(blockMenu, (s) => (s.owner === owner ? s.previewWidth : null))
   const canEdit = useStore(editable)
-  const menuOpen = menu.owner === owner
 
   const raw = node.attrs.src
   const src = typeof raw === 'string' ? displaySrc(raw) : ''
@@ -18,7 +18,7 @@ export default function ImageNodeView({ node, selected, getPos }: NodeViewProps)
   const title = (node.attrs.title as string | null) ?? undefined
   const v = node.attrs.widthPercent
   const widthPercent = typeof v === 'number' ? v : null
-  const shown = menuOpen && menu.previewWidth !== null ? menu.previewWidth : widthPercent
+  const shown = previewWidth ?? widthPercent
 
   return (
     <NodeViewWrapper

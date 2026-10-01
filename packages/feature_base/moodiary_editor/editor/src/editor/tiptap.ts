@@ -306,6 +306,7 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
     getContent: () => (editor ? JSON.stringify(editor.getJSON()) : ''),
     setEditable: (value) => {
       if (!value) hideUndoToast()
+      options.editable = value
       editor?.setEditable(value, false)
       // setEditable(value, false) 不触发 onUpdate，需显式回调驱动 UI
       setEditableState(value)

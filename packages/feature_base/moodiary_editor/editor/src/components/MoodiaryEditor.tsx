@@ -36,7 +36,7 @@ export default function MoodiaryEditor({
   const [kit] = useState(() =>
     createEditorKit({ editable: initialEditable, placeholder: t('content'), onChange: emitChange }),
   )
-  const [options] = useState(() => ({ ...kit.options, immediatelyRender: true as const }))
+  const [options] = useState(() => Object.assign(kit.options, { immediatelyRender: true as const }))
   const editor = useEditor(options)
 
   const [wordCount, setWordCount] = useState(0)

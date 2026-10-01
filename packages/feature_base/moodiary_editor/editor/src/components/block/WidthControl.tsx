@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { MIN_WIDTH_PERCENT, WIDTH_PERCENT_STOPS, snapWidthPercent } from '../../editor/media-size'
 import { useT } from '../../i18n'
+import { cn } from 'cn'
 import { rangeClass } from '../../lib/range'
 
 export default function WidthControl({
@@ -43,7 +44,7 @@ export default function WidthControl({
       </div>
 
       <input
-        className={`${rangeClass} mx-2.5 my-2 w-auto`}
+        className={cn(rangeClass, 'mx-2.5 my-2 w-auto')}
         type="range"
         min={MIN_WIDTH_PERCENT}
         max={100}
