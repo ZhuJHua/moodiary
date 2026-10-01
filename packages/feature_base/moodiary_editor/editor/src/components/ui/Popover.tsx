@@ -42,13 +42,14 @@ export default function Popover({
   const [style, setStyle] = useState<CSSProperties>({})
   const onClosedRef = useRef(onClosed)
   onClosedRef.current = onClosed
+  const openRef = useRef(false)
   const open = anchor !== null
 
   const close = useCallback((): void => {
-    setAnchor((prev) => {
-      if (prev) onClosedRef.current?.()
-      return null
-    })
+    if (!openRef.current) return
+    openRef.current = false
+    setAnchor(null)
+    onClosedRef.current?.()
   }, [])
 
   const place = useCallback((): void => {
@@ -106,6 +107,7 @@ export default function Popover({
     () => ({
       open: (el) => {
         if (!keepFocus) dismissKeyboard()
+        openRef.current = true
         setAnchor(el)
       },
       close,

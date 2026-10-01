@@ -1,17 +1,15 @@
 /*
- * MoodiaryEditor 生产样式 = Tailwind v4 + daisyUI（编辑器外观）+ TipTap/ProseMirror 正文排版 +
+ * MoodiaryEditor 生产样式 = Tailwind v4 + shadcn token（编辑器外观）+ TipTap/ProseMirror 正文排版 +
  * 由种子色生成的 --app-* token 映射。
  *
  * 配色单一真源：Flutter 下发种子色 → bridge/theme.ts 在 :root 重算整套 --app-* token（明暗各一套）。
- * daisyUI 主题（下方 light/dark）只把 --color-* 指向 var(--app-*)，故 daisyUI 组件（按钮/表面）与
- * 正文、音视频控件全部跟随同一套配色、明暗自动切换。daisyUI v5 允许主题色直接引用外部 var()
- * （color-mix 在 var()→hex 上工作、无构建期转换），前提是显式给齐所有 -content token（下方已给）。
+ * 下方 @theme inline / :root 只把 shadcn 的 --background/--primary/… 指向 var(--app-*)，故 shadcn 组件
+ * 与正文、音视频控件全部跟随同一套配色、明暗自动切换；dark 变体绑在 <html data-theme>。
  * 代码高亮 token（.hljs-*）不走 --app-*，用固定的 github / github-dark（照 hljs 11 的
  * 同名主题生成），与助手的代码块同一张表；经 [data-theme='dark'] 切换。
  */
 
 @import 'tailwindcss';
-@import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 
 /* Flutter 只下发 dark: bool，写在 <html data-theme>；shadcn 组件里的 dark: 变体绑到它 */
@@ -169,44 +167,6 @@ body {
   color: var(--app-on-surface-variant);
   opacity: 0.6;
   font-weight: 700;
-}
-/* 右下角状态条：同步气泡 + 字数小药丸，仅编辑态显示，不拦截点击。 */
-.moodiary-statusbar {
-  position: absolute;
-  right: 12px;
-  bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  pointer-events: none;
-  user-select: none;
-}
-.moodiary-wordcount {
-  padding: 2px 8px;
-  border-radius: 9999px;
-  background: var(--app-surface);
-  color: var(--app-on-surface-variant);
-  font-size: 11px;
-  line-height: 1.6;
-  opacity: 0.8;
-}
-/* 自动保存气泡：保存中 / 已保存 / 保存失败（idle 不显示）。与字数同款底色，文字色随状态。 */
-.moodiary-savestatus {
-  padding: 2px 8px;
-  border-radius: 9999px;
-  background: var(--app-surface);
-  font-size: 11px;
-  line-height: 1.6;
-  opacity: 0.8;
-}
-.moodiary-savestatus[data-state='saving'] {
-  color: var(--app-on-surface-variant);
-}
-.moodiary-savestatus[data-state='saved'] {
-  color: var(--app-primary);
-}
-.moodiary-savestatus[data-state='failed'] {
-  color: var(--app-error);
 }
 .moodiary-editor {
   /* 视口内：短文时长满剩余高度（提供点击聚焦区），长文时随内容撑高、由视口滚动。 */

@@ -1,11 +1,7 @@
 import { useRef, useState } from 'react'
 import { MIN_WIDTH_PERCENT, WIDTH_PERCENT_STOPS, snapWidthPercent } from '../../editor/media-size'
 import { useT } from '../../i18n'
-
-const RANGE =
-  'mx-2.5 my-2 h-2 w-auto cursor-pointer appearance-none rounded-full bg-muted outline-none ' +
-  '[&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary ' +
-  '[&::-moz-range-thumb]:size-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-primary'
+import { rangeClass } from '../../lib/range'
 
 export default function WidthControl({
   value,
@@ -47,7 +43,7 @@ export default function WidthControl({
       </div>
 
       <input
-        className={RANGE}
+        className={`${rangeClass} mx-2.5 my-2 w-auto`}
         type="range"
         min={MIN_WIDTH_PERCENT}
         max={100}
