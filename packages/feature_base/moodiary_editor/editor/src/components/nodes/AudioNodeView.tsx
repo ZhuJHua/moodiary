@@ -8,8 +8,8 @@ import { fetchMediaName, mediaUrl } from '../../editor/media'
 import { formatTime, useMediaControls } from '../../editor/use-media'
 import { useT } from '../../i18n'
 import { useStore } from '../../lib/store'
+import { rangeClass } from '../../lib/range'
 import { Button } from '../ui/button'
-import { Slider } from '../ui/slider'
 
 export default function AudioNodeView({ node, selected, getPos }: NodeViewProps) {
   const t = useT()
@@ -36,7 +36,6 @@ export default function AudioNodeView({ node, selected, getPos }: NodeViewProps)
   const audioRef = useRef<HTMLAudioElement>(null)
   const { playing, duration, muted, sliderValue, toggle, toggleMute, seekTo, endSeek } =
     useMediaControls(audioRef)
-  const hasDuration = duration > 0
 
   return (
     <NodeViewWrapper
@@ -79,16 +78,17 @@ export default function AudioNodeView({ node, selected, getPos }: NodeViewProps)
             )}
           </div>
           <div className="flex items-center gap-2">
-            <Slider
-              className="flex-1"
+            <input
+              className={`${rangeClass} h-1.5 flex-1`}
+              type="range"
               min={0}
-              max={hasDuration ? duration : 1}
-              step={0.01}
-              value={[sliderValue]}
-              disabled={!hasDuration}
+              max={duration || 0}
+              step="any"
+              value={sliderValue}
               aria-label={t('audio.progressLabel')}
-              onValueChange={([v]) => seekTo(v)}
-              onValueCommit={([v]) => endSeek(v)}
+              onChange={(e) => seekTo(Number(e.currentTarget.value))}
+              onPointerUp={(e) => endSeek(Number(e.currentTarget.value))}
+              onPointerCancel={(e) => endSeek(Number(e.currentTarget.value))}
             />
             <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
               {formatTime(sliderValue)} / {formatTime(duration)}

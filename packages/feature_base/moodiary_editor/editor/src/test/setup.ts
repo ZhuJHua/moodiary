@@ -33,11 +33,3 @@ class FontFaceStub {
 }
 Object.assign(globalThis, { FontFace: FontFaceStub, IS_REACT_ACT_ENVIRONMENT: true })
 Object.defineProperty(document, 'fonts', { value: { add: () => {} }, configurable: true })
-
-// jsdom 没有 ResizeObserver，radix Slider 的 thumb 在 layout effect 里要用
-class ResizeObserverStub {
-  observe(): void {}
-  unobserve(): void {}
-  disconnect(): void {}
-}
-Object.assign(globalThis, { ResizeObserver: ResizeObserverStub })
