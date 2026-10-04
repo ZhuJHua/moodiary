@@ -1,4 +1,5 @@
 import 'package:fast_image/fast_image.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
@@ -13,16 +14,29 @@ const double _kCellAspect = 46 / 54;
 const double _kCellGap = 3;
 const double _kGridPadding = 8;
 
-// 恒定六行：行数跟着月份变的话，翻月时下半屏会上下弹
+// 恒定六行：行数跟着月份变的话，翻月时下半屏会上下弹（年视图迷你月也统一六行对齐）
 const int _kGridRows = 6;
 
-// 锚页：往前 6000 个月（500 年），往后不设界
+// 锚页：月/年各自锚定，往前 6000 个周期，往后不设界
 const int _kAnchorPage = 6000;
+const int _kYearAnchorPage = 6000;
 
 // 系统字号放大到 1.6× 时日期与篇数会互相顶，故封顶
 const double _kCellMaxTextScale = 1.15;
 
 const double _kHeaderHeight = 18;
+
+// 年视图：达到该宽度切 4 列，否则 3 列
+const double _kYearWideWidth = 600;
+
+// 垂直滑动手势切换月/年视图的速度阈值（px/s）
+const double _kScopeSwipeVelocity = 300;
+
+// 年视图迷你月内部行高（日期行高度的下限，多出的空间用于铺满整页）
+const double _kMiniWeekdayHeight = 12;
+const double _kMiniDayHeight = 13;
+
+enum _Scope { month, year }
 
 @visibleForTesting
 ({int leading, int days}) monthGeometry(DateTime month) => (
@@ -43,6 +57,13 @@ int pageForMonth(DateTime anchorMonth, DateTime month) =>
     (month.year - anchorMonth.year) * 12 +
     (month.month - anchorMonth.month);
 
+@visibleForTesting
+DateTime yearForPage(int anchorYear, int page) =>
+    DateTime(anchorYear + page - _kYearAnchorPage);
+
+@visibleForTesting
+int pageForYear(int anchorYear, int year) => _kYearAnchorPage + year - anchorYear;
+
 class CalendarPage extends ConsumerStatefulWidget {
   const CalendarPage({super.key});
 
@@ -51,8 +72,16 @@ class CalendarPage extends ConsumerStatefulWidget {
 }
 
 class _CalendarPageState extends ConsumerState<CalendarPage> {
-  late DateTime _month = _monthOf(_today());
-  late DateTime _selected = _today();
+  _Scope _scope = _Scope.month;
+
+  // 所有视图共享的“当前日期”：点选、翻页落位、回到今天、年视图进月各自写入；
+  // 视图切换时新视图一律从这里推导落点，保证来回切换不丢位置
+  late DateTime _current = _today();
+
+  // 两个“当前展示周期”的镜像，只用于标题/统计，随各自视图的翻页更新；
+  // 跨视图切换的瞬间由 _setScope 用 _current 重新播种，不跨视图带状态
+  late DateTime _month = _monthOf(_current);
+  late int _year = _current.year;
 
   Future<List<Diary>>? _dayEntries;
   String _dayKey = '';
@@ -65,9 +94,11 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
   static DateTime _monthOf(DateTime d) => DateTime(d.year, d.month);
 
   late final DateTime _anchorMonth = _monthOf(_today());
-  late final PageController _pageCtl = PageController(
-    initialPage: _kAnchorPage,
-  );
+  late final int _anchorYear = _today().year;
+
+  late PageController _pageCtl = PageController(initialPage: _kAnchorPage);
+
+  bool _pendingToday = false;
 
   DateTime _monthForPage(int page) => monthForPage(_anchorMonth, page);
 
@@ -88,24 +119,89 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
   }
 
   void _onPageChanged(int page) {
-    setState(() => _month = _monthForPage(page));
+    setState(() {
+      switch (_scope) {
+        case _Scope.month:
+          _month = _monthForPage(page);
+        case _Scope.year:
+          _year = yearForPage(_anchorYear, page).year;
+      }
+    });
   }
 
   void _onSettled() {
     final target = _pendingToday ? _today() : _pickDayIn(_month);
     _pendingToday = false;
-    if (target == _selected) return;
-    setState(() => _selected = target);
+    if (target == _current) return;
+    setState(() => _current = target);
   }
 
-  bool _pendingToday = false;
-
   void _backToToday() {
+    final today = _today();
+    if (_scope == _Scope.year) {
+      _goToPage(pageForYear(_anchorYear, today.year));
+      return;
+    }
     _pendingToday = true;
-    _goToPage(_pageForMonth(_monthOf(_today())));
-    if (_pageCtl.hasClients &&
-        _pageCtl.page?.round() == _pageForMonth(_month)) {
+    final page = _pageForMonth(_monthOf(today));
+    _goToPage(page);
+    if (_pageCtl.hasClients && _pageCtl.page?.round() == page) {
       _onSettled();
+    }
+  }
+
+  // 年月视图的切换入口之一在标题栏（滑动手势是另一个）
+  void _toggleYearScope() {
+    _setScope(_scope == _Scope.year ? _Scope.month : _Scope.year);
+  }
+
+  // 视图切换：左右滑 = 同周期翻页（pager 各自处理），上下滑 = 跨周期切换
+  void _setScope(_Scope scope) {
+    if (scope == _scope) return;
+    // 切换瞬间用“当前日期”重新播种各镜像，落点与统计都以它为准
+    switch (scope) {
+      case _Scope.month:
+        if (_scope == _Scope.year) {
+          // 年 → 月：保留月份，落到浏览到的年份；“当前日期”随之改挂
+          _month = DateTime(_year, _month.month);
+          final days = monthGeometry(_month).days;
+          _current = DateTime(
+            _month.year,
+            _month.month,
+            _current.day.clamp(1, days),
+          );
+        } else {
+          _month = _monthOf(_current);
+        }
+      case _Scope.year:
+        _year = _current.year;
+    }
+    final old = _pageCtl;
+    _scope = scope;
+    _pageCtl = PageController(initialPage: _pageForScope(scope));
+    old.dispose();
+    HapticFeedback.selectionClick();
+    setState(() {});
+  }
+
+  int _pageForScope(_Scope scope) => switch (scope) {
+    _Scope.month => _pageForMonth(_month),
+    _Scope.year => pageForYear(_anchorYear, _year),
+  };
+
+  DateTime _periodForPage(int page) => switch (_scope) {
+    _Scope.month => monthForPage(_anchorMonth, page),
+    _Scope.year => yearForPage(_anchorYear, page),
+  };
+
+  void _onVerticalDragEnd(DragEndDetails details) {
+    final v = details.velocity.pixelsPerSecond.dy;
+    if (v > _kScopeSwipeVelocity && _scope == _Scope.month) {
+      // 下滑：月 → 年
+      _setScope(_Scope.year);
+    } else if (v < -_kScopeSwipeVelocity && _scope == _Scope.year) {
+      // 上滑：年 → 月
+      _setScope(_Scope.month);
     }
   }
 
@@ -115,7 +211,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     final sameDom = DateTime(
       month.year,
       month.month,
-      _selected.day.clamp(1, days),
+      _current.day.clamp(1, days),
     );
     if (byDay == null || byDay.containsKey(sameDom)) return sameDom;
     for (var d = 1; d <= days; d++) {
@@ -125,9 +221,16 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     return sameDom;
   }
 
+  // 年视图点选月份：进入该月的月视图
+  void _openMonth(DateTime month) {
+    _month = month;
+    _current = _pickDayIn(month);
+    _setScope(_Scope.month);
+  }
+
   void _syncDayEntries(DayWriting? writing) {
     final ids = writing?.ids ?? const <String>[];
-    final key = '${TimeFormat.isoDate(_selected)}|${ids.join(',')}';
+    final key = '${TimeFormat.isoDate(_current)}|${ids.join(',')}';
     if (key == _dayKey) return;
     _dayKey = key;
     _dayEntries = ids.isEmpty
@@ -138,95 +241,146 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final byDay = ref.watch(dashboardControllerProvider).value?.byDay;
-    _syncDayEntries(byDay?[_selected]);
+    _syncDayEntries(byDay?[_current]);
+
+    final count = _periodCount(byDay);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.l10n.diary.calendarTitle),
+        title: Row(
+          children: [
+            Flexible(
+              child: Text(
+                _titleText(context),
+                maxLines: 1,
+                overflow: .ellipsis,
+                style: theme.typography.titleMedium.emphasized.onSurface,
+              ),
+            ),
+            if (count != null)
+              Text(
+                ' [${context.l10n.diary.timelineMonthCount(count: count)}]',
+                maxLines: 1,
+                style: theme.typography.titleMedium.onSurfaceVariant,
+              ),
+          ],
+        ),
         actions: [
           IconButton(
+            tooltip: _scope == _Scope.year
+                ? context.l10n.diary.calendarMonthView
+                : context.l10n.diary.calendarYearView,
+            icon: Icon(
+              _scope == _Scope.year
+                  ? LucideIcons.calendarDays
+                  : LucideIcons.layoutGrid,
+            ),
+            onPressed: _toggleYearScope,
+          ),
+          IconButton(
             tooltip: context.l10n.diary.calendarBackToToday,
-            icon: const Icon(LucideIcons.calendarCheck),
+            // 数字 = 当前日期；点击把“当前日期”拨回系统当日
+            icon: _TodayGlyph(day: _current.day),
             onPressed: _backToToday,
           ),
         ],
       ),
       body: Column(
         children: [
-          _MonthBar(
-            month: _month,
-            entryCount: _monthCount(byDay),
-            onPrev: () => _goToPage(_pageForMonth(_month) - 1),
-            onNext: () => _goToPage(_pageForMonth(_month) + 1),
-          ),
-          const _WeekdayHeader(),
-          _MonthPager(
-            controller: _pageCtl,
-            byDay: byDay,
-            selected: _selected,
-            today: _today(),
-            monthForPage: _monthForPage,
-            onPageChanged: _onPageChanged,
-            onSettled: _onSettled,
-            onSelect: (d) => setState(() => _selected = d),
-          ),
-          const SizedBox(height: 4),
-          Expanded(
-            child: _DayEntries(day: _selected, entries: _dayEntries),
-          ),
+          if (_scope != _Scope.year) const _WeekdayHeader(),
+          if (_scope == _Scope.year)
+            Expanded(
+              child: GestureDetector(
+                onVerticalDragEnd: _onVerticalDragEnd,
+                behavior: .opaque,
+                child: _YearPager(
+                  controller: _pageCtl,
+                  byDay: byDay,
+                  today: _today(),
+                  yearForPage: (page) => yearForPage(_anchorYear, page).year,
+                  onPageChanged: _onPageChanged,
+                  onSelectMonth: _openMonth,
+                ),
+              ),
+            )
+          else
+            GestureDetector(
+              onVerticalDragEnd: _onVerticalDragEnd,
+              behavior: .opaque,
+              child: _PeriodPager(
+                controller: _pageCtl,
+                periodForPage: _periodForPage,
+                onPageChanged: _onPageChanged,
+                onSettled: _onSettled,
+                pageBuilder: _buildPeriodPage,
+              ),
+            ),
+          if (_scope != _Scope.year) ...[
+            const SizedBox(height: 4),
+            Expanded(child: _DayEntries(day: _current, entries: _dayEntries)),
+          ],
         ],
       ),
     );
   }
 
-  int? _monthCount(Map<DateTime, DayWriting>? byDay) {
+  Widget _buildPeriodPage(BuildContext context, DateTime period) => _MonthGrid(
+    month: period,
+    byDay: ref.watch(dashboardControllerProvider).value?.byDay,
+    selected: _current,
+    today: _today(),
+    onSelect: (d) => setState(() => _current = d),
+  );
+
+  String _titleText(BuildContext context) => switch (_scope) {
+    _Scope.year => TimeFormat.yearTitle(DateTime(_year)),
+    _Scope.month => TimeFormat.monthTitle(_month),
+  };
+
+  // 统计一律走 from–to 闭区间逐日累加，任何跨月/跨年边界都精确
+  int? _periodCount(Map<DateTime, DayWriting>? byDay) {
     if (byDay == null) return null;
+    final (:from, :to) = switch (_scope) {
+      _Scope.month => (
+        from: _month,
+        to: DateTime(_month.year, _month.month + 1, 0),
+      ),
+      _Scope.year => (from: DateTime(_year), to: DateTime(_year, 12, 31)),
+    };
     var sum = 0;
-    byDay.forEach((day, w) {
-      if (day.year == _month.year && day.month == _month.month) sum += w.count;
-    });
+    for (var d = from; !d.isAfter(to); d = d.add(const Duration(days: 1))) {
+      sum += byDay[d]?.count ?? 0;
+    }
     return sum;
   }
 }
 
-class _MonthBar extends StatelessWidget {
-  final DateTime month;
-  final int? entryCount;
-  final VoidCallback onPrev;
-  final VoidCallback onNext;
+// lucide 没有 1–31 整套数字日历图标，用日历框叠加文字实现；
+// 数字落在框体内（避开顶部挂环），日期变化时随 widget 重建自动刷新
+class _TodayGlyph extends StatelessWidget {
+  final int day;
 
-  const _MonthBar({
-    required this.month,
-    required this.entryCount,
-    required this.onPrev,
-    required this.onNext,
-  });
+  const _TodayGlyph({required this.day});
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    return Padding(
-      padding: const .fromLTRB(6, 0, 6, 6),
-      child: Row(
+    return SizedBox.square(
+      dimension: 24,
+      child: Stack(
         children: [
-          IconButton(
-            icon: const Icon(LucideIcons.chevronLeft),
-            onPressed: onPrev,
-          ),
-          Text(
-            TimeFormat.monthTitle(month),
-            style: theme.typography.titleMedium.emphasized.onSurface,
-          ),
-          const Spacer(),
-          if (entryCount != null)
-            Text(
-              context.l10n.diary.timelineMonthCount(count: entryCount!),
-              style: theme.typography.labelMedium.onSurfaceVariant,
+          const Center(child: Icon(LucideIcons.calendar, size: 24)),
+          Positioned.fill(
+            top: 7,
+            child: Center(
+              child: Text(
+                '$day',
+                maxLines: 1,
+                style: context.theme.typography.labelSmall.emphasized.onSurface
+                    .copyWith(fontSize: 9, height: 1),
+              ),
             ),
-          IconButton(
-            icon: const Icon(LucideIcons.chevronRight),
-            onPressed: onNext,
           ),
         ],
       ),
@@ -259,25 +413,19 @@ class _WeekdayHeader extends StatelessWidget {
   }
 }
 
-class _MonthPager extends StatelessWidget {
+class _PeriodPager extends StatelessWidget {
   final PageController controller;
-  final Map<DateTime, DayWriting>? byDay;
-  final DateTime selected;
-  final DateTime today;
-  final DateTime Function(int page) monthForPage;
+  final DateTime Function(int page) periodForPage;
   final ValueChanged<int> onPageChanged;
   final VoidCallback onSettled;
-  final ValueChanged<DateTime> onSelect;
+  final Widget Function(BuildContext context, DateTime period) pageBuilder;
 
-  const _MonthPager({
+  const _PeriodPager({
     required this.controller,
-    required this.byDay,
-    required this.selected,
-    required this.today,
-    required this.monthForPage,
+    required this.periodForPage,
     required this.onPageChanged,
     required this.onSettled,
-    required this.onSelect,
+    required this.pageBuilder,
   });
 
   @override
@@ -289,23 +437,23 @@ class _MonthPager extends StatelessWidget {
         final height =
             cell / _kCellAspect * _kGridRows + _kCellGap * (_kGridRows - 1) + 8;
 
-        return SizedBox(
-          height: height,
-          child: NotificationListener<ScrollEndNotification>(
-            // depth 0 = 分页器自身；子级冒泡通知不筛掉会被误判为落位
-            onNotification: (n) {
-              if (n.depth == 0) onSettled();
-              return false;
-            },
-            child: PageView.builder(
-              controller: controller,
-              onPageChanged: onPageChanged,
-              itemBuilder: (context, page) => _MonthGrid(
-                month: monthForPage(page),
-                byDay: byDay,
-                selected: selected,
-                today: today,
-                onSelect: onSelect,
+        return AnimatedSize(
+          duration: Durations.medium4,
+          curve: Easing.emphasizedDecelerate,
+          alignment: .topCenter,
+          child: SizedBox(
+            height: height,
+            child: NotificationListener<ScrollEndNotification>(
+              // depth 0 = 分页器自身；子级冒泡通知不筛掉会被误判为落位
+              onNotification: (n) {
+                if (n.depth == 0) onSettled();
+                return false;
+              },
+              child: PageView.builder(
+                controller: controller,
+                onPageChanged: onPageChanged,
+                itemBuilder: (context, page) =>
+                    pageBuilder(context, periodForPage(page)),
               ),
             ),
           ),
@@ -366,6 +514,241 @@ class _MonthGrid extends StatelessWidget {
   }
 }
 
+class _YearPager extends StatelessWidget {
+  final PageController controller;
+  final Map<DateTime, DayWriting>? byDay;
+  final DateTime today;
+  final int Function(int page) yearForPage;
+  final ValueChanged<int> onPageChanged;
+  final ValueChanged<DateTime> onSelectMonth;
+
+  const _YearPager({
+    required this.controller,
+    required this.byDay,
+    required this.today,
+    required this.yearForPage,
+    required this.onPageChanged,
+    required this.onSelectMonth,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return PageView.builder(
+      controller: controller,
+      onPageChanged: onPageChanged,
+      itemBuilder: (context, page) => _YearGrid(
+        year: yearForPage(page),
+        byDay: byDay,
+        today: today,
+        onSelectMonth: onSelectMonth,
+      ),
+    );
+  }
+}
+
+class _YearGrid extends StatelessWidget {
+  final int year;
+  final Map<DateTime, DayWriting>? byDay;
+  final DateTime today;
+  final ValueChanged<DateTime> onSelectMonth;
+
+  const _YearGrid({
+    required this.year,
+    required this.byDay,
+    required this.today,
+    required this.onSelectMonth,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= _kYearWideWidth ? 4 : 3;
+        const gap = 12.0;
+        final rows = 12 ~/ columns;
+        final cardWidth =
+            (constraints.maxWidth - _kGridPadding * 2 - gap * (columns - 1)) /
+            columns;
+
+        // 铺满整页：把可用高度均摊给每行卡片，多出来的空间再摊给卡片内的日期行
+        final cardHeight =
+            (constraints.maxHeight - _kGridPadding * 2 - gap * (rows - 1)) /
+            rows;
+        final dayHeight =
+            (cardHeight - _kHeaderHeight - 4 - _kMiniWeekdayHeight) /
+            _kGridRows;
+        final cell = dayHeight.clamp(_kMiniDayHeight, double.infinity).toDouble();
+        final filledHeight =
+            _kHeaderHeight + 4 + _kMiniWeekdayHeight + cell * _kGridRows;
+
+        return Padding(
+          padding: const .all(_kGridPadding),
+          child: GridView.count(
+            crossAxisCount: columns,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: gap,
+            crossAxisSpacing: gap,
+            childAspectRatio: cardWidth / filledHeight,
+            children: [
+              for (var m = 1; m <= 12; m++)
+                _YearMonthCard(
+                  month: DateTime(year, m),
+                  count: _monthTotal(byDay, year, m),
+                  byDay: byDay,
+                  dayHeight: cell,
+                  today: today,
+                  onTap: () => onSelectMonth(DateTime(year, m)),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  int _monthTotal(Map<DateTime, DayWriting>? byDay, int year, int month) {
+    if (byDay == null) return 0;
+    var sum = 0;
+    byDay.forEach((day, w) {
+      if (day.year == year && day.month == month) sum += w.count;
+    });
+    return sum;
+  }
+}
+
+class _YearMonthCard extends StatelessWidget {
+  final DateTime month;
+  final int count;
+  final Map<DateTime, DayWriting>? byDay;
+  final double dayHeight;
+  final DateTime today;
+  final VoidCallback onTap;
+
+  const _YearMonthCard({
+    required this.month,
+    required this.count,
+    required this.byDay,
+    required this.dayHeight,
+    required this.today,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final (:leading, :days) = monthGeometry(month);
+    // 与 _WeekdayHeader 同源的周日锚
+    final sunday = DateTime(2026, 8, 2);
+
+    return MInkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: onTap,
+      child: Semantics(
+        button: true,
+        label: [
+          TimeFormat.monthTitle(month),
+          context.l10n.diary.timelineMonthCount(count: count),
+        ].join(' · '),
+        child: ExcludeSemantics(
+          child: MediaQuery.withClampedTextScaling(
+            maxScaleFactor: _kCellMaxTextScale,
+            child: Column(
+              crossAxisAlignment: .start,
+              children: [
+                SizedBox(
+                  height: _kHeaderHeight,
+                  child: Row(
+                    crossAxisAlignment: .end,
+                    children: [
+                      Flexible(
+                        // 年视图里月份不必带年份：zh「10月」/ en「Oct」
+                        child: Text(
+                          TimeFormat.monthAbbr(month),
+                          maxLines: 1,
+                          overflow: .ellipsis,
+                          style: theme.typography.titleSmall.emphasized
+                              .onSurface,
+                        ),
+                      ),
+                      Padding(
+                        padding: const .only(bottom: 1),
+                        child: Text(
+                          '[$count]',
+                          maxLines: 1,
+                          style: theme.typography.labelSmall.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                SizedBox(
+                  height: _kMiniWeekdayHeight,
+                  child: Row(
+                    children: [
+                      for (var i = 0; i < 7; i++)
+                        Expanded(
+                          // narrow 形式：zh「日一二三四五六」，不加“周”前缀
+                          child: Text(
+                            TimeFormat.weekdayNarrow(
+                              sunday.add(Duration(days: i)),
+                            ),
+                            textAlign: .center,
+                            maxLines: 1,
+                            style: theme.typography.labelSmall.outline
+                                .copyWith(fontSize: 8),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                for (var r = 0; r < _kGridRows; r++)
+                  SizedBox(
+                    height: dayHeight,
+                    child: Row(
+                      children: [
+                        for (var c = 0; c < 7; c++)
+                          () {
+                            final idx = r * 7 + c - leading;
+                            if (idx < 0 || idx >= days) {
+                              return const Expanded(child: SizedBox.shrink());
+                            }
+                            final day = DateTime(month.year, month.month, idx + 1);
+                            final hasWriting = byDay?.containsKey(day) ?? false;
+                            // 今天 > 有日记 > 普通，三档强调
+                            final style =
+                                day == today
+                                ? theme.typography.labelSmall.emphasized.primary
+                                : hasWriting
+                                ? theme.typography.labelSmall.emphasized.onSurface
+                                : theme.typography.labelSmall.outline;
+                            return Expanded(
+                              child: Center(
+                                child: Text(
+                                  '${day.day}',
+                                  maxLines: 1,
+                                  textAlign: .center,
+                                  style: style.copyWith(
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          }(),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _DayCell extends StatelessWidget {
   final DateTime day;
   final DayWriting? writing;
@@ -389,12 +772,40 @@ class _DayCell extends StatelessWidget {
 
     Widget content;
     if (w == null) {
+      final lunar = LunarCalendar.fromSolar(day);
+      final typo = context.theme.typography;
+      // 没写的格子：阳历为主（加大）、农历为辅（原字号），两行整体在格内居中；
+      // 有日记的格子保持原样
+      final dateStyle = !isToday
+          ? typo.titleSmall.onSurfaceVariant
+          : typo.titleSmall.emphasized.primary;
       content = Padding(
         padding: const .fromLTRB(4, 3, 4, 3),
         child: Column(
+          mainAxisAlignment: .center,
           crossAxisAlignment: .stretch,
           children: [
-            _CellHeader(day: day, count: 0, onCover: false, isToday: isToday),
+            Text(
+              '${day.day}',
+              textAlign: .center,
+              maxLines: 1,
+              style: dateStyle.copyWith(
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+            if (lunar != null) ...[
+              const SizedBox(height: 2),
+              Text(
+                LunarCalendar.dayName(lunar),
+                textAlign: .center,
+                maxLines: 1,
+                overflow: .ellipsis,
+                style: typo.labelSmall.outline.copyWith(
+                  fontSize: 8,
+                  height: 1,
+                ),
+              ),
+            ],
           ],
         ),
       );

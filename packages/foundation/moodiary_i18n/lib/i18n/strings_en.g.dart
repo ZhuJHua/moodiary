@@ -723,6 +723,8 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get calendarTitle => 'Calendar';
 	@override String get calendarBackToToday => 'Today';
 	@override String get calendarEmptyDay => 'Nothing written that day';
+	@override String get calendarYearView => 'Year view';
+	@override String get calendarMonthView => 'Month view';
 }
 
 // Path: editor

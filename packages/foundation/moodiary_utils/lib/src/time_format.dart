@@ -72,8 +72,14 @@ class TimeFormat {
   static String monthTitle(DateTime time) =>
       DateFormat.yMMMM().format(time.toLocal());
 
+  static String yearTitle(DateTime time) => DateFormat.y().format(time.toLocal());
+
   static String weekdayShort(DateTime time) =>
       DateFormat.E().format(time.toLocal());
+
+  // narrow 形式：zh 返回“日一二三四五六”，en 返回“S M T W T F S”
+  static String weekdayNarrow(DateTime time) =>
+      DateFormat.EEEEE().format(time.toLocal());
 
   static String relative(DateTime time) {
     final t = time.toLocal();

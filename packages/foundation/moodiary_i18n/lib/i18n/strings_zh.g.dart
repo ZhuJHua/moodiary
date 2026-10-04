@@ -2000,6 +2000,12 @@ class Translations$diary$zh {
 
 	/// zh: '这天没有写'
 	String get calendarEmptyDay => '这天没有写';
+
+	/// zh: '年视图'
+	String get calendarYearView => '年视图';
+
+	/// zh: '月视图'
+	String get calendarMonthView => '月视图';
 }
 
 // Path: editor
