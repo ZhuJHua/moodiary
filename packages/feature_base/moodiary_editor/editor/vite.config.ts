@@ -32,7 +32,7 @@ export default defineConfig({
   build: {
     outDir: '../assets/editor',
     emptyOutDir: true,
-    target: 'es2019',
+    target: 'es2022',
     cssCodeSplit: false,
     reportCompressedSize: false,
     rollupOptions: {
