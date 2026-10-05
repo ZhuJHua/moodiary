@@ -113,8 +113,6 @@ class MoodiaryEditor extends StatefulWidget {
 
   final Future<String?> Function(String name)? mediaNameResolver;
 
-  final WidgetBuilder? loadingBuilder;
-
   const MoodiaryEditor({
     super.key,
     this.controller,
@@ -160,7 +158,6 @@ class MoodiaryEditor extends StatefulWidget {
     this.fontResolver,
     this.mediaResolver,
     this.mediaNameResolver,
-    this.loadingBuilder,
   });
 
   @override
@@ -581,13 +578,19 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
 
   Future<void> _activate() async {
     if (_activated) return;
-    await _setContent(widget.initialContent);
-    await _setTitle(widget.initialTitle);
-    await _setEditable(!widget.readOnly);
-    await _setTheme();
-    await _setSaveStatus();
-    await _setMeta();
-    await _setLinks();
+    _lastContent = widget.initialContent;
+    _contentLocked = false;
+    await _run(
+      'window.MoodiaryBridge.activate(${jsonEncode({
+        'content': widget.initialContent,
+        'title': widget.initialTitle,
+        'editable': !widget.readOnly,
+        'theme': _themePayload(),
+        'saveStatus': widget.saveStatus,
+        'meta': widget.metaJson ?? '',
+        'links': widget.linksJson ?? '',
+      })})',
+    );
     if (_jsReady &&
         widget.fontResolver?.call() != null &&
         !_fontReady.isCompleted) {
@@ -783,13 +786,6 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
                   textAlign: .center,
                 ),
               ),
-            )
-          else if (!_activated)
-            ColoredBox(
-              color: surface,
-              child:
-                  widget.loadingBuilder?.call(context) ??
-                  const Center(child: CircularProgressIndicator()),
             ),
         ],
       ),

@@ -133,6 +133,7 @@ export default function MoodiaryEditor({
     vp?.addEventListener('scroll', onViewportScroll, { passive: true })
     viewportBottom.current = vp?.getBoundingClientRect().bottom ?? Infinity
     const onViewportResize = (): void => {
+      autoGrowTitle()
       const box = viewportEl.current
       if (!box) return
       const bounds = box.getBoundingClientRect()
@@ -165,7 +166,7 @@ export default function MoodiaryEditor({
       cancelAnimationFrame(scrollRaf.current)
       cancelAnimationFrame(spyRaf.current)
     }
-  }, [editor, platform, onViewportScroll])
+  }, [editor, platform, onViewportScroll, autoGrowTitle])
 
   const showLinks =
     !editable && links != null && links.outgoing.length + links.incoming.length > 0

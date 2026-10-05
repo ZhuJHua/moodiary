@@ -7,6 +7,16 @@ import { focusTitle, setTitle } from './title'
 import type { EditorApi } from '../editor/tiptap'
 import { dismissOverlay } from '../editor/overlay'
 
+export interface ActivatePayload {
+  content: string
+  title: string
+  editable: boolean
+  theme: EditorTheme
+  saveStatus: string
+  meta: string
+  links: string
+}
+
 let api: EditorApi | null = null
 let ready = false
 
@@ -30,6 +40,15 @@ export function emitChange(content: string): void {
 
 export function installBridge(): void {
   window.MoodiaryBridge = {
+    activate: (p: ActivatePayload) => {
+      api?.setContent(p.content ?? '')
+      setTitle(p.title ?? '')
+      api?.setEditable(p.editable)
+      applyTheme(p.theme)
+      setSaveStatus(p.saveStatus)
+      setMeta(p.meta ?? '')
+      setLinks(p.links ?? '')
+    },
     setContent: (content: string) => api?.setContent(content ?? ''),
     getContent: () => api?.getContent() ?? '',
     setTheme: (theme: EditorTheme) => applyTheme(theme),
