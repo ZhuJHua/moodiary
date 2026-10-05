@@ -182,7 +182,7 @@ export default function EditorToolbar({
   }
   const HeadingIcon = s.h1 ? Heading1 : s.h2 ? Heading2 : s.h3 ? Heading3 : Pilcrow
 
-  const divider = <Separator orientation="vertical" className="mx-1 h-5" />
+  const divider = <Separator orientation="vertical" className="mx-1 h-5 data-vertical:self-center" />
 
   return (
     <div
