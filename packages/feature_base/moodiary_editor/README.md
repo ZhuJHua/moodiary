@@ -13,7 +13,6 @@
 `MoodiaryEditor` 不依赖 app 代码，宿主通过参数注入：
 - `rolesResolver` —— 按 `Brightness` 返回编辑器角色色表 `EditorRoles`（`Map<String, String>`）。
 - `mediaResolver` —— 媒体文件名 → 磁盘路径 + MIME，注入给 `EditorLocalServer` 按需读盘。
-- `loadingBuilder` —— 加载遮罩（不传则用 `CircularProgressIndicator`）。
 - `onPickImage/onPickAudioFile/onRecordAudio/onPickVideo/onSaveImage/onImageTap` —— 媒体选取/存盘/点击回调（音视频在 webview 内用原生 `<audio>`/`<video>` + 自绘控件内联播放，无需播放回调）。
 
 ## Web 源与构建

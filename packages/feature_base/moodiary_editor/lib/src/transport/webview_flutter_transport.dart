@@ -27,6 +27,8 @@ class WebViewFlutterTransport extends EditorTransport {
     }
     final controller = WebViewController.fromPlatformCreationParams(params);
     await controller.setJavaScriptMode(.unrestricted);
+    // 底色由宿主 Flutter 提供：页面根元素也是透明的，平台视图就不会在页面淡入时整块弹出。
+    await controller.setBackgroundColor(const Color(0x00000000));
     await controller.addJavaScriptChannel(
       kEditorChannel,
       onMessageReceived: (message) => onMessage(message.message),

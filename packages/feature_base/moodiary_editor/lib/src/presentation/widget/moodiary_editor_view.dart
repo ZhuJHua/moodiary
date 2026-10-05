@@ -304,7 +304,6 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       mediaNameResolver: (name) async =>
           (await getIt<MediaInfoRepository>().getMediaInfoByFileName(name))
               ?.name,
-      loadingBuilder: (_) => const MLoading(),
     );
   }
 }

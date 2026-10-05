@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer' as developer;
-import 'dart:io' show gzip;
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -128,8 +127,8 @@ class EditorLocalServer {
     if (compressed != null) {
       return HttpServerResponse(
         200,
-        headers: {'content-type': contentType},
-        body: .fromList(gzip.decode(compressed)),
+        headers: {'content-type': contentType, 'content-encoding': 'gzip'},
+        body: compressed,
       );
     }
     final raw = await _tryLoadAsset('$_assetBase/$rel');
