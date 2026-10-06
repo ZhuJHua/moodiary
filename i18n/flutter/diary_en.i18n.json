@@ -162,7 +162,8 @@
   "searchReindexHint": "Rebuild the index after upgrading so older entries become searchable",
   "searchReindex": "Rebuild",
   "autoSaved": "Autosaved",
-  "calendarTitle": "Calendar",
   "calendarBackToToday": "Today",
-  "calendarEmptyDay": "Nothing written that day"
+  "calendarEmptyDay": "Nothing written that day",
+  "calendarYearView": "Year view",
+  "calendarMonthView": "Month view"
 }

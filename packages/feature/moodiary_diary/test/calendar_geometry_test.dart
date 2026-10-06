@@ -48,4 +48,20 @@ void main() {
       expect(monthForPage(anchor, page - 24), DateTime(2024, 12));
     });
   });
+
+  group('页码 ↔ 年', () {
+    const anchorYear = 2026;
+
+    test('锚年落在锚页上，来回换算不掉精度', () {
+      for (var delta = -100; delta <= 100; delta++) {
+        final year = anchorYear + delta;
+        final page = pageForYear(anchorYear, year);
+        expect(
+          yearForPage(anchorYear, page).year,
+          year,
+          reason: 'delta=$delta',
+        );
+      }
+    });
+  });
 }

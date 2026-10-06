@@ -1992,14 +1992,17 @@ class Translations$diary$zh {
 	/// zh: '自动保存'
 	String get autoSaved => '自动保存';
 
-	/// zh: '日历'
-	String get calendarTitle => '日历';
-
 	/// zh: '回到今天'
 	String get calendarBackToToday => '回到今天';
 
 	/// zh: '这天没有写'
 	String get calendarEmptyDay => '这天没有写';
+
+	/// zh: '年视图'
+	String get calendarYearView => '年视图';
+
+	/// zh: '月视图'
+	String get calendarMonthView => '月视图';
 }
 
 // Path: editor

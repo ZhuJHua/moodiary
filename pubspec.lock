@@ -2308,6 +2308,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.2"
+  tyme:
+    dependency: transitive
+    description:
+      name: tyme
+      sha256: "1c336e5a8b97d394a0c030ce5e685b8b3881a4d3dfb698f3ea8816f359011b14"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.5.0"
   typed_data:
     dependency: transitive
     description:
