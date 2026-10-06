@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:mui/mui.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
@@ -27,7 +27,7 @@ class WebViewFlutterTransport extends EditorTransport {
     }
     final controller = WebViewController.fromPlatformCreationParams(params);
     await controller.setJavaScriptMode(.unrestricted);
-    await controller.setBackgroundColor(const Color(0x00000000));
+    await controller.setBackgroundColor(Colors.transparent);
     await controller.addJavaScriptChannel(
       kEditorChannel,
       onMessageReceived: (message) => onMessage(message.message),

@@ -9,8 +9,7 @@
     #app { height: 100%; }
   </style>
   <script>
-    // 全局错误上报（早于模块脚本执行）。通道与 bridge/post.ts 一致：window.MoodiaryEditor
-    // —— 由 Flutter 注入的 DOCUMENT_START shim 提供（先于本内联脚本执行）。
+    // window.MoodiaryEditor 由 Flutter 的 DOCUMENT_START shim 注入，早于本脚本
     (function () {
       function send(payload) {
         var msg = JSON.stringify({ type: 'error', payload: JSON.stringify(payload) })
