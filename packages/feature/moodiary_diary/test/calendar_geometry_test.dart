@@ -56,7 +56,11 @@ void main() {
       for (var delta = -100; delta <= 100; delta++) {
         final year = anchorYear + delta;
         final page = pageForYear(anchorYear, year);
-        expect(yearForPage(anchorYear, page).year, year, reason: 'delta=$delta');
+        expect(
+          yearForPage(anchorYear, page).year,
+          year,
+          reason: 'delta=$delta',
+        );
       }
     });
   });

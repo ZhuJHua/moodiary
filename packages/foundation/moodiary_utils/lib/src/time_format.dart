@@ -98,8 +98,7 @@ class TimeFormat {
   static String weekdayNarrow(DateTime time) =>
       DateFormat.EEEEE().format(time.toLocal());
 
-  /// 农历日的简写（tyme 按整型 y/m/d 换算，不受本地时区/DST 影响）：
-  /// 初一返回“X月”（闰月加“闰”前缀），其余返回“初二”…“三十”
+  // 初一返回月名（闰月带“闰”），其余返回日名
   static String lunarDay(DateTime day) {
     final lunar = SolarDay.fromYmd(day.year, day.month, day.day).getLunarDay();
     if (lunar.getDay() != 1) return lunar.getName();

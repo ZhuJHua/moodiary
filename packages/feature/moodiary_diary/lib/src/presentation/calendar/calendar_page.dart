@@ -137,7 +137,10 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
   void _backToToday() {
     final today = _today();
     if (_scope == _Scope.year) {
-      setState(() => _current = today);
+      setState(() {
+        _current = today;
+        _month = _monthOf(today);
+      });
       _goToPage(pageForYear(_anchorYear, today.year));
       return;
     }
