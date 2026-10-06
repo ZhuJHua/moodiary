@@ -9,22 +9,6 @@
     #app { height: 100%; }
   </style>
   <script>
-    // 先于样式表把主题色变量钉成 Flutter 下发的值，避免首帧按 CSS 默认值（浅色）绘制。
-    (function () {
-      try {
-        var raw = new URLSearchParams(location.search).get('boot')
-        if (!raw) return
-        var b64 = raw.replace(/-/g, '+').replace(/_/g, '/')
-        var boot = JSON.parse(decodeURIComponent(escape(atob(b64))))
-        var surface = boot && boot.theme && boot.theme.roles && boot.theme.roles.surface
-        if (!surface) return
-        var root = document.documentElement
-        root.style.setProperty('--app-background', surface)
-        if (boot.theme.dark) root.style.colorScheme = 'dark'
-      } catch (_) {}
-    })()
-  </script>
-  <script>
     // 全局错误上报（早于模块脚本执行）。通道与 bridge/post.ts 一致：window.MoodiaryEditor
     // —— 由 Flutter 注入的 DOCUMENT_START shim 提供（先于本内联脚本执行）。
     (function () {

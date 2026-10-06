@@ -7,7 +7,7 @@ import { focusTitle, setTitle } from './title'
 import type { EditorApi } from '../editor/tiptap'
 import { dismissOverlay } from '../editor/overlay'
 
-export interface ActivatePayload {
+export interface PageState {
   content: string
   title: string
   editable: boolean
@@ -40,14 +40,14 @@ export function emitChange(content: string): void {
 
 export function installBridge(): void {
   window.MoodiaryBridge = {
-    activate: (p: ActivatePayload) => {
-      api?.setContent(p.content ?? '')
-      setTitle(p.title ?? '')
-      api?.setEditable(p.editable)
-      applyTheme(p.theme)
-      setSaveStatus(p.saveStatus)
-      setMeta(p.meta ?? '')
-      setLinks(p.links ?? '')
+    applyState: (s: Partial<PageState>) => {
+      if (s.content !== undefined) api?.setContent(s.content)
+      if (s.title !== undefined) setTitle(s.title)
+      if (s.editable !== undefined) api?.setEditable(s.editable)
+      if (s.theme) applyTheme(s.theme)
+      if (s.saveStatus !== undefined) setSaveStatus(s.saveStatus)
+      if (s.meta !== undefined) setMeta(s.meta)
+      if (s.links !== undefined) setLinks(s.links)
     },
     setContent: (content: string) => api?.setContent(content ?? ''),
     getContent: () => api?.getContent() ?? '',
