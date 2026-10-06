@@ -1,4 +1,20 @@
 import 'package:intl/intl.dart';
+import 'package:tyme/tyme.dart';
+
+const _lunarMonthNames = [
+  '正',
+  '二',
+  '三',
+  '四',
+  '五',
+  '六',
+  '七',
+  '八',
+  '九',
+  '十',
+  '冬',
+  '腊',
+];
 
 class TimeFormat {
   static String mediaDuration(Duration d) {
@@ -72,7 +88,8 @@ class TimeFormat {
   static String monthTitle(DateTime time) =>
       DateFormat.yMMMM().format(time.toLocal());
 
-  static String yearTitle(DateTime time) => DateFormat.y().format(time.toLocal());
+  static String yearTitle(DateTime time) =>
+      DateFormat.y().format(time.toLocal());
 
   static String weekdayShort(DateTime time) =>
       DateFormat.E().format(time.toLocal());
@@ -80,6 +97,15 @@ class TimeFormat {
   // narrow 形式：zh 返回“日一二三四五六”，en 返回“S M T W T F S”
   static String weekdayNarrow(DateTime time) =>
       DateFormat.EEEEE().format(time.toLocal());
+
+  /// 农历日的简写（tyme 按整型 y/m/d 换算，不受本地时区/DST 影响）：
+  /// 初一返回“X月”（闰月加“闰”前缀），其余返回“初二”…“三十”
+  static String lunarDay(DateTime day) {
+    final lunar = SolarDay.fromYmd(day.year, day.month, day.day).getLunarDay();
+    if (lunar.getDay() != 1) return lunar.getName();
+    final month = lunar.getLunarMonth();
+    return '${month.isLeap() ? '闰' : ''}${_lunarMonthNames[month.getMonth() - 1]}月';
+  }
 
   static String relative(DateTime time) {
     final t = time.toLocal();

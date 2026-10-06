@@ -14,14 +14,14 @@ const double _kCellAspect = 46 / 54;
 const double _kCellGap = 3;
 const double _kGridPadding = 8;
 
-// 恒定六行：行数跟着月份变的话，翻月时下半屏会上下弹（年视图迷你月也统一六行对齐）
+// 恒定六行，翻月时下半屏不跳动
 const int _kGridRows = 6;
 
-// 锚页：月/年各自锚定，往前 6000 个周期，往后不设界
+// 锚页：往前 6000 个周期，往后不设界
 const int _kAnchorPage = 6000;
 const int _kYearAnchorPage = 6000;
 
-// 系统字号放大到 1.6× 时日期与篇数会互相顶，故封顶
+// 系统字号放大时日期与篇数互顶，故封顶
 const double _kCellMaxTextScale = 1.15;
 
 const double _kHeaderHeight = 18;
@@ -29,10 +29,10 @@ const double _kHeaderHeight = 18;
 // 年视图：达到该宽度切 4 列，否则 3 列
 const double _kYearWideWidth = 600;
 
-// 垂直滑动手势切换月/年视图的速度阈值（px/s）
+// 上下滑切换月/年视图的速度阈值（px/s）
 const double _kScopeSwipeVelocity = 300;
 
-// 年视图迷你月内部行高（日期行高度的下限，多出的空间用于铺满整页）
+// 年视图迷你月内部行高下限
 const double _kMiniWeekdayHeight = 12;
 const double _kMiniDayHeight = 13;
 
@@ -40,13 +40,12 @@ enum _Scope { month, year }
 
 @visibleForTesting
 ({int leading, int days}) monthGeometry(DateTime month) => (
-  // weekday 是周一=1..周日=7，% 7 折成周日=0
   leading: DateTime(month.year, month.month).weekday % 7,
-  // 下个月第 0 天 = 本月最后一天，跨年/闰年由 DateTime 自动归一
+  // 下个月第 0 天 = 本月最后一天
   days: DateTime(month.year, month.month + 1, 0).day,
 );
 
-// 别手写 ~/12 与 %12：负数月份取模在 Dart 不是数学取模，跨到锚点之前的年份会差一年
+// Dart 的 % 不是数学取模，负数月份用手写表达式会差一年
 @visibleForTesting
 DateTime monthForPage(DateTime anchorMonth, int page) =>
     DateTime(anchorMonth.year, anchorMonth.month + page - _kAnchorPage);
@@ -62,7 +61,8 @@ DateTime yearForPage(int anchorYear, int page) =>
     DateTime(anchorYear + page - _kYearAnchorPage);
 
 @visibleForTesting
-int pageForYear(int anchorYear, int year) => _kYearAnchorPage + year - anchorYear;
+int pageForYear(int anchorYear, int year) =>
+    _kYearAnchorPage + year - anchorYear;
 
 class CalendarPage extends ConsumerStatefulWidget {
   const CalendarPage({super.key});
@@ -74,12 +74,10 @@ class CalendarPage extends ConsumerStatefulWidget {
 class _CalendarPageState extends ConsumerState<CalendarPage> {
   _Scope _scope = _Scope.month;
 
-  // 所有视图共享的“当前日期”：点选、翻页落位、回到今天、年视图进月各自写入；
-  // 视图切换时新视图一律从这里推导落点，保证来回切换不丢位置
+  // 所有视图共享的“当前日期”，切换视图时从这里推导落点
   late DateTime _current = _today();
 
-  // 两个“当前展示周期”的镜像，只用于标题/统计，随各自视图的翻页更新；
-  // 跨视图切换的瞬间由 _setScope 用 _current 重新播种，不跨视图带状态
+  // 仅用于标题/统计的“当前展示周期”镜像
   late DateTime _month = _monthOf(_current);
   late int _year = _current.year;
 
@@ -139,6 +137,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
   void _backToToday() {
     final today = _today();
     if (_scope == _Scope.year) {
+      setState(() => _current = today);
       _goToPage(pageForYear(_anchorYear, today.year));
       return;
     }
@@ -150,19 +149,17 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     }
   }
 
-  // 年月视图的切换入口之一在标题栏（滑动手势是另一个）
   void _toggleYearScope() {
     _setScope(_scope == _Scope.year ? _Scope.month : _Scope.year);
   }
 
-  // 视图切换：左右滑 = 同周期翻页（pager 各自处理），上下滑 = 跨周期切换
+  // 左右滑翻页由 pager 处理，这里只接上下滑
   void _setScope(_Scope scope) {
     if (scope == _scope) return;
-    // 切换瞬间用“当前日期”重新播种各镜像，落点与统计都以它为准
     switch (scope) {
       case _Scope.month:
         if (_scope == _Scope.year) {
-          // 年 → 月：保留月份，落到浏览到的年份；“当前日期”随之改挂
+          // 年 → 月：保留月份，年份跟随浏览位置
           _month = DateTime(_year, _month.month);
           final days = monthGeometry(_month).days;
           _current = DateTime(
@@ -281,7 +278,6 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
           ),
           IconButton(
             tooltip: context.l10n.diary.calendarBackToToday,
-            // 数字 = 当前日期；点击把“当前日期”拨回系统当日
             icon: _TodayGlyph(day: _current.day),
             onPressed: _backToToday,
           ),
@@ -319,7 +315,9 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
             ),
           if (_scope != _Scope.year) ...[
             const SizedBox(height: 4),
-            Expanded(child: _DayEntries(day: _current, entries: _dayEntries)),
+            Expanded(
+              child: _DayEntries(day: _current, entries: _dayEntries),
+            ),
           ],
         ],
       ),
@@ -350,15 +348,17 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
       _Scope.year => (from: DateTime(_year), to: DateTime(_year, 12, 31)),
     };
     var sum = 0;
-    for (var d = from; !d.isAfter(to); d = d.add(const Duration(days: 1))) {
+    var d = from;
+    // 步进用构造器归一化：add(Duration) 是绝对时长，DST 切换后会偏出午夜导致漏算
+    while (!d.isAfter(to)) {
       sum += byDay[d]?.count ?? 0;
+      d = DateTime(d.year, d.month, d.day + 1);
     }
     return sum;
   }
 }
 
-// lucide 没有 1–31 整套数字日历图标，用日历框叠加文字实现；
-// 数字落在框体内（避开顶部挂环），日期变化时随 widget 重建自动刷新
+// lucide 无整套数字日历图标，用日历框叠文字实现
 class _TodayGlyph extends StatelessWidget {
   final int day;
 
@@ -444,7 +444,7 @@ class _PeriodPager extends StatelessWidget {
           child: SizedBox(
             height: height,
             child: NotificationListener<ScrollEndNotification>(
-              // depth 0 = 分页器自身；子级冒泡通知不筛掉会被误判为落位
+              // 只认分页器自身的滚动结束通知
               onNotification: (n) {
                 if (n.depth == 0) onSettled();
                 return false;
@@ -570,14 +570,16 @@ class _YearGrid extends StatelessWidget {
             (constraints.maxWidth - _kGridPadding * 2 - gap * (columns - 1)) /
             columns;
 
-        // 铺满整页：把可用高度均摊给每行卡片，多出来的空间再摊给卡片内的日期行
+        // 把可用高度均摊给卡片行，多余空间摊给卡片内的日期行
         final cardHeight =
             (constraints.maxHeight - _kGridPadding * 2 - gap * (rows - 1)) /
             rows;
         final dayHeight =
             (cardHeight - _kHeaderHeight - 4 - _kMiniWeekdayHeight) /
             _kGridRows;
-        final cell = dayHeight.clamp(_kMiniDayHeight, double.infinity).toDouble();
+        final cell = dayHeight
+            .clamp(_kMiniDayHeight, double.infinity)
+            .toDouble();
         final filledHeight =
             _kHeaderHeight + 4 + _kMiniWeekdayHeight + cell * _kGridRows;
 
@@ -637,7 +639,7 @@ class _YearMonthCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final (:leading, :days) = monthGeometry(month);
-    // 与 _WeekdayHeader 同源的周日锚
+    // 周日锚，与 _WeekdayHeader 同源
     final sunday = DateTime(2026, 8, 2);
 
     return MInkWell(
@@ -661,13 +663,13 @@ class _YearMonthCard extends StatelessWidget {
                     crossAxisAlignment: .end,
                     children: [
                       Flexible(
-                        // 年视图里月份不必带年份：zh「10月」/ en「Oct」
+                        // 年视图月份不带年份
                         child: Text(
                           TimeFormat.monthAbbr(month),
                           maxLines: 1,
                           overflow: .ellipsis,
-                          style: theme.typography.titleSmall.emphasized
-                              .onSurface,
+                          style:
+                              theme.typography.titleSmall.emphasized.onSurface,
                         ),
                       ),
                       Padding(
@@ -695,8 +697,9 @@ class _YearMonthCard extends StatelessWidget {
                             ),
                             textAlign: .center,
                             maxLines: 1,
-                            style: theme.typography.labelSmall.outline
-                                .copyWith(fontSize: 8),
+                            style: theme.typography.labelSmall.outline.copyWith(
+                              fontSize: 8,
+                            ),
                           ),
                         ),
                     ],
@@ -713,14 +716,21 @@ class _YearMonthCard extends StatelessWidget {
                             if (idx < 0 || idx >= days) {
                               return const Expanded(child: SizedBox.shrink());
                             }
-                            final day = DateTime(month.year, month.month, idx + 1);
+                            final day = DateTime(
+                              month.year,
+                              month.month,
+                              idx + 1,
+                            );
                             final hasWriting = byDay?.containsKey(day) ?? false;
                             // 今天 > 有日记 > 普通，三档强调
-                            final style =
-                                day == today
+                            final style = day == today
                                 ? theme.typography.labelSmall.emphasized.primary
                                 : hasWriting
-                                ? theme.typography.labelSmall.emphasized.onSurface
+                                ? theme
+                                      .typography
+                                      .labelSmall
+                                      .emphasized
+                                      .onSurface
                                 : theme.typography.labelSmall.outline;
                             return Expanded(
                               child: Center(
@@ -772,10 +782,8 @@ class _DayCell extends StatelessWidget {
 
     Widget content;
     if (w == null) {
-      final lunar = LunarCalendar.fromSolar(day);
+      final showLunar = Localizations.localeOf(context).languageCode == 'zh';
       final typo = context.theme.typography;
-      // 没写的格子：阳历为主（加大）、农历为辅（原字号），两行整体在格内居中；
-      // 有日记的格子保持原样
       final dateStyle = !isToday
           ? typo.titleSmall.onSurfaceVariant
           : typo.titleSmall.emphasized.primary;
@@ -793,17 +801,14 @@ class _DayCell extends StatelessWidget {
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
-            if (lunar != null) ...[
+            if (showLunar) ...[
               const SizedBox(height: 2),
               Text(
-                LunarCalendar.dayName(lunar),
+                TimeFormat.lunarDay(day),
                 textAlign: .center,
                 maxLines: 1,
                 overflow: .ellipsis,
-                style: typo.labelSmall.outline.copyWith(
-                  fontSize: 8,
-                  height: 1,
-                ),
+                style: typo.labelSmall.outline.copyWith(fontSize: 8, height: 1),
               ),
             ],
           ],
@@ -850,7 +855,7 @@ class _DayCell extends StatelessWidget {
 class _CellHeader extends StatelessWidget {
   final DateTime day;
 
-  // count 0 = 没写；只有 >1 才显示
+  // 只有 >1 才显示
   final int count;
   final bool onCover;
   final bool isToday;
@@ -874,7 +879,7 @@ class _CellHeader extends StatelessWidget {
                 : typo.labelSmall.onSurfaceVariant)
             .copyWith(fontFeatures: tabular);
 
-    // 加粗须用 .emphasized，不能 copyWith(fontWeight)：可变字体下会被 fontVariations 吃掉，不报错也不生效
+    // 加粗必须用 .emphasized：copyWith(fontWeight) 在可变字体下不生效
     final dateStyle = !isToday
         ? style
         : (onCover

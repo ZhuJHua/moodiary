@@ -720,7 +720,6 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get searchReindexHint => 'Rebuild the index after upgrading so older entries become searchable';
 	@override String get searchReindex => 'Rebuild';
 	@override String get autoSaved => 'Autosaved';
-	@override String get calendarTitle => 'Calendar';
 	@override String get calendarBackToToday => 'Today';
 	@override String get calendarEmptyDay => 'Nothing written that day';
 	@override String get calendarYearView => 'Year view';

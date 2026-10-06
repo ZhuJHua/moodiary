@@ -1992,9 +1992,6 @@ class Translations$diary$zh {
 	/// zh: '自动保存'
 	String get autoSaved => '自动保存';
 
-	/// zh: '日历'
-	String get calendarTitle => '日历';
-
 	/// zh: '回到今天'
 	String get calendarBackToToday => '回到今天';
 

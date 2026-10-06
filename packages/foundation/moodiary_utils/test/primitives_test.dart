@@ -64,5 +64,20 @@ void main() {
         contains('2000'),
       );
     });
+
+    test('lunarDay：春节锚点与日常', () {
+      expect(TimeFormat.lunarDay(DateTime(2023, 1, 22)), '正月');
+      expect(TimeFormat.lunarDay(DateTime(2024, 2, 10)), '正月');
+      expect(TimeFormat.lunarDay(DateTime(2025, 1, 29)), '正月');
+      expect(TimeFormat.lunarDay(DateTime(2026, 2, 17)), '正月');
+      expect(TimeFormat.lunarDay(DateTime(1900, 1, 31)), '正月');
+      expect(TimeFormat.lunarDay(DateTime(2000, 1, 1)), '廿五');
+      expect(TimeFormat.lunarDay(DateTime(2026, 9, 25)), '十五');
+    });
+
+    test('lunarDay：闰月初一', () {
+      expect(TimeFormat.lunarDay(DateTime(2023, 3, 22)), '闰二月');
+      expect(TimeFormat.lunarDay(DateTime(2025, 7, 25)), '闰六月');
+    });
   });
 }
