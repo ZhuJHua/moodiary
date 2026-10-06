@@ -13,8 +13,44 @@ permissions:
   contents: read
 
 jobs:
+  changes:
+    name: Changes
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      dart: ${{ steps.scope.outputs.dart }}
+      rust: ${{ steps.scope.outputs.rust }}
+      editor: ${{ steps.scope.outputs.editor }}
+    steps:
+      - name: Scope
+        id: scope
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          if [ -z "$PR_NUMBER" ]; then
+            printf '%s\n' dart=true rust=true editor=true | tee -a "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          files=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files" \
+            --jq '.[] | .filename, (.previous_filename // empty)')
+          dart=false rust=false editor=false
+          while IFS= read -r f; do
+            case $f in
+              .github/workflows/quality.yml) dart=true rust=true editor=true ;;
+              packages/feature_base/moodiary_editor/editor/* | i18n/web/*) editor=true ;;
+              packages/foundation/*/rust/*) dart=true rust=true ;;
+              *.md | docs/* | res/* | .github/* | .vscode/* | LICENSE | .mcp.json) ;;
+              *) dart=true ;;
+            esac
+          done <<<"$files"
+          printf '%s\n' "dart=$dart" "rust=$rust" "editor=$editor" | tee -a "$GITHUB_OUTPUT"
+
   dart:
     name: Dart
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.dart == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -59,6 +95,8 @@ jobs:
 
   rust:
     name: Rust
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.rust == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -79,6 +117,8 @@ jobs:
 
   editor:
     name: Editor
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.editor == 'true') }}
     runs-on: ubuntu-latest
     defaults:
       run:

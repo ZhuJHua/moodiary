@@ -41,10 +41,10 @@ cd packages/feature_base/moodiary_editor/editor && corepack pnpm type-check && c
 dart tool/release.dart --bump patch     # or an explicit X.Y.Z
 
 # Sponsors
-dart tool/sponsor.dart <@github | nickname> ...  # appends to both READMEs between the sponsors markers, opens a [skip ci] PR to merge by hand
+dart tool/sponsor.dart <@github | nickname> ...  # appends to both READMEs between the sponsors markers, opens a PR to merge by hand
 ```
 
-Full-repo verification = the four Lint & Test commands above.
+Full-repo verification = the four Lint & Test commands above. CI (`quality.yml`) runs them as the Dart / Rust / Editor jobs, required on develop; its `changes` job skips each one the PR's paths cannot affect.
 
 **Tests are one process**: one `flutter test` at the repo root over the affected packages' `test/` dirs, so hooks and the frontend compiler run once, not once per package (280s -> 38s).
 

@@ -1,52 +1,35 @@
 name: Label PR Based on Conventional Commits
 
 on:
-  pull_request:
-    types: [ opened, synchronize, reopened ]
+  pull_request_target:
+    types: [ opened, edited, synchronize, reopened ]
+
+permissions:
+  pull-requests: write
 
 jobs:
   label-pr:
+    if: github.event.action != 'edited' || github.event.changes.title
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Analyze PR Title
-        id: analyze_title
-        run: |
-          pr_title="${{ github.event.pull_request.title }}"
-          label=""
-          if [[ "$pr_title" == feat* ]]; then
-            label="feat"
-          elif [[ "$pr_title" == fix* ]]; then
-            label="fix"
-          elif [[ "$pr_title" == chore* ]]; then
-            label="chore"
-          elif [[ "$pr_title" == docs* ]]; then
-            label="docs"
-          elif [[ "$pr_title" == style* ]]; then
-            label="style"
-          elif [[ "$pr_title" == refactor* ]]; then
-            label="refactor"
-          elif [[ "$pr_title" == perf* ]]; then
-            label="perf"
-          elif [[ "$pr_title" == test* ]]; then
-            label="test"
-          elif [[ "$pr_title" == build* ]]; then
-            label="build"
-          elif [[ "$pr_title" == ci* ]]; then
-            label="ci"
-          elif [[ "$pr_title" == revert* ]]; then
-            label="revert"
-          else
-            label="?"
-          fi
-
-          echo "label=$label" >> $GITHUB_ENV
-
       - name: Add Label to PR
-        uses: actions-ecosystem/action-add-labels@v1
-        with:
-          labels: ${{ env.label }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          types=(feat fix chore docs style refactor perf test build ci revert '?')
+          label='?'
+          for t in "${types[@]}"; do
+            if [[ $PR_TITLE == "$t"* ]]; then label=$t; break; fi
+          done
+
+          api="repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/labels"
+          current=$(gh api "$api" --jq '.[].name')
+          for t in "${types[@]}"; do
+            if [[ $t != "$label" ]] && grep -qxF -- "$t" <<<"$current"; then
+              gh api --method DELETE "$api/$(jq -rn --arg s "$t" '$s|@uri')" --silent
+            fi
+          done
+          gh api --method POST "$api" -f "labels[]=$label" --silent
