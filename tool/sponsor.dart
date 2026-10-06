@@ -137,7 +137,7 @@ Future<void> main(List<String> argv) async {
 
   final title = 'chore(readme): add sponsor ${args.join(', ')}';
   await _run('git', ['add', ..._readmes.keys.map((f) => f.path)]);
-  await _run('git', ['commit', '-m', '$title [skip ci]']);
+  await _run('git', ['commit', '-m', title]);
   await _run('git', ['push', '-u', 'origin', branch]);
   await _run('gh', [
     'pr',
@@ -152,5 +152,5 @@ Future<void> main(List<String> argv) async {
     '更新捐助者名单。',
   ]);
 
-  stdout.writeln('\n完成。PR 已创建（不跑 CI），人工合并即可。');
+  stdout.writeln('\n完成。PR 已创建，合并即可。');
 }
