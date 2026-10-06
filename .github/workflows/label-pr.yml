@@ -2,13 +2,14 @@ name: Label PR Based on Conventional Commits
 
 on:
   pull_request_target:
-    types: [ opened, synchronize, reopened ]
+    types: [ opened, edited, synchronize, reopened ]
 
 permissions:
   pull-requests: write
 
 jobs:
   label-pr:
+    if: github.event.action != 'edited' || github.event.changes.title
     runs-on: ubuntu-latest
 
     steps:
@@ -18,18 +19,17 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
-          case "$PR_TITLE" in
-            feat*) label=feat ;;
-            fix*) label=fix ;;
-            chore*) label=chore ;;
-            docs*) label=docs ;;
-            style*) label=style ;;
-            refactor*) label=refactor ;;
-            perf*) label=perf ;;
-            test*) label=test ;;
-            build*) label=build ;;
-            ci*) label=ci ;;
-            revert*) label=revert ;;
-            *) label='?' ;;
-          esac
-          gh api --method POST "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/labels" -f "labels[]=$label" --silent
+          types=(feat fix chore docs style refactor perf test build ci revert '?')
+          label='?'
+          for t in "${types[@]}"; do
+            if [[ $PR_TITLE == "$t"* ]]; then label=$t; break; fi
+          done
+
+          api="repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/labels"
+          current=$(gh api "$api" --jq '.[].name')
+          for t in "${types[@]}"; do
+            if [[ $t != "$label" ]] && grep -qxF -- "$t" <<<"$current"; then
+              gh api --method DELETE "$api/$(jq -rn --arg s "$t" '$s|@uri')" --silent
+            fi
+          done
+          gh api --method POST "$api" -f "labels[]=$label" --silent
