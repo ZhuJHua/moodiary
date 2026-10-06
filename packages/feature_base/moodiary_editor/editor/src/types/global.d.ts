@@ -1,4 +1,4 @@
-import type { ActivatePayload } from '../bridge'
+import type { PageState } from '../bridge'
 import type { EditorBoot } from '../bridge/boot'
 import type { EditorTheme } from '../bridge/theme'
 
@@ -10,7 +10,7 @@ declare global {
   interface Window {
     MoodiaryEditor?: JsChannel
     MoodiaryBridge: {
-      activate: (payload: ActivatePayload) => void
+      applyState: (state: Partial<PageState>) => void
       setContent: (content: string) => void
       getContent: () => string
       setTheme: (theme: EditorTheme) => void

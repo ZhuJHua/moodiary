@@ -109,8 +109,7 @@
 }
 
 /* —— 布局：编辑器填满 webview，正文在内部滚动 —— */
-/* 页面不画底色：底色由宿主（Flutter 的 surface）提供，Android 上 WebView 原生层也透明，
-   这样平台视图在页面淡入时不会以不透明矩形先弹出来。 */
+/* 底色由宿主 Flutter 提供，页面与 WebView 原生层都透明，平台视图在页面淡入时才不会整块弹出 */
 html,
 body {
   background: transparent;

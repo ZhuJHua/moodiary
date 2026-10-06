@@ -580,17 +580,11 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
     if (_activated) return;
     _lastContent = widget.initialContent;
     _contentLocked = false;
-    await _run(
-      'window.MoodiaryBridge.activate(${jsonEncode({
-        'content': widget.initialContent,
-        'title': widget.initialTitle,
-        'editable': !widget.readOnly,
-        'theme': _themePayload(),
-        'saveStatus': widget.saveStatus,
-        'meta': widget.metaJson ?? '',
-        'links': widget.linksJson ?? '',
-      })})',
-    );
+    await _applyState({
+      'content': widget.initialContent,
+      'title': widget.initialTitle,
+      ..._pageState(),
+    });
     if (_jsReady &&
         widget.fontResolver?.call() != null &&
         !_fontReady.isCompleted) {
@@ -599,16 +593,23 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
         onTimeout: () {},
       );
       if (!mounted) return;
-      await _setEditable(!widget.readOnly);
-      await _setTheme();
-      await _setSaveStatus();
-      await _setMeta();
-      await _setLinks();
+      await _applyState(_pageState());
     }
     if (!mounted) return;
     setState(() => _activated = true);
     widget.onReady?.call();
   }
+
+  Map<String, dynamic> _pageState() => {
+    'editable': !widget.readOnly,
+    'theme': _themePayload(),
+    'saveStatus': widget.saveStatus,
+    'meta': widget.metaJson ?? '',
+    'links': widget.linksJson ?? '',
+  };
+
+  Future<void> _applyState(Map<String, dynamic> state) =>
+      _run('window.MoodiaryBridge.applyState(${jsonEncode(state)})');
 
   Map<String, dynamic> _themePayload() {
     final brightness = context.theme.brightness;
@@ -767,12 +768,11 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
 
   @override
   Widget build(BuildContext context) {
-    final surface = context.theme.colors.surface;
     final transport = _transport;
     final loadError = _loadError;
 
     return ColoredBox(
-      color: surface,
+      color: context.theme.colors.surface,
       child: Stack(
         fit: .expand,
         children: [
