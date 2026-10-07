@@ -127,8 +127,8 @@ class Translations$app$zh {
 	/// zh: '常用地点'
 	String get placeManager => '常用地点';
 
-	/// zh: '足迹地图'
-	String get mapTitle => '足迹地图';
+	/// zh: '足迹'
+	String get mapTitle => '足迹';
 
 	/// zh: '显示'
 	String get sectionDisplay => '显示';
@@ -301,8 +301,8 @@ class Translations$app$zh {
 	/// zh: 'devapi.qweather.com 或自定义'
 	String get servicesQweatherHostHint => 'devapi.qweather.com 或自定义';
 
-	/// zh: '天地图'
-	String get servicesTianditu => '天地图';
+	/// zh: '地图'
+	String get servicesMap => '地图';
 
 	/// zh: '已保存'
 	String get servicesSaved => '已保存';
@@ -1817,6 +1817,42 @@ class Translations$diary$zh {
 
 	/// zh: '足迹'
 	String get mapTitle => '足迹';
+
+	/// zh: '地点'
+	String get mapPlaces => '地点';
+
+	/// zh: '最多'
+	String get mapSortMost => '最多';
+
+	/// zh: '最近'
+	String get mapSortRecent => '最近';
+
+	/// zh: '暂无足迹'
+	String get mapEmpty => '暂无足迹';
+
+	/// zh: '全屏'
+	String get mapExpand => '全屏';
+
+	/// zh: '显示全部'
+	String get mapFitAll => '显示全部';
+
+	/// zh: '地图源'
+	String get mapSource => '地图源';
+
+	/// zh: '选择地图源'
+	String get mapChooseSource => '选择地图源';
+
+	/// zh: '天地图'
+	String get mapSourceTianditu => '天地图';
+
+	/// zh: '天地图 Key'
+	String get mapTiandituKey => '天地图 Key';
+
+	/// zh: '天地图需要 Key'
+	String get mapTiandituNoKey => '天地图需要 Key';
+
+	/// zh: '地图加载失败'
+	String get mapLoadFailed => '地图加载失败';
 
 	/// zh: '添加标签'
 	String get addTag => '添加标签';

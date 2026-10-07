@@ -37,6 +37,6 @@ App namespaces: one file per feature, `common` plus `app` / `diary` / `assistant
 
 **Sync events carry no strings**: `SyncEvent` has only kind / level / reason / payload, and the log page picks l10n by kind / reason — add a `SyncEventReason` or payload field instead of a sentence. `SyncException` uses `l10n.sync.err*`. `_kindLabel` / `_kindIcon` are exhaustive switches, so a new kind without a string is a compile error.
 
-**Chinese literals that stay**: `'宋体'` (font family), `'『压测』'` (stress-test diary title marker; historical data depends on it), the ICP filing number (legal identifier), `logger.e` / `assert` text (log files).
+**Chinese literals that stay**: `'宋体'` (font family), `'『压测』'` (stress-test diary title marker; historical data depends on it), the ICP filing number and the Tianditu attribution `天地图 GS (…) 号` (legal identifiers), `logger.e` / `assert` text (log files).
 
 > Never run `dart run slang migrate arb`.

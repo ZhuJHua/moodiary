@@ -22,7 +22,11 @@ class _PlaceManagerPageState extends ConsumerState<PlaceManagerPage> {
   @override
   Widget build(BuildContext context) {
     final async = ref.watch(orderedPlacesProvider);
-    final counts = ref.watch(placeDiaryCountsProvider).value ?? const {};
+    final counts = {
+      for (final MapEntry(:key, :value)
+          in (ref.watch(placeFootprintsProvider).value ?? const {}).entries)
+        key: value.count,
+    };
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.diary.placeManagerTitle)),
       floatingActionButton: (async.value?.isNotEmpty ?? false)
@@ -258,20 +262,13 @@ class _PlaceTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
-    final color = categoryColorOf(colorValue: null, id: place.id);
-    final onColor = onCategoryColor(color);
     return Card.filled(
       margin: const .symmetric(vertical: 4),
       color: colors.surfaceContainerLow,
       clipBehavior: .antiAlias,
       child: ListTile(
         onTap: onEdit,
-        leading: Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(color: color, borderRadius: .circular(13)),
-          child: Icon(placeIconOf(place.icon), size: 21, color: onColor),
-        ),
+        leading: PlaceBadge(place: place),
         title: Text(
           place.name,
           maxLines: 1,

@@ -31,6 +31,33 @@ IconData placeIconOf(String? name) => switch (name) {
   _ => LucideIcons.mapPin,
 };
 
+Color placeColorOf(Place place) => categoryColorOf(id: place.id);
+
+class PlaceBadge extends StatelessWidget {
+  final Place place;
+  final double size;
+
+  const PlaceBadge({super.key, required this.place, this.size = 42});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = placeColorOf(place);
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: .circular(size * 0.3),
+      ),
+      child: Icon(
+        placeIconOf(place.icon),
+        size: size / 2,
+        color: onCategoryColor(color),
+      ),
+    );
+  }
+}
+
 String formatDistance(BuildContext context, double meters) {
   if (meters < 1000) {
     return context.l10n.diary.placeDistanceMeters(meters: meters.round());

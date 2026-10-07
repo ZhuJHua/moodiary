@@ -111,7 +111,7 @@ Place? placeById(Ref ref, String? id) {
 }
 
 @riverpod
-Future<Map<String, int>> placeDiaryCounts(Ref ref) async {
+Future<Map<String, PlaceFootprint>> placeFootprints(Ref ref) async {
   final diaryRepo = getIt<DiaryRepository>();
   Timer? debounce;
   final sub = diaryRepo.diaryEvents.listen((_) {
@@ -122,5 +122,5 @@ Future<Map<String, int>> placeDiaryCounts(Ref ref) async {
     debounce?.cancel();
     sub.cancel();
   });
-  return diaryRepo.diaryCountByPlace();
+  return diaryRepo.placeFootprints();
 }

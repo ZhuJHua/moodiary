@@ -77,7 +77,18 @@ class _MChipBarState<T> extends State<MChipBar<T>> {
           children: [
             for (var i = 0; i < widget.items.length; i++) ...[
               if (i > 0) const SizedBox(width: 8),
-              Center(child: _chip(context, widget.items[i])),
+              Center(
+                child: MChip(
+                  key: _chipKeys.putIfAbsent(
+                    widget.items[i].value,
+                    GlobalKey.new,
+                  ),
+                  item: widget.items[i],
+                  selected: widget.selected == widget.items[i].value,
+                  height: widget.height,
+                  onSelected: widget.onSelected,
+                ),
+              ),
             ],
             const SizedBox(width: 4),
           ],
@@ -112,12 +123,26 @@ class _MChipBarState<T> extends State<MChipBar<T>> {
             ),
     );
   }
+}
 
-  Widget _chip(BuildContext context, MChipData<T> item) {
-    final key = _chipKeys.putIfAbsent(item.value, GlobalKey.new);
+class MChip<T> extends StatelessWidget {
+  final MChipData<T> item;
+  final bool selected;
+  final ValueChanged<T> onSelected;
+  final double height;
+
+  const MChip({
+    super.key,
+    required this.item,
+    required this.selected,
+    required this.onSelected,
+    this.height = 32,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final scheme = context.theme.colors;
     final dark = context.theme.isDark;
-    final selected = widget.selected == item.value;
     final color = item.accentColor;
 
     final Color bg;
@@ -136,61 +161,58 @@ class _MChipBarState<T> extends State<MChipBar<T>> {
       fg = categoryTextColor(color, dark: dark);
     }
 
-    return KeyedSubtree(
-      key: key,
-      child: AnimatedContainer(
-        duration: Durations.short4,
-        curve: Curves.easeOut,
-        height: widget.height,
-        decoration: ShapeDecoration(color: bg, shape: const StadiumBorder()),
-        child: MInkWell(
-          shape: const StadiumBorder(),
-          onTap: () {
-            HapticFeedback.selectionClick();
-            widget.onSelected(item.value);
-          },
-          child: Padding(
-            padding: const .symmetric(horizontal: 13),
-            child: Row(
-              mainAxisSize: .min,
-              children: [
-                if (item.icon != null) ...[
-                  Icon(item.icon, size: 16, color: fg),
-                  const SizedBox(width: 6),
-                ] else if (color != null) ...[
-                  AnimatedContainer(
-                    duration: Durations.short4,
-                    width: 7,
-                    height: 7,
-                    decoration: BoxDecoration(color: color, shape: .circle),
-                  ),
-                  const SizedBox(width: 6),
-                ],
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 140),
-                  child: AnimatedDefaultTextStyle(
-                    duration: Durations.short4,
-                    style: selected
-                        ? (color == null
-                              ? context
-                                    .theme
-                                    .typography
-                                    .labelMedium
-                                    .emphasized
-                                    .onSecondaryContainer
-                              : context
-                                    .theme
-                                    .typography
-                                    .labelMedium
-                                    .emphasized
-                                    .onSecondaryContainer
-                                    .copyWith(color: fg))
-                        : context.theme.typography.labelMedium.onSurfaceVariant,
-                    child: Text(item.label, maxLines: 1, overflow: .ellipsis),
-                  ),
+    return AnimatedContainer(
+      duration: Durations.short4,
+      curve: Curves.easeOut,
+      height: height,
+      decoration: ShapeDecoration(color: bg, shape: const StadiumBorder()),
+      child: MInkWell(
+        shape: const StadiumBorder(),
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onSelected(item.value);
+        },
+        child: Padding(
+          padding: const .symmetric(horizontal: 13),
+          child: Row(
+            mainAxisSize: .min,
+            children: [
+              if (item.icon != null) ...[
+                Icon(item.icon, size: 16, color: fg),
+                const SizedBox(width: 6),
+              ] else if (color != null) ...[
+                AnimatedContainer(
+                  duration: Durations.short4,
+                  width: 7,
+                  height: 7,
+                  decoration: BoxDecoration(color: color, shape: .circle),
                 ),
+                const SizedBox(width: 6),
               ],
-            ),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 140),
+                child: AnimatedDefaultTextStyle(
+                  duration: Durations.short4,
+                  style: selected
+                      ? (color == null
+                            ? context
+                                  .theme
+                                  .typography
+                                  .labelMedium
+                                  .emphasized
+                                  .onSecondaryContainer
+                            : context
+                                  .theme
+                                  .typography
+                                  .labelMedium
+                                  .emphasized
+                                  .onSecondaryContainer
+                                  .copyWith(color: fg))
+                      : context.theme.typography.labelMedium.onSurfaceVariant,
+                  child: Text(item.label, maxLines: 1, overflow: .ellipsis),
+                ),
+              ),
+            ],
           ),
         ),
       ),

@@ -264,8 +264,30 @@ void main() {
       final b = (await repo.getDiaryByBusinessId('d2'))!;
       expect(b.placeId, isNull);
       expect(b.weather, isNull);
-      expect(await repo.diaryCountByPlace(), {'p-xiamen': 1});
-      expect((await repo.getDiariesWithPlace()).map((d) => d.id), ['d1']);
+      expect((await repo.placeFootprints()).keys, ['p-xiamen']);
+    });
+
+    test('placeFootprints 按地点聚合篇数与首末时间，跳过回收站', () async {
+      DateTime at(int day) => DateTime.utc(2025, 3, day, 8);
+      for (final (id, day, show) in [
+        ('a', 3, true),
+        ('b', 9, true),
+        ('c', 20, false),
+      ]) {
+        await repo.insertADiary(
+          makeDiary(
+            id,
+            '正文',
+            time: at(day),
+            show: show,
+          ).copyWith(placeId: 'p1'),
+        );
+      }
+      final footprint = (await repo.placeFootprints())['p1']!;
+      expect(footprint.count, 2);
+      expect(footprint.first, at(3));
+      expect(footprint.last, at(9));
+      expect((await repo.getDiariesAtPlace('p1')).map((d) => d.id), ['b', 'a']);
     });
 
     test('手选天气没有温度：weather_temp 存 NULL 且读回不炸', () async {
