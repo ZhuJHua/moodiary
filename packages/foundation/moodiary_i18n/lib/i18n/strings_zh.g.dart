@@ -1821,12 +1821,6 @@ class Translations$diary$zh {
 	/// zh: '地点'
 	String get mapPlaces => '地点';
 
-	/// zh: '最多'
-	String get mapSortMost => '最多';
-
-	/// zh: '最近'
-	String get mapSortRecent => '最近';
-
 	/// zh: '暂无足迹'
 	String get mapEmpty => '暂无足迹';
 

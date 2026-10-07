@@ -105,8 +105,6 @@ enum MoodiaryKVs<T extends Object> {
 
   mapTileSource<String>(defaultValue: ''),
 
-  footprintSort<String>(defaultValue: 'most'),
-
   weather<List<String>>(),
 
   startTime<int>(),

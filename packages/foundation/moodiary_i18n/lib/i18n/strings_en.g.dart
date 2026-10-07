@@ -663,8 +663,6 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get managerAll => 'All';
 	@override String get mapTitle => 'Footprints';
 	@override String get mapPlaces => 'Places';
-	@override String get mapSortMost => 'Most';
-	@override String get mapSortRecent => 'Recent';
 	@override String get mapEmpty => 'No footprints yet';
 	@override String get mapExpand => 'Full screen';
 	@override String get mapFitAll => 'Show all';

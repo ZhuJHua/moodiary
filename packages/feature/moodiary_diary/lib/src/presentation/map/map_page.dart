@@ -35,8 +35,6 @@ Future<List<Footprint>> footprints(Ref ref) async {
   ];
 }
 
-enum _Sort { most, recent }
-
 typedef _Camera = ({LatLng center, double zoom});
 
 const double _kCardHeight = 280;
@@ -84,7 +82,6 @@ class _MapPageState extends ConsumerState<MapPage>
     ..addListener(_tweenCamera);
   final _scroll = ScrollController();
   final _source = MoodiaryKVs.mapTileSource.getNotifier();
-  final _sort = MoodiaryKVs.footprintSort.getNotifier();
 
   MapController _map = MapController();
   CameraFit? _initialFit;
@@ -121,13 +118,11 @@ class _MapPageState extends ConsumerState<MapPage>
   void initState() {
     super.initState();
     _source.addListener(_onSourceChanged);
-    _sort.addListener(_onSortChanged);
   }
 
   @override
   void dispose() {
     _source.removeListener(_onSourceChanged);
-    _sort.removeListener(_onSortChanged);
     _progress.dispose();
     _expand.dispose();
     _camera.dispose();
@@ -140,8 +135,6 @@ class _MapPageState extends ConsumerState<MapPage>
     setState(() => _errorShown = false);
     _collapseIfUnavailable();
   }
-
-  void _onSortChanged() => setState(() {});
 
   void _onMapReady() => _mapReady = true;
 
@@ -306,14 +299,8 @@ class _MapPageState extends ConsumerState<MapPage>
     final tiandituKey = keyAsync.value ?? '';
     final mapAvailable =
         source != null && (source != .tianditu || tiandituKey.isNotEmpty);
-    final sort = _Sort.values.asNameMap()[_sort.value] ?? .most;
     final sorted = [...fps]
-      ..sort(
-        (a, b) => switch (sort) {
-          .most => b.stat.count.compareTo(a.stat.count),
-          .recent => b.stat.last.compareTo(a.stat.last),
-        },
-      );
+      ..sort((a, b) => b.stat.count.compareTo(a.stat.count));
 
     final list = ScrollConfiguration(
       behavior: ScrollConfiguration.of(context).copyWith(overscroll: false),
@@ -322,35 +309,11 @@ class _MapPageState extends ConsumerState<MapPage>
         slivers: [
           const SliverToBoxAdapter(child: SizedBox(height: 4 + _kCardHeight)),
           SliverPadding(
-            padding: const .fromLTRB(20, 16, _kCardInset, 0),
+            padding: const .fromLTRB(20, 16, 20, 0),
             sliver: SliverToBoxAdapter(
-              child: Row(
-                children: [
-                  Text(
-                    l10n.mapPlaces,
-                    style: context
-                        .theme
-                        .typography
-                        .titleSmall
-                        .emphasized
-                        .onSurface,
-                  ),
-                  const Spacer(),
-                  for (final (i, s) in _Sort.values.indexed) ...[
-                    if (i > 0) const SizedBox(width: 8),
-                    MChip(
-                      item: MChipData(
-                        value: s,
-                        label: switch (s) {
-                          .most => l10n.mapSortMost,
-                          .recent => l10n.mapSortRecent,
-                        },
-                      ),
-                      selected: s == sort,
-                      onSelected: (v) => _sort.value = v.name,
-                    ),
-                  ],
-                ],
+              child: Text(
+                l10n.mapPlaces,
+                style: context.theme.typography.titleSmall.emphasized.onSurface,
               ),
             ),
           ),
@@ -750,22 +713,11 @@ class _PlaceTile extends StatelessWidget {
                 PlaceBadge(place: fp.place),
                 const SizedBox(width: 14),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: .start,
-                    mainAxisSize: .min,
-                    children: [
-                      Text(
-                        fp.place.name,
-                        maxLines: 1,
-                        overflow: .ellipsis,
-                        style: theme.typography.titleMedium.onSurface,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _range(fp.stat.first, fp.stat.last),
-                        style: theme.typography.labelMedium.onSurfaceVariant,
-                      ),
-                    ],
+                  child: Text(
+                    fp.place.name,
+                    maxLines: 1,
+                    overflow: .ellipsis,
+                    style: theme.typography.titleMedium.onSurface,
                   ),
                 ),
                 const SizedBox(width: 8),
