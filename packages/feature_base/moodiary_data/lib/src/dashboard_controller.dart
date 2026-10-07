@@ -57,7 +57,12 @@ class DashboardController extends _$DashboardController {
     final ms = MoodiaryKVs.startTime.get();
     if (ms == null || ms == 0) return 1;
     final first = DateTime.fromMillisecondsSinceEpoch(ms);
-    final diff = DateTime.now().difference(first).inDays;
+    final now = DateTime.now();
+    final diff = DateTime.utc(
+      now.year,
+      now.month,
+      now.day,
+    ).difference(DateTime.utc(first.year, first.month, first.day)).inDays;
     return diff < 0 ? 1 : diff + 1;
   }
 
