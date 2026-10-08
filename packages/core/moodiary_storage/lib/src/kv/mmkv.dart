@@ -43,13 +43,6 @@ final class MmkvKVStorage extends IKVStorage {
     if (!legacyMigrationPending) {
       final firstStart = get<bool>(MoodiaryKVs.firstStart.name) ?? true;
       set<bool>(MoodiaryKVs.firstStart.name, firstStart);
-      if (!_mmkv.containsKey(MoodiaryKVs.startTime.name)) {
-        final installed = (await AppInfo.getPackageInfo()).installTime;
-        set<int>(
-          MoodiaryKVs.startTime.name,
-          (installed ?? DateTime.now()).millisecondsSinceEpoch,
-        );
-      }
     }
   }
 

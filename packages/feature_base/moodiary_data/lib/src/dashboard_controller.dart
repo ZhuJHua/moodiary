@@ -1,7 +1,6 @@
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'dashboard_controller.g.dart';
@@ -54,14 +53,8 @@ class DashboardController extends _$DashboardController {
   }
 
   int _useDays(Iterable<DateTime> writingDays) {
-    final ms = MoodiaryKVs.startTime.get();
-    DateTime? first = ms == null || ms == 0
-        ? null
-        : DateTime.fromMillisecondsSinceEpoch(ms);
-    for (final day in writingDays) {
-      if (first == null || day.isBefore(first)) first = day;
-    }
-    if (first == null) return 1;
+    if (writingDays.isEmpty) return 0;
+    final first = writingDays.reduce((a, b) => a.isBefore(b) ? a : b);
     final now = DateTime.now();
     final diff = DateTime.utc(
       now.year,

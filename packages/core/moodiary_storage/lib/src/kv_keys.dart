@@ -104,7 +104,6 @@ enum MoodiaryKVs<T extends Object> {
   placeOrder<List<String>>(),
   weather<List<String>>(),
 
-  startTime<int>(),
   supportPath<String>(),
   cachePath<String>(),
   uuid<String>(),
