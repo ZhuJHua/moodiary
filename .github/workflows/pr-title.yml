@@ -44,6 +44,6 @@ jobs:
           gh api --method POST "$api" "${args[@]}" --silent
 
           if ! $valid; then
-            echo "::error title=PR title is not a Conventional Commit::Expected 'type(scope)!: description', e.g. 'feat(diary): add a year view'. type is one of: ${types[*]}; scope (lowercase) and ! are optional. See CONTRIBUTING.md."
+            echo "::error title=PR title is not a Conventional Commit::Expected 'type(scope)!: description', e.g. 'feat(diary): add a year view'. type is one of: ${types[*]}; scope (lowercase) and ! are optional. See https://docs.moodiary.net/dev/pull-requests"
             exit 1
           fi
