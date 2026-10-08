@@ -373,7 +373,7 @@ class _PlaceEditorSheetState extends ConsumerState<_PlaceEditorSheet> {
                 initialZoom: lat != null ? _kEditorZoom : 3,
                 minZoom: 3,
                 maxZoom: 18,
-                backgroundColor: theme.colors.surfaceContainer,
+                backgroundColor: theme.colors.surfaceContainerHighest,
                 interactionOptions: const InteractionOptions(
                   flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
                 ),
