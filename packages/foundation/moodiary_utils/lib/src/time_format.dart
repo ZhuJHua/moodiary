@@ -103,7 +103,12 @@ class TimeFormat {
 
   // 初一返回月名（闰月带“闰”），其余返回日名
   static String lunarDay(DateTime day) {
-    final lunar = SolarDay.fromYmd(day.year, day.month, day.day).getLunarDay();
+    final solar = SolarDay.fromYmd(day.year, day.month, day.day);
+    final term = solar.getTerm().getJulianDay().getSolarDay();
+    if (solar == term) return solar.getTerm().getName();
+    if (solar.getFestival() != null) return solar.getFestival()!.getName();
+    final lunar = solar.getLunarDay();
+    if (lunar.getFestival() != null) return lunar.getFestival()!.getName();
     if (lunar.getDay() != 1) return lunar.getName();
     final month = lunar.getLunarMonth();
     return '${month.isLeap() ? '闰' : ''}${_lunarMonthNames[month.getMonth() - 1]}月';
