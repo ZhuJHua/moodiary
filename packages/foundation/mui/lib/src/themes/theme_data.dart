@@ -28,6 +28,8 @@ class MuiThemeData with MuiValue {
 
   Color get onMedia => tokens.onMedia;
 
+  Color get overlay => colors.surfaceContainerLowest.withValues(alpha: 0.9);
+
   Color get success => tokens.success;
 
   MuiFontConfig get font => tokens.font;

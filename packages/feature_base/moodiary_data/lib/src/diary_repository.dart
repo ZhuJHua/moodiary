@@ -16,6 +16,8 @@ import 'media_item.dart';
 
 enum IndexMode { inline, skip }
 
+typedef PlaceFootprint = ({int count, DateTime first, DateTime last});
+
 @lazySingleton
 class DiaryRepository {
   DiaryRepository(this._db);
@@ -492,21 +494,28 @@ class DiaryRepository {
     return row != null;
   }
 
-  Future<List<Diary>> getDiariesWithPlace() async {
-    final q = _visible()..where((d) => d.placeId.isNotNull());
+  Future<List<Diary>> getDiariesAtPlace(String placeId) async {
+    final q = _visible()..where((d) => d.placeId.equals(placeId));
     _orderBy(q, .timeDesc);
     return _assemble(await q.get());
   }
 
-  Future<Map<String, int>> diaryCountByPlace() async {
-    final place = _db.diaries.placeId;
+  Future<Map<String, PlaceFootprint>> placeFootprints() async {
+    final d = _db.diaries;
     final count = countAll();
-    final q = _db.selectOnly(_db.diaries)
-      ..addColumns([place, count])
-      ..where(_db.diaries.show.equals(1) & place.isNotNull())
-      ..groupBy([place]);
+    final first = d.time.min();
+    final last = d.time.max();
+    final q = _db.selectOnly(d)
+      ..addColumns([d.placeId, count, first, last])
+      ..where(d.show.equals(1) & d.placeId.isNotNull())
+      ..groupBy([d.placeId]);
     return {
-      for (final row in await q.get()) row.read(place)!: row.read(count)!,
+      for (final row in await q.get())
+        row.read(d.placeId)!: (
+          count: row.read(count)!,
+          first: dbToTime(row.read(first)!),
+          last: dbToTime(row.read(last)!),
+        ),
     };
   }
 

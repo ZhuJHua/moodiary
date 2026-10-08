@@ -62,6 +62,9 @@ class TimeFormat {
   static String monthDay(DateTime time) =>
       DateFormat.MMMd().format(time.toLocal());
 
+  static String yearMonth(DateTime time) =>
+      DateFormat('y.MM').format(time.toLocal());
+
   static String monthAbbr(DateTime time) =>
       DateFormat.MMM().format(time.toLocal());
 

@@ -127,8 +127,8 @@ class Translations$app$zh {
 	/// zh: '常用地点'
 	String get placeManager => '常用地点';
 
-	/// zh: '足迹地图'
-	String get mapTitle => '足迹地图';
+	/// zh: '足迹'
+	String get mapTitle => '足迹';
 
 	/// zh: '显示'
 	String get sectionDisplay => '显示';
@@ -301,8 +301,8 @@ class Translations$app$zh {
 	/// zh: 'devapi.qweather.com 或自定义'
 	String get servicesQweatherHostHint => 'devapi.qweather.com 或自定义';
 
-	/// zh: '天地图'
-	String get servicesTianditu => '天地图';
+	/// zh: '地图'
+	String get servicesMap => '地图';
 
 	/// zh: '已保存'
 	String get servicesSaved => '已保存';
@@ -1818,6 +1818,36 @@ class Translations$diary$zh {
 	/// zh: '足迹'
 	String get mapTitle => '足迹';
 
+	/// zh: '地点'
+	String get mapPlaces => '地点';
+
+	/// zh: '暂无足迹'
+	String get mapEmpty => '暂无足迹';
+
+	/// zh: '全屏'
+	String get mapExpand => '全屏';
+
+	/// zh: '显示全部'
+	String get mapFitAll => '显示全部';
+
+	/// zh: '地图源'
+	String get mapSource => '地图源';
+
+	/// zh: '选择地图源'
+	String get mapChooseSource => '选择地图源';
+
+	/// zh: '天地图'
+	String get mapSourceTianditu => '天地图';
+
+	/// zh: '天地图 Key'
+	String get mapTiandituKey => '天地图 Key';
+
+	/// zh: '天地图需要 Key'
+	String get mapTiandituNoKey => '天地图需要 Key';
+
+	/// zh: '地图加载失败'
+	String get mapLoadFailed => '地图加载失败';
+
 	/// zh: '添加标签'
 	String get addTag => '添加标签';
 
@@ -1853,6 +1883,9 @@ class Translations$diary$zh {
 
 	/// zh: '系统定位服务未开启'
 	String get positionServiceOff => '系统定位服务未开启';
+
+	/// zh: '正在定位'
+	String get positionLocating => '正在定位';
 
 	/// zh: '自动获取'
 	String get positionAuto => '自动获取';
@@ -1904,9 +1937,6 @@ class Translations$diary$zh {
 
 	/// zh: '{km} km'
 	String placeDistanceKilometers({required Object km}) => '${km} km';
-
-	/// zh: '与「{name}」相距 {distance}，太近了，可能互相误命中。'
-	String placeOverlapWarning({required Object name, required Object distance}) => '与「${name}」相距 ${distance}，太近了，可能互相误命中。';
 
 	/// zh: '{count} 篇日记'
 	String placeDiaryCount({required Object count}) => '${count} 篇日记';

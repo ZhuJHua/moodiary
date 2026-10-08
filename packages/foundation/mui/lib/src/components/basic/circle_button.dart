@@ -1,6 +1,6 @@
 import 'package:mui/mui.dart';
 
-enum MCircleButtonTone { filled, tonal, plain }
+enum MCircleButtonTone { filled, tonal, plain, overlay }
 
 class MCircleButton extends StatelessWidget {
   final Widget icon;
@@ -41,6 +41,7 @@ class MCircleButton extends StatelessWidget {
         scheme.surfaceContainerHigh,
         scheme.onSurfaceVariant,
       ),
+      MCircleButtonTone.overlay => (context.theme.overlay, scheme.onSurface),
     };
 
     final fill = enabled
