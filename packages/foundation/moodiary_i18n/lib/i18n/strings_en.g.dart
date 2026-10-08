@@ -161,7 +161,7 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get semanticDeleteMessage => 'Deletes the downloaded model file. You can download it again later.';
 	@override String get semanticDeleteConfirm => 'Delete';
 	@override String get semanticDescQwen3 => 'Multilingual, recalls subtle phrasing';
-	@override String get dashUseDays => 'Days used';
+	@override String get dashJournalDays => 'Days journaling';
 	@override String get dashWordCount => 'Words';
 	@override String get dashCategoryCount => 'Categories';
 	@override String get dashTagCount => 'Tags';

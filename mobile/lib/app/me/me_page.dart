@@ -288,7 +288,7 @@ class _StatRow extends StatelessWidget {
         padding: const .symmetric(horizontal: 8, vertical: 14),
         child: Row(
           children: [
-            _Metric(label: l10n.app.dashUseDays, value: stats?.useDays),
+            _Metric(label: l10n.app.dashJournalDays, value: stats?.journalDays),
             _Metric(label: l10n.app.dashWordCount, value: stats?.wordCount),
             _Metric(
               label: l10n.app.dashCategoryCount,

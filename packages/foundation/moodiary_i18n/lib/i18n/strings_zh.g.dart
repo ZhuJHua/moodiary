@@ -376,8 +376,8 @@ class Translations$app$zh {
 	/// zh: '多语言，含蓄表达也能召回'
 	String get semanticDescQwen3 => '多语言，含蓄表达也能召回';
 
-	/// zh: '使用天数'
-	String get dashUseDays => '使用天数';
+	/// zh: '记录天数'
+	String get dashJournalDays => '记录天数';
 
 	/// zh: '总字数'
 	String get dashWordCount => '总字数';
