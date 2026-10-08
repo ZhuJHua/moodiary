@@ -1,7 +1,5 @@
 library;
 
-export 'package:clock/clock.dart';
-
 export 'src/adaptive.dart';
 export 'src/border.dart';
 export 'src/fast_hash.dart';

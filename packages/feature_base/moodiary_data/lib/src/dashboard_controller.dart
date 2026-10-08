@@ -1,7 +1,6 @@
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'dashboard_controller.g.dart';
@@ -56,7 +55,7 @@ class DashboardController extends _$DashboardController {
   int _journalDays(Iterable<DateTime> writingDays) {
     if (writingDays.isEmpty) return 0;
     final first = writingDays.reduce((a, b) => a.isBefore(b) ? a : b);
-    final now = clock.now();
+    final now = DateTime.now();
     final diff = DateTime.utc(
       now.year,
       now.month,
@@ -129,7 +128,7 @@ class DashboardController extends _$DashboardController {
   }
 
   int _thisMonthCount(List<Diary> diaries) {
-    final now = clock.now();
+    final now = DateTime.now();
     var count = 0;
     for (final d in diaries) {
       final t = d.time.toLocal();
@@ -160,7 +159,7 @@ class DashboardController extends _$DashboardController {
       DateTime(day.year, day.month, day.day - 1);
 
   static DateTime _today() {
-    final now = clock.now();
+    final now = DateTime.now();
     return DateTime(now.year, now.month, now.day);
   }
 }
