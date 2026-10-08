@@ -9,42 +9,41 @@ part of 'map_page.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(mapData)
-final mapDataProvider = MapDataProvider._();
+@ProviderFor(footprints)
+final footprintsProvider = FootprintsProvider._();
 
-final class MapDataProvider
+final class FootprintsProvider
     extends
         $FunctionalProvider<
-          AsyncValue<({List<PlacePin> pins, String tiandituKey})>,
-          ({List<PlacePin> pins, String tiandituKey}),
-          FutureOr<({List<PlacePin> pins, String tiandituKey})>
+          AsyncValue<List<Footprint>>,
+          List<Footprint>,
+          FutureOr<List<Footprint>>
         >
-    with
-        $FutureModifier<({List<PlacePin> pins, String tiandituKey})>,
-        $FutureProvider<({List<PlacePin> pins, String tiandituKey})> {
-  MapDataProvider._()
+    with $FutureModifier<List<Footprint>>, $FutureProvider<List<Footprint>> {
+  FootprintsProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'mapDataProvider',
+        name: r'footprintsProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$mapDataHash();
+  String debugGetCreateSourceHash() => _$footprintsHash();
 
   @$internal
   @override
-  $FutureProviderElement<({List<PlacePin> pins, String tiandituKey})>
-  $createElement($ProviderPointer pointer) => $FutureProviderElement(pointer);
+  $FutureProviderElement<List<Footprint>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<({List<PlacePin> pins, String tiandituKey})> create(Ref ref) {
-    return mapData(ref);
+  FutureOr<List<Footprint>> create(Ref ref) {
+    return footprints(ref);
   }
 }
 
-String _$mapDataHash() => r'fd0a56b4716c6e1f59b1339b8fecbf38f1ae2680';
+String _$footprintsHash() => r'7220824fc8c5cbc06cf24542dc65e6251f8085de';

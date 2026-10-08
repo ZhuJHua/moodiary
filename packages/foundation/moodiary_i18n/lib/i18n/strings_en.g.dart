@@ -78,7 +78,7 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get syncBackup => 'Sync and backup';
 	@override String get categoryManager => 'Categories';
 	@override String get placeManager => 'Places';
-	@override String get mapTitle => 'Trail map';
+	@override String get mapTitle => 'Footprints';
 	@override String get sectionDisplay => 'Display';
 	@override String get diarySettings => 'Entry preferences';
 	@override String get themeMode => 'Theme';
@@ -136,7 +136,7 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get servicesAssistant => 'AI assistant';
 	@override String get servicesQweather => 'QWeather';
 	@override String get servicesQweatherHostHint => 'devapi.qweather.com, or your own';
-	@override String get servicesTianditu => 'Tianditu';
+	@override String get servicesMap => 'Map';
 	@override String get servicesSaved => 'Saved';
 	@override String get servicesSaveFailed => 'Could not save, please try again';
 	@override String get semanticTitle => 'Semantic search';
@@ -661,7 +661,17 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get managerRecycleConfirm => 'Move';
 	@override String managerRecycled({required Object done, required Object total}) => 'Moved ${done} / ${total} to the recycle bin';
 	@override String get managerAll => 'All';
-	@override String get mapTitle => 'Trail';
+	@override String get mapTitle => 'Footprints';
+	@override String get mapPlaces => 'Places';
+	@override String get mapEmpty => 'No footprints yet';
+	@override String get mapExpand => 'Full screen';
+	@override String get mapFitAll => 'Show all';
+	@override String get mapSource => 'Map source';
+	@override String get mapChooseSource => 'Choose a map source';
+	@override String get mapSourceTianditu => 'Tianditu';
+	@override String get mapTiandituKey => 'Tianditu key';
+	@override String get mapTiandituNoKey => 'Tianditu needs a key';
+	@override String get mapLoadFailed => 'Map failed to load';
 	@override String get addTag => 'Add a tag';
 	@override String get tagNameHint => 'Tag name';
 	@override String get add => 'Add';
@@ -674,6 +684,7 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get positionPermissionDenied => 'Location permission was not granted';
 	@override String get positionPermissionForever => 'Location permission is denied — enable it in system settings';
 	@override String get positionServiceOff => 'Location services are turned off';
+	@override String get positionLocating => 'Locating';
 	@override String get positionAuto => 'Fetch automatically';
 	@override String get positionNewPlace => 'New place';
 	@override String get positionManagePlaces => 'Manage places';
@@ -691,7 +702,6 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get placeIconLabel => 'Icon';
 	@override String placeDistanceMeters({required Object meters}) => '${meters} m';
 	@override String placeDistanceKilometers({required Object km}) => '${km} km';
-	@override String placeOverlapWarning({required Object distance, required Object name}) => 'Only ${distance} from "${name}" — the two may match each other.';
 	@override String placeDiaryCount({required Object count}) => '${count} entries';
 	@override String get placeNoDiary => 'No entries';
 	@override String placeDeleteTitle({required Object name}) => 'Delete "${name}"?';

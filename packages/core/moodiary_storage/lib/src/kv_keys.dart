@@ -102,6 +102,9 @@ enum MoodiaryKVs<T extends Object> {
   autoNearestPlace<bool>(defaultValue: false),
 
   placeOrder<List<String>>(),
+
+  mapTileSource<String>(defaultValue: ''),
+
   weather<List<String>>(),
 
   supportPath<String>(),

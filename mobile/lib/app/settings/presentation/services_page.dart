@@ -6,6 +6,7 @@ import 'package:moodiary_assistant/moodiary_assistant.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
+import 'package:moodiary_diary/moodiary_diary.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_ml/moodiary_ml.dart';
@@ -26,7 +27,7 @@ class ServicesPage extends ConsumerWidget {
             const _AiSection(),
             const _SemanticSection(),
             const _QweatherSection(),
-            const _TiandituSection(),
+            const _MapSection(),
             SliverGap(context.safeBottom),
           ],
         ),
@@ -329,21 +330,34 @@ class _QweatherSection extends ConsumerWidget {
   }
 }
 
-class _TiandituSection extends ConsumerWidget {
-  const _TiandituSection();
+class _MapSection extends StatelessWidget {
+  const _MapSection();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final scheme = context.theme.colors;
-    return MSliverSettingGroup(
-      title: context.l10n.app.servicesTianditu,
-      children: [
-        _SecretKvTile(
-          kv: .tiandituKey,
-          title: 'API Key',
-          leading: Icon(LucideIcons.map, color: scheme.onSurfaceVariant),
-        ),
-      ],
+    return ValueListenableBuilder<String>(
+      valueListenable: MoodiaryKVs.mapTileSource.getNotifier(),
+      builder: (context, value, _) {
+        final source = MapTileSource.of(value);
+        return MSliverSettingGroup(
+          title: context.l10n.app.servicesMap,
+          children: [
+            SettingListTile(
+              leading: Icon(LucideIcons.layers, color: scheme.onSurfaceVariant),
+              title: context.l10n.diary.mapSource,
+              subtitle: source?.label ?? context.l10n.common.notConfigured,
+              onTap: () => showMapSourcePicker(context),
+            ),
+            if (source == .tianditu)
+              _SecretKvTile(
+                kv: .tiandituKey,
+                title: context.l10n.diary.mapTiandituKey,
+                leading: Icon(LucideIcons.key, color: scheme.onSurfaceVariant),
+              ),
+          ],
+        );
+      },
     );
   }
 }

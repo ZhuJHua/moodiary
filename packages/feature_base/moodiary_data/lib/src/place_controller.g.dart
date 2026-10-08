@@ -177,41 +177,43 @@ final class PlaceByIdFamily extends $Family
   String toString() => r'placeByIdProvider';
 }
 
-@ProviderFor(placeDiaryCounts)
-final placeDiaryCountsProvider = PlaceDiaryCountsProvider._();
+@ProviderFor(placeFootprints)
+final placeFootprintsProvider = PlaceFootprintsProvider._();
 
-final class PlaceDiaryCountsProvider
+final class PlaceFootprintsProvider
     extends
         $FunctionalProvider<
-          AsyncValue<Map<String, int>>,
-          Map<String, int>,
-          FutureOr<Map<String, int>>
+          AsyncValue<Map<String, PlaceFootprint>>,
+          Map<String, PlaceFootprint>,
+          FutureOr<Map<String, PlaceFootprint>>
         >
-    with $FutureModifier<Map<String, int>>, $FutureProvider<Map<String, int>> {
-  PlaceDiaryCountsProvider._()
+    with
+        $FutureModifier<Map<String, PlaceFootprint>>,
+        $FutureProvider<Map<String, PlaceFootprint>> {
+  PlaceFootprintsProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'placeDiaryCountsProvider',
+        name: r'placeFootprintsProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$placeDiaryCountsHash();
+  String debugGetCreateSourceHash() => _$placeFootprintsHash();
 
   @$internal
   @override
-  $FutureProviderElement<Map<String, int>> $createElement(
+  $FutureProviderElement<Map<String, PlaceFootprint>> $createElement(
     $ProviderPointer pointer,
   ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<Map<String, int>> create(Ref ref) {
-    return placeDiaryCounts(ref);
+  FutureOr<Map<String, PlaceFootprint>> create(Ref ref) {
+    return placeFootprints(ref);
   }
 }
 
-String _$placeDiaryCountsHash() => r'4031001e1fc85bb0cc31040024146ff89f9a3647';
+String _$placeFootprintsHash() => r'3503d9864260ca396a2c64d771065bc50f721df0';
