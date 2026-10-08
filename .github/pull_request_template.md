@@ -16,4 +16,4 @@
 
 - [ ] `dart tool/task.dart analyze` and `test` pass
 - [ ] Generated files and both `zh` / `en` strings are updated
-- [ ] Data, sync or LAN format changes are described in a `BREAKING CHANGE:` footer
+- [ ] Data, sync or LAN format changes are called out; breaking ones carry a `BREAKING CHANGE:` footer

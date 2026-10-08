@@ -32,6 +32,8 @@ split_commits = false
 commit_preprocessors = [
 ]
 commit_parsers = [
+  { message = "^[a-z]+(\\([^)]*\\))?!:", group = "<!-- -1 -->💥 Breaking Changes" },
+  { footer = "^BREAKING[ -]CHANGE", group = "<!-- -1 -->💥 Breaking Changes" },
   { footer = "^Changelog:\\s*skip", skip = true },
   { message = "^feat", group = "<!-- 0 -->🚀 Features" },
   { message = "^fix", group = "<!-- 1 -->🐛 Bug Fixes" },
