@@ -10,7 +10,7 @@
 
 ## AI usage
 
-<!-- None, or which tools and for what. See https://docs.moodiary.net/dev/ai-policy -->
+<!-- Optional: which AI tools you used and for what. See https://docs.moodiary.net/dev/ai-policy -->
 
 ## Checklist
 
