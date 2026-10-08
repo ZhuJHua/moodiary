@@ -684,6 +684,7 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get positionPermissionDenied => 'Location permission was not granted';
 	@override String get positionPermissionForever => 'Location permission is denied — enable it in system settings';
 	@override String get positionServiceOff => 'Location services are turned off';
+	@override String get positionLocating => 'Locating';
 	@override String get positionAuto => 'Fetch automatically';
 	@override String get positionNewPlace => 'New place';
 	@override String get positionManagePlaces => 'Manage places';
@@ -701,7 +702,6 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get placeIconLabel => 'Icon';
 	@override String placeDistanceMeters({required Object meters}) => '${meters} m';
 	@override String placeDistanceKilometers({required Object km}) => '${km} km';
-	@override String placeOverlapWarning({required Object distance, required Object name}) => 'Only ${distance} from "${name}" — the two may match each other.';
 	@override String placeDiaryCount({required Object count}) => '${count} entries';
 	@override String get placeNoDiary => 'No entries';
 	@override String placeDeleteTitle({required Object name}) => 'Delete "${name}"?';

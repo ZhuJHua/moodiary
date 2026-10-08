@@ -41,8 +41,6 @@ const double _kCardHeight = 280;
 const double _kCardInset = 16;
 const double _kFitMaxZoom = 13;
 const double _kFocusZoom = 14;
-const _kExpandDuration = Duration(milliseconds: 350);
-const _kCollapseDuration = Duration(milliseconds: 300);
 
 LatLng _latLng(Place p) => LatLng(p.latitude, p.longitude);
 
@@ -70,8 +68,8 @@ class _MapPageState extends ConsumerState<MapPage>
     with TickerProviderStateMixin {
   late final _expand = AnimationController(
     vsync: this,
-    duration: _kExpandDuration,
-    reverseDuration: _kCollapseDuration,
+    duration: Durations.medium3,
+    reverseDuration: Durations.medium2,
   )..addStatusListener(_onExpandStatus);
   late final _progress = CurvedAnimation(
     parent: _expand,
@@ -80,7 +78,6 @@ class _MapPageState extends ConsumerState<MapPage>
   );
   late final _camera = AnimationController(vsync: this)
     ..addListener(_tweenCamera);
-  final _scroll = ScrollController();
   final _source = MoodiaryKVs.mapTileSource.getNotifier();
 
   MapController _map = MapController();
@@ -126,7 +123,6 @@ class _MapPageState extends ConsumerState<MapPage>
     _progress.dispose();
     _expand.dispose();
     _camera.dispose();
-    _scroll.dispose();
     _map.dispose();
     super.dispose();
   }
@@ -196,7 +192,7 @@ class _MapPageState extends ConsumerState<MapPage>
 
   void _expandMap() {
     if (!_mapReady || !_expand.isDismissed) return;
-    _animateCamera(_fullOverview(), _kExpandDuration);
+    _animateCamera(_fullOverview(), Durations.medium3);
     _expand.forward();
   }
 
@@ -206,7 +202,7 @@ class _MapPageState extends ConsumerState<MapPage>
       _expand.value = 0;
       return;
     }
-    _animateCamera(_cardOverview(), _kCollapseDuration);
+    _animateCamera(_cardOverview(), Durations.medium2);
     _expand.reverse();
   }
 
@@ -215,7 +211,7 @@ class _MapPageState extends ConsumerState<MapPage>
   }
 
   void _resetCard() {
-    _animateCamera(_cardOverview(), _kExpandDuration);
+    _animateCamera(_cardOverview(), Durations.medium3);
     setState(() => _cardMoved = false);
   }
 
@@ -244,7 +240,7 @@ class _MapPageState extends ConsumerState<MapPage>
       _animateCamera((
         center: _latLng(fp.place),
         zoom: math.max(_map.camera.zoom, _kFocusZoom),
-      ), _kExpandDuration);
+      ), Durations.medium3);
       if (_expand.isDismissed) setState(() => _cardMoved = true);
     }
     _openPlace(fp);
@@ -302,38 +298,11 @@ class _MapPageState extends ConsumerState<MapPage>
     final sorted = [...fps]
       ..sort((a, b) => b.stat.count.compareTo(a.stat.count));
 
-    final list = ScrollConfiguration(
-      behavior: ScrollConfiguration.of(context).copyWith(overscroll: false),
-      child: CustomScrollView(
-        controller: _scroll,
-        slivers: [
-          const SliverToBoxAdapter(child: SizedBox(height: 4 + _kCardHeight)),
-          SliverPadding(
-            padding: const .fromLTRB(20, 16, 20, 0),
-            sliver: SliverToBoxAdapter(
-              child: Text(
-                l10n.mapPlaces,
-                style: context.theme.typography.titleSmall.emphasized.onSurface,
-              ),
-            ),
-          ),
-          SliverPadding(
-            padding: .fromLTRB(
-              _kCardInset,
-              12,
-              _kCardInset,
-              context.safeBottom + 16,
-            ),
-            sliver: SliverList.builder(
-              itemCount: sorted.length,
-              itemBuilder: (context, i) => _PlaceTile(
-                fp: sorted[i],
-                onTap: () => _onPlaceTap(sorted[i]),
-              ),
-            ),
-          ),
-        ],
-      ),
+    final list = ListView.builder(
+      padding: .fromLTRB(_kCardInset, 12, _kCardInset, context.safeBottom + 16),
+      itemCount: sorted.length,
+      itemBuilder: (context, i) =>
+          _PlaceTile(fp: sorted[i], onTap: () => _onPlaceTap(sorted[i])),
     );
 
     final cover = switch (source) {
@@ -362,8 +331,17 @@ class _MapPageState extends ConsumerState<MapPage>
     return Stack(
       children: [
         Column(
+          crossAxisAlignment: .start,
           children: [
             header,
+            const SizedBox(height: 4 + _kCardHeight),
+            Padding(
+              padding: const .fromLTRB(20, 16, 20, 0),
+              child: Text(
+                l10n.mapPlaces,
+                style: context.theme.typography.titleSmall.emphasized.onSurface,
+              ),
+            ),
             Expanded(child: list),
           ],
         ),
@@ -425,7 +403,7 @@ class _MapPageState extends ConsumerState<MapPage>
                   height: 52,
                   child: _FootprintPin(
                     count: fp.stat.count,
-                    color: placeColorOf(fp.place),
+                    color: placeIconColor(context, fp.place.icon),
                     selected: fp.place.id == _selectedPlaceId,
                     onTap: interactive ? () => _openPlace(fp) : null,
                   ),
@@ -442,67 +420,38 @@ class _MapPageState extends ConsumerState<MapPage>
       builder: (context, map) {
         final t = _progress.value;
         final card = Offset(_kCardInset, headerBottom + 4) & _cardSize;
-        final rect = Rect.lerp(card, Offset.zero & _screen, t)!;
-        final clipTop = lerpDouble(headerBottom, 0, t)!;
-        return Positioned.fill(
-          top: clipTop,
-          child: ClipRect(
+        return Positioned.fromRect(
+          rect: Rect.lerp(card, Offset.zero & _screen, t)!,
+          child: ClipRRect(
+            borderRadius: .circular(lerpDouble(theme.radii.lg, 0, t)!),
             child: Stack(
               children: [
-                Positioned.fromRect(
-                  rect: rect.translate(0, -clipTop),
-                  child: AnimatedBuilder(
-                    animation: _scroll,
-                    builder: (context, child) => Transform.translate(
-                      offset: Offset(
-                        0,
-                        -(_scroll.hasClients ? _scroll.offset : 0) * (1 - t),
-                      ),
-                      child: child,
-                    ),
-                    child: ClipRRect(
-                      borderRadius: .circular(
-                        lerpDouble(theme.radii.lg, 0, t)!,
-                      ),
-                      child: Stack(
-                        children: [
-                          Positioned.fill(
-                            child: IgnorePointer(
-                              ignoring: !interactive,
-                              child: map,
-                            ),
-                          ),
-                          if (cover != null) Positioned.fill(child: cover),
-                          if (source != null) ...[
-                            Positioned(
-                              left: 8,
-                              bottom: 8 + insets.bottom * t,
-                              child: MapAttribution(source: source),
-                            ),
-                            if (t < 1)
-                              _CardControls(
-                                opacity:
-                                    1 - const Interval(0, 0.3).transform(t),
-                                moved: _cardMoved,
-                                onReset: _resetCard,
-                                onExpand: _expandMap,
-                              ),
-                          ],
-                          if (t > 0)
-                            _ExpandedControls(
-                              opacity: const Interval(0.55, 1).transform(t),
-                              enabled: _expand.isCompleted,
-                              onBack: _collapse,
-                              onFitAll: () => _animateCamera(
-                                _fullOverview(),
-                                _kExpandDuration,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
+                Positioned.fill(
+                  child: IgnorePointer(ignoring: !interactive, child: map),
                 ),
+                if (cover != null) Positioned.fill(child: cover),
+                if (source != null) ...[
+                  Positioned(
+                    left: 8,
+                    bottom: 8 + insets.bottom * t,
+                    child: MapAttribution(source: source),
+                  ),
+                  if (t < 1)
+                    _CardControls(
+                      opacity: 1 - const Interval(0, 0.3).transform(t),
+                      moved: _cardMoved,
+                      onReset: _resetCard,
+                      onExpand: _expandMap,
+                    ),
+                ],
+                if (t > 0)
+                  _ExpandedControls(
+                    opacity: const Interval(0.55, 1).transform(t),
+                    enabled: _expand.isCompleted,
+                    onBack: _collapse,
+                    onFitAll: () =>
+                        _animateCamera(_fullOverview(), Durations.medium3),
+                  ),
               ],
             ),
           ),
@@ -647,41 +596,40 @@ class _FootprintPin extends StatelessWidget {
     final theme = context.theme;
     final single = count == 1 && !selected;
     final size = selected ? 38.0 : (single ? 14.0 : (count < 10 ? 26.0 : 30.0));
-    final dot = AnimatedContainer(
-      duration: Durations.short4,
-      curve: Curves.easeOut,
-      width: size,
-      height: size,
-      alignment: .center,
-      decoration: BoxDecoration(
-        color: color,
-        shape: .circle,
-        border: .all(color: theme.onMedia, width: selected ? 3 : 2),
-        boxShadow: MGlassSurface.defaultShadows(theme.colors),
-      ),
-      child: single
-          ? null
-          : Text(
-              count > 99 ? '99+' : '$count',
-              maxLines: 1,
-              style: theme.typography.labelSmall.emphasized.onMedia.copyWith(
-                fontFeatures: const [.tabularFigures()],
-              ),
-            ),
-    );
     return GestureDetector(
       behavior: .opaque,
       onTap: onTap,
       child: Center(
-        child: selected
-            ? DecoratedBox(
-                decoration: BoxDecoration(
-                  shape: .circle,
-                  color: color.withValues(alpha: 0.24),
-                ),
-                child: Padding(padding: const .all(7), child: dot),
-              )
-            : dot,
+        child: AnimatedContainer(
+          duration: Durations.short4,
+          curve: Easing.emphasizedDecelerate,
+          padding: .all(selected ? 7 : 0),
+          decoration: BoxDecoration(
+            shape: .circle,
+            color: color.withValues(alpha: selected ? 0.24 : 0),
+          ),
+          child: AnimatedContainer(
+            duration: Durations.short4,
+            curve: Easing.emphasizedDecelerate,
+            width: size,
+            height: size,
+            alignment: .center,
+            decoration: BoxDecoration(
+              color: color,
+              shape: .circle,
+              border: .all(color: theme.onMedia, width: selected ? 3 : 2),
+              boxShadow: MGlassSurface.defaultShadows(theme.colors),
+            ),
+            child: single
+                ? null
+                : Text(
+                    count > 99 ? '99+' : '$count',
+                    maxLines: 1,
+                    style: theme.typography.labelSmall.emphasized.onMedia
+                        .copyWith(fontFeatures: const [.tabularFigures()]),
+                  ),
+          ),
+        ),
       ),
     );
   }
