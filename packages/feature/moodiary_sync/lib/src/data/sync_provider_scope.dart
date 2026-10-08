@@ -30,3 +30,8 @@ Future<Set<String>> configuredCloudBackendIds() async => {
   for (final b in _allSyncBackends())
     if (await b.isReady()) b.type.value,
 };
+
+IRemoteSyncBackend? currentSyncBackend() =>
+    getIt.isRegistered<IRemoteSyncBackend>()
+    ? getIt<IRemoteSyncBackend>()
+    : null;

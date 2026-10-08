@@ -13,6 +13,7 @@ dependencies:
   flutter:
     sdk: flutter
 
+  clock: 1.1.3
   fast_crypto: 0.0.1
   moodiary_di: 0.0.1
   moodiary_logging: 0.0.1

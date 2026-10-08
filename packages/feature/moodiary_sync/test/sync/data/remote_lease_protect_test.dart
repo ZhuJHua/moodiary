@@ -278,7 +278,9 @@ void main() {
         );
         expect(
           events
-              .where((e) => e.kind == .lockAcquire && e.reason == .casUnsupported)
+              .where(
+                (e) => e.kind == .lockAcquire && e.reason == .casUnsupported,
+              )
               .length,
           1,
           reason: '降级结论缓存后不再刷屏',
@@ -336,11 +338,9 @@ void main() {
         final sub = logger.events.listen(events.add);
 
         Object? error;
-        RemoteLease.protect(
-          backend,
-          () async => 0,
-          logger: logger,
-        ).catchError((Object e) {
+        RemoteLease.protect(backend, () async => 0, logger: logger).catchError((
+          Object e,
+        ) {
           error = e;
           return 0;
         });

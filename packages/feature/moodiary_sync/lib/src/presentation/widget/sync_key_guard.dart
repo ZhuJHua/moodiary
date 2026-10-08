@@ -10,6 +10,8 @@ import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/sync_keyfile.dart';
 import 'package:moodiary_sync/src/data/sync_provider_scope.dart';
+import 'package:moodiary_sync/src/presentation/widget/user_key_tile.dart';
+import 'package:mui/mui.dart';
 
 Future<bool> ensureSyncKeyReady({
   required BuildContext context,
@@ -53,8 +55,17 @@ Future<bool> ensureSyncKeyReady({
     return true;
   }
   if (keyfile == null) {
-    if (context.mounted) {
-      toast.error(message: l10n.sync.keyGuardMissing);
+    if (!context.mounted) return false;
+    final reset = await MAlert.confirm(
+      context,
+      title: l10n.sync.keyMissingTitle,
+      message: l10n.sync.keyGuardMissing,
+      icon: LucideIcons.triangleAlert,
+      isDestructive: true,
+      confirmLabel: l10n.sync.keyResetAction,
+    );
+    if (reset && context.mounted) {
+      await resetAndOfferNewKey(context: context, ref: ref, backend: backend);
     }
     return false;
   }
@@ -63,6 +74,7 @@ Future<bool> ensureSyncKeyReady({
 
   if (!context.mounted) return false;
   List<int>? unwrappedDek;
+  var forgot = false;
   final entered = await MAlert.prompt(
     context,
     title: l10n.sync.keyGuardTitle,
@@ -75,6 +87,24 @@ Future<bool> ensureSyncKeyReady({
     // keyfile 按 trim 后的 passphrase 生成，改成原文会让带首尾空格的密码解不开
     barrierDismissible: false,
     validator: (value) => value.isEmpty ? l10n.sync.keyNeedPassword : null,
+    footer: Builder(
+      builder: (ctx) => Align(
+        alignment: .centerRight,
+        child: MInkWell.fade(
+          onTap: () {
+            forgot = true;
+            Navigator.of(ctx).pop();
+          },
+          child: Padding(
+            padding: const .fromLTRB(8, 6, 2, 6),
+            child: Text(
+              l10n.sync.keyForgot,
+              style: ctx.theme.typography.labelMedium.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
+    ),
     onSubmit: (passphrase) async {
       try {
         final dek = await SyncKeyManager.unwrapDek(
@@ -89,14 +119,20 @@ Future<bool> ensureSyncKeyReady({
       }
     },
   );
+  if (forgot) {
+    if (context.mounted) {
+      await resetAndOfferNewKey(context: context, ref: ref, backend: backend);
+    }
+    return false;
+  }
   if (entered == null || unwrappedDek == null) return false;
 
-  await SyncKeyManager.storeDek(unwrappedDek!);
-  SyncKeyManager.cacheKeyfile(keyfile);
-  await SyncKeyManager.markPendingUpload(await configuredCloudBackendIds());
-  final backendId = backend.persistentBackendId;
-  if (backendId != null) await SyncKeyManager.clearPendingUpload(backendId);
-  SyncKeyManager.clearKeyConflict(backendId);
+  await SyncKeyManager.installKey(
+    dek: unwrappedDek!,
+    keyfile: keyfile,
+    backendId: backend.persistentBackendId,
+    configured: await configuredCloudBackendIds(),
+  );
   if (context.mounted) ref.invalidate(syncDekControllerProvider);
   toast.success(message: l10n.sync.keyConfigured);
   return true;

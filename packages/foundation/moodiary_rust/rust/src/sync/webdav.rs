@@ -1,7 +1,10 @@
-use super::{kind_of_reqwest, kind_of_status, tagged};
+use super::{
+    kind_of_reqwest, kind_of_status, req_err, tagged, xml_elements, xml_has_element, xml_text,
+};
 use crate::api::ExclusiveCreate;
 use anyhow::Result;
 use bytes::Bytes;
+use percent_encoding::{AsciiSet, NON_ALPHANUMERIC, percent_decode_str, utf8_percent_encode};
 use reqwest_dav::re_exports::reqwest::Method;
 use reqwest_dav::{Auth, ClientBuilder, Dav2xx, Depth};
 use std::collections::HashSet;
@@ -40,18 +43,60 @@ fn dav_err(e: reqwest_dav::Error, msg: impl std::fmt::Display) -> anyhow::Error 
     tagged(dav_kind(&e), format!("{msg}: {e}"))
 }
 
-fn req_err(e: reqwest::Error, msg: impl std::fmt::Display) -> anyhow::Error {
-    tagged(kind_of_reqwest(&e), format!("{msg}: {e}"))
+const PATH_KEEP: &AsciiSet = &NON_ALPHANUMERIC
+    .remove(b'/')
+    .remove(b'-')
+    .remove(b'_')
+    .remove(b'.')
+    .remove(b'~');
+
+fn percent_decode(s: &str) -> String {
+    percent_decode_str(s).decode_utf8_lossy().into_owned()
+}
+
+fn percent_encode_path(path: &str) -> String {
+    utf8_percent_encode(path, PATH_KEEP).to_string()
+}
+
+fn parse_multistatus(xml: &str) -> Vec<(String, bool)> {
+    xml_elements(xml, "response")
+        .into_iter()
+        .filter_map(|r| {
+            let href = xml_text(xml_elements(r, "href").first()?);
+            Some((href, xml_has_element(r, "collection")))
+        })
+        .collect()
+}
+
+fn root_prefix(base: &url::Url, root: &str) -> String {
+    format!(
+        "{}/{}",
+        percent_decode(base.path()).trim_end_matches('/'),
+        root
+    )
+}
+
+fn href_to_rel(base: &url::Url, prefix: &str, href: &str) -> Option<String> {
+    let path = percent_decode(base.join(href).ok()?.path());
+    let rest = path.strip_prefix(prefix)?;
+    if !rest.is_empty() && !rest.starts_with('/') {
+        return None;
+    }
+    Some(rest.trim_matches('/').to_owned())
 }
 
 pub struct DavClient {
     client: reqwest_dav::Client,
+    base: url::Url,
     root: String,
     created_dirs: Mutex<HashSet<String>>,
 }
 
 impl DavClient {
     pub fn new(base_url: String, username: String, password: String) -> Result<DavClient> {
+        let base: url::Url = base_url
+            .parse()
+            .map_err(|e| anyhow::anyhow!("Invalid WebDAV URL: {e}"))?;
         let client = ClientBuilder::new()
             .set_agent(crate::http::client::shared()?)
             .set_host(base_url)
@@ -61,6 +106,7 @@ impl DavClient {
 
         Ok(DavClient {
             client,
+            base,
             root: "moodiary".to_string(),
             created_dirs: Mutex::new(HashSet::new()),
         })
@@ -254,6 +300,53 @@ impl DavClient {
         }
     }
 
+    pub async fn list_objects(&self) -> Result<Vec<String>> {
+        let mut keys = Vec::new();
+        let mut seen = HashSet::from([String::new()]);
+        let mut pending = vec![String::new()];
+        let prefix = root_prefix(&self.base, &self.root);
+        while let Some(dir) = pending.pop() {
+            let path = if dir.is_empty() {
+                format!("{}/", self.root)
+            } else {
+                format!("{}/{}/", self.root, percent_encode_path(&dir))
+            };
+            let resp = self
+                .client
+                .list_raw(&path, Depth::Number(1))
+                .await
+                .map_err(|e| dav_err(e, "Failed to list"))?;
+            let status = resp.status().as_u16();
+            if status == 404 {
+                continue;
+            }
+            if !resp.status().is_success() {
+                return Err(tagged(
+                    kind_of_status(status),
+                    format!("List failed: HTTP {status}"),
+                ));
+            }
+            let body = resp
+                .text()
+                .await
+                .map_err(|e| req_err(e, "Failed to read list response"))?;
+            for (href, is_collection) in parse_multistatus(&body) {
+                let Some(rel) = href_to_rel(&self.base, &prefix, &href) else {
+                    continue;
+                };
+                if rel.is_empty() || rel == dir {
+                    continue;
+                }
+                if !is_collection {
+                    keys.push(rel);
+                } else if seen.insert(rel.clone()) {
+                    pending.push(rel);
+                }
+            }
+        }
+        Ok(keys)
+    }
+
     pub async fn stat_object(&self, key: String) -> Result<String> {
         let path = self.full_path(&key);
         let req = self
@@ -368,6 +461,123 @@ mod tests {
         )
         .unwrap();
         (server, client)
+    }
+
+    #[test]
+    fn multistatus_hrefs_resolve_against_the_base() {
+        let xml = r#"<?xml version="1.0"?>
+<d:multistatus xmlns:d="DAV:">
+<d:response><d:href>/dav/moodiary/</d:href><d:propstat><d:prop><d:resourcetype><d:collection/></d:resourcetype></d:prop></d:propstat></d:response>
+<d:response><d:href>http://h:80/dav/moodiary/diary/</d:href><d:propstat><d:prop><d:resourcetype><d:collection/></d:resourcetype></d:prop></d:propstat></d:response>
+<d:response><d:href>/dav/moodiary/manifest.json</d:href><d:propstat><d:prop><d:resourcetype/></d:prop></d:propstat></d:response>
+<d:response><d:href>/dav/moodiary/media/a%20b%26c.png</d:href><d:propstat><d:prop><d:resourcetype/></d:prop></d:propstat></d:response>
+<d:response><d:href>/dav/moodiary-other/x.json</d:href><d:propstat><d:prop><d:resourcetype/></d:prop></d:propstat></d:response>
+</d:multistatus>"#;
+        let base: url::Url = "http://h/dav".parse().unwrap();
+        let prefix = root_prefix(&base, "moodiary");
+        let rels: Vec<_> = parse_multistatus(xml)
+            .into_iter()
+            .map(|(h, c)| (href_to_rel(&base, &prefix, &h), c))
+            .collect();
+        assert_eq!(
+            rels,
+            vec![
+                (Some(String::new()), true),
+                (Some("diary".into()), true),
+                (Some("manifest.json".into()), false),
+                (Some("media/a b&c.png".into()), false),
+                (None, false),
+            ]
+        );
+    }
+
+    #[test]
+    fn percent_codec_round_trips_paths() {
+        assert_eq!(percent_decode("a%20b%E4%B8%AD%zz%"), "a b中%zz%");
+        assert_eq!(percent_decode("%e4%b8%ad%4"), "中%4");
+        for c in 0u8..=0x7f {
+            let s = (c as char).to_string();
+            let want = if c.is_ascii_alphanumeric() || b"/-_.~".contains(&c) {
+                s.clone()
+            } else {
+                format!("%{c:02X}")
+            };
+            assert_eq!(percent_encode_path(&s), want);
+        }
+        assert_eq!(
+            percent_encode_path("media/a b&中.png"),
+            "media/a%20b%26%E4%B8%AD.png"
+        );
+        assert_eq!(percent_decode(&percent_encode_path("x y/中")), "x y/中");
+    }
+
+    #[tokio::test]
+    async fn list_objects_walks_collections_depth_one() {
+        let handler: HandlerFn = Arc::new(move |req: HttpServerRequest| {
+            Box::pin(async move {
+                let entry = |href: &str, dir: bool| {
+                    format!(
+                        "<response><href>{href}</href><propstat><prop><resourcetype>{}</resourcetype></prop></propstat></response>",
+                        if dir { "<collection/>" } else { "" }
+                    )
+                };
+                let depth_one = req
+                    .headers
+                    .iter()
+                    .any(|kv| kv.key.eq_ignore_ascii_case("depth") && kv.value == "1");
+                let body = match (req.method.as_str(), req.path.trim_end_matches('/')) {
+                    ("PROPFIND", _) if !depth_one => None,
+                    ("PROPFIND", "/moodiary") => Some(format!(
+                        "{}{}{}",
+                        entry("/moodiary/", true),
+                        entry("/moodiary/manifest.json", false),
+                        entry("/moodiary/diary/", true)
+                    )),
+                    ("PROPFIND", "/moodiary/diary") => Some(format!(
+                        "{}{}",
+                        entry("/moodiary/diary/", true),
+                        entry("/moodiary/diary/a%201.json", false)
+                    )),
+                    _ => None,
+                };
+                match body {
+                    Some(b) => HttpServerResponse {
+                        status: 207,
+                        headers: vec![],
+                        body: format!("<multistatus xmlns=\"DAV:\">{b}</multistatus>").into_bytes(),
+                        body_file_path: None,
+                    },
+                    None => HttpServerResponse {
+                        status: 404,
+                        headers: vec![],
+                        body: vec![],
+                        body_file_path: None,
+                    },
+                }
+            })
+        });
+        let (mut server, client) = serve(handler, "list").await;
+        let mut keys = client.list_objects().await.unwrap();
+        keys.sort();
+        assert_eq!(keys, vec!["diary/a 1.json", "manifest.json"]);
+        server.stop();
+    }
+
+    #[tokio::test]
+    async fn list_objects_on_a_missing_root_is_empty() {
+        let handler: HandlerFn = Arc::new(move |_| {
+            Box::pin(async move {
+                HttpServerResponse {
+                    status: 404,
+                    headers: vec![],
+                    body: vec![],
+                    body_file_path: None,
+                }
+            })
+        });
+        let (mut server, client) = serve(handler, "list404").await;
+        assert!(client.list_objects().await.unwrap().is_empty());
+        server.stop();
     }
 
     #[tokio::test]

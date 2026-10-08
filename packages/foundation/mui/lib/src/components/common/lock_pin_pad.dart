@@ -2,6 +2,10 @@ import 'package:flutter/services.dart';
 import 'package:mui/mui.dart';
 
 const int kPinLength = 4;
+@visibleForTesting
+const Duration kLockPinVerifyDelay = Duration(milliseconds: 120);
+@visibleForTesting
+const Duration kLockPinShakeDuration = Duration(milliseconds: 320);
 
 class LockPinPadController {
   _LockPinPadState? _state;
@@ -26,6 +30,8 @@ class LockPinPad extends StatefulWidget {
 
   final VoidCallback? onBiometric;
 
+  final IconData biometricIcon;
+
   final ValueChanged<String> onCompleted;
 
   final bool enabled;
@@ -39,6 +45,7 @@ class LockPinPad extends StatefulWidget {
     this.error,
     this.showBiometric = false,
     this.onBiometric,
+    this.biometricIcon = LucideIcons.fingerprintPattern,
     this.enabled = true,
     this.controller,
   });
@@ -51,7 +58,7 @@ class _LockPinPadState extends State<LockPinPad>
     with SingleTickerProviderStateMixin {
   late final AnimationController _shakeCtrl = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 320),
+    duration: kLockPinShakeDuration,
   );
   late final Animation<double> _shake = CurvedAnimation(
     parent: _shakeCtrl,
@@ -101,7 +108,7 @@ class _LockPinPadState extends State<LockPinPad>
     setState(() => _pin += d);
     if (_pin.length == kPinLength) {
       final pin = _pin;
-      Future.delayed(const Duration(milliseconds: 120), () {
+      Future.delayed(kLockPinVerifyDelay, () {
         if (mounted) widget.onCompleted(pin);
       });
     }
@@ -187,9 +194,11 @@ class _LockPinPadState extends State<LockPinPad>
                 _NumButton(label: d, onTap: () => _onDigit(d), size: dotSize),
               widget.showBiometric
                   ? _IconButton(
-                      icon: LucideIcons.fingerprint,
+                      icon: widget.biometricIcon,
                       onTap: widget.onBiometric ?? () {},
                       size: dotSize,
+                      color: scheme.primary,
+                      iconSize: 28,
                     )
                   : SizedBox(width: dotSize, height: dotSize),
               _NumButton(label: '0', onTap: () => _onDigit('0'), size: dotSize),
@@ -254,11 +263,15 @@ class _IconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
   final double size;
+  final Color? color;
+  final double iconSize;
 
   const _IconButton({
     required this.icon,
     required this.onTap,
     required this.size,
+    this.color,
+    this.iconSize = 24,
   });
 
   @override
@@ -268,7 +281,11 @@ class _IconButton extends StatelessWidget {
       child: SizedBox(
         width: size,
         height: size,
-        child: Icon(icon, size: 24, color: context.theme.colors.onSurface),
+        child: Icon(
+          icon,
+          size: iconSize,
+          color: color ?? context.theme.colors.onSurface,
+        ),
       ),
     );
   }

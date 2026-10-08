@@ -74,7 +74,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 525293245;
+  int get rustContentHash => -1992391768;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -101,6 +101,10 @@ abstract class RustLibApi extends BaseApi {
   Future<void> crateApiWebdavDavClientDeleteObject({
     required DavClient that,
     required String key,
+  });
+
+  Future<List<String>> crateApiWebdavDavClientListObjects({
+    required DavClient that,
   });
 
   Future<DavClient> crateApiWebdavDavClientNew({
@@ -185,6 +189,11 @@ abstract class RustLibApi extends BaseApi {
   Future<void> crateApiS3S3ClientDeleteObject({
     required S3Client that,
     required String key,
+  });
+
+  Future<List<String>> crateApiS3S3ClientListObjects({
+    required S3Client that,
+    required String prefix,
   });
 
   Future<S3Client> crateApiS3S3ClientNew({
@@ -436,6 +445,39 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(
         debugName: "DavClient_delete_object",
         argNames: ["that", "key"],
+      );
+
+  @override
+  Future<List<String>> crateApiWebdavDavClientListObjects({
+    required DavClient that,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
+                that,
+              );
+          return wire.wire__crate__api__webdav__DavClient_list_objects(
+            port_,
+            arg0,
+          );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_list_String,
+          decodeErrorData: dco_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiWebdavDavClientListObjectsConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiWebdavDavClientListObjectsConstMeta =>
+      const TaskConstMeta(
+        debugName: "DavClient_list_objects",
+        argNames: ["that"],
       );
 
   @override
@@ -1047,6 +1089,42 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(
         debugName: "S3Client_delete_object",
         argNames: ["that", "key"],
+      );
+
+  @override
+  Future<List<String>> crateApiS3S3ClientListObjects({
+    required S3Client that,
+    required String prefix,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
+                that,
+              );
+          var arg1 = cst_encode_String(prefix);
+          return wire.wire__crate__api__s3__S3Client_list_objects(
+            port_,
+            arg0,
+            arg1,
+          );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_list_String,
+          decodeErrorData: dco_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiS3S3ClientListObjectsConstMeta,
+        argValues: [that, prefix],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiS3S3ClientListObjectsConstMeta =>
+      const TaskConstMeta(
+        debugName: "S3Client_list_objects",
+        argNames: ["that", "prefix"],
       );
 
   @override
@@ -2043,6 +2121,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<String> dco_decode_list_String(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_String).toList();
+  }
+
+  @protected
   List<KeyValue> dco_decode_list_key_value(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_key_value).toList();
@@ -2785,6 +2869,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_key = sse_decode_String(deserializer);
     var var_value = sse_decode_String(deserializer);
     return KeyValue(key: var_key, value: var_value);
+  }
+
+  @protected
+  List<String> sse_decode_list_String(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <String>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_String(deserializer));
+    }
+    return ans_;
   }
 
   @protected
@@ -3982,6 +4078,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_String(List<String> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_String(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_key_value(
     List<KeyValue> self,
     SseSerializer serializer,
@@ -4370,6 +4475,9 @@ class DavClientImpl extends RustOpaque implements DavClient {
   Future<void> deleteObject({required String key}) => RustLib.instance.api
       .crateApiWebdavDavClientDeleteObject(that: this, key: key);
 
+  Future<List<String>> listObjects() =>
+      RustLib.instance.api.crateApiWebdavDavClientListObjects(that: this);
+
   Future<Uint8List?> readObject({required String key}) => RustLib.instance.api
       .crateApiWebdavDavClientReadObject(that: this, key: key);
 
@@ -4512,6 +4620,11 @@ class S3ClientImpl extends RustOpaque implements S3Client {
 
   Future<void> deleteObject({required String key}) =>
       RustLib.instance.api.crateApiS3S3ClientDeleteObject(that: this, key: key);
+
+  Future<List<String>> listObjects({required String prefix}) => RustLib
+      .instance
+      .api
+      .crateApiS3S3ClientListObjects(that: this, prefix: prefix);
 
   Future<Uint8List?> readObject({required String key}) =>
       RustLib.instance.api.crateApiS3S3ClientReadObject(that: this, key: key);

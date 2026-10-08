@@ -17,6 +17,8 @@ dependencies:
   device_info_plus: 13.2.0
   geolocator: 14.0.3
   local_auth: 3.0.2
+  local_auth_android: 2.0.10
+  local_auth_darwin: 2.0.4
   network_info_plus: 8.2.1
   package_info_plus: 10.2.1
   path_provider: 2.1.6

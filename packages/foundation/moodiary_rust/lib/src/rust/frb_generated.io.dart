@@ -268,6 +268,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   KeyValue dco_decode_key_value(dynamic raw);
 
   @protected
+  List<String> dco_decode_list_String(dynamic raw);
+
+  @protected
   List<KeyValue> dco_decode_list_key_value(dynamic raw);
 
   @protected
@@ -562,6 +565,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   KeyValue sse_decode_key_value(SseDeserializer deserializer);
 
   @protected
+  List<String> sse_decode_list_String(SseDeserializer deserializer);
+
+  @protected
   List<KeyValue> sse_decode_list_key_value(SseDeserializer deserializer);
 
   @protected
@@ -799,6 +805,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int cst_encode_isize(PlatformInt64 raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw.toInt();
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_String> cst_encode_list_String(List<String> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_String(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      ans.ref.ptr[i] = cst_encode_String(raw[i]);
+    }
+    return ans;
   }
 
   @protected
@@ -1671,6 +1687,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_key_value(KeyValue self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_String(List<String> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_key_value(List<KeyValue> self, SseSerializer serializer);
 
   @protected
@@ -1910,6 +1929,19 @@ class RustLibWire implements BaseWire {
       );
   late final _cst_new_box_autoadd_u_32 = _cst_new_box_autoadd_u_32Ptr
       .asFunction<ffi.Pointer<ffi.Uint32> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_String> cst_new_list_String(int len) {
+    return _cst_new_list_String(len);
+  }
+
+  late final _cst_new_list_StringPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_String> Function(ffi.Int32)
+        >
+      >('frbgen_moodiary_rust_cst_new_list_String');
+  late final _cst_new_list_String = _cst_new_list_StringPtr
+      .asFunction<ffi.Pointer<wire_cst_list_String> Function(int)>();
 
   ffi.Pointer<wire_cst_list_key_value> cst_new_list_key_value(int len) {
     return _cst_new_list_key_value(len);
@@ -2635,6 +2667,30 @@ class RustLibWire implements BaseWire {
             void Function(int, int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
           >();
 
+  void wire__crate__api__s3__S3Client_list_objects(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> prefix,
+  ) {
+    return _wire__crate__api__s3__S3Client_list_objects(port_, that, prefix);
+  }
+
+  late final _wire__crate__api__s3__S3Client_list_objectsPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__s3__S3Client_list_objects');
+  late final _wire__crate__api__s3__S3Client_list_objects =
+      _wire__crate__api__s3__S3Client_list_objectsPtr
+          .asFunction<
+            void Function(int, int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
+          >();
+
   void wire__crate__api__s3__S3Client_new(
     int port_,
     ffi.Pointer<wire_cst_list_prim_u_8_strict> endpoint,
@@ -2913,6 +2969,18 @@ class RustLibWire implements BaseWire {
           .asFunction<
             void Function(int, int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
           >();
+
+  void wire__crate__api__webdav__DavClient_list_objects(int port_, int that) {
+    return _wire__crate__api__webdav__DavClient_list_objects(port_, that);
+  }
+
+  late final _wire__crate__api__webdav__DavClient_list_objectsPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+        'frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_list_objects',
+      );
+  late final _wire__crate__api__webdav__DavClient_list_objects =
+      _wire__crate__api__webdav__DavClient_list_objectsPtr
+          .asFunction<void Function(int, int)>();
 
   void wire__crate__api__webdav__DavClient_new(
     int port_,
@@ -3524,6 +3592,21 @@ final class wire_cst_key_value extends ffi.Struct {
   }) => $allocator<wire_cst_key_value>()
     ..ref.key = key
     ..ref.value = value;
+}
+
+final class wire_cst_list_String extends ffi.Struct {
+  external ffi.Pointer<ffi.Pointer<wire_cst_list_prim_u_8_strict>> ptr;
+
+  @ffi.Int32()
+  external int len;
+
+  static ffi.Pointer<wire_cst_list_String> $allocate(
+    ffi.Allocator $allocator, {
+    required ffi.Pointer<ffi.Pointer<wire_cst_list_prim_u_8_strict>> ptr,
+    required int len,
+  }) => $allocator<wire_cst_list_String>()
+    ..ref.ptr = ptr
+    ..ref.len = len;
 }
 
 final class wire_cst_list_key_value extends ffi.Struct {

@@ -279,10 +279,7 @@ class CloudReCipher {
         '${DateTime.now().microsecondsSinceEpoch}:${_seq++}';
     final updated = manifest.copyForUpdate().withWriteToken(token);
     final newMfBytes = await to.encode(updated.toJson());
-    if (!listEquals(
-      await backend.readObject(SyncKeys.manifestPath),
-      mfBytes,
-    )) {
+    if (!listEquals(await backend.readObject(SyncKeys.manifestPath), mfBytes)) {
       throw SyncException(l10n.sync.errManifestRace, kind: .manifestRace);
     }
     await backend.writeObject(SyncKeys.manifestPath, newMfBytes);

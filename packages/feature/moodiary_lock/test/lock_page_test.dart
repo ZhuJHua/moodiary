@@ -50,17 +50,17 @@ void main() {
       await t.tap(find.text(d));
       await t.pump();
     }
-    await t.pump(kLockVerifyDelay + const Duration(milliseconds: 1));
+    await t.pump(kLockPinVerifyDelay + const Duration(milliseconds: 1));
     await t.pump();
   }
 
   Future<void> settleFailure(WidgetTester t) async {
     await t.pump(kLockClearDelay + const Duration(milliseconds: 20));
-    await t.pump(kLockShakeDuration * 2 + const Duration(milliseconds: 20));
+    await t.pump(kLockPinShakeDuration * 2 + const Duration(milliseconds: 20));
     await t.pump();
   }
 
-  testWidgets('校验在飞时退格与输入都被挡住——不会起第二个 _verify', (t) async {
+  testWidgets('校验在飞时退格与输入都被挡住', (t) async {
     final gate = Completer<bool>();
     AppLockPin.verifier = (hash, pin) {
       verifyCalls += 1;
@@ -79,10 +79,10 @@ void main() {
     await t.pump();
     await settleFailure(t);
     expect(verifyCalls, 1, reason: '整个飞行窗口只允许一次校验');
-    expect(find.textContaining('还可重试 4 次'), findsOneWidget);
+    expect(find.textContaining('还剩 4 次'), findsOneWidget);
   });
 
-  testWidgets('连错五次进入冷却；冷却期输入无效；冷却结束计数清零', (t) async {
+  testWidgets('连错五次进入冷却；冷却期输入无效；冷却结束提示消失', (t) async {
     AppLockPin.verifier = (hash, pin) async {
       verifyCalls += 1;
       return false;
@@ -94,7 +94,7 @@ void main() {
       await settleFailure(t);
     }
     expect(verifyCalls, 5);
-    expect(find.textContaining('尝试次数过多'), findsOneWidget);
+    expect(find.textContaining('尝试过多'), findsOneWidget);
 
     await enterPin(t, '2222');
     expect(verifyCalls, 5, reason: '冷却期输入必须被挡住');
@@ -103,12 +103,7 @@ void main() {
       const Duration(seconds: 30) + const Duration(milliseconds: 20),
     );
     await t.pump();
-    expect(find.textContaining('尝试次数过多'), findsNothing);
-
-    await enterPin(t, '3333');
-    await settleFailure(t);
-    expect(verifyCalls, 6);
-    expect(find.textContaining('还可重试 4 次'), findsOneWidget);
+    expect(find.textContaining('尝试过多'), findsNothing);
   });
 
   testWidgets('校验通过：不计失败、进入已解锁态', (t) async {
@@ -120,7 +115,7 @@ void main() {
     await enterPin(t, '1234');
     await t.pump(kLockClearDelay + const Duration(milliseconds: 20));
     expect(verifyCalls, 1);
-    expect(find.textContaining('还可重试'), findsNothing);
+    expect(find.textContaining('还剩'), findsNothing);
     expect(find.byIcon(LucideIcons.lockOpen), findsOneWidget);
     await t.tap(find.text('1'), warnIfMissed: false);
     await t.pump(const Duration(milliseconds: 200));

@@ -7,7 +7,6 @@ import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
-import 'package:mui/mui.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../data/export_options.dart';
@@ -70,8 +69,10 @@ class _ExportSection extends StatelessWidget {
     );
   }
 
-  void _open(BuildContext context, ExportFormat format) =>
-      ExportFormatRoute(format: format.id).push(context);
+  Future<void> _open(BuildContext context, ExportFormat format) async {
+    if (!await AppAuth.verify(context, .dataExport) || !context.mounted) return;
+    await ExportFormatRoute(format: format.id).push(context);
+  }
 }
 
 class _MarkdownImportSection extends StatelessWidget {
@@ -148,6 +149,7 @@ class _BackupSection extends StatelessWidget {
 
   Future<void> _exportBackup(BuildContext context) async {
     final l10n = context.l10n;
+    if (!await AppAuth.verify(context, .dataExport)) return;
     toast.loading(message: l10n.export.packingBackup);
     final String zipPath;
     try {

@@ -960,11 +960,9 @@ void main() {
           ),
         ),
       );
-      expect(
-        backend.manifest()!.entries.keys,
-        ['d:c'],
-        reason: '两边 writeToken 都是空串，只有按字节比对才能发现基线已变',
-      );
+      expect(backend.manifest()!.entries.keys, [
+        'd:c',
+      ], reason: '两边 writeToken 都是空串，只有按字节比对才能发现基线已变');
     });
 
     test('别人先写 → 提交前校验拦住整份覆盖，对方的 manifest 原样保留', () async {

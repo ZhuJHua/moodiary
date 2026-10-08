@@ -154,7 +154,10 @@ class S3SyncBackend implements IRemoteSyncBackend {
   }
 
   @override
-  Future<ExclusiveCreate> tryCreateExclusive(String key, Uint8List bytes) async {
+  Future<ExclusiveCreate> tryCreateExclusive(
+    String key,
+    Uint8List bytes,
+  ) async {
     try {
       final client = await _client();
       final result = await client.createExclusive(
@@ -171,6 +174,20 @@ class S3SyncBackend implements IRemoteSyncBackend {
         e,
         (d) => l10n.sync.errCreateRemote(key: key, error: d),
       );
+    }
+  }
+
+  @override
+  Future<List<String>> listObjects() async {
+    try {
+      final client = await _client();
+      final prefix = _objectName('');
+      return [
+        for (final name in await client.listObjects(prefix: prefix))
+          if (name.startsWith(prefix)) name.substring(prefix.length),
+      ];
+    } catch (e) {
+      throw SyncException.wrap(e, (d) => l10n.sync.errListRemote(error: d));
     }
   }
 

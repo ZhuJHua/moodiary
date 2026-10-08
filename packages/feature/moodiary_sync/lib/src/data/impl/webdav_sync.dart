@@ -138,7 +138,10 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
   }
 
   @override
-  Future<ExclusiveCreate> tryCreateExclusive(String key, Uint8List bytes) async {
+  Future<ExclusiveCreate> tryCreateExclusive(
+    String key,
+    Uint8List bytes,
+  ) async {
     try {
       final client = await _client();
       final result = await client.createExclusive(key: key, data: bytes);
@@ -152,6 +155,16 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
         e,
         (d) => l10n.sync.errCreateRemote(key: key, error: d),
       );
+    }
+  }
+
+  @override
+  Future<List<String>> listObjects() async {
+    try {
+      final client = await _client();
+      return await client.listObjects();
+    } catch (e) {
+      throw SyncException.wrap(e, (d) => l10n.sync.errListRemote(error: d));
     }
   }
 

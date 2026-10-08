@@ -411,7 +411,10 @@ class LocalArchiveBackend implements RemoteObjectStore {
   }
 
   @override
-  Future<ExclusiveCreate> tryCreateExclusive(String key, Uint8List bytes) async {
+  Future<ExclusiveCreate> tryCreateExclusive(
+    String key,
+    Uint8List bytes,
+  ) async {
     final file = _file(key);
     await file.parent.create(recursive: true);
     try {

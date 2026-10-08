@@ -45,6 +45,10 @@ impl DavClient {
         self.inner.delete_object(key).await
     }
 
+    pub async fn list_objects(&self) -> Result<Vec<String>> {
+        self.inner.list_objects().await
+    }
+
     pub async fn stat_object(&self, key: String) -> Result<String> {
         self.inner.stat_object(key).await
     }
