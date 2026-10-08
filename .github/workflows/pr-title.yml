@@ -1,0 +1,49 @@
+name: PR Title
+
+on:
+  pull_request_target:
+    types: [ opened, edited, synchronize, reopened ]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  pr-title:
+    name: PR title
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Lint title and label PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          types=(feat fix perf refactor docs test style build ci chore revert)
+          re="^($(IFS='|'; echo "${types[*]}"))(\([a-z0-9][a-z0-9._/-]*\))?(!)?: [^ ].*$"
+
+          valid=false label='?' breaking=false
+          if [[ $PR_TITLE =~ $re ]]; then
+            valid=true label=${BASH_REMATCH[1]}
+            [[ -n ${BASH_REMATCH[3]} ]] && breaking=true
+          fi
+          grep -qE '^BREAKING[ -]CHANGE: ' <<<"${PR_BODY//$'\r'/}" && breaking=true
+
+          api="repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/labels"
+          current=$(gh api "$api" --jq '.[].name')
+          want=("$label")
+          $breaking && want+=(breaking)
+          for t in "${types[@]}" '?' breaking; do
+            if ! printf '%s\n' "${want[@]}" | grep -qxF -- "$t" && grep -qxF -- "$t" <<<"$current"; then
+              gh api --method DELETE "$api/$(jq -rn --arg s "$t" '$s|@uri')" --silent
+            fi
+          done
+          args=()
+          for t in "${want[@]}"; do args+=(-f "labels[]=$t"); done
+          gh api --method POST "$api" "${args[@]}" --silent
+
+          if ! $valid; then
+            echo "::error title=PR title is not a Conventional Commit::Expected 'type(scope)!: description', e.g. 'feat(diary): add a year view'. type is one of: ${types[*]}; scope (lowercase) and ! are optional. See CONTRIBUTING.md."
+            exit 1
+          fi

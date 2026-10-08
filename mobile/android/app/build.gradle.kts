@@ -27,15 +27,17 @@ android {
         resValues = true
     }
 
-    signingConfigs {
-        create("config") {
-            storeFile = file("key.jks")
+    val keystore = file("key.jks")
+    if (keystore.exists()) {
+        signingConfigs.create("config") {
+            storeFile = keystore
             storePassword = localProperties.getProperty("storePassword")
             keyPassword = localProperties.getProperty("keyPassword")
             keyAlias = "key0"
             enableV3Signing = true
         }
     }
+    val appSigning = signingConfigs.findByName("config") ?: signingConfigs.getByName("debug")
 
     defaultConfig {
         applicationId = "cn.yooss.moodiary"
@@ -58,7 +60,7 @@ android {
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("config")
+            signingConfig = appSigning
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -67,13 +69,13 @@ android {
             )
         }
         debug {
-            signingConfig = signingConfigs.getByName("config")
+            signingConfig = appSigning
             resValue("string", "app_name", "Moodiary Debug")
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
         }
         maybeCreate("profile").apply {
-            signingConfig = signingConfigs.getByName("config")
+            signingConfig = appSigning
             applicationIdSuffix = ".profile"
         }
     }

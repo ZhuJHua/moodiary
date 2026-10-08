@@ -56,19 +56,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Read Flutter version
-        id: fv
-        run: echo "version=$(jq -r '.flutter' .fvmrc)" >> "$GITHUB_OUTPUT"
+      - name: Read tool versions
+        id: versions
+        run: |
+          echo "flutter=$(jq -r '.flutter' .fvmrc)" >> "$GITHUB_OUTPUT"
+          echo "melos=$(yq '.dev_dependencies.melos' pubspec.yaml)" >> "$GITHUB_OUTPUT"
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ steps.fv.outputs.version }}
+          flutter-version: ${{ steps.versions.outputs.flutter }}
 
       - name: Set up Melos (bootstrap)
         uses: bluefireteam/melos-action@v3
         with:
-          melos-version: 8.2.2
+          melos-version: ${{ steps.versions.outputs.melos }}
 
       - name: Check generated bindings
         run: dart tool/check_generated.dart

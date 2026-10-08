@@ -41,15 +41,16 @@ commit_parsers = [
   { message = "^style", group = "<!-- 5 -->🎨 Styling" },
   { message = "^test", group = "<!-- 6 -->🧪 Testing" },
   { message = "^chore\\(release\\)", skip = true },
-  { message = "^chore\\(deps.*\\)", skip = true },
-  { message = "^chore\\(pr\\)", skip = true },
-  { message = "^chore\\(pull\\)", skip = true },
-  { message = "^chore\\(readme\\)", skip = true },
-  { message = "^chore|^ci", group = "<!-- 7 -->⚙️ Miscellaneous Tasks" },
+  { message = "^chore\\(deps.*\\)", skip = true, group = "<!-- 7 -->⚙️ Miscellaneous Tasks" },
+  { message = "^chore\\(pr\\)", skip = true, group = "<!-- 7 -->⚙️ Miscellaneous Tasks" },
+  { message = "^chore\\(pull\\)", skip = true, group = "<!-- 7 -->⚙️ Miscellaneous Tasks" },
+  { message = "^chore\\(readme\\)", skip = true, group = "<!-- 7 -->⚙️ Miscellaneous Tasks" },
+  { message = "^chore|^ci|^build", group = "<!-- 7 -->⚙️ Miscellaneous Tasks" },
   { body = ".*security", group = "<!-- 8 -->🛡️ Security" },
   { message = "^revert", group = "<!-- 9 -->◀️ Revert" },
   { message = ".*", group = "<!-- 10 -->💼 Other" },
 ]
 filter_commits = false
+protect_breaking_commits = true
 topo_order = false
 sort_commits = "oldest"
