@@ -41,7 +41,7 @@ class DashboardController extends _$DashboardController {
     final byDay = _aggregateByDay(visible);
 
     return DashboardStats(
-      useDays: _useDays(),
+      useDays: _useDays(byDay.keys),
       diaryCount: visible.length,
       wordCount: _wordCount(visible),
       categoryCount: cats.length,
@@ -53,10 +53,15 @@ class DashboardController extends _$DashboardController {
     );
   }
 
-  int _useDays() {
+  int _useDays(Iterable<DateTime> writingDays) {
     final ms = MoodiaryKVs.startTime.get();
-    if (ms == null || ms == 0) return 1;
-    final first = DateTime.fromMillisecondsSinceEpoch(ms);
+    DateTime? first = ms == null || ms == 0
+        ? null
+        : DateTime.fromMillisecondsSinceEpoch(ms);
+    for (final day in writingDays) {
+      if (first == null || day.isBefore(first)) first = day;
+    }
+    if (first == null) return 1;
     final now = DateTime.now();
     final diff = DateTime.utc(
       now.year,
