@@ -105,7 +105,7 @@
   "semanticDeleteMessage": "Deletes the downloaded model file. You can download it again later.",
   "semanticDeleteConfirm": "Delete",
   "semanticDescQwen3": "Multilingual, recalls subtle phrasing",
-  "dashUseDays": "Days used",
+  "dashJournalDays": "Days journaling",
   "dashWordCount": "Words",
   "dashCategoryCount": "Categories",
   "dashTagCount": "Tags",

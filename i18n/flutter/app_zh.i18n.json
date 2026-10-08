@@ -105,7 +105,7 @@
   "semanticDeleteMessage": "删除已下载的模型文件，之后可重新下载。",
   "semanticDeleteConfirm": "删除",
   "semanticDescQwen3": "多语言，含蓄表达也能召回",
-  "dashUseDays": "使用天数",
+  "dashJournalDays": "记录天数",
   "dashWordCount": "总字数",
   "dashCategoryCount": "分类数",
   "dashTagCount": "标签数",

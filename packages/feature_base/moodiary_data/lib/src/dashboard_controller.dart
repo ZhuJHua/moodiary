@@ -40,7 +40,7 @@ class DashboardController extends _$DashboardController {
     final byDay = _aggregateByDay(visible);
 
     return DashboardStats(
-      useDays: _useDays(byDay.keys),
+      journalDays: _journalDays(byDay.keys),
       diaryCount: visible.length,
       wordCount: _wordCount(visible),
       categoryCount: cats.length,
@@ -52,7 +52,7 @@ class DashboardController extends _$DashboardController {
     );
   }
 
-  int _useDays(Iterable<DateTime> writingDays) {
+  int _journalDays(Iterable<DateTime> writingDays) {
     if (writingDays.isEmpty) return 0;
     final first = writingDays.reduce((a, b) => a.isBefore(b) ? a : b);
     final now = DateTime.now();
@@ -119,12 +119,10 @@ class DashboardController extends _$DashboardController {
     final set = days.toSet();
     var streak = 0;
     var cursor = _today();
-    if (!set.contains(cursor)) {
-      cursor = cursor.subtract(const Duration(days: 1));
-    }
+    if (!set.contains(cursor)) cursor = _dayBefore(cursor);
     while (set.contains(cursor)) {
       streak++;
-      cursor = cursor.subtract(const Duration(days: 1));
+      cursor = _dayBefore(cursor);
     }
     return streak;
   }
@@ -140,7 +138,8 @@ class DashboardController extends _$DashboardController {
   }
 
   int _lastYearCount(Map<DateTime, DayWriting> byDay) {
-    final from = _today().subtract(const Duration(days: 364));
+    final today = _today();
+    final from = DateTime(today.year, today.month, today.day - 364);
     var sum = 0;
     byDay.forEach((day, w) {
       if (!day.isBefore(from)) sum += w.count;
@@ -155,6 +154,9 @@ class DashboardController extends _$DashboardController {
     }
     return unique.length;
   }
+
+  static DateTime _dayBefore(DateTime day) =>
+      DateTime(day.year, day.month, day.day - 1);
 
   static DateTime _today() {
     final now = DateTime.now();
@@ -214,7 +216,7 @@ class DayWriting {
 }
 
 class DashboardStats {
-  final int useDays;
+  final int journalDays;
   final int diaryCount;
   final int wordCount;
   final int categoryCount;
@@ -227,7 +229,7 @@ class DashboardStats {
   final int lastYearCount;
 
   const DashboardStats({
-    required this.useDays,
+    required this.journalDays,
     required this.diaryCount,
     required this.wordCount,
     required this.categoryCount,
