@@ -8,6 +8,7 @@ final class LegacyPrefsKVSource implements IKVSource {
     'webDavOption',
     'tencentId',
     'tencentKey',
+    'startTime',
   };
 
   static Set<String> get _allKeys => {
