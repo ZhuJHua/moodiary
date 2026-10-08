@@ -7,7 +7,6 @@ import 'map_tile_source.dart';
 const _tiandituAttribution = '天地图 GS (2026) 4921号';
 const _osmAttribution = '© OpenStreetMap contributors';
 
-// vec_w = 矢量底图，cva_w = 中文注记
 const _tiandituVec =
     'https://t{s}.tianditu.gov.cn/vec_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=vec&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk={tk}';
 const _tiandituCva =

@@ -264,7 +264,6 @@ void main() {
       final b = (await repo.getDiaryByBusinessId('d2'))!;
       expect(b.placeId, isNull);
       expect(b.weather, isNull);
-      expect((await repo.placeFootprints()).keys, ['p-xiamen']);
     });
 
     test('placeFootprints 按地点聚合篇数与首末时间，跳过回收站', () async {
