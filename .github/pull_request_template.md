@@ -10,7 +10,7 @@
 
 ## AI usage
 
-<!-- Optional: which AI tools you used and for what. See https://docs.moodiary.net/dev/ai-policy -->
+<!-- Optional: which AI tools you used and for what, or an `Assisted-by: <tool>` line. See https://docs.moodiary.net/dev/ai-policy -->
 
 ## Checklist
 
