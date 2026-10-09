@@ -105,10 +105,6 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get aboutSource => 'Source code';
 	@override String get aboutLicenses => 'Open source licenses';
 	@override String get aboutFeedback => 'Feedback and help';
-	@override String get aboutSponsor => 'Sponsor';
-	@override String get sponsorThanks => 'Thank you for considering it!';
-	@override String get sponsorBody => 'Moodiary is open source, maintained by one developer in their spare time. If you like the app, the link below is a way to support further work on it.';
-	@override String get sponsorAfdian => 'Afdian';
 	@override String get fontTitle => 'Fonts';
 	@override String get fontImportSubtitle => 'Import a ttf / otf font; long-press to remove one';
 	@override String get fontPreview => 'Preview';

@@ -4,7 +4,6 @@ import 'package:moodiary_mobile/app/settings/presentation/diary_setting_page.dar
 import 'package:moodiary_mobile/app/settings/presentation/font_page.dart';
 import 'package:moodiary_mobile/app/settings/presentation/services_page.dart';
 import 'package:moodiary_mobile/app/settings/presentation/setting_page.dart';
-import 'package:moodiary_mobile/app/settings/presentation/sponsor_page.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 
 class FontRoute extends MoodiaryRouteBase {
@@ -37,12 +36,6 @@ class DiarySettingRoute extends MoodiaryRouteBase {
   const DiarySettingRoute() : super(path);
 }
 
-class SponsorRoute extends MoodiaryRouteBase {
-  static const String path = '/setting/sponsor';
-
-  const SponsorRoute() : super(path);
-}
-
 List<RouteBase> settingRoutes() => [
   GoRoute(path: SettingRoute.path, builder: (_, _) => const SettingPage()),
   GoRoute(
@@ -53,5 +46,4 @@ List<RouteBase> settingRoutes() => [
   GoRoute(path: AccentRoute.path, builder: (_, _) => const AccentPage()),
   GoRoute(path: ServicesRoute.path, builder: (_, _) => const ServicesPage()),
   GoRoute(path: AboutRoute.path, builder: (_, _) => const AboutPage()),
-  GoRoute(path: SponsorRoute.path, builder: (_, _) => const SponsorPage()),
 ];

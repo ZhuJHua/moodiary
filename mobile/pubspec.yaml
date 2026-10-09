@@ -72,7 +72,6 @@ dev_dependencies:
 
 flutter:
   assets:
-    - res/sponsor/
     # ignore: asset_directory_does_not_exist
     - assets/licenses/
 
