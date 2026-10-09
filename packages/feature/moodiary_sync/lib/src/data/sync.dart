@@ -41,6 +41,8 @@ abstract class IRemoteSyncBackend implements RemoteObjectStore {
   Future<void> clearOptions();
 
   Future<void> testConnection();
+
+  Future<List<String>> listObjects();
 }
 
 class SyncCounts {

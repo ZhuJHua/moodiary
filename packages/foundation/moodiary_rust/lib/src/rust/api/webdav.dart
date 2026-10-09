@@ -17,6 +17,8 @@ abstract class DavClient implements RustOpaqueInterface {
 
   Future<void> deleteObject({required String key});
 
+  Future<List<String>> listObjects();
+
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
   static Future<DavClient> newInstance({
     required String baseUrl,

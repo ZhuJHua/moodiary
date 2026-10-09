@@ -54,6 +54,10 @@ impl S3Client {
         self.inner.delete_object(key).await
     }
 
+    pub async fn list_objects(&self, prefix: String) -> Result<Vec<String>> {
+        self.inner.list_objects(prefix).await
+    }
+
     pub async fn stat_object(&self, key: String) -> Result<String> {
         self.inner.stat_object(key).await
     }

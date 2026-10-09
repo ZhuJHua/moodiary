@@ -78,7 +78,7 @@ class IncrementalSyncEngine {
     SyncDirtyTracker? dirty,
     SyncTrigger? trigger,
   }) {
-    final n = concurrency ?? _resolveConcurrency();
+    final n = concurrency ?? resolveConcurrency();
     return IncrementalSyncEngine._(
       _GatedBackend(backend, n),
       n,
@@ -122,7 +122,7 @@ class IncrementalSyncEngine {
 
   int _mediaUploaded = 0;
 
-  static int _resolveConcurrency() {
+  static int resolveConcurrency() {
     final raw = MoodiaryKVs.syncConcurrency.get() ?? defaultConcurrency;
     return raw.clamp(_minConcurrency, _maxConcurrency).toInt();
   }
@@ -728,7 +728,13 @@ class IncrementalSyncEngine {
 
   Future<(SyncManifest?, Uint8List?)> _readManifestBytes() async {
     final bytes = await backend.readObject(SyncKeys.manifestPath);
-    return (bytes == null ? null : await _decodeManifest(bytes), bytes);
+    if (bytes == null) return (null, null);
+    if (await SyncKeyManager.remoteDecryptedElsewhere(backend, bytes)) {
+      SyncKeyManager.markKeyConflict(backend.persistentBackendId);
+      _logger.error(.keyConflict, payload: _backendPayload());
+      throw SyncKeyConflictException(l10n.sync.errRemoteDecrypted);
+    }
+    return (await _decodeManifest(bytes), bytes);
   }
 
   Future<SyncManifest?> _readManifest() async {

@@ -67,6 +67,13 @@ final class FakeRemoteBackend implements IRemoteSyncBackend {
   Future<void> testConnection() async {}
 
   @override
+  Future<List<String>> listObjects() async {
+    ops.add('list');
+    beforeOp?.call('list', '');
+    return objects.keys.toList();
+  }
+
+  @override
   Future<Uint8List?> readObject(String key) async {
     ops.add('read $key');
     beforeOp?.call('read', key);
@@ -103,7 +110,10 @@ final class FakeRemoteBackend implements IRemoteSyncBackend {
   }
 
   @override
-  Future<ExclusiveCreate> tryCreateExclusive(String key, Uint8List bytes) async {
+  Future<ExclusiveCreate> tryCreateExclusive(
+    String key,
+    Uint8List bytes,
+  ) async {
     ops.add('create $key');
     beforeOp?.call('create', key);
     if (!conditionalPutSupported) return .unsupported;

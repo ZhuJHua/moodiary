@@ -17,6 +17,8 @@ abstract class S3Client implements RustOpaqueInterface {
 
   Future<void> deleteObject({required String key});
 
+  Future<List<String>> listObjects({required String prefix});
+
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
   static Future<S3Client> newInstance({
     required String endpoint,

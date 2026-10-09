@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_sync/src/application/remote_wipe.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
@@ -229,6 +230,32 @@ void main() {
       expect(SyncKeyManager.pendingUploadBackends(), isEmpty);
     });
 
+    test('installKey 只在换了 DEK 时标记媒体强制重传', () async {
+      const keyfile = SyncKeyfile(
+        kdfMemoryKiB: 65536,
+        kdfIterations: 3,
+        kdfParallelism: 4,
+        saltB64: 'cw==',
+        wrappedDekB64: 'dw==',
+      );
+      Future<void> install(List<int> dek) => SyncKeyManager.installKey(
+        dek: dek,
+        keyfile: keyfile,
+        backendId: 'b1',
+        configured: {'b1', 'b2'},
+      );
+      final dek = SyncKeyManager.generateDek();
+      SyncKeyManager.markKeyConflict('b1');
+      await install(dek);
+      expect(SyncKeyManager.hasForceMediaReupload('b1'), isFalse);
+      expect(SyncKeyManager.hasKeyConflict('b1'), isFalse);
+      expect(SyncKeyManager.pendingUploadBackends(), ['b2']);
+      await install([...dek]);
+      expect(SyncKeyManager.hasForceMediaReupload('b1'), isFalse);
+      await install(SyncKeyManager.generateDek());
+      expect(SyncKeyManager.hasForceMediaReupload('b1'), isTrue);
+    });
+
     test('cacheKeyfile 往返；损坏缓存按不存在处理', () async {
       final dek = SyncKeyManager.generateDek();
       final kf = await SyncKeyManager.wrapDek(dek: dek, passphrase: 'p');
@@ -404,53 +431,182 @@ void main() {
     });
   });
 
-  group('verifyPassphrase', () {
-    test('远端 keyfile 优先；解包 DEK 与本机一致才通过', () async {
-      final dek = SyncKeyManager.generateDek();
-      await SyncKeyManager.storeDek(dek);
-      final kf = await SyncKeyManager.wrapDek(dek: dek, passphrase: 'p');
+  group('probeRemote', () {
+    test('无清单 / 明文清单 → plaintext', () async {
       final backend = FakeRemoteBackend();
-      backend.objects[SyncKeys.keysPath] = kf.toBytes();
-
       expect(
-        await SyncKeyManager.verifyPassphrase('p', backend: backend),
-        isTrue,
+        await SyncKeyManager.probeRemote(backend),
+        RemoteKeyStatus.plaintext,
       );
+      backend.objects[SyncKeys.manifestPath] = await SyncCipher.plaintext
+          .encode({'version': 2});
       expect(
-        await SyncKeyManager.verifyPassphrase('wrong', backend: backend),
-        isFalse,
+        await SyncKeyManager.probeRemote(backend),
+        RemoteKeyStatus.plaintext,
       );
     });
 
-    test('远端不可达回退本机缓存', () async {
-      final dek = SyncKeyManager.generateDek();
-      await SyncKeyManager.storeDek(dek);
-      final kf = await SyncKeyManager.wrapDek(dek: dek, passphrase: 'p');
-      SyncKeyManager.cacheKeyfile(kf);
-
+    test('密文清单解不开 → 有 keys.json 为 locked，没有为 keyfileMissing', () async {
       final backend = FakeRemoteBackend();
-      backend.beforeOp = (op, key) => throw const SyncException('offline');
+      backend.objects[SyncKeys.manifestPath] = Uint8List.fromList([
+        ...utf8.encode(SyncCipher.magic),
+        1,
+        2,
+        3,
+      ]);
 
+      await SyncKeyManager.storeDek(SyncKeyManager.generateDek());
       expect(
-        await SyncKeyManager.verifyPassphrase('p', backend: backend),
-        isTrue,
+        await SyncKeyManager.probeRemote(backend),
+        RemoteKeyStatus.keyfileMissing,
       );
-    });
 
-    test('本机无 DEK / 无任何 keyfile → false', () async {
-      expect(await SyncKeyManager.verifyPassphrase('p'), isFalse);
-      await SyncKeyManager.storeDek(SyncKeyManager.generateDek());
-      expect(await SyncKeyManager.verifyPassphrase('p'), isFalse);
-    });
-
-    test('keyfile 包的是别把 DEK → false（防串库）', () async {
-      await SyncKeyManager.storeDek(SyncKeyManager.generateDek());
-      final other = await SyncKeyManager.wrapDek(
+      backend.objects[SyncKeys.keysPath] = (await SyncKeyManager.wrapDek(
         dek: SyncKeyManager.generateDek(),
         passphrase: 'p',
+      )).toBytes();
+      expect(await SyncKeyManager.probeRemote(backend), RemoteKeyStatus.locked);
+
+      await SyncKeyManager.clearDek();
+      expect(await SyncKeyManager.probeRemote(backend), RemoteKeyStatus.locked);
+    });
+
+    test('读不到远端 → unknown', () async {
+      final backend = FakeRemoteBackend();
+      backend.beforeOp = (op, key) => throw const SyncException('offline');
+      expect(
+        await SyncKeyManager.probeRemote(backend),
+        RemoteKeyStatus.unknown,
       );
-      SyncKeyManager.cacheKeyfile(other);
-      expect(await SyncKeyManager.verifyPassphrase('p'), isFalse);
+    });
+  });
+
+  test('remoteDecryptedElsewhere：本机有密钥、云端明文且无 keys.json 才算，待补传也不放行', () async {
+    final backend = FakeRemoteBackend();
+    final plain = await SyncCipher.plaintext.encode({'version': 2});
+    Future<bool> check(Uint8List manifest) =>
+        SyncKeyManager.remoteDecryptedElsewhere(backend, manifest);
+
+    expect(await check(plain), isFalse);
+
+    await SyncKeyManager.storeDek(SyncKeyManager.generateDek());
+    expect(await check(plain), isTrue);
+    expect(
+      await check(Uint8List.fromList([...utf8.encode(SyncCipher.magic), 1])),
+      isFalse,
+    );
+    expect(
+      await SyncKeyManager.remoteDecryptedElsewhere(
+        FakeRemoteBackend(backendId: 'webdav'),
+        Uint8List(0),
+      ),
+      isFalse,
+    );
+
+    SyncKeyManager.cacheKeyfile(
+      await SyncKeyManager.wrapDek(
+        dek: SyncKeyManager.generateDek(),
+        passphrase: 'p',
+      ),
+    );
+    await SyncKeyManager.markPendingUpload({'webdav'});
+    backend.objects[SyncKeys.manifestPath] = plain;
+    await SyncKeyManager.uploadPendingKeyfile(backend);
+    expect(backend.hasObject(SyncKeys.keysPath), isFalse);
+    expect(SyncKeyManager.pendingUploadBackends(), ['webdav']);
+    expect(await check(plain), isTrue);
+
+    backend.objects[SyncKeys.keysPath] = (await SyncKeyManager.wrapDek(
+      dek: SyncKeyManager.generateDek(),
+      passphrase: 'p',
+    )).toBytes();
+    expect(await check(plain), isFalse);
+  });
+
+  group('RemoteWipe', () {
+    test('信封无条件最先删，可疑键与锁文件不碰，删完补一份明文空清单', () async {
+      final backend = FakeRemoteBackend(
+        objects: {
+          for (final k in [
+            'diary/a.json',
+            'media/image/x.jpg',
+            SyncKeys.keysPath,
+            'mediainfo/image/x.jpg.json',
+            '../outside.db',
+            'media/%2e%2e/y',
+          ])
+            k: Uint8List.fromList([1]),
+        },
+      );
+      final progress = <int>[];
+      final report = await RemoteWipe.run(
+        backend,
+        passphrase: null,
+        onProgress: (done, total, _) => progress.add(done),
+      );
+
+      expect(report.deleted, 5);
+      expect(report.failed, 0);
+      expect(progress.last, 5);
+      expect(backend.objects.keys, {
+        '../outside.db',
+        'media/%2e%2e/y',
+        SyncKeys.manifestPath,
+      });
+      final writes = backend.ops.where(
+        (o) =>
+            (o.startsWith('delete ') || o.startsWith('write ')) &&
+            !o.endsWith(SyncKeys.lockPath),
+      );
+      expect(writes.take(2), [
+        'delete ${SyncKeys.manifestPath}',
+        'delete ${SyncKeys.keysPath}',
+      ]);
+      expect(writes.last, 'write ${SyncKeys.manifestPath}');
+    });
+
+    test('补种失败挂冲突标记，自动同步不会用旧密钥重铺空云端', () async {
+      final backend =
+          FakeRemoteBackend(
+              objects: {
+                'diary/a.json': Uint8List.fromList([1]),
+              },
+            )
+            ..beforeOp = (op, key) {
+              if (op == 'write' && key == SyncKeys.manifestPath) {
+                throw const SyncException('offline');
+              }
+            };
+      await SyncKeyManager.storeDek(SyncKeyManager.generateDek());
+
+      await expectLater(
+        RemoteWipe.run(backend, passphrase: null),
+        throwsA(isA<SyncException>()),
+      );
+      expect(SyncKeyManager.hasKeyConflict('webdav'), isTrue);
+    });
+
+    test('删除失败重试一次，仍失败只计数，补种照常', () async {
+      final backend = FakeRemoteBackend(
+        objects: {
+          SyncKeys.manifestPath: Uint8List.fromList([1]),
+          'diary/a.json': Uint8List.fromList([1]),
+          'diary/b.json': Uint8List.fromList([1]),
+          'diary/c.json': Uint8List.fromList([1]),
+        },
+      );
+      var flaky = 0;
+      backend.beforeOp = (op, key) {
+        if (op != 'delete') return;
+        if (key == 'diary/a.json') throw const SyncException('denied');
+        if (key == 'diary/c.json' && flaky++ == 0) {
+          throw const SyncException('timeout');
+        }
+      };
+      final report = await RemoteWipe.run(backend, passphrase: null);
+      expect(report.failed, 1);
+      expect(report.deleted, 4);
+      expect(backend.objects.keys, {'diary/a.json', SyncKeys.manifestPath});
     });
   });
 }

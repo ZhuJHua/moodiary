@@ -1307,6 +1307,7 @@ dependencies = [
  "http-body-util",
  "hyper",
  "hyper-util",
+ "percent-encoding",
  "reqwest",
  "reqwest_dav",
  "rig-agent",

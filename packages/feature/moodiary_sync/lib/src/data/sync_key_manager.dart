@@ -13,6 +13,8 @@ import 'package:moodiary_sync/src/data/sync_keyfile.dart';
 
 enum RemoteKeyfileCheck { safe, conflict, unknown }
 
+enum RemoteKeyStatus { plaintext, unlocked, locked, keyfileMissing, unknown }
+
 typedef DeriveKeyFn = Future<List<int>> Function({
   required String salt,
   required String passphrase,
@@ -134,6 +136,23 @@ class SyncKeyManager {
     await MoodiarySecureKVs.syncDek.set(base64Encode(dek));
     _dekCache = dek;
     _dekLoaded = true;
+  }
+
+  static Future<void> installKey({
+    required List<int> dek,
+    required SyncKeyfile keyfile,
+    required String? backendId,
+    required Set<String> configured,
+  }) async {
+    final previous = await loadDek();
+    if (previous != null && !listEquals(previous, dek)) {
+      markForceMediaReupload(backendId);
+    }
+    await storeDek(dek);
+    cacheKeyfile(keyfile);
+    await markPendingUpload(configured);
+    if (backendId != null) await clearPendingUpload(backendId);
+    clearKeyConflict(backendId);
   }
 
   static Future<void> clearDek() async {
@@ -264,10 +283,16 @@ class SyncKeyManager {
     final Uint8List? manifestBytes;
     try {
       remote = await readRemoteKeyfile(backend);
-      if (remote == null) return .safe;
       manifestBytes = await backend.readObject(SyncKeys.manifestPath);
     } catch (_) {
       return .unknown;
+    }
+    if (remote == null) {
+      final plaintextCloud =
+          manifestBytes != null &&
+          manifestBytes.isNotEmpty &&
+          !SyncCipher.isCipherText(manifestBytes);
+      return plaintextCloud ? .unknown : .safe;
     }
     final cached = cachedKeyfile();
     if (cached != null &&
@@ -310,25 +335,43 @@ class SyncKeyManager {
     }
   }
 
-  static Future<bool> verifyPassphrase(
-    String passphrase, {
-    IRemoteSyncBackend? backend,
-  }) async {
-    final localDek = await loadDek();
-    if (localDek == null) return false;
-    SyncKeyfile? keyfile;
-    if (backend != null && await backend.isReady()) {
-      try {
-        keyfile = await readRemoteKeyfile(backend);
-      } catch (_) {
-        keyfile = null;
-      }
+  static Future<bool> remoteDecryptedElsewhere(
+    RemoteObjectStore backend,
+    Uint8List manifest,
+  ) async {
+    final id = backend.persistentBackendId;
+    if (id == null || manifest.isEmpty || SyncCipher.isCipherText(manifest)) {
+      return false;
     }
-    keyfile ??= cachedKeyfile();
-    if (keyfile == null) return false;
+    if (await loadDek() == null) return false;
+    return await readRemoteKeyfile(backend) == null;
+  }
+
+  static Future<RemoteKeyStatus> probeRemote(RemoteObjectStore backend) async {
+    final Uint8List? manifest;
     try {
-      final dek = await unwrapDek(keyfile: keyfile, passphrase: passphrase);
-      return listEquals(dek, localDek);
+      manifest = await backend.readObject(SyncKeys.manifestPath);
+    } catch (_) {
+      return .unknown;
+    }
+    if (manifest == null || !SyncCipher.isCipherText(manifest)) {
+      return .plaintext;
+    }
+    final dek = await loadDek();
+    if (dek != null && await _opens(dek, manifest)) return .unlocked;
+    try {
+      return await readRemoteKeyfile(backend) == null
+          ? .keyfileMissing
+          : .locked;
+    } catch (_) {
+      return .unknown;
+    }
+  }
+
+  static Future<bool> _opens(List<int> dek, Uint8List bytes) async {
+    try {
+      await SyncCipher.withKey(dek).decryptBytes(bytes);
+      return true;
     } on SyncException {
       return false;
     }

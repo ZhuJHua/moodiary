@@ -1,11 +1,33 @@
+import 'package:clock/clock.dart';
 import 'package:fast_crypto/fast_crypto.dart';
 import 'package:flutter/foundation.dart'
     show ValueListenable, ValueNotifier, visibleForTesting;
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 
+sealed class PinAttempt {
+  const PinAttempt();
+}
+
+final class PinAccepted extends PinAttempt {
+  const PinAccepted();
+}
+
+final class PinRejected extends PinAttempt {
+  final int remaining;
+  const PinRejected(this.remaining);
+}
+
+final class PinLockedOut extends PinAttempt {
+  final Duration left;
+  const PinLockedOut(this.left);
+}
+
 final class AppLockPin {
   AppLockPin._();
+
+  static const int maxAttempts = 5;
+  static const Duration cooldown = Duration(seconds: 30);
 
   @visibleForTesting
   static Future<String> Function(String pin) hasher = _rustHash;
@@ -48,6 +70,7 @@ final class AppLockPin {
   }
 
   static Future<void> clear() async {
+    resetAttempts();
     MoodiaryKVs.appLockHint.set(false);
     await MoodiarySecureKVs.password.remove();
     _enabled.value = false;
@@ -76,5 +99,41 @@ final class AppLockPin {
       logger.e('应用锁：校验 PIN 失败', error: e, stackTrace: s);
       return false;
     }
+  }
+
+  static Duration lockoutLeft() {
+    final now = clock.now();
+    final until = MoodiaryKVs.appLockLockedUntil.get() ?? 0;
+    final left = Duration(milliseconds: until - now.millisecondsSinceEpoch);
+    if (left <= Duration.zero) return Duration.zero;
+    if (left <= cooldown) return left;
+    MoodiaryKVs.appLockLockedUntil.set(
+      now.add(cooldown).millisecondsSinceEpoch,
+    );
+    return cooldown;
+  }
+
+  static void resetAttempts() {
+    MoodiaryKVs.appLockFailCount.set(0);
+    MoodiaryKVs.appLockLockedUntil.set(0);
+  }
+
+  static Future<PinAttempt> attempt(String pin) async {
+    final left = lockoutLeft();
+    if (left > Duration.zero) return PinLockedOut(left);
+    if (await verify(pin)) {
+      resetAttempts();
+      return const PinAccepted();
+    }
+    final failed = (MoodiaryKVs.appLockFailCount.get() ?? 0) + 1;
+    if (failed < maxAttempts) {
+      MoodiaryKVs.appLockFailCount.set(failed);
+      return PinRejected(maxAttempts - failed);
+    }
+    MoodiaryKVs.appLockFailCount.set(0);
+    MoodiaryKVs.appLockLockedUntil.set(
+      clock.now().add(cooldown).millisecondsSinceEpoch,
+    );
+    return const PinLockedOut(cooldown);
   }
 }

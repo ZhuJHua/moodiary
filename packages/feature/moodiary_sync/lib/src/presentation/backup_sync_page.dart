@@ -18,7 +18,6 @@ import 'package:moodiary_sync/src/presentation/widget/sync_labels.dart';
 import 'package:moodiary_sync/src/presentation/widget/user_key_tile.dart';
 import 'package:moodiary_sync/src/presentation/widget/webdav_form_sheet.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
-import 'package:mui/mui.dart';
 
 class BackupSyncPage extends ConsumerWidget {
   const BackupSyncPage({super.key});
@@ -190,6 +189,10 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
           subtitle: _backendSubtitle(context, configured),
           trailing: const Icon(LucideIcons.chevronRight),
           onTap: () async {
+            if (!await AppAuth.verify(context, .syncConfig) ||
+                !context.mounted) {
+              return;
+            }
             final ok = current == .webdav
                 ? await WebDavFormSheet.show(context)
                 : await S3FormSheet.show(context);
@@ -325,7 +328,12 @@ class _LanSection extends StatelessWidget {
           subtitle: context.l10n.sync.lanSendSubtitle,
           leading: const Icon(LucideIcons.radioTower),
           trailing: const Icon(LucideIcons.chevronRight),
-          onTap: () => const LanSendRoute().push(context),
+          onTap: () async {
+            if (!await AppAuth.verify(context, .lanSend) || !context.mounted) {
+              return;
+            }
+            const LanSendRoute().push(context);
+          },
         ),
         SettingListTile(
           title: context.l10n.sync.lanReceive,

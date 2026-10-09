@@ -1,4 +1,4 @@
-use super::{kind_of_reqwest, kind_of_status, tagged};
+use super::{kind_of_reqwest, kind_of_status, req_err, tagged, xml_elements, xml_text};
 use crate::api::ExclusiveCreate;
 use anyhow::Result;
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
@@ -95,6 +95,49 @@ fn is_ipv4_shaped(bytes: &[u8]) -> bool {
         }
     }
     dots == 3 && has_digit
+}
+
+fn list_url(bucket: &Bucket, creds: &Credentials, prefix: &str, token: Option<&str>) -> url::Url {
+    let mut action = bucket.get_object(Some(creds), "");
+    action.query_mut().insert("list-type", "2");
+    action.query_mut().insert("prefix", prefix);
+    if let Some(t) = token {
+        action.query_mut().insert("continuation-token", t);
+    }
+    action.sign(SIGN_TTL)
+}
+
+struct ListPage {
+    keys: Vec<String>,
+    next: Option<String>,
+}
+
+fn parse_list_page(xml: &str) -> Result<ListPage> {
+    let keys = xml_elements(xml, "Contents")
+        .into_iter()
+        .filter_map(|c| xml_elements(c, "Key").first().map(|k| xml_text(k)))
+        .filter(|k| !k.is_empty() && !k.ends_with('/'))
+        .collect();
+    let truncated = xml_elements(xml, "IsTruncated")
+        .first()
+        .is_some_and(|t| t.trim().eq_ignore_ascii_case("true"));
+    if !truncated {
+        return Ok(ListPage { keys, next: None });
+    }
+    let next = xml_elements(xml, "NextContinuationToken")
+        .first()
+        .map(|t| xml_text(t))
+        .filter(|t| !t.is_empty())
+        .ok_or_else(|| {
+            tagged(
+                "server",
+                "List failed: truncated response without NextContinuationToken",
+            )
+        })?;
+    Ok(ListPage {
+        keys,
+        next: Some(next),
+    })
 }
 
 fn resolve_region(region: Option<String>) -> String {
@@ -284,12 +327,7 @@ impl S3Client {
         crate::http::client::read_body(resp)
             .await
             .map(Some)
-            .map_err(|e| {
-                tagged(
-                    kind_of_reqwest(&e),
-                    format!("Failed to read object content: {e}"),
-                )
-            })
+            .map_err(|e| req_err(e, "Failed to read object content"))
     }
 
     pub async fn write_object(&self, key: String, data: Vec<u8>) -> Result<()> {
@@ -419,6 +457,43 @@ impl S3Client {
         match resp.status().as_u16() {
             404 | 200..=299 => Ok(()),
             _ => Err(Self::fail(&format!("Delete {key}"), resp).await),
+        }
+    }
+
+    pub async fn list_objects(&self, prefix: String) -> Result<Vec<String>> {
+        let mut keys = Vec::new();
+        let mut token: Option<String> = None;
+        loop {
+            let resp = self
+                .send(
+                    reqwest::Method::GET,
+                    |b| list_url(b, &self.creds, &prefix, token.as_deref()),
+                    &[],
+                    None,
+                )
+                .await?;
+            if resp.status().as_u16() == 404 {
+                return Ok(keys);
+            }
+            if !resp.status().is_success() {
+                return Err(Self::fail("List", resp).await);
+            }
+            let body = resp
+                .text()
+                .await
+                .map_err(|e| req_err(e, "Failed to read list response"))?;
+            let page = parse_list_page(&body)?;
+            keys.extend(page.keys);
+            match page.next {
+                None => return Ok(keys),
+                Some(next) if token.as_deref() == Some(next.as_str()) => {
+                    return Err(tagged(
+                        "server",
+                        "List failed: server repeated the continuation token",
+                    ));
+                }
+                next => token = next,
+            }
         }
     }
 
@@ -574,6 +649,59 @@ mod tests {
         );
         assert_eq!(cas_header(CAS_NONE), None);
         assert_eq!(cas_header(CAS_UNKNOWN), None);
+    }
+
+    #[test]
+    fn list_page_keeps_files_and_the_continuation_token() {
+        let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Name>b</Name><Prefix></Prefix>
+<IsTruncated>true</IsTruncated><NextContinuationToken>tok&amp;1==</NextContinuationToken>
+<Contents><Key>manifest.json</Key><Size>1</Size></Contents>
+<Contents><Key>diary/</Key><Size>0</Size></Contents>
+<Contents><Key>media/image/a&amp;b.png</Key></Contents>
+<CommonPrefixes><Prefix>diary/</Prefix></CommonPrefixes></ListBucketResult>"#;
+        let page = parse_list_page(xml).unwrap();
+        assert_eq!(page.keys, vec!["manifest.json", "media/image/a&b.png"]);
+        assert_eq!(page.next.as_deref(), Some("tok&1=="));
+    }
+
+    #[test]
+    fn list_url_targets_the_bucket_root() {
+        let client = S3Client::new(
+            "localhost/gateway".into(),
+            "ak".into(),
+            "sk".into(),
+            "moodiary".into(),
+            true,
+            None,
+        )
+        .expect("client builds");
+        let url = list_url(&client.bucket, &client.creds, "root/", Some("t&k"));
+        assert_eq!(url.path(), "/gateway/moodiary/");
+        let query: std::collections::HashMap<_, _> = url.query_pairs().into_owned().collect();
+        assert_eq!(query["list-type"], "2");
+        assert_eq!(query["prefix"], "root/");
+        assert_eq!(query["continuation-token"], "t&k");
+        assert!(query.contains_key("X-Amz-Signature"));
+    }
+
+    #[test]
+    fn list_page_without_truncation_ends() {
+        let xml = "<ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>";
+        let page = parse_list_page(xml).unwrap();
+        assert!(page.keys.is_empty());
+        assert!(page.next.is_none());
+    }
+
+    #[test]
+    fn truncated_list_page_without_a_token_fails() {
+        for xml in [
+            "<ListBucketResult><IsTruncated>true</IsTruncated><Contents><Key>a</Key></Contents></ListBucketResult>",
+            "<ListBucketResult><IsTruncated>true</IsTruncated><NextContinuationToken></NextContinuationToken></ListBucketResult>",
+        ] {
+            let err = parse_list_page(xml).err().expect(xml).to_string();
+            assert!(err.starts_with("[server] "), "{err}");
+        }
     }
 
     #[test]

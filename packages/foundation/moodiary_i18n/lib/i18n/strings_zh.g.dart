@@ -2583,89 +2583,101 @@ class Translations$lock$zh {
 
 	// Translations
 
-	/// zh: '应用锁'
-	String get title => '应用锁';
+	/// zh: '访问密码'
+	String get title => '访问密码';
 
-	/// zh: '已开启'
-	String get enabled => '已开启';
+	/// zh: '启动与敏感操作时验证'
+	String get subtitle => '启动与敏感操作时验证';
 
-	/// zh: '未开启'
-	String get disabled => '未开启';
+	/// zh: '修改访问密码'
+	String get changePassword => '修改访问密码';
 
-	/// zh: '开启后，每次启动应用都需要输入密码。'
-	String get turnOnMessage => '开启后，每次启动应用都需要输入密码。';
+	/// zh: '离开即锁定'
+	String get lockNow => '离开即锁定';
 
-	/// zh: '关闭后启动将不再需要密码。'
-	String get turnOffMessage => '关闭后启动将不再需要密码。';
+	/// zh: '回到应用时重新验证'
+	String get lockNowSubtitle => '回到应用时重新验证';
 
-	/// zh: '去设置'
-	String get turnOnAction => '去设置';
+	/// zh: '生物识别'
+	String get biometric => '生物识别';
 
-	/// zh: '去关闭'
-	String get turnOffAction => '去关闭';
+	/// zh: '代替访问密码'
+	String get biometricSubtitle => '代替访问密码';
 
-	/// zh: '修改密码'
-	String get changePassword => '修改密码';
+	/// zh: '访问密码已开启'
+	String get turnedOn => '访问密码已开启';
 
-	/// zh: '立即锁定'
-	String get lockNow => '立即锁定';
+	/// zh: '访问密码已关闭'
+	String get turnedOff => '访问密码已关闭';
 
-	/// zh: '退到后台后再回来需重新解锁'
-	String get lockNowSubtitle => '退到后台后再回来需重新解锁';
+	/// zh: '访问密码已修改'
+	String get passwordChanged => '访问密码已修改';
 
-	/// zh: '生物识别解锁'
-	String get biometric => '生物识别解锁';
+	/// zh: '设置访问密码'
+	String get setPassword => '设置访问密码';
 
-	/// zh: '用指纹 / 面容快速解锁'
-	String get biometricSubtitle => '用指纹 / 面容快速解锁';
+	/// zh: '再次输入'
+	String get confirmPassword => '再次输入';
 
-	/// zh: '已开启应用锁'
-	String get turnedOn => '已开启应用锁';
+	/// zh: '两次不一致，请重新设置'
+	String get mismatch => '两次不一致，请重新设置';
 
-	/// zh: '已关闭应用锁'
-	String get turnedOff => '已关闭应用锁';
+	/// zh: '保存失败，请重试'
+	String get saveFailed => '保存失败，请重试';
 
-	/// zh: '密码已修改'
-	String get passwordChanged => '密码已修改';
+	/// zh: '输入新密码'
+	String get enterNew => '输入新密码';
 
-	/// zh: '设置密码'
-	String get setPassword => '设置密码';
+	/// zh: '再次输入'
+	String get confirmNew => '再次输入';
 
-	/// zh: '确认密码'
-	String get confirmPassword => '确认密码';
+	/// zh: '输入访问密码'
+	String get prompt => '输入访问密码';
 
-	/// zh: '两次输入不一致，请重新设置'
-	String get mismatch => '两次输入不一致，请重新设置';
+	/// zh: '密码错误，还剩 {count} 次'
+	String attemptsLeft({required Object count}) => '密码错误，还剩 ${count} 次';
 
-	/// zh: '密码保存失败，请重试'
-	String get saveFailed => '密码保存失败，请重试';
+	/// zh: '尝试过多，{seconds} 秒后重试'
+	String cooldown({required Object seconds}) => '尝试过多，${seconds} 秒后重试';
 
-	/// zh: '密码错误'
-	String get wrongPassword => '密码错误';
+	/// zh: '验证身份'
+	String get biometricTitle => '验证身份';
 
-	/// zh: '输入密码以关闭'
-	String get enterToTurnOff => '输入密码以关闭';
+	/// zh: '使用生物识别继续'
+	String get biometricReason => '使用生物识别继续';
 
-	/// zh: '输入当前密码'
-	String get verifyCurrent => '输入当前密码';
+	/// zh: '使用密码'
+	String get biometricUsePasscode => '使用密码';
 
-	/// zh: '设置新密码'
-	String get enterNew => '设置新密码';
+	/// zh: '需要验证身份'
+	String get authSubtitle => '需要验证身份';
 
-	/// zh: '确认新密码'
-	String get confirmNew => '确认新密码';
+	/// zh: '修改加密密码'
+	String get actionSyncKeyChange => '修改加密密码';
 
-	/// zh: '请输入密码'
-	String get prompt => '请输入密码';
+	/// zh: '关闭加密'
+	String get actionSyncKeyDisable => '关闭加密';
 
-	/// zh: '密码错误，还可重试 {count} 次'
-	String attemptsLeft({required Object count}) => '密码错误，还可重试 ${count} 次';
+	/// zh: '重置云端'
+	String get actionSyncCloudReset => '重置云端';
 
-	/// zh: '尝试次数过多，请等待 {seconds} 秒'
-	String cooldown({required Object seconds}) => '尝试次数过多，请等待 ${seconds} 秒';
+	/// zh: '关闭访问密码'
+	String get actionPasscodeDisable => '关闭访问密码';
 
-	/// zh: '安全验证'
-	String get biometricReason => '安全验证';
+	/// zh: '修改访问密码'
+	String get actionPasscodeChange => '修改访问密码';
+
+	/// zh: '导出数据'
+	String get actionDataExport => '导出数据';
+
+	/// zh: '开启生物识别'
+	String get actionBiometricEnable => '开启生物识别';
+
+	/// zh: '局域网发送'
+	String get actionLanSend => '局域网发送';
+
+	/// zh: '修改同步配置'
+	String get actionSyncConfig => '修改同步配置';
 }
 
 // Path: media
@@ -3381,32 +3393,32 @@ class Translations$sync$zh {
 	/// zh: '未连接 Wi-Fi，无法获取本机地址'
 	String get lanNoWifi => '未连接 Wi-Fi，无法获取本机地址';
 
-	/// zh: '远端数据已加密但缺少密钥文件（keys.json），无法解密。请清空远端数据后重新上传。'
-	String get keyGuardMissing => '远端数据已加密但缺少密钥文件（keys.json），无法解密。请清空远端数据后重新上传。';
+	/// zh: '云端缺少密钥文件，任何密码都无法解开。'
+	String get keyGuardMissing => '云端缺少密钥文件，任何密码都无法解开。';
 
-	/// zh: '远端备份已加密'
-	String get keyGuardTitle => '远端备份已加密';
+	/// zh: '云端数据已加密'
+	String get keyGuardTitle => '云端数据已加密';
 
-	/// zh: '当前设备的密钥无法解密远端数据。请输入与原设备一致的加密密码，验证通过后开始同步。'
-	String get keyGuardMessageMismatch => '当前设备的密钥无法解密远端数据。请输入与原设备一致的加密密码，验证通过后开始同步。';
+	/// zh: '本机密钥与云端不一致，请输入云端的加密密码。'
+	String get keyGuardMessageMismatch => '本机密钥与云端不一致，请输入云端的加密密码。';
 
-	/// zh: '远端数据已加密。请输入与原设备一致的加密密码，验证通过后开始同步。'
-	String get keyGuardMessage => '远端数据已加密。请输入与原设备一致的加密密码，验证通过后开始同步。';
+	/// zh: '输入加密密码以继续同步。'
+	String get keyGuardMessage => '输入加密密码以继续同步。';
 
 	/// zh: '加密密码'
 	String get keyGuardHint => '加密密码';
 
-	/// zh: '验证并保存'
-	String get keyGuardConfirm => '验证并保存';
+	/// zh: '解锁'
+	String get keyGuardConfirm => '解锁';
 
 	/// zh: '请输入密码'
 	String get keyNeedPassword => '请输入密码';
 
-	/// zh: '密码不正确，无法解密远端数据'
-	String get keyGuardWrong => '密码不正确，无法解密远端数据';
+	/// zh: '密码不正确'
+	String get keyGuardWrong => '密码不正确';
 
-	/// zh: '密钥已配置'
-	String get keyConfigured => '密钥已配置';
+	/// zh: '已解锁'
+	String get keyConfigured => '已解锁';
 
 	/// zh: '端到端加密'
 	String get e2eTitle => '端到端加密';
@@ -3420,26 +3432,8 @@ class Translations$sync$zh {
 	/// zh: '管理加密'
 	String get e2eManage => '管理加密';
 
-	/// zh: '密码不正确'
-	String get keyWrong => '密码不正确';
-
-	/// zh: '验证成功'
-	String get keyVerified => '验证成功';
-
-	/// zh: '请先验证当前密码'
-	String get keyVerifyFirst => '请先验证当前密码';
-
 	/// zh: '两次输入的密码不一致'
 	String get keyMismatch => '两次输入的密码不一致';
-
-	/// zh: '加密管理'
-	String get keyManageTitle => '加密管理';
-
-	/// zh: '当前密码'
-	String get keyCurrent => '当前密码';
-
-	/// zh: '验证'
-	String get keyVerify => '验证';
 
 	/// zh: '新密码'
 	String get keyNew => '新密码';
@@ -3453,20 +3447,20 @@ class Translations$sync$zh {
 	/// zh: '关闭加密'
 	String get keyTurnOff => '关闭加密';
 
-	/// zh: '密码已更换（数据密钥不变，云端无需重新加密）'
-	String get keyChanged => '密码已更换（数据密钥不变，云端无需重新加密）';
+	/// zh: '密码已修改'
+	String get keyChanged => '密码已修改';
 
-	/// zh: '加密云端已有数据'
-	String get keyEncryptCloudTitle => '加密云端已有数据';
+	/// zh: '加密云端数据？'
+	String get keyEncryptCloudTitle => '加密云端数据？';
 
-	/// zh: '检测到当前同步后端已存在数据。确认后会生成随机数据密钥并加密云端的日记、分类与媒体文件；该密钥由你的密码封装存放在云端。'
-	String get keyEncryptCloudMessage => '检测到当前同步后端已存在数据。确认后会生成随机数据密钥并加密云端的日记、分类与媒体文件；该密钥由你的密码封装存放在云端。';
+	/// zh: '云端已有的日记、分类与媒体将被加密，密钥由你的密码保护。'
+	String get keyEncryptCloudMessage => '云端已有的日记、分类与媒体将被加密，密钥由你的密码保护。';
 
 	/// zh: '继续'
 	String get keyContinue => '继续';
 
-	/// zh: '密钥文件写入云端失败，已取消：{error}'
-	String keyWriteFailed({required Object error}) => '密钥文件写入云端失败，已取消：${error}';
+	/// zh: '密钥写入云端失败：{error}'
+	String keyWriteFailed({required Object error}) => '密钥写入云端失败：${error}';
 
 	/// zh: '云端已加密：{report}'
 	String keyCloudEncrypted({required Object report}) => '云端已加密：${report}';
@@ -3474,17 +3468,17 @@ class Translations$sync$zh {
 	/// zh: '加密已开启'
 	String get keyEncryptionOn => '加密已开启';
 
-	/// zh: '解密云端数据'
-	String get keyDecryptTitle => '解密云端数据';
+	/// zh: '关闭加密？'
+	String get keyDecryptTitle => '关闭加密？';
 
-	/// zh: '关闭加密后，云端的日记、分类与媒体文件会被解密回明文，密钥文件将被删除。确认要继续吗？'
-	String get keyDecryptMessage => '关闭加密后，云端的日记、分类与媒体文件会被解密回明文，密钥文件将被删除。确认要继续吗？';
+	/// zh: '云端数据将解密为明文，密钥文件随之删除。'
+	String get keyDecryptMessage => '云端数据将解密为明文，密钥文件随之删除。';
 
-	/// zh: '有 {failed} 个对象没能解密回明文，已保持加密开启、云端密钥文件未删除。请检查网络后重试关闭。'
-	String keyDecryptPartial({required Object failed}) => '有 ${failed} 个对象没能解密回明文，已保持加密开启、云端密钥文件未删除。请检查网络后重试关闭。';
+	/// zh: '{failed} 个文件未能解密，加密保持开启，请稍后重试。'
+	String keyDecryptPartial({required Object failed}) => '${failed} 个文件未能解密，加密保持开启，请稍后重试。';
 
-	/// zh: '有 {failed} 个对象没能加密，它们在云端仍是明文。补齐要先关闭加密再重新开启一次——直接重开只会换密码。'
-	String keyEncryptPartial({required Object failed}) => '有 ${failed} 个对象没能加密，它们在云端仍是明文。补齐要先关闭加密再重新开启一次——直接重开只会换密码。';
+	/// zh: '{failed} 个文件未能加密，仍为明文。关闭后重新开启加密即可补齐。'
+	String keyEncryptPartial({required Object failed}) => '${failed} 个文件未能加密，仍为明文。关闭后重新开启加密即可补齐。';
 
 	/// zh: '加密已关闭'
 	String get keyEncryptionOff => '加密已关闭';
@@ -3492,8 +3486,8 @@ class Translations$sync$zh {
 	/// zh: '重新加密失败：{error}'
 	String keyReCipherFailed({required Object error}) => '重新加密失败：${error}';
 
-	/// zh: '远端为空，仅保存本地密钥'
-	String get keyRemoteEmpty => '远端为空，仅保存本地密钥';
+	/// zh: '云端为空，已保存密钥'
+	String get keyRemoteEmpty => '云端为空，已保存密钥';
 
 	/// zh: '正在处理云端数据'
 	String get keyProcessing => '正在处理云端数据';
@@ -3501,41 +3495,95 @@ class Translations$sync$zh {
 	/// zh: '准备'
 	String get keyPreparing => '准备';
 
-	/// zh: '已用该密码解锁云端密钥'
-	String get keyUnlocked => '已用该密码解锁云端密钥';
+	/// zh: '已解锁'
+	String get keyUnlocked => '已解锁';
 
-	/// zh: '本机密码已更新；云端由另一把密钥加密，解锁后会自动同步新密码'
-	String get keyChangedLocalOnly => '本机密码已更新；云端由另一把密钥加密，解锁后会自动同步新密码';
+	/// zh: '本机密码已修改，解锁云端后自动同步'
+	String get keyChangedLocalOnly => '本机密码已修改，解锁云端后自动同步';
 
-	/// zh: '无法读取云端密钥文件，已取消：{error}'
-	String keyRemoteProbeFailed({required Object error}) => '无法读取云端密钥文件，已取消：${error}';
+	/// zh: '无法读取云端：{error}'
+	String keyRemoteProbeFailed({required Object error}) => '无法读取云端：${error}';
 
-	/// zh: '密码打不开云端密钥'
-	String get keyRemoteMismatchTitle => '密码打不开云端密钥';
+	/// zh: '密码不匹配'
+	String get keyRemoteMismatchTitle => '密码不匹配';
 
-	/// zh: '云端数据是用另一个密码加密的，这个密码解不开。如果你还记得原密码，请返回重试。也可以丢弃云端的加密数据，用新密码重新上传本机数据。'
-	String get keyRemoteMismatchMessage => '云端数据是用另一个密码加密的，这个密码解不开。如果你还记得原密码，请返回重试。也可以丢弃云端的加密数据，用新密码重新上传本机数据。';
+	/// zh: '这个密码解不开云端数据。可以返回重试，或重置云端。'
+	String get keyRemoteMismatchMessage => '这个密码解不开云端数据。可以返回重试，或重置云端。';
 
-	/// zh: '丢弃云端数据'
-	String get keyDiscardRemote => '丢弃云端数据';
+	/// zh: '同步已暂停'
+	String get keyConflictTitle => '同步已暂停';
 
-	/// zh: '确认丢弃云端加密数据'
-	String get keyDiscardTitle => '确认丢弃云端加密数据';
+	/// zh: '云端加密与本机不一致，点击处理'
+	String get keyConflictSubtitle => '云端加密与本机不一致，点击处理';
 
-	/// zh: '云端现有的日记、分类与媒体将无法再被解密，且此操作不可撤销。本机数据不受影响，会在下次同步时用新密码重新上传。确认继续吗？'
-	String get keyDiscardMessage => '云端现有的日记、分类与媒体将无法再被解密，且此操作不可撤销。本机数据不受影响，会在下次同步时用新密码重新上传。确认继续吗？';
+	/// zh: '已锁定'
+	String get e2eLocked => '已锁定';
 
-	/// zh: '确认丢弃'
-	String get keyDiscardConfirm => '确认丢弃';
+	/// zh: '云端数据由其他密码加密，同步已暂停。'
+	String get keyLockedNotice => '云端数据由其他密码加密，同步已暂停。';
 
-	/// zh: '清除云端密钥文件失败，已取消：{error}'
-	String keyDiscardFailed({required Object error}) => '清除云端密钥文件失败，已取消：${error}';
+	/// zh: '输入密码解锁'
+	String get keyUnlockAction => '输入密码解锁';
 
-	/// zh: '需要解锁云端密钥'
-	String get keyConflictTitle => '需要解锁云端密钥';
+	/// zh: '忘记密码，重置云端'
+	String get keyForgotReset => '忘记密码，重置云端';
 
-	/// zh: '云端由另一把密钥加密，同步已暂停。点击输入密码解锁'
-	String get keyConflictSubtitle => '云端由另一把密钥加密，同步已暂停。点击输入密码解锁';
+	/// zh: '忘记密码？'
+	String get keyForgot => '忘记密码？';
+
+	/// zh: '修改密码'
+	String get keyChangeAction => '修改密码';
+
+	/// zh: '开启加密'
+	String get keyEnableAction => '开启加密';
+
+	/// zh: '暂不加密'
+	String get keySkipEncryption => '暂不加密';
+
+	/// zh: '无法解密云端'
+	String get keyMissingTitle => '无法解密云端';
+
+	/// zh: '重置云端'
+	String get keyResetAction => '重置云端';
+
+	/// zh: '重置云端？'
+	String get keyResetTitle => '重置云端？';
+
+	/// zh: '云端文件将被清空，本机数据不受影响。'
+	String get keyResetMessage => '云端文件将被清空，本机数据不受影响。';
+
+	/// zh: '清空并重置'
+	String get keyResetConfirm => '清空并重置';
+
+	/// zh: '正在清空云端'
+	String get keyWiping => '正在清空云端';
+
+	/// zh: '已清空 {count} 个文件'
+	String keyWiped({required Object count}) => '已清空 ${count} 个文件';
+
+	/// zh: '{failed} 个文件未能删除，可稍后再次重置'
+	String keyWipePartial({required Object failed}) => '${failed} 个文件未能删除，可稍后再次重置';
+
+	/// zh: '清空失败：{error}'
+	String keyWipeFailed({required Object error}) => '清空失败：${error}';
+
+	/// zh: '云端未加密'
+	String get keyRemoteDecryptedTitle => '云端未加密';
+
+	/// zh: '本机开着端到端加密，云端却是明文，可能是其他设备关闭了加密或重置了云端。'
+	String get keyRemoteDecryptedMessage => '本机开着端到端加密，云端却是明文，可能是其他设备关闭了加密或重置了云端。';
+
+	/// zh: '用本机密码加密云端'
+	String get keyRemoteDecryptedEncrypt => '用本机密码加密云端';
+
+	/// zh: '本机也关闭加密'
+	String get keyRemoteDecryptedTurnOff => '本机也关闭加密';
+
+	/// zh: '暂不同步'
+	String get keyNotNow => '暂不同步';
+
+	/// zh: '云端已是明文而本机开着加密，同步已暂停，请到同步设置中处理'
+	String get errRemoteDecrypted => '云端已是明文而本机开着加密，同步已暂停，请到同步设置中处理';
 
 	/// zh: '云端由另一把密钥加密，本机密钥解不开，已中止同步以免覆盖云端密钥文件'
 	String get errKeyConflict => '云端由另一把密钥加密，本机密钥解不开，已中止同步以免覆盖云端密钥文件';
@@ -3731,6 +3779,9 @@ class Translations$sync$zh {
 
 	/// zh: '删除远端对象失败（{key}）：{error}'
 	String errDeleteRemote({required Object key, required Object error}) => '删除远端对象失败（${key}）：${error}';
+
+	/// zh: '列出远端对象失败：{error}'
+	String errListRemote({required Object error}) => '列出远端对象失败：${error}';
 
 	/// zh: '查询远端对象失败（{key}）：{error}'
 	String errStatRemote({required Object key, required Object error}) => '查询远端对象失败（${key}）：${error}';

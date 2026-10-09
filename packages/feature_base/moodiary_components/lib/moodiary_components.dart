@@ -4,6 +4,7 @@ export 'package:mui/mui.dart';
 export 'package:re_highlight/re_highlight.dart'
     show Highlight, HighlightResult, TextSpanRenderer;
 
+export 'src/common/app_auth.dart';
 export 'src/common/async_value.dart';
 export 'src/common/audio/audio_player_page.dart';
 export 'src/common/audio_player.dart';

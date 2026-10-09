@@ -323,6 +323,21 @@ void main() {
     });
   });
 
+  test('本机开着加密、云端被别处解成明文：同步暂停，不碰云端', () async {
+    final backend = FakeRemoteBackend();
+    await seedRemote(backend, diaries: [buildDiary(id: 'a', modifiedMs: 100)]);
+    final before = Map.of(backend.objects);
+    await SyncKeyManager.storeDek(SyncKeyManager.generateDek());
+    final store = FakeDiaryStore([buildDiary(id: 'b', modifiedMs: 200)]);
+
+    await expectLater(
+      engineOn(backend, diaries: store).sync(),
+      throwsA(isA<SyncKeyConflictException>()),
+    );
+    expect(SyncKeyManager.hasKeyConflict(backend.persistentBackendId), isTrue);
+    expect(backend.objects, before);
+  });
+
   group('push — media', () {
     test(
       'uploads media BEFORE the diary JSON and records confirmed refs',
@@ -960,11 +975,9 @@ void main() {
           ),
         ),
       );
-      expect(
-        backend.manifest()!.entries.keys,
-        ['d:c'],
-        reason: '两边 writeToken 都是空串，只有按字节比对才能发现基线已变',
-      );
+      expect(backend.manifest()!.entries.keys, [
+        'd:c',
+      ], reason: '两边 writeToken 都是空串，只有按字节比对才能发现基线已变');
     });
 
     test('别人先写 → 提交前校验拦住整份覆盖，对方的 manifest 原样保留', () async {

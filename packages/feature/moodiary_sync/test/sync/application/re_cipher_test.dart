@@ -46,7 +46,9 @@ void main() {
 
     backend.beforeOp = (op, key) {
       if (op == 'read' && key == SyncKeys.diaryObjectPath('a')) {
-        backend.objects[SyncKeys.manifestPath] = manifestBytes('another-device');
+        backend.objects[SyncKeys.manifestPath] = manifestBytes(
+          'another-device',
+        );
       }
     };
 

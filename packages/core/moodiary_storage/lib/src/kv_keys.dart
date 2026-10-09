@@ -60,6 +60,8 @@ enum MoodiaryKVs<T extends Object> {
   lockNow<bool>(defaultValue: false),
 
   appLockHint<bool>(),
+  appLockFailCount<int>(defaultValue: 0),
+  appLockLockedUntil<int>(defaultValue: 0),
   supportBiometrics<bool>(defaultValue: false),
   backendPrivacy<bool>(defaultValue: false),
 

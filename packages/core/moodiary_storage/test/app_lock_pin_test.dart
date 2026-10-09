@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -113,7 +114,7 @@ void main() {
     });
   });
 
-  group('2.7.3 搬过来的明文原件', () {
+  group('明文存储的 PIN', () {
     test('比对通过并就地升级成哈希', () async {
       secure.data[MoodiarySecureKVs.password.name] = '1234';
 
@@ -136,5 +137,37 @@ void main() {
     AppLockPin.verifier = (hash, pin) async => throw StateError('bad hash');
 
     expect(await AppLockPin.verify('1234'), isFalse);
+  });
+
+  test('连错 5 次冷却 30 秒，冷却内不校验，冷却后计数清零；对了也清零', () async {
+    await AppLockPin.set('1234');
+    var now = DateTime(2026, 10, 6, 12);
+    await withClock(Clock(() => now), () async {
+      for (var i = 4; i >= 1; i--) {
+        expect((await AppLockPin.attempt('0000') as PinRejected).remaining, i);
+      }
+      expect(await AppLockPin.attempt('0000'), isA<PinLockedOut>());
+      expect(await AppLockPin.attempt('1234'), isA<PinLockedOut>());
+
+      now = now.add(AppLockPin.cooldown);
+      expect(AppLockPin.lockoutLeft(), Duration.zero);
+      expect((await AppLockPin.attempt('0000') as PinRejected).remaining, 4);
+      expect(await AppLockPin.attempt('1234'), isA<PinAccepted>());
+      expect((await AppLockPin.attempt('0000') as PinRejected).remaining, 4);
+
+      for (var i = 0; i < AppLockPin.maxAttempts; i++) {
+        await AppLockPin.attempt('0000');
+      }
+      now = now.subtract(const Duration(hours: 1));
+      expect(
+        AppLockPin.lockoutLeft(),
+        AppLockPin.cooldown,
+        reason: '时钟回拨不延长冷却',
+      );
+      now = now.add(const Duration(seconds: 10));
+      expect(AppLockPin.lockoutLeft(), const Duration(seconds: 20));
+      now = now.add(const Duration(seconds: 20));
+      expect(AppLockPin.lockoutLeft(), Duration.zero);
+    });
   });
 }

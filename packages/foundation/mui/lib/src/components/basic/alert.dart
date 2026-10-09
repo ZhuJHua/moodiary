@@ -107,6 +107,7 @@ abstract final class MAlert {
     List<TextInputFormatter>? inputFormatters,
     String? Function(String value)? validator,
     Future<String?> Function(String value)? onSubmit,
+    Widget? footer,
     bool barrierDismissible = true,
   }) {
     return _push<String>(
@@ -129,6 +130,7 @@ abstract final class MAlert {
         inputFormatters: inputFormatters,
         validator: validator,
         onSubmit: onSubmit,
+        footer: footer,
       ),
     );
   }
@@ -424,6 +426,7 @@ class _PromptBody extends StatefulWidget {
   final List<TextInputFormatter>? inputFormatters;
   final String? Function(String value)? validator;
   final Future<String?> Function(String value)? onSubmit;
+  final Widget? footer;
 
   const _PromptBody({
     required this.title,
@@ -442,6 +445,7 @@ class _PromptBody extends StatefulWidget {
     this.inputFormatters,
     this.validator,
     this.onSubmit,
+    this.footer,
   });
 
   @override
@@ -505,6 +509,26 @@ class _PromptBodyState extends State<_PromptBody> {
     }
   }
 
+  Widget _withFooter(Widget field) {
+    final footer = widget.footer;
+    if (footer == null) return field;
+    return Column(
+      mainAxisSize: .min,
+      crossAxisAlignment: .stretch,
+      spacing: 4,
+      children: [
+        field,
+        IgnorePointer(
+          ignoring: _busy,
+          child: Opacity(
+            opacity: _busy ? context.theme.states.disabledOpacity : 1,
+            child: footer,
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.muiL10n;
@@ -516,19 +540,21 @@ class _PromptBodyState extends State<_PromptBody> {
         message: widget.message,
         icon: widget.icon,
         isDestructive: widget.isDestructive,
-        content: MField(
-          controller: _controller,
-          autofocus: true,
-          minHeight: _kFieldHeight,
-          hintText: widget.hintText,
-          errorText: _error,
-          enabled: !_busy,
-          obscureText: widget.obscureText,
-          maxLength: widget.maxLength,
-          maxLines: widget.maxLines,
-          keyboardType: widget.keyboardType,
-          inputFormatters: widget.inputFormatters,
-          onSubmitted: (_) => _submit(),
+        content: _withFooter(
+          MField(
+            controller: _controller,
+            autofocus: true,
+            minHeight: _kFieldHeight,
+            hintText: widget.hintText,
+            errorText: _error,
+            enabled: !_busy,
+            obscureText: widget.obscureText,
+            maxLength: widget.maxLength,
+            maxLines: widget.maxLines,
+            keyboardType: widget.keyboardType,
+            inputFormatters: widget.inputFormatters,
+            onSubmitted: (_) => _submit(),
+          ),
         ),
         actions: MActionBar<String>(
           layout: .auto,
