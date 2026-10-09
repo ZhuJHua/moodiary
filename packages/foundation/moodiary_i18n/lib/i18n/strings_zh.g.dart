@@ -208,18 +208,6 @@ class Translations$app$zh {
 	/// zh: '反馈 / 答疑'
 	String get aboutFeedback => '反馈 / 答疑';
 
-	/// zh: '赞助'
-	String get aboutSponsor => '赞助';
-
-	/// zh: '感谢您的考虑！'
-	String get sponsorThanks => '感谢您的考虑！';
-
-	/// zh: 'Moodiary 是开源软件，由开发者业余维护。如果您喜欢这款应用，可通过下面的链接支持作者继续维护。'
-	String get sponsorBody => 'Moodiary 是开源软件，由开发者业余维护。如果您喜欢这款应用，可通过下面的链接支持作者继续维护。';
-
-	/// zh: '爱发电'
-	String get sponsorAfdian => '爱发电';
-
 	/// zh: '字体'
 	String get fontTitle => '字体';
 
