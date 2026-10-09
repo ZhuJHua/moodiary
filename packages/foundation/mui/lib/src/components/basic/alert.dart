@@ -516,7 +516,16 @@ class _PromptBodyState extends State<_PromptBody> {
       mainAxisSize: .min,
       crossAxisAlignment: .stretch,
       spacing: 4,
-      children: [field, footer],
+      children: [
+        field,
+        IgnorePointer(
+          ignoring: _busy,
+          child: Opacity(
+            opacity: _busy ? context.theme.states.disabledOpacity : 1,
+            child: footer,
+          ),
+        ),
+      ],
     );
   }
 

@@ -330,11 +330,16 @@ impl DavClient {
                 .text()
                 .await
                 .map_err(|e| req_err(e, "Failed to read list response"))?;
+            let mut found_self = false;
             for (href, is_collection) in parse_multistatus(&body) {
                 let Some(rel) = href_to_rel(&self.base, &prefix, &href) else {
                     continue;
                 };
-                if rel.is_empty() || rel == dir {
+                if rel == dir {
+                    found_self = true;
+                    continue;
+                }
+                if rel.is_empty() {
                     continue;
                 }
                 if !is_collection {
@@ -342,6 +347,12 @@ impl DavClient {
                 } else if seen.insert(rel.clone()) {
                     pending.push(rel);
                 }
+            }
+            if !found_self {
+                return Err(tagged(
+                    "server",
+                    format!("List of {path} does not describe {path}"),
+                ));
             }
         }
         Ok(keys)
@@ -577,6 +588,23 @@ mod tests {
         });
         let (mut server, client) = serve(handler, "list404").await;
         assert!(client.list_objects().await.unwrap().is_empty());
+        server.stop();
+    }
+
+    #[tokio::test]
+    async fn list_objects_rejects_hrefs_outside_the_base() {
+        let handler: HandlerFn = Arc::new(move |_| {
+            Box::pin(async move {
+                HttpServerResponse {
+                    status: 207,
+                    headers: vec![],
+                    body: br#"<multistatus xmlns="DAV:"><response><href>/elsewhere/manifest.json</href><propstat><prop><resourcetype/></prop></propstat></response></multistatus>"#.to_vec(),
+                    body_file_path: None,
+                }
+            })
+        });
+        let (mut server, client) = serve(handler, "listoutside").await;
+        assert!(client.list_objects().await.is_err());
         server.stop();
     }
 
