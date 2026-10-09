@@ -42,7 +42,6 @@ class MediaManager {
         final out = await getIt<IHeifDecoder>().convert(
           imageFile.path,
           outputPath: AppFiles.getRealPath('image', name),
-          format: 'jpg',
         );
         if (out == null) return null;
       } else {
