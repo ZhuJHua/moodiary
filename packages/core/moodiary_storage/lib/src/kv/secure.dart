@@ -6,6 +6,11 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 class FlutterSecureStorageKVStorage implements ISecureKVStorage {
   late final FlutterSecureStorage _storage;
 
+  // 清空走可重置的实例：Keystore 解不开旧密钥时普通实例连 deleteAll 都会失败
+  static const FlutterSecureStorage _resettable = FlutterSecureStorage(
+    aOptions: AndroidOptions(resetOnError: true),
+  );
+
   @FactoryMethod(preResolve: true)
   static Future<FlutterSecureStorageKVStorage> create() async {
     final storage = FlutterSecureStorageKVStorage();
@@ -15,7 +20,7 @@ class FlutterSecureStorageKVStorage implements ISecureKVStorage {
 
   @override
   Future<void> clear() {
-    return _storage.deleteAll();
+    return _resettable.deleteAll();
   }
 
   @override
@@ -25,7 +30,10 @@ class FlutterSecureStorageKVStorage implements ISecureKVStorage {
 
   @override
   Future<void> init() async {
-    _storage = const FlutterSecureStorage();
+    // resetOnError 默认 true：Keystore 解密失败会静默清空整个仓库，连数据库密钥一起丢
+    _storage = const FlutterSecureStorage(
+      aOptions: AndroidOptions(resetOnError: false),
+    );
   }
 
   @override

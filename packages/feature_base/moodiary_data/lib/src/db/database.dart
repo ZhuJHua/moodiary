@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite3;
 import 'package:sqlite3_simple/sqlite3_simple.dart';
@@ -10,6 +11,7 @@ import 'package:sqlite3_vec/sqlite3_vec.dart';
 
 import 'database.steps.dart';
 import 'db_codec.dart';
+import 'db_encryption.dart';
 
 part 'database.g.dart';
 
@@ -34,6 +36,8 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
     installJiebaDict();
   }
 
+  /// 加密只在密钥从安全存储读回来之后做（新库也先明文、下次启动再转）；
+  /// 密钥读不到或加密失败时按明文打开，只有「加密库配不上密钥」才是启动失败。
   static Future<MoodiaryDatabase> open({
     required String path,
     required String jiebaDictDir,
@@ -42,22 +46,52 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
     // 但必须赶在第一条连接之前；缺词典时首次查询是 abort 而不是报错。
     loadSqliteVec();
     loadSimpleExtension(jiebaDictDir: jiebaDictDir);
-    final executor = NativeDatabase.createInBackground(
-      File(path),
-      readPool: 3,
-      setup: _setupConnection,
+    final key = await _keyFor(path);
+    final db = MoodiaryDatabase._(
+      NativeDatabase.createInBackground(
+        File(path),
+        readPool: 3,
+        setup: _setupConnection(key),
+      ),
     );
-    final db = MoodiaryDatabase._(executor);
-    await db.customSelect('SELECT 1').get();
+    try {
+      await db.customSelect('SELECT 1').get();
+    } catch (e) {
+      await db.close();
+      if (key != null && isNotADatabase(e)) throw DatabaseKeyMismatch();
+      rethrow;
+    }
     return db;
   }
 
-  static void _setupConnection(sqlite3.Database db) {
+  static Future<String?> _keyFor(String path) async {
+    final state = databaseFileState(path);
+    final resolved = await resolveDatabaseKey(fileState: state);
+    switch (resolved) {
+      case DatabaseKeyStored(:final key):
+        if (state != .plaintext) return key;
+        if (await encryptPlaintextDatabaseOrSkip(path: path, key: key)) {
+          return key;
+        }
+        // rename 之后的收尾失败也算失败，但文件已经是加密的了
+        return databaseFileState(path) == .encrypted ? key : null;
+      case DatabaseKeyFresh():
+        return null;
+      case DatabaseKeyFailed(:final cause):
+        if (state == .encrypted) throw DatabaseKeyUnavailable(cause);
+        logger.e('数据库密钥不可用，本次按明文打开', error: cause);
+        return null;
+    }
+  }
+
+  // 每条连接（写 + 3 读）都各自执行；PRAGMA key 必须是第一条语句
+  static void Function(sqlite3.Database) _setupConnection(String? key) => (db) {
+    if (key != null) applyDatabaseKey(db, key);
     db.execute('PRAGMA journal_mode = WAL');
     db.execute('PRAGMA busy_timeout = 5000');
     db.execute('PRAGMA synchronous = NORMAL');
     db.execute('PRAGMA foreign_keys = ON');
-  }
+  };
 
   @override
   int get schemaVersion => 3;

@@ -36,6 +36,11 @@ melos:
       run: fvm dart tool/task.dart gen-rust
       description: 重新生成 Rust FFI 绑定
 
+hooks:
+  user_defines:
+    sqlite3:
+      source: sqlcipher
+
 dev_dependencies:
   melos: 8.6.0
   flutter_test:

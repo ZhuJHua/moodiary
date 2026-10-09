@@ -33,4 +33,17 @@ void main() {
     logger.i('two');
     expect(calls, [null], reason: 'Logger 实例被缓存，不逐条重建');
   });
+
+  test('release 下截掉 SqliteException 的语句与绑定参数', () {
+    const raw =
+        'SqliteException(1): while executing, constraint failed\n'
+        '  Causing statement: INSERT INTO diaries VALUES (?), parameters: 今天的日记';
+    expect(AppLogger.redact(raw, debug: false), isNot(contains('今天的日记')));
+    expect(
+      AppLogger.redact(raw, debug: false),
+      'SqliteException(1): while executing, constraint failed',
+    );
+    expect(AppLogger.redact('plain error', debug: false), 'plain error');
+    expect(AppLogger.redact(raw, debug: true), raw);
+  });
 }

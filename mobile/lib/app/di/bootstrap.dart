@@ -55,7 +55,13 @@ Future<void> resetAllData() async {
     await step(
       'database.deleteFiles',
       () => Future.wait([
-        for (final suffix in const ['', '-wal', '-shm', '-journal'])
+        for (final suffix in const [
+          '',
+          '-wal',
+          '-shm',
+          '-journal',
+          encryptingSuffix,
+        ])
           AppFiles.deleteFile(
             AppFiles.getRealPath('database', 'moodiary.db$suffix'),
           ),
@@ -65,7 +71,28 @@ Future<void> resetAllData() async {
   await step('kv.clear', () async => getIt.maybeGet<IKVStorage>()?.clear());
   await Future.wait([
     step('secureKv.clear', () async {
-      await getIt.maybeGet<ISecureKVStorage>()?.clear();
+      final secure = getIt.maybeGet<ISecureKVStorage>();
+      if (secure == null) return;
+      // 库被就地清空时文件仍是用当前密钥加密的，密钥要跟着留下；读不出来就只能连库一起放弃
+      String? databaseKey;
+      if (dbCleared) {
+        try {
+          databaseKey = await secure.get(MoodiarySecureKVs.databaseKey.name);
+        } catch (e, s) {
+          logger.e(
+            'resetAllData: database key unreadable',
+            error: e,
+            stackTrace: s,
+          );
+        }
+      }
+      if (databaseKey == null) {
+        await secure.clear();
+        return;
+      }
+      for (final key in MoodiarySecureKVs.values) {
+        if (key != MoodiarySecureKVs.databaseKey) await secure.remove(key.name);
+      }
     }),
     step('legacyPrefs.clear', LegacyPrefsKVSource.clearStore),
     step('media.reset', AppFiles.resetUserMediaDirs),

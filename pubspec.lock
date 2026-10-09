@@ -2191,8 +2191,8 @@ packages:
     dependency: transitive
     description:
       path: "."
-      ref: b69cb32
-      resolved-ref: b69cb3288bf9ec80b90f417dd86bff3afe268c00
+      ref: db8a9a2
+      resolved-ref: db8a9a2d0eabeaf8d9f42e980aa07df2bd56eedf
       url: "https://github.com/ZhuJHua/sqlite3_simple.git"
     source: git
     version: "3.0.0"

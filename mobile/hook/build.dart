@@ -16,6 +16,11 @@ const _rustDirs = [
 /// Dependencies whose third-party licenses cargo-about cannot see, because the
 /// sources are not Rust. Each ships the entries as `third_party.json` at its root.
 const _externalLicensePackages = ['sqlite3_simple', 'sqlite3_vec'];
+
+/// Licenses of native code no package manifest covers: the SQLCipher build of
+/// `sqlite3` (root pubspec `source: sqlcipher`) and the OpenSSL it links on
+/// Android; isar_plus embeds the same pair.
+const _localLicenseManifest = 'licenses/third_party.json';
 const _editorDir = 'packages/feature_base/moodiary_editor/editor';
 const _npmManifest = '$_editorDir/build/third-party-licenses.json';
 const _outPath = 'assets/licenses/third_party.json';
@@ -30,7 +35,10 @@ void main(List<String> args) async {
     }
     final repoRoot = input.packageRoot.resolve('../');
     final rustDirs = [for (final dir in _rustDirs) repoRoot.resolve(dir)];
-    final externalManifests = _externalLicenseManifests(repoRoot);
+    final externalManifests = [
+      ..._externalLicenseManifests(repoRoot),
+      input.packageRoot.resolve(_localLicenseManifest),
+    ];
     final lockFile = File.fromUri(
       input.packageRoot.resolve('.dart_tool/licenses_build.lock'),
     )..createSync(recursive: true);

@@ -17,7 +17,7 @@ dependencies:
   sqlite3_simple:
     git:
       url: https://github.com/ZhuJHua/sqlite3_simple.git
-      ref: b69cb32
+      ref: db8a9a2
   moodiary_di: 0.0.1
   moodiary_files: 0.0.1
   moodiary_storage: 0.0.1

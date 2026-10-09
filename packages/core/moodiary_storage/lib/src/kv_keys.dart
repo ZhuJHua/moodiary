@@ -9,6 +9,8 @@ enum MoodiaryKVs<T extends Object> {
 
   dbEngineMigrated<bool>(defaultValue: false),
 
+  dbEncryptFailures<int>(defaultValue: 0),
+
   autoSync<bool>(defaultValue: false),
 
   syncPollInterval<int>(defaultValue: 30),
@@ -146,6 +148,9 @@ enum MoodiaryKVs<T extends Object> {
 
 enum MoodiarySecureKVs {
   syncDek,
+
+  // SQLCipher 原始密钥，64 位十六进制；只由 resolveDatabaseKey 读写
+  databaseKey,
 
   webDavOption,
 

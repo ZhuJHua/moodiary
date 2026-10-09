@@ -1,4 +1,6 @@
 import 'package:flutter/services.dart';
+import 'package:moodiary_data/moodiary_data.dart'
+    show DatabaseKeyLost, DatabaseKeyMismatch, DatabaseKeyUnavailable;
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_mobile/app/di/bootstrap.dart';
 import 'package:mui/mui.dart';
@@ -36,6 +38,34 @@ class _BootFailurePageState extends State<BootFailurePage> {
   }
 
   String get _details => 'Error: ${widget.error}\n\n${widget.stackTrace}';
+
+  String get _hint => switch (widget.error) {
+    DatabaseKeyLost() =>
+      '数据库已加密，但安全存储里没有它的密钥，通常是应用数据从备份或别的设备恢复而来。'
+          '密钥无法找回；请清空数据后，从备份文件或云同步恢复。\n'
+          'The database is encrypted but its key is missing from secure '
+          'storage, usually because the app data was restored from a backup '
+          'or another device. The key cannot be recovered; erase the data, '
+          'then restore from a backup file or cloud sync.',
+    DatabaseKeyMismatch() =>
+      '数据库无法用当前密钥打开：密钥与文件不匹配，或文件已损坏。'
+          '可先重启重试；仍失败的话请清空数据后，从备份文件或云同步恢复。\n'
+          'The database cannot be opened with the stored key: the key does '
+          'not match the file, or the file is damaged. Restart to retry; if it '
+          'keeps failing, erase the data and restore from a backup file or '
+          'cloud sync.',
+    DatabaseKeyUnavailable() =>
+      '系统安全存储暂时读不出数据库密钥（Keystore / 钥匙串）。'
+          '请先重启设备重试；仍失败的话请清空数据后，从备份文件或云同步恢复。\n'
+          'The database key cannot be read from the system secure storage '
+          '(Keystore / Keychain) right now. Restart the device and try again; '
+          'if it keeps failing, erase the data and restore from a backup file '
+          'or cloud sync.',
+    _ =>
+      '应用在初始化时遇到错误。你的数据仍在设备上，可先重启应用重试。\n'
+          'The app hit an error during startup. Your data is still on this '
+          'device; restarting the app may help.',
+  };
 
   Future<void> _copy() async {
     await Clipboard.setData(ClipboardData(text: _details));
@@ -83,11 +113,7 @@ class _BootFailurePageState extends State<BootFailurePage> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        '应用在初始化时遇到错误。你的数据仍在设备上，可先重启应用重试。\n'
-                        'The app hit an error during startup. Your data is still '
-                        'on this device; restarting the app may help.',
-                      ),
+                      Text(_hint),
                       const SizedBox(height: 16),
                       Expanded(
                         child: DecoratedBox(

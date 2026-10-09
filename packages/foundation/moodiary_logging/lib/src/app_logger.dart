@@ -38,12 +38,21 @@ class AppLogger {
 
   Logger get _log => _logger ??= loggerFactory(_logFilePath);
 
+  // SqliteException.toString() 会带上绑定参数，也就是日记正文；落盘前截掉
+  @visibleForTesting
+  static Object redact(Object error, {bool debug = kDebugMode}) {
+    if (debug) return error;
+    final text = error.toString();
+    final cut = text.indexOf('Causing statement');
+    return cut < 0 ? error : text.substring(0, cut).trimRight();
+  }
+
   void e(Object message, {required Object error, StackTrace? stackTrace}) {
-    _log.e(message, error: error, stackTrace: stackTrace);
+    _log.e(message, error: redact(error), stackTrace: stackTrace);
   }
 
   void f(Object message, {required Object error, StackTrace? stackTrace}) {
-    _log.f(message, error: error, stackTrace: stackTrace);
+    _log.f(message, error: redact(error), stackTrace: stackTrace);
   }
 
   void i(Object message) {

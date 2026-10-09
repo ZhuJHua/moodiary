@@ -1,10 +1,19 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
 import 'package:drift_dev/api/migrations_native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_data/src/db/db_encryption.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_storage/testing.dart';
+import 'package:sqlite3/sqlite3.dart' as sqlite3;
 import 'package:sqlite3_simple/sqlite3_simple.dart';
+import 'package:sqlite3_vec/sqlite3_vec.dart';
 
 import 'drift/moodiary/generated/schema.dart';
 import 'drift/moodiary/generated/schema_v1.dart' as v1;
@@ -201,5 +210,351 @@ void main() {
         await db.close();
       });
     }
+  });
+
+  group('静态加密', () {
+    late Directory dir;
+    late MemorySecureKVStorage secure;
+    late MemoryKVStorage kv;
+
+    setUp(() async {
+      await getIt.reset();
+      loadSqliteVec();
+      secure = MemorySecureKVStorage();
+      kv = MemoryKVStorage();
+      getIt.registerSingleton<ISecureKVStorage>(secure);
+      getIt.registerSingleton<IKVStorage>(kv);
+      dir = Directory.systemTemp.createTempSync('db_enc');
+    });
+
+    tearDown(() async {
+      await getIt.reset();
+      dir.deleteSync(recursive: true);
+    });
+
+    String? storedKey() => secure.data[MoodiarySecureKVs.databaseKey.name];
+
+    Diary diary(String id, String text) => Diary(
+      id: id,
+      title: 'title-$id',
+      content: '{"type":"doc","content":[]}',
+      contentText: text,
+      time: DateTime.utc(2026, 1, 1),
+      lastModified: DateTime.utc(2026, 1, 1),
+      show: true,
+      mood: .neutral,
+      imageName: const [],
+      audioName: const [],
+      videoName: const [],
+      tags: const [],
+      type: 'tiptap',
+    );
+
+    Uint8List f32(List<double> v) =>
+        Float32List.fromList(v).buffer.asUint8List();
+
+    Future<String> plaintextDatabase() async {
+      final path = '${dir.path}/moodiary.db';
+      // 线上的明文库都是 WAL 模式，文件头里带着这个标记
+      final db = MoodiaryDatabase.forTesting(
+        NativeDatabase(
+          File(path),
+          setup: (raw) => raw.execute('PRAGMA journal_mode = WAL'),
+        ),
+      );
+      await DiaryRepository(db)
+          .insertDiaries([diary('d1', '今天吃了苹果'), diary('d2', '香蕉也不错')]);
+      await db.customStatement(
+        'CREATE VIRTUAL TABLE vec_diary_chunks '
+        'USING vec0(embedding float[4] distance_metric=cosine)',
+      );
+      await db.customStatement(
+        'INSERT INTO vec_diary_chunks(rowid, embedding) VALUES (1, ?)',
+        [
+          f32([1, 0, 0, 0]),
+        ],
+      );
+      await db.close();
+      expect(databaseFileState(path), DatabaseFileState.plaintext);
+      return path;
+    }
+
+    Future<MoodiaryDatabase> open(String path) =>
+        MoodiaryDatabase.open(path: path, jiebaDictDir: defaultJiebaDictDir());
+
+    Future<List<String>> search(MoodiaryDatabase db, String q) async => [
+      for (final hit in await DiaryRepository(db).searchDiaries(query: q))
+        hit.diary.id,
+    ];
+
+    Future<int> vecHit(MoodiaryDatabase db) async {
+      final rows = await db
+          .customSelect(
+            'SELECT rowid FROM vec_diary_chunks WHERE embedding MATCH ? '
+            'AND k = 1',
+            variables: [
+              Variable(f32([1, 0, 0, 0])),
+            ],
+          )
+          .get();
+      return rows.single.read<int>('rowid');
+    }
+
+    test('宿主构建必须是 SQLCipher，否则 PRAGMA key 会被静默忽略', () {
+      final db = sqlite3.sqlite3.openInMemory();
+      addTearDown(db.close);
+      expect(db.select('PRAGMA cipher_version'), isNotEmpty);
+    });
+
+    test('按文件头分类：不足 16 字节算不存在', () {
+      final path = '${dir.path}/x.db';
+      expect(databaseFileState(path), DatabaseFileState.missing);
+      File(path).writeAsBytesSync([]);
+      expect(databaseFileState(path), DatabaseFileState.missing);
+      File(path).writeAsBytesSync(List.filled(8, 1));
+      expect(databaseFileState(path), DatabaseFileState.missing);
+      File(path).writeAsBytesSync(List.filled(4096, 0x5a));
+      expect(databaseFileState(path), DatabaseFileState.encrypted);
+      File(path).deleteSync();
+      sqlite3.sqlite3.open(path)
+        ..execute('CREATE TABLE t(x)')
+        ..close();
+      expect(databaseFileState(path), DatabaseFileState.plaintext);
+    });
+
+    test('密钥解析：首次生成是 fresh，读回才是 stored，加密库缺密钥是 lost', () async {
+      final first = await resolveDatabaseKey(fileState: .missing);
+      expect(first, isA<DatabaseKeyFresh>());
+      expect(storedKey(), hasLength(64));
+
+      final second = await resolveDatabaseKey(fileState: .plaintext);
+      expect(second, isA<DatabaseKeyStored>());
+      expect((second as DatabaseKeyStored).key, storedKey());
+
+      secure.data.clear();
+      await expectLater(
+        resolveDatabaseKey(fileState: .encrypted),
+        throwsA(isA<DatabaseKeyLost>()),
+      );
+
+      secure.data[MoodiarySecureKVs.databaseKey.name] = 'not-a-key';
+      expect(
+        await resolveDatabaseKey(fileState: .encrypted),
+        isA<DatabaseKeyFailed>(),
+      );
+      expect(
+        await resolveDatabaseKey(fileState: .plaintext),
+        isA<DatabaseKeyFresh>(),
+        reason: '没有加密数据依赖坏掉的值，直接换一把',
+      );
+      expect(storedKey(), hasLength(64));
+
+      secure.data.clear();
+      secure.failingReads.add(MoodiarySecureKVs.databaseKey.name);
+      expect(
+        await resolveDatabaseKey(fileState: .plaintext),
+        isA<DatabaseKeyFailed>(),
+      );
+    });
+
+    test('明文库 + 读回的密钥：加密后拼音搜索、vec0、触发器照常，重开仍可读', () async {
+      final path = await plaintextDatabase();
+      secure.data[MoodiarySecureKVs.databaseKey.name] = newDatabaseKey();
+      File('$path$encryptingSuffix').writeAsStringSync('stale half copy');
+
+      var db = await open(path);
+      expect(databaseFileState(path), DatabaseFileState.encrypted);
+      expect(File('$path$encryptingSuffix').existsSync(), isFalse);
+      final version = await db.customSelect('PRAGMA user_version').getSingle();
+      expect(version.data.values.single, 3);
+      expect(await search(db, 'pingguo'), ['d1']);
+      expect(await vecHit(db), 1);
+      await DiaryRepository(db).insertDiaries([diary('d3', '橙子很甜')]);
+      expect(await search(db, 'chengzi'), ['d3']);
+      await db.close();
+
+      db = await open(path);
+      expect(await search(db, 'xiangjiao'), ['d2']);
+      await db.close();
+
+      final wrong = sqlite3.sqlite3.open(path);
+      addTearDown(wrong.close);
+      expect(
+        () => wrong.select('SELECT count(*) FROM diaries'),
+        throwsA(isA<sqlite3.SqliteException>()),
+      );
+    });
+
+    test('当次生成的密钥不加密已有明文库，下一次启动读回后才加密', () async {
+      final path = await plaintextDatabase();
+
+      var db = await open(path);
+      expect(storedKey(), hasLength(64));
+      expect(databaseFileState(path), DatabaseFileState.plaintext);
+      expect(await search(db, 'pingguo'), ['d1']);
+      await db.close();
+
+      db = await open(path);
+      expect(databaseFileState(path), DatabaseFileState.encrypted);
+      expect(await search(db, 'pingguo'), ['d1']);
+      await db.close();
+    });
+
+    test('新库也先明文，下一次启动用读回的密钥加密', () async {
+      final path = '${dir.path}/moodiary.db';
+      var db = await open(path);
+      await DiaryRepository(db).insertDiaries([diary('d1', '今天吃了苹果')]);
+      await db.close();
+      expect(storedKey(), hasLength(64));
+      expect(databaseFileState(path), DatabaseFileState.plaintext);
+
+      db = await open(path);
+      await db.close();
+      expect(databaseFileState(path), DatabaseFileState.encrypted);
+
+      final raw = sqlite3.sqlite3.open(path);
+      addTearDown(raw.close);
+      applyDatabaseKey(raw, storedKey()!);
+      expect(raw.select('SELECT count(*) AS n FROM diaries').single['n'], 1);
+    });
+
+    test('校验失败：副本与旁文件清掉，原文件不动，下次重来能成功', () async {
+      final path = await plaintextDatabase();
+      final key = newDatabaseKey();
+
+      afterExportForTesting = (tmp) =>
+          File(tmp).writeAsBytesSync(List.filled(8192, 0));
+      addTearDown(() => afterExportForTesting = null);
+      await expectLater(
+        encryptPlaintextDatabase(path: path, key: key),
+        throwsA(anything),
+      );
+      // 只有 journal_mode 落回 DELETE 这一处头部改动，数据原样
+      expect(databaseFileState(path), DatabaseFileState.plaintext);
+      final raw = sqlite3.sqlite3.open(path);
+      expect(raw.select('SELECT count(*) AS n FROM diaries').single['n'], 2);
+      raw.close();
+      for (final suffix in [
+        encryptingSuffix,
+        '$encryptingSuffix-journal',
+        '-wal',
+        '-shm',
+        '-journal',
+      ]) {
+        expect(File('$path$suffix').existsSync(), isFalse, reason: suffix);
+      }
+
+      afterExportForTesting = null;
+      await encryptPlaintextDatabase(path: path, key: key);
+      expect(databaseFileState(path), DatabaseFileState.encrypted);
+    });
+
+    test('密钥读不到：明文库照常打开，加密库才是启动失败', () async {
+      final path = await plaintextDatabase();
+      secure.failingReads.add(MoodiarySecureKVs.databaseKey.name);
+      final db = await open(path);
+      expect(databaseFileState(path), DatabaseFileState.plaintext);
+      expect(await search(db, 'pingguo'), ['d1']);
+      await db.close();
+
+      secure.failingReads.clear();
+      secure.data[MoodiarySecureKVs.databaseKey.name] = newDatabaseKey();
+      await (await open(path)).close();
+      expect(databaseFileState(path), DatabaseFileState.encrypted);
+
+      secure.failingReads.add(MoodiarySecureKVs.databaseKey.name);
+      await expectLater(open(path), throwsA(isA<DatabaseKeyUnavailable>()));
+    });
+
+    test('密钥对不上：启动失败，文件不动', () async {
+      final path = await plaintextDatabase();
+      final key = newDatabaseKey();
+      secure.data[MoodiarySecureKVs.databaseKey.name] = key;
+      await (await open(path)).close();
+
+      secure.data[MoodiarySecureKVs.databaseKey.name] = newDatabaseKey();
+      await expectLater(open(path), throwsA(isA<DatabaseKeyMismatch>()));
+
+      secure.data[MoodiarySecureKVs.databaseKey.name] = key;
+      final db = await open(path);
+      expect(await search(db, 'pingguo'), ['d1']);
+      await db.close();
+    });
+
+    test('加密失败：错误文本不含密钥；按明文打开并计数，三次后不再尝试', () async {
+      final path = await plaintextDatabase();
+      final key = newDatabaseKey();
+      secure.data[MoodiarySecureKVs.databaseKey.name] = key;
+
+      // 目录只读 → ATTACH 建不出副本（root 不受权限约束，跳过这一段）
+      final root =
+          Process.runSync('id', ['-u']).stdout.toString().trim() == '0';
+      if (!root) {
+        await Process.run('chmod', ['0500', dir.path]);
+        try {
+          await expectLater(
+            encryptPlaintextDatabase(path: path, key: key),
+            throwsA(
+              predicate(
+                (e) => !e.toString().contains(key),
+                'error without key',
+              ),
+            ),
+          );
+        } finally {
+          await Process.run('chmod', ['0700', dir.path]);
+        }
+        expect(File('$path$encryptingSuffix').existsSync(), isFalse);
+      }
+
+      encryptImplementation = (_, _, {afterExport}) =>
+          throw StateError('disk full');
+      addTearDown(() => encryptImplementation = encryptDatabaseFile);
+      var db = await open(path);
+      expect(databaseFileState(path), DatabaseFileState.plaintext);
+      expect(MoodiaryKVs.dbEncryptFailures.get(), 1);
+      expect(await search(db, 'pingguo'), ['d1']);
+      await db.close();
+
+      MoodiaryKVs.dbEncryptFailures.set(maxEncryptFailures);
+      db = await open(path);
+      expect(databaseFileState(path), DatabaseFileState.plaintext);
+      expect(MoodiaryKVs.dbEncryptFailures.get(), maxEncryptFailures);
+      await db.close();
+
+      encryptImplementation = encryptDatabaseFile;
+      MoodiaryKVs.dbEncryptFailures.remove();
+      db = await open(path);
+      expect(databaseFileState(path), DatabaseFileState.encrypted);
+      expect(MoodiaryKVs.dbEncryptFailures.get(), 0);
+      await db.close();
+    });
+
+    test('WAL 里未检查点的改动也进加密副本，且不留明文旁文件', () async {
+      final live = await plaintextDatabase();
+      final copy = '${dir.path}/copy.db';
+      final writer = sqlite3.sqlite3.open(live);
+      writer.execute("UPDATE diaries SET title = 'wal-title' WHERE id = 'd1'");
+      expect(File('$live-wal').lengthSync(), greaterThan(0));
+      File(live).copySync(copy);
+      File('$live-wal').copySync('$copy-wal');
+      File('$live-shm').copySync('$copy-shm');
+      writer.close();
+
+      final key = newDatabaseKey();
+      await encryptPlaintextDatabase(path: copy, key: key);
+      for (final suffix in ['-wal', '-shm', '-journal']) {
+        expect(File('$copy$suffix').existsSync(), isFalse, reason: suffix);
+      }
+      expect(databaseFileState(copy), DatabaseFileState.encrypted);
+
+      secure.data[MoodiarySecureKVs.databaseKey.name] = key;
+      final db = await open(copy);
+      final row = await db
+          .customSelect("SELECT title FROM diaries WHERE id = 'd1'")
+          .getSingle();
+      expect(row.read<String>('title'), 'wal-title');
+      await db.close();
+    });
   });
 }
