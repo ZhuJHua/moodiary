@@ -52,11 +52,8 @@ class ImageOptimizer {
         newDiary: withDerivedMedia(touched(diary.copyWith(content: content))),
       );
       for (final old in renamed.keys) {
-        try {
-          await File(AppFiles.getRealPath('image', old)).delete();
-        } on PathNotFoundException {
-          // 已不在。
-        }
+        final file = File(AppFiles.getRealPath('image', old));
+        if (await file.exists()) await file.delete();
       }
     }
 
@@ -81,11 +78,7 @@ class ImageOptimizer {
     if (!await File(src).exists()) return false;
     final part = AppFiles.getRealPath('image', 'heif-${uuidV7()}.jpg');
     try {
-      final out = await getIt<IHeifDecoder>().convert(
-        src,
-        outputPath: part,
-        format: 'jpg',
-      );
+      final out = await getIt<IHeifDecoder>().convert(src, outputPath: part);
       if (out == null) return false;
       await File(part).rename(dst);
       return true;
