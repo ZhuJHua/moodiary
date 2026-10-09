@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show listEquals;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
@@ -234,6 +236,8 @@ Future<bool> resolveDecryptedRemote({
 }) async {
   final id = backend.persistentBackendId;
   final keyfile = SyncKeyManager.cachedKeyfile();
+  final dek = await SyncKeyManager.loadDek();
+  if (!context.mounted) return false;
   final choice = await MAlert.show<_DecryptedChoice>(
     context,
     title: l10n.sync.keyRemoteDecryptedTitle,
@@ -241,7 +245,7 @@ Future<bool> resolveDecryptedRemote({
     icon: LucideIcons.lockKeyholeOpen,
     actionsLayout: .vertical,
     actions: [
-      if (keyfile != null)
+      if (keyfile != null && dek != null)
         MAction(
           label: l10n.sync.keyRemoteDecryptedEncrypt,
           value: .encrypt,
@@ -251,10 +255,10 @@ Future<bool> resolveDecryptedRemote({
       MAction(label: l10n.sync.keyNotNow),
     ],
   );
+  SyncKeyManager.markKeyConflict(id);
   if (!context.mounted) return false;
   switch (choice) {
     case null:
-      SyncKeyManager.markKeyConflict(id);
       return false;
     case .turnOff:
       if (!await AppAuth.verify(context, .syncKeyDisable)) return false;
@@ -263,7 +267,27 @@ Future<bool> resolveDecryptedRemote({
       toast.success(message: l10n.sync.keyEncryptionOff);
       return true;
     case .encrypt:
-      final dek = (await SyncKeyManager.loadDek())!;
+      final entered = await MAlert.prompt(
+        context,
+        title: l10n.sync.keyRemoteDecryptedEncrypt,
+        hintText: l10n.sync.keyGuardHint,
+        confirmLabel: l10n.sync.keyContinue,
+        obscureText: true,
+        barrierDismissible: false,
+        validator: (value) => value.isEmpty ? l10n.sync.keyNeedPassword : null,
+        onSubmit: (passphrase) async {
+          try {
+            final unwrapped = await SyncKeyManager.unwrapDek(
+              keyfile: keyfile!,
+              passphrase: passphrase,
+            );
+            return listEquals(unwrapped, dek) ? null : l10n.sync.keyGuardWrong;
+          } catch (_) {
+            return l10n.sync.keyGuardWrong;
+          }
+        },
+      );
+      if (entered == null || !context.mounted) return false;
       try {
         await RemoteLease.protect(backend, () async {
           if (!await SyncKeyManager.claimRemoteKeyfile(backend, keyfile!)) {
@@ -274,9 +298,10 @@ Future<bool> resolveDecryptedRemote({
         toast.error(message: l10n.sync.keyWriteFailed(error: '$e'));
         return false;
       }
+      if (id != null) await SyncKeyManager.clearPendingUpload(id);
       SyncKeyManager.clearKeyConflict(id);
       if (!context.mounted) return false;
-      return _encryptCloud(context, backend, dek);
+      return _encryptCloud(context, backend, dek!);
   }
 }
 

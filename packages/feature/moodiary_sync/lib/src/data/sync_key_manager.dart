@@ -283,10 +283,16 @@ class SyncKeyManager {
     final Uint8List? manifestBytes;
     try {
       remote = await readRemoteKeyfile(backend);
-      if (remote == null) return .safe;
       manifestBytes = await backend.readObject(SyncKeys.manifestPath);
     } catch (_) {
       return .unknown;
+    }
+    if (remote == null) {
+      final plaintextCloud =
+          manifestBytes != null &&
+          manifestBytes.isNotEmpty &&
+          !SyncCipher.isCipherText(manifestBytes);
+      return plaintextCloud ? .unknown : .safe;
     }
     final cached = cachedKeyfile();
     if (cached != null &&
@@ -337,9 +343,7 @@ class SyncKeyManager {
     if (id == null || manifest.isEmpty || SyncCipher.isCipherText(manifest)) {
       return false;
     }
-    if (await loadDek() == null || pendingUploadBackends().contains(id)) {
-      return false;
-    }
+    if (await loadDek() == null) return false;
     return await readRemoteKeyfile(backend) == null;
   }
 

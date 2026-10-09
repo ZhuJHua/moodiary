@@ -32,9 +32,14 @@ abstract final class RemoteWipe {
     final key = passphrase == null ? null : await _newKey(passphrase);
     return IncrementalSyncEngine.runExclusive(
       () => RemoteLease.protect(backend, () async {
-        final report = await _wipe(backend, onProgress);
-        await _reseed(backend, key, configured);
-        return report;
+        try {
+          final report = await _wipe(backend, onProgress);
+          await _reseed(backend, key, configured);
+          return report;
+        } catch (_) {
+          SyncKeyManager.markKeyConflict(backend.persistentBackendId);
+          rethrow;
+        }
       }),
     );
   }

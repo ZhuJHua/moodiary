@@ -481,7 +481,7 @@ void main() {
     });
   });
 
-  test('remoteDecryptedElsewhere：本机有密钥、云端明文且无 keys.json 才算', () async {
+  test('remoteDecryptedElsewhere：本机有密钥、云端明文且无 keys.json 才算，待补传也不放行', () async {
     final backend = FakeRemoteBackend();
     final plain = await SyncCipher.plaintext.encode({'version': 2});
     Future<bool> check(Uint8List manifest) =>
@@ -503,9 +503,18 @@ void main() {
       isFalse,
     );
 
+    SyncKeyManager.cacheKeyfile(
+      await SyncKeyManager.wrapDek(
+        dek: SyncKeyManager.generateDek(),
+        passphrase: 'p',
+      ),
+    );
     await SyncKeyManager.markPendingUpload({'webdav'});
-    expect(await check(plain), isFalse);
-    await SyncKeyManager.clearPendingUpload('webdav');
+    backend.objects[SyncKeys.manifestPath] = plain;
+    await SyncKeyManager.uploadPendingKeyfile(backend);
+    expect(backend.hasObject(SyncKeys.keysPath), isFalse);
+    expect(SyncKeyManager.pendingUploadBackends(), ['webdav']);
+    expect(await check(plain), isTrue);
 
     backend.objects[SyncKeys.keysPath] = (await SyncKeyManager.wrapDek(
       dek: SyncKeyManager.generateDek(),
@@ -554,6 +563,27 @@ void main() {
         'delete ${SyncKeys.keysPath}',
       ]);
       expect(writes.last, 'write ${SyncKeys.manifestPath}');
+    });
+
+    test('补种失败挂冲突标记，自动同步不会用旧密钥重铺空云端', () async {
+      final backend =
+          FakeRemoteBackend(
+              objects: {
+                'diary/a.json': Uint8List.fromList([1]),
+              },
+            )
+            ..beforeOp = (op, key) {
+              if (op == 'write' && key == SyncKeys.manifestPath) {
+                throw const SyncException('offline');
+              }
+            };
+      await SyncKeyManager.storeDek(SyncKeyManager.generateDek());
+
+      await expectLater(
+        RemoteWipe.run(backend, passphrase: null),
+        throwsA(isA<SyncException>()),
+      );
+      expect(SyncKeyManager.hasKeyConflict('webdav'), isTrue);
     });
 
     test('删除失败重试一次，仍失败只计数，补种照常', () async {
