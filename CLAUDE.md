@@ -39,9 +39,6 @@ cd packages/feature_base/moodiary_editor/editor && corepack pnpm type-check && c
 
 # Release (run on develop, clean tree, in sync with origin)
 dart tool/release.dart --bump patch     # or an explicit X.Y.Z
-
-# Sponsors
-dart tool/sponsor.dart <@github | nickname> ...  # appends to both READMEs between the sponsors markers, opens a PR to merge by hand
 ```
 
 Full-repo verification = the four Lint & Test commands above. CI (`quality.yml`) runs them as the Dart / Rust / Editor jobs, required on develop; its `changes` job skips each one the PR's paths cannot affect.

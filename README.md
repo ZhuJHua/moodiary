@@ -16,6 +16,11 @@
   <img src="https://img.shields.io/github/license/ZhuJHua/moodiary?style=for-the-badge&color=4ac6b7">
 </div>
 
+<p align="center">
+  <a href="https://trendshift.io/repositories/13048?utm_source=repository-badge&amp;utm_medium=badge&amp;utm_campaign=badge-repository-13048" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/13048" alt="ZhuJHua%2Fmoodiary | Trendshift" width="250" height="55"/></a>
+  <a href="https://hellogithub.com/repository/ZhuJHua/moodiary" target="_blank"><img src="https://api.hellogithub.com/v1/widgets/recommend.svg?rid=6b4ef2844fa44f9e8fb03424e500b09e&claim_uid=Eo1dkfFK0sQZluO" alt="Featured｜HelloGitHub" width="250" height="54"/></a>
+</p>
+
 ## ✨ Features
 
 - **Rich text**: insert images, audio and video.
@@ -41,14 +46,4 @@ Everything else is in the docs at [docs.moodiary.net](https://docs.moodiary.net)
 
 ## 🥪 Sponsor
 
-If Moodiary is useful to you, you can buy me a sandwich.
-
-<img src="mobile/res/sponsor/wechat.jpg" style="width:300px" alt="Sponsor"/>
-
-### Sponsors
-
-To be listed, leave your GitHub username or a nickname in the note of your donation. A nickname must comply with applicable laws, or it will not be shown.
-
-<!-- sponsors:start -->
-朱东杰, [dsxksss](https://github.com/dsxksss), 不对味的雪碧, [xiaoxianzi-99](https://github.com/xiaoxianzi-99), Lucci, [Higanoneko](https://github.com/Higanoneko), h, 大作文
-<!-- sponsors:end -->
+If Moodiary is useful to you, you can [buy me a sandwich](https://yooss.cn/sponsor.html).
