@@ -329,6 +329,20 @@ class SyncKeyManager {
     }
   }
 
+  static Future<bool> remoteDecryptedElsewhere(
+    RemoteObjectStore backend,
+    Uint8List manifest,
+  ) async {
+    final id = backend.persistentBackendId;
+    if (id == null || manifest.isEmpty || SyncCipher.isCipherText(manifest)) {
+      return false;
+    }
+    if (await loadDek() == null || pendingUploadBackends().contains(id)) {
+      return false;
+    }
+    return await readRemoteKeyfile(backend) == null;
+  }
+
   static Future<RemoteKeyStatus> probeRemote(RemoteObjectStore backend) async {
     final Uint8List? manifest;
     try {

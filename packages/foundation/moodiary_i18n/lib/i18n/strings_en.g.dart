@@ -1275,8 +1275,8 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String keyRemoteProbeFailed({required Object error}) => 'Could not read the cloud: ${error}';
 	@override String get keyRemoteMismatchTitle => 'Password does not match';
 	@override String get keyRemoteMismatchMessage => 'This password can\'t unlock the cloud data. Go back and retry, or reset the cloud.';
-	@override String get keyConflictTitle => 'Cloud is locked';
-	@override String get keyConflictSubtitle => 'Sync paused. Tap to enter the password';
+	@override String get keyConflictTitle => 'Sync paused';
+	@override String get keyConflictSubtitle => 'Cloud encryption doesn\'t match this device. Tap to resolve';
 	@override String get e2eLocked => 'Locked';
 	@override String get keyLockedNotice => 'Cloud data is encrypted with another password. Sync is paused.';
 	@override String get keyUnlockAction => 'Enter password to unlock';
@@ -1294,6 +1294,12 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String keyWiped({required Object count}) => 'Cleared ${count} files';
 	@override String keyWipePartial({required Object failed}) => '${failed} files could not be deleted; reset again later';
 	@override String keyWipeFailed({required Object error}) => 'Clearing failed: ${error}';
+	@override String get keyRemoteDecryptedTitle => 'Cloud isn\'t encrypted';
+	@override String get keyRemoteDecryptedMessage => 'End-to-end encryption is on here, but the cloud is plain text. Another device may have turned encryption off or reset the cloud.';
+	@override String get keyRemoteDecryptedEncrypt => 'Encrypt the cloud with this password';
+	@override String get keyRemoteDecryptedTurnOff => 'Turn off encryption here';
+	@override String get keyNotNow => 'Not now';
+	@override String get errRemoteDecrypted => 'The cloud is plain text while encryption is on here. Sync paused; resolve it in sync settings.';
 	@override String get errKeyConflict => 'The remote is encrypted with a different key that this device cannot open. Sync stopped so the remote key file is not overwritten.';
 	@override String get lanReceiveHint => 'The sender usually finds this device on its own; the address above can also be typed in by hand. Keep this page open while receiving.';
 	@override String get errKeyfileCorrupt => 'The remote key file is corrupt (not a JSON object)';

@@ -157,22 +157,7 @@ Future<bool> applyUserKeyChange({
     if (context.mounted) ref.invalidate(syncDekControllerProvider);
 
     if (hasRemote) {
-      if (!context.mounted) return true;
-      final report = await _runWithProgress(
-        context,
-        backend: backend,
-        from: .plaintext,
-        to: .withKey(newDek),
-      );
-      if (report != null && report.failed > 0) {
-        if (context.mounted) {
-          toast.error(
-            message: l10n.sync.keyEncryptPartial(failed: report.failed),
-          );
-        }
-      } else if (report != null && context.mounted) {
-        toast.success(message: l10n.sync.keyCloudEncrypted(report: report));
-      }
+      if (context.mounted) await _encryptCloud(context, backend, newDek);
     } else if (context.mounted) {
       toast.success(message: l10n.sync.keyEncryptionOn);
     }
@@ -218,6 +203,81 @@ Future<bool> applyUserKeyChange({
   if (context.mounted) ref.invalidate(syncDekControllerProvider);
   if (context.mounted) toast.success(message: l10n.sync.keyEncryptionOff);
   return true;
+}
+
+Future<bool> _encryptCloud(
+  BuildContext context,
+  IRemoteSyncBackend backend,
+  List<int> dek,
+) async {
+  final report = await _runWithProgress(
+    context,
+    backend: backend,
+    from: .plaintext,
+    to: .withKey(dek),
+  );
+  if (report == null) return false;
+  if (report.failed > 0) {
+    toast.error(message: l10n.sync.keyEncryptPartial(failed: report.failed));
+    return false;
+  }
+  toast.success(message: l10n.sync.keyCloudEncrypted(report: report));
+  return true;
+}
+
+enum _DecryptedChoice { turnOff, encrypt }
+
+Future<bool> resolveDecryptedRemote({
+  required BuildContext context,
+  required WidgetRef ref,
+  required IRemoteSyncBackend backend,
+}) async {
+  final id = backend.persistentBackendId;
+  final keyfile = SyncKeyManager.cachedKeyfile();
+  final choice = await MAlert.show<_DecryptedChoice>(
+    context,
+    title: l10n.sync.keyRemoteDecryptedTitle,
+    message: l10n.sync.keyRemoteDecryptedMessage,
+    icon: LucideIcons.lockKeyholeOpen,
+    actionsLayout: .vertical,
+    actions: [
+      if (keyfile != null)
+        MAction(
+          label: l10n.sync.keyRemoteDecryptedEncrypt,
+          value: .encrypt,
+          isPrimary: true,
+        ),
+      MAction(label: l10n.sync.keyRemoteDecryptedTurnOff, value: .turnOff),
+      MAction(label: l10n.sync.keyNotNow),
+    ],
+  );
+  if (!context.mounted) return false;
+  switch (choice) {
+    case null:
+      SyncKeyManager.markKeyConflict(id);
+      return false;
+    case .turnOff:
+      if (!await AppAuth.verify(context, .syncKeyDisable)) return false;
+      await SyncKeyManager.clearDek();
+      if (context.mounted) ref.invalidate(syncDekControllerProvider);
+      toast.success(message: l10n.sync.keyEncryptionOff);
+      return true;
+    case .encrypt:
+      final dek = (await SyncKeyManager.loadDek())!;
+      try {
+        await RemoteLease.protect(backend, () async {
+          if (!await SyncKeyManager.claimRemoteKeyfile(backend, keyfile!)) {
+            throw SyncKeyConflictException(l10n.sync.errKeyConflict);
+          }
+        });
+      } catch (e) {
+        toast.error(message: l10n.sync.keyWriteFailed(error: '$e'));
+        return false;
+      }
+      SyncKeyManager.clearKeyConflict(id);
+      if (!context.mounted) return false;
+      return _encryptCloud(context, backend, dek);
+  }
 }
 
 enum _AdoptOutcome { unlocked, cancelled, reset }

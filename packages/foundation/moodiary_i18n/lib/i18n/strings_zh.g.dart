@@ -3510,11 +3510,11 @@ class Translations$sync$zh {
 	/// zh: '这个密码解不开云端数据。可以返回重试，或重置云端。'
 	String get keyRemoteMismatchMessage => '这个密码解不开云端数据。可以返回重试，或重置云端。';
 
-	/// zh: '云端已锁定'
-	String get keyConflictTitle => '云端已锁定';
+	/// zh: '同步已暂停'
+	String get keyConflictTitle => '同步已暂停';
 
-	/// zh: '同步已暂停，点击输入密码解锁'
-	String get keyConflictSubtitle => '同步已暂停，点击输入密码解锁';
+	/// zh: '云端加密与本机不一致，点击处理'
+	String get keyConflictSubtitle => '云端加密与本机不一致，点击处理';
 
 	/// zh: '已锁定'
 	String get e2eLocked => '已锁定';
@@ -3566,6 +3566,24 @@ class Translations$sync$zh {
 
 	/// zh: '清空失败：{error}'
 	String keyWipeFailed({required Object error}) => '清空失败：${error}';
+
+	/// zh: '云端未加密'
+	String get keyRemoteDecryptedTitle => '云端未加密';
+
+	/// zh: '本机开着端到端加密，云端却是明文，可能是其他设备关闭了加密或重置了云端。'
+	String get keyRemoteDecryptedMessage => '本机开着端到端加密，云端却是明文，可能是其他设备关闭了加密或重置了云端。';
+
+	/// zh: '用本机密码加密云端'
+	String get keyRemoteDecryptedEncrypt => '用本机密码加密云端';
+
+	/// zh: '本机也关闭加密'
+	String get keyRemoteDecryptedTurnOff => '本机也关闭加密';
+
+	/// zh: '暂不同步'
+	String get keyNotNow => '暂不同步';
+
+	/// zh: '云端已是明文而本机开着加密，同步已暂停，请到同步设置中处理'
+	String get errRemoteDecrypted => '云端已是明文而本机开着加密，同步已暂停，请到同步设置中处理';
 
 	/// zh: '云端由另一把密钥加密，本机密钥解不开，已中止同步以免覆盖云端密钥文件'
 	String get errKeyConflict => '云端由另一把密钥加密，本机密钥解不开，已中止同步以免覆盖云端密钥文件';

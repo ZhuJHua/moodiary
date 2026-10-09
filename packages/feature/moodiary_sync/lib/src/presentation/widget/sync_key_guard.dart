@@ -10,6 +10,7 @@ import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/sync_keyfile.dart';
 import 'package:moodiary_sync/src/data/sync_provider_scope.dart';
+import 'package:moodiary_sync/src/presentation/widget/user_key_change_flow.dart';
 import 'package:moodiary_sync/src/presentation/widget/user_key_tile.dart';
 import 'package:mui/mui.dart';
 
@@ -27,6 +28,22 @@ Future<bool> ensureSyncKeyReady({
     return true;
   }
   if (manifestBytes == null || !SyncCipher.isCipherText(manifestBytes)) {
+    final bool decrypted;
+    try {
+      decrypted =
+          manifestBytes != null &&
+          await SyncKeyManager.remoteDecryptedElsewhere(backend, manifestBytes);
+    } catch (_) {
+      return true;
+    }
+    if (decrypted) {
+      if (!context.mounted) return false;
+      return resolveDecryptedRemote(
+        context: context,
+        ref: ref,
+        backend: backend,
+      );
+    }
     SyncKeyManager.clearKeyConflict(backend.persistentBackendId);
     return true;
   }

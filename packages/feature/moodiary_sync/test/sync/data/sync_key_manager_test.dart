@@ -481,6 +481,39 @@ void main() {
     });
   });
 
+  test('remoteDecryptedElsewhere：本机有密钥、云端明文且无 keys.json 才算', () async {
+    final backend = FakeRemoteBackend();
+    final plain = await SyncCipher.plaintext.encode({'version': 2});
+    Future<bool> check(Uint8List manifest) =>
+        SyncKeyManager.remoteDecryptedElsewhere(backend, manifest);
+
+    expect(await check(plain), isFalse);
+
+    await SyncKeyManager.storeDek(SyncKeyManager.generateDek());
+    expect(await check(plain), isTrue);
+    expect(
+      await check(Uint8List.fromList([...utf8.encode(SyncCipher.magic), 1])),
+      isFalse,
+    );
+    expect(
+      await SyncKeyManager.remoteDecryptedElsewhere(
+        FakeRemoteBackend(backendId: 'webdav'),
+        Uint8List(0),
+      ),
+      isFalse,
+    );
+
+    await SyncKeyManager.markPendingUpload({'webdav'});
+    expect(await check(plain), isFalse);
+    await SyncKeyManager.clearPendingUpload('webdav');
+
+    backend.objects[SyncKeys.keysPath] = (await SyncKeyManager.wrapDek(
+      dek: SyncKeyManager.generateDek(),
+      passphrase: 'p',
+    )).toBytes();
+    expect(await check(plain), isFalse);
+  });
+
   group('RemoteWipe', () {
     test('信封无条件最先删，可疑键与锁文件不碰，删完补一份明文空清单', () async {
       final backend = FakeRemoteBackend(
