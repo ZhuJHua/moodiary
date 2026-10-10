@@ -1,6 +1,6 @@
-import type { PageState } from '../bridge'
-import type { EditorBoot } from '../bridge/boot'
-import type { EditorTheme } from '../bridge/theme'
+import type { PageState } from '@/core/bridge'
+import type { EditorBoot } from '@/core/bridge/boot'
+import type { EditorTheme } from '@/core/bridge/theme'
 
 interface JsChannel {
   postMessage: (message: string) => void
@@ -14,7 +14,6 @@ declare global {
       setContent: (content: string) => void
       getContent: () => string
       setTheme: (theme: EditorTheme) => void
-      setSaveStatus: (status: string) => void
       setTitle: (title: string) => void
       setMeta: (json: string) => void
       setLinks: (json: string) => void
