@@ -1,6 +1,7 @@
 import { runUndoToast, undoToast } from '@/core/state/undo-toast'
 import { t } from '@/core/i18n'
 import { useStore } from '@/lib/store'
+import { keepFocus } from '@/lib/utils'
 
 export default function UndoToast() {
   const { visible, message } = useStore(undoToast)
@@ -16,7 +17,7 @@ export default function UndoToast() {
             <button
               type="button"
               className="rounded-md px-3 py-1.5 font-semibold text-primary active:bg-accent"
-              onMouseDown={(e) => e.preventDefault()}
+              onMouseDown={keepFocus}
               onClick={runUndoToast}
             >
               {t('block.undo')}

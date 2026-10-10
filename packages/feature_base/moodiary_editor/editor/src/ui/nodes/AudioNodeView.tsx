@@ -9,9 +9,10 @@ import { t } from '@/core/i18n'
 import { useBlockMenu } from '@/ui/hooks/use-block-menu'
 import { rangeClass } from '@/lib/range'
 import { Button } from '@/ui/primitives/button'
+import { keepFocus } from '@/lib/utils'
 
 export default function AudioNodeView({ node, selected, getPos }: NodeViewProps) {
-  const { canEdit, menuOpen, openMenu } = useBlockMenu('audio', getPos)
+  const { canEdit, wrapperClass, openMenu } = useBlockMenu('audio', getPos, selected)
 
   const filename = (node.attrs.filename as string | null) ?? ''
   const src = filename ? mediaUrl(filename) : undefined
@@ -35,7 +36,7 @@ export default function AudioNodeView({ node, selected, getPos }: NodeViewProps)
 
   return (
     <NodeViewWrapper
-      className={`moodiary-media moodiary-media--audio${selected ? ' is-selected' : ''}${menuOpen ? ' is-menu-open' : ''}`}
+      className={wrapperClass('moodiary-media moodiary-media--audio')}
       contentEditable={false}
     >
       <div className="moodiary-block__body flex items-center gap-3 rounded-lg border border-border bg-muted px-3 py-2.5">
@@ -45,7 +46,7 @@ export default function AudioNodeView({ node, selected, getPos }: NodeViewProps)
           className="shrink-0 rounded-full"
           type="button"
           title={playing ? t('audio.pause') : t('audio.play')}
-          onMouseDown={(e) => e.preventDefault()}
+          onMouseDown={keepFocus}
           onClick={toggle}
         >
           {playing ? <Pause className="size-5" /> : <Play className="size-5" />}
@@ -59,7 +60,7 @@ export default function AudioNodeView({ node, selected, getPos }: NodeViewProps)
               className="shrink-0 rounded-full"
               type="button"
               title={muted ? t('audio.unmute') : t('audio.mute')}
-              onMouseDown={(e) => e.preventDefault()}
+              onMouseDown={keepFocus}
               onClick={toggleMute}
             >
               {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}

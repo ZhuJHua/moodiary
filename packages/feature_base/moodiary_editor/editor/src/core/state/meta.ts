@@ -69,18 +69,18 @@ export const meta = createStore<EditorMeta | null>(null)
 
 export const links = createStore<EditorLinks | null>(null)
 
-export function setMeta(json: string): void {
+function parseJson<T>(json: string): T | null {
   try {
-    meta.set(json ? (JSON.parse(json) as EditorMeta) : null)
+    return json ? (JSON.parse(json) as T) : null
   } catch {
-    meta.set(null)
+    return null
   }
 }
 
+export function setMeta(json: string): void {
+  meta.set(parseJson<EditorMeta>(json))
+}
+
 export function setLinks(json: string): void {
-  try {
-    links.set(json ? (JSON.parse(json) as EditorLinks) : null)
-  } catch {
-    links.set(null)
-  }
+  links.set(parseJson<EditorLinks>(json))
 }

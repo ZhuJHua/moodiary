@@ -7,7 +7,7 @@ import type { EditorHarness } from '@/test/harness'
 import BlockMenu from '@/ui/block/BlockMenu'
 import { clampWidthPercent, snapWidthPercent, WIDTH_PERCENT_STOPS } from './media-size'
 import { setMediaPrefix } from './media'
-import { blockMenu, openBlockMenu } from '@/core/state/block-menu'
+import { blockMenu, openBlockMenu } from '@/ui/block/block-menu'
 import { runUndoToast, undoToast } from '@/core/state/undo-toast'
 import { dismissOverlay } from '@/core/state/overlay'
 

@@ -19,10 +19,6 @@ export function setMediaInfoPrefix(base: string): void {
   if (base) mediaInfoPrefix = base.endsWith('/') ? base : `${base}/`
 }
 
-export function audioDefaultName(): string {
-  return t('audio.defaultName')
-}
-
 export async function fetchMediaName(name: string): Promise<string | null> {
   if (!mediaInfoPrefix) return null
   try {
@@ -35,7 +31,7 @@ export async function fetchMediaName(name: string): Promise<string | null> {
   }
 }
 
-export function isImage(name: string): boolean {
+function isImage(name: string): boolean {
   return /^image-/.test(name)
 }
 export function isAudio(name: string): boolean {
@@ -45,7 +41,7 @@ export function isVideo(name: string): boolean {
   return /^video-/.test(name)
 }
 
-export function isLocalMedia(name: string): boolean {
+function isLocalMedia(name: string): boolean {
   return isImage(name) || isAudio(name) || isVideo(name)
 }
 

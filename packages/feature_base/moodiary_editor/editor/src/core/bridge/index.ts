@@ -37,18 +37,17 @@ export function emitChange(content: string): void {
   if (ready) post('change', content)
 }
 
-function setEditable(value: boolean): void {
+export function applyEditable(target: EditorApi | null, value: boolean): void {
   editable.set(value)
-  api?.setEditable(value)
+  target?.setEditable(value)
 }
 
-// 走 api 的调用须在页面 post('ready') 之后，Flutter 侧以此为准
 export function installBridge(): void {
   window.MoodiaryBridge = {
     applyState: (s: Partial<PageState>) => {
       if (s.content !== undefined) api?.setContent(s.content)
       if (s.title !== undefined) setTitle(s.title)
-      if (s.editable !== undefined) setEditable(s.editable)
+      if (s.editable !== undefined) applyEditable(api, s.editable)
       if (s.theme) applyTheme(s.theme)
       if (s.meta !== undefined) setMeta(s.meta)
       if (s.links !== undefined) setLinks(s.links)
@@ -56,9 +55,9 @@ export function installBridge(): void {
     setContent: (content: string) => api?.setContent(content ?? ''),
     getContent: () => api?.getContent() ?? '',
     setTheme: (theme: EditorTheme) => applyTheme(theme),
-    setTitle: (t: string) => setTitle(t ?? ''),
-    setMeta: (json: string) => setMeta(json ?? ''),
-    setLinks: (json: string) => setLinks(json ?? ''),
+    setTitle,
+    setMeta,
+    setLinks,
     focus: () => api?.focus(),
     blur: () => {
       api?.blur()
@@ -66,7 +65,7 @@ export function installBridge(): void {
       if (el instanceof HTMLElement) el.blur()
     },
     focusTitle: () => focusTitle(),
-    setEditable,
+    setEditable: (value: boolean) => applyEditable(api, value),
     reset: () => api?.reset(),
     insertMedia: (name: string, alt?: string) => api?.insertMedia(name, alt),
     insertAudio: (name: string) => api?.insertAudio(name),

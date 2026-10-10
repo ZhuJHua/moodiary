@@ -11,7 +11,7 @@ export interface EditorTheme {
   fontScale?: number
 }
 
-export let isDark = false
+let isDark = false
 
 let fontBase = ''
 

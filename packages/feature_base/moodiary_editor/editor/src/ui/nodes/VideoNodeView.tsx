@@ -7,15 +7,17 @@ import { mediaUrl } from '@/core/editor/media'
 import { formatTime, useMediaControls } from '@/ui/hooks/use-media'
 import { t } from '@/core/i18n'
 import { useBlockMenu, widthPercentOf } from '@/ui/hooks/use-block-menu'
+import { keepFocus } from '@/lib/utils'
 
 const MIN_FRAME_RATIO = 4 / 5
 const MAX_FRAME_RATIO = 16 / 9
 const CONTROLS_HIDE_DELAY = 3000
 
 export default function VideoNodeView({ node, selected, getPos }: NodeViewProps) {
-  const { canEdit, menuOpen, shownWidth, openMenu } = useBlockMenu(
+  const { canEdit, wrapperClass, widthStyle, openMenu } = useBlockMenu(
     'video',
     getPos,
+    selected,
     widthPercentOf(node.attrs.widthPercent),
   )
 
@@ -108,8 +110,8 @@ export default function VideoNodeView({ node, selected, getPos }: NodeViewProps)
 
   return (
     <NodeViewWrapper
-      className={`moodiary-media moodiary-media--video${selected ? ' is-selected' : ''}${menuOpen ? ' is-menu-open' : ''}`}
-      style={shownWidth === null ? undefined : { maxWidth: `${shownWidth}%` }}
+      className={wrapperClass('moodiary-media moodiary-media--video')}
+      style={widthStyle}
       contentEditable={false}
     >
       <div
@@ -133,13 +135,13 @@ export default function VideoNodeView({ node, selected, getPos }: NodeViewProps)
           onPlay={() => keepControls(true)}
           onPause={() => keepControls(false)}
           onEnded={() => keepControls(false)}
-          onMouseDown={(e) => e.preventDefault()}
+          onMouseDown={keepFocus}
           onClick={onPictureTap}
         />
 
         <div
           className={`moodiary-video__bar absolute inset-x-0 bottom-0 flex items-center gap-1${controlsVisible ? '' : ' is-hidden'}${dragging ? ' is-scrubbing' : ''}`}
-          onMouseDown={(e) => e.preventDefault()}
+          onMouseDown={keepFocus}
           onPointerDown={() => keepControls()}
         >
           <button

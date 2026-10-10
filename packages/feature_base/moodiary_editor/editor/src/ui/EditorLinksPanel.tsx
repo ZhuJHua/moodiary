@@ -4,6 +4,7 @@ import type { EditorLinkItem, EditorLinks } from '@/core/state/meta'
 import { post } from '@/core/bridge/post'
 import { Badge } from '@/ui/primitives/badge'
 import { Button } from '@/ui/primitives/button'
+import { keepFocus } from '@/lib/utils'
 
 export default function EditorLinksPanel({ links }: { links: EditorLinks }) {
   const sections = [
@@ -27,7 +28,7 @@ export default function EditorLinksPanel({ links }: { links: EditorLinks }) {
             variant="ghost"
             size="icon"
             title={links.graphTip}
-            onMouseDown={(e) => e.preventDefault()}
+            onMouseDown={keepFocus}
             onClick={() => post('openGraph')}
           >
             <Waypoints className="size-5" />
@@ -43,7 +44,7 @@ export default function EditorLinksPanel({ links }: { links: EditorLinks }) {
                     <button
                       type="button"
                       className="flex w-full items-center gap-3 rounded-md px-1 py-2 text-left active:bg-accent"
-                      onMouseDown={(e) => e.preventDefault()}
+                      onMouseDown={keepFocus}
                       onClick={() => onOpen(item)}
                     >
                       <span

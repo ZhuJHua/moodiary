@@ -1,4 +1,4 @@
-import { useEffect, useRef, type Ref } from 'react'
+import { useEffect, useRef } from 'react'
 import type { Editor } from '@tiptap/core'
 import { EditorContent, useEditorState } from '@tiptap/react'
 import { bindScrollViewport } from '@/core/bridge/scroll'
@@ -11,8 +11,7 @@ import EditorMetaHeader from './meta/EditorMetaHeader'
 import TitleField from './TitleField'
 import { useScrollSpy } from './hooks/use-scroll-spy'
 
-// 滚动容器：属性头 + 标题 + 正文 + 双链面板一起滚
-export default function EditorViewport({ editor, ref }: { editor: Editor; ref?: Ref<HTMLDivElement> }) {
+export default function EditorViewport({ editor }: { editor: Editor }) {
   const editable = useStore(editableStore)
   const meta = useStore(metaStore)
   const links = useStore(linksStore)
@@ -29,18 +28,12 @@ export default function EditorViewport({ editor, ref }: { editor: Editor; ref?: 
     return () => bindScrollViewport(null)
   }, [])
 
-  const setRef = (el: HTMLDivElement | null): void => {
-    viewport.current = el
-    if (typeof ref === 'function') ref(el)
-    else if (ref) ref.current = el
-  }
-
   const showLinks =
     !editable && links != null && links.outgoing.length + links.incoming.length > 0
 
   return (
     <div className="moodiary-editor-scroll">
-      <div ref={setRef} className="moodiary-editor-viewport" onScroll={onScroll}>
+      <div ref={viewport} className="moodiary-editor-viewport" onScroll={onScroll}>
         {meta && <EditorMetaHeader meta={meta} editable={editable} wordCount={wordCount} />}
         <TitleField editor={editor} editable={editable} />
         <EditorContent editor={editor} className="moodiary-editor" />
