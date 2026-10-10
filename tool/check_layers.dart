@@ -390,7 +390,6 @@ const Set<String> _mobileOnlyPlugins = {
   'wechat_picker_library',
   'wechat_camera_picker',
   'image_picker',
-  'heif_converter',
   'video_player',
   'flutter_displaymode',
 };
@@ -552,7 +551,7 @@ void main(List<String> args) {
       stderr.writeln('  ✗ $v');
     }
     stderr.writeln(
-      '  → 抽端口把实现挪进 app 组合根（IFilePicker/IHeifDecoder 的做法），'
+      '  → 抽端口把实现挪进 app 组合根（IFilePicker 的做法），'
       '或确属移动专属实现包时加进 _mobileOnlyPluginAllowlist 并写明理由。',
     );
     exit(1);

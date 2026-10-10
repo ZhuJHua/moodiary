@@ -49,7 +49,7 @@ dependencies:
   gap: 3.0.1
 
   file_picker: 12.2.0
-  heif_converter: 1.0.7
+  platform_image_converter: 2.2.0
 
   flutter_displaymode: 0.7.0
   flutter_svg: 2.3.0

@@ -1046,14 +1046,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
-  heif_converter:
-    dependency: transitive
-    description:
-      name: heif_converter
-      sha256: "8d1bfe7bf096d135c8acbbbe68a0ad4bbf49b1c7f0832fa630ff4c3d81f681ae"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.7"
   hive_ce:
     dependency: transitive
     description:
@@ -1758,6 +1750,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.6"
+  platform_image_converter:
+    dependency: transitive
+    description:
+      name: platform_image_converter
+      sha256: "2db748581702f7696bd611f20ee40365b8f5e11327d1c6a15ed06a613e59b059"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.0"
   plugin_platform_interface:
     dependency: transitive
     description:
