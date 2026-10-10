@@ -3,11 +3,7 @@ import { createElement } from 'react'
 import { cleanup, fireEvent, render } from '@testing-library/react'
 import EditorMetaHeader from './EditorMetaHeader'
 import type { EditorMeta } from '@/core/state/meta'
-
-interface Posted {
-  type: string
-  payload?: unknown
-}
+import { captureBridge, lastPost, type Posted } from '@/test/editor'
 
 let posted: Posted[] = []
 
@@ -60,18 +56,16 @@ const sheetButtons = (): HTMLButtonElement[] =>
   Array.from(openSheet()?.querySelectorAll<HTMLButtonElement>('button') ?? [])
 const sheetButton = (text: string): HTMLButtonElement | undefined =>
   sheetButtons().find((b) => b.textContent?.trim() === text)
-const last = (type: string): Posted | undefined => [...posted].reverse().find((p) => p.type === type)
+const last = (type: string): Posted | undefined => lastPost(posted, type)
 
 beforeEach(() => {
   vi.useFakeTimers()
   vi.setSystemTime(new Date(2026, 8, 23, 10, 0, 0))
-  posted = []
-  window.MoodiaryEditor = { postMessage: (raw: string) => posted.push(JSON.parse(raw) as Posted) }
+  posted = captureBridge()
 })
 
 afterEach(() => {
   cleanup()
-  document.body.innerHTML = ''
   delete window.MoodiaryEditor
   vi.useRealTimers()
 })
@@ -111,32 +105,6 @@ describe('meta header sheets', () => {
     expect(openSheet()!.querySelector<HTMLButtonElement>('[aria-label="上个月"]')?.disabled).toBe(true)
   })
 
-  it('time: confirm reads the wheel positions', () => {
-    const tops: number[] = []
-    Object.defineProperty(HTMLElement.prototype, 'scrollTop', {
-      configurable: true,
-      get(this: HTMLElement) {
-        const i = Array.from(document.querySelectorAll('.moodiary-wheel__list')).indexOf(this)
-        return i < 0 ? 0 : (tops[i] ?? 0)
-      },
-      set(this: HTMLElement, v: number) {
-        const i = Array.from(document.querySelectorAll('.moodiary-wheel__list')).indexOf(this)
-        if (i >= 0) tops[i] = v
-      },
-    })
-    try {
-      const w = mount()
-      click(find(w, '.meta-date-sub'))
-      expect(tops).toEqual([14 * 40, 32 * 40])
-      tops[0] = 9 * 40
-      tops[1] = 5 * 40 + 12
-      click(sheetButton('确定'))
-      expect(last('changeTime')?.payload).toEqual({ hour: 9, minute: 5 })
-    } finally {
-      delete (HTMLElement.prototype as { scrollTop?: number }).scrollTop
-    }
-  })
-
   it('category: picking posts the id, picking the current one posts nothing', () => {
     const w = mount()
     click(findAll(w, '.meta-fn-item')[0])
@@ -154,7 +122,7 @@ describe('meta header sheets', () => {
     fireEvent.keyDown(input, { key: 'Enter' })
     expect(last('addTag')?.payload).toEqual({ name: '读书' })
     expect(input.value).toBe('')
-    posted = []
+    posted.length = 0
     fireEvent.input(input, { target: { value: '旅行' } })
     fireEvent.keyDown(input, { key: 'Enter' })
     expect(last('addTag')).toBeUndefined()

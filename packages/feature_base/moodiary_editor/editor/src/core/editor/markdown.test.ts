@@ -1,18 +1,15 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import type { JSONContent } from '@tiptap/core'
-import { setupEditor } from '@/test/harness'
-import type { EditorHarness } from '@/test/harness'
+import { flush, renderEditor, type EditorFixture } from '@/test/editor'
 
-let h: EditorHarness
+let h: EditorFixture
 
 beforeEach(() => {
-  vi.useFakeTimers()
-  h = setupEditor()
+  h = renderEditor()
 })
 
 afterEach(() => {
   h.destroy()
-  vi.useRealTimers()
 })
 
 const setMarkdown = (md: string): void => {
@@ -62,7 +59,7 @@ describe('official markdown: parse', () => {
     const md = h.editor.getMarkdown()
     expect(md).toContain('[[\\[游记\\] 杭州\\\\西湖]](moodiary://diary/d2)')
     setMarkdown(md)
-    expect(h.findNode('diaryLink')?.attrs).toEqual({ id: 'd2', label })
+    expect(h.nodes('diaryLink')[0]?.attrs).toEqual({ id: 'd2', label })
   })
 })
 
@@ -162,7 +159,7 @@ describe('paste and legacy content', () => {
       value: { files: [], types: ['text/plain'], getData: () => '# 标题\n\n- [ ] 事' },
     })
     h.editor.view.dom.dispatchEvent(event)
-    await vi.advanceTimersByTimeAsync(0)
+    await flush()
     expect(types()).toEqual(['heading', 'taskList'])
   })
 
