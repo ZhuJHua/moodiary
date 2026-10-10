@@ -5,7 +5,7 @@ import { setMediaInfoPrefix, setMediaPrefix } from '@/core/editor/media'
 import { setLocale } from '@/core/i18n'
 import { editable } from '@/core/state/editable'
 
-// 首次渲染前跑完：壳层拿到的 store 已是 Flutter 下发的值，不会先按默认值画一帧
+// 首次渲染前跑完，首帧不按 store 默认值画
 export function bootstrap(): { platform: Platform } {
   const boot = readBoot()
   if (boot.mediaBase) setMediaPrefix(boot.mediaBase)

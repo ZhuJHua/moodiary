@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
 import { Check, Copy } from 'lucide-react'
 import { t } from '@/core/i18n'
+import { keepFocus } from '@/lib/utils'
 
 export default function CodeBlockNodeView({ node }: NodeViewProps) {
   const l = node.attrs.language as string | null
@@ -42,7 +43,7 @@ export default function CodeBlockNodeView({ node }: NodeViewProps) {
           className="moodiary-code-block__copy"
           type="button"
           title={copied ? t('code.copied') : t('code.copy')}
-          onMouseDown={(e) => e.preventDefault()}
+          onMouseDown={keepFocus}
           onClick={() => void copy()}
         >
           <Icon className="size-4" />

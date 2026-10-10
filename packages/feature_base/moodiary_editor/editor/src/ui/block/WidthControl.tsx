@@ -3,6 +3,7 @@ import { MIN_WIDTH_PERCENT, WIDTH_PERCENT_STOPS, snapWidthPercent } from '@/core
 import { t } from '@/core/i18n'
 import { cn } from 'cn'
 import { rangeClass } from '@/lib/range'
+import { keepFocus } from '@/lib/utils'
 
 export default function WidthControl({
   value,
@@ -51,7 +52,7 @@ export default function WidthControl({
         value={shown ?? 100}
         tabIndex={-1}
         aria-label={t('mediaSize.width')}
-        onMouseDown={(e) => e.preventDefault()}
+        onMouseDown={keepFocus}
         onChange={(e) => setDraft(snapWidthPercent(Number(e.currentTarget.value)))}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}

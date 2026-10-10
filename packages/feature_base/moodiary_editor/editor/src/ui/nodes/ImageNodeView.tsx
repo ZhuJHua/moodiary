@@ -4,9 +4,10 @@ import { displaySrc } from '@/core/editor/media'
 import { useBlockMenu, widthPercentOf } from '@/ui/hooks/use-block-menu'
 
 export default function ImageNodeView({ node, selected, getPos }: NodeViewProps) {
-  const { canEdit, menuOpen, shownWidth, openMenu } = useBlockMenu(
+  const { canEdit, wrapperClass, widthStyle, openMenu } = useBlockMenu(
     'image',
     getPos,
+    selected,
     widthPercentOf(node.attrs.widthPercent),
   )
 
@@ -17,8 +18,8 @@ export default function ImageNodeView({ node, selected, getPos }: NodeViewProps)
 
   return (
     <NodeViewWrapper
-      className={`moodiary-image${selected ? ' is-selected' : ''}${menuOpen ? ' is-menu-open' : ''}`}
-      style={shownWidth === null ? undefined : { maxWidth: `${shownWidth}%` }}
+      className={wrapperClass('moodiary-image')}
+      style={widthStyle}
       contentEditable={false}
     >
       <img

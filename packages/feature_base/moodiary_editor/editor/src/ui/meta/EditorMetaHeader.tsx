@@ -12,8 +12,8 @@ import TimePicker from './TimePicker'
 import type { PickerHandle } from './picker'
 import { moodIcon, weatherGlyph } from './icons'
 import { t } from '@/core/i18n'
+import { keepFocus } from '@/lib/utils'
 
-const prevent = (e: MouseEvent): void => e.preventDefault()
 const anchorOf = (e: SyntheticEvent): HTMLElement => e.currentTarget as HTMLElement
 
 export default function EditorMetaHeader({
@@ -76,7 +76,7 @@ export default function EditorMetaHeader({
           type="button"
           className="meta-plain-btn meta-date-anchor"
           disabled={!editable}
-          onMouseDown={prevent}
+          onMouseDown={keepFocus}
           onClick={(e) => datePicker.current?.open(anchorOf(e))}
         >
           {meta.dateText}
@@ -85,7 +85,7 @@ export default function EditorMetaHeader({
           type="button"
           className="meta-plain-btn meta-date-sub"
           disabled={!editable}
-          onMouseDown={prevent}
+          onMouseDown={keepFocus}
           onClick={(e) => timePicker.current?.open(anchorOf(e))}
         >
           {subLine}
@@ -99,7 +99,7 @@ export default function EditorMetaHeader({
           className="meta-plain-btn meta-fn-mood meta-mood-chip"
           style={{ color: currentMood?.color, background: `${currentMood?.color}26` }}
           disabled={!editable}
-          onMouseDown={prevent}
+          onMouseDown={keepFocus}
           onClick={(e) => moodPicker.current?.open(anchorOf(e))}
         >
           <MoodIcon className="size-4" />
@@ -110,7 +110,7 @@ export default function EditorMetaHeader({
             type="button"
             className="meta-plain-btn meta-fn-item"
             disabled={!editable}
-            onMouseDown={prevent}
+            onMouseDown={keepFocus}
             onClick={(e) => categoryPicker.current?.open(anchorOf(e))}
           >
             <Folder className={`meta-fn-icon${meta.category ? '' : ' meta-fn-icon--unset'}`} />
@@ -122,7 +122,7 @@ export default function EditorMetaHeader({
             type="button"
             className="meta-plain-btn meta-fn-item meta-fn-item--shrink"
             disabled={!editable}
-            onMouseDown={prevent}
+            onMouseDown={keepFocus}
             onClick={(e) => weatherPicker.current?.open(anchorOf(e))}
           >
             {weatherIcon ? (
@@ -138,7 +138,7 @@ export default function EditorMetaHeader({
             type="button"
             className="meta-plain-btn meta-fn-item meta-fn-item--shrink"
             disabled={!editable}
-            onMouseDown={prevent}
+            onMouseDown={keepFocus}
             onClick={(e) => placePicker.current?.open(anchorOf(e))}
           >
             <MapPin className={`meta-fn-icon${meta.position ? '' : ' meta-fn-icon--unset'}`} />
@@ -155,7 +155,7 @@ export default function EditorMetaHeader({
               type="button"
               className="meta-plain-btn meta-tag"
               disabled={!editable}
-              onMouseDown={prevent}
+              onMouseDown={keepFocus}
               onClick={(e) => openTag(tag, e)}
             >
               #{tag}

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { ChevronDown, ChevronUp, X } from 'lucide-react'
 import { cn } from 'cn'
 import { closeOverlay, openOverlay, type Overlay } from '@/core/state/overlay'
@@ -17,8 +17,7 @@ import { t } from '@/core/i18n'
 import { useStore } from '@/lib/store'
 import { Button } from '@/ui/primitives/button'
 import { Input } from '@/ui/primitives/input'
-
-const prevent = (e: MouseEvent): void => e.preventDefault()
+import { keepFocus } from '@/lib/utils'
 
 export default function EditorSearchBar({ className }: { className?: string }) {
   const s = useStore(editorSearch)
@@ -68,7 +67,7 @@ export default function EditorSearchBar({ className }: { className?: string }) {
             size="icon-xs"
             className={cn('rounded-md', s.caseSensitive && 'bg-accent text-primary')}
             title={t('search.matchCase')}
-            onMouseDown={prevent}
+            onMouseDown={keepFocus}
             onClick={toggleCase}
           >
             <span className="text-[11px] font-bold">Aa</span>
@@ -78,7 +77,7 @@ export default function EditorSearchBar({ className }: { className?: string }) {
             size="icon-xs"
             className="rounded-md"
             title={t('search.previous')}
-            onMouseDown={prevent}
+            onMouseDown={keepFocus}
             onClick={prevMatch}
           >
             <ChevronUp className="size-4" />
@@ -88,7 +87,7 @@ export default function EditorSearchBar({ className }: { className?: string }) {
             size="icon-xs"
             className="rounded-md"
             title={t('search.next')}
-            onMouseDown={prevent}
+            onMouseDown={keepFocus}
             onClick={nextMatch}
           >
             <ChevronDown className="size-4" />
@@ -98,7 +97,7 @@ export default function EditorSearchBar({ className }: { className?: string }) {
             size="icon-xs"
             className="rounded-md"
             title={t('search.close')}
-            onMouseDown={prevent}
+            onMouseDown={keepFocus}
             onClick={closeSearch}
           >
             <X className="size-4" />
@@ -113,10 +112,10 @@ export default function EditorSearchBar({ className }: { className?: string }) {
           onChange={(e) => setReplace(e.target.value)}
         />
         <div className="flex items-center justify-end gap-0.5">
-          <Button variant="ghost" size="xs" className="rounded-md" onMouseDown={prevent} onClick={replaceOne}>
+          <Button variant="ghost" size="xs" className="rounded-md" onMouseDown={keepFocus} onClick={replaceOne}>
             {t('search.replace')}
           </Button>
-          <Button variant="ghost" size="xs" className="rounded-md" onMouseDown={prevent} onClick={replaceAllMatches}>
+          <Button variant="ghost" size="xs" className="rounded-md" onMouseDown={keepFocus} onClick={replaceAllMatches}>
             {t('search.replaceAll')}
           </Button>
         </div>

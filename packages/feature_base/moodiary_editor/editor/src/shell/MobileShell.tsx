@@ -1,4 +1,3 @@
-import { useRef } from 'react'
 import { post } from '@/core/bridge/post'
 import { dismissKeyboard } from '@/core/editor/keyboard'
 import { editable as editableStore } from '@/core/state/editable'
@@ -11,12 +10,10 @@ import { useKeepCaretVisible } from '@/ui/hooks/use-keep-caret-visible'
 import UndoToast from '@/ui/overlay/UndoToast'
 import EditorToolbar, { type PickType } from '@/ui/toolbar/EditorToolbar'
 
-// 触屏壳：工具栏贴底、弹原生选择器前先收键盘
 export default function MobileShell() {
   const editor = useDiaryEditor()
   const editable = useStore(editableStore)
-  const viewport = useRef<HTMLDivElement>(null)
-  useKeepCaretVisible(editor, viewport)
+  useKeepCaretVisible(editor)
 
   const pick = (type: PickType): void => {
     dismissKeyboard()
@@ -24,8 +21,8 @@ export default function MobileShell() {
   }
 
   return (
-    <div className="moodiary-editor-root" data-platform="mobile">
-      <EditorViewport ref={viewport} editor={editor} />
+    <div className="moodiary-editor-root">
+      <EditorViewport editor={editor} />
       <EditorSearchBar className="border-t border-border" />
       <UndoToast />
       {editable && (

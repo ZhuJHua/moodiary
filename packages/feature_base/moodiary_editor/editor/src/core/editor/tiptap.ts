@@ -24,7 +24,6 @@ import { Audio, Video } from './media-nodes'
 
 type NodeViewComponent = Parameters<typeof ReactNodeViewRenderer>[0]
 
-// 节点视图由壳层注入，内核不认识任何 React 组件
 export interface EditorNodeViews {
   codeBlock: NodeViewComponent
   image: NodeViewComponent
@@ -93,7 +92,7 @@ function parseDoc(content: string): JSONContent | null {
   }
 }
 
-export function wrapPlainText(text: string): JSONContent {
+function wrapPlainText(text: string): JSONContent {
   const content = text.split(/\r?\n/).map((line) => ({
     type: 'paragraph',
     ...(line ? { content: [{ type: 'text', text: line }] } : {}),
@@ -312,7 +311,6 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
     setContent: (content) => loadContent(content ?? ''),
     getContent: () => (editor ? JSON.stringify(editor.getJSON()) : ''),
     setEditable: (value) => {
-      if (!value) hideUndoToast()
       options.editable = value
       editor?.setEditable(value, false)
     },

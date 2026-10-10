@@ -1,4 +1,5 @@
 import { createStore } from '@/lib/store'
+import { editable } from './editable'
 
 const DURATION = 4000
 
@@ -22,6 +23,10 @@ export function hideUndoToast(): void {
   if (undoToast.get().visible) undoToast.patch({ visible: false })
   action = null
 }
+
+editable.subscribe(() => {
+  if (!editable.get()) hideUndoToast()
+})
 
 export function runUndoToast(): void {
   const fn = action

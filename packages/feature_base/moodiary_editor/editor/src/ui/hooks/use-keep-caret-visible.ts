@@ -1,14 +1,15 @@
-import { useEffect, type RefObject } from 'react'
+import { useEffect } from 'react'
 import type { Editor } from '@tiptap/core'
 import { NodeSelection } from '@tiptap/pm/state'
+import { scrollViewport } from '@/core/bridge/scroll'
 
 // 软键盘弹出压矮视口时，把被盖住的光标滚回可见区
-export function useKeepCaretVisible(editor: Editor, viewport: RefObject<HTMLElement | null>): void {
+export function useKeepCaretVisible(editor: Editor): void {
   useEffect(() => {
-    let bottom = viewport.current?.getBoundingClientRect().bottom ?? Infinity
+    let bottom = scrollViewport()?.getBoundingClientRect().bottom ?? Infinity
     let raf = 0
     const onResize = (): void => {
-      const box = viewport.current
+      const box = scrollViewport()
       if (!box) return
       const bounds = box.getBoundingClientRect()
       const bottomBefore = bottom
@@ -27,5 +28,5 @@ export function useKeepCaretVisible(editor: Editor, viewport: RefObject<HTMLElem
       window.removeEventListener('resize', onResize)
       cancelAnimationFrame(raf)
     }
-  }, [editor, viewport])
+  }, [editor])
 }

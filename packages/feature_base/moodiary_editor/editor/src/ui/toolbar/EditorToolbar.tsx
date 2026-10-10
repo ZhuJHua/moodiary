@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type MouseEvent } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Editor } from '@tiptap/core'
 import { useEditorState } from '@tiptap/react'
 import { FileAudio, Image, Link, Mic, Music, Redo2, Search, Table, Undo2, Video } from 'lucide-react'
@@ -21,10 +21,9 @@ import {
   toggleHeading,
   type HeadingKey,
 } from './tools'
+import { keepFocus } from '@/lib/utils'
 
 export type PickType = 'pickImage' | 'pickVideo' | 'recordAudio' | 'pickAudioFile'
-
-const prevent = (e: MouseEvent): void => e.preventDefault()
 
 export default function EditorToolbar({
   editor,
@@ -172,7 +171,7 @@ export default function EditorToolbar({
             size={dense ? 'default' : 'sm'}
             className={cn('px-2', dense && 'h-10')}
             title={t(op.title)}
-            onMouseDown={prevent}
+            onMouseDown={keepFocus}
             onClick={() => op.run(chain()).run()}
           >
             <span className="text-xs leading-none font-semibold">{t(op.label)}</span>

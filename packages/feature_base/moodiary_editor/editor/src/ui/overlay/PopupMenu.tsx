@@ -24,7 +24,7 @@ export default function PopupMenu({
   const hasActive = items.some((item) => item.active)
 
   return (
-    <div className="popup-menu-host">
+    <div>
       <div onClick={(e) => pop.current?.open(e.currentTarget)}>{children}</div>
       <Popover ref={pop} keepFocus panelClass="min-w-42 max-w-80">
         {items.map((item) => {

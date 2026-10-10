@@ -8,13 +8,12 @@ import { useDiaryEditor } from '@/ui/hooks/use-diary-editor'
 import UndoToast from '@/ui/overlay/UndoToast'
 import EditorToolbar, { type PickType } from '@/ui/toolbar/EditorToolbar'
 
-// 键鼠壳：工具栏与查找条在顶部
 export default function DesktopShell() {
   const editor = useDiaryEditor()
   const editable = useStore(editableStore)
 
   return (
-    <div className="moodiary-editor-root" data-platform="desktop">
+    <div className="moodiary-editor-root">
       {editable && (
         <EditorToolbar
           editor={editor}

@@ -5,7 +5,7 @@ import { Editor, EditorContent } from '@tiptap/react'
 import type { JSONContent } from '@tiptap/core'
 import { expect, vi } from 'vitest'
 import { linkSuggestion } from '@/core/editor/diary-link'
-import { editable } from '@/core/state/editable'
+import { applyEditable } from '@/core/bridge'
 import { createEditorKit } from '@/core/editor/tiptap'
 import type { EditorApi } from '@/core/editor/tiptap'
 import { nodeViews } from '@/ui/nodes'
@@ -67,11 +67,7 @@ export function setupEditor(): EditorHarness {
     editor,
     api: kit.api,
     posted,
-    // 与 bridge 的 setEditable 同步：store 归 bridge 写，内核只改 editor
-    setEditable: (value) => {
-      editable.set(value)
-      kit.api.setEditable(value)
-    },
+    setEditable: (value) => applyEditable(kit.api, value),
     lastPost,
     flush,
     type: async (text) => {

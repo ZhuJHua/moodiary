@@ -4,7 +4,6 @@ import { post } from '@/core/bridge/post'
 
 const HEADINGS = '.ProseMirror h1, .ProseMirror h2, .ProseMirror h3, .ProseMirror h4, .ProseMirror h5, .ProseMirror h6'
 
-// 报告视口顶部当前所在的标题序号，供 Flutter 的目录高亮
 export function useScrollSpy(editor: Editor, viewport: RefObject<HTMLElement | null>): () => void {
   const active = useRef(-1)
   const raf = useRef(0)

@@ -2,8 +2,7 @@ import type { MouseEvent } from 'react'
 import { cn } from 'cn'
 import { Button } from '@/ui/primitives/button'
 import type { ToolIcon } from './tools'
-
-const prevent = (e: MouseEvent): void => e.preventDefault()
+import { keepFocus } from '@/lib/utils'
 
 export default function ToolbarButton({
   icon: Icon,
@@ -30,7 +29,7 @@ export default function ToolbarButton({
       title={title}
       data-testid={testId}
       disabled={disabled}
-      onMouseDown={prevent}
+      onMouseDown={keepFocus}
       onClick={onClick}
     >
       <Icon className="size-5" />

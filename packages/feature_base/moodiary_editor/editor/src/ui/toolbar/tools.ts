@@ -20,25 +20,7 @@ import type { MessageKey } from '@/core/i18n'
 
 export type ToolIcon = ComponentType<{ className?: string }>
 
-export interface ToolbarState {
-  bold: boolean
-  italic: boolean
-  underline: boolean
-  strike: boolean
-  code: boolean
-  bulletList: boolean
-  orderedList: boolean
-  taskList: boolean
-  blockquote: boolean
-  codeBlock: boolean
-  heading: boolean
-  h1: boolean
-  h2: boolean
-  h3: boolean
-  table: boolean
-}
-
-export const readToolbarState = (ed: Editor): ToolbarState => ({
+export const readToolbarState = (ed: Editor) => ({
   bold: ed.isActive('bold'),
   italic: ed.isActive('italic'),
   underline: ed.isActive('underline'),
@@ -55,6 +37,8 @@ export const readToolbarState = (ed: Editor): ToolbarState => ({
   h3: ed.isActive('heading', { level: 3 }),
   table: ed.isActive('table'),
 })
+
+export type ToolbarState = ReturnType<typeof readToolbarState>
 
 export interface FormatTool {
   key: keyof ToolbarState
