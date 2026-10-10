@@ -16,7 +16,6 @@ import { closeOverlay, openOverlay, type Overlay } from '@/core/state/overlay'
 export interface PopoverHandle {
   open(anchor: HTMLElement): void
   close(): void
-  isOpen(): boolean
 }
 
 const GAP = 6
@@ -41,7 +40,9 @@ export default function Popover({
   const panel = useRef<HTMLDivElement>(null)
   const [style, setStyle] = useState<CSSProperties>({})
   const onClosedRef = useRef(onClosed)
-  onClosedRef.current = onClosed
+  useLayoutEffect(() => {
+    onClosedRef.current = onClosed
+  })
   const openRef = useRef(false)
   const open = anchor !== null
 
@@ -111,9 +112,8 @@ export default function Popover({
         setAnchor(el)
       },
       close,
-      isOpen: () => anchor !== null,
     }),
-    [anchor, close, keepFocus],
+    [close, keepFocus],
   )
 
   // React 把 touchstart 注册成 passive，preventDefault 无效；拦截层要原生非 passive 监听才能吃掉整段触摸

@@ -3,7 +3,7 @@ import { Loader2 } from 'lucide-react'
 import { cn } from 'cn'
 import { dismissSuggestion, linkSuggestion, selectCandidate } from '@/core/editor/diary-link'
 import { closeOverlay, openOverlay, type Overlay } from '@/core/state/overlay'
-import { useT } from '@/core/i18n'
+import { t } from '@/core/i18n'
 import { useStore } from '@/lib/store'
 
 const MARGIN = 8
@@ -21,7 +21,6 @@ interface Pos {
 const overlay: Overlay = { dismiss: dismissSuggestion }
 
 export default function DiaryLinkSuggestion() {
-  const t = useT()
   const s = useStore(linkSuggestion)
   const box = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState<Pos>({ left: 0, top: 0, bottom: null, maxH: 240, ready: false })

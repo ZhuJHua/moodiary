@@ -11,7 +11,7 @@ import DatePicker from './DatePicker'
 import TimePicker from './TimePicker'
 import type { PickerHandle } from './picker'
 import { moodIcon, weatherGlyph } from './icons'
-import { useT } from '@/core/i18n'
+import { t } from '@/core/i18n'
 
 const prevent = (e: MouseEvent): void => e.preventDefault()
 const anchorOf = (e: SyntheticEvent): HTMLElement => e.currentTarget as HTMLElement
@@ -25,7 +25,6 @@ export default function EditorMetaHeader({
   editable: boolean
   wordCount: number
 }) {
-  const t = useT()
 
   const subLine = editable
     ? meta.subText

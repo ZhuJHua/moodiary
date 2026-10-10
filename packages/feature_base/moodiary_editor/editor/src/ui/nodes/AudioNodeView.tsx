@@ -3,20 +3,15 @@ import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
 import { Pause, Play, Volume2, VolumeX } from 'lucide-react'
 import { cn } from 'cn'
 import BlockHandle from './BlockHandle'
-import { blockMenu, openBlockMenu } from '@/core/state/block-menu'
-import { editable } from '@/core/state/editable'
 import { fetchMediaName, mediaUrl } from '@/core/editor/media'
 import { formatTime, useMediaControls } from '@/ui/hooks/use-media'
-import { useT } from '@/core/i18n'
-import { useStore } from '@/lib/store'
+import { t } from '@/core/i18n'
+import { useBlockMenu } from '@/ui/hooks/use-block-menu'
 import { rangeClass } from '@/lib/range'
 import { Button } from '@/ui/primitives/button'
 
 export default function AudioNodeView({ node, selected, getPos }: NodeViewProps) {
-  const t = useT()
-  const [owner] = useState(() => Symbol('audio'))
-  const menuOpen = useStore(blockMenu, (s) => s.owner === owner)
-  const canEdit = useStore(editable)
+  const { canEdit, menuOpen, openMenu } = useBlockMenu('audio', getPos)
 
   const filename = (node.attrs.filename as string | null) ?? ''
   const src = filename ? mediaUrl(filename) : undefined
@@ -70,12 +65,7 @@ export default function AudioNodeView({ node, selected, getPos }: NodeViewProps)
               {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
             </Button>
             {canEdit && (
-              <BlockHandle
-                variant="inline"
-                onOpen={(anchor) =>
-                  openBlockMenu({ owner, kind: 'audio', anchor, getPos: () => getPos() })
-                }
-              />
+              <BlockHandle variant="inline" onOpen={openMenu} />
             )}
           </div>
           <div className="flex items-center gap-2">

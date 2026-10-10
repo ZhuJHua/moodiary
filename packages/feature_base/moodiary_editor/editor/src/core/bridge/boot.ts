@@ -1,7 +1,9 @@
 import type { EditorTheme } from './theme'
 
+export type Platform = 'mobile' | 'desktop'
+
 export interface EditorBoot {
-  platform?: 'mobile' | 'desktop'
+  platform?: Platform
   editable?: boolean
   locale?: string
   theme?: EditorTheme | null

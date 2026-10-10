@@ -1,5 +1,5 @@
 import { Ellipsis } from 'lucide-react'
-import { useT } from '@/core/i18n'
+import { t } from '@/core/i18n'
 
 export default function BlockHandle({
   variant,
@@ -8,7 +8,6 @@ export default function BlockHandle({
   variant: 'corner' | 'inline'
   onOpen: (anchor: HTMLElement) => void
 }) {
-  const t = useT()
   return (
     <button
       type="button"

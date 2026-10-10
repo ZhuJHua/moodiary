@@ -20,10 +20,7 @@ export default function TableGridPicker({
 
   return (
     <div
-      className={cn(
-        'rounded-lg border border-border bg-popover p-2 text-popover-foreground shadow-lg',
-        className,
-      )}
+      className={cn('p-2', className)}
       style={style}
     >
       <div className="grid w-max gap-0.5" style={{ gridTemplateColumns: `repeat(${MAX_C}, 1.25rem)` }}>

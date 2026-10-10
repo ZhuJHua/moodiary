@@ -5,8 +5,10 @@ import { Editor, EditorContent } from '@tiptap/react'
 import type { JSONContent } from '@tiptap/core'
 import { expect, vi } from 'vitest'
 import { linkSuggestion } from '@/core/editor/diary-link'
+import { editable } from '@/core/state/editable'
 import { createEditorKit } from '@/core/editor/tiptap'
 import type { EditorApi } from '@/core/editor/tiptap'
+import { nodeViews } from '@/ui/nodes'
 
 export interface Posted {
   type: string
@@ -17,6 +19,7 @@ export interface EditorHarness {
   editor: Editor
   api: EditorApi
   posted: Posted[]
+  setEditable(value: boolean): void
   lastPost(type: string): Posted | undefined
   type(text: string): Promise<void>
   respond(items: Array<{ id: string; label: string }>): Promise<void>
@@ -47,7 +50,7 @@ export function setupEditor(): EditorHarness {
   }
   linkSuggestion.set({ open: false, loading: false, query: '', items: [], index: 0, rect: null })
 
-  const kit = createEditorKit({ editable: true, placeholder: '', onChange: () => {} })
+  const kit = createEditorKit({ editable: true, placeholder: '', nodeViews, onChange: () => {} })
   const editor = new Editor({ ...kit.options })
   kit.attach(editor)
   const root = mountContent(editor)
@@ -64,6 +67,11 @@ export function setupEditor(): EditorHarness {
     editor,
     api: kit.api,
     posted,
+    // 与 bridge 的 setEditable 同步：store 归 bridge 写，内核只改 editor
+    setEditable: (value) => {
+      editable.set(value)
+      kit.api.setEditable(value)
+    },
     lastPost,
     flush,
     type: async (text) => {

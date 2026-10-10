@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { Editor } from '@tiptap/core'
 import { createEditorKit } from './tiptap'
 import { countGraphemes, plainTextOf, wordCountOf } from './word-count'
+import { nodeViews } from '@/ui/nodes'
 
 function docOf(content: object[]): Editor {
-  const kit = createEditorKit({ editable: true, placeholder: '', onChange: () => {} })
+  const kit = createEditorKit({ editable: true, placeholder: '', nodeViews, onChange: () => {} })
   const editor = new Editor({ ...kit.options, element: document.createElement('div') })
   editor.commands.setContent({ type: 'doc', content }, { emitUpdate: false })
   return editor

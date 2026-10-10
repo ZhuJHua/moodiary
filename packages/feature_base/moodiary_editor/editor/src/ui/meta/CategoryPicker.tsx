@@ -4,10 +4,9 @@ import Popover, { type PopoverHandle } from '@/ui/overlay/Popover'
 import { post } from '@/core/bridge/post'
 import type { EditorMeta } from '@/core/state/meta'
 import type { PickerHandle } from './picker'
-import { useT } from '@/core/i18n'
+import { t } from '@/core/i18n'
 
 export default function CategoryPicker({ ref, meta }: { ref?: Ref<PickerHandle>; meta: EditorMeta }) {
-  const t = useT()
   const pop = useRef<PopoverHandle>(null)
 
   useImperativeHandle(ref, () => ({ open: (anchor) => pop.current?.open(anchor) }), [])

@@ -32,8 +32,6 @@ class MoodiaryEditorView extends StatefulWidget {
 
   final double fontScale;
 
-  final String saveStatus;
-
   final ValueChanged<String>? onOpenDiaryLink;
 
   final String? metaJson;
@@ -67,7 +65,6 @@ class MoodiaryEditorView extends StatefulWidget {
     this.editable = true,
     this.firstLineIndent = false,
     this.fontScale = 1.0,
-    this.saveStatus = 'idle',
     this.onOpenDiaryLink,
     this.metaJson,
     this.linksJson,
@@ -295,7 +292,6 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       onClearPosition: widget.onClearPosition,
       onOpenGraph: widget.onOpenGraph,
       onOverlayChanged: widget.onOverlayChanged,
-      saveStatus: widget.saveStatus,
       firstLineIndent: widget.firstLineIndent,
       fontScale: widget.fontScale,
       rolesResolver: getIt<ThemeManager>().editorRoles,

@@ -3,23 +3,21 @@ import { createStore } from '@/lib/store'
 export type BlockKind = 'image' | 'video' | 'audio'
 
 export interface BlockTarget {
-  owner: symbol
+  owner: string
   kind: BlockKind
   anchor: HTMLElement
   getPos: () => number | undefined
 }
 
-export const blockMenu = createStore<{ owner: symbol | null; previewWidth: number | null }>({
-  owner: null,
+export const blockMenu = createStore<{ target: BlockTarget | null; previewWidth: number | null }>({
+  target: null,
   previewWidth: null,
 })
 
-let opener: ((target: BlockTarget) => void) | null = null
-
-export function registerBlockMenu(fn: ((target: BlockTarget) => void) | null): void {
-  opener = fn
+export function openBlockMenu(target: BlockTarget): void {
+  blockMenu.set({ target, previewWidth: null })
 }
 
-export function openBlockMenu(target: BlockTarget): void {
-  opener?.(target)
+export function closeBlockMenu(): void {
+  blockMenu.patch({ target: null, previewWidth: null })
 }

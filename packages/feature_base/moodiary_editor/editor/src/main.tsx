@@ -1,8 +1,7 @@
 import { createRoot } from 'react-dom/client'
-import App from '@/shell/EditorShell'
-import { readBoot } from '@/core/bridge/boot'
-import { setLocale } from '@/core/i18n'
-import '@/styles/moodiary-editor.css'
+import { bootstrap } from '@/core/bridge/bootstrap'
+import EditorShell from '@/shell/EditorShell'
+import './styles/moodiary-editor.css'
 
-setLocale(readBoot().locale)
-createRoot(document.getElementById('app')!).render(<App />)
+const { platform } = bootstrap()
+createRoot(document.getElementById('app')!).render(<EditorShell platform={platform} />)

@@ -5,10 +5,9 @@ import { post } from '@/core/bridge/post'
 import type { EditorMeta } from '@/core/state/meta'
 import { placeIcon } from './icons'
 import type { PickerHandle } from './picker'
-import { useT } from '@/core/i18n'
+import { t } from '@/core/i18n'
 
 export default function PlacePicker({ ref, meta }: { ref?: Ref<PickerHandle>; meta: EditorMeta }) {
-  const t = useT()
   const pop = useRef<PopoverHandle>(null)
 
   useImperativeHandle(

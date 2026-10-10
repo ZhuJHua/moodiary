@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Editor } from '@tiptap/core'
 import type { Node as PMNode } from '@tiptap/pm/model'
 import { closeHistory } from '@tiptap/pm/history'
@@ -6,50 +6,35 @@ import { ArrowDownToLine, ArrowUpToLine, Trash2 } from 'lucide-react'
 import Popover, { type PopoverHandle } from '@/ui/overlay/Popover'
 import WidthControl from './WidthControl'
 import { insertParagraph } from '@/core/editor/block-caret'
-import { blockMenu, registerBlockMenu, type BlockTarget } from '@/core/state/block-menu'
+import { blockMenu, closeBlockMenu } from '@/core/state/block-menu'
 import { hideUndoToast, showUndoToast } from '@/core/state/undo-toast'
-import { useT } from '@/core/i18n'
+import { t } from '@/core/i18n'
+import { useStore } from '@/lib/store'
 
 export default function BlockMenu({ editor }: { editor: Editor }) {
-  const t = useT()
   const pop = useRef<PopoverHandle>(null)
-  const target = useRef<BlockTarget | null>(null)
-  const [kind, setKind] = useState<BlockTarget['kind'] | null>(null)
+  const target = useStore(blockMenu, (s) => s.target)
   const [node, setNode] = useState<PMNode | null>(null)
 
-  const position = (): number | null => {
-    const pos = target.current?.getPos()
-    return pos == null ? null : pos
-  }
-
-  const refresh = useCallback((): void => {
-    const pos = target.current?.getPos()
-    setNode(pos == null ? null : editor.state.doc.nodeAt(pos))
-  }, [editor])
-
-  const onClosed = useCallback((): void => {
-    editor.off('transaction', refresh)
-    target.current = null
-    setKind(null)
-    blockMenu.set({ owner: null, previewWidth: null })
-  }, [editor, refresh])
-
   useEffect(() => {
-    registerBlockMenu((next) => {
-      target.current = next
-      setKind(next.kind)
-      blockMenu.set({ owner: next.owner, previewWidth: null })
-      refresh()
-      editor.on('transaction', refresh)
-      pop.current?.open(next.anchor)
-    })
-    return () => {
-      registerBlockMenu(null)
-      onClosed()
+    if (!target) {
+      pop.current?.close()
+      return
     }
-  }, [editor, refresh, onClosed])
+    const refresh = (): void => {
+      const pos = target.getPos()
+      setNode(pos == null ? null : editor.state.doc.nodeAt(pos))
+    }
+    refresh()
+    editor.on('transaction', refresh)
+    pop.current?.open(target.anchor)
+    return () => {
+      editor.off('transaction', refresh)
+    }
+  }, [editor, target])
 
-  const sizable = kind !== null && kind !== 'audio'
+  const position = (): number | null => target?.getPos() ?? null
+  const sizable = target !== null && target.kind !== 'audio'
   const v = node?.attrs.widthPercent
   const widthPercent = typeof v === 'number' ? v : null
 
@@ -86,7 +71,7 @@ export default function BlockMenu({ editor }: { editor: Editor }) {
   }
 
   return (
-    <Popover ref={pop} keepFocus panelClass="w-56" label={t('block.more')} onClosed={onClosed}>
+    <Popover ref={pop} keepFocus panelClass="w-56" label={t('block.more')} onClosed={closeBlockMenu}>
       {sizable && node && (
         <>
           <WidthControl
