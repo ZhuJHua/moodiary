@@ -4,9 +4,9 @@ import { createRoot, type Root } from 'react-dom/client'
 import { Editor, EditorContent } from '@tiptap/react'
 import type { JSONContent } from '@tiptap/core'
 import { expect, vi } from 'vitest'
-import { linkSuggestion } from '../editor/diary-link'
-import { createEditorKit } from '../editor/tiptap'
-import type { EditorApi } from '../editor/tiptap'
+import { linkSuggestion } from '@/core/editor/diary-link'
+import { createEditorKit } from '@/core/editor/tiptap'
+import type { EditorApi } from '@/core/editor/tiptap'
 
 export interface Posted {
   type: string

@@ -9,10 +9,10 @@ import {
   type DynamicColor,
 } from '@material/material-color-utilities'
 import { Moon, Sun } from 'lucide-react'
-import { Button } from '../src/components/ui/button'
-import { Input } from '../src/components/ui/input'
-import { Toggle } from '../src/components/ui/toggle'
-import type { EditorRoles, EditorTheme } from '../src/bridge/theme'
+import { Button } from '@/ui/primitives/button'
+import { Input } from '@/ui/primitives/input'
+import { Toggle } from '@/ui/primitives/toggle'
+import type { EditorRoles, EditorTheme } from '@/core/bridge/theme'
 
 type Device = 'phone' | 'desktop'
 type Variant = 'tonalSpot' | 'monochrome'
