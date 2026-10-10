@@ -1,6 +1,5 @@
 
 @import 'tailwindcss';
-@source not '../../dev';
 @import 'shadcn/tailwind.css';
 
 /* Flutter 只下发 dark: bool，写在 <html data-theme>；shadcn 组件里的 dark: 变体绑到它 */

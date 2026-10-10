@@ -20,4 +20,3 @@
 - web 源在 `editor/`（React 19 + @tiptap/react + shadcn-ui + Tailwind v4 + Vite）。`hook/build.dart` 在 `flutter run` / `build` 时构建（目标系统等于宿主时直接返回，`flutter test` 不构建），输出平铺的 gzip 产物到 `../assets/editor/`，运行时由 `EditorLocalServer` 解压后发明文。钩子声明 `editor/src/**` 与配置文件为依赖，改了源码自动重建，要求 `corepack` 在 PATH 上。
 - `editor/src` 分四层，只能向下依赖（`src/layers.test.ts` 强制）：`lib`（store、cn）→ `core`（bridge 协议、TipTap 扩展与 `createEditorKit`、store、i18n，不 import 任何 React 组件）→ `ui`（节点视图、属性头、工具栏等共享 React 件）→ `shell`（`MobileShell` / `DesktopShell` 决定工具栏位置、键盘与快捷键策略；`main.tsx` 按 boot 的 `platform` 选壳）。节点视图经 `createEditorKit({ nodeViews })` 由壳注入。
 - 页面文案是仓库根的 `i18n/web/{zh,en}.json`（slang 不读这里，两边都要的串各存一份）：由 `editor/src/i18n` 的类型化 `t()` 直接 import 进产物，无需额外 codegen；boot 只下发 `locale`，钩子把该目录也声明为依赖。
-- 开发预览：`cd editor && corepack pnpm harness`。

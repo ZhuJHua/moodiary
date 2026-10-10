@@ -10,7 +10,6 @@
   },
   "scripts": {
     "dev": "vite",
-    "harness": "vite --open /dev.html",
     "build": "tsc --noEmit && vite build",
     "type-check": "tsc --noEmit",
     "test": "vitest run"
