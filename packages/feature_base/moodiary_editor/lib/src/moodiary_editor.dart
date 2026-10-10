@@ -251,7 +251,6 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
       return;
     }
     final boot = <String, dynamic>{
-      'platform': (Platform.isAndroid || Platform.isIOS) ? 'mobile' : 'desktop',
       'editable': !widget.readOnly,
       'locale': LocaleSettings.currentLocale.languageCode,
       'theme': _themePayload(),

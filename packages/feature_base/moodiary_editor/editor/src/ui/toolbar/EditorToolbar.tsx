@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import type { Editor } from '@tiptap/core'
 import { useEditorState } from '@tiptap/react'
 import { FileAudio, Image, Link, Mic, Music, Redo2, Search, Table, Undo2, Video } from 'lucide-react'
-import { cn } from 'cn'
 import { openSearch } from '@/core/editor/search'
 import { t } from '@/core/i18n'
 import Popover, { type PopoverHandle } from '@/ui/overlay/Popover'
@@ -27,13 +26,9 @@ export type PickType = 'pickImage' | 'pickVideo' | 'recordAudio' | 'pickAudioFil
 
 export default function EditorToolbar({
   editor,
-  dense = false,
-  className,
   onPick,
 }: {
   editor: Editor
-  dense?: boolean
-  className?: string
   onPick: (type: PickType) => void
 }) {
   const s = useEditorState({ editor, selector: ({ editor: ed }) => readToolbarState(ed) })
@@ -85,15 +80,11 @@ export default function EditorToolbar({
 
   return (
     <div
-      className={cn(
-        'moodiary-toolbar no-scrollbar flex items-center gap-0.5 overflow-x-auto bg-background px-2 py-1.5',
-        className,
-      )}
+      className="moodiary-toolbar no-scrollbar flex items-center gap-0.5 overflow-x-auto border-t border-border bg-background px-2 py-1.5"
     >
       <ToolbarButton
         icon={Undo2}
         title={t('toolbar.undo')}
-        dense={dense}
         testId="undo"
         disabled={!history.canUndo}
         onClick={() => chain().undo().run()}
@@ -101,7 +92,6 @@ export default function EditorToolbar({
       <ToolbarButton
         icon={Redo2}
         title={t('toolbar.redo')}
-        dense={dense}
         testId="redo"
         disabled={!history.canRedo}
         onClick={() => chain().redo().run()}
@@ -111,22 +101,19 @@ export default function EditorToolbar({
       <ToolbarButton
         icon={Image}
         title={t('toolbar.insertImage')}
-        dense={dense}
         onClick={() => onPick('pickImage')}
       />
       <PopupMenu items={audioItems} onSelect={(key) => onPick(key as PickType)}>
-        <ToolbarButton icon={Music} title={t('toolbar.insertAudio')} dense={dense} />
+        <ToolbarButton icon={Music} title={t('toolbar.insertAudio')} />
       </PopupMenu>
       <ToolbarButton
         icon={Video}
         title={t('toolbar.insertVideo')}
-        dense={dense}
         onClick={() => onPick('pickVideo')}
       />
       <ToolbarButton
         icon={Link}
         title={t('toolbar.insertDiaryLink')}
-        dense={dense}
         onClick={() => chain().insertContent('[[').run()}
       />
       {divider}
@@ -138,7 +125,7 @@ export default function EditorToolbar({
         <ToolbarButton
           icon={currentHeadingIcon(s)}
           title={t('toolbar.heading')}
-          dense={dense}
+         
           active={s.heading}
         />
       </PopupMenu>
@@ -147,7 +134,7 @@ export default function EditorToolbar({
           key={tool.key}
           icon={tool.icon}
           title={t(tool.title)}
-          dense={dense}
+         
           active={s[tool.key]}
           onClick={() => tool.run(chain()).run()}
         />
@@ -157,7 +144,6 @@ export default function EditorToolbar({
       <ToolbarButton
         icon={Table}
         title={t('toolbar.insertTable')}
-        dense={dense}
         onClick={(e) => tablePop.current?.open(e.currentTarget)}
       />
       <Popover ref={tablePop} keepFocus panelClass="w-fit">
@@ -168,8 +154,8 @@ export default function EditorToolbar({
           <Button
             key={op.key}
             variant="ghost"
-            size={dense ? 'default' : 'sm'}
-            className={cn('px-2', dense && 'h-10')}
+            size="default"
+            className="h-10 px-2"
             title={t(op.title)}
             onMouseDown={keepFocus}
             onClick={() => op.run(chain()).run()}
@@ -179,7 +165,7 @@ export default function EditorToolbar({
         ))}
       {divider}
 
-      <ToolbarButton icon={Search} title={t('toolbar.findReplace')} dense={dense} onClick={openSearch} />
+      <ToolbarButton icon={Search} title={t('toolbar.findReplace')} onClick={openSearch} />
     </div>
   )
 }

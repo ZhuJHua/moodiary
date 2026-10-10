@@ -19,7 +19,7 @@ import { Button } from '@/ui/primitives/button'
 import { Input } from '@/ui/primitives/input'
 import { keepFocus } from '@/lib/utils'
 
-export default function EditorSearchBar({ className }: { className?: string }) {
+export default function EditorSearchBar() {
   const s = useStore(editorSearch)
   const findInput = useRef<HTMLInputElement>(null)
   const [overlay] = useState<Overlay>(() => ({ dismiss: () => closeSearch() }))
@@ -46,7 +46,7 @@ export default function EditorSearchBar({ className }: { className?: string }) {
   if (!s.open) return null
   return (
     <div
-      className={cn('moodiary-search flex-none bg-background px-2 py-1.5', className)}
+      className="moodiary-search flex-none border-t border-border bg-background px-2 py-1.5"
     >
       <div className="grid grid-cols-[1fr_auto] items-center gap-x-1.5 gap-y-1">
         <Input
