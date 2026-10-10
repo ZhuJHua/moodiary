@@ -1,61 +1,54 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { TextSelection } from '@tiptap/pm/state'
-import { setupEditor } from '@/test/harness'
-import type { EditorHarness } from '@/test/harness'
+import { renderEditor, type EditorFixture } from '@/test/editor'
 
-let h: EditorHarness
+let h: EditorFixture
 
 beforeEach(() => {
-  vi.useFakeTimers()
-  h = setupEditor()
+  h = renderEditor()
 })
 
 afterEach(() => {
   h.destroy()
-  vi.useRealTimers()
 })
 
-const mediaNames = (h: EditorHarness): string[] => {
-  const names: string[] = []
-  const walk = (n: { type?: string; attrs?: Record<string, unknown>; content?: unknown[] }): void => {
-    if (n.type === 'image') names.push(String(n.attrs?.src))
-    if (n.type === 'audio' || n.type === 'video') names.push(String(n.attrs?.filename))
-    for (const c of (n.content ?? []) as never[]) walk(c)
-  }
-  walk(h.editor.getJSON())
-  return names
-}
+const mediaNames = (): string[] =>
+  h.editor.getJSON().content!.flatMap((n) => {
+    if (n.type === 'image') return [String(n.attrs?.src)]
+    if (n.type === 'audio' || n.type === 'video') return [String(n.attrs?.filename)]
+    return []
+  })
 
 describe('insert media blocks', () => {
   it('inserting three images keeps all in order', () => {
     h.api.insertMedia('a.jpg')
     h.api.insertMedia('b.jpg')
     h.api.insertMedia('c.jpg')
-    expect(mediaNames(h)).toEqual(['a.jpg', 'b.jpg', 'c.jpg'])
+    expect(mediaNames()).toEqual(['a.jpg', 'b.jpg', 'c.jpg'])
   })
 
   it('mixed image / audio / video inserts do not replace each other', () => {
     h.api.insertMedia('a.jpg')
     h.api.insertAudio('audio-1.m4a')
     h.api.insertVideo('video-1.mp4')
-    expect(mediaNames(h)).toEqual(['a.jpg', 'audio-1.m4a', 'video-1.mp4'])
+    expect(mediaNames()).toEqual(['a.jpg', 'audio-1.m4a', 'video-1.mp4'])
   })
 
   it('inserts after existing text instead of wiping it', async () => {
-    await h.type('今天')
+    await h.insert('今天')
     h.api.insertMedia('a.jpg')
     expect(h.editor.getText()).toContain('今天')
-    expect(mediaNames(h)).toEqual(['a.jpg'])
+    expect(mediaNames()).toEqual(['a.jpg'])
   })
 
   it('does not raise the keyboard and leaves the caret after the block', async () => {
-    await h.type('开头')
+    await h.insert('开头')
     h.editor.view.dom.blur()
     h.api.insertMedia('a.jpg')
     h.api.insertMedia('b.jpg')
     expect(h.editor.view.hasFocus()).toBe(false)
     expect(h.editor.state.selection).toBeInstanceOf(TextSelection)
-    await h.type('然后')
+    await h.insert('然后')
     const blocks = h.editor
       .getJSON()
       .content!.map((n) => n.type + (n.attrs?.src ?? '') + ((n.content?.[0] as { text?: string } | undefined)?.text ?? ''))
