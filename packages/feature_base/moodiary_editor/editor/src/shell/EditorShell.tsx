@@ -1,13 +1,19 @@
 import { useEffect, useRef } from 'react'
 import { boundApi } from '@/core/bridge'
-import type { Platform } from '@/core/bridge/boot'
 import { post } from '@/core/bridge/post'
+import { dismissKeyboard } from '@/core/editor/keyboard'
 import { unproxyMedia } from '@/core/editor/media'
-import { editable } from '@/core/state/editable'
+import { editable as editableStore } from '@/core/state/editable'
+import { useStore } from '@/lib/store'
+import BlockMenu from '@/ui/block/BlockMenu'
 import DiaryLinkSuggestion from '@/ui/DiaryLinkSuggestion'
+import EditorSearchBar from '@/ui/EditorSearchBar'
+import EditorViewport from '@/ui/EditorViewport'
+import { useDiaryEditor } from '@/ui/hooks/use-diary-editor'
 import { useFindShortcut } from '@/ui/hooks/use-find-shortcut'
-import DesktopShell from './DesktopShell'
-import MobileShell from './MobileShell'
+import { useKeepCaretVisible } from '@/ui/hooks/use-keep-caret-visible'
+import UndoToast from '@/ui/overlay/UndoToast'
+import EditorToolbar, { type PickType } from '@/ui/toolbar/EditorToolbar'
 
 // 原生 click 监听先于 React 合成事件，链接 preventDefault 和 BlockHandle 的 stopPropagation 都依赖这个顺序
 function onClick(e: MouseEvent): void {
@@ -25,7 +31,7 @@ function onClick(e: MouseEvent): void {
   if (anchor && anchor.closest('.ProseMirror')) {
     e.preventDefault()
     const url = anchor.getAttribute('href') ?? ''
-    if (!editable.get() && /^https?:\/\//i.test(url)) post('urlTap', { url })
+    if (!editableStore.get() && /^https?:\/\//i.test(url)) post('urlTap', { url })
     return
   }
   const img = target?.closest('img')
@@ -39,17 +45,32 @@ function onClick(e: MouseEvent): void {
   else post('imageTap', { src: name, srcs: [name], index: 0 })
 }
 
-export default function EditorShell({ platform }: { platform: Platform }) {
+function pick(type: PickType): void {
+  dismissKeyboard()
+  post(type)
+}
+
+export default function EditorShell() {
   const shell = useRef<HTMLDivElement>(null)
+  const editor = useDiaryEditor()
+  const editable = useStore(editableStore)
+  useKeepCaretVisible(editor)
   useFindShortcut()
   useEffect(() => {
     const el = shell.current
     el?.addEventListener('click', onClick)
     return () => el?.removeEventListener('click', onClick)
   }, [])
+
   return (
     <div ref={shell} className="editor-shell">
-      {platform === 'mobile' ? <MobileShell /> : <DesktopShell />}
+      <div className="moodiary-editor-root">
+        <EditorViewport editor={editor} />
+        <EditorSearchBar />
+        <UndoToast />
+        {editable && <EditorToolbar editor={editor} onPick={pick} />}
+        {editable && <BlockMenu editor={editor} />}
+      </div>
       <DiaryLinkSuggestion />
     </div>
   )

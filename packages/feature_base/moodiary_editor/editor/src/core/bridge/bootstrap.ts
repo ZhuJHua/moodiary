@@ -1,4 +1,4 @@
-import { readBoot, type Platform } from './boot'
+import { readBoot } from './boot'
 import { installBridge } from './index'
 import { applyTheme, setFontBase } from './theme'
 import { setMediaInfoPrefix, setMediaPrefix } from '@/core/editor/media'
@@ -6,7 +6,7 @@ import { setLocale } from '@/core/i18n'
 import { editable } from '@/core/state/editable'
 
 // 首次渲染前跑完，首帧不按 store 默认值画
-export function bootstrap(): { platform: Platform } {
+export function bootstrap(): void {
   const boot = readBoot()
   if (boot.mediaBase) setMediaPrefix(boot.mediaBase)
   if (boot.mediaInfoBase) setMediaInfoPrefix(boot.mediaInfoBase)
@@ -16,5 +16,4 @@ export function bootstrap(): { platform: Platform } {
   editable.set(boot.editable ?? true)
   installBridge()
   if (boot.theme) applyTheme(boot.theme)
-  return { platform: boot.platform ?? 'desktop' }
 }

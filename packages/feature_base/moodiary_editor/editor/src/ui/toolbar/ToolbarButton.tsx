@@ -7,7 +7,6 @@ import { keepFocus } from '@/lib/utils'
 export default function ToolbarButton({
   icon: Icon,
   title,
-  dense,
   active,
   disabled,
   testId,
@@ -15,7 +14,6 @@ export default function ToolbarButton({
 }: {
   icon: ToolIcon
   title: string
-  dense?: boolean
   active?: boolean
   disabled?: boolean
   testId?: string
@@ -24,8 +22,8 @@ export default function ToolbarButton({
   return (
     <Button
       variant="ghost"
-      size={dense ? 'icon-lg' : 'icon'}
-      className={cn(dense && 'size-10', active && 'bg-accent text-primary')}
+      size="icon-lg"
+      className={cn('size-10', active && 'bg-accent text-primary')}
       title={title}
       data-testid={testId}
       disabled={disabled}

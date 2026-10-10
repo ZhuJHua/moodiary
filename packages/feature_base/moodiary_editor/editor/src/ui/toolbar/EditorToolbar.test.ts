@@ -10,7 +10,7 @@ let h: EditorHarness
 beforeEach(() => {
   vi.useFakeTimers()
   h = setupEditor()
-  render(createElement(EditorToolbar, { editor: h.editor, dense: true, onPick: () => {} }))
+  render(createElement(EditorToolbar, { editor: h.editor, onPick: () => {} }))
 })
 
 afterEach(() => {
