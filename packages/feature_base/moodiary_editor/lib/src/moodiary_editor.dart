@@ -6,7 +6,9 @@ import 'dart:io';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:mui/mui.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'editor_local_server.dart';
 import 'media.dart';
@@ -49,7 +51,8 @@ class MoodiaryEditor extends StatefulWidget {
 
   final VoidCallback? onPickImage;
 
-  final VoidCallback? onPickAudio;
+  final VoidCallback? onPickAudioFile;
+  final VoidCallback? onRecordAudio;
   final VoidCallback? onPickVideo;
 
   final Future<Duration?> Function(String name, Duration position)?
@@ -66,11 +69,11 @@ class MoodiaryEditor extends StatefulWidget {
 
   final String? linksJson;
 
-  final VoidCallback? onPickDate;
-  final VoidCallback? onPickTime;
-  final VoidCallback? onPickCategory;
-  final VoidCallback? onAddTag;
-  final ValueChanged<int>? onRemoveTag;
+  final ValueChanged<DateTime>? onChangeDate;
+  final ValueChanged<TimeOfDay>? onChangeTime;
+  final ValueChanged<String?>? onChangeCategory;
+  final ValueChanged<String>? onAddTag;
+  final ValueChanged<String>? onRemoveTag;
 
   final ValueChanged<String>? onChangeMood;
 
@@ -94,7 +97,7 @@ class MoodiaryEditor extends StatefulWidget {
 
   final VoidCallback? onOpenGraph;
 
-  final String saveStatus;
+  final ValueChanged<bool>? onOverlayChanged;
 
   final bool firstLineIndent;
 
@@ -108,8 +111,6 @@ class MoodiaryEditor extends StatefulWidget {
 
   final Future<String?> Function(String name)? mediaNameResolver;
 
-  final WidgetBuilder? loadingBuilder;
-
   const MoodiaryEditor({
     super.key,
     this.controller,
@@ -122,7 +123,8 @@ class MoodiaryEditor extends StatefulWidget {
     this.onReady,
     this.onImageTap,
     this.onPickImage,
-    this.onPickAudio,
+    this.onPickAudioFile,
+    this.onRecordAudio,
     this.onPickVideo,
     this.onVideoFullscreen,
     this.onSaveImage,
@@ -130,9 +132,9 @@ class MoodiaryEditor extends StatefulWidget {
     this.onOpenDiaryLink,
     this.metaJson,
     this.linksJson,
-    this.onPickDate,
-    this.onPickTime,
-    this.onPickCategory,
+    this.onChangeDate,
+    this.onChangeTime,
+    this.onChangeCategory,
     this.onAddTag,
     this.onRemoveTag,
     this.onChangeMood,
@@ -146,21 +148,21 @@ class MoodiaryEditor extends StatefulWidget {
     this.onManagePlaces,
     this.onClearPosition,
     this.onOpenGraph,
-    this.saveStatus = 'idle',
+    this.onOverlayChanged,
     this.firstLineIndent = false,
     this.fontScale = 1.0,
     this.rolesResolver,
     this.fontResolver,
     this.mediaResolver,
     this.mediaNameResolver,
-    this.loadingBuilder,
   });
 
   @override
   State<MoodiaryEditor> createState() => _MoodiaryEditorState();
 }
 
-class _MoodiaryEditorState extends State<MoodiaryEditor> {
+class _MoodiaryEditorState extends State<MoodiaryEditor>
+    with SoftKeyboardObserver {
   EditorTransport? _transport;
   bool _jsReady = false;
   bool _activated = false;
@@ -174,12 +176,23 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
 
   late String _lastContent = widget.initialContent;
 
+  bool _contentLocked = false;
+
   EditorFocusTarget _focusTarget = .none;
 
   @override
   void initState() {
     super.initState();
     widget.controller?._bind(this);
+  }
+
+  // iOS 的 WebKit 收键盘时自己 blur；Android 收起键盘后焦点还留在网页里
+  @override
+  void didChangeSoftKeyboardVisibility(bool visible) {
+    if (visible || !Platform.isAndroid) return;
+    if (_focusTarget == .none || !_activated) return;
+    if (WidgetsBinding.instance.lifecycleState != .resumed) return;
+    unawaited(_blur());
   }
 
   @override
@@ -191,9 +204,6 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     }
     if (oldWidget.readOnly != widget.readOnly && _activated) {
       _setEditable(!widget.readOnly);
-    }
-    if (oldWidget.saveStatus != widget.saveStatus && _activated) {
-      _setSaveStatus();
     }
     if (oldWidget.metaJson != widget.metaJson && _activated) {
       _setMeta();
@@ -241,10 +251,8 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
       return;
     }
     final boot = <String, dynamic>{
-      'platform': (Platform.isAndroid || Platform.isIOS) ? 'mobile' : 'desktop',
       'editable': !widget.readOnly,
       'locale': LocaleSettings.currentLocale.languageCode,
-      'saveStatus': widget.saveStatus,
       'theme': _themePayload(),
     };
     final server = getIt<EditorLocalServer>();
@@ -323,6 +331,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
         if (!_fontReady.isCompleted) _fontReady.complete();
         return;
       case 'change':
+        if (_contentLocked) return;
         final content = payload is String ? payload : '';
         _lastContent = content;
         widget.onChanged?.call(content);
@@ -346,11 +355,33 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
       case 'error':
         _log('JS error: $payload', level: 1000);
         return;
+      case 'contentError':
+        final lost = payload is Map && payload['lost'] == true;
+        _contentLocked = lost;
+        _log(
+          'editor rejected the document (lost: $lost): '
+          '${payload is Map ? payload['message'] : payload}',
+          level: lost ? 1000 : 900,
+        );
+        return;
+      case 'urlTap':
+        final url = payload is Map ? payload['url'] : null;
+        final uri = url is String ? Uri.tryParse(url) : null;
+        if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
+          unawaited(_openUrl(uri));
+        }
+        return;
       case 'pickImage':
         widget.onPickImage?.call();
         return;
-      case 'pickAudio':
-        widget.onPickAudio?.call();
+      case 'pickAudioFile':
+        widget.onPickAudioFile?.call();
+        return;
+      case 'recordAudio':
+        widget.onRecordAudio?.call();
+        return;
+      case 'overlay':
+        widget.onOverlayChanged?.call(payload == true);
         return;
       case 'pickVideo':
         widget.onPickVideo?.call();
@@ -399,23 +430,44 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
           if (id is String && id.isNotEmpty) widget.onOpenDiaryLink?.call(id);
         }
         return;
-      case 'pickDate':
-        widget.onPickDate?.call();
+      case 'changeDate':
+        if (payload is Map) {
+          final y = payload['year'];
+          final m = payload['month'];
+          final d = payload['day'];
+          if (y is num && m is num && d is num) {
+            widget.onChangeDate?.call(
+              DateTime(y.toInt(), m.toInt(), d.toInt()),
+            );
+          }
+        }
         return;
-      case 'pickTime':
-        widget.onPickTime?.call();
+      case 'changeTime':
+        if (payload is Map) {
+          final h = payload['hour'];
+          final m = payload['minute'];
+          if (h is num && m is num) {
+            widget.onChangeTime?.call(
+              TimeOfDay(hour: h.toInt(), minute: m.toInt()),
+            );
+          }
+        }
         return;
-      case 'pickCategory':
-        widget.onPickCategory?.call();
+      case 'changeCategory':
+        final id = payload is Map ? payload['id'] : null;
+        widget.onChangeCategory?.call(
+          id is String && id.isNotEmpty ? id : null,
+        );
         return;
       case 'addTag':
-        widget.onAddTag?.call();
+        final name = payload is Map ? payload['name'] : null;
+        if (name is String && name.trim().isNotEmpty) {
+          widget.onAddTag?.call(name.trim());
+        }
         return;
       case 'removeTag':
-        if (payload is Map) {
-          final index = payload['index'];
-          if (index is num) widget.onRemoveTag?.call(index.toInt());
-        }
+        final name = payload is Map ? payload['name'] : null;
+        if (name is String) widget.onRemoveTag?.call(name);
         return;
       case 'changeMood':
         if (payload is Map) {
@@ -518,13 +570,13 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
 
   Future<void> _activate() async {
     if (_activated) return;
-    await _setContent(widget.initialContent);
-    await _setTitle(widget.initialTitle);
-    await _setEditable(!widget.readOnly);
-    await _setTheme();
-    await _setSaveStatus();
-    await _setMeta();
-    await _setLinks();
+    _lastContent = widget.initialContent;
+    _contentLocked = false;
+    await _applyState({
+      'content': widget.initialContent,
+      'title': widget.initialTitle,
+      ..._pageState(),
+    });
     if (_jsReady &&
         widget.fontResolver?.call() != null &&
         !_fontReady.isCompleted) {
@@ -533,16 +585,22 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
         onTimeout: () {},
       );
       if (!mounted) return;
-      await _setEditable(!widget.readOnly);
-      await _setTheme();
-      await _setSaveStatus();
-      await _setMeta();
-      await _setLinks();
+      await _applyState(_pageState());
     }
     if (!mounted) return;
     setState(() => _activated = true);
     widget.onReady?.call();
   }
+
+  Map<String, dynamic> _pageState() => {
+    'editable': !widget.readOnly,
+    'theme': _themePayload(),
+    'meta': widget.metaJson ?? '',
+    'links': widget.linksJson ?? '',
+  };
+
+  Future<void> _applyState(Map<String, dynamic> state) =>
+      _run('window.MoodiaryBridge.applyState(${jsonEncode(state)})');
 
   Map<String, dynamic> _themePayload() {
     final brightness = context.theme.brightness;
@@ -598,12 +656,6 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     await _run('window.MoodiaryBridge.setEditable($value)');
   }
 
-  Future<void> _setSaveStatus() async {
-    await _run(
-      'window.MoodiaryBridge.setSaveStatus(${jsonEncode(widget.saveStatus)})',
-    );
-  }
-
   Future<void> _setMeta() async {
     await _run(
       'window.MoodiaryBridge.setMeta(${jsonEncode(widget.metaJson ?? '')})',
@@ -622,8 +674,18 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     );
   }
 
+  Future<void> _openUrl(Uri uri) async {
+    try {
+      final ok = await launchUrl(uri, mode: .externalApplication);
+      if (!ok) _log('urlTap: no handler for $uri', level: 900);
+    } catch (e, s) {
+      _log('urlTap failed: $uri', error: e, stack: s, level: 1000);
+    }
+  }
+
   Future<void> _setContent(String content) async {
     _lastContent = content;
+    _contentLocked = false;
     await _run('window.MoodiaryBridge.setContent(${jsonEncode(content)})');
   }
 
@@ -666,6 +728,10 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     await _run('window.MoodiaryBridge.focusTitle()');
   }
 
+  Future<void> _dismissOverlay() async {
+    await _run('window.MoodiaryBridge.dismissOverlay()');
+  }
+
   Future<void> _insertMedia(String name, [String alt = '']) async {
     await _run(
       'window.MoodiaryBridge.insertMedia('
@@ -687,12 +753,11 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
 
   @override
   Widget build(BuildContext context) {
-    final surface = context.theme.colors.surface;
     final transport = _transport;
     final loadError = _loadError;
 
     return ColoredBox(
-      color: surface,
+      color: context.theme.colors.surface,
       child: Stack(
         fit: .expand,
         children: [
@@ -706,13 +771,6 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
                   textAlign: .center,
                 ),
               ),
-            )
-          else if (!_activated)
-            ColoredBox(
-              color: surface,
-              child:
-                  widget.loadingBuilder?.call(context) ??
-                  const Center(child: CircularProgressIndicator()),
             ),
         ],
       ),
@@ -751,6 +809,10 @@ class MoodiaryEditorController {
 
   Future<void> focusTitle() async {
     await _state?._focusTitle();
+  }
+
+  Future<void> dismissOverlay() async {
+    await _state?._dismissOverlay();
   }
 
   EditorFocusTarget get focusTarget => _state?._focusTarget ?? .none;

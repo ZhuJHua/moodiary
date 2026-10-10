@@ -469,7 +469,27 @@ void main() {
           ]),
         ]),
       );
-      expect(MarkdownWriter.write(doc, _noMeta), '[[那天]]');
+      expect(
+        MarkdownWriter.write(doc, _noMeta),
+        '[[那天]](moodiary://diary/target-9)',
+      );
+    });
+
+    test('双链标签里的方括号与反斜杠转义，导入端才配得上括号', () {
+      final doc = _convert(
+        _doc([
+          _para([
+            {
+              'type': 'diaryLink',
+              'attrs': {'id': 'd2', 'label': r'[游记] 杭州\西湖'},
+            },
+          ]),
+        ]),
+      );
+      expect(
+        MarkdownWriter.write(doc, _noMeta),
+        r'[[\[游记\] 杭州\\西湖]](moodiary://diary/d2)',
+      );
     });
   });
 }

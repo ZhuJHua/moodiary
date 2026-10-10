@@ -23,7 +23,7 @@ Two unrelated slang outputs:
 
 App namespaces: one file per feature, `common` plus `app` / `diary` / `assistant` / `export` / `sync` / `media` / `editor` / `ui` / `lock` / `share` / `picker`. Read as `l10n.diary.searchResult`; deleting a feature deletes its two files. Feature packages do not install slang (mui excepted).
 
-`i18n/web/{zh,en}.json` belongs to the editor page alone (vue-i18n, bundled by unplugin-vue-i18n's `include`) and slang never reads it; a string both sides need is duplicated in both trees. `dart tool/task.dart i18n` is slang only.
+`i18n/web/{zh,en}.json` belongs to the editor page alone (imported as JSON by its typed `t()` in `editor/src/i18n`) and slang never reads it; a string both sides need is duplicated in both trees. `dart tool/task.dart i18n` is slang only.
 
 - Widgets use `context.l10n.xxx` (rebuilds on language change); services / export / callbacks use top-level `l10n.xxx` (does not rebuild). Parameters are named.
 - After editing `*.i18n.json` run `dart tool/task.dart i18n` (output is committed).

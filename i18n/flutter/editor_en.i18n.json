@@ -1,12 +1,7 @@
 {
   "audioFileError": "Audio file error",
-  "pickAudio": "Select audio",
-  "pickAudioFromRecord": "Recording",
-  "pickAudioFromFile": "File Audio",
   "unsupportedPlatform": "The editor is not supported on this platform",
   "loadFailed": "Failed to load the editor\n{error}",
-  "pickCategory": "Pick a category",
-  "noCategory": "No category",
   "migrationTitle": "Upgrade data migration",
   "migrationIntro": "Version 2.8.0 uses a new data engine and editor. A one-time migration is required before you can continue.",
   "migrationStepEngine": "Database engine upgrade",

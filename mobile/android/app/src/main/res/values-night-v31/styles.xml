@@ -9,6 +9,7 @@
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_splash_icon</item>
     </style>
     <style name="NormalTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorControlActivated">@android:color/system_accent1_200</item>
         <item name="android:windowBackground">?android:colorBackground</item>
     </style>
 </resources>

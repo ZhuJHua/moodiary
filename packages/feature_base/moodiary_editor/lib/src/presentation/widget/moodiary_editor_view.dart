@@ -32,17 +32,15 @@ class MoodiaryEditorView extends StatefulWidget {
 
   final double fontScale;
 
-  final String saveStatus;
-
   final ValueChanged<String>? onOpenDiaryLink;
 
   final String? metaJson;
   final String? linksJson;
-  final VoidCallback? onPickDate;
-  final VoidCallback? onPickTime;
-  final VoidCallback? onPickCategory;
-  final VoidCallback? onAddTag;
-  final ValueChanged<int>? onRemoveTag;
+  final ValueChanged<DateTime>? onChangeDate;
+  final ValueChanged<TimeOfDay>? onChangeTime;
+  final ValueChanged<String?>? onChangeCategory;
+  final ValueChanged<String>? onAddTag;
+  final ValueChanged<String>? onRemoveTag;
   final ValueChanged<String>? onChangeMood;
   final ValueChanged<String>? onChangeWeather;
   final VoidCallback? onClearWeather;
@@ -54,6 +52,7 @@ class MoodiaryEditorView extends StatefulWidget {
   final VoidCallback? onManagePlaces;
   final VoidCallback? onClearPosition;
   final VoidCallback? onOpenGraph;
+  final ValueChanged<bool>? onOverlayChanged;
 
   const MoodiaryEditorView({
     super.key,
@@ -66,13 +65,12 @@ class MoodiaryEditorView extends StatefulWidget {
     this.editable = true,
     this.firstLineIndent = false,
     this.fontScale = 1.0,
-    this.saveStatus = 'idle',
     this.onOpenDiaryLink,
     this.metaJson,
     this.linksJson,
-    this.onPickDate,
-    this.onPickTime,
-    this.onPickCategory,
+    this.onChangeDate,
+    this.onChangeTime,
+    this.onChangeCategory,
     this.onAddTag,
     this.onRemoveTag,
     this.onChangeMood,
@@ -86,6 +84,7 @@ class MoodiaryEditorView extends StatefulWidget {
     this.onManagePlaces,
     this.onClearPosition,
     this.onOpenGraph,
+    this.onOverlayChanged,
   });
 
   @override
@@ -146,35 +145,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
     if (name != null) await _controller.insertVideo(name);
   }
 
-  void _showAudioDialog() {
-    showDialog<void>(
-      context: context,
-      builder: (sheetContext) {
-        return SimpleDialog(
-          title: Text(context.l10n.editor.pickAudio),
-          children: [
-            SimpleDialogOption(
-              onPressed: () => _pickAudioFile(sheetContext),
-              child: _DialogRow(
-                icon: LucideIcons.fileAudio,
-                label: context.l10n.editor.pickAudioFromFile,
-              ),
-            ),
-            SimpleDialogOption(
-              onPressed: () => _recordAudio(sheetContext),
-              child: _DialogRow(
-                icon: LucideIcons.mic,
-                label: context.l10n.editor.pickAudioFromRecord,
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _pickAudioFile(BuildContext sheetContext) async {
-    Navigator.of(sheetContext).pop();
+  Future<void> _pickAudioFile() async {
     String? name;
     try {
       final file = await getIt<IFilePicker>().pickAudio();
@@ -205,8 +176,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
     }
   }
 
-  Future<void> _recordAudio(BuildContext sheetContext) async {
-    Navigator.of(sheetContext).pop();
+  Future<void> _recordAudio() async {
     final result = await MSheet.show<RecordSaveResult>(
       context,
       builder: (_) => const RecordSheet(),
@@ -295,7 +265,8 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       onTitleChanged: widget.onTitleChanged,
       onActiveHeadingChanged: widget.onActiveHeadingChanged,
       onPickImage: _pickImages,
-      onPickAudio: _showAudioDialog,
+      onPickAudioFile: _pickAudioFile,
+      onRecordAudio: _recordAudio,
       onPickVideo: _pickVideo,
       onSaveImage: _saveDataUriImage,
       onImageTap: _previewImages,
@@ -304,9 +275,9 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       onOpenDiaryLink: widget.onOpenDiaryLink,
       metaJson: widget.metaJson,
       linksJson: widget.linksJson,
-      onPickDate: widget.onPickDate,
-      onPickTime: widget.onPickTime,
-      onPickCategory: widget.onPickCategory,
+      onChangeDate: widget.onChangeDate,
+      onChangeTime: widget.onChangeTime,
+      onChangeCategory: widget.onChangeCategory,
       onAddTag: widget.onAddTag,
       onRemoveTag: widget.onRemoveTag,
       onChangeMood: widget.onChangeMood,
@@ -320,7 +291,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       onManagePlaces: widget.onManagePlaces,
       onClearPosition: widget.onClearPosition,
       onOpenGraph: widget.onOpenGraph,
-      saveStatus: widget.saveStatus,
+      onOverlayChanged: widget.onOverlayChanged,
       firstLineIndent: widget.firstLineIndent,
       fontScale: widget.fontScale,
       rolesResolver: getIt<ThemeManager>().editorRoles,
@@ -329,18 +300,6 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       mediaNameResolver: (name) async =>
           (await getIt<MediaInfoRepository>().getMediaInfoByFileName(name))
               ?.name,
-      loadingBuilder: (_) => const MLoading(),
     );
-  }
-}
-
-class _DialogRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  const _DialogRow({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(children: [Icon(icon), const SizedBox(width: 12), Text(label)]);
   }
 }

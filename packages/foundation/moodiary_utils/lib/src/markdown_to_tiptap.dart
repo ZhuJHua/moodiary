@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:markdown/markdown.dart' as md;
 
+const diaryLinkScheme = 'moodiary://diary/';
+
 class MarkdownToTiptap {
   const MarkdownToTiptap._();
 
@@ -189,8 +191,22 @@ class MarkdownToTiptap {
           });
         }
       case 'a':
-        final href = el.attributes['href'];
-        final next = (href != null && href.isNotEmpty)
+        final href = el.attributes['href'] ?? '';
+        if (href.startsWith(diaryLinkScheme)) {
+          final id = href.substring(diaryLinkScheme.length);
+          var label = el.textContent;
+          if (label.startsWith('[') && label.endsWith(']')) {
+            label = label.substring(1, label.length - 1);
+          }
+          if (id.isNotEmpty) {
+            buf.add({
+              'type': 'diaryLink',
+              'attrs': {'id': id, 'label': label},
+            });
+            return;
+          }
+        }
+        final next = href.isNotEmpty
             ? [
                 ...marks,
                 {
@@ -238,9 +254,14 @@ class MarkdownToTiptap {
       };
     }
     final alt = node.attributes['alt'];
+    final title = node.attributes['title'];
     return {
       'type': 'image',
-      'attrs': {'src': src, if (alt != null && alt.isNotEmpty) 'alt': alt},
+      'attrs': {
+        'src': src,
+        if (alt != null && alt.isNotEmpty) 'alt': alt,
+        if (title != null && title.isNotEmpty) 'title': title,
+      },
     };
   }
 
@@ -338,8 +359,10 @@ class MarkdownToTiptap {
           for (final c in cell.children ?? const <md.Node>[]) {
             _inline(c, const [], buf);
           }
+          final align = cell.attributes['align'];
           cells.add({
             'type': cell.tag == 'th' ? 'tableHeader' : 'tableCell',
+            if (align != null && align.isNotEmpty) 'attrs': {'align': align},
             'content': [
               {'type': 'paragraph', if (buf.isNotEmpty) 'content': buf},
             ],

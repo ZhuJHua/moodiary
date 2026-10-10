@@ -1,5 +1,6 @@
-import type { EditorBoot } from '../bridge/boot'
-import type { EditorTheme } from '../bridge/theme'
+import type { PageState } from '@/core/bridge'
+import type { EditorBoot } from '@/core/bridge/boot'
+import type { EditorTheme } from '@/core/bridge/theme'
 
 interface JsChannel {
   postMessage: (message: string) => void
@@ -9,10 +10,10 @@ declare global {
   interface Window {
     MoodiaryEditor?: JsChannel
     MoodiaryBridge: {
+      applyState: (state: Partial<PageState>) => void
       setContent: (content: string) => void
       getContent: () => string
       setTheme: (theme: EditorTheme) => void
-      setSaveStatus: (status: string) => void
       setTitle: (title: string) => void
       setMeta: (json: string) => void
       setLinks: (json: string) => void
@@ -28,6 +29,7 @@ declare global {
       resolveLinkCandidates: (reqId: string, json: string) => void
       scrollToHeading: (index: number) => void
       resumeVideo: (name: string, seconds: number) => void
+      dismissOverlay: () => void
       getScrollY: () => number
       setScrollY: (y: number) => void
     }

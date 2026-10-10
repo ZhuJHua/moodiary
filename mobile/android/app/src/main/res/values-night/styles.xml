@@ -8,6 +8,7 @@
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
     </style>
     <style name="NormalTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorControlActivated">#C4C7C5</item>
         <item name="android:windowBackground">?android:colorBackground</item>
     </style>
 </resources>

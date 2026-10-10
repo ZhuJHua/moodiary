@@ -1,17 +1,13 @@
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
+import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import Icons from 'unplugin-icons/vite'
 import { compression, defineAlgorithm } from 'vite-plugin-compression2'
 import license from 'rollup-plugin-license'
 
 export default defineConfig({
   plugins: [
-    vue(),
-    VueI18nPlugin({ include: fileURLToPath(new URL('../../../../i18n/web/**', import.meta.url)) }),
-    Icons({ compiler: 'vue3' }),
+    react(),
     tailwindcss(),
     // build/ 不能改到 outDir —— 那里的东西会被打包并由本地服务发出去
     license({
@@ -29,11 +25,14 @@ export default defineConfig({
       deleteOriginalAssets: true,
     }),
   ],
+  resolve: {
+    alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
+  },
   base: './',
   build: {
     outDir: '../assets/editor',
     emptyOutDir: true,
-    target: 'es2019',
+    target: 'es2022',
     cssCodeSplit: false,
     reportCompressedSize: false,
     rollupOptions: {

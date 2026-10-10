@@ -22,15 +22,13 @@ class EditorBody extends StatefulWidget {
 
   final ValueChanged<String>? onOpenDiaryLink;
 
-  final String saveStatus;
-
   final String? metaJson;
   final String? linksJson;
-  final VoidCallback? onPickDate;
-  final VoidCallback? onPickTime;
-  final VoidCallback? onPickCategory;
-  final VoidCallback? onAddTag;
-  final ValueChanged<int>? onRemoveTag;
+  final ValueChanged<DateTime>? onChangeDate;
+  final ValueChanged<TimeOfDay>? onChangeTime;
+  final ValueChanged<String?>? onChangeCategory;
+  final ValueChanged<String>? onAddTag;
+  final ValueChanged<String>? onRemoveTag;
   final ValueChanged<String>? onChangeMood;
   final ValueChanged<String>? onChangeWeather;
   final VoidCallback? onClearWeather;
@@ -42,6 +40,7 @@ class EditorBody extends StatefulWidget {
   final VoidCallback? onManagePlaces;
   final VoidCallback? onClearPosition;
   final VoidCallback? onOpenGraph;
+  final ValueChanged<bool>? onOverlayChanged;
 
   const EditorBody({
     super.key,
@@ -54,12 +53,11 @@ class EditorBody extends StatefulWidget {
     this.onActiveHeadingChanged,
     this.editable = true,
     this.onOpenDiaryLink,
-    this.saveStatus = 'idle',
     this.metaJson,
     this.linksJson,
-    this.onPickDate,
-    this.onPickTime,
-    this.onPickCategory,
+    this.onChangeDate,
+    this.onChangeTime,
+    this.onChangeCategory,
     this.onAddTag,
     this.onRemoveTag,
     this.onChangeMood,
@@ -73,6 +71,7 @@ class EditorBody extends StatefulWidget {
     this.onManagePlaces,
     this.onClearPosition,
     this.onOpenGraph,
+    this.onOverlayChanged,
   });
 
   @override
@@ -92,15 +91,21 @@ class _EditorBodyState extends State<EditorBody> {
   }
 
   String _resolveContent() {
-    if (widget.type != .richText) return widget.initialContent;
-    final converted = QuillDeltaToTiptap.convert(widget.initialContent);
-    if (converted != null) return converted;
-    var plain =
-        QuillDelta.plainText(widget.initialContent) ?? widget.initialContent;
-    if (plain.trim().isEmpty && widget.initialContent.trim().isNotEmpty) {
-      plain = widget.initialContent;
+    final content = widget.initialContent;
+    switch (widget.type) {
+      case .tiptap:
+        return content;
+      case .markdown:
+        return MarkdownToTiptap.convert(content) ??
+            TiptapContent.wrapPlainText(content);
+      case .richText:
+        final converted = QuillDeltaToTiptap.convert(content);
+        if (converted != null) return converted;
+        var plain = QuillDelta.plainText(content) ?? content;
+        if (plain.trim().isEmpty && content.trim().isNotEmpty) plain = content;
+        return MarkdownToTiptap.convert(plain) ??
+            TiptapContent.wrapPlainText(plain);
     }
-    return MarkdownToTiptap.convert(plain) ?? plain;
   }
 
   @override
@@ -116,7 +121,6 @@ class _EditorBodyState extends State<EditorBody> {
         controller: widget.editorController,
         onActiveHeadingChanged: widget.onActiveHeadingChanged,
         editable: widget.editable && widget.type.isEditable,
-        saveStatus: widget.saveStatus,
         firstLineIndent: firstLineIndent,
         fontScale: fontScale,
         onChanged: (content) =>
@@ -124,9 +128,9 @@ class _EditorBodyState extends State<EditorBody> {
         onOpenDiaryLink: widget.onOpenDiaryLink,
         metaJson: widget.metaJson,
         linksJson: widget.linksJson,
-        onPickDate: widget.onPickDate,
-        onPickTime: widget.onPickTime,
-        onPickCategory: widget.onPickCategory,
+        onChangeDate: widget.onChangeDate,
+        onChangeTime: widget.onChangeTime,
+        onChangeCategory: widget.onChangeCategory,
         onAddTag: widget.onAddTag,
         onRemoveTag: widget.onRemoveTag,
         onChangeMood: widget.onChangeMood,
@@ -140,6 +144,7 @@ class _EditorBodyState extends State<EditorBody> {
         onManagePlaces: widget.onManagePlaces,
         onClearPosition: widget.onClearPosition,
         onOpenGraph: widget.onOpenGraph,
+        onOverlayChanged: widget.onOverlayChanged,
       ),
     );
   }

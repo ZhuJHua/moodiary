@@ -47,10 +47,8 @@
     "replace": "Replace",
     "replaceAll": "All"
   },
-  "image": {
-    "size": "Image size",
+  "mediaSize": {
     "width": "Width",
-    "widthSlider": "Image width",
     "defaultWidth": "Default",
     "reset": "Reset to default"
   },
@@ -68,7 +66,9 @@
     "mute": "Mute",
     "unmute": "Unmute",
     "progressLabel": "Audio progress",
-    "defaultName": "Audio"
+    "defaultName": "Audio",
+    "fromRecord": "Record",
+    "fromFile": "Choose a file"
   },
   "code": {
     "plainText": "Plain text",
@@ -79,5 +79,33 @@
     "searching": "Searching…",
     "prompt": "Type a keyword to search diaries…",
     "empty": "No matching diary"
+  },
+  "meta": {
+    "date": "Pick a date",
+    "time": "Pick a time",
+    "mood": "Mood",
+    "category": "Category",
+    "noCategory": "No category",
+    "weather": "Weather",
+    "place": "Location",
+    "tagPlaceholder": "New tag",
+    "addTag": "Add",
+    "removeTag": "Remove tag",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "am": "AM",
+    "pm": "PM",
+    "period": "AM or PM",
+    "hour": "Hour",
+    "minute": "Minute",
+    "confirm": "OK"
+  },
+  "block": {
+    "more": "More actions",
+    "insertAbove": "Insert text above",
+    "insertBelow": "Insert text below",
+    "delete": "Delete",
+    "deleted": "Deleted",
+    "undo": "Undo"
   }
 }
