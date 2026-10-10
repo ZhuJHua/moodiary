@@ -4,7 +4,7 @@ import Popover, { type PopoverHandle } from '@/ui/overlay/Popover'
 import { post } from '@/core/bridge/post'
 import type { EditorMeta } from '@/core/state/meta'
 import type { PickerHandle } from './picker'
-import { dateLocale, useT } from '@/core/i18n'
+import { dateLocale, t } from '@/core/i18n'
 
 interface Ymd {
   y: number
@@ -21,7 +21,6 @@ const monthKey = (y: number, m: number): number => y * 12 + m
 const splitMonthKey = (k: number): { y: number; m: number } => ({ y: Math.floor(k / 12), m: k % 12 })
 
 export default function DatePicker({ ref, meta }: { ref?: Ref<PickerHandle>; meta: EditorMeta }) {
-  const t = useT()
   const pop = useRef<PopoverHandle>(null)
   const yearList = useRef<HTMLDivElement>(null)
   const [mode, setMode] = useState<'day' | 'year'>('day')

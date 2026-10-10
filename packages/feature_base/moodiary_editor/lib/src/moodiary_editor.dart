@@ -99,8 +99,6 @@ class MoodiaryEditor extends StatefulWidget {
 
   final ValueChanged<bool>? onOverlayChanged;
 
-  final String saveStatus;
-
   final bool firstLineIndent;
 
   final double fontScale;
@@ -151,7 +149,6 @@ class MoodiaryEditor extends StatefulWidget {
     this.onClearPosition,
     this.onOpenGraph,
     this.onOverlayChanged,
-    this.saveStatus = 'idle',
     this.firstLineIndent = false,
     this.fontScale = 1.0,
     this.rolesResolver,
@@ -208,9 +205,6 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
     if (oldWidget.readOnly != widget.readOnly && _activated) {
       _setEditable(!widget.readOnly);
     }
-    if (oldWidget.saveStatus != widget.saveStatus && _activated) {
-      _setSaveStatus();
-    }
     if (oldWidget.metaJson != widget.metaJson && _activated) {
       _setMeta();
     }
@@ -260,7 +254,6 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
       'platform': (Platform.isAndroid || Platform.isIOS) ? 'mobile' : 'desktop',
       'editable': !widget.readOnly,
       'locale': LocaleSettings.currentLocale.languageCode,
-      'saveStatus': widget.saveStatus,
       'theme': _themePayload(),
     };
     final server = getIt<EditorLocalServer>();
@@ -603,7 +596,6 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
   Map<String, dynamic> _pageState() => {
     'editable': !widget.readOnly,
     'theme': _themePayload(),
-    'saveStatus': widget.saveStatus,
     'meta': widget.metaJson ?? '',
     'links': widget.linksJson ?? '',
   };
@@ -663,12 +655,6 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
 
   Future<void> _setEditable(bool value) async {
     await _run('window.MoodiaryBridge.setEditable($value)');
-  }
-
-  Future<void> _setSaveStatus() async {
-    await _run(
-      'window.MoodiaryBridge.setSaveStatus(${jsonEncode(widget.saveStatus)})',
-    );
   }
 
   Future<void> _setMeta() async {

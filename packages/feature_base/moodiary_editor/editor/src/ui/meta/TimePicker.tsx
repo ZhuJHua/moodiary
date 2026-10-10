@@ -4,7 +4,7 @@ import WheelColumn, { type WheelColumnHandle } from '@/ui/overlay/WheelColumn'
 import { post } from '@/core/bridge/post'
 import type { EditorMeta } from '@/core/state/meta'
 import type { PickerHandle } from './picker'
-import { useT } from '@/core/i18n'
+import { t } from '@/core/i18n'
 
 const pad = (n: number): string => String(n).padStart(2, '0')
 const minutes = Array.from({ length: 60 }, (_, i) => pad(i))
@@ -15,7 +15,6 @@ interface Hm {
 }
 
 export default function TimePicker({ ref, meta }: { ref?: Ref<PickerHandle>; meta: EditorMeta }) {
-  const t = useT()
   const pop = useRef<PopoverHandle>(null)
   const period = useRef<WheelColumnHandle>(null)
   const hour = useRef<WheelColumnHandle>(null)

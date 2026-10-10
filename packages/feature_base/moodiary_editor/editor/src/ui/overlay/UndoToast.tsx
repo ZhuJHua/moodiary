@@ -1,9 +1,8 @@
 import { runUndoToast, undoToast } from '@/core/state/undo-toast'
-import { useT } from '@/core/i18n'
+import { t } from '@/core/i18n'
 import { useStore } from '@/lib/store'
 
 export default function UndoToast() {
-  const t = useT()
   const { visible, message } = useStore(undoToast)
   return (
     <div className="relative">

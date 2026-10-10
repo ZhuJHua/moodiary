@@ -13,15 +13,14 @@ import {
   setTerm,
   toggleCase,
 } from '@/core/editor/search'
-import { useT } from '@/core/i18n'
+import { t } from '@/core/i18n'
 import { useStore } from '@/lib/store'
 import { Button } from '@/ui/primitives/button'
 import { Input } from '@/ui/primitives/input'
 
 const prevent = (e: MouseEvent): void => e.preventDefault()
 
-export default function EditorSearchBar({ platform }: { platform: 'mobile' | 'desktop' }) {
-  const t = useT()
+export default function EditorSearchBar({ className }: { className?: string }) {
   const s = useStore(editorSearch)
   const findInput = useRef<HTMLInputElement>(null)
   const [overlay] = useState<Overlay>(() => ({ dismiss: () => closeSearch() }))
@@ -48,10 +47,7 @@ export default function EditorSearchBar({ platform }: { platform: 'mobile' | 'de
   if (!s.open) return null
   return (
     <div
-      className={cn(
-        'moodiary-search flex-none bg-background px-2 py-1.5',
-        platform === 'desktop' ? 'border-b border-border' : 'border-t border-border',
-      )}
+      className={cn('moodiary-search flex-none bg-background px-2 py-1.5', className)}
     >
       <div className="grid grid-cols-[1fr_auto] items-center gap-x-1.5 gap-y-1">
         <Input

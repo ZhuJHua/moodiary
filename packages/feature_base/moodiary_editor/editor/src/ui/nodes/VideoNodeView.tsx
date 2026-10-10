@@ -3,31 +3,25 @@ import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
 import { Maximize, Pause, Play, Volume2, VolumeX } from 'lucide-react'
 import BlockHandle from './BlockHandle'
 import { post } from '@/core/bridge/post'
-import { blockMenu, openBlockMenu } from '@/core/state/block-menu'
-import { editable } from '@/core/state/editable'
 import { mediaUrl } from '@/core/editor/media'
 import { formatTime, useMediaControls } from '@/ui/hooks/use-media'
-import { useT } from '@/core/i18n'
-import { useStore } from '@/lib/store'
+import { t } from '@/core/i18n'
+import { useBlockMenu, widthPercentOf } from '@/ui/hooks/use-block-menu'
 
 const MIN_FRAME_RATIO = 4 / 5
 const MAX_FRAME_RATIO = 16 / 9
 const CONTROLS_HIDE_DELAY = 3000
 
 export default function VideoNodeView({ node, selected, getPos }: NodeViewProps) {
-  const t = useT()
-  const [owner] = useState(() => Symbol('video'))
-  const menuOpen = useStore(blockMenu, (s) => s.owner === owner)
-  const previewWidth = useStore(blockMenu, (s) => (s.owner === owner ? s.previewWidth : null))
-  const canEdit = useStore(editable)
+  const { canEdit, menuOpen, shownWidth, openMenu } = useBlockMenu(
+    'video',
+    getPos,
+    widthPercentOf(node.attrs.widthPercent),
+  )
 
   const filename = (node.attrs.filename as string | null) ?? ''
   const src = filename ? mediaUrl(filename) : undefined
   const poster = filename ? mediaUrl(filename, { poster: true }) : ''
-
-  const v = node.attrs.widthPercent
-  const widthPercent = typeof v === 'number' ? v : null
-  const shown = previewWidth ?? widthPercent
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const { playing, duration, muted, sliderValue, dragging, toggle, toggleMute, seekTo, endSeek } =
@@ -75,10 +69,7 @@ export default function VideoNodeView({ node, selected, getPos }: NodeViewProps)
   function handOffToNative(): void {
     const el = videoRef.current
     if (!el || !filename) return
-    try {
-      el.pause()
-    } catch {
-    }
+    el.pause()
     keepControls()
     post('videoFullscreen', { name: filename, position: el.currentTime })
   }
@@ -98,11 +89,7 @@ export default function VideoNodeView({ node, selected, getPos }: NodeViewProps)
   function onTrackDown(e: PointerEvent): void {
     const at = timeAtPointer(e)
     if (at === null) return
-    // 老 WebView / jsdom 可能没有 setPointerCapture
-    try {
-      trackRef.current?.setPointerCapture?.(e.pointerId)
-    } catch {
-    }
+    trackRef.current?.setPointerCapture?.(e.pointerId)
     seekTo(at)
     keepControls()
   }
@@ -122,7 +109,7 @@ export default function VideoNodeView({ node, selected, getPos }: NodeViewProps)
   return (
     <NodeViewWrapper
       className={`moodiary-media moodiary-media--video${selected ? ' is-selected' : ''}${menuOpen ? ' is-menu-open' : ''}`}
-      style={shown === null ? undefined : { maxWidth: `${shown}%` }}
+      style={shownWidth === null ? undefined : { maxWidth: `${shownWidth}%` }}
       contentEditable={false}
     >
       <div
@@ -208,12 +195,7 @@ export default function VideoNodeView({ node, selected, getPos }: NodeViewProps)
         </div>
 
         {canEdit && (
-          <BlockHandle
-            variant="corner"
-            onOpen={(anchor) =>
-              openBlockMenu({ owner, kind: 'video', anchor, getPos: () => getPos() })
-            }
-          />
+          <BlockHandle variant="corner" onOpen={openMenu} />
         )}
       </div>
     </NodeViewWrapper>

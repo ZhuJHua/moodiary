@@ -1,24 +1,15 @@
 import { useEffect, useRef } from 'react'
-import MoodiaryEditor from './EditorFrame'
-import DiaryLinkSuggestion from '@/ui/DiaryLinkSuggestion'
-import { boundApi, installBridge } from '@/core/bridge'
-import { readBoot } from '@/core/bridge/boot'
-import { applyTheme, setFontBase } from '@/core/bridge/theme'
+import { boundApi } from '@/core/bridge'
+import type { Platform } from '@/core/bridge/boot'
 import { post } from '@/core/bridge/post'
+import { unproxyMedia } from '@/core/editor/media'
 import { editable } from '@/core/state/editable'
-import { setMediaInfoPrefix, setMediaPrefix, unproxyMedia } from '@/core/editor/media'
+import DiaryLinkSuggestion from '@/ui/DiaryLinkSuggestion'
+import { useFindShortcut } from '@/ui/hooks/use-find-shortcut'
+import DesktopShell from './DesktopShell'
+import MobileShell from './MobileShell'
 
-const boot = readBoot()
-if (boot.mediaBase) setMediaPrefix(boot.mediaBase)
-if (boot.mediaInfoBase) setMediaInfoPrefix(boot.mediaInfoBase)
-// 字体文件基址须先于 applyTheme 注入：applyTheme 里用它拼 @font-face 的 src。
-if (boot.fontBase) setFontBase(boot.fontBase)
-const initialEditable = boot.editable ?? true
-const platform = boot.platform ?? 'desktop'
-
-installBridge()
-if (boot.theme) applyTheme(boot.theme)
-
+// 原生 click 监听先于 React 合成事件，链接 preventDefault 和 BlockHandle 的 stopPropagation 都依赖这个顺序
 function onClick(e: MouseEvent): void {
   const target = e.target as HTMLElement | null
   const link = target?.closest('[data-type="diaryLink"]') as HTMLElement | null
@@ -48,8 +39,9 @@ function onClick(e: MouseEvent): void {
   else post('imageTap', { src: name, srcs: [name], index: 0 })
 }
 
-export default function App() {
+export default function EditorShell({ platform }: { platform: Platform }) {
   const shell = useRef<HTMLDivElement>(null)
+  useFindShortcut()
   useEffect(() => {
     const el = shell.current
     el?.addEventListener('click', onClick)
@@ -57,7 +49,7 @@ export default function App() {
   }, [])
   return (
     <div ref={shell} className="editor-shell">
-      <MoodiaryEditor editable={initialEditable} platform={platform} />
+      {platform === 'mobile' ? <MobileShell /> : <DesktopShell />}
       <DiaryLinkSuggestion />
     </div>
   )

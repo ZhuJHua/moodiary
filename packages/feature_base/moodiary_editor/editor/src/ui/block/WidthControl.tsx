@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { MIN_WIDTH_PERCENT, WIDTH_PERCENT_STOPS, snapWidthPercent } from '@/core/editor/media-size'
-import { useT } from '@/core/i18n'
+import { t } from '@/core/i18n'
 import { cn } from 'cn'
 import { rangeClass } from '@/lib/range'
 
@@ -13,7 +13,6 @@ export default function WidthControl({
   onPreview: (value: number | null) => void
   onCommit: (value: number | null) => void
 }) {
-  const t = useT()
   const [draft, setDraftState] = useState<number | null>(null)
   const draftRef = useRef<number | null>(null)
 

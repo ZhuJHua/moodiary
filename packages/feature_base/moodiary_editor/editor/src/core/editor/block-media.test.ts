@@ -156,10 +156,10 @@ describe('block handle and menu', () => {
 
   it('shows the handle only while editable', async () => {
     expect(handles()).toHaveLength(1)
-    h.api.setEditable(false)
+    h.setEditable(false)
     await h.flush()
     expect(handles()).toHaveLength(0)
-    h.api.setEditable(true)
+    h.setEditable(true)
     await h.flush()
     expect(handles()).toHaveLength(1)
   })
@@ -201,7 +201,7 @@ describe('block handle and menu', () => {
     })
     await h.flush()
     expect(panel()).toBeNull()
-    expect(blockMenu.get().owner).toBeNull()
+    expect(blockMenu.get().target).toBeNull()
     expect(h.lastPost('overlay')?.payload).toBe(false)
   })
 
@@ -257,7 +257,7 @@ describe('block handle and menu', () => {
     await h.flush()
     const anchor = h.editor.view.dom.querySelector<HTMLElement>('.moodiary-media--audio')!
     await act(async () => {
-      openBlockMenu({ owner: Symbol('audio'), kind: 'audio', anchor, getPos: () => posOf('audio') })
+      openBlockMenu({ owner: 'audio', kind: 'audio', anchor, getPos: () => posOf('audio') })
     })
     await h.flush()
     expect(panel()).not.toBeNull()

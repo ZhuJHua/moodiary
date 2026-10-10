@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ComponentType, type ReactNode } from 'react'
+import { useRef, type ComponentType, type ReactNode } from 'react'
 import { Check } from 'lucide-react'
 import Popover, { type PopoverHandle } from './Popover'
 
@@ -12,38 +12,21 @@ export interface PopupMenuItem {
 
 export default function PopupMenu({
   items = [],
-  open,
-  onOpenChange,
   onSelect,
   children,
 }: {
   items?: PopupMenuItem[]
-  open: boolean
-  onOpenChange: (open: boolean) => void
   onSelect: (key: string) => void
   children?: ReactNode
 }) {
-  const trigger = useRef<HTMLDivElement>(null)
   const pop = useRef<PopoverHandle>(null)
   const hasIcon = items.some((item) => item.icon != null)
   const hasActive = items.some((item) => item.active)
 
-  useEffect(() => {
-    if (open && trigger.current) pop.current?.open(trigger.current)
-    else pop.current?.close()
-  }, [open])
-
   return (
     <div className="popup-menu-host">
-      <div ref={trigger} onClick={() => onOpenChange(!open)}>
-        {children}
-      </div>
-      <Popover
-        ref={pop}
-        keepFocus
-        panelClass="min-w-42 max-w-80"
-        onClosed={() => onOpenChange(false)}
-      >
+      <div onClick={(e) => pop.current?.open(e.currentTarget)}>{children}</div>
+      <Popover ref={pop} keepFocus panelClass="min-w-42 max-w-80">
         {items.map((item) => {
           const Icon = item.icon
           return (
@@ -54,7 +37,7 @@ export default function PopupMenu({
               onClick={(e) => {
                 e.stopPropagation()
                 onSelect(item.key)
-                onOpenChange(false)
+                pop.current?.close()
               }}
             >
               {hasIcon && (

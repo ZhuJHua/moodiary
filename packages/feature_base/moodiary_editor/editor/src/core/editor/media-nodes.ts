@@ -1,16 +1,8 @@
 import { Node, mergeAttributes } from '@tiptap/core'
-import type { ReactNodeViewRenderer } from '@tiptap/react'
-import AudioNodeView from '@/ui/nodes/AudioNodeView'
-import VideoNodeView from '@/ui/nodes/VideoNodeView'
-import { blockNodeView } from './block-node-view'
 import { mediaMarkdownSpec } from './markdown'
 import { widthPercentAttribute } from './media-size'
 
-function createMediaNode(opts: {
-  name: 'audio' | 'video'
-  view: Parameters<typeof ReactNodeViewRenderer>[0]
-  sizable: boolean
-}): Node {
+function createMediaNode(opts: { name: 'audio' | 'video'; sizable: boolean }): Node {
   return Node.create({
     name: opts.name,
     group: 'block',
@@ -34,11 +26,8 @@ function createMediaNode(opts: {
       return ['div', mergeAttributes(HTMLAttributes, { 'data-media': opts.name })]
     },
     ...mediaMarkdownSpec,
-    addNodeView() {
-      return blockNodeView(opts.view)
-    },
   })
 }
 
-export const Audio = createMediaNode({ name: 'audio', view: AudioNodeView, sizable: false })
-export const Video = createMediaNode({ name: 'video', view: VideoNodeView, sizable: true })
+export const Audio = createMediaNode({ name: 'audio', sizable: false })
+export const Video = createMediaNode({ name: 'video', sizable: true })

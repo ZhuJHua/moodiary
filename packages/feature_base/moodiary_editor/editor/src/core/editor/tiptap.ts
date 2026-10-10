@@ -11,17 +11,26 @@ import { TaskList } from '@tiptap/extension-task-list'
 import { TaskItem } from '@tiptap/extension-task-item'
 import { ReactNodeViewRenderer } from '@tiptap/react'
 import { common, createLowlight } from 'lowlight'
-import CodeBlockNodeView from '@/ui/nodes/CodeBlockNodeView'
 import { DiaryLink, resolveLinkCandidates as applyLinkCandidates } from './diary-link'
 import { SearchExtension } from './search'
 
 import { post } from '@/core/bridge/post'
 import { caretAfter, caretBefore } from './block-caret'
-import { setEditableState } from '@/core/state/editable'
+import { blockNodeView } from './block-node-view'
 import { hideUndoToast } from '@/core/state/undo-toast'
 import { MediaImage } from './image-node'
 import { MoodiaryMarkdown } from './markdown'
 import { Audio, Video } from './media-nodes'
+
+type NodeViewComponent = Parameters<typeof ReactNodeViewRenderer>[0]
+
+// 节点视图由壳层注入，内核不认识任何 React 组件
+export interface EditorNodeViews {
+  codeBlock: NodeViewComponent
+  image: NodeViewComponent
+  audio: NodeViewComponent
+  video: NodeViewComponent
+}
 
 const lowlight = createLowlight(common)
 
@@ -58,8 +67,8 @@ export interface EditorApi {
 export interface EditorKitOptions {
   editable: boolean
   placeholder: string
+  nodeViews: EditorNodeViews
   onChange: (content: string) => void
-  onEditableChange?: (value: boolean) => void
 }
 
 export interface EditorKit {
@@ -115,7 +124,7 @@ function scrollNodeSelection(view: EditorView): boolean {
 }
 
 export function createEditorKit(opts: EditorKitOptions): EditorKit {
-  const { editable, placeholder, onChange, onEditableChange } = opts
+  const { editable, placeholder, nodeViews, onChange } = opts
 
   let editor: Editor | null = null
   let suppress = false
@@ -215,13 +224,11 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
       // 两者节点同名，须关掉 StarterKit 自带 codeBlock 才能换成 CodeBlockLowlight
       StarterKit.configure({ codeBlock: false, link: { openOnClick: false } }),
       CodeBlockLowlight.configure({ lowlight }).extend({
-        addNodeView() {
-          return ReactNodeViewRenderer(CodeBlockNodeView)
-        },
+        addNodeView: () => ReactNodeViewRenderer(nodeViews.codeBlock),
       }),
-      MediaImage,
-      Audio,
-      Video,
+      MediaImage.extend({ addNodeView: () => blockNodeView(nodeViews.image) }),
+      Audio.extend({ addNodeView: () => blockNodeView(nodeViews.audio) }),
+      Video.extend({ addNodeView: () => blockNodeView(nodeViews.video) }),
       TableKit.configure({ table: { resizable: true } }),
       TaskList,
       TaskItem.configure({ nested: true }),
@@ -308,9 +315,6 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
       if (!value) hideUndoToast()
       options.editable = value
       editor?.setEditable(value, false)
-      // setEditable(value, false) 不触发 onUpdate，需显式回调驱动 UI
-      setEditableState(value)
-      onEditableChange?.(value)
     },
     focus: () => {
       editor?.commands.focus()
@@ -385,8 +389,6 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
       editor = e
       document.addEventListener('scroll', markScroll, { capture: true, passive: true })
       e.on('destroy', () => document.removeEventListener('scroll', markScroll, { capture: true }))
-      // 初始值须显式推入，否则只读态会被当成可编辑（共享模块级状态）
-      setEditableState(editable)
     },
   }
 }

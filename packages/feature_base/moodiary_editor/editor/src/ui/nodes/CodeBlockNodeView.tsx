@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
 import { Check, Copy } from 'lucide-react'
-import { useT } from '@/core/i18n'
+import { t } from '@/core/i18n'
 
 export default function CodeBlockNodeView({ node }: NodeViewProps) {
-  const t = useT()
   const l = node.attrs.language as string | null
   const language = l && l.length ? l : t('code.plainText')
 

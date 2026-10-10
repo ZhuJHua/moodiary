@@ -19,6 +19,8 @@ export function createStore<T>(initial: T): Store<T> {
       emit()
     },
     patch: (partial) => {
+      const keys = Object.keys(partial) as (keyof T)[]
+      if (keys.every((k) => Object.is(state[k], partial[k]))) return
       state = { ...state, ...partial }
       emit()
     },

@@ -22,8 +22,6 @@ class EditorBody extends StatefulWidget {
 
   final ValueChanged<String>? onOpenDiaryLink;
 
-  final String saveStatus;
-
   final String? metaJson;
   final String? linksJson;
   final ValueChanged<DateTime>? onChangeDate;
@@ -55,7 +53,6 @@ class EditorBody extends StatefulWidget {
     this.onActiveHeadingChanged,
     this.editable = true,
     this.onOpenDiaryLink,
-    this.saveStatus = 'idle',
     this.metaJson,
     this.linksJson,
     this.onChangeDate,
@@ -124,7 +121,6 @@ class _EditorBodyState extends State<EditorBody> {
         controller: widget.editorController,
         onActiveHeadingChanged: widget.onActiveHeadingChanged,
         editable: widget.editable && widget.type.isEditable,
-        saveStatus: widget.saveStatus,
         firstLineIndent: firstLineIndent,
         fontScale: fontScale,
         onChanged: (content) =>

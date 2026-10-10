@@ -1,7 +1,5 @@
 import { mergeAttributes } from '@tiptap/core'
 import Image from '@tiptap/extension-image'
-import ImageNodeView from '@/ui/nodes/ImageNodeView'
-import { blockNodeView } from './block-node-view'
 import { mediaNodeFor } from './markdown'
 import { displaySrc, unproxyMedia } from './media'
 import { widthPercentAttribute } from './media-size'
@@ -38,7 +36,4 @@ export const MediaImage = Image.extend({
     return ['img', mergeAttributes(this.options.HTMLAttributes, attrs)]
   },
 
-  addNodeView() {
-    return blockNodeView(ImageNodeView)
-  },
 })

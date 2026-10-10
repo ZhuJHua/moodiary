@@ -727,7 +727,6 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       initialContent: diary.content,
       initialTitle: diary.title,
       editable: _mode == .edit,
-      saveStatus: _saveStatus,
       onChanged: _onContentChanged,
       onTitleChanged: _onTitleChanged,
       editorController: _editorController,
