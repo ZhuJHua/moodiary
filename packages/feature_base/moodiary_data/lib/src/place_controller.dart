@@ -74,6 +74,70 @@ class PlaceController extends _$PlaceController {
       return false;
     }
   }
+
+  /// 这次合并会改写哪些日记（含回收站），最新在前。
+  ///
+  /// 只服务于合并过程中的进度展示：读失败就按空列表返回（记日志），不拦住合并。
+  Future<List<Diary>> affectedDiaries(List<String> placeIds) async {
+    try {
+      final diaries = await getIt<DiaryRepository>().getDiariesWithPlaceIds(
+        placeIds,
+      );
+      return [...diaries]..sort((a, b) => b.time.compareTo(a.time));
+    } catch (e, s) {
+      logger.e('load affected diaries failed', error: e, stackTrace: s);
+      return const [];
+    }
+  }
+
+  /// 合并 [removedIds] 到 [keptId]（可改名 [finalName]），返回撤销凭据；
+  /// 失败返回 null。
+  Future<PlaceMergeRecord?> mergePlaces({
+    required String keptId,
+    required String finalName,
+    required List<String> removedIds,
+  }) async {
+    try {
+      final byId = {
+        for (final p in state.value ?? const <Place>[]) p.id: p,
+      };
+      final kept = byId[keptId];
+      final removed = [
+        for (final id in removedIds)
+          if (byId[id] != null) byId[id]!,
+      ];
+      if (kept == null || removed.isEmpty) return null;
+      final order = MoodiaryKVs.placeOrder.get() ?? const <String>[];
+      final record = await _repository.mergePlaces(
+        kept: kept,
+        finalName: finalName,
+        removed: removed,
+        placeOrder: order,
+        diaries: getIt<DiaryRepository>(),
+      );
+      final removedIdSet = {for (final p in removed) p.id};
+      MoodiaryKVs.placeOrder.set([
+        for (final id in order)
+          if (!removedIdSet.contains(id)) id,
+      ]);
+      return record;
+    } catch (e, s) {
+      logger.e('merge places failed', error: e, stackTrace: s);
+      return null;
+    }
+  }
+
+  /// 撤销一次合并，成功返回 true。
+  Future<bool> undoMerge(PlaceMergeRecord record) async {
+    try {
+      await _repository.undoMerge(record, diaries: getIt<DiaryRepository>());
+      MoodiaryKVs.placeOrder.set(record.placeOrder);
+      return true;
+    } catch (e, s) {
+      logger.e('undo merge failed', error: e, stackTrace: s);
+      return false;
+    }
+  }
 }
 
 @riverpod
