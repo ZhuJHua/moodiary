@@ -8,6 +8,7 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 import 'place_editor.dart';
+import 'place_merge_sheet.dart';
 
 class PlaceManagerPage extends ConsumerStatefulWidget {
   const PlaceManagerPage({super.key});
@@ -18,6 +19,9 @@ class PlaceManagerPage extends ConsumerStatefulWidget {
 
 class _PlaceManagerPageState extends ConsumerState<PlaceManagerPage> {
   String _query = '';
+  final Set<String> _selected = {};
+
+  bool get _selecting => _selected.isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
@@ -27,31 +31,59 @@ class _PlaceManagerPageState extends ConsumerState<PlaceManagerPage> {
           in (ref.watch(placeFootprintsProvider).value ?? const {}).entries)
         key: value.count,
     };
-    return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.diary.placeManagerTitle)),
-      floatingActionButton: (async.value?.isNotEmpty ?? false)
-          ? FloatingActionButton(
-              heroTag: 'placeManagerFab',
-              onPressed: _onAddPlace,
-              child: const Icon(LucideIcons.plus),
-            )
-          : null,
-      body: async.buildLoading(
-        data: (places) {
-          if (places.isEmpty) return _Empty(onAdd: _onAddPlace);
-          final q = _query.trim().toLowerCase();
-          final filtered = q.isEmpty
-              ? places
-              : places.where((p) => p.name.toLowerCase().contains(q)).toList();
-          return Column(
-            children: [
-              _SearchField(onChanged: (v) => setState(() => _query = v)),
-              Expanded(
-                child: _buildList(filtered, counts, canReorder: q.isEmpty),
+    final l10n = context.l10n;
+    return PopScope(
+      canPop: !_selecting,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _exitSelection();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            _selecting
+                ? l10n.diary.placeSelectedTitle(count: _selected.length)
+                : l10n.diary.placeManagerTitle,
+          ),
+          actions: [
+            if (_selecting) ...[
+              TextButton(
+                onPressed: _selected.length >= 2 ? _onMerge : null,
+                child: Text(l10n.diary.placeMerge),
+              ),
+              TextButton(
+                onPressed: _exitSelection,
+                child: Text(l10n.common.cancel),
               ),
             ],
-          );
-        },
+          ],
+        ),
+        floatingActionButton: (async.value?.isNotEmpty ?? false) && !_selecting
+            ? FloatingActionButton(
+                heroTag: 'placeManagerFab',
+                onPressed: _onAddPlace,
+                child: const Icon(LucideIcons.plus),
+              )
+            : null,
+        body: async.buildLoading(
+          data: (places) {
+            if (places.isEmpty) return _Empty(onAdd: _onAddPlace);
+            final q = _query.trim().toLowerCase();
+            final filtered = q.isEmpty
+                ? places
+                : places.where((p) => p.name.toLowerCase().contains(q)).toList();
+            if (_selecting) {
+              return _buildList(filtered, counts, canReorder: false);
+            }
+            return Column(
+              children: [
+                _SearchField(onChanged: (v) => setState(() => _query = v)),
+                Expanded(
+                  child: _buildList(filtered, counts, canReorder: q.isEmpty),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -72,6 +104,10 @@ class _PlaceManagerPageState extends ConsumerState<PlaceManagerPage> {
           return _PlaceTile(
             place: p,
             count: counts[p.id] ?? 0,
+            selecting: _selecting,
+            selected: _selected.contains(p.id),
+            onToggle: () => _toggleSelect(p.id),
+            onLongPress: () => _enterSelection(p.id),
             onEdit: () => _onEditPlace(p),
             onDelete: () => _onDelete(p),
           );
@@ -121,6 +157,7 @@ class _PlaceManagerPageState extends ConsumerState<PlaceManagerPage> {
             place: p,
             count: counts[p.id] ?? 0,
             dragIndex: index,
+            onLongPress: () => _enterSelection(p.id),
             onEdit: () => _onEditPlace(p),
             onDelete: () => _onDelete(p),
           ),
@@ -168,6 +205,38 @@ class _PlaceManagerPageState extends ConsumerState<PlaceManagerPage> {
     } else {
       toast.error(message: l10n.diary.placeDeleteBlocked);
     }
+  }
+
+  void _enterSelection(String id) {
+    if (_selecting) return;
+    HapticFeedback.mediumImpact();
+    setState(() => _selected.add(id));
+  }
+
+  void _toggleSelect(String id) {
+    HapticFeedback.selectionClick();
+    setState(() {
+      if (!_selected.remove(id)) _selected.add(id);
+    });
+  }
+
+  void _exitSelection() => setState(_selected.clear);
+
+  Future<void> _onMerge() async {
+    final places = ref.read(orderedPlacesProvider).value ?? const <Place>[];
+    final selected = [
+      for (final p in places)
+        if (_selected.contains(p.id)) p,
+    ];
+    if (selected.length < 2) {
+      toast.info(message: l10n.diary.placeMergeMinTwo);
+      return;
+    }
+    // 弹层自驱整个合并流程（二次确认、进度、撤销倒计时、结果气泡）。
+    final outcome = await showPlaceMergeSheet(context, candidates: selected);
+    if (!mounted) return;
+    if (outcome == null || outcome == PlaceMergeOutcome.cancelled) return;
+    _exitSelection();
   }
 }
 
@@ -248,6 +317,10 @@ class _PlaceTile extends StatelessWidget {
   final Place place;
   final int count;
   final int? dragIndex;
+  final bool selecting;
+  final bool selected;
+  final VoidCallback? onToggle;
+  final VoidCallback? onLongPress;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
@@ -255,6 +328,10 @@ class _PlaceTile extends StatelessWidget {
     required this.place,
     required this.count,
     this.dragIndex,
+    this.selecting = false,
+    this.selected = false,
+    this.onToggle,
+    this.onLongPress,
     required this.onEdit,
     required this.onDelete,
   });
@@ -262,12 +339,12 @@ class _PlaceTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
-    return Card.filled(
+    final tile = Card.filled(
       margin: const .symmetric(vertical: 4),
-      color: colors.surfaceContainerLow,
+      color: selected ? colors.secondaryContainer : colors.surfaceContainerLow,
       clipBehavior: .antiAlias,
       child: ListTile(
-        onTap: onEdit,
+        onTap: selecting ? onToggle : onEdit,
         leading: PlaceBadge(place: place),
         title: Text(
           place.name,
@@ -281,54 +358,70 @@ class _PlaceTile extends StatelessWidget {
               : context.l10n.diary.placeNoDiary,
           style: context.theme.typography.labelSmall.onSurfaceVariant,
         ),
-        trailing: Row(
-          mainAxisSize: .min,
-          children: [
-            MMenuButton<String>(
-              tooltip: context.l10n.common.more,
-              onSelected: (key) {
-                switch (key) {
-                  case 'edit':
-                    onEdit();
-                  case 'delete':
-                    onDelete();
-                }
-              },
-              entries: [
-                MMenuEntry(
-                  value: 'edit',
-                  label: context.l10n.diary.edit,
-                  icon: LucideIcons.squarePen,
-                ),
-                MMenuEntry(
-                  value: 'delete',
-                  label: context.l10n.common.delete,
-                  icon: LucideIcons.trash2,
-                  isDestructive: true,
-                ),
-              ],
-              child: Padding(
+        trailing: selecting
+            ? Padding(
                 padding: const .all(12),
                 child: Icon(
-                  LucideIcons.ellipsisVertical,
-                  color: colors.onSurfaceVariant,
+                  selected ? LucideIcons.circleCheck : LucideIcons.circle,
+                  color: selected
+                      ? colors.primary
+                      : colors.onSurfaceVariant,
                 ),
-              ),
-            ),
-            if (dragIndex != null)
-              ReorderableDragStartListener(
-                index: dragIndex!,
-                child: Padding(
-                  padding: const .only(left: 4),
-                  child: Icon(
-                    LucideIcons.gripHorizontal,
-                    color: colors.onSurfaceVariant,
+              )
+            : Row(
+                mainAxisSize: .min,
+                children: [
+                  MMenuButton<String>(
+                    tooltip: context.l10n.common.more,
+                    onSelected: (key) {
+                      switch (key) {
+                        case 'edit':
+                          onEdit();
+                        case 'delete':
+                          onDelete();
+                      }
+                    },
+                    entries: [
+                      MMenuEntry(
+                        value: 'edit',
+                        label: context.l10n.diary.edit,
+                        icon: LucideIcons.squarePen,
+                      ),
+                      MMenuEntry(
+                        value: 'delete',
+                        label: context.l10n.common.delete,
+                        icon: LucideIcons.trash2,
+                        isDestructive: true,
+                      ),
+                    ],
+                    child: Padding(
+                      padding: const .all(12),
+                      child: Icon(
+                        LucideIcons.ellipsisVertical,
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
                   ),
-                ),
+                  if (dragIndex != null)
+                    ReorderableDragStartListener(
+                      index: dragIndex!,
+                      child: Padding(
+                        padding: const .only(left: 4),
+                        child: Icon(
+                          LucideIcons.gripHorizontal,
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                ],
               ),
-          ],
-        ),
       ),
+    );
+    if (selecting) return tile;
+    return GestureDetector(
+      onLongPress: onLongPress,
+      behavior: HitTestBehavior.opaque,
+      child: tile,
     );
   }
 }

@@ -581,6 +581,41 @@ class DiaryRepository {
     return _assemble(await q.get());
   }
 
+  /// 全部指向这些地点的日记（含回收站），地点合并时使用。
+  Future<List<Diary>> getDiariesWithPlaceIds(List<String> placeIds) async {
+    if (placeIds.isEmpty) return const [];
+    final rows = await (_db.select(
+      _db.diaries,
+    )..where((d) => d.placeId.isIn(placeIds))).get();
+    return _assemble(rows);
+  }
+
+  /// 按 id 取日记（含回收站），撤销合并时按凭据精确取回。
+  Future<List<Diary>> getDiariesByIds(List<String> ids) async {
+    if (ids.isEmpty) return const [];
+    final rows = await (_db.select(
+      _db.diaries,
+    )..where((d) => d.id.isIn(ids))).get();
+    return _assemble(rows);
+  }
+
+  /// 把日记重指到 [placeId] 并推进 last_modified（同步靠它传播）。
+  /// 不做内容重建 —— 只有元数据变更。每个受影响日记发出 DiaryUpdated。
+  Future<void> repointDiaries(
+    List<Diary> diaries,
+    String placeId, {
+    required DateTime at,
+  }) async {
+    if (diaries.isEmpty) return;
+    final atMs = dbTime(at);
+    for (final diary in diaries) {
+      await (_db.update(_db.diaries)..where((d) => d.id.equals(diary.id))).write(
+        DiariesCompanion(placeId: Value(placeId), lastModified: Value(atMs)),
+      );
+      _events.add(DiaryUpdated(diary.copyWith(placeId: placeId, lastModified: at)));
+    }
+  }
+
   Future<Map<String, PlaceFootprint>> placeFootprints() async {
     final d = _db.diaries;
     final count = countAll();
