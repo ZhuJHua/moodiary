@@ -13,6 +13,9 @@ import 'src/presentation/mood_insights/mood_insights_page.dart';
 import 'src/presentation/place/place_manager_page.dart';
 import 'src/presentation/recycle/recycle_page.dart';
 import 'src/presentation/search/search_page.dart';
+import 'src/presentation/wordcloud/word_cloud_dictionary_page.dart';
+import 'src/presentation/wordcloud/word_cloud_page.dart';
+import 'src/presentation/wordcloud/word_cloud_range_page.dart';
 
 export 'src/application/diary_filter.dart';
 export 'src/application/diary_selection.dart';
@@ -59,5 +62,14 @@ List<RouteBase> diaryRoutes() => [
     builder: (_, state) => state.params['diary_id'] == null
         ? const DiaryGraphPage()
         : DiaryEgoGraphPage.fromRoute(state),
+  ),
+  GoRoute(path: WordCloudRoute.path, builder: (_, _) => const WordCloudPage()),
+  GoRoute(
+    path: WordCloudDictionaryRoute.path,
+    builder: (_, _) => const WordCloudDictionaryPage(),
+  ),
+  GoRoute(
+    path: WordCloudRangeRoute.path,
+    builder: (_, state) => WordCloudRangePage.fromRoute(state),
   ),
 ];
