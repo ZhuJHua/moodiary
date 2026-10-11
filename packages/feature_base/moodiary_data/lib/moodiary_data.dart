@@ -25,3 +25,6 @@ export 'src/place_repository.dart';
 export 'src/secret_controller.dart';
 export 'src/sync_pending.dart';
 export 'src/tombstone_repository.dart';
+export 'src/word_cloud_lexicon.dart';
+export 'src/word_cloud_repository.dart';
+export 'src/word_cloud_text.dart';

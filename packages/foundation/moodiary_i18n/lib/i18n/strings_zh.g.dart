@@ -48,6 +48,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$share$zh share = Translations$share$zh.internal(_root);
 	late final Translations$sync$zh sync = Translations$sync$zh.internal(_root);
 	late final Translations$ui$zh ui = Translations$ui$zh.internal(_root);
+	late final Translations$wordcloud$zh wordcloud = Translations$wordcloud$zh.internal(_root);
 }
 
 // Path: app
@@ -3953,4 +3954,223 @@ class Translations$ui$zh {
 
 	/// zh: '{speed: String}× 倍速播放中'
 	String videoPlayerSpeedBoost({required String speed}) => '${speed}× 倍速播放中';
+}
+
+// Path: wordcloud
+class Translations$wordcloud$zh {
+	Translations$wordcloud$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: '词云'
+	String get title => '词云';
+
+	/// zh: '{diaries} 篇 · {terms} 个词'
+	String subtitle({required Object diaries, required Object terms}) => '${diaries} 篇 · ${terms} 个词';
+
+	/// zh: '本周'
+	String get rangeWeek => '本周';
+
+	/// zh: '本月'
+	String get rangeMonth => '本月';
+
+	/// zh: '本年'
+	String get rangeYear => '本年';
+
+	/// zh: '自定义'
+	String get rangeCustom => '自定义';
+
+	/// zh: '这一段'
+	String get modePerBucket => '这一段';
+
+	/// zh: '累计'
+	String get modeCumulative => '累计';
+
+	/// zh: '只显示这一段里出现的词'
+	String get modePerBucketHint => '只显示这一段里出现的词';
+
+	/// zh: '从开头累计到这一段的词'
+	String get modeCumulativeHint => '从开头累计到这一段的词';
+
+	/// zh: '播放'
+	String get play => '播放';
+
+	/// zh: '暂停'
+	String get pause => '暂停';
+
+	/// zh: '慢一点'
+	String get slower => '慢一点';
+
+	/// zh: '快一点'
+	String get faster => '快一点';
+
+	/// zh: '第 {index}/{total} 段'
+	String segmentLabel({required Object index, required Object total}) => '第 ${index}/${total} 段';
+
+	/// zh: '{from} 至 {to}'
+	String windowRange({required Object from, required Object to}) => '${from} 至 ${to}';
+
+	/// zh: '到 {day} 为止'
+	String upto({required Object day}) => '到 ${day} 为止';
+
+	/// zh: '这段时间还没有可以成词的记录'
+	String get emptyTitle => '这段时间还没有可以成词的记录';
+
+	/// zh: '换个时间范围，或者先写点什么。'
+	String get emptyDesc => '换个时间范围，或者先写点什么。';
+
+	/// zh: '出现 {count} 次'
+	String wordCount({required Object count}) => '出现 ${count} 次';
+
+	/// zh: '隐藏这个词'
+	String get wordBlock => '隐藏这个词';
+
+	/// zh: '已隐藏'
+	String get blockedToast => '已隐藏';
+
+	/// zh: '每根柱子是一段词云，顺序就是时间轴'
+	String get windowBarsHint => '每根柱子是一段词云，顺序就是时间轴';
+
+	/// zh: '时间范围'
+	String get timelineSheetTitle => '时间范围';
+
+	/// zh: '看哪一段时间'
+	String get rangeTitle => '看哪一段时间';
+
+	/// zh: '{count} {unit}'
+	String windowSize({required Object count, required Object unit}) => '${count} ${unit}';
+
+	/// zh: '每段覆盖多久'
+	String get windowLengthTitle => '每段覆盖多久';
+
+	/// zh: '相邻两段首尾相接，不重叠'
+	String get windowLengthHint => '相邻两段首尾相接，不重叠';
+
+	/// zh: '共 {count} 段 · 每段 {size}'
+	String windowSummary({required Object count, required Object size}) => '共 ${count} 段 · 每段 ${size}';
+
+	/// zh: '最多 {count} 段 · 每段 {size}'
+	String windowAtMost({required Object count, required Object size}) => '最多 ${count} 段 · 每段 ${size}';
+
+	/// zh: '跳过 {count} 个空白时段'
+	String windowSkipped({required Object count}) => '跳过 ${count} 个空白时段';
+
+	/// zh: '后面还有 {count} 段'
+	String windowPreviewMore({required Object count}) => '后面还有 ${count} 段';
+
+	/// zh: '这个范围看不了，先按上次的设置显示'
+	String get windowKeepLast => '这个范围看不了，先按上次的设置显示';
+
+	/// zh: '天'
+	String get unitDay => '天';
+
+	/// zh: '周'
+	String get unitWeek => '周';
+
+	/// zh: '月'
+	String get unitMonth => '月';
+
+	/// zh: '季度'
+	String get unitQuarter => '季度';
+
+	/// zh: '年'
+	String get unitYear => '年';
+
+	/// zh: '结束时间要晚于开始时间'
+	String get errEmptyRange => '结束时间要晚于开始时间';
+
+	/// zh: '段数太多了（最多 400 段），选短一点的时间范围'
+	String get errTooManyWindows => '段数太多了（最多 400 段），选短一点的时间范围';
+
+	/// zh: '选择时间范围'
+	String get rangePageTitle => '选择时间范围';
+
+	/// zh: '确定'
+	String get rangeApply => '确定';
+
+	/// zh: '点月份选一段时间，第一下是开始，第二下是结束'
+	String get rangeHint => '点月份选一段时间，第一下是开始，第二下是结束';
+
+	/// zh: '已选开始：{day}，再点一个月份选结束'
+	String rangePickedStart({required Object day}) => '已选开始：${day}，再点一个月份选结束';
+
+	/// zh: '从最早一篇开始'
+	String get rangeFromEarliest => '从最早一篇开始';
+
+	/// zh: '到最新一篇为止'
+	String get rangeToLatest => '到最新一篇为止';
+
+	/// zh: '全部时间'
+	String get rangeEverything => '全部时间';
+
+	/// zh: '开始日期'
+	String get rangePickStart => '开始日期';
+
+	/// zh: '结束日期'
+	String get rangePickEnd => '结束日期';
+
+	/// zh: '{count} 篇'
+	String monthCount({required Object count}) => '${count} 篇';
+
+	/// zh: '词云词典'
+	String get dictionaryTitle => '词云词典';
+
+	/// zh: '要保留的词'
+	String get lexiconTitle => '要保留的词';
+
+	/// zh: '有些词会被拆开、或者悄悄粘在一起（比如「今天」和「天气」被粘成「今天天气」）。想让它按原样统计，就加到这里。'
+	String get lexiconHint => '有些词会被拆开、或者悄悄粘在一起（比如「今天」和「天气」被粘成「今天天气」）。想让它按原样统计，就加到这里。';
+
+	/// zh: '输入一个词'
+	String get lexiconAddHint => '输入一个词';
+
+	/// zh: '保留'
+	String get lexiconAdd => '保留';
+
+	/// zh: '已保留'
+	String get lexiconToast => '已保留';
+
+	/// zh: '清空要保留的词'
+	String get lexiconClear => '清空要保留的词';
+
+	/// zh: '将移除全部 {count} 个词。'
+	String lexiconClearMessage({required Object count}) => '将移除全部 ${count} 个词。';
+
+	/// zh: '不想看到的词'
+	String get blockedTitle => '不想看到的词';
+
+	/// zh: '只影响词云，不会改动日记原文。'
+	String get blockedHint => '只影响词云，不会改动日记原文。';
+
+	/// zh: '输入不想看到的词'
+	String get blockedAddHint => '输入不想看到的词';
+
+	/// zh: '添加'
+	String get blockedAdd => '添加';
+
+	/// zh: '清空'
+	String get blockedClear => '清空';
+
+	/// zh: '将移除全部 {count} 个词，它们会重新出现在词云里。'
+	String blockedClearMessage({required Object count}) => '将移除全部 ${count} 个词，它们会重新出现在词云里。';
+
+	/// zh: '还没有添加'
+	String get wordsEmpty => '还没有添加';
+
+	/// zh: '已经加过了，或者列表满了'
+	String get wordsRejected => '已经加过了，或者列表满了';
+
+	/// zh: '单个字'
+	String get singleCharsTitle => '单个字';
+
+	/// zh: '隐藏单个字'
+	String get hideSingleChars => '隐藏单个字';
+
+	/// zh: '打开后「的、了、去、说」这类单字都不显示（「雨、猫」这样的也会一起隐藏）。想留哪个，把它加进「要保留的词」。'
+	String get hideSingleCharsHint => '打开后「的、了、去、说」这类单字都不显示（「雨、猫」这样的也会一起隐藏）。想留哪个，把它加进「要保留的词」。';
+
+	/// zh: '「不想看到的词」优先于「要保留的词」，两者都优先于系统默认忽略的词。只存在本机。'
+	String get priorityHint => '「不想看到的词」优先于「要保留的词」，两者都优先于系统默认忽略的词。只存在本机。';
 }

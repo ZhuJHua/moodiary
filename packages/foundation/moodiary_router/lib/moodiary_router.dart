@@ -139,6 +139,31 @@ class CalendarRoute extends MoodiaryRouteBase {
   const CalendarRoute() : super(path);
 }
 
+class WordCloudRoute extends MoodiaryRouteBase {
+  static const String path = '/word_cloud';
+
+  const WordCloudRoute() : super(path);
+}
+
+class WordCloudDictionaryRoute extends MoodiaryRouteBase {
+  static const String path = '/word_cloud/dictionary';
+
+  const WordCloudDictionaryRoute() : super(path);
+}
+
+/// 自定义时间范围（日历式选择器）。起止用 ISO8601 字符串传，params 只放标量。
+class WordCloudRangeRoute extends MoodiaryRouteBase {
+  static const String path = '/word_cloud/range';
+
+  final String? start;
+  final String? end;
+
+  const WordCloudRangeRoute({this.start, this.end}) : super(path);
+
+  @override
+  Map<String, dynamic> get params => {'start': start, 'end': end};
+}
+
 class DiaryGraphRoute extends MoodiaryRouteBase {
   static const String path = '/graph';
 
