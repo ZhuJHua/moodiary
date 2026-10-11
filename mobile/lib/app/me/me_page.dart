@@ -376,6 +376,21 @@ class _RecallGrid extends StatelessWidget {
             ),
           ],
         ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: _RecallTile(
+                icon: LucideIcons.cloud,
+                label: l10n.wordcloud.title,
+                onTap: () => const WordCloudRoute().push(context),
+              ),
+            ),
+            // 右边留空：与上面两行同宽同形，位置留给以后要加的回顾项。
+            const SizedBox(width: 8),
+            const Expanded(child: SizedBox()),
+          ],
+        ),
       ],
     );
   }

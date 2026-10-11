@@ -28,3 +28,5 @@ export 'src/search.dart';
 export 'src/sync_tombstone.dart';
 export 'src/utc_date_time_converter.dart';
 export 'src/view_mode.dart';
+export 'src/word_cloud.dart';
+export 'src/word_cloud_windows.dart';

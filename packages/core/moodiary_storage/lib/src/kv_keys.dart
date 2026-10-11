@@ -105,6 +105,16 @@ enum MoodiaryKVs<T extends Object> {
 
   placeOrder<List<String>>(),
 
+  /// 词云的屏蔽词（用户自己维护，只在本机）。默认停用词是代码常量，不走这里。
+  wordCloudBlockedWords<List<String>>(),
+
+  /// 词云的自定义词典：按整词统计，用来修正 jieba 的分词（「存在性需求」）。
+  /// 词典优先于内置停用词表 —— 它同时也是一份「保留名单」。
+  wordCloudLexicon<List<String>>(),
+
+  /// 词云是否隐藏单个字（中英文都一样）。默认关：先靠扩容后的停用词表。
+  wordCloudHideSingleChars<bool>(defaultValue: false),
+
   mapTileSource<String>(defaultValue: ''),
 
   weather<List<String>>(),

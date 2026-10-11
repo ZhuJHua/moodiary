@@ -406,6 +406,22 @@ class DiaryRepository {
     return counts;
   }
 
+  /// 最早 / 最晚一篇的时间（给时间范围选择器的「最早一篇 / 最新一篇」用）。
+  /// 只投影两个聚合值，不碰正文。
+  Future<({DateTime? first, DateTime? last})> diaryTimeSpan() async {
+    final t = _db.diaries.time;
+    final q = _db.selectOnly(_db.diaries)
+      ..addColumns([t.min(), t.max()])
+      ..where(_db.diaries.show.equals(1));
+    final row = await q.getSingle();
+    final first = row.read(t.min());
+    final last = row.read(t.max());
+    return (
+      first: first == null ? null : dbToTime(first).toLocal(),
+      last: last == null ? null : dbToTime(last).toLocal(),
+    );
+  }
+
   Future<({Map<String, int> byCategory, int total})>
   diaryCountByCategory() async {
     final cat = _db.diaries.categoryId;
