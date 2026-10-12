@@ -5,7 +5,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_platform/moodiary_platform.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
