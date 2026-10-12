@@ -34,3 +34,14 @@ Widget muiTestApp(
     ),
   );
 }
+
+/// 关掉气泡的防抖窗口；断言气泡文案的用例在 `setUp` 里调一次。
+///
+/// `Toast` 走 `SmartDialog.show`，防抖由 flutter_smart_dialog 的进程级 static 表
+/// 按**真实时钟**判断（默认 300ms）：`tester.pump` 只推进 fake clock，同一个
+/// isolate 里上一个用例刚弹过气泡时（真实相隔常常只有几十毫秒），本用例的气泡
+/// 会被静默丢弃，`find.text` 随即随机失败。窗口压到零后，气泡出不出只由本用例
+/// 的调用决定。
+void disableToastDebounce() {
+  SmartDialog.config.custom = SmartConfigCustom(debounceTime: Duration.zero);
+}

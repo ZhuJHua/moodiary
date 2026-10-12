@@ -23,6 +23,7 @@ export 'src/media_info_event.dart';
 export 'src/memory_entry.dart';
 export 'src/place.dart';
 export 'src/place_event.dart';
+export 'src/place_merge_record.dart';
 export 'src/reasoning_control.dart';
 export 'src/search.dart';
 export 'src/sync_tombstone.dart';

@@ -1956,6 +1956,48 @@ class Translations$diary$zh {
 	/// zh: '距此 {distance}'
 	String placeDistanceAway({required Object distance}) => '距此 ${distance}';
 
+	/// zh: '合并'
+	String get placeMerge => '合并';
+
+	/// zh: '已选 {count} 个地点'
+	String placeSelectedTitle({required Object count}) => '已选 ${count} 个地点';
+
+	/// zh: '请至少选择 2 个地点'
+	String get placeMergeMinTwo => '请至少选择 2 个地点';
+
+	/// zh: '选择最终地址'
+	String get placeMergeSheetTitle => '选择最终地址';
+
+	/// zh: '确认合并地点？'
+	String get placeMergeConfirmTitle => '确认合并地点？';
+
+	/// zh: '「{name}」将合并 {count} 个地点，{diaries} 篇日记随之指向它，原地点会被删除。'
+	String placeMergeConfirmMessage({required Object name, required Object count, required Object diaries}) => '「${name}」将合并 ${count} 个地点，${diaries} 篇日记随之指向它，原地点会被删除。';
+
+	/// zh: '正在合并…'
+	String get placeMerging => '正在合并…';
+
+	/// zh: '正在撤销…'
+	String get placeUndoing => '正在撤销…';
+
+	/// zh: '正在更新 {done}/{total} 篇日记'
+	String placeMergeProgress({required Object done, required Object total}) => '正在更新 ${done}/${total} 篇日记';
+
+	/// zh: '没有日记需要改写'
+	String get placeMergeNoDiary => '没有日记需要改写';
+
+	/// zh: '已合并为「{name}」'
+	String placeMerged({required Object name}) => '已合并为「${name}」';
+
+	/// zh: '撤销'
+	String get placeUndo => '撤销';
+
+	/// zh: '已撤销合并'
+	String get placeUndone => '已撤销合并';
+
+	/// zh: '撤销失败'
+	String get placeUndoFailed => '撤销失败';
+
 	/// zh: '主页'
 	String get home => '主页';
 
