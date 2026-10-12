@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_native/moodiary_native.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -162,6 +163,10 @@ class MoodiaryEditor extends StatefulWidget {
 
 class _MoodiaryEditorState extends State<MoodiaryEditor>
     with SoftKeyboardObserver {
+  // Android WebView 的选择手柄由原生主题绘制，颜色只能推给原生
+  static final _selectionHandle = SelectionHandleApi();
+  static int? _handleColor;
+
   EditorTransport? _transport;
   bool _jsReady = false;
   bool _activated = false;
@@ -220,6 +225,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _syncHandleColor();
     if (!_prepareStarted) {
       _prepareStarted = true;
       _prepare();
@@ -742,6 +748,14 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
     await _run(
       'window.MoodiaryBridge.setLinks(${jsonEncode(widget.linksJson ?? '')})',
     );
+  }
+
+  void _syncHandleColor() {
+    if (!Platform.isAndroid) return;
+    final argb = context.theme.colors.primary.toARGB32();
+    if (argb == _handleColor) return;
+    _handleColor = argb;
+    unawaited(_selectionHandle.setColor(argb));
   }
 
   Future<void> _setTheme() async {

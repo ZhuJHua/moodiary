@@ -26,8 +26,9 @@ dart tool/task.dart build-apk / build-ios  # the only two targets
 dart tool/task.dart build-runner   # whole workspace
 dart tool/task.dart gen-rust       # regenerate Rust FFI bindings after touching rust/src/api
 dart tool/task.dart i18n           # slang codegen after editing i18n/flutter (i18n/web needs no codegen)
+dart tool/task.dart pigeon         # moodiary_native bindings after editing its pigeons/native_api.dart
 dart tool/task.dart migrations     # drift schema snapshot + step-by-step migration codegen, after bumping schemaVersion
-dart tool/task.dart gen            # gen-rust + i18n
+dart tool/task.dart gen            # gen-rust + i18n + pigeon
 
 # Lint & Test
 dart tool/task.dart analyze        # layer check + flutter analyze
@@ -58,7 +59,7 @@ Full-repo verification = the four Lint & Test commands above. CI (`quality.yml`)
 
 ### Layout notes
 
-Package roles are each pubspec's `description`; layer = directory. `i18n/flutter` (slang) and `i18n/web` (editor page, imported by its typed `t()`) hold every translation json; a string both need is duplicated. `moodiary_ml` is the sole owner of `flutter_onnxruntime`.
+Package roles are each pubspec's `description`; layer = directory. `i18n/flutter` (slang) and `i18n/web` (editor page, imported by its typed `t()`) hold every translation json; a string both need is duplicated. `moodiary_ml` is the sole owner of `flutter_onnxruntime`. `moodiary_native` is the only home for our own Kotlin / Swift code: every Flutter-to-native call is a pigeon API there, never an ad-hoc MethodChannel or code in `mobile/android` / `mobile/ios`.
 
 Unqualified `lib/...` means `mobile/lib/...`; `packages/` and `tool/` are repo-root-relative.
 

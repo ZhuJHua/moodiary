@@ -9,7 +9,9 @@
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_splash_icon</item>
     </style>
     <style name="NormalTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
-        <item name="colorControlActivated">@android:color/system_accent1_600</item>
+        <item name="android:textSelectHandleLeft">@drawable/selection_handle_left</item>
+        <item name="android:textSelectHandleRight">@drawable/selection_handle_right</item>
+        <item name="android:textSelectHandle">@drawable/selection_handle_center</item>
         <item name="android:windowBackground">?android:colorBackground</item>
     </style>
 </resources>
