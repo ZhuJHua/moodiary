@@ -3,6 +3,7 @@ import type { JSONContent } from '@tiptap/core'
 import { Editor, EditorContent } from '@tiptap/react'
 import { vi } from 'vitest'
 import { applyEditable } from '@/core/bridge'
+import { respond } from '@/core/bridge/request'
 import { linkSuggestion } from '@/core/editor/diary-link'
 import { createEditorKit, type EditorApi } from '@/core/editor/tiptap'
 import { nodeViews } from '@/ui/nodes'
@@ -12,12 +13,23 @@ export interface Posted {
   payload?: unknown
 }
 
-// 顶替 Flutter 注入的 JS channel，收下页面发出的每条消息
+export const testMediaUrl = (name: string, poster = false): string =>
+  poster ? `file:///media/poster/${name}` : `file:///media/${name}`
+
+// 顶替 Flutter 注入的 JS channel：收下页面发出的每条消息，并像 Flutter 一样回答媒体解析请求
 export function captureBridge(): Posted[] {
   const posted: Posted[] = []
   window.MoodiaryEditor = {
     postMessage: (raw: string) => {
-      posted.push(JSON.parse(raw) as Posted)
+      const message = JSON.parse(raw) as Posted
+      posted.push(message)
+      const p = message.payload as { reqId?: string; items?: { name: string; poster?: boolean }[] } | undefined
+      if (message.type === 'resolveMedia' && p?.reqId) {
+        const urls = Object.fromEntries(
+          (p.items ?? []).map((i) => [i.poster ? `${i.name}#poster` : i.name, testMediaUrl(i.name, i.poster)]),
+        )
+        respond(p.reqId, JSON.stringify(urls))
+      }
     },
   }
   return posted

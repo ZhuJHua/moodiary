@@ -1,34 +1,57 @@
-import { t } from '@/core/i18n'
+import { request } from '@/core/bridge/request'
 
 const LEGACY_PREFIX = 'moodiary-media://media/'
 
-let mediaPrefix = LEGACY_PREFIX
-
-export function setMediaPrefix(base: string): void {
-  if (base) mediaPrefix = base.endsWith('/') ? base : `${base}/`
+export interface MediaRef {
+  name: string
+  poster?: boolean
 }
 
-export function mediaUrl(name: string, opts?: { poster?: boolean }): string {
-  const base = mediaPrefix + name
-  return opts?.poster ? `${base}?poster=1` : base
+const keyOf = (ref: MediaRef): string => (ref.poster ? `${ref.name}#poster` : ref.name)
+
+const resolved = new Map<string, string | null>()
+const nameOfUrl = new Map<string, string>()
+const pending = new Map<string, Promise<string | null>>()
+let batch: { refs: MediaRef[]; done: Promise<Record<string, string | null>> } | null = null
+
+// 同一轮微任务里的请求合并成一次桥调用；Flutter 回的是 file:// 地址，缩略图可能现生成
+function enqueue(ref: MediaRef): Promise<Record<string, string | null>> {
+  if (!batch) {
+    const refs: MediaRef[] = []
+    const done = Promise.resolve().then(() => {
+      batch = null
+      return request<Record<string, string | null>>('resolveMedia', { items: refs })
+    })
+    batch = { refs, done }
+  }
+  batch.refs.push(ref)
+  return batch.done
 }
 
-let mediaInfoPrefix = ''
+export function resolveMedia(ref: MediaRef): Promise<string | null> {
+  const key = keyOf(ref)
+  if (resolved.has(key)) return Promise.resolve(resolved.get(key) ?? null)
+  let job = pending.get(key)
+  if (!job) {
+    job = enqueue(ref).then((urls) => {
+      const url = urls[key] ?? null
+      resolved.set(key, url)
+      if (url) nameOfUrl.set(url, ref.name)
+      pending.delete(key)
+      return url
+    })
+    pending.set(key, job)
+  }
+  return job
+}
 
-export function setMediaInfoPrefix(base: string): void {
-  if (base) mediaInfoPrefix = base.endsWith('/') ? base : `${base}/`
+export function cachedMedia(ref: MediaRef): string | null | undefined {
+  return resolved.get(keyOf(ref))
 }
 
 export async function fetchMediaName(name: string): Promise<string | null> {
-  if (!mediaInfoPrefix) return null
-  try {
-    const res = await fetch(mediaInfoPrefix + name)
-    if (!res.ok) return null
-    const data = (await res.json()) as { name?: string | null }
-    return typeof data.name === 'string' && data.name ? data.name : null
-  } catch {
-    return null
-  }
+  const res = await request<{ name?: string | null }>('mediaName', { name })
+  return typeof res.name === 'string' && res.name ? res.name : null
 }
 
 function isImage(name: string): boolean {
@@ -41,15 +64,17 @@ export function isVideo(name: string): boolean {
   return /^video-/.test(name)
 }
 
-function isLocalMedia(name: string): boolean {
+export function isLocalMedia(name: string): boolean {
   return isImage(name) || isAudio(name) || isVideo(name)
 }
 
+// 序列化成 HTML（复制到剪贴板）时用已解析的地址；解析不到就保留文件名
 export function displaySrc(src: string): string {
-  return isLocalMedia(src) ? mediaPrefix + src : src
+  return (isLocalMedia(src) && cachedMedia({ name: src })) || src
 }
 
 export function unproxyMedia(url: string): string {
-  if (url.startsWith(mediaPrefix)) return url.slice(mediaPrefix.length)
+  const name = nameOfUrl.get(url)
+  if (name) return name
   return url.startsWith(LEGACY_PREFIX) ? url.slice(LEGACY_PREFIX.length) : url
 }

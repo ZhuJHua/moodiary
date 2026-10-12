@@ -3,10 +3,10 @@ import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
 import { Maximize, Pause, Play, Volume2, VolumeX } from 'lucide-react'
 import BlockHandle from './BlockHandle'
 import { post } from '@/core/bridge/post'
-import { mediaUrl } from '@/core/editor/media'
 import { formatTime, useMediaControls } from '@/ui/hooks/use-media'
 import { t } from '@/core/i18n'
 import { useBlockMenu, widthPercentOf } from '@/ui/hooks/use-block-menu'
+import { useMediaSrc } from '@/ui/hooks/use-media-src'
 import { keepFocus } from '@/lib/utils'
 
 const MIN_FRAME_RATIO = 4 / 5
@@ -22,8 +22,8 @@ export default function VideoNodeView({ node, selected, getPos }: NodeViewProps)
   )
 
   const filename = (node.attrs.filename as string | null) ?? ''
-  const src = filename ? mediaUrl(filename) : undefined
-  const poster = filename ? mediaUrl(filename, { poster: true }) : ''
+  const src = useMediaSrc(filename)
+  const poster = useMediaSrc(filename, true) ?? ''
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const { playing, duration, muted, sliderValue, dragging, toggle, toggleMute, seekTo, endSeek } =

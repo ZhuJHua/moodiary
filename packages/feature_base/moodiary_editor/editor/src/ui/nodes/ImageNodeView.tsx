@@ -1,7 +1,7 @@
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
 import BlockHandle from './BlockHandle'
-import { displaySrc } from '@/core/editor/media'
 import { useBlockMenu, widthPercentOf } from '@/ui/hooks/use-block-menu'
+import { useMediaSrc } from '@/ui/hooks/use-media-src'
 
 export default function ImageNodeView({ node, selected, getPos }: NodeViewProps) {
   const { canEdit, wrapperClass, widthStyle, openMenu } = useBlockMenu(
@@ -12,7 +12,7 @@ export default function ImageNodeView({ node, selected, getPos }: NodeViewProps)
   )
 
   const raw = node.attrs.src
-  const src = typeof raw === 'string' ? displaySrc(raw) : ''
+  const src = useMediaSrc(typeof raw === 'string' ? raw : null)
   const alt = (node.attrs.alt as string | null) ?? ''
   const title = (node.attrs.title as string | null) ?? undefined
 

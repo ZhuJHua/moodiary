@@ -4,13 +4,12 @@ import 'dart:developer' as developer;
 import 'dart:io';
 
 import 'package:flutter/foundation.dart' show kDebugMode;
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:mui/mui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'editor_local_server.dart';
+import 'editor_page.dart';
 import 'media.dart';
 import 'transport/editor_transport.dart';
 
@@ -250,28 +249,10 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
       }
       return;
     }
-    final boot = <String, dynamic>{
-      'editable': !widget.readOnly,
-      'locale': LocaleSettings.currentLocale.languageCode,
-      'theme': _themePayload(),
-    };
-    final server = getIt<EditorLocalServer>();
-    server.mediaResolver ??= widget.mediaResolver;
-    server.fontResolver ??= widget.fontResolver;
-    server.mediaNameResolver ??= widget.mediaNameResolver;
     try {
-      await server.ensureStarted();
-    } catch (e, s) {
-      _log('local server failed to start', error: e, stack: s, level: 1000);
-      if (mounted) setState(() => _loadError = e.toString());
-      return;
-    }
-    if (!mounted) return;
-    boot['mediaBase'] = server.mediaBase;
-    boot['fontBase'] = server.fontBase;
-    boot['mediaInfoBase'] = server.mediaInfoBase;
-    try {
-      await _buildController(server.pageUri(boot));
+      final page = await resolveEditorPage();
+      if (!mounted) return;
+      await _buildController(page);
     } catch (e, s) {
       _log('webview controller build failed', error: e, stack: s, level: 1000);
       if (mounted) setState(() => _loadError = e.toString());
@@ -280,10 +261,10 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
     _startReadyTimeout();
   }
 
-  Future<void> _buildController(Uri pageUri) async {
+  Future<void> _buildController(EditorPage page) async {
     final transport = createEditorTransport();
     await transport.prepare(
-      pageUri: pageUri,
+      page: page,
       onMessage: _onMessage,
       onConsoleError: (m) => _log('JS console: $m', level: 1000),
       onWebError: (desc, code) =>
@@ -321,6 +302,31 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
     final type = (data['type'] as String?) ?? '';
     final payload = data['payload'];
     switch (type) {
+      case 'boot':
+        if (payload is Map && payload['reqId'] is String) {
+          unawaited(_respond(payload['reqId'] as String, _bootPayload()));
+        }
+        return;
+      case 'resolveMedia':
+        if (payload is Map && payload['reqId'] is String) {
+          unawaited(
+            _handleResolveMedia(
+              payload['reqId'] as String,
+              payload['items'] is List ? payload['items'] as List : const [],
+            ),
+          );
+        }
+        return;
+      case 'mediaName':
+        if (payload is Map && payload['reqId'] is String) {
+          unawaited(
+            _handleMediaName(
+              payload['reqId'] as String,
+              payload['name'] is String ? payload['name'] as String : '',
+            ),
+          );
+        }
+        return;
       case 'ready':
         if (_jsReady) return;
         _jsReady = true;
@@ -532,6 +538,75 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
     );
   }
 
+  Map<String, dynamic> _bootPayload() => {
+    'editable': !widget.readOnly,
+    'locale': LocaleSettings.currentLocale.languageCode,
+    'theme': _themePayload(),
+  };
+
+  Future<void> _respond(String reqId, Object? value) => _run(
+    'window.MoodiaryBridge.respond('
+    '${jsonEncode(reqId)},${jsonEncode(jsonEncode(value))})',
+  );
+
+  Future<void> _handleResolveMedia(String reqId, List<dynamic> items) async {
+    final resolver = widget.mediaResolver;
+    final urls = <String, String?>{};
+    await Future.wait([
+      for (final item in items.whereType<Map<dynamic, dynamic>>())
+        () async {
+          final name = item['name'];
+          if (name is! String) return;
+          final poster = item['poster'] == true;
+          String? url;
+          if (resolver != null && _isSafeMediaName(name)) {
+            try {
+              final resolved = await resolver(name, poster: poster);
+              if (resolved != null) url = Uri.file(resolved.path).toString();
+            } catch (e, s) {
+              _log(
+                'media resolve failed: $name',
+                error: e,
+                stack: s,
+                level: 1000,
+              );
+            }
+          }
+          urls[poster ? '$name#poster' : name] = url;
+        }(),
+    ]);
+    if (mounted) await _respond(reqId, urls);
+  }
+
+  Future<void> _handleMediaName(String reqId, String name) async {
+    String? display;
+    final resolver = widget.mediaNameResolver;
+    if (resolver != null && _isSafeMediaName(name)) {
+      try {
+        display = await resolver(name);
+      } catch (e, s) {
+        _log(
+          'media name lookup failed: $name',
+          error: e,
+          stack: s,
+          level: 1000,
+        );
+      }
+    }
+    if (mounted) await _respond(reqId, {'name': display});
+  }
+
+  // video- 长度须 ≥42：宿主 substring(6, 42) 取 uuid 依赖该长度
+  static bool _isSafeMediaName(String name) {
+    if (name.contains('/') || name.contains('\\') || name.contains('..')) {
+      return false;
+    }
+    if (name.startsWith('image-')) return name.length > 'image-'.length;
+    if (name.startsWith('audio-')) return name.length > 'audio-'.length;
+    if (name.startsWith('video-')) return name.length >= 42;
+    return false;
+  }
+
   Future<void> _handleLinkCandidates(String reqId, String query) async {
     List<DiaryLinkCandidate> list = const [];
     try {
@@ -611,6 +686,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
       'roles': roles,
       'dark': brightness == .dark,
       if (font != null) 'font': font.family,
+      if (font != null) 'fontUrl': Uri.file(font.path).toString(),
       if (font != null) 'fontV': _fontVersion(font),
       'firstLineIndent': widget.firstLineIndent,
       'fontScale': widget.fontScale,

@@ -1,13 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent } from '@testing-library/react'
-import { setMediaPrefix } from '@/core/editor/media'
 import { flush, renderEditor, type EditorFixture } from '@/test/editor'
 
 let h: EditorFixture
 
 beforeEach(async () => {
   vi.useFakeTimers()
-  setMediaPrefix('http://127.0.0.1:5321/tok/media/')
   h = renderEditor()
   h.api.insertVideo('video-1.mp4')
   await flush()

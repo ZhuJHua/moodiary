@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/widgets.dart';
 
+import '../editor_page.dart';
 import 'inappwebview_windows_transport.dart';
 import 'webview_flutter_transport.dart';
 
@@ -13,7 +14,7 @@ typedef OnTransportWebError = void Function(String description, int code);
 
 abstract class EditorTransport {
   Future<void> prepare({
-    required Uri pageUri,
+    required EditorPage page,
     required OnTransportMessage onMessage,
     required OnTransportConsoleError onConsoleError,
     required OnTransportWebError onWebError,

@@ -1,5 +1,4 @@
 import type { PageState } from '@/core/bridge'
-import type { EditorBoot } from '@/core/bridge/boot'
 import type { EditorTheme } from '@/core/bridge/theme'
 
 interface JsChannel {
@@ -32,8 +31,8 @@ declare global {
       dismissOverlay: () => void
       getScrollY: () => number
       setScrollY: (y: number) => void
+      respond: (reqId: string, json: string) => void
     }
-    __BOOT__?: EditorBoot
   }
 }
 

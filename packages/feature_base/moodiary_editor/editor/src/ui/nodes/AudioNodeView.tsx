@@ -3,7 +3,8 @@ import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
 import { Pause, Play, Volume2, VolumeX } from 'lucide-react'
 import { cn } from 'cn'
 import BlockHandle from './BlockHandle'
-import { fetchMediaName, mediaUrl } from '@/core/editor/media'
+import { fetchMediaName } from '@/core/editor/media'
+import { useMediaSrc } from '@/ui/hooks/use-media-src'
 import { formatTime, useMediaControls } from '@/ui/hooks/use-media'
 import { t } from '@/core/i18n'
 import { useBlockMenu } from '@/ui/hooks/use-block-menu'
@@ -15,7 +16,7 @@ export default function AudioNodeView({ node, selected, getPos }: NodeViewProps)
   const { canEdit, wrapperClass, openMenu } = useBlockMenu('audio', getPos, selected)
 
   const filename = (node.attrs.filename as string | null) ?? ''
-  const src = filename ? mediaUrl(filename) : undefined
+  const src = useMediaSrc(filename)
 
   const [fetchedName, setFetchedName] = useState<string | null>(null)
   useEffect(() => {

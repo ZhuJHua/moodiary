@@ -1,14 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { flush, renderEditor, type EditorFixture } from '@/test/editor'
+import { flush, renderEditor, testMediaUrl, type EditorFixture } from '@/test/editor'
 import { clampWidthPercent, snapWidthPercent } from './media-size'
-import { setMediaPrefix } from './media'
-
-const PREFIX = 'http://127.0.0.1:5321/tok/media/'
-
 let h: EditorFixture
 
 beforeEach(() => {
-  setMediaPrefix(PREFIX)
   h = renderEditor()
 })
 
@@ -29,15 +24,30 @@ const setWidth = (type: string, value: number | null): void => {
 const query = <T extends HTMLElement>(selector: string): T | null => h.editor.view.dom.querySelector<T>(selector)
 
 describe('image source', () => {
-  it('serves local media through the proxy and leaves external urls alone', async () => {
+  it('swaps local media for the file URL Flutter resolves and leaves external urls alone', async () => {
     h.api.insertMedia('image-1.jpg')
     await flush()
-    expect(query('img')?.getAttribute('src')).toBe(`${PREFIX}image-1.jpg`)
+    expect(query('img')?.getAttribute('src')).toBe(testMediaUrl('image-1.jpg'))
     expect(attrsOf('image')[0].src).toBe('image-1.jpg')
 
     h.editor.commands.setContent({ type: 'doc', content: [{ type: 'image', attrs: { src: 'https://example.com/a.png' } }] })
     await flush()
     expect(query('img')?.getAttribute('src')).toBe('https://example.com/a.png')
+  })
+})
+
+describe('media resolution', () => {
+  it('asks Flutter once for every block inserted in the same tick', async () => {
+    h.api.insertMedia('image-a.jpg')
+    h.api.insertMedia('image-b.jpg')
+    h.api.insertVideo('video-0123456789012345678901234567890123456.mp4')
+    await flush()
+    const requests = h.posted.filter((m) => m.type === 'resolveMedia')
+    expect(requests).toHaveLength(1)
+    const items = (requests[0].payload as { items: { name: string; poster?: boolean }[] }).items
+    expect(items.map((i) => (i.poster ? `${i.name}#poster` : i.name)).sort()).toEqual(
+      ['image-a.jpg', 'image-b.jpg', 'video-0123456789012345678901234567890123456.mp4', 'video-0123456789012345678901234567890123456.mp4#poster'].sort(),
+    )
   })
 })
 
@@ -91,7 +101,7 @@ describe('HTML parsing (clipboard)', () => {
     h.editor.view.pasteHTML(html, new Event('paste') as unknown as ClipboardEvent)
   }
 
-  it('strips the media prefix and clamps or drops hostile size attributes', () => {
+  it('maps resolved file URLs back to names and clamps or drops hostile size attributes', () => {
     h.api.insertMedia('image-1.jpg')
     paste(h.editor.getHTML())
     expect(attrsOf('image').every((a) => String(a.src).startsWith('image-'))).toBe(true)

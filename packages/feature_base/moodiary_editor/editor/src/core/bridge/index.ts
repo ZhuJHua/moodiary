@@ -1,5 +1,6 @@
 import { applyTheme, type EditorTheme } from './theme'
 import { post } from './post'
+import { respond } from './request'
 import { setLinks, setMeta } from '@/core/state/meta'
 import { editable } from '@/core/state/editable'
 import { getScrollY, setScrollY } from './scroll'
@@ -79,5 +80,6 @@ export function installBridge(): void {
     dismissOverlay: () => dismissOverlay(),
     getScrollY: () => getScrollY(),
     setScrollY: (y: number) => setScrollY(y),
+    respond,
   }
 }
