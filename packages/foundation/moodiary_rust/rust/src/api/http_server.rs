@@ -10,7 +10,6 @@ pub use crate::http::server::{HttpServerRequest, HttpServerResponse};
 pub struct _HttpServerRequest {
     pub method: String,
     pub path: String,
-    pub query: Vec<KeyValue>,
     pub headers: Vec<KeyValue>,
     pub body: Vec<u8>,
     pub body_file_path: Option<String>,
@@ -21,7 +20,6 @@ pub struct _HttpServerResponse {
     pub status: u16,
     pub headers: Vec<KeyValue>,
     pub body: Vec<u8>,
-    pub body_file_path: Option<String>,
 }
 
 fn fallback_response(error: anyhow::Error) -> HttpServerResponse {
@@ -32,7 +30,6 @@ fn fallback_response(error: anyhow::Error) -> HttpServerResponse {
             value: "text/plain; charset=utf-8".to_owned(),
         }],
         body: error.to_string().into_bytes(),
-        body_file_path: None,
     }
 }
 
@@ -44,7 +41,6 @@ pub struct HttpServer {
 impl HttpServer {
     pub async fn start(
         preferred_port: u16,
-        loopback_only: bool,
         spool_dir: String,
         // 不能叫 handler：与 FRB 生成代码里的内部调度器字段同名冲突
         on_request: impl Fn(HttpServerRequest) -> DartFnFuture<Result<HttpServerResponse>>
@@ -66,7 +62,6 @@ impl HttpServer {
         Ok(HttpServer {
             inner: crate::http::server::HttpServer::start(
                 preferred_port,
-                loopback_only,
                 spool_dir,
                 handler,
                 progress,

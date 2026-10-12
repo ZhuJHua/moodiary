@@ -6,8 +6,6 @@ class HttpServerRequest {
 
   final String path;
 
-  final Map<String, String> query;
-
   final Map<String, String> headers;
 
   final Uint8List body;
@@ -17,7 +15,6 @@ class HttpServerRequest {
   const HttpServerRequest({
     required this.method,
     required this.path,
-    this.query = const {},
     this.headers = const {},
     required this.body,
     this.bodyFilePath,
@@ -28,13 +25,11 @@ class HttpServerResponse {
   final int statusCode;
   final Map<String, String> headers;
   final Uint8List body;
-  final String? bodyFilePath;
 
   HttpServerResponse(
     this.statusCode, {
     this.headers = const {},
     Uint8List? body,
-    this.bodyFilePath,
   }) : body = body ?? Uint8List(0);
 
   factory HttpServerResponse.ok(List<int> body, {String? contentType}) =>
@@ -55,19 +50,6 @@ class HttpServerResponse {
         headers: const {'content-type': 'text/plain; charset=utf-8'},
         body: .fromList(utf8.encode(message)),
       );
-
-  factory HttpServerResponse.file(
-    String path, {
-    required String contentType,
-    Map<String, String> headers = const {},
-  }) => HttpServerResponse(
-    200,
-    headers: {...headers, 'content-type': contentType},
-    bodyFilePath: path,
-  );
-
-  factory HttpServerResponse.notFound() =>
-      HttpServerResponse.text(404, 'not found');
 }
 
 typedef HttpServerHandler = Future<HttpServerResponse> Function(
@@ -80,14 +62,11 @@ abstract class IHttpServer {
   Future<void> start({
     required HttpServerHandler handler,
     int preferredPort = 0,
-    bool loopbackOnly = false,
     String? spoolDir,
     void Function(int received, int? total)? onBodyProgress,
   });
 
   int get port;
-
-  bool get isRunning;
 
   Future<void> stop();
 }
