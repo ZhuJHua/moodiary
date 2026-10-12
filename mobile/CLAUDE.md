@@ -14,15 +14,15 @@ Composition-root details (di / bootstrap / MaterialApp mounting) behind the root
 
 Changed annotations **require `dart tool/task.dart build-runner`** (output is committed, and the task formats the unformatted `*.module.dart`). Never hand-write `getIt.register*` — `IRemoteSyncBackend` switches through the hand-written session scope `activateSyncProvider`, because the container only owns wiring fixed for the lifetime.
 
-**Plan — dual composition root, follow this when desktop starts**: desktop gets its own `desktop/lib/app/di/di.dart` (same eight externalPackageModulesBefore plus its own `@InjectableInit`) plus the non-micro-package bindings of `_assertRequiredBindings`, currently four: `IHttpClient` (copy AppModule.httpClient, onError to the desktop notification), `MoodiaryDatabase` (copy AppModule.database, desktop path), `IFilePicker` (system dialog), `IHeifDecoder` (copy MobileHeifDecoder: platform_image_converter decodes HEIC through WIC / GdkPixbuf there). **Do not split platforms with `@Environment`**: it filters one scanned source set by tag, so both implementations must live in one package, pushing moodiary_picker and the wechat dependencies onto desktop. `@Environment('test')` is rejected too, because doubles live in each package's test/ while generateForDir scans only lib. `_assertRequiredBindings` reports missing bindings in the first second of startup, and that list is the composition root's required-bindings table.
+`_assertRequiredBindings` reports missing bindings in the first second of startup, and that list is the composition root's required-bindings table.
 
 > **injectable is not exported from the `moodiary_di` barrel**: the generator hard-codes `import 'package:injectable/...'` into its output, so every pubspec must declare it anyway. moodiary_di owns only the runtime get_it instance; annotations are a build-time contract, same as freezed / riverpod.
 
-### mui coexistence period: the part mounted on MaterialApp
+### mui: the part mounted on MaterialApp
 
 **Two hard points**:
 
-1. `MaterialUiCompatibilityBridge` sits on `MaterialApp.builder` and **wraps `FlutterSmartDialog.init()`**, whose own Overlay makes toast/loading siblings of child. It maps only platform / visualDensity / colorScheme / textTheme, so **the 25 component sub-themes do not cross**: third-party widgets keep our colors and typography but fall back to Material defaults for component styling. It ships `@Deprecated` and goes once every dependency has migrated.
+1. `MaterialUiCompatibilityBridge` sits on `MaterialApp.builder` and **wraps `FlutterSmartDialog.init()`**, whose own Overlay makes toast/loading siblings of child. It maps only platform / visualDensity / colorScheme / textTheme, so **the 25 component sub-themes do not cross**: third-party widgets keep our colors and typography but fall back to Material defaults for component styling. It is `@Deprecated`.
 2. The material entry in `localizationsDelegates` **must be material_ui's own `GlobalMaterialLocalizations.delegates`** (cupertino/widgets included), not the same-named class from `flutter_localizations`. App strings go through slang's `TranslationProvider`, off this chain; mui's generic words are on it (`GlobalMuiLocalizations.delegate`).
 
-> **A bare `GoRoute` and a bare `Hero` are correct, do not wrap them.** go_router finds its host with `findAncestorWidgetOfExactType<MaterialApp>()`, and since 18.0.0 that is material_ui's `MaterialApp`, so transitions, hero arcs and the error page all work. `route_error_page.dart` goes through `errorBuilder` because the built-in page hard-codes English.
+> **A bare `GoRoute` and a bare `Hero` are correct, do not wrap them.** go_router finds its host with `findAncestorWidgetOfExactType<MaterialApp>()`, which is material_ui's `MaterialApp`, so transitions, hero arcs and the error page all work. `route_error_page.dart` goes through `errorBuilder` because the built-in page hard-codes English.

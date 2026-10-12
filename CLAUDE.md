@@ -42,7 +42,7 @@ dart tool/release.dart --bump patch     # or an explicit X.Y.Z
 
 Full-repo verification = the four Lint & Test commands above. CI (`quality.yml`) runs them as the Dart / Rust / Editor jobs, required on develop; its `changes` job skips each one the PR's paths cannot affect.
 
-**Tests are one process**: one `flutter test` at the repo root over the affected packages' `test/` dirs, so hooks and the frontend compiler run once, not once per package (280s -> 38s).
+**Tests are one process**: one `flutter test` at the repo root over the affected packages' `test/` dirs, so hooks and the frontend compiler run once, not once per package.
 
 - The root dev-depends on `moodiary_data` / `moodiary_assistant` only to pull `sqlite3_simple` / `sqlite3_vec` / `flutter_js` into the hook tree: a hook runs only for the cwd package's deps.
 - cwd is the repo root, so tests read repo files through `repoRoot` (`moodiary_lint/testing.dart`), never a relative path, and write only into their own `createTempSync` dir — every package's suites share one temp root.
@@ -66,7 +66,7 @@ Unqualified `lib/...` means `mobile/lib/...`; `packages/` and `tool/` are repo-r
 
 The DAG is strictly `foundation -> core -> feature_base -> feature -> apps`. Features never import each other; shared logic sinks a layer, cross-feature composition happens in the app. pub only guarantees acyclicity, so **direction is enforced by `tool/check_layers.dart`** at a zero baseline. Melos `categories:` are filters only.
 
-core and feature_base each have an intra-layer order (`_coreOrder` / `_featureBaseOrder`; same-tier packages never import each other). Two edges were bought with injection and must not be reverted:
+core and feature_base each have an intra-layer order (`_coreOrder` / `_featureBaseOrder`; same-tier packages never import each other). Two edges rely on injection; keep them:
 
 - **`storage` below `files`**: the database and dictionary directories come from the composition root, so storage knows nothing about the file layout.
 - **`moodiary_logging` stays in foundation** because the release log path is injected via `AppLogger.configure`; reading `AppFiles` directly would float the package above core, out of reach of almost everyone.
