@@ -9,7 +9,6 @@ Moodiary is a Flutter + Rust diary app. **Layered pub-workspace monorepo**: 32 s
 - **Flutter 3.47.2 / Dart 3.13.0**. `.fvmrc` pins 3.47.2; `>=3.47.0` in `mobile/pubspec.yaml` is only the lower bound.
 - **Rust 1.95.0 stable** (one `rust/rust-toolchain.toml` per native package, kept identical by `tool/check_generated.dart`), `flutter_rust_bridge` 2.13.0. Native libraries are built by Native Assets build hooks (needs `rustup`).
 - **Android**: AGP 9.1.0 / Gradle 9.3.1 / KGP 2.4.0, built-in Kotlin (`android.builtInKotlin=true`); daemon JVM pinned to 21 in `gradle-daemon-jvm.properties`.
-- **Riverpod** (dev) + codegen, **go_router**, **get_it**, **SQLite** (drift + FTS5 external content over the `simple` tokenizer from `sqlite3_simple`; schema source of truth is the `.drift` files in `moodiary_data`), **Freezed** + **json_serializable**.
 
 ## Commands
 
@@ -43,10 +42,10 @@ dart tool/release.dart --bump patch     # or an explicit X.Y.Z
 
 Full-repo verification = the four Lint & Test commands above. CI (`quality.yml`) runs them as the Dart / Rust / Editor jobs, required on develop; its `changes` job skips each one the PR's paths cannot affect.
 
-**Tests are one process**: one `flutter test` at the repo root over the affected packages' `test/` dirs, so hooks and the frontend compiler run once, not once per package (280s -> 38s).
+**Tests are one process**: one `flutter test` at the repo root over the affected packages' `test/` dirs, so hooks and the frontend compiler run once, not once per package.
 
 - The root dev-depends on `moodiary_data` / `moodiary_assistant` only to pull `sqlite3_simple` / `sqlite3_vec` / `flutter_js` into the hook tree: a hook runs only for the cwd package's deps.
-- cwd is the repo root, so tests read repo files through `repoRoot` (`moodiary_lint/testing.dart`), never a relative path, and write only into their own `createTempSync` dir — every package's suites now share one temp root.
+- cwd is the repo root, so tests read repo files through `repoRoot` (`moodiary_lint/testing.dart`), never a relative path, and write only into their own `createTempSync` dir — every package's suites share one temp root.
 - Per-file isolate load (~1.5s) dominates, so new cases go in an existing file.
 
 **Melos**: `melos bootstrap` activates the workspace and regenerates IDE module files; it runs no codegen. `melos list` / `melos run <script> --category <layer>` filter by layer.
@@ -57,56 +56,9 @@ Full-repo verification = the four Lint & Test commands above. CI (`quality.yml`)
 
 ## Architecture
 
-### Directory Layout
+### Layout notes
 
-```
-moodiary/                    # root = workspace + Melos coordinator (no app code)
-  tool/                      # task runner + layer check
-  i18n/                      # every translation json: flutter/ (slang) and web/ (editor page, bundled by unplugin-vue-i18n); a string both need is duplicated
-  mobile/                    # Flutter app (pub: moodiary_mobile)
-    lib/
-      app/                   # composition layer: di, router, shell, lifecycle
-        home/                # home tab
-        settings/            # settings hub
-      main.dart
-  packages/
-    foundation/              # leaf layer, no internal deps
-      moodiary_lint/         #   shared analyzer options; testing.dart carries repoRoot for tests that read repo files
-      moodiary_di/           #   the single get_it instance
-      moodiary_logging/      #   logging; on-disk path injected by the composition root
-      moodiary_i18n/         #   slang codegen + lookup entry points
-      moodiary_router/       #   typed route primitives over go_router; every route class lives here
-      fast_image/            #   image pipeline (derivatives / region decode / tiled viewer), native lib libfastimage
-      fast_press/            #   export typesetting IR -> PDF (typst) / DOCX, libfastpress (moodiary_export only)
-      moodiary_rust/         #   http client/server, WebDAV/S3 sync, rig chat, graph layout; libmoodiary_rust (four facades, one owner each, lazy)
-      fast_tokenizer/        #   Hugging Face tokenizer for the ONNX models, libfasttokenizer
-      fast_crypto/           #   AES-GCM + Argon2id, libfastcrypto (facade self-initializes)
-      fast_zip/              #   zip write/extract, libfastzip (moodiary_export / moodiary_sync only)
-      moodiary_utils/        #   pure utils + content converters (tiptap/markdown/quill)
-      mui/                   #   design system, a supplement to material_ui
-    core/                    # domain-free infra. Order: platform,http -> storage -> files -> theme
-      moodiary_platform/     #   dirs / biometrics / network state / app and device info
-      moodiary_http/         #   IHttpClient / IHttpServer ports, implemented in Rust
-      moodiary_storage/      #   KV (MMKV) / SecureKV (no database here)
-      moodiary_files/        #   file layout + media pipeline + file picker port
-      moodiary_theme/        #   system color, accent tiers, custom fonts -> ThemeData
-    feature_base/            # -> core/foundation. Order: models,ml -> data -> components,migration,preferences -> picker -> editor
-      moodiary_models/       #   pure Freezed models + DTOs + event types
-      moodiary_data/         #   SQLite (drift) + repositories + controllers + shared transient state
-      moodiary_components/   #   UI shared by features that mui cannot reach; code-highlight table, DiaryShare hook
-      moodiary_migration/    #   one-shot legacy migration; legacy/ freezes the old Isar models
-      moodiary_preferences/  #   preference state
-      moodiary_ml/           #   embeddings for local RAG on flutter_onnxruntime + model download/activation (sole owner of flutter_onnxruntime)
-      moodiary_picker/       #   wechat_assets_picker reskinned + image_picker camera (mobile only)
-      moodiary_editor/       #   TipTap webview editor base, embedded by diary
-    feature/                 # -> feature_base/core/foundation; features never import each other
-      moodiary_export/       #   export Markdown/Word/PDF/image, local backup, Markdown import, share (= single-entry export)
-      moodiary_diary/        #   diary CRUD/search/category/calendar/map/recycle
-      moodiary_sync/         #   sync engine + UI
-      moodiary_assistant/    #   AI assistant (flutter_chat_ui + rig); runJavascript sandbox on our flutter_js fork
-      moodiary_media/        #   media library
-      moodiary_lock/         #   app lock
-```
+Package roles are each pubspec's `description`; layer = directory. `i18n/flutter` (slang) and `i18n/web` (editor page, bundled by unplugin-vue-i18n) hold every translation json; a string both need is duplicated. `moodiary_ml` is the sole owner of `flutter_onnxruntime`.
 
 Unqualified `lib/...` means `mobile/lib/...`; `packages/` and `tool/` are repo-root-relative.
 
@@ -114,7 +66,7 @@ Unqualified `lib/...` means `mobile/lib/...`; `packages/` and `tool/` are repo-r
 
 The DAG is strictly `foundation -> core -> feature_base -> feature -> apps`. Features never import each other; shared logic sinks a layer, cross-feature composition happens in the app. pub only guarantees acyclicity, so **direction is enforced by `tool/check_layers.dart`** at a zero baseline. Melos `categories:` are filters only.
 
-core and feature_base each have an intra-layer order (`_coreOrder` / `_featureBaseOrder`; same-tier packages never import each other). Two edges were bought with injection and must not be reverted:
+core and feature_base each have an intra-layer order (`_coreOrder` / `_featureBaseOrder`; same-tier packages never import each other). Two edges rely on injection; keep them:
 
 - **`storage` below `files`**: the database and dictionary directories come from the composition root, so storage knows nothing about the file layout.
 - **`moodiary_logging` stays in foundation** because the release log path is injected via `AppLogger.configure`; reading `AppFiles` directly would float the package above core, out of reach of almost everyone.
@@ -163,13 +115,9 @@ Two unrelated slang outputs: the App (default mode, `Translations` / top-level `
 - Secrets (app-lock PIN, third-party API keys) live in `MoodiarySecureKVs`. In widgets use `secretKvProvider(key)` and `ref.invalidate` after every write.
 - Never touch `password` directly; go through `AppLockPin` (Argon2id PHC string). App lock on = a credential exists (`AppLockPin.enabled`, loaded in `main.dart`).
 
-### Full-text search lives in `sqlite3_simple`, a git dependency
+### Full-text search
 
-- `diary_fts` is external content over `diaries` with `tokenize='simple'`, maintained by three triggers in `diary_tables.drift`.
-- The tokenizer is **not in this repo**: [`sqlite3_simple`](https://github.com/ZhuJHua/sqlite3_simple), our fork of [wangfenjin/simple](https://github.com/wangfenjin/simple) rebuilt as a pure Dart package that compiles the C++ sources through a build hook, pinned by commit sha, not published to pub. An FTS5 tokenizer has to be a C-ABI loadable extension (`fts5_api` is only reachable through `SELECT fts5(?1)` + `sqlite3_bind_pointer` from inside one), so it is the one native library here outside FRB.
-- `loadSimpleExtension(jiebaDictDir: ...)` runs in `MoodiaryDatabase.open` (and `installJiebaDict()` in `.forTesting`) before any connection is created; the `sqlite3_auto_extension` registration and the dictionary path are process-level native state, so one call covers the background isolate and every connection in `readPool`.
-- **The dictionary install is not optional.**
-- Han text is indexed per character with pinyin variants as colocated tokens, which is what makes `pingguo` and `pg` find 苹果. Queries go through `jieba_query(text)`, which returns a finished MATCH expression — word phrases for Han, pinyin candidate groups for latin, **AND between terms**.
+The FTS5 tokenizer is the git dependency `sqlite3_simple` (not in this repo); details in `packages/feature_base/moodiary_data/CLAUDE.md`.
 
 ### Rust: several `fast_*` packages, one native library each
 

@@ -1,6 +1,6 @@
 # moodiary_assistant: agent architecture and conventions
 
-Dart orchestrates, Rust executes. rig (`rig-core` + `rig-agent`, pinned `=0.42.0`) only adapts the provider protocol and runs the tool loop; every architectural decision — prompt layering, memory, retrieval, the permission gate — lives here. Do not track rig's `main`; migrate to 0.43 in its own PR from MIGRATING.md.
+Dart orchestrates, Rust executes. rig (`rig-core` + `rig-agent`, pinned `=0.42.0`) only adapts the provider protocol and runs the tool loop; every architectural decision — prompt layering, memory, retrieval, the permission gate — lives here. Do not track rig's `main`.
 
 ## One request
 
