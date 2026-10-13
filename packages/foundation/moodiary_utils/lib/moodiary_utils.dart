@@ -12,7 +12,6 @@ export 'src/markdown_to_tiptap.dart';
 export 'src/password_generator.dart';
 export 'src/quill_delta.dart';
 export 'src/quill_to_tiptap.dart';
-export 'src/soft_keyboard.dart';
 export 'src/time_format.dart';
 export 'src/tiptap_content.dart';
 export 'src/upload_speed_calculator.dart';

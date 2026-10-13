@@ -6,7 +6,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_native/moodiary_native.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -161,8 +160,7 @@ class MoodiaryEditor extends StatefulWidget {
   State<MoodiaryEditor> createState() => _MoodiaryEditorState();
 }
 
-class _MoodiaryEditorState extends State<MoodiaryEditor>
-    with SoftKeyboardObserver {
+class _MoodiaryEditorState extends State<MoodiaryEditor> {
   // Android WebView 的选择手柄由原生主题绘制，颜色只能推给原生
   static final _selectionHandle = SelectionHandleApi();
   static int? _handleColor;
@@ -188,15 +186,6 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
   void initState() {
     super.initState();
     widget.controller?._bind(this);
-  }
-
-  // iOS 的 WebKit 收键盘时自己 blur；Android 收起键盘后焦点还留在网页里
-  @override
-  void didChangeSoftKeyboardVisibility(bool visible) {
-    if (visible || !Platform.isAndroid) return;
-    if (_focusTarget == .none || !_activated) return;
-    if (WidgetsBinding.instance.lifecycleState != .resumed) return;
-    unawaited(_blur());
   }
 
   @override

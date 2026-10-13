@@ -743,54 +743,6 @@ packages:
       url: "https://github.com/ZhuJHua/flutter_js.git"
     source: git
     version: "0.9.0"
-  flutter_keyboard_visibility:
-    dependency: transitive
-    description:
-      name: flutter_keyboard_visibility
-      sha256: dabc6c146897b2d07794b096e3e696212c08ac1500b4344ba84f0bd6878b9a51
-      url: "https://pub.dev"
-    source: hosted
-    version: "7.0.1"
-  flutter_keyboard_visibility_linux:
-    dependency: transitive
-    description:
-      name: flutter_keyboard_visibility_linux
-      sha256: "478ccab140efbf8e0725063da5522a6c512a6ed33b9687161855a1eb6a668abe"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.0.0"
-  flutter_keyboard_visibility_macos:
-    dependency: transitive
-    description:
-      name: flutter_keyboard_visibility_macos
-      sha256: "7bee81be3c5aa06950b11e68cc947b4b567079456ab66a261c3fee01a5194fc0"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.0.0"
-  flutter_keyboard_visibility_platform_interface:
-    dependency: transitive
-    description:
-      name: flutter_keyboard_visibility_platform_interface
-      sha256: c16de89f36e655562baed76d8e05a9f19c884707e569b3ae6c121e0f41adfabe
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.0.0"
-  flutter_keyboard_visibility_web:
-    dependency: transitive
-    description:
-      name: flutter_keyboard_visibility_web
-      sha256: "2200cc44d1d743b83176bd078a341780bd054a0217ec35a08679387c0989fb35"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.0.0"
-  flutter_keyboard_visibility_windows:
-    dependency: transitive
-    description:
-      name: flutter_keyboard_visibility_windows
-      sha256: fde7b3fd757bcd31474e6575d0e12ccb3d244841e97645b6d78df7bf86a9e341
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.0.0"
   flutter_lints:
     dependency: transitive
     description:
