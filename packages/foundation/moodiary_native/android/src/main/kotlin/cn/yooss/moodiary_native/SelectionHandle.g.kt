@@ -13,7 +13,7 @@ import io.flutter.plugin.common.StandardMethodCodec
 import io.flutter.plugin.common.StandardMessageCodec
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
-private object NativeApiPigeonUtils {
+private object SelectionHandlePigeonUtils {
 
   fun wrapResult(result: Any?): List<Any?> {
     return listOf(result)
@@ -47,7 +47,7 @@ class FlutterError (
   override val message: String? = null,
   val details: Any? = null
 ) : RuntimeException()
-private open class NativeApiPigeonCodec : StandardMessageCodec() {
+private open class SelectionHandlePigeonCodec : StandardMessageCodec() {
   override fun readValueOfType(type: Byte, buffer: ByteBuffer): Any? {
     return     super.readValueOfType(type, buffer)
   }
@@ -63,7 +63,7 @@ interface SelectionHandleApi {
   companion object {
     /** The codec used by SelectionHandleApi. */
     val codec: MessageCodec<Any?> by lazy {
-      NativeApiPigeonCodec()
+      SelectionHandlePigeonCodec()
     }
     /** Sets up an instance of `SelectionHandleApi` to handle messages through the `binaryMessenger`. */
     @JvmOverloads
@@ -79,7 +79,7 @@ interface SelectionHandleApi {
               api.setColor(argbArg)
               listOf(null)
             } catch (exception: Throwable) {
-              NativeApiPigeonUtils.wrapError(exception)
+              SelectionHandlePigeonUtils.wrapError(exception)
             }
             reply.reply(wrapped)
           }

@@ -206,13 +206,18 @@ const _slangPkgDirs = [
 const _pigeonPkgDir = 'packages/foundation/moodiary_native';
 
 Future<void> _pigeon() async {
-  await _run('fvm', [
-    'dart',
-    'run',
-    'pigeon',
-    '--input',
-    'pigeons/native_api.dart',
-  ], cwd: _pigeonPkgDir);
+  final inputs =
+      Directory('$_pigeonPkgDir/pigeons').listSync().whereType<File>().toList()
+        ..sort((a, b) => a.path.compareTo(b.path));
+  for (final input in inputs) {
+    await _run('fvm', [
+      'dart',
+      'run',
+      'pigeon',
+      '--input',
+      'pigeons/${input.uri.pathSegments.last}',
+    ], cwd: _pigeonPkgDir);
+  }
   await _run('fvm', ['dart', 'format', '$_pigeonPkgDir/lib']);
 }
 

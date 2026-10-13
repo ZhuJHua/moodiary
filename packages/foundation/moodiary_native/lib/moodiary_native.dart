@@ -1,1 +1,1 @@
-export 'src/native_api.g.dart';
+export 'src/selection_handle.g.dart';

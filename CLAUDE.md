@@ -26,7 +26,7 @@ dart tool/task.dart build-apk / build-ios  # the only two targets
 dart tool/task.dart build-runner   # whole workspace
 dart tool/task.dart gen-rust       # regenerate Rust FFI bindings after touching rust/src/api
 dart tool/task.dart i18n           # slang codegen after editing i18n/flutter (i18n/web needs no codegen)
-dart tool/task.dart pigeon         # moodiary_native bindings after editing its pigeons/native_api.dart
+dart tool/task.dart pigeon         # moodiary_native bindings after editing its pigeons/*.dart
 dart tool/task.dart migrations     # drift schema snapshot + step-by-step migration codegen, after bumping schemaVersion
 dart tool/task.dart gen            # gen-rust + i18n + pigeon
 
@@ -59,7 +59,7 @@ Full-repo verification = the four Lint & Test commands above. CI (`quality.yml`)
 
 ### Layout notes
 
-Package roles are each pubspec's `description`; layer = directory. `i18n/flutter` (slang) and `i18n/web` (editor page, imported by its typed `t()`) hold every translation json; a string both need is duplicated. `moodiary_ml` is the sole owner of `flutter_onnxruntime`. `moodiary_native` is the only home for our own Kotlin / Swift code: every Flutter-to-native call is a pigeon API there, never an ad-hoc MethodChannel or code in `mobile/android` / `mobile/ios`.
+Package roles are each pubspec's `description`; layer = directory. `i18n/flutter` (slang) and `i18n/web` (editor page, imported by its typed `t()`) hold every translation json; a string both need is duplicated. `moodiary_ml` is the sole owner of `flutter_onnxruntime`. `moodiary_native` is the only home for our own Kotlin / Swift code: every Flutter-to-native call is a pigeon API there, never an ad-hoc MethodChannel or code in `mobile/android` / `mobile/ios`. One pigeon file per feature, generating only the platforms it needs, all into one Kotlin package and one Swift module; each platform's error class comes from the first file that targets it (Kotlin: `selection_handle.dart`, Swift: none yet), and every later file sets `includeErrorClass: false` for that platform.
 
 Unqualified `lib/...` means `mobile/lib/...`; `packages/` and `tool/` are repo-root-relative.
 
