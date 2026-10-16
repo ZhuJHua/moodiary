@@ -50,7 +50,7 @@ final class MediaItemsProvider
   }
 }
 
-String _$mediaItemsHash() => r'edbb801306abd0254b08319471e4057f6fb0584b';
+String _$mediaItemsHash() => r'e69b597918d717be91e8c93bf132ce3aa1240026';
 
 final class MediaItemsFamily extends $Family
     with
@@ -131,7 +131,7 @@ final class MediaCleanupControllerProvider
 }
 
 String _$mediaCleanupControllerHash() =>
-    r'64e5cff97a19df503a65ea26778e9bf4552d846a';
+    r'633cb28b3a4b98be0e60eea7cedbb6a079cf0cad';
 
 abstract class _$MediaCleanupController extends $Notifier<void> {
   void build();

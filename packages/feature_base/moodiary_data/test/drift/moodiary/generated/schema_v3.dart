@@ -57,6 +57,15 @@ class Diaries extends Table with TableInfo<Diaries, DiariesData> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
+  late final GeneratedColumn<String> mediaText = GeneratedColumn<String>(
+    'media_text',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'\'',
+    defaultValue: const CustomExpression('\'\''),
+  );
   late final GeneratedColumn<int> time = GeneratedColumn<int>(
     'time',
     aliasedName,
@@ -145,6 +154,7 @@ class Diaries extends Table with TableInfo<Diaries, DiariesData> {
     title,
     content,
     contentText,
+    mediaText,
     time,
     lastModified,
     show,
@@ -190,6 +200,10 @@ class Diaries extends Table with TableInfo<Diaries, DiariesData> {
       contentText: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}content_text'],
+      )!,
+      mediaText: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}media_text'],
       )!,
       time: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
@@ -250,6 +264,7 @@ class DiariesData extends DataClass implements Insertable<DiariesData> {
   final String title;
   final String content;
   final String contentText;
+  final String mediaText;
   final int time;
   final int lastModified;
   final int show;
@@ -267,6 +282,7 @@ class DiariesData extends DataClass implements Insertable<DiariesData> {
     required this.title,
     required this.content,
     required this.contentText,
+    required this.mediaText,
     required this.time,
     required this.lastModified,
     required this.show,
@@ -289,6 +305,7 @@ class DiariesData extends DataClass implements Insertable<DiariesData> {
     map['title'] = Variable<String>(title);
     map['content'] = Variable<String>(content);
     map['content_text'] = Variable<String>(contentText);
+    map['media_text'] = Variable<String>(mediaText);
     map['time'] = Variable<int>(time);
     map['last_modified'] = Variable<int>(lastModified);
     map['show'] = Variable<int>(show);
@@ -322,6 +339,7 @@ class DiariesData extends DataClass implements Insertable<DiariesData> {
       title: Value(title),
       content: Value(content),
       contentText: Value(contentText),
+      mediaText: Value(mediaText),
       time: Value(time),
       lastModified: Value(lastModified),
       show: Value(show),
@@ -357,6 +375,7 @@ class DiariesData extends DataClass implements Insertable<DiariesData> {
       title: serializer.fromJson<String>(json['title']),
       content: serializer.fromJson<String>(json['content']),
       contentText: serializer.fromJson<String>(json['contentText']),
+      mediaText: serializer.fromJson<String>(json['mediaText']),
       time: serializer.fromJson<int>(json['time']),
       lastModified: serializer.fromJson<int>(json['lastModified']),
       show: serializer.fromJson<int>(json['show']),
@@ -379,6 +398,7 @@ class DiariesData extends DataClass implements Insertable<DiariesData> {
       'title': serializer.toJson<String>(title),
       'content': serializer.toJson<String>(content),
       'contentText': serializer.toJson<String>(contentText),
+      'mediaText': serializer.toJson<String>(mediaText),
       'time': serializer.toJson<int>(time),
       'lastModified': serializer.toJson<int>(lastModified),
       'show': serializer.toJson<int>(show),
@@ -399,6 +419,7 @@ class DiariesData extends DataClass implements Insertable<DiariesData> {
     String? title,
     String? content,
     String? contentText,
+    String? mediaText,
     int? time,
     int? lastModified,
     int? show,
@@ -416,6 +437,7 @@ class DiariesData extends DataClass implements Insertable<DiariesData> {
     title: title ?? this.title,
     content: content ?? this.content,
     contentText: contentText ?? this.contentText,
+    mediaText: mediaText ?? this.mediaText,
     time: time ?? this.time,
     lastModified: lastModified ?? this.lastModified,
     show: show ?? this.show,
@@ -439,6 +461,7 @@ class DiariesData extends DataClass implements Insertable<DiariesData> {
       contentText: data.contentText.present
           ? data.contentText.value
           : this.contentText,
+      mediaText: data.mediaText.present ? data.mediaText.value : this.mediaText,
       time: data.time.present ? data.time.value : this.time,
       lastModified: data.lastModified.present
           ? data.lastModified.value
@@ -469,6 +492,7 @@ class DiariesData extends DataClass implements Insertable<DiariesData> {
           ..write('title: $title, ')
           ..write('content: $content, ')
           ..write('contentText: $contentText, ')
+          ..write('mediaText: $mediaText, ')
           ..write('time: $time, ')
           ..write('lastModified: $lastModified, ')
           ..write('show: $show, ')
@@ -491,6 +515,7 @@ class DiariesData extends DataClass implements Insertable<DiariesData> {
     title,
     content,
     contentText,
+    mediaText,
     time,
     lastModified,
     show,
@@ -512,6 +537,7 @@ class DiariesData extends DataClass implements Insertable<DiariesData> {
           other.title == this.title &&
           other.content == this.content &&
           other.contentText == this.contentText &&
+          other.mediaText == this.mediaText &&
           other.time == this.time &&
           other.lastModified == this.lastModified &&
           other.show == this.show &&
@@ -531,6 +557,7 @@ class DiariesCompanion extends UpdateCompanion<DiariesData> {
   final Value<String> title;
   final Value<String> content;
   final Value<String> contentText;
+  final Value<String> mediaText;
   final Value<int> time;
   final Value<int> lastModified;
   final Value<int> show;
@@ -548,6 +575,7 @@ class DiariesCompanion extends UpdateCompanion<DiariesData> {
     this.title = const Value.absent(),
     this.content = const Value.absent(),
     this.contentText = const Value.absent(),
+    this.mediaText = const Value.absent(),
     this.time = const Value.absent(),
     this.lastModified = const Value.absent(),
     this.show = const Value.absent(),
@@ -566,6 +594,7 @@ class DiariesCompanion extends UpdateCompanion<DiariesData> {
     required String title,
     required String content,
     required String contentText,
+    this.mediaText = const Value.absent(),
     required int time,
     required int lastModified,
     required int show,
@@ -592,6 +621,7 @@ class DiariesCompanion extends UpdateCompanion<DiariesData> {
     Expression<String>? title,
     Expression<String>? content,
     Expression<String>? contentText,
+    Expression<String>? mediaText,
     Expression<int>? time,
     Expression<int>? lastModified,
     Expression<int>? show,
@@ -610,6 +640,7 @@ class DiariesCompanion extends UpdateCompanion<DiariesData> {
       if (title != null) 'title': title,
       if (content != null) 'content': content,
       if (contentText != null) 'content_text': contentText,
+      if (mediaText != null) 'media_text': mediaText,
       if (time != null) 'time': time,
       if (lastModified != null) 'last_modified': lastModified,
       if (show != null) 'show': show,
@@ -630,6 +661,7 @@ class DiariesCompanion extends UpdateCompanion<DiariesData> {
     Value<String>? title,
     Value<String>? content,
     Value<String>? contentText,
+    Value<String>? mediaText,
     Value<int>? time,
     Value<int>? lastModified,
     Value<int>? show,
@@ -648,6 +680,7 @@ class DiariesCompanion extends UpdateCompanion<DiariesData> {
       title: title ?? this.title,
       content: content ?? this.content,
       contentText: contentText ?? this.contentText,
+      mediaText: mediaText ?? this.mediaText,
       time: time ?? this.time,
       lastModified: lastModified ?? this.lastModified,
       show: show ?? this.show,
@@ -681,6 +714,9 @@ class DiariesCompanion extends UpdateCompanion<DiariesData> {
     }
     if (contentText.present) {
       map['content_text'] = Variable<String>(contentText.value);
+    }
+    if (mediaText.present) {
+      map['media_text'] = Variable<String>(mediaText.value);
     }
     if (time.present) {
       map['time'] = Variable<int>(time.value);
@@ -724,6 +760,7 @@ class DiariesCompanion extends UpdateCompanion<DiariesData> {
           ..write('title: $title, ')
           ..write('content: $content, ')
           ..write('contentText: $contentText, ')
+          ..write('mediaText: $mediaText, ')
           ..write('time: $time, ')
           ..write('lastModified: $lastModified, ')
           ..write('show: $show, ')
@@ -5867,8 +5904,16 @@ class DiaryFts extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
+  late final GeneratedColumn<String> mediaText = GeneratedColumn<String>(
+    'media_text',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
   @override
-  List<GeneratedColumn> get $columns => [title, contentText];
+  List<GeneratedColumn> get $columns => [title, contentText, mediaText];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -5888,6 +5933,10 @@ class DiaryFts extends Table
         DriftSqlType.string,
         data['${effectivePrefix}content_text'],
       ),
+      mediaText: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}media_text'],
+      ),
     );
   }
 
@@ -5900,13 +5949,14 @@ class DiaryFts extends Table
   bool get dontWriteConstraints => true;
   @override
   String get moduleAndArgs =>
-      'fts5(title, content_text, content=\'diaries\', content_rowid=\'rid\', tokenize=\'simple\')';
+      'fts5(title, content_text, media_text, content=\'diaries\', content_rowid=\'rid\', tokenize=\'simple\')';
 }
 
 class DiaryFtsData extends DataClass implements Insertable<DiaryFtsData> {
   final String? title;
   final String? contentText;
-  const DiaryFtsData({this.title, this.contentText});
+  final String? mediaText;
+  const DiaryFtsData({this.title, this.contentText, this.mediaText});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -5915,6 +5965,9 @@ class DiaryFtsData extends DataClass implements Insertable<DiaryFtsData> {
     }
     if (!nullToAbsent || contentText != null) {
       map['content_text'] = Variable<String>(contentText);
+    }
+    if (!nullToAbsent || mediaText != null) {
+      map['media_text'] = Variable<String>(mediaText);
     }
     return map;
   }
@@ -5927,6 +5980,9 @@ class DiaryFtsData extends DataClass implements Insertable<DiaryFtsData> {
       contentText: contentText == null && nullToAbsent
           ? const Value.absent()
           : Value(contentText),
+      mediaText: mediaText == null && nullToAbsent
+          ? const Value.absent()
+          : Value(mediaText),
     );
   }
 
@@ -5938,6 +5994,7 @@ class DiaryFtsData extends DataClass implements Insertable<DiaryFtsData> {
     return DiaryFtsData(
       title: serializer.fromJson<String?>(json['title']),
       contentText: serializer.fromJson<String?>(json['contentText']),
+      mediaText: serializer.fromJson<String?>(json['mediaText']),
     );
   }
   @override
@@ -5946,15 +6003,18 @@ class DiaryFtsData extends DataClass implements Insertable<DiaryFtsData> {
     return <String, dynamic>{
       'title': serializer.toJson<String?>(title),
       'contentText': serializer.toJson<String?>(contentText),
+      'mediaText': serializer.toJson<String?>(mediaText),
     };
   }
 
   DiaryFtsData copyWith({
     Value<String?> title = const Value.absent(),
     Value<String?> contentText = const Value.absent(),
+    Value<String?> mediaText = const Value.absent(),
   }) => DiaryFtsData(
     title: title.present ? title.value : this.title,
     contentText: contentText.present ? contentText.value : this.contentText,
+    mediaText: mediaText.present ? mediaText.value : this.mediaText,
   );
   DiaryFtsData copyWithCompanion(DiaryFtsCompanion data) {
     return DiaryFtsData(
@@ -5962,6 +6022,7 @@ class DiaryFtsData extends DataClass implements Insertable<DiaryFtsData> {
       contentText: data.contentText.present
           ? data.contentText.value
           : this.contentText,
+      mediaText: data.mediaText.present ? data.mediaText.value : this.mediaText,
     );
   }
 
@@ -5969,43 +6030,50 @@ class DiaryFtsData extends DataClass implements Insertable<DiaryFtsData> {
   String toString() {
     return (StringBuffer('DiaryFtsData(')
           ..write('title: $title, ')
-          ..write('contentText: $contentText')
+          ..write('contentText: $contentText, ')
+          ..write('mediaText: $mediaText')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(title, contentText);
+  int get hashCode => Object.hash(title, contentText, mediaText);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is DiaryFtsData &&
           other.title == this.title &&
-          other.contentText == this.contentText);
+          other.contentText == this.contentText &&
+          other.mediaText == this.mediaText);
 }
 
 class DiaryFtsCompanion extends UpdateCompanion<DiaryFtsData> {
   final Value<String?> title;
   final Value<String?> contentText;
+  final Value<String?> mediaText;
   final Value<int> rowid;
   const DiaryFtsCompanion({
     this.title = const Value.absent(),
     this.contentText = const Value.absent(),
+    this.mediaText = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   DiaryFtsCompanion.insert({
     this.title = const Value.absent(),
     this.contentText = const Value.absent(),
+    this.mediaText = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   static Insertable<DiaryFtsData> custom({
     Expression<String>? title,
     Expression<String>? contentText,
+    Expression<String>? mediaText,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (title != null) 'title': title,
       if (contentText != null) 'content_text': contentText,
+      if (mediaText != null) 'media_text': mediaText,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -6013,11 +6081,13 @@ class DiaryFtsCompanion extends UpdateCompanion<DiaryFtsData> {
   DiaryFtsCompanion copyWith({
     Value<String?>? title,
     Value<String?>? contentText,
+    Value<String?>? mediaText,
     Value<int>? rowid,
   }) {
     return DiaryFtsCompanion(
       title: title ?? this.title,
       contentText: contentText ?? this.contentText,
+      mediaText: mediaText ?? this.mediaText,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -6031,6 +6101,9 @@ class DiaryFtsCompanion extends UpdateCompanion<DiaryFtsData> {
     if (contentText.present) {
       map['content_text'] = Variable<String>(contentText.value);
     }
+    if (mediaText.present) {
+      map['media_text'] = Variable<String>(mediaText.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -6042,6 +6115,7 @@ class DiaryFtsCompanion extends UpdateCompanion<DiaryFtsData> {
     return (StringBuffer('DiaryFtsCompanion(')
           ..write('title: $title, ')
           ..write('contentText: $contentText, ')
+          ..write('mediaText: $mediaText, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();

@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_inappwebview_platform_interface/flutter_inappwebview_platform_interface.dart';
 
+import '../editor_page.dart';
 import 'editor_transport.dart';
 
 class WindowsInAppWebViewTransport extends EditorTransport {
@@ -15,12 +16,18 @@ class WindowsInAppWebViewTransport extends EditorTransport {
 
   @override
   Future<void> prepare({
-    required Uri pageUri,
+    required EditorPage page,
     required OnTransportMessage onMessage,
     required OnTransportConsoleError onConsoleError,
     required OnTransportWebError onWebError,
     required bool debug,
   }) async {
+    final pageUri = switch (page) {
+      EditorFilePage(:final path) => Uri.file(path),
+      EditorAssetPage() => throw UnsupportedError(
+        'Windows loads the editor from a file',
+      ),
+    };
     final params = PlatformInAppWebViewWidgetCreationParams(
       controllerFromPlatform: (controller) => controller,
       initialUrlRequest: URLRequest(url: WebUri(pageUri.toString())),

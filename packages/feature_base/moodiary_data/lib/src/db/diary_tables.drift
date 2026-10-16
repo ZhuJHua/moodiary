@@ -10,6 +10,7 @@ CREATE TABLE diaries (
   title         TEXT NOT NULL,
   content       TEXT NOT NULL,
   content_text  TEXT NOT NULL,
+  media_text    TEXT NOT NULL DEFAULT '',
   time          INTEGER NOT NULL,
   last_modified INTEGER NOT NULL,
   show          INTEGER NOT NULL,
@@ -64,26 +65,29 @@ CREATE INDEX idx_diary_links_dst ON diary_links (dst_id);
 CREATE VIRTUAL TABLE diary_fts USING fts5(
   title,
   content_text,
+  media_text,
   content='diaries',
   content_rowid='rid',
   tokenize='simple'
 );
 
 CREATE TRIGGER diary_fts_ai AFTER INSERT ON diaries BEGIN
-  INSERT INTO diary_fts (rowid, title, content_text)
-    VALUES (new.rid, new.title, new.content_text);
+  INSERT INTO diary_fts (rowid, title, content_text, media_text)
+    VALUES (new.rid, new.title, new.content_text, new.media_text);
 END;
 
 CREATE TRIGGER diary_fts_ad AFTER DELETE ON diaries BEGIN
-  INSERT INTO diary_fts (diary_fts, rowid, title, content_text)
-    VALUES ('delete', old.rid, old.title, old.content_text);
+  INSERT INTO diary_fts (diary_fts, rowid, title, content_text, media_text)
+    VALUES ('delete', old.rid, old.title, old.content_text, old.media_text);
 END;
 
-CREATE TRIGGER diary_fts_au AFTER UPDATE OF title, content_text ON diaries
-WHEN old.title IS NOT new.title OR old.content_text IS NOT new.content_text
+CREATE TRIGGER diary_fts_au AFTER UPDATE OF title, content_text, media_text ON diaries
+WHEN old.title IS NOT new.title
+  OR old.content_text IS NOT new.content_text
+  OR old.media_text IS NOT new.media_text
 BEGIN
-  INSERT INTO diary_fts (diary_fts, rowid, title, content_text)
-    VALUES ('delete', old.rid, old.title, old.content_text);
-  INSERT INTO diary_fts (rowid, title, content_text)
-    VALUES (new.rid, new.title, new.content_text);
+  INSERT INTO diary_fts (diary_fts, rowid, title, content_text, media_text)
+    VALUES ('delete', old.rid, old.title, old.content_text, old.media_text);
+  INSERT INTO diary_fts (rowid, title, content_text, media_text)
+    VALUES (new.rid, new.title, new.content_text, new.media_text);
 END;

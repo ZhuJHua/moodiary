@@ -68,6 +68,18 @@ class Diaries extends Table with TableInfo<Diaries, DiaryRow> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
+  static const VerificationMeta _mediaTextMeta = const VerificationMeta(
+    'mediaText',
+  );
+  late final GeneratedColumn<String> mediaText = GeneratedColumn<String>(
+    'media_text',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'\'',
+    defaultValue: const CustomExpression('\'\''),
+  );
   static const VerificationMeta _timeMeta = const VerificationMeta('time');
   late final GeneratedColumn<int> time = GeneratedColumn<int>(
     'time',
@@ -176,6 +188,7 @@ class Diaries extends Table with TableInfo<Diaries, DiaryRow> {
     title,
     content,
     contentText,
+    mediaText,
     time,
     lastModified,
     show,
@@ -242,6 +255,12 @@ class Diaries extends Table with TableInfo<Diaries, DiaryRow> {
       );
     } else if (isInserting) {
       context.missing(_contentTextMeta);
+    }
+    if (data.containsKey('media_text')) {
+      context.handle(
+        _mediaTextMeta,
+        mediaText.isAcceptableOrUnknown(data['media_text']!, _mediaTextMeta),
+      );
     }
     if (data.containsKey('time')) {
       context.handle(
@@ -358,6 +377,10 @@ class Diaries extends Table with TableInfo<Diaries, DiaryRow> {
         DriftSqlType.string,
         data['${effectivePrefix}content_text'],
       )!,
+      mediaText: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}media_text'],
+      )!,
       time: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}time'],
@@ -417,6 +440,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
   final String title;
   final String content;
   final String contentText;
+  final String mediaText;
   final int time;
   final int lastModified;
   final int show;
@@ -434,6 +458,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
     required this.title,
     required this.content,
     required this.contentText,
+    required this.mediaText,
     required this.time,
     required this.lastModified,
     required this.show,
@@ -456,6 +481,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
     map['title'] = Variable<String>(title);
     map['content'] = Variable<String>(content);
     map['content_text'] = Variable<String>(contentText);
+    map['media_text'] = Variable<String>(mediaText);
     map['time'] = Variable<int>(time);
     map['last_modified'] = Variable<int>(lastModified);
     map['show'] = Variable<int>(show);
@@ -489,6 +515,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
       title: Value(title),
       content: Value(content),
       contentText: Value(contentText),
+      mediaText: Value(mediaText),
       time: Value(time),
       lastModified: Value(lastModified),
       show: Value(show),
@@ -524,6 +551,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
       title: serializer.fromJson<String>(json['title']),
       content: serializer.fromJson<String>(json['content']),
       contentText: serializer.fromJson<String>(json['content_text']),
+      mediaText: serializer.fromJson<String>(json['media_text']),
       time: serializer.fromJson<int>(json['time']),
       lastModified: serializer.fromJson<int>(json['last_modified']),
       show: serializer.fromJson<int>(json['show']),
@@ -546,6 +574,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
       'title': serializer.toJson<String>(title),
       'content': serializer.toJson<String>(content),
       'content_text': serializer.toJson<String>(contentText),
+      'media_text': serializer.toJson<String>(mediaText),
       'time': serializer.toJson<int>(time),
       'last_modified': serializer.toJson<int>(lastModified),
       'show': serializer.toJson<int>(show),
@@ -566,6 +595,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
     String? title,
     String? content,
     String? contentText,
+    String? mediaText,
     int? time,
     int? lastModified,
     int? show,
@@ -583,6 +613,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
     title: title ?? this.title,
     content: content ?? this.content,
     contentText: contentText ?? this.contentText,
+    mediaText: mediaText ?? this.mediaText,
     time: time ?? this.time,
     lastModified: lastModified ?? this.lastModified,
     show: show ?? this.show,
@@ -606,6 +637,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
       contentText: data.contentText.present
           ? data.contentText.value
           : this.contentText,
+      mediaText: data.mediaText.present ? data.mediaText.value : this.mediaText,
       time: data.time.present ? data.time.value : this.time,
       lastModified: data.lastModified.present
           ? data.lastModified.value
@@ -636,6 +668,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
           ..write('title: $title, ')
           ..write('content: $content, ')
           ..write('contentText: $contentText, ')
+          ..write('mediaText: $mediaText, ')
           ..write('time: $time, ')
           ..write('lastModified: $lastModified, ')
           ..write('show: $show, ')
@@ -658,6 +691,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
     title,
     content,
     contentText,
+    mediaText,
     time,
     lastModified,
     show,
@@ -679,6 +713,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
           other.title == this.title &&
           other.content == this.content &&
           other.contentText == this.contentText &&
+          other.mediaText == this.mediaText &&
           other.time == this.time &&
           other.lastModified == this.lastModified &&
           other.show == this.show &&
@@ -698,6 +733,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
   final Value<String> title;
   final Value<String> content;
   final Value<String> contentText;
+  final Value<String> mediaText;
   final Value<int> time;
   final Value<int> lastModified;
   final Value<int> show;
@@ -715,6 +751,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
     this.title = const Value.absent(),
     this.content = const Value.absent(),
     this.contentText = const Value.absent(),
+    this.mediaText = const Value.absent(),
     this.time = const Value.absent(),
     this.lastModified = const Value.absent(),
     this.show = const Value.absent(),
@@ -733,6 +770,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
     required String title,
     required String content,
     required String contentText,
+    this.mediaText = const Value.absent(),
     required int time,
     required int lastModified,
     required int show,
@@ -759,6 +797,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
     Expression<String>? title,
     Expression<String>? content,
     Expression<String>? contentText,
+    Expression<String>? mediaText,
     Expression<int>? time,
     Expression<int>? lastModified,
     Expression<int>? show,
@@ -777,6 +816,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
       if (title != null) 'title': title,
       if (content != null) 'content': content,
       if (contentText != null) 'content_text': contentText,
+      if (mediaText != null) 'media_text': mediaText,
       if (time != null) 'time': time,
       if (lastModified != null) 'last_modified': lastModified,
       if (show != null) 'show': show,
@@ -797,6 +837,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
     Value<String>? title,
     Value<String>? content,
     Value<String>? contentText,
+    Value<String>? mediaText,
     Value<int>? time,
     Value<int>? lastModified,
     Value<int>? show,
@@ -815,6 +856,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
       title: title ?? this.title,
       content: content ?? this.content,
       contentText: contentText ?? this.contentText,
+      mediaText: mediaText ?? this.mediaText,
       time: time ?? this.time,
       lastModified: lastModified ?? this.lastModified,
       show: show ?? this.show,
@@ -848,6 +890,9 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
     }
     if (contentText.present) {
       map['content_text'] = Variable<String>(contentText.value);
+    }
+    if (mediaText.present) {
+      map['media_text'] = Variable<String>(mediaText.value);
     }
     if (time.present) {
       map['time'] = Variable<int>(time.value);
@@ -891,6 +936,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
           ..write('title: $title, ')
           ..write('content: $content, ')
           ..write('contentText: $contentText, ')
+          ..write('mediaText: $mediaText, ')
           ..write('time: $time, ')
           ..write('lastModified: $lastModified, ')
           ..write('show: $show, ')
@@ -7021,8 +7067,19 @@ class DiaryFts extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
+  static const VerificationMeta _mediaTextMeta = const VerificationMeta(
+    'mediaText',
+  );
+  late final GeneratedColumn<String> mediaText = GeneratedColumn<String>(
+    'media_text',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
   @override
-  List<GeneratedColumn> get $columns => [title, contentText];
+  List<GeneratedColumn> get $columns => [title, contentText, mediaText];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -7050,6 +7107,12 @@ class DiaryFts extends Table
         ),
       );
     }
+    if (data.containsKey('media_text')) {
+      context.handle(
+        _mediaTextMeta,
+        mediaText.isAcceptableOrUnknown(data['media_text']!, _mediaTextMeta),
+      );
+    }
     return context;
   }
 
@@ -7067,6 +7130,10 @@ class DiaryFts extends Table
         DriftSqlType.string,
         data['${effectivePrefix}content_text'],
       ),
+      mediaText: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}media_text'],
+      ),
     );
   }
 
@@ -7079,13 +7146,14 @@ class DiaryFts extends Table
   bool get dontWriteConstraints => true;
   @override
   String get moduleAndArgs =>
-      'fts5(title, content_text, content=\'diaries\', content_rowid=\'rid\', tokenize=\'simple\')';
+      'fts5(title, content_text, media_text, content=\'diaries\', content_rowid=\'rid\', tokenize=\'simple\')';
 }
 
 class DiaryFt extends DataClass implements Insertable<DiaryFt> {
   final String? title;
   final String? contentText;
-  const DiaryFt({this.title, this.contentText});
+  final String? mediaText;
+  const DiaryFt({this.title, this.contentText, this.mediaText});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -7094,6 +7162,9 @@ class DiaryFt extends DataClass implements Insertable<DiaryFt> {
     }
     if (!nullToAbsent || contentText != null) {
       map['content_text'] = Variable<String>(contentText);
+    }
+    if (!nullToAbsent || mediaText != null) {
+      map['media_text'] = Variable<String>(mediaText);
     }
     return map;
   }
@@ -7106,6 +7177,9 @@ class DiaryFt extends DataClass implements Insertable<DiaryFt> {
       contentText: contentText == null && nullToAbsent
           ? const Value.absent()
           : Value(contentText),
+      mediaText: mediaText == null && nullToAbsent
+          ? const Value.absent()
+          : Value(mediaText),
     );
   }
 
@@ -7117,6 +7191,7 @@ class DiaryFt extends DataClass implements Insertable<DiaryFt> {
     return DiaryFt(
       title: serializer.fromJson<String?>(json['title']),
       contentText: serializer.fromJson<String?>(json['content_text']),
+      mediaText: serializer.fromJson<String?>(json['media_text']),
     );
   }
   @override
@@ -7125,15 +7200,18 @@ class DiaryFt extends DataClass implements Insertable<DiaryFt> {
     return <String, dynamic>{
       'title': serializer.toJson<String?>(title),
       'content_text': serializer.toJson<String?>(contentText),
+      'media_text': serializer.toJson<String?>(mediaText),
     };
   }
 
   DiaryFt copyWith({
     Value<String?> title = const Value.absent(),
     Value<String?> contentText = const Value.absent(),
+    Value<String?> mediaText = const Value.absent(),
   }) => DiaryFt(
     title: title.present ? title.value : this.title,
     contentText: contentText.present ? contentText.value : this.contentText,
+    mediaText: mediaText.present ? mediaText.value : this.mediaText,
   );
   DiaryFt copyWithCompanion(DiaryFtsCompanion data) {
     return DiaryFt(
@@ -7141,6 +7219,7 @@ class DiaryFt extends DataClass implements Insertable<DiaryFt> {
       contentText: data.contentText.present
           ? data.contentText.value
           : this.contentText,
+      mediaText: data.mediaText.present ? data.mediaText.value : this.mediaText,
     );
   }
 
@@ -7148,43 +7227,50 @@ class DiaryFt extends DataClass implements Insertable<DiaryFt> {
   String toString() {
     return (StringBuffer('DiaryFt(')
           ..write('title: $title, ')
-          ..write('contentText: $contentText')
+          ..write('contentText: $contentText, ')
+          ..write('mediaText: $mediaText')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(title, contentText);
+  int get hashCode => Object.hash(title, contentText, mediaText);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is DiaryFt &&
           other.title == this.title &&
-          other.contentText == this.contentText);
+          other.contentText == this.contentText &&
+          other.mediaText == this.mediaText);
 }
 
 class DiaryFtsCompanion extends UpdateCompanion<DiaryFt> {
   final Value<String?> title;
   final Value<String?> contentText;
+  final Value<String?> mediaText;
   final Value<int> rowid;
   const DiaryFtsCompanion({
     this.title = const Value.absent(),
     this.contentText = const Value.absent(),
+    this.mediaText = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   DiaryFtsCompanion.insert({
     this.title = const Value.absent(),
     this.contentText = const Value.absent(),
+    this.mediaText = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   static Insertable<DiaryFt> custom({
     Expression<String>? title,
     Expression<String>? contentText,
+    Expression<String>? mediaText,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (title != null) 'title': title,
       if (contentText != null) 'content_text': contentText,
+      if (mediaText != null) 'media_text': mediaText,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -7192,11 +7278,13 @@ class DiaryFtsCompanion extends UpdateCompanion<DiaryFt> {
   DiaryFtsCompanion copyWith({
     Value<String?>? title,
     Value<String?>? contentText,
+    Value<String?>? mediaText,
     Value<int>? rowid,
   }) {
     return DiaryFtsCompanion(
       title: title ?? this.title,
       contentText: contentText ?? this.contentText,
+      mediaText: mediaText ?? this.mediaText,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -7210,6 +7298,9 @@ class DiaryFtsCompanion extends UpdateCompanion<DiaryFt> {
     if (contentText.present) {
       map['content_text'] = Variable<String>(contentText.value);
     }
+    if (mediaText.present) {
+      map['media_text'] = Variable<String>(mediaText.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -7221,6 +7312,7 @@ class DiaryFtsCompanion extends UpdateCompanion<DiaryFt> {
     return (StringBuffer('DiaryFtsCompanion(')
           ..write('title: $title, ')
           ..write('contentText: $contentText, ')
+          ..write('mediaText: $mediaText, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -7300,20 +7392,20 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
   );
   late final DiaryFts diaryFts = DiaryFts(this);
   late final Trigger diaryFtsAi = Trigger(
-    'CREATE TRIGGER diary_fts_ai AFTER INSERT ON diaries BEGIN INSERT INTO diary_fts ("rowid", title, content_text) VALUES (new.rid, new.title, new.content_text);END',
+    'CREATE TRIGGER diary_fts_ai AFTER INSERT ON diaries BEGIN INSERT INTO diary_fts ("rowid", title, content_text, media_text) VALUES (new.rid, new.title, new.content_text, new.media_text);END',
     'diary_fts_ai',
   );
   late final Trigger diaryFtsAd = Trigger(
-    'CREATE TRIGGER diary_fts_ad AFTER DELETE ON diaries BEGIN INSERT INTO diary_fts (diary_fts, "rowid", title, content_text) VALUES (\'delete\', old.rid, old.title, old.content_text);END',
+    'CREATE TRIGGER diary_fts_ad AFTER DELETE ON diaries BEGIN INSERT INTO diary_fts (diary_fts, "rowid", title, content_text, media_text) VALUES (\'delete\', old.rid, old.title, old.content_text, old.media_text);END',
     'diary_fts_ad',
   );
   late final Trigger diaryFtsAu = Trigger(
-    'CREATE TRIGGER diary_fts_au AFTER UPDATE OF title, content_text ON diaries WHEN old.title IS NOT new.title OR old.content_text IS NOT new.content_text BEGIN INSERT INTO diary_fts (diary_fts, "rowid", title, content_text) VALUES (\'delete\', old.rid, old.title, old.content_text);INSERT INTO diary_fts ("rowid", title, content_text) VALUES (new.rid, new.title, new.content_text);END',
+    'CREATE TRIGGER diary_fts_au AFTER UPDATE OF title, content_text, media_text ON diaries WHEN old.title IS NOT new.title OR old.content_text IS NOT new.content_text OR old.media_text IS NOT new.media_text BEGIN INSERT INTO diary_fts (diary_fts, "rowid", title, content_text, media_text) VALUES (\'delete\', old.rid, old.title, old.content_text, old.media_text);INSERT INTO diary_fts ("rowid", title, content_text, media_text) VALUES (new.rid, new.title, new.content_text, new.media_text);END',
     'diary_fts_au',
   );
   Selectable<BacklinksResult> backlinks(String toId) {
     return customSelect(
-      'SELECT"d"."rid" AS "nested_0.rid", "d"."id" AS "nested_0.id", "d"."category_id" AS "nested_0.category_id", "d"."title" AS "nested_0.title", "d"."content" AS "nested_0.content", "d"."content_text" AS "nested_0.content_text", "d"."time" AS "nested_0.time", "d"."last_modified" AS "nested_0.last_modified", "d"."show" AS "nested_0.show", "d"."mood" AS "nested_0.mood", "d"."type" AS "nested_0.type", "d"."aspect" AS "nested_0.aspect", "d"."place_id" AS "nested_0.place_id", "d"."weather_icon" AS "nested_0.weather_icon", "d"."weather_temp" AS "nested_0.weather_temp", "d"."weather_text" AS "nested_0.weather_text" FROM diary_links AS l INNER JOIN diaries AS d ON d.id = l.src_id WHERE l.dst_id = ?1 AND d.show = 1 ORDER BY d.time DESC, d.id DESC',
+      'SELECT"d"."rid" AS "nested_0.rid", "d"."id" AS "nested_0.id", "d"."category_id" AS "nested_0.category_id", "d"."title" AS "nested_0.title", "d"."content" AS "nested_0.content", "d"."content_text" AS "nested_0.content_text", "d"."media_text" AS "nested_0.media_text", "d"."time" AS "nested_0.time", "d"."last_modified" AS "nested_0.last_modified", "d"."show" AS "nested_0.show", "d"."mood" AS "nested_0.mood", "d"."type" AS "nested_0.type", "d"."aspect" AS "nested_0.aspect", "d"."place_id" AS "nested_0.place_id", "d"."weather_icon" AS "nested_0.weather_icon", "d"."weather_temp" AS "nested_0.weather_temp", "d"."weather_text" AS "nested_0.weather_text" FROM diary_links AS l INNER JOIN diaries AS d ON d.id = l.src_id WHERE l.dst_id = ?1 AND d.show = 1 ORDER BY d.time DESC, d.id DESC',
       variables: [Variable<String>(toId)],
       readsFrom: {this.diaryLinks, this.diaries},
     ).asyncMap(
@@ -7325,7 +7417,7 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
 
   Selectable<ForwardLinksResult> forwardLinks(String fromId) {
     return customSelect(
-      'SELECT"d"."rid" AS "nested_0.rid", "d"."id" AS "nested_0.id", "d"."category_id" AS "nested_0.category_id", "d"."title" AS "nested_0.title", "d"."content" AS "nested_0.content", "d"."content_text" AS "nested_0.content_text", "d"."time" AS "nested_0.time", "d"."last_modified" AS "nested_0.last_modified", "d"."show" AS "nested_0.show", "d"."mood" AS "nested_0.mood", "d"."type" AS "nested_0.type", "d"."aspect" AS "nested_0.aspect", "d"."place_id" AS "nested_0.place_id", "d"."weather_icon" AS "nested_0.weather_icon", "d"."weather_temp" AS "nested_0.weather_temp", "d"."weather_text" AS "nested_0.weather_text" FROM diary_links AS l INNER JOIN diaries AS d ON d.id = l.dst_id WHERE l.src_id = ?1 AND d.id != ?1 AND d.show = 1 ORDER BY d.time DESC, d.id DESC',
+      'SELECT"d"."rid" AS "nested_0.rid", "d"."id" AS "nested_0.id", "d"."category_id" AS "nested_0.category_id", "d"."title" AS "nested_0.title", "d"."content" AS "nested_0.content", "d"."content_text" AS "nested_0.content_text", "d"."media_text" AS "nested_0.media_text", "d"."time" AS "nested_0.time", "d"."last_modified" AS "nested_0.last_modified", "d"."show" AS "nested_0.show", "d"."mood" AS "nested_0.mood", "d"."type" AS "nested_0.type", "d"."aspect" AS "nested_0.aspect", "d"."place_id" AS "nested_0.place_id", "d"."weather_icon" AS "nested_0.weather_icon", "d"."weather_temp" AS "nested_0.weather_temp", "d"."weather_text" AS "nested_0.weather_text" FROM diary_links AS l INNER JOIN diaries AS d ON d.id = l.dst_id WHERE l.src_id = ?1 AND d.id != ?1 AND d.show = 1 ORDER BY d.time DESC, d.id DESC',
       variables: [Variable<String>(fromId)],
       readsFrom: {this.diaryLinks, this.diaries},
     ).asyncMap(
@@ -7495,6 +7587,7 @@ typedef $DiariesCreateCompanionBuilder = DiariesCompanion Function({
   required String title,
   required String content,
   required String contentText,
+  Value<String> mediaText,
   required int time,
   required int lastModified,
   required int show,
@@ -7513,6 +7606,7 @@ typedef $DiariesUpdateCompanionBuilder = DiariesCompanion Function({
   Value<String> title,
   Value<String> content,
   Value<String> contentText,
+  Value<String> mediaText,
   Value<int> time,
   Value<int> lastModified,
   Value<int> show,
@@ -7620,6 +7714,11 @@ class $DiariesFilterComposer extends Composer<_$MoodiaryDatabase, Diaries> {
 
   ColumnFilters<String> get contentText => $composableBuilder(
     column: $table.contentText,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mediaText => $composableBuilder(
+    column: $table.mediaText,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7787,6 +7886,11 @@ class $DiariesOrderingComposer extends Composer<_$MoodiaryDatabase, Diaries> {
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get mediaText => $composableBuilder(
+    column: $table.mediaText,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get time => $composableBuilder(
     column: $table.time,
     builder: (column) => ColumnOrderings(column),
@@ -7867,6 +7971,9 @@ class $DiariesAnnotationComposer extends Composer<_$MoodiaryDatabase, Diaries> {
     column: $table.contentText,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get mediaText =>
+      $composableBuilder(column: $table.mediaText, builder: (column) => column);
 
   GeneratedColumn<int> get time =>
       $composableBuilder(column: $table.time, builder: (column) => column);
@@ -8020,6 +8127,7 @@ class $DiariesTableManager
                 Value<String> title = const Value.absent(),
                 Value<String> content = const Value.absent(),
                 Value<String> contentText = const Value.absent(),
+                Value<String> mediaText = const Value.absent(),
                 Value<int> time = const Value.absent(),
                 Value<int> lastModified = const Value.absent(),
                 Value<int> show = const Value.absent(),
@@ -8037,6 +8145,7 @@ class $DiariesTableManager
                 title: title,
                 content: content,
                 contentText: contentText,
+                mediaText: mediaText,
                 time: time,
                 lastModified: lastModified,
                 show: show,
@@ -8056,6 +8165,7 @@ class $DiariesTableManager
                 required String title,
                 required String content,
                 required String contentText,
+                Value<String> mediaText = const Value.absent(),
                 required int time,
                 required int lastModified,
                 required int show,
@@ -8073,6 +8183,7 @@ class $DiariesTableManager
                 title: title,
                 content: content,
                 contentText: contentText,
+                mediaText: mediaText,
                 time: time,
                 lastModified: lastModified,
                 show: show,
@@ -12236,11 +12347,13 @@ typedef $DiaryTagsProcessedTableManager =
 typedef $DiaryFtsCreateCompanionBuilder = DiaryFtsCompanion Function({
   Value<String?> title,
   Value<String?> contentText,
+  Value<String?> mediaText,
   Value<int> rowid,
 });
 typedef $DiaryFtsUpdateCompanionBuilder = DiaryFtsCompanion Function({
   Value<String?> title,
   Value<String?> contentText,
+  Value<String?> mediaText,
   Value<int> rowid,
 });
 
@@ -12259,6 +12372,11 @@ class $DiaryFtsFilterComposer extends Composer<_$MoodiaryDatabase, DiaryFts> {
 
   ColumnFilters<String> get contentText => $composableBuilder(
     column: $table.contentText,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mediaText => $composableBuilder(
+    column: $table.mediaText,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -12280,6 +12398,11 @@ class $DiaryFtsOrderingComposer extends Composer<_$MoodiaryDatabase, DiaryFts> {
     column: $table.contentText,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get mediaText => $composableBuilder(
+    column: $table.mediaText,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $DiaryFtsAnnotationComposer
@@ -12298,6 +12421,9 @@ class $DiaryFtsAnnotationComposer
     column: $table.contentText,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get mediaText =>
+      $composableBuilder(column: $table.mediaText, builder: (column) => column);
 }
 
 class $DiaryFtsTableManager
@@ -12330,20 +12456,24 @@ class $DiaryFtsTableManager
               ({
                 Value<String?> title = const Value.absent(),
                 Value<String?> contentText = const Value.absent(),
+                Value<String?> mediaText = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => DiaryFtsCompanion(
                 title: title,
                 contentText: contentText,
+                mediaText: mediaText,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
                 Value<String?> title = const Value.absent(),
                 Value<String?> contentText = const Value.absent(),
+                Value<String?> mediaText = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => DiaryFtsCompanion.insert(
                 title: title,
                 contentText: contentText,
+                mediaText: mediaText,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

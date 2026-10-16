@@ -56,6 +56,30 @@ class MediaManager {
     }
   }
 
+  static final RegExp _safeExtension = RegExp(r'^\.[a-z0-9]{1,10}$');
+
+  static Future<({String name, String fileName, String? mime, int size})?>
+  saveAttachment(XFile file) async {
+    final fileName = file.name.isNotEmpty ? file.name : basename(file.path);
+    final ext = extension(fileName).toLowerCase();
+    final name =
+        'file-${uuidV7()}${_safeExtension.hasMatch(ext) ? ext : '.bin'}';
+    final target = AppFiles.getRealPath(MediaType.file.value, name);
+    try {
+      await file.saveTo(target);
+      return (
+        name: name,
+        fileName: fileName,
+        mime: file.mimeType ?? await _sniffMime(target),
+        size: await File(target).length(),
+      );
+    } catch (e) {
+      logger.d('saveAttachment failed: ${file.path} ($e)');
+      await AppFiles.deleteFile(target);
+      return null;
+    }
+  }
+
   static Future<String?> _sniffMime(String path) async {
     RandomAccessFile? raf;
     try {

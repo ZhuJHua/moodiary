@@ -85,6 +85,26 @@ void main() {
         isNull,
       );
     });
+
+    test('renameMedia 保留时长，去空白，空名记为 null', () async {
+      final repo = MediaInfoRepository(db);
+      final events = <MediaInfoEvent>[];
+      final sub = repo.mediaInfoEvents.listen(events.add);
+      addTearDown(sub.cancel);
+      await repo.insertAMediaInfo(
+        MediaInfo.create(fileName: 'audio-1.m4a', durationMs: 1234),
+      );
+      await repo.renameMedia('audio-1.m4a', '  海边 ');
+      var got = (await repo.getMediaInfoByFileName('audio-1.m4a'))!;
+      expect((got.name, got.durationMs), ('海边', 1234));
+      await repo.renameMedia('audio-1.m4a', ' ');
+      got = (await repo.getMediaInfoByFileName('audio-1.m4a'))!;
+      expect((got.name, got.durationMs), (null, 1234));
+      await repo.renameMedia('audio-9.m4a', '新');
+      expect((await repo.getMediaInfoByFileName('audio-9.m4a'))!.name, '新');
+      await pumpEventQueue();
+      expect(events, hasLength(4));
+    });
   });
 
   group('TombstoneRepository', () {

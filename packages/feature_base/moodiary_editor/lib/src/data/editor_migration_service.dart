@@ -2,10 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
+import 'package:moodiary_migration/moodiary_migration.dart'
+    show EngineMigrationService;
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
@@ -16,8 +19,23 @@ class EditorMigrationService {
 
   static bool requiresMigration = false;
 
+  static bool hasLegacyDiaries = false;
+
+  static bool requiresContentUpgrade = false;
+
   static Future<void> refreshRequiresMigration() async {
-    requiresMigration = await getIt<DiaryRepository>().hasLegacyFormatDiaries();
+    final repo = getIt<DiaryRepository>();
+    hasLegacyDiaries = await repo.hasLegacyFormatDiaries();
+    requiresContentUpgrade = MoodiaryKVs.contentSchemaV2.get() != true;
+    // 空库无需升级，除非引擎迁移马上要往里灌数据
+    if (requiresContentUpgrade &&
+        !hasLegacyDiaries &&
+        !EngineMigrationService.requiresMigration &&
+        await repo.countAllDiaries() == 0) {
+      MoodiaryKVs.contentSchemaV2.set(true);
+      requiresContentUpgrade = false;
+    }
+    requiresMigration = hasLegacyDiaries || requiresContentUpgrade;
     if (!requiresMigration) unawaited(purgeBackups());
   }
 
@@ -49,6 +67,48 @@ class EditorMigrationService {
     );
   }
 
+  @visibleForTesting
+  static String get contentBackupPath =>
+      AppFiles.getRealPath(_backupType, 'content-v2.json');
+
+  // 只在动第一篇前写一次，中断重跑保留最初的快照
+  static Future<void> _writeContentBackup(DiaryRepository repo) async {
+    final file = File(contentBackupPath);
+    if (await file.exists()) return;
+    await file.parent.create(recursive: true);
+    final part = File('${file.path}.part');
+    final sink = part.openWrite();
+    try {
+      sink.write(
+        '{"kind":"content-v2-backup",'
+        '"savedAt":${jsonEncode(DateTime.now().toIso8601String())},'
+        '"diaries":[',
+      );
+      var first = true;
+      for (final diary in await repo.getAllDiaries()) {
+        if (!first) sink.write(',');
+        first = false;
+        sink.write(jsonEncode(diary.toJson()));
+      }
+      sink.write(']}');
+      await sink.flush();
+    } finally {
+      await sink.close();
+    }
+    await part.rename(file.path);
+  }
+
+  static Future<int> upgradeContent({
+    void Function(int done, int total)? onProgress,
+  }) async {
+    final repo = getIt<DiaryRepository>();
+    await _writeContentBackup(repo);
+    final changed = await repo.upgradeContentSchema(onProgress: onProgress);
+    MoodiaryKVs.contentSchemaV2.set(true);
+    requiresContentUpgrade = false;
+    return changed;
+  }
+
   static Future<List<Diary>> pendingDiaries() =>
       getIt<DiaryRepository>().getLegacyFormatDiaries();
 
@@ -78,6 +138,7 @@ class EditorMigrationService {
       images: diary.imageName,
       audios: diary.audioName,
       videos: diary.videoName,
+      files: diary.fileName,
     );
 
     await _writeBackup(diary);
@@ -93,6 +154,7 @@ class EditorMigrationService {
       imageName: media.images,
       audioName: media.audios,
       videoName: media.videos,
+      fileName: media.files,
     );
     await getIt<DiaryRepository>().updateADiary(
       newDiary: newDiary,

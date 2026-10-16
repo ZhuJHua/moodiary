@@ -1,6 +1,7 @@
 {
   "title": "Media",
   "typeImage": "Image",
+  "typeFile": "Attachment",
   "deleteUseLessFile": "Delete useless file",
   "empty": "No media yet",
   "cleanupScanning": "Scanning for unused files",
@@ -20,5 +21,9 @@
   "videoCount(plural, param=count)": {
     "one": "{count} Video",
     "other": "{count} Videos"
+  },
+  "fileCount(plural, param=count)": {
+    "one": "{count} Attachment",
+    "other": "{count} Attachments"
   }
 }

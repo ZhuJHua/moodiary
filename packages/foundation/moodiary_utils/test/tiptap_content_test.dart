@@ -15,20 +15,170 @@ Map<String, dynamic> _text(String t) => {'type': 'text', 'text': t};
 
 void main() {
   group('TiptapContent — TipTap 文档', () {
-    test('plainText 按块补换行、收敛 3+ 空行、首尾 trim', () {
+    test('plainText：文本块之间一个换行，媒体与分隔线不占行', () {
       final c = TiptapContent.parse(
         _doc([
           _p([_text('第一段')]),
           {'type': 'horizontalRule'},
+          {
+            'type': 'image',
+            'attrs': {'src': 'image-a.png'},
+          },
           {'type': 'horizontalRule'},
           _p([_text('第二段')]),
         ]),
       );
       expect(c.isDoc, isTrue);
-      expect(c.plainText, '第一段\n\n第二段');
+      expect(c.plainText, '第一段\n第二段');
     });
 
-    test('plainText 计入双链标签', () {
+    test('plainText：空段落照样占一行，首尾不 trim、空行不收敛', () {
+      final c = TiptapContent.parse(
+        _doc([
+          {'type': 'paragraph'},
+          _p([_text('  a  ')]),
+          {'type': 'paragraph'},
+          {'type': 'paragraph'},
+          {'type': 'paragraph'},
+          _p([_text('b')]),
+          {'type': 'paragraph'},
+        ]),
+      );
+      expect(c.plainText, '\n  a  \n\n\n\nb\n');
+    });
+
+    test('plainText：hardBreak → 换行，代码块保留自带换行', () {
+      final c = TiptapContent.parse(
+        _doc([
+          _p([
+            _text('上'),
+            {'type': 'hardBreak'},
+            _text('下'),
+          ]),
+          {
+            'type': 'codeBlock',
+            'attrs': {'language': null},
+            'content': [_text('a\n\nb')],
+          },
+        ]),
+      );
+      expect(c.plainText, '上\n下\na\n\nb');
+    });
+
+    test('plainText：列表、任务、引用、表格的段落逐个分行', () {
+      Map<String, dynamic> item(String type, String t) => {
+        'type': type,
+        if (type == 'taskItem') 'attrs': {'checked': false},
+        'content': [
+          _p([_text(t)]),
+        ],
+      };
+      Map<String, dynamic> cell(String type, String t) => {
+        'type': type,
+        'content': [
+          _p([_text(t)]),
+        ],
+      };
+      final c = TiptapContent.parse(
+        _doc([
+          {
+            'type': 'bulletList',
+            'content': [
+              item('listItem', '1'),
+              {
+                'type': 'listItem',
+                'content': [
+                  _p([_text('2')]),
+                  {
+                    'type': 'orderedList',
+                    'content': [item('listItem', '2.1')],
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            'type': 'taskList',
+            'content': [item('taskItem', 't')],
+          },
+          {
+            'type': 'blockquote',
+            'content': [
+              _p([_text('q1')]),
+              _p([_text('q2')]),
+            ],
+          },
+          {
+            'type': 'table',
+            'content': [
+              {
+                'type': 'tableRow',
+                'content': [
+                  cell('tableHeader', 'h1'),
+                  cell('tableHeader', 'h2'),
+                ],
+              },
+              {
+                'type': 'tableRow',
+                'content': [cell('tableCell', 'c1'), cell('tableCell', 'c2')],
+              },
+            ],
+          },
+        ]),
+      );
+      expect(c.plainText, '1\n2\n2.1\nt\nq1\nq2\nh1\nh2\nc1\nc2');
+    });
+
+    test('plainText：四种媒体的名字都不进正文，附件也不占行', () {
+      final c = TiptapContent.parse(
+        _doc([
+          {
+            'type': 'attachment',
+            'attrs': {'src': 'file-x.pdf', 'name': '报告.pdf'},
+          },
+          _p([_text('正文')]),
+          {
+            'type': 'image',
+            'attrs': {'src': 'image-a.png', 'name': '封面'},
+          },
+          {
+            'type': 'audio',
+            'attrs': {'src': 'audio-a.m4a', 'name': '晨间录音'},
+          },
+          {
+            'type': 'video',
+            'attrs': {'src': 'video-a.mp4', 'name': '海边'},
+          },
+          {
+            'type': 'attachment',
+            'attrs': {'src': 'file-y.pdf', 'name': ''},
+          },
+          _p([_text('尾')]),
+        ]),
+      );
+      expect(c.plainText, '正文\n尾');
+    });
+
+    test('plainText：未知节点不丢文本——含文本子节点的当文本块', () {
+      final c = TiptapContent.parse(
+        _doc([
+          _p([_text('a')]),
+          {
+            'type': 'callout',
+            'content': [_text('未知块')],
+          },
+          {
+            'type': 'details',
+            'content': [
+              _p([_text('嵌套')]),
+            ],
+          },
+        ]),
+      );
+      expect(c.plainText, 'a\n未知块\n嵌套');
+    });
+
+    test('plainText 计入双链标签，标签为空时用 id', () {
       final c = TiptapContent.parse(
         _doc([
           _p([
@@ -37,13 +187,22 @@ void main() {
               'type': 'diaryLink',
               'attrs': {'id': 'a1', 'label': '去年今日'},
             },
+            _text('和'),
+            {
+              'type': 'diaryLink',
+              'attrs': {'id': 'b2', 'label': ''},
+            },
+            {
+              'type': 'diaryLink',
+              'attrs': {'id': 'c3', 'label': null},
+            },
           ]),
         ]),
       );
-      expect(c.plainText, '看这篇去年今日');
+      expect(c.plainText, '看这篇去年今日和b2c3');
     });
 
-    test('media 按节点类型分流、去重且保序', () {
+    test('media 按节点类型分流、去重且保序，附件进 files', () {
       final c = TiptapContent.parse(
         _doc([
           {
@@ -52,7 +211,11 @@ void main() {
           },
           {
             'type': 'audio',
-            'attrs': {'filename': 'audio-1.m4a'},
+            'attrs': {'src': 'audio-1.m4a'},
+          },
+          {
+            'type': 'attachment',
+            'attrs': {'src': 'file-1.pdf', 'name': 'a.pdf'},
           },
           {
             'type': 'image',
@@ -60,15 +223,37 @@ void main() {
           },
           {
             'type': 'video',
-            'attrs': {'filename': 'video-1.mp4'},
+            'attrs': {'src': 'video-1.mp4'},
           },
           {
             'type': 'image',
             'attrs': {'src': 'image-b.webp'},
           },
+          {
+            'type': 'attachment',
+            'attrs': {'src': 'file-1.pdf', 'name': 'a.pdf'},
+          },
         ]),
       );
       expect(c.media.images, ['image-b.webp', 'image-a.webp']);
+      expect(c.media.audios, ['audio-1.m4a']);
+      expect(c.media.videos, ['video-1.mp4']);
+      expect(c.media.files, ['file-1.pdf']);
+    });
+
+    test('media 读 v1 的 filename（先归一化再收集）', () {
+      final c = TiptapContent.parse(
+        _doc([
+          {
+            'type': 'audio',
+            'attrs': {'filename': 'audio-1.m4a'},
+          },
+          {
+            'type': 'video',
+            'attrs': {'filename': 'video-1.mp4'},
+          },
+        ]),
+      );
       expect(c.media.audios, ['audio-1.m4a']);
       expect(c.media.videos, ['video-1.mp4']);
     });
@@ -83,13 +268,62 @@ void main() {
           {'type': 'image'},
           {
             'type': 'audio',
-            'attrs': {'filename': null},
+            'attrs': {'src': null},
           },
+          {'type': 'attachment'},
         ]),
       );
       expect(c.media.images, isEmpty);
       expect(c.media.audios, isEmpty);
       expect(c.media.videos, isEmpty);
+      expect(c.media.files, isEmpty);
+    });
+
+    test('mediaText：四种媒体的名字按文档序、trim 后逐行，空名跳过', () {
+      final c = TiptapContent.parse(
+        _doc([
+          {
+            'type': 'image',
+            'attrs': {'src': 'image-a.png', 'alt': ' 封面 '},
+          },
+          _p([_text('正文')]),
+          {
+            'type': 'blockquote',
+            'content': [
+              {
+                'type': 'audio',
+                'attrs': {'src': 'audio-a.m4a', 'name': '晨间录音'},
+              },
+            ],
+          },
+          {
+            'type': 'video',
+            'attrs': {'src': 'video-a.mp4', 'name': '  '},
+          },
+          {
+            'type': 'video',
+            'attrs': {'src': 'video-b.mp4', 'name': null},
+          },
+          {
+            'type': 'attachment',
+            'attrs': {'src': 'file-a.pdf', 'name': '报告.pdf'},
+          },
+          {
+            'type': 'image',
+            'attrs': {'src': 'image-b.png'},
+          },
+        ]),
+      );
+      expect(c.mediaText, '封面\n晨间录音\n报告.pdf');
+      expect(
+        TiptapContent.parse(
+          _doc([
+            _p([_text('x')]),
+          ]),
+        ).mediaText,
+        '',
+      );
+      expect(TiptapContent.parse('![封面](image-1.webp)').mediaText, '');
     });
 
     test('links 去重保序，忽略空 id', () {
@@ -228,6 +462,11 @@ void main() {
       expect(c.isDoc, isTrue);
       expect(c.plainText, '');
     });
+
+    test('产出已是 v2，归一化原样返回', () {
+      final json = TiptapContent.wrapPlainText('a\nb');
+      expect(TiptapContent.normalize(json), same(json));
+    });
   });
 
   group('TiptapContent.ensureMedia — 媒体守恒', () {
@@ -249,6 +488,40 @@ void main() {
       expect(media.images, ['image-kept.png', 'image-lost.png']);
       expect(media.audios, ['audio-lost.m4a']);
       expect(media.videos, ['video-lost.mp4']);
+    });
+
+    test('补回的节点是 v2 形状（src、附件四个 attrs），文档带 v: 2', () {
+      final ensured = jsonDecode(
+        TiptapContent.ensureMedia(
+          _doc([
+            _p([_text('x')]),
+          ]),
+          images: [],
+          audios: ['audio-a.m4a'],
+          videos: ['video-a.mp4'],
+          files: ['file-a.pdf'],
+        ),
+      ) as Map<String, dynamic>;
+      expect(ensured['attrs'], {'v': 2});
+      expect((ensured['content'] as List).skip(1), [
+        {
+          'type': 'audio',
+          'attrs': {'src': 'audio-a.m4a'},
+        },
+        {
+          'type': 'video',
+          'attrs': {'src': 'video-a.mp4'},
+        },
+        {
+          'type': 'attachment',
+          'attrs': {
+            'src': 'file-a.pdf',
+            'name': null,
+            'mime': null,
+            'size': null,
+          },
+        },
+      ]);
     });
 
     test('全部在场时原样返回（字节不变）', () {
@@ -327,6 +600,374 @@ void main() {
         ),
         same(doc),
       );
+    });
+  });
+
+  group('TiptapContent.countCharacters', () {
+    test('去掉所有空白后按字素簇计数', () {
+      expect(TiptapContent.countCharacters(''), 0);
+      expect(TiptapContent.countCharacters(' \t\n\r　'), 0);
+      expect(TiptapContent.countCharacters('a b\nc\td'), 4);
+      expect(TiptapContent.countCharacters('今天 天气'), 4);
+    });
+
+    test('emoji、组合字符、ZWJ 序列各算一个', () {
+      expect(TiptapContent.countCharacters('👍🏽'), 1);
+      expect(TiptapContent.countCharacters('👨‍👩‍👧'), 1);
+      expect(TiptapContent.countCharacters('é'), 1);
+      expect(TiptapContent.countCharacters('🇨🇳 好'), 2);
+    });
+  });
+
+  group('TiptapContent.normalize — v1 → v2', () {
+    Map<String, dynamic> norm(Map<String, dynamic> doc) =>
+        jsonDecode(TiptapContent.normalize(jsonEncode(doc)))
+            as Map<String, dynamic>;
+
+    Map<String, dynamic> v1(List<Map<String, dynamic>> content) => {
+      'type': 'doc',
+      'content': content,
+    };
+
+    Map<String, dynamic> first(Map<String, dynamic> doc) =>
+        (doc['content'] as List).first as Map<String, dynamic>;
+
+    test('doc 补 attrs.v = 2，保留其它 doc attrs', () {
+      expect(norm(v1([_p([])]))['attrs'], {'v': 2});
+      expect(
+        norm({
+          'type': 'doc',
+          'attrs': {'v': 1, 'x': 'y'},
+          'content': [_p([])],
+        })['attrs'],
+        {'v': 2, 'x': 'y'},
+      );
+    });
+
+    test('audio / video：filename → src，丢掉 filename；已有 src 优先', () {
+      final doc = norm(
+        v1([
+          {
+            'type': 'audio',
+            'attrs': {'filename': 'audio-1.m4a'},
+          },
+          {
+            'type': 'video',
+            'attrs': {'filename': 'video-1.mp4', 'widthPercent': 50},
+          },
+          {
+            'type': 'video',
+            'attrs': {'src': 'video-2.mp4', 'filename': 'video-old.mp4'},
+          },
+        ]),
+      );
+      expect(doc['content'], [
+        {
+          'type': 'audio',
+          'attrs': {'src': 'audio-1.m4a'},
+        },
+        {
+          'type': 'video',
+          'attrs': {'widthPercent': 50, 'src': 'video-1.mp4'},
+        },
+        {
+          'type': 'video',
+          'attrs': {'src': 'video-2.mp4'},
+        },
+      ]);
+    });
+
+    test('image：丢 width / height，widthPercent 夹到 25..100 再吸附到最近档', () {
+      Object? snapped(Object? raw) => first(
+        norm(
+          v1([
+            {
+              'type': 'image',
+              'attrs': {'src': 'image-a.png', 'widthPercent': raw},
+            },
+          ]),
+        ),
+      )['attrs']['widthPercent'];
+      expect(snapped(25), 25);
+      expect(snapped(37), 25);
+      expect(snapped(38), 50);
+      expect(snapped(62), 50);
+      expect(snapped(63), 75);
+      expect(snapped(87), 75);
+      expect(snapped(88), 100);
+      expect(snapped(100), 100);
+      expect(snapped(10), 25);
+      expect(snapped(180), 100);
+      expect(snapped(62.4), 50);
+      expect(snapped('50'), isNull);
+      expect(snapped(null), isNull);
+
+      final image = first(
+        norm(
+          v1([
+            {
+              'type': 'image',
+              'attrs': {
+                'src': 'image-a.png',
+                'alt': 'x',
+                'title': null,
+                'width': 640,
+                'height': 480,
+              },
+            },
+          ]),
+        ),
+      );
+      expect(image['attrs'], {'src': 'image-a.png', 'name': 'x'});
+    });
+
+    test('image：name ??= alt ?? title（只认非空串），然后丢 alt / title', () {
+      Map<String, dynamic> folded(Map<String, dynamic> attrs) => first(
+        norm({
+          'type': 'doc',
+          'attrs': {'v': 2},
+          'content': [
+            {'type': 'image', 'attrs': attrs},
+          ],
+        }),
+      )['attrs'];
+      expect(folded({'src': 's', 'alt': 'a', 'title': 't'}), {
+        'src': 's',
+        'name': 'a',
+      });
+      expect(folded({'src': 's', 'alt': '', 'title': 't'}), {
+        'src': 's',
+        'name': 't',
+      });
+      expect(folded({'src': 's', 'name': 'n', 'alt': 'a'}), {
+        'src': 's',
+        'name': 'n',
+      });
+      expect(folded({'src': 's', 'name': '', 'alt': 'a'}), {
+        'src': 's',
+        'name': '',
+      });
+      expect(folded({'src': 's', 'name': null, 'alt': '', 'title': null}), {
+        'src': 's',
+        'name': null,
+      });
+      expect(folded({'src': 's', 'alt': null}), {'src': 's'});
+    });
+
+    test('diaryLink 丢 mentionSuggestionChar，id / label 不动', () {
+      final paragraph = first(
+        norm(
+          v1([
+            _p([
+              {
+                'type': 'diaryLink',
+                'attrs': {
+                  'id': 'a',
+                  'label': 'L',
+                  'mentionSuggestionChar': '[[',
+                },
+              },
+            ]),
+          ]),
+        ),
+      );
+      expect((paragraph['content'] as List).single['attrs'], {
+        'id': 'a',
+        'label': 'L',
+      });
+    });
+
+    test('link mark 只留 href，其它 mark 不动', () {
+      final paragraph = first(
+        norm(
+          v1([
+            _p([
+              {
+                'type': 'text',
+                'text': 't',
+                'marks': [
+                  {'type': 'bold'},
+                  {
+                    'type': 'link',
+                    'attrs': {
+                      'href': 'https://e.com',
+                      'target': '_blank',
+                      'rel': 'noopener',
+                      'class': null,
+                    },
+                  },
+                ],
+              },
+            ]),
+          ]),
+        ),
+      );
+      expect((paragraph['content'] as List).single['marks'], [
+        {'type': 'bold'},
+        {
+          'type': 'link',
+          'attrs': {'href': 'https://e.com'},
+        },
+      ]);
+    });
+
+    test('horizontalRule：缺 attrs 补 solid / null，已有 variant 保留', () {
+      final doc = norm(
+        v1([
+          {'type': 'horizontalRule'},
+          {
+            'type': 'horizontalRule',
+            'attrs': {'variant': 'wavy'},
+          },
+          {
+            'type': 'horizontalRule',
+            'attrs': {'variant': 'text', 'label': '第二章'},
+          },
+        ]),
+      );
+      expect(
+        [for (final n in doc['content'] as List) n['attrs']],
+        [
+          {'variant': 'solid', 'label': null},
+          {'variant': 'wavy', 'label': null},
+          {'variant': 'text', 'label': '第二章'},
+        ],
+      );
+    });
+
+    test('嵌套位置（列表、引用、表格）同样归一', () {
+      final doc = norm(
+        v1([
+          {
+            'type': 'blockquote',
+            'content': [
+              {
+                'type': 'bulletList',
+                'content': [
+                  {
+                    'type': 'listItem',
+                    'content': [
+                      _p([]),
+                      {
+                        'type': 'audio',
+                        'attrs': {'filename': 'audio-n.m4a'},
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ]),
+      );
+      expect(TiptapContent.parse(jsonEncode(doc)).media.audios, [
+        'audio-n.m4a',
+      ]);
+      expect(jsonEncode(doc), isNot(contains('filename')));
+    });
+
+    test('未知节点与 mark 原样保留', () {
+      final unknown = {
+        'type': 'callout',
+        'attrs': {'filename': 'keep', 'emoji': '💡'},
+        'content': [
+          {
+            'type': 'text',
+            'text': 'x',
+            'marks': [
+              {
+                'type': 'comment',
+                'attrs': {'id': 'c1'},
+              },
+            ],
+          },
+        ],
+      };
+      expect(first(norm(v1([unknown]))), unknown);
+    });
+
+    test('已是 v2 → 同一个实例（字符串与 Map 都是）', () {
+      final json = jsonEncode({
+        'type': 'doc',
+        'attrs': {'v': 2},
+        'content': [
+          {
+            'type': 'image',
+            'attrs': {'src': 'image-a.png', 'widthPercent': 50},
+          },
+          {
+            'type': 'horizontalRule',
+            'attrs': {'variant': 'solid', 'label': null},
+          },
+          _p([
+            {
+              'type': 'text',
+              'text': 't',
+              'marks': [
+                {
+                  'type': 'link',
+                  'attrs': {'href': 'https://e.com'},
+                },
+              ],
+            },
+          ]),
+        ],
+      });
+      expect(TiptapContent.normalize(json), same(json));
+      final map = jsonDecode(json) as Map<String, dynamic>;
+      expect(TiptapContent.normalizeDoc(map), same(map));
+    });
+
+    test('幂等：归一两次与一次相同，第二次返回同一实例', () {
+      final once = TiptapContent.normalize(
+        jsonEncode(
+          v1([
+            {
+              'type': 'audio',
+              'attrs': {'filename': 'audio-1.m4a'},
+            },
+            {'type': 'horizontalRule'},
+            {
+              'type': 'image',
+              'attrs': {
+                'src': 'image-1.png',
+                'width': 3,
+                'widthPercent': 40,
+                'alt': 'a',
+              },
+            },
+          ]),
+        ),
+      );
+      expect(TiptapContent.normalize(once), same(once));
+    });
+
+    test('非 doc 输入与更高版本的 doc 原样返回', () {
+      const md = '# 标题';
+      expect(TiptapContent.normalize(md), same(md));
+      final future = jsonEncode({
+        'type': 'doc',
+        'attrs': {'v': 3},
+        'content': [
+          {
+            'type': 'audio',
+            'attrs': {'filename': 'audio-1.m4a'},
+          },
+        ],
+      });
+      expect(TiptapContent.normalize(future), same(future));
+    });
+
+    test('归一不改输入对象', () {
+      final input = v1([
+        {
+          'type': 'audio',
+          'attrs': {'filename': 'audio-1.m4a'},
+        },
+      ]);
+      final before = jsonEncode(input);
+      TiptapContent.normalizeDoc(input);
+      expect(jsonEncode(input), before);
     });
   });
 }

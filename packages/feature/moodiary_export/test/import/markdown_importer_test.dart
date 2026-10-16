@@ -9,6 +9,7 @@ import 'package:moodiary_export/moodiary_export.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path/path.dart' as p;
 
 class _FakeStore implements ImportMediaStore {
@@ -21,6 +22,7 @@ class _FakeStore implements ImportMediaStore {
       .image => 'image-$_n.jpg',
       .video => 'video-$_n.mp4',
       .audio => 'audio-$_n.m4a',
+      .file => 'file-$_n.pdf',
     };
   }
 }
@@ -132,13 +134,16 @@ tags: ["a"]
     expect((await diaries.getDiaryByBusinessId(id))!.title, '旧');
   });
 
-  test('媒体改写后三列由正文派生', () async {
-    Directory(p.join(root.path, 'assets')).createSync();
+  test('媒体与附件改写后四列由正文派生，正文是 v2', () async {
+    Directory(p.join(root.path, 'assets', 'file')).createSync(recursive: true);
     File(p.join(root.path, 'assets', 'p.jpg')).writeAsBytesSync([0]);
     File(p.join(root.path, 'assets', 'v.mp4')).writeAsBytesSync([0]);
+    File(p.join(root.path, 'assets', 'file', 'file-x.pdf'))
+        .writeAsBytesSync([1, 2, 3]);
     write(
       'm.md',
-      '![图](assets/p.jpg)\n\n[视频](assets/v.mp4)\n\n![丢了](assets/gone.jpg)',
+      '![图](assets/p.jpg)\n\n[视频](assets/v.mp4)\n\n![丢了](assets/gone.jpg)'
+          '\n\n[报告.pdf](assets/file/file-x.pdf)',
     );
 
     final report = await importer.run(source());
@@ -147,10 +152,23 @@ tags: ["a"]
     final diary = (await diaries.getAllDiaries()).single;
     expect(diary.imageName, ['image-1.jpg']);
     expect(diary.videoName, ['video-2.mp4']);
+    expect(diary.fileName, ['file-3.pdf']);
     final doc = jsonDecode(diary.content) as Map<String, dynamic>;
+    expect(doc['attrs'], {'v': 2});
     final types = [for (final n in doc['content'] as List) n['type']];
     expect(types, contains('image'));
     expect(types, contains('video'));
+    final attachment = (doc['content'] as List).singleWhere(
+      (n) => n['type'] == 'attachment',
+    );
+    expect(attachment['attrs'], {
+      'src': 'file-3.pdf',
+      'name': '报告.pdf',
+      'mime': 'application/pdf',
+      'size': 3,
+    });
+    expect(diary.contentText, isNot(contains('报告.pdf')));
+    expect(TiptapContent.parse(diary.content).mediaText, '图\nv\n报告.pdf');
   });
 
   test('单篇失败不中止，取消后已转换的落库', () async {

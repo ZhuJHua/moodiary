@@ -1,8 +1,21 @@
 import 'dart:convert';
 
+import 'package:characters/characters.dart';
+
 import 'markdown_converter.dart';
 
+typedef ContentMedia = ({
+  List<String> images,
+  List<String> videos,
+  List<String> audios,
+  List<String> files,
+});
+
 class TiptapContent {
+  static const int _schemaVersion = 2;
+
+  static const List<int> _widthPercentStops = [25, 50, 75, 100];
+
   final String _raw;
   final Map<String, dynamic>? _doc;
 
@@ -23,59 +36,230 @@ class TiptapContent {
     return null;
   }
 
-  static const _blockTypes = {
-    'paragraph',
-    'heading',
-    'listItem',
-    'blockquote',
-    'codeBlock',
+  late final Map<String, dynamic>? _v2 = switch (_doc) {
+    final doc? => normalizeDoc(doc),
+    null => null,
+  };
+
+  static String normalize(String content) {
+    final c = TiptapContent.parse(content);
+    return c._doc == null || identical(c._v2, c._doc)
+        ? content
+        : jsonEncode(c._v2);
+  }
+
+  static Map<String, dynamic> normalizeDoc(Map<String, dynamic> doc) {
+    final attrs = doc['attrs'];
+    final v = attrs is Map ? attrs['v'] : null;
+    if (v is int && v > _schemaVersion) return doc;
+
+    Map<String, dynamic>? out;
+    if (v != _schemaVersion) {
+      out = {
+        ...doc,
+        'attrs': {if (attrs is Map) ...attrs, 'v': _schemaVersion},
+      };
+    }
+    final content = doc['content'];
+    if (content is List) {
+      final next = _normalizeList(content);
+      if (!identical(next, content)) (out ??= {...doc})['content'] = next;
+    }
+    return out ?? doc;
+  }
+
+  static List<dynamic> _normalizeList(List<dynamic> nodes) {
+    List<dynamic>? out;
+    for (var i = 0; i < nodes.length; i++) {
+      final node = nodes[i];
+      if (node is! Map) continue;
+      final next = _normalizeNode(node);
+      if (!identical(next, node)) (out ??= List.of(nodes))[i] = next;
+    }
+    return out ?? nodes;
+  }
+
+  static Map<dynamic, dynamic> _normalizeNode(Map<dynamic, dynamic> node) {
+    Map<String, dynamic>? out;
+    Map<String, dynamic> edit() => out ??= Map<String, dynamic>.from(node);
+
+    final attrs = node['attrs'];
+    final nextAttrs = _normalizeAttrs(node['type'], attrs);
+    if (!identical(nextAttrs, attrs)) edit()['attrs'] = nextAttrs;
+
+    final marks = node['marks'];
+    if (marks is List) {
+      final nextMarks = _normalizeMarks(marks);
+      if (!identical(nextMarks, marks)) edit()['marks'] = nextMarks;
+    }
+
+    final content = node['content'];
+    if (content is List) {
+      final nextContent = _normalizeList(content);
+      if (!identical(nextContent, content)) edit()['content'] = nextContent;
+    }
+    return out ?? node;
+  }
+
+  static Object? _normalizeAttrs(Object? type, Object? attrs) {
+    switch (type) {
+      case 'audio' || 'video':
+        if (attrs is! Map || !attrs.containsKey('filename')) return attrs;
+        final src = attrs['src'];
+        return {
+          for (final e in attrs.entries)
+            if (e.key != 'filename') e.key: e.value,
+          'src': src is String && src.isNotEmpty ? src : attrs['filename'],
+        };
+      case 'image':
+        if (attrs is! Map) return attrs;
+        final width = attrs['widthPercent'];
+        final snapped = width == null ? null : _snapWidthPercent(width);
+        if (!attrs.keys.any(_droppedImageAttrs.contains) && snapped == width) {
+          return attrs;
+        }
+        final name =
+            attrs['name'] ??
+            _nonEmpty(attrs['alt']) ??
+            _nonEmpty(attrs['title']);
+        return {
+          for (final e in attrs.entries)
+            if (!_droppedImageAttrs.contains(e.key)) e.key: e.value,
+          if (attrs.containsKey('widthPercent')) 'widthPercent': snapped,
+          'name': ?name,
+        };
+      case 'diaryLink':
+        if (attrs is! Map || !attrs.containsKey('mentionSuggestionChar')) {
+          return attrs;
+        }
+        return {
+          for (final e in attrs.entries)
+            if (e.key != 'mentionSuggestionChar') e.key: e.value,
+        };
+      case 'horizontalRule':
+        if (attrs is! Map) return {'variant': 'solid', 'label': null};
+        if (attrs['variant'] is String && attrs.containsKey('label')) {
+          return attrs;
+        }
+        return {
+          ...attrs,
+          if (attrs['variant'] is! String) 'variant': 'solid',
+          if (!attrs.containsKey('label')) 'label': null,
+        };
+      default:
+        return attrs;
+    }
+  }
+
+  static List<dynamic> _normalizeMarks(List<dynamic> marks) {
+    List<dynamic>? out;
+    for (var i = 0; i < marks.length; i++) {
+      final mark = marks[i];
+      if (mark is! Map || mark['type'] != 'link') continue;
+      final attrs = mark['attrs'];
+      if (attrs is! Map || attrs.keys.every((k) => k == 'href')) continue;
+      (out ??= List.of(marks))[i] = {
+        ...Map<String, dynamic>.from(mark),
+        'attrs': {'href': attrs['href']},
+      };
+    }
+    return out ?? marks;
+  }
+
+  static const _droppedImageAttrs = {'width', 'height', 'alt', 'title'};
+
+  static String? _nonEmpty(Object? value) =>
+      value is String && value.isNotEmpty ? value : null;
+
+  static int? _snapWidthPercent(Object? value) {
+    if (value is! num || !value.isFinite) return null;
+    final clamped = value.round().clamp(25, 100);
+    var best = _widthPercentStops.first;
+    for (final stop in _widthPercentStops) {
+      if ((clamped - stop).abs() <= (clamped - best).abs()) best = stop;
+    }
+    return best;
+  }
+
+  static const _textblocks = {'paragraph', 'heading', 'codeBlock'};
+
+  static const _silentLeaves = {
+    'image',
+    'video',
+    'audio',
+    'attachment',
     'horizontalRule',
   };
 
-  static final RegExp _blankLines = RegExp(r'\n{3,}');
+  // 与 ProseMirror textBetween(0, size, '\n') 逐字一致
+  late final String plainText = _plainText();
+
+  String _plainText() {
+    final doc = _v2;
+    if (doc == null) return MarkdownConverter.convert(_raw);
+    final buf = StringBuffer();
+    var first = true;
+    void separate() {
+      if (first) {
+        first = false;
+      } else {
+        buf.write('\n');
+      }
+    }
+
+    void walk(Object? node) {
+      if (node is! Map) return;
+      final type = node['type'];
+      switch (type) {
+        case 'text':
+          final text = node['text'];
+          if (text is String) buf.write(text);
+        case 'hardBreak':
+          buf.write('\n');
+        case 'diaryLink':
+          buf.write(_diaryLinkText(node['attrs']));
+        default:
+          if (_silentLeaves.contains(type)) return;
+          final content = node['content'];
+          if (_textblocks.contains(type) || _hasTextChild(content)) separate();
+          if (content is List) content.forEach(walk);
+      }
+    }
+
+    final content = doc['content'];
+    if (content is List) content.forEach(walk);
+    return buf.toString();
+  }
+
+  static bool _hasTextChild(Object? content) =>
+      content is List && content.any((c) => c is Map && c['type'] == 'text');
+
+  static String _diaryLinkText(Object? attrs) {
+    if (attrs is! Map) return '';
+    final label = attrs['label'];
+    if (label is String && label.isNotEmpty) return label;
+    final id = attrs['id'];
+    return id is String ? id : '';
+  }
+
+  static final RegExp _whitespace = RegExp(r'\s+');
+
+  static int countCharacters(String text) =>
+      text.replaceAll(_whitespace, '').characters.length;
 
   static final RegExp _markdownMedia = RegExp(
     r'!\[[^\]]*\]\((image-[^\s)]+|audio-[^\s)]+|video-[^\s)]+)\)',
   );
 
-  late final String plainText = _plainText();
+  late final ContentMedia media = _media();
 
-  String _plainText() {
-    final doc = _doc;
-    if (doc == null) return MarkdownConverter.convert(_raw);
-    final buf = StringBuffer();
-    _collectText(doc, buf);
-    return buf.toString().replaceAll(_blankLines, '\n\n').trim();
-  }
-
-  static void _collectText(dynamic node, StringBuffer buf) {
-    if (node is! Map) return;
-    final text = node['text'];
-    if (text is String) buf.write(text);
-    if (node['type'] == 'diaryLink') {
-      final attrs = node['attrs'];
-      if (attrs is Map && attrs['label'] is String) {
-        buf.write(attrs['label'] as String);
-      }
-    }
-    final content = node['content'];
-    if (content is List) {
-      for (final child in content) {
-        _collectText(child, buf);
-      }
-    }
-    if (_blockTypes.contains(node['type'])) buf.write('\n');
-  }
-
-  late final ({List<String> images, List<String> videos, List<String> audios})
-  media = _media();
-
-  ({List<String> images, List<String> videos, List<String> audios}) _media() {
+  ContentMedia _media() {
     final images = <String>{};
     final audios = <String>{};
     final videos = <String>{};
+    final files = <String>{};
 
-    final doc = _doc;
+    final doc = _v2;
     if (doc == null) {
       for (final m in _markdownMedia.allMatches(_raw)) {
         final name = m.group(1)!;
@@ -87,52 +271,67 @@ class TiptapContent {
           images.add(name);
         }
       }
-      return (
-        images: images.toList(),
-        videos: videos.toList(),
-        audios: audios.toList(),
-      );
-    }
-
-    void walk(dynamic node) {
-      if (node is! Map) return;
-      final type = node['type'];
-      final attrs = node['attrs'];
-      if (attrs is Map) {
-        if (type == 'image') {
-          final s = attrs['src'];
-          if (s is String && s.isNotEmpty && !_isExternalSrc(s)) images.add(s);
-        } else if (type == 'audio') {
-          final f = attrs['filename'];
-          if (f is String && f.isNotEmpty) audios.add(f);
-        } else if (type == 'video') {
-          final f = attrs['filename'];
-          if (f is String && f.isNotEmpty) videos.add(f);
+    } else {
+      void walk(Object? node) {
+        if (node is! Map) return;
+        final into = switch (node['type']) {
+          'image' => images,
+          'audio' => audios,
+          'video' => videos,
+          'attachment' => files,
+          _ => null,
+        };
+        final attrs = node['attrs'];
+        if (into != null && attrs is Map) {
+          final src = attrs['src'];
+          if (src is String && src.isNotEmpty && !_isExternalSrc(src)) {
+            into.add(src);
+          }
         }
+        final content = node['content'];
+        if (content is List) content.forEach(walk);
       }
-      final content = node['content'];
-      if (content is List) {
-        for (final child in content) {
-          walk(child);
-        }
-      }
-    }
 
-    walk(doc);
+      walk(doc);
+    }
     return (
       images: images.toList(),
       videos: videos.toList(),
       audios: audios.toList(),
+      files: files.toList(),
     );
+  }
+
+  static const _mediaTypes = {'image', 'video', 'audio', 'attachment'};
+
+  late final String mediaText = _mediaText();
+
+  String _mediaText() {
+    final doc = _v2;
+    if (doc == null) return '';
+    final names = <String>[];
+    void walk(Object? node) {
+      if (node is! Map) return;
+      final attrs = node['attrs'];
+      if (_mediaTypes.contains(node['type']) && attrs is Map) {
+        final name = attrs['name'];
+        if (name is String && name.trim().isNotEmpty) names.add(name.trim());
+      }
+      final content = node['content'];
+      if (content is List) content.forEach(walk);
+    }
+
+    walk(doc);
+    return names.join('\n');
   }
 
   late final List<String> links = _links();
 
   List<String> _links() {
-    final doc = _doc;
+    final doc = _v2;
     if (doc == null) return const [];
     final ids = <String>{};
-    void walk(dynamic node) {
+    void walk(Object? node) {
       if (node is! Map) return;
       if (node['type'] == 'diaryLink') {
         final attrs = node['attrs'];
@@ -142,11 +341,7 @@ class TiptapContent {
         }
       }
       final content = node['content'];
-      if (content is List) {
-        for (final child in content) {
-          walk(child);
-        }
-      }
+      if (content is List) content.forEach(walk);
     }
 
     walk(doc);
@@ -156,25 +351,21 @@ class TiptapContent {
   late final List<({int level, String text})> headings = _headings();
 
   List<({int level, String text})> _headings() {
-    final doc = _doc;
+    final doc = _v2;
     if (doc == null) return const [];
     final out = <({int level, String text})>[];
-    void walk(dynamic node) {
+    void walk(Object? node) {
       if (node is! Map) return;
       if (node['type'] == 'heading') {
         final attrs = node['attrs'];
         final raw = (attrs is Map) ? attrs['level'] : null;
-        final level = (raw is int) ? (raw < 1 ? 1 : (raw > 6 ? 6 : raw)) : 1;
+        final level = (raw is int) ? raw.clamp(1, 6) : 1;
         final buf = StringBuffer();
         _collectInline(node['content'], buf);
         out.add((level: level, text: buf.toString().trim()));
       }
       final content = node['content'];
-      if (content is List) {
-        for (final child in content) {
-          walk(child);
-        }
-      }
+      if (content is List) content.forEach(walk);
     }
 
     walk(doc);
@@ -184,7 +375,9 @@ class TiptapContent {
   static bool _isExternalSrc(String src) =>
       src.startsWith('http://') ||
       src.startsWith('https://') ||
-      src.startsWith('data:');
+      src.startsWith('data:') ||
+      src.startsWith('file:') ||
+      src.contains('/');
 
   static String wrapPlainText(String text) {
     final content = [
@@ -198,63 +391,76 @@ class TiptapContent {
         },
     ];
     if (content.isEmpty) content.add({'type': 'paragraph'});
-    return jsonEncode({'type': 'doc', 'content': content});
+    return jsonEncode(newDoc(content));
   }
+
+  static Map<String, dynamic> newDoc(List<Map<String, dynamic>> content) => {
+    'type': 'doc',
+    'attrs': {'v': _schemaVersion},
+    'content': content,
+  };
+
+  static Map<String, dynamic> attachmentNode({
+    required String src,
+    String? name,
+    String? mime,
+    int? size,
+  }) => {
+    'type': 'attachment',
+    'attrs': {'src': src, 'name': name, 'mime': mime, 'size': size},
+  };
 
   static String ensureMedia(
     String docJson, {
     required List<String> images,
     required List<String> audios,
     required List<String> videos,
+    List<String> files = const [],
   }) {
     final parsed = TiptapContent.parse(docJson);
-    final doc = parsed._doc;
+    final doc = parsed._v2;
     if (doc == null) return docJson;
 
     final present = parsed.media;
-    final missing = <Map<String, dynamic>>[
-      for (final name in {...images})
-        if (name.isNotEmpty &&
-            !_isExternalSrc(name) &&
-            !present.images.contains(name))
-          {
-            'type': 'image',
-            'attrs': {'src': name},
-          },
-      for (final name in {...audios})
-        if (name.isNotEmpty && !present.audios.contains(name))
-          {
-            'type': 'audio',
-            'attrs': {'filename': name},
-          },
-      for (final name in {...videos})
-        if (name.isNotEmpty && !present.videos.contains(name))
-          {
-            'type': 'video',
-            'attrs': {'filename': name},
-          },
+    Iterable<String> missing(List<String> names, List<String> have) => {
+      ...names,
+    }.where((n) => n.isNotEmpty && !_isExternalSrc(n) && !have.contains(n));
+
+    final added = <Map<String, dynamic>>[
+      for (final name in missing(images, present.images))
+        {
+          'type': 'image',
+          'attrs': {'src': name},
+        },
+      for (final name in missing(audios, present.audios))
+        {
+          'type': 'audio',
+          'attrs': {'src': name},
+        },
+      for (final name in missing(videos, present.videos))
+        {
+          'type': 'video',
+          'attrs': {'src': name},
+        },
+      for (final name in missing(files, present.files))
+        attachmentNode(src: name),
     ];
-    if (missing.isEmpty) return docJson;
+    if (added.isEmpty) return docJson;
 
     final content = doc['content'];
     return jsonEncode({
       ...doc,
-      'content': [...(content is List ? content : const []), ...missing],
+      'content': [...(content is List ? content : const []), ...added],
     });
   }
 
-  static void _collectInline(dynamic content, StringBuffer buf) {
+  static void _collectInline(Object? content, StringBuffer buf) {
     if (content is! List) return;
     for (final node in content) {
       if (node is! Map) continue;
       final text = node['text'];
       if (text is String) buf.write(text);
-      if (node['type'] == 'diaryLink') {
-        final attrs = node['attrs'];
-        if (attrs is Map && attrs['label'] is String) {
-          buf.write(attrs['label'] as String);
-        }
-      }
+      if (node['type'] == 'diaryLink') buf.write(_diaryLinkText(node['attrs']));
       _collectInline(node['content'], buf);
     }
   }

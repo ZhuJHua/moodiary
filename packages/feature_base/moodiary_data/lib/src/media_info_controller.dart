@@ -5,6 +5,7 @@ import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import 'diary_repository.dart';
 import 'media_info_repository.dart';
 
 part 'media_info_controller.g.dart';
@@ -55,6 +56,17 @@ class MediaInfoController extends _$MediaInfoController {
       return true;
     } catch (e, s) {
       logger.e('upsert media info failed', error: e, stackTrace: s);
+      return false;
+    }
+  }
+
+  Future<bool> renameAudio(String fileName, String? name) async {
+    try {
+      await _repository.renameMedia(fileName, name);
+      await getIt<DiaryRepository>().renameAudio(fileName, name);
+      return true;
+    } catch (e, s) {
+      logger.e('rename audio failed', error: e, stackTrace: s);
       return false;
     }
   }

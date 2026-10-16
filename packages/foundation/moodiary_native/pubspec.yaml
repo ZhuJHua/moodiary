@@ -1,0 +1,30 @@
+name: moodiary_native
+description: "The app's only Flutter-to-native channel: every call into Android or iOS code goes through its pigeon APIs."
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  webview_flutter_android: 4.14.1
+  webview_flutter_wkwebview: 3.26.1
+
+dev_dependencies:
+  moodiary_lint: 0.0.1
+  pigeon: 29.0.8
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: cn.yooss.moodiary_native
+        pluginClass: MoodiaryNativePlugin
+      ios:
+        pluginClass: MoodiaryNativePlugin

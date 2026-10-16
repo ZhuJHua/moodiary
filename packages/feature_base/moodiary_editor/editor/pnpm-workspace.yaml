@@ -1,4 +1,7 @@
 allowBuilds:
+  '@parcel/watcher': false
   esbuild: true
-minimumReleaseAgeExclude:
-  - '@material-symbols/svg-400@0.45.1'
+overrides:
+  prosemirror-view: 1.42.6
+  '@tiptap/extension-bubble-menu': 3.31.4
+  '@tiptap/extension-floating-menu': 3.31.4

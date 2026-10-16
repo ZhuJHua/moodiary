@@ -22,7 +22,7 @@ IncrementalSyncEngine            增量引擎（按操作构造）
         │  ├─ _mediaGate (Pool)           媒体「读+加解密+传输」流水线并发上限（限内存）
         │  └─ SyncCipher                  AES-256-GCM，持有原始 DEK；信封加密见 SyncKeyManager
         │
-SyncManifest (v2)                远端清单：结构化条目 + 媒体清单 + 毫秒时间戳
+SyncManifest (v3)                远端清单：结构化条目 + 媒体清单 + 毫秒时间戳
 SyncKeyManager / keys.json       信封加密：随机 32B DEK 加密全部对象（只存本机
                                  SecureKV）；用户密码 + 随机盐经 Argon2id 派生 KEK，
                                  KEK 只用来包 DEK，包好的信封存远端明文 keys.json
@@ -76,9 +76,10 @@ manifest 快照直接复用给 push，空转热路径少一次 GET+解密——�
    下次 pull 会按 LWW 把更新的远端版本拉回、本地复活（日记 / 分类各有回归测试钉住）。
    对称地，**pull 下载写库失败必须计入 `failed`**（各条目写入抛出的异常由条目级
    catch 统一 `failed++`）—— 否则谎报成功、错误推进 lastSyncTime。
-3. **manifest 版本守卫**：`version` 非 2（当前）或 1（2.8.0 遗留，读入后按 v2
-   写回）一律抛 `SyncException`（含更高版本 —— 静默丢条目会诱发 manifest
-   重建式数据丢失）；单条损坏的 entry 只丢弃该条。
+3. **manifest 版本守卫**：`version` 不在 1..3 之间（3 为当前，正文 schema v2
+   起步；1、2 是旧版写的，读入后按 v3 写回，旧客户端从此拒读）一律抛
+   `SyncException`（含更高版本 —— 静默丢条目会诱发 manifest 重建式数据丢失）；
+   单条损坏的 entry 只丢弃该条。
 4. **媒体清单只记确认存在的引用**：`ManifestEntry.media` 来自
    `_pushDiaryMedia` 的返回值（集合命中 / stat 命中 / 上传成功）；本地缺失
    而跳过的引用**不得**写入，否则谎报存在、该文件永远失去补传机会。
@@ -151,7 +152,7 @@ concurrency 解耦，单测全用内存假实现（`sync_test_harness.dart`）�
 文件系统 / Rust / 网络，确定性运行。生产实现只是转发到 repository / `package:file`，
 行为不变。
 
-- `data/model/manifest_test.dart`：v2 序列化往返、版本守卫（v1 接受，更旧/更新/缺失拒绝）、
+- `data/model/manifest_test.dart`：序列化往返、版本守卫（v1/v2 接受，更旧/更新/缺失拒绝）、
   损坏条目丢弃、媒体并集排除 tombstone、`copyForUpdate` 隔离、**毫秒 int LWW 回归**。
 - `data/remote_lease_test.dart`：租约 payload 往返、损坏容错、过期判定边界。
 - `data/remote_lease_protect_test.dart`（fake_async）：抢占→执行→释放、接管本机

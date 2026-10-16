@@ -22,8 +22,6 @@ class EditorBody extends StatefulWidget {
 
   final ValueChanged<String>? onOpenDiaryLink;
 
-  final String saveStatus;
-
   final String? metaJson;
   final String? linksJson;
   final VoidCallback? onPickDate;
@@ -43,6 +41,8 @@ class EditorBody extends StatefulWidget {
   final VoidCallback? onClearPosition;
   final VoidCallback? onOpenGraph;
 
+  final Widget? statusBar;
+
   const EditorBody({
     super.key,
     required this.type,
@@ -54,7 +54,6 @@ class EditorBody extends StatefulWidget {
     this.onActiveHeadingChanged,
     this.editable = true,
     this.onOpenDiaryLink,
-    this.saveStatus = 'idle',
     this.metaJson,
     this.linksJson,
     this.onPickDate,
@@ -73,6 +72,7 @@ class EditorBody extends StatefulWidget {
     this.onManagePlaces,
     this.onClearPosition,
     this.onOpenGraph,
+    this.statusBar,
   });
 
   @override
@@ -116,7 +116,6 @@ class _EditorBodyState extends State<EditorBody> {
         controller: widget.editorController,
         onActiveHeadingChanged: widget.onActiveHeadingChanged,
         editable: widget.editable && widget.type.isEditable,
-        saveStatus: widget.saveStatus,
         firstLineIndent: firstLineIndent,
         fontScale: fontScale,
         onChanged: (content) =>
@@ -140,6 +139,7 @@ class _EditorBodyState extends State<EditorBody> {
         onManagePlaces: widget.onManagePlaces,
         onClearPosition: widget.onClearPosition,
         onOpenGraph: widget.onOpenGraph,
+        statusBar: widget.statusBar,
       ),
     );
   }

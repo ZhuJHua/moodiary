@@ -1,0 +1,40 @@
+/* 首帧兜底，运行时由 applyTheme 覆盖 */
+:root {
+  --app-surface: #fdfdfd;
+  --app-on-surface: #1b1b1b;
+  --app-on-surface-variant: #474747;
+  --app-surface-container-low: #f6f6f6;
+  --app-surface-container: #f0f0f0;
+  --app-surface-container-high: #eaeaea;
+  --app-surface-container-highest: #e2e2e2;
+  --app-primary: #000000;
+  --app-on-primary: #ffffff;
+  --app-secondary-container: #e2e2e2;
+  --app-on-secondary-container: #1b1b1b;
+  --app-inverse-surface: #303030;
+  --app-on-inverse-surface: #f1f1f1;
+  --app-outline-variant: #c6c6c6;
+  --app-error: #ba1a1a;
+  --app-selection: #0000004a;
+  --app-text-indent: 0;
+  --app-font-scale: 1;
+  --app-font-sans: system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei UI', 'PingFang SC', sans-serif;
+  --app-font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Roboto Mono', Menlo, monospace;
+  --md-text-2xs: 0.6875rem;
+  --md-text-xs: 0.75rem;
+  --md-text-sm: 0.8125rem;
+  --md-text-md: 0.875rem;
+  --md-text-lg: 0.9375rem;
+  --md-text-body: 1.0625rem;
+  --md-text-xl: 1.125rem;
+  --md-text-title: 1.75rem;
+  --md-para-gap: 1em;
+  --md-highlight-bg: #fbe7a1;
+  --md-highlight-fg: inherit;
+  --md-block-gap: 0.75em;
+}
+
+:root[data-theme='dark'] {
+  --md-highlight-bg: #5c4b14;
+  --md-highlight-fg: #f6ebc8;
+}

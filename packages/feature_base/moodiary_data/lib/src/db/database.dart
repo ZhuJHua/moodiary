@@ -4,6 +4,7 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite3;
 import 'package:sqlite3_simple/sqlite3_simple.dart';
 import 'package:sqlite3_vec/sqlite3_vec.dart';
@@ -97,6 +98,8 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
                 await m.dropColumn(schema.chatSessions, column);
               }
               await customStatement('DROP TABLE diary_fts');
+              await m.addColumn(schema.diaries, schema.diaries.mediaText);
+              await _rederiveTiptapText();
               await m.createTable(schema.diaryFts);
               for (final trigger in [diaryFtsAi, diaryFtsAd, diaryFtsAu]) {
                 await m.create(trigger);
@@ -110,6 +113,27 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
       );
     },
   );
+
+  Future<void> _rederiveTiptapText() async {
+    final rows = await customSelect(
+      'SELECT rid, content, content_text FROM diaries WHERE type = ?',
+      variables: [Variable(DiaryType.tiptap.value)],
+    ).get();
+    await batch((b) {
+      for (final row in rows) {
+        final doc = TiptapContent.parse(row.read<String>('content'));
+        final plain = doc.plainText;
+        final media = doc.mediaText;
+        if (plain == row.read<String>('content_text') && media.isEmpty) {
+          continue;
+        }
+        b.customStatement(
+          'UPDATE diaries SET content_text = ?, media_text = ? WHERE rid = ?',
+          [plain, media, row.read<int>('rid')],
+        );
+      }
+    });
+  }
 
   Future<void> _migratePositionsToPlaces() async {
     final rows = await customSelect(

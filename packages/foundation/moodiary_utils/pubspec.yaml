@@ -13,6 +13,7 @@ dependencies:
   flutter:
     sdk: flutter
 
+  characters: 1.4.1
   intl: 0.20.3
   synchronized: 3.4.1+2
   image_size_getter: 2.4.1

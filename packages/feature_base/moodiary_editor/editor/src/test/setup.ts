@@ -1,21 +1,8 @@
-import { config } from '@vue/test-utils'
-import { i18n } from '../i18n'
+// jsdom 无选区时 collapseToEnd 会抛
+const collapseToEnd = Selection.prototype.collapseToEnd
+Selection.prototype.collapseToEnd = function (this: Selection) {
+  if (this.rangeCount > 0) collapseToEnd.call(this)
+}
 
-config.global.plugins = [i18n]
-
-const zeroRect = {
-  x: 0,
-  y: 0,
-  width: 0,
-  height: 0,
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  toJSON: () => ({}),
-} as DOMRect
-
-Range.prototype.getBoundingClientRect = () => zeroRect
-Range.prototype.getClientRects = () =>
-  ({ length: 0, item: () => null, *[Symbol.iterator]() {} }) as unknown as DOMRectList
-document.elementFromPoint = () => null
+// jsdom 不实现媒体播放
+HTMLMediaElement.prototype.pause = () => {}

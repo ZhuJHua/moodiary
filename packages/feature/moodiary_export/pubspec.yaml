@@ -31,6 +31,7 @@ dependencies:
   mui: 0.0.1
 
   crypto: 3.0.7
+  mime: 2.1.0
   gap: 3.0.1
   path: 1.9.1
   share_plus: 13.3.0

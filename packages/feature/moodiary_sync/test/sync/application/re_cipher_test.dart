@@ -89,6 +89,23 @@ void main() {
     );
   });
 
+  test('附件（fileName）与其它媒体一样被收集并转换', () async {
+    final backend = FakeRemoteBackend();
+    backend.objects[SyncKeys.manifestPath] = manifestBytes('mine');
+    backend.objects[SyncKeys.diaryObjectPath('a')] = jsonBytes({
+      'id': 'a',
+      'fileName': ['file-a.pdf'],
+    });
+    backend.objects['media/file/file-a.pdf'] = Uint8List.fromList([1, 2, 3]);
+
+    await CloudReCipher(backend, logger: logger).run(
+      from: SyncCipher.withKey(List.filled(32, 1)),
+      to: SyncCipher.plaintext,
+    );
+
+    expect(backend.opCount('read', 'media/file/file-a.pdf'), greaterThan(0));
+  });
+
   test('已是目标形态的对象不再重传', () async {
     final backend = FakeRemoteBackend();
     backend.objects[SyncKeys.manifestPath] = manifestBytes('mine');
