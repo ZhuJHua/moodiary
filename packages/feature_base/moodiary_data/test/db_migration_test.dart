@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
 import 'package:drift_dev/api/migrations_native.dart';
@@ -187,6 +189,68 @@ void main() {
     final hit = (await DiaryRepository(db).searchDiaries(query: '苹果')).single;
     expect(hit.diary.id, 'd1', reason: "'rebuild' 从 diaries 重灌了整个索引");
     expect(hit.titleHighlight, '关于${marked('苹果')}的日记');
+    await db.close();
+  });
+
+  test('v2 老库升级：媒体名回填进 media_text，附件名移出纯文本，三列重建后可搜', () async {
+    final schema = await verifier.schemaAt(2);
+    final old = v2.DatabaseAtV2(schema.newConnection());
+    v2.DiariesCompanion row(String id, String type, String content) =>
+        v2.DiariesCompanion.insert(
+          id: id,
+          title: '',
+          content: content,
+          contentText: '今天\n计划.pdf',
+          time: 0,
+          lastModified: 7,
+          show: 1,
+          mood: 'neutral',
+          type: type,
+        );
+    final doc = jsonEncode({
+      'type': 'doc',
+      'attrs': {'v': 2},
+      'content': [
+        {
+          'type': 'paragraph',
+          'content': [
+            {'type': 'text', 'text': '今天'},
+          ],
+        },
+        {
+          'type': 'audio',
+          'attrs': {'src': 'audio-1.m4a', 'name': '海边录音'},
+        },
+        {
+          'type': 'attachment',
+          'attrs': {'src': 'file-1.pdf', 'name': '计划.pdf'},
+        },
+      ],
+    });
+    await old.batch((b) {
+      b.insertAll(old.diaries, [
+        row('tiptap', 'tiptap', doc),
+        row('legacy', 'markdown', '海边'),
+      ]);
+    });
+    await old.close();
+
+    final db = MoodiaryDatabase.forTesting(schema.newConnection());
+    await verifier.migrateAndValidate(db, 3);
+    final rows = {for (final r in await db.select(db.diaries).get()) r.id: r};
+    expect(rows['tiptap']!.contentText, '今天');
+    expect(rows['tiptap']!.mediaText, '海边录音\n计划.pdf');
+    expect(rows['tiptap']!.lastModified, 7);
+    expect(rows['legacy']!.contentText, '今天\n计划.pdf');
+    expect(rows['legacy']!.mediaText, isEmpty);
+    final repo = DiaryRepository(db);
+    final hits = await repo.searchDiaries(query: '海边');
+    expect(hits.single.diary.id, 'tiptap');
+    expect(hits.single.excerpt, contains(marked('海边')));
+    expect(
+      (await repo.searchDiaries(query: '计划')).map((h) => h.diary.id).toSet(),
+      {'tiptap', 'legacy'},
+    );
     await db.close();
   });
 

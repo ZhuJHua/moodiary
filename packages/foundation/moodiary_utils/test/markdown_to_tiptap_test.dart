@@ -42,6 +42,7 @@ void main() {
     test('doc 结构 + 段落', () {
       final d = _doc('hello world');
       expect(d['type'], 'doc');
+      expect(d['attrs'], {'v': 2});
       expect(d['content'][0], {
         'type': 'paragraph',
         'content': [
@@ -117,9 +118,12 @@ void main() {
       expect(c[0]['content'][0]['text'], 'var x = 1;');
     });
 
-    test('分隔线', () {
+    test('分隔线带 v2 默认 attrs', () {
       final c = _content('a\n\n---\n\nb');
-      expect(c.any((n) => n['type'] == 'horizontalRule'), isTrue);
+      expect(c.firstWhere((n) => n['type'] == 'horizontalRule')['attrs'], {
+        'variant': 'solid',
+        'label': null,
+      });
     });
 
     test('表格 → table / tableRow / tableHeader / tableCell', () {
@@ -140,18 +144,30 @@ void main() {
       });
       expect(_content('![](audio-1.m4a)')[0], {
         'type': 'audio',
-        'attrs': {'filename': 'audio-1.m4a'},
+        'attrs': {'src': 'audio-1.m4a'},
       });
       expect(_content('![](video-1.mp4)')[0], {
         'type': 'video',
-        'attrs': {'filename': 'video-1.mp4'},
+        'attrs': {'src': 'video-1.mp4'},
       });
     });
 
-    test('图片带 alt 保留', () {
+    test('alt 成为三类媒体的 name，没有 alt 时取 title', () {
       expect(_content('![cover](image-1.jpg)')[0], {
         'type': 'image',
-        'attrs': {'src': 'image-1.jpg', 'alt': 'cover'},
+        'attrs': {'src': 'image-1.jpg', 'name': 'cover'},
+      });
+      expect(_content('![晨间录音](audio-1.m4a)')[0], {
+        'type': 'audio',
+        'attrs': {'src': 'audio-1.m4a', 'name': '晨间录音'},
+      });
+      expect(_content(r'![海边\_1](video-1.mp4)')[0], {
+        'type': 'video',
+        'attrs': {'src': 'video-1.mp4', 'name': '海边_1'},
+      });
+      expect(_content('![](image-2.jpg "旧标题")')[0], {
+        'type': 'image',
+        'attrs': {'src': 'image-2.jpg', 'name': '旧标题'},
       });
     });
 
@@ -198,6 +214,142 @@ void main() {
       final item = _find(doc, 'taskItem').single;
       expect(((item['content'] as List).first as Map)['type'], 'paragraph');
       expect(_find(doc, 'image').single['attrs']['src'], 'image-y.png');
+    });
+  });
+
+  group('MarkdownToTiptap — Moodiary 方言', () {
+    List<dynamic> inline(String md) => _content(md)[0]['content'] as List;
+
+    test('[[label]](moodiary://diary/id) → diaryLink，保留 id 与标签', () {
+      expect(inline('看 [[去年今日]](moodiary://diary/0190-ab) 吧'), [
+        {'type': 'text', 'text': '看 '},
+        {
+          'type': 'diaryLink',
+          'attrs': {'id': '0190-ab', 'label': '去年今日'},
+        },
+        {'type': 'text', 'text': ' 吧'},
+      ]);
+    });
+
+    test('单层方括号与转义括号的标签同样识别', () {
+      expect(inline('[x](moodiary://diary/a1)').single['attrs'], {
+        'id': 'a1',
+        'label': 'x',
+      });
+      expect(inline(r'[[a\]b]](moodiary://diary/a2)').single['attrs'], {
+        'id': 'a2',
+        'label': 'a]b',
+      });
+    });
+
+    test('只有 scheme 没有 id 的链接仍是普通链接', () {
+      final node = inline('[x](moodiary://diary/)').single;
+      expect(node['type'], 'text');
+      expect((node['marks'] as List).single['type'], 'link');
+    });
+
+    test('==x== → highlight；单个 = 不受影响', () {
+      final nodes = inline('a ==亮== b = c');
+      final lit = nodes.firstWhere((n) => n['text'] == '亮');
+      expect(lit['marks'], [
+        {'type': 'highlight'},
+      ]);
+      expect(_allText(_doc('a ==亮== b = c')), 'a 亮 b = c');
+      expect(
+        (inline('今天==很开心==啊')[1]['marks'] as List).single['type'],
+        'highlight',
+      );
+    });
+
+    test('不像高亮的 == 原样保留，不吞字符', () {
+      for (final s in [
+        'if a == b and c == d',
+        'if a==b and c==d',
+        'a===b===c',
+        'a ====b==== c',
+        '==a=b==',
+        '== a ==',
+        '==a ==',
+      ]) {
+        expect(_find(_doc(s), 'text').single, {'type': 'text', 'text': s});
+      }
+    });
+
+    test('<u>x</u> → underline，可与其它标记叠加', () {
+      final nodes = inline('前 <u>**粗**下</u> 后');
+      final bold = nodes.firstWhere((n) => n['text'] == '粗');
+      expect(
+        (bold['marks'] as List).map((m) => m['type']),
+        containsAll(['bold', 'underline']),
+      );
+      final plain = nodes.firstWhere((n) => n['text'] == '下');
+      expect(plain['marks'], [
+        {'type': 'underline'},
+      ]);
+      expect(_allText(_doc('前 <u>**粗**下</u> 后')), '前 粗下 后');
+    });
+
+    test('落单的 <u> 或 </u> 原样当文字，不吞内容', () {
+      expect(_allText(_doc('a <u>b')), 'a <u>b');
+      expect(_allText(_doc('a </u> b')), 'a </u> b');
+    });
+
+    test('独占一行的 [name](file-…) → attachment 块，两侧文字成段', () {
+      final c = _content('看附件\n[报告.pdf](file-0190.pdf)\n结束');
+      expect(c.map((n) => n['type']), ['paragraph', 'attachment', 'paragraph']);
+      expect(c[1]['attrs'], {
+        'src': 'file-0190.pdf',
+        'name': '报告.pdf',
+        'mime': null,
+        'size': null,
+      });
+      expect(c[0]['content'], [
+        {'type': 'text', 'text': '看附件'},
+      ]);
+      expect(c[2]['content'], [
+        {'type': 'text', 'text': '结束'},
+      ]);
+      expect(
+        _content('[a](file-1.pdf)\n[b](file-2.pdf)').map((n) => n['type']),
+        ['attachment', 'attachment'],
+      );
+    });
+
+    test('行内或标题里的 [name](file-…) 仍是普通链接', () {
+      for (final s in [
+        '看附件 [报告.pdf](file-0190.pdf) 结束',
+        '# [报告.pdf](file-0190.pdf)',
+      ]) {
+        expect(_find(_doc(s), 'attachment'), isEmpty);
+        final link = _find(
+          _doc(s),
+          'text',
+        ).firstWhere((n) => n['text'] == '报告.pdf');
+        expect(link['marks'], [
+          {
+            'type': 'link',
+            'attrs': {'href': 'file-0190.pdf'},
+          },
+        ]);
+      }
+    });
+
+    test('attachmentInfo 回填 mime 与 size；空链接文字不起名', () {
+      final json = MarkdownToTiptap.convert(
+        '[](file-1.zip)',
+        attachmentInfo: (name) => (mime: 'application/zip', size: 42),
+      );
+      expect(_find(_parse(json), 'attachment').single['attrs'], {
+        'src': 'file-1.zip',
+        'name': null,
+        'mime': 'application/zip',
+        'size': 42,
+      });
+    });
+
+    test('带路径或 scheme 的链接不是附件', () {
+      expect(_find(_doc('[a](assets/file/file-1.pdf)'), 'attachment'), isEmpty);
+      expect(_find(_doc('[a](https://x/file-1.pdf)'), 'attachment'), isEmpty);
     });
   });
 }

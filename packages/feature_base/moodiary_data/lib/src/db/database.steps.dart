@@ -1424,7 +1424,7 @@ final class Schema3 extends i0.VersionedSchema {
     idxDiaryLinksDst,
     diaryFts,
   ];
-  late final Shape1 diaries = Shape1(
+  late final Shape18 diaries = Shape18(
     source: i0.VersionedTable(
       entityName: 'diaries',
       withoutRowId: false,
@@ -1437,6 +1437,7 @@ final class Schema3 extends i0.VersionedSchema {
         _column_5,
         _column_6,
         _column_7,
+        _column_85,
         _column_8,
         _column_9,
         _column_10,
@@ -1524,7 +1525,7 @@ final class Schema3 extends i0.VersionedSchema {
     'idx_llm_providers_sort',
     'CREATE INDEX idx_llm_providers_sort ON llm_providers (sort_order)',
   );
-  late final Shape18 chatSessions = Shape18(
+  late final Shape19 chatSessions = Shape19(
     source: i0.VersionedTable(
       entityName: 'chat_sessions',
       withoutRowId: false,
@@ -1551,7 +1552,7 @@ final class Schema3 extends i0.VersionedSchema {
     'idx_chat_sessions_updated',
     'CREATE INDEX idx_chat_sessions_updated ON chat_sessions (updated_at DESC)',
   );
-  late final Shape19 chatMessages = Shape19(
+  late final Shape20 chatMessages = Shape20(
     source: i0.VersionedTable(
       entityName: 'chat_messages',
       withoutRowId: false,
@@ -1569,7 +1570,7 @@ final class Schema3 extends i0.VersionedSchema {
         _column_55,
         _column_56,
         _column_57,
-        _column_85,
+        _column_86,
       ],
       attachedDatabase: database,
     ),
@@ -1598,7 +1599,7 @@ final class Schema3 extends i0.VersionedSchema {
     ),
     alias: null,
   );
-  late final Shape20 memories = Shape20(
+  late final Shape21 memories = Shape21(
     source: i0.VersionedTable(
       entityName: 'memories',
       withoutRowId: false,
@@ -1610,7 +1611,7 @@ final class Schema3 extends i0.VersionedSchema {
         _column_6,
         _column_31,
         _column_41,
-        _column_86,
+        _column_87,
       ],
       attachedDatabase: database,
     ),
@@ -1736,11 +1737,11 @@ final class Schema3 extends i0.VersionedSchema {
     'idx_diary_links_dst',
     'CREATE INDEX idx_diary_links_dst ON diary_links (dst_id)',
   );
-  late final Shape21 diaryFts = Shape21(
+  late final Shape22 diaryFts = Shape22(
     source: i0.VersionedVirtualTable(
       entityName: 'diary_fts',
-      moduleAndArgs: 'fts5(title, content_text, content=\'diaries\', content_rowid=\'rid\', tokenize=\'simple\')',
-      columns: [_column_87, _column_88],
+      moduleAndArgs: 'fts5(title, content_text, media_text, content=\'diaries\', content_rowid=\'rid\', tokenize=\'simple\')',
+      columns: [_column_88, _column_89, _column_90],
       attachedDatabase: database,
     ),
     alias: null,
@@ -1749,6 +1750,54 @@ final class Schema3 extends i0.VersionedSchema {
 
 class Shape18 extends i0.VersionedTable {
   Shape18({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<int> get rid =>
+      columnsByName['rid']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get categoryId =>
+      columnsByName['category_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get title =>
+      columnsByName['title']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get content =>
+      columnsByName['content']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get contentText =>
+      columnsByName['content_text']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get mediaText =>
+      columnsByName['media_text']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get time =>
+      columnsByName['time']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get lastModified =>
+      columnsByName['last_modified']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get show =>
+      columnsByName['show']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get mood =>
+      columnsByName['mood']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get type =>
+      columnsByName['type']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<double> get aspect =>
+      columnsByName['aspect']! as i1.GeneratedColumn<double>;
+  i1.GeneratedColumn<String> get placeId =>
+      columnsByName['place_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get weatherIcon =>
+      columnsByName['weather_icon']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get weatherTemp =>
+      columnsByName['weather_temp']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get weatherText =>
+      columnsByName['weather_text']! as i1.GeneratedColumn<String>;
+}
+
+i1.GeneratedColumn<String> _column_85(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'media_text',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL DEFAULT \'\'',
+      defaultValue: const i1.CustomExpression('\'\''),
+    );
+
+class Shape19 extends i0.VersionedTable {
+  Shape19({required super.source, required super.alias}) : super.aliased();
   i1.GeneratedColumn<String> get id =>
       columnsByName['id']! as i1.GeneratedColumn<String>;
   i1.GeneratedColumn<String> get title =>
@@ -1775,8 +1824,8 @@ class Shape18 extends i0.VersionedTable {
           as i1.GeneratedColumn<int>;
 }
 
-class Shape19 extends i0.VersionedTable {
-  Shape19({required super.source, required super.alias}) : super.aliased();
+class Shape20 extends i0.VersionedTable {
+  Shape20({required super.source, required super.alias}) : super.aliased();
   i1.GeneratedColumn<String> get id =>
       columnsByName['id']! as i1.GeneratedColumn<String>;
   i1.GeneratedColumn<String> get sessionId =>
@@ -1803,7 +1852,7 @@ class Shape19 extends i0.VersionedTable {
       columnsByName['provider_id']! as i1.GeneratedColumn<String>;
 }
 
-i1.GeneratedColumn<String> _column_85(String aliasedName) =>
+i1.GeneratedColumn<String> _column_86(String aliasedName) =>
     i1.GeneratedColumn<String>(
       'provider_id',
       aliasedName,
@@ -1812,8 +1861,8 @@ i1.GeneratedColumn<String> _column_85(String aliasedName) =>
       $customConstraints: '',
     );
 
-class Shape20 extends i0.VersionedTable {
-  Shape20({required super.source, required super.alias}) : super.aliased();
+class Shape21 extends i0.VersionedTable {
+  Shape21({required super.source, required super.alias}) : super.aliased();
   i1.GeneratedColumn<String> get id =>
       columnsByName['id']! as i1.GeneratedColumn<String>;
   i1.GeneratedColumn<String> get category =>
@@ -1828,7 +1877,7 @@ class Shape20 extends i0.VersionedTable {
       columnsByName['source']! as i1.GeneratedColumn<String>;
 }
 
-i1.GeneratedColumn<String> _column_86(String aliasedName) =>
+i1.GeneratedColumn<String> _column_87(String aliasedName) =>
     i1.GeneratedColumn<String>(
       'source',
       aliasedName,
@@ -1837,15 +1886,17 @@ i1.GeneratedColumn<String> _column_86(String aliasedName) =>
       $customConstraints: '',
     );
 
-class Shape21 extends i0.VersionedVirtualTable {
-  Shape21({required super.source, required super.alias}) : super.aliased();
+class Shape22 extends i0.VersionedVirtualTable {
+  Shape22({required super.source, required super.alias}) : super.aliased();
   i1.GeneratedColumn<String> get title =>
       columnsByName['title']! as i1.GeneratedColumn<String>;
   i1.GeneratedColumn<String> get contentText =>
       columnsByName['content_text']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get mediaText =>
+      columnsByName['media_text']! as i1.GeneratedColumn<String>;
 }
 
-i1.GeneratedColumn<String> _column_87(String aliasedName) =>
+i1.GeneratedColumn<String> _column_88(String aliasedName) =>
     i1.GeneratedColumn<String>(
       'title',
       aliasedName,
@@ -1853,9 +1904,17 @@ i1.GeneratedColumn<String> _column_87(String aliasedName) =>
       type: i1.DriftSqlType.string,
       $customConstraints: '',
     );
-i1.GeneratedColumn<String> _column_88(String aliasedName) =>
+i1.GeneratedColumn<String> _column_89(String aliasedName) =>
     i1.GeneratedColumn<String>(
       'content_text',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints: '',
+    );
+i1.GeneratedColumn<String> _column_90(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'media_text',
       aliasedName,
       true,
       type: i1.DriftSqlType.string,

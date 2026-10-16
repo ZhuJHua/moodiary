@@ -1,6 +1,7 @@
 import 'dart:convert';
 
-import 'package:drift/drift.dart' show Value;
+import 'package:drift/drift.dart'
+    show ApplyInterceptor, QueryExecutor, QueryInterceptor, Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
@@ -18,6 +19,7 @@ Diary makeDiary(
   List<String> images = const [],
   List<String> audios = const [],
   List<String> videos = const [],
+  List<String> files = const [],
   List<String> tags = const [],
   DateTime? time,
   String? categoryId,
@@ -27,6 +29,7 @@ Diary makeDiary(
       content ??
       jsonEncode({
         'type': 'doc',
+        'attrs': {'v': 2},
         'content': [
           {
             'type': 'paragraph',
@@ -35,19 +38,24 @@ Diary makeDiary(
               for (final target in linkTo)
                 {
                   'type': 'diaryLink',
-                  'attrs': {'id': target},
-                },
-              for (final name in [...images, ...videos, ...audios])
-                {
-                  'type': name.startsWith('image')
-                      ? 'image'
-                      : name.startsWith('video')
-                      ? 'video'
-                      : 'audio',
-                  'attrs': {'filename': name},
+                  'attrs': {'id': target, 'label': 'L'},
                 },
             ],
           },
+          for (final name in [...images, ...videos, ...audios])
+            {
+              'type': name.startsWith('image')
+                  ? 'image'
+                  : name.startsWith('video')
+                  ? 'video'
+                  : 'audio',
+              'attrs': {'src': name},
+            },
+          for (final name in files)
+            {
+              'type': 'attachment',
+              'attrs': {'src': name, 'name': name, 'mime': null, 'size': 1},
+            },
         ],
       });
   return Diary(
@@ -63,12 +71,32 @@ Diary makeDiary(
     imageName: images,
     audioName: audios,
     videoName: videos,
+    fileName: files,
     tags: tags,
     type: 'tiptap',
   );
 }
 
+String v1Doc(List<Map<String, dynamic>> content) =>
+    jsonEncode({'type': 'doc', 'content': content});
+
 String marked(String word) => '$searchHitStart$word$searchHitEnd';
+
+String v2Doc(List<Map<String, dynamic>> content) => jsonEncode({
+  'type': 'doc',
+  'attrs': {'v': 2},
+  'content': content,
+});
+
+Map<String, dynamic> audioNode(String src, [String? name]) => {
+  'type': 'audio',
+  'attrs': {'src': src, 'name': ?name},
+};
+
+List<Object?> audioNamesOf(Diary d) => [
+  for (final node in (jsonDecode(d.content) as Map)['content'] as List)
+    if (node['type'] == 'audio') node['attrs']['name'],
+];
 
 void main() {
   late MoodiaryDatabase db;
@@ -222,6 +250,52 @@ void main() {
       expect(ids, [for (final hit in whole) hit.diary.id], reason: '与不分页同序');
     });
 
+    test('媒体名进 media_text 可搜、摘要落在媒体名上，但不进纯文本', () async {
+      final content = v2Doc([
+        {
+          'type': 'paragraph',
+          'content': [
+            {'type': 'text', 'text': '今天'},
+          ],
+        },
+        audioNode('audio-1.m4a', '海边录音'),
+        {
+          'type': 'attachment',
+          'attrs': {
+            'src': 'file-1.pdf',
+            'name': '旅行计划.pdf',
+            'mime': null,
+            'size': 1,
+          },
+        },
+        {
+          'type': 'image',
+          'attrs': {'src': 'image-1.jpg', 'alt': '落日'},
+        },
+      ]);
+      await repo.insertADiary(
+        makeDiary(
+          'd1',
+          '今天',
+          content: content,
+          images: ['image-1.jpg'],
+          audios: ['audio-1.m4a'],
+          files: ['file-1.pdf'],
+        ),
+      );
+      final row = await (db.select(
+        db.diaries,
+      )..where((d) => d.id.equals('d1'))).getSingle();
+      expect(row.mediaText, '海边录音\n旅行计划.pdf\n落日');
+      expect(row.contentText, '今天');
+      final hit = (await repo.searchDiaries(query: '海边')).single;
+      expect(hit.diary.id, 'd1');
+      expect(hit.excerpt, contains(marked('海边')));
+      for (final q in ['旅行计划', '落日']) {
+        expect((await search(q)).map((d) => d.id), ['d1'], reason: q);
+      }
+    });
+
     test('同 id 重复插入不产生重复行/重复命中', () async {
       final d = makeDiary('d1', '苹果');
       await repo.insertADiary(d);
@@ -331,14 +405,42 @@ void main() {
       expect(auds.map((d) => d.id), ['aud']);
     });
 
-    test('collectReferencedMedia 汇总含回收站', () async {
+    test('collectReferencedMedia 汇总含回收站，附件进 files', () async {
       await repo.insertDiaries([
         makeDiary('a', '正文', images: ['image-1.jpg']),
         makeDiary('b', '正文', audios: ['audio-1.m4a'], show: false),
+        makeDiary('c', '正文', files: ['file-1.pdf'], show: false),
       ]);
       final refs = await repo.collectReferencedMedia();
       expect(refs.images, {'image-1.jpg'});
       expect(refs.audios, {'audio-1.m4a'});
+      expect(refs.files, {'file-1.pdf'});
+    });
+
+    test('附件以 kind=file 存子表并保序往返，媒体查询按 file 过滤', () async {
+      await repo.insertDiaries([
+        makeDiary(
+          'f',
+          '正文',
+          files: ['file-b.pdf', 'file-a.zip'],
+          time: DateTime.utc(2026, 1, 2),
+        ),
+        makeDiary('i', '正文', images: ['image-1.jpg']),
+      ]);
+      final got = (await repo.getDiaryByBusinessId('f'))!;
+      expect(got.fileName, ['file-b.pdf', 'file-a.zip']);
+      final rows = await (db.select(
+        db.diaryMedia,
+      )..where((m) => m.diaryId.equals('f'))).get();
+      expect(rows.map((r) => r.kind).toSet(), {'file'});
+      expect((await repo.getMediaItems(type: .file)).map((m) => m.fileName), [
+        'file-b.pdf',
+        'file-a.zip',
+      ]);
+      expect((await repo.getMediaSourceDiaries(type: .file)).map((d) => d.id), [
+        'f',
+      ]);
+      expect(await repo.getMediaItems(type: .image), hasLength(1));
     });
 
     test('collectReferencedMedia 含助手聊天图片', () async {
@@ -369,6 +471,49 @@ void main() {
 
       final refs = await repo.collectReferencedMedia();
       expect(refs.images, contains('image-chat.jpg'));
+    });
+  });
+
+  group('音频改名', () {
+    freshDatabasePerTest();
+
+    test('renameAudio 改写全部引用日记的节点名，算用户编辑', () async {
+      final before = DateTime.utc(2026, 1, 1);
+      await repo.insertDiaries([
+        makeDiary('a', '一', audios: ['audio-1.m4a']),
+        makeDiary(
+          'b',
+          '二',
+          audios: ['audio-1.m4a', 'audio-2.m4a'],
+          show: false,
+        ),
+        makeDiary('c', '三', audios: ['audio-2.m4a']),
+      ]);
+      final events = <DiaryEvent>[];
+      final sub = repo.diaryEvents.listen(events.add);
+      expect(await repo.renameAudio('audio-1.m4a', '  海边录音 '), 2);
+      await pumpEventQueue();
+      await sub.cancel();
+
+      expect(events.map((e) => (e as DiaryUpdated).diary.id).toSet(), {
+        'a',
+        'b',
+      });
+      expect(events.any((e) => e.fromSync), isFalse);
+      final a = (await repo.getDiaryByBusinessId('a'))!;
+      final b = (await repo.getDiaryByBusinessId('b'))!;
+      final c = (await repo.getDiaryByBusinessId('c'))!;
+      expect(audioNamesOf(a), ['海边录音']);
+      expect(audioNamesOf(b), ['海边录音', null]);
+      expect(a.lastModified.isAfter(before), isTrue);
+      expect(c.lastModified, before);
+      expect(a.contentText, '一');
+      expect((await search('海边')).map((d) => d.id), ['a']);
+
+      expect(await repo.renameAudio('audio-1.m4a', ' '), 2);
+      expect(audioNamesOf((await repo.getDiaryByBusinessId('a'))!), [null]);
+      expect(await search('海边'), isEmpty);
+      expect(await repo.renameAudio('audio-1.m4a', null), 0);
     });
   });
 
@@ -553,6 +698,173 @@ void main() {
     });
   });
 
+  group('内容 schema v2', () {
+    freshDatabasePerTest();
+
+    final v1 = v1Doc([
+      {
+        'type': 'paragraph',
+        'content': [
+          {'type': 'text', 'text': '  早'},
+          {
+            'type': 'diaryLink',
+            'attrs': {'id': 'x', 'label': '', 'mentionSuggestionChar': '['},
+          },
+        ],
+      },
+      {'type': 'horizontalRule'},
+      {
+        'type': 'audio',
+        'attrs': {'filename': 'audio-1.m4a'},
+      },
+      {'type': 'paragraph'},
+    ]);
+    final stamp = DateTime.utc(2025, 6, 1, 8);
+
+    Diary legacyShaped(String id) =>
+        makeDiary(id, '旧版纯文本', content: v1, audios: const [], time: stamp);
+
+    Future<void> rawInsert(Diary d) async {
+      await db
+          .into(db.diaries)
+          .insert(
+            DiariesCompanion.insert(
+              id: d.id,
+              title: d.title,
+              content: d.content,
+              contentText: d.contentText,
+              time: stamp.microsecondsSinceEpoch,
+              lastModified: stamp.microsecondsSinceEpoch,
+              show: 1,
+              mood: d.mood.name,
+              type: d.type,
+            ),
+          );
+    }
+
+    void expectV2(Diary d) {
+      final doc = jsonDecode(d.content) as Map<String, dynamic>;
+      expect(doc['attrs'], {'v': 2});
+      expect(d.content, isNot(contains('filename')));
+      expect(d.content, isNot(contains('mentionSuggestionChar')));
+      expect(d.contentText, '  早x\n');
+      expect(d.audioName, ['audio-1.m4a']);
+      expect(d.lastModified, stamp);
+    }
+
+    test('insert 漏斗：v1 正文落库即 v2，派生重算，lastModified 不动', () async {
+      final events = <DiaryEvent>[];
+      final sub = repo.diaryEvents.listen(events.add);
+      await repo.insertADiary(legacyShaped('a'), fromSync: true);
+      await pumpEventQueue();
+      await sub.cancel();
+      expectV2((await repo.getDiaryByBusinessId('a'))!);
+      expectV2((events.single as DiaryCreated).diary);
+      expect((await repo.getBacklinks('x')).map((d) => d.id), ['a']);
+    });
+
+    test('update 漏斗同样归一，index: skip 也不例外', () async {
+      await repo.updateADiary(newDiary: legacyShaped('a'), index: .skip);
+      expectV2((await repo.getDiaryByBusinessId('a'))!);
+    });
+
+    test('已是 v2 的正文原样落库，旧格式类型不碰', () async {
+      final v2 = makeDiary('v2', '正文', images: ['image-1.jpg']);
+      final rich = makeDiary(
+        'rich',
+        '旧',
+      ).copyWith(type: 'richText', content: '[{"insert":"旧\\n"}]');
+      await repo.insertDiaries([v2, rich]);
+      expect((await repo.getDiaryByBusinessId('v2'))!.content, v2.content);
+      expect((await repo.getDiaryByBusinessId('rich'))!.content, rich.content);
+    });
+
+    test('upgradeContentSchema：批量归一、重算派生与索引，不动 lastModified，可重跑', () async {
+      for (var i = 0; i < 5; i++) {
+        await rawInsert(legacyShaped('d$i'));
+      }
+      await rawInsert(makeDiary('ok', '已是新版'));
+      final progress = <(int, int)>[];
+      final events = <DiaryEvent>[];
+      final sub = repo.diaryEvents.listen(events.add);
+      final changed = await repo.upgradeContentSchema(
+        batchSize: 2,
+        onProgress: (done, total) => progress.add((done, total)),
+      );
+      await pumpEventQueue();
+      await sub.cancel();
+
+      expect(changed, 5);
+      expect(progress.first, (0, 6));
+      expect(progress.last, (6, 6));
+      for (var i = 0; i < 5; i++) {
+        expectV2((await repo.getDiaryByBusinessId('d$i'))!);
+      }
+      expect(events.every((e) => e is DiaryUpdated && e.fromSync), isTrue);
+      expect(events, hasLength(5));
+      expect((await search('早')).map((d) => d.id).toSet(), {
+        for (var i = 0; i < 5; i++) 'd$i',
+      });
+      expect((await repo.getBacklinks('x')), hasLength(5));
+      expect(await repo.upgradeContentSchema(), 0);
+    });
+
+    test('upgradeContentSchema：无名音频节点从 MediaInfo 回填名字，已有名不覆盖', () async {
+      final infos = MediaInfoRepository(db);
+      await infos.insertAMediaInfo(
+        MediaInfo.create(fileName: 'audio-1.m4a', name: '晨间录音'),
+      );
+      await infos.insertAMediaInfo(
+        MediaInfo.create(fileName: 'audio-2.m4a', name: '旧名'),
+      );
+      await rawInsert(
+        makeDiary(
+          'd',
+          '正文',
+          content: v2Doc([
+            audioNode('audio-1.m4a'),
+            audioNode('audio-2.m4a', '新名'),
+            audioNode('audio-3.m4a'),
+          ]),
+        ),
+      );
+
+      expect(await repo.upgradeContentSchema(), 1);
+      final d = (await repo.getDiaryByBusinessId('d'))!;
+      expect(audioNamesOf(d), ['晨间录音', '新名', null]);
+      expect(d.lastModified, stamp);
+      expect((await search('晨间')).map((d) => d.id), ['d']);
+      expect(await repo.upgradeContentSchema(), 0);
+    });
+
+    test('upgradeContentSchema：读后被同步改写或删除的行不回写旧副本', () async {
+      final race = _AfterBatchRead();
+      await db.close();
+      db = MoodiaryDatabase.forTesting(
+        NativeDatabase.memory(
+          setup: (raw) => raw.execute('PRAGMA foreign_keys = ON'),
+        ).interceptWith(race),
+      );
+      repo = DiaryRepository(db);
+      for (final id in ['a', 'b', 'c']) {
+        await rawInsert(legacyShaped(id));
+      }
+      final pulled = makeDiary('a', '远端新版', time: DateTime.utc(2026, 2, 1));
+      race.pending = () async {
+        await repo.insertADiary(pulled, fromSync: true);
+        await repo.deleteDiariesByIds(['b']);
+      };
+
+      expect(await repo.upgradeContentSchema(), 1);
+      expect(race.pending, isNull);
+      final a = (await repo.getDiaryByBusinessId('a'))!;
+      expect(a.content, pulled.content);
+      expect(a.lastModified, pulled.lastModified);
+      expect(await repo.getDiaryByBusinessId('b'), isNull);
+      expectV2((await repo.getDiaryByBusinessId('c'))!);
+    });
+  });
+
   group('重建与修复', () {
     freshDatabasePerTest();
 
@@ -579,6 +891,24 @@ void main() {
       expect(fixed.contentText, '正文 内容');
       expect(fixed.categoryId, isNull);
     });
+
+    test('repairData 发现陈旧的 media_text', () async {
+      await repo.insertADiary(
+        makeDiary(
+          'd1',
+          '正文',
+          content: v2Doc([audioNode('audio-1.m4a', '海边录音')]),
+          audios: ['audio-1.m4a'],
+        ).copyWith(contentText: ''),
+      );
+      await (db.update(db.diaries)..where((d) => d.id.equals('d1'))).write(
+        const DiariesCompanion(mediaText: Value('')),
+      );
+      expect(await search('海边'), isEmpty);
+      final report = await repo.repairData();
+      expect(report.changed, 1);
+      expect((await search('海边')).map((d) => d.id), ['d1']);
+    });
   });
 
   test('clearAll 清空后句柄仍可用', () async {
@@ -592,4 +922,23 @@ void main() {
     await repo.insertADiary(makeDiary('d2', '香蕉'));
     expect((await search('香蕉')).map((d) => d.id), ['d2']);
   });
+}
+
+class _AfterBatchRead extends QueryInterceptor {
+  Future<void> Function()? pending;
+
+  @override
+  Future<List<Map<String, Object?>>> runSelect(
+    QueryExecutor executor,
+    String statement,
+    List<Object?> args,
+  ) async {
+    final rows = await super.runSelect(executor, statement, args);
+    final run = pending;
+    if (run != null && statement.contains('FROM "diaries" WHERE')) {
+      pending = null;
+      await run();
+    }
+    return rows;
+  }
 }

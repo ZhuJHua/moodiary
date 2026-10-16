@@ -34,7 +34,7 @@ class ManifestEntry {
 }
 
 class SyncManifest {
-  static const int currentVersion = 2;
+  static const int currentVersion = 3;
 
   static const int legacyVersion = 1;
 
@@ -60,7 +60,7 @@ class SyncManifest {
 
   factory SyncManifest.fromJson(Map<String, dynamic> json) {
     final version = json['version'] is int ? json['version'] as int : 0;
-    if (version != currentVersion && version != legacyVersion) {
+    if (version < legacyVersion || version > currentVersion) {
       throw SyncException(
         l10n.sync.errManifestVersion(remote: version, local: currentVersion),
       );

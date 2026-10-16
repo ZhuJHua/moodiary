@@ -109,7 +109,7 @@ class MarkdownImporter {
         title ??= MarkdownFrontMatter.titleFromFileName(entry.name);
 
         body = await stage.rewrite(body, entry.path);
-        final converted = _toTiptap(body);
+        final converted = _toTiptap(body, attachmentInfo: stage.attachmentInfo);
 
         String? categoryId;
         final categoryName = meta.category?.trim();
@@ -182,9 +182,13 @@ class MarkdownImporter {
   }
 
   static ({String content, String contentText, DiaryType type}) _toTiptap(
-    String markdown,
-  ) {
-    final json = MarkdownToTiptap.convert(markdown);
+    String markdown, {
+    AttachmentInfo? Function(String name)? attachmentInfo,
+  }) {
+    final json = MarkdownToTiptap.convert(
+      markdown,
+      attachmentInfo: attachmentInfo,
+    );
     if (json != null && json.isNotEmpty) {
       return (
         content: json,

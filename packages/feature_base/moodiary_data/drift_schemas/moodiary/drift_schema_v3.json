@@ -80,6 +80,16 @@
             "dsl_features": []
           },
           {
+            "name": "media_text",
+            "getter_name": "mediaText",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT ''",
+            "default_dart": "const CustomExpression('\\'\\'')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
             "name": "time",
             "getter_name": "time",
             "moor_type": "int",
@@ -1591,10 +1601,20 @@
             "default_dart": null,
             "default_client_dart": null,
             "dsl_features": []
+          },
+          {
+            "name": "media_text",
+            "getter_name": "mediaText",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
           }
         ],
         "is_virtual": true,
-        "create_virtual_stmt": "CREATE VIRTUAL TABLE \"diary_fts\" USING fts5(title, content_text, content='diaries', content_rowid='rid', tokenize='simple')",
+        "create_virtual_stmt": "CREATE VIRTUAL TABLE \"diary_fts\" USING fts5(title, content_text, media_text, content='diaries', content_rowid='rid', tokenize='simple')",
         "without_rowid": false,
         "constraints": []
       }
@@ -1613,7 +1633,7 @@
           29
         ],
         "name": "diary_fts_ai",
-        "sql": "CREATE TRIGGER diary_fts_ai AFTER INSERT ON diaries BEGIN\n  INSERT INTO diary_fts (rowid, title, content_text)\n    VALUES (new.rid, new.title, new.content_text);\nEND;"
+        "sql": "CREATE TRIGGER diary_fts_ai AFTER INSERT ON diaries BEGIN\n  INSERT INTO diary_fts (rowid, title, content_text, media_text)\n    VALUES (new.rid, new.title, new.content_text, new.media_text);\nEND;"
       }
     },
     {
@@ -1630,7 +1650,7 @@
           29
         ],
         "name": "diary_fts_ad",
-        "sql": "CREATE TRIGGER diary_fts_ad AFTER DELETE ON diaries BEGIN\n  INSERT INTO diary_fts (diary_fts, rowid, title, content_text)\n    VALUES ('delete', old.rid, old.title, old.content_text);\nEND;"
+        "sql": "CREATE TRIGGER diary_fts_ad AFTER DELETE ON diaries BEGIN\n  INSERT INTO diary_fts (diary_fts, rowid, title, content_text, media_text)\n    VALUES ('delete', old.rid, old.title, old.content_text, old.media_text);\nEND;"
       }
     },
     {
@@ -1647,7 +1667,7 @@
           29
         ],
         "name": "diary_fts_au",
-        "sql": "CREATE TRIGGER diary_fts_au AFTER UPDATE OF title, content_text ON diaries\nWHEN old.title IS NOT new.title OR old.content_text IS NOT new.content_text\nBEGIN\n  INSERT INTO diary_fts (diary_fts, rowid, title, content_text)\n    VALUES ('delete', old.rid, old.title, old.content_text);\n  INSERT INTO diary_fts (rowid, title, content_text)\n    VALUES (new.rid, new.title, new.content_text);\nEND;"
+        "sql": "CREATE TRIGGER diary_fts_au AFTER UPDATE OF title, content_text, media_text ON diaries\nWHEN old.title IS NOT new.title\n  OR old.content_text IS NOT new.content_text\n  OR old.media_text IS NOT new.media_text\nBEGIN\n  INSERT INTO diary_fts (diary_fts, rowid, title, content_text, media_text)\n    VALUES ('delete', old.rid, old.title, old.content_text, old.media_text);\n  INSERT INTO diary_fts (rowid, title, content_text, media_text)\n    VALUES (new.rid, new.title, new.content_text, new.media_text);\nEND;"
       }
     }
   ],
@@ -1657,7 +1677,7 @@
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"diaries\" (\"rid\" INTEGER PRIMARY KEY, \"id\" TEXT NOT NULL UNIQUE, \"category_id\" TEXT, \"title\" TEXT NOT NULL, \"content\" TEXT NOT NULL, \"content_text\" TEXT NOT NULL, \"time\" INTEGER NOT NULL, \"last_modified\" INTEGER NOT NULL, \"show\" INTEGER NOT NULL, \"mood\" TEXT NOT NULL, \"type\" TEXT NOT NULL, \"aspect\" REAL, \"place_id\" TEXT, \"weather_icon\" TEXT, \"weather_temp\" TEXT, \"weather_text\" TEXT);"
+          "sql": "CREATE TABLE IF NOT EXISTS \"diaries\" (\"rid\" INTEGER PRIMARY KEY, \"id\" TEXT NOT NULL UNIQUE, \"category_id\" TEXT, \"title\" TEXT NOT NULL, \"content\" TEXT NOT NULL, \"content_text\" TEXT NOT NULL, \"media_text\" TEXT NOT NULL DEFAULT '', \"time\" INTEGER NOT NULL, \"last_modified\" INTEGER NOT NULL, \"show\" INTEGER NOT NULL, \"mood\" TEXT NOT NULL, \"type\" TEXT NOT NULL, \"aspect\" REAL, \"place_id\" TEXT, \"weather_icon\" TEXT, \"weather_temp\" TEXT, \"weather_text\" TEXT);"
         }
       ]
     },
@@ -1918,7 +1938,7 @@
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE VIRTUAL TABLE IF NOT EXISTS \"diary_fts\" USING fts5(title, content_text, content='diaries', content_rowid='rid', tokenize='simple');"
+          "sql": "CREATE VIRTUAL TABLE IF NOT EXISTS \"diary_fts\" USING fts5(title, content_text, media_text, content='diaries', content_rowid='rid', tokenize='simple');"
         }
       ]
     },
@@ -1927,7 +1947,7 @@
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE TRIGGER diary_fts_ai AFTER INSERT ON diaries BEGIN INSERT INTO diary_fts (\"rowid\", title, content_text) VALUES (new.rid, new.title, new.content_text);END"
+          "sql": "CREATE TRIGGER diary_fts_ai AFTER INSERT ON diaries BEGIN INSERT INTO diary_fts (\"rowid\", title, content_text, media_text) VALUES (new.rid, new.title, new.content_text, new.media_text);END"
         }
       ]
     },
@@ -1936,7 +1956,7 @@
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE TRIGGER diary_fts_ad AFTER DELETE ON diaries BEGIN INSERT INTO diary_fts (diary_fts, \"rowid\", title, content_text) VALUES ('delete', old.rid, old.title, old.content_text);END"
+          "sql": "CREATE TRIGGER diary_fts_ad AFTER DELETE ON diaries BEGIN INSERT INTO diary_fts (diary_fts, \"rowid\", title, content_text, media_text) VALUES ('delete', old.rid, old.title, old.content_text, old.media_text);END"
         }
       ]
     },
@@ -1945,7 +1965,7 @@
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE TRIGGER diary_fts_au AFTER UPDATE OF title, content_text ON diaries WHEN old.title IS NOT new.title OR old.content_text IS NOT new.content_text BEGIN INSERT INTO diary_fts (diary_fts, \"rowid\", title, content_text) VALUES ('delete', old.rid, old.title, old.content_text);INSERT INTO diary_fts (\"rowid\", title, content_text) VALUES (new.rid, new.title, new.content_text);END"
+          "sql": "CREATE TRIGGER diary_fts_au AFTER UPDATE OF title, content_text, media_text ON diaries WHEN old.title IS NOT new.title OR old.content_text IS NOT new.content_text OR old.media_text IS NOT new.media_text BEGIN INSERT INTO diary_fts (diary_fts, \"rowid\", title, content_text, media_text) VALUES ('delete', old.rid, old.title, old.content_text, old.media_text);INSERT INTO diary_fts (\"rowid\", title, content_text, media_text) VALUES (new.rid, new.title, new.content_text, new.media_text);END"
         }
       ]
     }

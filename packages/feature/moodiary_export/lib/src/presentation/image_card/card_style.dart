@@ -18,6 +18,8 @@ class ImageCardStyle {
 
   final Color codeSurface;
 
+  final Color highlight;
+
   final Color placeholder;
 
   final Color onMedia;
@@ -51,6 +53,7 @@ class ImageCardStyle {
     required this.hairline,
     required this.accent,
     required this.codeSurface,
+    required this.highlight,
     required this.placeholder,
     required this.onMedia,
     required this.mediaScrim,
@@ -98,6 +101,7 @@ class ImageCardStyle {
       hairline: scheme.outlineVariant,
       accent: scheme.primary,
       codeSurface: scheme.surfaceContainer,
+      highlight: scheme.secondaryContainer,
       placeholder: scheme.surfaceContainerHigh,
       onMedia: theme.onMedia,
       mediaScrim: scheme.scrim.withValues(alpha: 0.45),
