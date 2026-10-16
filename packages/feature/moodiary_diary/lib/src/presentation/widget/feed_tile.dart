@@ -229,7 +229,7 @@ class _Headline extends StatelessWidget {
   Widget build(BuildContext context) {
     final typo = context.theme.typography;
     final title = diary.title.trim();
-    final body = diary.contentText.preview();
+    final body = diary.contentText.preview(singleLine: true);
 
     final mark = WidgetSpan(
       alignment: .middle,
@@ -573,6 +573,12 @@ class _MetaLine extends StatelessWidget {
         icon(LucideIcons.mic),
         if (diary.audioName.length > 1)
           TextSpan(text: '${diary.audioName.length}'),
+      ],
+      if (diary.fileName.isNotEmpty) ...[
+        dot,
+        icon(LucideIcons.paperclip),
+        if (diary.fileName.length > 1)
+          TextSpan(text: '${diary.fileName.length}'),
       ],
       if (weather != null) ...[
         dot,

@@ -1,0 +1,316 @@
+.md-title {
+  flex: none;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0 0 0.5rem;
+  padding: 0;
+  border: 0;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  background: transparent;
+  color: var(--app-on-surface);
+  font-family: var(--app-font-sans);
+  font-size: var(--md-text-title);
+  line-height: 1.3;
+  font-weight: 700;
+
+  &::placeholder {
+    color: var(--app-on-surface-variant);
+    opacity: 0.55;
+  }
+}
+
+.md-editor {
+  flex: 1 0 auto;
+  display: flex;
+
+  .ProseMirror {
+    flex: 1;
+    min-width: 0;
+    outline: none;
+    padding-bottom: 96px;
+    color: var(--app-on-surface);
+    caret-color: var(--app-on-surface);
+    font-family: var(--app-font-sans);
+    font-size: var(--md-text-body);
+    line-height: 1.75;
+    overflow-wrap: break-word;
+  }
+
+  .ProseMirror[contenteditable='false'] {
+    padding-bottom: 24px;
+  }
+
+  .ProseMirror :where(p, ul, ol, blockquote, h1, h2, h3, h4, h5, h6) {
+    margin: 0;
+  }
+
+  .ProseMirror > * + *, .ProseMirror blockquote > * + * {
+    margin-top: var(--md-para-gap);
+  }
+
+  .ProseMirror > p {
+    text-indent: var(--app-text-indent);
+  }
+
+  .ProseMirror p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    color: var(--app-on-surface-variant);
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  .ProseMirror :is(h1, h2, h3, h4, h5, h6) {
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
+  .ProseMirror > h1:not(:first-child) {
+    margin-top: 1.5em;
+  }
+
+  .ProseMirror > h2:not(:first-child) {
+    margin-top: 1.4em;
+  }
+
+  .ProseMirror > h3:not(:first-child) {
+    margin-top: 1.3em;
+  }
+
+  .ProseMirror > :is(h4, h5, h6):not(:first-child) {
+    margin-top: 1.2em;
+  }
+
+  .ProseMirror > :is(h1, h2, h3, h4, h5, h6) + * {
+    margin-top: 0.4em;
+  }
+
+  .ProseMirror h1 {
+    font-size: 1.5em;
+  }
+
+  .ProseMirror h2 {
+    font-size: 1.25em;
+  }
+
+  .ProseMirror h3 {
+    font-size: 1.125em;
+    font-weight: 600;
+  }
+
+  .ProseMirror :is(h4, h5, h6) {
+    font-size: 1em;
+    font-weight: 600;
+  }
+
+  .ProseMirror > :first-child {
+    margin-top: 0;
+  }
+
+  .ProseMirror ul, .ProseMirror ol {
+    padding-left: 1.5em;
+  }
+
+  .ProseMirror li > p {
+    margin: 0;
+  }
+
+  .ProseMirror li::marker {
+    color: var(--app-on-surface-variant);
+  }
+
+  .ProseMirror ul[data-type='taskList'] {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  .ProseMirror ul[data-type='taskList'] ul[data-type='taskList'] {
+    padding-left: 0.2em;
+  }
+
+  .ProseMirror ul[data-type='taskList'] > li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .ProseMirror ul[data-type='taskList'] > li > label {
+    position: relative;
+    flex: none;
+    width: 1.2em;
+    height: 1.2em;
+    margin-top: 0.275em;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .ProseMirror ul[data-type='taskList'] > li > label > input {
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    border: 1.5px solid var(--app-on-surface-variant);
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .ProseMirror ul[data-type='taskList'] > li[data-checked='true'] > label > input {
+    border-color: var(--app-on-surface);
+    background: var(--app-on-surface);
+  }
+
+  .ProseMirror ul[data-type='taskList'] > li[data-checked='true'] > label::after {
+    content: '';
+    position: absolute;
+    inset: 0.15em;
+    background: var(--app-surface);
+    pointer-events: none;
+    -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 6 9 17l-5-5'/></svg>") center / contain no-repeat;
+    mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 6 9 17l-5-5'/></svg>") center / contain no-repeat;
+  }
+
+  .ProseMirror ul[data-type='taskList'] > li > div {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .ProseMirror ul[data-type='taskList'] > li[data-checked='true'] > div {
+    color: var(--app-on-surface-variant);
+    text-decoration: line-through;
+  }
+
+  .ProseMirror blockquote {
+    padding-left: 1em;
+    border-left: 0.25em solid var(--app-outline-variant);
+    color: var(--app-on-surface-variant);
+  }
+
+  .ProseMirror code {
+    padding: 0.1em 0.35em;
+    border-radius: 4px;
+    background: var(--app-surface-container-high);
+    font-family: var(--app-font-mono);
+    font-size: 0.875em;
+  }
+
+  .ProseMirror mark {
+    padding: 0 1px;
+    border-radius: 3px;
+    background: var(--md-highlight-bg);
+    color: var(--md-highlight-fg);
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+
+  .ProseMirror a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    text-decoration-color: var(--app-on-surface-variant);
+  }
+
+  .ProseMirror .md-diary-link {
+    padding: 0 4px;
+    border-radius: 6px;
+    background: var(--app-surface-container-high);
+    font-weight: 500;
+    cursor: pointer;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+
+  .ProseMirror .suggestion {
+    border-radius: 4px;
+    background: var(--app-surface-container-high);
+  }
+
+  .ProseMirror .ProseMirror-search-match {
+    border-radius: 2px;
+    background: var(--app-surface-container-highest);
+  }
+
+  .ProseMirror .ProseMirror-active-search-match {
+    background: var(--app-inverse-surface);
+    color: var(--app-on-inverse-surface);
+  }
+
+  .ProseMirror .md-hr {
+    margin: var(--md-para-gap) 0;
+    padding: 0.5em 0;
+    border-radius: 8px;
+    cursor: pointer;
+    /* 不进原生选区，否则 iOS 失焦后会在节点上画选区手柄 */
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .ProseMirror .md-hr > hr {
+    margin: 0;
+    border: 0;
+    height: 1px;
+    background: var(--app-outline-variant);
+  }
+
+  .ProseMirror .md-hr[data-variant='dashed'] > hr {
+    background: linear-gradient(to right, var(--app-outline-variant) 60%, transparent 60%) 0 0 / 10px 1px repeat-x;
+  }
+
+  .ProseMirror .md-hr[data-variant='dotted'] > hr {
+    height: 4px;
+    background: radial-gradient(circle, var(--app-on-surface-variant) 1.2px, transparent 1.6px) 0 50% / 9px 4px repeat-x;
+    opacity: 0.6;
+  }
+
+  .ProseMirror .md-hr[data-variant='double'] > hr {
+    height: 4px;
+    box-sizing: border-box;
+    background: transparent;
+    border-top: 1px solid var(--app-outline-variant);
+    border-bottom: 1px solid var(--app-outline-variant);
+  }
+
+  .ProseMirror .md-hr[data-variant='wavy'] > hr {
+    height: 6px;
+    -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='6' viewBox='0 0 12 6'><path d='M0 3 Q3 0.5 6 3 T12 3' fill='none' stroke='black' stroke-width='1.3'/></svg>") 0 0 / 12px 6px repeat-x;
+    mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='6' viewBox='0 0 12 6'><path d='M0 3 Q3 0.5 6 3 T12 3' fill='none' stroke='black' stroke-width='1.3'/></svg>") 0 0 / 12px 6px repeat-x;
+    background: var(--app-on-surface-variant);
+  }
+
+  .ProseMirror .md-hr[data-variant='text'] {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--app-on-surface-variant);
+    font-size: var(--md-text-sm);
+    line-height: 1.4;
+  }
+
+  .ProseMirror .md-hr[data-variant='text']::before, .ProseMirror .md-hr[data-variant='text']::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--app-outline-variant);
+  }
+
+  .ProseMirror .md-hr__label:empty {
+    display: none;
+  }
+
+  .ProseMirror[contenteditable='true'] .is-selected > .md-block__body, .ProseMirror[contenteditable='true'] .md-hr.ProseMirror-selectednode {
+    outline: 2.5px solid var(--app-on-surface);
+    outline-offset: 3px;
+  }
+
+  .ProseMirror .md-hr.ProseMirror-selectednode {
+    outline-offset: 0;
+  }
+}

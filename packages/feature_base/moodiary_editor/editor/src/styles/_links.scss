@@ -1,0 +1,129 @@
+.md-links {
+  margin: 8px 0 24px;
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--app-surface-container-low);
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__icon {
+    width: 16px;
+    height: 16px;
+    color: var(--app-on-surface-variant);
+  }
+
+  &__title {
+    font-size: var(--md-text-md);
+    font-weight: 600;
+  }
+
+  &__count {
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: var(--app-surface-container-high);
+    color: var(--app-on-surface-variant);
+    font-size: var(--md-text-xs);
+  }
+
+  &__spacer {
+    flex: 1;
+  }
+}
+
+.md-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--app-on-surface-variant);
+  cursor: pointer;
+}
+
+.md-icon-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.md-links {
+  &__section {
+    margin: 8px 4px 2px;
+    color: var(--app-on-surface-variant);
+    font-size: var(--md-text-xs);
+  }
+
+  &__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 8px 4px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  &__item:active {
+    background: var(--app-surface-container-high);
+  }
+
+  &__badge {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background: var(--app-surface-container-high);
+    color: var(--app-on-surface-variant);
+  }
+
+  &__badge svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  &__text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__item-title, &__item-sub {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__item-title {
+    font-size: var(--md-text-md);
+    font-weight: 500;
+  }
+
+  &__item-sub {
+    color: var(--app-on-surface-variant);
+    font-size: var(--md-text-xs);
+  }
+
+  &__chevron {
+    width: 16px;
+    height: 16px;
+    opacity: 0.4;
+  }
+}

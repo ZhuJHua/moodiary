@@ -29,6 +29,13 @@ abstract final class MAssetPicker {
     return files.isEmpty ? null : files.first;
   }
 
+  static Future<XFile?> takePhoto() async {
+    final asset = await MoodiaryCamera.takePhoto();
+    if (asset == null) return null;
+    final files = await _materialize([asset]);
+    return files.firstOrNull;
+  }
+
   static Future<List<AssetEntity>?> _push(
     BuildContext context,
     RequestType type, {

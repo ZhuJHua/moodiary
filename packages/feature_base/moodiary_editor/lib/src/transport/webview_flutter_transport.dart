@@ -3,6 +3,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
+import '../editor_page.dart';
 import 'editor_transport.dart';
 
 class WebViewFlutterTransport extends EditorTransport {
@@ -10,7 +11,7 @@ class WebViewFlutterTransport extends EditorTransport {
 
   @override
   Future<void> prepare({
-    required Uri pageUri,
+    required EditorPage page,
     required OnTransportMessage onMessage,
     required OnTransportConsoleError onConsoleError,
     required OnTransportWebError onWebError,
@@ -27,6 +28,8 @@ class WebViewFlutterTransport extends EditorTransport {
     }
     final controller = WebViewController.fromPlatformCreationParams(params);
     await controller.setJavaScriptMode(.unrestricted);
+    // 底色由宿主 Flutter 提供：页面根元素也透明，平台视图就不会在路由淡入时整块白底弹出
+    await controller.setBackgroundColor(const Color(0x00000000));
     await controller.addJavaScriptChannel(
       kEditorChannel,
       onMessageReceived: (message) => onMessage(message.message),
@@ -43,6 +46,8 @@ class WebViewFlutterTransport extends EditorTransport {
     );
     final platform = controller.platform;
     if (platform is AndroidWebViewController) {
+      await platform.setAllowFileAccess(true);
+      await platform.setAllowContentAccess(false);
       await platform.setMediaPlaybackRequiresUserGesture(false);
       // Android WebView textZoom 会跟随系统字体缩放，与下发的 --app-font-scale 相乘，故钉死 100。
       await platform.setTextZoom(100);
@@ -51,7 +56,20 @@ class WebViewFlutterTransport extends EditorTransport {
       if (debug) await platform.setInspectable(true);
     }
     _web = controller;
-    await controller.loadRequest(pageUri);
+    switch (page) {
+      case EditorAssetPage(:final assetKey):
+        await controller.loadFlutterAsset(assetKey);
+      case EditorFilePage(:final path, :final readAccessDir)
+          when platform is WebKitWebViewController:
+        await platform.loadFileWithParams(
+          WebKitLoadFileParams(
+            absoluteFilePath: path,
+            readAccessPath: readAccessDir,
+          ),
+        );
+      case EditorFilePage(:final path):
+        await controller.loadFile(path);
+    }
   }
 
   @override
@@ -69,6 +87,13 @@ class WebViewFlutterTransport extends EditorTransport {
       return null;
     }
   }
+
+  @override
+  int? get nativeViewId => switch (_web?.platform) {
+    final AndroidWebViewController android => android.webViewIdentifier,
+    final WebKitWebViewController webkit => webkit.webViewIdentifier,
+    _ => null,
+  };
 
   @override
   Widget buildView() {

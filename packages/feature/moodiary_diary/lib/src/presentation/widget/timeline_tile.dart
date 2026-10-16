@@ -456,6 +456,15 @@ class _Footer extends StatelessWidget {
         ),
       );
     }
+    if (diary.fileName.isNotEmpty) {
+      chips.add(
+        _MediaChip(
+          icon: LucideIcons.paperclip,
+          count: diary.fileName.length,
+          style: style,
+        ),
+      );
+    }
     for (final tag in diary.tags.take(2)) {
       chips.add(
         ConstrainedBox(

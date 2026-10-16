@@ -162,6 +162,12 @@ class EditorMigrationRoute extends MoodiaryRouteBase {
   const EditorMigrationRoute() : super(path);
 }
 
+class EditorToolbarSettingRoute extends MoodiaryRouteBase {
+  static const String path = '/setting/editor_toolbar';
+
+  const EditorToolbarSettingRoute() : super(path);
+}
+
 class BackupSyncRoute extends MoodiaryRouteBase {
   static const String path = '/setting/backup_sync';
 

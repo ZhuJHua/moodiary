@@ -46,7 +46,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     with WidgetsBindingObserver, RouteAware {
   static const _autoSaveDebounce = Duration(seconds: 2);
 
-  EditorFocusTarget _restoreFocusTarget = .none;
+  InputSuspension? _routeSuspension;
 
   _Mode _mode = .read;
 
@@ -155,23 +155,13 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
 
   @override
   void didPushNext() {
-    _restoreFocusTarget = _mode == .edit
-        ? _editorController.focusTarget
-        : .none;
-    unawaited(_editorController.blur());
-    FocusManager.instance.primaryFocus?.unfocus();
+    _routeSuspension ??= _editorController.suspendInput();
   }
 
   @override
   void didPopNext() {
-    final target = _restoreFocusTarget;
-    _restoreFocusTarget = .none;
-    if (target == .none || _mode != .edit) return;
-    unawaited(
-      target == .title
-          ? _editorController.focusTitle()
-          : _editorController.focus(),
-    );
+    unawaited(_routeSuspension?.resume());
+    _routeSuspension = null;
   }
 
   @override
@@ -268,7 +258,12 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     super.didChangeAppLifecycleState(state);
     final shouldFlush =
         state == .paused || state == .inactive || state == .hidden;
-    if (shouldFlush && _dirty) _flushAutoSave();
+    if (shouldFlush) unawaited(_flushOnBackground());
+  }
+
+  Future<void> _flushOnBackground() async {
+    await _editorController.flush();
+    if (_dirty) await _flushAutoSave();
   }
 
   void _onContentChanged(String content, String plain) {
@@ -306,13 +301,15 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   }
 
   Future<void> _onPickDate(Diary current) async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: current.time.toLocal(),
-      firstDate: DateTime(1949, 10, 1),
-      lastDate: .now(),
-      switchToInputEntryModeIcon: const Icon(LucideIcons.keyboard),
-      switchToCalendarEntryModeIcon: const Icon(LucideIcons.calendarDays),
+    final picked = await _editorController.withInputSuspended(
+      () => showDatePicker(
+        context: context,
+        initialDate: current.time.toLocal(),
+        firstDate: DateTime(1949, 10, 1),
+        lastDate: .now(),
+        switchToInputEntryModeIcon: const Icon(LucideIcons.keyboard),
+        switchToCalendarEntryModeIcon: const Icon(LucideIcons.calendarDays),
+      ),
     );
     if (picked == null || !mounted) return;
     ref.read(_provider.notifier).changeDate(picked);
@@ -321,11 +318,13 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   }
 
   Future<void> _onPickTime(Diary current) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: .fromDateTime(current.time.toLocal()),
-      switchToInputEntryModeIcon: const Icon(LucideIcons.keyboard),
-      switchToTimerEntryModeIcon: const Icon(LucideIcons.clock),
+    final picked = await _editorController.withInputSuspended(
+      () => showTimePicker(
+        context: context,
+        initialTime: .fromDateTime(current.time.toLocal()),
+        switchToInputEntryModeIcon: const Icon(LucideIcons.keyboard),
+        switchToTimerEntryModeIcon: const Icon(LucideIcons.clock),
+      ),
     );
     if (picked == null || !mounted) return;
     ref.read(_provider.notifier).changeTime(picked);
@@ -334,9 +333,11 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   }
 
   Future<void> _onPickCategory(Diary current) async {
-    final (picked, category) = await CategoryPickerSheet.show(
-      context: context,
-      currentCategoryId: current.categoryId,
+    final (picked, category) = await _editorController.withInputSuspended(
+      () => CategoryPickerSheet.show(
+        context: context,
+        currentCategoryId: current.categoryId,
+      ),
     );
     if (!picked || !mounted) return;
     ref.read(_provider.notifier).changeCategory(category?.id);
@@ -345,11 +346,13 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   }
 
   Future<void> _onAddTag(Diary current) async {
-    final tag = await MAlert.prompt(
-      context,
-      title: l10n.diary.addTag,
-      hintText: l10n.diary.tagNameHint,
-      confirmLabel: l10n.diary.add,
+    final tag = await _editorController.withInputSuspended(
+      () => MAlert.prompt(
+        context,
+        title: l10n.diary.addTag,
+        hintText: l10n.diary.tagNameHint,
+        confirmLabel: l10n.diary.add,
+      ),
     );
     if (tag == null || tag.isEmpty || !mounted) return;
     if (current.tags.contains(tag)) return;
@@ -445,10 +448,12 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   Future<void> _onNewPlace() async {
     _placeTouched = true;
     final fix = _fix;
-    final saved = await showPlaceEditor(
-      context,
-      latitude: fix?.latitude,
-      longitude: fix?.longitude,
+    final saved = await _editorController.withInputSuspended(
+      () => showPlaceEditor(
+        context,
+        latitude: fix?.latitude,
+        longitude: fix?.longitude,
+      ),
     );
     if (saved == null || !mounted) return;
     ref.read(_provider.notifier).changePlace(saved.id);
@@ -537,15 +542,25 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     final headings = diary == null
         ? const <({int level, String text})>[]
         : _headingsOf(diary.content);
-    return PopScope(
-      canPop: _hops.atRoot,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _goHistory(-1);
-      },
+    final panel = _editorController.panel;
+    return ListenableBuilder(
+      listenable: panel,
+      builder: (context, child) => PopScope(
+        canPop: _hops.atRoot && !_editorController.panelOpen,
+        onPopInvokedWithResult: (didPop, _) {
+          if (didPop) return;
+          if (_editorController.panelOpen) {
+            panel.hide();
+          } else {
+            _goHistory(-1);
+          }
+        },
+        child: child!,
+      ),
       child: Scaffold(
         key: _scaffoldKey,
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
-          centerTitle: true,
           leadingWidth: _hops.length > 1 ? 144 : null,
           leading: _hops.length > 1
               ? Row(
@@ -570,14 +585,45 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
                   ],
                 )
               : null,
-          title: (_mode == .edit && diary != null) ? _writingPill(diary) : null,
           actions: [
-            if (diary != null && _mode == .edit)
-              IconButton(
-                tooltip: context.l10n.common.save,
-                icon: const Icon(LucideIcons.check),
-                onPressed: _saveAndExit,
+            if (diary != null && _mode == .edit) ...[
+              ValueListenableBuilder(
+                valueListenable: _editorController.state,
+                builder: (context, state, _) => Row(
+                  mainAxisSize: .min,
+                  children: [
+                    IconButton(
+                      tooltip: context.l10n.editor.toolbar.undo,
+                      icon: const Icon(LucideIcons.undo2),
+                      onPressed: state.canUndo
+                          ? () => _editorController.exec(.undo)
+                          : null,
+                    ),
+                    IconButton(
+                      tooltip: context.l10n.editor.toolbar.redo,
+                      icon: const Icon(LucideIcons.redo2),
+                      onPressed: state.canRedo
+                          ? () => _editorController.exec(.redo)
+                          : null,
+                    ),
+                  ],
+                ),
               ),
+              IconButton(
+                tooltip: context.l10n.editor.toolbar.find,
+                icon: const Icon(LucideIcons.search),
+                onPressed: _editorController.openSearch,
+              ),
+              Padding(
+                padding: const .only(left: 4, right: 8),
+                child: MCircleButton(
+                  tooltip: context.l10n.common.save,
+                  iconSize: 20,
+                  icon: const Icon(LucideIcons.check),
+                  onPressed: _saveAndExit,
+                ),
+              ),
+            ],
             if (diary != null &&
                 _mode == .read &&
                 DiaryType.fromValue(diary.type).isEditable)
@@ -604,7 +650,10 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
               IconButton(
                 tooltip: context.l10n.diary.outline,
                 icon: const Icon(LucideIcons.tableOfContents),
-                onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+                onPressed: () {
+                  _editorController.panel.hide();
+                  _scaffoldKey.currentState?.openEndDrawer();
+                },
               ),
           ],
         ),
@@ -619,10 +668,10 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
                 },
               ),
         body: diary != null
-            ? SafeArea(child: _buildBody(diary))
+            ? SafeArea(bottom: false, child: _buildBody(diary))
             : editAsync.buildLoading(
                 loading: () => const SizedBox.shrink(),
-                data: (d) => SafeArea(child: _buildBody(d)),
+                data: (d) => SafeArea(bottom: false, child: _buildBody(d)),
               ),
       ),
     );
@@ -635,15 +684,17 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     return '$h:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
-  Widget _writingPill(Diary diary) {
+  Widget _statusBar(Diary diary) {
     final typo = context.theme.typography;
     final showWords = MoodiaryKVs.showWordCount.get() ?? true;
     final showTime = MoodiaryKVs.showWritingTime.get() ?? true;
-    final segs = <Widget>[
+    final stats = <Widget>[
       if (showWords)
         _pillSeg(
           LucideIcons.text,
-          context.l10n.diary.wordCount(count: diary.contentText.runes.length),
+          context.l10n.diary.wordCount(
+            count: TiptapContent.countCharacters(diary.contentText),
+          ),
           typo.bodySmall.onSurfaceVariant,
         ),
       if (showTime)
@@ -655,25 +706,16 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
             typo.bodySmall.onSurfaceVariant,
           ),
         ),
-      _saveSeg(),
     ];
-    final children = <Widget>[];
-    for (var i = 0; i < segs.length; i++) {
-      if (i > 0) {
-        children.add(Text(' · ', style: typo.bodySmall.outline));
-      }
-      children.add(segs[i]);
-    }
-    return FittedBox(
-      fit: .scaleDown,
-      child: Container(
-        padding: const .symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: context.theme.colors.surfaceContainerHighest,
-          borderRadius: .circular(20),
-        ),
-        child: Row(mainAxisSize: .min, children: children),
-      ),
+    return Row(
+      children: [
+        for (final (i, seg) in stats.indexed) ...[
+          if (i > 0) Text(' · ', style: typo.bodySmall.outline),
+          seg,
+        ],
+        const Spacer(),
+        _saveSeg(),
+      ],
     );
   }
 
@@ -681,8 +723,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     return Row(
       mainAxisSize: .min,
       children: [
-        Icon(icon, size: 13, color: style.color),
-        const SizedBox(width: 3),
+        Icon(icon, size: 14, color: style.color),
+        const SizedBox(width: 4),
         Text(
           text,
           style: style.copyWith(fontFeatures: const [.tabularFigures()]),
@@ -739,6 +781,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   }
 
   Future<void> _saveAndExit() async {
+    await _editorController.flush();
     if (_dirty) {
       await _flushAutoSave();
       if (!mounted) return;
@@ -749,6 +792,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       toast.success(message: l10n.diary.saved);
     }
     if (!mounted) return;
+    _editorController.panel.hide();
     setState(() => _mode = .read);
   }
 
@@ -762,7 +806,6 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       initialContent: diary.content,
       initialTitle: diary.title,
       editable: _mode == .edit,
-      saveStatus: _saveStatus,
       onChanged: _onContentChanged,
       onTitleChanged: _onTitleChanged,
       editorController: _editorController,
@@ -783,9 +826,14 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       onLocateForPlaces: _onLocateForPlaces,
       onPickPlace: _onPickPlace,
       onNewPlace: _onNewPlace,
-      onManagePlaces: () => const PlaceManagerRoute().push(context),
+      onManagePlaces: () => _editorController.withInputSuspended(
+        () => const PlaceManagerRoute().push<void>(context),
+      ),
       onClearPosition: _onClearPosition,
-      onOpenGraph: () => DiaryGraphRoute(diaryId: diary.id).push(context),
+      onOpenGraph: () => _editorController.withInputSuspended(
+        () => DiaryGraphRoute(diaryId: diary.id).push<void>(context),
+      ),
+      statusBar: _mode == .edit ? _statusBar(diary) : null,
     );
   }
 
@@ -989,6 +1037,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   }
 
   Future<bool> _flushBeforeHop() async {
+    await _editorController.flush();
     if (!_dirty) return true;
     await _flushAutoSave();
     if (!mounted) return false;
