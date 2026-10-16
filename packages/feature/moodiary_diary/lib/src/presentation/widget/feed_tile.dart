@@ -5,7 +5,6 @@ import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
-import 'package:mui/mui.dart';
 
 const double _kThumbW = 96.0;
 const double _kThumbTallW = 56.0;
@@ -229,7 +228,7 @@ class _Headline extends StatelessWidget {
   Widget build(BuildContext context) {
     final typo = context.theme.typography;
     final title = diary.title.trim();
-    final body = diary.contentText.preview();
+    final body = diary.contentText.preview(singleLine: true);
 
     final mark = WidgetSpan(
       alignment: .middle,
@@ -251,7 +250,7 @@ class _Headline extends StatelessWidget {
         TextSpan(
           children: [
             mark,
-            TextSpan(text: body),
+            ...mediaMarkedSpans(body, style: typo.bodyMedium.onSurface),
           ],
         ),
         maxLines: 1,
@@ -269,7 +268,16 @@ class _Headline extends StatelessWidget {
             style: typo.titleSmall.emphasized.onSurface.copyWith(height: 1.35),
           ),
           if (runInBody && body.isNotEmpty)
-            TextSpan(text: '  $body', style: typo.bodySmall.onSurfaceVariant),
+            TextSpan(
+              style: typo.bodySmall.onSurfaceVariant,
+              children: [
+                const TextSpan(text: '  '),
+                ...mediaMarkedSpans(
+                  body,
+                  style: typo.bodySmall.onSurfaceVariant,
+                ),
+              ],
+            ),
         ],
       ),
       maxLines: 1,
@@ -292,7 +300,7 @@ class _Excerpt extends StatelessWidget {
     }
     return Padding(
       padding: const .only(top: 3),
-      child: Text(
+      child: MediaMarkedText(
         body,
         maxLines: maxLines,
         overflow: .ellipsis,
@@ -573,6 +581,12 @@ class _MetaLine extends StatelessWidget {
         icon(LucideIcons.mic),
         if (diary.audioName.length > 1)
           TextSpan(text: '${diary.audioName.length}'),
+      ],
+      if (diary.fileName.isNotEmpty) ...[
+        dot,
+        icon(LucideIcons.paperclip),
+        if (diary.fileName.length > 1)
+          TextSpan(text: '${diary.fileName.length}'),
       ],
       if (weather != null) ...[
         dot,

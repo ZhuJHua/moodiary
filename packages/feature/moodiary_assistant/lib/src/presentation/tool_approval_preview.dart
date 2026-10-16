@@ -147,7 +147,7 @@ Future<ToolApprovalPreview> _updateDiary(
       lines.add((
         label: l10n.assistant.approvalFieldContent,
         value: l10n.assistant.approvalContentRewrite(
-          from: _chars(diary?.contentText ?? ''),
+          from: _chars(MediaMarkup.body(diary?.contentText ?? '')),
           to: _chars(_str(item['content'])),
         ),
       ));

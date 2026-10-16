@@ -33,6 +33,14 @@ class DiarySettingPage extends StatelessWidget {
                   kv: .showWordCount,
                   title: context.l10n.app.showWordCount,
                 ),
+                SettingListTile(
+                  title: context.l10n.editor.toolbar.settingsTitle,
+                  trailing: Icon(
+                    LucideIcons.chevronRight,
+                    color: context.theme.colors.onSurfaceVariant,
+                  ),
+                  onTap: () => const EditorToolbarSettingRoute().push(context),
+                ),
               ],
             ),
             MSliverSettingGroup(

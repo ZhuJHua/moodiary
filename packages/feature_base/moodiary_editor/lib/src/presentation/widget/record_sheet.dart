@@ -8,7 +8,7 @@ import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 import 'package:record/record.dart';
 
-typedef RecordSaveResult = ({String fileName, String? name, Duration duration});
+typedef RecordSaveResult = ({String fileName, String name, Duration duration});
 
 class RecordSheet extends StatefulWidget {
   const RecordSheet({super.key});
@@ -155,11 +155,14 @@ class _RecordSheetState extends State<RecordSheet> {
     final duration = await probeAudioDuration(path) ?? _watch.elapsed;
     final fileName = _fileName;
     _fileName = null;
-    final name = _nameController.text.trim();
+    final typed = _nameController.text.trim();
     if (!mounted || fileName == null) return;
     Navigator.of(context).pop<RecordSaveResult>((
       fileName: fileName,
-      name: name.isEmpty ? null : name,
+      name: typed.isNotEmpty
+          ? typed
+          : '${l10n.editor.toolbar.record} '
+                '${TimeFormat.compactDateTime(DateTime.now())}',
       duration: duration,
     ));
   }

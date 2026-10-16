@@ -203,6 +203,24 @@ const _slangPkgDirs = [
   'packages/foundation/mui',
 ];
 
+const _pigeonPkgDir = 'packages/foundation/moodiary_native';
+
+Future<void> _pigeon() async {
+  final inputs =
+      Directory('$_pigeonPkgDir/pigeons').listSync().whereType<File>().toList()
+        ..sort((a, b) => a.path.compareTo(b.path));
+  for (final input in inputs) {
+    await _run('fvm', [
+      'dart',
+      'run',
+      'pigeon',
+      '--input',
+      'pigeons/${input.uri.pathSegments.last}',
+    ], cwd: _pigeonPkgDir);
+  }
+  await _run('fvm', ['dart', 'format', '$_pigeonPkgDir/lib']);
+}
+
 Future<void> _i18n() async {
   for (final dir in _slangPkgDirs) {
     await _run('fvm', ['dart', 'run', 'slang'], cwd: dir);
@@ -285,6 +303,7 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
   },
   'gen-rust': (_) => _genRust(),
   'i18n': (_) => _i18n(),
+  'pigeon': (_) => _pigeon(),
   'migrations': (_) => _run(
     'fvm',
     ['dart', 'run', 'drift_dev', 'make-migrations'],
@@ -293,6 +312,7 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
   'gen': (_) async {
     await _genRust();
     await _i18n();
+    await _pigeon();
   },
   'clean': (_) async {
     for (final path in [
