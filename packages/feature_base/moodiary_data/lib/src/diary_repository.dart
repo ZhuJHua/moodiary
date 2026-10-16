@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -151,6 +150,9 @@ class DiaryRepository {
     await (_db.delete(
       _db.diaryTags,
     )..where((t) => t.diaryId.equals(d.id))).go();
+    final mediaNames = d.type == DiaryType.tiptap.value
+        ? TiptapContent.parse(d.content).mediaNames
+        : const <String, String>{};
     await _db.batch((b) {
       b.insertAll(_db.diaryMedia, [
         for (final (kind, names) in [
@@ -165,6 +167,7 @@ class DiaryRepository {
               kind: kind,
               seq: i,
               fileName: names[i],
+              name: Value(mediaNames[names[i]]),
             ),
       ]);
       b.insertAll(_db.diaryTags, [
@@ -272,15 +275,14 @@ class DiaryRepository {
     _events.add(DiaryUpdated(newDiary, fromSync: fromSync));
   }
 
-  Future<int> renameAudio(String fileName, String? name) async {
+  Future<int> renameMedia(MediaType type, String fileName, String? name) async {
     final trimmed = name?.trim();
     final value = trimmed == null || trimmed.isEmpty ? null : trimmed;
+    final nodeType = type == .file ? 'attachment' : type.value;
     final m = _db.diaryMedia;
     final referencing = _db.selectOnly(m, distinct: true)
       ..addColumns([m.diaryId])
-      ..where(
-        m.kind.equals(MediaType.audio.value) & m.fileName.equals(fileName),
-      );
+      ..where(m.kind.equals(type.value) & m.fileName.equals(fileName));
     final written = await _db.transaction(() async {
       final rows =
           await (_db.select(_db.diaries)..where(
@@ -291,13 +293,15 @@ class DiaryRepository {
               .get();
       final out = <Diary>[];
       for (final diary in await _assemble(rows)) {
-        final content = _withAudioNames(
+        final content = TiptapContent.mapMediaNames(
           diary.content,
-          (src, current) => src == fileName ? value : current,
+          (t, src, current) =>
+              t == nodeType && src == fileName ? value : current,
         );
         if (identical(content, diary.content)) continue;
         final next = _rederived(touched(diary.copyWith(content: content)));
         await _upsertRow(next);
+        await _syncChildren(next);
         out.add(next);
       }
       return out;
@@ -306,37 +310,6 @@ class DiaryRepository {
       _events.add(DiaryUpdated(diary));
     }
     return written.length;
-  }
-
-  static String _withAudioNames(
-    String content,
-    Object? Function(String src, Object? name) rename,
-  ) {
-    final Object? doc;
-    try {
-      doc = jsonDecode(content);
-    } on FormatException {
-      return content;
-    }
-    var changed = false;
-    void walk(Object? node) {
-      if (node is! Map) return;
-      final attrs = node['attrs'];
-      if (node['type'] == 'audio' && attrs is Map) {
-        final src = attrs['src'];
-        final name = attrs['name'];
-        final next = src is String ? rename(src, name) : name;
-        if (next != name) {
-          attrs['name'] = next;
-          changed = true;
-        }
-      }
-      final children = node['content'];
-      if (children is List) children.forEach(walk);
-    }
-
-    walk(doc);
-    return changed ? jsonEncode(doc) : content;
   }
 
   Future<void> setVisibility(Diary diary, {required bool show}) => updateADiary(
@@ -661,7 +634,7 @@ class DiaryRepository {
     final m = _db.diaryMedia;
     final d = _db.diaries;
     final q = _db.selectOnly(m).join([innerJoin(d, d.id.equalsExp(m.diaryId))])
-      ..addColumns([m.fileName, d.id, d.time])
+      ..addColumns([m.fileName, m.name, d.id, d.time])
       ..where(d.show.equals(1) & m.kind.equals(type.value))
       ..orderBy([
         OrderingTerm.desc(d.time),
@@ -673,6 +646,7 @@ class DiaryRepository {
       for (final r in await q.get())
         MediaItem(
           fileName: r.read(m.fileName)!,
+          name: r.read(m.name),
           diaryId: r.read(d.id)!,
           time: dbToTime(r.read(d.time)!),
         ),
@@ -1097,7 +1071,6 @@ class DiaryRepository {
               .get())
         row.read(idCol)!,
     ];
-    final audioNames = await _audioNames();
     var changed = 0;
     onProgress?.call(0, ids.length);
     for (var start = 0; start < ids.length; start += batchSize) {
@@ -1109,9 +1082,7 @@ class DiaryRepository {
       final updates = [
         for (var i = 0; i < rows.length; i++)
           if (_rederived(
-                batch[i].copyWith(
-                  content: _upgradedContent(batch[i], audioNames),
-                ),
+                batch[i].copyWith(content: _normalizedContent(batch[i])),
               )
               case final next when next != batch[i])
             (rows[i], next),
@@ -1145,27 +1116,6 @@ class DiaryRepository {
     }
     await rebuildAllIndexes();
     return changed;
-  }
-
-  Future<Map<String, String>> _audioNames() async {
-    final rows = await (_db.select(
-      _db.mediaInfos,
-    )..where((m) => m.name.isNotNull())).get();
-    return {
-      for (final r in rows)
-        if (r.name!.trim() case final name when name.isNotEmpty)
-          r.fileName: name,
-    };
-  }
-
-  static String _upgradedContent(Diary d, Map<String, String> audioNames) {
-    final content = _normalizedContent(d);
-    if (audioNames.isEmpty || d.type != DiaryType.tiptap.value) return content;
-    return _withAudioNames(
-      content,
-      (src, name) =>
-          name is String && name.isNotEmpty ? name : audioNames[src] ?? name,
-    );
   }
 
   static bool _sameNameSet(List<String> a, List<String> b) {

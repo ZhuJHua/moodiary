@@ -1198,62 +1198,6 @@
       "references": [],
       "type": "table",
       "data": {
-        "name": "media_infos",
-        "was_declared_in_moor": true,
-        "columns": [
-          {
-            "name": "file_name",
-            "getter_name": "fileName",
-            "moor_type": "string",
-            "nullable": false,
-            "customConstraints": "NOT NULL PRIMARY KEY",
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": [
-              "primary-key"
-            ]
-          },
-          {
-            "name": "name",
-            "getter_name": "name",
-            "moor_type": "string",
-            "nullable": true,
-            "customConstraints": "",
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "duration_ms",
-            "getter_name": "durationMs",
-            "moor_type": "int",
-            "nullable": true,
-            "customConstraints": "",
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "last_modified",
-            "getter_name": "lastModified",
-            "moor_type": "int",
-            "nullable": false,
-            "customConstraints": "NOT NULL",
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          }
-        ],
-        "is_virtual": false,
-        "without_rowid": false,
-        "constraints": []
-      }
-    },
-    {
-      "id": 19,
-      "references": [],
-      "type": "table",
-      "data": {
         "name": "places",
         "was_declared_in_moor": true,
         "columns": [
@@ -1326,7 +1270,7 @@
       }
     },
     {
-      "id": 20,
+      "id": 19,
       "references": [
         0
       ],
@@ -1340,7 +1284,7 @@
       }
     },
     {
-      "id": 21,
+      "id": 20,
       "references": [
         0
       ],
@@ -1354,7 +1298,7 @@
       }
     },
     {
-      "id": 22,
+      "id": 21,
       "references": [
         0
       ],
@@ -1368,7 +1312,7 @@
       }
     },
     {
-      "id": 23,
+      "id": 22,
       "references": [
         0
       ],
@@ -1428,6 +1372,16 @@
             "default_dart": null,
             "default_client_dart": null,
             "dsl_features": []
+          },
+          {
+            "name": "name",
+            "getter_name": "name",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
           }
         ],
         "is_virtual": false,
@@ -1443,13 +1397,13 @@
       }
     },
     {
-      "id": 24,
+      "id": 23,
       "references": [
-        23
+        22
       ],
       "type": "index",
       "data": {
-        "on": 23,
+        "on": 22,
         "name": "idx_diary_media_kind",
         "sql": "CREATE INDEX idx_diary_media_kind ON diary_media (kind, diary_id);",
         "unique": false,
@@ -1457,13 +1411,13 @@
       }
     },
     {
-      "id": 25,
+      "id": 24,
       "references": [
-        23
+        22
       ],
       "type": "index",
       "data": {
-        "on": 23,
+        "on": 22,
         "name": "idx_diary_media_file",
         "sql": "CREATE INDEX idx_diary_media_file ON diary_media (file_name);",
         "unique": false,
@@ -1471,7 +1425,7 @@
       }
     },
     {
-      "id": 26,
+      "id": 25,
       "references": [
         0
       ],
@@ -1535,13 +1489,13 @@
       }
     },
     {
-      "id": 27,
+      "id": 26,
       "references": [
-        26
+        25
       ],
       "type": "index",
       "data": {
-        "on": 26,
+        "on": 25,
         "name": "idx_diary_tags_tag",
         "sql": "CREATE INDEX idx_diary_tags_tag ON diary_tags (tag);",
         "unique": false,
@@ -1549,7 +1503,7 @@
       }
     },
     {
-      "id": 28,
+      "id": 27,
       "references": [
         1
       ],
@@ -1563,7 +1517,7 @@
       }
     },
     {
-      "id": 29,
+      "id": 28,
       "references": [
         0
       ],
@@ -1600,51 +1554,51 @@
       }
     },
     {
-      "id": 30,
+      "id": 29,
       "references": [
         0,
-        29
+        28
       ],
       "type": "trigger",
       "data": {
         "on": 0,
         "references_in_body": [
           0,
-          29
+          28
         ],
         "name": "diary_fts_ai",
         "sql": "CREATE TRIGGER diary_fts_ai AFTER INSERT ON diaries BEGIN\n  INSERT INTO diary_fts (rowid, title, content_text)\n    VALUES (new.rid, new.title, new.content_text);\nEND;"
       }
     },
     {
-      "id": 31,
+      "id": 30,
       "references": [
         0,
-        29
+        28
       ],
       "type": "trigger",
       "data": {
         "on": 0,
         "references_in_body": [
           0,
-          29
+          28
         ],
         "name": "diary_fts_ad",
         "sql": "CREATE TRIGGER diary_fts_ad AFTER DELETE ON diaries BEGIN\n  INSERT INTO diary_fts (diary_fts, rowid, title, content_text)\n    VALUES ('delete', old.rid, old.title, old.content_text);\nEND;"
       }
     },
     {
-      "id": 32,
+      "id": 31,
       "references": [
         0,
-        29
+        28
       ],
       "type": "trigger",
       "data": {
         "on": 0,
         "references_in_body": [
           0,
-          29
+          28
         ],
         "name": "diary_fts_au",
         "sql": "CREATE TRIGGER diary_fts_au AFTER UPDATE OF title, content_text ON diaries\nWHEN old.title IS NOT new.title OR old.content_text IS NOT new.content_text\nBEGIN\n  INSERT INTO diary_fts (diary_fts, rowid, title, content_text)\n    VALUES ('delete', old.rid, old.title, old.content_text);\n  INSERT INTO diary_fts (rowid, title, content_text)\n    VALUES (new.rid, new.title, new.content_text);\nEND;"
@@ -1815,15 +1769,6 @@
       ]
     },
     {
-      "name": "media_infos",
-      "sql": [
-        {
-          "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"media_infos\" (\"file_name\" TEXT NOT NULL PRIMARY KEY, \"name\" TEXT, \"duration_ms\" INTEGER, \"last_modified\" INTEGER NOT NULL);"
-        }
-      ]
-    },
-    {
       "name": "places",
       "sql": [
         {
@@ -1864,7 +1809,7 @@
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"diary_media\" (\"diary_id\" TEXT NOT NULL REFERENCES diaries(id)ON DELETE CASCADE, \"kind\" TEXT NOT NULL, \"seq\" INTEGER NOT NULL, \"file_name\" TEXT NOT NULL, PRIMARY KEY(diary_id, kind, seq));"
+          "sql": "CREATE TABLE IF NOT EXISTS \"diary_media\" (\"diary_id\" TEXT NOT NULL REFERENCES diaries(id)ON DELETE CASCADE, \"kind\" TEXT NOT NULL, \"seq\" INTEGER NOT NULL, \"file_name\" TEXT NOT NULL, \"name\" TEXT, PRIMARY KEY(diary_id, kind, seq));"
         }
       ]
     },

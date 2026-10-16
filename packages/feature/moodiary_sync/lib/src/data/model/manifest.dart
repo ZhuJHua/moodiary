@@ -1,5 +1,4 @@
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 
 class ManifestEntry {
@@ -135,8 +134,11 @@ class SyncKeys {
 
   static String placeObjectPath(String id) => 'place/$id.json';
 
-  static String mediaInfoObjectPath(String fileName) =>
-      'mediainfo/${mediaTypeOfFileName(fileName)}/$fileName.json';
+  static String mediaInfoObjectPath(String fileName) {
+    final i = fileName.indexOf('-');
+    final type = i <= 0 ? 'other' : fileName.substring(0, i);
+    return 'mediainfo/$type/$fileName.json';
+  }
 
   static String mediaObjectPath(String type, String filename) =>
       'media/$type/$filename';

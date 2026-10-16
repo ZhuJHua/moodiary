@@ -25,7 +25,6 @@ class AutoSyncWatcher {
     this._diaries,
     this._categories,
     this._places,
-    this._mediaInfos,
     this._dirty,
     this._openDiaries,
   );
@@ -35,7 +34,6 @@ class AutoSyncWatcher {
   final DiaryRepository _diaries;
   final CategoryRepository _categories;
   final PlaceRepository _places;
-  final MediaInfoRepository _mediaInfos;
   final SyncDirtyTracker _dirty;
   final OpenDiaryRegistry _openDiaries;
 
@@ -54,7 +52,6 @@ class AutoSyncWatcher {
   StreamSubscription<DiaryEvent>? _diarySub;
   StreamSubscription<CategoryEvent>? _categorySub;
   StreamSubscription<PlaceEvent>? _placeSub;
-  StreamSubscription<MediaInfoEvent>? _mediaInfoSub;
   StreamSubscription<String>? _closedSub;
   StreamSubscription<SyncEvent>? _syncSub;
   StreamSubscription<bool>? _netSub;
@@ -99,11 +96,6 @@ class AutoSyncWatcher {
       _onLocalChange();
     });
     _placeSub ??= _places.placeEvents.listen((event) {
-      if (event.fromSync) return;
-      MoodiaryKVs.syncPendingLocal.set(true);
-      _onLocalChange();
-    });
-    _mediaInfoSub ??= _mediaInfos.mediaInfoEvents.listen((event) {
       if (event.fromSync) return;
       MoodiaryKVs.syncPendingLocal.set(true);
       _onLocalChange();
@@ -160,7 +152,6 @@ class AutoSyncWatcher {
     await _diarySub?.cancel();
     await _categorySub?.cancel();
     await _placeSub?.cancel();
-    await _mediaInfoSub?.cancel();
     await _closedSub?.cancel();
     await _syncSub?.cancel();
     await _netSub?.cancel();
@@ -169,7 +160,6 @@ class AutoSyncWatcher {
     _diarySub = null;
     _categorySub = null;
     _placeSub = null;
-    _mediaInfoSub = null;
     _closedSub = null;
     _syncSub = null;
     _netSub = null;

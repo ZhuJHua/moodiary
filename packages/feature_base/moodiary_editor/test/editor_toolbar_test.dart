@@ -8,6 +8,7 @@ import 'package:moodiary_editor/src/ime/ime_panel.dart';
 import 'package:moodiary_editor/src/toolbar/context_items.dart';
 import 'package:moodiary_editor/src/toolbar/editor_state.dart';
 import 'package:moodiary_editor/src/toolbar/editor_toolbar.dart';
+import 'package:moodiary_editor/src/toolbar/editor_toolbar_host.dart';
 import 'package:moodiary_editor/src/toolbar/toolbar_button.dart';
 import 'package:moodiary_editor/src/toolbar/toolbar_tools.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
@@ -468,5 +469,12 @@ void main() {
       await tester.pump();
       expect(released, isTrue);
     });
+  });
+  test('附件改名只改主文件名，扩展名跟实际文件走', () {
+    expect(splitAttachmentName('旅行计划.pdf', 'file-1.pdf'), ('旅行计划', '.pdf'));
+    expect(splitAttachmentName('合同.PDF', 'file-1.pdf'), ('合同', '.PDF'));
+    expect(splitAttachmentName('笔记 v1.2', 'file-1.md'), ('笔记 v1.2', '.md'));
+    expect(splitAttachmentName('奇怪.x-y', 'file-1.bin'), ('奇怪', '.x-y'));
+    expect(splitAttachmentName('无扩展名', 'file-1.bin'), ('无扩展名', ''));
   });
 }

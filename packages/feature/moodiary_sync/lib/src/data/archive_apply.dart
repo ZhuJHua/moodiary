@@ -67,7 +67,6 @@ class ArchiveApplier {
   final SyncDiaryStore _diaryStore;
   final SyncCategoryStore _categoryStore;
   final SyncPlaceStore _placeStore;
-  final SyncMediaInfoStore _mediaInfoStore;
   final SyncTombstoneStore _tombstoneStore;
   final SyncMediaFiles _mediaFiles;
   final Future<SyncCipher> Function() _cipherProvider;
@@ -81,7 +80,6 @@ class ArchiveApplier {
     SyncDiaryStore? diaryStore,
     SyncCategoryStore? categoryStore,
     SyncPlaceStore? placeStore,
-    SyncMediaInfoStore? mediaInfoStore,
     SyncTombstoneStore? tombstoneStore,
     SyncMediaFiles? mediaFiles,
     Future<SyncCipher> Function()? cipherProvider,
@@ -98,7 +96,6 @@ class ArchiveApplier {
     diaryStore ?? RepoSyncDiaryStore(),
     categoryStore ?? RepoSyncCategoryStore(),
     placeStore ?? RepoSyncPlaceStore(),
-    mediaInfoStore ?? RepoSyncMediaInfoStore(),
     tombstoneStore ?? RepoSyncTombstoneStore(),
     mediaFiles ?? DiskSyncMediaFiles(),
     cipherProvider ?? SyncCipher.current,
@@ -116,7 +113,6 @@ class ArchiveApplier {
     this._diaryStore,
     this._categoryStore,
     this._placeStore,
-    this._mediaInfoStore,
     this._tombstoneStore,
     this._mediaFiles,
     this._cipherProvider,
@@ -163,7 +159,6 @@ class ArchiveApplier {
     final diaryRepo = _diaryStore;
     final categoryRepo = _categoryStore;
     final placeRepo = _placeStore;
-    final mediaInfoRepo = _mediaInfoStore;
     final localDiaries = {
       for (final d in await diaryRepo.getAllDiaries()) d.id: d,
     };
@@ -172,10 +167,6 @@ class ArchiveApplier {
     };
     final localCategories = {
       for (final c in await categoryRepo.getAllCategoriesForSync()) c.id: c,
-    };
-    final localMediaInfos = {
-      for (final a in await mediaInfoRepo.getAllMediaInfosForSync())
-        a.fileName: a,
     };
     final tombstones = TombstoneBatch(await _tombstoneStore.getAll());
 
@@ -223,8 +214,9 @@ class ArchiveApplier {
     int diaryChanged = 0;
     int categoryChanged = 0;
     int placeChanged = 0;
-    int mediaInfoChanged = 0;
     int failed = 0;
+
+    final legacyAudioNames = <String, Future<String?>>{};
 
     Future<void> pullOneEntry(MapEntry<String, ManifestEntry> entry) async {
       if (_cancellation.isRequested) return;
@@ -292,6 +284,7 @@ class ArchiveApplier {
           final decoded = await (await _cipher()).decode(bytes);
           if (decoded is! Map<String, dynamic>) return;
           await _adoptLegacyPosition(decoded);
+          await _adoptLegacyAudioNames(decoded, manifest, legacyAudioNames);
           final diary = Diary.fromJson(decoded);
           if (diary.id != id) {
             failed++;
@@ -498,88 +491,6 @@ class ArchiveApplier {
             .placeDownload,
             payload: {'placeId': id, 'placeName': place.name},
           );
-        } else if (key.startsWith(SyncKeys.mediaInfoPrefix)) {
-          final id = key.substring(SyncKeys.mediaInfoPrefix.length);
-          if (isTombstone) {
-            if (restoring) return;
-            final tombstoneMs = entry.value.timeMs;
-            MediaInfo? local = localMediaInfos[id];
-            if (local != null) {
-              local = await mediaInfoRepo.getMediaInfoByFileName(id);
-            }
-            if (local != null &&
-                local.lastModified.millisecondsSinceEpoch > tombstoneMs) {
-              _logger.info(
-                .mediaInfoSkip,
-                reason: .localNewer,
-                payload: {'mediaFileName': id},
-              );
-              return;
-            }
-            if (local != null) {
-              tombstones.add(
-                await mediaInfoRepo.tombstoneMediaInfo(id, fromSync: fromSync),
-              );
-              mediaInfoChanged++;
-              _logger.info(
-                .mediaInfoTombstonePull,
-                payload: {'mediaFileName': id},
-              );
-            }
-            if (trackingId != null) tombstones.markPushed(key, trackingId);
-            return;
-          }
-          final remoteMs = entry.value.timeMs;
-          final localMs =
-              localMediaInfos[id]?.lastModified.millisecondsSinceEpoch ??
-              (restoring ? null : tombstones[key]?.timeMs);
-          if (localMs != null && remoteMs <= localMs) {
-            skipped++;
-            _logger.info(
-              .mediaInfoSkip,
-              reason: .upToDate,
-              payload: {'mediaFileName': id},
-            );
-            return;
-          }
-          final bytes = await backend.readObject(
-            SyncKeys.mediaInfoObjectPath(id),
-          );
-          if (bytes == null) return;
-          final decoded = await (await _cipher()).decode(bytes);
-          if (decoded is! Map<String, dynamic>) return;
-          final freshLocal = await mediaInfoRepo.getMediaInfoByFileName(id);
-          final freshMs =
-              freshLocal?.lastModified.millisecondsSinceEpoch ??
-              (restoring
-                  ? null
-                  : (await _tombstoneStore.getByKey(key))?.timeMs);
-          if (freshMs != null && remoteMs <= freshMs) {
-            _logger.info(
-              .mediaInfoSkip,
-              reason: .upToDate,
-              payload: {'mediaFileName': id},
-            );
-            return;
-          }
-          final mediaInfo = MediaInfo.fromJson(decoded);
-          if (mediaInfo.fileName != id) {
-            failed++;
-            _logger.error(
-              .mediaInfoDownload,
-              payload: {'key': key, 'objectId': mediaInfo.fileName},
-            );
-            return;
-          }
-          await mediaInfoRepo.insertAMediaInfo(
-            restoring && freshLocal == null
-                ? mediaInfo.copyWith(lastModified: DateTime.timestamp())
-                : mediaInfo,
-            fromSync: fromSync,
-          );
-          tombstones.remove(key);
-          mediaInfoChanged++;
-          _logger.info(.mediaInfoDownload, payload: {'mediaFileName': id});
         }
       } catch (e) {
         failed++;
@@ -589,8 +500,6 @@ class ArchiveApplier {
             final k when k.startsWith(SyncKeys.categoryPrefix) =>
               .categoryDownload,
             final k when k.startsWith(SyncKeys.placePrefix) => .placeDownload,
-            final k when k.startsWith(SyncKeys.mediaInfoPrefix) =>
-              .mediaInfoDownload,
             _ => .error,
           },
           payload: {'key': key, 'detail': e.toString()},
@@ -625,7 +534,6 @@ class ArchiveApplier {
         'diaryCount': diaryChanged,
         'categoryCount': categoryChanged,
         'placeCount': placeChanged,
-        'mediaInfoCount': mediaInfoChanged,
         'mediaCount': _mediaDownloaded,
         'failed': failed,
         'mediaFailed': _mediaFailed,
@@ -644,7 +552,6 @@ class ArchiveApplier {
         diaries: diaryChanged,
         categories: categoryChanged,
         places: placeChanged,
-        mediaInfos: mediaInfoChanged,
         mediaFiles: _mediaDownloaded,
       ),
       elapsed: sw.elapsed,
@@ -653,6 +560,52 @@ class ArchiveApplier {
       cancelled: stopped,
       skipped: skipped,
     );
+  }
+
+  Future<void> _adoptLegacyAudioNames(
+    Map<String, dynamic> decoded,
+    SyncManifest manifest,
+    Map<String, Future<String?>> cache,
+  ) async {
+    final content = decoded['content'];
+    if (decoded['type'] != 'tiptap' || content is! String) return;
+    final parsed = TiptapContent.parse(content);
+    if (!parsed.isLegacy) return;
+    final named = parsed.mediaNames.keys.toSet();
+    final names = <String, String>{};
+    for (final src in parsed.media.audios) {
+      if (named.contains(src)) continue;
+      final entry = manifest.entries[SyncKeys.mediaInfo(src)];
+      if (entry == null || entry.deleted) continue;
+      final name = await (cache[src] ??= _readLegacyAudioName(src));
+      if (name != null) names[src] = name;
+    }
+    if (names.isEmpty) return;
+    decoded['content'] = TiptapContent.mapMediaNames(
+      content,
+      (type, src, name) =>
+          type == 'audio' && (name == null || name.trim().isEmpty)
+          ? names[src] ?? name
+          : name,
+    );
+  }
+
+  Future<String?> _readLegacyAudioName(String src) async {
+    try {
+      final bytes = await backend.readObject(SyncKeys.mediaInfoObjectPath(src));
+      if (bytes == null) return null;
+      final info = await (await _cipher()).decode(bytes);
+      final name = info is Map ? info['name'] : null;
+      final trimmed = name is String ? name.trim() : '';
+      return trimmed.isEmpty ? null : trimmed;
+    } catch (e) {
+      _logger.warn(
+        .diaryDownload,
+        reason: .decodeFailed,
+        payload: {'filename': src, 'detail': e.toString()},
+      );
+      return null;
+    }
   }
 
   Future<void> _adoptLegacyPosition(Map<String, dynamic> decoded) async {

@@ -120,7 +120,7 @@ class _BackupSection extends StatelessWidget {
       final base = l10n.export.restoreSummary(
         diary: result.diaryCount,
         category: result.categoryCount,
-        media: result.mediaInfoCount,
+        media: result.mediaCount,
       );
       final withSkipped = result.skipped > 0
           ? l10n.export.restoreSummarySkipped(

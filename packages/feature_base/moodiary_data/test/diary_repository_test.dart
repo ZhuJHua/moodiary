@@ -6,6 +6,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
+import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
@@ -487,10 +488,10 @@ void main() {
     });
   });
 
-  group('音频改名', () {
+  group('媒体改名', () {
     freshDatabasePerTest();
 
-    test('renameAudio 改写全部引用日记的节点名，算用户编辑', () async {
+    test('renameMedia 改写全部引用日记的节点名，算用户编辑', () async {
       final before = DateTime.utc(2026, 1, 1);
       await repo.insertDiaries([
         makeDiary('a', '一', audios: ['audio-1.m4a']),
@@ -504,7 +505,7 @@ void main() {
       ]);
       final events = <DiaryEvent>[];
       final sub = repo.diaryEvents.listen(events.add);
-      expect(await repo.renameAudio('audio-1.m4a', '  海边录音 '), 2);
+      expect(await repo.renameMedia(.audio, 'audio-1.m4a', '  海边录音 '), 2);
       await pumpEventQueue();
       await sub.cancel();
 
@@ -528,11 +529,51 @@ void main() {
       );
       expect((await search('海边')).map((d) => d.id), ['a']);
 
-      expect(await repo.renameAudio('audio-1.m4a', ' '), 2);
+      expect(await repo.renameMedia(.audio, 'audio-1.m4a', ' '), 2);
       expect(audioNamesOf((await repo.getDiaryByBusinessId('a'))!), [null]);
       expect((await repo.getDiaryByBusinessId('a'))!.contentText, '一');
       expect(await search('海边'), isEmpty);
-      expect(await repo.renameAudio('audio-1.m4a', null), 0);
+      expect(await repo.renameMedia(.audio, 'audio-1.m4a', null), 0);
+    });
+
+    test('diary_media 跟着正文记名称，改名后媒体列表同步', () async {
+      await repo.insertDiaries([
+        makeDiary(
+          'a',
+          '一',
+          content: v2Doc([
+            audioNode('audio-1.m4a', ' 晨间 '),
+            {
+              'type': 'image',
+              'attrs': {'src': 'image-1.jpg'},
+            },
+            {
+              'type': 'attachment',
+              'attrs': {'src': 'file-1.pdf', 'name': '计划.pdf'},
+            },
+          ]),
+          audios: ['audio-1.m4a'],
+          images: ['image-1.jpg'],
+          files: ['file-1.pdf'],
+        ),
+      ]);
+      Future<List<(String, String?)>> items(MediaType type) async => [
+        for (final i in await repo.getMediaItems(type: type))
+          (i.fileName, i.name),
+      ];
+      expect(await items(.audio), [('audio-1.m4a', '晨间')]);
+      expect(await items(.image), [('image-1.jpg', null)]);
+      expect(await items(.file), [('file-1.pdf', '计划.pdf')]);
+
+      expect(await repo.renameMedia(.image, 'image-1.jpg', '日落'), 1);
+      expect(await repo.renameMedia(.file, 'file-1.pdf', '旅行.pdf'), 1);
+      expect(await repo.renameMedia(.audio, 'image-1.jpg', '错类型'), 0);
+      expect(await items(.image), [('image-1.jpg', '日落')]);
+      expect(await items(.file), [('file-1.pdf', '旅行.pdf')]);
+      expect(
+        (await repo.getDiaryByBusinessId('a'))!.contentText,
+        '\uFDD3晨间\uFDD0\n\uFDD1日落\uFDD0\n\uFDD4旅行.pdf\uFDD0',
+      );
     });
   });
 
@@ -825,34 +866,6 @@ void main() {
         for (var i = 0; i < 5; i++) 'd$i',
       });
       expect((await repo.getBacklinks('x')), hasLength(5));
-      expect(await repo.upgradeContentSchema(), 0);
-    });
-
-    test('upgradeContentSchema：无名音频节点从 MediaInfo 回填名字，已有名不覆盖', () async {
-      final infos = MediaInfoRepository(db);
-      await infos.insertAMediaInfo(
-        MediaInfo.create(fileName: 'audio-1.m4a', name: '晨间录音'),
-      );
-      await infos.insertAMediaInfo(
-        MediaInfo.create(fileName: 'audio-2.m4a', name: '旧名'),
-      );
-      await rawInsert(
-        makeDiary(
-          'd',
-          '正文',
-          content: v2Doc([
-            audioNode('audio-1.m4a'),
-            audioNode('audio-2.m4a', '新名'),
-            audioNode('audio-3.m4a'),
-          ]),
-        ),
-      );
-
-      expect(await repo.upgradeContentSchema(), 1);
-      final d = (await repo.getDiaryByBusinessId('d'))!;
-      expect(audioNamesOf(d), ['晨间录音', '新名', null]);
-      expect(d.lastModified, stamp);
-      expect((await search('晨间')).map((d) => d.id), ['d']);
       expect(await repo.upgradeContentSchema(), 0);
     });
 

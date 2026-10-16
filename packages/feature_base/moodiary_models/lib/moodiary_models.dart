@@ -18,8 +18,6 @@ export 'src/llm_model_preset.dart';
 export 'src/llm_provider.dart';
 export 'src/llm_provider_preset.dart';
 export 'src/manual_weather.dart';
-export 'src/media_info.dart';
-export 'src/media_info_event.dart';
 export 'src/memory_entry.dart';
 export 'src/place.dart';
 export 'src/place_event.dart';

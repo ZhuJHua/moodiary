@@ -1,12 +1,8 @@
 import 'package:fast_image/fast_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_logging/moodiary_logging.dart';
-import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 import 'media_controller.dart';
@@ -222,6 +218,7 @@ class _MediaBody extends ConsumerWidget {
           .audio => _AudioTile(
             key: key,
             name: names[index],
+            label: flat.labels[group][index],
             date: flat.dates[group],
           ),
           .file => throw UnsupportedError('attachments are not in the gallery'),
@@ -268,52 +265,19 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-final Set<String> _backfillAttempted = {};
-
-Future<void> _backfillChain = Future.value();
-
-void _scheduleBackfill(String name) {
-  if (!_backfillAttempted.add(name)) return;
-  _backfillChain = _backfillChain
-      .then((_) => _backfillMediaInfo(name))
-      .catchError(
-        (Object e, StackTrace s) =>
-            logger.e('audio backfill failed: $name', error: e, stackTrace: s),
-      );
-}
-
-Future<void> _backfillMediaInfo(String name) async {
-  final duration = await probeAudioDuration(
-    AppFiles.getRealPath('audio', name),
-  );
-  if (duration == null) return;
-  final existing = await getIt<MediaInfoRepository>().getMediaInfoByFileName(
-    name,
-  );
-  if (existing?.durationMs != null) return;
-  await getIt<MediaInfoRepository>().insertAMediaInfo(
-    MediaInfo(
-      fileName: name,
-      name: existing?.name,
-      durationMs: duration.inMilliseconds,
-      lastModified:
-          existing?.lastModified ??
-          DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
-    ),
-  );
-}
-
 class _AudioTile extends ConsumerWidget {
   final String name;
+  final String? label;
   final DateTime date;
 
-  const _AudioTile({super.key, required this.name, required this.date});
+  const _AudioTile({
+    super.key,
+    required this.name,
+    required this.label,
+    required this.date,
+  });
 
-  Future<void> _rename(
-    BuildContext context,
-    WidgetRef ref,
-    MediaInfo? info,
-  ) async {
+  Future<void> _rename(BuildContext context, WidgetRef ref) async {
     final action = await MMenu.show<_AudioTileAction>(
       anchorContext: context,
       entries: [
@@ -328,26 +292,21 @@ class _AudioTile extends ConsumerWidget {
     final input = await MAlert.prompt(
       context,
       title: context.l10n.media.rename,
-      initialValue: info?.name ?? '',
+      initialValue: label ?? '',
       hintText: context.l10n.common.name,
     );
-    if (input == null || input.isEmpty) return;
+    if (input == null) return;
     await ref
-        .read(mediaInfoControllerProvider.notifier)
-        .renameAudio(name, input);
+        .read(mediaItemsProvider(type: .audio).notifier)
+        .rename(name, input);
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final scheme = theme.colors;
-    final info = ref.watch(mediaInfoByFileNameProvider(name));
-    final infoReady = ref.watch(mediaInfoControllerProvider).hasValue;
-    if (infoReady && info?.durationMs == null) {
-      _scheduleBackfill(name);
-    }
-    final displayName = info?.name ?? context.l10n.common.audio;
-    final durationMs = info?.durationMs;
+    final displayName = label ?? context.l10n.common.audio;
+    final duration = ref.watch(audioDurationProvider(name)).value;
     return Material(
       color: scheme.surfaceContainer,
       shape: RoundedRectangleBorder(
@@ -363,11 +322,9 @@ class _AudioTile extends ConsumerWidget {
           name: name,
           title: displayName,
           subtitle: TimeFormat.fullDate(date),
-          knownDuration: durationMs == null
-              ? null
-              : Duration(milliseconds: durationMs),
+          knownDuration: duration,
         ),
-        onLongPress: () => _rename(context, ref, info),
+        onLongPress: () => _rename(context, ref),
         child: Padding(
           padding: const .all(12),
           child: Row(
@@ -394,10 +351,10 @@ class _AudioTile extends ConsumerWidget {
                   style: theme.typography.bodyMedium.emphasized.onSurface,
                 ),
               ),
-              if (durationMs != null) ...[
+              if (duration != null) ...[
                 const SizedBox(width: 8),
                 Text(
-                  TimeFormat.mediaDuration(Duration(milliseconds: durationMs)),
+                  TimeFormat.mediaDuration(duration),
                   style: theme.typography.labelSmall.onSurfaceVariant.copyWith(
                     fontFeatures: const [.tabularFigures()],
                   ),

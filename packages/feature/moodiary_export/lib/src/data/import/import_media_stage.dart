@@ -3,11 +3,8 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:mime/mime.dart';
-import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
-import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path/path.dart' as p;
 
@@ -53,17 +50,6 @@ class AppImportMediaStore implements ImportMediaStore {
             ? name
             : null;
       case .audio:
-        final repo = getIt<MediaInfoRepository>();
-        if (await repo.getMediaInfoByFileName(name) == null) {
-          final duration = await probeAudioDuration(local.path);
-          await repo.insertAMediaInfo(
-            MediaInfo.create(
-              fileName: name,
-              name: p.basenameWithoutExtension(path),
-              durationMs: duration?.inMilliseconds,
-            ),
-          );
-        }
         return name;
     }
   }
@@ -112,13 +98,6 @@ class AppImportMediaStore implements ImportMediaStore {
         await AppFiles.deleteFile(target);
         return null;
       }
-      await getIt<MediaInfoRepository>().insertAMediaInfo(
-        MediaInfo.create(
-          fileName: name,
-          name: p.basenameWithoutExtension(path),
-          durationMs: duration.inMilliseconds,
-        ),
-      );
       return name;
     } catch (e, st) {
       logger.e('导入音频失败：$path', error: e, stackTrace: st);

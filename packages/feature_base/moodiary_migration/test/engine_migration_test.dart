@@ -132,14 +132,6 @@ void main() {
           fontWghtAxisMap: {'wght': 400},
         ),
       );
-      isar.mediaInfos.put(
-        legacy.MediaInfo(
-          fileName: 'audio-1.m4a',
-          name: '晨间录音',
-          durationMs: 1234,
-          lastModified: now,
-        ),
-      );
       isar.syncTombstones.put(
         legacy.SyncTombstone(
           key: 'd:deleted-diary',
@@ -213,7 +205,6 @@ void main() {
     categoryRepository: CategoryRepository(db),
     placeRepository: PlaceRepository(db),
     fontRepository: FontRepository(db),
-    mediaInfoRepository: MediaInfoRepository(db),
     tombstoneRepository: TombstoneRepository(db),
     legacyDir: dir.path,
   );
@@ -257,9 +248,6 @@ void main() {
       (await FontRepository(db).getFontByFontFamily('LXGW'))!.fontWghtAxisMap,
       {'wght': 400},
     );
-    final mediaInfo = await MediaInfoRepository(db)
-        .getMediaInfoByFileName('audio-1.m4a');
-    expect(mediaInfo!.durationMs, 1234);
     final tombstone = await TombstoneRepository(db).getByKey('d:deleted-diary');
     expect(tombstone!.pushedBackends, ['backend-a']);
 
@@ -306,7 +294,6 @@ void main() {
       categoryRepository: CategoryRepository(db),
       placeRepository: PlaceRepository(db),
       fontRepository: FontRepository(db),
-      mediaInfoRepository: MediaInfoRepository(db),
       tombstoneRepository: TombstoneRepository(db),
       legacyDir: dir.path,
     );

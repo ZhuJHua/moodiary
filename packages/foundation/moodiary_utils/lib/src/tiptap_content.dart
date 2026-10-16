@@ -316,6 +316,65 @@ class TiptapContent {
     );
   }
 
+  bool get isLegacy {
+    final attrs = _doc?['attrs'];
+    final v = attrs is Map ? attrs['v'] : null;
+    return _doc != null && (v is! int || v < _schemaVersion);
+  }
+
+  late final Map<String, String> mediaNames = _mediaNames();
+
+  Map<String, String> _mediaNames() {
+    final doc = _v2;
+    if (doc == null) return const {};
+    final out = <String, String>{};
+    void walk(Object? node) {
+      if (node is! Map) return;
+      final attrs = node['attrs'];
+      if (_mediaKinds.containsKey(node['type']) && attrs is Map) {
+        final src = attrs['src'];
+        final name = _mediaName(attrs);
+        if (src is String && name.isNotEmpty) out.putIfAbsent(src, () => name);
+      }
+      final content = node['content'];
+      if (content is List) content.forEach(walk);
+    }
+
+    walk(doc);
+    return out;
+  }
+
+  // 返回原串即未改；v1 的音视频 src 还在 filename 里
+  static String mapMediaNames(
+    String content,
+    String? Function(String type, String src, String? name) rename,
+  ) {
+    final doc = _tryDoc(content);
+    if (doc == null) return content;
+    var changed = false;
+    void walk(Object? node) {
+      if (node is! Map) return;
+      final type = node['type'];
+      final attrs = node['attrs'];
+      if (type is String && _mediaKinds.containsKey(type) && attrs is Map) {
+        final src = _nonEmpty(attrs['src']) ?? _nonEmpty(attrs['filename']);
+        final name = attrs['name'];
+        if (src != null) {
+          final next = rename(type, src, name is String ? name : null);
+          if (next != name) {
+            attrs['name'] = next;
+            changed = true;
+          }
+        }
+      }
+      final content = node['content'];
+      if (content is List) content.forEach(walk);
+    }
+
+    walk(doc);
+    return changed ? jsonEncode(doc) : content;
+  }
+
   late final List<String> links = _links();
 
   List<String> _links() {

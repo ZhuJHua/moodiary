@@ -31,7 +31,6 @@ void main() {
         diaryStore: FakeDiaryStore(const []),
         categoryStore: FakeCategoryStore(const []),
         placeStore: FakePlaceStore(),
-        mediaInfoStore: FakeMediaInfoStore(const []),
         tombstoneStore: FakeTombstoneStore(),
         mediaFiles: FakeMediaFiles(),
         cipherProvider: () async => SyncCipher.plaintext,

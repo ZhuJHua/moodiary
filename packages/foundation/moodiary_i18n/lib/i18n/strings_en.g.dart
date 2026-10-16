@@ -803,7 +803,7 @@ class _Translations$export$en extends Translations$export$zh {
 	@override String get restoreConfirmLabel => 'Restore';
 	@override String get restoring => 'Restoring…';
 	@override String restoreDone({required Object summary}) => 'Restored: ${summary}';
-	@override String restoreSummary({required Object diary, required Object category, required Object media}) => '${diary} diaries / ${category} categories / ${media} media entries';
+	@override String restoreSummary({required Object diary, required Object category, required Object media}) => '${diary} diaries / ${category} categories / ${media} media files';
 	@override String restoreSummarySkipped({required Object base, required Object skipped}) => '${base}, ${skipped} skipped (this device has newer content)';
 	@override String restoreSummaryFailed({required Object base, required Object failed}) => '${base}, ${failed} failed';
 	@override String restorePartial({required Object summary}) => 'Restore did not fully succeed: ${summary}. Check storage space and connection, then retry — don\'t delete the old device\'s data yet';
@@ -1151,11 +1151,6 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String get kindPlaceSkip => 'Place skipped';
 	@override String get kindPlaceTombstonePush => 'Place deletion pushed';
 	@override String get kindPlaceTombstonePull => 'Place deletion applied';
-	@override String get kindMediaInfoUpload => 'Media info uploaded';
-	@override String get kindMediaInfoDownload => 'Media info downloaded';
-	@override String get kindMediaInfoSkip => 'Media info skipped';
-	@override String get kindMediaInfoTombstonePush => 'Media info deletion pushed';
-	@override String get kindMediaInfoTombstonePull => 'Media info deletion pulled';
 	@override String get kindMediaUpload => 'Media uploaded';
 	@override String get kindMediaDownload => 'Media downloaded';
 	@override String get kindMediaSkip => 'Media skipped';
@@ -1347,7 +1342,7 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String warnMediaFailed({required Object count}) => '${count} media file(s) could not be downloaded; images or audio may be missing from those entries';
 	@override String get warnStopped => 'Stopped by you — the rest will continue on the next sync';
 	@override String warnFailedCount({required Object count}) => '${count} failed';
-	@override String reCipherSummary({required Object diary, required Object category, required Object mediaInfo, required Object media, required Object ms}) => '${diary} entries + ${category} categories + ${mediaInfo} media records + ${media} files (${ms}ms)';
+	@override String reCipherSummary({required Object diary, required Object category, required Object media, required Object ms}) => '${diary} entries + ${category} categories + ${media} files (${ms}ms)';
 	@override String reCipherFailedSuffix({required Object base, required Object failed}) => '${base}\n${failed} objects failed and were skipped';
 	@override String get stepPrepare => 'Preparing';
 	@override String stepDiary({required Object id}) => 'Entry ${id}';

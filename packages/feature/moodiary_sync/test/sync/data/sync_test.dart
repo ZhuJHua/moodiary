@@ -6,13 +6,12 @@ void main() {
   group('SyncReport', () {
     test('legacy totals are the sum of both directions', () {
       const r = SyncReport(
-        pushed: SyncCounts(diaries: 2, categories: 1, mediaInfos: 3),
+        pushed: SyncCounts(diaries: 2, categories: 1),
         pulled: SyncCounts(diaries: 1, mediaFiles: 4),
         elapsed: .zero,
       );
       expect(r.diaryCount, 3);
       expect(r.categoryCount, 1);
-      expect(r.mediaInfoCount, 3);
       expect(r.changedNothing, isFalse);
     });
   });
@@ -64,7 +63,7 @@ void main() {
     test('entry changes ignore media files', () {
       expect(const SyncCounts(mediaFiles: 3).hasEntryChanges, isFalse);
       expect(const SyncCounts(mediaFiles: 3).isEmpty, isFalse);
-      expect(const SyncCounts(mediaInfos: 1).hasEntryChanges, isTrue);
+      expect(const SyncCounts(places: 1).hasEntryChanges, isTrue);
     });
   });
 

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:mui/mui.dart';
+import 'package:path/path.dart' as p;
 
 import '../ime/ime_panel.dart';
 import '../moodiary_editor.dart';
@@ -21,8 +22,6 @@ class EditorToolbarHost extends StatefulWidget {
   final MoodiaryEditorController controller;
   final bool editable;
   final Future<void> Function(InsertItem item) onInsertMedia;
-  final Future<void> Function(EditorSelectedNode node, String? name)
-  onMediaRenamed;
   final Widget child;
   final Widget? statusBar;
 
@@ -31,7 +30,6 @@ class EditorToolbarHost extends StatefulWidget {
     required this.controller,
     required this.editable,
     required this.onInsertMedia,
-    required this.onMediaRenamed,
     required this.child,
     this.statusBar,
   });
@@ -147,20 +145,24 @@ class _EditorToolbarHostState extends State<EditorToolbarHost> {
     final node = _state.node;
     if (node == null) return;
     final current = node.attrs['name'] as String?;
+    final attachment = node.type == .attachment;
+    final (stem, ext) = attachment
+        ? splitAttachmentName(current ?? '', node.attrs['src'] as String? ?? '')
+        : (current, '');
     final input = await _c.withInputSuspended(
       () async => mounted
           ? showMediaNameSheet(
               context,
-              current,
-              required: node.type == .audio || node.type == .attachment,
+              stem,
+              required: attachment,
+              suffix: ext.isEmpty ? null : ext,
             )
           : null,
     );
     if (input == null || !mounted) return;
-    final name = input.isEmpty ? null : input;
+    final name = input.isEmpty ? null : '$input$ext';
     if (name == current) return;
     await _c.exec(.setMediaName, {'name': name});
-    await widget.onMediaRenamed(node, name);
   }
 
   void _onInsert(InsertItem item) {
@@ -452,4 +454,18 @@ class _EditorToolbarHostState extends State<EditorToolbarHost> {
       ],
     );
   }
+}
+
+// 扩展名跟着实际文件走；存盘时不安全的扩展名被换成 .bin，那时只能信名称里的
+@visibleForTesting
+(String, String) splitAttachmentName(String name, String src) {
+  final real = p.extension(src);
+  final own = p.extension(name);
+  final ext = real.isEmpty || real == '.bin' || own.toLowerCase() == real
+      ? own
+      : real;
+  final stem = own.isNotEmpty && own == ext
+      ? name.substring(0, name.length - own.length)
+      : name;
+  return (stem, ext);
 }

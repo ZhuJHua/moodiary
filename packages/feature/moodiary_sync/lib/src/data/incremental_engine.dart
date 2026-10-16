@@ -39,7 +39,6 @@ class IncrementalSyncEngine {
   final SyncDiaryStore _diaryStore;
   final SyncCategoryStore _categoryStore;
   final SyncPlaceStore _placeStore;
-  final SyncMediaInfoStore _mediaInfoStore;
   final SyncTombstoneStore _tombstoneStore;
   final SyncMediaFiles _mediaFiles;
 
@@ -68,7 +67,6 @@ class IncrementalSyncEngine {
     SyncDiaryStore? diaryStore,
     SyncCategoryStore? categoryStore,
     SyncPlaceStore? placeStore,
-    SyncMediaInfoStore? mediaInfoStore,
     SyncTombstoneStore? tombstoneStore,
     SyncMediaFiles? mediaFiles,
     Future<SyncCipher> Function()? cipherProvider,
@@ -86,7 +84,6 @@ class IncrementalSyncEngine {
       diaryStore ?? RepoSyncDiaryStore(),
       categoryStore ?? RepoSyncCategoryStore(),
       placeStore ?? RepoSyncPlaceStore(),
-      mediaInfoStore ?? RepoSyncMediaInfoStore(),
       tombstoneStore ?? RepoSyncTombstoneStore(),
       mediaFiles ?? DiskSyncMediaFiles(),
       cipherProvider ?? SyncCipher.current,
@@ -104,7 +101,6 @@ class IncrementalSyncEngine {
     this._diaryStore,
     this._categoryStore,
     this._placeStore,
-    this._mediaInfoStore,
     this._tombstoneStore,
     this._mediaFiles,
     this._cipherProvider,
@@ -202,7 +198,6 @@ class IncrementalSyncEngine {
       diaryStore: _diaryStore,
       categoryStore: _categoryStore,
       placeStore: _placeStore,
-      mediaInfoStore: _mediaInfoStore,
       tombstoneStore: _tombstoneStore,
       mediaFiles: _mediaFiles,
       cipherProvider: _cipher,
@@ -312,12 +307,10 @@ class IncrementalSyncEngine {
     final skippedOpen = allDiaries.length - diaries.length;
     final categories = await _categoryStore.getAllCategoriesForSync();
     final places = await _placeStore.getAllPlacesForSync();
-    final mediaInfoRows = await _mediaInfoStore.getAllMediaInfosForSync();
 
     int diaryChanged = 0;
     int categoryChanged = 0;
     int placeChanged = 0;
-    int mediaInfoChanged = 0;
     int failed = 0;
 
     final trackingId = backend.persistentBackendId;
@@ -481,48 +474,6 @@ class IncrementalSyncEngine {
 
     await runPooled(places, concurrency, pushOnePlace);
 
-    Future<void> pushOneMediaInfo(MediaInfo mediaInfo) async {
-      if (_cancellation.isRequested) return;
-      final key = SyncKeys.mediaInfo(mediaInfo.fileName);
-      final remoteEntry = manifest.entries[key];
-      final remoteMs = remoteEntry?.timeMs;
-      if (remoteMs != null &&
-          mediaInfo.lastModified.millisecondsSinceEpoch <= remoteMs) {
-        _logger.info(
-          .mediaInfoSkip,
-          reason: .upToDate,
-          payload: {'mediaFileName': mediaInfo.fileName},
-        );
-        return;
-      }
-      try {
-        final bytes = await (await _cipher()).encode(mediaInfo.toJson());
-        await backend.writeObject(
-          SyncKeys.mediaInfoObjectPath(mediaInfo.fileName),
-          bytes,
-        );
-        updated.entries[key] = ManifestEntry(
-          timeMs: mediaInfo.lastModified.millisecondsSinceEpoch,
-        );
-        mediaInfoChanged++;
-        _logger.info(
-          .mediaInfoUpload,
-          payload: {'mediaFileName': mediaInfo.fileName, 'bytes': bytes.length},
-        );
-      } catch (e) {
-        failed++;
-        _logger.error(
-          .mediaInfoUpload,
-          payload: {
-            'mediaFileName': mediaInfo.fileName,
-            'detail': e.toString(),
-          },
-        );
-      }
-    }
-
-    await runPooled(mediaInfoRows, concurrency, pushOneMediaInfo);
-
     void pushOneTombstone(SyncTombstone t) {
       final key = t.key;
       final remoteEntry = manifest.entries[key];
@@ -546,11 +497,6 @@ class IncrementalSyncEngine {
           SyncEventKind.placeSkip,
           SyncEventKind.placeTombstonePush,
           'placeId',
-        ),
-        .mediaInfo => (
-          SyncEventKind.mediaInfoSkip,
-          SyncEventKind.mediaInfoTombstonePush,
-          'mediaFileName',
         ),
       };
       if (remoteEntry == null || remoteEntry.deleted) {
@@ -586,9 +532,6 @@ class IncrementalSyncEngine {
         case .place:
           deferredObjectDeletes.add(SyncKeys.placeObjectPath(t.entityId));
           placeChanged++;
-        case .mediaInfo:
-          deferredObjectDeletes.add(SyncKeys.mediaInfoObjectPath(t.entityId));
-          mediaInfoChanged++;
       }
       if (trackingId != null) tombstones.markPushed(key, trackingId);
       _logger.info(
@@ -603,10 +546,7 @@ class IncrementalSyncEngine {
       pushOneTombstone(t);
     }
 
-    if (diaryChanged > 0 ||
-        categoryChanged > 0 ||
-        placeChanged > 0 ||
-        mediaInfoChanged > 0) {
+    if (diaryChanged > 0 || categoryChanged > 0 || placeChanged > 0) {
       final token = _newWriteToken();
       final manifestBytes = await (await _cipher()).encode(
         updated.withWriteToken(token).toJson(),
@@ -659,7 +599,6 @@ class IncrementalSyncEngine {
         'diaryCount': diaryChanged,
         'categoryCount': categoryChanged,
         'placeCount': placeChanged,
-        'mediaInfoCount': mediaInfoChanged,
         'mediaCount': _mediaUploaded,
         'failed': failed,
         'cancelled': stopped,
@@ -676,7 +615,6 @@ class IncrementalSyncEngine {
         diaries: diaryChanged,
         categories: categoryChanged,
         places: placeChanged,
-        mediaInfos: mediaInfoChanged,
         mediaFiles: _mediaUploaded,
       ),
       elapsed: sw.elapsed,

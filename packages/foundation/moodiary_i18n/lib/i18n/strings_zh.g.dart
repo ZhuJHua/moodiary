@@ -2204,8 +2204,8 @@ class Translations$export$zh {
 	/// zh: '恢复完成：{summary}'
 	String restoreDone({required Object summary}) => '恢复完成：${summary}';
 
-	/// zh: '日记 {diary} 条 / 分类 {category} 条 / 媒体信息 {media} 条'
-	String restoreSummary({required Object diary, required Object category, required Object media}) => '日记 ${diary} 条 / 分类 ${category} 条 / 媒体信息 ${media} 条';
+	/// zh: '日记 {diary} 条 / 分类 {category} 条 / 媒体 {media} 个'
+	String restoreSummary({required Object diary, required Object category, required Object media}) => '日记 ${diary} 条 / 分类 ${category} 条 / 媒体 ${media} 个';
 
 	/// zh: '{base}，跳过 {skipped} 条（本机内容更新）'
 	String restoreSummarySkipped({required Object base, required Object skipped}) => '${base}，跳过 ${skipped} 条（本机内容更新）';
@@ -3130,21 +3130,6 @@ class Translations$sync$zh {
 	/// zh: '地点删除应用'
 	String get kindPlaceTombstonePull => '地点删除应用';
 
-	/// zh: '上传媒体信息'
-	String get kindMediaInfoUpload => '上传媒体信息';
-
-	/// zh: '下载媒体信息'
-	String get kindMediaInfoDownload => '下载媒体信息';
-
-	/// zh: '跳过媒体信息'
-	String get kindMediaInfoSkip => '跳过媒体信息';
-
-	/// zh: '推送媒体信息删除'
-	String get kindMediaInfoTombstonePush => '推送媒体信息删除';
-
-	/// zh: '同步媒体信息删除'
-	String get kindMediaInfoTombstonePull => '同步媒体信息删除';
-
 	/// zh: '上传媒体'
 	String get kindMediaUpload => '上传媒体';
 
@@ -3718,8 +3703,8 @@ class Translations$sync$zh {
 	/// zh: '{count} 条失败'
 	String warnFailedCount({required Object count}) => '${count} 条失败';
 
-	/// zh: '日记 {diary} + 分类 {category} + 媒体信息 {mediaInfo} + 媒体 {media}（耗时 {ms}ms）'
-	String reCipherSummary({required Object diary, required Object category, required Object mediaInfo, required Object media, required Object ms}) => '日记 ${diary} + 分类 ${category} + 媒体信息 ${mediaInfo} + 媒体 ${media}（耗时 ${ms}ms）';
+	/// zh: '日记 {diary} + 分类 {category} + 媒体 {media}（耗时 {ms}ms）'
+	String reCipherSummary({required Object diary, required Object category, required Object media, required Object ms}) => '日记 ${diary} + 分类 ${category} + 媒体 ${media}（耗时 ${ms}ms）';
 
 	/// zh: '{base} {failed} 个对象失败已跳过'
 	String reCipherFailedSuffix({required Object base, required Object failed}) => '${base}\n${failed} 个对象失败已跳过';

@@ -233,7 +233,6 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
         return;
       }
       final title = p.basenameWithoutExtension(file.path);
-      await _saveMediaInfo(name, title: title, duration: duration);
       await _controller.exec(.insertAudio, {
         'name': name,
         'displayName': title,
@@ -252,43 +251,10 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       builder: (_) => const RecordSheet(),
     );
     if (result == null) return;
-    await _saveMediaInfo(
-      result.fileName,
-      title: result.name,
-      duration: result.duration,
-    );
     await _controller.exec(.insertAudio, {
       'name': result.fileName,
       'displayName': result.name,
     });
-  }
-
-  Future<void> _saveMediaInfo(
-    String fileName, {
-    String? title,
-    Duration? duration,
-  }) async {
-    try {
-      await getIt<MediaInfoRepository>().insertAMediaInfo(
-        MediaInfo.create(
-          fileName: fileName,
-          name: title,
-          durationMs: duration?.inMilliseconds,
-        ),
-      );
-    } catch (e, s) {
-      logger.e('save media info failed: $fileName', error: e, stackTrace: s);
-    }
-  }
-
-  Future<void> _onMediaRenamed(EditorSelectedNode node, String? name) async {
-    final src = node.attrs['src'];
-    if (node.type != .audio || src is! String) return;
-    try {
-      await getIt<MediaInfoRepository>().renameMedia(src, name);
-    } catch (e, s) {
-      logger.e('rename media info failed: $src', error: e, stackTrace: s);
-    }
   }
 
   void _previewImages(List<String> images, int index) {
@@ -345,7 +311,6 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       controller: _controller,
       editable: widget.editable,
       onInsertMedia: _onInsertMedia,
-      onMediaRenamed: _onMediaRenamed,
       statusBar: widget.statusBar,
       child: _buildEditor(),
     );

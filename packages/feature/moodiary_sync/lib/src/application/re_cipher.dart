@@ -20,7 +20,6 @@ class ReCipherReport {
   final int diaryCount;
   final int categoryCount;
   final int placeCount;
-  final int mediaInfoCount;
   final int mediaCount;
   final int failed;
   final Duration elapsed;
@@ -29,7 +28,6 @@ class ReCipherReport {
     required this.diaryCount,
     required this.categoryCount,
     this.placeCount = 0,
-    this.mediaInfoCount = 0,
     required this.mediaCount,
     required this.failed,
     required this.elapsed,
@@ -40,7 +38,6 @@ class ReCipherReport {
     final base = l10n.sync.reCipherSummary(
       diary: diaryCount,
       category: categoryCount,
-      mediaInfo: mediaInfoCount,
       media: mediaCount,
       ms: elapsed.inMilliseconds,
     );
@@ -134,7 +131,6 @@ class CloudReCipher {
     int diaryCount = 0;
     int categoryCount = 0;
     int placeCount = 0;
-    int mediaInfoCount = 0;
     int mediaCount = 0;
     int failed = 0;
 
@@ -237,9 +233,7 @@ class CloudReCipher {
     for (final id in mediaInfoIds) {
       try {
         final ok = await reEncodeJson(SyncKeys.mediaInfoObjectPath(id));
-        if (ok == true) {
-          mediaInfoCount++;
-        } else if (ok == false) {
+        if (ok == false) {
           failed++;
         }
       } catch (e) {
@@ -313,7 +307,6 @@ class CloudReCipher {
       diaryCount: diaryCount,
       categoryCount: categoryCount,
       placeCount: placeCount,
-      mediaInfoCount: mediaInfoCount,
       mediaCount: mediaCount,
       failed: failed,
       elapsed: sw.elapsed,

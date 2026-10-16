@@ -4,6 +4,7 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite3;
 import 'package:sqlite3_simple/sqlite3_simple.dart';
 import 'package:sqlite3_vec/sqlite3_vec.dart';
@@ -96,6 +97,12 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
               ]) {
                 await m.dropColumn(schema.chatSessions, column);
               }
+              await _adoptMediaInfoNames();
+              await m.deleteTable('media_infos');
+              await customStatement(
+                "DELETE FROM tombstones WHERE \"key\" LIKE 'm:%'",
+              );
+              await m.addColumn(schema.diaryMedia, schema.diaryMedia.name);
               await customStatement('DROP TABLE diary_fts');
               await m.createTable(schema.diaryFts);
               for (final trigger in [diaryFtsAi, diaryFtsAd, diaryFtsAu]) {
@@ -153,6 +160,39 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
         );
       }
     });
+  }
+
+  // 2.8.1 的音频名只在 media_infos 里；正文其余的升级留给 upgradeContentSchema
+  Future<void> _adoptMediaInfoNames() async {
+    final names = {
+      for (final row in await customSelect(
+        'SELECT file_name, name FROM media_infos WHERE name IS NOT NULL',
+      ).get())
+        if (row.read<String>('name').trim() case final name
+            when name.isNotEmpty)
+          row.read<String>('file_name'): name,
+    };
+    if (names.isEmpty) return;
+    final rows = await customSelect(
+      'SELECT DISTINCT d.id, d.content FROM diaries d '
+      'JOIN diary_media m ON m.diary_id = d.id '
+      "WHERE m.kind = 'audio' AND d.type = 'tiptap'",
+    ).get();
+    for (final row in rows) {
+      final content = row.read<String>('content');
+      final named = TiptapContent.mapMediaNames(
+        content,
+        (type, src, name) =>
+            type == 'audio' && (name == null || name.trim().isEmpty)
+            ? names[src] ?? name
+            : name,
+      );
+      if (identical(named, content)) continue;
+      await customStatement('UPDATE diaries SET content = ? WHERE id = ?', [
+        named,
+        row.read<String>('id'),
+      ]);
+    }
   }
 
   Future<void> clearAll() async {

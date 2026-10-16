@@ -957,6 +957,61 @@ void main() {
     });
   });
 
+  group('TiptapContent 媒体名称', () {
+    final v1 = jsonEncode({
+      'type': 'doc',
+      'content': [
+        {
+          'type': 'audio',
+          'attrs': {'filename': 'audio-1.m4a'},
+        },
+        {
+          'type': 'image',
+          'attrs': {'src': 'image-1.jpg', 'alt': ' 日落 '},
+        },
+        {
+          'type': 'attachment',
+          'attrs': {'src': 'file-1.pdf', 'name': '计划.pdf'},
+        },
+        {
+          'type': 'image',
+          'attrs': {'src': 'image-1.jpg', 'name': '第二处'},
+        },
+      ],
+    });
+
+    test('isLegacy 只认没有 v 或 v 小于 2 的文档', () {
+      expect(TiptapContent.parse(v1).isLegacy, isTrue);
+      expect(
+        TiptapContent.parse(TiptapContent.normalize(v1)).isLegacy,
+        isFalse,
+      );
+      expect(TiptapContent.parse('纯文本').isLegacy, isFalse);
+    });
+
+    test('mediaNames 按 src 取第一个非空名称，归一后的 alt 也算', () {
+      expect(TiptapContent.parse(v1).mediaNames, {
+        'image-1.jpg': '日落',
+        'file-1.pdf': '计划.pdf',
+      });
+    });
+
+    test('mapMediaNames 认 v1 的 filename，没改返回原串', () {
+      String? keep(String type, String src, String? name) => name;
+      expect(identical(TiptapContent.mapMediaNames(v1, keep), v1), isTrue);
+      final named = TiptapContent.mapMediaNames(
+        v1,
+        (type, src, name) => type == 'audio' ? '晨间' : name,
+      );
+      expect(TiptapContent.parse(named).mediaNames['audio-1.m4a'], '晨间');
+      expect(TiptapContent.parse(named).isLegacy, isTrue);
+      expect(
+        identical(TiptapContent.mapMediaNames('纯文本', keep), '纯文本'),
+        isTrue,
+      );
+    });
+  });
+
   group('MediaMarkup', () {
     String desc(List<MarkupRun> runs) => runs
         .map(

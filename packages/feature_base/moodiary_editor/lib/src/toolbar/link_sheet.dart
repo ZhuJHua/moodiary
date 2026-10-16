@@ -132,18 +132,25 @@ Future<String?> showMediaNameSheet(
   BuildContext context,
   String? name, {
   required bool required,
+  String? suffix,
 }) {
   return MSheet.show<String>(
     context,
-    builder: (_) => _MediaNameSheet(name: name ?? '', required: required),
+    builder: (_) =>
+        _MediaNameSheet(name: name ?? '', required: required, suffix: suffix),
   );
 }
 
 class _MediaNameSheet extends StatefulWidget {
   final String name;
   final bool required;
+  final String? suffix;
 
-  const _MediaNameSheet({required this.name, required this.required});
+  const _MediaNameSheet({
+    required this.name,
+    required this.required,
+    this.suffix,
+  });
 
   @override
   State<_MediaNameSheet> createState() => _MediaNameSheetState();
@@ -181,6 +188,7 @@ class _MediaNameSheetState extends State<_MediaNameSheet> {
       child: MField(
         controller: _name,
         label: context.l10n.common.name,
+        suffixText: widget.suffix,
         autofocus: true,
         textInputAction: .done,
         onSubmitted: (_) => _submit(),
