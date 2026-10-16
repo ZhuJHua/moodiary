@@ -16,14 +16,12 @@ abstract class HttpServer implements RustOpaqueInterface {
 
   static Future<HttpServer> start({
     required int preferredPort,
-    required bool loopbackOnly,
     required String spoolDir,
     required FutureOr<HttpServerResponse> Function(HttpServerRequest) onRequest,
     required FutureOr<void> Function(PlatformInt64, PlatformInt64)
     onBodyProgress,
   }) => RustLib.instance.api.crateApiHttpServerHttpServerStart(
     preferredPort: preferredPort,
-    loopbackOnly: loopbackOnly,
     spoolDir: spoolDir,
     onRequest: onRequest,
     onBodyProgress: onBodyProgress,
@@ -35,7 +33,6 @@ abstract class HttpServer implements RustOpaqueInterface {
 class HttpServerRequest {
   final String method;
   final String path;
-  final List<KeyValue> query;
   final List<KeyValue> headers;
   final Uint8List body;
   final String? bodyFilePath;
@@ -43,7 +40,6 @@ class HttpServerRequest {
   const HttpServerRequest({
     required this.method,
     required this.path,
-    required this.query,
     required this.headers,
     required this.body,
     this.bodyFilePath,
@@ -53,7 +49,6 @@ class HttpServerRequest {
   int get hashCode =>
       method.hashCode ^
       path.hashCode ^
-      query.hashCode ^
       headers.hashCode ^
       body.hashCode ^
       bodyFilePath.hashCode;
@@ -65,7 +60,6 @@ class HttpServerRequest {
           runtimeType == other.runtimeType &&
           method == other.method &&
           path == other.path &&
-          query == other.query &&
           headers == other.headers &&
           body == other.body &&
           bodyFilePath == other.bodyFilePath;
@@ -75,21 +69,15 @@ class HttpServerResponse {
   final int status;
   final List<KeyValue> headers;
   final Uint8List body;
-  final String? bodyFilePath;
 
   const HttpServerResponse({
     required this.status,
     required this.headers,
     required this.body,
-    this.bodyFilePath,
   });
 
   @override
-  int get hashCode =>
-      status.hashCode ^
-      headers.hashCode ^
-      body.hashCode ^
-      bodyFilePath.hashCode;
+  int get hashCode => status.hashCode ^ headers.hashCode ^ body.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -98,6 +86,5 @@ class HttpServerResponse {
           runtimeType == other.runtimeType &&
           status == other.status &&
           headers == other.headers &&
-          body == other.body &&
-          bodyFilePath == other.bodyFilePath;
+          body == other.body;
 }
