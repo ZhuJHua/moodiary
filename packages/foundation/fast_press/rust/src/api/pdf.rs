@@ -20,6 +20,7 @@ pub struct _PdfStyle {
     pub include_meta: bool,
     pub video_label: String,
     pub audio_label: String,
+    pub attachment_label: String,
 }
 
 pub fn write_pdf(

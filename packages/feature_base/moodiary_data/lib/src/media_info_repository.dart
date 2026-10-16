@@ -85,6 +85,19 @@ class MediaInfoRepository {
     _events.add(MediaInfoUpserted(mediaInfo, fromSync: fromSync));
   }
 
+  Future<MediaInfo> renameMedia(String fileName, String? name) async {
+    final trimmed = name?.trim();
+    final existing = await getMediaInfoByFileName(fileName);
+    final info = MediaInfo(
+      fileName: fileName,
+      name: trimmed == null || trimmed.isEmpty ? null : trimmed,
+      durationMs: existing?.durationMs,
+      lastModified: .timestamp(),
+    );
+    await insertAMediaInfo(info);
+    return info;
+  }
+
   Future<bool> deleteAMediaInfo(String fileName) async {
     final tombstone = SyncTombstone.forMediaInfo(fileName, at: .timestamp());
     final deleted = await _db.transaction(() async {

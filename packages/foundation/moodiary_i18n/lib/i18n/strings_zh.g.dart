@@ -2034,15 +2034,6 @@ class Translations$editor$zh {
 	/// zh: '音频文件错误'
 	String get audioFileError => '音频文件错误';
 
-	/// zh: '选择音频'
-	String get pickAudio => '选择音频';
-
-	/// zh: '录音'
-	String get pickAudioFromRecord => '录音';
-
-	/// zh: '音频文件'
-	String get pickAudioFromFile => '音频文件';
-
 	/// zh: '当前平台暂不支持编辑器'
 	String get unsupportedPlatform => '当前平台暂不支持编辑器';
 
@@ -2072,6 +2063,18 @@ class Translations$editor$zh {
 
 	/// zh: '旧格式正文转换为新编辑器格式，转换前自动备份原文'
 	String get migrationStepEditorDesc => '旧格式正文转换为新编辑器格式，转换前自动备份原文';
+
+	/// zh: '新版编辑器需要把日记升级到新格式，完成后才能继续使用。'
+	String get migrationContentIntro => '新版编辑器需要把日记升级到新格式，完成后才能继续使用。';
+
+	/// zh: '日记格式升级'
+	String get migrationStepContent => '日记格式升级';
+
+	/// zh: '升级到新版编辑器格式，升级前自动备份全部日记'
+	String get migrationStepContentDesc => '升级到新版编辑器格式，升级前自动备份全部日记';
+
+	/// zh: '全部日记已升级到新格式'
+	String get migrationContentDoneSubtitle => '全部日记已升级到新格式';
 
 	/// zh: '开始迁移'
 	String get migrationStart => '开始迁移';
@@ -2150,6 +2153,8 @@ class Translations$editor$zh {
 
 	/// zh: '开始使用'
 	String get migrationEnter => '开始使用';
+
+	late final Translations$editor$toolbar$zh toolbar = Translations$editor$toolbar$zh.internal(_root);
 }
 
 // Path: export
@@ -2427,11 +2432,11 @@ class Translations$export$zh {
 	/// zh: '音频'
 	String get mediaAudio => '音频';
 
+	/// zh: '附件'
+	String get mediaAttachment => '附件';
+
 	/// zh: '图片'
 	String get formatImage => '图片';
-
-	/// zh: 'PNG 长图'
-	String get formatImageSubtitle => 'PNG 长图';
 
 	/// zh: '导出为图片'
 	String get titleImage => '导出为图片';
@@ -2462,18 +2467,6 @@ class Translations$export$zh {
 
 	/// zh: '{width} dp · {scale}×（输出宽 {pixels} px）'
 	String imageSizeValue({required Object width, required Object scale, required Object pixels}) => '${width} dp · ${scale}×（输出宽 ${pixels} px）';
-
-	/// zh: '宽度'
-	String get imageWidth => '宽度';
-
-	/// zh: '标准'
-	String get imageWidthStandard => '标准';
-
-	/// zh: '宽'
-	String get imageWidthWide => '宽';
-
-	/// zh: '清晰度'
-	String get imageScale => '清晰度';
 
 	/// zh: '显示 Moodiary 标识'
 	String get imageWatermark => '显示 Moodiary 标识';
@@ -2682,6 +2675,9 @@ class Translations$media$zh {
 	/// zh: '图片'
 	String get typeImage => '图片';
 
+	/// zh: '附件'
+	String get typeFile => '附件';
+
 	/// zh: '清理无用文件'
 	String get deleteUseLessFile => '清理无用文件';
 
@@ -2719,6 +2715,11 @@ class Translations$media$zh {
 	/// zh: '(other) {{count} 段视频}'
 	String videoCount({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
 		other: '${count} 段视频',
+	);
+
+	/// zh: '(other) {{count} 个附件}'
+	String fileCount({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
+		other: '${count} 个附件',
 	);
 }
 
@@ -3959,4 +3960,280 @@ class Translations$ui$zh {
 
 	/// zh: '{speed: String}× 倍速播放中'
 	String videoPlayerSpeedBoost({required String speed}) => '${speed}× 倍速播放中';
+}
+
+// Path: editor.toolbar
+class Translations$editor$toolbar$zh {
+	Translations$editor$toolbar$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: '插入'
+	String get insert => '插入';
+
+	/// zh: '格式'
+	String get format => '格式';
+
+	/// zh: '待办'
+	String get task => '待办';
+
+	/// zh: '图片'
+	String get image => '图片';
+
+	/// zh: '链接'
+	String get link => '链接';
+
+	/// zh: '双链'
+	String get diaryLink => '双链';
+
+	/// zh: '切回键盘'
+	String get showKeyboard => '切回键盘';
+
+	/// zh: '收起键盘'
+	String get hideKeyboard => '收起键盘';
+
+	/// zh: '粗体'
+	String get bold => '粗体';
+
+	/// zh: '斜体'
+	String get italic => '斜体';
+
+	/// zh: '下划线'
+	String get underline => '下划线';
+
+	/// zh: '删除线'
+	String get strike => '删除线';
+
+	/// zh: '高亮'
+	String get highlight => '高亮';
+
+	/// zh: '行内代码'
+	String get inlineCode => '行内代码';
+
+	/// zh: '正文'
+	String get paragraph => '正文';
+
+	/// zh: '无序'
+	String get bulletList => '无序';
+
+	/// zh: '有序'
+	String get orderedList => '有序';
+
+	/// zh: '待办'
+	String get taskList => '待办';
+
+	/// zh: '取消缩进'
+	String get outdent => '取消缩进';
+
+	/// zh: '缩进'
+	String get indent => '缩进';
+
+	/// zh: '引用'
+	String get quote => '引用';
+
+	/// zh: '代码块'
+	String get codeBlock => '代码块';
+
+	/// zh: '清除格式'
+	String get clearFormat => '清除格式';
+
+	/// zh: '媒体与文件'
+	String get mediaAndFiles => '媒体与文件';
+
+	/// zh: '内容块'
+	String get blocks => '内容块';
+
+	/// zh: '相册'
+	String get gallery => '相册';
+
+	/// zh: '拍照'
+	String get camera => '拍照';
+
+	/// zh: '视频'
+	String get video => '视频';
+
+	/// zh: '录音'
+	String get record => '录音';
+
+	/// zh: '音频'
+	String get audio => '音频';
+
+	/// zh: '附件'
+	String get attachment => '附件';
+
+	/// zh: '表格'
+	String get table => '表格';
+
+	/// zh: '分割线'
+	String get divider => '分割线';
+
+	/// zh: '查看'
+	String get view => '查看';
+
+	/// zh: '宽度'
+	String get width => '宽度';
+
+	/// zh: '上移'
+	String get moveUp => '上移';
+
+	/// zh: '下移'
+	String get moveDown => '下移';
+
+	/// zh: '删除'
+	String get delete => '删除';
+
+	/// zh: '打开'
+	String get open => '打开';
+
+	/// zh: '重命名'
+	String get rename => '重命名';
+
+	/// zh: '样式'
+	String get style => '样式';
+
+	/// zh: '实线'
+	String get dividerSolid => '实线';
+
+	/// zh: '虚线'
+	String get dividerDashed => '虚线';
+
+	/// zh: '点线'
+	String get dividerDotted => '点线';
+
+	/// zh: '双线'
+	String get dividerDouble => '双线';
+
+	/// zh: '波浪线'
+	String get dividerWavy => '波浪线';
+
+	/// zh: '文字分隔'
+	String get dividerText => '文字分隔';
+
+	/// zh: '分隔文字'
+	String get dividerLabel => '分隔文字';
+
+	/// zh: '加行'
+	String get tableAddRow => '加行';
+
+	/// zh: '删行'
+	String get tableDeleteRow => '删行';
+
+	/// zh: '加列'
+	String get tableAddColumn => '加列';
+
+	/// zh: '删列'
+	String get tableDeleteColumn => '删列';
+
+	/// zh: '表格'
+	String get tableMenu => '表格';
+
+	/// zh: '表头'
+	String get tableHeaderRow => '表头';
+
+	/// zh: '删除表格'
+	String get tableDelete => '删除表格';
+
+	/// zh: '复制代码'
+	String get copyCode => '复制代码';
+
+	/// zh: '跳出代码块'
+	String get exitCode => '跳出代码块';
+
+	/// zh: '打开链接'
+	String get openLink => '打开链接';
+
+	/// zh: '复制链接'
+	String get copyLink => '复制链接';
+
+	/// zh: '编辑链接'
+	String get editLink => '编辑链接';
+
+	/// zh: '移除链接'
+	String get removeLink => '移除链接';
+
+	/// zh: '添加链接'
+	String get addLinkTitle => '添加链接';
+
+	/// zh: '编辑链接'
+	String get editLinkTitle => '编辑链接';
+
+	/// zh: '显示文字'
+	String get linkText => '显示文字';
+
+	/// zh: '链接地址'
+	String get linkUrl => '链接地址';
+
+	/// zh: '撤销'
+	String get undo => '撤销';
+
+	/// zh: '重做'
+	String get redo => '重做';
+
+	/// zh: '查找'
+	String get find => '查找';
+
+	/// zh: '查找'
+	String get findHint => '查找';
+
+	/// zh: '替换为'
+	String get replaceHint => '替换为';
+
+	/// zh: '替换'
+	String get replace => '替换';
+
+	/// zh: '全部替换'
+	String get replaceAll => '全部替换';
+
+	/// zh: '替换'
+	String get toggleReplace => '替换';
+
+	/// zh: '上一个'
+	String get previousMatch => '上一个';
+
+	/// zh: '下一个'
+	String get nextMatch => '下一个';
+
+	/// zh: '关闭查找'
+	String get closeFind => '关闭查找';
+
+	/// zh: '{current}/{total}'
+	String matchCount({required Object current, required Object total}) => '${current}/${total}';
+
+	/// zh: '编辑器工具栏'
+	String get settingsTitle => '编辑器工具栏';
+
+	/// zh: '恢复默认'
+	String get resetDefault => '恢复默认';
+
+	/// zh: '预览'
+	String get preview => '预览';
+
+	/// zh: '工具栏'
+	String get shownSection => '工具栏';
+
+	/// zh: '可添加'
+	String get availableSection => '可添加';
+
+	/// zh: '移除工具'
+	String get removeTools => '移除工具';
+
+	/// zh: '已选 {count} 项'
+	String selectedCount({required Object count}) => '已选 ${count} 项';
+
+	/// zh: '移除'
+	String get remove => '移除';
+
+	/// zh: '加到工具栏'
+	String get addToToolbar => '加到工具栏';
+
+	/// zh: '附件保存失败'
+	String get attachmentFailed => '附件保存失败';
+
+	/// zh: '没有可以打开它的应用'
+	String get openFailed => '没有可以打开它的应用';
+
+	/// zh: '插入失败'
+	String get insertFailed => '插入失败';
 }

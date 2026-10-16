@@ -65,11 +65,13 @@ void main() {
       expect(restored.entries['c:cat']!.media, isEmpty);
     });
 
-    test('accepts the legacy v1 manifest (released 2.8.0)', () {
-      final json = validJson()..['version'] = SyncManifest.legacyVersion;
-      final m = SyncManifest.fromJson(json);
-      expect(m.version, SyncManifest.legacyVersion);
-      expect(m.copyForUpdate().version, SyncManifest.currentVersion);
+    test('accepts every older manifest (v1 from 2.8.0, v2) and writes v3', () {
+      expect(SyncManifest.currentVersion, 3);
+      for (final version in [SyncManifest.legacyVersion, 2]) {
+        final m = SyncManifest.fromJson(validJson()..['version'] = version);
+        expect(m.version, version);
+        expect(m.copyForUpdate().version, SyncManifest.currentVersion);
+      }
     });
 
     test('rejects other versions (older and newer)', () {

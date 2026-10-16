@@ -13,7 +13,11 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 
-String tiptapDoc(String text, {List<String> linkTo = const []}) => jsonEncode({
+String tiptapDoc(
+  String text, {
+  List<String> linkTo = const [],
+  List<String> images = const [],
+}) => jsonEncode({
   'type': 'doc',
   'content': [
     {
@@ -27,6 +31,11 @@ String tiptapDoc(String text, {List<String> linkTo = const []}) => jsonEncode({
           },
       ],
     },
+    for (final name in images)
+      {
+        'type': 'image',
+        'attrs': {'filename': name},
+      },
   ],
 });
 
@@ -43,7 +52,7 @@ legacy.Diary legacyDiary(
 }) => legacy.Diary(
   id: id,
   title: 'title-$id',
-  content: tiptapDoc(text, linkTo: linkTo),
+  content: tiptapDoc(text, linkTo: linkTo, images: images),
   contentText: text,
   time: DateTime.utc(2026, 1, 1, 8),
   lastModified: DateTime.utc(2026, 1, 2, 8),

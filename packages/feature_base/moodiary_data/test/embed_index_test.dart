@@ -52,7 +52,7 @@ Diary makeDiary(String id, String text, {bool show = true, String? title}) =>
       id: id,
       categoryId: null,
       title: title ?? '',
-      content: '{}',
+      content: text,
       contentText: text,
       time: DateTime.utc(2026, 1, 1),
       lastModified: DateTime.utc(2026, 1, 1),

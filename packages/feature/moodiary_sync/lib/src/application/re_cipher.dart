@@ -405,5 +405,6 @@ class CloudReCipher {
     addAll('image', json['imageName']);
     addAll('audio', json['audioName']);
     addAll('video', json['videoName']);
+    addAll('file', json['fileName']);
   }
 }

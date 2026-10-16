@@ -431,6 +431,7 @@ final class FakeMediaFiles implements SyncMediaFiles {
     await drop(oldDiary.imageName, newDiary.imageName, 'image');
     await drop(oldDiary.audioName, newDiary.audioName, 'audio');
     await drop(oldDiary.videoName, newDiary.videoName, 'video');
+    await drop(oldDiary.fileName, newDiary.fileName, 'file');
   }
 
   @override
@@ -508,6 +509,7 @@ Diary buildDiary({
   List<String> images = const [],
   List<String> audios = const [],
   List<String> videos = const [],
+  List<String> files = const [],
 }) {
   final ts = atMs(modifiedMs);
   return Diary(
@@ -523,6 +525,7 @@ Diary buildDiary({
     imageName: images,
     audioName: audios,
     videoName: videos,
+    fileName: files,
     tags: const [],
     type: 'tiptap',
   );

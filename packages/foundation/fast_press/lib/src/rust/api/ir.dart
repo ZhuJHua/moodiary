@@ -28,7 +28,10 @@ sealed class IrBlock with _$IrBlock {
       IrBlock_Quote;
   const factory IrBlock.code({String? language, required String text}) =
       IrBlock_Code;
-  const factory IrBlock.divider() = IrBlock_Divider;
+  const factory IrBlock.divider({
+    required IrDividerVariant variant,
+    String? label,
+  }) = IrBlock_Divider;
   const factory IrBlock.image({
     required String path,
     String? alt,
@@ -37,10 +40,19 @@ sealed class IrBlock with _$IrBlock {
   }) = IrBlock_Image;
   const factory IrBlock.media({
     required String kind,
+    String? name,
     required String filename,
     required String path,
     String? coverPath,
+    int? widthPercent,
   }) = IrBlock_Media;
+  const factory IrBlock.attachment({
+    required String name,
+    required String filename,
+    required String path,
+    String? mime,
+    PlatformInt64? size,
+  }) = IrBlock_Attachment;
   const factory IrBlock.table({required List<IrRow> rows}) = IrBlock_Table;
 }
 
@@ -78,6 +90,8 @@ class IrCell {
           align == other.align &&
           header == other.header;
 }
+
+enum IrDividerVariant { solid, dashed, dotted, double, wavy, text }
 
 class IrDoc {
   final String id;
@@ -167,6 +181,7 @@ class IrSpan {
   final bool strike;
   final bool underline;
   final bool code;
+  final bool highlight;
   final String? href;
   final String? diaryLinkId;
 
@@ -177,6 +192,7 @@ class IrSpan {
     required this.strike,
     required this.underline,
     required this.code,
+    required this.highlight,
     this.href,
     this.diaryLinkId,
   });
@@ -189,6 +205,7 @@ class IrSpan {
       strike.hashCode ^
       underline.hashCode ^
       code.hashCode ^
+      highlight.hashCode ^
       href.hashCode ^
       diaryLinkId.hashCode;
 
@@ -203,6 +220,7 @@ class IrSpan {
           strike == other.strike &&
           underline == other.underline &&
           code == other.code &&
+          highlight == other.highlight &&
           href == other.href &&
           diaryLinkId == other.diaryLinkId;
 }

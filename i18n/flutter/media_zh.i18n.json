@@ -1,6 +1,7 @@
 {
   "title": "媒体库",
   "typeImage": "图片",
+  "typeFile": "附件",
   "deleteUseLessFile": "清理无用文件",
   "empty": "这里还没有媒体",
   "cleanupScanning": "正在扫描无用文件",
@@ -17,5 +18,8 @@
   },
   "videoCount(plural, param=count)": {
     "other": "{count} 段视频"
+  },
+  "fileCount(plural, param=count)": {
+    "other": "{count} 个附件"
   }
 }

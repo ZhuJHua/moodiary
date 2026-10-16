@@ -231,6 +231,7 @@ class DiskSyncMediaFiles implements SyncMediaFiles {
     await drop(oldDiary.imageName, newDiary.imageName, 'image');
     await drop(oldDiary.audioName, newDiary.audioName, 'audio');
     await drop(oldDiary.videoName, newDiary.videoName, 'video');
+    await drop(oldDiary.fileName, newDiary.fileName, 'file');
     for (final name in oldDiary.videoName) {
       if (newDiary.videoName.contains(name)) continue;
       final thumb = videoThumbnailName(name);

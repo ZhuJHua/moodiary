@@ -684,6 +684,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
         untitledLabel: l10n.common.untitled,
         videoLabel: l10n.common.video,
         audioLabel: l10n.common.audio,
+        attachmentLabel: l10n.export.mediaAttachment,
         onProgress: (progress) {
           if (mounted) setState(() => _progress = progress);
         },

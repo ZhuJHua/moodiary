@@ -8,6 +8,7 @@ Diary withDerivedMedia(Diary d) {
     imageName: media.images,
     videoName: media.videos,
     audioName: media.audios,
+    fileName: media.files,
   );
 }
 

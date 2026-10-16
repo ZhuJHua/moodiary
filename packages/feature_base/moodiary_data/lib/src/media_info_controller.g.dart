@@ -35,7 +35,7 @@ final class MediaInfoControllerProvider
 }
 
 String _$mediaInfoControllerHash() =>
-    r'9a34ce566e2c93530d6afa09b8f6c4f0261b399a';
+    r'7bcf6af93ab5c6facc1a60dee3e8034143c63d47';
 
 abstract class _$MediaInfoController
     extends $AsyncNotifier<Map<String, MediaInfo>> {

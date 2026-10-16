@@ -22,22 +22,27 @@ class MediaPage extends StatelessWidget {
   }
 }
 
+const _galleryTypes = [MediaType.image, MediaType.audio, MediaType.video];
+
 String _typeLabel(BuildContext c, MediaType t) => switch (t) {
   .image => c.l10n.media.typeImage,
   .audio => c.l10n.common.audio,
   .video => c.l10n.common.video,
+  .file => c.l10n.media.typeFile,
 };
 
 IconData _typeIcon(MediaType t) => switch (t) {
   .image => LucideIcons.image,
   .audio => LucideIcons.music,
   .video => LucideIcons.film,
+  .file => LucideIcons.paperclip,
 };
 
 String _countLabel(BuildContext c, MediaType t, int n) => switch (t) {
   .image => c.l10n.media.imageCount(count: n),
   .audio => c.l10n.media.audioCount(count: n),
   .video => c.l10n.media.videoCount(count: n),
+  .file => c.l10n.media.fileCount(count: n),
 };
 
 class _MobileMediaPage extends ConsumerStatefulWidget {
@@ -64,7 +69,7 @@ class _MobileMediaPageState extends ConsumerState<_MobileMediaPage> {
             selected: _type,
             onSelected: (t) => setState(() => _type = t),
             items: [
-              for (final t in MediaType.values)
+              for (final t in _galleryTypes)
                 MChipData(
                   value: t,
                   label: _typeLabel(context, t),
@@ -219,6 +224,7 @@ class _MediaBody extends ConsumerWidget {
             name: names[index],
             date: flat.dates[group],
           ),
+          .file => throw UnsupportedError('attachments are not in the gallery'),
         };
     }
   }
@@ -325,17 +331,10 @@ class _AudioTile extends ConsumerWidget {
       initialValue: info?.name ?? '',
       hintText: context.l10n.common.name,
     );
-    if (input == null) return;
+    if (input == null || input.isEmpty) return;
     await ref
         .read(mediaInfoControllerProvider.notifier)
-        .upsertMediaInfo(
-          MediaInfo(
-            fileName: name,
-            name: input.isEmpty ? null : input,
-            durationMs: info?.durationMs,
-            lastModified: .timestamp(),
-          ),
-        );
+        .renameAudio(name, input);
   }
 
   @override

@@ -8,6 +8,7 @@ import 'package:injectable/injectable.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_ml/moodiary_ml.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
 import 'db/database.dart';
 import 'db/db_codec.dart';
@@ -163,7 +164,11 @@ class EmbedIndexService {
       spans.add((start: -1, len: 0)); // start=-1 是标题块的 sentinel
     }
     for (final span in chunkOffsets(row.contentText)) {
-      texts.add(row.contentText.substring(span.start, span.start + span.len));
+      texts.add(
+        MediaMarkup.strip(
+          row.contentText.substring(span.start, span.start + span.len),
+        ),
+      );
       spans.add(span);
     }
     final hashes = [for (final t in texts) _hash(t)];

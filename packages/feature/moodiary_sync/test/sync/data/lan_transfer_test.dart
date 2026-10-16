@@ -43,19 +43,13 @@ final class IoTestHttpServer extends IHttpServer {
   int get port => _io!.port;
 
   @override
-  bool get isRunning => _io != null;
-
-  @override
   Future<void> start({
     required HttpServerHandler handler,
     int preferredPort = 0,
-    bool loopbackOnly = false,
     String? spoolDir,
     void Function(int received, int? total)? onBodyProgress,
   }) async {
-    final address = loopbackOnly
-        ? io.InternetAddress.loopbackIPv4
-        : io.InternetAddress.anyIPv4;
+    final address = io.InternetAddress.anyIPv4;
     try {
       _io = await io.HttpServer.bind(address, preferredPort);
     } on io.SocketException {
@@ -96,7 +90,6 @@ final class IoTestHttpServer extends IHttpServer {
             HttpServerRequest(
               method: req.method.toUpperCase(),
               path: req.uri.path,
-              query: req.uri.queryParameters,
               headers: headers,
               body: inline,
               bodyFilePath: bodyFile,

@@ -185,14 +185,30 @@ class MarkdownWriter {
         _writeIndented(buf, _image(block, o), indent);
         buf.writeln();
 
-      case IrBlock_Media(:final kind, :final filename):
+      case IrBlock_Media(:final kind, :final name, :final filename):
         final label = kind == 'video'
             ? l10n.export.mediaVideo
             : l10n.export.mediaAudio;
         final target = o.mediaMode == .relative
             ? '${o.assetsDir}/$kind/$filename'
             : filename;
-        _writeIndented(buf, '[$label：$filename]($target)', indent);
+        _writeIndented(
+          buf,
+          '[$label：${_escape(name ?? filename)}]($target)',
+          indent,
+        );
+        buf.writeln();
+
+      case IrBlock_Attachment(:final name, :final filename, :final path):
+        final target = switch (o.mediaMode) {
+          .relative => '${o.assetsDir}/file/$filename',
+          .absolute => path,
+        };
+        _writeIndented(
+          buf,
+          '[${_escape(name)}](${_escapeUrl(target)})',
+          indent,
+        );
         buf.writeln();
 
       case IrBlock_Table(:final rows):
@@ -309,6 +325,7 @@ class MarkdownWriter {
     if (span.bold) text = '**$text**';
     if (span.italic) text = '*$text*';
     if (span.strike && o.dialect == .gfm) text = '~~$text~~';
+    if (span.highlight && o.dialect == .gfm) text = '==$text==';
     if (span.underline) text = '<u>$text</u>';
     if (span.href != null) text = '[$text](${_escapeUrl(span.href!)})';
     return text;
@@ -326,6 +343,7 @@ class MarkdownWriter {
         case '[':
         case ']':
         case '<':
+        case '=':
           buf.write('\\$ch');
         default:
           buf.write(ch);

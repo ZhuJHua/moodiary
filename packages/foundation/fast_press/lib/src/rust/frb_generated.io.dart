@@ -107,6 +107,9 @@ abstract class FastPressLibApiImplPlatform
   DocxStyle dco_decode_box_autoadd_docx_style(dynamic raw);
 
   @protected
+  PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw);
+
+  @protected
   IrDoc dco_decode_box_autoadd_ir_doc(dynamic raw);
 
   @protected
@@ -122,10 +125,19 @@ abstract class FastPressLibApiImplPlatform
   double dco_decode_f_64(dynamic raw);
 
   @protected
+  int dco_decode_i_32(dynamic raw);
+
+  @protected
+  PlatformInt64 dco_decode_i_64(dynamic raw);
+
+  @protected
   IrBlock dco_decode_ir_block(dynamic raw);
 
   @protected
   IrCell dco_decode_ir_cell(dynamic raw);
+
+  @protected
+  IrDividerVariant dco_decode_ir_divider_variant(dynamic raw);
 
   @protected
   IrDoc dco_decode_ir_doc(dynamic raw);
@@ -168,6 +180,9 @@ abstract class FastPressLibApiImplPlatform
 
   @protected
   bool? dco_decode_opt_box_autoadd_bool(dynamic raw);
+
+  @protected
+  PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw);
 
   @protected
   int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
@@ -257,6 +272,9 @@ abstract class FastPressLibApiImplPlatform
   DocxStyle sse_decode_box_autoadd_docx_style(SseDeserializer deserializer);
 
   @protected
+  PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer);
+
+  @protected
   IrDoc sse_decode_box_autoadd_ir_doc(SseDeserializer deserializer);
 
   @protected
@@ -272,10 +290,19 @@ abstract class FastPressLibApiImplPlatform
   double sse_decode_f_64(SseDeserializer deserializer);
 
   @protected
+  int sse_decode_i_32(SseDeserializer deserializer);
+
+  @protected
+  PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
+
+  @protected
   IrBlock sse_decode_ir_block(SseDeserializer deserializer);
 
   @protected
   IrCell sse_decode_ir_cell(SseDeserializer deserializer);
+
+  @protected
+  IrDividerVariant sse_decode_ir_divider_variant(SseDeserializer deserializer);
 
   @protected
   IrDoc sse_decode_ir_doc(SseDeserializer deserializer);
@@ -320,6 +347,9 @@ abstract class FastPressLibApiImplPlatform
   bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer);
 
   @protected
+  PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer);
+
+  @protected
   int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
 
   @protected
@@ -336,9 +366,6 @@ abstract class FastPressLibApiImplPlatform
 
   @protected
   BigInt sse_decode_usize(SseDeserializer deserializer);
-
-  @protected
-  int sse_decode_i_32(SseDeserializer deserializer);
 
   @protected
   ffi.Pointer<wire_cst_list_prim_u_8_strict> cst_encode_AnyhowException(
@@ -371,6 +398,12 @@ abstract class FastPressLibApiImplPlatform
   }
 
   @protected
+  ffi.Pointer<ffi.Int64> cst_encode_box_autoadd_i_64(PlatformInt64 raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return wire.cst_new_box_autoadd_i_64(cst_encode_i_64(raw));
+  }
+
+  @protected
   ffi.Pointer<wire_cst_ir_doc> cst_encode_box_autoadd_ir_doc(IrDoc raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     final ptr = wire.cst_new_box_autoadd_ir_doc();
@@ -392,6 +425,12 @@ abstract class FastPressLibApiImplPlatform
   ffi.Pointer<ffi.Uint32> cst_encode_box_autoadd_u_32(int raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return wire.cst_new_box_autoadd_u_32(cst_encode_u_32(raw));
+  }
+
+  @protected
+  int cst_encode_i_64(PlatformInt64 raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw.toInt();
   }
 
   @protected
@@ -493,6 +532,12 @@ abstract class FastPressLibApiImplPlatform
   }
 
   @protected
+  ffi.Pointer<ffi.Int64> cst_encode_opt_box_autoadd_i_64(PlatformInt64? raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw == null ? ffi.nullptr : cst_encode_box_autoadd_i_64(raw);
+  }
+
+  @protected
   ffi.Pointer<ffi.Uint32> cst_encode_opt_box_autoadd_u_32(int? raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw == null ? ffi.nullptr : cst_encode_box_autoadd_u_32(raw);
@@ -546,6 +591,7 @@ abstract class FastPressLibApiImplPlatform
     wireObj.page_break_between = cst_encode_bool(apiObj.pageBreakBetween);
     wireObj.video_label = cst_encode_String(apiObj.videoLabel);
     wireObj.audio_label = cst_encode_String(apiObj.audioLabel);
+    wireObj.attachment_label = cst_encode_String(apiObj.attachmentLabel);
   }
 
   @protected
@@ -592,7 +638,11 @@ abstract class FastPressLibApiImplPlatform
       return;
     }
     if (apiObj is IrBlock_Divider) {
+      var pre_variant = cst_encode_ir_divider_variant(apiObj.variant);
+      var pre_label = cst_encode_opt_String(apiObj.label);
       wireObj.tag = 5;
+      wireObj.kind.Divider.variant = pre_variant;
+      wireObj.kind.Divider.label = pre_label;
       return;
     }
     if (apiObj is IrBlock_Image) {
@@ -611,19 +661,39 @@ abstract class FastPressLibApiImplPlatform
     }
     if (apiObj is IrBlock_Media) {
       var pre_kind = cst_encode_String(apiObj.kind);
+      var pre_name = cst_encode_opt_String(apiObj.name);
       var pre_filename = cst_encode_String(apiObj.filename);
       var pre_path = cst_encode_String(apiObj.path);
       var pre_cover_path = cst_encode_opt_String(apiObj.coverPath);
+      var pre_width_percent = cst_encode_opt_box_autoadd_u_32(
+        apiObj.widthPercent,
+      );
       wireObj.tag = 7;
       wireObj.kind.Media.kind = pre_kind;
+      wireObj.kind.Media.name = pre_name;
       wireObj.kind.Media.filename = pre_filename;
       wireObj.kind.Media.path = pre_path;
       wireObj.kind.Media.cover_path = pre_cover_path;
+      wireObj.kind.Media.width_percent = pre_width_percent;
+      return;
+    }
+    if (apiObj is IrBlock_Attachment) {
+      var pre_name = cst_encode_String(apiObj.name);
+      var pre_filename = cst_encode_String(apiObj.filename);
+      var pre_path = cst_encode_String(apiObj.path);
+      var pre_mime = cst_encode_opt_String(apiObj.mime);
+      var pre_size = cst_encode_opt_box_autoadd_i_64(apiObj.size);
+      wireObj.tag = 8;
+      wireObj.kind.Attachment.name = pre_name;
+      wireObj.kind.Attachment.filename = pre_filename;
+      wireObj.kind.Attachment.path = pre_path;
+      wireObj.kind.Attachment.mime = pre_mime;
+      wireObj.kind.Attachment.size = pre_size;
       return;
     }
     if (apiObj is IrBlock_Table) {
       var pre_rows = cst_encode_list_ir_row(apiObj.rows);
-      wireObj.tag = 8;
+      wireObj.tag = 9;
       wireObj.kind.Table.rows = pre_rows;
       return;
     }
@@ -672,6 +742,7 @@ abstract class FastPressLibApiImplPlatform
     wireObj.strike = cst_encode_bool(apiObj.strike);
     wireObj.underline = cst_encode_bool(apiObj.underline);
     wireObj.code = cst_encode_bool(apiObj.code);
+    wireObj.highlight = cst_encode_bool(apiObj.highlight);
     wireObj.href = cst_encode_opt_String(apiObj.href);
     wireObj.diary_link_id = cst_encode_opt_String(apiObj.diaryLinkId);
   }
@@ -693,6 +764,7 @@ abstract class FastPressLibApiImplPlatform
     wireObj.include_meta = cst_encode_bool(apiObj.includeMeta);
     wireObj.video_label = cst_encode_String(apiObj.videoLabel);
     wireObj.audio_label = cst_encode_String(apiObj.audioLabel);
+    wireObj.attachment_label = cst_encode_String(apiObj.attachmentLabel);
   }
 
   @protected
@@ -754,6 +826,12 @@ abstract class FastPressLibApiImplPlatform
 
   @protected
   double cst_encode_f_64(double raw);
+
+  @protected
+  int cst_encode_i_32(int raw);
+
+  @protected
+  int cst_encode_ir_divider_variant(IrDividerVariant raw);
 
   @protected
   int cst_encode_u_32(int raw);
@@ -849,6 +927,12 @@ abstract class FastPressLibApiImplPlatform
   );
 
   @protected
+  void sse_encode_box_autoadd_i_64(
+    PlatformInt64 self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_ir_doc(IrDoc self, SseSerializer serializer);
 
   @protected
@@ -867,10 +951,22 @@ abstract class FastPressLibApiImplPlatform
   void sse_encode_f_64(double self, SseSerializer serializer);
 
   @protected
+  void sse_encode_i_32(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
+
+  @protected
   void sse_encode_ir_block(IrBlock self, SseSerializer serializer);
 
   @protected
   void sse_encode_ir_cell(IrCell self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ir_divider_variant(
+    IrDividerVariant self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_ir_doc(IrDoc self, SseSerializer serializer);
@@ -921,6 +1017,12 @@ abstract class FastPressLibApiImplPlatform
   void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer);
 
   @protected
+  void sse_encode_opt_box_autoadd_i_64(
+    PlatformInt64? self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);
 
   @protected
@@ -937,9 +1039,6 @@ abstract class FastPressLibApiImplPlatform
 
   @protected
   void sse_encode_usize(BigInt self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_i_32(int self, SseSerializer serializer);
 }
 
 // Section: wire_class
@@ -990,6 +1089,17 @@ class FastPressLibWire implements BaseWire {
   late final _cst_new_box_autoadd_docx_style =
       _cst_new_box_autoadd_docx_stylePtr
           .asFunction<ffi.Pointer<wire_cst_docx_style> Function()>();
+
+  ffi.Pointer<ffi.Int64> cst_new_box_autoadd_i_64(int value) {
+    return _cst_new_box_autoadd_i_64(value);
+  }
+
+  late final _cst_new_box_autoadd_i_64Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Int64> Function(ffi.Int64)>>(
+        'frbgen_fast_press_cst_new_box_autoadd_i_64',
+      );
+  late final _cst_new_box_autoadd_i_64 = _cst_new_box_autoadd_i_64Ptr
+      .asFunction<ffi.Pointer<ffi.Int64> Function(int)>();
 
   ffi.Pointer<wire_cst_ir_doc> cst_new_box_autoadd_ir_doc() {
     return _cst_new_box_autoadd_ir_doc();
@@ -1547,11 +1657,41 @@ final class IrBlockKind extends ffi.Union {
 
   external wire_cst_IrBlock_Code Code;
 
+  external wire_cst_IrBlock_Divider Divider;
+
   external wire_cst_IrBlock_Image Image;
 
   external wire_cst_IrBlock_Media Media;
 
+  external wire_cst_IrBlock_Attachment Attachment;
+
   external wire_cst_IrBlock_Table Table;
+}
+
+final class wire_cst_IrBlock_Attachment extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> name;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> filename;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> path;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> mime;
+
+  external ffi.Pointer<ffi.Int64> size;
+
+  static ffi.Pointer<wire_cst_IrBlock_Attachment> $allocate(
+    ffi.Allocator $allocator, {
+    required ffi.Pointer<wire_cst_list_prim_u_8_strict> name,
+    required ffi.Pointer<wire_cst_list_prim_u_8_strict> filename,
+    required ffi.Pointer<wire_cst_list_prim_u_8_strict> path,
+    required ffi.Pointer<wire_cst_list_prim_u_8_strict> mime,
+    required ffi.Pointer<ffi.Int64> size,
+  }) => $allocator<wire_cst_IrBlock_Attachment>()
+    ..ref.name = name
+    ..ref.filename = filename
+    ..ref.path = path
+    ..ref.mime = mime
+    ..ref.size = size;
 }
 
 final class wire_cst_IrBlock_Code extends ffi.Struct {
@@ -1566,6 +1706,21 @@ final class wire_cst_IrBlock_Code extends ffi.Struct {
   }) => $allocator<wire_cst_IrBlock_Code>()
     ..ref.language = language
     ..ref.text = text;
+}
+
+final class wire_cst_IrBlock_Divider extends ffi.Struct {
+  @ffi.Int32()
+  external int variant;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> label;
+
+  static ffi.Pointer<wire_cst_IrBlock_Divider> $allocate(
+    ffi.Allocator $allocator, {
+    required int variant,
+    required ffi.Pointer<wire_cst_list_prim_u_8_strict> label,
+  }) => $allocator<wire_cst_IrBlock_Divider>()
+    ..ref.variant = variant
+    ..ref.label = label;
 }
 
 final class wire_cst_IrBlock_Heading extends ffi.Struct {
@@ -1629,23 +1784,31 @@ final class wire_cst_IrBlock_List extends ffi.Struct {
 final class wire_cst_IrBlock_Media extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> kind;
 
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> name;
+
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> filename;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> path;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> cover_path;
 
+  external ffi.Pointer<ffi.Uint32> width_percent;
+
   static ffi.Pointer<wire_cst_IrBlock_Media> $allocate(
     ffi.Allocator $allocator, {
     required ffi.Pointer<wire_cst_list_prim_u_8_strict> kind,
+    required ffi.Pointer<wire_cst_list_prim_u_8_strict> name,
     required ffi.Pointer<wire_cst_list_prim_u_8_strict> filename,
     required ffi.Pointer<wire_cst_list_prim_u_8_strict> path,
     required ffi.Pointer<wire_cst_list_prim_u_8_strict> cover_path,
+    required ffi.Pointer<ffi.Uint32> width_percent,
   }) => $allocator<wire_cst_IrBlock_Media>()
     ..ref.kind = kind
+    ..ref.name = name
     ..ref.filename = filename
     ..ref.path = path
-    ..ref.cover_path = cover_path;
+    ..ref.cover_path = cover_path
+    ..ref.width_percent = width_percent;
 }
 
 final class wire_cst_IrBlock_Paragraph extends ffi.Struct {
@@ -1711,6 +1874,8 @@ final class wire_cst_docx_style extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> audio_label;
 
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> attachment_label;
+
   static ffi.Pointer<wire_cst_docx_style> $allocate(
     ffi.Allocator $allocator, {
     required ffi.Pointer<wire_cst_list_prim_u_8_strict> east_asia_font,
@@ -1726,6 +1891,7 @@ final class wire_cst_docx_style extends ffi.Struct {
     required bool page_break_between,
     required ffi.Pointer<wire_cst_list_prim_u_8_strict> video_label,
     required ffi.Pointer<wire_cst_list_prim_u_8_strict> audio_label,
+    required ffi.Pointer<wire_cst_list_prim_u_8_strict> attachment_label,
   }) => $allocator<wire_cst_docx_style>()
     ..ref.east_asia_font = east_asia_font
     ..ref.ascii_font = ascii_font
@@ -1739,7 +1905,8 @@ final class wire_cst_docx_style extends ffi.Struct {
     ..ref.include_meta = include_meta
     ..ref.page_break_between = page_break_between
     ..ref.video_label = video_label
-    ..ref.audio_label = audio_label;
+    ..ref.audio_label = audio_label
+    ..ref.attachment_label = attachment_label;
 }
 
 final class wire_cst_ir_block extends ffi.Struct {
@@ -1857,6 +2024,9 @@ final class wire_cst_ir_span extends ffi.Struct {
   @ffi.Bool()
   external bool code;
 
+  @ffi.Bool()
+  external bool highlight;
+
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> href;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> diary_link_id;
@@ -1869,6 +2039,7 @@ final class wire_cst_ir_span extends ffi.Struct {
     required bool strike,
     required bool underline,
     required bool code,
+    required bool highlight,
     required ffi.Pointer<wire_cst_list_prim_u_8_strict> href,
     required ffi.Pointer<wire_cst_list_prim_u_8_strict> diary_link_id,
   }) => $allocator<wire_cst_ir_span>()
@@ -1878,6 +2049,7 @@ final class wire_cst_ir_span extends ffi.Struct {
     ..ref.strike = strike
     ..ref.underline = underline
     ..ref.code = code
+    ..ref.highlight = highlight
     ..ref.href = href
     ..ref.diary_link_id = diary_link_id;
 }
@@ -2035,6 +2207,8 @@ final class wire_cst_pdf_style extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> audio_label;
 
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> attachment_label;
+
   static ffi.Pointer<wire_cst_pdf_style> $allocate(
     ffi.Allocator $allocator, {
     required ffi.Pointer<wire_cst_list_prim_u_8_strict> font_path,
@@ -2049,6 +2223,7 @@ final class wire_cst_pdf_style extends ffi.Struct {
     required bool include_meta,
     required ffi.Pointer<wire_cst_list_prim_u_8_strict> video_label,
     required ffi.Pointer<wire_cst_list_prim_u_8_strict> audio_label,
+    required ffi.Pointer<wire_cst_list_prim_u_8_strict> attachment_label,
   }) => $allocator<wire_cst_pdf_style>()
     ..ref.font_path = font_path
     ..ref.font_family = font_family
@@ -2061,5 +2236,6 @@ final class wire_cst_pdf_style extends ffi.Struct {
     ..ref.include_title = include_title
     ..ref.include_meta = include_meta
     ..ref.video_label = video_label
-    ..ref.audio_label = audio_label;
+    ..ref.audio_label = audio_label
+    ..ref.attachment_label = attachment_label;
 }

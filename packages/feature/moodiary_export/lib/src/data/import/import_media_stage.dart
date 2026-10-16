@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import 'package:mime/mime.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
@@ -10,7 +11,7 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path/path.dart' as p;
 
-enum ImportMediaKind { image, video, audio }
+enum ImportMediaKind { image, video, audio, file }
 
 abstract interface class ImportMediaStore {
   Future<String?> save(String path, ImportMediaKind kind);
@@ -33,6 +34,8 @@ class AppImportMediaStore implements ImportMediaStore {
         return saved[path];
       case .audio:
         return _saveAudio(path);
+      case .file:
+        return (await MediaManager.saveAttachment(XFile(path)))?.name;
     }
   }
 
@@ -43,7 +46,7 @@ class AppImportMediaStore implements ImportMediaStore {
     if (!local.existsSync()) return null;
     if (!await sameFileContent(File(path), local)) return null;
     switch (kind) {
-      case .image:
+      case .image || .file:
         return name;
       case .video:
         return File(AppFiles.getRealPath('thumbnail', name)).existsSync()
@@ -133,10 +136,14 @@ class ImportMediaStage {
 
   int missing = 0;
 
+  final Map<String, AttachmentInfo> _attachments = {};
+
   ImportMediaStage(this._root, this._store);
 
+  AttachmentInfo? attachmentInfo(String name) => _attachments[name];
+
   static final RegExp _link = RegExp(
-    r'(!?)\[([^\]]*)\]\(\s*(<[^>]*>|[^\s)]+)(?:\s+"[^"]*")?\s*\)',
+    r'(!?)\[((?:[^\]\\]|\\.)*)\]\(\s*(<[^>]*>|[^\s)]+)(?:\s+"[^"]*")?\s*\)',
   );
   static final RegExp _scheme = RegExp(r'^[a-zA-Z][a-zA-Z0-9+.\-]*:');
 
@@ -171,6 +178,10 @@ class ImportMediaStage {
     return null;
   }
 
+  static bool _isAttachmentPath(String path) =>
+      p.basename(p.dirname(path)) == 'file' ||
+      p.basename(path).startsWith('file-');
+
   Future<String> rewrite(String markdown, String markdownPath) async {
     final dir = p.dirname(markdownPath);
     final out = StringBuffer();
@@ -202,7 +213,10 @@ class ImportMediaStage {
     if (!p.isWithin(_root.path, resolved) && resolved != _root.path) {
       return degraded;
     }
-    final kind = kindOf(resolved);
+    final ImportMediaKind? kind =
+        degraded == null && _isAttachmentPath(resolved)
+        ? .file
+        : kindOf(resolved);
     if (kind == null) return degraded;
     if (!File(resolved).existsSync()) {
       missing++;
@@ -213,9 +227,27 @@ class ImportMediaStage {
       missing++;
       return degraded;
     }
-    final alt = kind == .image ? m.group(2)! : '';
+    if (kind == .file) {
+      _attachments[name] = (
+        mime: lookupMimeType(resolved),
+        size: File(resolved).lengthSync(),
+      );
+      final text = m.group(2)!.trim().isEmpty
+          ? p
+                .basename(resolved)
+                .replaceAllMapped(_punctuation, (c) => '\\${c[0]}')
+          : m.group(2);
+      return '[$text]($name)';
+    }
+    final alt = kind == .image
+        ? m.group(2)!
+        : p
+              .basenameWithoutExtension(resolved)
+              .replaceAllMapped(_punctuation, (c) => '\\${c[0]}');
     return '![$alt]($name)';
   }
+
+  static final RegExp _punctuation = RegExp(r'[!-/:-@\[-`{-~]');
 
   Future<String?> _save(String path, ImportMediaKind kind) async {
     if (_saved.containsKey(path)) return _saved[path];

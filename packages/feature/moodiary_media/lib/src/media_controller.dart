@@ -33,6 +33,7 @@ class MediaItems extends _$MediaItems with LoadMoreMixin<MediaItem> {
     .image => d.imageName,
     .audio => d.audioName,
     .video => d.videoName,
+    .file => d.fileName,
   };
 
   void _applyChange(DiaryEvent event) {
@@ -90,13 +91,19 @@ class MediaCleanupController extends _$MediaCleanupController {
       usedImages: used.images,
       usedAudios: used.audios,
       usedVideos: used.videos,
+      usedFiles: used.files,
     );
   }
 
   Future<void> clean(MediaCleanupReport report) async {
     await AppFiles.deleteOrphanMedia(report);
     final used = await getIt<DiaryRepository>().collectReferencedMedia();
-    final referenced = {...used.images, ...used.audios, ...used.videos};
+    final referenced = {
+      ...used.images,
+      ...used.audios,
+      ...used.videos,
+      ...used.files,
+    };
     final rows = await getIt<MediaInfoRepository>().getAllMediaInfos();
     for (final row in rows) {
       if (referenced.contains(row.fileName)) continue;

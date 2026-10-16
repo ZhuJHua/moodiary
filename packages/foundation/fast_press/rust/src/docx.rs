@@ -4,7 +4,9 @@ use std::collections::HashSet;
 use std::fs::File;
 use std::path::Path;
 
-use crate::ir::{IrBlock, IrDoc, IrListItem, IrRow, IrSpan};
+use crate::ir::{
+    IrBlock, IrDividerVariant, IrDoc, IrListItem, IrRow, IrSpan, attachment_line, divider_label,
+};
 
 pub struct DocxStyle {
     pub east_asia_font: String,
@@ -20,6 +22,7 @@ pub struct DocxStyle {
     pub page_break_between: bool,
     pub video_label: String,
     pub audio_label: String,
+    pub attachment_label: String,
 }
 
 const NUM_BULLET: usize = 1;
@@ -72,6 +75,8 @@ fn highlight(language: Option<&str>, text: &str) -> Vec<Vec<CodePiece>> {
         .collect()
 }
 const QUOTE_COLOR: &str = "6B7686";
+const RULE_COLOR: &str = "B4B4B4";
+const HIGHLIGHT_FILL: &str = "FFF0A0";
 const LINK_COLOR: &str = "2B5CB8";
 const META_COLOR: &str = "8A93A0";
 
@@ -299,9 +304,9 @@ fn block(docx: Docx, block: &IrBlock, ctx: &Ctx, depth: usize) -> Docx {
             docx
         }
 
-        IrBlock::Divider => docx.add_paragraph(
-            Paragraph::new().add_run(Run::new().add_text("―".repeat(30)).color(META_COLOR)),
-        ),
+        IrBlock::Divider { variant, label } => {
+            docx.add_paragraph(divider(*variant, label.as_deref(), ctx, depth))
+        }
 
         IrBlock::Image {
             path,
@@ -320,13 +325,15 @@ fn block(docx: Docx, block: &IrBlock, ctx: &Ctx, depth: usize) -> Docx {
 
         IrBlock::Media {
             kind,
+            name,
             filename,
             cover_path,
+            width_percent,
             ..
         } => {
             let mut docx = docx;
             if let Some(cover) = cover_path.as_deref()
-                && let Some(run) = image_run(cover, Some(60), ctx)
+                && let Some(run) = image_run(cover, Some(width_percent.unwrap_or(60)), ctx)
             {
                 docx = docx.add_paragraph(Paragraph::new().add_run(run));
             }
@@ -340,13 +347,57 @@ fn block(docx: Docx, block: &IrBlock, ctx: &Ctx, depth: usize) -> Docx {
                     fonts(Run::new(), ctx.style)
                         .size(half_pt(ctx.style.font_size_pt * 0.85))
                         .color(META_COLOR)
-                        .add_text(format!("[{label}] {filename}")),
+                        .add_text(format!("[{label}] {}", name.as_deref().unwrap_or(filename))),
                 ),
             )
         }
 
+        IrBlock::Attachment { name, size, .. } => docx.add_paragraph(
+            indented(Paragraph::new(), depth).add_run(
+                fonts(Run::new(), ctx.style)
+                    .size(half_pt(ctx.style.font_size_pt * 0.85))
+                    .color(META_COLOR)
+                    .add_text(attachment_line(&ctx.style.attachment_label, name, *size)),
+            ),
+        ),
+
         IrBlock::Table { rows } => table(docx, rows, ctx),
     }
+}
+
+fn divider(variant: IrDividerVariant, label: Option<&str>, ctx: &Ctx, depth: usize) -> Paragraph {
+    let para = indented(Paragraph::new(), depth);
+    if let Some(label) = divider_label(variant, label) {
+        let rule = "―".repeat(6);
+        return para.align(AlignmentType::Center).add_run(
+            fonts(Run::new(), ctx.style)
+                .size(half_pt(ctx.style.font_size_pt * 0.85))
+                .color(META_COLOR)
+                .add_text(format!("{rule}  {label}  {rule}")),
+        );
+    }
+    let (val, size) = match variant {
+        IrDividerVariant::Dashed => (BorderType::Dashed, 6),
+        IrDividerVariant::Dotted => (BorderType::Dotted, 8),
+        IrDividerVariant::Double => (BorderType::Double, 4),
+        IrDividerVariant::Wavy => (BorderType::Wave, 6),
+        IrDividerVariant::Solid | IrDividerVariant::Text => (BorderType::Single, 6),
+    };
+    let border = |position| {
+        ParagraphBorder::new(position)
+            .val(val)
+            .size(size)
+            .space(1)
+            .color(RULE_COLOR)
+    };
+    let mut para = para;
+    // 边框相同的相邻段落 Word 会并成一组只画一条底边，between 让组内每条都画出来
+    para.property = para.property.set_borders(
+        ParagraphBorders::with_empty()
+            .set(border(ParagraphBorderPosition::Bottom))
+            .set(border(ParagraphBorderPosition::Between)),
+    );
+    para
 }
 
 fn quoted(docx: Docx, child: &IrBlock, ctx: &Ctx, depth: usize) -> Docx {
@@ -535,6 +586,9 @@ fn styled_run(span: &IrSpan, ctx: &Ctx, color: Option<&str>) -> Run {
     if span.underline || span.href.is_some() || span.diary_link_id.is_some() {
         run = run.underline("single");
     }
+    if span.highlight {
+        run = run.shading(Shading::new().fill(HIGHLIGHT_FILL));
+    }
     if let Some(c) = color {
         run = run.color(c);
     }
@@ -603,6 +657,7 @@ mod tests {
             page_break_between: true,
             video_label: "视频".into(),
             audio_label: "音频".into(),
+            attachment_label: "附件".into(),
         }
     }
 
@@ -719,7 +774,10 @@ mod tests {
                     fixture::sp("，"),
                     strike,
                 ]),
-                IrBlock::Divider,
+                IrBlock::Divider {
+                    variant: IrDividerVariant::Solid,
+                    label: None,
+                },
                 IrBlock::Quote {
                     children: vec![fixture::text_para("引用一段话")],
                 },
@@ -930,6 +988,134 @@ mod tests {
             xml.contains(r#"<w:tblLayout w:type="fixed" />"#),
             "固定布局才让上面两项生效"
         );
+    }
+
+    #[test]
+    fn dividers_become_paragraph_borders() {
+        let dir = tempdir();
+        let out = dir.join("dividers.docx").to_string_lossy().into_owned();
+        let divider = |variant, label: Option<&str>| IrBlock::Divider {
+            variant,
+            label: label.map(Into::into),
+        };
+        let docs = vec![fixture::doc(vec![
+            divider(IrDividerVariant::Solid, None),
+            divider(IrDividerVariant::Dashed, None),
+            divider(IrDividerVariant::Dotted, None),
+            divider(IrDividerVariant::Double, None),
+            divider(IrDividerVariant::Wavy, None),
+            divider(IrDividerVariant::Text, Some("第二天")),
+        ])];
+        write_docx(docs, &test_style(), out.clone(), &|| false).expect("导出应当成功");
+
+        let xml = doc_xml(&unzip(&out));
+        assert_eq!(
+            xml.matches("<w:pBdr>").count(),
+            5,
+            "五种线型各一条段落下边框"
+        );
+        for val in ["single", "dashed", "dotted", "double", "wave"] {
+            assert!(
+                xml.contains(&format!(r#"<w:bottom w:val="{val}""#)),
+                "缺少 {val} 下边框"
+            );
+        }
+        assert!(xml.contains("第二天"), "文字分隔线保留标签");
+        assert!(xml.contains(r#"<w:jc w:val="center" />"#), "标签居中");
+    }
+
+    #[test]
+    fn consecutive_same_dividers_each_draw_a_rule() {
+        let dir = tempdir();
+        let out = dir
+            .join("same-dividers.docx")
+            .to_string_lossy()
+            .into_owned();
+        let solid = || IrBlock::Divider {
+            variant: IrDividerVariant::Solid,
+            label: None,
+        };
+        let docs = vec![fixture::doc(vec![solid(), solid()])];
+        write_docx(docs, &test_style(), out.clone(), &|| false).expect("导出应当成功");
+
+        let xml = doc_xml(&unzip(&out));
+        let borders: Vec<&str> = xml
+            .split("<w:pBdr>")
+            .skip(1)
+            .map(|s| s.split("</w:pBdr>").next().unwrap())
+            .collect();
+        assert_eq!(borders.len(), 2, "实际：{xml}");
+        for b in borders {
+            assert!(b.contains(r#"<w:bottom w:val="single""#), "实际：{b}");
+            assert!(
+                b.contains(r#"<w:between w:val="single""#),
+                "同款相邻分隔线靠 between 逐条可见，实际：{b}"
+            );
+        }
+    }
+
+    #[test]
+    fn highlight_is_run_shading() {
+        let dir = tempdir();
+        let out = dir.join("highlight.docx").to_string_lossy().into_owned();
+        let docs = vec![fixture::doc(vec![fixture::para(vec![
+            fixture::sp("普通"),
+            IrSpan {
+                text: "重点".into(),
+                highlight: true,
+                ..Default::default()
+            },
+        ])])];
+        write_docx(docs, &test_style(), out.clone(), &|| false).expect("导出应当成功");
+
+        let xml = doc_xml(&unzip(&out));
+        assert_eq!(
+            xml.matches(&format!(r#"w:fill="{HIGHLIGHT_FILL}""#))
+                .count(),
+            1,
+            "只有高亮那一段铺底色"
+        );
+    }
+
+    #[test]
+    fn attachment_is_a_labelled_line() {
+        let dir = tempdir();
+        let out = dir.join("attachment.docx").to_string_lossy().into_owned();
+        let docs = vec![fixture::doc(vec![IrBlock::Attachment {
+            name: "报告.pdf".into(),
+            filename: "file-0190aa11.pdf".into(),
+            path: "/nowhere/file-0190aa11.pdf".into(),
+            mime: Some("application/pdf".into()),
+            size: Some(5 * 1024 * 1024),
+        }])];
+        write_docx(docs, &test_style(), out.clone(), &|| false).expect("导出应当成功");
+
+        let xml = doc_xml(&unzip(&out));
+        assert!(xml.contains("[附件] 报告.pdf · 5.0 MB"), "实际：{xml}");
+    }
+
+    #[test]
+    fn media_label_prefers_name() {
+        let dir = tempdir();
+        let out = dir.join("media.docx").to_string_lossy().into_owned();
+        let media = |kind: &str, name: Option<&str>, filename: &str| IrBlock::Media {
+            kind: kind.into(),
+            name: name.map(Into::into),
+            filename: filename.into(),
+            path: format!("/nowhere/{filename}"),
+            cover_path: None,
+            width_percent: None,
+        };
+        let docs = vec![fixture::doc(vec![
+            media("audio", Some("晨间录音"), "audio-0190aa11.m4a"),
+            media("video", None, "video-0190aa12.mp4"),
+        ])];
+        write_docx(docs, &test_style(), out.clone(), &|| false).expect("导出应当成功");
+
+        let xml = doc_xml(&unzip(&out));
+        assert!(xml.contains("[音频] 晨间录音"), "实际：{xml}");
+        assert!(!xml.contains("audio-0190aa11.m4a"), "有名字时不露文件名");
+        assert!(xml.contains("[视频] video-0190aa12.mp4"), "实际：{xml}");
     }
 
     #[test]

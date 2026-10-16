@@ -75,6 +75,7 @@ class ExportService {
 
     required String videoLabel,
     required String audioLabel,
+    required String attachmentLabel,
     void Function(ExportProgress progress)? onProgress,
 
     press.CancelToken? cancel,
@@ -135,6 +136,7 @@ class ExportService {
           untitledLabel,
           videoLabel,
           audioLabel,
+          attachmentLabel,
           token,
         ),
         .pdf => await _writePdf(
@@ -144,6 +146,7 @@ class ExportService {
           untitledLabel,
           videoLabel,
           audioLabel,
+          attachmentLabel,
           onProgress,
           token,
         ),
@@ -315,6 +318,7 @@ class ExportService {
     String untitledLabel,
     String videoLabel,
     String audioLabel,
+    String attachmentLabel,
     press.CancelToken token,
   ) async {
     final layout = settings.docx;
@@ -332,6 +336,7 @@ class ExportService {
       pageBreakBetween: true,
       videoLabel: videoLabel,
       audioLabel: audioLabel,
+      attachmentLabel: attachmentLabel,
     );
 
     final outDir = Directory(p.join(workDir.path, 'out'))
@@ -382,6 +387,7 @@ class ExportService {
     String untitledLabel,
     String videoLabel,
     String audioLabel,
+    String attachmentLabel,
     void Function(ExportProgress progress)? onProgress,
     press.CancelToken token,
   ) async {
@@ -401,6 +407,7 @@ class ExportService {
       includeMeta: settings.common.includeMeta,
       videoLabel: videoLabel,
       audioLabel: audioLabel,
+      attachmentLabel: attachmentLabel,
     );
 
     final outDir = Directory(p.join(workDir.path, 'out'))
@@ -636,9 +643,16 @@ class _MediaStage {
   }
 
   Future<IrBlock?> _dropMedia(IrBlock block) async => switch (block) {
-    IrBlock_Image() || IrBlock_Media() => null,
+    IrBlock_Image() || IrBlock_Media() || IrBlock_Attachment() => null,
+    _ => _mapChildren(block, _dropMedia),
+  };
+
+  Future<IrBlock> _mapChildren(
+    IrBlock block,
+    Future<IrBlock?> Function(IrBlock) visit,
+  ) async => switch (block) {
     IrBlock_Quote(:final children) => IrBlock.quote(
-      children: await _mapBlocks(children, _dropMedia),
+      children: await _mapBlocks(children, visit),
     ),
     IrBlock_List(:final ordered, :final start, :final items) => IrBlock.list(
       ordered: ordered,
@@ -646,8 +660,25 @@ class _MediaStage {
       items: [
         for (final item in items)
           IrListItem(
-            children: await _mapBlocks(item.children, _dropMedia),
+            children: await _mapBlocks(item.children, visit),
             checked: item.checked,
+          ),
+      ],
+    ),
+    IrBlock_Table(:final rows) => IrBlock.table(
+      rows: [
+        for (final row in rows)
+          IrRow(
+            cells: [
+              for (final cell in row.cells)
+                IrCell(
+                  children: await _mapBlocks(cell.children, visit),
+                  colspan: cell.colspan,
+                  rowspan: cell.rowspan,
+                  align: cell.align,
+                  header: cell.header,
+                ),
+            ],
           ),
       ],
     ),
@@ -678,29 +709,19 @@ class _MediaStage {
         _rememberAsset(block.path, '${block.kind}/${block.filename}');
         return .media(
           kind: block.kind,
+          name: block.name,
           filename: block.filename,
           path: block.path,
           coverPath: cover,
+          widthPercent: block.widthPercent,
         );
 
-      case IrBlock_Quote(:final children):
-        return .quote(children: await _mapBlocks(children, _stageBlock));
-
-      case IrBlock_List(:final ordered, :final start, :final items):
-        return .list(
-          ordered: ordered,
-          start: start,
-          items: [
-            for (final item in items)
-              IrListItem(
-                children: await _mapBlocks(item.children, _stageBlock),
-                checked: item.checked,
-              ),
-          ],
-        );
+      case IrBlock_Attachment():
+        _rememberAsset(block.path, 'file/${block.filename}');
+        return block;
 
       default:
-        return block;
+        return _mapChildren(block, _stageBlock);
     }
   }
 
