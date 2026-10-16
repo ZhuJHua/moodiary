@@ -63,4 +63,10 @@ class MuiLocalizationsData with BaseTranslations<MuiLocale, MuiLocalizationsData
 
 	/// zh: '保存'
 	String get save => '保存';
+
+	/// zh: '上移'
+	String get moveUp => '上移';
+
+	/// zh: '下移'
+	String get moveDown => '下移';
 }
