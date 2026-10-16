@@ -9,5 +9,7 @@
   "configured": "已配置",
   "notConfigured": "未配置",
   "input": "输入",
-  "save": "保存"
+  "save": "保存",
+  "moveUp": "上移",
+  "moveDown": "下移"
 }
