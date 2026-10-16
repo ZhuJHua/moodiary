@@ -1,0 +1,1 @@
+-keep class cn.yooss.moodiary_native.SelectionHandle*Drawable { <init>(); }
