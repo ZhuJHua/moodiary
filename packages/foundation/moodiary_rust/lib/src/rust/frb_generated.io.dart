@@ -1077,7 +1077,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ) {
     wireObj.method = cst_encode_String(apiObj.method);
     wireObj.path = cst_encode_String(apiObj.path);
-    wireObj.query = cst_encode_list_key_value(apiObj.query);
     wireObj.headers = cst_encode_list_key_value(apiObj.headers);
     wireObj.body = cst_encode_list_prim_u_8_strict(apiObj.body);
     wireObj.body_file_path = cst_encode_opt_String(apiObj.bodyFilePath);
@@ -1091,7 +1090,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.status = cst_encode_u_16(apiObj.status);
     wireObj.headers = cst_encode_list_key_value(apiObj.headers);
     wireObj.body = cst_encode_list_prim_u_8_strict(apiObj.body);
-    wireObj.body_file_path = cst_encode_opt_String(apiObj.bodyFilePath);
   }
 
   @protected
@@ -2512,7 +2510,6 @@ class RustLibWire implements BaseWire {
   void wire__crate__api__http_server__HttpServer_start(
     int port_,
     int preferred_port,
-    bool loopback_only,
     ffi.Pointer<wire_cst_list_prim_u_8_strict> spool_dir,
     ffi.Pointer<ffi.Void> on_request,
     ffi.Pointer<ffi.Void> on_body_progress,
@@ -2520,7 +2517,6 @@ class RustLibWire implements BaseWire {
     return _wire__crate__api__http_server__HttpServer_start(
       port_,
       preferred_port,
-      loopback_only,
       spool_dir,
       on_request,
       on_body_progress,
@@ -2533,7 +2529,6 @@ class RustLibWire implements BaseWire {
           ffi.Void Function(
             ffi.Int64,
             ffi.Uint16,
-            ffi.Bool,
             ffi.Pointer<wire_cst_list_prim_u_8_strict>,
             ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
@@ -2546,7 +2541,6 @@ class RustLibWire implements BaseWire {
             void Function(
               int,
               int,
-              bool,
               ffi.Pointer<wire_cst_list_prim_u_8_strict>,
               ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,
@@ -3532,8 +3526,6 @@ final class wire_cst_http_server_request extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> path;
 
-  external ffi.Pointer<wire_cst_list_key_value> query;
-
   external ffi.Pointer<wire_cst_list_key_value> headers;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> body;
@@ -3544,14 +3536,12 @@ final class wire_cst_http_server_request extends ffi.Struct {
     ffi.Allocator $allocator, {
     required ffi.Pointer<wire_cst_list_prim_u_8_strict> method,
     required ffi.Pointer<wire_cst_list_prim_u_8_strict> path,
-    required ffi.Pointer<wire_cst_list_key_value> query,
     required ffi.Pointer<wire_cst_list_key_value> headers,
     required ffi.Pointer<wire_cst_list_prim_u_8_strict> body,
     required ffi.Pointer<wire_cst_list_prim_u_8_strict> body_file_path,
   }) => $allocator<wire_cst_http_server_request>()
     ..ref.method = method
     ..ref.path = path
-    ..ref.query = query
     ..ref.headers = headers
     ..ref.body = body
     ..ref.body_file_path = body_file_path;
@@ -3565,19 +3555,15 @@ final class wire_cst_http_server_response extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> body;
 
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> body_file_path;
-
   static ffi.Pointer<wire_cst_http_server_response> $allocate(
     ffi.Allocator $allocator, {
     required int status,
     required ffi.Pointer<wire_cst_list_key_value> headers,
     required ffi.Pointer<wire_cst_list_prim_u_8_strict> body,
-    required ffi.Pointer<wire_cst_list_prim_u_8_strict> body_file_path,
   }) => $allocator<wire_cst_http_server_response>()
     ..ref.status = status
     ..ref.headers = headers
-    ..ref.body = body
-    ..ref.body_file_path = body_file_path;
+    ..ref.body = body;
 }
 
 final class wire_cst_key_value extends ffi.Struct {
