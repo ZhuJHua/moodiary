@@ -33,6 +33,7 @@ enum EditorCommand {
   openLink,
   copyLink,
   setMediaWidth,
+  previewMediaWidth,
   setMediaName,
   moveBlockUp,
   moveBlockDown,

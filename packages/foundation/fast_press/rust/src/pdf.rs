@@ -11,6 +11,7 @@ use typst::{Library, LibraryExt, World};
 
 use crate::ir::{
     IrBlock, IrDividerVariant, IrDoc, IrListItem, IrRow, IrSpan, attachment_line, divider_label,
+    media_width_percent,
 };
 
 pub struct PdfStyle {
@@ -467,7 +468,7 @@ impl<'a> Markup<'a> {
         let name = format!("img/{}.{extension}", self.images.len());
         self.images.push((name.clone(), bytes));
 
-        let width = width_percent.unwrap_or(100).clamp(10, 100);
+        let width = media_width_percent(width_percent);
         let alt_arg = alt
             .filter(|a| !a.trim().is_empty())
             .map(|a| format!(", alt: {}", string_literal(a)))

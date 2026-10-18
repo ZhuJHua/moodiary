@@ -15,8 +15,6 @@ typedef ContentMedia = ({
 class TiptapContent {
   static const int _schemaVersion = 2;
 
-  static const List<int> _widthPercentStops = [25, 50, 75, 100];
-
   final String _raw;
   final Map<String, dynamic>? _doc;
 
@@ -115,8 +113,8 @@ class TiptapContent {
       case 'image':
         if (attrs is! Map) return attrs;
         final width = attrs['widthPercent'];
-        final snapped = width == null ? null : _snapWidthPercent(width);
-        if (!attrs.keys.any(_droppedImageAttrs.contains) && snapped == width) {
+        final clamped = width == null ? null : _clampWidthPercent(width);
+        if (!attrs.keys.any(_droppedImageAttrs.contains) && clamped == width) {
           return attrs;
         }
         final name =
@@ -126,7 +124,7 @@ class TiptapContent {
         return {
           for (final e in attrs.entries)
             if (!_droppedImageAttrs.contains(e.key)) e.key: e.value,
-          if (attrs.containsKey('widthPercent')) 'widthPercent': snapped,
+          if (attrs.containsKey('widthPercent')) 'widthPercent': clamped,
           'name': ?name,
         };
       case 'diaryLink':
@@ -172,14 +170,9 @@ class TiptapContent {
   static String? _nonEmpty(Object? value) =>
       value is String && value.isNotEmpty ? value : null;
 
-  static int? _snapWidthPercent(Object? value) {
+  static int? _clampWidthPercent(Object? value) {
     if (value is! num || !value.isFinite) return null;
-    final clamped = value.round().clamp(25, 100);
-    var best = _widthPercentStops.first;
-    for (final stop in _widthPercentStops) {
-      if ((clamped - stop).abs() <= (clamped - best).abs()) best = stop;
-    }
-    return best;
+    return value.round().clamp(25, 100);
   }
 
   static const _textblocks = {'paragraph', 'heading', 'codeBlock'};

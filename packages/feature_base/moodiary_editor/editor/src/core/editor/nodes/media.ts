@@ -1,12 +1,12 @@
 import { Node, mergeAttributes, type Attribute, type JSONContent } from '@tiptap/core'
 import { displaySrc, mediaKindOf, unproxyMedia } from '../media'
-import { snapWidthPercent } from '../normalize'
+import { clampWidthPercent } from '../normalize'
 
 const widthPercentAttribute: Partial<Attribute> = {
   default: null,
   parseHTML: (el) => {
     const raw = el.getAttribute('data-width-percent')
-    return raw === null ? null : snapWidthPercent(Number(raw))
+    return raw === null ? null : clampWidthPercent(Number(raw))
   },
   renderHTML: (attrs) => {
     const v = attrs.widthPercent

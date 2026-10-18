@@ -663,8 +663,8 @@ void main() {
       ]);
     });
 
-    test('image：丢 width / height，widthPercent 夹到 25..100 再吸附到最近档', () {
-      Object? snapped(Object? raw) => first(
+    test('image：丢 width / height，widthPercent 只夹到 25..100、不吸附', () {
+      Object? clamped(Object? raw) => first(
         norm(
           v1([
             {
@@ -674,19 +674,15 @@ void main() {
           ]),
         ),
       )['attrs']['widthPercent'];
-      expect(snapped(25), 25);
-      expect(snapped(37), 25);
-      expect(snapped(38), 50);
-      expect(snapped(62), 50);
-      expect(snapped(63), 75);
-      expect(snapped(87), 75);
-      expect(snapped(88), 100);
-      expect(snapped(100), 100);
-      expect(snapped(10), 25);
-      expect(snapped(180), 100);
-      expect(snapped(62.4), 50);
-      expect(snapped('50'), isNull);
-      expect(snapped(null), isNull);
+      expect(clamped(25), 25);
+      expect(clamped(37), 37);
+      expect(clamped(63), 63);
+      expect(clamped(100), 100);
+      expect(clamped(10), 25);
+      expect(clamped(180), 100);
+      expect(clamped(62.4), 62);
+      expect(clamped('50'), isNull);
+      expect(clamped(null), isNull);
 
       final image = first(
         norm(

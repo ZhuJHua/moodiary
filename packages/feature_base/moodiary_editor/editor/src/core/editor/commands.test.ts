@@ -35,7 +35,7 @@ describe('contract', () => {
       'toggleBulletList', 'toggleOrderedList', 'toggleTaskList', 'indent', 'outdent', 'undo', 'redo',
       'insertImage', 'insertVideo', 'insertAudio', 'insertAttachment', 'insertTable', 'insertHorizontalRule',
       'insertBlockquote', 'insertCodeBlock', 'insertTaskList', 'insertDiaryLink', 'setLink', 'unsetLink',
-      'openLink', 'copyLink', 'setMediaWidth', 'setMediaName', 'moveBlockUp', 'moveBlockDown', 'deleteBlock',
+      'openLink', 'copyLink', 'setMediaWidth', 'previewMediaWidth', 'setMediaName', 'moveBlockUp', 'moveBlockDown', 'deleteBlock',
       'setHorizontalRule', 'previewImage', 'openAttachment', 'copyCode', 'exitCode', 'caretAfterNode', 'tableAddRowAfter',
       'tableDeleteRow', 'tableAddColumnAfter', 'tableDeleteColumn', 'tableToggleHeaderRow', 'tableDelete',
       'search', 'searchNext', 'searchPrev', 'replace', 'replaceAll', 'clearSearch',
@@ -258,12 +258,29 @@ describe('block actions', () => {
     ),
   )
 
-  it('media width snaps and only applies to a selected image or video', () => {
+  it('media width clamps to 25..100, resets with null and only applies to a selected image or video', () => {
     selectNodeAt(5)
+    exec('setMediaWidth', { percent: 63 })
+    expect(h.nodes('image')[0].attrs!.widthPercent).toBe(63)
+    exec('setMediaWidth', { percent: 10 })
+    expect(h.nodes('image')[0].attrs!.widthPercent).toBe(25)
+    exec('setMediaWidth', { percent: 'x' })
+    expect(h.nodes('image')[0].attrs!.widthPercent).toBe(25)
+    exec('setMediaWidth', { percent: null })
+    expect(h.nodes('image')[0].attrs!.widthPercent).toBeNull()
+    selectNodeAt(7)
     exec('setMediaWidth', { percent: 50 })
-    expect(h.nodes('image')[0].attrs!.widthPercent).toBe(50)
-    exec('setMediaWidth', { percent: 70 })
-    expect(h.nodes('image')[0].attrs!.widthPercent).toBe(75)
+    expect(h.nodes('image')[0].attrs!.widthPercent).toBeNull()
+  })
+
+  it('media width preview only touches the DOM', async () => {
+    await flush()
+    selectNodeAt(5)
+    exec('previewMediaWidth', { percent: 40 })
+    const wrapper = h.editor.view.dom.querySelector<HTMLElement>('.md-image')!
+    expect(wrapper.style.width).toBe('40%')
+    expect(h.nodes('image')[0].attrs!.widthPercent).toBeNull()
+    expect(h.editor.can().undo()).toBe(false)
   })
 
   it('media name applies only to a selected media node and undoes', () => {

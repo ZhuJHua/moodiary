@@ -6,6 +6,7 @@ use std::path::Path;
 
 use crate::ir::{
     IrBlock, IrDividerVariant, IrDoc, IrListItem, IrRow, IrSpan, attachment_line, divider_label,
+    media_width_percent,
 };
 
 pub struct DocxStyle {
@@ -622,7 +623,7 @@ fn image_run(path: &str, width_percent: Option<u32>, ctx: &Ctx) -> Option<Run> {
         return None;
     }
 
-    let percent = width_percent.unwrap_or(100).clamp(1, 100);
+    let percent = media_width_percent(width_percent);
     let target_w = ctx.content_width_emu / 100 * percent;
     let natural_w = px_w * EMU_PER_TWIP * 15;
     let final_w = target_w.min(natural_w).max(1);

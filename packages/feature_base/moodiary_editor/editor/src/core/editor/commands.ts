@@ -12,7 +12,7 @@ import {
   selectedBlock,
 } from './block'
 import { linkAt } from './link'
-import { HR_VARIANTS, snapWidthPercent, type HorizontalRuleVariant } from './normalize'
+import { HR_VARIANTS, clampWidthPercent, type HorizontalRuleVariant } from './normalize'
 import {
   clearSearch,
   replaceAllMatches,
@@ -63,6 +63,13 @@ function insertAtom(ctx: RunContext, json: JSONContent): void {
 }
 
 const MEDIA_TYPES = new Set(['image', 'video', 'audio', 'attachment'])
+
+const SIZED_TYPES = new Set(['image', 'video'])
+
+function sizedNode(editor: Editor): NodeSelection | null {
+  const sel = editor.state.selection
+  return sel instanceof NodeSelection && SIZED_TYPES.has(sel.node.type.name) ? sel : null
+}
 
 const mediaName = (v: unknown): string | null => str(v).trim() || null
 
@@ -233,11 +240,21 @@ const HANDLERS: Record<string, Handler> = {
     if (href) post('copy', { text: href })
   },
   setMediaWidth: (c, a) => {
-    const percent = snapWidthPercent(Number(a.percent))
-    const sel = c.editor.state.selection
-    if (percent === null || !(sel instanceof NodeSelection)) return
-    if (sel.node.type.name !== 'image' && sel.node.type.name !== 'video') return
+    const sel = sizedNode(c.editor)
+    const reset = a.percent === null
+    const percent = reset ? null : clampWidthPercent(Number(a.percent))
+    if (!sel || (!reset && percent === null)) return
     chain(c).updateAttributes(sel.node.type.name, { widthPercent: percent }).run()
+  },
+  previewMediaWidth: (c, a) => {
+    const sel = sizedNode(c.editor)
+    const percent = clampWidthPercent(Number(a.percent))
+    const dom = sel && c.editor.view.nodeDOM(sel.from)
+    if (percent === null || !(dom instanceof HTMLElement)) return
+    const wrapper = dom.matches('[data-node-view-wrapper]')
+      ? dom
+      : dom.querySelector<HTMLElement>('[data-node-view-wrapper]')
+    if (wrapper) wrapper.style.width = `${percent}%`
   },
   setMediaName: (c, a) => {
     const sel = c.editor.state.selection

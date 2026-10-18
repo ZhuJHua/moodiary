@@ -285,7 +285,7 @@ class TiptapToIr {
 
   static int? _widthPercent(dynamic raw) {
     if (raw is! num || !raw.isFinite || raw <= 0) return null;
-    return raw.round().clamp(1, 100);
+    return raw.round().clamp(25, 100);
   }
 
   static String? _nonEmpty(dynamic value) =>

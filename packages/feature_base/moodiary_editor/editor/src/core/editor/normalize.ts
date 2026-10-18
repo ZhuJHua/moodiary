@@ -2,8 +2,6 @@ import type { JSONContent } from '@tiptap/core'
 
 export const SCHEMA_VERSION = 2
 
-const WIDTH_PERCENT_STOPS = [25, 50, 75, 100] as const
-
 export type HorizontalRuleVariant = 'solid' | 'dashed' | 'dotted' | 'double' | 'wavy' | 'text'
 
 export const HR_VARIANTS: readonly HorizontalRuleVariant[] = [
@@ -15,14 +13,9 @@ export const HR_VARIANTS: readonly HorizontalRuleVariant[] = [
   'text',
 ]
 
-export function snapWidthPercent(value: unknown): number | null {
+export function clampWidthPercent(value: unknown): number | null {
   if (typeof value !== 'number' || !Number.isFinite(value)) return null
-  const clamped = Math.min(100, Math.max(25, Math.round(value)))
-  let best: number = WIDTH_PERCENT_STOPS[0]
-  for (const stop of WIDTH_PERCENT_STOPS) {
-    if (Math.abs(clamped - stop) < Math.abs(clamped - best)) best = stop
-  }
-  return best
+  return Math.min(100, Math.max(25, Math.round(value)))
 }
 
 type Attrs = Record<string, unknown>
@@ -48,7 +41,7 @@ function normalizeAttrs(type: string | undefined, raw: Attrs | undefined): Attrs
     case 'image': {
       if (!raw) return raw
       const { width: _w, height: _h, alt, title, ...rest } = raw
-      if ('widthPercent' in rest) rest.widthPercent = snapWidthPercent(rest.widthPercent)
+      if ('widthPercent' in rest) rest.widthPercent = clampWidthPercent(rest.widthPercent)
       rest.name ??= nonEmpty(alt) ?? nonEmpty(title)
       return rest
     }

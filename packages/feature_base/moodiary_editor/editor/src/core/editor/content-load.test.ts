@@ -3,7 +3,7 @@ import type { JSONContent } from '@tiptap/core'
 import { DOMParser, DOMSerializer } from '@tiptap/pm/model'
 import { CHANGE_DEBOUNCE_MS } from '@/core/bridge/change'
 import { doc, flush, p, renderEditor, type EditorFixture } from '@/test/editor'
-import { docVersion, normalizeDoc, snapWidthPercent } from './normalize'
+import { clampWidthPercent, docVersion, normalizeDoc } from './normalize'
 import { countCharacters, plainTextOf } from './plain-text'
 
 let h: EditorFixture
@@ -246,8 +246,8 @@ describe('normalizeDoc (v1 → v2)', () => {
     expect(docVersion(out)).toBe(2)
   })
 
-  it('drops image pixel sizes and snaps widthPercent to the nearest stop', () => {
-    expect(content[0].attrs).toEqual({ src: 'image-1.png', name: null, widthPercent: 50 })
+  it('drops image pixel sizes and keeps widthPercent', () => {
+    expect(content[0].attrs).toEqual({ src: 'image-1.png', name: null, widthPercent: 60 })
   })
 
   it('renames audio/video filename to src', () => {
@@ -274,9 +274,9 @@ describe('normalizeDoc (v1 → v2)', () => {
     expect(v1.content[1].attrs).toEqual({ filename: 'audio-1.m4a' })
   })
 
-  it('snaps every in-range integer to 25/50/75/100', () => {
-    expect([25, 37, 38, 62, 63, 88, 100, 10, 140].map(snapWidthPercent)).toEqual([25, 25, 50, 50, 75, 100, 100, 25, 100])
-    expect(snapWidthPercent(null)).toBeNull()
-    expect(snapWidthPercent('50')).toBeNull()
+  it('clamps width to 25..100 without snapping', () => {
+    expect([25, 37, 62.6, 88, 100, 10, 140].map(clampWidthPercent)).toEqual([25, 37, 63, 88, 100, 25, 100])
+    expect(clampWidthPercent(null)).toBeNull()
+    expect(clampWidthPercent('50')).toBeNull()
   })
 })

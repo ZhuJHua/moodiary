@@ -119,6 +119,10 @@ impl IrDoc {
     }
 }
 
+pub fn media_width_percent(value: Option<u32>) -> u32 {
+    value.unwrap_or(100).clamp(25, 100)
+}
+
 pub fn divider_label(variant: IrDividerVariant, label: Option<&str>) -> Option<&str> {
     match variant {
         IrDividerVariant::Text => label.map(str::trim).filter(|l| !l.is_empty()),
