@@ -1,6 +1,6 @@
 # Mobile: the composition root
 
-Composition-root details for dependency injection, bootstrap, and app mounting. Follow the root [AGENTS.md](../AGENTS.md).
+Composition-root details for dependency injection, bootstrap, and app mounting.
 
 ## Dependency injection
 
