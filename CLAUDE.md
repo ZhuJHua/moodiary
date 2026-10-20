@@ -19,9 +19,9 @@ dart tool/task.dart setup          # flutter pub get (the editor bundle is built
 
 # Run & Build (mobile app)
 dart tool/task.dart run            # flutter run
-dart tool/task.dart run -- --flavor production # Android requires a flavor
+dart tool/task.dart run -- --flavor production # Android
 dart tool/task.dart build-apk / build-ios  # the only two targets
-dart tool/task.dart build-apk -- --flavor alpha --release # release settings, isolated Alpha app
+dart tool/task.dart build-apk -- --flavor alpha --release
 # Extra flutter flags go after --:  dart tool/task.dart run -- --release
 
 # Code Gen

@@ -1,7 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-/// Marks every Alpha route and overlay without intercepting input.
 class BuildBadge extends StatelessWidget {
   const BuildBadge({super.key, required this.child});
 

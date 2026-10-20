@@ -65,7 +65,6 @@ jobs:
           ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          # Official releases must use the release key rather than the local fallback.
           if [ -z "$ANDROID_KJS" ] || [ -z "$ANDROID_STORE_PASSWORD" ] || [ -z "$ANDROID_KEY_PASSWORD" ]; then
             echo "Android release signing secrets are required." >&2
             exit 1
