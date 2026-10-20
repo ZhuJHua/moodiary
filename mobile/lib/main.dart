@@ -140,13 +140,19 @@ void main() async {
     buildRouter(initialLocation: resolveInitialLocation());
   } catch (e, s) {
     logger.f('bootstrap failed', error: e, stackTrace: s);
-    runApp(BootFailurePage(error: e, stackTrace: s));
+    runApp(
+      BuildBadge(
+        child: BootFailurePage(error: e, stackTrace: s),
+      ),
+    );
     return;
   }
 
   runApp(
-    TranslationProvider(
-      child: ProviderScope(retry: (_, _) => null, child: const Moodiary()),
+    BuildBadge(
+      child: TranslationProvider(
+        child: ProviderScope(retry: (_, _) => null, child: const Moodiary()),
+      ),
     ),
   );
 }
@@ -166,15 +172,13 @@ class Moodiary extends ConsumerWidget {
           .dark => Brightness.dark,
           .system => MediaQuery.platformBrightnessOf(context),
         };
-        return BuildBadge(
-          child: AnnotatedRegion(
-            value: systemOverlayStyleOf(brightness),
-            // ignore: deprecated_member_use
-            child: MaterialUiCompatibilityBridge(
-              child: FrostedGlassOverlayComponent(
-                child: AppLockObserver(
-                  child: FlutterSmartDialog.init()(context, child!),
-                ),
+        return AnnotatedRegion(
+          value: systemOverlayStyleOf(brightness),
+          // ignore: deprecated_member_use
+          child: MaterialUiCompatibilityBridge(
+            child: FrostedGlassOverlayComponent(
+              child: AppLockObserver(
+                child: FlutterSmartDialog.init()(context, child!),
               ),
             ),
           ),

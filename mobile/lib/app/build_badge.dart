@@ -1,5 +1,5 @@
 import 'package:flutter/services.dart';
-import 'package:mui/mui.dart';
+import 'package:flutter/widgets.dart';
 
 /// Marks every Alpha route and overlay without intercepting input.
 class BuildBadge extends StatelessWidget {
@@ -14,8 +14,9 @@ class BuildBadge extends StatelessWidget {
     return Banner(
       message: 'ALPHA',
       textDirection: TextDirection.ltr,
+      layoutDirection: TextDirection.ltr,
       location: BannerLocation.topStart,
-      color: context.theme.success,
+      color: const Color(0xA01E7F4F),
       child: child,
     );
   }

@@ -293,6 +293,8 @@ const Map<String, String> _themeAllowlist = {
   'packages/foundation/mui/lib/src/themes/': 'mui 的主题层就是色板与 token 的定义处',
   'mobile/lib/app/boot_failure_page.dart':
       '启动失败兜底页：主题系统此刻可能正是坏掉的那一环，刻意零依赖、硬编码配色',
+  'mobile/lib/app/build_badge.dart':
+      'Alpha 构建角标：与 Flutter DEBUG 一样使用固定颜色，挂在应用外层，不依赖主题',
   'packages/foundation/fast_image/lib/src/tile_debug.dart':
       '看图页 tile 调试叠层：颜色是 tile 状态编码，画在照片上，不跟主题',
   'packages/foundation/mui/lib/src/components/common/env_badge.dart':
