@@ -56,7 +56,7 @@ class InsertPanel extends StatelessWidget {
     ];
     return PanelScroll(
       top: 20,
-      gap: 22,
+      gap: 24,
       children: [
         _Section(
           title: t.mediaAndFiles,
@@ -88,11 +88,16 @@ class _Section extends StatelessWidget {
     final typo = context.theme.typography;
     return Column(
       crossAxisAlignment: .stretch,
-      spacing: 12,
+      spacing: 10,
       children: [
         Padding(
-          padding: const .only(left: 4),
-          child: Text(title, style: typo.labelMedium.onSurfaceVariant),
+          padding: const .only(left: 2),
+          child: Text(
+            title,
+            style: typo.labelMedium.withColor(
+              context.theme.colors.onSurfaceVariant,
+            ),
+          ),
         ),
         Row(
           children: [
@@ -129,20 +134,22 @@ class _Tile extends StatelessWidget {
           spacing: 7,
           children: [
             Container(
-              width: 50,
-              height: 50,
+              width: 48,
+              height: 48,
               alignment: .center,
               decoration: BoxDecoration(
-                color: colors.surfaceContainerLowest,
-                borderRadius: .circular(16),
+                color: panelGroupColor(context),
+                borderRadius: .circular(14),
               ),
-              child: Icon(item.icon, size: 22, color: colors.onSurface),
+              child: Icon(item.icon, size: 21, color: colors.onSurface),
             ),
             Text(
               label,
               maxLines: 1,
               overflow: .ellipsis,
-              style: context.theme.typography.labelMedium.onSurface,
+              style: context.theme.typography.labelMedium.withColor(
+                colors.onSurface,
+              ),
             ),
           ],
         ),

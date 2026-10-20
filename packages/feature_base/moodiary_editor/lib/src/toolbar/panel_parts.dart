@@ -9,6 +9,13 @@ typedef EditorExec = void Function(
   Map<String, Object?>? args,
 ]);
 
+Color panelGroupColor(BuildContext context) {
+  final theme = context.theme;
+  return theme.isDark
+      ? theme.colors.surfaceContainerHigh
+      : theme.colors.surfaceContainerLowest;
+}
+
 class PanelSegmentGroup extends StatelessWidget {
   final double? height;
   final List<Widget> children;
@@ -21,11 +28,12 @@ class PanelSegmentGroup extends StatelessWidget {
       height: height,
       padding: const .all(4),
       decoration: BoxDecoration(
-        color: context.theme.colors.surfaceContainerLowest,
-        borderRadius: .circular(14),
+        color: panelGroupColor(context),
+        borderRadius: .circular(context.theme.radii.md),
       ),
       child: Row(
         crossAxisAlignment: .stretch,
+        spacing: 2,
         children: [for (final child in children) Expanded(child: child)],
       ),
     );
@@ -48,7 +56,8 @@ class PanelSegment extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.theme.colors;
+    final theme = context.theme;
+    final colors = theme.colors;
     final foreground = onTap == null
         ? colors.outlineVariant
         : selected
@@ -63,13 +72,12 @@ class PanelSegment extends StatelessWidget {
       child: MInkWell(
         onTap: onTap,
         enabled: onTap != null,
-        borderRadius: .circular(10),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 120),
+        borderRadius: .circular(theme.radii.sm),
+        child: Container(
           alignment: .center,
           decoration: BoxDecoration(
             color: selected ? colors.primary : null,
-            borderRadius: .circular(10),
+            borderRadius: .circular(theme.radii.sm),
           ),
           child: IconTheme.merge(
             data: IconThemeData(color: foreground),

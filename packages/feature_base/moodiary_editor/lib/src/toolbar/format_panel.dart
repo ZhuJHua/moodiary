@@ -60,9 +60,9 @@ class FormatPanel extends StatelessWidget {
               semanticLabel: t.paragraph,
               child: SegmentText(t.paragraph, style: typo.labelLarge.onSurface),
             ),
-            heading(1, 18),
-            heading(2, 16),
-            heading(3, 14),
+            heading(1, 19),
+            heading(2, 17),
+            heading(3, 15),
           ],
         ),
         SizedBox(
@@ -167,7 +167,7 @@ class FormatPanel extends StatelessWidget {
           ),
         ),
         SizedBox(
-          height: 48,
+          height: 52,
           child: Row(
             spacing: 10,
             children: [
@@ -224,12 +224,12 @@ class _PanelButton extends StatelessWidget {
     final colors = context.theme.colors;
     return MInkWell(
       onTap: onTap,
-      borderRadius: .circular(14),
+      borderRadius: .circular(context.theme.radii.md),
       child: Container(
         alignment: .center,
         decoration: BoxDecoration(
-          color: colors.surfaceContainerLowest,
-          borderRadius: .circular(14),
+          color: panelGroupColor(context),
+          borderRadius: .circular(context.theme.radii.md),
         ),
         child: IconTheme.merge(
           data: IconThemeData(color: colors.onSurface),

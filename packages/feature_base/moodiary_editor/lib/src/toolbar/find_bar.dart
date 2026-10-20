@@ -87,9 +87,7 @@ class _EditorFindBarState extends State<EditorFindBar> {
                                 .typography
                                 .labelMedium
                                 .onSurfaceVariant
-                                .copyWith(
-                                  fontFeatures: const [.tabularFigures()],
-                                ),
+                                .tabular,
                           ),
                         ),
                       ToolbarIconButton(
@@ -110,7 +108,7 @@ class _EditorFindBarState extends State<EditorFindBar> {
                 ToolbarIconButton(
                   icon: LucideIcons.replace,
                   tooltip: t.toggleReplace,
-                  tone: _replacing ? .active : .plain,
+                  tone: _replacing ? .on : .plain,
                   onTap: () => setState(() => _replacing = !_replacing),
                 ),
               ToolbarIconButton(

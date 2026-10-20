@@ -35,7 +35,7 @@ class EditorToolbar extends StatelessWidget {
     final row = EdgeFadeScroll(
       key: ValueKey(contextKind),
       child: Row(
-        spacing: 4,
+        spacing: 2,
         children: [
           if (grouped) ...[
             ToolbarContextGroup(children: contextItems),
@@ -54,8 +54,8 @@ class EditorToolbar extends StatelessWidget {
     );
     return ExcludeFocus(
       child: Container(
-        height: 45,
-        padding: const .symmetric(horizontal: 4),
+        height: 52,
+        padding: const .symmetric(horizontal: 6),
         decoration: BoxDecoration(
           color: colors.surfaceContainerLow,
           border: Border(

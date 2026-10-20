@@ -1,6 +1,8 @@
 import 'package:mui/mui.dart';
 
-enum ToolbarButtonTone { plain, active, pressed }
+import 'panel_parts.dart';
+
+enum ToolbarButtonTone { plain, active, on }
 
 class ToolbarIconButton extends StatelessWidget {
   final IconData icon;
@@ -25,7 +27,7 @@ class ToolbarIconButton extends StatelessWidget {
     final colors = context.theme.colors;
     final (background, foreground) = switch (tone) {
       _ when onTap == null => (null, colors.outlineVariant),
-      .pressed => (colors.primary, colors.onPrimary),
+      .on => (colors.primary, colors.onPrimary),
       .active => (colors.surfaceContainerHighest, colors.onSurface),
       .plain => (null, colors.onSurface),
     };
@@ -40,15 +42,14 @@ class ToolbarIconButton extends StatelessWidget {
         child: MInkWell(
           onTap: onTap,
           enabled: onTap != null,
-          borderRadius: .circular(10),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 120),
+          borderRadius: .circular(context.theme.radii.sm),
+          child: Container(
             width: width,
             height: height,
             alignment: .center,
             decoration: BoxDecoration(
               color: background,
-              borderRadius: .circular(10),
+              borderRadius: .circular(context.theme.radii.sm),
             ),
             child: Icon(icon, size: 20, color: foreground),
           ),
@@ -78,24 +79,22 @@ class ToolbarLabelButton extends StatelessWidget {
     final foreground = pressed ? colors.onPrimary : colors.onSurface;
     return MInkWell(
       onTap: onTap,
-      borderRadius: .circular(10),
+      borderRadius: .circular(context.theme.radii.sm),
       child: Container(
         height: 36,
-        padding: const .symmetric(horizontal: 10),
+        padding: const .only(left: 10, right: 12),
         decoration: BoxDecoration(
           color: pressed ? colors.primary : null,
-          borderRadius: .circular(10),
+          borderRadius: .circular(context.theme.radii.sm),
         ),
         child: Row(
           mainAxisSize: .min,
+          spacing: 6,
           children: [
             Icon(icon, size: 16, color: foreground),
-            const SizedBox(width: 4),
             Text(
               label,
-              style: context.theme.typography.labelLarge.onSurface.copyWith(
-                color: foreground,
-              ),
+              style: context.theme.typography.labelLarge.withColor(foreground),
             ),
           ],
         ),
@@ -126,6 +125,7 @@ class ToolbarNameChip extends StatelessWidget {
     final typography = context.theme.typography;
     final label = name?.trim() ?? '';
     final named = label.isNotEmpty;
+    final foreground = named ? colors.onSurface : colors.onSurfaceVariant;
     return Semantics(
       button: true,
       label: named ? label : placeholder,
@@ -136,32 +136,26 @@ class ToolbarNameChip extends StatelessWidget {
         excludeFromSemantics: true,
         child: MInkWell(
           onTap: onTap,
-          borderRadius: .circular(10),
+          borderRadius: .circular(context.theme.radii.sm),
           child: Container(
             height: 36,
             constraints: const BoxConstraints(maxWidth: 160),
-            padding: const .symmetric(horizontal: 10),
+            padding: const .symmetric(horizontal: 12),
             decoration: BoxDecoration(
               color: colors.surfaceContainerHighest,
-              borderRadius: .circular(10),
+              borderRadius: .circular(context.theme.radii.sm),
             ),
             child: Row(
               mainAxisSize: .min,
+              spacing: 8,
               children: [
-                Icon(
-                  icon,
-                  size: 16,
-                  color: named ? colors.onSurface : colors.onSurfaceVariant,
-                ),
-                const SizedBox(width: 6),
+                Icon(icon, size: 16, color: foreground),
                 Flexible(
                   child: Text(
                     named ? label : placeholder,
                     maxLines: 1,
                     overflow: .ellipsis,
-                    style: named
-                        ? typography.labelLarge.onSurface
-                        : typography.labelLarge.onSurfaceVariant,
+                    style: typography.labelLarge.withColor(foreground),
                   ),
                 ),
               ],
@@ -182,7 +176,7 @@ class ToolbarDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 1,
-      height: 24,
+      height: 20,
       margin: .symmetric(horizontal: margin),
       color: context.theme.colors.outlineVariant,
     );
@@ -197,11 +191,12 @@ class ToolbarContextGroup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: const .all(2),
       decoration: BoxDecoration(
-        color: context.theme.colors.surfaceContainerHighest,
-        borderRadius: .circular(10),
+        color: panelGroupColor(context),
+        borderRadius: .circular(context.theme.radii.md),
       ),
-      child: Row(mainAxisSize: .min, children: children),
+      child: Row(mainAxisSize: .min, spacing: 2, children: children),
     );
   }
 }

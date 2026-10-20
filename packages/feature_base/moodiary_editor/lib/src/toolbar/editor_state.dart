@@ -22,7 +22,7 @@ enum EditorBlock {
 
 enum EditorList { bullet, ordered, task }
 
-enum EditorPanel { insert, format, divider, block }
+enum EditorPanel { insert, format, block }
 
 enum EditorSelectionKind { caret, text, node }
 

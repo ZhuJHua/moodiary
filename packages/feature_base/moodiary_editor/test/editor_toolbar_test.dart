@@ -9,6 +9,9 @@ import 'package:moodiary_editor/src/toolbar/context_items.dart';
 import 'package:moodiary_editor/src/toolbar/editor_state.dart';
 import 'package:moodiary_editor/src/toolbar/editor_toolbar.dart';
 import 'package:moodiary_editor/src/toolbar/editor_toolbar_host.dart';
+import 'package:moodiary_editor/src/toolbar/floating_bars.dart';
+import 'package:moodiary_editor/src/toolbar/format_panel.dart';
+import 'package:moodiary_editor/src/toolbar/panel_parts.dart';
 import 'package:moodiary_editor/src/toolbar/toolbar_button.dart';
 import 'package:moodiary_editor/src/toolbar/toolbar_tools.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
@@ -165,9 +168,7 @@ void main() {
                       ),
                       exec: (_, [_]) {},
                       popover: null,
-                      dividerPanelOpen: false,
                       onTogglePopover: (_) {},
-                      onToggleDividerPanel: () {},
                       onRenameMedia: () => renames++,
                     );
                     return EditorToolbar(
@@ -205,6 +206,210 @@ void main() {
 
     await mount(.attachment, 'quarterly report final version (2).pdf' * 3);
     expect(tester.getSize(chip).width, lessThanOrEqualTo(160));
+  });
+
+  testWidgets('格式面板切换段落样式时选中底色立即换位，旧选项不淡出', (tester) async {
+    final state = ValueNotifier(const EditorState());
+    addTearDown(state.dispose);
+    await tester.pumpWidget(
+      TranslationProvider(
+        child: MuiTheme(
+          data: buildMuiTheme(brightness: .light),
+          child: MaterialApp(
+            home: Scaffold(
+              body: ValueListenableBuilder(
+                valueListenable: state,
+                builder: (_, s, _) => FormatPanel(state: s, exec: (_, [_]) {}),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    BoxDecoration? decorationOf(int index) =>
+        tester
+                .widget<Container>(
+                  find.descendant(
+                    of: find.byType(PanelSegment).at(index),
+                    matching: find.byType(Container),
+                  ),
+                )
+                .decoration
+            as BoxDecoration?;
+    final colors = tester.element(find.byType(FormatPanel)).theme.colors;
+    expect(decorationOf(0)?.color, colors.primary);
+
+    state.value = const EditorState(block: .heading1);
+    await tester.pump();
+    expect(decorationOf(0)?.boxShadow, isNull);
+    expect(decorationOf(0)?.color, isNull);
+    expect(decorationOf(1)?.color, colors.primary);
+    expect(tester.binding.hasScheduledFrame, isFalse, reason: '选中态切换不该有过渡动画');
+  });
+
+  testWidgets('打开的面板使用主色，已启用格式使用浅底，分组内外保持一致', (tester) async {
+    await tester.pumpWidget(
+      TranslationProvider(
+        child: MuiTheme(
+          data: buildMuiTheme(brightness: .light),
+          child: MaterialApp(
+            home: Scaffold(
+              body: Align(
+                alignment: .bottomCenter,
+                child: EditorToolbar(
+                  contextKind: .table,
+                  contextItems: [
+                    ToolbarIconButton(
+                      icon: LucideIcons.tableProperties,
+                      tooltip: 'grouped',
+                      tone: .on,
+                      onTap: () {},
+                    ),
+                  ],
+                  tools: const [ToolbarTool.insert, ToolbarTool.bold],
+                  toneOf: (tool) => tool == .insert ? .on : .active,
+                  enabledOf: (_) => true,
+                  onTool: (_) {},
+                  keyboardShown: true,
+                  onKeyboardToggle: () {},
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    final toolbar = tester.element(find.byType(EditorToolbar));
+    final colors = toolbar.theme.colors;
+    BoxDecoration decorationOf(String tooltip) =>
+        tester
+                .widget<Container>(
+                  find.descendant(
+                    of: find.byWidgetPredicate(
+                      (w) => w is ToolbarIconButton && w.tooltip == tooltip,
+                    ),
+                    matching: find.byType(Container),
+                  ),
+                )
+                .decoration!
+            as BoxDecoration;
+    expect(decorationOf('grouped').color, colors.primary);
+    expect(decorationOf('grouped').boxShadow, isNull);
+    final tool = ToolbarTool.insert.label(toolbar);
+    expect(decorationOf(tool).color, colors.primary);
+    expect(decorationOf(tool).boxShadow, isNull);
+    expect(
+      decorationOf(ToolbarTool.bold.label(toolbar)).color,
+      colors.surfaceContainerHighest,
+    );
+    expect(
+      tester.widget<Icon>(find.byIcon(LucideIcons.plus)).color,
+      colors.onPrimary,
+    );
+    expect(
+      tester.widget<Icon>(find.byIcon(LucideIcons.bold)).color,
+      colors.onSurface,
+    );
+  });
+
+  testWidgets('宽度弹层：吸附 ±3 并预览，按住拖动只在松手提交一次，点轨道和读屏步进立即提交', (tester) async {
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final previews = <int>[];
+    final picks = <int?>[];
+    Future<void> mount(int? current) => tester.pumpWidget(
+      TranslationProvider(
+        child: MuiTheme(
+          data: buildMuiTheme(brightness: .light),
+          child: MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: WidthPicker(
+                  current: current,
+                  onPreview: previews.add,
+                  onPick: picks.add,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    double thumb() => tester.widget<Slider>(find.byType(Slider)).value;
+    Offset at(double percent) {
+      final track = tester.getRect(find.byType(Slider));
+      return Offset(
+        track.left + (percent - 25) / 75 * track.width,
+        track.center.dy,
+      );
+    }
+
+    void step({required bool up}) {
+      final props = tester
+          .widget<Semantics>(
+            find
+                .byWidgetPredicate(
+                  (w) => w is Semantics && (w.properties.slider ?? false),
+                )
+                .first,
+          )
+          .properties;
+      (up ? props.onIncrease : props.onDecrease)!();
+    }
+
+    final t = l10n.editor.toolbar;
+
+    await mount(null);
+    expect(thumb(), 100);
+    expect(find.text(t.originalSize), findsOneWidget);
+    await tester.tap(find.text(t.original));
+    await tester.tap(find.text('50%'));
+    expect(picks, [50]);
+
+    final drag = await tester.startGesture(at(47.6));
+    await tester.pump(const Duration(milliseconds: 200));
+    await drag.moveTo(at(55));
+    await tester.pump();
+    await drag.moveTo(at(61.4));
+    await tester.pump();
+    expect(picks, [50]);
+    await drag.up();
+    await tester.pump();
+    expect(previews.last, 61);
+    expect(picks, [50, 61]);
+    expect(thumb(), 61);
+    expect(find.text('61%'), findsOneWidget);
+
+    await mount(61);
+    await tester.tapAt(at(75.4));
+    await tester.pump();
+    expect(picks, [50, 61, 75]);
+
+    final back = await tester.startGesture(at(75));
+    await back.moveTo(at(63));
+    await tester.pump();
+    await back.moveTo(at(60.6));
+    await tester.pump();
+    await back.up();
+    await tester.pump();
+    expect(picks, [50, 61, 75]);
+    expect(thumb(), 61);
+
+    step(up: true);
+    await tester.pump();
+    expect(picks, [50, 61, 75, 62]);
+
+    await tester.tap(find.text(t.original));
+    expect(picks, [50, 61, 75, 62, null]);
+
+    await mount(100);
+    step(up: false);
+    await tester.pump();
+    await mount(75);
+    step(up: true);
+    await tester.pump();
+    expect(picks, [50, 61, 75, 62, null, 99, 76]);
   });
 
   group('EditorState.fromJson', () {

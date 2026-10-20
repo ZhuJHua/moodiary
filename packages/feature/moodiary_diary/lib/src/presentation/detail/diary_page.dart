@@ -695,7 +695,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
           context.l10n.diary.wordCount(
             count: TiptapContent.countCharacters(diary.contentText),
           ),
-          typo.bodySmall.onSurfaceVariant,
+          typo.bodySmall.outline,
         ),
       if (showTime)
         ValueListenableBuilder<int>(
@@ -703,7 +703,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
           builder: (_, sec, _) => _pillSeg(
             LucideIcons.timer,
             _fmtDuration(sec),
-            typo.bodySmall.onSurfaceVariant,
+            typo.bodySmall.outline,
           ),
         ),
     ];
@@ -748,7 +748,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
             const SizedBox(width: 4),
             Text(
               context.l10n.diary.saving,
-              style: typo.bodySmall.onSurfaceVariant,
+              style: typo.bodySmall.outline,
             ),
           ],
         );

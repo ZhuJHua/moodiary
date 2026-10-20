@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:mui/mui.dart';
 
-const Duration _kReleaseDelay = Duration(milliseconds: 50);
+const Duration _kMinPressed = Duration(milliseconds: 100);
 
-const Duration _kFadeDuration = Duration(milliseconds: 90);
+const Duration _kReleaseFade = Duration(milliseconds: 150);
 
 abstract class _MInkWellPressedHost {
   void onDescendantPressedChanged(bool pressed);
@@ -78,11 +78,17 @@ class MInkWell extends StatefulWidget {
   State<MInkWell> createState() => _MInkWellState();
 }
 
-class _MInkWellState extends State<MInkWell> implements _MInkWellPressedHost {
+class _MInkWellState extends State<MInkWell>
+    with SingleTickerProviderStateMixin
+    implements _MInkWellPressedHost {
   bool _selfPressed = false;
   int _pressedDescendants = 0;
 
-  Timer? _releaseTimer;
+  Timer? _minPressedTimer;
+  bool _releasePending = false;
+  bool _voided = false;
+
+  late final AnimationController _feedback = AnimationController(vsync: this);
 
   _MInkWellPressedHost? _parent;
 
@@ -111,13 +117,18 @@ class _MInkWellState extends State<MInkWell> implements _MInkWellPressedHost {
   @override
   void didUpdateWidget(covariant MInkWell oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!widget.enabled && _selfPressed) _setPressed(false);
+    if (!widget.enabled && _selfPressed) {
+      _voided = true;
+      _release();
+    }
+    _syncFeedback();
   }
 
   @override
   void dispose() {
-    _releaseTimer?.cancel();
+    _minPressedTimer?.cancel();
     if (_isPressedAnywhere) _parent?.onDescendantPressedChanged(false);
+    _feedback.dispose();
     super.dispose();
   }
 
@@ -125,10 +136,15 @@ class _MInkWellState extends State<MInkWell> implements _MInkWellPressedHost {
   void onDescendantPressedChanged(bool pressed) {
     if (!mounted) return;
     final was = _isPressedAnywhere;
-    setState(() {
-      _pressedDescendants += pressed ? 1 : -1;
-      assert(_pressedDescendants >= 0, 'MInkWell 的子树按压计数被减穿了');
-    });
+    _pressedDescendants += pressed ? 1 : -1;
+    assert(_pressedDescendants >= 0, 'MInkWell 的子树按压计数被减穿了');
+    if (_shouldRenderPressed) {
+      scheduleMicrotask(() {
+        if (mounted) _syncFeedback();
+      });
+    } else {
+      _syncFeedback();
+    }
     if (was != _isPressedAnywhere) {
       _parent?.onDescendantPressedChanged(_isPressedAnywhere);
     }
@@ -137,58 +153,80 @@ class _MInkWellState extends State<MInkWell> implements _MInkWellPressedHost {
   void _setPressed(bool value) {
     if (!mounted || _selfPressed == value) return;
     final was = _isPressedAnywhere;
-    setState(() => _selfPressed = value);
+    _selfPressed = value;
+    _syncFeedback();
     if (was != _isPressedAnywhere) {
       _parent?.onDescendantPressedChanged(_isPressedAnywhere);
     }
   }
 
-  void _scheduleRelease() {
-    if (!_selfPressed) return;
-    _releaseTimer?.cancel();
-    _releaseTimer = Timer(_kReleaseDelay, () {
-      _releaseTimer = null;
-      _setPressed(false);
+  void _syncFeedback() {
+    if (_shouldRenderPressed) {
+      _feedback.value = 1;
+    } else if (_selfPressed || _pressedDescendants > 0 || !widget.enabled) {
+      _feedback.value = 0;
+    } else if (_feedback.value > 0 && !_feedback.isAnimating) {
+      unawaited(
+        _feedback.animateTo(0, duration: _kReleaseFade, curve: Curves.easeOut),
+      );
+    }
+  }
+
+  bool get _armed => widget.enabled && !_voided;
+
+  void _startHold() {
+    _minPressedTimer?.cancel();
+    _minPressedTimer = Timer(_kMinPressed, () {
+      if (_releasePending) _setPressed(false);
+      _releasePending = false;
     });
   }
 
-  void _cancelRelease() {
-    _releaseTimer?.cancel();
-    _releaseTimer = null;
+  void _scheduleRelease() {
+    final held = _minPressedTimer?.isActive ?? false;
+    if (!held && _armed && _feedback.value == 0) _startHold();
+    if (_minPressedTimer?.isActive ?? false) {
+      _releasePending = true;
+    } else {
+      _setPressed(false);
+    }
   }
 
   void _press() {
-    _cancelRelease();
+    _voided = false;
+    _releasePending = false;
+    _startHold();
     _setPressed(true);
   }
 
   void _release() {
-    _cancelRelease();
+    _minPressedTimer?.cancel();
+    _releasePending = false;
     _setPressed(false);
   }
 
   void _onTap() {
-    widget.onTap?.call();
+    if (_armed) widget.onTap?.call();
     _scheduleRelease();
   }
 
   void _onLongPress() {
-    widget.onLongPress?.call();
+    if (_armed) widget.onLongPress?.call();
     _release();
   }
 
   void _onLongPressStart(LongPressStartDetails details) {
-    widget.onLongPressStart?.call(details);
+    if (_armed) widget.onLongPressStart?.call(details);
     _release();
   }
 
   Widget _withFeedback(Widget child) {
     final states = context.theme.states;
     if (widget._fade) {
-      return AnimatedOpacity(
-        opacity: _shouldRenderPressed ? states.pressedContentOpacity : 1,
-        duration: _kFadeDuration,
-        curve: Curves.easeOut,
+      return FadeTransition(
+        opacity: _feedback.drive(
+          Tween(begin: 1, end: states.pressedContentOpacity),
+        ),
         child: child,
       );
     }
@@ -202,8 +240,9 @@ class _MInkWellState extends State<MInkWell> implements _MInkWellPressedHost {
         child,
         Positioned.fill(
           child: IgnorePointer(
-            child: ColoredBox(
-              color: _shouldRenderPressed ? color : Colors.transparent,
+            child: FadeTransition(
+              opacity: _feedback,
+              child: ColoredBox(color: color),
             ),
           ),
         ),
@@ -216,26 +255,30 @@ class _MInkWellState extends State<MInkWell> implements _MInkWellPressedHost {
     final behavior = widget.behavior ?? HitTestBehavior.opaque;
     Widget result = _withFeedback(widget.child);
 
-    if (_isInteractive) {
-      final hasTap = widget.onTap != null;
-      final hasLongPress =
-          widget.onLongPress != null ||
-          widget.onLongPressStart != null ||
-          widget.onLongPressUp != null;
-      result = GestureDetector(
-        behavior: behavior,
+    final hasTap = widget.onTap != null;
+    final hasLongPress =
+        widget.onLongPress != null ||
+        widget.onLongPressStart != null ||
+        widget.onLongPressUp != null;
+    result = IgnorePointer(
+      ignoring: _isInteractive && !widget.enabled,
+      child: GestureDetector(
+        behavior: _isInteractive ? behavior : HitTestBehavior.deferToChild,
         onTapDown: hasTap ? (_) => _press() : null,
         onTap: hasTap ? _onTap : null,
         onTapCancel: hasTap ? _release : null,
         onLongPressDown: hasLongPress && !hasTap ? (_) => _press() : null,
         onLongPress: widget.onLongPress != null ? _onLongPress : null,
         onLongPressStart: hasLongPress ? _onLongPressStart : null,
-        onLongPressUp: widget.onLongPressUp,
-        onLongPressCancel: hasLongPress ? _release : null,
+        onLongPressUp: widget.onLongPressUp == null
+            ? null
+            : () {
+                if (_armed) widget.onLongPressUp!();
+              },
+        onLongPressCancel: hasLongPress && !hasTap ? _release : null,
         child: result,
-      );
-      if (!widget.enabled) result = IgnorePointer(child: result);
-    }
+      ),
+    );
 
     final borderRadius = widget.borderRadius;
     final shape = widget.shape;

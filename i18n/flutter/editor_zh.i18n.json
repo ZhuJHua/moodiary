@@ -76,6 +76,8 @@
     "divider": "分割线",
     "view": "查看",
     "width": "宽度",
+    "originalSize": "原始大小",
+    "original": "原始",
     "moveUp": "上移",
     "moveDown": "下移",
     "delete": "删除",

@@ -1473,6 +1473,8 @@ class _Translations$editor$toolbar$en extends Translations$editor$toolbar$zh {
 	@override String get divider => 'Divider';
 	@override String get view => 'View';
 	@override String get width => 'Width';
+	@override String get originalSize => 'Original size';
+	@override String get original => 'Original';
 	@override String get moveUp => 'Move up';
 	@override String get moveDown => 'Move down';
 	@override String get delete => 'Delete';

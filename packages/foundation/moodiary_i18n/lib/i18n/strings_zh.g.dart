@@ -4060,6 +4060,12 @@ class Translations$editor$toolbar$zh {
 	/// zh: '宽度'
 	String get width => '宽度';
 
+	/// zh: '原始大小'
+	String get originalSize => '原始大小';
+
+	/// zh: '原始'
+	String get original => '原始';
+
 	/// zh: '上移'
 	String get moveUp => '上移';
 

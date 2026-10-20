@@ -6,7 +6,7 @@ import 'package:path/path.dart' as p;
 import '../ime/ime_panel.dart';
 import '../moodiary_editor.dart';
 import 'context_items.dart';
-import 'divider_panel.dart';
+import 'divider_picker.dart';
 import 'editor_command.dart';
 import 'editor_state.dart';
 import 'editor_toolbar.dart';
@@ -74,18 +74,23 @@ class _EditorToolbarHostState extends State<EditorToolbarHost> {
 
   void _onState() {
     final s = _state;
-    if (s.selection == .node && _c.focusTarget.value == .editor) {
-      if (_panel.type == .keyboard) _panel.showPanel(.block);
-    } else if (_panel.panel case .block || .divider) {
-      _panel.showKeyboard();
+    final focused = _c.focusTarget.value == .editor;
+    if (s.selection == .node && (focused || _panel.type != .keyboard)) {
+      if (_panel.type != .custom) _panel.showPanel(.block);
+    } else if (_panel.panel == .block) {
+      focused ? _panel.showKeyboard() : _panel.hide();
     }
     final popover = switch (_popover) {
       .width when s.nodeType == .image || s.nodeType == .video => _popover,
+      .divider when s.nodeType == .horizontalRule => _popover,
       .table when s.inTable => _popover,
       _ => null,
     };
     if (popover != _popover) setState(() => _popover = popover);
   }
+
+  bool get _editing =>
+      _c.focusTarget.value == .editor || _panel.type == .custom;
 
   void _togglePanel(EditorPanel panel) {
     if (_panel.panel == panel) {
@@ -105,6 +110,7 @@ class _EditorToolbarHostState extends State<EditorToolbarHost> {
     }
     if (_state.selection == .node) await _c.exec(.caretAfterNode);
     _panel.showKeyboard();
+    if (_c.focusTarget.value != .editor) await _c.focus();
   }
 
   Future<void> _editLink() async {
@@ -122,10 +128,19 @@ class _EditorToolbarHostState extends State<EditorToolbarHost> {
     await _c.exec(.setLink, {'text': input.text, 'href': input.href});
   }
 
+  Future<T> _suspendForBlock<T>(Future<T> Function() open) async {
+    final unfocused = _c.focusTarget.value != .editor;
+    try {
+      return await _c.withInputSuspended(open);
+    } finally {
+      if (unfocused && mounted) _onState();
+    }
+  }
+
   Future<void> _pickDividerStyle(HorizontalRuleVariant variant) async {
     String? label;
     if (variant == .text) {
-      label = await _c.withInputSuspended(
+      label = await _suspendForBlock(
         () async => mounted
             ? showDividerLabelSheet(
                 context,
@@ -149,7 +164,7 @@ class _EditorToolbarHostState extends State<EditorToolbarHost> {
     final (stem, ext) = attachment
         ? splitAttachmentName(current ?? '', node.attrs['src'] as String? ?? '')
         : (current, '');
-    final input = await _c.withInputSuspended(
+    final input = await _suspendForBlock(
       () async => mounted
           ? showMediaNameSheet(
               context,
@@ -257,7 +272,7 @@ class _EditorToolbarHostState extends State<EditorToolbarHost> {
       .format => _panel.panel == .format,
       _ => false,
     };
-    if (on) return .pressed;
+    if (on) return .on;
     final active = switch (tool) {
       .task => s.list == .task,
       .link => s.link != null,
@@ -299,11 +314,16 @@ class _EditorToolbarHostState extends State<EditorToolbarHost> {
     switch (_popover) {
       case .width:
         final percent = s.node?.attrs['widthPercent'];
-        return Center(
-          child: WidthPicker(
-            current: percent is num ? percent.toInt() : null,
-            onPick: (p) => _exec(.setMediaWidth, {'percent': p}),
-          ),
+        return WidthPicker(
+          current: percent is num ? percent.toInt() : null,
+          onPreview: (p) => _exec(.previewMediaWidth, {'percent': p}),
+          onPick: (p) => _exec(.setMediaWidth, {'percent': p}),
+        );
+      case .divider:
+        return DividerPicker(
+          current: HorizontalRuleVariant.values
+              .asNameMap()[s.node?.attrs['variant']],
+          onPick: (v) => unawaited(_pickDividerStyle(v)),
         );
       case .table:
         return Center(
@@ -320,29 +340,15 @@ class _EditorToolbarHostState extends State<EditorToolbarHost> {
   Widget _buildPanel(BuildContext context, EditorPanel panel) {
     final colors = context.theme.colors;
     final s = _state;
+    Widget sheet(Widget child) =>
+        ColoredBox(color: colors.surfaceContainer, child: child);
     return switch (panel) {
       .block => ColoredBox(color: colors.surfaceContainerLow),
-      .insert => ColoredBox(
-        color: colors.surfaceContainer,
-        child: InsertPanel(inTable: s.inTable, onInsert: _onInsert),
-      ),
-      .format => ColoredBox(
-        color: colors.surfaceContainer,
-        child: ValueListenableBuilder(
+      .insert => sheet(InsertPanel(inTable: s.inTable, onInsert: _onInsert)),
+      .format => sheet(
+        ValueListenableBuilder(
           valueListenable: _c.state,
           builder: (_, state, _) => FormatPanel(state: state, exec: _exec),
-        ),
-      ),
-      .divider => ColoredBox(
-        color: colors.surfaceContainer,
-        child: ValueListenableBuilder(
-          valueListenable: _c.state,
-          builder: (_, state, _) => DividerStylePanel(
-            current: HorizontalRuleVariant.values
-                .asNameMap()[state.node?.attrs['variant']],
-            label: state.node?.attrs['label'] as String?,
-            onPick: (v) => unawaited(_pickDividerStyle(v)),
-          ),
         ),
       ),
     };
@@ -382,29 +388,16 @@ class _EditorToolbarHostState extends State<EditorToolbarHost> {
         ),
         if (widget.editable) ...[
           if (widget.statusBar case final status?)
-            ListenableBuilder(
-              listenable: Listenable.merge([_c.focusTarget, _panel]),
-              builder: (context, child) => Container(
-                height: 28,
-                padding: const .symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  color:
-                      _c.focusTarget.value == .editor || _panel.type == .custom
-                      ? colors.surfaceContainerLow
-                      : colors.surface,
-                  border: Border(
-                    top: BorderSide(color: colors.surfaceContainerHighest),
-                  ),
-                ),
-                child: child,
-              ),
+            Container(
+              height: 28,
+              padding: const .symmetric(horizontal: 16),
+              color: colors.surface,
               child: status,
             ),
           ListenableBuilder(
             listenable: Listenable.merge([_c.state, _c.focusTarget, _panel]),
             builder: (context, _) {
-              final visible =
-                  _c.focusTarget.value == .editor || _panel.type == .custom;
+              final visible = _editing;
               if (!visible) return const SizedBox.shrink();
               final inCode = _state.inCodeBlock;
               final toolbarContext = buildToolbarContext(
@@ -412,9 +405,7 @@ class _EditorToolbarHostState extends State<EditorToolbarHost> {
                 state: _state,
                 exec: _exec,
                 popover: _popover,
-                dividerPanelOpen: _panel.panel == .divider,
                 onTogglePopover: _togglePopover,
-                onToggleDividerPanel: () => _togglePanel(.divider),
                 onRenameMedia: () => unawaited(_renameMedia()),
               );
               return EditorToolbar(
@@ -443,8 +434,7 @@ class _EditorToolbarHostState extends State<EditorToolbarHost> {
               target: _c.imeTarget,
               compact: (panel) => panel == .block,
               panelBuilder: _buildPanel,
-              backgroundColor:
-                  _c.focusTarget.value == .editor || _panel.type == .custom
+              backgroundColor: _editing
                   ? colors.surfaceContainerLow
                   : colors.surface,
             ),

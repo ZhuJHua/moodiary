@@ -76,6 +76,8 @@
     "divider": "Divider",
     "view": "View",
     "width": "Width",
+    "originalSize": "Original size",
+    "original": "Original",
     "moveUp": "Move up",
     "moveDown": "Move down",
     "delete": "Delete",

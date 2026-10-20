@@ -5,7 +5,7 @@ import 'editor_state.dart';
 import 'panel_parts.dart';
 import 'toolbar_button.dart';
 
-enum ToolbarPopover { width, table }
+enum ToolbarPopover { width, divider, table }
 
 enum ToolbarContextKind {
   none,
@@ -25,9 +25,7 @@ ToolbarContext buildToolbarContext(
   required EditorState state,
   required EditorExec exec,
   required ToolbarPopover? popover,
-  required bool dividerPanelOpen,
   required ValueChanged<ToolbarPopover> onTogglePopover,
-  required VoidCallback onToggleDividerPanel,
   required VoidCallback onRenameMedia,
 }) {
   final s = state;
@@ -38,9 +36,10 @@ ToolbarContext buildToolbarContext(
     VoidCallback? onTap, {
     bool pressed = false,
   }) => ToolbarIconButton(
+    key: ValueKey(tooltip),
     icon: icon,
     tooltip: tooltip,
-    tone: pressed ? .pressed : .plain,
+    tone: pressed ? .on : .plain,
     onTap: onTap,
   );
   Widget width() => button(
@@ -83,8 +82,8 @@ ToolbarContext buildToolbarContext(
       ToolbarLabelButton(
         icon: LucideIcons.chevronDown,
         label: t.style,
-        pressed: dividerPanelOpen,
-        onTap: onToggleDividerPanel,
+        pressed: popover == .divider,
+        onTap: () => onTogglePopover(.divider),
       ),
       ...moveAndDelete,
     ],
