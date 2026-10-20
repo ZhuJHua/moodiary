@@ -1,8 +1,8 @@
-# CLAUDE.md
+# Agent instructions
 
 ## Project Overview
 
-Moodiary is a Flutter + Rust diary app. **Layered pub-workspace monorepo**: 32 shared packages under `packages/` in four dependency layers, consumed by the single Flutter app **`mobile/`** (Android + iOS, pub name `moodiary_mobile`). The root `pubspec.yaml` is the workspace + Melos coordinator — no app code, no dependencies beyond what the test run needs. A desktop app will be rebuilt later; the packages are layered for it, but no desktop target exists today.
+Moodiary is a Flutter + Rust diary app. Shared packages under `packages/` form four dependency layers, consumed by **`mobile/`** (Android + iOS, pub name `moodiary_mobile`). The root `pubspec.yaml` coordinates the pub workspace and Melos; it contains no app code.
 
 ## Tech Stack
 
@@ -15,46 +15,46 @@ Moodiary is a Flutter + Rust diary app. **Layered pub-workspace monorepo**: 32 s
 ```bash
 # Setup
 fvm use
-dart tool/task.dart setup          # flutter pub get (the editor bundle is built by moodiary_editor's build hook on run/build; needs corepack)
+fvm dart tool/task.dart setup          # flutter pub get (the editor bundle is built by moodiary_editor's build hook on run/build; needs corepack)
 
 # Run & Build (mobile app)
-dart tool/task.dart run            # flutter run
-dart tool/task.dart run -- --flavor production # Android
-dart tool/task.dart build-apk / build-ios  # the only two targets
-dart tool/task.dart build-apk -- --flavor alpha --release
-# Extra flutter flags go after --:  dart tool/task.dart run -- --release
+fvm dart tool/task.dart run -- --flavor production # Android
+fvm dart tool/task.dart run            # iOS; select an iOS device
+fvm dart tool/task.dart build-apk      # defaults to the production flavor
+fvm dart tool/task.dart build-ios
+fvm dart tool/task.dart build-apk -- --flavor alpha --release
+# Extra flutter flags go after --:  fvm dart tool/task.dart run -- --release
 
 # Code Gen
-dart tool/task.dart build-runner   # whole workspace
-dart tool/task.dart gen-rust       # regenerate Rust FFI bindings after touching rust/src/api
-dart tool/task.dart i18n           # slang codegen after editing i18n/flutter (i18n/web needs no codegen)
-dart tool/task.dart migrations     # drift schema snapshot + step-by-step migration codegen, after bumping schemaVersion
-dart tool/task.dart gen            # gen-rust + i18n
+fvm dart tool/task.dart build-runner   # whole workspace
+fvm dart tool/task.dart gen-rust       # regenerate Rust FFI bindings after touching rust/src/api
+fvm dart tool/task.dart i18n           # slang codegen after editing i18n/flutter (i18n/web needs no codegen)
+fvm dart tool/task.dart migrations     # drift schema snapshot + step-by-step migration codegen, after bumping schemaVersion
+fvm dart tool/task.dart gen            # gen-rust + i18n
 
 # Lint & Test
-dart tool/task.dart analyze        # layer check + flutter analyze
-dart tool/task.dart test           # affected packages only: changed vs --diff=<ref> (default: the merge-base with origin/develop, so the whole branch, plus uncommitted and untracked) plus transitive dependents; root pubspec change or --all runs everything (CI). Only the legacy-database migration tests need ISAR_TEST_DYLIB
-dart tool/task.dart test-mobile    # mobile/ only
-for d in packages/foundation/*/rust; do (cd $d && cargo clippy --all-targets -- -D warnings && cargo test); done  # six packages; fast_* would miss moodiary_rust
-cd packages/feature_base/moodiary_editor/editor && corepack pnpm type-check && corepack pnpm test
+fvm dart tool/task.dart analyze        # generated-binding checks + layer checks + flutter analyze
+fvm dart tool/task.dart test           # affected packages only: changed vs --diff=<ref> (default: the merge-base with origin/develop, so the whole branch, plus uncommitted and untracked) plus transitive dependents; root pubspec change or --all runs everything (CI). Only the legacy-database migration tests need ISAR_TEST_DYLIB
+fvm dart tool/task.dart test-mobile    # mobile/ only
+for d in packages/foundation/*/rust; do (cd "$d" && cargo clippy --all-targets -- -D warnings && cargo test); done
+(cd packages/feature_base/moodiary_editor/editor && corepack pnpm install --frozen-lockfile && corepack pnpm type-check && corepack pnpm test)
 
 # Release (run on develop, clean tree, in sync with origin)
-dart tool/release.dart --bump patch     # or an explicit X.Y.Z
+fvm dart tool/release.dart --bump patch     # or an explicit X.Y.Z
 ```
 
-Full-repo verification = the four Lint & Test commands above. CI (`quality.yml`) runs them as the Dart / Rust / Editor jobs, required on develop; its `changes` job skips each one the PR's paths cannot affect.
+For full verification, use `test --all` alongside the analysis, Rust, and editor commands above. CI (`quality.yml`) groups these into Dart, Rust, and Editor jobs; its `changes` job skips jobs unaffected by the PR paths.
 
 **Tests are one process**: one `flutter test` at the repo root over the affected packages' `test/` dirs, so hooks and the frontend compiler run once, not once per package.
 
 - The root dev-depends on `moodiary_data` / `moodiary_assistant` only to pull `sqlite3_simple` / `sqlite3_vec` / `flutter_js` into the hook tree: a hook runs only for the cwd package's deps.
-- cwd is the repo root, so tests read repo files through `repoRoot` (`moodiary_lint/testing.dart`), never a relative path, and write only into their own `createTempSync` dir — every package's suites share one temp root.
-- Per-file isolate load (~1.5s) dominates, so new cases go in an existing file.
+- cwd is the repo root, so tests read repo files through `repoRoot` (`moodiary_lint/testing.dart`), never a relative path, and write only into their own `createTempSync` directory.
 
 **Melos**: `melos bootstrap` activates the workspace and regenerates IDE module files; it runs no codegen. `melos list` / `melos run <script> --category <layer>` filter by layer.
 
 **Release**: `tool/release.dart` bumps `mobile/pubspec.yaml`, prepends a git-cliff section to `CHANGELOG.md` for review, opens the `chore(release): X.Y.Z` PR and dispatches `build.yml` from the release branch. The build reads the version from the pubspec and the notes from that section, then leaves a **draft** release — no tag yet. Merging the PR fires `publish-release.yml`, which undrafts it; undrafting is what creates the tag, at the squash commit. Changelog generation never runs in CI. To keep a PR out of the changelog, put `Changelog: skip` in the squashed commit body or use a skipped scope (`chore(deps|readme|pr|pull)`); `chore(release)` skips the release commit itself.
 
-**Versions** are exact-pinned everywhere.
+Keep dependency versions pinned; match shared native pins across packages.
 
 ## Architecture
 
@@ -62,7 +62,7 @@ Full-repo verification = the four Lint & Test commands above. CI (`quality.yml`)
 
 Package roles are each pubspec's `description`; layer = directory. `i18n/flutter` (slang) and `i18n/web` (editor page, bundled by unplugin-vue-i18n) hold every translation json; a string both need is duplicated. `moodiary_ml` is the sole owner of `flutter_onnxruntime`.
 
-Unqualified `lib/...` means `mobile/lib/...`; `packages/` and `tool/` are repo-root-relative.
+Paths are relative to the repository root unless stated otherwise.
 
 ### Layer Dependencies
 
@@ -73,9 +73,7 @@ core and feature_base each have an intra-layer order (`_coreOrder` / `_featureBa
 - **`storage` below `files`**: the database and dictionary directories come from the composition root, so storage knows nothing about the file layout.
 - **`moodiary_logging` stays in foundation** because the release log path is injected via `AppLogger.configure`; reading `AppFiles` directly would float the package above core, out of reach of almost everyone.
 
-**core knows no domain type** (`Diary` / `Category` / `Font`): the models live in `moodiary_models`, the schema tables and `Font` assembly in `moodiary_data`, orphan-media cleanup in `moodiary_migration`. `moodiary_i18n` belongs in foundation even though its namespaces carry feature names: that knowledge is JSON keys, not type dependencies.
-
-In-app layering within `mobile/lib`: `gen -> core -> data -> component -> feature/<x> -> app -> main.dart`, zero violations.
+**core knows no domain type** (`Diary` / `Category` / `Font`): domain models live in `moodiary_models`, schema tables in `moodiary_data`, and orphan-media cleanup in `moodiary_migration`. `moodiary_i18n` belongs in foundation even though its namespaces carry feature names: that knowledge is JSON keys, not type dependencies.
 
 ### Package barrels: bare exports, visibility in the file
 
@@ -85,12 +83,12 @@ A barrel exports whole `src/` files without `show`. Anything a file does not nee
 
 Routes carry no path or query parameters, because the app never targets the web. A route class in `moodiary_router` holds `location` (its `static const path`) and a `params` map with snake_case keys; `push`/`go`/`replace` send it as `extra`, and each page exposes `factory X.fromRoute(GoRouterState)` reading `state.params`. Feature packages define their `xxxRoutes()` list in the package barrel; there is no `routes.dart`. Keep `params` to JSON scalars (ids, bools).
 
-### DI: get_it + injectable (details in mobile/CLAUDE.md)
+### DI: get_it + injectable (details in [mobile/AGENTS.md](mobile/AGENTS.md))
 
 - Binding annotations go on implementation classes (`@Singleton(as:)` etc.). storage / http / ml / data / assistant / sync / editor / theme are micro-packages mounted by `mobile/lib/app/di/di.dart`; there is exactly one `configureDependencies`.
-- The container owns the whole object graph: `MoodiaryDatabase` (preResolve), the 14 repositories (`@lazySingleton`, constructor-injected), and the process-level holders (`@singleton`). Resolve with `getIt<X>()`; Riverpod Notifiers / widgets write `late final _repo = getIt<X>()`. Riverpod manages UI state only; there are no repository providers and no static `X.get()` facades (`MoodiaryKVs.x.get()` is a key accessor and stays).
+- The container owns the whole object graph: `MoodiaryDatabase` (preResolve), repositories (`@lazySingleton`, constructor-injected), and the process-level holders (`@singleton`). Resolve with `getIt<X>()`; Riverpod Notifiers / widgets write `late final _repo = getIt<X>()`. Riverpod manages UI state only; there are no repository providers and no static `X.get()` facades (`MoodiaryKVs.x.get()` is a key accessor and stays).
 - Tests: `XxxRepository(MoodiaryDatabase.forTesting(...))` for repositories; `getIt.registerSingleton<XxxRepository>(fake)` + `tearDown(getIt.reset)` above them.
-- After changing annotations run `dart tool/task.dart build-runner` (generated files are committed). Business code never hand-writes `getIt.register*`; the one exception is the session scope opened by `activateSyncProvider()`, which exposes the `@Named(SyncProviderIds.x)` backend as the unnamed `IRemoteSyncBackend`.
+- After changing annotations run `fvm dart tool/task.dart build-runner` (generated files are committed). Business code never hand-writes `getIt.register*`; the one exception is the session scope opened by `activateSyncProvider()`, which exposes the `@Named(SyncProviderIds.x)` backend as the unnamed `IRemoteSyncBackend`.
 - `@PostConstruct` is deliberately unused; startup belongs to main's bootstrap, not the container.
 
 ### mui: a supplement to material, not a replacement
@@ -100,13 +98,13 @@ Routes carry no path or query parameters, because the app never targets the web.
 - `ColorScheme` / `TextTheme` are the sources of truth; `buildMuiTheme()` is the only place that constructs `ThemeData`. Access via `context.theme.typography.titleSmall.emphasized.primary`; what `ThemeData` cannot hold goes in `MuiTokens` (token tables, `onMedia`, `success`, `MuiFontConfig` for variable-font weights).
 - mui has zero `moodiary_*` deps and ships its own slang strings.
 
-### i18n: slang, not gen-l10n (both modes in packages/foundation/moodiary_i18n/CLAUDE.md)
+### i18n: slang, not gen-l10n (both modes in [moodiary_i18n/AGENTS.md](packages/foundation/moodiary_i18n/AGENTS.md))
 
 Two unrelated slang outputs: the App (default mode, `Translations` / top-level `l10n`) and mui (`locale_handling: false` + hand-written delegate, `context.muiL10n`). **i18n** is the mechanism, **l10n** the resolved strings, **Localizations** only Flutter's chain (mui alone).
 
 - Widgets use `context.l10n.xxx` (rebuilds on language change); services / export / callbacks use top-level `l10n.xxx`. Parameters are named. Write `l10n.xxx.yyy` in full.
 - One namespace file per feature, under `i18n/flutter` (Dart) or `i18n/web` (editor page); feature packages do not install slang (mui excepted).
-- After editing `i18n/flutter/*.i18n.json` run `dart tool/task.dart i18n` (generated files are committed). `i18n/web/{zh,en}.json` is compiled into the editor bundle by unplugin-vue-i18n, so it needs no codegen step.
+- After editing `i18n/flutter/*.i18n.json` run `fvm dart tool/task.dart i18n` (generated files are committed). `i18n/web/{zh,en}.json` is compiled into the editor bundle by unplugin-vue-i18n, so it needs no codegen step.
 - Text for the model (prompts, tool descriptions, tool results) is hardcoded English and never enters i18n; text for the user goes through slang.
 - Some Chinese literals are kept on purpose (sync log lines, font family names, legal text); check moodiary_i18n's list before translating one.
 
@@ -119,11 +117,11 @@ Two unrelated slang outputs: the App (default mode, `Translations` / top-level `
 
 ### Full-text search
 
-The FTS5 tokenizer is the git dependency `sqlite3_simple` (not in this repo); details in `packages/feature_base/moodiary_data/CLAUDE.md`.
+The FTS5 tokenizer is the git dependency `sqlite3_simple` (not in this repo); details in [moodiary_data/AGENTS.md](packages/feature_base/moodiary_data/AGENTS.md).
 
 ### Rust: several `fast_*` packages, one native library each
 
-Principle: split freely, never duplicate dependencies. http / sync / llm share one network base and live in `moodiary_rust` (the only real binary duplication otherwise, 2 MiB); graph lives there too. Each package ships its own crate, native library, hook, about.toml, rust-toolchain and Cargo.lock.
+Principle: split freely, never duplicate dependencies. http / sync / llm share one network base in `moodiary_rust`; graph lives there too. Each package ships its own crate, native library, hook, about.toml, rust-toolchain and Cargo.lock.
 
 | Package | Owner | Loading |
 |---|---|---|
@@ -135,9 +133,8 @@ Principle: split freely, never duplicate dependencies. http / sync / llm share o
 | fast_crypto | whole repo | facade self-initializes per call |
 
 - Every build hook returns early when the target OS is the host (`flutter test`): Dart tests never load a Rust library, the editor bundle or the license manifest; Rust and the editor are tested by their own suites. **Three third-party code assets are the exception** — `sqlite3_vec`, `sqlite3_simple` and `flutter_js` build for the host too (`diary_fts` cannot even be created without the `simple` tokenizer, and the JS sandbox tests need quickjs), which is why the root pubspec dev-depends on their owners.
-- Every package exposes `XxxLib` and an idempotent `Xxx.ensureInitialized()`. Opaque handles (`CancelToken`) cannot cross a .so, so there is one per library, constructed synchronously; construct only after the await. After touching `rust/src/api` run `dart tool/task.dart gen-rust`.
-- Everything goes through FRB; raw dart:ffi saves only the 0.3 MB floor.
+- Initialize each native runtime before constructing its opaque handles (`CancelToken`); handles cannot cross native libraries. After touching `rust/src/api` run `fvm dart tool/task.dart gen-rust`.
+- Use FRB for the in-repo native libraries.
 - No `[workspace.dependencies]`: the same crate is pinned per package, and `tool/check_generated.dart` fails on drift across Cargo.toml, toolchain channel and FRB / ffigen pins.
-- Splitting libraries is a delivery strategy, not a size saving (619 KB floor per library). The license manifest `mobile/assets/licenses/third_party.json` is generated at build time by `mobile/hook/build.dart`; local machines and CI need `cargo-about` 0.9.2. It scans the in-repo crates and merges the root `third_party.json` shipped by each package in `_externalLicensePackages` (`sqlite3_simple`, `sqlite3_vec` — vendored C/C++ that cargo-about cannot see), resolved through `.dart_tool/package_config.json`.
-- zip stays in Rust: the LAN archive uses entry-level AES-256, and pure Dart manages 17 MB/s with the whole entry on the heap.
-- `lanProtoVersion` is 3: `lan_receiver._admit` requires the `x-moodiary-proto` header to equal 3.
+- The license manifest `mobile/assets/licenses/third_party.json` is generated at build time by `mobile/hook/build.dart`; local machines and CI need `cargo-about` 0.9.2. It scans the in-repo crates and merges the root `third_party.json` shipped by each package in `_externalLicensePackages` (`sqlite3_simple`, `sqlite3_vec` — vendored C/C++ that cargo-about cannot see), resolved through `.dart_tool/package_config.json`.
+- Keep zip handling in Rust; LAN archives use entry-level AES-256 encryption.
