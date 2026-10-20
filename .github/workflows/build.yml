@@ -59,24 +59,29 @@ jobs:
         working-directory: mobile
         run: flutter pub get
 
-      - name: Decode Keystore
+      - name: Prepare Android signing
+        env:
+          ANDROID_KJS: ${{ secrets.ANDROID_KJS }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          echo "${{ secrets.ANDROID_KJS }}" | base64 --decode > mobile/android/app/key.jks
-
-      - name: Create local.properties
-        run: |
-          echo "storePassword=${{ secrets.ANDROID_STORE_PASSWORD }}" > mobile/android/local.properties
-          echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> mobile/android/local.properties
+          # Official releases must use the release key rather than the local fallback.
+          if [ -z "$ANDROID_KJS" ] || [ -z "$ANDROID_STORE_PASSWORD" ] || [ -z "$ANDROID_KEY_PASSWORD" ]; then
+            echo "Android release signing secrets are required." >&2
+            exit 1
+          fi
+          printf '%s' "$ANDROID_KJS" | base64 --decode > mobile/android/app/key.jks
+          printf 'storePassword=%s\nkeyPassword=%s\n' "$ANDROID_STORE_PASSWORD" "$ANDROID_KEY_PASSWORD" > mobile/android/local.properties
 
       - name: Build APK
         working-directory: mobile
-        run: flutter build apk --release --target-platform android-arm64 --obfuscate --split-debug-info=splitMap
+        run: flutter build apk --flavor production --release --target-platform android-arm64 --obfuscate --split-debug-info=splitMap
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: mobile/build/app/outputs/flutter-apk/app-release.apk
+          path: mobile/build/app/outputs/flutter-apk/app-production-release.apk
   release:
     runs-on: ubuntu-latest
     name: Publish Release
@@ -105,7 +110,7 @@ jobs:
       - name: Rename Artifacts
         run: |
           mkdir -p renamed-artifacts
-          mv artifacts/android/app-release.apk renamed-artifacts/moodiary-${{ env.VERSION }}-android-arm64.apk
+          mv artifacts/android/app-production-release.apk renamed-artifacts/moodiary-${{ env.VERSION }}-android-arm64.apk
 
       - name: Extract Release Notes From Changelog
         run: |

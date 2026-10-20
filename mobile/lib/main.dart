@@ -16,6 +16,7 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
 import 'package:moodiary_mobile/app/boot_failure_page.dart';
+import 'package:moodiary_mobile/app/build_badge.dart';
 import 'package:moodiary_mobile/app/di/bootstrap.dart';
 import 'package:moodiary_mobile/app/di/di.dart';
 import 'package:moodiary_mobile/app/licenses.dart';
@@ -165,13 +166,15 @@ class Moodiary extends ConsumerWidget {
           .dark => Brightness.dark,
           .system => MediaQuery.platformBrightnessOf(context),
         };
-        return AnnotatedRegion(
-          value: systemOverlayStyleOf(brightness),
-          // ignore: deprecated_member_use
-          child: MaterialUiCompatibilityBridge(
-            child: FrostedGlassOverlayComponent(
-              child: AppLockObserver(
-                child: FlutterSmartDialog.init()(context, child!),
+        return BuildBadge(
+          child: AnnotatedRegion(
+            value: systemOverlayStyleOf(brightness),
+            // ignore: deprecated_member_use
+            child: MaterialUiCompatibilityBridge(
+              child: FrostedGlassOverlayComponent(
+                child: AppLockObserver(
+                  child: FlutterSmartDialog.init()(context, child!),
+                ),
               ),
             ),
           ),

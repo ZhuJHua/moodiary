@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:moodiary_files/moodiary_files.dart';
+import 'package:moodiary_mobile/app/build_badge.dart';
 import 'package:moodiary_mobile/app/di/bootstrap.dart';
 import 'package:mui/mui.dart';
 
@@ -60,6 +61,7 @@ class _BootFailurePageState extends State<BootFailurePage> {
     final logPath = _logPath;
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      builder: (context, child) => BuildBadge(child: child!),
       home: Scaffold(
         body: SafeArea(
           child: Padding(
