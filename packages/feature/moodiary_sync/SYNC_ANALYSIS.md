@@ -53,13 +53,13 @@ media, writes entry JSON, publishes the manifest, then performs deferred cleanup
    newer remote entries. An old local deletion must not replace a newer live
    remote entry. Pull rechecks local timestamps before applying writes.
 3. **Confirm media before recording it.** Media references must come from the
-   existing remote manifest, a successful probe or an upload. Missing local files
-   are warned about and omitted from the confirmed set. Upload failure prevents
-   publication of that diary's updated JSON and manifest entry.
+   existing remote manifest, a successful probe or an upload. A locally missing
+   file without a confirmed remote reference is warned about and omitted. Upload
+   failure prevents publication of that diary's updated JSON and manifest entry.
 4. **Publish before cleanup.** Push defers obsolete remote object and media
-   deletion, plus local tombstone coverage changes, until after manifest commit
-   and verification. Pull writes a diary tombstone before deleting local media.
-   Cleanup failures can leave unreferenced remote objects.
+   deletion, plus persistence of tombstone coverage, until after any required
+   manifest commit and verification. Pull writes a diary tombstone before deleting
+   local media. Cleanup failures can leave unreferenced remote objects.
 5. **Detect manifest races.** Before writing, compare current manifest bytes with
    the original read; afterward, read back the unique `writeToken`. A mismatch
    raises `manifestRace`. Writes remain ordinary `writeObject` calls, not atomic
@@ -80,8 +80,8 @@ media, writes entry JSON, publishes the manifest, then performs deferred cleanup
    `lastSyncTime` advances only without failures or cancellation. Engine exceptions
    emit an aborted `syncEnd` so event-driven sync state can reset.
 9. **Collect conversion media from both sources.** Re-ciphering gathers media
-   from the manifest and the diary JSON it traverses, including already converted
-   diaries. It does not discover objects outside those entries.
+   from the manifest and diary JSON passed to `onDecoded`. It does not discover
+   objects outside those entries.
 
 ## Known limitations
 

@@ -33,7 +33,7 @@ App namespaces: one file per feature, `common` plus `app` / `diary` / `assistant
 - Non-base locales are deferred imports (`lazy: true`), so the App uses async `setLocale`, never `setLocaleSync`. mui pins `lazy: false` because its delegate returns a `SynchronousFuture` from `buildSync`. Gate: `mui/test/i18n_test.dart` checks for no `deferred as`.
 - `timestamp` and `flat_map` are off in `slang.yaml` (noisy diffs, an extra full map).
 
-**The reader decides whether a string goes through slang**: text for the model (system prompt, tool descriptions, argument schemas, tool return text; `moodiary_assistant/lib/src/data/`) is hard-coded English, never i18n; text for the user goes through slang. The UI summary of a tool call is a separate string from `AssistantToolSpec.summaryOf`; the two never share.
+**The reader decides whether a string goes through slang**: text for the model (system prompt, tool descriptions, argument schemas, tool return text; `moodiary_assistant/lib/src/data/`) is hard-coded English, never i18n; text for the user goes through slang. The UI summary comes from `AssistantToolSpec.summaryOf` and is separate from the model-facing tool result.
 
 **Sync events carry no strings**: `SyncEvent` has only kind / level / reason / payload, and the log page picks l10n by kind / reason — add a `SyncEventReason` or payload field instead of a sentence. `SyncException` uses `l10n.sync.err*`. `_kindLabel` / `_kindIcon` are exhaustive switches, so a new kind without a string is a compile error.
 
