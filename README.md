@@ -4,7 +4,7 @@
   <img alt="moodiary" src="res/social_light.svg">
 </picture>
 
-<p align="center"><a href="README.zh.md">Simplified Chinese</a> | English</p>
+<p align="center"><a href="README.zh.md">简体中文</a> | English</p>
 
 <p align="center"><a href="https://docs.moodiary.net" target="_blank">Docs</a> | <a href="https://answer.moodiary.net" target="_blank">Forum</a> | QQ group: <a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=xGr0TNp_X1z3XEn09_iE_iGSLolQwl6Y&jump_from=webapi&authKey=ZmSb2oEd94FSXxBXRBq53hgTjjvcfmgkQrduB3uL12XtRylPmRlO2OdFz6R25tIo">760014526</a> | Telegram: <a target="_blank" href="https://t.me/openmoodiary">openmoodiary</a></p>
 
