@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_editor/src/ime/ime_height.dart';
 import 'package:moodiary_editor/src/ime/ime_panel.dart';
+import 'package:moodiary_editor/src/moodiary_editor.dart';
 import 'package:moodiary_editor/src/toolbar/context_items.dart';
 import 'package:moodiary_editor/src/toolbar/editor_state.dart';
 import 'package:moodiary_editor/src/toolbar/editor_toolbar.dart';
@@ -237,80 +239,204 @@ void main() {
                 .decoration
             as BoxDecoration?;
     final colors = tester.element(find.byType(FormatPanel)).theme.colors;
-    expect(decorationOf(0)?.color, colors.primary);
+    expect(decorationOf(0)?.color, colors.secondaryContainer);
 
     state.value = const EditorState(block: .heading1);
     await tester.pump();
     expect(decorationOf(0)?.boxShadow, isNull);
     expect(decorationOf(0)?.color, isNull);
-    expect(decorationOf(1)?.color, colors.primary);
+    expect(decorationOf(1)?.color, colors.secondaryContainer);
     expect(tester.binding.hasScheduledFrame, isFalse, reason: '选中态切换不该有过渡动画');
   });
 
-  testWidgets('打开的面板使用主色，已启用格式使用浅底，分组内外保持一致', (tester) async {
-    await tester.pumpWidget(
-      TranslationProvider(
-        child: MuiTheme(
-          data: buildMuiTheme(brightness: .light),
-          child: MaterialApp(
-            home: Scaffold(
-              body: Align(
-                alignment: .bottomCenter,
-                child: EditorToolbar(
-                  contextKind: .table,
-                  contextItems: [
-                    ToolbarIconButton(
-                      icon: LucideIcons.tableProperties,
-                      tooltip: 'grouped',
-                      tone: .on,
-                      onTap: () {},
-                    ),
-                  ],
-                  tools: const [ToolbarTool.insert, ToolbarTool.bold],
-                  toneOf: (tool) => tool == .insert ? .on : .active,
-                  enabledOf: (_) => true,
-                  onTool: (_) {},
-                  keyboardShown: true,
-                  onKeyboardToggle: () {},
+  for (final brightness in Brightness.values) {
+    testWidgets('工具栏随页面，选中态柔和且分组内外一致：${brightness.name}', (tester) async {
+      tester.view.physicalSize = const Size(1200, 1800);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        TranslationProvider(
+          child: MuiTheme(
+            data: buildMuiTheme(brightness: brightness),
+            child: MaterialApp(
+              theme: buildMuiTheme(brightness: brightness),
+              home: Scaffold(
+                body: Align(
+                  alignment: .bottomCenter,
+                  child: EditorToolbar(
+                    contextKind: .table,
+                    contextItems: [
+                      ToolbarIconButton(
+                        icon: LucideIcons.tableProperties,
+                        tooltip: 'grouped',
+                        tone: .on,
+                        onTap: () {},
+                      ),
+                    ],
+                    tools: const [ToolbarTool.insert, ToolbarTool.bold],
+                    toneOf: (tool) => tool == .insert ? .on : .active,
+                    enabledOf: (_) => true,
+                    onTool: (_) {},
+                    keyboardShown: true,
+                    onKeyboardToggle: () {},
+                  ),
                 ),
               ),
             ),
           ),
         ),
-      ),
-    );
-    final toolbar = tester.element(find.byType(EditorToolbar));
-    final colors = toolbar.theme.colors;
-    BoxDecoration decorationOf(String tooltip) =>
-        tester
-                .widget<Container>(
-                  find.descendant(
-                    of: find.byWidgetPredicate(
-                      (w) => w is ToolbarIconButton && w.tooltip == tooltip,
+      );
+      final toolbar = tester.element(find.byType(EditorToolbar));
+      final colors = toolbar.theme.colors;
+      final selected = colors.secondaryContainer;
+      final foreground = colors.onSecondaryContainer;
+      BoxDecoration decorationOf(String tooltip) =>
+          tester
+                  .widget<Container>(
+                    find.descendant(
+                      of: find.byWidgetPredicate(
+                        (w) => w is ToolbarIconButton && w.tooltip == tooltip,
+                      ),
+                      matching: find.byType(Container),
                     ),
-                    matching: find.byType(Container),
-                  ),
-                )
-                .decoration!
-            as BoxDecoration;
-    expect(decorationOf('grouped').color, colors.primary);
-    expect(decorationOf('grouped').boxShadow, isNull);
-    final tool = ToolbarTool.insert.label(toolbar);
-    expect(decorationOf(tool).color, colors.primary);
-    expect(decorationOf(tool).boxShadow, isNull);
-    expect(
-      decorationOf(ToolbarTool.bold.label(toolbar)).color,
-      colors.surfaceContainerHighest,
-    );
-    expect(
-      tester.widget<Icon>(find.byIcon(LucideIcons.plus)).color,
-      colors.onPrimary,
-    );
-    expect(
-      tester.widget<Icon>(find.byIcon(LucideIcons.bold)).color,
-      colors.onSurface,
-    );
-  });
+                  )
+                  .decoration!
+              as BoxDecoration;
+      final barDecoration =
+          tester
+                  .widget<Container>(
+                    find.descendant(
+                      of: find.byType(EditorToolbar),
+                      matching: find.byWidgetPredicate(
+                        (w) => w is Container && w.constraints?.maxHeight == 52,
+                      ),
+                    ),
+                  )
+                  .decoration!
+              as BoxDecoration;
+      expect(barDecoration.color, colors.surface);
+      expect(
+        (barDecoration.border! as Border).top.color,
+        colors.outlineVariant,
+      );
+      expect((barDecoration.border! as Border).top.width, 1);
+      expect((barDecoration.border! as Border).bottom, BorderSide.none);
+      for (final divider in tester.widgetList<VerticalDivider>(
+        find.descendant(
+          of: find.byType(EditorToolbar),
+          matching: find.byType(VerticalDivider),
+        ),
+      )) {
+        expect(divider.thickness, 1);
+        expect(divider.color, colors.outlineVariant);
+      }
+      expect(decorationOf('grouped').color, selected);
+      expect(decorationOf('grouped').boxShadow, isNull);
+      final tool = ToolbarTool.insert.label(toolbar);
+      expect(decorationOf(tool).color, selected);
+      expect(decorationOf(tool).boxShadow, isNull);
+      expect(decorationOf(ToolbarTool.bold.label(toolbar)).color, selected);
+      expect(
+        tester.widget<Icon>(find.byIcon(LucideIcons.plus)).color,
+        foreground,
+      );
+      expect(
+        tester.widget<Icon>(find.byIcon(LucideIcons.bold)).color,
+        foreground,
+      );
+    });
+  }
+
+  for (final brightness in Brightness.values) {
+    testWidgets('后台收键盘保留焦点时安全区随工具栏，只有展开面板使用面板色：${brightness.name}', (
+      tester,
+    ) async {
+      getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
+      addTearDown(getIt.reset);
+      tester.view.physicalSize = const Size(1200, 2400);
+      tester.view.devicePixelRatio = 3;
+      tester.view.viewPadding = const FakeViewPadding(bottom: 60);
+      addTearDown(tester.view.reset);
+      const channel =
+          'dev.flutter.pigeon.moodiary_native.EditorKeyboardEvents.keyboardEvents';
+      final messenger = tester.binding.defaultBinaryMessenger;
+      messenger.setMockMethodCallHandler(
+        const MethodChannel(channel, pigeonMethodCodec),
+        (_) async => null,
+      );
+      addTearDown(
+        () => messenger.setMockMethodCallHandler(
+          const MethodChannel(channel, pigeonMethodCodec),
+          null,
+        ),
+      );
+      final controller = MoodiaryEditorController();
+      final focus = controller.focusTarget as ValueNotifier<EditorFocusTarget>;
+      final theme = buildMuiTheme(
+        brightness: brightness,
+        accent: const MuiAccent.seeded(Color(0xFF4F794A)),
+      );
+      await tester.pumpWidget(
+        TranslationProvider(
+          child: MaterialApp(
+            theme: theme,
+            home: Scaffold(
+              resizeToAvoidBottomInset: false,
+              body: EditorToolbarHost(
+                controller: controller,
+                editable: true,
+                onInsertMedia: (_) async {},
+                child: const SizedBox.expand(),
+              ),
+            ),
+          ),
+        ),
+      );
+      ImePanelContainer<EditorPanel> container() =>
+          tester.widget(find.byType(ImePanelContainer<EditorPanel>));
+      expect(container().backgroundColor, theme.colorScheme.surface);
+      focus.value = .editor;
+      await tester.pump();
+      expect(controller.panel.type, ImePanelType.keyboard);
+      expect(container().backgroundColor, theme.colorScheme.surface);
+
+      tester.binding.handleAppLifecycleStateChanged(.paused);
+      addTearDown(
+        () => tester.binding.handleAppLifecycleStateChanged(.resumed),
+      );
+      await messenger.handlePlatformMessage(
+        channel,
+        pigeonMethodCodec.encodeSuccessEnvelope(
+          _event(visible: false, start: true),
+        ),
+        (_) {},
+      );
+      await tester.pumpAndSettle();
+      expect(controller.panel.type, ImePanelType.none);
+      expect(focus.value, EditorFocusTarget.editor);
+      expect(find.byType(EditorToolbar), findsOneWidget);
+      expect(container().backgroundColor, theme.colorScheme.surface);
+      expect(
+        tester.getSize(find.byType(ImePanelContainer<EditorPanel>)).height,
+        20,
+      );
+
+      tester.binding.handleAppLifecycleStateChanged(.resumed);
+      for (final panel in [EditorPanel.format, EditorPanel.insert]) {
+        controller.panel.showPanel(panel);
+        await tester.pumpAndSettle();
+        expect(
+          container().backgroundColor,
+          theme.colorScheme.surfaceContainerLow,
+        );
+      }
+      controller.panel.showPanel(.block);
+      await tester.pumpAndSettle();
+      expect(container().backgroundColor, theme.colorScheme.surface);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+    });
+  }
 
   testWidgets('宽度弹层：吸附 ±3 并预览，按住拖动只在松手提交一次，点轨道和读屏步进立即提交', (tester) async {
     tester.view.physicalSize = const Size(360, 640);

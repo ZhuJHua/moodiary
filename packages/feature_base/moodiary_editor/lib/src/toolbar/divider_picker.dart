@@ -4,6 +4,7 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:mui/mui.dart';
 
 import 'floating_bars.dart';
+import 'panel_parts.dart';
 
 enum HorizontalRuleVariant { solid, dashed, dotted, double, wavy, text }
 
@@ -83,10 +84,10 @@ class _StyleChoice extends StatelessWidget {
           height: 64,
           padding: const .symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            color: colors.surfaceContainerLow,
+            color: panelGroupColor(context),
             borderRadius: radius,
             border: Border.all(
-              color: selected ? colors.primary : Colors.transparent,
+              color: selected ? colors.outline : Colors.transparent,
               width: 1.5,
             ),
           ),

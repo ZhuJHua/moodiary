@@ -26,9 +26,16 @@ class ToolbarIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
     final (background, foreground) = switch (tone) {
-      _ when onTap == null => (null, colors.outlineVariant),
-      .on => (colors.primary, colors.onPrimary),
-      .active => (colors.surfaceContainerHighest, colors.onSurface),
+      _ when onTap == null => (
+        null,
+        colors.onSurface.withValues(
+          alpha: context.theme.states.disabledOpacity,
+        ),
+      ),
+      .on || .active => (
+        panelSelectedColor(context),
+        panelSelectedForeground(context),
+      ),
       .plain => (null, colors.onSurface),
     };
     return Semantics(
@@ -76,7 +83,9 @@ class ToolbarLabelButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
-    final foreground = pressed ? colors.onPrimary : colors.onSurface;
+    final foreground = pressed
+        ? panelSelectedForeground(context)
+        : colors.onSurface;
     return MInkWell(
       onTap: onTap,
       borderRadius: .circular(context.theme.radii.sm),
@@ -84,7 +93,7 @@ class ToolbarLabelButton extends StatelessWidget {
         height: 36,
         padding: const .only(left: 10, right: 12),
         decoration: BoxDecoration(
-          color: pressed ? colors.primary : null,
+          color: pressed ? panelSelectedColor(context) : null,
           borderRadius: .circular(context.theme.radii.sm),
         ),
         child: Row(
@@ -125,7 +134,9 @@ class ToolbarNameChip extends StatelessWidget {
     final typography = context.theme.typography;
     final label = name?.trim() ?? '';
     final named = label.isNotEmpty;
-    final foreground = named ? colors.onSurface : colors.onSurfaceVariant;
+    final foreground = named
+        ? panelSelectedForeground(context)
+        : colors.onSurfaceVariant;
     return Semantics(
       button: true,
       label: named ? label : placeholder,
@@ -142,7 +153,7 @@ class ToolbarNameChip extends StatelessWidget {
             constraints: const BoxConstraints(maxWidth: 160),
             padding: const .symmetric(horizontal: 12),
             decoration: BoxDecoration(
-              color: colors.surfaceContainerHighest,
+              color: panelSelectedColor(context),
               borderRadius: .circular(context.theme.radii.sm),
             ),
             child: Row(
@@ -174,11 +185,13 @@ class ToolbarDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 1,
+    return SizedBox(
       height: 20,
-      margin: .symmetric(horizontal: margin),
-      color: context.theme.colors.outlineVariant,
+      child: VerticalDivider(
+        width: margin * 2 + 1,
+        thickness: 1,
+        color: context.theme.colors.outlineVariant,
+      ),
     );
   }
 }

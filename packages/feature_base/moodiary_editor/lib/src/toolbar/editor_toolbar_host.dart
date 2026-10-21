@@ -341,9 +341,9 @@ class _EditorToolbarHostState extends State<EditorToolbarHost> {
     final colors = context.theme.colors;
     final s = _state;
     Widget sheet(Widget child) =>
-        ColoredBox(color: colors.surfaceContainer, child: child);
+        ColoredBox(color: colors.surfaceContainerLow, child: child);
     return switch (panel) {
-      .block => ColoredBox(color: colors.surfaceContainerLow),
+      .block => const SizedBox.shrink(),
       .insert => sheet(InsertPanel(inTable: s.inTable, onInsert: _onInsert)),
       .format => sheet(
         ValueListenableBuilder(
@@ -434,7 +434,7 @@ class _EditorToolbarHostState extends State<EditorToolbarHost> {
               target: _c.imeTarget,
               compact: (panel) => panel == .block,
               panelBuilder: _buildPanel,
-              backgroundColor: _editing
+              backgroundColor: _c.panelOpen
                   ? colors.surfaceContainerLow
                   : colors.surface,
             ),

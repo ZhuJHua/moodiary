@@ -618,6 +618,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
                 padding: const .only(left: 4, right: 8),
                 child: MCircleButton(
                   tooltip: context.l10n.common.save,
+                  tone: .plain,
                   iconSize: 20,
                   icon: const Icon(LucideIcons.check),
                   onPressed: _saveAndExit,

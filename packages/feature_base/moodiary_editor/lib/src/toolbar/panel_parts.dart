@@ -9,12 +9,14 @@ typedef EditorExec = void Function(
   Map<String, Object?>? args,
 ]);
 
-Color panelGroupColor(BuildContext context) {
-  final theme = context.theme;
-  return theme.isDark
-      ? theme.colors.surfaceContainerHigh
-      : theme.colors.surfaceContainerLowest;
-}
+Color panelGroupColor(BuildContext context) =>
+    context.theme.colors.surfaceContainerHigh;
+
+Color panelSelectedColor(BuildContext context) =>
+    context.theme.colors.secondaryContainer;
+
+Color panelSelectedForeground(BuildContext context) =>
+    context.theme.colors.onSecondaryContainer;
 
 class PanelSegmentGroup extends StatelessWidget {
   final double? height;
@@ -59,9 +61,9 @@ class PanelSegment extends StatelessWidget {
     final theme = context.theme;
     final colors = theme.colors;
     final foreground = onTap == null
-        ? colors.outlineVariant
+        ? colors.onSurface.withValues(alpha: theme.states.disabledOpacity)
         : selected
-        ? colors.onPrimary
+        ? panelSelectedForeground(context)
         : colors.onSurface;
     return Semantics(
       button: true,
@@ -76,7 +78,7 @@ class PanelSegment extends StatelessWidget {
         child: Container(
           alignment: .center,
           decoration: BoxDecoration(
-            color: selected ? colors.primary : null,
+            color: selected ? panelSelectedColor(context) : null,
             borderRadius: .circular(theme.radii.sm),
           ),
           child: IconTheme.merge(

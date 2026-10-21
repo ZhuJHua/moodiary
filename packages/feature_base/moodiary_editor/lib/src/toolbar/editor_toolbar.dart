@@ -57,9 +57,9 @@ class EditorToolbar extends StatelessWidget {
         height: 52,
         padding: const .symmetric(horizontal: 6),
         decoration: BoxDecoration(
-          color: colors.surfaceContainerLow,
+          color: colors.surface,
           border: Border(
-            top: BorderSide(color: colors.surfaceContainerHighest),
+            top: BorderSide(color: colors.outlineVariant, width: 1),
           ),
         ),
         child: Row(

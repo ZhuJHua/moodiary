@@ -51,7 +51,7 @@ class _EditorFindBarState extends State<EditorFindBar> {
       decoration: BoxDecoration(
         color: colors.surface,
         border: Border(
-          bottom: BorderSide(color: colors.surfaceContainerHighest),
+          bottom: BorderSide(color: colors.outlineVariant, width: 1),
         ),
       ),
       child: Column(
