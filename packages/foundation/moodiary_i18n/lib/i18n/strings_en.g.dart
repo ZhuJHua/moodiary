@@ -1006,8 +1006,10 @@ class _Translations$picker$en extends Translations$picker$zh {
 	@override String get recentAlbum => 'Recent';
 	@override String get done => 'Done';
 	@override String doneCount({required Object count, required Object max}) => 'Done ${count}/${max}';
-	@override String get limitedTip => 'The app can only access selected photos';
+	@override String get limitedTip => 'The app can only access selected photos and videos';
 	@override String get limitedManage => 'Manage';
+	@override String get limitedEmptyImages => 'No accessible photos. Tap Manage to select photos to allow access to.';
+	@override String get limitedEmptyVideos => 'No accessible videos. Tap Manage to select videos to allow access to.';
 	@override String get permissionDenied => 'Grant photo library access in Settings';
 	@override String get a11ySelect => 'Select';
 	@override String get a11yUnselect => 'Deselect';

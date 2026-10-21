@@ -34,8 +34,11 @@ abstract final class MAssetPicker {
     RequestType type, {
     required int maxAssets,
   }) async {
-    final requestOption = PermissionRequestOption(
-      androidPermission: AndroidPermission(type: type, mediaLocation: false),
+    const requestOption = PermissionRequestOption(
+      androidPermission: AndroidPermission(
+        type: RequestType.common,
+        mediaLocation: false,
+      ),
     );
     final permission = await _permission(context, requestOption);
     if (permission == null || !context.mounted) return null;
@@ -78,7 +81,7 @@ abstract final class MAssetPicker {
         if (lost != null) _prepend(provider, lost);
       }),
     );
-    final result = await navigator.push<List<AssetEntity>>(
+    return navigator.push<List<AssetEntity>>(
       PickerPageRoute<List<AssetEntity>>(
         motion: motion,
         scrim: scrim,
@@ -89,8 +92,6 @@ abstract final class MAssetPicker {
             ),
       ),
     );
-    provider.dispose();
-    return result;
   }
 
   static Future<void> _captureInto(

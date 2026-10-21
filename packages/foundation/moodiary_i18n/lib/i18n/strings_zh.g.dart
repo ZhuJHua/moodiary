@@ -2739,11 +2739,17 @@ class Translations$picker$zh {
 	/// zh: '完成 {count}/{max}'
 	String doneCount({required Object count, required Object max}) => '完成 ${count}/${max}';
 
-	/// zh: '你只允许应用访问部分照片'
-	String get limitedTip => '你只允许应用访问部分照片';
+	/// zh: '你只允许应用访问部分照片和视频'
+	String get limitedTip => '你只允许应用访问部分照片和视频';
 
 	/// zh: '管理'
 	String get limitedManage => '管理';
+
+	/// zh: '暂无可访问的照片，请点「管理」选择允许访问的照片'
+	String get limitedEmptyImages => '暂无可访问的照片，请点「管理」选择允许访问的照片';
+
+	/// zh: '暂无可访问的视频，请点「管理」选择允许访问的视频'
+	String get limitedEmptyVideos => '暂无可访问的视频，请点「管理」选择允许访问的视频';
 
 	/// zh: '请前往设置中开启相册权限'
 	String get permissionDenied => '请前往设置中开启相册权限';
