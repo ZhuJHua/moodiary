@@ -69,7 +69,6 @@ export const ImageNode = Node.create({
 
   markdownTokenName: 'image',
 
-  // 旧导出写 ![alt](src "title")，没有 alt 时取 title
   parseMarkdown: (token, helpers) => {
     const src = String(token.href ?? '')
     const kind = mediaKindOf(src)

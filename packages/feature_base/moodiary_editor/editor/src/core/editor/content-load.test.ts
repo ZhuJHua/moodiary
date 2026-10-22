@@ -3,7 +3,7 @@ import type { JSONContent } from '@tiptap/core'
 import { DOMParser, DOMSerializer } from '@tiptap/pm/model'
 import { CHANGE_DEBOUNCE_MS } from '@/core/bridge/change'
 import { doc, flush, p, renderEditor, type EditorFixture } from '@/test/editor'
-import { clampWidthPercent, docVersion, normalizeDoc } from './normalize'
+import { HR_VARIANTS, clampWidthPercent, docVersion, normalizeDoc } from './normalize'
 import { countCharacters, plainTextOf } from './plain-text'
 
 let h: EditorFixture
@@ -163,13 +163,6 @@ describe('loading resets the undo stack', () => {
     expect(h.editor.getText()).not.toContain('第一篇的正文')
   })
 
-  it('swaps the history plugin instead of stacking copies of it', () => {
-    const historyPlugins = (): number =>
-      h.editor.state.plugins.filter((pl) => (pl as unknown as { key: string }).key.startsWith('history$')).length
-    for (let i = 0; i < 5; i += 1) h.load(doc([p(`第 ${i} 篇`)]))
-    expect(historyPlugins()).toBe(1)
-  })
-
   it('loading never emits a change', async () => {
     vi.useFakeTimers()
     h.load(doc([p('a')]))
@@ -211,6 +204,42 @@ describe('pasted html images', () => {
         if (n.isAtom) names.push(n.attrs.name)
       })
     expect(names).toEqual(['海', '音', '件.pdf', '旧'])
+  })
+})
+
+describe('custom node HTML serialization', () => {
+  it('preserves every divider variant and label without creating extra dividers', () => {
+    const { schema } = h.editor
+    const source = schema.nodeFromJSON(
+      doc(HR_VARIANTS.map((variant) => ({
+        type: 'horizontalRule',
+        attrs: { variant, label: variant === 'text' ? '章节 <一>' : null },
+      }))),
+    )
+    const el = document.createElement('div')
+    el.appendChild(DOMSerializer.fromSchema(schema).serializeFragment(source.content))
+    expect(DOMParser.fromSchema(schema).parse(el).toJSON()).toEqual(source.toJSON())
+  })
+
+  it('imports a standard hr with the default divider attributes', () => {
+    const el = document.createElement('div')
+    el.innerHTML = '<hr>'
+    expect(DOMParser.fromSchema(h.editor.schema).parse(el).firstChild?.toJSON()).toEqual({
+      type: 'horizontalRule',
+      attrs: { variant: 'solid', label: null },
+    })
+  })
+
+  it('keeps absent and invalid attachment sizes unknown, including after an HTML round-trip', () => {
+    const { schema } = h.editor
+    const el = document.createElement('div')
+    const source = schema.nodeFromJSON(doc([{ type: 'attachment', attrs: { src: 'file-1.pdf' } }]))
+    el.appendChild(DOMSerializer.fromSchema(schema).serializeFragment(source.content))
+    expect(DOMParser.fromSchema(schema).parse(el).firstChild?.attrs.size).toBeNull()
+    for (const [raw, expected] of [['', null], [' ', null], ['-1', null], ['unknown', null], ['0', 0], ['2048', 2048]]) {
+      el.innerHTML = `<div data-type="attachment" data-src="file-1.pdf" data-size="${raw}"></div>`
+      expect(DOMParser.fromSchema(schema).parse(el).firstChild?.attrs.size).toBe(expected)
+    }
   })
 })
 

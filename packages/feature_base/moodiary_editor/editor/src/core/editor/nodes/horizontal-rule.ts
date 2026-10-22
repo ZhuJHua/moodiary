@@ -1,15 +1,11 @@
-import { Node, mergeAttributes, nodeInputRule } from '@tiptap/core'
+import { mergeAttributes, nodeInputRule } from '@tiptap/core'
+import HorizontalRule from '@tiptap/extension-horizontal-rule'
 import { HR_VARIANTS, type HorizontalRuleVariant } from '../normalize'
 
 const variantOf = (value: unknown): HorizontalRuleVariant =>
   HR_VARIANTS.includes(value as HorizontalRuleVariant) ? (value as HorizontalRuleVariant) : 'solid'
 
-export const HorizontalRuleNode = Node.create({
-  name: 'horizontalRule',
-  group: 'block',
-  selectable: true,
-  draggable: false,
-
+export const HorizontalRuleNode = HorizontalRule.extend({
   addAttributes() {
     return {
       variant: {
@@ -26,11 +22,11 @@ export const HorizontalRuleNode = Node.create({
   },
 
   parseHTML() {
-    return [{ tag: 'div[data-type="horizontalRule"]' }, { tag: 'hr' }]
+    return [{ tag: 'div[data-type="horizontalRule"]' }, ...(this.parent?.() ?? [])]
   },
 
   renderHTML({ node, HTMLAttributes }) {
-    const attrs = mergeAttributes(HTMLAttributes, {
+    const attrs = mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
       'data-type': 'horizontalRule',
       'data-block-node': '',
       class: 'md-hr',
@@ -41,14 +37,9 @@ export const HorizontalRuleNode = Node.create({
     return ['div', attrs, ['hr']]
   },
 
-  markdownTokenName: 'hr',
-  parseMarkdown: (_token, helpers) => helpers.createNode('horizontalRule', { variant: 'solid', label: null }),
-  renderMarkdown: () => '---',
-
   addInputRules() {
     return [
-      nodeInputRule({ find: /^(?:---|—-|___\s|\*\*\*\s)$/, type: this.type }),
-      // 中文输入法 shift+- 一次出两个破折号，所以破折号不限三个
+      ...(this.parent?.() ?? []),
       nodeInputRule({ find: /^(?:—{3,}|－{3,})$/, type: this.type }),
     ]
   },

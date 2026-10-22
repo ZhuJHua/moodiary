@@ -31,7 +31,9 @@ export const AttachmentNode = Node.create({
       size: {
         default: null,
         parseHTML: (el) => {
-          const n = Number(el.getAttribute('data-size'))
+          const raw = el.getAttribute('data-size')?.trim()
+          if (!raw) return null
+          const n = Number(raw)
           return Number.isFinite(n) && n >= 0 ? n : null
         },
         renderHTML: (attrs) => (typeof attrs.size === 'number' ? { 'data-size': String(attrs.size) } : {}),

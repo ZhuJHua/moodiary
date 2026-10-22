@@ -11,7 +11,7 @@ export default function CodeBlockNodeView({ node }: NodeViewProps) {
   const timer = useRef(0)
   useEffect(() => () => window.clearTimeout(timer.current), [])
 
-  // 剪贴板交给 Flutter：file:// 页面不是安全上下文，navigator.clipboard 不可用
+  // 由 Flutter 统一处理 WebView 的剪贴板访问。
   function copy(): void {
     post('copy', { text: node.textContent })
     setCopied(true)

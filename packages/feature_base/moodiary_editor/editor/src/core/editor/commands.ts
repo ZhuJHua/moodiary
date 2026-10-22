@@ -349,8 +349,6 @@ const LEAVE_BLOCK_FIRST = new Set(['insertTable', 'insertDiaryLink', 'setLink'])
 // 不 focus：键盘收着时点这些命令不该把键盘叫出来
 const NO_FOCUS = new Set([...READ_ONLY_SAFE, 'undo', 'redo', 'replace', 'replaceAll'])
 
-export const EXEC_COMMANDS: readonly string[] = Object.keys(HANDLERS)
-
 export function execCommand(ctx: ExecContext, command: string, args: ExecArgs = {}): boolean {
   const handler = Object.prototype.hasOwnProperty.call(HANDLERS, command) ? HANDLERS[command] : undefined
   if (!handler) return false

@@ -93,7 +93,6 @@ export function deriveState(editor: Editor): EditorState {
     list,
     canIndent: !!listItem && can.sinkListItem(listItem),
     canOutdent: !!listItem && can.liftListItem(listItem),
-    // 读历史深度而不是 can().undo()：后者在部分版本里会真的执行撤销
     canUndo: undoDepth(state) > 0,
     canRedo: redoDepth(state) > 0,
     selection: isNode ? 'node' : selection.empty ? 'caret' : 'text',

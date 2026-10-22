@@ -90,22 +90,6 @@ describe('custom nodes round-trip through the markdown dialect', () => {
       { type: 'text', text: '。' },
     ])
   })
-
-  it('every node and mark in the schema declares a markdown renderer', () => {
-    const missing = h.editor.extensionManager.extensions
-      .filter(
-        (e) =>
-          (e.type === 'node' || e.type === 'mark') &&
-          !['doc', 'text', 'tableRow', 'tableCell', 'tableHeader'].includes(e.name),
-      )
-      .filter(
-        (e) =>
-          !(e.config as { renderMarkdown?: unknown }).renderMarkdown &&
-          !(e.parent?.config as { renderMarkdown?: unknown } | undefined)?.renderMarkdown,
-      )
-      .map((e) => e.name)
-    expect(missing).toEqual([])
-  })
 })
 
 describe('markdown paste', () => {

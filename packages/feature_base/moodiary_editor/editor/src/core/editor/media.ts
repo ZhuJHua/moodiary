@@ -7,7 +7,7 @@ interface MediaRef {
 
 const keyOf = (ref: MediaRef): string => (ref.poster ? `${ref.name}#poster` : ref.name)
 
-const resolved = new Map<string, string | null>()
+const resolved = new Map<string, string>()
 const nameOfUrl = new Map<string, string>()
 const pending = new Map<string, Promise<string | null>>()
 let batch: { refs: MediaRef[]; done: Promise<Record<string, string | null>> } | null = null
@@ -32,8 +32,10 @@ export function resolveMedia(ref: MediaRef): Promise<string | null> {
   if (!job) {
     job = enqueue(ref).then((urls) => {
       const url = urls[key] ?? null
-      resolved.set(key, url)
-      if (url) nameOfUrl.set(url, ref.name)
+      if (url) {
+        resolved.set(key, url)
+        nameOfUrl.set(url, ref.name)
+      }
       pending.delete(key)
       return url
     })
@@ -67,8 +69,12 @@ export function unproxyMedia(url: string): string {
   const known = nameOfUrl.get(url)
   if (known) return known
   if (!/^file:/i.test(url)) return url
-  const base = decodeURIComponent(url.slice(url.lastIndexOf('/') + 1))
-  return mediaKindOf(base) ? base : ''
+  try {
+    const base = decodeURIComponent(url.slice(url.lastIndexOf('/') + 1))
+    return mediaKindOf(base) ? base : ''
+  } catch {
+    return ''
+  }
 }
 
 export function fileExtension(name: string): string {

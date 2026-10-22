@@ -19,6 +19,7 @@
     "@tiptap/core": "3.32.0",
     "@tiptap/extension-code-block-lowlight": "3.32.0",
     "@tiptap/extension-highlight": "3.32.0",
+    "@tiptap/extension-horizontal-rule": "3.32.0",
     "@tiptap/extension-link": "3.32.0",
     "@tiptap/extension-list": "3.32.0",
     "@tiptap/extension-mention": "3.32.0",

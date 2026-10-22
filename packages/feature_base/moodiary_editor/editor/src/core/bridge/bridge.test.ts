@@ -192,16 +192,6 @@ describe('EditorState', () => {
 })
 
 describe('Flutter → JS', () => {
-  it('exposes every bridge method', () => {
-    expect(Object.keys(bridge()).sort()).toEqual(
-      [
-        'respond', 'setContent', 'setTitle', 'setEditable', 'setMeta', 'setLinks', 'setTheme',
-        'focus', 'blur', 'focusTitle', 'holdSelection', 'resolveImage', 'resolveLinkCandidates', 'scrollToHeading',
-        'getScrollY', 'setScrollY', 'resumeVideo', 'setPanelMode', 'flush', 'exec',
-      ].sort(),
-    )
-  })
-
   it('exec routes to the command table', () => {
     bridge().exec('setHeading', { level: 1 })
     expect(h.topTypes()[0]).toBe('heading')

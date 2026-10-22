@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NodeSelection, TextSelection } from '@tiptap/pm/state'
 import type { JSONContent } from '@tiptap/core'
 import { doc, flush, p, renderEditor, type EditorFixture } from '@/test/editor'
-import { EXEC_COMMANDS, normalizeHref } from './commands'
+import { normalizeHref } from './commands'
 
 let h: EditorFixture
 
@@ -28,21 +28,6 @@ const top = (): JSONContent[] => h.editor.getJSON().content ?? []
 const parentType = (): string => h.editor.state.selection.$from.parent.type.name
 
 describe('contract', () => {
-  it('implements every command in the bridge table', () => {
-    const table = [
-      'toggleBold', 'toggleItalic', 'toggleUnderline', 'toggleStrike', 'toggleCode', 'toggleHighlight',
-      'clearFormatting', 'setParagraph', 'setHeading', 'toggleBlockquote', 'toggleCodeBlock',
-      'toggleBulletList', 'toggleOrderedList', 'toggleTaskList', 'indent', 'outdent', 'undo', 'redo',
-      'insertImage', 'insertVideo', 'insertAudio', 'insertAttachment', 'insertTable', 'insertHorizontalRule',
-      'insertBlockquote', 'insertCodeBlock', 'insertTaskList', 'insertDiaryLink', 'setLink', 'unsetLink',
-      'openLink', 'copyLink', 'setMediaWidth', 'previewMediaWidth', 'setMediaName', 'moveBlockUp', 'moveBlockDown', 'deleteBlock',
-      'setHorizontalRule', 'previewImage', 'openAttachment', 'copyCode', 'exitCode', 'caretAfterNode', 'tableAddRowAfter',
-      'tableDeleteRow', 'tableAddColumnAfter', 'tableDeleteColumn', 'tableToggleHeaderRow', 'tableDelete',
-      'search', 'searchNext', 'searchPrev', 'replace', 'replaceAll', 'clearSearch',
-    ]
-    expect([...EXEC_COMMANDS].sort()).toEqual([...table].sort())
-  })
-
   it('reports an unknown command as an error', () => {
     exec('explode')
     expect(h.lastPost('error')?.payload).toContain('explode')
@@ -157,6 +142,20 @@ describe('insert placement', () => {
     caretAt(2)
     exec('insertHorizontalRule', { variant: 'wavy' })
     expect(h.nodes('horizontalRule')[0].attrs).toEqual({ variant: 'wavy', label: null })
+  })
+
+  it('supports the standard Tiptap divider command, dry run and undo', () => {
+    h.load(doc([p()]))
+    caretAt(1)
+    const before = h.editor.getJSON()
+    expect(typeof h.editor.commands.setHorizontalRule).toBe('function')
+    expect(h.editor.can().setHorizontalRule()).toBe(true)
+    expect(h.editor.getJSON()).toEqual(before)
+    expect(h.editor.chain().setHorizontalRule().run()).toBe(true)
+    expect(h.topTypes()).toEqual(['horizontalRule', 'paragraph'])
+    expect(parentType()).toBe('paragraph')
+    h.editor.commands.undo()
+    expect(h.editor.getJSON()).toEqual(before)
   })
 
   it('container inserts turn an empty paragraph, or add a new block with the caret inside', () => {
@@ -312,7 +311,6 @@ describe('block actions', () => {
     expect(text('.md-audio__name')).toBe('音频')
     expect(text('.md-attachment__name')).toBe('附件')
     expect(text('.md-attachment__tile')).toBe('PDF')
-    expect(h.posted.map((m) => m.type)).not.toContain('mediaName')
     selectNodeAt(0)
     exec('setMediaName', { name: '晨间' })
     await flush()

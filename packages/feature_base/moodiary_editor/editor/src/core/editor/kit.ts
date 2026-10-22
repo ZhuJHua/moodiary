@@ -305,7 +305,7 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
   }
 
   const resetHistory = (ed: Editor): void => {
-    // 不可用 view.updateState()：会绕过 dispatchTransaction 导致 history 复活，撤销后内容变空
+    // 通过编辑器注册插件，保持 history 与 transaction 派发同步。
     ed.unregisterPlugin('history')
     ed.registerPlugin(history(HISTORY_OPTIONS))
     const tr = ed.state.tr.setSelection(Selection.atStart(ed.state.doc))
