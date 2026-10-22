@@ -36,6 +36,7 @@ export 'components/common/lock_pin_pad.dart';
 export 'components/common/nav_bar.dart';
 export 'components/common/qweather_icon.dart';
 export 'components/common/setting_tile.dart';
+export 'components/common/sliver_reorderable_setting_group.dart';
 export 'components/common/sliver_setting_group.dart';
 export 'components/common/sync_pending_indicator.dart';
 export 'components/common/time_line.dart';

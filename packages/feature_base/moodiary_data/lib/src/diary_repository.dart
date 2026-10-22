@@ -8,10 +8,12 @@ import 'package:injectable/injectable.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
 import 'db/database.dart';
 import 'db/db_codec.dart';
 import 'diary_content.dart';
+import 'diary_derive.dart';
 import 'media_item.dart';
 
 enum IndexMode { inline, skip }
@@ -37,6 +39,7 @@ class DiaryRepository {
     required List<String> images,
     required List<String> audios,
     required List<String> videos,
+    required List<String> files,
     required List<String> tags,
   }) {
     final icon = r.weatherIcon;
@@ -60,6 +63,7 @@ class DiaryRepository {
       imageName: images,
       audioName: audios,
       videoName: videos,
+      fileName: files,
       tags: tags,
       placeId: r.placeId,
       type: r.type,
@@ -119,6 +123,7 @@ class DiaryRepository {
           images: mediaById[r.id]?['image'] ?? const [],
           audios: mediaById[r.id]?['audio'] ?? const [],
           videos: mediaById[r.id]?['video'] ?? const [],
+          files: mediaById[r.id]?['file'] ?? const [],
           tags: tagsById[r.id] ?? const [],
         ),
     ];
@@ -128,14 +133,12 @@ class DiaryRepository {
       row == null ? null : (await _assemble([row])).first;
 
   Future<int> _upsertRow(Diary d) async {
+    final companion = _toCompanion(d);
     final row = await _db
         .into(_db.diaries)
         .insertReturning(
-          _toCompanion(d),
-          onConflict: DoUpdate(
-            (_) => _toCompanion(d),
-            target: [_db.diaries.id],
-          ),
+          companion,
+          onConflict: DoUpdate((_) => companion, target: [_db.diaries.id]),
         );
     return row.rid;
   }
@@ -147,12 +150,16 @@ class DiaryRepository {
     await (_db.delete(
       _db.diaryTags,
     )..where((t) => t.diaryId.equals(d.id))).go();
+    final mediaNames = d.type == DiaryType.tiptap.value
+        ? TiptapContent.parse(d.content).mediaNames
+        : const <String, String>{};
     await _db.batch((b) {
       b.insertAll(_db.diaryMedia, [
         for (final (kind, names) in [
           ('image', d.imageName),
           ('audio', d.audioName),
           ('video', d.videoName),
+          ('file', d.fileName),
         ])
           for (var i = 0; i < names.length; i++)
             DiaryMediaCompanion.insert(
@@ -160,6 +167,7 @@ class DiaryRepository {
               kind: kind,
               seq: i,
               fileName: names[i],
+              name: Value(mediaNames[names[i]]),
             ),
       ]);
       b.insertAll(_db.diaryTags, [
@@ -186,12 +194,39 @@ class DiaryRepository {
     IndexMode index = .inline,
   }) => insertDiaries([diary], fromSync: fromSync, index: index);
 
+  // contentText 一律由正文重新生成，不信任调用方（同步、导入）带来的值
+  static Diary _canonical(Diary d) {
+    final content = _normalizedContent(d);
+    if (!identical(content, d.content)) {
+      return _rederived(d.copyWith(content: content));
+    }
+    final text = DiaryContent.of(d).plainText;
+    return text == d.contentText ? d : d.copyWith(contentText: text);
+  }
+
+  static String _normalizedContent(Diary d) => d.type == DiaryType.tiptap.value
+      ? TiptapContent.normalize(d.content)
+      : d.content;
+
+  static Diary _rederived(Diary d) {
+    final derived = DiaryContent.of(d);
+    final media = derived.media;
+    return d.copyWith(
+      contentText: derived.plainText,
+      imageName: media.images,
+      audioName: media.audios,
+      videoName: media.videos,
+      fileName: media.files,
+    );
+  }
+
   Future<void> insertDiaries(
-    List<Diary> diaries, {
+    List<Diary> incoming, {
     bool fromSync = false,
     IndexMode index = .inline,
   }) async {
-    if (diaries.isEmpty) return;
+    if (incoming.isEmpty) return;
+    final diaries = [for (final d in incoming) _canonical(d)];
     await _db.transaction(() async {
       for (final diary in diaries) {
         await _upsertRow(diary);
@@ -225,8 +260,10 @@ class DiaryRepository {
       final derived = DiaryContent.of(newDiary).media;
       return _sameNameSet(newDiary.imageName, derived.images) &&
           _sameNameSet(newDiary.videoName, derived.videos) &&
-          _sameNameSet(newDiary.audioName, derived.audios);
-    }(), '媒体三列与正文引用不一致：写入方漏了 withDerivedMedia（见 diary_derive.dart）');
+          _sameNameSet(newDiary.audioName, derived.audios) &&
+          _sameNameSet(newDiary.fileName, derived.files);
+    }(), '媒体列与正文引用不一致：写入方漏了 withDerivedMedia（见 diary_derive.dart）');
+    newDiary = _canonical(newDiary);
     await _db.transaction(() async {
       await _upsertRow(newDiary);
       await _syncChildren(newDiary);
@@ -236,6 +273,44 @@ class DiaryRepository {
       }
     });
     _events.add(DiaryUpdated(newDiary, fromSync: fromSync));
+  }
+
+  Future<int> renameMedia(MediaType type, String fileName, String? name) async {
+    final trimmed = name?.trim();
+    final value = trimmed == null || trimmed.isEmpty ? null : trimmed;
+    final nodeType = type == .file ? 'attachment' : type.value;
+    final m = _db.diaryMedia;
+    final referencing = _db.selectOnly(m, distinct: true)
+      ..addColumns([m.diaryId])
+      ..where(m.kind.equals(type.value) & m.fileName.equals(fileName));
+    final written = await _db.transaction(() async {
+      final rows =
+          await (_db.select(_db.diaries)..where(
+                (d) =>
+                    d.id.isInQuery(referencing) &
+                    d.type.equals(DiaryType.tiptap.value),
+              ))
+              .get();
+      final out = <Diary>[];
+      for (final diary in await _assemble(rows)) {
+        final content = TiptapContent.mapMediaNames(
+          diary.content,
+          (t, src, current) =>
+              t == nodeType && src == fileName ? value : current,
+        );
+        if (identical(content, diary.content)) continue;
+        final next = _rederived(touched(diary.copyWith(content: content)));
+        await _upsertRow(next);
+        await _syncChildren(next);
+        out.add(next);
+      }
+      await _enqueueEmbed(out.map((diary) => diary.id));
+      return out;
+    });
+    for (final diary in written) {
+      _events.add(DiaryUpdated(diary));
+    }
+    return written.length;
   }
 
   Future<void> setVisibility(Diary diary, {required bool show}) => updateADiary(
@@ -334,6 +409,11 @@ class DiaryRepository {
         if (thumbName != null) {
           await AppFiles.deleteFile(AppFiles.getRealPath('video', thumbName));
         }
+      } catch (_) {}
+    }
+    for (final name in diary.fileName) {
+      try {
+        await AppFiles.deleteFile(AppFiles.getRealPath('file', name));
       } catch (_) {}
     }
   }
@@ -569,11 +649,7 @@ class DiaryRepository {
     int? offset,
     int? limit,
   }) async {
-    final kind = switch (type) {
-      .image => 'image',
-      .audio => 'audio',
-      .video => 'video',
-    };
+    final kind = type.value;
     final q = _visible()
       ..where(
         (d) => existsQuery(
@@ -594,7 +670,7 @@ class DiaryRepository {
     final m = _db.diaryMedia;
     final d = _db.diaries;
     final q = _db.selectOnly(m).join([innerJoin(d, d.id.equalsExp(m.diaryId))])
-      ..addColumns([m.fileName, d.id, d.time])
+      ..addColumns([m.fileName, m.name, d.id, d.time])
       ..where(d.show.equals(1) & m.kind.equals(type.value))
       ..orderBy([
         OrderingTerm.desc(d.time),
@@ -606,17 +682,26 @@ class DiaryRepository {
       for (final r in await q.get())
         MediaItem(
           fileName: r.read(m.fileName)!,
+          name: r.read(m.name),
           diaryId: r.read(d.id)!,
           time: dbToTime(r.read(d.time)!),
         ),
     ];
   }
 
-  Future<({Set<String> images, Set<String> audios, Set<String> videos})>
+  Future<
+    ({
+      Set<String> images,
+      Set<String> audios,
+      Set<String> videos,
+      Set<String> files,
+    })
+  >
   collectReferencedMedia() async {
     final images = <String>{};
     final audios = <String>{};
     final videos = <String>{};
+    final files = <String>{};
     for (final m in await _db.select(_db.diaryMedia).get()) {
       switch (m.kind) {
         case 'image':
@@ -627,6 +712,8 @@ class DiaryRepository {
           videos.add(m.fileName);
           final thumb = AppFiles.thumbnailNameOf(m.fileName);
           if (thumb != null) videos.add(thumb);
+        case 'file':
+          files.add(m.fileName);
       }
     }
     final chatImages = _db.selectOnly(_db.chatMessages)
@@ -636,14 +723,14 @@ class DiaryRepository {
       final name = row.read(_db.chatMessages.imageName);
       if (name != null && name.isNotEmpty) images.add(name);
     }
-    return (images: images, audios: audios, videos: videos);
+    return (images: images, audios: audios, videos: videos, files: files);
   }
 
   static const _ftsRowId = CustomExpression<int>('${DiaryFts.$name}.rowid');
 
   /// 汉字切成词短语、拉丁串展开成拼音候选，多个词之间是 AND。
   Future<String> _matchExpression(String query) async {
-    final trimmed = query.trim();
+    final trimmed = MediaMarkup.strip(query).trim();
     if (trimmed.isEmpty) return '';
     final row = await _db
         .customSelect(
@@ -770,7 +857,9 @@ class DiaryRepository {
   static const _graphPreviewChars = 24;
 
   static String? _graphPreview(String contentText) {
-    final flat = contentText.replaceAll(RegExp(r'\s+'), ' ').trim();
+    final flat = MediaMarkup.strip(contentText)
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
     if (flat.isEmpty) return null;
     final runes = flat.runes.toList();
     return runes.length <= _graphPreviewChars
@@ -934,7 +1023,8 @@ class DiaryRepository {
   }
 
   Future<DiaryRepairReport> repairData() async {
-    final diaries = await getAllDiaries();
+    final rows = await _db.select(_db.diaries).get();
+    final diaries = await _assemble(rows);
     final categoryIds = {
       for (final row in await _db.select(_db.categories).get()) row.id,
     };
@@ -945,9 +1035,9 @@ class DiaryRepository {
     var orphanCategoryFixed = 0;
 
     for (final diary in diaries) {
-      var next = diary;
-      var changed = false;
-      final derived = DiaryContent.of(diary);
+      var next = _canonical(diary);
+      final derived = DiaryContent.of(next);
+      var changed = !identical(next, diary);
 
       final plain = derived.plainText;
       if (plain != diary.contentText) {
@@ -958,11 +1048,13 @@ class DiaryRepository {
       final media = derived.media;
       if (!_sameNameSet(media.images, diary.imageName) ||
           !_sameNameSet(media.videos, diary.videoName) ||
-          !_sameNameSet(media.audios, diary.audioName)) {
+          !_sameNameSet(media.audios, diary.audioName) ||
+          !_sameNameSet(media.files, diary.fileName)) {
         next = next.copyWith(
           imageName: media.images,
           videoName: media.videos,
           audioName: media.audios,
+          fileName: media.files,
         );
         changed = true;
         mediaFixed++;
@@ -999,6 +1091,66 @@ class DiaryRepository {
       orphanCategoryFixed: orphanCategoryFixed,
       reindexed: reindexed,
     );
+  }
+
+  Future<int> upgradeContentSchema({
+    void Function(int done, int total)? onProgress,
+    int batchSize = 50,
+  }) async {
+    final idCol = _db.diaries.id;
+    final ids = [
+      for (final row
+          in await (_db.selectOnly(_db.diaries)
+                ..addColumns([idCol])
+                ..orderBy([OrderingTerm.asc(idCol)]))
+              .get())
+        row.read(idCol)!,
+    ];
+    var changed = 0;
+    onProgress?.call(0, ids.length);
+    for (var start = 0; start < ids.length; start += batchSize) {
+      final end = min(start + batchSize, ids.length);
+      final rows = await (_db.select(
+        _db.diaries,
+      )..where((d) => d.id.isIn(ids.sublist(start, end)))).get();
+      final batch = await _assemble(rows);
+      final updates = [
+        for (var i = 0; i < rows.length; i++)
+          if (_rederived(
+                batch[i].copyWith(content: _normalizedContent(batch[i])),
+              )
+              case final next when next != batch[i])
+            (rows[i], next),
+      ];
+      if (updates.isNotEmpty) {
+        final written = <Diary>[];
+        await _db.transaction(() async {
+          for (final (row, diary) in updates) {
+            // 读到写之间同步拉取可能已改写或删除这行（它落库时已归一），行变了就跳过
+            final n =
+                await (_db.update(_db.diaries)..where(
+                      (d) =>
+                          d.id.equals(row.id) &
+                          d.lastModified.equals(row.lastModified) &
+                          d.content.equals(row.content),
+                    ))
+                    .write(_toCompanion(diary));
+            if (n == 0) continue;
+            await _syncChildren(diary);
+            written.add(diary);
+          }
+          await _enqueueEmbed([for (final diary in written) diary.id]);
+        });
+        for (final diary in written) {
+          _events.add(DiaryUpdated(diary, fromSync: true));
+        }
+        changed += written.length;
+      }
+      onProgress?.call(end, ids.length);
+      await Future<void>.delayed(Duration.zero);
+    }
+    await rebuildAllIndexes();
+    return changed;
   }
 
   static bool _sameNameSet(List<String> a, List<String> b) {

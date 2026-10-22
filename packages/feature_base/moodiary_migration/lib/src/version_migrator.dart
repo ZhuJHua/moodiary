@@ -20,13 +20,20 @@ class VersionMigrator {
   static Future<void> run() async {
     if (MmkvKVStorage.legacyMigrationPending) return;
     final packageInfo = await AppInfo.getPackageInfo();
-    final currentVersion = '${packageInfo.version}+${packageInfo.buildNumber}';
+    await apply(
+      currentVersion: '${packageInfo.version}+${packageInfo.buildNumber}',
+    );
+  }
+
+  @visibleForTesting
+  static Future<void> apply({required String currentVersion}) async {
     final appVersion = MoodiaryKVs.appVersion.get();
     if (appVersion != null) {
       await merge(lastAppVersion: appVersion);
     }
     if (appVersion == null) {
       MoodiaryKVs.searchIndexBackfilled.set(true);
+      MoodiaryKVs.contentSchemaV2.set(true);
     }
     if (kDebugMode || appVersion == null || appVersion != currentVersion) {
       MoodiaryKVs.appVersion.set(currentVersion);

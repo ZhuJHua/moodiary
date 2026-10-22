@@ -36,6 +36,7 @@ CREATE TABLE diary_media (
   kind      TEXT NOT NULL,
   seq       INTEGER NOT NULL,
   file_name TEXT NOT NULL,
+  name      TEXT,
   PRIMARY KEY (diary_id, kind, seq)
 ) AS DiaryMediaRow;
 

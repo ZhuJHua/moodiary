@@ -27,6 +27,7 @@ class MField extends StatefulWidget {
   final ValueChanged<String>? onSubmitted;
   final ValueChanged<String>? onChanged;
   final Widget? trailing;
+  final String? suffixText;
   final MFieldVariant variant;
 
   final bool showClear;
@@ -53,6 +54,7 @@ class MField extends StatefulWidget {
     this.onSubmitted,
     this.onChanged,
     this.trailing,
+    this.suffixText,
     this.variant = MFieldVariant.filled,
     this.showClear = true,
     this.contentPadding,
@@ -155,6 +157,7 @@ class _MFieldState extends State<MField> {
         constraints: multiline || plain
             ? null
             : BoxConstraints(minHeight: widget.minHeight),
+        suffixText: widget.suffixText,
         suffixIcon: _buildTrailing(scheme),
         filled: plain ? false : null,
         isCollapsed: plain ? true : null,

@@ -49,34 +49,26 @@ class SyncCounts {
   final int diaries;
   final int categories;
   final int places;
-  final int mediaInfos;
   final int mediaFiles;
 
   const SyncCounts({
     this.diaries = 0,
     this.categories = 0,
     this.places = 0,
-    this.mediaInfos = 0,
     this.mediaFiles = 0,
   });
 
   static const SyncCounts zero = SyncCounts();
 
   bool get isEmpty =>
-      diaries == 0 &&
-      categories == 0 &&
-      places == 0 &&
-      mediaInfos == 0 &&
-      mediaFiles == 0;
+      diaries == 0 && categories == 0 && places == 0 && mediaFiles == 0;
 
-  bool get hasEntryChanges =>
-      diaries > 0 || categories > 0 || places > 0 || mediaInfos > 0;
+  bool get hasEntryChanges => diaries > 0 || categories > 0 || places > 0;
 
   SyncCounts operator +(SyncCounts other) => SyncCounts(
     diaries: diaries + other.diaries,
     categories: categories + other.categories,
     places: places + other.places,
-    mediaInfos: mediaInfos + other.mediaInfos,
     mediaFiles: mediaFiles + other.mediaFiles,
   );
 }
@@ -110,7 +102,6 @@ class SyncReport {
 
   int get diaryCount => pushed.diaries + pulled.diaries;
   int get categoryCount => pushed.categories + pulled.categories;
-  int get mediaInfoCount => pushed.mediaInfos + pulled.mediaInfos;
 
   bool get changedNothing => pushed.isEmpty && pulled.isEmpty;
 
@@ -139,9 +130,9 @@ class SyncReport {
   @override
   String toString() =>
       '上行 日记 ${pushed.diaries} / 分类 ${pushed.categories} / '
-      '媒体信息 ${pushed.mediaInfos} / 媒体 ${pushed.mediaFiles}；'
+      '媒体 ${pushed.mediaFiles}；'
       '下行 日记 ${pulled.diaries} / 分类 ${pulled.categories} / '
-      '媒体信息 ${pulled.mediaInfos} / 媒体 ${pulled.mediaFiles}'
+      '媒体 ${pulled.mediaFiles}'
       '（耗时 ${elapsed.inMilliseconds}ms）'
       '${warning == null ? '' : '\n$warning'}';
 }

@@ -410,7 +410,6 @@ void main() {
         diaryStore: diaryStore,
         categoryStore: FakeCategoryStore(),
         placeStore: placeStore,
-        mediaInfoStore: FakeMediaInfoStore(),
         tombstoneStore: diaryStore.tombstones,
         mediaFiles: FakeMediaFiles(),
         cipherProvider: () async => SyncCipher.plaintext,
@@ -440,7 +439,6 @@ void main() {
         diaryStore: diaryStore,
         categoryStore: FakeCategoryStore(),
         placeStore: FakePlaceStore(),
-        mediaInfoStore: FakeMediaInfoStore(),
         tombstoneStore: diaryStore.tombstones,
         mediaFiles: FakeMediaFiles(),
       );
@@ -466,7 +464,6 @@ void main() {
         diaryStore: diaryStore,
         categoryStore: categoryStore,
         placeStore: FakePlaceStore(),
-        mediaInfoStore: FakeMediaInfoStore(),
         tombstoneStore: diaryStore.tombstones,
         mediaFiles: mediaFiles,
       );
@@ -498,7 +495,6 @@ void main() {
         diaryStore: diaryStore,
         categoryStore: FakeCategoryStore(),
         placeStore: FakePlaceStore(),
-        mediaInfoStore: FakeMediaInfoStore(),
         tombstoneStore: diaryStore.tombstones,
         mediaFiles: mediaFiles,
       );
@@ -534,7 +530,6 @@ void main() {
         diaryStore: diaryStore,
         categoryStore: FakeCategoryStore(),
         placeStore: FakePlaceStore(),
-        mediaInfoStore: FakeMediaInfoStore(),
         tombstoneStore: diaryStore.tombstones,
         mediaFiles: mediaFiles,
       );
@@ -567,7 +562,6 @@ void main() {
         diaryStore: diaryStore,
         categoryStore: FakeCategoryStore(),
         placeStore: FakePlaceStore(),
-        mediaInfoStore: FakeMediaInfoStore(),
         tombstoneStore: diaryStore.tombstones,
         mediaFiles: FakeMediaFiles(),
       );
@@ -592,7 +586,6 @@ void main() {
         diaryStore: diaryStore,
         categoryStore: FakeCategoryStore(),
         placeStore: FakePlaceStore(),
-        mediaInfoStore: FakeMediaInfoStore(),
         tombstoneStore: diaryStore.tombstones,
         mediaFiles: FakeMediaFiles(),
       );
@@ -615,7 +608,6 @@ void main() {
         diaryStore: diaryStore,
         categoryStore: FakeCategoryStore(),
         placeStore: FakePlaceStore(),
-        mediaInfoStore: FakeMediaInfoStore(),
         tombstoneStore: diaryStore.tombstones,
         mediaFiles: FakeMediaFiles(),
       );
@@ -637,7 +629,6 @@ void main() {
         diaryStore: FakeDiaryStore(),
         categoryStore: FakeCategoryStore(),
         placeStore: FakePlaceStore(),
-        mediaInfoStore: FakeMediaInfoStore(),
         tombstoneStore: FakeTombstoneStore(),
         mediaFiles: FakeMediaFiles(),
       );

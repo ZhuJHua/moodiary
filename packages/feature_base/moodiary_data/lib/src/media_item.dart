@@ -1,12 +1,15 @@
 class MediaItem {
   final String fileName;
 
+  final String? name;
+
   final String diaryId;
 
   final DateTime time;
 
   const MediaItem({
     required this.fileName,
+    this.name,
     required this.diaryId,
     required this.time,
   });

@@ -24,19 +24,15 @@ class DiaryContent {
 
   late final String plainText = switch (_type) {
     .tiptap => _tiptap!.plainText,
-    .markdown => MarkdownConverter.convert(_diary.content),
-    .richText => QuillDelta.plainTextOf(_delta)?.trimRight() ?? _diary.content,
+    .markdown => MediaMarkup.strip(MarkdownConverter.convert(_diary.content)),
+    .richText => MediaMarkup.strip(
+      QuillDelta.plainTextOf(_delta)?.trimRight() ?? _diary.content,
+    ),
   };
 
-  late final ({List<String> images, List<String> videos, List<String> audios})
-  media = _media();
+  late final ContentMedia media = _salvage(_parseMedia());
 
-  ({List<String> images, List<String> videos, List<String> audios}) _media() =>
-      _salvage(_parseMedia());
-
-  ({List<String> images, List<String> videos, List<String> audios}) _salvage(
-    ({List<String> images, List<String> videos, List<String> audios}) parsed,
-  ) {
+  ContentMedia _salvage(ContentMedia parsed) {
     List<String> keep(List<String> derived, List<String> existing) {
       final seen = derived.toSet();
       final rescued = existing.where(
@@ -49,15 +45,14 @@ class DiaryContent {
       images: keep(parsed.images, _diary.imageName),
       videos: keep(parsed.videos, _diary.videoName),
       audios: keep(parsed.audios, _diary.audioName),
+      files: keep(parsed.files, _diary.fileName),
     );
   }
 
-  ({List<String> images, List<String> videos, List<String> audios})
-  _parseMedia() {
+  ContentMedia _parseMedia() {
     switch (_type) {
       case .tiptap:
-        final m = _tiptap!.media;
-        return (images: m.images, videos: m.videos, audios: m.audios);
+        return _tiptap!.media;
       case .markdown:
         final images = <String>{};
         final audios = <String>{};
@@ -76,6 +71,7 @@ class DiaryContent {
           images: images.toList(),
           videos: videos.toList(),
           audios: audios.toList(),
+          files: const [],
         );
       case .richText:
         final delta = _delta;
@@ -84,6 +80,7 @@ class DiaryContent {
             images: _diary.imageName,
             videos: _diary.videoName,
             audios: _diary.audioName,
+            files: _diary.fileName,
           );
         }
         final images = <String>{};
@@ -104,6 +101,7 @@ class DiaryContent {
           images: images.toList(),
           videos: videos.toList(),
           audios: audios.toList(),
+          files: const [],
         );
     }
   }

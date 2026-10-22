@@ -11,6 +11,7 @@ Diary _diary({
   List<String> imageName = const [],
   List<String> videoName = const [],
   List<String> audioName = const [],
+  List<String> fileName = const [],
 }) => Diary(
   id: 'd1',
   title: 't',
@@ -23,6 +24,7 @@ Diary _diary({
   imageName: imageName,
   audioName: audioName,
   videoName: videoName,
+  fileName: fileName,
   tags: const [],
   type: type.value,
 );
@@ -56,6 +58,41 @@ void main() {
       expect(c.media.images, direct.media.images);
       expect(c.links, direct.links);
       expect(c.links, ['other']);
+    });
+
+    test('附件派生进 files，withDerivedMedia 写回 fileName', () {
+      final withFile = jsonEncode({
+        'type': 'doc',
+        'attrs': {'v': 2},
+        'content': [
+          {
+            'type': 'attachment',
+            'attrs': {
+              'src': 'file-1.pdf',
+              'name': '报告.pdf',
+              'mime': 'application/pdf',
+              'size': 3,
+            },
+          },
+          {
+            'type': 'audio',
+            'attrs': {'src': 'audio-1.m4a'},
+          },
+        ],
+      });
+      final d = _diary(content: withFile, type: .tiptap);
+      expect(DiaryContent.of(d).media.files, ['file-1.pdf']);
+      expect(DiaryContent.of(d).plainText, '\uFDD4报告.pdf\uFDD0');
+      final derived = withDerivedMedia(d);
+      expect(derived.fileName, ['file-1.pdf']);
+      expect(derived.audioName, ['audio-1.m4a']);
+      expect(derived.toJson()['fileName'], ['file-1.pdf']);
+    });
+
+    test('fileName 缺省为空，旧 JSON（无 fileName 键）也能读', () {
+      final json = _diary(content: doc, type: .tiptap).toJson()
+        ..remove('fileName');
+      expect(Diary.fromJson(json).fileName, isEmpty);
     });
   });
 
@@ -123,6 +160,15 @@ void main() {
         imageName: const ['image-a.png'],
       );
       expect(DiaryContent.of(d).media.images, ['image-a.png']);
+    });
+
+    test('附件引用同样守恒：正文里还提到的旧引用保留', () {
+      final d = _diary(
+        content: '附件 file-a.pdf 还在',
+        type: .tiptap,
+        fileName: const ['file-a.pdf', 'file-gone.pdf'],
+      );
+      expect(DiaryContent.of(d).media.files, ['file-a.pdf']);
     });
 
     test('tiptap 正文解析不出 doc 时同样兜住', () {

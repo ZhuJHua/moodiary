@@ -25,6 +25,7 @@ abstract class Diary with _$Diary {
     required List<String> imageName,
     required List<String> audioName,
     required List<String> videoName,
+    @Default(<String>[]) List<String> fileName,
     required List<String> tags,
 
     String? placeId,

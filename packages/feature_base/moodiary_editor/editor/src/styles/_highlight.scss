@@ -1,0 +1,138 @@
+/* 由 highlight.js 11 github / github-dark 主题生成，与 code_theme.dart 同表，别手改 */
+.md-editor {
+  .hljs-doctag, .hljs-keyword, .hljs-meta-keyword, .hljs-template-tag, .hljs-template-variable, .hljs-type, .hljs-variable.language_ {
+    color: #d73a49;
+  }
+
+  .hljs-title, .hljs-title.class_, .hljs-title.class_.inherited__, .hljs-title.function_ {
+    color: #6f42c1;
+  }
+
+  .hljs-attr, .hljs-attribute, .hljs-literal, .hljs-meta, .hljs-number, .hljs-operator, .hljs-variable, .hljs-selector-attr, .hljs-selector-class, .hljs-selector-id {
+    color: #005cc5;
+  }
+
+  .hljs-regexp, .hljs-string, .hljs-meta-string {
+    color: #032f62;
+  }
+
+  .hljs-built_in, .hljs-symbol {
+    color: #e36209;
+  }
+
+  .hljs-comment, .hljs-code, .hljs-formula {
+    color: #6a737d;
+  }
+
+  .hljs-name, .hljs-quote, .hljs-selector-tag, .hljs-selector-pseudo {
+    color: #22863a;
+  }
+
+  .hljs-section {
+    color: #005cc5;
+    font-weight: 600;
+  }
+
+  .hljs-bullet {
+    color: #735c0f;
+  }
+
+  .hljs-emphasis {
+    font-style: italic;
+  }
+
+  .hljs-strong {
+    font-weight: 600;
+  }
+
+  .hljs-addition {
+    color: #22863a;
+    background-color: #f0fff4;
+  }
+
+  .hljs-deletion {
+    color: #b31d28;
+    background-color: #ffeef0;
+  }
+}
+
+[data-theme='dark'] .md-editor .hljs-doctag,
+[data-theme='dark'] .md-editor .hljs-keyword,
+[data-theme='dark'] .md-editor .hljs-meta-keyword,
+[data-theme='dark'] .md-editor .hljs-template-tag,
+[data-theme='dark'] .md-editor .hljs-template-variable,
+[data-theme='dark'] .md-editor .hljs-type,
+[data-theme='dark'] .md-editor .hljs-variable.language_ {
+  color: #ff7b72;
+}
+
+[data-theme='dark'] .md-editor .hljs-title,
+[data-theme='dark'] .md-editor .hljs-title.class_,
+[data-theme='dark'] .md-editor .hljs-title.class_.inherited__,
+[data-theme='dark'] .md-editor .hljs-title.function_ {
+  color: #d2a8ff;
+}
+
+[data-theme='dark'] .md-editor .hljs-attr,
+[data-theme='dark'] .md-editor .hljs-attribute,
+[data-theme='dark'] .md-editor .hljs-literal,
+[data-theme='dark'] .md-editor .hljs-meta,
+[data-theme='dark'] .md-editor .hljs-number,
+[data-theme='dark'] .md-editor .hljs-operator,
+[data-theme='dark'] .md-editor .hljs-variable,
+[data-theme='dark'] .md-editor .hljs-selector-attr,
+[data-theme='dark'] .md-editor .hljs-selector-class,
+[data-theme='dark'] .md-editor .hljs-selector-id {
+  color: #79c0ff;
+}
+
+[data-theme='dark'] .md-editor .hljs-regexp,
+[data-theme='dark'] .md-editor .hljs-string,
+[data-theme='dark'] .md-editor .hljs-meta-string {
+  color: #a5d6ff;
+}
+
+[data-theme='dark'] .md-editor .hljs-built_in,
+[data-theme='dark'] .md-editor .hljs-symbol {
+  color: #ffa657;
+}
+
+[data-theme='dark'] .md-editor .hljs-comment,
+[data-theme='dark'] .md-editor .hljs-code,
+[data-theme='dark'] .md-editor .hljs-formula {
+  color: #8b949e;
+}
+
+[data-theme='dark'] .md-editor .hljs-name,
+[data-theme='dark'] .md-editor .hljs-quote,
+[data-theme='dark'] .md-editor .hljs-selector-tag,
+[data-theme='dark'] .md-editor .hljs-selector-pseudo {
+  color: #7ee787;
+}
+
+[data-theme='dark'] .md-editor .hljs-section {
+  color: #1f6feb;
+  font-weight: 600;
+}
+
+[data-theme='dark'] .md-editor .hljs-bullet {
+  color: #f2cc60;
+}
+
+[data-theme='dark'] .md-editor .hljs-emphasis {
+  font-style: italic;
+}
+
+[data-theme='dark'] .md-editor .hljs-strong {
+  font-weight: 600;
+}
+
+[data-theme='dark'] .md-editor .hljs-addition {
+  color: #aff5b4;
+  background-color: #033a16;
+}
+
+[data-theme='dark'] .md-editor .hljs-deletion {
+  color: #ffdcd7;
+  background-color: #67060c;
+}

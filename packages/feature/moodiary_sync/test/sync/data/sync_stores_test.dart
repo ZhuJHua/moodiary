@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:file/memory.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moodiary_sync/src/data/media_refs.dart';
 import 'package:moodiary_sync/src/data/sync_stores.dart';
 import 'package:path/path.dart' as p;
 
@@ -38,6 +39,26 @@ void main() {
     await media.delete('audio', 'x.m4a');
   });
 
+  test('collectDiaryMediaEntries 覆盖四类，附件落在 file 目录', () {
+    const video = 'video-0123456789012345678901234567890123.mp4';
+    final entries = collectDiaryMediaEntries(
+      buildDiary(
+        id: 'd',
+        images: ['image-a.jpg'],
+        audios: ['audio-a.m4a'],
+        videos: [video],
+        files: ['file-a.pdf'],
+      ),
+    );
+    expect(entries, [
+      ('image', 'image-a.jpg'),
+      ('audio', 'audio-a.m4a'),
+      ('video', video),
+      ('video', 'thumbnail-0123456789012345678901234567890123.jpeg'),
+      ('file', 'file-a.pdf'),
+    ]);
+  });
+
   group('cleanUpReplaced', () {
     test(
       'removes media dropped by the new diary, keeps retained ones',
@@ -45,19 +66,28 @@ void main() {
         await media.write('image', 'keep.jpg', bytes([1]));
         await media.write('image', 'drop.jpg', bytes([2]));
         await media.write('audio', 'drop.m4a', bytes([3]));
+        await media.write('file', 'file-keep.pdf', bytes([4]));
+        await media.write('file', 'file-drop.zip', bytes([5]));
 
         final oldDiary = buildDiary(
           id: 'd',
           images: ['keep.jpg', 'drop.jpg'],
           audios: ['drop.m4a'],
+          files: ['file-keep.pdf', 'file-drop.zip'],
         );
-        final newDiary = buildDiary(id: 'd', images: ['keep.jpg']);
+        final newDiary = buildDiary(
+          id: 'd',
+          images: ['keep.jpg'],
+          files: ['file-keep.pdf'],
+        );
 
         await media.cleanUpReplaced(oldDiary, newDiary);
 
         expect(await media.exists('image', 'keep.jpg'), isTrue);
         expect(await media.exists('image', 'drop.jpg'), isFalse);
         expect(await media.exists('audio', 'drop.m4a'), isFalse);
+        expect(await media.exists('file', 'file-keep.pdf'), isTrue);
+        expect(await media.exists('file', 'file-drop.zip'), isFalse);
       },
     );
 

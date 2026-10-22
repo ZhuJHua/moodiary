@@ -62,14 +62,12 @@ class SyncLogRun extends SyncLogEntry {
   int get pushedCount =>
       _sum('diaryCount', where: (d) => d == 'push') +
       _sum('categoryCount', where: (d) => d == 'push') +
-      _sum('placeCount', where: (d) => d == 'push') +
-      _sum('mediaInfoCount', where: (d) => d == 'push');
+      _sum('placeCount', where: (d) => d == 'push');
 
   int get pulledCount =>
       _sum('diaryCount', where: (d) => d != 'push') +
       _sum('categoryCount', where: (d) => d != 'push') +
-      _sum('placeCount', where: (d) => d != 'push') +
-      _sum('mediaInfoCount', where: (d) => d != 'push');
+      _sum('placeCount', where: (d) => d != 'push');
 
   int get mediaCount => _sum('mediaCount');
   int get failedCount => _sum('failed');

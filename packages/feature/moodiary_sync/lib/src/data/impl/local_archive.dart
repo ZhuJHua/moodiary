@@ -24,8 +24,6 @@ class LocalArchive {
       final categories = await RepoSyncCategoryStore()
           .getAllCategoriesForSync();
       final places = await RepoSyncPlaceStore().getAllPlacesForSync();
-      final mediaInfos = await RepoSyncMediaInfoStore()
-          .getAllMediaInfosForSync();
       final tombstones = await RepoSyncTombstoneStore().getAll();
       final zipPath = p.join(
         PlatformService.get().applicationCachePath,
@@ -39,7 +37,6 @@ class LocalArchive {
           diaries: diaries,
           categories: categories,
           places: places,
-          mediaInfos: mediaInfos,
           tombstones: tombstones,
           mediaBaseDir: PlatformService.get().applicationSupportPath,
         );
@@ -70,8 +67,6 @@ class LocalArchive {
       final categories = await RepoSyncCategoryStore()
           .getAllCategoriesForSync();
       final places = await RepoSyncPlaceStore().getAllPlacesForSync();
-      final mediaInfos = await RepoSyncMediaInfoStore()
-          .getAllMediaInfosForSync();
       final tombstones = await RepoSyncTombstoneStore().getAll();
       final zipPath = p.join(
         PlatformService.get().applicationCachePath,
@@ -86,7 +81,6 @@ class LocalArchive {
           diaries: diaries,
           categories: categories,
           places: places,
-          mediaInfos: mediaInfos,
           tombstones: tombstones,
           mediaBaseDir: PlatformService.get().applicationSupportPath,
           remote: remote,
@@ -107,7 +101,6 @@ class LocalArchive {
     diaries: await RepoSyncDiaryStore().getAllDiaries(),
     categories: await RepoSyncCategoryStore().getAllCategoriesForSync(),
     places: await RepoSyncPlaceStore().getAllPlacesForSync(),
-    mediaInfos: await RepoSyncMediaInfoStore().getAllMediaInfosForSync(),
     tombstones: await RepoSyncTombstoneStore().getAll(),
     mediaBaseDir: PlatformService.get().applicationSupportPath,
   );
@@ -116,7 +109,6 @@ class LocalArchive {
     required List<Diary> diaries,
     required List<Category> categories,
     List<Place> places = const [],
-    List<MediaInfo> mediaInfos = const [],
     required List<SyncTombstone> tombstones,
     required String mediaBaseDir,
   }) async {
@@ -149,11 +141,6 @@ class LocalArchive {
         timeMs: place.lastModified.millisecondsSinceEpoch,
       );
     }
-    for (final mediaInfo in mediaInfos) {
-      entries[SyncKeys.mediaInfo(mediaInfo.fileName)] = ManifestEntry(
-        timeMs: mediaInfo.lastModified.millisecondsSinceEpoch,
-      );
-    }
     return SyncManifest(
       version: SyncManifest.currentVersion,
       updatedAtMs: DateTime.now().millisecondsSinceEpoch,
@@ -167,7 +154,6 @@ class LocalArchive {
     required List<Diary> diaries,
     required List<Category> categories,
     List<Place> places = const [],
-    List<MediaInfo> mediaInfos = const [],
     required List<SyncTombstone> tombstones,
     required String mediaBaseDir,
     SyncManifest? remote,
@@ -177,7 +163,6 @@ class LocalArchive {
       diaries: diaries,
       categories: categories,
       places: places,
-      mediaInfos: mediaInfos,
       tombstones: tombstones,
       mediaBaseDir: mediaBaseDir,
     );
@@ -200,7 +185,6 @@ class LocalArchive {
     final diaryById = {for (final d in diaries) d.id: d};
     final categoryById = {for (final c in categories) c.id: c};
     final placeById = {for (final p in places) p.id: p};
-    final mediaInfoByName = {for (final m in mediaInfos) m.fileName: m};
     final remoteMedia = remote?.referencedMedia() ?? const <String>{};
     final addedMedia = <String>{};
 
@@ -231,12 +215,6 @@ class LocalArchive {
         await sink.addBytes(
           SyncKeys.placeObjectPath(id),
           await cipher.encode(placeById[id]!.toJson()),
-        );
-      } else if (entry.key.startsWith(SyncKeys.mediaInfoPrefix)) {
-        final id = entry.key.substring(SyncKeys.mediaInfoPrefix.length);
-        await sink.addBytes(
-          SyncKeys.mediaInfoObjectPath(id),
-          await cipher.encode(mediaInfoByName[id]!.toJson()),
         );
       }
     }
@@ -298,7 +276,6 @@ class LocalArchive {
     SyncDiaryStore? diaryStore,
     SyncCategoryStore? categoryStore,
     SyncPlaceStore? placeStore,
-    SyncMediaInfoStore? mediaInfoStore,
     SyncTombstoneStore? tombstoneStore,
     SyncMediaFiles? mediaFiles,
     Future<SyncCipher> Function()? cipherProvider,
@@ -326,7 +303,6 @@ class LocalArchive {
         diaryStore: diaryStore,
         categoryStore: categoryStore,
         placeStore: placeStore,
-        mediaInfoStore: mediaInfoStore,
         tombstoneStore: tombstoneStore,
         mediaFiles: mediaFiles,
         cipherProvider: cipher,

@@ -53,13 +53,27 @@ class IrBlockRenderer {
       items: items,
     ),
     IrBlock_Code(:final language, :final text) => _code(language, text),
-    IrBlock_Divider() => Container(height: 1, color: style.hairline),
+    IrBlock_Divider() => _divider(block),
     IrBlock_Image(:final path, :final widthPercent, :final isExternal) =>
       _image(path: path, widthPercent: widthPercent, isExternal: isExternal),
-    IrBlock_Media(:final kind, :final filename, :final coverPath) => _media(
-      kind: kind,
-      filename: filename,
-      coverPath: coverPath,
+    IrBlock_Media(
+      :final kind,
+      :final name,
+      :final filename,
+      :final coverPath,
+      :final widthPercent,
+    ) =>
+      _media(
+        kind: kind,
+        label: name ?? filename,
+        coverPath: coverPath,
+        widthPercent: widthPercent,
+      ),
+    IrBlock_Attachment(:final name, :final size) => _placeholderBox(
+      icon: LucideIcons.paperclip,
+      label: name,
+      trailing: size == null ? null : formatByteSize(size),
+      compact: true,
     ),
     IrBlock_Table(:final rows) => _table(rows),
   };
@@ -114,7 +128,32 @@ class IrBlockRenderer {
     if (s.href != null || s.diaryLinkId != null) {
       out = out.copyWith(color: style.accent);
     }
+    if (s.highlight) out = out.copyWith(backgroundColor: style.highlight);
     return TextSpan(text: s.text, style: out);
+  }
+
+  Widget _divider(IrBlock_Divider block) {
+    final label = block.visibleLabel;
+    if (label == null) {
+      return CustomPaint(
+        size: const Size(double.infinity, _DividerPainter.height),
+        painter: _DividerPainter(block.variant, switch (block.variant) {
+          .dashed || .dotted || .wavy => style.outline,
+          _ => style.hairline,
+        }),
+      );
+    }
+    final rule = Expanded(child: Container(height: 1, color: style.hairline));
+    return Row(
+      children: [
+        rule,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(label, style: style.meta),
+        ),
+        rule,
+      ],
+    );
   }
 
   Widget _quote(List<IrBlock> children) => Container(
@@ -265,14 +304,15 @@ class IrBlockRenderer {
 
   Widget _media({
     required String kind,
-    required String filename,
+    required String label,
     required String? coverPath,
+    required int? widthPercent,
   }) {
     final cover = coverPath == null ? null : images[coverPath];
     if (kind == 'video' && cover != null) {
-      final width = style.contentWidth;
+      final width = style.contentWidth * ((widthPercent ?? 100) / 100);
       final height = width * cover.height / cover.width;
-      return ClipRRect(
+      final framed = ClipRRect(
         borderRadius: BorderRadius.circular(8),
         child: SizedBox(
           width: width,
@@ -298,10 +338,11 @@ class IrBlockRenderer {
           ),
         ),
       );
+      return Align(alignment: Alignment.center, child: framed);
     }
     return _placeholderBox(
       icon: kind == 'video' ? LucideIcons.video : LucideIcons.audioLines,
-      label: filename,
+      label: label,
       compact: true,
     );
   }
@@ -309,6 +350,7 @@ class IrBlockRenderer {
   Widget _placeholderBox({
     required IconData icon,
     String? label,
+    String? trailing,
     bool compact = false,
   }) => Container(
     width: double.infinity,
@@ -333,6 +375,10 @@ class IrBlockRenderer {
               overflow: TextOverflow.ellipsis,
             ),
           ),
+        ],
+        if (trailing != null) ...[
+          const SizedBox(width: 10),
+          Text(trailing, style: style.meta),
         ],
       ],
     ),
@@ -373,4 +419,69 @@ class IrBlockRenderer {
       ],
     );
   }
+}
+
+class _DividerPainter extends CustomPainter {
+  final IrDividerVariant variant;
+  final Color color;
+
+  static const double height = 8;
+
+  const _DividerPainter(this.variant, this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final mid = size.height / 2;
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+    switch (variant) {
+      case .dashed:
+        for (var x = 0.0; x < size.width; x += 10) {
+          canvas.drawLine(
+            Offset(x, mid),
+            Offset((x + 6).clamp(0, size.width), mid),
+            paint,
+          );
+        }
+      case .dotted:
+        final dot = Paint()..color = color;
+        for (var x = 1.0; x < size.width; x += 5) {
+          canvas.drawCircle(Offset(x, mid), 1, dot);
+        }
+      case .double:
+        canvas.drawLine(
+          Offset(0, mid - 1.5),
+          Offset(size.width, mid - 1.5),
+          paint,
+        );
+        canvas.drawLine(
+          Offset(0, mid + 1.5),
+          Offset(size.width, mid + 1.5),
+          paint,
+        );
+      case .wavy:
+        const half = 5.0;
+        const amplitude = 2.5;
+        final path = Path()..moveTo(0, mid);
+        var up = true;
+        for (var x = 0.0; x + half <= size.width; x += half) {
+          path.quadraticBezierTo(
+            x + half / 2,
+            mid + (up ? -amplitude * 2 : amplitude * 2),
+            x + half,
+            mid,
+          );
+          up = !up;
+        }
+        canvas.drawPath(path, paint);
+      case .solid || .text:
+        canvas.drawLine(Offset(0, mid), Offset(size.width, mid), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DividerPainter old) =>
+      old.variant != variant || old.color != color;
 }

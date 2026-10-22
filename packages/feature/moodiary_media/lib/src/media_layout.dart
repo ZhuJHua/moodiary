@@ -30,10 +30,11 @@ class MediaFlat {
   final List<MediaEntry> entries;
   final List<DateTime> dates;
   final List<List<String>> groups;
+  final List<List<String?>> labels;
   final List<Key> keys;
   final Map<Key, int> _indexOf;
 
-  MediaFlat._(this.entries, this.dates, this.groups, this.keys)
+  MediaFlat._(this.entries, this.dates, this.groups, this.labels, this.keys)
     : _indexOf = {for (var i = 0; i < keys.length; i++) keys[i]: i};
 
   bool get isEmpty => entries.isEmpty;
@@ -44,6 +45,7 @@ class MediaFlat {
     final entries = <MediaEntry>[];
     final dates = <DateTime>[];
     final groups = <List<String>>[];
+    final labels = <List<String?>>[];
     final keys = <Key>[];
     DateTime? current;
     for (final item in items) {
@@ -53,15 +55,17 @@ class MediaFlat {
         current = day;
         dates.add(day);
         groups.add(<String>[]);
+        labels.add(<String?>[]);
         entries.add(MediaHeader(groups.length - 1));
         keys.add(ValueKey('h:${day.millisecondsSinceEpoch}'));
       }
       final g = groups.length - 1;
       groups[g].add(item.fileName);
+      labels[g].add(item.name);
       entries.add(MediaCell(g, groups[g].length - 1));
       keys.add(ValueKey('${item.diaryId}:${item.fileName}'));
     }
-    return MediaFlat._(entries, dates, groups, keys);
+    return MediaFlat._(entries, dates, groups, labels, keys);
   }
 }
 

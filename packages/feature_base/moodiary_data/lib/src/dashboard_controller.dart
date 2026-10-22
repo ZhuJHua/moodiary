@@ -1,6 +1,7 @@
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'dashboard_controller.g.dart';
@@ -42,7 +43,7 @@ class DashboardController extends _$DashboardController {
     return DashboardStats(
       journalDays: _journalDays(byDay.keys),
       diaryCount: visible.length,
-      wordCount: _wordCount(visible),
+      wordCount: byDay.values.fold(0, (a, day) => a + day.words),
       categoryCount: cats.length,
       streakDays: _streakDays(byDay.keys),
       thisMonthCount: _thisMonthCount(visible),
@@ -64,14 +65,6 @@ class DashboardController extends _$DashboardController {
     return diff < 0 ? 1 : diff + 1;
   }
 
-  int _wordCount(List<Diary> diaries) {
-    var sum = 0;
-    for (final d in diaries) {
-      sum += d.contentText.length;
-    }
-    return sum;
-  }
-
   Map<DateTime, DayWriting> _aggregateByDay(List<Diary> diaries) {
     final grouped = <DateTime, List<Diary>>{};
     for (final d in diaries) {
@@ -83,7 +76,10 @@ class DashboardController extends _$DashboardController {
 
     final words = {
       for (final e in grouped.entries)
-        e.key: e.value.fold<int>(0, (a, d) => a + d.contentText.length),
+        e.key: e.value.fold<int>(
+          0,
+          (a, d) => a + TiptapContent.countCharacters(d.contentText),
+        ),
     };
     final levelOf = heatmapLevelResolver(words.values);
 

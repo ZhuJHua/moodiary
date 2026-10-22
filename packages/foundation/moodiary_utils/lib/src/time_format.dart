@@ -47,8 +47,12 @@ class TimeFormat {
   static String listDateTime(DateTime time) =>
       DateFormat.yMd().add_Hm().format(time.toLocal());
 
-  static String anchorDate(DateTime time) =>
-      DateFormat.yMd().format(time.toLocal());
+  static String anchorDate(DateTime time) {
+    final local = time.toLocal();
+    return local.year == DateTime.now().year
+        ? DateFormat.MMMd().format(local)
+        : DateFormat.yMMMd().format(local);
+  }
 
   static String weekdayTimeHms(DateTime time) =>
       DateFormat.E().add_Hms().format(time.toLocal());

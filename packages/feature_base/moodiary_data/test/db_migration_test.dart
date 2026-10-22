@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
 import 'package:drift_dev/api/migrations_native.dart';
@@ -187,6 +189,97 @@ void main() {
     final hit = (await DiaryRepository(db).searchDiaries(query: '苹果')).single;
     expect(hit.diary.id, 'd1', reason: "'rebuild' 从 diaries 重灌了整个索引");
     expect(hit.titleHighlight, '关于${marked('苹果')}的日记');
+    await db.close();
+  });
+
+  test('v2 老库升级：media_infos 里的音频名并进正文后删表，m: 墓碑一并清掉', () async {
+    final schema = await verifier.schemaAt(2);
+    final old = v2.DatabaseAtV2(schema.newConnection());
+    final content = jsonEncode({
+      'type': 'doc',
+      'content': [
+        for (final file in ['audio-1.m4a', 'audio-2.m4a', 'audio-3.m4a'])
+          {
+            'type': 'audio',
+            'attrs': {
+              'filename': file,
+              if (file == 'audio-2.m4a') 'name': '已有名',
+            },
+          },
+      ],
+    });
+    await old
+        .into(old.diaries)
+        .insert(
+          v2.DiariesCompanion.insert(
+            id: 'd1',
+            title: '',
+            content: content,
+            contentText: '',
+            time: 1,
+            lastModified: 7,
+            show: 1,
+            mood: 'neutral',
+            type: 'tiptap',
+          ),
+        );
+    for (final (seq, file) in [
+      (0, 'audio-1.m4a'),
+      (1, 'audio-2.m4a'),
+      (2, 'audio-3.m4a'),
+    ]) {
+      await old
+          .into(old.diaryMedia)
+          .insert(
+            v2.DiaryMediaCompanion.insert(
+              diaryId: 'd1',
+              kind: 'audio',
+              seq: seq,
+              fileName: file,
+            ),
+          );
+    }
+    for (final (file, name) in [
+      ('audio-1.m4a', ' 晨间录音 '),
+      ('audio-2.m4a', '旧名'),
+      ('audio-3.m4a', null),
+    ]) {
+      await old
+          .into(old.mediaInfos)
+          .insert(
+            v2.MediaInfosCompanion.insert(
+              fileName: file,
+              name: Value(name),
+              lastModified: 0,
+            ),
+          );
+    }
+    for (final key in ['m:audio-1.m4a', 'd:gone']) {
+      await old
+          .into(old.tombstones)
+          .insert(v2.TombstonesCompanion.insert(key: key, timeMs: 1));
+    }
+    await old.close();
+
+    final db = MoodiaryDatabase.forTesting(schema.newConnection());
+    await verifier.migrateAndValidate(db, 3);
+    final row = await db
+        .customSelect(
+          "SELECT content, last_modified FROM diaries WHERE id = 'd1'",
+        )
+        .getSingle();
+    expect(row.read<int>('last_modified'), 7);
+    expect(
+      [
+        for (final node
+            in (jsonDecode(row.read<String>('content')) as Map)['content']
+                as List)
+          (node as Map)['attrs']['name'],
+      ],
+      ['晨间录音', '已有名', null],
+    );
+    final keys = await db.customSelect('SELECT "key" FROM tombstones').get();
+    expect(keys.map((r) => r.read<String>('key')), ['d:gone']);
     await db.close();
   });
 

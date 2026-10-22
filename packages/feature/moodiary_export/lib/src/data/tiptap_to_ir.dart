@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
 import 'export_doc.dart';
 
@@ -29,7 +30,12 @@ class TiptapToIr {
 
     final doc = _tryDoc(content);
     if (doc != null) {
-      _blocks(doc['content'], blocks, unsupported, resolvePath);
+      _blocks(
+        TiptapContent.normalizeDoc(doc)['content'],
+        blocks,
+        unsupported,
+        resolvePath,
+      );
     } else if (content.trim().isNotEmpty) {
       blocks.add(.paragraph(spans: [irSpan(content)]));
     }
@@ -133,7 +139,7 @@ class TiptapToIr {
         );
 
       case 'horizontalRule':
-        out.add(const .divider());
+        out.add(_divider(attrs));
 
       case 'image':
         final block = _image(attrs, resolve);
@@ -142,6 +148,10 @@ class TiptapToIr {
       case 'audio':
       case 'video':
         final block = _media(node['type'] as String, attrs, resolve);
+        if (block != null) out.add(block);
+
+      case 'attachment':
+        final block = _attachment(attrs, resolve);
         if (block != null) out.add(block);
 
       case 'table':
@@ -225,37 +235,61 @@ class TiptapToIr {
     final src = attrs['src'];
     if (src is! String || src.isEmpty) return null;
 
-    final alt = attrs['alt'];
-    final wp = attrs['widthPercent'];
-
-    if (_isExternal(src)) {
-      return .image(
-        path: src,
-        alt: alt is String ? alt : null,
-        widthPercent: wp is int ? wp : null,
-        isExternal: true,
-      );
-    }
+    final external = _isExternal(src);
     return .image(
-      path: resolve('image', src),
-      alt: alt is String ? alt : null,
-      widthPercent: wp is int ? wp : null,
-      isExternal: false,
+      path: external ? src : resolve('image', src),
+      alt: _nonEmpty(attrs['name']),
+      widthPercent: _widthPercent(attrs['widthPercent']),
+      isExternal: external,
     );
   }
 
   static IrBlock? _media(String type, dynamic attrs, ResolveMediaPath resolve) {
     if (attrs is! Map) return null;
-    final name = attrs['filename'];
-    if (name is! String || name.isEmpty) return null;
+    final src = _nonEmpty(attrs['src']);
+    if (src == null) return null;
     final isVideo = type == 'video';
     return .media(
       kind: isVideo ? 'video' : 'audio',
-      filename: name,
-      path: resolve(type, name),
-      coverPath: isVideo ? resolve('thumbnail', name) : null,
+      name: _nonEmpty(attrs['name']),
+      filename: src,
+      path: resolve(type, src),
+      coverPath: isVideo ? resolve('thumbnail', src) : null,
+      widthPercent: isVideo ? _widthPercent(attrs['widthPercent']) : null,
     );
   }
+
+  static IrBlock? _attachment(dynamic attrs, ResolveMediaPath resolve) {
+    if (attrs is! Map) return null;
+    final src = _nonEmpty(attrs['src']);
+    if (src == null) return null;
+    final size = attrs['size'];
+    return .attachment(
+      name: _nonEmpty(attrs['name']) ?? src,
+      filename: src,
+      path: resolve('file', src),
+      mime: _nonEmpty(attrs['mime']),
+      size: size is num && size.isFinite && size >= 0 ? size.toInt() : null,
+    );
+  }
+
+  static IrBlock _divider(dynamic attrs) {
+    final raw = attrs is Map ? attrs['variant'] : null;
+    final variant = IrDividerVariant.values.firstWhere(
+      (v) => v.name == raw,
+      orElse: () => .solid,
+    );
+    final label = attrs is Map ? _nonEmpty(attrs['label']) : null;
+    return .divider(variant: variant, label: variant == .text ? label : null);
+  }
+
+  static int? _widthPercent(dynamic raw) {
+    if (raw is! num || !raw.isFinite || raw <= 0) return null;
+    return raw.round().clamp(25, 100);
+  }
+
+  static String? _nonEmpty(dynamic value) =>
+      value is String && value.isNotEmpty ? value : null;
 
   static bool _isExternal(String src) {
     if (_mediaPrefixes.any(src.startsWith)) return false;
@@ -277,6 +311,7 @@ class TiptapToIr {
           strike: last.strike,
           underline: last.underline,
           code: last.code,
+          highlight: last.highlight,
           href: last.href,
           diaryLinkId: last.diaryLinkId,
         );
@@ -324,12 +359,13 @@ class TiptapToIr {
       a.strike == b.strike &&
       a.underline == b.underline &&
       a.code == b.code &&
+      a.highlight == b.highlight &&
       a.href == b.href &&
       a.diaryLinkId == b.diaryLinkId;
 
   static IrSpan _withMarks(String text, dynamic marks) {
     var bold = false, italic = false, strike = false;
-    var underline = false, code = false;
+    var underline = false, code = false, highlight = false;
     String? href;
 
     if (marks is List) {
@@ -346,6 +382,8 @@ class TiptapToIr {
             underline = true;
           case 'code':
             code = true;
+          case 'highlight':
+            highlight = true;
           case 'link':
             final attrs = mark['attrs'];
             if (attrs is Map && attrs['href'] is String) {
@@ -362,6 +400,7 @@ class TiptapToIr {
       strike: strike,
       underline: underline,
       code: code,
+      highlight: highlight,
       href: href,
     );
   }

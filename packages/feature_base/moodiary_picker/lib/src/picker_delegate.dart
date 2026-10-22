@@ -17,7 +17,10 @@ class MoodiaryPickerDelegate
     super.textDelegate,
     super.specialItems,
     super.shouldRevertGrid = false,
-  }) : super(pathNameBuilder: _pathName(recentLabel));
+  }) : super(
+         pathNameBuilder: _pathName(recentLabel),
+         limitedPermissionOverlayPredicate: (_) => false,
+       );
 
   final MuiThemeData mui;
   final String recentLabel;
@@ -28,6 +31,50 @@ class MoodiaryPickerDelegate
   MuiThemeData get _t => mui;
 
   static const double _badgeSize = 20;
+
+  Future<void> _manageLimited() =>
+      PhotoManager.presentLimited(type: provider.requestType);
+
+  @override
+  void initState(
+    covariant AssetPickerState<
+      AssetEntity,
+      AssetPathEntity,
+      DefaultAssetPickerBuilderDelegate
+    >
+    state,
+  ) {
+    super.initState(state);
+    presentLimitedTapGestureRecognizer?.onTap = _manageLimited;
+  }
+
+  @override
+  Widget emptyIndicator(BuildContext context) {
+    final l10n = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: .min,
+        spacing: 16,
+        children: [
+          Text(
+            isPermissionLimited
+                ? (provider.requestType == RequestType.video
+                      ? l10n.picker.limitedEmptyVideos
+                      : l10n.picker.limitedEmptyImages)
+                : textDelegate.emptyList,
+            style: _t.typography.bodyLarge.onSurfaceVariant,
+            textAlign: .center,
+          ),
+          if (isPermissionLimited)
+            FilledButton(
+              onPressed: _manageLimited,
+              child: Text(l10n.picker.limitedManage),
+            ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget imageAndVideoItemBuilder(
@@ -189,7 +236,7 @@ class MoodiaryPickerDelegate
         child: GestureDetector(
           onTap: () {
             if (isPermissionLimited && provider.isAssetsEmpty) {
-              PhotoManager.presentLimited();
+              _manageLimited();
               return;
             }
             if (provider.currentPath == null) return;
@@ -359,7 +406,7 @@ class MoodiaryPickerDelegate
         : MediaQuery.paddingOf(context).bottom;
     final l10n = context.l10n;
     return MInkWell(
-      onTap: PhotoManager.openSetting,
+      onTap: _manageLimited,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14)
             .add(EdgeInsets.only(bottom: bottomPadding)),

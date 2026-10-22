@@ -12,6 +12,12 @@ if (localPropertiesFile.exists()) {
     localPropertiesFile.reader(Charsets.UTF_8).use { localProperties.load(it) }
 }
 
+val releaseKeystore = file("key.jks")
+val releaseStorePassword = localProperties.getProperty("storePassword")
+val releaseKeyPassword = localProperties.getProperty("keyPassword")
+val hasReleaseSigning = releaseKeystore.isFile &&
+    !releaseStorePassword.isNullOrBlank() && !releaseKeyPassword.isNullOrBlank()
+
 android {
     namespace = "cn.yooss.moodiary"
     compileSdk = 36
@@ -22,19 +28,23 @@ android {
         targetCompatibility = JavaVersion.VERSION_21
     }
 
-    // AGP 9 起 buildFeatures 默认全关；debug buildType 用 resValue 注入 app_name，必须显式打开。
-    buildFeatures {
-        resValues = true
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("config") {
+                storeFile = releaseKeystore
+                storePassword = releaseStorePassword
+                keyPassword = releaseKeyPassword
+                keyAlias = "key0"
+                enableV3Signing = true
+            }
+        }
     }
 
-    signingConfigs {
-        create("config") {
-            storeFile = file("key.jks")
-            storePassword = localProperties.getProperty("storePassword")
-            keyPassword = localProperties.getProperty("keyPassword")
-            keyAlias = "key0"
-            enableV3Signing = true
-        }
+    val appSigningConfig = signingConfigs.getByName(
+        if (hasReleaseSigning) "config" else "debug",
+    )
+    if (!hasReleaseSigning) {
+        logger.lifecycle("Local signing is unavailable; using the default Android debug keystore.")
     }
 
     defaultConfig {
@@ -56,9 +66,20 @@ android {
         }
     }
 
+    flavorDimensions += "channel"
+    productFlavors {
+        create("production") {
+            dimension = "channel"
+        }
+        create("alpha") {
+            dimension = "channel"
+            applicationIdSuffix = ".alpha"
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("config")
+            signingConfig = appSigningConfig
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -67,13 +88,12 @@ android {
             )
         }
         debug {
-            signingConfig = signingConfigs.getByName("config")
-            resValue("string", "app_name", "Moodiary Debug")
+            signingConfig = appSigningConfig
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
         }
         maybeCreate("profile").apply {
-            signingConfig = signingConfigs.getByName("config")
+            signingConfig = appSigningConfig
             applicationIdSuffix = ".profile"
         }
     }

@@ -13,14 +13,12 @@ class RustHttpServer extends IHttpServer {
   Future<void> start({
     required HttpServerHandler handler,
     int preferredPort = 0,
-    bool loopbackOnly = false,
     String? spoolDir,
     void Function(int received, int? total)? onBodyProgress,
   }) async {
     await rust.MoodiaryRust.ensureInitialized();
     _server = await rust.HttpServer.start(
       preferredPort: preferredPort,
-      loopbackOnly: loopbackOnly,
       spoolDir: spoolDir ?? Directory.systemTemp.path,
       onRequest: (request) async {
         try {
@@ -29,7 +27,6 @@ class RustHttpServer extends IHttpServer {
             status: response.statusCode,
             headers: _pairs(response.headers),
             body: response.body,
-            bodyFilePath: response.bodyFilePath,
           );
         } catch (e) {
           return rust.HttpServerResponse(
@@ -51,7 +48,6 @@ class RustHttpServer extends IHttpServer {
       HttpServerRequest(
         method: request.method,
         path: request.path,
-        query: _map(request.query),
         headers: _map(request.headers),
         body: request.body,
         bodyFilePath: request.bodyFilePath,
@@ -67,9 +63,6 @@ class RustHttpServer extends IHttpServer {
 
   @override
   int get port => _server!.port();
-
-  @override
-  bool get isRunning => _server != null;
 
   @override
   Future<void> stop() async {

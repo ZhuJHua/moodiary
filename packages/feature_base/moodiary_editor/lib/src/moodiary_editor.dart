@@ -3,13 +3,17 @@ import 'dart:convert';
 import 'dart:developer' as developer;
 import 'dart:io';
 
-import 'package:flutter/foundation.dart' show kDebugMode;
-import 'package:moodiary_di/moodiary_di.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_native/moodiary_native.dart';
 import 'package:mui/mui.dart';
 
-import 'editor_local_server.dart';
+import 'editor_page.dart';
+import 'ime/ime_panel.dart';
 import 'media.dart';
+import 'toolbar/editor_command.dart';
+import 'toolbar/editor_state.dart';
 import 'transport/editor_transport.dart';
 
 typedef EditorRoles = Map<String, String>;
@@ -43,14 +47,11 @@ class MoodiaryEditor extends StatefulWidget {
 
   final ValueChanged<int>? onActiveHeadingChanged;
 
-  final VoidCallback? onReady;
-
   final void Function(List<String> images, int index)? onImageTap;
 
-  final VoidCallback? onPickImage;
+  final ValueChanged<String>? onUrlTap;
 
-  final VoidCallback? onPickAudio;
-  final VoidCallback? onPickVideo;
+  final void Function(String src, String name, String? mime)? onAttachmentTap;
 
   final Future<Duration?> Function(String name, Duration position)?
   onVideoFullscreen;
@@ -94,8 +95,6 @@ class MoodiaryEditor extends StatefulWidget {
 
   final VoidCallback? onOpenGraph;
 
-  final String saveStatus;
-
   final bool firstLineIndent;
 
   final double fontScale;
@@ -106,10 +105,6 @@ class MoodiaryEditor extends StatefulWidget {
 
   final MediaResolver? mediaResolver;
 
-  final Future<String?> Function(String name)? mediaNameResolver;
-
-  final WidgetBuilder? loadingBuilder;
-
   const MoodiaryEditor({
     super.key,
     this.controller,
@@ -119,11 +114,9 @@ class MoodiaryEditor extends StatefulWidget {
     this.onChanged,
     this.onTitleChanged,
     this.onActiveHeadingChanged,
-    this.onReady,
     this.onImageTap,
-    this.onPickImage,
-    this.onPickAudio,
-    this.onPickVideo,
+    this.onUrlTap,
+    this.onAttachmentTap,
     this.onVideoFullscreen,
     this.onSaveImage,
     this.onRequestLinkCandidates,
@@ -146,14 +139,11 @@ class MoodiaryEditor extends StatefulWidget {
     this.onManagePlaces,
     this.onClearPosition,
     this.onOpenGraph,
-    this.saveStatus = 'idle',
     this.firstLineIndent = false,
     this.fontScale = 1.0,
     this.rolesResolver,
     this.fontResolver,
     this.mediaResolver,
-    this.mediaNameResolver,
-    this.loadingBuilder,
   });
 
   @override
@@ -161,6 +151,13 @@ class MoodiaryEditor extends StatefulWidget {
 }
 
 class _MoodiaryEditorState extends State<MoodiaryEditor> {
+  // Android WebView 的选择手柄由原生主题绘制，颜色只能推给原生
+  static final _selectionHandle = SelectionHandleApi();
+  static int? _handleColor;
+
+  static final _keyboard = EditorKeyboardApi();
+  static int? _keyboardViewId;
+
   EditorTransport? _transport;
   bool _jsReady = false;
   bool _activated = false;
@@ -172,9 +169,12 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
 
   String? _loadError;
 
-  late String _lastContent = widget.initialContent;
+  String? _lastStateRaw;
 
-  EditorFocusTarget _focusTarget = .none;
+  final _flushes = <String, Completer<void>>{};
+  int _flushSeq = 0;
+
+  InputSuspension? _overlay;
 
   @override
   void initState() {
@@ -191,9 +191,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     }
     if (oldWidget.readOnly != widget.readOnly && _activated) {
       _setEditable(!widget.readOnly);
-    }
-    if (oldWidget.saveStatus != widget.saveStatus && _activated) {
-      _setSaveStatus();
+      if (!widget.readOnly) unawaited(_attachKeyboard());
     }
     if (oldWidget.metaJson != widget.metaJson && _activated) {
       _setMeta();
@@ -211,6 +209,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _syncHandleColor();
     if (!_prepareStarted) {
       _prepareStarted = true;
       _prepare();
@@ -222,10 +221,18 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
   @override
   void dispose() {
     _readyTimeout?.cancel();
+    unawaited(_overlay?.resume());
     widget.controller?._unbind(this);
+    final viewId = _transport?.nativeViewId;
+    if (viewId != null && viewId == _keyboardViewId) {
+      _keyboardViewId = null;
+      unawaited(_keyboard.detach());
+    }
     _transport?.dispose();
     super.dispose();
   }
+
+  static bool get _nativeKeyboard => Platform.isAndroid || Platform.isIOS;
 
   bool get _platformSupported =>
       Platform.isAndroid ||
@@ -240,30 +247,10 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
       }
       return;
     }
-    final boot = <String, dynamic>{
-      'platform': (Platform.isAndroid || Platform.isIOS) ? 'mobile' : 'desktop',
-      'editable': !widget.readOnly,
-      'locale': LocaleSettings.currentLocale.languageCode,
-      'saveStatus': widget.saveStatus,
-      'theme': _themePayload(),
-    };
-    final server = getIt<EditorLocalServer>();
-    server.mediaResolver ??= widget.mediaResolver;
-    server.fontResolver ??= widget.fontResolver;
-    server.mediaNameResolver ??= widget.mediaNameResolver;
     try {
-      await server.ensureStarted();
-    } catch (e, s) {
-      _log('local server failed to start', error: e, stack: s, level: 1000);
-      if (mounted) setState(() => _loadError = e.toString());
-      return;
-    }
-    if (!mounted) return;
-    boot['mediaBase'] = server.mediaBase;
-    boot['fontBase'] = server.fontBase;
-    boot['mediaInfoBase'] = server.mediaInfoBase;
-    try {
-      await _buildController(server.pageUri(boot));
+      final page = await resolveEditorPage();
+      if (!mounted) return;
+      await _buildController(page);
     } catch (e, s) {
       _log('webview controller build failed', error: e, stack: s, level: 1000);
       if (mounted) setState(() => _loadError = e.toString());
@@ -272,10 +259,10 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     _startReadyTimeout();
   }
 
-  Future<void> _buildController(Uri pageUri) async {
+  Future<void> _buildController(EditorPage page) async {
     final transport = createEditorTransport();
     await transport.prepare(
-      pageUri: pageUri,
+      page: page,
       onMessage: _onMessage,
       onConsoleError: (m) => _log('JS console: $m', level: 1000),
       onWebError: (desc, code) =>
@@ -313,6 +300,21 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     final type = (data['type'] as String?) ?? '';
     final payload = data['payload'];
     switch (type) {
+      case 'boot':
+        if (payload is Map && payload['reqId'] is String) {
+          unawaited(_respond(payload['reqId'] as String, _bootPayload()));
+        }
+        return;
+      case 'resolveMedia':
+        if (payload is Map && payload['reqId'] is String) {
+          unawaited(
+            _handleResolveMedia(
+              payload['reqId'] as String,
+              payload['items'] is List ? payload['items'] as List : const [],
+            ),
+          );
+        }
+        return;
       case 'ready':
         if (_jsReady) return;
         _jsReady = true;
@@ -323,19 +325,83 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
         if (!_fontReady.isCompleted) _fontReady.complete();
         return;
       case 'change':
-        final content = payload is String ? payload : '';
-        _lastContent = content;
-        widget.onChanged?.call(content);
+        widget.onChanged?.call(payload is String ? payload : '');
         return;
       case 'titleChange':
         widget.onTitleChanged?.call(payload is String ? payload : '');
         return;
       case 'focusChange':
-        _focusTarget = switch (payload) {
+        if (payload == 'editor' || payload == 'title') {
+          unawaited(_attachKeyboard());
+        }
+        widget.controller?._focus.value = switch (payload) {
           'editor' => EditorFocusTarget.editor,
           'title' => EditorFocusTarget.title,
           _ => EditorFocusTarget.none,
         };
+        return;
+      case 'state':
+        if (payload is! Map) return;
+        final raw = jsonEncode(payload);
+        if (raw == _lastStateRaw) return;
+        _lastStateRaw = raw;
+        widget.controller?._state.value = EditorState.fromJson(
+          Map<String, Object?>.from(payload),
+        );
+        return;
+      case 'flushed':
+        if (payload is Map) _flushes.remove(payload['reqId'])?.complete();
+        return;
+      case 'editorTap':
+        widget.controller?.panel.showKeyboard();
+        return;
+      case 'overlay':
+        if (payload is Map && payload['open'] == true) {
+          _overlay ??= widget.controller?.suspendInput();
+        } else {
+          unawaited(_overlay?.resume());
+          _overlay = null;
+        }
+        return;
+      case 'urlTap':
+        if (payload is Map && payload['href'] is String) {
+          widget.onUrlTap?.call(payload['href'] as String);
+        }
+        return;
+      case 'attachmentTap':
+        if (payload is Map) {
+          final src = payload['src'];
+          final name = payload['name'];
+          final mime = payload['mime'];
+          if (src is String && _isSafeMediaName(src)) {
+            widget.onAttachmentTap?.call(
+              src,
+              name is String ? name : src,
+              mime is String ? mime : null,
+            );
+          }
+        }
+        return;
+      case 'copy':
+        if (payload is Map && payload['text'] is String) {
+          unawaited(Clipboard.setData(.new(text: payload['text'] as String)));
+          toast.success(message: l10n.common.copied);
+        }
+        return;
+      case 'contentError':
+        _log('content rejected by editor: $payload', level: 1000);
+        return;
+      case 'searchState':
+        if (payload is Map) {
+          final query = payload['query'];
+          final total = payload['total'];
+          final current = payload['current'];
+          widget.controller?._search.value = (
+            query: query is String ? query : '',
+            total: total is num ? total.toInt() : 0,
+            current: current is num ? current.toInt() : 0,
+          );
+        }
         return;
       case 'activeHeading':
         final index = payload is int
@@ -345,15 +411,6 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
         return;
       case 'error':
         _log('JS error: $payload', level: 1000);
-        return;
-      case 'pickImage':
-        widget.onPickImage?.call();
-        return;
-      case 'pickAudio':
-        widget.onPickAudio?.call();
-        return;
-      case 'pickVideo':
-        widget.onPickVideo?.call();
         return;
       case 'saveImage':
         if (payload is Map) {
@@ -480,6 +537,58 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     );
   }
 
+  Map<String, dynamic> _bootPayload() => {
+    'editable': !widget.readOnly,
+    'locale': LocaleSettings.currentLocale.languageCode,
+    'theme': _themePayload(),
+  };
+
+  Future<void> _respond(String reqId, Object? value) => _run(
+    'window.MoodiaryBridge.respond('
+    '${jsonEncode(reqId)},${jsonEncode(jsonEncode(value))})',
+  );
+
+  Future<void> _handleResolveMedia(String reqId, List<dynamic> items) async {
+    final resolver = widget.mediaResolver;
+    final urls = <String, String?>{};
+    await Future.wait([
+      for (final item in items.whereType<Map<dynamic, dynamic>>())
+        () async {
+          final name = item['name'];
+          if (name is! String) return;
+          final poster = item['poster'] == true;
+          String? url;
+          if (resolver != null && _isSafeMediaName(name)) {
+            try {
+              final resolved = await resolver(name, poster: poster);
+              if (resolved != null) url = Uri.file(resolved.path).toString();
+            } catch (e, s) {
+              _log(
+                'media resolve failed: $name',
+                error: e,
+                stack: s,
+                level: 1000,
+              );
+            }
+          }
+          urls[poster ? '$name#poster' : name] = url;
+        }(),
+    ]);
+    if (mounted) await _respond(reqId, urls);
+  }
+
+  // video- 长度须 ≥42：宿主 substring(6, 42) 取 uuid 依赖该长度
+  static bool _isSafeMediaName(String name) {
+    if (name.contains('/') || name.contains('\\') || name.contains('..')) {
+      return false;
+    }
+    if (name.startsWith('image-')) return name.length > 'image-'.length;
+    if (name.startsWith('audio-')) return name.length > 'audio-'.length;
+    if (name.startsWith('video-')) return name.length >= 42;
+    if (name.startsWith('file-')) return name.length > 'file-'.length;
+    return false;
+  }
+
   Future<void> _handleLinkCandidates(String reqId, String query) async {
     List<DiaryLinkCandidate> list = const [];
     try {
@@ -522,7 +631,6 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     await _setTitle(widget.initialTitle);
     await _setEditable(!widget.readOnly);
     await _setTheme();
-    await _setSaveStatus();
     await _setMeta();
     await _setLinks();
     if (_jsReady &&
@@ -535,13 +643,12 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
       if (!mounted) return;
       await _setEditable(!widget.readOnly);
       await _setTheme();
-      await _setSaveStatus();
       await _setMeta();
       await _setLinks();
     }
     if (!mounted) return;
+    if (!widget.readOnly) unawaited(_attachKeyboard());
     setState(() => _activated = true);
-    widget.onReady?.call();
   }
 
   Map<String, dynamic> _themePayload() {
@@ -553,6 +660,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
       'roles': roles,
       'dark': brightness == .dark,
       if (font != null) 'font': font.family,
+      if (font != null) 'fontUrl': Uri.file(font.path).toString(),
       if (font != null) 'fontV': _fontVersion(font),
       'firstLineIndent': widget.firstLineIndent,
       'fontScale': widget.fontScale,
@@ -598,12 +706,6 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     await _run('window.MoodiaryBridge.setEditable($value)');
   }
 
-  Future<void> _setSaveStatus() async {
-    await _run(
-      'window.MoodiaryBridge.setSaveStatus(${jsonEncode(widget.saveStatus)})',
-    );
-  }
-
   Future<void> _setMeta() async {
     await _run(
       'window.MoodiaryBridge.setMeta(${jsonEncode(widget.metaJson ?? '')})',
@@ -616,6 +718,14 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     );
   }
 
+  void _syncHandleColor() {
+    if (!Platform.isAndroid) return;
+    final argb = context.theme.colors.primary.toARGB32();
+    if (argb == _handleColor) return;
+    _handleColor = argb;
+    unawaited(_selectionHandle.setColor(argb));
+  }
+
   Future<void> _setTheme() async {
     await _run(
       'window.MoodiaryBridge.setTheme(${jsonEncode(_themePayload())})',
@@ -623,7 +733,6 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
   }
 
   Future<void> _setContent(String content) async {
-    _lastContent = content;
     await _run('window.MoodiaryBridge.setContent(${jsonEncode(content)})');
   }
 
@@ -655,30 +764,80 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
   }
 
   Future<void> _focus() async {
+    await _focusWebView();
     await _run('window.MoodiaryBridge.focus()');
+  }
+
+  Future<void> _focusWebView() async {
+    if (await _attachKeyboard()) await _keyboard.focusWebView();
   }
 
   Future<void> _blur() async {
     await _run('window.MoodiaryBridge.blur()');
   }
 
+  Future<void> _holdSelection() async {
+    await _run('window.MoodiaryBridge.holdSelection()');
+  }
+
   Future<void> _focusTitle() async {
+    await _focusWebView();
     await _run('window.MoodiaryBridge.focusTitle()');
   }
 
-  Future<void> _insertMedia(String name, [String alt = '']) async {
+  Future<void> _exec(EditorCommand command, Map<String, Object?>? args) async {
     await _run(
-      'window.MoodiaryBridge.insertMedia('
-      '${jsonEncode(name)},${jsonEncode(alt)})',
+      'window.MoodiaryBridge.exec(${jsonEncode(command.name)}'
+      '${args == null ? '' : ',${jsonEncode(args)}'})',
     );
   }
 
-  Future<void> _insertAudio(String name) async {
-    await _run('window.MoodiaryBridge.insertAudio(${jsonEncode(name)})');
+  Future<void> _flush() async {
+    if (_transport == null || !_jsReady) return;
+    final reqId = 'f${_flushSeq++}';
+    final done = _flushes[reqId] = Completer<void>();
+    await _run('window.MoodiaryBridge.flush(${jsonEncode(reqId)})');
+    await done.future.timeout(
+      const Duration(seconds: 1),
+      onTimeout: () => _flushes.remove(reqId),
+    );
   }
 
-  Future<void> _insertVideo(String name) async {
-    await _run('window.MoodiaryBridge.insertVideo(${jsonEncode(name)})');
+  Future<void> _setPanelMode(bool value) async {
+    await _run('window.MoodiaryBridge.setPanelMode($value)');
+  }
+
+  // 原生键盘只服务一个 WebView：就绪即 attach 以赶在键盘动画前，聚焦时再夺回
+  Future<bool> _attachKeyboard() async {
+    final viewId = _transport?.nativeViewId;
+    if (!_nativeKeyboard || viewId == null) return false;
+    if (_keyboardViewId == viewId) return true;
+    try {
+      await _keyboard.attach(viewId);
+    } on PlatformException catch (e, s) {
+      _log('keyboard attach failed', error: e, stack: s, level: 1000);
+      return false;
+    }
+    _keyboardViewId = viewId;
+    return true;
+  }
+
+  Future<bool> _suppressKeyboard(bool suppressed) async {
+    if (!await _attachKeyboard()) return false;
+    if (suppressed) await _setPanelMode(true);
+    final ok = await _keyboard.setKeyboardSuppressed(suppressed);
+    if (!suppressed) await _setPanelMode(false);
+    return ok;
+  }
+
+  Future<void> _dismissKeyboard() async {
+    widget.controller?._focus.value = .none;
+    await _setPanelMode(false);
+    await _blur();
+    // iOS 的收起标记不会自行清除，安卓的是一次性的
+    if (Platform.isIOS && await _attachKeyboard()) {
+      await _keyboard.setKeyboardSuppressed(false);
+    }
   }
 
   Future<void> _run(String source) async {
@@ -706,13 +865,6 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
                   textAlign: .center,
                 ),
               ),
-            )
-          else if (!_activated)
-            ColoredBox(
-              color: surface,
-              child:
-                  widget.loadingBuilder?.call(context) ??
-                  const Center(child: CircularProgressIndicator()),
             ),
         ],
       ),
@@ -722,59 +874,124 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
 
 enum EditorFocusTarget { none, editor, title }
 
-class MoodiaryEditorController {
-  _MoodiaryEditorState? _state;
+typedef EditorSearchState = ({String query, int total, int current});
 
-  void _bind(_MoodiaryEditorState state) => _state = state;
+class MoodiaryEditorController {
+  _MoodiaryEditorState? _host;
+
+  final _state = ValueNotifier<EditorState>(.empty);
+  final _focus = ValueNotifier<EditorFocusTarget>(.none);
+  final _search = ValueNotifier<EditorSearchState?>(null);
+  final _searchOpen = ValueNotifier<bool>(false);
+
+  late final ImeTarget imeTarget = _EditorImeTarget(this);
+
+  final panel = ImePanelController<EditorPanel>();
+
+  int _suspensions = 0;
+  EditorFocusTarget _resumeTo = .none;
+  Future<void> _suspended = Future.value();
+
+  bool get panelOpen => panel.type == .custom && panel.panel != .block;
+
+  void _bind(_MoodiaryEditorState state) => _host = state;
 
   void _unbind(_MoodiaryEditorState state) {
-    if (identical(_state, state)) _state = null;
+    if (identical(_host, state)) _host = null;
   }
 
-  bool get isReady => _state?._activated ?? false;
+  ValueListenable<EditorState> get state => _state;
 
-  Future<void> setContent(String content) async {
-    await _state?._setContent(content);
+  ValueListenable<EditorFocusTarget> get focusTarget => _focus;
+
+  ValueListenable<EditorSearchState?> get search => _search;
+
+  ValueListenable<bool> get searchOpen => _searchOpen;
+
+  Future<void> exec(EditorCommand command, [Map<String, Object?>? args]) async {
+    await _host?._exec(command, args);
   }
 
-  Future<String> getContent() async {
-    return _state?._lastContent ?? '';
+  Future<void> flush() async {
+    await _host?._flush();
+  }
+
+  void openSearch() => _searchOpen.value = true;
+
+  Future<void> closeSearch() async {
+    _searchOpen.value = false;
+    _search.value = null;
+    await exec(.clearSearch);
   }
 
   Future<void> focus() async {
-    await _state?._focus();
+    await _host?._focus();
   }
 
   Future<void> blur() async {
-    await _state?._blur();
+    await _host?._blur();
   }
 
   Future<void> focusTitle() async {
-    await _state?._focusTitle();
+    await _host?._focusTitle();
   }
 
-  EditorFocusTarget get focusTarget => _state?._focusTarget ?? .none;
-
-  bool get hasFocus => focusTarget != .none;
-
-  Future<void> insertMedia(String name, {String alt = ''}) async {
-    await _state?._insertMedia(name, alt);
+  Future<void> holdSelection() async {
+    await _host?._holdSelection();
   }
 
-  Future<void> insertAudio(String name) async {
-    await _state?._insertAudio(name);
+  InputSuspension suspendInput() {
+    if (_suspensions++ == 0) {
+      _resumeTo = _focus.value;
+      _suspended = _suspend(_resumeTo);
+    }
+    return InputSuspension._(this, _suspended);
   }
 
-  Future<void> insertVideo(String name) async {
-    await _state?._insertVideo(name);
+  Future<T> withInputSuspended<T>(Future<T> Function() open) async {
+    final suspension = suspendInput();
+    try {
+      await suspension.ready;
+      return await open();
+    } finally {
+      await suspension.resume();
+    }
+  }
+
+  Future<void> _suspend(EditorFocusTarget focus) async {
+    final active = focus != .none || panel.type != .none;
+    if (active) await holdSelection();
+    FocusManager.instance.primaryFocus?.unfocus();
+    if (active) await panel.release();
+  }
+
+  Future<void> _endSuspension() async {
+    if (--_suspensions > 0) return;
+    final target = _resumeTo;
+    _resumeTo = .none;
+    await _suspended;
+    if (target == .none) return;
+    // 弹层里的输入框下一帧才失焦并让 Flutter 收键盘，先等它收完，否则刚拉起的键盘会被一并收掉
+    await _textFieldReleased();
+    await panel.keyboardGone();
+    // 权限框、相机等外部界面回来时窗口还没拿回焦点，此时拉不起键盘
+    await _appResumed();
+    if (_suspensions > 0 || _focus.value != .none) return;
+    switch (target) {
+      case .editor:
+        await focus();
+      case .title:
+        await focusTitle();
+      case .none:
+    }
   }
 
   Future<void> scrollToHeading(int index) async {
-    await _state?._scrollToHeading(index);
+    await _host?._scrollToHeading(index);
   }
 
   Future<double> getScrollY() async {
-    return (await _state?._getScrollY()) ?? 0;
+    return (await _host?._getScrollY()) ?? 0;
   }
 
   Future<void> swapDocument({
@@ -782,10 +999,74 @@ class MoodiaryEditorController {
     required String title,
     double scrollY = 0,
   }) async {
-    await _state?._swapDocument(
+    await _host?._swapDocument(
       content: content,
       title: title,
       scrollY: scrollY,
     );
+  }
+}
+
+Future<void> _textFieldReleased() async {
+  final manager = FocusManager.instance;
+  bool editing() =>
+      manager.primaryFocus?.context
+          ?.findAncestorStateOfType<EditableTextState>() !=
+      null;
+  if (!editing()) return;
+  final released = Completer<void>();
+  void onFocus() {
+    if (!editing() && !released.isCompleted) released.complete();
+  }
+
+  manager.addListener(onFocus);
+  await released.future;
+  manager.removeListener(onFocus);
+}
+
+Future<void> _appResumed() async {
+  if (WidgetsBinding.instance.lifecycleState == .resumed) return;
+  final resumed = Completer<void>();
+  final listener = AppLifecycleListener(onResume: resumed.complete);
+  await resumed.future;
+  listener.dispose();
+}
+
+final class InputSuspension {
+  final MoodiaryEditorController _controller;
+  final Future<void> ready;
+  bool _resumed = false;
+
+  InputSuspension._(this._controller, this.ready);
+
+  Future<void> resume() async {
+    if (_resumed) return;
+    _resumed = true;
+    await _controller._endSuspension();
+  }
+}
+
+final class _EditorImeTarget implements ImeTarget {
+  final MoodiaryEditorController _controller;
+
+  _EditorImeTarget(this._controller);
+
+  @override
+  late final ValueListenable<bool> focused = _FocusedListenable(
+    _controller._focus,
+  );
+
+  @override
+  Future<bool> suppressKeyboard(bool suppressed) async =>
+      await _controller._host?._suppressKeyboard(suppressed) ?? false;
+
+  @override
+  Future<void> dismiss() async => _controller._host?._dismissKeyboard();
+}
+
+class _FocusedListenable extends ValueNotifier<bool> {
+  _FocusedListenable(ValueListenable<EditorFocusTarget> source)
+    : super(source.value != EditorFocusTarget.none) {
+    source.addListener(() => value = source.value != EditorFocusTarget.none);
   }
 }

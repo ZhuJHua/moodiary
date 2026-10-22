@@ -45,6 +45,7 @@ class PdfStyle {
   final bool includeMeta;
   final String videoLabel;
   final String audioLabel;
+  final String attachmentLabel;
 
   const PdfStyle({
     required this.fontPath,
@@ -59,6 +60,7 @@ class PdfStyle {
     required this.includeMeta,
     required this.videoLabel,
     required this.audioLabel,
+    required this.attachmentLabel,
   });
 
   @override
@@ -74,7 +76,8 @@ class PdfStyle {
       includeTitle.hashCode ^
       includeMeta.hashCode ^
       videoLabel.hashCode ^
-      audioLabel.hashCode;
+      audioLabel.hashCode ^
+      attachmentLabel.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -92,5 +95,6 @@ class PdfStyle {
           includeTitle == other.includeTitle &&
           includeMeta == other.includeMeta &&
           videoLabel == other.videoLabel &&
-          audioLabel == other.audioLabel;
+          audioLabel == other.audioLabel &&
+          attachmentLabel == other.attachmentLabel;
 }

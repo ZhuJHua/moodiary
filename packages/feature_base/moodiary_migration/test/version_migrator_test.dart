@@ -99,6 +99,25 @@ void main() {
     });
   });
 
+  group('内容 schema v2 闸门', () {
+    setUp(() => getIt.registerSingleton<IKVStorage>(MemoryKVStorage()));
+    tearDown(getIt.reset);
+
+    test('全新安装直接视为已升级', () async {
+      await VersionMigrator.apply(currentVersion: '2.9.0+120');
+      expect(MoodiaryKVs.contentSchemaV2.get(), isTrue);
+      expect(MoodiaryKVs.searchIndexBackfilled.get(), isTrue);
+      expect(MoodiaryKVs.appVersion.get(), '2.9.0+120');
+    });
+
+    test('老用户升级不动标志，留给迁移页', () async {
+      MoodiaryKVs.appVersion.set('2.8.2+96');
+      await VersionMigrator.apply(currentVersion: '2.9.0+120');
+      expect(MoodiaryKVs.contentSchemaV2.get(), isFalse);
+      expect(MoodiaryKVs.appVersion.get(), '2.9.0+120');
+    });
+  });
+
   final dylib = Platform.environment['ISAR_TEST_DYLIB'];
   if (dylib == null || dylib.isEmpty) {
     test(

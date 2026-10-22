@@ -203,7 +203,7 @@ void main() {
         ]).last,
         {
           'type': 'audio',
-          'attrs': {'filename': 'audio-1.m4a'},
+          'attrs': {'src': 'audio-1.m4a'},
         },
       );
       expect(
@@ -215,7 +215,7 @@ void main() {
         ]).last,
         {
           'type': 'video',
-          'attrs': {'filename': 'video-1.mp4'},
+          'attrs': {'src': 'video-1.mp4'},
         },
       );
     });
@@ -350,7 +350,7 @@ void main() {
         },
         {
           'type': 'audio',
-          'attrs': {'filename': 'audio-1.m4a'},
+          'attrs': {'src': 'audio-1.m4a'},
         },
       ]);
     });
@@ -367,7 +367,7 @@ void main() {
       expect(blocks, [
         {
           'type': 'video',
-          'attrs': {'filename': 'video-1.mp4'},
+          'attrs': {'src': 'video-1.mp4'},
         },
         {
           'type': 'codeBlock',

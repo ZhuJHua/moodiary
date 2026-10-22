@@ -1411,7 +1411,6 @@ final class Schema3 extends i0.VersionedSchema {
     idxTombstonesTime,
     categories,
     fonts,
-    mediaInfos,
     places,
     idxDiariesShowTime,
     idxDiariesShowCatTime,
@@ -1657,17 +1656,6 @@ final class Schema3 extends i0.VersionedSchema {
     ),
     alias: null,
   );
-  late final Shape14 mediaInfos = Shape14(
-    source: i0.VersionedTable(
-      entityName: 'media_infos',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [],
-      columns: [_column_75, _column_76, _column_77, _column_9],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
   late final Shape15 places = Shape15(
     source: i0.VersionedTable(
       entityName: 'places',
@@ -1698,13 +1686,13 @@ final class Schema3 extends i0.VersionedSchema {
     'idx_diaries_show_lastmod',
     'CREATE INDEX idx_diaries_show_lastmod ON diaries (show, last_modified DESC, id DESC)',
   );
-  late final Shape16 diaryMedia = Shape16(
+  late final Shape21 diaryMedia = Shape21(
     source: i0.VersionedTable(
       entityName: 'diary_media',
       withoutRowId: false,
       isStrict: false,
       tableConstraints: ['PRIMARY KEY(diary_id, kind, seq)'],
-      columns: [_column_81, _column_82, _column_21, _column_83],
+      columns: [_column_81, _column_82, _column_21, _column_83, _column_76],
       attachedDatabase: database,
     ),
     alias: null,
@@ -1736,7 +1724,7 @@ final class Schema3 extends i0.VersionedSchema {
     'idx_diary_links_dst',
     'CREATE INDEX idx_diary_links_dst ON diary_links (dst_id)',
   );
-  late final Shape21 diaryFts = Shape21(
+  late final Shape22 diaryFts = Shape22(
     source: i0.VersionedVirtualTable(
       entityName: 'diary_fts',
       moduleAndArgs: 'fts5(title, content_text, content=\'diaries\', content_rowid=\'rid\', tokenize=\'simple\')',
@@ -1837,8 +1825,22 @@ i1.GeneratedColumn<String> _column_86(String aliasedName) =>
       $customConstraints: '',
     );
 
-class Shape21 extends i0.VersionedVirtualTable {
+class Shape21 extends i0.VersionedTable {
   Shape21({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<String> get diaryId =>
+      columnsByName['diary_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get kind =>
+      columnsByName['kind']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get seq =>
+      columnsByName['seq']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get fileName =>
+      columnsByName['file_name']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get name =>
+      columnsByName['name']! as i1.GeneratedColumn<String>;
+}
+
+class Shape22 extends i0.VersionedVirtualTable {
+  Shape22({required super.source, required super.alias}) : super.aliased();
   i1.GeneratedColumn<String> get title =>
       columnsByName['title']! as i1.GeneratedColumn<String>;
   i1.GeneratedColumn<String> get contentText =>

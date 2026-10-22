@@ -1,7 +1,8 @@
 enum MediaType {
   image(0, 'image'),
   audio(1, 'audio'),
-  video(2, 'video');
+  video(2, 'video'),
+  file(3, 'file');
 
   const MediaType(this.number, this.value);
 
@@ -16,6 +17,7 @@ enum MediaType {
       'image' => MediaType.image,
       'audio' => MediaType.audio,
       'video' => MediaType.video,
+      'file' => MediaType.file,
       'thumbnail' => MediaType.video,
       _ => throw UnimplementedError('Unknown media type: $value'),
     };

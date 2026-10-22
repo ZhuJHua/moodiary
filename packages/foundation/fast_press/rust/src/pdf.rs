@@ -9,7 +9,10 @@ use typst::text::{Font, FontBook};
 use typst::utils::LazyHash;
 use typst::{Library, LibraryExt, World};
 
-use crate::ir::{IrBlock, IrDoc, IrListItem, IrRow, IrSpan};
+use crate::ir::{
+    IrBlock, IrDividerVariant, IrDoc, IrListItem, IrRow, IrSpan, attachment_line, divider_label,
+    media_width_percent,
+};
 
 pub struct PdfStyle {
     pub font_path: String,
@@ -24,7 +27,15 @@ pub struct PdfStyle {
     pub include_meta: bool,
     pub video_label: String,
     pub audio_label: String,
+    pub attachment_label: String,
 }
+
+const RULE: &str = "0.5pt + luma(180)";
+const HIGHLIGHT_FILL: &str = "rgb(\"#fff0a0\")";
+const WAVY: &str = "layout(size => curve(stroke: 0.6pt + luma(170), curve.move((0pt, 1.5pt)), \
+    curve.quad((2pt, -3pt), (4pt, 0pt), relative: true), \
+    ..range(calc.max(calc.floor(size.width / 4pt) - 1, 0))\
+    .map(i => curve.quad(auto, (4pt, 0pt), relative: true))))";
 
 pub fn write_pdf(
     docs: Vec<IrDoc>,
@@ -272,11 +283,7 @@ impl<'a> Markup<'a> {
                 );
             }
 
-            IrBlock::Divider => {
-                self.out.push_str(
-                    "#v(0.4em)\n#line(length: 100%, stroke: 0.5pt + luma(180))\n#v(0.4em)\n",
-                );
-            }
+            IrBlock::Divider { variant, label } => self.divider(*variant, label.as_deref()),
 
             IrBlock::Image {
                 path,
@@ -287,12 +294,19 @@ impl<'a> Markup<'a> {
 
             IrBlock::Media {
                 kind,
+                name,
                 filename,
                 cover_path,
+                width_percent,
                 ..
             } => {
                 if let Some(cover) = cover_path.as_deref() {
-                    self.image(cover, None, Some(60), false);
+                    self.image(
+                        cover,
+                        name.as_deref(),
+                        Some(width_percent.unwrap_or(60)),
+                        false,
+                    );
                 }
                 let label = if kind == "video" {
                     &self.style.video_label
@@ -303,12 +317,52 @@ impl<'a> Markup<'a> {
                     self.out,
                     "#text(size: {}pt, fill: luma(120), {})",
                     self.style.font_size_pt * 0.85,
-                    string_literal(&format!("[{label}] {filename}"))
+                    string_literal(&format!(
+                        "[{label}] {}",
+                        name.as_deref().unwrap_or(filename)
+                    ))
+                );
+            }
+
+            IrBlock::Attachment { name, size, .. } => {
+                let _ = writeln!(
+                    self.out,
+                    "#text(size: {}pt, fill: luma(120), {})",
+                    self.style.font_size_pt * 0.85,
+                    string_literal(&attachment_line(&self.style.attachment_label, name, *size))
                 );
             }
 
             IrBlock::Table { rows } => self.table(rows),
         }
+    }
+
+    fn divider(&mut self, variant: IrDividerVariant, label: Option<&str>) {
+        let line = |stroke: &str| format!("line(length: 100%, stroke: {stroke})");
+        let body = match variant {
+            IrDividerVariant::Solid => line(RULE),
+            IrDividerVariant::Dashed => {
+                line("(paint: luma(180), thickness: 0.6pt, dash: \"dashed\")")
+            }
+            IrDividerVariant::Dotted => {
+                line("(paint: luma(160), thickness: 1pt, dash: \"dotted\")")
+            }
+            IrDividerVariant::Double => {
+                format!("stack(spacing: 1.5pt, {}, {})", line(RULE), line(RULE))
+            }
+            IrDividerVariant::Wavy => WAVY.to_string(),
+            IrDividerVariant::Text => match divider_label(variant, label) {
+                Some(label) => format!(
+                    "grid(columns: (1fr, auto, 1fr), column-gutter: 0.8em, align: horizon, {}, text(size: {}pt, fill: luma(120), {}), {})",
+                    line(RULE),
+                    self.style.font_size_pt * 0.85,
+                    string_literal(label),
+                    line(RULE)
+                ),
+                None => line(RULE),
+            },
+        };
+        let _ = writeln!(self.out, "#v(0.4em)\n#{body}\n#v(0.4em)");
     }
 
     fn list(&mut self, ordered: bool, start: usize, items: &[IrListItem]) {
@@ -414,7 +468,7 @@ impl<'a> Markup<'a> {
         let name = format!("img/{}.{extension}", self.images.len());
         self.images.push((name.clone(), bytes));
 
-        let width = width_percent.unwrap_or(100).clamp(10, 100);
+        let width = media_width_percent(width_percent);
         let alt_arg = alt
             .filter(|a| !a.trim().is_empty())
             .map(|a| format!(", alt: {}", string_literal(a)))
@@ -459,9 +513,19 @@ impl<'a> Markup<'a> {
     }
 
     fn styled(&self, span: &IrSpan, line: &str) -> String {
-        if span.code {
-            return format!("raw({})", string_literal(line));
+        let body = if span.code {
+            format!("raw({})", string_literal(line))
+        } else {
+            self.decorated(span, line)
+        };
+        if span.highlight {
+            format!("highlight(fill: {HIGHLIGHT_FILL}, {body})")
+        } else {
+            body
         }
+    }
+
+    fn decorated(&self, span: &IrSpan, line: &str) -> String {
         let mut body = text_call(line, self.style);
         if span.bold {
             body = format!("strong({body})");
@@ -486,7 +550,7 @@ enum InlinePiece {
 
 fn merge_whitespace_spans(spans: &[IrSpan]) -> Vec<InlinePiece> {
     fn marks_whitespace(span: &IrSpan) -> bool {
-        span.strike || span.underline || span.code
+        span.strike || span.underline || span.code || span.highlight
     }
     fn blank(text: &str) -> bool {
         !text.is_empty() && text.chars().all(|c| c == ' ' || c == '\t')
@@ -618,6 +682,7 @@ mod tests {
             include_meta: true,
             video_label: "Video".into(),
             audio_label: "Audio".into(),
+            attachment_label: "File".into(),
         }
     }
 
@@ -673,7 +738,10 @@ mod tests {
                         ..Default::default()
                     },
                 ]),
-                IrBlock::Divider,
+                IrBlock::Divider {
+                    variant: IrDividerVariant::Solid,
+                    label: None,
+                },
                 IrBlock::Quote {
                     children: vec![fixture::text_para("quoted")],
                 },
@@ -798,6 +866,136 @@ mod tests {
         let err = write_pdf(docs, &bad, out.clone(), &|| false).unwrap_err();
         assert!(err.to_string().contains("读取字体失败"));
         assert!(!std::path::Path::new(&out).exists(), "失败时不应留下文件");
+    }
+
+    pub(super) fn rendered(blocks: Vec<IrBlock>) -> (String, Vec<typst::visualize::Shape>) {
+        fn walk(
+            frame: &typst::layout::Frame,
+            text: &mut String,
+            shapes: &mut Vec<typst::visualize::Shape>,
+        ) {
+            for (_pos, item) in frame.items() {
+                match item {
+                    typst::layout::FrameItem::Text(t) => text.push_str(&t.text),
+                    typst::layout::FrameItem::Shape(sh, _) => shapes.push(sh.clone()),
+                    typst::layout::FrameItem::Group(g) => walk(&g.frame, text, shapes),
+                    _ => {}
+                }
+            }
+        }
+
+        let font_blob = std::fs::read(font_path()).unwrap();
+        let st = style();
+        let mut g = Markup::new(&st);
+        g.document(&[fixture::doc(blocks)], &|| false).unwrap();
+        let (source, images) = g.finish();
+        let world = MoodiaryWorld::new(source, font_blob, images).unwrap();
+        let doc = typst::compile(&world)
+            .output
+            .unwrap_or_else(|e| panic!("排版失败：{e:?}"));
+        let _ = typst_pdf::pdf(&doc, &typst_pdf::PdfOptions::default()).unwrap();
+        let (mut text, mut shapes) = (String::new(), Vec::new());
+        for page in doc.pages() {
+            walk(&page.frame, &mut text, &mut shapes);
+        }
+        (text, shapes)
+    }
+
+    fn divider(variant: IrDividerVariant, label: Option<&str>) -> IrBlock {
+        IrBlock::Divider {
+            variant,
+            label: label.map(Into::into),
+        }
+    }
+
+    fn line_count(shapes: &[typst::visualize::Shape]) -> usize {
+        shapes
+            .iter()
+            .filter(|s| matches!(s.geometry, typst::visualize::Geometry::Line(_)))
+            .count()
+    }
+
+    #[test]
+    fn divider_variants_draw_their_shape() {
+        let (_, solid) = rendered(vec![divider(IrDividerVariant::Solid, None)]);
+        assert_eq!(line_count(&solid), 1, "实线应当画一条");
+
+        let (_, double) = rendered(vec![divider(IrDividerVariant::Double, None)]);
+        assert_eq!(line_count(&double), 2, "双线应当画两条");
+
+        for variant in [IrDividerVariant::Dashed, IrDividerVariant::Dotted] {
+            let (_, shapes) = rendered(vec![divider(variant, None)]);
+            assert!(
+                shapes
+                    .iter()
+                    .any(|s| s.stroke.as_ref().is_some_and(|k| k.dash.is_some())),
+                "{variant:?} 应当带 dash"
+            );
+        }
+
+        let (_, wavy) = rendered(vec![divider(IrDividerVariant::Wavy, None)]);
+        assert!(
+            wavy.iter()
+                .any(|s| matches!(s.geometry, typst::visualize::Geometry::Curve(_))),
+            "波浪线应当是一条曲线"
+        );
+
+        let (text, labelled) = rendered(vec![divider(IrDividerVariant::Text, Some("Day two"))]);
+        assert!(
+            text.contains("Day two"),
+            "文字分隔线应当画出标签，实际：{text:?}"
+        );
+        assert_eq!(line_count(&labelled), 2, "标签两侧各一条线");
+
+        let (_, blank) = rendered(vec![divider(IrDividerVariant::Text, Some("  "))]);
+        assert_eq!(line_count(&blank), 1, "空标签退化成实线");
+    }
+
+    #[test]
+    fn attachment_renders_name_and_size() {
+        let (text, _) = rendered(vec![
+            IrBlock::Attachment {
+                name: "report.pdf".into(),
+                filename: "file-0190aa11.pdf".into(),
+                path: "/nowhere/file-0190aa11.pdf".into(),
+                mime: Some("application/pdf".into()),
+                size: Some(2048),
+            },
+            IrBlock::Attachment {
+                name: "notes.txt".into(),
+                filename: "file-0190aa12.txt".into(),
+                path: "/nowhere/file-0190aa12.txt".into(),
+                mime: None,
+                size: None,
+            },
+        ]);
+        assert!(
+            text.contains("[File] report.pdf · 2.0 KB"),
+            "实际：{text:?}"
+        );
+        assert!(text.contains("[File] notes.txt"), "实际：{text:?}");
+    }
+
+    #[test]
+    fn media_label_prefers_name() {
+        let media = |kind: &str, name: Option<&str>, filename: &str| IrBlock::Media {
+            kind: kind.into(),
+            name: name.map(Into::into),
+            filename: filename.into(),
+            path: format!("/nowhere/{filename}"),
+            cover_path: None,
+            width_percent: None,
+        };
+        let (text, _) = rendered(vec![
+            media("audio", Some("Morning walk"), "audio-0190aa11.m4a"),
+            media("video", None, "video-0190aa12.mp4"),
+        ]);
+        assert!(text.contains("[Audio] Morning walk"), "实际：{text:?}");
+        assert!(!text.contains("audio-0190aa11"), "有名字时不露文件名");
+        assert!(
+            text.contains("[Video] video-0190aa12.mp4"),
+            "实际：{text:?}"
+        );
     }
 
     #[test]
@@ -949,6 +1147,43 @@ mod whitespace_between_marks {
             (lines[0] - expected).abs() < 0.01,
             "删除线长 {:.2}pt，应当等于 \"AAA\" 的 {:.2}pt（渗出去了）",
             lines[0],
+            expected
+        );
+    }
+
+    #[test]
+    fn highlight_paints_only_its_word() {
+        let (text, shapes) = super::tests::rendered(vec![fixture::para(vec![
+            IrSpan {
+                text: "AAA".into(),
+                highlight: true,
+                ..Default::default()
+            },
+            fixture::sp(" "),
+            fixture::sp("BBB"),
+        ])]);
+        assert!(text.contains("AAA"));
+        let rects: Vec<_> = shapes
+            .iter()
+            .filter_map(|s| match s.geometry {
+                typst::visualize::Geometry::Rect(size) => Some((size, &s.fill)),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(rects.len(), 1);
+        let (size, fill) = rects[0];
+        assert!(
+            matches!(fill, Some(typst::visualize::Paint::Solid(c)) if {
+                let rgb = c.to_rgb();
+                (rgb.red - 1.0).abs() < 0.01 && (rgb.blue - 160.0 / 255.0).abs() < 0.01
+            }),
+            "高亮应当铺一块底色"
+        );
+        let expected = word_width("AAA");
+        assert!(
+            (size.x.to_pt() - expected).abs() < 0.01,
+            "高亮宽 {:.2}pt，应当等于 \"AAA\" 的 {:.2}pt",
+            size.x.to_pt(),
             expected
         );
     }
