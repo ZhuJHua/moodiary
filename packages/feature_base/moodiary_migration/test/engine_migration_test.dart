@@ -12,6 +12,7 @@ import 'package:moodiary_migration/src/legacy/legacy_models.dart' as legacy;
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
 String tiptapDoc(
   String text, {
@@ -273,6 +274,76 @@ void main() {
       db.diaries,
     )..addColumns([countAll()])).getSingle();
     expect(row.read(countAll()), 6);
+  });
+
+  test('Isar 录音名称写入 v2 正文，保留已有名称和时间戳', () async {
+    final original = legacyDiary('d-audio', '录音').copyWith(
+      content: jsonEncode({
+        'type': 'doc',
+        'content': [
+          for (final (src, name) in [
+            ('audio-named.m4a', null),
+            ('audio-inline.m4a', '正文名称'),
+            ('audio-blank.m4a', null),
+            ('audio-missing.m4a', null),
+          ])
+            {
+              'type': 'audio',
+              'attrs': {'filename': src, 'name': ?name},
+            },
+          {
+            'type': 'image',
+            'attrs': {'src': 'image-x.jpg'},
+          },
+        ],
+      }),
+      audioName: const [
+        'audio-named.m4a',
+        'audio-inline.m4a',
+        'audio-blank.m4a',
+        'audio-missing.m4a',
+      ],
+      imageName: const ['image-x.jpg'],
+    );
+    final isar = Isar.open(
+      schemas: legacy.moodiarySchemas,
+      directory: dir.path,
+      inspector: false,
+    );
+    isar.write((isar) {
+      isar.diarys.put(original);
+      isar.mediaInfos.putAll([
+        for (final (src, name) in [
+          ('audio-named.m4a', '  旧库录音名称  '),
+          ('audio-inline.m4a', '过时名称'),
+          ('audio-blank.m4a', '  '),
+          ('image-x.jpg', '图片名称'),
+        ])
+          legacy.MediaInfo(
+            fileName: src,
+            name: name,
+            lastModified: original.lastModified,
+          ),
+      ]);
+    });
+    isar.close();
+
+    final repo = DiaryRepository(db);
+    for (var attempt = 0; attempt < 2; attempt++) {
+      await migrate();
+      await repo.upgradeContentSchema();
+      final migrated = (await repo.getDiaryByBusinessId(original.id))!;
+      final parsed = TiptapContent.parse(migrated.content);
+      expect(parsed.isLegacy, isFalse);
+      expect(parsed.mediaNames, {
+        'audio-named.m4a': '旧库录音名称',
+        'audio-inline.m4a': '正文名称',
+      });
+      expect(parsed.media.audios, original.audioName);
+      expect(migrated.contentText, contains('旧库录音名称'));
+      expect(migrated.time, original.time);
+      expect(migrated.lastModified, original.lastModified);
+    }
   });
 
   test('搬迁不产生本地变更事件（fromSync）', () async {

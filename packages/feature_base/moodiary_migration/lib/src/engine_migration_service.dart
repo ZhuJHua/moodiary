@@ -9,6 +9,7 @@ import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_migration/src/legacy/legacy_models.dart' as legacy;
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
 class EngineMigrationService {
   const EngineMigrationService._();
@@ -90,6 +91,13 @@ class EngineMigrationService {
           '拒绝用空库覆盖',
         );
       }
+      // Isar names must reach the body before insertDiaries normalizes it to v2;
+      // the SQLite schema migration runs before these legacy rows are copied.
+      final audioNames = {
+        for (final info in await isar.mediaInfos.where().findAllAsync())
+          if (info.name?.trim() case final name? when name.isNotEmpty)
+            info.fileName: name,
+      };
       await db.clearAll();
 
       const batch = 256;
@@ -142,7 +150,16 @@ class EngineMigrationService {
               id: d.id,
               categoryId: d.categoryId,
               title: d.title,
-              content: d.content,
+              content: d.type == DiaryType.tiptap.value
+                  ? TiptapContent.mapMediaNames(
+                      d.content,
+                      (type, src, name) =>
+                          type == 'audio' &&
+                              (name == null || name.trim().isEmpty)
+                          ? audioNames[src] ?? name
+                          : name,
+                    )
+                  : d.content,
               contentText: d.contentText,
               time: d.time,
               lastModified: d.lastModified,

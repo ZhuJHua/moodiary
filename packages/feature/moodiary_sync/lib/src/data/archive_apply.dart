@@ -591,21 +591,14 @@ class ArchiveApplier {
   }
 
   Future<String?> _readLegacyAudioName(String src) async {
-    try {
-      final bytes = await backend.readObject(SyncKeys.mediaInfoObjectPath(src));
-      if (bytes == null) return null;
-      final info = await (await _cipher()).decode(bytes);
-      final name = info is Map ? info['name'] : null;
-      final trimmed = name is String ? name.trim() : '';
-      return trimmed.isEmpty ? null : trimmed;
-    } catch (e) {
-      _logger.warn(
-        .diaryDownload,
-        reason: .decodeFailed,
-        payload: {'filename': src, 'detail': e.toString()},
-      );
-      return null;
-    }
+    // Missing metadata is compatible; read/decode failures must block the diary
+    // write so the unchanged remote timestamp remains eligible for a retry.
+    final bytes = await backend.readObject(SyncKeys.mediaInfoObjectPath(src));
+    if (bytes == null) return null;
+    final info = await (await _cipher()).decode(bytes);
+    final name = info is Map ? info['name'] : null;
+    final trimmed = name is String ? name.trim() : '';
+    return trimmed.isEmpty ? null : trimmed;
   }
 
   Future<void> _adoptLegacyPosition(Map<String, dynamic> decoded) async {

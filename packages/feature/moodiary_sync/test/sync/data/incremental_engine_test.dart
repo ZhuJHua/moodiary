@@ -1301,6 +1301,85 @@ void main() {
       },
     );
 
+    for (final failure in ['read', 'decode', 'decrypt']) {
+      for (final hasLocal in [false, true]) {
+        test('$failure failure preserves the local diary and can retry '
+            '(hasLocal=$hasLocal)', () async {
+          final backend = FakeRemoteBackend();
+          seedLegacyRemote(backend, docOf(v2: false));
+          final path = SyncKeys.mediaInfoObjectPath(audio);
+          final metadata = backend.objects[path]!;
+          switch (failure) {
+            case 'read':
+              backend.beforeOp = (op, key) {
+                if (op == 'read' && key == path) {
+                  throw const SyncException('temporary metadata read failure');
+                }
+              };
+            case 'decode':
+              backend.objects[path] = Uint8List.fromList(utf8.encode('{'));
+            case 'decrypt':
+              backend.objects[path] = Uint8List.fromList(
+                utf8.encode('${SyncCipher.magic}encrypted'),
+              );
+          }
+          final previous = buildDiary(id: 'a', modifiedMs: 500);
+          final local = FakeDiaryStore([if (hasLocal) previous]);
+          final engine = engineOn(backend, diaries: local);
+
+          final failed = await engine.pull();
+
+          expect(failed.failed, 1);
+          expect(failed.diaryCount, 0);
+          expect(local.diaries['a'], hasLocal ? previous : isNull);
+          expect(local.writeOrigins, isEmpty);
+          expect(MoodiaryKVs.lastSyncTime.get(), anyOf(isNull, 0));
+
+          backend.beforeOp = null;
+          backend.objects[path] = metadata;
+          final retried = await engine.pull();
+
+          expect(retried.failed, 0);
+          expect(retried.diaryCount, 1);
+          final saved = local.diaries['a']!;
+          expect(TiptapContent.parse(saved.content).mediaNames, {
+            audio: 'Voice memo',
+          });
+          expect(saved.lastModified, atMs(1000));
+          expect(local.writeOrigins['a'], isTrue);
+          expect(MoodiaryKVs.lastSyncTime.get(), greaterThan(0));
+        });
+      }
+    }
+
+    for (final missing in ['object', 'name', 'blank name']) {
+      test(
+        'missing legacy $missing still allows the diary to be pulled',
+        () async {
+          final backend = FakeRemoteBackend();
+          seedLegacyRemote(backend, docOf(v2: false));
+          final path = SyncKeys.mediaInfoObjectPath(audio);
+          if (missing == 'object') {
+            backend.objects.remove(path);
+          } else {
+            backend.objects[path] = jsonBytes({
+              'fileName': audio,
+              if (missing == 'blank name') 'name': '  ',
+            });
+          }
+          final local = FakeDiaryStore();
+
+          final report = await engineOn(backend, diaries: local).pull();
+
+          expect(report.failed, 0);
+          expect(report.diaryCount, 1);
+          final saved = local.diaries['a']!;
+          expect(TiptapContent.parse(saved.content).mediaNames, isEmpty);
+          expect(saved.lastModified, atMs(1000));
+        },
+      );
+    }
+
     test(
       'push keeps existing m: manifest entries and objects untouched',
       () async {
