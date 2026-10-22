@@ -122,7 +122,7 @@ class ImportMediaStage {
   AttachmentInfo? attachmentInfo(String name) => _attachments[name];
 
   static final RegExp _link = RegExp(
-    r'(!?)\[((?:[^\]\\]|\\.)*)\]\(\s*(<[^>]*>|[^\s)]+)(?:\s+"[^"]*")?\s*\)',
+    r'(!?)\[((?:[^\]\\]|\\.)*)\]\(\s*(<[^>]*>|[^\s)]+)(?:\s+"([^"]*)")?\s*\)',
   );
   static final RegExp _scheme = RegExp(r'^[a-zA-Z][a-zA-Z0-9+.\-]*:');
 
@@ -218,8 +218,20 @@ class ImportMediaStage {
           : m.group(2);
       return '[$text]($name)';
     }
-    final alt = kind == .image
-        ? m.group(2)!
+    var label = m.group(2)!;
+    if (m.group(1) != '!' && kind != .image) {
+      final withoutPrefix = label.replaceFirst(_exportMediaPrefix, '');
+      if (withoutPrefix != label) {
+        label = withoutPrefix == p.basename(resolved) ? '' : withoutPrefix;
+      }
+    }
+    final title = m.group(4);
+    final alt = label.trim().isNotEmpty
+        ? label
+        : title != null && title.trim().isNotEmpty
+        ? title.replaceAllMapped(_punctuation, (c) => '\\${c[0]}')
+        : kind == .image
+        ? ''
         : p
               .basenameWithoutExtension(resolved)
               .replaceAllMapped(_punctuation, (c) => '\\${c[0]}');
@@ -227,6 +239,9 @@ class ImportMediaStage {
   }
 
   static final RegExp _punctuation = RegExp(r'[!-/:-@\[-`{-~]');
+  static final RegExp _exportMediaPrefix = RegExp(
+    r'^(?:Video|Audio|视频|音频)[：:]\s*',
+  );
 
   Future<String?> _save(String path, ImportMediaKind kind) async {
     if (_saved.containsKey(path)) return _saved[path];

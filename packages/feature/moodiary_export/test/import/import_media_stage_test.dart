@@ -63,7 +63,7 @@ void main() {
     outsideRoot.deleteSync(recursive: true);
   });
 
-  test('三类媒体改写成入库名，视频 / 音频统一为图片语法、以文件名为名', () async {
+  test('媒体改写成入库名并保留链接文字或标题，无名称才使用文件名', () async {
     final out = await stage.rewrite(
       '![封面](assets/pic.jpg)\n'
       '[视频：clip.mp4](assets/video/clip.mp4)\n'
@@ -73,7 +73,7 @@ void main() {
     );
     expect(
       out,
-      '![封面](image-1.jpg)\n![clip](video-2.mp4)\n![song](audio-3.m4a)\n'
+      '![封面](image-1.jpg)\n![clip](video-2.mp4)\n![title](audio-3.m4a)\n'
       r'![my\_song\[1\]](audio-4.m4a)',
     );
     final json = MarkdownToTiptap.convert(out);
@@ -85,7 +85,7 @@ void main() {
       [
         ('image', '封面'),
         ('video', 'clip'),
-        ('audio', 'song'),
+        ('audio', 'title'),
         ('audio', 'my_song[1]'),
       ],
     );
@@ -96,6 +96,62 @@ void main() {
       ImportMediaKind.audio,
     ]);
     expect(stage.missing, 0);
+  });
+
+  test('媒体文件的自定义名称和转义字符经过导入后仍保留', () async {
+    final out = await stage.rewrite(
+      r'![晨间\[录音\]](assets/song.m4a)'
+      '\n\n'
+      '[海边](assets/video/clip.mp4)\n\n'
+      '![](assets/pic.jpg "封面")',
+      md,
+    );
+    final nodes = jsonDecode(MarkdownToTiptap.convert(out)!)['content'] as List;
+    expect(nodes.map((n) => n['attrs']['name']), ['晨间[录音]', '海边', '封面']);
+  });
+
+  test('音视频 Markdown 导出后再导入保留名称，类型前缀不进入名称', () async {
+    for (final rel in [
+      'audio/audio-original.m4a',
+      'video/video-original.mp4',
+    ]) {
+      File(p.join(root.path, 'assets', rel))
+        ..createSync(recursive: true)
+        ..writeAsBytesSync([0]);
+    }
+    final doc = TiptapToIr.convert(
+      id: 'd',
+      title: '',
+      time: DateTime(2026),
+      content: jsonEncode({
+        'type': 'doc',
+        'content': [
+          {
+            'type': 'audio',
+            'attrs': {'src': 'audio-original.m4a', 'name': '晨间[录音]'},
+          },
+          {
+            'type': 'video',
+            'attrs': {'src': 'video-original.mp4', 'name': '海边'},
+          },
+        ],
+      }),
+      resolvePath: (kind, name) => '/data/$kind/$name',
+    );
+    final exported = MarkdownWriter.write(
+      doc,
+      const MarkdownOptions(frontMatter: false, includeTitle: false),
+    );
+    final rewritten = await stage.rewrite(exported, md);
+    final nodes =
+        jsonDecode(MarkdownToTiptap.convert(rewritten)!)['content'] as List;
+    expect(nodes.map((n) => n['attrs']['name']), ['晨间[录音]', '海边']);
+
+    final english = await stage.rewrite('[Audio：Morning](assets/song.m4a)', md);
+    final audio =
+        (jsonDecode(MarkdownToTiptap.convert(english)!)['content'] as List)
+            .single;
+    expect(audio['attrs']['name'], 'Morning');
   });
 
   test('百分号编码与尖括号目标都能解析', () async {

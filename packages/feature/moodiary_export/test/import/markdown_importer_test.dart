@@ -174,7 +174,7 @@ tags: ["a"]
       ],
       [
         (MediaKind.image, '图'),
-        (MediaKind.video, 'v'),
+        (MediaKind.video, '视频'),
         (MediaKind.attachment, '报告.pdf'),
       ],
     );
