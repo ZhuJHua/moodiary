@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -148,6 +149,32 @@ void main() {
       diary.contentText.substring(hit.startOff, hit.startOff + hit.len),
       contains('旅行'),
     );
+  });
+
+  test('媒体重命名更新向量索引，语义搜索使用新名称', () async {
+    await repo.insertADiary(
+      makeDiary('recording', '').copyWith(
+        content: jsonEncode({
+          'type': 'doc',
+          'attrs': {'v': 2},
+          'content': [
+            {
+              'type': 'audio',
+              'attrs': {'src': 'audio-1.m4a', 'name': '工作'},
+            },
+          ],
+        }),
+        audioName: const ['audio-1.m4a'],
+      ),
+    );
+    await repo.insertADiary(makeDiary('other', '美食'));
+    await index.drain();
+    final embedded = embedder.embeddedPassages;
+
+    expect(await repo.renameMedia(.audio, 'audio-1.m4a', '旅行'), 1);
+    expect(await index.drain(), 1);
+    expect(embedder.embeddedPassages, greaterThan(embedded));
+    expect((await index.search('旅行', limit: 1)).single.diaryId, 'recording');
   });
 
   test('硬删除由排空回收孤儿分块与向量', () async {

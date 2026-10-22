@@ -304,6 +304,7 @@ class DiaryRepository {
         await _syncChildren(next);
         out.add(next);
       }
+      await _enqueueEmbed(out.map((diary) => diary.id));
       return out;
     });
     for (final diary in written) {
@@ -998,8 +999,7 @@ class DiaryRepository {
     var mediaFixed = 0;
     var orphanCategoryFixed = 0;
 
-    for (var i = 0; i < diaries.length; i++) {
-      final diary = diaries[i];
+    for (final diary in diaries) {
       var next = _canonical(diary);
       final derived = DiaryContent.of(next);
       var changed = !identical(next, diary);
