@@ -17,5 +17,8 @@ List<(String, String)> collectDiaryMediaEntries(Diary diary) {
     final thumb = videoThumbnailName(name);
     if (thumb != null) entries.add(('video', thumb));
   }
+  for (final name in diary.fileName) {
+    entries.add(('file', name));
+  }
   return entries;
 }

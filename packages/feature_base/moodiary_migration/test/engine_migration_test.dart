@@ -12,8 +12,13 @@ import 'package:moodiary_migration/src/legacy/legacy_models.dart' as legacy;
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
-String tiptapDoc(String text, {List<String> linkTo = const []}) => jsonEncode({
+String tiptapDoc(
+  String text, {
+  List<String> linkTo = const [],
+  List<String> images = const [],
+}) => jsonEncode({
   'type': 'doc',
   'content': [
     {
@@ -27,6 +32,11 @@ String tiptapDoc(String text, {List<String> linkTo = const []}) => jsonEncode({
           },
       ],
     },
+    for (final name in images)
+      {
+        'type': 'image',
+        'attrs': {'filename': name},
+      },
   ],
 });
 
@@ -43,7 +53,7 @@ legacy.Diary legacyDiary(
 }) => legacy.Diary(
   id: id,
   title: 'title-$id',
-  content: tiptapDoc(text, linkTo: linkTo),
+  content: tiptapDoc(text, linkTo: linkTo, images: images),
   contentText: text,
   time: DateTime.utc(2026, 1, 1, 8),
   lastModified: DateTime.utc(2026, 1, 2, 8),
@@ -123,14 +133,6 @@ void main() {
           fontWghtAxisMap: {'wght': 400},
         ),
       );
-      isar.mediaInfos.put(
-        legacy.MediaInfo(
-          fileName: 'audio-1.m4a',
-          name: '晨间录音',
-          durationMs: 1234,
-          lastModified: now,
-        ),
-      );
       isar.syncTombstones.put(
         legacy.SyncTombstone(
           key: 'd:deleted-diary',
@@ -204,7 +206,6 @@ void main() {
     categoryRepository: CategoryRepository(db),
     placeRepository: PlaceRepository(db),
     fontRepository: FontRepository(db),
-    mediaInfoRepository: MediaInfoRepository(db),
     tombstoneRepository: TombstoneRepository(db),
     legacyDir: dir.path,
   );
@@ -248,9 +249,6 @@ void main() {
       (await FontRepository(db).getFontByFontFamily('LXGW'))!.fontWghtAxisMap,
       {'wght': 400},
     );
-    final mediaInfo = await MediaInfoRepository(db)
-        .getMediaInfoByFileName('audio-1.m4a');
-    expect(mediaInfo!.durationMs, 1234);
     final tombstone = await TombstoneRepository(db).getByKey('d:deleted-diary');
     expect(tombstone!.pushedBackends, ['backend-a']);
 
@@ -278,6 +276,76 @@ void main() {
     expect(row.read(countAll()), 6);
   });
 
+  test('Isar 录音名称写入 v2 正文，保留已有名称和时间戳', () async {
+    final original = legacyDiary('d-audio', '录音').copyWith(
+      content: jsonEncode({
+        'type': 'doc',
+        'content': [
+          for (final (src, name) in [
+            ('audio-named.m4a', null),
+            ('audio-inline.m4a', '正文名称'),
+            ('audio-blank.m4a', null),
+            ('audio-missing.m4a', null),
+          ])
+            {
+              'type': 'audio',
+              'attrs': {'filename': src, 'name': ?name},
+            },
+          {
+            'type': 'image',
+            'attrs': {'src': 'image-x.jpg'},
+          },
+        ],
+      }),
+      audioName: const [
+        'audio-named.m4a',
+        'audio-inline.m4a',
+        'audio-blank.m4a',
+        'audio-missing.m4a',
+      ],
+      imageName: const ['image-x.jpg'],
+    );
+    final isar = Isar.open(
+      schemas: legacy.moodiarySchemas,
+      directory: dir.path,
+      inspector: false,
+    );
+    isar.write((isar) {
+      isar.diarys.put(original);
+      isar.mediaInfos.putAll([
+        for (final (src, name) in [
+          ('audio-named.m4a', '  旧库录音名称  '),
+          ('audio-inline.m4a', '过时名称'),
+          ('audio-blank.m4a', '  '),
+          ('image-x.jpg', '图片名称'),
+        ])
+          legacy.MediaInfo(
+            fileName: src,
+            name: name,
+            lastModified: original.lastModified,
+          ),
+      ]);
+    });
+    isar.close();
+
+    final repo = DiaryRepository(db);
+    for (var attempt = 0; attempt < 2; attempt++) {
+      await migrate();
+      await repo.upgradeContentSchema();
+      final migrated = (await repo.getDiaryByBusinessId(original.id))!;
+      final parsed = TiptapContent.parse(migrated.content);
+      expect(parsed.isLegacy, isFalse);
+      expect(parsed.mediaNames, {
+        'audio-named.m4a': '旧库录音名称',
+        'audio-inline.m4a': '正文名称',
+      });
+      expect(parsed.media.audios, original.audioName);
+      expect(migrated.contentText, contains('旧库录音名称'));
+      expect(migrated.time, original.time);
+      expect(migrated.lastModified, original.lastModified);
+    }
+  });
+
   test('搬迁不产生本地变更事件（fromSync）', () async {
     seedLegacy();
     final repo = DiaryRepository(db);
@@ -297,7 +365,6 @@ void main() {
       categoryRepository: CategoryRepository(db),
       placeRepository: PlaceRepository(db),
       fontRepository: FontRepository(db),
-      mediaInfoRepository: MediaInfoRepository(db),
       tombstoneRepository: TombstoneRepository(db),
       legacyDir: dir.path,
     );

@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'tiptap_content.dart';
+
 class QuillDeltaToTiptap {
   const QuillDeltaToTiptap._();
 
@@ -54,7 +56,7 @@ class QuillDeltaToTiptap {
     if (current.segs.isNotEmpty) close(const <String, dynamic>{});
 
     final content = _buildBlocks(lines);
-    return jsonEncode({'type': 'doc', 'content': content});
+    return jsonEncode(TiptapContent.newDoc(content));
   }
 
   static List<Map<String, dynamic>> _buildBlocks(List<_Line> lines) {
@@ -250,12 +252,12 @@ class QuillDeltaToTiptap {
       case 'audio':
         return {
           'type': 'audio',
-          'attrs': {'filename': seg.name},
+          'attrs': {'src': seg.name},
         };
       case 'video':
         return {
           'type': 'video',
-          'attrs': {'filename': seg.name},
+          'attrs': {'src': seg.name},
         };
       default:
         return {'type': 'paragraph'};

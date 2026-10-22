@@ -1,6 +1,6 @@
 use flutter_rust_bridge::frb;
 
-pub use crate::ir::{IrBlock, IrCell, IrDoc, IrListItem, IrRow, IrSpan};
+pub use crate::ir::{IrBlock, IrCell, IrDividerVariant, IrDoc, IrListItem, IrRow, IrSpan};
 
 #[frb(mirror(IrDoc))]
 pub struct _IrDoc {
@@ -22,6 +22,7 @@ pub struct _IrSpan {
     pub strike: bool,
     pub underline: bool,
     pub code: bool,
+    pub highlight: bool,
     pub href: Option<String>,
     pub diary_link_id: Option<String>,
 }
@@ -46,6 +47,16 @@ pub struct _IrCell {
     pub header: bool,
 }
 
+#[frb(mirror(IrDividerVariant))]
+pub enum _IrDividerVariant {
+    Solid,
+    Dashed,
+    Dotted,
+    Double,
+    Wavy,
+    Text,
+}
+
 #[frb(mirror(IrBlock))]
 pub enum _IrBlock {
     Paragraph {
@@ -67,7 +78,10 @@ pub enum _IrBlock {
         language: Option<String>,
         text: String,
     },
-    Divider,
+    Divider {
+        variant: IrDividerVariant,
+        label: Option<String>,
+    },
     Image {
         path: String,
         alt: Option<String>,
@@ -76,9 +90,18 @@ pub enum _IrBlock {
     },
     Media {
         kind: String,
+        name: Option<String>,
         filename: String,
         path: String,
         cover_path: Option<String>,
+        width_percent: Option<u32>,
+    },
+    Attachment {
+        name: String,
+        filename: String,
+        path: String,
+        mime: Option<String>,
+        size: Option<i64>,
     },
     Table {
         rows: Vec<IrRow>,

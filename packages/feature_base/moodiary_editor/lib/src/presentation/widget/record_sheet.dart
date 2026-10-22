@@ -233,9 +233,7 @@ class _RecordSheetState extends State<RecordSheet> {
           const SizedBox(height: 8),
           Text(
             _fmt(_elapsed),
-            style: context.theme.typography.titleMedium.onSurface.copyWith(
-              fontFeatures: const [.tabularFigures()],
-            ),
+            style: context.theme.typography.titleMedium.onSurface.tabular,
           ),
           const SizedBox(height: 12),
           Row(

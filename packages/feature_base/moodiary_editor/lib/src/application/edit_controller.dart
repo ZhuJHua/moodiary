@@ -247,5 +247,6 @@ class EditController extends _$EditController {
       d.contentText.trim().isEmpty &&
       d.imageName.isEmpty &&
       d.audioName.isEmpty &&
-      d.videoName.isEmpty;
+      d.videoName.isEmpty &&
+      d.fileName.isEmpty;
 }

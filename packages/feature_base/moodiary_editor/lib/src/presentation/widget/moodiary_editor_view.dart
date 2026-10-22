@@ -13,7 +13,12 @@ import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_theme/moodiary_theme.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:open_file/open_file.dart';
 import 'package:path/path.dart' as p;
+import 'package:url_launcher/url_launcher.dart';
+
+import '../../toolbar/editor_toolbar_host.dart';
+import '../../toolbar/insert_panel.dart';
 
 class MoodiaryEditorView extends StatefulWidget {
   final String initialContent;
@@ -31,8 +36,6 @@ class MoodiaryEditorView extends StatefulWidget {
   final bool firstLineIndent;
 
   final double fontScale;
-
-  final String saveStatus;
 
   final ValueChanged<String>? onOpenDiaryLink;
 
@@ -55,6 +58,8 @@ class MoodiaryEditorView extends StatefulWidget {
   final VoidCallback? onClearPosition;
   final VoidCallback? onOpenGraph;
 
+  final Widget? statusBar;
+
   const MoodiaryEditorView({
     super.key,
     required this.initialContent,
@@ -66,7 +71,6 @@ class MoodiaryEditorView extends StatefulWidget {
     this.editable = true,
     this.firstLineIndent = false,
     this.fontScale = 1.0,
-    this.saveStatus = 'idle',
     this.onOpenDiaryLink,
     this.metaJson,
     this.linksJson,
@@ -86,6 +90,7 @@ class MoodiaryEditorView extends StatefulWidget {
     this.onManagePlaces,
     this.onClearPosition,
     this.onOpenGraph,
+    this.statusBar,
   });
 
   @override
@@ -95,17 +100,83 @@ class MoodiaryEditorView extends StatefulWidget {
 class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
   late final _controller = widget.controller ?? MoodiaryEditorController();
 
-  Future<void> _pickImages() async {
-    final files = await getIt<IFilePicker>().pickImages(context);
-    if (files.isEmpty) return;
-    await _insertPicked(files);
+  Future<void> _onInsertMedia(InsertItem item) async {
+    try {
+      await _controller.withInputSuspended(() => _insertMedia(item));
+    } catch (e, s) {
+      logger.e('insert ${item.name} failed', error: e, stackTrace: s);
+      if (mounted) {
+        toast.error(message: context.l10n.editor.toolbar.insertFailed);
+      }
+    }
   }
 
-  Future<void> _insertPicked(List<XFile> files) async {
+  Future<void> _insertMedia(InsertItem item) async {
+    switch (item) {
+      case .gallery:
+        await _insertImages(await getIt<IFilePicker>().pickImages(context));
+      case .camera:
+        final photo = await getIt<IFilePicker>().takePhoto();
+        if (photo != null) await _insertImages([photo]);
+      case .video:
+        await _pickVideo();
+      case .record:
+        await _recordAudio();
+      case .audio:
+        await _pickAudioFile();
+      case .attachment:
+        await _pickAttachment();
+      default:
+    }
+  }
+
+  Future<void> _insertImages(List<XFile> files) async {
     for (final file in files) {
       final name = await MediaManager.saveImage(file);
       if (name == null) continue;
-      await _controller.insertMedia(name);
+      await _controller.exec(.insertImage, {'name': name});
+    }
+  }
+
+  Future<void> _pickAttachment() async {
+    final file = await getIt<IFilePicker>().pickFile();
+    if (file == null) return;
+    final saved = await MediaManager.saveAttachment(file);
+    if (saved == null) {
+      if (mounted) {
+        toast.error(message: context.l10n.editor.toolbar.attachmentFailed);
+      }
+      return;
+    }
+    await _controller.exec(.insertAttachment, {
+      'name': saved.name,
+      'displayName': saved.fileName,
+      'mime': saved.mime,
+      'size': saved.size,
+    });
+  }
+
+  Future<void> _openAttachment(String src, String name, String? mime) async {
+    final result = await OpenFile.open(
+      AppFiles.getRealPath('file', src),
+      type: mime,
+    );
+    if (result.type != .done && mounted) {
+      toast.error(message: context.l10n.editor.toolbar.openFailed);
+    }
+  }
+
+  // 链接来自用户内容，javascript: / file: / intent: 一律不开
+  static const _openableSchemes = {'http', 'https', 'mailto', 'tel', 'sms'};
+
+  Future<void> _openUrl(String href) async {
+    final uri = Uri.tryParse(href);
+    final opened =
+        uri != null &&
+        _openableSchemes.contains(uri.scheme.toLowerCase()) &&
+        await launchUrl(uri, mode: .externalApplication);
+    if (!opened && mounted) {
+      toast.error(message: context.l10n.editor.toolbar.openFailed);
     }
   }
 
@@ -143,38 +214,10 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
     if (file == null) return;
     final saved = await MediaManager.saveVideo(videoFileList: [file]);
     final name = saved[file.path];
-    if (name != null) await _controller.insertVideo(name);
+    if (name != null) await _controller.exec(.insertVideo, {'name': name});
   }
 
-  void _showAudioDialog() {
-    showDialog<void>(
-      context: context,
-      builder: (sheetContext) {
-        return SimpleDialog(
-          title: Text(context.l10n.editor.pickAudio),
-          children: [
-            SimpleDialogOption(
-              onPressed: () => _pickAudioFile(sheetContext),
-              child: _DialogRow(
-                icon: LucideIcons.fileAudio,
-                label: context.l10n.editor.pickAudioFromFile,
-              ),
-            ),
-            SimpleDialogOption(
-              onPressed: () => _recordAudio(sheetContext),
-              child: _DialogRow(
-                icon: LucideIcons.mic,
-                label: context.l10n.editor.pickAudioFromRecord,
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _pickAudioFile(BuildContext sheetContext) async {
-    Navigator.of(sheetContext).pop();
+  Future<void> _pickAudioFile() async {
     String? name;
     try {
       final file = await getIt<IFilePicker>().pickAudio();
@@ -189,53 +232,29 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
         if (mounted) toast.error(message: context.l10n.editor.audioFileError);
         return;
       }
-      await _saveMediaInfo(
-        name,
-        title: p.basenameWithoutExtension(file.path),
-        duration: duration,
-      );
-      await _controller.insertAudio(name);
+      final title = p.basenameWithoutExtension(file.path);
+      await _controller.exec(.insertAudio, {
+        'name': name,
+        'displayName': title,
+      });
     } catch (_) {
       if (name != null) {
-        try {
-          await AppFiles.deleteFile(AppFiles.getRealPath('audio', name));
-        } catch (_) {}
+        await AppFiles.deleteFile(AppFiles.getRealPath('audio', name));
       }
       if (mounted) toast.error(message: context.l10n.editor.audioFileError);
     }
   }
 
-  Future<void> _recordAudio(BuildContext sheetContext) async {
-    Navigator.of(sheetContext).pop();
+  Future<void> _recordAudio() async {
     final result = await MSheet.show<RecordSaveResult>(
       context,
       builder: (_) => const RecordSheet(),
     );
     if (result == null) return;
-    await _saveMediaInfo(
-      result.fileName,
-      title: result.name,
-      duration: result.duration,
-    );
-    await _controller.insertAudio(result.fileName);
-  }
-
-  Future<void> _saveMediaInfo(
-    String fileName, {
-    String? title,
-    Duration? duration,
-  }) async {
-    try {
-      await getIt<MediaInfoRepository>().insertAMediaInfo(
-        MediaInfo.create(
-          fileName: fileName,
-          name: title,
-          durationMs: duration?.inMilliseconds,
-        ),
-      );
-    } catch (e, s) {
-      logger.e('save media info failed: $fileName', error: e, stackTrace: s);
-    }
+    await _controller.exec(.insertAudio, {
+      'name': result.fileName,
+      'displayName': result.name,
+    });
   }
 
   void _previewImages(List<String> images, int index) {
@@ -276,7 +295,9 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
     final title = d.title.trim();
     if (title.isNotEmpty) return title;
     final date = TimeFormat.isoDate(d.time);
-    final snippet = d.contentText.trim().replaceAll(RegExp(r'\s+'), ' ');
+    final snippet = MediaMarkup.strip(d.contentText)
+        .trim()
+        .replaceAll(RegExp(r'\s+'), ' ');
     if (snippet.isEmpty) return date;
     final clipped = snippet.length > 16
         ? '${snippet.substring(0, 16)}…'
@@ -286,6 +307,16 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
 
   @override
   Widget build(BuildContext context) {
+    return EditorToolbarHost(
+      controller: _controller,
+      editable: widget.editable,
+      onInsertMedia: _onInsertMedia,
+      statusBar: widget.statusBar,
+      child: _buildEditor(),
+    );
+  }
+
+  Widget _buildEditor() {
     return MoodiaryEditor(
       controller: _controller,
       readOnly: !widget.editable,
@@ -294,9 +325,8 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       onChanged: widget.onChanged,
       onTitleChanged: widget.onTitleChanged,
       onActiveHeadingChanged: widget.onActiveHeadingChanged,
-      onPickImage: _pickImages,
-      onPickAudio: _showAudioDialog,
-      onPickVideo: _pickVideo,
+      onUrlTap: _openUrl,
+      onAttachmentTap: _openAttachment,
       onSaveImage: _saveDataUriImage,
       onImageTap: _previewImages,
       onVideoFullscreen: _openVideoFullscreen,
@@ -320,27 +350,11 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       onManagePlaces: widget.onManagePlaces,
       onClearPosition: widget.onClearPosition,
       onOpenGraph: widget.onOpenGraph,
-      saveStatus: widget.saveStatus,
       firstLineIndent: widget.firstLineIndent,
       fontScale: widget.fontScale,
       rolesResolver: getIt<ThemeManager>().editorRoles,
       fontResolver: () => getIt<ThemeManager>().editorFont,
       mediaResolver: appMediaResolver,
-      mediaNameResolver: (name) async =>
-          (await getIt<MediaInfoRepository>().getMediaInfoByFileName(name))
-              ?.name,
-      loadingBuilder: (_) => const MLoading(),
     );
-  }
-}
-
-class _DialogRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  const _DialogRow({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(children: [Icon(icon), const SizedBox(width: 12), Text(label)]);
   }
 }

@@ -4,6 +4,7 @@ import 'package:moodiary_models/moodiary_models.dart';
 export 'package:fast_press/fast_press.dart'
     show
         IrBlock,
+        IrBlock_Attachment,
         IrBlock_Code,
         IrBlock_Divider,
         IrBlock_Heading,
@@ -14,6 +15,7 @@ export 'package:fast_press/fast_press.dart'
         IrBlock_Quote,
         IrBlock_Table,
         IrCell,
+        IrDividerVariant,
         IrRow,
         IrDoc,
         IrListItem,
@@ -70,6 +72,7 @@ IrSpan irSpan(
   bool strike = false,
   bool underline = false,
   bool code = false,
+  bool highlight = false,
   String? href,
   String? diaryLinkId,
 }) => IrSpan(
@@ -79,6 +82,7 @@ IrSpan irSpan(
   strike: strike,
   underline: underline,
   code: code,
+  highlight: highlight,
   href: href,
   diaryLinkId: diaryLinkId,
 );
@@ -90,10 +94,31 @@ extension IrSpanX on IrSpan {
       !strike &&
       !underline &&
       !code &&
+      !highlight &&
       href == null &&
       diaryLinkId == null;
 }
 
 extension IrListX on IrBlock_List {
   bool get isTask => items.any((i) => i.checked != null);
+}
+
+extension IrDividerX on IrBlock_Divider {
+  String? get visibleLabel {
+    if (variant != .text) return null;
+    final trimmed = label?.trim() ?? '';
+    return trimmed.isEmpty ? null : trimmed;
+  }
+}
+
+String formatByteSize(int bytes) {
+  const units = ['KB', 'MB', 'GB', 'TB'];
+  if (bytes < 1024) return '${bytes < 0 ? 0 : bytes} B';
+  var value = bytes / 1024;
+  var unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit++;
+  }
+  return '${value.toStringAsFixed(value < 10 ? 1 : 0)} ${units[unit]}';
 }

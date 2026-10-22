@@ -21,6 +21,7 @@ pub struct _DocxStyle {
     pub page_break_between: bool,
     pub video_label: String,
     pub audio_label: String,
+    pub attachment_label: String,
 }
 
 pub fn write_docx(

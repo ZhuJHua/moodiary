@@ -17,6 +17,9 @@ class MobileFilePicker implements IFilePicker {
   }
 
   @override
+  Future<XFile?> takePhoto() => MAssetPicker.takePhoto();
+
+  @override
   Future<XFile?> pickAudio() async {
     final res = await fp.FilePicker.pickFile(type: .audio);
     return res?.xFile;

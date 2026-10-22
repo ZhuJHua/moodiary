@@ -504,6 +504,7 @@ const _: fn() = || {
         let _: bool = DocxStyle.page_break_between;
         let _: String = DocxStyle.video_label;
         let _: String = DocxStyle.audio_label;
+        let _: String = DocxStyle.attachment_label;
     }
     match None::<crate::api::ir::IrBlock>.unwrap() {
         crate::api::ir::IrBlock::Paragraph { spans } => {
@@ -529,7 +530,10 @@ const _: fn() = || {
             let _: Option<String> = language;
             let _: String = text;
         }
-        crate::api::ir::IrBlock::Divider => {}
+        crate::api::ir::IrBlock::Divider { variant, label } => {
+            let _: crate::api::ir::IrDividerVariant = variant;
+            let _: Option<String> = label;
+        }
         crate::api::ir::IrBlock::Image {
             path,
             alt,
@@ -543,14 +547,31 @@ const _: fn() = || {
         }
         crate::api::ir::IrBlock::Media {
             kind,
+            name,
             filename,
             path,
             cover_path,
+            width_percent,
         } => {
             let _: String = kind;
+            let _: Option<String> = name;
             let _: String = filename;
             let _: String = path;
             let _: Option<String> = cover_path;
+            let _: Option<u32> = width_percent;
+        }
+        crate::api::ir::IrBlock::Attachment {
+            name,
+            filename,
+            path,
+            mime,
+            size,
+        } => {
+            let _: String = name;
+            let _: String = filename;
+            let _: String = path;
+            let _: Option<String> = mime;
+            let _: Option<i64> = size;
         }
         crate::api::ir::IrBlock::Table { rows } => {
             let _: Vec<crate::api::ir::IrRow> = rows;
@@ -592,6 +613,7 @@ const _: fn() = || {
         let _: bool = IrSpan.strike;
         let _: bool = IrSpan.underline;
         let _: bool = IrSpan.code;
+        let _: bool = IrSpan.highlight;
         let _: Option<String> = IrSpan.href;
         let _: Option<String> = IrSpan.diary_link_id;
     }
@@ -609,6 +631,7 @@ const _: fn() = || {
         let _: bool = PdfStyle.include_meta;
         let _: String = PdfStyle.video_label;
         let _: String = PdfStyle.audio_label;
+        let _: String = PdfStyle.attachment_label;
     }
 };
 
@@ -624,6 +647,32 @@ impl CstDecode<f64> for f64 {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> f64 {
         self
+    }
+}
+impl CstDecode<i32> for i32 {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> i32 {
+        self
+    }
+}
+impl CstDecode<i64> for i64 {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> i64 {
+        self
+    }
+}
+impl CstDecode<crate::api::ir::IrDividerVariant> for i32 {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::api::ir::IrDividerVariant {
+        match self {
+            0 => crate::api::ir::IrDividerVariant::Solid,
+            1 => crate::api::ir::IrDividerVariant::Dashed,
+            2 => crate::api::ir::IrDividerVariant::Dotted,
+            3 => crate::api::ir::IrDividerVariant::Double,
+            4 => crate::api::ir::IrDividerVariant::Wavy,
+            5 => crate::api::ir::IrDividerVariant::Text,
+            _ => unreachable!("Invalid variant for IrDividerVariant: {}", self),
+        }
     }
 }
 impl CstDecode<u32> for u32 {
@@ -743,6 +792,7 @@ impl SseDecode for crate::api::docx::DocxStyle {
         let mut var_pageBreakBetween = <bool>::sse_decode(deserializer);
         let mut var_videoLabel = <String>::sse_decode(deserializer);
         let mut var_audioLabel = <String>::sse_decode(deserializer);
+        let mut var_attachmentLabel = <String>::sse_decode(deserializer);
         return crate::api::docx::DocxStyle {
             east_asia_font: var_eastAsiaFont,
             ascii_font: var_asciiFont,
@@ -757,6 +807,7 @@ impl SseDecode for crate::api::docx::DocxStyle {
             page_break_between: var_pageBreakBetween,
             video_label: var_videoLabel,
             audio_label: var_audioLabel,
+            attachment_label: var_attachmentLabel,
         };
     }
 }
@@ -765,6 +816,20 @@ impl SseDecode for f64 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_f64::<NativeEndian>().unwrap()
+    }
+}
+
+impl SseDecode for i32 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        deserializer.cursor.read_i32::<NativeEndian>().unwrap()
+    }
+}
+
+impl SseDecode for i64 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        deserializer.cursor.read_i64::<NativeEndian>().unwrap()
     }
 }
 
@@ -810,7 +875,12 @@ impl SseDecode for crate::api::ir::IrBlock {
                 };
             }
             5 => {
-                return crate::api::ir::IrBlock::Divider;
+                let mut var_variant = <crate::api::ir::IrDividerVariant>::sse_decode(deserializer);
+                let mut var_label = <Option<String>>::sse_decode(deserializer);
+                return crate::api::ir::IrBlock::Divider {
+                    variant: var_variant,
+                    label: var_label,
+                };
             }
             6 => {
                 let mut var_path = <String>::sse_decode(deserializer);
@@ -826,17 +896,35 @@ impl SseDecode for crate::api::ir::IrBlock {
             }
             7 => {
                 let mut var_kind = <String>::sse_decode(deserializer);
+                let mut var_name = <Option<String>>::sse_decode(deserializer);
                 let mut var_filename = <String>::sse_decode(deserializer);
                 let mut var_path = <String>::sse_decode(deserializer);
                 let mut var_coverPath = <Option<String>>::sse_decode(deserializer);
+                let mut var_widthPercent = <Option<u32>>::sse_decode(deserializer);
                 return crate::api::ir::IrBlock::Media {
                     kind: var_kind,
+                    name: var_name,
                     filename: var_filename,
                     path: var_path,
                     cover_path: var_coverPath,
+                    width_percent: var_widthPercent,
                 };
             }
             8 => {
+                let mut var_name = <String>::sse_decode(deserializer);
+                let mut var_filename = <String>::sse_decode(deserializer);
+                let mut var_path = <String>::sse_decode(deserializer);
+                let mut var_mime = <Option<String>>::sse_decode(deserializer);
+                let mut var_size = <Option<i64>>::sse_decode(deserializer);
+                return crate::api::ir::IrBlock::Attachment {
+                    name: var_name,
+                    filename: var_filename,
+                    path: var_path,
+                    mime: var_mime,
+                    size: var_size,
+                };
+            }
+            9 => {
                 let mut var_rows = <Vec<crate::api::ir::IrRow>>::sse_decode(deserializer);
                 return crate::api::ir::IrBlock::Table { rows: var_rows };
             }
@@ -861,6 +949,22 @@ impl SseDecode for crate::api::ir::IrCell {
             rowspan: var_rowspan,
             align: var_align,
             header: var_header,
+        };
+    }
+}
+
+impl SseDecode for crate::api::ir::IrDividerVariant {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::api::ir::IrDividerVariant::Solid,
+            1 => crate::api::ir::IrDividerVariant::Dashed,
+            2 => crate::api::ir::IrDividerVariant::Dotted,
+            3 => crate::api::ir::IrDividerVariant::Double,
+            4 => crate::api::ir::IrDividerVariant::Wavy,
+            5 => crate::api::ir::IrDividerVariant::Text,
+            _ => unreachable!("Invalid variant for IrDividerVariant: {}", inner),
         };
     }
 }
@@ -918,6 +1022,7 @@ impl SseDecode for crate::api::ir::IrSpan {
         let mut var_strike = <bool>::sse_decode(deserializer);
         let mut var_underline = <bool>::sse_decode(deserializer);
         let mut var_code = <bool>::sse_decode(deserializer);
+        let mut var_highlight = <bool>::sse_decode(deserializer);
         let mut var_href = <Option<String>>::sse_decode(deserializer);
         let mut var_diaryLinkId = <Option<String>>::sse_decode(deserializer);
         return crate::api::ir::IrSpan {
@@ -927,6 +1032,7 @@ impl SseDecode for crate::api::ir::IrSpan {
             strike: var_strike,
             underline: var_underline,
             code: var_code,
+            highlight: var_highlight,
             href: var_href,
             diary_link_id: var_diaryLinkId,
         };
@@ -1051,6 +1157,17 @@ impl SseDecode for Option<bool> {
     }
 }
 
+impl SseDecode for Option<i64> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<i64>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<u32> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1077,6 +1194,7 @@ impl SseDecode for crate::api::pdf::PdfStyle {
         let mut var_includeMeta = <bool>::sse_decode(deserializer);
         let mut var_videoLabel = <String>::sse_decode(deserializer);
         let mut var_audioLabel = <String>::sse_decode(deserializer);
+        let mut var_attachmentLabel = <String>::sse_decode(deserializer);
         return crate::api::pdf::PdfStyle {
             font_path: var_fontPath,
             font_family: var_fontFamily,
@@ -1090,6 +1208,7 @@ impl SseDecode for crate::api::pdf::PdfStyle {
             include_meta: var_includeMeta,
             video_label: var_videoLabel,
             audio_label: var_audioLabel,
+            attachment_label: var_attachmentLabel,
         };
     }
 }
@@ -1117,13 +1236,6 @@ impl SseDecode for usize {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_u64::<NativeEndian>().unwrap() as _
-    }
-}
-
-impl SseDecode for i32 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        deserializer.cursor.read_i32::<NativeEndian>().unwrap()
     }
 }
 
@@ -1216,6 +1328,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::docx::DocxStyle> {
             self.0.page_break_between.into_into_dart().into_dart(),
             self.0.video_label.into_into_dart().into_dart(),
             self.0.audio_label.into_into_dart().into_dart(),
+            self.0.attachment_label.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -1264,7 +1377,12 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::ir::IrBlock> {
                 text.into_into_dart().into_dart(),
             ]
             .into_dart(),
-            crate::api::ir::IrBlock::Divider => [5.into_dart()].into_dart(),
+            crate::api::ir::IrBlock::Divider { variant, label } => [
+                5.into_dart(),
+                variant.into_into_dart().into_dart(),
+                label.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
             crate::api::ir::IrBlock::Image {
                 path,
                 alt,
@@ -1280,19 +1398,38 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::ir::IrBlock> {
             .into_dart(),
             crate::api::ir::IrBlock::Media {
                 kind,
+                name,
                 filename,
                 path,
                 cover_path,
+                width_percent,
             } => [
                 7.into_dart(),
                 kind.into_into_dart().into_dart(),
+                name.into_into_dart().into_dart(),
                 filename.into_into_dart().into_dart(),
                 path.into_into_dart().into_dart(),
                 cover_path.into_into_dart().into_dart(),
+                width_percent.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::api::ir::IrBlock::Attachment {
+                name,
+                filename,
+                path,
+                mime,
+                size,
+            } => [
+                8.into_dart(),
+                name.into_into_dart().into_dart(),
+                filename.into_into_dart().into_dart(),
+                path.into_into_dart().into_dart(),
+                mime.into_into_dart().into_dart(),
+                size.into_into_dart().into_dart(),
             ]
             .into_dart(),
             crate::api::ir::IrBlock::Table { rows } => {
-                [8.into_dart(), rows.into_into_dart().into_dart()].into_dart()
+                [9.into_dart(), rows.into_into_dart().into_dart()].into_dart()
             }
             _ => {
                 unimplemented!("");
@@ -1332,6 +1469,31 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::ir::IrCell>>
     for crate::api::ir::IrCell
 {
     fn into_into_dart(self) -> FrbWrapper<crate::api::ir::IrCell> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::ir::IrDividerVariant> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self.0 {
+            crate::api::ir::IrDividerVariant::Solid => 0.into_dart(),
+            crate::api::ir::IrDividerVariant::Dashed => 1.into_dart(),
+            crate::api::ir::IrDividerVariant::Dotted => 2.into_dart(),
+            crate::api::ir::IrDividerVariant::Double => 3.into_dart(),
+            crate::api::ir::IrDividerVariant::Wavy => 4.into_dart(),
+            crate::api::ir::IrDividerVariant::Text => 5.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crate::api::ir::IrDividerVariant>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::ir::IrDividerVariant>>
+    for crate::api::ir::IrDividerVariant
+{
+    fn into_into_dart(self) -> FrbWrapper<crate::api::ir::IrDividerVariant> {
         self.into()
     }
 }
@@ -1410,6 +1572,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::ir::IrSpan> {
             self.0.strike.into_into_dart().into_dart(),
             self.0.underline.into_into_dart().into_dart(),
             self.0.code.into_into_dart().into_dart(),
+            self.0.highlight.into_into_dart().into_dart(),
             self.0.href.into_into_dart().into_dart(),
             self.0.diary_link_id.into_into_dart().into_dart(),
         ]
@@ -1443,6 +1606,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::pdf::PdfStyle> {
             self.0.include_meta.into_into_dart().into_dart(),
             self.0.video_label.into_into_dart().into_dart(),
             self.0.audio_label.into_into_dart().into_dart(),
+            self.0.attachment_label.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -1550,6 +1714,7 @@ impl SseEncode for crate::api::docx::DocxStyle {
         <bool>::sse_encode(self.page_break_between, serializer);
         <String>::sse_encode(self.video_label, serializer);
         <String>::sse_encode(self.audio_label, serializer);
+        <String>::sse_encode(self.attachment_label, serializer);
     }
 }
 
@@ -1557,6 +1722,20 @@ impl SseEncode for f64 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         serializer.cursor.write_f64::<NativeEndian>(self).unwrap();
+    }
+}
+
+impl SseEncode for i32 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        serializer.cursor.write_i32::<NativeEndian>(self).unwrap();
+    }
+}
+
+impl SseEncode for i64 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        serializer.cursor.write_i64::<NativeEndian>(self).unwrap();
     }
 }
 
@@ -1592,8 +1771,10 @@ impl SseEncode for crate::api::ir::IrBlock {
                 <Option<String>>::sse_encode(language, serializer);
                 <String>::sse_encode(text, serializer);
             }
-            crate::api::ir::IrBlock::Divider => {
+            crate::api::ir::IrBlock::Divider { variant, label } => {
                 <i32>::sse_encode(5, serializer);
+                <crate::api::ir::IrDividerVariant>::sse_encode(variant, serializer);
+                <Option<String>>::sse_encode(label, serializer);
             }
             crate::api::ir::IrBlock::Image {
                 path,
@@ -1609,18 +1790,36 @@ impl SseEncode for crate::api::ir::IrBlock {
             }
             crate::api::ir::IrBlock::Media {
                 kind,
+                name,
                 filename,
                 path,
                 cover_path,
+                width_percent,
             } => {
                 <i32>::sse_encode(7, serializer);
                 <String>::sse_encode(kind, serializer);
+                <Option<String>>::sse_encode(name, serializer);
                 <String>::sse_encode(filename, serializer);
                 <String>::sse_encode(path, serializer);
                 <Option<String>>::sse_encode(cover_path, serializer);
+                <Option<u32>>::sse_encode(width_percent, serializer);
+            }
+            crate::api::ir::IrBlock::Attachment {
+                name,
+                filename,
+                path,
+                mime,
+                size,
+            } => {
+                <i32>::sse_encode(8, serializer);
+                <String>::sse_encode(name, serializer);
+                <String>::sse_encode(filename, serializer);
+                <String>::sse_encode(path, serializer);
+                <Option<String>>::sse_encode(mime, serializer);
+                <Option<i64>>::sse_encode(size, serializer);
             }
             crate::api::ir::IrBlock::Table { rows } => {
-                <i32>::sse_encode(8, serializer);
+                <i32>::sse_encode(9, serializer);
                 <Vec<crate::api::ir::IrRow>>::sse_encode(rows, serializer);
             }
             _ => {
@@ -1638,6 +1837,26 @@ impl SseEncode for crate::api::ir::IrCell {
         <u32>::sse_encode(self.rowspan, serializer);
         <Option<String>>::sse_encode(self.align, serializer);
         <bool>::sse_encode(self.header, serializer);
+    }
+}
+
+impl SseEncode for crate::api::ir::IrDividerVariant {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::api::ir::IrDividerVariant::Solid => 0,
+                crate::api::ir::IrDividerVariant::Dashed => 1,
+                crate::api::ir::IrDividerVariant::Dotted => 2,
+                crate::api::ir::IrDividerVariant::Double => 3,
+                crate::api::ir::IrDividerVariant::Wavy => 4,
+                crate::api::ir::IrDividerVariant::Text => 5,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
     }
 }
 
@@ -1679,6 +1898,7 @@ impl SseEncode for crate::api::ir::IrSpan {
         <bool>::sse_encode(self.strike, serializer);
         <bool>::sse_encode(self.underline, serializer);
         <bool>::sse_encode(self.code, serializer);
+        <bool>::sse_encode(self.highlight, serializer);
         <Option<String>>::sse_encode(self.href, serializer);
         <Option<String>>::sse_encode(self.diary_link_id, serializer);
     }
@@ -1784,6 +2004,16 @@ impl SseEncode for Option<bool> {
     }
 }
 
+impl SseEncode for Option<i64> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <i64>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for Option<u32> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -1809,6 +2039,7 @@ impl SseEncode for crate::api::pdf::PdfStyle {
         <bool>::sse_encode(self.include_meta, serializer);
         <String>::sse_encode(self.video_label, serializer);
         <String>::sse_encode(self.audio_label, serializer);
+        <String>::sse_encode(self.attachment_label, serializer);
     }
 }
 
@@ -1838,13 +2069,6 @@ impl SseEncode for usize {
             .cursor
             .write_u64::<NativeEndian>(self as _)
             .unwrap();
-    }
-}
-
-impl SseEncode for i32 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        serializer.cursor.write_i32::<NativeEndian>(self).unwrap();
     }
 }
 
@@ -1968,6 +2192,12 @@ mod io {
             CstDecode::<crate::api::docx::DocxStyle>::cst_decode(*wrap).into()
         }
     }
+    impl CstDecode<i64> for *mut i64 {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> i64 {
+            unsafe { *flutter_rust_bridge::for_generated::box_from_leak_ptr(self) }
+        }
+    }
     impl CstDecode<crate::api::ir::IrDoc> for *mut wire_cst_ir_doc {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::api::ir::IrDoc {
@@ -2005,6 +2235,7 @@ mod io {
                 page_break_between: self.page_break_between.cst_decode(),
                 video_label: self.video_label.cst_decode(),
                 audio_label: self.audio_label.cst_decode(),
+                attachment_label: self.attachment_label.cst_decode(),
             }
         }
     }
@@ -2046,7 +2277,13 @@ mod io {
                         text: ans.text.cst_decode(),
                     }
                 }
-                5 => crate::api::ir::IrBlock::Divider,
+                5 => {
+                    let ans = unsafe { self.kind.Divider };
+                    crate::api::ir::IrBlock::Divider {
+                        variant: ans.variant.cst_decode(),
+                        label: ans.label.cst_decode(),
+                    }
+                }
                 6 => {
                     let ans = unsafe { self.kind.Image };
                     crate::api::ir::IrBlock::Image {
@@ -2060,12 +2297,24 @@ mod io {
                     let ans = unsafe { self.kind.Media };
                     crate::api::ir::IrBlock::Media {
                         kind: ans.kind.cst_decode(),
+                        name: ans.name.cst_decode(),
                         filename: ans.filename.cst_decode(),
                         path: ans.path.cst_decode(),
                         cover_path: ans.cover_path.cst_decode(),
+                        width_percent: ans.width_percent.cst_decode(),
                     }
                 }
                 8 => {
+                    let ans = unsafe { self.kind.Attachment };
+                    crate::api::ir::IrBlock::Attachment {
+                        name: ans.name.cst_decode(),
+                        filename: ans.filename.cst_decode(),
+                        path: ans.path.cst_decode(),
+                        mime: ans.mime.cst_decode(),
+                        size: ans.size.cst_decode(),
+                    }
+                }
+                9 => {
                     let ans = unsafe { self.kind.Table };
                     crate::api::ir::IrBlock::Table {
                         rows: ans.rows.cst_decode(),
@@ -2129,6 +2378,7 @@ mod io {
                 strike: self.strike.cst_decode(),
                 underline: self.underline.cst_decode(),
                 code: self.code.cst_decode(),
+                highlight: self.highlight.cst_decode(),
                 href: self.href.cst_decode(),
                 diary_link_id: self.diary_link_id.cst_decode(),
             }
@@ -2229,6 +2479,7 @@ mod io {
                 include_meta: self.include_meta.cst_decode(),
                 video_label: self.video_label.cst_decode(),
                 audio_label: self.audio_label.cst_decode(),
+                attachment_label: self.attachment_label.cst_decode(),
             }
         }
     }
@@ -2248,6 +2499,7 @@ mod io {
                 page_break_between: Default::default(),
                 video_label: core::ptr::null_mut(),
                 audio_label: core::ptr::null_mut(),
+                attachment_label: core::ptr::null_mut(),
             }
         }
     }
@@ -2338,6 +2590,7 @@ mod io {
                 strike: Default::default(),
                 underline: Default::default(),
                 code: Default::default(),
+                highlight: Default::default(),
                 href: core::ptr::null_mut(),
                 diary_link_id: core::ptr::null_mut(),
             }
@@ -2363,6 +2616,7 @@ mod io {
                 include_meta: Default::default(),
                 video_label: core::ptr::null_mut(),
                 audio_label: core::ptr::null_mut(),
+                attachment_label: core::ptr::null_mut(),
             }
         }
     }
@@ -2536,6 +2790,11 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_fast_press_cst_new_box_autoadd_i_64(value: i64) -> *mut i64 {
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
+    }
+
+    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_fast_press_cst_new_box_autoadd_ir_doc() -> *mut wire_cst_ir_doc {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(wire_cst_ir_doc::new_with_null_ptr())
     }
@@ -2669,6 +2928,7 @@ mod io {
         page_break_between: bool,
         video_label: *mut wire_cst_list_prim_u_8_strict,
         audio_label: *mut wire_cst_list_prim_u_8_strict,
+        attachment_label: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -2684,8 +2944,10 @@ mod io {
         List: wire_cst_IrBlock_List,
         Quote: wire_cst_IrBlock_Quote,
         Code: wire_cst_IrBlock_Code,
+        Divider: wire_cst_IrBlock_Divider,
         Image: wire_cst_IrBlock_Image,
         Media: wire_cst_IrBlock_Media,
+        Attachment: wire_cst_IrBlock_Attachment,
         Table: wire_cst_IrBlock_Table,
         nil__: (),
     }
@@ -2720,6 +2982,12 @@ mod io {
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
+    pub struct wire_cst_IrBlock_Divider {
+        variant: i32,
+        label: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
     pub struct wire_cst_IrBlock_Image {
         path: *mut wire_cst_list_prim_u_8_strict,
         alt: *mut wire_cst_list_prim_u_8_strict,
@@ -2730,9 +2998,20 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_IrBlock_Media {
         kind: *mut wire_cst_list_prim_u_8_strict,
+        name: *mut wire_cst_list_prim_u_8_strict,
         filename: *mut wire_cst_list_prim_u_8_strict,
         path: *mut wire_cst_list_prim_u_8_strict,
         cover_path: *mut wire_cst_list_prim_u_8_strict,
+        width_percent: *mut u32,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_IrBlock_Attachment {
+        name: *mut wire_cst_list_prim_u_8_strict,
+        filename: *mut wire_cst_list_prim_u_8_strict,
+        path: *mut wire_cst_list_prim_u_8_strict,
+        mime: *mut wire_cst_list_prim_u_8_strict,
+        size: *mut i64,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -2780,6 +3059,7 @@ mod io {
         strike: bool,
         underline: bool,
         code: bool,
+        highlight: bool,
         href: *mut wire_cst_list_prim_u_8_strict,
         diary_link_id: *mut wire_cst_list_prim_u_8_strict,
     }
@@ -2846,6 +3126,7 @@ mod io {
         include_meta: bool,
         video_label: *mut wire_cst_list_prim_u_8_strict,
         audio_label: *mut wire_cst_list_prim_u_8_strict,
+        attachment_label: *mut wire_cst_list_prim_u_8_strict,
     }
 }
 #[cfg(not(target_family = "wasm"))]

@@ -41,18 +41,6 @@ abstract interface class SyncPlaceStore {
   Future<SyncTombstone> tombstonePlace(String id, {bool fromSync = false});
 }
 
-abstract interface class SyncMediaInfoStore {
-  Future<List<MediaInfo>> getAllMediaInfosForSync();
-  Future<MediaInfo?> getMediaInfoByFileName(String fileName);
-
-  Future<void> insertAMediaInfo(MediaInfo mediaInfo, {bool fromSync = false});
-
-  Future<SyncTombstone> tombstoneMediaInfo(
-    String fileName, {
-    bool fromSync = false,
-  });
-}
-
 abstract interface class SyncTombstoneStore {
   Future<List<SyncTombstone>> getAll();
   Future<SyncTombstone?> getByKey(String key);
@@ -127,27 +115,6 @@ class RepoSyncPlaceStore implements SyncPlaceStore {
   @override
   Future<SyncTombstone> tombstonePlace(String id, {bool fromSync = false}) =>
       _repo.tombstonePlaceForSync(id, fromSync: fromSync);
-}
-
-class RepoSyncMediaInfoStore implements SyncMediaInfoStore {
-  late final _repo = getIt<MediaInfoRepository>();
-
-  @override
-  Future<List<MediaInfo>> getAllMediaInfosForSync() => _repo.getAllMediaInfos();
-
-  @override
-  Future<MediaInfo?> getMediaInfoByFileName(String fileName) =>
-      _repo.getMediaInfoByFileName(fileName);
-
-  @override
-  Future<void> insertAMediaInfo(MediaInfo mediaInfo, {bool fromSync = false}) =>
-      _repo.insertAMediaInfo(mediaInfo, fromSync: fromSync);
-
-  @override
-  Future<SyncTombstone> tombstoneMediaInfo(
-    String fileName, {
-    bool fromSync = false,
-  }) => _repo.tombstoneMediaInfoForSync(fileName, fromSync: fromSync);
 }
 
 class RepoSyncTombstoneStore implements SyncTombstoneStore {
@@ -231,6 +198,7 @@ class DiskSyncMediaFiles implements SyncMediaFiles {
     await drop(oldDiary.imageName, newDiary.imageName, 'image');
     await drop(oldDiary.audioName, newDiary.audioName, 'audio');
     await drop(oldDiary.videoName, newDiary.videoName, 'video');
+    await drop(oldDiary.fileName, newDiary.fileName, 'file');
     for (final name in oldDiary.videoName) {
       if (newDiary.videoName.contains(name)) continue;
       final thumb = videoThumbnailName(name);

@@ -37,6 +37,10 @@ enum MuiWeight {
   };
 }
 
+extension MuiTabularFigures on TextStyle {
+  TextStyle get tabular => copyWith(fontFeatures: const [.tabularFigures()]);
+}
+
 @immutable
 class MuiTextRole {
   const MuiTextRole._(this._base, this._colors, this._onMedia, this._emphasis);
@@ -51,6 +55,8 @@ class MuiTextRole {
 
   MuiTextRole get emphasized =>
       MuiTextRole._(_emphasis, _colors, _onMedia, _emphasis);
+
+  TextStyle withColor(Color color) => _base.copyWith(color: color);
 
   TextStyle get onSurface => _base.copyWith(color: _colors.onSurface);
   TextStyle get onSurfaceVariant =>

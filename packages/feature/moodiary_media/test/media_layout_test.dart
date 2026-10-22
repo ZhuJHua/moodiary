@@ -28,6 +28,16 @@ void main() {
       expect((flat.entries[2] as MediaCell).index, 1);
     });
 
+    test('labels 与 groups 对齐，取自 MediaItem.name', () {
+      final flat = MediaFlat.of([
+        MediaItem(fileName: 'a', name: 'Song', diaryId: 'x', time: d1),
+        _item('b', 'x', d1),
+      ]);
+      expect(flat.labels, [
+        ['Song', null],
+      ]);
+    });
+
     test('key 能反查 index（插入 / 删除后按 key 找回 element）', () {
       final flat = MediaFlat.of([_item('a', 'x', d1)]);
       expect(flat.indexOfKey(flat.keys[1]), 1);

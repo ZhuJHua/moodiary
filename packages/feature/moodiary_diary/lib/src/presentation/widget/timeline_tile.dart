@@ -4,7 +4,6 @@ import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
-import 'package:mui/mui.dart';
 
 const double _kDateWidth = 30.0;
 const double _kAxisWidth = 20.0;
@@ -195,7 +194,7 @@ class _Content extends StatelessWidget {
           ],
           if (body.isNotEmpty) ...[
             const SizedBox(height: 2),
-            Text(
+            MediaMarkedText(
               body,
               maxLines: hasTitle ? 2 : 3,
               overflow: .ellipsis,
@@ -452,6 +451,15 @@ class _Footer extends StatelessWidget {
         _MediaChip(
           icon: LucideIcons.video,
           count: diary.videoName.length,
+          style: style,
+        ),
+      );
+    }
+    if (diary.fileName.isNotEmpty) {
+      chips.add(
+        _MediaChip(
+          icon: LucideIcons.paperclip,
+          count: diary.fileName.length,
           style: style,
         ),
       );

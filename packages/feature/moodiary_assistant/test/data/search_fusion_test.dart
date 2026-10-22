@@ -12,7 +12,7 @@ void main() {
 
   Diary diary(String title, String body) => Diary.create(
     title: title,
-    content: '',
+    content: body,
     contentText: body,
     mood: .neutral,
     imageName: const [],

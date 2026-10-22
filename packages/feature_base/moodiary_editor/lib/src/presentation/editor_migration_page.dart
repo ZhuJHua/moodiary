@@ -22,88 +22,118 @@ class EditorMigrationPage extends StatefulWidget {
 
 enum _Phase { landing, running, failed, done }
 
-enum _Stage { engine, editor }
+enum _Stage { engine, editor, content }
 
 class _EditorMigrationPageState extends State<EditorMigrationPage> {
   _Phase _phase = .landing;
 
+  late final List<_Stage> _stages = [
+    if (EngineMigrationService.requiresMigration) .engine,
+    if (EngineMigrationService.requiresMigration ||
+        EditorMigrationService.hasLegacyDiaries)
+      .editor,
+    if (EditorMigrationService.requiresContentUpgrade) .content,
+  ];
+
   _Stage? _activeStage;
+  final Set<_Stage> _completed = {};
+  _Stage? _failedStage;
   int _done = 0;
   int _total = 0;
 
-  bool _engineFailed = false;
   int _editorFailed = 0;
   String? _logPath;
 
   int _summaryDiaries = 0;
   int _summaryCategories = 0;
 
+  bool get _onlyContent =>
+      !_stages.contains(_Stage.engine) && !_stages.contains(_Stage.editor);
+
+  void _onProgress(int done, int total) {
+    if (!mounted) return;
+    setState(() {
+      _done = done;
+      _total = total;
+    });
+  }
+
+  void _enter(_Stage stage, {int total = 0}) {
+    if (!mounted) return;
+    setState(() {
+      _activeStage = stage;
+      _done = 0;
+      _total = total;
+    });
+  }
+
+  void _complete(_Stage stage) {
+    if (!mounted) return;
+    setState(() {
+      _completed.add(stage);
+      _activeStage = null;
+      _done = 0;
+      _total = 0;
+    });
+  }
+
   Future<void> _run() async {
     setState(() {
       _phase = .running;
       _activeStage = null;
+      _completed.clear();
+      _failedStage = null;
       _done = 0;
       _total = 0;
-      _engineFailed = false;
       _editorFailed = 0;
       _logPath = null;
     });
     try {
       if (EngineMigrationService.requiresMigration) {
-        setState(() => _activeStage = .engine);
-        await EngineMigrationService.migrate(
-          onProgress: (done, total) {
-            if (mounted) {
-              setState(() {
-                _done = done;
-                _total = total;
-              });
-            }
-          },
-        );
+        _enter(.engine);
+        await EngineMigrationService.migrate(onProgress: _onProgress);
         await EngineMigrationService.finalizeMigration();
         await EditorMigrationService.refreshRequiresMigration();
-        if (!mounted) return;
-        setState(() {
-          _activeStage = null;
-          _done = 0;
-          _total = 0;
-        });
       }
+      _complete(.engine);
+
       final pending = await EditorMigrationService.pendingDiaries();
       if (!mounted) return;
-      setState(() {
-        _activeStage = .editor;
-        _total = pending.length;
-      });
+      if (pending.isNotEmpty) _enter(.editor, total: pending.length);
       final report = await EditorMigrationService.migrateAll(
         pending,
-        onProgress: (done, total) {
-          if (mounted) setState(() => _done = done);
-        },
+        onProgress: _onProgress,
       );
       if (!mounted) return;
       if (report.failed > 0) {
         final logPath = await _writeFailureLog(
-          stage: 'editor',
+          stage: _Stage.editor.name,
           failures: report.failures,
         );
         if (!mounted) return;
         setState(() {
           _phase = .failed;
+          _failedStage = .editor;
           _editorFailed = report.failed;
           _logPath = logPath;
         });
         return;
       }
+      _complete(.editor);
+
+      if (EditorMigrationService.requiresContentUpgrade) {
+        _enter(.content);
+        await EditorMigrationService.upgradeContent(onProgress: _onProgress);
+      }
+      _complete(.content);
     } catch (e, s) {
       final redacted = EditorMigrationService.redactDbError(e);
       logger.e('forced migration failed', error: redacted, stackTrace: s);
-      final engineFailed = _activeStage == .engine;
+      final failed = _activeStage ?? _Stage.editor;
       String? logPath;
       try {
         logPath = await _writeFailureLog(
-          stage: engineFailed ? 'engine' : 'editor',
+          stage: failed.name,
           error: redacted,
           stackTrace: s,
         );
@@ -113,7 +143,7 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
       if (!mounted) return;
       setState(() {
         _phase = .failed;
-        _engineFailed = engineFailed;
+        _failedStage = failed;
         _logPath = logPath;
       });
       return;
@@ -187,6 +217,25 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
     );
   }
 
+  static IconData _stageIcon(_Stage stage) => switch (stage) {
+    .engine => LucideIcons.database,
+    .editor => LucideIcons.fileText,
+    .content => LucideIcons.fileCog,
+  };
+
+  String _stageTitle(BuildContext context, _Stage stage) => switch (stage) {
+    .engine => context.l10n.editor.migrationStepEngine,
+    .editor => context.l10n.editor.migrationStepEditor,
+    .content => context.l10n.editor.migrationStepContent,
+  };
+
+  String _stageDescription(BuildContext context, _Stage stage) =>
+      switch (stage) {
+        .engine => context.l10n.editor.migrationStepEngineDesc,
+        .editor => context.l10n.editor.migrationStepEditorDesc,
+        .content => context.l10n.editor.migrationStepContentDesc,
+      };
+
   Widget _buildLanding(BuildContext context) {
     final theme = context.theme;
     final l10n = context.l10n;
@@ -197,21 +246,19 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
           icon: LucideIcons.database,
           color: theme.colors.primary,
           title: l10n.editor.migrationTitle,
-          subtitle: l10n.editor.migrationIntro,
+          subtitle: _onlyContent
+              ? l10n.editor.migrationContentIntro
+              : l10n.editor.migrationIntro,
         ),
         const SizedBox(height: 32),
         _Card(
           children: [
-            _StepRow(
-              icon: LucideIcons.database,
-              title: l10n.editor.migrationStepEngine,
-              subtitle: l10n.editor.migrationStepEngineDesc,
-            ),
-            _StepRow(
-              icon: LucideIcons.fileText,
-              title: l10n.editor.migrationStepEditor,
-              subtitle: l10n.editor.migrationStepEditorDesc,
-            ),
+            for (final stage in _stages)
+              _StepRow(
+                icon: _stageIcon(stage),
+                title: _stageTitle(context, stage),
+                subtitle: _stageDescription(context, stage),
+              ),
           ],
         ),
         const Spacer(),
@@ -238,7 +285,6 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
   Widget _buildRunning(BuildContext context) {
     final theme = context.theme;
     final l10n = context.l10n;
-    final engineRunning = _activeStage == .engine;
     return Column(
       crossAxisAlignment: .stretch,
       children: [
@@ -251,28 +297,27 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
         const SizedBox(height: 32),
         _Card(
           children: [
-            _StepRow(
-              icon: engineRunning
-                  ? LucideIcons.database
-                  : LucideIcons.circleCheck,
-              title: l10n.editor.migrationStepEngine,
-              trailing: engineRunning
-                  ? '$_done / $_total'
-                  : l10n.editor.migrationStageDone,
-              progress: engineRunning
-                  ? (_total == 0 ? null : _done / _total)
-                  : null,
-              showProgress: engineRunning,
-            ),
-            _StepRow(
-              icon: LucideIcons.fileText,
-              title: l10n.editor.migrationStepEditor,
-              trailing: engineRunning ? null : '$_done / $_total',
-              progress: engineRunning
-                  ? null
-                  : (_total == 0 ? null : _done / _total),
-              showProgress: !engineRunning,
-            ),
+            for (final stage in _stages)
+              if (_completed.contains(stage))
+                _StepRow(
+                  icon: LucideIcons.circleCheck,
+                  title: _stageTitle(context, stage),
+                  trailing: l10n.editor.migrationStageDone,
+                )
+              else if (stage == _activeStage)
+                _StepRow(
+                  icon: _stageIcon(stage),
+                  title: _stageTitle(context, stage),
+                  trailing: '$_done / $_total',
+                  progress: _total == 0 ? null : _done / _total,
+                  showProgress: true,
+                )
+              else
+                _StepRow(
+                  icon: _stageIcon(stage),
+                  title: _stageTitle(context, stage),
+                  trailing: l10n.editor.migrationStagePending,
+                ),
           ],
         ),
         const Spacer(),
@@ -300,30 +345,31 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
         const SizedBox(height: 32),
         _Card(
           children: [
-            _StepRow(
-              icon: _engineFailed
-                  ? LucideIcons.circleAlert
-                  : LucideIcons.circleCheck,
-              iconColor: _engineFailed ? theme.colors.error : null,
-              title: l10n.editor.migrationStepEngine,
-              trailing: _engineFailed
-                  ? l10n.editor.migrationStageFailed
-                  : l10n.editor.migrationStageDone,
-              trailingError: _engineFailed,
-            ),
-            _StepRow(
-              icon: _editorFailed > 0
-                  ? LucideIcons.circleAlert
-                  : LucideIcons.fileText,
-              iconColor: _editorFailed > 0 ? theme.colors.error : null,
-              title: l10n.editor.migrationStepEditor,
-              trailing: _editorFailed > 0
-                  ? l10n.editor.migrationStageFailedCount(count: _editorFailed)
-                  : (_engineFailed
-                        ? l10n.editor.migrationStagePending
-                        : l10n.editor.migrationStageFailed),
-              trailingError: _editorFailed > 0 || !_engineFailed,
-            ),
+            for (final stage in _stages)
+              if (stage == _failedStage)
+                _StepRow(
+                  icon: LucideIcons.circleAlert,
+                  iconColor: theme.colors.error,
+                  title: _stageTitle(context, stage),
+                  trailing: stage == .editor && _editorFailed > 0
+                      ? l10n.editor.migrationStageFailedCount(
+                          count: _editorFailed,
+                        )
+                      : l10n.editor.migrationStageFailed,
+                  trailingError: true,
+                )
+              else if (_completed.contains(stage))
+                _StepRow(
+                  icon: LucideIcons.circleCheck,
+                  title: _stageTitle(context, stage),
+                  trailing: l10n.editor.migrationStageDone,
+                )
+              else
+                _StepRow(
+                  icon: _stageIcon(stage),
+                  title: _stageTitle(context, stage),
+                  trailing: l10n.editor.migrationStagePending,
+                ),
           ],
         ),
         const Spacer(),
@@ -368,7 +414,9 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
           icon: LucideIcons.circleCheck,
           color: theme.colors.primary,
           title: l10n.editor.migrationDoneTitle,
-          subtitle: l10n.editor.migrationDoneSubtitle,
+          subtitle: _stages.contains(_Stage.engine)
+              ? l10n.editor.migrationDoneSubtitle
+              : l10n.editor.migrationContentDoneSubtitle,
         ),
         const SizedBox(height: 32),
         _Card(
@@ -385,10 +433,11 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
                 count: _summaryCategories,
               ),
             ),
-            _SummaryRow(
-              label: l10n.editor.migrationSummaryMedia,
-              value: l10n.editor.migrationSummaryMigrated,
-            ),
+            if (_stages.contains(_Stage.engine))
+              _SummaryRow(
+                label: l10n.editor.migrationSummaryMedia,
+                value: l10n.editor.migrationSummaryMigrated,
+              ),
           ],
         ),
         const Spacer(),

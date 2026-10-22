@@ -870,14 +870,13 @@ fn wire__crate__api__http_server__HttpServer_port_impl(
 fn wire__crate__api__http_server__HttpServer_start_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     preferred_port: impl CstDecode<u16>,
-    loopback_only: impl CstDecode<bool>,
     spool_dir: impl CstDecode<String>,
     on_request: impl CstDecode<flutter_rust_bridge::DartOpaque>,
     on_body_progress: impl CstDecode<flutter_rust_bridge::DartOpaque>,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "HttpServer_start", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || {let api_preferred_port = preferred_port.cst_decode();let api_loopback_only = loopback_only.cst_decode();let api_spool_dir = spool_dir.cst_decode();let api_on_request = decode_DartFn_Inputs_http_server_request_Output_http_server_response_AnyhowException(on_request.cst_decode());let api_on_body_progress = decode_DartFn_Inputs_i_64_i_64_Output_unit_AnyhowException(on_body_progress.cst_decode()); move |context| async move {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "HttpServer_start", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || {let api_preferred_port = preferred_port.cst_decode();let api_spool_dir = spool_dir.cst_decode();let api_on_request = decode_DartFn_Inputs_http_server_request_Output_http_server_response_AnyhowException(on_request.cst_decode());let api_on_body_progress = decode_DartFn_Inputs_i_64_i_64_Output_unit_AnyhowException(on_body_progress.cst_decode()); move |context| async move {
                     transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
-                         let output_ok = crate::api::http_server::HttpServer::start(api_preferred_port, api_loopback_only, api_spool_dir, api_on_request, api_on_body_progress).await?;   std::result::Result::Ok(output_ok)
+                         let output_ok = crate::api::http_server::HttpServer::start(api_preferred_port, api_spool_dir, api_on_request, api_on_body_progress).await?;   std::result::Result::Ok(output_ok)
                     })().await)
                 } })
 }
@@ -1521,7 +1520,6 @@ const _: fn() = || {
         let HttpServerRequest = None::<crate::api::http_server::HttpServerRequest>.unwrap();
         let _: String = HttpServerRequest.method;
         let _: String = HttpServerRequest.path;
-        let _: Vec<crate::api::http::KeyValue> = HttpServerRequest.query;
         let _: Vec<crate::api::http::KeyValue> = HttpServerRequest.headers;
         let _: Vec<u8> = HttpServerRequest.body;
         let _: Option<String> = HttpServerRequest.body_file_path;
@@ -1531,7 +1529,6 @@ const _: fn() = || {
         let _: u16 = HttpServerResponse.status;
         let _: Vec<crate::api::http::KeyValue> = HttpServerResponse.headers;
         let _: Vec<u8> = HttpServerResponse.body;
-        let _: Option<String> = HttpServerResponse.body_file_path;
     }
     {
         let KeyValue = None::<crate::api::http::KeyValue>.unwrap();
@@ -2250,14 +2247,12 @@ impl SseDecode for crate::api::http_server::HttpServerRequest {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_method = <String>::sse_decode(deserializer);
         let mut var_path = <String>::sse_decode(deserializer);
-        let mut var_query = <Vec<crate::api::http::KeyValue>>::sse_decode(deserializer);
         let mut var_headers = <Vec<crate::api::http::KeyValue>>::sse_decode(deserializer);
         let mut var_body = <Vec<u8>>::sse_decode(deserializer);
         let mut var_bodyFilePath = <Option<String>>::sse_decode(deserializer);
         return crate::api::http_server::HttpServerRequest {
             method: var_method,
             path: var_path,
-            query: var_query,
             headers: var_headers,
             body: var_body,
             body_file_path: var_bodyFilePath,
@@ -2271,12 +2266,10 @@ impl SseDecode for crate::api::http_server::HttpServerResponse {
         let mut var_status = <u16>::sse_decode(deserializer);
         let mut var_headers = <Vec<crate::api::http::KeyValue>>::sse_decode(deserializer);
         let mut var_body = <Vec<u8>>::sse_decode(deserializer);
-        let mut var_bodyFilePath = <Option<String>>::sse_decode(deserializer);
         return crate::api::http_server::HttpServerResponse {
             status: var_status,
             headers: var_headers,
             body: var_body,
-            body_file_path: var_bodyFilePath,
         };
     }
 }
@@ -2979,7 +2972,6 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::http_server::HttpS
         [
             self.0.method.into_into_dart().into_dart(),
             self.0.path.into_into_dart().into_dart(),
-            self.0.query.into_into_dart().into_dart(),
             self.0.headers.into_into_dart().into_dart(),
             self.0.body.into_into_dart().into_dart(),
             self.0.body_file_path.into_into_dart().into_dart(),
@@ -3005,7 +2997,6 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::http_server::HttpS
             self.0.status.into_into_dart().into_dart(),
             self.0.headers.into_into_dart().into_dart(),
             self.0.body.into_into_dart().into_dart(),
-            self.0.body_file_path.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -3550,7 +3541,6 @@ impl SseEncode for crate::api::http_server::HttpServerRequest {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.method, serializer);
         <String>::sse_encode(self.path, serializer);
-        <Vec<crate::api::http::KeyValue>>::sse_encode(self.query, serializer);
         <Vec<crate::api::http::KeyValue>>::sse_encode(self.headers, serializer);
         <Vec<u8>>::sse_encode(self.body, serializer);
         <Option<String>>::sse_encode(self.body_file_path, serializer);
@@ -3563,7 +3553,6 @@ impl SseEncode for crate::api::http_server::HttpServerResponse {
         <u16>::sse_encode(self.status, serializer);
         <Vec<crate::api::http::KeyValue>>::sse_encode(self.headers, serializer);
         <Vec<u8>>::sse_encode(self.body, serializer);
-        <Option<String>>::sse_encode(self.body_file_path, serializer);
     }
 }
 
@@ -4240,7 +4229,6 @@ mod io {
             crate::api::http_server::HttpServerRequest {
                 method: self.method.cst_decode(),
                 path: self.path.cst_decode(),
-                query: self.query.cst_decode(),
                 headers: self.headers.cst_decode(),
                 body: self.body.cst_decode(),
                 body_file_path: self.body_file_path.cst_decode(),
@@ -4254,7 +4242,6 @@ mod io {
                 status: self.status.cst_decode(),
                 headers: self.headers.cst_decode(),
                 body: self.body.cst_decode(),
-                body_file_path: self.body_file_path.cst_decode(),
             }
         }
     }
@@ -4583,7 +4570,6 @@ mod io {
             Self {
                 method: core::ptr::null_mut(),
                 path: core::ptr::null_mut(),
-                query: core::ptr::null_mut(),
                 headers: core::ptr::null_mut(),
                 body: core::ptr::null_mut(),
                 body_file_path: core::ptr::null_mut(),
@@ -4601,7 +4587,6 @@ mod io {
                 status: Default::default(),
                 headers: core::ptr::null_mut(),
                 body: core::ptr::null_mut(),
-                body_file_path: core::ptr::null_mut(),
             }
         }
     }
@@ -4902,7 +4887,6 @@ mod io {
     pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__http_server__HttpServer_start(
         port_: i64,
         preferred_port: u16,
-        loopback_only: bool,
         spool_dir: *mut wire_cst_list_prim_u_8_strict,
         on_request: *const std::ffi::c_void,
         on_body_progress: *const std::ffi::c_void,
@@ -4910,7 +4894,6 @@ mod io {
         wire__crate__api__http_server__HttpServer_start_impl(
             port_,
             preferred_port,
-            loopback_only,
             spool_dir,
             on_request,
             on_body_progress,
@@ -5374,7 +5357,6 @@ mod io {
     pub struct wire_cst_http_server_request {
         method: *mut wire_cst_list_prim_u_8_strict,
         path: *mut wire_cst_list_prim_u_8_strict,
-        query: *mut wire_cst_list_key_value,
         headers: *mut wire_cst_list_key_value,
         body: *mut wire_cst_list_prim_u_8_strict,
         body_file_path: *mut wire_cst_list_prim_u_8_strict,
@@ -5385,7 +5367,6 @@ mod io {
         status: u16,
         headers: *mut wire_cst_list_key_value,
         body: *mut wire_cst_list_prim_u_8_strict,
-        body_file_path: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

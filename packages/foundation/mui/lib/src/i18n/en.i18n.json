@@ -9,5 +9,7 @@
   "configured": "Configured",
   "notConfigured": "Not configured",
   "input": "Enter",
-  "save": "Save"
+  "save": "Save",
+  "moveUp": "Move up",
+  "moveDown": "Move down"
 }

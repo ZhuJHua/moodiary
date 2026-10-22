@@ -45,4 +45,6 @@ class MuiLocalizationsDataEn extends MuiLocalizationsData with BaseTranslations<
 	@override String get notConfigured => 'Not configured';
 	@override String get input => 'Enter';
 	@override String get save => 'Save';
+	@override String get moveUp => 'Move up';
+	@override String get moveDown => 'Move down';
 }

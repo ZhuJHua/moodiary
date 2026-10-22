@@ -1,16 +1,15 @@
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::net::{Ipv4Addr, SocketAddr};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use anyhow::{Context, Result};
 use bytes::Bytes;
-use futures::TryStreamExt;
 use futures::future::BoxFuture;
-use http_body_util::{BodyExt, Full, StreamBody};
-use hyper::body::{Frame, Incoming};
+use http_body_util::{BodyExt, Full};
+use hyper::body::Incoming;
 use hyper::service::service_fn;
-use tokio::io::{AsyncReadExt, AsyncSeekExt, AsyncWriteExt};
+use tokio::io::AsyncWriteExt;
 use tokio::net::TcpListener;
 use tokio::sync::oneshot;
 
@@ -19,7 +18,6 @@ use crate::http::KeyValue;
 pub struct HttpServerRequest {
     pub method: String,
     pub path: String,
-    pub query: Vec<KeyValue>,
     pub headers: Vec<KeyValue>,
     pub body: Vec<u8>,
     pub body_file_path: Option<String>,
@@ -29,7 +27,6 @@ pub struct HttpServerResponse {
     pub status: u16,
     pub headers: Vec<KeyValue>,
     pub body: Vec<u8>,
-    pub body_file_path: Option<String>,
 }
 
 const SPOOL_THRESHOLD: usize = 256 * 1024;
@@ -50,19 +47,14 @@ pub struct HttpServer {
 impl HttpServer {
     pub async fn start(
         preferred_port: u16,
-        loopback_only: bool,
         spool_dir: String,
         handler: HandlerFn,
         progress: ProgressFn,
     ) -> Result<HttpServer> {
-        let ip = if loopback_only {
-            IpAddr::V4(Ipv4Addr::LOCALHOST)
-        } else {
-            IpAddr::V4(Ipv4Addr::UNSPECIFIED)
-        };
-        let listener = match TcpListener::bind(SocketAddr::new(ip, preferred_port)).await {
+        let ip = Ipv4Addr::UNSPECIFIED;
+        let listener = match TcpListener::bind(SocketAddr::from((ip, preferred_port))).await {
             Ok(l) => l,
-            Err(_) if preferred_port != 0 => TcpListener::bind(SocketAddr::new(ip, 0))
+            Err(_) if preferred_port != 0 => TcpListener::bind(SocketAddr::from((ip, 0)))
                 .await
                 .context("bind fallback port failed")?,
             Err(e) => return Err(e).context("bind failed"),
@@ -142,18 +134,6 @@ async fn serve_inner(
 ) -> Result<hyper::Response<BoxedBody>> {
     let (parts, body) = req.into_parts();
 
-    let query = parts
-        .uri
-        .query()
-        .map(|q| {
-            url::form_urlencoded::parse(q.as_bytes())
-                .map(|(k, v)| KeyValue {
-                    key: k.into_owned(),
-                    value: v.into_owned(),
-                })
-                .collect()
-        })
-        .unwrap_or_default();
     let headers: Vec<KeyValue> = parts
         .headers
         .iter()
@@ -162,11 +142,6 @@ async fn serve_inner(
             value: v.to_str().unwrap_or_default().to_string(),
         })
         .collect();
-    let range_header = parts
-        .headers
-        .get(hyper::header::RANGE)
-        .and_then(|v| v.to_str().ok())
-        .map(str::to_string);
     let total: i64 = parts
         .headers
         .get(hyper::header::CONTENT_LENGTH)
@@ -179,7 +154,6 @@ async fn serve_inner(
     let request = HttpServerRequest {
         method: parts.method.as_str().to_uppercase(),
         path: parts.uri.path().to_string(),
-        query,
         headers,
         body: collected.inline,
         body_file_path: collected
@@ -194,14 +168,11 @@ async fn serve_inner(
         let _ = tokio::fs::remove_file(path).await;
     }
 
-    match response.body_file_path {
-        Some(path) => file_response(&path, response.status, response.headers, range_header).await,
-        None => Ok(bytes_response(
-            response.status,
-            response.headers,
-            response.body,
-        )),
-    }
+    Ok(bytes_response(
+        response.status,
+        response.headers,
+        response.body,
+    ))
 }
 
 struct CollectedBody {
@@ -287,93 +258,6 @@ fn text_response(status: u16, message: &str) -> hyper::Response<BoxedBody> {
         .expect("static response")
 }
 
-async fn file_response(
-    path: &str,
-    status: u16,
-    headers: Vec<KeyValue>,
-    range_header: Option<String>,
-) -> Result<hyper::Response<BoxedBody>> {
-    let Ok(mut file) = tokio::fs::File::open(path).await else {
-        return Ok(text_response(404, "file not found"));
-    };
-    let total = file.metadata().await.context("stat file failed")?.len();
-
-    let range = match &range_header {
-        Some(header) => match parse_range(header, total) {
-            Some(range) => Some(range),
-            None => {
-                return Ok(hyper::Response::builder()
-                    .status(416)
-                    .header(hyper::header::CONTENT_RANGE, format!("bytes */{total}"))
-                    .body(Full::new(Bytes::new()).map_err(|e| match e {}).boxed())
-                    .expect("static response"));
-            }
-        },
-        None => None,
-    };
-
-    let (start, end) = range.unwrap_or((0, total.saturating_sub(1)));
-    let len = if total == 0 { 0 } else { end - start + 1 };
-    if start > 0 {
-        file.seek(std::io::SeekFrom::Start(start))
-            .await
-            .context("seek failed")?;
-    }
-    let stream =
-        tokio_util::io::ReaderStream::with_capacity(file.take(len), 64 * 1024).map_ok(Frame::data);
-
-    let mut builder = hyper::Response::builder()
-        .status(if range.is_some() { 206 } else { status })
-        .header(hyper::header::ACCEPT_RANGES, "bytes")
-        .header(hyper::header::CONTENT_LENGTH, len);
-    if range.is_some() {
-        builder = builder.header(
-            hyper::header::CONTENT_RANGE,
-            format!("bytes {start}-{end}/{total}"),
-        );
-    }
-    for kv in headers {
-        builder = builder.header(kv.key, kv.value);
-    }
-    Ok(builder
-        .body(StreamBody::new(stream).boxed())
-        .unwrap_or_else(|e| text_response(500, &format!("build response failed: {e}"))))
-}
-
-fn parse_range(header: &str, total: u64) -> Option<(u64, u64)> {
-    if total == 0 {
-        return None;
-    }
-    let spec = header.strip_prefix("bytes=")?.trim();
-    if spec.is_empty() || spec.contains(',') {
-        return None;
-    }
-    let dash = spec.find('-')?;
-    let (start_str, end_str) = (spec[..dash].trim(), spec[dash + 1..].trim());
-    let (start, mut end) = if start_str.is_empty() {
-        let suffix: u64 = end_str.parse().ok().filter(|n| *n > 0)?;
-        (total.saturating_sub(suffix), total - 1)
-    } else {
-        let start: u64 = start_str.parse().ok()?;
-        let end: u64 = if end_str.is_empty() {
-            total - 1
-        } else {
-            end_str.parse().ok()?
-        };
-        (start, end)
-    };
-    if start >= total {
-        return None;
-    }
-    if end >= total {
-        end = total - 1;
-    }
-    if start > end {
-        return None;
-    }
-    Some((start, end))
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -407,14 +291,11 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn roundtrip_small_body_and_query() {
+    async fn roundtrip_small_body() {
         let dir = test_dir("small");
         let handler = test_handler(|req| {
             assert_eq!(req.method, "POST");
             assert_eq!(req.path, "/echo");
-            assert_eq!(req.query.len(), 1);
-            assert_eq!(req.query[0].key, "a");
-            assert_eq!(req.query[0].value, "b c");
             assert!(req.body_file_path.is_none());
             HttpServerResponse {
                 status: 200,
@@ -423,12 +304,10 @@ mod tests {
                     value: "1".into(),
                 }],
                 body: req.body,
-                body_file_path: None,
             }
         });
         let mut server = HttpServer::start(
             0,
-            true,
             dir.to_string_lossy().into_owned(),
             handler,
             noop_progress(),
@@ -465,7 +344,6 @@ mod tests {
                 status: 200,
                 headers: vec![],
                 body: b"ok".to_vec(),
-                body_file_path: None,
             }
         });
         let progress_seen = seen.clone();
@@ -473,15 +351,10 @@ mod tests {
             progress_seen.lock().unwrap().0.push((received, total));
             Box::pin(async {})
         });
-        let mut server = HttpServer::start(
-            0,
-            true,
-            dir.to_string_lossy().into_owned(),
-            handler,
-            progress,
-        )
-        .await
-        .unwrap();
+        let mut server =
+            HttpServer::start(0, dir.to_string_lossy().into_owned(), handler, progress)
+                .await
+                .unwrap();
 
         let payload = vec![7u8; 2 * 1024 * 1024];
         let client = test_client();
@@ -508,75 +381,6 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn file_response_supports_range() {
-        let dir = test_dir("range");
-        let media = dir.join("media.bin");
-        std::fs::write(&media, (0u8..=99).collect::<Vec<u8>>()).unwrap();
-
-        let media_path = media.to_string_lossy().into_owned();
-        let handler = test_handler(move |_| HttpServerResponse {
-            status: 200,
-            headers: vec![KeyValue {
-                key: "content-type".into(),
-                value: "application/octet-stream".into(),
-            }],
-            body: vec![],
-            body_file_path: Some(media_path.clone()),
-        });
-        let mut server = HttpServer::start(
-            0,
-            true,
-            dir.to_string_lossy().into_owned(),
-            handler,
-            noop_progress(),
-        )
-        .await
-        .unwrap();
-        let base = format!("http://127.0.0.1:{}/f", server.port());
-        let client = test_client();
-
-        let full = client.get(&base).send().await.unwrap();
-        assert_eq!(full.status().as_u16(), 200);
-        assert_eq!(full.headers()["accept-ranges"], "bytes");
-        assert_eq!(full.bytes().await.unwrap().len(), 100);
-
-        let partial = client
-            .get(&base)
-            .header("range", "bytes=10-19")
-            .send()
-            .await
-            .unwrap();
-        assert_eq!(partial.status().as_u16(), 206);
-        assert_eq!(partial.headers()["content-range"], "bytes 10-19/100");
-        let bytes = partial.bytes().await.unwrap();
-        assert_eq!(bytes.as_ref(), &(10u8..=19).collect::<Vec<u8>>()[..]);
-
-        let suffix = client
-            .get(&base)
-            .header("range", "bytes=-5")
-            .send()
-            .await
-            .unwrap();
-        assert_eq!(suffix.status().as_u16(), 206);
-        assert_eq!(
-            suffix.bytes().await.unwrap().as_ref(),
-            &[95, 96, 97, 98, 99]
-        );
-
-        let bad = client
-            .get(&base)
-            .header("range", "bytes=200-")
-            .send()
-            .await
-            .unwrap();
-        assert_eq!(bad.status().as_u16(), 416);
-        assert_eq!(bad.headers()["content-range"], "bytes */100");
-
-        server.stop();
-        std::fs::remove_dir_all(&dir).ok();
-    }
-
-    #[tokio::test]
     async fn upload_file_streams_to_server_with_content_length() {
         use crate::http::request::{ClientSettings, HttpClient, HttpMethod};
 
@@ -597,18 +401,12 @@ mod tests {
                 status: 200,
                 headers: vec![],
                 body: len.to_string().into_bytes(),
-                body_file_path: None,
             }
         });
-        let mut server = HttpServer::start(
-            0,
-            true,
-            dir.to_string_lossy().into_owned(),
-            handler,
-            progress,
-        )
-        .await
-        .unwrap();
+        let mut server =
+            HttpServer::start(0, dir.to_string_lossy().into_owned(), handler, progress)
+                .await
+                .unwrap();
 
         let client = HttpClient::new(ClientSettings {
             base_url: None,
