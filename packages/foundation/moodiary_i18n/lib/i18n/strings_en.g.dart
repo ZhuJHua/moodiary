@@ -741,9 +741,6 @@ class _Translations$editor$en extends Translations$editor$zh {
 
 	// Translations
 	@override String get audioFileError => 'Audio file error';
-	@override String get pickAudio => 'Select audio';
-	@override String get pickAudioFromRecord => 'Recording';
-	@override String get pickAudioFromFile => 'File Audio';
 	@override String get unsupportedPlatform => 'The editor is not supported on this platform';
 	@override String loadFailed({required Object error}) => 'Failed to load the editor\n${error}';
 	@override String get pickCategory => 'Pick a category';
@@ -754,6 +751,10 @@ class _Translations$editor$en extends Translations$editor$zh {
 	@override String get migrationStepEngineDesc => 'Moves diaries, categories, fonts and all other data into the new database';
 	@override String get migrationStepEditor => 'Diary format conversion';
 	@override String get migrationStepEditorDesc => 'Converts old-format content to the new editor format; originals are backed up first';
+	@override String get migrationContentIntro => 'The new editor needs your diaries upgraded to a new format before you can continue.';
+	@override String get migrationStepContent => 'Diary format upgrade';
+	@override String get migrationStepContentDesc => 'Upgrades to the new editor format; all diaries are backed up first';
+	@override String get migrationContentDoneSubtitle => 'All diaries now use the new format';
 	@override String get migrationStart => 'Start migration';
 	@override String get migrationExit => 'Exit app';
 	@override String get migrationLandingNote => 'Do not exit the app during migration. No old data is deleted until migration succeeds.';
@@ -780,6 +781,7 @@ class _Translations$editor$en extends Translations$editor$zh {
 	@override String get migrationSummaryMedia => 'Media & fonts';
 	@override String get migrationSummaryMigrated => 'Migrated';
 	@override String get migrationEnter => 'Get started';
+	@override late final _Translations$editor$toolbar$en toolbar = _Translations$editor$toolbar$en._(_root);
 }
 
 // Path: export
@@ -802,7 +804,7 @@ class _Translations$export$en extends Translations$export$zh {
 	@override String get restoreConfirmLabel => 'Restore';
 	@override String get restoring => 'Restoring…';
 	@override String restoreDone({required Object summary}) => 'Restored: ${summary}';
-	@override String restoreSummary({required Object diary, required Object category, required Object media}) => '${diary} diaries / ${category} categories / ${media} media entries';
+	@override String restoreSummary({required Object diary, required Object category, required Object media}) => '${diary} diaries / ${category} categories / ${media} media files';
 	@override String restoreSummarySkipped({required Object base, required Object skipped}) => '${base}, ${skipped} skipped (this device has newer content)';
 	@override String restoreSummaryFailed({required Object base, required Object failed}) => '${base}, ${failed} failed';
 	@override String restorePartial({required Object summary}) => 'Restore did not fully succeed: ${summary}. Check storage space and connection, then retry — don\'t delete the old device\'s data yet';
@@ -878,8 +880,8 @@ class _Translations$export$en extends Translations$export$zh {
 	@override String get progressSerializing => 'Writing file…';
 	@override String get mediaVideo => 'Video';
 	@override String get mediaAudio => 'Audio';
+	@override String get mediaAttachment => 'Attachment';
 	@override String get formatImage => 'Image';
-	@override String get formatImageSubtitle => 'PNG long image';
 	@override String get titleImage => 'Export as image';
 	@override String get sectionImage => 'Image';
 	@override String get includePosition => 'Include location';
@@ -890,10 +892,6 @@ class _Translations$export$en extends Translations$export$zh {
 	@override String get imageBrightnessDark => 'Dark';
 	@override String get imageSize => 'Size and sharpness';
 	@override String imageSizeValue({required Object width, required Object scale, required Object pixels}) => '${width} dp · ${scale}× (${pixels} px wide)';
-	@override String get imageWidth => 'Width';
-	@override String get imageWidthStandard => 'Standard';
-	@override String get imageWidthWide => 'Wide';
-	@override String get imageScale => 'Sharpness';
 	@override String get imageWatermark => 'Show Moodiary mark';
 	@override String get imageMerge => 'Merge into one long image';
 	@override String get imageMergeSubtitle => 'Off means one image per entry; over 9 are zipped';
@@ -975,6 +973,7 @@ class _Translations$media$en extends Translations$media$zh {
 	// Translations
 	@override String get title => 'Media';
 	@override String get typeImage => 'Image';
+	@override String get typeFile => 'Attachment';
 	@override String get deleteUseLessFile => 'Delete useless file';
 	@override String get empty => 'No media yet';
 	@override String get cleanupScanning => 'Scanning for unused files';
@@ -995,6 +994,10 @@ class _Translations$media$en extends Translations$media$zh {
 		one: '${count} Video',
 		other: '${count} Videos',
 	);
+	@override String fileCount({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(count,
+		one: '${count} Attachment',
+		other: '${count} Attachments',
+	);
 }
 
 // Path: picker
@@ -1007,8 +1010,10 @@ class _Translations$picker$en extends Translations$picker$zh {
 	@override String get recentAlbum => 'Recent';
 	@override String get done => 'Done';
 	@override String doneCount({required Object count, required Object max}) => 'Done ${count}/${max}';
-	@override String get limitedTip => 'The app can only access selected photos';
+	@override String get limitedTip => 'The app can only access selected photos and videos';
 	@override String get limitedManage => 'Manage';
+	@override String get limitedEmptyImages => 'No accessible photos. Tap Manage to select photos to allow access to.';
+	@override String get limitedEmptyVideos => 'No accessible videos. Tap Manage to select videos to allow access to.';
 	@override String get permissionDenied => 'Grant photo library access in Settings';
 	@override String get a11ySelect => 'Select';
 	@override String get a11yUnselect => 'Deselect';
@@ -1147,11 +1152,6 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String get kindPlaceSkip => 'Place skipped';
 	@override String get kindPlaceTombstonePush => 'Place deletion pushed';
 	@override String get kindPlaceTombstonePull => 'Place deletion applied';
-	@override String get kindMediaInfoUpload => 'Media info uploaded';
-	@override String get kindMediaInfoDownload => 'Media info downloaded';
-	@override String get kindMediaInfoSkip => 'Media info skipped';
-	@override String get kindMediaInfoTombstonePush => 'Media info deletion pushed';
-	@override String get kindMediaInfoTombstonePull => 'Media info deletion pulled';
 	@override String get kindMediaUpload => 'Media uploaded';
 	@override String get kindMediaDownload => 'Media downloaded';
 	@override String get kindMediaSkip => 'Media skipped';
@@ -1343,7 +1343,7 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String warnMediaFailed({required Object count}) => '${count} media file(s) could not be downloaded; images or audio may be missing from those entries';
 	@override String get warnStopped => 'Stopped by you — the rest will continue on the next sync';
 	@override String warnFailedCount({required Object count}) => '${count} failed';
-	@override String reCipherSummary({required Object diary, required Object category, required Object mediaInfo, required Object media, required Object ms}) => '${diary} entries + ${category} categories + ${mediaInfo} media records + ${media} files (${ms}ms)';
+	@override String reCipherSummary({required Object diary, required Object category, required Object media, required Object ms}) => '${diary} entries + ${category} categories + ${media} files (${ms}ms)';
 	@override String reCipherFailedSuffix({required Object base, required Object failed}) => '${base}\n${failed} objects failed and were skipped';
 	@override String get stepPrepare => 'Preparing';
 	@override String stepDiary({required Object id}) => 'Entry ${id}';
@@ -1509,4 +1509,104 @@ class _Translations$wordcloud$en extends Translations$wordcloud$zh {
 	@override String get hideSingleChars => 'Hide single characters';
 	@override String get hideSingleCharsHint => 'Single characters such as 的, 了, 去, 说 stay out of the cloud (雨 and 猫 too). Add any you want to keep to 「Words to keep」.';
 	@override String get priorityHint => 'Words to hide win over words to keep, and both win over the built-in ignore list. Stored on this device only.';
+}
+
+// Path: editor.toolbar
+class _Translations$editor$toolbar$en extends Translations$editor$toolbar$zh {
+	_Translations$editor$toolbar$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get insert => 'Insert';
+	@override String get format => 'Format';
+	@override String get task => 'To-do';
+	@override String get image => 'Image';
+	@override String get link => 'Link';
+	@override String get diaryLink => 'Diary link';
+	@override String get showKeyboard => 'Show keyboard';
+	@override String get hideKeyboard => 'Hide keyboard';
+	@override String get bold => 'Bold';
+	@override String get italic => 'Italic';
+	@override String get underline => 'Underline';
+	@override String get strike => 'Strikethrough';
+	@override String get highlight => 'Highlight';
+	@override String get inlineCode => 'Inline code';
+	@override String get paragraph => 'Body';
+	@override String get bulletList => 'Bullets';
+	@override String get orderedList => 'Numbered';
+	@override String get taskList => 'To-do';
+	@override String get outdent => 'Outdent';
+	@override String get indent => 'Indent';
+	@override String get quote => 'Quote';
+	@override String get codeBlock => 'Code block';
+	@override String get clearFormat => 'Clear format';
+	@override String get mediaAndFiles => 'Media and files';
+	@override String get blocks => 'Blocks';
+	@override String get gallery => 'Photos';
+	@override String get camera => 'Camera';
+	@override String get video => 'Video';
+	@override String get record => 'Record';
+	@override String get audio => 'Audio';
+	@override String get attachment => 'File';
+	@override String get table => 'Table';
+	@override String get divider => 'Divider';
+	@override String get view => 'View';
+	@override String get width => 'Width';
+	@override String get originalSize => 'Original size';
+	@override String get original => 'Original';
+	@override String get moveUp => 'Move up';
+	@override String get moveDown => 'Move down';
+	@override String get delete => 'Delete';
+	@override String get open => 'Open';
+	@override String get rename => 'Rename';
+	@override String get style => 'Style';
+	@override String get dividerSolid => 'Solid';
+	@override String get dividerDashed => 'Dashed';
+	@override String get dividerDotted => 'Dotted';
+	@override String get dividerDouble => 'Double';
+	@override String get dividerWavy => 'Wavy';
+	@override String get dividerText => 'With text';
+	@override String get dividerLabel => 'Divider text';
+	@override String get tableAddRow => 'Add row';
+	@override String get tableDeleteRow => 'Delete row';
+	@override String get tableAddColumn => 'Add column';
+	@override String get tableDeleteColumn => 'Delete column';
+	@override String get tableMenu => 'Table';
+	@override String get tableHeaderRow => 'Header row';
+	@override String get tableDelete => 'Delete table';
+	@override String get copyCode => 'Copy code';
+	@override String get exitCode => 'Exit code block';
+	@override String get openLink => 'Open link';
+	@override String get copyLink => 'Copy link';
+	@override String get editLink => 'Edit link';
+	@override String get removeLink => 'Remove link';
+	@override String get addLinkTitle => 'Add link';
+	@override String get editLinkTitle => 'Edit link';
+	@override String get linkText => 'Text';
+	@override String get linkUrl => 'URL';
+	@override String get undo => 'Undo';
+	@override String get redo => 'Redo';
+	@override String get find => 'Find';
+	@override String get findHint => 'Find';
+	@override String get replaceHint => 'Replace with';
+	@override String get replace => 'Replace';
+	@override String get replaceAll => 'Replace all';
+	@override String get toggleReplace => 'Replace';
+	@override String get previousMatch => 'Previous';
+	@override String get nextMatch => 'Next';
+	@override String get closeFind => 'Close find';
+	@override String matchCount({required Object current, required Object total}) => '${current}/${total}';
+	@override String get settingsTitle => 'Editor toolbar';
+	@override String get resetDefault => 'Reset';
+	@override String get preview => 'Preview';
+	@override String get shownSection => 'Toolbar';
+	@override String get availableSection => 'Available';
+	@override String get removeTools => 'Remove tools';
+	@override String selectedCount({required Object count}) => '${count} selected';
+	@override String get remove => 'Remove';
+	@override String get addToToolbar => 'Add to toolbar';
+	@override String get attachmentFailed => 'Could not save the file';
+	@override String get openFailed => 'No app can open this file';
+	@override String get insertFailed => 'Could not insert';
 }

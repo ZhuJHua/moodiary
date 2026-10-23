@@ -58,35 +58,6 @@ void main() {
     });
   });
 
-  group('MediaInfoRepository', () {
-    test('upsert / 查 / 删 + 墓碑往返', () async {
-      final repo = MediaInfoRepository(db);
-      final tombs = TombstoneRepository(db);
-      final info = MediaInfo.create(
-        fileName: 'audio-1.m4a',
-        name: '晨间录音',
-        durationMs: 1234,
-      );
-      await repo.insertAMediaInfo(info);
-      final got = (await repo.getMediaInfoByFileName('audio-1.m4a'))!;
-      expect(got.name, '晨间录音');
-      expect(got.durationMs, 1234);
-      expect(got.mediaType, 'audio');
-
-      expect(await repo.deleteAMediaInfo('audio-1.m4a'), isTrue);
-      expect(await repo.getMediaInfoByFileName('audio-1.m4a'), isNull);
-      expect(
-        await tombs.getByKey(SyncTombstone.mediaInfoKey('audio-1.m4a')),
-        isNotNull,
-      );
-      await repo.insertAMediaInfo(MediaInfo.create(fileName: 'audio-2.m4a'));
-      expect(
-        (await repo.getMediaInfoByFileName('audio-2.m4a'))!.durationMs,
-        isNull,
-      );
-    });
-  });
-
   group('TombstoneRepository', () {
     test('putAll / deleteByKeys / purgeExpired', () async {
       final repo = TombstoneRepository(db);

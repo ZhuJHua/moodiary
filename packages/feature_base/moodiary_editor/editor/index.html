@@ -4,32 +4,26 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Moodiary Editor</title>
-  <style>
-    html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
-    #app { height: 100%; }
-  </style>
   <script>
-    // 全局错误上报（早于模块脚本执行）。通道与 bridge/post.ts 一致：window.MoodiaryEditor
-    // —— 由 Flutter 注入的 DOCUMENT_START shim 提供（先于本内联脚本执行）。
+    // 早于模块脚本装上，启动期的错误也能报给 Flutter
     (function () {
       function send(payload) {
-        var msg = JSON.stringify({ type: 'error', payload: JSON.stringify(payload) })
-        try {
-          if (window.MoodiaryEditor) window.MoodiaryEditor.postMessage(msg)
-        } catch (_) {}
+        if (window.MoodiaryEditor) {
+          window.MoodiaryEditor.postMessage(JSON.stringify({ type: 'error', payload: JSON.stringify(payload) }))
+        }
       }
       window.addEventListener('error', function (e) {
         send({
           kind: 'error',
-          message: e && e.message,
-          source: e && e.filename,
-          lineno: e && e.lineno,
-          colno: e && e.colno,
-          stack: e && e.error && e.error.stack
+          message: e.message,
+          source: e.filename,
+          lineno: e.lineno,
+          colno: e.colno,
+          stack: e.error && e.error.stack
         })
       })
       window.addEventListener('unhandledrejection', function (e) {
-        var r = e && e.reason
+        var r = e.reason
         send({
           kind: 'unhandledrejection',
           message: r && (r.message || String(r)),
@@ -41,6 +35,6 @@
 </head>
 <body>
   <div id="app"></div>
-  <script type="module" src="/src/main.ts"></script>
+  <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>

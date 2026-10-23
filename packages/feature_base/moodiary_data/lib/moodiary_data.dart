@@ -16,8 +16,6 @@ export 'src/embed_queue_watcher.dart';
 export 'src/font_repository.dart';
 export 'src/image_optimizer.dart';
 export 'src/loadmore.dart';
-export 'src/media_info_controller.dart';
-export 'src/media_info_repository.dart';
 export 'src/media_item.dart';
 export 'src/open_diary_registry.dart';
 export 'src/place_controller.dart';

@@ -46,6 +46,7 @@ class DocxStyle {
   final bool pageBreakBetween;
   final String videoLabel;
   final String audioLabel;
+  final String attachmentLabel;
 
   const DocxStyle({
     required this.eastAsiaFont,
@@ -61,6 +62,7 @@ class DocxStyle {
     required this.pageBreakBetween,
     required this.videoLabel,
     required this.audioLabel,
+    required this.attachmentLabel,
   });
 
   @override
@@ -77,7 +79,8 @@ class DocxStyle {
       includeMeta.hashCode ^
       pageBreakBetween.hashCode ^
       videoLabel.hashCode ^
-      audioLabel.hashCode;
+      audioLabel.hashCode ^
+      attachmentLabel.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -96,5 +99,6 @@ class DocxStyle {
           includeMeta == other.includeMeta &&
           pageBreakBetween == other.pageBreakBetween &&
           videoLabel == other.videoLabel &&
-          audioLabel == other.audioLabel;
+          audioLabel == other.audioLabel &&
+          attachmentLabel == other.attachmentLabel;
 }

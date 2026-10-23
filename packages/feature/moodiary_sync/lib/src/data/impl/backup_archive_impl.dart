@@ -20,7 +20,7 @@ class SyncBackupArchive implements IBackupArchive {
     return BackupImportResult(
       diaryCount: report.diaryCount,
       categoryCount: report.categoryCount,
-      mediaInfoCount: report.mediaInfoCount,
+      mediaCount: report.pulled.mediaFiles,
       failed: report.failed,
       cancelled: report.cancelled,
       skipped: report.skipped,

@@ -1,9 +1,9 @@
-import 'dart:io';
-
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
+import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'media_controller.g.dart';
@@ -33,7 +33,16 @@ class MediaItems extends _$MediaItems with LoadMoreMixin<MediaItem> {
     .image => d.imageName,
     .audio => d.audioName,
     .video => d.videoName,
+    .file => d.fileName,
   };
+
+  Future<void> rename(String fileName, String name) async {
+    try {
+      await getIt<DiaryRepository>().renameMedia(type, fileName, name);
+    } catch (e, s) {
+      logger.e('rename media failed: $fileName', error: e, stackTrace: s);
+    }
+  }
 
   void _applyChange(DiaryEvent event) {
     final list = state.value;
@@ -53,9 +62,17 @@ class MediaItems extends _$MediaItems with LoadMoreMixin<MediaItem> {
           if (removed) state = .data(without);
           return;
         }
+        final labels = diary.type == DiaryType.tiptap.value
+            ? TiptapContent.parse(diary.content).mediaNames
+            : const <String, String>{};
         final fresh = [
           for (final name in names)
-            MediaItem(fileName: name, diaryId: diary.id, time: diary.time),
+            MediaItem(
+              fileName: name,
+              name: labels[name],
+              diaryId: diary.id,
+              time: diary.time,
+            ),
         ];
         if (!noMore &&
             without.isNotEmpty &&
@@ -90,20 +107,21 @@ class MediaCleanupController extends _$MediaCleanupController {
       usedImages: used.images,
       usedAudios: used.audios,
       usedVideos: used.videos,
+      usedFiles: used.files,
     );
   }
 
   Future<void> clean(MediaCleanupReport report) async {
     await AppFiles.deleteOrphanMedia(report);
-    final used = await getIt<DiaryRepository>().collectReferencedMedia();
-    final referenced = {...used.images, ...used.audios, ...used.videos};
-    final rows = await getIt<MediaInfoRepository>().getAllMediaInfos();
-    for (final row in rows) {
-      if (referenced.contains(row.fileName)) continue;
-      final file = File(AppFiles.getRealPath(row.mediaType, row.fileName));
-      if (!await file.exists()) {
-        await getIt<MediaInfoRepository>().deleteAMediaInfo(row.fileName);
-      }
-    }
   }
+}
+
+// 读不出（文件还在同步下载）时不留缓存，下次显示再读
+@riverpod
+Future<Duration?> audioDuration(Ref ref, String fileName) async {
+  final duration = await probeAudioDuration(
+    AppFiles.getRealPath('audio', fileName),
+  );
+  if (duration != null) ref.keepAlive();
+  return duration;
 }

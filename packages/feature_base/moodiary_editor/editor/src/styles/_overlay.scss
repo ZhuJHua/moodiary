@@ -1,0 +1,182 @@
+.md-popover-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+}
+
+.md-popover {
+  position: fixed;
+  z-index: 61;
+  box-sizing: border-box;
+  max-width: calc(100vw - 16px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px;
+  border-radius: 16px;
+  background: var(--app-surface-container-high);
+  color: var(--app-on-surface);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12), 0 8px 24px rgba(0, 0, 0, 0.12);
+
+  &--grid {
+    width: 288px;
+  }
+
+  &--list {
+    width: 240px;
+  }
+}
+
+.md-pop-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+}
+
+.md-pop-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: 60px;
+  padding: 8px 2px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--app-on-surface-variant);
+  font-size: var(--md-text-xs);
+  cursor: pointer;
+}
+
+.md-pop-cell svg,
+.md-pop-cell .md-qi {
+  width: 22px;
+  height: 22px;
+  font-size: 22px;
+}
+
+.md-pop-cell.is-active {
+  background: var(--app-surface-container-highest);
+  color: var(--app-on-surface);
+  font-weight: 600;
+}
+
+.md-pop-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--app-on-surface);
+  font-size: var(--md-text-md);
+  text-align: left;
+  cursor: pointer;
+}
+
+.md-pop-item svg {
+  width: 18px;
+  height: 18px;
+}
+
+.md-pop-item:active,
+.md-pop-cell:active {
+  background: var(--app-surface-container-highest);
+}
+
+.md-pop-item.is-active {
+  font-weight: 600;
+  background: var(--app-surface-container-highest);
+}
+
+.md-pop-item.is-dim {
+  color: var(--app-on-surface-variant);
+}
+
+.md-pop-item.is-danger {
+  color: var(--app-error);
+}
+
+.md-pop-item__grow {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.md-pop-item__trail {
+  color: var(--app-on-surface-variant);
+  font-size: var(--md-text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.md-pop-scroll {
+  max-height: 220px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.md-pop-divider {
+  height: 1px;
+  margin: 6px 4px;
+  background: var(--app-outline-variant);
+}
+
+.md-suggest {
+  position: fixed;
+  z-index: 70;
+  box-sizing: border-box;
+  width: min(18rem, calc(100vw - 16px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--app-surface-container-high);
+  color: var(--app-on-surface);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12), 0 8px 24px rgba(0, 0, 0, 0.12);
+
+  &__hint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    color: var(--app-on-surface-variant);
+    font-size: var(--md-text-md);
+  }
+
+  &__item {
+    display: block;
+    width: 100%;
+    min-height: 40px;
+    padding: 0 10px;
+    overflow: hidden;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    font-size: var(--md-text-md);
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  &__item.is-active, &__item:active {
+    background: var(--app-surface-container-highest);
+  }
+}
+
+.md-spin {
+  width: 14px;
+  height: 14px;
+  animation: md-spin 0.9s linear infinite;
+}
+
+@keyframes md-spin {
+    to {
+      transform: rotate(360deg);
+    }
+}

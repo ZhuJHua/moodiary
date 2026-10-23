@@ -854,7 +854,7 @@ abstract final class AssistantToolRegistry {
         'id=${diary.id} 【${TimeFormat.isoDate(diary.time)}】$title '
         'mood=${diary.mood.name} via=$via$sim$catPart',
       );
-      final text = diary.contentText.trim();
+      final text = MediaMarkup.forModel(diary.contentText).trim();
       if (text.isNotEmpty) {
         buffer.writeln(
           text.length > _maxExcerptLength
@@ -916,7 +916,7 @@ abstract final class AssistantToolRegistry {
     if (diary.tags.isNotEmpty) {
       buffer.writeln('tags=${diary.tags.join(', ')}');
     }
-    final text = diary.contentText.trim();
+    final text = MediaMarkup.forModel(diary.contentText).trim();
     buffer
       ..writeln('body:')
       ..writeln(

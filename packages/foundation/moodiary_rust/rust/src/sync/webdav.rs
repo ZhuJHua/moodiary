@@ -446,7 +446,6 @@ mod tests {
                         status,
                         headers: vec![],
                         body: vec![],
-                        body_file_path: None,
                     }
                 })
             })
@@ -458,7 +457,6 @@ mod tests {
         std::fs::create_dir_all(&dir).unwrap();
         let server = HttpServer::start(
             0,
-            true,
             dir.to_string_lossy().into_owned(),
             handler,
             Arc::new(|_, _| Box::pin(async {})),
@@ -556,13 +554,11 @@ mod tests {
                         status: 207,
                         headers: vec![],
                         body: format!("<multistatus xmlns=\"DAV:\">{b}</multistatus>").into_bytes(),
-                        body_file_path: None,
                     },
                     None => HttpServerResponse {
                         status: 404,
                         headers: vec![],
                         body: vec![],
-                        body_file_path: None,
                     },
                 }
             })
@@ -582,7 +578,6 @@ mod tests {
                     status: 404,
                     headers: vec![],
                     body: vec![],
-                    body_file_path: None,
                 }
             })
         });
@@ -599,7 +594,6 @@ mod tests {
                     status: 207,
                     headers: vec![],
                     body: br#"<multistatus xmlns="DAV:"><response><href>/elsewhere/manifest.json</href><propstat><prop><resourcetype/></prop></propstat></response></multistatus>"#.to_vec(),
-                    body_file_path: None,
                 }
             })
         });
@@ -676,7 +670,6 @@ mod tests {
                     status,
                     headers: vec![],
                     body: body.into_bytes(),
-                    body_file_path: None,
                 }
             })
         });
@@ -702,7 +695,6 @@ mod tests {
                     status: if req.method == "MKCOL" { 403 } else { 201 },
                     headers: vec![],
                     body: vec![],
-                    body_file_path: None,
                 }
             })
         });

@@ -653,6 +653,12 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
   }
 
   @protected
+  PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_i_64(raw);
+  }
+
+  @protected
   IrDoc dco_decode_box_autoadd_ir_doc(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_ir_doc(raw);
@@ -674,8 +680,8 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
   DocxStyle dco_decode_docx_style(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 13)
-      throw Exception('unexpected arr length: expect 13 but see ${arr.length}');
+    if (arr.length != 14)
+      throw Exception('unexpected arr length: expect 14 but see ${arr.length}');
     return DocxStyle(
       eastAsiaFont: dco_decode_String(arr[0]),
       asciiFont: dco_decode_String(arr[1]),
@@ -690,6 +696,7 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
       pageBreakBetween: dco_decode_bool(arr[10]),
       videoLabel: dco_decode_String(arr[11]),
       audioLabel: dco_decode_String(arr[12]),
+      attachmentLabel: dco_decode_String(arr[13]),
     );
   }
 
@@ -697,6 +704,18 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
   double dco_decode_f_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as double;
+  }
+
+  @protected
+  int dco_decode_i_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
+  }
+
+  @protected
+  PlatformInt64 dco_decode_i_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dcoDecodeI64(raw);
   }
 
   @protected
@@ -724,7 +743,10 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
           text: dco_decode_String(raw[2]),
         );
       case 5:
-        return IrBlock_Divider();
+        return IrBlock_Divider(
+          variant: dco_decode_ir_divider_variant(raw[1]),
+          label: dco_decode_opt_String(raw[2]),
+        );
       case 6:
         return IrBlock_Image(
           path: dco_decode_String(raw[1]),
@@ -735,11 +757,21 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
       case 7:
         return IrBlock_Media(
           kind: dco_decode_String(raw[1]),
-          filename: dco_decode_String(raw[2]),
-          path: dco_decode_String(raw[3]),
-          coverPath: dco_decode_opt_String(raw[4]),
+          name: dco_decode_opt_String(raw[2]),
+          filename: dco_decode_String(raw[3]),
+          path: dco_decode_String(raw[4]),
+          coverPath: dco_decode_opt_String(raw[5]),
+          widthPercent: dco_decode_opt_box_autoadd_u_32(raw[6]),
         );
       case 8:
+        return IrBlock_Attachment(
+          name: dco_decode_String(raw[1]),
+          filename: dco_decode_String(raw[2]),
+          path: dco_decode_String(raw[3]),
+          mime: dco_decode_opt_String(raw[4]),
+          size: dco_decode_opt_box_autoadd_i_64(raw[5]),
+        );
+      case 9:
         return IrBlock_Table(rows: dco_decode_list_ir_row(raw[1]));
       default:
         throw Exception("unreachable");
@@ -759,6 +791,12 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
       align: dco_decode_opt_String(arr[3]),
       header: dco_decode_bool(arr[4]),
     );
+  }
+
+  @protected
+  IrDividerVariant dco_decode_ir_divider_variant(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return IrDividerVariant.values[raw as int];
   }
 
   @protected
@@ -804,8 +842,8 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
   IrSpan dco_decode_ir_span(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 8)
-      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    if (arr.length != 9)
+      throw Exception('unexpected arr length: expect 9 but see ${arr.length}');
     return IrSpan(
       text: dco_decode_String(arr[0]),
       bold: dco_decode_bool(arr[1]),
@@ -813,8 +851,9 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
       strike: dco_decode_bool(arr[3]),
       underline: dco_decode_bool(arr[4]),
       code: dco_decode_bool(arr[5]),
-      href: dco_decode_opt_String(arr[6]),
-      diaryLinkId: dco_decode_opt_String(arr[7]),
+      highlight: dco_decode_bool(arr[6]),
+      href: dco_decode_opt_String(arr[7]),
+      diaryLinkId: dco_decode_opt_String(arr[8]),
     );
   }
 
@@ -879,6 +918,12 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
   }
 
   @protected
+  PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_i_64(raw);
+  }
+
+  @protected
   int? dco_decode_opt_box_autoadd_u_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_u_32(raw);
@@ -888,8 +933,8 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
   PdfStyle dco_decode_pdf_style(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 12)
-      throw Exception('unexpected arr length: expect 12 but see ${arr.length}');
+    if (arr.length != 13)
+      throw Exception('unexpected arr length: expect 13 but see ${arr.length}');
     return PdfStyle(
       fontPath: dco_decode_String(arr[0]),
       fontFamily: dco_decode_String(arr[1]),
@@ -903,6 +948,7 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
       includeMeta: dco_decode_bool(arr[9]),
       videoLabel: dco_decode_String(arr[10]),
       audioLabel: dco_decode_String(arr[11]),
+      attachmentLabel: dco_decode_String(arr[12]),
     );
   }
 
@@ -1071,6 +1117,12 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
   }
 
   @protected
+  PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_i_64(deserializer));
+  }
+
+  @protected
   IrDoc sse_decode_box_autoadd_ir_doc(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_ir_doc(deserializer));
@@ -1104,6 +1156,7 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
     var var_pageBreakBetween = sse_decode_bool(deserializer);
     var var_videoLabel = sse_decode_String(deserializer);
     var var_audioLabel = sse_decode_String(deserializer);
+    var var_attachmentLabel = sse_decode_String(deserializer);
     return DocxStyle(
       eastAsiaFont: var_eastAsiaFont,
       asciiFont: var_asciiFont,
@@ -1118,6 +1171,7 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
       pageBreakBetween: var_pageBreakBetween,
       videoLabel: var_videoLabel,
       audioLabel: var_audioLabel,
+      attachmentLabel: var_attachmentLabel,
     );
   }
 
@@ -1125,6 +1179,18 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
   double sse_decode_f_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getFloat64();
+  }
+
+  @protected
+  int sse_decode_i_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getInt32();
+  }
+
+  @protected
+  PlatformInt64 sse_decode_i_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getPlatformInt64();
   }
 
   @protected
@@ -1157,7 +1223,9 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
         var var_text = sse_decode_String(deserializer);
         return IrBlock_Code(language: var_language, text: var_text);
       case 5:
-        return IrBlock_Divider();
+        var var_variant = sse_decode_ir_divider_variant(deserializer);
+        var var_label = sse_decode_opt_String(deserializer);
+        return IrBlock_Divider(variant: var_variant, label: var_label);
       case 6:
         var var_path = sse_decode_String(deserializer);
         var var_alt = sse_decode_opt_String(deserializer);
@@ -1171,16 +1239,33 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
         );
       case 7:
         var var_kind = sse_decode_String(deserializer);
+        var var_name = sse_decode_opt_String(deserializer);
         var var_filename = sse_decode_String(deserializer);
         var var_path = sse_decode_String(deserializer);
         var var_coverPath = sse_decode_opt_String(deserializer);
+        var var_widthPercent = sse_decode_opt_box_autoadd_u_32(deserializer);
         return IrBlock_Media(
           kind: var_kind,
+          name: var_name,
           filename: var_filename,
           path: var_path,
           coverPath: var_coverPath,
+          widthPercent: var_widthPercent,
         );
       case 8:
+        var var_name = sse_decode_String(deserializer);
+        var var_filename = sse_decode_String(deserializer);
+        var var_path = sse_decode_String(deserializer);
+        var var_mime = sse_decode_opt_String(deserializer);
+        var var_size = sse_decode_opt_box_autoadd_i_64(deserializer);
+        return IrBlock_Attachment(
+          name: var_name,
+          filename: var_filename,
+          path: var_path,
+          mime: var_mime,
+          size: var_size,
+        );
+      case 9:
         var var_rows = sse_decode_list_ir_row(deserializer);
         return IrBlock_Table(rows: var_rows);
       default:
@@ -1203,6 +1288,13 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
       align: var_align,
       header: var_header,
     );
+  }
+
+  @protected
+  IrDividerVariant sse_decode_ir_divider_variant(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return IrDividerVariant.values[inner];
   }
 
   @protected
@@ -1252,6 +1344,7 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
     var var_strike = sse_decode_bool(deserializer);
     var var_underline = sse_decode_bool(deserializer);
     var var_code = sse_decode_bool(deserializer);
+    var var_highlight = sse_decode_bool(deserializer);
     var var_href = sse_decode_opt_String(deserializer);
     var var_diaryLinkId = sse_decode_opt_String(deserializer);
     return IrSpan(
@@ -1261,6 +1354,7 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
       strike: var_strike,
       underline: var_underline,
       code: var_code,
+      highlight: var_highlight,
       href: var_href,
       diaryLinkId: var_diaryLinkId,
     );
@@ -1380,6 +1474,17 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
   }
 
   @protected
+  PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_i_64(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
   int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -1405,6 +1510,7 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
     var var_includeMeta = sse_decode_bool(deserializer);
     var var_videoLabel = sse_decode_String(deserializer);
     var var_audioLabel = sse_decode_String(deserializer);
+    var var_attachmentLabel = sse_decode_String(deserializer);
     return PdfStyle(
       fontPath: var_fontPath,
       fontFamily: var_fontFamily,
@@ -1418,6 +1524,7 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
       includeMeta: var_includeMeta,
       videoLabel: var_videoLabel,
       audioLabel: var_audioLabel,
+      attachmentLabel: var_attachmentLabel,
     );
   }
 
@@ -1442,12 +1549,6 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
   BigInt sse_decode_usize(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getBigUint64();
-  }
-
-  @protected
-  int sse_decode_i_32(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getInt32();
   }
 
   @protected
@@ -1550,6 +1651,18 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
   double cst_encode_f_64(double raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw;
+  }
+
+  @protected
+  int cst_encode_i_32(int raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw;
+  }
+
+  @protected
+  int cst_encode_ir_divider_variant(IrDividerVariant raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return cst_encode_i_32(raw.index);
   }
 
   @protected
@@ -1724,6 +1837,15 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
   }
 
   @protected
+  void sse_encode_box_autoadd_i_64(
+    PlatformInt64 self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_64(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_ir_doc(IrDoc self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_ir_doc(self, serializer);
@@ -1760,12 +1882,25 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
     sse_encode_bool(self.pageBreakBetween, serializer);
     sse_encode_String(self.videoLabel, serializer);
     sse_encode_String(self.audioLabel, serializer);
+    sse_encode_String(self.attachmentLabel, serializer);
   }
 
   @protected
   void sse_encode_f_64(double self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putFloat64(self);
+  }
+
+  @protected
+  void sse_encode_i_32(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putInt32(self);
+  }
+
+  @protected
+  void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putPlatformInt64(self);
   }
 
   @protected
@@ -1795,8 +1930,10 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
         sse_encode_i_32(4, serializer);
         sse_encode_opt_String(language, serializer);
         sse_encode_String(text, serializer);
-      case IrBlock_Divider():
+      case IrBlock_Divider(variant: final variant, label: final label):
         sse_encode_i_32(5, serializer);
+        sse_encode_ir_divider_variant(variant, serializer);
+        sse_encode_opt_String(label, serializer);
       case IrBlock_Image(
         path: final path,
         alt: final alt,
@@ -1810,17 +1947,34 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
         sse_encode_bool(isExternal, serializer);
       case IrBlock_Media(
         kind: final kind,
+        name: final name,
         filename: final filename,
         path: final path,
         coverPath: final coverPath,
+        widthPercent: final widthPercent,
       ):
         sse_encode_i_32(7, serializer);
         sse_encode_String(kind, serializer);
+        sse_encode_opt_String(name, serializer);
         sse_encode_String(filename, serializer);
         sse_encode_String(path, serializer);
         sse_encode_opt_String(coverPath, serializer);
-      case IrBlock_Table(rows: final rows):
+        sse_encode_opt_box_autoadd_u_32(widthPercent, serializer);
+      case IrBlock_Attachment(
+        name: final name,
+        filename: final filename,
+        path: final path,
+        mime: final mime,
+        size: final size,
+      ):
         sse_encode_i_32(8, serializer);
+        sse_encode_String(name, serializer);
+        sse_encode_String(filename, serializer);
+        sse_encode_String(path, serializer);
+        sse_encode_opt_String(mime, serializer);
+        sse_encode_opt_box_autoadd_i_64(size, serializer);
+      case IrBlock_Table(rows: final rows):
+        sse_encode_i_32(9, serializer);
         sse_encode_list_ir_row(rows, serializer);
     }
   }
@@ -1833,6 +1987,15 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
     sse_encode_u_32(self.rowspan, serializer);
     sse_encode_opt_String(self.align, serializer);
     sse_encode_bool(self.header, serializer);
+  }
+
+  @protected
+  void sse_encode_ir_divider_variant(
+    IrDividerVariant self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
   }
 
   @protected
@@ -1870,6 +2033,7 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
     sse_encode_bool(self.strike, serializer);
     sse_encode_bool(self.underline, serializer);
     sse_encode_bool(self.code, serializer);
+    sse_encode_bool(self.highlight, serializer);
     sse_encode_opt_String(self.href, serializer);
     sse_encode_opt_String(self.diaryLinkId, serializer);
   }
@@ -1971,6 +2135,19 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
   }
 
   @protected
+  void sse_encode_opt_box_autoadd_i_64(
+    PlatformInt64? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_i_64(self, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -1995,6 +2172,7 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
     sse_encode_bool(self.includeMeta, serializer);
     sse_encode_String(self.videoLabel, serializer);
     sse_encode_String(self.audioLabel, serializer);
+    sse_encode_String(self.attachmentLabel, serializer);
   }
 
   @protected
@@ -2018,12 +2196,6 @@ class FastPressLibApiImpl extends FastPressLibApiImplPlatform
   void sse_encode_usize(BigInt self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putBigUint64(self);
-  }
-
-  @protected
-  void sse_encode_i_32(int self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putInt32(self);
   }
 }
 

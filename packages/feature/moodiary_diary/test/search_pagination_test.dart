@@ -18,7 +18,7 @@ void main() {
       for (var i = 0; i < 40; i++)
         Diary.create(
           title: '第 $i 篇',
-          content: '',
+          content: '今天吃了一个苹果',
           contentText: '今天吃了一个苹果',
           mood: .neutral,
           imageName: const [],

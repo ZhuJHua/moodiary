@@ -35,6 +35,7 @@ class AppFiles {
       createDir(imageThumbDir),
       createDir(join(_filePath, 'audio')),
       createDir(join(_filePath, 'video')),
+      createDir(join(_filePath, 'file')),
       createDir(join(_filePath, 'font')),
     ]);
   }
@@ -101,6 +102,7 @@ class AppFiles {
       deleteDir(join(_filePath, 'image')),
       deleteDir(join(_filePath, 'audio')),
       deleteDir(join(_filePath, 'video')),
+      deleteDir(join(_filePath, 'file')),
       deleteDir(join(_filePath, 'font')),
     ]);
     await initCreateDir();
@@ -170,6 +172,7 @@ class AppFiles {
     required Set<String> usedImages,
     required Set<String> usedAudios,
     required Set<String> usedVideos,
+    required Set<String> usedFiles,
   }) async {
     final orphans = <(String type, Set<String> names)>[
       (
@@ -189,6 +192,12 @@ class AppFiles {
         (await getDirFileName(MediaType.video.value))
             .toSet()
             .difference(usedVideos),
+      ),
+      (
+        MediaType.file.value,
+        (await getDirFileName(MediaType.file.value))
+            .toSet()
+            .difference(usedFiles),
       ),
     ];
 

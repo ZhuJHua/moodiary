@@ -160,7 +160,7 @@ class _RecycleTile extends StatelessWidget {
             ),
             if (diary.contentText.isNotEmpty) ...[
               const SizedBox(height: 8),
-              Text(
+              MediaMarkedText(
                 diary.contentText.trim(),
                 style: typo.bodyMedium.onSurface,
                 maxLines: 2,

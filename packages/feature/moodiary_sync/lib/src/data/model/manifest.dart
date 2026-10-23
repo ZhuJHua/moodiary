@@ -1,5 +1,4 @@
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 
 class ManifestEntry {
@@ -34,7 +33,7 @@ class ManifestEntry {
 }
 
 class SyncManifest {
-  static const int currentVersion = 2;
+  static const int currentVersion = 3;
 
   static const int legacyVersion = 1;
 
@@ -60,7 +59,7 @@ class SyncManifest {
 
   factory SyncManifest.fromJson(Map<String, dynamic> json) {
     final version = json['version'] is int ? json['version'] as int : 0;
-    if (version != currentVersion && version != legacyVersion) {
+    if (version < legacyVersion || version > currentVersion) {
       throw SyncException(
         l10n.sync.errManifestVersion(remote: version, local: currentVersion),
       );
@@ -135,8 +134,11 @@ class SyncKeys {
 
   static String placeObjectPath(String id) => 'place/$id.json';
 
-  static String mediaInfoObjectPath(String fileName) =>
-      'mediainfo/${mediaTypeOfFileName(fileName)}/$fileName.json';
+  static String mediaInfoObjectPath(String fileName) {
+    final i = fileName.indexOf('-');
+    final type = i <= 0 ? 'other' : fileName.substring(0, i);
+    return 'mediainfo/$type/$fileName.json';
+  }
 
   static String mediaObjectPath(String type, String filename) =>
       'media/$type/$filename';

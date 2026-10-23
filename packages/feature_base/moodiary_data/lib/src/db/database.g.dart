@@ -5674,333 +5674,6 @@ class FontsCompanion extends UpdateCompanion<FontRow> {
   }
 }
 
-class MediaInfos extends Table with TableInfo<MediaInfos, MediaInfoRow> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  MediaInfos(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _fileNameMeta = const VerificationMeta(
-    'fileName',
-  );
-  late final GeneratedColumn<String> fileName = GeneratedColumn<String>(
-    'file_name',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL PRIMARY KEY',
-  );
-  static const VerificationMeta _nameMeta = const VerificationMeta('name');
-  late final GeneratedColumn<String> name = GeneratedColumn<String>(
-    'name',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    $customConstraints: '',
-  );
-  static const VerificationMeta _durationMsMeta = const VerificationMeta(
-    'durationMs',
-  );
-  late final GeneratedColumn<int> durationMs = GeneratedColumn<int>(
-    'duration_ms',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    $customConstraints: '',
-  );
-  static const VerificationMeta _lastModifiedMeta = const VerificationMeta(
-    'lastModified',
-  );
-  late final GeneratedColumn<int> lastModified = GeneratedColumn<int>(
-    'last_modified',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  @override
-  List<GeneratedColumn> get $columns => [
-    fileName,
-    name,
-    durationMs,
-    lastModified,
-  ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'media_infos';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<MediaInfoRow> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('file_name')) {
-      context.handle(
-        _fileNameMeta,
-        fileName.isAcceptableOrUnknown(data['file_name']!, _fileNameMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_fileNameMeta);
-    }
-    if (data.containsKey('name')) {
-      context.handle(
-        _nameMeta,
-        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
-      );
-    }
-    if (data.containsKey('duration_ms')) {
-      context.handle(
-        _durationMsMeta,
-        durationMs.isAcceptableOrUnknown(data['duration_ms']!, _durationMsMeta),
-      );
-    }
-    if (data.containsKey('last_modified')) {
-      context.handle(
-        _lastModifiedMeta,
-        lastModified.isAcceptableOrUnknown(
-          data['last_modified']!,
-          _lastModifiedMeta,
-        ),
-      );
-    } else if (isInserting) {
-      context.missing(_lastModifiedMeta);
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {fileName};
-  @override
-  MediaInfoRow map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return MediaInfoRow(
-      fileName: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}file_name'],
-      )!,
-      name: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}name'],
-      ),
-      durationMs: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}duration_ms'],
-      ),
-      lastModified: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}last_modified'],
-      )!,
-    );
-  }
-
-  @override
-  MediaInfos createAlias(String alias) {
-    return MediaInfos(attachedDatabase, alias);
-  }
-
-  @override
-  bool get dontWriteConstraints => true;
-}
-
-class MediaInfoRow extends DataClass implements Insertable<MediaInfoRow> {
-  final String fileName;
-  final String? name;
-  final int? durationMs;
-  final int lastModified;
-  const MediaInfoRow({
-    required this.fileName,
-    this.name,
-    this.durationMs,
-    required this.lastModified,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['file_name'] = Variable<String>(fileName);
-    if (!nullToAbsent || name != null) {
-      map['name'] = Variable<String>(name);
-    }
-    if (!nullToAbsent || durationMs != null) {
-      map['duration_ms'] = Variable<int>(durationMs);
-    }
-    map['last_modified'] = Variable<int>(lastModified);
-    return map;
-  }
-
-  MediaInfosCompanion toCompanion(bool nullToAbsent) {
-    return MediaInfosCompanion(
-      fileName: Value(fileName),
-      name: name == null && nullToAbsent ? const Value.absent() : Value(name),
-      durationMs: durationMs == null && nullToAbsent
-          ? const Value.absent()
-          : Value(durationMs),
-      lastModified: Value(lastModified),
-    );
-  }
-
-  factory MediaInfoRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return MediaInfoRow(
-      fileName: serializer.fromJson<String>(json['file_name']),
-      name: serializer.fromJson<String?>(json['name']),
-      durationMs: serializer.fromJson<int?>(json['duration_ms']),
-      lastModified: serializer.fromJson<int>(json['last_modified']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'file_name': serializer.toJson<String>(fileName),
-      'name': serializer.toJson<String?>(name),
-      'duration_ms': serializer.toJson<int?>(durationMs),
-      'last_modified': serializer.toJson<int>(lastModified),
-    };
-  }
-
-  MediaInfoRow copyWith({
-    String? fileName,
-    Value<String?> name = const Value.absent(),
-    Value<int?> durationMs = const Value.absent(),
-    int? lastModified,
-  }) => MediaInfoRow(
-    fileName: fileName ?? this.fileName,
-    name: name.present ? name.value : this.name,
-    durationMs: durationMs.present ? durationMs.value : this.durationMs,
-    lastModified: lastModified ?? this.lastModified,
-  );
-  MediaInfoRow copyWithCompanion(MediaInfosCompanion data) {
-    return MediaInfoRow(
-      fileName: data.fileName.present ? data.fileName.value : this.fileName,
-      name: data.name.present ? data.name.value : this.name,
-      durationMs: data.durationMs.present
-          ? data.durationMs.value
-          : this.durationMs,
-      lastModified: data.lastModified.present
-          ? data.lastModified.value
-          : this.lastModified,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('MediaInfoRow(')
-          ..write('fileName: $fileName, ')
-          ..write('name: $name, ')
-          ..write('durationMs: $durationMs, ')
-          ..write('lastModified: $lastModified')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(fileName, name, durationMs, lastModified);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is MediaInfoRow &&
-          other.fileName == this.fileName &&
-          other.name == this.name &&
-          other.durationMs == this.durationMs &&
-          other.lastModified == this.lastModified);
-}
-
-class MediaInfosCompanion extends UpdateCompanion<MediaInfoRow> {
-  final Value<String> fileName;
-  final Value<String?> name;
-  final Value<int?> durationMs;
-  final Value<int> lastModified;
-  final Value<int> rowid;
-  const MediaInfosCompanion({
-    this.fileName = const Value.absent(),
-    this.name = const Value.absent(),
-    this.durationMs = const Value.absent(),
-    this.lastModified = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  MediaInfosCompanion.insert({
-    required String fileName,
-    this.name = const Value.absent(),
-    this.durationMs = const Value.absent(),
-    required int lastModified,
-    this.rowid = const Value.absent(),
-  }) : fileName = Value(fileName),
-       lastModified = Value(lastModified);
-  static Insertable<MediaInfoRow> custom({
-    Expression<String>? fileName,
-    Expression<String>? name,
-    Expression<int>? durationMs,
-    Expression<int>? lastModified,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (fileName != null) 'file_name': fileName,
-      if (name != null) 'name': name,
-      if (durationMs != null) 'duration_ms': durationMs,
-      if (lastModified != null) 'last_modified': lastModified,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  MediaInfosCompanion copyWith({
-    Value<String>? fileName,
-    Value<String?>? name,
-    Value<int?>? durationMs,
-    Value<int>? lastModified,
-    Value<int>? rowid,
-  }) {
-    return MediaInfosCompanion(
-      fileName: fileName ?? this.fileName,
-      name: name ?? this.name,
-      durationMs: durationMs ?? this.durationMs,
-      lastModified: lastModified ?? this.lastModified,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (fileName.present) {
-      map['file_name'] = Variable<String>(fileName.value);
-    }
-    if (name.present) {
-      map['name'] = Variable<String>(name.value);
-    }
-    if (durationMs.present) {
-      map['duration_ms'] = Variable<int>(durationMs.value);
-    }
-    if (lastModified.present) {
-      map['last_modified'] = Variable<int>(lastModified.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('MediaInfosCompanion(')
-          ..write('fileName: $fileName, ')
-          ..write('name: $name, ')
-          ..write('durationMs: $durationMs, ')
-          ..write('lastModified: $lastModified, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
 class Places extends Table with TableInfo<Places, PlaceRow> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -6458,8 +6131,17 @@ class DiaryMedia extends Table with TableInfo<DiaryMedia, DiaryMediaRow> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
   @override
-  List<GeneratedColumn> get $columns => [diaryId, kind, seq, fileName];
+  List<GeneratedColumn> get $columns => [diaryId, kind, seq, fileName, name];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -6504,6 +6186,12 @@ class DiaryMedia extends Table with TableInfo<DiaryMedia, DiaryMediaRow> {
     } else if (isInserting) {
       context.missing(_fileNameMeta);
     }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    }
     return context;
   }
 
@@ -6529,6 +6217,10 @@ class DiaryMedia extends Table with TableInfo<DiaryMedia, DiaryMediaRow> {
         DriftSqlType.string,
         data['${effectivePrefix}file_name'],
       )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      ),
     );
   }
 
@@ -6550,11 +6242,13 @@ class DiaryMediaRow extends DataClass implements Insertable<DiaryMediaRow> {
   final String kind;
   final int seq;
   final String fileName;
+  final String? name;
   const DiaryMediaRow({
     required this.diaryId,
     required this.kind,
     required this.seq,
     required this.fileName,
+    this.name,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -6563,6 +6257,9 @@ class DiaryMediaRow extends DataClass implements Insertable<DiaryMediaRow> {
     map['kind'] = Variable<String>(kind);
     map['seq'] = Variable<int>(seq);
     map['file_name'] = Variable<String>(fileName);
+    if (!nullToAbsent || name != null) {
+      map['name'] = Variable<String>(name);
+    }
     return map;
   }
 
@@ -6572,6 +6269,7 @@ class DiaryMediaRow extends DataClass implements Insertable<DiaryMediaRow> {
       kind: Value(kind),
       seq: Value(seq),
       fileName: Value(fileName),
+      name: name == null && nullToAbsent ? const Value.absent() : Value(name),
     );
   }
 
@@ -6585,6 +6283,7 @@ class DiaryMediaRow extends DataClass implements Insertable<DiaryMediaRow> {
       kind: serializer.fromJson<String>(json['kind']),
       seq: serializer.fromJson<int>(json['seq']),
       fileName: serializer.fromJson<String>(json['file_name']),
+      name: serializer.fromJson<String?>(json['name']),
     );
   }
   @override
@@ -6595,6 +6294,7 @@ class DiaryMediaRow extends DataClass implements Insertable<DiaryMediaRow> {
       'kind': serializer.toJson<String>(kind),
       'seq': serializer.toJson<int>(seq),
       'file_name': serializer.toJson<String>(fileName),
+      'name': serializer.toJson<String?>(name),
     };
   }
 
@@ -6603,11 +6303,13 @@ class DiaryMediaRow extends DataClass implements Insertable<DiaryMediaRow> {
     String? kind,
     int? seq,
     String? fileName,
+    Value<String?> name = const Value.absent(),
   }) => DiaryMediaRow(
     diaryId: diaryId ?? this.diaryId,
     kind: kind ?? this.kind,
     seq: seq ?? this.seq,
     fileName: fileName ?? this.fileName,
+    name: name.present ? name.value : this.name,
   );
   DiaryMediaRow copyWithCompanion(DiaryMediaCompanion data) {
     return DiaryMediaRow(
@@ -6615,6 +6317,7 @@ class DiaryMediaRow extends DataClass implements Insertable<DiaryMediaRow> {
       kind: data.kind.present ? data.kind.value : this.kind,
       seq: data.seq.present ? data.seq.value : this.seq,
       fileName: data.fileName.present ? data.fileName.value : this.fileName,
+      name: data.name.present ? data.name.value : this.name,
     );
   }
 
@@ -6624,13 +6327,14 @@ class DiaryMediaRow extends DataClass implements Insertable<DiaryMediaRow> {
           ..write('diaryId: $diaryId, ')
           ..write('kind: $kind, ')
           ..write('seq: $seq, ')
-          ..write('fileName: $fileName')
+          ..write('fileName: $fileName, ')
+          ..write('name: $name')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(diaryId, kind, seq, fileName);
+  int get hashCode => Object.hash(diaryId, kind, seq, fileName, name);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -6638,7 +6342,8 @@ class DiaryMediaRow extends DataClass implements Insertable<DiaryMediaRow> {
           other.diaryId == this.diaryId &&
           other.kind == this.kind &&
           other.seq == this.seq &&
-          other.fileName == this.fileName);
+          other.fileName == this.fileName &&
+          other.name == this.name);
 }
 
 class DiaryMediaCompanion extends UpdateCompanion<DiaryMediaRow> {
@@ -6646,12 +6351,14 @@ class DiaryMediaCompanion extends UpdateCompanion<DiaryMediaRow> {
   final Value<String> kind;
   final Value<int> seq;
   final Value<String> fileName;
+  final Value<String?> name;
   final Value<int> rowid;
   const DiaryMediaCompanion({
     this.diaryId = const Value.absent(),
     this.kind = const Value.absent(),
     this.seq = const Value.absent(),
     this.fileName = const Value.absent(),
+    this.name = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   DiaryMediaCompanion.insert({
@@ -6659,6 +6366,7 @@ class DiaryMediaCompanion extends UpdateCompanion<DiaryMediaRow> {
     required String kind,
     required int seq,
     required String fileName,
+    this.name = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : diaryId = Value(diaryId),
        kind = Value(kind),
@@ -6669,6 +6377,7 @@ class DiaryMediaCompanion extends UpdateCompanion<DiaryMediaRow> {
     Expression<String>? kind,
     Expression<int>? seq,
     Expression<String>? fileName,
+    Expression<String>? name,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -6676,6 +6385,7 @@ class DiaryMediaCompanion extends UpdateCompanion<DiaryMediaRow> {
       if (kind != null) 'kind': kind,
       if (seq != null) 'seq': seq,
       if (fileName != null) 'file_name': fileName,
+      if (name != null) 'name': name,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -6685,6 +6395,7 @@ class DiaryMediaCompanion extends UpdateCompanion<DiaryMediaRow> {
     Value<String>? kind,
     Value<int>? seq,
     Value<String>? fileName,
+    Value<String?>? name,
     Value<int>? rowid,
   }) {
     return DiaryMediaCompanion(
@@ -6692,6 +6403,7 @@ class DiaryMediaCompanion extends UpdateCompanion<DiaryMediaRow> {
       kind: kind ?? this.kind,
       seq: seq ?? this.seq,
       fileName: fileName ?? this.fileName,
+      name: name ?? this.name,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -6711,6 +6423,9 @@ class DiaryMediaCompanion extends UpdateCompanion<DiaryMediaRow> {
     if (fileName.present) {
       map['file_name'] = Variable<String>(fileName.value);
     }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -6724,6 +6439,7 @@ class DiaryMediaCompanion extends UpdateCompanion<DiaryMediaRow> {
           ..write('kind: $kind, ')
           ..write('seq: $seq, ')
           ..write('fileName: $fileName, ')
+          ..write('name: $name, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -7266,7 +6982,6 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
   );
   late final Categories categories = Categories(this);
   late final Fonts fonts = Fonts(this);
-  late final MediaInfos mediaInfos = MediaInfos(this);
   late final Places places = Places(this);
   late final Index idxDiariesShowTime = Index(
     'idx_diaries_show_time',
@@ -7411,7 +7126,6 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
     idxTombstonesTime,
     categories,
     fonts,
-    mediaInfos,
     places,
     idxDiariesShowTime,
     idxDiariesShowCatTime,
@@ -11254,198 +10968,6 @@ typedef $FontsProcessedTableManager =
       FontRow,
       PrefetchHooks Function()
     >;
-typedef $MediaInfosCreateCompanionBuilder = MediaInfosCompanion Function({
-  required String fileName,
-  Value<String?> name,
-  Value<int?> durationMs,
-  required int lastModified,
-  Value<int> rowid,
-});
-typedef $MediaInfosUpdateCompanionBuilder = MediaInfosCompanion Function({
-  Value<String> fileName,
-  Value<String?> name,
-  Value<int?> durationMs,
-  Value<int> lastModified,
-  Value<int> rowid,
-});
-
-class $MediaInfosFilterComposer
-    extends Composer<_$MoodiaryDatabase, MediaInfos> {
-  $MediaInfosFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get fileName => $composableBuilder(
-    column: $table.fileName,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get durationMs => $composableBuilder(
-    column: $table.durationMs,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get lastModified => $composableBuilder(
-    column: $table.lastModified,
-    builder: (column) => ColumnFilters(column),
-  );
-}
-
-class $MediaInfosOrderingComposer
-    extends Composer<_$MoodiaryDatabase, MediaInfos> {
-  $MediaInfosOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get fileName => $composableBuilder(
-    column: $table.fileName,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get durationMs => $composableBuilder(
-    column: $table.durationMs,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get lastModified => $composableBuilder(
-    column: $table.lastModified,
-    builder: (column) => ColumnOrderings(column),
-  );
-}
-
-class $MediaInfosAnnotationComposer
-    extends Composer<_$MoodiaryDatabase, MediaInfos> {
-  $MediaInfosAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get fileName =>
-      $composableBuilder(column: $table.fileName, builder: (column) => column);
-
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
-
-  GeneratedColumn<int> get durationMs => $composableBuilder(
-    column: $table.durationMs,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<int> get lastModified => $composableBuilder(
-    column: $table.lastModified,
-    builder: (column) => column,
-  );
-}
-
-class $MediaInfosTableManager
-    extends
-        RootTableManager<
-          _$MoodiaryDatabase,
-          MediaInfos,
-          MediaInfoRow,
-          $MediaInfosFilterComposer,
-          $MediaInfosOrderingComposer,
-          $MediaInfosAnnotationComposer,
-          $MediaInfosCreateCompanionBuilder,
-          $MediaInfosUpdateCompanionBuilder,
-          (
-            MediaInfoRow,
-            BaseReferences<_$MoodiaryDatabase, MediaInfos, MediaInfoRow>,
-          ),
-          MediaInfoRow,
-          PrefetchHooks Function()
-        > {
-  $MediaInfosTableManager(_$MoodiaryDatabase db, MediaInfos table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $MediaInfosFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $MediaInfosOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $MediaInfosAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> fileName = const Value.absent(),
-                Value<String?> name = const Value.absent(),
-                Value<int?> durationMs = const Value.absent(),
-                Value<int> lastModified = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => MediaInfosCompanion(
-                fileName: fileName,
-                name: name,
-                durationMs: durationMs,
-                lastModified: lastModified,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String fileName,
-                Value<String?> name = const Value.absent(),
-                Value<int?> durationMs = const Value.absent(),
-                required int lastModified,
-                Value<int> rowid = const Value.absent(),
-              }) => MediaInfosCompanion.insert(
-                fileName: fileName,
-                name: name,
-                durationMs: durationMs,
-                lastModified: lastModified,
-                rowid: rowid,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable<MediaInfos, MediaInfoRow>(table),
-                  BaseReferences<_$MoodiaryDatabase, MediaInfos, MediaInfoRow>(
-                    db,
-                    table,
-                    e,
-                  ),
-                ),
-              )
-              .toList(),
-          prefetchHooksCallback: null,
-        ),
-      );
-}
-
-typedef $MediaInfosProcessedTableManager =
-    ProcessedTableManager<
-      _$MoodiaryDatabase,
-      MediaInfos,
-      MediaInfoRow,
-      $MediaInfosFilterComposer,
-      $MediaInfosOrderingComposer,
-      $MediaInfosAnnotationComposer,
-      $MediaInfosCreateCompanionBuilder,
-      $MediaInfosUpdateCompanionBuilder,
-      (
-        MediaInfoRow,
-        BaseReferences<_$MoodiaryDatabase, MediaInfos, MediaInfoRow>,
-      ),
-      MediaInfoRow,
-      PrefetchHooks Function()
-    >;
 typedef $PlacesCreateCompanionBuilder = PlacesCompanion Function({
   required String id,
   required String name,
@@ -11670,6 +11192,7 @@ typedef $DiaryMediaCreateCompanionBuilder = DiaryMediaCompanion Function({
   required String kind,
   required int seq,
   required String fileName,
+  Value<String?> name,
   Value<int> rowid,
 });
 typedef $DiaryMediaUpdateCompanionBuilder = DiaryMediaCompanion Function({
@@ -11677,6 +11200,7 @@ typedef $DiaryMediaUpdateCompanionBuilder = DiaryMediaCompanion Function({
   Value<String> kind,
   Value<int> seq,
   Value<String> fileName,
+  Value<String?> name,
   Value<int> rowid,
 });
 
@@ -11723,6 +11247,11 @@ class $DiaryMediaFilterComposer
 
   ColumnFilters<String> get fileName => $composableBuilder(
     column: $table.fileName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -11774,6 +11303,11 @@ class $DiaryMediaOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $DiariesOrderingComposer get diaryId {
     final $DiariesOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -11815,6 +11349,9 @@ class $DiaryMediaAnnotationComposer
 
   GeneratedColumn<String> get fileName =>
       $composableBuilder(column: $table.fileName, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
 
   $DiariesAnnotationComposer get diaryId {
     final $DiariesAnnotationComposer composer = $composerBuilder(
@@ -11872,12 +11409,14 @@ class $DiaryMediaTableManager
                 Value<String> kind = const Value.absent(),
                 Value<int> seq = const Value.absent(),
                 Value<String> fileName = const Value.absent(),
+                Value<String?> name = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => DiaryMediaCompanion(
                 diaryId: diaryId,
                 kind: kind,
                 seq: seq,
                 fileName: fileName,
+                name: name,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -11886,12 +11425,14 @@ class $DiaryMediaTableManager
                 required String kind,
                 required int seq,
                 required String fileName,
+                Value<String?> name = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => DiaryMediaCompanion.insert(
                 diaryId: diaryId,
                 kind: kind,
                 seq: seq,
                 fileName: fileName,
+                name: name,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -12403,8 +11944,6 @@ class $MoodiaryDatabaseManager {
   $CategoriesTableManager get categories =>
       $CategoriesTableManager(_db, _db.categories);
   $FontsTableManager get fonts => $FontsTableManager(_db, _db.fonts);
-  $MediaInfosTableManager get mediaInfos =>
-      $MediaInfosTableManager(_db, _db.mediaInfos);
   $PlacesTableManager get places => $PlacesTableManager(_db, _db.places);
   $DiaryMediaTableManager get diaryMedia =>
       $DiaryMediaTableManager(_db, _db.diaryMedia);

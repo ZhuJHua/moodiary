@@ -171,7 +171,6 @@ abstract class RustLibApi extends BaseApi {
 
   Future<HttpServer> crateApiHttpServerHttpServerStart({
     required int preferredPort,
-    required bool loopbackOnly,
     required String spoolDir,
     required FutureOr<HttpServerResponse> Function(HttpServerRequest) onRequest,
     required FutureOr<void> Function(PlatformInt64, PlatformInt64)
@@ -932,7 +931,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @override
   Future<HttpServer> crateApiHttpServerHttpServerStart({
     required int preferredPort,
-    required bool loopbackOnly,
     required String spoolDir,
     required FutureOr<HttpServerResponse> Function(HttpServerRequest) onRequest,
     required FutureOr<void> Function(PlatformInt64, PlatformInt64)
@@ -942,13 +940,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       NormalTask(
         callFfi: (port_) {
           var arg0 = cst_encode_u_16(preferredPort);
-          var arg1 = cst_encode_bool(loopbackOnly);
-          var arg2 = cst_encode_String(spoolDir);
-          var arg3 =
+          var arg1 = cst_encode_String(spoolDir);
+          var arg2 =
               cst_encode_DartFn_Inputs_http_server_request_Output_http_server_response_AnyhowException(
                 onRequest,
               );
-          var arg4 =
+          var arg3 =
               cst_encode_DartFn_Inputs_i_64_i_64_Output_unit_AnyhowException(
                 onBodyProgress,
               );
@@ -958,7 +955,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             arg1,
             arg2,
             arg3,
-            arg4,
           );
         },
         codec: DcoCodec(
@@ -967,13 +963,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeErrorData: dco_decode_AnyhowException,
         ),
         constMeta: kCrateApiHttpServerHttpServerStartConstMeta,
-        argValues: [
-          preferredPort,
-          loopbackOnly,
-          spoolDir,
-          onRequest,
-          onBodyProgress,
-        ],
+        argValues: [preferredPort, spoolDir, onRequest, onBodyProgress],
         apiImpl: this,
       ),
     );
@@ -982,13 +972,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiHttpServerHttpServerStartConstMeta =>
       const TaskConstMeta(
         debugName: "HttpServer_start",
-        argNames: [
-          "preferredPort",
-          "loopbackOnly",
-          "spoolDir",
-          "onRequest",
-          "onBodyProgress",
-        ],
+        argNames: ["preferredPort", "spoolDir", "onRequest", "onBodyProgress"],
       );
 
   @override
@@ -2064,15 +2048,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   HttpServerRequest dco_decode_http_server_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 6)
-      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return HttpServerRequest(
       method: dco_decode_String(arr[0]),
       path: dco_decode_String(arr[1]),
-      query: dco_decode_list_key_value(arr[2]),
-      headers: dco_decode_list_key_value(arr[3]),
-      body: dco_decode_list_prim_u_8_strict(arr[4]),
-      bodyFilePath: dco_decode_opt_String(arr[5]),
+      headers: dco_decode_list_key_value(arr[2]),
+      body: dco_decode_list_prim_u_8_strict(arr[3]),
+      bodyFilePath: dco_decode_opt_String(arr[4]),
     );
   }
 
@@ -2080,13 +2063,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   HttpServerResponse dco_decode_http_server_response(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return HttpServerResponse(
       status: dco_decode_u_16(arr[0]),
       headers: dco_decode_list_key_value(arr[1]),
       body: dco_decode_list_prim_u_8_strict(arr[2]),
-      bodyFilePath: dco_decode_opt_String(arr[3]),
     );
   }
 
@@ -2814,14 +2796,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_method = sse_decode_String(deserializer);
     var var_path = sse_decode_String(deserializer);
-    var var_query = sse_decode_list_key_value(deserializer);
     var var_headers = sse_decode_list_key_value(deserializer);
     var var_body = sse_decode_list_prim_u_8_strict(deserializer);
     var var_bodyFilePath = sse_decode_opt_String(deserializer);
     return HttpServerRequest(
       method: var_method,
       path: var_path,
-      query: var_query,
       headers: var_headers,
       body: var_body,
       bodyFilePath: var_bodyFilePath,
@@ -2836,12 +2816,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_status = sse_decode_u_16(deserializer);
     var var_headers = sse_decode_list_key_value(deserializer);
     var var_body = sse_decode_list_prim_u_8_strict(deserializer);
-    var var_bodyFilePath = sse_decode_opt_String(deserializer);
     return HttpServerResponse(
       status: var_status,
       headers: var_headers,
       body: var_body,
-      bodyFilePath: var_bodyFilePath,
     );
   }
 
@@ -4034,7 +4012,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.method, serializer);
     sse_encode_String(self.path, serializer);
-    sse_encode_list_key_value(self.query, serializer);
     sse_encode_list_key_value(self.headers, serializer);
     sse_encode_list_prim_u_8_strict(self.body, serializer);
     sse_encode_opt_String(self.bodyFilePath, serializer);
@@ -4049,7 +4026,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_u_16(self.status, serializer);
     sse_encode_list_key_value(self.headers, serializer);
     sse_encode_list_prim_u_8_strict(self.body, serializer);
-    sse_encode_opt_String(self.bodyFilePath, serializer);
   }
 
   @protected

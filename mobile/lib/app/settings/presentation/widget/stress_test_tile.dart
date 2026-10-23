@@ -9,6 +9,7 @@ import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
 class StressTestTile extends StatefulWidget {
   final bool isFirst;
@@ -143,9 +144,8 @@ class _StressTestTileState extends State<StressTestTile> {
       final t = rng.nextInt(total);
       if (t != i) targets.add(idFor(t));
     }
-    final content = jsonEncode({
-      'type': 'doc',
-      'content': [
+    final content = jsonEncode(
+      TiptapContent.newDoc([
         {
           'type': 'paragraph',
           'content': [
@@ -156,8 +156,8 @@ class _StressTestTileState extends State<StressTestTile> {
               },
           ],
         },
-      ],
-    });
+      ]),
+    );
     final time = now.subtract(
       Duration(days: rng.nextInt(730), minutes: rng.nextInt(1440)),
     );
@@ -165,7 +165,7 @@ class _StressTestTileState extends State<StressTestTile> {
       id: idFor(i),
       title: '$_prefix#$i',
       content: content,
-      contentText: '',
+      contentText: TiptapContent.parse(content).plainText,
       time: time,
       lastModified: time,
       show: true,

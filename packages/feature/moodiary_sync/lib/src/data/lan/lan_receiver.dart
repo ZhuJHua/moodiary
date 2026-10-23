@@ -96,8 +96,6 @@ class LanReceiverService {
 
   int get port => _server!.port;
 
-  bool get isRunning => _server?.isRunning ?? false;
-
   Future<void> start() async {
     version = await _appVersion();
     pin = lanGeneratePin();

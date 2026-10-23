@@ -50,7 +50,7 @@ final class MediaItemsProvider
   }
 }
 
-String _$mediaItemsHash() => r'edbb801306abd0254b08319471e4057f6fb0584b';
+String _$mediaItemsHash() => r'a8a29012507ce47f47c78b5ac24c33aefbb26c97';
 
 final class MediaItemsFamily extends $Family
     with
@@ -131,7 +131,7 @@ final class MediaCleanupControllerProvider
 }
 
 String _$mediaCleanupControllerHash() =>
-    r'64e5cff97a19df503a65ea26778e9bf4552d846a';
+    r'd710a957995c7afe84e95f2f7a17ddaf308c5272';
 
 abstract class _$MediaCleanupController extends $Notifier<void> {
   void build();
@@ -149,4 +149,78 @@ abstract class _$MediaCleanupController extends $Notifier<void> {
             >;
     return element.handleCreate(ref, build);
   }
+}
+
+@ProviderFor(audioDuration)
+final audioDurationProvider = AudioDurationFamily._();
+
+final class AudioDurationProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<Duration?>,
+          Duration?,
+          FutureOr<Duration?>
+        >
+    with $FutureModifier<Duration?>, $FutureProvider<Duration?> {
+  AudioDurationProvider._({
+    required AudioDurationFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'audioDurationProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$audioDurationHash();
+
+  @override
+  String toString() {
+    return r'audioDurationProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<Duration?> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<Duration?> create(Ref ref) {
+    final argument = this.argument as String;
+    return audioDuration(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is AudioDurationProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$audioDurationHash() => r'113f724b62004ff3b02d3bc7358648e8f75adf5c';
+
+final class AudioDurationFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<Duration?>, String> {
+  AudioDurationFamily._()
+    : super(
+        retry: null,
+        name: r'audioDurationProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  AudioDurationProvider call(String fileName) =>
+      AudioDurationProvider._(argument: fileName, from: this);
+
+  @override
+  String toString() => r'audioDurationProvider';
 }

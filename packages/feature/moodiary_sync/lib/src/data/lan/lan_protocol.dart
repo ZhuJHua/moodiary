@@ -9,7 +9,7 @@ import 'package:moodiary_platform/moodiary_platform.dart';
 
 const int lanDefaultPort = 6636;
 
-const int lanProtoVersion = 3;
+const int lanProtoVersion = 4;
 const String lanApiBase = '/moodiary/lan/v1';
 const String lanHandshakePath = '$lanApiBase/handshake';
 const String lanManifestPath = '$lanApiBase/manifest';

@@ -6,6 +6,8 @@ abstract class IFilePicker {
 
   Future<XFile?> pickVideo(BuildContext context);
 
+  Future<XFile?> takePhoto();
+
   Future<XFile?> pickAudio();
 
   Future<XFile?> pickFile({List<String>? allowedExtensions});

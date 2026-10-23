@@ -9,6 +9,8 @@ enum MoodiaryKVs<T extends Object> {
 
   dbEngineMigrated<bool>(defaultValue: false),
 
+  contentSchemaV2<bool>(defaultValue: false),
+
   autoSync<bool>(defaultValue: false),
 
   syncPollInterval<int>(defaultValue: 30),
@@ -56,6 +58,11 @@ enum MoodiaryKVs<T extends Object> {
   firstLineIndent<bool>(defaultValue: false),
   showWritingTime<bool>(defaultValue: true),
   showWordCount<bool>(defaultValue: true),
+
+  editorImeHeightPortrait<double>(defaultValue: 0),
+  editorImeHeightLandscape<double>(defaultValue: 0),
+  editorToolbarOrder<List<String>>(),
+  editorToolbarHidden<List<String>>(),
 
   lockNow<bool>(defaultValue: false),
 

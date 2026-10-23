@@ -97,6 +97,7 @@ Future<void> _exportSingle(
       untitledLabel: l10n.common.untitled,
       videoLabel: l10n.common.video,
       audioLabel: l10n.common.audio,
+      attachmentLabel: l10n.export.mediaAttachment,
     );
     await toast.dismiss();
     await shareExported(outcome.path, l10n);

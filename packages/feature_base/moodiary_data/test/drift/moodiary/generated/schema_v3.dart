@@ -4729,282 +4729,6 @@ class FontsCompanion extends UpdateCompanion<FontsData> {
   }
 }
 
-class MediaInfos extends Table with TableInfo<MediaInfos, MediaInfosData> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  MediaInfos(this.attachedDatabase, [this._alias]);
-  late final GeneratedColumn<String> fileName = GeneratedColumn<String>(
-    'file_name',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL PRIMARY KEY',
-  );
-  late final GeneratedColumn<String> name = GeneratedColumn<String>(
-    'name',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    $customConstraints: '',
-  );
-  late final GeneratedColumn<int> durationMs = GeneratedColumn<int>(
-    'duration_ms',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    $customConstraints: '',
-  );
-  late final GeneratedColumn<int> lastModified = GeneratedColumn<int>(
-    'last_modified',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  @override
-  List<GeneratedColumn> get $columns => [
-    fileName,
-    name,
-    durationMs,
-    lastModified,
-  ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'media_infos';
-  @override
-  Set<GeneratedColumn> get $primaryKey => {fileName};
-  @override
-  MediaInfosData map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return MediaInfosData(
-      fileName: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}file_name'],
-      )!,
-      name: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}name'],
-      ),
-      durationMs: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}duration_ms'],
-      ),
-      lastModified: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}last_modified'],
-      )!,
-    );
-  }
-
-  @override
-  MediaInfos createAlias(String alias) {
-    return MediaInfos(attachedDatabase, alias);
-  }
-
-  @override
-  bool get dontWriteConstraints => true;
-}
-
-class MediaInfosData extends DataClass implements Insertable<MediaInfosData> {
-  final String fileName;
-  final String? name;
-  final int? durationMs;
-  final int lastModified;
-  const MediaInfosData({
-    required this.fileName,
-    this.name,
-    this.durationMs,
-    required this.lastModified,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['file_name'] = Variable<String>(fileName);
-    if (!nullToAbsent || name != null) {
-      map['name'] = Variable<String>(name);
-    }
-    if (!nullToAbsent || durationMs != null) {
-      map['duration_ms'] = Variable<int>(durationMs);
-    }
-    map['last_modified'] = Variable<int>(lastModified);
-    return map;
-  }
-
-  MediaInfosCompanion toCompanion(bool nullToAbsent) {
-    return MediaInfosCompanion(
-      fileName: Value(fileName),
-      name: name == null && nullToAbsent ? const Value.absent() : Value(name),
-      durationMs: durationMs == null && nullToAbsent
-          ? const Value.absent()
-          : Value(durationMs),
-      lastModified: Value(lastModified),
-    );
-  }
-
-  factory MediaInfosData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return MediaInfosData(
-      fileName: serializer.fromJson<String>(json['fileName']),
-      name: serializer.fromJson<String?>(json['name']),
-      durationMs: serializer.fromJson<int?>(json['durationMs']),
-      lastModified: serializer.fromJson<int>(json['lastModified']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'fileName': serializer.toJson<String>(fileName),
-      'name': serializer.toJson<String?>(name),
-      'durationMs': serializer.toJson<int?>(durationMs),
-      'lastModified': serializer.toJson<int>(lastModified),
-    };
-  }
-
-  MediaInfosData copyWith({
-    String? fileName,
-    Value<String?> name = const Value.absent(),
-    Value<int?> durationMs = const Value.absent(),
-    int? lastModified,
-  }) => MediaInfosData(
-    fileName: fileName ?? this.fileName,
-    name: name.present ? name.value : this.name,
-    durationMs: durationMs.present ? durationMs.value : this.durationMs,
-    lastModified: lastModified ?? this.lastModified,
-  );
-  MediaInfosData copyWithCompanion(MediaInfosCompanion data) {
-    return MediaInfosData(
-      fileName: data.fileName.present ? data.fileName.value : this.fileName,
-      name: data.name.present ? data.name.value : this.name,
-      durationMs: data.durationMs.present
-          ? data.durationMs.value
-          : this.durationMs,
-      lastModified: data.lastModified.present
-          ? data.lastModified.value
-          : this.lastModified,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('MediaInfosData(')
-          ..write('fileName: $fileName, ')
-          ..write('name: $name, ')
-          ..write('durationMs: $durationMs, ')
-          ..write('lastModified: $lastModified')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(fileName, name, durationMs, lastModified);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is MediaInfosData &&
-          other.fileName == this.fileName &&
-          other.name == this.name &&
-          other.durationMs == this.durationMs &&
-          other.lastModified == this.lastModified);
-}
-
-class MediaInfosCompanion extends UpdateCompanion<MediaInfosData> {
-  final Value<String> fileName;
-  final Value<String?> name;
-  final Value<int?> durationMs;
-  final Value<int> lastModified;
-  final Value<int> rowid;
-  const MediaInfosCompanion({
-    this.fileName = const Value.absent(),
-    this.name = const Value.absent(),
-    this.durationMs = const Value.absent(),
-    this.lastModified = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  MediaInfosCompanion.insert({
-    required String fileName,
-    this.name = const Value.absent(),
-    this.durationMs = const Value.absent(),
-    required int lastModified,
-    this.rowid = const Value.absent(),
-  }) : fileName = Value(fileName),
-       lastModified = Value(lastModified);
-  static Insertable<MediaInfosData> custom({
-    Expression<String>? fileName,
-    Expression<String>? name,
-    Expression<int>? durationMs,
-    Expression<int>? lastModified,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (fileName != null) 'file_name': fileName,
-      if (name != null) 'name': name,
-      if (durationMs != null) 'duration_ms': durationMs,
-      if (lastModified != null) 'last_modified': lastModified,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  MediaInfosCompanion copyWith({
-    Value<String>? fileName,
-    Value<String?>? name,
-    Value<int?>? durationMs,
-    Value<int>? lastModified,
-    Value<int>? rowid,
-  }) {
-    return MediaInfosCompanion(
-      fileName: fileName ?? this.fileName,
-      name: name ?? this.name,
-      durationMs: durationMs ?? this.durationMs,
-      lastModified: lastModified ?? this.lastModified,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (fileName.present) {
-      map['file_name'] = Variable<String>(fileName.value);
-    }
-    if (name.present) {
-      map['name'] = Variable<String>(name.value);
-    }
-    if (durationMs.present) {
-      map['duration_ms'] = Variable<int>(durationMs.value);
-    }
-    if (lastModified.present) {
-      map['last_modified'] = Variable<int>(lastModified.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('MediaInfosCompanion(')
-          ..write('fileName: $fileName, ')
-          ..write('name: $name, ')
-          ..write('durationMs: $durationMs, ')
-          ..write('lastModified: $lastModified, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
 class Places extends Table with TableInfo<Places, PlacesData> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -5386,8 +5110,16 @@ class DiaryMedia extends Table with TableInfo<DiaryMedia, DiaryMediaData> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
   @override
-  List<GeneratedColumn> get $columns => [diaryId, kind, seq, fileName];
+  List<GeneratedColumn> get $columns => [diaryId, kind, seq, fileName, name];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -5415,6 +5147,10 @@ class DiaryMedia extends Table with TableInfo<DiaryMedia, DiaryMediaData> {
         DriftSqlType.string,
         data['${effectivePrefix}file_name'],
       )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      ),
     );
   }
 
@@ -5436,11 +5172,13 @@ class DiaryMediaData extends DataClass implements Insertable<DiaryMediaData> {
   final String kind;
   final int seq;
   final String fileName;
+  final String? name;
   const DiaryMediaData({
     required this.diaryId,
     required this.kind,
     required this.seq,
     required this.fileName,
+    this.name,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -5449,6 +5187,9 @@ class DiaryMediaData extends DataClass implements Insertable<DiaryMediaData> {
     map['kind'] = Variable<String>(kind);
     map['seq'] = Variable<int>(seq);
     map['file_name'] = Variable<String>(fileName);
+    if (!nullToAbsent || name != null) {
+      map['name'] = Variable<String>(name);
+    }
     return map;
   }
 
@@ -5458,6 +5199,7 @@ class DiaryMediaData extends DataClass implements Insertable<DiaryMediaData> {
       kind: Value(kind),
       seq: Value(seq),
       fileName: Value(fileName),
+      name: name == null && nullToAbsent ? const Value.absent() : Value(name),
     );
   }
 
@@ -5471,6 +5213,7 @@ class DiaryMediaData extends DataClass implements Insertable<DiaryMediaData> {
       kind: serializer.fromJson<String>(json['kind']),
       seq: serializer.fromJson<int>(json['seq']),
       fileName: serializer.fromJson<String>(json['fileName']),
+      name: serializer.fromJson<String?>(json['name']),
     );
   }
   @override
@@ -5481,6 +5224,7 @@ class DiaryMediaData extends DataClass implements Insertable<DiaryMediaData> {
       'kind': serializer.toJson<String>(kind),
       'seq': serializer.toJson<int>(seq),
       'fileName': serializer.toJson<String>(fileName),
+      'name': serializer.toJson<String?>(name),
     };
   }
 
@@ -5489,11 +5233,13 @@ class DiaryMediaData extends DataClass implements Insertable<DiaryMediaData> {
     String? kind,
     int? seq,
     String? fileName,
+    Value<String?> name = const Value.absent(),
   }) => DiaryMediaData(
     diaryId: diaryId ?? this.diaryId,
     kind: kind ?? this.kind,
     seq: seq ?? this.seq,
     fileName: fileName ?? this.fileName,
+    name: name.present ? name.value : this.name,
   );
   DiaryMediaData copyWithCompanion(DiaryMediaCompanion data) {
     return DiaryMediaData(
@@ -5501,6 +5247,7 @@ class DiaryMediaData extends DataClass implements Insertable<DiaryMediaData> {
       kind: data.kind.present ? data.kind.value : this.kind,
       seq: data.seq.present ? data.seq.value : this.seq,
       fileName: data.fileName.present ? data.fileName.value : this.fileName,
+      name: data.name.present ? data.name.value : this.name,
     );
   }
 
@@ -5510,13 +5257,14 @@ class DiaryMediaData extends DataClass implements Insertable<DiaryMediaData> {
           ..write('diaryId: $diaryId, ')
           ..write('kind: $kind, ')
           ..write('seq: $seq, ')
-          ..write('fileName: $fileName')
+          ..write('fileName: $fileName, ')
+          ..write('name: $name')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(diaryId, kind, seq, fileName);
+  int get hashCode => Object.hash(diaryId, kind, seq, fileName, name);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -5524,7 +5272,8 @@ class DiaryMediaData extends DataClass implements Insertable<DiaryMediaData> {
           other.diaryId == this.diaryId &&
           other.kind == this.kind &&
           other.seq == this.seq &&
-          other.fileName == this.fileName);
+          other.fileName == this.fileName &&
+          other.name == this.name);
 }
 
 class DiaryMediaCompanion extends UpdateCompanion<DiaryMediaData> {
@@ -5532,12 +5281,14 @@ class DiaryMediaCompanion extends UpdateCompanion<DiaryMediaData> {
   final Value<String> kind;
   final Value<int> seq;
   final Value<String> fileName;
+  final Value<String?> name;
   final Value<int> rowid;
   const DiaryMediaCompanion({
     this.diaryId = const Value.absent(),
     this.kind = const Value.absent(),
     this.seq = const Value.absent(),
     this.fileName = const Value.absent(),
+    this.name = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   DiaryMediaCompanion.insert({
@@ -5545,6 +5296,7 @@ class DiaryMediaCompanion extends UpdateCompanion<DiaryMediaData> {
     required String kind,
     required int seq,
     required String fileName,
+    this.name = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : diaryId = Value(diaryId),
        kind = Value(kind),
@@ -5555,6 +5307,7 @@ class DiaryMediaCompanion extends UpdateCompanion<DiaryMediaData> {
     Expression<String>? kind,
     Expression<int>? seq,
     Expression<String>? fileName,
+    Expression<String>? name,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -5562,6 +5315,7 @@ class DiaryMediaCompanion extends UpdateCompanion<DiaryMediaData> {
       if (kind != null) 'kind': kind,
       if (seq != null) 'seq': seq,
       if (fileName != null) 'file_name': fileName,
+      if (name != null) 'name': name,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -5571,6 +5325,7 @@ class DiaryMediaCompanion extends UpdateCompanion<DiaryMediaData> {
     Value<String>? kind,
     Value<int>? seq,
     Value<String>? fileName,
+    Value<String?>? name,
     Value<int>? rowid,
   }) {
     return DiaryMediaCompanion(
@@ -5578,6 +5333,7 @@ class DiaryMediaCompanion extends UpdateCompanion<DiaryMediaData> {
       kind: kind ?? this.kind,
       seq: seq ?? this.seq,
       fileName: fileName ?? this.fileName,
+      name: name ?? this.name,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -5597,6 +5353,9 @@ class DiaryMediaCompanion extends UpdateCompanion<DiaryMediaData> {
     if (fileName.present) {
       map['file_name'] = Variable<String>(fileName.value);
     }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -5610,6 +5369,7 @@ class DiaryMediaCompanion extends UpdateCompanion<DiaryMediaData> {
           ..write('kind: $kind, ')
           ..write('seq: $seq, ')
           ..write('fileName: $fileName, ')
+          ..write('name: $name, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -6086,7 +5846,6 @@ class DatabaseAtV3 extends GeneratedDatabase {
   );
   late final Categories categories = Categories(this);
   late final Fonts fonts = Fonts(this);
-  late final MediaInfos mediaInfos = MediaInfos(this);
   late final Places places = Places(this);
   late final Index idxDiariesShowTime = Index(
     'idx_diaries_show_time',
@@ -6142,7 +5901,6 @@ class DatabaseAtV3 extends GeneratedDatabase {
     idxTombstonesTime,
     categories,
     fonts,
-    mediaInfos,
     places,
     idxDiariesShowTime,
     idxDiariesShowCatTime,

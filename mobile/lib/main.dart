@@ -16,6 +16,7 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
 import 'package:moodiary_mobile/app/boot_failure_page.dart';
+import 'package:moodiary_mobile/app/build_badge.dart';
 import 'package:moodiary_mobile/app/di/bootstrap.dart';
 import 'package:moodiary_mobile/app/di/di.dart';
 import 'package:moodiary_mobile/app/licenses.dart';
@@ -139,13 +140,19 @@ void main() async {
     buildRouter(initialLocation: resolveInitialLocation());
   } catch (e, s) {
     logger.f('bootstrap failed', error: e, stackTrace: s);
-    runApp(BootFailurePage(error: e, stackTrace: s));
+    runApp(
+      BuildBadge(
+        child: BootFailurePage(error: e, stackTrace: s),
+      ),
+    );
     return;
   }
 
   runApp(
-    TranslationProvider(
-      child: ProviderScope(retry: (_, _) => null, child: const Moodiary()),
+    BuildBadge(
+      child: TranslationProvider(
+        child: ProviderScope(retry: (_, _) => null, child: const Moodiary()),
+      ),
     ),
   );
 }

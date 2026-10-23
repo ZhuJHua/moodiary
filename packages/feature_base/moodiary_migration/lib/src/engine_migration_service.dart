@@ -9,6 +9,7 @@ import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_migration/src/legacy/legacy_models.dart' as legacy;
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
 class EngineMigrationService {
   const EngineMigrationService._();
@@ -34,7 +35,6 @@ class EngineMigrationService {
     CategoryRepository? categoryRepository,
     PlaceRepository? placeRepository,
     FontRepository? fontRepository,
-    MediaInfoRepository? mediaInfoRepository,
     TombstoneRepository? tombstoneRepository,
     String? legacyDir,
   }) async {
@@ -44,7 +44,6 @@ class EngineMigrationService {
     final categoryRepo = categoryRepository ?? getIt<CategoryRepository>();
     final placeRepo = placeRepository ?? getIt<PlaceRepository>();
     final fontRepo = fontRepository ?? getIt<FontRepository>();
-    final mediaInfoRepo = mediaInfoRepository ?? getIt<MediaInfoRepository>();
     final tombstoneRepo = tombstoneRepository ?? getIt<TombstoneRepository>();
 
     final dir = legacyDir ?? AppFiles.getRealPath('database', '');
@@ -61,7 +60,6 @@ class EngineMigrationService {
       final diaryCount = await isar.diarys.where().countAsync();
       final categoryCount = await isar.categorys.where().countAsync();
       final fontCount = await isar.fonts.where().countAsync();
-      final mediaInfoCount = await isar.mediaInfos.where().countAsync();
       final tombstoneCount = await isar.syncTombstones.where().countAsync();
       final providerCount = await isar.llmProviders.where().countAsync();
       final sessionCount = await isar.chatSessions.where().countAsync();
@@ -71,7 +69,6 @@ class EngineMigrationService {
           diaryCount +
           categoryCount +
           fontCount +
-          mediaInfoCount +
           tombstoneCount +
           providerCount +
           sessionCount +
@@ -94,6 +91,13 @@ class EngineMigrationService {
           '拒绝用空库覆盖',
         );
       }
+      // Isar names must reach the body before insertDiaries normalizes it to v2;
+      // the SQLite schema migration runs before these legacy rows are copied.
+      final audioNames = {
+        for (final info in await isar.mediaInfos.where().findAllAsync())
+          if (info.name?.trim() case final name? when name.isNotEmpty)
+            info.fileName: name,
+      };
       await db.clearAll();
 
       const batch = 256;
@@ -146,7 +150,16 @@ class EngineMigrationService {
               id: d.id,
               categoryId: d.categoryId,
               title: d.title,
-              content: d.content,
+              content: d.type == DiaryType.tiptap.value
+                  ? TiptapContent.mapMediaNames(
+                      d.content,
+                      (type, src, name) =>
+                          type == 'audio' &&
+                              (name == null || name.trim().isEmpty)
+                          ? audioNames[src] ?? name
+                          : name,
+                    )
+                  : d.content,
               contentText: d.contentText,
               time: d.time,
               lastModified: d.lastModified,
@@ -175,25 +188,6 @@ class EngineMigrationService {
           ),
         );
         tick(1);
-      }
-
-      for (var i = 0; i < mediaInfoCount; i += batch) {
-        final rows = await isar.mediaInfos.where().findAllAsync(
-          offset: i,
-          limit: batch,
-        );
-        for (final m in rows) {
-          await mediaInfoRepo.insertAMediaInfo(
-            MediaInfo(
-              fileName: m.fileName,
-              name: m.name,
-              durationMs: m.durationMs,
-              lastModified: m.lastModified,
-            ),
-            fromSync: true,
-          );
-        }
-        tick(rows.length);
       }
 
       // 墓碑必须最后搬：日记/分类/媒体插入会顺手清同 id 墓碑，先搬会被误清
@@ -333,7 +327,6 @@ class EngineMigrationService {
         'categories': (categoryCount, await sqliteCount(db.categories)),
         'places': (placesByName.length, await sqliteCount(db.places)),
         'fonts': (fontCount, await sqliteCount(db.fonts)),
-        'media_infos': (mediaInfoCount, await sqliteCount(db.mediaInfos)),
         'tombstones': (tombstoneCount, await sqliteCount(db.tombstones)),
         'llm_providers': (providerCount, await sqliteCount(db.llmProviders)),
         'chat_sessions': (sessionCount, await sqliteCount(db.chatSessions)),

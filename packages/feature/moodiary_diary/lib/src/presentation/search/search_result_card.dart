@@ -2,7 +2,6 @@ import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
-import 'package:mui/mui.dart';
 
 class SearchResultCard extends StatelessWidget {
   const SearchResultCard({super.key, required this.hit, this.onTap});
@@ -11,13 +10,29 @@ class SearchResultCard extends StatelessWidget {
 
   final VoidCallback? onTap;
 
+  static List<InlineSpan> _hits(
+    String marked,
+    TextStyle base,
+    TextStyle highlight,
+  ) => [
+    for (final (text, isHit) in splitSearchHighlight(marked))
+      TextSpan(text: text, style: isHit ? highlight : base),
+  ];
+
   static TextSpan _spans(String marked, TextStyle base, TextStyle highlight) =>
-      TextSpan(
-        children: [
-          for (final (text, isHit) in splitSearchHighlight(marked))
-            TextSpan(text: text, style: isHit ? highlight : base),
-        ],
-      );
+      TextSpan(children: _hits(marked, base, highlight));
+
+  static TextSpan _excerptSpans(
+    String marked,
+    TextStyle base,
+    TextStyle highlight,
+  ) => TextSpan(
+    children: mediaMarkedSpans(
+      marked,
+      style: base,
+      textSpans: (text) => _hits(text, base, highlight),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +71,7 @@ class SearchResultCard extends StatelessWidget {
                 const SizedBox(height: 6),
               ],
               Text.rich(
-                _spans(
+                _excerptSpans(
                   excerpt,
                   typography.bodyMedium.onSurfaceVariant.copyWith(height: 1.4),
                   typography.bodyMedium.onPrimaryContainer.copyWith(
