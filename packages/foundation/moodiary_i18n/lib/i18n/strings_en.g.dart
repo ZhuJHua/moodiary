@@ -46,6 +46,7 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$share$en share = _Translations$share$en._(_root);
 	@override late final _Translations$sync$en sync = _Translations$sync$en._(_root);
 	@override late final _Translations$ui$en ui = _Translations$ui$en._(_root);
+	@override late final _Translations$wordcloud$en wordcloud = _Translations$wordcloud$en._(_root);
 }
 
 // Path: app
@@ -1429,6 +1430,85 @@ class _Translations$ui$en extends Translations$ui$zh {
 	@override String get videoPlayerBrightness => 'Brightness';
 	@override String get videoPlayerVolume => 'Volume';
 	@override String videoPlayerSpeedBoost({required Object speed}) => 'Playing at ${speed}×';
+}
+
+// Path: wordcloud
+class _Translations$wordcloud$en extends Translations$wordcloud$zh {
+	_Translations$wordcloud$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Word cloud';
+	@override String subtitle({required Object diaries, required Object terms}) => '${diaries} entries · ${terms} words';
+	@override String get rangeWeek => 'This week';
+	@override String get rangeMonth => 'This month';
+	@override String get rangeYear => 'This year';
+	@override String get rangeCustom => 'Custom';
+	@override String get modePerBucket => 'This one';
+	@override String get modeCumulative => 'So far';
+	@override String get modePerBucketHint => 'Only words from this period';
+	@override String get modeCumulativeHint => 'Everything from the start up to this period';
+	@override String get play => 'Play';
+	@override String get pause => 'Pause';
+	@override String get slower => 'Slower';
+	@override String get faster => 'Faster';
+	@override String segmentLabel({required Object index, required Object total}) => '${index}/${total}';
+	@override String windowRange({required Object from, required Object to}) => '${from} – ${to}';
+	@override String upto({required Object day}) => 'Up to ${day}';
+	@override String get emptyTitle => 'Nothing to cloud in this range yet';
+	@override String get emptyDesc => 'Pick another range, or write something first.';
+	@override String wordCount({required Object count}) => '${count} occurrences';
+	@override String get wordBlock => 'Hide this word';
+	@override String get blockedToast => 'Hidden from now on';
+	@override String get windowBarsHint => 'Each bar is one cloud on the timeline';
+	@override String get timelineSheetTitle => 'Time range';
+	@override String get rangeTitle => 'Which stretch of time';
+	@override String windowSize({required Object count, required Object unit}) => '${count} ${unit}';
+	@override String get windowLengthTitle => 'Each cloud covers';
+	@override String get windowLengthHint => 'Clouds sit back to back without overlapping';
+	@override String windowSummary({required Object count, required Object size}) => '${count} clouds · ${size} each';
+	@override String windowAtMost({required Object count, required Object size}) => 'up to ${count} clouds · ${size} each';
+	@override String windowPreviewMore({required Object count}) => '${count} more after these';
+	@override String get windowKeepLast => 'That range won\'t work, keeping the last settings';
+	@override String windowSkipped({required Object count}) => '${count} empty periods skipped';
+	@override String get unitDay => 'day(s)';
+	@override String get unitWeek => 'week(s)';
+	@override String get unitMonth => 'month(s)';
+	@override String get unitQuarter => 'quarter(s)';
+	@override String get unitYear => 'year(s)';
+	@override String get errEmptyRange => 'The end has to be later than the start';
+	@override String get errTooManyWindows => 'Too many clouds (400 max). Pick a shorter range';
+	@override String get rangePageTitle => 'Pick a time range';
+	@override String get rangeApply => 'Done';
+	@override String get rangeHint => 'Tap a month to start, tap another to finish';
+	@override String rangePickedStart({required Object day}) => 'Start: ${day} — now tap the month it should end';
+	@override String get rangeFromEarliest => 'From the first entry';
+	@override String get rangeToLatest => 'To the latest entry';
+	@override String get rangeEverything => 'Everything';
+	@override String get rangePickStart => 'Start date';
+	@override String get rangePickEnd => 'End date';
+	@override String monthCount({required Object count}) => '${count}';
+	@override String get dictionaryTitle => 'Word cloud dictionary';
+	@override String get lexiconTitle => 'Words to keep';
+	@override String get lexiconHint => 'Some words get split, others get glued together (「今天」 and 「天气」 becoming 「今天天气」). Add them here to count them as written.';
+	@override String get lexiconAddHint => 'A word';
+	@override String get lexiconAdd => 'Keep it';
+	@override String get lexiconToast => 'Kept';
+	@override String get lexiconClear => 'Clear kept words';
+	@override String lexiconClearMessage({required Object count}) => 'All ${count} words will be removed.';
+	@override String get blockedTitle => 'Words to hide';
+	@override String get blockedHint => 'Only affects the cloud; your diary text is never changed.';
+	@override String get blockedAddHint => 'A word to hide';
+	@override String get blockedAdd => 'Add';
+	@override String get blockedClear => 'Clear';
+	@override String blockedClearMessage({required Object count}) => 'All ${count} words will be removed and shown again.';
+	@override String get wordsEmpty => 'Nothing added yet';
+	@override String get wordsRejected => 'Already added, or the list is full';
+	@override String get singleCharsTitle => 'Single characters';
+	@override String get hideSingleChars => 'Hide single characters';
+	@override String get hideSingleCharsHint => 'Single characters such as 的, 了, 去, 说 stay out of the cloud (雨 and 猫 too). Add any you want to keep to 「Words to keep」.';
+	@override String get priorityHint => 'Words to hide win over words to keep, and both win over the built-in ignore list. Stored on this device only.';
 }
 
 // Path: editor.toolbar
