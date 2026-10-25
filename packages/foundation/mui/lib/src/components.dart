@@ -34,6 +34,7 @@ export 'components/common/color_picker.dart';
 export 'components/common/env_badge.dart';
 export 'components/common/file_type_icon.dart';
 export 'components/common/heatmap.dart';
+export 'components/common/line_chart.dart';
 export 'components/common/lock_pin_pad.dart';
 export 'components/common/nav_bar.dart';
 export 'components/common/qweather_icon.dart';

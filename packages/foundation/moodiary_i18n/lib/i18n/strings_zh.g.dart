@@ -42,6 +42,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$diary$zh diary = Translations$diary$zh.internal(_root);
 	late final Translations$editor$zh editor = Translations$editor$zh.internal(_root);
 	late final Translations$export$zh export = Translations$export$zh.internal(_root);
+	late final Translations$insights$zh insights = Translations$insights$zh.internal(_root);
 	late final Translations$lock$zh lock = Translations$lock$zh.internal(_root);
 	late final Translations$media$zh media = Translations$media$zh.internal(_root);
 	late final Translations$picker$zh picker = Translations$picker$zh.internal(_root);
@@ -2557,6 +2558,171 @@ class Translations$export$zh {
 
 	/// zh: '{count} 个媒体文件无法导入（缺失或无法读取），已按普通链接保留'
 	String importMissingMedia({required Object count}) => '${count} 个媒体文件无法导入（缺失或无法读取），已按普通链接保留';
+}
+
+// Path: insights
+class Translations$insights$zh {
+	Translations$insights$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: '心情洞察'
+	String get title => '心情洞察';
+
+	/// zh: '周'
+	String get week => '周';
+
+	/// zh: '月'
+	String get month => '月';
+
+	/// zh: '年'
+	String get year => '年';
+
+	/// zh: '{year}年'
+	String yearTitle({required Object year}) => '${year}年';
+
+	/// zh: '{start} – {end}'
+	String weekTitle({required Object start, required Object end}) => '${start} – ${end}';
+
+	/// zh: '平均 · {level}'
+	String averageLevel({required Object level}) => '平均 · ${level}';
+
+	/// zh: '按天平均，未记录的天不计入'
+	String get dailyMean => '按天平均，未记录的天不计入';
+
+	/// zh: '记录天数'
+	String get recordedDays => '记录天数';
+
+	/// zh: '日记篇数'
+	String get entries => '日记篇数';
+
+	/// zh: '最好的一天'
+	String get bestDay => '最好的一天';
+
+	/// zh: '这段时间还没有记录心情'
+	String get empty => '这段时间还没有记录心情';
+
+	/// zh: '心情日历'
+	String get calendar => '心情日历';
+
+	/// zh: '每日趋势'
+	String get trend => '每日趋势';
+
+	/// zh: '心情分布'
+	String get distribution => '心情分布';
+
+	/// zh: '星期规律'
+	String get weekdayPattern => '星期规律';
+
+	/// zh: '标签与心情'
+	String get tags => '标签与心情';
+
+	/// zh: '只统计至少 5 篇的标签，这是相关，不是因果'
+	String get tagsCaption => '只统计至少 5 篇的标签，这是相关，不是因果';
+
+	/// zh: '这段时间还没有符合条件的标签'
+	String get tagsEmpty => '这段时间还没有符合条件的标签';
+
+	/// zh: '点日期查看当天'
+	String get selectHint => '点日期查看当天';
+
+	/// zh: '查看'
+	String get view => '查看';
+
+	/// zh: '未记录'
+	String get unrecorded => '未记录';
+
+	/// zh: '今天'
+	String get today => '今天';
+
+	/// zh: '本周日记'
+	String get weekDiaries => '本周日记';
+
+	/// zh: '年度心情'
+	String get yearPixels => '年度心情';
+
+	/// zh: '每月平均'
+	String get monthlyTrend => '每月平均';
+
+	/// zh: '本月平均心情 · {level}'
+	String monthAverage({required Object level}) => '本月平均心情 · ${level}';
+
+	/// zh: '记录 {count} / {days} 天'
+	String recordedProgress({required Object count, required Object days}) => '记录 ${count} / ${days} 天';
+
+	/// zh: '心情记录更新了'
+	String get noticeTitle => '心情记录更新了';
+
+	/// zh: '{version} 新变化'
+	String noticeSubtitle({required Object version}) => '${version} 新变化';
+
+	/// zh: '心情只记录今天感觉怎么样，也可以不填'
+	String get noticeCaption => '心情只记录今天感觉怎么样，也可以不填';
+
+	/// zh: '场景改成了标签'
+	String get noticeTagsTitle => '场景改成了标签';
+
+	/// zh: '以前选过的学习、旅行等，已经加到对应日记的标签里。'
+	String get noticeTagsBody => '以前选过的学习、旅行等，已经加到对应日记的标签里。';
+
+	/// zh: '旧的心情已自动换算'
+	String get noticeLevelsTitle => '旧的心情已自动换算';
+
+	/// zh: '开心、满足等换成了相近的等级，没选过的显示为未记录。'
+	String get noticeLevelsBody => '开心、满足等换成了相近的等级，没选过的显示为未记录。';
+
+	/// zh: '新增心情洞察'
+	String get noticeInsightsTitle => '新增心情洞察';
+
+	/// zh: '在「我的」里查看心情日历和变化趋势。'
+	String get noticeInsightsBody => '在「我的」里查看心情日历和变化趋势。';
+
+	/// zh: '去看看'
+	String get noticeExplore => '去看看';
+
+	/// zh: '知道了'
+	String get noticeDone => '知道了';
+
+	/// zh: '心情洞察加载失败'
+	String get loadError => '心情洞察加载失败';
+
+	/// zh: '重试'
+	String get retry => '重试';
+
+	/// zh: '上一期'
+	String get previousPeriod => '上一期';
+
+	/// zh: '下一期'
+	String get nextPeriod => '下一期';
+
+	/// zh: '{count} · {percent}%'
+	String countPercent({required Object count, required Object percent}) => '${count} · ${percent}%';
+
+	/// zh: '{sign}{value}'
+	String signedDelta({required Object sign, required Object value}) => '${sign}${value}';
+
+	/// zh: '{date} · {weekday}'
+	String dayHeader({required Object date, required Object weekday}) => '${date} · ${weekday}';
+
+	/// zh: '{count} / 7'
+	String recordedWeek({required Object count}) => '${count} / 7';
+
+	/// zh: '(other) {{date} · {level} · {count} 篇}'
+	String dayDetail({required num count, required Object date, required Object level}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
+		other: '${date} · ${level} · ${count} 篇',
+	);
+
+	/// zh: '(other) {{date} · {level}（{score}）· {count} 篇}'
+	String dayTooltip({required num count, required Object date, required Object level, required Object score}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
+		other: '${date} · ${level}（${score}）· ${count} 篇',
+	);
+
+	/// zh: '(other) {好心情连续 {count} 天}'
+	String streak({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
+		other: '好心情连续 ${count} 天',
+	);
 }
 
 // Path: lock

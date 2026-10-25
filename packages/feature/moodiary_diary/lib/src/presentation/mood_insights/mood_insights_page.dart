@@ -1,0 +1,646 @@
+import 'dart:async';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_di/moodiary_di.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_logging/moodiary_logging.dart';
+import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_router/moodiary_router.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
+
+import '../widget/diary_entry_tile.dart';
+import 'mood_calendar.dart';
+import 'mood_patterns.dart';
+
+class MoodInsightsPage extends ConsumerStatefulWidget {
+  const MoodInsightsPage({super.key});
+
+  @override
+  ConsumerState<MoodInsightsPage> createState() => _MoodInsightsPageState();
+}
+
+class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
+    with RouteAware {
+  MoodInsightsScope _scope = .month;
+  DateTime _anchor = moodDayKey(DateTime.now());
+  DateTime? _selected;
+  late final _repository = getIt<MoodInsightsRepository>();
+  late Future<_InsightsData> _future;
+  StreamSubscription<DiaryEvent>? _subscription;
+  Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = _load();
+    _subscription = getIt<DiaryRepository>().diaryEvents.listen((_) {
+      _debounce?.cancel();
+      _debounce = Timer(const Duration(milliseconds: 200), _refresh);
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) moodiaryRouteObserver.subscribe(this, route);
+  }
+
+  @override
+  void didPopNext() => _refresh();
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _subscription?.cancel();
+    moodiaryRouteObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  void _refresh() {
+    if (mounted) setState(() => _future = _load());
+  }
+
+  Future<_InsightsData> _load() async {
+    final bounds = moodPeriodBounds(_anchor, _scope);
+    final previous = moodPeriodBounds(moodDayOffset(bounds.start, -1), _scope);
+    final patternStart = _scope == .month
+        ? moodDayOffset(bounds.end, -90)
+        : bounds.start;
+    final start = patternStart.isBefore(previous.start)
+        ? patternStart
+        : previous.start;
+    try {
+      final rows = await _repository.entries(start, bounds.end);
+      List<MoodInsightEntry> between(DateTime from, DateTime to) => rows
+          .where(
+            (e) =>
+                !moodDayKey(e.time).isBefore(from) &&
+                moodDayKey(e.time).isBefore(to),
+          )
+          .toList();
+      final periodRows = between(bounds.start, bounds.end);
+      return _InsightsData(
+        rows: periodRows,
+        summary: summarizeMood(periodRows),
+        previous: summarizeMood(between(previous.start, previous.end)),
+        weekdays: moodWeekdayAverages(
+          rows,
+          start: patternStart,
+          end: bounds.end,
+        ),
+      );
+    } catch (e, s) {
+      logger.e('Mood insights load failed', error: e, stackTrace: s);
+      rethrow;
+    }
+  }
+
+  void _changeScope(MoodInsightsScope scope) => setState(() {
+    _scope = scope;
+    _selected = null;
+    _future = _load();
+  });
+
+  void _move(int direction) => setState(() {
+    final start = moodPeriodBounds(_anchor, _scope).start;
+    _anchor = switch (_scope) {
+      .week => moodDayOffset(start, direction * 7),
+      .month => DateTime(start.year, start.month + direction),
+      .year => DateTime(start.year + direction),
+    };
+    _selected = null;
+    _future = _load();
+  });
+
+  String _periodTitle(BuildContext context, DateTime start, DateTime end) {
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    return switch (_scope) {
+      .week => context.l10n.insights.weekTitle(
+        start: DateFormat.MMMd(locale).format(start),
+        end: start.month == moodDayOffset(end, -1).month
+            ? DateFormat.d(locale).format(moodDayOffset(end, -1))
+            : DateFormat.MMMd(locale).format(moodDayOffset(end, -1)),
+      ),
+      .month => DateFormat.yMMMM(locale).format(start),
+      .year => context.l10n.insights.yearTitle(year: start.year),
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bounds = moodPeriodBounds(_anchor, _scope);
+    final today = moodDayKey(DateTime.now());
+    final containsToday =
+        !today.isBefore(bounds.start) && today.isBefore(bounds.end);
+    return Scaffold(
+      appBar: AppBar(title: Text(context.l10n.insights.title)),
+      body: ListView(
+        padding: .fromLTRB(
+          12,
+          4,
+          12,
+          12 + MediaQuery.paddingOf(context).bottom,
+        ),
+        children: [
+          _Block(
+            child: Column(
+              children: [
+                MSegmentedControl<MoodInsightsScope>(
+                  selected: _scope,
+                  onChanged: _changeScope,
+                  options: [
+                    MSegmentOption(
+                      value: .week,
+                      label: context.l10n.insights.week,
+                    ),
+                    MSegmentOption(
+                      value: .month,
+                      label: context.l10n.insights.month,
+                    ),
+                    MSegmentOption(
+                      value: .year,
+                      label: context.l10n.insights.year,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    IconButton(
+                      tooltip: context.l10n.insights.previousPeriod,
+                      onPressed: () => _move(-1),
+                      icon: const Icon(LucideIcons.chevronLeft),
+                    ),
+                    Expanded(
+                      child: Text(
+                        _periodTitle(context, bounds.start, bounds.end),
+                        textAlign: .center,
+                        style: context.theme.typography.titleMedium.onSurface,
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: context.l10n.insights.nextPeriod,
+                      onPressed: containsToday ? null : () => _move(1),
+                      icon: const Icon(LucideIcons.chevronRight),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          FutureBuilder<_InsightsData>(
+            future: _future,
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return _Block(
+                  child: Column(
+                    children: [
+                      Text(context.l10n.insights.loadError),
+                      TextButton(
+                        onPressed: _refresh,
+                        child: Text(context.l10n.insights.retry),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              final data = snapshot.data;
+              if (data == null || snapshot.connectionState != .done) {
+                return const _Block(
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (data.summary.average == null) {
+                return _Block(
+                  child: Padding(
+                    padding: const .symmetric(vertical: 32),
+                    child: Center(
+                      child: Text(
+                        context.l10n.insights.empty,
+                        style: context
+                            .theme
+                            .typography
+                            .bodyMedium
+                            .onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                );
+              }
+              return Column(
+                crossAxisAlignment: .stretch,
+                children: [
+                  _Block(
+                    child: _Summary(data: data, scope: _scope),
+                  ),
+                  if (_scope != .week)
+                    _Block(
+                      title: _scope == .month
+                          ? context.l10n.insights.calendar
+                          : context.l10n.insights.yearPixels,
+                      child: Column(
+                        children: [
+                          MoodCalendar(
+                            scope: _scope,
+                            start: bounds.start,
+                            days: data.summary.days,
+                            selected: _selected,
+                            onSelected: (day) => setState(
+                              () => _selected = day == _selected ? null : day,
+                            ),
+                          ),
+                          _dayFooter(data),
+                          const SizedBox(height: 8),
+                          const MoodInsightsLegend(),
+                        ],
+                      ),
+                    ),
+                  _Block(
+                    title: _scope == .year
+                        ? context.l10n.insights.monthlyTrend
+                        : context.l10n.insights.trend,
+                    child: _trend(data, bounds.start, bounds.end),
+                  ),
+                  if (_scope == .week)
+                    _Block(
+                      title: context.l10n.insights.weekDiaries,
+                      child: _WeekEntries(days: data.summary.days),
+                    ),
+                  if (_scope != .week) ...[
+                    _Block(
+                      title: context.l10n.insights.distribution,
+                      child: MoodDistribution(
+                        counts: data.summary.distribution,
+                      ),
+                    ),
+                    _Block(
+                      title: context.l10n.insights.weekdayPattern,
+                      child: MoodWeekdayPattern(averages: data.weekdays),
+                    ),
+                    _Block(
+                      title: context.l10n.insights.tags,
+                      child: MoodTags(deltas: moodTagDeltas(data.rows)),
+                    ),
+                  ],
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _trend(_InsightsData data, DateTime start, DateTime end) {
+    final List<DateTime> dates;
+    final List<double?> values;
+    final List<(int, String)> labels;
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    if (_scope == .year) {
+      dates = [for (var m = 1; m <= 12; m++) DateTime(start.year, m)];
+      values = [
+        for (final date in dates)
+          summarizeMood(
+            data.rows.where((e) => moodDayKey(e.time).month == date.month),
+          ).average,
+      ];
+      labels = [
+        for (final i in [0, 3, 6, 9])
+          (i, DateFormat.MMM(locale).format(dates[i])),
+      ];
+    } else {
+      dates = [
+        for (
+          var date = start;
+          date.isBefore(end);
+          date = moodDayOffset(date, 1)
+        )
+          date,
+      ];
+      values = [for (final date in dates) data.summary.days[date]?.average];
+      labels = _scope == .week
+          ? [
+              for (var i = 0; i < 7; i++)
+                (i, TimeFormat.weekdayNarrow(dates[i])),
+            ]
+          : [
+              for (final i in {0, 7, 14, 21, dates.length - 1}) (i, '${i + 1}'),
+            ];
+    }
+    return MLineChart(
+      values: values,
+      yMin: 1,
+      yMax: 5,
+      baseline: 3,
+      yLabelBuilder: (tick) =>
+          MoodGlyph(mood: DiaryMood.fromScore(tick), size: 14),
+      xLabels: labels,
+      pointColor: (_, value) => moodLevel(value)!.colorOf(context),
+      semanticsLabel: _scope == .year
+          ? context.l10n.insights.monthlyTrend
+          : context.l10n.insights.trend,
+      tooltipBuilder: (index) {
+        final date = dates[index];
+        final count = _scope == .year
+            ? data.rows
+                  .where((e) => moodDayKey(e.time).month == date.month)
+                  .length
+            : data.summary.days[date]?.entries.length ?? 0;
+        return context.l10n.insights.dayTooltip(
+          date: _scope == .year
+              ? DateFormat.yMMMM(locale).format(date)
+              : TimeFormat.monthDay(date),
+          level:
+              moodLevel(values[index])?.label(context) ??
+              context.l10n.insights.unrecorded,
+          score: values[index]?.toStringAsFixed(1) ?? '–',
+          count: count,
+        );
+      },
+    );
+  }
+
+  Widget _dayFooter(_InsightsData data) {
+    final day = _selected;
+    final info = data.summary.days[day];
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            day == null
+                ? context.l10n.insights.selectHint
+                : context.l10n.insights.dayDetail(
+                    date: TimeFormat.monthDay(day),
+                    level:
+                        info?.level?.label(context) ??
+                        context.l10n.insights.unrecorded,
+                    count: info?.entries.length ?? 0,
+                  ),
+            style: context.theme.typography.labelMedium.onSurfaceVariant,
+          ),
+        ),
+        TextButton(
+          onPressed: day == null || info == null ? null : () => _showDay(day),
+          child: Text(context.l10n.insights.view),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showDay(DateTime day) async {
+    Future<List<Diary>> load() async {
+      try {
+        return await getIt<DiaryRepository>().getDiariesByDateRange(
+          day,
+          moodDayOffset(day, 1).subtract(const Duration(microseconds: 1)),
+        );
+      } catch (e, s) {
+        logger.e('Mood day diaries load failed', error: e, stackTrace: s);
+        rethrow;
+      }
+    }
+
+    final future = load();
+    await MSheet.show<void>(
+      context,
+      builder: (context) => SizedBox(
+        height: MediaQuery.sizeOf(context).height * .65,
+        child: FutureBuilder<List<Diary>>(
+          future: future,
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return Center(child: Text(context.l10n.insights.loadError));
+            }
+            final diaries = snapshot.data;
+            if (diaries == null) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            return ListView(
+              padding: const .all(14),
+              children: [
+                Text(
+                  TimeFormat.longDate(day),
+                  style: context.theme.typography.titleMedium.onSurface,
+                ),
+                const SizedBox(height: 12),
+                for (final diary in diaries) DiaryEntryTile(diary: diary),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _InsightsData {
+  final List<MoodInsightEntry> rows;
+  final MoodInsightsSummary summary;
+  final MoodInsightsSummary previous;
+  final List<double?> weekdays;
+  const _InsightsData({
+    required this.rows,
+    required this.summary,
+    required this.previous,
+    required this.weekdays,
+  });
+}
+
+class _Block extends StatelessWidget {
+  final String? title;
+  final Widget child;
+  const _Block({this.title, required this.child});
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const .only(bottom: 12),
+    child: Card.filled(
+      color: context.theme.colors.surfaceContainerLow,
+      margin: .zero,
+      child: Padding(
+        padding: const .all(14),
+        child: Column(
+          crossAxisAlignment: .stretch,
+          children: [
+            if (title != null) ...[
+              Text(
+                title!,
+                style: context.theme.typography.titleSmall.emphasized.onSurface,
+              ),
+              const SizedBox(height: 14),
+            ],
+            child,
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _Summary extends StatelessWidget {
+  final _InsightsData data;
+  final MoodInsightsScope scope;
+  const _Summary({required this.data, required this.scope});
+  @override
+  Widget build(BuildContext context) {
+    final summary = data.summary;
+    final delta = moodPeriodDelta(summary, data.previous);
+    final recorded =
+        summary.days.entries.where((e) => e.value.average != null).toList()
+          ..sort((a, b) => b.value.average!.compareTo(a.value.average!));
+    Widget metric(String value, String label) => Expanded(
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: context.theme.typography.titleMedium.emphasized.onSurface
+                .copyWith(fontFeatures: const [.tabularFigures()]),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            textAlign: .center,
+            style: context.theme.typography.labelSmall.onSurfaceVariant,
+          ),
+        ],
+      ),
+    );
+    return Column(
+      crossAxisAlignment: .stretch,
+      children: [
+        Row(
+          spacing: 10,
+          children: [
+            MoodGlyph(mood: moodLevel(summary.average), size: 40),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: .start,
+                children: [
+                  Text(
+                    summary.average!.toStringAsFixed(1),
+                    style: context
+                        .theme
+                        .typography
+                        .headlineSmall
+                        .emphasized
+                        .onSurface
+                        .copyWith(fontFeatures: const [.tabularFigures()]),
+                  ),
+                  Text(
+                    context.l10n.insights.averageLevel(
+                      level: moodLevel(summary.average)!.label(context),
+                    ),
+                    style: context.theme.typography.bodyMedium.onSurfaceVariant,
+                  ),
+                ],
+              ),
+            ),
+            if (delta != null) MoodDeltaPill(delta: delta),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          context.l10n.insights.dailyMean,
+          style: context.theme.typography.labelSmall.onSurfaceVariant,
+        ),
+        const SizedBox(height: 18),
+        Row(
+          crossAxisAlignment: .start,
+          children: [
+            metric(
+              scope == .week
+                  ? context.l10n.insights.recordedWeek(
+                      count: summary.recordedDays,
+                    )
+                  : '${summary.recordedDays}',
+              context.l10n.insights.recordedDays,
+            ),
+            metric('${summary.entryCount}', context.l10n.insights.entries),
+            if (scope == .week)
+              metric(
+                TimeFormat.weekdayShort(recorded.first.key),
+                context.l10n.insights.bestDay,
+              )
+            else
+              metric(
+                '${summary.longestGoodStreak}',
+                context.l10n.insights.streak(count: summary.longestGoodStreak),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _WeekEntries extends StatelessWidget {
+  final Map<DateTime, MoodInsightDay> days;
+  const _WeekEntries({required this.days});
+  @override
+  Widget build(BuildContext context) {
+    final dates = days.keys.toList()..sort((a, b) => b.compareTo(a));
+    return Column(
+      crossAxisAlignment: .stretch,
+      children: [
+        for (final day in dates) ...[
+          Padding(
+            padding: const .symmetric(vertical: 8),
+            child: Text(
+              day == moodDayKey(DateTime.now())
+                  ? context.l10n.insights.today
+                  : context.l10n.insights.dayHeader(
+                      date: TimeFormat.monthDay(day),
+                      weekday: TimeFormat.weekdayShort(day),
+                    ),
+              style: context
+                  .theme
+                  .typography
+                  .labelMedium
+                  .emphasized
+                  .onSurfaceVariant,
+            ),
+          ),
+          for (final entry
+              in (days[day]!.entries.toList()
+                ..sort((a, b) => b.time.compareTo(a.time))))
+            MInkWell(
+              onTap: () => DiaryRoute(diaryId: entry.id).push(context),
+              child: Padding(
+                padding: const .symmetric(vertical: 10),
+                child: Row(
+                  spacing: 8,
+                  children: [
+                    MoodGlyph(mood: entry.mood, size: 18),
+                    Text(
+                      TimeFormat.clock(entry.time),
+                      style: context
+                          .theme
+                          .typography
+                          .labelSmall
+                          .onSurfaceVariant
+                          .copyWith(fontFeatures: const [.tabularFigures()]),
+                    ),
+                    Expanded(
+                      child: MediaMarkedText(
+                        entry.title.trim().isNotEmpty
+                            ? entry.title.trim()
+                            : entry.preview.trim().isNotEmpty
+                            ? entry.preview.trim()
+                            : context.l10n.common.untitled,
+                        maxLines: 1,
+                        overflow: .ellipsis,
+                        style: context.theme.typography.bodyMedium.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ],
+    );
+  }
+}

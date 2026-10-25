@@ -98,6 +98,12 @@ Future<void> _initSystem() async {
   DiaryShare.register(showDiaryShareSheet);
   runStartupMaintenance();
   await Future.wait([themeFuture, localeFuture, migrationGateFuture]);
+  final upgradedFrom = getIt<MoodiaryDatabase>().upgradedFrom;
+  if (upgradedFrom != null &&
+      upgradedFrom < 3 &&
+      !EngineMigrationService.requiresMigration) {
+    MoodiaryKVs.pendingMoodNotice.set(true);
+  }
 
   SystemChrome.setEnabledSystemUIMode(.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(

@@ -40,6 +40,7 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$diary$en diary = _Translations$diary$en._(_root);
 	@override late final _Translations$editor$en editor = _Translations$editor$en._(_root);
 	@override late final _Translations$export$en export = _Translations$export$en._(_root);
+	@override late final _Translations$insights$en insights = _Translations$insights$en._(_root);
 	@override late final _Translations$lock$en lock = _Translations$lock$en._(_root);
 	@override late final _Translations$media$en media = _Translations$media$en._(_root);
 	@override late final _Translations$picker$en picker = _Translations$picker$en._(_root);
@@ -921,6 +922,74 @@ class _Translations$export$en extends Translations$export$zh {
 	@override String importRunFailed({required Object error}) => 'Import failed: ${error}';
 	@override String get importEmpty => 'No .md files found in the package';
 	@override String importMissingMedia({required Object count}) => '${count} media files could not be imported (missing or unreadable) and were kept as plain links';
+}
+
+// Path: insights
+class _Translations$insights$en extends Translations$insights$zh {
+	_Translations$insights$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Mood insights';
+	@override String get week => 'Week';
+	@override String get month => 'Month';
+	@override String get year => 'Year';
+	@override String yearTitle({required Object year}) => '${year}';
+	@override String weekTitle({required Object start, required Object end}) => '${start} – ${end}';
+	@override String averageLevel({required Object level}) => 'Average · ${level}';
+	@override String get dailyMean => 'Averaged by day; days without a mood are excluded';
+	@override String get recordedDays => 'Days recorded';
+	@override String get entries => 'Entries';
+	@override String get bestDay => 'Best day';
+	@override String get empty => 'No moods recorded in this period yet';
+	@override String get calendar => 'Mood calendar';
+	@override String get trend => 'Daily trend';
+	@override String get distribution => 'Mood distribution';
+	@override String get weekdayPattern => 'Weekday pattern';
+	@override String get tags => 'Tags and mood';
+	@override String get tagsCaption => 'Only tags with at least 5 mood entries. Correlation is not causation.';
+	@override String get tagsEmpty => 'No tags meet the threshold in this period';
+	@override String get selectHint => 'Tap a date to see the day';
+	@override String get view => 'View';
+	@override String get unrecorded => 'Not recorded';
+	@override String get today => 'Today';
+	@override String get weekDiaries => 'This week’s entries';
+	@override String get yearPixels => 'Year in moods';
+	@override String get monthlyTrend => 'Monthly averages';
+	@override String monthAverage({required Object level}) => 'This month’s mood · ${level}';
+	@override String recordedProgress({required Object count, required Object days}) => 'Recorded ${count} / ${days} days';
+	@override String get noticeTitle => 'Mood tracking has changed';
+	@override String noticeSubtitle({required Object version}) => 'New in ${version}';
+	@override String get noticeCaption => 'Mood captures how you feel today. You can also leave it blank.';
+	@override String get noticeTagsTitle => 'Scenes are now tags';
+	@override String get noticeTagsBody => 'Previous choices like Study and Travel have been added as tags to their diary entries.';
+	@override String get noticeLevelsTitle => 'Past moods have been converted';
+	@override String get noticeLevelsBody => 'Moods like Happy and Fulfilled now use similar levels. Entries without a choice stay unrecorded.';
+	@override String get noticeInsightsTitle => 'Introducing mood insights';
+	@override String get noticeInsightsBody => 'Find your mood calendar and trends in Me.';
+	@override String get noticeExplore => 'Take a look';
+	@override String get noticeDone => 'Got it';
+	@override String get loadError => 'Couldn’t load mood insights';
+	@override String get retry => 'Retry';
+	@override String get previousPeriod => 'Previous period';
+	@override String get nextPeriod => 'Next period';
+	@override String countPercent({required Object count, required Object percent}) => '${count} · ${percent}%';
+	@override String signedDelta({required Object sign, required Object value}) => '${sign}${value}';
+	@override String dayHeader({required Object date, required Object weekday}) => '${date} · ${weekday}';
+	@override String recordedWeek({required Object count}) => '${count} / 7';
+	@override String dayDetail({required num count, required Object date, required Object level}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(count,
+		one: '${date} · ${level} · 1 entry',
+		other: '${date} · ${level} · ${count} entries',
+	);
+	@override String dayTooltip({required num count, required Object date, required Object level, required Object score}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(count,
+		one: '${date} · ${level} (${score}) · 1 entry',
+		other: '${date} · ${level} (${score}) · ${count} entries',
+	);
+	@override String streak({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(count,
+		one: '1 day of good moods',
+		other: '${count} days of good moods',
+	);
 }
 
 // Path: lock

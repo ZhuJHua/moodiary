@@ -4,7 +4,7 @@ import 'package:moodiary_assistant/moodiary_assistant.dart'
     show AssistantService;
 import 'package:moodiary_data/injectable.module.dart';
 import 'package:moodiary_data/moodiary_data.dart'
-    show IBackupArchive, MoodiaryDatabase;
+    show IBackupArchive, MoodiaryDatabase, MoodInsightsRepository;
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_editor/injectable.module.dart';
 import 'package:moodiary_files/moodiary_files.dart'
@@ -45,6 +45,7 @@ void _assertRequiredBindings() {
   final missing = <String>[
     if (!getIt.isRegistered<IKVStorage>()) 'IKVStorage',
     if (!getIt.isRegistered<MoodiaryDatabase>()) 'MoodiaryDatabase',
+    if (!getIt.isRegistered<MoodInsightsRepository>()) 'MoodInsightsRepository',
     if (!getIt.isRegistered<ISecureKVStorage>()) 'ISecureKVStorage',
     if (!getIt.isRegistered<IHttpClient>()) 'IHttpClient',
     if (!getIt.isRegistered<IHttpServer>()) 'IHttpServer',

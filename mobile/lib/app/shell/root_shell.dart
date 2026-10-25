@@ -10,6 +10,8 @@ import 'package:moodiary_mobile/app/me/me_page.dart' show MePage;
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:mui/mui.dart';
 
+import 'mood_upgrade_notice.dart';
+
 enum _ShellTab { diary, assistant, me }
 
 List<MNavDestination> _navDestinations(BuildContext context) {
@@ -39,6 +41,14 @@ class MobileRootShell extends ConsumerStatefulWidget {
 
 class _MobileRootShellState extends ConsumerState<MobileRootShell> {
   _ShellTab _tab = .diary;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) showPendingMoodNotice(context);
+    });
+  }
 
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 

@@ -13,6 +13,7 @@ import 'package:moodiary_data/src/diary_repository.dart' as _i1068;
 import 'package:moodiary_data/src/embed_index_service.dart' as _i768;
 import 'package:moodiary_data/src/embed_queue_watcher.dart' as _i135;
 import 'package:moodiary_data/src/font_repository.dart' as _i377;
+import 'package:moodiary_data/src/mood_insights_repository.dart' as _i504;
 import 'package:moodiary_data/src/open_diary_registry.dart' as _i107;
 import 'package:moodiary_data/src/place_repository.dart' as _i925;
 import 'package:moodiary_data/src/sync_pending.dart' as _i931;
@@ -40,6 +41,9 @@ class MoodiaryDataPackageModule extends _i526.MicroPackageModule {
     );
     gh.lazySingleton<_i377.FontRepository>(
       () => _i377.FontRepository(gh<_i527.MoodiaryDatabase>()),
+    );
+    gh.lazySingleton<_i504.MoodInsightsRepository>(
+      () => _i504.MoodInsightsRepository(gh<_i527.MoodiaryDatabase>()),
     );
     gh.lazySingleton<_i925.PlaceRepository>(
       () => _i925.PlaceRepository(gh<_i527.MoodiaryDatabase>()),
