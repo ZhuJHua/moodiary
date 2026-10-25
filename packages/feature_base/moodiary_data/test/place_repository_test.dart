@@ -54,7 +54,7 @@ void main() {
             time: 0,
             lastModified: 0,
             show: 1,
-            mood: 'neutral',
+
             type: 'tiptap',
             placeId: const Value('p1'),
           ),

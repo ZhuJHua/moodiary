@@ -63,7 +63,7 @@ class MarkdownWriter {
     buf.writeln('id: ${doc.id}');
     buf.writeln('title: ${_yamlString(doc.title)}');
     buf.writeln('time: ${_isoWithOffset(doc.time)}');
-    buf.writeln('mood: ${doc.mood.name}');
+    if (doc.mood case final mood?) buf.writeln('mood: ${mood.name}');
     if (doc.categoryName != null) {
       buf.writeln('category: ${_yamlString(doc.categoryName!)}');
     }

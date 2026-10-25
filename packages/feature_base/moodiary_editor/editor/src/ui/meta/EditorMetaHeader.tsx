@@ -69,8 +69,8 @@ export default function EditorMetaHeader({
   const tagPop = useRef<PopoverHandle>(null)
   const [tagIndex, setTagIndex] = useState(-1)
 
-  const currentMood = meta.moods.find((m) => m.value === meta.mood)!
-  const MoodIcon = moodIcon(currentMood.icon)
+  const currentMood = meta.moods.find((m) => m.value === meta.mood)
+  const MoodIcon = moodIcon(currentMood?.icon)
   const glyph = weatherGlyph(meta.weather?.icon)
 
   const act = (pop: PopoverHandle | null, type: string, payload?: unknown): void => {
@@ -95,14 +95,14 @@ export default function EditorMetaHeader({
           </MetaButton>
         </div>
         <MetaButton
-          className="md-mood"
+          className={`md-mood${currentMood ? '' : ' is-unset'}`}
           editable={editable}
-          ariaLabel={`${t('meta.mood')} ${currentMood.label}`}
-          style={{ '--mood': currentMood.color } as CSSProperties}
+          ariaLabel={`${t('meta.mood')} ${currentMood?.label ?? t('meta.moodUnset')}`}
+          style={{ '--mood': currentMood?.color } as CSSProperties}
           onPress={(anchor) => moodPop.current?.open(anchor)}
         >
           <MoodIcon />
-          <span>{currentMood.label}</span>
+          <span>{currentMood?.label ?? t('meta.moodUnset')}</span>
         </MetaButton>
       </div>
 
@@ -185,6 +185,11 @@ export default function EditorMetaHeader({
                 )
               })}
             </div>
+            <button type="button" className="md-pop-item is-dim"
+              aria-pressed={!currentMood}
+              onClick={() => act(moodPop.current, 'changeMood', { mood: '' })}>
+              <X />{t('meta.moodClear')}
+            </button>
           </Popover>
 
           <Popover ref={weatherPop} label={t('meta.weather')} className="md-popover--grid">

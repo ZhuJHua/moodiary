@@ -13,7 +13,7 @@ CREATE TABLE diaries (
   time          INTEGER NOT NULL,
   last_modified INTEGER NOT NULL,
   show          INTEGER NOT NULL,
-  mood          TEXT NOT NULL,
+  mood_level    INTEGER CHECK (mood_level BETWEEN 1 AND 5),
   type          TEXT NOT NULL,
   aspect        REAL,
   place_id      TEXT,
@@ -88,3 +88,9 @@ BEGIN
   INSERT INTO diary_fts (rowid, title, content_text)
     VALUES (new.rid, new.title, new.content_text);
 END;
+
+-- Deferred until the stored UI language has loaded; never synced as domain data.
+CREATE TABLE legacy_mood_scenes (
+  diary_id TEXT NOT NULL PRIMARY KEY REFERENCES diaries (id) ON DELETE CASCADE,
+  scene TEXT NOT NULL
+) AS LegacyMoodSceneRow;

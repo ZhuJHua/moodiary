@@ -37,6 +37,8 @@
     "category": "Category",
     "tag": "Tag",
     "addTag": "Add tag",
-    "removeTag": "Remove tag"
+    "removeTag": "Remove tag",
+    "moodUnset": "Not recorded",
+    "moodClear": "Don't record"
   }
 }

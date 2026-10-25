@@ -97,14 +97,16 @@ class Diaries extends Table with TableInfo<Diaries, DiaryRow> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
-  static const VerificationMeta _moodMeta = const VerificationMeta('mood');
-  late final GeneratedColumn<String> mood = GeneratedColumn<String>(
-    'mood',
+  static const VerificationMeta _moodLevelMeta = const VerificationMeta(
+    'moodLevel',
+  );
+  late final GeneratedColumn<int> moodLevel = GeneratedColumn<int>(
+    'mood_level',
     aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'CHECK (mood_level BETWEEN 1 AND 5)',
   );
   static const VerificationMeta _typeMeta = const VerificationMeta('type');
   late final GeneratedColumn<String> type = GeneratedColumn<String>(
@@ -179,7 +181,7 @@ class Diaries extends Table with TableInfo<Diaries, DiaryRow> {
     time,
     lastModified,
     show,
-    mood,
+    moodLevel,
     type,
     aspect,
     placeId,
@@ -270,13 +272,11 @@ class Diaries extends Table with TableInfo<Diaries, DiaryRow> {
     } else if (isInserting) {
       context.missing(_showMeta);
     }
-    if (data.containsKey('mood')) {
+    if (data.containsKey('mood_level')) {
       context.handle(
-        _moodMeta,
-        mood.isAcceptableOrUnknown(data['mood']!, _moodMeta),
+        _moodLevelMeta,
+        moodLevel.isAcceptableOrUnknown(data['mood_level']!, _moodLevelMeta),
       );
-    } else if (isInserting) {
-      context.missing(_moodMeta);
     }
     if (data.containsKey('type')) {
       context.handle(
@@ -370,10 +370,10 @@ class Diaries extends Table with TableInfo<Diaries, DiaryRow> {
         DriftSqlType.int,
         data['${effectivePrefix}show'],
       )!,
-      mood: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}mood'],
-      )!,
+      moodLevel: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}mood_level'],
+      ),
       type: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}type'],
@@ -420,7 +420,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
   final int time;
   final int lastModified;
   final int show;
-  final String mood;
+  final int? moodLevel;
   final String type;
   final double? aspect;
   final String? placeId;
@@ -437,7 +437,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
     required this.time,
     required this.lastModified,
     required this.show,
-    required this.mood,
+    this.moodLevel,
     required this.type,
     this.aspect,
     this.placeId,
@@ -459,7 +459,9 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
     map['time'] = Variable<int>(time);
     map['last_modified'] = Variable<int>(lastModified);
     map['show'] = Variable<int>(show);
-    map['mood'] = Variable<String>(mood);
+    if (!nullToAbsent || moodLevel != null) {
+      map['mood_level'] = Variable<int>(moodLevel);
+    }
     map['type'] = Variable<String>(type);
     if (!nullToAbsent || aspect != null) {
       map['aspect'] = Variable<double>(aspect);
@@ -492,7 +494,9 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
       time: Value(time),
       lastModified: Value(lastModified),
       show: Value(show),
-      mood: Value(mood),
+      moodLevel: moodLevel == null && nullToAbsent
+          ? const Value.absent()
+          : Value(moodLevel),
       type: Value(type),
       aspect: aspect == null && nullToAbsent
           ? const Value.absent()
@@ -527,7 +531,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
       time: serializer.fromJson<int>(json['time']),
       lastModified: serializer.fromJson<int>(json['last_modified']),
       show: serializer.fromJson<int>(json['show']),
-      mood: serializer.fromJson<String>(json['mood']),
+      moodLevel: serializer.fromJson<int?>(json['mood_level']),
       type: serializer.fromJson<String>(json['type']),
       aspect: serializer.fromJson<double?>(json['aspect']),
       placeId: serializer.fromJson<String?>(json['place_id']),
@@ -549,7 +553,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
       'time': serializer.toJson<int>(time),
       'last_modified': serializer.toJson<int>(lastModified),
       'show': serializer.toJson<int>(show),
-      'mood': serializer.toJson<String>(mood),
+      'mood_level': serializer.toJson<int?>(moodLevel),
       'type': serializer.toJson<String>(type),
       'aspect': serializer.toJson<double?>(aspect),
       'place_id': serializer.toJson<String?>(placeId),
@@ -569,7 +573,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
     int? time,
     int? lastModified,
     int? show,
-    String? mood,
+    Value<int?> moodLevel = const Value.absent(),
     String? type,
     Value<double?> aspect = const Value.absent(),
     Value<String?> placeId = const Value.absent(),
@@ -586,7 +590,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
     time: time ?? this.time,
     lastModified: lastModified ?? this.lastModified,
     show: show ?? this.show,
-    mood: mood ?? this.mood,
+    moodLevel: moodLevel.present ? moodLevel.value : this.moodLevel,
     type: type ?? this.type,
     aspect: aspect.present ? aspect.value : this.aspect,
     placeId: placeId.present ? placeId.value : this.placeId,
@@ -611,7 +615,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
           ? data.lastModified.value
           : this.lastModified,
       show: data.show.present ? data.show.value : this.show,
-      mood: data.mood.present ? data.mood.value : this.mood,
+      moodLevel: data.moodLevel.present ? data.moodLevel.value : this.moodLevel,
       type: data.type.present ? data.type.value : this.type,
       aspect: data.aspect.present ? data.aspect.value : this.aspect,
       placeId: data.placeId.present ? data.placeId.value : this.placeId,
@@ -639,7 +643,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
           ..write('time: $time, ')
           ..write('lastModified: $lastModified, ')
           ..write('show: $show, ')
-          ..write('mood: $mood, ')
+          ..write('moodLevel: $moodLevel, ')
           ..write('type: $type, ')
           ..write('aspect: $aspect, ')
           ..write('placeId: $placeId, ')
@@ -661,7 +665,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
     time,
     lastModified,
     show,
-    mood,
+    moodLevel,
     type,
     aspect,
     placeId,
@@ -682,7 +686,7 @@ class DiaryRow extends DataClass implements Insertable<DiaryRow> {
           other.time == this.time &&
           other.lastModified == this.lastModified &&
           other.show == this.show &&
-          other.mood == this.mood &&
+          other.moodLevel == this.moodLevel &&
           other.type == this.type &&
           other.aspect == this.aspect &&
           other.placeId == this.placeId &&
@@ -701,7 +705,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
   final Value<int> time;
   final Value<int> lastModified;
   final Value<int> show;
-  final Value<String> mood;
+  final Value<int?> moodLevel;
   final Value<String> type;
   final Value<double?> aspect;
   final Value<String?> placeId;
@@ -718,7 +722,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
     this.time = const Value.absent(),
     this.lastModified = const Value.absent(),
     this.show = const Value.absent(),
-    this.mood = const Value.absent(),
+    this.moodLevel = const Value.absent(),
     this.type = const Value.absent(),
     this.aspect = const Value.absent(),
     this.placeId = const Value.absent(),
@@ -736,7 +740,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
     required int time,
     required int lastModified,
     required int show,
-    required String mood,
+    this.moodLevel = const Value.absent(),
     required String type,
     this.aspect = const Value.absent(),
     this.placeId = const Value.absent(),
@@ -750,7 +754,6 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
        time = Value(time),
        lastModified = Value(lastModified),
        show = Value(show),
-       mood = Value(mood),
        type = Value(type);
   static Insertable<DiaryRow> custom({
     Expression<int>? rid,
@@ -762,7 +765,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
     Expression<int>? time,
     Expression<int>? lastModified,
     Expression<int>? show,
-    Expression<String>? mood,
+    Expression<int>? moodLevel,
     Expression<String>? type,
     Expression<double>? aspect,
     Expression<String>? placeId,
@@ -780,7 +783,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
       if (time != null) 'time': time,
       if (lastModified != null) 'last_modified': lastModified,
       if (show != null) 'show': show,
-      if (mood != null) 'mood': mood,
+      if (moodLevel != null) 'mood_level': moodLevel,
       if (type != null) 'type': type,
       if (aspect != null) 'aspect': aspect,
       if (placeId != null) 'place_id': placeId,
@@ -800,7 +803,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
     Value<int>? time,
     Value<int>? lastModified,
     Value<int>? show,
-    Value<String>? mood,
+    Value<int?>? moodLevel,
     Value<String>? type,
     Value<double?>? aspect,
     Value<String?>? placeId,
@@ -818,7 +821,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
       time: time ?? this.time,
       lastModified: lastModified ?? this.lastModified,
       show: show ?? this.show,
-      mood: mood ?? this.mood,
+      moodLevel: moodLevel ?? this.moodLevel,
       type: type ?? this.type,
       aspect: aspect ?? this.aspect,
       placeId: placeId ?? this.placeId,
@@ -858,8 +861,8 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
     if (show.present) {
       map['show'] = Variable<int>(show.value);
     }
-    if (mood.present) {
-      map['mood'] = Variable<String>(mood.value);
+    if (moodLevel.present) {
+      map['mood_level'] = Variable<int>(moodLevel.value);
     }
     if (type.present) {
       map['type'] = Variable<String>(type.value);
@@ -894,7 +897,7 @@ class DiariesCompanion extends UpdateCompanion<DiaryRow> {
           ..write('time: $time, ')
           ..write('lastModified: $lastModified, ')
           ..write('show: $show, ')
-          ..write('mood: $mood, ')
+          ..write('moodLevel: $moodLevel, ')
           ..write('type: $type, ')
           ..write('aspect: $aspect, ')
           ..write('placeId: $placeId, ')
@@ -6943,6 +6946,227 @@ class DiaryFtsCompanion extends UpdateCompanion<DiaryFt> {
   }
 }
 
+class LegacyMoodScenes extends Table
+    with TableInfo<LegacyMoodScenes, LegacyMoodSceneRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  LegacyMoodScenes(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _diaryIdMeta = const VerificationMeta(
+    'diaryId',
+  );
+  late final GeneratedColumn<String> diaryId = GeneratedColumn<String>(
+    'diary_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints:
+        'NOT NULL PRIMARY KEY REFERENCES diaries(id)ON DELETE CASCADE',
+  );
+  static const VerificationMeta _sceneMeta = const VerificationMeta('scene');
+  late final GeneratedColumn<String> scene = GeneratedColumn<String>(
+    'scene',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [diaryId, scene];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'legacy_mood_scenes';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LegacyMoodSceneRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('diary_id')) {
+      context.handle(
+        _diaryIdMeta,
+        diaryId.isAcceptableOrUnknown(data['diary_id']!, _diaryIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_diaryIdMeta);
+    }
+    if (data.containsKey('scene')) {
+      context.handle(
+        _sceneMeta,
+        scene.isAcceptableOrUnknown(data['scene']!, _sceneMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sceneMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {diaryId};
+  @override
+  LegacyMoodSceneRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LegacyMoodSceneRow(
+      diaryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}diary_id'],
+      )!,
+      scene: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}scene'],
+      )!,
+    );
+  }
+
+  @override
+  LegacyMoodScenes createAlias(String alias) {
+    return LegacyMoodScenes(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class LegacyMoodSceneRow extends DataClass
+    implements Insertable<LegacyMoodSceneRow> {
+  final String diaryId;
+  final String scene;
+  const LegacyMoodSceneRow({required this.diaryId, required this.scene});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['diary_id'] = Variable<String>(diaryId);
+    map['scene'] = Variable<String>(scene);
+    return map;
+  }
+
+  LegacyMoodScenesCompanion toCompanion(bool nullToAbsent) {
+    return LegacyMoodScenesCompanion(
+      diaryId: Value(diaryId),
+      scene: Value(scene),
+    );
+  }
+
+  factory LegacyMoodSceneRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LegacyMoodSceneRow(
+      diaryId: serializer.fromJson<String>(json['diary_id']),
+      scene: serializer.fromJson<String>(json['scene']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'diary_id': serializer.toJson<String>(diaryId),
+      'scene': serializer.toJson<String>(scene),
+    };
+  }
+
+  LegacyMoodSceneRow copyWith({String? diaryId, String? scene}) =>
+      LegacyMoodSceneRow(
+        diaryId: diaryId ?? this.diaryId,
+        scene: scene ?? this.scene,
+      );
+  LegacyMoodSceneRow copyWithCompanion(LegacyMoodScenesCompanion data) {
+    return LegacyMoodSceneRow(
+      diaryId: data.diaryId.present ? data.diaryId.value : this.diaryId,
+      scene: data.scene.present ? data.scene.value : this.scene,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LegacyMoodSceneRow(')
+          ..write('diaryId: $diaryId, ')
+          ..write('scene: $scene')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(diaryId, scene);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LegacyMoodSceneRow &&
+          other.diaryId == this.diaryId &&
+          other.scene == this.scene);
+}
+
+class LegacyMoodScenesCompanion extends UpdateCompanion<LegacyMoodSceneRow> {
+  final Value<String> diaryId;
+  final Value<String> scene;
+  final Value<int> rowid;
+  const LegacyMoodScenesCompanion({
+    this.diaryId = const Value.absent(),
+    this.scene = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  LegacyMoodScenesCompanion.insert({
+    required String diaryId,
+    required String scene,
+    this.rowid = const Value.absent(),
+  }) : diaryId = Value(diaryId),
+       scene = Value(scene);
+  static Insertable<LegacyMoodSceneRow> custom({
+    Expression<String>? diaryId,
+    Expression<String>? scene,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (diaryId != null) 'diary_id': diaryId,
+      if (scene != null) 'scene': scene,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  LegacyMoodScenesCompanion copyWith({
+    Value<String>? diaryId,
+    Value<String>? scene,
+    Value<int>? rowid,
+  }) {
+    return LegacyMoodScenesCompanion(
+      diaryId: diaryId ?? this.diaryId,
+      scene: scene ?? this.scene,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (diaryId.present) {
+      map['diary_id'] = Variable<String>(diaryId.value);
+    }
+    if (scene.present) {
+      map['scene'] = Variable<String>(scene.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LegacyMoodScenesCompanion(')
+          ..write('diaryId: $diaryId, ')
+          ..write('scene: $scene, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$MoodiaryDatabase extends GeneratedDatabase {
   _$MoodiaryDatabase(QueryExecutor e) : super(e);
   $MoodiaryDatabaseManager get managers => $MoodiaryDatabaseManager(this);
@@ -7026,9 +7250,10 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
     'CREATE TRIGGER diary_fts_au AFTER UPDATE OF title, content_text ON diaries WHEN old.title IS NOT new.title OR old.content_text IS NOT new.content_text BEGIN INSERT INTO diary_fts (diary_fts, "rowid", title, content_text) VALUES (\'delete\', old.rid, old.title, old.content_text);INSERT INTO diary_fts ("rowid", title, content_text) VALUES (new.rid, new.title, new.content_text);END',
     'diary_fts_au',
   );
+  late final LegacyMoodScenes legacyMoodScenes = LegacyMoodScenes(this);
   Selectable<BacklinksResult> backlinks(String toId) {
     return customSelect(
-      'SELECT"d"."rid" AS "nested_0.rid", "d"."id" AS "nested_0.id", "d"."category_id" AS "nested_0.category_id", "d"."title" AS "nested_0.title", "d"."content" AS "nested_0.content", "d"."content_text" AS "nested_0.content_text", "d"."time" AS "nested_0.time", "d"."last_modified" AS "nested_0.last_modified", "d"."show" AS "nested_0.show", "d"."mood" AS "nested_0.mood", "d"."type" AS "nested_0.type", "d"."aspect" AS "nested_0.aspect", "d"."place_id" AS "nested_0.place_id", "d"."weather_icon" AS "nested_0.weather_icon", "d"."weather_temp" AS "nested_0.weather_temp", "d"."weather_text" AS "nested_0.weather_text" FROM diary_links AS l INNER JOIN diaries AS d ON d.id = l.src_id WHERE l.dst_id = ?1 AND d.show = 1 ORDER BY d.time DESC, d.id DESC',
+      'SELECT"d"."rid" AS "nested_0.rid", "d"."id" AS "nested_0.id", "d"."category_id" AS "nested_0.category_id", "d"."title" AS "nested_0.title", "d"."content" AS "nested_0.content", "d"."content_text" AS "nested_0.content_text", "d"."time" AS "nested_0.time", "d"."last_modified" AS "nested_0.last_modified", "d"."show" AS "nested_0.show", "d"."mood_level" AS "nested_0.mood_level", "d"."type" AS "nested_0.type", "d"."aspect" AS "nested_0.aspect", "d"."place_id" AS "nested_0.place_id", "d"."weather_icon" AS "nested_0.weather_icon", "d"."weather_temp" AS "nested_0.weather_temp", "d"."weather_text" AS "nested_0.weather_text" FROM diary_links AS l INNER JOIN diaries AS d ON d.id = l.src_id WHERE l.dst_id = ?1 AND d.show = 1 ORDER BY d.time DESC, d.id DESC',
       variables: [Variable<String>(toId)],
       readsFrom: {this.diaryLinks, this.diaries},
     ).asyncMap(
@@ -7040,7 +7265,7 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
 
   Selectable<ForwardLinksResult> forwardLinks(String fromId) {
     return customSelect(
-      'SELECT"d"."rid" AS "nested_0.rid", "d"."id" AS "nested_0.id", "d"."category_id" AS "nested_0.category_id", "d"."title" AS "nested_0.title", "d"."content" AS "nested_0.content", "d"."content_text" AS "nested_0.content_text", "d"."time" AS "nested_0.time", "d"."last_modified" AS "nested_0.last_modified", "d"."show" AS "nested_0.show", "d"."mood" AS "nested_0.mood", "d"."type" AS "nested_0.type", "d"."aspect" AS "nested_0.aspect", "d"."place_id" AS "nested_0.place_id", "d"."weather_icon" AS "nested_0.weather_icon", "d"."weather_temp" AS "nested_0.weather_temp", "d"."weather_text" AS "nested_0.weather_text" FROM diary_links AS l INNER JOIN diaries AS d ON d.id = l.dst_id WHERE l.src_id = ?1 AND d.id != ?1 AND d.show = 1 ORDER BY d.time DESC, d.id DESC',
+      'SELECT"d"."rid" AS "nested_0.rid", "d"."id" AS "nested_0.id", "d"."category_id" AS "nested_0.category_id", "d"."title" AS "nested_0.title", "d"."content" AS "nested_0.content", "d"."content_text" AS "nested_0.content_text", "d"."time" AS "nested_0.time", "d"."last_modified" AS "nested_0.last_modified", "d"."show" AS "nested_0.show", "d"."mood_level" AS "nested_0.mood_level", "d"."type" AS "nested_0.type", "d"."aspect" AS "nested_0.aspect", "d"."place_id" AS "nested_0.place_id", "d"."weather_icon" AS "nested_0.weather_icon", "d"."weather_temp" AS "nested_0.weather_temp", "d"."weather_text" AS "nested_0.weather_text" FROM diary_links AS l INNER JOIN diaries AS d ON d.id = l.dst_id WHERE l.src_id = ?1 AND d.id != ?1 AND d.show = 1 ORDER BY d.time DESC, d.id DESC',
       variables: [Variable<String>(fromId)],
       readsFrom: {this.diaryLinks, this.diaries},
     ).asyncMap(
@@ -7140,6 +7365,7 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
     diaryFtsAi,
     diaryFtsAd,
     diaryFtsAu,
+    legacyMoodScenes,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -7199,6 +7425,13 @@ abstract class _$MoodiaryDatabase extends GeneratedDatabase {
       ),
       result: [TableUpdate('diary_fts', kind: UpdateKind.insert)],
     ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'diaries',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('legacy_mood_scenes', kind: UpdateKind.delete)],
+    ),
   ]);
 }
 
@@ -7212,7 +7445,7 @@ typedef $DiariesCreateCompanionBuilder = DiariesCompanion Function({
   required int time,
   required int lastModified,
   required int show,
-  required String mood,
+  Value<int?> moodLevel,
   required String type,
   Value<double?> aspect,
   Value<String?> placeId,
@@ -7230,7 +7463,7 @@ typedef $DiariesUpdateCompanionBuilder = DiariesCompanion Function({
   Value<int> time,
   Value<int> lastModified,
   Value<int> show,
-  Value<String> mood,
+  Value<int?> moodLevel,
   Value<String> type,
   Value<double?> aspect,
   Value<String?> placeId,
@@ -7297,6 +7530,27 @@ final class $DiariesReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<LegacyMoodScenes, List<LegacyMoodSceneRow>>
+  _legacyMoodScenesRefsTable(_$MoodiaryDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.legacyMoodScenes,
+        aliasName: 'diaries__id__legacy_mood_scenes__diary_id',
+      );
+
+  $LegacyMoodScenesProcessedTableManager get legacyMoodScenesRefs {
+    final manager = $LegacyMoodScenesTableManager(
+      $_db,
+      $_db.legacyMoodScenes,
+    ).filter((f) => f.diaryId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _legacyMoodScenesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $DiariesFilterComposer extends Composer<_$MoodiaryDatabase, Diaries> {
@@ -7352,8 +7606,8 @@ class $DiariesFilterComposer extends Composer<_$MoodiaryDatabase, Diaries> {
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get mood => $composableBuilder(
-    column: $table.mood,
+  ColumnFilters<int> get moodLevel => $composableBuilder(
+    column: $table.moodLevel,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7461,6 +7715,31 @@ class $DiariesFilterComposer extends Composer<_$MoodiaryDatabase, Diaries> {
     );
     return f(composer);
   }
+
+  Expression<bool> legacyMoodScenesRefs(
+    Expression<bool> Function($LegacyMoodScenesFilterComposer f) f,
+  ) {
+    final $LegacyMoodScenesFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.legacyMoodScenes,
+      getReferencedColumn: (t) => t.diaryId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $LegacyMoodScenesFilterComposer(
+            $db: $db,
+            $table: $db.legacyMoodScenes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $DiariesOrderingComposer extends Composer<_$MoodiaryDatabase, Diaries> {
@@ -7516,8 +7795,8 @@ class $DiariesOrderingComposer extends Composer<_$MoodiaryDatabase, Diaries> {
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get mood => $composableBuilder(
-    column: $table.mood,
+  ColumnOrderings<int> get moodLevel => $composableBuilder(
+    column: $table.moodLevel,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -7593,8 +7872,8 @@ class $DiariesAnnotationComposer extends Composer<_$MoodiaryDatabase, Diaries> {
   GeneratedColumn<int> get show =>
       $composableBuilder(column: $table.show, builder: (column) => column);
 
-  GeneratedColumn<String> get mood =>
-      $composableBuilder(column: $table.mood, builder: (column) => column);
+  GeneratedColumn<int> get moodLevel =>
+      $composableBuilder(column: $table.moodLevel, builder: (column) => column);
 
   GeneratedColumn<String> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
@@ -7694,6 +7973,31 @@ class $DiariesAnnotationComposer extends Composer<_$MoodiaryDatabase, Diaries> {
     );
     return f(composer);
   }
+
+  Expression<T> legacyMoodScenesRefs<T extends Object>(
+    Expression<T> Function($LegacyMoodScenesAnnotationComposer a) f,
+  ) {
+    final $LegacyMoodScenesAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.legacyMoodScenes,
+      getReferencedColumn: (t) => t.diaryId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $LegacyMoodScenesAnnotationComposer(
+            $db: $db,
+            $table: $db.legacyMoodScenes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $DiariesTableManager
@@ -7713,6 +8017,7 @@ class $DiariesTableManager
             bool diaryLinksRefs,
             bool diaryMediaRefs,
             bool diaryTagsRefs,
+            bool legacyMoodScenesRefs,
           })
         > {
   $DiariesTableManager(_$MoodiaryDatabase db, Diaries table)
@@ -7737,7 +8042,7 @@ class $DiariesTableManager
                 Value<int> time = const Value.absent(),
                 Value<int> lastModified = const Value.absent(),
                 Value<int> show = const Value.absent(),
-                Value<String> mood = const Value.absent(),
+                Value<int?> moodLevel = const Value.absent(),
                 Value<String> type = const Value.absent(),
                 Value<double?> aspect = const Value.absent(),
                 Value<String?> placeId = const Value.absent(),
@@ -7754,7 +8059,7 @@ class $DiariesTableManager
                 time: time,
                 lastModified: lastModified,
                 show: show,
-                mood: mood,
+                moodLevel: moodLevel,
                 type: type,
                 aspect: aspect,
                 placeId: placeId,
@@ -7773,7 +8078,7 @@ class $DiariesTableManager
                 required int time,
                 required int lastModified,
                 required int show,
-                required String mood,
+                Value<int?> moodLevel = const Value.absent(),
                 required String type,
                 Value<double?> aspect = const Value.absent(),
                 Value<String?> placeId = const Value.absent(),
@@ -7790,7 +8095,7 @@ class $DiariesTableManager
                 time: time,
                 lastModified: lastModified,
                 show: show,
-                mood: mood,
+                moodLevel: moodLevel,
                 type: type,
                 aspect: aspect,
                 placeId: placeId,
@@ -7811,6 +8116,7 @@ class $DiariesTableManager
                 diaryLinksRefs = false,
                 diaryMediaRefs = false,
                 diaryTagsRefs = false,
+                legacyMoodScenesRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -7818,6 +8124,7 @@ class $DiariesTableManager
                     if (diaryLinksRefs) db.diaryLinks,
                     if (diaryMediaRefs) db.diaryMedia,
                     if (diaryTagsRefs) db.diaryTags,
+                    if (legacyMoodScenesRefs) db.legacyMoodScenes,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -7873,6 +8180,26 @@ class $DiariesTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (legacyMoodScenesRefs)
+                        await $_getPrefetchedData<
+                          DiaryRow,
+                          Diaries,
+                          LegacyMoodSceneRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $DiariesReferences
+                              ._legacyMoodScenesRefsTable(db),
+                          managerFromTypedResult: (p0) => $DiariesReferences(
+                            db,
+                            table,
+                            p0,
+                          ).legacyMoodScenesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.diaryId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -7897,6 +8224,7 @@ typedef $DiariesProcessedTableManager =
         bool diaryLinksRefs,
         bool diaryMediaRefs,
         bool diaryTagsRefs,
+        bool legacyMoodScenesRefs,
       })
     >;
 typedef $DiaryLinksCreateCompanionBuilder = DiaryLinksCompanion Function({
@@ -11918,6 +12246,269 @@ typedef $DiaryFtsProcessedTableManager =
       DiaryFt,
       PrefetchHooks Function()
     >;
+typedef $LegacyMoodScenesCreateCompanionBuilder =
+    LegacyMoodScenesCompanion Function({
+      required String diaryId,
+      required String scene,
+      Value<int> rowid,
+    });
+typedef $LegacyMoodScenesUpdateCompanionBuilder =
+    LegacyMoodScenesCompanion Function({
+      Value<String> diaryId,
+      Value<String> scene,
+      Value<int> rowid,
+    });
+
+final class $LegacyMoodScenesReferences
+    extends
+        BaseReferences<
+          _$MoodiaryDatabase,
+          LegacyMoodScenes,
+          LegacyMoodSceneRow
+        > {
+  $LegacyMoodScenesReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static Diaries _diaryIdTable(_$MoodiaryDatabase db) =>
+      db.diaries.createAlias('legacy_mood_scenes__diary_id__diaries__id');
+
+  $DiariesProcessedTableManager get diaryId {
+    final $_column = $_itemColumn<String>('diary_id')!;
+
+    final manager = $DiariesTableManager(
+      $_db,
+      $_db.diaries,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_diaryIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $LegacyMoodScenesFilterComposer
+    extends Composer<_$MoodiaryDatabase, LegacyMoodScenes> {
+  $LegacyMoodScenesFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get scene => $composableBuilder(
+    column: $table.scene,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $DiariesFilterComposer get diaryId {
+    final $DiariesFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.diaryId,
+      referencedTable: $db.diaries,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $DiariesFilterComposer(
+            $db: $db,
+            $table: $db.diaries,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $LegacyMoodScenesOrderingComposer
+    extends Composer<_$MoodiaryDatabase, LegacyMoodScenes> {
+  $LegacyMoodScenesOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get scene => $composableBuilder(
+    column: $table.scene,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $DiariesOrderingComposer get diaryId {
+    final $DiariesOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.diaryId,
+      referencedTable: $db.diaries,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $DiariesOrderingComposer(
+            $db: $db,
+            $table: $db.diaries,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $LegacyMoodScenesAnnotationComposer
+    extends Composer<_$MoodiaryDatabase, LegacyMoodScenes> {
+  $LegacyMoodScenesAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get scene =>
+      $composableBuilder(column: $table.scene, builder: (column) => column);
+
+  $DiariesAnnotationComposer get diaryId {
+    final $DiariesAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.diaryId,
+      referencedTable: $db.diaries,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $DiariesAnnotationComposer(
+            $db: $db,
+            $table: $db.diaries,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $LegacyMoodScenesTableManager
+    extends
+        RootTableManager<
+          _$MoodiaryDatabase,
+          LegacyMoodScenes,
+          LegacyMoodSceneRow,
+          $LegacyMoodScenesFilterComposer,
+          $LegacyMoodScenesOrderingComposer,
+          $LegacyMoodScenesAnnotationComposer,
+          $LegacyMoodScenesCreateCompanionBuilder,
+          $LegacyMoodScenesUpdateCompanionBuilder,
+          (LegacyMoodSceneRow, $LegacyMoodScenesReferences),
+          LegacyMoodSceneRow,
+          PrefetchHooks Function({bool diaryId})
+        > {
+  $LegacyMoodScenesTableManager(_$MoodiaryDatabase db, LegacyMoodScenes table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $LegacyMoodScenesFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $LegacyMoodScenesOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $LegacyMoodScenesAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> diaryId = const Value.absent(),
+                Value<String> scene = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LegacyMoodScenesCompanion(
+                diaryId: diaryId,
+                scene: scene,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String diaryId,
+                required String scene,
+                Value<int> rowid = const Value.absent(),
+              }) => LegacyMoodScenesCompanion.insert(
+                diaryId: diaryId,
+                scene: scene,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<LegacyMoodScenes, LegacyMoodSceneRow>(table),
+                  $LegacyMoodScenesReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({diaryId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (diaryId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.diaryId,
+                        referencedTable: $LegacyMoodScenesReferences
+                            ._diaryIdTable(db),
+                        referencedColumn: $LegacyMoodScenesReferences
+                            ._diaryIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $LegacyMoodScenesProcessedTableManager =
+    ProcessedTableManager<
+      _$MoodiaryDatabase,
+      LegacyMoodScenes,
+      LegacyMoodSceneRow,
+      $LegacyMoodScenesFilterComposer,
+      $LegacyMoodScenesOrderingComposer,
+      $LegacyMoodScenesAnnotationComposer,
+      $LegacyMoodScenesCreateCompanionBuilder,
+      $LegacyMoodScenesUpdateCompanionBuilder,
+      (LegacyMoodSceneRow, $LegacyMoodScenesReferences),
+      LegacyMoodSceneRow,
+      PrefetchHooks Function({bool diaryId})
+    >;
 
 class $MoodiaryDatabaseManager {
   final _$MoodiaryDatabase _db;
@@ -11951,6 +12542,8 @@ class $MoodiaryDatabaseManager {
       $DiaryTagsTableManager(_db, _db.diaryTags);
   $DiaryFtsTableManager get diaryFts =>
       $DiaryFtsTableManager(_db, _db.diaryFts);
+  $LegacyMoodScenesTableManager get legacyMoodScenes =>
+      $LegacyMoodScenesTableManager(_db, _db.legacyMoodScenes);
 }
 
 class BacklinksResult {

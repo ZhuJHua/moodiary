@@ -106,6 +106,7 @@ class DiaryTimelineView extends ConsumerWidget {
                           breakAfter: next?.breakBefore ?? false,
                           hasAbove: flatIndex > 0,
                           moodBelow: next?.diary.mood,
+                          hasBelow: next != null,
                           category: category,
                           place: place,
                           showCategoryLabel: filter.isAll,

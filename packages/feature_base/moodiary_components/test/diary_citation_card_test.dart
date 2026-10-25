@@ -14,7 +14,7 @@ void main() {
           state: .ready,
           time: time,
           title: '加班到十点',
-          mood: .tired,
+          mood: .bad,
           onTap: () => tapped = true,
         ),
       ),

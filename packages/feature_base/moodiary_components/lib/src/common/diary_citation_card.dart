@@ -37,7 +37,7 @@ class DiaryCitationCard extends StatelessWidget {
     final muted = state != .ready;
     final accent = muted
         ? scheme.outlineVariant
-        : mood?.color ?? scheme.primary;
+        : mood?.color ?? scheme.outlineVariant;
 
     final Widget body = switch (state) {
       .loading => Column(

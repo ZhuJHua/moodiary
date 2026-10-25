@@ -9,7 +9,7 @@ final _mui = buildMuiTheme(brightness: Brightness.light);
 
 Diary diary({
   String title = 'T',
-  DiaryMood mood = .neutral,
+  DiaryMood? mood,
   DiaryWeather? weather,
   List<String> tags = const [],
   List<String> audio = const [],
@@ -159,8 +159,8 @@ void main() {
     addTearDown(t.view.reset);
 
     const boundaryKey = ValueKey('axis-probe');
-    final top = diary(title: '', mood: .negative);
-    final bottom = diary(title: '', mood: .positive);
+    final top = diary(title: '', mood: .bad);
+    final bottom = diary(title: '', mood: .good);
 
     await t.pumpWidget(
       MuiTheme(
@@ -236,7 +236,10 @@ void main() {
   });
 
   testWidgets('mood colors are pairwise distinct', (t) async {
-    final colors = {for (final m in DiaryMood.values) diaryMoodColor(m)};
+    final colors = {
+      for (final m in DiaryMood.values)
+        diaryMoodColor(m, _mui.colorScheme.outlineVariant),
+    };
     expect(colors.length, DiaryMood.values.length);
   });
 

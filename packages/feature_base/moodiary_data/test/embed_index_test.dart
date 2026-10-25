@@ -58,7 +58,7 @@ Diary makeDiary(String id, String text, {bool show = true, String? title}) =>
       time: DateTime.utc(2026, 1, 1),
       lastModified: DateTime.utc(2026, 1, 1),
       show: show,
-      mood: .neutral,
+      mood: null,
       imageName: const [],
       audioName: const [],
       videoName: const [],

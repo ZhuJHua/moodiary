@@ -477,7 +477,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
       case 'changeMood':
         if (payload is Map) {
           final mood = payload['mood'];
-          if (mood is String && mood.isNotEmpty) {
+          if (mood is String) {
             widget.onChangeMood?.call(mood);
           }
         }

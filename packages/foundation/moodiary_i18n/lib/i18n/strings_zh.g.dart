@@ -1333,54 +1333,6 @@ class Translations$common$zh {
 	/// zh: '确认'
 	String get ok => '确认';
 
-	/// zh: '低落'
-	String get moodNegative => '低落';
-
-	/// zh: '平静'
-	String get moodNeutral => '平静';
-
-	/// zh: '开心'
-	String get moodPositive => '开心';
-
-	/// zh: '充实'
-	String get moodFulfilled => '充实';
-
-	/// zh: '生气'
-	String get moodAngry => '生气';
-
-	/// zh: '焦虑'
-	String get moodAnxious => '焦虑';
-
-	/// zh: '疲惫'
-	String get moodTired => '疲惫';
-
-	/// zh: '无语'
-	String get moodSpeechless => '无语';
-
-	/// zh: '恋爱'
-	String get moodLove => '恋爱';
-
-	/// zh: '学习'
-	String get moodStudy => '学习';
-
-	/// zh: '摸鱼'
-	String get moodSlacking => '摸鱼';
-
-	/// zh: '好吃'
-	String get moodFood => '好吃';
-
-	/// zh: '工作'
-	String get moodWork => '工作';
-
-	/// zh: '旅行'
-	String get moodTravel => '旅行';
-
-	/// zh: '运动'
-	String get moodSports => '运动';
-
-	/// zh: '生病'
-	String get moodSick => '生病';
-
 	/// zh: '晴'
 	String get weatherSunny => '晴';
 
@@ -1488,6 +1440,42 @@ class Translations$common$zh {
 
 	/// zh: '已复制到剪贴板'
 	String get copied => '已复制到剪贴板';
+
+	/// zh: '学习'
+	String get legacySceneStudy => '学习';
+
+	/// zh: '工作'
+	String get legacySceneWork => '工作';
+
+	/// zh: '旅行'
+	String get legacySceneTravel => '旅行';
+
+	/// zh: '运动'
+	String get legacySceneSports => '运动';
+
+	/// zh: '好吃'
+	String get legacySceneFood => '好吃';
+
+	/// zh: '摸鱼'
+	String get legacySceneSlacking => '摸鱼';
+
+	/// zh: '糟糕'
+	String get moodAwful => '糟糕';
+
+	/// zh: '不好'
+	String get moodBad => '不好';
+
+	/// zh: '一般'
+	String get moodOkay => '一般';
+
+	/// zh: '不错'
+	String get moodGood => '不错';
+
+	/// zh: '很棒'
+	String get moodGreat => '很棒';
+
+	/// zh: '未记录'
+	String get moodUnset => '未记录';
 }
 
 // Path: diary
@@ -2519,8 +2507,8 @@ class Translations$export$zh {
 	/// zh: '本应用「不合并」导出的 Markdown 可以直接导回；合并成一个文件的不支持。'
 	String get importSpecRoundTrip => '本应用「不合并」导出的 Markdown 可以直接导回；合并成一个文件的不支持。';
 
-	/// zh: '日记.zip ├── 2026-09-06-晴天.md ├── 2026-09-07-散步.md └── assets/ ├── image/a.jpg └── video/b.mp4 2026-09-06-晴天.md --- title: "晴天" time: 2026-09-06T10:30:00+08:00 mood: fulfilled category: "生活" tags: ["周末"] --- 今天出门走了走。 ![](assets/image/a.jpg)'
-	String get importSpecExample => '日记.zip\n├── 2026-09-06-晴天.md\n├── 2026-09-07-散步.md\n└── assets/\n    ├── image/a.jpg\n    └── video/b.mp4\n\n2026-09-06-晴天.md\n---\ntitle: "晴天"\ntime: 2026-09-06T10:30:00+08:00\nmood: fulfilled\ncategory: "生活"\ntags: ["周末"]\n---\n\n今天出门走了走。\n![](assets/image/a.jpg)';
+	/// zh: '日记.zip ├── 2026-09-06-晴天.md ├── 2026-09-07-散步.md └── assets/ ├── image/a.jpg └── video/b.mp4 2026-09-06-晴天.md --- title: "晴天" time: 2026-09-06T10:30:00+08:00 mood: good category: "生活" tags: ["周末"] --- 今天出门走了走。 ![](assets/image/a.jpg)'
+	String get importSpecExample => '日记.zip\n├── 2026-09-06-晴天.md\n├── 2026-09-07-散步.md\n└── assets/\n    ├── image/a.jpg\n    └── video/b.mp4\n\n2026-09-06-晴天.md\n---\ntitle: "晴天"\ntime: 2026-09-06T10:30:00+08:00\nmood: good\ncategory: "生活"\ntags: ["周末"]\n---\n\n今天出门走了走。\n![](assets/image/a.jpg)';
 
 	/// zh: '导入 {count} 篇'
 	String importRunButton({required Object count}) => '导入 ${count} 篇';

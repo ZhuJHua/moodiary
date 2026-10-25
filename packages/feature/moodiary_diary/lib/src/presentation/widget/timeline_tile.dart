@@ -30,6 +30,7 @@ class DiaryTimelineTile extends StatelessWidget {
   final bool hasAbove;
 
   final DiaryMood? moodBelow;
+  final bool hasBelow;
 
   final Category? category;
   final Place? place;
@@ -49,6 +50,7 @@ class DiaryTimelineTile extends StatelessWidget {
     this.breakAfter = false,
     this.hasAbove = false,
     this.moodBelow,
+    this.hasBelow = false,
     this.category,
     this.place,
     this.showCategoryLabel = true,
@@ -63,13 +65,15 @@ class DiaryTimelineTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
     final topPad = _kTopPad + (breakBefore ? _kBreakPad : 0.0);
-    final mood = diaryMoodColor(diary.mood);
+    final mood = diaryMoodColor(diary.mood, colors.outlineVariant);
 
     return CustomPaint(
       painter: _AxisPainter(
         color: mood,
         hasAbove: hasAbove,
-        below: moodBelow == null ? null : diaryMoodColor(moodBelow!),
+        below: hasBelow || moodBelow != null
+            ? diaryMoodColor(moodBelow, colors.outlineVariant)
+            : null,
         dashedAbove: breakBefore,
         dashedBelow: breakAfter,
         idle: colors.outlineVariant,

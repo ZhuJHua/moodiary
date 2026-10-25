@@ -476,7 +476,7 @@ Diary buildDiary({
     time: ts,
     lastModified: ts,
     show: show,
-    mood: .neutral,
+    mood: null,
     imageName: images,
     audioName: audios,
     videoName: videos,

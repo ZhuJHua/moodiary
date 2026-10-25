@@ -238,7 +238,10 @@ class _Headline extends StatelessWidget {
           width: 3.5,
           height: 12,
           decoration: BoxDecoration(
-            color: diaryMoodColor(diary.mood),
+            color: diaryMoodColor(
+              diary.mood,
+              context.theme.colors.outlineVariant,
+            ),
             borderRadius: const .all(.circular(999)),
           ),
         ),

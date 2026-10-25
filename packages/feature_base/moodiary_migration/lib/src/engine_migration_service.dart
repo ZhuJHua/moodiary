@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
@@ -393,10 +394,16 @@ class EngineMigrationService {
     return DiaryWeather(icon: raw[0], temp: raw[1], text: raw[2]);
   }
 
-  static DiaryMood _mood(double raw) => switch (raw) {
-    < 0.5 => .negative,
-    > 0.5 => .positive,
-    _ => .neutral,
+  @visibleForTesting
+  static DiaryMood? moodFromLegacyDouble(double raw) => _mood(raw);
+
+  static DiaryMood? _mood(double raw) => switch (raw) {
+    0.5 => null,
+    < 0.2 => .awful,
+    < 0.4 => .bad,
+    < 0.6 => .okay,
+    < 0.8 => .good,
+    _ => .great,
   };
 }
 

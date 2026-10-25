@@ -86,6 +86,10 @@ Future<void> _initSystem() async {
     }
   }();
 
+  await localeFuture;
+  await getIt<MoodiaryDatabase>().applyLegacyMoodScenes(
+    (scene) => scene.labelOf(l10n),
+  );
   await syncBackendFuture;
   if (getIt<MoodiaryDatabase>().upgradedFrom != null) {
     MoodiaryKVs.syncPendingLocal.set(true);

@@ -85,7 +85,7 @@ class ImageCard extends StatelessWidget {
 
   List<Widget> _meta(ExportDoc doc) {
     final chips = <Widget>[
-      _moodChip(doc.mood),
+      if (doc.mood case final mood?) _moodChip(mood),
       if (doc.weather case final w?)
         _metaItem(LucideIcons.cloudSun, w.displayText),
       if (doc.categoryName case final name? when name.isNotEmpty)

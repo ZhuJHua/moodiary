@@ -14,7 +14,7 @@ void main() {
     title: title,
     content: body,
     contentText: body,
-    mood: .neutral,
+    mood: null,
     imageName: const [],
     audioName: const [],
     videoName: const [],

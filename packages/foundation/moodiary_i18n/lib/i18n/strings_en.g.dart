@@ -492,22 +492,6 @@ class _Translations$common$en extends Translations$common$zh {
 
 	// Translations
 	@override String get ok => 'OK';
-	@override String get moodNegative => 'Low';
-	@override String get moodNeutral => 'Calm';
-	@override String get moodPositive => 'Happy';
-	@override String get moodFulfilled => 'Fulfilled';
-	@override String get moodAngry => 'Angry';
-	@override String get moodAnxious => 'Anxious';
-	@override String get moodTired => 'Tired';
-	@override String get moodSpeechless => 'Speechless';
-	@override String get moodLove => 'In love';
-	@override String get moodStudy => 'Studying';
-	@override String get moodSlacking => 'Slacking';
-	@override String get moodFood => 'Yummy';
-	@override String get moodWork => 'Working';
-	@override String get moodTravel => 'Traveling';
-	@override String get moodSports => 'Workout';
-	@override String get moodSick => 'Sick';
 	@override String get weatherSunny => 'Sunny';
 	@override String get weatherCloudy => 'Cloudy';
 	@override String get weatherOvercast => 'Overcast';
@@ -544,6 +528,18 @@ class _Translations$common$en extends Translations$common$zh {
 	@override String get configured => 'Configured';
 	@override String get notConfigured => 'Not configured';
 	@override String get copied => 'Copied to clipboard';
+	@override String get legacySceneStudy => 'Studying';
+	@override String get legacySceneWork => 'Working';
+	@override String get legacySceneTravel => 'Traveling';
+	@override String get legacySceneSports => 'Workout';
+	@override String get legacySceneFood => 'Yummy';
+	@override String get legacySceneSlacking => 'Slacking';
+	@override String get moodAwful => 'Awful';
+	@override String get moodBad => 'Bad';
+	@override String get moodOkay => 'Okay';
+	@override String get moodGood => 'Good';
+	@override String get moodGreat => 'Great';
+	@override String get moodUnset => 'Not recorded';
 }
 
 // Path: diary
@@ -908,7 +904,7 @@ class _Translations$export$en extends Translations$export$zh {
 	@override String get importSpecAssets => 'Put images, videos and audio under assets/ (subfolders allowed) and reference them with relative paths.';
 	@override String get importSpecFrontMatter => 'An optional front matter at the top may set title, time, mood, category, tags, weather and position. Without it, the title comes from the first level-1 heading or the file name, and the time from a date at the start of the file name.';
 	@override String get importSpecRoundTrip => 'Markdown exported by this app without merging can be imported back directly; merged single-file exports are not supported.';
-	@override String get importSpecExample => 'diaries.zip\n├── 2026-09-06-sunny.md\n├── 2026-09-07-walk.md\n└── assets/\n    ├── image/a.jpg\n    └── video/b.mp4\n\n2026-09-06-sunny.md\n---\ntitle: "Sunny"\ntime: 2026-09-06T10:30:00+08:00\nmood: fulfilled\ncategory: "Life"\ntags: ["weekend"]\n---\n\nWent out for a walk today.\n![](assets/image/a.jpg)';
+	@override String get importSpecExample => 'diaries.zip\n├── 2026-09-06-sunny.md\n├── 2026-09-07-walk.md\n└── assets/\n    ├── image/a.jpg\n    └── video/b.mp4\n\n2026-09-06-sunny.md\n---\ntitle: "Sunny"\ntime: 2026-09-06T10:30:00+08:00\nmood: good\ncategory: "Life"\ntags: ["weekend"]\n---\n\nWent out for a walk today.\n![](assets/image/a.jpg)';
 	@override String importRunButton({required Object count}) => 'Import ${count} entries';
 	@override String importProgress({required Object done, required Object total}) => 'Importing ${done}/${total}';
 	@override String importSummary({required Object diary, required Object category, required Object place}) => '${diary} entries / ${category} new categories / ${place} new places';

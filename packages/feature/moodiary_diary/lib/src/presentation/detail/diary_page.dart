@@ -368,7 +368,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     _scheduleAutoSave();
   }
 
-  void _onChangeMood(DiaryMood mood) {
+  void _onChangeMood(DiaryMood? mood) {
     ref.read(_provider.notifier).changeMood(mood);
     _dirty = true;
     _scheduleAutoSave();
@@ -747,10 +747,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
               child: CircularProgressIndicator(strokeWidth: 1.6),
             ),
             const SizedBox(width: 4),
-            Text(
-              context.l10n.diary.saving,
-              style: typo.bodySmall.outline,
-            ),
+            Text(context.l10n.diary.saving, style: typo.bodySmall.outline),
           ],
         );
       case 'saved':
@@ -840,7 +837,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
 
   void _onChangeMoodName(String name) {
     final mood = DiaryMood.values.where((m) => m.name == name).firstOrNull;
-    if (mood == null) return;
+    if (mood == null && name.isNotEmpty) return;
     _onChangeMood(mood);
   }
 
@@ -885,7 +882,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     return jsonEncode({
       'dateText': TimeFormat.anchorDate(diary.time),
       'subText': TimeFormat.weekdayTimeHms(diary.time),
-      'mood': diary.mood.name,
+      'mood': diary.mood?.name,
       'moods': [
         for (final mood in DiaryMood.values)
           {
