@@ -1,30 +1,17 @@
 import {
-  Annoyed,
   Building2,
   Coffee,
   Dumbbell,
-  Frown,
-  Laugh,
   Hospital,
   House,
   MapPin,
-  Meh,
   Plane,
   School,
-  Smile,
   Trees,
   type LucideIcon,
 } from 'lucide-react'
 import qiFontUrl from 'qweather-icons/font/fonts/qweather-icons.woff2?url'
 import qiCodepoints from 'qweather-icons/font/qweather-icons.json'
-
-const MOOD_ICONS: Record<string, LucideIcon> = {
-  smile: Smile,
-  meh: Meh,
-  frown: Frown,
-  laugh: Laugh,
-  annoyed: Annoyed,
-}
 
 const PLACE_ICONS: Record<string, LucideIcon> = {
   house: House,
@@ -36,10 +23,6 @@ const PLACE_ICONS: Record<string, LucideIcon> = {
   hospital: Hospital,
   plane: Plane,
   'map-pin': MapPin,
-}
-
-export function moodIcon(name: string | undefined): LucideIcon {
-  return MOOD_ICONS[name ?? ''] ?? Meh
 }
 
 export function placeIcon(name: string | undefined): LucideIcon {

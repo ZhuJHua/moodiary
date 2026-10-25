@@ -1,9 +1,11 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 import 'package:moodiary_diary/src/presentation/widget/timeline_tile.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:mui/mui.dart';
 
 final _mui = buildMuiTheme(brightness: Brightness.light);
 
@@ -235,10 +237,66 @@ void main() {
     );
   });
 
+  testWidgets(
+    'unset axis is hollow with outline-variant segments at both radii',
+    (t) async {
+      for (final big in [true, false]) {
+        await t.pumpWidget(
+          wrap(
+            tile(
+              d: diary(mood: null),
+              dayStart: big,
+              hasAbove: true,
+              moodBelow: .great,
+            ),
+          ),
+        );
+        final finder = find
+            .descendant(
+              of: find.byType(DiaryTimelineTile),
+              matching: find.byType(CustomPaint),
+            )
+            .first;
+        final painter = t.widget<CustomPaint>(finder).painter!;
+        final size = t.getSize(finder);
+        final scheme = t.element(find.byType(DiaryTimelineTile)).theme.colors;
+        final recorder = ui.PictureRecorder();
+        painter.paint(Canvas(recorder)..scale(4), size);
+        final picture = recorder.endRecording();
+        final image = await t.runAsync(
+          () => picture.toImage(
+            (size.width * 4).ceil(),
+            (size.height * 4).ceil(),
+          ),
+        );
+        final bytes = await t.runAsync(
+          () => image!.toByteData(format: .rawRgba),
+        );
+        final width = image!.width;
+        Color pixel(double x, double y) {
+          final offset = ((y * 4).floor() * width + (x * 4).floor()) * 4;
+          return Color.fromARGB(
+            bytes!.getUint8(offset + 3),
+            bytes.getUint8(offset),
+            bytes.getUint8(offset + 1),
+            bytes.getUint8(offset + 2),
+          );
+        }
+
+        expect(pixel(48, 13).a, 0, reason: 'the center must stay hollow');
+        expect(pixel(48, big ? 18 : 16.5), scheme.outline);
+        expect(pixel(48, 1), scheme.outlineVariant);
+        expect(pixel(48, size.height - 2), scheme.outlineVariant);
+        image.dispose();
+        picture.dispose();
+      }
+    },
+  );
+
   testWidgets('mood colors are pairwise distinct', (t) async {
     final colors = {
       for (final m in DiaryMood.values)
-        diaryMoodColor(m, _mui.colorScheme.outlineVariant),
+        MoodPalette.classic.color(m, Brightness.light),
     };
     expect(colors.length, DiaryMood.values.length);
   });

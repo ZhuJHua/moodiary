@@ -1,4 +1,9 @@
 {
+  "moodColors": "Mood colors",
+  "moodPaletteClassic": "Classic",
+  "moodPaletteDefault": "Default",
+  "moodPaletteBlueOrange": "Blue–orange",
+  "moodPaletteColorblind": "Colorblind friendly",
   "accentTitle": "Accent color",
   "accentNeutral": "Default",
   "accentSystem": "From wallpaper",

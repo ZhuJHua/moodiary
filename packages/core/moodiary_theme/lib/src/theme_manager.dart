@@ -153,6 +153,7 @@ class ThemeManager {
       'onSecondaryContainer': hex(scheme.onSecondaryContainer),
       'inverseSurface': hex(scheme.inverseSurface),
       'onInverseSurface': hex(scheme.onInverseSurface),
+      'outline': hex(scheme.outline),
       'outlineVariant': hex(scheme.outlineVariant),
       'error': hex(scheme.error),
     };

@@ -55,6 +55,11 @@ class _Translations$app$en extends Translations$app$zh {
 	final TranslationsEn _root; // ignore: unused_field
 
 	// Translations
+	@override String get moodColors => 'Mood colors';
+	@override String get moodPaletteClassic => 'Classic';
+	@override String get moodPaletteDefault => 'Default';
+	@override String get moodPaletteBlueOrange => 'Blue–orange';
+	@override String get moodPaletteColorblind => 'Colorblind friendly';
 	@override String get accentTitle => 'Accent color';
 	@override String get accentNeutral => 'Default';
 	@override String get accentSystem => 'From wallpaper';

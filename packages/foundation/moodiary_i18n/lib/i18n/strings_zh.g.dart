@@ -58,6 +58,21 @@ class Translations$app$zh {
 
 	// Translations
 
+	/// zh: '心情配色'
+	String get moodColors => '心情配色';
+
+	/// zh: '经典'
+	String get moodPaletteClassic => '经典';
+
+	/// zh: '默认'
+	String get moodPaletteDefault => '默认';
+
+	/// zh: '蓝橙'
+	String get moodPaletteBlueOrange => '蓝橙';
+
+	/// zh: '色盲友好'
+	String get moodPaletteColorblind => '色盲友好';
+
 	/// zh: '主题色'
 	String get accentTitle => '主题色';
 

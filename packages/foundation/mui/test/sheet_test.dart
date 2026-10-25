@@ -351,6 +351,106 @@ void main() {
     });
   });
 
+  testWidgets('option leading replaces icon; icon remains the fallback', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(
+        (context) => MSheet.picker<int>(
+          context,
+          title: 'Options',
+          options: const [
+            MSheetOption(
+              value: 1,
+              label: 'Custom',
+              icon: LucideIcons.sun,
+              leading: SizedBox(
+                key: ValueKey('leading'),
+                width: 24,
+                height: 24,
+              ),
+            ),
+            MSheetOption(value: 2, label: 'Icon', icon: LucideIcons.moon),
+          ],
+        ),
+      ),
+    );
+    await open(tester);
+    expect(find.byKey(const ValueKey('leading')), findsOneWidget);
+    expect(find.byIcon(LucideIcons.sun), findsNothing);
+    expect(find.byIcon(LucideIcons.moon), findsOneWidget);
+  });
+
+  testWidgets(
+    'notice renders header, hero, items and footer and returns action',
+    (tester) async {
+      String? result;
+      await tester.pumpWidget(
+        host((context) async {
+          result = await MSheet.notice<String>(
+            context,
+            title: 'Notice',
+            subtitle: 'Details',
+            icon: LucideIcons.info,
+            hero: const Text('Preview'),
+            items: const [
+              MNoticeItem(
+                icon: LucideIcons.lock,
+                title: 'Private',
+                body: 'Only you',
+              ),
+              MNoticeItem(icon: LucideIcons.check, title: 'Ready'),
+            ],
+            footer: const Text('Footer'),
+            actions: const [
+              MAction(label: 'Continue', value: 'continued', isPrimary: true),
+            ],
+          );
+        }),
+      );
+      await open(tester);
+      for (final text in [
+        'Notice',
+        'Details',
+        'Preview',
+        'Private',
+        'Only you',
+        'Ready',
+        'Footer',
+      ]) {
+        expect(find.text(text), findsOneWidget);
+      }
+      expect(find.byType(MNoticeItem), findsNWidgets(2));
+      expect(find.byIcon(LucideIcons.lock), findsOneWidget);
+      await tester.tap(find.text('Continue'));
+      await tester.pumpAndSettle();
+      expect(result, 'continued');
+    },
+  );
+
+  testWidgets(
+    'notice without hero or footer renders optional body and dismisses',
+    (tester) async {
+      int? result = 7;
+      await tester.pumpWidget(
+        host((context) async {
+          result = await MSheet.notice<int>(
+            context,
+            title: 'Notice',
+            items: const [MNoticeItem(icon: LucideIcons.info, title: 'Item')],
+            actions: const [MAction(label: 'Close')],
+          );
+        }),
+      );
+      await open(tester);
+      expect(find.text('Item'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
+      expect(result, isNull);
+    },
+  );
+
   group('MField', () {
     Widget fieldHost(Widget child) => MuiTheme(
       data: _mui,

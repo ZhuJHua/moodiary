@@ -38,6 +38,45 @@ abstract final class MSheet {
     );
   }
 
+  static Future<T?> notice<T>(
+    BuildContext context, {
+    required String title,
+    String? subtitle,
+    IconData? icon,
+    Widget? hero,
+    required List<MNoticeItem> items,
+    Widget? footer,
+    required List<MAction<T>> actions,
+  }) {
+    return MSheet.show<T>(
+      context,
+      builder: (sheetContext) => MSheetScaffold<T>(
+        title: title,
+        subtitle: subtitle,
+        icon: icon,
+        actions: actions,
+        child: Column(
+          mainAxisSize: .min,
+          crossAxisAlignment: .stretch,
+          spacing: 16,
+          children: [
+            if (hero != null)
+              Container(
+                padding: const .symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: sheetContext.theme.colors.surfaceContainerHigh,
+                  borderRadius: .circular(sheetContext.theme.radii.lg),
+                ),
+                child: hero,
+              ),
+            ...items,
+            ?footer,
+          ],
+        ),
+      ),
+    );
+  }
+
   static Future<T?> picker<T>(
     BuildContext context, {
     required String title,
@@ -98,6 +137,7 @@ class MSheetOption<T> {
   final String label;
   final String? subtitle;
   final IconData? icon;
+  final Widget? leading;
   final bool enabled;
 
   const MSheetOption({
@@ -105,6 +145,7 @@ class MSheetOption<T> {
     required this.label,
     this.subtitle,
     this.icon,
+    this.leading,
     this.enabled = true,
   });
 }
@@ -150,8 +191,9 @@ class MSheetOptionTile<T> extends StatelessWidget {
                 padding: const .symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
-                    if (option.icon != null) ...[
-                      Icon(option.icon, size: 20, color: foreground),
+                    if (option.leading != null || option.icon != null) ...[
+                      option.leading ??
+                          Icon(option.icon, size: 20, color: foreground),
                       const SizedBox(width: 12),
                     ],
                     Expanded(

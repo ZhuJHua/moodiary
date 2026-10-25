@@ -8,13 +8,13 @@ import 'package:moodiary_mobile/app/settings/presentation/widget/cache_usage_til
 import 'package:moodiary_mobile/app/settings/presentation/widget/data_repair_tile.dart';
 import 'package:moodiary_mobile/app/settings/presentation/widget/image_optimize_tile.dart';
 import 'package:moodiary_mobile/app/settings/presentation/widget/language_dialog.dart';
+import 'package:moodiary_mobile/app/settings/presentation/widget/mood_palette_sheet.dart';
 import 'package:moodiary_mobile/app/settings/presentation/widget/theme_mode_dialog.dart';
 import 'package:moodiary_mobile/app/settings/setting_routes.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_theme/moodiary_theme.dart';
-import 'package:mui/mui.dart';
 
 void _openSetting(BuildContext context, MoodiaryRouteBase route) {
   route.push(context);
@@ -135,6 +135,18 @@ class _DisplaySection extends ConsumerWidget {
           leading: _lead(context, LucideIcons.type),
           trailing: _chevron(context),
           onTap: () => _openSetting(context, const FontRoute()),
+        ),
+        ValueListenableBuilder<String>(
+          valueListenable: MoodiaryKVs.moodPalette.getNotifier(),
+          builder: (context, palette, _) => SettingListTile(
+            title: context.l10n.app.moodColors,
+            leading: _lead(context, LucideIcons.smile),
+            trailing: _value(
+              context,
+              MoodPalette.fromName(palette).label(context),
+            ),
+            onTap: () => MoodPaletteSheet.show(context),
+          ),
         ),
       ],
     );

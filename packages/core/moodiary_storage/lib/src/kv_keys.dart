@@ -41,6 +41,8 @@ enum MoodiaryKVs<T extends Object> {
 
   themeAccentColor<int>(defaultValue: 0xFF2E59A7),
 
+  moodPalette<String>(defaultValue: 'classic'),
+
   themeMode<int>(defaultValue: 0),
 
   fontTheme<int>(defaultValue: 0),

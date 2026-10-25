@@ -4,7 +4,7 @@ interface EditorMetaMoodOption {
   value: string
   label: string
   color: string
-  icon: string
+  onColor: string
 }
 
 interface EditorMetaPlace {

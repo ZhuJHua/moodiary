@@ -683,6 +683,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
       'onSecondaryContainer': _hex(scheme.onSecondaryContainer),
       'inverseSurface': _hex(scheme.inverseSurface),
       'onInverseSurface': _hex(scheme.onInverseSurface),
+      'outline': _hex(scheme.outline),
       'outlineVariant': _hex(scheme.outlineVariant),
       'error': _hex(scheme.error),
     };

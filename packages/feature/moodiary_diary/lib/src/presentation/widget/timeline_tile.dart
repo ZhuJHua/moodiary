@@ -65,14 +65,16 @@ class DiaryTimelineTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
     final topPad = _kTopPad + (breakBefore ? _kBreakPad : 0.0);
-    final mood = diaryMoodColor(diary.mood, colors.outlineVariant);
+    final mood = diary.mood?.colorOf(context) ?? colors.outlineVariant;
 
     return CustomPaint(
       painter: _AxisPainter(
         color: mood,
+        hollow: diary.mood == null,
+        outline: colors.outline,
         hasAbove: hasAbove,
         below: hasBelow || moodBelow != null
-            ? diaryMoodColor(moodBelow, colors.outlineVariant)
+            ? moodBelow?.colorOf(context) ?? colors.outlineVariant
             : null,
         dashedAbove: breakBefore,
         dashedBelow: breakAfter,
@@ -542,6 +544,8 @@ class _MediaChip extends StatelessWidget {
 
 class _AxisPainter extends CustomPainter {
   final Color color;
+  final bool hollow;
+  final Color outline;
 
   final bool hasAbove;
   final Color? below;
@@ -553,6 +557,8 @@ class _AxisPainter extends CustomPainter {
 
   const _AxisPainter({
     required this.color,
+    required this.hollow,
+    required this.outline,
     required this.hasAbove,
     required this.below,
     required this.dashedAbove,
@@ -584,12 +590,26 @@ class _AxisPainter extends CustomPainter {
         if (dashedBelow) {
           _dash(canvas, x, bottom, size.height, idle);
         } else {
-          _segment(canvas, x, bottom, size.height, color, below!);
+          _segment(
+            canvas,
+            x,
+            bottom,
+            size.height,
+            color,
+            hollow ? idle : below!,
+          );
         }
       }
     }
 
-    canvas.drawCircle(Offset(x, dotDy), radius, Paint()..color = color);
+    canvas.drawCircle(
+      Offset(x, dotDy),
+      radius,
+      Paint()
+        ..color = hollow ? outline : color
+        ..style = hollow ? PaintingStyle.stroke : PaintingStyle.fill
+        ..strokeWidth = 1.5,
+    );
   }
 
   void _segment(
@@ -625,6 +645,8 @@ class _AxisPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _AxisPainter old) =>
       old.color != color ||
+      old.hollow != hollow ||
+      old.outline != outline ||
       old.hasAbove != hasAbove ||
       old.below != below ||
       old.dashedAbove != dashedAbove ||

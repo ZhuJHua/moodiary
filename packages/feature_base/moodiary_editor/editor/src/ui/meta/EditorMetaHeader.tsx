@@ -3,8 +3,9 @@ import { Cloud, Folder, Hash, LocateFixed, MapPin, Plus, RefreshCw, Settings, Tr
 import { post } from '@/core/bridge/post'
 import { t } from '@/core/i18n'
 import type { EditorMeta } from '@/core/state/meta'
+import MoodGlyph from './MoodGlyph'
 import Popover, { type PopoverHandle } from '@/ui/overlay/Popover'
-import { moodIcon, placeIcon, weatherGlyph } from './icons'
+import { placeIcon, weatherGlyph } from './icons'
 
 interface MetaButtonProps {
   className: string
@@ -70,7 +71,6 @@ export default function EditorMetaHeader({
   const [tagIndex, setTagIndex] = useState(-1)
 
   const currentMood = meta.moods.find((m) => m.value === meta.mood)
-  const MoodIcon = moodIcon(currentMood?.icon)
   const glyph = weatherGlyph(meta.weather?.icon)
 
   const act = (pop: PopoverHandle | null, type: string, payload?: unknown): void => {
@@ -101,7 +101,7 @@ export default function EditorMetaHeader({
           style={{ '--mood': currentMood?.color } as CSSProperties}
           onPress={(anchor) => moodPop.current?.open(anchor)}
         >
-          <MoodIcon />
+          <MoodGlyph level={currentMood?.value} color={currentMood?.color} onColor={currentMood?.onColor} size={18} />
           <span>{currentMood?.label ?? t('meta.moodUnset')}</span>
         </MetaButton>
       </div>
@@ -166,10 +166,9 @@ export default function EditorMetaHeader({
 
       {editable && (
         <>
-          <Popover ref={moodPop} label={t('meta.mood')} className="md-popover--grid">
+          <Popover ref={moodPop} label={t('meta.mood')} className="md-popover--mood">
             <div className="md-pop-grid">
               {meta.moods.map((m) => {
-                const Icon = moodIcon(m.icon)
                 const active = m.value === meta.mood
                 return (
                   <button
@@ -179,16 +178,17 @@ export default function EditorMetaHeader({
                     aria-pressed={active}
                     onClick={() => act(moodPop.current, 'changeMood', { mood: m.value })}
                   >
-                    <Icon style={{ color: m.color }} />
+                    <MoodGlyph level={m.value} color={m.color} onColor={m.onColor} size={30} />
                     <span>{m.label}</span>
                   </button>
                 )
               })}
             </div>
+            <div className="md-pop-divider" />
             <button type="button" className="md-pop-item is-dim"
               aria-pressed={!currentMood}
               onClick={() => act(moodPop.current, 'changeMood', { mood: '' })}>
-              <X />{t('meta.moodClear')}
+              <MoodGlyph size={18} />{t('meta.moodClear')}
             </button>
           </Popover>
 

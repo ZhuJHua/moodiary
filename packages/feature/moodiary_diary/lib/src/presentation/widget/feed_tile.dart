@@ -235,14 +235,14 @@ class _Headline extends StatelessWidget {
       child: Padding(
         padding: const .only(right: 7),
         child: Container(
-          width: 3.5,
-          height: 12,
+          width: 7,
+          height: 7,
           decoration: BoxDecoration(
-            color: diaryMoodColor(
-              diary.mood,
-              context.theme.colors.outlineVariant,
-            ),
-            borderRadius: const .all(.circular(999)),
+            shape: .circle,
+            color: diary.mood?.colorOf(context),
+            border: diary.mood == null
+                ? Border.all(color: context.theme.colors.outline, width: 1.5)
+                : null,
           ),
         ),
       ),

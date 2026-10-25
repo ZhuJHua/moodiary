@@ -181,8 +181,15 @@ class Moodiary extends ConsumerWidget {
           // ignore: deprecated_member_use
           child: MaterialUiCompatibilityBridge(
             child: FrostedGlassOverlayComponent(
-              child: AppLockObserver(
-                child: FlutterSmartDialog.init()(context, child!),
+              child: ValueListenableBuilder<String>(
+                valueListenable: MoodiaryKVs.moodPalette.getNotifier(),
+                builder: (context, palette, child) => MoodPaletteScope(
+                  palette: MoodPalette.fromName(palette),
+                  child: child!,
+                ),
+                child: AppLockObserver(
+                  child: FlutterSmartDialog.init()(context, child!),
+                ),
               ),
             ),
           ),

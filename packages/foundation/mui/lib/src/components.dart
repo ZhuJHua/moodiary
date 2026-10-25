@@ -21,6 +21,7 @@ export 'components/basic/marquee.dart';
 export 'components/basic/menu.dart';
 export 'components/basic/modal.dart';
 export 'components/basic/network_image.dart';
+export 'components/basic/notice_item.dart';
 export 'components/basic/overlay_label.dart';
 export 'components/basic/popup.dart';
 export 'components/basic/pull_to_refresh.dart';

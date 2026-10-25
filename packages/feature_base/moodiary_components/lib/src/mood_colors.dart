@@ -2,30 +2,20 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:mui/mui.dart';
 
-extension DiaryMoodVisuals on DiaryMood {
-  Color get color => switch (this) {
-    .awful => const Color(0xFFB71C1C),
-    .bad => const Color(0xFFEE7F59),
-    .okay => const Color(0xFFD8D5CD),
-    .good => const Color(0xFF79C26A),
-    .great => const Color(0xFF1E7B45),
-  };
+import 'mood_palette.dart';
 
-  IconData get icon => switch (this) {
-    .awful => LucideIcons.frown,
-    .bad => LucideIcons.annoyed,
-    .okay => LucideIcons.meh,
-    .good => LucideIcons.smile,
-    .great => LucideIcons.laugh,
-  };
+extension DiaryMoodAppearance on DiaryMood {
+  Color colorOf(BuildContext context, {MoodPalette? palette}) =>
+      (palette ?? MoodPalette.of(context)).color(
+        this,
+        context.theme.brightness,
+      );
 
-  String get iconName => switch (this) {
-    .awful => 'frown',
-    .bad => 'annoyed',
-    .okay => 'meh',
-    .good => 'smile',
-    .great => 'laugh',
-  };
+  Color onColorOf(BuildContext context, {MoodPalette? palette}) =>
+      (palette ?? MoodPalette.of(context)).onColor(
+        this,
+        context.theme.brightness,
+      );
 
   String labelOf(Translations l10n) => switch (this) {
     .awful => l10n.common.moodAwful,

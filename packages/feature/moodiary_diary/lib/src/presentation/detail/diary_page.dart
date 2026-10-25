@@ -888,8 +888,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
           {
             'value': mood.name,
             'label': mood.label(context),
-            'color': _hexColor(mood.color),
-            'icon': mood.iconName,
+            'color': _hexColor(mood.colorOf(context)),
+            'onColor': _hexColor(mood.onColorOf(context)),
           },
       ],
       'category': categoryLabel,
