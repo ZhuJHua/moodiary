@@ -6,11 +6,11 @@ import 'package:mui/mui.dart';
 
 enum MoodPalette {
   classic(
-    [0xFFB71C1C, 0xFFEE7F59, 0xFFD8D5CD, 0xFF79C26A, 0xFF1E7B45],
+    [0xFFD4382F, 0xFFF0936B, 0xFFD8D5CD, 0xFF79C26A, 0xFF2A9356],
     [0xFFEF5A50, 0xFFF7B08F, 0xFF66645F, 0xFF8FD27F, 0xFF34A35B],
   ),
   blueOrange(
-    [0xFF2C4A9C, 0xFF6E93D8, 0xFFD4D1C9, 0xFFF2A13E, 0xFFC24A16],
+    [0xFF4467C4, 0xFF89A8E2, 0xFFD4D1C9, 0xFFF2A13E, 0xFFD45A1E],
     [0xFF5F84DE, 0xFFA3BDEE, 0xFF6B6964, 0xFFF4B35E, 0xFFE06A2C],
   );
 
@@ -34,14 +34,8 @@ enum MoodPalette {
   Color color(DiaryMood mood, Brightness brightness) =>
       Color((brightness == .dark ? _dark : _light)[mood.index]);
 
-  Color onColor(DiaryMood mood, Brightness brightness) {
-    final luminance = color(mood, brightness).computeLuminance();
-    const white = Color(0xFFFFFFFF);
-    const ink = Color(0xFF161616);
-    final whiteContrast = 1.05 / (luminance + 0.05);
-    final inkContrast = (luminance + 0.05) / (ink.computeLuminance() + 0.05);
-    return whiteContrast > inkContrast ? white : ink;
-  }
+  Color onColor(DiaryMood mood, Brightness brightness) =>
+      Color.lerp(color(mood, brightness), const Color(0xFF000000), 0.75)!;
 
   String label(BuildContext context) => switch (this) {
     classic => context.l10n.app.moodPaletteClassic,

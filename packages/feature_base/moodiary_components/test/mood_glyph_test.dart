@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter_test/flutter_test.dart';
@@ -25,29 +24,20 @@ void main() {
     expect(MoodPalette.current, MoodPalette.classic);
   });
 
-  test('on-colors maximize WCAG contrast in every palette and brightness', () {
-    double contrast(Color a, Color b) {
-      final x = a.computeLuminance(), y = b.computeLuminance();
-      return (math.max(x, y) + 0.05) / (math.min(x, y) + 0.05);
-    }
-
-    for (final palette in MoodPalette.values) {
-      for (final brightness in Brightness.values) {
-        for (final mood in DiaryMood.values) {
-          final fill = palette.color(mood, brightness);
-          final on = palette.onColor(mood, brightness);
-          const candidates = [Color(0xFFFFFFFF), Color(0xFF161616)];
-          expect(candidates, contains(on));
-          for (final candidate in candidates) {
-            expect(
-              contrast(fill, on),
-              greaterThanOrEqualTo(contrast(fill, candidate)),
-            );
+  test(
+    'on-colors lerp fills 75% toward black in every palette and brightness',
+    () {
+      for (final palette in MoodPalette.values) {
+        for (final brightness in Brightness.values) {
+          for (final mood in DiaryMood.values) {
+            final fill = palette.color(mood, brightness);
+            final on = palette.onColor(mood, brightness);
+            expect(on, Color.lerp(fill, const Color(0xFF000000), 0.75));
           }
         }
       }
-    }
-  });
+    },
+  );
 
   testWidgets('all five faces and unset paint at small and large sizes', (
     tester,
@@ -119,10 +109,10 @@ void main() {
         ),
       ),
     );
-    expect(fill, const Color(0xFFB71C1C));
+    expect(fill, const Color(0xFFD4382F));
     MoodiaryKVs.moodPalette.set('blueOrange');
     await tester.pumpAndSettle();
-    expect(fill, const Color(0xFF2C4A9C));
+    expect(fill, const Color(0xFF4467C4));
     expect(on, MoodPalette.blueOrange.onColor(.awful, .light));
     brightness.value = .dark;
     await tester.pumpAndSettle();

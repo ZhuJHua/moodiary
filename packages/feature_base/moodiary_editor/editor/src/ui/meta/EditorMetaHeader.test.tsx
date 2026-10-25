@@ -8,11 +8,11 @@ import EditorMetaHeader from './EditorMetaHeader'
 const meta: EditorMeta = {
   dateText: '2026-10-25', subText: '12:00', mood: null,
   moods: [
-    { value: 'awful', label: 'Awful', color: '#B71C1C', onColor: '#FFFFFF' },
-    { value: 'bad', label: 'Bad', color: '#EE7F59', onColor: '#161616' },
-    { value: 'okay', label: 'Okay', color: '#D8D5CD', onColor: '#161616' },
-    { value: 'good', label: 'Good', color: '#79C26A', onColor: '#161616' },
-    { value: 'great', label: 'Great', color: '#1E7B45', onColor: '#FFFFFF' },
+    { value: 'awful', label: 'Awful', color: '#D4382F', onColor: '#350E0C' },
+    { value: 'bad', label: 'Bad', color: '#F0936B', onColor: '#3C251B' },
+    { value: 'okay', label: 'Okay', color: '#D8D5CD', onColor: '#363533' },
+    { value: 'good', label: 'Good', color: '#79C26A', onColor: '#1E311B' },
+    { value: 'great', label: 'Great', color: '#2A9356', onColor: '#0B2516' },
   ],
   category: null, weather: null, weatherOptions: [], weatherAutoLabel: null,
   weatherClearLabel: '', position: null, positionId: null, places: [],
@@ -38,8 +38,10 @@ describe('mood metadata bridge', () => {
     const view = render(<EditorMetaHeader meta={current} editable wordCount={0} />)
     fireEvent.click(screen.getByRole('button', { name: 'Mood Not recorded' }))
     await screen.findByRole('button', { name: 'Awful' })
-    for (const label of ['Awful', 'Bad', 'Okay', 'Good', 'Great']) {
-      expect(screen.getByRole('button', { name: label })).toBeTruthy()
+    for (const mood of meta.moods) {
+      const cell = screen.getByRole('button', { name: mood.label })
+      expect(cell.querySelector('circle')?.getAttribute('fill')).toBe(mood.color)
+      expect(cell.querySelector('g')?.getAttribute('stroke')).toBe(mood.onColor)
     }
     fireEvent.click(screen.getByRole('button', { name: 'Good' }))
     expect(postMessage.mock.calls.map(([raw]) => JSON.parse(raw))).toContainEqual({ type: 'changeMood', payload: { mood: 'good' } })
@@ -54,20 +56,20 @@ describe('mood metadata bridge', () => {
     const view = render(<EditorMetaHeader meta={{ ...meta, mood: 'awful' }} editable wordCount={0} />)
     const pill = screen.getByRole('button', { name: 'Mood Awful' })
     expect(pill.querySelector('svg')?.getAttribute('width')).toBe('18')
-    expect(pill.querySelector('circle')?.getAttribute('fill')).toBe('#B71C1C')
-    expect(pill.querySelector('g')?.getAttribute('stroke')).toBe('#FFFFFF')
+    expect(pill.querySelector('circle')?.getAttribute('fill')).toBe('#D4382F')
+    expect(pill.querySelector('g')?.getAttribute('stroke')).toBe('#350E0C')
     const updated = { ...meta, mood: 'awful', moods: meta.moods.map((m) => (
-      m.value === 'awful' ? { ...m, color: '#5F84DE', onColor: '#161616' } : m
+      m.value === 'awful' ? { ...m, color: '#5F84DE', onColor: '#182138' } : m
     )) }
     view.rerender(<EditorMetaHeader meta={updated} editable wordCount={0} />)
     expect(pill.querySelector('circle')?.getAttribute('fill')).toBe('#5F84DE')
-    expect(pill.querySelector('g')?.getAttribute('stroke')).toBe('#161616')
+    expect(pill.querySelector('g')?.getAttribute('stroke')).toBe('#182138')
     fireEvent.click(pill)
     const cell = await screen.findByRole('button', { name: 'Awful' })
     expect(cell.getAttribute('aria-pressed')).toBe('true')
     expect(cell.querySelector('svg')?.getAttribute('width')).toBe('30')
     expect(cell.querySelector('circle')?.getAttribute('fill')).toBe('#5F84DE')
-    expect(cell.querySelector('g')?.getAttribute('stroke')).toBe('#161616')
+    expect(cell.querySelector('g')?.getAttribute('stroke')).toBe('#182138')
     const clear = screen.getByRole('button', { name: "Don't record" })
     expect(clear.querySelector('circle')?.getAttribute('stroke-dasharray')).toBe('2.6 2.2')
   })
