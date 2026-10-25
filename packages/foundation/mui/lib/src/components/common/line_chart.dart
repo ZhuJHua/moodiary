@@ -60,7 +60,7 @@ class _MLineChartState extends State<MLineChart> {
             final left = widget.yLabelBuilder == null ? 10.0 : 28.0;
             final plot = Rect.fromLTRB(
               left + 7,
-              44,
+              widget.yLabelBuilder == null ? 7 : 10,
               constraints.maxWidth - 10,
               widget.height - 30,
             );

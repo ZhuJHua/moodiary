@@ -2719,9 +2719,12 @@ class Translations$insights$zh {
 		other: '${date} · ${level}（${score}）· ${count} 篇',
 	);
 
-	/// zh: '(other) {好心情连续 {count} 天}'
-	String streak({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
-		other: '好心情连续 ${count} 天',
+	/// zh: '好心情连续'
+	String get streak => '好心情连续';
+
+	/// zh: '(other) {{count} 天}'
+	String streakDays({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
+		other: '${count} 天',
 	);
 }
 

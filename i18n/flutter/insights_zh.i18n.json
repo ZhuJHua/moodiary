@@ -52,7 +52,8 @@
   "dayTooltip(plural, param=count)": {
     "other": "{date} · {level}（{score}）· {count} 篇"
   },
-  "streak(plural, param=count)": {
-    "other": "好心情连续 {count} 天"
+  "streak": "好心情连续",
+  "streakDays(plural, param=count)": {
+    "other": "{count} 天"
   }
 }

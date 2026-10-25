@@ -64,21 +64,39 @@ void main() {
     (tester) async {
       await pumpChart(tester, [2, null, 4]);
       await tester.runAsync(() async {
-        expect(await hasInk(tester, 85, 135), isFalse);
-        expect(await hasInk(tester, 17, 154), isTrue);
-        expect(await hasInk(tester, 290, 81), isTrue);
+        expect(await hasInk(tester, 85, 121), isFalse);
+        expect(await hasInk(tester, 17, 144), isTrue);
+        expect(await hasInk(tester, 290, 53), isTrue);
       });
       await pumpChart(tester, [2, 3, 4]);
       await tester.runAsync(
-        () async => expect(await hasInk(tester, 85, 135), isTrue),
+        () async => expect(await hasInk(tester, 85, 121), isTrue),
       );
       await pumpChart(tester, [null, 3, null]);
       await tester.runAsync(() async {
-        expect(await hasInk(tester, 154, 117), isTrue);
-        expect(await hasInk(tester, 85, 135), isFalse);
+        expect(await hasInk(tester, 154, 99), isTrue);
+        expect(await hasInk(tester, 85, 121), isFalse);
       });
     },
   );
+
+  testWidgets('top markers use the chart edge; tooltip overlays the plot', (
+    tester,
+  ) async {
+    await pumpChart(tester, [5]);
+    await tester.runAsync(() async {
+      expect(await hasInk(tester, 154, 7), isTrue);
+    });
+    await tester.tap(find.byType(MLineChart));
+    await tester.pump();
+    final chart = tester.getRect(find.byType(MLineChart));
+    final bubble = tester.getRect(
+      find.byKey(const ValueKey('line-chart-tooltip')),
+    );
+    expect(bubble.top, chart.top);
+    expect(bubble.bottom, greaterThan(chart.top + 7));
+    expect(chart.height, 220);
+  });
 
   testWidgets('tap and drag select nearest index including missing samples', (
     tester,

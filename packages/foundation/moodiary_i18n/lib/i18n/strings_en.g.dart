@@ -986,9 +986,10 @@ class _Translations$insights$en extends Translations$insights$zh {
 		one: '${date} · ${level} (${score}) · 1 entry',
 		other: '${date} · ${level} (${score}) · ${count} entries',
 	);
-	@override String streak({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(count,
-		one: '1 day of good moods',
-		other: '${count} days of good moods',
+	@override String get streak => 'Good-mood streak';
+	@override String streakDays({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(count,
+		one: '1 day',
+		other: '${count} days',
 	);
 }
 

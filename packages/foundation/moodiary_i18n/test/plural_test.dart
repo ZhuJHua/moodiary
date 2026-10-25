@@ -11,6 +11,8 @@ void main() {
     expect(l10n.diary.timelineMonthCount(count: 1), '1 篇');
     expect(l10n.diary.timelineMonthCount(count: 5), '5 篇');
     expect(l10n.media.imageCount(count: 1), '1 张照片');
+    expect(l10n.insights.streak, '好心情连续');
+    expect(l10n.insights.streakDays(count: 4), '4 天');
   });
 
   test('英文走 CLDR 单复数', () async {
@@ -19,6 +21,9 @@ void main() {
     expect(l10n.diary.timelineMonthCount(count: 2), '2 entries');
     expect(l10n.media.imageCount(count: 1), '1 Photo');
     expect(l10n.media.imageCount(count: 3), '3 Photos');
+    expect(l10n.insights.streak, 'Good-mood streak');
+    expect(l10n.insights.streakDays(count: 1), '1 day');
+    expect(l10n.insights.streakDays(count: 4), '4 days');
   });
 
   test('渲染中文复数不再落到 slang 的兜底（那条 print 每次都打，release 也打）', () async {

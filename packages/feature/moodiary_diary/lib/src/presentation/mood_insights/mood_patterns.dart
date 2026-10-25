@@ -69,92 +69,121 @@ class MoodWeekdayPattern extends StatelessWidget {
   final List<double?> averages;
   const MoodWeekdayPattern({super.key, required this.averages});
   @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      SizedBox(
-        height: 120,
-        child: Stack(
-          children: [
-            Positioned(
-              left: 0,
-              right: 0,
-              top: 59.5,
-              child: Container(
-                height: 1,
-                color: context.theme.colors.outlineVariant,
-              ),
+  Widget build(BuildContext context) {
+    const height = 88.0;
+    final span = averages
+        .take(7)
+        .whereType<double>()
+        .fold<double>(
+          1,
+          (span, value) => (value - 3).abs() > span ? (value - 3).abs() : span,
+        );
+    return Row(
+      crossAxisAlignment: .start,
+      children: [
+        SizedBox(
+          width: 28,
+          height: height,
+          child: Align(
+            alignment: .centerLeft,
+            child: Text(
+              '3.0',
+              style: context.theme.typography.labelSmall.outline,
             ),
-            Row(
-              children: [
-                for (var i = 0; i < 7; i++)
-                  Expanded(
-                    child: Builder(
-                      builder: (context) {
-                        final value = averages[i];
-                        return Semantics(
-                          label:
-                              '${TimeFormat.weekdayShort(DateTime(2026, 10, 18 + i))}: ${value?.toStringAsFixed(1) ?? context.l10n.insights.unrecorded}',
-                          child: Tooltip(
-                            message:
-                                value?.toStringAsFixed(1) ??
-                                context.l10n.insights.unrecorded,
-                            child: SizedBox(
-                              height: 120,
-                              child: Stack(
-                                alignment: .topCenter,
-                                children: [
-                                  if (value != null)
-                                    Positioned(
-                                      top: value >= 3
-                                          ? 60 - (value - 3) * 27
-                                          : 60,
-                                      child: Container(
-                                        width: 18,
-                                        height: (value - 3).abs() * 27,
-                                        decoration: BoxDecoration(
-                                          color: moodLevel(value)!
-                                              .colorOf(context),
-                                          borderRadius: .circular(4),
-                                        ),
+          ),
+        ),
+        Expanded(
+          child: Column(
+            children: [
+              SizedBox(
+                height: height,
+                child: Stack(
+                  children: [
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      top: height / 2 - .5,
+                      child: Container(
+                        height: 1,
+                        color: context.theme.colors.outlineVariant,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        for (var i = 0; i < 7; i++)
+                          Expanded(
+                            child: Builder(
+                              builder: (context) {
+                                final value = averages[i];
+                                final barHeight = value == null
+                                    ? 0.0
+                                    : (value - 3).abs() /
+                                          span *
+                                          (height / 2 - 4);
+                                return Semantics(
+                                  label:
+                                      '${TimeFormat.weekdayShort(DateTime(2026, 10, 18 + i))}: ${value?.toStringAsFixed(1) ?? context.l10n.insights.unrecorded}',
+                                  child: Tooltip(
+                                    message:
+                                        value?.toStringAsFixed(1) ??
+                                        context.l10n.insights.unrecorded,
+                                    child: SizedBox(
+                                      height: height,
+                                      child: Stack(
+                                        alignment: .topCenter,
+                                        children: [
+                                          if (value != null)
+                                            Positioned(
+                                              top: value >= 3
+                                                  ? height / 2 - barHeight
+                                                  : height / 2,
+                                              child: Container(
+                                                width: 18,
+                                                height: barHeight,
+                                                decoration: BoxDecoration(
+                                                  color: moodLevel(value)!
+                                                      .colorOf(context),
+                                                  borderRadius: .circular(4),
+                                                ),
+                                              ),
+                                            ),
+                                        ],
                                       ),
                                     ),
-                                ],
-                              ),
+                                  ),
+                                );
+                              },
                             ),
                           ),
-                        );
-                      },
+                      ],
                     ),
-                  ),
-              ],
-            ),
-            Positioned(
-              left: 0,
-              top: 42,
-              child: Text(
-                '3.0',
-                style: context.theme.typography.labelSmall.outline,
-              ),
-            ),
-          ],
-        ),
-      ),
-      const SizedBox(height: 4),
-      Row(
-        children: [
-          for (var i = 0; i < 7; i++)
-            Expanded(
-              child: Center(
-                child: Text(
-                  TimeFormat.weekdayNarrow(DateTime(2026, 10, 18 + i)),
-                  style: context.theme.typography.labelSmall.onSurfaceVariant,
+                  ],
                 ),
               ),
-            ),
-        ],
-      ),
-    ],
-  );
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  for (var i = 0; i < 7; i++)
+                    Expanded(
+                      child: Center(
+                        child: Text(
+                          TimeFormat.weekdayNarrow(DateTime(2026, 10, 18 + i)),
+                          style: context
+                              .theme
+                              .typography
+                              .labelSmall
+                              .onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class MoodTags extends StatelessWidget {

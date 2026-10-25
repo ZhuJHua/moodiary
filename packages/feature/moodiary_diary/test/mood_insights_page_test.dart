@@ -1,9 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
+import 'package:moodiary_diary/src/presentation/mood_insights/mood_calendar.dart';
 import 'package:moodiary_diary/src/presentation/mood_insights/mood_insights_page.dart';
+import 'package:moodiary_diary/src/presentation/mood_insights/mood_patterns.dart';
+import 'package:moodiary_diary/src/presentation/widget/diary_entry_tile.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
 import 'support/pump.dart';
@@ -24,6 +28,13 @@ class _Repository implements MoodInsightsRepository {
 }
 
 class _Diaries implements DiaryRepository {
+  List<Diary> rows = [];
+  @override
+  Future<List<Diary>> getDiariesByDateRange(
+    DateTime start,
+    DateTime end, {
+    bool visibleOnly = true,
+  }) async => rows;
   @override
   Stream<DiaryEvent> get diaryEvents => const Stream.empty();
   @override
@@ -33,10 +44,12 @@ class _Diaries implements DiaryRepository {
 void main() {
   setUpAll(setupPluralResolvers);
   late _Repository repository;
+  late _Diaries diaries;
   setUp(() {
     repository = _Repository();
+    diaries = _Diaries();
     getIt.registerSingleton<MoodInsightsRepository>(repository);
-    getIt.registerSingleton<DiaryRepository>(_Diaries());
+    getIt.registerSingleton<DiaryRepository>(diaries);
   });
   tearDown(getIt.reset);
 
@@ -48,6 +61,13 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text(l10n.insights.empty), findsOneWidget);
+      expect(
+        find.ancestor(
+          of: find.byType(MSegmentedControl<MoodInsightsScope>),
+          matching: find.byType(Card),
+        ),
+        findsNothing,
+      );
       expect(find.byType(MLineChart), findsNothing);
       expect(find.text(l10n.insights.calendar), findsNothing);
       await tester.tap(find.text(l10n.insights.week));
@@ -83,6 +103,8 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text(l10n.insights.calendar), findsOneWidget);
+      expect(find.text(l10n.insights.streakDays(count: 1)), findsOneWidget);
+      expect(find.text(l10n.insights.streak), findsOneWidget);
       expect(find.text(l10n.insights.empty), findsNothing);
       final next = tester.widget<IconButton>(
         find
@@ -102,6 +124,15 @@ void main() {
         scrollable: find.byType(Scrollable).first,
       );
       expect(find.text(l10n.insights.weekDiaries), findsOneWidget);
+      expect(
+        find.text(
+          l10n.insights.dayHeader(
+            date: TimeFormat.monthDay(moodDayKey(now)),
+            weekday: l10n.insights.today,
+          ),
+        ),
+        findsOneWidget,
+      );
       await tester.scrollUntilVisible(
         find.text(l10n.insights.year),
         -300,
@@ -118,4 +149,163 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  for (final count in [1, 20]) {
+    testWidgets('day sheet wraps $count entries and dismisses by dragging', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final today = moodDayKey(DateTime.now());
+      repository.rows = [
+        MoodInsightEntry(id: 'today', time: today, mood: DiaryMood.good),
+      ];
+      diaries.rows = [
+        for (var i = 0; i < count; i++)
+          Diary(
+            id: '$i',
+            title: 'Entry $i',
+            content: '',
+            contentText: 'Body',
+            time: today,
+            lastModified: today,
+            show: true,
+            imageName: const [],
+            audioName: const [],
+            videoName: const [],
+            tags: const [],
+            type: DiaryType.tiptap.value,
+          ),
+      ];
+      await tester.pumpWidget(
+        muiTestApp(const MoodInsightsPage(), wrapScaffold: false),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(MoodCalendar),
+          matching: find.text('${today.day}'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text(l10n.insights.view));
+      await tester.tap(find.text(l10n.insights.view));
+      await tester.pumpAndSettle();
+      final list = find.byType(ListView).last;
+      final scrollable = find
+          .descendant(of: list, matching: find.byType(Scrollable))
+          .first;
+      final position = tester.state<ScrollableState>(scrollable).position;
+      expect(tester.getSize(list).height, lessThanOrEqualTo(844 * .75));
+      if (count == 1) {
+        expect(tester.getSize(list).height, lessThan(300));
+        expect(position.maxScrollExtent, 0);
+        expect(position.physics.shouldAcceptUserOffset(position), isFalse);
+        await tester.drag(
+          find.byType(DiaryEntryTile).first,
+          const Offset(0, 300),
+        );
+      } else {
+        expect(position.maxScrollExtent, greaterThan(0));
+        await tester.scrollUntilVisible(
+          find.text('Entry 19'),
+          300,
+          scrollable: scrollable,
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('Entry 19').hitTestable(), findsOneWidget);
+        // The handle remains available while the content scrolls.
+        final top = tester.getTopLeft(list);
+        await tester.dragFrom(Offset(195, top.dy - 24), const Offset(0, 600));
+      }
+      await tester.pumpAndSettle();
+      expect(find.byType(DiaryEntryTile), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  for (final (locale, labels) in [
+    (const Locale('zh'), ['1月', '4月', '7月', '10月']),
+    (const Locale('en'), ['Jan', 'Apr', 'Jul', 'Oct']),
+  ]) {
+    testWidgets('year month labels are centred and unclipped in $locale', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        muiTestApp(
+          Center(
+            child: SizedBox(
+              width: 320,
+              child: MoodCalendar(
+                scope: .year,
+                start: DateTime(2026),
+                days: const {},
+                selected: null,
+                onSelected: (_) {},
+              ),
+            ),
+          ),
+          locale: locale,
+        ),
+      );
+      await tester.pumpAndSettle();
+      final calendar = tester.getRect(find.byType(MoodCalendar));
+      final pixels = find.descendant(
+        of: find.byType(MoodCalendar),
+        matching: find.byType(MInkWell),
+      );
+      for (var i = 0; i < labels.length; i++) {
+        final label = tester.getRect(find.text(labels[i]));
+        final dayIndex = DateTime(
+          2026,
+          1 + i * 3,
+        ).difference(DateTime(2026)).inDays;
+        final pixel = tester.getRect(pixels.at(dayIndex));
+        expect(label.center.dy, closeTo(pixel.center.dy, .01));
+        expect(label.top, greaterThanOrEqualTo(calendar.top));
+        expect(label.bottom, lessThanOrEqualTo(calendar.bottom));
+        expect(label.right, lessThan(pixel.left));
+      }
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  for (final (values, heights) in [
+    ([5.0, 2.5], [40.0, 10.0]),
+    ([3.5, 2.5], [20.0, 20.0]),
+  ]) {
+    testWidgets(
+      'weekday bars scale to $values without covering the baseline label',
+      (tester) async {
+        await tester.pumpWidget(
+          muiTestApp(
+            ListView(
+              children: [
+                MoodWeekdayPattern(
+                  averages: [...values, null, null, null, null, null],
+                ),
+              ],
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final bars = find.byWidgetPredicate(
+          (widget) => widget is Container && widget.constraints?.maxWidth == 18,
+        );
+        expect(bars, findsNWidgets(2));
+        final label = tester.getRect(find.text('3.0'));
+        for (var i = 0; i < heights.length; i++) {
+          final bar = tester.getRect(bars.at(i));
+          expect(bar.height, heights[i]);
+          expect(label.right, lessThan(bar.left));
+        }
+        expect(
+          tester.getSize(find.byType(MoodWeekdayPattern)).height,
+          lessThan(120),
+        );
+      },
+    );
+  }
 }

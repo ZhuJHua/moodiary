@@ -146,7 +146,8 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
           12 + MediaQuery.paddingOf(context).bottom,
         ),
         children: [
-          _Block(
+          Padding(
+            padding: const .only(bottom: 12),
             child: Column(
               children: [
                 MSegmentedControl<MoodInsightsScope>(
@@ -407,19 +408,36 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
     final future = load();
     await MSheet.show<void>(
       context,
-      builder: (context) => SizedBox(
-        height: MediaQuery.sizeOf(context).height * .65,
+      builder: (context) => ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight:
+              MediaQuery.sizeOf(context).height * .75 -
+              48 -
+              MediaQuery.viewPaddingOf(context).bottom,
+        ),
         child: FutureBuilder<List<Diary>>(
           future: future,
           builder: (context, snapshot) {
             if (snapshot.hasError) {
-              return Center(child: Text(context.l10n.insights.loadError));
+              return Padding(
+                padding: const .all(14),
+                child: Center(
+                  heightFactor: 1,
+                  child: Text(context.l10n.insights.loadError),
+                ),
+              );
             }
             final diaries = snapshot.data;
             if (diaries == null) {
-              return const Center(child: CircularProgressIndicator());
+              return const SizedBox(
+                height: 80,
+                child: Center(child: CircularProgressIndicator()),
+              );
             }
             return ListView(
+              shrinkWrap: true,
+              primary: false,
+              physics: const ClampingScrollPhysics(),
               padding: const .all(14),
               children: [
                 Text(
@@ -566,8 +584,10 @@ class _Summary extends StatelessWidget {
               )
             else
               metric(
-                '${summary.longestGoodStreak}',
-                context.l10n.insights.streak(count: summary.longestGoodStreak),
+                context.l10n.insights.streakDays(
+                  count: summary.longestGoodStreak,
+                ),
+                context.l10n.insights.streak,
               ),
           ],
         ),
@@ -589,12 +609,12 @@ class _WeekEntries extends StatelessWidget {
           Padding(
             padding: const .symmetric(vertical: 8),
             child: Text(
-              day == moodDayKey(DateTime.now())
-                  ? context.l10n.insights.today
-                  : context.l10n.insights.dayHeader(
-                      date: TimeFormat.monthDay(day),
-                      weekday: TimeFormat.weekdayShort(day),
-                    ),
+              context.l10n.insights.dayHeader(
+                date: TimeFormat.monthDay(day),
+                weekday: day == moodDayKey(DateTime.now())
+                    ? context.l10n.insights.today
+                    : TimeFormat.weekdayShort(day),
+              ),
               style: context
                   .theme
                   .typography

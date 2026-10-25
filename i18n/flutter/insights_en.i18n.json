@@ -54,8 +54,9 @@
     "one": "{date} · {level} ({score}) · 1 entry",
     "other": "{date} · {level} ({score}) · {count} entries"
   },
-  "streak(plural, param=count)": {
-    "one": "1 day of good moods",
-    "other": "{count} days of good moods"
+  "streak": "Good-mood streak",
+  "streakDays(plural, param=count)": {
+    "one": "1 day",
+    "other": "{count} days"
   }
 }

@@ -67,13 +67,15 @@ class MoodCalendar extends StatelessWidget {
   Widget _year(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       // Nominal 8px cells; shrink on narrow cards while preserving all 31 columns.
-      final cell = math.min(8.0, (constraints.maxWidth - 28 - 30) / 31);
+      const labelWidth = 40.0;
+      final cell = math.min(8.0, (constraints.maxWidth - labelWidth - 30) / 31);
       final width = cell * 31 + 30;
+      final height = cell * 12 + 11;
       return Column(
         children: [
           Row(
             children: [
-              const SizedBox(width: 28),
+              const SizedBox(width: labelWidth),
               SizedBox(
                 width: width,
                 height: 18,
@@ -92,47 +94,65 @@ class MoodCalendar extends StatelessWidget {
               ),
             ],
           ),
-          for (var month = 1; month <= 12; month++)
-            Padding(
-              padding: const .only(bottom: 1),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 28,
-                    height: cell,
-                    child: Align(
-                      alignment: .centerLeft,
-                      child: [1, 4, 7, 10].contains(month)
-                          ? Text(
-                              DateFormat.MMM(
+          Padding(
+            // Labels are taller than a pixel row; leave room at both edges.
+            padding: const .symmetric(vertical: 6),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: labelWidth,
+                  height: height,
+                  child: Stack(
+                    clipBehavior: .none,
+                    children: [
+                      for (final month in [1, 4, 7, 10])
+                        Positioned(
+                          left: 0,
+                          right: 4,
+                          top: (month - 1) * (cell + 1) + cell / 2 - 9,
+                          height: 18,
+                          child: Align(
+                            alignment: .centerLeft,
+                            child: Text(
+                              DateFormat(
+                                'MMM',
                                 Localizations.localeOf(context).toLanguageTag(),
                               ).format(DateTime(start.year, month)),
                               maxLines: 1,
-                              style: context.theme.typography.labelSmall.outline
-                                  .copyWith(fontSize: 9),
-                            )
-                          : null,
-                    ),
-                  ),
-                  Row(
-                    spacing: 1,
-                    children: [
-                      for (var day = 1; day <= 31; day++)
-                        SizedBox.square(
-                          dimension: cell,
-                          child: day > DateTime(start.year, month + 1, 0).day
-                              ? null
-                              : _cell(
-                                  context,
-                                  DateTime(start.year, month, day),
-                                  pixel: true,
-                                ),
+                              style:
+                                  context.theme.typography.labelSmall.outline,
+                            ),
+                          ),
                         ),
                     ],
                   ),
-                ],
-              ),
+                ),
+                Column(
+                  spacing: 1,
+                  children: [
+                    for (var month = 1; month <= 12; month++)
+                      Row(
+                        spacing: 1,
+                        children: [
+                          for (var day = 1; day <= 31; day++)
+                            SizedBox.square(
+                              dimension: cell,
+                              child:
+                                  day > DateTime(start.year, month + 1, 0).day
+                                  ? null
+                                  : _cell(
+                                      context,
+                                      DateTime(start.year, month, day),
+                                      pixel: true,
+                                    ),
+                            ),
+                        ],
+                      ),
+                  ],
+                ),
+              ],
             ),
+          ),
         ],
       );
     },
