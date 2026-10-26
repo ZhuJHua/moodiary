@@ -1,3 +1,5 @@
+import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:path/path.dart' as p;
 import 'package:yaml/yaml.dart';
@@ -88,6 +90,13 @@ abstract final class MarkdownFrontMatter {
   static MarkdownEntryMeta _meta(Map raw) {
     final map = {for (final e in raw.entries) e.key.toString(): e.value};
     final id = _string(map['id']);
+    final moodName = _string(map['mood']);
+    final legacy = LegacyMood.fromName(moodName);
+    final tags = _strings(map['tags']);
+    if (legacy?.scene case final scene?) {
+      final tag = scene.labelOf(l10n);
+      if (!tags.contains(tag)) tags.add(tag);
+    }
     return MarkdownEntryMeta(
       id: id != null && _uuid.hasMatch(id) ? id.toLowerCase() : null,
       title: _string(map['title']),
@@ -95,14 +104,14 @@ abstract final class MarkdownFrontMatter {
         final s? => parseTime(s),
         null => null,
       },
-      mood: switch (_string(map['mood'])) {
-        final s? => DiaryMood.values.asNameMap()[s],
-        null => null,
-      },
+      mood:
+          DiaryMood.fromName(moodName) ??
+          DiaryMood.fromScore(int.tryParse(moodName ?? '')) ??
+          legacy?.mood,
       category: _string(map['category']),
       weather: _weather(map['weather']),
       position: _position(map['position']),
-      tags: _strings(map['tags']),
+      tags: tags,
     );
   }
 
@@ -117,7 +126,7 @@ abstract final class MarkdownFrontMatter {
       return [for (final item in v) ?_string(item)];
     }
     final single = _string(v);
-    return single == null ? const [] : [single];
+    return single == null ? [] : [single];
   }
 
   static DiaryWeather? _weather(Object? v) {

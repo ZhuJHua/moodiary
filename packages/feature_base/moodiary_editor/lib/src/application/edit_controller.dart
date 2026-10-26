@@ -100,7 +100,7 @@ class EditController extends _$EditController {
     state = state.whenData((current) => current.copyWith(type: type.value));
   }
 
-  void changeMood(DiaryMood mood) {
+  void changeMood(DiaryMood? mood) {
     state = state.whenData((current) => current.copyWith(mood: mood));
   }
 

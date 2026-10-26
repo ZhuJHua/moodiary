@@ -81,13 +81,13 @@ class Diaries extends Table with TableInfo<Diaries, DiariesData> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
-  late final GeneratedColumn<String> mood = GeneratedColumn<String>(
-    'mood',
+  late final GeneratedColumn<int> moodLevel = GeneratedColumn<int>(
+    'mood_level',
     aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'CHECK (mood_level BETWEEN 1 AND 5)',
   );
   late final GeneratedColumn<String> type = GeneratedColumn<String>(
     'type',
@@ -148,7 +148,7 @@ class Diaries extends Table with TableInfo<Diaries, DiariesData> {
     time,
     lastModified,
     show,
-    mood,
+    moodLevel,
     type,
     aspect,
     placeId,
@@ -203,10 +203,10 @@ class Diaries extends Table with TableInfo<Diaries, DiariesData> {
         DriftSqlType.int,
         data['${effectivePrefix}show'],
       )!,
-      mood: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}mood'],
-      )!,
+      moodLevel: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}mood_level'],
+      ),
       type: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}type'],
@@ -253,7 +253,7 @@ class DiariesData extends DataClass implements Insertable<DiariesData> {
   final int time;
   final int lastModified;
   final int show;
-  final String mood;
+  final int? moodLevel;
   final String type;
   final double? aspect;
   final String? placeId;
@@ -270,7 +270,7 @@ class DiariesData extends DataClass implements Insertable<DiariesData> {
     required this.time,
     required this.lastModified,
     required this.show,
-    required this.mood,
+    this.moodLevel,
     required this.type,
     this.aspect,
     this.placeId,
@@ -292,7 +292,9 @@ class DiariesData extends DataClass implements Insertable<DiariesData> {
     map['time'] = Variable<int>(time);
     map['last_modified'] = Variable<int>(lastModified);
     map['show'] = Variable<int>(show);
-    map['mood'] = Variable<String>(mood);
+    if (!nullToAbsent || moodLevel != null) {
+      map['mood_level'] = Variable<int>(moodLevel);
+    }
     map['type'] = Variable<String>(type);
     if (!nullToAbsent || aspect != null) {
       map['aspect'] = Variable<double>(aspect);
@@ -325,7 +327,9 @@ class DiariesData extends DataClass implements Insertable<DiariesData> {
       time: Value(time),
       lastModified: Value(lastModified),
       show: Value(show),
-      mood: Value(mood),
+      moodLevel: moodLevel == null && nullToAbsent
+          ? const Value.absent()
+          : Value(moodLevel),
       type: Value(type),
       aspect: aspect == null && nullToAbsent
           ? const Value.absent()
@@ -360,7 +364,7 @@ class DiariesData extends DataClass implements Insertable<DiariesData> {
       time: serializer.fromJson<int>(json['time']),
       lastModified: serializer.fromJson<int>(json['lastModified']),
       show: serializer.fromJson<int>(json['show']),
-      mood: serializer.fromJson<String>(json['mood']),
+      moodLevel: serializer.fromJson<int?>(json['moodLevel']),
       type: serializer.fromJson<String>(json['type']),
       aspect: serializer.fromJson<double?>(json['aspect']),
       placeId: serializer.fromJson<String?>(json['placeId']),
@@ -382,7 +386,7 @@ class DiariesData extends DataClass implements Insertable<DiariesData> {
       'time': serializer.toJson<int>(time),
       'lastModified': serializer.toJson<int>(lastModified),
       'show': serializer.toJson<int>(show),
-      'mood': serializer.toJson<String>(mood),
+      'moodLevel': serializer.toJson<int?>(moodLevel),
       'type': serializer.toJson<String>(type),
       'aspect': serializer.toJson<double?>(aspect),
       'placeId': serializer.toJson<String?>(placeId),
@@ -402,7 +406,7 @@ class DiariesData extends DataClass implements Insertable<DiariesData> {
     int? time,
     int? lastModified,
     int? show,
-    String? mood,
+    Value<int?> moodLevel = const Value.absent(),
     String? type,
     Value<double?> aspect = const Value.absent(),
     Value<String?> placeId = const Value.absent(),
@@ -419,7 +423,7 @@ class DiariesData extends DataClass implements Insertable<DiariesData> {
     time: time ?? this.time,
     lastModified: lastModified ?? this.lastModified,
     show: show ?? this.show,
-    mood: mood ?? this.mood,
+    moodLevel: moodLevel.present ? moodLevel.value : this.moodLevel,
     type: type ?? this.type,
     aspect: aspect.present ? aspect.value : this.aspect,
     placeId: placeId.present ? placeId.value : this.placeId,
@@ -444,7 +448,7 @@ class DiariesData extends DataClass implements Insertable<DiariesData> {
           ? data.lastModified.value
           : this.lastModified,
       show: data.show.present ? data.show.value : this.show,
-      mood: data.mood.present ? data.mood.value : this.mood,
+      moodLevel: data.moodLevel.present ? data.moodLevel.value : this.moodLevel,
       type: data.type.present ? data.type.value : this.type,
       aspect: data.aspect.present ? data.aspect.value : this.aspect,
       placeId: data.placeId.present ? data.placeId.value : this.placeId,
@@ -472,7 +476,7 @@ class DiariesData extends DataClass implements Insertable<DiariesData> {
           ..write('time: $time, ')
           ..write('lastModified: $lastModified, ')
           ..write('show: $show, ')
-          ..write('mood: $mood, ')
+          ..write('moodLevel: $moodLevel, ')
           ..write('type: $type, ')
           ..write('aspect: $aspect, ')
           ..write('placeId: $placeId, ')
@@ -494,7 +498,7 @@ class DiariesData extends DataClass implements Insertable<DiariesData> {
     time,
     lastModified,
     show,
-    mood,
+    moodLevel,
     type,
     aspect,
     placeId,
@@ -515,7 +519,7 @@ class DiariesData extends DataClass implements Insertable<DiariesData> {
           other.time == this.time &&
           other.lastModified == this.lastModified &&
           other.show == this.show &&
-          other.mood == this.mood &&
+          other.moodLevel == this.moodLevel &&
           other.type == this.type &&
           other.aspect == this.aspect &&
           other.placeId == this.placeId &&
@@ -534,7 +538,7 @@ class DiariesCompanion extends UpdateCompanion<DiariesData> {
   final Value<int> time;
   final Value<int> lastModified;
   final Value<int> show;
-  final Value<String> mood;
+  final Value<int?> moodLevel;
   final Value<String> type;
   final Value<double?> aspect;
   final Value<String?> placeId;
@@ -551,7 +555,7 @@ class DiariesCompanion extends UpdateCompanion<DiariesData> {
     this.time = const Value.absent(),
     this.lastModified = const Value.absent(),
     this.show = const Value.absent(),
-    this.mood = const Value.absent(),
+    this.moodLevel = const Value.absent(),
     this.type = const Value.absent(),
     this.aspect = const Value.absent(),
     this.placeId = const Value.absent(),
@@ -569,7 +573,7 @@ class DiariesCompanion extends UpdateCompanion<DiariesData> {
     required int time,
     required int lastModified,
     required int show,
-    required String mood,
+    this.moodLevel = const Value.absent(),
     required String type,
     this.aspect = const Value.absent(),
     this.placeId = const Value.absent(),
@@ -583,7 +587,6 @@ class DiariesCompanion extends UpdateCompanion<DiariesData> {
        time = Value(time),
        lastModified = Value(lastModified),
        show = Value(show),
-       mood = Value(mood),
        type = Value(type);
   static Insertable<DiariesData> custom({
     Expression<int>? rid,
@@ -595,7 +598,7 @@ class DiariesCompanion extends UpdateCompanion<DiariesData> {
     Expression<int>? time,
     Expression<int>? lastModified,
     Expression<int>? show,
-    Expression<String>? mood,
+    Expression<int>? moodLevel,
     Expression<String>? type,
     Expression<double>? aspect,
     Expression<String>? placeId,
@@ -613,7 +616,7 @@ class DiariesCompanion extends UpdateCompanion<DiariesData> {
       if (time != null) 'time': time,
       if (lastModified != null) 'last_modified': lastModified,
       if (show != null) 'show': show,
-      if (mood != null) 'mood': mood,
+      if (moodLevel != null) 'mood_level': moodLevel,
       if (type != null) 'type': type,
       if (aspect != null) 'aspect': aspect,
       if (placeId != null) 'place_id': placeId,
@@ -633,7 +636,7 @@ class DiariesCompanion extends UpdateCompanion<DiariesData> {
     Value<int>? time,
     Value<int>? lastModified,
     Value<int>? show,
-    Value<String>? mood,
+    Value<int?>? moodLevel,
     Value<String>? type,
     Value<double?>? aspect,
     Value<String?>? placeId,
@@ -651,7 +654,7 @@ class DiariesCompanion extends UpdateCompanion<DiariesData> {
       time: time ?? this.time,
       lastModified: lastModified ?? this.lastModified,
       show: show ?? this.show,
-      mood: mood ?? this.mood,
+      moodLevel: moodLevel ?? this.moodLevel,
       type: type ?? this.type,
       aspect: aspect ?? this.aspect,
       placeId: placeId ?? this.placeId,
@@ -691,8 +694,8 @@ class DiariesCompanion extends UpdateCompanion<DiariesData> {
     if (show.present) {
       map['show'] = Variable<int>(show.value);
     }
-    if (mood.present) {
-      map['mood'] = Variable<String>(mood.value);
+    if (moodLevel.present) {
+      map['mood_level'] = Variable<int>(moodLevel.value);
     }
     if (type.present) {
       map['type'] = Variable<String>(type.value);
@@ -727,7 +730,7 @@ class DiariesCompanion extends UpdateCompanion<DiariesData> {
           ..write('time: $time, ')
           ..write('lastModified: $lastModified, ')
           ..write('show: $show, ')
-          ..write('mood: $mood, ')
+          ..write('moodLevel: $moodLevel, ')
           ..write('type: $type, ')
           ..write('aspect: $aspect, ')
           ..write('placeId: $placeId, ')
@@ -5808,6 +5811,197 @@ class DiaryFtsCompanion extends UpdateCompanion<DiaryFtsData> {
   }
 }
 
+class LegacyMoodScenes extends Table
+    with TableInfo<LegacyMoodScenes, LegacyMoodScenesData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  LegacyMoodScenes(this.attachedDatabase, [this._alias]);
+  late final GeneratedColumn<String> diaryId = GeneratedColumn<String>(
+    'diary_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints:
+        'NOT NULL PRIMARY KEY REFERENCES diaries(id)ON DELETE CASCADE',
+  );
+  late final GeneratedColumn<String> scene = GeneratedColumn<String>(
+    'scene',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [diaryId, scene];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'legacy_mood_scenes';
+  @override
+  Set<GeneratedColumn> get $primaryKey => {diaryId};
+  @override
+  LegacyMoodScenesData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LegacyMoodScenesData(
+      diaryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}diary_id'],
+      )!,
+      scene: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}scene'],
+      )!,
+    );
+  }
+
+  @override
+  LegacyMoodScenes createAlias(String alias) {
+    return LegacyMoodScenes(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class LegacyMoodScenesData extends DataClass
+    implements Insertable<LegacyMoodScenesData> {
+  final String diaryId;
+  final String scene;
+  const LegacyMoodScenesData({required this.diaryId, required this.scene});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['diary_id'] = Variable<String>(diaryId);
+    map['scene'] = Variable<String>(scene);
+    return map;
+  }
+
+  LegacyMoodScenesCompanion toCompanion(bool nullToAbsent) {
+    return LegacyMoodScenesCompanion(
+      diaryId: Value(diaryId),
+      scene: Value(scene),
+    );
+  }
+
+  factory LegacyMoodScenesData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LegacyMoodScenesData(
+      diaryId: serializer.fromJson<String>(json['diaryId']),
+      scene: serializer.fromJson<String>(json['scene']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'diaryId': serializer.toJson<String>(diaryId),
+      'scene': serializer.toJson<String>(scene),
+    };
+  }
+
+  LegacyMoodScenesData copyWith({String? diaryId, String? scene}) =>
+      LegacyMoodScenesData(
+        diaryId: diaryId ?? this.diaryId,
+        scene: scene ?? this.scene,
+      );
+  LegacyMoodScenesData copyWithCompanion(LegacyMoodScenesCompanion data) {
+    return LegacyMoodScenesData(
+      diaryId: data.diaryId.present ? data.diaryId.value : this.diaryId,
+      scene: data.scene.present ? data.scene.value : this.scene,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LegacyMoodScenesData(')
+          ..write('diaryId: $diaryId, ')
+          ..write('scene: $scene')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(diaryId, scene);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LegacyMoodScenesData &&
+          other.diaryId == this.diaryId &&
+          other.scene == this.scene);
+}
+
+class LegacyMoodScenesCompanion extends UpdateCompanion<LegacyMoodScenesData> {
+  final Value<String> diaryId;
+  final Value<String> scene;
+  final Value<int> rowid;
+  const LegacyMoodScenesCompanion({
+    this.diaryId = const Value.absent(),
+    this.scene = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  LegacyMoodScenesCompanion.insert({
+    required String diaryId,
+    required String scene,
+    this.rowid = const Value.absent(),
+  }) : diaryId = Value(diaryId),
+       scene = Value(scene);
+  static Insertable<LegacyMoodScenesData> custom({
+    Expression<String>? diaryId,
+    Expression<String>? scene,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (diaryId != null) 'diary_id': diaryId,
+      if (scene != null) 'scene': scene,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  LegacyMoodScenesCompanion copyWith({
+    Value<String>? diaryId,
+    Value<String>? scene,
+    Value<int>? rowid,
+  }) {
+    return LegacyMoodScenesCompanion(
+      diaryId: diaryId ?? this.diaryId,
+      scene: scene ?? this.scene,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (diaryId.present) {
+      map['diary_id'] = Variable<String>(diaryId.value);
+    }
+    if (scene.present) {
+      map['scene'] = Variable<String>(scene.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LegacyMoodScenesCompanion(')
+          ..write('diaryId: $diaryId, ')
+          ..write('scene: $scene, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class DatabaseAtV3 extends GeneratedDatabase {
   DatabaseAtV3(QueryExecutor e) : super(e);
   late final Diaries diaries = Diaries(this);
@@ -5878,6 +6072,7 @@ class DatabaseAtV3 extends GeneratedDatabase {
     'CREATE INDEX idx_diary_links_dst ON diary_links (dst_id)',
   );
   late final DiaryFts diaryFts = DiaryFts(this);
+  late final LegacyMoodScenes legacyMoodScenes = LegacyMoodScenes(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5912,6 +6107,7 @@ class DatabaseAtV3 extends GeneratedDatabase {
     idxDiaryTagsTag,
     idxDiaryLinksDst,
     diaryFts,
+    legacyMoodScenes,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -5949,6 +6145,13 @@ class DatabaseAtV3 extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('diary_tags', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'diaries',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('legacy_mood_scenes', kind: UpdateKind.delete)],
     ),
   ]);
   @override

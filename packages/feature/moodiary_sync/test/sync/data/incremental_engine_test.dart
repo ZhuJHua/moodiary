@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/incremental_engine.dart';
@@ -73,6 +75,44 @@ void main() {
   }
 
   Uint8List jsonBytes(Object v) => .fromList(utf8.encode(jsonEncode(v)));
+
+  test(
+    'pull converts legacy moods and scene tags in the current UI language',
+    () async {
+      addTearDown(() => LocaleSettings.setLocale(AppLocale.zh));
+      for (final locale in AppLocale.values) {
+        await LocaleSettings.setLocale(locale);
+        final backend = FakeRemoteBackend();
+        final legacy = {
+          'positive': DiaryMood.good,
+          'love': DiaryMood.great,
+          'neutral': null,
+          'travel': null,
+        };
+        final source = [
+          for (final name in legacy.keys) buildDiary(id: name, modifiedMs: 100),
+        ];
+        await seedRemote(backend, diaries: source);
+        for (final diary in source) {
+          final json = diary.toJson()..['mood'] = diary.id;
+          if (diary.id == 'travel') {
+            json['tags'] = [l10n.common.legacySceneTravel];
+        }
+          backend.objects[SyncKeys.diaryObjectPath(diary.id)] = jsonBytes(json);
+        }
+        final store = FakeDiaryStore();
+        final report = await engineOn(backend, diaries: store).pull();
+        expect(report.failed, 0);
+        expect(store.diaries, hasLength(4));
+        for (final entry in legacy.entries) {
+          final diary = store.diaries[entry.key]!;
+          expect(diary.mood, entry.value, reason: entry.key);
+          expect(diary.lastModified, atMs(100));
+        }
+        expect(store.diaries['travel']!.tags, [l10n.common.legacySceneTravel]);
+      }
+    },
+  );
 
   group('push — first sync', () {
     test('uploads all diaries + categories and writes a v4 manifest', () async {

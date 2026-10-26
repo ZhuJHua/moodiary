@@ -69,7 +69,7 @@ Diary makeDiary(
     time: time ?? DateTime.utc(2026, 1, 1),
     lastModified: time ?? DateTime.utc(2026, 1, 1),
     show: show,
-    mood: .neutral,
+    mood: null,
     imageName: images,
     audioName: audios,
     videoName: videos,
@@ -796,7 +796,7 @@ void main() {
               time: stamp.microsecondsSinceEpoch,
               lastModified: stamp.microsecondsSinceEpoch,
               show: 1,
-              mood: d.mood.name,
+              moodLevel: Value(d.mood?.score),
               type: d.type,
             ),
           );

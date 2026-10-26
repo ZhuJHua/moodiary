@@ -1,4 +1,9 @@
 {
+  "moodColors": "心情配色",
+  "moodPaletteClassic": "经典",
+  "moodPaletteDefault": "默认",
+  "moodPaletteBlueOrange": "蓝橙",
+  "moodPaletteColorblind": "色盲友好",
   "accentTitle": "主题色",
   "accentNeutral": "默认",
   "accentSystem": "壁纸取色",

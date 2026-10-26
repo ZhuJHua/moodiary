@@ -10,6 +10,7 @@ import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
 import '../widget/diary_entry_tile.dart';
+import '../widget/today_glyph.dart';
 
 const double _kCellAspect = 46 / 54;
 const double _kCellGap = 3;
@@ -282,7 +283,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
           ),
           IconButton(
             tooltip: context.l10n.diary.calendarBackToToday,
-            icon: _TodayGlyph(day: _current.day),
+            icon: TodayGlyph(day: _current.day),
             onPressed: _backToToday,
           ),
         ],
@@ -359,36 +360,6 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
       d = DateTime(d.year, d.month, d.day + 1);
     }
     return sum;
-  }
-}
-
-// lucide 无整套数字日历图标，用日历框叠文字实现
-class _TodayGlyph extends StatelessWidget {
-  final int day;
-
-  const _TodayGlyph({required this.day});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox.square(
-      dimension: 24,
-      child: Stack(
-        children: [
-          const Center(child: Icon(LucideIcons.calendar, size: 24)),
-          Positioned.fill(
-            top: 7,
-            child: Center(
-              child: Text(
-                '$day',
-                maxLines: 1,
-                style: context.theme.typography.labelSmall.emphasized.onSurface
-                    .copyWith(fontSize: 9, height: 1),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 

@@ -21,6 +21,7 @@ dependencies:
   slang: 4.19.1
   slang_flutter: 4.19.0
   flutter_smart_dialog: 5.3.0
+  skeletonizer: 3.0.0
 
 dev_dependencies:
   flutter_test:

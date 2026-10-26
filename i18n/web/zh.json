@@ -37,6 +37,8 @@
     "category": "分类",
     "tag": "标签",
     "addTag": "添加标签",
-    "removeTag": "删除标签"
+    "removeTag": "删除标签",
+    "moodUnset": "未记录",
+    "moodClear": "不记录心情"
   }
 }

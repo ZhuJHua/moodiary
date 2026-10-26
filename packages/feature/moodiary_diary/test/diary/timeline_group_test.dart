@@ -10,7 +10,7 @@ Diary diary(DateTime time, {DateTime? modified, String id = 'x'}) => Diary(
   time: time,
   lastModified: modified ?? time,
   show: true,
-  mood: .neutral,
+  mood: null,
   imageName: const [],
   audioName: const [],
   videoName: const [],

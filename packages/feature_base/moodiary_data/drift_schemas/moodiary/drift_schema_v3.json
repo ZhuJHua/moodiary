@@ -110,11 +110,11 @@
             "dsl_features": []
           },
           {
-            "name": "mood",
-            "getter_name": "mood",
-            "moor_type": "string",
-            "nullable": false,
-            "customConstraints": "NOT NULL",
+            "name": "mood_level",
+            "getter_name": "moodLevel",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "CHECK (mood_level BETWEEN 1 AND 5)",
             "default_dart": null,
             "default_client_dart": null,
             "dsl_features": []
@@ -1603,6 +1603,55 @@
         "name": "diary_fts_au",
         "sql": "CREATE TRIGGER diary_fts_au AFTER UPDATE OF title, content_text ON diaries\nWHEN old.title IS NOT new.title OR old.content_text IS NOT new.content_text\nBEGIN\n  INSERT INTO diary_fts (diary_fts, rowid, title, content_text)\n    VALUES ('delete', old.rid, old.title, old.content_text);\n  INSERT INTO diary_fts (rowid, title, content_text)\n    VALUES (new.rid, new.title, new.content_text);\nEND;"
       }
+    },
+    {
+      "id": 32,
+      "references": [
+        0
+      ],
+      "type": "table",
+      "data": {
+        "name": "legacy_mood_scenes",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "diary_id",
+            "getter_name": "diaryId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY REFERENCES diaries(id)ON DELETE CASCADE",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key",
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "diaries",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": "cascade"
+                }
+              }
+            ]
+          },
+          {
+            "name": "scene",
+            "getter_name": "scene",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": []
+      }
     }
   ],
   "fixed_sql": [
@@ -1611,7 +1660,7 @@
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"diaries\" (\"rid\" INTEGER PRIMARY KEY, \"id\" TEXT NOT NULL UNIQUE, \"category_id\" TEXT, \"title\" TEXT NOT NULL, \"content\" TEXT NOT NULL, \"content_text\" TEXT NOT NULL, \"time\" INTEGER NOT NULL, \"last_modified\" INTEGER NOT NULL, \"show\" INTEGER NOT NULL, \"mood\" TEXT NOT NULL, \"type\" TEXT NOT NULL, \"aspect\" REAL, \"place_id\" TEXT, \"weather_icon\" TEXT, \"weather_temp\" TEXT, \"weather_text\" TEXT);"
+          "sql": "CREATE TABLE IF NOT EXISTS \"diaries\" (\"rid\" INTEGER PRIMARY KEY, \"id\" TEXT NOT NULL UNIQUE, \"category_id\" TEXT, \"title\" TEXT NOT NULL, \"content\" TEXT NOT NULL, \"content_text\" TEXT NOT NULL, \"time\" INTEGER NOT NULL, \"last_modified\" INTEGER NOT NULL, \"show\" INTEGER NOT NULL, \"mood_level\" INTEGER CHECK (mood_level BETWEEN 1 AND 5), \"type\" TEXT NOT NULL, \"aspect\" REAL, \"place_id\" TEXT, \"weather_icon\" TEXT, \"weather_temp\" TEXT, \"weather_text\" TEXT);"
         }
       ]
     },
@@ -1891,6 +1940,15 @@
         {
           "dialect": "sqlite",
           "sql": "CREATE TRIGGER diary_fts_au AFTER UPDATE OF title, content_text ON diaries WHEN old.title IS NOT new.title OR old.content_text IS NOT new.content_text BEGIN INSERT INTO diary_fts (diary_fts, \"rowid\", title, content_text) VALUES ('delete', old.rid, old.title, old.content_text);INSERT INTO diary_fts (\"rowid\", title, content_text) VALUES (new.rid, new.title, new.content_text);END"
+        }
+      ]
+    },
+    {
+      "name": "legacy_mood_scenes",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"legacy_mood_scenes\" (\"diary_id\" TEXT NOT NULL PRIMARY KEY REFERENCES diaries(id)ON DELETE CASCADE, \"scene\" TEXT NOT NULL);"
         }
       ]
     }

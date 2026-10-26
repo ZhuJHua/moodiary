@@ -11,7 +11,7 @@ void main() {
     time: time,
     lastModified: modified ?? time,
     show: true,
-    mood: .neutral,
+    mood: null,
     imageName: const [],
     audioName: const [],
     videoName: const [],

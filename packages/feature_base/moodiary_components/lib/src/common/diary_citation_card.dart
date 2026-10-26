@@ -37,7 +37,7 @@ class DiaryCitationCard extends StatelessWidget {
     final muted = state != .ready;
     final accent = muted
         ? scheme.outlineVariant
-        : mood?.color ?? scheme.primary;
+        : mood?.colorOf(context) ?? scheme.outlineVariant;
 
     final Widget body = switch (state) {
       .loading => Column(
@@ -61,6 +61,10 @@ class DiaryCitationCard extends StatelessWidget {
         children: [
           Row(
             children: [
+              if (state == .ready) ...[
+                MoodGlyph(mood: mood, size: 14),
+                const SizedBox(width: 5),
+              ],
               if (time case final t?)
                 Text(
                   TimeFormat.monthDay(t),

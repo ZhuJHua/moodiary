@@ -5,6 +5,8 @@ import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
+import 'mood_insights_card.dart';
+
 class MePage extends ConsumerStatefulWidget {
   const MePage({super.key});
 
@@ -38,12 +40,17 @@ class _MePageState extends ConsumerState<MePage> with RouteAware {
   @override
   void didPopNext() => _refresh();
 
-  void _refresh() =>
-      ref.read(dashboardControllerProvider.notifier).refreshIfStale();
+  void _refresh() {
+    ref.read(dashboardControllerProvider.notifier).refreshIfStale();
+    ref.read(moodInsightsControllerProvider.notifier).refreshIfStale();
+  }
 
   @override
   Widget build(BuildContext context) {
     final stats = ref.watch(dashboardControllerProvider).value;
+    final moodState = ref.watch(moodInsightsControllerProvider);
+    final moods = moodState.value;
+    final moodLoading = moodState.isLoading;
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.app.meTitle)),
       body: ListView(
@@ -61,6 +68,28 @@ class _MePageState extends ConsumerState<MePage> with RouteAware {
                 setState(() => _selectedDay = day == _selectedDay ? null : day),
           ),
           const SizedBox(height: 12),
+          if (moodLoading || moods != null) ...[
+            MDelayedLoading(
+              loading: moods == null,
+              builder: (context, showLoading) {
+                if (moods != null) return MoodInsightsCard(data: moods);
+                if (showLoading) {
+                  return MSkeleton(
+                    enabled: true,
+                    child: MoodInsightsCard.placeholder(),
+                  );
+                }
+                return Visibility(
+                  visible: false,
+                  maintainState: true,
+                  maintainAnimation: true,
+                  maintainSize: true,
+                  child: MoodInsightsCard.placeholder(),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+          ],
           _StatRow(stats: stats),
           const SizedBox(height: 16),
           _SectionLabel(context.l10n.app.meSectionRecall),

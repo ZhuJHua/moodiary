@@ -29,6 +29,37 @@ bool _isGray(Color color) {
 }
 
 void main() {
+  test('harmonize uses Blend with the primary and leaves low chroma alone', () {
+    const fill = Color(0xFFD4382F);
+    for (final brightness in Brightness.values) {
+      final neutral = buildMuiTheme(brightness: brightness).colorScheme;
+      expect(neutral.harmonize(fill), fill);
+      final muted = neutral.copyWith(
+        primary: Color(mcu.Hct.from(240, 4, 40).toInt()),
+      );
+      expect(mcu.Hct.fromInt(muted.primary.toARGB32()).chroma, lessThan(6));
+      expect(muted.harmonize(fill), fill);
+      for (final seed in [
+        0xFF2E59A7,
+        0xFF6B7A3A,
+        0xFFB33C86,
+        0xFF6750A4,
+        0xFF00897B,
+      ]) {
+        final colors = buildMuiTheme(
+          brightness: brightness,
+          accent: MuiAccent.seeded(Color(seed)),
+        ).colorScheme;
+        expect(
+          colors.harmonize(fill),
+          Color(
+            mcu.Blend.harmonize(fill.toARGB32(), colors.primary.toARGB32()),
+          ),
+        );
+      }
+    }
+  });
+
   group('resolveColorScheme', () {
     for (final brightness in Brightness.values) {
       final neutral = resolveColorScheme(brightness, const MuiAccent.neutral());

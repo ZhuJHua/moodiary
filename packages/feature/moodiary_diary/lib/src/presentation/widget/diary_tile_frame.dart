@@ -1,10 +1,7 @@
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 enum DiaryCardSyncState { none, dirty, syncing }
-
-Color diaryMoodColor(DiaryMood mood) => mood.color;
 
 class DiaryTileFrame extends StatelessWidget {
   final Widget child;

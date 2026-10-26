@@ -86,6 +86,10 @@ Future<void> _initSystem() async {
     }
   }();
 
+  await localeFuture;
+  await getIt<MoodiaryDatabase>().applyLegacyMoodScenes(
+    (scene) => scene.labelOf(l10n),
+  );
   await syncBackendFuture;
   if (getIt<MoodiaryDatabase>().upgradedFrom != null) {
     MoodiaryKVs.syncPendingLocal.set(true);
@@ -94,6 +98,12 @@ Future<void> _initSystem() async {
   DiaryShare.register(showDiaryShareSheet);
   runStartupMaintenance();
   await Future.wait([themeFuture, localeFuture, migrationGateFuture]);
+  final upgradedFrom = getIt<MoodiaryDatabase>().upgradedFrom;
+  if (upgradedFrom != null &&
+      upgradedFrom < 3 &&
+      !EngineMigrationService.requiresMigration) {
+    MoodiaryKVs.pendingMoodNotice.set(true);
+  }
 
   SystemChrome.setEnabledSystemUIMode(.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(
@@ -177,8 +187,15 @@ class Moodiary extends ConsumerWidget {
           // ignore: deprecated_member_use
           child: MaterialUiCompatibilityBridge(
             child: FrostedGlassOverlayComponent(
-              child: AppLockObserver(
-                child: FlutterSmartDialog.init()(context, child!),
+              child: ValueListenableBuilder<String>(
+                valueListenable: MoodiaryKVs.moodPalette.getNotifier(),
+                builder: (context, palette, child) => MoodPaletteScope(
+                  palette: MoodPalette.fromName(palette),
+                  child: child!,
+                ),
+                child: AppLockObserver(
+                  child: FlutterSmartDialog.init()(context, child!),
+                ),
               ),
             ),
           ),

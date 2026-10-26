@@ -2,11 +2,47 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_export/moodiary_export.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 void main() {
   group('MarkdownFrontMatter.parse', () {
-    test('解出导出形态的全部键', () {
+    test('new names and digits 1-5, unset and legacy moods', () {
+      for (final mood in DiaryMood.values) {
+        for (final value in [mood.name, '${mood.score}']) {
+          expect(
+            MarkdownFrontMatter.parse('---\nmood: $value\n---\n').meta.mood,
+            mood,
+          );
+        }
+      }
+      for (final value in ['neutral', 'null', '', '0', '6']) {
+        expect(
+          MarkdownFrontMatter.parse('---\nmood: $value\n---\n').meta.mood,
+          isNull,
+        );
+      }
+    });
+    test(
+      'legacy scene tags use the current locale and are deduplicated',
+      () async {
+        for (final locale in AppLocale.values) {
+          await LocaleSettings.setLocale(locale);
+          final label = l10n.common.legacySceneTravel;
+          final meta = MarkdownFrontMatter.parse(
+            '---\nmood: travel\ntags: ["$label"]\n---\n',
+          ).meta;
+          expect(meta.mood, isNull);
+          expect(meta.tags, [label]);
+          expect(
+            MarkdownFrontMatter.parse('---\nmood: study\n---\n').meta.tags,
+            [l10n.common.legacySceneStudy],
+          );
+        }
+        await LocaleSettings.setLocale(AppLocale.zh);
+      },
+    );
+    test('解出旧版 front matter 的全部键并转换 fulfilled', () {
       const source = '''
 ---
 id: "01912345-89ab-7cde-8f01-23456789abcd"
@@ -27,7 +63,7 @@ tags: ["a", "b"]
       expect(meta.title, '今天：很好');
       expect(meta.time, DateTime(2026, 9, 6, 10, 30).toUtc());
       expect(meta.time!.isUtc, isTrue);
-      expect(meta.mood, DiaryMood.fulfilled);
+      expect(meta.mood, DiaryMood.great);
       expect(meta.category, '生活');
       expect(
         meta.weather,
@@ -87,6 +123,18 @@ tags: solo
   });
 
   group('与 MarkdownWriter 往返', () {
+    test('unset mood is omitted from front matter', () {
+      final doc = TiptapToIr.convert(
+        id: 'x',
+        title: '',
+        time: DateTime.utc(2026),
+        content: '',
+        resolvePath: (_, name) => name,
+      );
+      final md = MarkdownWriter.write(doc);
+      expect(md, isNot(contains('mood:')));
+      expect(MarkdownFrontMatter.parse(md).meta.mood, isNull);
+    });
     test('导出的 front matter 原样解回，时间跨时区仍是同一时刻', () {
       final time = DateTime(2026, 9, 6, 10, 30);
       final doc = TiptapToIr.convert(
@@ -105,7 +153,7 @@ tags: solo
           ],
         }),
         resolvePath: (kind, name) => '/data/$kind/$name',
-        mood: DiaryMood.travel,
+        mood: DiaryMood.good,
         weather: const DiaryWeather(icon: '100', text: '晴'),
         place: Place.create(name: '西湖', latitude: 30.25, longitude: 120.15),
         tags: const ['a', 'b'],
@@ -122,7 +170,7 @@ tags: solo
       expect(meta.id, '01912345-89ab-7cde-8f01-23456789abcd');
       expect(meta.title, '标题: 带冒号');
       expect(meta.time, time.toUtc());
-      expect(meta.mood, DiaryMood.travel);
+      expect(meta.mood, DiaryMood.good);
       expect(meta.category, '旅行');
       expect(meta.weather, const DiaryWeather(icon: '100', text: '晴'));
       expect(meta.position!.name, '西湖');

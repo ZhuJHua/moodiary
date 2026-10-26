@@ -305,8 +305,8 @@ const Map<String, String> _themeAllowlist = {
       '播放器暗房，同上（页面本体够不着 mui）',
   'packages/feature_base/moodiary_components/lib/src/common/image_browser.dart':
       '图片浏览暗房，同上',
-  'packages/feature_base/moodiary_components/lib/src/mood_colors.dart':
-      '心情色带：业务语义色，全 App 唯一刻意不跟主题走的一组',
+  'packages/feature_base/moodiary_components/lib/src/mood_palette.dart':
+      '心情色板：固定设计色及其对比前景，按主题明暗切换',
   'packages/foundation/mui/lib/src/components/common/category_color.dart':
       '分类哈希色板 + 由它派生前景色的唯一算处',
   'packages/foundation/mui/lib/src/components/common/color_picker.dart':

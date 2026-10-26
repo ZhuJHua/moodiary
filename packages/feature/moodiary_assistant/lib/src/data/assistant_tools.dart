@@ -94,9 +94,8 @@ abstract final class AssistantToolRegistry {
           'text (use getDiary for that) — and state the total number of '
           'matches, which may exceed what is returned; when it does, say so '
           'instead of presenting the rows as the complete set. '
-          'Mood is one of a fixed set of emotion/state values (see the mood '
-          'enum on createDiary); neutral is also the default for entries whose '
-          'mood was never set, so do not over-read it. '
+          'Mood has five levels: awful, bad, okay, good, great. '
+          'Null means not recorded. '
           'Call this whenever the user asks about what they wrote, and to get '
           'ids before editing or deleting entries.',
       jsonSchema: {
@@ -196,11 +195,11 @@ abstract final class AssistantToolRegistry {
                 'title': {'type': 'string', 'description': 'Optional title.'},
                 'content': {'type': 'string', 'description': 'Body, Markdown.'},
                 'mood': {
-                  'type': 'string',
-                  'enum': [for (final m in DiaryMood.values) m.name],
+                  'type': ['string', 'null'],
+                  'enum': [for (final m in DiaryMood.values) m.name, null],
                   'description':
-                      'Mood or life-state of the entry. Omit unless the user '
-                      'conveyed one.',
+                      'Mood: awful, bad, okay, good or great. Null means not '
+                      'recorded. Omit unless the user conveyed one.',
                 },
                 'categoryId': {
                   'type': 'string',
@@ -242,9 +241,9 @@ abstract final class AssistantToolRegistry {
                   'description': 'New body, Markdown.',
                 },
                 'mood': {
-                  'type': 'string',
-                  'enum': [for (final m in DiaryMood.values) m.name],
-                  'description': 'New mood.',
+                  'type': ['string', 'null'],
+                  'enum': [for (final m in DiaryMood.values) m.name, null],
+                  'description': 'New mood: awful, bad, okay, good or great. Null means not recorded; omit to keep it unchanged.',
                 },
                 'categoryId': {
                   'type': 'string',
@@ -852,7 +851,7 @@ abstract final class AssistantToolRegistry {
           : '';
       buffer.writeln(
         'id=${diary.id} 【${TimeFormat.isoDate(diary.time)}】$title '
-        'mood=${diary.mood.name} via=$via$sim$catPart',
+        'mood=${diary.mood?.name ?? 'not recorded'} via=$via$sim$catPart',
       );
       final text = MediaMarkup.forModel(diary.contentText).trim();
       if (text.isNotEmpty) {
@@ -909,7 +908,7 @@ abstract final class AssistantToolRegistry {
       ..writeln('id=${diary.id}')
       ..writeln('date=${TimeFormat.isoDate(diary.time)}')
       ..writeln('title=$title')
-      ..writeln('mood=${diary.mood.name}');
+      ..writeln('mood=${diary.mood?.name ?? 'not recorded'}');
     if (diary.categoryId != null && diary.categoryId!.isNotEmpty) {
       buffer.writeln('categoryId=${diary.categoryId}');
     }
@@ -1020,18 +1019,16 @@ abstract final class AssistantToolRegistry {
 
     final moods = await repo.getDiaryByCategory(sort: .timeDesc, limit: 9999);
     if (moods.isNotEmpty) {
-      final counts = <DiaryMood, int>{};
+      final counts = <DiaryMood?, int>{};
       for (final d in moods) {
         counts[d.mood] = (counts[d.mood] ?? 0) + 1;
       }
       buffer
+        ..writeln('mood distribution (null means not recorded):')
         ..writeln(
-          'mood distribution (neutral is also the default for entries whose '
-          'mood was never set):',
-        )
-        ..writeln(
-          '- ${[for (final m in DiaryMood.values)
-            if ((counts[m] ?? 0) > 0 || m == DiaryMood.neutral) '${m.name}=${counts[m] ?? 0}'].join(', ')}',
+          '- ${[
+            for (final m in [...DiaryMood.values, null]) '${m?.name ?? 'not recorded'}=${counts[m] ?? 0}',
+          ].join(', ')}',
         );
     }
     return buffer.toString().trim();
@@ -1045,7 +1042,7 @@ abstract final class AssistantToolRegistry {
     final content = (input['content'] as String?)?.trim() ?? '';
     if (content.isEmpty) return 'Failed: the body cannot be empty.';
 
-    final mood = _parseMood(input['mood']) ?? DiaryMood.neutral;
+    final mood = _parseMood(input['mood']);
     final categoryId = await _resolveCategoryId(input['categoryId']);
 
     final converted = _toTiptap(content);
@@ -1113,7 +1110,9 @@ abstract final class AssistantToolRegistry {
       updated = withDerivedMedia(updated);
     }
     final mood = _parseMood(input['mood']);
-    if (mood != null) updated = updated.copyWith(mood: mood);
+    if (input.containsKey('mood') && (input['mood'] == null || mood != null)) {
+      updated = updated.copyWith(mood: mood);
+    }
     if (input.containsKey('categoryId')) {
       final rawCategory = (input['categoryId'] as String?)?.trim() ?? '';
       if (rawCategory.isEmpty) {

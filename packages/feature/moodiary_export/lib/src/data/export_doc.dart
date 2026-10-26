@@ -25,7 +25,7 @@ class ExportDoc {
   final String id;
   final String title;
   final DateTime time;
-  final DiaryMood mood;
+  final DiaryMood? mood;
   final DiaryWeather? weather;
   final Place? place;
   final List<String> tags;
@@ -39,7 +39,7 @@ class ExportDoc {
     required this.title,
     required this.time,
     required this.blocks,
-    this.mood = .neutral,
+    this.mood,
     this.weather,
     this.place,
     this.tags = const [],

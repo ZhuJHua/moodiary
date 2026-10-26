@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:fast_image/fast_image.dart';
+import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
@@ -285,6 +286,16 @@ class ArchiveApplier {
           if (decoded is! Map<String, dynamic>) return;
           await _adoptLegacyPosition(decoded);
           await _adoptLegacyAudioNames(decoded, manifest, legacyAudioNames);
+          if (LegacyMood.fromName(decoded['mood'] as String?)
+              case final legacy?) {
+            decoded['mood'] = legacy.mood?.name;
+            if (legacy.scene case final scene?) {
+              final tags = List<String>.from(decoded['tags'] as List? ?? []);
+              final tag = scene.labelOf(l10n);
+              if (!tags.contains(tag)) tags.add(tag);
+              decoded['tags'] = tags;
+            }
+          }
           final diary = Diary.fromJson(decoded);
           if (diary.id != id) {
             failed++;

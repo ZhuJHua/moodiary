@@ -16,11 +16,11 @@ class FormatPanel extends StatelessWidget {
     final t = context.l10n.editor.toolbar;
     final typo = context.theme.typography;
     final marksEnabled = !state.inCodeBlock;
-    Widget heading(int level, double size) => PanelSegment(
+    Widget heading(int level, double size) => MSegment(
       selected: state.block.headingLevel == level,
       onTap: () => exec(.setHeading, {'level': level}),
       semanticLabel: 'H$level',
-      child: SegmentText(
+      child: MSegmentText(
         'H$level',
         style: typo.titleMedium.emphasized.onSurface.copyWith(fontSize: size),
       ),
@@ -30,7 +30,7 @@ class FormatPanel extends StatelessWidget {
       IconData icon,
       String label,
       EditorCommand c,
-    ) => PanelSegment(
+    ) => MSegment(
       selected: state.has(mark),
       onTap: marksEnabled ? () => exec(c) : null,
       semanticLabel: label,
@@ -41,7 +41,7 @@ class FormatPanel extends StatelessWidget {
       IconData icon,
       String label,
       EditorCommand c,
-    ) => PanelSegment(
+    ) => MSegment(
       selected: state.list == list,
       onTap: () => exec(c),
       semanticLabel: label,
@@ -51,14 +51,17 @@ class FormatPanel extends StatelessWidget {
       top: 16,
       gap: 12,
       children: [
-        PanelSegmentGroup(
+        MSegmentGroup(
           height: 48,
           children: [
-            PanelSegment(
+            MSegment(
               selected: state.block == .paragraph,
               onTap: () => exec(.setParagraph),
               semanticLabel: t.paragraph,
-              child: SegmentText(t.paragraph, style: typo.labelLarge.onSurface),
+              child: MSegmentText(
+                t.paragraph,
+                style: typo.labelLarge.onSurface,
+              ),
             ),
             heading(1, 19),
             heading(2, 17),
@@ -72,7 +75,7 @@ class FormatPanel extends StatelessWidget {
             children: [
               Expanded(
                 flex: 4,
-                child: PanelSegmentGroup(
+                child: MSegmentGroup(
                   children: [
                     mark(.bold, LucideIcons.bold, t.bold, .toggleBold),
                     mark(.italic, LucideIcons.italic, t.italic, .toggleItalic),
@@ -93,7 +96,7 @@ class FormatPanel extends StatelessWidget {
               ),
               Expanded(
                 flex: 2,
-                child: PanelSegmentGroup(
+                child: MSegmentGroup(
                   children: [
                     mark(
                       .highlight,
@@ -115,7 +118,7 @@ class FormatPanel extends StatelessWidget {
             children: [
               Expanded(
                 flex: 3,
-                child: PanelSegmentGroup(
+                child: MSegmentGroup(
                   children: [
                     list(
                       .bullet,
@@ -140,9 +143,9 @@ class FormatPanel extends StatelessWidget {
               ),
               Expanded(
                 flex: 2,
-                child: PanelSegmentGroup(
+                child: MSegmentGroup(
                   children: [
-                    PanelSegment(
+                    MSegment(
                       onTap: state.canOutdent ? () => exec(.outdent) : null,
                       semanticLabel: t.outdent,
                       child: _IconLabel(
@@ -151,7 +154,7 @@ class FormatPanel extends StatelessWidget {
                         vertical: true,
                       ),
                     ),
-                    PanelSegment(
+                    MSegment(
                       onTap: state.canIndent ? () => exec(.indent) : null,
                       semanticLabel: t.indent,
                       child: _IconLabel(
@@ -173,9 +176,9 @@ class FormatPanel extends StatelessWidget {
             children: [
               Expanded(
                 flex: 2,
-                child: PanelSegmentGroup(
+                child: MSegmentGroup(
                   children: [
-                    PanelSegment(
+                    MSegment(
                       selected: state.block == .blockquote,
                       onTap: () => exec(.toggleBlockquote),
                       semanticLabel: t.quote,
@@ -184,7 +187,7 @@ class FormatPanel extends StatelessWidget {
                         label: t.quote,
                       ),
                     ),
-                    PanelSegment(
+                    MSegment(
                       selected: state.block == .codeBlock,
                       onTap: () => exec(.toggleCodeBlock),
                       semanticLabel: t.codeBlock,
@@ -254,7 +257,7 @@ class _IconLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final typo = context.theme.typography;
-    final text = SegmentText(
+    final text = MSegmentText(
       label,
       style: vertical ? typo.labelSmall.onSurface : typo.labelLarge.onSurface,
     );

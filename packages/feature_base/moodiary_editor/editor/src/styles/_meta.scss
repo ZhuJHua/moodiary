@@ -75,20 +75,41 @@
   min-height: 1.75rem;
   padding: 0 10px 0 8px;
   border-radius: 14px;
-  background: color-mix(in srgb, var(--mood) 14%, var(--app-surface));
-  color: color-mix(in srgb, var(--mood) 72%, var(--app-on-surface));
+  background: color-mix(in srgb, var(--mood) 18%, var(--app-surface));
+  color: color-mix(in srgb, var(--mood) 55%, var(--app-on-surface));
   font-size: var(--md-text-sm);
   font-weight: 500;
 
   svg {
-    width: 14px;
-    height: 14px;
-    stroke-width: 2;
-    color: var(--mood);
+    width: 18px;
+    height: 18px;
   }
 
   &:not(:disabled):active {
     background: color-mix(in srgb, var(--mood) 24%, var(--app-surface));
+  }
+
+  &.is-unset {
+    background: var(--app-surface-container);
+    color: var(--md-meta-faint);
+  }
+}
+
+.md-popover--mood {
+  width: 300px;
+
+  .md-pop-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .md-pop-cell {
+    box-sizing: border-box;
+    min-height: 68px;
+
+    svg {
+      width: 30px;
+      height: 30px;
+    }
   }
 }
 

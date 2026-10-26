@@ -84,6 +84,25 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
               }
             },
             from2To3: (m, schema) async {
+              await m.addColumn(schema.diaries, schema.diaries.moodLevel);
+              await m.createTable(schema.legacyMoodScenes);
+              final moods = await customSelect('SELECT id, mood FROM diaries')
+                  .get();
+              for (final row in moods) {
+                final legacy = LegacyMood.fromName(row.read<String>('mood'));
+                await customStatement(
+                  'UPDATE diaries SET mood_level = ? WHERE id = ?',
+                  [legacy?.mood?.score, row.read<String>('id')],
+                );
+                if (legacy?.scene case final scene?) {
+                  await customStatement(
+                    'INSERT INTO legacy_mood_scenes (diary_id, scene) VALUES (?, ?)',
+                    [row.read<String>('id'), scene.name],
+                  );
+                }
+              }
+              // mood is absent from all indexes and FTS triggers.
+              await m.dropColumn(schema.diaries, 'mood');
               await m.addColumn(
                 schema.chatMessages,
                 schema.chatMessages.providerId,
@@ -194,6 +213,25 @@ class MoodiaryDatabase extends _$MoodiaryDatabase {
       ]);
     }
   }
+
+  /// Must run after locale loading and before sync can read migrated diaries.
+  /// Kept transactional so interruption retries without duplicate scene tags.
+  Future<void> applyLegacyMoodScenes(String Function(LegacyMoodScene) label) =>
+      transaction(() async {
+        final pending = await select(legacyMoodScenes).get();
+        for (final row in pending) {
+          final scene = LegacyMoodScene.values.byName(row.scene);
+          final tag = label(scene);
+          await customStatement(
+            'INSERT INTO diary_tags (diary_id, seq, tag) '
+            'SELECT ?, COALESCE(MAX(seq), -1) + 1, ? FROM diary_tags '
+            'WHERE diary_id = ? HAVING NOT EXISTS '
+            '(SELECT 1 FROM diary_tags WHERE diary_id = ? AND tag = ?)',
+            [row.diaryId, tag, row.diaryId, row.diaryId, tag],
+          );
+        }
+        await delete(legacyMoodScenes).go();
+      });
 
   Future<void> clearAll() async {
     await transaction(() async {

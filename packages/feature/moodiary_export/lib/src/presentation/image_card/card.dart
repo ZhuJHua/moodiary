@@ -85,7 +85,7 @@ class ImageCard extends StatelessWidget {
 
   List<Widget> _meta(ExportDoc doc) {
     final chips = <Widget>[
-      _moodChip(doc.mood),
+      if (doc.mood case final mood?) _moodChip(mood),
       if (doc.weather case final w?)
         _metaItem(LucideIcons.cloudSun, w.displayText),
       if (doc.categoryName case final name? when name.isNotEmpty)
@@ -135,29 +135,38 @@ class ImageCard extends StatelessWidget {
     ];
   }
 
-  Widget _moodChip(DiaryMood mood) {
-    final color = mood.color;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(
-          alpha: style.brightness == Brightness.dark ? 0.18 : 0.15,
-        ),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(mood.icon, size: 14, color: color),
-          const SizedBox(width: 4),
-          Text(
-            mood.labelOf(l10n),
-            style: style.metaStrong.copyWith(color: color),
+  Widget _moodChip(DiaryMood mood) => MuiTheme(
+    data: buildMuiTheme(brightness: style.brightness),
+    child: Builder(
+      builder: (context) {
+        final color = mood.colorOf(context);
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: color.withValues(
+              alpha: style.brightness == Brightness.dark ? 0.18 : 0.15,
+            ),
+            borderRadius: BorderRadius.circular(999),
           ),
-        ],
-      ),
-    );
-  }
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              MoodGlyph(
+                mood: mood,
+                size: 14,
+                semanticLabel: mood.labelOf(l10n),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                mood.labelOf(l10n),
+                style: style.metaStrong.copyWith(color: color),
+              ),
+            ],
+          ),
+        );
+      },
+    ),
+  );
 
   Widget _metaItem(IconData icon, String text) => Row(
     mainAxisSize: MainAxisSize.min,

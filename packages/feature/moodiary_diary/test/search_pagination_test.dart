@@ -20,7 +20,7 @@ void main() {
           title: '第 $i 篇',
           content: '今天吃了一个苹果',
           contentText: '今天吃了一个苹果',
-          mood: .neutral,
+          mood: null,
           imageName: const [],
           audioName: const [],
           videoName: const [],

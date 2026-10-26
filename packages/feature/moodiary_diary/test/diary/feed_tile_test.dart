@@ -10,7 +10,7 @@ final _mui = buildMuiTheme(brightness: Brightness.light);
 Diary diary({
   String title = 'T',
   String text = 'body',
-  DiaryMood mood = .neutral,
+  DiaryMood? mood,
   List<String> images = const [],
   List<String> videos = const [],
   List<String> audios = const [],
@@ -245,7 +245,7 @@ void main() {
       time: DateTime(2026, 7, 1, 9, 15),
       lastModified: DateTime(2026, 8, 20, 21, 30),
       show: true,
-      mood: .neutral,
+      mood: null,
       imageName: const [],
       audioName: const [],
       videoName: const [],

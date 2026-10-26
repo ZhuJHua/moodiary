@@ -149,7 +149,7 @@ class MarkdownImporter {
               time: time,
               lastModified: now,
               show: true,
-              mood: meta.mood ?? .neutral,
+              mood: meta.mood,
               weather: meta.weather,
               imageName: const [],
               audioName: const [],

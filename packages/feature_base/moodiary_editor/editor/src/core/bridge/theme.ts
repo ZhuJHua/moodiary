@@ -27,6 +27,7 @@ const ROLE_VARS: Record<string, string> = {
   onSecondaryContainer: '--app-on-secondary-container',
   inverseSurface: '--app-inverse-surface',
   onInverseSurface: '--app-on-inverse-surface',
+  outline: '--app-outline',
   outlineVariant: '--app-outline-variant',
   error: '--app-error',
 }

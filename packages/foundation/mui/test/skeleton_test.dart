@@ -1,0 +1,158 @@
+import 'dart:ui' as ui;
+
+import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mui/mui.dart';
+import 'package:skeletonizer/skeletonizer.dart'
+    show SkeletonizerConfig, SolidColorEffect;
+
+void main() {
+  testWidgets('delayed loading cancels and restarts for each request', (
+    tester,
+  ) async {
+    Future<void> show({required bool loading, int request = 0}) =>
+        tester.pumpWidget(
+          MaterialApp(
+            theme: buildMuiTheme(brightness: .light),
+            home: MDelayedLoading(
+              loading: loading,
+              loadKey: request,
+              builder: (_, showLoading) => showLoading
+                  ? const MSkeleton(enabled: true, child: Text('Placeholder'))
+                  : const Text('Content'),
+            ),
+          ),
+        );
+    await show(loading: true);
+    expect(find.byType(MSkeleton), findsNothing);
+    await tester.pump(const Duration(milliseconds: 299));
+    expect(find.text('Placeholder'), findsNothing);
+    await show(loading: false);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byType(MSkeleton), findsNothing);
+    await show(loading: true);
+    await tester.pump(const Duration(milliseconds: 299));
+    await show(loading: true, request: 1);
+    await tester.pump(const Duration(milliseconds: 299));
+    expect(find.byType(MSkeleton), findsNothing);
+    await tester.pump(const Duration(milliseconds: 1));
+    expect(find.byType(MSkeleton), findsOneWidget);
+    await show(loading: false, request: 1);
+    expect(find.byType(MSkeleton), findsNothing);
+    await show(loading: true, request: 2);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('zero loading delay builds the skeleton immediately', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildMuiTheme(brightness: .light),
+        home: MDelayedLoading(
+          loading: true,
+          delay: Duration.zero,
+          builder: (_, showLoading) =>
+              MSkeleton(enabled: showLoading, child: const Text('Content')),
+        ),
+      ),
+    );
+    expect(tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled, isTrue);
+  });
+
+  for (final enabled in [true, false]) {
+    testWidgets('enabled=$enabled paints bones or the untouched child', (
+      tester,
+    ) async {
+      const surface = Color(0xFF123456);
+      const ink = Color(0xFFFF0000);
+      const child = SizedBox(
+        width: 180,
+        height: 60,
+        child: ColoredBox(
+          color: surface,
+          child: Center(
+            child: Text('Loaded content', style: TextStyle(color: ink)),
+          ),
+        ),
+      );
+      final theme = buildMuiTheme(brightness: .light);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: theme,
+          home: MediaQuery(
+            data: const MediaQueryData(disableAnimations: true),
+            child: Center(
+              child: RepaintBoundary(
+                key: const ValueKey('image'),
+                child: MSkeleton(enabled: enabled, child: child),
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(
+        tester.widget<MSkeleton>(find.byType(MSkeleton)).child,
+        same(child),
+      );
+      await tester.pumpAndSettle();
+      await tester.runAsync(() async {
+        final boundary = tester.renderObject<RenderRepaintBoundary>(
+          find.byKey(const ValueKey('image')),
+        );
+        final image = await boundary.toImage();
+        final bytes = (await image.toByteData(
+          format: ui.ImageByteFormat.rawRgba,
+        ))!;
+        int pixels(Color color) {
+          final argb = color.toARGB32();
+          var count = 0;
+          for (var i = 0; i < bytes.lengthInBytes; i += 4) {
+            if (bytes.getUint8(i) == (argb >> 16 & 255) &&
+                bytes.getUint8(i + 1) == (argb >> 8 & 255) &&
+                bytes.getUint8(i + 2) == (argb & 255)) {
+              count++;
+            }
+          }
+          return count;
+        }
+
+        expect(pixels(surface), greaterThan(100));
+        expect(pixels(ink), enabled ? 0 : greaterThan(10));
+        expect(
+          pixels(theme.colorScheme.surfaceContainerHighest),
+          enabled ? greaterThan(10) : 0,
+        );
+        image.dispose();
+      });
+    });
+  }
+
+  testWidgets('bones are static and follow the app brightness', (tester) async {
+    for (final brightness in Brightness.values) {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: buildMuiTheme(brightness: brightness),
+          themeAnimationDuration: Duration.zero,
+          home: MediaQuery(
+            data: MediaQueryData(
+              platformBrightness: brightness == .light ? .dark : .light,
+            ),
+            child: const MSkeleton(enabled: true, child: Text('Content')),
+          ),
+        ),
+      );
+      final config = tester
+          .widget<SkeletonizerConfig>(find.byType(SkeletonizerConfig))
+          .data;
+      expect(config.brightness, brightness);
+      final effect = config.resolveEffect(brightness);
+      expect(effect, isA<SolidColorEffect>());
+      expect(effect.duration, Duration.zero);
+      await tester.pumpAndSettle();
+      expect(tester.binding.transientCallbackCount, 0);
+    }
+  });
+}

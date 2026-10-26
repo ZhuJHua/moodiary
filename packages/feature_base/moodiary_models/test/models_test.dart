@@ -12,12 +12,16 @@ void main() {
     expect(c.color, isNull);
   });
 
-  test('DiaryMood JSON round-trips by name and falls back to neutral', () {
-    final d = Diary.empty(type: .tiptap).copyWith(mood: .positive);
+  test('DiaryMood JSON round-trips by name and supports unset', () {
+    final d = Diary.empty(type: .tiptap).copyWith(mood: .good);
     final json = d.toJson();
-    expect(json['mood'], 'positive');
-    expect(Diary.fromJson(json).mood, DiaryMood.positive);
-    expect(DiaryMood.fromName('nope'), DiaryMood.neutral);
+    expect(json['mood'], 'good');
+    expect(Diary.fromJson(json).mood, DiaryMood.good);
+    expect(DiaryMood.fromName('nope'), isNull);
+    expect(Diary.empty(type: .tiptap).mood, isNull);
+    expect(Diary.fromJson(d.copyWith(mood: null).toJson()).mood, isNull);
+    expect(d.copyWith(mood: null).toJson()['mood'], isNull);
+    expect(DiaryMood.values.map((m) => m.score), [1, 2, 3, 4, 5]);
   });
 
   group('DiaryWeather 展示串', () {

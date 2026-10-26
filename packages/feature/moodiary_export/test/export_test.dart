@@ -1,11 +1,15 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moodiary_components/moodiary_components.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_export/moodiary_export.dart';
 import 'package:moodiary_export/src/presentation/image_card/blocks.dart';
+import 'package:moodiary_export/src/presentation/image_card/card.dart';
 import 'package:moodiary_export/src/presentation/image_card/card_style.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
+import 'package:moodiary_storage/testing.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
-import 'package:mui/mui.dart';
 
 String _resolve(String kind, String name) => '/data/$kind/$name';
 
@@ -737,6 +741,48 @@ void main() {
       expect(MarkdownWriter.write(doc, _noMeta), '[[那天]]');
     });
   });
+
+  testWidgets(
+    'share card uses stored palette and export brightness in a detached tree',
+    (tester) async {
+      final storage = MemoryKVStorage();
+      getIt.registerSingleton<IKVStorage>(storage);
+      addTearDown(getIt.reset);
+      MoodiaryKVs.moodPalette.set('blueOrange');
+      final theme = buildMuiTheme(brightness: .dark);
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: .ltr,
+          child: ImageCard(
+            docs: [
+              ExportDoc(
+                id: 'mood',
+                title: '',
+                time: DateTime(2026),
+                mood: .awful,
+                blocks: const [],
+              ),
+            ],
+            common: const ExportCommon(),
+            style: ImageCardStyle.of(theme, widthDp: 400, watermark: false),
+            images: const {},
+          ),
+        ),
+      );
+      expect(tester.takeException(), isNull);
+      expect(find.byType(MoodGlyph), findsOneWidget);
+      final context = tester.element(find.byType(MoodGlyph));
+      expect(MoodPalette.of(context), MoodPalette.blueOrange);
+      expect(context.theme.brightness, Brightness.dark);
+      final chip = tester
+          .widgetList<Container>(find.byType(Container))
+          .firstWhere((widget) => widget.decoration is BoxDecoration);
+      expect(
+        (chip.decoration! as BoxDecoration).color?.withValues(alpha: 1),
+        MoodPalette.blueOrange.color(.awful, theme.colorScheme),
+      );
+    },
+  );
 
   group('IrBlockRenderer', () {
     testWidgets('分隔线、附件、音视频名与高亮都能画出来', (tester) async {

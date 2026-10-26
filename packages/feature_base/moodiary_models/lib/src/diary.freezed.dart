@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Diary {
 
- String get id; String? get categoryId; String get title; String get content; String get contentText;@UtcDateTimeConverter() DateTime get time;@UtcDateTimeConverter() DateTime get lastModified; bool get show;@JsonKey(unknownEnumValue: DiaryMood.neutral) DiaryMood get mood; DiaryWeather? get weather; List<String> get imageName; List<String> get audioName; List<String> get videoName; List<String> get fileName; List<String> get tags; String? get placeId; String get type; double? get aspect;
+ String get id; String? get categoryId; String get title; String get content; String get contentText;@UtcDateTimeConverter() DateTime get time;@UtcDateTimeConverter() DateTime get lastModified; bool get show; DiaryMood? get mood; DiaryWeather? get weather; List<String> get imageName; List<String> get audioName; List<String> get videoName; List<String> get fileName; List<String> get tags; String? get placeId; String get type; double? get aspect;
 /// Create a copy of Diary
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -54,7 +54,7 @@ abstract mixin class $DiaryCopyWith<$Res>  {
   factory $DiaryCopyWith(Diary value, $Res Function(Diary) _then) = _$DiaryCopyWithImpl;
 @useResult
 $Res call({
- String id, String? categoryId, String title, String content, String contentText,@UtcDateTimeConverter() DateTime time,@UtcDateTimeConverter() DateTime lastModified, bool show,@JsonKey(unknownEnumValue: DiaryMood.neutral) DiaryMood mood, DiaryWeather? weather, List<String> imageName, List<String> audioName, List<String> videoName, List<String> fileName, List<String> tags, String? placeId, String type, double? aspect
+ String id, String? categoryId, String title, String content, String contentText,@UtcDateTimeConverter() DateTime time,@UtcDateTimeConverter() DateTime lastModified, bool show, DiaryMood? mood, DiaryWeather? weather, List<String> imageName, List<String> audioName, List<String> videoName, List<String> fileName, List<String> tags, String? placeId, String type, double? aspect
 });
 
 
@@ -71,7 +71,7 @@ class _$DiaryCopyWithImpl<$Res>
 
 /// Create a copy of Diary
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? categoryId = freezed,Object? title = null,Object? content = null,Object? contentText = null,Object? time = null,Object? lastModified = null,Object? show = null,Object? mood = null,Object? weather = freezed,Object? imageName = null,Object? audioName = null,Object? videoName = null,Object? fileName = null,Object? tags = null,Object? placeId = freezed,Object? type = null,Object? aspect = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? categoryId = freezed,Object? title = null,Object? content = null,Object? contentText = null,Object? time = null,Object? lastModified = null,Object? show = null,Object? mood = freezed,Object? weather = freezed,Object? imageName = null,Object? audioName = null,Object? videoName = null,Object? fileName = null,Object? tags = null,Object? placeId = freezed,Object? type = null,Object? aspect = freezed,}) {
   return _then(Diary(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
@@ -81,8 +81,8 @@ as String,contentText: null == contentText ? _self.contentText : contentText // 
 as String,time: null == time ? _self.time : time // ignore: cast_nullable_to_non_nullable
 as DateTime,lastModified: null == lastModified ? _self.lastModified : lastModified // ignore: cast_nullable_to_non_nullable
 as DateTime,show: null == show ? _self.show : show // ignore: cast_nullable_to_non_nullable
-as bool,mood: null == mood ? _self.mood : mood // ignore: cast_nullable_to_non_nullable
-as DiaryMood,weather: freezed == weather ? _self.weather : weather // ignore: cast_nullable_to_non_nullable
+as bool,mood: freezed == mood ? _self.mood : mood // ignore: cast_nullable_to_non_nullable
+as DiaryMood?,weather: freezed == weather ? _self.weather : weather // ignore: cast_nullable_to_non_nullable
 as DiaryWeather?,imageName: null == imageName ? _self.imageName : imageName // ignore: cast_nullable_to_non_nullable
 as List<String>,audioName: null == audioName ? _self.audioName : audioName // ignore: cast_nullable_to_non_nullable
 as List<String>,videoName: null == videoName ? _self.videoName : videoName // ignore: cast_nullable_to_non_nullable
@@ -188,7 +188,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String? categoryId,  String title,  String content,  String contentText, @UtcDateTimeConverter()  DateTime time, @UtcDateTimeConverter()  DateTime lastModified,  bool show, @JsonKey(unknownEnumValue: DiaryMood.neutral)  DiaryMood mood,  DiaryWeather? weather,  List<String> imageName,  List<String> audioName,  List<String> videoName,  List<String> fileName,  List<String> tags,  String? placeId,  String type,  double? aspect)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String? categoryId,  String title,  String content,  String contentText, @UtcDateTimeConverter()  DateTime time, @UtcDateTimeConverter()  DateTime lastModified,  bool show,  DiaryMood? mood,  DiaryWeather? weather,  List<String> imageName,  List<String> audioName,  List<String> videoName,  List<String> fileName,  List<String> tags,  String? placeId,  String type,  double? aspect)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Diary() when $default != null:
 return $default(_that.id,_that.categoryId,_that.title,_that.content,_that.contentText,_that.time,_that.lastModified,_that.show,_that.mood,_that.weather,_that.imageName,_that.audioName,_that.videoName,_that.fileName,_that.tags,_that.placeId,_that.type,_that.aspect);case _:
@@ -209,7 +209,7 @@ return $default(_that.id,_that.categoryId,_that.title,_that.content,_that.conten
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String? categoryId,  String title,  String content,  String contentText, @UtcDateTimeConverter()  DateTime time, @UtcDateTimeConverter()  DateTime lastModified,  bool show, @JsonKey(unknownEnumValue: DiaryMood.neutral)  DiaryMood mood,  DiaryWeather? weather,  List<String> imageName,  List<String> audioName,  List<String> videoName,  List<String> fileName,  List<String> tags,  String? placeId,  String type,  double? aspect)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String? categoryId,  String title,  String content,  String contentText, @UtcDateTimeConverter()  DateTime time, @UtcDateTimeConverter()  DateTime lastModified,  bool show,  DiaryMood? mood,  DiaryWeather? weather,  List<String> imageName,  List<String> audioName,  List<String> videoName,  List<String> fileName,  List<String> tags,  String? placeId,  String type,  double? aspect)  $default,) {final _that = this;
 switch (_that) {
 case _Diary():
 return $default(_that.id,_that.categoryId,_that.title,_that.content,_that.contentText,_that.time,_that.lastModified,_that.show,_that.mood,_that.weather,_that.imageName,_that.audioName,_that.videoName,_that.fileName,_that.tags,_that.placeId,_that.type,_that.aspect);case _:
@@ -229,7 +229,7 @@ return $default(_that.id,_that.categoryId,_that.title,_that.content,_that.conten
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String? categoryId,  String title,  String content,  String contentText, @UtcDateTimeConverter()  DateTime time, @UtcDateTimeConverter()  DateTime lastModified,  bool show, @JsonKey(unknownEnumValue: DiaryMood.neutral)  DiaryMood mood,  DiaryWeather? weather,  List<String> imageName,  List<String> audioName,  List<String> videoName,  List<String> fileName,  List<String> tags,  String? placeId,  String type,  double? aspect)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String? categoryId,  String title,  String content,  String contentText, @UtcDateTimeConverter()  DateTime time, @UtcDateTimeConverter()  DateTime lastModified,  bool show,  DiaryMood? mood,  DiaryWeather? weather,  List<String> imageName,  List<String> audioName,  List<String> videoName,  List<String> fileName,  List<String> tags,  String? placeId,  String type,  double? aspect)?  $default,) {final _that = this;
 switch (_that) {
 case _Diary() when $default != null:
 return $default(_that.id,_that.categoryId,_that.title,_that.content,_that.contentText,_that.time,_that.lastModified,_that.show,_that.mood,_that.weather,_that.imageName,_that.audioName,_that.videoName,_that.fileName,_that.tags,_that.placeId,_that.type,_that.aspect);case _:
@@ -244,7 +244,7 @@ return $default(_that.id,_that.categoryId,_that.title,_that.content,_that.conten
 @JsonSerializable()
 
 class _Diary extends Diary {
-  const _Diary({required this.id, this.categoryId, required this.title, required this.content, required this.contentText, @UtcDateTimeConverter() required this.time, @UtcDateTimeConverter() required this.lastModified, required this.show, @JsonKey(unknownEnumValue: DiaryMood.neutral) required this.mood, this.weather, required  List<String> imageName, required  List<String> audioName, required  List<String> videoName,  List<String> fileName = const <String>[], required  List<String> tags, this.placeId, required this.type, this.aspect}): _imageName = imageName,_audioName = audioName,_videoName = videoName,_fileName = fileName,_tags = tags,super._();
+  const _Diary({required this.id, this.categoryId, required this.title, required this.content, required this.contentText, @UtcDateTimeConverter() required this.time, @UtcDateTimeConverter() required this.lastModified, required this.show, this.mood, this.weather, required  List<String> imageName, required  List<String> audioName, required  List<String> videoName,  List<String> fileName = const <String>[], required  List<String> tags, this.placeId, required this.type, this.aspect}): _imageName = imageName,_audioName = audioName,_videoName = videoName,_fileName = fileName,_tags = tags,super._();
   factory _Diary.fromJson(Map<String, dynamic> json) => _$DiaryFromJson(json);
 
 @override final  String id;
@@ -255,7 +255,7 @@ class _Diary extends Diary {
 @override@UtcDateTimeConverter() final  DateTime time;
 @override@UtcDateTimeConverter() final  DateTime lastModified;
 @override final  bool show;
-@override@JsonKey(unknownEnumValue: DiaryMood.neutral) final  DiaryMood mood;
+@override final  DiaryMood? mood;
 @override final  DiaryWeather? weather;
  final  List<String> _imageName;
 @override List<String> get imageName {
@@ -331,7 +331,7 @@ abstract mixin class _$DiaryCopyWith<$Res> implements $DiaryCopyWith<$Res> {
   factory _$DiaryCopyWith(_Diary value, $Res Function(_Diary) _then) = __$DiaryCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String? categoryId, String title, String content, String contentText,@UtcDateTimeConverter() DateTime time,@UtcDateTimeConverter() DateTime lastModified, bool show,@JsonKey(unknownEnumValue: DiaryMood.neutral) DiaryMood mood, DiaryWeather? weather, List<String> imageName, List<String> audioName, List<String> videoName, List<String> fileName, List<String> tags, String? placeId, String type, double? aspect
+ String id, String? categoryId, String title, String content, String contentText,@UtcDateTimeConverter() DateTime time,@UtcDateTimeConverter() DateTime lastModified, bool show, DiaryMood? mood, DiaryWeather? weather, List<String> imageName, List<String> audioName, List<String> videoName, List<String> fileName, List<String> tags, String? placeId, String type, double? aspect
 });
 
 
@@ -348,7 +348,7 @@ class __$DiaryCopyWithImpl<$Res>
 
 /// Create a copy of Diary
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? categoryId = freezed,Object? title = null,Object? content = null,Object? contentText = null,Object? time = null,Object? lastModified = null,Object? show = null,Object? mood = null,Object? weather = freezed,Object? imageName = null,Object? audioName = null,Object? videoName = null,Object? fileName = null,Object? tags = null,Object? placeId = freezed,Object? type = null,Object? aspect = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? categoryId = freezed,Object? title = null,Object? content = null,Object? contentText = null,Object? time = null,Object? lastModified = null,Object? show = null,Object? mood = freezed,Object? weather = freezed,Object? imageName = null,Object? audioName = null,Object? videoName = null,Object? fileName = null,Object? tags = null,Object? placeId = freezed,Object? type = null,Object? aspect = freezed,}) {
   return _then(_Diary(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
@@ -358,8 +358,8 @@ as String,contentText: null == contentText ? _self.contentText : contentText // 
 as String,time: null == time ? _self.time : time // ignore: cast_nullable_to_non_nullable
 as DateTime,lastModified: null == lastModified ? _self.lastModified : lastModified // ignore: cast_nullable_to_non_nullable
 as DateTime,show: null == show ? _self.show : show // ignore: cast_nullable_to_non_nullable
-as bool,mood: null == mood ? _self.mood : mood // ignore: cast_nullable_to_non_nullable
-as DiaryMood,weather: freezed == weather ? _self.weather : weather // ignore: cast_nullable_to_non_nullable
+as bool,mood: freezed == mood ? _self.mood : mood // ignore: cast_nullable_to_non_nullable
+as DiaryMood?,weather: freezed == weather ? _self.weather : weather // ignore: cast_nullable_to_non_nullable
 as DiaryWeather?,imageName: null == imageName ? _self._imageName : imageName // ignore: cast_nullable_to_non_nullable
 as List<String>,audioName: null == audioName ? _self._audioName : audioName // ignore: cast_nullable_to_non_nullable
 as List<String>,videoName: null == videoName ? _self._videoName : videoName // ignore: cast_nullable_to_non_nullable

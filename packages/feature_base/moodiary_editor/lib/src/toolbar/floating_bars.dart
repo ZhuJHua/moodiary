@@ -188,11 +188,11 @@ class _WidthPickerState extends State<WidthPicker> {
     final shown = _draft ?? widget.current;
     Widget segment(int? percent) {
       final label = percent == null ? t.original : '$percent%';
-      return PanelSegment(
+      return MSegment(
         selected: shown == percent,
         onTap: () => _pick(percent),
         semanticLabel: percent == null ? t.originalSize : label,
-        child: SegmentText(label, style: typo.labelLarge.onSurface),
+        child: MSegmentText(label, style: typo.labelLarge.onSurface),
       );
     }
 

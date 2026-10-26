@@ -52,7 +52,7 @@ class DiaryRepository {
       time: dbToTime(r.time),
       lastModified: dbToTime(r.lastModified),
       show: r.show != 0,
-      mood: DiaryMood.fromName(r.mood),
+      mood: DiaryMood.fromScore(r.moodLevel),
       weather: icon == null
           ? null
           : DiaryWeather(
@@ -80,7 +80,7 @@ class DiaryRepository {
     time: dbTime(d.time),
     lastModified: dbTime(d.lastModified),
     show: d.show ? 1 : 0,
-    mood: d.mood.name,
+    moodLevel: Value(d.mood?.score),
     type: d.type,
     aspect: Value(d.aspect),
     placeId: Value(d.placeId),

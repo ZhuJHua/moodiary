@@ -28,7 +28,7 @@ void main() {
       title: title,
       content: '',
       contentText: '$title 的正文',
-      mood: .neutral,
+      mood: null,
       imageName: const [],
       audioName: const [],
       videoName: const [],

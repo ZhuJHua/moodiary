@@ -283,6 +283,120 @@ void main() {
     await db.close();
   });
 
+  test(
+    'v2 moods migrate to nullable scores; scene tags wait for the UI locale',
+    () async {
+      final schema = await verifier.schemaAt(2);
+      final old = v2.DatabaseAtV2(schema.newConnection());
+      final expected = <String, DiaryMood?>{
+        'fulfilled': .great,
+        'love': .great,
+        'positive': .good,
+        'neutral': null,
+        'negative': .bad,
+        'anxious': .bad,
+        'tired': .bad,
+        'speechless': .bad,
+        'sick': .bad,
+        'angry': .awful,
+        for (final scene in LegacyMoodScene.values) scene.name: null,
+      };
+      for (final name in expected.keys) {
+        await old
+            .into(old.diaries)
+            .insert(
+              v2.DiariesCompanion.insert(
+                id: name,
+                title: name,
+                content: '',
+                contentText: name,
+                time: 1,
+                lastModified: 7,
+                show: 1,
+                mood: name,
+                type: 'tiptap',
+              ),
+            );
+      }
+      // The selected language's existing tag must not be added a second time.
+      await old
+          .into(old.diaryTags)
+          .insert(
+            v2.DiaryTagsCompanion.insert(
+              diaryId: 'travel',
+              seq: 4,
+              tag: 'Travel',
+            ),
+          );
+      await old
+          .into(old.diaryTags)
+          .insert(
+            v2.DiaryTagsCompanion.insert(
+              diaryId: 'work',
+              seq: 2,
+              tag: 'existing',
+            ),
+          );
+      await old.close();
+      final db = MoodiaryDatabase.forTesting(schema.newConnection());
+      await verifier.migrateAndValidate(db, 3);
+      final columns = await db.customSelect('PRAGMA table_info(diaries)').get();
+      expect(
+        columns.map((r) => r.read<String>('name')),
+        isNot(contains('mood')),
+      );
+      final repo = DiaryRepository(db);
+      for (final entry in expected.entries) {
+        final diary = (await repo.getDiaryByBusinessId(entry.key))!;
+        expect(diary.mood, entry.value, reason: entry.key);
+        expect(diary.lastModified, dbToTime(7));
+      }
+      expect((await repo.getDiaryByBusinessId('study'))!.tags, isEmpty);
+      expect(await db.select(db.legacyMoodScenes).get(), hasLength(6));
+      await expectLater(
+        db.applyLegacyMoodScenes((scene) {
+          if (scene == LegacyMoodScene.food) {
+            throw StateError('locale interrupted');
+          }
+          return scene.name;
+        }),
+        throwsStateError,
+      );
+      expect((await repo.getDiaryByBusinessId('study'))!.tags, isEmpty);
+      expect(await db.select(db.legacyMoodScenes).get(), hasLength(6));
+      await db.applyLegacyMoodScenes(
+        (scene) => switch (scene) {
+          .study => 'Study',
+          .work => 'Work',
+          .travel => 'Travel',
+          .sports => 'Sports',
+          .food => 'Food',
+          .slacking => 'Slacking',
+        },
+      );
+      expect((await repo.getDiaryByBusinessId('travel'))!.tags, ['Travel']);
+      expect((await repo.getDiaryByBusinessId('work'))!.tags, [
+        'existing',
+        'Work',
+      ]);
+      expect((await repo.getDiaryByBusinessId('study'))!.tags, ['Study']);
+      expect(await db.select(db.legacyMoodScenes).get(), isEmpty);
+      await db.applyLegacyMoodScenes((_) => 'wrong locale');
+      expect((await repo.getDiaryByBusinessId('travel'))!.tags, ['Travel']);
+      final study = (await repo.getDiaryByBusinessId('study'))!;
+      expect(study.lastModified, dbToTime(7));
+      expect(await repo.searchDiaries(query: 'study'), isNotEmpty);
+      // SQLite itself rejects invalid scores.
+      await expectLater(
+        db.customStatement(
+          "UPDATE diaries SET mood_level = 6 WHERE id = 'study'",
+        ),
+        throwsA(anything),
+      );
+      await db.close();
+    },
+  );
+
   group('逐档迁移', () {
     const versions = GeneratedHelper.versions;
     for (var i = 0; i + 1 < versions.length; i++) {

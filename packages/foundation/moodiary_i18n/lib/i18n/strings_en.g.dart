@@ -40,6 +40,7 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$diary$en diary = _Translations$diary$en._(_root);
 	@override late final _Translations$editor$en editor = _Translations$editor$en._(_root);
 	@override late final _Translations$export$en export = _Translations$export$en._(_root);
+	@override late final _Translations$insights$en insights = _Translations$insights$en._(_root);
 	@override late final _Translations$lock$en lock = _Translations$lock$en._(_root);
 	@override late final _Translations$media$en media = _Translations$media$en._(_root);
 	@override late final _Translations$picker$en picker = _Translations$picker$en._(_root);
@@ -55,6 +56,11 @@ class _Translations$app$en extends Translations$app$zh {
 	final TranslationsEn _root; // ignore: unused_field
 
 	// Translations
+	@override String get moodColors => 'Mood colors';
+	@override String get moodPaletteClassic => 'Classic';
+	@override String get moodPaletteDefault => 'Default';
+	@override String get moodPaletteBlueOrange => 'Blue–orange';
+	@override String get moodPaletteColorblind => 'Colorblind friendly';
 	@override String get accentTitle => 'Accent color';
 	@override String get accentNeutral => 'Default';
 	@override String get accentSystem => 'From wallpaper';
@@ -492,22 +498,6 @@ class _Translations$common$en extends Translations$common$zh {
 
 	// Translations
 	@override String get ok => 'OK';
-	@override String get moodNegative => 'Low';
-	@override String get moodNeutral => 'Calm';
-	@override String get moodPositive => 'Happy';
-	@override String get moodFulfilled => 'Fulfilled';
-	@override String get moodAngry => 'Angry';
-	@override String get moodAnxious => 'Anxious';
-	@override String get moodTired => 'Tired';
-	@override String get moodSpeechless => 'Speechless';
-	@override String get moodLove => 'In love';
-	@override String get moodStudy => 'Studying';
-	@override String get moodSlacking => 'Slacking';
-	@override String get moodFood => 'Yummy';
-	@override String get moodWork => 'Working';
-	@override String get moodTravel => 'Traveling';
-	@override String get moodSports => 'Workout';
-	@override String get moodSick => 'Sick';
 	@override String get weatherSunny => 'Sunny';
 	@override String get weatherCloudy => 'Cloudy';
 	@override String get weatherOvercast => 'Overcast';
@@ -544,6 +534,18 @@ class _Translations$common$en extends Translations$common$zh {
 	@override String get configured => 'Configured';
 	@override String get notConfigured => 'Not configured';
 	@override String get copied => 'Copied to clipboard';
+	@override String get legacySceneStudy => 'Studying';
+	@override String get legacySceneWork => 'Working';
+	@override String get legacySceneTravel => 'Traveling';
+	@override String get legacySceneSports => 'Workout';
+	@override String get legacySceneFood => 'Yummy';
+	@override String get legacySceneSlacking => 'Slacking';
+	@override String get moodAwful => 'Awful';
+	@override String get moodBad => 'Bad';
+	@override String get moodOkay => 'Okay';
+	@override String get moodGood => 'Good';
+	@override String get moodGreat => 'Great';
+	@override String get moodUnset => 'Not recorded';
 }
 
 // Path: diary
@@ -908,7 +910,7 @@ class _Translations$export$en extends Translations$export$zh {
 	@override String get importSpecAssets => 'Put images, videos and audio under assets/ (subfolders allowed) and reference them with relative paths.';
 	@override String get importSpecFrontMatter => 'An optional front matter at the top may set title, time, mood, category, tags, weather and position. Without it, the title comes from the first level-1 heading or the file name, and the time from a date at the start of the file name.';
 	@override String get importSpecRoundTrip => 'Markdown exported by this app without merging can be imported back directly; merged single-file exports are not supported.';
-	@override String get importSpecExample => 'diaries.zip\n├── 2026-09-06-sunny.md\n├── 2026-09-07-walk.md\n└── assets/\n    ├── image/a.jpg\n    └── video/b.mp4\n\n2026-09-06-sunny.md\n---\ntitle: "Sunny"\ntime: 2026-09-06T10:30:00+08:00\nmood: fulfilled\ncategory: "Life"\ntags: ["weekend"]\n---\n\nWent out for a walk today.\n![](assets/image/a.jpg)';
+	@override String get importSpecExample => 'diaries.zip\n├── 2026-09-06-sunny.md\n├── 2026-09-07-walk.md\n└── assets/\n    ├── image/a.jpg\n    └── video/b.mp4\n\n2026-09-06-sunny.md\n---\ntitle: "Sunny"\ntime: 2026-09-06T10:30:00+08:00\nmood: good\ncategory: "Life"\ntags: ["weekend"]\n---\n\nWent out for a walk today.\n![](assets/image/a.jpg)';
 	@override String importRunButton({required Object count}) => 'Import ${count} entries';
 	@override String importProgress({required Object done, required Object total}) => 'Importing ${done}/${total}';
 	@override String importSummary({required Object diary, required Object category, required Object place}) => '${diary} entries / ${category} new categories / ${place} new places';
@@ -920,6 +922,67 @@ class _Translations$export$en extends Translations$export$zh {
 	@override String importRunFailed({required Object error}) => 'Import failed: ${error}';
 	@override String get importEmpty => 'No .md files found in the package';
 	@override String importMissingMedia({required Object count}) => '${count} media files could not be imported (missing or unreadable) and were kept as plain links';
+}
+
+// Path: insights
+class _Translations$insights$en extends Translations$insights$zh {
+	_Translations$insights$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Mood insights';
+	@override String get week => 'Week';
+	@override String get month => 'Month';
+	@override String get year => 'Year';
+	@override String get selectMonth => 'Choose month';
+	@override String get selectYear => 'Choose year';
+	@override String get selectWeek => 'Choose week';
+	@override String pickerYear({required Object year}) => '${year}';
+	@override String yearTitle({required Object year}) => '${year}';
+	@override String weekTitle({required Object start, required Object end}) => '${start} – ${end}';
+	@override String get recordedDays => 'Days recorded';
+	@override String get entries => 'Entries';
+	@override String get bestDay => 'Best day';
+	@override String get empty => 'No moods yet';
+	@override String get calendar => 'Calendar';
+	@override String get trend => 'Trend';
+	@override String get distribution => 'Distribution';
+	@override String get weekdayPattern => 'By weekday';
+	@override String get view => 'View';
+	@override String get unrecorded => 'Not recorded';
+	@override String get today => 'Today';
+	@override String get weekDiaries => 'This week’s entries';
+	@override String get yearPixels => 'Full year';
+	@override String get monthlyTrend => 'By month';
+	@override String monthMood({required Object level}) => 'This month’s mood · ${level}';
+	@override String get noticeTitle => 'Mood tracking has changed';
+	@override String noticeSubtitle({required Object version}) => 'New in ${version}';
+	@override String get noticeCaption => 'Mood captures how you feel today. You can also leave it blank.';
+	@override String get noticeTagsTitle => 'Scenes are now tags';
+	@override String get noticeTagsBody => 'Previous choices like Study and Travel have been added as tags to their diary entries.';
+	@override String get noticeLevelsTitle => 'Past moods have been converted';
+	@override String get noticeLevelsBody => 'Moods like Happy and Fulfilled now use similar levels. Entries without a choice stay unrecorded.';
+	@override String get noticeInsightsTitle => 'Introducing mood insights';
+	@override String get noticeInsightsBody => 'Find your mood calendar and trends in Me.';
+	@override String get noticeExplore => 'Take a look';
+	@override String get noticeDone => 'Got it';
+	@override String get loadError => 'Couldn’t load';
+	@override String get retry => 'Retry';
+	@override String get previousPeriod => 'Previous period';
+	@override String get nextPeriod => 'Next period';
+	@override String countPercent({required Object count, required Object percent}) => '${count} · ${percent}%';
+	@override String signedDelta({required Object sign, required Object value}) => '${sign}${value}';
+	@override String dayHeader({required Object date, required Object weekday}) => '${date} · ${weekday}';
+	@override String recordedWeek({required Object count}) => '${count} / 7';
+	@override String get streak => 'Good-mood streak';
+	@override String streakDays({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(count,
+		one: '1 day',
+		other: '${count} days',
+	);
+	@override String dayDetail({required Object date, required Object level}) => '${date} · ${level}';
+	@override String yearRange({required Object start, required Object end}) => '${start} – ${end}';
+	@override String weekDays({required Object start, required Object end}) => '${start} – ${end}';
 }
 
 // Path: lock

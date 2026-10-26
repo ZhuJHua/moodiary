@@ -133,6 +133,11 @@ class MediaRoute extends MoodiaryRouteBase {
   const MediaRoute() : super(path);
 }
 
+class MoodInsightsRoute extends MoodiaryRouteBase {
+  static const path = '/mood-insights';
+  const MoodInsightsRoute() : super(path);
+}
+
 class CalendarRoute extends MoodiaryRouteBase {
   static const String path = '/calendar';
 

@@ -42,6 +42,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$diary$zh diary = Translations$diary$zh.internal(_root);
 	late final Translations$editor$zh editor = Translations$editor$zh.internal(_root);
 	late final Translations$export$zh export = Translations$export$zh.internal(_root);
+	late final Translations$insights$zh insights = Translations$insights$zh.internal(_root);
 	late final Translations$lock$zh lock = Translations$lock$zh.internal(_root);
 	late final Translations$media$zh media = Translations$media$zh.internal(_root);
 	late final Translations$picker$zh picker = Translations$picker$zh.internal(_root);
@@ -57,6 +58,21 @@ class Translations$app$zh {
 	final Translations _root; // ignore: unused_field
 
 	// Translations
+
+	/// zh: '心情配色'
+	String get moodColors => '心情配色';
+
+	/// zh: '经典'
+	String get moodPaletteClassic => '经典';
+
+	/// zh: '默认'
+	String get moodPaletteDefault => '默认';
+
+	/// zh: '蓝橙'
+	String get moodPaletteBlueOrange => '蓝橙';
+
+	/// zh: '色盲友好'
+	String get moodPaletteColorblind => '色盲友好';
 
 	/// zh: '主题色'
 	String get accentTitle => '主题色';
@@ -1333,54 +1349,6 @@ class Translations$common$zh {
 	/// zh: '确认'
 	String get ok => '确认';
 
-	/// zh: '低落'
-	String get moodNegative => '低落';
-
-	/// zh: '平静'
-	String get moodNeutral => '平静';
-
-	/// zh: '开心'
-	String get moodPositive => '开心';
-
-	/// zh: '充实'
-	String get moodFulfilled => '充实';
-
-	/// zh: '生气'
-	String get moodAngry => '生气';
-
-	/// zh: '焦虑'
-	String get moodAnxious => '焦虑';
-
-	/// zh: '疲惫'
-	String get moodTired => '疲惫';
-
-	/// zh: '无语'
-	String get moodSpeechless => '无语';
-
-	/// zh: '恋爱'
-	String get moodLove => '恋爱';
-
-	/// zh: '学习'
-	String get moodStudy => '学习';
-
-	/// zh: '摸鱼'
-	String get moodSlacking => '摸鱼';
-
-	/// zh: '好吃'
-	String get moodFood => '好吃';
-
-	/// zh: '工作'
-	String get moodWork => '工作';
-
-	/// zh: '旅行'
-	String get moodTravel => '旅行';
-
-	/// zh: '运动'
-	String get moodSports => '运动';
-
-	/// zh: '生病'
-	String get moodSick => '生病';
-
 	/// zh: '晴'
 	String get weatherSunny => '晴';
 
@@ -1488,6 +1456,42 @@ class Translations$common$zh {
 
 	/// zh: '已复制到剪贴板'
 	String get copied => '已复制到剪贴板';
+
+	/// zh: '学习'
+	String get legacySceneStudy => '学习';
+
+	/// zh: '工作'
+	String get legacySceneWork => '工作';
+
+	/// zh: '旅行'
+	String get legacySceneTravel => '旅行';
+
+	/// zh: '运动'
+	String get legacySceneSports => '运动';
+
+	/// zh: '好吃'
+	String get legacySceneFood => '好吃';
+
+	/// zh: '摸鱼'
+	String get legacySceneSlacking => '摸鱼';
+
+	/// zh: '糟糕'
+	String get moodAwful => '糟糕';
+
+	/// zh: '不好'
+	String get moodBad => '不好';
+
+	/// zh: '一般'
+	String get moodOkay => '一般';
+
+	/// zh: '不错'
+	String get moodGood => '不错';
+
+	/// zh: '很棒'
+	String get moodGreat => '很棒';
+
+	/// zh: '未记录'
+	String get moodUnset => '未记录';
 }
 
 // Path: diary
@@ -2519,8 +2523,8 @@ class Translations$export$zh {
 	/// zh: '本应用「不合并」导出的 Markdown 可以直接导回；合并成一个文件的不支持。'
 	String get importSpecRoundTrip => '本应用「不合并」导出的 Markdown 可以直接导回；合并成一个文件的不支持。';
 
-	/// zh: '日记.zip ├── 2026-09-06-晴天.md ├── 2026-09-07-散步.md └── assets/ ├── image/a.jpg └── video/b.mp4 2026-09-06-晴天.md --- title: "晴天" time: 2026-09-06T10:30:00+08:00 mood: fulfilled category: "生活" tags: ["周末"] --- 今天出门走了走。 ![](assets/image/a.jpg)'
-	String get importSpecExample => '日记.zip\n├── 2026-09-06-晴天.md\n├── 2026-09-07-散步.md\n└── assets/\n    ├── image/a.jpg\n    └── video/b.mp4\n\n2026-09-06-晴天.md\n---\ntitle: "晴天"\ntime: 2026-09-06T10:30:00+08:00\nmood: fulfilled\ncategory: "生活"\ntags: ["周末"]\n---\n\n今天出门走了走。\n![](assets/image/a.jpg)';
+	/// zh: '日记.zip ├── 2026-09-06-晴天.md ├── 2026-09-07-散步.md └── assets/ ├── image/a.jpg └── video/b.mp4 2026-09-06-晴天.md --- title: "晴天" time: 2026-09-06T10:30:00+08:00 mood: good category: "生活" tags: ["周末"] --- 今天出门走了走。 ![](assets/image/a.jpg)'
+	String get importSpecExample => '日记.zip\n├── 2026-09-06-晴天.md\n├── 2026-09-07-散步.md\n└── assets/\n    ├── image/a.jpg\n    └── video/b.mp4\n\n2026-09-06-晴天.md\n---\ntitle: "晴天"\ntime: 2026-09-06T10:30:00+08:00\nmood: good\ncategory: "生活"\ntags: ["周末"]\n---\n\n今天出门走了走。\n![](assets/image/a.jpg)';
 
 	/// zh: '导入 {count} 篇'
 	String importRunButton({required Object count}) => '导入 ${count} 篇';
@@ -2554,6 +2558,164 @@ class Translations$export$zh {
 
 	/// zh: '{count} 个媒体文件无法导入（缺失或无法读取），已按普通链接保留'
 	String importMissingMedia({required Object count}) => '${count} 个媒体文件无法导入（缺失或无法读取），已按普通链接保留';
+}
+
+// Path: insights
+class Translations$insights$zh {
+	Translations$insights$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: '心情洞察'
+	String get title => '心情洞察';
+
+	/// zh: '周'
+	String get week => '周';
+
+	/// zh: '月'
+	String get month => '月';
+
+	/// zh: '年'
+	String get year => '年';
+
+	/// zh: '选择月份'
+	String get selectMonth => '选择月份';
+
+	/// zh: '选择年份'
+	String get selectYear => '选择年份';
+
+	/// zh: '选择周'
+	String get selectWeek => '选择周';
+
+	/// zh: '{year} 年'
+	String pickerYear({required Object year}) => '${year} 年';
+
+	/// zh: '{year}年'
+	String yearTitle({required Object year}) => '${year}年';
+
+	/// zh: '{start} – {end}'
+	String weekTitle({required Object start, required Object end}) => '${start} – ${end}';
+
+	/// zh: '记录天数'
+	String get recordedDays => '记录天数';
+
+	/// zh: '篇数'
+	String get entries => '篇数';
+
+	/// zh: '最好的一天'
+	String get bestDay => '最好的一天';
+
+	/// zh: '暂无心情记录'
+	String get empty => '暂无心情记录';
+
+	/// zh: '日历'
+	String get calendar => '日历';
+
+	/// zh: '趋势'
+	String get trend => '趋势';
+
+	/// zh: '分布'
+	String get distribution => '分布';
+
+	/// zh: '按星期'
+	String get weekdayPattern => '按星期';
+
+	/// zh: '查看'
+	String get view => '查看';
+
+	/// zh: '未记录'
+	String get unrecorded => '未记录';
+
+	/// zh: '今天'
+	String get today => '今天';
+
+	/// zh: '本周日记'
+	String get weekDiaries => '本周日记';
+
+	/// zh: '全年'
+	String get yearPixels => '全年';
+
+	/// zh: '每月'
+	String get monthlyTrend => '每月';
+
+	/// zh: '本月心情 · {level}'
+	String monthMood({required Object level}) => '本月心情 · ${level}';
+
+	/// zh: '心情记录更新了'
+	String get noticeTitle => '心情记录更新了';
+
+	/// zh: '{version} 新变化'
+	String noticeSubtitle({required Object version}) => '${version} 新变化';
+
+	/// zh: '心情只记录今天感觉怎么样，也可以不填'
+	String get noticeCaption => '心情只记录今天感觉怎么样，也可以不填';
+
+	/// zh: '场景改成了标签'
+	String get noticeTagsTitle => '场景改成了标签';
+
+	/// zh: '以前选过的学习、旅行等，已经加到对应日记的标签里。'
+	String get noticeTagsBody => '以前选过的学习、旅行等，已经加到对应日记的标签里。';
+
+	/// zh: '旧的心情已自动换算'
+	String get noticeLevelsTitle => '旧的心情已自动换算';
+
+	/// zh: '开心、满足等换成了相近的等级，没选过的显示为未记录。'
+	String get noticeLevelsBody => '开心、满足等换成了相近的等级，没选过的显示为未记录。';
+
+	/// zh: '新增心情洞察'
+	String get noticeInsightsTitle => '新增心情洞察';
+
+	/// zh: '在「我的」里查看心情日历和变化趋势。'
+	String get noticeInsightsBody => '在「我的」里查看心情日历和变化趋势。';
+
+	/// zh: '去看看'
+	String get noticeExplore => '去看看';
+
+	/// zh: '知道了'
+	String get noticeDone => '知道了';
+
+	/// zh: '加载失败'
+	String get loadError => '加载失败';
+
+	/// zh: '重试'
+	String get retry => '重试';
+
+	/// zh: '上一期'
+	String get previousPeriod => '上一期';
+
+	/// zh: '下一期'
+	String get nextPeriod => '下一期';
+
+	/// zh: '{count} · {percent}%'
+	String countPercent({required Object count, required Object percent}) => '${count} · ${percent}%';
+
+	/// zh: '{sign}{value}'
+	String signedDelta({required Object sign, required Object value}) => '${sign}${value}';
+
+	/// zh: '{date} · {weekday}'
+	String dayHeader({required Object date, required Object weekday}) => '${date} · ${weekday}';
+
+	/// zh: '{count} / 7'
+	String recordedWeek({required Object count}) => '${count} / 7';
+
+	/// zh: '好心情连续'
+	String get streak => '好心情连续';
+
+	/// zh: '(other) {{count} 天}'
+	String streakDays({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
+		other: '${count} 天',
+	);
+
+	/// zh: '{date} · {level}'
+	String dayDetail({required Object date, required Object level}) => '${date} · ${level}';
+
+	/// zh: '{start} – {end}年'
+	String yearRange({required Object start, required Object end}) => '${start} – ${end}年';
+
+	/// zh: '{start} – {end}日'
+	String weekDays({required Object start, required Object end}) => '${start} – ${end}日';
 }
 
 // Path: lock
