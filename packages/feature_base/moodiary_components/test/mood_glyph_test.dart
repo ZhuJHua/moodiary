@@ -66,8 +66,9 @@ void main() {
       for (final palette in MoodPalette.values) {
         for (final brightness in Brightness.values) {
           for (final mood in DiaryMood.values) {
-            final fill = palette.color(mood, brightness);
-            final on = palette.onColor(mood, brightness);
+            final colors = buildMuiTheme(brightness: brightness).colorScheme;
+            final fill = palette.color(mood, colors);
+            final on = palette.onColor(mood, colors);
             expect(on, Color.lerp(fill, const Color(0xFF000000), 0.75));
           }
         }
@@ -149,10 +150,22 @@ void main() {
     MoodiaryKVs.moodPalette.set('blueOrange');
     await tester.pumpAndSettle();
     expect(fill, const Color(0xFF4467C4));
-    expect(on, MoodPalette.blueOrange.onColor(.awful, .light));
+    expect(
+      on,
+      MoodPalette.blueOrange.onColor(
+        .awful,
+        buildMuiTheme(brightness: .light).colorScheme,
+      ),
+    );
     brightness.value = .dark;
     await tester.pumpAndSettle();
     expect(fill, const Color(0xFF5F84DE));
-    expect(on, MoodPalette.blueOrange.onColor(.awful, .dark));
+    expect(
+      on,
+      MoodPalette.blueOrange.onColor(
+        .awful,
+        buildMuiTheme(brightness: .dark).colorScheme,
+      ),
+    );
   });
 }

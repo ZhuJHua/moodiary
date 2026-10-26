@@ -296,7 +296,10 @@ void main() {
   testWidgets('mood colors are pairwise distinct', (t) async {
     final colors = {
       for (final m in DiaryMood.values)
-        MoodPalette.classic.color(m, Brightness.light),
+        MoodPalette.classic.color(
+          m,
+          buildMuiTheme(brightness: Brightness.light).colorScheme,
+        ),
     };
     expect(colors.length, DiaryMood.values.length);
   });

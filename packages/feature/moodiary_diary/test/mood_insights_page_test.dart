@@ -404,7 +404,82 @@ void main() {
     );
   }
 
-  testWidgets('year pixels hide the footer until selection', (tester) async {
+  for (final year in [2000, 2023, 2024]) {
+    testWidgets(
+      'year heatmap covers every day of $year with rounded mood colors',
+      (tester) async {
+        final start = DateTime(year);
+        final end = DateTime(year, 12, 31);
+        final count = DateTime.utc(year + 1)
+            .difference(DateTime.utc(year))
+            .inDays;
+        final recorded = DateTime(year, 2, 28);
+        final colors = buildMuiTheme(
+          brightness: .dark,
+          accent: const MuiAccent.seeded(Color(0xFF6750A4)),
+        );
+        DateTime? selected;
+        await tester.pumpWidget(
+          muiTestApp(
+            MuiTheme(
+              data: colors,
+              child: MoodPaletteScope(
+                palette: .blueOrange,
+                child: MoodCalendar(
+                  scope: .year,
+                  start: start,
+                  days: moodDays([
+                    MoodInsightEntry(id: 'a', time: recorded, mood: .awful),
+                    MoodInsightEntry(id: 'b', time: recorded, mood: .great),
+                    MoodInsightEntry(id: 'unset', time: DateTime(year, 3)),
+                  ]),
+                  selected: recorded,
+                  onSelected: (day) => selected = day,
+                ),
+              ),
+            ),
+          ),
+        );
+        final map = find.byType(MHeatmap);
+        final heatmap = tester.widget<MHeatmap>(map);
+        expect(heatmap.startDate, start);
+        expect(heatmap.endDate, end);
+        expect(heatmap.weeks, (start.weekday % 7 + count - 1) ~/ 7 + 1);
+        expect(heatmap.selected, recorded);
+        expect(
+          heatmap.colorOf!(recorded),
+          MoodPalette.blueOrange.color(.okay, colors.colorScheme),
+        );
+        expect(heatmap.colorOf!(start), isNull);
+        expect(heatmap.colorOf!(DateTime(year, 3)), isNull);
+        final cells = find.descendant(
+          of: map,
+          matching: find.byType(Container),
+        );
+        expect(cells, findsNWidgets(count));
+        expect(
+          (tester.widget<Container>(cells.first).decoration! as BoxDecoration)
+              .color,
+          MHeatmap.levelColor(tester.element(map), 0),
+        );
+        final days = find.descendant(
+          of: map,
+          matching: find.byType(GestureDetector),
+        );
+        await tester.ensureVisible(days.first);
+        await tester.tap(days.first);
+        expect(selected, start);
+        await tester.ensureVisible(days.last);
+        await tester.tap(days.last);
+        expect(selected, end);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  testWidgets('year heatmap selection opens the day footer and diary sheet', (
+    tester,
+  ) async {
     final today = moodDayKey(DateTime.now());
     repository.rows = [MoodInsightEntry(id: 'today', time: today, mood: .good)];
     await tester.pumpWidget(
@@ -420,15 +495,31 @@ void main() {
       date: TimeFormat.monthDay(today),
       level: DiaryMood.good.labelOf(l10n),
     );
-    final day = find.descendant(
-      of: find.byType(MoodCalendar),
-      matching: find.byTooltip(description),
+    final heatmap = tester.widget<MHeatmap>(find.byType(MHeatmap));
+    expect(heatmap.endDate, today);
+    expect(heatmap.startDate, DateTime(today.year));
+    expect(
+      heatmap.colorOf!(today),
+      DiaryMood.good.colorOf(tester.element(find.byType(MHeatmap))),
     );
+    final day = find
+        .descendant(
+          of: find.byType(MHeatmap),
+          matching: find.byType(GestureDetector),
+        )
+        .last;
     await tester.ensureVisible(day);
     await tester.tap(day);
     await tester.pumpAndSettle();
     expect(find.text(description), findsOneWidget);
     expect(find.text(l10n.insights.view), findsOneWidget);
+    diaries.rows = [
+      Diary.empty(type: .richText).copyWith(title: 'Year heatmap diary'),
+    ];
+    await tester.ensureVisible(find.text(l10n.insights.view));
+    await tester.tap(find.text(l10n.insights.view));
+    await tester.pumpAndSettle();
+    expect(find.text('Year heatmap diary'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -988,16 +1079,19 @@ void main() {
   });
 
   for (final month in [1, 2]) {
-    testWidgets('year row $month drills down including an unlabelled row', (
-      tester,
-    ) async {
+    testWidgets('year heatmap month $month label drills down', (tester) async {
       await openPage(tester);
       await tester.tap(find.text(l10n.insights.year));
       await tester.pumpAndSettle();
       // Use a past year to exercise all months without future dates.
       await tester.fling(periodButton, const Offset(200, 0), 800);
       await tester.pumpAndSettle();
-      final label = find.byKey(ValueKey('insights-year-month-$month'));
+      final label = find.descendant(
+        of: find.byType(MHeatmap),
+        matching: find.text(
+          TimeFormat.monthAbbr(DateTime(DateTime.now().year - 1, month)),
+        ),
+      );
       await tester.ensureVisible(label);
       await tester.tap(label);
       await tester.pumpAndSettle();
@@ -1082,7 +1176,7 @@ void main() {
     testWidgets('$scope cells replace mood colors with uniform bones', (
       tester,
     ) async {
-      final start = DateTime(2026, 10);
+      final start = DateTime(2025, 10);
       final day = MoodInsightDay([
         MoodInsightEntry(id: 'a', time: start, mood: .great),
       ]);
@@ -1112,6 +1206,21 @@ void main() {
         ),
         findsNWidgets(scope == .month ? 31 : 365),
       );
+      if (scope == .year) {
+        final map = find.byType(MHeatmap);
+        expect(map, findsOneWidget);
+        expect(
+          find.descendant(of: map, matching: find.byType(Container)),
+          findsNothing,
+        );
+        final bones = find.descendant(
+          of: map,
+          matching: find.byWidgetPredicate((w) => w is Bone),
+        );
+        for (final bone in bones.evaluate()) {
+          expect(bone.size, const Size.square(11));
+        }
+      }
       expect(tester.takeException(), isNull);
     });
   }
@@ -1321,52 +1430,6 @@ void main() {
       }
       await tester.pumpAndSettle();
       expect(find.byType(DiaryEntryTile), findsNothing);
-      expect(tester.takeException(), isNull);
-    });
-  }
-
-  for (final (locale, labels) in [
-    (const Locale('zh'), ['1月', '4月', '7月', '10月']),
-    (const Locale('en'), ['Jan', 'Apr', 'Jul', 'Oct']),
-  ]) {
-    testWidgets('year month labels are centred and unclipped in $locale', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        muiTestApp(
-          Center(
-            child: SizedBox(
-              width: 320,
-              child: MoodCalendar(
-                scope: .year,
-                start: DateTime(2026),
-                days: const {},
-                selected: null,
-                onSelected: (_) {},
-              ),
-            ),
-          ),
-          locale: locale,
-        ),
-      );
-      await tester.pumpAndSettle();
-      final calendar = tester.getRect(find.byType(MoodCalendar));
-      final pixels = find.descendant(
-        of: find.byType(MoodCalendar),
-        matching: find.byType(MInkWell),
-      );
-      for (var i = 0; i < labels.length; i++) {
-        final label = tester.getRect(find.text(labels[i]));
-        final dayIndex = DateTime(
-          2026,
-          1 + i * 3,
-        ).difference(DateTime(2026)).inDays;
-        final pixel = tester.getRect(pixels.at(dayIndex));
-        expect(label.center.dy, closeTo(pixel.center.dy, .01));
-        expect(label.top, greaterThanOrEqualTo(calendar.top));
-        expect(label.bottom, lessThanOrEqualTo(calendar.bottom));
-        expect(label.right, lessThan(pixel.left));
-      }
       expect(tester.takeException(), isNull);
     });
   }

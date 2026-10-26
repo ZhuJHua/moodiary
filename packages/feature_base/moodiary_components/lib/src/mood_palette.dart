@@ -31,11 +31,12 @@ enum MoodPalette {
       context.dependOnInheritedWidgetOfExactType<MoodPaletteScope>()?.palette ??
       current;
 
-  Color color(DiaryMood mood, Brightness brightness) =>
-      Color((brightness == .dark ? _dark : _light)[mood.index]);
+  Color color(DiaryMood mood, ColorScheme colorScheme) => colorScheme.harmonize(
+    Color((colorScheme.brightness == .dark ? _dark : _light)[mood.index]),
+  );
 
-  Color onColor(DiaryMood mood, Brightness brightness) =>
-      Color.lerp(color(mood, brightness), const Color(0xFF000000), 0.75)!;
+  Color onColor(DiaryMood mood, ColorScheme colorScheme) =>
+      Color.lerp(color(mood, colorScheme), const Color(0xFF000000), 0.75)!;
 
   String label(BuildContext context) => switch (this) {
     classic => context.l10n.app.moodPaletteClassic,

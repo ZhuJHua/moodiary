@@ -43,6 +43,37 @@ class _Dashboard extends DashboardController {
   Future<DashboardStats> build() => Completer<DashboardStats>().future;
 }
 
+class _ReadyDashboard extends DashboardController {
+  static DateTime get today {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
+
+  @override
+  Future<DashboardStats> build() async => DashboardStats(
+    journalDays: 1,
+    diaryCount: 2,
+    wordCount: 300,
+    categoryCount: 0,
+    streakDays: 1,
+    thisMonthCount: 2,
+    tagCount: 0,
+    lastYearCount: 2,
+    byDay: {
+      today: const DayWriting(
+        count: 2,
+        words: 300,
+        level: 3,
+        ids: ['a', 'b'],
+        coverName: null,
+        coverIsVideo: false,
+        categoryId: null,
+        title: 'Today',
+      ),
+    },
+  );
+}
+
 class _Places extends PlaceController {
   @override
   Future<List<Place>> build() async => [];
@@ -87,6 +118,47 @@ void main() {
     );
   });
   tearDown(getIt.reset);
+
+  testWidgets(
+    'Me retains the rolling 53-week level heatmap and day selection',
+    (tester) async {
+      final repository = _PendingMoods();
+      repository.pending.complete([]);
+      getIt.registerSingleton<MoodInsightsRepository>(repository);
+      getIt.registerSingleton<DiaryRepository>(_Diaries());
+      final router = host(const MePage());
+      addTearDown(router.dispose);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            dashboardControllerProvider.overrideWith(_ReadyDashboard.new),
+            placeControllerProvider.overrideWith(_Places.new),
+          ],
+          child: app(router),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final map = find.byType(MHeatmap);
+      final heatmap = tester.widget<MHeatmap>(map);
+      expect(heatmap.weeks, 53);
+      expect(heatmap.endDate, _ReadyDashboard.today);
+      expect(heatmap.startDate, isNull);
+      expect(heatmap.colorOf, isNull);
+      expect(heatmap.onMonthSelected, isNull);
+      expect(heatmap.levels, {_ReadyDashboard.today: 3});
+      final cells = find.descendant(of: map, matching: find.byType(Container));
+      final decoration =
+          tester.widget<Container>(cells.last).decoration! as BoxDecoration;
+      expect(decoration.color, MHeatmap.levelColor(tester.element(map), 3));
+      await tester.tap(cells.last);
+      await tester.pumpAndSettle();
+      expect(tester.widget<MHeatmap>(map).selected, _ReadyDashboard.today);
+      await tester.tap(cells.last);
+      await tester.pumpAndSettle();
+      expect(tester.widget<MHeatmap>(map).selected, isNull);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   for (final hint in [true, false]) {
     for (final recorded in [true, false]) {

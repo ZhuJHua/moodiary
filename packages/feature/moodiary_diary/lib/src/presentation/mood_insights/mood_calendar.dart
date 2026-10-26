@@ -1,6 +1,3 @@
-import 'dart:math' as math;
-
-import 'package:intl/intl.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
@@ -66,129 +63,38 @@ class MoodCalendar extends StatelessWidget {
     );
   }
 
-  Widget _year(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) {
-      // Nominal 8px cells; shrink on narrow cards while preserving all 31 columns.
-      const labelWidth = 40.0;
-      final cell = math.min(8.0, (constraints.maxWidth - labelWidth - 30) / 31);
-      final width = cell * 31 + 30;
-      final height = cell * 12 + 11;
-      return Column(
-        children: [
-          Row(
-            children: [
-              const SizedBox(width: labelWidth),
-              SizedBox(
-                width: width,
-                height: 18,
-                child: Stack(
-                  children: [
-                    for (final day in [1, 10, 20, 31])
-                      Positioned(
-                        left: ((day - 1) * (cell + 1) - 4).clamp(0, width - 14),
-                        child: Text(
-                          '$day',
-                          style: context.theme.typography.labelSmall.outline,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          Padding(
-            // Labels are taller than a pixel row; leave room at both edges.
-            padding: const .symmetric(vertical: 6),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: labelWidth,
-                  height: height,
-                  child: Stack(
-                    clipBehavior: .none,
-                    children: [
-                      for (final month in [1, 4, 7, 10])
-                        Positioned(
-                          left: 0,
-                          right: 4,
-                          top: (month - 1) * (cell + 1) + cell / 2 - 9,
-                          height: 18,
-                          child: Align(
-                            alignment: .centerLeft,
-                            child: Text(
-                              DateFormat(
-                                'MMM',
-                                Localizations.localeOf(context).toLanguageTag(),
-                              ).format(DateTime(start.year, month)),
-                              maxLines: 1,
-                              style:
-                                  context.theme.typography.labelSmall.outline,
-                            ),
-                          ),
-                        ),
-                      if (onMonthSelected != null)
-                        for (var month = 1; month <= 12; month++)
-                          Positioned(
-                            left: 0,
-                            right: 0,
-                            top: (month - 1) * (cell + 1),
-                            height: cell + (month == 12 ? 0 : 1),
-                            child: Semantics(
-                              button: true,
-                              label: DateFormat.yMMMM(
-                                Localizations.localeOf(context).toLanguageTag(),
-                              ).format(DateTime(start.year, month)),
-                              child: GestureDetector(
-                                key: ValueKey('insights-year-month-$month'),
-                                behavior: .opaque,
-                                onTap: () => onMonthSelected!(
-                                  DateTime(start.year, month),
-                                ),
-                              ),
-                            ),
-                          ),
-                    ],
-                  ),
-                ),
-                Column(
-                  spacing: 1,
-                  children: [
-                    for (var month = 1; month <= 12; month++)
-                      Row(
-                        spacing: 1,
-                        children: [
-                          for (var day = 1; day <= 31; day++)
-                            SizedBox.square(
-                              dimension: cell,
-                              child:
-                                  day > DateTime(start.year, month + 1, 0).day
-                                  ? null
-                                  : _cell(
-                                      context,
-                                      DateTime(start.year, month, day),
-                                      pixel: true,
-                                    ),
-                            ),
-                        ],
-                      ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      );
-    },
-  );
+  Widget _year(BuildContext context) {
+    final firstDay = DateTime(start.year);
+    final today = moodDayKey(DateTime.now());
+    final end = start.year == today.year ? today : DateTime(start.year, 12, 31);
+    // Count calendar days in UTC so DST cannot change the number of columns.
+    final dayCount = DateTime.utc(
+      end.year,
+      end.month,
+      end.day,
+    ).difference(DateTime.utc(start.year)).inDays;
+    return MHeatmap(
+      key: ValueKey(start.year),
+      startDate: firstDay,
+      endDate: end,
+      weeks: (firstDay.weekday % 7 + dayCount) ~/ 7 + 1,
+      colorOf: (day) => days[day]?.level?.colorOf(context),
+      selected: selected,
+      onDaySelected: onSelected,
+      onMonthSelected: onMonthSelected,
+      monthLabel: TimeFormat.monthAbbr,
+      semanticsLabel: context.l10n.insights.yearPixels,
+    );
+  }
 
-  Widget _cell(BuildContext context, DateTime date, {bool pixel = false}) {
+  Widget _cell(BuildContext context, DateTime date) {
     final colors = context.theme.colors;
     final today = moodDayKey(DateTime.now());
     final future = date.isAfter(today);
     final info = days[date];
     final level = info?.level;
     final selectedDay = date == selected;
-    final radius = BorderRadius.circular(pixel ? 1 : 8);
+    final radius = BorderRadius.circular(8);
     final description = context.l10n.insights.dayDetail(
       date: TimeFormat.monthDay(date),
       level: level?.label(context) ?? context.l10n.insights.unrecorded,
@@ -210,54 +116,41 @@ class MoodCalendar extends StatelessWidget {
             onTap: future ? null : () => onSelected(date),
             child: Container(
               decoration: BoxDecoration(
-                color: future
-                    ? (pixel
-                          ? colors.surfaceContainerHigh.withValues(alpha: .6)
-                          : null)
-                    : level?.colorOf(context),
+                color: future ? null : level?.colorOf(context),
                 borderRadius: radius,
                 border: selectedDay
                     ? Border.all(color: colors.onSurface, width: 1.6)
                     : date == today
                     ? Border.all(color: colors.outline, width: 1.2)
-                    : pixel && level == null && !future
-                    ? Border.all(color: colors.outlineVariant)
                     : null,
               ),
-              child: pixel
-                  ? null
-                  : Center(
-                      child: Column(
-                        mainAxisSize: .min,
-                        children: [
-                          Text(
-                            '${date.day}',
-                            style: context
-                                .theme
-                                .typography
-                                .labelMedium
-                                .onSurface
-                                .copyWith(
-                                  color: future
-                                      ? colors.outlineVariant
-                                      : level?.onColorOf(context) ??
-                                            colors.outline,
-                                  fontFeatures: const [.tabularFigures()],
-                                ),
+              child: Center(
+                child: Column(
+                  mainAxisSize: .min,
+                  children: [
+                    Text(
+                      '${date.day}',
+                      style: context.theme.typography.labelMedium.onSurface
+                          .copyWith(
+                            color: future
+                                ? colors.outlineVariant
+                                : level?.onColorOf(context) ?? colors.outline,
+                            fontFeatures: const [.tabularFigures()],
                           ),
-                          if (info != null && level == null && !future)
-                            Container(
-                              width: 4,
-                              height: 4,
-                              margin: const .only(top: 2),
-                              decoration: BoxDecoration(
-                                color: colors.outline,
-                                shape: .circle,
-                              ),
-                            ),
-                        ],
-                      ),
                     ),
+                    if (info != null && level == null && !future)
+                      Container(
+                        width: 4,
+                        height: 4,
+                        margin: const .only(top: 2),
+                        decoration: BoxDecoration(
+                          color: colors.outline,
+                          shape: .circle,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),

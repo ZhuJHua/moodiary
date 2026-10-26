@@ -1,5 +1,6 @@
 import 'package:material_color_utilities/material_color_utilities.dart'
     show
+        Blend,
         DynamicColor,
         DynamicScheme,
         Hct,
@@ -17,6 +18,15 @@ class MuiAccent {
   final Color? seed;
 
   bool get isNeutral => seed == null;
+}
+
+/// Coordinates semantic fills with the accent while preserving neutral themes.
+extension MuiColorHarmonization on ColorScheme {
+  Color harmonize(Color fill) {
+    final accent = primary.toARGB32();
+    if (Hct.fromInt(accent).chroma < 6) return fill;
+    return Color(Blend.harmonize(fill.toARGB32(), accent));
+  }
 }
 
 ColorScheme resolveColorScheme(Brightness brightness, MuiAccent accent) {

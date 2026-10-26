@@ -6,16 +6,10 @@ import 'mood_palette.dart';
 
 extension DiaryMoodAppearance on DiaryMood {
   Color colorOf(BuildContext context, {MoodPalette? palette}) =>
-      (palette ?? MoodPalette.of(context)).color(
-        this,
-        context.theme.brightness,
-      );
+      (palette ?? MoodPalette.of(context)).color(this, context.theme.colors);
 
   Color onColorOf(BuildContext context, {MoodPalette? palette}) =>
-      (palette ?? MoodPalette.of(context)).onColor(
-        this,
-        context.theme.brightness,
-      );
+      (palette ?? MoodPalette.of(context)).onColor(this, context.theme.colors);
 
   String labelOf(Translations l10n) => switch (this) {
     .awful => l10n.common.moodAwful,
