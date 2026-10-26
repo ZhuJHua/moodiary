@@ -3691,8 +3691,8 @@ class Translations$sync$zh {
 	/// zh: '重置云端？'
 	String get keyResetTitle => '重置云端？';
 
-	/// zh: '云端文件将被清空，本机数据不受影响。'
-	String get keyResetMessage => '云端文件将被清空，本机数据不受影响。';
+	/// zh: '云端的全部文件将被永久删除，包括本机没有的日记和媒体，无法恢复；本机数据不受影响。如果还有其他设备能正常同步，请先在那台设备上同步一次。'
+	String get keyResetMessage => '云端的全部文件将被永久删除，包括本机没有的日记和媒体，无法恢复；本机数据不受影响。如果还有其他设备能正常同步，请先在那台设备上同步一次。';
 
 	/// zh: '清空并重置'
 	String get keyResetConfirm => '清空并重置';

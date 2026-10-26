@@ -226,7 +226,7 @@
   "keyMissingTitle": "无法解密云端",
   "keyResetAction": "重置云端",
   "keyResetTitle": "重置云端？",
-  "keyResetMessage": "云端文件将被清空，本机数据不受影响。",
+  "keyResetMessage": "云端的全部文件将被永久删除，包括本机没有的日记和媒体，无法恢复；本机数据不受影响。如果还有其他设备能正常同步，请先在那台设备上同步一次。",
   "keyResetConfirm": "清空并重置",
   "keyWiping": "正在清空云端",
   "keyWiped": "已清空 {count} 个文件",
