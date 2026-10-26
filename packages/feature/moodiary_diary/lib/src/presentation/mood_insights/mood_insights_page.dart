@@ -259,6 +259,7 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
                       if (_scope == .week)
                         _Block(
                           title: context.l10n.insights.weekDiaries,
+                          inkBleed: _WeekEntries.inkBleed,
                           child: _WeekEntries(days: data.summary.days),
                         ),
                       if (_scope != .week) ...[
@@ -507,8 +508,12 @@ class _InsightsData {
 
 class _Block extends StatelessWidget {
   final String? title;
+
+  // 子项的点按高亮向卡片内边距外扩出的宽度；子项自行把内容缩回同样的距离
+  final double inkBleed;
+
   final Widget child;
-  const _Block({this.title, required this.child});
+  const _Block({this.title, this.inkBleed = 0, required this.child});
   @override
   Widget build(BuildContext context) => Padding(
     padding: const .only(bottom: 12),
@@ -516,14 +521,18 @@ class _Block extends StatelessWidget {
       color: context.theme.colors.surfaceContainerLow,
       margin: .zero,
       child: Padding(
-        padding: const .all(14),
+        padding: .symmetric(horizontal: 14 - inkBleed, vertical: 14),
         child: Column(
           crossAxisAlignment: .stretch,
           children: [
             if (title != null) ...[
-              Text(
-                title!,
-                style: context.theme.typography.titleSmall.emphasized.onSurface,
+              Padding(
+                padding: .symmetric(horizontal: inkBleed),
+                child: Text(
+                  title!,
+                  style:
+                      context.theme.typography.titleSmall.emphasized.onSurface,
+                ),
               ),
               const SizedBox(height: 14),
             ],
@@ -630,6 +639,9 @@ class _Summary extends StatelessWidget {
 class _WeekEntries extends StatelessWidget {
   final Map<DateTime, MoodInsightDay> days;
   const _WeekEntries({required this.days});
+
+  static const inkBleed = 8.0;
+
   @override
   Widget build(BuildContext context) {
     final dates = days.keys.toList()..sort((a, b) => b.compareTo(a));
@@ -638,7 +650,7 @@ class _WeekEntries extends StatelessWidget {
       children: [
         for (final day in dates) ...[
           Padding(
-            padding: const .symmetric(vertical: 8),
+            padding: const .symmetric(horizontal: inkBleed, vertical: 8),
             child: Text(
               context.l10n.insights.dayHeader(
                 date: TimeFormat.monthDay(day),
@@ -658,9 +670,10 @@ class _WeekEntries extends StatelessWidget {
               in (days[day]!.entries.toList()
                 ..sort((a, b) => b.time.compareTo(a.time))))
             MInkWell(
+              borderRadius: .circular(context.theme.radii.sm),
               onTap: () => DiaryRoute(diaryId: entry.id).push(context),
               child: Padding(
-                padding: const .symmetric(vertical: 10),
+                padding: const .symmetric(horizontal: inkBleed, vertical: 10),
                 child: Row(
                   spacing: 8,
                   children: [
