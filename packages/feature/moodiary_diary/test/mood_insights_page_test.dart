@@ -8,6 +8,7 @@ import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/src/presentation/mood_insights/mood_calendar.dart';
 import 'package:moodiary_diary/src/presentation/mood_insights/mood_insights_page.dart';
 import 'package:moodiary_diary/src/presentation/mood_insights/mood_patterns.dart';
+import 'package:moodiary_diary/src/presentation/mood_insights/mood_period_picker.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_entry_tile.dart';
 import 'package:moodiary_diary/src/presentation/widget/today_glyph.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
@@ -329,7 +330,45 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('week picker disables future days and highlights selected week', (
+  for (final column in [0, 3, 6]) {
+    testWidgets('tapping weekday area $column selects the whole week', (
+      tester,
+    ) async {
+      await openPage(tester);
+      await tester.tap(find.text(l10n.insights.week));
+      await tester.pumpAndSettle();
+      await openPicker(tester);
+      final today = moodDayKey(DateTime.now());
+      final week = moodPeriodBounds(
+        DateTime(today.year, today.month),
+        .week,
+      ).start;
+      final day = moodDayOffset(week, column);
+      final row = find.byKey(
+        ValueKey('week-row-${week.year}-${week.month}-${week.day}'),
+      );
+      final ink = find.descendant(of: row, matching: find.byType(MInkWell));
+      expect(ink, findsOneWidget);
+      expect(tester.getSize(ink).width, tester.getSize(row).width);
+      expect(
+        tester.widget<MInkWell>(ink).borderRadius,
+        BorderRadius.circular(12),
+      );
+      final dayArea = find.byKey(
+        ValueKey('week-day-${day.year}-${day.month}-${day.day}'),
+      );
+      expect(
+        find.descendant(of: dayArea, matching: find.byType(MInkWell)),
+        findsNothing,
+      );
+      await tester.tap(dayArea);
+      await tester.pumpAndSettle();
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(repository.queries.last.end, moodDayOffset(week, 7));
+    });
+  }
+
+  testWidgets('today row stays enabled including its dimmed future day areas', (
     tester,
   ) async {
     await openPage(tester);
@@ -337,27 +376,156 @@ void main() {
     await tester.pumpAndSettle();
     await openPicker(tester);
     final today = moodDayKey(DateTime.now());
+    final week = moodPeriodBounds(today, .week).start;
+    final row = find.byKey(
+      ValueKey('week-row-${week.year}-${week.month}-${week.day}'),
+    );
+    final ink = tester.widget<MInkWell>(
+      find.descendant(of: row, matching: find.byType(MInkWell)),
+    );
+    expect(ink.enabled, isTrue);
+    expect(ink.onTap, isNotNull);
+    final highlight = tester.widget<DecoratedBox>(
+      find.descendant(of: row, matching: find.byType(DecoratedBox)),
+    );
+    expect(
+      (highlight.decoration as BoxDecoration).color,
+      Theme.of(tester.element(row)).colorScheme.primaryContainer,
+    );
     final tomorrow = moodDayOffset(today, 1);
-    // The last row also includes adjacent-month days.
-    final future = find.byKey(
-      ValueKey('week-day-${tomorrow.year}-${tomorrow.month}-${tomorrow.day}'),
+    final target = tomorrow.isBefore(moodDayOffset(week, 7)) ? tomorrow : today;
+    final dayArea = find.byKey(
+      ValueKey('week-day-${target.year}-${target.month}-${target.day}'),
     );
-    expect(tester.widget<MInkWell>(future).onTap, isNull);
-    await tester.tap(future);
+    expect(
+      tester
+          .widget<Opacity>(
+            find.descendant(of: dayArea, matching: find.byType(Opacity)),
+          )
+          .opacity,
+      target == today ? 1 : .38,
+    );
+    await tester.tap(dayArea);
     await tester.pumpAndSettle();
-    expect(find.byType(BottomSheet), findsOneWidget);
-    final selectedRows = find.descendant(
-      of: find.byType(BottomSheet),
-      matching: find.byWidgetPredicate(
-        (w) =>
-            w is DecoratedBox &&
-            w.decoration is BoxDecoration &&
-            (w.decoration as BoxDecoration).color ==
-                MuiTheme.of(tester.element(future)).colors.primaryContainer,
-      ),
-    );
-    expect(selectedRows, findsOneWidget);
+    expect(find.byType(BottomSheet), findsNothing);
+    expect(repository.queries.last.end, moodDayOffset(week, 7));
   });
+
+  testWidgets('entirely future week row is disabled and dimmed only once', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    try {
+      final today = moodDayKey(DateTime.now());
+      final month = DateTime(today.year, today.month + 1);
+      final week = moodPeriodBounds(moodDayOffset(month, 6), .week).start;
+      await tester.pumpWidget(
+        muiTestApp(
+          MoodPeriodPicker(scope: .week, anchor: month, repository: repository),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final row = find.byKey(
+        ValueKey('week-row-${week.year}-${week.month}-${week.day}'),
+      );
+      final ink = tester.widget<MInkWell>(
+        find.descendant(of: row, matching: find.byType(MInkWell)),
+      );
+      expect(ink.enabled, isFalse);
+      expect(ink.onTap, isNull);
+      expect(
+        tester
+            .widget<Opacity>(
+              find.descendant(of: row, matching: find.byType(Opacity)).first,
+            )
+            .opacity,
+        .38,
+      );
+      final dayOpacities = tester
+          .widgetList<Opacity>(
+            find.descendant(of: row, matching: find.byType(Opacity)),
+          )
+          .skip(1);
+      expect(dayOpacities.map((w) => w.opacity), everyElement(1.0));
+      final node = tester.getSemantics(row);
+      expect(
+        node,
+        matchesSemantics(
+          label: node.label,
+          isButton: true,
+          hasEnabledState: true,
+          hasSelectedState: true,
+          isSelected: week == moodPeriodBounds(month, .week).start,
+        ),
+      );
+      await tester.tap(row);
+      await tester.pumpAndSettle();
+      expect(row, findsOneWidget);
+      expect(tester.takeException(), isNull);
+    } finally {
+      semantics.dispose();
+    }
+  });
+
+  for (final (locale, range) in [
+    (const Locale('zh'), '10月11日 – 10月17日'),
+    (const Locale('en'), 'Oct 11 – Oct 17'),
+  ]) {
+    testWidgets('week rows expose one localized button each in $locale', (
+      tester,
+    ) async {
+      final semantics = tester.ensureSemantics();
+      try {
+        final anchor = DateTime(2026, 10, 11);
+        await tester.pumpWidget(
+          muiTestApp(
+            MoodPeriodPicker(
+              scope: .week,
+              anchor: anchor,
+              repository: repository,
+            ),
+            locale: locale,
+          ),
+        );
+        await tester.pumpAndSettle();
+        final start = moodPeriodBounds(DateTime(2026, 10), .week).start;
+        var rows = 0;
+        final ids = <int>{};
+        for (
+          var week = start;
+          week.isBefore(DateTime(2026, 11));
+          week = moodDayOffset(week, 7)
+        ) {
+          final row = find.byKey(
+            ValueKey('week-row-${week.year}-${week.month}-${week.day}'),
+          );
+          final node = tester.getSemantics(row);
+          final enabled = !week.isAfter(moodDayKey(DateTime.now()));
+          expect(
+            node,
+            matchesSemantics(
+              label: week == anchor ? range : node.label,
+              isButton: true,
+              hasSelectedState: true,
+              isSelected: week == anchor,
+              hasEnabledState: true,
+              isEnabled: enabled,
+              hasTapAction: enabled,
+            ),
+          );
+          expect(node.childrenCount, 0);
+          expect(find.bySemanticsLabel(node.label), findsOneWidget);
+          ids.add(node.id);
+          rows++;
+        }
+        expect(rows, 5);
+        expect(ids.length, rows);
+        expect(find.byType(MInkWell), findsNWidgets(rows));
+      } finally {
+        semantics.dispose();
+      }
+    });
+  }
 
   for (final scope in MoodInsightsScope.values) {
     testWidgets('back to today is conditional and returns to current $scope', (

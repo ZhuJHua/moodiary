@@ -249,12 +249,43 @@ class _MoodPeriodPickerState extends State<MoodPeriodPicker> {
           week.isBefore(end);
           week = moodDayOffset(week, 7)
         )
-          DecoratedBox(
+          _week(context, week, selected: week == selected),
+      ],
+    );
+  }
+
+  Widget _week(BuildContext context, DateTime week, {required bool selected}) {
+    final enabled = !week.isAfter(_today);
+    final colors = context.theme.colors;
+    final radius = BorderRadius.circular(12);
+    final last = moodDayOffset(week, 6);
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    final format = week.year == last.year
+        ? DateFormat.MMMd(locale)
+        : DateFormat.yMMMd(locale);
+    void select() => Navigator.of(context).pop(week);
+    return Semantics(
+      key: ValueKey('week-row-${week.year}-${week.month}-${week.day}'),
+      container: true,
+      excludeSemantics: true,
+      label: context.l10n.insights.weekTitle(
+        start: format.format(week),
+        end: format.format(last),
+      ),
+      button: true,
+      selected: selected,
+      enabled: enabled,
+      onTap: enabled ? select : null,
+      child: Opacity(
+        opacity: enabled ? 1 : .38,
+        child: MInkWell(
+          enabled: enabled,
+          borderRadius: radius,
+          onTap: enabled ? select : null,
+          child: DecoratedBox(
             decoration: BoxDecoration(
-              color: week == selected
-                  ? context.theme.colors.primaryContainer
-                  : null,
-              borderRadius: .circular(12),
+              color: selected ? colors.primaryContainer : null,
+              borderRadius: radius,
             ),
             child: Row(
               children: [
@@ -263,38 +294,42 @@ class _MoodPeriodPickerState extends State<MoodPeriodPicker> {
                     child: _day(
                       context,
                       moodDayOffset(week, i),
-                      selected: week == selected,
+                      selected: selected,
+                      rowEnabled: enabled,
                     ),
                   ),
               ],
             ),
           ),
-      ],
+        ),
+      ),
     );
   }
 
-  Widget _day(BuildContext context, DateTime day, {required bool selected}) {
+  Widget _day(
+    BuildContext context,
+    DateTime day, {
+    required bool selected,
+    required bool rowEnabled,
+  }) {
     final colors = context.theme.colors;
-    final enabled = !day.isAfter(_today);
-    return Semantics(
-      label: TimeFormat.longDate(day),
-      button: true,
-      enabled: enabled,
+    return SizedBox(
+      key: ValueKey('week-day-${day.year}-${day.month}-${day.day}'),
+      height: 44,
       child: Opacity(
-        opacity: enabled ? (day.month == _month.month ? 1 : .6) : .38,
-        child: MInkWell(
-          key: ValueKey('week-day-${day.year}-${day.month}-${day.day}'),
-          borderRadius: .circular(12),
-          onTap: enabled ? () => Navigator.of(context).pop(day) : null,
-          child: SizedBox(
-            height: 44,
-            child: Center(
-              child: Text(
-                '${day.day}',
-                style: context.theme.typography.labelLarge.withColor(
-                  selected ? colors.onPrimaryContainer : colors.onSurface,
-                ),
-              ),
+        // Entirely future rows are already dimmed as a unit.
+        opacity: !rowEnabled
+            ? 1
+            : day.isAfter(_today)
+            ? .38
+            : day.month == _month.month
+            ? 1
+            : .6,
+        child: Center(
+          child: Text(
+            '${day.day}',
+            style: context.theme.typography.labelLarge.withColor(
+              selected ? colors.onPrimaryContainer : colors.onSurface,
             ),
           ),
         ),
