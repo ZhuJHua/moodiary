@@ -226,7 +226,7 @@
   "keyMissingTitle": "Cannot decrypt cloud",
   "keyResetAction": "Reset cloud",
   "keyResetTitle": "Reset cloud?",
-  "keyResetMessage": "Clears the cloud; local data is kept.",
+  "keyResetMessage": "Permanently deletes everything in the cloud, including diaries and media that aren't on this device. Local data is kept. If another device still syncs, sync it first.",
   "keyResetConfirm": "Clear and reset",
   "keyWiping": "Clearing cloud",
   "keyWiped": "Cleared {count} files",

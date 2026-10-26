@@ -1347,7 +1347,7 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String get keyMissingTitle => 'Cannot decrypt cloud';
 	@override String get keyResetAction => 'Reset cloud';
 	@override String get keyResetTitle => 'Reset cloud?';
-	@override String get keyResetMessage => 'Clears the cloud; local data is kept.';
+	@override String get keyResetMessage => 'Permanently deletes everything in the cloud, including diaries and media that aren\'t on this device. Local data is kept. If another device still syncs, sync it first.';
 	@override String get keyResetConfirm => 'Clear and reset';
 	@override String get keyWiping => 'Clearing cloud';
 	@override String keyWiped({required Object count}) => 'Cleared ${count} files';
