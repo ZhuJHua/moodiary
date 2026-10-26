@@ -2002,9 +2002,6 @@ class Translations$diary$zh {
 	/// zh: '未知分类'
 	String get unknownCategory => '未知分类';
 
-	/// zh: '加载中…'
-	String get loading => '加载中…';
-
 	/// zh: '升级后需重建索引，旧日记正文才能被搜索到'
 	String get searchReindexHint => '升级后需重建索引，旧日记正文才能被搜索到';
 

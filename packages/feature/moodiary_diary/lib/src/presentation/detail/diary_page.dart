@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
+import 'package:moodiary_diary/src/application/diary_meta_references.dart';
 import 'package:moodiary_editor/moodiary_editor.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -547,6 +548,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(categoryControllerProvider, (_, _) {});
+    ref.listen(orderedPlacesProvider, (_, _) {});
     final editAsync = ref.watch(_provider);
     if (editAsync.hasValue && _hopTarget?.id == widget.diaryId) {
       _hopTarget = null;
@@ -813,6 +816,12 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     _ensureLinksLoaded(diary.id);
     _shownContent ??= diary.content;
     _shownTitle ??= diary.title;
+    final references = ref.watch(
+      diaryMetaReferencesProvider(
+        categoryId: diary.categoryId,
+        placeId: diary.placeId,
+      ),
+    );
     return EditorBody(
       key: const ValueKey('diary-editor'),
       type: .fromValue(diary.type),
@@ -824,7 +833,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       editorController: _editorController,
       onActiveHeadingChanged: (i) => _activeHeading.value = i,
       onOpenDiaryLink: _openLinkedDiary,
-      metaJson: _metaJson(diary),
+      metaJson: _metaJson(diary, references),
+      metaReady: references.ready,
       linksJson: _linksJson(),
       onPickDate: () => _onPickDate(diary),
       onPickTime: () => _onPickTime(diary),
@@ -856,17 +866,12 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     _onChangeMood(mood);
   }
 
-  String _metaJson(Diary diary) {
+  String _metaJson(Diary diary, DiaryMetaReferences references) {
     final weather = diary.weather;
-    final categoryAsync = ref.watch(
-      getCategoryProvider(id: diary.categoryId ?? ''),
-    );
     final categoryLabel = diary.categoryId == null
         ? null
-        : categoryAsync.maybeWhen(
-            data: (c) => c?.categoryName ?? context.l10n.diary.unknownCategory,
-            orElse: () => context.l10n.diary.loading,
-          );
+        : references.category?.categoryName ??
+              context.l10n.diary.unknownCategory;
     final qweatherHost = MoodiaryKVs.qweatherApiHost.get();
     final qweatherKey = ref
         .watch(secretKvProvider(MoodiarySecureKVs.qweatherKey))
@@ -874,8 +879,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     final qweatherReady =
         (qweatherHost?.isNotEmpty ?? false) &&
         (qweatherKey?.isNotEmpty ?? false);
-    final places = ref.watch(orderedPlacesProvider).value ?? const <Place>[];
-    final place = places.where((p) => p.id == diary.placeId).firstOrNull;
+    final places = references.places;
+    final place = references.place;
     final fix = _fix;
     final placeRows = [
       for (final p in places)

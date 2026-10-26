@@ -40,6 +40,7 @@ class MoodiaryEditorView extends StatefulWidget {
   final ValueChanged<String>? onOpenDiaryLink;
 
   final String? metaJson;
+  final bool metaReady;
   final String? linksJson;
   final VoidCallback? onPickDate;
   final VoidCallback? onPickTime;
@@ -73,6 +74,7 @@ class MoodiaryEditorView extends StatefulWidget {
     this.fontScale = 1.0,
     this.onOpenDiaryLink,
     this.metaJson,
+    this.metaReady = true,
     this.linksJson,
     this.onPickDate,
     this.onPickTime,
@@ -333,6 +335,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       onRequestLinkCandidates: _linkCandidates,
       onOpenDiaryLink: widget.onOpenDiaryLink,
       metaJson: widget.metaJson,
+      metaReady: widget.metaReady,
       linksJson: widget.linksJson,
       onPickDate: widget.onPickDate,
       onPickTime: widget.onPickTime,

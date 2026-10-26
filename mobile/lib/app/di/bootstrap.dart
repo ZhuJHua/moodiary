@@ -4,7 +4,7 @@ import 'package:fast_image/fast_image.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_editor/moodiary_editor.dart'
-    show EditorMigrationService;
+    show EditorMigrationService, resolveEditorPage;
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_migration/moodiary_migration.dart'
@@ -26,6 +26,7 @@ Future<void> bootstrapPlatform() async {
 }
 
 void runStartupMaintenance() {
+  unawaited(resolveEditorPage());
   unawaited(purgeExpiredTombstones());
   unawaited(purgeSyncMediaTemp());
   unawaited(getIt<EmbedIndexService>().drain());

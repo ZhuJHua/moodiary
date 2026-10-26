@@ -724,7 +724,6 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get unsaved => 'Unsaved';
 	@override String get saveFailed => 'Could not save';
 	@override String get unknownCategory => 'Unknown category';
-	@override String get loading => 'Loading…';
 	@override String get searchReindexHint => 'Rebuild the index after upgrading so older entries become searchable';
 	@override String get searchReindex => 'Rebuild';
 	@override String get autoSaved => 'Autosaved';

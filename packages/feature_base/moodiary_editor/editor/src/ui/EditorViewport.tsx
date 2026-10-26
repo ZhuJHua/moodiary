@@ -30,7 +30,7 @@ export default function EditorViewport({ editor }: { editor: Editor }) {
 
   return (
     <div ref={viewport} className="md-viewport" onScroll={onScroll}>
-      <div className="md-page">
+      <div className="md-page" style={{ visibility: meta === undefined ? 'hidden' : 'visible' }}>
         {meta && <EditorMetaHeader meta={meta} editable={editable} wordCount={wordCount} />}
         <TitleField editor={editor} editable={editable} />
         <EditorContent editor={editor} className="md-editor" />
