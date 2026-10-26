@@ -128,7 +128,10 @@ void main() {
       final last =
           tester.widget<Container>(cells.last).decoration! as BoxDecoration;
       expect(first.color, const Color(0xFF123456));
-      expect(last.color, MHeatmap.levelColor(tester.element(cells.last), 0));
+      final context = tester.element(cells.last);
+      expect(last.color, MHeatmap.emptyColor(context));
+      expect(MHeatmap.emptyColor(context), MHeatmap.levelColor(context, 0));
+      expect(last.borderRadius, MHeatmap.cellBorderRadius);
       expect(
         first.border,
         Border.all(
@@ -141,6 +144,185 @@ void main() {
       expect(selected, end);
     },
   );
+
+  for (final brightness in Brightness.values) {
+    testWidgets(
+      '$brightness dashed swatch paints short 1px strokes without any fill',
+      (tester) async {
+        final theme = buildMuiTheme(brightness: brightness);
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: theme,
+            home: const Center(child: MHeatmapDashedSwatch()),
+          ),
+        );
+        final swatch = find.byType(MHeatmapDashedSwatch);
+        expect(tester.getSize(swatch), const Size.square(11));
+        final customPaint = tester.widget<CustomPaint>(
+          find.descendant(of: swatch, matching: find.byType(CustomPaint)),
+        );
+        void paint(Canvas canvas) =>
+            customPaint.painter!.paint(canvas, const Size.square(11));
+        var strokes = 0;
+        expect(
+          paint,
+          paints..everything((method, arguments) {
+            if (method != #drawPath) return false;
+            final path = arguments[0] as Path;
+            final stroke = arguments[1] as Paint;
+            expect(
+              stroke.color.toARGB32(),
+              theme.colorScheme.outlineVariant.toARGB32(),
+            );
+            expect(stroke.style, PaintingStyle.stroke);
+            expect(stroke.strokeWidth, 1);
+            expect(path.computeMetrics().single.length, inExclusiveRange(1, 2));
+            // Extracted paths use float32 coordinates.
+            const tolerance = 1e-5;
+            final bounds = path.getBounds();
+            expect(bounds.left, greaterThanOrEqualTo(.5 - tolerance));
+            expect(bounds.top, greaterThanOrEqualTo(.5 - tolerance));
+            expect(bounds.right, lessThanOrEqualTo(10.5 + tolerance));
+            expect(bounds.bottom, lessThanOrEqualTo(10.5 + tolerance));
+            strokes++;
+            return true;
+          }),
+        );
+        expect(strokes, greaterThanOrEqualTo(10));
+      },
+    );
+  }
+
+  testWidgets(
+    'colorOf dashed empties stay unfilled and keep selection and end-date rings',
+    (tester) async {
+      final end = DateTime(2020, 8, 17);
+      final selected = DateTime(2020, 8, 16);
+      DateTime? tapped;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: buildMuiTheme(brightness: .light),
+          home: Scaffold(
+            body: MHeatmap(
+              startDate: selected,
+              endDate: end,
+              weeks: 1,
+              levels: {selected: 4, end: 4},
+              colorOf: (_) => null,
+              emptyCell: .dashed,
+              selected: selected,
+              onDaySelected: (day) => tapped = day,
+              monthLabel: (month) => '${month.month}',
+              semanticsLabel: 'dashed',
+            ),
+          ),
+        ),
+      );
+      final map = find.byType(MHeatmap);
+      final cells = find.descendant(of: map, matching: find.byType(Container));
+      final swatches = find.descendant(
+        of: map,
+        matching: find.byType(MHeatmapDashedSwatch),
+      );
+      expect(cells, findsNWidgets(2));
+      expect(swatches, findsNWidgets(2));
+      final colors = MuiTheme.of(tester.element(map)).colors;
+      final decorations = tester
+          .widgetList<Container>(cells)
+          .map((cell) => cell.decoration! as BoxDecoration)
+          .toList();
+      expect(decorations.map((decoration) => decoration.color), [null, null]);
+      expect(
+        decorations.first.border,
+        Border.all(color: colors.onSurface, width: 1.6),
+      );
+      expect(
+        decorations.last.border,
+        Border.all(color: colors.outline, width: 1.2),
+      );
+      for (var i = 0; i < 2; i++) {
+        expect(tester.getSize(cells.at(i)), const Size.square(11));
+        expect(tester.getSize(swatches.at(i)), const Size.square(11));
+        expect(decorations[i].borderRadius, MHeatmap.cellBorderRadius);
+      }
+      await tester.tap(swatches.first);
+      expect(tapped, selected);
+      await tester.tap(swatches.last);
+      expect(tapped, end);
+    },
+  );
+
+  testWidgets('dashed mode only affects null colorOf days through today', (
+    tester,
+  ) async {
+    final now = DateTime.now();
+    final tomorrow = DateTime(now.year, now.month, now.day + 1);
+    final yesterday = DateTime(now.year, now.month, now.day - 1);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildMuiTheme(brightness: .light),
+        home: Scaffold(
+          body: MHeatmap(
+            startDate: yesterday,
+            endDate: tomorrow,
+            weeks: 2,
+            colorOf: (day) => day == yesterday ? const Color(0xFF123456) : null,
+            emptyCell: .dashed,
+            monthLabel: (month) => '${month.month}',
+            semanticsLabel: 'future',
+          ),
+        ),
+      ),
+    );
+    final cells = find.descendant(
+      of: find.byType(MHeatmap),
+      matching: find.byType(Container),
+    );
+    expect(cells, findsNWidgets(3));
+    final decorations = tester
+        .widgetList<Container>(cells)
+        .map((cell) => cell.decoration! as BoxDecoration)
+        .toList();
+    expect(decorations[0].color, const Color(0xFF123456));
+    expect(decorations[1].color, isNull);
+    expect(
+      decorations[2].color,
+      MHeatmap.emptyColor(tester.element(cells.last)),
+    );
+    expect(find.byType(MHeatmapDashedSwatch), findsOneWidget);
+  });
+
+  testWidgets('levels mode ignores dashed empty style', (tester) async {
+    final end = DateTime(2020, 8, 17);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildMuiTheme(brightness: .light),
+        home: Scaffold(
+          body: MHeatmap(
+            endDate: end,
+            weeks: 1,
+            levels: {end: 3},
+            emptyCell: .dashed,
+            monthLabel: (month) => '${month.month}',
+            semanticsLabel: 'levels',
+          ),
+        ),
+      ),
+    );
+    expect(find.byType(MHeatmapDashedSwatch), findsNothing);
+    final cells = find.descendant(
+      of: find.byType(MHeatmap),
+      matching: find.byType(Container),
+    );
+    final colors = tester
+        .widgetList<Container>(cells)
+        .map((cell) => (cell.decoration! as BoxDecoration).color)
+        .toList();
+    expect(colors, [
+      MHeatmap.levelColor(tester.element(cells.first), 0),
+      MHeatmap.levelColor(tester.element(cells.last), 3),
+    ]);
+  });
 
   testWidgets('month labels optionally select the first day of that month', (
     tester,
@@ -238,6 +420,8 @@ void main() {
         ),
       );
       final map = find.byType(MHeatmap);
+      expect(tester.widget<MHeatmap>(map).emptyCell, MHeatmapEmptyCell.filled);
+      expect(find.byType(MHeatmapDashedSwatch), findsNothing);
       final cells = find.descendant(of: map, matching: find.byType(Container));
       expect(cells, findsNWidgets(53 * 7 - 5));
       final context = tester.element(map);

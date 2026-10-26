@@ -94,6 +94,90 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  for (final brightness in Brightness.values) {
+    for (final accent in [
+      const MuiAccent.neutral(),
+      const MuiAccent.seeded(Color(0xFF6750A4)),
+    ]) {
+      testWidgets(
+        '$brightness ${accent.seed} legend uses a dashed empty swatch only in year view',
+        (tester) async {
+          final theme = buildMuiTheme(brightness: brightness, accent: accent);
+          for (final scope in [
+            MoodInsightsScope.month,
+            MoodInsightsScope.year,
+          ]) {
+            await tester.pumpWidget(
+              muiTestApp(
+                MuiTheme(
+                  data: theme,
+                  child: MoodInsightsLegend(scope: scope),
+                ),
+              ),
+            );
+            final legend = find.byType(MoodInsightsLegend);
+            final glyphs = tester.widgetList<MoodGlyph>(
+              find.descendant(of: legend, matching: find.byType(MoodGlyph)),
+            );
+            expect(glyphs.map((glyph) => glyph.mood), [
+              ...DiaryMood.values,
+              if (scope == .month) null,
+            ]);
+            expect(find.text(l10n.insights.unrecorded), findsOneWidget);
+            final swatch = find.descendant(
+              of: legend,
+              matching: find.byType(MHeatmapDashedSwatch),
+            );
+            if (scope == .year) {
+              expect(swatch, findsOneWidget);
+              expect(tester.getSize(swatch), const Size.square(11));
+              expect(
+                swatch,
+                paints..path(
+                  color: theme.colorScheme.outlineVariant,
+                  strokeWidth: 1,
+                  style: PaintingStyle.stroke,
+                ),
+              );
+              expect(
+                find.descendant(of: legend, matching: find.byType(Container)),
+                findsNothing,
+              );
+            } else {
+              expect(swatch, findsNothing);
+            }
+          }
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
+  }
+
+  testWidgets(
+    'year legend empty swatch becomes a rounded square bone while loading',
+    (tester) async {
+      await tester.pumpWidget(
+        muiTestApp(
+          const MSkeleton(
+            enabled: true,
+            child: MoodInsightsLegend(scope: .year),
+          ),
+        ),
+      );
+      final legend = find.byType(MoodInsightsLegend);
+      expect(
+        find.descendant(of: legend, matching: find.byType(Container)),
+        findsNothing,
+      );
+      final bones = find.descendant(
+        of: legend,
+        matching: find.byWidgetPredicate((widget) => widget is Bone),
+      );
+      expect(bones, findsNWidgets(6));
+      expect(tester.getSize(bones.last), const Size.square(11));
+    },
+  );
+
   final periodButton = find.byKey(const ValueKey('insights-period-picker'));
   Finder cell(DateTime date) =>
       find.byKey(ValueKey('period-${date.year}-${date.month}'));
@@ -446,6 +530,7 @@ void main() {
         expect(heatmap.endDate, end);
         expect(heatmap.weeks, (start.weekday % 7 + count - 1) ~/ 7 + 1);
         expect(heatmap.selected, recorded);
+        expect(heatmap.emptyCell, MHeatmapEmptyCell.dashed);
         expect(
           heatmap.colorOf!(recorded),
           MoodPalette.blueOrange.color(.okay, colors.colorScheme),
@@ -460,7 +545,11 @@ void main() {
         expect(
           (tester.widget<Container>(cells.first).decoration! as BoxDecoration)
               .color,
-          MHeatmap.levelColor(tester.element(map), 0),
+          isNull,
+        );
+        expect(
+          find.descendant(of: map, matching: find.byType(MHeatmapDashedSwatch)),
+          findsNWidgets(count - 1),
         );
         final days = find.descendant(
           of: map,
@@ -1318,6 +1407,12 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text(l10n.insights.calendar), findsOneWidget);
+      expect(
+        tester
+            .widget<MoodInsightsLegend>(find.byType(MoodInsightsLegend))
+            .scope,
+        MoodInsightsScope.month,
+      );
       expect(find.text(l10n.insights.streakDays(count: 1)), findsOneWidget);
       expect(find.text(l10n.insights.streak), findsOneWidget);
       expect(find.text(l10n.insights.empty), findsNothing);
@@ -1354,6 +1449,12 @@ void main() {
         scrollable: find.byType(Scrollable).first,
       );
       expect(find.text(l10n.insights.yearPixels), findsOneWidget);
+      expect(
+        tester
+            .widget<MoodInsightsLegend>(find.byType(MoodInsightsLegend))
+            .scope,
+        MoodInsightsScope.year,
+      );
       expect(tester.takeException(), isNull);
     },
   );

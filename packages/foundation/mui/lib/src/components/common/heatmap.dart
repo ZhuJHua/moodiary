@@ -4,12 +4,13 @@ const double _kCellSize = 11;
 
 const double _kSlotSize = 14;
 
-const double _kRadius = 2.5;
 const double _kMonthLabelHeight = 15;
 
 const double _kMaxTextScale = 1.15;
 
 const List<double> _kLevelStops = [0, 0.30, 0.53, 0.77, 1];
+
+enum MHeatmapEmptyCell { filled, dashed }
 
 class MHeatmap extends StatefulWidget {
   final DateTime endDate;
@@ -21,8 +22,11 @@ class MHeatmap extends StatefulWidget {
 
   final Map<DateTime, int> levels;
 
-  /// Overrides levels; null uses the normal empty cell color.
+  /// Overrides levels; null uses [emptyCell].
   final Color? Function(DateTime day)? colorOf;
+
+  /// Style of past or present null days in [colorOf] mode; levels are unchanged.
+  final MHeatmapEmptyCell emptyCell;
 
   final ValueChanged<DateTime>? onMonthSelected;
 
@@ -43,10 +47,15 @@ class MHeatmap extends StatefulWidget {
     this.weeks = 53,
     this.startDate,
     this.colorOf,
+    this.emptyCell = .filled,
     this.onMonthSelected,
     this.selected,
     this.onDaySelected,
   });
+
+  static const cellBorderRadius = BorderRadius.all(Radius.circular(2.5));
+
+  static Color emptyColor(BuildContext context) => levelColor(context, 0);
 
   static Color levelColor(BuildContext context, int level) {
     final colors = context.theme.colors;
@@ -114,6 +123,7 @@ class _MHeatmapState extends State<MHeatmap> {
                             levels: widget.levels,
                             startDate: widget.startDate,
                             colorOf: widget.colorOf,
+                            emptyCell: widget.emptyCell,
                             selected: widget.selected,
                             onDaySelected: widget.onDaySelected,
                           ),
@@ -201,6 +211,7 @@ class _MonthLabels extends StatelessWidget {
 }
 
 class _Column extends StatelessWidget {
+  final MHeatmapEmptyCell emptyCell;
   final DateTime? startDate;
   final Color? Function(DateTime day)? colorOf;
   final DateTime weekStart;
@@ -213,6 +224,7 @@ class _Column extends StatelessWidget {
     required this.weekStart,
     required this.startDate,
     required this.colorOf,
+    required this.emptyCell,
     required this.endDate,
     required this.levels,
     required this.selected,
@@ -221,6 +233,8 @@ class _Column extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
     return Column(
       mainAxisSize: .min,
       children: [
@@ -235,11 +249,17 @@ class _Column extends StatelessWidget {
                 (startDate != null && day.isBefore(startDate!))) {
               return const SizedBox.square(dimension: _kSlotSize);
             }
+            final color = colorOf?.call(day);
             return _Cell(
               day: day,
               color: colorOf == null
                   ? MHeatmap.levelColor(context, levels[day] ?? 0)
-                  : colorOf!(day) ?? MHeatmap.levelColor(context, 0),
+                  : color ?? MHeatmap.emptyColor(context),
+              dashed:
+                  colorOf != null &&
+                  color == null &&
+                  emptyCell == .dashed &&
+                  !day.isAfter(today),
               isToday: day == endDate,
               isSelected: day == selected,
               onTap: onDaySelected,
@@ -253,6 +273,7 @@ class _Column extends StatelessWidget {
 class _Cell extends StatelessWidget {
   final DateTime day;
   final Color color;
+  final bool dashed;
   final bool isToday;
   final bool isSelected;
   final ValueChanged<DateTime>? onTap;
@@ -260,6 +281,7 @@ class _Cell extends StatelessWidget {
   const _Cell({
     required this.day,
     required this.color,
+    required this.dashed,
     required this.isToday,
     required this.isSelected,
     required this.onTap,
@@ -274,6 +296,15 @@ class _Cell extends StatelessWidget {
         ? Border.all(color: colors.outline, width: 1.2)
         : null;
 
+    final cell = Container(
+      width: _kCellSize,
+      height: _kCellSize,
+      decoration: BoxDecoration(
+        color: dashed ? null : color,
+        borderRadius: MHeatmap.cellBorderRadius,
+        border: border,
+      ),
+    );
     final box = Center(
       child: Skeleton.replace(
         width: _kCellSize,
@@ -281,17 +312,17 @@ class _Cell extends StatelessWidget {
         replacement: const Bone(
           width: _kCellSize,
           height: _kCellSize,
-          borderRadius: .all(.circular(_kRadius)),
+          borderRadius: MHeatmap.cellBorderRadius,
         ),
-        child: Container(
-          width: _kCellSize,
-          height: _kCellSize,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: const .all(.circular(_kRadius)),
-            border: border,
-          ),
-        ),
+        child: dashed
+            ? Stack(
+                children: [
+                  const Positioned.fill(child: MHeatmapDashedSwatch()),
+                  // Rings paint over the dashes without changing the cell size.
+                  cell,
+                ],
+              )
+            : cell,
       ),
     );
 
@@ -305,6 +336,56 @@ class _Cell extends StatelessWidget {
       child: SizedBox.square(dimension: _kSlotSize, child: box),
     );
   }
+}
+
+/// The same unfilled 11px dashed square used by heatmap cells and legends.
+class MHeatmapDashedSwatch extends StatelessWidget {
+  const MHeatmapDashedSwatch({super.key});
+
+  @override
+  Widget build(BuildContext context) => Skeleton.replace(
+    width: _kCellSize,
+    height: _kCellSize,
+    replacement: const Bone(
+      width: _kCellSize,
+      height: _kCellSize,
+      borderRadius: MHeatmap.cellBorderRadius,
+    ),
+    child: CustomPaint(
+      size: const Size.square(_kCellSize),
+      painter: _DashedCellPainter(context.theme.colors.outlineVariant),
+    ),
+  );
+}
+
+class _DashedCellPainter extends CustomPainter {
+  const _DashedCellPainter(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.isEmpty) return;
+    final path = Path()
+      ..addRRect(
+        MHeatmap.cellBorderRadius.toRRect(Offset.zero & size).deflate(.5),
+      );
+    final outline = path.computeMetrics().single;
+    // About 1.5px of stroke and 1.5px of space, evenly around the corners.
+    final count = (outline.length / 3).round();
+    final step = outline.length / count;
+    final paint = Paint()
+      ..color = color
+      ..style = .stroke
+      ..strokeWidth = 1;
+    for (var i = 0; i < count; i++) {
+      canvas.drawPath(outline.extractPath(i * step, (i + .5) * step), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedCellPainter oldDelegate) =>
+      color != oldDelegate.color;
 }
 
 class MHeatmapLegend extends StatelessWidget {

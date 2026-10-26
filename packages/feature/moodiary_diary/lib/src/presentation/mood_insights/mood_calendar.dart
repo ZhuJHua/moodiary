@@ -79,6 +79,7 @@ class MoodCalendar extends StatelessWidget {
       endDate: end,
       weeks: (firstDay.weekday % 7 + dayCount) ~/ 7 + 1,
       colorOf: (day) => days[day]?.level?.colorOf(context),
+      emptyCell: .dashed,
       selected: selected,
       onDaySelected: onSelected,
       onMonthSelected: onMonthSelected,
@@ -160,7 +161,10 @@ class MoodCalendar extends StatelessWidget {
 }
 
 class MoodInsightsLegend extends StatelessWidget {
-  const MoodInsightsLegend({super.key});
+  const MoodInsightsLegend({super.key, required this.scope});
+
+  final MoodInsightsScope scope;
+
   @override
   Widget build(BuildContext context) => Wrap(
     alignment: .center,
@@ -172,7 +176,13 @@ class MoodInsightsLegend extends StatelessWidget {
           mainAxisSize: .min,
           spacing: 3,
           children: [
-            MoodGlyph(mood: mood, size: 14),
+            if (mood == null && scope == .year)
+              const SizedBox.square(
+                dimension: 14,
+                child: Center(child: MHeatmapDashedSwatch()),
+              )
+            else
+              MoodGlyph(mood: mood, size: 14),
             Text(
               mood?.label(context) ?? context.l10n.insights.unrecorded,
               style: context.theme.typography.labelSmall.onSurfaceVariant,

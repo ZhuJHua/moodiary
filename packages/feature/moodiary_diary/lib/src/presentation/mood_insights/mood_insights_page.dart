@@ -248,7 +248,7 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
                               ),
                               if (_selected != null) _dayFooter(data),
                               const SizedBox(height: 8),
-                              const MoodInsightsLegend(),
+                              MoodInsightsLegend(scope: _scope),
                             ],
                           ),
                         ),
