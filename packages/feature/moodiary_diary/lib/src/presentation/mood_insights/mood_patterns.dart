@@ -202,11 +202,6 @@ class MoodTags extends StatelessWidget {
     crossAxisAlignment: .stretch,
     spacing: 12,
     children: [
-      if (deltas.isEmpty)
-        Text(
-          context.l10n.insights.tagsEmpty,
-          style: context.theme.typography.bodySmall.onSurfaceVariant,
-        ),
       for (final delta in deltas)
         Row(
           spacing: 8,
@@ -283,10 +278,6 @@ class MoodTags extends StatelessWidget {
             ),
           ],
         ),
-      Text(
-        context.l10n.insights.tagsCaption,
-        style: context.theme.typography.labelSmall.onSurfaceVariant,
-      ),
     ],
   );
 }

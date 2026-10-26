@@ -193,9 +193,11 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('4.0'), findsOneWidget);
       expect(
-        find.text(
-          l10n.insights.monthAverage(level: DiaryMood.good.labelOf(l10n)),
-        ),
+        find.text(l10n.insights.monthMood(level: DiaryMood.good.labelOf(l10n))),
+        findsOneWidget,
+      );
+      expect(
+        find.text('本月心情 · ${DiaryMood.good.labelOf(l10n)}'),
         findsOneWidget,
       );
       expect(find.byType(MoodGlyph), findsNWidgets(7));

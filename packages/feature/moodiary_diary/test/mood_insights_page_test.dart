@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:intl/intl.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/src/presentation/mood_insights/mood_calendar.dart';
 import 'package:moodiary_diary/src/presentation/mood_insights/mood_insights_page.dart';
 import 'package:moodiary_diary/src/presentation/mood_insights/mood_patterns.dart';
+import 'package:moodiary_diary/src/presentation/mood_insights/mood_period_header.dart';
 import 'package:moodiary_diary/src/presentation/mood_insights/mood_period_picker.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_entry_tile.dart';
 import 'package:moodiary_diary/src/presentation/widget/today_glyph.dart';
@@ -55,7 +55,12 @@ class _Diaries implements DiaryRepository {
 }
 
 void main() {
-  setUpAll(setupPluralResolvers);
+  setUpAll(() async {
+    setupPluralResolvers();
+    // Load deferred translations outside the widget tests' fake async clock.
+    await LocaleSettings.setLocale(AppLocale.en);
+    await LocaleSettings.setLocale(AppLocale.zh);
+  });
   late _Repository repository;
   late _Diaries diaries;
   setUp(() {
@@ -97,6 +102,335 @@ void main() {
     await tester.tap(periodButton);
     await tester.pumpAndSettle();
   }
+
+  for (final locale in AppLocale.values) {
+    for (final (scope, start, end, zhEyebrow, zhLabel, enEyebrow, enLabel) in [
+      (
+        MoodInsightsScope.month,
+        DateTime(2026, 10),
+        DateTime(2026, 11),
+        '2026年',
+        '10月',
+        '2026',
+        'Oct',
+      ),
+      (
+        MoodInsightsScope.year,
+        DateTime(2026),
+        DateTime(2027),
+        '',
+        '2026年',
+        '',
+        '2026',
+      ),
+      (
+        MoodInsightsScope.week,
+        DateTime(2026, 10, 18),
+        DateTime(2026, 10, 25),
+        '2026年10月',
+        '18 – 24日',
+        'Oct 2026',
+        '18 – 24',
+      ),
+      (
+        MoodInsightsScope.week,
+        DateTime(2026, 9, 28),
+        DateTime(2026, 10, 5),
+        '2026年',
+        '9月28日 – 10月4日',
+        '2026',
+        'Sep 28 – Oct 4',
+      ),
+      (
+        MoodInsightsScope.week,
+        DateTime(2025, 12, 28),
+        DateTime(2026, 1, 4),
+        '2025 – 2026年',
+        '12月28日 – 1月3日',
+        '2025 – 2026',
+        'Dec 28 – Jan 3',
+      ),
+    ]) {
+      testWidgets('$locale $scope $start header labels and picker target', (
+        tester,
+      ) async {
+        await LocaleSettings.setLocale(locale);
+        addTearDown(() => LocaleSettings.setLocale(AppLocale.zh));
+        var picked = false;
+        MoodInsightsScope? changed;
+        await tester.pumpWidget(
+          muiTestApp(
+            MoodPeriodHeader(
+              scope: scope,
+              start: start,
+              end: end,
+              onPickPeriod: () => picked = true,
+              onChanged: (scope) => changed = scope,
+            ),
+            locale: locale.flutterLocale,
+          ),
+        );
+        await tester.pumpAndSettle();
+        final eyebrow = tester.widget<Text>(
+          find.byKey(const ValueKey('insights-period-eyebrow')),
+        );
+        final label = tester.widget<Text>(
+          find.byKey(const ValueKey('insights-period-label')),
+        );
+        expect(eyebrow.data, locale == AppLocale.zh ? zhEyebrow : enEyebrow);
+        expect(label.data, locale == AppLocale.zh ? zhLabel : enLabel);
+        expect(
+          tester
+              .getSize(find.byKey(const ValueKey('insights-period-eyebrow')))
+              .height,
+          greaterThan(0),
+        );
+        expect(label.style?.fontSize, 24);
+        expect(label.style?.fontFeatures, const [FontFeature.tabularFigures()]);
+        expect(
+          find.ancestor(of: periodButton, matching: find.byType(Card)),
+          findsNothing,
+        );
+        expect(
+          tester.widget<MInkWell>(periodButton).borderRadius,
+          BorderRadius.circular(12),
+        );
+        await tester.tap(periodButton);
+        expect(picked, isTrue);
+        await tester.tap(find.text(l10n.insights.week));
+        expect(changed, MoodInsightsScope.week);
+        expect(tester.takeException(), isNull);
+      });
+    }
+
+    for (final scale in [1.0, 3.0]) {
+      testWidgets('$locale header fits at text scale $scale', (tester) async {
+        await LocaleSettings.setLocale(locale);
+        addTearDown(() => LocaleSettings.setLocale(AppLocale.zh));
+        await tester.pumpWidget(
+          muiTestApp(
+            MediaQuery(
+              data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+              child: Center(
+                child: SizedBox(
+                  width: 366,
+                  child: MoodPeriodHeader(
+                    scope: .month,
+                    start: DateTime(2026, 10),
+                    end: DateTime(2026, 11),
+                    onPickPeriod: () {},
+                    onChanged: (_) {},
+                  ),
+                ),
+              ),
+            ),
+            locale: locale.flutterLocale,
+          ),
+        );
+        await tester.pumpAndSettle();
+        final period = tester.getRect(periodButton);
+        final control = tester.getRect(
+          find.byType(MSegmentedControl<MoodInsightsScope>),
+        );
+        final header = tester.getRect(find.byType(MoodPeriodHeader));
+        if (scale == 1) {
+          expect(control.bottom, closeTo(period.bottom - 4, .01));
+          expect(control.width, closeTo(132, .01));
+          expect(control.height, 32);
+        } else {
+          expect(control.top, greaterThanOrEqualTo(period.bottom + 8));
+        }
+        expect(control.right, lessThanOrEqualTo(header.right));
+        expect(period.right, lessThanOrEqualTo(header.right));
+        expect(tester.takeException(), isNull);
+      });
+    }
+
+    testWidgets('$locale empty and error states use short copy', (
+      tester,
+    ) async {
+      await LocaleSettings.setLocale(locale);
+      addTearDown(() => LocaleSettings.setLocale(AppLocale.zh));
+      await tester.pumpWidget(
+        muiTestApp(
+          const MoodInsightsPage(),
+          wrapScaffold: false,
+          locale: locale.flutterLocale,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.text(locale == AppLocale.zh ? '暂无心情记录' : 'No moods yet'),
+        findsOneWidget,
+      );
+      repository.pending = Completer();
+      await tester.tap(find.text(l10n.insights.year));
+      await tester.pump();
+      repository.pending!.completeError(StateError('load failed'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text(locale == AppLocale.zh ? '加载失败' : 'Couldn’t load'),
+        findsOneWidget,
+      );
+      repository.pending = null;
+      await tester.tap(find.text(l10n.insights.retry));
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.insights.empty), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('$locale summary, cards, tooltips and footer use short copy', (
+      tester,
+    ) async {
+      await LocaleSettings.setLocale(locale);
+      addTearDown(() => LocaleSettings.setLocale(AppLocale.zh));
+      expect(
+        [
+          l10n.insights.calendar,
+          l10n.insights.trend,
+          l10n.insights.distribution,
+          l10n.insights.weekdayPattern,
+          l10n.insights.tags,
+          l10n.insights.yearPixels,
+          l10n.insights.monthlyTrend,
+        ],
+        locale == AppLocale.zh
+            ? ['日历', '趋势', '分布', '按星期', '标签', '全年', '每月']
+            : [
+                'Calendar',
+                'Trend',
+                'Distribution',
+                'By weekday',
+                'Tags',
+                'Full year',
+                'By month',
+              ],
+      );
+      expect(
+        l10n.insights.monthMood(level: 'Good'),
+        locale == AppLocale.zh ? '本月心情 · Good' : 'This month’s mood · Good',
+      );
+      final today = moodDayKey(DateTime.now());
+      repository.rows = [
+        MoodInsightEntry(id: 'today', time: today, mood: .good),
+      ];
+      await tester.pumpWidget(
+        muiTestApp(
+          const MoodInsightsPage(),
+          wrapScaffold: false,
+          locale: locale.flutterLocale,
+        ),
+      );
+      await tester.pumpAndSettle();
+      final level = DiaryMood.good.labelOf(l10n);
+      expect(find.text(level), findsWidgets);
+      expect(
+        find.text('${locale == AppLocale.zh ? '平均' : 'Average'} · $level'),
+        findsNothing,
+      );
+      expect(
+        find.text(locale == AppLocale.zh ? '篇数' : 'Entries'),
+        findsOneWidget,
+      );
+      expect(find.text(l10n.insights.view), findsNothing);
+      expect(
+        find.text(locale == AppLocale.zh ? '日历' : 'Calendar'),
+        findsOneWidget,
+      );
+      final description = '${TimeFormat.monthDay(today)} · $level';
+      final day = find.descendant(
+        of: find.byType(MoodCalendar),
+        matching: find.byTooltip(description),
+      );
+      expect(day, findsOneWidget);
+      await tester.ensureVisible(day);
+      await tester.pumpAndSettle();
+      await tester.tap(day);
+      await tester.pumpAndSettle();
+      expect(find.text(description), findsOneWidget);
+      expect(find.text(l10n.insights.view), findsOneWidget);
+      final chart = tester.widget<MLineChart>(find.byType(MLineChart));
+      expect(chart.tooltipBuilder(today.day - 1), description);
+      await tester.ensureVisible(day);
+      await tester.pumpAndSettle();
+      await tester.tap(day);
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.insights.view), findsNothing);
+      for (final title in [
+        l10n.insights.trend,
+        l10n.insights.distribution,
+        l10n.insights.weekdayPattern,
+      ]) {
+        await tester.ensureVisible(find.text(title));
+        expect(find.text(title), findsOneWidget);
+      }
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  for (final count in [0, 4, 5]) {
+    testWidgets(
+      'tags card is only present with qualifying tags ($count entries)',
+      (tester) async {
+        final today = moodDayKey(DateTime.now());
+        repository.rows = [
+          MoodInsightEntry(id: 'untagged', time: today, mood: .good),
+          for (var i = 0; i < count; i++)
+            MoodInsightEntry(
+              id: '$i',
+              time: today,
+              mood: .great,
+              tags: ['Walk'],
+            ),
+        ];
+        await tester.pumpWidget(
+          muiTestApp(const MoodInsightsPage(), wrapScaffold: false),
+        );
+        await tester.pumpAndSettle();
+        expect(
+          find.byType(MoodTags),
+          count >= 5 ? findsOneWidget : findsNothing,
+        );
+        expect(
+          find.text(l10n.insights.tags),
+          count >= 5 ? findsOneWidget : findsNothing,
+        );
+        if (count >= 5) {
+          await tester.ensureVisible(find.text('#Walk'));
+          expect(find.text('#Walk'), findsOneWidget);
+        }
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  testWidgets('year pixels hide the footer until selection', (tester) async {
+    final today = moodDayKey(DateTime.now());
+    repository.rows = [MoodInsightEntry(id: 'today', time: today, mood: .good)];
+    await tester.pumpWidget(
+      muiTestApp(const MoodInsightsPage(), wrapScaffold: false),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l10n.insights.year));
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.insights.view), findsNothing);
+    expect(l10n.insights.yearPixels, '全年');
+    expect(l10n.insights.monthlyTrend, '每月');
+    final description = l10n.insights.dayDetail(
+      date: TimeFormat.monthDay(today),
+      level: DiaryMood.good.labelOf(l10n),
+    );
+    final day = find.descendant(
+      of: find.byType(MoodCalendar),
+      matching: find.byTooltip(description),
+    );
+    await tester.ensureVisible(day);
+    await tester.tap(day);
+    await tester.pumpAndSettle();
+    expect(find.text(description), findsOneWidget);
+    expect(find.text(l10n.insights.view), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 
   for (final scope in MoodInsightsScope.values) {
     testWidgets('$scope opens its picker and jumps to the selected period', (
@@ -140,7 +474,10 @@ void main() {
       }
       if (scope == .month) {
         expect(
-          find.text(DateFormat.yMMMM('zh').format(target)),
+          find.descendant(
+            of: periodButton,
+            matching: find.text('${target.month}月'),
+          ),
           findsOneWidget,
         );
         final calendar = tester.widget<MoodCalendar>(find.byType(MoodCalendar));
@@ -542,7 +879,7 @@ void main() {
       await tester.pumpAndSettle();
       final todayAction = find.byTooltip(l10n.diary.calendarBackToToday);
       expect(todayAction, findsNothing);
-      await tester.tap(find.byTooltip(l10n.insights.previousPeriod));
+      await tester.fling(periodButton, const Offset(200, 0), 800);
       await tester.pumpAndSettle();
       expect(todayAction, findsOneWidget);
       expect(
@@ -642,7 +979,7 @@ void main() {
       await tester.tap(find.text(l10n.insights.year));
       await tester.pumpAndSettle();
       // Use a past year to exercise all months without future dates.
-      await tester.tap(find.byTooltip(l10n.insights.previousPeriod));
+      await tester.fling(periodButton, const Offset(200, 0), 800);
       await tester.pumpAndSettle();
       final label = find.byKey(ValueKey('insights-year-month-$month'));
       await tester.ensureVisible(label);
@@ -697,7 +1034,7 @@ void main() {
       );
       expect(find.byWidgetPredicate((w) => w is Bone), findsWidgets);
       // Controls remain usable during the request and keep the chosen scope.
-      await tester.tap(find.byTooltip(l10n.insights.previousPeriod));
+      await tester.fling(periodButton, const Offset(200, 0), 800);
       await tester.pump();
       final bounds = repository.queries.last;
       final chartSize = tester.getSize(find.byType(MLineChart));
@@ -859,15 +1196,8 @@ void main() {
       expect(find.text(l10n.insights.streakDays(count: 1)), findsOneWidget);
       expect(find.text(l10n.insights.streak), findsOneWidget);
       expect(find.text(l10n.insights.empty), findsNothing);
-      final next = tester.widget<IconButton>(
-        find
-            .ancestor(
-              of: find.byTooltip(l10n.insights.nextPeriod),
-              matching: find.byType(IconButton),
-            )
-            .first,
-      );
-      expect(next.onPressed, isNull);
+      expect(find.byIcon(LucideIcons.chevronLeft), findsNothing);
+      expect(find.byIcon(LucideIcons.chevronRight), findsNothing);
       await tester.tap(find.text(l10n.insights.week));
       await tester.pumpAndSettle();
       expect(find.text(l10n.insights.calendar), findsNothing);

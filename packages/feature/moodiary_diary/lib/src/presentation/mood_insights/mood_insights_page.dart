@@ -15,6 +15,7 @@ import '../widget/diary_entry_tile.dart';
 import '../widget/today_glyph.dart';
 import 'mood_calendar.dart';
 import 'mood_patterns.dart';
+import 'mood_period_header.dart';
 import 'mood_period_picker.dart';
 
 class MoodInsightsPage extends ConsumerStatefulWidget {
@@ -63,7 +64,11 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
   }
 
   void _refresh() {
-    if (mounted) setState(() => _future = _load());
+    if (mounted) {
+      setState(() {
+        _future = _load();
+      });
+    }
   }
 
   Future<_InsightsData> _load() async {
@@ -137,20 +142,6 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
     if (mounted && date != null) _jump(date);
   }
 
-  String _periodTitle(BuildContext context, DateTime start, DateTime end) {
-    final locale = Localizations.localeOf(context).toLanguageTag();
-    return switch (_scope) {
-      .week => context.l10n.insights.weekTitle(
-        start: DateFormat.MMMd(locale).format(start),
-        end: start.month == moodDayOffset(end, -1).month
-            ? DateFormat.d(locale).format(moodDayOffset(end, -1))
-            : DateFormat.MMMd(locale).format(moodDayOffset(end, -1)),
-      ),
-      .month => DateFormat.yMMMM(locale).format(start),
-      .year => context.l10n.insights.yearTitle(year: start.year),
-    };
-  }
-
   @override
   Widget build(BuildContext context) {
     final bounds = moodPeriodBounds(_anchor, _scope);
@@ -183,87 +174,12 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
             12 + MediaQuery.paddingOf(context).bottom,
           ),
           children: [
-            Padding(
-              padding: const .only(bottom: 12),
-              child: Column(
-                children: [
-                  MSegmentedControl<MoodInsightsScope>(
-                    selected: _scope,
-                    onChanged: _changeScope,
-                    options: [
-                      MSegmentOption(
-                        value: .week,
-                        label: context.l10n.insights.week,
-                      ),
-                      MSegmentOption(
-                        value: .month,
-                        label: context.l10n.insights.month,
-                      ),
-                      MSegmentOption(
-                        value: .year,
-                        label: context.l10n.insights.year,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      IconButton(
-                        tooltip: context.l10n.insights.previousPeriod,
-                        onPressed: () => _move(-1),
-                        icon: const Icon(LucideIcons.chevronLeft),
-                      ),
-                      Expanded(
-                        child: Center(
-                          child: MInkWell(
-                            key: const ValueKey('insights-period-picker'),
-                            borderRadius: .circular(10),
-                            onTap: _pickPeriod,
-                            child: Container(
-                              padding: const .symmetric(
-                                vertical: 6,
-                                horizontal: 10,
-                              ),
-                              decoration: BoxDecoration(
-                                color:
-                                    context.theme.colors.surfaceContainerHigh,
-                                borderRadius: .circular(10),
-                              ),
-                              child: Row(
-                                mainAxisSize: .min,
-                                spacing: 6,
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      _periodTitle(
-                                        context,
-                                        bounds.start,
-                                        bounds.end,
-                                      ),
-                                      textAlign: .center,
-                                      style: context
-                                          .theme
-                                          .typography
-                                          .titleMedium
-                                          .onSurface,
-                                    ),
-                                  ),
-                                  const Icon(LucideIcons.chevronDown, size: 18),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: context.l10n.insights.nextPeriod,
-                        onPressed: containsToday ? null : () => _move(1),
-                        icon: const Icon(LucideIcons.chevronRight),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+            MoodPeriodHeader(
+              scope: _scope,
+              start: bounds.start,
+              end: bounds.end,
+              onPickPeriod: _pickPeriod,
+              onChanged: _changeScope,
             ),
             FutureBuilder<_InsightsData>(
               future: _future,
@@ -302,6 +218,7 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
                     ),
                   );
                 }
+                final tags = moodTagDeltas(data.rows);
                 return MSkeleton(
                   enabled: loading,
                   child: Column(
@@ -329,7 +246,7 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
                                       _selected = day == _selected ? null : day,
                                 ),
                               ),
-                              _dayFooter(data),
+                              if (_selected != null) _dayFooter(data),
                               const SizedBox(height: 8),
                               const MoodInsightsLegend(),
                             ],
@@ -357,10 +274,11 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
                           title: context.l10n.insights.weekdayPattern,
                           child: MoodWeekdayPattern(averages: data.weekdays),
                         ),
-                        _Block(
-                          title: context.l10n.insights.tags,
-                          child: MoodTags(deltas: moodTagDeltas(data.rows)),
-                        ),
+                        if (tags.isNotEmpty)
+                          _Block(
+                            title: context.l10n.insights.tags,
+                            child: MoodTags(deltas: tags),
+                          ),
                       ],
                     ],
                   ),
@@ -419,11 +337,6 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
           : context.l10n.insights.trend,
       tooltipBuilder: (index) {
         final date = dates[index];
-        final count = _scope == .year
-            ? data.rows
-                  .where((e) => moodDayKey(e.time).month == date.month)
-                  .length
-            : data.summary.days[date]?.entries.length ?? 0;
         return context.l10n.insights.dayTooltip(
           date: _scope == .year
               ? DateFormat.yMMMM(locale).format(date)
@@ -431,34 +344,29 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
           level:
               moodLevel(values[index])?.label(context) ??
               context.l10n.insights.unrecorded,
-          score: values[index]?.toStringAsFixed(1) ?? '–',
-          count: count,
         );
       },
     );
   }
 
   Widget _dayFooter(_InsightsData data) {
-    final day = _selected;
+    final day = _selected!;
     final info = data.summary.days[day];
     return Row(
       children: [
         Expanded(
           child: Text(
-            day == null
-                ? context.l10n.insights.selectHint
-                : context.l10n.insights.dayDetail(
-                    date: TimeFormat.monthDay(day),
-                    level:
-                        info?.level?.label(context) ??
-                        context.l10n.insights.unrecorded,
-                    count: info?.entries.length ?? 0,
-                  ),
+            context.l10n.insights.dayDetail(
+              date: TimeFormat.monthDay(day),
+              level:
+                  info?.level?.label(context) ??
+                  context.l10n.insights.unrecorded,
+            ),
             style: context.theme.typography.labelMedium.onSurfaceVariant,
           ),
         ),
         TextButton(
-          onPressed: day == null || info == null ? null : () => _showDay(day),
+          onPressed: info == null ? null : () => _showDay(day),
           child: Text(context.l10n.insights.view),
         ),
       ],
@@ -509,7 +417,7 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
                       id: 'skeleton-$i',
                       title: context.l10n.common.untitled,
                       content: '',
-                      contentText: context.l10n.insights.dailyMean,
+                      contentText: context.l10n.common.untitled,
                       time: day,
                       lastModified: day,
                       show: true,
@@ -566,7 +474,7 @@ class _InsightsData {
             time: moodDayOffset(start, i),
             mood: DiaryMood.fromScore(scores[i % scores.length]),
             title: l10n.common.untitled,
-            preview: l10n.insights.dailyMean,
+            preview: l10n.common.untitled,
             tags: [l10n.insights.week, if (i.isEven) l10n.insights.month],
           ),
     ];
@@ -660,9 +568,7 @@ class _Summary extends StatelessWidget {
                         .copyWith(fontFeatures: const [.tabularFigures()]),
                   ),
                   Text(
-                    context.l10n.insights.averageLevel(
-                      level: moodLevel(summary.average)!.label(context),
-                    ),
+                    moodLevel(summary.average)!.label(context),
                     style: context.theme.typography.bodyMedium.onSurfaceVariant,
                   ),
                 ],
@@ -671,11 +577,6 @@ class _Summary extends StatelessWidget {
             if (delta != null)
               Skeleton.leaf(child: MoodDeltaPill(delta: delta)),
           ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          context.l10n.insights.dailyMean,
-          style: context.theme.typography.labelSmall.onSurfaceVariant,
         ),
         const SizedBox(height: 18),
         Row(

@@ -65,7 +65,7 @@ class MoodInsightsCard extends StatelessWidget {
                         ),
                         Flexible(
                           child: Text(
-                            context.l10n.insights.monthAverage(
+                            context.l10n.insights.monthMood(
                               level:
                                   moodLevel(data.month.average)
                                       ?.label(context) ??

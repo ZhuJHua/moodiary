@@ -192,7 +192,6 @@ class MoodCalendar extends StatelessWidget {
     final description = context.l10n.insights.dayDetail(
       date: TimeFormat.monthDay(date),
       level: level?.label(context) ?? context.l10n.insights.unrecorded,
-      count: info?.entries.length ?? 0,
     );
     return Skeleton.replace(
       replacement: Bone(
