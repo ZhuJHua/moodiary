@@ -153,92 +153,99 @@ void main() {
     expect(find.text('body'), findsOneWidget);
   });
 
-  testWidgets('the axis does not jump colour at the seam between two rows', (
-    t,
-  ) async {
-    t.view.devicePixelRatio = 1.0;
-    t.view.physicalSize = const Size(240, 800);
-    addTearDown(t.view.reset);
+  for (final (upper, lower) in <(DiaryMood?, DiaryMood?)>[
+    (.bad, .good),
+    (null, .good),
+    (.good, null),
+  ]) {
+    testWidgets('the axis does not jump colour at the seam: $upper -> $lower', (
+      t,
+    ) async {
+      t.view.devicePixelRatio = 1.0;
+      t.view.physicalSize = const Size(240, 800);
+      addTearDown(t.view.reset);
 
-    const boundaryKey = ValueKey('axis-probe');
-    final top = diary(title: '', mood: .bad);
-    final bottom = diary(title: '', mood: .good);
+      const boundaryKey = ValueKey('axis-probe');
+      final top = diary(title: '', mood: upper);
+      final bottom = diary(title: '', mood: lower);
 
-    await t.pumpWidget(
-      MuiTheme(
-        data: _mui,
-        child: MaterialApp(
-          home: Scaffold(
-            body: RepaintBoundary(
-              key: boundaryKey,
-              child: Column(
-                mainAxisSize: .min,
-                children: [
-                  DiaryTimelineTile(
-                    key: const ValueKey('a'),
-                    diary: top,
-                    stamp: top.time,
-                    dayStart: true,
-                    breakBefore: false,
-                    moodBelow: bottom.mood,
-                  ),
-                  DiaryTimelineTile(
-                    key: const ValueKey('b'),
-                    diary: bottom,
-                    stamp: bottom.time,
-                    dayStart: true,
-                    breakBefore: false,
-                    hasAbove: true,
-                  ),
-                ],
+      await t.pumpWidget(
+        MuiTheme(
+          data: _mui,
+          child: MaterialApp(
+            home: Scaffold(
+              body: RepaintBoundary(
+                key: boundaryKey,
+                child: Column(
+                  mainAxisSize: .min,
+                  children: [
+                    DiaryTimelineTile(
+                      key: const ValueKey('a'),
+                      diary: top,
+                      stamp: top.time,
+                      dayStart: true,
+                      breakBefore: false,
+                      moodBelow: bottom.mood,
+                      hasBelow: true,
+                    ),
+                    DiaryTimelineTile(
+                      key: const ValueKey('b'),
+                      diary: bottom,
+                      stamp: bottom.time,
+                      dayStart: true,
+                      breakBefore: false,
+                      hasAbove: true,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ),
-      ),
-    );
-    await t.pumpAndSettle();
-
-    final seam = t.getBottomLeft(find.byKey(const ValueKey('a'))).dy;
-    final boundary =
-        t.renderObject(find.byKey(boundaryKey)) as RenderRepaintBoundary;
-    // toImage 必须跑在 runAsync 里，否则在 fake async 下永不完成
-    final data = await t.runAsync(() async {
-      final image = await boundary.toImage();
-      final bytes = await image.toByteData(format: .rawRgba);
-      return (bytes: bytes!, width: image.width);
-    });
-    final bytes = data!.bytes;
-    final width = data.width;
-
-    // 轴心 x：日期列 30 + 间隙 8 + 轴列 20 的中点。
-    const axisX = 48;
-    (int, int, int) pixelAt(int y) {
-      final offset = (y * width + axisX) * 4;
-      return (
-        bytes.getUint8(offset),
-        bytes.getUint8(offset + 1),
-        bytes.getUint8(offset + 2),
       );
-    }
+      await t.pumpAndSettle();
 
-    final above = pixelAt(seam.round() - 3);
-    final below = pixelAt(seam.round() + 3);
-    final delta = [
-      (above.$1 - below.$1).abs(),
-      (above.$2 - below.$2).abs(),
-      (above.$3 - below.$3).abs(),
-    ].reduce((a, b) => a > b ? a : b);
+      final seam = t.getBottomLeft(find.byKey(const ValueKey('a'))).dy;
+      final boundary =
+          t.renderObject(find.byKey(boundaryKey)) as RenderRepaintBoundary;
+      // toImage 必须跑在 runAsync 里，否则在 fake async 下永不完成
+      final data = await t.runAsync(() async {
+        final image = await boundary.toImage();
+        final bytes = await image.toByteData(format: .rawRgba);
+        return (bytes: bytes!, width: image.width);
+      });
+      final bytes = data!.bytes;
+      final width = data.width;
 
-    expect(
-      delta,
-      lessThan(40),
-      reason: '接缝两侧轴线颜色应当连续，实测 above=$above below=$below',
-    );
-  });
+      // 轴心 x：日期列 30 + 间隙 8 + 轴列 20 的中点。
+      const axisX = 48;
+      (int, int, int) pixelAt(int y) {
+        final offset = (y * width + axisX) * 4;
+        return (
+          bytes.getUint8(offset),
+          bytes.getUint8(offset + 1),
+          bytes.getUint8(offset + 2),
+        );
+      }
+
+      final above = pixelAt(seam.round() - 3);
+      final below = pixelAt(seam.round() + 3);
+      final delta = [
+        (above.$1 - below.$1).abs(),
+        (above.$2 - below.$2).abs(),
+        (above.$3 - below.$3).abs(),
+      ].reduce((a, b) => a > b ? a : b);
+
+      expect(
+        delta,
+        lessThan(40),
+        reason: '接缝两侧轴线颜色应当连续，实测 above=$above below=$below',
+      );
+    });
+  }
 
   testWidgets(
-    'unset axis is hollow with outline-variant segments at both radii',
+    'unset axis is hollow, outline-variant above, fading into the next mood',
     (t) async {
       for (final big in [true, false]) {
         await t.pumpWidget(
@@ -286,7 +293,13 @@ void main() {
         expect(pixel(48, 13).a, 0, reason: 'the center must stay hollow');
         expect(pixel(48, big ? 18 : 16.5), scheme.outline);
         expect(pixel(48, 1), scheme.outlineVariant);
-        expect(pixel(48, size.height - 2), scheme.outlineVariant);
+        expect(
+          pixel(48, size.height - 2),
+          isSameColorAs(
+            DiaryMood.great.colorOf(t.element(find.byType(DiaryTimelineTile))),
+            threshold: 0.08,
+          ),
+        );
         image.dispose();
         picture.dispose();
       }

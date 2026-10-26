@@ -590,14 +590,7 @@ class _AxisPainter extends CustomPainter {
         if (dashedBelow) {
           _dash(canvas, x, bottom, size.height, idle);
         } else {
-          _segment(
-            canvas,
-            x,
-            bottom,
-            size.height,
-            color,
-            hollow ? idle : below!,
-          );
+          _segment(canvas, x, bottom, size.height, color, below!);
         }
       }
     }
