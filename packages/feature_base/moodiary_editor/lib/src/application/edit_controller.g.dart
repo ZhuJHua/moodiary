@@ -51,7 +51,7 @@ final class EditControllerProvider
   }
 }
 
-String _$editControllerHash() => r'2dbef5593b97f60837cd96b39060dd15eac68be3';
+String _$editControllerHash() => r'6b2048c42af9b7b987821be44d62264a1d5d8149';
 
 final class EditControllerFamily extends $Family
     with

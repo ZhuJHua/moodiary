@@ -65,6 +65,8 @@ class MoodiaryEditor extends StatefulWidget {
 
   final String? metaJson;
 
+  final bool metaReady;
+
   final String? linksJson;
 
   final VoidCallback? onPickDate;
@@ -122,6 +124,7 @@ class MoodiaryEditor extends StatefulWidget {
     this.onRequestLinkCandidates,
     this.onOpenDiaryLink,
     this.metaJson,
+    this.metaReady = true,
     this.linksJson,
     this.onPickDate,
     this.onPickTime,
@@ -160,6 +163,9 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
 
   EditorTransport? _transport;
   bool _jsReady = false;
+  bool _readyTimedOut = false;
+  bool _activating = false;
+  bool _metaSent = false;
   bool _activated = false;
   Timer? _readyTimeout;
 
@@ -193,7 +199,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
       _setEditable(!widget.readOnly);
       if (!widget.readOnly) unawaited(_attachKeyboard());
     }
-    if (oldWidget.metaJson != widget.metaJson && _activated) {
+    if (oldWidget.metaJson != widget.metaJson && _metaSent) {
       _setMeta();
     }
     if (oldWidget.linksJson != widget.linksJson && _activated) {
@@ -203,6 +209,9 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
             oldWidget.fontScale != widget.fontScale) &&
         _activated) {
       _setTheme();
+    }
+    if (!oldWidget.metaReady && widget.metaReady) {
+      _activate();
     }
   }
 
@@ -280,6 +289,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     _readyTimeout?.cancel();
     _readyTimeout = Timer(const Duration(seconds: 10), () {
       if (_jsReady || !mounted) return;
+      _readyTimedOut = true;
       _log(
         'TIMEOUT waiting for JS "ready" after 10s — '
         '页面或脚本可能挂了，检查 console / error 日志',
@@ -626,29 +636,40 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
   }
 
   Future<void> _activate() async {
-    if (_activated) return;
-    await _setContent(widget.initialContent);
-    await _setTitle(widget.initialTitle);
-    await _setEditable(!widget.readOnly);
-    await _setTheme();
-    await _setMeta();
-    await _setLinks();
-    if (_jsReady &&
-        widget.fontResolver?.call() != null &&
-        !_fontReady.isCompleted) {
-      await _fontReady.future.timeout(
-        const Duration(seconds: 2),
-        onTimeout: () {},
-      );
-      if (!mounted) return;
+    if (_activated ||
+        _activating ||
+        !widget.metaReady ||
+        (!_jsReady && !_readyTimedOut)) {
+      return;
+    }
+    _activating = true;
+    try {
+      await _setContent(widget.initialContent);
+      await _setTitle(widget.initialTitle);
       await _setEditable(!widget.readOnly);
       await _setTheme();
+      if (!mounted || !widget.metaReady) return;
       await _setMeta();
       await _setLinks();
+      if (_jsReady &&
+          widget.fontResolver?.call() != null &&
+          !_fontReady.isCompleted) {
+        await _fontReady.future.timeout(
+          const Duration(seconds: 2),
+          onTimeout: () {},
+        );
+        if (!mounted) return;
+        await _setEditable(!widget.readOnly);
+        await _setTheme();
+        await _setMeta();
+        await _setLinks();
+      }
+      if (!mounted) return;
+      if (!widget.readOnly) unawaited(_attachKeyboard());
+      setState(() => _activated = true);
+    } finally {
+      _activating = false;
     }
-    if (!mounted) return;
-    if (!widget.readOnly) unawaited(_attachKeyboard());
-    setState(() => _activated = true);
   }
 
   Map<String, dynamic> _themePayload() {
@@ -708,6 +729,8 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
   }
 
   Future<void> _setMeta() async {
+    // 首次下发即显示页面，等字体期间也继续接收元数据更新
+    _metaSent = true;
     await _run(
       'window.MoodiaryBridge.setMeta(${jsonEncode(widget.metaJson ?? '')})',
     );

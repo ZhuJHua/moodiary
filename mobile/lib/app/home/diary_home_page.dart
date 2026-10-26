@@ -51,6 +51,10 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
     final selecting = selection.isNotEmpty;
     final filter = ref.watch(homeDiaryFilterProvider);
 
+    // Keep editor metadata warm while the home route remains mounted.
+    ref.listen(orderedPlacesProvider, (_, _) {});
+    ref.listen(secretKvProvider(MoodiarySecureKVs.qweatherKey), (_, _) {});
+
     ref.listen(orderedCategoriesProvider, (_, next) {
       final id = ref.read(homeDiaryFilterProvider).categoryId;
       final categories = next.value;

@@ -23,7 +23,7 @@ const meta: EditorMeta = {
 afterEach(() => {
   cleanup()
   resetBridgeForTest()
-  metaStore.setState({ meta: null })
+  metaStore.setState({ meta: undefined })
   setLocale('zh')
 })
 

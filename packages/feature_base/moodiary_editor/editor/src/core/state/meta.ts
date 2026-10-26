@@ -55,8 +55,9 @@ export interface EditorLinks {
   incoming: EditorLinkItem[]
 }
 
-export const metaStore = createStore<{ meta: EditorMeta | null; links: EditorLinks | null }>()(() => ({
-  meta: null,
+export const metaStore = createStore<{ meta: EditorMeta | null | undefined; links: EditorLinks | null }>()(() => ({
+  // undefined 尚未下发，null 表示宿主没有页头
+  meta: undefined,
   links: null,
 }))
 
