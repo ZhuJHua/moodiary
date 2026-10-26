@@ -23,6 +23,7 @@ class EditorBody extends StatefulWidget {
   final ValueChanged<String>? onOpenDiaryLink;
 
   final String? metaJson;
+  final bool metaReady;
   final String? linksJson;
   final VoidCallback? onPickDate;
   final VoidCallback? onPickTime;
@@ -55,6 +56,7 @@ class EditorBody extends StatefulWidget {
     this.editable = true,
     this.onOpenDiaryLink,
     this.metaJson,
+    this.metaReady = true,
     this.linksJson,
     this.onPickDate,
     this.onPickTime,
@@ -122,6 +124,7 @@ class _EditorBodyState extends State<EditorBody> {
             widget.onChanged(content, TiptapContent.parse(content).plainText),
         onOpenDiaryLink: widget.onOpenDiaryLink,
         metaJson: widget.metaJson,
+        metaReady: widget.metaReady,
         linksJson: widget.linksJson,
         onPickDate: widget.onPickDate,
         onPickTime: widget.onPickTime,

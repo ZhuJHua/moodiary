@@ -167,7 +167,6 @@
   "unsaved": "未保存",
   "saveFailed": "保存失败",
   "unknownCategory": "未知分类",
-  "loading": "加载中…",
   "searchReindexHint": "升级后需重建索引，旧日记正文才能被搜索到",
   "searchReindex": "重建",
   "autoSaved": "自动保存",

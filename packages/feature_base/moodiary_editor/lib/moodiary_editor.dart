@@ -10,6 +10,7 @@ export 'src/data/editor_migration_service.dart';
 export 'src/data/geo_repository.dart';
 export 'src/data/qweather_config.dart';
 export 'src/data/weather_repository.dart';
+export 'src/editor_page.dart';
 export 'src/media.dart';
 export 'src/moodiary_editor.dart';
 export 'src/presentation/editor_migration_page.dart';

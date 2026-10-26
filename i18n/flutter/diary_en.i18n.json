@@ -168,7 +168,6 @@
   "unsaved": "Unsaved",
   "saveFailed": "Could not save",
   "unknownCategory": "Unknown category",
-  "loading": "Loading…",
   "searchReindexHint": "Rebuild the index after upgrading so older entries become searchable",
   "searchReindex": "Rebuild",
   "autoSaved": "Autosaved",
