@@ -4,7 +4,7 @@ import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mui/mui.dart';
 import 'package:skeletonizer/skeletonizer.dart'
-    show SkeletonizerConfig, ShimmerEffect, SolidColorEffect;
+    show SkeletonizerConfig, SolidColorEffect;
 
 void main() {
   for (final enabled in [true, false]) {
@@ -75,38 +75,29 @@ void main() {
     });
   }
 
-  testWidgets('app brightness and reduced motion drive the configuration', (
-    tester,
-  ) async {
+  testWidgets('bones are static and follow the app brightness', (tester) async {
     for (final brightness in Brightness.values) {
-      for (final reduceMotion in [false, true]) {
-        await tester.pumpWidget(
-          MaterialApp(
-            theme: buildMuiTheme(brightness: brightness),
-            themeAnimationDuration: Duration.zero,
-            home: MediaQuery(
-              data: MediaQueryData(
-                platformBrightness: brightness == .light ? .dark : .light,
-                disableAnimations: reduceMotion,
-              ),
-              child: const MSkeleton(enabled: true, child: Text('Content')),
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: buildMuiTheme(brightness: brightness),
+          themeAnimationDuration: Duration.zero,
+          home: MediaQuery(
+            data: MediaQueryData(
+              platformBrightness: brightness == .light ? .dark : .light,
             ),
+            child: const MSkeleton(enabled: true, child: Text('Content')),
           ),
-        );
-        final config = tester
-            .widget<SkeletonizerConfig>(find.byType(SkeletonizerConfig))
-            .data;
-        expect(config.brightness, brightness);
-        final effect = config.resolveEffect(brightness);
-        if (reduceMotion) {
-          expect(effect, isA<SolidColorEffect>());
-          expect(effect.duration, Duration.zero);
-          await tester.pumpAndSettle();
-          expect(tester.binding.transientCallbackCount, 0);
-        } else {
-          expect(effect, isA<ShimmerEffect>());
-        }
-      }
+        ),
+      );
+      final config = tester
+          .widget<SkeletonizerConfig>(find.byType(SkeletonizerConfig))
+          .data;
+      expect(config.brightness, brightness);
+      final effect = config.resolveEffect(brightness);
+      expect(effect, isA<SolidColorEffect>());
+      expect(effect.duration, Duration.zero);
+      await tester.pumpAndSettle();
+      expect(tester.binding.transientCallbackCount, 0);
     }
   });
 }
