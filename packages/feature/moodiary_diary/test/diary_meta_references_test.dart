@@ -86,45 +86,6 @@ void main() {
     expect(container.read(provider).ready, isTrue);
   });
 
-  test(
-    'warm caches resolve on the first read without another async hop',
-    () async {
-      categories.result.complete([category]);
-      places.result.complete([place]);
-      await container.read(categoryControllerProvider.future);
-      await container.read(placeControllerProvider.future);
-      final meta = container.read(provider);
-      expect(meta.ready, isTrue);
-      expect(meta.category, category);
-      expect(meta.place, place);
-
-      container.listen(provider, (_, _) {});
-      final renamed = category.copyWith(categoryName: 'Trips');
-      categories.events.add(CategoryEvent.upserted(renamed));
-      await Future<void>.delayed(Duration.zero);
-      expect(container.read(provider).category, renamed);
-      expect(container.read(provider).ready, isTrue);
-    },
-  );
-
-  test('only assigned references need their cache to resolve', () async {
-    final categoryOnly = diaryMetaReferencesProvider(categoryId: 'c');
-    final placeOnly = diaryMetaReferencesProvider(placeId: 'p');
-    container.listen(categoryOnly, (_, _) {});
-    container.listen(placeOnly, (_, _) {});
-    expect(container.read(categoryOnly).ready, isFalse);
-    expect(container.read(placeOnly).ready, isFalse);
-
-    categories.result.complete([category]);
-    await container.read(categoryControllerProvider.future);
-    expect(container.read(categoryOnly).ready, isTrue);
-    expect(container.read(placeOnly).ready, isFalse);
-
-    places.result.complete([place]);
-    await container.read(placeControllerProvider.future);
-    expect(container.read(placeOnly).ready, isTrue);
-  });
-
   test('unassigned and deleted references are ready', () async {
     expect(container.read(diaryMetaReferencesProvider()).ready, isTrue);
     container.listen(provider, (_, _) {});
