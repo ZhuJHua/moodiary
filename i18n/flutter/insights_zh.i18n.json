@@ -48,7 +48,6 @@
     "other": "{count} 天"
   },
   "dayDetail": "{date} · {level}",
-  "dayTooltip": "{date} · {level}",
   "yearRange": "{start} – {end}年",
   "weekDays": "{start} – {end}日"
 }

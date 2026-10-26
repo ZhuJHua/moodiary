@@ -485,8 +485,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text(description), findsOneWidget);
       expect(find.text(l10n.insights.view), findsOneWidget);
-      final chart = tester.widget<MLineChart>(find.byType(MLineChart));
-      expect(chart.tooltipBuilder(today.day - 1), description);
       await tester.ensureVisible(day);
       await tester.pumpAndSettle();
       await tester.tap(day);
@@ -1108,9 +1106,7 @@ void main() {
     });
   }
 
-  testWidgets('flings navigate but chart scrubbing and slow drags do not', (
-    tester,
-  ) async {
+  testWidgets('flings navigate but slow drags do not', (tester) async {
     await openPage(tester);
     final currentEnd = repository.queries.last.end;
     await tester.timedDrag(
@@ -1126,24 +1122,6 @@ void main() {
       repository.queries.last.end,
       DateTime(currentEnd.year, currentEnd.month - 1),
     );
-    final previousEnd = repository.queries.last.end;
-    await tester.ensureVisible(find.byType(MLineChart));
-    await tester.pumpAndSettle();
-    final chart = tester.getRect(find.byType(MLineChart));
-    await tester.flingFrom(
-      chart.centerLeft + const Offset(45, 80),
-      const Offset(150, 0),
-      800,
-    );
-    await tester.pumpAndSettle();
-    expect(repository.queries.last.end, previousEnd);
-    expect(find.byKey(const ValueKey('line-chart-tooltip')), findsOneWidget);
-    await tester.scrollUntilVisible(
-      periodButton,
-      -300,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.pumpAndSettle();
     await tester.fling(periodButton, const Offset(-200, 0), 800);
     await tester.pumpAndSettle();
     expect(repository.queries.last.end, currentEnd);

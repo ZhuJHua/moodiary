@@ -49,7 +49,6 @@
     "other": "{count} days"
   },
   "dayDetail": "{date} · {level}",
-  "dayTooltip": "{date} · {level}",
   "yearRange": "{start} – {end}",
   "weekDays": "{start} – {end}"
 }

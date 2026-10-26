@@ -330,17 +330,6 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
       semanticsLabel: _scope == .year
           ? context.l10n.insights.monthlyTrend
           : context.l10n.insights.trend,
-      tooltipBuilder: (index) {
-        final date = dates[index];
-        return context.l10n.insights.dayTooltip(
-          date: _scope == .year
-              ? DateFormat.yMMMM(locale).format(date)
-              : TimeFormat.monthDay(date),
-          level:
-              moodLevel(values[index])?.label(context) ??
-              context.l10n.insights.unrecorded,
-        );
-      },
     );
   }
 

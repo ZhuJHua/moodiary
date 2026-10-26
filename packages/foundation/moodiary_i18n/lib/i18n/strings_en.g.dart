@@ -981,7 +981,6 @@ class _Translations$insights$en extends Translations$insights$zh {
 		other: '${count} days',
 	);
 	@override String dayDetail({required Object date, required Object level}) => '${date} · ${level}';
-	@override String dayTooltip({required Object date, required Object level}) => '${date} · ${level}';
 	@override String yearRange({required Object start, required Object end}) => '${start} – ${end}';
 	@override String weekDays({required Object start, required Object end}) => '${start} – ${end}';
 }

@@ -2711,9 +2711,6 @@ class Translations$insights$zh {
 	/// zh: '{date} · {level}'
 	String dayDetail({required Object date, required Object level}) => '${date} · ${level}';
 
-	/// zh: '{date} · {level}'
-	String dayTooltip({required Object date, required Object level}) => '${date} · ${level}';
-
 	/// zh: '{start} – {end}年'
 	String yearRange({required Object start, required Object end}) => '${start} – ${end}年';
 

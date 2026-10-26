@@ -33,7 +33,6 @@ Future<void> pumpChart(
                 ringColor: const Color(0xFFFFFFFF),
                 pointColor: (_, _) => const Color(0xFFFF0000),
                 semanticsLabel: 'Trend',
-                tooltipBuilder: (i) => 'sample $i: ${values[i]}',
               ),
             ),
           ),
@@ -83,7 +82,6 @@ void main() {
                   yMin: 1,
                   yMax: 5,
                   pointColor: (_, _) => const Color(0xFFFF0000),
-                  tooltipBuilder: (_) => 'sample',
                   semanticsLabel: 'Trend',
                 ),
               ),
@@ -146,57 +144,20 @@ void main() {
     });
   }
 
-  testWidgets('top markers use the chart edge; tooltip overlays the plot', (
-    tester,
-  ) async {
+  testWidgets('top markers use the chart edge', (tester) async {
     await pumpChart(tester, [5]);
     await tester.runAsync(() async {
       expect(await hasInk(tester, 154, 7), isTrue);
     });
-    await tester.tap(find.byType(MLineChart));
-    await tester.pump();
     final chart = tester.getRect(find.byType(MLineChart));
-    final bubble = tester.getRect(
-      find.byKey(const ValueKey('line-chart-tooltip')),
-    );
-    expect(bubble.top, chart.top);
-    expect(bubble.bottom, greaterThan(chart.top + 7));
     expect(chart.height, 220);
   });
 
-  testWidgets('tap and drag select nearest index including missing samples', (
+  testWidgets('empty and single-value charts render without division by zero', (
     tester,
   ) async {
-    final semantics = tester.ensureSemantics();
-    await pumpChart(tester, [2, null, 4]);
-    final origin = tester.getTopLeft(find.byType(MLineChart));
-    await tester.tapAt(origin + const Offset(150, 120));
-    await tester.pump();
-    expect(find.text('sample 1: null'), findsOneWidget);
-    expect(
-      tester.getSemantics(find.bySemanticsLabel('Trend')),
-      matchesSemantics(label: 'Trend', value: 'sample 1: null'),
-    );
-    final gesture = await tester.startGesture(origin + const Offset(150, 120));
-    await gesture.moveTo(origin + const Offset(290, 120));
-    await gesture.up();
-    await tester.pump();
-    expect(find.text('sample 2: 4.0'), findsOneWidget);
-    semantics.dispose();
+    await pumpChart(tester, []);
+    await pumpChart(tester, [3]);
+    expect(tester.takeException(), isNull);
   });
-
-  testWidgets(
-    'empty and single-value charts remain selectable without division by zero',
-    (tester) async {
-      await pumpChart(tester, []);
-      await tester.tap(find.byType(MLineChart));
-      await tester.pump();
-      expect(find.byKey(const ValueKey('line-chart-tooltip')), findsNothing);
-      await pumpChart(tester, [3]);
-      await tester.tap(find.byType(MLineChart));
-      await tester.pump();
-      expect(find.text('sample 0: 3.0'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    },
-  );
 }
