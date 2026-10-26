@@ -29,7 +29,7 @@ reqwest = { version = "=0.13.4", default-features = false, features = [
     "deflate",
     "stream",
 ] }
-rustls = { version = "=0.23.43", default-features = false, features = ["ring", "std", "tls12"] }
+rustls = { version = "=0.23.45", default-features = false, features = ["ring", "std", "tls12"] }
 webpki-roots = "=1.0.9"
 reqwest_dav = { version = "=0.3.3", default-features = false, features = ["rustls-tls-no-provider"] }
 rusty-s3 = { version = "=0.10.2", default-features = false, features = ["rustcrypto"] }
