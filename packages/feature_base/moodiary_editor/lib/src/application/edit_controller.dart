@@ -199,17 +199,32 @@ class EditController extends _$EditController {
   }
 
   Future<DraftSaveResult> _doAutoSave() async {
-    final current = _latest;
-    if (current == null) return .saved;
-    final next = touched(withDerivedMedia(current));
-    if (_wasNewDraft && _isBlank(next)) {
+    while (true) {
+      final current = _latest;
+      if (current == null) return .saved;
+      final next = touched(withDerivedMedia(current));
       try {
-        if (_persisted) {
-          await _repository.hardDeleteDiary(next.id);
-          _persisted = false;
+        if (_wasNewDraft && _isBlank(next)) {
+          if (_persisted) {
+            await _repository.hardDeleteDiary(next.id);
+            _persisted = false;
+          }
+        } else {
+          final indexMode =
+              next.contentText == _indexedContent && next.title == _indexedTitle
+              ? IndexMode.skip
+              : IndexMode.inline;
+          if (_persisted) {
+            await _repository.updateADiary(newDiary: next, index: indexMode);
+          } else {
+            await _repository.insertADiary(next);
+            _persisted = true;
+          }
         }
         _indexedContent = next.contentText;
         _indexedTitle = next.title;
+        // 写入期间有新编辑时，保留最新状态并继续保存。
+        if (!identical(_latest, current)) continue;
         _latest = next;
         if (ref.mounted) {
           state = .data(next);
@@ -218,27 +233,6 @@ class EditController extends _$EditController {
       } catch (_) {
         return .failed;
       }
-    }
-    final indexMode =
-        next.contentText == _indexedContent && next.title == _indexedTitle
-        ? IndexMode.skip
-        : IndexMode.inline;
-    try {
-      if (_persisted) {
-        await _repository.updateADiary(newDiary: next, index: indexMode);
-      } else {
-        await _repository.insertADiary(next);
-        _persisted = true;
-      }
-      _indexedContent = next.contentText;
-      _indexedTitle = next.title;
-      _latest = next;
-      if (ref.mounted) {
-        state = .data(next);
-      }
-      return .saved;
-    } catch (_) {
-      return .failed;
     }
   }
 
