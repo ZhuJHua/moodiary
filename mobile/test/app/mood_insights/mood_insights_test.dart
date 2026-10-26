@@ -146,6 +146,22 @@ void main() {
       expect(heatmap.colorOf, isNull);
       expect(heatmap.onMonthSelected, isNull);
       expect(heatmap.levels, {_ReadyDashboard.today: 3});
+      final legend = find.byType(MHeatmapLegend);
+      final scale = tester.widget<MHeatmapLegend>(legend);
+      expect(scale.lessLabel, l10n.app.meLegendLess);
+      expect(scale.moreLabel, l10n.app.meLegendMore);
+      expect(scale.colors, isNull);
+      expect(
+        tester
+            .widgetList<Container>(
+              find.descendant(of: legend, matching: find.byType(Container)),
+            )
+            .map((swatch) => (swatch.decoration! as BoxDecoration).color),
+        [
+          for (var i = 0; i < 5; i++)
+            MHeatmap.levelColor(tester.element(legend), i),
+        ],
+      );
       final cells = find.descendant(of: map, matching: find.byType(Container));
       final decoration =
           tester.widget<Container>(cells.last).decoration! as BoxDecoration;

@@ -245,9 +245,8 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
                                       _selected = day == _selected ? null : day,
                                 ),
                               ),
-                              if (_selected != null) _dayFooter(data),
                               const SizedBox(height: 8),
-                              MoodInsightsLegend(scope: _scope),
+                              _dayFooter(data),
                             ],
                           ),
                         ),
@@ -345,26 +344,50 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
   }
 
   Widget _dayFooter(_InsightsData data) {
-    final day = _selected!;
+    final day = _selected;
     final info = data.summary.days[day];
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            context.l10n.insights.dayDetail(
-              date: TimeFormat.monthDay(day),
-              level:
-                  info?.level?.label(context) ??
-                  context.l10n.insights.unrecorded,
+    // 固定行高：选中日期后出现的「查看」按钮不撑高卡片
+    return SizedBox(
+      height: 40,
+      child: Row(
+        children: [
+          Expanded(
+            child: Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    day == null
+                        ? ''
+                        : context.l10n.insights.dayDetail(
+                            date: TimeFormat.monthDay(day),
+                            level:
+                                info?.level?.label(context) ??
+                                context.l10n.insights.unrecorded,
+                          ),
+                    maxLines: 1,
+                    overflow: .ellipsis,
+                    style:
+                        context.theme.typography.labelMedium.onSurfaceVariant,
+                  ),
+                ),
+                if (day != null)
+                  TextButton(
+                    onPressed: info == null ? null : () => _showDay(day),
+                    child: Text(context.l10n.insights.view),
+                  ),
+              ],
             ),
-            style: context.theme.typography.labelMedium.onSurfaceVariant,
           ),
-        ),
-        TextButton(
-          onPressed: info == null ? null : () => _showDay(day),
-          child: Text(context.l10n.insights.view),
-        ),
-      ],
+          const SizedBox(width: 8),
+          MHeatmapLegend(
+            lessLabel: DiaryMood.awful.label(context),
+            moreLabel: DiaryMood.great.label(context),
+            colors: [
+              for (final mood in DiaryMood.values) mood.colorOf(context),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

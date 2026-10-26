@@ -392,10 +392,14 @@ class MHeatmapLegend extends StatelessWidget {
   final String lessLabel;
   final String moreLabel;
 
+  /// Custom scale colors, ordered from less to more. Defaults to level colors.
+  final List<Color>? colors;
+
   const MHeatmapLegend({
     super.key,
     required this.lessLabel,
     required this.moreLabel,
+    this.colors,
   });
 
   @override
@@ -405,14 +409,14 @@ class MHeatmapLegend extends StatelessWidget {
       mainAxisSize: .min,
       children: [
         Text(lessLabel, style: style),
-        for (var i = 0; i < _kLevelStops.length; i++)
+        for (var i = 0; i < (colors?.length ?? _kLevelStops.length); i++)
           Padding(
             padding: const .symmetric(horizontal: 2),
             child: Container(
               width: 10,
               height: 10,
               decoration: BoxDecoration(
-                color: MHeatmap.levelColor(context, i),
+                color: colors?[i] ?? MHeatmap.levelColor(context, i),
                 borderRadius: const .all(.circular(2)),
               ),
             ),

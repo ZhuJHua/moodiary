@@ -41,6 +41,61 @@ void main() {
   ];
 
   for (final brightness in Brightness.values) {
+    testWidgets(
+      '$brightness legend keeps default level colors and custom colors',
+      (tester) async {
+        const custom = [
+          Color(0xFFFF0000),
+          Color(0xFF00FF00),
+          Color(0xFF0000FF),
+        ];
+        for (final colors in [null, custom]) {
+          await tester.pumpWidget(
+            MaterialApp(
+              theme: buildMuiTheme(brightness: brightness),
+              home: Scaffold(
+                body: MHeatmapLegend(
+                  lessLabel: 'Less',
+                  moreLabel: 'More',
+                  colors: colors,
+                ),
+              ),
+            ),
+          );
+          final legend = find.byType(MHeatmapLegend);
+          final swatches = find.descendant(
+            of: legend,
+            matching: find.byType(Container),
+          );
+          final expected =
+              colors ??
+              [
+                for (var i = 0; i < 5; i++)
+                  MHeatmap.levelColor(tester.element(legend), i),
+              ];
+          expect(find.text('Less'), findsOneWidget);
+          expect(find.text('More'), findsOneWidget);
+          expect(
+            tester
+                .widgetList<Container>(swatches)
+                .map(
+                  (swatch) => (swatch.decoration! as BoxDecoration).color,
+                ),
+            expected,
+          );
+          for (final swatch in swatches.evaluate()) {
+            expect(
+              tester.getSize(find.byWidget(swatch.widget)),
+              const Size.square(10),
+            );
+          }
+          expect(tester.takeException(), isNull);
+        }
+      },
+    );
+  }
+
+  for (final brightness in Brightness.values) {
     for (final (name, accent) in accents) {
       testWidgets('$brightness · $name 档五级色阶两两可分', (tester) async {
         final ramp = await _rampOf(tester, brightness, accent);

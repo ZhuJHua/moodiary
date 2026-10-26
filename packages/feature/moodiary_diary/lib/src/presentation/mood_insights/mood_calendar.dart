@@ -1,7 +1,6 @@
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 class MoodCalendar extends StatelessWidget {
@@ -46,6 +45,7 @@ class MoodCalendar extends StatelessWidget {
         const SizedBox(height: 8),
         GridView.builder(
           shrinkWrap: true,
+          padding: .zero,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 7,
@@ -158,37 +158,4 @@ class MoodCalendar extends StatelessWidget {
       ),
     );
   }
-}
-
-class MoodInsightsLegend extends StatelessWidget {
-  const MoodInsightsLegend({super.key, required this.scope});
-
-  final MoodInsightsScope scope;
-
-  @override
-  Widget build(BuildContext context) => Wrap(
-    alignment: .center,
-    spacing: 10,
-    runSpacing: 8,
-    children: [
-      for (final mood in [...DiaryMood.values, null])
-        Row(
-          mainAxisSize: .min,
-          spacing: 3,
-          children: [
-            if (mood == null && scope == .year)
-              const SizedBox.square(
-                dimension: 14,
-                child: Center(child: MHeatmapDashedSwatch()),
-              )
-            else
-              MoodGlyph(mood: mood, size: 14),
-            Text(
-              mood?.label(context) ?? context.l10n.insights.unrecorded,
-              style: context.theme.typography.labelSmall.onSurfaceVariant,
-            ),
-          ],
-        ),
-    ],
-  );
 }
