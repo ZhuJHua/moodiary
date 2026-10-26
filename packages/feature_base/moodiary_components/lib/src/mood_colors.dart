@@ -11,6 +11,9 @@ extension DiaryMoodAppearance on DiaryMood {
   Color onColorOf(BuildContext context, {MoodPalette? palette}) =>
       (palette ?? MoodPalette.of(context)).onColor(this, context.theme.colors);
 
+  Color textColorOf(BuildContext context) =>
+      MoodPalette.of(context).textColor(this, context.theme.colors);
+
   String labelOf(Translations l10n) => switch (this) {
     .awful => l10n.common.moodAwful,
     .bad => l10n.common.moodBad,

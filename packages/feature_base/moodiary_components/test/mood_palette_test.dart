@@ -37,9 +37,36 @@ double _deltaE(Color first, Color second) {
       );
 }
 
+double _contrast(Color a, Color b) {
+  final la = a.computeLuminance(), lb = b.computeLuminance();
+  return (math.max(la, lb) + .05) / (math.min(la, lb) + .05);
+}
+
 void main() {
   for (final brightness in Brightness.values) {
     for (final palette in MoodPalette.values) {
+      test('$palette $brightness day labels reach 4.5:1 on every fill', () {
+        for (final accent in [
+          const MuiAccent.neutral(),
+          for (final seed in [0xFF2E59A7, 0xFF6B7A3A, 0xFFB33C86, 0xFF00897B])
+            MuiAccent.seeded(Color(seed)),
+        ]) {
+          final colors = buildMuiTheme(
+            brightness: brightness,
+            accent: accent,
+          ).colorScheme;
+          for (final mood in DiaryMood.values) {
+            expect(
+              _contrast(
+                palette.color(mood, colors),
+                palette.textColor(mood, colors),
+              ),
+              greaterThanOrEqualTo(4.5),
+              reason: '$accent $mood',
+            );
+          }
+        }
+      });
       for (final seed in [
         0xFF2E59A7,
         0xFF6B7A3A,

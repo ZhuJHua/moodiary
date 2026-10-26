@@ -123,7 +123,7 @@ class MoodCalendar extends StatelessWidget {
                           .copyWith(
                             color: future
                                 ? colors.outlineVariant
-                                : level?.onColorOf(context) ?? colors.outline,
+                                : level?.textColorOf(context) ?? colors.outline,
                             fontFeatures: const [.tabularFigures()],
                           ),
                     ),

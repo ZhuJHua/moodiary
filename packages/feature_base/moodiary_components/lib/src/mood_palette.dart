@@ -38,6 +38,15 @@ enum MoodPalette {
   Color onColor(DiaryMood mood, ColorScheme colorScheme) =>
       Color.lerp(color(mood, colorScheme), const Color(0xFF000000), 0.75)!;
 
+  // Small text on the fill: a near-black of the same hue on light fills,
+  // white on dark ones, split where both reach the same contrast.
+  Color textColor(DiaryMood mood, ColorScheme colorScheme) {
+    final fill = color(mood, colorScheme);
+    return fill.computeLuminance() > 0.179
+        ? Color.lerp(fill, const Color(0xFF000000), 0.9)!
+        : const Color(0xFFFFFFFF);
+  }
+
   String label(BuildContext context) => switch (this) {
     classic => context.l10n.app.moodPaletteClassic,
     blueOrange => context.l10n.app.moodPaletteBlueOrange,

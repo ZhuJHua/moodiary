@@ -64,6 +64,7 @@ class MSegment extends StatelessWidget {
       enabled: onTap != null,
       label: semanticLabel,
       excludeSemantics: true,
+      onTap: onTap,
       child: MInkWell(
         onTap: onTap,
         enabled: onTap != null,

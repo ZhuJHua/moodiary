@@ -61,6 +61,27 @@ void main() {
     handle.dispose();
   });
 
+  testWidgets('读屏的点按动作会切换分段', (tester) async {
+    final handle = tester.ensureSemantics();
+    _Range? picked;
+    await _pump(tester, selected: .month, onChanged: (v) => picked = v);
+
+    expect(
+      tester.getSemantics(find.bySemanticsLabel('年')),
+      matchesSemantics(
+        label: '年',
+        isButton: true,
+        hasSelectedState: true,
+        hasEnabledState: true,
+        isEnabled: true,
+        hasTapAction: true,
+      ),
+    );
+    tester.semantics.tap(find.semantics.byLabel('年'));
+    expect(picked, _Range.year);
+    handle.dispose();
+  });
+
   testWidgets('选中块用 secondaryContainer，文字跟随前景色', (tester) async {
     await _pump(tester, selected: .week, onChanged: (_) {});
     final context = tester.element(find.text('周'));
