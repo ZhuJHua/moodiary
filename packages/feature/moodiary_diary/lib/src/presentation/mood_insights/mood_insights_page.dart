@@ -75,9 +75,10 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
   }
 
   Future<_InsightsData> _load() async {
-    final bounds = moodPeriodBounds(_anchor, _scope);
-    final previous = moodPeriodBounds(moodDayOffset(bounds.start, -1), _scope);
-    final patternStart = _scope == .month
+    final scope = _scope;
+    final bounds = moodPeriodBounds(_anchor, scope);
+    final previous = moodPeriodBounds(moodDayOffset(bounds.start, -1), scope);
+    final patternStart = scope == .month
         ? moodDayOffset(bounds.end, -90)
         : bounds.start;
     final start = patternStart.isBefore(previous.start)
@@ -92,6 +93,9 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
           }).toList();
       final periodRows = between(bounds.start, bounds.end);
       return _InsightsData(
+        scope: scope,
+        start: bounds.start,
+        end: bounds.end,
         rows: periodRows,
         summary: summarizeMood(periodRows),
         previous: summarizeMood(between(previous.start, previous.end)),
@@ -199,88 +203,103 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
                     ),
                   );
                 }
-                final data = loading
-                    ? _InsightsData.placeholder(
-                        bounds.start,
-                        bounds.end,
-                        context.l10n.common.untitled,
-                      )
-                    : snapshot.requireData;
-                if (data.summary.average == null) {
-                  return _Block(
-                    child: Padding(
-                      padding: const .symmetric(vertical: 32),
-                      child: Center(
-                        child: Text(
-                          context.l10n.insights.empty,
-                          style: context
-                              .theme
-                              .typography
-                              .bodyMedium
-                              .onSurfaceVariant,
+                return MDelayedLoading(
+                  loading: loading,
+                  loadKey: _future,
+                  builder: (context, showLoading) {
+                    if (loading && !showLoading && !snapshot.hasData) {
+                      return const SizedBox.shrink();
+                    }
+                    final data = showLoading
+                        ? _InsightsData.placeholder(
+                            _scope,
+                            bounds.start,
+                            bounds.end,
+                            context.l10n.common.untitled,
+                          )
+                        : snapshot.requireData;
+                    final scope = data.scope;
+                    final period = (start: data.start, end: data.end);
+                    if (data.summary.average == null) {
+                      return _Block(
+                        child: Padding(
+                          padding: const .symmetric(vertical: 32),
+                          child: Center(
+                            child: Text(
+                              context.l10n.insights.empty,
+                              style: context
+                                  .theme
+                                  .typography
+                                  .bodyMedium
+                                  .onSurfaceVariant,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  );
-                }
-                return MSkeleton(
-                  enabled: loading,
-                  child: Column(
-                    crossAxisAlignment: .stretch,
-                    children: [
-                      _Block(
-                        child: _Summary(data: data, scope: _scope),
-                      ),
-                      if (_scope != .week)
-                        _Block(
-                          title: _scope == .month
-                              ? context.l10n.insights.calendar
-                              : context.l10n.insights.yearPixels,
-                          child: Column(
-                            children: [
-                              MoodCalendar(
-                                scope: _scope,
-                                start: bounds.start,
-                                days: data.summary.days,
-                                selected: _selected,
-                                onMonthSelected: (month) =>
-                                    _jump(month, scope: .month),
-                                onSelected: (day) => setState(
-                                  () =>
-                                      _selected = day == _selected ? null : day,
-                                ),
+                      );
+                    }
+                    return MSkeleton(
+                      enabled: showLoading,
+                      child: Column(
+                        crossAxisAlignment: .stretch,
+                        children: [
+                          _Block(
+                            child: _Summary(data: data, scope: scope),
+                          ),
+                          if (scope != .week)
+                            _Block(
+                              title: scope == .month
+                                  ? context.l10n.insights.calendar
+                                  : context.l10n.insights.yearPixels,
+                              child: Column(
+                                children: [
+                                  MoodCalendar(
+                                    scope: scope,
+                                    start: period.start,
+                                    days: data.summary.days,
+                                    selected: _selected,
+                                    onMonthSelected: (month) =>
+                                        _jump(month, scope: .month),
+                                    onSelected: (day) => setState(
+                                      () => _selected = day == _selected
+                                          ? null
+                                          : day,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  _dayFooter(data),
+                                ],
                               ),
-                              const SizedBox(height: 8),
-                              _dayFooter(data),
-                            ],
+                            ),
+                          _Block(
+                            title: scope == .year
+                                ? context.l10n.insights.monthlyTrend
+                                : context.l10n.insights.trend,
+                            child: _trend(data, period.start, period.end),
                           ),
-                        ),
-                      _Block(
-                        title: _scope == .year
-                            ? context.l10n.insights.monthlyTrend
-                            : context.l10n.insights.trend,
-                        child: _trend(data, bounds.start, bounds.end),
+                          if (scope == .week)
+                            _Block(
+                              title: context.l10n.insights.weekDiaries,
+                              inkBleed: _WeekEntries.inkBleed,
+                              child: _WeekEntries(days: data.summary.days),
+                            ),
+                          if (scope != .week) ...[
+                            _Block(
+                              title: context.l10n.insights.distribution,
+                              child: MoodDistribution(
+                                counts: data.summary.distribution,
+                              ),
+                            ),
+                            _Block(
+                              title: context.l10n.insights.weekdayPattern,
+                              child: MoodWeekdayPattern(
+                                averages: data.weekdays,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-                      if (_scope == .week)
-                        _Block(
-                          title: context.l10n.insights.weekDiaries,
-                          inkBleed: _WeekEntries.inkBleed,
-                          child: _WeekEntries(days: data.summary.days),
-                        ),
-                      if (_scope != .week) ...[
-                        _Block(
-                          title: context.l10n.insights.distribution,
-                          child: MoodDistribution(
-                            counts: data.summary.distribution,
-                          ),
-                        ),
-                        _Block(
-                          title: context.l10n.insights.weekdayPattern,
-                          child: MoodWeekdayPattern(averages: data.weekdays),
-                        ),
-                      ],
-                    ],
-                  ),
+                    );
+                  },
                 );
               },
             ),
@@ -295,7 +314,7 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
     final List<double?> values;
     final List<(int, String)> labels;
     final locale = Localizations.localeOf(context).toLanguageTag();
-    if (_scope == .year) {
+    if (data.scope == .year) {
       dates = [for (var m = 1; m <= 12; m++) DateTime(start.year, m)];
       final averages = moodMonthAverages(data.rows);
       values = [for (final date in dates) averages[date]];
@@ -313,7 +332,7 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
           date,
       ];
       values = [for (final date in dates) data.summary.days[date]?.average];
-      labels = _scope == .week
+      labels = data.scope == .week
           ? [
               for (var i = 0; i < 7; i++)
                 (i, TimeFormat.weekdayNarrow(dates[i])),
@@ -332,7 +351,7 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
           MoodGlyph(mood: DiaryMood.fromScore(tick), size: 14),
       xLabels: labels,
       pointColor: (_, value) => moodLevel(value)!.colorOf(context),
-      semanticsLabel: _scope == .year
+      semanticsLabel: data.scope == .year
           ? context.l10n.insights.monthlyTrend
           : context.l10n.insights.trend,
     );
@@ -422,41 +441,48 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
               );
             }
             final loading = snapshot.connectionState != .done;
-            final diaries =
-                snapshot.data ??
-                [
-                  for (var i = 0; i < 2; i++)
-                    Diary(
-                      id: 'skeleton-$i',
-                      title: context.l10n.common.untitled,
-                      content: '',
-                      contentText: context.l10n.common.untitled,
-                      time: day,
-                      lastModified: day,
-                      show: true,
-                      imageName: const [],
-                      audioName: const [],
-                      videoName: const [],
-                      tags: const [],
-                      type: DiaryType.richText.value,
-                    ),
-                ];
-            return MSkeleton(
-              enabled: loading,
-              child: ListView(
-                shrinkWrap: true,
-                primary: false,
-                physics: const ClampingScrollPhysics(),
-                padding: const .all(14),
-                children: [
-                  Text(
-                    TimeFormat.longDate(day),
-                    style: context.theme.typography.titleMedium.onSurface,
+            return MDelayedLoading(
+              loading: loading,
+              loadKey: future,
+              builder: (context, showLoading) {
+                if (loading && !showLoading) return const SizedBox.shrink();
+                final diaries =
+                    snapshot.data ??
+                    [
+                      for (var i = 0; i < 2; i++)
+                        Diary(
+                          id: 'skeleton-$i',
+                          title: context.l10n.common.untitled,
+                          content: '',
+                          contentText: context.l10n.common.untitled,
+                          time: day,
+                          lastModified: day,
+                          show: true,
+                          imageName: const [],
+                          audioName: const [],
+                          videoName: const [],
+                          tags: const [],
+                          type: DiaryType.richText.value,
+                        ),
+                    ];
+                return MSkeleton(
+                  enabled: showLoading,
+                  child: ListView(
+                    shrinkWrap: true,
+                    primary: false,
+                    physics: const ClampingScrollPhysics(),
+                    padding: const .all(14),
+                    children: [
+                      Text(
+                        TimeFormat.longDate(day),
+                        style: context.theme.typography.titleMedium.onSurface,
+                      ),
+                      const SizedBox(height: 12),
+                      for (final diary in diaries) DiaryEntryTile(diary: diary),
+                    ],
                   ),
-                  const SizedBox(height: 12),
-                  for (final diary in diaries) DiaryEntryTile(diary: diary),
-                ],
-              ),
+                );
+              },
             );
           },
         ),
@@ -466,11 +492,17 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
 }
 
 class _InsightsData {
+  final MoodInsightsScope scope;
+  final DateTime start;
+  final DateTime end;
   final List<MoodInsightEntry> rows;
   final MoodInsightsSummary summary;
   final MoodInsightsSummary previous;
   final List<double?> weekdays;
   const _InsightsData({
+    required this.scope,
+    required this.start,
+    required this.end,
     required this.rows,
     required this.summary,
     required this.previous,
@@ -478,6 +510,7 @@ class _InsightsData {
   });
 
   factory _InsightsData.placeholder(
+    MoodInsightsScope scope,
     DateTime start,
     DateTime end,
     String title,
@@ -496,6 +529,9 @@ class _InsightsData {
     ];
     final summary = summarizeMood(rows);
     return _InsightsData(
+      scope: scope,
+      start: start,
+      end: end,
       rows: rows,
       summary: summary,
       previous: summary,

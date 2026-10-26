@@ -8,6 +8,7 @@ export 'components/basic/button_size.dart';
 export 'components/basic/circle_button.dart';
 export 'components/basic/circle_button_group.dart';
 export 'components/basic/clipper.dart';
+export 'components/basic/delayed_loading.dart';
 export 'components/basic/dialog.dart';
 export 'components/basic/expand_tap_area.dart';
 export 'components/basic/fix_scroll.dart';

@@ -69,10 +69,25 @@ class _MePageState extends ConsumerState<MePage> with RouteAware {
           ),
           const SizedBox(height: 12),
           if (moodLoading || moods != null) ...[
-            if (moodLoading)
-              MSkeleton(enabled: true, child: MoodInsightsCard.placeholder())
-            else
-              MoodInsightsCard(data: moods!),
+            MDelayedLoading(
+              loading: moods == null,
+              builder: (context, showLoading) {
+                if (moods != null) return MoodInsightsCard(data: moods);
+                if (showLoading) {
+                  return MSkeleton(
+                    enabled: true,
+                    child: MoodInsightsCard.placeholder(),
+                  );
+                }
+                return Visibility(
+                  visible: false,
+                  maintainState: true,
+                  maintainAnimation: true,
+                  maintainSize: true,
+                  child: MoodInsightsCard.placeholder(),
+                );
+              },
+            ),
             const SizedBox(height: 12),
           ],
           _StatRow(stats: stats),

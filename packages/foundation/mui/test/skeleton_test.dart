@@ -7,6 +7,61 @@ import 'package:skeletonizer/skeletonizer.dart'
     show SkeletonizerConfig, SolidColorEffect;
 
 void main() {
+  testWidgets('delayed loading cancels and restarts for each request', (
+    tester,
+  ) async {
+    Future<void> show({required bool loading, int request = 0}) =>
+        tester.pumpWidget(
+          MaterialApp(
+            theme: buildMuiTheme(brightness: .light),
+            home: MDelayedLoading(
+              loading: loading,
+              loadKey: request,
+              builder: (_, showLoading) => showLoading
+                  ? const MSkeleton(enabled: true, child: Text('Placeholder'))
+                  : const Text('Content'),
+            ),
+          ),
+        );
+    await show(loading: true);
+    expect(find.byType(MSkeleton), findsNothing);
+    await tester.pump(const Duration(milliseconds: 299));
+    expect(find.text('Placeholder'), findsNothing);
+    await show(loading: false);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byType(MSkeleton), findsNothing);
+    await show(loading: true);
+    await tester.pump(const Duration(milliseconds: 299));
+    await show(loading: true, request: 1);
+    await tester.pump(const Duration(milliseconds: 299));
+    expect(find.byType(MSkeleton), findsNothing);
+    await tester.pump(const Duration(milliseconds: 1));
+    expect(find.byType(MSkeleton), findsOneWidget);
+    await show(loading: false, request: 1);
+    expect(find.byType(MSkeleton), findsNothing);
+    await show(loading: true, request: 2);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('zero loading delay builds the skeleton immediately', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildMuiTheme(brightness: .light),
+        home: MDelayedLoading(
+          loading: true,
+          delay: Duration.zero,
+          builder: (_, showLoading) =>
+              MSkeleton(enabled: showLoading, child: const Text('Content')),
+        ),
+      ),
+    );
+    expect(tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled, isTrue);
+  });
+
   for (final enabled in [true, false]) {
     testWidgets('enabled=$enabled paints bones or the untouched child', (
       tester,

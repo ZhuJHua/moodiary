@@ -970,7 +970,112 @@ void main() {
     expect(repository.queries.length, count);
   });
 
-  testWidgets('picker jump shows skeleton until new period finishes loading', (
+  for (final recorded in [true, false]) {
+    testWidgets('fast initial result recorded=$recorded skips placeholders', (
+      tester,
+    ) async {
+      repository.pending = Completer();
+      await tester.pumpWidget(
+        muiTestApp(const MoodInsightsPage(), wrapScaffold: false),
+      );
+      expect(find.byType(MoodPeriodHeader), findsOneWidget);
+      expect(find.byType(MSkeleton), findsNothing);
+      expect(find.byType(MoodCalendar), findsNothing);
+      expect(find.byType(MLineChart), findsNothing);
+      expect(find.text(l10n.insights.empty), findsNothing);
+      await tester.pump(const Duration(milliseconds: 50));
+      repository.pending!.complete([
+        if (recorded)
+          MoodInsightEntry(id: 'fast', time: DateTime.now(), mood: .good),
+      ]);
+      await tester.pump();
+      await tester.pump();
+      expect(
+        find.byWidgetPredicate((w) => w is MSkeleton && w.enabled),
+        findsNothing,
+      );
+      expect(find.byWidgetPredicate((w) => w is Bone), findsNothing);
+      expect(find.text(recorded ? '4.0' : l10n.insights.empty), findsOneWidget);
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(
+        find.byWidgetPredicate((w) => w is MSkeleton && w.enabled),
+        findsNothing,
+      );
+    });
+  }
+
+  testWidgets('scope switch retains the previous period until data arrives', (
+    tester,
+  ) async {
+    await openPage(tester);
+    final previous = tester.widget<MoodCalendar>(find.byType(MoodCalendar));
+    final chart = tester.widget<MLineChart>(find.byType(MLineChart));
+    repository.pending = Completer();
+    await tester.tap(find.text(l10n.insights.year));
+    await tester.pump();
+    expect(
+      tester.widget<MoodPeriodHeader>(find.byType(MoodPeriodHeader)).scope,
+      MoodInsightsScope.year,
+    );
+    final retained = tester.widget<MoodCalendar>(find.byType(MoodCalendar));
+    expect(retained.scope, previous.scope);
+    expect(retained.start, previous.start);
+    expect(retained.days, previous.days);
+    expect(
+      tester.widget<MLineChart>(find.byType(MLineChart)).values,
+      chart.values,
+    );
+    await tester.pump(const Duration(milliseconds: 299));
+    expect(tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled, isFalse);
+    repository.pending!.complete([
+      MoodInsightEntry(id: 'year', time: DateTime.now(), mood: .awful),
+    ]);
+    await tester.pump();
+    expect(
+      tester.widget<MoodCalendar>(find.byType(MoodCalendar)).scope,
+      MoodInsightsScope.year,
+    );
+    expect(find.text('1.0'), findsOneWidget);
+    expect(tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled, isFalse);
+  });
+
+  testWidgets('superseding a slow load restarts delay and ignores its result', (
+    tester,
+  ) async {
+    await openPage(tester);
+    final slow = Completer<List<MoodInsightEntry>>();
+    repository.pending = slow;
+    await tester.tap(find.text(l10n.insights.year));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled, isTrue);
+    final latest = Completer<List<MoodInsightEntry>>();
+    repository.pending = latest;
+    await tester.tap(find.text(l10n.insights.week));
+    await tester.pump();
+    expect(tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled, isFalse);
+    await tester.pump(const Duration(milliseconds: 50));
+    latest.complete([
+      MoodInsightEntry(id: 'latest', time: DateTime.now(), mood: .good),
+    ]);
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('4.0'), findsOneWidget);
+    slow.complete([
+      MoodInsightEntry(id: 'stale', time: DateTime.now(), mood: .awful),
+    ]);
+    await tester.pumpAndSettle();
+    expect(find.text('4.0'), findsOneWidget);
+    expect(find.text('1.0'), findsNothing);
+    expect(
+      tester.widget<MoodPeriodHeader>(find.byType(MoodPeriodHeader)).scope,
+      MoodInsightsScope.week,
+    );
+    expect(find.byType(MoodCalendar), findsNothing);
+    expect(tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled, isFalse);
+  });
+
+  testWidgets('picker jump delays skeleton until new period finishes loading', (
     tester,
   ) async {
     await openPage(tester);
@@ -979,6 +1084,15 @@ void main() {
     repository.pending = Completer();
     await tester.tap(cell(target));
     await tester.pump();
+    expect(tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled, isFalse);
+    expect(
+      tester.widget<MoodPeriodHeader>(find.byType(MoodPeriodHeader)).start,
+      target,
+    );
+    expect(
+      tester.widget<MoodCalendar>(find.byType(MoodCalendar)).start,
+      DateTime(DateTime.now().year, DateTime.now().month),
+    );
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.byType(BottomSheet), findsNothing);
     expect(tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled, isTrue);
@@ -1050,6 +1164,11 @@ void main() {
         );
         await tester.pump();
       }
+      expect(find.byType(MSkeleton), findsNothing);
+      expect(find.byType(MLineChart), findsNothing);
+      await tester.pump(const Duration(milliseconds: 299));
+      expect(find.byType(MSkeleton), findsNothing);
+      await tester.pump(const Duration(milliseconds: 1));
       expect(find.byType(CircularProgressIndicator), findsNothing);
       final skeleton = find.byType(MSkeleton);
       expect(tester.widget<MSkeleton>(skeleton).enabled, isTrue);
@@ -1068,6 +1187,7 @@ void main() {
       // Controls remain usable during the request and keep the chosen scope.
       await tester.fling(periodButton, const Offset(200, 0), 800);
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
       final bounds = repository.queries.last;
       final chartSize = tester.getSize(find.byType(MLineChart));
       final calendarSize = scope == .week
@@ -1140,6 +1260,42 @@ void main() {
     });
   }
 
+  testWidgets('fast day sheet result skips skeleton entry tiles', (
+    tester,
+  ) async {
+    await openPage(tester);
+    final today = moodDayKey(DateTime.now());
+    await tester.tap(
+      find.descendant(
+        of: find.byType(MoodCalendar),
+        matching: find.text('${today.day}'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    diaries.pending = Completer();
+    await tester.ensureVisible(find.text(l10n.insights.view));
+    await tester.tap(find.text(l10n.insights.view));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.byType(DiaryEntryTile), findsNothing);
+    diaries.pending!.complete([
+      Diary.empty(type: .richText).copyWith(title: 'Fast day diary'),
+    ]);
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('Fast day diary'), findsOneWidget);
+    expect(find.byType(DiaryEntryTile), findsOneWidget);
+    expect(
+      find.byWidgetPredicate((w) => w is MSkeleton && w.enabled),
+      findsNothing,
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.byWidgetPredicate((w) => w is MSkeleton && w.enabled),
+      findsNothing,
+    );
+  });
+
   testWidgets('pending day sheet shows two real entry tiles as skeleton rows', (
     tester,
   ) async {
@@ -1164,7 +1320,10 @@ void main() {
     await tester.ensureVisible(find.text(l10n.insights.view));
     await tester.tap(find.text(l10n.insights.view));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byType(DiaryEntryTile), findsNothing);
+    await tester.pump(const Duration(milliseconds: 299));
+    expect(find.byType(DiaryEntryTile), findsNothing);
+    await tester.pump(const Duration(milliseconds: 1));
     expect(find.byType(CircularProgressIndicator), findsNothing);
     expect(find.byType(DiaryEntryTile), findsNWidgets(2));
     expect(

@@ -181,8 +181,8 @@ void main() {
   for (final recorded in [true, false]) {
     testWidgets(
       recorded
-          ? 'Me shows a skeleton while loading, then the populated mood card'
-          : 'Me shows a skeleton while loading, then the empty mood card',
+          ? 'Me delays the skeleton with stable height, then the populated mood card'
+          : 'Me delays the skeleton with stable height, then the empty mood card',
       (tester) async {
         tester.view.physicalSize = const Size(390, 844);
         tester.view.devicePixelRatio = 1;
@@ -206,12 +206,22 @@ void main() {
         expect(find.byType(CircularProgressIndicator), findsNothing);
         final card = find.byType(MoodInsightsCard);
         expect(card, findsOneWidget);
+        expect(find.byType(MSkeleton), findsNothing);
+        final loadingHeight = tester.getSize(card).height;
+        final hidden = tester.widget<Visibility>(
+          find.ancestor(of: card, matching: find.byType(Visibility)).first,
+        );
+        expect(hidden.visible, isFalse);
+        expect(hidden.maintainSize, isTrue);
+        await tester.pump(const Duration(milliseconds: 299));
+        expect(find.byType(MSkeleton), findsNothing);
+        await tester.pump(const Duration(milliseconds: 1));
         expect(
           tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled,
           isTrue,
         );
         expect(find.byWidgetPredicate((w) => w is Bone), findsNWidgets(7));
-        final loadingHeight = tester.getSize(card).height;
+        expect(tester.getSize(card).height, loadingHeight);
         final today = moodDayKey(DateTime.now());
         repository.pending.complete([
           if (recorded)
@@ -242,14 +252,53 @@ void main() {
             everyElement(isNull),
           );
           expect(find.text(l10n.insights.title), findsOneWidget);
+          expect(
+            find.descendant(
+              of: card,
+              matching: find.byIcon(LucideIcons.chevronRight),
+            ),
+            findsNothing,
+          );
+          expect(
+            find.descendant(of: card, matching: find.byType(MInkWell)),
+            findsNothing,
+          );
           await tester.tap(card);
           await tester.pumpAndSettle();
-          expect(find.text('insights-destination'), findsOneWidget);
+          expect(find.text('insights-destination'), findsNothing);
         }
         expect(tester.takeException(), isNull);
       },
     );
   }
+
+  testWidgets('Me fast mood result never shows a skeleton', (tester) async {
+    final repository = _PendingMoods();
+    getIt.registerSingleton<MoodInsightsRepository>(repository);
+    getIt.registerSingleton<DiaryRepository>(_Diaries());
+    final router = _host(const MePage());
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          dashboardControllerProvider.overrideWith(_Dashboard.new),
+          placeControllerProvider.overrideWith(_Places.new),
+        ],
+        child: _app(router),
+      ),
+    );
+    final height = tester.getSize(find.byType(MoodInsightsCard)).height;
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.byType(MSkeleton), findsNothing);
+    repository.pending.complete([]);
+    await tester.pump();
+    await tester.pump();
+    expect(find.text(l10n.insights.empty), findsOneWidget);
+    expect(tester.getSize(find.byType(MoodInsightsCard)).height, height);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byType(MSkeleton), findsNothing);
+    expect(find.byWidgetPredicate((w) => w is Bone), findsNothing);
+  });
 
   testWidgets('Me omits the mood card when loading fails without data', (
     tester,
