@@ -52,6 +52,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
 
   bool _dirty = false;
 
+  int _editRevision = 0;
+
   bool _autoFillTried = false;
 
   bool _weatherTouched = false;
@@ -269,15 +271,20 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   void _onContentChanged(String content, String plain) {
     _shownContent = content;
     ref.read(_provider.notifier).changeContent(content, contentText: plain);
-    _dirty = true;
+    _markDirty();
     _scheduleAutoSave();
   }
 
   void _onTitleChanged(String value) {
     _shownTitle = value;
     ref.read(_provider.notifier).changeTitle(value);
-    _dirty = true;
+    _markDirty();
     _scheduleAutoSave();
+  }
+
+  void _markDirty() {
+    _dirty = true;
+    _editRevision++;
   }
 
   void _scheduleAutoSave() {
@@ -287,16 +294,22 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   }
 
   Future<void> _flushAutoSave() async {
-    _autoSaveTimer?.cancel();
-    _autoSaveTimer = null;
+    final notifier = _notifier;
     if (mounted) setState(() => _saveStatus = 'saving');
-    final result = await ref.read(_provider.notifier).autoSave();
-    final ok = result == .saved;
-    if (ok) _dirty = false;
-    if (!mounted) return;
-    setState(() => _saveStatus = ok ? 'saved' : 'failed');
-    if (ok) {
-      unawaited(_maybeAutoFill());
+    while (true) {
+      _autoSaveTimer?.cancel();
+      _autoSaveTimer = null;
+      final revision = _editRevision;
+      final result = await notifier.autoSave();
+      if (!mounted || !identical(notifier, _notifier)) return;
+      final ok = result == .saved;
+      if (ok && revision != _editRevision) continue;
+      if (ok) _dirty = false;
+      setState(() => _saveStatus = ok ? 'saved' : 'failed');
+      if (ok) {
+        unawaited(_maybeAutoFill());
+      }
+      return;
     }
   }
 
@@ -313,7 +326,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     );
     if (picked == null || !mounted) return;
     ref.read(_provider.notifier).changeDate(picked);
-    _dirty = true;
+    _markDirty();
     _scheduleAutoSave();
   }
 
@@ -328,7 +341,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     );
     if (picked == null || !mounted) return;
     ref.read(_provider.notifier).changeTime(picked);
-    _dirty = true;
+    _markDirty();
     _scheduleAutoSave();
   }
 
@@ -341,7 +354,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     );
     if (!picked || !mounted) return;
     ref.read(_provider.notifier).changeCategory(category?.id);
-    _dirty = true;
+    _markDirty();
     _scheduleAutoSave();
   }
 
@@ -357,20 +370,20 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     if (tag == null || tag.isEmpty || !mounted) return;
     if (current.tags.contains(tag)) return;
     ref.read(_provider.notifier).changeTags([...current.tags, tag]);
-    _dirty = true;
+    _markDirty();
     _scheduleAutoSave();
   }
 
   void _onRemoveTag(Diary current, int index) {
     final next = [...current.tags]..removeAt(index);
     ref.read(_provider.notifier).changeTags(next);
-    _dirty = true;
+    _markDirty();
     _scheduleAutoSave();
   }
 
   void _onChangeMood(DiaryMood? mood) {
     ref.read(_provider.notifier).changeMood(mood);
-    _dirty = true;
+    _markDirty();
     _scheduleAutoSave();
   }
 
@@ -383,14 +396,14 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
         .changeWeather(
           DiaryWeather(icon: option.code, text: option.label(context)),
         );
-    _dirty = true;
+    _markDirty();
     _scheduleAutoSave();
   }
 
   void _onClearWeather() {
     _weatherTouched = true;
     ref.read(_provider.notifier).changeWeather(null);
-    _dirty = true;
+    _markDirty();
     _scheduleAutoSave();
   }
 
@@ -406,7 +419,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     toast.success(
       message: l10n.diary.weatherFetched(weather: weather.displayText),
     );
-    _dirty = true;
+    _markDirty();
     _scheduleAutoSave();
   }
 
@@ -418,7 +431,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       toast.error(message: _geoFailureMessage(result.failure));
       return;
     }
-    _dirty = true;
+    _markDirty();
     _scheduleAutoSave();
   }
 
@@ -434,14 +447,14 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     if (!places.any((p) => p.id == id)) return;
     _placeTouched = true;
     ref.read(_provider.notifier).changePlace(id);
-    _dirty = true;
+    _markDirty();
     _scheduleAutoSave();
   }
 
   void _onClearPosition() {
     _placeTouched = true;
     ref.read(_provider.notifier).changePlace(null);
-    _dirty = true;
+    _markDirty();
     _scheduleAutoSave();
   }
 
@@ -457,7 +470,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     );
     if (saved == null || !mounted) return;
     ref.read(_provider.notifier).changePlace(saved.id);
-    _dirty = true;
+    _markDirty();
     _scheduleAutoSave();
   }
 
@@ -518,7 +531,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       changed = changed || (result.weather != null && _weatherUntouched);
     }
     if (!changed) return;
-    _dirty = true;
+    _markDirty();
     if (_mode == .edit) {
       _scheduleAutoSave();
     } else {
@@ -781,12 +794,14 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   Future<void> _saveAndExit() async {
     await _editorController.flush();
     if (_dirty) {
-      await _flushAutoSave();
-      if (!mounted) return;
-      if (_saveStatus != 'saved') {
-        toast.error(message: l10n.diary.saveFailed);
-        return;
-      }
+      do {
+        await _flushAutoSave();
+        if (!mounted) return;
+        if (_saveStatus != 'saved') {
+          toast.error(message: l10n.diary.saveFailed);
+          return;
+        }
+      } while (_dirty);
       toast.success(message: l10n.diary.saved);
     }
     if (!mounted) return;
@@ -1038,12 +1053,13 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
 
   Future<bool> _flushBeforeHop() async {
     await _editorController.flush();
-    if (!_dirty) return true;
-    await _flushAutoSave();
-    if (!mounted) return false;
-    if (_saveStatus == 'failed') {
-      toast.error(message: l10n.diary.saveFailed);
-      return false;
+    while (_dirty) {
+      await _flushAutoSave();
+      if (!mounted) return false;
+      if (_saveStatus == 'failed') {
+        toast.error(message: l10n.diary.saveFailed);
+        return false;
+      }
     }
     return true;
   }
