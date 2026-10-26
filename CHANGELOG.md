@@ -2,6 +2,55 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.9.0] - 2026-10-26
+
+### 🚀 Features
+
+- *(about)* Check for updates against GitHub releases (#287)
+- *(assistant)* Improve the chat list experience (#291)
+- *(search)* Rebuild full-text search on an external-content FTS5 index (#295)
+- *(assistant)* Model surface, notes and memory, permission gate (#292)
+- *(i18n)* Top-level i18n/ tree and vue-i18n for the editor page (#307)
+- *(diary)* Rebuild the calendar around month/year scopes with lunar… (#313)
+- *(diary)* Improve the map page (#316)
+- *(calendar)* Unify day label rendering — term/festival/lunar priority (#318)
+- *(sync)* Reset a forgotten E2E password and gate sensitive actions with a passcode (#324)
+- *(android)* Add alpha builds and signing fallback (#336)
+- *(editor)* Rebuild and improve the editing experience (#334)
+- *(mood)* Five-level moods and mood insights (#341)
+
+### 🐛 Bug Fixes
+
+- *(cliff)* Skip release commits and honour a Changelog: skip footer (#279)
+- *(sync)* Degrade when the remote rejects a conditional write (#305)
+- *(editor)* Stop injecting meta into the page on every keystroke (#306)
+- *(me)* Count journal days from the earliest diary (#317)
+- *(media)* Keep HEIC orientation (#328)
+- *(picker)* Handle limited photo and video access (#338)
+- *(media)* Video playback on some hisilicon chips — force GL textures (#329)
+- *(picker)* Preview unselected assets on tap (#342)
+- *(diary)* Fade the axis below an unset mood into the next node (#345)
+- *(editor)* Keep edits that arrive while an autosave is writing (#347)
+- *(ios)* Update Rust to 1.99.1 so native libraries load on iOS 27 (#346)
+- *(diary)* Render a diary in one pass once its data is ready (#351)
+
+### 🚜 Refactor
+
+- *(rag)* Move the sqlite-vec binding out into the sqlite3_vec package (#299)
+- *(ml)* Drop mood suggestion (#300)
+
+### 📚 Documentation
+
+- Trim derivable content from CLAUDE.md (#333)
+- Migrate agent guidance and clean up documentation (#337)
+
+### ⚙️ Miscellaneous Tasks
+
+- Run dart format and regenerate build_runner output (#293)
+- Regenerate rust FFI bindings (#294)
+- Fix fork PR labelling and switch to native auto-merge (#314)
+- Remove the issue-labeled workflow (#323)
+
 ## [2.8.1] - 2026-09-07
 
 2.8.1 rebuilds Moodiary on new foundations: a new database, a new editor, a new
