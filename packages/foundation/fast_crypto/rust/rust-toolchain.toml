@@ -1,5 +1,5 @@
 [toolchain]
-channel = "1.95.0"
+channel = "1.99.1"
 components = ["clippy"]
 targets = [
   "aarch64-linux-android",
