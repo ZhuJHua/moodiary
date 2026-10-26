@@ -2661,9 +2661,6 @@ class Translations$insights$zh {
 	/// zh: '本月平均心情 · {level}'
 	String monthAverage({required Object level}) => '本月平均心情 · ${level}';
 
-	/// zh: '记录 {count} / {days} 天'
-	String recordedProgress({required Object count, required Object days}) => '记录 ${count} / ${days} 天';
-
 	/// zh: '心情记录更新了'
 	String get noticeTitle => '心情记录更新了';
 

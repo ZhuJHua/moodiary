@@ -962,7 +962,6 @@ class _Translations$insights$en extends Translations$insights$zh {
 	@override String get yearPixels => 'Year in moods';
 	@override String get monthlyTrend => 'Monthly averages';
 	@override String monthAverage({required Object level}) => 'This month’s mood · ${level}';
-	@override String recordedProgress({required Object count, required Object days}) => 'Recorded ${count} / ${days} days';
 	@override String get noticeTitle => 'Mood tracking has changed';
 	@override String noticeSubtitle({required Object version}) => 'New in ${version}';
 	@override String get noticeCaption => 'Mood captures how you feel today. You can also leave it blank.';

@@ -30,7 +30,6 @@
   "yearPixels": "年度心情",
   "monthlyTrend": "每月平均",
   "monthAverage": "本月平均心情 · {level}",
-  "recordedProgress": "记录 {count} / {days} 天",
   "noticeTitle": "心情记录更新了",
   "noticeSubtitle": "{version} 新变化",
   "noticeCaption": "心情只记录今天感觉怎么样，也可以不填",

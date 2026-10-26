@@ -30,7 +30,6 @@
   "yearPixels": "Year in moods",
   "monthlyTrend": "Monthly averages",
   "monthAverage": "This month’s mood · {level}",
-  "recordedProgress": "Recorded {count} / {days} days",
   "noticeTitle": "Mood tracking has changed",
   "noticeSubtitle": "New in {version}",
   "noticeCaption": "Mood captures how you feel today. You can also leave it blank.",

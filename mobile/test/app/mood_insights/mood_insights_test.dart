@@ -125,6 +125,17 @@ void main() {
               isTrue,
             );
             expect(find.byWidgetPredicate((w) => w is Bone), findsNWidgets(7));
+            expect(
+              find.textContaining(
+                RegExp(r'^(记录|Recorded) \d+ / \d+ (天|days)$'),
+              ),
+              findsNothing,
+            );
+            expect(
+              tester.getTopLeft(find.byType(MoodGlyph).first).dy -
+                  tester.getBottomLeft(find.text('4.0')).dy,
+              14,
+            );
             loadingSize = tester.getSize(find.byType(MoodInsightsCard));
           }
           final today = moodDayKey(DateTime.now());
@@ -159,7 +170,7 @@ void main() {
   }
 
   testWidgets(
-    'Me card shows month, progress, rolling glyphs and opens insights',
+    'Me card shows month average, delta, rolling glyphs and opens insights',
     (tester) async {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1;
@@ -182,11 +193,22 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('4.0'), findsOneWidget);
       expect(
-        find.text(l10n.insights.recordedProgress(count: 1, days: 21)),
+        find.text(
+          l10n.insights.monthAverage(level: DiaryMood.good.labelOf(l10n)),
+        ),
         findsOneWidget,
       );
       expect(find.byType(MoodGlyph), findsNWidgets(7));
       expect(find.text('+0.5'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.byType(MoodGlyph).first).dy -
+            tester.getBottomLeft(find.text('4.0')).dy,
+        14,
+      );
+      expect(
+        find.textContaining(RegExp(r'^(记录|Recorded) \d+ / \d+ (天|days)$')),
+        findsNothing,
+      );
       await tester.tap(find.byType(MoodInsightsCard));
       await tester.pumpAndSettle();
       expect(find.text('insights-destination'), findsOneWidget);

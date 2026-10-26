@@ -51,40 +51,28 @@ class MoodInsightsCard extends StatelessWidget {
                 spacing: 8,
                 children: [
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: .start,
+                    child: Row(
+                      crossAxisAlignment: .baseline,
+                      textBaseline: .alphabetic,
+                      spacing: 6,
                       children: [
-                        Row(
-                          crossAxisAlignment: .baseline,
-                          textBaseline: .alphabetic,
-                          spacing: 6,
-                          children: [
-                            Text(
-                              data.month.average?.toStringAsFixed(1) ?? '–',
-                              style: typo.headlineSmall.emphasized.onSurface
-                                  .copyWith(
-                                    fontFeatures: const [.tabularFigures()],
-                                  ),
-                            ),
-                            Flexible(
-                              child: Text(
-                                context.l10n.insights.monthAverage(
-                                  level:
-                                      moodLevel(data.month.average)
-                                          ?.label(context) ??
-                                      context.l10n.insights.unrecorded,
-                                ),
-                                style: typo.bodyMedium.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
                         Text(
-                          context.l10n.insights.recordedProgress(
-                            count: data.month.recordedDays,
-                            days: data.today.day,
+                          data.month.average?.toStringAsFixed(1) ?? '–',
+                          style: typo.headlineSmall.emphasized.onSurface
+                              .copyWith(
+                                fontFeatures: const [.tabularFigures()],
+                              ),
+                        ),
+                        Flexible(
+                          child: Text(
+                            context.l10n.insights.monthAverage(
+                              level:
+                                  moodLevel(data.month.average)
+                                      ?.label(context) ??
+                                  context.l10n.insights.unrecorded,
+                            ),
+                            style: typo.bodyMedium.onSurfaceVariant,
                           ),
-                          style: typo.labelMedium.onSurfaceVariant,
                         ),
                       ],
                     ),
@@ -93,7 +81,7 @@ class MoodInsightsCard extends StatelessWidget {
                     Skeleton.leaf(child: MoodDeltaPill(delta: data.delta!)),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               Row(
                 children: [
                   for (var i = 0; i < 7; i++)
