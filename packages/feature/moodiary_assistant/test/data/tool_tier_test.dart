@@ -47,6 +47,30 @@ void main() {
       ]);
     });
 
+    test('rememberFact 带 id 改写旧记忆才是不可逆', () {
+      expect(
+        assistantToolTier(.rememberFact, {
+          'items': [
+            {'text': '喜欢跑步'},
+          ],
+        }),
+        AssistantToolTier.write,
+      );
+      expect(
+        assistantToolTier(.rememberFact, {
+          'items': [
+            {'text': '喜欢跑步'},
+            {'id': 'm1', 'text': '改成游泳'},
+          ],
+        }),
+        AssistantToolTier.destructive,
+      );
+      expect(
+        assistantToolTier(.rememberFact, {'id': ' ', 'text': 't'}),
+        AssistantToolTier.write,
+      );
+    });
+
     test('删日记进回收站算可逆，删分类和删记忆不可逆', () {
       expect(
         assistantToolTier(.deleteDiary, const {}),
