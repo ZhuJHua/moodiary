@@ -32,6 +32,7 @@ All notable changes to this project will be documented in this file.
 - *(diary)* Fade the axis below an unset mood into the next node (#345)
 - *(editor)* Keep edits that arrive while an autosave is writing (#347)
 - *(ios)* Update Rust to 1.99.1 so native libraries load on iOS 27 (#346)
+- *(diary)* Render a diary in one pass once its data is ready (#351)
 
 ### 🚜 Refactor
 
