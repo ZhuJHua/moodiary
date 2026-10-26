@@ -17,10 +17,11 @@ void main(List<String> args) async {
       cratePath: 'rust',
       extraCargoEnvironmentVariables: env,
     ).run(input: input, output: output);
-    // native_toolchain_rust 只登记 crate 自身 src 为依赖，显式加 Cargo.toml/lock 防止改依赖后钩子不重跑
+    // native_toolchain_rust 只登记 crate 自身 src 为依赖，显式加 Cargo.toml/lock 和 rust-toolchain.toml 防止改依赖或升工具链后钩子不重跑
     output.dependencies.addAll([
       input.packageRoot.resolve('rust/Cargo.toml'),
       input.packageRoot.resolve('rust/Cargo.lock'),
+      input.packageRoot.resolve('rust/rust-toolchain.toml'),
     ]);
   });
 }

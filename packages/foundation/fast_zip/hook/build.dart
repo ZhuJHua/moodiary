@@ -17,10 +17,11 @@ void main(List<String> args) async {
       cratePath: 'rust',
       extraCargoEnvironmentVariables: env,
     ).run(input: input, output: output);
-    // Cargo.toml / Cargo.lock 需显式登记为依赖，否则改动不会触发钩子重跑
+    // Cargo.toml / Cargo.lock / rust-toolchain.toml 需显式登记为依赖，否则改动不会触发钩子重跑
     output.dependencies.addAll([
       input.packageRoot.resolve('rust/Cargo.toml'),
       input.packageRoot.resolve('rust/Cargo.lock'),
+      input.packageRoot.resolve('rust/rust-toolchain.toml'),
     ]);
   });
 }
