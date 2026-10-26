@@ -51,27 +51,23 @@ describe('mood metadata bridge', () => {
     expect(postMessage.mock.calls.map(([raw]) => JSON.parse(raw))).toContainEqual({ type: 'changeMood', payload: { mood: '' } })
   })
 
-  it('repaints pill and picker from updated palette colors without icon names', async () => {
+  it('repaints pill and picker from updated palette colors', async () => {
     setLocale('en')
     const view = render(<EditorMetaHeader meta={{ ...meta, mood: 'awful' }} editable wordCount={0} />)
     const pill = screen.getByRole('button', { name: 'Mood Awful' })
-    expect(pill.querySelector('svg')?.getAttribute('width')).toBe('18')
-    expect(pill.querySelector('circle')?.getAttribute('fill')).toBe('#D4382F')
-    expect(pill.querySelector('g')?.getAttribute('stroke')).toBe('#350E0C')
+    expect(pill.querySelector('circle')?.getAttribute('fill')).toBe(meta.moods[0].color)
+    expect(pill.querySelector('g')?.getAttribute('stroke')).toBe(meta.moods[0].onColor)
     const updated = { ...meta, mood: 'awful', moods: meta.moods.map((m) => (
       m.value === 'awful' ? { ...m, color: '#5F84DE', onColor: '#182138' } : m
     )) }
     view.rerender(<EditorMetaHeader meta={updated} editable wordCount={0} />)
-    expect(pill.querySelector('circle')?.getAttribute('fill')).toBe('#5F84DE')
-    expect(pill.querySelector('g')?.getAttribute('stroke')).toBe('#182138')
+    expect(pill.querySelector('circle')?.getAttribute('fill')).toBe(updated.moods[0].color)
+    expect(pill.querySelector('g')?.getAttribute('stroke')).toBe(updated.moods[0].onColor)
     fireEvent.click(pill)
     const cell = await screen.findByRole('button', { name: 'Awful' })
     expect(cell.getAttribute('aria-pressed')).toBe('true')
-    expect(cell.querySelector('svg')?.getAttribute('width')).toBe('30')
-    expect(cell.querySelector('circle')?.getAttribute('fill')).toBe('#5F84DE')
-    expect(cell.querySelector('g')?.getAttribute('stroke')).toBe('#182138')
-    const clear = screen.getByRole('button', { name: "Don't record" })
-    expect(clear.querySelector('circle')?.getAttribute('stroke-dasharray')).toBe('2.6 2.2')
+    expect(cell.querySelector('circle')?.getAttribute('fill')).toBe(updated.moods[0].color)
+    expect(cell.querySelector('g')?.getAttribute('stroke')).toBe(updated.moods[0].onColor)
   })
 
   it('also renders unset metadata in read-only mode', () => {

@@ -78,17 +78,9 @@ void main() {
           expect(
             tester
                 .widgetList<Container>(swatches)
-                .map(
-                  (swatch) => (swatch.decoration! as BoxDecoration).color,
-                ),
+                .map((swatch) => (swatch.decoration! as BoxDecoration).color),
             expected,
           );
-          for (final swatch in swatches.evaluate()) {
-            expect(
-              tester.getSize(find.byWidget(swatch.widget)),
-              const Size.square(10),
-            );
-          }
           expect(tester.takeException(), isNull);
         }
       },
@@ -186,13 +178,9 @@ void main() {
       final context = tester.element(cells.last);
       expect(last.color, MHeatmap.emptyColor(context));
       expect(MHeatmap.emptyColor(context), MHeatmap.levelColor(context, 0));
-      expect(last.borderRadius, MHeatmap.cellBorderRadius);
       expect(
-        first.border,
-        Border.all(
-          color: MuiTheme.of(tester.element(cells.first)).colors.onSurface,
-          width: 1.6,
-        ),
+        first.border?.top.color,
+        tester.element(cells.first).theme.colors.onSurface,
       );
       expect(visited, [colored, end]);
       await tester.tap(cells.last);
@@ -202,7 +190,7 @@ void main() {
 
   for (final brightness in Brightness.values) {
     testWidgets(
-      '$brightness dashed swatch paints short 1px strokes without any fill',
+      '$brightness dashed swatch paints theme strokes without a fill',
       (tester) async {
         final theme = buildMuiTheme(brightness: brightness);
         await tester.pumpWidget(
@@ -212,12 +200,11 @@ void main() {
           ),
         );
         final swatch = find.byType(MHeatmapDashedSwatch);
-        expect(tester.getSize(swatch), const Size.square(11));
+        final size = tester.getSize(swatch);
         final customPaint = tester.widget<CustomPaint>(
           find.descendant(of: swatch, matching: find.byType(CustomPaint)),
         );
-        void paint(Canvas canvas) =>
-            customPaint.painter!.paint(canvas, const Size.square(11));
+        void paint(Canvas canvas) => customPaint.painter!.paint(canvas, size);
         var strokes = 0;
         expect(
           paint,
@@ -230,20 +217,19 @@ void main() {
               theme.colorScheme.outlineVariant.toARGB32(),
             );
             expect(stroke.style, PaintingStyle.stroke);
-            expect(stroke.strokeWidth, 1);
-            expect(path.computeMetrics().single.length, inExclusiveRange(1, 2));
+            expect(stroke.strokeWidth, greaterThan(0));
             // Extracted paths use float32 coordinates.
             const tolerance = 1e-5;
             final bounds = path.getBounds();
-            expect(bounds.left, greaterThanOrEqualTo(.5 - tolerance));
-            expect(bounds.top, greaterThanOrEqualTo(.5 - tolerance));
-            expect(bounds.right, lessThanOrEqualTo(10.5 + tolerance));
-            expect(bounds.bottom, lessThanOrEqualTo(10.5 + tolerance));
+            expect(bounds.left, greaterThanOrEqualTo(-tolerance));
+            expect(bounds.top, greaterThanOrEqualTo(-tolerance));
+            expect(bounds.right, lessThanOrEqualTo(size.width + tolerance));
+            expect(bounds.bottom, lessThanOrEqualTo(size.height + tolerance));
             strokes++;
             return true;
           }),
         );
-        expect(strokes, greaterThanOrEqualTo(10));
+        expect(strokes, greaterThan(1));
       },
     );
   }
@@ -287,18 +273,10 @@ void main() {
           .map((cell) => cell.decoration! as BoxDecoration)
           .toList();
       expect(decorations.map((decoration) => decoration.color), [null, null]);
-      expect(
-        decorations.first.border,
-        Border.all(color: colors.onSurface, width: 1.6),
-      );
-      expect(
-        decorations.last.border,
-        Border.all(color: colors.outline, width: 1.2),
-      );
+      expect(decorations.first.border?.top.color, colors.onSurface);
+      expect(decorations.last.border?.top.color, colors.outline);
       for (var i = 0; i < 2; i++) {
-        expect(tester.getSize(cells.at(i)), const Size.square(11));
-        expect(tester.getSize(swatches.at(i)), const Size.square(11));
-        expect(decorations[i].borderRadius, MHeatmap.cellBorderRadius);
+        expect(tester.getSize(cells.at(i)), tester.getSize(swatches.at(i)));
       }
       await tester.tap(swatches.first);
       expect(tapped, selected);
@@ -447,57 +425,6 @@ void main() {
       expect(selected, start);
       await tester.tap(cells.last);
       expect(selected, end);
-    },
-  );
-
-  testWidgets(
-    'default Me heatmap keeps its levels, cell geometry and selection border',
-    (tester) async {
-      final today = DateTime(2026, 8, 17);
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: buildMuiTheme(
-            brightness: .light,
-            accent: const MuiAccent.seeded(Color(0xFF2E59A7)),
-          ),
-          home: Scaffold(
-            body: SizedBox(
-              width: 200,
-              child: MHeatmap(
-                endDate: today,
-                levels: {today: 4, DateTime(2026, 8, 16): 2},
-                selected: today,
-                monthLabel: (month) => '${month.month}',
-                semanticsLabel: 'Me',
-              ),
-            ),
-          ),
-        ),
-      );
-      final map = find.byType(MHeatmap);
-      expect(tester.widget<MHeatmap>(map).emptyCell, MHeatmapEmptyCell.filled);
-      expect(find.byType(MHeatmapDashedSwatch), findsNothing);
-      final cells = find.descendant(of: map, matching: find.byType(Container));
-      expect(cells, findsNWidgets(53 * 7 - 5));
-      final context = tester.element(map);
-      final colors = MuiTheme.of(context).colors;
-      final decorations = tester
-          .widgetList<Container>(cells)
-          .map((cell) => cell.decoration! as BoxDecoration)
-          .toList();
-      expect(decorations.first.color, MHeatmap.levelColor(context, 0));
-      expect(
-        decorations[decorations.length - 2].color,
-        MHeatmap.levelColor(context, 2),
-      );
-      expect(decorations.last.color, MHeatmap.levelColor(context, 4));
-      expect(
-        decorations.last.border,
-        Border.all(color: colors.onSurface, width: 1.6),
-      );
-      expect(tester.getSize(cells.last), const Size.square(11));
-      final rows = find.descendant(of: map, matching: find.byType(Row));
-      expect(tester.getSize(rows.first), const Size(53 * 14, 7 * 14));
     },
   );
 

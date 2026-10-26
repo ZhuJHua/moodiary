@@ -25,7 +25,7 @@ export 'src/presentation/widget/view_mode_sheet.dart';
 List<RouteBase> diaryRoutes() => [
   GoRoute(
     path: MoodInsightsRoute.path,
-    builder: (_, _) => const MoodInsightsPage(),
+    builder: (_, state) => MoodInsightsPage.fromRoute(state),
   ),
   GoRoute(
     path: NewDiaryRoute.path,

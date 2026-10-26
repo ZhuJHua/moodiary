@@ -13,10 +13,10 @@ enum DiaryMood {
       score != null && score >= 1 && score <= 5 ? values[score - 1] : null;
 }
 
-/// Scene choices in the old mood picker. Callers resolve these in the UI locale.
+/// Scene tags for legacy imports. Callers resolve these in the UI locale.
 enum LegacyMoodScene { study, work, travel, sports, food, slacking }
 
-/// The single conversion boundary for mood names written by 2.8.1 and earlier.
+/// Converts legacy mood names into levels and optional scene tags.
 class LegacyMood {
   final DiaryMood? mood;
   final LegacyMoodScene? scene;

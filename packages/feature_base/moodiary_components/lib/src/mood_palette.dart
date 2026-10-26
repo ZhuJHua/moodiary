@@ -23,13 +23,13 @@ enum MoodPalette {
       name == blueOrange.name ? blueOrange : classic;
 
   // Standalone component trees can use the default without app storage.
-  static MoodPalette get current => getIt.isRegistered<IKVStorage>()
+  static MoodPalette get _current => getIt.isRegistered<IKVStorage>()
       ? fromName(MoodiaryKVs.moodPalette.get())
       : classic;
 
   static MoodPalette of(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<MoodPaletteScope>()?.palette ??
-      current;
+      _current;
 
   Color color(DiaryMood mood, ColorScheme colorScheme) => colorScheme.harmonize(
     Color((colorScheme.brightness == .dark ? _dark : _light)[mood.index]),

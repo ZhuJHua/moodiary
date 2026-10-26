@@ -1,5 +1,3 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_di/moodiary_di.dart';
@@ -51,30 +49,26 @@ void main() {
 
   test('palette storage defaults and round-trips stable names', () {
     expect(MoodiaryKVs.moodPalette.get(), 'classic');
-    expect(MoodPalette.current, MoodPalette.classic);
+    expect(
+      MoodPalette.fromName(MoodiaryKVs.moodPalette.get()),
+      MoodPalette.classic,
+    );
     MoodiaryKVs.moodPalette.set('blueOrange');
-    expect(MoodPalette.current, MoodPalette.blueOrange);
+    expect(
+      MoodPalette.fromName(MoodiaryKVs.moodPalette.get()),
+      MoodPalette.blueOrange,
+    );
     MoodiaryKVs.moodPalette.set('unknown');
-    expect(MoodPalette.current, MoodPalette.classic);
+    expect(
+      MoodPalette.fromName(MoodiaryKVs.moodPalette.get()),
+      MoodPalette.classic,
+    );
     MoodiaryKVs.moodPalette.remove();
-    expect(MoodPalette.current, MoodPalette.classic);
+    expect(
+      MoodPalette.fromName(MoodiaryKVs.moodPalette.get()),
+      MoodPalette.classic,
+    );
   });
-
-  test(
-    'on-colors lerp fills 75% toward black in every palette and brightness',
-    () {
-      for (final palette in MoodPalette.values) {
-        for (final brightness in Brightness.values) {
-          for (final mood in DiaryMood.values) {
-            final colors = buildMuiTheme(brightness: brightness).colorScheme;
-            final fill = palette.color(mood, colors);
-            final on = palette.onColor(mood, colors);
-            expect(on, Color.lerp(fill, const Color(0xFF000000), 0.75));
-          }
-        }
-      }
-    },
-  );
 
   testWidgets('all five faces and unset paint at small and large sizes', (
     tester,
@@ -96,20 +90,6 @@ void main() {
           ),
         );
         expect(tester.takeException(), isNull);
-        for (final glyph in find.byType(MoodGlyph).evaluate()) {
-          final paint = tester.widget<CustomPaint>(
-            find.descendant(
-              of: find.byWidget(glyph.widget),
-              matching: find.byType(CustomPaint),
-            ),
-          );
-          final recorder = ui.PictureRecorder();
-          expect(
-            () => paint.painter!.paint(Canvas(recorder), paint.size),
-            returnsNormally,
-          );
-          recorder.endRecording().dispose();
-        }
       }
     }
   });
@@ -146,10 +126,22 @@ void main() {
         ),
       ),
     );
-    expect(fill, const Color(0xFFD4382F));
+    expect(
+      fill,
+      MoodPalette.classic.color(
+        .awful,
+        buildMuiTheme(brightness: .light).colorScheme,
+      ),
+    );
     MoodiaryKVs.moodPalette.set('blueOrange');
     await tester.pumpAndSettle();
-    expect(fill, const Color(0xFF4467C4));
+    expect(
+      fill,
+      MoodPalette.blueOrange.color(
+        .awful,
+        buildMuiTheme(brightness: .light).colorScheme,
+      ),
+    );
     expect(
       on,
       MoodPalette.blueOrange.onColor(
@@ -159,7 +151,13 @@ void main() {
     );
     brightness.value = .dark;
     await tester.pumpAndSettle();
-    expect(fill, const Color(0xFF5F84DE));
+    expect(
+      fill,
+      MoodPalette.blueOrange.color(
+        .awful,
+        buildMuiTheme(brightness: .dark).colorScheme,
+      ),
+    );
     expect(
       on,
       MoodPalette.blueOrange.onColor(

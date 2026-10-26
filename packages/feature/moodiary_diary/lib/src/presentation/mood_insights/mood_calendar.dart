@@ -29,19 +29,7 @@ class MoodCalendar extends StatelessWidget {
     final count = DateTime(start.year, start.month + 1, 0).day;
     return Column(
       children: [
-        Row(
-          children: [
-            for (var i = 0; i < 7; i++)
-              Expanded(
-                child: Center(
-                  child: Text(
-                    TimeFormat.weekdayNarrow(DateTime(2026, 10, 18 + i)),
-                    style: context.theme.typography.labelSmall.onSurfaceVariant,
-                  ),
-                ),
-              ),
-          ],
-        ),
+        const MoodWeekdayHeader(),
         const SizedBox(height: 8),
         GridView.builder(
           shrinkWrap: true,
@@ -158,4 +146,23 @@ class MoodCalendar extends StatelessWidget {
       ),
     );
   }
+}
+
+class MoodWeekdayHeader extends StatelessWidget {
+  const MoodWeekdayHeader({super.key});
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      for (var i = 0; i < 7; i++)
+        Expanded(
+          child: Center(
+            child: Text(
+              TimeFormat.weekdayNarrow(DateTime(2026, 10, 18 + i)),
+              style: context.theme.typography.labelSmall.onSurfaceVariant,
+            ),
+          ),
+        ),
+    ],
+  );
 }

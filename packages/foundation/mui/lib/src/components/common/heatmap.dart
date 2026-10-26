@@ -2,6 +2,8 @@ import 'package:mui/mui.dart';
 
 const double _kCellSize = 11;
 
+const _kCellBorderRadius = BorderRadius.all(Radius.circular(2.5));
+
 const double _kSlotSize = 14;
 
 const double _kMonthLabelHeight = 15;
@@ -52,8 +54,6 @@ class MHeatmap extends StatefulWidget {
     this.selected,
     this.onDaySelected,
   });
-
-  static const cellBorderRadius = BorderRadius.all(Radius.circular(2.5));
 
   static Color emptyColor(BuildContext context) => levelColor(context, 0);
 
@@ -301,7 +301,7 @@ class _Cell extends StatelessWidget {
       height: _kCellSize,
       decoration: BoxDecoration(
         color: dashed ? null : color,
-        borderRadius: MHeatmap.cellBorderRadius,
+        borderRadius: _kCellBorderRadius,
         border: border,
       ),
     );
@@ -312,7 +312,7 @@ class _Cell extends StatelessWidget {
         replacement: const Bone(
           width: _kCellSize,
           height: _kCellSize,
-          borderRadius: MHeatmap.cellBorderRadius,
+          borderRadius: _kCellBorderRadius,
         ),
         child: dashed
             ? Stack(
@@ -338,7 +338,7 @@ class _Cell extends StatelessWidget {
   }
 }
 
-/// The same unfilled 11px dashed square used by heatmap cells and legends.
+/// Unfilled dashed square for empty heatmap cells.
 class MHeatmapDashedSwatch extends StatelessWidget {
   const MHeatmapDashedSwatch({super.key});
 
@@ -349,7 +349,7 @@ class MHeatmapDashedSwatch extends StatelessWidget {
     replacement: const Bone(
       width: _kCellSize,
       height: _kCellSize,
-      borderRadius: MHeatmap.cellBorderRadius,
+      borderRadius: _kCellBorderRadius,
     ),
     child: CustomPaint(
       size: const Size.square(_kCellSize),
@@ -367,9 +367,7 @@ class _DashedCellPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (size.isEmpty) return;
     final path = Path()
-      ..addRRect(
-        MHeatmap.cellBorderRadius.toRRect(Offset.zero & size).deflate(.5),
-      );
+      ..addRRect(_kCellBorderRadius.toRRect(Offset.zero & size).deflate(.5));
     final outline = path.computeMetrics().single;
     // About 1.5px of stroke and 1.5px of space, evenly around the corners.
     final count = (outline.length / 3).round();

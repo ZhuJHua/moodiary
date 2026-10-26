@@ -16,7 +16,6 @@ class MSkeleton extends StatelessWidget {
         brightness: theme.brightness,
         // false preserves Card/Container paints; content shapes opt into bones.
         ignoreContainers: false,
-        // 静态骨架，不做扫光
         effectResolver: (_) =>
             SolidColorEffect(color: theme.colors.surfaceContainerHighest),
       ),

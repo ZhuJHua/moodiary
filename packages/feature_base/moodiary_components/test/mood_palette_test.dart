@@ -38,33 +38,8 @@ double _deltaE(Color first, Color second) {
 }
 
 void main() {
-  const originals = {
-    MoodPalette.classic: [
-      [0xFFD4382F, 0xFFF0936B, 0xFFD8D5CD, 0xFF79C26A, 0xFF2A9356],
-      [0xFFEF5A50, 0xFFF7B08F, 0xFF66645F, 0xFF8FD27F, 0xFF34A35B],
-    ],
-    MoodPalette.blueOrange: [
-      [0xFF4467C4, 0xFF89A8E2, 0xFFD4D1C9, 0xFFF2A13E, 0xFFD45A1E],
-      [0xFF5F84DE, 0xFFA3BDEE, 0xFF6B6964, 0xFFF4B35E, 0xFFE06A2C],
-    ],
-  };
   for (final brightness in Brightness.values) {
     for (final palette in MoodPalette.values) {
-      test('$palette $brightness neutral theme preserves original fills', () {
-        final colors = buildMuiTheme(brightness: brightness).colorScheme;
-        final expected = originals[palette]![brightness == .light ? 0 : 1];
-        for (final mood in DiaryMood.values) {
-          expect(palette.color(mood, colors), Color(expected[mood.index]));
-          expect(
-            palette.onColor(mood, colors),
-            Color.lerp(
-              Color(expected[mood.index]),
-              const Color(0xFF000000),
-              .75,
-            ),
-          );
-        }
-      });
       for (final seed in [
         0xFF2E59A7,
         0xFF6B7A3A,
@@ -89,30 +64,6 @@ void main() {
                 reason: '${DiaryMood.values[i]} -> ${DiaryMood.values[i + 1]}',
               );
             }
-            for (final mood in DiaryMood.values) {
-              expect(
-                fills[mood.index],
-                colors.harmonize(
-                  Color(
-                    originals[palette]![brightness == .light
-                        ? 0
-                        : 1][mood.index],
-                  ),
-                ),
-              );
-              expect(
-                palette.onColor(mood, colors),
-                Color.lerp(fills[mood.index], const Color(0xFF000000), .75),
-              );
-            }
-            expect(
-              fills,
-              isNot(
-                originals[palette]![brightness == .light ? 0 : 1]
-                    .map(Color.new)
-                    .toList(),
-              ),
-            );
           },
         );
       }

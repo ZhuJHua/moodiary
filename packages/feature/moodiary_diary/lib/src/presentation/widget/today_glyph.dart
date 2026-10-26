@@ -1,8 +1,6 @@
-import 'package:flutter/foundation.dart' show internal;
 import 'package:moodiary_components/moodiary_components.dart';
 
 // lucide 无整套数字日历图标，用日历框叠文字实现
-@internal
 class TodayGlyph extends StatelessWidget {
   final int day;
 

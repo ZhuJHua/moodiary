@@ -21,6 +21,9 @@ import 'mood_period_picker.dart';
 class MoodInsightsPage extends ConsumerStatefulWidget {
   const MoodInsightsPage({super.key});
 
+  factory MoodInsightsPage.fromRoute(GoRouterState state) =>
+      const MoodInsightsPage();
+
   @override
   ConsumerState<MoodInsightsPage> createState() => _MoodInsightsPageState();
 }
@@ -82,13 +85,11 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
         : previous.start;
     try {
       final rows = await _repository.entries(start, bounds.end);
-      List<MoodInsightEntry> between(DateTime from, DateTime to) => rows
-          .where(
-            (e) =>
-                !moodDayKey(e.time).isBefore(from) &&
-                moodDayKey(e.time).isBefore(to),
-          )
-          .toList();
+      List<MoodInsightEntry> between(DateTime from, DateTime to) =>
+          rows.where((e) {
+            final day = moodDayKey(e.time);
+            return !day.isBefore(from) && day.isBefore(to);
+          }).toList();
       final periodRows = between(bounds.start, bounds.end);
       return _InsightsData(
         rows: periodRows,
@@ -199,7 +200,11 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
                   );
                 }
                 final data = loading
-                    ? _InsightsData.placeholder(bounds.start, bounds.end)
+                    ? _InsightsData.placeholder(
+                        bounds.start,
+                        bounds.end,
+                        context.l10n.common.untitled,
+                      )
                     : snapshot.requireData;
                 if (data.summary.average == null) {
                   return _Block(
@@ -472,7 +477,11 @@ class _InsightsData {
     required this.weekdays,
   });
 
-  factory _InsightsData.placeholder(DateTime start, DateTime end) {
+  factory _InsightsData.placeholder(
+    DateTime start,
+    DateTime end,
+    String title,
+  ) {
     const scores = [4, 3, 5, 2, 4, 1, 3];
     final rows = <MoodInsightEntry>[
       for (var i = 0; moodDayOffset(start, i).isBefore(end); i++)
@@ -481,8 +490,8 @@ class _InsightsData {
             id: 'skeleton-$i',
             time: moodDayOffset(start, i),
             mood: DiaryMood.fromScore(scores[i % scores.length]),
-            title: l10n.common.untitled,
-            preview: l10n.common.untitled,
+            title: title,
+            preview: title,
           ),
     ];
     final summary = summarizeMood(rows);

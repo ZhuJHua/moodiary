@@ -158,11 +158,10 @@ List<double?> moodWeekdayAverages(
   required DateTime end,
 }) {
   final days = moodDays(
-    entries.where(
-      (e) =>
-          !moodDayKey(e.time).isBefore(start) &&
-          moodDayKey(e.time).isBefore(end),
-    ),
+    entries.where((e) {
+      final day = moodDayKey(e.time);
+      return !day.isBefore(start) && day.isBefore(end);
+    }),
   );
   return [
     for (var weekday = 0; weekday < 7; weekday++)

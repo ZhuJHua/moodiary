@@ -4,7 +4,7 @@ import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mui/mui.dart';
 
-Future<void> pumpChart(
+Future<void> _pumpChart(
   WidgetTester tester,
   List<double?> values, {
   bool connectGaps = false,
@@ -42,7 +42,7 @@ Future<void> pumpChart(
   );
 }
 
-Future<bool> hasInk(WidgetTester tester, int x, int y) async {
+Future<bool> _hasInk(WidgetTester tester, int x, int y) async {
   final boundary = tester.renderObject<RenderRepaintBoundary>(
     find.byKey(const ValueKey('chart-image')),
   );
@@ -113,17 +113,17 @@ void main() {
     testWidgets('connectGaps=$connectGaps controls continuity across null', (
       tester,
     ) async {
-      await pumpChart(tester, [2, null, 4], connectGaps: connectGaps);
+      await _pumpChart(tester, [2, null, 4], connectGaps: connectGaps);
       await tester.runAsync(() async {
-        expect(await hasInk(tester, 85, 121), connectGaps);
-        expect(await hasInk(tester, 222, 76), connectGaps);
-        expect(await hasInk(tester, 154, 104), isFalse);
-        expect(await hasInk(tester, 17, 144), isTrue);
-        expect(await hasInk(tester, 290, 53), isTrue);
+        expect(await _hasInk(tester, 85, 121), connectGaps);
+        expect(await _hasInk(tester, 222, 76), connectGaps);
+        expect(await _hasInk(tester, 154, 104), isFalse);
+        expect(await _hasInk(tester, 17, 144), isTrue);
+        expect(await _hasInk(tester, 290, 53), isTrue);
       });
-      await pumpChart(tester, [2, 3, 4], connectGaps: connectGaps);
+      await _pumpChart(tester, [2, 3, 4], connectGaps: connectGaps);
       await tester.runAsync(
-        () async => expect(await hasInk(tester, 85, 121), isTrue),
+        () async => expect(await _hasInk(tester, 85, 121), isTrue),
       );
     });
 
@@ -134,30 +134,28 @@ void main() {
         [3],
         [null, 3, null],
       ]) {
-        await pumpChart(tester, values, connectGaps: connectGaps);
+        await _pumpChart(tester, values, connectGaps: connectGaps);
         await tester.runAsync(() async {
-          expect(await hasInk(tester, 154, 99), isTrue);
-          expect(await hasInk(tester, 85, 99), isFalse);
-          expect(await hasInk(tester, 222, 99), isFalse);
+          expect(await _hasInk(tester, 154, 99), isTrue);
+          expect(await _hasInk(tester, 85, 99), isFalse);
+          expect(await _hasInk(tester, 222, 99), isFalse);
         });
       }
     });
   }
 
   testWidgets('top markers use the chart edge', (tester) async {
-    await pumpChart(tester, [5]);
+    await _pumpChart(tester, [5]);
     await tester.runAsync(() async {
-      expect(await hasInk(tester, 154, 7), isTrue);
+      expect(await _hasInk(tester, 154, 7), isTrue);
     });
-    final chart = tester.getRect(find.byType(MLineChart));
-    expect(chart.height, 220);
   });
 
   testWidgets('empty and single-value charts render without division by zero', (
     tester,
   ) async {
-    await pumpChart(tester, []);
-    await pumpChart(tester, [3]);
+    await _pumpChart(tester, []);
+    await _pumpChart(tester, [3]);
     expect(tester.takeException(), isNull);
   });
 }

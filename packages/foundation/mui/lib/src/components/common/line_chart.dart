@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:mui/mui.dart';
 
 /// A discrete, nullable series. Missing samples break the line by default.
@@ -159,7 +160,6 @@ class _LinePainter extends CustomPainter {
       ..color = grid
       ..strokeWidth = 0;
     for (var tick = yMin.ceil(); tick <= yMax.floor(); tick++) {
-      gridPaint.strokeWidth = 0;
       canvas.drawLine(
         Offset(plot.left, y(tick.toDouble())),
         Offset(plot.right, y(tick.toDouble())),
@@ -209,5 +209,15 @@ class _LinePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_LinePainter oldDelegate) => true;
+  bool shouldRepaint(_LinePainter oldDelegate) =>
+      !listEquals(values, oldDelegate.values) ||
+      connectGaps != oldDelegate.connectGaps ||
+      yMin != oldDelegate.yMin ||
+      yMax != oldDelegate.yMax ||
+      baseline != oldDelegate.baseline ||
+      plot != oldDelegate.plot ||
+      grid != oldDelegate.grid ||
+      line != oldDelegate.line ||
+      ring != oldDelegate.ring ||
+      !listEquals(pointColors, oldDelegate.pointColors);
 }

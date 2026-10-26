@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
-MoodInsightEntry entry(int day, DiaryMood? mood) => MoodInsightEntry(
+MoodInsightEntry _entry(int day, DiaryMood? mood) => MoodInsightEntry(
   id: '$day-${mood?.name}',
   time: DateTime(2026, 10, day, 13),
   mood: mood,
@@ -19,11 +19,11 @@ void main() {
     'day average excludes null moods; period mean gives each day equal weight',
     () {
       final result = summarizeMood([
-        entry(1, .awful),
-        entry(1, .awful),
-        entry(1, null),
-        entry(2, .great),
-        entry(3, null),
+        _entry(1, .awful),
+        _entry(1, .awful),
+        _entry(1, null),
+        _entry(2, .great),
+        _entry(3, null),
       ]);
       expect(result.days[DateTime(2026, 10, 1)]!.average, 1);
       expect(result.average, 3); // entry-weighted mean would be 7/3
@@ -39,10 +39,10 @@ void main() {
     'longest streak rounds half up, breaks on gaps, nulls and low moods',
     () {
       final result = summarizeMood([
-        entry(1, .okay), entry(1, .good), // 3.5 => good
-        entry(2, .great), entry(3, null), entry(4, .good),
-        entry(6, .good), entry(7, .great), entry(8, .good),
-        entry(9, .okay), entry(10, .great),
+        _entry(1, .okay), _entry(1, .good), // 3.5 => good
+        _entry(2, .great), _entry(3, null), _entry(4, .good),
+        _entry(6, .good), _entry(7, .great), _entry(8, .good),
+        _entry(9, .okay), _entry(10, .great),
       ]);
       expect(moodLevel(3.5), DiaryMood.good);
       expect(result.longestGoodStreak, 3);
@@ -59,13 +59,13 @@ void main() {
 
   test('weekday window is half-open, Sunday first, averaged by day', () {
     final rows = [
-      entry(11, .awful),
-      entry(18, .awful),
-      entry(18, .great),
-      entry(19, .good),
-      entry(25, .great),
-      entry(26, .awful),
-      entry(20, null),
+      _entry(11, .awful),
+      _entry(18, .awful),
+      _entry(18, .great),
+      _entry(19, .good),
+      _entry(25, .great),
+      _entry(26, .awful),
+      _entry(20, null),
     ];
     final values = moodWeekdayAverages(
       rows,
@@ -149,11 +149,11 @@ void main() {
     'previous period delta uses day means, absent if either period is empty',
     () {
       final current = summarizeMood([
-        entry(1, .great),
-        entry(2, .awful),
-        entry(2, .awful),
+        _entry(1, .great),
+        _entry(2, .awful),
+        _entry(2, .awful),
       ]);
-      final previous = summarizeMood([entry(1, .good)]);
+      final previous = summarizeMood([_entry(1, .good)]);
       expect(moodPeriodDelta(current, previous), -1);
       expect(moodPeriodDelta(current, summarizeMood([])), isNull);
       expect(moodPeriodDelta(summarizeMood([]), previous), isNull);
@@ -163,7 +163,7 @@ void main() {
   test('empty and unrecorded entries have no average, streak or weekdays', () {
     for (final rows in [
       <MoodInsightEntry>[],
-      [entry(1, null)],
+      [_entry(1, null)],
     ]) {
       final result = summarizeMood(rows);
       expect(result.average, isNull);

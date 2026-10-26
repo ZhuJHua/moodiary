@@ -778,8 +778,8 @@ void main() {
           .widgetList<Container>(find.byType(Container))
           .firstWhere((widget) => widget.decoration is BoxDecoration);
       expect(
-        (chip.decoration! as BoxDecoration).color,
-        const Color(0xFF5F84DE).withValues(alpha: 0.18),
+        (chip.decoration! as BoxDecoration).color?.withValues(alpha: 1),
+        MoodPalette.blueOrange.color(.awful, theme.colorScheme),
       );
     },
   );

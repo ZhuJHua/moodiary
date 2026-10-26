@@ -4,6 +4,8 @@ import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
+import 'mood_calendar.dart';
+
 class MoodDistribution extends StatelessWidget {
   final Map<DiaryMood, int> counts;
   const MoodDistribution({super.key, required this.counts});
@@ -169,23 +171,7 @@ class MoodWeekdayPattern extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              Row(
-                children: [
-                  for (var i = 0; i < 7; i++)
-                    Expanded(
-                      child: Center(
-                        child: Text(
-                          TimeFormat.weekdayNarrow(DateTime(2026, 10, 18 + i)),
-                          style: context
-                              .theme
-                              .typography
-                              .labelSmall
-                              .onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
+              const MoodWeekdayHeader(),
             ],
           ),
         ),

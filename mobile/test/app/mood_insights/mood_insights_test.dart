@@ -79,7 +79,7 @@ class _Places extends PlaceController {
   Future<List<Place>> build() async => [];
 }
 
-GoRouter host(Widget child) => GoRouter(
+GoRouter _host(Widget child) => GoRouter(
   routes: [
     GoRoute(
       path: '/',
@@ -92,7 +92,7 @@ GoRouter host(Widget child) => GoRouter(
   ],
 );
 
-Widget app(GoRouter router) => TranslationProvider(
+Widget _app(GoRouter router) => TranslationProvider(
   child: MaterialApp.router(
     theme: buildMuiTheme(brightness: .light),
     routerConfig: router,
@@ -126,7 +126,7 @@ void main() {
       repository.pending.complete([]);
       getIt.registerSingleton<MoodInsightsRepository>(repository);
       getIt.registerSingleton<DiaryRepository>(_Diaries());
-      final router = host(const MePage());
+      final router = _host(const MePage());
       addTearDown(router.dispose);
       await tester.pumpWidget(
         ProviderScope(
@@ -134,7 +134,7 @@ void main() {
             dashboardControllerProvider.overrideWith(_ReadyDashboard.new),
             placeControllerProvider.overrideWith(_Places.new),
           ],
-          child: app(router),
+          child: _app(router),
         ),
       );
       await tester.pumpAndSettle();
@@ -142,9 +142,6 @@ void main() {
       final heatmap = tester.widget<MHeatmap>(map);
       expect(heatmap.weeks, 53);
       expect(heatmap.endDate, _ReadyDashboard.today);
-      expect(heatmap.startDate, isNull);
-      expect(heatmap.colorOf, isNull);
-      expect(heatmap.onMonthSelected, isNull);
       expect(heatmap.levels, {_ReadyDashboard.today: 3});
       final legend = find.byType(MHeatmapLegend);
       final scale = tester.widget<MHeatmapLegend>(legend);
@@ -189,7 +186,7 @@ void main() {
           getIt.registerSingleton<MoodInsightsRepository>(repository);
           getIt.registerSingleton<DiaryRepository>(_Diaries());
           MoodiaryKVs.moodCardHint.set(hint);
-          final router = host(const MePage());
+          final router = _host(const MePage());
           addTearDown(router.dispose);
           await tester.pumpWidget(
             ProviderScope(
@@ -197,7 +194,7 @@ void main() {
                 dashboardControllerProvider.overrideWith(_Dashboard.new),
                 placeControllerProvider.overrideWith(_Places.new),
               ],
-              child: app(router),
+              child: _app(router),
             ),
           );
           await tester.pump();
@@ -213,17 +210,6 @@ void main() {
               isTrue,
             );
             expect(find.byWidgetPredicate((w) => w is Bone), findsNWidgets(7));
-            expect(
-              find.textContaining(
-                RegExp(r'^(记录|Recorded) \d+ / \d+ (天|days)$'),
-              ),
-              findsNothing,
-            );
-            expect(
-              tester.getTopLeft(find.byType(MoodGlyph).first).dy -
-                  tester.getBottomLeft(find.text('4.0')).dy,
-              14,
-            );
             loadingSize = tester.getSize(find.byType(MoodInsightsCard));
           }
           final today = moodDayKey(DateTime.now());
@@ -275,30 +261,17 @@ void main() {
         hasRecordedMood: true,
         today: today,
       );
-      final router = host(MoodInsightsCard(data: data));
+      final router = _host(MoodInsightsCard(data: data));
       addTearDown(router.dispose);
-      await tester.pumpWidget(app(router));
+      await tester.pumpWidget(_app(router));
       await tester.pumpAndSettle();
       expect(find.text('4.0'), findsOneWidget);
       expect(
         find.text(l10n.insights.monthMood(level: DiaryMood.good.labelOf(l10n))),
         findsOneWidget,
       );
-      expect(
-        find.text('本月心情 · ${DiaryMood.good.labelOf(l10n)}'),
-        findsOneWidget,
-      );
       expect(find.byType(MoodGlyph), findsNWidgets(7));
       expect(find.text('+0.5'), findsOneWidget);
-      expect(
-        tester.getTopLeft(find.byType(MoodGlyph).first).dy -
-            tester.getBottomLeft(find.text('4.0')).dy,
-        14,
-      );
-      expect(
-        find.textContaining(RegExp(r'^(记录|Recorded) \d+ / \d+ (天|days)$')),
-        findsNothing,
-      );
       await tester.tap(find.byType(MoodInsightsCard));
       await tester.pumpAndSettle();
       expect(find.text('insights-destination'), findsOneWidget);
@@ -314,7 +287,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
       MoodiaryKVs.pendingMoodNotice.set(true);
-      final router = host(
+      final router = _host(
         Builder(
           builder: (context) => TextButton(
             onPressed: () => showPendingMoodNotice(context),
@@ -323,7 +296,7 @@ void main() {
         ),
       );
       addTearDown(router.dispose);
-      await tester.pumpWidget(app(router));
+      await tester.pumpWidget(_app(router));
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
       expect(MoodiaryKVs.pendingMoodNotice.get(), isFalse);

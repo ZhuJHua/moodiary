@@ -1,12 +1,11 @@
-import 'package:flutter/foundation.dart' show internal;
 import 'package:intl/intl.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
 
-@internal
+import 'mood_calendar.dart';
+
 class MoodPeriodPicker extends StatefulWidget {
   final MoodInsightsScope scope;
   final DateTime anchor;
@@ -230,19 +229,7 @@ class _MoodPeriodPickerState extends State<MoodPeriodPicker> {
     final selected = moodPeriodBounds(widget.anchor, .week).start;
     return Column(
       children: [
-        Row(
-          children: [
-            for (var i = 0; i < 7; i++)
-              Expanded(
-                child: Center(
-                  child: Text(
-                    TimeFormat.weekdayNarrow(DateTime(2026, 10, 18 + i)),
-                    style: context.theme.typography.labelSmall.onSurfaceVariant,
-                  ),
-                ),
-              ),
-          ],
-        ),
+        const MoodWeekdayHeader(),
         const SizedBox(height: 8),
         for (
           var week = start;

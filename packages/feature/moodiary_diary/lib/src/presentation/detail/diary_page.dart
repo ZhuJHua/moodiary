@@ -836,7 +836,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   }
 
   void _onChangeMoodName(String name) {
-    final mood = DiaryMood.values.where((m) => m.name == name).firstOrNull;
+    final mood = DiaryMood.fromName(name);
     if (mood == null && name.isNotEmpty) return;
     _onChangeMood(mood);
   }

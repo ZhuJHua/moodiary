@@ -120,7 +120,6 @@ void main() {
             time: 1,
             lastModified: 2,
             show: 1,
-
             type: 'tiptap',
           ),
         );
