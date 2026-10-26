@@ -38,6 +38,11 @@ class _Diaries implements DiaryRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+class _FailedMoods extends MoodInsightsController {
+  @override
+  Future<MoodInsightsCardData> build() async => throw StateError('unavailable');
+}
+
 class _Dashboard extends DashboardController {
   @override
   Future<DashboardStats> build() => Completer<DashboardStats>().future;
@@ -173,75 +178,100 @@ void main() {
     },
   );
 
-  for (final hint in [true, false]) {
-    for (final recorded in [true, false]) {
-      testWidgets(
-        'Me hint=$hint shows skeleton or stays hidden, then persists recorded=$recorded',
-        (tester) async {
-          tester.view.physicalSize = const Size(390, 844);
-          tester.view.devicePixelRatio = 1;
-          addTearDown(tester.view.resetPhysicalSize);
-          addTearDown(tester.view.resetDevicePixelRatio);
-          final repository = _PendingMoods()..recorded = recorded;
-          getIt.registerSingleton<MoodInsightsRepository>(repository);
-          getIt.registerSingleton<DiaryRepository>(_Diaries());
-          MoodiaryKVs.moodCardHint.set(hint);
-          final router = _host(const MePage());
-          addTearDown(router.dispose);
-          await tester.pumpWidget(
-            ProviderScope(
-              overrides: [
-                dashboardControllerProvider.overrideWith(_Dashboard.new),
-                placeControllerProvider.overrideWith(_Places.new),
-              ],
-              child: _app(router),
+  for (final recorded in [true, false]) {
+    testWidgets(
+      recorded
+          ? 'Me shows a skeleton while loading, then the populated mood card'
+          : 'Me shows a skeleton while loading, then the empty mood card',
+      (tester) async {
+        tester.view.physicalSize = const Size(390, 844);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final repository = _PendingMoods()..recorded = recorded;
+        getIt.registerSingleton<MoodInsightsRepository>(repository);
+        getIt.registerSingleton<DiaryRepository>(_Diaries());
+        final router = _host(const MePage());
+        addTearDown(router.dispose);
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              dashboardControllerProvider.overrideWith(_Dashboard.new),
+              placeControllerProvider.overrideWith(_Places.new),
+            ],
+            child: _app(router),
+          ),
+        );
+        await tester.pump();
+        expect(find.byType(CircularProgressIndicator), findsNothing);
+        final card = find.byType(MoodInsightsCard);
+        expect(card, findsOneWidget);
+        expect(
+          tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled,
+          isTrue,
+        );
+        expect(find.byWidgetPredicate((w) => w is Bone), findsNWidgets(7));
+        final loadingHeight = tester.getSize(card).height;
+        final today = moodDayKey(DateTime.now());
+        repository.pending.complete([
+          if (recorded)
+            MoodInsightEntry(id: 'actual', time: today, mood: .great),
+        ]);
+        await tester.pumpAndSettle();
+        expect(card, findsOneWidget);
+        expect(find.byType(MSkeleton), findsNothing);
+        expect(find.byWidgetPredicate((w) => w is Bone), findsNothing);
+        expect(tester.getSize(card).height, loadingHeight);
+        if (recorded) {
+          expect(find.text('5.0'), findsOneWidget);
+          expect(
+            find.text(
+              l10n.insights.monthMood(level: DiaryMood.great.labelOf(l10n)),
             ),
+            findsOneWidget,
           );
-          await tester.pump();
-          expect(find.byType(CircularProgressIndicator), findsNothing);
+          expect(find.text(l10n.insights.empty), findsNothing);
+        } else {
+          expect(find.text(l10n.insights.empty), findsOneWidget);
+          expect(find.text('–'), findsNothing);
+          expect(find.byType(MoodDeltaPill), findsNothing);
           expect(
-            find.byType(MoodInsightsCard),
-            hint ? findsOneWidget : findsNothing,
+            tester
+                .widgetList<MoodGlyph>(find.byType(MoodGlyph))
+                .map((g) => g.mood),
+            everyElement(isNull),
           );
-          Size? loadingSize;
-          if (hint) {
-            expect(
-              tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled,
-              isTrue,
-            );
-            expect(find.byWidgetPredicate((w) => w is Bone), findsNWidgets(7));
-            loadingSize = tester.getSize(find.byType(MoodInsightsCard));
-          }
-          final today = moodDayKey(DateTime.now());
-          repository.pending.complete([
-            if (recorded)
-              MoodInsightEntry(id: 'actual', time: today, mood: .great),
-          ]);
+          expect(find.text(l10n.insights.title), findsOneWidget);
+          await tester.tap(card);
           await tester.pumpAndSettle();
-          expect(MoodiaryKVs.moodCardHint.get(), recorded);
-          expect(
-            find.byType(MoodInsightsCard),
-            recorded ? findsOneWidget : findsNothing,
-          );
-          expect(find.byWidgetPredicate((w) => w is Bone), findsNothing);
-          if (recorded) {
-            expect(
-              tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled,
-              isFalse,
-            );
-            expect(find.text('5.0'), findsOneWidget);
-            if (loadingSize != null) {
-              expect(
-                tester.getSize(find.byType(MoodInsightsCard)),
-                loadingSize,
-              );
-            }
-          }
-          expect(tester.takeException(), isNull);
-        },
-      );
-    }
+          expect(find.text('insights-destination'), findsOneWidget);
+        }
+        expect(tester.takeException(), isNull);
+      },
+    );
   }
+
+  testWidgets('Me omits the mood card when loading fails without data', (
+    tester,
+  ) async {
+    final router = _host(const MePage());
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          dashboardControllerProvider.overrideWith(_Dashboard.new),
+          moodInsightsControllerProvider.overrideWith(_FailedMoods.new),
+          placeControllerProvider.overrideWith(_Places.new),
+        ],
+        child: _app(router),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(MoodInsightsCard), findsNothing);
+    expect(find.byType(MSkeleton), findsNothing);
+    expect(find.text(l10n.app.dashJournalDays), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets(
     'Me card shows month average, delta, rolling glyphs and opens insights',

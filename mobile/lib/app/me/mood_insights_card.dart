@@ -35,6 +35,10 @@ class MoodInsightsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final typo = context.theme.typography;
+    final headline = typo.headlineSmall.emphasized.onSurface;
+    final topRowHeight =
+        MediaQuery.textScalerOf(context).scale(headline.fontSize!) *
+        headline.height!;
     return Card.filled(
       color: context.theme.colors.surfaceContainerLow,
       margin: .zero,
@@ -46,40 +50,49 @@ class MoodInsightsCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: .stretch,
             children: [
-              Row(
-                crossAxisAlignment: .start,
-                spacing: 8,
-                children: [
-                  Expanded(
-                    child: Row(
-                      crossAxisAlignment: .baseline,
-                      textBaseline: .alphabetic,
-                      spacing: 6,
-                      children: [
-                        Text(
-                          data.month.average?.toStringAsFixed(1) ?? '–',
-                          style: typo.headlineSmall.emphasized.onSurface
-                              .copyWith(
-                                fontFeatures: const [.tabularFigures()],
-                              ),
-                        ),
-                        Flexible(
-                          child: Text(
-                            context.l10n.insights.monthMood(
-                              level:
-                                  moodLevel(data.month.average)
-                                      ?.label(context) ??
-                                  context.l10n.insights.unrecorded,
+              SizedBox(
+                height: topRowHeight,
+                child: Row(
+                  crossAxisAlignment: .center,
+                  spacing: 8,
+                  children: [
+                    Expanded(
+                      child: !data.hasRecordedMood
+                          ? Text(
+                              context.l10n.insights.empty,
+                              style: typo.bodyMedium.onSurfaceVariant,
+                              maxLines: 1,
+                              overflow: .ellipsis,
+                            )
+                          : Row(
+                              crossAxisAlignment: .baseline,
+                              textBaseline: .alphabetic,
+                              spacing: 6,
+                              children: [
+                                Text(
+                                  data.month.average?.toStringAsFixed(1) ?? '–',
+                                  style: headline.copyWith(
+                                    fontFeatures: const [.tabularFigures()],
+                                  ),
+                                ),
+                                Flexible(
+                                  child: Text(
+                                    context.l10n.insights.monthMood(
+                                      level:
+                                          moodLevel(data.month.average)
+                                              ?.label(context) ??
+                                          context.l10n.insights.unrecorded,
+                                    ),
+                                    style: typo.bodyMedium.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
                             ),
-                            style: typo.bodyMedium.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
                     ),
-                  ),
-                  if (data.delta != null)
-                    Skeleton.leaf(child: MoodDeltaPill(delta: data.delta!)),
-                ],
+                    if (data.hasRecordedMood && data.delta != null)
+                      Skeleton.leaf(child: MoodDeltaPill(delta: data.delta!)),
+                  ],
+                ),
               ),
               const SizedBox(height: 14),
               Row(
