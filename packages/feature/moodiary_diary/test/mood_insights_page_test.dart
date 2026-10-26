@@ -1,16 +1,18 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
+import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/src/presentation/mood_insights/mood_calendar.dart';
 import 'package:moodiary_diary/src/presentation/mood_insights/mood_insights_page.dart';
 import 'package:moodiary_diary/src/presentation/mood_insights/mood_patterns.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_entry_tile.dart';
+import 'package:moodiary_diary/src/presentation/widget/today_glyph.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
-import 'package:mui/mui.dart';
 
 import 'support/pump.dart';
 
@@ -26,6 +28,11 @@ class _Repository implements MoodInsightsRepository {
         .where((e) => !e.time.isBefore(start) && e.time.isBefore(end))
         .toList();
   }
+
+  @override
+  Future<DateTime?> earliestEntry() async => rows.isEmpty
+      ? null
+      : rows.map((e) => e.time).reduce((a, b) => a.isBefore(b) ? a : b);
 
   @override
   Future<bool> hasRecordedMood() async => rows.any((e) => e.mood != null);
@@ -57,6 +64,440 @@ void main() {
     getIt.registerSingleton<DiaryRepository>(diaries);
   });
   tearDown(getIt.reset);
+
+  Future<void> openPage(WidgetTester tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final today = moodDayKey(DateTime.now());
+    repository.rows = [
+      for (var year = today.year - 2; year <= today.year; year++)
+        for (var month = 1; month <= 12; month++)
+          if (!DateTime(year, month).isAfter(today))
+            MoodInsightEntry(
+              id: '$year-$month',
+              time: DateTime(year, month),
+              mood: month == 1 ? .awful : .great,
+            ),
+      MoodInsightEntry(id: 'today', time: today, mood: .good),
+    ];
+    await tester.pumpWidget(
+      muiTestApp(const MoodInsightsPage(), wrapScaffold: false),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  final periodButton = find.byKey(const ValueKey('insights-period-picker'));
+  Finder cell(DateTime date) =>
+      find.byKey(ValueKey('period-${date.year}-${date.month}'));
+  Future<void> openPicker(WidgetTester tester) async {
+    await tester.ensureVisible(periodButton);
+    await tester.tap(periodButton);
+    await tester.pumpAndSettle();
+  }
+
+  for (final scope in MoodInsightsScope.values) {
+    testWidgets('$scope opens its picker and jumps to the selected period', (
+      tester,
+    ) async {
+      await openPage(tester);
+      final today = moodDayKey(DateTime.now());
+      final scopeLabel = switch (scope) {
+        .week => l10n.insights.week,
+        .month => l10n.insights.month,
+        .year => l10n.insights.year,
+      };
+      await tester.tap(find.text(scopeLabel));
+      await tester.pumpAndSettle();
+      await openPicker(tester);
+      expect(
+        find.text(switch (scope) {
+          .week => l10n.insights.selectWeek,
+          .month => l10n.insights.selectMonth,
+          .year => l10n.insights.selectYear,
+        }),
+        findsOneWidget,
+      );
+      final target = switch (scope) {
+        .week => DateTime(today.year, today.month),
+        .month => DateTime(today.year, 1),
+        .year => DateTime(today.year - 1),
+      };
+      final choice = scope == .week
+          ? find.byKey(ValueKey('week-day-${target.year}-${target.month}-1'))
+          : cell(target);
+      await tester.tap(choice);
+      await tester.pumpAndSettle();
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(repository.queries.last.end, moodPeriodBounds(target, scope).end);
+      if (scope != .week) {
+        expect(
+          tester.widget<MoodCalendar>(find.byType(MoodCalendar)).start,
+          target,
+        );
+      }
+      if (scope == .month) {
+        expect(
+          find.text(DateFormat.yMMMM('zh').format(target)),
+          findsOneWidget,
+        );
+        final calendar = tester.widget<MoodCalendar>(find.byType(MoodCalendar));
+        expect(calendar.days[target]!.level, DiaryMood.awful);
+      }
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  for (final scope in [MoodInsightsScope.month, MoodInsightsScope.year]) {
+    testWidgets('$scope selected picker label uses onPrimaryContainer', (
+      tester,
+    ) async {
+      await openPage(tester);
+      if (scope == .year) {
+        await tester.tap(find.text(l10n.insights.year));
+        await tester.pumpAndSettle();
+      }
+      await openPicker(tester);
+      final today = moodDayKey(DateTime.now());
+      final selected = moodPeriodBounds(today, scope).start;
+      final selectedCell = cell(selected);
+      final colorScheme = Theme.of(tester.element(selectedCell)).colorScheme;
+      final selectedLabel = tester.widget<Text>(
+        find.descendant(of: selectedCell, matching: find.byType(Text)),
+      );
+      expect(selectedLabel.style?.color, colorScheme.onPrimaryContainer);
+      final other = scope == .year
+          ? DateTime(today.year - 1)
+          : DateTime(today.year, today.month == 1 ? 2 : 1);
+      final otherLabel = tester.widget<Text>(
+        find.descendant(of: cell(other), matching: find.byType(Text)),
+      );
+      expect(otherLabel.style?.color, colorScheme.onSurface);
+    });
+  }
+
+  testWidgets('week picker highlighted row numbers use onPrimaryContainer', (
+    tester,
+  ) async {
+    await openPage(tester);
+    await tester.tap(find.text(l10n.insights.week));
+    await tester.pumpAndSettle();
+    await openPicker(tester);
+    final today = moodDayKey(DateTime.now());
+    final selectedWeek = moodPeriodBounds(today, .week).start;
+    Finder dayCell(DateTime day) =>
+        find.byKey(ValueKey('week-day-${day.year}-${day.month}-${day.day}'));
+    final colorScheme = Theme.of(tester.element(dayCell(today))).colorScheme;
+    final month = DateTime(today.year, today.month);
+    final firstWeek = moodPeriodBounds(month, .week).start;
+    final end = DateTime(today.year, today.month + 1);
+    for (
+      var week = firstWeek;
+      week.isBefore(end);
+      week = moodDayOffset(week, 7)
+    ) {
+      for (var i = 0; i < 7; i++) {
+        final number = tester.widget<Text>(
+          find.descendant(
+            of: dayCell(moodDayOffset(week, i)),
+            matching: find.byType(Text),
+          ),
+        );
+        expect(
+          number.style?.color,
+          week == selectedWeek
+              ? colorScheme.onPrimaryContainer
+              : colorScheme.onSurface,
+        );
+      }
+    }
+  });
+
+  testWidgets('month picker bounds, selection style and averages', (
+    tester,
+  ) async {
+    await openPage(tester);
+    final today = moodDayKey(DateTime.now());
+    await openPicker(tester);
+    final current = cell(DateTime(today.year, today.month));
+    final selectedBox =
+        tester
+                .widget<Container>(
+                  find
+                      .descendant(of: current, matching: find.byType(Container))
+                      .first,
+                )
+                .decoration!
+            as BoxDecoration;
+    expect(selectedBox.border!.top.width, 1.5);
+    for (var month = today.month + 1; month <= 12; month++) {
+      final future = cell(DateTime(today.year, month));
+      expect(tester.widget<MInkWell>(future).onTap, isNull);
+      await tester.tap(future);
+      expect(find.byType(BottomSheet), findsOneWidget);
+    }
+    final january = cell(DateTime(today.year));
+    expect(
+      tester
+          .widget<MoodGlyph>(
+            find.descendant(of: january, matching: find.byType(MoodGlyph)),
+          )
+          .mood,
+      today.month == 1 ? DiaryMood.okay : DiaryMood.awful,
+    );
+    IconButton navigation(String label) => tester.widget<IconButton>(
+      find
+          .ancestor(
+            of: find.descendant(
+              of: find.byType(BottomSheet),
+              matching: find.byTooltip(label),
+            ),
+            matching: find.byType(IconButton),
+          )
+          .first,
+    );
+    expect(navigation(l10n.insights.nextPeriod).onPressed, isNull);
+    for (var i = 0; i < 2; i++) {
+      await tester.tap(
+        find.descendant(
+          of: find.byType(BottomSheet),
+          matching: find.byTooltip(l10n.insights.previousPeriod),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+    expect(navigation(l10n.insights.previousPeriod).onPressed, isNull);
+    expect(cell(DateTime(today.year - 2)), findsOneWidget);
+  });
+
+  testWidgets('year picker uses the same full-year mean as the summary', (
+    tester,
+  ) async {
+    final today = moodDayKey(DateTime.now());
+    repository.rows = [
+      MoodInsightEntry(
+        id: 'end-of-year',
+        time: DateTime(today.year, 12, 31),
+        mood: .awful,
+      ),
+    ];
+    await tester.pumpWidget(
+      muiTestApp(const MoodInsightsPage(), wrapScaffold: false),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l10n.insights.year));
+    await tester.pumpAndSettle();
+    await openPicker(tester);
+    expect(
+      tester
+          .widget<MoodGlyph>(
+            find.descendant(
+              of: cell(DateTime(today.year)),
+              matching: find.byType(MoodGlyph),
+            ),
+          )
+          .mood,
+      DiaryMood.awful,
+    );
+  });
+
+  testWidgets('future-only diaries still allow choosing the current year', (
+    tester,
+  ) async {
+    final today = moodDayKey(DateTime.now());
+    repository.rows = [
+      MoodInsightEntry(
+        id: 'future',
+        time: DateTime(today.year + 1),
+        mood: .good,
+      ),
+    ];
+    await tester.pumpWidget(
+      muiTestApp(const MoodInsightsPage(), wrapScaffold: false),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l10n.insights.year));
+    await tester.pumpAndSettle();
+    await openPicker(tester);
+    final current = cell(DateTime(today.year));
+    expect(tester.widget<MInkWell>(current).onTap, isNotNull);
+    expect(
+      find.descendant(of: current, matching: find.byType(MoodGlyph)),
+      findsNothing,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('week picker disables future days and highlights selected week', (
+    tester,
+  ) async {
+    await openPage(tester);
+    await tester.tap(find.text(l10n.insights.week));
+    await tester.pumpAndSettle();
+    await openPicker(tester);
+    final today = moodDayKey(DateTime.now());
+    final tomorrow = moodDayOffset(today, 1);
+    // The last row also includes adjacent-month days.
+    final future = find.byKey(
+      ValueKey('week-day-${tomorrow.year}-${tomorrow.month}-${tomorrow.day}'),
+    );
+    expect(tester.widget<MInkWell>(future).onTap, isNull);
+    await tester.tap(future);
+    await tester.pumpAndSettle();
+    expect(find.byType(BottomSheet), findsOneWidget);
+    final selectedRows = find.descendant(
+      of: find.byType(BottomSheet),
+      matching: find.byWidgetPredicate(
+        (w) =>
+            w is DecoratedBox &&
+            w.decoration is BoxDecoration &&
+            (w.decoration as BoxDecoration).color ==
+                MuiTheme.of(tester.element(future)).colors.primaryContainer,
+      ),
+    );
+    expect(selectedRows, findsOneWidget);
+  });
+
+  for (final scope in MoodInsightsScope.values) {
+    testWidgets('back to today is conditional and returns to current $scope', (
+      tester,
+    ) async {
+      await openPage(tester);
+      await tester.tap(
+        find.text(switch (scope) {
+          .week => l10n.insights.week,
+          .month => l10n.insights.month,
+          .year => l10n.insights.year,
+        }),
+      );
+      await tester.pumpAndSettle();
+      final todayAction = find.byTooltip(l10n.diary.calendarBackToToday);
+      expect(todayAction, findsNothing);
+      await tester.tap(find.byTooltip(l10n.insights.previousPeriod));
+      await tester.pumpAndSettle();
+      expect(todayAction, findsOneWidget);
+      expect(
+        tester.widget<TodayGlyph>(find.byType(TodayGlyph)).day,
+        DateTime.now().day,
+      );
+      await tester.tap(todayAction);
+      await tester.pumpAndSettle();
+      expect(todayAction, findsNothing);
+      expect(
+        repository.queries.last.end,
+        moodPeriodBounds(DateTime.now(), scope).end,
+      );
+    });
+  }
+
+  testWidgets('flings navigate but chart scrubbing and slow drags do not', (
+    tester,
+  ) async {
+    await openPage(tester);
+    final currentEnd = repository.queries.last.end;
+    await tester.timedDrag(
+      periodButton,
+      const Offset(100, 0),
+      const Duration(seconds: 2),
+    );
+    await tester.pumpAndSettle();
+    expect(repository.queries.last.end, currentEnd);
+    await tester.fling(periodButton, const Offset(200, 0), 800);
+    await tester.pumpAndSettle();
+    expect(
+      repository.queries.last.end,
+      DateTime(currentEnd.year, currentEnd.month - 1),
+    );
+    final previousEnd = repository.queries.last.end;
+    await tester.ensureVisible(find.byType(MLineChart));
+    await tester.pumpAndSettle();
+    final chart = tester.getRect(find.byType(MLineChart));
+    await tester.flingFrom(
+      chart.centerLeft + const Offset(45, 80),
+      const Offset(150, 0),
+      800,
+    );
+    await tester.pumpAndSettle();
+    expect(repository.queries.last.end, previousEnd);
+    expect(find.byKey(const ValueKey('line-chart-tooltip')), findsOneWidget);
+    await tester.scrollUntilVisible(
+      periodButton,
+      -300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    await tester.fling(periodButton, const Offset(-200, 0), 800);
+    await tester.pumpAndSettle();
+    expect(repository.queries.last.end, currentEnd);
+    final count = repository.queries.length;
+    await tester.fling(periodButton, const Offset(-200, 0), 800);
+    await tester.pumpAndSettle();
+    expect(repository.queries.length, count);
+  });
+
+  testWidgets('picker jump shows skeleton until new period finishes loading', (
+    tester,
+  ) async {
+    await openPage(tester);
+    await openPicker(tester);
+    final target = DateTime(DateTime.now().year, 1);
+    repository.pending = Completer();
+    await tester.tap(cell(target));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byType(BottomSheet), findsNothing);
+    expect(tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled, isTrue);
+    expect(
+      tester.widget<MoodCalendar>(find.byType(MoodCalendar)).start,
+      target,
+    );
+    repository.pending!.complete([
+      MoodInsightEntry(id: 'jumped', time: target, mood: .awful),
+    ]);
+    await tester.pumpAndSettle();
+    expect(tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled, isFalse);
+    expect(
+      tester
+          .widget<MoodCalendar>(find.byType(MoodCalendar))
+          .days[target]!
+          .level,
+      DiaryMood.awful,
+    );
+  });
+
+  for (final month in [1, 2]) {
+    testWidgets('year row $month drills down including an unlabelled row', (
+      tester,
+    ) async {
+      await openPage(tester);
+      await tester.tap(find.text(l10n.insights.year));
+      await tester.pumpAndSettle();
+      // Use a past year to exercise all months without future dates.
+      await tester.tap(find.byTooltip(l10n.insights.previousPeriod));
+      await tester.pumpAndSettle();
+      final label = find.byKey(ValueKey('insights-year-month-$month'));
+      await tester.ensureVisible(label);
+      await tester.tap(label);
+      await tester.pumpAndSettle();
+      final calendar = tester.widget<MoodCalendar>(find.byType(MoodCalendar));
+      expect(calendar.scope, MoodInsightsScope.month);
+      expect(calendar.start, DateTime(DateTime.now().year - 1, month));
+      await tester.scrollUntilVisible(
+        periodButton,
+        -300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(
+        tester
+            .widget<MSegmentedControl<MoodInsightsScope>>(
+              find.byType(MSegmentedControl<MoodInsightsScope>),
+            )
+            .selected,
+        MoodInsightsScope.month,
+      );
+    });
+  }
 
   for (final scope in MoodInsightsScope.values) {
     testWidgets('$scope pending period uses the normal layout with bones', (

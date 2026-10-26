@@ -24,6 +24,9 @@ class _PendingMoods implements MoodInsightsRepository {
       pending.future;
 
   @override
+  Future<DateTime?> earliestEntry() async => null;
+
+  @override
   Future<bool> hasRecordedMood() async => recorded;
 }
 

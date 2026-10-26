@@ -79,6 +79,29 @@ Map<DateTime, MoodInsightDay> moodDays(Iterable<MoodInsightEntry> entries) {
   return {for (final e in grouped.entries) e.key: MoodInsightDay(e.value)};
 }
 
+/// Calendar-month means of recorded day means, keyed by local month start.
+/// Unrecorded-only months are present with a null average.
+Map<DateTime, double?> moodMonthAverages(Iterable<MoodInsightEntry> entries) =>
+    _moodPeriodAverages(entries, (day) => DateTime(day.year, day.month));
+
+/// Calendar-year means of recorded day means (not means of month means).
+Map<DateTime, double?> moodYearAverages(Iterable<MoodInsightEntry> entries) =>
+    _moodPeriodAverages(entries, (day) => DateTime(day.year));
+
+Map<DateTime, double?> _moodPeriodAverages(
+  Iterable<MoodInsightEntry> entries,
+  DateTime Function(DateTime) periodKey,
+) {
+  final periods = <DateTime, List<double>>{};
+  for (final day in moodDays(entries).entries) {
+    final values = periods.putIfAbsent(periodKey(day.key), () => []);
+    if (day.value.average case final average?) values.add(average);
+  }
+  return {
+    for (final period in periods.entries) period.key: _mean(period.value),
+  };
+}
+
 class MoodInsightsSummary {
   final Map<DateTime, MoodInsightDay> days;
   final double? average;

@@ -18,6 +18,11 @@ class _Repository implements MoodInsightsRepository {
   }
 
   @override
+  Future<DateTime?> earliestEntry() async => rows.isEmpty
+      ? null
+      : rows.map((e) => e.time).reduce((a, b) => a.isBefore(b) ? a : b);
+
+  @override
   Future<bool> hasRecordedMood() async => rows.any((e) => e.mood != null);
 }
 

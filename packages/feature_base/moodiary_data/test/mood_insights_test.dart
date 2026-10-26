@@ -80,6 +80,55 @@ void main() {
     expect(values, [4, 4, null, null, null, null, null]);
   });
 
+  test(
+    'month and year averages weigh recorded days, not entries or months',
+    () {
+      final rows = [
+        MoodInsightEntry(id: 'a', time: DateTime(2024, 1, 1), mood: .awful),
+        MoodInsightEntry(id: 'b', time: DateTime(2024, 1, 1, 20), mood: .awful),
+        MoodInsightEntry(id: 'c', time: DateTime(2024, 1, 2), mood: .great),
+        MoodInsightEntry(id: 'd', time: DateTime(2024, 1, 3)),
+        MoodInsightEntry(id: 'e', time: DateTime(2024, 2, 29), mood: .great),
+        MoodInsightEntry(id: 'f', time: DateTime(2024, 3)),
+        MoodInsightEntry(id: 'g', time: DateTime(2025, 1, 1), mood: .good),
+        MoodInsightEntry(id: 'h', time: DateTime(2023, 12, 31)),
+      ];
+      final months = moodMonthAverages(rows.reversed);
+      final years = moodYearAverages(rows.reversed);
+      expect(months, {
+        DateTime(2023, 12): null,
+        DateTime(2024, 1): 3.0,
+        DateTime(2024, 2): 5.0,
+        DateTime(2024, 3): null,
+        DateTime(2025, 1): 4.0,
+      });
+      expect(years[DateTime(2024)], closeTo(11 / 3, .00001));
+      expect(years[DateTime(2025)], 4);
+      expect(years[DateTime(2023)], isNull);
+      for (final month in months.keys) {
+        expect(
+          months[month],
+          summarizeMood(
+            rows.where((e) {
+              final day = moodDayKey(e.time);
+              return day.year == month.year && day.month == month.month;
+            }),
+          ).average,
+        );
+      }
+      expect(moodMonthAverages([]), isEmpty);
+      expect(moodYearAverages([]), isEmpty);
+    },
+  );
+
+  test('month and year keys use local calendar dates for UTC entries', () {
+    final instant = DateTime.utc(2025, 12, 31, 23, 30);
+    final local = instant.toLocal();
+    final rows = [MoodInsightEntry(id: 'utc', time: instant, mood: .good)];
+    expect(moodMonthAverages(rows), {DateTime(local.year, local.month): 4.0});
+    expect(moodYearAverages(rows), {DateTime(local.year): 4.0});
+  });
+
   test('tags require five mood entries; delta is entry weighted and tags deduplicated', () {
     final rows = [
       for (var i = 0; i < 5; i++) entry(i + 1, .great, tags: ['up', 'up']),

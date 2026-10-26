@@ -935,6 +935,10 @@ class _Translations$insights$en extends Translations$insights$zh {
 	@override String get week => 'Week';
 	@override String get month => 'Month';
 	@override String get year => 'Year';
+	@override String get selectMonth => 'Choose month';
+	@override String get selectYear => 'Choose year';
+	@override String get selectWeek => 'Choose week';
+	@override String pickerYear({required Object year}) => '${year}';
 	@override String yearTitle({required Object year}) => '${year}';
 	@override String weekTitle({required Object start, required Object end}) => '${start} – ${end}';
 	@override String averageLevel({required Object level}) => 'Average · ${level}';

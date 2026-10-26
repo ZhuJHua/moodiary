@@ -52,6 +52,18 @@ class MoodInsightsRepository {
         ];
       });
 
+  /// Includes visible diaries without a mood so picker history matches the diary.
+  Future<DateTime?> earliestEntry() async {
+    final row = await _db
+        .customSelect(
+          'SELECT MIN(time) AS first_time FROM diaries WHERE show = 1',
+          readsFrom: {_db.diaries},
+        )
+        .getSingle();
+    final time = row.readNullable<int>('first_time');
+    return time == null ? null : dbToTime(time);
+  }
+
   Future<bool> hasRecordedMood() async =>
       (await _db
               .customSelect(

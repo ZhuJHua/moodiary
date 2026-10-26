@@ -65,6 +65,18 @@ void main() {
     expect(rows.last.tags, ['tag-first']);
   });
 
+  test(
+    'earliest diary includes null moods but excludes hidden diaries',
+    () async {
+      expect(await repository.earliestEntry(), isNull);
+      await insert('hidden-oldest', DateTime(2020), visible: false);
+      final first = DateTime(2023, 12, 31, 23, 30);
+      await insert('no-mood', first);
+      await insert('recorded', DateTime(2026), mood: 5);
+      expect((await repository.earliestEntry())?.toLocal(), first);
+    },
+  );
+
   test('ever recorded ignores hidden entries and unrecorded moods', () async {
     expect(await repository.hasRecordedMood(), isFalse);
     await insert('hidden', DateTime(2026), mood: 3, visible: false);

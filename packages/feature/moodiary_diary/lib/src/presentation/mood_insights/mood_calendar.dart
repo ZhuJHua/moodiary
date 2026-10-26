@@ -13,6 +13,7 @@ class MoodCalendar extends StatelessWidget {
   final Map<DateTime, MoodInsightDay> days;
   final DateTime? selected;
   final ValueChanged<DateTime> onSelected;
+  final ValueChanged<DateTime>? onMonthSelected;
   const MoodCalendar({
     super.key,
     required this.scope,
@@ -20,6 +21,7 @@ class MoodCalendar extends StatelessWidget {
     required this.days,
     required this.selected,
     required this.onSelected,
+    this.onMonthSelected,
   });
 
   @override
@@ -124,6 +126,27 @@ class MoodCalendar extends StatelessWidget {
                             ),
                           ),
                         ),
+                      if (onMonthSelected != null)
+                        for (var month = 1; month <= 12; month++)
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            top: (month - 1) * (cell + 1),
+                            height: cell + (month == 12 ? 0 : 1),
+                            child: Semantics(
+                              button: true,
+                              label: DateFormat.yMMMM(
+                                Localizations.localeOf(context).toLanguageTag(),
+                              ).format(DateTime(start.year, month)),
+                              child: GestureDetector(
+                                key: ValueKey('insights-year-month-$month'),
+                                behavior: .opaque,
+                                onTap: () => onMonthSelected!(
+                                  DateTime(start.year, month),
+                                ),
+                              ),
+                            ),
+                          ),
                     ],
                   ),
                 ),

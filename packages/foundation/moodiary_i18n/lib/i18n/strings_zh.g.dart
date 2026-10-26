@@ -2580,6 +2580,18 @@ class Translations$insights$zh {
 	/// zh: '年'
 	String get year => '年';
 
+	/// zh: '选择月份'
+	String get selectMonth => '选择月份';
+
+	/// zh: '选择年份'
+	String get selectYear => '选择年份';
+
+	/// zh: '选择周'
+	String get selectWeek => '选择周';
+
+	/// zh: '{year} 年'
+	String pickerYear({required Object year}) => '${year} 年';
+
 	/// zh: '{year}年'
 	String yearTitle({required Object year}) => '${year}年';
 
