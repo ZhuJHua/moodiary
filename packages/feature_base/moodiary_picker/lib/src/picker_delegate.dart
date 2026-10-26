@@ -120,6 +120,7 @@ class MoodiaryPickerDelegate
   Widget selectedBackdrop(BuildContext context, int index, AssetEntity asset) {
     return Positioned.fill(
       child: GestureDetector(
+        behavior: .opaque,
         onTap: isPreviewEnabled ? () => viewAsset(context, index, asset) : null,
         child: Consumer<DefaultAssetPickerProvider>(
           builder: (context, p, _) {
