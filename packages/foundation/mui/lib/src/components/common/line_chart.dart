@@ -2,9 +2,10 @@ import 'dart:math' as math;
 
 import 'package:mui/mui.dart';
 
-/// A discrete, nullable series. Missing samples break the connecting line.
+/// A discrete, nullable series. Missing samples break the line by default.
 class MLineChart extends StatefulWidget {
   final List<double?> values;
+  final bool connectGaps;
   final double yMin;
   final double yMax;
   final double? baseline;
@@ -19,6 +20,7 @@ class MLineChart extends StatefulWidget {
   const MLineChart({
     super.key,
     required this.values,
+    this.connectGaps = false,
     required this.yMin,
     required this.yMax,
     this.baseline,
@@ -102,6 +104,7 @@ class _MLineChartState extends State<MLineChart> {
                       child: CustomPaint(
                         painter: _LinePainter(
                           values: widget.values,
+                          connectGaps: widget.connectGaps,
                           yMin: widget.yMin,
                           yMax: widget.yMax,
                           baseline: widget.baseline,
@@ -205,6 +208,7 @@ class _MLineChartState extends State<MLineChart> {
 
 class _LinePainter extends CustomPainter {
   final List<double?> values;
+  final bool connectGaps;
   final double yMin;
   final double yMax;
   final double? baseline;
@@ -216,6 +220,7 @@ class _LinePainter extends CustomPainter {
 
   _LinePainter({
     required this.values,
+    required this.connectGaps,
     required this.yMin,
     required this.yMax,
     required this.baseline,
@@ -263,7 +268,7 @@ class _LinePainter extends CustomPainter {
     for (var index = 0; index < values.length; index++) {
       final value = values[index];
       if (value == null) {
-        previous = null;
+        if (!connectGaps) previous = null;
         continue;
       }
       final point = Offset(x(index), y(value));

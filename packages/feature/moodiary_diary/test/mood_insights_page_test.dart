@@ -865,6 +865,22 @@ void main() {
   }
 
   for (final scope in MoodInsightsScope.values) {
+    testWidgets('trend connects recorded points across gaps for $scope', (
+      tester,
+    ) async {
+      await openPage(tester);
+      await tester.tap(
+        find.text(switch (scope) {
+          .week => l10n.insights.week,
+          .month => l10n.insights.month,
+          .year => l10n.insights.year,
+        }),
+      );
+      await tester.pumpAndSettle();
+      final chart = tester.widget<MLineChart>(find.byType(MLineChart));
+      expect(chart.connectGaps, isTrue);
+    });
+
     testWidgets('back to today is conditional and returns to current $scope', (
       tester,
     ) async {

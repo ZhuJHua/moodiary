@@ -4,13 +4,18 @@ import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mui/mui.dart';
 
-Future<void> pumpChart(WidgetTester tester, List<double?> values) async {
+Future<void> pumpChart(
+  WidgetTester tester,
+  List<double?> values, {
+  bool connectGaps = false,
+}) async {
   final theme = buildMuiTheme(brightness: .light);
   await tester.pumpWidget(
     MaterialApp(
       theme: theme.copyWith(
         colorScheme: theme.colorScheme.copyWith(
           onSurfaceVariant: const Color(0xFF000000),
+          outlineVariant: const Color(0xFFFFFFFF),
         ),
       ),
       home: Scaffold(
@@ -22,6 +27,7 @@ Future<void> pumpChart(WidgetTester tester, List<double?> values) async {
               width: 300,
               child: MLineChart(
                 values: values,
+                connectGaps: connectGaps,
                 yMin: 1,
                 yMax: 5,
                 ringColor: const Color(0xFFFFFFFF),
@@ -86,6 +92,10 @@ void main() {
         ),
       );
       expect(tester.getSize(find.byType(MLineChart)), const Size(300, 180));
+      expect(
+        tester.widget<MLineChart>(find.byType(MLineChart)).connectGaps,
+        false,
+      );
       final bones = find.byWidgetPredicate((widget) => widget is Bone);
       expect(bones, enabled ? findsOneWidget : findsNothing);
       expect(
@@ -101,26 +111,40 @@ void main() {
     }
   });
 
-  testWidgets(
-    'null breaks the painted line; lone samples retain their markers',
-    (tester) async {
-      await pumpChart(tester, [2, null, 4]);
+  for (final connectGaps in [false, true]) {
+    testWidgets('connectGaps=$connectGaps controls continuity across null', (
+      tester,
+    ) async {
+      await pumpChart(tester, [2, null, 4], connectGaps: connectGaps);
       await tester.runAsync(() async {
-        expect(await hasInk(tester, 85, 121), isFalse);
+        expect(await hasInk(tester, 85, 121), connectGaps);
+        expect(await hasInk(tester, 222, 76), connectGaps);
+        expect(await hasInk(tester, 154, 104), isFalse);
         expect(await hasInk(tester, 17, 144), isTrue);
         expect(await hasInk(tester, 290, 53), isTrue);
       });
-      await pumpChart(tester, [2, 3, 4]);
+      await pumpChart(tester, [2, 3, 4], connectGaps: connectGaps);
       await tester.runAsync(
         () async => expect(await hasInk(tester, 85, 121), isTrue),
       );
-      await pumpChart(tester, [null, 3, null]);
-      await tester.runAsync(() async {
-        expect(await hasInk(tester, 154, 99), isTrue);
-        expect(await hasInk(tester, 85, 121), isFalse);
-      });
-    },
-  );
+    });
+
+    testWidgets('a lone sample draws only its marker with $connectGaps', (
+      tester,
+    ) async {
+      for (final values in <List<double?>>[
+        [3],
+        [null, 3, null],
+      ]) {
+        await pumpChart(tester, values, connectGaps: connectGaps);
+        await tester.runAsync(() async {
+          expect(await hasInk(tester, 154, 99), isTrue);
+          expect(await hasInk(tester, 85, 99), isFalse);
+          expect(await hasInk(tester, 222, 99), isFalse);
+        });
+      }
+    });
+  }
 
   testWidgets('top markers use the chart edge; tooltip overlays the plot', (
     tester,

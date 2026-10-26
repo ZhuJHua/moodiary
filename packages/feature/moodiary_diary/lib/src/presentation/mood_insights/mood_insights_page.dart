@@ -325,6 +325,7 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
     }
     return MLineChart(
       values: values,
+      connectGaps: true,
       yMin: 1,
       yMax: 5,
       baseline: 3,
