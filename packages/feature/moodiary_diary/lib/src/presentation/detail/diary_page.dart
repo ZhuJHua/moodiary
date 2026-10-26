@@ -548,6 +548,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(categoryControllerProvider, (_, _) {});
+    ref.listen(orderedPlacesProvider, (_, _) {});
     final editAsync = ref.watch(_provider);
     if (editAsync.hasValue && _hopTarget?.id == widget.diaryId) {
       _hopTarget = null;

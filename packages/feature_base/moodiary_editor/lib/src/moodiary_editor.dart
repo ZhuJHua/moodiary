@@ -22,6 +22,41 @@ typedef EditorFont = ({String family, String path});
 
 typedef DiaryLinkCandidate = ({String id, String label});
 
+@visibleForTesting
+String buildEditorActivationJs({
+  String? content,
+  String? title,
+  required bool editable,
+  required Map<String, dynamic> theme,
+  String? metaJson,
+  String? linksJson,
+}) => [
+  if (content != null) _setContentJs(content),
+  if (title != null) _setTitleJs(title),
+  _setEditableJs(editable),
+  _setThemeJs(theme),
+  _setMetaJs(metaJson),
+  _setLinksJs(linksJson),
+].map((source) => 'try{$source;}catch(e){console.error(e);}').join('\n');
+
+String _setContentJs(String content) =>
+    'window.MoodiaryBridge.setContent(${jsonEncode(content)})';
+
+String _setTitleJs(String title) =>
+    'window.MoodiaryBridge.setTitle(${jsonEncode(title)})';
+
+String _setEditableJs(bool value) =>
+    'window.MoodiaryBridge.setEditable($value)';
+
+String _setThemeJs(Map<String, dynamic> payload) =>
+    'window.MoodiaryBridge.setTheme(${jsonEncode(payload)})';
+
+String _setMetaJs(String? metaJson) =>
+    'window.MoodiaryBridge.setMeta(${jsonEncode(metaJson ?? '')})';
+
+String _setLinksJs(String? linksJson) =>
+    'window.MoodiaryBridge.setLinks(${jsonEncode(linksJson ?? '')})';
+
 void _log(String msg, {Object? error, StackTrace? stack, int level = 0}) {
   developer.log(
     msg,
@@ -644,13 +679,18 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     }
     _activating = true;
     try {
-      await _setContent(widget.initialContent);
-      await _setTitle(widget.initialTitle);
-      await _setEditable(!widget.readOnly);
-      await _setTheme();
       if (!mounted || !widget.metaReady) return;
-      await _setMeta();
-      await _setLinks();
+      final source = buildEditorActivationJs(
+        content: widget.initialContent,
+        title: widget.initialTitle,
+        editable: !widget.readOnly,
+        theme: _themePayload(),
+        metaJson: widget.metaJson,
+        linksJson: widget.linksJson,
+      );
+      // 首次下发即显示页面，等字体期间也继续接收元数据更新
+      _metaSent = true;
+      await _run(source);
       if (_jsReady &&
           widget.fontResolver?.call() != null &&
           !_fontReady.isCompleted) {
@@ -659,10 +699,14 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
           onTimeout: () {},
         );
         if (!mounted) return;
-        await _setEditable(!widget.readOnly);
-        await _setTheme();
-        await _setMeta();
-        await _setLinks();
+        await _run(
+          buildEditorActivationJs(
+            editable: !widget.readOnly,
+            theme: _themePayload(),
+            metaJson: widget.metaJson,
+            linksJson: widget.linksJson,
+          ),
+        );
       }
       if (!mounted) return;
       if (!widget.readOnly) unawaited(_attachKeyboard());
@@ -725,21 +769,17 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
   }
 
   Future<void> _setEditable(bool value) async {
-    await _run('window.MoodiaryBridge.setEditable($value)');
+    await _run(_setEditableJs(value));
   }
 
   Future<void> _setMeta() async {
     // 首次下发即显示页面，等字体期间也继续接收元数据更新
     _metaSent = true;
-    await _run(
-      'window.MoodiaryBridge.setMeta(${jsonEncode(widget.metaJson ?? '')})',
-    );
+    await _run(_setMetaJs(widget.metaJson));
   }
 
   Future<void> _setLinks() async {
-    await _run(
-      'window.MoodiaryBridge.setLinks(${jsonEncode(widget.linksJson ?? '')})',
-    );
+    await _run(_setLinksJs(widget.linksJson));
   }
 
   void _syncHandleColor() {
@@ -751,17 +791,15 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
   }
 
   Future<void> _setTheme() async {
-    await _run(
-      'window.MoodiaryBridge.setTheme(${jsonEncode(_themePayload())})',
-    );
+    await _run(_setThemeJs(_themePayload()));
   }
 
   Future<void> _setContent(String content) async {
-    await _run('window.MoodiaryBridge.setContent(${jsonEncode(content)})');
+    await _run(_setContentJs(content));
   }
 
   Future<void> _setTitle(String title) async {
-    await _run('window.MoodiaryBridge.setTitle(${jsonEncode(title)})');
+    await _run(_setTitleJs(title));
   }
 
   Future<void> _scrollToHeading(int index) async {
