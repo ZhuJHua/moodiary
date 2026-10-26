@@ -949,7 +949,6 @@ class _Translations$insights$en extends Translations$insights$zh {
 	@override String get trend => 'Trend';
 	@override String get distribution => 'Distribution';
 	@override String get weekdayPattern => 'By weekday';
-	@override String get tags => 'Tags';
 	@override String get view => 'View';
 	@override String get unrecorded => 'Not recorded';
 	@override String get today => 'Today';

@@ -218,7 +218,6 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
                     ),
                   );
                 }
-                final tags = moodTagDeltas(data.rows);
                 return MSkeleton(
                   enabled: loading,
                   child: Column(
@@ -274,11 +273,6 @@ class _MoodInsightsPageState extends ConsumerState<MoodInsightsPage>
                           title: context.l10n.insights.weekdayPattern,
                           child: MoodWeekdayPattern(averages: data.weekdays),
                         ),
-                        if (tags.isNotEmpty)
-                          _Block(
-                            title: context.l10n.insights.tags,
-                            child: MoodTags(deltas: tags),
-                          ),
                       ],
                     ],
                   ),
@@ -476,7 +470,6 @@ class _InsightsData {
             mood: DiaryMood.fromScore(scores[i % scores.length]),
             title: l10n.common.untitled,
             preview: l10n.common.untitled,
-            tags: [l10n.insights.week, if (i.isEven) l10n.insights.month],
           ),
     ];
     final summary = summarizeMood(rows);

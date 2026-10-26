@@ -7,7 +7,6 @@ class MoodInsightEntry {
   final DiaryMood? mood;
   final String title;
   final String preview;
-  final List<String> tags;
 
   const MoodInsightEntry({
     required this.id,
@@ -15,7 +14,6 @@ class MoodInsightEntry {
     this.mood,
     this.title = '',
     this.preview = '',
-    this.tags = const [],
   });
 }
 
@@ -175,39 +173,6 @@ List<double?> moodWeekdayAverages(
             .nonNulls,
       ),
   ];
-}
-
-class MoodTagDelta {
-  final String tag;
-  final int count;
-  final double delta;
-  const MoodTagDelta(this.tag, this.count, this.delta);
-}
-
-List<MoodTagDelta> moodTagDeltas(Iterable<MoodInsightEntry> entries) {
-  final recorded = entries.where((e) => e.mood != null).toList();
-  final overall = _mean(recorded.map((e) => e.mood!.score));
-  if (overall == null) return const [];
-  final tags = <String, List<int>>{};
-  for (final entry in recorded) {
-    for (final tag in entry.tags.toSet()) {
-      (tags[tag] ??= []).add(entry.mood!.score);
-    }
-  }
-  final deltas =
-      [
-        for (final tag in tags.entries)
-          if (tag.value.length >= 5)
-            MoodTagDelta(
-              tag.key,
-              tag.value.length,
-              _mean(tag.value)! - overall,
-            ),
-      ]..sort((a, b) {
-        final magnitude = b.delta.abs().compareTo(a.delta.abs());
-        return magnitude == 0 ? a.tag.compareTo(b.tag) : magnitude;
-      });
-  return deltas.take(7).toList();
 }
 
 double? moodPeriodDelta(

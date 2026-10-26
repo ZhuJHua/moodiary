@@ -2,15 +2,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
-MoodInsightEntry entry(
-  int day,
-  DiaryMood? mood, {
-  List<String> tags = const [],
-}) => MoodInsightEntry(
+MoodInsightEntry entry(int day, DiaryMood? mood) => MoodInsightEntry(
   id: '$day-${mood?.name}',
   time: DateTime(2026, 10, day, 13),
   mood: mood,
-  tags: tags,
 );
 
 void main() {
@@ -129,40 +124,6 @@ void main() {
     expect(moodYearAverages(rows), {DateTime(local.year): 4.0});
   });
 
-  test('tags require five mood entries; delta is entry weighted and tags deduplicated', () {
-    final rows = [
-      for (var i = 0; i < 5; i++) entry(i + 1, .great, tags: ['up', 'up']),
-      for (var i = 0; i < 5; i++) entry(i + 6, .awful, tags: ['down']),
-      for (var i = 0; i < 4; i++) entry(i + 11, .okay, tags: ['small']),
-      entry(20, null, tags: ['small']),
-    ];
-    final tags = moodTagDeltas(rows);
-    expect(tags.map((e) => e.tag), ['down', 'up']);
-    expect(tags.map((e) => e.count), [5, 5]);
-    expect(tags.map((e) => e.delta), [-2, 2]);
-  });
-
-  test('tags sorted by absolute delta and limited to seven', () {
-    final rows = [
-      for (var i = 0; i < 5; i++)
-        entry(
-          i + 1,
-          .great,
-          tags: [for (var tag = 0; tag < 9; tag++) 'tag$tag'],
-        ),
-      for (var i = 0; i < 5; i++) entry(i + 10, .awful),
-    ];
-    final tags = moodTagDeltas(rows);
-    expect(tags.length, 7);
-    expect(tags.every((e) => e.delta == 2), isTrue);
-    final varying = moodTagDeltas([
-      for (var i = 0; i < 5; i++) entry(i + 1, .great, tags: ['high']),
-      for (var i = 0; i < 5; i++) entry(i + 6, .good, tags: ['middle']),
-      for (var i = 0; i < 10; i++) entry(i + 11, .awful, tags: ['low']),
-    ]);
-    expect(varying.map((e) => e.tag), ['high', 'low', 'middle']);
-  });
-
   test(
     'Sunday-first week bounds include Sunday, cross months, and are half-open',
     () {
@@ -199,7 +160,7 @@ void main() {
     },
   );
 
-  test('empty and unrecorded entries have no average, streak, weekdays or tag deltas', () {
+  test('empty and unrecorded entries have no average, streak or weekdays', () {
     for (final rows in [
       <MoodInsightEntry>[],
       [entry(1, null)],
@@ -209,7 +170,6 @@ void main() {
       expect(result.recordedDays, 0);
       expect(result.longestGoodStreak, 0);
       expect(result.distribution.values.every((e) => e == 0), isTrue);
-      expect(moodTagDeltas(rows), isEmpty);
       expect(
         moodWeekdayAverages(rows, start: DateTime(2026), end: DateTime(2027)),
         List<double?>.filled(7, null),

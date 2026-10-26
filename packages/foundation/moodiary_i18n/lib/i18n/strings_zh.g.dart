@@ -2622,9 +2622,6 @@ class Translations$insights$zh {
 	/// zh: '按星期'
 	String get weekdayPattern => '按星期';
 
-	/// zh: '标签'
-	String get tags => '标签';
-
 	/// zh: '查看'
 	String get view => '查看';
 

@@ -374,18 +374,16 @@ void main() {
           l10n.insights.trend,
           l10n.insights.distribution,
           l10n.insights.weekdayPattern,
-          l10n.insights.tags,
           l10n.insights.yearPixels,
           l10n.insights.monthlyTrend,
         ],
         locale == AppLocale.zh
-            ? ['日历', '趋势', '分布', '按星期', '标签', '全年', '每月']
+            ? ['日历', '趋势', '分布', '按星期', '全年', '每月']
             : [
                 'Calendar',
                 'Trend',
                 'Distribution',
                 'By weekday',
-                'Tags',
                 'Full year',
                 'By month',
               ],
@@ -450,42 +448,6 @@ void main() {
       }
       expect(tester.takeException(), isNull);
     });
-  }
-
-  for (final count in [0, 4, 5]) {
-    testWidgets(
-      'tags card is only present with qualifying tags ($count entries)',
-      (tester) async {
-        final today = moodDayKey(DateTime.now());
-        repository.rows = [
-          MoodInsightEntry(id: 'untagged', time: today, mood: .good),
-          for (var i = 0; i < count; i++)
-            MoodInsightEntry(
-              id: '$i',
-              time: today,
-              mood: .great,
-              tags: ['Walk'],
-            ),
-        ];
-        await tester.pumpWidget(
-          muiTestApp(const MoodInsightsPage(), wrapScaffold: false),
-        );
-        await tester.pumpAndSettle();
-        expect(
-          find.byType(MoodTags),
-          count >= 5 ? findsOneWidget : findsNothing,
-        );
-        expect(
-          find.text(l10n.insights.tags),
-          count >= 5 ? findsOneWidget : findsNothing,
-        );
-        if (count >= 5) {
-          await tester.ensureVisible(find.text('#Walk'));
-          expect(find.text('#Walk'), findsOneWidget);
-        }
-        expect(tester.takeException(), isNull);
-      },
-    );
   }
 
   for (final year in [2000, 2023, 2024]) {

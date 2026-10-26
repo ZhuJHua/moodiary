@@ -12,45 +12,28 @@ class MoodInsightsRepository {
   final MoodiaryDatabase _db;
 
   /// [start, end) in local calendar time, stored as UTC microseconds.
-  Future<List<MoodInsightEntry>> entries(DateTime start, DateTime end) =>
-      _db.transaction(() async {
-        final variables = [Variable(dbTime(start)), Variable(dbTime(end))];
-        final rows = await _db
-            .customSelect(
-              'SELECT id, time, mood_level, title, substr(content_text, 1, 120) AS preview '
-              'FROM diaries WHERE show = 1 AND time >= ? AND time < ? '
-              'ORDER BY time DESC, id DESC',
-              variables: variables,
-              readsFrom: {_db.diaries},
-            )
-            .get();
-        final tagRows = await _db
-            .customSelect(
-              'SELECT t.diary_id, t.tag FROM diary_tags t '
-              'JOIN diaries d ON d.id = t.diary_id '
-              'WHERE d.show = 1 AND d.time >= ? AND d.time < ? ORDER BY t.seq',
-              variables: variables,
-              readsFrom: {_db.diaries, _db.diaryTags},
-            )
-            .get();
-        final tags = <String, List<String>>{};
-        for (final row in tagRows) {
-          (tags[row.read<String>('diary_id')] ??= []).add(
-            row.read<String>('tag'),
-          );
-        }
-        return [
-          for (final row in rows)
-            MoodInsightEntry(
-              id: row.read<String>('id'),
-              time: dbToTime(row.read<int>('time')),
-              mood: DiaryMood.fromScore(row.readNullable<int>('mood_level')),
-              title: row.read<String>('title'),
-              preview: row.read<String>('preview'),
-              tags: tags[row.read<String>('id')] ?? const [],
-            ),
-        ];
-      });
+  Future<List<MoodInsightEntry>> entries(DateTime start, DateTime end) async {
+    final variables = [Variable(dbTime(start)), Variable(dbTime(end))];
+    final rows = await _db
+        .customSelect(
+          'SELECT id, time, mood_level, title, substr(content_text, 1, 120) AS preview '
+          'FROM diaries WHERE show = 1 AND time >= ? AND time < ? '
+          'ORDER BY time DESC, id DESC',
+          variables: variables,
+          readsFrom: {_db.diaries},
+        )
+        .get();
+    return [
+      for (final row in rows)
+        MoodInsightEntry(
+          id: row.read<String>('id'),
+          time: dbToTime(row.read<int>('time')),
+          mood: DiaryMood.fromScore(row.readNullable<int>('mood_level')),
+          title: row.read<String>('title'),
+          preview: row.read<String>('preview'),
+        ),
+    ];
+  }
 
   /// Includes visible diaries without a mood so picker history matches the diary.
   Future<DateTime?> earliestEntry() async {

@@ -38,12 +38,9 @@ void main() {
             type: 'text',
           ),
         );
-    await db
-        .into(db.diaryTags)
-        .insert(DiaryTagsCompanion.insert(diaryId: id, seq: 0, tag: 'tag-$id'));
   }
 
-  test('light projection respects visibility, local half-open bounds, tags and preview length', () async {
+  test('light projection respects visibility, local half-open bounds and preview length', () async {
     final start = DateTime(2026, 10, 1);
     final end = DateTime(2026, 11, 1);
     await insert(
@@ -62,7 +59,6 @@ void main() {
     expect(rows.first.mood, isNull);
     expect(rows.last.title, 'Title first');
     expect(rows.last.preview.length, 120);
-    expect(rows.last.tags, ['tag-first']);
   });
 
   test(
