@@ -171,61 +171,72 @@ class MoodCalendar extends StatelessWidget {
       level: level?.label(context) ?? context.l10n.insights.unrecorded,
       count: info?.entries.length ?? 0,
     );
-    return Semantics(
-      label: description,
-      selected: selectedDay,
-      button: true,
-      child: Tooltip(
-        message: description,
-        child: MInkWell(
-          borderRadius: radius,
-          onTap: future ? null : () => onSelected(date),
-          child: Container(
-            decoration: BoxDecoration(
-              color: future
-                  ? (pixel
-                        ? colors.surfaceContainerHigh.withValues(alpha: .6)
-                        : null)
-                  : level?.colorOf(context),
-              borderRadius: radius,
-              border: selectedDay
-                  ? Border.all(color: colors.onSurface, width: 1.6)
-                  : date == today
-                  ? Border.all(color: colors.outline, width: 1.2)
-                  : pixel && level == null && !future
-                  ? Border.all(color: colors.outlineVariant)
-                  : null,
-            ),
-            child: pixel
-                ? null
-                : Center(
-                    child: Column(
-                      mainAxisSize: .min,
-                      children: [
-                        Text(
-                          '${date.day}',
-                          style: context.theme.typography.labelMedium.onSurface
-                              .copyWith(
-                                color: future
-                                    ? colors.outlineVariant
-                                    : level?.onColorOf(context) ??
-                                          colors.outline,
-                                fontFeatures: const [.tabularFigures()],
-                              ),
-                        ),
-                        if (info != null && level == null && !future)
-                          Container(
-                            width: 4,
-                            height: 4,
-                            margin: const .only(top: 2),
-                            decoration: BoxDecoration(
-                              color: colors.outline,
-                              shape: .circle,
-                            ),
+    return Skeleton.replace(
+      replacement: Bone(
+        width: double.infinity,
+        height: double.infinity,
+        borderRadius: radius,
+      ),
+      child: Semantics(
+        label: description,
+        selected: selectedDay,
+        button: true,
+        child: Tooltip(
+          message: description,
+          child: MInkWell(
+            borderRadius: radius,
+            onTap: future ? null : () => onSelected(date),
+            child: Container(
+              decoration: BoxDecoration(
+                color: future
+                    ? (pixel
+                          ? colors.surfaceContainerHigh.withValues(alpha: .6)
+                          : null)
+                    : level?.colorOf(context),
+                borderRadius: radius,
+                border: selectedDay
+                    ? Border.all(color: colors.onSurface, width: 1.6)
+                    : date == today
+                    ? Border.all(color: colors.outline, width: 1.2)
+                    : pixel && level == null && !future
+                    ? Border.all(color: colors.outlineVariant)
+                    : null,
+              ),
+              child: pixel
+                  ? null
+                  : Center(
+                      child: Column(
+                        mainAxisSize: .min,
+                        children: [
+                          Text(
+                            '${date.day}',
+                            style: context
+                                .theme
+                                .typography
+                                .labelMedium
+                                .onSurface
+                                .copyWith(
+                                  color: future
+                                      ? colors.outlineVariant
+                                      : level?.onColorOf(context) ??
+                                            colors.outline,
+                                  fontFeatures: const [.tabularFigures()],
+                                ),
                           ),
-                      ],
+                          if (info != null && level == null && !future)
+                            Container(
+                              width: 4,
+                              height: 4,
+                              margin: const .only(top: 2),
+                              decoration: BoxDecoration(
+                                color: colors.outline,
+                                shape: .circle,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
+            ),
           ),
         ),
       ),

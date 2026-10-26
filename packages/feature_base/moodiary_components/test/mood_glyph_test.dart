@@ -13,6 +13,42 @@ void main() {
   setUp(() => getIt.registerSingleton<IKVStorage>(MemoryKVStorage()));
   tearDown(getIt.reset);
 
+  testWidgets('glyph is a circle bone only inside an enabled skeleton', (
+    tester,
+  ) async {
+    for (final enabled in [true, false]) {
+      await tester.pumpWidget(
+        muiTestApp(
+          MSkeleton(
+            enabled: enabled,
+            child: const MoodGlyph(mood: .great, size: 30),
+          ),
+        ),
+      );
+      expect(tester.getSize(find.byType(MoodGlyph)), const Size.square(30));
+      final bones = find.byWidgetPredicate((widget) => widget is Bone);
+      expect(bones, enabled ? findsOneWidget : findsNothing);
+      if (enabled) {
+        expect(tester.getSize(bones), const Size.square(30));
+        expect(
+          find.descendant(
+            of: find.byType(MoodGlyph),
+            matching: find.byType(CustomPaint),
+          ),
+          findsNothing,
+        );
+      } else {
+        expect(
+          find.descendant(
+            of: find.byType(MoodGlyph),
+            matching: find.byType(CustomPaint),
+          ),
+          findsOneWidget,
+        );
+      }
+    }
+  });
+
   test('palette storage defaults and round-trips stable names', () {
     expect(MoodiaryKVs.moodPalette.get(), 'classic');
     expect(MoodPalette.current, MoodPalette.classic);

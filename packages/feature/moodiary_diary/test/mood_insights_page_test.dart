@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
@@ -13,11 +15,13 @@ import 'package:mui/mui.dart';
 import 'support/pump.dart';
 
 class _Repository implements MoodInsightsRepository {
+  Completer<List<MoodInsightEntry>>? pending;
   List<MoodInsightEntry> rows = [];
   final queries = <({DateTime start, DateTime end})>[];
   @override
   Future<List<MoodInsightEntry>> entries(DateTime start, DateTime end) async {
     queries.add((start: start, end: end));
+    if (pending case final request?) return request.future;
     return rows
         .where((e) => !e.time.isBefore(start) && e.time.isBefore(end))
         .toList();
@@ -28,13 +32,14 @@ class _Repository implements MoodInsightsRepository {
 }
 
 class _Diaries implements DiaryRepository {
+  Completer<List<Diary>>? pending;
   List<Diary> rows = [];
   @override
   Future<List<Diary>> getDiariesByDateRange(
     DateTime start,
     DateTime end, {
     bool visibleOnly = true,
-  }) async => rows;
+  }) async => pending == null ? rows : pending!.future;
   @override
   Stream<DiaryEvent> get diaryEvents => const Stream.empty();
   @override
@@ -52,6 +57,145 @@ void main() {
     getIt.registerSingleton<DiaryRepository>(diaries);
   });
   tearDown(getIt.reset);
+
+  for (final scope in MoodInsightsScope.values) {
+    testWidgets('$scope pending period uses the normal layout with bones', (
+      tester,
+    ) async {
+      repository.pending = Completer();
+      await tester.pumpWidget(
+        muiTestApp(const MoodInsightsPage(), wrapScaffold: false),
+      );
+      if (scope != .month) {
+        await tester.tap(
+          find.text(scope == .week ? l10n.insights.week : l10n.insights.year),
+        );
+        await tester.pump();
+      }
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      final skeleton = find.byType(MSkeleton);
+      expect(tester.widget<MSkeleton>(skeleton).enabled, isTrue);
+      expect(
+        find.ancestor(
+          of: find.byType(MSegmentedControl<MoodInsightsScope>),
+          matching: skeleton,
+        ),
+        findsNothing,
+      );
+      expect(
+        find.byType(MoodCalendar),
+        scope == .week ? findsNothing : findsOneWidget,
+      );
+      expect(find.byWidgetPredicate((w) => w is Bone), findsWidgets);
+      // Controls remain usable during the request and keep the chosen scope.
+      await tester.tap(find.byTooltip(l10n.insights.previousPeriod));
+      await tester.pump();
+      final bounds = repository.queries.last;
+      final chartSize = tester.getSize(find.byType(MLineChart));
+      final calendarSize = scope == .week
+          ? null
+          : tester.getSize(find.byType(MoodCalendar));
+      repository.pending!.complete([
+        MoodInsightEntry(
+          id: 'loaded',
+          time: moodDayOffset(bounds.end, -1),
+          mood: .good,
+        ),
+      ]);
+      await tester.pumpAndSettle();
+      expect(tester.widget<MSkeleton>(find.byType(MSkeleton)).enabled, isFalse);
+      expect(find.byWidgetPredicate((w) => w is Bone), findsNothing);
+      expect(find.text('4.0'), findsOneWidget);
+      expect(tester.getSize(find.byType(MLineChart)), chartSize);
+      if (scope != .week) {
+        final calendar = tester.widget<MoodCalendar>(find.byType(MoodCalendar));
+        expect(calendar.scope, scope);
+        expect(tester.getSize(find.byType(MoodCalendar)), calendarSize);
+      }
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  for (final scope in [MoodInsightsScope.month, MoodInsightsScope.year]) {
+    testWidgets('$scope cells replace mood colors with uniform bones', (
+      tester,
+    ) async {
+      final start = DateTime(2026, 10);
+      final day = MoodInsightDay([
+        MoodInsightEntry(id: 'a', time: start, mood: .great),
+      ]);
+      await tester.pumpWidget(
+        muiTestApp(
+          MSkeleton(
+            enabled: true,
+            child: MoodCalendar(
+              scope: scope,
+              start: start,
+              days: {start: day},
+              selected: start,
+              onSelected: (_) {},
+            ),
+          ),
+        ),
+      );
+      final calendar = find.byType(MoodCalendar);
+      expect(
+        find.descendant(of: calendar, matching: find.byType(MInkWell)),
+        findsNothing,
+      );
+      expect(
+        find.descendant(
+          of: calendar,
+          matching: find.byWidgetPredicate((w) => w is Bone),
+        ),
+        findsNWidgets(scope == .month ? 31 : 365),
+      );
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('pending day sheet shows two real entry tiles as skeleton rows', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final today = moodDayKey(DateTime.now());
+    repository.rows = [MoodInsightEntry(id: 'today', time: today, mood: .good)];
+    diaries.pending = Completer();
+    await tester.pumpWidget(
+      muiTestApp(const MoodInsightsPage(), wrapScaffold: false),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(
+        of: find.byType(MoodCalendar),
+        matching: find.text('${today.day}'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text(l10n.insights.view));
+    await tester.tap(find.text(l10n.insights.view));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.byType(DiaryEntryTile), findsNWidgets(2));
+    expect(
+      tester.widget<MSkeleton>(find.byType(MSkeleton).last).enabled,
+      isTrue,
+    );
+    diaries.pending!.complete([
+      Diary.empty(type: .richText).copyWith(title: 'Loaded day diary'),
+    ]);
+    await tester.pumpAndSettle();
+    expect(find.byType(DiaryEntryTile), findsOneWidget);
+    expect(find.text('Loaded day diary'), findsOneWidget);
+    expect(
+      tester.widget<MSkeleton>(find.byType(MSkeleton).last).enabled,
+      isFalse,
+    );
+  });
 
   testWidgets(
     'empty state replaces all data cards and scope navigation still works',

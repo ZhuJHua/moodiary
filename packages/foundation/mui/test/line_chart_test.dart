@@ -59,6 +59,48 @@ Future<bool> hasInk(WidgetTester tester, int x, int y) async {
 }
 
 void main() {
+  testWidgets('skeleton replaces the whole chart with one sized rounded bone', (
+    tester,
+  ) async {
+    for (final enabled in [true, false]) {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: buildMuiTheme(brightness: .light),
+          home: Scaffold(
+            body: MSkeleton(
+              enabled: enabled,
+              child: SizedBox(
+                width: 300,
+                child: MLineChart(
+                  height: 180,
+                  values: const [2, 4],
+                  yMin: 1,
+                  yMax: 5,
+                  pointColor: (_, _) => const Color(0xFFFF0000),
+                  tooltipBuilder: (_) => 'sample',
+                  semanticsLabel: 'Trend',
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(tester.getSize(find.byType(MLineChart)), const Size(300, 180));
+      final bones = find.byWidgetPredicate((widget) => widget is Bone);
+      expect(bones, enabled ? findsOneWidget : findsNothing);
+      expect(
+        find.descendant(
+          of: find.byType(MLineChart),
+          matching: find.byType(CustomPaint),
+        ),
+        enabled ? findsNothing : findsOneWidget,
+      );
+      if (enabled) {
+        expect(tester.getSize(bones), const Size(300, 180));
+      }
+    }
+  });
+
   testWidgets(
     'null breaks the painted line; lone samples retain their markers',
     (tester) async {

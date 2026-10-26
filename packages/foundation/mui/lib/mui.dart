@@ -4,6 +4,7 @@ export 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 export 'package:lucide_icons_flutter/lucide_icons.dart';
 
 export 'package:material_ui/material_ui.dart';
+export 'package:skeletonizer/skeletonizer.dart' show Skeleton, Bone;
 
 export 'src/components.dart';
 export 'src/foundation/offscreen_size.dart';

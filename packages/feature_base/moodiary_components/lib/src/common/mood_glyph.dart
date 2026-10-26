@@ -20,19 +20,26 @@ class MoodGlyph extends StatelessWidget {
   final String? semanticLabel;
 
   @override
-  Widget build(BuildContext context) => Semantics(
-    label:
-        semanticLabel ?? mood?.label(context) ?? context.l10n.common.moodUnset,
-    image: true,
-    child: CustomPaint(
-      size: Size.square(size),
-      painter: _MoodPainter(
-        mood: mood,
-        fill: mood?.colorOf(context, palette: palette),
-        ink:
-            mood?.onColorOf(context, palette: palette) ??
-            context.theme.colors.outline,
-        small: size < 20,
+  Widget build(BuildContext context) => Skeleton.replace(
+    width: size,
+    height: size,
+    replacement: Bone.circle(size: size),
+    child: Semantics(
+      label:
+          semanticLabel ??
+          mood?.label(context) ??
+          context.l10n.common.moodUnset,
+      image: true,
+      child: CustomPaint(
+        size: Size.square(size),
+        painter: _MoodPainter(
+          mood: mood,
+          fill: mood?.colorOf(context, palette: palette),
+          ink:
+              mood?.onColorOf(context, palette: palette) ??
+              context.theme.colors.outline,
+          small: size < 20,
+        ),
       ),
     ),
   );

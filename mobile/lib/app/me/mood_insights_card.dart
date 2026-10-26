@@ -8,6 +8,30 @@ class MoodInsightsCard extends StatelessWidget {
   final MoodInsightsCardData data;
   const MoodInsightsCard({super.key, required this.data});
 
+  factory MoodInsightsCard.placeholder() {
+    final today = moodDayKey(DateTime.now());
+    final rows = [
+      for (var i = -6; i <= 0; i++)
+        MoodInsightEntry(
+          id: 'skeleton-$i',
+          time: moodDayOffset(today, i),
+          mood: .good,
+        ),
+    ];
+    final days = moodDays(rows);
+    return MoodInsightsCard(
+      data: MoodInsightsCardData(
+        month: summarizeMood(rows),
+        delta: .5,
+        lastSevenDays: [
+          for (var i = -6; i <= 0; i++) days[moodDayOffset(today, i)],
+        ],
+        hasRecordedMood: true,
+        today: today,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final typo = context.theme.typography;
@@ -65,7 +89,8 @@ class MoodInsightsCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (data.delta != null) MoodDeltaPill(delta: data.delta!),
+                  if (data.delta != null)
+                    Skeleton.leaf(child: MoodDeltaPill(delta: data.delta!)),
                 ],
               ),
               const SizedBox(height: 16),

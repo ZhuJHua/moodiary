@@ -43,6 +43,8 @@ enum MoodiaryKVs<T extends Object> {
 
   moodPalette<String>(defaultValue: 'classic'),
 
+  moodCardHint<bool>(defaultValue: false),
+
   pendingMoodNotice<bool>(defaultValue: false),
 
   themeMode<int>(defaultValue: 0),

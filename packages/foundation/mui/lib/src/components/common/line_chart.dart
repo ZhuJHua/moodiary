@@ -49,143 +49,154 @@ class _MLineChartState extends State<MLineChart> {
     final colors = context.theme.colors;
     final tooltip = Theme.of(context).tooltipTheme;
     final selected = _selected;
-    return Semantics(
-      label: widget.semanticsLabel,
-      excludeSemantics: true,
-      value: selected == null ? null : widget.tooltipBuilder(selected),
-      child: SizedBox(
+    return Skeleton.replace(
+      replacement: Bone(
+        width: double.infinity,
         height: widget.height,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final left = widget.yLabelBuilder == null ? 10.0 : 28.0;
-            final plot = Rect.fromLTRB(
-              left + 7,
-              widget.yLabelBuilder == null ? 7 : 10,
-              constraints.maxWidth - 10,
-              widget.height - 30,
-            );
-            double x(int index) => widget.values.length <= 1
-                ? plot.center.dx
-                : plot.left + plot.width * index / (widget.values.length - 1);
-            double y(double value) =>
-                plot.bottom -
-                plot.height *
-                    ((value - widget.yMin) / (widget.yMax - widget.yMin)).clamp(
-                      0,
-                      1,
-                    );
-            void select(Offset offset) {
-              if (widget.values.isEmpty) return;
-              final index = widget.values.length <= 1
-                  ? 0
-                  : ((offset.dx - plot.left) /
-                            plot.width *
-                            (widget.values.length - 1))
-                        .round()
-                        .clamp(0, widget.values.length - 1);
-              setState(() => _selected = index);
-            }
+        borderRadius: .circular(12),
+      ),
+      child: Semantics(
+        label: widget.semanticsLabel,
+        excludeSemantics: true,
+        value: selected == null ? null : widget.tooltipBuilder(selected),
+        child: SizedBox(
+          height: widget.height,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final left = widget.yLabelBuilder == null ? 10.0 : 28.0;
+              final plot = Rect.fromLTRB(
+                left + 7,
+                widget.yLabelBuilder == null ? 7 : 10,
+                constraints.maxWidth - 10,
+                widget.height - 30,
+              );
+              double x(int index) => widget.values.length <= 1
+                  ? plot.center.dx
+                  : plot.left + plot.width * index / (widget.values.length - 1);
+              double y(double value) =>
+                  plot.bottom -
+                  plot.height *
+                      ((value - widget.yMin) / (widget.yMax - widget.yMin))
+                          .clamp(0, 1);
+              void select(Offset offset) {
+                if (widget.values.isEmpty) return;
+                final index = widget.values.length <= 1
+                    ? 0
+                    : ((offset.dx - plot.left) /
+                              plot.width *
+                              (widget.values.length - 1))
+                          .round()
+                          .clamp(0, widget.values.length - 1);
+                setState(() => _selected = index);
+              }
 
-            final bubbleWidth = math.min(240.0, constraints.maxWidth);
-            return GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTapDown: (event) => select(event.localPosition),
-              onHorizontalDragStart: (event) => select(event.localPosition),
-              onHorizontalDragUpdate: (event) => select(event.localPosition),
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: CustomPaint(
-                      painter: _LinePainter(
-                        values: widget.values,
-                        yMin: widget.yMin,
-                        yMax: widget.yMax,
-                        baseline: widget.baseline,
-                        plot: plot,
-                        grid: colors.outlineVariant,
-                        line: colors.onSurfaceVariant,
-                        ring: widget.ringColor ?? colors.surfaceContainerLow,
-                        pointColors: [
-                          for (var i = 0; i < widget.values.length; i++)
-                            widget.values[i] == null
-                                ? colors.outline
-                                : widget.pointColor(i, widget.values[i]!),
-                        ],
+              final bubbleWidth = math.min(240.0, constraints.maxWidth);
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTapDown: (event) => select(event.localPosition),
+                onHorizontalDragStart: (event) => select(event.localPosition),
+                onHorizontalDragUpdate: (event) => select(event.localPosition),
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: CustomPaint(
+                        painter: _LinePainter(
+                          values: widget.values,
+                          yMin: widget.yMin,
+                          yMax: widget.yMax,
+                          baseline: widget.baseline,
+                          plot: plot,
+                          grid: colors.outlineVariant,
+                          line: colors.onSurfaceVariant,
+                          ring: widget.ringColor ?? colors.surfaceContainerLow,
+                          pointColors: [
+                            for (var i = 0; i < widget.values.length; i++)
+                              widget.values[i] == null
+                                  ? colors.outline
+                                  : widget.pointColor(i, widget.values[i]!),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  if (widget.yLabelBuilder != null)
-                    for (
-                      var tick = widget.yMin.ceil();
-                      tick <= widget.yMax.floor();
-                      tick++
-                    )
-                      Positioned(
-                        left: 0,
-                        top: y(tick.toDouble()) - 10,
-                        width: left,
-                        height: 20,
-                        child: Center(child: widget.yLabelBuilder!(tick)),
-                      ),
-                  for (final (index, label) in widget.xLabels)
-                    if (index >= 0 && index < widget.values.length)
-                      Positioned(
-                        left: (x(index) - 18).clamp(
-                          0,
-                          constraints.maxWidth - 36,
+                    if (widget.yLabelBuilder != null)
+                      for (
+                        var tick = widget.yMin.ceil();
+                        tick <= widget.yMax.floor();
+                        tick++
+                      )
+                        Positioned(
+                          left: 0,
+                          top: y(tick.toDouble()) - 10,
+                          width: left,
+                          height: 20,
+                          child: Center(child: widget.yLabelBuilder!(tick)),
                         ),
-                        bottom: 0,
-                        width: 36,
-                        height: 22,
-                        child: Center(
-                          child: Text(
-                            label,
-                            maxLines: 1,
-                            style: context
-                                .theme
-                                .typography
-                                .labelSmall
-                                .onSurfaceVariant,
+                    for (final (index, label) in widget.xLabels)
+                      if (index >= 0 && index < widget.values.length)
+                        Positioned(
+                          left: (x(index) - 18).clamp(
+                            0,
+                            constraints.maxWidth - 36,
+                          ),
+                          bottom: 0,
+                          width: 36,
+                          height: 22,
+                          child: Center(
+                            child: Text(
+                              label,
+                              maxLines: 1,
+                              style: context
+                                  .theme
+                                  .typography
+                                  .labelSmall
+                                  .onSurfaceVariant,
+                            ),
                           ),
                         ),
-                      ),
-                  if (selected != null)
-                    Positioned(
-                      left: (x(selected) - bubbleWidth / 2).clamp(
-                        0,
-                        constraints.maxWidth - bubbleWidth,
-                      ),
-                      top: 0,
-                      width: bubbleWidth,
-                      child: IgnorePointer(
-                        child: Center(
-                          child: Container(
-                            key: const ValueKey('line-chart-tooltip'),
-                            padding:
-                                tooltip.padding ??
-                                const .symmetric(horizontal: 10, vertical: 6),
-                            decoration:
-                                tooltip.decoration ??
-                                BoxDecoration(
-                                  color: colors.inverseSurface,
-                                  borderRadius: .circular(6),
-                                ),
-                            child: Text(
-                              widget.tooltipBuilder(selected),
-                              textAlign: .center,
-                              style:
-                                  tooltip.textStyle ??
-                                  context.theme.typography.labelSmall.onSurface
-                                      .copyWith(color: colors.onInverseSurface),
+                    if (selected != null)
+                      Positioned(
+                        left: (x(selected) - bubbleWidth / 2).clamp(
+                          0,
+                          constraints.maxWidth - bubbleWidth,
+                        ),
+                        top: 0,
+                        width: bubbleWidth,
+                        child: IgnorePointer(
+                          child: Center(
+                            child: Container(
+                              key: const ValueKey('line-chart-tooltip'),
+                              padding:
+                                  tooltip.padding ??
+                                  const .symmetric(horizontal: 10, vertical: 6),
+                              decoration:
+                                  tooltip.decoration ??
+                                  BoxDecoration(
+                                    color: colors.inverseSurface,
+                                    borderRadius: .circular(6),
+                                  ),
+                              child: Text(
+                                widget.tooltipBuilder(selected),
+                                textAlign: .center,
+                                style:
+                                    tooltip.textStyle ??
+                                    context
+                                        .theme
+                                        .typography
+                                        .labelSmall
+                                        .onSurface
+                                        .copyWith(
+                                          color: colors.onInverseSurface,
+                                        ),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                ],
-              ),
-            );
-          },
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ),
     );

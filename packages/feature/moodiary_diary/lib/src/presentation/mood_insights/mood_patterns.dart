@@ -29,14 +29,18 @@ class MoodDistribution extends StatelessWidget {
                 child: LayoutBuilder(
                   builder: (context, constraints) => Align(
                     alignment: .centerLeft,
-                    child: Container(
-                      height: 10,
-                      width: total == 0
-                          ? 0
-                          : constraints.maxWidth * (counts[mood] ?? 0) / total,
-                      decoration: BoxDecoration(
-                        color: mood.colorOf(context),
-                        borderRadius: .horizontal(right: const .circular(4)),
+                    child: Skeleton.leaf(
+                      child: Container(
+                        height: 10,
+                        width: total == 0
+                            ? 0
+                            : constraints.maxWidth *
+                                  (counts[mood] ?? 0) /
+                                  total,
+                        decoration: BoxDecoration(
+                          color: mood.colorOf(context),
+                          borderRadius: .horizontal(right: const .circular(4)),
+                        ),
                       ),
                     ),
                   ),
@@ -103,9 +107,11 @@ class MoodWeekdayPattern extends StatelessWidget {
                       left: 0,
                       right: 0,
                       top: height / 2 - .5,
-                      child: Container(
-                        height: 1,
-                        color: context.theme.colors.outlineVariant,
+                      child: Skeleton.leaf(
+                        child: Container(
+                          height: 1,
+                          color: context.theme.colors.outlineVariant,
+                        ),
                       ),
                     ),
                     Row(
@@ -137,13 +143,15 @@ class MoodWeekdayPattern extends StatelessWidget {
                                               top: value >= 3
                                                   ? height / 2 - barHeight
                                                   : height / 2,
-                                              child: Container(
-                                                width: 18,
-                                                height: barHeight,
-                                                decoration: BoxDecoration(
-                                                  color: moodLevel(value)!
-                                                      .colorOf(context),
-                                                  borderRadius: .circular(4),
+                                              child: Skeleton.leaf(
+                                                child: Container(
+                                                  width: 18,
+                                                  height: barHeight,
+                                                  decoration: BoxDecoration(
+                                                    color: moodLevel(value)!
+                                                        .colorOf(context),
+                                                    borderRadius: .circular(4),
+                                                  ),
                                                 ),
                                               ),
                                             ),
@@ -228,9 +236,11 @@ class MoodTags extends StatelessWidget {
                           left: half,
                           top: 0,
                           bottom: 0,
-                          child: Container(
-                            width: 1,
-                            color: context.theme.colors.outlineVariant,
+                          child: Skeleton.leaf(
+                            child: Container(
+                              width: 1,
+                              color: context.theme.colors.outlineVariant,
+                            ),
                           ),
                         ),
                         Positioned(
@@ -238,16 +248,18 @@ class MoodTags extends StatelessWidget {
                               ? half - half * delta.delta.abs() / extent
                               : half,
                           top: 6,
-                          child: Container(
-                            width: half * delta.delta.abs() / extent,
-                            height: 10,
-                            decoration: BoxDecoration(
-                              color:
-                                  (delta.delta < 0
-                                          ? DiaryMood.bad
-                                          : DiaryMood.good)
-                                      .colorOf(context),
-                              borderRadius: .circular(4),
+                          child: Skeleton.leaf(
+                            child: Container(
+                              width: half * delta.delta.abs() / extent,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                color:
+                                    (delta.delta < 0
+                                            ? DiaryMood.bad
+                                            : DiaryMood.good)
+                                        .colorOf(context),
+                                borderRadius: .circular(4),
+                              ),
                             ),
                           ),
                         ),

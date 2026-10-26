@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
+import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
@@ -18,6 +19,16 @@ class _MePageState extends ConsumerState<MePage> with RouteAware {
   DateTime? _selectedDay;
 
   bool? _wasVisible;
+
+  @override
+  void initState() {
+    super.initState();
+    ref.listenManual(moodInsightsControllerProvider, (_, next) {
+      if (next case AsyncData(:final value)) {
+        MoodiaryKVs.moodCardHint.set(value.hasRecordedMood);
+      }
+    }, fireImmediately: true);
+  }
 
   @override
   void didChangeDependencies() {
@@ -48,7 +59,12 @@ class _MePageState extends ConsumerState<MePage> with RouteAware {
   @override
   Widget build(BuildContext context) {
     final stats = ref.watch(dashboardControllerProvider).value;
-    final moods = ref.watch(moodInsightsControllerProvider).value;
+    final moodState = ref.watch(moodInsightsControllerProvider);
+    final moods = moodState.value;
+    final moodLoading = moodState.isLoading;
+    final showMood = moodLoading
+        ? MoodiaryKVs.moodCardHint.get()!
+        : moods?.hasRecordedMood == true;
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.app.meTitle)),
       body: ListView(
@@ -66,8 +82,13 @@ class _MePageState extends ConsumerState<MePage> with RouteAware {
                 setState(() => _selectedDay = day == _selectedDay ? null : day),
           ),
           const SizedBox(height: 12),
-          if (moods != null && moods.hasRecordedMood) ...[
-            MoodInsightsCard(data: moods),
+          if (showMood) ...[
+            MSkeleton(
+              enabled: moodLoading,
+              child: moodLoading
+                  ? MoodInsightsCard.placeholder()
+                  : MoodInsightsCard(data: moods!),
+            ),
             const SizedBox(height: 12),
           ],
           _StatRow(stats: stats),
