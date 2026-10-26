@@ -63,16 +63,17 @@ AssistantToolTier assistantToolTier(
   .recallMemory ||
   .runJavascript => .read,
   .updateDiary => _rewritesContent(args) ? .destructive : .write,
-  .createDiary ||
-  .createCategory ||
-  .updateCategory ||
-  .rememberFact ||
-  .deleteDiary => .write,
+  .rememberFact => _revisesMemory(args) ? .destructive : .write,
+  .createDiary || .createCategory || .updateCategory || .deleteDiary => .write,
   .deleteCategory || .forgetFact => .destructive,
 };
 
 bool _rewritesContent(Map<String, dynamic> args) =>
     assistantToolItems(args).any((e) => e['content'] != null);
+
+// 带 id 是原地改写旧记忆，没有历史版本
+bool _revisesMemory(Map<String, dynamic> args) =>
+    assistantToolItems(args).any((e) => '${e['id'] ?? ''}'.trim().isNotEmpty);
 
 List<Map<String, dynamic>> assistantToolItems(Map<String, dynamic> input) {
   final raw = input['items'];
