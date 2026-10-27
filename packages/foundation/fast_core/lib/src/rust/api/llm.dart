@@ -13,7 +13,7 @@ Stream<RigStreamEvent> rigChatStream({
   required RigChatInput input,
   required FutureOr<String> Function(String, String) toolDispatch,
   required FutureOr<String> Function(String, String, String) toolGate,
-}) => RustLib.instance.api.crateApiLlmRigChatStream(
+}) => FastCoreLib.instance.api.crateApiLlmRigChatStream(
   input: input,
   toolDispatch: toolDispatch,
   toolGate: toolGate,

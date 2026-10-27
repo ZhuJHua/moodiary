@@ -21,7 +21,8 @@ val hasReleaseSigning = releaseKeystore.isFile &&
 android {
     namespace = "cn.yooss.moodiary"
     compileSdk = 36
-    ndkVersion = flutter.ndkVersion
+    // 与 .github/workflows/build.yml 的 setup-ndk（r28c）同步升级
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21

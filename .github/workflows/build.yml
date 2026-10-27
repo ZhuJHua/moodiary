@@ -59,16 +59,13 @@ jobs:
         working-directory: mobile
         run: flutter pub get
 
-      - name: Pin Android NDK for native asset hooks
-        shell: bash
-        run: |
-          ndk_version=$(sed -n 's/.*val ndkVersion: String = "\([^"]*\)".*/\1/p' "$FLUTTER_ROOT/packages/flutter_tools/gradle/src/main/kotlin/FlutterExtension.kt")
-          test -n "$ndk_version"
-          ndk="$ANDROID_HOME/ndk/$ndk_version"
-          if [ ! -d "$ndk" ]; then
-            yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;$ndk_version" > /dev/null
-          fi
-          printf 'ANDROID_NDK_HOME=%s\nANDROID_NDK_ROOT=%s\n' "$ndk" "$ndk" >> "$GITHUB_ENV"
+      # 与 mobile/android/app/build.gradle.kts 的 ndkVersion 保持一致（r28c = 28.2.13676358）
+      - name: Set Up NDK
+        id: ndk
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r28c
+          link-to-sdk: true
 
       - name: Prepare Android signing
         env:
@@ -85,10 +82,14 @@ jobs:
 
       - name: Build APK
         working-directory: mobile
+        env:
+          ANDROID_NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
         run: flutter build apk --flavor production --release --target-platform android-arm64 --obfuscate --split-debug-info=splitMap
 
       - name: Check native library 16 KB alignment
         shell: bash
+        env:
+          ANDROID_NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
         run: |
           apk=mobile/build/app/outputs/flutter-apk/app-production-release.apk
           tmp=$(mktemp -d)

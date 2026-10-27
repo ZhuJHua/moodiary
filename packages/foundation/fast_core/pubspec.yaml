@@ -1,5 +1,5 @@
-name: moodiary_rust
-description: "reqwest client, hyper server, WebDAV/S3 access, rig chat and graph layout in one Rust library (libmoodiary_rust)."
+name: fast_core
+description: "reqwest client, hyper server, WebDAV/S3 access, rig chat and graph layout in one Rust library (libfastcore)."
 version: 0.0.1
 publish_to: none
 
