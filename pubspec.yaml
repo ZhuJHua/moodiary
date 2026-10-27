@@ -36,6 +36,16 @@ melos:
       run: fvm dart tool/task.dart gen-rust
       description: 重新生成 Rust FFI 绑定
 
+# false 让对应包的 Rust hook 变成空操作；CI 的 Dart job 跑测试前用 yq 关掉，本地默认构建。
+hooks:
+  user_defines:
+    fast_core: {build_assets: true}
+    fast_crypto: {build_assets: true}
+    fast_image: {build_assets: true}
+    fast_press: {build_assets: true}
+    fast_tokenizer: {build_assets: true}
+    fast_zip: {build_assets: true}
+
 dev_dependencies:
   melos: 8.6.0
   flutter_test:

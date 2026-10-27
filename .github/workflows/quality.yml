@@ -90,6 +90,13 @@ jobs:
           fi
           echo "ISAR_TEST_DYLIB=$so" >> "$GITHUB_ENV"
 
+      # 测试不加载 Rust 库，关掉 Rust hook 免得为宿主平台编译
+      - name: Skip Rust build hooks
+        run: |
+          for p in fast_core fast_crypto fast_image fast_press fast_tokenizer fast_zip; do
+            yq -i ".hooks.user_defines.$p.build_assets = false" pubspec.yaml
+          done
+
       - name: Test
         run: dart tool/task.dart test --all
 

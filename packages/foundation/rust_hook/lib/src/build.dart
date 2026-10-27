@@ -10,9 +10,10 @@ Future<void> buildRustCrate(List<String> args, {bool androidCmake = false}) =>
     build(args, (input, output) async {
       // hooks 在 buildCodeAssets 为 false 时访问 code 会抛异常。
       if (!input.config.buildCodeAssets) return;
+      // hook 分不清 flutter test 与桌面端构建（dart-lang/native#2480），默认都构建；
+      // 根 pubspec 的 hooks.user_defines.<包名>.build_assets: false 可整体关闭（CI 测试用）
+      if (input.userDefines['build_assets'] == false) return;
       final code = input.config.code;
-      // flutter test 以宿主 OS 为目标，不构建 Rust 库。
-      if (code.targetOS == OS.current) return;
       final env = rustCargoEnvironment(
         code,
         androidNdkRoot: androidCmake && code.targetOS == OS.android
