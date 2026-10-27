@@ -185,7 +185,6 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
   Future<String?> statObject(String key) async {
     try {
       final client = await _client();
-      // Rust 侧只在 404 返回空串，网络错误与 401/5xx 都抛
       final stat = await client.statObject(key: key);
       return stat.isEmpty ? null : stat;
     } catch (e) {

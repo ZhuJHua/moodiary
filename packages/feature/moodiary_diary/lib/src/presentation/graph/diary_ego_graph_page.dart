@@ -100,7 +100,6 @@ class _DiaryEgoGraphPageState extends ConsumerState<DiaryEgoGraphPage>
     _seed = seed;
     _target = null;
     _frame.push(seed);
-    // 中心必须在下标 0 才能 pin（buildEgoGraph 排序保证），否则退化为不 pin
     final pin = scene.centerIndex == 0 ? 1 : 0;
     const density = GraphDensity.normal;
     Float32List? last;

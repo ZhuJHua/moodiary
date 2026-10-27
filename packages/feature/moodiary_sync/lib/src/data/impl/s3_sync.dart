@@ -12,7 +12,6 @@ import 'package:moodiary_sync/src/data/secure_options.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 
-// 配置索引：0 endpoint、1 region（可空）、2 accessKey、3 secretKey、4 bucket、5 useSSL('1'/'0')。
 @Named(SyncProviderIds.s3)
 @LazySingleton(as: IRemoteSyncBackend)
 class S3SyncBackend implements IRemoteSyncBackend {
