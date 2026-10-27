@@ -22,15 +22,17 @@ import 'frb_generated.io.dart'
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// Main entrypoint of the Rust API
-class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
+class FastCoreLib
+    extends
+        BaseEntrypoint<FastCoreLibApi, FastCoreLibApiImpl, FastCoreLibWire> {
   @internal
-  static final instance = RustLib._();
+  static final instance = FastCoreLib._();
 
-  RustLib._();
+  FastCoreLib._();
 
   /// Initialize flutter_rust_bridge
   static Future<void> init({
-    RustLibApi? api,
+    FastCoreLibApi? api,
     BaseHandler? handler,
     ExternalLibrary? externalLibrary,
     bool forceSameCodegenVersion = true,
@@ -45,7 +47,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
   /// Initialize flutter_rust_bridge in mock mode.
   /// No libraries for FFI are loaded.
-  static void initMock({required RustLibApi api}) {
+  static void initMock({required FastCoreLibApi api}) {
     instance.initMockImpl(api: api);
   }
 
@@ -56,12 +58,12 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   static void dispose() => instance.disposeImpl();
 
   @override
-  ApiImplConstructor<RustLibApiImpl, RustLibWire> get apiImplConstructor =>
-      RustLibApiImpl.new;
+  ApiImplConstructor<FastCoreLibApiImpl, FastCoreLibWire>
+  get apiImplConstructor => FastCoreLibApiImpl.new;
 
   @override
-  WireConstructor<RustLibWire> get wireConstructor =>
-      RustLibWire.fromExternalLibrary;
+  WireConstructor<FastCoreLibWire> get wireConstructor =>
+      FastCoreLibWire.fromExternalLibrary;
 
   @override
   Future<void> executeRustInitializers() async {}
@@ -78,14 +80,14 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
-        stem: 'moodiary_rust',
+        stem: 'fastcore',
         ioDirectory: 'rust/target/release/',
         webPrefix: 'pkg/',
         wasmBindgenName: 'wasm_bindgen',
       );
 }
 
-abstract class RustLibApi extends BaseApi {
+abstract class FastCoreLibApi extends BaseApi {
   void crateApiCancelCancelTokenCancel({required CancelToken that});
 
   bool crateApiCancelCancelTokenIsCancelled({required CancelToken that});
@@ -288,8 +290,9 @@ abstract class RustLibApi extends BaseApi {
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_S3ClientPtr;
 }
 
-class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
-  RustLibApiImpl({
+class FastCoreLibApiImpl extends FastCoreLibApiImplPlatform
+    implements FastCoreLibApi {
+  FastCoreLibApiImpl({
     required super.handler,
     required super.wire,
     required super.generalizedFrbRustBinding,
@@ -4406,18 +4409,18 @@ class CancelTokenImpl extends RustOpaque implements CancelToken {
 
   static final _kStaticData = RustArcStaticData(
     rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_CancelToken,
+        FastCoreLib.instance.api.rust_arc_increment_strong_count_CancelToken,
     rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_CancelToken,
+        FastCoreLib.instance.api.rust_arc_decrement_strong_count_CancelToken,
     rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_CancelTokenPtr,
+        FastCoreLib.instance.api.rust_arc_decrement_strong_count_CancelTokenPtr,
   );
 
   void cancel() =>
-      RustLib.instance.api.crateApiCancelCancelTokenCancel(that: this);
+      FastCoreLib.instance.api.crateApiCancelCancelTokenCancel(that: this);
 
   bool isCancelled() =>
-      RustLib.instance.api.crateApiCancelCancelTokenIsCancelled(that: this);
+      FastCoreLib.instance.api.crateApiCancelCancelTokenIsCancelled(that: this);
 }
 
 @sealed
@@ -4432,48 +4435,50 @@ class DavClientImpl extends RustOpaque implements DavClient {
 
   static final _kStaticData = RustArcStaticData(
     rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_DavClient,
+        FastCoreLib.instance.api.rust_arc_increment_strong_count_DavClient,
     rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_DavClient,
+        FastCoreLib.instance.api.rust_arc_decrement_strong_count_DavClient,
     rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_DavClientPtr,
+        FastCoreLib.instance.api.rust_arc_decrement_strong_count_DavClientPtr,
   );
 
   Future<ExclusiveCreate> createExclusive({
     required String key,
     required List<int> data,
-  }) => RustLib.instance.api.crateApiWebdavDavClientCreateExclusive(
+  }) => FastCoreLib.instance.api.crateApiWebdavDavClientCreateExclusive(
     that: this,
     key: key,
     data: data,
   );
 
-  Future<void> deleteObject({required String key}) => RustLib.instance.api
+  Future<void> deleteObject({required String key}) => FastCoreLib.instance.api
       .crateApiWebdavDavClientDeleteObject(that: this, key: key);
 
   Future<List<String>> listObjects() =>
-      RustLib.instance.api.crateApiWebdavDavClientListObjects(that: this);
+      FastCoreLib.instance.api.crateApiWebdavDavClientListObjects(that: this);
 
-  Future<Uint8List?> readObject({required String key}) => RustLib.instance.api
+  Future<Uint8List?> readObject({required String key}) => FastCoreLib
+      .instance
+      .api
       .crateApiWebdavDavClientReadObject(that: this, key: key);
 
   Future<bool> readObjectToFile({
     required String key,
     required String filePath,
-  }) => RustLib.instance.api.crateApiWebdavDavClientReadObjectToFile(
+  }) => FastCoreLib.instance.api.crateApiWebdavDavClientReadObjectToFile(
     that: this,
     key: key,
     filePath: filePath,
   );
 
-  Future<String> statObject({required String key}) => RustLib.instance.api
+  Future<String> statObject({required String key}) => FastCoreLib.instance.api
       .crateApiWebdavDavClientStatObject(that: this, key: key);
 
-  Future<bool> testConnection() =>
-      RustLib.instance.api.crateApiWebdavDavClientTestConnection(that: this);
+  Future<bool> testConnection() => FastCoreLib.instance.api
+      .crateApiWebdavDavClientTestConnection(that: this);
 
   Future<void> writeObject({required String key, required List<int> data}) =>
-      RustLib.instance.api.crateApiWebdavDavClientWriteObject(
+      FastCoreLib.instance.api.crateApiWebdavDavClientWriteObject(
         that: this,
         key: key,
         data: data,
@@ -4482,7 +4487,7 @@ class DavClientImpl extends RustOpaque implements DavClient {
   Future<void> writeObjectFile({
     required String key,
     required String filePath,
-  }) => RustLib.instance.api.crateApiWebdavDavClientWriteObjectFile(
+  }) => FastCoreLib.instance.api.crateApiWebdavDavClientWriteObjectFile(
     that: this,
     key: key,
     filePath: filePath,
@@ -4501,18 +4506,18 @@ class HttpClientImpl extends RustOpaque implements HttpClient {
 
   static final _kStaticData = RustArcStaticData(
     rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_HttpClient,
+        FastCoreLib.instance.api.rust_arc_increment_strong_count_HttpClient,
     rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_HttpClient,
+        FastCoreLib.instance.api.rust_arc_decrement_strong_count_HttpClient,
     rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_HttpClientPtr,
+        FastCoreLib.instance.api.rust_arc_decrement_strong_count_HttpClientPtr,
   );
 
   Stream<DownloadEvent> downloadFile({
     required RequestOptions options,
     required String destPath,
     required CancelToken cancel,
-  }) => RustLib.instance.api.crateApiHttpHttpClientDownloadFile(
+  }) => FastCoreLib.instance.api.crateApiHttpHttpClientDownloadFile(
     that: this,
     options: options,
     destPath: destPath,
@@ -4522,7 +4527,7 @@ class HttpClientImpl extends RustOpaque implements HttpClient {
   Future<HttpResponse> request({
     required RequestOptions options,
     Uint8List? body,
-  }) => RustLib.instance.api.crateApiHttpHttpClientRequest(
+  }) => FastCoreLib.instance.api.crateApiHttpHttpClientRequest(
     that: this,
     options: options,
     body: body,
@@ -4532,7 +4537,7 @@ class HttpClientImpl extends RustOpaque implements HttpClient {
     required RequestOptions options,
     required String filePath,
     required CancelToken cancel,
-  }) => RustLib.instance.api.crateApiHttpHttpClientUploadFile(
+  }) => FastCoreLib.instance.api.crateApiHttpHttpClientUploadFile(
     that: this,
     options: options,
     filePath: filePath,
@@ -4552,18 +4557,18 @@ class HttpServerImpl extends RustOpaque implements HttpServer {
 
   static final _kStaticData = RustArcStaticData(
     rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_HttpServer,
+        FastCoreLib.instance.api.rust_arc_increment_strong_count_HttpServer,
     rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_HttpServer,
+        FastCoreLib.instance.api.rust_arc_decrement_strong_count_HttpServer,
     rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_HttpServerPtr,
+        FastCoreLib.instance.api.rust_arc_decrement_strong_count_HttpServerPtr,
   );
 
   int port() =>
-      RustLib.instance.api.crateApiHttpServerHttpServerPort(that: this);
+      FastCoreLib.instance.api.crateApiHttpServerHttpServerPort(that: this);
 
   void stop() =>
-      RustLib.instance.api.crateApiHttpServerHttpServerStop(that: this);
+      FastCoreLib.instance.api.crateApiHttpServerHttpServerStop(that: this);
 }
 
 @sealed
@@ -4578,50 +4583,52 @@ class S3ClientImpl extends RustOpaque implements S3Client {
 
   static final _kStaticData = RustArcStaticData(
     rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_S3Client,
+        FastCoreLib.instance.api.rust_arc_increment_strong_count_S3Client,
     rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_S3Client,
+        FastCoreLib.instance.api.rust_arc_decrement_strong_count_S3Client,
     rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_S3ClientPtr,
+        FastCoreLib.instance.api.rust_arc_decrement_strong_count_S3ClientPtr,
   );
 
   Future<ExclusiveCreate> createExclusive({
     required String key,
     required List<int> data,
-  }) => RustLib.instance.api.crateApiS3S3ClientCreateExclusive(
+  }) => FastCoreLib.instance.api.crateApiS3S3ClientCreateExclusive(
     that: this,
     key: key,
     data: data,
   );
 
-  Future<void> deleteObject({required String key}) =>
-      RustLib.instance.api.crateApiS3S3ClientDeleteObject(that: this, key: key);
+  Future<void> deleteObject({required String key}) => FastCoreLib.instance.api
+      .crateApiS3S3ClientDeleteObject(that: this, key: key);
 
-  Future<List<String>> listObjects({required String prefix}) => RustLib
+  Future<List<String>> listObjects({required String prefix}) => FastCoreLib
       .instance
       .api
       .crateApiS3S3ClientListObjects(that: this, prefix: prefix);
 
-  Future<Uint8List?> readObject({required String key}) =>
-      RustLib.instance.api.crateApiS3S3ClientReadObject(that: this, key: key);
+  Future<Uint8List?> readObject({required String key}) => FastCoreLib
+      .instance
+      .api
+      .crateApiS3S3ClientReadObject(that: this, key: key);
 
   Future<bool> readObjectToFile({
     required String key,
     required String filePath,
-  }) => RustLib.instance.api.crateApiS3S3ClientReadObjectToFile(
+  }) => FastCoreLib.instance.api.crateApiS3S3ClientReadObjectToFile(
     that: this,
     key: key,
     filePath: filePath,
   );
 
-  Future<String> statObject({required String key}) =>
-      RustLib.instance.api.crateApiS3S3ClientStatObject(that: this, key: key);
+  Future<String> statObject({required String key}) => FastCoreLib.instance.api
+      .crateApiS3S3ClientStatObject(that: this, key: key);
 
   Future<bool> testConnection() =>
-      RustLib.instance.api.crateApiS3S3ClientTestConnection(that: this);
+      FastCoreLib.instance.api.crateApiS3S3ClientTestConnection(that: this);
 
   Future<void> writeObject({required String key, required List<int> data}) =>
-      RustLib.instance.api.crateApiS3S3ClientWriteObject(
+      FastCoreLib.instance.api.crateApiS3S3ClientWriteObject(
         that: this,
         key: key,
         data: data,
@@ -4630,7 +4637,7 @@ class S3ClientImpl extends RustOpaque implements S3Client {
   Future<void> writeObjectFile({
     required String key,
     required String filePath,
-  }) => RustLib.instance.api.crateApiS3S3ClientWriteObjectFile(
+  }) => FastCoreLib.instance.api.crateApiS3S3ClientWriteObjectFile(
     that: this,
     key: key,
     filePath: filePath,

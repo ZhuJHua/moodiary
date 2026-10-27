@@ -4718,27 +4718,27 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__cancel__CancelToken_cancel(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__cancel__CancelToken_cancel(
         that: usize,
     ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
         wire__crate__api__cancel__CancelToken_cancel_impl(that)
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__cancel__CancelToken_is_cancelled(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__cancel__CancelToken_is_cancelled(
         that: usize,
     ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
         wire__crate__api__cancel__CancelToken_is_cancelled_impl(that)
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__cancel__CancelToken_new()
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__cancel__CancelToken_new()
     -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
         wire__crate__api__cancel__CancelToken_new_impl()
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_create_exclusive(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__webdav__DavClient_create_exclusive(
         port_: i64,
         that: usize,
         key: *mut wire_cst_list_prim_u_8_strict,
@@ -4748,7 +4748,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_delete_object(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__webdav__DavClient_delete_object(
         port_: i64,
         that: usize,
         key: *mut wire_cst_list_prim_u_8_strict,
@@ -4757,7 +4757,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_list_objects(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__webdav__DavClient_list_objects(
         port_: i64,
         that: usize,
     ) {
@@ -4765,7 +4765,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_new(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__webdav__DavClient_new(
         port_: i64,
         base_url: *mut wire_cst_list_prim_u_8_strict,
         username: *mut wire_cst_list_prim_u_8_strict,
@@ -4775,7 +4775,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_read_object(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__webdav__DavClient_read_object(
         port_: i64,
         that: usize,
         key: *mut wire_cst_list_prim_u_8_strict,
@@ -4784,7 +4784,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_read_object_to_file(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__webdav__DavClient_read_object_to_file(
         port_: i64,
         that: usize,
         key: *mut wire_cst_list_prim_u_8_strict,
@@ -4794,7 +4794,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_stat_object(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__webdav__DavClient_stat_object(
         port_: i64,
         that: usize,
         key: *mut wire_cst_list_prim_u_8_strict,
@@ -4803,7 +4803,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_test_connection(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__webdav__DavClient_test_connection(
         port_: i64,
         that: usize,
     ) {
@@ -4811,7 +4811,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_write_object(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__webdav__DavClient_write_object(
         port_: i64,
         that: usize,
         key: *mut wire_cst_list_prim_u_8_strict,
@@ -4821,7 +4821,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_write_object_file(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__webdav__DavClient_write_object_file(
         port_: i64,
         that: usize,
         key: *mut wire_cst_list_prim_u_8_strict,
@@ -4831,7 +4831,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__http__HttpClient_download_file(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__http__HttpClient_download_file(
         port_: i64,
         that: usize,
         sink: *mut wire_cst_list_prim_u_8_strict,
@@ -4845,7 +4845,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__http__HttpClient_new(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__http__HttpClient_new(
         port_: i64,
         settings: *mut wire_cst_client_settings,
     ) {
@@ -4853,7 +4853,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__http__HttpClient_request(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__http__HttpClient_request(
         port_: i64,
         that: usize,
         options: *mut wire_cst_request_options,
@@ -4863,7 +4863,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__http__HttpClient_upload_file(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__http__HttpClient_upload_file(
         port_: i64,
         that: usize,
         sink: *mut wire_cst_list_prim_u_8_strict,
@@ -4877,14 +4877,14 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__http_server__HttpServer_port(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__http_server__HttpServer_port(
         that: usize,
     ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
         wire__crate__api__http_server__HttpServer_port_impl(that)
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__http_server__HttpServer_start(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__http_server__HttpServer_start(
         port_: i64,
         preferred_port: u16,
         spool_dir: *mut wire_cst_list_prim_u_8_strict,
@@ -4901,14 +4901,14 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__http_server__HttpServer_stop(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__http_server__HttpServer_stop(
         that: usize,
     ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
         wire__crate__api__http_server__HttpServer_stop_impl(that)
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__s3__S3Client_create_exclusive(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__s3__S3Client_create_exclusive(
         port_: i64,
         that: usize,
         key: *mut wire_cst_list_prim_u_8_strict,
@@ -4918,7 +4918,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__s3__S3Client_delete_object(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__s3__S3Client_delete_object(
         port_: i64,
         that: usize,
         key: *mut wire_cst_list_prim_u_8_strict,
@@ -4927,7 +4927,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__s3__S3Client_list_objects(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__s3__S3Client_list_objects(
         port_: i64,
         that: usize,
         prefix: *mut wire_cst_list_prim_u_8_strict,
@@ -4936,7 +4936,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__s3__S3Client_new(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__s3__S3Client_new(
         port_: i64,
         endpoint: *mut wire_cst_list_prim_u_8_strict,
         access_key: *mut wire_cst_list_prim_u_8_strict,
@@ -4951,7 +4951,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__s3__S3Client_read_object(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__s3__S3Client_read_object(
         port_: i64,
         that: usize,
         key: *mut wire_cst_list_prim_u_8_strict,
@@ -4960,7 +4960,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__s3__S3Client_read_object_to_file(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__s3__S3Client_read_object_to_file(
         port_: i64,
         that: usize,
         key: *mut wire_cst_list_prim_u_8_strict,
@@ -4970,7 +4970,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__s3__S3Client_stat_object(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__s3__S3Client_stat_object(
         port_: i64,
         that: usize,
         key: *mut wire_cst_list_prim_u_8_strict,
@@ -4979,7 +4979,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__s3__S3Client_test_connection(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__s3__S3Client_test_connection(
         port_: i64,
         that: usize,
     ) {
@@ -4987,7 +4987,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__s3__S3Client_write_object(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__s3__S3Client_write_object(
         port_: i64,
         that: usize,
         key: *mut wire_cst_list_prim_u_8_strict,
@@ -4997,7 +4997,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__s3__S3Client_write_object_file(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__s3__S3Client_write_object_file(
         port_: i64,
         that: usize,
         key: *mut wire_cst_list_prim_u_8_strict,
@@ -5007,7 +5007,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__graph_layout__layout_graph_stream(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__graph_layout__layout_graph_stream(
         port_: i64,
         node_count: u32,
         edges: *mut wire_cst_list_prim_i_32_loose,
@@ -5026,7 +5026,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__llm__rig_chat_stream(
+    pub extern "C" fn frbgen_fast_core_wire__crate__api__llm__rig_chat_stream(
         port_: i64,
         sink: *mut wire_cst_list_prim_u_8_strict,
         input: *mut wire_cst_rig_chat_input,
@@ -5037,7 +5037,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCancelToken(
+    pub extern "C" fn frbgen_fast_core_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCancelToken(
         ptr: *const std::ffi::c_void,
     ) {
         unsafe {
@@ -5046,7 +5046,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCancelToken(
+    pub extern "C" fn frbgen_fast_core_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCancelToken(
         ptr: *const std::ffi::c_void,
     ) {
         unsafe {
@@ -5055,7 +5055,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
+    pub extern "C" fn frbgen_fast_core_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
         ptr: *const std::ffi::c_void,
     ) {
         unsafe {
@@ -5064,7 +5064,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
+    pub extern "C" fn frbgen_fast_core_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
         ptr: *const std::ffi::c_void,
     ) {
         unsafe {
@@ -5073,7 +5073,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
+    pub extern "C" fn frbgen_fast_core_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
         ptr: *const std::ffi::c_void,
     ) {
         unsafe {
@@ -5082,7 +5082,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
+    pub extern "C" fn frbgen_fast_core_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
         ptr: *const std::ffi::c_void,
     ) {
         unsafe {
@@ -5091,7 +5091,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
+    pub extern "C" fn frbgen_fast_core_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
         ptr: *const std::ffi::c_void,
     ) {
         unsafe {
@@ -5100,7 +5100,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
+    pub extern "C" fn frbgen_fast_core_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
         ptr: *const std::ffi::c_void,
     ) {
         unsafe {
@@ -5109,7 +5109,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
+    pub extern "C" fn frbgen_fast_core_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
         ptr: *const std::ffi::c_void,
     ) {
         unsafe {
@@ -5118,7 +5118,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
+    pub extern "C" fn frbgen_fast_core_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
         ptr: *const std::ffi::c_void,
     ) {
         unsafe {
@@ -5127,12 +5127,12 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_bool(value: bool) -> *mut bool {
+    pub extern "C" fn frbgen_fast_core_cst_new_box_autoadd_bool(value: bool) -> *mut bool {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_client_settings()
+    pub extern "C" fn frbgen_fast_core_cst_new_box_autoadd_client_settings()
     -> *mut wire_cst_client_settings {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
             wire_cst_client_settings::new_with_null_ptr(),
@@ -5140,7 +5140,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_graph_layout_params()
+    pub extern "C" fn frbgen_fast_core_cst_new_box_autoadd_graph_layout_params()
     -> *mut wire_cst_graph_layout_params {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
             wire_cst_graph_layout_params::new_with_null_ptr(),
@@ -5148,7 +5148,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_http_response()
+    pub extern "C" fn frbgen_fast_core_cst_new_box_autoadd_http_response()
     -> *mut wire_cst_http_response {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
             wire_cst_http_response::new_with_null_ptr(),
@@ -5156,7 +5156,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_request_options()
+    pub extern "C" fn frbgen_fast_core_cst_new_box_autoadd_request_options()
     -> *mut wire_cst_request_options {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
             wire_cst_request_options::new_with_null_ptr(),
@@ -5164,7 +5164,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_rig_chat_input()
+    pub extern "C" fn frbgen_fast_core_cst_new_box_autoadd_rig_chat_input()
     -> *mut wire_cst_rig_chat_input {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
             wire_cst_rig_chat_input::new_with_null_ptr(),
@@ -5172,19 +5172,17 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_u_16(value: u16) -> *mut u16 {
+    pub extern "C" fn frbgen_fast_core_cst_new_box_autoadd_u_16(value: u16) -> *mut u16 {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_u_32(value: u32) -> *mut u32 {
+    pub extern "C" fn frbgen_fast_core_cst_new_box_autoadd_u_32(value: u32) -> *mut u32 {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_list_String(
-        len: i32,
-    ) -> *mut wire_cst_list_String {
+    pub extern "C" fn frbgen_fast_core_cst_new_list_String(len: i32) -> *mut wire_cst_list_String {
         let wrap = wire_cst_list_String {
             ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
                 <*mut wire_cst_list_prim_u_8_strict>::new_with_null_ptr(),
@@ -5196,7 +5194,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_list_key_value(
+    pub extern "C" fn frbgen_fast_core_cst_new_list_key_value(
         len: i32,
     ) -> *mut wire_cst_list_key_value {
         let wrap = wire_cst_list_key_value {
@@ -5210,7 +5208,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_list_prim_f_32_loose(
+    pub extern "C" fn frbgen_fast_core_cst_new_list_prim_f_32_loose(
         len: i32,
     ) -> *mut wire_cst_list_prim_f_32_loose {
         let ans = wire_cst_list_prim_f_32_loose {
@@ -5221,7 +5219,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_list_prim_f_32_strict(
+    pub extern "C" fn frbgen_fast_core_cst_new_list_prim_f_32_strict(
         len: i32,
     ) -> *mut wire_cst_list_prim_f_32_strict {
         let ans = wire_cst_list_prim_f_32_strict {
@@ -5232,7 +5230,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_list_prim_i_32_loose(
+    pub extern "C" fn frbgen_fast_core_cst_new_list_prim_i_32_loose(
         len: i32,
     ) -> *mut wire_cst_list_prim_i_32_loose {
         let ans = wire_cst_list_prim_i_32_loose {
@@ -5243,7 +5241,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_list_prim_i_32_strict(
+    pub extern "C" fn frbgen_fast_core_cst_new_list_prim_i_32_strict(
         len: i32,
     ) -> *mut wire_cst_list_prim_i_32_strict {
         let ans = wire_cst_list_prim_i_32_strict {
@@ -5254,7 +5252,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_list_prim_u_8_loose(
+    pub extern "C" fn frbgen_fast_core_cst_new_list_prim_u_8_loose(
         len: i32,
     ) -> *mut wire_cst_list_prim_u_8_loose {
         let ans = wire_cst_list_prim_u_8_loose {
@@ -5265,7 +5263,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_list_prim_u_8_strict(
+    pub extern "C" fn frbgen_fast_core_cst_new_list_prim_u_8_strict(
         len: i32,
     ) -> *mut wire_cst_list_prim_u_8_strict {
         let ans = wire_cst_list_prim_u_8_strict {
@@ -5276,7 +5274,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_list_rig_chat_message(
+    pub extern "C" fn frbgen_fast_core_cst_new_list_rig_chat_message(
         len: i32,
     ) -> *mut wire_cst_list_rig_chat_message {
         let wrap = wire_cst_list_rig_chat_message {
@@ -5290,7 +5288,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_list_rig_tool_def(
+    pub extern "C" fn frbgen_fast_core_cst_new_list_rig_tool_def(
         len: i32,
     ) -> *mut wire_cst_list_rig_tool_def {
         let wrap = wire_cst_list_rig_tool_def {

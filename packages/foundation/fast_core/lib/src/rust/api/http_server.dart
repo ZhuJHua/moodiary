@@ -20,7 +20,7 @@ abstract class HttpServer implements RustOpaqueInterface {
     required FutureOr<HttpServerResponse> Function(HttpServerRequest) onRequest,
     required FutureOr<void> Function(PlatformInt64, PlatformInt64)
     onBodyProgress,
-  }) => RustLib.instance.api.crateApiHttpServerHttpServerStart(
+  }) => FastCoreLib.instance.api.crateApiHttpServerHttpServerStart(
     preferredPort: preferredPort,
     spoolDir: spoolDir,
     onRequest: onRequest,

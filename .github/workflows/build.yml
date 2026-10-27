@@ -59,6 +59,13 @@ jobs:
         working-directory: mobile
         run: flutter pub get
 
+      - name: Set Up NDK
+        id: ndk
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r28c
+          link-to-sdk: true
+
       - name: Prepare Android signing
         env:
           ANDROID_KJS: ${{ secrets.ANDROID_KJS }}
@@ -74,6 +81,8 @@ jobs:
 
       - name: Build APK
         working-directory: mobile
+        env:
+          ANDROID_NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
         run: flutter build apk --flavor production --release --target-platform android-arm64 --obfuscate --split-debug-info=splitMap
 
       - name: Upload APK Artifact

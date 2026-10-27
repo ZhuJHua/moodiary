@@ -3,16 +3,15 @@ library;
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:fast_core/sync.dart' as rust;
 import 'package:injectable/injectable.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_rust/sync.dart' as rust;
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/remote_lease.dart';
 import 'package:moodiary_sync/src/data/secure_options.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 
-// 配置索引：0 endpoint、1 region（可空）、2 accessKey、3 secretKey、4 bucket、5 useSSL('1'/'0')。
 @Named(SyncProviderIds.s3)
 @LazySingleton(as: IRemoteSyncBackend)
 class S3SyncBackend implements IRemoteSyncBackend {
@@ -63,7 +62,7 @@ class S3SyncBackend implements IRemoteSyncBackend {
 
   Future<rust.S3Client> _buildClient() async {
     final opts = await _read();
-    await rust.MoodiaryRust.ensureInitialized();
+    await rust.FastCore.ensureInitialized();
     final region = _at(opts, 1);
     return rust.S3Client.newInstance(
       endpoint: _at(opts, 0),

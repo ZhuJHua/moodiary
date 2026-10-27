@@ -12,7 +12,7 @@ Stream<Float32List> layoutGraphStream({
   required List<int> edges,
   required List<double> initialPositions,
   required GraphLayoutParams params,
-}) => RustLib.instance.api.crateApiGraphLayoutLayoutGraphStream(
+}) => FastCoreLib.instance.api.crateApiGraphLayoutLayoutGraphStream(
   nodeCount: nodeCount,
   edges: edges,
   initialPositions: initialPositions,

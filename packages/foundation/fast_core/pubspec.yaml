@@ -1,5 +1,5 @@
-name: moodiary_rust
-description: "reqwest client, hyper server, WebDAV/S3 access, rig chat and graph layout in one Rust library (libmoodiary_rust)."
+name: fast_core
+description: "reqwest client, hyper server, WebDAV/S3 access, rig chat and graph layout in one Rust library (libfastcore)."
 version: 0.0.1
 publish_to: none
 
@@ -10,11 +10,10 @@ environment:
   flutter: ">=3.47.0"
 
 dependencies:
-  code_assets: 1.2.1
   flutter:
     sdk: flutter
   flutter_rust_bridge: 2.13.0
-  flutter_rust_bridge_hooks: 2.13.0
+  rust_hook: 0.0.1
   freezed_annotation: 3.1.0
 
 dev_dependencies:

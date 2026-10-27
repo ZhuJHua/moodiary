@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:fast_core/graph.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_components/moodiary_components.dart';
@@ -14,7 +15,6 @@ import 'package:moodiary_diary/src/presentation/widget/diary_nav.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
-import 'package:moodiary_rust/graph.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'diary_ego_graph_page.g.dart';
@@ -100,7 +100,6 @@ class _DiaryEgoGraphPageState extends ConsumerState<DiaryEgoGraphPage>
     _seed = seed;
     _target = null;
     _frame.push(seed);
-    // 中心必须在下标 0 才能 pin（buildEgoGraph 排序保证），否则退化为不 pin
     final pin = scene.centerIndex == 0 ? 1 : 0;
     const density = GraphDensity.normal;
     Float32List? last;

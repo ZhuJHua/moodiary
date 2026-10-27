@@ -15,7 +15,7 @@ Stream<Float32List> layoutGraphStream({
   required List<double> initialPositions,
   required GraphLayoutParams params,
 }) async* {
-  await MoodiaryRust.ensureInitialized();
+  await FastCore.ensureInitialized();
   yield* api.layoutGraphStream(
     nodeCount: nodeCount,
     edges: Int32List.fromList(edges),

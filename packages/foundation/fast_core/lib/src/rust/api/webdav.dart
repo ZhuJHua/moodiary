@@ -8,8 +8,8 @@ import '../frb_generated.dart';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<S3Client>>
-abstract class S3Client implements RustOpaqueInterface {
+// Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DavClient>>
+abstract class DavClient implements RustOpaqueInterface {
   Future<ExclusiveCreate> createExclusive({
     required String key,
     required List<int> data,
@@ -17,23 +17,17 @@ abstract class S3Client implements RustOpaqueInterface {
 
   Future<void> deleteObject({required String key});
 
-  Future<List<String>> listObjects({required String prefix});
+  Future<List<String>> listObjects();
 
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
-  static Future<S3Client> newInstance({
-    required String endpoint,
-    required String accessKey,
-    required String secretKey,
-    required String bucket,
-    required bool useSsl,
-    String? region,
-  }) => RustLib.instance.api.crateApiS3S3ClientNew(
-    endpoint: endpoint,
-    accessKey: accessKey,
-    secretKey: secretKey,
-    bucket: bucket,
-    useSsl: useSsl,
-    region: region,
+  static Future<DavClient> newInstance({
+    required String baseUrl,
+    required String username,
+    required String password,
+  }) => FastCoreLib.instance.api.crateApiWebdavDavClientNew(
+    baseUrl: baseUrl,
+    username: username,
+    password: password,
   );
 
   Future<Uint8List?> readObject({required String key});

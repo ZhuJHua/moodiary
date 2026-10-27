@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:io' show Directory;
 
+import 'package:fast_core/http.dart' as rust;
 import 'package:injectable/injectable.dart';
 import 'package:moodiary_http/moodiary_http.dart';
-import 'package:moodiary_rust/http.dart' as rust;
 
 @Injectable(as: IHttpServer)
 class RustHttpServer extends IHttpServer {
@@ -16,7 +16,7 @@ class RustHttpServer extends IHttpServer {
     String? spoolDir,
     void Function(int received, int? total)? onBodyProgress,
   }) async {
-    await rust.MoodiaryRust.ensureInitialized();
+    await rust.FastCore.ensureInitialized();
     _server = await rust.HttpServer.start(
       preferredPort: preferredPort,
       spoolDir: spoolDir ?? Directory.systemTemp.path,

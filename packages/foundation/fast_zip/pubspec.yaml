@@ -10,11 +10,10 @@ environment:
   flutter: ">=3.47.0"
 
 dependencies:
-  code_assets: 1.2.1
   flutter:
     sdk: flutter
   flutter_rust_bridge: 2.13.0
-  flutter_rust_bridge_hooks: 2.13.0
+  rust_hook: 0.0.1
 
 dev_dependencies:
   flutter_test:

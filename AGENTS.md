@@ -122,18 +122,18 @@ The FTS5 tokenizer is the git dependency `sqlite3_simple` (not in this repo); de
 
 ### Rust: several `fast_*` packages, one native library each
 
-Principle: split freely, never duplicate dependencies. http / sync / llm share one network base in `moodiary_rust`; graph lives there too. Each package ships its own crate, native library, hook, about.toml, rust-toolchain and Cargo.lock.
+Principle: split freely, never duplicate dependencies. http / sync / llm share one network base in `fast_core`; graph lives there too. Each package ships its own crate, native library, hook (a one-liner over `rust_hook`), about.toml, rust-toolchain and Cargo.lock.
 
 | Package | Owner | Loading |
 |---|---|---|
-| moodiary_rust | one owner per facade: http.dart -> moodiary_http, sync.dart -> moodiary_sync, llm.dart -> moodiary_assistant, graph.dart -> moodiary_diary (`_rustFacadeOwners`) | lazy |
+| fast_core | one owner per facade: http.dart -> moodiary_http, sync.dart -> moodiary_sync, llm.dart -> moodiary_assistant, graph.dart -> moodiary_diary (`_rustFacadeOwners`) | lazy |
 | fast_tokenizer | moodiary_ml | first ONNX model load, `FastTokenizer.ensureInitialized` |
 | fast_image | whole repo | startup, `FastImageRuntime.init` |
 | fast_press | moodiary_export (`_nativePkgOwners`) | first export |
 | fast_zip | moodiary_export / moodiary_sync (`_nativePkgOwners`) | first archive / extract |
 | fast_crypto | whole repo | facade self-initializes per call |
 
-- Every build hook returns early when the target OS is the host (`flutter test`): Dart tests never load a Rust library, the editor bundle or the license manifest; Rust and the editor are tested by their own suites. **Three third-party code assets are the exception** — `sqlite3_vec`, `sqlite3_simple` and `flutter_js` build for the host too (`diary_fts` cannot even be created without the `simple` tokenizer, and the JS sandbox tests need quickjs), which is why the root pubspec dev-depends on their owners.
+- The editor-bundle and license-manifest hooks return early when the target OS is the host (`flutter test`). The Rust hooks build for the host too (desktop needs it, and hooks can't tell it from a test); CI's Dart job turns them off with `hooks.user_defines.<pkg>.build_assets: false`. Dart tests never load a Rust library, the editor bundle or the license manifest; Rust and the editor are tested by their own suites. **Three third-party code assets are needed by the tests** — `sqlite3_vec`, `sqlite3_simple` and `flutter_js` build for the host (`diary_fts` cannot even be created without the `simple` tokenizer, and the JS sandbox tests need quickjs), which is why the root pubspec dev-depends on their owners.
 - Initialize each native runtime before constructing its opaque handles (`CancelToken`); handles cannot cross native libraries. After touching `rust/src/api` run `fvm dart tool/task.dart gen-rust`.
 - Use FRB for the in-repo native libraries.
 - No `[workspace.dependencies]`: the same crate is pinned per package, and `tool/check_generated.dart` fails on drift across Cargo.toml, toolchain channel and FRB / ffigen pins.

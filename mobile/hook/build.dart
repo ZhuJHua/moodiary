@@ -10,11 +10,9 @@ const _rustDirs = [
   'packages/foundation/fast_tokenizer/rust',
   'packages/foundation/fast_crypto/rust',
   'packages/foundation/fast_zip/rust',
-  'packages/foundation/moodiary_rust/rust',
+  'packages/foundation/fast_core/rust',
 ];
 
-/// Dependencies whose third-party licenses cargo-about cannot see, because the
-/// sources are not Rust. Each ships the entries as `third_party.json` at its root.
 const _externalLicensePackages = ['sqlite3_simple', 'sqlite3_vec'];
 const _editorDir = 'packages/feature_base/moodiary_editor/editor';
 const _npmManifest = '$_editorDir/build/third-party-licenses.json';
