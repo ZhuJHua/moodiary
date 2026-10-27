@@ -9,7 +9,7 @@ import 'package:meta/meta.dart';
 Future<void> buildRustCrate(List<String> args, {bool androidCmake = false}) =>
     build(args, (input, output) async {
       if (!input.config.buildCodeAssets) return;
-      // 分不清 flutter test 与桌面端构建（dart-lang/native#2480），CI 测试时由 user-define 关掉
+      // https://github.com/dart-lang/native/issues/2480
       if (input.userDefines['build_assets'] == false) return;
       final code = input.config.code;
       final env = rustCargoEnvironment(
@@ -22,7 +22,6 @@ Future<void> buildRustCrate(List<String> args, {bool androidCmake = false}) =>
         cratePath: 'rust',
         extraCargoEnvironmentVariables: env,
       ).run(input: input, output: output);
-      // native_toolchain_rust 只登记 .d 里的源文件
       output.dependencies.addAll([
         input.packageRoot.resolve('rust/Cargo.toml'),
         input.packageRoot.resolve('rust/Cargo.lock'),
@@ -35,7 +34,6 @@ Map<String, String> rustCargoEnvironment(
   CodeConfig code, {
   Uri? androidNdkRoot,
 }) {
-  // rustc 默认 iOS 10.0，与 C 依赖不一致会链接失败（___chkstk_darwin）
   return switch (code.targetOS) {
     OS.iOS => {'IPHONEOS_DEPLOYMENT_TARGET': '${code.iOS.targetVersion}.0'},
     OS.macOS => {'MACOSX_DEPLOYMENT_TARGET': '${code.macOS.targetVersion}.0'},
@@ -55,10 +53,9 @@ Map<String, String> _androidEnvironment(CodeConfig code, Uri? ndkRoot) {
   };
   final target = triple.replaceAll('-', '_');
   return {
-    // native_toolchain_rust#116
+    // https://github.com/GregoryConrad/native_toolchain_rust/issues/116
     'CARGO_TARGET_${target.toUpperCase()}_RUSTFLAGS':
         '-C link-arg=-Wl,-z,max-page-size=16384',
-    // cmake-rs 只从这个变量找 NDK 工具链
     if (ndkRoot != null) ...{
       'CMAKE_TOOLCHAIN_FILE_$target': ndkRoot
           .resolve('build/cmake/android.toolchain.cmake')

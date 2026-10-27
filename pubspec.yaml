@@ -36,7 +36,6 @@ melos:
       run: fvm dart tool/task.dart gen-rust
       description: 重新生成 Rust FFI 绑定
 
-# CI 测试前改成 false
 hooks:
   user_defines:
     fast_core: {build_assets: true}

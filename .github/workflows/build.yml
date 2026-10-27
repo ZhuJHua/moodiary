@@ -59,7 +59,6 @@ jobs:
         working-directory: mobile
         run: flutter pub get
 
-      # r28c = 28.2.13676358
       - name: Set Up NDK
         id: ndk
         uses: nttld/setup-ndk@v1
