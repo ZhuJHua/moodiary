@@ -117,6 +117,11 @@ List<String> _checkPackageLayers() {
         out.add('$src（${layerOf[src]}）-> $dst（$dstLayerName）：下层依赖上层');
         continue;
       }
+      if (layerOf[src] == 'foundation' &&
+          dst == 'rust_hook' &&
+          _nativePkgOwners[dst]!.contains(src)) {
+        continue;
+      }
       if (layerOf[src] == 'feature_base' || layerOf[src] == 'core') {
         final order = layerOf[src] == 'core' ? _coreOrder : _featureBaseOrder;
         final s = order[src], d = order[dst];
@@ -132,6 +137,14 @@ List<String> _checkPackageLayers() {
 }
 
 const Map<String, Set<String>> _nativePkgOwners = {
+  'rust_hook': {
+    'fast_crypto',
+    'fast_image',
+    'fast_press',
+    'fast_tokenizer',
+    'fast_zip',
+    'moodiary_rust',
+  },
   'fast_press': {'moodiary_export'},
   'fast_zip': {'moodiary_export', 'moodiary_sync'},
 };

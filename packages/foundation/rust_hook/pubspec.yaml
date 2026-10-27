@@ -1,0 +1,20 @@
+name: rust_hook
+description: "Shared native-asset build hooks for the workspace's Rust crates."
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.13.0"
+
+dependencies:
+  code_assets: 1.2.1
+  flutter_rust_bridge_hooks: 2.13.0
+  hooks: 2.2.0
+  meta: 1.19.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1
