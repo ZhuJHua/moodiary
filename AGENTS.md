@@ -8,7 +8,7 @@ Moodiary is a Flutter + Rust diary app. Shared packages under `packages/` form f
 
 - **Flutter 3.47.8 / Dart 3.13.0**. `.fvmrc` pins 3.47.2; `>=3.47.0` in `mobile/pubspec.yaml` is only the lower bound.
 - **Rust 1.99.1 stable** (one `rust/rust-toolchain.toml` per native package, kept identical by `tool/check_generated.dart`), `flutter_rust_bridge` 2.13.0. Native libraries are built by Native Assets build hooks (needs `rustup`).
-- **Android**: AGP 9.1.0 / Gradle 9.3.1 / KGP 2.4.0, built-in Kotlin (`android.builtInKotlin=true`); daemon JVM pinned to 21 in `gradle-daemon-jvm.properties`. NDK 28.2.13676358 is pinned in `mobile/android/app/build.gradle.kts`; `build.yml` installs the same one (r28c) and passes it to the build as `ANDROID_NDK_HOME`, so bump both together.
+- **Android**: AGP 9.1.0 / Gradle 9.3.1 / KGP 2.4.0, built-in Kotlin (`android.builtInKotlin=true`); daemon JVM pinned to 21 in `gradle-daemon-jvm.properties`.
 
 ## Commands
 
@@ -133,10 +133,9 @@ Principle: split freely, never duplicate dependencies. http / sync / llm share o
 | fast_zip | moodiary_export / moodiary_sync (`_nativePkgOwners`) | first archive / extract |
 | fast_crypto | whole repo | facade self-initializes per call |
 
-- Hooks cannot tell `flutter test` from a desktop build (dart-lang/native#2480), so the Rust hooks build for every target, the host included; `hooks.user_defines.<pkg>.build_assets: false` in the root pubspec turns one off. CI's Dart job sets it for all six before testing, while a local `task.dart test` builds `fast_core` / `fast_crypto` / `fast_image` / `fast_tokenizer` for the host once (cached). Dart tests never load a Rust library. The editor-bundle and license-manifest hooks still return early when the target OS is the host. **Three third-party code assets are the exception** — `sqlite3_vec`, `sqlite3_simple` and `flutter_js` build for the host too (`diary_fts` cannot even be created without the `simple` tokenizer, and the JS sandbox tests need quickjs), which is why the root pubspec dev-depends on their owners.
+- Every build hook returns early when the target OS is the host (`flutter test`): Dart tests never load a Rust library, the editor bundle or the license manifest; Rust and the editor are tested by their own suites. **Three third-party code assets are the exception** — `sqlite3_vec`, `sqlite3_simple` and `flutter_js` build for the host too (`diary_fts` cannot even be created without the `simple` tokenizer, and the JS sandbox tests need quickjs), which is why the root pubspec dev-depends on their owners.
 - Initialize each native runtime before constructing its opaque handles (`CancelToken`); handles cannot cross native libraries. After touching `rust/src/api` run `fvm dart tool/task.dart gen-rust`.
 - Use FRB for the in-repo native libraries.
-- All Rust hooks go through `rust_hook`, which links Android libraries with 16 KB max-page-size independent of the NDK version.
 - No `[workspace.dependencies]`: the same crate is pinned per package, and `tool/check_generated.dart` fails on drift across Cargo.toml, toolchain channel and FRB / ffigen pins.
 - The license manifest `mobile/assets/licenses/third_party.json` is generated at build time by `mobile/hook/build.dart`; local machines and CI need `cargo-about` 0.9.2. It scans the in-repo crates and merges the root `third_party.json` shipped by each package in `_externalLicensePackages` (`sqlite3_simple`, `sqlite3_vec` — vendored C/C++ that cargo-about cannot see), resolved through `.dart_tool/package_config.json`.
 - Keep zip handling in Rust; LAN archives use entry-level AES-256 encryption.

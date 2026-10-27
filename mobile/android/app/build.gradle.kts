@@ -21,7 +21,7 @@ val hasReleaseSigning = releaseKeystore.isFile &&
 android {
     namespace = "cn.yooss.moodiary"
     compileSdk = 36
-    // 与 .github/workflows/build.yml 的 setup-ndk（r28c）同步升级
+    // 与 build.yml 的 setup-ndk 一起改
     ndkVersion = "28.2.13676358"
 
     compileOptions {

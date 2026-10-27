@@ -59,7 +59,7 @@ jobs:
         working-directory: mobile
         run: flutter pub get
 
-      # 与 mobile/android/app/build.gradle.kts 的 ndkVersion 保持一致（r28c = 28.2.13676358）
+      # r28c = 28.2.13676358
       - name: Set Up NDK
         id: ndk
         uses: nttld/setup-ndk@v1

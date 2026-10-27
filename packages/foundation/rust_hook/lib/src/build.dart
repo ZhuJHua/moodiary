@@ -8,10 +8,8 @@ import 'package:meta/meta.dart';
 
 Future<void> buildRustCrate(List<String> args, {bool androidCmake = false}) =>
     build(args, (input, output) async {
-      // hooks 在 buildCodeAssets 为 false 时访问 code 会抛异常。
       if (!input.config.buildCodeAssets) return;
-      // hook 分不清 flutter test 与桌面端构建（dart-lang/native#2480），默认都构建；
-      // 根 pubspec 的 hooks.user_defines.<包名>.build_assets: false 可整体关闭（CI 测试用）
+      // 分不清 flutter test 与桌面端构建（dart-lang/native#2480），CI 测试时由 user-define 关掉
       if (input.userDefines['build_assets'] == false) return;
       final code = input.config.code;
       final env = rustCargoEnvironment(
@@ -24,7 +22,7 @@ Future<void> buildRustCrate(List<String> args, {bool androidCmake = false}) =>
         cratePath: 'rust',
         extraCargoEnvironmentVariables: env,
       ).run(input: input, output: output);
-      // native_toolchain_rust 只跟踪 .d 源文件，需登记清单和工具链以免复用旧库。
+      // native_toolchain_rust 只登记 .d 里的源文件
       output.dependencies.addAll([
         input.packageRoot.resolve('rust/Cargo.toml'),
         input.packageRoot.resolve('rust/Cargo.lock'),
@@ -37,7 +35,7 @@ Map<String, String> rustCargoEnvironment(
   CodeConfig code, {
   Uri? androidNdkRoot,
 }) {
-  // native_toolchain_rust 不传部署目标，rustc 默认 iOS 10.0，C 依赖按 SDK 编会引用 ___chkstk_darwin。
+  // rustc 默认 iOS 10.0，与 C 依赖不一致会链接失败（___chkstk_darwin）
   return switch (code.targetOS) {
     OS.iOS => {'IPHONEOS_DEPLOYMENT_TARGET': '${code.iOS.targetVersion}.0'},
     OS.macOS => {'MACOSX_DEPLOYMENT_TARGET': '${code.macOS.targetVersion}.0'},
@@ -57,10 +55,10 @@ Map<String, String> _androidEnvironment(CodeConfig code, Uri? ndkRoot) {
   };
   final target = triple.replaceAll('-', '_');
   return {
-    // native_toolchain_rust#116：旧 NDK 默认 4 KB，需显式要求 16 KB 页对齐。
+    // native_toolchain_rust#116
     'CARGO_TARGET_${target.toUpperCase()}_RUSTFLAGS':
         '-C link-arg=-Wl,-z,max-page-size=16384',
-    // turbojpeg-sys 的 cmake-rs 0.1.58 需通过目标专属环境变量找到 NDK 工具链。
+    // cmake-rs 只从这个变量找 NDK 工具链
     if (ndkRoot != null) ...{
       'CMAKE_TOOLCHAIN_FILE_$target': ndkRoot
           .resolve('build/cmake/android.toolchain.cmake')
