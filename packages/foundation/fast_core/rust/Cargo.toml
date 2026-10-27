@@ -4,7 +4,6 @@ version = "0.1.0"
 edition = "2024"
 
 [lib]
-# 改名即断：native_toolchain_rust 按 lib.name 出文件名，Dart 侧按同一 stem 找库。
 name = "fastcore"
 crate-type = ["cdylib", "staticlib"]
 
@@ -21,7 +20,6 @@ tokio-util = { version = "=0.7.19", default-features = false, features = ["io"] 
 hyper = { version = "=1.11.0", default-features = false, features = ["server", "http1"] }
 hyper-util = { version = "=0.1.20", default-features = false, features = ["tokio"] }
 http-body-util = "=0.1.5"
-# gzip / brotli / deflate 必须开着：和风天气无条件 gzip。
 reqwest = { version = "=0.13.4", default-features = false, features = [
     "rustls-no-provider",
     "gzip",

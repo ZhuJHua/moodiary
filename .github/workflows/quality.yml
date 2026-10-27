@@ -79,7 +79,6 @@ jobs:
       - name: Check layer dependencies
         run: dart tool/check_layers.dart
 
-      # 真库集成测试靠 ISAR_TEST_DYLIB 解除 skip；找不到即 exit 1，不许静默全跳过。
       - name: Locate Isar test dylib
         run: |
           root=$(python3 -c "import json;d=json.load(open('.dart_tool/package_config.json'));print(next(p['rootUri'] for p in d['packages'] if p['name']=='isar_plus_flutter_libs'))")
