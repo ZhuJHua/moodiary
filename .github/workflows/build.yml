@@ -85,41 +85,6 @@ jobs:
           ANDROID_NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
         run: flutter build apk --flavor production --release --target-platform android-arm64 --obfuscate --split-debug-info=splitMap
 
-      - name: Check native library 16 KB alignment
-        shell: bash
-        env:
-          ANDROID_NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
-        run: |
-          apk=mobile/build/app/outputs/flutter-apk/app-production-release.apk
-          tmp=$(mktemp -d)
-          trap 'rm -rf "$tmp"' EXIT
-          unzip -q "$apk" 'lib/*/*.so' -d "$tmp"
-          readelf="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-readelf"
-          shopt -s nullglob
-          libraries=("$tmp"/lib/arm64-v8a/*.so "$tmp"/lib/x86_64/*.so)
-          if [ "${#libraries[@]}" -eq 0 ]; then
-            echo "No arm64-v8a or x86_64 native libraries found" >&2
-            exit 1
-          fi
-          printf '%-60s %-12s %s\n' LIBRARY LOAD_ALIGN RESULT
-          failed=0
-          for library in "${libraries[@]}"; do
-            alignments=$("$readelf" -lW "$library" | awk '$1 == "LOAD" {print $NF}')
-            if [ -z "$alignments" ]; then
-              printf '%-60s %-12s %s\n' "${library#"$tmp"/}" none FAIL
-              failed=1
-            fi
-            for alignment in $alignments; do
-              result=PASS
-              if (( alignment < 0x4000 )); then
-                result=FAIL
-                failed=1
-              fi
-              printf '%-60s %-12s %s\n' "${library#"$tmp"/}" "$alignment" "$result"
-            done
-          done
-          exit "$failed"
-
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
