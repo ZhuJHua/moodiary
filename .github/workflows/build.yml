@@ -62,7 +62,7 @@ jobs:
       - name: Pin Android NDK for native asset hooks
         shell: bash
         run: |
-          ndk_version=$(sed -n 's/^[[:space:]]*ndkVersion = "\([^"]*\)".*/\1/p' mobile/android/app/build.gradle.kts)
+          ndk_version=$(sed -n 's/.*val ndkVersion: String = "\([^"]*\)".*/\1/p' "$FLUTTER_ROOT/packages/flutter_tools/gradle/src/main/kotlin/FlutterExtension.kt")
           test -n "$ndk_version"
           ndk="$ANDROID_HOME/ndk/$ndk_version"
           if [ ! -d "$ndk" ]; then

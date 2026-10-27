@@ -9,7 +9,12 @@ final bool _hasFvm = () {
   }
 }();
 
-Future<void> _run(String cmd, List<String> args, {String? cwd}) async {
+Future<void> _run(
+  String cmd,
+  List<String> args, {
+  String? cwd,
+  Map<String, String>? environment,
+}) async {
   stdout.writeln(
     '\$ ${[cmd, ...args].join(' ')}${cwd != null ? '  (cwd: $cwd)' : ''}',
   );
@@ -17,6 +22,7 @@ Future<void> _run(String cmd, List<String> args, {String? cwd}) async {
     cmd,
     args,
     workingDirectory: cwd,
+    environment: environment,
     mode: .inheritStdio,
     runInShell: Platform.isWindows,
   );
@@ -25,8 +31,30 @@ Future<void> _run(String cmd, List<String> args, {String? cwd}) async {
 }
 
 Future<void> _flutter(List<String> args, {String? cwd = 'mobile'}) => _hasFvm
-    ? _run('fvm', ['flutter', ...args], cwd: cwd)
-    : _run('flutter', args, cwd: cwd);
+    ? _run('fvm', ['flutter', ...args], cwd: cwd, environment: _ndkEnv())
+    : _run('flutter', args, cwd: cwd, environment: _ndkEnv());
+
+// Flutter 给 hooks 的 NDK 优先取 ANDROID_NDK_HOME，否则取 SDK 里最新的；
+// 钉到 Flutter 默认的 ndkVersion，让 Rust/C hooks 与 Gradle 用同一个 NDK
+Map<String, String>? _ndkEnv() {
+  final env = Platform.environment;
+  if (env.containsKey('ANDROID_NDK_HOME')) return null;
+  final sdk = env['ANDROID_HOME'] ?? env['ANDROID_SDK_ROOT'];
+  final ext = File(
+    '.fvm/flutter_sdk/packages/flutter_tools/gradle/src/main/kotlin/FlutterExtension.kt',
+  );
+  if (sdk == null || !ext.existsSync()) return null;
+  final version = RegExp(
+    r'val ndkVersion: String = "([^"]+)"',
+  ).firstMatch(ext.readAsStringSync())?[1];
+  if (version == null) return null;
+  final ndk = Directory('$sdk/ndk/$version');
+  if (!ndk.existsSync()) {
+    stderr.writeln('NDK $version 未安装，hooks 将回退到 SDK 中最新的 NDK');
+    return null;
+  }
+  return {'ANDROID_NDK_HOME': ndk.path, 'ANDROID_NDK_ROOT': ndk.path};
+}
 
 Future<List<String>> _capture(String cmd, List<String> args) async {
   final r = await Process.run(cmd, args, runInShell: Platform.isWindows);
