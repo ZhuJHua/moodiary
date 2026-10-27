@@ -5182,9 +5182,7 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_fast_core_cst_new_list_String(
-        len: i32,
-    ) -> *mut wire_cst_list_String {
+    pub extern "C" fn frbgen_fast_core_cst_new_list_String(len: i32) -> *mut wire_cst_list_String {
         let wrap = wire_cst_list_String {
             ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
                 <*mut wire_cst_list_prim_u_8_strict>::new_with_null_ptr(),

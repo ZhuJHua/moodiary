@@ -2332,9 +2332,7 @@ class FastCoreLibWire implements BaseWire {
             ffi.Pointer<wire_cst_list_prim_u_8_strict>,
           )
         >
-      >(
-        'frbgen_fast_core_wire__crate__api__graph_layout__layout_graph_stream',
-      );
+      >('frbgen_fast_core_wire__crate__api__graph_layout__layout_graph_stream');
   late final _wire__crate__api__graph_layout__layout_graph_stream =
       _wire__crate__api__graph_layout__layout_graph_streamPtr
           .asFunction<
@@ -2378,9 +2376,7 @@ class FastCoreLibWire implements BaseWire {
             ffi.UintPtr,
           )
         >
-      >(
-        'frbgen_fast_core_wire__crate__api__http__HttpClient_download_file',
-      );
+      >('frbgen_fast_core_wire__crate__api__http__HttpClient_download_file');
   late final _wire__crate__api__http__HttpClient_download_file =
       _wire__crate__api__http__HttpClient_download_filePtr
           .asFunction<
@@ -2781,9 +2777,7 @@ class FastCoreLibWire implements BaseWire {
             ffi.Pointer<wire_cst_list_prim_u_8_strict>,
           )
         >
-      >(
-        'frbgen_fast_core_wire__crate__api__s3__S3Client_read_object_to_file',
-      );
+      >('frbgen_fast_core_wire__crate__api__s3__S3Client_read_object_to_file');
   late final _wire__crate__api__s3__S3Client_read_object_to_file =
       _wire__crate__api__s3__S3Client_read_object_to_filePtr
           .asFunction<
@@ -2886,9 +2880,7 @@ class FastCoreLibWire implements BaseWire {
             ffi.Pointer<wire_cst_list_prim_u_8_strict>,
           )
         >
-      >(
-        'frbgen_fast_core_wire__crate__api__s3__S3Client_write_object_file',
-      );
+      >('frbgen_fast_core_wire__crate__api__s3__S3Client_write_object_file');
   late final _wire__crate__api__s3__S3Client_write_object_file =
       _wire__crate__api__s3__S3Client_write_object_filePtr
           .asFunction<
@@ -2955,9 +2947,7 @@ class FastCoreLibWire implements BaseWire {
             ffi.Pointer<wire_cst_list_prim_u_8_strict>,
           )
         >
-      >(
-        'frbgen_fast_core_wire__crate__api__webdav__DavClient_delete_object',
-      );
+      >('frbgen_fast_core_wire__crate__api__webdav__DavClient_delete_object');
   late final _wire__crate__api__webdav__DavClient_delete_object =
       _wire__crate__api__webdav__DavClient_delete_objectPtr
           .asFunction<
@@ -3137,9 +3127,7 @@ class FastCoreLibWire implements BaseWire {
             ffi.Pointer<wire_cst_list_prim_u_8_loose>,
           )
         >
-      >(
-        'frbgen_fast_core_wire__crate__api__webdav__DavClient_write_object',
-      );
+      >('frbgen_fast_core_wire__crate__api__webdav__DavClient_write_object');
   late final _wire__crate__api__webdav__DavClient_write_object =
       _wire__crate__api__webdav__DavClient_write_objectPtr
           .asFunction<

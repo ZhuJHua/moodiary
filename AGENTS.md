@@ -8,7 +8,7 @@ Moodiary is a Flutter + Rust diary app. Shared packages under `packages/` form f
 
 - **Flutter 3.47.8 / Dart 3.13.0**. `.fvmrc` pins 3.47.2; `>=3.47.0` in `mobile/pubspec.yaml` is only the lower bound.
 - **Rust 1.99.1 stable** (one `rust/rust-toolchain.toml` per native package, kept identical by `tool/check_generated.dart`), `flutter_rust_bridge` 2.13.0. Native libraries are built by Native Assets build hooks (needs `rustup`).
-- **Android**: AGP 9.1.0 / Gradle 9.3.1 / KGP 2.4.0, built-in Kotlin (`android.builtInKotlin=true`); daemon JVM pinned to 21 in `gradle-daemon-jvm.properties`. NDK is Flutter's default (`flutter.ndkVersion`); `tool/task.dart` and CI export it as `ANDROID_NDK_HOME` so the native-asset hooks use the same one.
+- **Android**: AGP 9.1.0 / Gradle 9.3.1 / KGP 2.4.0, built-in Kotlin (`android.builtInKotlin=true`); daemon JVM pinned to 21 in `gradle-daemon-jvm.properties`. NDK 28.2.13676358 is pinned in `mobile/android/app/build.gradle.kts`; `build.yml` installs the same one (r28c) and passes it to the build as `ANDROID_NDK_HOME`, so bump both together.
 
 ## Commands
 
@@ -122,11 +122,11 @@ The FTS5 tokenizer is the git dependency `sqlite3_simple` (not in this repo); de
 
 ### Rust: several `fast_*` packages, one native library each
 
-Principle: split freely, never duplicate dependencies. http / sync / llm share one network base in `moodiary_rust`; graph lives there too. Each package ships its own crate, native library, hook, about.toml, rust-toolchain and Cargo.lock.
+Principle: split freely, never duplicate dependencies. http / sync / llm share one network base in `fast_core`; graph lives there too. Each package ships its own crate, native library, hook, about.toml, rust-toolchain and Cargo.lock.
 
 | Package | Owner | Loading |
 |---|---|---|
-| moodiary_rust | one owner per facade: http.dart -> moodiary_http, sync.dart -> moodiary_sync, llm.dart -> moodiary_assistant, graph.dart -> moodiary_diary (`_rustFacadeOwners`) | lazy |
+| fast_core | one owner per facade: http.dart -> moodiary_http, sync.dart -> moodiary_sync, llm.dart -> moodiary_assistant, graph.dart -> moodiary_diary (`_rustFacadeOwners`) | lazy |
 | fast_tokenizer | moodiary_ml | first ONNX model load, `FastTokenizer.ensureInitialized` |
 | fast_image | whole repo | startup, `FastImageRuntime.init` |
 | fast_press | moodiary_export (`_nativePkgOwners`) | first export |

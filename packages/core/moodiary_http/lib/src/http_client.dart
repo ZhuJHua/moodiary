@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:moodiary_rust/http.dart' show CancelToken;
+import 'package:fast_core/http.dart' show CancelToken;
 
-export 'package:moodiary_rust/http.dart' show CancelToken;
+export 'package:fast_core/http.dart' show CancelToken;
 
 enum HttpMethod { get, post, put, delete, patch, head, options }
 

@@ -138,12 +138,12 @@ List<String> _checkPackageLayers() {
 
 const Map<String, Set<String>> _nativePkgOwners = {
   'rust_hook': {
+    'fast_core',
     'fast_crypto',
     'fast_image',
     'fast_press',
     'fast_tokenizer',
     'fast_zip',
-    'moodiary_rust',
   },
   'fast_press': {'moodiary_export'},
   'fast_zip': {'moodiary_export', 'moodiary_sync'},
@@ -225,12 +225,12 @@ const Map<String, Set<String>> _rustFacadeOwners = {
 };
 
 final RegExp _rustFacadeRe = RegExp(
-  r"""^\s*(?:import|export)\s+['"]package:moodiary_rust/([a-z_]+)\.dart['"]""",
+  r"""^\s*(?:import|export)\s+['"]package:fast_core/([a-z_]+)\.dart['"]""",
   multiLine: true,
 );
 
 final RegExp _rustDeepRe = RegExp(
-  r"""^\s*(?:import|export)\s+['"]package:moodiary_rust/src/""",
+  r"""^\s*(?:import|export)\s+['"]package:fast_core/src/""",
   multiLine: true,
 );
 
@@ -242,7 +242,7 @@ List<String> _checkRustFacades() {
   ]) {
     for (final entity in _dartFiles(root)) {
       final rel = entity.path.replaceAll('\\', '/');
-      if (rel.contains('packages/foundation/moodiary_rust/')) continue;
+      if (rel.contains('packages/foundation/fast_core/')) continue;
       if (rel.endsWith('.g.dart') || rel.endsWith('.freezed.dart')) continue;
 
       final String owner;
@@ -257,7 +257,7 @@ List<String> _checkRustFacades() {
 
       final content = entity.readAsStringSync();
       if (_rustDeepRe.hasMatch(content)) {
-        out.add('$rel：绕过门面深入了 package:moodiary_rust/src/');
+        out.add('$rel：绕过门面深入了 package:fast_core/src/');
       }
       for (final m in _rustFacadeRe.allMatches(content)) {
         final facade = m.group(1)!;
@@ -265,7 +265,7 @@ List<String> _checkRustFacades() {
         if (owners == null) continue;
         if (owners.contains(owner)) continue;
         out.add(
-          '$rel（$owner）-> moodiary_rust/$facade.dart：'
+          '$rel（$owner）-> fast_core/$facade.dart：'
           '该门面只属于 ${owners.join('/')}',
         );
       }
@@ -585,9 +585,9 @@ void main(List<String> args) {
 
   final facadeViolations = _checkRustFacades();
   if (facadeViolations.isEmpty) {
-    stdout.writeln('✅ moodiary_rust 门面归属检查通过。');
+    stdout.writeln('✅ fast_core 门面归属检查通过。');
   } else {
-    stderr.writeln('❌ moodiary_rust 门面归属违规 ${facadeViolations.length} 条：');
+    stderr.writeln('❌ fast_core 门面归属违规 ${facadeViolations.length} 条：');
     for (final v in facadeViolations) {
       stderr.writeln('  ✗ $v');
     }

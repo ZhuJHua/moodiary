@@ -10,7 +10,7 @@ const _rustDirs = [
   'packages/foundation/fast_tokenizer/rust',
   'packages/foundation/fast_crypto/rust',
   'packages/foundation/fast_zip/rust',
-  'packages/foundation/moodiary_rust/rust',
+  'packages/foundation/fast_core/rust',
 ];
 
 /// Dependencies whose third-party licenses cargo-about cannot see, because the

@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:fast_core/llm.dart' as rust;
 import 'package:injectable/injectable.dart';
 import 'package:meta/meta.dart';
 import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/assistant_tools.dart';
-import 'package:moodiary_rust/llm.dart' as rust;
 
 const String _gateRun = 'run';
 const String _gateSkip = 'skip:';
@@ -84,7 +84,7 @@ class RigAssistantService implements AssistantService {
       reasoningBudget: request.reasoning.budgetTokens,
     );
 
-    await rust.MoodiaryRust.ensureInitialized();
+    await rust.FastCore.ensureInitialized();
     final stream = rust.rigChatStream(
       input: rust.RigChatInput(
         config: config,

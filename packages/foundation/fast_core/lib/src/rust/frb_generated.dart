@@ -23,7 +23,8 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// Main entrypoint of the Rust API
 class FastCoreLib
-    extends BaseEntrypoint<FastCoreLibApi, FastCoreLibApiImpl, FastCoreLibWire> {
+    extends
+        BaseEntrypoint<FastCoreLibApi, FastCoreLibApiImpl, FastCoreLibWire> {
   @internal
   static final instance = FastCoreLib._();
 
@@ -57,8 +58,8 @@ class FastCoreLib
   static void dispose() => instance.disposeImpl();
 
   @override
-  ApiImplConstructor<FastCoreLibApiImpl, FastCoreLibWire> get apiImplConstructor =>
-      FastCoreLibApiImpl.new;
+  ApiImplConstructor<FastCoreLibApiImpl, FastCoreLibWire>
+  get apiImplConstructor => FastCoreLibApiImpl.new;
 
   @override
   WireConstructor<FastCoreLibWire> get wireConstructor =>
@@ -289,7 +290,8 @@ abstract class FastCoreLibApi extends BaseApi {
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_S3ClientPtr;
 }
 
-class FastCoreLibApiImpl extends FastCoreLibApiImplPlatform implements FastCoreLibApi {
+class FastCoreLibApiImpl extends FastCoreLibApiImplPlatform
+    implements FastCoreLibApi {
   FastCoreLibApiImpl({
     required super.handler,
     required super.wire,
@@ -4455,7 +4457,9 @@ class DavClientImpl extends RustOpaque implements DavClient {
   Future<List<String>> listObjects() =>
       FastCoreLib.instance.api.crateApiWebdavDavClientListObjects(that: this);
 
-  Future<Uint8List?> readObject({required String key}) => FastCoreLib.instance.api
+  Future<Uint8List?> readObject({required String key}) => FastCoreLib
+      .instance
+      .api
       .crateApiWebdavDavClientReadObject(that: this, key: key);
 
   Future<bool> readObjectToFile({
@@ -4470,8 +4474,8 @@ class DavClientImpl extends RustOpaque implements DavClient {
   Future<String> statObject({required String key}) => FastCoreLib.instance.api
       .crateApiWebdavDavClientStatObject(that: this, key: key);
 
-  Future<bool> testConnection() =>
-      FastCoreLib.instance.api.crateApiWebdavDavClientTestConnection(that: this);
+  Future<bool> testConnection() => FastCoreLib.instance.api
+      .crateApiWebdavDavClientTestConnection(that: this);
 
   Future<void> writeObject({required String key, required List<int> data}) =>
       FastCoreLib.instance.api.crateApiWebdavDavClientWriteObject(
@@ -4595,16 +4599,18 @@ class S3ClientImpl extends RustOpaque implements S3Client {
     data: data,
   );
 
-  Future<void> deleteObject({required String key}) =>
-      FastCoreLib.instance.api.crateApiS3S3ClientDeleteObject(that: this, key: key);
+  Future<void> deleteObject({required String key}) => FastCoreLib.instance.api
+      .crateApiS3S3ClientDeleteObject(that: this, key: key);
 
   Future<List<String>> listObjects({required String prefix}) => FastCoreLib
       .instance
       .api
       .crateApiS3S3ClientListObjects(that: this, prefix: prefix);
 
-  Future<Uint8List?> readObject({required String key}) =>
-      FastCoreLib.instance.api.crateApiS3S3ClientReadObject(that: this, key: key);
+  Future<Uint8List?> readObject({required String key}) => FastCoreLib
+      .instance
+      .api
+      .crateApiS3S3ClientReadObject(that: this, key: key);
 
   Future<bool> readObjectToFile({
     required String key,
@@ -4615,8 +4621,8 @@ class S3ClientImpl extends RustOpaque implements S3Client {
     filePath: filePath,
   );
 
-  Future<String> statObject({required String key}) =>
-      FastCoreLib.instance.api.crateApiS3S3ClientStatObject(that: this, key: key);
+  Future<String> statObject({required String key}) => FastCoreLib.instance.api
+      .crateApiS3S3ClientStatObject(that: this, key: key);
 
   Future<bool> testConnection() =>
       FastCoreLib.instance.api.crateApiS3S3ClientTestConnection(that: this);

@@ -3,9 +3,9 @@ library;
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:fast_core/sync.dart' as rust;
 import 'package:injectable/injectable.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_rust/sync.dart' as rust;
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/remote_lease.dart';
 import 'package:moodiary_sync/src/data/secure_options.dart';
@@ -57,7 +57,7 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
 
   Future<rust.DavClient> _buildClient() async {
     final opts = await _read();
-    await rust.MoodiaryRust.ensureInitialized();
+    await rust.FastCore.ensureInitialized();
     return rust.DavClient.newInstance(
       baseUrl: _at(opts, 0),
       username: _at(opts, 1),

@@ -1,9 +1,9 @@
 import 'dart:convert';
 
+import 'package:fast_core/http.dart' as rust;
 import 'package:flutter/foundation.dart';
 import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
-import 'package:moodiary_rust/http.dart' as rust;
 
 class RustHttpClient extends IHttpClient {
   RustHttpClient({this.onError});
@@ -11,7 +11,7 @@ class RustHttpClient extends IHttpClient {
   final void Function(String message)? onError;
 
   late final Future<rust.HttpClient> _client =
-      rust.MoodiaryRust.ensureInitialized().then(
+      rust.FastCore.ensureInitialized().then(
         (_) => rust.HttpClient.newInstance(
           settings: const rust.ClientSettings(
             connectTimeoutMs: 5000,
