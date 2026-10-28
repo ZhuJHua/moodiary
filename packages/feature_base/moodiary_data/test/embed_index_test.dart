@@ -71,6 +71,7 @@ void main() {
   late DiaryRepository repo;
   late FakeEmbedder embedder;
   late EmbedIndexService index;
+  late OpenDiaryRegistry openDiaries;
 
   setUpAll(() {
     loadSqliteVec();
@@ -87,7 +88,8 @@ void main() {
     MoodiaryKVs.embeddingIndexStale.remove();
     await db.clearAll();
     embedder = FakeEmbedder();
-    index = EmbedIndexService(db, embedder);
+    openDiaries = OpenDiaryRegistry();
+    index = EmbedIndexService(db, embedder, openDiaries);
   });
 
   tearDownAll(() async {
@@ -134,6 +136,50 @@ void main() {
 
     final workHits = await index.search('工作', limit: 1);
     expect(workHits.single.diaryId, 'work');
+  });
+
+  test('排空跳过编辑中的日记，结束编辑后处理最新内容', () async {
+    await repo.insertADiary(makeDiary('open', '旅行'));
+    await repo.insertADiary(makeDiary('closed', '工作'));
+    openDiaries.setEditing('open', editing: true);
+
+    expect(await index.drain(maxDiaries: 1), 1);
+    expect((await db.select(db.diaryChunks).get()).map((c) => c.diaryId), [
+      'closed',
+    ]);
+    expect((await db.select(db.embedQueue).get()).single.diaryId, 'open');
+    expect(await index.drain().timeout(const Duration(seconds: 1)), 0);
+    final embedded = embedder.embeddedPassages;
+
+    await repo.updateADiary(newDiary: makeDiary('open', '美食'));
+    expect(await index.drain(), 0);
+    expect(embedder.embeddedPassages, embedded);
+    openDiaries.setEditing('open', editing: false);
+
+    expect(await index.drain(), 1);
+    expect(await queueCount(), 0);
+    expect((await index.search('美食', limit: 1)).single.diaryId, 'open');
+  });
+
+  test('只读打开的日记照常排空', () async {
+    openDiaries.open('open');
+    await repo.insertADiary(makeDiary('open', '旅行'));
+
+    expect(await index.drain(), 1);
+    expect(await queueCount(), 0);
+  });
+
+  test('重建索引仍保留编辑中日记的队列项', () async {
+    await repo.insertADiary(makeDiary('open', '旅行'));
+    await index.drain();
+    openDiaries.setEditing('open', editing: true);
+
+    expect(await index.rebuildAll(), 0);
+    expect(await queueCount(), 1);
+    expect(await chunkCount(), 0);
+    openDiaries.setEditing('open', editing: false);
+    expect(await index.drain(), 1);
+    expect(await queueCount(), 0);
   });
 
   test('内容变化触发重嵌，摘录偏移指向命中分块', () async {

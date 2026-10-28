@@ -143,16 +143,14 @@ class DiaryRepository {
     return row.rid;
   }
 
-  Future<void> _syncChildren(Diary d) async {
+  Future<void> _syncChildren(Diary d, [DiaryContent? derived]) async {
     await (_db.delete(
       _db.diaryMedia,
     )..where((m) => m.diaryId.equals(d.id))).go();
     await (_db.delete(
       _db.diaryTags,
     )..where((t) => t.diaryId.equals(d.id))).go();
-    final mediaNames = d.type == DiaryType.tiptap.value
-        ? TiptapContent.parse(d.content).mediaNames
-        : const <String, String>{};
+    final mediaNames = (derived ?? DiaryContent.of(d)).mediaNames;
     await _db.batch((b) {
       b.insertAll(_db.diaryMedia, [
         for (final (kind, names) in [
@@ -195,21 +193,20 @@ class DiaryRepository {
   }) => insertDiaries([diary], fromSync: fromSync, index: index);
 
   // contentText 一律由正文重新生成，不信任调用方（同步、导入）带来的值
-  static Diary _canonical(Diary d) {
-    final content = _normalizedContent(d);
+  static (Diary, DiaryContent) _canonical(Diary d, [DiaryContent? derived]) {
+    derived ??= DiaryContent.of(d);
+    final content = derived.normalizedContent;
     if (!identical(content, d.content)) {
-      return _rederived(d.copyWith(content: content));
+      final next = d.copyWith(content: content);
+      final nextDerived = DiaryContent.of(next);
+      return (_rederived(next, nextDerived), nextDerived);
     }
-    final text = DiaryContent.of(d).plainText;
-    return text == d.contentText ? d : d.copyWith(contentText: text);
+    final text = derived.plainText;
+    return (text == d.contentText ? d : d.copyWith(contentText: text), derived);
   }
 
-  static String _normalizedContent(Diary d) => d.type == DiaryType.tiptap.value
-      ? TiptapContent.normalize(d.content)
-      : d.content;
-
-  static Diary _rederived(Diary d) {
-    final derived = DiaryContent.of(d);
+  static Diary _rederived(Diary d, [DiaryContent? derived]) {
+    derived ??= DiaryContent.of(d);
     final media = derived.media;
     return d.copyWith(
       contentText: derived.plainText,
@@ -228,24 +225,25 @@ class DiaryRepository {
     if (incoming.isEmpty) return;
     final diaries = [for (final d in incoming) _canonical(d)];
     await _db.transaction(() async {
-      for (final diary in diaries) {
+      for (final (diary, derived) in diaries) {
         await _upsertRow(diary);
-        await _syncChildren(diary);
+        await _syncChildren(diary, derived);
         if (index == .inline) {
-          await _applyLinks(diary.id, DiaryContent.of(diary).links);
+          await _applyLinks(diary.id, derived.links);
         }
       }
       await (_db.delete(_db.tombstones)..where(
             (t) => t.key.isIn([
-              for (final diary in diaries) SyncTombstone.diaryKey(diary.id),
+              for (final (diary, _) in diaries)
+                SyncTombstone.diaryKey(diary.id),
             ]),
           ))
           .go();
       if (index == .inline) {
-        await _enqueueEmbed([for (final diary in diaries) diary.id]);
+        await _enqueueEmbed([for (final (diary, _) in diaries) diary.id]);
       }
     });
-    for (final diary in diaries) {
+    for (final (diary, _) in diaries) {
       _events.add(DiaryCreated(diary, fromSync: fromSync));
     }
   }
@@ -255,20 +253,21 @@ class DiaryRepository {
     IndexMode index = .inline,
     bool fromSync = false,
   }) async {
+    var derived = DiaryContent.of(newDiary);
     assert(() {
       if (index == .skip) return true;
-      final derived = DiaryContent.of(newDiary).media;
-      return _sameNameSet(newDiary.imageName, derived.images) &&
-          _sameNameSet(newDiary.videoName, derived.videos) &&
-          _sameNameSet(newDiary.audioName, derived.audios) &&
-          _sameNameSet(newDiary.fileName, derived.files);
+      final media = derived.media;
+      return _sameNameSet(newDiary.imageName, media.images) &&
+          _sameNameSet(newDiary.videoName, media.videos) &&
+          _sameNameSet(newDiary.audioName, media.audios) &&
+          _sameNameSet(newDiary.fileName, media.files);
     }(), '媒体列与正文引用不一致：写入方漏了 withDerivedMedia（见 diary_derive.dart）');
-    newDiary = _canonical(newDiary);
+    (newDiary, derived) = _canonical(newDiary, derived);
     await _db.transaction(() async {
       await _upsertRow(newDiary);
-      await _syncChildren(newDiary);
+      await _syncChildren(newDiary, derived);
       if (index == .inline) {
-        await _applyLinks(newDiary.id, DiaryContent.of(newDiary).links);
+        await _applyLinks(newDiary.id, derived.links);
         await _enqueueEmbed([newDiary.id]);
       }
     });
@@ -299,9 +298,11 @@ class DiaryRepository {
               t == nodeType && src == fileName ? value : current,
         );
         if (identical(content, diary.content)) continue;
-        final next = _rederived(touched(diary.copyWith(content: content)));
+        final edited = touched(diary.copyWith(content: content));
+        final derived = DiaryContent.of(edited);
+        final next = _rederived(edited, derived);
         await _upsertRow(next);
-        await _syncChildren(next);
+        await _syncChildren(next, derived);
         out.add(next);
       }
       await _enqueueEmbed(out.map((diary) => diary.id));
@@ -1000,8 +1001,7 @@ class DiaryRepository {
     var orphanCategoryFixed = 0;
 
     for (final diary in diaries) {
-      var next = _canonical(diary);
-      final derived = DiaryContent.of(next);
+      var (next, derived) = _canonical(diary);
       var changed = !identical(next, diary);
 
       final plain = derived.plainText;
@@ -1082,7 +1082,9 @@ class DiaryRepository {
       final updates = [
         for (var i = 0; i < rows.length; i++)
           if (_rederived(
-                batch[i].copyWith(content: _normalizedContent(batch[i])),
+                batch[i].copyWith(
+                  content: DiaryContent.of(batch[i]).normalizedContent,
+                ),
               )
               case final next when next != batch[i])
             (rows[i], next),

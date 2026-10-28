@@ -28,4 +28,22 @@ class OpenDiaryRegistry {
   bool contains(String id) => _open.containsKey(id);
 
   Set<String> snapshot() => Set<String>.unmodifiable(_open.keys);
+
+  /// 正处于编辑模式的日记；与“打开”不同，只读停留不算。
+  final Set<String> _editing = <String>{};
+  final StreamController<String> _editingEnded =
+      StreamController<String>.broadcast();
+
+  Stream<String> get editingEnded => _editingEnded.stream;
+
+  void setEditing(String id, {required bool editing}) {
+    if (id.isEmpty) return;
+    if (editing) {
+      _editing.add(id);
+    } else if (_editing.remove(id)) {
+      _editingEnded.add(id);
+    }
+  }
+
+  Set<String> editingSnapshot() => Set<String>.unmodifiable(_editing);
 }

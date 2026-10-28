@@ -14,6 +14,29 @@ Map<String, dynamic> _p(List<Map<String, dynamic>> inline) => {
 Map<String, dynamic> _text(String t) => {'type': 'text', 'text': t};
 
 void main() {
+  test('归一未改时返回原字符串，旧版归一为 v2', () {
+    final content = jsonEncode(
+      TiptapContent.newDoc([
+        _p([_text('正文')]),
+      ]),
+    );
+    expect(TiptapContent.normalize(content), same(content));
+    final legacy = _doc([
+      _p([_text('正文')]),
+    ]);
+    expect(
+      TiptapContent.normalize(legacy),
+      jsonEncode({
+        'type': 'doc',
+        'content': [
+          _p([_text('正文')]),
+        ],
+        'attrs': {'v': 2},
+      }),
+    );
+    expect(TiptapContent.normalize('不是 JSON'), same('不是 JSON'));
+  });
+
   group('TiptapContent — TipTap 文档', () {
     test('plainText：文本块之间一个换行，无名媒体与分隔线不占行', () {
       final c = TiptapContent.parse(

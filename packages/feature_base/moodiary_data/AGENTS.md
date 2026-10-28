@@ -27,7 +27,7 @@ Repositories and cross-feature controllers both live here, so this is where the 
 
 - **Large lists / paging / offsets that must track the DB** (Diary/Category): typed domain events plus in-memory `applyXxxEvent` increments, no re-query. A subscription that receives an event while state is still loading must set a missed flag and re-query once after the first query (`LoadMoreMixin.markMissedEvent`). The 200ms debounce on aggregate consumers stays, only to save recomputing the aggregates — re-query is an index query. **Paging alignment contract**: the SQL `ORDER BY ..., id DESC` must match `diarySortComparator`'s field order field for field (id = uuid v7, ordered by creation time).
 - **Small tables** (ChatSession/LlmProvider scale): a `Stream<void>` signal plus a full re-query; do not build event types and in-memory increments for them.
-- **Following a single object**: subscribe to `diaryEvents` filtered by id (getDiary provider), because SQLite has no row-level watch and domain events are semantically stronger anyway.
+- **Following a single object**: subscribe to `diaryEvents` filtered by id (EditController), because SQLite has no row-level watch and domain events are semantically stronger anyway.
 
 ## Write-path discipline
 

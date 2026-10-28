@@ -22,6 +22,14 @@ class DiaryContent {
       ? QuillDelta.ops(_diary.content)
       : null;
 
+  late final String normalizedContent = _type == .tiptap
+      ? _tiptap!.normalized
+      : _diary.content;
+
+  late final Map<String, String> mediaNames = _type == .tiptap
+      ? _tiptap!.mediaNames
+      : const {};
+
   late final String plainText = switch (_type) {
     .tiptap => _tiptap!.plainText,
     .markdown => MediaMarkup.strip(MarkdownConverter.convert(_diary.content)),

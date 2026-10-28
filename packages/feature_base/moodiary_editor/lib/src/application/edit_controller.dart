@@ -21,11 +21,9 @@ class EditController extends _$EditController {
 
   bool _wasNewDraft = false;
 
-  String? _indexedContent;
-
-  String? _indexedTitle;
-
   Diary? _latest;
+
+  Diary? _saved;
 
   Future<DraftSaveResult>? _inFlight;
 
@@ -35,19 +33,44 @@ class EditController extends _$EditController {
     DiaryType? defaultType,
     String? defaultCategoryId,
   }) async {
-    final diary = await ref.watch(
-      getDiaryProvider(
-        id: diaryId,
-        defaultType: defaultType,
-        defaultCategoryId: defaultCategoryId,
-      ).future,
-    );
-    if (diary == null) throw StateError('Diary not found: $diaryId');
     _persisted = !(diaryId == null || diaryId.isEmpty);
     _wasNewDraft = !_persisted;
+    final Diary diary;
+    if (_persisted) {
+      final stored = await _repository.getDiaryByBusinessId(diaryId!);
+      if (stored == null) throw StateError('Diary not found: $diaryId');
+      diary = stored;
+    } else {
+      if (defaultType == null) {
+        throw ArgumentError('新建空白日记必须显式提供 defaultType（id 为空时）');
+      }
+      diary = Diary.empty(type: defaultType)
+          .copyWith(categoryId: defaultCategoryId);
+    }
     _latest = diary;
-    _indexedContent = diary.contentText;
-    _indexedTitle = diary.title;
+    _saved = diary;
+    final sub = _repository.diaryEvents.listen((event) {
+      switch (event) {
+        // 同步拉取用 upsert 覆盖已有日记，发的是 DiaryCreated
+        case DiaryCreated(:final diary) || DiaryUpdated(:final diary):
+          if (diary.id != _latest?.id ||
+              _inFlight != null ||
+              !identical(_latest, _saved)) {
+            return;
+          }
+          _latest = diary;
+          _saved = diary;
+          state = .data(diary);
+        case DiaryDeleted(:final id):
+          if (id == _latest?.id) {
+            state = .error(
+              StateError('Diary not found: $id'),
+              StackTrace.current,
+            );
+          }
+      }
+    });
+    ref.onDispose(sub.cancel);
     listenSelf((_, next) {
       final value = next.value;
       if (value != null) _latest = value;
@@ -202,16 +225,24 @@ class EditController extends _$EditController {
     while (true) {
       final current = _latest;
       if (current == null) return .saved;
-      final next = touched(withDerivedMedia(current));
+      if (_persisted && identical(current, _saved)) return .saved;
+      final derived = withDerivedMedia(current);
+      final saved = _saved;
+      final rowDirty =
+          !_persisted ||
+          saved == null ||
+          derived.copyWith(lastModified: saved.lastModified) != saved;
+      final next = rowDirty ? touched(derived) : saved;
       try {
         if (_wasNewDraft && _isBlank(next)) {
           if (_persisted) {
             await _repository.hardDeleteDiary(next.id);
             _persisted = false;
           }
-        } else {
+        } else if (rowDirty) {
           final indexMode =
-              next.contentText == _indexedContent && next.title == _indexedTitle
+              next.contentText == saved?.contentText &&
+                  next.title == saved?.title
               ? IndexMode.skip
               : IndexMode.inline;
           if (_persisted) {
@@ -221,8 +252,7 @@ class EditController extends _$EditController {
             _persisted = true;
           }
         }
-        _indexedContent = next.contentText;
-        _indexedTitle = next.title;
+        _saved = next;
         // 写入期间有新编辑时，保留最新状态并继续保存。
         if (!identical(_latest, current)) continue;
         _latest = next;

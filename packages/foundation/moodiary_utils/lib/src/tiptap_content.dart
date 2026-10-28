@@ -40,12 +40,12 @@ class TiptapContent {
     null => null,
   };
 
-  static String normalize(String content) {
-    final c = TiptapContent.parse(content);
-    return c._doc == null || identical(c._v2, c._doc)
-        ? content
-        : jsonEncode(c._v2);
-  }
+  late final String normalized = _doc == null || identical(_v2, _doc)
+      ? _raw
+      : jsonEncode(_v2);
+
+  static String normalize(String content) =>
+      TiptapContent.parse(content).normalized;
 
   static Map<String, dynamic> normalizeDoc(Map<String, dynamic> doc) {
     final attrs = doc['attrs'];

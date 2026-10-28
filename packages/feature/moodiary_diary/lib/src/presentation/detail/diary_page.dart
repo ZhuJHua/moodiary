@@ -73,6 +73,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
 
   String? _guardId;
 
+  String? _editingId;
+
   ProviderSubscription<AsyncValue<Diary>>? _guardSub;
 
   final HopHistory _hops = HopHistory();
@@ -133,19 +135,25 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       _guardId = id;
       getIt<OpenDiaryRegistry>().open(id);
       _hops.reset(id);
+      _syncEditing();
     } else {
       _guardSub = ref.listenManual(_provider, (_, next) {
         final diary = next.value;
         if (diary != null && _guardId == null) {
           _guardId = diary.id;
           getIt<OpenDiaryRegistry>().open(diary.id);
+          _syncEditing();
         }
       });
     }
     _linksSub = getIt<DiaryRepository>().diaryEvents.listen((event) {
-      _linksDebounce?.cancel();
-      _linksDebounce = Timer(const Duration(milliseconds: 400), _loadLinks);
-      if (event is DiaryUpdated) _followExternalEdit(event.diary);
+      if (_mode != .edit) {
+        _linksDebounce?.cancel();
+        _linksDebounce = Timer(const Duration(milliseconds: 400), _loadLinks);
+      }
+      if (event case DiaryCreated(:final diary) || DiaryUpdated(:final diary)) {
+        _followExternalEdit(diary);
+      }
     });
   }
 
@@ -205,6 +213,19 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     _autoSaveTimer = null;
     _elapsed.value = 0;
     _activeHeading.value = -1;
+    _syncEditing();
+  }
+
+  // 编辑中的日记不做语义索引，退出编辑后再排空
+  void _syncEditing() {
+    final id = _mode == .edit ? _guardId : null;
+    if (id == _editingId) return;
+    final registry = getIt<OpenDiaryRegistry>();
+    if (_editingId case final previous?) {
+      registry.setEditing(previous, editing: false);
+    }
+    if (id != null) registry.setEditing(id, editing: true);
+    _editingId = id;
   }
 
   Future<void> _applyExternalSwap(String id) async {
@@ -244,6 +265,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     _linksSub?.cancel();
     final guardSub = _guardSub;
     final guardId = _guardId;
+    final editingId = _editingId;
     // ignore: discarded_futures
     () async {
       try {
@@ -251,6 +273,9 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       } finally {
         guardSub?.close();
         if (guardId != null) getIt<OpenDiaryRegistry>().close(guardId);
+        if (editingId != null) {
+          getIt<OpenDiaryRegistry>().setEditing(editingId, editing: false);
+        }
       }
     }();
     super.dispose();
@@ -789,6 +814,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
 
   void _enterEdit() {
     setState(() => _mode = .edit);
+    _syncEditing();
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => _editorController.focus(),
     );
@@ -810,6 +836,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     if (!mounted) return;
     _editorController.panel.hide();
     setState(() => _mode = .read);
+    _syncEditing();
+    unawaited(_loadLinks());
   }
 
   Widget _buildBody(Diary diary) {
@@ -1074,6 +1102,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       _mode = .read;
       _hopTarget = target;
     });
+    _syncEditing();
     _shownContent = target.content;
     _shownTitle = target.title;
     await _editorController.swapDocument(

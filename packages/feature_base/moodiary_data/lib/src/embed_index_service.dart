@@ -13,6 +13,7 @@ import 'package:moodiary_utils/moodiary_utils.dart';
 import 'db/database.dart';
 import 'db/db_codec.dart';
 import 'embed_chunker.dart';
+import 'open_diary_registry.dart';
 
 typedef SemanticHit = ({
   String diaryId,
@@ -23,10 +24,11 @@ typedef SemanticHit = ({
 
 @lazySingleton
 class EmbedIndexService {
-  EmbedIndexService(this._db, this._engine);
+  EmbedIndexService(this._db, this._engine, this._openDiaries);
 
   final MoodiaryDatabase _db;
   final SemanticEmbedder _engine;
+  final OpenDiaryRegistry _openDiaries;
 
   static const int _embedBatch = 16;
 
@@ -46,6 +48,9 @@ class EmbedIndexService {
       while (maxDiaries == null || processed < maxDiaries) {
         final batch =
             await (_db.select(_db.embedQueue)
+                  ..where(
+                    (q) => q.diaryId.isNotIn(_openDiaries.editingSnapshot()),
+                  )
                   ..orderBy([(q) => OrderingTerm.asc(q.enqueuedAt)])
                   ..limit(
                     maxDiaries == null
