@@ -43,13 +43,11 @@ void main() {
               )
               .last;
       final candidates = result.candidates[StorageCleanupKind.unusedMedia]!;
-      final report = MediaCleanupReport(
-        paths: candidates.files.map((f) => f.path).toList(),
-        bytes: candidates.bytes,
-      );
-      expect(report.bytes, 5);
-      expect(report.paths.length, 2);
-      await AppFiles.deleteOrphanMedia(report);
+      expect(candidates.bytes, 5);
+      expect(candidates.files, hasLength(2));
+      for (final candidate in candidates.files) {
+        await AppFiles.deleteFile(candidate.path);
+      }
       expect(File('${root.path}/image/orphan.jpg').existsSync(), isFalse);
       expect(
         File('${root.path}/image/thumb/orphan_512.jpg').existsSync(),

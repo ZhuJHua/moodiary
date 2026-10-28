@@ -37,6 +37,7 @@ dependencies:
   riverpod_annotation: 4.0.7
 
 dev_dependencies:
+  moodiary_platform: 0.0.1
   flutter_test:
     sdk: flutter
   flutter_riverpod: 3.4.3

@@ -220,40 +220,11 @@ class AppFiles {
     }
   }
 
-  static Future<void> deleteOrphanMedia(MediaCleanupReport report) async {
-    final imageDir = join(_filePath, 'image');
-    await Future.wait(
-      report.paths.map((path) async {
-        await deleteFile(path);
-        if (dirname(path) == imageDir) {
-          await FastImageDerivatives.deleteFor(basename(path));
-        }
-      }),
-    );
-  }
-
   static String getCachePath(String fileName) {
     return join(_cachePath, fileName);
   }
 
   static String getErrorLogPath() {
     return join(_filePath, 'error.log');
-  }
-}
-
-class MediaCleanupReport {
-  final List<String> paths;
-
-  final int bytes;
-
-  const MediaCleanupReport({required this.paths, required this.bytes});
-
-  int get count => paths.length;
-
-  bool get isEmpty => paths.isEmpty;
-
-  String get readableSize {
-    final unit = AppFiles.bytesToUnits(bytes);
-    return '${unit['size']} ${unit['unit']}';
   }
 }

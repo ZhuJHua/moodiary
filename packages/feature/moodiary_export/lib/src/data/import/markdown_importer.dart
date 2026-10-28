@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
@@ -54,7 +55,7 @@ class MarkdownImporter {
     MarkdownImportSource source, {
     void Function(int done, int total)? onProgress,
     bool Function()? isCancelled,
-  }) async {
+  }) => runMediaExclusive(() async {
     final stage = ImportMediaStage(source.root, _media);
     final categoryIds = {
       for (final c in await _categories.getAllCategories())
@@ -179,7 +180,7 @@ class MarkdownImporter {
       missingMedia: stage.missing,
       cancelled: cancelled,
     );
-  }
+  });
 
   static ({String content, String contentText, DiaryType type}) _toTiptap(
     String markdown, {

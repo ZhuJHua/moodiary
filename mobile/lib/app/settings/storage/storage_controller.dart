@@ -210,7 +210,7 @@ class StorageSelection extends _$StorageSelection {
         }
 
         freed += item.kind == .cache || item.kind == .unusedMedia
-            ? await runSyncExclusive(delete)
+            ? await runMediaExclusive(delete)
             : await delete();
       }
       return freed;
@@ -254,18 +254,5 @@ Future<int> _deleteUnusedMedia(List<StorageCandidate> files) async {
   final fresh = StorageScanInput(
     referencedMedia: await getIt<DiaryRepository>().collectReferencedMedia(),
   );
-  var freed = 0;
-  final paths = <String>[];
-  for (final file in files.where((f) => !fresh.references(f))) {
-    try {
-      freed += await File(file.path).length();
-      paths.add(file.path);
-    } on PathNotFoundException {
-      // Already removed.
-    }
-  }
-  await AppFiles.deleteOrphanMedia(
-    MediaCleanupReport(paths: paths, bytes: freed),
-  );
-  return freed;
+  return _deleteFiles(files.where((file) => !fresh.references(file)));
 }

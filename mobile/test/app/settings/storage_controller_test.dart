@@ -2,13 +2,15 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:fast_image/fast_image.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
+import 'package:moodiary_export/moodiary_export.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_mobile/app/settings/storage/storage_controller.dart';
+import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
@@ -37,16 +39,65 @@ class _DiaryRepository implements DiaryRepository {
   final images = <String>{};
   final videos = <String>{};
   final files = <String>{};
+  final batches = <List<Diary>>[];
+  Future<void> Function()? beforeCollect;
 
   @override
-  Future<ReferencedMedia> collectReferencedMedia() async => (
-    images: Set.of(images),
-    audios: <String>{},
-    videos: Set.of(videos),
-    files: Set.of(files),
-  );
+  Future<void> insertDiaries(
+    List<Diary> incoming, {
+    bool fromSync = false,
+    IndexMode index = .inline,
+  }) async {
+    batches.add(List.of(incoming));
+    for (final diary in incoming) {
+      images.addAll(diary.imageName);
+    }
+  }
+
+  @override
+  Future<ReferencedMedia> collectReferencedMedia() async {
+    await beforeCollect?.call();
+    return (
+      images: Set.of(images),
+      audios: <String>{},
+      videos: Set.of(videos),
+      files: Set.of(files),
+    );
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _Categories implements CategoryRepository {
+  @override
+  Future<List<Category>> getAllCategories() async => [];
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _Places implements PlaceRepository {
+  @override
+  Future<List<Place>> getAllPlaces() async => [];
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _ImportMedia implements ImportMediaStore {
+  final stagedLast = Completer<void>();
+  final release = Completer<void>();
+  var count = 0;
+
+  @override
+  Future<String?> save(String path, ImportMediaKind kind) async {
+    final name = 'image-${++count}.jpg';
+    await File(path).copy(AppFiles.getRealPath('image', name));
+    if (count == 101) {
+      stagedLast.complete();
+      await release.future;
+    }
+    return name;
+  }
 }
 
 StorageReport _report({
@@ -389,6 +440,158 @@ void main() {
     }
     await _complete(container);
   });
+
+  test(
+    'cleanup keeps live derivatives shared by an orphan image stem',
+    () async {
+      final orphan = write('support/image/foo.heic', 3);
+      final live = write('support/image/foo.jpg', 5);
+      final derivatives = [
+        for (final name in FastImageDerivatives.derivativeNamesOf('foo.jpg'))
+          write('support/image/thumb/$name', 7),
+      ];
+      final repository = _DiaryRepository()..images.add('foo.jpg');
+      getIt.registerSingleton<DiaryRepository>(repository);
+      getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
+      final container = ProviderContainer.test(
+        overrides: [storageSyncBusyProvider.overrideWith((ref) => false)],
+      );
+      _listen(container);
+      final scan = await _complete(container);
+      expect(
+        scan.candidates[StorageCleanupKind.unusedMedia]!.files.map(
+          (f) => f.path,
+        ),
+        [orphan.path],
+      );
+      expect(
+        await container
+            .read(storageSelectionProvider.notifier)
+            .clean(_items(container)),
+        3,
+      );
+      expect(orphan.existsSync(), isFalse);
+      for (final file in [live, ...derivatives]) {
+        expect(file.existsSync(), isTrue);
+      }
+      await _complete(container);
+    },
+  );
+
+  test(
+    'a stop requested behind cleanup reaches queued sync; sync resets it',
+    () async {
+      final orphan = write('support/file/orphan.txt', 5);
+      final entered = Completer<void>();
+      final release = Completer<void>();
+      final cancellation = getIt<SyncCancellation>();
+      final repository = _DiaryRepository();
+      repository.beforeCollect = () async {
+        entered.complete();
+        await release.future;
+        expect(cancellation.isRequested, isTrue);
+        repository.beforeCollect = null;
+      };
+      getIt.registerSingleton<DiaryRepository>(repository);
+      final container = ProviderContainer.test(
+        overrides: [
+          storageSyncBusyProvider.overrideWith((ref) => false),
+          storageReportProvider.overrideWith(
+            (ref) => Stream.value(
+              _report(
+                candidates: {
+                  .unusedMedia: [
+                    StorageCandidate(
+                      path: orphan.path,
+                      bytes: 5,
+                      area: .file,
+                      mediaName: 'orphan.txt',
+                    ),
+                  ],
+                },
+              ),
+            ),
+          ),
+        ],
+      );
+      _listen(container);
+      await _complete(container);
+      final clean = container
+          .read(storageSelectionProvider.notifier)
+          .clean(_items(container));
+      await entered.future;
+      var started = false;
+      final sync = runSyncExclusive(() async {
+        started = true;
+        return cancellation.isRequested;
+      });
+      cancellation.requestStop();
+      await pumpEventQueue();
+      expect(started, isFalse);
+      release.complete();
+      expect(await clean, 5);
+      expect(await sync, isTrue);
+      expect(cancellation.isRequested, isFalse);
+      await _complete(container);
+    },
+  );
+
+  test(
+    'cleanup waits for all Markdown import batches before revalidating media',
+    () async {
+      await AppFiles.initCreateDir();
+      final source = Directory('${root.path}/source')..createSync();
+      File('${source.path}/photo.jpg').writeAsBytesSync([1, 2, 3]);
+      for (var i = 0; i < 101; i++) {
+        // Unique source paths prevent the import stage's deduplication.
+        File('${source.path}/photo-$i.jpg').writeAsBytesSync([1, 2, 3]);
+        File('${source.path}/$i.md')
+            .writeAsStringSync('![photo](photo-$i.jpg)');
+      }
+      final repository = _DiaryRepository();
+      getIt.registerSingleton<DiaryRepository>(repository);
+      getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
+      final media = _ImportMedia();
+      final importing = MarkdownImporter(
+        diaries: repository,
+        categories: _Categories(),
+        places: _Places(),
+        media: media,
+      ).run(MarkdownImportSource.scan(source));
+      await media.stagedLast.future;
+      expect(repository.batches.map((batch) => batch.length), [100]);
+      final container = ProviderContainer.test(
+        overrides: [storageSyncBusyProvider.overrideWith((ref) => false)],
+      );
+      _listen(container);
+      final scan = await _complete(container);
+      expect(
+        scan.candidates[StorageCleanupKind.unusedMedia]!.files.single.mediaName,
+        'image-101.jpg',
+      );
+      var cleaned = false;
+      final clean = container
+          .read(storageSelectionProvider.notifier)
+          .clean(_items(container))
+          .then((bytes) {
+            cleaned = true;
+            return bytes;
+          });
+      await pumpEventQueue();
+      expect(cleaned, isFalse);
+      media.release.complete();
+      expect((await importing).diaries, 101);
+      expect(repository.batches.map((batch) => batch.length), [100, 1]);
+      expect(await clean, 0);
+      for (var i = 1; i <= 101; i++) {
+        expect(
+          File(AppFiles.getRealPath('image', 'image-$i.jpg')).existsSync(),
+          isTrue,
+        );
+      }
+      await _complete(container);
+    },
+  );
 
   test('unfinished kinds and double clicks cannot start deletion', () async {
     final file = write('support/model/incomplete.part', 4);
