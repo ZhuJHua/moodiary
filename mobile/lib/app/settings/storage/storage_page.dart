@@ -352,7 +352,7 @@ class _Category extends ConsumerWidget {
       5 => const FontRoute(),
       _ => null,
     };
-    // 可清理量叠在尺寸正下方，两行都右对齐；两行小字仍在单行行高内，行高不跳
+    // 可清理量叠在尺寸正下方，两行都右对齐，共用单行行高
     final size = Column(
       mainAxisSize: .min,
       crossAxisAlignment: .end,

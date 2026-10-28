@@ -158,7 +158,7 @@ void main() {
     });
 
     for (final version in ['2.9.1+120', '2.10.0+130']) {
-      test('$version 不再清理模型和旧键', () async {
+      test('$version 保留模型文件和旧键', () async {
         await VersionMigrator.merge(lastAppVersion: version);
 
         for (final name in [...moodFiles, embeddingFile]) {

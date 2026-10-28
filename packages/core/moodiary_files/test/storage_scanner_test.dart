@@ -89,7 +89,7 @@ void main() {
   });
 
   test(
-    'one walk classifies candidates and publishes only finalized kinds',
+    'candidates match references and publish only for finalized kinds',
     () async {
       final input = StorageScanInput(
         referencedMedia: (
@@ -160,6 +160,12 @@ void main() {
       for (final report in events) {
         for (final kind in StorageCleanupKind.values) {
           expect(report.candidates.containsKey(kind), report.finished(kind));
+          if (report.finished(kind)) {
+            expect(
+              report.candidates[kind]!.files.map((file) => file.path),
+              events.last.candidates[kind]!.files.map((file) => file.path),
+            );
+          }
         }
       }
       final report = events.last;
@@ -339,50 +345,44 @@ void main() {
     expect(report.bytes[StorageArea.model], 8);
   });
 
-  test(
-    'worker sends candidates once; main isolate retains cumulative lists',
-    () async {
-      write('support/model/old.bin', 5);
-      for (var i = 0; i < 450; i++) {
-        write('support/image/$i.jpg', 1);
+  test('each candidate list crosses the isolate once', () async {
+    write('support/model/old.bin', 5);
+    for (var i = 0; i < 450; i++) {
+      write('support/image/$i.jpg', 1);
+    }
+    final payloads = <StorageReport>[];
+    final reports = await StorageScanner(
+      supportPath: '${root.path}/support',
+      cachePath: '${root.path}/cache',
+      onWorkerReport: payloads.add,
+    ).scan(StorageScanInput()).toList();
+    final sent = <StorageCleanupKind>{};
+    var previousDone = <StorageArea>{};
+    for (final payload in payloads) {
+      for (final kind in payload.candidates.keys) {
+        expect(sent.add(kind), isTrue, reason: '$kind was sent twice');
+        expect(previousDone.containsAll(kind.areas), isFalse);
+        expect(payload.done.containsAll(kind.areas), isTrue);
       }
-      final payloads = <StorageReport>[];
-      final reports = await StorageScanner(
-        supportPath: '${root.path}/support',
-        cachePath: '${root.path}/cache',
-        onWorkerReport: payloads.add,
-      ).scan(StorageScanInput()).toList();
-      final sent = <StorageCleanupKind>{};
-      var previousDone = <StorageArea>{};
-      for (final payload in payloads) {
-        for (final kind in payload.candidates.keys) {
-          expect(sent.add(kind), isTrue, reason: '$kind was sent twice');
-          expect(previousDone.containsAll(kind.areas), isFalse);
-          expect(payload.done.containsAll(kind.areas), isTrue);
-        }
-        if (payload.done.length == previousDone.length) {
-          expect(payload.candidates, isEmpty);
-        }
-        previousDone = payload.done;
+      if (payload.done.length == previousDone.length) {
+        expect(payload.candidates, isEmpty);
       }
-      expect(sent, StorageCleanupKind.values.toSet());
-      expect(
-        payloads.where((p) => p.candidates.isEmpty).length,
-        greaterThan(2),
-      );
-      for (final report in reports.where(
-        (r) => r.done.contains(StorageArea.model),
-      )) {
-        expect(report.candidates[StorageCleanupKind.unusedModel]!.bytes, 5);
-      }
-      expect(
-        reports.last.candidates[StorageCleanupKind.unusedMedia]!.files,
-        hasLength(450),
-      );
-    },
-  );
+      previousDone = payload.done;
+    }
+    expect(sent, StorageCleanupKind.values.toSet());
+    expect(payloads.where((p) => p.candidates.isEmpty).length, greaterThan(2));
+    for (final report in reports.where(
+      (r) => r.done.contains(StorageArea.model),
+    )) {
+      expect(report.candidates[StorageCleanupKind.unusedModel]!.bytes, 5);
+    }
+    expect(
+      reports.last.candidates[StorageCleanupKind.unusedMedia]!.files,
+      hasLength(450),
+    );
+  });
 
-  test('without() drops cleaned kinds and their bytes', () {
+  test('cleaned kinds are removed from candidates and area totals', () {
     final report = StorageReport(
       bytes: const {StorageArea.model: 100, StorageArea.cache: 50},
       done: StorageArea.values.toSet(),

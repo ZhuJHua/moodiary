@@ -1,6 +1,6 @@
 import 'package:mui/mui.dart';
 
-/// Stable category identities from the approved storage design, in display order.
+/// Category colors in storage display order.
 abstract final class StoragePalette {
   static const _light = [
     Color(0xffc27428),

@@ -126,9 +126,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('an unfinished kind has no row instead of a placeholder', (
-    tester,
-  ) async {
+  testWidgets('an unfinished kind has no row', (tester) async {
     await show(tester, kind: .cache, loading: true);
     expect(find.byType(SettingCheckboxListTile), findsNothing);
     expect(find.text('建议清理'), findsNothing);
@@ -182,7 +180,7 @@ void main() {
         '媒体',
         '字体',
       ]);
-      // 可清理量在右侧尺寸下方，不占副标题，行高不跳
+      // 可清理量在右侧尺寸下方，不占副标题
       expect(tiles[2].title, '缓存');
       expect(
         find.descendant(

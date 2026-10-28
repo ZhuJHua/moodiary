@@ -43,7 +43,7 @@ void main() {
     expect(calls, [true]);
     expect(mark(tester).selected, isTrue);
     expect(find.byIcon(LucideIcons.check), findsOneWidget);
-    // 和开关行一致：选中状态只由勾选标记表达，不给整行着色（着色会盖住分割线）
+    // 选中状态只由勾选标记表达，整行着色会盖住分割线
     expect(
       tester.widget<SettingListTile>(find.byType(SettingListTile)).tileColor,
       isNull,

@@ -37,9 +37,7 @@ class StorageDisplay {
   const StorageDisplay({this.report, this.scanning = true, this.error});
 }
 
-/// Rescans (after a clean, or coming back from a linked page) keep the last
-/// finished report on screen and swap it only when the new scan is done, so
-/// rows and sizes don't drop to zero and grow back.
+/// Rescans keep the last finished report on screen until the new scan completes.
 @riverpod
 class StorageDisplayController extends _$StorageDisplayController {
   @override
@@ -59,7 +57,7 @@ class StorageDisplayController extends _$StorageDisplayController {
     );
   }
 
-  /// Cleaned kinds leave the screen at once instead of waiting for the rescan.
+  /// Cleaned kinds leave the screen before the rescan completes.
   void dropCleaned(Set<StorageCleanupKind> kinds) {
     final report = state.report;
     if (report == null || kinds.isEmpty) return;
@@ -112,8 +110,7 @@ class Reclaimable {
       0;
 }
 
-/// UI projection of the shown report: a row exists only once its kind is
-/// finished and has something to clean, so rows never flash in and out.
+/// A cleanup row requires a finished kind with nonzero reclaimable bytes.
 List<Reclaimable> storageReclaimables(
   StorageReport? report, {
   required bool syncBusy,

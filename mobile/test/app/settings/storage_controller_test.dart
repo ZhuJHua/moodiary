@@ -401,7 +401,6 @@ void main() {
     await _complete(container);
     expect(scans, 2);
     expect(_items(container), isEmpty);
-    // A regrown kind is immediately selectable; there is no retained cleaned id.
     file.writeAsBytesSync([1]);
     container.invalidate(storageReportProvider);
     await _complete(container);
@@ -802,7 +801,7 @@ void main() {
     },
   );
 
-  test('sync busy disables and skips unused media too', () async {
+  test('sync busy disables and skips unused media', () async {
     final file = write('support/file/incoming.txt', 5);
     final container = ProviderContainer.test(
       overrides: [
