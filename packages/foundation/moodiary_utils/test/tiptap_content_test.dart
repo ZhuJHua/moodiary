@@ -14,6 +14,79 @@ Map<String, dynamic> _p(List<Map<String, dynamic>> inline) => {
 Map<String, dynamic> _text(String t) => {'type': 'text', 'text': t};
 
 void main() {
+  group('解析复用', () {
+    test('同一正文引用复用实例，内容相等的新字符串重新解析', () {
+      final content = _doc([
+        _p([_text('正文')]),
+      ]);
+      final before = TiptapContent.parseCount;
+      final parsed = TiptapContent.parse(content);
+      expect(TiptapContent.parse(content), same(parsed));
+      expect(TiptapContent.parseCount - before, 1);
+
+      final fresh = String.fromCharCodes(content.codeUnits);
+      expect(fresh, content);
+      expect(identical(fresh, content), isFalse);
+      expect(TiptapContent.parse(fresh), isNot(same(parsed)));
+      expect(TiptapContent.parseCount - before, 2);
+      expect(TiptapContent.parse(content), isNot(same(parsed)));
+      expect(TiptapContent.parseCount - before, 3);
+    });
+
+    test('归一未改时返回原字符串，旧版归一与 v2 字符串相等', () {
+      final content = jsonEncode(
+        TiptapContent.newDoc([
+          _p([_text('正文')]),
+        ]),
+      );
+      expect(TiptapContent.normalize(content), same(content));
+      final legacy = _doc([
+        _p([_text('正文')]),
+      ]);
+      final parsed = TiptapContent.parse(legacy);
+      expect(
+        parsed.normalized,
+        jsonEncode({
+          'type': 'doc',
+          'content': [
+            _p([_text('正文')]),
+          ],
+          'attrs': {'v': 2},
+        }),
+      );
+      expect(TiptapContent.normalize(legacy), same(parsed.normalized));
+      expect(TiptapContent.normalize('不是 JSON'), same('不是 JSON'));
+    });
+
+    test('补媒体和改名不污染已缓存的正文', () {
+      final content = jsonEncode(
+        TiptapContent.newDoc([
+          {
+            'type': 'image',
+            'attrs': {'src': 'image-a.jpg', 'name': '原名'},
+          },
+        ]),
+      );
+      final parsed = TiptapContent.parse(content);
+      final added = TiptapContent.ensureMedia(
+        content,
+        images: ['image-b.jpg'],
+        audios: [],
+        videos: [],
+      );
+      final renamed = TiptapContent.mapMediaNames(content, (_, _, _) => '新名');
+      expect(TiptapContent.parse(content), same(parsed));
+      expect(parsed.normalized, same(content));
+      expect(parsed.media.images, ['image-a.jpg']);
+      expect(parsed.mediaNames, {'image-a.jpg': '原名'});
+      expect(TiptapContent.parse(added).media.images, [
+        'image-a.jpg',
+        'image-b.jpg',
+      ]);
+      expect(TiptapContent.parse(renamed).mediaNames, {'image-a.jpg': '新名'});
+    });
+  });
+
   group('TiptapContent — TipTap 文档', () {
     test('plainText：文本块之间一个换行，无名媒体与分隔线不占行', () {
       final c = TiptapContent.parse(

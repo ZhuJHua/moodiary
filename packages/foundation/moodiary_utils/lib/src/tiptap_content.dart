@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:characters/characters.dart';
+import 'package:flutter/foundation.dart';
 
 import 'markdown_converter.dart';
 import 'media_markup.dart';
@@ -20,8 +21,18 @@ class TiptapContent {
 
   TiptapContent._(this._raw, this._doc);
 
-  factory TiptapContent.parse(String content) =>
-      TiptapContent._(content, _tryDoc(content));
+  // 正文沿 copyWith 原引用流转；派生值只依赖正文，复用最近一次解析。
+  static TiptapContent? _last;
+
+  @visibleForTesting
+  static int parseCount = 0;
+
+  factory TiptapContent.parse(String content) {
+    final last = _last;
+    if (last != null && identical(last._raw, content)) return last;
+    parseCount++;
+    return _last = TiptapContent._(content, _tryDoc(content));
+  }
 
   bool get isDoc => _doc != null;
 
@@ -40,12 +51,12 @@ class TiptapContent {
     null => null,
   };
 
-  static String normalize(String content) {
-    final c = TiptapContent.parse(content);
-    return c._doc == null || identical(c._v2, c._doc)
-        ? content
-        : jsonEncode(c._v2);
-  }
+  late final String normalized = _doc == null || identical(_v2, _doc)
+      ? _raw
+      : jsonEncode(_v2);
+
+  static String normalize(String content) =>
+      TiptapContent.parse(content).normalized;
 
   static Map<String, dynamic> normalizeDoc(Map<String, dynamic> doc) {
     final attrs = doc['attrs'];

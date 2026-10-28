@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:drift/drift.dart'
-    show ApplyInterceptor, QueryExecutor, QueryInterceptor, Value;
+    show ApplyInterceptor, OrderingTerm, QueryExecutor, QueryInterceptor, Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
@@ -134,6 +134,279 @@ void main() {
   Future<List<Diary>> search(String word) async => [
     for (final hit in await repo.searchDiaries(query: word)) hit.diary,
   ];
+
+  group('保存只解析一次正文', () {
+    freshDatabasePerTest();
+
+    String fresh(String s) => String.fromCharCodes(s.codeUnits);
+    Diary freshContent(Diary d) => d.copyWith(content: fresh(d.content));
+
+    // 保存优化前的漏斗：每一步独立派生，归一改动时才重算媒体列。
+    Diary oldRederived(Diary d) {
+      final derived = DiaryContent.of(freshContent(d));
+      final media = derived.media;
+      return d.copyWith(
+        contentText: derived.plainText,
+        imageName: media.images,
+        audioName: media.audios,
+        videoName: media.videos,
+        fileName: media.files,
+      );
+    }
+
+    Diary oldCanonical(Diary input) {
+      final d = freshContent(input);
+      final content = d.type == 'tiptap'
+          ? TiptapContent.normalize(d.content)
+          : d.content;
+      if (!identical(content, d.content)) {
+        return oldRederived(d.copyWith(content: content));
+      }
+      final text = DiaryContent.of(freshContent(d)).plainText;
+      return text == d.contentText ? d : d.copyWith(contentText: text);
+    }
+
+    List<Diary> fixtures() => [
+      makeDiary(
+        'v2',
+        '过期纯文本',
+        content: v2Doc([
+          {
+            'type': 'heading',
+            'attrs': {'level': 2},
+            'content': [
+              {'type': 'text', 'text': '标题'},
+            ],
+          },
+          {
+            'type': 'paragraph',
+            'content': [
+              {'type': 'text', 'text': '正文'},
+              for (final id in ['target-b', 'target-a', 'target-b'])
+                {
+                  'type': 'diaryLink',
+                  'attrs': {'id': id, 'label': '链接'},
+                },
+            ],
+          },
+          for (final (type, src, name) in [
+            ('image', 'image-b.jpg', '封面'),
+            ('image', 'image-a.jpg', '内页'),
+            ('image', 'image-b.jpg', '重复名'),
+            ('video', 'video-a.mp4', '视频'),
+            ('audio', 'audio-a.m4a', '录音'),
+            ('attachment', 'file-a.pdf', '附件'),
+          ])
+            {
+              'type': type,
+              'attrs': {'src': src, 'name': name},
+            },
+        ]),
+        images: ['image-b.jpg', 'image-a.jpg'],
+        videos: ['video-a.mp4'],
+        audios: ['audio-a.m4a'],
+        files: ['file-a.pdf'],
+        tags: ['乙', '甲', '乙'],
+      ),
+      makeDiary(
+        'v1',
+        '过期纯文本',
+        content: v1Doc([
+          {
+            'type': 'paragraph',
+            'content': [
+              {'type': 'text', 'text': '旧版 image-legacy-rescue.jpg'},
+              {
+                'type': 'diaryLink',
+                'attrs': {
+                  'id': 'target-a',
+                  'label': '链接',
+                  'mentionSuggestionChar': '[',
+                },
+              },
+            ],
+          },
+          audioNode('audio-old.m4a', '旧录音')
+            ..['attrs'] = {'filename': 'audio-old.m4a', 'name': '旧录音'},
+        ]),
+        audios: ['audio-old.m4a'],
+        images: ['image-legacy-rescue.jpg'],
+        tags: ['旧版'],
+      ),
+      makeDiary(
+        'salvage',
+        '过期纯文本',
+        content: v2Doc([
+          {
+            'type': 'paragraph',
+            'content': [
+              {'type': 'text', 'text': '仅在文字引用 image-rescue.jpg'},
+            ],
+          },
+        ]),
+        images: ['image-rescue.jpg'],
+        tags: ['救回'],
+      ),
+      makeDiary(
+        'rich',
+        '过期纯文本',
+        images: ['image-rich.jpg'],
+        tags: ['富文本'],
+      ).copyWith(
+        type: 'richText',
+        content: jsonEncode([
+          {'insert': '富文本正文'},
+          {
+            'insert': {'image': 'image-rich.jpg'},
+          },
+          {'insert': '\n'},
+        ]),
+      ),
+      makeDiary(
+        'markdown',
+        '过期纯文本',
+        images: ['image-x.jpg'],
+        tags: ['Markdown'],
+      ).copyWith(type: 'markdown', content: '# 标题\n![](image-x.jpg)'),
+    ];
+
+    Future<void> expectStored(Diary expected) async {
+      expect(await repo.getDiaryByBusinessId(expected.id), expected);
+      final mediaNames = expected.type == 'tiptap'
+          ? TiptapContent.parse(fresh(expected.content)).mediaNames
+          : const <String, String>{};
+      final expectedMedia = [
+        for (final (kind, names) in [
+          ('audio', expected.audioName),
+          ('file', expected.fileName),
+          ('image', expected.imageName),
+          ('video', expected.videoName),
+        ])
+          for (var i = 0; i < names.length; i++)
+            (kind, i, names[i], mediaNames[names[i]]),
+      ];
+      final media =
+          await (db.select(db.diaryMedia)
+                ..where((m) => m.diaryId.equals(expected.id))
+                ..orderBy([
+                  (m) => OrderingTerm.asc(m.kind),
+                  (m) => OrderingTerm.asc(m.seq),
+                ]))
+              .get();
+      expect(
+        media.map((m) => (m.kind, m.seq, m.fileName, m.name)),
+        expectedMedia,
+      );
+      final links =
+          await (db.select(db.diaryLinks)
+                ..where((l) => l.srcId.equals(expected.id))
+                ..orderBy([(l) => OrderingTerm.asc(l.dstId)]))
+              .get();
+      final expectedLinks = DiaryContent.of(
+        freshContent(expected),
+      ).links.toList()..sort();
+      expect(links.map((l) => (l.srcId, l.dstId)), [
+        for (final id in expectedLinks) (expected.id, id),
+      ]);
+      final tags =
+          await (db.select(db.diaryTags)
+                ..where((t) => t.diaryId.equals(expected.id))
+                ..orderBy([(t) => OrderingTerm.asc(t.seq)]))
+              .get();
+      expect(tags.map((t) => (t.seq, t.tag)), [
+        for (var i = 0; i < expected.tags.length; i++) (i, expected.tags[i]),
+      ]);
+    }
+
+    for (final mode in ['insert', 'update-inline', 'update-skip']) {
+      test('$mode：正文、媒体救回、子表和事件与旧算法完全一致', () async {
+        final incoming = fixtures();
+        final expected = incoming.map(oldCanonical).toList();
+        if (mode != 'insert') {
+          await repo.insertDiaries([
+            for (final d in expected)
+              makeDiary(
+                d.id,
+                '待替换',
+                images: ['image-stale.jpg'],
+                tags: ['待替换'],
+                linkTo: mode == 'update-skip'
+                    ? DiaryContent.of(freshContent(d)).links
+                    : ['stale-target'],
+              ),
+          ]);
+        }
+        final events = <DiaryEvent>[];
+        final sub = repo.diaryEvents.listen(events.add);
+        addTearDown(sub.cancel);
+        if (mode == 'insert') {
+          await repo.insertDiaries(
+            incoming.map(freshContent).toList(),
+            index: .inline,
+          );
+        } else {
+          for (final d in incoming) {
+            await repo.updateADiary(
+              newDiary: freshContent(d),
+              index: mode == 'update-inline' ? .inline : .skip,
+            );
+          }
+        }
+        await pumpEventQueue();
+        expect(events, hasLength(expected.length));
+        expect(
+          events.map(
+            (e) => switch (e) {
+              DiaryCreated(:final diary) when mode == 'insert' => diary,
+              DiaryUpdated(:final diary) when mode != 'insert' => diary,
+              _ => fail('保存事件类型错误：$e'),
+            },
+          ),
+          expected,
+        );
+        for (final d in expected) {
+          await expectStored(d);
+        }
+      });
+    }
+
+    test('编辑器派生媒体到 inline 更新只解析一次', () async {
+      final d = freshContent(makeDiary('once', '正文', images: ['image-a.jpg']));
+      final before = TiptapContent.parseCount;
+      await repo.updateADiary(newDiary: withDerivedMedia(d), index: .inline);
+      expect(TiptapContent.parseCount - before, 1);
+    });
+
+    test('批量插入每篇 v2 只解析一次，不依赖最近一次缓存', () async {
+      final diaries = [
+        for (var i = 0; i < 5; i++)
+          freshContent(
+            makeDiary(
+              'batch-$i',
+              '正文 $i',
+              linkTo: ['target-$i'],
+              images: ['image-$i.jpg'],
+            ),
+          ),
+      ];
+      final before = TiptapContent.parseCount;
+      await repo.insertDiaries(diaries, index: .inline);
+      expect(TiptapContent.parseCount - before, diaries.length);
+    });
+
+    for (final insert in [true, false]) {
+      test('${insert ? '插入' : '更新'}旧版正文解析原串和归一后的串各一次', () async {
+        final legacy = freshContent(fixtures()[1]);
+        final before = TiptapContent.parseCount;
+        if (insert) {
+          await repo.insertADiary(legacy);
+        } else {
+          await repo.updateADiary(newDiary: withDerivedMedia(legacy));
+        }
+        expect(TiptapContent.parseCount - before, 2);
+      });
+    }
+  });
 
   group('检索', () {
     freshDatabasePerTest();
