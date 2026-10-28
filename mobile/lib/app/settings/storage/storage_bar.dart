@@ -126,10 +126,11 @@ class _StoragePainter extends CustomPainter {
     final active = values.where((v) => v > 0).length;
     final filled = (total / denominator * size.width).clamp(0.0, size.width);
     final room = math.max(0.0, filled - math.max(0, active - 1) * 2);
+    final widths = storageSegmentWidths(values, room);
     var x = 0.0;
     for (var i = 0; i < values.length; i++) {
       if (values[i] <= 0) continue;
-      final width = total > 0 ? values[i] / total * room : 0.0;
+      final width = widths[i];
       final rect = Rect.fromLTWH(x, 0, width, size.height);
       canvas.drawRect(rect, Paint()..color = colors[i]);
       if (sweep != null) {
@@ -159,4 +160,42 @@ class _StoragePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_StoragePainter oldDelegate) => true;
+}
+
+const double _kMinSegmentWidth = 8;
+
+/// 按比例分配 [room]，但非零分类至少 [minWidth] 宽，差额从较大的分类里按比例扣；
+/// 放不下所有最小宽度时平分。
+@visibleForTesting
+List<double> storageSegmentWidths(
+  List<double> values,
+  double room, {
+  double minWidth = _kMinSegmentWidth,
+}) {
+  final widths = List<double>.filled(values.length, 0);
+  final active = [
+    for (var i = 0; i < values.length; i++)
+      if (values[i] > 0) i,
+  ];
+  if (active.isEmpty || room <= 0) return widths;
+  if (active.length * minWidth >= room) {
+    for (final i in active) {
+      widths[i] = room / active.length;
+    }
+    return widths;
+  }
+  final pinned = <int>{};
+  while (true) {
+    final free = room - pinned.length * minWidth;
+    final rest = active.where((i) => !pinned.contains(i));
+    final sum = rest.fold(0.0, (a, i) => a + values[i]);
+    final newlyPinned = rest.where((i) => values[i] / sum * free < minWidth);
+    if (newlyPinned.isEmpty) {
+      for (final i in active) {
+        widths[i] = pinned.contains(i) ? minWidth : values[i] / sum * free;
+      }
+      return widths;
+    }
+    pinned.addAll(newlyPinned.toList());
+  }
 }

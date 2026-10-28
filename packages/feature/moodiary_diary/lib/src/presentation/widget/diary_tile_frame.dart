@@ -67,7 +67,7 @@ class DiaryTileFrame extends StatelessWidget {
                   right: _kMarkInset,
                   width: _kMarkSize,
                   height: _kMarkSize,
-                  child: DiarySelectMark(selected: selected),
+                  child: MSelectMark(selected: selected),
                 ),
             ],
           ),
@@ -93,31 +93,5 @@ class DiarySyncBadge extends StatelessWidget {
             child: CircularProgressIndicator(strokeWidth: 1.6, color: color),
           )
         : Icon(LucideIcons.cloudUpload, size: 14, color: color);
-  }
-}
-
-class DiarySelectMark extends StatelessWidget {
-  final bool selected;
-
-  const DiarySelectMark({super.key, required this.selected});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    return AnimatedContainer(
-      duration: Durations.short3,
-      curve: Curves.easeOut,
-      decoration: BoxDecoration(
-        shape: .circle,
-        color: selected ? colors.primary : colors.surfaceContainerLowest,
-        border: .all(
-          color: selected ? colors.primary : colors.outline,
-          width: 1.25,
-        ),
-      ),
-      child: selected
-          ? Icon(LucideIcons.check, size: 12, color: colors.onPrimary)
-          : null,
-    );
   }
 }

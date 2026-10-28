@@ -27,6 +27,7 @@ export 'components/basic/overlay_label.dart';
 export 'components/basic/popup.dart';
 export 'components/basic/pull_to_refresh.dart';
 export 'components/basic/segmented.dart';
+export 'components/basic/select_mark.dart';
 export 'components/basic/sheet.dart';
 export 'components/basic/skeleton.dart';
 export 'components/basic/text.dart';

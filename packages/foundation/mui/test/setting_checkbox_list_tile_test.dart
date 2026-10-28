@@ -26,46 +26,45 @@ void main() {
         ),
       );
 
-  testWidgets('row and round trailing checkbox toggle once per tap', (
-    tester,
-  ) async {
+  MSelectMark mark(WidgetTester tester) =>
+      tester.widget<MSelectMark>(find.byType(MSelectMark));
+
+  testWidgets('row and round select mark toggle once per tap', (tester) async {
     final calls = <bool>[];
     await pumpTile(tester, onChanged: calls.add);
     final tile = tester.widget<SettingListTile>(find.byType(SettingListTile));
     expect(tile.leading, isNull);
-    expect(tile.trailing, isA<Checkbox>());
-    expect(
-      tester.widget<Checkbox>(find.byType(Checkbox)).shape,
-      isA<CircleBorder>(),
-    );
+    expect(find.byType(Checkbox), findsNothing);
+    expect(mark(tester).selected, isFalse);
 
     await tester.tap(find.text('Clean cache'));
     await tester.pump();
     expect(calls, [true]);
-    expect(tester.widget<Checkbox>(find.byType(Checkbox)).value, isTrue);
-    // 和开关行一致：选中状态只由勾选框表达，不给整行着色（着色会盖住分割线）
-    final selectedTile = tester.widget<SettingListTile>(
-      find.byType(SettingListTile),
+    expect(mark(tester).selected, isTrue);
+    expect(find.byIcon(LucideIcons.check), findsOneWidget);
+    // 和开关行一致：选中状态只由勾选标记表达，不给整行着色（着色会盖住分割线）
+    expect(
+      tester.widget<SettingListTile>(find.byType(SettingListTile)).tileColor,
+      isNull,
     );
-    expect(selectedTile.tileColor, isNull);
-    expect(selectedTile.selected, isFalse);
 
-    await tester.tap(find.byType(Checkbox));
+    await tester.tap(find.byType(MSelectMark));
     await tester.pump();
     expect(calls, [true, false]);
-    expect(tester.widget<Checkbox>(find.byType(Checkbox)).value, isFalse);
+    expect(mark(tester).selected, isFalse);
   });
 
-  testWidgets('null onChanged disables both row and checkbox', (tester) async {
+  testWidgets('null onChanged disables the row and dims the mark', (
+    tester,
+  ) async {
     await pumpTile(tester);
     expect(
       tester.widget<SettingListTile>(find.byType(SettingListTile)).onTap,
       isNull,
     );
-    expect(tester.widget<Checkbox>(find.byType(Checkbox)).onChanged, isNull);
+    expect(mark(tester).enabled, isFalse);
     await tester.tap(find.text('Clean cache'));
-    await tester.tap(find.byType(Checkbox));
     await tester.pump();
-    expect(tester.widget<Checkbox>(find.byType(Checkbox)).value, isFalse);
+    expect(mark(tester).selected, isFalse);
   });
 }

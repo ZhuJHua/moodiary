@@ -122,6 +122,10 @@ class StorageController extends _$StorageController {
 
   @override
   StorageState build() {
+    // invalidate 后 Riverpod 在同一个实例上重跑 build：清掉上一轮的记录，
+    // 否则这些扫描不会重启，条目一直停在“统计中”；旧一轮的异步结果按代号丢弃
+    _started.clear();
+    _generation++;
     const initial = StorageState(
       items: [
         Reclaimable(id: 'models', area: .model, kind: .unusedModel),

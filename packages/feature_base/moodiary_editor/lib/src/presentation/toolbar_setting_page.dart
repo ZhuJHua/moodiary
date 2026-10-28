@@ -51,7 +51,6 @@ class _ToolbarSettingPageState extends State<ToolbarSettingPage> {
   @override
   Widget build(BuildContext context) {
     final t = context.l10n.editor.toolbar;
-    final colors = context.theme.colors;
     final removing = _removing;
     final available = [
       for (final tool in ToolbarTool.values)
@@ -123,16 +122,20 @@ class _ToolbarSettingPageState extends State<ToolbarSettingPage> {
                     return SettingListTile(
                       leading: Icon(tool.icon),
                       title: tool.label(context),
-                      tileColor: selected ? colors.secondaryContainer : null,
                       onTap: removing == null ? null : () => _toggle(tool),
                       trailing: AnimatedSwitcher(
                         duration: const Duration(milliseconds: 150),
                         child: removing == null
                             ? handle
-                            : Checkbox(
-                                shape: const CircleBorder(),
-                                value: selected,
-                                onChanged: (_) => _toggle(tool),
+                            // 和拖动手柄同占 48 宽的格子，标记居中，切换时位置不跳
+                            : SizedBox.square(
+                                dimension: 48,
+                                child: Center(
+                                  child: SizedBox.square(
+                                    dimension: 22,
+                                    child: MSelectMark(selected: selected),
+                                  ),
+                                ),
                               ),
                       ),
                       contentPadding: const .only(left: 16, right: 4),

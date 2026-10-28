@@ -253,10 +253,9 @@ class SettingCheckboxListTile extends StatelessWidget {
       leading: secondary,
       isFirst: isSingle == true ? true : isFirst,
       isLast: isSingle == true ? true : isLast,
-      trailing: Checkbox(
-        shape: const CircleBorder(),
-        value: value,
-        onChanged: onChanged == null ? null : (value) => onChanged(value!),
+      trailing: SizedBox.square(
+        dimension: 22,
+        child: MSelectMark(selected: value, enabled: onChanged != null),
       ),
       onTap: onChanged == null ? null : () => onChanged(!value),
     );

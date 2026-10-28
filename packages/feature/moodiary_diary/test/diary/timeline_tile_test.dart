@@ -3,7 +3,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 import 'package:moodiary_diary/src/presentation/widget/timeline_tile.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
@@ -109,7 +108,7 @@ void main() {
     await t.pumpWidget(
       wrap(tile(category: cat(), selecting: true, selected: true)),
     );
-    expect(find.byType(DiarySelectMark), findsOneWidget);
+    expect(find.byType(MSelectMark), findsOneWidget);
     expect(find.byIcon(LucideIcons.check), findsOneWidget);
     expect(find.text('work'), findsNothing);
   });
@@ -118,7 +117,7 @@ void main() {
     await t.pumpWidget(
       wrap(tile(category: cat(), selecting: true, selected: false)),
     );
-    expect(find.byType(DiarySelectMark), findsOneWidget);
+    expect(find.byType(MSelectMark), findsOneWidget);
     expect(find.byIcon(LucideIcons.check), findsNothing);
   });
 
