@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:injectable/injectable.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_http/moodiary_http.dart';
@@ -96,6 +97,17 @@ class EmbeddingModelManager {
     return 'https://$host/$hfPath';
   }
 
+  static final _activeParts = <String>{};
+
+  /// `.part` files a running download or probe still owns. A stalled download
+  /// can leave its file untouched for a long time, so age alone can't tell
+  /// storage cleanup that it is abandoned.
+  static bool ownsPartialDownload(String path) => _activeParts.contains(path);
+
+  @visibleForTesting
+  static void debugHoldPartialDownload(String path, {bool held = true}) =>
+      held ? _activeParts.add(path) : _activeParts.remove(path);
+
   Future<void> download(
     EmbeddingModelSpec spec, {
     void Function(int received, int total)? onProgress,
@@ -104,6 +116,22 @@ class EmbeddingModelManager {
     if (isDownloaded(spec)) return;
     final modelPath = modelPathOf(spec);
     final tokenizerPath = tokenizerPathOf(spec);
+    final parts = {'$modelPath.part', '$tokenizerPath.part'};
+    _activeParts.addAll(parts);
+    try {
+      await _download(spec, modelPath, tokenizerPath, onProgress, cancel);
+    } finally {
+      _activeParts.removeAll(parts);
+    }
+  }
+
+  Future<void> _download(
+    EmbeddingModelSpec spec,
+    String modelPath,
+    String tokenizerPath,
+    void Function(int received, int total)? onProgress,
+    CancelToken? cancel,
+  ) async {
     await Directory(modelPath).parent.create(recursive: true);
 
     if (!File(tokenizerPath).existsSync()) {

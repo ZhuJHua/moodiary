@@ -227,6 +227,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       final ext = p.extension(file.path);
       name = 'audio-${uuidV7()}$ext';
       final path = AppFiles.getRealPath('audio', name);
+      MediaHolds.add(.audio, name);
       await File(file.path).copy(path);
       final duration = await probeAudioDuration(path);
       if (duration == null) {

@@ -53,23 +53,29 @@ class DiaryTileFrame extends StatelessWidget {
             width: 1.5,
           ),
         ),
-        child: MInkWell(
-          borderRadius: borderRadius,
-          overlayColor: colors.onSurface.withValues(alpha: 0.06),
-          onTap: onTap,
-          onLongPress: onLongPress,
-          child: Stack(
-            children: [
-              Padding(padding: padding, child: child),
-              if (selecting)
-                Positioned(
-                  top: _kMarkInset,
-                  right: _kMarkInset,
-                  width: _kMarkSize,
-                  height: _kMarkSize,
-                  child: DiarySelectMark(selected: selected),
-                ),
-            ],
+        child: Semantics(
+          container: true,
+          selected: selecting ? selected : null,
+          child: MInkWell(
+            borderRadius: borderRadius,
+            overlayColor: colors.onSurface.withValues(alpha: 0.06),
+            onTap: onTap,
+            onLongPress: onLongPress,
+            child: Stack(
+              children: [
+                Padding(padding: padding, child: child),
+                if (selecting)
+                  Positioned(
+                    top: _kMarkInset,
+                    right: _kMarkInset,
+                    width: _kMarkSize,
+                    height: _kMarkSize,
+                    child: ExcludeSemantics(
+                      child: MSelectMark(selected: selected),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -93,31 +99,5 @@ class DiarySyncBadge extends StatelessWidget {
             child: CircularProgressIndicator(strokeWidth: 1.6, color: color),
           )
         : Icon(LucideIcons.cloudUpload, size: 14, color: color);
-  }
-}
-
-class DiarySelectMark extends StatelessWidget {
-  final bool selected;
-
-  const DiarySelectMark({super.key, required this.selected});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    return AnimatedContainer(
-      duration: Durations.short3,
-      curve: Curves.easeOut,
-      decoration: BoxDecoration(
-        shape: .circle,
-        color: selected ? colors.primary : colors.surfaceContainerLowest,
-        border: .all(
-          color: selected ? colors.primary : colors.outline,
-          width: 1.25,
-        ),
-      ),
-      child: selected
-          ? Icon(LucideIcons.check, size: 12, color: colors.onPrimary)
-          : null,
-    );
   }
 }

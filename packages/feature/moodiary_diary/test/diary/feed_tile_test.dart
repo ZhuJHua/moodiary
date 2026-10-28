@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 import 'package:moodiary_diary/src/presentation/widget/feed_tile.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
@@ -145,7 +144,7 @@ void main() {
         ),
       ),
     );
-    expect(find.byType(DiarySelectMark), findsOneWidget);
+    expect(find.byType(MSelectMark), findsOneWidget);
     expect(find.byIcon(LucideIcons.check), findsOneWidget);
     expect(find.text('#a'), findsOneWidget);
   });

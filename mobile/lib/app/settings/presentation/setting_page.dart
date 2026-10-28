@@ -4,7 +4,6 @@ import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_lock/moodiary_lock.dart';
 import 'package:moodiary_mobile/app/settings/presentation/widget/accent_sheet.dart';
-import 'package:moodiary_mobile/app/settings/presentation/widget/cache_usage_tile.dart';
 import 'package:moodiary_mobile/app/settings/presentation/widget/data_repair_tile.dart';
 import 'package:moodiary_mobile/app/settings/presentation/widget/image_optimize_tile.dart';
 import 'package:moodiary_mobile/app/settings/presentation/widget/language_dialog.dart';
@@ -186,7 +185,16 @@ class _DataSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return MSliverSettingGroup(
       title: context.l10n.app.sectionData,
-      children: const [DataRepairTile(), ImageOptimizeTile(), CacheUsageTile()],
+      children: [
+        const DataRepairTile(),
+        const ImageOptimizeTile(),
+        SettingListTile(
+          title: context.l10n.storage.title,
+          leading: _lead(context, LucideIcons.hardDrive),
+          trailing: _chevron(context),
+          onTap: () => _openSetting(context, const StorageRoute()),
+        ),
+      ],
     );
   }
 }

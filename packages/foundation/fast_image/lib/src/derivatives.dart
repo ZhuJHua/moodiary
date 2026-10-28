@@ -252,19 +252,37 @@ class FastImageDerivatives {
     await for (final entity in dir.list()) {
       if (entity is! File) continue;
       final name = basename(entity.path);
-      if (!_exts.contains(extension(name).toLowerCase())) {
-        if (name.endsWith('.part')) {
-          final stat = await entity.stat();
-          if (now.difference(stat.modified) < _partGrace) continue;
-        }
+      if (isStale(
+        name,
+        alive,
+        modified: (await entity.stat()).modified,
+        now: now,
+      )) {
         out.add(entity.path);
-        continue;
       }
-      final sep = name.lastIndexOf('_');
-      if (sep <= 0) continue;
-      if (!alive.contains(name.substring(0, sep))) out.add(entity.path);
     }
     return out;
+  }
+
+  /// Stat-only counterpart of [stale], for callers already walking the directory.
+  static bool isStale(
+    String name,
+    Set<String> liveStems, {
+    required DateTime modified,
+    required DateTime now,
+  }) {
+    if (!_exts.contains(extension(name).toLowerCase())) {
+      return !name.endsWith('.part') || now.difference(modified) >= _partGrace;
+    }
+    final stem = sourceStem(name);
+    return stem != null && !liveStems.contains(stem);
+  }
+
+  /// Source image stem encoded in a supported derivative filename.
+  static String? sourceStem(String name) {
+    if (!_exts.contains(extension(name).toLowerCase())) return null;
+    final sep = name.lastIndexOf('_');
+    return sep > 0 ? name.substring(0, sep) : null;
   }
 
   static const _partGrace = Duration(hours: 1);

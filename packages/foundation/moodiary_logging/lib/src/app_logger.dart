@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 
+import 'rotating_file_output.dart';
+
 class AppLogger {
   AppLogger._();
 
@@ -25,7 +27,7 @@ class AppLogger {
   static Logger _defaultFactory(String? logFilePath) => Logger(
     output: kDebugMode || logFilePath == null
         ? ConsoleOutput()
-        : FileOutput(file: File(logFilePath)),
+        : RotatingFileOutput(file: File(logFilePath)),
     filter: kDebugMode ? DevelopmentFilter() : ProductionFilter(),
   );
 

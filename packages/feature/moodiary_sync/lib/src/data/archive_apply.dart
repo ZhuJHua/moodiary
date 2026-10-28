@@ -20,18 +20,6 @@ import 'package:moodiary_sync/src/data/sync_stores.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path/path.dart' as p;
 import 'package:pool/pool.dart';
-import 'package:synchronized/synchronized.dart';
-
-final _syncFamilyLock = Lock();
-
-Future<T> runSyncExclusive<T>(Future<T> Function() body) =>
-    _syncFamilyLock.synchronized(() async {
-      try {
-        return await body();
-      } finally {
-        getIt<SyncCancellation>().reset();
-      }
-    });
 
 abstract class ArchiveApplyPolicy {
   const ArchiveApplyPolicy();

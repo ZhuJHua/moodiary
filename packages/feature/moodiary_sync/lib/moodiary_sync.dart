@@ -9,11 +9,13 @@ import 'src/presentation/sync_console_page.dart';
 
 export 'src/application/auto_sync_watcher.dart';
 export 'src/application/sync_controller.dart';
+export 'src/application/sync_runner.dart';
 export 'src/application/tombstone_gc.dart';
 export 'src/data/impl/backup_archive_impl.dart';
 export 'src/data/incremental_engine.dart' hide IncrementalSyncEngine;
 export 'src/data/model/sync_provider.dart';
 export 'src/data/sync.dart';
+export 'src/data/sync_exclusive.dart';
 export 'src/data/sync_logger.dart';
 export 'src/data/sync_provider_scope.dart';
 export 'src/presentation/backup_sync_page.dart';

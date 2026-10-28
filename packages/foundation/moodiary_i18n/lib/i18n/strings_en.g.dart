@@ -45,6 +45,7 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$media$en media = _Translations$media$en._(_root);
 	@override late final _Translations$picker$en picker = _Translations$picker$en._(_root);
 	@override late final _Translations$share$en share = _Translations$share$en._(_root);
+	@override late final _Translations$storage$en storage = _Translations$storage$en._(_root);
 	@override late final _Translations$sync$en sync = _Translations$sync$en._(_root);
 	@override late final _Translations$ui$en ui = _Translations$ui$en._(_root);
 }
@@ -225,8 +226,6 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get imageOptimizeThumbs => 'Thumbnails are ready.';
 	@override String get imageOptimizeFailed => 'Image optimisation failed';
 	@override String get imageOptimizeOk => 'OK';
-	@override String get cacheClear => 'Clear the cache';
-	@override String get cacheCleared => 'Cache cleared';
 	@override String get fontNameFailed => 'Could not read the font name';
 	@override String get fontExists => 'That font is already installed';
 	@override String get routeErrorTitle => 'Page not found';
@@ -1035,13 +1034,7 @@ class _Translations$media$en extends Translations$media$zh {
 	@override String get title => 'Media';
 	@override String get typeImage => 'Image';
 	@override String get typeFile => 'Attachment';
-	@override String get deleteUseLessFile => 'Delete useless file';
 	@override String get empty => 'No media yet';
-	@override String get cleanupScanning => 'Scanning for unused files';
-	@override String get cleanupEmpty => 'No unused files found';
-	@override String get cleanupConfirmTitle => 'Clean up unused files';
-	@override String cleanupConfirmMessage({required Object count, required Object size}) => 'Found ${count} files not referenced by any diary (${size}). Clean them up? This cannot be undone.';
-	@override String cleanupDone({required Object count}) => 'Cleaned up ${count} files';
 	@override String get rename => 'Rename';
 	@override String imageCount({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(count,
 		one: '${count} Photo',
@@ -1110,6 +1103,53 @@ class _Translations$share$en extends Translations$share$zh {
 	@override String get saveToAlbumFailed => 'Could not save — check Photos permission';
 	@override String get subject => 'Shared from Moodiary';
 	@override String generating({required Object format}) => 'Generating ${format}…';
+}
+
+// Path: storage
+class _Translations$storage$en extends Translations$storage$zh {
+	_Translations$storage$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Storage';
+	@override String get used => 'Used';
+	@override String get reclaimable => 'Can free';
+	@override String get model => 'AI models';
+	@override String get media => 'Media';
+	@override String get cache => 'Cache';
+	@override String get database => 'Diary data';
+	@override String get other => 'Other';
+	@override String get font => 'Fonts';
+	@override String get file => 'Attachments';
+	@override String get recommended => 'Recommended';
+	@override String get careful => 'Review first';
+	@override String get retiredMood => 'Old mood suggestion model';
+	@override String get noLongerUsed => 'No longer used';
+	@override String get unusedModel => 'Unused model';
+	@override String get partial => 'Unfinished downloads';
+	@override String get unusedMedia => 'Unused media';
+	@override String get legacy => 'Old database backup';
+	@override String get irreversible => 'Can\'t be undone';
+	@override String get counting => 'Counting';
+	@override String scanning({required Object area}) => 'Counting · ${area}';
+	@override String fileCount({required Object count}) => '${count} files';
+	@override String get complete => 'Counted';
+	@override String cleanable({required Object size}) => 'Can clean ${size}';
+	@override String clean({required Object size}) => 'Free ${size}';
+	@override String get nothingSelected => 'Nothing selected';
+	@override String get allClean => 'All clean';
+	@override String freed({required Object size}) => 'Freed ${size}';
+	@override String confirmTitle({required Object count}) => 'Clean ${count} items?';
+	@override String get total => 'Total';
+	@override String warning({required Object names}) => '${names} will be permanently deleted';
+	@override String get cancel => 'Cancel';
+	@override String get confirm => 'Clean';
+	@override String get syncing => 'Syncing';
+	@override String get failed => 'Could not count storage';
+	@override String get retry => 'Retry';
+	@override String get cleanFailed => 'Could not clean. Try again.';
+	@override String get listSeparator => ', ';
 }
 
 // Path: sync

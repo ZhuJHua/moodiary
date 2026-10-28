@@ -215,6 +215,61 @@ class SettingSwitchListTile extends StatelessWidget {
   }
 }
 
+class SettingCheckboxListTile extends StatelessWidget {
+  const SettingCheckboxListTile({
+    super.key,
+    required this.title,
+    required this.value,
+    required this.onChanged,
+    this.subtitle,
+    this.isFirst,
+    this.isLast,
+    this.secondary,
+    this.isSingle,
+  });
+
+  final dynamic title;
+
+  final dynamic subtitle;
+
+  final bool value;
+
+  final ValueChanged<bool>? onChanged;
+
+  final Widget? secondary;
+
+  final bool? isFirst;
+
+  final bool? isLast;
+
+  final bool? isSingle;
+
+  @override
+  Widget build(BuildContext context) {
+    final onChanged = this.onChanged;
+    return MergeSemantics(
+      child: Semantics(
+        checked: value,
+        enabled: onChanged != null,
+        child: SettingListTile(
+          title: title,
+          subtitle: subtitle,
+          leading: secondary,
+          isFirst: isSingle == true ? true : isFirst,
+          isLast: isSingle == true ? true : isLast,
+          trailing: ExcludeSemantics(
+            child: SizedBox.square(
+              dimension: 22,
+              child: MSelectMark(selected: value, enabled: onChanged != null),
+            ),
+          ),
+          onTap: onChanged == null ? null : () => onChanged(!value),
+        ),
+      ),
+    );
+  }
+}
+
 class SettingInputTile extends StatelessWidget {
   const SettingInputTile({
     super.key,

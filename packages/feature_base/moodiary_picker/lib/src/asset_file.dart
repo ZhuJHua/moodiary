@@ -5,7 +5,7 @@ import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_utils/moodiary_utils.dart' show uuidV7;
 import 'package:photo_manager/photo_manager.dart';
 
-// 缓存文件命名 picked-<uuid>.<ext>：不以 image-/video- 开头，避免被 MediaManager 当作已落库、或被 scanOrphanMedia 当孤儿清理
+// 缓存文件命名 picked-<uuid>.<ext>：不以 image-/video- 开头，避免被 MediaManager 当作已落库、或被存储扫描当作孤儿清理
 Future<List<XFile>> assetsToFiles(List<AssetEntity> assets) async {
   final files = await Future.wait(assets.map(assetToFile));
   return files.whereType<XFile>().toList();

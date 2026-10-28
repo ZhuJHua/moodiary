@@ -98,59 +98,6 @@ abstract class _$MediaItems extends $AsyncNotifier<List<MediaItem>> {
   }
 }
 
-@ProviderFor(MediaCleanupController)
-final mediaCleanupControllerProvider = MediaCleanupControllerProvider._();
-
-final class MediaCleanupControllerProvider
-    extends $NotifierProvider<MediaCleanupController, void> {
-  MediaCleanupControllerProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'mediaCleanupControllerProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$mediaCleanupControllerHash();
-
-  @$internal
-  @override
-  MediaCleanupController create() => MediaCleanupController();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(void value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<void>(value),
-    );
-  }
-}
-
-String _$mediaCleanupControllerHash() =>
-    r'd710a957995c7afe84e95f2f7a17ddaf308c5272';
-
-abstract class _$MediaCleanupController extends $Notifier<void> {
-  void build();
-  @$mustCallSuper
-  @override
-  WhenComplete runBuild() {
-    final ref = this.ref as $Ref<void, void>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<void, void>,
-              void,
-              Object?,
-              Object?
-            >;
-    return element.handleCreate(ref, build);
-  }
-}
-
 @ProviderFor(audioDuration)
 final audioDurationProvider = AudioDurationFamily._();
 

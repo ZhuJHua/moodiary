@@ -1,10 +1,10 @@
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:fast_image/fast_image.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 
 class AppFiles {
   static final String _filePath = PlatformService.get().applicationSupportPath;
@@ -13,10 +13,10 @@ class AppFiles {
 
   static Future<bool> deleteFile(String path) async {
     final File file = File(path);
-    if (await file.exists()) {
+    try {
       await file.delete();
       return true;
-    } else {
+    } on PathNotFoundException {
       return false;
     }
   }
@@ -45,18 +45,6 @@ class AppFiles {
     await directory.create(recursive: true);
   }
 
-  static Future<Map<String, dynamic>> countSize() async {
-    final cacheDir = await getApplicationCacheDirectory();
-    var bytes = 0;
-    final fileList = cacheDir.listSync(recursive: true);
-    for (final file in fileList) {
-      if (file is File) {
-        bytes += file.lengthSync();
-      }
-    }
-    return bytesToUnits(bytes);
-  }
-
   static Map<String, dynamic> bytesToUnits(int bytes) {
     if (bytes < 1024) {
       return {'size': bytes.toString(), 'unit': 'B', 'bytes': bytes};
@@ -81,11 +69,75 @@ class AppFiles {
     }
   }
 
-  static Future<void> clearCache() async {
-    final cacheDir = await getApplicationCacheDirectory();
-    if (await cacheDir.exists()) {
-      await cacheDir.delete(recursive: true);
-    }
+  /// These workspaces can outlive the page that started the job (including
+  /// files still owned by the share sheet). Retain them without a job lease.
+  static bool isProtectedCacheEntry(String name) =>
+      const {'sync-media', 'export', 'import'}.contains(name) ||
+      name.startsWith('backup-import-') ||
+      (name.startsWith('moodiary-backup-') && name.endsWith('.zip'));
+
+  /// Mirror FastImageDerivatives' grace period for incomplete downloads.
+  static const partialDownloadGrace = Duration(hours: 1);
+
+  static Future<int> clearCache({
+    String? cachePath,
+    bool protectWorkspaces = true,
+    Set<String>? filePaths,
+  }) {
+    final path = cachePath ?? _cachePath;
+    return Isolate.run(() {
+      var freed = 0;
+      void remove(FileSystemEntity entity) {
+        try {
+          final type = FileSystemEntity.typeSync(
+            entity.path,
+            followLinks: false,
+          );
+          if (type == FileSystemEntityType.directory) {
+            for (final child in Directory(
+              entity.path,
+            ).listSync(followLinks: false)) {
+              remove(child);
+            }
+            // Do not recursively delete files another owner created meanwhile.
+            Directory(entity.path).deleteSync();
+          } else if (type == FileSystemEntityType.file) {
+            final file = File(entity.path);
+            final bytes = file.lengthSync();
+            file.deleteSync();
+            freed += bytes;
+          } else if (type == FileSystemEntityType.link) {
+            Link(entity.path).deleteSync();
+          }
+        } on PathNotFoundException {
+          // Another cache owner already removed it.
+        }
+      }
+
+      if (filePaths != null) {
+        // A report cleanup removes only its snapshot, retaining newly made files.
+        for (final filePath in filePaths) {
+          if (!isWithin(path, filePath)) continue;
+          final top = split(relative(filePath, from: path)).first;
+          if (protectWorkspaces && isProtectedCacheEntry(top)) continue;
+          if (FileSystemEntity.typeSync(filePath, followLinks: false) ==
+              FileSystemEntityType.file) {
+            remove(File(filePath));
+          }
+        }
+        return freed;
+      }
+
+      final directory = Directory(path);
+      if (!directory.existsSync()) return 0;
+      for (final child in directory.listSync(followLinks: false)) {
+        if (!protectWorkspaces ||
+            !isProtectedCacheEntry(basename(child.path))) {
+          remove(child);
+        }
+      }
+      return freed;
+    });
   }
 
   static String get imageDir => join(_filePath, 'image');
@@ -168,93 +220,11 @@ class AppFiles {
     }
   }
 
-  static Future<MediaCleanupReport> scanOrphanMedia({
-    required Set<String> usedImages,
-    required Set<String> usedAudios,
-    required Set<String> usedVideos,
-    required Set<String> usedFiles,
-  }) async {
-    final orphans = <(String type, Set<String> names)>[
-      (
-        MediaType.image.value,
-        (await getDirFileName(MediaType.image.value))
-            .toSet()
-            .difference(usedImages),
-      ),
-      (
-        MediaType.audio.value,
-        (await getDirFileName(MediaType.audio.value))
-            .toSet()
-            .difference(usedAudios),
-      ),
-      (
-        MediaType.video.value,
-        (await getDirFileName(MediaType.video.value))
-            .toSet()
-            .difference(usedVideos),
-      ),
-      (
-        MediaType.file.value,
-        (await getDirFileName(MediaType.file.value))
-            .toSet()
-            .difference(usedFiles),
-      ),
-    ];
-
-    final paths = <String>[];
-    var bytes = 0;
-    for (final (type, names) in orphans) {
-      for (final name in names) {
-        final file = File(getRealPath(type, name));
-        if (await file.exists()) {
-          bytes += await file.length();
-          paths.add(file.path);
-        }
-      }
-    }
-    for (final path in await FastImageDerivatives.stale(
-      await getDirFileName(MediaType.image.value),
-    )) {
-      bytes += await File(path).length();
-      paths.add(path);
-    }
-    return MediaCleanupReport(paths: paths, bytes: bytes);
-  }
-
-  static Future<void> deleteOrphanMedia(MediaCleanupReport report) async {
-    final imageDir = join(_filePath, 'image');
-    await Future.wait(
-      report.paths.map((path) async {
-        await deleteFile(path);
-        if (dirname(path) == imageDir) {
-          await FastImageDerivatives.deleteFor(basename(path));
-        }
-      }),
-    );
-  }
-
   static String getCachePath(String fileName) {
     return join(_cachePath, fileName);
   }
 
   static String getErrorLogPath() {
     return join(_filePath, 'error.log');
-  }
-}
-
-class MediaCleanupReport {
-  final List<String> paths;
-
-  final int bytes;
-
-  const MediaCleanupReport({required this.paths, required this.bytes});
-
-  int get count => paths.length;
-
-  bool get isEmpty => paths.isEmpty;
-
-  String get readableSize {
-    final unit = AppFiles.bytesToUnits(bytes);
-    return '${unit['size']} ${unit['unit']}';
   }
 }

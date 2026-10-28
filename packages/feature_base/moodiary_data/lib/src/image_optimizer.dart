@@ -16,7 +16,7 @@ class ImageOptimizer {
 
   static Future<ImageOptimizeReport> run({
     void Function(int done, int total)? onProgress,
-  }) async {
+  }) => runMediaExclusive(() async {
     final repo = getIt<DiaryRepository>();
     final heicDiaries = await repo.getDiariesReferencingMedia(
       kind: .image,
@@ -69,7 +69,7 @@ class ImageOptimizer {
       heicConverted: converted,
       heicFailed: failed,
     );
-  }
+  });
 
   static Future<bool> _convert(String oldName, String newName) async {
     final src = AppFiles.getRealPath('image', oldName);
