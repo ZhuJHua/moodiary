@@ -168,8 +168,6 @@
   "imageOptimizeThumbs": "缩略图已就绪。",
   "imageOptimizeFailed": "图片优化失败",
   "imageOptimizeOk": "好",
-  "cacheClear": "清理缓存",
-  "cacheCleared": "清理成功",
   "fontNameFailed": "字体名称获取失败",
   "fontExists": "字体已存在",
   "routeErrorTitle": "页面不存在",

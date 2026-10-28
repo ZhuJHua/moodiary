@@ -47,6 +47,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$media$zh media = Translations$media$zh.internal(_root);
 	late final Translations$picker$zh picker = Translations$picker$zh.internal(_root);
 	late final Translations$share$zh share = Translations$share$zh.internal(_root);
+	late final Translations$storage$zh storage = Translations$storage$zh.internal(_root);
 	late final Translations$sync$zh sync = Translations$sync$zh.internal(_root);
 	late final Translations$ui$zh ui = Translations$ui$zh.internal(_root);
 }
@@ -565,12 +566,6 @@ class Translations$app$zh {
 
 	/// zh: '好'
 	String get imageOptimizeOk => '好';
-
-	/// zh: '清理缓存'
-	String get cacheClear => '清理缓存';
-
-	/// zh: '清理成功'
-	String get cacheCleared => '清理成功';
 
 	/// zh: '字体名称获取失败'
 	String get fontNameFailed => '字体名称获取失败';
@@ -2837,26 +2832,8 @@ class Translations$media$zh {
 	/// zh: '附件'
 	String get typeFile => '附件';
 
-	/// zh: '清理无用文件'
-	String get deleteUseLessFile => '清理无用文件';
-
 	/// zh: '这里还没有媒体'
 	String get empty => '这里还没有媒体';
-
-	/// zh: '正在扫描无用文件'
-	String get cleanupScanning => '正在扫描无用文件';
-
-	/// zh: '没有发现无用文件'
-	String get cleanupEmpty => '没有发现无用文件';
-
-	/// zh: '清理无用文件'
-	String get cleanupConfirmTitle => '清理无用文件';
-
-	/// zh: '发现 {count} 个未被任何日记引用的文件（{size}），确认清理？此操作不可恢复。'
-	String cleanupConfirmMessage({required Object count, required Object size}) => '发现 ${count} 个未被任何日记引用的文件（${size}），确认清理？此操作不可恢复。';
-
-	/// zh: '已清理 {count} 个文件'
-	String cleanupDone({required Object count}) => '已清理 ${count} 个文件';
 
 	/// zh: '重命名'
 	String get rename => '重命名';
@@ -2997,6 +2974,132 @@ class Translations$share$zh {
 
 	/// zh: '正在生成 {format}…'
 	String generating({required Object format}) => '正在生成 ${format}…';
+}
+
+// Path: storage
+class Translations$storage$zh {
+	Translations$storage$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: '存储空间'
+	String get title => '存储空间';
+
+	/// zh: '已用空间'
+	String get used => '已用空间';
+
+	/// zh: '可释放'
+	String get reclaimable => '可释放';
+
+	/// zh: 'AI 模型'
+	String get model => 'AI 模型';
+
+	/// zh: '媒体'
+	String get media => '媒体';
+
+	/// zh: '缓存'
+	String get cache => '缓存';
+
+	/// zh: '日记数据'
+	String get database => '日记数据';
+
+	/// zh: '其他'
+	String get other => '其他';
+
+	/// zh: '字体'
+	String get font => '字体';
+
+	/// zh: '附件'
+	String get file => '附件';
+
+	/// zh: '建议清理'
+	String get recommended => '建议清理';
+
+	/// zh: '谨慎清理'
+	String get careful => '谨慎清理';
+
+	/// zh: '旧版心情建议模型'
+	String get retiredMood => '旧版心情建议模型';
+
+	/// zh: '已不再使用'
+	String get noLongerUsed => '已不再使用';
+
+	/// zh: '不再使用的模型'
+	String get unusedModel => '不再使用的模型';
+
+	/// zh: '未完成的下载'
+	String get partial => '未完成的下载';
+
+	/// zh: '未使用的媒体'
+	String get unusedMedia => '未使用的媒体';
+
+	/// zh: '旧版数据库备份'
+	String get legacy => '旧版数据库备份';
+
+	/// zh: '删除后无法恢复'
+	String get irreversible => '删除后无法恢复';
+
+	/// zh: '统计中'
+	String get counting => '统计中';
+
+	/// zh: '正在统计 · {area}'
+	String scanning({required Object area}) => '正在统计 · ${area}';
+
+	/// zh: '{count} 个文件'
+	String fileCount({required Object count}) => '${count} 个文件';
+
+	/// zh: '统计完成'
+	String get complete => '统计完成';
+
+	/// zh: '可清理 {size}'
+	String cleanable({required Object size}) => '可清理 ${size}';
+
+	/// zh: '清理 {size}'
+	String clean({required Object size}) => '清理 ${size}';
+
+	/// zh: '未选择'
+	String get nothingSelected => '未选择';
+
+	/// zh: '无需清理'
+	String get allClean => '无需清理';
+
+	/// zh: '已释放 {size}'
+	String freed({required Object size}) => '已释放 ${size}';
+
+	/// zh: '清理 {count} 项？'
+	String confirmTitle({required Object count}) => '清理 ${count} 项？';
+
+	/// zh: '合计'
+	String get total => '合计';
+
+	/// zh: '{names}删除后无法恢复'
+	String warning({required Object names}) => '${names}删除后无法恢复';
+
+	/// zh: '取消'
+	String get cancel => '取消';
+
+	/// zh: '清理'
+	String get confirm => '清理';
+
+	/// zh: '同步中'
+	String get syncing => '同步中';
+
+	/// zh: '已清理'
+	String get cleaned => '已清理';
+
+	/// zh: '统计失败'
+	String get failed => '统计失败';
+
+	/// zh: '重试'
+	String get retry => '重试';
+
+	/// zh: '清理失败，请重试'
+	String get cleanFailed => '清理失败，请重试';
+
+	/// zh: '、'
+	String get listSeparator => '、';
 }
 
 // Path: sync

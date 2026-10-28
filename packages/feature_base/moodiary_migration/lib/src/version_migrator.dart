@@ -6,6 +6,7 @@ import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
+import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_migration/src/legacy/legacy_models.dart' as legacy;
 import 'package:moodiary_migration/src/orphan_media_cleaner.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -102,6 +103,10 @@ class VersionMigrator {
     if (below('2.8.2') && MoodiaryKVs.assistantReasoningEffort.get() == '') {
       MoodiaryKVs.assistantReasoningEffort.set('none');
     }
+
+    if (below('2.9.1')) {
+      await _purgeMoodLlmModel();
+    }
   }
 
   @visibleForTesting
@@ -116,6 +121,26 @@ class VersionMigrator {
   @visibleForTesting
   static Future<void> debugMergeToV273(String dir, List<legacy.Font> fonts) =>
       _mergeToV2_7_3({'database': dir, 'fonts': fonts});
+}
+
+Future<void> _purgeMoodLlmModel() async {
+  for (final name in const [
+    'qwen3-0.6b-int8.onnx',
+    'qwen3-0.6b-int8.tokenizer.json',
+    'qwen3-0.6b-int8.onnx.part',
+    'qwen3-0.6b-int8.tokenizer.json.part',
+  ]) {
+    try {
+      await AppFiles.deleteFile(AppFiles.getRealPath('model', name));
+    } catch (e, s) {
+      logger.e('purge mood model failed: $name', error: e, stackTrace: s);
+    }
+  }
+  try {
+    getIt<IKVStorage>().remove('moodLlmModelId');
+  } catch (e, s) {
+    logger.e('remove mood model key failed', error: e, stackTrace: s);
+  }
 }
 
 Future<void> _backupDatabaseOnce() async {

@@ -96,26 +96,6 @@ class MediaItems extends _$MediaItems with LoadMoreMixin<MediaItem> {
   }
 }
 
-@riverpod
-class MediaCleanupController extends _$MediaCleanupController {
-  @override
-  void build() {}
-
-  Future<MediaCleanupReport> scan() async {
-    final used = await getIt<DiaryRepository>().collectReferencedMedia();
-    return AppFiles.scanOrphanMedia(
-      usedImages: used.images,
-      usedAudios: used.audios,
-      usedVideos: used.videos,
-      usedFiles: used.files,
-    );
-  }
-
-  Future<void> clean(MediaCleanupReport report) async {
-    await AppFiles.deleteOrphanMedia(report);
-  }
-}
-
 // 读不出（文件还在同步下载）时不留缓存，下次显示再读
 @riverpod
 Future<Duration?> audioDuration(Ref ref, String fileName) async {

@@ -303,6 +303,8 @@ List<String> _checkLegacyMaterial() {
 }
 
 const Map<String, String> _themeAllowlist = {
+  'mobile/lib/app/settings/storage/storage_palette.dart':
+      '存储分类色板：设计稿固定的分类编码，按主题明暗切换',
   'packages/foundation/mui/lib/src/themes/': 'mui 的主题层就是色板与 token 的定义处',
   'mobile/lib/app/boot_failure_page.dart':
       '启动失败兜底页：主题系统此刻可能正是坏掉的那一环，刻意零依赖、硬编码配色',

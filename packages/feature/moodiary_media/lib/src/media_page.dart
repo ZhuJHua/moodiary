@@ -54,10 +54,7 @@ class _MobileMediaPageState extends ConsumerState<_MobileMediaPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(context.l10n.media.title),
-        actions: [_CleanupButton()],
-      ),
+      appBar: AppBar(title: Text(context.l10n.media.title)),
       body: Column(
         children: [
           const SizedBox(height: 4),
@@ -84,62 +81,6 @@ class _MobileMediaPageState extends ConsumerState<_MobileMediaPage> {
       ),
     );
   }
-}
-
-class _CleanupButton extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return IconButton(
-      tooltip: context.l10n.media.deleteUseLessFile,
-      icon: const Icon(LucideIcons.brushCleaning),
-      onPressed: () => runMediaCleanup(context, ref),
-    );
-  }
-}
-
-Future<void> runMediaCleanup(BuildContext context, WidgetRef ref) async {
-  final l10n = context.l10n;
-  final notifier = ref.read(mediaCleanupControllerProvider.notifier);
-
-  toast.loading(message: l10n.media.cleanupScanning);
-  final MediaCleanupReport report;
-  try {
-    report = await notifier.scan();
-  } catch (_) {
-    await toast.dismiss();
-    toast.error();
-    return;
-  }
-  await toast.dismiss();
-
-  if (report.isEmpty) {
-    toast.info(message: l10n.media.cleanupEmpty);
-    return;
-  }
-
-  if (!context.mounted) return;
-  final confirmed = await MAlert.confirm(
-    context,
-    title: l10n.media.cleanupConfirmTitle,
-    message: l10n.media.cleanupConfirmMessage(
-      count: report.count,
-      size: report.readableSize,
-    ),
-    isDestructive: true,
-  );
-  if (!confirmed) return;
-
-  toast.loading();
-  try {
-    await notifier.clean(report);
-  } catch (_) {
-    await toast.dismiss();
-    toast.error();
-    return;
-  }
-  if (context.mounted) ref.invalidate(mediaItemsProvider);
-  await toast.dismiss();
-  toast.success(message: l10n.media.cleanupDone(count: report.count));
 }
 
 const double _kGridPadding = 12;

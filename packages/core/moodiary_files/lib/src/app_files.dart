@@ -1,10 +1,10 @@
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:fast_image/fast_image.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 
 class AppFiles {
   static final String _filePath = PlatformService.get().applicationSupportPath;
@@ -13,10 +13,10 @@ class AppFiles {
 
   static Future<bool> deleteFile(String path) async {
     final File file = File(path);
-    if (await file.exists()) {
+    try {
       await file.delete();
       return true;
-    } else {
+    } on PathNotFoundException {
       return false;
     }
   }
@@ -45,18 +45,6 @@ class AppFiles {
     await directory.create(recursive: true);
   }
 
-  static Future<Map<String, dynamic>> countSize() async {
-    final cacheDir = await getApplicationCacheDirectory();
-    var bytes = 0;
-    final fileList = cacheDir.listSync(recursive: true);
-    for (final file in fileList) {
-      if (file is File) {
-        bytes += file.lengthSync();
-      }
-    }
-    return bytesToUnits(bytes);
-  }
-
   static Map<String, dynamic> bytesToUnits(int bytes) {
     if (bytes < 1024) {
       return {'size': bytes.toString(), 'unit': 'B', 'bytes': bytes};
@@ -81,11 +69,51 @@ class AppFiles {
     }
   }
 
-  static Future<void> clearCache() async {
-    final cacheDir = await getApplicationCacheDirectory();
-    if (await cacheDir.exists()) {
-      await cacheDir.delete(recursive: true);
-    }
+  /// These workspaces can outlive the page that started the job (including
+  /// files still owned by the share sheet). Retain them without a job lease.
+  static const protectedCacheDirectories = {'sync-media', 'export', 'import'};
+
+  static Future<int> clearCache({
+    String? cachePath,
+    Set<String> inUseDirectories = protectedCacheDirectories,
+  }) {
+    final path = cachePath ?? _cachePath;
+    return Isolate.run(() {
+      var freed = 0;
+      void remove(FileSystemEntity entity) {
+        try {
+          final type = FileSystemEntity.typeSync(
+            entity.path,
+            followLinks: false,
+          );
+          if (type == FileSystemEntityType.directory) {
+            for (final child in Directory(
+              entity.path,
+            ).listSync(followLinks: false)) {
+              remove(child);
+            }
+            // Do not recursively delete files another owner created meanwhile.
+            Directory(entity.path).deleteSync();
+          } else if (type == FileSystemEntityType.file) {
+            final file = File(entity.path);
+            final bytes = file.lengthSync();
+            file.deleteSync();
+            freed += bytes;
+          } else if (type == FileSystemEntityType.link) {
+            Link(entity.path).deleteSync();
+          }
+        } on PathNotFoundException {
+          // Another cache owner already removed it.
+        }
+      }
+
+      final directory = Directory(path);
+      if (!directory.existsSync()) return 0;
+      for (final child in directory.listSync(followLinks: false)) {
+        if (!inUseDirectories.contains(basename(child.path))) remove(child);
+      }
+      return freed;
+    });
   }
 
   static String get imageDir => join(_filePath, 'image');
@@ -212,9 +240,7 @@ class AppFiles {
         }
       }
     }
-    for (final path in await FastImageDerivatives.stale(
-      await getDirFileName(MediaType.image.value),
-    )) {
+    for (final path in await FastImageDerivatives.stale(usedImages)) {
       bytes += await File(path).length();
       paths.add(path);
     }

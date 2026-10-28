@@ -168,8 +168,6 @@
   "imageOptimizeThumbs": "Thumbnails are ready.",
   "imageOptimizeFailed": "Image optimisation failed",
   "imageOptimizeOk": "OK",
-  "cacheClear": "Clear the cache",
-  "cacheCleared": "Cache cleared",
   "fontNameFailed": "Could not read the font name",
   "fontExists": "That font is already installed",
   "routeErrorTitle": "Page not found",
