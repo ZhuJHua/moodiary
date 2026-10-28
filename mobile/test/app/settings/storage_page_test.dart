@@ -1,47 +1,26 @@
 // ignore_for_file: deprecated_member_use
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_ml/moodiary_ml.dart';
 import 'package:moodiary_mobile/app/settings/storage/storage_controller.dart';
 import 'package:moodiary_mobile/app/settings/storage/storage_page.dart';
+import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:mui/mui.dart';
 
-class _Controller extends StorageController {
-  final StorageState initial;
-  int cleanCalls = 0;
-  _Controller(this.initial);
-  @override
-  StorageState build() => initial;
-  @override
-  Future<int> clean() {
-    cleanCalls++;
-    return Completer<int>().future;
-  }
-}
-
 void main() {
-  setUpAll(setupPluralResolvers);
-  test('busy cache is excluded from both selection and cleaning totals', () {
-    const state = StorageState(
-      items: [
-        Reclaimable(
-          id: 'cache',
-          area: .cache,
-          kind: .cache,
-          ready: true,
-          bytes: 1024,
-          busy: true,
-        ),
-      ],
-      checked: {'cache'},
-    );
-    expect(state.selected, isEmpty);
-    expect(state.selectedBytes, 0);
+  late Directory root;
+  setUpAll(() {
+    setupPluralResolvers();
+    root = Directory.systemTemp.createTempSync('storage-page-');
+    PlatformService.get().applicationCachePath = root.path;
   });
+  tearDownAll(() => root.deleteSync(recursive: true));
 
   final progress = StorageScanProgress(
     bytes: {for (final area in StorageArea.values) area: 1024},
@@ -51,33 +30,61 @@ void main() {
     reclaimableCacheBytes: 1024,
   );
 
-  Future<_Controller> show(
+  Future<ProviderContainer> show(
     WidgetTester tester, {
-    bool careful = false,
-    StorageState? initial,
+    ReclaimKind kind = .cache,
+    bool loading = false,
+    bool busy = false,
+    bool cleaned = false,
+    Future<List<StrayModelFile>> Function()? models,
   }) async {
     await tester.binding.setSurfaceSize(const Size(400, 1400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    final controller = _Controller(
-      initial ??
-          StorageState(
-            progress: progress,
-            items: [
-              Reclaimable(
-                id: 'test',
-                area: .cache,
-                kind: careful ? .legacy : .cache,
-                safety: careful ? .careful : .safe,
-                ready: true,
-                bytes: 1024,
-              ),
-            ],
-            checked: const {'test'},
-          ),
-    );
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [storageControllerProvider.overrideWith(() => controller)],
+        retry: (_, _) => null,
+        overrides: [
+          storageUsageProvider.overrideWith(
+            (ref) => Stream.value(
+              StorageScanProgress(
+                bytes: progress.bytes,
+                done: loading ? {} : progress.done,
+                area: progress.area,
+                files: progress.files,
+                reclaimableCacheBytes: kind == .cache ? 1024 : 0,
+              ),
+            ),
+          ),
+          storageStrayModelsProvider.overrideWith(
+            (ref) =>
+                models?.call() ??
+                Future.value([
+                  if (kind == .retiredMood)
+                    const StrayModelFile(
+                      path: '/retired.onnx',
+                      bytes: 1024,
+                      kind: .retiredMood,
+                    ),
+                ]),
+          ),
+          storageOrphanMediaProvider.overrideWith(
+            (ref) async => StorageOrphanMedia(
+              report: MediaCleanupReport(
+                paths: [],
+                bytes: kind == .orphan ? 1024 : 0,
+              ),
+              counts: kind == .orphan ? {.image: 1} : {},
+              areaBytes: kind == .orphan ? {.image: 1024} : {},
+            ),
+          ),
+          storageLegacyBackupsProvider.overrideWith(
+            (ref) async => StorageLegacyBackups(
+              files: [],
+              bytes: kind == .legacy ? 1024 : 0,
+            ),
+          ),
+          storageSyncBusyProvider.overrideWith((ref) => busy),
+        ],
         child: TranslationProvider(
           child: MaterialApp(
             theme: buildMuiTheme(brightness: .light),
@@ -99,7 +106,16 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    return controller;
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(StoragePage)),
+    );
+    if (cleaned) {
+      await tester.runAsync(
+        () => container.read(storageSelectionProvider.notifier).clean(),
+      );
+      await tester.pumpAndSettle();
+    }
+    return container;
   }
 
   testWidgets('reclaim selection uses a trailing checkbox and toggles totals', (
@@ -134,69 +150,27 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  for (final (item, cleaned, subtitle) in <(Reclaimable, bool, String)>[
-    (
-      const Reclaimable(
-        id: 'test',
-        area: .image,
-        kind: .orphan,
-        ready: true,
-        bytes: 1024,
-        counts: {.image: 1},
-      ),
-      false,
-      '1.00 KB · 1 张照片 · 删除后无法恢复',
-    ),
-    (
-      const Reclaimable(
-        id: 'test',
-        area: .model,
-        kind: .retiredMood,
-        ready: true,
-        bytes: 1024,
-      ),
-      false,
-      '1.00 KB · 已不再使用',
-    ),
-    (const Reclaimable(id: 'test', area: .cache, kind: .cache), false, '统计中'),
-    (
-      const Reclaimable(
-        id: 'test',
-        area: .cache,
-        kind: .cache,
-        ready: true,
-        bytes: 1024,
-      ),
-      true,
-      '已清理',
-    ),
-    (
-      const Reclaimable(
-        id: 'test',
-        area: .cache,
-        kind: .cache,
-        ready: true,
-        bytes: 1024,
-        busy: true,
-      ),
-      false,
-      '同步中',
-    ),
-  ]) {
+  for (final (kind, loading, busy, cleaned, subtitle)
+      in <(ReclaimKind, bool, bool, bool, String)>[
+        (.orphan, false, false, false, '1.00 KB · 1 张照片 · 删除后无法恢复'),
+        (.retiredMood, false, false, false, '1.00 KB · 已不再使用'),
+        (.cache, true, false, false, '统计中'),
+        (.cache, false, false, true, '已清理'),
+        (.cache, false, true, false, '同步中'),
+      ]) {
     testWidgets('reclaim subtitle: $subtitle', (tester) async {
       await show(
         tester,
-        initial: StorageState(
-          progress: progress,
-          items: [item],
-          cleaned: cleaned ? {'test'} : {},
-        ),
+        kind: kind,
+        loading: loading,
+        busy: busy,
+        cleaned: cleaned,
       );
       final tile = tester.widget<SettingCheckboxListTile>(
         find.byType(SettingCheckboxListTile),
       );
       expect(tile.subtitle, subtitle);
-      expect(tile.onChanged == null, !item.available || cleaned);
+      expect(tile.onChanged == null, loading || busy || cleaned);
       expect(tester.takeException(), isNull);
     });
   }
@@ -242,10 +216,32 @@ void main() {
   testWidgets(
     'safe selection cleans immediately without a confirmation sheet',
     (tester) async {
-      final controller = await show(tester, careful: false);
-      await tester.tap(find.widgetWithText(FilledButton, '清理 1.00 KB'));
-      await tester.pump();
-      expect(controller.cleanCalls, 1);
+      final cache = File('${root.path}/cache.bin')
+        ..writeAsBytesSync(List.filled(1024, 0));
+      final container = await show(tester);
+      final button = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, '清理 1.00 KB'),
+      );
+      await tester.runAsync(() async {
+        final finished = Completer<void>();
+        final subscription = container.listen(storageSelectionProvider, (
+          _,
+          next,
+        ) {
+          if (next.cleaned.contains('cache') && !next.cleaning) {
+            finished.complete();
+          }
+        });
+        try {
+          button.onPressed!();
+          await finished.future.timeout(const Duration(seconds: 10));
+        } finally {
+          subscription.close();
+        }
+      });
+      await tester.pumpAndSettle();
+      expect(cache.existsSync(), isFalse);
+      expect(container.read(storageSelectionProvider).cleaned, {'cache'});
       expect(find.byType(MSheetScaffold<bool>), findsNothing);
       expect(tester.takeException(), isNull);
     },
@@ -254,7 +250,9 @@ void main() {
   testWidgets('careful selection opens a sheet, cancel keeps files', (
     tester,
   ) async {
-    final controller = await show(tester, careful: true);
+    final container = await show(tester, kind: .legacy);
+    await tester.tap(find.byType(SettingCheckboxListTile));
+    await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, '清理 1.00 KB'));
     await tester.pumpAndSettle();
     expect(find.text('清理 1 项？'), findsOneWidget);
@@ -268,11 +266,50 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(controller.cleanCalls, 0);
+    expect(container.read(storageSelectionProvider).cleaned, isEmpty);
     await tester.tap(find.text('取消'));
     await tester.pumpAndSettle();
-    expect(controller.cleanCalls, 0);
+    expect(container.read(storageSelectionProvider).cleaned, isEmpty);
     expect(find.text('清理 1 项？'), findsNothing);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'source error shows retry and disables its rows until retry succeeds',
+    (tester) async {
+      var fail = true;
+      await show(
+        tester,
+        kind: .partial,
+        models: () async {
+          if (fail) throw StateError('failed');
+          return const [
+            StrayModelFile(path: '/x.part', bytes: 1024, kind: .partial),
+          ];
+        },
+      );
+      expect(find.widgetWithText(TextButton, '重试'), findsOneWidget);
+      expect(
+        tester
+            .widgetList<SettingCheckboxListTile>(
+              find.byType(SettingCheckboxListTile),
+            )
+            .every((tile) => tile.onChanged == null),
+        isTrue,
+      );
+      fail = false;
+      await tester.tap(find.widgetWithText(TextButton, '重试'));
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(TextButton, '重试'), findsNothing);
+      expect(
+        tester
+            .widget<SettingCheckboxListTile>(
+              find.byType(SettingCheckboxListTile),
+            )
+            .onChanged,
+        isNotNull,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

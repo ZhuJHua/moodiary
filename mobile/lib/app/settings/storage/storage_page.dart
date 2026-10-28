@@ -44,17 +44,52 @@ String _itemName(BuildContext context, Reclaimable item) => switch (item.kind) {
   .legacy => context.l10n.storage.legacy,
 };
 
+class _StorageView {
+  final AsyncValue<StorageScanProgress> usage;
+  final List<Reclaimable> items;
+  final StorageSelectionState selection;
+
+  const _StorageView(this.usage, this.items, this.selection);
+
+  StorageScanProgress? get progress => usage.value;
+  Set<String> get checked => selection.checked;
+  Set<String> get cleaned => selection.cleaned;
+  bool get cleaning => selection.cleaning;
+  bool get hasError => usage.hasError || items.any((i) => i.status.hasError);
+  bool get scanning =>
+      !hasError &&
+      (usage.isLoading ||
+          progress?.complete != true ||
+          items.any((i) => i.status.isLoading));
+  List<Reclaimable> get selected => selection.selected(items);
+  int get selectedBytes => selected.fold(0, (sum, i) => sum + i.bytes);
+  int get reclaimableBytes => items
+      .where(
+        (i) =>
+            !i.status.isLoading &&
+            !i.status.hasError &&
+            !cleaned.contains(i.id),
+      )
+      .fold(0, (sum, i) => sum + i.bytes);
+  bool get needsConfirmation => selected.any((i) => i.safety == .careful);
+}
+
 class StoragePage extends ConsumerWidget {
   const StoragePage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(storageControllerProvider);
-    final items = state.items.where((i) => !i.ready || i.bytes > 0).toList();
+    final state = _StorageView(
+      ref.watch(storageUsageProvider),
+      ref.watch(storageReclaimablesProvider),
+      ref.watch(storageSelectionProvider),
+    );
+    final items = state.items;
     final selected = state.selected;
     final label = selected.isNotEmpty
         ? context.l10n.storage.clean(size: storageSize(state.selectedBytes))
-        : state.scanning && !items.any((i) => i.ready)
+        : state.scanning &&
+              !items.any((i) => !i.status.isLoading && !i.status.hasError)
         ? context.l10n.storage.counting
         : items.every((i) => state.cleaned.contains(i.id))
         ? context.l10n.storage.allClean
@@ -67,7 +102,7 @@ class StoragePage extends ConsumerWidget {
           slivers: [
             const SliverGap(16),
             _Categories(state: state),
-            if (state.error != null)
+            if (state.hasError)
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const .all(16),
@@ -75,11 +110,7 @@ class StoragePage extends ConsumerWidget {
                     children: [
                       Expanded(child: Text(context.l10n.storage.failed)),
                       TextButton(
-                        onPressed: () {
-                          ref.invalidate(storageControllerProvider);
-                          ref.invalidate(storageUsageProvider);
-                          ref.invalidate(storageStrayModelsProvider);
-                        },
+                        onPressed: () => refreshStorage(ref.invalidate),
                         child: Text(context.l10n.storage.retry),
                       ),
                     ],
@@ -125,7 +156,7 @@ class StoragePage extends ConsumerWidget {
   Future<void> _clean(
     BuildContext context,
     WidgetRef ref,
-    StorageState state,
+    _StorageView state,
   ) async {
     if (state.needsConfirmation) {
       final confirmed = await MSheet.show<bool>(
@@ -174,7 +205,7 @@ class StoragePage extends ConsumerWidget {
       if (confirmed != true || !context.mounted) return;
     }
     try {
-      final freed = await ref.read(storageControllerProvider.notifier).clean();
+      final freed = await ref.read(storageSelectionProvider.notifier).clean();
       toast.success(message: l10n.storage.freed(size: storageSize(freed)));
     } catch (_) {
       toast.error(message: l10n.storage.cleanFailed);
@@ -183,7 +214,7 @@ class StoragePage extends ConsumerWidget {
 }
 
 class _Overview extends StatelessWidget {
-  final StorageState state;
+  final _StorageView state;
   const _Overview({required this.state});
   @override
   Widget build(BuildContext context) {
@@ -251,7 +282,7 @@ class _Overview extends StatelessWidget {
                       ? context.l10n.storage.scanning(
                           area: _areaName(context, current < 0 ? 4 : current),
                         )
-                      : state.error != null
+                      : state.hasError
                       ? context.l10n.storage.failed
                       : context.l10n.storage.complete,
                   style: theme.typography.labelSmall.onSurfaceVariant,
@@ -273,7 +304,7 @@ class _Overview extends StatelessWidget {
 }
 
 class _Categories extends StatelessWidget {
-  final StorageState state;
+  final _StorageView state;
   const _Categories({required this.state});
 
   @override
@@ -292,7 +323,12 @@ class _Categories extends StatelessWidget {
             ),
             done: progress != null && _areas[i].every(progress.done.contains),
             reclaimable: state.items
-                .where((item) => item.ready && !state.cleaned.contains(item.id))
+                .where(
+                  (item) =>
+                      !item.status.isLoading &&
+                      !item.status.hasError &&
+                      !state.cleaned.contains(item.id),
+                )
                 .fold(0, (sum, item) => sum + item.bytesIn(_areas[i])),
           ),
       ],
@@ -330,9 +366,7 @@ class _Category extends ConsumerWidget {
           : () async {
               await route.push(context);
               if (!context.mounted) return;
-              ref.invalidate(storageUsageProvider);
-              ref.invalidate(storageStrayModelsProvider);
-              ref.invalidate(storageControllerProvider);
+              refreshStorage(ref.invalidate);
             },
       leading: Container(
         width: 10,
@@ -365,7 +399,7 @@ class _Category extends ConsumerWidget {
 
 class _ReclaimTile extends ConsumerWidget {
   final Reclaimable item;
-  final StorageState state;
+  final _StorageView state;
   const _ReclaimTile({required this.item, required this.state});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -387,7 +421,9 @@ class _ReclaimTile extends ConsumerWidget {
         ? context.l10n.storage.cleaned
         : item.busy
         ? context.l10n.storage.syncing
-        : !item.ready
+        : item.status.hasError
+        ? context.l10n.storage.failed
+        : item.status.isLoading
         ? context.l10n.storage.counting
         : parts.join(' · ');
     return SettingCheckboxListTile(
@@ -395,7 +431,7 @@ class _ReclaimTile extends ConsumerWidget {
       subtitle: subtitle,
       value: !cleaned && state.checked.contains(item.id),
       onChanged: enabled
-          ? (_) => ref.read(storageControllerProvider.notifier).toggle(item.id)
+          ? (_) => ref.read(storageSelectionProvider.notifier).toggle(item.id)
           : null,
     );
   }
