@@ -71,11 +71,17 @@ class AppFiles {
 
   /// These workspaces can outlive the page that started the job (including
   /// files still owned by the share sheet). Retain them without a job lease.
-  static const protectedCacheDirectories = {'sync-media', 'export', 'import'};
+  static bool isProtectedCacheEntry(String name) =>
+      const {'sync-media', 'export', 'import'}.contains(name) ||
+      name.startsWith('backup-import-') ||
+      (name.startsWith('moodiary-backup-') && name.endsWith('.zip'));
+
+  /// Mirror FastImageDerivatives' grace period for incomplete downloads.
+  static const partialDownloadGrace = Duration(hours: 1);
 
   static Future<int> clearCache({
     String? cachePath,
-    Set<String> inUseDirectories = protectedCacheDirectories,
+    bool protectWorkspaces = true,
     Set<String>? filePaths,
   }) {
     final path = cachePath ?? _cachePath;
@@ -113,7 +119,7 @@ class AppFiles {
         for (final filePath in filePaths) {
           if (!isWithin(path, filePath)) continue;
           final top = split(relative(filePath, from: path)).first;
-          if (inUseDirectories.contains(top)) continue;
+          if (protectWorkspaces && isProtectedCacheEntry(top)) continue;
           if (FileSystemEntity.typeSync(filePath, followLinks: false) ==
               FileSystemEntityType.file) {
             remove(File(filePath));
@@ -125,7 +131,10 @@ class AppFiles {
       final directory = Directory(path);
       if (!directory.existsSync()) return 0;
       for (final child in directory.listSync(followLinks: false)) {
-        if (!inUseDirectories.contains(basename(child.path))) remove(child);
+        if (!protectWorkspaces ||
+            !isProtectedCacheEntry(basename(child.path))) {
+          remove(child);
+        }
       }
       return freed;
     });

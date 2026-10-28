@@ -13,6 +13,7 @@ import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 import 'package:moodiary_sync/moodiary_sync.dart';
+import 'package:moodiary_sync/src/data/sync_cancellation.dart';
 
 class _Runner implements SyncRunner {
   @override
@@ -72,6 +73,7 @@ void _listen(ProviderContainer container) {
 List<Reclaimable> _items(ProviderContainer container) => storageReclaimables(
   container.read(storageDisplayControllerProvider).report,
   syncBusy: container.read(storageSyncBusyProvider),
+  canClean: container.read(storageDisplayControllerProvider).canClean,
 );
 
 Future<StorageReport> _complete(ProviderContainer container) async {
@@ -105,6 +107,7 @@ void main() {
     );
   });
   tearDownAll(() => root.deleteSync(recursive: true));
+  setUp(() => getIt.registerSingleton<SyncCancellation>(SyncCancellation()));
   tearDown(() async {
     await getIt.reset();
     for (final entity in root.listSync()) {
@@ -115,7 +118,9 @@ void main() {
   File write(String path, int bytes) {
     final file = File('${root.path}/$path');
     file.parent.createSync(recursive: true);
-    return file..writeAsBytesSync(List.filled(bytes, 0));
+    file.writeAsBytesSync(List.filled(bytes, 0));
+    file.setLastModifiedSync(DateTime.now().subtract(const Duration(hours: 2)));
+    return file;
   }
 
   test(
@@ -155,7 +160,9 @@ void main() {
         isEmpty,
       );
       expect(
-        await container.read(storageSelectionProvider.notifier).clean(),
+        await container
+            .read(storageSelectionProvider.notifier)
+            .clean(_items(container)),
         0,
       );
       await _complete(container);
@@ -174,6 +181,7 @@ void main() {
   test('sync starting after the snapshot makes clean skip cache', () async {
     final model = write('support/model/stale.part', 4);
     final cache = write('cache/in-use', 5);
+    final media = write('support/file/incoming.txt', 6);
     var busy = false;
     final container = ProviderContainer.test(
       overrides: [
@@ -187,6 +195,9 @@ void main() {
                 .cache: [
                   StorageCandidate(path: cache.path, bytes: 5, area: .cache),
                 ],
+                .unusedMedia: [
+                  StorageCandidate(path: media.path, bytes: 6, area: .file),
+                ],
               },
             ),
           ),
@@ -196,12 +207,15 @@ void main() {
     );
     _listen(container);
     await _complete(container);
-    final clean = container.read(storageSelectionProvider.notifier).clean();
+    final clean = container
+        .read(storageSelectionProvider.notifier)
+        .clean(_items(container));
     busy = true;
     container.invalidate(storageSyncBusyProvider);
     expect(await clean, 4);
     expect(model.existsSync(), isFalse);
     expect(cache.existsSync(), isTrue);
+    expect(media.existsSync(), isTrue);
     await _complete(container);
   });
 
@@ -234,10 +248,7 @@ void main() {
       addTearDown(next.close);
       stream = next.stream;
       container.invalidate(storageReportProvider);
-      expect(
-        _items(container).every((i) => i.status.isLoading && !i.available),
-        isTrue,
-      );
+      expect(_items(container).every((i) => !i.available), isTrue);
       next.add(
         _report(
           candidates: {
@@ -313,7 +324,12 @@ void main() {
     );
     _listen(container);
     await _complete(container);
-    expect(await container.read(storageSelectionProvider.notifier).clean(), 40);
+    expect(
+      await container
+          .read(storageSelectionProvider.notifier)
+          .clean(_items(container)),
+      40,
+    );
     expect(file.existsSync(), isFalse);
     expect(container.read(storageSelectionProvider).cleaning, isFalse);
     await _complete(container);
@@ -352,7 +368,12 @@ void main() {
     repository.videos.add('video-used.mp4');
     final unconfirmed = write('support/file/new.txt', 29);
     container.read(storageSelectionProvider.notifier).toggle(.unusedMedia);
-    expect(await container.read(storageSelectionProvider.notifier).clean(), 35);
+    expect(
+      await container
+          .read(storageSelectionProvider.notifier)
+          .clean(_items(container)),
+      35,
+    );
     for (final file in [unused, orphan, orphanDerivative]) {
       expect(file.existsSync(), isFalse);
     }
@@ -389,8 +410,8 @@ void main() {
     _listen(container);
     await pumpEventQueue();
     final notifier = container.read(storageSelectionProvider.notifier);
-    final first = notifier.clean();
-    expect(await notifier.clean(), 0);
+    final first = notifier.clean(_items(container));
+    expect(await notifier.clean(_items(container)), 0);
     expect(await first, 0);
     expect(file.existsSync(), isTrue);
   });
@@ -471,6 +492,268 @@ void main() {
       expect(_items(container), isEmpty);
     },
   );
+
+  test('sync busy disables and skips unused media too', () async {
+    final file = write('support/file/incoming.txt', 5);
+    final container = ProviderContainer.test(
+      overrides: [
+        storageSyncBusyProvider.overrideWith((ref) => true),
+        storageReportProvider.overrideWith(
+          (ref) => Stream.value(
+            _report(
+              candidates: {
+                .unusedMedia: [
+                  StorageCandidate(
+                    path: file.path,
+                    bytes: 5,
+                    area: .file,
+                    mediaName: 'incoming.txt',
+                  ),
+                ],
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+    _listen(container);
+    await _complete(container);
+    expect(_items(container).single.busy, isTrue);
+    expect(_items(container).single.available, isFalse);
+    expect(
+      await container
+          .read(storageSelectionProvider.notifier)
+          .clean(_items(container)),
+      0,
+    );
+    expect(file.existsSync(), isTrue);
+    await _complete(container);
+  });
+
+  for (final kind in [
+    StorageCleanupKind.cache,
+    StorageCleanupKind.unusedMedia,
+  ]) {
+    test(
+      '$kind cleanup waits for the shared lock and rechecks references inside it',
+      () async {
+        final file = write(
+          kind == .cache ? 'cache/snapshot' : 'support/file/incoming.txt',
+          5,
+        );
+        final repository = _DiaryRepository();
+        getIt.registerSingleton<DiaryRepository>(repository);
+        final container = ProviderContainer.test(
+          overrides: [
+            storageSyncBusyProvider.overrideWith((ref) => false),
+            storageReportProvider.overrideWith(
+              (ref) => Stream.value(
+                _report(
+                  candidates: {
+                    kind: [
+                      StorageCandidate(
+                        path: file.path,
+                        bytes: 5,
+                        area: kind == .cache ? .cache : .file,
+                        mediaName: 'incoming.txt',
+                      ),
+                    ],
+                  },
+                ),
+              ),
+            ),
+          ],
+        );
+        _listen(container);
+        await _complete(container);
+        final entered = Completer<void>();
+        final release = Completer<void>();
+        final owner = runSyncExclusive(() async {
+          entered.complete();
+          await release.future;
+          // Incoming media is referenced only at the end of the operation.
+          repository.files.add('incoming.txt');
+        });
+        await entered.future;
+        var finished = false;
+        final clean = container
+            .read(storageSelectionProvider.notifier)
+            .clean(_items(container))
+            .then((bytes) {
+              finished = true;
+              return bytes;
+            });
+        await pumpEventQueue();
+        expect(finished, isFalse);
+        expect(file.existsSync(), isTrue);
+        release.complete();
+        await owner;
+        expect(await clean, kind == .cache ? 5 : 0);
+        expect(file.existsSync(), kind != .cache);
+        await _complete(container);
+      },
+    );
+  }
+
+  test(
+    'clean deletes only the confirmed snapshot regardless of later selection',
+    () async {
+      final confirmedFile = write('support/model/confirmed.bin', 5);
+      final otherFile = write('support/model/other.bin', 7);
+      final laterFile = write('support/model/later.bin', 11);
+      var includeLater = false;
+      final container = ProviderContainer.test(
+        overrides: [
+          storageSyncBusyProvider.overrideWith((ref) => false),
+          storageReportProvider.overrideWith(
+            (ref) => Stream.value(
+              _report(
+                candidates: {
+                  .unusedModel: [
+                    StorageCandidate(
+                      path: confirmedFile.path,
+                      bytes: 5,
+                      area: .model,
+                    ),
+                    if (includeLater)
+                      StorageCandidate(
+                        path: laterFile.path,
+                        bytes: 11,
+                        area: .model,
+                      ),
+                  ],
+                  .retiredModel: [
+                    StorageCandidate(
+                      path: otherFile.path,
+                      bytes: 7,
+                      area: .model,
+                    ),
+                  ],
+                },
+              ),
+            ),
+          ),
+        ],
+      );
+      _listen(container);
+      await _complete(container);
+      final confirmed = List<Reclaimable>.unmodifiable(
+        _items(container).where((item) => item.kind == .unusedModel),
+      );
+      includeLater = true;
+      container.invalidate(storageReportProvider);
+      await _complete(container);
+      container.read(storageSelectionProvider.notifier).toggle(.unusedModel);
+      expect(
+        await container
+            .read(storageSelectionProvider.notifier)
+            .clean(confirmed),
+        5,
+      );
+      expect(confirmedFile.existsSync(), isFalse);
+      expect(otherFile.existsSync(), isTrue);
+      expect(laterFile.existsSync(), isTrue);
+      await _complete(container);
+    },
+  );
+
+  test(
+    'partials touched after scanning are skipped even if still old',
+    () async {
+      final touched = write('support/model/touched.part', 5);
+      final fresh = write('support/model/fresh.part', 7);
+      final old = write('support/model/old.part', 11);
+      final snapshot = [
+        for (final file in [touched, fresh, old])
+          StorageCandidate(
+            path: file.path,
+            bytes: file.lengthSync(),
+            area: .model,
+            modified: file.lastModifiedSync(),
+          ),
+      ];
+      final container = ProviderContainer.test(
+        overrides: [
+          storageSyncBusyProvider.overrideWith((ref) => false),
+          storageReportProvider.overrideWith(
+            (ref) =>
+                Stream.value(_report(candidates: {.partialDownload: snapshot})),
+          ),
+        ],
+      );
+      _listen(container);
+      await _complete(container);
+      touched.setLastModifiedSync(
+        DateTime.now().subtract(const Duration(minutes: 90)),
+      );
+      fresh.setLastModifiedSync(DateTime.now());
+      expect(
+        await container
+            .read(storageSelectionProvider.notifier)
+            .clean(_items(container)),
+        11,
+      );
+      expect(touched.existsSync(), isTrue);
+      expect(fresh.existsSync(), isTrue);
+      expect(old.existsSync(), isFalse);
+      await _complete(container);
+    },
+  );
+
+  for (final fail in [false, true]) {
+    test(
+      'previous report cannot be cleaned during ${fail ? 'error' : 'rescan'}',
+      () async {
+        final file = write('support/model/keep.bin', 5);
+        final next = StreamController<StorageReport>();
+        addTearDown(next.close);
+        var round = 0;
+        final container = ProviderContainer.test(
+          retry: (_, _) => null,
+          overrides: [
+            storageSyncBusyProvider.overrideWith((ref) => false),
+            storageReportProvider.overrideWith(
+              (ref) => round++ == 0
+                  ? Stream.value(
+                      _report(
+                        candidates: {
+                          .unusedModel: [
+                            StorageCandidate(
+                              path: file.path,
+                              bytes: 5,
+                              area: .model,
+                            ),
+                          ],
+                        },
+                      ),
+                    )
+                  : next.stream,
+            ),
+          ],
+        );
+        _listen(container);
+        await _complete(container);
+        final confirmed = _items(container);
+        container.invalidate(storageReportProvider);
+        await pumpEventQueue();
+        if (fail) {
+          next.addError(StateError('failed'));
+          await pumpEventQueue();
+        }
+        final display = container.read(storageDisplayControllerProvider);
+        expect(display.report!.complete, isTrue);
+        expect(display.canClean, isFalse);
+        expect(_items(container).single.available, isFalse);
+        expect(
+          await container
+              .read(storageSelectionProvider.notifier)
+              .clean(confirmed),
+          0,
+        );
+        expect(file.existsSync(), isTrue);
+      },
+    );
+  }
 
   test('cleaned kinds leave the screen before the rescan finishes', () async {
     final container = ProviderContainer.test(

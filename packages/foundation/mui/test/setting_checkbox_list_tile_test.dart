@@ -13,6 +13,7 @@ void main() {
             body: StatefulBuilder(
               builder: (context, setState) => SettingCheckboxListTile(
                 title: 'Clean cache',
+                subtitle: 'Temporary files',
                 value: selected,
                 onChanged: onChanged == null
                     ? null
@@ -66,5 +67,50 @@ void main() {
     await tester.tap(find.text('Clean cache'));
     await tester.pump();
     expect(mark(tester).selected, isFalse);
+  });
+  testWidgets('merged checkbox semantics include text, checked state and tap', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    try {
+      await pumpTile(tester, onChanged: (_) {});
+      expect(
+        tester.getSemantics(find.byType(SettingCheckboxListTile)),
+        matchesSemantics(
+          label: 'Clean cache\nTemporary files',
+          hasCheckedState: true,
+          isChecked: false,
+          hasEnabledState: true,
+          isEnabled: true,
+          hasTapAction: true,
+        ),
+      );
+      await tester.tap(find.text('Clean cache'));
+      await tester.pump();
+      expect(
+        tester.getSemantics(find.byType(SettingCheckboxListTile)),
+        matchesSemantics(
+          label: 'Clean cache\nTemporary files',
+          hasCheckedState: true,
+          isChecked: true,
+          hasEnabledState: true,
+          isEnabled: true,
+          hasTapAction: true,
+        ),
+      );
+      await pumpTile(tester);
+      expect(
+        tester.getSemantics(find.byType(SettingCheckboxListTile)),
+        matchesSemantics(
+          label: 'Clean cache\nTemporary files',
+          hasCheckedState: true,
+          isChecked: true,
+          hasEnabledState: true,
+          isEnabled: false,
+        ),
+      );
+    } finally {
+      semantics.dispose();
+    }
   });
 }

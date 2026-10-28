@@ -247,17 +247,25 @@ class SettingCheckboxListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final onChanged = this.onChanged;
-    return SettingListTile(
-      title: title,
-      subtitle: subtitle,
-      leading: secondary,
-      isFirst: isSingle == true ? true : isFirst,
-      isLast: isSingle == true ? true : isLast,
-      trailing: SizedBox.square(
-        dimension: 22,
-        child: MSelectMark(selected: value, enabled: onChanged != null),
+    return MergeSemantics(
+      child: Semantics(
+        checked: value,
+        enabled: onChanged != null,
+        child: SettingListTile(
+          title: title,
+          subtitle: subtitle,
+          leading: secondary,
+          isFirst: isSingle == true ? true : isFirst,
+          isLast: isSingle == true ? true : isLast,
+          trailing: ExcludeSemantics(
+            child: SizedBox.square(
+              dimension: 22,
+              child: MSelectMark(selected: value, enabled: onChanged != null),
+            ),
+          ),
+          onTap: onChanged == null ? null : () => onChanged(!value),
+        ),
       ),
-      onTap: onChanged == null ? null : () => onChanged(!value),
     );
   }
 }

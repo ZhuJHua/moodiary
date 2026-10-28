@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:fast_image/fast_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 
 import 'app_files.dart';
@@ -114,6 +115,7 @@ class StorageCandidate {
   /// Present for originals and video thumbnails, absent for image derivatives.
   final String? mediaName;
   final String? imageStem;
+  final DateTime? modified;
 
   const StorageCandidate({
     required this.path,
@@ -121,6 +123,7 @@ class StorageCandidate {
     required this.area,
     this.mediaName,
     this.imageStem,
+    this.modified,
   });
 }
 
@@ -202,7 +205,11 @@ class StorageScanner {
   final String supportPath;
   final String cachePath;
 
-  StorageScanner({String? supportPath, String? cachePath})
+  /// Observes the delta payload arriving from the worker, before accumulation.
+  @visibleForTesting
+  final void Function(StorageReport)? onWorkerReport;
+
+  StorageScanner({String? supportPath, String? cachePath, this.onWorkerReport})
     : supportPath = supportPath ?? AppFiles.getRealPath('', ''),
       cachePath = cachePath ?? AppFiles.getCachePath('');
 
@@ -210,6 +217,7 @@ class StorageScanner {
   Stream<StorageReport> scan(StorageScanInput input) async* {
     final port = ReceivePort();
     Isolate? worker;
+    final candidates = <StorageCleanupKind, StorageCandidates>{};
     try {
       worker = await Isolate.spawn(_scan, (
         port.sendPort,
@@ -220,7 +228,15 @@ class StorageScanner {
       await for (final event in port) {
         if (event == null) break;
         if (event is StorageReport) {
-          yield event;
+          onWorkerReport?.call(event);
+          candidates.addAll(event.candidates);
+          yield StorageReport(
+            bytes: event.bytes,
+            done: event.done,
+            area: event.area,
+            files: event.files,
+            candidates: candidates,
+          );
         } else if (event is List<String>) {
           Error.throwWithStackTrace(
             FileSystemException(event[0]),
@@ -247,13 +263,15 @@ void _scan((SendPort, String, String, StorageScanInput) args) {
   final pending = {
     for (final kind in StorageCleanupKind.values) kind: <StorageCandidate>[],
   };
-  final candidates = <StorageCleanupKind, StorageCandidates>{};
+  final published = <StorageCleanupKind>{};
   var files = 0;
   var sinceEmit = 0;
   final watch = Stopwatch()..start();
   final now = DateTime.now();
   var current = StorageArea.model;
-  void emit() {
+  void emit([
+    Map<StorageCleanupKind, StorageCandidates> candidates = const {},
+  ]) {
     port.send(
       StorageReport(
         bytes: bytes,
@@ -284,10 +302,13 @@ void _scan((SendPort, String, String, StorageScanInput) args) {
           path: entity.path,
           bytes: size,
           area: area,
+          modified: stat.modified,
         );
         if (area == .model) {
           if (name.endsWith('.part')) {
-            kind = .partialDownload;
+            if (now.difference(stat.modified) > AppFiles.partialDownloadGrace) {
+              kind = .partialDownload;
+            }
           } else if (input.retiredModelStems.any(
             (stem) => name == stem || name.startsWith('$stem.'),
           )) {
@@ -365,10 +386,7 @@ void _scan((SendPort, String, String, StorageScanInput) args) {
             walk(
               child,
               area,
-              kind:
-                  AppFiles.protectedCacheDirectories.contains(
-                    p.basename(child.path),
-                  )
+              kind: AppFiles.isProtectedCacheEntry(p.basename(child.path))
                   ? null
                   : .cache,
             );
@@ -421,12 +439,14 @@ void _scan((SendPort, String, String, StorageScanInput) args) {
         walk(Directory(p.join(support, area.name)), area);
       }
       done.add(area);
+      final finalized = <StorageCleanupKind, StorageCandidates>{};
       for (final kind in StorageCleanupKind.values) {
-        if (!candidates.containsKey(kind) && done.containsAll(kind.areas)) {
-          candidates[kind] = StorageCandidates(pending[kind]!);
+        if (!published.contains(kind) && done.containsAll(kind.areas)) {
+          published.add(kind);
+          finalized[kind] = StorageCandidates(pending.remove(kind)!);
         }
       }
-      emit();
+      emit(finalized);
     }
   } catch (error, stack) {
     port.send([error.toString(), stack.toString()]);

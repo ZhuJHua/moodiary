@@ -136,10 +136,15 @@ void main() {
       for (final entry in sizes.entries) {
         write('support/${entry.key}', entry.value);
       }
+      for (final name in ['old.onnx.part', 'live.onnx.part']) {
+        File('${root.path}/support/model/$name').setLastModifiedSync(
+          DateTime.now().subtract(const Duration(hours: 2)),
+        );
+      }
       File(
         '${root.path}/support/image/thumb/old.part',
       ).setLastModifiedSync(DateTime.now().subtract(const Duration(hours: 2)));
-      for (final name in AppFiles.protectedCacheDirectories) {
+      for (final name in const ['sync-media', 'export', 'import']) {
         write('cache/$name/in-use', 30);
       }
       write('cache/tmp/a', 31);
@@ -256,17 +261,124 @@ void main() {
       write('cache/temporary', 1);
       expect(await AppFiles.clearCache(cachePath: '${root.path}/cache'), 2);
       expect(Directory('${root.path}/cache').existsSync(), isTrue);
-      for (final name in AppFiles.protectedCacheDirectories) {
+      for (final name in const ['sync-media', 'export', 'import']) {
         expect(File('${root.path}/cache/$name/a').existsSync(), isTrue);
       }
       expect(Directory('${root.path}/cache/idle').existsSync(), isFalse);
       expect(File('${root.path}/cache/temporary').existsSync(), isFalse);
       await AppFiles.clearCache(
         cachePath: '${root.path}/cache',
-        inUseDirectories: {'sync-media'},
+        protectWorkspaces: false,
       );
-      expect(File('${root.path}/cache/sync-media/a').existsSync(), isTrue);
+      expect(File('${root.path}/cache/sync-media/a').existsSync(), isFalse);
       expect(Directory('${root.path}/cache/export').existsSync(), isFalse);
+    },
+  );
+
+  test(
+    'backup workspaces survive scans and both cleanup modes until reset',
+    () async {
+      final protected = [
+        'sync-media/a',
+        'export/a',
+        'import/a',
+        'backup-import-123/a',
+        'moodiary-backup-20261028.zip',
+      ];
+      for (final name in protected) {
+        write('cache/$name', 7);
+        expect(AppFiles.isProtectedCacheEntry(name.split('/').first), isTrue);
+      }
+      write('cache/idle.zip', 3);
+      final report = await StorageScanner(
+        supportPath: '${root.path}/support',
+        cachePath: '${root.path}/cache',
+      ).scan(StorageScanInput()).last;
+      expect(
+        report.candidates[StorageCleanupKind.cache]!.files.single.path,
+        '${root.path}/cache/idle.zip',
+      );
+      final allPaths = {
+        for (final name in protected) '${root.path}/cache/$name',
+        '${root.path}/cache/idle.zip',
+      };
+      expect(
+        await AppFiles.clearCache(
+          cachePath: '${root.path}/cache',
+          filePaths: allPaths,
+        ),
+        3,
+      );
+      expect(await AppFiles.clearCache(cachePath: '${root.path}/cache'), 0);
+      for (final name in protected) {
+        expect(File('${root.path}/cache/$name').existsSync(), isTrue);
+      }
+      expect(
+        await AppFiles.clearCache(
+          cachePath: '${root.path}/cache',
+          protectWorkspaces: false,
+        ),
+        35,
+      );
+    },
+  );
+
+  test('only model partials older than one hour are candidates', () async {
+    write('support/model/fresh.part', 3);
+    write('support/model/old.part', 5);
+    File('${root.path}/support/model/old.part')
+        .setLastModifiedSync(DateTime.now().subtract(const Duration(hours: 2)));
+    final report = await StorageScanner(
+      supportPath: '${root.path}/support',
+      cachePath: '${root.path}/cache',
+    ).scan(StorageScanInput()).last;
+    final files = report.candidates[StorageCleanupKind.partialDownload]!.files;
+    expect(files.single.path, endsWith('/old.part'));
+    expect(files.single.modified, isNotNull);
+    expect(report.candidates[StorageCleanupKind.unusedModel]!.files, isEmpty);
+    expect(report.bytes[StorageArea.model], 8);
+  });
+
+  test(
+    'worker sends candidates once; main isolate retains cumulative lists',
+    () async {
+      write('support/model/old.bin', 5);
+      for (var i = 0; i < 450; i++) {
+        write('support/image/$i.jpg', 1);
+      }
+      final payloads = <StorageReport>[];
+      final reports = await StorageScanner(
+        supportPath: '${root.path}/support',
+        cachePath: '${root.path}/cache',
+        onWorkerReport: payloads.add,
+      ).scan(StorageScanInput()).toList();
+      final sent = <StorageCleanupKind>{};
+      var previousDone = <StorageArea>{};
+      for (final payload in payloads) {
+        for (final kind in payload.candidates.keys) {
+          expect(sent.add(kind), isTrue, reason: '$kind was sent twice');
+          expect(previousDone.containsAll(kind.areas), isFalse);
+          expect(payload.done.containsAll(kind.areas), isTrue);
+        }
+        if (payload.done.length == previousDone.length) {
+          expect(payload.candidates, isEmpty);
+        }
+        previousDone = payload.done;
+      }
+      expect(sent, StorageCleanupKind.values.toSet());
+      expect(
+        payloads.where((p) => p.candidates.isEmpty).length,
+        greaterThan(2),
+      );
+      for (final report in reports.where(
+        (r) => r.done.contains(StorageArea.model),
+      )) {
+        expect(report.candidates[StorageCleanupKind.unusedModel]!.bytes, 5);
+      }
+      expect(
+        reports.last.candidates[StorageCleanupKind.unusedMedia]!.files,
+        hasLength(450),
+      );
     },
   );
 

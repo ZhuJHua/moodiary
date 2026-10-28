@@ -31,6 +31,8 @@ class StorageDisplay {
   final bool scanning;
   final Object? error;
 
+  bool get canClean => !scanning && error == null;
+
   const StorageDisplay({this.report, this.scanning = true, this.error});
 }
 
@@ -83,12 +85,14 @@ class Reclaimable {
   final StorageCleanupKind kind;
   final AsyncValue<int> status;
   final bool busy;
+  final bool enabled;
   final StorageCandidates? candidates;
 
   const Reclaimable({
     required this.kind,
     required this.status,
     this.busy = false,
+    this.enabled = true,
     this.candidates,
   });
 
@@ -99,7 +103,7 @@ class Reclaimable {
   Map<MediaType, int> get counts => candidates?.counts ?? const {};
   int get bytes => status.value ?? 0;
   bool get available =>
-      !status.isLoading && !status.hasError && !busy && bytes > 0;
+      enabled && !status.isLoading && !status.hasError && !busy && bytes > 0;
   int bytesIn(Iterable<StorageArea> areas) =>
       candidates?.areaBytes.entries
           .where((e) => areas.contains(e.key))
@@ -112,6 +116,7 @@ class Reclaimable {
 List<Reclaimable> storageReclaimables(
   StorageReport? report, {
   required bool syncBusy,
+  bool canClean = true,
 }) => [
   if (report != null)
     for (final kind in StorageCleanupKind.values)
@@ -120,7 +125,8 @@ List<Reclaimable> storageReclaimables(
           kind: kind,
           status: AsyncData(report.candidates[kind]!.bytes),
           candidates: report.candidates[kind],
-          busy: kind == .cache && syncBusy,
+          busy: (kind == .cache || kind == .unusedMedia) && syncBusy,
+          enabled: canClean,
         ),
 ];
 
@@ -162,34 +168,50 @@ class StorageSelection extends _$StorageSelection {
     state = state.copyWith(checked: checked);
   }
 
-  Future<int> clean() async {
-    if (state.cleaning) return 0;
-    final selected = state.selected(
-      storageReclaimables(
-        ref.read(storageDisplayControllerProvider).report,
-        syncBusy: ref.read(storageSyncBusyProvider),
-      ),
-    );
+  Future<int> clean(List<Reclaimable> confirmed) async {
+    if (state.cleaning ||
+        !ref.read(storageDisplayControllerProvider).canClean) {
+      return 0;
+    }
+    final selected = List<Reclaimable>.unmodifiable(confirmed);
     // Immutable candidate lists are captured before any await or refresh.
     state = state.copyWith(cleaning: true);
     var freed = 0;
     final cleaned = <StorageCleanupKind>{};
     try {
       for (final item in selected) {
-        if (item.kind == .cache && ref.read(storageSyncBusyProvider)) continue;
-        cleaned.add(item.kind);
-        freed += switch (item.kind) {
-          .retiredModel ||
-          .unusedModel ||
-          .partialDownload => await _deleteFiles(item.candidates!.files),
-          .cache => await AppFiles.clearCache(
-            filePaths: item.candidates!.files.map((f) => f.path).toSet(),
-          ),
-          .unusedMedia => await _deleteUnusedMedia(item.candidates!.files),
-          .legacyBackup => await LegacyBackups().delete(
-            filePaths: item.candidates!.files.map((f) => f.path).toSet(),
-          ),
-        };
+        bool allowed() =>
+            ref.mounted &&
+            ref.read(storageDisplayControllerProvider).canClean &&
+            item.available &&
+            item.candidates != null &&
+            (!(item.kind == .cache || item.kind == .unusedMedia) ||
+                !ref.read(storageSyncBusyProvider));
+        if (!allowed()) continue;
+        Future<int> delete() async {
+          // Revalidate after waiting for an export/import/sync to release the lock.
+          if (!allowed()) return 0;
+          cleaned.add(item.kind);
+          return switch (item.kind) {
+            .retiredModel ||
+            .unusedModel ||
+            .partialDownload => await _deleteFiles(
+              item.candidates!.files,
+              partialDownload: item.kind == .partialDownload,
+            ),
+            .cache => await AppFiles.clearCache(
+              filePaths: item.candidates!.files.map((f) => f.path).toSet(),
+            ),
+            .unusedMedia => await _deleteUnusedMedia(item.candidates!.files),
+            .legacyBackup => await LegacyBackups().delete(
+              filePaths: item.candidates!.files.map((f) => f.path).toSet(),
+            ),
+          };
+        }
+
+        freed += item.kind == .cache || item.kind == .unusedMedia
+            ? await runSyncExclusive(delete)
+            : await delete();
       }
       return freed;
     } finally {
@@ -204,12 +226,22 @@ class StorageSelection extends _$StorageSelection {
   }
 }
 
-Future<int> _deleteFiles(Iterable<StorageCandidate> files) async {
+Future<int> _deleteFiles(
+  Iterable<StorageCandidate> files, {
+  bool partialDownload = false,
+}) async {
   var freed = 0;
   for (final file in files) {
     try {
-      final bytes = await File(file.path).length();
-      if (await AppFiles.deleteFile(file.path)) freed += bytes;
+      final stat = await File(file.path).stat();
+      if (stat.type != FileSystemEntityType.file) continue;
+      if (partialDownload &&
+          ((file.modified != null && stat.modified != file.modified) ||
+              DateTime.now().difference(stat.modified) <=
+                  AppFiles.partialDownloadGrace)) {
+        continue;
+      }
+      if (await AppFiles.deleteFile(file.path)) freed += stat.size;
     } on PathNotFoundException {
       // A download or another cleaner already removed it.
     }

@@ -53,23 +53,29 @@ class DiaryTileFrame extends StatelessWidget {
             width: 1.5,
           ),
         ),
-        child: MInkWell(
-          borderRadius: borderRadius,
-          overlayColor: colors.onSurface.withValues(alpha: 0.06),
-          onTap: onTap,
-          onLongPress: onLongPress,
-          child: Stack(
-            children: [
-              Padding(padding: padding, child: child),
-              if (selecting)
-                Positioned(
-                  top: _kMarkInset,
-                  right: _kMarkInset,
-                  width: _kMarkSize,
-                  height: _kMarkSize,
-                  child: MSelectMark(selected: selected),
-                ),
-            ],
+        child: Semantics(
+          container: true,
+          selected: selecting ? selected : null,
+          child: MInkWell(
+            borderRadius: borderRadius,
+            overlayColor: colors.onSurface.withValues(alpha: 0.06),
+            onTap: onTap,
+            onLongPress: onLongPress,
+            child: Stack(
+              children: [
+                Padding(padding: padding, child: child),
+                if (selecting)
+                  Positioned(
+                    top: _kMarkInset,
+                    right: _kMarkInset,
+                    width: _kMarkSize,
+                    height: _kMarkSize,
+                    child: ExcludeSemantics(
+                      child: MSelectMark(selected: selected),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),

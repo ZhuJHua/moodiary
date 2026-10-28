@@ -70,7 +70,7 @@ Future<void> resetAllData() async {
     }),
     step('legacyPrefs.clear', LegacyPrefsKVSource.clearStore),
     step('media.reset', AppFiles.resetUserMediaDirs),
-    step('cache.clear', () => AppFiles.clearCache(inUseDirectories: const {})),
+    step('cache.clear', () => AppFiles.clearCache(protectWorkspaces: false)),
     step(
       'editorBackups.delete',
       () => AppFiles.deleteDir(EditorMigrationService.backupDirPath),

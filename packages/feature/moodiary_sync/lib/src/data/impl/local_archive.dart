@@ -12,6 +12,7 @@ import 'package:moodiary_sync/src/data/incremental_engine.dart';
 import 'package:moodiary_sync/src/data/media_refs.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
+import 'package:moodiary_sync/src/data/sync_exclusive.dart';
 import 'package:moodiary_sync/src/data/sync_stores.dart';
 import 'package:path/path.dart' as p;
 

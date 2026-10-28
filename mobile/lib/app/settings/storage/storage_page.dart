@@ -56,9 +56,7 @@ class _StorageView {
   bool get cleaning => selection.cleaning;
   bool get hasError => display.error != null;
 
-  /// A rescan behind an already finished report stays quiet: only the first
-  /// scan of a visit shows progress.
-  bool get scanning => !hasError && progress?.complete != true;
+  bool get scanning => display.scanning;
   List<Reclaimable> get selected => selection.selected(items);
   int get selectedBytes => selected.fold(0, (sum, i) => sum + i.bytes);
   int get reclaimableBytes => items
@@ -78,16 +76,18 @@ class StoragePage extends ConsumerWidget {
       storageReclaimables(
         display.report,
         syncBusy: ref.watch(storageSyncBusyProvider),
+        canClean: display.canClean,
       ),
       ref.watch(storageSelectionProvider),
     );
     final items = state.items;
     final selected = state.selected;
-    final label = selected.isNotEmpty
-        ? context.l10n.storage.clean(size: storageSize(state.selectedBytes))
-        : state.scanning &&
-              !items.any((i) => !i.status.isLoading && !i.status.hasError)
+    final label = state.hasError
+        ? context.l10n.storage.failed
+        : state.scanning
         ? context.l10n.storage.counting
+        : selected.isNotEmpty
+        ? context.l10n.storage.clean(size: storageSize(state.selectedBytes))
         : items.isEmpty
         ? context.l10n.storage.allClean
         : context.l10n.storage.nothingSelected;
@@ -134,7 +134,7 @@ class StoragePage extends ConsumerWidget {
         child: Padding(
           padding: const .fromLTRB(16, 12, 16, 12),
           child: FilledButton(
-            onPressed: selected.isEmpty || state.cleaning
+            onPressed: !display.canClean || selected.isEmpty || state.cleaning
                 ? null
                 : () => _clean(context, ref, state),
             child: state.cleaning
@@ -155,12 +155,13 @@ class StoragePage extends ConsumerWidget {
     WidgetRef ref,
     _StorageView state,
   ) async {
+    final confirmedItems = List<Reclaimable>.unmodifiable(state.selected);
     if (state.needsConfirmation) {
       final confirmed = await MSheet.show<bool>(
         context,
         builder: (sheetContext) => MSheetScaffold<bool>(
           title: sheetContext.l10n.storage.confirmTitle(
-            count: state.selected.length,
+            count: confirmedItems.length,
           ),
           actions: [
             MAction(label: sheetContext.l10n.storage.cancel, value: false),
@@ -175,7 +176,7 @@ class StoragePage extends ConsumerWidget {
             mainAxisSize: .min,
             crossAxisAlignment: .stretch,
             children: [
-              for (final item in state.selected)
+              for (final item in confirmedItems)
                 _SheetLine(
                   name: _itemName(sheetContext, item),
                   bytes: item.bytes,
@@ -189,7 +190,7 @@ class StoragePage extends ConsumerWidget {
               MNoticeItem(
                 icon: LucideIcons.triangleAlert,
                 title: sheetContext.l10n.storage.warning(
-                  names: state.selected
+                  names: confirmedItems
                       .where((i) => i.safety == .careful)
                       .map((i) => _itemName(sheetContext, i))
                       .join(sheetContext.l10n.storage.listSeparator),
@@ -202,7 +203,9 @@ class StoragePage extends ConsumerWidget {
       if (confirmed != true || !context.mounted) return;
     }
     try {
-      final freed = await ref.read(storageSelectionProvider.notifier).clean();
+      final freed = await ref
+          .read(storageSelectionProvider.notifier)
+          .clean(confirmedItems);
       toast.success(message: l10n.storage.freed(size: storageSize(freed)));
     } catch (_) {
       toast.error(message: l10n.storage.cleanFailed);

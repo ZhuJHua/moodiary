@@ -5,11 +5,13 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_mobile/app/settings/storage/storage_controller.dart';
 import 'package:moodiary_mobile/app/settings/storage/storage_page.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
+import 'package:moodiary_sync/src/data/sync_cancellation.dart';
 import 'package:mui/mui.dart';
 
 void main() {
@@ -20,6 +22,8 @@ void main() {
     PlatformService.get().applicationCachePath = root.path;
   });
   tearDownAll(() => root.deleteSync(recursive: true));
+  setUp(() => getIt.registerSingleton<SyncCancellation>(SyncCancellation()));
+  tearDown(getIt.reset);
 
   StorageReport report({
     StorageCleanupKind kind = .cache,
@@ -136,6 +140,7 @@ void main() {
         (.unusedMedia, false, false, '1.00 KB · 1 张照片 · 删除后无法恢复'),
         (.retiredModel, false, false, '1.00 KB · 已不再使用'),
         (.cache, false, true, '同步中'),
+        (.unusedMedia, false, true, '同步中'),
       ]) {
     testWidgets('reclaim subtitle: $subtitle', (tester) async {
       await show(tester, kind: kind, loading: loading, busy: busy);
@@ -273,6 +278,39 @@ void main() {
     expect(find.text('清理 1 项？'), findsNothing);
     expect(tester.takeException(), isNull);
   });
+
+  for (final fail in [false, true]) {
+    testWidgets(
+      'old rows retain sizes and checks but disable during ${fail ? 'error' : 'rescan'}',
+      (tester) async {
+        final next = StreamController<StorageReport>();
+        addTearDown(next.close);
+        var round = 0;
+        final container = await show(
+          tester,
+          reports: () => round++ == 0 ? Stream.value(report()) : next.stream,
+        );
+        container.invalidate(storageReportProvider);
+        await tester.pump();
+        if (fail) {
+          next.addError(StateError('failed'));
+          await tester.pumpAndSettle();
+        }
+        final tile = tester.widget<SettingCheckboxListTile>(
+          find.byType(SettingCheckboxListTile),
+        );
+        expect(tile.value, isTrue);
+        expect(tile.subtitle, '1.00 KB');
+        expect(tile.onChanged, isNull);
+        final button = tester.widget<FilledButton>(find.byType(FilledButton));
+        expect(button.onPressed, isNull);
+        expect(
+          find.widgetWithText(FilledButton, fail ? '统计失败' : '统计中'),
+          findsOneWidget,
+        );
+      },
+    );
+  }
 
   testWidgets(
     'source error shows retry and disables its rows until retry succeeds',
