@@ -24,17 +24,29 @@ void main() {
     await getIt.reset();
   });
 
+  test('snapshot cleanup keeps a backup absent from that snapshot', () async {
+    MoodiaryKVs.dbEngineMigrated.set(true);
+    final path = '${root.path}/default.isar.pre-sqlite.bak';
+    expect(
+      await LegacyBackups(databasePath: root.path).delete(filePaths: {path}),
+      4,
+    );
+    expect(File(path).existsSync(), isFalse);
+    expect(File('${root.path}/default.isar.v273bak').existsSync(), isTrue);
+  });
+
   test(
     'unfinalized migration never exposes or deletes rollback files',
     () async {
       final backups = LegacyBackups(databasePath: root.path);
-      expect(await backups.scan(), isEmpty);
+      expect(backups.dbEngineMigrated, isFalse);
       MoodiaryKVs.dbEngineMigrated.set(false);
       await backups.delete();
       expect(root.listSync().length, 3);
       MoodiaryKVs.dbEngineMigrated.set(true);
-      expect((await backups.scan()).length, 2);
-      await backups.delete();
+      expect(backups.dbEngineMigrated, isTrue);
+      expect(await backups.delete(), 8);
+      expect(await backups.delete(), 0);
       expect(root.listSync().single.path, endsWith('diary.sqlite'));
     },
   );

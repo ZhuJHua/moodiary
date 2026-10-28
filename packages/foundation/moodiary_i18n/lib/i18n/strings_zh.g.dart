@@ -3086,9 +3086,6 @@ class Translations$storage$zh {
 	/// zh: '同步中'
 	String get syncing => '同步中';
 
-	/// zh: '已清理'
-	String get cleaned => '已清理';
-
 	/// zh: '统计失败'
 	String get failed => '统计失败';
 

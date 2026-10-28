@@ -76,6 +76,7 @@ class AppFiles {
   static Future<int> clearCache({
     String? cachePath,
     Set<String> inUseDirectories = protectedCacheDirectories,
+    Set<String>? filePaths,
   }) {
     final path = cachePath ?? _cachePath;
     return Isolate.run(() {
@@ -105,6 +106,20 @@ class AppFiles {
         } on PathNotFoundException {
           // Another cache owner already removed it.
         }
+      }
+
+      if (filePaths != null) {
+        // A report cleanup removes only its snapshot, retaining newly made files.
+        for (final filePath in filePaths) {
+          if (!isWithin(path, filePath)) continue;
+          final top = split(relative(filePath, from: path)).first;
+          if (inUseDirectories.contains(top)) continue;
+          if (FileSystemEntity.typeSync(filePath, followLinks: false) ==
+              FileSystemEntityType.file) {
+            remove(File(filePath));
+          }
+        }
+        return freed;
       }
 
       final directory = Directory(path);
@@ -194,57 +209,6 @@ class AppFiles {
         await file.delete();
       }
     }
-  }
-
-  static Future<MediaCleanupReport> scanOrphanMedia({
-    required Set<String> usedImages,
-    required Set<String> usedAudios,
-    required Set<String> usedVideos,
-    required Set<String> usedFiles,
-  }) async {
-    final orphans = <(String type, Set<String> names)>[
-      (
-        MediaType.image.value,
-        (await getDirFileName(MediaType.image.value))
-            .toSet()
-            .difference(usedImages),
-      ),
-      (
-        MediaType.audio.value,
-        (await getDirFileName(MediaType.audio.value))
-            .toSet()
-            .difference(usedAudios),
-      ),
-      (
-        MediaType.video.value,
-        (await getDirFileName(MediaType.video.value))
-            .toSet()
-            .difference(usedVideos),
-      ),
-      (
-        MediaType.file.value,
-        (await getDirFileName(MediaType.file.value))
-            .toSet()
-            .difference(usedFiles),
-      ),
-    ];
-
-    final paths = <String>[];
-    var bytes = 0;
-    for (final (type, names) in orphans) {
-      for (final name in names) {
-        final file = File(getRealPath(type, name));
-        if (await file.exists()) {
-          bytes += await file.length();
-          paths.add(file.path);
-        }
-      }
-    }
-    for (final path in await FastImageDerivatives.stale(usedImages)) {
-      bytes += await File(path).length();
-      paths.add(path);
-    }
-    return MediaCleanupReport(paths: paths, bytes: bytes);
   }
 
   static Future<void> deleteOrphanMedia(MediaCleanupReport report) async {

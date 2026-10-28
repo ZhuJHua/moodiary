@@ -1146,7 +1146,6 @@ class _Translations$storage$en extends Translations$storage$zh {
 	@override String get cancel => 'Cancel';
 	@override String get confirm => 'Clean';
 	@override String get syncing => 'Syncing';
-	@override String get cleaned => 'Cleaned';
 	@override String get failed => 'Could not count storage';
 	@override String get retry => 'Retry';
 	@override String get cleanFailed => 'Could not clean. Try again.';

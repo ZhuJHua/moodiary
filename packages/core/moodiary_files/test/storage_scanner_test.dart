@@ -56,7 +56,7 @@ void main() {
     final events = await StorageScanner(
       supportPath: '${root.path}/support',
       cachePath: '${root.path}/cache',
-    ).scan().toList();
+    ).scan(StorageScanInput()).toList();
     expect(events.length, greaterThan(StorageArea.values.length + 1));
     var previousTotal = 0;
     var previousCount = 0;
@@ -80,13 +80,171 @@ void main() {
     expect(events.last.complete, isTrue);
     expect(events.last.done, StorageArea.values.toSet());
     expect(events.last.bytes, expected);
-    expect(events.last.reclaimableCacheBytes, 8);
+    expect(events.last.candidates[StorageCleanupKind.cache]!.bytes, 8);
     expect(events.last.total, expected.values.fold(0, (a, b) => a + b));
     expect(
       events[3].done,
       containsAll([StorageArea.model, StorageArea.database, StorageArea.font]),
     );
   });
+
+  test(
+    'one walk classifies candidates and publishes only finalized kinds',
+    () async {
+      final input = StorageScanInput(
+        referencedMedia: (
+          images: {'live.jpg'},
+          audios: {'live.m4a'},
+          videos: {'video-live.mp4'},
+          files: {'live.txt'},
+        ),
+        liveModelFiles: {'live.onnx', 'live.tokenizer.json'},
+        retiredModelStems: {'old'},
+        includeLegacyBackups: true,
+      );
+      final sizes = {
+        'model/live.onnx': 1,
+        'model/live.tokenizer.json': 2,
+        'model/old': 3,
+        'model/old.onnx': 4,
+        'model/old.tokenizer.json': 5,
+        'model/older.onnx': 6,
+        'model/unknown.bin': 7,
+        'model/old.onnx.part': 8,
+        'model/live.onnx.part': 9,
+        'image/live.jpg': 10,
+        'image/orphan.jpg': 11,
+        'image/thumb/live_512.jpg': 12,
+        'image/thumb/orphan_512.jpg': 13,
+        'image/thumb/orphan_base.jpg': 14,
+        'image/thumb/unrecognized.jpg': 15,
+        'image/thumb/junk.bin': 16,
+        'image/thumb/fresh.part': 17,
+        'image/thumb/old.part': 18,
+        'audio/live.m4a': 19,
+        'audio/orphan.m4a': 20,
+        'video/video-live.mp4': 21,
+        'video/thumbnail-live.jpeg': 22,
+        'video/video-orphan.mp4': 23,
+        'video/thumbnail-orphan.jpeg': 24,
+        'file/live.txt': 25,
+        'file/orphan.txt': 26,
+        'database/default.isar.pre-sqlite.bak': 27,
+        'database/default.isar.v273bak': 28,
+        'migration_backup/keep.json': 29,
+      };
+      for (final entry in sizes.entries) {
+        write('support/${entry.key}', entry.value);
+      }
+      File(
+        '${root.path}/support/image/thumb/old.part',
+      ).setLastModifiedSync(DateTime.now().subtract(const Duration(hours: 2)));
+      for (final name in AppFiles.protectedCacheDirectories) {
+        write('cache/$name/in-use', 30);
+      }
+      write('cache/tmp/a', 31);
+      // Neither storage usage nor cleanup follows symlinks.
+      Link('${root.path}/support/image/link.jpg')
+          .createSync('${root.path}/support/image/orphan.jpg');
+      Link('${root.path}/support/model/cycle')
+          .createSync('${root.path}/support/model');
+      final events = await StorageScanner(
+        supportPath: '${root.path}/support',
+        cachePath: '${root.path}/cache',
+      ).scan(input).toList();
+      for (final report in events) {
+        for (final kind in StorageCleanupKind.values) {
+          expect(report.candidates.containsKey(kind), report.finished(kind));
+        }
+      }
+      final report = events.last;
+      List<String> names(StorageCleanupKind kind) => report
+          .candidates[kind]!
+          .files
+          .map((f) => f.path.substring('${root.path}/support/'.length))
+          .toList();
+      expect(
+        names(.retiredModel),
+        unorderedEquals([
+          'model/old',
+          'model/old.onnx',
+          'model/old.tokenizer.json',
+        ]),
+      );
+      expect(
+        names(.unusedModel),
+        unorderedEquals(['model/older.onnx', 'model/unknown.bin']),
+      );
+      expect(
+        names(.partialDownload),
+        unorderedEquals(['model/old.onnx.part', 'model/live.onnx.part']),
+      );
+      expect(
+        names(.unusedMedia),
+        unorderedEquals([
+          'image/orphan.jpg',
+          'image/thumb/orphan_512.jpg',
+          'image/thumb/orphan_base.jpg',
+          'image/thumb/junk.bin',
+          'image/thumb/old.part',
+          'audio/orphan.m4a',
+          'video/video-orphan.mp4',
+          'video/thumbnail-orphan.jpeg',
+          'file/orphan.txt',
+        ]),
+      );
+      final media = report.candidates[StorageCleanupKind.unusedMedia]!;
+      expect(media.counts, {
+        MediaType.image: 1,
+        MediaType.audio: 1,
+        MediaType.video: 1,
+        MediaType.file: 1,
+      });
+      expect(media.areaBytes, {
+        StorageArea.image: 72,
+        StorageArea.audio: 20,
+        StorageArea.video: 47,
+        StorageArea.file: 26,
+      });
+      expect(report.candidates[StorageCleanupKind.cache]!.bytes, 31);
+      expect(report.bytes[StorageArea.cache], 121);
+      expect(report.candidates[StorageCleanupKind.legacyBackup]!.bytes, 55);
+      expect(report.bytes[StorageArea.legacyBackups], 84);
+      expect(report.total, sizes.values.fold(121, (sum, size) => sum + size));
+      final disabled = await StorageScanner(
+        supportPath: '${root.path}/support',
+        cachePath: '${root.path}/cache',
+      ).scan(StorageScanInput()).last;
+      expect(
+        disabled.candidates[StorageCleanupKind.legacyBackup]!.files,
+        isEmpty,
+      );
+      expect(disabled.bytes, report.bytes);
+    },
+  );
+
+  test(
+    'snapshot cache cleanup retains new files and protected workspaces',
+    () async {
+      write('cache/idle/scanned', 3);
+      write('cache/idle/new', 5);
+      write('cache/export/keep', 7);
+      final paths = {
+        '${root.path}/cache/idle/scanned',
+        '${root.path}/cache/export/keep',
+      };
+      expect(
+        await AppFiles.clearCache(
+          cachePath: '${root.path}/cache',
+          filePaths: paths,
+        ),
+        3,
+      );
+      expect(File('${root.path}/cache/idle/scanned').existsSync(), isFalse);
+      expect(File('${root.path}/cache/idle/new').existsSync(), isTrue);
+      expect(File('${root.path}/cache/export/keep').existsSync(), isTrue);
+    },
+  );
 
   test(
     'cache root and in-use workspaces survive; idle children are removed',

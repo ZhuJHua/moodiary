@@ -26,11 +26,26 @@ void main() {
       write('thumb/orphan_512.jpg', 2);
       write('live.jpg', 7);
       write('thumb/live_512.jpg', 5);
-      final report = await AppFiles.scanOrphanMedia(
-        usedImages: {'live.jpg'},
-        usedAudios: {},
-        usedVideos: {},
-        usedFiles: {},
+      final result =
+          await StorageScanner(
+                supportPath: root.path,
+                cachePath: '${root.path}/cache',
+              )
+              .scan(
+                StorageScanInput(
+                  referencedMedia: (
+                    images: {'live.jpg'},
+                    audios: {},
+                    videos: {},
+                    files: {},
+                  ),
+                ),
+              )
+              .last;
+      final candidates = result.candidates[StorageCleanupKind.unusedMedia]!;
+      final report = MediaCleanupReport(
+        paths: candidates.files.map((f) => f.path).toList(),
+        bytes: candidates.bytes,
       );
       expect(report.bytes, 5);
       expect(report.paths.length, 2);

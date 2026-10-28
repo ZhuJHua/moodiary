@@ -33,7 +33,6 @@
   "cancel": "Cancel",
   "confirm": "Clean",
   "syncing": "Syncing",
-  "cleaned": "Cleaned",
   "failed": "Could not count storage",
   "retry": "Retry",
   "cleanFailed": "Could not clean. Try again.",

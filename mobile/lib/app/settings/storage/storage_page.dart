@@ -36,40 +36,31 @@ String _areaName(BuildContext context, int index) => switch (index) {
 };
 
 String _itemName(BuildContext context, Reclaimable item) => switch (item.kind) {
-  .retiredMood => context.l10n.storage.retiredMood,
+  .retiredModel => context.l10n.storage.retiredMood,
   .unusedModel => context.l10n.storage.unusedModel,
-  .partial => context.l10n.storage.partial,
+  .partialDownload => context.l10n.storage.partial,
   .cache => context.l10n.storage.cache,
-  .orphan => context.l10n.storage.unusedMedia,
-  .legacy => context.l10n.storage.legacy,
+  .unusedMedia => context.l10n.storage.unusedMedia,
+  .legacyBackup => context.l10n.storage.legacy,
 };
 
 class _StorageView {
-  final AsyncValue<StorageScanProgress> usage;
+  final AsyncValue<StorageReport> usage;
   final List<Reclaimable> items;
   final StorageSelectionState selection;
 
   const _StorageView(this.usage, this.items, this.selection);
 
-  StorageScanProgress? get progress => usage.value;
-  Set<String> get checked => selection.checked;
-  Set<String> get cleaned => selection.cleaned;
+  StorageReport? get progress => usage.value;
+  Set<StorageCleanupKind> get checked => selection.checked;
   bool get cleaning => selection.cleaning;
   bool get hasError => usage.hasError || items.any((i) => i.status.hasError);
   bool get scanning =>
-      !hasError &&
-      (usage.isLoading ||
-          progress?.complete != true ||
-          items.any((i) => i.status.isLoading));
+      !hasError && (usage.isLoading || progress?.complete != true);
   List<Reclaimable> get selected => selection.selected(items);
   int get selectedBytes => selected.fold(0, (sum, i) => sum + i.bytes);
   int get reclaimableBytes => items
-      .where(
-        (i) =>
-            !i.status.isLoading &&
-            !i.status.hasError &&
-            !cleaned.contains(i.id),
-      )
+      .where((i) => !i.status.isLoading && !i.status.hasError)
       .fold(0, (sum, i) => sum + i.bytes);
   bool get needsConfirmation => selected.any((i) => i.safety == .careful);
 }
@@ -79,9 +70,10 @@ class StoragePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final report = ref.watch(storageReportProvider);
     final state = _StorageView(
-      ref.watch(storageUsageProvider),
-      ref.watch(storageReclaimablesProvider),
+      report,
+      storageReclaimables(report, syncBusy: ref.watch(storageSyncBusyProvider)),
       ref.watch(storageSelectionProvider),
     );
     final items = state.items;
@@ -91,7 +83,7 @@ class StoragePage extends ConsumerWidget {
         : state.scanning &&
               !items.any((i) => !i.status.isLoading && !i.status.hasError)
         ? context.l10n.storage.counting
-        : items.every((i) => state.cleaned.contains(i.id))
+        : items.isEmpty
         ? context.l10n.storage.allClean
         : context.l10n.storage.nothingSelected;
     return Scaffold(
@@ -110,7 +102,7 @@ class StoragePage extends ConsumerWidget {
                     children: [
                       Expanded(child: Text(context.l10n.storage.failed)),
                       TextButton(
-                        onPressed: () => refreshStorage(ref.invalidate),
+                        onPressed: () => ref.invalidate(storageReportProvider),
                         child: Text(context.l10n.storage.retry),
                       ),
                     ],
@@ -324,10 +316,7 @@ class _Categories extends StatelessWidget {
             done: progress != null && _areas[i].every(progress.done.contains),
             reclaimable: state.items
                 .where(
-                  (item) =>
-                      !item.status.isLoading &&
-                      !item.status.hasError &&
-                      !state.cleaned.contains(item.id),
+                  (item) => !item.status.isLoading && !item.status.hasError,
                 )
                 .fold(0, (sum, item) => sum + item.bytesIn(_areas[i])),
           ),
@@ -366,7 +355,7 @@ class _Category extends ConsumerWidget {
           : () async {
               await route.push(context);
               if (!context.mounted) return;
-              refreshStorage(ref.invalidate);
+              ref.invalidate(storageReportProvider);
             },
       leading: Container(
         width: 10,
@@ -403,11 +392,10 @@ class _ReclaimTile extends ConsumerWidget {
   const _ReclaimTile({required this.item, required this.state});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cleaned = state.cleaned.contains(item.id);
-    final enabled = item.available && !cleaned && !state.cleaning;
+    final enabled = item.available && !state.cleaning;
     final parts = [
       storageSize(item.bytes),
-      if (item.kind == .retiredMood) context.l10n.storage.noLongerUsed,
+      if (item.kind == .retiredModel) context.l10n.storage.noLongerUsed,
       for (final entry in item.counts.entries)
         switch (entry.key) {
           .image => context.l10n.media.imageCount(count: entry.value),
@@ -415,11 +403,9 @@ class _ReclaimTile extends ConsumerWidget {
           .video => context.l10n.media.videoCount(count: entry.value),
           .file => context.l10n.media.fileCount(count: entry.value),
         },
-      if (item.kind == .orphan) context.l10n.storage.irreversible,
+      if (item.kind == .unusedMedia) context.l10n.storage.irreversible,
     ];
-    final subtitle = cleaned
-        ? context.l10n.storage.cleaned
-        : item.busy
+    final subtitle = item.busy
         ? context.l10n.storage.syncing
         : item.status.hasError
         ? context.l10n.storage.failed
@@ -429,9 +415,9 @@ class _ReclaimTile extends ConsumerWidget {
     return SettingCheckboxListTile(
       title: _itemName(context, item),
       subtitle: subtitle,
-      value: !cleaned && state.checked.contains(item.id),
+      value: state.checked.contains(item.kind),
       onChanged: enabled
-          ? (_) => ref.read(storageSelectionProvider.notifier).toggle(item.id)
+          ? (_) => ref.read(storageSelectionProvider.notifier).toggle(item.kind)
           : null,
     );
   }

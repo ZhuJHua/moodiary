@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_ml/moodiary_ml.dart';
 import 'package:moodiary_mobile/app/settings/storage/storage_controller.dart';
 import 'package:moodiary_mobile/app/settings/storage/storage_page.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
@@ -22,21 +21,34 @@ void main() {
   });
   tearDownAll(() => root.deleteSync(recursive: true));
 
-  final progress = StorageScanProgress(
+  StorageReport report({
+    StorageCleanupKind kind = .cache,
+    bool loading = false,
+    bool empty = false,
+  }) => StorageReport(
     bytes: {for (final area in StorageArea.values) area: 1024},
-    done: StorageArea.values.toSet(),
+    done: loading ? {} : StorageArea.values.toSet(),
     area: .other,
     files: 11,
-    reclaimableCacheBytes: 1024,
+    candidates: {
+      if (!empty && !loading)
+        kind: StorageCandidates([
+          StorageCandidate(
+            path: kind == .cache ? '${root.path}/cache.bin' : '/candidate',
+            bytes: 1024,
+            area: kind.areas.first,
+            mediaName: kind == .unusedMedia ? 'orphan.jpg' : null,
+          ),
+        ]),
+    },
   );
 
   Future<ProviderContainer> show(
     WidgetTester tester, {
-    ReclaimKind kind = .cache,
+    StorageCleanupKind kind = .cache,
     bool loading = false,
     bool busy = false,
-    bool cleaned = false,
-    Future<List<StrayModelFile>> Function()? models,
+    Stream<StorageReport> Function()? reports,
   }) async {
     await tester.binding.setSurfaceSize(const Size(400, 1400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -44,44 +56,10 @@ void main() {
       ProviderScope(
         retry: (_, _) => null,
         overrides: [
-          storageUsageProvider.overrideWith(
-            (ref) => Stream.value(
-              StorageScanProgress(
-                bytes: progress.bytes,
-                done: loading ? {} : progress.done,
-                area: progress.area,
-                files: progress.files,
-                reclaimableCacheBytes: kind == .cache ? 1024 : 0,
-              ),
-            ),
-          ),
-          storageStrayModelsProvider.overrideWith(
+          storageReportProvider.overrideWith(
             (ref) =>
-                models?.call() ??
-                Future.value([
-                  if (kind == .retiredMood)
-                    const StrayModelFile(
-                      path: '/retired.onnx',
-                      bytes: 1024,
-                      kind: .retiredMood,
-                    ),
-                ]),
-          ),
-          storageOrphanMediaProvider.overrideWith(
-            (ref) async => StorageOrphanMedia(
-              report: MediaCleanupReport(
-                paths: [],
-                bytes: kind == .orphan ? 1024 : 0,
-              ),
-              counts: kind == .orphan ? {.image: 1} : {},
-              areaBytes: kind == .orphan ? {.image: 1024} : {},
-            ),
-          ),
-          storageLegacyBackupsProvider.overrideWith(
-            (ref) async => StorageLegacyBackups(
-              files: [],
-              bytes: kind == .legacy ? 1024 : 0,
-            ),
+                reports?.call() ??
+                Stream.value(report(kind: kind, loading: loading)),
           ),
           storageSyncBusyProvider.overrideWith((ref) => busy),
         ],
@@ -109,12 +87,6 @@ void main() {
     final container = ProviderScope.containerOf(
       tester.element(find.byType(StoragePage)),
     );
-    if (cleaned) {
-      await tester.runAsync(
-        () => container.read(storageSelectionProvider.notifier).clean(),
-      );
-      await tester.pumpAndSettle();
-    }
     return container;
   }
 
@@ -150,27 +122,30 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  for (final (kind, loading, busy, cleaned, subtitle)
-      in <(ReclaimKind, bool, bool, bool, String)>[
-        (.orphan, false, false, false, '1.00 KB · 1 张照片 · 删除后无法恢复'),
-        (.retiredMood, false, false, false, '1.00 KB · 已不再使用'),
-        (.cache, true, false, false, '统计中'),
-        (.cache, false, false, true, '已清理'),
-        (.cache, false, true, false, '同步中'),
+  for (final (kind, loading, busy, subtitle)
+      in <(StorageCleanupKind, bool, bool, String)>[
+        (.unusedMedia, false, false, '1.00 KB · 1 张照片 · 删除后无法恢复'),
+        (.retiredModel, false, false, '1.00 KB · 已不再使用'),
+        (.cache, true, false, '统计中'),
+        (.cache, false, true, '同步中'),
       ]) {
     testWidgets('reclaim subtitle: $subtitle', (tester) async {
-      await show(
-        tester,
-        kind: kind,
-        loading: loading,
-        busy: busy,
-        cleaned: cleaned,
-      );
-      final tile = tester.widget<SettingCheckboxListTile>(
-        find.byType(SettingCheckboxListTile),
-      );
+      await show(tester, kind: kind, loading: loading, busy: busy);
+      final tile = tester
+          .widgetList<SettingCheckboxListTile>(
+            find.byType(SettingCheckboxListTile),
+          )
+          .singleWhere(
+            (tile) =>
+                tile.title ==
+                (kind == .cache
+                    ? '缓存'
+                    : kind == .retiredModel
+                    ? '旧版心情建议模型'
+                    : '未使用的媒体'),
+          );
       expect(tile.subtitle, subtitle);
-      expect(tile.onChanged == null, loading || busy || cleaned);
+      expect(tile.onChanged == null, loading || busy);
       expect(tester.takeException(), isNull);
     });
   }
@@ -218,7 +193,11 @@ void main() {
     (tester) async {
       final cache = File('${root.path}/cache.bin')
         ..writeAsBytesSync(List.filled(1024, 0));
-      final container = await show(tester);
+      var scans = 0;
+      final container = await show(
+        tester,
+        reports: () => Stream.value(report(empty: scans++ > 0)),
+      );
       final button = tester.widget<FilledButton>(
         find.widgetWithText(FilledButton, '清理 1.00 KB'),
       );
@@ -228,7 +207,7 @@ void main() {
           _,
           next,
         ) {
-          if (next.cleaned.contains('cache') && !next.cleaning) {
+          if (!next.cleaning) {
             finished.complete();
           }
         });
@@ -241,7 +220,10 @@ void main() {
       });
       await tester.pumpAndSettle();
       expect(cache.existsSync(), isFalse);
-      expect(container.read(storageSelectionProvider).cleaned, {'cache'});
+      expect(container.read(storageSelectionProvider).cleaning, isFalse);
+      expect(find.byType(SettingCheckboxListTile), findsNothing);
+      expect(find.text('已清理'), findsNothing);
+      expect(scans, 2);
       expect(find.byType(MSheetScaffold<bool>), findsNothing);
       expect(tester.takeException(), isNull);
     },
@@ -250,7 +232,7 @@ void main() {
   testWidgets('careful selection opens a sheet, cancel keeps files', (
     tester,
   ) async {
-    final container = await show(tester, kind: .legacy);
+    final container = await show(tester, kind: .legacyBackup);
     await tester.tap(find.byType(SettingCheckboxListTile));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, '清理 1.00 KB'));
@@ -266,10 +248,10 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(container.read(storageSelectionProvider).cleaned, isEmpty);
+    expect(container.read(storageSelectionProvider).cleaning, isFalse);
     await tester.tap(find.text('取消'));
     await tester.pumpAndSettle();
-    expect(container.read(storageSelectionProvider).cleaned, isEmpty);
+    expect(container.read(storageSelectionProvider).cleaning, isFalse);
     expect(find.text('清理 1 项？'), findsNothing);
     expect(tester.takeException(), isNull);
   });
@@ -280,13 +262,10 @@ void main() {
       var fail = true;
       await show(
         tester,
-        kind: .partial,
-        models: () async {
-          if (fail) throw StateError('failed');
-          return const [
-            StrayModelFile(path: '/x.part', bytes: 1024, kind: .partial),
-          ];
-        },
+        kind: .partialDownload,
+        reports: () => fail
+            ? Stream.error(StateError('failed'))
+            : Stream.value(report(kind: .partialDownload)),
       );
       expect(find.widgetWithText(TextButton, '重试'), findsOneWidget);
       expect(

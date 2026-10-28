@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:isolate';
 
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -13,20 +12,14 @@ class LegacyBackups {
   LegacyBackups({String? databasePath})
     : databasePath = databasePath ?? AppFiles.getRealPath('database', '');
 
-  Future<List<File>> scan() async {
-    if (MoodiaryKVs.dbEngineMigrated.get() != true) return [];
-    final path = databasePath;
-    return Isolate.run(
-      () => [
-        for (final name in legacyDatabaseBackupNames)
-          if (File(p.join(path, name)).existsSync()) File(p.join(path, name)),
-      ],
-    );
-  }
+  bool get dbEngineMigrated => MoodiaryKVs.dbEngineMigrated.get() == true;
 
-  Future<int> delete() async {
+  Future<int> delete({Set<String>? filePaths}) async {
+    if (!dbEngineMigrated) return 0;
     var freed = 0;
-    for (final file in await scan()) {
+    for (final name in legacyDatabaseBackupNames) {
+      final file = File(p.join(databasePath, name));
+      if (filePaths != null && !filePaths.contains(file.path)) continue;
       try {
         final bytes = await file.length();
         await file.delete();

@@ -33,7 +33,6 @@
   "cancel": "取消",
   "confirm": "清理",
   "syncing": "同步中",
-  "cleaned": "已清理",
   "failed": "统计失败",
   "retry": "重试",
   "cleanFailed": "清理失败，请重试",
