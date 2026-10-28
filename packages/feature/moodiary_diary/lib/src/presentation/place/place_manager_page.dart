@@ -70,7 +70,9 @@ class _PlaceManagerPageState extends ConsumerState<PlaceManagerPage> {
             final q = _query.trim().toLowerCase();
             final filtered = q.isEmpty
                 ? places
-                : places.where((p) => p.name.toLowerCase().contains(q)).toList();
+                : places
+                      .where((p) => p.name.toLowerCase().contains(q))
+                      .toList();
             if (_selecting) {
               return _buildList(filtered, counts, canReorder: false);
             }
@@ -210,7 +212,12 @@ class _PlaceManagerPageState extends ConsumerState<PlaceManagerPage> {
   void _enterSelection(String id) {
     if (_selecting) return;
     HapticFeedback.mediumImpact();
-    setState(() => _selected.add(id));
+    // 多选态会收起搜索框：查询留着就成了看不见的过滤器，还会把可合并的
+    // 候选限制在最初那次搜索的结果里。
+    setState(() {
+      _query = '';
+      _selected.add(id);
+    });
   }
 
   void _toggleSelect(String id) {
@@ -344,6 +351,7 @@ class _PlaceTile extends StatelessWidget {
       color: selected ? colors.secondaryContainer : colors.surfaceContainerLow,
       clipBehavior: .antiAlias,
       child: ListTile(
+        selected: selected,
         onTap: selecting ? onToggle : onEdit,
         leading: PlaceBadge(place: place),
         title: Text(
@@ -363,9 +371,7 @@ class _PlaceTile extends StatelessWidget {
                 padding: const .all(12),
                 child: Icon(
                   selected ? LucideIcons.circleCheck : LucideIcons.circle,
-                  color: selected
-                      ? colors.primary
-                      : colors.onSurfaceVariant,
+                  color: selected ? colors.primary : colors.onSurfaceVariant,
                 ),
               )
             : Row(

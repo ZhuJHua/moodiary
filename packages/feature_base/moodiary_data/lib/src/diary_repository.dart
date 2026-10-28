@@ -600,19 +600,34 @@ class DiaryRepository {
   }
 
   /// 把日记重指到 [placeId] 并推进 last_modified（同步靠它传播）。
-  /// 不做内容重建 —— 只有元数据变更。每个受影响日记发出 DiaryUpdated。
-  Future<void> repointDiaries(
+  /// 不做内容重建 —— 只有元数据变更。
+  ///
+  /// 返回改写后的快照，但**不**发 DiaryUpdated：调用方通常在更外层的
+  /// 事务里（如地点合并），事件要等那个事务提交后再用
+  /// [publishDiaryUpdates] 补发，否则回滚之后界面会留着没落地的指向。
+  Future<List<Diary>> repointDiaries(
     List<Diary> diaries,
     String placeId, {
     required DateTime at,
   }) async {
-    if (diaries.isEmpty) return;
+    if (diaries.isEmpty) return const [];
     final atMs = dbTime(at);
+    final updated = <Diary>[];
     for (final diary in diaries) {
-      await (_db.update(_db.diaries)..where((d) => d.id.equals(diary.id))).write(
+      await (_db.update(
+        _db.diaries,
+      )..where((d) => d.id.equals(diary.id))).write(
         DiariesCompanion(placeId: Value(placeId), lastModified: Value(atMs)),
       );
-      _events.add(DiaryUpdated(diary.copyWith(placeId: placeId, lastModified: at)));
+      updated.add(diary.copyWith(placeId: placeId, lastModified: at));
+    }
+    return updated;
+  }
+
+  /// 把 [repointDiaries] 的结果补发成 DiaryUpdated（事务提交后调用）。
+  void publishDiaryUpdates(Iterable<Diary> diaries) {
+    for (final diary in diaries) {
+      _events.add(DiaryUpdated(diary));
     }
   }
 

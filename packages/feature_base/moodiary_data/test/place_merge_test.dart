@@ -27,20 +27,22 @@ void main() {
     String? placeId, {
     bool show = true,
     int lastModified = 0,
-  }) => db.into(db.diaries).insert(
-    DiariesCompanion.insert(
-      id: id,
-      title: '',
-      content: '',
-      contentText: '',
-      time: 0,
-      lastModified: lastModified,
-      show: show ? 1 : 0,
-      moodLevel: Value(DiaryMood.okay.score),
-      type: 'tiptap',
-      placeId: Value(placeId),
-    ),
-  );
+  }) => db
+      .into(db.diaries)
+      .insert(
+        DiariesCompanion.insert(
+          id: id,
+          title: '',
+          content: '',
+          contentText: '',
+          time: 0,
+          lastModified: lastModified,
+          show: show ? 1 : 0,
+          moodLevel: Value(DiaryMood.okay.score),
+          type: 'tiptap',
+          placeId: Value(placeId),
+        ),
+      );
 
   setUp(() {
     db = MoodiaryDatabase.forTesting(NativeDatabase.memory());
@@ -94,10 +96,7 @@ void main() {
 
     // 墓碑：被合并方有 place 墓碑
     final tombstones = await TombstoneRepository(db).getAll();
-    expect(
-      tombstones.map((t) => t.key),
-      contains(SyncTombstone.placeKey('b')),
-    );
+    expect(tombstones.map((t) => t.key), contains(SyncTombstone.placeKey('b')));
   });
 
   test('撤销：还原保留方原名、原 id 插回被合并方、日记指回、墓碑清除', () async {
@@ -119,7 +118,9 @@ void main() {
     expect(restored.firstWhere((p) => p.id == 'a').name, '家');
     final b = restored.firstWhere((p) => p.id == 'b');
     expect(b.name, '家门口');
-    expect(b.lastModified, DateTime.utc(2026, 9, 5));
+    // 按撤销时间重新盖章：原样的 lastModified 比合并时写下的墓碑还旧，
+    // 同步会跳过这一行，甚至在下一次拉取时把它再删掉。
+    expect(b.lastModified.isAfter(DateTime.utc(2026, 9, 5)), isTrue);
 
     final d2 = (await diaries.getDiariesByIds(['d2'])).single;
     expect(d2.placeId, 'b');
@@ -155,10 +156,10 @@ void main() {
     );
     await flushEvents();
 
-    expect(
-      placeEvents.map((e) => e.runtimeType),
-      [PlaceUpserted, PlaceDeleted],
-    );
+    expect(placeEvents.map((e) => e.runtimeType), [
+      PlaceUpserted,
+      PlaceDeleted,
+    ]);
     expect((placeEvents[0] as PlaceUpserted).place.id, 'a');
     expect((placeEvents[1] as PlaceDeleted).id, 'b');
     expect(diaryEvents, hasLength(1));
@@ -169,13 +170,18 @@ void main() {
     await places.undoMerge(record, diaries: diaries);
     await flushEvents();
 
-    expect(
-      placeEvents.map((e) => e.runtimeType),
-      [PlaceUpserted, PlaceUpserted],
+    expect(placeEvents.map((e) => e.runtimeType), [
+      PlaceUpserted,
+      PlaceUpserted,
+    ]);
+    expect(placeEvents.map((e) => (e as PlaceUpserted).place.id), ['a', 'b']);
+    // 事件带的就是落库的那份快照（被还原的地点已按撤销时间盖章）
+    final reopened = (await places.getAllPlaces()).firstWhere(
+      (p) => p.id == 'b',
     );
     expect(
-      placeEvents.map((e) => (e as PlaceUpserted).place.id),
-      ['a', 'b'],
+      (placeEvents.last as PlaceUpserted).place.lastModified,
+      reopened.lastModified,
     );
   });
 
@@ -227,13 +233,34 @@ void main() {
     expect(tombstones, isEmpty);
   });
 
-  test('repointDiaries：空列表直接返回；查询方法含回收站', () async {
+  test('repointDiaries：空列表直接返回；只写库不发事件；查询方法含回收站', () async {
     await places.insertAPlace(make('a', '家'));
     await insertDiary('d1', 'a');
     await insertDiary('d2', 'a', show: false);
 
+    final diaryEvents = <DiaryEvent>[];
+    final sub = diaries.diaryEvents.listen(diaryEvents.add);
+    addTearDown(sub.cancel);
+
     // 空列表：不做事
-    await diaries.repointDiaries(const [], 'a', at: DateTime.timestamp());
+    expect(
+      await diaries.repointDiaries(const [], 'a', at: DateTime.timestamp()),
+      isEmpty,
+    );
+
+    // 事务里的写不发事件：提交后由调用方 publishDiaryUpdates 补发
+    final updated = await diaries.repointDiaries(
+      await diaries.getDiariesWithPlaceIds(['a']),
+      'a',
+      at: DateTime.timestamp(),
+    );
+    await flushEvents();
+    expect(updated, hasLength(2));
+    expect(diaryEvents, isEmpty);
+
+    diaries.publishDiaryUpdates(updated);
+    await flushEvents();
+    expect(diaryEvents, hasLength(2));
 
     final all = await diaries.getDiariesWithPlaceIds(['a']);
     expect(all.map((d) => d.id), unorderedEquals(['d1', 'd2']));

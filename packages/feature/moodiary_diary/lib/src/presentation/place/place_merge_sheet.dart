@@ -64,6 +64,9 @@ Future<PlaceMergeOutcome?> showPlaceMergeSheet(
 }) {
   return MSheet.show<PlaceMergeOutcome>(
     context,
+    // 合并一旦落地就有撤销凭据要守，而官方下拉关闭走的是 Navigator.pop，
+    // 绕开下面 running 阶段的 PopScope —— 整窗不可拖，只能走自身动作退出。
+    enableDrag: false,
     builder: (_) => _PlaceMergeSheet(candidates: candidates),
   );
 }
@@ -156,10 +159,11 @@ class _PlaceMergeSheetState extends ConsumerState<_PlaceMergeSheet>
       return;
     }
     final l10n = context.l10n;
-    final footprints = ref.read(placeFootprintsProvider).value ?? const {};
-    final diaryCount = [
-      for (final p in widget.candidates) footprints[p.id]?.count ?? 0,
-    ].fold(0, (sum, c) => sum + c);
+    final controller = ref.read(placeControllerProvider.notifier);
+    // 合并会连回收站里的日记一起重指，所以确认数量与撤销窗口的进度都按
+    // 同一份"真正会被改写的日记"算 —— placeFootprints 只统计可见日记。
+    final affected = await controller.affectedDiaries(_candidateIds);
+    if (!mounted) return;
     // 二次确认对话框叠在底部窗之上。
     final confirmed = await MAlert.confirm(
       context,
@@ -167,23 +171,19 @@ class _PlaceMergeSheetState extends ConsumerState<_PlaceMergeSheet>
       message: l10n.diary.placeMergeConfirmMessage(
         name: _finalName,
         count: widget.candidates.length,
-        diaries: diaryCount,
+        diaries: affected.length,
       ),
       confirmLabel: l10n.diary.placeMerge,
       isDestructive: true,
     );
     if (!confirmed || !mounted) return;
-    await _merge();
+    await _merge(controller, affected);
   }
 
-  Future<void> _merge() async {
+  List<String> get _candidateIds => [for (final p in widget.candidates) p.id];
+
+  Future<void> _merge(PlaceController controller, List<Diary> affected) async {
     setState(() => _phase = _Phase.merging);
-    final controller = ref.read(placeControllerProvider.notifier);
-    // 先问清楚这次会动到哪些日记，好让撤销窗口里的进度有东西可演。
-    final affected = await controller.affectedDiaries([
-      for (final p in widget.candidates) p.id,
-    ]);
-    if (!mounted) return;
     final record = await controller.mergePlaces(
       keptId: _draft.selectedId,
       finalName: _finalName,
@@ -466,42 +466,49 @@ class _PlaceMergeSheetState extends ConsumerState<_PlaceMergeSheet>
           final place = widget.candidates[index];
           final selected = place.id == _draft.selectedId;
           final color = placeIconColor(context, place.icon);
-          return MInkWell(
+          // 颜色说不出"谁留下"：选中态交给读屏，候选组标成互斥。
+          return Semantics(
             key: ValueKey('place-merge-candidate-${place.id}'),
-            onTap: () => _select(place),
-            borderRadius: .circular(22),
-            child: AnimatedContainer(
-              duration: Durations.short4,
-              curve: Easing.emphasizedDecelerate,
-              padding: const .symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: selected ? color : colors.surfaceContainerHighest,
-                borderRadius: .circular(22),
-                border: selected
-                    ? null
-                    : Border.all(color: colors.outlineVariant),
-              ),
-              child: Row(
-                mainAxisSize: .min,
-                children: [
-                  Icon(
-                    placeIconOf(place.icon),
-                    size: 16,
-                    color: selected
-                        ? onCategoryColor(color)
-                        : colors.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    place.name,
-                    style: context.theme.typography.labelLarge.onSurface
-                        .copyWith(
-                          color: selected
-                              ? onCategoryColor(color)
-                              : colors.onSurfaceVariant,
-                        ),
-                  ),
-                ],
+            container: true,
+            button: true,
+            selected: selected,
+            inMutuallyExclusiveGroup: true,
+            child: MInkWell(
+              onTap: () => _select(place),
+              borderRadius: .circular(22),
+              child: AnimatedContainer(
+                duration: Durations.short4,
+                curve: Easing.emphasizedDecelerate,
+                padding: const .symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: selected ? color : colors.surfaceContainerHighest,
+                  borderRadius: .circular(22),
+                  border: selected
+                      ? null
+                      : Border.all(color: colors.outlineVariant),
+                ),
+                child: Row(
+                  mainAxisSize: .min,
+                  children: [
+                    Icon(
+                      placeIconOf(place.icon),
+                      size: 16,
+                      color: selected
+                          ? onCategoryColor(color)
+                          : colors.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      place.name,
+                      style: context.theme.typography.labelLarge.onSurface
+                          .copyWith(
+                            color: selected
+                                ? onCategoryColor(color)
+                                : colors.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );

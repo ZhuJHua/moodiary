@@ -40,7 +40,10 @@ class _StubPlaceController extends PlaceController {
     if (!mergeOk) return null;
     return PlaceMergeRecord(
       kept: _places.firstWhere((p) => p.id == keptId),
-      removed: [for (final p in _places) if (p.id != keptId) p],
+      removed: [
+        for (final p in _places)
+          if (p.id != keptId) p,
+      ],
       diaryRemap: {for (final d in affected) d.id: 'b'},
       placeOrder: const [],
     );
@@ -86,11 +89,6 @@ void main() {
       lastModified: DateTime.utc(2026),
     ),
   ];
-  final footprints = <String, PlaceFootprint>{
-    'a': (count: 2, first: DateTime.utc(2026), last: DateTime.utc(2026)),
-    'b': (count: 1, first: DateTime.utc(2026), last: DateTime.utc(2026)),
-  };
-
   late _StubPlaceController stub;
   PlaceMergeOutcome? outcome;
 
@@ -119,10 +117,7 @@ void main() {
   Future<void> pumpSheet(WidgetTester tester) async {
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          placeControllerProvider.overrideWith(() => stub),
-          placeFootprintsProvider.overrideWithValue(AsyncData(footprints)),
-        ],
+        overrides: [placeControllerProvider.overrideWith(() => stub)],
         child: TranslationProvider(
           child: MuiTheme(
             data: buildMuiTheme(brightness: Brightness.light),
@@ -141,11 +136,10 @@ void main() {
                   ref.watch(placeControllerProvider);
                   return FilledButton(
                     onPressed: () async {
-                      outcome =
-                          await showPlaceMergeSheet(
-                            context,
-                            candidates: candidates,
-                          );
+                      outcome = await showPlaceMergeSheet(
+                        context,
+                        candidates: candidates,
+                      );
                     },
                     child: const Text('open'),
                   );
@@ -216,13 +210,16 @@ void main() {
   });
 
   testWidgets('确认：二次确认对话框展示名称 / 地点数 / 日记数', (tester) async {
+    // 篇数按"会被改写的日记"算（含回收站），与撤销窗口共用同一份名单
+    stub.affected = [
+      _diary('d1', '杭州之行', DateTime.utc(2026, 9, 5)),
+      _diary('d2', '看展', DateTime.utc(2026, 9, 3)),
+      _diary('d3', '', DateTime.utc(2026, 9, 1)),
+    ];
     await pumpSheet(tester);
     await confirmToDialog(tester);
     expect(find.text('确认合并地点？'), findsOneWidget);
-    expect(
-      find.text('「家」将合并 2 个地点，3 篇日记随之指向它，原地点会被删除。'),
-      findsOneWidget,
-    );
+    expect(find.text('「家」将合并 2 个地点，3 篇日记随之指向它，原地点会被删除。'), findsOneWidget);
 
     // 对话框取消：回到编辑态，弹层不关（底部窗同有「取消」按钮，取最上层）
     await tester.tap(find.widgetWithText(FilledButton, '取消').last);
@@ -248,8 +245,7 @@ void main() {
     await burnToast(tester);
   });
 
-  testWidgets('确认后进入撤销窗口：进度条与撤销按钮，点撤销退出流程',
-      (tester) async {
+  testWidgets('确认后进入撤销窗口：进度条与撤销按钮，点撤销退出流程', (tester) async {
     await pumpSheet(tester);
     await confirmToDialog(tester);
     await acceptDialog(tester);
@@ -265,6 +261,50 @@ void main() {
     expect(outcome, PlaceMergeOutcome.undone);
     expect(find.text('已撤销合并'), findsOneWidget);
     await burnToast(tester);
+  });
+
+  testWidgets('撤销窗口内下拉关不掉弹层，凭据还在', (tester) async {
+    stub.affected = [_diary('d1', '杭州之行', DateTime.utc(2026, 9, 5))];
+    await pumpSheet(tester);
+    await confirmToDialog(tester);
+    await acceptDialog(tester);
+    expect(undoButton(), findsOneWidget);
+
+    // 官方下拉关闭走 Navigator.pop，绕开 running 阶段的 PopScope：
+    // 整窗 enableDrag: false，这条路不成立。
+    await tester.dragFrom(
+      tester.getRect(find.text('选择最终地址')).topCenter - const Offset(0, 8),
+      const Offset(0, 400),
+    );
+    await tester.pump();
+    expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    expect(outcome, isNull);
+
+    // 凭据没丢：撤销仍然有效
+    await tester.tap(undoButton());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(stub.undoCalls, 1);
+    expect(outcome, PlaceMergeOutcome.undone);
+    await burnToast(tester);
+  });
+
+  testWidgets('候选 chip 把选中态交给读屏，候选组互斥', (tester) async {
+    await pumpSheet(tester);
+    expect(
+      tester.getSemantics(candidate('a')),
+      isSemantics(
+        label: '家',
+        isButton: true,
+        isSelected: true,
+        isInMutuallyExclusiveGroup: true,
+        hasTapAction: true,
+      ),
+    );
+    expect(
+      tester.getSemantics(candidate('b')),
+      isSemantics(label: '家门口', isSelected: false),
+    );
   });
 
   testWidgets('倒计时耗尽：合并落定、关闭弹层并气泡提示', (tester) async {

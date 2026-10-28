@@ -135,6 +135,7 @@ class PlaceRepository {
     late final Place keptBefore;
     late final List<Place> removedRows;
     late final List<Diary> affected;
+    late final List<Diary> repointed;
     await _db.transaction(() async {
       final current = await getPlaceById(kept.id);
       if (current == null) {
@@ -148,17 +149,14 @@ class PlaceRepository {
       affected = await diaries.getDiariesWithPlaceIds([
         for (final p in removedRows) p.id,
       ]);
-      await _db.into(
-        _db.places,
-      ).insertOnConflictUpdate(
-        _toCompanion(
-          current.copyWith(
-            name: finalName.trim(),
-            lastModified: now,
-          ),
-        ),
-      );
-      await diaries.repointDiaries(affected, kept.id, at: now);
+      await _db
+          .into(_db.places)
+          .insertOnConflictUpdate(
+            _toCompanion(
+              current.copyWith(name: finalName.trim(), lastModified: now),
+            ),
+          );
+      repointed = await diaries.repointDiaries(affected, kept.id, at: now);
       for (final place in removedRows) {
         await (_db.delete(
           _db.places,
@@ -166,8 +164,12 @@ class PlaceRepository {
         await _insertTombstoneRow(SyncTombstone.forPlace(place.id, at: now));
       }
     });
+    // 提交成功之后才通知界面：事务回滚了就不该有人已经看到新的地点指向。
+    diaries.publishDiaryUpdates(repointed);
     _events.add(
-      PlaceUpserted(keptBefore.copyWith(name: finalName.trim(), lastModified: now)),
+      PlaceUpserted(
+        keptBefore.copyWith(name: finalName.trim(), lastModified: now),
+      ),
     );
     for (final place in removedRows) {
       _events.add(PlaceDeleted(place.id));
@@ -188,21 +190,27 @@ class PlaceRepository {
     required DiaryRepository diaries,
   }) async {
     final now = DateTime.timestamp();
+    late final List<Place> restored;
+    late final List<Diary> repointed;
     await _db.transaction(() async {
       final restoredKept = record.kept.copyWith(lastModified: now);
-      await _db.into(
-        _db.places,
-      ).insertOnConflictUpdate(_toCompanion(restoredKept));
+      await _db
+          .into(_db.places)
+          .insertOnConflictUpdate(_toCompanion(restoredKept));
       final placeKeys = [
         for (final p in record.removed) SyncTombstone.placeKey(p.id),
       ];
       await (_db.delete(
         _db.tombstones,
       )..where((t) => t.key.isIn(placeKeys))).go();
-      for (final place in record.removed) {
-        await _db.into(
-          _db.places,
-        ).insertOnConflictUpdate(_toCompanion(place));
+      // 合并时写过（也可能已经上传）这些地点的墓碑，原样的 lastModified 比
+      // 墓碑还旧：同步会跳过这一行，甚至在下一次拉取时把它再删掉。
+      // 所以按撤销时间重新盖章，事件也带同一份快照。
+      restored = [
+        for (final p in record.removed) p.copyWith(lastModified: now),
+      ];
+      for (final place in restored) {
+        await _db.into(_db.places).insertOnConflictUpdate(_toCompanion(place));
       }
       final affected = await diaries.getDiariesByIds(
         record.diaryRemap.keys.toList(),
@@ -215,12 +223,18 @@ class PlaceRepository {
           grouped.putIfAbsent(entry.value, () => []).add(diary);
         }
       }
+      final updated = <Diary>[];
       for (final entry in grouped.entries) {
-        await diaries.repointDiaries(entry.value, entry.key, at: now);
+        updated.addAll(
+          await diaries.repointDiaries(entry.value, entry.key, at: now),
+        );
       }
+      repointed = updated;
     });
+    // 同 [mergePlaces]：事务提交之后才通知界面。
+    diaries.publishDiaryUpdates(repointed);
     _events.add(PlaceUpserted(record.kept.copyWith(lastModified: now)));
-    for (final place in record.removed) {
+    for (final place in restored) {
       _events.add(PlaceUpserted(place));
     }
   }
