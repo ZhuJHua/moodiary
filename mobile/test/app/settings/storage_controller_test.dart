@@ -9,6 +9,7 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_export/moodiary_export.dart';
 import 'package:moodiary_files/moodiary_files.dart';
+import 'package:moodiary_ml/moodiary_ml.dart';
 import 'package:moodiary_mobile/app/settings/storage/storage_controller.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
@@ -902,6 +903,49 @@ void main() {
       await _complete(container);
     },
   );
+
+  test('an old partial a model download still owns is skipped', () async {
+    // A stalled download can leave its .part untouched past the grace period.
+    final held = write('support/model/held.part', 13);
+    EmbeddingModelManager.debugHoldPartialDownload(held.path);
+    addTearDown(
+      () => EmbeddingModelManager.debugHoldPartialDownload(
+        held.path,
+        held: false,
+      ),
+    );
+    final container = ProviderContainer.test(
+      overrides: [
+        storageSyncBusyProvider.overrideWith((ref) => false),
+        storageReportProvider.overrideWith(
+          (ref) => Stream.value(
+            _report(
+              candidates: {
+                .partialDownload: [
+                  StorageCandidate(
+                    path: held.path,
+                    bytes: 13,
+                    area: .model,
+                    modified: held.lastModifiedSync(),
+                  ),
+                ],
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+    _listen(container);
+    await _complete(container);
+    expect(
+      await container
+          .read(storageSelectionProvider.notifier)
+          .clean(_items(container)),
+      0,
+    );
+    expect(held.existsSync(), isTrue);
+    await _complete(container);
+  });
 
   for (final fail in [false, true]) {
     test(

@@ -236,7 +236,8 @@ Future<int> _deleteFiles(
       final stat = await File(file.path).stat();
       if (stat.type != FileSystemEntityType.file) continue;
       if (partialDownload &&
-          ((file.modified != null && stat.modified != file.modified) ||
+          (EmbeddingModelManager.ownsPartialDownload(file.path) ||
+              (file.modified != null && stat.modified != file.modified) ||
               DateTime.now().difference(stat.modified) <=
                   AppFiles.partialDownloadGrace)) {
         continue;
