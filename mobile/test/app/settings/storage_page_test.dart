@@ -172,16 +172,20 @@ void main() {
           )
           .toList();
       expect(tiles, hasLength(7));
-      String title(SettingListTile tile) =>
-          (tile.title as Text).data ??
-          (tile.title as Text).textSpan!.toPlainText();
-      expect(tiles.where((tile) => tile.onTap != null).map(title), [
+      expect(tiles.where((tile) => tile.onTap != null).map((t) => t.title), [
         'AI 模型',
         '媒体',
         '字体',
       ]);
-      // 可清理量和名称同一行，不占副标题，行高不跳
-      expect(title(tiles[2]), '缓存  可清理 1.00 KB');
+      // 可清理量在右侧尺寸下方，不占副标题，行高不跳
+      expect(tiles[2].title, '缓存');
+      expect(
+        find.descendant(
+          of: find.byWidget(tiles[2]),
+          matching: find.text('可清理 1.00 KB'),
+        ),
+        findsOneWidget,
+      );
       expect(tiles.every((tile) => tile.subtitle == null), isTrue);
       expect(
         find.descendant(

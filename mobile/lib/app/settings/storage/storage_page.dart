@@ -349,10 +349,23 @@ class _Category extends ConsumerWidget {
       5 => const FontRoute(),
       _ => null,
     };
-    final size = _AnimatedSize(
-      bytes: bytes,
-      suffix: done ? '' : '…',
-      style: context.theme.typography.bodySmall.primary,
+    // 可清理量叠在尺寸正下方，两行都右对齐；两行小字仍在单行行高内，行高不跳
+    final size = Column(
+      mainAxisSize: .min,
+      crossAxisAlignment: .end,
+      children: [
+        _AnimatedSize(
+          bytes: bytes,
+          suffix: done ? '' : '…',
+          style: context.theme.typography.bodySmall.primary,
+        ),
+        if (reclaimable > 0)
+          Text(
+            context.l10n.storage.cleanable(size: storageSize(reclaimable)),
+            style: context.theme.typography.labelSmall.onSurfaceVariant
+                .copyWith(fontFeatures: const [.tabularFigures()]),
+          ),
+      ],
     );
     return SettingListTile(
       onTap: route == null
@@ -370,23 +383,7 @@ class _Category extends ConsumerWidget {
           borderRadius: .circular(context.theme.radii.sm),
         ),
       ),
-      // 可清理量和名称同一行：行高不随它出现或消失而变化
-      title: Text.rich(
-        TextSpan(
-          style: context.theme.typography.bodyLarge.onSurface,
-          children: [
-            TextSpan(text: _areaName(context, index)),
-            if (reclaimable > 0)
-              TextSpan(
-                text:
-                    '  ${context.l10n.storage.cleanable(size: storageSize(reclaimable))}',
-                style: context.theme.typography.bodySmall.onSurfaceVariant,
-              ),
-          ],
-        ),
-        maxLines: 1,
-        overflow: .ellipsis,
-      ),
+      title: _areaName(context, index),
       trailing: route == null
           ? size
           : Row(
