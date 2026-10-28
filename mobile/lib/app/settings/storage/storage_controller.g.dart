@@ -48,6 +48,73 @@ final class StorageReportProvider
 
 String _$storageReportHash() => r'6582af7360fcb559306a9b1dce9243bd905ffe4f';
 
+/// Rescans (after a clean, or coming back from a linked page) keep the last
+/// finished report on screen and swap it only when the new scan is done, so
+/// rows and sizes don't drop to zero and grow back.
+
+@ProviderFor(StorageDisplayController)
+final storageDisplayControllerProvider = StorageDisplayControllerProvider._();
+
+/// Rescans (after a clean, or coming back from a linked page) keep the last
+/// finished report on screen and swap it only when the new scan is done, so
+/// rows and sizes don't drop to zero and grow back.
+final class StorageDisplayControllerProvider
+    extends $NotifierProvider<StorageDisplayController, StorageDisplay> {
+  /// Rescans (after a clean, or coming back from a linked page) keep the last
+  /// finished report on screen and swap it only when the new scan is done, so
+  /// rows and sizes don't drop to zero and grow back.
+  StorageDisplayControllerProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'storageDisplayControllerProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$storageDisplayControllerHash();
+
+  @$internal
+  @override
+  StorageDisplayController create() => StorageDisplayController();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(StorageDisplay value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<StorageDisplay>(value),
+    );
+  }
+}
+
+String _$storageDisplayControllerHash() =>
+    r'ab359c6410f4ca7e0c8f47f3af9636eeb5588c6f';
+
+/// Rescans (after a clean, or coming back from a linked page) keep the last
+/// finished report on screen and swap it only when the new scan is done, so
+/// rows and sizes don't drop to zero and grow back.
+
+abstract class _$StorageDisplayController extends $Notifier<StorageDisplay> {
+  StorageDisplay build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<StorageDisplay, StorageDisplay>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<StorageDisplay, StorageDisplay>,
+              StorageDisplay,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
 @ProviderFor(storageSyncBusy)
 final storageSyncBusyProvider = StorageSyncBusyProvider._();
 
@@ -121,7 +188,7 @@ final class StorageSelectionProvider
   }
 }
 
-String _$storageSelectionHash() => r'a97293e44537985e85d6b8ca5bd2b308e71488c7';
+String _$storageSelectionHash() => r'30ef51b015edbd506e67ef888e50ddbfaef22f3f';
 
 abstract class _$StorageSelection extends $Notifier<StorageSelectionState> {
   StorageSelectionState build();

@@ -122,11 +122,19 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('an unfinished kind has no row instead of a placeholder', (
+    tester,
+  ) async {
+    await show(tester, kind: .cache, loading: true);
+    expect(find.byType(SettingCheckboxListTile), findsNothing);
+    expect(find.text('建议清理'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   for (final (kind, loading, busy, subtitle)
       in <(StorageCleanupKind, bool, bool, String)>[
         (.unusedMedia, false, false, '1.00 KB · 1 张照片 · 删除后无法恢复'),
         (.retiredModel, false, false, '1.00 KB · 已不再使用'),
-        (.cache, true, false, '统计中'),
         (.cache, false, true, '同步中'),
       ]) {
     testWidgets('reclaim subtitle: $subtitle', (tester) async {
@@ -164,11 +172,17 @@ void main() {
           )
           .toList();
       expect(tiles, hasLength(7));
-      expect(
-        tiles.where((tile) => tile.onTap != null).map((tile) => tile.title),
-        ['AI 模型', '媒体', '字体'],
-      );
-      expect(tiles[2].subtitle, '可清理 1.00 KB');
+      String title(SettingListTile tile) =>
+          (tile.title as Text).data ??
+          (tile.title as Text).textSpan!.toPlainText();
+      expect(tiles.where((tile) => tile.onTap != null).map(title), [
+        'AI 模型',
+        '媒体',
+        '字体',
+      ]);
+      // 可清理量和名称同一行，不占副标题，行高不跳
+      expect(title(tiles[2]), '缓存  可清理 1.00 KB');
+      expect(tiles.every((tile) => tile.subtitle == null), isTrue);
       expect(
         find.descendant(
           of: group,

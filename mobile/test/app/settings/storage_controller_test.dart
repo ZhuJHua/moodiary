@@ -65,11 +65,12 @@ const _cache = StorageCandidate(path: '/cache', bytes: 123, area: .cache);
 
 void _listen(ProviderContainer container) {
   container.listen(storageReportProvider, (_, _) {});
+  container.listen(storageDisplayControllerProvider, (_, _) {});
   container.listen(storageSelectionProvider, (_, _) {});
 }
 
 List<Reclaimable> _items(ProviderContainer container) => storageReclaimables(
-  container.read(storageReportProvider),
+  container.read(storageDisplayControllerProvider).report,
   syncBusy: container.read(storageSyncBusyProvider),
 );
 
@@ -416,14 +417,82 @@ void main() {
     _listen(container);
     await pumpEventQueue();
     await container.pump();
-    expect(_items(container), hasLength(StorageCleanupKind.values.length));
-    expect(
-      _items(container).every((i) => i.status.hasError && !i.available),
-      isTrue,
-    );
+    expect(container.read(storageDisplayControllerProvider).error, isNotNull);
+    expect(_items(container), isEmpty);
     fail = false;
     container.invalidate(storageReportProvider);
     await _complete(container);
     expect(_items(container).single.available, isTrue);
+  });
+
+  test(
+    'a rescan keeps the finished report on screen until it completes',
+    () async {
+      final second = StreamController<StorageReport>();
+      addTearDown(second.close);
+      var round = 0;
+      final container = ProviderContainer.test(
+        overrides: [
+          storageReportProvider.overrideWith(
+            (ref) => round++ == 0
+                ? Stream.value(
+                    _report(
+                      candidates: {
+                        .cache: [_cache],
+                      },
+                    ),
+                  )
+                : second.stream,
+          ),
+          storageSyncBusyProvider.overrideWith((ref) => false),
+        ],
+      );
+      _listen(container);
+      await _complete(container);
+      expect(_items(container).single.kind, StorageCleanupKind.cache);
+
+      container.invalidate(storageReportProvider);
+      await pumpEventQueue();
+      second.add(
+        StorageReport(bytes: const {}, done: const {}, area: .model, files: 0),
+      );
+      await pumpEventQueue();
+      final display = container.read(storageDisplayControllerProvider);
+      expect(display.scanning, isTrue);
+      expect(display.report!.complete, isTrue);
+      expect(_items(container).single.kind, StorageCleanupKind.cache);
+
+      second.add(_report());
+      await pumpEventQueue();
+      expect(
+        container.read(storageDisplayControllerProvider).scanning,
+        isFalse,
+      );
+      expect(_items(container), isEmpty);
+    },
+  );
+
+  test('cleaned kinds leave the screen before the rescan finishes', () async {
+    final container = ProviderContainer.test(
+      overrides: [
+        storageReportProvider.overrideWith(
+          (ref) => Stream.value(
+            _report(
+              candidates: {
+                .cache: [_cache],
+                .partialDownload: [_partial],
+              },
+            ),
+          ),
+        ),
+        storageSyncBusyProvider.overrideWith((ref) => false),
+      ],
+    );
+    _listen(container);
+    await _complete(container);
+    container.read(storageDisplayControllerProvider.notifier).dropCleaned({
+      StorageCleanupKind.cache,
+    });
+    expect(_items(container).single.kind, StorageCleanupKind.partialDownload);
   });
 }

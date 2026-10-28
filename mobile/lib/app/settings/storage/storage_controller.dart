@@ -24,6 +24,50 @@ Stream<StorageReport> storageReport(Ref ref) async* {
   );
 }
 
+class StorageDisplay {
+  /// What the page draws: the latest finished report, or the partial one on
+  /// first open, before any scan has finished.
+  final StorageReport? report;
+  final bool scanning;
+  final Object? error;
+
+  const StorageDisplay({this.report, this.scanning = true, this.error});
+}
+
+/// Rescans (after a clean, or coming back from a linked page) keep the last
+/// finished report on screen and swap it only when the new scan is done, so
+/// rows and sizes don't drop to zero and grow back.
+@riverpod
+class StorageDisplayController extends _$StorageDisplayController {
+  @override
+  StorageDisplay build() {
+    final live = ref.watch(storageReportProvider);
+    final shown = stateOrNull?.report;
+    if (live.hasError) {
+      return StorageDisplay(report: shown, scanning: false, error: live.error);
+    }
+    final fresh = live.isLoading ? null : live.value;
+    if (fresh != null && fresh.complete) {
+      return StorageDisplay(report: fresh, scanning: false);
+    }
+    return StorageDisplay(
+      report: shown?.complete == true ? shown : fresh,
+      scanning: true,
+    );
+  }
+
+  /// Cleaned kinds leave the screen at once instead of waiting for the rescan.
+  void dropCleaned(Set<StorageCleanupKind> kinds) {
+    final report = state.report;
+    if (report == null || kinds.isEmpty) return;
+    state = StorageDisplay(
+      report: report.without(kinds),
+      scanning: state.scanning,
+      error: state.error,
+    );
+  }
+}
+
 @riverpod
 bool storageSyncBusy(Ref ref) {
   final runner = getIt<SyncRunner>();
@@ -63,34 +107,22 @@ class Reclaimable {
       0;
 }
 
-/// UI projection of the one report; no additional asynchronous sources.
+/// UI projection of the shown report: a row exists only once its kind is
+/// finished and has something to clean, so rows never flash in and out.
 List<Reclaimable> storageReclaimables(
-  AsyncValue<StorageReport> report, {
+  StorageReport? report, {
   required bool syncBusy,
-}) =>
-    [
-          for (final kind in StorageCleanupKind.values)
-            Reclaimable(
-              kind: kind,
-              status: report.when(
-                skipLoadingOnRefresh: false,
-                data: (value) => value.finished(kind)
-                    ? AsyncData(value.candidates[kind]?.bytes ?? 0)
-                    : const AsyncLoading(),
-                error: AsyncError.new,
-                loading: () => const AsyncLoading(),
-              ),
-              candidates: report.isLoading || report.hasError
-                  ? null
-                  : report.value?.candidates[kind],
-              busy: kind == .cache && syncBusy,
-            ),
-        ]
-        .where(
-          (item) =>
-              item.status.isLoading || item.status.hasError || item.bytes > 0,
-        )
-        .toList();
+}) => [
+  if (report != null)
+    for (final kind in StorageCleanupKind.values)
+      if (report.finished(kind) && (report.candidates[kind]?.bytes ?? 0) > 0)
+        Reclaimable(
+          kind: kind,
+          status: AsyncData(report.candidates[kind]!.bytes),
+          candidates: report.candidates[kind],
+          busy: kind == .cache && syncBusy,
+        ),
+];
 
 class StorageSelectionState {
   final Set<StorageCleanupKind> checked;
@@ -134,16 +166,18 @@ class StorageSelection extends _$StorageSelection {
     if (state.cleaning) return 0;
     final selected = state.selected(
       storageReclaimables(
-        ref.read(storageReportProvider),
+        ref.read(storageDisplayControllerProvider).report,
         syncBusy: ref.read(storageSyncBusyProvider),
       ),
     );
     // Immutable candidate lists are captured before any await or refresh.
     state = state.copyWith(cleaning: true);
     var freed = 0;
+    final cleaned = <StorageCleanupKind>{};
     try {
       for (final item in selected) {
         if (item.kind == .cache && ref.read(storageSyncBusyProvider)) continue;
+        cleaned.add(item.kind);
         freed += switch (item.kind) {
           .retiredModel ||
           .unusedModel ||
@@ -161,6 +195,9 @@ class StorageSelection extends _$StorageSelection {
     } finally {
       if (ref.mounted) {
         state = state.copyWith(cleaning: false);
+        ref
+            .read(storageDisplayControllerProvider.notifier)
+            .dropCleaned(cleaned);
         ref.invalidate(storageReportProvider);
       }
     }

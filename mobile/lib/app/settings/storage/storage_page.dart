@@ -45,18 +45,20 @@ String _itemName(BuildContext context, Reclaimable item) => switch (item.kind) {
 };
 
 class _StorageView {
-  final AsyncValue<StorageReport> usage;
+  final StorageDisplay display;
   final List<Reclaimable> items;
   final StorageSelectionState selection;
 
-  const _StorageView(this.usage, this.items, this.selection);
+  const _StorageView(this.display, this.items, this.selection);
 
-  StorageReport? get progress => usage.value;
+  StorageReport? get progress => display.report;
   Set<StorageCleanupKind> get checked => selection.checked;
   bool get cleaning => selection.cleaning;
-  bool get hasError => usage.hasError || items.any((i) => i.status.hasError);
-  bool get scanning =>
-      !hasError && (usage.isLoading || progress?.complete != true);
+  bool get hasError => display.error != null;
+
+  /// A rescan behind an already finished report stays quiet: only the first
+  /// scan of a visit shows progress.
+  bool get scanning => !hasError && progress?.complete != true;
   List<Reclaimable> get selected => selection.selected(items);
   int get selectedBytes => selected.fold(0, (sum, i) => sum + i.bytes);
   int get reclaimableBytes => items
@@ -70,10 +72,13 @@ class StoragePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final report = ref.watch(storageReportProvider);
+    final display = ref.watch(storageDisplayControllerProvider);
     final state = _StorageView(
-      report,
-      storageReclaimables(report, syncBusy: ref.watch(storageSyncBusyProvider)),
+      display,
+      storageReclaimables(
+        display.report,
+        syncBusy: ref.watch(storageSyncBusyProvider),
+      ),
       ref.watch(storageSelectionProvider),
     );
     final items = state.items;
@@ -365,10 +370,23 @@ class _Category extends ConsumerWidget {
           borderRadius: .circular(context.theme.radii.sm),
         ),
       ),
-      title: _areaName(context, index),
-      subtitle: reclaimable > 0
-          ? context.l10n.storage.cleanable(size: storageSize(reclaimable))
-          : null,
+      // 可清理量和名称同一行：行高不随它出现或消失而变化
+      title: Text.rich(
+        TextSpan(
+          style: context.theme.typography.bodyLarge.onSurface,
+          children: [
+            TextSpan(text: _areaName(context, index)),
+            if (reclaimable > 0)
+              TextSpan(
+                text:
+                    '  ${context.l10n.storage.cleanable(size: storageSize(reclaimable))}',
+                style: context.theme.typography.bodySmall.onSurfaceVariant,
+              ),
+          ],
+        ),
+        maxLines: 1,
+        overflow: .ellipsis,
+      ),
       trailing: route == null
           ? size
           : Row(

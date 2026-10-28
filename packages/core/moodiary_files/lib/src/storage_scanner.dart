@@ -173,6 +173,29 @@ class StorageReport {
   int get total => bytes.values.fold(0, (a, b) => a + b);
   bool get complete => done.length == StorageArea.values.length;
   bool finished(StorageCleanupKind kind) => done.containsAll(kind.areas);
+
+  /// This report as it will look once [kinds] are deleted: their candidates
+  /// are dropped and their bytes taken out of the areas they lived in.
+  StorageReport without(Set<StorageCleanupKind> kinds) {
+    final remaining = {...bytes};
+    for (final kind in kinds) {
+      for (final MapEntry(key: area, value: freed)
+          in candidates[kind]?.areaBytes.entries ??
+              const <MapEntry<StorageArea, int>>[]) {
+        remaining[area] = ((remaining[area] ?? 0) - freed).clamp(0, 1 << 62);
+      }
+    }
+    return StorageReport(
+      bytes: remaining,
+      done: done,
+      area: area,
+      files: files,
+      candidates: {
+        for (final MapEntry(:key, :value) in candidates.entries)
+          if (!kinds.contains(key)) key: value,
+      },
+    );
+  }
 }
 
 class StorageScanner {

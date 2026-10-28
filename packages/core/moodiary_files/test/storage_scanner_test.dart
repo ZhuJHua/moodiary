@@ -269,4 +269,26 @@ void main() {
       expect(Directory('${root.path}/cache/export').existsSync(), isFalse);
     },
   );
+
+  test('without() drops cleaned kinds and their bytes', () {
+    final report = StorageReport(
+      bytes: const {StorageArea.model: 100, StorageArea.cache: 50},
+      done: StorageArea.values.toSet(),
+      area: .other,
+      files: 3,
+      candidates: {
+        StorageCleanupKind.partialDownload: StorageCandidates(const [
+          StorageCandidate(path: '/m.part', bytes: 40, area: .model),
+        ]),
+        StorageCleanupKind.cache: StorageCandidates(const [
+          StorageCandidate(path: '/c', bytes: 50, area: .cache),
+        ]),
+      },
+    );
+    final left = report.without({StorageCleanupKind.partialDownload});
+    expect(left.bytes[StorageArea.model], 60);
+    expect(left.bytes[StorageArea.cache], 50);
+    expect(left.candidates.keys, [StorageCleanupKind.cache]);
+    expect(left.complete, isTrue);
+  });
 }
