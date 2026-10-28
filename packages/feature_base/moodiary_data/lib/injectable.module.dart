@@ -31,6 +31,7 @@ class MoodiaryDataPackageModule extends _i526.MicroPackageModule {
       () => _i768.EmbedIndexService(
         gh<_i527.MoodiaryDatabase>(),
         gh<_i611.SemanticEmbedder>(),
+        gh<_i107.OpenDiaryRegistry>(),
       ),
     );
     gh.lazySingleton<_i428.CategoryRepository>(
@@ -55,6 +56,7 @@ class MoodiaryDataPackageModule extends _i526.MicroPackageModule {
       () => _i135.EmbedQueueWatcher(
         gh<_i1068.DiaryRepository>(),
         gh<_i768.EmbedIndexService>(),
+        gh<_i107.OpenDiaryRegistry>(),
       ),
       dispose: (i) => i.dispose(),
     );
