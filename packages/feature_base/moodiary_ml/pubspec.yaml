@@ -13,7 +13,7 @@ dependencies:
   flutter:
     sdk: flutter
   injectable: 3.0.0
-  flutter_onnxruntime: 1.8.5
+  flutter_onnxruntime: 1.9.0
   fast_tokenizer: 0.0.1
   moodiary_files: 0.0.1
   moodiary_http: 0.0.1
