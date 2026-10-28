@@ -17,6 +17,7 @@ Stream<StorageReport> storageReport(Ref ref) async* {
   yield* StorageScanner().scan(
     StorageScanInput(
       referencedMedia: used,
+      heldMedia: MediaHolds.snapshot(),
       liveModelFiles: liveModelFileNames(),
       retiredModelStems: retiredModelStems,
       includeLegacyBackups: LegacyBackups().dbEngineMigrated,
@@ -229,11 +230,13 @@ class StorageSelection extends _$StorageSelection {
 Future<int> _deleteFiles(
   Iterable<StorageCandidate> files, {
   bool partialDownload = false,
+  bool Function(StorageCandidate)? keep,
 }) async {
   var freed = 0;
   for (final file in files) {
     try {
-      final stat = await File(file.path).stat();
+      final target = File(file.path);
+      final stat = partialDownload ? target.statSync() : await target.stat();
       if (stat.type != FileSystemEntityType.file) continue;
       if (partialDownload &&
           (EmbeddingModelManager.ownsPartialDownload(file.path) ||
@@ -242,7 +245,17 @@ Future<int> _deleteFiles(
                   AppFiles.partialDownloadGrace)) {
         continue;
       }
-      if (await AppFiles.deleteFile(file.path)) freed += stat.size;
+      if (keep?.call(file) ?? false) continue;
+      // Downloads claim their .part paths synchronously before their first
+      // await. Keep the final ownership/mtime/grace check and deletion in one
+      // main-isolate turn, so a new claim cannot interleave. The same applies
+      // to media holds reserved by writers.
+      if (partialDownload || keep != null) {
+        target.deleteSync();
+        freed += stat.size;
+      } else if (await AppFiles.deleteFile(file.path)) {
+        freed += stat.size;
+      }
     } on PathNotFoundException {
       // A download or another cleaner already removed it.
     }
@@ -255,5 +268,13 @@ Future<int> _deleteUnusedMedia(List<StorageCandidate> files) async {
   final fresh = StorageScanInput(
     referencedMedia: await getIt<DiaryRepository>().collectReferencedMedia(),
   );
-  return _deleteFiles(files.where((file) => !fresh.references(file)));
+  return _deleteFiles(
+    files,
+    keep: (file) =>
+        fresh.references(file) ||
+        MediaHolds.contains(
+          file.area.mediaType!,
+          File(file.path).uri.pathSegments.last,
+        ),
+  );
 }

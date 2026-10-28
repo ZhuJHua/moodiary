@@ -33,12 +33,16 @@ class MediaManager {
     bool reuseExisting = true,
   }) async {
     final srcName = basename(imageFile.path);
-    if (reuseExisting && srcName.startsWith('image-')) return srcName;
+    if (reuseExisting && srcName.startsWith('image-')) {
+      MediaHolds.add(.image, srcName);
+      return srcName;
+    }
     try {
       final mime = await _sniffMime(imageFile.path);
       final String name;
       if (mime == 'image/heic' || mime == 'image/heif') {
         name = 'image-${uuidV7()}.jpg';
+        MediaHolds.add(.image, name);
         final out = await getIt<IHeifDecoder>().convert(
           imageFile.path,
           outputPath: AppFiles.getRealPath('image', name),
@@ -46,6 +50,7 @@ class MediaManager {
         if (out == null) return null;
       } else {
         name = 'image-${uuidV7()}${_extensionFor(mime, imageFile.path)}';
+        MediaHolds.add(.image, name);
         await imageFile.saveTo(AppFiles.getRealPath('image', name));
       }
       unawaited(FastImageDerivatives.warm(AppFiles.getRealPath('image', name)));
@@ -66,6 +71,7 @@ class MediaManager {
         'file-${uuidV7()}${_safeExtension.hasMatch(ext) ? ext : '.bin'}';
     final target = AppFiles.getRealPath(MediaType.file.value, name);
     try {
+      MediaHolds.add(.file, name);
       await file.saveTo(target);
       return (
         name: name,
@@ -113,11 +119,13 @@ class MediaManager {
     await Future.wait(
       videoFileList.map((videoFile) async {
         if (reuseExisting && basename(videoFile.path).startsWith('video-')) {
+          MediaHolds.add(.video, basename(videoFile.path));
           videoNameMap[videoFile.path] = basename(videoFile.path);
           return;
         }
         final uuid = uuidV7();
         final videoName = 'video-$uuid.mp4';
+        MediaHolds.add(.video, videoName);
         videoNameMap[videoFile.path] = videoName;
         await videoFile.saveTo(AppFiles.getRealPath('video', videoName));
         final tempThumbnailPath = AppFiles.getRealPath('thumbnail', videoName);
@@ -173,7 +181,8 @@ class MediaManager {
     return completer.future;
   }
 
-  static Future<bool> _getVideoThumbnail(XFile xFile, destPath) async {
+  static Future<bool> _getVideoThumbnail(XFile xFile, String destPath) async {
+    MediaHolds.add(.video, basename(destPath));
     // 1280 = 图片 m 档位宽度，封面与其同宽
     const size = 1280;
     return await _thumbnail.saveThumbnailToFile(

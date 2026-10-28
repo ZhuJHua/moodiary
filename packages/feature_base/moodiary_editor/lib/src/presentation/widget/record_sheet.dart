@@ -63,6 +63,7 @@ class _RecordSheetState extends State<RecordSheet> {
     if (!granted) return;
     final name = 'audio-${uuidV7()}.m4a';
     final path = AppFiles.getRealPath('audio', name);
+    MediaHolds.add(.audio, name);
     await _recorder.start(
       const RecordConfig(androidConfig: AndroidRecordConfig(useLegacy: true)),
       path: path,

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:fast_image/fast_image.dart';
 import 'package:flutter/foundation.dart' hide Category;
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
@@ -84,6 +85,18 @@ class _Places implements PlaceRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+class _HeifDecoder implements IHeifDecoder {
+  @override
+  Future<String?> convert(String srcPath, {required String outputPath}) async {
+    expect(
+      MediaHolds.contains(.image, File(outputPath).uri.pathSegments.last),
+      isTrue,
+    );
+    await File(srcPath).copy(outputPath);
+    return outputPath;
+  }
+}
+
 class _ImportMedia implements ImportMediaStore {
   final stagedLast = Completer<void>();
   final release = Completer<void>();
@@ -148,6 +161,7 @@ Future<StorageReport> _complete(ProviderContainer container) async {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   late Directory root;
   setUpAll(() {
     root = Directory.systemTemp.createTempSync('storage-controller-');
@@ -441,6 +455,97 @@ void main() {
     }
     await _complete(container);
   });
+
+  for (final kind in ['image', 'heic', 'video', 'file']) {
+    test(
+      '$kind saved this process survives a stale unused-media snapshot',
+      () async {
+        await AppFiles.initCreateDir();
+        getIt.registerSingleton<DiaryRepository>(_DiaryRepository());
+        getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
+        getIt.registerSingleton<IHeifDecoder>(_HeifDecoder());
+        const channel = MethodChannel('fc_native_video_thumbnail');
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, (call) async {
+              final args = call.arguments as Map;
+              final path = args['destFile'] as String;
+              expect(
+                MediaHolds.contains(.video, File(path).uri.pathSegments.last),
+                isTrue,
+              );
+              await File(path).writeAsBytes([1, 2, 3]);
+              return true;
+            });
+        addTearDown(() {
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+              .setMockMethodCallHandler(channel, null);
+        });
+        final source = write('source.${kind == 'image' ? 'png' : kind}', 7);
+        final xfile = XFile(source.path);
+        final MediaType type;
+        final String name;
+        if (kind == 'video') {
+          type = .video;
+          name = (await MediaManager.saveVideo(
+            videoFileList: [xfile],
+          ))[source.path]!;
+        } else if (kind == 'file') {
+          type = .file;
+          name = (await MediaManager.saveAttachment(xfile))!.name;
+        } else {
+          type = .image;
+          name = (await MediaManager.saveImage(xfile))!;
+        }
+        if (kind == 'heic') expect(name, endsWith('.jpg'));
+        final protected = [File(AppFiles.getRealPath(type.value, name))];
+        if (type == .image) {
+          for (final derivative in FastImageDerivatives.derivativeNamesOf(
+            name,
+          )) {
+            protected.add(write('support/image/thumb/$derivative', 3));
+          }
+        } else if (type == .video) {
+          protected.add(File(AppFiles.getRealPath('thumbnail', name)));
+        }
+        final orphan = write('support/file/orphan.txt', 5);
+        // Simulate an already displayed snapshot which did not know the holds.
+        final stale = await StorageScanner().scan(StorageScanInput()).last;
+        expect(
+          stale.candidates[StorageCleanupKind.unusedMedia]!.files.map(
+            (f) => f.path,
+          ),
+          containsAll(protected.map((f) => f.path)),
+        );
+        final live = ProviderContainer.test();
+        final scanned = await _complete(live);
+        expect(
+          scanned.candidates[StorageCleanupKind.unusedMedia]!.files.map(
+            (f) => f.path,
+          ),
+          [orphan.path],
+        );
+        final container = ProviderContainer.test(
+          overrides: [
+            storageReportProvider.overrideWith((ref) => Stream.value(stale)),
+            storageSyncBusyProvider.overrideWith((ref) => false),
+          ],
+        );
+        _listen(container);
+        await _complete(container);
+        expect(
+          await container
+              .read(storageSelectionProvider.notifier)
+              .clean(_items(container)),
+          5,
+        );
+        expect(orphan.existsSync(), isFalse);
+        for (final file in protected) {
+          expect(file.existsSync(), isTrue, reason: file.path);
+        }
+        await _complete(container);
+      },
+    );
+  }
 
   test(
     'cleanup keeps live derivatives shared by an orphan image stem',
@@ -904,10 +1009,9 @@ void main() {
     },
   );
 
-  test('an old partial a model download still owns is skipped', () async {
+  test('a partial claimed after scanning is skipped', () async {
     // A stalled download can leave its .part untouched past the grace period.
     final held = write('support/model/held.part', 13);
-    EmbeddingModelManager.debugHoldPartialDownload(held.path);
     addTearDown(
       () => EmbeddingModelManager.debugHoldPartialDownload(
         held.path,
@@ -937,6 +1041,7 @@ void main() {
     );
     _listen(container);
     await _complete(container);
+    EmbeddingModelManager.debugHoldPartialDownload(held.path);
     expect(
       await container
           .read(storageSelectionProvider.notifier)
@@ -944,6 +1049,49 @@ void main() {
       0,
     );
     expect(held.existsSync(), isTrue);
+    await _complete(container);
+  });
+
+  test('partial deletion finishes before a later download can claim its path', () async {
+    final file = write('support/model/claim-after-delete.part', 13);
+    final container = ProviderContainer.test(
+      overrides: [
+        storageReportProvider.overrideWith(
+          (ref) => Stream.value(
+            _report(
+              candidates: {
+                .partialDownload: [
+                  StorageCandidate(
+                    path: file.path,
+                    bytes: 13,
+                    area: .model,
+                    modified: file.lastModifiedSync(),
+                  ),
+                ],
+              },
+            ),
+          ),
+        ),
+        storageSyncBusyProvider.overrideWith((ref) => false),
+      ],
+    );
+    _listen(container);
+    await _complete(container);
+    final clean = container
+        .read(storageSelectionProvider.notifier)
+        .clean(_items(container));
+    // No await: the old file must already be deleted before a new claim/write.
+    expect(file.existsSync(), isFalse);
+    EmbeddingModelManager.debugHoldPartialDownload(file.path);
+    addTearDown(
+      () => EmbeddingModelManager.debugHoldPartialDownload(
+        file.path,
+        held: false,
+      ),
+    );
+    file.writeAsBytesSync([1, 2, 3]);
+    expect(await clean, 13);
+    expect(file.readAsBytesSync(), [1, 2, 3]);
     await _complete(container);
   });
 

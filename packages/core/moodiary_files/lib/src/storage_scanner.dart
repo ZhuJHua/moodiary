@@ -70,24 +70,43 @@ class StorageScanInput {
       videos: const {},
       files: const {},
     ),
+    Map<MediaType, Set<String>> heldMedia = const {},
     Set<String> liveModelFiles = const {},
     Set<String> retiredModelStems = const {},
     this.includeLegacyBackups = false,
   }) : referencedMedia = (
-         images: Set.unmodifiable(referencedMedia.images),
-         audios: Set.unmodifiable(referencedMedia.audios),
-         videos: Set.unmodifiable(referencedMedia.videos),
-         files: Set.unmodifiable(referencedMedia.files),
+         images: Set.unmodifiable({
+           ...referencedMedia.images,
+           ...?heldMedia[MediaType.image],
+         }),
+         audios: Set.unmodifiable({
+           ...referencedMedia.audios,
+           ...?heldMedia[MediaType.audio],
+         }),
+         videos: Set.unmodifiable({
+           ...referencedMedia.videos,
+           ...?heldMedia[MediaType.video],
+         }),
+         files: Set.unmodifiable({
+           ...referencedMedia.files,
+           ...?heldMedia[MediaType.file],
+         }),
        ),
        liveModelFiles = Set.unmodifiable(liveModelFiles),
        retiredModelStems = Set.unmodifiable(retiredModelStems),
        _imageStems = {
          for (final name in referencedMedia.images)
            p.basenameWithoutExtension(name),
+         for (final name in heldMedia[MediaType.image] ?? const <String>{})
+           p.basenameWithoutExtension(name),
        },
        _videos = {
          ...referencedMedia.videos,
-         for (final name in referencedMedia.videos)
+         ...?heldMedia[MediaType.video],
+         for (final name in {
+           ...referencedMedia.videos,
+           ...?heldMedia[MediaType.video],
+         })
            if (AppFiles.thumbnailNameOf(name) case final String thumb) thumb,
        };
 
