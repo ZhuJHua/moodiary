@@ -104,7 +104,7 @@ enum MoodiaryKVs<T extends Object> {
 
   embeddingIndexStale<bool>(defaultValue: false),
 
-  modelDownloadMirror<bool>(defaultValue: true),
+  modelDownloadEndpoint<String>(defaultValue: ''),
 
   getWeather<bool>(defaultValue: false),
 

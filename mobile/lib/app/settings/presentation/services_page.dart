@@ -25,6 +25,7 @@ class ServicesPage extends ConsumerWidget {
         child: CustomScrollView(
           slivers: [
             const _AiSection(),
+            const _ModelDownloadSection(),
             const _SemanticSection(),
             const _QweatherSection(),
             const _MapSection(),
@@ -50,6 +51,82 @@ class _AiSection extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+class _ModelDownloadSection extends StatelessWidget {
+  const _ModelDownloadSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<String>(
+      valueListenable: MoodiaryKVs.modelDownloadEndpoint.getNotifier(),
+      builder: (context, value, _) {
+        final endpoint = value.trim();
+        final host = endpoint
+            .replaceFirst(RegExp(r'^.*?://'), '')
+            .split('/')
+            .first;
+        final subtitle = endpoint.isEmpty
+            ? '${context.l10n.app.servicesHfOfficial} · huggingface.co'
+            : '${context.l10n.app.servicesHfCustom} · $host';
+        return MSliverSettingGroup(
+          title: context.l10n.app.servicesModelDownload,
+          children: [
+            SettingListTile(
+              leading: Icon(
+                LucideIcons.download,
+                color: context.theme.colors.onSurfaceVariant,
+              ),
+              title: context.l10n.app.servicesHfEndpoint,
+              subtitle: subtitle,
+              trailing: const Icon(LucideIcons.chevronRight),
+              onTap: () => _pickEndpoint(context, endpoint),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _pickEndpoint(BuildContext context, String endpoint) async {
+    final custom = await MSheet.picker<bool>(
+      context,
+      title: context.l10n.app.servicesHfEndpoint,
+      selected: endpoint.isNotEmpty,
+      options: [
+        MSheetOption(
+          value: false,
+          label: context.l10n.app.servicesHfOfficial,
+          subtitle: 'huggingface.co',
+          icon: LucideIcons.globe,
+        ),
+        MSheetOption(
+          value: true,
+          label: context.l10n.app.servicesHfCustomAddress,
+          subtitle: endpoint.isEmpty
+              ? context.l10n.app.servicesHfCustomHint
+              : endpoint,
+          icon: LucideIcons.server,
+        ),
+      ],
+    );
+    if (custom == null || !context.mounted) return;
+    if (!custom) {
+      MoodiaryKVs.modelDownloadEndpoint.set('');
+    } else {
+      final result = await MAlert.prompt(
+        context,
+        title: l10n.app.servicesHfCustomAddress,
+        message: l10n.app.servicesHfEndpointHelp,
+        initialValue: endpoint,
+        hintText: HfHub.officialEndpoint,
+        keyboardType: TextInputType.url,
+      );
+      if (result == null || result.isEmpty) return;
+      MoodiaryKVs.modelDownloadEndpoint.set(result);
+    }
+    toast.success(message: l10n.app.servicesSaved);
   }
 }
 
@@ -252,13 +329,19 @@ class _ModelPickerSheetState extends State<_ModelPickerSheet> {
     });
     try {
       if (!downloaded) {
-        await _manager.download(
-          spec,
-          onProgress: (received, total) {
-            if (!mounted) return;
-            setState(() => _progress = total > 0 ? received / total : 0);
-          },
-        );
+        try {
+          await _manager.download(
+            spec,
+            onProgress: (received, total) {
+              if (!mounted) return;
+              setState(() => _progress = total > 0 ? received / total : 0);
+            },
+          );
+        } catch (e, s) {
+          logger.e('download embedding model failed', error: e, stackTrace: s);
+          toast.error(message: l10n.app.servicesModelDownloadFailed);
+          return;
+        }
       }
       if (mounted) setState(() => _progress = -1);
       await _manager.activate(spec);

@@ -137,6 +137,14 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get qweatherRequired => 'Set up QWeather first';
 	@override String get servicesIntro => 'Add your own third-party credentials here to enable the AI assistant, weather and maps. Credentials are stored on this device only.';
 	@override String get servicesAssistant => 'AI assistant';
+	@override String get servicesModelDownload => 'Model downloads';
+	@override String get servicesHfEndpoint => 'Hugging Face endpoint';
+	@override String get servicesHfOfficial => 'Official';
+	@override String get servicesHfCustom => 'Custom';
+	@override String get servicesHfCustomAddress => 'Custom address';
+	@override String get servicesHfCustomHint => 'Enter a Hugging Face-compatible site';
+	@override String get servicesHfEndpointHelp => 'Enter only the base URL. Model paths are added automatically.';
+	@override String get servicesModelDownloadFailed => 'Download failed. Try changing the endpoint in “Model downloads”.';
 	@override String get servicesQweather => 'QWeather';
 	@override String get servicesQweatherHostHint => 'devapi.qweather.com, or your own';
 	@override String get servicesMap => 'Map';

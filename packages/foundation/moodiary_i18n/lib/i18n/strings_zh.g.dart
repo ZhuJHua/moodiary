@@ -300,6 +300,30 @@ class Translations$app$zh {
 	/// zh: 'AI 助手'
 	String get servicesAssistant => 'AI 助手';
 
+	/// zh: '模型下载'
+	String get servicesModelDownload => '模型下载';
+
+	/// zh: 'Hugging Face 下载源'
+	String get servicesHfEndpoint => 'Hugging Face 下载源';
+
+	/// zh: '官方'
+	String get servicesHfOfficial => '官方';
+
+	/// zh: '自定义'
+	String get servicesHfCustom => '自定义';
+
+	/// zh: '自定义地址'
+	String get servicesHfCustomAddress => '自定义地址';
+
+	/// zh: '填写兼容 Hugging Face 的站点'
+	String get servicesHfCustomHint => '填写兼容 Hugging Face 的站点';
+
+	/// zh: '只填根地址，模型路径会自动拼接'
+	String get servicesHfEndpointHelp => '只填根地址，模型路径会自动拼接';
+
+	/// zh: '下载失败，可在「模型下载」中更换下载源'
+	String get servicesModelDownloadFailed => '下载失败，可在「模型下载」中更换下载源';
+
 	/// zh: '和风天气'
 	String get servicesQweather => '和风天气';
 
