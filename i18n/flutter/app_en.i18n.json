@@ -82,7 +82,6 @@
   "servicesModelDownload": "Model downloads",
   "servicesHfEndpoint": "Hugging Face endpoint",
   "servicesHfOfficial": "Official",
-  "servicesHfCustom": "Custom",
   "servicesHfCustomAddress": "Custom address",
   "servicesHfCustomHint": "Enter a Hugging Face-compatible site",
   "servicesHfEndpointHelp": "Enter only the base URL. Model paths are added automatically.",

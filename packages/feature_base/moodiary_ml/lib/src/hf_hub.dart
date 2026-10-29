@@ -1,18 +1,17 @@
-import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:moodiary_storage/moodiary_storage.dart';
 
 abstract final class HfHub {
   static const officialEndpoint = 'https://huggingface.co';
 
-  static String resolve(String hfPath) =>
-      resolveWith(MoodiaryKVs.modelDownloadEndpoint.get() ?? '', hfPath);
-
-  @visibleForTesting
-  static String resolveWith(String endpoint, String hfPath) {
+  /// The base URL downloads go to for a stored endpoint value; blank means
+  /// the official site.
+  static String normalize(String endpoint) {
     var base = endpoint.trim();
-    if (base.isEmpty) base = officialEndpoint;
+    if (base.isEmpty) return officialEndpoint;
     if (!base.contains('://')) base = 'https://$base';
-    base = base.replaceFirst(RegExp(r'/+$'), '');
-    return '$base/$hfPath';
+    return base.replaceFirst(RegExp(r'/+$'), '');
   }
+
+  static String resolve(String hfPath) =>
+      '${normalize(MoodiaryKVs.modelDownloadEndpoint.get() ?? '')}/$hfPath';
 }

@@ -309,9 +309,6 @@ class Translations$app$zh {
 	/// zh: '官方'
 	String get servicesHfOfficial => '官方';
 
-	/// zh: '自定义'
-	String get servicesHfCustom => '自定义';
-
 	/// zh: '自定义地址'
 	String get servicesHfCustomAddress => '自定义地址';
 

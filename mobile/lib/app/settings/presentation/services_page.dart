@@ -7,6 +7,7 @@ import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/moodiary_diary.dart';
+import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_ml/moodiary_ml.dart';
@@ -63,13 +64,10 @@ class _ModelDownloadSection extends StatelessWidget {
       valueListenable: MoodiaryKVs.modelDownloadEndpoint.getNotifier(),
       builder: (context, value, _) {
         final endpoint = value.trim();
-        final host = endpoint
-            .replaceFirst(RegExp(r'^.*?://'), '')
-            .split('/')
-            .first;
+        final host = Uri.parse(HfHub.normalize(endpoint)).authority;
         final subtitle = endpoint.isEmpty
-            ? '${context.l10n.app.servicesHfOfficial} · huggingface.co'
-            : '${context.l10n.app.servicesHfCustom} · $host';
+            ? '${context.l10n.app.servicesHfOfficial} · $host'
+            : '${context.l10n.common.custom} · $host';
         return MSliverSettingGroup(
           title: context.l10n.app.servicesModelDownload,
           children: [
@@ -98,7 +96,7 @@ class _ModelDownloadSection extends StatelessWidget {
         MSheetOption(
           value: false,
           label: context.l10n.app.servicesHfOfficial,
-          subtitle: 'huggingface.co',
+          subtitle: Uri.parse(HfHub.officialEndpoint).host,
           icon: LucideIcons.globe,
         ),
         MSheetOption(
@@ -123,8 +121,9 @@ class _ModelDownloadSection extends StatelessWidget {
         hintText: HfHub.officialEndpoint,
         keyboardType: TextInputType.url,
       );
-      if (result == null || result.isEmpty) return;
-      MoodiaryKVs.modelDownloadEndpoint.set(result);
+      final value = result?.trim() ?? '';
+      if (value.isEmpty) return;
+      MoodiaryKVs.modelDownloadEndpoint.set(value);
     }
     toast.success(message: l10n.app.servicesSaved);
   }
@@ -329,19 +328,13 @@ class _ModelPickerSheetState extends State<_ModelPickerSheet> {
     });
     try {
       if (!downloaded) {
-        try {
-          await _manager.download(
-            spec,
-            onProgress: (received, total) {
-              if (!mounted) return;
-              setState(() => _progress = total > 0 ? received / total : 0);
-            },
-          );
-        } catch (e, s) {
-          logger.e('download embedding model failed', error: e, stackTrace: s);
-          toast.error(message: l10n.app.servicesModelDownloadFailed);
-          return;
-        }
+        await _manager.download(
+          spec,
+          onProgress: (received, total) {
+            if (!mounted) return;
+            setState(() => _progress = total > 0 ? received / total : 0);
+          },
+        );
       }
       if (mounted) setState(() => _progress = -1);
       await _manager.activate(spec);
@@ -350,7 +343,11 @@ class _ModelPickerSheetState extends State<_ModelPickerSheet> {
       if (mounted) Navigator.of(context).pop();
     } catch (e, s) {
       logger.e('activate embedding model failed', error: e, stackTrace: s);
-      toast.error(message: l10n.app.semanticEnableFailed);
+      toast.error(
+        message: e is HttpException
+            ? l10n.app.servicesModelDownloadFailed
+            : l10n.app.semanticEnableFailed,
+      );
     } finally {
       if (mounted) setState(() => _downloadingId = null);
     }

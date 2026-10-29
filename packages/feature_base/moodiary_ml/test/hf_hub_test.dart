@@ -2,36 +2,26 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_ml/moodiary_ml.dart';
 
 void main() {
-  group('HfHub.resolveWith', () {
-    const hfPath = 'org/model/resolve/main/model.onnx';
-
-    for (final endpoint in ['', '   ']) {
-      test('uses the official endpoint for "$endpoint"', () {
-        expect(
-          HfHub.resolveWith(endpoint, hfPath),
-          'https://huggingface.co/$hfPath',
-        );
-      });
-    }
+  group('HfHub.normalize', () {
+    test('falls back to the official endpoint when blank', () {
+      expect(HfHub.normalize('   '), HfHub.officialEndpoint);
+    });
 
     test('adds HTTPS when no scheme is given', () {
+      expect(HfHub.normalize('hf-mirror.com'), 'https://hf-mirror.com');
+    });
+
+    test('trims whitespace and trailing slashes', () {
       expect(
-        HfHub.resolveWith('hf-mirror.com', hfPath),
-        'https://hf-mirror.com/$hfPath',
+        HfHub.normalize('  https://hf-mirror.com//  '),
+        'https://hf-mirror.com',
       );
     });
 
-    test('trims whitespace and removes all trailing slashes', () {
+    test('keeps HTTP and the port', () {
       expect(
-        HfHub.resolveWith('  https://hf-mirror.com//  ', hfPath),
-        'https://hf-mirror.com/$hfPath',
-      );
-    });
-
-    test('preserves HTTP and the port', () {
-      expect(
-        HfHub.resolveWith('http://192.168.1.8:8080', hfPath),
-        'http://192.168.1.8:8080/$hfPath',
+        HfHub.normalize('http://192.168.1.8:8080'),
+        'http://192.168.1.8:8080',
       );
     });
   });
