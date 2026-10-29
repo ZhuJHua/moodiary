@@ -7,6 +7,7 @@ import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_diary/moodiary_diary.dart';
+import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_ml/moodiary_ml.dart';
@@ -25,6 +26,7 @@ class ServicesPage extends ConsumerWidget {
         child: CustomScrollView(
           slivers: [
             const _AiSection(),
+            const _ModelDownloadSection(),
             const _SemanticSection(),
             const _QweatherSection(),
             const _MapSection(),
@@ -50,6 +52,80 @@ class _AiSection extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+class _ModelDownloadSection extends StatelessWidget {
+  const _ModelDownloadSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<String>(
+      valueListenable: MoodiaryKVs.modelDownloadEndpoint.getNotifier(),
+      builder: (context, value, _) {
+        final endpoint = value.trim();
+        final host = Uri.parse(HfHub.normalize(endpoint)).authority;
+        final subtitle = endpoint.isEmpty
+            ? '${context.l10n.app.servicesHfOfficial} · $host'
+            : '${context.l10n.common.custom} · $host';
+        return MSliverSettingGroup(
+          title: context.l10n.app.servicesModelDownload,
+          children: [
+            SettingListTile(
+              leading: Icon(
+                LucideIcons.download,
+                color: context.theme.colors.onSurfaceVariant,
+              ),
+              title: context.l10n.app.servicesHfEndpoint,
+              subtitle: subtitle,
+              trailing: const Icon(LucideIcons.chevronRight),
+              onTap: () => _pickEndpoint(context, endpoint),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _pickEndpoint(BuildContext context, String endpoint) async {
+    final custom = await MSheet.picker<bool>(
+      context,
+      title: context.l10n.app.servicesHfEndpoint,
+      selected: endpoint.isNotEmpty,
+      options: [
+        MSheetOption(
+          value: false,
+          label: context.l10n.app.servicesHfOfficial,
+          subtitle: Uri.parse(HfHub.officialEndpoint).host,
+          icon: LucideIcons.globe,
+        ),
+        MSheetOption(
+          value: true,
+          label: context.l10n.app.servicesHfCustomAddress,
+          subtitle: endpoint.isEmpty
+              ? context.l10n.app.servicesHfCustomHint
+              : endpoint,
+          icon: LucideIcons.server,
+        ),
+      ],
+    );
+    if (custom == null || !context.mounted) return;
+    if (!custom) {
+      MoodiaryKVs.modelDownloadEndpoint.set('');
+    } else {
+      final result = await MAlert.prompt(
+        context,
+        title: l10n.app.servicesHfCustomAddress,
+        message: l10n.app.servicesHfEndpointHelp,
+        initialValue: endpoint,
+        hintText: HfHub.officialEndpoint,
+        keyboardType: TextInputType.url,
+      );
+      final value = result?.trim() ?? '';
+      if (value.isEmpty) return;
+      MoodiaryKVs.modelDownloadEndpoint.set(value);
+    }
+    toast.success(message: l10n.app.servicesSaved);
   }
 }
 
@@ -267,7 +343,11 @@ class _ModelPickerSheetState extends State<_ModelPickerSheet> {
       if (mounted) Navigator.of(context).pop();
     } catch (e, s) {
       logger.e('activate embedding model failed', error: e, stackTrace: s);
-      toast.error(message: l10n.app.semanticEnableFailed);
+      toast.error(
+        message: e is HttpException
+            ? l10n.app.servicesModelDownloadFailed
+            : l10n.app.semanticEnableFailed,
+      );
     } finally {
       if (mounted) setState(() => _downloadingId = null);
     }

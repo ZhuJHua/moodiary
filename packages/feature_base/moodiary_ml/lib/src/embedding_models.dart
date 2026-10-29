@@ -7,6 +7,7 @@ import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 
+import 'hf_hub.dart';
 import 'onnx_embedding_backend.dart';
 
 class EmbeddingModelSpec {
@@ -91,12 +92,6 @@ class EmbeddingModelManager {
       File(modelPathOf(spec)).existsSync() &&
       File(tokenizerPathOf(spec)).existsSync();
 
-  String _url(String hfPath) {
-    final mirror = MoodiaryKVs.modelDownloadMirror.get() ?? true;
-    final host = mirror ? 'hf-mirror.com' : 'huggingface.co';
-    return 'https://$host/$hfPath';
-  }
-
   static final _activeParts = <String>{};
 
   /// `.part` files a running download or probe still owns. A stalled download
@@ -137,8 +132,9 @@ class EmbeddingModelManager {
     if (!File(tokenizerPath).existsSync()) {
       final tokenizerPart = '$tokenizerPath.part';
       await _http.downloadFile(
-        _url(spec.tokenizerHfPath),
+        HfHub.resolve(spec.tokenizerHfPath),
         tokenizerPart,
+        silent: true,
         cancel: cancel,
       );
       await File(tokenizerPart).rename(tokenizerPath);
@@ -146,9 +142,10 @@ class EmbeddingModelManager {
 
     final modelPart = '$modelPath.part';
     await _http.downloadFile(
-      _url(spec.modelHfPath),
+      HfHub.resolve(spec.modelHfPath),
       modelPart,
       onProgress: onProgress,
+      silent: true,
       cancel: cancel,
     );
     try {
