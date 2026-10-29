@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.9.1] - 2026-10-29
+
+### 🚀 Features
+
+- *(settings)* Add a storage page (#357)
+- *(settings)* Configurable Hugging Face endpoint (#360)
+
+### 🐛 Bug Fixes
+
+- *(android)* Align Rust libraries to 16 KB pages (#352)
+- *(ml)* Upgrade ONNX Runtime to 1.28 to stop SIGILL on SME-only CPUs (#356)
+- *(editor)* Stop the autosave loop and lighten diary saves (#358)
+
 ## [2.9.0] - 2026-10-26
 
 ### 🚀 Features
