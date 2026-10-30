@@ -9,19 +9,25 @@ const double _kSheetActionGap = 12;
 const double _kSheetPadding = 20;
 
 abstract final class MSheet {
+  /// [enableDrag] 关掉后底窗只能靠自身动作退出：官方下拉关闭走的是
+  /// `Navigator.pop`，绕过 `PopScope`，有不可丢弃状态的流程才需要它。
+  /// 拖柄只是"可拖"的提示，所以一并收掉。
   static Future<T?> show<T>(
     BuildContext context, {
     required WidgetBuilder builder,
     bool showHandle = true,
     bool barrierDismissible = true,
+    bool enableDrag = true,
   }) {
+    final dragHandle = showHandle && enableDrag;
     return showModalBottomSheet<T>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
       useSafeArea: true,
       isDismissible: barrierDismissible,
-      showDragHandle: showHandle,
+      enableDrag: enableDrag,
+      showDragHandle: dragHandle,
       shape: _kSheetShape,
       clipBehavior: .antiAlias,
       barrierColor: context.theme.colors.scrim.withValues(alpha: 0.32),
@@ -31,7 +37,7 @@ abstract final class MSheet {
         explicitChildNodes: true,
         label: MaterialLocalizations.of(sheetContext).bottomSheetLabel,
         child: _SheetInsets(
-          topGap: showHandle ? 0 : 12,
+          topGap: dragHandle ? 0 : 12,
           child: Builder(builder: builder),
         ),
       ),
