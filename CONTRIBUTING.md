@@ -1,17 +1,17 @@
 # Contributing
 
-See the [contributor docs](https://docs.moodiary.net/dev/) for setup and workflow.
+See the [contributor docs](https://docs.moodiary.net/dev/).
 
-Your first pull request needs a signed [CLA](CLA.md). A bot will post the link.
+For your first pull request, sign the [CLA](CLA.md) using the bot's link.
 
-Please don't add GPL, AGPL, LGPL or unlicensed code. If you use third-party material, note its source and license in the pull request.
+Don't add GPL, AGPL, LGPL or unlicensed code. Note the source and license of any third-party material in your pull request.
 
 ---
 
 # 参与贡献
 
-环境配置和开发流程见[贡献者文档](https://docs.moodiary.net/zh/dev/)。
+参见[贡献者文档](https://docs.moodiary.net/zh/dev/)。
 
-首次提交 PR 需要签署 [CLA](CLA.md)，机器人会贴出链接。
+首次提 PR 时，请通过机器人提供的链接签署 [CLA](CLA.md)。
 
-请不要引入 GPL、AGPL、LGPL 或没有许可证的代码。如果用到第三方素材，请在 PR 里注明来源和许可证。
+不要引入 GPL、AGPL、LGPL 或没有许可证的代码。用到第三方内容时，请在 PR 里注明来源和许可证。
