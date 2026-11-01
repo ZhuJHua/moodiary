@@ -1,4 +1,4 @@
-# Harmony Individual Contributor License Agreement
+# Moodiary Contributor License Agreement
 
 Thank you for your interest in contributing to the Moodiary project, maintained by the owner of the GitHub account ZhuJHua ("We" or "Us").
 
@@ -84,4 +84,4 @@ Us: the owner of the GitHub account ZhuJHua
 
 This work is licensed under a Creative Commons Attribution 3.0 Unported License.
 
-_This agreement is the Harmony Individual Contributor License Agreement (HA-CLA-I), Version 1.0, published by Project Harmony at https://www.harmonyagreements.org/agreements under the Creative Commons Attribution 3.0 Unported License (https://creativecommons.org/licenses/by/3.0/). Changes from the template: the project name, instruction links and governing law are filled in, Outbound License Option Five is selected, and no additional Media licenses are listed. The "Affiliates" bracket is removed, and the signature block is replaced by the Signature section._
+_This agreement is based on the Harmony Individual Contributor License Agreement (HA-CLA-I), Version 1.0, published by Project Harmony at https://www.harmonyagreements.org/agreements under the Creative Commons Attribution 3.0 Unported License (https://creativecommons.org/licenses/by/3.0/). Changes from the template: the title, the project name, instruction links and governing law are filled in, Outbound License Option Five is selected, and no additional Media licenses are listed. The "Affiliates" bracket is removed, and the signature block is replaced by the Signature section._
