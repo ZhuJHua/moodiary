@@ -193,7 +193,7 @@ Future<void> main(List<String> argv) async {
      gh run watch
   2. 检查 draft release 与 APK 没问题后，合并这个 PR（squash）
      合并会自动把 draft 转正、打 tag v$next 并推 Telegram
-  3. TestFlight 验证通过后，填写 iOS 中英文 release_notes.txt，手动运行 ios-submit.yml
-     指定 build_number，经 app-store 环境审批后提交审核；首版手动提交，使用 skip_metadata
+  3. TestFlight 验证通过后，手动运行 ios-submit.yml，指定 build_number，经 app-store 环境审批后提交审核
+     更新说明默认“修复已知问题”，有新功能或重大改动时先改 release_notes.txt，发完改回；首版手动提交，使用 skip_metadata
 ''');
 }
