@@ -132,7 +132,6 @@ platform :ios do
     UI.user_error!("build_number is required and must be a positive integer") unless build_number.match?(/\A[1-9]\d*\z/)
     skip_metadata = options[:skip_metadata] == true || options[:skip_metadata] == "true"
     metadata_path = File.join(IOS_DIR, "fastlane", "metadata")
-    # 首个版本需手动提交：App Store Connect 不接受首版的 whatsNew；届时使用 skip_metadata:true。
     unless skip_metadata
       ["zh-Hans", "en-US"].each do |locale|
         path = File.join(metadata_path, locale, "release_notes.txt")
