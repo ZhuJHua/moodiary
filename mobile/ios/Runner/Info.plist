@@ -34,23 +34,25 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>应用需要您的同意，才能访问相机</string>
+	<string>Moodiary 使用相机拍摄照片和视频，并添加到日记中。</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_moodiary._tcp</string>
 	</array>
 	<key>NSFaceIDUsageDescription</key>
-	<string>应用需要您的同意，才能使用人脸识别</string>
+	<string>开启应用锁后，Moodiary 使用面容 ID 解锁 App。</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>用于在同一 Wi-Fi 下与其它设备互传日记数据</string>
+	<string>Moodiary 使用本地网络，在同一 Wi-Fi 下与你的其它设备互传日记数据。</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Moodiary 仅在你使用 App 时获取位置，用于为日记添加地点和天气，不会在后台追踪你的位置。</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>应用需要您的同意，才能访问位置</string>
+	<string>Moodiary 在你使用 App 时获取位置，用于为日记添加地点和天气。</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>应用需要您的同意，才能使用麦克风</string>
+	<string>Moodiary 使用麦克风录制语音和视频声音，并添加到日记中。</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>应用需要您的同意，才能访问照片</string>
+	<string>Moodiary 将你拍摄或导出的照片和视频保存到照片图库。</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>应用需要您的同意，才能访问照片</string>
+	<string>Moodiary 读取照片图库，以便你将照片和视频添加到日记中。</string>
 	<key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>
@@ -100,7 +102,5 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-	<key>keychain-access-groups</key>
-	<array/>
 </dict>
 </plist>
