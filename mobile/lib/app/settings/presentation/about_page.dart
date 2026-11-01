@@ -9,9 +9,9 @@ import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 const _legalese =
-    'Moodiary is free software licensed under the GNU General Public License '
-    'v3.0. The licenses below cover the Dart, Rust and JavaScript packages it '
-    'is built on.';
+    'Moodiary is free software licensed under the GNU Affero General Public '
+    'License v3.0. The licenses below cover the Dart, Rust and JavaScript '
+    'packages it is built on.';
 
 class AboutPage extends StatefulWidget {
   const AboutPage({super.key});
