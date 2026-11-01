@@ -1,105 +1,87 @@
-# Moodiary Contributor License Agreement
+# Harmony Individual Contributor License Agreement
 
-Version 1.0
+Thank you for your interest in contributing to the Moodiary project, maintained by the owner of the GitHub account ZhuJHua ("We" or "Us").
 
-The Chinese text below is a courtesy translation. If the two versions differ, the English version applies.
-
-This agreement lets the Moodiary project accept your contributions and distribute them, including through app stores. You keep the copyright in your work.
+This contributor agreement ("Agreement") documents the rights granted by contributors to Us. To make this document effective, please sign it and send it to Us by mail, email, fax, or electronic submission, following the instructions at https://github.com/ZhuJHua/moodiary/blob/develop/CONTRIBUTING.md#contributor-license-agreement. This is a legally binding document, so please read it carefully before agreeing to it. The Agreement may cover more than one software project managed by Us.
 
 ## 1. Definitions
 
-- **"You"** means the person or legal entity signing this agreement.
-- **"Maintainer"** means the person who maintains the Moodiary project, currently the owner of the GitHub account `ZhuJHua`, and anyone who later takes over maintaining the project.
-- **"Contribution"** means any code, documentation, translation or other work that you submit to a repository of the Moodiary project, whether you submitted it before or after signing this agreement.
+"You" means the individual who Submits a Contribution to Us.
 
-## 2. Copyright license
+"Contribution" means any work of authorship that is Submitted by You to Us in which You own or assert ownership of the Copyright. If You do not own the Copyright in the entire work of authorship, please follow the instructions in https://github.com/ZhuJHua/moodiary/blob/develop/CONTRIBUTING.md#work-you-do-not-own.
 
-You grant the Maintainer a perpetual, worldwide, non-exclusive, royalty-free, irrevocable license to use, reproduce, modify, publicly display, publicly perform, sublicense and distribute your Contributions and works based on them.
+"Copyright" means all rights protecting works of authorship owned or controlled by You, including copyright, moral and neighboring rights, as appropriate, for the full term of their existence including any extensions by You.
 
-This includes the right to distribute them:
+"Material" means the work of authorship which is made available by Us to third parties. When this Agreement covers more than one software project, the Material means the work of authorship to which the Contribution was Submitted. After You Submit the Contribution, it may be included in the Material.
 
-- under the GNU Affero General Public License;
-- through app stores and other distribution services whose terms add restrictions, including the Apple App Store; and
-- under other open source or commercial license terms.
+"Submit" means any form of electronic, verbal, or written communication sent to Us or our representatives, including but not limited to electronic mailing lists, source code control systems, and issue tracking systems that are managed by, or on behalf of, Us for the purpose of discussing and improving the Material, but excluding communication that is conspicuously marked or otherwise designated in writing by You as "Not a Contribution."
 
-## 3. Patent license
+"Submission Date" means the date on which You Submit a Contribution to Us.
 
-You grant the Maintainer, and anyone who receives the project from the Maintainer, a perpetual, worldwide, non-exclusive, royalty-free, irrevocable patent license to make, use, sell, offer to sell, import and otherwise transfer your Contributions, for any patent claims you can license that your Contribution would necessarily infringe, alone or combined with the project.
+"Effective Date" means the date You execute this Agreement or the date You first Submit a Contribution to Us, whichever is earlier.
 
-If a person starts patent litigation claiming that a Contribution or the project infringes a patent, the patent license granted to that person ends on the date the litigation is filed.
+"Media" means any portion of a Contribution which is not software.
 
-## 4. What you keep
+## 2. Grant of Rights
 
-You keep the copyright in your Contributions and can use them for any other purpose. This agreement does not transfer ownership to anyone.
+## 2.1 Copyright License
 
-Your Contributions also stay available to everyone under the license of the project version they were submitted to. This agreement does not withdraw that license.
+(a) You retain ownership of the Copyright in Your Contribution and have the same rights to use or license the Contribution which You would have had without entering into the Agreement.
 
-## 5. Your statements
+(b) To the maximum extent permitted by the relevant law, You grant to Us a perpetual, worldwide, non-exclusive, transferable, royalty-free, irrevocable license under the Copyright covering the Contribution, with the right to sublicense such rights through multiple tiers of sublicensees, to reproduce, modify, display, perform and distribute the Contribution as part of the Material; provided that this license is conditioned upon compliance with Section 2.3.
 
-You state that:
+## 2.2 Patent License
 
-- each Contribution is your original work, or you have the right to submit it under this agreement;
-- if your employer or anyone else has rights in a Contribution, you have their permission to submit it; and
-- you will identify any third-party code or material in a Contribution, along with its license.
+For patent claims including, without limitation, method, process, and apparatus claims which You own, control or have the right to grant, now or in the future, You grant to Us a perpetual, worldwide, non-exclusive, transferable, royalty-free, irrevocable patent license, with the right to sublicense these rights to multiple tiers of sublicensees, to make, have made, use, sell, offer for sale, import and otherwise transfer the Contribution and the Contribution in combination with the Material (and portions of such combination). This license is granted only to the extent that the exercise of the licensed rights infringes such patent claims; and provided that this license is conditioned upon compliance with Section 2.3.
 
-## 6. Other terms
+## 2.3 Outbound License
 
-The Maintainer does not have to accept or use any Contribution.
+Based on the grant of rights in Sections 2.1 and 2.2, if We include Your Contribution in a Material, We may license the Contribution under any license, including copyleft, permissive, commercial, or proprietary licenses. As a condition on the exercise of this right, We agree to also license the Contribution under the terms of the license or licenses which We are using for the Material on the Submission Date.
 
-Contributions are provided "as is", without warranties or conditions of any kind, except where the law requires otherwise.
+2.4 Moral Rights. If moral rights apply to the Contribution, to the maximum extent permitted by law, You waive and agree not to assert such moral rights against Us or our successors in interest, or any of our licensees, either direct or indirect.
 
-You agree to these terms by signing through the project's CLA tool, or by stating in writing on the project's GitHub repository that you agree.
+2.5 Our Rights. You acknowledge that We are not obligated to use Your Contribution as part of the Material and may decide to include any Contribution We consider appropriate.
 
----
+2.6 Reservation of Rights. Any rights not expressly licensed under this section are expressly reserved by You.
 
-# Moodiary 贡献者许可协议
+## 3. Agreement
 
-版本 1.0
+You confirm that:
 
-以下中文为便于理解的译文。两个版本不一致时，以英文版为准。
+(a) You have the legal authority to enter into this Agreement.
 
-本协议让 Moodiary 项目可以接受并分发你的贡献，包括通过应用商店分发。你的作品版权仍归你所有。
+(b) You own the Copyright and patent claims covering the Contribution which are required to grant the rights under Section 2.
 
-## 1. 定义
+(c) The grant of rights under Section 2 does not violate any grant of rights which You have made to third parties, including Your employer. If You are an employee, You have had Your employer approve this Agreement or sign the Entity version of this document. If You are less than eighteen years old, please have Your parents or guardian sign the Agreement.
 
-- **“你”** 指签署本协议的个人或法律实体。
-- **“维护者”** 指维护 Moodiary 项目的人，目前是 GitHub 账号 `ZhuJHua` 的所有者，也包括之后接手维护项目的人。
-- **“贡献”** 指你向 Moodiary 项目的仓库提交的任何代码、文档、翻译或其它作品，无论提交于签署本协议之前还是之后。
+(d) You have followed the instructions in https://github.com/ZhuJHua/moodiary/blob/develop/CONTRIBUTING.md#work-you-do-not-own, if You do not own the Copyright in the entire work of authorship Submitted.
 
-## 2. 版权许可
+## 4. Disclaimer
 
-你授予维护者一项永久、全球范围、非独占、免版税、不可撤销的许可，可以使用、复制、修改、公开展示、公开表演、再许可和分发你的贡献及基于它的作品。
+EXCEPT FOR THE EXPRESS WARRANTIES IN SECTION 3, THE CONTRIBUTION IS PROVIDED "AS IS". MORE PARTICULARLY, ALL EXPRESS OR IMPLIED WARRANTIES INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE EXPRESSLY DISCLAIMED BY YOU TO US. TO THE EXTENT THAT ANY SUCH WARRANTIES CANNOT BE DISCLAIMED, SUCH WARRANTY IS LIMITED IN DURATION TO THE MINIMUM PERIOD PERMITTED BY LAW.
 
-其中包括以下列方式分发的权利：
+## 5. Consequential Damage Waiver
 
-- 按 GNU Affero 通用公共许可证分发；
-- 通过条款附加了限制的应用商店和其它分发服务分发，包括 Apple App Store；
-- 按其它开源或商业许可条款分发。
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT WILL YOU BE LIABLE FOR ANY LOSS OF PROFITS, LOSS OF ANTICIPATED SAVINGS, LOSS OF DATA, INDIRECT, SPECIAL, INCIDENTAL, CONSEQUENTIAL AND EXEMPLARY DAMAGES ARISING OUT OF THIS AGREEMENT REGARDLESS OF THE LEGAL OR EQUITABLE THEORY (CONTRACT, TORT OR OTHERWISE) UPON WHICH THE CLAIM IS BASED.
 
-## 3. 专利许可
+## 6. Miscellaneous
 
-对于你有权许可、且你的贡献单独或与项目结合时必然会侵犯的专利权利要求，你授予维护者以及从维护者处获得项目的任何人一项永久、全球范围、非独占、免版税、不可撤销的专利许可，可以制造、使用、销售、许诺销售、进口及以其它方式转让你的贡献。
+6.1 This Agreement will be governed by and construed in accordance with the laws of the People's Republic of China, excluding its conflicts of law provisions. Under certain circumstances, the governing law in this section might be superseded by the United Nations Convention on Contracts for the International Sale of Goods ("UN Convention") and the parties intend to avoid the application of the UN Convention to this Agreement and, thus, exclude the application of the UN Convention in its entirety to this Agreement.
 
-如果有人提起专利诉讼，主张某项贡献或本项目侵犯专利，授予此人的专利许可自起诉之日起终止。
+6.2 This Agreement sets out the entire agreement between You and Us for Your Contributions to Us and overrides all other agreements or understandings.
 
-## 4. 你保留的权利
+6.3 If You or We assign the rights or obligations received through this Agreement to a third party, as a condition of the assignment, that third party must agree in writing to abide by all the rights and obligations in the Agreement.
 
-你保留贡献的版权，也可以将其用于任何其它用途。本协议不向任何人转让所有权。
+6.4 The failure of either party to require performance by the other party of any provision of this Agreement in one situation shall not affect the right of a party to require such performance at any time in the future. A waiver of performance under a provision in one situation shall not be considered a waiver of the performance of the provision in the future or a waiver of the provision in its entirety.
 
-你的贡献对所有人仍然按其提交时项目版本的许可证提供。本协议不撤回该许可。
+6.5 If any provision of this Agreement is found void and unenforceable, such provision will be replaced to the extent possible with a provision that comes closest to the meaning of the original provision and which is enforceable. The terms and conditions set forth in this Agreement shall apply notwithstanding any failure of essential purpose of this Agreement or any limited remedy to the maximum extent possible under law.
 
-## 5. 你的声明
+## Signature
 
-你声明：
+You sign by using the project's CLA tool, or by stating on the project's GitHub repository that You agree to this Agreement.
 
-- 每项贡献都是你的原创作品，或者你有权按本协议提交；
-- 如果你的雇主或其他人对贡献享有权利，你已获得其许可；
-- 你会指明贡献中包含的第三方代码或素材及其许可证。
+Us: the owner of the GitHub account ZhuJHua
 
-## 6. 其它条款
+This work is licensed under a Creative Commons Attribution 3.0 Unported License.
 
-维护者没有义务接受或使用任何贡献。
-
-贡献按“现状”提供，不附带任何形式的保证或条件，法律另有规定的除外。
-
-你通过项目的 CLA 工具签署，或在项目的 GitHub 仓库上书面表示同意，即表示接受这些条款。
+_This agreement is the Harmony Individual Contributor License Agreement (HA-CLA-I), Version 1.0, published by Project Harmony at https://www.harmonyagreements.org/agreements under the Creative Commons Attribution 3.0 Unported License (https://creativecommons.org/licenses/by/3.0/). Changes from the template: the project name, instruction links and governing law are filled in, Outbound License Option Five is selected, and no additional Media licenses are listed. The "Affiliates" bracket is removed, and the signature block is replaced by the Signature section._
