@@ -1,0 +1,82 @@
+name: iOS TestFlight
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  beta:
+    runs-on: xcode-27
+    timeout-minutes: 90
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+      LC_ALL: en_US.UTF-8
+      LANG: en_US.UTF-8
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+      IOS_DIST_CERT_P12: ${{ secrets.IOS_DIST_CERT_P12 }}
+      IOS_DIST_CERT_PASSWORD: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Prepare iOS signing
+        run: |
+          for key in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8 IOS_DIST_CERT_P12 IOS_DIST_CERT_PASSWORD; do
+            if [ -z "${!key}" ]; then
+              echo "iOS release signing secret $key is required." >&2
+              exit 1
+            fi
+          done
+
+      - name: Read Flutter Version
+        run: echo "flutter-version=$(jq -r '.flutter' .fvmrc)" >> "$GITHUB_ENV"
+
+      - name: Set Up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.flutter-version }}
+
+      - name: Set Up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Set Up Rust
+        working-directory: packages/foundation/fast_image/rust
+        run: rustup show active-toolchain
+
+      - name: Install cargo-about
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-about@0.9.2
+
+      - name: Install Dependencies
+        working-directory: mobile
+        run: flutter pub get
+
+      - name: Set Up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          working-directory: mobile/ios
+          bundler-cache: true
+
+      - name: Build and Upload to TestFlight
+        working-directory: mobile/ios
+        run: bundle exec fastlane beta
+
+      - name: Upload Debug Symbols
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-debug-symbols
+          path: |
+            mobile/ios/build/Runner.xcarchive/dSYMs/
+            mobile/build/ios/split-debug-info/
+          if-no-files-found: warn

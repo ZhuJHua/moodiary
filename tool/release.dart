@@ -137,7 +137,6 @@ Future<void> main(List<String> argv) async {
   _pubspec.writeAsStringSync(
     source.replaceFirst(versionLine[0]!, 'version: $next+$nextBuild'),
   );
-  stdout.writeln('已写入 ${_pubspec.path}: version: $next+$nextBuild');
 
   await _run('git-cliff', [
     '--config',
@@ -184,13 +183,5 @@ Future<void> main(List<String> argv) async {
     body.path,
   ]);
   await _run('gh', ['workflow', 'run', 'build.yml', '--ref', branch]);
-
-  stdout.writeln('''
-
-完成。接下来：
-  1. CI 正在从 $branch 构建 APK，并建一个 v$next 的 draft release
-     gh run watch
-  2. 检查 draft release 与 APK 没问题后，合并这个 PR（squash）
-     合并会自动把 draft 转正、打 tag v$next 并推 Telegram
-''');
+  await _run('gh', ['workflow', 'run', 'ios-release.yml', '--ref', branch]);
 }
