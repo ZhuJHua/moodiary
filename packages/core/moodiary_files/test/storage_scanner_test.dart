@@ -149,10 +149,12 @@ void main() {
       }
       write('cache/tmp/a', 31);
       // Neither storage usage nor cleanup follows symlinks.
-      Link('${root.path}/support/image/link.jpg')
-          .createSync('${root.path}/support/image/orphan.jpg');
-      Link('${root.path}/support/model/cycle')
-          .createSync('${root.path}/support/model');
+      Link(
+        '${root.path}/support/image/link.jpg',
+      ).createSync('${root.path}/support/image/orphan.jpg');
+      Link(
+        '${root.path}/support/model/cycle',
+      ).createSync('${root.path}/support/model');
       final events = await StorageScanner(
         supportPath: '${root.path}/support',
         cachePath: '${root.path}/cache',
@@ -332,8 +334,9 @@ void main() {
   test('only model partials older than one hour are candidates', () async {
     write('support/model/fresh.part', 3);
     write('support/model/old.part', 5);
-    File('${root.path}/support/model/old.part')
-        .setLastModifiedSync(DateTime.now().subtract(const Duration(hours: 2)));
+    File(
+      '${root.path}/support/model/old.part',
+    ).setLastModifiedSync(DateTime.now().subtract(const Duration(hours: 2)));
     final report = await StorageScanner(
       supportPath: '${root.path}/support',
       cachePath: '${root.path}/cache',
@@ -402,5 +405,34 @@ void main() {
     expect(left.bytes[StorageArea.cache], 50);
     expect(left.candidates.keys, [StorageCleanupKind.cache]);
     expect(left.complete, isTrue);
+  });
+
+  test('candidate file names prefer the referenced media name', () {
+    expect(
+      const StorageCandidate(
+        path: '/support/image/orphan.jpg',
+        bytes: 1,
+        area: .image,
+        mediaName: 'orphan.jpg',
+      ).fileName,
+      'orphan.jpg',
+    );
+    expect(
+      const StorageCandidate(
+        path: '/support/image/thumb/orphan_512.jpg',
+        bytes: 1,
+        area: .image,
+        imageStem: 'orphan',
+      ).fileName,
+      'orphan',
+    );
+    expect(
+      const StorageCandidate(
+        path: '/support/cache/tmp.bin',
+        bytes: 1,
+        area: .cache,
+      ).fileName,
+      'tmp.bin',
+    );
   });
 }
