@@ -1,0 +1,163 @@
+require "base64"
+require "tmpdir"
+
+IOS_DIR = File.expand_path("..", __dir__)
+MOBILE_DIR = File.expand_path("..", IOS_DIR)
+REPO_DIR = File.expand_path("..", MOBILE_DIR)
+APP_IDENTIFIER = "cn.yooss.moodiary"
+TEAM_ID = "3XA29H789G"
+
+def app_version
+  match = File.read(File.join(MOBILE_DIR, "pubspec.yaml")).match(/^version:\s*(\d+\.\d+\.\d+)\+(\d+)\s*$/)
+  UI.user_error!("Could not read version: X.Y.Z+B from mobile/pubspec.yaml") unless match
+  [match[1], match[2].to_i]
+end
+
+def release_notes(version)
+  lines = File.readlines(File.join(REPO_DIR, "CHANGELOG.md"))
+  section = lines.drop_while { |line| !line.start_with?("## [#{version}]") }
+  notes = section.drop(1).take_while { |line| !line.start_with?("## [") }.join.strip
+  if notes.empty?
+    UI.important("No release notes for [#{version}] in CHANGELOG.md")
+    return nil
+  end
+  notes[0, 4000]
+end
+
+def enabled_option(options, key)
+  options[key] != false && options[key] != "false"
+end
+
+default_platform(:ios)
+
+platform :ios do
+  private_lane :asc_api_key do
+    app_store_connect_api_key(
+      key_id: ENV.fetch("ASC_KEY_ID"),
+      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+      key_content: ENV.fetch("ASC_KEY_P8"),
+      is_key_content_base64: true
+    )
+  end
+
+  desc "Archive and upload to TestFlight (upload:false to only sign and export)"
+  lane :beta do |options|
+    api_key = asc_api_key
+    version, minimum_build = app_version
+    build_number = [minimum_build, latest_testflight_build_number(
+      api_key: api_key,
+      app_identifier: APP_IDENTIFIER,
+      version: version,
+      initial_build_number: 0
+    ).to_i + 1].max
+    ci = is_ci
+    setup_ci if ci
+
+    project_file = File.join(IOS_DIR, "Runner.xcodeproj", "project.pbxproj")
+    original_project = File.binread(project_file) unless ci
+    begin
+      Dir.mktmpdir("moodiary-signing-") do |directory|
+        if ci
+          certificate = File.join(directory, "distribution.p12")
+          begin
+            File.write(certificate, Base64.strict_decode64(ENV.fetch("IOS_DIST_CERT_P12").gsub(/\s+/, "")), mode: "wb", perm: 0o600)
+            import_certificate(
+              certificate_path: certificate,
+              certificate_password: ENV.fetch("IOS_DIST_CERT_PASSWORD"),
+              keychain_name: ENV.fetch("MATCH_KEYCHAIN_NAME"),
+              keychain_password: ENV.fetch("MATCH_KEYCHAIN_PASSWORD", "")
+            )
+          ensure
+            File.delete(certificate) if File.exist?(certificate)
+          end
+        end
+
+        get_provisioning_profile(
+          api_key: api_key,
+          app_identifier: APP_IDENTIFIER,
+          team_id: TEAM_ID,
+          adhoc: false,
+          development: false,
+          output_path: directory
+        )
+        profile_name = lane_context[SharedValues::SIGH_NAME]
+        update_code_signing_settings(
+          path: File.join(IOS_DIR, "Runner.xcodeproj"),
+          targets: ["Runner"],
+          build_configurations: ["Release"],
+          use_automatic_signing: false,
+          code_sign_identity: "Apple Distribution",
+          team_id: TEAM_ID,
+          profile_name: profile_name
+        )
+
+        Dir.chdir(MOBILE_DIR) do
+          flutter = ci ? ["flutter"] : ["fvm", "flutter"]
+          sh(*flutter, "build", "ios", "--release", "--no-codesign", "--config-only",
+             "--build-name=#{version}", "--build-number=#{build_number}",
+             "--obfuscate", "--split-debug-info=build/ios/split-debug-info")
+        end
+        build_app(
+          workspace: File.join(IOS_DIR, "Runner.xcworkspace"),
+          scheme: "Runner",
+          configuration: "Release",
+          export_method: "app-store",
+          output_directory: File.join(IOS_DIR, "build"),
+          archive_path: File.join(IOS_DIR, "build", "Runner.xcarchive"),
+          export_options: {
+            signingStyle: "manual",
+            signingCertificate: "Apple Distribution",
+            teamID: TEAM_ID,
+            provisioningProfiles: { APP_IDENTIFIER => profile_name }
+          }
+        )
+      end
+      if enabled_option(options, :upload)
+        upload_to_testflight(
+          api_key: api_key,
+          app_identifier: APP_IDENTIFIER,
+          skip_waiting_for_build_processing: false,
+          distribute_external: false,
+          changelog: release_notes(version)
+        )
+      end
+    ensure
+      File.binwrite(project_file, original_project) unless ci
+    end
+  end
+
+  desc "Submit an existing TestFlight build for manual release after review"
+  lane :submit do |options|
+    build_number = options[:build_number].to_s
+    UI.user_error!("build_number is required and must be a positive integer") unless build_number.match?(/\A[1-9]\d*\z/)
+    skip_metadata = options[:skip_metadata] == true || options[:skip_metadata] == "true"
+    metadata_path = File.join(IOS_DIR, "fastlane", "metadata")
+    # 首个版本需手动提交：App Store Connect 不接受首版的 whatsNew；届时使用 skip_metadata:true。
+    unless skip_metadata
+      ["zh-Hans", "en-US"].each do |locale|
+        path = File.join(metadata_path, locale, "release_notes.txt")
+        UI.user_error!("Fill in #{path} before submitting") unless File.file?(path) && !File.read(path).strip.empty?
+      end
+    end
+    screenshots_path = File.join(IOS_DIR, "fastlane", "screenshots")
+    screenshots = Dir.glob(File.join(screenshots_path, "**", "*")).any? do |path|
+      File.file?(path) && path.match?(/\.(png|jpe?g)\z/i)
+    end
+    upload_to_app_store(
+      api_key: asc_api_key,
+      app_identifier: APP_IDENTIFIER,
+      skip_binary_upload: true,
+      skip_screenshots: !screenshots,
+      screenshots_path: screenshots_path,
+      skip_metadata: skip_metadata,
+      metadata_path: metadata_path,
+      app_version: app_version.first,
+      build_number: build_number,
+      submit_for_review: true,
+      automatic_release: false,
+      force: true,
+      precheck_include_in_app_purchases: false,
+      submission_information: { add_id_info_uses_idfa: false }
+    )
+  end
+end

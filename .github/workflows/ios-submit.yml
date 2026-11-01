@@ -1,0 +1,50 @@
+name: iOS App Store Review
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: TestFlight build number to submit
+        required: true
+        type: string
+      skip_metadata:
+        description: Skip release notes (required for the first version)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  submit:
+    runs-on: xcode-27
+    environment: app-store
+    env:
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Prepare App Store submission
+        run: |
+          for key in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8; do
+            if [ -z "${!key}" ]; then
+              echo "App Store Connect secret $key is required." >&2
+              exit 1
+            fi
+          done
+
+      - name: Set Up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          working-directory: mobile/ios
+          bundler-cache: true
+
+      - name: Submit for Review
+        working-directory: mobile/ios
+        env:
+          BUILD_NUMBER: ${{ inputs.build_number }}
+          SKIP_METADATA: ${{ inputs.skip_metadata }}
+        run: bundle exec fastlane submit "build_number:$BUILD_NUMBER" "skip_metadata:$SKIP_METADATA"
