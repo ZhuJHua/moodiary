@@ -76,8 +76,6 @@ platform :ios do
           api_key: api_key,
           app_identifier: APP_IDENTIFIER,
           team_id: TEAM_ID,
-          adhoc: false,
-          development: false,
           output_path: directory
         )
         profile_name = lane_context[SharedValues::SIGH_NAME]
