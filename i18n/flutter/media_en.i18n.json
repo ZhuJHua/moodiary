@@ -1,8 +1,9 @@
 {
-  "title": "Media",
+  "title": "Library",
   "typeImage": "Image",
   "typeFile": "Attachment",
   "empty": "No media yet",
+  "emptyFiles": "No attachments yet",
   "rename": "Rename",
   "imageCount(plural, param=count)": {
     "one": "{count} Photo",
