@@ -12,6 +12,8 @@ jobs:
     timeout-minutes: 90
     env:
       DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+      LC_ALL: en_US.UTF-8
+      LANG: en_US.UTF-8
       ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
       ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}

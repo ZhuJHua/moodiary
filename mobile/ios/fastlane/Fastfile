@@ -8,13 +8,13 @@ APP_IDENTIFIER = "cn.yooss.moodiary"
 TEAM_ID = "3XA29H789G"
 
 def app_version
-  match = File.read(File.join(MOBILE_DIR, "pubspec.yaml")).match(/^version:\s*(\d+\.\d+\.\d+)\+(\d+)\s*$/)
+  match = File.read(File.join(MOBILE_DIR, "pubspec.yaml"), encoding: "UTF-8").match(/^version:\s*(\d+\.\d+\.\d+)\+(\d+)\s*$/)
   UI.user_error!("Could not read version: X.Y.Z+B from mobile/pubspec.yaml") unless match
   [match[1], match[2].to_i]
 end
 
 def release_notes(version)
-  lines = File.readlines(File.join(REPO_DIR, "CHANGELOG.md"))
+  lines = File.readlines(File.join(REPO_DIR, "CHANGELOG.md"), encoding: "UTF-8")
   section = lines.drop_while { |line| !line.start_with?("## [#{version}]") }
   notes = section.drop(1).take_while { |line| !line.start_with?("## [") }.join.strip
   if notes.empty?
@@ -136,7 +136,7 @@ platform :ios do
     unless skip_metadata
       ["zh-Hans", "en-US"].each do |locale|
         path = File.join(metadata_path, locale, "release_notes.txt")
-        UI.user_error!("Fill in #{path} before submitting") unless File.file?(path) && !File.read(path).strip.empty?
+        UI.user_error!("Fill in #{path} before submitting") unless File.file?(path) && !File.read(path, encoding: "UTF-8").strip.empty?
       end
     end
     screenshots_path = File.join(IOS_DIR, "fastlane", "screenshots")
