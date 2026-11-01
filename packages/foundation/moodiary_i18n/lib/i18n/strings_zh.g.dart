@@ -2844,8 +2844,8 @@ class Translations$media$zh {
 
 	// Translations
 
-	/// zh: '媒体库'
-	String get title => '媒体库';
+	/// zh: '附件库'
+	String get title => '附件库';
 
 	/// zh: '图片'
 	String get typeImage => '图片';
@@ -2855,6 +2855,9 @@ class Translations$media$zh {
 
 	/// zh: '这里还没有媒体'
 	String get empty => '这里还没有媒体';
+
+	/// zh: '这里还没有附件'
+	String get emptyFiles => '这里还没有附件';
 
 	/// zh: '重命名'
 	String get rename => '重命名';

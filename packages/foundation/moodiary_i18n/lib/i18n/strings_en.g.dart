@@ -1038,10 +1038,11 @@ class _Translations$media$en extends Translations$media$zh {
 	final TranslationsEn _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'Media';
+	@override String get title => 'Library';
 	@override String get typeImage => 'Image';
 	@override String get typeFile => 'Attachment';
 	@override String get empty => 'No media yet';
+	@override String get emptyFiles => 'No attachments yet';
 	@override String get rename => 'Rename';
 	@override String imageCount({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(count,
 		one: '${count} Photo',
