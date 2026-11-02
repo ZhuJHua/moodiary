@@ -5,7 +5,7 @@ import PackageDescription
 let package = Package(
     name: "moodiary_native",
     platforms: [
-        .iOS("16.4")
+        .iOS("16.0")
     ],
     products: [
         .library(name: "moodiary-native", targets: ["moodiary_native"])
