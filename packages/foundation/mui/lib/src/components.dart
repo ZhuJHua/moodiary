@@ -52,5 +52,4 @@ export 'components/common/video/video_chrome_controller.dart';
 export 'components/common/video/video_playback_controller.dart';
 export 'components/common/video/video_playback_port.dart';
 export 'components/common/video/video_playback_state.dart';
-export 'components/glass/glass_config.dart';
 export 'components/glass/glass_surface.dart';

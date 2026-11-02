@@ -1350,6 +1350,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.1.0"
+  liquid_glass_widgets:
+    dependency: transitive
+    description:
+      name: liquid_glass_widgets
+      sha256: "959da0600b5f9e582f45f975858dea0f060d66d2752243227b3320195b40b179"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.16.1"
   listen:
     dependency: transitive
     description:
