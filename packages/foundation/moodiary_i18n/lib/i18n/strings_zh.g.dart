@@ -3062,6 +3062,15 @@ class Translations$storage$zh {
 	/// zh: '删除后无法恢复'
 	String get irreversible => '删除后无法恢复';
 
+	/// zh: '详情'
+	String get details => '详情';
+
+	/// zh: '清理前会再次检查这些文件，仍被日记使用的会被保留。'
+	String get detailsHint => '清理前会再次检查这些文件，仍被日记使用的会被保留。';
+
+	/// zh: '缩略图'
+	String get thumbnail => '缩略图';
+
 	/// zh: '统计中'
 	String get counting => '统计中';
 
