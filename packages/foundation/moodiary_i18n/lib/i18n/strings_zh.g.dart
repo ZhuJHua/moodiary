@@ -222,8 +222,8 @@ class Translations$app$zh {
 	/// zh: '开源许可'
 	String get aboutLicenses => '开源许可';
 
-	/// zh: '反馈 / 答疑'
-	String get aboutFeedback => '反馈 / 答疑';
+	/// zh: '隐私政策'
+	String get aboutPrivacy => '隐私政策';
 
 	/// zh: '字体'
 	String get fontTitle => '字体';

@@ -111,7 +111,7 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get aboutUpdateFailed => 'Could not check for updates, try again later';
 	@override String get aboutSource => 'Source code';
 	@override String get aboutLicenses => 'Open source licenses';
-	@override String get aboutFeedback => 'Feedback and help';
+	@override String get aboutPrivacy => 'Privacy policy';
 	@override String get fontTitle => 'Fonts';
 	@override String get fontImportSubtitle => 'Import a ttf / otf font; long-press to remove one';
 	@override String get fontPreview => 'Preview';
