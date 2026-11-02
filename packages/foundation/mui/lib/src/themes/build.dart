@@ -180,6 +180,7 @@ ThemeData buildMuiTheme({
     ),
 
     appBarTheme: AppBarTheme(
+      centerTitle: false,
       backgroundColor: cs.surface,
       scrolledUnderElevation: 0,
       systemOverlayStyle: systemOverlayStyleOf(brightness),

@@ -187,7 +187,7 @@ class _PresetCard extends StatelessWidget {
       borderRadius: AppBorderRadius.mediumBorderRadius,
       clipBehavior: .antiAlias,
       child: ListTile(
-        leading: ProviderLogo(logoUrl: preset.logoUrl, name: name),
+        leading: ProviderLogo(logoUrl: preset.logoUrl),
         title: Text(name),
         subtitle: Text(
           l10n.assistant.llmPickerModelCount(count: preset.models.length),

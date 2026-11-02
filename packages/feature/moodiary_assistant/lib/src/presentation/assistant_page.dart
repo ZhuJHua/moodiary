@@ -1643,7 +1643,6 @@ class _ModelChip extends StatelessWidget {
               else if (provider != null)
                 ProviderLogo(
                   logoUrl: ProviderLogo.urlOf(provider.presetId),
-                  name: provider.name,
                   size: 18,
                 ),
               const SizedBox(width: 6),
