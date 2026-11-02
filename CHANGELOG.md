@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.9.2] - 2026-11-02
+
+### 🚀 Features
+
+- *(settings)* Replace the forum link with the privacy policy (#373)
+- *(mui)* Adopt liquid glass for the bottom navigation bar (#375)
+
+### 🐛 Bug Fixes
+
+- *(ios)* Add privacy manifests and specific purpose strings for App Store review (#369)
+- *(ios)* Stop passing conflicting profile options to sigh (#370)
+- *(ios)* Show the status bar (#374)
+- Left-align titles and tidy small UI issues (#376)
+
+### 📚 Documentation
+
+- Add a contributor license agreement (#371)
+
+### ⚙️ Miscellaneous Tasks
+
+- *(ios)* Add fastlane TestFlight and App Store delivery (#367)
+
 ## [2.9.1] - 2026-10-29
 
 ### 🚀 Features
