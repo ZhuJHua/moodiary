@@ -62,10 +62,7 @@ class MNavBar extends StatelessWidget {
   static double _bottomMargin(BuildContext context) =>
       defaultTargetPlatform == TargetPlatform.iOS
       ? _kBottomGap
-      : math.max(
-          _kBottomGap,
-          MediaQuery.viewPaddingOf(context).bottom,
-        );
+      : math.max(_kBottomGap, MediaQuery.viewPaddingOf(context).bottom);
 
   @override
   Widget build(BuildContext context) {
@@ -113,9 +110,7 @@ class MNavBar extends StatelessWidget {
                     : glass.LiquidGlassSettings.ios27Light,
               )
             : Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: _kSideMargin,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: _kSideMargin),
                 child: SizedBox(
                   height: _kBarHeight,
                   child: Row(
