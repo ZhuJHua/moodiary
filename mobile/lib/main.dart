@@ -143,6 +143,8 @@ void main() async {
     return true;
   };
 
+  unawaited(MGlassSurface.initialize());
+
   registerThirdPartyLicenses();
 
   try {
@@ -159,9 +161,11 @@ void main() async {
   }
 
   runApp(
-    BuildBadge(
-      child: TranslationProvider(
-        child: ProviderScope(retry: (_, _) => null, child: const Moodiary()),
+    MGlassSurface.wrapApp(
+      child: BuildBadge(
+        child: TranslationProvider(
+          child: ProviderScope(retry: (_, _) => null, child: const Moodiary()),
+        ),
       ),
     ),
   );

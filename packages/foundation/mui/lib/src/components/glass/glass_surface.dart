@@ -1,7 +1,8 @@
 import 'dart:math' as math;
-import 'dart:ui';
 
-import 'package:flutter/foundation.dart' show listEquals;
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform, listEquals;
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart' as glass;
 import 'package:mui/mui.dart';
 
 class MGlassSurface extends StatelessWidget {
@@ -13,6 +14,8 @@ class MGlassSurface extends StatelessWidget {
 
   final Color? borderColor;
 
+  final double? borderWidth;
+
   final List<BoxShadow>? shadows;
 
   const MGlassSurface({
@@ -21,6 +24,7 @@ class MGlassSurface extends StatelessWidget {
     this.shape = const RoundedRectangleBorder(borderRadius: MuiRadius.lg),
     this.tint,
     this.borderColor,
+    this.borderWidth,
     this.shadows,
   });
 
@@ -34,80 +38,92 @@ class MGlassSurface extends StatelessWidget {
     ),
   ];
 
+  static Future<void> initialize() => glass.LiquidGlassWidgets.initialize(
+    enablePerformanceMonitor: false,
+    warmUpMode: defaultTargetPlatform == TargetPlatform.iOS
+        ? glass.GlassWarmUpMode.auto
+        : glass.GlassWarmUpMode.never,
+  );
+
+  static Widget wrapApp({required Widget child}) =>
+      glass.LiquidGlassWidgets.wrap(
+        brightnessResolver: (context) => context.theme.colors.brightness,
+        child: child,
+      );
+
   @override
   Widget build(BuildContext context) {
-    final config = MGlass.of(context);
     final scheme = context.theme.colors;
-    final dark = scheme.brightness == .dark;
-
     final base =
-        tint ?? (dark ? scheme.surfaceContainerHigh : scheme.surfaceContainer);
-    final fill = base.withValues(alpha: config.tintAlpha);
+        tint ??
+        (scheme.brightness == Brightness.dark
+            ? scheme.surfaceContainerHigh
+            : scheme.surfaceContainer);
     final side = BorderSide(
-      color:
-          borderColor ??
-          (dark
-              ? scheme.onSurface.withValues(alpha: 0.18)
-              : scheme.outlineVariant),
-      width: 1 / MediaQuery.devicePixelRatioOf(context),
+      color: borderColor ?? scheme.outlineVariant,
+      width: borderWidth ?? 1 / MediaQuery.devicePixelRatioOf(context),
     );
-
+    final direction = Directionality.maybeOf(context);
     return CustomPaint(
       painter: _GlassShadowPainter(
         shape: shape,
-        textDirection: Directionality.maybeOf(context),
+        textDirection: direction,
         shadows: shadows ?? defaultShadows(scheme),
       ),
       child: ClipPath(
         clipper: ShapeBorderClipper(shape: shape),
-        child: BackdropFilter(
-          filter: _backdropFilter(config),
+        child: glass.GlassContainer(
+          quality: glass.GlassQuality.minimal,
+          useOwnLayer: true,
+          shape: _liquidShape(direction),
+          settings: glass.LiquidGlassSettings(
+            glassColor: tint ?? base.withValues(alpha: 0.62),
+            bodyMode: glass.GlassBodyMode.clear,
+          ),
           child: DecoratedBox(
-            decoration: ShapeDecoration(
-              color: fill,
-              shape: shape.copyWith(side: side),
-            ),
+            decoration: ShapeDecoration(shape: shape.copyWith(side: side)),
             child: child,
           ),
         ),
       ),
     );
   }
-}
 
-ImageFilter _backdropFilter(MGlassConfig config) {
-  final blur = ImageFilter.blur(
-    sigmaX: config.blurSigma,
-    sigmaY: config.blurSigma,
-  );
-  if (config.saturation == 1) return blur;
-  return .compose(outer: _saturate(config.saturation), inner: blur);
-}
+  glass.LiquidShape _liquidShape(TextDirection? direction) => switch (shape) {
+    StadiumBorder() => const glass.LiquidRoundedRectangle(
+      borderRadius: double.infinity,
+    ),
+    CircleBorder() || OvalBorder() => const glass.LiquidOval(),
+    RoundedRectangleBorder(:final borderRadius) => _roundedShape(
+      borderRadius.resolve(direction),
+    ),
+    _ => const glass.LiquidRoundedRectangle(borderRadius: 0),
+  };
 
-ColorFilter _saturate(double s) {
-  const lumR = 0.213, lumG = 0.715, lumB = 0.072;
-  return .matrix(<double>[
-    lumR + s * (1 - lumR),
-    lumG * (1 - s),
-    lumB * (1 - s),
-    0,
-    0,
-    lumR * (1 - s),
-    lumG + s * (1 - lumG),
-    lumB * (1 - s),
-    0,
-    0,
-    lumR * (1 - s),
-    lumG * (1 - s),
-    lumB + s * (1 - lumB),
-    0,
-    0,
-    0,
-    0,
-    0,
-    1,
-    0,
-  ]);
+  glass.LiquidShape _roundedShape(BorderRadius radius) {
+    if (radius.topLeft == radius.topRight &&
+        radius.bottomLeft == radius.bottomRight &&
+        radius.topLeft.x == radius.topLeft.y &&
+        radius.bottomLeft.x == radius.bottomLeft.y) {
+      return glass.LiquidVerticalRoundedRectangle(
+        topRadius: radius.topLeft.x,
+        bottomRadius: radius.bottomLeft.x,
+      );
+    }
+    // The outer ClipPath preserves corners the package cannot represent.
+    return glass.LiquidRoundedRectangle(
+      borderRadius: [
+        radius.topLeft.x,
+        radius.topLeft.y,
+        radius.topRight.x,
+        radius.topRight.y,
+        radius.bottomLeft.x,
+        radius.bottomLeft.y,
+        radius.bottomRight.x,
+        radius.bottomRight.y,
+      ].reduce(math.min),
+    );
+  }
 }
 
 class _GlassShadowPainter extends CustomPainter {

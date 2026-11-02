@@ -1,15 +1,34 @@
+import 'dart:math' as math;
+
+import 'package:flutter/foundation.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart' as glass;
 import 'package:mui/mui.dart';
 
-const double kMoodiaryNavBarHeight = 60;
-const double kMoodiaryNavBarSideMargin = 16;
-const double kMoodiaryNavBarBottomGap = 10;
+const double _kBarHeight = 62;
+const double _kSideMargin = 20;
+const double _kBottomGap = 20;
 
-const double _kActionSize = 60;
-const double _kActionSpacing = 10;
+const double _kActionSize = 62;
+const double _kActionSpacing = 8;
 
-const double _kTrackInset = 6;
+const double _kTrackInset = 4;
+
+const double _kIconSize = 24;
+const double _kLabelFontSize = 10;
 
 const double _kMaxTextScale = 1.15;
+
+const double _kGlassBorderWidth = 0.5;
+
+List<BoxShadow> _glassShadows(ColorScheme scheme) =>
+    scheme.brightness == Brightness.dark
+    ? const []
+    : glass.LiquidGlassSettings.ios27Light.shadow ?? const [];
+
+Color? _glassBorderColor(ColorScheme scheme) =>
+    scheme.brightness == Brightness.dark
+    ? null
+    : scheme.onSurface.withValues(alpha: 0.3);
 
 class MNavDestination {
   final Widget icon;
@@ -40,43 +59,94 @@ class MNavBar extends StatelessWidget {
     this.action,
   });
 
-  static double bandHeight(BuildContext context) =>
-      kMoodiaryNavBarHeight +
-      kMoodiaryNavBarBottomGap +
-      MediaQuery.paddingOf(context).bottom;
+  static double _bottomMargin(BuildContext context) =>
+      defaultTargetPlatform == TargetPlatform.iOS
+      ? _kBottomGap
+      : math.max(
+          _kBottomGap,
+          MediaQuery.viewPaddingOf(context).bottom,
+        );
 
   @override
   Widget build(BuildContext context) {
-    final bottom = MediaQuery.paddingOf(context).bottom;
+    final scheme = context.theme.colors;
+    final ios = defaultTargetPlatform == TargetPlatform.iOS;
     return MediaQuery.withClampedTextScaling(
       maxScaleFactor: _kMaxTextScale,
       child: Padding(
-        padding: .fromLTRB(
-          kMoodiaryNavBarSideMargin,
-          0,
-          kMoodiaryNavBarSideMargin,
-          bottom + kMoodiaryNavBarBottomGap,
-        ),
-        child: SizedBox(
-          height: kMoodiaryNavBarHeight,
-          child: Row(
-            children: [
-              Expanded(
-                child: _Capsule(
-                  destinations: destinations,
-                  selectedIndex: selectedIndex,
-                  onDestinationSelected: onDestinationSelected,
+        padding: EdgeInsets.only(bottom: _bottomMargin(context)),
+        child: ios
+            ? glass.GlassTabBar.bottom(
+                quality: glass.GlassQuality.premium,
+                tabs: [
+                  for (final destination in destinations)
+                    glass.GlassTab(
+                      icon: destination.icon,
+                      label: destination.label,
+                    ),
+                ],
+                selectedIndex: selectedIndex,
+                onTabSelected: onDestinationSelected,
+                extraButton: action == null
+                    ? null
+                    : glass.GlassTabBarExtraButton(
+                        icon: _actionIcon(action!),
+                        label: action!.tooltip ?? '',
+                        onTap: action!.onPressed ?? () {},
+                        enabled: action!.onPressed != null,
+                        iconColor: scheme.onSurface,
+                        placement: glass.GlassExtraButtonPlacement.right,
+                        size: _kActionSize,
+                      ),
+                spacing: _kActionSpacing,
+                barHeight: _kBarHeight,
+                horizontalPadding: _kSideMargin,
+                verticalPadding: 0,
+                iconSize: _kIconSize,
+                labelFontSize: _kLabelFontSize,
+                selectedIconColor: scheme.onSurface,
+                selectedLabelColor: scheme.onSurface,
+                unselectedIconColor: scheme.onSurface,
+                unselectedLabelColor: scheme.onSurface,
+                settings: scheme.brightness == Brightness.dark
+                    ? glass.LiquidGlassSettings.ios27Dark
+                    : glass.LiquidGlassSettings.ios27Light,
+              )
+            : Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: _kSideMargin,
+                ),
+                child: SizedBox(
+                  height: _kBarHeight,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _Capsule(
+                          destinations: destinations,
+                          selectedIndex: selectedIndex,
+                          onDestinationSelected: onDestinationSelected,
+                        ),
+                      ),
+                      if (action != null) ...[
+                        const SizedBox(width: _kActionSpacing),
+                        _ActionButton(action: action!),
+                      ],
+                    ],
+                  ),
                 ),
               ),
-              if (action != null) ...[
-                const SizedBox(width: _kActionSpacing),
-                _ActionButton(action: action!),
-              ],
-            ],
-          ),
-        ),
       ),
     );
+  }
+
+  Widget _actionIcon(MNavAction action) {
+    final icon = IconTheme.merge(
+      data: const IconThemeData(size: _kIconSize),
+      child: action.icon,
+    );
+    return action.tooltip == null
+        ? icon
+        : Tooltip(message: action.tooltip!, child: icon);
   }
 }
 
@@ -96,6 +166,9 @@ class _Capsule extends StatelessWidget {
     final scheme = context.theme.colors;
     return MGlassSurface(
       shape: const StadiumBorder(),
+      shadows: _glassShadows(scheme),
+      borderColor: _glassBorderColor(scheme),
+      borderWidth: _kGlassBorderWidth,
       child: Padding(
         padding: const .all(_kTrackInset),
         child: LayoutBuilder(
@@ -114,7 +187,7 @@ class _Capsule extends StatelessWidget {
                   height: constraints.maxHeight,
                   child: DecoratedBox(
                     decoration: ShapeDecoration(
-                      color: scheme.secondaryContainer,
+                      color: scheme.onSurface.withValues(alpha: 0.1),
                       shape: const StadiumBorder(),
                     ),
                   ),
@@ -154,10 +227,6 @@ class _Tab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
-    final target = selected
-        ? scheme.onSecondaryContainer
-        : scheme.onSurfaceVariant;
-
     return Semantics(
       button: true,
       selected: selected,
@@ -166,28 +235,25 @@ class _Tab extends StatelessWidget {
         behavior: .opaque,
         onTap: onTap,
         child: ExcludeSemantics(
-          child: TweenAnimationBuilder<Color?>(
-            tween: ColorTween(end: target),
-            duration: Durations.medium2,
-            builder: (context, color, _) {
-              return Column(
-                mainAxisAlignment: .center,
-                children: [
-                  IconTheme.merge(
-                    data: IconThemeData(size: 21, color: color),
-                    child: destination.icon,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    destination.label,
-                    maxLines: 1,
-                    overflow: .ellipsis,
-                    style: context.theme.typography.labelSmall.onSurfaceVariant
-                        .copyWith(color: color),
-                  ),
-                ],
-              );
-            },
+          child: Column(
+            mainAxisAlignment: .center,
+            children: [
+              IconTheme.merge(
+                data: IconThemeData(size: _kIconSize, color: scheme.onSurface),
+                child: destination.icon,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                destination.label,
+                maxLines: 1,
+                overflow: .ellipsis,
+                style: context.theme.typography.labelSmall.onSurfaceVariant
+                    .copyWith(
+                      color: scheme.onSurface,
+                      fontSize: _kLabelFontSize,
+                    ),
+              ),
+            ],
           ),
         ),
       ),
@@ -203,21 +269,20 @@ class _ActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
-    Widget button = DecoratedBox(
-      decoration: ShapeDecoration(
-        shape: const CircleBorder(),
-        shadows: MGlassSurface.defaultShadows(scheme),
-      ),
-      child: Material(
-        color: scheme.primary,
-        shape: const CircleBorder(),
-        clipBehavior: .antiAlias,
+    Widget button = MGlassSurface(
+      shape: const CircleBorder(),
+      shadows: _glassShadows(scheme),
+      borderColor: _glassBorderColor(scheme),
+      borderWidth: _kGlassBorderWidth,
+      child: Semantics(
+        button: true,
+        enabled: action.onPressed != null,
         child: MInkWell(
           onTap: action.onPressed,
           child: SizedBox.square(
             dimension: _kActionSize,
             child: IconTheme.merge(
-              data: IconThemeData(size: 22, color: scheme.onPrimary),
+              data: IconThemeData(size: _kIconSize, color: scheme.onSurface),
               child: Center(child: action.icon),
             ),
           ),
