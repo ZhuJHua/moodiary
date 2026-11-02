@@ -168,15 +168,19 @@ class _AboutPageState extends State<AboutPage> {
                   SettingListTile(
                     isLast: true,
                     leading: Icon(
-                      LucideIcons.bug,
+                      LucideIcons.shield,
                       color: scheme.onSurfaceVariant,
                     ),
-                    title: context.l10n.app.aboutFeedback,
+                    title: context.l10n.app.aboutPrivacy,
                     trailing: Icon(
                       LucideIcons.chevronRight,
                       color: scheme.onSurfaceVariant,
                     ),
-                    onTap: () => _open('https://answer.moodiary.net'),
+                    onTap: () => _open(
+                      LocaleSettings.currentLocale == AppLocale.zh
+                          ? 'https://docs.moodiary.net/zh/privacy-policy.html'
+                          : 'https://docs.moodiary.net/privacy-policy.html',
+                    ),
                   ),
                 ],
               ),
