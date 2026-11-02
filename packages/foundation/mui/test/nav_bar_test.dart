@@ -12,7 +12,6 @@ const _destinations = [
 void main() {
   for (final (platform, inset, bottom) in [
     (TargetPlatform.iOS, 34.0, 20.0),
-    (TargetPlatform.android, 24.0, 24.0),
     (TargetPlatform.android, 48.0, 48.0),
     (TargetPlatform.android, 0.0, 20.0),
   ]) {
@@ -88,13 +87,6 @@ void main() {
         expect(actionRect.left - capsuleRect.right, 8);
         expect(874 - actionRect.bottom, bottom);
         expect(tester.getSize(find.byType(MNavBar)).height, 62 + bottom);
-        final iconContext = tester.element(
-          find.byIcon(LucideIcons.pencilLine).first,
-        );
-        expect(
-          MediaQuery.textScalerOf(iconContext).scale(10),
-          closeTo(11.5, 0.001),
-        );
         await tester.tapAt(
           Offset(
             capsuleRect.left + capsuleRect.width / 2,

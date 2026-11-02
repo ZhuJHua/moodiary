@@ -10,8 +10,6 @@ class MGlassSurface extends StatelessWidget {
 
   final OutlinedBorder shape;
 
-  final Color? tint;
-
   final Color? borderColor;
 
   final double? borderWidth;
@@ -22,7 +20,6 @@ class MGlassSurface extends StatelessWidget {
     super.key,
     required this.child,
     this.shape = const RoundedRectangleBorder(borderRadius: MuiRadius.lg),
-    this.tint,
     this.borderColor,
     this.borderWidth,
     this.shadows,
@@ -38,27 +35,26 @@ class MGlassSurface extends StatelessWidget {
     ),
   ];
 
-  static Future<void> initialize() => glass.LiquidGlassWidgets.initialize(
-    enablePerformanceMonitor: false,
-    warmUpMode: defaultTargetPlatform == TargetPlatform.iOS
-        ? glass.GlassWarmUpMode.auto
-        : glass.GlassWarmUpMode.never,
-  );
+  static Future<void> initialize() async {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      await glass.LiquidGlassWidgets.initialize(
+        enablePerformanceMonitor: false,
+      );
+    }
+  }
 
   static Widget wrapApp({required Widget child}) =>
       glass.LiquidGlassWidgets.wrap(
-        brightnessResolver: (context) => context.theme.colors.brightness,
+        brightnessResolver: Theme.maybeBrightnessOf,
         child: child,
       );
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
-    final base =
-        tint ??
-        (scheme.brightness == Brightness.dark
-            ? scheme.surfaceContainerHigh
-            : scheme.surfaceContainer);
+    final base = scheme.brightness == Brightness.dark
+        ? scheme.surfaceContainerHigh
+        : scheme.surfaceContainer;
     final side = BorderSide(
       color: borderColor ?? scheme.outlineVariant,
       width: borderWidth ?? 1 / MediaQuery.devicePixelRatioOf(context),
@@ -70,58 +66,30 @@ class MGlassSurface extends StatelessWidget {
         textDirection: direction,
         shadows: shadows ?? defaultShadows(scheme),
       ),
-      child: ClipPath(
-        clipper: ShapeBorderClipper(shape: shape),
-        child: glass.GlassContainer(
-          quality: glass.GlassQuality.minimal,
-          useOwnLayer: true,
-          shape: _liquidShape(direction),
-          settings: glass.LiquidGlassSettings(
-            glassColor: tint ?? base.withValues(alpha: 0.62),
-            bodyMode: glass.GlassBodyMode.clear,
+      child: glass.GlassContainer(
+        quality: glass.GlassQuality.minimal,
+        useOwnLayer: true,
+        shape: switch (shape) {
+          StadiumBorder() => const glass.LiquidRoundedRectangle(
+            borderRadius: double.infinity,
           ),
-          child: DecoratedBox(
-            decoration: ShapeDecoration(shape: shape.copyWith(side: side)),
-            child: child,
-          ),
+          CircleBorder() => const glass.LiquidOval(),
+          RoundedRectangleBorder(:final borderRadius) =>
+            glass.LiquidRoundedRectangle(
+              borderRadius: borderRadius.resolve(direction).topLeft.x,
+            ),
+          _ => const glass.LiquidRoundedRectangle(borderRadius: 0),
+        },
+        settings: glass.LiquidGlassSettings(
+          glassColor: base.withValues(alpha: 0.62),
+          bodyMode: glass.GlassBodyMode.clear,
+          shadow: const [],
+        ),
+        child: DecoratedBox(
+          decoration: ShapeDecoration(shape: shape.copyWith(side: side)),
+          child: child,
         ),
       ),
-    );
-  }
-
-  glass.LiquidShape _liquidShape(TextDirection? direction) => switch (shape) {
-    StadiumBorder() => const glass.LiquidRoundedRectangle(
-      borderRadius: double.infinity,
-    ),
-    CircleBorder() || OvalBorder() => const glass.LiquidOval(),
-    RoundedRectangleBorder(:final borderRadius) => _roundedShape(
-      borderRadius.resolve(direction),
-    ),
-    _ => const glass.LiquidRoundedRectangle(borderRadius: 0),
-  };
-
-  glass.LiquidShape _roundedShape(BorderRadius radius) {
-    if (radius.topLeft == radius.topRight &&
-        radius.bottomLeft == radius.bottomRight &&
-        radius.topLeft.x == radius.topLeft.y &&
-        radius.bottomLeft.x == radius.bottomLeft.y) {
-      return glass.LiquidVerticalRoundedRectangle(
-        topRadius: radius.topLeft.x,
-        bottomRadius: radius.bottomLeft.x,
-      );
-    }
-    // The outer ClipPath preserves corners the package cannot represent.
-    return glass.LiquidRoundedRectangle(
-      borderRadius: [
-        radius.topLeft.x,
-        radius.topLeft.y,
-        radius.topRight.x,
-        radius.topRight.y,
-        radius.bottomLeft.x,
-        radius.bottomLeft.y,
-        radius.bottomRight.x,
-        radius.bottomRight.y,
-      ].reduce(math.min),
     );
   }
 }
