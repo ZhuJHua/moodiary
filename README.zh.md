@@ -44,6 +44,14 @@
     <td>Android</td>
     <td><a href="https://github.com/ZhuJHua/moodiary/releases/latest"><img alt="在 GitHub 下载" src="res/badges/github_zh.svg" height="40"></a></td>
   </tr>
+  <tr>
+    <td>macOS</td>
+    <td>即将推出</td>
+  </tr>
+  <tr>
+    <td>Windows</td>
+    <td>即将推出</td>
+  </tr>
 </table>
 
 其余内容请参阅文档站 [docs.moodiary.net](https://docs.moodiary.net)。

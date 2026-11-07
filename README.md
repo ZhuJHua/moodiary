@@ -44,6 +44,14 @@
     <td>Android</td>
     <td><a href="https://github.com/ZhuJHua/moodiary/releases/latest"><img alt="Download on GitHub" src="res/badges/github_en.svg" height="40"></a></td>
   </tr>
+  <tr>
+    <td>macOS</td>
+    <td>Coming soon</td>
+  </tr>
+  <tr>
+    <td>Windows</td>
+    <td>Coming soon</td>
+  </tr>
 </table>
 
 Everything else is in the docs at [docs.moodiary.net](https://docs.moodiary.net).
