@@ -34,7 +34,19 @@
 
 ## 🚀 开始使用
 
-在 [Releases](https://github.com/ZhuJHua/moodiary/releases) 下载安装包。应用离线即可使用。
+<table>
+  <tr><th>平台</th><th>下载</th></tr>
+  <tr>
+    <td>iOS</td>
+    <td><a href="https://apps.apple.com/app/id6740092321"><img alt="在 App Store 下载" src="res/badges/app_store_zh.svg" height="40"></a></td>
+  </tr>
+  <tr>
+    <td>Android</td>
+    <td><a href="https://github.com/ZhuJHua/moodiary/releases/latest"><img alt="在 GitHub 下载" src="res/badges/github_zh.svg" height="40"></a></td>
+  </tr>
+</table>
+
+应用离线即可使用。
 
 其余内容请参阅文档站 [docs.moodiary.net](https://docs.moodiary.net)。
 

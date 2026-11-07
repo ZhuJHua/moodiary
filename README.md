@@ -34,7 +34,19 @@
 
 ## 🚀 Getting started
 
-Download an installer from [Releases](https://github.com/ZhuJHua/moodiary/releases). The app works offline out of the box.
+<table>
+  <tr><th>Platform</th><th>Download</th></tr>
+  <tr>
+    <td>iOS</td>
+    <td><a href="https://apps.apple.com/app/id6740092321"><img alt="Download on the App Store" src="res/badges/app_store_en.svg" height="40"></a></td>
+  </tr>
+  <tr>
+    <td>Android</td>
+    <td><a href="https://github.com/ZhuJHua/moodiary/releases/latest"><img alt="Download on GitHub" src="res/badges/github_en.svg" height="40"></a></td>
+  </tr>
+</table>
+
+The app works offline out of the box.
 
 Everything else is in the docs at [docs.moodiary.net](https://docs.moodiary.net).
 
