@@ -102,59 +102,103 @@ Future<_Harness> _start() async {
   return harness;
 }
 
-/// Reads an event stream until [predicate] matches one of its events.
-Future<({String event, String data})> _nextEvent(
-  HttpClientResponse response,
-  bool Function(String event, String data) predicate, {
-  Duration timeout = const Duration(seconds: 5),
-}) async {
-  final completer = Completer<({String event, String data})>();
-  var event = 'message';
-  final buffer = StringBuffer();
-  late StreamSubscription<String> subscription;
-  final timer = Timer(timeout, () {
-    if (!completer.isCompleted) {
-      completer.completeError(StateError('timed out waiting for an SSE event'));
-    }
-  });
-  subscription = response
-      .transform(utf8.decoder)
-      .transform(const LineSplitter())
-      .listen(
-        (line) {
-          if (line.startsWith('event:')) {
-            event = line.substring(6).trim();
-            return;
-          }
-          if (line.startsWith('data:')) {
-            buffer.write(line.substring(5).trim());
-            return;
-          }
-          if (line.isEmpty && buffer.isNotEmpty) {
-            final data = buffer.toString();
-            buffer.clear();
-            if (predicate(event, data) && !completer.isCompleted) {
-              completer.complete((event: event, data: data));
-            }
-            event = 'message';
-          }
-        },
-        onError: (Object error) {
-          if (!completer.isCompleted) completer.completeError(error);
-        },
-        onDone: () {
-          if (!completer.isCompleted) {
-            completer.completeError(StateError('stream closed early'));
-          }
-        },
-        cancelOnError: true,
-      );
-  try {
-    return await completer.future;
-  } finally {
-    timer.cancel();
-    await subscription.cancel();
+/// Reads one HTTP event stream over its whole lifetime.
+///
+/// A `HttpClientResponse` body can only be listened to once, so every wait
+/// shares a single subscription and buffers the events it did not consume.
+class _SseReader {
+  _SseReader(this._response) {
+    _subscription = _response
+        .transform(utf8.decoder)
+        .transform(const LineSplitter())
+        .listen(
+          _onLine,
+          onError: (Object error) {
+            _error = error;
+            _failWaiters();
+          },
+          onDone: () {
+            _done = true;
+            _failWaiters();
+          },
+          cancelOnError: true,
+        );
   }
+
+  final HttpClientResponse _response;
+  late final StreamSubscription<String> _subscription;
+  final List<({String event, String data})> _events = [];
+  final List<_Waiter> _waiters = [];
+  String _event = 'message';
+  final StringBuffer _data = StringBuffer();
+  Object? _error;
+  bool _done = false;
+
+  void _onLine(String line) {
+    if (line.startsWith('event:')) {
+      _event = line.substring(6).trim();
+      return;
+    }
+    if (line.startsWith('data:')) {
+      _data.write(line.substring(5).trim());
+      return;
+    }
+    if (line.isNotEmpty || _data.isEmpty) return;
+    final event = (event: _event, data: _data.toString());
+    _event = 'message';
+    _data.clear();
+    _events.add(event);
+    final index = _waiters.indexWhere(
+      (w) => w.predicate(event.event, event.data),
+    );
+    if (index < 0) return;
+    final waiter = _waiters.removeAt(index);
+    _events.remove(event);
+    waiter.completer.complete(event);
+  }
+
+  void _failWaiters() {
+    final error = _error;
+    for (final waiter in _waiters) {
+      if (waiter.completer.isCompleted) continue;
+      waiter.completer.completeError(
+        error ?? StateError('stream closed before the event arrived'),
+      );
+    }
+    _waiters.clear();
+  }
+
+  /// Waits for the first event matching [predicate], consumed once.
+  Future<({String event, String data})> next(
+    bool Function(String event, String data) predicate, {
+    Duration timeout = const Duration(seconds: 10),
+  }) {
+    final index = _events.indexWhere((e) => predicate(e.event, e.data));
+    if (index >= 0) return Future.value(_events.removeAt(index));
+    if (_error != null) return Future.error(_error!);
+    if (_done) {
+      return Future.error(StateError('stream closed before the event arrived'));
+    }
+    final completer = Completer<({String event, String data})>();
+    final waiter = _Waiter(predicate, completer);
+    _waiters.add(waiter);
+    return completer.future.timeout(
+      timeout,
+      onTimeout: () {
+        _waiters.remove(waiter);
+        throw StateError('timed out waiting for an SSE event');
+      },
+    );
+  }
+
+  Future<void> close() => _subscription.cancel();
+}
+
+class _Waiter {
+  _Waiter(this.predicate, this.completer);
+
+  final bool Function(String event, String data) predicate;
+  final Completer<({String event, String data})> completer;
 }
 
 void main() {
@@ -196,10 +240,16 @@ void main() {
       final response = await harness.send(
         'POST',
         harness.mcp,
-        {'jsonrpc': '2.0', 'id': 1, 'method': 'ping'},
+        {
+          'jsonrpc': '2.0',
+          'id': 1,
+          'method': 'initialize',
+          'params': {'protocolVersion': mcpLatestProtocolVersion},
+        },
         extraHeaders: {'origin': 'http://localhost:3000'},
       );
       expect(response.status, HttpStatus.ok);
+      expect(response.headers['access-control-allow-origin'], isNotNull);
     });
 
     test('answers the CORS preflight without a token', () async {
@@ -399,8 +449,9 @@ void main() {
       final response = await request.close();
       expect(response.statusCode, HttpStatus.ok);
       expect(response.headers.contentType?.mimeType, 'text/event-stream');
-      final event = _nextEvent(
-        response,
+      final events = _SseReader(response);
+      addTearDown(events.close);
+      final event = events.next(
         (event, data) => data.contains('notifications/resources/updated'),
       );
       await Future<void>.delayed(const Duration(milliseconds: 100));
@@ -437,15 +488,15 @@ void main() {
       request.headers.set('accept', 'text/event-stream');
       final response = await request.close();
       expect(response.statusCode, HttpStatus.ok);
-      final endpointEvent = await _nextEvent(
-        response,
+      final events = _SseReader(response);
+      addTearDown(events.close);
+      final endpointEvent = await events.next(
         (event, data) => event == 'endpoint',
       );
       final endpoint = endpointEvent.data;
       expect(endpoint, contains('/messages?sessionId='));
       final sessionId = Uri.parse(endpoint).queryParameters['sessionId']!;
-      final answer = _nextEvent(
-        response,
+      final answer = events.next(
         (event, data) => data.contains('"protocolVersion"'),
       );
       final posted = await harness.send('POST', harness.messages(sessionId), {
