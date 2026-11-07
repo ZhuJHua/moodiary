@@ -59,10 +59,15 @@ class _AppLockObserverState extends State<AppLockObserver>
 
     _locking = true;
     _pauseMcp();
-    router
-        .pushRoute(const LockRoute(lockType: 'pause'))
-        .whenComplete(() => _locking = false);
+    router.pushRoute(const LockRoute(lockType: 'pause')).whenComplete(() {
+      _locking = false;
+      // Only after the lock screen is gone may the endpoint serve again.
+      _resumeMcp();
+    });
   }
+
+  bool get _onLockScreen =>
+      router.routerDelegate.currentConfiguration.uri.path == LockRoute.path;
 
   /// A locked app must not keep serving diaries to the network.
   void _pauseMcp() {
@@ -72,8 +77,13 @@ class _AppLockObserverState extends State<AppLockObserver>
   }
 
   /// [McpService.resume] is a no-op unless the user left the server enabled.
+  ///
+  /// Coming back to a still locked app keeps the endpoint down: `.resumed` also
+  /// fires while the lock screen is up, and that screen is exactly what must not
+  /// be served through.
   void _resumeMcp() {
     if (!_mcpPaused) return;
+    if (_onLockScreen) return;
     _mcpPaused = false;
     if (!getIt.isRegistered<McpService>()) return;
     unawaited(getIt<McpService>().resume());

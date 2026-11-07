@@ -658,7 +658,7 @@ Future<McpToolResult> _deleteDiary(
 
   final existing = await diaries.getDiaryByBusinessId(id);
   if (existing == null) {
-    return McpToolResult.text('delete_diary: no diary with id="$id".');
+    return McpToolResult.error('delete_diary: no diary with id="$id".');
   }
   final title = existing.title.trim().isEmpty ? 'Untitled' : existing.title;
   if (mode == 'recycle') {
