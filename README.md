@@ -46,8 +46,6 @@
   </tr>
 </table>
 
-The app works offline out of the box.
-
 Everything else is in the docs at [docs.moodiary.net](https://docs.moodiary.net).
 
 ## 🤝 Contributors

@@ -46,8 +46,6 @@
   </tr>
 </table>
 
-应用离线即可使用。
-
 其余内容请参阅文档站 [docs.moodiary.net](https://docs.moodiary.net)。
 
 ## 🤝 贡献者
