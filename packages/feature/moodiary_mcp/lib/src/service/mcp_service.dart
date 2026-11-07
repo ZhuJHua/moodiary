@@ -15,7 +15,8 @@ import '../tools/register_moodiary_tools.dart';
 import '../transport/io_mcp_transport.dart';
 import '../transport/transport.dart';
 
-/// Default port offered in the settings page.
+/// Default port offered in the settings page; keep in sync with the
+/// `MoodiaryKVs.mcpPort` default.
 const int mcpDefaultPort = 8765;
 
 enum McpServerStatus { stopped, starting, running, failed }

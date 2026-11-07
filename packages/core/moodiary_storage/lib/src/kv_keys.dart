@@ -15,6 +15,7 @@ enum MoodiaryKVs<T extends Object> {
 
   mcpEnabled<bool>(defaultValue: false),
 
+  // 与 moodiary_mcp 的 mcpDefaultPort 保持一致（core 不能反向依赖 feature）。
   mcpPort<int>(defaultValue: 8765),
 
   mcpAllowLan<bool>(defaultValue: false),
