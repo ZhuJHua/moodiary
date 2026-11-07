@@ -48,33 +48,64 @@ class _MobileMediaPage extends ConsumerStatefulWidget {
   ConsumerState<_MobileMediaPage> createState() => _MobileMediaPageState();
 }
 
+enum _LibraryTab { media, attachments }
+
 class _MobileMediaPageState extends ConsumerState<_MobileMediaPage> {
   MediaType _type = .image;
+  _LibraryTab _tab = .media;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.media.title)),
+      appBar: AppBar(title: Text(l10n.media.title)),
       body: Column(
         children: [
           const SizedBox(height: 4),
-          MChipBar<MediaType>(
-            selected: _type,
-            onSelected: (t) => setState(() => _type = t),
-            items: [
-              for (final t in _galleryTypes)
-                MChipData(
-                  value: t,
-                  label: _typeLabel(context, t),
-                  icon: _typeIcon(t),
-                ),
-            ],
+          Padding(
+            padding: const .symmetric(horizontal: 12),
+            child: MSegmentedControl<_LibraryTab>(
+              options: [
+                MSegmentOption(value: .media, label: l10n.common.media),
+                MSegmentOption(value: .attachments, label: l10n.media.typeFile),
+              ],
+              selected: _tab,
+              onChanged: (tab) => setState(() => _tab = tab),
+            ),
+          ),
+          AnimatedSize(
+            duration: Durations.short3,
+            curve: Curves.easeOutCubic,
+            alignment: .topCenter,
+            child: _tab == .media
+                ? Padding(
+                    padding: const .only(top: 4),
+                    child: MChipBar<MediaType>(
+                      selected: _type,
+                      onSelected: (t) => setState(() => _type = t),
+                      items: [
+                        for (final t in _galleryTypes)
+                          MChipData(
+                            value: t,
+                            label: _typeLabel(context, t),
+                            icon: _typeIcon(t),
+                          ),
+                      ],
+                    ),
+                  )
+                : const SizedBox(width: double.infinity),
           ),
           const SizedBox(height: 4),
           Expanded(
             child: AnimatedSwitcher(
               duration: Durations.short3,
-              child: _MediaBody(key: ValueKey(_type), type: _type),
+              child: switch (_tab) {
+                .media => _MediaBody(key: ValueKey(_type), type: _type),
+                .attachments => const _MediaBody(
+                  key: ValueKey(MediaType.file),
+                  type: MediaType.file,
+                ),
+              },
             ),
           ),
         ],
@@ -86,8 +117,8 @@ class _MobileMediaPageState extends ConsumerState<_MobileMediaPage> {
 const double _kGridPadding = 12;
 const double _kGridSpacing = 4;
 const int _kGridColumns = 3;
-const double _kAudioTileExtent = 66;
-const double _kAudioSpacing = 8;
+const double _kListTileExtent = 66;
+const double _kListSpacing = 8;
 
 class _MediaBody extends ConsumerWidget {
   final MediaType type;
@@ -104,8 +135,9 @@ class _MediaBody extends ConsumerWidget {
     return async.buildLoading(
       data: (items) {
         final flat = MediaFlat.of(items);
-        if (flat.isEmpty) return _Empty();
-        final audio = type == .audio;
+        if (flat.isEmpty) return _Empty(type: type);
+        // 音频和附件是一行一条的列表，媒体其余类型是网格。
+        final list = type == .audio || type == .file;
         return MRefresh(
           onLoadMore: () => ref.read(provider.notifier).loadMore(),
           onRefresh: () => ref.read(provider.notifier).refresh(),
@@ -117,10 +149,10 @@ class _MediaBody extends ConsumerWidget {
                 sliver: SliverGrid(
                   gridDelegate: GroupedGridDelegate(
                     entries: flat.entries,
-                    columns: audio ? 1 : _kGridColumns,
-                    spacing: audio ? _kAudioSpacing : _kGridSpacing,
+                    columns: list ? 1 : _kGridColumns,
+                    spacing: list ? _kListSpacing : _kGridSpacing,
                     headerExtent: _headerExtent(context),
-                    tileMainExtent: audio ? _kAudioTileExtent : null,
+                    tileMainExtent: list ? _kListTileExtent : null,
                   ),
                   delegate: SliverChildBuilderDelegate(
                     (context, i) => _buildEntry(flat, i),
@@ -162,7 +194,11 @@ class _MediaBody extends ConsumerWidget {
             label: flat.labels[group][index],
             date: flat.dates[group],
           ),
-          .file => throw UnsupportedError('attachments are not in the gallery'),
+          .file => _FileTile(
+            key: key,
+            name: names[index],
+            label: flat.labels[group][index],
+          ),
         };
     }
   }
@@ -317,6 +353,60 @@ class _AudioTile extends ConsumerWidget {
 
 enum _AudioTileAction { rename }
 
+class _FileTile extends StatelessWidget {
+  final String name;
+  final String? label;
+
+  const _FileTile({super.key, required this.name, this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final scheme = theme.colors;
+    final trimmed = label?.trim() ?? '';
+    final displayName = trimmed.isEmpty ? context.l10n.media.typeFile : trimmed;
+    return Material(
+      color: scheme.surfaceContainer,
+      shape: RoundedRectangleBorder(
+        borderRadius: AppBorderRadius.largeBorderRadius,
+        side: BorderSide(color: scheme.outlineVariant),
+      ),
+      child: Padding(
+        padding: const .all(12),
+        child: Row(
+          children: [
+            FileTypeIcon(
+              _fileExtension(displayName, name),
+              size: 36,
+              color: scheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                displayName,
+                maxLines: 1,
+                overflow: .ellipsis,
+                style: theme.typography.bodyMedium.emphasized.onSurface,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 显示名里的扩展名优先；没有时退回存储文件名（`file-xxx.pdf`）。
+String _fileExtension(String displayName, String storedName) {
+  String extensionOf(String value) {
+    final dot = value.lastIndexOf('.');
+    return dot > 0 && dot < value.length - 1 ? value.substring(dot + 1) : '';
+  }
+
+  final fromDisplayName = extensionOf(displayName);
+  return fromDisplayName.isNotEmpty ? fromDisplayName : extensionOf(storedName);
+}
+
 class _Thumb extends StatelessWidget {
   final ImageProvider image;
   final Widget? overlay;
@@ -421,6 +511,10 @@ class _VideoTile extends StatelessWidget {
 }
 
 class _Empty extends StatelessWidget {
+  final MediaType type;
+
+  const _Empty({required this.type});
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -435,7 +529,9 @@ class _Empty extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            context.l10n.media.empty,
+            type == .file
+                ? context.l10n.media.emptyFiles
+                : context.l10n.media.empty,
             style: theme.typography.bodyMedium.onSurfaceVariant,
           ),
         ],
