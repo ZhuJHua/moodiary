@@ -13,6 +13,12 @@ enum MoodiaryKVs<T extends Object> {
 
   autoSync<bool>(defaultValue: false),
 
+  mcpEnabled<bool>(defaultValue: false),
+
+  mcpPort<int>(defaultValue: 8765),
+
+  mcpAllowLan<bool>(defaultValue: false),
+
   syncPollInterval<int>(defaultValue: 30),
 
   syncProvider<String>(defaultValue: 'webdav'),
@@ -167,7 +173,9 @@ enum MoodiarySecureKVs {
 
   qweatherKey,
 
-  tiandituKey;
+  tiandituKey,
+
+  mcpToken;
 
   Future<String?> get() => getIt<ISecureKVStorage>().get(name);
 

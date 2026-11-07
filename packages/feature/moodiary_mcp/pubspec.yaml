@@ -1,0 +1,32 @@
+name: moodiary_mcp
+description: "Local MCP server that lets external MCP clients read and edit diaries."
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  moodiary_data: 0.0.1
+  moodiary_di: 0.0.1
+  moodiary_logging: 0.0.1
+  moodiary_models: 0.0.1
+  moodiary_platform: 0.0.1
+  moodiary_storage: 0.0.1
+  moodiary_utils: 0.0.1
+
+  injectable: 3.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1
+  drift: 2.35.0
+  build_runner: 2.16.1
+  injectable_generator: 3.1.3

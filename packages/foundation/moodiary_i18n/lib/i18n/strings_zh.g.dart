@@ -599,6 +599,135 @@ class Translations$app$zh {
 
 	/// zh: '返回首页'
 	String get routeErrorBackHome => '返回首页';
+
+	/// zh: 'MCP 服务'
+	String get sectionMcp => 'MCP 服务';
+
+	/// zh: '本地 MCP 服务'
+	String get mcpEnableTitle => '本地 MCP 服务';
+
+	/// zh: '已关闭，本机没有在监听'
+	String get mcpEnableSubtitleOff => '已关闭，本机没有在监听';
+
+	/// zh: '已开启，但服务未运行'
+	String get mcpEnableSubtitleOn => '已开启，但服务未运行';
+
+	/// zh: '正在启动…'
+	String get mcpEnableSubtitleStarting => '正在启动…';
+
+	/// zh: '运行中，端口 {port}'
+	String mcpEnableSubtitleRunning({required Object port}) => '运行中，端口 ${port}';
+
+	/// zh: '服务启动失败'
+	String get mcpEnableSubtitleFailed => '服务启动失败';
+
+	/// zh: '连接信息'
+	String get mcpEntryTitle => '连接信息';
+
+	/// zh: 'MCP 服务'
+	String get mcpPageTitle => 'MCP 服务';
+
+	/// zh: '服务'
+	String get mcpGroupServer => '服务';
+
+	/// zh: '访问'
+	String get mcpGroupAccess => '访问';
+
+	/// zh: '网络'
+	String get mcpGroupNetwork => '网络';
+
+	/// zh: '状态'
+	String get mcpStatusTitle => '状态';
+
+	/// zh: '服务已关闭'
+	String get mcpStatusStopped => '服务已关闭';
+
+	/// zh: '正在启动服务…'
+	String get mcpStatusStarting => '正在启动服务…';
+
+	/// zh: '正在监听端口 {port}'
+	String mcpStatusRunning({required Object port}) => '正在监听端口 ${port}';
+
+	/// zh: '启动失败：{error}'
+	String mcpStatusFailed({required Object error}) => '启动失败：${error}';
+
+	/// zh: '端点地址'
+	String get mcpEndpointTitle => '端点地址';
+
+	/// zh: '开启服务后可查看端点地址'
+	String get mcpEndpointHint => '开启服务后可查看端点地址';
+
+	/// zh: '端点地址已复制'
+	String get mcpEndpointCopied => '端点地址已复制';
+
+	/// zh: '访问令牌'
+	String get mcpTokenTitle => '访问令牌';
+
+	/// zh: '正在准备…'
+	String get mcpTokenLoading => '正在准备…';
+
+	/// zh: '显示令牌'
+	String get mcpTokenShow => '显示令牌';
+
+	/// zh: '隐藏令牌'
+	String get mcpTokenHide => '隐藏令牌';
+
+	/// zh: '复制'
+	String get mcpCopy => '复制';
+
+	/// zh: '令牌已复制'
+	String get mcpTokenCopied => '令牌已复制';
+
+	/// zh: '重新生成令牌'
+	String get mcpTokenRegenerate => '重新生成令牌';
+
+	/// zh: '重新生成访问令牌？'
+	String get mcpTokenRegenerateTitle => '重新生成访问令牌？';
+
+	/// zh: '已连接的客户端仍在使用旧令牌，需要更新为新令牌后才能继续访问。运行中的服务会重启以使用新令牌。'
+	String get mcpTokenRegenerateMessage => '已连接的客户端仍在使用旧令牌，需要更新为新令牌后才能继续访问。运行中的服务会重启以使用新令牌。';
+
+	/// zh: '重新生成'
+	String get mcpTokenRegenerateConfirm => '重新生成';
+
+	/// zh: '已生成新令牌，请更新客户端'
+	String get mcpTokenRegenerated => '已生成新令牌，请更新客户端';
+
+	/// zh: '拿到这个令牌的人可以读取和修改你的日记'
+	String get mcpSecurityHint => '拿到这个令牌的人可以读取和修改你的日记';
+
+	/// zh: '允许同一 Wi-Fi 下的设备访问'
+	String get mcpLanTitle => '允许同一 Wi-Fi 下的设备访问';
+
+	/// zh: '关闭时仅本机（127.0.0.1）可以访问'
+	String get mcpLanSubtitle => '关闭时仅本机（127.0.0.1）可以访问';
+
+	/// zh: '端口'
+	String get mcpPortTitle => '端口';
+
+	/// zh: '当前使用端口 {port}'
+	String mcpPortBound({required Object port}) => '当前使用端口 ${port}';
+
+	/// zh: '取值范围 1024–65535。若端口被占用，会自动改用其他端口。'
+	String get mcpPortHelp => '取值范围 1024–65535。若端口被占用，会自动改用其他端口。';
+
+	/// zh: '请输入 1024–65535 之间的数字'
+	String get mcpPortInvalid => '请输入 1024–65535 之间的数字';
+
+	/// zh: '已保存'
+	String get mcpSaved => '已保存';
+
+	/// zh: '如何连接'
+	String get mcpConnectTitle => '如何连接';
+
+	/// zh: '服务地址：{endpoint}'
+	String mcpConnectEndpoint({required Object endpoint}) => '服务地址：${endpoint}';
+
+	/// zh: '请求头：Authorization: Bearer <token>'
+	String get mcpConnectAuth => '请求头：Authorization: Bearer <token>';
+
+	/// zh: '开启局域网访问时，客户端需要与本机连接同一 Wi-Fi。'
+	String get mcpConnectWifi => '开启局域网访问时，客户端需要与本机连接同一 Wi-Fi。';
 }
 
 // Path: assistant
