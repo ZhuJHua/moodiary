@@ -78,6 +78,10 @@ catalog once per server start, which is why `listChanged` stays `false` for
 tools/prompts and `subscribe` stays `false` for resources: changes are pushed as
 `notifications/resources/updated` for the URIs the database touched instead.
 
+The handlers keep the MCP contract here (names, schemas, `McpToolResult` shapes)
+and delegate the diary rules to `moodiary_diary_ops`, which the in-app assistant
+uses too.
+
 - Tools: diary CRUD, search, links/tags, categories, statistics, server info.
 - Resources: `moodiary://categories`, `moodiary://diaries/recent`,
   `moodiary://stats/overview`, template `moodiary://diary/{id}`.

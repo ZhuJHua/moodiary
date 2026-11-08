@@ -2,9 +2,8 @@
 /// tags and the link graph of one diary.
 library;
 
-import 'dart:convert';
-
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_diary_ops/moodiary_diary_ops.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
@@ -12,7 +11,6 @@ import '../protocol/json_rpc.dart';
 import '../protocol/mcp_types.dart';
 import '../registry/mcp_registry.dart';
 import 'arguments.dart';
-import 'diary_format.dart';
 
 /// Both accepted shapes of the `sort` argument.
 const List<String> _sortValues = ['timeDesc', 'timeAsc'];
@@ -266,7 +264,8 @@ void registerDiaryTools(
       destructive: true,
       idempotent: true,
     ),
-    (call, arguments) => _deleteDiary(arguments, diaries: diaries),
+    (call, arguments) =>
+        _deleteDiary(arguments, diaries: diaries, categories: categories),
   );
 
   registry.addTool(
@@ -319,7 +318,8 @@ void registerDiaryTools(
       readOnly: true,
       idempotent: true,
     ),
-    (call, arguments) => _getDiaryLinks(arguments, diaries: diaries),
+    (call, arguments) =>
+        _getDiaryLinks(arguments, diaries: diaries, categories: categories),
   );
 
   registry.addTool(
@@ -345,40 +345,9 @@ void registerDiaryTools(
       readOnly: true,
       idempotent: true,
     ),
-    (call, arguments) => _listTags(arguments, diaries: diaries),
+    (call, arguments) =>
+        _listTags(arguments, diaries: diaries, categories: categories),
   );
-}
-
-/// One page of visible diaries. [limit] rows are taken after skipping [offset].
-///
-/// The repository pages by category only, so a time window is read in full and
-/// paged here; a window is a user chosen range, which keeps that bounded.
-Future<List<Diary>> diaryPage(
-  DiaryRepository diaries, {
-  String? categoryId,
-  DateTime? start,
-  DateTime? end,
-  DiarySort sort = DiarySort.timeDesc,
-  int offset = 0,
-  int limit = 20,
-}) async {
-  if (start == null && end == null) {
-    return diaries.getDiaryByCategory(
-      categoryId: categoryId,
-      offset: offset,
-      limit: limit,
-      sort: sort,
-    );
-  }
-  final all = await diaries.getDiariesByDateRange(
-    start ?? DateTime.utc(1970),
-    end ?? DateTime.utc(9000),
-  );
-  final filtered = [
-    for (final diary in all)
-      if (categoryId == null || diary.categoryId == categoryId) diary,
-  ]..sort(diarySortComparator(sort));
-  return filtered.skip(offset).take(limit).toList();
 }
 
 Future<McpToolResult> _listDiaries(
@@ -396,8 +365,7 @@ Future<McpToolResult> _listDiaries(
   final limit = args.optionalInt('limit', fallback: 20, min: 1, max: 100);
   final offset = args.optionalInt('offset', fallback: 0, min: 0, max: 1000000);
 
-  final page = await diaryPage(
-    diaries,
+  final page = await DiaryQueries(diaries: diaries).page(
     categoryId: categoryId,
     start: start,
     end: end,
@@ -454,7 +422,7 @@ Future<McpToolResult> _getDiary(
     _ => (content: decodeJsonOrText(diary.content), truncated: false),
   };
 
-  final links = await diaryLinkSummary(diaries, diary);
+  final links = await DiaryQueries(diaries: diaries).linkSummary(diary);
   return McpToolResult.json({
     ...diarySummary(diary, categoryName: names[diary.categoryId]),
     'type': diary.type,
@@ -485,37 +453,6 @@ Future<McpToolResult> _getDiary(
   return (content: capped, truncated: capped != text);
 }
 
-/// Decodes a stored document so a JSON aware client sees structure instead of a
-/// string inside a string; raw content that is not JSON is passed through.
-Object? decodeJsonOrText(String content) {
-  if (content.isEmpty) return content;
-  try {
-    return jsonDecode(content);
-  } on FormatException {
-    return content;
-  }
-}
-
-/// Forward and backlink summaries of [diary], shared by the tool and the
-/// `moodiary://diary/{id}` resource.
-Future<Map<String, dynamic>> diaryLinkSummary(
-  DiaryRepository diaries,
-  Diary diary,
-) async {
-  final forward = await diaries.getForwardLinks(diary.id);
-  final backlinks = await diaries.getBacklinks(diary.id);
-  Map<String, dynamic> entry(Diary linked) => {
-    'id': linked.id,
-    'title': linked.title,
-    'time': isoUtc(linked.time),
-    'timeLocal': isoLocal(linked.time),
-  };
-  return {
-    'forward': [for (final linked in forward) entry(linked)],
-    'backlinks': [for (final linked in backlinks) entry(linked)],
-  };
-}
-
 Future<McpToolResult> _createDiary(
   Map<String, dynamic> arguments, {
   required DiaryRepository diaries,
@@ -529,29 +466,30 @@ Future<McpToolResult> _createDiary(
   final mood = args.optionalMood('mood');
   final tags = args.optionalStringList('tags') ?? const <String>[];
   final show = args.optionalBool('show') ?? true;
-  final categoryId = await _optionalKnownCategoryId(
-    args,
-    categories,
-    'create_diary',
-  );
+  final categoryId = args.optionalText('categoryId');
 
-  final wrapped = TiptapContent.wrapPlainText(content);
-  var diary = Diary.create(
-    title: title,
-    content: wrapped,
-    contentText: TiptapContent.parse(wrapped).plainText,
-    type: DiaryType.tiptap,
-    categoryId: categoryId,
-    mood: mood,
-    tags: tags,
-    imageName: const [],
-    audioName: const [],
-    videoName: const [],
-  );
-  if (time != null || !show) {
-    diary = diary.copyWith(time: time ?? diary.time, show: show);
+  final Diary diary;
+  try {
+    diary = await DiaryWrites(diaries: diaries, categories: categories).create(
+      title: title,
+      content: content,
+      format: DiaryContentFormat.plainText,
+      mood: mood,
+      categoryId: categoryId,
+      time: time,
+      tags: tags,
+      show: show,
+    );
+  } on DiaryOpsException catch (e) {
+    if (e.failure == DiaryOpsFailure.invalidCategory) {
+      throw JsonRpcException(
+        JsonRpcCode.invalidParams,
+        'create_diary: categoryId "${e.categoryId}" is not a known category; '
+        'call list_categories first',
+      );
+    }
+    rethrow;
   }
-  await diaries.insertADiary(diary);
   return _createdOrUpdated(diaries, categories, diary, created: true);
 }
 
@@ -563,73 +501,53 @@ Future<McpToolResult> _updateDiary(
   final args = Args('update_diary', arguments);
   args.rejectMediaArguments();
   final id = args.requireText('id');
-
-  final existing = await diaries.getDiaryByBusinessId(id);
-  if (existing == null) {
-    return McpToolResult.error('update_diary: no diary with id="$id".');
-  }
-
-  var next = existing;
-  var changed = false;
-  if (args.contains('title')) {
-    next = next.copyWith(title: args.text('title'));
-    changed = true;
-  }
-  if (args.contains('content')) {
-    // Replacing the body drops the media references the new body does not have,
-    // which is exactly what withDerivedMedia recomputes from the new document.
-    final wrapped = TiptapContent.wrapPlainText(args.requireText('content'));
-    next = withDerivedMedia(
-      next.copyWith(
-        content: wrapped,
-        contentText: TiptapContent.parse(wrapped).plainText,
-        type: DiaryType.tiptap.value,
-      ),
-    );
-    changed = true;
-  }
-  if (args.contains('time')) {
-    final time = args.optionalDate('time');
-    if (time != null) {
-      next = next.copyWith(time: time);
-      changed = true;
-    }
-  }
-  if (args.contains('categoryId')) {
-    next = next.copyWith(
-      categoryId: await _optionalKnownCategoryId(
-        args,
-        categories,
-        'update_diary',
-      ),
-    );
-    changed = true;
-  }
-  if (args.contains('mood')) {
-    next = next.copyWith(mood: args.optionalMood('mood'));
-    changed = true;
-  }
-  if (args.contains('tags')) {
-    next = next.copyWith(tags: args.optionalStringList('tags') ?? const []);
-    changed = true;
-  }
-  if (args.contains('show')) {
-    final show = args.optionalBool('show');
-    if (show != null) {
-      next = next.copyWith(show: show);
-      changed = true;
-    }
-  }
-  if (!changed) {
+  final patch = DiaryPatch(
+    title: args.contains('title') ? args.text('title') : null,
+    content: args.contains('content') ? args.requireText('content') : null,
+    mood: args.contains('mood') ? args.optionalMood('mood') : null,
+    moodSet: args.contains('mood'),
+    categoryId: args.contains('categoryId')
+        ? (args.optionalText('categoryId') ?? '')
+        : null,
+    time: args.contains('time') ? args.optionalDate('time') : null,
+    tags: args.contains('tags')
+        ? (args.optionalStringList('tags') ?? const <String>[])
+        : null,
+    show: args.contains('show') ? args.optionalBool('show') : null,
+  );
+  if (patch.isEmpty) {
     throw const JsonRpcException(
       JsonRpcCode.invalidParams,
       'update_diary: provide at least one field to change',
     );
   }
 
-  next = touched(next);
-  await diaries.updateADiary(newDiary: next, index: IndexMode.inline);
-  return _createdOrUpdated(diaries, categories, next, created: false);
+  try {
+    final next = await DiaryWrites(diaries: diaries, categories: categories)
+        .update(
+          id: id,
+          patch: patch,
+          format: DiaryContentFormat.plainText,
+          index: IndexMode.inline,
+        );
+    return await _createdOrUpdated(diaries, categories, next, created: false);
+  } on DiaryOpsException catch (e) {
+    return switch (e.failure) {
+      DiaryOpsFailure.notFound => McpToolResult.error(
+        'update_diary: no diary with id="$id".',
+      ),
+      DiaryOpsFailure.invalidCategory => throw JsonRpcException(
+        JsonRpcCode.invalidParams,
+        'update_diary: categoryId "${e.categoryId}" is not a known category; '
+        'call list_categories first',
+      ),
+      DiaryOpsFailure.noChanges => throw const JsonRpcException(
+        JsonRpcCode.invalidParams,
+        'update_diary: provide at least one field to change',
+      ),
+      _ => McpToolResult.error('update_diary: could not update the diary.'),
+    };
+  }
 }
 
 Future<McpToolResult> _createdOrUpdated(
@@ -650,30 +568,31 @@ Future<McpToolResult> _createdOrUpdated(
 Future<McpToolResult> _deleteDiary(
   Map<String, dynamic> arguments, {
   required DiaryRepository diaries,
+  required CategoryRepository categories,
 }) async {
   final args = Args('delete_diary', arguments);
   final id = args.requireText('id');
   final mode =
       args.optionalEnum('mode', const ['delete', 'recycle']) ?? 'delete';
+  final recycle = mode == 'recycle';
 
-  final existing = await diaries.getDiaryByBusinessId(id);
-  if (existing == null) {
+  try {
+    final result = await DiaryWrites(diaries: diaries, categories: categories)
+        .delete(
+          id: id,
+          mode: recycle ? DiaryDeleteMode.recycle : DiaryDeleteMode.permanent,
+        );
+    final title = result.diary.title.trim().isEmpty
+        ? 'Untitled'
+        : result.diary.title.trim();
+    return McpToolResult.text(
+      recycle
+          ? 'delete_diary: moved "$title" (id=$id) to the recycle bin.'
+          : 'delete_diary: deleted "$title" (id=$id) and its local media files.',
+    );
+  } on DiaryOpsException {
     return McpToolResult.error('delete_diary: no diary with id="$id".');
   }
-  final title = existing.title.trim().isEmpty ? 'Untitled' : existing.title;
-  if (mode == 'recycle') {
-    await diaries.setVisibility(existing, show: false);
-    return McpToolResult.text(
-      'delete_diary: moved "$title" (id=$id) to the recycle bin.',
-    );
-  }
-  final removed = await diaries.deleteADiary(id);
-  if (!removed) {
-    return McpToolResult.text('delete_diary: no diary with id="$id".');
-  }
-  return McpToolResult.text(
-    'delete_diary: deleted "$title" (id=$id) and its local media files.',
-  );
 }
 
 Future<McpToolResult> _searchDiaries(
@@ -692,30 +611,28 @@ Future<McpToolResult> _searchDiaries(
   final offset = args.optionalInt('offset', fallback: 0, min: 0, max: 1000000);
   final endExclusive = end?.add(const Duration(microseconds: 1));
 
-  final total = await diaries.countSearchDiaries(
+  final page = await DiaryQueries(diaries: diaries).searchPage(
     query: query,
     categoryId: categoryId,
     start: start,
-    end: endExclusive,
-  );
-  final hits = await diaries.searchDiaries(
-    query: query,
-    categoryId: categoryId,
-    start: start,
-    end: endExclusive,
+    endExclusive: endExclusive,
     limit: limit,
     offset: offset,
   );
   final names = await categoryNames(categories);
-  call.reportProgress(hits.length, total: total, message: 'search_diaries');
+  call.reportProgress(
+    page.hits.length,
+    total: page.total,
+    message: 'search_diaries',
+  );
   return McpToolResult.json({
     'query': query,
-    'total': total,
+    'total': page.total,
     'offset': offset,
     'limit': limit,
-    'hasMore': offset + hits.length < total,
+    'hasMore': offset + page.hits.length < page.total,
     'hits': [
-      for (final hit in hits)
+      for (final hit in page.hits)
         {
           ...diarySummary(hit.diary, categoryName: names[hit.diary.categoryId]),
           'titleHighlight': _markHighlight(hit.titleHighlight),
@@ -734,6 +651,7 @@ String _markHighlight(String text) =>
 Future<McpToolResult> _getDiaryLinks(
   Map<String, dynamic> arguments, {
   required DiaryRepository diaries,
+  required CategoryRepository categories,
 }) async {
   final args = Args('get_diary_links', arguments);
   final id = args.requireText('id');
@@ -741,7 +659,7 @@ Future<McpToolResult> _getDiaryLinks(
   if (diary == null) {
     return McpToolResult.error('get_diary_links: no diary with id="$id".');
   }
-  final links = await diaryLinkSummary(diaries, diary);
+  final links = await DiaryQueries(diaries: diaries).linkSummary(diary);
   return McpToolResult.json({
     'id': diary.id,
     'title': diary.title,
@@ -754,54 +672,22 @@ Future<McpToolResult> _getDiaryLinks(
 Future<McpToolResult> _listTags(
   Map<String, dynamic> arguments, {
   required DiaryRepository diaries,
+  required CategoryRepository categories,
 }) async {
   final args = Args('list_tags', arguments);
   final limit = args.optionalInt('limit', fallback: 50, min: 1, max: 500);
 
-  final all = await diaries.getAllDiaries();
-  final counts = <String, int>{};
-  var visible = 0;
-  for (final diary in all) {
-    if (!diary.show) continue;
-    visible++;
-    for (final tag in diary.tags) {
-      counts.update(tag, (count) => count + 1, ifAbsent: () => 1);
-    }
-  }
-  final sorted = counts.entries.toList()
-    ..sort((a, b) {
-      final byCount = b.value.compareTo(a.value);
-      return byCount != 0 ? byCount : a.key.compareTo(b.key);
-    });
+  final result = await DiaryQueries(diaries: diaries).tags(limit: limit);
   return McpToolResult.json({
     'tags': [
-      for (final entry in sorted.take(limit))
-        {'tag': entry.key, 'diaries': entry.value},
+      for (final entry in result.tags)
+        {'tag': entry.tag, 'diaries': entry.diaries},
     ],
-    'count': sorted.length > limit ? limit : sorted.length,
-    'totalDistinct': counts.length,
-    'scannedDiaries': visible,
+    'count': result.tags.length,
+    'totalDistinct': result.totalDistinct,
+    'scannedDiaries': result.scannedDiaries,
     'note':
         'The database has no tag index: these counts come from every visible '
         'diary.',
   });
-}
-
-/// The category id of a create or update call, validated against the table.
-Future<String?> _optionalKnownCategoryId(
-  Args args,
-  CategoryRepository categories,
-  String subject,
-) async {
-  final categoryId = args.optionalText('categoryId');
-  if (categoryId == null) return null;
-  final category = await categories.getCategoryById(categoryId);
-  if (category == null) {
-    throw JsonRpcException(
-      JsonRpcCode.invalidParams,
-      '$subject: categoryId "$categoryId" is not a known category; call '
-      'list_categories first',
-    );
-  }
-  return category.id;
 }

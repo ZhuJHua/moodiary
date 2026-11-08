@@ -3,14 +3,11 @@
 library;
 
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_diary_ops/moodiary_diary_ops.dart';
 
 import '../protocol/json_rpc.dart';
 import '../protocol/mcp_types.dart';
 import '../registry/mcp_registry.dart';
-import '../tools/category_tools.dart';
-import '../tools/diary_format.dart';
-import '../tools/diary_tools.dart';
-import '../tools/stats_tools.dart';
 
 /// How many diaries `moodiary://diaries/recent` holds. The service sends a
 /// `notifications/resources/updated` for this URI on every diary change.
@@ -32,10 +29,16 @@ void registerDiaryResources(
           "the number of visible diaries in it.",
       mimeType: 'application/json',
     ),
-    (call, uri) async => McpResourceReadResult.json(
-      uri,
-      await categoryTreePayload(categories, diaries),
-    ),
+    (call, uri) async {
+      final tree = await CategoryOps(
+        categories: categories,
+        diaries: diaries,
+      ).tree();
+      return McpResourceReadResult.json(uri, {
+        'categories': tree.categories,
+        'total': tree.total,
+      });
+    },
   );
 
   registry.addResource(
@@ -50,7 +53,8 @@ void registerDiaryResources(
       mimeType: 'application/json',
     ),
     (call, uri) async {
-      final page = await diaryPage(diaries, limit: _recentDiaryCount);
+      final page = await DiaryQueries(diaries: diaries)
+          .page(limit: _recentDiaryCount);
       final names = await categoryNames(categories);
       return McpResourceReadResult.json(uri, {
         'diaries': [
@@ -75,11 +79,11 @@ void registerDiaryResources(
     ),
     (call, uri) async => McpResourceReadResult.json(
       uri,
-      await statsOverview(
+      await DiaryStatsOps(
         diaries: diaries,
         categories: categories,
         insights: insights,
-      ),
+      ).statsPayload(),
     ),
   );
 
@@ -104,12 +108,13 @@ void registerDiaryResources(
         );
       }
       final names = await categoryNames(categories);
+      final links = await DiaryQueries(diaries: diaries).linkSummary(diary);
       return McpResourceReadResult.text(
         uri,
         diaryMarkdownDocument(
           diary,
           categoryName: names[diary.categoryId],
-          links: await diaryLinkSummary(diaries, diary),
+          links: links,
         ),
         mimeType: 'text/markdown',
       );

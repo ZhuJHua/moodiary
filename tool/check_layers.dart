@@ -48,6 +48,7 @@ const Map<String, int> _featureBaseOrder = {
   'moodiary_models': 0,
   'moodiary_ml': 0,
   'moodiary_data': 1,
+  'moodiary_diary_ops': 2,
   'moodiary_components': 2,
   'moodiary_migration': 2,
   'moodiary_preferences': 2,

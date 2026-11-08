@@ -3,12 +3,11 @@
 library;
 
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_diary_ops/moodiary_diary_ops.dart';
 
 import '../protocol/json_rpc.dart';
 import '../protocol/mcp_types.dart';
 import '../registry/mcp_registry.dart';
-import '../tools/diary_format.dart';
-import '../tools/stats_tools.dart';
 
 /// Completions are capped so a picker stays usable.
 const int _completionLimit = 20;

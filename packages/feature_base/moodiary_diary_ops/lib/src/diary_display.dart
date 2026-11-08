@@ -1,5 +1,6 @@
-/// Formatting shared by the diary tools and resources: time rendering, list
-/// summaries and a Tiptap document to Markdown walker.
+/// Diary projections shared by the assistant tools and the MCP catalog:
+/// time rendering, list summaries, category views and a Tiptap document to
+/// Markdown walker.
 ///
 /// Nothing here invents content: media only appears when the document itself
 /// carries a media node, and a legacy (non Tiptap) diary is handed back as the
@@ -306,4 +307,31 @@ String diaryMarkdownDocument(
 Future<Map<String, String>> categoryNames(CategoryRepository categories) async {
   final all = await categories.getAllCategories();
   return {for (final category in all) category.id: category.categoryName};
+}
+
+/// One category as the catalog shows it.
+Map<String, dynamic> categoryInfo(
+  Category category, {
+  int? diaryCount,
+  List<Map<String, dynamic>> children = const [],
+}) => {
+  'id': category.id,
+  'name': category.categoryName,
+  'parentId': category.parentId,
+  'color': category.color,
+  'colorHex': colorHex(category.color),
+  'lastModified': isoUtc(category.lastModified),
+  'diaries': diaryCount,
+  'children': children,
+};
+
+/// Decodes a stored document so a JSON aware client sees structure instead of a
+/// string inside a string; raw content that is not JSON is passed through.
+Object? decodeJsonOrText(String content) {
+  if (content.isEmpty) return content;
+  try {
+    return jsonDecode(content);
+  } on FormatException {
+    return content;
+  }
 }

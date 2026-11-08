@@ -6,22 +6,12 @@ import 'package:moodiary_assistant/src/data/js_sandbox.dart';
 import 'package:moodiary_assistant/src/data/memory_repository.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
+import 'package:moodiary_diary_ops/moodiary_diary_ops.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 typedef AssistantToolRun = Future<String> Function(Map<String, dynamic> input);
-
-typedef _KeywordSearch = ({
-  List<Diary> results,
-  int total,
-  List<String> keywords,
-  String? categoryId,
-  DateTime? start,
-  DateTime? endExclusive,
-});
-
-typedef _SearchRow = ({Diary diary, bool keyword, bool meaning, double? score});
 
 const String _failurePrefix = 'Failed:';
 
@@ -621,89 +611,54 @@ abstract final class AssistantToolRegistry {
     };
   }
 
-  static Future<_KeywordSearch> _keywordSearch(
-    Map<String, dynamic> input,
-  ) async {
-    final rawKeywords = ((input['query'] as String?) ?? '').trim();
-    final keywordsForDisplay = rawKeywords
-        .split(RegExp(r'\s+'))
-        .where((e) => e.isNotEmpty)
-        .toList();
-    final categoryId = _trimToNull(input['categoryId']);
-    final sortName = (input['sort'] as String?)?.trim();
-    final limit = _parseLimit(input['limit']);
-    final start = _parseDate(input['startDate']);
-    final endExclusive = _parseDate(input['endDate'])
-        ?.add(const Duration(days: 1));
+  static DiaryQueries _queries() => DiaryQueries(
+    diaries: getIt<DiaryRepository>(),
+    semantic: getIt.isRegistered<EmbedIndexService>()
+        ? getIt<EmbedIndexService>()
+        : null,
+  );
 
-    final repo = getIt<DiaryRepository>();
-    List<Diary> results;
-    int? total;
-    if (rawKeywords.isNotEmpty) {
-      final hits = await repo.searchDiaries(
-        query: rawKeywords,
-        categoryId: categoryId,
-        start: start,
-        end: endExclusive,
-        sort: _toSearchSort(sortName),
-        limit: limit,
-      );
-      results = [for (final hit in hits) hit.diary];
-      if (results.length >= limit) {
-        total = await repo.countSearchDiaries(
-          query: rawKeywords,
-          categoryId: categoryId,
-          start: start,
-          end: endExclusive,
-        );
-      }
-    } else if (start != null || endExclusive != null) {
-      final ranged = await repo.getDiariesByDateRange(
-        start ?? .fromMillisecondsSinceEpoch(0),
-        endExclusive ?? DateTime.now().add(const Duration(days: 1)),
-      );
-      results =
-          ranged
-              .where((d) => categoryId == null || d.categoryId == categoryId)
-              .where((d) => _inRange(d.time, start, endExclusive))
-              .toList()
-            ..sort(_diaryComparator(sortName));
-    } else {
-      results = await repo.getDiaryByCategory(
-        categoryId: categoryId,
-        sort: _toDiarySort(sortName),
-        limit: limit,
-      );
-    }
+  static DiaryWrites _writes() => DiaryWrites(
+    diaries: getIt<DiaryRepository>(),
+    categories: getIt.isRegistered<CategoryRepository>()
+        ? getIt<CategoryRepository>()
+        : null,
+  );
 
-    return (
-      results: results,
-      total: total ?? results.length,
-      keywords: keywordsForDisplay,
-      categoryId: categoryId,
-      start: start,
-      endExclusive: endExclusive,
+  static CategoryOps _categoryOps() => CategoryOps(
+    categories: getIt<CategoryRepository>(),
+    diaries: getIt<DiaryRepository>(),
+  );
+
+  static DiaryStatsOps _stats() => DiaryStatsOps(
+    diaries: getIt<DiaryRepository>(),
+    categories: getIt<CategoryRepository>(),
+    insights: getIt.isRegistered<MoodInsightsRepository>()
+        ? getIt<MoodInsightsRepository>()
+        : null,
+  );
+
+  static Future<KeywordSearch> _keywordSearch(Map<String, dynamic> input) {
+    return _queries().keyword(
+      query: ((input['query'] as String?) ?? '').trim(),
+      categoryId: _trimToNull(input['categoryId']),
+      start: _parseDate(input['startDate']),
+      endExclusive: _parseDate(input['endDate'])?.add(const Duration(days: 1)),
+      sort: (input['sort'] as String?)?.trim(),
+      limit: _parseLimit(input['limit']),
     );
   }
 
   static Future<List<SemanticHit>> _semanticHits(
     Map<String, dynamic> input, {
     required int limit,
-  }) async {
-    final query = ((input['query'] as String?) ?? '').trim();
-    if (query.isEmpty) return const [];
-    if (!semanticAvailable) return const [];
-    final index = getIt<EmbedIndexService>();
-    final categoryId = _trimToNull(input['categoryId']);
-    final start = _parseDate(input['startDate']);
-    final endExclusive = _parseDate(input['endDate'])
-        ?.add(const Duration(days: 1));
-    return index.search(
-      query,
+  }) {
+    return _queries().semanticHits(
+      query: ((input['query'] as String?) ?? '').trim(),
       limit: limit,
-      categoryId: categoryId,
-      start: start,
-      endExclusive: endExclusive,
+      categoryId: _trimToNull(input['categoryId']),
+      start: _parseDate(input['startDate']),
+      endExclusive: _parseDate(input['endDate'])?.add(const Duration(days: 1)),
     );
   }
 
@@ -714,6 +669,7 @@ abstract final class AssistantToolRegistry {
     final semanticOn = hasQuery && semanticAvailable;
     final wantKeyword = mode != 'meaning';
     final wantMeaning = mode != 'keyword' && semanticOn;
+    final queries = _queries();
 
     final keyword = wantKeyword
         ? await _keywordSearch(input)
@@ -731,7 +687,7 @@ abstract final class AssistantToolRegistry {
         ? await _semanticHits(input, limit: limit)
         : const <SemanticHit>[];
 
-    final rows = _fuse(keyword.results, hits, limit: limit);
+    final rows = queries.fuse(keyword.results, hits, limit: limit);
     if (rows.isEmpty) {
       final base = await _emptyQueryMessage(
         keyword.keywords,
@@ -748,81 +704,17 @@ abstract final class AssistantToolRegistry {
           : ' Only the keyword path ran; the semantic index is off.';
       return '$base$how';
     }
-    final repo = getIt<DiaryRepository>();
-    final resolved = <_SearchRow>[];
-    for (final row in rows) {
-      if (row.diary != null) {
-        resolved.add((
-          diary: row.diary!,
-          keyword: row.keyword,
-          meaning: row.meaning,
-          score: row.score,
-        ));
-        continue;
-      }
-      final diary = await repo.getDiaryByBusinessId(row.id);
-      if (diary == null) continue;
-      resolved.add((
-        diary: diary,
-        keyword: row.keyword,
-        meaning: row.meaning,
-        score: row.score,
-      ));
-    }
+    final resolved = await queries.resolve(rows);
     return _formatSearchRows(
       resolved,
-      total: keyword.total + hits.length - _overlap(keyword.results, hits),
+      total:
+          keyword.total + hits.length - queries.overlap(keyword.results, hits),
       atLeast: wantMeaning && hits.length >= limit,
     );
   }
 
-  static int _overlap(List<Diary> diaries, List<SemanticHit> hits) {
-    final ids = {for (final d in diaries) d.id};
-    var n = 0;
-    for (final h in hits) {
-      if (ids.contains(h.diaryId)) n++;
-    }
-    return n;
-  }
-
-  static List<
-    ({String id, Diary? diary, bool keyword, bool meaning, double? score})
-  >
-  _fuse(List<Diary> keyword, List<SemanticHit> hits, {required int limit}) {
-    const k = 60;
-    final score = <String, double>{};
-    final byId = <String, Diary>{};
-    final fromKeyword = <String>{};
-    final fromMeaning = <String>{};
-    final similarity = <String, double>{};
-    for (var i = 0; i < keyword.length; i++) {
-      final d = keyword[i];
-      byId[d.id] = d;
-      fromKeyword.add(d.id);
-      score[d.id] = (score[d.id] ?? 0) + 1 / (k + i + 1);
-    }
-    for (var i = 0; i < hits.length; i++) {
-      final h = hits[i];
-      fromMeaning.add(h.diaryId);
-      similarity[h.diaryId] = (1 - h.distance).clamp(-1.0, 1.0);
-      score[h.diaryId] = (score[h.diaryId] ?? 0) + 1 / (k + i + 1);
-    }
-    final ids = score.keys.toList()
-      ..sort((a, b) => score[b]!.compareTo(score[a]!));
-    return [
-      for (final id in ids.take(limit))
-        (
-          id: id,
-          diary: byId[id],
-          keyword: fromKeyword.contains(id),
-          meaning: fromMeaning.contains(id),
-          score: similarity[id],
-        ),
-    ];
-  }
-
   static String _formatSearchRows(
-    List<_SearchRow> rows, {
+    List<SearchRow> rows, {
     required int total,
     bool atLeast = false,
   }) {
@@ -872,17 +764,9 @@ abstract final class AssistantToolRegistry {
       return 'Failed: no diary id given. Get ids from searchDiaries first.';
     }
 
-    final repo = getIt<DiaryRepository>();
-    final chunks = <String>[];
-    final missing = <String>[];
-    for (final id in ids.take(_maxBatchRead)) {
-      final diary = await repo.getDiaryByBusinessId(id);
-      if (diary == null || !diary.show) {
-        missing.add(id);
-        continue;
-      }
-      chunks.add(_formatDiaryFull(diary));
-    }
+    final read = await _queries().read(ids, max: _maxBatchRead);
+    final chunks = [for (final diary in read.found) _formatDiaryFull(diary)];
+    final missing = read.missing;
 
     final buffer = StringBuffer();
     if (missing.isNotEmpty) {
@@ -986,48 +870,36 @@ abstract final class AssistantToolRegistry {
       : line;
 
   static Future<String> _diaryOverview(Map<String, dynamic> input) async {
-    final repo = getIt<DiaryRepository>();
-    final counts = await repo.diaryCountByCategory();
-    if (counts.total == 0) return 'No diaries yet.';
+    final overview = await _stats().overviewForModel();
+    if (overview.total == 0) return 'No diaries yet.';
 
-    final cats = await getIt<CategoryRepository>().getAllCategories();
-    final nameById = {for (final c in cats) c.id: c.categoryName};
-    final newest = await repo.getDiaryByCategory(sort: .timeDesc, limit: 1);
-    final oldest = await repo.getDiaryByCategory(sort: .timeAsc, limit: 1);
-
-    final buffer = StringBuffer()..writeln('Total entries=${counts.total}');
-    if (newest.isNotEmpty && oldest.isNotEmpty) {
+    final buffer = StringBuffer()..writeln('Total entries=${overview.total}');
+    if (overview.oldest != null && overview.newest != null) {
       buffer.writeln(
-        'span=${TimeFormat.isoDate(oldest.first.time)} ~ '
-        '${TimeFormat.isoDate(newest.first.time)}',
+        'span=${TimeFormat.isoDate(overview.oldest!)} ~ '
+        '${TimeFormat.isoDate(overview.newest!)}',
       );
     }
-    final categorized = counts.byCategory.values.fold<int>(0, (a, b) => a + b);
-    final uncategorized = counts.total - categorized;
     buffer.writeln('by category:');
-    if (counts.byCategory.isEmpty) {
+    if (overview.categories.isEmpty) {
       buffer.writeln('- (all uncategorised)');
     } else {
-      final entries = counts.byCategory.entries.toList()
-        ..sort((a, b) => b.value.compareTo(a.value));
-      for (final e in entries) {
-        final name = nameById[e.key] ?? '(deleted category)';
-        buffer.writeln('- $name (id=${e.key}): ${e.value}');
+      for (final category in overview.categories) {
+        buffer.writeln(
+          '- ${category.name} (id=${category.id}): ${category.count}',
+        );
       }
     }
-    if (uncategorized > 0) buffer.writeln('- uncategorised: $uncategorized');
+    if (overview.uncategorized > 0) {
+      buffer.writeln('- uncategorised: ${overview.uncategorized}');
+    }
 
-    final moods = await repo.getDiaryByCategory(sort: .timeDesc, limit: 9999);
-    if (moods.isNotEmpty) {
-      final counts = <DiaryMood?, int>{};
-      for (final d in moods) {
-        counts[d.mood] = (counts[d.mood] ?? 0) + 1;
-      }
+    if (overview.moods.isNotEmpty) {
       buffer
         ..writeln('mood distribution (null means not recorded):')
         ..writeln(
           '- ${[
-            for (final m in [...DiaryMood.values, null]) '${m?.name ?? 'not recorded'}=${counts[m] ?? 0}',
+            for (final mood in [...DiaryMood.values, null]) '${mood?.name ?? 'not recorded'}=${overview.moods[mood] ?? 0}',
           ].join(', ')}',
         );
     }
@@ -1042,44 +914,16 @@ abstract final class AssistantToolRegistry {
     final content = (input['content'] as String?)?.trim() ?? '';
     if (content.isEmpty) return 'Failed: the body cannot be empty.';
 
-    final mood = _parseMood(input['mood']);
-    final categoryId = await _resolveCategoryId(input['categoryId']);
-
-    final converted = _toTiptap(content);
-    final diary = Diary.create(
-      categoryId: categoryId,
+    final diary = await _writes().create(
       title: title,
-      content: converted.content,
-      contentText: converted.contentText,
-      mood: mood,
-      imageName: const [],
-      audioName: const [],
-      videoName: const [],
-      tags: const [],
-      type: converted.type,
-      aspect: null,
+      content: content,
+      mood: _parseMood(input['mood']),
+      categoryId: _trimToNull(input['categoryId']),
+      format: DiaryContentFormat.markdown,
+      requireKnownCategory: false,
     );
-    await getIt<DiaryRepository>().insertADiary(diary);
     return 'Created "${title.isEmpty ? 'Untitled' : title}" '
         '(${TimeFormat.isoDate(diary.time)}), id=${diary.id}.';
-  }
-
-  static ({String content, String contentText, DiaryType type}) _toTiptap(
-    String markdown,
-  ) {
-    final json = MarkdownToTiptap.convert(markdown);
-    if (json != null && json.isNotEmpty) {
-      return (
-        content: json,
-        contentText: TiptapContent.parse(json).plainText,
-        type: DiaryType.tiptap,
-      );
-    }
-    return (
-      content: markdown,
-      contentText: MarkdownConverter.convert(markdown),
-      type: DiaryType.markdown,
-    );
   }
 
   static Future<String> _updateDiary(Map<String, dynamic> input) =>
@@ -1089,52 +933,43 @@ abstract final class AssistantToolRegistry {
     final id = (input['id'] as String?)?.trim() ?? '';
     if (id.isEmpty) return 'Failed: no diary id given.';
 
-    final repo = getIt<DiaryRepository>();
-    final existing = await repo.getDiaryByBusinessId(id);
-    if (existing == null || !existing.show) {
-      return 'Failed: no diary with id=$id.';
-    }
-
-    var updated = existing;
     final title = input['title'] as String?;
-    if (title != null) updated = updated.copyWith(title: title.trim());
     final content = input['content'] as String?;
-    if (content != null) {
-      final converted = _toTiptap(content);
-      updated = updated.copyWith(
-        content: converted.content,
-        contentText: converted.contentText,
-        type: converted.type.value,
-      );
-      // 内容变更必须重算媒体引用，否则媒体库留下幻影条目
-      updated = withDerivedMedia(updated);
-    }
     final mood = _parseMood(input['mood']);
-    if (input.containsKey('mood') && (input['mood'] == null || mood != null)) {
-      updated = updated.copyWith(mood: mood);
-    }
-    if (input.containsKey('categoryId')) {
-      final rawCategory = (input['categoryId'] as String?)?.trim() ?? '';
-      if (rawCategory.isEmpty) {
-        updated = updated.copyWith(categoryId: null);
-      } else {
-        final resolved = await _resolveCategoryId(rawCategory);
-        if (resolved == null) {
-          return 'Failed: no category with id=$rawCategory (check listCategories).';
-        }
-        updated = updated.copyWith(categoryId: resolved);
-      }
-    }
-    updated = touched(updated);
-
-    await repo.updateADiary(
-      newDiary: updated,
-      index: (title == null && content == null) ? .skip : .inline,
+    final patch = DiaryPatch(
+      title: title?.trim(),
+      content: content,
+      mood: mood,
+      moodSet:
+          input.containsKey('mood') && (input['mood'] == null || mood != null),
+      categoryId: input.containsKey('categoryId')
+          ? (input['categoryId'] as String?)?.trim() ?? ''
+          : null,
     );
-    final shown = updated.title.trim().isEmpty
-        ? 'Untitled'
-        : updated.title.trim();
-    return 'Updated "$shown" (id=$id).';
+
+    try {
+      final updated = await _writes().update(
+        id: id,
+        patch: patch,
+        format: DiaryContentFormat.markdown,
+        requireKnownCategory: true,
+        requireVisible: true,
+        index: (title == null && content == null)
+            ? IndexMode.skip
+            : IndexMode.inline,
+      );
+      final shown = updated.title.trim().isEmpty
+          ? 'Untitled'
+          : updated.title.trim();
+      return 'Updated "$shown" (id=$id).';
+    } on DiaryOpsException catch (e) {
+      return switch (e.failure) {
+        DiaryOpsFailure.notFound => 'Failed: no diary with id=$id.',
+        DiaryOpsFailure.invalidCategory =>
+          'Failed: no category with id=${e.categoryId} (check listCategories).',
+        _ => 'Failed: could not update the diary.',
+      };
+    }
   }
 
   static Future<String> _deleteDiary(Map<String, dynamic> input) =>
@@ -1144,23 +979,28 @@ abstract final class AssistantToolRegistry {
     final id = (input['id'] as String?)?.trim() ?? '';
     if (id.isEmpty) return 'Failed: no diary id given.';
 
-    final repo = getIt<DiaryRepository>();
-    final existing = await repo.getDiaryByBusinessId(id);
-    if (existing == null) return 'Failed: no diary with id=$id.';
-
-    final title = existing.title.trim().isEmpty
-        ? 'Untitled'
-        : existing.title.trim();
-    if (!existing.show) {
-      return '"$title" (id=$id) is already in the recycle bin.';
+    try {
+      final result = await _writes().delete(
+        id: id,
+        reportAlreadyRecycled: true,
+      );
+      final title = result.diary.title.trim().isEmpty
+          ? 'Untitled'
+          : result.diary.title.trim();
+      return switch (result.outcome) {
+        DiaryDeleteOutcome.alreadyRecycled =>
+          '"$title" (id=$id) is already in the recycle bin.',
+        DiaryDeleteOutcome.recycled =>
+          'Moved "$title" (id=$id) to the recycle bin.',
+        DiaryDeleteOutcome.deleted => 'Deleted "$title" (id=$id).',
+      };
+    } on DiaryOpsException {
+      return 'Failed: no diary with id=$id.';
     }
-    // 软删=移入回收站(show=false)；勿用 deleteADiary(那是永久删除+删媒体)。
-    await repo.setVisibility(existing, show: false);
-    return 'Moved "$title" (id=$id) to the recycle bin.';
   }
 
   static Future<String> _listCategories(Map<String, dynamic> input) async {
-    final cats = await getIt<CategoryRepository>().getAllCategories();
+    final cats = await _categoryOps().all();
     if (cats.isEmpty) return 'No categories yet.';
     final buffer = StringBuffer();
     for (final c in cats) {
@@ -1175,9 +1015,8 @@ abstract final class AssistantToolRegistry {
   static Future<String> _createOneCategory(Map<String, dynamic> input) async {
     final name = (input['name'] as String?)?.trim() ?? '';
     if (name.isEmpty) return 'Failed: the category name cannot be empty.';
-    final category = Category.create(categoryName: name);
     try {
-      await getIt<CategoryRepository>().insertACategory(category);
+      final category = await _categoryOps().create(name: name);
       return 'Created category "$name", id=${category.id}.';
     } catch (_) {
       return 'Failed: could not create the category.';
@@ -1194,18 +1033,11 @@ abstract final class AssistantToolRegistry {
       return 'Failed: category id and name are both required.';
     }
 
-    final repo = getIt<CategoryRepository>();
-    final existing = await repo.getCategoryById(id);
-    if (existing == null) {
-      return 'Failed: no category with id=$id.';
-    }
-    final updated = existing.copyWith(
-      categoryName: name,
-      lastModified: .timestamp(),
-    );
     try {
-      await repo.insertACategory(updated);
+      await _categoryOps().update(id: id, name: name, nameSet: true);
       return 'Renamed the category to "$name" (id=$id).';
+    } on DiaryOpsException {
+      return 'Failed: no category with id=$id.';
     } catch (_) {
       return 'Failed: could not rename the category.';
     }
@@ -1219,7 +1051,7 @@ abstract final class AssistantToolRegistry {
     if (id.isEmpty) return 'Failed: no category id given.';
     bool ok;
     try {
-      ok = await getIt<CategoryRepository>().deleteACategory(id);
+      ok = (await _categoryOps().delete(id)).deleted;
     } catch (_) {
       ok = false;
     }
@@ -1343,13 +1175,6 @@ abstract final class AssistantToolRegistry {
         : 'Failed: no memory with id=$id.';
   }
 
-  static Future<String?> _resolveCategoryId(Object? raw) async {
-    final id = (raw as String?)?.trim();
-    if (id == null || id.isEmpty) return null;
-    final cat = await getIt<CategoryRepository>().getCategoryById(id);
-    return cat == null ? null : id;
-  }
-
   static DiaryMood? _parseMood(Object? raw) =>
       raw is String ? DiaryMood.values.asNameMap()[raw] : null;
 
@@ -1379,31 +1204,6 @@ abstract final class AssistantToolRegistry {
     if (parsed == null) return null;
     return DateTime(parsed.year, parsed.month, parsed.day);
   }
-
-  static bool _inRange(DateTime time, DateTime? start, DateTime? endExclusive) {
-    if (start != null && time.isBefore(start)) return false;
-    if (endExclusive != null && !time.isBefore(endExclusive)) return false;
-    return true;
-  }
-
-  static SearchSort _toSearchSort(String? name) => switch (name) {
-    'newest' => SearchSort.timeDesc,
-    'oldest' => SearchSort.timeAsc,
-    _ => SearchSort.relevance,
-  };
-
-  static DiarySort _toDiarySort(String? name) => switch (name) {
-    'oldest' => DiarySort.timeAsc,
-    'modified' => DiarySort.lastModifiedDesc,
-    _ => DiarySort.timeDesc,
-  };
-
-  static int Function(Diary, Diary) _diaryComparator(String? name) =>
-      switch (name) {
-        'oldest' => (a, b) => a.time.compareTo(b.time),
-        'modified' => (a, b) => b.lastModified.compareTo(a.lastModified),
-        _ => (a, b) => b.time.compareTo(a.time),
-      };
 
   static Future<String> _emptyQueryMessage(
     List<String> keywords,
