@@ -636,6 +636,9 @@ class Translations$app$zh {
 	/// zh: '网络'
 	String get mcpGroupNetwork => '网络';
 
+	/// zh: '后台'
+	String get mcpGroupKeepAlive => '后台';
+
 	/// zh: '状态'
 	String get mcpStatusTitle => '状态';
 
@@ -716,6 +719,24 @@ class Translations$app$zh {
 
 	/// zh: '已保存'
 	String get mcpSaved => '已保存';
+
+	/// zh: '后台保持运行'
+	String get mcpKeepAliveTitle => '后台保持运行';
+
+	/// zh: '离开 App 后仍让 MCP 服务保持可达'
+	String get mcpKeepAliveSubtitle => '离开 App 后仍让 MCP 服务保持可达';
+
+	/// zh: '已允许后台运行'
+	String get mcpKeepAliveAndroidExempt => '已允许后台运行';
+
+	/// zh: '电池优化仍然开启，请允许 App 在后台运行'
+	String get mcpKeepAliveAndroidNotExempt => '电池优化仍然开启，请允许 App 在后台运行';
+
+	/// zh: '允许后台运行'
+	String get mcpKeepAliveAndroidRequest => '允许后台运行';
+
+	/// zh: '已保存'
+	String get mcpKeepAliveSaved => '已保存';
 
 	/// zh: '如何连接'
 	String get mcpConnectTitle => '如何连接';

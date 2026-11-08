@@ -8,6 +8,7 @@ import 'dart:async' as _i687;
 
 import 'package:injectable/injectable.dart' as _i526;
 import 'package:moodiary_data/moodiary_data.dart' as _i691;
+import 'package:moodiary_mcp/src/service/mcp_keep_alive.dart' as _i833;
 import 'package:moodiary_mcp/src/service/mcp_service.dart' as _i952;
 
 class MoodiaryMcpPackageModule extends _i526.MicroPackageModule {
@@ -20,6 +21,9 @@ class MoodiaryMcpPackageModule extends _i526.MicroPackageModule {
         gh<_i691.CategoryRepository>(),
         gh<_i691.MoodInsightsRepository>(),
       ),
+    );
+    gh.lazySingleton<_i833.McpKeepAlive>(
+      () => _i833.McpKeepAlive(gh<_i952.McpService>()),
     );
   }
 }

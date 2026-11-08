@@ -249,6 +249,7 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get mcpGroupServer => 'Server';
 	@override String get mcpGroupAccess => 'Access';
 	@override String get mcpGroupNetwork => 'Network';
+	@override String get mcpGroupKeepAlive => 'Background';
 	@override String get mcpStatusTitle => 'Status';
 	@override String get mcpStatusStopped => 'The server is off';
 	@override String get mcpStatusStarting => 'Starting the server…';
@@ -276,6 +277,12 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get mcpPortHelp => 'Between 1024 and 65535. If the port is taken, another one is used.';
 	@override String get mcpPortInvalid => 'Enter a number between 1024 and 65535';
 	@override String get mcpSaved => 'Saved';
+	@override String get mcpKeepAliveTitle => 'Keep running in the background';
+	@override String get mcpKeepAliveSubtitle => 'Keeps the MCP server reachable after you leave the app';
+	@override String get mcpKeepAliveAndroidExempt => 'Allowed to run in the background';
+	@override String get mcpKeepAliveAndroidNotExempt => 'Battery optimisation is still on — allow the app to run in the background';
+	@override String get mcpKeepAliveAndroidRequest => 'Allow background running';
+	@override String get mcpKeepAliveSaved => 'Saved';
 	@override String get mcpConnectTitle => 'How to connect';
 	@override String mcpConnectEndpoint({required Object endpoint}) => 'Server URL: ${endpoint}';
 	@override String get mcpConnectAuth => 'Header: Authorization: Bearer <token>';

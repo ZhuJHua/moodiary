@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
@@ -33,18 +34,33 @@ class McpPage extends StatefulWidget {
   State<McpPage> createState() => _McpPageState();
 }
 
-class _McpPageState extends State<McpPage> {
+class _McpPageState extends State<McpPage> with WidgetsBindingObserver {
   final McpService _service = getIt<McpService>();
+  final McpKeepAlive _keepAlive = getIt<McpKeepAlive>();
 
   String? _token;
   bool _revealToken = false;
+  bool _exempt = !Platform.isAndroid;
 
   String? get _currentToken => _service.token ?? _token;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     unawaited(_loadToken());
+    unawaited(_refreshExemption());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == .resumed) unawaited(_refreshExemption());
   }
 
   @override
@@ -58,6 +74,7 @@ class _McpPageState extends State<McpPage> {
           builder: (context, state, _) => CustomScrollView(
             slivers: [
               _serverSection(context, state),
+              _keepAliveSection(context),
               _accessSection(context, state),
               _networkSection(context, state),
               _connectBlurb(context, state),
@@ -92,6 +109,40 @@ class _McpPageState extends State<McpPage> {
             failed: state.status == .failed,
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _keepAliveSection(BuildContext context) {
+    if (!_keepAlive.supported) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+    final android = Platform.isAndroid;
+    return MSliverSettingGroup(
+      title: context.l10n.app.mcpGroupKeepAlive,
+      children: [
+        ValueListenableBuilder<bool>(
+          valueListenable: MoodiaryKVs.mcpBackgroundKeepAlive.getNotifier(),
+          builder: (context, keepAlive, _) => SettingSwitchListTile(
+            title: context.l10n.app.mcpKeepAliveTitle,
+            subtitle: android
+                ? (_exempt
+                      ? context.l10n.app.mcpKeepAliveAndroidExempt
+                      : context.l10n.app.mcpKeepAliveAndroidNotExempt)
+                : context.l10n.app.mcpKeepAliveSubtitle,
+            secondary: _lead(context, LucideIcons.batteryCharging),
+            value: keepAlive,
+            onChanged: (on) => unawaited(_setKeepAlive(on)),
+          ),
+        ),
+        if (android && !_exempt)
+          SettingListTile(
+            title: context.l10n.app.mcpKeepAliveAndroidRequest,
+            subtitle: context.l10n.app.mcpKeepAliveAndroidNotExempt,
+            leading: _lead(context, LucideIcons.shield),
+            trailing: _chevron(context),
+            onTap: () => unawaited(_requestExemption()),
+          ),
       ],
     );
   }
@@ -284,6 +335,33 @@ class _McpPageState extends State<McpPage> {
     await _service.updateConfig(lan: lan);
     if (!mounted) return;
     toast.success(message: context.l10n.app.mcpSaved);
+  }
+
+  Future<void> _setKeepAlive(bool on) async {
+    try {
+      await _keepAlive.setEnabled(on);
+      if (!mounted) return;
+      toast.success(message: context.l10n.app.mcpKeepAliveSaved);
+    } catch (e, s) {
+      logger.e('切换 MCP 后台保活失败', error: e, stackTrace: s);
+      if (!mounted) return;
+      toast.error(message: context.l10n.common.loadFailed);
+      return;
+    }
+    await _refreshExemption();
+  }
+
+  Future<void> _requestExemption() async {
+    final exempt = await _keepAlive.requestExemption();
+    if (!mounted) return;
+    setState(() => _exempt = exempt);
+    if (exempt) toast.success(message: context.l10n.app.mcpKeepAliveSaved);
+  }
+
+  Future<void> _refreshExemption() async {
+    final exempt = await _keepAlive.isExempt();
+    if (!mounted || exempt == _exempt) return;
+    setState(() => _exempt = exempt);
   }
 
   Future<void> _copyToken() async {

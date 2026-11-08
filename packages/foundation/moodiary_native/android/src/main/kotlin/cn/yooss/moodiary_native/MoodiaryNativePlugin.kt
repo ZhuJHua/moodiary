@@ -7,6 +7,7 @@ import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 
 class MoodiaryNativePlugin : FlutterPlugin, ActivityAware {
     private var keyboard: EditorKeyboard? = null
+    private var keepAlive: BackgroundKeepAlive? = null
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         val messenger = binding.binaryMessenger
@@ -15,14 +16,19 @@ class MoodiaryNativePlugin : FlutterPlugin, ActivityAware {
             EditorKeyboardApi.setUp(messenger, it)
             KeyboardEventsStreamHandler.register(messenger, it.events)
         }
+        keepAlive = BackgroundKeepAlive(binding.applicationContext).also {
+            BackgroundKeepAliveApi.setUp(messenger, it)
+        }
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         val messenger = binding.binaryMessenger
         SelectionHandleApi.setUp(messenger, null)
         EditorKeyboardApi.setUp(messenger, null)
+        BackgroundKeepAliveApi.setUp(messenger, null)
         keyboard?.dispose()
         keyboard = null
+        keepAlive = null
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) = setActivity(binding.activity)
@@ -36,5 +42,6 @@ class MoodiaryNativePlugin : FlutterPlugin, ActivityAware {
 
     private fun setActivity(activity: Activity?) {
         keyboard?.activity = activity
+        keepAlive?.activity = activity
     }
 }

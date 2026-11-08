@@ -20,6 +20,8 @@ enum MoodiaryKVs<T extends Object> {
 
   mcpAllowLan<bool>(defaultValue: false),
 
+  mcpBackgroundKeepAlive<bool>(defaultValue: false),
+
   syncPollInterval<int>(defaultValue: 30),
 
   syncProvider<String>(defaultValue: 'webdav'),
