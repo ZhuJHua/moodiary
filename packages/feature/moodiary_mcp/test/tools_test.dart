@@ -169,7 +169,7 @@ void main() {
       expect((initialized['serverInfo'] as Map)['version'], 'test');
 
       final listed = resultOf(await call('tools/list'));
-      final tools = (listed['items'] as List).cast<Map<String, dynamic>>();
+      final tools = (listed['tools'] as List).cast<Map<String, dynamic>>();
       expect(
         {for (final tool in tools) tool['name']},
         {

@@ -43,8 +43,14 @@ class McpPage<T> {
   final List<T> items;
   final String? nextCursor;
 
-  Map<String, dynamic> toJson(Object? Function(T item) encode) => {
-    'items': [for (final item in items) encode(item)],
+  /// Encodes the page under [key], the property name the schema gives the list
+  /// (`tools`, `resources`, `resourceTemplates`, `prompts`).
+  ///
+  /// The name is not cosmetic: clients read exactly that property, so a generic
+  /// wrapper such as `items` makes `tools/list` answer a result without
+  /// `tools`, and a typed client fails while decoding it.
+  Map<String, dynamic> toJson(String key, Object? Function(T item) encode) => {
+    key: [for (final item in items) encode(item)],
     'nextCursor': ?nextCursor,
   };
 }

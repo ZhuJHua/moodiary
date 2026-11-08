@@ -177,14 +177,14 @@ void main() {
   group('tools', () {
     test('lists tools with cursor pagination', () async {
       final first = (await call('tools/list'))['result'] as Map;
-      final firstItems = first['items'] as List;
+      final firstItems = first['tools'] as List;
       expect(firstItems.length, mcpPageSize);
       expect((firstItems.first as Map)['name'], isA<String>());
       final cursor = first['nextCursor'];
       expect(cursor, isNotNull);
       final second =
           (await call('tools/list', {'cursor': cursor}))['result'] as Map;
-      expect((second['items'] as List).length, greaterThan(0));
+      expect((second['tools'] as List).length, greaterThan(0));
       expect(second.containsKey('nextCursor'), isFalse);
     });
 
@@ -285,13 +285,13 @@ void main() {
   group('resources', () {
     test('lists static resources and templates', () async {
       final resources = (await call('resources/list'))['result'] as Map;
-      expect((resources['items'] as List).single, {
+      expect((resources['resources'] as List).single, {
         'uri': 'moodiary://categories',
         'name': 'categories',
       });
       final templates =
           (await call('resources/templates/list'))['result'] as Map;
-      expect((templates['items'] as List).single, {
+      expect((templates['resourceTemplates'] as List).single, {
         'uriTemplate': 'moodiary://diary/{id}',
         'name': 'diary',
       });
@@ -350,7 +350,7 @@ void main() {
   group('prompts and completions', () {
     test('lists prompts and renders one', () async {
       final list = (await call('prompts/list'))['result'] as Map;
-      final prompt = (list['items'] as List).single as Map;
+      final prompt = (list['prompts'] as List).single as Map;
       expect(prompt['name'], 'daily_review');
       expect((prompt['arguments'] as List).single, {
         'name': 'date',
@@ -391,6 +391,27 @@ void main() {
         ((response['result'] as Map)['completion'] as Map)['values'],
         isEmpty,
       );
+    });
+  });
+
+  // The property names are part of the protocol, not formatting: a client reads
+  // `tools` off a `tools/list` result and throws "type 'Null' is not a subtype
+  // of type 'List<dynamic>'" when the server answers a generic wrapper instead.
+  group('list result shapes', () {
+    test('every list endpoint names its array as the schema does', () async {
+      const expected = <String, String>{
+        'tools/list': 'tools',
+        'resources/list': 'resources',
+        'resources/templates/list': 'resourceTemplates',
+        'prompts/list': 'prompts',
+      };
+      for (final entry in expected.entries) {
+        final result =
+            (await call(entry.key))['result'] as Map<String, dynamic>;
+        expect(result.keys, contains(entry.value), reason: entry.key);
+        expect(result.keys, isNot(contains('items')), reason: entry.key);
+        expect(result[entry.value], isA<List<dynamic>>(), reason: entry.key);
+      }
     });
   });
 

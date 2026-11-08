@@ -173,20 +173,20 @@ class McpServer {
 
   Map<String, dynamic> _listTools(Map<String, dynamic> params) => registry
       .page(registry.tools, params['cursor'])
-      .toJson((tool) => tool.toJson());
+      .toJson('tools', (tool) => tool.toJson());
 
   Map<String, dynamic> _listResources(Map<String, dynamic> params) => registry
       .page(registry.resources, params['cursor'])
-      .toJson((resource) => resource.toJson());
+      .toJson('resources', (resource) => resource.toJson());
 
   Map<String, dynamic> _listResourceTemplates(Map<String, dynamic> params) =>
       registry
           .page(registry.resourceTemplates, params['cursor'])
-          .toJson((template) => template.toJson());
+          .toJson('resourceTemplates', (template) => template.toJson());
 
   Map<String, dynamic> _listPrompts(Map<String, dynamic> params) => registry
       .page(registry.prompts, params['cursor'])
-      .toJson((prompt) => prompt.toJson());
+      .toJson('prompts', (prompt) => prompt.toJson());
 
   Future<Map<String, dynamic>> _callTool(
     McpSessionState session,

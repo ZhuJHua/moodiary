@@ -310,7 +310,7 @@ void main() {
       }, sessionId: sessionId);
       expect(response.status, HttpStatus.ok);
       final frame = jsonDecode(response.body) as Map<String, dynamic>;
-      final tools = (frame['result'] as Map)['items'] as List;
+      final tools = (frame['result'] as Map)['tools'] as List;
       expect((tools.single as Map)['name'], 'echo');
     });
 
