@@ -539,7 +539,9 @@ void main() {
       expect(response.status, HttpStatus.ok);
       final frame = jsonDecode(response.body) as Map<String, dynamic>;
       final tools = (frame['result'] as Map)['tools'] as List;
-      expect((tools.single as Map)['name'], 'echo');
+      expect([
+        for (final tool in tools) (tool as Map)['name'],
+      ], containsAll(<String>['echo', 'progress']));
     });
 
     test('calls a tool over the session', () async {
