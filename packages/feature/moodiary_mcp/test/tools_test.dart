@@ -197,6 +197,10 @@ void main() {
           'get_stats',
           'server_info',
           'render_diary_image',
+          'list_diary_media',
+          'read_diary_media',
+          'add_diary_image',
+          'add_diary_attachment',
         },
       );
       for (final tool in tools) {

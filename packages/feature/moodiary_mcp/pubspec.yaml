@@ -16,6 +16,7 @@ dependencies:
   moodiary_data: 0.0.1
   moodiary_diary_ops: 0.0.1
   moodiary_di: 0.0.1
+  moodiary_files: 0.0.1
   moodiary_logging: 0.0.1
   moodiary_models: 0.0.1
   moodiary_native: 0.0.1
@@ -24,6 +25,7 @@ dependencies:
   moodiary_utils: 0.0.1
 
   injectable: 3.0.0
+  mime: 2.1.0
 
 dev_dependencies:
   flutter_test:
