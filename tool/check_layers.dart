@@ -199,7 +199,7 @@ List<File> _dartFiles(String root) {
   return _dartFileCache.putIfAbsent(root, () {
     final dir = Directory(root);
     if (!dir.existsSync()) return const [];
-    const skip = {'.dart_tool', 'build', 'node_modules', 'target', '.git'};
+    const skip = {'.dart_tool', 'build', 'target', '.git'};
     final out = <File>[];
     void walk(Directory d) {
       for (final entity in d.listSync(followLinks: false)) {
