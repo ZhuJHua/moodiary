@@ -23,12 +23,20 @@ const List<String> mcpSupportedProtocolVersions = [
 
 const String mcpServerInstructions =
     'Moodiary is a local diary app. These tools read and write the diary '
-    'database of the device that runs this server: diaries (title, rich text '
-    'content, time, mood, tags, category), categories, full text search and '
-    'statistics. Content is stored as Tiptap JSON internally; every tool that '
-    'returns or accepts diary content also speaks plain text or Markdown, and '
-    'Markdown is converted for you. Diary bodies and titles are private user '
-    'data: quote them only when the user asks about them.';
+    'database of the device that runs this server: diaries (title, body, time, '
+    'mood, tags, category), categories, full text search, statistics, media and '
+    'long images. A body is stored as a Tiptap document, and the contentFormat '
+    'argument selects the representation on reads and writes: markdown '
+    '(default), text, or document for the raw Tiptap JSON object. On update '
+    'calls a field you omit is left unchanged and an explicit null clears a '
+    'nullable one (categoryId, mood, tags, color, parentId); title is cleared '
+    'with an empty string. Media is attached with add_diary_image or '
+    'add_diary_attachment, listed by list_diary_media and returned by '
+    'read_diary_media; render_diary_image renders a diary as the same long PNG '
+    'the app exports. A bad argument is a JSON-RPC invalid params error, while '
+    'an unknown id is a normal tool result with isError. Diary bodies and '
+    'titles are private user data: quote them only when the user asks about '
+    'them.';
 
 /// Page size for every list/cursor endpoint.
 const int mcpPageSize = 50;

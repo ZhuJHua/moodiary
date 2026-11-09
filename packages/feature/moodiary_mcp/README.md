@@ -1,9 +1,9 @@
 # moodiary_mcp
 
 Local [Model Context Protocol](https://modelcontextprotocol.io) server: a switch
-in **Settings → MCP** turns the phone into an MCP endpoint so other MCP clients
-(Claude Desktop, Cursor, VS Code, any SDK client) on the same device or the same
-Wi-Fi can read, search, create, edit and delete diaries.
+in **Settings → Assistant → MCP** (智能助理 in the Chinese UI) turns the phone into
+an MCP endpoint so other MCP clients (Claude Desktop, Cursor, VS Code, any SDK client) on the same device or
+the same Wi-Fi can read, search, create, edit and delete diaries.
 
 Nothing leaves the device unless a client you configured asks for it. A
 loopback-only server can run without a password; as soon as LAN access is on the
@@ -59,8 +59,16 @@ Details:
   fixed embedded image.
 - **Locked app, closed port.** The server is paused while the app lock is
   engaged and resumed afterwards.
-- **No media transfer.** Image/audio/video contents are never sent; tools expose
-  the file names and the diary body only.
+- **Media travels, within limits.** A client can import an image or an
+  attachment (`add_diary_image`, `add_diary_attachment`: base64, at most 16 MB
+  decoded, images only PNG/JPEG/WebP/GIF), read one back (`read_diary_media`,
+  `moodiary://diary/{id}/media/{name}`) and render a diary as the app's long PNG
+  (`render_diary_image`). An image is returned inline as MCP `image` content up
+  to 8 MB; audio, video and attachments come back as metadata plus a
+  `resource_link`, and the blob resource refuses anything above 8 MB. A media
+  name is served only when the diary itself references it, so the tools cannot
+  read arbitrary files, and every write lands in the app media directories with
+  the app naming scheme, so the editor shows it.
 
 ## Endpoints
 
@@ -129,7 +137,9 @@ Over the LAN, where the password is always required:
     "moodiary": {
       "type": "http",
       "url": "http://192.168.1.20:8765/mcp",
-      "headers": { "Authorization": "Bearer <token from Settings → MCP>" }
+      "headers": {
+        "Authorization": "Bearer <token from Settings → Assistant → MCP>"
+      }
     }
   }
 }
@@ -152,31 +162,79 @@ The handlers keep the MCP contract here (names, schemas, `McpToolResult` shapes)
 and delegate the diary rules to `moodiary_diary_ops`, which the in-app assistant
 uses too.
 
-- Tools: diary CRUD, search, links/tags, categories, statistics, server info.
-- Resources: `moodiary://categories`, `moodiary://diaries/recent`,
-  `moodiary://stats/overview`, template `moodiary://diary/{id}`.
-- Prompts: `daily_review`, `summarize_period`, `find_connections`.
+19 tools, grouped by what they act on:
+
+| Group | Tools |
+| --- | --- |
+| Diaries | `list_diaries`, `get_diary`, `create_diary`, `update_diary`, `delete_diary`, `search_diaries`, `get_diary_links`, `list_tags` |
+| Categories | `list_categories`, `create_category`, `update_category`, `delete_category` |
+| Statistics | `get_stats`, `server_info` |
+| Media | `list_diary_media`, `read_diary_media`, `add_diary_image`, `add_diary_attachment` |
+| Export | `render_diary_image` |
+
+Resources: `moodiary://categories`, `moodiary://diaries/recent`,
+`moodiary://stats/overview`, and the templates `moodiary://diary/{id}` (Markdown
+diary) and `moodiary://diary/{id}/media/{name}` (media blob).
+Prompts: `daily_review`, `summarize_period`, `find_connections`.
+
+### Tools and arguments
+
+Every tool composes its input schema from `lib/src/tools/schemas.dart`, so an
+argument that appears in several tools is described and parsed identically:
+
+| Convention | Rule |
+| --- | --- |
+| `visible` | The write-side name of the diary's stored `show` flag; the summaries report it as `show`. |
+| Clearing a field | Omit it to leave the field unchanged; send `null` to clear a nullable one: `categoryId`, `mood`, `tags`, `color`, `parentId`. `title` is cleared with an empty string. The non-nullable `title`, `content`, `time` and `visible` ignore an explicit `null`. |
+| `contentFormat` | Read: `markdown` (default), `text`, `document` (raw Tiptap JSON object). Write: `markdown` (default), `text`, `document`, where `document` has to be a valid Tiptap document or the call fails with `-32602`. |
+| `linkStyle` | `uri` (default) keeps the target of a diary mention (`[label](moodiary://diary/<id>)` in Markdown, `label (uri)` in text); `label` keeps only the label. |
+| `excerpt` | `plain` (default), `markdown` or `none`. |
+| `sort` | `list_diaries`: `newest` (default), `oldest`, `modified`. `search_diaries`: `relevance` (default), `newest`, `oldest`. |
+| Dates | `startDate` / `endDate`, inclusive, ISO-8601; a bare `yyyy-MM-dd` is one local day. |
+| Paging | `limit` (default 20, capped at 100) and `offset`. List results carry `count`, `offset`, `limit` and `hasMore`. |
+| Result shapes | Lists answer `{<collection>: [...], count, offset, limit, hasMore}`; writes answer `{created|updated|deleted: true, diary|category: {...}}`. |
+| Errors | A wrong argument, an unknown enum or an unknown id the call *references* (a `categoryId`, `parentId` or diary id inside a filter) is JSON-RPC `-32602`; an id the tool *acts on* that does not exist is a normal result with `isError: true`. |
+
+Behaviour worth knowing before composing calls:
+
+- `list_diaries` `tag` is an exact, case-sensitive tag match. The full text
+  index has no tag index, so this filter reads every visible diary and pages in
+  memory; the same cost applies to `list_tags`.
+- `search_diaries` searches text only and deliberately has no tag filter.
+- `list_categories` reports two numbers per node: `diaries` is the direct count,
+  `diariesTotal` also counts every descendant.
+- `get_stats` keeps `sum(months.diaries) + olderDiaries + futureDiaries ==
+  visibleDiaries`, and `monthsWindow` names the months the buckets cover.
+- `get_diary_links` lists `dangling`: diary ids the body mentions but the
+  database does not hold; `get_diary` carries the same graph unless
+  `includeLinks=false`.
+- `delete_category` answers the real `reparentedChildren` ids: a successful
+  delete re-homes the former children to the root category.
 
 ### Body representations
 
 Diary bodies are stored as Tiptap documents, so the read and write tools take an
 explicit representation instead of guessing:
 
-- `get_diary`: `format` is `markdown` (default), `text`, `tiptap` or `json`; the
-  latter two return the raw stored document and win over the render flags.
-  `renderMarkdown` (default `true`) set to `false` returns the plain text body
-  instead of Markdown — no syntax, media as `[image: name]` placeholders.
-  `renderLinks` (default `true`) set to `false` renders a diary link (double
-  link) as its label text instead of `[label](moodiary://diary/<id>)`; it only
-  affects Markdown output. The answer's `contentFormat` names the representation
-  actually returned.
-- `list_diaries` / `search_diaries`: the preview is one plain text line, cut to
-  200 characters. `renderMarkdown` (default `false`) set to `true` returns the
-  Markdown body excerpt instead, so headings and lists survive.
-- `create_diary` / `update_diary`: `contentFormat` is `markdown` (default) or
-  `text`. The default parses `content` as Markdown and stores the editor
-  document, `text` stores literal paragraphs so Markdown syntax stays visible;
-  it applies to `content` only.
+- `get_diary`: `contentFormat` is `markdown` (default), `text` or `document`.
+  `markdown` renders the stored document as Markdown, `text` returns the plain
+  body (no syntax, media as `[image: name]` placeholders), and `document`
+  returns the raw stored Tiptap document as a JSON object, subject to the
+  100 000 character result limit. The answer's `contentFormat` names the
+  representation actually returned. `linkStyle` (default `uri`) decides whether
+  a diary mention keeps its target in both Markdown and text output, and
+  `includeLinks` (default `true`) set to `false` omits the `links` graph.
+- `list_diaries` / `search_diaries`: `excerpt` picks the preview — `plain`
+  (default) is one line of plain text cut to 200 characters, `markdown` is the
+  Markdown body cut to the same length so headings and lists survive, and `none`
+  drops it. In search hits the highlighted search snippet is always `excerpt`
+  and the projection is `preview`, so `excerpt=none` only drops the preview.
+- `create_diary` / `update_diary`: `contentFormat` is `markdown` (default),
+  `text` or `document`. The default parses `content` as Markdown and stores the
+  editor document, `text` stores literal paragraphs so Markdown syntax stays
+  visible, and `document` takes a Tiptap document JSON object verbatim; it
+  applies to `content` only. On update, an omitted field is left unchanged and
+  an explicit `null` clears a nullable one.
 
 ## Lifecycle
 

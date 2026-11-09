@@ -1,5 +1,5 @@
-/// Diary read and write tools: list, read, create, update, soft delete, search,
-/// tags and the link graph of one diary.
+/// Diary read and write tools: list, read, create, update, delete, search, tags
+/// and the link graph of one diary.
 library;
 
 import 'package:moodiary_data/moodiary_data.dart';
@@ -11,107 +11,7 @@ import '../protocol/json_rpc.dart';
 import '../protocol/mcp_types.dart';
 import '../registry/mcp_registry.dart';
 import 'arguments.dart';
-
-/// Both accepted shapes of the `sort` argument.
-const List<String> _sortValues = ['timeDesc', 'timeAsc'];
-
-/// Body representations `get_diary` can answer with. The first two are raw
-/// stored documents and win over `renderMarkdown`.
-const List<String> _contentFormats = ['markdown', 'text', 'tiptap', 'json'];
-
-/// How `create_diary` and `update_diary` interpret the body they are handed.
-const List<String> _writeContentFormats = ['markdown', 'text'];
-
-const Map<String, dynamic> _categoryIdSchema = {
-  'type': 'string',
-  'description': 'Only diaries filed under this category id.',
-};
-
-const Map<String, dynamic> _startSchema = {
-  'type': 'string',
-  'description':
-      'Inclusive ISO-8601 lower bound on the diary time. A bare yyyy-MM-dd '
-      'means local midnight of that day.',
-};
-
-const Map<String, dynamic> _endSchema = {
-  'type': 'string',
-  'description':
-      'Inclusive ISO-8601 upper bound on the diary time. A bare yyyy-MM-dd '
-      'covers that whole local day.',
-};
-
-const Map<String, dynamic> _limitSchema = {
-  'type': 'integer',
-  'minimum': 1,
-  'maximum': 100,
-  'default': 20,
-  'description': 'Page size, capped at 100.',
-};
-
-const Map<String, dynamic> _offsetSchema = {
-  'type': 'integer',
-  'minimum': 0,
-  'default': 0,
-  'description': 'Number of matching diaries to skip.',
-};
-
-const Map<String, dynamic> _idSchema = {
-  'type': 'string',
-  'description': 'Diary id (uuid v7) as returned by the list tools.',
-};
-
-/// The excerpt projection flag shared by the list shaped read tools.
-const Map<String, dynamic> _renderMarkdownExcerptSchema = {
-  'type': 'boolean',
-  'default': false,
-  'description':
-      'false keeps the single line plain excerpt; true returns the Markdown '
-      'body cut to $mcpExcerptChars characters, so headings and lists survive.',
-};
-
-/// The body representation a write tool parses its `content` with.
-const Map<String, dynamic> _writeContentFormatSchema = {
-  'type': 'string',
-  'enum': _writeContentFormats,
-  'default': 'markdown',
-  'description':
-      'markdown parses content as Markdown and stores the editor document '
-      '(formatting is preserved); text stores it as plain text paragraphs, so '
-      'Markdown syntax stays literal. Applies only to content.',
-};
-
-const Map<String, dynamic> _moodSchema = {
-  'description':
-      'Mood as awful, bad, okay, good or great, or as a score from 1 to 5. An '
-      'empty string clears it.',
-  'oneOf': [
-    {
-      'type': 'string',
-      'enum': ['awful', 'bad', 'okay', 'good', 'great'],
-    },
-    {'type': 'integer', 'minimum': 1, 'maximum': 5},
-  ],
-};
-
-const Map<String, dynamic> _tagsSchema = {
-  'type': 'array',
-  'items': {'type': 'string'},
-  'description': 'Replaces the whole tag list; the order is kept.',
-};
-
-const Map<String, dynamic> _timeSchema = {
-  'type': 'string',
-  'description':
-      'ISO-8601 instant the diary is about. A bare yyyy-MM-dd means local '
-      "midnight. Defaults to now for create and is left unchanged by update.",
-};
-
-const String _mediaRefusal =
-    'Media cannot be attached through MCP: images, audio, video and file '
-    'attachments only come from the app editor. Argument level media fields '
-    'are rejected, and replacing the body drops the media references the new '
-    'body no longer contains.';
+import 'schemas.dart';
 
 void registerDiaryTools(
   McpRegistry registry, {
@@ -124,26 +24,30 @@ void registerDiaryTools(
       title: 'List diaries',
       description:
           'Lists diary summaries, newest first by default: id, title, time in '
-          'UTC and local time, last modified, category, mood, tags, an excerpt '
-          'and whether the diary is visible. The excerpt is a single line of '
-          'plain text up to 200 characters; set renderMarkdown=true to get the '
-          'Markdown body cut to the same length instead. Page with limit and '
-          'offset. Bodies are not included; call get_diary for those.',
+          'UTC and local time, last modification, category, mood, tags, a '
+          'preview and whether the diary is visible. Bodies are not included; '
+          'call get_diary for those. Page with limit and offset, hasMore says '
+          'whether another page exists. tag is an exact tag match; the search '
+          'index has no tag index, so a tag filter reads every visible diary '
+          'and pages in memory, which is slower than the other filters. '
+          'excerpt picks the preview: plain (default) is one line of plain '
+          'text, markdown keeps headings and lists, none drops it.',
       inputSchema: {
         'type': 'object',
         'properties': {
-          'categoryId': _categoryIdSchema,
-          'start': _startSchema,
-          'end': _endSchema,
-          'sort': {
+          'categoryId': categoryIdSchema,
+          'tag': {
             'type': 'string',
-            'enum': _sortValues,
-            'default': 'timeDesc',
-            'description': 'Diary time order.',
+            'description':
+                'Exact tag to filter by, as list_tags spells it '
+                '(case-sensitive).',
           },
-          'renderMarkdown': _renderMarkdownExcerptSchema,
-          'limit': _limitSchema,
-          'offset': _offsetSchema,
+          'startDate': startDateSchema,
+          'endDate': endDateSchema,
+          'sort': diarySortSchema,
+          'limit': limitSchema,
+          'offset': offsetSchema,
+          'excerpt': excerptSchema,
         },
       },
       readOnly: true,
@@ -158,45 +62,29 @@ void registerDiaryTools(
       name: 'get_diary',
       title: 'Read one diary',
       description:
-          'Reads one diary with its metadata. format=markdown (default) renders '
-          'the stored document as Markdown; text returns the plain text body; '
-          'json and tiptap return the raw stored document (tiptap normalized to '
-          'the current schema version) and win over renderMarkdown. '
-          'renderMarkdown=false returns the plain text body instead of Markdown '
-          '(no syntax, media as [image: name] placeholders). renderLinks=false '
-          'renders a diary link (double link) as its label text instead of '
-          '[label](moodiary://diary/<id>); it only affects Markdown output. '
-          'contentFormat reports the representation actually returned. Returns '
-          'metadata too: category, mood, tags, time, media file names and diary '
-          'links. '
-          '$_mediaRefusal',
+          'Reads one diary with its metadata. contentFormat=markdown (default) '
+          'renders the stored document as Markdown; text returns the plain body '
+          '(no syntax, media as [image: name] placeholders); document returns '
+          'the raw stored Tiptap document as a JSON object and is subject to '
+          'the $mcpResultChars character result limit. linkStyle=uri (default) '
+          'renders a diary mention as [label](moodiary://diary/<id>), label '
+          'keeps only the label. includeLinks=false omits the links graph '
+          '(forward links, backlinks and dangling ids). The result also carries '
+          'the summary fields, type, media file names, the recorded place and '
+          'weather, and the moodiary:// URI. Attach media with add_diary_image '
+          'or add_diary_attachment; read it with list_diary_media.',
       inputSchema: {
         'type': 'object',
         'properties': {
-          'id': _idSchema,
-          'format': {
-            'type': 'string',
-            'enum': _contentFormats,
-            'default': 'markdown',
-            'description':
-                'Body representation. tiptap and json ignore the render flags '
-                'and return the raw document.',
-          },
-          'renderMarkdown': {
+          'id': diaryIdSchema,
+          'contentFormat': readContentFormatSchema,
+          'linkStyle': linkStyleSchema,
+          'includeLinks': {
             'type': 'boolean',
             'default': true,
             'description':
-                'false returns the plain text body instead of Markdown: no '
-                'syntax and media as [image: name] placeholders. Ignored when '
-                'format is tiptap or json.',
-          },
-          'renderLinks': {
-            'type': 'boolean',
-            'default': true,
-            'description':
-                'false renders diary links (double links) as their label text '
-                'instead of [label](moodiary://diary/<id>). Ignored unless '
-                'Markdown is returned.',
+                'false omits links, the graph of forward links, backlinks and '
+                'dangling diary ids of this diary.',
           },
         },
         'required': ['id'],
@@ -213,13 +101,15 @@ void registerDiaryTools(
       name: 'create_diary',
       title: 'Create a diary',
       description:
-          'Creates one diary. content is parsed as Markdown by default and '
-          'stored through the editor conversion, so formatting such as headings, '
-          'lists and emphasis is preserved; set contentFormat=text to store it '
-          'as plain text paragraphs, where Markdown syntax stays literal. Read '
-          'the result back with get_diary. Returns the new id and its summary. '
-          'Media cannot be added here: '
-          '$_mediaRefusal',
+          'Creates one diary and returns its summary. content is required; '
+          'contentFormat=markdown (default) parses it as Markdown and stores '
+          'the editor document so headings, lists and emphasis survive, text '
+          'stores literal paragraphs so Markdown syntax stays visible, and '
+          'document expects a Tiptap document JSON object and refuses anything '
+          'else with invalid params. visible defaults to true (the summary '
+          'reports it as show); title may be empty. Media is not part of the '
+          'body here: attach it afterwards with add_diary_image or '
+          'add_diary_attachment.',
       inputSchema: {
         'type': 'object',
         'properties': {
@@ -230,19 +120,19 @@ void registerDiaryTools(
           'content': {
             'type': 'string',
             'description':
-                'Diary body; required. Parsed as Markdown unless '
-                'contentFormat=text.',
+                'Diary body; required. Interpreted according to contentFormat.',
           },
-          'contentFormat': _writeContentFormatSchema,
-          'time': _timeSchema,
-          'categoryId': _categoryIdSchema,
-          'mood': _moodSchema,
-          'tags': _tagsSchema,
-          'show': {
-            'type': 'boolean',
-            'default': true,
-            'description': 'false files the diary in the recycle bin.',
+          'contentFormat': writeContentFormatSchema,
+          'time': {
+            'type': 'string',
+            'description':
+                'ISO-8601 instant the diary is about. A bare yyyy-MM-dd means '
+                'local midnight. Defaults to now.',
           },
+          'categoryId': categoryIdSchema,
+          'mood': moodSchema,
+          'tags': tagsSchema,
+          'visible': visibleSchema,
         },
         'required': ['content'],
       },
@@ -256,15 +146,19 @@ void registerDiaryTools(
       name: 'update_diary',
       title: 'Update a diary',
       description:
-          'Updates the given fields of one diary and leaves every other field '
-          'alone; lastModified is bumped. content replaces the whole body, '
-          'parsed as Markdown by default so formatting is kept, or as plain text '
-          'paragraphs with contentFormat=text. Send an empty string for '
-          'categoryId or mood to clear it. $_mediaRefusal',
+          'Updates the given fields of one diary and leaves every omitted field '
+          'unchanged; lastModified is bumped. Send null to clear a nullable '
+          'field: categoryId, mood and tags (null or an empty array); '
+          'title is cleared with an empty string. content, time and visible are '
+          'not nullable, so an explicit null for them is ignored. content '
+          'replaces the whole body and contentFormat selects how it is '
+          'interpreted (markdown default, text, or document for a Tiptap '
+          'document JSON object). An unknown category id is invalid params; an '
+          'unknown diary id is a tool error.',
       inputSchema: {
         'type': 'object',
         'properties': {
-          'id': _idSchema,
+          'id': diaryIdSchema,
           'title': {
             'type': 'string',
             'description': 'New title; an empty string clears it.',
@@ -272,24 +166,20 @@ void registerDiaryTools(
           'content': {
             'type': 'string',
             'description':
-                'New body; replaces the old one. Parsed as Markdown unless '
-                'contentFormat=text.',
+                'New body; replaces the old one. Interpreted according to '
+                'contentFormat.',
           },
-          'contentFormat': _writeContentFormatSchema,
-          'time': _timeSchema,
-          'categoryId': {
+          'contentFormat': writeContentFormatSchema,
+          'time': {
             'type': 'string',
             'description':
-                'New category id; an empty string removes the category.',
+                'New ISO-8601 instant. A bare yyyy-MM-dd means local midnight. '
+                'An explicit null is ignored.',
           },
-          'mood': _moodSchema,
-          'tags': _tagsSchema,
-          'show': {
-            'type': 'boolean',
-            'description':
-                'true keeps the diary visible, false moves it to the recycle '
-                'bin.',
-          },
+          'categoryId': categoryIdSchema,
+          'mood': moodSchema,
+          'tags': tagsSchema,
+          'visible': visibleSchema,
         },
         'required': ['id'],
       },
@@ -304,20 +194,23 @@ void registerDiaryTools(
       name: 'delete_diary',
       title: 'Delete a diary',
       description:
-          "Deletes one diary and reports whether it existed. mode=delete "
-          '(default) removes the diary row and its local media files and leaves '
-          'a sync tombstone so other devices delete it too. mode=recycle is the '
-          "app's recycle bin: the diary is hidden (show=false) and can be "
-          'restored from the app.',
+          'Deletes one diary and reports the mode that was applied. '
+          'mode=permanent (default) removes the row and its local media files '
+          'and leaves a sync tombstone so other devices delete it too; '
+          'mode=recycle is the app recycle bin, which hides the diary '
+          '(show=false) and can be undone in the app. title is the stored '
+          'title, empty when the diary had none. An unknown id is a tool error.',
       inputSchema: {
         'type': 'object',
         'properties': {
-          'id': _idSchema,
+          'id': diaryIdSchema,
           'mode': {
             'type': 'string',
-            'enum': ['delete', 'recycle'],
-            'default': 'delete',
-            'description': 'Permanent delete versus moving to the recycle bin.',
+            'enum': deleteModeValues,
+            'default': 'permanent',
+            'description':
+                'permanent removes the diary, recycle moves it to the recycle '
+                'bin.',
           },
         },
         'required': ['id'],
@@ -334,13 +227,15 @@ void registerDiaryTools(
       name: 'search_diaries',
       title: 'Search diaries',
       description:
-          'Full text search over diary titles and bodies (Chinese words, pinyin '
-          'and Latin text all match). Returns the total hit count and one page '
-          'of hits. Each hit carries the search-highlighted excerpt, where '
-          'matches are wrapped in **double asterisks**, plus a preview: the '
-          'single line plain body by default, or the Markdown body cut to '
-          '$mcpExcerptChars characters when renderMarkdown=true. The excerpt is '
-          'always the plain search snippet.',
+          'Full text search over diary titles and bodies; Chinese words, '
+          'pinyin and Latin text all match. Search is text only: there is no '
+          'tag filter here, use list_diaries tag instead. Returns the total hit '
+          'count and one page of hits. Each hit carries the search '
+          'highlighted titleHighlight and excerpt, where matches are wrapped in '
+          '**double asterisks**, plus a preview: the excerpt projection, which '
+          'is omitted with excerpt=none while the highlighted excerpt stays. '
+          'sort=relevance (default) ranks by match score; newest and oldest '
+          'order by diary time.',
       inputSchema: {
         'type': 'object',
         'properties': {
@@ -348,12 +243,13 @@ void registerDiaryTools(
             'type': 'string',
             'description': 'Words to search for; required.',
           },
-          'categoryId': _categoryIdSchema,
-          'start': _startSchema,
-          'end': _endSchema,
-          'renderMarkdown': _renderMarkdownExcerptSchema,
-          'limit': _limitSchema,
-          'offset': _offsetSchema,
+          'categoryId': categoryIdSchema,
+          'startDate': startDateSchema,
+          'endDate': endDateSchema,
+          'sort': searchSortSchema,
+          'limit': limitSchema,
+          'offset': offsetSchema,
+          'excerpt': excerptSchema,
         },
         'required': ['query'],
       },
@@ -373,11 +269,14 @@ void registerDiaryTools(
       name: 'get_diary_links',
       title: 'Read diary links',
       description:
-          'Lists the diaries this diary links to (forward links) and the diaries '
-          'that link to it (backlinks), with id, title and time.',
+          'Lists the diaries this diary links to (forward), the diaries that '
+          'link to it (backlinks) and the ids it mentions that do not exist '
+          '(dangling), each with id, title and time. A dangling id is a '
+          'moodiary://diary/<id> link to a diary that was deleted or never '
+          'synced to this device.',
       inputSchema: {
         'type': 'object',
-        'properties': {'id': _idSchema},
+        'properties': {'id': diaryIdSchema},
         'required': ['id'],
       },
       readOnly: true,
@@ -397,15 +296,7 @@ void registerDiaryTools(
           'over every visible diary and is linear in the number of diaries.',
       inputSchema: {
         'type': 'object',
-        'properties': {
-          'limit': {
-            'type': 'integer',
-            'minimum': 1,
-            'maximum': 500,
-            'default': 50,
-            'description': 'Number of tags to return, capped at 500.',
-          },
-        },
+        'properties': {'limit': tagLimitSchema},
       },
       readOnly: true,
       idempotent: true,
@@ -415,6 +306,129 @@ void registerDiaryTools(
   );
 }
 
+/// The `categoryId` filter of the list and search tools, validated up front.
+///
+/// An unknown id used to return an empty page, which a model reads as "that
+/// category has no diaries" instead of "that category does not exist"; every
+/// tool that filters by category now fails the way `create_diary` and
+/// `update_diary` already did.
+Future<String?> _categoryFilter(
+  Args args,
+  CategoryRepository categories,
+) async {
+  final id = args.optionalText('categoryId');
+  if (id == null) return null;
+  if (await categories.getCategoryById(id) == null) {
+    throw JsonRpcException(
+      JsonRpcCode.invalidParams,
+      '${args.subject}: categoryId "$id" is not a known category; call '
+      'list_categories first',
+    );
+  }
+  return id;
+}
+
+/// One page of the in-memory tag filter.
+///
+/// The database has no tag index, so the tag filter has to read the visible
+/// diaries (already in the requested order) and page here; it is linear in the
+/// number of diaries, like `list_tags`.
+List<Diary> _tagPage(
+  List<Diary> visible, {
+  required String tag,
+  required String? categoryId,
+  required DateTime? start,
+  required DateTime? end,
+  required int offset,
+  required int limit,
+}) {
+  final matched = [
+    for (final diary in visible)
+      if (diary.tags.contains(tag) &&
+          (categoryId == null || diary.categoryId == categoryId) &&
+          (start == null || !diary.time.isBefore(start)) &&
+          (end == null || !diary.time.isAfter(end)))
+        diary,
+  ];
+  return matched.skip(offset).take(limit).toList();
+}
+
+/// A diary summary with the requested excerpt projection.
+///
+/// [diarySummary] always fills `excerpt`; `excerpt=none` is this catalog's way
+/// of asking for smaller summaries, so the key is dropped rather than sent
+/// empty.
+Map<String, dynamic> _summary(
+  Diary diary, {
+  String? categoryName,
+  required String excerpt,
+}) {
+  final summary = diarySummary(
+    diary,
+    categoryName: categoryName,
+    renderMarkdown: excerpt == 'markdown',
+  );
+  if (excerpt == 'none') summary.remove('excerpt');
+  return summary;
+}
+
+/// The mutation result shape the write tools answer with.
+Future<McpToolResult> _mutation(
+  DiaryRepository diaries,
+  CategoryRepository categories,
+  Diary diary, {
+  required bool created,
+}) async {
+  final names = await categoryNames(categories);
+  return McpToolResult.json({
+    if (created) 'created': true else 'updated': true,
+    'diary': _summary(
+      diary,
+      categoryName: names[diary.categoryId],
+      excerpt: 'plain',
+    ),
+  });
+}
+
+/// Maps the `contentFormat` argument of a write tool onto the shared codec;
+/// absent means Markdown, the same default as the assistant tools.
+DiaryContentFormat _writeFormat(String? value) => switch (value) {
+  'text' => DiaryContentFormat.plainText,
+  'document' => DiaryContentFormat.document,
+  _ => DiaryContentFormat.markdown,
+};
+
+/// Maps a write failure onto the tool surface: a bad argument is invalid params
+/// (`-32602`, the client can repair the call), a missing row is an `isError`
+/// result (the call itself was well formed).
+McpToolResult _writeFailure(String subject, DiaryOpsException e, String id) =>
+    switch (e.failure) {
+      DiaryOpsFailure.invalidCategory => throw JsonRpcException(
+        JsonRpcCode.invalidParams,
+        '$subject: categoryId "${e.categoryId}" is not a known category; call '
+        'list_categories first',
+      ),
+      DiaryOpsFailure.invalidDocument => throw JsonRpcException(
+        JsonRpcCode.invalidParams,
+        '$subject: content is not a Tiptap document; contentFormat="document" '
+        'expects a JSON object with type "doc"',
+      ),
+      DiaryOpsFailure.emptyContent => throw JsonRpcException(
+        JsonRpcCode.invalidParams,
+        '$subject: content must not be empty',
+      ),
+      DiaryOpsFailure.noChanges => throw JsonRpcException(
+        JsonRpcCode.invalidParams,
+        '$subject: provide at least one field to change',
+      ),
+      DiaryOpsFailure.notFound => McpToolResult.error(
+        '$subject: no diary with id="$id".',
+      ),
+      final failure => McpToolResult.error(
+        '$subject: the diary could not be written (${failure.name}).',
+      ),
+    };
+
 Future<McpToolResult> _listDiaries(
   McpCallContext call,
   Map<String, dynamic> arguments, {
@@ -422,36 +436,54 @@ Future<McpToolResult> _listDiaries(
   required CategoryRepository categories,
 }) async {
   final args = Args('list_diaries', arguments);
-  final categoryId = args.optionalText('categoryId');
-  final start = args.optionalDate('start');
-  final end = args.optionalDate('end', endOfDay: true);
+  final categoryId = await _categoryFilter(args, categories);
+  final tag = args.optionalText('tag');
+  final start = args.optionalDate('startDate');
+  final end = args.optionalDate('endDate', endOfDay: true);
   args.requireOrderedRange(start, end);
-  final sort = args.optionalEnum('sort', _sortValues) ?? 'timeDesc';
-  final renderMarkdown = args.optionalBool('renderMarkdown') ?? false;
+  final sort = switch (args.optionalEnum('sort', diarySortValues)) {
+    'oldest' => DiarySort.timeAsc,
+    'modified' => DiarySort.lastModifiedDesc,
+    _ => DiarySort.timeDesc,
+  };
+  final excerpt = args.optionalEnum('excerpt', excerptValues) ?? 'plain';
   final limit = args.optionalInt('limit', fallback: 20, min: 1, max: 100);
   final offset = args.optionalInt('offset', fallback: 0, min: 0, max: 1000000);
 
-  final page = await DiaryQueries(diaries: diaries).page(
-    categoryId: categoryId,
-    start: start,
-    end: end,
-    sort: sort == 'timeAsc' ? DiarySort.timeAsc : DiarySort.timeDesc,
-    offset: offset,
-    limit: limit + 1,
-  );
+  final List<Diary> page;
+  if (tag == null) {
+    page = await DiaryQueries(diaries: diaries).page(
+      categoryId: categoryId,
+      start: start,
+      end: end,
+      sort: sort,
+      offset: offset,
+      limit: limit + 1,
+    );
+  } else {
+    page = _tagPage(
+      await diaries.getDiaryByCategory(sort: sort),
+      tag: tag,
+      categoryId: categoryId,
+      start: start,
+      end: end,
+      offset: offset,
+      limit: limit + 1,
+    );
+  }
   final names = await categoryNames(categories);
-  final diaries_ = page.take(limit).toList();
-  call.reportProgress(diaries_.length, message: 'list_diaries');
+  final rows = page.take(limit).toList();
+  call.reportProgress(rows.length, message: 'list_diaries');
   return McpToolResult.json({
     'diaries': [
-      for (final diary in diaries_)
-        diarySummary(
+      for (final diary in rows)
+        _summary(
           diary,
           categoryName: names[diary.categoryId],
-          renderMarkdown: renderMarkdown,
+          excerpt: excerpt,
         ),
     ],
-    'count': diaries_.length,
+    'count': rows.length,
     'offset': offset,
     'limit': limit,
     'hasMore': page.length > limit,
@@ -465,53 +497,45 @@ Future<McpToolResult> _getDiary(
 }) async {
   final args = Args('get_diary', arguments);
   final id = args.requireText('id');
-  final requestedFormat =
-      args.optionalEnum('format', _contentFormats) ?? 'markdown';
-  final renderMarkdown = args.optionalBool('renderMarkdown') ?? true;
-  final renderLinks = args.optionalBool('renderLinks') ?? true;
-  final rawFormat = requestedFormat == 'tiptap' || requestedFormat == 'json';
+  final contentFormat =
+      args.optionalEnum('contentFormat', readContentFormatValues) ?? 'markdown';
+  final linkStyle = args.optionalEnum('linkStyle', linkStyleValues) ?? 'uri';
+  final includeLinks = args.optionalBool('includeLinks') ?? true;
 
   final diary = await diaries.getDiaryByBusinessId(id);
   if (diary == null) {
     return McpToolResult.error('get_diary: no diary with id="$id".');
   }
-  final names = await categoryNames(categories);
-  if (rawFormat && diary.content.length > mcpResultChars) {
+  if (contentFormat == 'document' && diary.content.length > mcpResultChars) {
     return McpToolResult.error(
       'get_diary: the stored document of id="$id" is '
       '${diary.content.length} characters, more than the $mcpResultChars '
-      'character result limit; read it as plain text with renderMarkdown=false '
-      'or format="text" instead.',
+      'character result limit; read it as text (contentFormat="text") or as '
+      'Markdown instead.',
     );
   }
 
+  final style = linkStyle == 'label'
+      ? DiaryLinkStyle.label
+      : DiaryLinkStyle.uri;
   final ({Object? content, bool truncated}) projection;
-  final String format;
-  if (requestedFormat == 'tiptap') {
-    projection = (
-      content: decodeJsonOrText(TiptapContent.normalize(diary.content)),
-      truncated: false,
-    );
-    format = 'tiptap';
-  } else if (requestedFormat == 'json') {
-    projection = (content: decodeJsonOrText(diary.content), truncated: false);
-    format = 'json';
-  } else if (requestedFormat == 'text') {
-    projection = _capped(diaryToText(diary));
-    format = 'text';
-  } else if (renderMarkdown) {
-    projection = _capped(diaryToMarkdown(diary, renderLinks: renderLinks));
-    format = 'markdown';
-  } else {
-    projection = _capped(diaryToText(diary));
-    format = 'text';
+  switch (contentFormat) {
+    case 'document':
+      projection = (
+        content: decodeJsonOrText(TiptapContent.normalize(diary.content)),
+        truncated: false,
+      );
+    case 'text':
+      projection = _capped(diaryToText(diary, linkStyle: style));
+    default:
+      projection = _capped(diaryToMarkdown(diary, linkStyle: style));
   }
 
-  final links = await DiaryQueries(diaries: diaries).linkSummary(diary);
+  final names = await categoryNames(categories);
   return McpToolResult.json({
-    ...diarySummary(diary, categoryName: names[diary.categoryId]),
+    ..._summary(diary, categoryName: names[diary.categoryId], excerpt: 'plain'),
     'type': diary.type,
-    'contentFormat': format,
+    'contentFormat': contentFormat,
     'content': projection.content,
     'contentTruncated': projection.truncated,
     'placeId': diary.placeId,
@@ -527,7 +551,8 @@ Future<McpToolResult> _getDiary(
       'videos': diary.videoName,
       'files': diary.fileName,
     },
-    'links': links,
+    if (includeLinks)
+      'links': await DiaryQueries(diaries: diaries).linkSummary(diary),
     'uri': '$diaryUriPrefix${diary.id}',
   });
 }
@@ -538,28 +563,21 @@ Future<McpToolResult> _getDiary(
   return (content: capped, truncated: capped != text);
 }
 
-/// Maps the `contentFormat` argument onto the shared write codec; absent means
-/// Markdown, the same default as the assistant tools.
-DiaryContentFormat _writeFormat(String? value) => value == 'text'
-    ? DiaryContentFormat.plainText
-    : DiaryContentFormat.markdown;
-
 Future<McpToolResult> _createDiary(
   Map<String, dynamic> arguments, {
   required DiaryRepository diaries,
   required CategoryRepository categories,
 }) async {
   final args = Args('create_diary', arguments);
-  args.rejectMediaArguments();
   final content = args.requireText('content');
   final contentFormat = _writeFormat(
-    args.optionalEnum('contentFormat', _writeContentFormats),
+    args.optionalEnum('contentFormat', writeContentFormatValues),
   );
   final title = args.optionalText('title') ?? '';
   final time = args.optionalDate('time');
   final mood = args.optionalMood('mood');
   final tags = args.optionalStringList('tags') ?? const <String>[];
-  final show = args.optionalBool('show') ?? true;
+  final visible = args.optionalBool('visible') ?? true;
   final categoryId = args.optionalText('categoryId');
 
   final Diary diary;
@@ -572,19 +590,12 @@ Future<McpToolResult> _createDiary(
       categoryId: categoryId,
       time: time,
       tags: tags,
-      show: show,
+      show: visible,
     );
   } on DiaryOpsException catch (e) {
-    if (e.failure == DiaryOpsFailure.invalidCategory) {
-      throw JsonRpcException(
-        JsonRpcCode.invalidParams,
-        'create_diary: categoryId "${e.categoryId}" is not a known category; '
-        'call list_categories first',
-      );
-    }
-    rethrow;
+    return _writeFailure('create_diary', e, '');
   }
-  return _createdOrUpdated(diaries, categories, diary, created: true);
+  return _mutation(diaries, categories, diary, created: true);
 }
 
 Future<McpToolResult> _updateDiary(
@@ -593,24 +604,26 @@ Future<McpToolResult> _updateDiary(
   required CategoryRepository categories,
 }) async {
   final args = Args('update_diary', arguments);
-  args.rejectMediaArguments();
   final id = args.requireText('id');
   final contentFormat = _writeFormat(
-    args.optionalEnum('contentFormat', _writeContentFormats),
+    args.optionalEnum('contentFormat', writeContentFormatValues),
   );
+  // Nullable fields read `has`, so a sent null (or an empty string for a text
+  // field) clears them; the non-nullable ones read `contains`, so an explicit
+  // null leaves them untouched.
   final patch = DiaryPatch(
     title: args.contains('title') ? args.text('title') : null,
     content: args.contains('content') ? args.requireText('content') : null,
-    mood: args.contains('mood') ? args.optionalMood('mood') : null,
-    moodSet: args.contains('mood'),
-    categoryId: args.contains('categoryId')
+    mood: args.has('mood') ? args.optionalMood('mood') : null,
+    moodSet: args.has('mood'),
+    categoryId: args.has('categoryId')
         ? (args.optionalText('categoryId') ?? '')
         : null,
     time: args.contains('time') ? args.optionalDate('time') : null,
-    tags: args.contains('tags')
+    tags: args.has('tags')
         ? (args.optionalStringList('tags') ?? const <String>[])
         : null,
-    show: args.contains('show') ? args.optionalBool('show') : null,
+    show: args.contains('visible') ? args.optionalBool('visible') : null,
   );
   if (patch.isEmpty) {
     throw const JsonRpcException(
@@ -627,39 +640,10 @@ Future<McpToolResult> _updateDiary(
           format: contentFormat,
           index: IndexMode.inline,
         );
-    return await _createdOrUpdated(diaries, categories, next, created: false);
+    return await _mutation(diaries, categories, next, created: false);
   } on DiaryOpsException catch (e) {
-    return switch (e.failure) {
-      DiaryOpsFailure.notFound => McpToolResult.error(
-        'update_diary: no diary with id="$id".',
-      ),
-      DiaryOpsFailure.invalidCategory => throw JsonRpcException(
-        JsonRpcCode.invalidParams,
-        'update_diary: categoryId "${e.categoryId}" is not a known category; '
-        'call list_categories first',
-      ),
-      DiaryOpsFailure.noChanges => throw const JsonRpcException(
-        JsonRpcCode.invalidParams,
-        'update_diary: provide at least one field to change',
-      ),
-      _ => McpToolResult.error('update_diary: could not update the diary.'),
-    };
+    return _writeFailure('update_diary', e, id);
   }
-}
-
-Future<McpToolResult> _createdOrUpdated(
-  DiaryRepository diaries,
-  CategoryRepository categories,
-  Diary diary, {
-  required bool created,
-}) async {
-  final names = await categoryNames(categories);
-  return McpToolResult.json({
-    'created': created,
-    'updated': !created,
-    ...diarySummary(diary, categoryName: names[diary.categoryId]),
-    'uri': '$diaryUriPrefix${diary.id}',
-  });
 }
 
 Future<McpToolResult> _deleteDiary(
@@ -669,8 +653,7 @@ Future<McpToolResult> _deleteDiary(
 }) async {
   final args = Args('delete_diary', arguments);
   final id = args.requireText('id');
-  final mode =
-      args.optionalEnum('mode', const ['delete', 'recycle']) ?? 'delete';
+  final mode = args.optionalEnum('mode', deleteModeValues) ?? 'permanent';
   final recycle = mode == 'recycle';
 
   try {
@@ -679,14 +662,12 @@ Future<McpToolResult> _deleteDiary(
           id: id,
           mode: recycle ? DiaryDeleteMode.recycle : DiaryDeleteMode.permanent,
         );
-    final title = result.diary.title.trim().isEmpty
-        ? 'Untitled'
-        : result.diary.title.trim();
-    return McpToolResult.text(
-      recycle
-          ? 'delete_diary: moved "$title" (id=$id) to the recycle bin.'
-          : 'delete_diary: deleted "$title" (id=$id) and its local media files.',
-    );
+    return McpToolResult.json({
+      'deleted': true,
+      'id': id,
+      'title': result.diary.title.trim(),
+      'mode': mode,
+    });
   } on DiaryOpsException {
     return McpToolResult.error('delete_diary: no diary with id="$id".');
   }
@@ -700,45 +681,64 @@ Future<McpToolResult> _searchDiaries(
 }) async {
   final args = Args('search_diaries', arguments);
   final query = args.requireText('query');
-  final categoryId = args.optionalText('categoryId');
-  final start = args.optionalDate('start');
-  final end = args.optionalDate('end', endOfDay: true);
+  final categoryId = await _categoryFilter(args, categories);
+  final start = args.optionalDate('startDate');
+  final end = args.optionalDate('endDate', endOfDay: true);
   args.requireOrderedRange(start, end);
+  final sort = switch (args.optionalEnum('sort', searchSortValues)) {
+    'newest' => SearchSort.timeDesc,
+    'oldest' => SearchSort.timeAsc,
+    _ => SearchSort.relevance,
+  };
+  final excerpt = args.optionalEnum('excerpt', excerptValues) ?? 'plain';
   final limit = args.optionalInt('limit', fallback: 20, min: 1, max: 100);
   final offset = args.optionalInt('offset', fallback: 0, min: 0, max: 1000000);
   final endExclusive = end?.add(const Duration(microseconds: 1));
-  final renderMarkdown = args.optionalBool('renderMarkdown') ?? false;
 
-  final page = await DiaryQueries(diaries: diaries).searchPage(
+  // The repository is asked directly instead of going through
+  // `DiaryQueries.searchPage` because the `sort` argument has to reach the
+  // index ordering; the two calls are the same pair searchPage makes.
+  final total = await diaries.countSearchDiaries(
     query: query,
     categoryId: categoryId,
     start: start,
-    endExclusive: endExclusive,
+    end: endExclusive,
+  );
+  final hits = await diaries.searchDiaries(
+    query: query,
+    categoryId: categoryId,
+    start: start,
+    end: endExclusive,
+    sort: sort,
     limit: limit,
     offset: offset,
   );
   final names = await categoryNames(categories);
-  call.reportProgress(
-    page.hits.length,
-    total: page.total,
-    message: 'search_diaries',
-  );
+  call.reportProgress(hits.length, total: total, message: 'search_diaries');
   return McpToolResult.json({
     'query': query,
-    'total': page.total,
+    'total': total,
     'offset': offset,
     'limit': limit,
-    'hasMore': offset + page.hits.length < page.total,
+    'hasMore': offset + hits.length < total,
     'hits': [
-      for (final hit in page.hits)
+      for (final hit in hits)
         {
-          // The search snippet replaces `excerpt` below, so the summary keeps
-          // its default plain projection and only `preview` follows
-          // `renderMarkdown`.
-          ...diarySummary(hit.diary, categoryName: names[hit.diary.categoryId]),
+          // The search snippet replaces the summary's `excerpt`, so the summary
+          // keeps its default plain projection and only `preview` follows the
+          // `excerpt` argument.
+          ..._summary(
+            hit.diary,
+            categoryName: names[hit.diary.categoryId],
+            excerpt: 'plain',
+          ),
           'titleHighlight': _markHighlight(hit.titleHighlight),
           'excerpt': _markHighlight(hit.excerpt),
-          'preview': excerptOf(hit.diary, renderMarkdown: renderMarkdown),
+          if (excerpt != 'none')
+            'preview': excerptOf(
+              hit.diary,
+              renderMarkdown: excerpt == 'markdown',
+            ),
         },
     ],
   });

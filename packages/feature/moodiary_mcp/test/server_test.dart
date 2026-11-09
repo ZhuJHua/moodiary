@@ -135,7 +135,13 @@ void main() {
         expect(result['protocolVersion'], '2025-03-26');
         expect((result['serverInfo'] as Map)['name'], 'moodiary');
         expect((result['serverInfo'] as Map)['version'], '9.9.9');
-        expect(result['instructions'], isNotEmpty);
+        final instructions = result['instructions'] as String;
+        expect(instructions, isNotEmpty);
+        // The instructions have to describe the shared conventions: a model
+        // reads them before it sees any tool description.
+        expect(instructions, contains('contentFormat'));
+        expect(instructions, contains('null'));
+        expect(instructions, contains('render_diary_image'));
         final capabilities = result['capabilities'] as Map;
         expect(
           capabilities.keys,

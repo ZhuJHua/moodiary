@@ -7,10 +7,7 @@ import 'package:moodiary_diary_ops/moodiary_diary_ops.dart';
 import '../protocol/mcp_types.dart';
 import '../registry/mcp_registry.dart';
 import 'arguments.dart';
-
-const int _defaultMonths = 12;
-
-const int _maxMonths = 120;
+import 'schemas.dart';
 
 void registerStatsTools(
   McpRegistry registry, {
@@ -30,35 +27,24 @@ void registerStatsTools(
       name: 'get_stats',
       title: 'Diary statistics',
       description:
-          'Reports the diary count, the visible and recycle bin sizes, the '
-          'diary count per local calendar month for the last months, the count '
-          'per category, the mood distribution of visible diaries and the '
-          'oldest diary time.',
+          'Reports the diary totals (all rows, visible, recycle bin, '
+          'uncategorized), the diary count per local calendar month for the '
+          'last months, the count per category, the mood distribution of '
+          'visible diaries and the oldest diary time. monthsWindow names the '
+          'months the bucket list covers; olderDiaries and futureDiaries count '
+          'the visible diaries outside that window, so '
+          'sum(months.diaries) + olderDiaries + futureDiaries == '
+          'visibleDiaries always holds and no diary is missing from the sum.',
       inputSchema: {
         'type': 'object',
-        'properties': {
-          'months': {
-            'type': 'integer',
-            'minimum': 1,
-            'maximum': 120,
-            'default': 12,
-            'description':
-                'How many calendar months the per-month counts cover, '
-                'including the current month.',
-          },
-        },
+        'properties': {'months': statsMonthsSchema},
       },
       readOnly: true,
       idempotent: true,
     ),
     (call, arguments) async {
       final args = Args('get_stats', arguments);
-      final months = args.optionalInt(
-        'months',
-        fallback: _defaultMonths,
-        min: 1,
-        max: _maxMonths,
-      );
+      final months = args.optionalInt('months', fallback: 12, min: 1, max: 120);
       return McpToolResult.json(await stats.statsPayload(months: months));
     },
   );

@@ -1,10 +1,14 @@
 /// Argument parsing shared by the tool, resource and prompt handlers.
 ///
-/// Every reader throws a [JsonRpcException] with [JsonRpcCode.invalidParams]
-/// whose message starts with [Args.subject] and names the offending argument,
-/// so a model can repair its call from the message alone. Count-like arguments
-/// are clamped to the cap their schema documents instead of failing; a wrong
-/// type always fails.
+/// The view is three-state, because the write tools distinguish "the client did
+/// not send this field" (leave it alone) from "the client sent null" (clear it):
+/// [Args.has] answers the first question and [Args.contains] the second, and the
+/// typed readers below report an absent and a null value the same way. Every
+/// reader throws a [JsonRpcException] with [JsonRpcCode.invalidParams] whose
+/// message starts with [Args.subject] and names the offending argument, so a
+/// model can repair its call from the message alone. Count-like arguments are
+/// clamped to the cap their schema documents instead of failing; a wrong type
+/// always fails.
 library;
 
 import 'package:moodiary_models/moodiary_models.dart';
@@ -22,23 +26,26 @@ class Args {
 
   static final RegExp _bareDate = RegExp(r'^\d{4}-\d{2}-\d{2}$');
 
-  /// Media attachment names. No MCP tool writes them: the app only ever adds
-  /// media from its editor, so a client that sends these gets told so instead of
-  /// silently losing them.
-  static const List<String> _mediaArguments = [
-    'imageName',
-    'audioName',
-    'videoName',
-    'fileName',
-    'media',
-  ];
+  /// `#RRGGBB` or `#AARRGGBB`, the two colour strings a client may send.
+  static final RegExp _hexColor = RegExp(r'^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$');
 
   static const String _moodArgumentHelp =
       'must be one of awful, bad, okay, good, great or a score from 1 to 5';
 
-  /// Whether the client sent the argument at all. An explicit `null` counts as
-  /// absent, which is what the `update_*` tools read as "leave this alone";
-  /// clearing a field is sent as an empty string instead.
+  static const String _colorArgumentHelp =
+      'must be a 32 bit ARGB integer, #RRGGBB or #AARRGGBB; send null or an '
+      'empty string to clear the colour';
+
+  /// Whether the client sent [name] at all, even as an explicit `null`.
+  ///
+  /// The `update_*` tools read this as "the caller wants this field changed",
+  /// which is what makes a sent `null` mean "clear it".
+  bool has(String name) => _raw.containsKey(name);
+
+  /// Whether the client sent [name] with a non-null value.
+  ///
+  /// Non-nullable fields (`title`, `content`, `time`, `visible`) read this, so
+  /// an explicit `null` leaves them alone instead of failing the call.
   bool contains(String name) => _raw[name] != null;
 
   Never _invalid(String name, String problem) => throw JsonRpcException(
@@ -68,8 +75,8 @@ class Args {
     return trimmed.isEmpty ? null : trimmed;
   }
 
-  /// Untrimmed string; only valid after [contains] confirmed the argument, so a
-  /// blank value can clear a field.
+  /// Trimmed string; only valid after [contains] confirmed the argument, so a
+  /// blank value can clear a field while an absent one stays untouched.
   String text(String name) {
     final value = _raw[name];
     if (value is! String) _invalid(name, 'must be a string');
@@ -98,14 +105,34 @@ class Args {
     return parsed;
   }
 
-  /// 32 bit ARGB colour of a category.
-  int? optionalArgb(String name) {
+  /// 32 bit ARGB colour, or `null` when the client clears it.
+  ///
+  /// Three shapes are accepted because they are the three a client actually
+  /// produces: an ARGB integer (what the app stores), `#RRGGBB` (what a colour
+  /// picker copies, taken as opaque) and `#AARRGGBB`. An explicit `null` and an
+  /// empty string both clear the colour, which is why `null` is the answer for
+  /// both and the caller uses [has] to tell clearing from an absent argument.
+  int? optionalColor(String name) {
     final value = _raw[name];
     if (value == null) return null;
-    final parsed = _asInt(name, value);
-    if (parsed < 0 || parsed > 0xFFFFFFFF) {
-      _invalid(name, 'must be a 32 bit ARGB integer');
+    if (value is String) {
+      final text = value.trim();
+      if (text.isEmpty) return null;
+      final match = _hexColor.firstMatch(text);
+      if (match == null) _invalid(name, _colorArgumentHelp);
+      final digits = match.group(1)!;
+      final argb = int.parse(digits, radix: 16);
+      return digits.length == 6 ? 0xFF000000 | argb : argb;
     }
+    final parsed = switch (value) {
+      final int intValue => intValue,
+      final double doubleValue
+          when doubleValue.isFinite &&
+              doubleValue == doubleValue.roundToDouble() =>
+        doubleValue.toInt(),
+      _ => _invalid(name, _colorArgumentHelp),
+    };
+    if (parsed < 0 || parsed > 0xFFFFFFFF) _invalid(name, _colorArgumentHelp);
     return parsed;
   }
 
@@ -143,8 +170,8 @@ class Args {
     return out;
   }
 
-  /// `awful|bad|okay|good|great` or a score from 1 to 5; a blank value clears
-  /// the mood.
+  /// `awful|bad|okay|good|great` or a score from 1 to 5; a blank value or an
+  /// explicit `null` clears the mood.
   DiaryMood? optionalMood(String name) {
     final value = _raw[name];
     if (value == null) return null;
@@ -190,16 +217,7 @@ class Args {
   /// Fails when [start] and [end] are both present and reversed.
   void requireOrderedRange(DateTime? start, DateTime? end) {
     if (start != null && end != null && start.isAfter(end)) {
-      _invalidMessage('start must not be after end');
-    }
-  }
-
-  /// Refuses media arguments by name instead of dropping them.
-  void rejectMediaArguments() {
-    for (final name in _mediaArguments) {
-      if (contains(name)) {
-        _invalid(name, 'is not supported: this tool cannot attach media');
-      }
+      _invalidMessage('startDate must not be after endDate');
     }
   }
 }

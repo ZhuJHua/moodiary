@@ -14,8 +14,12 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 
-// A minimal Tiptap document; media nodes are appended after the paragraph so
-// the repository derives the media lists the tools then serve.
+// A minimal Tiptap document; media nodes are appended after the paragraph so the
+// tools have something to list and serve.
+//
+// The repository writes the `diary_media` rows from the Diary's media columns,
+// not from the document, so the columns have to be derived from the nodes here:
+// `withDerivedMedia` is the same projection the write path applies.
 Diary makeDiary(
   String id,
   String text, {
@@ -38,21 +42,23 @@ Diary makeDiary(
           ],
         })
       : text;
-  return Diary(
-    id: id,
-    categoryId: null,
-    title: title ?? 'title-$id',
-    content: content,
-    contentText: text,
-    time: DateTime.utc(2026, 1, 1),
-    lastModified: DateTime.utc(2026, 1, 1),
-    show: true,
-    mood: null,
-    imageName: const [],
-    audioName: const [],
-    videoName: const [],
-    tags: const [],
-    type: type,
+  return withDerivedMedia(
+    Diary(
+      id: id,
+      categoryId: null,
+      title: title ?? 'title-$id',
+      content: content,
+      contentText: text,
+      time: DateTime.utc(2026, 1, 1),
+      lastModified: DateTime.utc(2026, 1, 1),
+      show: true,
+      mood: null,
+      imageName: const [],
+      audioName: const [],
+      videoName: const [],
+      tags: const [],
+      type: type,
+    ),
   );
 }
 
@@ -373,6 +379,31 @@ void main() {
       expect((node['attrs'] as Map)['src'], name);
       // No name argument: the stored name is the display name.
       expect((node['attrs'] as Map)['name'], name);
+    });
+
+    test('widthPercent omitted or null keeps the document default', () async {
+      // `null` means the same as omitting the argument: the node carries no
+      // width attribute, so the editor's own default applies.
+      final cases = <Map<String, dynamic>>[
+        {},
+        {'widthPercent': null},
+      ];
+      for (var index = 0; index < cases.length; index++) {
+        final id = 'diary-$index';
+        await diaries.insertADiary(makeDiary(id, 'body'));
+        final data = structuredOf(
+          await toolCall('add_diary_image', {
+            'id': id,
+            'data': base64Encode(pngBytes),
+            ...cases[index],
+          }),
+        );
+        final name = data['name'] as String;
+        final stored = (await diaries.getDiaryByBusinessId(id))!;
+        final blocks = (jsonDecode(stored.content) as Map)['content'] as List;
+        final node = blocks.last as Map<String, dynamic>;
+        expect(node['attrs'], {'src': name, 'name': name});
+      }
     });
 
     test('invalid base64 is invalid params', () async {

@@ -23,6 +23,7 @@ import '../protocol/json_rpc.dart';
 import '../protocol/mcp_types.dart';
 import '../registry/mcp_registry.dart';
 import 'arguments.dart';
+import 'schemas.dart';
 
 /// Cheap shape check for a client supplied MIME type of an attachment; the
 /// value ends up in the media node and in the resource link, so a malformed one
@@ -56,18 +57,6 @@ const int _maxPayloadBytes = 16 * 1024 * 1024;
 /// on the wire, and some clients keep tool results in the model context.
 const int _maxInlineImageBytes = 8 * 1024 * 1024;
 
-const Map<String, dynamic> _idSchema = {
-  'type': 'string',
-  'description': 'Diary id (uuid v7) as returned by the list tools.',
-};
-
-const Map<String, dynamic> _nameSchema = {
-  'type': 'string',
-  'description':
-      'Media file name exactly as list_diary_media shows it, e.g. '
-      '"image-018f...png". Paths are rejected.',
-};
-
 /// Registers the media tools.
 ///
 /// [store] is `null` when the composition root did not install one; the default
@@ -93,7 +82,7 @@ void registerMediaTools(
           'moodiary://diary/{id}/media/{name}.',
       inputSchema: {
         'type': 'object',
-        'properties': {'id': _idSchema},
+        'properties': {'id': diaryIdSchema},
         'required': ['id'],
       },
       readOnly: true,
@@ -119,8 +108,8 @@ void registerMediaTools(
       inputSchema: {
         'type': 'object',
         'properties': {
-          'id': _idSchema,
-          'name': _nameSchema,
+          'id': diaryIdSchema,
+          'name': mediaNameSchema,
           'kind': {
             'type': 'string',
             'enum': _mediaKinds,
@@ -150,14 +139,16 @@ void registerMediaTools(
           'image/png, image/jpeg, image/webp and image/gif; the type is sniffed '
           'from the bytes when mimeType is omitted, and HEIC/HEIF is refused '
           'because this build has no decoder for it. name is the display name '
-          'stored on the node (defaults to the stored file name) and '
-          'widthPercent is the node width 10..100. The response reports the '
+          'stored on the node (defaults to the stored file name); '
+          'widthPercent is the node width 10..100, and omitting it or sending '
+          'null keeps the document default. An unknown diary id is a tool '
+          'error. The response reports the '
           'stored file name and the updated media lists instead of the whole '
           'body.',
       inputSchema: {
         'type': 'object',
         'properties': {
-          'id': _idSchema,
+          'id': diaryIdSchema,
           'data': {
             'type': 'string',
             'description':
@@ -186,13 +177,14 @@ void registerMediaTools(
                 'before the first.',
           },
           'widthPercent': {
-            'type': 'integer',
+            'type': ['integer', 'null'],
             'minimum': 10,
             'maximum': 100,
             'description':
-                'Image width as a percentage of the content width. The '
-                'document store keeps values from 25 to 100, so smaller '
-                'values are raised to 25.',
+                'Image width as a percentage of the content width, clamped '
+                'into 10..100. Omitted or null writes no width attribute, so '
+                'the document default applies. The document store keeps values '
+                'from 25 to 100, so 10..24 is raised to 25.',
           },
         },
         'required': ['id', 'data'],
@@ -218,7 +210,7 @@ void registerMediaTools(
       inputSchema: {
         'type': 'object',
         'properties': {
-          'id': _idSchema,
+          'id': diaryIdSchema,
           'data': {
             'type': 'string',
             'description':
@@ -381,6 +373,9 @@ Future<McpToolResult> _addDiaryImage(
   final position = args.optionalEnum('position', _positions) ?? 'end';
   final requestedMime = _normalizeMime(args.optionalText('mimeType'));
   final displayName = args.optionalText('name');
+  // A null widthPercent is the same as omitting it: the node is written
+  // without a width attribute and the document default applies, so the
+  // present-with-a-value test is the right reader here rather than [has].
   final widthPercent = args.contains('widthPercent')
       ? args.optionalInt('widthPercent', fallback: 100, min: 10, max: 100)
       : null;

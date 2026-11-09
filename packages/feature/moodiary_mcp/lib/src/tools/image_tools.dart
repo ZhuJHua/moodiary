@@ -15,6 +15,7 @@ import '../protocol/json_rpc.dart';
 import '../protocol/mcp_types.dart';
 import '../registry/mcp_registry.dart';
 import 'arguments.dart';
+import 'schemas.dart';
 
 /// Values of the `theme` argument.
 const List<String> _themes = ['light', 'dark', 'system'];
@@ -23,11 +24,6 @@ const List<String> _themes = ['light', 'dark', 'system'];
 /// and some clients keep tool results in their model context, so an 8 MB image
 /// already costs roughly 10.7 MB of wire text.
 const int _maxPngBytes = 8 * 1024 * 1024;
-
-const Map<String, dynamic> _idSchema = {
-  'type': 'string',
-  'description': 'Diary id (uuid v7) as returned by the list tools.',
-};
 
 /// Registers the long-image tool.
 ///
@@ -55,11 +51,11 @@ void registerImageTools(
           'reports it. watermark adds the Moodiary mark, includeTitle and '
           'includeMeta drop the title or the metadata line. Images larger than '
           '8 MB are refused: lower scale or width instead of truncating the '
-          'picture.',
+          'picture. An unknown diary id is a tool error.',
       inputSchema: {
         'type': 'object',
         'properties': {
-          'id': _idSchema,
+          'id': diaryIdSchema,
           'theme': {
             'type': 'string',
             'enum': _themes,

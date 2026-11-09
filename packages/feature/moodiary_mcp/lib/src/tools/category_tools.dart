@@ -8,25 +8,7 @@ import '../protocol/json_rpc.dart';
 import '../protocol/mcp_types.dart';
 import '../registry/mcp_registry.dart';
 import 'arguments.dart';
-
-const Map<String, dynamic> _nameSchema = {
-  'type': 'string',
-  'description': 'Category name; must not be empty.',
-};
-
-const Map<String, dynamic> _parentIdSchema = {
-  'type': 'string',
-  'description':
-      'Id of the parent category. An empty string makes the category a root '
-      'category.',
-};
-
-const Map<String, dynamic> _colorSchema = {
-  'type': 'integer',
-  'description':
-      'Category colour as a 32 bit ARGB integer, e.g. 4278233312 for an '
-      'opaque colour. An empty string clears it.',
-};
+import 'schemas.dart';
 
 void registerCategoryTools(
   McpRegistry registry, {
@@ -41,8 +23,11 @@ void registerCategoryTools(
       title: 'List categories',
       description:
           'Lists every diary category as a tree (children nested under their '
-          'parent) with id, name, parent id, ARGB colour, colour hex and the '
-          'number of visible diaries in each category.',
+          'parent) with id, name, parent id, ARGB colour, colour hex and two '
+          'counts: diaries is the number of visible diaries filed directly in '
+          'the category, diariesTotal also counts the diaries of every '
+          'descendant, so a parent never looks emptier than its children. total '
+          'is the number of categories, not of diaries.',
       inputSchema: {'type': 'object', 'properties': {}},
       readOnly: true,
       idempotent: true,
@@ -62,13 +47,15 @@ void registerCategoryTools(
       title: 'Create a category',
       description:
           'Creates one diary category and returns it. parentId must be an '
-          'existing category id.',
+          'existing category id; omit it (or send null) for a root category. '
+          'color accepts a 32 bit ARGB integer or a #RRGGBB / #AARRGGBB '
+          'string, and an unknown parent is invalid params.',
       inputSchema: {
         'type': 'object',
         'properties': {
-          'name': _nameSchema,
-          'parentId': _parentIdSchema,
-          'color': _colorSchema,
+          'name': categoryNameSchema,
+          'parentId': parentIdSchema,
+          'color': colorSchema,
         },
         'required': ['name'],
       },
@@ -77,7 +64,7 @@ void registerCategoryTools(
       final args = Args('create_category', arguments);
       final name = args.requireText('name');
       final parentId = args.optionalText('parentId');
-      final color = args.optionalArgb('color');
+      final color = args.optionalColor('color');
       try {
         final category = await ops.create(
           name: name,
@@ -86,7 +73,7 @@ void registerCategoryTools(
         );
         return McpToolResult.json({
           'created': true,
-          ...categoryInfo(category, diaryCount: 0),
+          'category': categoryInfo(category, diaryCount: 0),
         });
       } on DiaryOpsException catch (e) {
         if (e.failure == DiaryOpsFailure.notFound) {
@@ -106,16 +93,21 @@ void registerCategoryTools(
       name: 'update_category',
       title: 'Update a category',
       description:
-          'Renames, recolours or reparents one category and leaves the other '
-          'fields alone. Send an empty string for parentId or color to clear '
-          'it. Refuses a parent that would create a cycle.',
+          'Renames, recolours or reparents one category and leaves every '
+          'omitted field unchanged. Send null (or an empty string) for color or '
+          'parentId to clear it: parentId null makes the category a root '
+          'category. Refuses a parent that would create a cycle and requires at '
+          'least one of name, color and parentId.',
       inputSchema: {
         'type': 'object',
         'properties': {
-          'id': {'type': 'string', 'description': 'Category id.'},
-          'name': _nameSchema,
-          'color': _colorSchema,
-          'parentId': _parentIdSchema,
+          'id': {
+            'type': 'string',
+            'description': 'Category id as list_categories returns it.',
+          },
+          'name': categoryNameSchema,
+          'color': colorSchema,
+          'parentId': parentIdSchema,
         },
         'required': ['id'],
       },
@@ -129,14 +121,15 @@ void registerCategoryTools(
           id: id,
           name: args.contains('name') ? args.requireText('name') : null,
           nameSet: args.contains('name'),
-          color: args.contains('color') ? args.optionalArgb('color') : null,
-          colorSet: args.contains('color'),
-          parentId: args.contains('parentId')
-              ? args.optionalText('parentId')
-              : null,
-          parentSet: args.contains('parentId'),
+          color: args.has('color') ? args.optionalColor('color') : null,
+          colorSet: args.has('color'),
+          parentId: args.has('parentId') ? args.optionalText('parentId') : null,
+          parentSet: args.has('parentId'),
         );
-        return McpToolResult.json({'updated': true, ...categoryInfo(category)});
+        return McpToolResult.json({
+          'updated': true,
+          'category': categoryInfo(category),
+        });
       } on DiaryOpsException catch (e) {
         return switch (e.failure) {
           DiaryOpsFailure.notFound => McpToolResult.error(
@@ -169,12 +162,17 @@ void registerCategoryTools(
       description:
           'Deletes one empty category. The app refuses to delete a category '
           'that still holds diaries (in the recycle bin too); the result then '
-          'reports the refusal instead of deleting anything. Child categories '
-          'are left in place and become root categories.',
+          'reports the refusal in reason and nothing changes. A successful '
+          'delete re-homes the child categories to the root category and lists '
+          'their ids in reparentedChildren, which is what the database now '
+          'holds.',
       inputSchema: {
         'type': 'object',
         'properties': {
-          'id': {'type': 'string', 'description': 'Category id.'},
+          'id': {
+            'type': 'string',
+            'description': 'Category id as list_categories returns it.',
+          },
         },
         'required': ['id'],
       },
@@ -191,6 +189,7 @@ void registerCategoryTools(
             'deleted': false,
             'id': id,
             'name': result.category.categoryName,
+            'reparentedChildren': const <String>[],
             'reason':
                 'the app refuses to delete a category that still holds diaries, '
                 'including diaries in the recycle bin; move those diaries to '
