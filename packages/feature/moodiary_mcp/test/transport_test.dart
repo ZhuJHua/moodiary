@@ -45,6 +45,8 @@ class _Harness {
 
   Uri get sse => Uri.parse('http://127.0.0.1:${transport.port}/sse');
 
+  Uri get icon => Uri.parse('http://127.0.0.1:${transport.port}/icon.png');
+
   Uri messages(String sessionId) => Uri.parse(
     'http://127.0.0.1:${transport.port}/messages?sessionId=$sessionId',
   );
@@ -53,6 +55,28 @@ class _Harness {
     client.close(force: true);
     await transport.stop();
     server.dispose();
+  }
+
+  /// [send] for a body that is not text, such as the PNG icon.
+  Future<({int status, Map<String, String> headers, List<int> bytes})> sendRaw(
+    String method,
+    Uri uri, {
+    String? token = _token,
+    Map<String, String> extraHeaders = const {},
+  }) async {
+    final request = await client.openUrl(method, uri);
+    if (token != null) request.headers.set('authorization', 'Bearer $token');
+    extraHeaders.forEach(request.headers.set);
+    final response = await request.close();
+    final bytes = <int>[];
+    await for (final chunk in response) {
+      bytes.addAll(chunk);
+    }
+    final headers = <String, String>{};
+    response.headers.forEach(
+      (name, values) => headers[name] = values.join(','),
+    );
+    return (status: response.statusCode, headers: headers, bytes: bytes);
   }
 
   Future<({int status, Map<String, String> headers, String body})> send(
@@ -90,11 +114,20 @@ class _Harness {
   }
 }
 
-Future<_Harness> _start() async {
+Future<_Harness> _start({
+  bool allowLan = false,
+  bool requireToken = true,
+  String token = _token,
+}) async {
   final transport = IoMcpTransport();
   final server = McpServer(registry: _registry(), serverVersion: 'test');
   await transport.start(
-    const McpTransportConfig(port: 0, allowLan: false, token: _token),
+    McpTransportConfig(
+      port: 0,
+      allowLan: allowLan,
+      token: token,
+      requireToken: requireToken,
+    ),
     server,
   );
   final harness = _Harness(transport, server);
@@ -267,6 +300,184 @@ void main() {
         response.headers['access-control-allow-headers'],
         contains('Mcp-Session-Id'),
       );
+    });
+  });
+
+  group('optional bearer token', () {
+    test('GET /mcp skips the auth gate when no token is required', () async {
+      final harness = await _start(requireToken: false, token: '');
+      final response = await harness.send(
+        'GET',
+        harness.mcp,
+        null,
+        token: null,
+      );
+      // Authentication is off, so the missing session id is what the transport
+      // complains about, not the missing Authorization header.
+      expect(response.status, HttpStatus.badRequest);
+      expect(response.headers['www-authenticate'], isNull);
+    });
+
+    test('GET /mcp still needs the token when it is required', () async {
+      final harness = await _start();
+      final response = await harness.send(
+        'GET',
+        harness.mcp,
+        null,
+        token: null,
+      );
+      expect(response.status, HttpStatus.unauthorized);
+      expect(response.headers['www-authenticate'], contains('Bearer'));
+    });
+
+    test('a whole session works without a token', () async {
+      final harness = await _start(requireToken: false, token: '');
+      final init = await harness.send('POST', harness.mcp, {
+        'jsonrpc': '2.0',
+        'id': 1,
+        'method': 'initialize',
+        'params': {'protocolVersion': mcpLatestProtocolVersion},
+      }, token: null);
+      expect(init.status, HttpStatus.ok);
+      final sessionId = init.headers['mcp-session-id'];
+      expect(sessionId, isNotNull);
+      final response = await harness.send(
+        'POST',
+        harness.mcp,
+        {
+          'jsonrpc': '2.0',
+          'id': 2,
+          'method': 'tools/call',
+          'params': {
+            'name': 'echo',
+            'arguments': {'value': 'hi'},
+          },
+        },
+        token: null,
+        sessionId: sessionId,
+      );
+      expect(response.status, HttpStatus.ok);
+      final frame = jsonDecode(response.body) as Map<String, dynamic>;
+      expect((frame['result'] as Map)['structuredContent'], {'echo': 'hi'});
+    });
+
+    test('the origin policy still applies without a token', () async {
+      final harness = await _start(requireToken: false, token: '');
+      final response = await harness.send(
+        'POST',
+        harness.mcp,
+        {'jsonrpc': '2.0', 'id': 1, 'method': 'ping'},
+        token: null,
+        extraHeaders: {'origin': 'https://evil.example'},
+      );
+      expect(response.status, HttpStatus.forbidden);
+    });
+
+    test('LAN access without a token is refused', () async {
+      final transport = IoMcpTransport();
+      final server = McpServer(registry: _registry(), serverVersion: 'test');
+      addTearDown(server.dispose);
+      await expectLater(
+        transport.start(
+          const McpTransportConfig(
+            port: 0,
+            allowLan: true,
+            token: '',
+            requireToken: false,
+          ),
+          server,
+        ),
+        throwsArgumentError,
+      );
+      expect(transport.port, 0);
+      expect(transport.endpoints, isEmpty);
+    });
+  });
+
+  group('server icon', () {
+    const pngSignature = <int>[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+
+    test('GET /icon.png answers the PNG without a token', () async {
+      final harness = await _start();
+      final response = await harness.sendRaw('GET', harness.icon, token: null);
+      expect(response.status, HttpStatus.ok);
+      expect(response.headers['content-type'], startsWith('image/png'));
+      expect(response.bytes.take(8).toList(), pngSignature);
+      expect(
+        int.parse(response.headers['content-length']!),
+        response.bytes.length,
+      );
+      expect(response.headers['cache-control'], contains('max-age=3600'));
+    });
+
+    test('HEAD /icon.png answers the headers without a body', () async {
+      final harness = await _start();
+      final response = await harness.sendRaw('HEAD', harness.icon, token: null);
+      expect(response.status, HttpStatus.ok);
+      expect(response.headers['content-type'], startsWith('image/png'));
+      expect(int.parse(response.headers['content-length']!), greaterThan(0));
+      expect(response.bytes, isEmpty);
+    });
+
+    test('the origin policy still applies to the icon', () async {
+      final harness = await _start();
+      final response = await harness.sendRaw(
+        'GET',
+        harness.icon,
+        token: null,
+        extraHeaders: {'origin': 'https://evil.example'},
+      );
+      expect(response.status, HttpStatus.forbidden);
+    });
+
+    test('initialize advertises the icon and the website', () async {
+      final harness = await _start();
+      final response = await harness.send('POST', harness.mcp, {
+        'jsonrpc': '2.0',
+        'id': 1,
+        'method': 'initialize',
+        'params': {'protocolVersion': mcpLatestProtocolVersion},
+      });
+      expect(response.status, HttpStatus.ok);
+      final result = (jsonDecode(response.body) as Map)['result'] as Map;
+      final serverInfo = result['serverInfo'] as Map;
+      expect(serverInfo['websiteUrl'], 'https://github.com/ZhuJHua/moodiary');
+      final icon = (serverInfo['icons'] as List).single as Map;
+      expect(
+        icon['src'],
+        'http://127.0.0.1:${harness.transport.port}/icon.png',
+      );
+      expect(icon['mimeType'], 'image/png');
+      expect(icon['sizes'], ['512x512']);
+    });
+
+    test('the legacy initialize answer carries the same icon', () async {
+      final harness = await _start();
+      final request = await harness.client.getUrl(harness.sse);
+      request.headers.set('authorization', 'Bearer $_token');
+      request.headers.set('accept', 'text/event-stream');
+      final response = await request.close();
+      expect(response.statusCode, HttpStatus.ok);
+      final events = _SseReader(response);
+      addTearDown(events.close);
+      final endpointEvent = await events.next(
+        (event, data) => event == 'endpoint',
+      );
+      final sessionId = Uri.parse(endpointEvent.data)
+          .queryParameters['sessionId']!;
+      final answer = events.next((event, data) => data.contains('"icons"'));
+      final posted = await harness.send('POST', harness.messages(sessionId), {
+        'jsonrpc': '2.0',
+        'id': 1,
+        'method': 'initialize',
+        'params': {'protocolVersion': '2024-11-05'},
+      });
+      expect(posted.status, HttpStatus.accepted);
+      final frame = jsonDecode((await answer).data) as Map<String, dynamic>;
+      final serverInfo = (frame['result'] as Map)['serverInfo'] as Map;
+      final icon = (serverInfo['icons'] as List).single as Map;
+      expect(icon['src'], endsWith('/icon.png'));
+      expect(icon['mimeType'], 'image/png');
     });
   });
 
@@ -526,7 +737,12 @@ void main() {
       final transport = IoMcpTransport();
       final server = McpServer(registry: _registry(), serverVersion: 'test');
       await transport.start(
-        const McpTransportConfig(port: 0, allowLan: false, token: _token),
+        const McpTransportConfig(
+          port: 0,
+          allowLan: false,
+          token: _token,
+          requireToken: true,
+        ),
         server,
       );
       final port = transport.port;

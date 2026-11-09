@@ -28,6 +28,7 @@ class McpServerState {
     this.port,
     this.endpoints = const [],
     this.allowLan = false,
+    this.requireToken = false,
     this.error,
   });
 
@@ -35,6 +36,11 @@ class McpServerState {
   final int? port;
   final List<Uri> endpoints;
   final bool allowLan;
+
+  /// Whether the running server demands the bearer token; the settings page
+  /// shows the token only when it does. Always `true` while [allowLan] is set.
+  final bool requireToken;
+
   final String? error;
 
   bool get running => status == .running;
@@ -45,19 +51,30 @@ class McpServerState {
       other.status == status &&
       other.port == port &&
       other.allowLan == allowLan &&
+      other.requireToken == requireToken &&
       other.error == error &&
       listEquals(other.endpoints, endpoints);
 
   @override
-  int get hashCode =>
-      Object.hash(status, port, allowLan, error, Object.hashAll(endpoints));
+  int get hashCode => Object.hash(
+    status,
+    port,
+    allowLan,
+    requireToken,
+    error,
+    Object.hashAll(endpoints),
+  );
 }
 
 /// Owns the local MCP endpoint: builds the tool catalog, starts and stops the
 /// transport, keeps the bearer token and mirrors database changes to clients.
 ///
+/// The bearer token is optional on a loopback only server and mandatory as soon
+/// as LAN access is on; see [requireToken].
+///
 /// The service is a process level singleton and never touches the UI; the
-/// settings page observes [state] and calls [enable] / [disable].
+/// settings page observes [state] and calls [enable] / [disable] /
+/// [updateConfig].
 @lazySingleton
 class McpService {
   McpService(this._diaries, this._categories, this._insights);
@@ -88,6 +105,14 @@ class McpService {
 
   static bool get allowLan => MoodiaryKVs.mcpAllowLan.get() ?? false;
 
+  /// Whether a client has to present the bearer token.
+  ///
+  /// LAN access always requires it: the switch only applies to a loopback only
+  /// server, so a configuration that publishes the diary on the network without
+  /// a shared secret cannot be expressed.
+  static bool get requireToken =>
+      allowLan || (MoodiaryKVs.mcpRequireToken.get() ?? true);
+
   /// Starts the server when the user turned the switch on; called once from the
   /// app bootstrap so a previously enabled server comes back after a restart.
   Future<void> restore() async {
@@ -117,12 +142,26 @@ class McpService {
     await start();
   }
 
-  /// Applies a new port or LAN policy; restarts when the server is running.
-  Future<void> updateConfig({int? port, bool? lan}) async {
+  /// Applies a new port, LAN policy or token policy; restarts when the server is
+  /// running, because none of the three can change under a live socket.
+  ///
+  /// `requireToken: false` is persisted even while [allowLan] is on, but it has
+  /// no effect there: [requireToken] keeps answering `true` until the LAN switch
+  /// goes off again.
+  Future<void> updateConfig({int? port, bool? lan, bool? requireToken}) async {
     final wasRunning = state.value.running;
     if (port != null) MoodiaryKVs.mcpPort.set(port);
     if (lan != null) MoodiaryKVs.mcpAllowLan.set(lan);
-    if (!wasRunning) return;
+    if (requireToken != null) MoodiaryKVs.mcpRequireToken.set(requireToken);
+    if (!wasRunning) {
+      // Keep the value the settings page reads in sync even while stopped; an
+      // unchanged state is not emitted twice, because [McpServerState] compares
+      // by value.
+      if (state.value.status == .stopped) {
+        _set(McpServerState(requireToken: McpService.requireToken));
+      }
+      return;
+    }
     await stop();
     await start();
   }
@@ -130,9 +169,13 @@ class McpService {
   Future<void> start() async {
     if (_busy || state.value.status == .running) return;
     _busy = true;
-    _set(const McpServerState(status: .starting));
+    final needsToken = requireToken;
+    _set(McpServerState(status: .starting, requireToken: needsToken));
     try {
-      final token = await ensureToken();
+      // A loopback only server may run without a token; nothing is generated or
+      // read in that case, so the stored token keeps existing for the moment the
+      // user switches authentication back on.
+      final token = needsToken ? await ensureToken() : '';
       final version = await _appVersion();
       final server = McpServer(
         registry: buildMoodiaryRegistry(
@@ -149,6 +192,7 @@ class McpService {
           port: configuredPort,
           allowLan: allowLan,
           token: token,
+          requireToken: needsToken,
         ),
         server,
       );
@@ -161,13 +205,16 @@ class McpService {
           port: transport.port,
           endpoints: transport.endpoints,
           allowLan: allowLan,
+          requireToken: needsToken,
         ),
       );
       logger.i('MCP server listening on ${transport.endpoints.join(', ')}');
     } catch (e, s) {
       logger.e('MCP server failed to start', error: e, stackTrace: s);
       await _teardown();
-      _set(McpServerState(status: .failed, error: '$e'));
+      _set(
+        McpServerState(status: .failed, error: '$e', requireToken: needsToken),
+      );
     } finally {
       _busy = false;
     }
@@ -176,10 +223,13 @@ class McpService {
   Future<void> stop() async {
     if (state.value.status == .stopped) return;
     await _teardown();
-    _set(const McpServerState());
+    _set(McpServerState(requireToken: requireToken));
   }
 
   /// Rotates the bearer token; a running server is restarted to use it.
+  ///
+  /// Rotating is allowed while authentication is off: the new secret is stored
+  /// and takes effect as soon as [requireToken] turns back on.
   Future<String> regenerateToken() async {
     final random = Random.secure();
     final bytes = List<int>.generate(32, (_) => random.nextInt(256));
@@ -193,6 +243,13 @@ class McpService {
     return token;
   }
 
+  /// The token the running server demands, or the stored one, generating it on
+  /// first use.
+  ///
+  /// The settings page calls this to display the token, which is why it keeps
+  /// returning a secret even while a token-less server is running: the user must
+  /// be able to copy it before turning authentication back on. [start] only
+  /// calls it when [requireToken] is `true`.
   Future<String> ensureToken() async {
     final cached = _token;
     if (cached != null && cached.isNotEmpty) return cached;

@@ -10,10 +10,15 @@
 ///   first event points at the message endpoint) and `/messages` (where the
 ///   client posts, receiving `202 Accepted` and the answers on the stream).
 ///
-/// Both are private endpoints: every request except the CORS preflight has to
-/// present the configured bearer token, and browser origins are restricted to
-/// local pages so a hostile website cannot reach the diary through DNS
-/// rebinding.
+/// The endpoints are private: browser origins are restricted to local pages so
+/// a hostile website cannot reach the diary through DNS rebinding, and every
+/// request has to present the configured bearer token unless the operator runs a
+/// loopback-only endpoint without one (see [McpTransportConfig]).
+///
+/// Two answers are exempt from the bearer token: the CORS preflight and
+/// `GET /icon.png`, the server icon (`HEAD` included) advertised in
+/// `initialize`. The icon is a public app artwork, not diary data, and clients
+/// fetch it before they hold a session.
 library;
 
 import 'dart:async';
@@ -27,6 +32,7 @@ import '../protocol/json_rpc.dart';
 import '../protocol/mcp_types.dart';
 import '../server/mcp_server.dart';
 import '../server/mcp_session.dart';
+import '../server/server_icon.dart';
 import 'http_auth.dart';
 import 'sse_writer.dart';
 import 'transport.dart';
@@ -35,14 +41,23 @@ const String _mcpPath = '/mcp';
 const String _ssePath = '/sse';
 const String _messagesPath = '/messages';
 
+/// The icon advertised in `serverInfo.icons`.
+const String _iconPath = '/icon.png';
+
 const String _sessionIdHeader = 'Mcp-Session-Id';
 const String _protocolVersionHeader = 'MCP-Protocol-Version';
 const String _lastEventIdHeader = 'Last-Event-ID';
 const String _originHeaderName = 'origin';
 const String _sessionIdQuery = 'sessionId';
 
+/// `serverInfo.websiteUrl`, which MCP clients show next to the icon.
+const String _websiteUrl = 'https://github.com/ZhuJHua/moodiary';
+
+/// The image bytes never change, so a client may keep them for an hour.
+const String _iconCacheControl = 'public, max-age=3600';
+
 const String _wwwAuthenticateValue = 'Bearer realm="moodiary-mcp"';
-const String _corsMethods = 'POST, GET, DELETE, OPTIONS';
+const String _corsMethods = 'POST, GET, HEAD, DELETE, OPTIONS';
 const String _corsHeaders =
     'Content-Type, Authorization, Mcp-Session-Id, MCP-Protocol-Version, '
     'Last-Event-ID';
@@ -60,6 +75,9 @@ const int _maxSessions = 64;
 const int _maxBindAttempts = 12;
 const int _maxLanEndpoints = 4;
 
+/// A sane upper bound for a `Host` header echoed into the icon URL.
+const int _maxHostLength = 255;
+
 const Duration _pingInterval = Duration(seconds: 25);
 const Duration _idleTimeout = Duration(minutes: 30);
 const Duration _sweepInterval = Duration(minutes: 5);
@@ -68,6 +86,11 @@ class IoMcpTransport implements McpTransport {
   HttpServer? _server;
   McpServer? _core;
   String _token = '';
+
+  /// `false` only on a loopback socket: without a token anybody on the network
+  /// could read the diary, which [start] refuses.
+  bool _requireToken = false;
+
   int _port = 0;
   List<Uri> _endpoints = const [];
   Timer? _sweeper;
@@ -95,11 +118,31 @@ class IoMcpTransport implements McpTransport {
       logger.d('MCP transport is already running');
       return;
     }
+    // A config that publishes the diary on the network without a shared secret
+    // is a bug in the caller, not something to start and log about.
+    if (!config.requireToken && config.allowLan) {
+      throw ArgumentError.value(
+        config.allowLan,
+        'allowLan',
+        'MCP LAN access requires the bearer token',
+      );
+    }
     _starting = true;
     final generation = ++_generation;
     try {
       _token = config.token;
-      if (_token.isEmpty) {
+      _requireToken = config.requireToken;
+      if (!_requireToken) {
+        // No warning level in AppLogger, so the notice is a debug line: the
+        // settings page is where the user is told about the mode.
+        logger.d(
+          'MCP transport started without bearer authentication, only the '
+          'loopback interface is reachable',
+        );
+        if (_token.isNotEmpty) {
+          logger.d('MCP: the stored token is ignored while auth is disabled');
+        }
+      } else if (_token.isEmpty) {
         logger.e(
           'MCP transport started without a bearer token, every request will '
           'be rejected',
@@ -143,6 +186,7 @@ class IoMcpTransport implements McpTransport {
     final server = _server;
     _server = null;
     _core = null;
+    _requireToken = false;
     _port = 0;
     _endpoints = const [];
     _sessions.clear();
@@ -250,12 +294,19 @@ class IoMcpTransport implements McpTransport {
       );
       return;
     }
-    if (!hasValidBearerToken(request, _token)) {
+    final path = _normalizePath(request.uri.path);
+    // Public on purpose: the icon is app artwork, the client asks for it before
+    // it can hold a session, and it carries no diary data.
+    if (path == _iconPath) {
+      await _routeIcon(request);
+      return;
+    }
+    if (_requireToken && !hasValidBearerToken(request, _token)) {
       logger.d('MCP transport rejected an unauthenticated request');
       await _unauthorized(request);
       return;
     }
-    switch (_normalizePath(request.uri.path)) {
+    switch (path) {
       case _mcpPath:
         await _routeMcp(request);
       case _ssePath:
@@ -277,6 +328,36 @@ class IoMcpTransport implements McpTransport {
           JsonRpcCode.invalidRequest,
           'unknown endpoint',
         );
+    }
+  }
+
+  /// `GET`/`HEAD /icon.png`: the embedded server icon, answered before the
+  /// bearer token check because an icon is not sensitive.
+  Future<void> _routeIcon(HttpRequest request) async {
+    switch (request.method) {
+      case 'GET':
+      case 'HEAD':
+        await _serveIcon(request);
+      default:
+        await _methodNotAllowed(request, 'GET, HEAD, OPTIONS');
+    }
+  }
+
+  Future<void> _serveIcon(HttpRequest request) async {
+    final response = request.response;
+    try {
+      final bytes = mcpIconPngBytes;
+      response.statusCode = HttpStatus.ok;
+      response.headers
+        ..contentType = ContentType('image', 'png')
+        ..set(HttpHeaders.cacheControlHeader, _iconCacheControl);
+      // A fixed, embedded image: the body is bounded no matter the request.
+      response.contentLength = bytes.length;
+      _applyCors(request, response);
+      if (request.method != 'HEAD') response.add(bytes);
+      await response.close();
+    } catch (error) {
+      logger.d('MCP transport could not write the icon ($error)');
     }
   }
 
@@ -365,12 +446,13 @@ class IoMcpTransport implements McpTransport {
       return;
     }
     final notifications = <Map<String, dynamic>>[];
-    final frame = await _dispatch(core, session, message, notifications);
-    if (frame == null) {
+    final answered = await _dispatch(core, session, message, notifications);
+    if (answered == null) {
       // A notification: the client is told it was accepted, not answered.
       await _respondEmpty(request, HttpStatus.accepted, sessionId: session.id);
       return;
     }
+    final frame = _withServerIcon(request, message, answered);
     if (_acceptsEventStream(request) || notifications.isNotEmpty) {
       await _respondEventStream(request, [...notifications, frame], session.id);
       return;
@@ -511,8 +593,12 @@ class IoMcpTransport implements McpTransport {
     if (message == null) return;
     await _respondEmpty(request, HttpStatus.accepted);
     try {
-      final frame = await _dispatch(core, session, message, []);
-      if (frame != null) session.notify(frame);
+      final answered = await _dispatch(core, session, message, []);
+      if (answered != null) {
+        // The answer travels over the stream, but it is still built from this
+        // request's Host header.
+        session.notify(_withServerIcon(request, message, answered));
+      }
     } catch (error, stackTrace) {
       logger.e(
         'MCP legacy message failed',
@@ -617,6 +703,68 @@ class IoMcpTransport implements McpTransport {
   /// other message has to name an existing one.
   bool _isInitialize(Map<String, dynamic> message) =>
       message['method'] == 'initialize' && message['id'] != null;
+
+  /// [frame] with `serverInfo.icons` and `serverInfo.websiteUrl` added when it
+  /// answers an `initialize` request, [frame] itself otherwise.
+  ///
+  /// Both fields are 2025-06-18 additions; older clients ignore them, so the
+  /// negotiated protocol version is left alone. The maps are copied instead of
+  /// mutated: the core may hand out a frame that shares nested maps with the
+  /// registry.
+  Map<String, dynamic> _withServerIcon(
+    HttpRequest request,
+    Map<String, dynamic> message,
+    Map<String, dynamic> frame,
+  ) {
+    if (!_isInitialize(message)) return frame;
+    final result = frame['result'];
+    if (result is! Map) return frame;
+    final serverInfo = result['serverInfo'];
+    if (serverInfo is! Map) return frame;
+    final info = Map<String, dynamic>.from(serverInfo)
+      ..['websiteUrl'] = _websiteUrl
+      ..['icons'] = [
+        {
+          'src': _iconUrl(request),
+          'mimeType': mcpIconMimeType,
+          'sizes': ['${mcpIconEdge}x$mcpIconEdge'],
+        },
+      ];
+    final copiedResult = Map<String, dynamic>.from(result)
+      ..['serverInfo'] = info;
+    return Map<String, dynamic>.from(frame)..['result'] = copiedResult;
+  }
+
+  /// Absolute `http://<host>/icon.png` URL a client should fetch the icon from.
+  ///
+  /// The request's `Host` header is authoritative: it is the address the client
+  /// dialled, so a LAN client gets its LAN address and a loopback client the
+  /// loopback one. The fallbacks only matter for a client that sends no `Host`
+  /// at all.
+  String _iconUrl(HttpRequest request) {
+    final authority = _authorityOf(_header(request, HttpHeaders.hostHeader));
+    if (authority != null) return 'http://$authority$_iconPath';
+    final endpoints = _endpoints;
+    if (endpoints.isNotEmpty) {
+      return endpoints.first.replace(path: _iconPath).toString();
+    }
+    return 'http://127.0.0.1:$_port$_iconPath';
+  }
+
+  /// The `host[:port]` part of a `Host` header, `null` when it is not one.
+  ///
+  /// A header is client input, so it is parsed and validated before it is echoed
+  /// back inside a URL: no user info, no path, no query, no fragment.
+  String? _authorityOf(String? host) {
+    if (host == null) return null;
+    final candidate = host.trim();
+    if (candidate.isEmpty || candidate.length > _maxHostLength) return null;
+    final parsed = Uri.tryParse('http://$candidate/');
+    if (parsed == null || parsed.host.isEmpty) return null;
+    if (parsed.userInfo.isNotEmpty || parsed.path != '/') return null;
+    if (parsed.hasQuery || parsed.hasFragment) return null;
+    return parsed.authority;
+  }
 
   McpSessionState _createSession(McpServer core) {
     final session = core.createSession();

@@ -20,6 +20,9 @@ enum MoodiaryKVs<T extends Object> {
 
   mcpAllowLan<bool>(defaultValue: false),
 
+  // 只在本机监听（mcpAllowLan 为 false）时才能关掉；局域网访问必须带令牌。
+  mcpRequireToken<bool>(defaultValue: true),
+
   mcpBackgroundKeepAlive<bool>(defaultValue: false),
 
   syncPollInterval<int>(defaultValue: 30),
