@@ -82,6 +82,30 @@ GET    /icon.png                     Server icon, PNG (no token required)
 HEAD   /icon.png                     Same headers, no body
 ```
 
+### Protocol notes
+
+A few decisions are stricter than the specification requires, because SDK
+clients decode these fields strictly and fail the whole response otherwise:
+
+- **The answer encoding follows `Accept`.** A `POST /mcp` reply is an event
+  stream only when the client asks for `text/event-stream`; every other client
+  gets one `application/json` frame, and the notifications raised while the
+  request ran are dropped (a notification is not retransmitted, and this client
+  never opened a stream to carry it).
+- **Resources and templates always carry a `description`.** The 2025-06-18
+  schema marks it optional, but client SDKs read it as a non-null `String`.
+- **`MCP-Protocol-Version` is validated on `GET`, `POST` and `DELETE`.** An
+  unsupported version is `400` + `invalidRequest`, so a client cannot open or
+  close a session while claiming a version the server never negotiated.
+- **Numbers in notifications are JSON reals.** `progress` and `total` are sent
+  as doubles even when the count is whole, because some clients decode them as
+  `double`.
+- **The token is a static bearer header, not OAuth.** A `401` carries
+  `WWW-Authenticate: Bearer`; clients that implement OAuth discovery may follow
+  that hint instead of telling the user the token is missing, so put
+  `Authorization: Bearer <token>` in the client's headers (as the settings page
+  says) rather than waiting for a prompt.
+
 ## Server icon
 
 The app's launcher mark is embedded as a 512×512 PNG

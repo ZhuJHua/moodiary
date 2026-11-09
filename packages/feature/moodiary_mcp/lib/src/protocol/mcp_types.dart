@@ -223,6 +223,10 @@ class McpCallContext {
   bool get isCancelled => cancelled();
 
   /// No-op when the client did not send a `progressToken`.
+  ///
+  /// Both numbers are sent as JSON reals rather than integers, because clients
+  /// decode a `progress` value as a `double` and some of them reject an integer
+  /// token. The measurement is the same; only its JSON shape changes.
   void reportProgress(num progress, {num? total, String? message}) {
     final token = progressToken;
     if (token == null) return;
@@ -231,8 +235,8 @@ class McpCallContext {
       'method': 'notifications/progress',
       'params': {
         'progressToken': token,
-        'progress': progress,
-        'total': ?total,
+        'progress': progress.toDouble(),
+        'total': ?total?.toDouble(),
         'message': ?message,
       },
     });
