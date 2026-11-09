@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
@@ -53,7 +54,7 @@ class MoodCalendar extends StatelessWidget {
 
   Widget _year(BuildContext context) {
     final firstDay = DateTime(start.year);
-    final today = moodDayKey(DateTime.now());
+    final today = moodDayKey(clock.now());
     final end = start.year == today.year ? today : DateTime(start.year, 12, 31);
     // Count calendar days in UTC so DST cannot change the number of columns.
     final dayCount = DateTime.utc(
@@ -78,7 +79,7 @@ class MoodCalendar extends StatelessWidget {
 
   Widget _cell(BuildContext context, DateTime date) {
     final colors = context.theme.colors;
-    final today = moodDayKey(DateTime.now());
+    final today = moodDayKey(clock.now());
     final future = date.isAfter(today);
     final info = days[date];
     final level = info?.level;
