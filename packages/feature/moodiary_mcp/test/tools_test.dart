@@ -1267,6 +1267,32 @@ void main() {
   });
 
   group('resources', () {
+    test('every listed resource and template has a description', () async {
+      // SDK clients decode `description` as a non-null String, so a resource or
+      // template that omits it makes the whole list response unreadable.
+      final resources = resultOf(await call('resources/list'));
+      final listed = (resources['resources'] as List).cast<Map>();
+      expect(listed, isNotEmpty);
+      for (final resource in listed) {
+        expect(
+          (resource['description'] as String?)?.trim(),
+          isNotEmpty,
+          reason: '${resource['uri']} needs a description',
+        );
+      }
+      final templates = resultOf(await call('resources/templates/list'));
+      final listedTemplates = (templates['resourceTemplates'] as List)
+          .cast<Map>();
+      expect(listedTemplates, isNotEmpty);
+      for (final template in listedTemplates) {
+        expect(
+          (template['description'] as String?)?.trim(),
+          isNotEmpty,
+          reason: '${template['uriTemplate']} needs a description',
+        );
+      }
+    });
+
     test('resources expose the catalog and one diary', () async {
       final categoryId = await newCategory('Resource category');
       await diaries.insertADiary(

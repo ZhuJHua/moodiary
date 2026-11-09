@@ -42,7 +42,11 @@ McpRegistry _registry({Completer<McpToolResult>? slow}) {
     });
   }
   registry.addResource(
-    const McpResource(uri: 'moodiary://categories', name: 'categories'),
+    const McpResource(
+      uri: 'moodiary://categories',
+      name: 'categories',
+      description: 'Every diary category',
+    ),
     (call, uri) async => McpResourceReadResult.json(uri, const [
       {'id': 'a'},
     ]),
@@ -51,6 +55,7 @@ McpRegistry _registry({Completer<McpToolResult>? slow}) {
     const McpResourceTemplate(
       uriTemplate: 'moodiary://diary/{id}',
       name: 'diary',
+      description: 'One diary',
     ),
     (call, uri, variables) async {
       if (variables['id'] == 'missing') {
@@ -294,12 +299,14 @@ void main() {
       expect((resources['resources'] as List).single, {
         'uri': 'moodiary://categories',
         'name': 'categories',
+        'description': 'Every diary category',
       });
       final templates =
           (await call('resources/templates/list'))['result'] as Map;
       expect((templates['resourceTemplates'] as List).single, {
         'uriTemplate': 'moodiary://diary/{id}',
         'name': 'diary',
+        'description': 'One diary',
       });
     });
 

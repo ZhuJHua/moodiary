@@ -375,7 +375,12 @@ class IoMcpTransport implements McpTransport {
   }
 
   /// `POST /mcp`: one JSON-RPC message in, its answer out.
+  ///
+  /// The answer is an event stream only when the client's `Accept` header asks
+  /// for one; every other client gets a single JSON frame, which is the encoding
+  /// the spec leaves to the server.
   Future<void> _postStreamable(HttpRequest request) async {
+    if (await _rejectUnsupportedVersion(request)) return;
     if (!_isJsonRequest(request)) {
       await _sendError(
         request,
@@ -392,18 +397,6 @@ class IoMcpTransport implements McpTransport {
         HttpStatus.requestEntityTooLarge,
         JsonRpcCode.invalidRequest,
         'request body is larger than 4 MiB',
-      );
-      return;
-    }
-    final version = _header(request, _protocolVersionHeader);
-    if (version != null &&
-        version.isNotEmpty &&
-        !mcpSupportedProtocolVersions.contains(version)) {
-      await _sendError(
-        request,
-        HttpStatus.badRequest,
-        JsonRpcCode.invalidRequest,
-        'unsupported MCP-Protocol-Version',
       );
       return;
     }
@@ -453,15 +446,20 @@ class IoMcpTransport implements McpTransport {
       return;
     }
     final frame = _withServerIcon(request, message, answered);
-    if (_acceptsEventStream(request) || notifications.isNotEmpty) {
+    if (_acceptsEventStream(request)) {
       await _respondEventStream(request, [...notifications, frame], session.id);
       return;
     }
+    // A client that did not ask for an event stream cannot parse one, so the
+    // answer is the plain JSON frame. The notifications collected above are
+    // dropped: a notification is not retransmitted, and this client never
+    // accepted the stream that would have carried them.
     await _respondJson(request, HttpStatus.ok, frame, sessionId: session.id);
   }
 
   /// `GET /mcp`: the stream the server pushes notifications on.
   Future<void> _openStreamableStream(HttpRequest request) async {
+    if (await _rejectUnsupportedVersion(request)) return;
     final sessionId = _header(request, _sessionIdHeader);
     if (sessionId == null || sessionId.isEmpty) {
       await _sendError(
@@ -491,6 +489,7 @@ class IoMcpTransport implements McpTransport {
 
   /// `DELETE /mcp`: the client ends its session explicitly.
   Future<void> _deleteStreamable(HttpRequest request) async {
+    if (await _rejectUnsupportedVersion(request)) return;
     final sessionId = _header(request, _sessionIdHeader);
     if (sessionId == null || sessionId.isEmpty) {
       await _sendError(
@@ -864,6 +863,29 @@ class IoMcpTransport implements McpTransport {
       await _sendError(request, HttpStatus.badRequest, e.code, e.message);
       return null;
     }
+  }
+
+  /// Answers `400 invalidRequest` and returns `true` when the request carries an
+  /// `MCP-Protocol-Version` this server does not support.
+  ///
+  /// The header became mandatory in 2025-03-26 and is absent from older clients,
+  /// so an absent or empty value passes. All three Streamable HTTP methods check
+  /// it, not only `POST`: otherwise a client could open or end a session while
+  /// claiming a version the server never negotiated.
+  Future<bool> _rejectUnsupportedVersion(HttpRequest request) async {
+    final version = _header(request, _protocolVersionHeader);
+    if (version == null ||
+        version.isEmpty ||
+        mcpSupportedProtocolVersions.contains(version)) {
+      return false;
+    }
+    await _sendError(
+      request,
+      HttpStatus.badRequest,
+      JsonRpcCode.invalidRequest,
+      'unsupported MCP-Protocol-Version',
+    );
+    return true;
   }
 
   bool _isJsonRequest(HttpRequest request) {

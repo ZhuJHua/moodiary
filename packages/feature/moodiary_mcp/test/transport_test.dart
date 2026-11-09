@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moodiary_mcp/src/protocol/json_rpc.dart';
 import 'package:moodiary_mcp/src/protocol/mcp_types.dart';
 import 'package:moodiary_mcp/src/registry/mcp_registry.dart';
 import 'package:moodiary_mcp/src/server/mcp_server.dart';
@@ -27,8 +28,24 @@ McpRegistry _registry() {
     ),
     (call, arguments) async => McpToolResult.json({'echo': arguments['value']}),
   );
+  registry.addTool(
+    const McpTool(
+      name: 'progress',
+      description: 'reports progress',
+      inputSchema: {'type': 'object', 'properties': <String, dynamic>{}},
+      readOnly: true,
+    ),
+    (call, arguments) async {
+      call.reportProgress(1, total: 2);
+      return McpToolResult.text('done');
+    },
+  );
   registry.addResource(
-    const McpResource(uri: 'moodiary://ping', name: 'ping'),
+    const McpResource(
+      uri: 'moodiary://ping',
+      name: 'ping',
+      description: 'Answers pong',
+    ),
     (call, uri) async => McpResourceReadResult.text(uri, 'pong'),
   );
   return registry;
@@ -624,6 +641,134 @@ void main() {
         extraHeaders: {'mcp-protocol-version': '1999-01-01'},
       );
       expect(response.status, HttpStatus.badRequest);
+    });
+
+    test('GET and DELETE validate the protocol version header', () async {
+      final harness = await _start();
+      final init = await harness.send('POST', harness.mcp, {
+        'jsonrpc': '2.0',
+        'id': 1,
+        'method': 'initialize',
+        'params': {'protocolVersion': mcpLatestProtocolVersion},
+      });
+      final sessionId = init.headers['mcp-session-id']!;
+      const supported = {'mcp-protocol-version': mcpLatestProtocolVersion};
+      // A stale client must not be able to open or end a session under a
+      // version the server never negotiated.
+      for (final method in ['GET', 'DELETE']) {
+        final rejected = await harness.send(
+          method,
+          harness.mcp,
+          null,
+          sessionId: sessionId,
+          extraHeaders: {'mcp-protocol-version': '1999-01-01'},
+        );
+        expect(rejected.status, HttpStatus.badRequest, reason: method);
+        final frame = jsonDecode(rejected.body) as Map<String, dynamic>;
+        expect(
+          (frame['error'] as Map)['code'],
+          JsonRpcCode.invalidRequest,
+          reason: method,
+        );
+        expect(
+          (frame['error'] as Map)['message'],
+          contains('MCP-Protocol-Version'),
+          reason: method,
+        );
+      }
+      // The rejected calls did not touch the session, and a supported version
+      // still opens the stream.
+      final request = await harness.client.getUrl(harness.mcp);
+      request.headers.set('authorization', 'Bearer $_token');
+      request.headers.set('mcp-session-id', sessionId);
+      request.headers.set('accept', 'text/event-stream');
+      supported.forEach(request.headers.set);
+      final opened = await request.close();
+      expect(opened.statusCode, HttpStatus.ok);
+      expect(opened.headers.contentType?.mimeType, 'text/event-stream');
+      final events = _SseReader(opened);
+      addTearDown(events.close);
+      final deleted = await harness.send(
+        'DELETE',
+        harness.mcp,
+        null,
+        sessionId: sessionId,
+        extraHeaders: supported,
+      );
+      expect(deleted.status, HttpStatus.ok);
+    });
+
+    test(
+      'a JSON-only client gets the frame without the notifications',
+      () async {
+        final harness = await _start();
+        final init = await harness.send('POST', harness.mcp, {
+          'jsonrpc': '2.0',
+          'id': 1,
+          'method': 'initialize',
+          'params': {'protocolVersion': mcpLatestProtocolVersion},
+        });
+        final response = await harness.send(
+          'POST',
+          harness.mcp,
+          {
+            'jsonrpc': '2.0',
+            'id': 2,
+            'method': 'tools/call',
+            'params': {
+              'name': 'progress',
+              'arguments': <String, dynamic>{},
+              '_meta': {'progressToken': 'p-1'},
+            },
+          },
+          sessionId: init.headers['mcp-session-id'],
+          extraHeaders: {'accept': 'application/json'},
+        );
+        expect(response.status, HttpStatus.ok);
+        // A client that did not accept an event stream cannot parse one, so it
+        // gets the single JSON frame and the progress notification is dropped.
+        expect(
+          response.headers['content-type'],
+          startsWith('application/json'),
+        );
+        expect(response.body, isNot(contains('notifications/progress')));
+        final frame = jsonDecode(response.body) as Map<String, dynamic>;
+        expect(frame['id'], 2);
+        expect(((frame['result'] as Map)['content'] as List).single, {
+          'type': 'text',
+          'text': 'done',
+        });
+      },
+    );
+
+    test('an event stream client still gets the notifications', () async {
+      final harness = await _start();
+      final init = await harness.send('POST', harness.mcp, {
+        'jsonrpc': '2.0',
+        'id': 1,
+        'method': 'initialize',
+        'params': {'protocolVersion': mcpLatestProtocolVersion},
+      });
+      final response = await harness.send(
+        'POST',
+        harness.mcp,
+        {
+          'jsonrpc': '2.0',
+          'id': 2,
+          'method': 'tools/call',
+          'params': {
+            'name': 'progress',
+            'arguments': <String, dynamic>{},
+            '_meta': {'progressToken': 'p-1'},
+          },
+        },
+        sessionId: init.headers['mcp-session-id'],
+        extraHeaders: {'accept': 'application/json, text/event-stream'},
+      );
+      expect(response.status, HttpStatus.ok);
+      expect(response.headers['content-type'], startsWith('text/event-stream'));
+      expect(response.body, contains('"method":"notifications/progress"'));
+      expect(response.body, contains('"id":2'));
     });
 
     test('a non JSON content type is rejected', () async {

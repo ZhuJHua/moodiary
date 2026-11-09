@@ -236,6 +236,22 @@ explicit representation instead of guessing:
   applies to `content` only. On update, an omitted field is left unchanged and
   an explicit `null` clears a nullable one.
 
+### Known native limitations
+
+Three behaviours come from the app's own indexes and database rather than from
+this package, so the tools inherit them; each one has an issue upstream and no
+MCP-side workaround, because inventing one here would make the tool results
+disagree with what the diary screens show.
+
+- **A link from a diary to itself is only a backlink.** The forward-link index
+  skips the diary's own id, so `get_diary_links` reports a self mention under
+  `backlinks` with an empty `forward`, and it is not `dangling` either.
+- **Tags are case-sensitive.** `MCP`, `mcp` and `Mcp` are three tags in the
+  database, and `list_diaries` `tag`/`list_tags` report them as three entries.
+- **Tags are not full-text searchable.** The index covers title and body text
+  only, so `search_diaries` cannot find a tag; filter with `list_diaries` `tag`
+  instead.
+
 ## Lifecycle
 
 `McpService` (DI singleton) owns one `McpServer` + one transport. The settings

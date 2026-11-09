@@ -159,6 +159,7 @@ void main() {
     const template = McpResourceTemplate(
       uriTemplate: 'moodiary://diary/{id}',
       name: 'diary',
+      description: 'One diary',
     );
 
     test('matches and decodes variables', () {
@@ -213,13 +214,18 @@ void main() {
     test('prefers a static resource over a template', () {
       final registry = McpRegistry();
       registry.addResource(
-        const McpResource(uri: 'moodiary://diary/fixed', name: 'fixed'),
+        const McpResource(
+          uri: 'moodiary://diary/fixed',
+          name: 'fixed',
+          description: 'A fixed diary',
+        ),
         (call, uri) async => McpResourceReadResult.text(uri, 'static'),
       );
       registry.addResourceTemplate(
         const McpResourceTemplate(
           uriTemplate: 'moodiary://diary/{id}',
           name: 'diary',
+          description: 'One diary',
         ),
         (call, uri, variables) async =>
             McpResourceReadResult.text(uri, 'template ${variables['id']}'),

@@ -246,22 +246,26 @@ class McpResource {
   const McpResource({
     required this.uri,
     required this.name,
+    required this.description,
     this.title,
-    this.description,
     this.mimeType,
   });
 
   final String uri;
   final String name;
   final String? title;
-  final String? description;
+
+  /// Required here although the 2025-06-18 schema marks it optional: SDK
+  /// clients decode `description` as a non-null [String] and fail the whole
+  /// `resources/list` response when a resource omits it.
+  final String description;
   final String? mimeType;
 
   Map<String, dynamic> toJson() => {
     'uri': uri,
     'name': name,
     'title': ?title,
-    'description': ?description,
+    'description': description,
     'mimeType': ?mimeType,
   };
 }
@@ -272,22 +276,26 @@ class McpResourceTemplate {
   const McpResourceTemplate({
     required this.uriTemplate,
     required this.name,
+    required this.description,
     this.title,
-    this.description,
     this.mimeType,
   });
 
   final String uriTemplate;
   final String name;
   final String? title;
-  final String? description;
+
+  /// Required here although the 2025-06-18 schema marks it optional: SDK
+  /// clients decode `description` as a non-null [String] and fail the whole
+  /// `resources/templates/list` response when a template omits it.
+  final String description;
   final String? mimeType;
 
   Map<String, dynamic> toJson() => {
     'uriTemplate': uriTemplate,
     'name': name,
     'title': ?title,
-    'description': ?description,
+    'description': description,
     'mimeType': ?mimeType,
   };
 
