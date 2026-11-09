@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary_components/moodiary_components.dart';
 import 'package:moodiary_data/moodiary_data.dart';
@@ -24,7 +25,7 @@ class MoodPeriodPicker extends StatefulWidget {
 
 class _MoodPeriodPickerState extends State<MoodPeriodPicker> {
   late DateTime _month = DateTime(widget.anchor.year, widget.anchor.month);
-  late final _today = moodDayKey(DateTime.now());
+  late final _today = moodDayKey(clock.now());
   DateTime? _earliest;
   late Future<Map<DateTime, double?>> _future = _load();
 
