@@ -23,6 +23,13 @@ class TiptapContent {
   factory TiptapContent.parse(String content) =>
       TiptapContent._(content, _tryDoc(content));
 
+  /// Reads an already decoded document without a JSON round trip.
+  factory TiptapContent.fromDocument(Map<String, dynamic> document) =>
+      TiptapContent._('', document);
+
+  /// The normalized document; callers must treat it as read-only.
+  Map<String, dynamic>? get document => _v2;
+
   bool get isDoc => _doc != null;
 
   static Map<String, dynamic>? _tryDoc(String content) {

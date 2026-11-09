@@ -86,7 +86,11 @@ final Highlight codeHighlighter = Highlight()
 String? resolveCodeLanguage(String? language) {
   final name = language?.trim().toLowerCase();
   if (name == null || name.isEmpty) return null;
-  return codeHighlighter.getLanguage(name)?.name?.toLowerCase();
+  final mode = codeHighlighter.getLanguage(name);
+  if (mode == null) return null;
+  return codeHighlighter.listLanguages().firstWhere(
+    (key) => identical(codeHighlighter.getLanguage(key), mode),
+  );
 }
 
 const Map<String, TextStyle> lightCodeTheme = githubTheme;

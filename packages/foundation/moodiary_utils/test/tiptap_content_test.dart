@@ -14,6 +14,34 @@ Map<String, dynamic> _p(List<Map<String, dynamic>> inline) => {
 Map<String, dynamic> _text(String t) => {'type': 'text', 'text': t};
 
 void main() {
+  test(
+    'decoded documents expose the same normalized map and derived content',
+    () {
+      final source = _doc([
+        {
+          'type': 'heading',
+          'attrs': {'level': 2},
+          'content': [_text('Heading')],
+        },
+        _p([_text('汉 👨‍👩‍👧‍👦 é')]),
+        {
+          'type': 'audio',
+          'attrs': {'filename': 'audio-test.m4a'},
+        },
+      ]);
+      final parsed = TiptapContent.parse(source);
+      expect(parsed.document, jsonDecode(parsed.normalized));
+      final decoded = TiptapContent.fromDocument(parsed.document!);
+      expect(decoded.plainText, parsed.plainText);
+      expect(decoded.headings, parsed.headings);
+      expect(decoded.media.images, parsed.media.images);
+      expect(decoded.media.audios, parsed.media.audios);
+      expect(decoded.media.videos, parsed.media.videos);
+      expect(decoded.media.files, parsed.media.files);
+      expect(TiptapContent.parse('plain text').document, isNull);
+    },
+  );
+
   test('归一未改时返回原字符串，旧版归一为 v2', () {
     final content = jsonEncode(
       TiptapContent.newDoc([

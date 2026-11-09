@@ -107,7 +107,7 @@ class _EditorBodyState extends State<EditorBody> {
 
   @override
   Widget build(BuildContext context) {
-    // webview 的 Android textZoom 钉死为 100，系统字号缩放需在此显式算出下发
+    // 文档排版统一使用宿主提供的系统字号缩放
     final fontScale = MediaQuery.textScalerOf(context).scale(16) / 16;
     return ValueListenableBuilder<bool>(
       valueListenable: MoodiaryKVs.firstLineIndent.getNotifier(),

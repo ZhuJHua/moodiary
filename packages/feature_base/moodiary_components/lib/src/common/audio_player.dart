@@ -26,7 +26,7 @@ class AudioProgress {
 }
 
 class AudioPlaybackController {
-  final _player = AudioPlayer();
+  final AudioPlayer _player;
 
   final ValueNotifier<String?> activePath = ValueNotifier(null);
 
@@ -44,12 +44,19 @@ class AudioPlaybackController {
   bool _playing = false;
   bool _muted = false;
   bool _completed = false;
+  bool _disposed = false;
+  Future<void>? _preparing;
 
   // ExoPlayer seek 后会瞬时回报旧位置，需按目标显示直到流回报追上再跟随
   Duration? _pendingSeek;
   Timer? _seekGuard;
 
-  AudioPlaybackController() {
+  AudioPlaybackController() : this._(AudioPlayer());
+
+  @visibleForTesting
+  AudioPlaybackController.forTesting(AudioPlayer player) : this._(player);
+
+  AudioPlaybackController._(this._player) {
     _posSub = _player.onPositionChanged.listen((d) {
       final pending = _pendingSeek;
       if (pending != null) {
@@ -77,6 +84,7 @@ class AudioPlaybackController {
     bool? playing,
     bool? muted,
   }) {
+    if (_disposed) return;
     _position = position ?? _position;
     _duration = duration ?? _duration;
     _playing = playing ?? _playing;
@@ -89,16 +97,57 @@ class AudioPlaybackController {
     );
   }
 
+  /// Resolve metadata without starting playback.
+  Future<void> prepare(String path) {
+    if (_disposed) return Future.value();
+    if (activePath.value == path) return _preparing ?? Future.value();
+    activePath.value = path;
+    _completed = false;
+    _position = .zero;
+    _duration = .zero;
+    _emit(playing: false);
+    return _preparing = _prepare(path)
+        .catchError((Object error, StackTrace stack) {
+          if (!_disposed && activePath.value == path) activePath.value = null;
+          Error.throwWithStackTrace(error, stack);
+        });
+  }
+
+  Future<void> _prepare(String path) async {
+    // Keep the source after the track ends so paused and end-of-track seeks
+    // stay valid; the plugin's default release mode clears it.
+    await _player.setReleaseMode(ReleaseMode.stop);
+    if (_disposed || activePath.value != path) return;
+    await _player.setSource(
+      path.startsWith('http://') || path.startsWith('https://')
+          ? UrlSource(path)
+          : DeviceFileSource(path),
+    );
+    final duration = await _player.getDuration();
+    if (!_disposed &&
+        activePath.value == path &&
+        duration != null &&
+        duration > Duration.zero) {
+      _emit(duration: duration);
+    }
+  }
+
   Future<void> toggle(String path) async {
     try {
       if (activePath.value == path) {
+        await _preparing;
+        if (_disposed) return;
         if (_playing) {
           _emit(playing: false);
           await _player.pause();
         } else if (_completed) {
           _completed = false;
           _emit(playing: true);
-          await _player.play(DeviceFileSource(path));
+          await _player.play(
+            path.startsWith('http://') || path.startsWith('https://')
+                ? UrlSource(path)
+                : DeviceFileSource(path),
+          );
         } else {
           _emit(playing: true);
           await _player.resume();
@@ -119,11 +168,15 @@ class AudioPlaybackController {
   }
 
   Future<void> seek(double fraction, {Duration? fallbackTotal}) async {
+    if (_disposed) return;
     final totalMs = _duration.inMilliseconds > 0
         ? _duration.inMilliseconds
         : (fallbackTotal?.inMilliseconds ?? 0);
     if (totalMs <= 0) return;
-    final target = Duration(milliseconds: (fraction * totalMs).round());
+    final target = Duration(
+      milliseconds: (fraction.clamp(0, 1) * totalMs).round(),
+    );
+    if (_preparing != null) _completed = target.inMilliseconds >= totalMs;
     _pendingSeek = target;
     _emit(position: target);
     _seekGuard?.cancel();
@@ -132,6 +185,8 @@ class AudioPlaybackController {
       () => _pendingSeek = null,
     );
     try {
+      await _preparing;
+      if (_disposed) return;
       await _player.seek(target);
     } catch (_) {}
   }
@@ -143,6 +198,7 @@ class AudioPlaybackController {
   }
 
   void dispose() {
+    _disposed = true;
     _seekGuard?.cancel();
     _posSub.cancel();
     _durSub.cancel();

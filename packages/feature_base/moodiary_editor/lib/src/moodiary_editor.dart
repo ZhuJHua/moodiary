@@ -2,60 +2,41 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer' as developer;
 import 'dart:io';
+import 'dart:isolate';
+import 'dart:math' as math;
 
+import 'package:fast_image/fast_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
+import 'package:moodiary_components/moodiary_components.dart' as components;
 import 'package:moodiary_i18n/moodiary_i18n.dart';
+import 'package:moodiary_models/moodiary_models.dart' as models;
 import 'package:moodiary_native/moodiary_native.dart';
+import 'package:moodiary_theme/moodiary_theme.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
-import 'editor_page.dart';
 import 'ime/ime_panel.dart';
 import 'media.dart';
 import 'toolbar/editor_command.dart';
 import 'toolbar/editor_state.dart';
-import 'transport/editor_transport.dart';
+import 'toolbar/link_sheet.dart';
+import 'typography.dart';
 
-typedef EditorRoles = Map<String, String>;
+part 'editor/apple_tracking.dart';
+part 'editor/header.dart';
+part 'editor/host.dart';
+part 'editor/media_controls.dart';
+part 'editor/meta_options.dart';
+part 'editor/nodes.dart';
+part 'editor/style.dart';
+part 'editor/transfer.dart';
+part 'editor/view.dart';
 
 typedef EditorFont = ({String family, String path});
 
 typedef DiaryLinkCandidate = ({String id, String label});
-
-@visibleForTesting
-String buildEditorActivationJs({
-  String? content,
-  String? title,
-  required bool editable,
-  required Map<String, dynamic> theme,
-  String? metaJson,
-  String? linksJson,
-}) => [
-  if (content != null) _setContentJs(content),
-  if (title != null) _setTitleJs(title),
-  _setEditableJs(editable),
-  _setThemeJs(theme),
-  _setMetaJs(metaJson),
-  _setLinksJs(linksJson),
-].map((source) => 'try{$source;}catch(e){console.error(e);}').join('\n');
-
-String _setContentJs(String content) =>
-    'window.MoodiaryBridge.setContent(${jsonEncode(content)})';
-
-String _setTitleJs(String title) =>
-    'window.MoodiaryBridge.setTitle(${jsonEncode(title)})';
-
-String _setEditableJs(bool value) =>
-    'window.MoodiaryBridge.setEditable($value)';
-
-String _setThemeJs(Map<String, dynamic> payload) =>
-    'window.MoodiaryBridge.setTheme(${jsonEncode(payload)})';
-
-String _setMetaJs(String? metaJson) =>
-    'window.MoodiaryBridge.setMeta(${jsonEncode(metaJson ?? '')})';
-
-String _setLinksJs(String? linksJson) =>
-    'window.MoodiaryBridge.setLinks(${jsonEncode(linksJson ?? '')})';
 
 void _log(String msg, {Object? error, StackTrace? stack, int level = 0}) {
   developer.log(
@@ -135,8 +116,7 @@ class MoodiaryEditor extends StatefulWidget {
   final bool firstLineIndent;
 
   final double fontScale;
-
-  final EditorRoles Function(Brightness brightness)? rolesResolver;
+  final EditorTypography typography;
 
   final EditorFont? Function()? fontResolver;
 
@@ -179,7 +159,7 @@ class MoodiaryEditor extends StatefulWidget {
     this.onOpenGraph,
     this.firstLineIndent = false,
     this.fontScale = 1.0,
-    this.rolesResolver,
+    this.typography = const EditorTypography(),
     this.fontResolver,
     this.mediaResolver,
   });
@@ -188,750 +168,39 @@ class MoodiaryEditor extends StatefulWidget {
   State<MoodiaryEditor> createState() => _MoodiaryEditorState();
 }
 
-class _MoodiaryEditorState extends State<MoodiaryEditor> {
-  // Android WebView 的选择手柄由原生主题绘制，颜色只能推给原生
-  static final _selectionHandle = SelectionHandleApi();
-  static int? _handleColor;
-
-  static final _keyboard = EditorKeyboardApi();
-  static int? _keyboardViewId;
-
-  EditorTransport? _transport;
-  bool _jsReady = false;
-  bool _readyTimedOut = false;
-  bool _activating = false;
-  bool _metaSent = false;
-  bool _activated = false;
-  Timer? _readyTimeout;
-
-  final Completer<void> _fontReady = Completer<void>();
-
-  bool _prepareStarted = false;
-
-  String? _loadError;
-
-  String? _lastStateRaw;
-
-  final _flushes = <String, Completer<void>>{};
-  int _flushSeq = 0;
-
-  InputSuspension? _overlay;
-
-  @override
-  void initState() {
-    super.initState();
-    widget.controller?._bind(this);
-  }
-
-  @override
-  void didUpdateWidget(MoodiaryEditor oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.controller != widget.controller) {
-      oldWidget.controller?._unbind(this);
-      widget.controller?._bind(this);
-    }
-    if (oldWidget.readOnly != widget.readOnly && _activated) {
-      _setEditable(!widget.readOnly);
-      if (!widget.readOnly) unawaited(_attachKeyboard());
-    }
-    if (oldWidget.metaJson != widget.metaJson && _metaSent) {
-      _setMeta();
-    }
-    if (oldWidget.linksJson != widget.linksJson && _activated) {
-      _setLinks();
-    }
-    if ((oldWidget.firstLineIndent != widget.firstLineIndent ||
-            oldWidget.fontScale != widget.fontScale) &&
-        _activated) {
-      _setTheme();
-    }
-    if (!oldWidget.metaReady && widget.metaReady) {
-      _activate();
-    }
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _syncHandleColor();
-    if (!_prepareStarted) {
-      _prepareStarted = true;
-      _prepare();
-    } else if (_activated) {
-      _setTheme();
-    }
-  }
-
-  @override
-  void dispose() {
-    _readyTimeout?.cancel();
-    unawaited(_overlay?.resume());
-    widget.controller?._unbind(this);
-    final viewId = _transport?.nativeViewId;
-    if (viewId != null && viewId == _keyboardViewId) {
-      _keyboardViewId = null;
-      unawaited(_keyboard.detach());
-    }
-    _transport?.dispose();
-    super.dispose();
-  }
-
-  static bool get _nativeKeyboard => Platform.isAndroid || Platform.isIOS;
-
-  bool get _platformSupported =>
-      Platform.isAndroid ||
-      Platform.isIOS ||
-      Platform.isMacOS ||
-      Platform.isWindows;
-
-  Future<void> _prepare() async {
-    if (!_platformSupported) {
-      if (mounted) {
-        setState(() => _loadError = l10n.editor.unsupportedPlatform);
-      }
-      return;
-    }
-    try {
-      final page = await resolveEditorPage();
-      if (!mounted) return;
-      await _buildController(page);
-    } catch (e, s) {
-      _log('webview controller build failed', error: e, stack: s, level: 1000);
-      if (mounted) setState(() => _loadError = e.toString());
-      return;
-    }
-    _startReadyTimeout();
-  }
-
-  Future<void> _buildController(EditorPage page) async {
-    final transport = createEditorTransport();
-    await transport.prepare(
-      page: page,
-      onMessage: _onMessage,
-      onConsoleError: (m) => _log('JS console: $m', level: 1000),
-      onWebError: (desc, code) =>
-          _log('webResourceError: $desc (code $code)', level: 1000),
-      debug: kDebugMode,
-    );
-    if (!mounted) {
-      transport.dispose();
-      return;
-    }
-    setState(() => _transport = transport);
-  }
-
-  void _startReadyTimeout() {
-    _readyTimeout?.cancel();
-    _readyTimeout = Timer(const Duration(seconds: 10), () {
-      if (_jsReady || !mounted) return;
-      _readyTimedOut = true;
-      _log(
-        'TIMEOUT waiting for JS "ready" after 10s — '
-        '页面或脚本可能挂了，检查 console / error 日志',
-        level: 1000,
-      );
-      _activate();
-    });
-  }
-
-  void _onMessage(String raw) {
-    Map<String, dynamic> data;
-    try {
-      data = jsonDecode(raw) as Map<String, dynamic>;
-    } catch (e) {
-      _log('bad JS message (not JSON): $raw', error: e, level: 900);
-      return;
-    }
-    final type = (data['type'] as String?) ?? '';
-    final payload = data['payload'];
-    switch (type) {
-      case 'boot':
-        if (payload is Map && payload['reqId'] is String) {
-          unawaited(_respond(payload['reqId'] as String, _bootPayload()));
-        }
-        return;
-      case 'resolveMedia':
-        if (payload is Map && payload['reqId'] is String) {
-          unawaited(
-            _handleResolveMedia(
-              payload['reqId'] as String,
-              payload['items'] is List ? payload['items'] as List : const [],
-            ),
-          );
-        }
-        return;
-      case 'ready':
-        if (_jsReady) return;
-        _jsReady = true;
-        _readyTimeout?.cancel();
-        _activate();
-        return;
-      case 'fontReady':
-        if (!_fontReady.isCompleted) _fontReady.complete();
-        return;
-      case 'change':
-        widget.onChanged?.call(payload is String ? payload : '');
-        return;
-      case 'titleChange':
-        widget.onTitleChanged?.call(payload is String ? payload : '');
-        return;
-      case 'focusChange':
-        if (payload == 'editor' || payload == 'title') {
-          unawaited(_attachKeyboard());
-        }
-        widget.controller?._focus.value = switch (payload) {
-          'editor' => EditorFocusTarget.editor,
-          'title' => EditorFocusTarget.title,
-          _ => EditorFocusTarget.none,
-        };
-        return;
-      case 'state':
-        if (payload is! Map) return;
-        final raw = jsonEncode(payload);
-        if (raw == _lastStateRaw) return;
-        _lastStateRaw = raw;
-        widget.controller?._state.value = EditorState.fromJson(
-          Map<String, Object?>.from(payload),
-        );
-        return;
-      case 'flushed':
-        if (payload is Map) _flushes.remove(payload['reqId'])?.complete();
-        return;
-      case 'editorTap':
-        widget.controller?.panel.showKeyboard();
-        return;
-      case 'overlay':
-        if (payload is Map && payload['open'] == true) {
-          _overlay ??= widget.controller?.suspendInput();
-        } else {
-          unawaited(_overlay?.resume());
-          _overlay = null;
-        }
-        return;
-      case 'urlTap':
-        if (payload is Map && payload['href'] is String) {
-          widget.onUrlTap?.call(payload['href'] as String);
-        }
-        return;
-      case 'attachmentTap':
-        if (payload is Map) {
-          final src = payload['src'];
-          final name = payload['name'];
-          final mime = payload['mime'];
-          if (src is String && _isSafeMediaName(src)) {
-            widget.onAttachmentTap?.call(
-              src,
-              name is String ? name : src,
-              mime is String ? mime : null,
-            );
-          }
-        }
-        return;
-      case 'copy':
-        if (payload is Map && payload['text'] is String) {
-          unawaited(Clipboard.setData(.new(text: payload['text'] as String)));
-          toast.success(message: l10n.common.copied);
-        }
-        return;
-      case 'contentError':
-        _log('content rejected by editor: $payload', level: 1000);
-        return;
-      case 'searchState':
-        if (payload is Map) {
-          final query = payload['query'];
-          final total = payload['total'];
-          final current = payload['current'];
-          widget.controller?._search.value = (
-            query: query is String ? query : '',
-            total: total is num ? total.toInt() : 0,
-            current: current is num ? current.toInt() : 0,
-          );
-        }
-        return;
-      case 'activeHeading':
-        final index = payload is int
-            ? payload
-            : (payload is num ? payload.toInt() : -1);
-        widget.onActiveHeadingChanged?.call(index);
-        return;
-      case 'error':
-        _log('JS error: $payload', level: 1000);
-        return;
-      case 'saveImage':
-        if (payload is Map) {
-          _handleSaveImage(Map<String, dynamic>.from(payload));
-        }
-        return;
-      case 'imageTap':
-        if (payload is Map) {
-          final srcs = [...?(payload['srcs'] as List?)?.whereType<String>()];
-          if (srcs.isNotEmpty) {
-            final index = payload['index'];
-            final i = index is num ? index.toInt() : 0;
-            widget.onImageTap?.call(srcs, i < 0 || i >= srcs.length ? 0 : i);
-            return;
-          }
-          final src = payload['src'];
-          if (src is String && src.isNotEmpty) {
-            widget.onImageTap?.call([src], 0);
-          }
-        }
-        return;
-      case 'videoFullscreen':
-        if (payload is Map) {
-          final name = payload['name'];
-          final pos = payload['position'];
-          if (name is String && name.isNotEmpty) {
-            _handleVideoFullscreen(name, pos is num ? pos.toDouble() : 0);
-          }
-        }
-        return;
-      case 'requestLinkCandidates':
-        if (payload is Map) {
-          final reqId = payload['reqId'];
-          final query = payload['query'];
-          if (reqId is String) {
-            _handleLinkCandidates(reqId, query is String ? query : '');
-          }
-        }
-        return;
-      case 'linkTap':
-        if (payload is Map) {
-          final id = payload['id'];
-          if (id is String && id.isNotEmpty) widget.onOpenDiaryLink?.call(id);
-        }
-        return;
-      case 'pickDate':
-        widget.onPickDate?.call();
-        return;
-      case 'pickTime':
-        widget.onPickTime?.call();
-        return;
-      case 'pickCategory':
-        widget.onPickCategory?.call();
-        return;
-      case 'addTag':
-        widget.onAddTag?.call();
-        return;
-      case 'removeTag':
-        if (payload is Map) {
-          final index = payload['index'];
-          if (index is num) widget.onRemoveTag?.call(index.toInt());
-        }
-        return;
-      case 'changeMood':
-        if (payload is Map) {
-          final mood = payload['mood'];
-          if (mood is String) {
-            widget.onChangeMood?.call(mood);
-          }
-        }
-        return;
-      case 'changeWeather':
-        if (payload is Map) {
-          final code = payload['code'];
-          if (code is String && code.isNotEmpty) {
-            widget.onChangeWeather?.call(code);
-          }
-        }
-        return;
-      case 'clearWeather':
-        widget.onClearWeather?.call();
-        return;
-      case 'fetchWeather':
-        widget.onFetchWeather?.call();
-        return;
-      case 'fetchPosition':
-        widget.onFetchPosition?.call();
-        return;
-      case 'locateForPlaces':
-        widget.onLocateForPlaces?.call();
-        return;
-      case 'pickPlace':
-        if (payload is Map) {
-          final id = payload['id'];
-          if (id is String && id.isNotEmpty) widget.onPickPlace?.call(id);
-        }
-        return;
-      case 'newPlace':
-        widget.onNewPlace?.call();
-        return;
-      case 'managePlaces':
-        widget.onManagePlaces?.call();
-        return;
-      case 'clearPosition':
-        widget.onClearPosition?.call();
-        return;
-      case 'openGraph':
-        widget.onOpenGraph?.call();
-        return;
-    }
-  }
-
-  Future<void> _handleVideoFullscreen(String name, double seconds) async {
-    final open = widget.onVideoFullscreen;
-    if (open == null) return;
-    final resumeAt = await open(
-      name,
-      Duration(milliseconds: (seconds * 1000).round()),
-    );
-    if (!mounted || resumeAt == null) return;
-    await _run(
-      'window.MoodiaryBridge.resumeVideo('
-      '${jsonEncode(name)}, ${resumeAt.inMilliseconds / 1000})',
-    );
-  }
-
-  Map<String, dynamic> _bootPayload() => {
-    'editable': !widget.readOnly,
-    'locale': LocaleSettings.currentLocale.languageCode,
-    'theme': _themePayload(),
-  };
-
-  Future<void> _respond(String reqId, Object? value) => _run(
-    'window.MoodiaryBridge.respond('
-    '${jsonEncode(reqId)},${jsonEncode(jsonEncode(value))})',
-  );
-
-  Future<void> _handleResolveMedia(String reqId, List<dynamic> items) async {
-    final resolver = widget.mediaResolver;
-    final urls = <String, String?>{};
-    await Future.wait([
-      for (final item in items.whereType<Map<dynamic, dynamic>>())
-        () async {
-          final name = item['name'];
-          if (name is! String) return;
-          final poster = item['poster'] == true;
-          String? url;
-          if (resolver != null && _isSafeMediaName(name)) {
-            try {
-              final resolved = await resolver(name, poster: poster);
-              if (resolved != null) url = Uri.file(resolved.path).toString();
-            } catch (e, s) {
-              _log(
-                'media resolve failed: $name',
-                error: e,
-                stack: s,
-                level: 1000,
-              );
-            }
-          }
-          urls[poster ? '$name#poster' : name] = url;
-        }(),
-    ]);
-    if (mounted) await _respond(reqId, urls);
-  }
-
-  // video- 长度须 ≥42：宿主 substring(6, 42) 取 uuid 依赖该长度
-  static bool _isSafeMediaName(String name) {
-    if (name.contains('/') || name.contains('\\') || name.contains('..')) {
-      return false;
-    }
-    if (name.startsWith('image-')) return name.length > 'image-'.length;
-    if (name.startsWith('audio-')) return name.length > 'audio-'.length;
-    if (name.startsWith('video-')) return name.length >= 42;
-    if (name.startsWith('file-')) return name.length > 'file-'.length;
+bool _isSafeMediaName(String name) {
+  if (name.contains('/') || name.contains('\\') || name.contains('..')) {
     return false;
   }
+  if (name.startsWith('image-')) return name.length > 'image-'.length;
+  if (name.startsWith('audio-')) return name.length > 'audio-'.length;
+  if (name.startsWith('video-')) return name.length >= 42;
+  if (name.startsWith('file-')) return name.length > 'file-'.length;
+  return false;
+}
 
-  Future<void> _handleLinkCandidates(String reqId, String query) async {
-    List<DiaryLinkCandidate> list = const [];
-    try {
-      list = await widget.onRequestLinkCandidates?.call(query) ?? const [];
-    } catch (e, s) {
-      _log('onRequestLinkCandidates failed', error: e, stack: s, level: 1000);
-    }
-    final json = jsonEncode([
-      for (final c in list) {'id': c.id, 'label': c.label},
-    ]);
-    await _run(
-      'window.MoodiaryBridge.resolveLinkCandidates('
-      '${jsonEncode(reqId)},${jsonEncode(json)})',
-    );
-  }
-
-  Future<void> _handleSaveImage(Map<String, dynamic> p) async {
-    final id = p['id'] as String?;
-    final dataUri = p['dataUri'] as String?;
-    final name = (p['name'] as String?) ?? '';
-    if (id == null || dataUri == null) return;
-    String? saved;
-    try {
-      saved = await widget.onSaveImage?.call(dataUri, name);
-    } catch (e, s) {
-      _log('onSaveImage failed', error: e, stack: s, level: 1000);
-    }
-    await _resolveImage(id, saved ?? '');
-  }
-
-  Future<void> _resolveImage(String id, String name) async {
-    await _run(
-      'window.MoodiaryBridge.resolveImage(${jsonEncode(id)},${jsonEncode(name)})',
-    );
-  }
-
-  Future<void> _activate() async {
-    if (_activated ||
-        _activating ||
-        !widget.metaReady ||
-        (!_jsReady && !_readyTimedOut)) {
-      return;
-    }
-    _activating = true;
-    try {
-      if (!mounted || !widget.metaReady) return;
-      final source = buildEditorActivationJs(
-        content: widget.initialContent,
-        title: widget.initialTitle,
-        editable: !widget.readOnly,
-        theme: _themePayload(),
-        metaJson: widget.metaJson,
-        linksJson: widget.linksJson,
-      );
-      // 首次下发即显示页面，等字体期间也继续接收元数据更新
-      _metaSent = true;
-      await _run(source);
-      if (_jsReady &&
-          widget.fontResolver?.call() != null &&
-          !_fontReady.isCompleted) {
-        await _fontReady.future.timeout(
-          const Duration(seconds: 2),
-          onTimeout: () {},
-        );
-        if (!mounted) return;
-        await _run(
-          buildEditorActivationJs(
-            editable: !widget.readOnly,
-            theme: _themePayload(),
-            metaJson: widget.metaJson,
-            linksJson: widget.linksJson,
-          ),
-        );
-      }
-      if (!mounted) return;
-      if (!widget.readOnly) unawaited(_attachKeyboard());
-      setState(() => _activated = true);
-    } finally {
-      _activating = false;
-    }
-  }
-
-  Map<String, dynamic> _themePayload() {
-    final brightness = context.theme.brightness;
-    final roles =
-        widget.rolesResolver?.call(brightness) ?? _fallbackRoles(context);
-    final font = widget.fontResolver?.call();
-    return {
-      'roles': roles,
-      'dark': brightness == .dark,
-      if (font != null) 'font': font.family,
-      if (font != null) 'fontUrl': Uri.file(font.path).toString(),
-      if (font != null) 'fontV': _fontVersion(font),
-      'firstLineIndent': widget.firstLineIndent,
-      'fontScale': widget.fontScale,
-    };
-  }
-
-  static EditorRoles _fallbackRoles(BuildContext context) {
-    final scheme = context.theme.colors;
-    return {
-      'surface': _hex(scheme.surface),
-      'onSurface': _hex(scheme.onSurface),
-      'onSurfaceVariant': _hex(scheme.onSurfaceVariant),
-      'surfaceContainerLow': _hex(scheme.surfaceContainerLow),
-      'surfaceContainer': _hex(scheme.surfaceContainer),
-      'surfaceContainerHigh': _hex(scheme.surfaceContainerHigh),
-      'surfaceContainerHighest': _hex(scheme.surfaceContainerHighest),
-      'primary': _hex(scheme.primary),
-      'onPrimary': _hex(scheme.onPrimary),
-      'secondaryContainer': _hex(scheme.secondaryContainer),
-      'onSecondaryContainer': _hex(scheme.onSecondaryContainer),
-      'inverseSurface': _hex(scheme.inverseSurface),
-      'onInverseSurface': _hex(scheme.onInverseSurface),
-      'outline': _hex(scheme.outline),
-      'outlineVariant': _hex(scheme.outlineVariant),
-      'error': _hex(scheme.error),
-    };
-  }
-
-  static String _fontVersion(EditorFont font) {
-    try {
-      final mtime = File(font.path).statSync().modified.millisecondsSinceEpoch;
-      return '${font.family}-$mtime';
-    } catch (_) {
-      return font.family;
-    }
-  }
-
-  static String _hex(Color c) {
-    final rgb = c.toARGB32() & 0xFFFFFF;
-    return '#${rgb.toRadixString(16).padLeft(6, '0')}';
-  }
-
-  Future<void> _setEditable(bool value) async {
-    await _run(_setEditableJs(value));
-  }
-
-  Future<void> _setMeta() async {
-    // 首次下发即显示页面，等字体期间也继续接收元数据更新
-    _metaSent = true;
-    await _run(_setMetaJs(widget.metaJson));
-  }
-
-  Future<void> _setLinks() async {
-    await _run(_setLinksJs(widget.linksJson));
-  }
-
-  void _syncHandleColor() {
-    if (!Platform.isAndroid) return;
-    final argb = context.theme.colors.primary.toARGB32();
-    if (argb == _handleColor) return;
-    _handleColor = argb;
-    unawaited(_selectionHandle.setColor(argb));
-  }
-
-  Future<void> _setTheme() async {
-    await _run(_setThemeJs(_themePayload()));
-  }
-
-  Future<void> _setContent(String content) async {
-    await _run(_setContentJs(content));
-  }
-
-  Future<void> _setTitle(String title) async {
-    await _run(_setTitleJs(title));
-  }
-
-  Future<void> _scrollToHeading(int index) async {
-    await _run('window.MoodiaryBridge.scrollToHeading($index)');
-  }
-
-  Future<double> _getScrollY() async {
-    final raw = await _transport?.runForResult(
-      'window.MoodiaryBridge.getScrollY()',
-    );
-    if (raw is num) return raw.toDouble();
-    if (raw is String) return double.tryParse(raw) ?? 0;
-    return 0;
-  }
-
-  Future<void> _swapDocument({
+abstract interface class EditorHost {
+  ValueListenable<EditorState> get state;
+  ValueListenable<EditorFocusTarget> get focusTarget;
+  ValueListenable<EditorSearchState?> get search;
+  Future<void> exec(EditorCommand command, Map<String, Object?>? args);
+  Future<void> flush();
+  Future<void> focus();
+  Future<void> blur();
+  Future<void> focusTitle();
+  Future<void> holdSelection();
+  Future<void> setPanelMode(bool value);
+  Future<bool> suppressKeyboard(bool value);
+  Future<void> dismissKeyboard();
+  Future<void> scrollToHeading(int index);
+  Future<double> getScrollY();
+  Future<void> setScrollY(double value);
+  Future<void> swapDocument({
     required String content,
     required String title,
     double scrollY = 0,
-  }) async {
-    await _setContent(content);
-    await _setTitle(title);
-    await _run('window.MoodiaryBridge.setScrollY($scrollY)');
-  }
-
-  Future<void> _focus() async {
-    await _focusWebView();
-    await _run('window.MoodiaryBridge.focus()');
-  }
-
-  Future<void> _focusWebView() async {
-    if (await _attachKeyboard()) await _keyboard.focusWebView();
-  }
-
-  Future<void> _blur() async {
-    await _run('window.MoodiaryBridge.blur()');
-  }
-
-  Future<void> _holdSelection() async {
-    await _run('window.MoodiaryBridge.holdSelection()');
-  }
-
-  Future<void> _focusTitle() async {
-    await _focusWebView();
-    await _run('window.MoodiaryBridge.focusTitle()');
-  }
-
-  Future<void> _exec(EditorCommand command, Map<String, Object?>? args) async {
-    await _run(
-      'window.MoodiaryBridge.exec(${jsonEncode(command.name)}'
-      '${args == null ? '' : ',${jsonEncode(args)}'})',
-    );
-  }
-
-  Future<void> _flush() async {
-    if (_transport == null || !_jsReady) return;
-    final reqId = 'f${_flushSeq++}';
-    final done = _flushes[reqId] = Completer<void>();
-    await _run('window.MoodiaryBridge.flush(${jsonEncode(reqId)})');
-    await done.future.timeout(
-      const Duration(seconds: 1),
-      onTimeout: () => _flushes.remove(reqId),
-    );
-  }
-
-  Future<void> _setPanelMode(bool value) async {
-    await _run('window.MoodiaryBridge.setPanelMode($value)');
-  }
-
-  // 原生键盘只服务一个 WebView：就绪即 attach 以赶在键盘动画前，聚焦时再夺回
-  Future<bool> _attachKeyboard() async {
-    final viewId = _transport?.nativeViewId;
-    if (!_nativeKeyboard || viewId == null) return false;
-    if (_keyboardViewId == viewId) return true;
-    try {
-      await _keyboard.attach(viewId);
-    } on PlatformException catch (e, s) {
-      _log('keyboard attach failed', error: e, stack: s, level: 1000);
-      return false;
-    }
-    _keyboardViewId = viewId;
-    return true;
-  }
-
-  Future<bool> _suppressKeyboard(bool suppressed) async {
-    if (!await _attachKeyboard()) return false;
-    if (suppressed) await _setPanelMode(true);
-    final ok = await _keyboard.setKeyboardSuppressed(suppressed);
-    if (!suppressed) await _setPanelMode(false);
-    return ok;
-  }
-
-  Future<void> _dismissKeyboard() async {
-    widget.controller?._focus.value = .none;
-    await _setPanelMode(false);
-    await _blur();
-    // iOS 的收起标记不会自行清除，安卓的是一次性的
-    if (Platform.isIOS && await _attachKeyboard()) {
-      await _keyboard.setKeyboardSuppressed(false);
-    }
-  }
-
-  Future<void> _run(String source) async {
-    await _transport?.run(source);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final surface = context.theme.colors.surface;
-    final transport = _transport;
-    final loadError = _loadError;
-
-    return ColoredBox(
-      color: surface,
-      child: Stack(
-        fit: .expand,
-        children: [
-          if (transport != null) transport.buildView(),
-          if (loadError != null)
-            Center(
-              child: Padding(
-                padding: const .all(24),
-                child: Text(
-                  context.l10n.editor.loadFailed(error: loadError),
-                  textAlign: .center,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
+  });
+  Future<void> resumeVideo(String name, Duration position);
 }
 
 enum EditorFocusTarget { none, editor, title }
@@ -939,7 +208,7 @@ enum EditorFocusTarget { none, editor, title }
 typedef EditorSearchState = ({String query, int total, int current});
 
 class MoodiaryEditorController {
-  _MoodiaryEditorState? _host;
+  EditorHost? _host;
 
   final _state = ValueNotifier<EditorState>(.empty);
   final _focus = ValueNotifier<EditorFocusTarget>(.none);
@@ -956,10 +225,57 @@ class MoodiaryEditorController {
 
   bool get panelOpen => panel.type == .custom && panel.panel != .block;
 
-  void _bind(_MoodiaryEditorState state) => _host = state;
+  bool Function()? dismissTransient;
 
-  void _unbind(_MoodiaryEditorState state) {
-    if (identical(_host, state)) _host = null;
+  Future<void> editLink(BuildContext context) async {
+    final host = _host;
+    if (host is! MoodiaryEditorHost ||
+        host.readOnly ||
+        !host.bodyFocus.hasPrimaryFocus) {
+      return;
+    }
+    final state = host.state.value, generation = host._generation;
+    final input = await withInputSuspended(
+      () => showLinkSheet(
+        context,
+        text: state.link?.text ?? state.selectedText,
+        href: state.link?.href ?? '',
+      ),
+    );
+    if (!context.mounted ||
+        !identical(_host, host) ||
+        generation != host._generation ||
+        input == null) {
+      return;
+    }
+    await exec(.setLink, {'text': input.text, 'href': input.href});
+  }
+
+  void _bind(EditorHost host) {
+    final old = _host;
+    if (old != null) _unbind(old);
+    _host = host;
+    host.state.addListener(_syncState);
+    host.focusTarget.addListener(_syncFocus);
+    host.search.addListener(_syncSearch);
+    _syncState();
+    _syncFocus();
+    _syncSearch();
+  }
+
+  void _syncState() => _state.value = _host?.state.value ?? EditorState.empty;
+  void _syncFocus() =>
+      _focus.value = _host?.focusTarget.value ?? EditorFocusTarget.none;
+  void _syncSearch() => _search.value = _host?.search.value;
+  @visibleForTesting
+  void bindHostForTesting(EditorHost host) => _bind(host);
+
+  void _unbind(EditorHost host) {
+    if (!identical(_host, host)) return;
+    host.state.removeListener(_syncState);
+    host.focusTarget.removeListener(_syncFocus);
+    host.search.removeListener(_syncSearch);
+    _host = null;
   }
 
   ValueListenable<EditorState> get state => _state;
@@ -971,35 +287,65 @@ class MoodiaryEditorController {
   ValueListenable<bool> get searchOpen => _searchOpen;
 
   Future<void> exec(EditorCommand command, [Map<String, Object?>? args]) async {
-    await _host?._exec(command, args);
+    await _host?.exec(command, args);
   }
 
   Future<void> flush() async {
-    await _host?._flush();
+    await _host?.flush();
   }
 
-  void openSearch() => _searchOpen.value = true;
+  EditorFocusTarget _searchSource = .none;
+  ft.Selection? _searchSelection;
+  ft.Node? _searchDocument;
+  TextSelection? _searchTitleSelection;
+  void openSearch() {
+    if (_searchOpen.value) return;
+    _searchSource = _focus.value;
+    if (_host case final MoodiaryEditorHost host) {
+      _searchSelection = host.editor.state.selection;
+      _searchDocument = host.editor.state.doc;
+      _searchTitleSelection = host.title.selection;
+    }
+    unawaited(holdSelection());
+    _searchOpen.value = true;
+  }
 
   Future<void> closeSearch() async {
     _searchOpen.value = false;
     _search.value = null;
     await exec(.clearSearch);
+    final source = _searchSource;
+    _searchSource = .none;
+    final selection = _searchSelection,
+        document = _searchDocument,
+        titleSelection = _searchTitleSelection;
+    _searchSelection = null;
+    _searchDocument = null;
+    _searchTitleSelection = null;
+    if (_focus.value != .none) return;
+    if (_host case final MoodiaryEditorHost host
+        when identical(document, host.editor.state.doc)) {
+      if (selection != null) host.editor.setSelection(selection);
+      if (titleSelection != null) host.title.selection = titleSelection;
+    }
+    if (source == .title) await focusTitle();
+    if (source == .editor) await focus();
   }
 
   Future<void> focus() async {
-    await _host?._focus();
+    await _host?.focus();
   }
 
   Future<void> blur() async {
-    await _host?._blur();
+    await _host?.blur();
   }
 
   Future<void> focusTitle() async {
-    await _host?._focusTitle();
+    await _host?.focusTitle();
   }
 
   Future<void> holdSelection() async {
-    await _host?._holdSelection();
+    await _host?.holdSelection();
   }
 
   InputSuspension suspendInput() {
@@ -1049,23 +395,22 @@ class MoodiaryEditorController {
   }
 
   Future<void> scrollToHeading(int index) async {
-    await _host?._scrollToHeading(index);
+    await _host?.scrollToHeading(index);
   }
 
   Future<double> getScrollY() async {
-    return (await _host?._getScrollY()) ?? 0;
+    return (await _host?.getScrollY()) ?? 0;
   }
 
+  Future<void> setScrollY(double value) async => _host?.setScrollY(value);
+  Future<void> resumeVideo(String name, Duration position) async =>
+      _host?.resumeVideo(name, position);
   Future<void> swapDocument({
     required String content,
     required String title,
     double scrollY = 0,
   }) async {
-    await _host?._swapDocument(
-      content: content,
-      title: title,
-      scrollY: scrollY,
-    );
+    await _host?.swapDocument(content: content, title: title, scrollY: scrollY);
   }
 }
 
@@ -1120,10 +465,10 @@ final class _EditorImeTarget implements ImeTarget {
 
   @override
   Future<bool> suppressKeyboard(bool suppressed) async =>
-      await _controller._host?._suppressKeyboard(suppressed) ?? false;
+      await _controller._host?.suppressKeyboard(suppressed) ?? false;
 
   @override
-  Future<void> dismiss() async => _controller._host?._dismissKeyboard();
+  Future<void> dismiss() async => _controller._host?.dismissKeyboard();
 }
 
 class _FocusedListenable extends ValueNotifier<bool> {

@@ -133,32 +133,6 @@ class ThemeManager {
     };
   }
 
-  Map<String, String> editorRoles(Brightness brightness) {
-    final scheme = brightness == .light
-        ? lightTheme.colorScheme
-        : darkTheme.colorScheme;
-    String hex(Color color) =>
-        '#${(color.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}';
-    return {
-      'surface': hex(scheme.surface),
-      'onSurface': hex(scheme.onSurface),
-      'onSurfaceVariant': hex(scheme.onSurfaceVariant),
-      'surfaceContainerLow': hex(scheme.surfaceContainerLow),
-      'surfaceContainer': hex(scheme.surfaceContainer),
-      'surfaceContainerHigh': hex(scheme.surfaceContainerHigh),
-      'surfaceContainerHighest': hex(scheme.surfaceContainerHighest),
-      'primary': hex(scheme.primary),
-      'onPrimary': hex(scheme.onPrimary),
-      'secondaryContainer': hex(scheme.secondaryContainer),
-      'onSecondaryContainer': hex(scheme.onSecondaryContainer),
-      'inverseSurface': hex(scheme.inverseSurface),
-      'onInverseSurface': hex(scheme.onInverseSurface),
-      'outline': hex(scheme.outline),
-      'outlineVariant': hex(scheme.outlineVariant),
-      'error': hex(scheme.error),
-    };
-  }
-
   ({String family, String path})? get editorFont {
     final family = fontFamily;
     final fileName = _activeFontFileName;

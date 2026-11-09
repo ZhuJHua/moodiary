@@ -330,9 +330,9 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       onActiveHeadingChanged: widget.onActiveHeadingChanged,
       onUrlTap: _openUrl,
       onAttachmentTap: _openAttachment,
-      onSaveImage: _saveDataUriImage,
       onImageTap: _previewImages,
       onVideoFullscreen: _openVideoFullscreen,
+      onSaveImage: _saveDataUriImage,
       onRequestLinkCandidates: _linkCandidates,
       onOpenDiaryLink: widget.onOpenDiaryLink,
       metaJson: widget.metaJson,
@@ -356,7 +356,6 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       onOpenGraph: widget.onOpenGraph,
       firstLineIndent: widget.firstLineIndent,
       fontScale: widget.fontScale,
-      rolesResolver: getIt<ThemeManager>().editorRoles,
       fontResolver: () => getIt<ThemeManager>().editorFont,
       mediaResolver: appMediaResolver,
     );

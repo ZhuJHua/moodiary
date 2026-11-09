@@ -1,7 +1,5 @@
 {
   "audioFileError": "Audio file error",
-  "unsupportedPlatform": "The editor is not supported on this platform",
-  "loadFailed": "Failed to load the editor\n{error}",
   "pickCategory": "Pick a category",
   "noCategory": "No category",
   "migrationTitle": "Upgrade data migration",
@@ -100,6 +98,10 @@
     "tableDelete": "Delete table",
     "copyCode": "Copy code",
     "exitCode": "Exit code block",
+    "pasteFormatted": "Formatting applied",
+    "restoreOriginal": "Restore original",
+    "pasteKeptFormat": "Formatting kept",
+    "pasteUsePlain": "Use plain text",
     "openLink": "Open link",
     "copyLink": "Copy link",
     "editLink": "Edit link",
@@ -132,5 +134,30 @@
     "attachmentFailed": "Could not save the file",
     "openFailed": "No app can open this file",
     "insertFailed": "Could not insert"
+  },
+  "content": {
+    "audioProgress": "Audio progress",
+    "videoProgress": "Video progress",
+    "codeCopy": "Copy",
+    "codeCopied": "Copied",
+    "titlePlaceholder": "Title",
+    "bodyPlaceholder": "Text",
+    "codeAutoDetect": "Auto-detect",
+    "plainText": "Plain text",
+    "play": "Play",
+    "pause": "Pause",
+    "mute": "Mute",
+    "fullscreen": "Fullscreen"
+  },
+  "meta": {
+    "mood": "Mood",
+    "weather": "Weather",
+    "place": "Location",
+    "category": "Category",
+    "tag": "Tag",
+    "addTag": "Add tag",
+    "removeTag": "Remove tag",
+    "moodUnset": "Not recorded",
+    "moodClear": "Don't record"
   }
 }

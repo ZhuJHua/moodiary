@@ -1,0 +1,20 @@
+name: flutter_tiptap
+description: "Flutter rich text editor compatible with the tiptap JSON format."
+version: 0.0.1
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  characters: 1.4.1
+  html: 0.15.7
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1

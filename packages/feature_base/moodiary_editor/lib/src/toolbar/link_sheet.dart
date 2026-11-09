@@ -27,10 +27,20 @@ class _LinkSheet extends StatefulWidget {
 class _LinkSheetState extends State<_LinkSheet> {
   late final _text = TextEditingController(text: widget.text);
   late final _href = TextEditingController(text: widget.href);
+  final _hrefFocus = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _hrefFocus.requestFocus();
+    });
+  }
 
   @override
   void dispose() {
     _text.dispose();
+    _hrefFocus.dispose();
     _href.dispose();
     super.dispose();
   }
@@ -64,6 +74,7 @@ class _LinkSheetState extends State<_LinkSheet> {
           MField(controller: _text, label: t.linkText, textInputAction: .next),
           MField(
             controller: _href,
+            focusNode: _hrefFocus,
             label: t.linkUrl,
             autofocus: widget.text.isNotEmpty && widget.href.isEmpty,
             keyboardType: .url,

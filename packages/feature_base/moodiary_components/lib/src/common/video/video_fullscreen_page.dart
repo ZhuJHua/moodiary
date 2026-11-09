@@ -101,9 +101,17 @@ class MVideoPlayerPage extends StatefulWidget {
     final String videoPath;
     final String? coverPath;
     try {
-      videoPath = AppFiles.getRealPath('video', name);
-      coverPath = _coverPathOf(name);
-      aspect = await _coverAspect(coverPath);
+      final remote = Uri.tryParse(name);
+      if (remote != null &&
+          (remote.scheme == 'http' || remote.scheme == 'https')) {
+        videoPath = name;
+        coverPath = null;
+        aspect = null;
+      } else {
+        videoPath = AppFiles.getRealPath('video', name);
+        coverPath = _coverPathOf(name);
+        aspect = await _coverAspect(coverPath);
+      }
     } finally {
       _opening = false;
     }
@@ -182,7 +190,11 @@ class _MVideoPlayerPageState extends State<MVideoPlayerPage>
   void initState() {
     super.initState();
     _player = MVideoPlaybackController(
-      source: .file(widget.videoPath),
+      source:
+          widget.videoPath.startsWith('http://') ||
+              widget.videoPath.startsWith('https://')
+          ? VideoSource.network(Uri.parse(widget.videoPath))
+          : VideoSource.file(widget.videoPath),
       portFactory: widget.portFactory,
       initialAspect: widget.initialAspect,
       autoPlay: false,

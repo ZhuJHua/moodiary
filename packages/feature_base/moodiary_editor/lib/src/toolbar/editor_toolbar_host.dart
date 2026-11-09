@@ -45,26 +45,36 @@ class _EditorToolbarHostState extends State<EditorToolbarHost> {
   MoodiaryEditorController get _c => widget.controller;
   ImePanelController<EditorPanel> get _panel => _c.panel;
   EditorState get _state => _c.state.value;
+  bool _contentError = false;
+  bool get _editable => widget.editable && !_state.contentError;
 
   @override
   void initState() {
     super.initState();
+    _c.dismissTransient = _dismissTransient;
     _c.state.addListener(_onState);
+    _c.focusTarget.addListener(_onState);
   }
 
   @override
   void didUpdateWidget(covariant EditorToolbarHost oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.dismissTransient = null;
+      widget.controller.dismissTransient = _dismissTransient;
       oldWidget.controller.state.removeListener(_onState);
+      oldWidget.controller.focusTarget.removeListener(_onState);
       widget.controller.state.addListener(_onState);
+      widget.controller.focusTarget.addListener(_onState);
     }
     if (!oldWidget.editable && widget.editable) _tools = ToolbarPrefs.load();
   }
 
   @override
   void dispose() {
+    _c.dismissTransient = null;
     _c.state.removeListener(_onState);
+    _c.focusTarget.removeListener(_onState);
     super.dispose();
   }
 
@@ -74,9 +84,18 @@ class _EditorToolbarHostState extends State<EditorToolbarHost> {
 
   void _onState() {
     final s = _state;
+    if (_contentError != s.contentError) {
+      _contentError = s.contentError;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() {});
+      });
+    }
     final focused = _c.focusTarget.value == .editor;
-    if (s.selection == .node && (focused || _panel.type != .keyboard)) {
-      if (_panel.type != .custom) _panel.showPanel(.block);
+    // A block selected while typing (e.g. Backspace onto an image) keeps the
+    // keyboard, so the next key deletes it or types after it. Only with the
+    // keyboard down does the block panel take its place.
+    if (s.selection == .node) {
+      if (_panel.type == .none) _panel.showPanel(.block);
     } else if (_panel.panel == .block) {
       focused ? _panel.showKeyboard() : _panel.hide();
     }
@@ -113,20 +132,13 @@ class _EditorToolbarHostState extends State<EditorToolbarHost> {
     if (_c.focusTarget.value != .editor) await _c.focus();
   }
 
-  Future<void> _editLink() async {
-    final s = _state;
-    final input = await _c.withInputSuspended(
-      () async => mounted
-          ? showLinkSheet(
-              context,
-              text: s.link?.text ?? s.selectedText,
-              href: s.link?.href ?? '',
-            )
-          : null,
-    );
-    if (input == null || !mounted) return;
-    await _c.exec(.setLink, {'text': input.text, 'href': input.href});
+  bool _dismissTransient() {
+    if (_popover == null) return false;
+    setState(() => _popover = null);
+    return true;
   }
+
+  Future<void> _editLink() => _c.editLink(context);
 
   Future<T> _suspendForBlock<T>(Future<T> Function() open) async {
     final unfocused = _c.focusTarget.value != .editor;
@@ -362,14 +374,14 @@ class _EditorToolbarHostState extends State<EditorToolbarHost> {
         ValueListenableBuilder(
           valueListenable: _c.searchOpen,
           builder: (_, open, _) => open
-              ? EditorFindBar(controller: _c, editable: widget.editable)
+              ? EditorFindBar(controller: _c, editable: _editable)
               : const SizedBox.shrink(),
         ),
         Expanded(
           child: Stack(
             children: [
               Positioned.fill(child: widget.child),
-              if (widget.editable)
+              if (_editable)
                 Positioned(
                   left: 10,
                   right: 10,
@@ -386,7 +398,7 @@ class _EditorToolbarHostState extends State<EditorToolbarHost> {
             ],
           ),
         ),
-        if (widget.editable) ...[
+        if (_editable) ...[
           if (widget.statusBar case final status?)
             Container(
               height: 28,
@@ -439,8 +451,7 @@ class _EditorToolbarHostState extends State<EditorToolbarHost> {
                   : colors.surface,
             ),
           ),
-        ] else
-          SizedBox(height: MediaQuery.viewPaddingOf(context).bottom),
+        ],
       ],
     );
   }

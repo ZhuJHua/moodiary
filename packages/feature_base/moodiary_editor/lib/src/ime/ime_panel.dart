@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
@@ -8,8 +7,8 @@ import 'package:mui/mui.dart';
 
 import 'ime_height.dart';
 
-// 原生 EventChannel 只认一个监听方，所有容器共用这一个广播流
-final _nativeKeyboardEvents = keyboardEvents();
+// The native event channel takes one listener; every container shares it.
+final _nativeKeyboardHeights = keyboardHeight();
 
 enum ImePanelType { none, keyboard, custom }
 
@@ -73,7 +72,7 @@ class ImePanelContainer<T> extends StatefulWidget {
   final Color? backgroundColor;
 
   @visibleForTesting
-  final Stream<KeyboardEvent>? keyboardEvents;
+  final Stream<double>? keyboardHeights;
 
   const ImePanelContainer({
     super.key,
@@ -82,7 +81,7 @@ class ImePanelContainer<T> extends StatefulWidget {
     required this.panelBuilder,
     this.compact,
     this.backgroundColor,
-    this.keyboardEvents,
+    this.keyboardHeights,
   });
 
   @override
@@ -97,7 +96,8 @@ class _ImePanelContainerState<T> extends State<ImePanelContainer<T>>
 
   double? _measured;
 
-  bool _keyboardChangedByItself = false;
+  // The system already animates the insets; animate only to or from a panel.
+  bool _animate = false;
 
   // 主动收键盘后、收起事件到来前的可见事件是过时的
   bool _awaitingHide = false;
@@ -105,8 +105,13 @@ class _ImePanelContainerState<T> extends State<ImePanelContainer<T>>
 
   Completer<void>? _keyboardGone;
 
-  StreamSubscription<KeyboardEvent>? _keyboardSub;
-  Timer? _ensureTimer;
+  double _lastKeyboardHeight = 0;
+  // Final keyboard height from the native event, known as the animation starts.
+  double? _target;
+  StreamSubscription<double>? _heightSub;
+  Timer? _ensureTimer, _rememberTimer;
+  // A hide reported before the keyboard came back after a resume is stale.
+  bool _shownSinceResume = false;
 
   @override
   void initState() {
@@ -114,8 +119,8 @@ class _ImePanelContainerState<T> extends State<ImePanelContainer<T>>
     widget.controller._attach(this);
     widget.target.focused.addListener(_onFocusChanged);
     WidgetsBinding.instance.addObserver(this);
-    _keyboardSub = (widget.keyboardEvents ?? _nativeKeyboardEvents).listen(
-      _onKeyboardEvent,
+    _heightSub = (widget.keyboardHeights ?? _nativeKeyboardHeights).listen(
+      _onKeyboardHeight,
     );
   }
 
@@ -138,8 +143,9 @@ class _ImePanelContainerState<T> extends State<ImePanelContainer<T>>
     widget.controller._detach(this);
     widget.target.focused.removeListener(_onFocusChanged);
     WidgetsBinding.instance.removeObserver(this);
-    unawaited(_keyboardSub?.cancel());
+    unawaited(_heightSub?.cancel());
     _ensureTimer?.cancel();
+    _rememberTimer?.cancel();
     _keyboardGone?.complete();
     super.dispose();
   }
@@ -171,45 +177,83 @@ class _ImePanelContainerState<T> extends State<ImePanelContainer<T>>
     }
   }
 
-  void _onKeyboardEvent(KeyboardEvent event) {
+  // Switches as soon as the keyboard starts moving; the insets then only move
+  // the placeholder.
+  void _onKeyboardHeight(double height) {
     if (!mounted) return;
-    if (!event.visible) _awaitingHide = false;
-    if (event.floating) {
-      if (event.visible && _type == .custom && !_awaitingHide) {
-        _switchTo(.keyboard, fromFocus: true);
+    if (height <= 0) {
+      _target = null;
+      _awaitingHide = false;
+      if (_type == .keyboard) _keyboardHidden();
+      return;
+    }
+    _target = height;
+    _shownSinceResume = true;
+    _remember(height);
+    if ((_type == .custom && !_awaitingHide) ||
+        (_type == .none && widget.target.focused.value)) {
+      unawaited(_switchTo(.keyboard, fromFocus: true));
+    } else if (_type == .keyboard && _lastType == .custom) {
+      setState(() {});
+    }
+  }
+
+  void _keyboardHidden() {
+    final userHide =
+        _android &&
+        _shownSinceResume &&
+        WidgetsBinding.instance.lifecycleState == .resumed;
+    unawaited(_switchTo(.none, fromFocus: !userHide));
+  }
+
+  void _syncKeyboard(double height) {
+    final previous = _lastKeyboardHeight;
+    if (height == previous) return;
+    _lastKeyboardHeight = height;
+    if (height <= 0) {
+      _awaitingHide = false;
+      // The native event says when it really left; this may be an old hide
+      // ending under a keyboard already on its way back.
+      if (_type == .keyboard && previous > 0 && _target == null) {
+        _keyboardHidden();
       }
       return;
     }
-    if (event.visible) {
-      final total = event.height + (Platform.isAndroid ? _safeBottom : 0);
-      if (event.isStart) {
-        _remember(total);
-        if ((_type == .custom && !_awaitingHide) ||
-            (_type == .none && widget.target.focused.value)) {
-          _switchTo(.keyboard, fromFocus: true);
-        } else if (_type == .keyboard) {
-          _keyboardChangedByItself = true;
-          setState(() {});
-          WidgetsBinding.instance.addPostFrameCallback(
-            (_) => _keyboardChangedByItself = false,
-          );
-        }
-      } else {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          final stable = _insets;
-          if (stable > 0) _remember(stable);
-          if (_type == .keyboard && _lastType == .custom) {
-            setState(() => _lastType = .keyboard);
-          }
-        });
-      }
-    } else if (_type == .keyboard && (_android || !event.isStart)) {
-      // 安卓收起动画开始时 insets 已是终态，当场处理；iOS 聚焦过程中 willHide 会抖，等动画结束
-      final userHide =
-          _android && WidgetsBinding.instance.lifecycleState == .resumed;
-      _switchTo(.none, fromFocus: !userHide);
+    if (height > previous) _shownSinceResume = true;
+    // Without the native height, keep only a height the insets settle on.
+    _rememberTimer?.cancel();
+    _rememberTimer = Timer(const Duration(milliseconds: 150), () {
+      if (!mounted || _target != null || _lastKeyboardHeight != height) return;
+      _remember(height);
+      if (_type == .keyboard) _settleFromPanel();
+    });
+    // A shrinking keyboard is on its way out, not coming back.
+    if (height > previous &&
+        ((_type == .custom && !_awaitingHide) ||
+            (_type == .none && widget.target.focused.value))) {
+      unawaited(_switchTo(.keyboard, fromFocus: true));
     }
+    if (_type != .keyboard) return;
+    if (_lastType == .custom) {
+      if (height >= _handoffHeight()) _settleFromPanel();
+    } else {
+      _animate = false;
+    }
+  }
+
+  double _handoffHeight() => _target ?? _panelHeight();
+
+  // Coming from a panel the placeholder holds the panel height until the
+  // keyboard covers it, then hands over to the insets.
+  void _settleFromPanel() {
+    if (_lastType != .custom) return;
+    setState(() => _lastType = .keyboard);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncKeyboard(_insets);
   }
 
   void _remember(double height) {
@@ -223,7 +267,14 @@ class _ImePanelContainerState<T> extends State<ImePanelContainer<T>>
   static bool get _android => defaultTargetPlatform == .android;
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != .resumed) _shownSinceResume = false;
+  }
+
+  @override
   void didChangeMetrics() {
+    final view = View.of(context);
+    _syncKeyboard(view.viewInsets.bottom / view.devicePixelRatio);
     if (_keyboardGone != null && !_keyboardOnScreen) {
       _keyboardGone!.complete();
       _keyboardGone = null;
@@ -246,7 +297,7 @@ class _ImePanelContainerState<T> extends State<ImePanelContainer<T>>
     await (_keyboardGone ??= Completer<void>()).future;
   }
 
-  // 安卓小窗、悬浮或硬件键盘不占 viewInsets 原生也可能不报：两次都为 0 就退回 none，焦点保留
+  // 悬浮或硬件键盘不占 viewInsets，保留焦点并收起占位。
   void _ensureKeyboardVisible() {
     _ensureTimer?.cancel();
     _ensureTimer = Timer(const Duration(milliseconds: 200), () {
@@ -272,6 +323,7 @@ class _ImePanelContainerState<T> extends State<ImePanelContainer<T>>
     }
     _lastType = previous;
     _type = type;
+    _animate = type == .custom || previous == .custom;
     _panel = type == .custom ? panel : null;
     widget.controller._sync(_type, _panel);
     setState(() {});
@@ -292,7 +344,7 @@ class _ImePanelContainerState<T> extends State<ImePanelContainer<T>>
         _ignoreFocus = false;
       }
     } else if (previous == .custom) {
-      // iOS 的零高 inputView 标记不复位，之后每次聚焦都拿到零高键盘
+      // Restore the editor input connection when leaving a custom panel.
       unawaited(widget.target.suppressKeyboard(false));
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -302,41 +354,43 @@ class _ImePanelContainerState<T> extends State<ImePanelContainer<T>>
 
   double _keyboardPlaceholder() {
     var height = _insets;
-    if (_lastType == .custom) height = max(height, _panelHeight());
+    if (_lastType == .custom) height = max(height, _handoffHeight());
     return max(height, _safeBottom);
   }
 
   @override
   Widget build(BuildContext context) {
     final panel = _panel;
-    final Widget child = switch (_type) {
-      .custom when panel != null && (widget.compact?.call(panel) ?? false) =>
-        SizedBox(
-          width: double.infinity,
-          height: _safeBottom,
-          child: widget.panelBuilder(context, panel),
-        ),
-      .custom when panel != null => SizedBox(
-        width: double.infinity,
-        height: _panelHeight(),
-        child: widget.panelBuilder(context, panel),
+    final (height, content) = switch (_type) {
+      .custom when panel != null && (widget.compact?.call(panel) ?? false) => (
+        _safeBottom,
+        widget.panelBuilder(context, panel),
       ),
-      .keyboard => SizedBox(
-        width: double.infinity,
-        height: _keyboardPlaceholder(),
+      .custom when panel != null => (
+        _panelHeight(),
+        widget.panelBuilder(context, panel),
       ),
-      _ => SizedBox(width: double.infinity, height: max(_insets, _safeBottom)),
+      .keyboard => (_keyboardPlaceholder(), null),
+      _ => (max(_insets, _safeBottom), null),
     };
-    final duration = _keyboardChangedByItself
-        ? const Duration(milliseconds: 50)
-        : const Duration(milliseconds: 200);
     return ColoredBox(
       color: widget.backgroundColor ?? Colors.transparent,
-      child: AnimatedSize(
-        alignment: .topCenter,
-        duration: duration,
-        curve: Curves.linear,
-        child: child,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(end: height),
+        duration: _animate ? const Duration(milliseconds: 200) : Duration.zero,
+        builder: (context, value, child) => SizedBox(
+          width: double.infinity,
+          height: value,
+          child: ClipRect(
+            child: OverflowBox(
+              alignment: .topCenter,
+              minHeight: height,
+              maxHeight: height,
+              child: child,
+            ),
+          ),
+        ),
+        child: content,
       ),
     );
   }

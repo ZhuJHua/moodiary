@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:isolate';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
@@ -103,15 +104,37 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
 
   final ValueNotifier<int> _activeHeading = ValueNotifier<int>(-1);
 
-  String? _headingsContent;
+  String? _headingsContent, _countText;
   List<({int level, String text})> _headings = const [];
+  int? _characterCount;
+  Timer? _metadataTimer;
 
-  List<({int level, String text})> _headingsOf(String content) {
-    if (content != _headingsContent) {
-      _headingsContent = content;
-      _headings = TiptapContent.parse(content).headings;
-    }
-    return _headings;
+  void _refreshMetadata(Diary diary) {
+    final content = diary.content, text = diary.contentText;
+    if (content == _headingsContent && text == _countText) return;
+    _headingsContent = content;
+    _countText = text;
+    // Keep the previous outline and count until the new ones arrive, so typing
+    // updates them in place instead of blanking and fading them back in.
+    _metadataTimer?.cancel();
+    bool current() =>
+        mounted && content == _headingsContent && text == _countText;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!current()) return;
+      _metadataTimer = Timer(
+        _mode == .edit ? const Duration(milliseconds: 300) : Duration.zero,
+        () async {
+          final result = content.length >= 64 * 1024 || text.length >= 64 * 1024
+              ? await _diaryMetadataAsync(content, text)
+              : _diaryMetadata(content, text);
+          if (!current()) return;
+          setState(() {
+            _headings = result.headings;
+            _characterCount = result.count;
+          });
+        },
+      );
+    });
   }
 
   EditControllerProvider get _provider => editControllerProvider(
@@ -258,6 +281,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     moodiaryRouteObserver.unsubscribe(this);
     WidgetsBinding.instance.removeObserver(this);
     _activeHeading.dispose();
+    _metadataTimer?.cancel();
     _autoSaveTimer?.cancel();
     _writingTimer?.cancel();
     _elapsed.dispose();
@@ -580,9 +604,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       _hopTarget = null;
     }
     final diary = editAsync.value ?? _hopTarget;
-    final headings = diary == null
-        ? const <({int level, String text})>[]
-        : _headingsOf(diary.content);
+    if (diary != null) _refreshMetadata(diary);
+    final headings = _headings;
     final panel = _editorController.panel;
     return ListenableBuilder(
       listenable: panel,
@@ -726,18 +749,20 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     return '$h:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
-  Widget _statusBar(Diary diary) {
+  Widget _statusBar() {
     final typo = context.theme.typography;
     final showWords = MoodiaryKVs.showWordCount.get() ?? true;
     final showTime = MoodiaryKVs.showWritingTime.get() ?? true;
     final stats = <Widget>[
       if (showWords)
-        _pillSeg(
-          LucideIcons.text,
-          context.l10n.diary.wordCount(
-            count: TiptapContent.countCharacters(diary.contentText),
+        AnimatedOpacity(
+          opacity: _characterCount == null ? 0 : 1,
+          duration: const Duration(milliseconds: 120),
+          child: _pillSeg(
+            LucideIcons.text,
+            context.l10n.diary.wordCount(count: _characterCount ?? 0),
+            typo.bodySmall.outline,
           ),
-          typo.bodySmall.outline,
         ),
       if (showTime)
         ValueListenableBuilder<int>(
@@ -884,7 +909,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       onOpenGraph: () => _editorController.withInputSuspended(
         () => DiaryGraphRoute(diaryId: diary.id).push<void>(context),
       ),
-      statusBar: _mode == .edit ? _statusBar(diary) : null,
+      statusBar: _mode == .edit ? _statusBar() : null,
     );
   }
 
@@ -1251,3 +1276,15 @@ class _TocDrawer extends StatelessWidget {
     );
   }
 }
+
+({List<({int level, String text})> headings, int count}) _diaryMetadata(
+  String content,
+  String text,
+) => (
+  headings: TiptapContent.parse(content).headings,
+  count: TiptapContent.countCharacters(text),
+);
+
+Future<({List<({int level, String text})> headings, int count})>
+_diaryMetadataAsync(String content, String text) =>
+    Isolate.run(() => _diaryMetadata(content, text));
