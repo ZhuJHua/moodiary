@@ -1,6 +1,6 @@
 import 'package:pigeon/pigeon.dart';
 
-// 后台保活：安卓只负责申请电池优化白名单，iOS 负责静音音频；真正的常驻逻辑在 Dart 侧
+// 后台保活：安卓负责电池优化白名单与通知权限，iOS 负责静音音频；真正的常驻逻辑在 Dart 侧
 @ConfigurePigeon(
   PigeonOptions(
     dartOut: 'lib/src/background_keep_alive.g.dart',
@@ -20,5 +20,13 @@ abstract class BackgroundKeepAliveApi {
 
   bool requestExemption();
 
+  // 通知权限只决定常驻时的通知能否显示，没有它也照样能保活
+  bool isNotificationsEnabled();
+
+  bool requestNotifications();
+
   void setSilentAudio(bool enabled);
+
+  // 系统设置里本应用的详情页，用户拒绝过权限后从这里手动打开
+  void openAppSettings();
 }

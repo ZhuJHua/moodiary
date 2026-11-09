@@ -270,6 +270,10 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get mcpTokenRegenerateConfirm => 'Regenerate';
 	@override String get mcpTokenRegenerated => 'New token generated — update your clients';
 	@override String get mcpSecurityHint => 'Anyone with this token can read and edit your diaries';
+	@override String get mcpRequireTokenTitle => 'Require an access token';
+	@override String get mcpRequireTokenSubtitle => 'Off lets local requests skip the Authorization header';
+	@override String get mcpRequireTokenForced => 'LAN access always requires the token';
+	@override String get mcpTokenDisabled => 'Token check is off — only this phone can connect';
 	@override String get mcpLanTitle => 'Allow devices on my Wi-Fi';
 	@override String get mcpLanSubtitle => 'Off keeps the server on this phone only (127.0.0.1)';
 	@override String get mcpPortTitle => 'Port';
@@ -279,13 +283,29 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get mcpSaved => 'Saved';
 	@override String get mcpKeepAliveTitle => 'Keep running in the background';
 	@override String get mcpKeepAliveSubtitle => 'Keeps the MCP server reachable after you leave the app';
-	@override String get mcpKeepAliveAndroidExempt => 'Allowed to run in the background';
-	@override String get mcpKeepAliveAndroidNotExempt => 'Battery optimisation is still on — allow the app to run in the background';
-	@override String get mcpKeepAliveAndroidRequest => 'Allow background running';
+	@override String get mcpKeepAlivePermissionTitle => 'Background permissions';
+	@override String get mcpKeepAlivePermissionSubtitle => 'Tap to review and grant what background running needs';
+	@override String mcpKeepAlivePermissionSummary({required Object granted, required Object total}) => '${granted} of ${total} permissions granted';
+	@override String get mcpKeepAlivePermissionReady => 'All permissions granted — background running is ready';
 	@override String get mcpKeepAliveSaved => 'Saved';
+	@override String get mcpKeepAliveSheetTitle => 'Permissions for background running';
+	@override String get mcpKeepAliveSheetSubtitle => 'The system needs these allowed to keep the MCP server reachable after you leave the app';
+	@override String get mcpKeepAliveBatteryTitle => 'Ignore battery optimisation';
+	@override String get mcpKeepAliveBatteryDesc => 'Stops the system from ending the app to save power';
+	@override String get mcpKeepAliveNotificationTitle => 'Notification permission';
+	@override String get mcpKeepAliveNotificationDesc => 'Lets the app keep its background state in the foreground service notification';
+	@override String get mcpKeepAliveGranted => 'Granted';
+	@override String get mcpKeepAliveNotGranted => 'Not granted';
+	@override String get mcpKeepAliveGrant => 'Grant';
+	@override String get mcpKeepAliveOpenSettings => 'Open app info';
+	@override String get mcpKeepAliveSettingsHint => 'Some vendor ROMs also need auto-start and background activity allowed from the app info page';
+	@override String get mcpKeepAliveRefresh => 'Refresh';
+	@override String get mcpKeepAliveDone => 'Done';
+	@override String get mcpKeepAliveRequestFailed => 'Could not open the system settings — grant it from the app info page';
 	@override String get mcpConnectTitle => 'How to connect';
 	@override String mcpConnectEndpoint({required Object endpoint}) => 'Server URL: ${endpoint}';
 	@override String get mcpConnectAuth => 'Header: Authorization: Bearer <token>';
+	@override String get mcpConnectAuthNone => 'No header needed (local access with the token check off)';
 	@override String get mcpConnectWifi => 'The client must be on the same Wi-Fi as this phone when LAN access is on.';
 }
 

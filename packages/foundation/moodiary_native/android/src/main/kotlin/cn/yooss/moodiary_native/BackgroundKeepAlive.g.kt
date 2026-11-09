@@ -48,7 +48,10 @@ private open class BackgroundKeepAlivePigeonCodec : StandardMessageCodec() {
 interface BackgroundKeepAliveApi {
   fun isExempt(): Boolean
   fun requestExemption(): Boolean
+  fun isNotificationsEnabled(): Boolean
+  fun requestNotifications(): Boolean
   fun setSilentAudio(enabled: Boolean)
+  fun openAppSettings()
 
   companion object {
     /** The codec used by BackgroundKeepAliveApi. */
@@ -90,6 +93,36 @@ interface BackgroundKeepAliveApi {
         }
       }
       run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.moodiary_native.BackgroundKeepAliveApi.isNotificationsEnabled$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              listOf(api.isNotificationsEnabled())
+            } catch (exception: Throwable) {
+              BackgroundKeepAlivePigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.moodiary_native.BackgroundKeepAliveApi.requestNotifications$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              listOf(api.requestNotifications())
+            } catch (exception: Throwable) {
+              BackgroundKeepAlivePigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.moodiary_native.BackgroundKeepAliveApi.setSilentAudio$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { message, reply ->
@@ -97,6 +130,22 @@ interface BackgroundKeepAliveApi {
             val enabledArg = args[0] as Boolean
             val wrapped: List<Any?> = try {
               api.setSilentAudio(enabledArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              BackgroundKeepAlivePigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.moodiary_native.BackgroundKeepAliveApi.openAppSettings$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              api.openAppSettings()
               listOf(null)
             } catch (exception: Throwable) {
               BackgroundKeepAlivePigeonUtils.wrapError(exception)
