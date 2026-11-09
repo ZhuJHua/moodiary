@@ -1,5 +1,6 @@
 library;
 
+export 'src/export/diary_image_renderer.dart';
 export 'src/protocol/json_rpc.dart';
 export 'src/protocol/mcp_types.dart';
 export 'src/registry/mcp_registry.dart';

@@ -196,6 +196,7 @@ void main() {
           'delete_category',
           'get_stats',
           'server_info',
+          'render_diary_image',
         },
       );
       for (final tool in tools) {

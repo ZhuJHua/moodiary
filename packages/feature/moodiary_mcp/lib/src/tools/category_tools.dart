@@ -201,7 +201,9 @@ void registerCategoryTools(
           'deleted': true,
           'id': id,
           'name': result.category.categoryName,
-          'reparentedChildren': result.children,
+          'reparentedChildren': [
+            for (final child in result.reparented) child.id,
+          ],
         });
       } on DiaryOpsException {
         return McpToolResult.error(

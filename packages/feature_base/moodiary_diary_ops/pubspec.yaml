@@ -21,3 +21,4 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
+  drift: 2.35.0

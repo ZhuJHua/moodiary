@@ -94,6 +94,12 @@ class DiaryStatsOps {
   }
 
   /// The `get_stats` payload, also served as `moodiary://stats/overview`.
+  ///
+  /// The month buckets cover the local calendar months of the requested
+  /// window, and `olderDiaries` / `futureDiaries` account for the visible rows
+  /// outside it, so `sum(months) + olderDiaries + futureDiaries` always equals
+  /// `visibleDiaries` — including future-dated entries and entries older than
+  /// the window, which used to disappear from the sum without a trace.
   Future<Map<String, dynamic>> statsPayload({int months = 12}) async {
     final total = await diaries.countAllDiaries();
     final byCategory = await diaries.diaryCountByCategory();
@@ -104,11 +110,25 @@ class DiaryStatsOps {
     final monthly = await diaries.diaryCountByMonth(sort: DiarySort.timeDesc);
     final earliest = await insights!.earliestEntry();
 
+    // A non-positive window would make the invariant meaningless, so one month
+    // is the floor; the tool layer already clamps its own range.
+    final windowMonths = months < 1 ? 1 : months;
     final now = DateTime.now();
+    final windowStart = DateTime(now.year, now.month - (windowMonths - 1));
+    final windowEnd = DateTime(now.year, now.month);
     final monthRows = <Map<String, dynamic>>[];
-    for (var back = months - 1; back >= 0; back--) {
+    for (var back = windowMonths - 1; back >= 0; back--) {
       final key = DateTime(now.year, now.month - back);
       monthRows.add({'month': _monthKey(key), 'diaries': monthly[key] ?? 0});
+    }
+    var olderDiaries = 0;
+    var futureDiaries = 0;
+    for (final entry in monthly.entries) {
+      if (entry.key.isBefore(windowStart)) {
+        olderDiaries += entry.value;
+      } else if (entry.key.isAfter(windowEnd)) {
+        futureDiaries += entry.value;
+      }
     }
 
     final entries = await visibleEntries();
@@ -136,6 +156,12 @@ class DiaryStatsOps {
       'uncategorizedDiaries': byCategory.total - categorised,
       'firstDiaryTime': earliest == null ? null : isoUtc(earliest),
       'months': monthRows,
+      'monthsWindow': {
+        'from': _monthKey(windowStart),
+        'to': _monthKey(windowEnd),
+      },
+      'olderDiaries': olderDiaries,
+      'futureDiaries': futureDiaries,
       'categories': categoryRows,
       'moods': {
         'distribution': {

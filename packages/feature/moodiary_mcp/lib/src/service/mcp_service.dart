@@ -10,6 +10,7 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 
+import '../export/diary_image_renderer.dart';
 import '../server/mcp_server.dart';
 import '../tools/register_moodiary_tools.dart';
 import '../transport/io_mcp_transport.dart';
@@ -81,6 +82,18 @@ class McpService {
 
   /// Replaceable for tests.
   static McpTransport Function() transportFactory = IoMcpTransport.new;
+
+  /// The native long-image renderer, installed by the app composition root.
+  ///
+  /// Rendering needs `moodiary_export`, which this feature package may not
+  /// import, so the adapter comes in through this replaceable holder instead of
+  /// the constructor (which would force injectable codegen for a value the
+  /// container cannot provide). Tests replace it too; `null` makes
+  /// `render_diary_image` answer with a "not available in this build" error.
+  ///
+  /// The value is read when a server instance is built, so install it before
+  /// [start] to take effect for that instance.
+  static DiaryImageRenderer? imageRenderer;
 
   final DiaryRepository _diaries;
   final CategoryRepository _categories;
@@ -183,6 +196,7 @@ class McpService {
           categories: _categories,
           insights: _insights,
           appVersion: version,
+          imageRenderer: imageRenderer,
         ),
         serverVersion: version,
       );

@@ -1,12 +1,8 @@
-import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:moodiary_components/moodiary_components.dart';
-import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_lock/moodiary_lock.dart';
-import 'package:moodiary_mcp/moodiary_mcp.dart';
 import 'package:moodiary_mobile/app/settings/presentation/widget/accent_sheet.dart';
 import 'package:moodiary_mobile/app/settings/presentation/widget/data_repair_tile.dart';
 import 'package:moodiary_mobile/app/settings/presentation/widget/image_optimize_tile.dart';
@@ -34,22 +30,6 @@ Widget _chevron(BuildContext context) => Icon(
 Widget _value(BuildContext context, String text) =>
     Text(text, style: context.theme.typography.bodySmall.primary);
 
-String _mcpSubtitle(
-  BuildContext context,
-  McpServerState state, {
-  required bool enabled,
-}) {
-  if (!enabled) return context.l10n.app.mcpEnableSubtitleOff;
-  return switch (state.status) {
-    .stopped => context.l10n.app.mcpEnableSubtitleOn,
-    .starting => context.l10n.app.mcpEnableSubtitleStarting,
-    .running => context.l10n.app.mcpEnableSubtitleRunning(
-      port: state.port ?? 0,
-    ),
-    .failed => context.l10n.app.mcpEnableSubtitleFailed,
-  };
-}
-
 class SettingPage extends StatelessWidget {
   const SettingPage({super.key});
 
@@ -65,7 +45,6 @@ class SettingPage extends StatelessWidget {
             const _DisplaySection(),
             const _PrivacySection(),
             const _DataSection(),
-            const _McpSection(),
             const _MoreSection(),
             SliverGap(context.safeBottom),
           ],
@@ -216,49 +195,6 @@ class _DataSection extends StatelessWidget {
           onTap: () => _openSetting(context, const StorageRoute()),
         ),
       ],
-    );
-  }
-}
-
-class _McpSection extends StatefulWidget {
-  const _McpSection();
-
-  @override
-  State<_McpSection> createState() => _McpSectionState();
-}
-
-class _McpSectionState extends State<_McpSection> {
-  late final McpService _service = getIt<McpService>();
-
-  @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: MoodiaryKVs.mcpEnabled.getNotifier(),
-      builder: (context, enabled, _) => ValueListenableBuilder<McpServerState>(
-        valueListenable: _service.state,
-        builder: (context, state, _) => MSliverSettingGroup(
-          title: context.l10n.app.sectionMcp,
-          children: [
-            SettingSwitchListTile(
-              title: context.l10n.app.mcpEnableTitle,
-              subtitle: _mcpSubtitle(context, state, enabled: enabled),
-              secondary: _lead(context, LucideIcons.server),
-              value: enabled,
-              onChanged: (on) =>
-                  unawaited(on ? _service.enable() : _service.disable()),
-            ),
-            SettingListTile(
-              title: context.l10n.app.mcpEntryTitle,
-              subtitle: state.endpoints.isEmpty
-                  ? _mcpSubtitle(context, state, enabled: enabled)
-                  : state.endpoints.first.toString(),
-              leading: _lead(context, LucideIcons.plug),
-              trailing: _chevron(context),
-              onTap: () => _openSetting(context, const McpRoute()),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -13,9 +13,10 @@ import 'package:moodiary_utils/moodiary_utils.dart';
 /// How a caller hands a body in.
 ///
 /// The assistant writes Markdown and lets the editor conversion keep the
-/// formatting; MCP clients write plain text paragraphs. The stored
+/// formatting; MCP clients write plain text paragraphs or a raw Tiptap
+/// document (the representation the editor itself stores). The stored
 /// representation differs, so the choice is explicit rather than global.
-enum DiaryContentFormat { markdown, plainText }
+enum DiaryContentFormat { markdown, plainText, document }
 
 /// Recycle bin versus permanent removal (which also drops local media).
 enum DiaryDeleteMode { recycle, permanent }
@@ -29,6 +30,9 @@ enum DiaryOpsFailure {
   fieldRequired,
   noChanges,
   categoryCycle,
+
+  /// A `DiaryContentFormat.document` body is not a Tiptap document object.
+  invalidDocument,
 }
 
 class DiaryOpsException implements Exception {
@@ -254,6 +258,20 @@ class DiaryWrites {
         return (
           content: wrapped,
           contentText: TiptapContent.parse(wrapped).plainText,
+          type: DiaryType.tiptap,
+        );
+      case DiaryContentFormat.document:
+        // A document body comes from a JSON aware client, so a malformed shape
+        // is the caller's mistake, not an empty diary; normalize it the same
+        // way the repository does so the stored row is canonical.
+        final parsed = TiptapContent.parse(text);
+        if (!parsed.isDoc) {
+          throw const DiaryOpsException(DiaryOpsFailure.invalidDocument);
+        }
+        final normalized = parsed.normalized;
+        return (
+          content: normalized,
+          contentText: TiptapContent.parse(normalized).plainText,
           type: DiaryType.tiptap,
         );
     }

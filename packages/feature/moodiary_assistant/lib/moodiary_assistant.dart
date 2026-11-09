@@ -1,5 +1,6 @@
 library;
 
+import 'package:flutter/widgets.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 
 import 'src/presentation/assistant_notes_page.dart';
@@ -15,10 +16,16 @@ export 'src/data/impl/rig_assistant.dart';
 export 'src/presentation/assistant_page.dart';
 export 'src/presentation/assistant_summary_tile.dart';
 
-List<RouteBase> assistantRoutes() => [
+/// Routes of the assistant feature.
+///
+/// [settingExtras] is the composition-root hook for extra slivers of the
+/// assistant settings page: the app passes settings sections owned by other
+/// features there, because this package may not import them.
+List<RouteBase> assistantRoutes({List<Widget> Function()? settingExtras}) => [
   GoRoute(
     path: AssistantSettingRoute.path,
-    builder: (_, _) => const AssistantSettingPage(),
+    builder: (_, _) =>
+        AssistantSettingPage(extras: settingExtras?.call() ?? const []),
   ),
   GoRoute(
     path: AssistantMemoriesRoute.path,

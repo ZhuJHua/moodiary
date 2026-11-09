@@ -8,6 +8,7 @@ import 'package:moodiary_media/moodiary_media.dart' show mediaRoutes;
 import 'package:moodiary_migration/moodiary_migration.dart'
     show EngineMigrationService;
 import 'package:moodiary_mobile/app/router/route_error_page.dart';
+import 'package:moodiary_mobile/app/settings/presentation/mcp_setting_section.dart';
 import 'package:moodiary_mobile/app/settings/setting_routes.dart';
 import 'package:moodiary_mobile/app/shell/root_shell.dart' show MobileRootShell;
 import 'package:moodiary_router/moodiary_router.dart';
@@ -66,5 +67,5 @@ List<RouteBase> _mobileRoutes() => [
   ...exportRoutes(),
   ...lockRoutes(),
   ...editorRoutes(),
-  ...assistantRoutes(),
+  ...assistantRoutes(settingExtras: () => [const McpSettingSection()]),
 ];

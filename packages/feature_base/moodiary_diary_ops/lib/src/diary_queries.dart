@@ -303,6 +303,12 @@ class DiaryQueries {
   }
 
   /// Forward and backlink summaries of [diary].
+  ///
+  /// `dangling` lists the diary ids the body mentions but the table does not
+  /// hold, in sorted order: a `moodiary://diary/<id>` link to a permanently
+  /// deleted or never synced diary used to fail silently. `forward` and
+  /// `backlinks` keep the repository's native query semantics, which exclude a
+  /// self link from `forward` (a native bug tracked separately).
   Future<Map<String, dynamic>> linkSummary(Diary diary) async {
     final forward = await diaries.getForwardLinks(diary.id);
     final backlinks = await diaries.getBacklinks(diary.id);
@@ -312,12 +318,22 @@ class DiaryQueries {
       'time': isoUtc(linked.time),
       'timeLocal': isoLocal(linked.time),
     };
+    final referenced = DiaryContent.of(diary).links.toList()..sort();
+    final dangling = <String>[];
+    for (final id in referenced) {
+      if (dangling.length >= _danglingLimit) break;
+      if (await diaries.getDiaryByBusinessId(id) == null) dangling.add(id);
+    }
     return {
       'forward': [for (final linked in forward) entry(linked)],
       'backlinks': [for (final linked in backlinks) entry(linked)],
+      'dangling': dangling,
     };
   }
 }
+
+/// Upper bound on `dangling`, so one document cannot flood a result with ids.
+const int _danglingLimit = 100;
 
 SearchSort _toSearchSort(String? name) => switch (name) {
   'newest' => SearchSort.timeDesc,

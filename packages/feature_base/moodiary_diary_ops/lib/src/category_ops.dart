@@ -2,6 +2,8 @@
 ///
 /// A category only disappears while it holds no diary, and a reparent that
 /// would close a cycle is refused; both rules used to live in each client.
+/// Deleting a category also re-homes its children to the root, because a
+/// dangling `parentId` would silently hide them from the tree.
 library;
 
 import 'package:moodiary_data/moodiary_data.dart';
@@ -19,6 +21,10 @@ class CategoryOps {
   Future<List<Category>> all() => categories.getAllCategories();
 
   /// The tree a catalog resource or a tool renders, with visible diary counts.
+  ///
+  /// Every node carries its direct `diaries` count and a `diariesTotal` that
+  /// also counts the diaries of all descendants. [total] remains the number of
+  /// categories, not of diaries.
   Future<({List<Map<String, dynamic>> categories, int total})> tree() async {
     final all = await categories.getAllCategories();
     final counts = (await diaries.diaryCountByCategory()).byCategory;
@@ -85,7 +91,12 @@ class CategoryOps {
   }
 
   /// Deletes an empty category; [deleted] is false when diaries still hold it.
-  Future<({bool deleted, Category category, int children})> delete(
+  ///
+  /// A successful delete re-homes every former child to the root and returns
+  /// the categories as they were persisted, so the caller reports the real
+  /// reparenting instead of a pre-computed count. A refused delete changes
+  /// nothing, so [reparented] is empty.
+  Future<({bool deleted, Category category, List<Category> reparented})> delete(
     String id,
   ) async {
     final existing = await categories.getCategoryById(id);
@@ -93,9 +104,28 @@ class CategoryOps {
       throw DiaryOpsException(DiaryOpsFailure.notFound, id: id);
     }
     final all = await categories.getAllCategories();
-    final children = all.where((category) => category.parentId == id).length;
+    final children = [
+      for (final category in all)
+        if (category.parentId == id) category,
+    ];
     final removed = await categories.deleteACategory(id);
-    return (deleted: removed, category: existing, children: children);
+    if (!removed) {
+      return (
+        deleted: false,
+        category: existing,
+        reparented: const <Category>[],
+      );
+    }
+    final reparented = <Category>[];
+    for (final child in children) {
+      final next = child.copyWith(
+        parentId: null,
+        lastModified: DateTime.timestamp(),
+      );
+      await categories.insertACategory(next);
+      reparented.add(next);
+    }
+    return (deleted: true, category: existing, reparented: reparented);
   }
 
   Future<void> _require(String id, {required bool requireKnown}) async {
@@ -139,22 +169,32 @@ class CategoryOps {
       childrenOf.putIfAbsent(key, () => []).add(category);
     }
 
-    Map<String, dynamic> node(Category category, Set<String> path) {
+    ({Map<String, dynamic> node, int total}) build(
+      Category category,
+      Set<String> path,
+    ) {
+      var total = counts[category.id] ?? 0;
       final children = <Map<String, dynamic>>[];
       for (final child in childrenOf[category.id] ?? const <Category>[]) {
         if (path.contains(child.id)) continue;
-        children.add(node(child, {...path, child.id}));
+        final built = build(child, {...path, child.id});
+        total += built.total;
+        children.add(built.node);
       }
-      return categoryInfo(
-        category,
-        diaryCount: counts[category.id] ?? 0,
-        children: children,
+      return (
+        node: categoryInfo(
+          category,
+          diaryCount: counts[category.id] ?? 0,
+          diariesTotal: total,
+          children: children,
+        ),
+        total: total,
       );
     }
 
     return [
       for (final root in childrenOf[null] ?? const <Category>[])
-        node(root, {root.id}),
+        build(root, {root.id}).node,
     ];
   }
 }
