@@ -46,10 +46,23 @@ String truncate(String text, [int chars = mcpResultChars]) {
   return '${String.fromCharCodes(runes.take(chars))}…';
 }
 
+/// The plain body of [diary]: no Markdown syntax and media runs rendered as
+/// `[image: name]` placeholders. This is the projection a caller gets when it
+/// asks for no Markdown at all.
+String diaryToText(Diary diary) => MediaMarkup.forModel(diary.contentText);
+
 /// One line preview of the diary body, used by every list shaped result.
-String excerptOf(Diary diary, {int chars = mcpExcerptChars}) {
-  final text = MediaMarkup.forModel(diary.contentText)
-      .replaceAll(RegExp(r'\s+'), ' ');
+///
+/// With [renderMarkdown] the preview is the Markdown body cut to [chars]
+/// instead, so headings and lists survive the cut; the plain form collapses
+/// every run of whitespace to a single space.
+String excerptOf(
+  Diary diary, {
+  int chars = mcpExcerptChars,
+  bool renderMarkdown = false,
+}) {
+  if (renderMarkdown) return truncate(diaryToMarkdown(diary), chars);
+  final text = diaryToText(diary).replaceAll(RegExp(r'\s+'), ' ');
   return truncate(text.trim(), chars);
 }
 
@@ -59,7 +72,14 @@ String? colorHex(int? argb) => argb == null
     : '#${argb.toRadixString(16).padLeft(8, '0').toUpperCase()}';
 
 /// The list shaped projection a client sees for one diary.
-Map<String, dynamic> diarySummary(Diary diary, {String? categoryName}) => {
+///
+/// [renderMarkdown] selects the `excerpt` projection: the one line plain
+/// preview by default, the Markdown body cut to [mcpExcerptChars] when true.
+Map<String, dynamic> diarySummary(
+  Diary diary, {
+  String? categoryName,
+  bool renderMarkdown = false,
+}) => {
   'id': diary.id,
   'title': diary.title,
   'time': isoUtc(diary.time),
@@ -69,17 +89,23 @@ Map<String, dynamic> diarySummary(Diary diary, {String? categoryName}) => {
   'categoryName': categoryName,
   'mood': diary.mood?.name,
   'tags': diary.tags,
-  'excerpt': excerptOf(diary),
+  'excerpt': excerptOf(diary, renderMarkdown: renderMarkdown),
   'show': diary.show,
 };
 
 /// The tiptap body of [diary] as Markdown. Legacy diaries are not converted:
 /// a Markdown diary already holds Markdown, a rich text one only has its text.
-String diaryToMarkdown(Diary diary) =>
+///
+/// [renderLinks] false renders a diary link as its label text instead of
+/// `[label](moodiary://diary/<id>)`.
+String diaryToMarkdown(Diary diary, {bool renderLinks = true}) =>
     switch (DiaryType.fromValue(diary.type)) {
-      DiaryType.tiptap => tiptapToMarkdown(diary.content),
+      DiaryType.tiptap => tiptapToMarkdown(
+        diary.content,
+        renderLinks: renderLinks,
+      ),
       DiaryType.markdown => diary.content,
-      DiaryType.richText => MediaMarkup.forModel(diary.contentText),
+      DiaryType.richText => diaryToText(diary),
     };
 
 /// Renders a stored Tiptap document as Markdown.
@@ -88,7 +114,10 @@ String diaryToMarkdown(Diary diary) =>
 /// and ordered lists, block quotes, code blocks, horizontal rules, links,
 /// diary mentions and media. Unknown blocks are descended into so no text is
 /// lost; media is rendered from the node that is actually in the document.
-String tiptapToMarkdown(String content) {
+///
+/// [renderLinks] false degrades a diary mention to its label text, without the
+/// `moodiary://diary/<id>` URI.
+String tiptapToMarkdown(String content, {bool renderLinks = true}) {
   final parsed = TiptapContent.parse(content);
   if (!parsed.isDoc) return content;
   final Object? decoded;
@@ -99,31 +128,31 @@ String tiptapToMarkdown(String content) {
   }
   if (decoded is! Map) return content;
   final out = StringBuffer();
-  _blocks(decoded['content'], out);
+  _blocks(decoded['content'], out, renderLinks);
   return out.toString().trim();
 }
 
-void _blocks(Object? nodes, StringBuffer out) {
+void _blocks(Object? nodes, StringBuffer out, bool renderLinks) {
   if (nodes is! List) return;
   for (final node in nodes) {
     if (node is! Map) continue;
-    final block = _block(node);
+    final block = _block(node, renderLinks);
     if (block == null || block.isEmpty) continue;
     if (out.isNotEmpty) out.write('\n\n');
     out.write(block);
   }
 }
 
-String? _block(Map<dynamic, dynamic> node) {
+String? _block(Map<dynamic, dynamic> node, bool renderLinks) {
   final attrs = node['attrs'];
   switch (node['type']) {
     case 'paragraph':
-      final text = _inline(node['content']);
+      final text = _inline(node['content'], renderLinks);
       return text.trim().isEmpty ? null : text;
     case 'heading':
       final raw = attrs is Map ? attrs['level'] : null;
       final level = raw is int ? raw.clamp(1, 6) : 1;
-      final text = _inline(node['content']).trim();
+      final text = _inline(node['content'], renderLinks).trim();
       return text.isEmpty ? null : '${'#' * level} $text';
     case 'codeBlock':
       final language = attrs is Map && attrs['language'] is String
@@ -132,38 +161,43 @@ String? _block(Map<dynamic, dynamic> node) {
       return '```$language\n${_plainInline(node['content'])}\n```';
     case 'blockquote':
       final inner = StringBuffer();
-      _blocks(node['content'], inner);
+      _blocks(node['content'], inner, renderLinks);
       final text = inner.toString().trim();
       if (text.isEmpty) return null;
       return [
         for (final line in text.split('\n')) line.isEmpty ? '>' : '> $line',
       ].join('\n');
     case 'bulletList':
-      return _list(node['content'], ordered: false);
+      return _list(node['content'], renderLinks, ordered: false);
     case 'orderedList':
       final start = attrs is Map && attrs['start'] is int
           ? attrs['start'] as int
           : 1;
-      return _list(node['content'], ordered: true, start: start);
+      return _list(node['content'], renderLinks, ordered: true, start: start);
     case 'horizontalRule':
       return '---';
     case 'image' || 'video' || 'audio' || 'attachment':
       return _media(node['type'], attrs);
     default:
       final inner = StringBuffer();
-      _blocks(node['content'], inner);
+      _blocks(node['content'], inner, renderLinks);
       return inner.isEmpty ? null : inner.toString();
   }
 }
 
-String? _list(Object? items, {required bool ordered, int start = 1}) {
+String? _list(
+  Object? items,
+  bool renderLinks, {
+  required bool ordered,
+  int start = 1,
+}) {
   if (items is! List) return null;
   final lines = <String>[];
   var number = start;
   for (final item in items) {
     if (item is! Map || item['type'] != 'listItem') continue;
     final inner = StringBuffer();
-    _blocks(item['content'], inner);
+    _blocks(item['content'], inner, renderLinks);
     final text = inner.toString().trim();
     if (text.isEmpty) continue;
     final marker = ordered ? '${number++}.' : '-';
@@ -191,7 +225,7 @@ String? _media(Object? type, Object? attrs) {
   };
 }
 
-String _inline(Object? nodes) {
+String _inline(Object? nodes, bool renderLinks) {
   final buf = StringBuffer();
   if (nodes is! List) return '';
   for (final node in nodes) {
@@ -202,21 +236,21 @@ String _inline(Object? nodes) {
       case 'hardBreak':
         buf.write('  \n');
       case 'diaryLink':
-        buf.write(_diaryLink(node['attrs']));
+        buf.write(_diaryLink(node['attrs'], renderLinks));
       case 'image' || 'video' || 'audio' || 'attachment':
         buf.write(_media(node['type'], node['attrs']) ?? '');
       default:
-        buf.write(_inline(node['content']));
+        buf.write(_inline(node['content'], renderLinks));
     }
   }
   return buf.toString();
 }
 
-String _diaryLink(Object? attrs) {
+String _diaryLink(Object? attrs, bool renderLinks) {
   final id = attrs is Map ? attrs['id'] : null;
   final label = attrs is Map ? attrs['label'] : null;
   final text = label is String && label.isNotEmpty ? label : '$id';
-  if (id is! String || id.isEmpty) return text;
+  if (!renderLinks || id is! String || id.isEmpty) return text;
   return '[$text]($diaryUriPrefix$id)';
 }
 
@@ -278,11 +312,12 @@ String _plainInline(Object? nodes) {
 }
 
 /// A diary as a Markdown resource: JSON front matter (which is valid YAML) then
-/// the readable body.
+/// the readable body. [renderLinks] follows [diaryToMarkdown].
 String diaryMarkdownDocument(
   Diary diary, {
   String? categoryName,
   Map<String, dynamic> links = const {},
+  bool renderLinks = true,
 }) {
   final frontMatter = {
     'id': diary.id,
@@ -297,7 +332,7 @@ String diaryMarkdownDocument(
     'uri': '$diaryUriPrefix${diary.id}',
     'links': links,
   };
-  final body = truncate(diaryToMarkdown(diary));
+  final body = truncate(diaryToMarkdown(diary, renderLinks: renderLinks));
   return '---\n'
       '${const JsonEncoder.withIndent('  ').convert(frontMatter)}\n'
       '---\n\n$body\n';

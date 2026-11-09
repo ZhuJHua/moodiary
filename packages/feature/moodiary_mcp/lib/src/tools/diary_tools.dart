@@ -15,7 +15,12 @@ import 'arguments.dart';
 /// Both accepted shapes of the `sort` argument.
 const List<String> _sortValues = ['timeDesc', 'timeAsc'];
 
+/// Body representations `get_diary` can answer with. The first two are raw
+/// stored documents and win over `renderMarkdown`.
 const List<String> _contentFormats = ['markdown', 'text', 'tiptap', 'json'];
+
+/// How `create_diary` and `update_diary` interpret the body they are handed.
+const List<String> _writeContentFormats = ['markdown', 'text'];
 
 const Map<String, dynamic> _categoryIdSchema = {
   'type': 'string',
@@ -54,6 +59,26 @@ const Map<String, dynamic> _offsetSchema = {
 const Map<String, dynamic> _idSchema = {
   'type': 'string',
   'description': 'Diary id (uuid v7) as returned by the list tools.',
+};
+
+/// The excerpt projection flag shared by the list shaped read tools.
+const Map<String, dynamic> _renderMarkdownExcerptSchema = {
+  'type': 'boolean',
+  'default': false,
+  'description':
+      'false keeps the single line plain excerpt; true returns the Markdown '
+      'body cut to $mcpExcerptChars characters, so headings and lists survive.',
+};
+
+/// The body representation a write tool parses its `content` with.
+const Map<String, dynamic> _writeContentFormatSchema = {
+  'type': 'string',
+  'enum': _writeContentFormats,
+  'default': 'markdown',
+  'description':
+      'markdown parses content as Markdown and stores the editor document '
+      '(formatting is preserved); text stores it as plain text paragraphs, so '
+      'Markdown syntax stays literal. Applies only to content.',
 };
 
 const Map<String, dynamic> _moodSchema = {
@@ -99,9 +124,11 @@ void registerDiaryTools(
       title: 'List diaries',
       description:
           'Lists diary summaries, newest first by default: id, title, time in '
-          'UTC and local time, last modified, category, mood, tags, a 200 '
-          'character excerpt and whether the diary is visible. Page with limit '
-          'and offset. Bodies are not included; call get_diary for those.',
+          'UTC and local time, last modified, category, mood, tags, an excerpt '
+          'and whether the diary is visible. The excerpt is a single line of '
+          'plain text up to 200 characters; set renderMarkdown=true to get the '
+          'Markdown body cut to the same length instead. Page with limit and '
+          'offset. Bodies are not included; call get_diary for those.',
       inputSchema: {
         'type': 'object',
         'properties': {
@@ -114,6 +141,7 @@ void registerDiaryTools(
             'default': 'timeDesc',
             'description': 'Diary time order.',
           },
+          'renderMarkdown': _renderMarkdownExcerptSchema,
           'limit': _limitSchema,
           'offset': _offsetSchema,
         },
@@ -133,8 +161,14 @@ void registerDiaryTools(
           'Reads one diary with its metadata. format=markdown (default) renders '
           'the stored document as Markdown; text returns the plain text body; '
           'json and tiptap return the raw stored document (tiptap normalized to '
-          'the current schema version). Returns metadata too: category, mood, '
-          'tags, time, media file names and diary links. '
+          'the current schema version) and win over renderMarkdown. '
+          'renderMarkdown=false returns the plain text body instead of Markdown '
+          '(no syntax, media as [image: name] placeholders). renderLinks=false '
+          'renders a diary link (double link) as its label text instead of '
+          '[label](moodiary://diary/<id>); it only affects Markdown output. '
+          'contentFormat reports the representation actually returned. Returns '
+          'metadata too: category, mood, tags, time, media file names and diary '
+          'links. '
           '$_mediaRefusal',
       inputSchema: {
         'type': 'object',
@@ -144,7 +178,25 @@ void registerDiaryTools(
             'type': 'string',
             'enum': _contentFormats,
             'default': 'markdown',
-            'description': 'Body representation.',
+            'description':
+                'Body representation. tiptap and json ignore the render flags '
+                'and return the raw document.',
+          },
+          'renderMarkdown': {
+            'type': 'boolean',
+            'default': true,
+            'description':
+                'false returns the plain text body instead of Markdown: no '
+                'syntax and media as [image: name] placeholders. Ignored when '
+                'format is tiptap or json.',
+          },
+          'renderLinks': {
+            'type': 'boolean',
+            'default': true,
+            'description':
+                'false renders diary links (double links) as their label text '
+                'instead of [label](moodiary://diary/<id>). Ignored unless '
+                'Markdown is returned.',
           },
         },
         'required': ['id'],
@@ -161,10 +213,12 @@ void registerDiaryTools(
       name: 'create_diary',
       title: 'Create a diary',
       description:
-          'Creates one diary. Content is plain text or Markdown and is stored '
-          'as plain text paragraphs, so Markdown syntax is kept literally; use '
-          'get_diary format=markdown to read it back. Returns the new id and its '
-          'summary. Media cannot be added here: '
+          'Creates one diary. content is parsed as Markdown by default and '
+          'stored through the editor conversion, so formatting such as headings, '
+          'lists and emphasis is preserved; set contentFormat=text to store it '
+          'as plain text paragraphs, where Markdown syntax stays literal. Read '
+          'the result back with get_diary. Returns the new id and its summary. '
+          'Media cannot be added here: '
           '$_mediaRefusal',
       inputSchema: {
         'type': 'object',
@@ -175,8 +229,11 @@ void registerDiaryTools(
           },
           'content': {
             'type': 'string',
-            'description': 'Diary body as plain text; required.',
+            'description':
+                'Diary body; required. Parsed as Markdown unless '
+                'contentFormat=text.',
           },
+          'contentFormat': _writeContentFormatSchema,
           'time': _timeSchema,
           'categoryId': _categoryIdSchema,
           'mood': _moodSchema,
@@ -200,9 +257,10 @@ void registerDiaryTools(
       title: 'Update a diary',
       description:
           'Updates the given fields of one diary and leaves every other field '
-          'alone; lastModified is bumped. content replaces the whole body as '
-          'plain text paragraphs. Send an empty string for categoryId or mood '
-          'to clear it. $_mediaRefusal',
+          'alone; lastModified is bumped. content replaces the whole body, '
+          'parsed as Markdown by default so formatting is kept, or as plain text '
+          'paragraphs with contentFormat=text. Send an empty string for '
+          'categoryId or mood to clear it. $_mediaRefusal',
       inputSchema: {
         'type': 'object',
         'properties': {
@@ -213,8 +271,11 @@ void registerDiaryTools(
           },
           'content': {
             'type': 'string',
-            'description': 'New body as plain text; replaces the old one.',
+            'description':
+                'New body; replaces the old one. Parsed as Markdown unless '
+                'contentFormat=text.',
           },
+          'contentFormat': _writeContentFormatSchema,
           'time': _timeSchema,
           'categoryId': {
             'type': 'string',
@@ -275,8 +336,11 @@ void registerDiaryTools(
       description:
           'Full text search over diary titles and bodies (Chinese words, pinyin '
           'and Latin text all match). Returns the total hit count and one page '
-          'of hits with the title highlight and a body excerpt where matches are '
-          'wrapped in **double asterisks**.',
+          'of hits. Each hit carries the search-highlighted excerpt, where '
+          'matches are wrapped in **double asterisks**, plus a preview: the '
+          'single line plain body by default, or the Markdown body cut to '
+          '$mcpExcerptChars characters when renderMarkdown=true. The excerpt is '
+          'always the plain search snippet.',
       inputSchema: {
         'type': 'object',
         'properties': {
@@ -287,6 +351,7 @@ void registerDiaryTools(
           'categoryId': _categoryIdSchema,
           'start': _startSchema,
           'end': _endSchema,
+          'renderMarkdown': _renderMarkdownExcerptSchema,
           'limit': _limitSchema,
           'offset': _offsetSchema,
         },
@@ -362,6 +427,7 @@ Future<McpToolResult> _listDiaries(
   final end = args.optionalDate('end', endOfDay: true);
   args.requireOrderedRange(start, end);
   final sort = args.optionalEnum('sort', _sortValues) ?? 'timeDesc';
+  final renderMarkdown = args.optionalBool('renderMarkdown') ?? false;
   final limit = args.optionalInt('limit', fallback: 20, min: 1, max: 100);
   final offset = args.optionalInt('offset', fallback: 0, min: 0, max: 1000000);
 
@@ -379,7 +445,11 @@ Future<McpToolResult> _listDiaries(
   return McpToolResult.json({
     'diaries': [
       for (final diary in diaries_)
-        diarySummary(diary, categoryName: names[diary.categoryId]),
+        diarySummary(
+          diary,
+          categoryName: names[diary.categoryId],
+          renderMarkdown: renderMarkdown,
+        ),
     ],
     'count': diaries_.length,
     'offset': offset,
@@ -395,40 +465,55 @@ Future<McpToolResult> _getDiary(
 }) async {
   final args = Args('get_diary', arguments);
   final id = args.requireText('id');
-  final format = args.optionalEnum('format', _contentFormats) ?? 'markdown';
+  final requestedFormat =
+      args.optionalEnum('format', _contentFormats) ?? 'markdown';
+  final renderMarkdown = args.optionalBool('renderMarkdown') ?? true;
+  final renderLinks = args.optionalBool('renderLinks') ?? true;
+  final rawFormat = requestedFormat == 'tiptap' || requestedFormat == 'json';
 
   final diary = await diaries.getDiaryByBusinessId(id);
   if (diary == null) {
     return McpToolResult.error('get_diary: no diary with id="$id".');
   }
   final names = await categoryNames(categories);
-  if ((format == 'json' || format == 'tiptap') &&
-      diary.content.length > mcpResultChars) {
+  if (rawFormat && diary.content.length > mcpResultChars) {
     return McpToolResult.error(
       'get_diary: the stored document of id="$id" is '
       '${diary.content.length} characters, more than the $mcpResultChars '
-      'character result limit; read it with format="text" or '
-      'format="markdown" instead.',
+      'character result limit; read it as plain text with renderMarkdown=false '
+      'or format="text" instead.',
     );
   }
 
-  final (:content, :truncated) = switch (format) {
-    'text' => _capped(MediaMarkup.forModel(diary.contentText)),
-    'markdown' => _capped(diaryToMarkdown(diary)),
-    'tiptap' => (
+  final ({Object? content, bool truncated}) projection;
+  final String format;
+  if (requestedFormat == 'tiptap') {
+    projection = (
       content: decodeJsonOrText(TiptapContent.normalize(diary.content)),
       truncated: false,
-    ),
-    _ => (content: decodeJsonOrText(diary.content), truncated: false),
-  };
+    );
+    format = 'tiptap';
+  } else if (requestedFormat == 'json') {
+    projection = (content: decodeJsonOrText(diary.content), truncated: false);
+    format = 'json';
+  } else if (requestedFormat == 'text') {
+    projection = _capped(diaryToText(diary));
+    format = 'text';
+  } else if (renderMarkdown) {
+    projection = _capped(diaryToMarkdown(diary, renderLinks: renderLinks));
+    format = 'markdown';
+  } else {
+    projection = _capped(diaryToText(diary));
+    format = 'text';
+  }
 
   final links = await DiaryQueries(diaries: diaries).linkSummary(diary);
   return McpToolResult.json({
     ...diarySummary(diary, categoryName: names[diary.categoryId]),
     'type': diary.type,
     'contentFormat': format,
-    'content': content,
-    'contentTruncated': truncated,
+    'content': projection.content,
+    'contentTruncated': projection.truncated,
     'placeId': diary.placeId,
     if (diary.weather case final weather?)
       'weather': {
@@ -453,6 +538,12 @@ Future<McpToolResult> _getDiary(
   return (content: capped, truncated: capped != text);
 }
 
+/// Maps the `contentFormat` argument onto the shared write codec; absent means
+/// Markdown, the same default as the assistant tools.
+DiaryContentFormat _writeFormat(String? value) => value == 'text'
+    ? DiaryContentFormat.plainText
+    : DiaryContentFormat.markdown;
+
 Future<McpToolResult> _createDiary(
   Map<String, dynamic> arguments, {
   required DiaryRepository diaries,
@@ -461,6 +552,9 @@ Future<McpToolResult> _createDiary(
   final args = Args('create_diary', arguments);
   args.rejectMediaArguments();
   final content = args.requireText('content');
+  final contentFormat = _writeFormat(
+    args.optionalEnum('contentFormat', _writeContentFormats),
+  );
   final title = args.optionalText('title') ?? '';
   final time = args.optionalDate('time');
   final mood = args.optionalMood('mood');
@@ -473,7 +567,7 @@ Future<McpToolResult> _createDiary(
     diary = await DiaryWrites(diaries: diaries, categories: categories).create(
       title: title,
       content: content,
-      format: DiaryContentFormat.plainText,
+      format: contentFormat,
       mood: mood,
       categoryId: categoryId,
       time: time,
@@ -501,6 +595,9 @@ Future<McpToolResult> _updateDiary(
   final args = Args('update_diary', arguments);
   args.rejectMediaArguments();
   final id = args.requireText('id');
+  final contentFormat = _writeFormat(
+    args.optionalEnum('contentFormat', _writeContentFormats),
+  );
   final patch = DiaryPatch(
     title: args.contains('title') ? args.text('title') : null,
     content: args.contains('content') ? args.requireText('content') : null,
@@ -527,7 +624,7 @@ Future<McpToolResult> _updateDiary(
         .update(
           id: id,
           patch: patch,
-          format: DiaryContentFormat.plainText,
+          format: contentFormat,
           index: IndexMode.inline,
         );
     return await _createdOrUpdated(diaries, categories, next, created: false);
@@ -610,6 +707,7 @@ Future<McpToolResult> _searchDiaries(
   final limit = args.optionalInt('limit', fallback: 20, min: 1, max: 100);
   final offset = args.optionalInt('offset', fallback: 0, min: 0, max: 1000000);
   final endExclusive = end?.add(const Duration(microseconds: 1));
+  final renderMarkdown = args.optionalBool('renderMarkdown') ?? false;
 
   final page = await DiaryQueries(diaries: diaries).searchPage(
     query: query,
@@ -634,10 +732,13 @@ Future<McpToolResult> _searchDiaries(
     'hits': [
       for (final hit in page.hits)
         {
+          // The search snippet replaces `excerpt` below, so the summary keeps
+          // its default plain projection and only `preview` follows
+          // `renderMarkdown`.
           ...diarySummary(hit.diary, categoryName: names[hit.diary.categoryId]),
           'titleHighlight': _markHighlight(hit.titleHighlight),
           'excerpt': _markHighlight(hit.excerpt),
-          'preview': excerptOf(hit.diary),
+          'preview': excerptOf(hit.diary, renderMarkdown: renderMarkdown),
         },
     ],
   });

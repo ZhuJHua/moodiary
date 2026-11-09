@@ -152,6 +152,15 @@ void main() {
       (diary as Map<String, dynamic>)['id'] as String,
   ];
 
+  Map<String, dynamic> singleSummary(Map<String, dynamic> data) =>
+      (data['diaries'] as List).cast<Map<String, dynamic>>().single;
+
+  Map<String, dynamic> storedDoc(String content) =>
+      jsonDecode(content) as Map<String, dynamic>;
+
+  List<Map<String, dynamic>> docBlocks(Map<String, dynamic> doc) =>
+      (doc['content'] as List).cast<Map<String, dynamic>>();
+
   Future<String> newCategory(String name, {String? parentId}) async {
     final created = structuredOf(
       await toolCall('create_category', {'name': name, 'parentId': ?parentId}),
@@ -392,6 +401,234 @@ void main() {
         expect(diaryIds(byWindow), ['d2', 'd3', 'd4']);
       },
     );
+  });
+
+  group('rendering and content format arguments', () {
+    test(
+      'get_diary renderLinks=false keeps the label and drops the URI',
+      () async {
+        await diaries.insertDiaries([
+          makeDiary('target', 'target body'),
+          makeDiary('source', 'see ', linkTo: ['target']),
+        ]);
+
+        final withLinks = structuredOf(
+          await toolCall('get_diary', {'id': 'source'}),
+        );
+        expect(withLinks['contentFormat'], 'markdown');
+        expect(withLinks['content'], contains('[L](moodiary://diary/target)'));
+
+        final labelOnly = structuredOf(
+          await toolCall('get_diary', {'id': 'source', 'renderLinks': false}),
+        );
+        expect(labelOnly['content'], 'see L');
+        expect(labelOnly['content'], isNot(contains('moodiary://diary/')));
+      },
+    );
+
+    test('get_diary renderMarkdown=false returns the plain body', () async {
+      final doc = jsonEncode({
+        'type': 'doc',
+        'attrs': {'v': 2},
+        'content': [
+          {
+            'type': 'heading',
+            'attrs': {'level': 1},
+            'content': [
+              {'type': 'text', 'text': 'Heading'},
+            ],
+          },
+          {
+            'type': 'paragraph',
+            'content': [
+              {
+                'type': 'text',
+                'text': 'bold words',
+                'marks': [
+                  {'type': 'bold'},
+                ],
+              },
+            ],
+          },
+        ],
+      });
+      await diaries.insertADiary(
+        makeDiary('rich', 'Heading\nbold words', content: doc),
+      );
+
+      final markdown = structuredOf(
+        await toolCall('get_diary', {'id': 'rich'}),
+      );
+      expect(markdown['contentFormat'], 'markdown');
+      expect(markdown['content'], contains('# Heading'));
+      expect(markdown['content'], contains('**bold words**'));
+
+      final plain = structuredOf(
+        await toolCall('get_diary', {'id': 'rich', 'renderMarkdown': false}),
+      );
+      expect(plain['contentFormat'], 'text');
+      expect(plain['content'], 'Heading\nbold words');
+      expect(plain['content'], isNot(contains('**')));
+      expect(plain['content'], isNot(contains('#')));
+
+      // An explicit raw format still wins over renderMarkdown.
+      final raw = structuredOf(
+        await toolCall('get_diary', {
+          'id': 'rich',
+          'format': 'tiptap',
+          'renderMarkdown': false,
+        }),
+      );
+      expect(raw['contentFormat'], 'tiptap');
+      expect(raw['content'], isA<Map>());
+    });
+
+    test(
+      'list_diaries renderMarkdown=true returns a Markdown excerpt',
+      () async {
+        final doc = jsonEncode({
+          'type': 'doc',
+          'attrs': {'v': 2},
+          'content': [
+            {
+              'type': 'heading',
+              'attrs': {'level': 2},
+              'content': [
+                {'type': 'text', 'text': 'Plan'},
+              ],
+            },
+            {
+              'type': 'paragraph',
+              'content': [
+                {'type': 'text', 'text': 'body text'},
+              ],
+            },
+          ],
+        });
+        await diaries.insertADiary(
+          makeDiary('md', 'Plan\nbody text', content: doc),
+        );
+
+        final plain = structuredOf(await toolCall('list_diaries'));
+        expect(singleSummary(plain)['excerpt'], 'Plan body text');
+
+        final marked = structuredOf(
+          await toolCall('list_diaries', {'renderMarkdown': true}),
+        );
+        final excerpt = singleSummary(marked)['excerpt'] as String;
+        expect(excerpt, contains('## Plan'));
+        expect(excerpt, contains('body text'));
+      },
+    );
+
+    test(
+      'search_diaries renderMarkdown=true returns a Markdown preview',
+      () async {
+        final doc = jsonEncode({
+          'type': 'doc',
+          'attrs': {'v': 2},
+          'content': [
+            {
+              'type': 'heading',
+              'attrs': {'level': 2},
+              'content': [
+                {'type': 'text', 'text': 'apple'},
+              ],
+            },
+            {
+              'type': 'paragraph',
+              'content': [
+                {'type': 'text', 'text': 'note'},
+              ],
+            },
+          ],
+        });
+        await diaries.insertADiary(
+          makeDiary('apple-doc', 'apple\nnote', content: doc),
+        );
+
+        final plain = structuredOf(
+          await toolCall('search_diaries', {'query': 'apple'}),
+        );
+        final plainHit = (plain['hits'] as List)
+            .cast<Map<String, dynamic>>()
+            .single;
+        expect(plainHit['preview'], 'apple note');
+        expect(plainHit['excerpt'], contains('**apple**'));
+
+        final marked = structuredOf(
+          await toolCall('search_diaries', {
+            'query': 'apple',
+            'renderMarkdown': true,
+          }),
+        );
+        final markedHit = (marked['hits'] as List)
+            .cast<Map<String, dynamic>>()
+            .single;
+        expect(markedHit['preview'], contains('## apple'));
+        expect(markedHit['excerpt'], contains('**apple**'));
+      },
+    );
+
+    test('create_diary contentFormat picks Markdown or plain text', () async {
+      final markdown = structuredOf(
+        await toolCall('create_diary', {
+          'title': 'Markdown',
+          'content': '# Heading\n\n- one\n- two',
+        }),
+      );
+      final markdownStored = (await diaries.getDiaryByBusinessId(
+        markdown['id'] as String,
+      ))!;
+      expect(markdownStored.type, 'tiptap');
+      final markdownTypes = docBlocks(storedDoc(markdownStored.content))
+          .map((block) => block['type']);
+      expect(markdownTypes, contains('heading'));
+      expect(markdownTypes, contains('bulletList'));
+
+      final markdownRead = structuredOf(
+        await toolCall('get_diary', {'id': markdown['id']}),
+      );
+      expect(markdownRead['content'], contains('# Heading'));
+      expect(markdownRead['content'], contains('- one'));
+
+      final text = structuredOf(
+        await toolCall('create_diary', {
+          'title': 'Text',
+          'content': '# Heading',
+          'contentFormat': 'text',
+        }),
+      );
+      final textStored = (await diaries.getDiaryByBusinessId(
+        text['id'] as String,
+      ))!;
+      final textBlocks = docBlocks(storedDoc(textStored.content));
+      expect(textBlocks, hasLength(1));
+      expect(textBlocks.single['type'], 'paragraph');
+      expect(textStored.contentText, '# Heading');
+    });
+
+    test('update_diary contentFormat rewrites the body the same way', () async {
+      await diaries.insertADiary(makeDiary('edit', 'start'));
+
+      await toolCall('update_diary', {'id': 'edit', 'content': '## Later'});
+      var stored = (await diaries.getDiaryByBusinessId('edit'))!;
+      expect(docBlocks(storedDoc(stored.content)).single['type'], 'heading');
+
+      await toolCall('update_diary', {
+        'id': 'edit',
+        'content': '## Later',
+        'contentFormat': 'text',
+      });
+      stored = (await diaries.getDiaryByBusinessId('edit'))!;
+      final blocks = docBlocks(storedDoc(stored.content));
+      expect(blocks.single['type'], 'paragraph');
+      expect(
+        ((blocks.single['content'] as List).single as Map)['text'],
+        '## Later',
+      );
+      expect(stored.contentText, '## Later');
+    });
   });
 
   group('categories and statistics', () {
@@ -656,6 +893,12 @@ void main() {
       await diaries.insertADiary(makeDiary('known', 'body'));
       final noFields = await toolCall('update_diary', {'id': 'known'});
       expect(errorCode(noFields), JsonRpcCode.invalidParams);
+
+      final unknownFormat = await toolCall('create_diary', {
+        'content': 'body',
+        'contentFormat': 'html',
+      });
+      expect(errorCode(unknownFormat), JsonRpcCode.invalidParams);
     });
   });
 }
