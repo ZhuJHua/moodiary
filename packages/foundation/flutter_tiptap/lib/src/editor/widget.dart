@@ -131,7 +131,7 @@ class TiptapEditor extends StatefulWidget {
 
 /// Exposes keyboard, composition and viewport controls for an editor.
 class TiptapEditorState extends State<TiptapEditor>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, TickerProviderStateMixin {
   late FocusNode _focusNode;
   late ScrollController _scroll;
   late _TiptapTextInput _input;
@@ -196,7 +196,53 @@ class TiptapEditorState extends State<TiptapEditor>
     }
   }
 
-  Offset? _codeDrag;
+  ScrollPositionWithSingleContext? _overflowPosition;
+  Drag? _overflowDrag;
+  ScrollHoldController? _overflowHold;
+
+  void _unbindOverflow() {
+    _render?._unbindHorizontal();
+    _overflowPosition?.goIdle();
+  }
+
+  void _overflowDown(DragDownDetails details) {
+    final render = _render, position = _overflowPosition;
+    if (render == null || position == null) return;
+    final index = render._horizontalRowAt(_local(details.globalPosition));
+    if (index == null) return;
+    final row = render._row(index), block = row.table ?? row.node;
+    if (!identical(render._horizontalBlock, block)) {
+      _unbindOverflow();
+      position.correctPixels(render._horizontalOffset(index));
+      render._horizontalBlock = block;
+      render._horizontalBlockPosition = row.table == null
+          ? row.position
+          : row.position - row.tableRowPosition - 1;
+      render._horizontalPosition = position;
+    }
+    render._applyHorizontalDimensions();
+    _overflowHold = position.hold(() => _overflowHold = null);
+  }
+
+  void _overflowStart(DragStartDetails details) {
+    if (_render?._horizontalBlock == null) return;
+    _overflowDrag = _overflowPosition!.drag(
+      details,
+      () => _overflowDrag = null,
+    );
+  }
+
+  void _overflowCancel() {
+    _overflowHold?.cancel();
+    _overflowDrag?.cancel();
+  }
+
+  void _overflowScrolled() {
+    final render = _render, block = render?._horizontalBlock;
+    if (render == null || block == null) return;
+    render._setHorizontalOffset(block, _overflowPosition!.pixels);
+  }
+
   int _tapCount = 0;
   Duration _lastTap = Duration.zero;
   Offset _lastTapPosition = Offset.zero;
@@ -315,6 +361,8 @@ class TiptapEditorState extends State<TiptapEditor>
 
   @override
   void dispose() {
+    _unbindOverflow();
+    _overflowPosition?.dispose();
     _releaseScrollHolds();
     WidgetsBinding.instance.removeObserver(this);
     widget.controller.removeListener(_changed);
@@ -416,6 +464,17 @@ class TiptapEditorState extends State<TiptapEditor>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final physics = ScrollConfiguration.of(context).getScrollPhysics(context);
+    if (_overflowPosition == null ||
+        _overflowPosition!.physics.toString() != physics.toString()) {
+      _unbindOverflow();
+      _overflowPosition?.dispose();
+      _overflowPosition = ScrollPositionWithSingleContext(
+        physics: physics,
+        context: _OverflowScrollContext(this),
+        keepScrollOffset: false,
+      )..addListener(_overflowScrolled);
+    }
     _tickerEnabled = TickerMode.valuesOf(context).enabled;
     _reduceMotion = MediaQuery.disableAnimationsOf(context);
     _resetBlink();
@@ -1222,19 +1281,31 @@ class TiptapEditorState extends State<TiptapEditor>
                                   !_scrollInputBlocked &&
                                   _render?._horizontalRowAt(_local(point)) !=
                                       null;
-                              recognizer.onStart = (details) {
-                                _codeDrag = _local(details.globalPosition);
-                              };
-                              recognizer.onUpdate = (details) {
-                                if (_codeDrag != null) {
-                                  _render?._scrollCode(
-                                    _codeDrag!,
-                                    -details.delta.dx,
-                                  );
+                              recognizer
+                                ..gestureSettings =
+                                    MediaQuery.maybeGestureSettingsOf(context)
+                                ..dragStartBehavior = DragStartBehavior.start
+                                ..minFlingDistance =
+                                    _overflowPosition?.physics.minFlingDistance
+                                ..minFlingVelocity =
+                                    _overflowPosition?.physics.minFlingVelocity
+                                ..maxFlingVelocity =
+                                    _overflowPosition?.physics.maxFlingVelocity
+                                ..supportedDevices = ScrollConfiguration.of(
+                                  context,
+                                ).dragDevices
+                                ..velocityTrackerBuilder =
+                                    ScrollConfiguration.of(context)
+                                        .velocityTrackerBuilder(context)
+                                ..onDown = _overflowDown
+                                ..onStart = _overflowStart
+                                ..onUpdate = (details) {
+                                  _overflowDrag?.update(details);
                                 }
-                              };
-                              recognizer.onEnd = (_) => _codeDrag = null;
-                              recognizer.onCancel = () => _codeDrag = null;
+                                ..onEnd = (details) {
+                                  _overflowDrag?.end(details);
+                                }
+                                ..onCancel = _overflowCancel;
                             }),
                       },
                       child: GestureDetector(
@@ -1408,6 +1479,30 @@ class _HandleLayout extends SingleChildLayoutDelegate {
   // Styling and document layout can change while the selection offsets stay
   // fixed, so a rebuilt handle must refresh its geometry too.
   bool shouldRelayout(_HandleLayout old) => true;
+}
+
+class _OverflowScrollContext implements ScrollContext {
+  _OverflowScrollContext(this.state);
+  final TiptapEditorState state;
+
+  @override
+  BuildContext get notificationContext => state.context;
+  @override
+  BuildContext get storageContext => state.context;
+  @override
+  TickerProvider get vsync => state;
+  @override
+  AxisDirection get axisDirection => AxisDirection.right;
+  @override
+  double get devicePixelRatio => MediaQuery.devicePixelRatioOf(state.context);
+  @override
+  void setIgnorePointer(bool value) {}
+  @override
+  void setCanDrag(bool value) {}
+  @override
+  void setSemanticsActions(Set<ui.SemanticsAction> actions) {}
+  @override
+  void saveOffset(double offset) {}
 }
 
 class _OverflowDragRecognizer extends HorizontalDragGestureRecognizer {

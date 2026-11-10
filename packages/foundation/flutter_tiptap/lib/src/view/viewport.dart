@@ -173,6 +173,49 @@ class _RenderEditorViewport extends RenderBox
       Expando<Map<String, ui.Paragraph>>();
   final Map<int, _Row> _rows = {};
   final Expando<double> _codeOffsets = Expando<double>();
+  ScrollPositionWithSingleContext? _horizontalPosition;
+  m.Node? _horizontalBlock;
+  int? _horizontalBlockPosition;
+
+  void _unbindHorizontal() {
+    final position = _horizontalPosition, block = _horizontalBlock;
+    position?.goIdle();
+    if (position != null && block != null && position.hasContentDimensions) {
+      _codeOffsets[block] = position.pixels.clamp(
+        0.0,
+        position.maxScrollExtent,
+      );
+      markNeedsLayout();
+      markNeedsPaint();
+    }
+    _horizontalPosition = null;
+    _horizontalBlock = null;
+    _horizontalBlockPosition = null;
+  }
+
+  void _applyHorizontalDimensions() {
+    final position = _horizontalPosition,
+        blockPosition = _horizontalBlockPosition;
+    if (position == null || blockPosition == null) return;
+    final metrics = horizontalScrollMetrics(blockPosition);
+    if (metrics == null) {
+      _unbindHorizontal();
+      return;
+    }
+    position.applyViewportDimension(metrics.viewport.width);
+    while (!position.applyContentDimensions(0, metrics.maxScrollExtent)) {}
+    _codeOffsets[_horizontalBlock!] = position.pixels;
+  }
+
+  void _setHorizontalOffset(m.Node block, double pixels) {
+    if (_codeOffsets[block] == pixels) return;
+    _codeOffsets[block] = pixels;
+    _showOverflowIndicator(block);
+    markNeedsLayout();
+    markNeedsPaint();
+    _scheduleGeometry();
+  }
+
   final Map<int, SemanticsNode> _taskSemantics = {};
   Ticker? _overflowTicker;
   m.Node? _scrollingBlock;
@@ -197,7 +240,138 @@ class _RenderEditorViewport extends RenderBox
 
   _Row _row(int index) => _rows[index] ??= _Row.at(_doc, index, _style);
   TiptapHeightIndex? _heights;
-  Expando<_BlockLayout> _layouts = Expando<_BlockLayout>();
+  // 64 entries cover several 932px text screens; 32K text bounds long blocks.
+  static const _layoutLimit = 64, _layoutTextLimit = 32768;
+  final _layouts = HashMap<m.Node, _BlockLayout>.identity();
+  final _layoutOrder = LinkedList<_BlockLayout>();
+  final Set<_BlockLayout> _usedLayouts = {}, _retiredLayouts = {};
+  int _cachedTextLength = 0;
+  bool _trimScheduled = false;
+
+  void _cacheDiagnostics() {
+    _controller.diagnostics.cachedLayouts = _layouts.length;
+    _controller.diagnostics.cachedTextLength = _cachedTextLength;
+  }
+
+  _BlockLayout _useLayout(m.Node node, _BlockLayout Function() create) {
+    var layout = _layouts[node];
+    if (layout == null) {
+      layout = create();
+      _layouts[node] = layout;
+      _cachedTextLength += layout.text.length;
+      _cacheDiagnostics();
+    }
+    _touchLayout(layout);
+    if (layout is _TableRowLayout) {
+      for (final cell in layout.cells) {
+        for (final block in cell.blocks) {
+          _touchLayout(block.$1);
+        }
+      }
+    }
+    if (!_trimScheduled) {
+      _trimScheduled = true;
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        _trimScheduled = false;
+        if (attached) _trimLayouts();
+      });
+    }
+    return layout;
+  }
+
+  void _touchLayout(_BlockLayout layout) {
+    if (_layoutOrder.isEmpty || !identical(_layoutOrder.last, layout)) {
+      if (layout.list != null) layout.unlink();
+      _layoutOrder.add(layout);
+    }
+    _usedLayouts.add(layout);
+  }
+
+  void _retireLayout(m.Node node) {
+    final layout = _layouts.remove(node);
+    if (layout == null) return;
+    layout.unlink();
+    _cachedTextLength -= layout.text.length;
+    _retiredLayouts.add(layout);
+    _cacheDiagnostics();
+  }
+
+  void _trimLayouts() {
+    for (final layout in _retiredLayouts) {
+      layout.dispose();
+    }
+    _retiredLayouts.clear();
+    if (_layouts.length <= _layoutLimit &&
+        _cachedTextLength <= _layoutTextLimit) {
+      _usedLayouts.clear();
+      return;
+    }
+    final protected = Set<_BlockLayout>.of(_usedLayouts);
+    _usedLayouts.clear();
+    void protect(int index) {
+      final layout = _layouts[_row(index).node];
+      if (layout == null) return;
+      protected.add(layout);
+      if (layout is _TableRowLayout) {
+        for (final cell in layout.cells) {
+          protected.addAll(cell.blocks.map((block) => block.$1));
+        }
+      }
+    }
+
+    if (_doc.rowCount > 0) {
+      for (
+        var index = _firstVisible;
+        index < math.min(_lastVisible, _doc.rowCount);
+        index++
+      ) {
+        protect(index);
+      }
+      protect(_indexForPosition(_controller.state.selection.head));
+      protect(_indexForPosition(_controller.state.selection.anchor));
+      if (_horizontalBlockPosition case final position?) {
+        protect(_indexForPosition(position));
+      }
+    }
+    var removed = true;
+    while (removed &&
+        (_layouts.length > _layoutLimit ||
+            _cachedTextLength > _layoutTextLimit)) {
+      removed = false;
+      for (final layout in _layoutOrder.toList()) {
+        if (_layouts.length <= _layoutLimit &&
+            _cachedTextLength <= _layoutTextLimit) {
+          break;
+        }
+        if (protected.contains(layout) || layout.tableUsers.isNotEmpty) {
+          continue;
+        }
+        _layouts.remove(layout.node);
+        layout.unlink();
+        _cachedTextLength -= layout.text.length;
+        layout.dispose();
+        removed = true;
+      }
+    }
+    _cacheDiagnostics();
+  }
+
+  void _clearLayouts() {
+    final layouts = {..._layouts.values, ..._retiredLayouts};
+    for (final layout in layouts.whereType<_TableRowLayout>()) {
+      layout.dispose();
+    }
+    for (final layout in layouts) {
+      if (layout is! _TableRowLayout) layout.dispose();
+    }
+    _layoutOrder.clear();
+    _layouts.clear();
+    _usedLayouts.clear();
+    _retiredLayouts.clear();
+    _cachedTextLength = 0;
+    _cacheDiagnostics();
+  }
+
   double _contentWidth = 1;
   int _firstVisible = 0, _lastVisible = 0;
   bool _geometryScheduled = false;
@@ -234,6 +408,7 @@ class _RenderEditorViewport extends RenderBox
     }
     if (!identical(controller, _controller)) {
       if (attached) _controller.removeListener(_changed);
+      _clearLayouts();
       _controller = controller;
       _doc = controller.state.doc;
       _heights = null;
@@ -248,6 +423,7 @@ class _RenderEditorViewport extends RenderBox
       markNeedsLayout();
     }
     if (style != _style) {
+      _clearLayouts();
       _style = style;
       _rows.clear();
       _highlights = Expando<TextSpan>();
@@ -274,17 +450,27 @@ class _RenderEditorViewport extends RenderBox
 
   @override
   void detach() {
+    _unbindHorizontal();
     _overflowTicker?.dispose();
     _overflowTicker = null;
     _indicatorOpacity = 0;
     _controller.removeListener(_changed);
     PaintingBinding.instance.systemFonts.removeListener(_fontsChanged);
     _offset.removeListener(_scrolled);
+    _clearLayouts();
     super.detach();
   }
 
+  @override
+  void dispose() {
+    _clearLayouts();
+    _placeholderParagraph?.dispose();
+    _placeholderParagraph = null;
+    super.dispose();
+  }
+
   void _fontsChanged() {
-    _layouts = Expando<_BlockLayout>();
+    _clearLayouts();
     _chrome = Expando<Map<String, ui.Paragraph>>();
     _placeholderParagraph = null;
     markNeedsLayout();
@@ -303,6 +489,8 @@ class _RenderEditorViewport extends RenderBox
         _controller.state.selection is! m.NodeSelection;
     if (!identical(next, _doc)) {
       final transaction = _controller.lastTransaction;
+      final mapsDocument =
+          transaction != null && identical(transaction.before, _doc);
       if (transaction == null) _cacheReady = false;
       if (transaction != null && identical(transaction.before, _doc)) {
         final documents = transaction.documents;
@@ -324,7 +512,19 @@ class _RenderEditorViewport extends RenderBox
         final table = next.nodeAt(mapped.clamp(0, next.content.size));
         if (table?.type == 'table' && _codeOffsets[oldTable] != null) {
           _codeOffsets[table!] = _codeOffsets[oldTable]!;
+          if (identical(_horizontalBlock, oldTable)) _horizontalBlock = table;
           if (identical(_scrollingBlock, oldTable)) _scrollingBlock = table;
+        }
+      }
+      if (_horizontalBlockPosition case final position?) {
+        final mapped = mapsDocument
+            ? transaction.mapping.map(position)
+            : position;
+        _horizontalBlockPosition = mapped;
+        if (mapped < 0 ||
+            mapped >= next.content.size ||
+            !identical(next.nodeAt(mapped), _horizontalBlock)) {
+          _unbindHorizontal();
         }
       }
       _rows.clear();
@@ -371,11 +571,23 @@ class _RenderEditorViewport extends RenderBox
           final cached = _layouts[before];
           if (_codeOffsets[before] case final offset?) {
             _codeOffsets[after] = offset;
+            if (identical(_horizontalBlock, before) &&
+                before.type == after.type) {
+              _horizontalBlock = after;
+            }
           }
           if (cached != null &&
+              cached.tableUsers.isEmpty &&
               after.type != 'tableRow' &&
               !identical(before, after)) {
-            _layouts[after] = cached.revise(after);
+            final revised = _layouts.containsKey(after)
+                ? null
+                : cached.revise(after);
+            _retireLayout(before);
+            if (revised != null) _useLayout(after, () => revised);
+          } else if (cached?.tableUsers.isEmpty == true &&
+              !identical(before, after)) {
+            _retireLayout(before);
           }
         }
       }
@@ -422,17 +634,25 @@ class _RenderEditorViewport extends RenderBox
             _tableColumns(cached.table, _style),
             _tableColumns(row.table!, _style),
           )) {
-        _layouts[node] = null;
+        _retireLayout(node);
       } else {
         cached.table = row.table!;
         cached.rowPosition = row.tableRowPosition;
       }
     }
-    final layout = _layouts[node] ??= node.type == 'tableRow'
-        ? _TableRowLayout(node, row.table!, row.tableRow, row.tableRowPosition)
-        : _BlockLayout(node);
+    final layout = _useLayout(
+      node,
+      () => node.type == 'tableRow'
+          ? _TableRowLayout(
+              node,
+              row.table!,
+              row.tableRow,
+              row.tableRowPosition,
+            )
+          : _BlockLayout(node),
+    );
     if (layout is _TableRowLayout) {
-      layout.blockLayout = (node) => _layouts[node] ??= _BlockLayout(node);
+      layout.blockLayout = (node) => _useLayout(node, () => _BlockLayout(node));
       layout.highlighter = _highlighter;
       layout.nodeHeight = (node, width) => _nodeViews.containsKey(node.type)
           ? _nodeSizes[node] ??
@@ -593,6 +813,7 @@ class _RenderEditorViewport extends RenderBox
         break;
       }
     }
+    _applyHorizontalDimensions();
     _positionNodeViews();
     _layoutOffset = _offset.pixels;
     _inLayout = false;
@@ -667,11 +888,13 @@ class _RenderEditorViewport extends RenderBox
     );
   }
 
-  double _horizontalOffset(int index) =>
-      (_codeOffsets[_row(index).table ?? _row(index).node] ?? 0).clamp(
-        0.0,
-        _horizontalExtent(index),
-      );
+  double _horizontalOffset(int index) {
+    final block = _row(index).table ?? _row(index).node;
+    final pixels = _codeOffsets[block] ?? 0;
+    return identical(block, _horizontalBlock)
+        ? pixels
+        : pixels.clamp(0.0, _horizontalExtent(index));
+  }
 
   Offset _origin(int index) =>
       _rowOrigin(index) +
@@ -707,12 +930,11 @@ class _RenderEditorViewport extends RenderBox
         block = row.table ?? row.node,
         previous = _horizontalOffset(index),
         next = (previous + delta).clamp(0.0, _horizontalExtent(index));
-    if (next == previous) return true;
-    _codeOffsets[block] = next;
-    _showOverflowIndicator(block);
-    markNeedsLayout();
-    markNeedsPaint();
-    _scheduleGeometry();
+    if (identical(block, _horizontalBlock)) {
+      _horizontalPosition!.jumpTo(next);
+    } else {
+      _setHorizontalOffset(block, next);
+    }
     return true;
   }
 

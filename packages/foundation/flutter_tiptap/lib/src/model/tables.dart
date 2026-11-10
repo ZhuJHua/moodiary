@@ -469,7 +469,8 @@ final Expando<Node> _fixedTables = Expando<Node>();
 
 /// Repairs malformed grids and inconsistent column widths. Valid subtrees retain
 /// identity; normalization never flattens a merged cell's content.
-Node fixTables(Node doc) => _fixedTables[doc] ??= _fixTables(doc);
+Node fixTables(Node doc) =>
+    doc.isLeaf || doc.isTextblock ? doc : _fixedTables[doc] ??= _fixTables(doc);
 Node _fixTables(Node node) {
   if (node.isLeaf || node.isTextblock) return node;
   final children = node.content

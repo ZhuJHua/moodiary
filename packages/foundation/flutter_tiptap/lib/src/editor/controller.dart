@@ -6,6 +6,8 @@ class TiptapDiagnostics {
   int paragraphLayouts = 0;
   int fullDocumentScans = 0;
   int visibleBlocks = 0;
+  int cachedLayouts = 0;
+  int cachedTextLength = 0;
   int get visibleRows => visibleBlocks;
   int get rowLayouts => blockLayouts;
   Set<int> get lastLaidOutRows => Set.unmodifiable(lastLaidOutBlocks);

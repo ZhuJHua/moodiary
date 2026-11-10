@@ -65,7 +65,7 @@ class _TableCellLayout {
   double continuation = 0;
 }
 
-class _TableRowLayout extends _BlockLayout {
+final class _TableRowLayout extends _BlockLayout {
   _TableRowLayout(super.node, this.table, this.rowIndex, this.rowPosition);
   m.Node table;
   int rowIndex, rowPosition;
@@ -75,6 +75,21 @@ class _TableRowLayout extends _BlockLayout {
   TiptapCodeHighlighter? highlighter;
   double? Function(m.Node node, double width)? nodeHeight;
   double Function(int from, int to)? rowDistance;
+  void _releaseCells() {
+    for (final cell in cells) {
+      for (final block in cell.blocks) {
+        block.$1.tableUsers.remove(this);
+      }
+    }
+    cells.clear();
+  }
+
+  @override
+  void dispose() {
+    _releaseCells();
+    super.dispose();
+  }
+
   @override
   double get intrinsicWidth => tableWidth;
   @override
@@ -88,7 +103,7 @@ class _TableRowLayout extends _BlockLayout {
     double firstLineIndent = 0,
   }) {
     if (this.width == width && identical(this.style, style)) return false;
-    cells.clear();
+    _releaseCells();
     final map = m.TableMap.get(table),
         columns = List<double>.of(_tableColumns(table, style));
     var total = columns.fold(0.0, (a, b) => a + b);
@@ -126,6 +141,7 @@ class _TableRowLayout extends _BlockLayout {
       for (final block in cell.rows()) {
         final layout =
             blockLayout?.call(block.node) ?? _BlockLayout(block.node);
+        layout.tableUsers.add(this);
         layout.layout(
           available,
           style,

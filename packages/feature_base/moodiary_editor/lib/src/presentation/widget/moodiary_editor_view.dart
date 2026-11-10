@@ -22,6 +22,8 @@ import '../../toolbar/insert_panel.dart';
 
 class MoodiaryEditorView extends StatefulWidget {
   final String initialContent;
+  final String? initialContentText;
+  final ValueChanged<TiptapMetadata>? onMetadataChanged;
   final ValueChanged<String> onChanged;
 
   final String initialTitle;
@@ -64,6 +66,8 @@ class MoodiaryEditorView extends StatefulWidget {
   const MoodiaryEditorView({
     super.key,
     required this.initialContent,
+    this.initialContentText,
+    this.onMetadataChanged,
     required this.onChanged,
     this.initialTitle = '',
     this.onTitleChanged,
@@ -329,6 +333,8 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       controller: _controller,
       readOnly: !widget.editable,
       initialContent: widget.initialContent,
+      initialContentText: widget.initialContentText,
+      onMetadataChanged: widget.onMetadataChanged,
       initialTitle: widget.initialTitle,
       onChanged: widget.onChanged,
       onTitleChanged: widget.onTitleChanged,

@@ -9,6 +9,8 @@ import 'package:mui/mui.dart';
 class EditorBody extends StatefulWidget {
   final DiaryType type;
   final String initialContent;
+  final String? initialContentText;
+  final ValueChanged<TiptapMetadata>? onMetadataChanged;
 
   final String initialTitle;
   final ValueChanged<String>? onTitleChanged;
@@ -48,6 +50,8 @@ class EditorBody extends StatefulWidget {
     super.key,
     required this.type,
     required this.initialContent,
+    this.initialContentText,
+    this.onMetadataChanged,
     required this.onChanged,
     this.initialTitle = '',
     this.onTitleChanged,
@@ -113,6 +117,8 @@ class _EditorBodyState extends State<EditorBody> {
       valueListenable: MoodiaryKVs.firstLineIndent.getNotifier(),
       builder: (context, firstLineIndent, _) => MoodiaryEditorView(
         initialContent: _content,
+        initialContentText: widget.initialContentText,
+        onMetadataChanged: widget.onMetadataChanged,
         initialTitle: widget.initialTitle,
         onTitleChanged: widget.onTitleChanged,
         controller: widget.editorController,

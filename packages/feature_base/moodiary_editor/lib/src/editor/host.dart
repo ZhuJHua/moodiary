@@ -1,13 +1,13 @@
 part of '../moodiary_editor.dart';
 
 const _asyncLoadThreshold = 64 * 1024;
-typedef _LoadedDocument = ({ft.Node doc, String? error});
+typedef _LoadedDocument = ({ft.Node doc, String? error, TiptapContent source});
 
 _LoadedDocument _loadDocument(String content) {
   final schema = ft.Schema.standard();
+  final source = TiptapContent.parse(content);
   try {
-    final parsed = TiptapContent.parse(content);
-    final json = parsed.document;
+    final json = source.document;
     ft.Node doc;
     if (json != null) {
       if (json['type'] != 'doc') {
@@ -44,7 +44,7 @@ _LoadedDocument _loadDocument(String content) {
         ],
       );
     }
-    return (doc: doc, error: null);
+    return (doc: doc, error: null, source: source);
   } catch (error) {
     final message = error.toString();
     // Keep readable portions without ever replacing the persisted source.
@@ -56,9 +56,10 @@ _LoadedDocument _loadDocument(String content) {
             !n.isOpaque &&
             (n.isLeaf || schema.validContent(n.type, n.content)) &&
             n.content.every(valid);
-        if (valid(parsed)) return (doc: parsed, error: message);
+        if (valid(parsed)) return (doc: parsed, error: message, source: source);
         return (
           error: message,
+          source: source,
           doc: schema.node(
             'doc',
             content: [
@@ -76,6 +77,7 @@ _LoadedDocument _loadDocument(String content) {
     } catch (_) {}
     return (
       error: message,
+      source: source,
       doc: schema.node(
         'doc',
         content: [
@@ -94,12 +96,36 @@ _LoadedDocument _loadDocument(String content) {
 Future<_LoadedDocument> _loadDocumentAsync(String content) =>
     Isolate.run(() => _loadDocument(content));
 
-int _countDocument(ft.Node doc) => TiptapContent.countCharacters(
-  TiptapContent.fromDocument(doc.toJson()).plainText,
+TiptapMetadata _documentMetadata(
+  ft.Node? doc,
+  TiptapContent? source,
+  String? contentText,
+  bool useRenderedContent,
+) {
+  final rendered = source == null || useRenderedContent
+      ? TiptapContent.fromDocument(doc!.toJson())
+      : null;
+  return (source ?? rendered!).metadata(
+    contentText: contentText,
+    renderedContent: rendered,
+  );
+}
+
+Future<TiptapMetadata> _documentMetadataAsync(
+  ft.Node? doc,
+  TiptapContent? source,
+  String? contentText,
+  bool useRenderedContent,
+) => Isolate.run(
+  () => _documentMetadata(doc, source, contentText, useRenderedContent),
 );
 
-Future<int> _countDocumentAsync(ft.Node doc) =>
-    Isolate.run(() => _countDocument(doc));
+Future<TiptapMetadata> _metadataForContentText(
+  TiptapMetadata metadata,
+  String? contentText,
+) async => (contentText?.length ?? 0) >= _asyncLoadThreshold
+    ? Isolate.run(() => metadata.forContentText(contentText))
+    : metadata.forContentText(contentText);
 
 /// Connects the document editor to the shared toolbar and host callbacks.
 class MoodiaryEditorHost extends ChangeNotifier implements EditorHost {
@@ -135,9 +161,16 @@ class MoodiaryEditorHost extends ChangeNotifier implements EditorHost {
     _lastTitle = title.text;
     _deriveState();
     if (_loading) {
-      _documentLoaded = _finishLoad(content, _generation);
+      _documentLoaded = _finishLoad(
+        content,
+        _generation,
+        configuration.initialContentText,
+      );
     } else {
-      _scheduleCount();
+      _scheduleCount(
+        initial: initial,
+        contentText: configuration.initialContentText,
+      );
     }
   }
   MoodiaryEditor _configuration;
@@ -163,22 +196,57 @@ class MoodiaryEditorHost extends ChangeNotifier implements EditorHost {
       _panelMode = false;
   Timer? _countTimer;
   int? _characterCount;
+  TiptapMetadata? _metadata;
+  ft.Node? _metadataDocument;
   int? get characterCount => _characterCount;
   Future<void> _documentLoaded = Future.value();
   @visibleForTesting
   Future<void> get documentLoaded => _documentLoaded;
 
-  void _scheduleCount({bool debounce = false}) {
+  void _scheduleCount({
+    bool debounce = false,
+    _LoadedDocument? initial,
+    String? contentText,
+  }) {
     _countTimer?.cancel();
     final doc = editor.state.doc;
+    final configuration = _configuration;
+    final followContentText =
+        initial != null && contentText == configuration.initialContentText;
     Future<void> count() async {
       if (_disposed || _loading || !identical(doc, editor.state.doc)) return;
-      final value = _largeDocument || doc.content.size >= _asyncLoadThreshold
-          ? await _countDocumentAsync(doc)
-          : _countDocument(doc);
+      final useRenderedContent =
+          initial != null &&
+          (initial.error != null ||
+              !initial.source.isDoc ||
+              !identical(initial.doc, doc));
+      var value =
+          _largeDocument ||
+              doc.content.size >= _asyncLoadThreshold ||
+              (contentText?.length ?? 0) >= _asyncLoadThreshold
+          ? await _documentMetadataAsync(
+              initial == null || useRenderedContent ? doc : null,
+              initial?.source,
+              contentText,
+              useRenderedContent,
+            )
+          : _documentMetadata(
+              doc,
+              initial?.source,
+              contentText,
+              useRenderedContent,
+            );
       if (_disposed || _loading || !identical(doc, editor.state.doc)) return;
-      _characterCount = value;
-      notifyListeners();
+      if (followContentText &&
+          configuration.initialContent == _configuration.initialContent &&
+          contentText != _configuration.initialContentText) {
+        value = await _metadataForContentText(
+          value,
+          _configuration.initialContentText,
+        );
+      }
+      if (_disposed || _loading || !identical(doc, editor.state.doc)) return;
+      _publishMetadata(doc, value);
     }
 
     if (debounce) {
@@ -188,23 +256,44 @@ class MoodiaryEditorHost extends ChangeNotifier implements EditorHost {
     }
   }
 
-  Future<void> _finishLoad(String content, int generation) async {
-    _loadingContent = content;
-    final result = await _loadDocumentAsync(content);
-    if (_disposed || generation != _generation) return;
-    _loadingContent = null;
-    _installDocument(result);
+  void _publishMetadata(ft.Node doc, TiptapMetadata value) {
+    _metadataDocument = doc;
+    _metadata = value;
+    _characterCount = value.characterCount;
+    _configuration.onMetadataChanged?.call(value);
     notifyListeners();
   }
 
-  void _installDocument(_LoadedDocument result) {
+  Future<void> _finishLoad(
+    String content,
+    int generation,
+    String? contentText,
+  ) async {
+    _loadingContent = content;
+    final configuration = _configuration;
+    final result = await _loadDocumentAsync(content);
+    if (_disposed || generation != _generation) return;
+    _loadingContent = null;
+    _installDocument(
+      result,
+      contentText:
+          configuration.initialContent == content &&
+              configuration.initialContentText == contentText &&
+              _configuration.initialContent == content
+          ? _configuration.initialContentText
+          : contentText,
+    );
+    notifyListeners();
+  }
+
+  void _installDocument(_LoadedDocument result, {String? contentText}) {
     _protected = result.error != null;
     contentError.value = result.error;
     editor.replaceDocument(result.doc);
     _lastDocument = editor.state.doc;
     _loading = false;
     _deriveState();
-    _scheduleCount();
+    _scheduleCount(initial: result, contentText: contentText);
   }
 
   String? _loadingContent;
@@ -220,6 +309,7 @@ class MoodiaryEditorHost extends ChangeNotifier implements EditorHost {
   ValueListenable<EditorSearchState?> get search => _search;
 
   void update(MoodiaryEditor configuration) {
+    final previous = _configuration;
     final replacePending =
         _loading && _loadingContent != configuration.initialContent;
     _configuration = configuration;
@@ -227,6 +317,7 @@ class MoodiaryEditorHost extends ChangeNotifier implements EditorHost {
       unawaited(
         swapDocument(
           content: configuration.initialContent,
+          contentText: configuration.initialContentText,
           title: configuration.initialTitle,
         ),
       );
@@ -237,11 +328,37 @@ class MoodiaryEditorHost extends ChangeNotifier implements EditorHost {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_disposed) notifyListeners();
     });
+    if (!replacePending &&
+        previous.initialContent == configuration.initialContent &&
+        previous.initialContentText != configuration.initialContentText) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        final metadata = _metadata, doc = editor.state.doc;
+        if (_disposed ||
+            metadata == null ||
+            !identical(doc, _metadataDocument)) {
+          return;
+        }
+        final value = await _metadataForContentText(
+          metadata,
+          configuration.initialContentText,
+        );
+        if (_disposed ||
+            _loading ||
+            !identical(doc, editor.state.doc) ||
+            configuration.initialContentText !=
+                _configuration.initialContentText) {
+          return;
+        }
+        _publishMetadata(doc, value);
+      });
+    }
   }
 
   void _changed() {
     final doc = editor.state.doc;
     if (!identical(doc, _lastDocument)) {
+      _metadata = null;
+      _metadataDocument = null;
       if (_lastDocument != null && !_loading && !readOnly) {
         _pending = true;
         _save?.cancel();
@@ -515,6 +632,7 @@ class MoodiaryEditorHost extends ChangeNotifier implements EditorHost {
   Future<void> swapDocument({
     required String content,
     required String title,
+    String? contentText,
     double scrollY = 0,
   }) async {
     final generation = ++_generation;
@@ -524,6 +642,8 @@ class MoodiaryEditorHost extends ChangeNotifier implements EditorHost {
     _save?.cancel();
     _countTimer?.cancel();
     _characterCount = null;
+    _metadata = null;
+    _metadataDocument = null;
     _pending = false;
     _held = null;
     _heldDocument = null;
@@ -537,12 +657,12 @@ class MoodiaryEditorHost extends ChangeNotifier implements EditorHost {
     if (_largeDocument) {
       editor.replaceDocument(_loadDocument('').doc);
       notifyListeners();
-      _documentLoaded = _finishLoad(content, generation);
+      _documentLoaded = _finishLoad(content, generation, contentText);
       await _documentLoaded;
       if (_disposed || generation != _generation) return;
     } else {
       _loadingContent = null;
-      _installDocument(_loadDocument(content));
+      _installDocument(_loadDocument(content), contentText: contentText);
       notifyListeners();
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {

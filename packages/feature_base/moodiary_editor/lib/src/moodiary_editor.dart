@@ -52,6 +52,8 @@ class MoodiaryEditor extends StatefulWidget {
   final MoodiaryEditorController? controller;
 
   final String initialContent;
+  final String? initialContentText;
+  final ValueChanged<TiptapMetadata>? onMetadataChanged;
 
   final String initialTitle;
 
@@ -127,6 +129,8 @@ class MoodiaryEditor extends StatefulWidget {
     super.key,
     this.controller,
     this.initialContent = '',
+    this.initialContentText,
+    this.onMetadataChanged,
     this.initialTitle = '',
     this.readOnly = false,
     this.onChanged,
@@ -199,6 +203,7 @@ abstract interface class EditorHost {
   Future<void> swapDocument({
     required String content,
     required String title,
+    String? contentText,
     double scrollY = 0,
   });
   Future<void> resumeVideo(String name, Duration position);
@@ -409,9 +414,15 @@ class MoodiaryEditorController {
   Future<void> swapDocument({
     required String content,
     required String title,
+    String? contentText,
     double scrollY = 0,
   }) async {
-    await _host?.swapDocument(content: content, title: title, scrollY: scrollY);
+    await _host?.swapDocument(
+      content: content,
+      title: title,
+      contentText: contentText,
+      scrollY: scrollY,
+    );
   }
 }
 

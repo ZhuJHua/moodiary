@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:isolate';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
@@ -104,38 +103,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
 
   final ValueNotifier<int> _activeHeading = ValueNotifier<int>(-1);
 
-  String? _headingsContent, _countText;
   List<({int level, String text})> _headings = const [];
   int? _characterCount;
-  Timer? _metadataTimer;
-
-  void _refreshMetadata(Diary diary) {
-    final content = diary.content, text = diary.contentText;
-    if (content == _headingsContent && text == _countText) return;
-    _headingsContent = content;
-    _countText = text;
-    // Keep the previous outline and count until the new ones arrive, so typing
-    // updates them in place instead of blanking and fading them back in.
-    _metadataTimer?.cancel();
-    bool current() =>
-        mounted && content == _headingsContent && text == _countText;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!current()) return;
-      _metadataTimer = Timer(
-        _mode == .edit ? const Duration(milliseconds: 300) : Duration.zero,
-        () async {
-          final result = content.length >= 64 * 1024 || text.length >= 64 * 1024
-              ? await _diaryMetadataAsync(content, text)
-              : _diaryMetadata(content, text);
-          if (!current()) return;
-          setState(() {
-            _headings = result.headings;
-            _characterCount = result.count;
-          });
-        },
-      );
-    });
-  }
 
   EditControllerProvider get _provider => editControllerProvider(
     widget.diaryId,
@@ -259,6 +228,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     _shownTitle = target.title;
     await _editorController.swapDocument(
       content: target.content,
+      contentText: target.contentText,
       title: target.title,
     );
   }
@@ -271,6 +241,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     unawaited(
       _editorController.swapDocument(
         content: diary.content,
+        contentText: diary.contentText,
         title: diary.title,
       ),
     );
@@ -281,7 +252,6 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     moodiaryRouteObserver.unsubscribe(this);
     WidgetsBinding.instance.removeObserver(this);
     _activeHeading.dispose();
-    _metadataTimer?.cancel();
     _autoSaveTimer?.cancel();
     _writingTimer?.cancel();
     _elapsed.dispose();
@@ -604,7 +574,6 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       _hopTarget = null;
     }
     final diary = editAsync.value ?? _hopTarget;
-    if (diary != null) _refreshMetadata(diary);
     final headings = _headings;
     final panel = _editorController.panel;
     return ListenableBuilder(
@@ -879,6 +848,16 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       key: const ValueKey('diary-editor'),
       type: .fromValue(diary.type),
       initialContent: diary.content,
+      initialContentText: diary.contentText,
+      onMetadataChanged: (metadata) {
+        if (!mounted) return;
+        setState(() {
+          _headings = DiaryType.fromValue(diary.type) == .richText
+              ? const []
+              : metadata.headings;
+          _characterCount = metadata.contentTextCharacterCount;
+        });
+      },
       initialTitle: diary.title,
       editable: _mode == .edit,
       onChanged: _onContentChanged,
@@ -1132,6 +1111,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     _shownTitle = target.title;
     await _editorController.swapDocument(
       content: target.content,
+      contentText: target.contentText,
       title: target.title,
       scrollY: scrollY,
     );
@@ -1276,15 +1256,3 @@ class _TocDrawer extends StatelessWidget {
     );
   }
 }
-
-({List<({int level, String text})> headings, int count}) _diaryMetadata(
-  String content,
-  String text,
-) => (
-  headings: TiptapContent.parse(content).headings,
-  count: TiptapContent.countCharacters(text),
-);
-
-Future<({List<({int level, String text})> headings, int count})>
-_diaryMetadataAsync(String content, String text) =>
-    Isolate.run(() => _diaryMetadata(content, text));

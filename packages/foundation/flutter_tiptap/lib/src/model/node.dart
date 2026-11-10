@@ -1,7 +1,10 @@
 part of '../model.dart';
 
 class Fragment extends Iterable<Node> {
-  Fragment(Iterable<Node> nodes) : this._inline(_normalize(nodes));
+  factory Fragment(Iterable<Node> nodes) {
+    if (nodes is List<Node> && nodes.isEmpty) return empty;
+    return Fragment._inline(_normalize(nodes));
+  }
   Fragment._inline(List<Node> nodes)
     : _nodes = nodes,
       blocks = null,
@@ -13,7 +16,7 @@ class Fragment extends Iterable<Node> {
       _nodes = null,
       size = tree.summary.nodeSize,
       textLength = tree.summary.textLength;
-  static final empty = Fragment(const []);
+  static final empty = Fragment._inline(const []);
   final List<Node>? _nodes;
   final BlockTree? blocks;
   final int size;
@@ -246,7 +249,11 @@ class Node {
       if (length > 0 && (node.isText || node.marks.isNotEmpty)) {
         result += _MarkCoverage(
           length,
-          Map.unmodifiable({for (final mark in node.marks) mark.type: length}),
+          node.marks.isEmpty
+              ? const <String, int>{}
+              : Map.unmodifiable({
+                  for (final mark in node.marks) mark.type: length,
+                }),
         );
       }
       position += node.nodeSize;

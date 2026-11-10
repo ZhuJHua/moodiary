@@ -22,6 +22,15 @@ class _ParagraphChunk {
   final List<int> paddingOffsets = [];
   final List<(int, int, double, double, Color, double, double)> codeBoxes = [];
   final List<(int, int, Color, double, double)> highlightBoxes = [];
+  void dispose() {
+    paragraph?.dispose();
+    paragraph = null;
+    for (final chip in chips) {
+      chip.$2.dispose();
+    }
+    chips.clear();
+  }
+
   int paragraphOffset(int local) =>
       local + prefix + paddingOffsets.where((at) => at <= local).length;
   int documentOffset(int paragraph) =>
@@ -42,25 +51,30 @@ class _ParagraphChunk {
   int get prefix => indent > 0 ? 1 : 0;
   double? exactHeight;
   double get height => exactHeight ?? paragraph?.height ?? 0;
-  _ParagraphChunk shift(int delta) =>
-      _ParagraphChunk(
-          start + delta,
-          end + delta,
-          paragraph: paragraph,
-          width: width,
-          style: style,
-        )
-        ..exactHeight = exactHeight
-        ..indent = indent
-        ..alignment = alignment
-        ..base = base
-        ..chips.addAll(chips)
-        ..paddingOffsets.addAll(paddingOffsets)
-        ..codeBoxes.addAll(codeBoxes)
-        ..highlightBoxes.addAll(highlightBoxes);
+  _ParagraphChunk shift(int delta) {
+    final shifted =
+        _ParagraphChunk(
+            start + delta,
+            end + delta,
+            paragraph: paragraph,
+            width: width,
+            style: style,
+          )
+          ..exactHeight = exactHeight
+          ..indent = indent
+          ..alignment = alignment
+          ..base = base
+          ..chips.addAll(chips)
+          ..paddingOffsets.addAll(paddingOffsets)
+          ..codeBoxes.addAll(codeBoxes)
+          ..highlightBoxes.addAll(highlightBoxes);
+    paragraph = null;
+    chips.clear();
+    return shifted;
+  }
 }
 
-class _BlockLayout {
+base class _BlockLayout extends LinkedListEntry<_BlockLayout> {
   _BlockLayout(this.node)
     : text = node.isTextblock ? _inlineText(node) : node.type {
     chunks = node.type == 'codeBlock'
@@ -77,6 +91,13 @@ class _BlockLayout {
   double? width;
   TiptapEditorStyle? style;
   TextSpan? highlight;
+  final Set<_TableRowLayout> tableUsers = {};
+
+  void dispose() {
+    for (final chunk in chunks) {
+      chunk.dispose();
+    }
+  }
 
   static List<_ParagraphChunk> _splitCode(String text) {
     if (text.isEmpty) return [_ParagraphChunk(0, 0)];
@@ -206,6 +227,7 @@ class _BlockLayout {
           identical(highlight, codeHighlight)) {
         continue;
       }
+      chunk.dispose();
       final paintEnd =
           node.type == 'codeBlock' &&
               chunk.end < text.length &&

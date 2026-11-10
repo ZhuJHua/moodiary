@@ -12,6 +12,33 @@ typedef ContentMedia = ({
   List<String> files,
 });
 
+class TiptapMetadata {
+  final String plainText;
+  final List<({int level, String text})> headings;
+  final int characterCount;
+  final int contentTextCharacterCount;
+
+  TiptapMetadata._({
+    required this.plainText,
+    required List<({int level, String text})> headings,
+    required this.characterCount,
+    required this.contentTextCharacterCount,
+  }) : headings = List.unmodifiable(headings);
+
+  TiptapMetadata forContentText(String? contentText) {
+    final count = contentText == null || contentText == plainText
+        ? characterCount
+        : TiptapContent.countCharacters(contentText);
+    if (count == contentTextCharacterCount) return this;
+    return TiptapMetadata._(
+      plainText: plainText,
+      headings: headings,
+      characterCount: characterCount,
+      contentTextCharacterCount: count,
+    );
+  }
+}
+
 class TiptapContent {
   static const int _schemaVersion = 2;
 
@@ -31,6 +58,23 @@ class TiptapContent {
   Map<String, dynamic>? get document => _v2;
 
   bool get isDoc => _doc != null;
+
+  TiptapMetadata metadata({
+    String? contentText,
+    TiptapContent? renderedContent,
+  }) {
+    final extracted = (renderedContent ?? this).plainText;
+    final plainText = contentText == extracted ? contentText! : extracted;
+    final count = countCharacters(plainText);
+    return TiptapMetadata._(
+      plainText: plainText,
+      headings: headings,
+      characterCount: count,
+      contentTextCharacterCount: contentText == null || contentText == plainText
+          ? count
+          : countCharacters(contentText),
+    );
+  }
 
   static Map<String, dynamic>? _tryDoc(String content) {
     final trimmed = content.trimLeft();

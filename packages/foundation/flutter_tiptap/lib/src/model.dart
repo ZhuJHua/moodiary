@@ -37,7 +37,9 @@ Object? _freeze(Object? value) => switch (value) {
 Map<String, Object?> _attrs(
   Map<String, Object?> defaults,
   Map<String, Object?>? attrs,
-) => _freeze({...defaults, ...?attrs})! as Map<String, Object?>;
+) => defaults.isEmpty && (attrs == null || attrs.isEmpty)
+    ? const <String, Object?>{}
+    : _freeze({...defaults, ...?attrs})! as Map<String, Object?>;
 
 bool _equal(Object? a, Object? b) {
   if (identical(a, b)) return true;

@@ -224,7 +224,7 @@ class Schema {
           ? Fragment(content)
           : Fragment.blocks(content),
       text,
-      List.unmodifiable(marks),
+      marks.isEmpty ? const [] : List.unmodifiable(marks),
       null,
     );
   }

@@ -8,6 +8,9 @@ class _MarkCoverage {
   _MarkCoverage operator +(_MarkCoverage b) {
     if (length == 0) return b;
     if (b.length == 0) return this;
+    if (marks.isEmpty && b.marks.isEmpty) {
+      return _MarkCoverage(length + b.length, const {});
+    }
     final values = {...marks};
     for (final entry in b.marks.entries) {
       values.update(
