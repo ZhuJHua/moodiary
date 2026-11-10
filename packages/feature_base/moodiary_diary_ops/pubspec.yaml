@@ -10,9 +10,6 @@ environment:
   flutter: ">=3.47.0"
 
 dependencies:
-  flutter:
-    sdk: flutter
-
   moodiary_data: 0.0.1
   moodiary_models: 0.0.1
   moodiary_utils: 0.0.1

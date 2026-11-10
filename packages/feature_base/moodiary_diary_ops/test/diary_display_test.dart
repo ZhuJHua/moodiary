@@ -281,7 +281,7 @@ void main() {
         '[site](https://x.test)![pic](image-1.png)\n\nsecond',
       );
       expect(
-        diaryToMarkdown(diary, renderLinks: false),
+        diaryToMarkdown(diary, linkStyle: DiaryLinkStyle.label),
         'see other and [site](https://x.test)![pic](image-1.png)\n\nsecond',
       );
     });

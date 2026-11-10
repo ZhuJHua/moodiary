@@ -69,9 +69,6 @@ const String _corsExposeHeaders = 'Mcp-Session-Id';
 /// MCP clients send small JSON-RPC frames; anything bigger is not a client.
 const int _maxBodyBytes = 4 * 1024 * 1024;
 
-/// Sessions kept at once, oldest evicted first.
-const int _maxSessions = 64;
-
 const int _maxBindAttempts = 12;
 const int _maxLanEndpoints = 4;
 
@@ -99,9 +96,6 @@ class IoMcpTransport implements McpTransport {
   /// Bumped by [stop] so a bind that is still in flight cannot resurrect a
   /// transport the caller already stopped.
   int _generation = 0;
-
-  /// Live sessions, in creation order, with their last activity.
-  final Map<String, _TrackedSession> _sessions = {};
 
   /// Open event streams, so [stop] can end every one of them.
   final Set<_SseConnection> _connections = {};
@@ -170,7 +164,7 @@ class IoMcpTransport implements McpTransport {
           );
         },
       );
-      _sweeper = Timer.periodic(_sweepInterval, (_) => _sweepIdleSessions());
+      _sweeper = Timer.periodic(_sweepInterval, (_) => _pruneSessions());
       _endpoints = await _endpointsFor(bound.port, config.allowLan);
       logger.d('MCP transport listening on ${_endpoints.join(', ')}');
     } finally {
@@ -189,7 +183,6 @@ class IoMcpTransport implements McpTransport {
     _requireToken = false;
     _port = 0;
     _endpoints = const [];
-    _sessions.clear();
     final connections = _connections.toList();
     _connections.clear();
     for (final connection in connections) {
@@ -381,54 +374,19 @@ class IoMcpTransport implements McpTransport {
   /// the spec leaves to the server.
   Future<void> _postStreamable(HttpRequest request) async {
     if (await _rejectUnsupportedVersion(request)) return;
-    if (!_isJsonRequest(request)) {
-      await _sendError(
-        request,
-        HttpStatus.unsupportedMediaType,
-        JsonRpcCode.invalidRequest,
-        'Content-Type must be application/json',
-      );
-      return;
-    }
-    final body = await _readBody(request);
-    if (body == null) {
-      await _sendError(
-        request,
-        HttpStatus.requestEntityTooLarge,
-        JsonRpcCode.invalidRequest,
-        'request body is larger than 4 MiB',
-      );
-      return;
-    }
-    final message = await _decodeOrReject(request, body);
+    final message = await _readMessage(request);
     if (message == null) return;
-    final core = _core;
-    if (core == null) {
-      await _sendError(
-        request,
-        HttpStatus.internalServerError,
-        JsonRpcCode.internalError,
-        'server is stopping',
-      );
-      return;
-    }
+    final core = await _requireCore(request);
+    if (core == null) return;
     final headerSessionId = _header(request, _sessionIdHeader);
     final McpSessionState session;
     if (headerSessionId != null && headerSessionId.isNotEmpty) {
-      final existing = core.session(headerSessionId);
-      if (existing == null) {
-        await _sendError(
-          request,
-          HttpStatus.notFound,
-          JsonRpcCode.invalidRequest,
-          'unknown MCP session',
-        );
-        return;
-      }
-      _touch(headerSessionId);
+      final existing = await _requireSession(request, headerSessionId);
+      if (existing == null) return;
       session = existing;
     } else if (_isInitialize(message)) {
-      session = _createSession(core);
+      session = core.createSession();
+      _closeDetachedStreams(core);
     } else {
       await _sendError(
         request,
@@ -470,20 +428,11 @@ class IoMcpTransport implements McpTransport {
       );
       return;
     }
-    final session = _core?.session(sessionId);
-    if (session == null) {
-      await _sendError(
-        request,
-        HttpStatus.notFound,
-        JsonRpcCode.invalidRequest,
-        'unknown MCP session',
-      );
-      return;
-    }
+    final session = await _requireSession(request, sessionId);
+    if (session == null) return;
     if (_header(request, _lastEventIdHeader) != null) {
       logger.d('MCP: streams are not resumable, ignoring Last-Event-ID');
     }
-    _touch(sessionId);
     await _serveStream(request, session);
   }
 
@@ -500,15 +449,7 @@ class IoMcpTransport implements McpTransport {
       );
       return;
     }
-    if (_core?.session(sessionId) == null) {
-      await _sendError(
-        request,
-        HttpStatus.notFound,
-        JsonRpcCode.invalidRequest,
-        'unknown MCP session',
-      );
-      return;
-    }
+    if (await _requireSession(request, sessionId) == null) return;
     _dropSession(sessionId);
     await _respondEmpty(request, HttpStatus.ok);
   }
@@ -516,17 +457,10 @@ class IoMcpTransport implements McpTransport {
   /// `GET /sse`: the 2024-11-05 stream, whose first event names the message
   /// endpoint to POST to.
   Future<void> _openLegacyStream(HttpRequest request) async {
-    final core = _core;
-    if (core == null) {
-      await _sendError(
-        request,
-        HttpStatus.internalServerError,
-        JsonRpcCode.internalError,
-        'server is stopping',
-      );
-      return;
-    }
-    final session = _createSession(core);
+    final core = await _requireCore(request);
+    if (core == null) return;
+    final session = core.createSession();
+    _closeDetachedStreams(core);
     final endpoint = Uri(
       path: _messagesPath,
       queryParameters: {_sessionIdQuery: session.id},
@@ -548,47 +482,11 @@ class IoMcpTransport implements McpTransport {
       );
       return;
     }
-    final core = _core;
-    if (core == null) {
-      await _sendError(
-        request,
-        HttpStatus.internalServerError,
-        JsonRpcCode.internalError,
-        'server is stopping',
-      );
-      return;
-    }
-    final session = core.session(sessionId);
-    if (session == null) {
-      await _sendError(
-        request,
-        HttpStatus.notFound,
-        JsonRpcCode.invalidRequest,
-        'unknown MCP session',
-      );
-      return;
-    }
-    _touch(sessionId);
-    if (!_isJsonRequest(request)) {
-      await _sendError(
-        request,
-        HttpStatus.unsupportedMediaType,
-        JsonRpcCode.invalidRequest,
-        'Content-Type must be application/json',
-      );
-      return;
-    }
-    final body = await _readBody(request);
-    if (body == null) {
-      await _sendError(
-        request,
-        HttpStatus.requestEntityTooLarge,
-        JsonRpcCode.invalidRequest,
-        'request body is larger than 4 MiB',
-      );
-      return;
-    }
-    final message = await _decodeOrReject(request, body);
+    final core = await _requireCore(request);
+    if (core == null) return;
+    final session = await _requireSession(request, sessionId);
+    if (session == null) return;
+    final message = await _readMessage(request);
     if (message == null) return;
     await _respondEmpty(request, HttpStatus.accepted);
     try {
@@ -765,52 +663,95 @@ class IoMcpTransport implements McpTransport {
     return parsed.authority;
   }
 
-  McpSessionState _createSession(McpServer core) {
-    final session = core.createSession();
-    _sessions[session.id] = _TrackedSession(lastSeen: DateTime.now());
-    _enforceSessionLimit();
-    return session;
+  /// The running core, or `null` after a `500` when the transport is stopping.
+  Future<McpServer?> _requireCore(HttpRequest request) async {
+    final core = _core;
+    if (core != null) return core;
+    await _sendError(
+      request,
+      HttpStatus.internalServerError,
+      JsonRpcCode.internalError,
+      'server is stopping',
+    );
+    return null;
   }
 
-  void _enforceSessionLimit() {
-    while (_sessions.length > _maxSessions) {
-      // Insertion order is creation order, so the first key is the oldest one.
-      final oldest = _sessions.keys.first;
-      logger.d('MCP: session limit reached, dropping the oldest session');
-      _dropSession(oldest);
+  /// The live session [id] (touched), or `null` after a `404`.
+  Future<McpSessionState?> _requireSession(
+    HttpRequest request,
+    String id,
+  ) async {
+    final session = _core?.session(id);
+    if (session != null) {
+      session.touch();
+      return session;
     }
+    await _sendError(
+      request,
+      HttpStatus.notFound,
+      JsonRpcCode.invalidRequest,
+      'unknown MCP session',
+    );
+    return null;
   }
 
   void _dropSession(String id) {
-    _sessions.remove(id);
-    final connections = [
+    _core?.disposeSession(id);
+    _closeSessionStreams(id);
+  }
+
+  void _closeSessionStreams(String id) {
+    for (final connection in [
       for (final connection in _connections)
         if (connection.sessionId == id) connection,
-    ];
-    for (final connection in connections) {
+    ]) {
       _connections.remove(connection);
       unawaited(connection.close());
     }
-    _core?.disposeSession(id);
   }
 
-  void _touch(String id) {
-    final tracked = _sessions[id];
-    if (tracked != null) tracked.lastSeen = DateTime.now();
-  }
-
-  void _sweepIdleSessions() {
-    if (_server == null) return;
-    final cutoff = DateTime.now().subtract(_idleTimeout);
-    final idle = [
-      for (final entry in _sessions.entries)
-        if (entry.value.lastSeen.isBefore(cutoff)) entry.key,
-    ];
-    if (idle.isEmpty) return;
-    logger.d('MCP: dropping ${idle.length} idle session(s)');
-    for (final id in idle) {
-      _dropSession(id);
+  /// Closes the streams of sessions the core dropped on its own: a new session
+  /// may have evicted the oldest one, and idle sessions are pruned on a timer.
+  void _closeDetachedStreams(McpServer core) {
+    for (final connection in [
+      for (final connection in _connections)
+        if (core.session(connection.sessionId) == null) connection,
+    ]) {
+      _connections.remove(connection);
+      unawaited(connection.close());
     }
+  }
+
+  void _pruneSessions() {
+    final core = _core;
+    if (core == null) return;
+    core.pruneIdleSessions(_idleTimeout);
+    _closeDetachedStreams(core);
+  }
+
+  /// Reads and decodes the JSON-RPC body of a POST, answering the client and
+  /// returning `null` when it is not acceptable.
+  Future<Map<String, dynamic>?> _readMessage(HttpRequest request) async {
+    if (!_isJsonRequest(request)) {
+      await _sendError(
+        request,
+        HttpStatus.unsupportedMediaType,
+        JsonRpcCode.invalidRequest,
+        'Content-Type must be application/json',
+      );
+      return null;
+    }
+    final body = await _readBody(request);
+    if (body == null) {
+      await _sendError(
+        request,
+        HttpStatus.requestEntityTooLarge,
+        JsonRpcCode.invalidRequest,
+        'request body is larger than 4 MiB',
+      );
+      return null;
+    }
+    return _decodeOrReject(request, body);
   }
 
   /// Reads the body, returning `null` once it exceeds [_maxBodyBytes]. The
@@ -1071,13 +1012,6 @@ class IoMcpTransport implements McpTransport {
       logger.d('MCP transport could not send an error response ($error)');
     }
   }
-}
-
-/// When a session last did something; the core does not need to know.
-class _TrackedSession {
-  _TrackedSession({required this.lastSeen});
-
-  DateTime lastSeen;
 }
 
 /// One open event stream plus the signal that ends its handler.

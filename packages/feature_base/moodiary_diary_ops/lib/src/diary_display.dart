@@ -29,11 +29,8 @@ const String diaryUriPrefix = 'moodiary://diary/';
 ///
 /// [uri] keeps the target: `[label](href)` in Markdown and `label (href)` in
 /// plain text. [label] drops the target and leaves only the label, which is
-/// what list previews and the legacy `renderLinks: false` callers want.
+/// what list previews want.
 enum DiaryLinkStyle { uri, label }
-
-DiaryLinkStyle _styleOf(bool renderLinks, DiaryLinkStyle? linkStyle) =>
-    linkStyle ?? (renderLinks ? DiaryLinkStyle.uri : DiaryLinkStyle.label);
 
 /// The stored representation: ISO-8601 in UTC.
 String isoUtc(DateTime time) => time.toUtc().toIso8601String();
@@ -73,21 +70,17 @@ String diaryToText(
 
 /// One line preview of the diary body, used by every list shaped result.
 ///
-/// With [renderMarkdown] the preview is the Markdown body cut to [chars]
-/// instead, so headings and lists survive the cut; the plain form collapses
-/// every run of whitespace to a single space and drops link targets, because a
-/// preview is not a navigation surface.
-String excerptOf(
-  Diary diary, {
-  int chars = mcpExcerptChars,
-  bool renderMarkdown = false,
-}) {
-  if (renderMarkdown) return truncate(diaryToMarkdown(diary), chars);
+/// With [renderMarkdown] the preview is the Markdown body cut to
+/// [mcpExcerptChars] instead, so headings and lists survive the cut; the plain
+/// form collapses every run of whitespace to a single space and drops link
+/// targets, because a preview is not a navigation surface.
+String excerptOf(Diary diary, {bool renderMarkdown = false}) {
+  if (renderMarkdown) return truncate(diaryToMarkdown(diary), mcpExcerptChars);
   final text = diaryToText(
     diary,
     linkStyle: DiaryLinkStyle.label,
   ).replaceAll(RegExp(r'\s+'), ' ');
-  return truncate(text.trim(), chars);
+  return truncate(text.trim(), mcpExcerptChars);
 }
 
 /// `#AARRGGBB`, or `null` when the category has no colour.
@@ -119,24 +112,13 @@ Map<String, dynamic> diarySummary(
 
 /// The tiptap body of [diary] as Markdown. Legacy diaries are not converted:
 /// a Markdown diary already holds Markdown, a rich text one only has its text.
-///
-/// [renderLinks] is the legacy boolean form of [linkStyle]; when both are sent
-/// [linkStyle] wins.
 String diaryToMarkdown(
   Diary diary, {
-  bool renderLinks = true,
-  DiaryLinkStyle? linkStyle,
+  DiaryLinkStyle linkStyle = DiaryLinkStyle.uri,
 }) => switch (DiaryType.fromValue(diary.type)) {
-  DiaryType.tiptap => tiptapToMarkdown(
-    diary.content,
-    renderLinks: renderLinks,
-    linkStyle: linkStyle,
-  ),
+  DiaryType.tiptap => tiptapToMarkdown(diary.content, linkStyle: linkStyle),
   DiaryType.markdown => diary.content,
-  DiaryType.richText => diaryToText(
-    diary,
-    linkStyle: _styleOf(renderLinks, linkStyle),
-  ),
+  DiaryType.richText => diaryToText(diary, linkStyle: linkStyle),
 };
 
 /// Renders a stored Tiptap document as Markdown.
@@ -147,15 +129,12 @@ String diaryToMarkdown(
 /// descended into so no text is lost; media is rendered from the node that is
 /// actually in the document.
 ///
-/// [renderLinks] false degrades a diary mention to its label text, without the
-/// `moodiary://diary/<id>` URI. It is the legacy boolean form of [linkStyle];
-/// when both are sent [linkStyle] wins.
+/// [DiaryLinkStyle.label] degrades a diary mention to its label text, without
+/// the `moodiary://diary/<id>` URI.
 String tiptapToMarkdown(
   String content, {
-  bool renderLinks = true,
-  DiaryLinkStyle? linkStyle,
+  DiaryLinkStyle linkStyle = DiaryLinkStyle.uri,
 }) {
-  final style = _styleOf(renderLinks, linkStyle);
   final parsed = TiptapContent.parse(content);
   if (!parsed.isDoc) return content;
   final Object? decoded;
@@ -166,7 +145,7 @@ String tiptapToMarkdown(
   }
   if (decoded is! Map) return content;
   final out = StringBuffer();
-  _blocks(decoded['content'], out, style);
+  _blocks(decoded['content'], out, linkStyle);
   return out.toString().trim();
 }
 
@@ -679,13 +658,12 @@ String _plainInline(Object? nodes) {
 }
 
 /// A diary as a Markdown resource: JSON front matter (which is valid YAML) then
-/// the readable body. [renderLinks] and [linkStyle] follow [diaryToMarkdown].
+/// the readable body. [linkStyle] follows [diaryToMarkdown].
 String diaryMarkdownDocument(
   Diary diary, {
   String? categoryName,
   Map<String, dynamic> links = const {},
-  bool renderLinks = true,
-  DiaryLinkStyle? linkStyle,
+  DiaryLinkStyle linkStyle = DiaryLinkStyle.uri,
 }) {
   final frontMatter = {
     'id': diary.id,
@@ -700,9 +678,7 @@ String diaryMarkdownDocument(
     'uri': '$diaryUriPrefix${diary.id}',
     'links': links,
   };
-  final body = truncate(
-    diaryToMarkdown(diary, renderLinks: renderLinks, linkStyle: linkStyle),
-  );
+  final body = truncate(diaryToMarkdown(diary, linkStyle: linkStyle));
   return '---\n'
       '${const JsonEncoder.withIndent('  ').convert(frontMatter)}\n'
       '---\n\n$body\n';

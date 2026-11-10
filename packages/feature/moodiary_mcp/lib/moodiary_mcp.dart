@@ -1,12 +1,9 @@
 library;
 
+/// The package surface the app consumes: the service, its keep-alive companion
+/// and the renderer port the composition root implements. Protocol, transport,
+/// tools and registry stay inside `src/`, reachable through direct imports from
+/// the package's own tests.
 export 'src/export/diary_image_renderer.dart';
-export 'src/protocol/json_rpc.dart';
-export 'src/protocol/mcp_types.dart';
-export 'src/registry/mcp_registry.dart';
-export 'src/server/mcp_server.dart';
-export 'src/server/mcp_session.dart';
 export 'src/service/mcp_keep_alive.dart';
 export 'src/service/mcp_service.dart';
-export 'src/transport/io_mcp_transport.dart';
-export 'src/transport/transport.dart';

@@ -13,10 +13,19 @@ import 'mcp_session.dart';
 /// Transports (Streamable HTTP, legacy HTTP+SSE) hand decoded JSON-RPC messages
 /// in and write the returned responses out; the core never touches sockets.
 class McpServer {
-  McpServer({required this.registry, this.serverVersion = '0.0.0'});
+  McpServer({
+    required this.registry,
+    this.serverVersion = '0.0.0',
+    this.maxSessions = 64,
+  });
 
   final McpRegistry registry;
   final String serverVersion;
+
+  /// Sessions kept at once; the oldest is evicted when a new one would exceed
+  /// it. A local endpoint has one client, so this only bounds a client that
+  /// keeps connecting without ending its sessions.
+  final int maxSessions;
 
   final Map<String, McpSessionState> _sessions = {};
   int _sessionSeq = 0;
@@ -28,15 +37,35 @@ class McpServer {
           'moodiary-${++_sessionSeq}-${DateTime.now().microsecondsSinceEpoch}',
     );
     _sessions[session.id] = session;
+    while (_sessions.length > maxSessions) {
+      // Insertion order is creation order, so the first key is the oldest one.
+      final oldest = _sessions.keys.first;
+      logger.d('MCP: session limit reached, dropping the oldest session');
+      disposeSession(oldest);
+    }
     return session;
   }
 
   McpSessionState? session(String id) => _sessions[id];
 
-  Iterable<McpSessionState> get sessions => _sessions.values;
-
   void disposeSession(String id) {
     _sessions.remove(id)?.dispose();
+  }
+
+  /// Drops the sessions idle for longer than [idleTimeout] and returns their
+  /// ids, so a transport can close the streams it still holds for them.
+  List<String> pruneIdleSessions(Duration idleTimeout) {
+    final cutoff = DateTime.now().subtract(idleTimeout);
+    final idle = [
+      for (final entry in _sessions.entries)
+        if (entry.value.lastSeen.isBefore(cutoff)) entry.key,
+    ];
+    if (idle.isEmpty) return const [];
+    logger.d('MCP: dropping ${idle.length} idle session(s)');
+    for (final id in idle) {
+      disposeSession(id);
+    }
+    return idle;
   }
 
   void dispose() {
@@ -101,12 +130,12 @@ class McpServer {
   ) async => switch (request.method) {
     'initialize' => _initialize(session, request.params),
     'ping' => const <String, dynamic>{},
-    'tools/list' => _listTools(request.params),
+    'tools/list' => _listTools(),
     'tools/call' => _callTool(session, request),
-    'resources/list' => _listResources(request.params),
-    'resources/templates/list' => _listResourceTemplates(request.params),
+    'resources/list' => _listResources(),
+    'resources/templates/list' => _listResourceTemplates(),
     'resources/read' => _readResource(session, request),
-    'prompts/list' => _listPrompts(request.params),
+    'prompts/list' => _listPrompts(),
     'prompts/get' => _getPrompt(session, request),
     'logging/setLevel' => _setLevel(session, request.params),
     'completion/complete' => _complete(session, request),
@@ -144,13 +173,12 @@ class McpServer {
       params['protocolVersion'],
     );
     final clientInfo = params['clientInfo'];
-    if (clientInfo is Map) {
-      session.clientName = clientInfo['name']?.toString();
-      session.clientVersion = clientInfo['version']?.toString();
-    }
+    final clientName = clientInfo is Map
+        ? clientInfo['name']?.toString()
+        : null;
     logger.d(
       'MCP session ${session.id} initialized '
-      '(client: ${session.clientName ?? 'unknown'}, '
+      '(client: ${clientName ?? 'unknown'}, '
       'protocol: ${session.protocolVersion})',
     );
     return {
@@ -171,22 +199,26 @@ class McpServer {
     };
   }
 
-  Map<String, dynamic> _listTools(Map<String, dynamic> params) => registry
-      .page(registry.tools, params['cursor'])
-      .toJson('tools', (tool) => tool.toJson());
+  // The property names below are the protocol, not formatting: a client reads
+  // `tools` off a `tools/list` result, so a generic `items` wrapper makes a
+  // typed client fail while decoding the response.
+  Map<String, dynamic> _listTools() => {
+    'tools': [for (final tool in registry.tools) tool.toJson()],
+  };
 
-  Map<String, dynamic> _listResources(Map<String, dynamic> params) => registry
-      .page(registry.resources, params['cursor'])
-      .toJson('resources', (resource) => resource.toJson());
+  Map<String, dynamic> _listResources() => {
+    'resources': [for (final resource in registry.resources) resource.toJson()],
+  };
 
-  Map<String, dynamic> _listResourceTemplates(Map<String, dynamic> params) =>
-      registry
-          .page(registry.resourceTemplates, params['cursor'])
-          .toJson('resourceTemplates', (template) => template.toJson());
+  Map<String, dynamic> _listResourceTemplates() => {
+    'resourceTemplates': [
+      for (final template in registry.resourceTemplates) template.toJson(),
+    ],
+  };
 
-  Map<String, dynamic> _listPrompts(Map<String, dynamic> params) => registry
-      .page(registry.prompts, params['cursor'])
-      .toJson('prompts', (prompt) => prompt.toJson());
+  Map<String, dynamic> _listPrompts() => {
+    'prompts': [for (final prompt in registry.prompts) prompt.toJson()],
+  };
 
   Future<Map<String, dynamic>> _callTool(
     McpSessionState session,
@@ -240,14 +272,14 @@ class McpServer {
         'uri must be the resource uri',
       );
     }
-    final resolved = registry.resolveResource(uri);
-    if (resolved == null) {
+    final reader = registry.resolveResource(uri);
+    if (reader == null) {
       throw JsonRpcException(
         JsonRpcCode.resourceNotFound,
         'resource not found: $uri',
       );
     }
-    final result = await resolved.reader(_context(session, request));
+    final result = await reader(_context(session, request));
     return result.toJson();
   }
 
@@ -318,9 +350,6 @@ class McpServer {
     final meta = request.params['_meta'];
     final progressToken = meta is Map ? meta['progressToken'] : null;
     return McpCallContext(
-      sessionId: session.id,
-      requestId: request.id,
-      protocolVersion: session.protocolVersion ?? mcpLatestProtocolVersion,
       progressToken: progressToken,
       notify: session.notify,
       cancelled: () => session.isCancelled(request.id),

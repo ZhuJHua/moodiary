@@ -87,8 +87,8 @@ class _McpKeepAliveSheetState extends State<McpKeepAliveSheet>
         LucideIcons.batteryCharging,
       ),
       KeepAlivePermission.notifications => (
-        l10n.mcpKeepAliveNotificationTitle,
-        l10n.mcpKeepAliveNotificationDesc,
+        l10n.mcpKeepAliveNotificationPermissionTitle,
+        l10n.mcpKeepAliveNotificationPermissionDesc,
         LucideIcons.bell,
       ),
     };

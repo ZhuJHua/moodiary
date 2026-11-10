@@ -609,21 +609,6 @@ class Translations$app$zh {
 	/// zh: '已关闭，本机没有在监听'
 	String get mcpEnableSubtitleOff => '已关闭，本机没有在监听';
 
-	/// zh: '已开启，但服务未运行'
-	String get mcpEnableSubtitleOn => '已开启，但服务未运行';
-
-	/// zh: '正在启动…'
-	String get mcpEnableSubtitleStarting => '正在启动…';
-
-	/// zh: '运行中，端口 {port}'
-	String mcpEnableSubtitleRunning({required Object port}) => '运行中，端口 ${port}';
-
-	/// zh: '服务启动失败'
-	String get mcpEnableSubtitleFailed => '服务启动失败';
-
-	/// zh: '连接信息'
-	String get mcpEntryTitle => '连接信息';
-
 	/// zh: 'MCP 服务'
 	String get mcpPageTitle => 'MCP 服务';
 
@@ -735,41 +720,47 @@ class Translations$app$zh {
 	/// zh: '后台保持运行'
 	String get mcpKeepAliveTitle => '后台保持运行';
 
-	/// zh: '离开 App 后仍让 MCP 服务保持可达'
-	String get mcpKeepAliveSubtitle => '离开 App 后仍让 MCP 服务保持可达';
+	/// zh: '安卓使用带常驻通知的前台服务，iOS 使用音频会话保持运行'
+	String get mcpKeepAliveSubtitle => '安卓使用带常驻通知的前台服务，iOS 使用音频会话保持运行';
 
-	/// zh: '后台保活权限'
-	String get mcpKeepAlivePermissionTitle => '后台保活权限';
+	/// zh: 'MCP 服务正在运行'
+	String get mcpKeepAliveNotificationTitle => 'MCP 服务正在运行';
 
-	/// zh: '点击查看并授予后台保活所需的权限'
-	String get mcpKeepAlivePermissionSubtitle => '点击查看并授予后台保活所需的权限';
+	/// zh: '外部客户端可继续访问，打开 Moodiary 可停止服务'
+	String get mcpKeepAliveNotificationText => '外部客户端可继续访问，打开 Moodiary 可停止服务';
+
+	/// zh: '前台服务权限'
+	String get mcpKeepAlivePermissionTitle => '前台服务权限';
+
+	/// zh: '点击查看前台服务需要的权限'
+	String get mcpKeepAlivePermissionSubtitle => '点击查看前台服务需要的权限';
 
 	/// zh: '已获得 {granted}/{total} 项权限'
 	String mcpKeepAlivePermissionSummary({required Object granted, required Object total}) => '已获得 ${granted}/${total} 项权限';
 
-	/// zh: '权限已齐备，后台保活可用'
-	String get mcpKeepAlivePermissionReady => '权限已齐备，后台保活可用';
+	/// zh: '权限已齐备，服务可以保持运行'
+	String get mcpKeepAlivePermissionReady => '权限已齐备，服务可以保持运行';
 
 	/// zh: '已保存'
 	String get mcpKeepAliveSaved => '已保存';
 
-	/// zh: '后台保活所需权限'
-	String get mcpKeepAliveSheetTitle => '后台保活所需权限';
+	/// zh: '前台服务所需权限'
+	String get mcpKeepAliveSheetTitle => '前台服务所需权限';
 
-	/// zh: '离开 App 后，系统需要允许这些权限才能让 MCP 服务继续可达'
-	String get mcpKeepAliveSheetSubtitle => '离开 App 后，系统需要允许这些权限才能让 MCP 服务继续可达';
+	/// zh: '离开 App 后由前台服务保持服务可达，安卓会显示一条常驻通知'
+	String get mcpKeepAliveSheetSubtitle => '离开 App 后由前台服务保持服务可达，安卓会显示一条常驻通知';
 
 	/// zh: '忽略电池优化'
 	String get mcpKeepAliveBatteryTitle => '忽略电池优化';
 
-	/// zh: '系统不会因为省电策略结束后台进程'
-	String get mcpKeepAliveBatteryDesc => '系统不会因为省电策略结束后台进程';
+	/// zh: '让前台服务在 Doze 与厂商省电策略下继续运行'
+	String get mcpKeepAliveBatteryDesc => '让前台服务在 Doze 与厂商省电策略下继续运行';
 
 	/// zh: '通知权限'
-	String get mcpKeepAliveNotificationTitle => '通知权限';
+	String get mcpKeepAliveNotificationPermissionTitle => '通知权限';
 
-	/// zh: '允许 App 在前台服务通知里保持后台运行状态'
-	String get mcpKeepAliveNotificationDesc => '允许 App 在前台服务通知里保持后台运行状态';
+	/// zh: 'Android 13 起，未允许通知时前台服务的常驻通知不会显示'
+	String get mcpKeepAliveNotificationPermissionDesc => 'Android 13 起，未允许通知时前台服务的常驻通知不会显示';
 
 	/// zh: '已获得'
 	String get mcpKeepAliveGranted => '已获得';
@@ -786,29 +777,11 @@ class Translations$app$zh {
 	/// zh: '部分厂商系统还需要在应用信息页里允许自启动与后台活动'
 	String get mcpKeepAliveSettingsHint => '部分厂商系统还需要在应用信息页里允许自启动与后台活动';
 
-	/// zh: '刷新'
-	String get mcpKeepAliveRefresh => '刷新';
-
 	/// zh: '完成'
 	String get mcpKeepAliveDone => '完成';
 
 	/// zh: '无法打开系统设置，请手动前往应用信息页开启'
 	String get mcpKeepAliveRequestFailed => '无法打开系统设置，请手动前往应用信息页开启';
-
-	/// zh: '如何连接'
-	String get mcpConnectTitle => '如何连接';
-
-	/// zh: '服务地址：{endpoint}'
-	String mcpConnectEndpoint({required Object endpoint}) => '服务地址：${endpoint}';
-
-	/// zh: '请求头：Authorization: Bearer <token>'
-	String get mcpConnectAuth => '请求头：Authorization: Bearer <token>';
-
-	/// zh: '无需请求头（仅本机访问，且未启用令牌）'
-	String get mcpConnectAuthNone => '无需请求头（仅本机访问，且未启用令牌）';
-
-	/// zh: '开启局域网访问时，客户端需要与本机连接同一 Wi-Fi。'
-	String get mcpConnectWifi => '开启局域网访问时，客户端需要与本机连接同一 Wi-Fi。';
 }
 
 // Path: assistant

@@ -23,15 +23,14 @@ class DiaryStatsOps {
   DiaryStatsOps({
     required this.diaries,
     required this.categories,
-    this.insights,
+    required this.insights,
   });
 
   final DiaryRepository diaries;
   final CategoryRepository categories;
 
-  /// Only the MCP payload needs the mood read model; the assistant overview
-  /// reads the diary table alone.
-  final MoodInsightsRepository? insights;
+  /// The mood read model behind [statsPayload] and [visibleDiaryEntries].
+  final MoodInsightsRepository insights;
 
   /// Visible count, span, per-category counts and the mood distribution.
   Future<AssistantOverview> overviewForModel() async {
@@ -108,7 +107,7 @@ class DiaryStatsOps {
       for (final category in categoryList) category.id: category.categoryName,
     };
     final monthly = await diaries.diaryCountByMonth(sort: DiarySort.timeDesc);
-    final earliest = await insights!.earliestEntry();
+    final earliest = await insights.earliestEntry();
 
     // A non-positive window would make the invariant meaningless, so one month
     // is the floor; the tool layer already clamps its own range.
@@ -131,7 +130,7 @@ class DiaryStatsOps {
       }
     }
 
-    final entries = await visibleEntries();
+    final entries = await visibleDiaryEntries(insights);
     final mood = summarizeMood(entries);
     final recorded = mood.distribution.values.fold(0, (sum, n) => sum + n);
     final categorised = byCategory.byCategory.values.fold(
@@ -176,11 +175,6 @@ class DiaryStatsOps {
       'generatedAt': isoUtc(DateTime.now()),
     };
   }
-
-  /// Every visible diary as the light projection the mood insights read model
-  /// uses. Prompt completions need days and titles without loading diary bodies.
-  Future<List<MoodInsightEntry>> visibleEntries() =>
-      visibleDiaryEntries(insights!);
 
   String _monthKey(DateTime month) =>
       '${month.year}-${month.month.toString().padLeft(2, '0')}';

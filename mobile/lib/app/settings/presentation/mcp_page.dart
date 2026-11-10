@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
-import 'package:gap/gap.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
@@ -43,11 +42,8 @@ class _McpPageState extends State<McpPage> with WidgetsBindingObserver {
   final McpService _service = getIt<McpService>();
   final McpKeepAlive _keepAlive = getIt<McpKeepAlive>();
 
-  String? _token;
   bool _revealToken = false;
   List<KeepAlivePermissionStatus> _permissions = const [];
-
-  String? get _currentToken => _service.token ?? _token;
 
   @override
   void initState() {
@@ -82,7 +78,6 @@ class _McpPageState extends State<McpPage> with WidgetsBindingObserver {
               _keepAliveSection(context),
               _accessSection(context, state),
               _networkSection(context, state),
-              _connectBlurb(context, state),
               SliverGap(context.safeBottom),
             ],
           ),
@@ -99,7 +94,7 @@ class _McpPageState extends State<McpPage> with WidgetsBindingObserver {
           valueListenable: MoodiaryKVs.mcpEnabled.getNotifier(),
           builder: (context, enabled, _) => SettingSwitchListTile(
             title: context.l10n.app.mcpEnableTitle,
-            subtitle: _switchSubtitle(context, state, enabled: enabled),
+            subtitle: enabled ? null : context.l10n.app.mcpEnableSubtitleOff,
             secondary: _lead(context, LucideIcons.server),
             value: enabled,
             onChanged: (on) => unawaited(_setEnabled(on)),
@@ -122,33 +117,28 @@ class _McpPageState extends State<McpPage> with WidgetsBindingObserver {
     if (!_keepAlive.supported) {
       return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
-    if (!Platform.isAndroid) {
-      return MSliverSettingGroup(
-        title: context.l10n.app.mcpGroupKeepAlive,
-        children: [
-          ValueListenableBuilder<bool>(
-            valueListenable: MoodiaryKVs.mcpBackgroundKeepAlive.getNotifier(),
-            builder: (context, keepAlive, _) => SettingSwitchListTile(
-              title: context.l10n.app.mcpKeepAliveTitle,
-              subtitle: context.l10n.app.mcpKeepAliveSubtitle,
-              secondary: _lead(context, LucideIcons.batteryCharging),
-              value: keepAlive,
-              onChanged: (on) => unawaited(_setKeepAlive(on)),
-            ),
-          ),
-        ],
-      );
-    }
     return MSliverSettingGroup(
       title: context.l10n.app.mcpGroupKeepAlive,
       children: [
-        SettingListTile(
-          title: context.l10n.app.mcpKeepAlivePermissionTitle,
-          subtitle: _keepAliveSubtitle(context),
-          leading: _lead(context, LucideIcons.shield),
-          trailing: _chevron(context),
-          onTap: () => unawaited(_openKeepAliveSheet()),
+        ValueListenableBuilder<bool>(
+          valueListenable: MoodiaryKVs.mcpBackgroundKeepAlive.getNotifier(),
+          builder: (context, keepAlive, _) => SettingSwitchListTile(
+            title: context.l10n.app.mcpKeepAliveTitle,
+            subtitle: context.l10n.app.mcpKeepAliveSubtitle,
+            secondary: _lead(context, LucideIcons.batteryCharging),
+            value: keepAlive,
+            onChanged: (on) => unawaited(_setKeepAlive(on)),
+          ),
         ),
+        // 安卓的前台服务要一项电池优化豁免和通知权限；iOS 没有对应的系统开关。
+        if (Platform.isAndroid)
+          SettingListTile(
+            title: context.l10n.app.mcpKeepAlivePermissionTitle,
+            subtitle: _keepAliveSubtitle(context),
+            leading: _lead(context, LucideIcons.shield),
+            trailing: _chevron(context),
+            onTap: () => unawaited(_openKeepAliveSheet()),
+          ),
       ],
     );
   }
@@ -211,7 +201,7 @@ class _McpPageState extends State<McpPage> with WidgetsBindingObserver {
                 SettingListTile(
                   title: context.l10n.app.mcpTokenTitle,
                   subtitle: _revealToken
-                      ? (_currentToken ?? context.l10n.app.mcpTokenLoading)
+                      ? (_service.token ?? context.l10n.app.mcpTokenLoading)
                       : _maskedToken,
                   leading: _lead(context, LucideIcons.key),
                   trailing: IconButton(
@@ -269,64 +259,6 @@ class _McpPageState extends State<McpPage> with WidgetsBindingObserver {
     );
   }
 
-  Widget _connectBlurb(BuildContext context, McpServerState state) {
-    final theme = context.theme;
-    final endpoint = state.endpoints.isEmpty
-        ? context.l10n.app.mcpEndpointHint
-        : state.endpoints.first.toString();
-    final lan = MoodiaryKVs.mcpAllowLan.get() ?? false;
-    final required = _requiresToken(
-      lan: lan,
-      stored: MoodiaryKVs.mcpRequireToken.get() ?? true,
-    );
-    final lines = [
-      context.l10n.app.mcpConnectEndpoint(endpoint: endpoint),
-      required
-          ? context.l10n.app.mcpConnectAuth
-          : context.l10n.app.mcpConnectAuthNone,
-      if (lan) context.l10n.app.mcpConnectWifi,
-    ];
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const .fromLTRB(16, 12, 16, 4),
-        child: Column(
-          crossAxisAlignment: .start,
-          children: [
-            Text(
-              context.l10n.app.mcpConnectTitle,
-              style: theme.typography.labelLarge.onSurfaceVariant,
-            ),
-            const Gap(6),
-            for (final line in lines)
-              Padding(
-                padding: const .only(bottom: 2),
-                child: Text(
-                  '· $line',
-                  style: theme.typography.bodySmall.onSurfaceVariant,
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _switchSubtitle(
-    BuildContext context,
-    McpServerState state, {
-    required bool enabled,
-  }) {
-    if (!enabled) return context.l10n.app.mcpEnableSubtitleOff;
-    return switch (state.status) {
-      .stopped => context.l10n.app.mcpEnableSubtitleOn,
-      .starting => context.l10n.app.mcpEnableSubtitleStarting,
-      .running => context.l10n.app.mcpEnableSubtitleRunning(
-        port: state.port ?? 0,
-      ),
-      .failed => context.l10n.app.mcpEnableSubtitleFailed,
-    };
-  }
-
   String _keepAliveSubtitle(BuildContext context) {
     final l10n = context.l10n.app;
     if (_permissions.isEmpty) return l10n.mcpKeepAlivePermissionSubtitle;
@@ -364,7 +296,7 @@ class _McpPageState extends State<McpPage> with WidgetsBindingObserver {
     }
     final token = await _ensureToken();
     if (!mounted || token == null) return;
-    setState(() => _token = token);
+    setState(() {});
   }
 
   Future<String?> _ensureToken() async {
@@ -436,9 +368,9 @@ class _McpPageState extends State<McpPage> with WidgetsBindingObserver {
   }
 
   Future<void> _copyToken() async {
-    final token = _currentToken ?? await _ensureToken();
+    final token = _service.token ?? await _ensureToken();
     if (!mounted || token == null) return;
-    setState(() => _token = token);
+    setState(() {});
     _copy(token, context.l10n.app.mcpTokenCopied);
   }
 
@@ -452,9 +384,9 @@ class _McpPageState extends State<McpPage> with WidgetsBindingObserver {
     );
     if (!confirmed || !mounted) return;
     try {
-      final token = await _service.regenerateToken();
+      await _service.regenerateToken();
       if (!mounted) return;
-      setState(() => _token = token);
+      setState(() {});
       toast.success(message: context.l10n.app.mcpTokenRegenerated);
     } catch (e, s) {
       logger.e('重新生成 MCP 令牌失败', error: e, stackTrace: s);

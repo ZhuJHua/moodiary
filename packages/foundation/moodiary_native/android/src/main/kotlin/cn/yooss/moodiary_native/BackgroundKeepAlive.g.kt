@@ -50,7 +50,7 @@ interface BackgroundKeepAliveApi {
   fun requestExemption(): Boolean
   fun isNotificationsEnabled(): Boolean
   fun requestNotifications(): Boolean
-  fun setSilentAudio(enabled: Boolean)
+  fun setKeepAlive(enabled: Boolean, notificationTitle: String, notificationText: String)
   fun openAppSettings()
 
   companion object {
@@ -123,13 +123,15 @@ interface BackgroundKeepAliveApi {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.moodiary_native.BackgroundKeepAliveApi.setSilentAudio$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.moodiary_native.BackgroundKeepAliveApi.setKeepAlive$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val enabledArg = args[0] as Boolean
+            val notificationTitleArg = args[1] as String
+            val notificationTextArg = args[2] as String
             val wrapped: List<Any?> = try {
-              api.setSilentAudio(enabledArg)
+              api.setKeepAlive(enabledArg, notificationTitleArg, notificationTextArg)
               listOf(null)
             } catch (exception: Throwable) {
               BackgroundKeepAlivePigeonUtils.wrapError(exception)

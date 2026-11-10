@@ -38,9 +38,6 @@ const String mcpServerInstructions =
     'titles are private user data: quote them only when the user asks about '
     'them.';
 
-/// Page size for every list/cursor endpoint.
-const int mcpPageSize = 50;
-
 String negotiateProtocolVersion(Object? requested) {
   if (requested is String && mcpSupportedProtocolVersions.contains(requested)) {
     return requested;
@@ -98,21 +95,6 @@ abstract final class McpContent {
     'description': ?description,
     'mimeType': ?mimeType,
   };
-
-  static Map<String, dynamic> embeddedResource({
-    required String uri,
-    required String mimeType,
-    String? text,
-    String? blob,
-  }) => {
-    'type': 'resource',
-    'resource': {
-      'uri': uri,
-      'mimeType': mimeType,
-      'text': ?text,
-      'blob': ?blob,
-    },
-  };
 }
 
 /// A tool the client can call.
@@ -122,18 +104,15 @@ class McpTool {
     required this.description,
     required this.inputSchema,
     this.title,
-    this.outputSchema,
     this.readOnly = false,
     this.destructive = false,
     this.idempotent = false,
-    this.openWorld = false,
   });
 
   final String name;
   final String description;
   final Map<String, dynamic> inputSchema;
   final String? title;
-  final Map<String, dynamic>? outputSchema;
 
   final bool readOnly;
 
@@ -141,20 +120,17 @@ class McpTool {
   final bool destructive;
   final bool idempotent;
 
-  /// Diaries live in a closed local database, so this stays false.
-  final bool openWorld;
-
   Map<String, dynamic> toJson() => {
     'name': name,
     'title': ?title,
     'description': description,
     'inputSchema': inputSchema,
-    'outputSchema': ?outputSchema,
     'annotations': {
       'readOnlyHint': readOnly,
       'destructiveHint': destructive,
       'idempotentHint': idempotent,
-      'openWorldHint': openWorld,
+      // Diaries live in a closed local database: every tool is closed-world.
+      'openWorldHint': false,
     },
   };
 }
@@ -195,18 +171,11 @@ class McpToolResult {
 /// Per-call context handed to tool, resource and prompt handlers.
 class McpCallContext {
   McpCallContext({
-    required this.sessionId,
-    required this.requestId,
-    required this.protocolVersion,
     required this.notify,
     required this.cancelled,
     this.progressToken,
     this.logMessage,
   });
-
-  final String sessionId;
-  final Object? requestId;
-  final String protocolVersion;
 
   /// Sends one server to client JSON-RPC notification to this session.
   final void Function(Map<String, dynamic> notification) notify;
@@ -304,29 +273,32 @@ class McpResourceTemplate {
   };
 
   /// Returns the template variables for [uri], or `null` when it does not match.
+  ///
+  /// Both sides are compared after URI parsing, so a percent-encoded segment
+  /// arrives decoded here and no hand-built pattern has to escape anything.
   Map<String, String>? match(String uri) {
-    final pattern = StringBuffer('^');
-    final names = <String>[];
-    final segments = uriTemplate.split('/');
-    for (var i = 0; i < segments.length; i++) {
-      // `moodiary://…` already carries two empty segments; only add the
-      // separator between segments or the pattern would require a leading `/`.
-      if (i > 0) pattern.write('/');
-      final segment = segments[i];
-      if (segment.startsWith('{') && segment.endsWith('}')) {
-        names.add(segment.substring(1, segment.length - 1));
-        pattern.write('([^/]+)');
-      } else {
-        pattern.write(RegExp.escape(segment));
-      }
+    final parsed = Uri.tryParse(uri);
+    final template = Uri.tryParse(uriTemplate);
+    if (parsed == null || template == null) return null;
+    if (parsed.hasQuery || parsed.hasFragment) return null;
+    if (parsed.scheme != template.scheme || parsed.host != template.host) {
+      return null;
     }
-    pattern.write(r'$');
-    final match = RegExp(pattern.toString()).firstMatch(uri);
-    if (match == null) return null;
-    return {
-      for (var i = 0; i < names.length; i++)
-        names[i]: Uri.decodeComponent(match.group(i + 1)!),
-    };
+    final actual = parsed.pathSegments;
+    final expected = template.pathSegments;
+    if (actual.length != expected.length) return null;
+    final variables = <String, String>{};
+    for (var i = 0; i < expected.length; i++) {
+      final segment = expected[i];
+      final value = actual[i];
+      if (segment.startsWith('{') && segment.endsWith('}')) {
+        if (value.isEmpty) return null;
+        variables[segment.substring(1, segment.length - 1)] = value;
+        continue;
+      }
+      if (segment != value) return null;
+    }
+    return variables;
   }
 }
 

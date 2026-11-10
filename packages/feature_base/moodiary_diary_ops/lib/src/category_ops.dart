@@ -18,8 +18,6 @@ class CategoryOps {
   final CategoryRepository categories;
   final DiaryRepository diaries;
 
-  Future<List<Category>> all() => categories.getAllCategories();
-
   /// The tree a catalog resource or a tool renders, with visible diary counts.
   ///
   /// Every node carries its direct `diaries` count and a `diariesTotal` that
@@ -35,14 +33,13 @@ class CategoryOps {
     required String name,
     String? parentId,
     int? color,
-    bool requireParent = true,
   }) async {
     final trimmed = name.trim();
     if (trimmed.isEmpty) {
       throw const DiaryOpsException(DiaryOpsFailure.fieldRequired);
     }
     if (parentId != null && parentId.isNotEmpty) {
-      await _require(parentId, requireKnown: requireParent);
+      await _require(parentId);
     }
     final category = Category.create(
       categoryName: trimmed,
@@ -63,7 +60,6 @@ class CategoryOps {
     bool colorSet = false,
     String? parentId,
     bool parentSet = false,
-    bool rejectCycle = true,
   }) async {
     if (!nameSet && !colorSet && !parentSet) {
       throw DiaryOpsException(DiaryOpsFailure.noChanges, id: id);
@@ -80,8 +76,8 @@ class CategoryOps {
     if (colorSet) next = next.copyWith(color: color);
     if (parentSet) {
       if (parentId != null && parentId.isNotEmpty) {
-        await _require(parentId, requireKnown: true);
-        if (rejectCycle) await _rejectCycle(id, parentId);
+        await _require(parentId);
+        await _rejectCycle(id, parentId);
       }
       next = next.copyWith(parentId: parentId);
     }
@@ -128,9 +124,9 @@ class CategoryOps {
     return (deleted: true, category: existing, reparented: reparented);
   }
 
-  Future<void> _require(String id, {required bool requireKnown}) async {
+  Future<void> _require(String id) async {
     final category = await categories.getCategoryById(id);
-    if (category == null && requireKnown) {
+    if (category == null) {
       throw DiaryOpsException(DiaryOpsFailure.notFound, categoryId: id);
     }
   }

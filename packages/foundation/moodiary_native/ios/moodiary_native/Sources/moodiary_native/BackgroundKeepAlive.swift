@@ -2,35 +2,12 @@ import AVFoundation
 import Flutter
 import Foundation
 import UIKit
-import UserNotifications
 
-// 通知 API 的回调在系统自己的队列上执行，这里用一个带锁的盒子把结果带回调用线程
-private final class NotificationResultBox<T>: @unchecked Sendable {
-  private let lock = NSLock()
-  private var stored: T?
-
-  func set(_ value: T) {
-    lock.lock()
-    defer { lock.unlock() }
-    stored = value
-  }
-
-  var value: T? {
-    lock.lock()
-    defer { lock.unlock() }
-    return stored
-  }
-}
-
-// iOS 侧靠循环播放静音音频让进程在后台继续存活；通知权限只决定常驻时的通知能否显示
+// iOS 侧靠循环播放静音音频让进程在后台继续存活；常驻通知与前台服务是安卓专属
 final class BackgroundKeepAlive: NSObject, BackgroundKeepAliveApi {
   private var player: AVAudioPlayer?
 
-  // Pigeon 的 HostApi 是同步调用，而通知状态是异步回调的：阻塞等一小会儿。
-  // 不会死锁——getNotificationSettings / requestAuthorization 的回调在系统私有队列上
-  // 执行，不排在主队列后面；即便真的超时，也只是按未授权返回，页面回前台会重新读。
-  private static let notificationTimeout: TimeInterval = 2
-
+  // 安卓专属的权限接口：iOS 没有对应的系统限制，按“已满足”返回即可
   func isExempt() throws -> Bool {
     true
   }
@@ -40,24 +17,11 @@ final class BackgroundKeepAlive: NSObject, BackgroundKeepAliveApi {
   }
 
   func isNotificationsEnabled() throws -> Bool {
-    Self.isAuthorized(Self.notificationSettings())
+    true
   }
 
   func requestNotifications() throws -> Bool {
-    if Self.isAuthorized(Self.notificationSettings()) {
-      return true
-    }
-    let box = NotificationResultBox<Bool>()
-    let semaphore = DispatchSemaphore(value: 0)
-    UNUserNotificationCenter.current()
-      .requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
-        box.set(granted)
-        semaphore.signal()
-      }
-    // 系统弹窗要等用户点击，回调通常晚于这里等待的上限：超时就先当未授权，
-    // 真正结果由页面回到前台时重新读状态得到。
-    _ = semaphore.wait(timeout: .now() + Self.notificationTimeout)
-    return box.value ?? false
+    true
   }
 
   func openAppSettings() throws {
@@ -65,7 +29,12 @@ final class BackgroundKeepAlive: NSObject, BackgroundKeepAliveApi {
     UIApplication.shared.open(url)
   }
 
-  func setSilentAudio(enabled: Bool) throws {
+  func setKeepAlive(
+    enabled: Bool,
+    notificationTitle: String,
+    notificationText: String
+  ) throws {
+    // 通知标题与正文只用于安卓前台服务，这里忽略
     if enabled {
       guard player == nil else { return }
       let session = AVAudioSession.sharedInstance()
@@ -86,27 +55,6 @@ final class BackgroundKeepAlive: NSObject, BackgroundKeepAliveApi {
       player = nil
       try? AVAudioSession.sharedInstance().setActive(
         false, options: .notifyOthersOnDeactivation)
-    }
-  }
-
-  private static func notificationSettings() -> UNNotificationSettings? {
-    let box = NotificationResultBox<UNNotificationSettings>()
-    let semaphore = DispatchSemaphore(value: 0)
-    UNUserNotificationCenter.current().getNotificationSettings { settings in
-      box.set(settings)
-      semaphore.signal()
-    }
-    _ = semaphore.wait(timeout: .now() + notificationTimeout)
-    return box.value
-  }
-
-  // 静默推送（provisional）也允许发通知，一并算作已授权
-  private static func isAuthorized(_ settings: UNNotificationSettings?) -> Bool {
-    switch settings?.authorizationStatus {
-    case .authorized?, .provisional?, .ephemeral?:
-      return true
-    default:
-      return false
     }
   }
 

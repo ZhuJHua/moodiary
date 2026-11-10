@@ -19,9 +19,6 @@ class _AppLockObserverState extends State<AppLockObserver>
     with WidgetsBindingObserver {
   bool _locking = false;
 
-  /// Whether the MCP endpoint was stopped because the lock screen came up.
-  bool _mcpPaused = false;
-
   static const Set<String> _skip = {
     LockRoute.path,
     ShareRoute.path,
@@ -44,7 +41,7 @@ class _AppLockObserverState extends State<AppLockObserver>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == .resumed) {
-      _resumeMcp();
+      _restoreMcp();
       return;
     }
     if (state != .paused && state != .hidden) {
@@ -58,11 +55,11 @@ class _AppLockObserverState extends State<AppLockObserver>
     if (_skip.contains(location)) return;
 
     _locking = true;
-    _pauseMcp();
+    _stopMcp();
     router.pushRoute(const LockRoute(lockType: 'pause')).whenComplete(() {
       _locking = false;
       // Only after the lock screen is gone may the endpoint serve again.
-      _resumeMcp();
+      _restoreMcp();
     });
   }
 
@@ -70,23 +67,21 @@ class _AppLockObserverState extends State<AppLockObserver>
       router.routerDelegate.currentConfiguration.uri.path == LockRoute.path;
 
   /// A locked app must not keep serving diaries to the network.
-  void _pauseMcp() {
+  void _stopMcp() {
     if (!getIt.isRegistered<McpService>()) return;
-    _mcpPaused = true;
-    unawaited(getIt<McpService>().pause());
+    unawaited(getIt<McpService>().stop());
   }
 
-  /// [McpService.resume] is a no-op unless the user left the server enabled.
+  /// [McpService.restore] is a no-op unless the user left the server enabled,
+  /// and [McpService.start] returns early while it runs.
   ///
   /// Coming back to a still locked app keeps the endpoint down: `.resumed` also
   /// fires while the lock screen is up, and that screen is exactly what must not
   /// be served through.
-  void _resumeMcp() {
-    if (!_mcpPaused) return;
+  void _restoreMcp() {
     if (_onLockScreen) return;
-    _mcpPaused = false;
     if (!getIt.isRegistered<McpService>()) return;
-    unawaited(getIt<McpService>().resume());
+    unawaited(getIt<McpService>().restore());
   }
 
   @override

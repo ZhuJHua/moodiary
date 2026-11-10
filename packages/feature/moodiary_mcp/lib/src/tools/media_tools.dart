@@ -12,7 +12,6 @@ library;
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:mime/mime.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_diary_ops/moodiary_diary_ops.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -65,6 +64,7 @@ const int _maxInlineImageBytes = 8 * 1024 * 1024;
 void registerMediaTools(
   McpRegistry registry, {
   required DiaryRepository diaries,
+  required CategoryRepository categories,
   DiaryMediaStore? store,
 }) {
   final media = store ?? DiaryMediaStore();
@@ -190,7 +190,7 @@ void registerMediaTools(
         'required': ['id', 'data'],
       },
     ),
-    (call, arguments) => _addDiaryImage(diaries, media, arguments),
+    (call, arguments) => _addDiaryImage(diaries, categories, media, arguments),
   );
 
   registry.addTool(
@@ -233,7 +233,8 @@ void registerMediaTools(
         'required': ['id', 'data', 'fileName'],
       },
     ),
-    (call, arguments) => _addDiaryAttachment(diaries, media, arguments),
+    (call, arguments) =>
+        _addDiaryAttachment(diaries, categories, media, arguments),
   );
 }
 
@@ -343,10 +344,10 @@ Future<McpToolResult> _readDiaryMedia(
   }
   if (bytes.length > _maxInlineImageBytes) {
     return McpToolResult.error(
-      'read_diary_media: the image "$name" is ${_megabytes(bytes.length)} MB, '
-      'more than the ${_maxInlineImageBytes ~/ (1024 * 1024)} MB inline limit, '
-      'so it is not returned. The file is still on the device; open the diary '
-      'in the app to view it.',
+      'read_diary_media: the image "$name" is ${formatMegabytes(bytes.length)} '
+      'MB, more than the ${_maxInlineImageBytes ~/ (1024 * 1024)} MB inline '
+      'limit, so it is not returned. The file is still on the device; open the '
+      'diary in the app to view it.',
     );
   }
   return McpToolResult(
@@ -363,6 +364,7 @@ Future<McpToolResult> _readDiaryMedia(
 
 Future<McpToolResult> _addDiaryImage(
   DiaryRepository diaries,
+  CategoryRepository categories,
   DiaryMediaStore media,
   Map<String, dynamic> arguments,
 ) async {
@@ -410,6 +412,7 @@ Future<McpToolResult> _addDiaryImage(
   };
   return _persistNode(
     diaries,
+    categories,
     subject: subject,
     diary: diary,
     node: node,
@@ -420,6 +423,7 @@ Future<McpToolResult> _addDiaryImage(
 
 Future<McpToolResult> _addDiaryAttachment(
   DiaryRepository diaries,
+  CategoryRepository categories,
   DiaryMediaStore media,
   Map<String, dynamic> arguments,
 ) async {
@@ -467,6 +471,7 @@ Future<McpToolResult> _addDiaryAttachment(
   };
   return _persistNode(
     diaries,
+    categories,
     subject: subject,
     diary: diary,
     node: node,
@@ -478,7 +483,8 @@ Future<McpToolResult> _addDiaryAttachment(
 /// Inserts [node] into the diary document and persists it, then answers with
 /// the stored file name and the updated media lists.
 Future<McpToolResult> _persistNode(
-  DiaryRepository diaries, {
+  DiaryRepository diaries,
+  CategoryRepository categories, {
   required String subject,
   required Diary diary,
   required Map<String, dynamic> node,
@@ -489,6 +495,7 @@ Future<McpToolResult> _persistNode(
   try {
     updated = await _insertNode(
       diaries,
+      categories,
       diary: diary,
       node: node,
       atStart: atStart,
@@ -519,7 +526,8 @@ Future<McpToolResult> _persistNode(
 /// Parses the stored document, inserts [node] and persists the body with the
 /// `document` write format so `DiaryWrites` re-derives the media lists.
 Future<Diary> _insertNode(
-  DiaryRepository diaries, {
+  DiaryRepository diaries,
+  CategoryRepository categories, {
   required Diary diary,
   required Map<String, dynamic> node,
   required bool atStart,
@@ -535,7 +543,7 @@ Future<Diary> _insertNode(
     nodes.add(node);
   }
   document['content'] = nodes;
-  return DiaryWrites(diaries: diaries).update(
+  return DiaryWrites(diaries: diaries, categories: categories).update(
     id: diary.id,
     patch: DiaryPatch(content: jsonEncode(document)),
     format: DiaryContentFormat.document,
@@ -565,30 +573,25 @@ String _opsFailureMessage(DiaryOpsException e, String id) =>
       final failure => 'the diary could not be updated (${failure.name}).',
     };
 
-/// One entry of a `list_diary_media` list.
-Future<Map<String, dynamic>> _mediaEntry(
-  DiaryMediaStore media,
-  DiaryMediaKind kind,
-  String name,
-) async {
-  final stat = await media.stat(kind, name);
-  return {
-    'name': name,
-    'mimeType': stat.mimeType,
-    'bytes': stat.bytes,
-    'exists': stat.exists,
-  };
-}
-
 /// Entries for [names], skipping names that could never be served safely.
 Future<List<Map<String, dynamic>>> _mediaEntries(
   DiaryMediaStore media,
   DiaryMediaKind kind,
   List<String> names,
-) async => [
-  for (final name in names)
-    if (isSafeMediaName(name)) await _mediaEntry(media, kind, name),
-];
+) async {
+  final entries = <Map<String, dynamic>>[];
+  for (final name in names) {
+    if (!isSafeMediaName(name)) continue;
+    final stat = await media.stat(kind, name);
+    entries.add({
+      'name': name,
+      'mimeType': stat.mimeType,
+      'bytes': stat.bytes,
+      'exists': stat.exists,
+    });
+  }
+  return entries;
+}
 
 /// Decodes the `data` argument, checking the documented decoded size cap first.
 ///
@@ -612,7 +615,7 @@ Future<List<Map<String, dynamic>>> _mediaEntries(
 }
 
 McpToolResult _tooLarge(String subject, int bytes) => McpToolResult.error(
-  '$subject: data decodes to ${_megabytes(bytes)} MB, more than the '
+  '$subject: data decodes to ${formatMegabytes(bytes)} MB, more than the '
   '${_maxPayloadBytes ~/ (1024 * 1024)} MB limit per file; send a smaller file '
   'or attach it in the app.',
 );
@@ -691,12 +694,8 @@ String? _normalizeMime(String? value) {
   return base == 'image/jpg' ? 'image/jpeg' : base;
 }
 
-String? _sniffMime(Uint8List bytes) {
-  final header = bytes.length > defaultMagicNumbersMaxLength
-      ? bytes.sublist(0, defaultMagicNumbersMaxLength)
-      : bytes;
-  return _normalizeMime(lookupMimeType('', headerBytes: header));
-}
+String? _sniffMime(Uint8List bytes) =>
+    _normalizeMime(DiaryMediaStore.sniffMime('', bytes));
 
 /// Last path segment of a client supplied file name, used as display name.
 String _displayFileName(String fileName) {
@@ -706,5 +705,3 @@ String _displayFileName(String fileName) {
 
 String _mediaUri(String id, String name) =>
     'moodiary://diary/$id/media/${Uri.encodeComponent(name)}';
-
-String _megabytes(int bytes) => (bytes / (1024 * 1024)).toStringAsFixed(1);

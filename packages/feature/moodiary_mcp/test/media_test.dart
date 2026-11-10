@@ -6,61 +6,17 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
-import 'package:moodiary_mcp/moodiary_mcp.dart';
 import 'package:moodiary_mcp/src/media/diary_media.dart';
+import 'package:moodiary_mcp/src/protocol/json_rpc.dart';
+import 'package:moodiary_mcp/src/registry/mcp_registry.dart';
 import 'package:moodiary_mcp/src/resources/media_resources.dart';
+import 'package:moodiary_mcp/src/server/mcp_server.dart';
+import 'package:moodiary_mcp/src/server/mcp_session.dart';
 import 'package:moodiary_mcp/src/tools/media_tools.dart';
-import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 
-// A minimal Tiptap document; media nodes are appended after the paragraph so the
-// tools have something to list and serve.
-//
-// The repository writes the `diary_media` rows from the Diary's media columns,
-// not from the document, so the columns have to be derived from the nodes here:
-// `withDerivedMedia` is the same projection the write path applies.
-Diary makeDiary(
-  String id,
-  String text, {
-  String? title,
-  String type = 'tiptap',
-  List<Map<String, dynamic>> media = const [],
-}) {
-  final content = type == 'tiptap'
-      ? jsonEncode({
-          'type': 'doc',
-          'attrs': {'v': 2},
-          'content': [
-            {
-              'type': 'paragraph',
-              'content': [
-                {'type': 'text', 'text': text},
-              ],
-            },
-            ...media,
-          ],
-        })
-      : text;
-  return withDerivedMedia(
-    Diary(
-      id: id,
-      categoryId: null,
-      title: title ?? 'title-$id',
-      content: content,
-      contentText: text,
-      time: DateTime.utc(2026, 1, 1),
-      lastModified: DateTime.utc(2026, 1, 1),
-      show: true,
-      mood: null,
-      imageName: const [],
-      audioName: const [],
-      videoName: const [],
-      tags: const [],
-      type: type,
-    ),
-  );
-}
+import 'support.dart';
 
 /// 8 byte PNG signature plus filler, enough for the magic number sniffer.
 final Uint8List pngBytes = Uint8List.fromList([
@@ -82,9 +38,10 @@ void main() {
   late DiaryMediaStore store;
   late MoodiaryDatabase db;
   late DiaryRepository diaries;
+  late CategoryRepository categories;
   late McpServer server;
   late McpSessionState session;
-  var seq = 0;
+  late TestMcpClient client;
 
   setUpAll(() {
     if (!getIt.isRegistered<IKVStorage>()) {
@@ -96,10 +53,16 @@ void main() {
   /// depend on the rest of the frozen catalog.
   void buildServer() {
     final registry = McpRegistry();
-    registerMediaTools(registry, diaries: diaries, store: store);
+    registerMediaTools(
+      registry,
+      diaries: diaries,
+      categories: categories,
+      store: store,
+    );
     registerMediaResources(registry, diaries: diaries, store: store);
     server = McpServer(registry: registry, serverVersion: 'test');
     session = server.createSession();
+    client = TestMcpClient(server: server, session: session);
   }
 
   setUp(() async {
@@ -114,7 +77,7 @@ void main() {
       ),
     );
     diaries = DiaryRepository(db);
-    seq = 0;
+    categories = CategoryRepository(db);
     buildServer();
   });
 
@@ -127,38 +90,12 @@ void main() {
   Future<Map<String, dynamic>> call(
     String method, [
     Map<String, dynamic> params = const {},
-  ]) async {
-    final response = await server.handle(session, {
-      'jsonrpc': '2.0',
-      'id': ++seq,
-      'method': method,
-      'params': params,
-    });
-    expect(response, isNotNull, reason: '$method must answer a request');
-    return response!;
-  }
+  ]) => client.call(method, params);
 
   Future<Map<String, dynamic>> toolCall(
     String name, [
     Map<String, dynamic> arguments = const {},
-  ]) => call('tools/call', {'name': name, 'arguments': arguments});
-
-  Map<String, dynamic> resultOf(Map<String, dynamic> response) =>
-      response['result'] as Map<String, dynamic>;
-
-  Map<String, dynamic> structuredOf(Map<String, dynamic> response) =>
-      resultOf(response)['structuredContent'] as Map<String, dynamic>;
-
-  List<Map<String, dynamic>> contentOf(Map<String, dynamic> response) => [
-    for (final item in resultOf(response)['content'] as List)
-      (item as Map).cast<String, dynamic>(),
-  ];
-
-  String textOf(Map<String, dynamic> response) =>
-      contentOf(response).single['text'] as String;
-
-  int errorCode(Map<String, dynamic> response) =>
-      (response['error'] as Map)['code'] as int;
+  ]) => client.toolCall(name, arguments);
 
   Map<String, dynamic> resourceContent(Map<String, dynamic> response) =>
       ((resultOf(response)['contents'] as List).single as Map)

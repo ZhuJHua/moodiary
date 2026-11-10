@@ -282,8 +282,7 @@ void registerDiaryTools(
       readOnly: true,
       idempotent: true,
     ),
-    (call, arguments) =>
-        _getDiaryLinks(arguments, diaries: diaries, categories: categories),
+    (call, arguments) => _getDiaryLinks(arguments, diaries: diaries),
   );
 
   registry.addTool(
@@ -301,8 +300,7 @@ void registerDiaryTools(
       readOnly: true,
       idempotent: true,
     ),
-    (call, arguments) =>
-        _listTags(arguments, diaries: diaries, categories: categories),
+    (call, arguments) => _listTags(arguments, diaries: diaries),
   );
 }
 
@@ -326,6 +324,30 @@ Future<String?> _categoryFilter(
     );
   }
   return id;
+}
+
+/// The paging arguments `list_diaries` and `search_diaries` share.
+typedef _PageArgs = ({
+  String? categoryId,
+  DateTime? start,
+  DateTime? end,
+  int limit,
+  int offset,
+});
+
+/// Reads and validates the shared paging arguments of the two paged tools.
+Future<_PageArgs> _pageArgs(Args args, CategoryRepository categories) async {
+  final categoryId = await _categoryFilter(args, categories);
+  final start = args.optionalDate('startDate');
+  final end = args.optionalDate('endDate', endOfDay: true);
+  args.requireOrderedRange(start, end);
+  return (
+    categoryId: categoryId,
+    start: start,
+    end: end,
+    limit: args.optionalInt('limit', fallback: 20, min: 1, max: 100),
+    offset: args.optionalInt('offset', fallback: 0, min: 0, max: 1000000),
+  );
 }
 
 /// One page of the in-memory tag filter.
@@ -436,43 +458,38 @@ Future<McpToolResult> _listDiaries(
   required CategoryRepository categories,
 }) async {
   final args = Args('list_diaries', arguments);
-  final categoryId = await _categoryFilter(args, categories);
+  final paging = await _pageArgs(args, categories);
   final tag = args.optionalText('tag');
-  final start = args.optionalDate('startDate');
-  final end = args.optionalDate('endDate', endOfDay: true);
-  args.requireOrderedRange(start, end);
   final sort = switch (args.optionalEnum('sort', diarySortValues)) {
     'oldest' => DiarySort.timeAsc,
     'modified' => DiarySort.lastModifiedDesc,
     _ => DiarySort.timeDesc,
   };
   final excerpt = args.optionalEnum('excerpt', excerptValues) ?? 'plain';
-  final limit = args.optionalInt('limit', fallback: 20, min: 1, max: 100);
-  final offset = args.optionalInt('offset', fallback: 0, min: 0, max: 1000000);
 
   final List<Diary> page;
   if (tag == null) {
     page = await DiaryQueries(diaries: diaries).page(
-      categoryId: categoryId,
-      start: start,
-      end: end,
+      categoryId: paging.categoryId,
+      start: paging.start,
+      end: paging.end,
       sort: sort,
-      offset: offset,
-      limit: limit + 1,
+      offset: paging.offset,
+      limit: paging.limit + 1,
     );
   } else {
     page = _tagPage(
       await diaries.getDiaryByCategory(sort: sort),
       tag: tag,
-      categoryId: categoryId,
-      start: start,
-      end: end,
-      offset: offset,
-      limit: limit + 1,
+      categoryId: paging.categoryId,
+      start: paging.start,
+      end: paging.end,
+      offset: paging.offset,
+      limit: paging.limit + 1,
     );
   }
   final names = await categoryNames(categories);
-  final rows = page.take(limit).toList();
+  final rows = page.take(paging.limit).toList();
   call.reportProgress(rows.length, message: 'list_diaries');
   return McpToolResult.json({
     'diaries': [
@@ -484,9 +501,9 @@ Future<McpToolResult> _listDiaries(
         ),
     ],
     'count': rows.length,
-    'offset': offset,
-    'limit': limit,
-    'hasMore': page.length > limit,
+    'offset': paging.offset,
+    'limit': paging.limit,
+    'hasMore': page.length > paging.limit,
   });
 }
 
@@ -498,7 +515,7 @@ Future<McpToolResult> _getDiary(
   final args = Args('get_diary', arguments);
   final id = args.requireText('id');
   final contentFormat =
-      args.optionalEnum('contentFormat', readContentFormatValues) ?? 'markdown';
+      args.optionalEnum('contentFormat', contentFormatValues) ?? 'markdown';
   final linkStyle = args.optionalEnum('linkStyle', linkStyleValues) ?? 'uri';
   final includeLinks = args.optionalBool('includeLinks') ?? true;
 
@@ -571,7 +588,7 @@ Future<McpToolResult> _createDiary(
   final args = Args('create_diary', arguments);
   final content = args.requireText('content');
   final contentFormat = _writeFormat(
-    args.optionalEnum('contentFormat', writeContentFormatValues),
+    args.optionalEnum('contentFormat', contentFormatValues),
   );
   final title = args.optionalText('title') ?? '';
   final time = args.optionalDate('time');
@@ -606,7 +623,7 @@ Future<McpToolResult> _updateDiary(
   final args = Args('update_diary', arguments);
   final id = args.requireText('id');
   final contentFormat = _writeFormat(
-    args.optionalEnum('contentFormat', writeContentFormatValues),
+    args.optionalEnum('contentFormat', contentFormatValues),
   );
   // Nullable fields read `has`, so a sent null (or an empty string for a text
   // field) clears them; the non-nullable ones read `contains`, so an explicit
@@ -681,46 +698,41 @@ Future<McpToolResult> _searchDiaries(
 }) async {
   final args = Args('search_diaries', arguments);
   final query = args.requireText('query');
-  final categoryId = await _categoryFilter(args, categories);
-  final start = args.optionalDate('startDate');
-  final end = args.optionalDate('endDate', endOfDay: true);
-  args.requireOrderedRange(start, end);
+  final paging = await _pageArgs(args, categories);
   final sort = switch (args.optionalEnum('sort', searchSortValues)) {
     'newest' => SearchSort.timeDesc,
     'oldest' => SearchSort.timeAsc,
     _ => SearchSort.relevance,
   };
   final excerpt = args.optionalEnum('excerpt', excerptValues) ?? 'plain';
-  final limit = args.optionalInt('limit', fallback: 20, min: 1, max: 100);
-  final offset = args.optionalInt('offset', fallback: 0, min: 0, max: 1000000);
-  final endExclusive = end?.add(const Duration(microseconds: 1));
+  final endExclusive = paging.end?.add(const Duration(microseconds: 1));
 
-  // The repository is asked directly instead of going through
-  // `DiaryQueries.searchPage` because the `sort` argument has to reach the
-  // index ordering; the two calls are the same pair searchPage makes.
+  // The repository is asked directly instead of through `DiaryQueries`
+  // because the `sort` argument has to reach the index ordering: count and
+  // page are two calls against the same filter.
   final total = await diaries.countSearchDiaries(
     query: query,
-    categoryId: categoryId,
-    start: start,
+    categoryId: paging.categoryId,
+    start: paging.start,
     end: endExclusive,
   );
   final hits = await diaries.searchDiaries(
     query: query,
-    categoryId: categoryId,
-    start: start,
+    categoryId: paging.categoryId,
+    start: paging.start,
     end: endExclusive,
     sort: sort,
-    limit: limit,
-    offset: offset,
+    limit: paging.limit,
+    offset: paging.offset,
   );
   final names = await categoryNames(categories);
   call.reportProgress(hits.length, total: total, message: 'search_diaries');
   return McpToolResult.json({
     'query': query,
     'total': total,
-    'offset': offset,
-    'limit': limit,
-    'hasMore': offset + hits.length < total,
+    'offset': paging.offset,
+    'limit': paging.limit,
+    'hasMore': paging.offset + hits.length < total,
     'hits': [
       for (final hit in hits)
         {
@@ -752,7 +764,6 @@ String _markHighlight(String text) =>
 Future<McpToolResult> _getDiaryLinks(
   Map<String, dynamic> arguments, {
   required DiaryRepository diaries,
-  required CategoryRepository categories,
 }) async {
   final args = Args('get_diary_links', arguments);
   final id = args.requireText('id');
@@ -773,7 +784,6 @@ Future<McpToolResult> _getDiaryLinks(
 Future<McpToolResult> _listTags(
   Map<String, dynamic> arguments, {
   required DiaryRepository diaries,
-  required CategoryRepository categories,
 }) async {
   final args = Args('list_tags', arguments);
   final limit = args.optionalInt('limit', fallback: 50, min: 1, max: 500);

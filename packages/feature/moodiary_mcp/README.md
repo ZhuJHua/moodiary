@@ -1,7 +1,7 @@
 # moodiary_mcp
 
 Local [Model Context Protocol](https://modelcontextprotocol.io) server: a switch
-in **Settings → Assistant → MCP** (智能助理 in the Chinese UI) turns the phone into
+in **Settings → Services → MCP** (服务 in the Chinese UI) turns the phone into
 an MCP endpoint so other MCP clients (Claude Desktop, Cursor, VS Code, any SDK client) on the same device or
 the same Wi-Fi can read, search, create, edit and delete diaries.
 
@@ -21,8 +21,8 @@ bearer token shown in the settings page is mandatory.
 | Icon | 512×512 PNG advertised as `serverInfo.icons` in `initialize` (plus `serverInfo.websiteUrl`) and served at `GET /icon.png` |
 | Errors | JSON-RPC 2.0 (`-32700`, `-32600`, `-32601`, `-32602`, `-32603`), MCP `-32002` for a missing resource, `-32800` for cancellation; failing tools answer with `isError: true` results instead of protocol errors |
 
-List endpoints page at 50 items with the opaque `nextCursor` from the previous
-response.
+List endpoints answer the whole catalog in one response: it is far below any
+client page limit, so no answer carries a `nextCursor`.
 
 ## Security model
 
@@ -162,7 +162,7 @@ Over the LAN, where the password is always required:
       "type": "http",
       "url": "http://192.168.1.20:8765/mcp",
       "headers": {
-        "Authorization": "Bearer <token from Settings → Assistant → MCP>"
+        "Authorization": "Bearer <token from Settings → Services → MCP>"
       }
     }
   }
@@ -281,9 +281,42 @@ disagree with what the diary screens show.
 `McpService` (DI singleton) owns one `McpServer` + one transport. The settings
 switch persists `mcpEnabled` / `mcpPort` / `mcpAllowLan` / `mcpRequireToken` in KV
 and the token in secure KV; `bootstrap.dart` calls `restore()` at startup so an
-enabled server comes back, and the app-lock observer calls `pause()` /
-`resume()`. `updateConfig(port:, lan:, requireToken:)` persists the new settings
+enabled server comes back, and the app-lock observer calls `stop()` /
+`restore()`. `updateConfig(port:, lan:, requireToken:)` persists the new settings
 and restarts a running server, because none of the three can change under a live
 socket. `start()` reads secure storage only when the token is required: a
 token-less loopback server starts with an empty token and keeps the stored one for
 the moment the requirement comes back.
+
+## Keep-alive
+
+The endpoint only answers while its process is alive, and both platforms need an
+OS-level reason to keep it that way. `McpKeepAlive` owns the switch
+(`mcpBackgroundKeepAlive`) and makes exactly one native call,
+`BackgroundKeepAliveApi.setKeepAlive(enabled, notificationTitle,
+notificationText)`, only when the desired state changes.
+
+- **Android** runs `McpKeepAliveService`, a `specialUse` foreground service with
+  an ongoing, low-importance notification whose title and text come from `l10n`
+  (built in Dart, because the notification lives on the platform side).
+  `dataSync` is deliberately not used: on Android 15 it is capped at six hours
+  per 24 hours, which would stop a server people leave running. The two
+  permissions the settings sheet reports do not replace the service — an exempt
+  app without a foreground service is still killed. The battery-optimisation
+  exemption keeps the service alive through Doze and vendor savers; the
+  notification permission is what makes the ongoing notification visible from
+  Android 13 on.
+- **iOS** keeps the process alive with an active audio session (a looping silent
+  track under `UIBackgroundModes: audio`); the notification arguments are ignored
+  there.
+
+While the app lock is up the endpoint is stopped, so the service covers app
+switching, not the lock screen. `startForegroundService` is refused when the app
+is in the background on Android 12+; the platform side catches and logs that
+instead of crashing, and `bootstrap.dart` re-applies the switch on the next
+launch.
+
+Google Play needs a declaration for the `specialUse` type in the Play Console
+(App content → Foreground service types) matching the
+`PROPERTY_SPECIAL_USE_FGS_SUBTYPE` value declared in
+`packages/foundation/moodiary_native/android/src/main/AndroidManifest.xml`.

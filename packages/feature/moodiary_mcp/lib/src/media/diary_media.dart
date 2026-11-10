@@ -133,6 +133,9 @@ bool isSafeMediaName(String name) =>
     !name.contains(r'\') &&
     !name.contains('..');
 
+/// [bytes] as megabytes with one decimal, for the limit messages a tool shows.
+String formatMegabytes(int bytes) => (bytes / (1024 * 1024)).toStringAsFixed(1);
+
 /// The media references a stored [Diary] carries.
 ///
 /// The four lists are derived from the document's media nodes, so they are the
@@ -192,6 +195,19 @@ class DiaryMediaStore {
 
   final String Function(String kind, String name) _pathOf;
 
+  /// MIME type [bytes] (and [name], when it has an extension) identify, or
+  /// `null` when neither the header nor the name says anything.
+  ///
+  /// The tools sniff a client payload with this before [saveImage], so one rule
+  /// decides both what is accepted and what the file is served as.
+  static String? sniffMime(String name, Uint8List bytes) {
+    if (bytes.isEmpty) return null;
+    final header = bytes.length > defaultMagicNumbersMaxLength
+        ? bytes.sublist(0, defaultMagicNumbersMaxLength)
+        : bytes;
+    return lookupMimeType(name, headerBytes: header);
+  }
+
   /// Absolute path of [name] inside the fixed directory of [kind].
   ///
   /// The kind directory always comes from the store; a client supplied name is
@@ -232,7 +248,7 @@ class DiaryMediaStore {
     final name = 'file-${uuidV7()}${_extensionOf(fileName)}';
     final mime =
         _nonEmptyMime(mimeType) ??
-        _sniff(name, bytes) ??
+        DiaryMediaStore.sniffMime(name, bytes) ??
         'application/octet-stream';
     return _write(DiaryMediaKind.file, name, bytes, mimeType: mime);
   }
@@ -350,12 +366,5 @@ class DiaryMediaStore {
     } finally {
       await reader?.close();
     }
-  }
-
-  String? _sniff(String name, Uint8List bytes) {
-    final header = bytes.length > defaultMagicNumbersMaxLength
-        ? bytes.sublist(0, defaultMagicNumbersMaxLength)
-        : bytes;
-    return lookupMimeType(name, headerBytes: header);
   }
 }

@@ -11,6 +11,7 @@ import 'dart:convert';
 import 'package:moodiary_data/moodiary_data.dart';
 
 import '../export/diary_image_renderer.dart';
+import '../media/diary_media.dart';
 import '../protocol/json_rpc.dart';
 import '../protocol/mcp_types.dart';
 import '../registry/mcp_registry.dart';
@@ -200,15 +201,13 @@ Future<McpToolResult> _renderDiaryImage(
   final bytes = rendered.pngBytes;
   if (bytes.length > _maxPngBytes) {
     return McpToolResult.error(
-      'render_diary_image: the PNG is ${_megabytes(bytes.length)} MB, more '
-      'than the ${_maxPngBytes ~/ (1024 * 1024)} MB response limit. Lower '
+      'render_diary_image: the PNG is ${formatMegabytes(bytes.length)} MB, '
+      'more than the ${_maxPngBytes ~/ (1024 * 1024)} MB response limit. Lower '
       'scale (currently $scale) or width (currently $width) and call again.',
     );
   }
 
-  final effectiveScale = rendered.widthPx <= 0
-      ? scale
-      : (rendered.widthPx / width).round().clamp(1, 3);
+  final effectiveScale = (rendered.widthPx / width).round().clamp(1, 3);
   final metadata = <String, dynamic>{
     'id': diary.id,
     'mimeType': 'image/png',
@@ -240,5 +239,3 @@ String _detail(DiaryImageRenderException e) => switch (e.message) {
   final message? => ' ($message)',
   null => '',
 };
-
-String _megabytes(int bytes) => (bytes / (1024 * 1024)).toStringAsFixed(1);

@@ -25,11 +25,8 @@ const List<String> diarySortValues = ['newest', 'oldest', 'modified'];
 /// match score to rank by.
 const List<String> searchSortValues = ['relevance', 'newest', 'oldest'];
 
-/// Values of `contentFormat` on the read tools.
-const List<String> readContentFormatValues = ['markdown', 'text', 'document'];
-
-/// Values of `contentFormat` on the write tools.
-const List<String> writeContentFormatValues = ['markdown', 'text', 'document'];
+/// Values of `contentFormat`, on the read and the write tools alike.
+const List<String> contentFormatValues = ['markdown', 'text', 'document'];
 
 /// Values of `linkStyle`.
 const List<String> linkStyleValues = ['uri', 'label'];
@@ -119,7 +116,7 @@ const Map<String, dynamic> searchSortSchema = {
 /// `contentFormat` of the read tools.
 const Map<String, dynamic> readContentFormatSchema = {
   'type': 'string',
-  'enum': readContentFormatValues,
+  'enum': contentFormatValues,
   'default': 'markdown',
   'description':
       'Representation actually returned: markdown (converted from the stored '
@@ -131,7 +128,7 @@ const Map<String, dynamic> readContentFormatSchema = {
 /// `contentFormat` of the write tools.
 const Map<String, dynamic> writeContentFormatSchema = {
   'type': 'string',
-  'enum': writeContentFormatValues,
+  'enum': contentFormatValues,
   'default': 'markdown',
   'description':
       'How content is interpreted: markdown (default) parses it and stores the '

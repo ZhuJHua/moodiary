@@ -16,10 +16,6 @@ import '../tools/register_moodiary_tools.dart';
 import '../transport/io_mcp_transport.dart';
 import '../transport/transport.dart';
 
-/// Default port offered in the settings page; keep in sync with the
-/// `MoodiaryKVs.mcpPort` default.
-const int mcpDefaultPort = 8765;
-
 enum McpServerStatus { stopped, starting, running, failed }
 
 @immutable
@@ -28,20 +24,12 @@ class McpServerState {
     this.status = .stopped,
     this.port,
     this.endpoints = const [],
-    this.allowLan = false,
-    this.requireToken = false,
     this.error,
   });
 
   final McpServerStatus status;
   final int? port;
   final List<Uri> endpoints;
-  final bool allowLan;
-
-  /// Whether the running server demands the bearer token; the settings page
-  /// shows the token only when it does. Always `true` while [allowLan] is set.
-  final bool requireToken;
-
   final String? error;
 
   bool get running => status == .running;
@@ -51,20 +39,12 @@ class McpServerState {
       other is McpServerState &&
       other.status == status &&
       other.port == port &&
-      other.allowLan == allowLan &&
-      other.requireToken == requireToken &&
       other.error == error &&
       listEquals(other.endpoints, endpoints);
 
   @override
-  int get hashCode => Object.hash(
-    status,
-    port,
-    allowLan,
-    requireToken,
-    error,
-    Object.hashAll(endpoints),
-  );
+  int get hashCode =>
+      Object.hash(status, port, error, Object.hashAll(endpoints));
 }
 
 /// Owns the local MCP endpoint: builds the tool catalog, starts and stops the
@@ -79,9 +59,6 @@ class McpServerState {
 @lazySingleton
 class McpService {
   McpService(this._diaries, this._categories, this._insights);
-
-  /// Replaceable for tests.
-  static McpTransport Function() transportFactory = IoMcpTransport.new;
 
   /// The native long-image renderer, installed by the app composition root.
   ///
@@ -114,7 +91,8 @@ class McpService {
 
   bool get enabled => MoodiaryKVs.mcpEnabled.get() ?? false;
 
-  static int get configuredPort => MoodiaryKVs.mcpPort.get() ?? mcpDefaultPort;
+  /// The port to listen on; `MoodiaryKVs.mcpPort` supplies the default.
+  static int get configuredPort => MoodiaryKVs.mcpPort.get()!;
 
   static bool get allowLan => MoodiaryKVs.mcpAllowLan.get() ?? false;
 
@@ -134,25 +112,14 @@ class McpService {
   }
 
   /// The settings switch: persist the flag and start right away.
-  Future<void> enable({int? port, bool? lan}) async {
+  Future<void> enable() async {
     MoodiaryKVs.mcpEnabled.set(true);
-    if (port != null) MoodiaryKVs.mcpPort.set(port);
-    if (lan != null) MoodiaryKVs.mcpAllowLan.set(lan);
     await start();
   }
 
   Future<void> disable() async {
     MoodiaryKVs.mcpEnabled.set(false);
     await stop();
-  }
-
-  /// Stops the endpoint without touching the persisted switch, e.g. while the
-  /// app lock is up.
-  Future<void> pause() => stop();
-
-  Future<void> resume() async {
-    if (!enabled) return;
-    await start();
   }
 
   /// Applies a new port, LAN policy or token policy; restarts when the server is
@@ -166,15 +133,7 @@ class McpService {
     if (port != null) MoodiaryKVs.mcpPort.set(port);
     if (lan != null) MoodiaryKVs.mcpAllowLan.set(lan);
     if (requireToken != null) MoodiaryKVs.mcpRequireToken.set(requireToken);
-    if (!wasRunning) {
-      // Keep the value the settings page reads in sync even while stopped; an
-      // unchanged state is not emitted twice, because [McpServerState] compares
-      // by value.
-      if (state.value.status == .stopped) {
-        _set(McpServerState(requireToken: McpService.requireToken));
-      }
-      return;
-    }
+    if (!wasRunning) return;
     await stop();
     await start();
   }
@@ -183,7 +142,7 @@ class McpService {
     if (_busy || state.value.status == .running) return;
     _busy = true;
     final needsToken = requireToken;
-    _set(McpServerState(status: .starting, requireToken: needsToken));
+    state.value = McpServerState(status: .starting);
     try {
       // A loopback only server may run without a token; nothing is generated or
       // read in that case, so the stored token keeps existing for the moment the
@@ -200,7 +159,7 @@ class McpService {
         ),
         serverVersion: version,
       );
-      final transport = transportFactory();
+      final transport = IoMcpTransport();
       await transport.start(
         McpTransportConfig(
           port: configuredPort,
@@ -213,22 +172,16 @@ class McpService {
       _server = server;
       _transport = transport;
       _listenForChanges(server);
-      _set(
-        McpServerState(
-          status: .running,
-          port: transport.port,
-          endpoints: transport.endpoints,
-          allowLan: allowLan,
-          requireToken: needsToken,
-        ),
+      state.value = McpServerState(
+        status: .running,
+        port: transport.port,
+        endpoints: transport.endpoints,
       );
       logger.i('MCP server listening on ${transport.endpoints.join(', ')}');
     } catch (e, s) {
       logger.e('MCP server failed to start', error: e, stackTrace: s);
       await _teardown();
-      _set(
-        McpServerState(status: .failed, error: '$e', requireToken: needsToken),
-      );
+      state.value = McpServerState(status: .failed, error: '$e');
     } finally {
       _busy = false;
     }
@@ -237,7 +190,7 @@ class McpService {
   Future<void> stop() async {
     if (state.value.status == .stopped) return;
     await _teardown();
-    _set(McpServerState(requireToken: requireToken));
+    state.value = const McpServerState();
   }
 
   /// Rotates the bearer token; a running server is restarted to use it.
@@ -305,10 +258,6 @@ class McpService {
       server.resourceUpdated('moodiary://categories');
       server.resourceUpdated('moodiary://stats/overview');
     });
-  }
-
-  void _set(McpServerState next) {
-    state.value = next;
   }
 
   Future<String> _appVersion() async {

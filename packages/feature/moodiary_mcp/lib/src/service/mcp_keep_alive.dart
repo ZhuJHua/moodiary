@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
+import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_native/moodiary_native.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
@@ -42,18 +43,22 @@ final class KeepAlivePermissionStatus {
 
 /// Keeps the local MCP endpoint reachable while the app sits in the background.
 ///
-/// On Android reachability is decided by the permissions [statuses] reports:
-/// the battery optimisation exemption and the notification permission. Losing
-/// either one makes the system stop the process (or hide the ongoing
-/// notification) sooner or later, so the page renders one row per permission
-/// and calls [request] on the row the user taps; [openAppSettings] is the
-/// fallback once Android stops showing its own dialog. Android needs no
-/// keep-alive code of its own.
+/// Both platforms need an OS-level reason to stay alive, and they differ:
 ///
-/// On iOS an active audio session is what lets the process keep running, so
-/// [setEnabled] merely persists the switch, [restore] re-applies it after a
-/// restart, and the silent audio track loops while the switch is on and the
-/// server is actually running.
+/// * Android runs a `specialUse` foreground service with an ongoing
+///   notification ([_apply] passes the notification copy through
+///   [BackgroundKeepAliveApi.setKeepAlive]). The service keeps the process out
+///   of the background bucket; [statuses] reports the two permissions it needs
+///   (battery optimisation exemption for Doze and vendor ROMs, notification
+///   permission for the visible ongoing notification) and [request] asks for
+///   them. [openAppSettings] is the fallback once Android stops showing its own
+///   dialog.
+/// * iOS keeps the process alive through an active audio session, so the same
+///   [BackgroundKeepAliveApi.setKeepAlive] call starts a silent looping track.
+///
+/// The switch itself is persisted, [restore] re-applies it after a restart, and
+/// [_apply] only calls into native when the desired state actually changes, so
+/// ordinary server state churn does not restart the service.
 @lazySingleton
 class McpKeepAlive {
   McpKeepAlive(this._server) {
@@ -62,8 +67,8 @@ class McpKeepAlive {
 
   final McpService _server;
 
-  /// Last value handed to the native silent audio player; `null` means unknown.
-  bool? _audioRunning;
+  /// Last value handed to the native keep-alive; `null` means unknown.
+  bool? _keepAliveRunning;
 
   bool get enabled => MoodiaryKVs.mcpBackgroundKeepAlive.get() ?? false;
 
@@ -75,9 +80,9 @@ class McpKeepAlive {
 
   /// The permissions the keep-alive needs on this platform, in display order.
   ///
-  /// Empty off Android, where the system owns the decision instead. A failed
-  /// native read falls back to "not granted" rows so the page can still ask
-  /// for them.
+  /// Empty off Android: only Android gates the foreground service on
+  /// permissions. A failed native read falls back to "not granted" rows so the
+  /// page can still ask for them.
   Future<List<KeepAlivePermissionStatus>> statuses() async {
     if (!Platform.isAndroid) return const [];
     try {
@@ -148,10 +153,7 @@ class McpKeepAlive {
     }
   }
 
-  /// Persists the iOS switch and starts or stops the background mode right away.
-  ///
-  /// Android has no switch any more: its permissions, not this flag, decide
-  /// whether the endpoint stays reachable, so [request] drives them instead.
+  /// Persists the switch and turns the background mode on or off right away.
   Future<void> setEnabled(bool on) async {
     MoodiaryKVs.mcpBackgroundKeepAlive.set(on);
     await _apply();
@@ -159,16 +161,29 @@ class McpKeepAlive {
 
   void _onServerStateChanged() => unawaited(_apply());
 
+  /// Turns the native keep-alive on while the switch is on and the server
+  /// actually runs, and off in every other case.
+  ///
+  /// The notification copy comes from `l10n` because the ongoing notification
+  /// is built on the platform side, and this is a service, not a widget.
   Future<void> _apply() async {
-    if (!Platform.isIOS) return;
+    if (!supported) return;
     try {
       final shouldRun = enabled && _server.state.value.running;
-      if (shouldRun == _audioRunning) return;
-      _audioRunning = shouldRun;
-      await BackgroundKeepAliveApi().setSilentAudio(shouldRun);
+      if (shouldRun == _keepAliveRunning) return;
+      _keepAliveRunning = shouldRun;
+      await BackgroundKeepAliveApi().setKeepAlive(
+        shouldRun,
+        l10n.app.mcpKeepAliveNotificationTitle,
+        l10n.app.mcpKeepAliveNotificationText,
+      );
     } catch (e, s) {
-      _audioRunning = null;
-      logger.e('McpKeepAlive: silent audio failed', error: e, stackTrace: s);
+      _keepAliveRunning = null;
+      logger.e(
+        'McpKeepAlive: toggling keep-alive failed',
+        error: e,
+        stackTrace: s,
+      );
     }
   }
 }

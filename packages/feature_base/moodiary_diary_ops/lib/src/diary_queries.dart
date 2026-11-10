@@ -22,6 +22,9 @@ typedef KeywordSearch = ({
 /// semantic similarity when the meaning path contributed it.
 typedef SearchRow = ({Diary diary, bool keyword, bool meaning, double? score});
 
+/// Upper bound on the ids one batch read accepts.
+const int maxBatchRead = 10;
+
 /// Every read the assistant tools and the MCP server perform.
 class DiaryQueries {
   DiaryQueries({required this.diaries, this.semantic});
@@ -30,8 +33,6 @@ class DiaryQueries {
 
   /// The local semantic index, when the device has one enabled.
   final EmbedIndexService? semantic;
-
-  bool get semanticAvailable => semantic?.enabled ?? false;
 
   /// Keyword hit path, or a filtered browse when [query] is empty.
   ///
@@ -223,36 +224,10 @@ class DiaryQueries {
     return filtered.skip(offset).take(limit).toList();
   }
 
-  /// Full text search page with the total hit count.
-  Future<({int total, List<DiarySearchHit> hits})> searchPage({
-    required String query,
-    String? categoryId,
-    DateTime? start,
-    DateTime? endExclusive,
-    int limit = 20,
-    int offset = 0,
-  }) async {
-    final total = await diaries.countSearchDiaries(
-      query: query,
-      categoryId: categoryId,
-      start: start,
-      end: endExclusive,
-    );
-    final hits = await diaries.searchDiaries(
-      query: query,
-      categoryId: categoryId,
-      start: start,
-      end: endExclusive,
-      limit: limit,
-      offset: offset,
-    );
-    return (total: total, hits: hits);
-  }
-
   /// Batch read by business id; hidden diaries count as missing.
   Future<({List<Diary> found, List<String> missing})> read(
     List<String> ids, {
-    int max = 10,
+    int max = maxBatchRead,
   }) async {
     final found = <Diary>[];
     final missing = <String>[];

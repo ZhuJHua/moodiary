@@ -12,7 +12,7 @@ import android.os.PowerManager
 import android.provider.Settings
 import android.util.Log
 
-// 安卓侧只负责电池优化白名单与通知权限，真正的常驻/保活不由这里实现
+// 安卓侧：用 specialUse 前台服务真正把进程留在后台，另外暴露前台服务需要的两个权限
 class BackgroundKeepAlive(private val context: Context) : BackgroundKeepAliveApi {
     var activity: Activity? = null
 
@@ -100,8 +100,25 @@ class BackgroundKeepAlive(private val context: Context) : BackgroundKeepAliveApi
         }
     }
 
-    override fun setSilentAudio(enabled: Boolean) {
-        // 安卓没有静音音频保活，后台能否存活取决于上面的电池优化与通知权限
+    override fun setKeepAlive(
+        enabled: Boolean,
+        notificationTitle: String,
+        notificationText: String,
+    ) {
+        val intent = Intent(context, McpKeepAliveService::class.java)
+            .putExtra(McpKeepAliveService.EXTRA_TITLE, notificationTitle)
+            .putExtra(McpKeepAliveService.EXTRA_TEXT, notificationText)
+        try {
+            if (enabled) {
+                context.startForegroundService(intent)
+            } else {
+                context.stopService(intent)
+            }
+        } catch (e: Exception) {
+            // 12 起在后台启动前台服务会抛 ForegroundServiceStartNotAllowedException，
+            // 其它系统限制也会拒绝：只记录，不让 Dart 侧崩溃
+            Log.w(TAG, "Failed to toggle the keep-alive foreground service", e)
+        }
     }
 
     private fun openNotificationSettings() {

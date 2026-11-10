@@ -83,7 +83,7 @@ protocol BackgroundKeepAliveApi {
   func requestExemption() throws -> Bool
   func isNotificationsEnabled() throws -> Bool
   func requestNotifications() throws -> Bool
-  func setSilentAudio(enabled: Bool) throws
+  func setKeepAlive(enabled: Bool, notificationTitle: String, notificationText: String) throws
   func openAppSettings() throws
 }
 
@@ -145,20 +145,22 @@ class BackgroundKeepAliveApiSetup {
     } else {
       requestNotificationsChannel.setMessageHandler(nil)
     }
-    let setSilentAudioChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.moodiary_native.BackgroundKeepAliveApi.setSilentAudio\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    let setKeepAliveChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.moodiary_native.BackgroundKeepAliveApi.setKeepAlive\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
-      setSilentAudioChannel.setMessageHandler { message, reply in
+      setKeepAliveChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
         let enabledArg = args[0] as! Bool
+        let notificationTitleArg = args[1] as! String
+        let notificationTextArg = args[2] as! String
         do {
-          try api.setSilentAudio(enabled: enabledArg)
+          try api.setKeepAlive(enabled: enabledArg, notificationTitle: notificationTitleArg, notificationText: notificationTextArg)
           reply(wrapResult(nil))
         } catch {
           reply(wrapError(error))
         }
       }
     } else {
-      setSilentAudioChannel.setMessageHandler(nil)
+      setKeepAliveChannel.setMessageHandler(nil)
     }
     let openAppSettingsChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.moodiary_native.BackgroundKeepAliveApi.openAppSettings\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {

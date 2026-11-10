@@ -134,7 +134,6 @@ void main() {
       final json = tool.toJson();
       expect(json['name'], 'list_diaries');
       expect(json.containsKey('title'), isFalse);
-      expect(json.containsKey('outputSchema'), isFalse);
       expect(json['annotations'], {
         'readOnlyHint': true,
         'destructiveHint': false,
@@ -171,42 +170,6 @@ void main() {
       expect(template.match('moodiary://diary'), isNull);
       expect(template.match('moodiary://diary/1/2'), isNull);
       expect(template.match('moodiary://categories'), isNull);
-    });
-  });
-
-  group('cursor pagination', () {
-    final registry = McpRegistry();
-    final items = [for (var i = 0; i < mcpPageSize * 2 + 3; i++) i];
-
-    test('returns a full first page and a cursor', () {
-      final page = registry.page(items, null);
-      expect(page.items.length, mcpPageSize);
-      expect(page.nextCursor, '$mcpPageSize');
-    });
-
-    test('walks to the last page without a cursor', () {
-      var cursor = null as String?;
-      final seen = <int>[];
-      var rounds = 0;
-      do {
-        final page = registry.page(items, cursor);
-        seen.addAll(page.items);
-        cursor = page.nextCursor;
-        rounds++;
-      } while (cursor != null && rounds < 10);
-      expect(seen, items);
-      expect(rounds, 3);
-    });
-
-    test('rejects a nonsense cursor', () {
-      expect(
-        () => registry.page(items, 'abc'),
-        throwsA(isA<JsonRpcException>()),
-      );
-      expect(
-        () => registry.page(items, '-1'),
-        throwsA(isA<JsonRpcException>()),
-      );
     });
   });
 

@@ -14,15 +14,7 @@ import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
 
 class AssistantSettingPage extends StatelessWidget {
-  const AssistantSettingPage({super.key, this.extras = const <Widget>[]});
-
-  /// Sliver widgets appended after the built-in sections.
-  ///
-  /// This is the composition-root hook for settings sections that belong to
-  /// the assistant but live in another feature: this package may not import
-  /// another feature package, so the app passes the section in here (for
-  /// example the local MCP server entry).
-  final List<Widget> extras;
+  const AssistantSettingPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +27,6 @@ class AssistantSettingPage extends StatelessWidget {
             const _ProviderSection(),
             const _PersonalSection(),
             const _ToolSection(),
-            ...extras,
             SliverGap(context.safeBottom),
           ],
         ),

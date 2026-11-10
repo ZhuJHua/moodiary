@@ -64,10 +64,9 @@ const McpPrompt _findConnections = McpPrompt(
 void registerDiaryPrompts(
   McpRegistry registry, {
   required DiaryRepository diaries,
-  required CategoryRepository categories,
   required MoodInsightsRepository insights,
 }) {
-  final completions = _Completions(categories: categories, insights: insights);
+  final completions = _Completions(insights: insights);
 
   registry.addPrompt(_dailyReview, (call, arguments) async {
     final day = _dayArgument(
@@ -226,27 +225,22 @@ DateTime _today() {
   return DateTime(now.year, now.month, now.day);
 }
 
-String _formatDay(DateTime day) {
-  final month = day.month.toString().padLeft(2, '0');
-  final date = day.day.toString().padLeft(2, '0');
-  return '${day.year}-$month-$date';
-}
+/// `yyyy-MM-dd` of a local day: Dart's ISO-8601 output for a local instant
+/// starts with exactly that and zero-pads it the same way.
+String _formatDay(DateTime day) => day.toIso8601String().substring(0, 10);
 
-String _formatClock(DateTime time) {
-  final hour = time.hour.toString().padLeft(2, '0');
-  final minute = time.minute.toString().padLeft(2, '0');
-  return '$hour:$minute';
-}
+/// `HH:mm` of a local instant, at offset 11 of the same ISO form.
+String _formatClock(DateTime time) => time.toIso8601String().substring(11, 16);
 
 String _oneLine(String text, [int chars = 80]) =>
     truncate(text.replaceAll(RegExp(r'\s+'), ' ').trim(), chars);
 
-/// Argument completions: days that hold diaries, recent diary ids and category
-/// names. Every list is capped at [_completionLimit].
+/// Argument completions: the days that hold diaries and the recent diary ids,
+/// the only argument shapes the three prompts take. Every list is capped at
+/// [_completionLimit].
 class _Completions {
-  _Completions({required this.categories, required this.insights});
+  _Completions({required this.insights});
 
-  final CategoryRepository categories;
   final MoodInsightsRepository insights;
 
   Future<McpCompletionResult> handle(
@@ -260,8 +254,6 @@ class _Completions {
         return _dates(partial);
       case 'diaryId':
         return _diaryIds(partial);
-      case 'category' || 'categoryId' || 'categoryName':
-        return _categoryNames(partial);
       default:
         return const McpCompletionResult(values: []);
     }
@@ -294,19 +286,5 @@ class _Completions {
       if (matches) values.add(entry.id);
     }
     return McpCompletionResult(values: values, total: values.length);
-  }
-
-  Future<McpCompletionResult> _categoryNames(String partial) async {
-    final all = await categories.getAllCategories();
-    final values = <String>[
-      for (final category in all)
-        if (category.categoryName.toLowerCase().startsWith(partial))
-          category.categoryName,
-    ];
-    return McpCompletionResult(
-      values: values.take(_completionLimit).toList(),
-      total: values.length,
-      hasMore: values.length > _completionLimit,
-    );
   }
 }

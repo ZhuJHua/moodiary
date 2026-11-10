@@ -3,8 +3,8 @@ import 'dart:async';
 import '../protocol/mcp_types.dart';
 
 /// Server side state of one MCP session: the negotiated protocol version, the
-/// log level the client picked, the server-to-client notification stream and the
-/// set of cancelled request ids.
+/// log level the client picked, when it last did something, the server-to-client
+/// notification stream and the set of cancelled request ids.
 ///
 /// Transports own the session id; the server keeps the state as long as the
 /// transport reports the session alive.
@@ -16,12 +16,14 @@ class McpSessionState {
   /// `null` until `initialize` negotiated a version.
   String? protocolVersion;
 
-  String? clientName;
-  String? clientVersion;
-
   bool get initialized => protocolVersion != null;
 
   McpLogLevel logLevel = McpLogLevel.info;
+
+  /// When the session last carried a request; the core prunes idle sessions.
+  DateTime lastSeen = DateTime.now();
+
+  void touch() => lastSeen = DateTime.now();
 
   bool _disposed = false;
 

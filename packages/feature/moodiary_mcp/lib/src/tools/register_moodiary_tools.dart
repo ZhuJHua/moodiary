@@ -36,7 +36,12 @@ McpRegistry buildMoodiaryRegistry({
   registerDiaryTools(registry, diaries: diaries, categories: categories);
   registerCategoryTools(registry, diaries: diaries, categories: categories);
   registerImageTools(registry, diaries: diaries, renderer: imageRenderer);
-  registerMediaTools(registry, diaries: diaries, store: mediaStore);
+  registerMediaTools(
+    registry,
+    diaries: diaries,
+    categories: categories,
+    store: mediaStore,
+  );
   registerStatsTools(
     registry,
     diaries: diaries,
@@ -51,11 +56,6 @@ McpRegistry buildMoodiaryRegistry({
     insights: insights,
   );
   registerMediaResources(registry, diaries: diaries, store: mediaStore);
-  registerDiaryPrompts(
-    registry,
-    diaries: diaries,
-    categories: categories,
-    insights: insights,
-  );
+  registerDiaryPrompts(registry, diaries: diaries, insights: insights);
   return registry;
 }

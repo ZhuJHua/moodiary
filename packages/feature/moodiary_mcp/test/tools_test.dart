@@ -9,57 +9,10 @@ import 'package:moodiary_mcp/src/protocol/mcp_types.dart';
 import 'package:moodiary_mcp/src/server/mcp_server.dart';
 import 'package:moodiary_mcp/src/server/mcp_session.dart';
 import 'package:moodiary_mcp/src/tools/register_moodiary_tools.dart';
-import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 
-Diary makeDiary(
-  String id,
-  String text, {
-  String? content,
-  String? title,
-  List<String> linkTo = const [],
-  List<String> tags = const [],
-  DateTime? time,
-  String? categoryId,
-  bool show = true,
-}) {
-  final doc =
-      content ??
-      jsonEncode({
-        'type': 'doc',
-        'attrs': {'v': 2},
-        'content': [
-          {
-            'type': 'paragraph',
-            'content': [
-              {'type': 'text', 'text': text},
-              for (final target in linkTo)
-                {
-                  'type': 'diaryLink',
-                  'attrs': {'id': target, 'label': 'L'},
-                },
-            ],
-          },
-        ],
-      });
-  return Diary(
-    id: id,
-    categoryId: categoryId,
-    title: title ?? 'title-$id',
-    content: doc,
-    contentText: text,
-    time: time ?? DateTime.utc(2026, 1, 1),
-    lastModified: time ?? DateTime.utc(2026, 1, 1),
-    show: show,
-    mood: null,
-    imageName: const [],
-    audioName: const [],
-    videoName: const [],
-    tags: tags,
-    type: 'tiptap',
-  );
-}
+import 'support.dart';
 
 /// A Tiptap document with a heading and one bold paragraph, used to show that a
 /// `contentFormat` really reaches the stored document.
@@ -96,7 +49,7 @@ void main() {
   late MoodInsightsRepository insights;
   late McpServer server;
   late McpSessionState session;
-  var seq = 0;
+  late TestMcpClient client;
 
   setUpAll(() {
     getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
@@ -121,7 +74,7 @@ void main() {
       serverVersion: 'test',
     );
     session = server.createSession();
-    seq = 0;
+    client = TestMcpClient(server: server, session: session);
   });
 
   tearDown(() async {
@@ -132,93 +85,15 @@ void main() {
   Future<Map<String, dynamic>> call(
     String method, [
     Map<String, dynamic> params = const {},
-  ]) async {
-    final response = await server.handle(session, {
-      'jsonrpc': '2.0',
-      'id': ++seq,
-      'method': method,
-      'params': params,
-    });
-    expect(response, isNotNull, reason: '$method must answer a request');
-    return response!;
-  }
+  ]) => client.call(method, params);
 
   Future<Map<String, dynamic>> toolCall(
     String name, [
     Map<String, dynamic> arguments = const {},
-  ]) => call('tools/call', {'name': name, 'arguments': arguments});
+  ]) => client.toolCall(name, arguments);
 
-  Map<String, dynamic> resultOf(Map<String, dynamic> response) =>
-      response['result'] as Map<String, dynamic>;
-
-  Map<String, dynamic> structuredOf(Map<String, dynamic> response) =>
-      resultOf(response)['structuredContent'] as Map<String, dynamic>;
-
-  String textOf(Map<String, dynamic> response) {
-    final content = resultOf(response)['content'] as List;
-    return (content.single as Map)['text'] as String;
-  }
-
-  int errorCode(Map<String, dynamic> response) =>
-      (response['error'] as Map)['code'] as int;
-
-  String errorMessage(Map<String, dynamic> response) =>
-      (response['error'] as Map)['message'] as String;
-
-  String resourceText(Map<String, dynamic> response) {
-    final contents = resultOf(response)['contents'] as List;
-    return (contents.single as Map)['text'] as String;
-  }
-
-  Map<String, dynamic> resourceJson(Map<String, dynamic> response) =>
-      jsonDecode(resourceText(response)) as Map<String, dynamic>;
-
-  List<String> completionValues(Map<String, dynamic> response) {
-    final completion = resultOf(response)['completion'] as Map;
-    return (completion['values'] as List).cast<String>();
-  }
-
-  List<String> diaryIds(Map<String, dynamic> data) => [
-    for (final diary in data['diaries'] as List)
-      (diary as Map<String, dynamic>)['id'] as String,
-  ];
-
-  Map<String, dynamic> singleSummary(Map<String, dynamic> data) =>
-      (data['diaries'] as List).cast<Map<String, dynamic>>().single;
-
-  Map<String, dynamic> singleHit(Map<String, dynamic> data) =>
-      (data['hits'] as List).cast<Map<String, dynamic>>().single;
-
-  Map<String, dynamic> storedDoc(String content) =>
-      jsonDecode(content) as Map<String, dynamic>;
-
-  List<Map<String, dynamic>> docBlocks(Map<String, dynamic> doc) =>
-      (doc['content'] as List).cast<Map<String, dynamic>>();
-
-  Map<String, dynamic> toolNamed(Map<String, dynamic> listed, String name) =>
-      (listed['tools'] as List).cast<Map<String, dynamic>>().firstWhere(
-        (tool) => tool['name'] == name,
-      );
-
-  Map<String, dynamic> propertiesOf(Map<String, dynamic> tool) =>
-      (tool['inputSchema'] as Map<String, dynamic>)['properties']
-          as Map<String, dynamic>;
-
-  Future<String> newCategory(
-    String name, {
-    String? parentId,
-    Object? color,
-  }) async {
-    final created = structuredOf(
-      await toolCall('create_category', {
-        'name': name,
-        'parentId': ?parentId,
-        'color': ?color,
-      }),
-    );
-    expect(created['created'], isTrue);
-    return (created['category'] as Map<String, dynamic>)['id'] as String;
-  }
+  Future<String> newCategory(String name, {String? parentId, Object? color}) =>
+      client.newCategory(name, parentId: parentId, color: color);
 
   group('catalog', () {
     test('initialize then tools/list returns the full catalog', () async {
@@ -1341,7 +1216,6 @@ void main() {
 
   group('prompts and completions', () {
     test('prompts render messages and complete known values', () async {
-      await newCategory('Travel');
       await diaries.insertADiary(
         makeDiary('p1', 'prompt body', time: DateTime(2020, 1, 15, 12)),
       );
@@ -1383,14 +1257,6 @@ void main() {
       );
       expect(dates, contains('2020-01-15'));
       expect(dates.every((value) => value.startsWith('2020-01')), isTrue);
-
-      final names = completionValues(
-        await call('completion/complete', {
-          'ref': {'type': 'ref/prompt', 'name': 'daily_review'},
-          'argument': {'name': 'category', 'value': 'Tra'},
-        }),
-      );
-      expect(names, ['Travel']);
     });
   });
 

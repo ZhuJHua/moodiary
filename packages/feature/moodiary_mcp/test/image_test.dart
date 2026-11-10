@@ -5,41 +5,17 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
-import 'package:moodiary_mcp/moodiary_mcp.dart';
+import 'package:moodiary_mcp/src/export/diary_image_renderer.dart';
+import 'package:moodiary_mcp/src/protocol/json_rpc.dart';
+import 'package:moodiary_mcp/src/registry/mcp_registry.dart';
+import 'package:moodiary_mcp/src/server/mcp_server.dart';
+import 'package:moodiary_mcp/src/server/mcp_session.dart';
 import 'package:moodiary_mcp/src/tools/image_tools.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 
-// A minimal Tiptap document; the image tool never parses it, it only hands the
-// diary to the renderer, but a valid document keeps the fixture realistic.
-Diary makeDiary(String id, String text) => Diary(
-  id: id,
-  categoryId: null,
-  title: 'title-$id',
-  content: jsonEncode({
-    'type': 'doc',
-    'attrs': {'v': 2},
-    'content': [
-      {
-        'type': 'paragraph',
-        'content': [
-          {'type': 'text', 'text': text},
-        ],
-      },
-    ],
-  }),
-  contentText: text,
-  time: DateTime.utc(2026, 1, 1),
-  lastModified: DateTime.utc(2026, 1, 1),
-  show: true,
-  mood: null,
-  imageName: const [],
-  audioName: const [],
-  videoName: const [],
-  tags: const [],
-  type: 'tiptap',
-);
+import 'support.dart';
 
 /// Fixed 32 byte payload: the tool must forward exactly the bytes it gets.
 final Uint8List _pngBytes = Uint8List.fromList(
@@ -93,7 +69,7 @@ void main() {
   late DiaryRepository diaries;
   late McpServer server;
   late McpSessionState session;
-  var seq = 0;
+  late TestMcpClient client;
 
   setUpAll(() {
     if (!getIt.isRegistered<IKVStorage>()) {
@@ -109,7 +85,6 @@ void main() {
     );
     diaries = DiaryRepository(db);
     await diaries.insertADiary(makeDiary('diary-1', 'a day worth exporting'));
-    seq = 0;
   });
 
   tearDown(() async {
@@ -124,39 +99,17 @@ void main() {
     registerImageTools(registry, diaries: diaries, renderer: renderer);
     server = McpServer(registry: registry, serverVersion: 'test');
     session = server.createSession();
+    client = TestMcpClient(server: server, session: session);
   }
 
   Future<Map<String, dynamic>> call(
     String method, [
     Map<String, dynamic> params = const {},
-  ]) async {
-    final response = await server.handle(session, {
-      'jsonrpc': '2.0',
-      'id': ++seq,
-      'method': method,
-      'params': params,
-    });
-    expect(response, isNotNull, reason: '$method must answer a request');
-    return response!;
-  }
+  ]) => client.call(method, params);
 
   Future<Map<String, dynamic>> toolCall([
     Map<String, dynamic> arguments = const {},
-  ]) => call('tools/call', {
-    'name': 'render_diary_image',
-    'arguments': arguments,
-  });
-
-  Map<String, dynamic> resultOf(Map<String, dynamic> response) =>
-      response['result'] as Map<String, dynamic>;
-
-  Map<String, dynamic> structuredOf(Map<String, dynamic> response) =>
-      resultOf(response)['structuredContent'] as Map<String, dynamic>;
-
-  List<Map<String, dynamic>> contentOf(Map<String, dynamic> response) => [
-    for (final item in resultOf(response)['content'] as List)
-      (item as Map).cast<String, dynamic>(),
-  ];
+  ]) => client.toolCall('render_diary_image', arguments);
 
   test('catalog advertises a read-only, non-idempotent image tool', () async {
     buildServer(_FakeRenderer());

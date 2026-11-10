@@ -36,11 +36,6 @@ McpRegistry _registry({Completer<McpToolResult>? slow}) {
     call.log(McpLogLevel.error, 'error line', data: {'e': 1});
     return McpToolResult.text('logged');
   });
-  for (var i = 0; i < mcpPageSize + 2; i++) {
-    registry.addTool(_tool('filler_$i'), (call, arguments) async {
-      return McpToolResult.text('filler');
-    });
-  }
   registry.addResource(
     const McpResource(
       uri: 'moodiary://categories',
@@ -160,7 +155,6 @@ void main() {
         );
         expect((capabilities['resources'] as Map)['subscribe'], isFalse);
         expect(session.protocolVersion, '2025-03-26');
-        expect(session.clientName, 'test-client');
         expect(session.initialized, isTrue);
       },
     );
@@ -186,22 +180,15 @@ void main() {
   });
 
   group('tools', () {
-    test('lists tools with cursor pagination', () async {
-      final first = (await call('tools/list'))['result'] as Map;
-      final firstItems = first['tools'] as List;
-      expect(firstItems.length, mcpPageSize);
-      expect((firstItems.first as Map)['name'], isA<String>());
-      final cursor = first['nextCursor'];
-      expect(cursor, isNotNull);
-      final second =
-          (await call('tools/list', {'cursor': cursor}))['result'] as Map;
-      expect((second['tools'] as List).length, greaterThan(0));
-      expect(second.containsKey('nextCursor'), isFalse);
-    });
-
-    test('rejects a bad cursor', () async {
-      final response = await call('tools/list', {'cursor': 'oops'});
-      expect((response['error'] as Map)['code'], JsonRpcCode.invalidParams);
+    test('lists every tool under the tools property', () async {
+      final result = (await call('tools/list'))['result'] as Map;
+      final tools = (result['tools'] as List).cast<Map<String, dynamic>>();
+      expect([
+        for (final tool in tools) tool['name'],
+      ], containsAll(<String>['echo', 'fails', 'slow', 'progress', 'logger']));
+      // The catalog is frozen at a size below any page limit, so a list answer
+      // carries neither a cursor nor a truncated array.
+      expect(result.containsKey('nextCursor'), isFalse);
     });
 
     test('returns structured content for a successful call', () async {
@@ -445,6 +432,29 @@ void main() {
       expect(server.session(session.id), isNull);
       expect(closed, isTrue);
       expect(session.isDisposed, isTrue);
+    });
+
+    test('prunes idle sessions and reports their ids', () async {
+      final idle = server.createSession()
+        ..lastSeen = DateTime.now().subtract(const Duration(hours: 1));
+      expect(server.pruneIdleSessions(const Duration(minutes: 30)), [idle.id]);
+      expect(server.session(idle.id), isNull);
+      expect(idle.isDisposed, isTrue);
+      expect(server.pruneIdleSessions(const Duration(minutes: 30)), isEmpty);
+    });
+
+    test('evicts the oldest session at the limit', () async {
+      final bounded = McpServer(
+        registry: _registry(),
+        serverVersion: '9.9.9',
+        maxSessions: 2,
+      );
+      addTearDown(bounded.dispose);
+      final first = bounded.createSession();
+      bounded.createSession();
+      bounded.createSession();
+      expect(bounded.session(first.id), isNull);
+      expect(first.isDisposed, isTrue);
     });
   });
 }

@@ -6,7 +6,6 @@
 /// `false`.
 library;
 
-import '../protocol/json_rpc.dart';
 import '../protocol/mcp_types.dart';
 
 typedef McpToolHandler = Future<McpToolResult> Function(
@@ -36,58 +35,40 @@ typedef McpCompletionHandler = Future<McpCompletionResult> Function(
   String partialValue,
 );
 
-/// One page of a list endpoint plus the cursor of the following page.
-class McpPage<T> {
-  const McpPage(this.items, this.nextCursor);
-
-  final List<T> items;
-  final String? nextCursor;
-
-  /// Encodes the page under [key], the property name the schema gives the list
-  /// (`tools`, `resources`, `resourceTemplates`, `prompts`).
-  ///
-  /// The name is not cosmetic: clients read exactly that property, so a generic
-  /// wrapper such as `items` makes `tools/list` answer a result without
-  /// `tools`, and a typed client fails while decoding it.
-  Map<String, dynamic> toJson(String key, Object? Function(T item) encode) => {
-    key: [for (final item in items) encode(item)],
-    'nextCursor': ?nextCursor,
-  };
-}
-
 class McpRegistry {
-  final Map<String, _ToolEntry> _tools = {};
-  final Map<String, _ResourceEntry> _resources = {};
-  final List<_ResourceTemplateEntry> _templates = [];
-  final Map<String, _PromptEntry> _prompts = {};
-
-  bool get isEmpty => _tools.isEmpty && _resources.isEmpty && _prompts.isEmpty;
+  /// The descriptor a list endpoint advertises next to the handler that serves
+  /// it.
+  final Map<String, (McpTool, McpToolHandler)> _tools = {};
+  final Map<String, (McpResource, McpResourceReader)> _resources = {};
+  final List<(McpResourceTemplate, McpResourceTemplateReader)> _templates = [];
+  final Map<String, (McpPrompt, McpPromptHandler, McpCompletionHandler?)>
+  _prompts = {};
 
   void addTool(McpTool tool, McpToolHandler handler) {
     if (_tools.containsKey(tool.name)) {
       throw ArgumentError('duplicate MCP tool: ${tool.name}');
     }
-    _tools[tool.name] = _ToolEntry(tool, handler);
+    _tools[tool.name] = (tool, handler);
   }
 
   void addResource(McpResource resource, McpResourceReader reader) {
     if (_resources.containsKey(resource.uri)) {
       throw ArgumentError('duplicate MCP resource: ${resource.uri}');
     }
-    _resources[resource.uri] = _ResourceEntry(resource, reader);
+    _resources[resource.uri] = (resource, reader);
   }
 
   void addResourceTemplate(
     McpResourceTemplate template,
     McpResourceTemplateReader reader,
   ) {
-    if (_templates.any((e) => e.template.uriTemplate == template.uriTemplate)) {
+    if (_templates.any((e) => e.$1.uriTemplate == template.uriTemplate)) {
       throw ArgumentError(
         'duplicate MCP resource template: '
         '${template.uriTemplate}',
       );
     }
-    _templates.add(_ResourceTemplateEntry(template, reader));
+    _templates.add((template, reader));
   }
 
   void addPrompt(
@@ -98,104 +79,37 @@ class McpRegistry {
     if (_prompts.containsKey(prompt.name)) {
       throw ArgumentError('duplicate MCP prompt: ${prompt.name}');
     }
-    _prompts[prompt.name] = _PromptEntry(prompt, handler, complete);
+    _prompts[prompt.name] = (prompt, handler, complete);
   }
 
   /// Completion handler for a prompt argument, when the guest installed one.
-  McpCompletionHandler? promptCompletion(String prompt) =>
-      _prompts[prompt]?.complete;
+  McpCompletionHandler? promptCompletion(String prompt) => _prompts[prompt]?.$3;
 
-  List<McpTool> get tools => [for (final e in _tools.values) e.tool];
+  List<McpTool> get tools => [for (final e in _tools.values) e.$1];
 
-  List<McpResource> get resources => [
-    for (final e in _resources.values) e.resource,
-  ];
+  List<McpResource> get resources => [for (final e in _resources.values) e.$1];
 
   List<McpResourceTemplate> get resourceTemplates => [
-    for (final e in _templates) e.template,
+    for (final e in _templates) e.$1,
   ];
 
-  List<McpPrompt> get prompts => [for (final e in _prompts.values) e.prompt];
+  List<McpPrompt> get prompts => [for (final e in _prompts.values) e.$1];
 
-  /// Cursor pagination over a descriptor list; [cursor] is the opaque value a
-  /// previous page returned.
-  McpPage<T> page<T>(List<T> all, Object? cursor) {
-    final offset = _offset(cursor);
-    final end = offset + mcpPageSize;
-    return McpPage(
-      all.skip(offset).take(mcpPageSize).toList(),
-      end < all.length ? '$end' : null,
-    );
-  }
-
-  static int _offset(Object? cursor) {
-    if (cursor == null || cursor == '') return 0;
-    final offset = int.tryParse('$cursor');
-    if (offset == null || offset < 0) {
-      throw const JsonRpcException(
-        JsonRpcCode.invalidParams,
-        'cursor is not a valid page cursor',
-      );
-    }
-    return offset;
-  }
-
-  McpToolHandler? toolHandler(String name) => _tools[name]?.handler;
-
-  bool hasTool(String name) => _tools.containsKey(name);
+  McpToolHandler? toolHandler(String name) => _tools[name]?.$2;
 
   /// Matches a static resource first, then the registered templates.
-  McpResolvedResource? resolveResource(String uri) {
+  Future<McpResourceReadResult> Function(McpCallContext call)? resolveResource(
+    String uri,
+  ) {
     final direct = _resources[uri];
-    if (direct != null) {
-      return McpResolvedResource(reader: (call) => direct.reader(call, uri));
-    }
+    if (direct != null) return (call) => direct.$2(call, uri);
     for (final entry in _templates) {
-      final variables = entry.template.match(uri);
+      final variables = entry.$1.match(uri);
       if (variables == null) continue;
-      return McpResolvedResource(
-        reader: (call) => entry.reader(call, uri, variables),
-        template: entry.template,
-      );
+      return (call) => entry.$2(call, uri, variables);
     }
     return null;
   }
 
-  McpPromptHandler? promptHandler(String name) => _prompts[name]?.handler;
-}
-
-class McpResolvedResource {
-  const McpResolvedResource({required this.reader, this.template});
-
-  final Future<McpResourceReadResult> Function(McpCallContext call) reader;
-  final McpResourceTemplate? template;
-}
-
-class _ToolEntry {
-  const _ToolEntry(this.tool, this.handler);
-
-  final McpTool tool;
-  final McpToolHandler handler;
-}
-
-class _ResourceEntry {
-  const _ResourceEntry(this.resource, this.reader);
-
-  final McpResource resource;
-  final McpResourceReader reader;
-}
-
-class _ResourceTemplateEntry {
-  const _ResourceTemplateEntry(this.template, this.reader);
-
-  final McpResourceTemplate template;
-  final McpResourceTemplateReader reader;
-}
-
-class _PromptEntry {
-  const _PromptEntry(this.prompt, this.handler, this.complete);
-
-  final McpPrompt prompt;
-  final McpPromptHandler handler;
-  final McpCompletionHandler? complete;
+  McpPromptHandler? promptHandler(String name) => _prompts[name]?.$2;
 }

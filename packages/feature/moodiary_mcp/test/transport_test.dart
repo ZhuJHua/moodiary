@@ -152,103 +152,33 @@ Future<_Harness> _start({
   return harness;
 }
 
-/// Reads one HTTP event stream over its whole lifetime.
+/// Reads `data:` lines from one HTTP event stream.
 ///
-/// A `HttpClientResponse` body can only be listened to once, so every wait
-/// shares a single subscription and buffers the events it did not consume.
-class _SseReader {
-  _SseReader(this._response) {
-    _subscription = _response
-        .transform(utf8.decoder)
-        .transform(const LineSplitter())
-        .listen(
-          _onLine,
-          onError: (Object error) {
-            _error = error;
-            _failWaiters();
-          },
-          onDone: () {
-            _done = true;
-            _failWaiters();
-          },
-          cancelOnError: true,
-        );
-  }
-
-  final HttpClientResponse _response;
-  late final StreamSubscription<String> _subscription;
-  final List<({String event, String data})> _events = [];
-  final List<_Waiter> _waiters = [];
-  String _event = 'message';
-  final StringBuffer _data = StringBuffer();
-  Object? _error;
-  bool _done = false;
-
-  void _onLine(String line) {
-    if (line.startsWith('event:')) {
-      _event = line.substring(6).trim();
-      return;
-    }
-    if (line.startsWith('data:')) {
-      _data.write(line.substring(5).trim());
-      return;
-    }
-    if (line.isNotEmpty || _data.isEmpty) return;
-    final event = (event: _event, data: _data.toString());
-    _event = 'message';
-    _data.clear();
-    _events.add(event);
-    final index = _waiters.indexWhere(
-      (w) => w.predicate(event.event, event.data),
-    );
-    if (index < 0) return;
-    final waiter = _waiters.removeAt(index);
-    _events.remove(event);
-    waiter.completer.complete(event);
-  }
-
-  void _failWaiters() {
-    final error = _error;
-    for (final waiter in _waiters) {
-      if (waiter.completer.isCompleted) continue;
-      waiter.completer.completeError(
-        error ?? StateError('stream closed before the event arrived'),
+/// A response body can only be listened to once, so every wait shares one
+/// iterator; the events a wait did not consume stay buffered in it.
+class _SseLines {
+  _SseLines(Stream<List<int>> body)
+    : _lines = StreamIterator(
+        body.transform(utf8.decoder).transform(const LineSplitter()),
       );
+
+  final StreamIterator<String> _lines;
+
+  /// The payload of the next event whose `data:` line satisfies [test].
+  Future<String> next(bool Function(String data) test) =>
+      _next(test).timeout(const Duration(seconds: 10));
+
+  Future<String> _next(bool Function(String data) test) async {
+    while (await _lines.moveNext()) {
+      final line = _lines.current;
+      if (!line.startsWith('data:')) continue;
+      final data = line.substring(5).trim();
+      if (test(data)) return data;
     }
-    _waiters.clear();
+    throw StateError('stream closed before the event arrived');
   }
 
-  /// Waits for the first event matching [predicate], consumed once.
-  Future<({String event, String data})> next(
-    bool Function(String event, String data) predicate, {
-    Duration timeout = const Duration(seconds: 10),
-  }) {
-    final index = _events.indexWhere((e) => predicate(e.event, e.data));
-    if (index >= 0) return Future.value(_events.removeAt(index));
-    if (_error != null) return Future.error(_error!);
-    if (_done) {
-      return Future.error(StateError('stream closed before the event arrived'));
-    }
-    final completer = Completer<({String event, String data})>();
-    final waiter = _Waiter(predicate, completer);
-    _waiters.add(waiter);
-    return completer.future.timeout(
-      timeout,
-      onTimeout: () {
-        _waiters.remove(waiter);
-        throw StateError('timed out waiting for an SSE event');
-      },
-    );
-  }
-
-  Future<void> close() => _subscription.cancel();
-}
-
-class _Waiter {
-  _Waiter(this.predicate, this.completer);
-
-  final bool Function(String event, String data) predicate;
-  final Completer<({String event, String data})> completer;
+  Future<void> close() => _lines.cancel();
 }
 
 void main() {
@@ -475,14 +405,12 @@ void main() {
       request.headers.set('accept', 'text/event-stream');
       final response = await request.close();
       expect(response.statusCode, HttpStatus.ok);
-      final events = _SseReader(response);
+      final events = _SseLines(response);
       addTearDown(events.close);
-      final endpointEvent = await events.next(
-        (event, data) => event == 'endpoint',
+      final endpoint = await events.next(
+        (data) => data.contains('/messages?sessionId='),
       );
-      final sessionId = Uri.parse(endpointEvent.data)
-          .queryParameters['sessionId']!;
-      final answer = events.next((event, data) => data.contains('"icons"'));
+      final sessionId = Uri.parse(endpoint).queryParameters['sessionId']!;
       final posted = await harness.send('POST', harness.messages(sessionId), {
         'jsonrpc': '2.0',
         'id': 1,
@@ -490,7 +418,9 @@ void main() {
         'params': {'protocolVersion': '2024-11-05'},
       });
       expect(posted.status, HttpStatus.accepted);
-      final frame = jsonDecode((await answer).data) as Map<String, dynamic>;
+      final frame = jsonDecode(
+        await events.next((data) => data.contains('"icons"')),
+      ) as Map<String, dynamic>;
       final serverInfo = (frame['result'] as Map)['serverInfo'] as Map;
       final icon = (serverInfo['icons'] as List).single as Map;
       expect(icon['src'], endsWith('/icon.png'));
@@ -688,8 +618,6 @@ void main() {
       final opened = await request.close();
       expect(opened.statusCode, HttpStatus.ok);
       expect(opened.headers.contentType?.mimeType, 'text/event-stream');
-      final events = _SseReader(opened);
-      addTearDown(events.close);
       final deleted = await harness.send(
         'DELETE',
         harness.mcp,
@@ -807,16 +735,15 @@ void main() {
       final response = await request.close();
       expect(response.statusCode, HttpStatus.ok);
       expect(response.headers.contentType?.mimeType, 'text/event-stream');
-      final events = _SseReader(response);
+      final events = _SseLines(response);
       addTearDown(events.close);
-      final event = events.next(
-        (event, data) => data.contains('notifications/resources/updated'),
-      );
       await Future<void>.delayed(const Duration(milliseconds: 100));
       harness.server.resourceUpdated('moodiary://ping');
-      final received = await event;
+      final data = await events.next(
+        (data) => data.contains('notifications/resources/updated'),
+      );
       expect(
-        jsonDecode(received.data),
+        jsonDecode(data),
         containsPair('method', 'notifications/resources/updated'),
       );
     });
@@ -846,17 +773,13 @@ void main() {
       request.headers.set('accept', 'text/event-stream');
       final response = await request.close();
       expect(response.statusCode, HttpStatus.ok);
-      final events = _SseReader(response);
+      final events = _SseLines(response);
       addTearDown(events.close);
-      final endpointEvent = await events.next(
-        (event, data) => event == 'endpoint',
+      final endpoint = await events.next(
+        (data) => data.contains('/messages?sessionId='),
       );
-      final endpoint = endpointEvent.data;
       expect(endpoint, contains('/messages?sessionId='));
       final sessionId = Uri.parse(endpoint).queryParameters['sessionId']!;
-      final answer = events.next(
-        (event, data) => data.contains('"protocolVersion"'),
-      );
       final posted = await harness.send('POST', harness.messages(sessionId), {
         'jsonrpc': '2.0',
         'id': 1,
@@ -864,7 +787,9 @@ void main() {
         'params': {'protocolVersion': mcpLatestProtocolVersion},
       });
       expect(posted.status, HttpStatus.accepted);
-      final frame = jsonDecode((await answer).data) as Map<String, dynamic>;
+      final frame = jsonDecode(
+        await events.next((data) => data.contains('"protocolVersion"')),
+      ) as Map<String, dynamic>;
       expect((frame['result'] as Map)['protocolVersion'], isNotNull);
     });
 

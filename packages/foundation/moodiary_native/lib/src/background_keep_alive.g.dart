@@ -148,16 +148,20 @@ class BackgroundKeepAliveApi {
     return pigeonVar_replyValue! as bool;
   }
 
-  Future<void> setSilentAudio(bool enabled) async {
+  Future<void> setKeepAlive(
+    bool enabled,
+    String notificationTitle,
+    String notificationText,
+  ) async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.moodiary_native.BackgroundKeepAliveApi.setSilentAudio$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.moodiary_native.BackgroundKeepAliveApi.setKeepAlive$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
     final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[enabled],
+      <Object?>[enabled, notificationTitle, notificationText],
     );
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 

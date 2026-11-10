@@ -62,11 +62,7 @@ abstract final class AssistantToolRegistry {
 
   static const _maxRecallLimit = 8;
 
-  static const _maxExcerptLength = 200;
-
   static const _maxFullContentLength = 4000;
-
-  static const _maxBatchRead = 10;
 
   static const _maxBatchWrite = _maxQueryLimit;
 
@@ -141,14 +137,14 @@ abstract final class AssistantToolRegistry {
       tool: .getDiary,
       description:
           'Read the full text of diaries by id (searchDiaries returns excerpts only). '
-          'Pass every id you need in one call. Max $_maxBatchRead per call.',
+          'Pass every id you need in one call. Max $maxBatchRead per call.',
       jsonSchema: {
         'type': 'object',
         'properties': {
           'ids': {
             'type': 'array',
             'items': {'type': 'string'},
-            'description': 'Diary ids from searchDiaries. Max $_maxBatchRead.',
+            'description': 'Diary ids from searchDiaries. Max $maxBatchRead.',
           },
         },
         'required': ['ids'],
@@ -620,9 +616,7 @@ abstract final class AssistantToolRegistry {
 
   static DiaryWrites _writes() => DiaryWrites(
     diaries: getIt<DiaryRepository>(),
-    categories: getIt.isRegistered<CategoryRepository>()
-        ? getIt<CategoryRepository>()
-        : null,
+    categories: getIt<CategoryRepository>(),
   );
 
   static CategoryOps _categoryOps() => CategoryOps(
@@ -633,9 +627,7 @@ abstract final class AssistantToolRegistry {
   static DiaryStatsOps _stats() => DiaryStatsOps(
     diaries: getIt<DiaryRepository>(),
     categories: getIt<CategoryRepository>(),
-    insights: getIt.isRegistered<MoodInsightsRepository>()
-        ? getIt<MoodInsightsRepository>()
-        : null,
+    insights: getIt<MoodInsightsRepository>(),
   );
 
   static Future<KeywordSearch> _keywordSearch(Map<String, dynamic> input) {
@@ -748,8 +740,8 @@ abstract final class AssistantToolRegistry {
       final text = MediaMarkup.forModel(diary.contentText).trim();
       if (text.isNotEmpty) {
         buffer.writeln(
-          text.length > _maxExcerptLength
-              ? '${text.substring(0, _maxExcerptLength)}… (excerpt; full text via getDiary)'
+          text.length > mcpExcerptChars
+              ? '${text.substring(0, mcpExcerptChars)}… (excerpt; full text via getDiary)'
               : text,
         );
       }
@@ -764,7 +756,7 @@ abstract final class AssistantToolRegistry {
       return 'Failed: no diary id given. Get ids from searchDiaries first.';
     }
 
-    final read = await _queries().read(ids, max: _maxBatchRead);
+    final read = await _queries().read(ids);
     final chunks = [for (final diary in read.found) _formatDiaryFull(diary)];
     final missing = read.missing;
 
@@ -776,9 +768,9 @@ abstract final class AssistantToolRegistry {
       );
       if (chunks.isNotEmpty) buffer.writeln();
     }
-    if (ids.length > _maxBatchRead) {
+    if (ids.length > maxBatchRead) {
       buffer.writeln(
-        '(Only the first $_maxBatchRead were read; call again for the rest.)',
+        '(Only the first $maxBatchRead were read; call again for the rest.)',
       );
     }
     buffer.write(chunks.join('\n\n---\n\n'));
@@ -919,7 +911,6 @@ abstract final class AssistantToolRegistry {
       content: content,
       mood: _parseMood(input['mood']),
       categoryId: _trimToNull(input['categoryId']),
-      format: DiaryContentFormat.markdown,
       requireKnownCategory: false,
     );
     return 'Created "${title.isEmpty ? 'Untitled' : title}" '
@@ -951,8 +942,6 @@ abstract final class AssistantToolRegistry {
       final updated = await _writes().update(
         id: id,
         patch: patch,
-        format: DiaryContentFormat.markdown,
-        requireKnownCategory: true,
         requireVisible: true,
         index: (title == null && content == null)
             ? IndexMode.skip
@@ -987,20 +976,16 @@ abstract final class AssistantToolRegistry {
       final title = result.diary.title.trim().isEmpty
           ? 'Untitled'
           : result.diary.title.trim();
-      return switch (result.outcome) {
-        DiaryDeleteOutcome.alreadyRecycled =>
-          '"$title" (id=$id) is already in the recycle bin.',
-        DiaryDeleteOutcome.recycled =>
-          'Moved "$title" (id=$id) to the recycle bin.',
-        DiaryDeleteOutcome.deleted => 'Deleted "$title" (id=$id).',
-      };
+      return result.outcome == DiaryDeleteOutcome.alreadyRecycled
+          ? '"$title" (id=$id) is already in the recycle bin.'
+          : 'Moved "$title" (id=$id) to the recycle bin.';
     } on DiaryOpsException {
       return 'Failed: no diary with id=$id.';
     }
   }
 
   static Future<String> _listCategories(Map<String, dynamic> input) async {
-    final cats = await _categoryOps().all();
+    final cats = await getIt<CategoryRepository>().getAllCategories();
     if (cats.isEmpty) return 'No categories yet.';
     final buffer = StringBuffer();
     for (final c in cats) {

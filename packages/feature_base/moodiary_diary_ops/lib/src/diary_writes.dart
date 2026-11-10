@@ -86,13 +86,12 @@ class DiaryPatch {
 typedef _Converted = ({String content, String contentText, DiaryType type});
 
 class DiaryWrites {
-  DiaryWrites({required this.diaries, this.categories});
+  DiaryWrites({required this.diaries, required this.categories});
 
   final DiaryRepository diaries;
 
-  /// Only needed when a call carries a category id; a delete or a category-less
-  /// write works without it.
-  final CategoryRepository? categories;
+  /// Used to validate a category id before it is stored.
+  final CategoryRepository categories;
 
   /// Creates one diary and returns the stored row.
   ///
@@ -145,7 +144,6 @@ class DiaryWrites {
     required String id,
     required DiaryPatch patch,
     DiaryContentFormat format = DiaryContentFormat.markdown,
-    bool requireKnownCategory = true,
     bool requireVisible = false,
     IndexMode index = IndexMode.inline,
   }) async {
@@ -175,10 +173,7 @@ class DiaryWrites {
     }
     if (patch.categoryId case final categoryId?) {
       next = next.copyWith(
-        categoryId: await _resolveCategory(
-          categoryId,
-          requireKnown: requireKnownCategory,
-        ),
+        categoryId: await _resolveCategory(categoryId, requireKnown: true),
       );
     }
     if (patch.time case final time?) {
@@ -229,7 +224,7 @@ class DiaryWrites {
   }) async {
     final id = raw?.trim();
     if (id == null || id.isEmpty) return null;
-    final category = await categories?.getCategoryById(id);
+    final category = await categories.getCategoryById(id);
     if (category != null) return id;
     if (requireKnown) {
       throw DiaryOpsException(DiaryOpsFailure.invalidCategory, categoryId: id);
