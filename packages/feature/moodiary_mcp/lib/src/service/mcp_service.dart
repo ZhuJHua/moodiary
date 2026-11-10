@@ -142,7 +142,7 @@ class McpService {
     if (_busy || state.value.status == .running) return;
     _busy = true;
     final needsToken = requireToken;
-    state.value = McpServerState(status: .starting);
+    state.value = const McpServerState(status: .starting);
     try {
       // A loopback only server may run without a token; nothing is generated or
       // read in that case, so the stored token keeps existing for the moment the
