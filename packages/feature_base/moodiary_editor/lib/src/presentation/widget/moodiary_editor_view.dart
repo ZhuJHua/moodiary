@@ -260,14 +260,19 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
     });
   }
 
-  void _previewImages(List<String> images, int index) {
+  void _previewImages(List<String> images, int index, List<Object> heroTags) {
     final resolved = [
       for (final src in images)
         src.startsWith('http://') || src.startsWith('https://')
             ? src
             : AppFiles.getRealPath('image', src),
     ];
-    MImageBrowser.show(context, images: resolved, initialIndex: index);
+    MImageBrowser.show(
+      context,
+      images: resolved,
+      initialIndex: index,
+      heroTags: heroTags,
+    );
   }
 
   Future<Duration?> _openVideoFullscreen(String name, Duration position) async {

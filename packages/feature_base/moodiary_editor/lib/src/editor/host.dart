@@ -589,22 +589,29 @@ class MoodiaryEditorHost extends ChangeNotifier implements EditorHost {
   @override
   Future<void> resumeVideo(String name, Duration position) async =>
       _media[name]?.resumeAt(position);
-  void previewImage(String src) {
+  void previewImage(int documentPosition) {
     final images = <String>[];
-    void visit(ft.Node node) {
+    final positions = <int>[];
+    void visit(ft.Node node, int position) {
       if (node.type == 'image' &&
           node.attrs['src'] is String &&
           !(node.attrs['src']! as String).startsWith('data:')) {
         images.add(node.attrs['src']! as String);
+        positions.add(position);
       }
+      var childPosition = position + 1;
       for (final child in node.content) {
-        visit(child);
+        visit(child, childPosition);
+        childPosition += child.nodeSize;
       }
     }
 
-    visit(editor.state.doc);
-    if (images.isEmpty) images.add(src);
-    _configuration.onImageTap?.call(images, math.max(0, images.indexOf(src)));
+    visit(editor.state.doc, -1);
+    final index = positions.indexOf(documentPosition);
+    if (index < 0) return;
+    _configuration.onImageTap?.call(images, index, [
+      for (final position in positions) (this, position),
+    ]);
   }
 
   Future<void> pasteImage(Object payload) => importImage(payload);
@@ -691,7 +698,7 @@ class MoodiaryEditorHost extends ChangeNotifier implements EditorHost {
         }
       case EditorCommand.previewImage:
         if (selected?.type == 'image') {
-          previewImage(selected!.attrs['src'] as String? ?? '');
+          previewImage(editor.state.selection.from);
         }
       case EditorCommand.openAttachment:
         if (selected?.type == 'attachment') {

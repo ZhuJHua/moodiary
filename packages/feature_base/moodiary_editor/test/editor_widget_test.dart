@@ -1152,6 +1152,141 @@ void main() {
   );
 
   testWidgets(
+    'duplicate diary images use absolute node-view positions in every container',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 2000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      ft.Node image() => _schema.node(
+        'image',
+        attrs: {'src': 'duplicate.png', 'widthPercent': 25},
+      );
+      final nodes = [
+        image(),
+        _schema.node(
+          'bulletList',
+          content: [
+            _schema.node('listItem', content: [_p(''), image()]),
+          ],
+        ),
+        _schema.node('blockquote', content: [image()]),
+        _schema.node(
+          'table',
+          content: [
+            _schema.node(
+              'tableRow',
+              content: [
+                _schema.node('tableCell', content: [image()]),
+                _schema.node(
+                  'tableCell',
+                  content: [
+                    _schema.node('blockquote', content: [image()]),
+                  ],
+                ),
+              ],
+            ),
+            _schema.node(
+              'tableRow',
+              content: [
+                _schema.node('tableCell', content: [_p(''), image()]),
+                _schema.node('tableCell', content: [_p('')]),
+              ],
+            ),
+          ],
+        ),
+      ];
+      const positions = [0, 5, 9, 14, 18, 26];
+      List<String>? openedImages;
+      List<Object>? openedTags;
+      var openedIndex = -1;
+      await tester.pumpWidget(
+        _app(
+          MoodiaryEditor(
+            readOnly: true,
+            initialContent: _json(nodes),
+            onImageTap: (images, index, tags) {
+              openedImages = images;
+              openedIndex = index;
+              openedTags = tags;
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final doc = _editor(tester).controller.state.doc;
+      for (final position in positions) {
+        expect(doc.nodeAt(position)?.type, 'image');
+      }
+      final heroes = tester.widgetList<Hero>(find.byType(Hero)).toList();
+      for (final hero in heroes) {
+        expect(hero.child, isA<ClipRRect>());
+        expect(hero.flightShuttleBuilder, isNull);
+      }
+      final tags = heroes.map((hero) => hero.tag).toList();
+      expect(tags.toSet(), hasLength(positions.length));
+      expect(
+        tags.map((tag) => (tag as (MoodiaryEditorHost, int)).$2),
+        positions,
+      );
+      final host = (tags.first as (MoodiaryEditorHost, int)).$1;
+      for (var i = 0; i < tags.length; i++) {
+        expect(
+          identical((tags[i] as (MoodiaryEditorHost, int)).$1, host),
+          isTrue,
+        );
+        await tester.tap(find.byWidget(heroes[i]));
+        await tester.pump(const Duration(milliseconds: 350));
+        expect(openedIndex, i);
+        expect(openedImages, List.filled(positions.length, 'duplicate.png'));
+        expect(openedTags, tags);
+        expect(tester.takeException(), isNull);
+      }
+    },
+  );
+
+  testWidgets(
+    'stacked diary hosts have distinct image tags and exclude data URIs',
+    (tester) async {
+      final content = _json([
+        _schema.node(
+          'image',
+          attrs: {'src': 'duplicate.png', 'widthPercent': 25},
+        ),
+        _schema.node(
+          'image',
+          attrs: {'src': 'data:image/png;base64,', 'widthPercent': 25},
+        ),
+      ]);
+      await tester.pumpWidget(
+        _app(
+          Row(
+            children: [
+              for (var i = 0; i < 2; i++)
+                Expanded(
+                  child: MoodiaryEditor(
+                    readOnly: true,
+                    initialContent: content,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final tags = tester
+          .widgetList<Hero>(find.byType(Hero))
+          .map((hero) => hero.tag)
+          .toList();
+      expect(tags, hasLength(2));
+      expect(tags.toSet(), hasLength(2));
+      final first = tags[0] as (MoodiaryEditorHost, int);
+      final second = tags[1] as (MoodiaryEditorHost, int);
+      expect(first.$2, second.$2);
+      expect(identical(first.$1, second.$1), isFalse);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
     'read-only metadata, linked diaries and gallery/attachment callbacks',
     (tester) async {
       final opened = <String>[], gallery = <String>[];
@@ -1201,7 +1336,7 @@ void main() {
             onOpenDiaryLink: opened.add,
             onOpenGraph: () => graph++,
             onPickDate: () => dates++,
-            onImageTap: (images, at) {
+            onImageTap: (images, at, heroTags) {
               gallery.addAll(images);
               index = at;
             },

@@ -63,7 +63,8 @@ class MoodiaryEditor extends StatefulWidget {
 
   final ValueChanged<int>? onActiveHeadingChanged;
 
-  final void Function(List<String> images, int index)? onImageTap;
+  final void Function(List<String> images, int index, List<Object> heroTags)?
+  onImageTap;
 
   final ValueChanged<String>? onUrlTap;
 

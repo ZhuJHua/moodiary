@@ -111,7 +111,9 @@ class _MediaNodeState extends State<_MediaNode> {
 
   void _select() {
     if (widget.host.readOnly) {
-      if (widget.view.node.type == 'image') widget.host.previewImage(_name);
+      if (widget.view.node.type == 'image') {
+        widget.host.previewImage(widget.view.position);
+      }
       if (widget.view.node.type == 'attachment') {
         widget.host._configuration.onAttachmentTap?.call(
           _name,
@@ -376,16 +378,18 @@ class _MediaNodeState extends State<_MediaNode> {
           ),
         );
       }
+      child = ClipRRect(borderRadius: BorderRadius.circular(12), child: child);
+      if (type == 'image' && !_name.startsWith('data:')) {
+        child = Hero(tag: (widget.host, widget.view.position), child: child);
+      }
       return MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
           onTap: _select,
-          onDoubleTap: () =>
-              type == 'image' ? widget.host.previewImage(_name) : _select(),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: child,
-          ),
+          onDoubleTap: () => type == 'image'
+              ? widget.host.previewImage(widget.view.position)
+              : _select(),
+          child: child,
         ),
       );
     },

@@ -18,6 +18,7 @@ class MImageBrowser extends StatefulWidget {
   final List<String> images;
   final int initialIndex;
   final String? heroPrefix;
+  final List<Object>? heroTags;
 
   final FastImageTier? placeholderTier;
 
@@ -26,14 +27,16 @@ class MImageBrowser extends StatefulWidget {
     required this.images,
     this.initialIndex = 0,
     this.heroPrefix,
+    this.heroTags,
     this.placeholderTier,
-  });
+  }) : assert(heroPrefix == null || heroTags == null);
 
   static Future<void> show(
     BuildContext context, {
     required List<String> images,
     int initialIndex = 0,
     String? heroPrefix,
+    List<Object>? heroTags,
     FastImageTier? placeholderTier,
   }) {
     return context.pushTransparentRoute(
@@ -41,6 +44,7 @@ class MImageBrowser extends StatefulWidget {
         images: images,
         initialIndex: initialIndex,
         heroPrefix: heroPrefix,
+        heroTags: heroTags,
         placeholderTier: placeholderTier,
       ),
     );
@@ -189,7 +193,16 @@ class _MImageBrowserState extends State<MImageBrowser> {
   }
 
   Widget _buildGallery() {
-    final hero = widget.heroPrefix != null;
+    assert(
+      widget.heroTags == null ||
+          widget.heroTags!.length == widget.images.length,
+    );
+    final hero = widget.heroPrefix != null || widget.heroTags != null;
+    assert(
+      widget.heroTags == null ||
+          widget.heroTags!.toSet().length == widget.heroTags!.length,
+      'Gallery Hero tags must be unique',
+    );
     final Widget gallery;
     if (widget.images.length == 1) {
       gallery = _buildPage(0, hero: hero);
@@ -261,7 +274,12 @@ class _MImageBrowserState extends State<MImageBrowser> {
       );
     }
     if (!hero) return page;
-    return Hero(tag: '${widget.heroPrefix}-$image', child: page);
+    return Hero(
+      tag: widget.heroTags != null
+          ? widget.heroTags![index]
+          : '${widget.heroPrefix}-$image',
+      child: page,
+    );
   }
 
   void _onScaleState(int index, PhotoViewScaleState state) {
