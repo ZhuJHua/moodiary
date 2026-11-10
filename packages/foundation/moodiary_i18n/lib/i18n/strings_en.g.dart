@@ -1138,6 +1138,9 @@ class _Translations$storage$en extends Translations$storage$zh {
 	@override String get unusedMedia => 'Unused media';
 	@override String get legacy => 'Old database backup';
 	@override String get irreversible => 'Can\'t be undone';
+	@override String get details => 'Details';
+	@override String get detailsHint => 'Files are checked again before cleaning; anything a diary now uses is kept.';
+	@override String get thumbnail => 'Thumbnail';
 	@override String get counting => 'Counting';
 	@override String scanning({required Object area}) => 'Counting · ${area}';
 	@override String fileCount({required Object count}) => '${count} files';

@@ -29,6 +29,7 @@ void main() {
     StorageCleanupKind kind = .cache,
     bool loading = false,
     bool empty = false,
+    List<StorageCandidate>? files,
   }) => StorageReport(
     bytes: {for (final area in StorageArea.values) area: 1024},
     done: loading ? {} : StorageArea.values.toSet(),
@@ -36,14 +37,19 @@ void main() {
     files: 11,
     candidates: {
       if (!empty && !loading)
-        kind: StorageCandidates([
-          StorageCandidate(
-            path: kind == .cache ? '${root.path}/cache.bin' : '/candidate',
-            bytes: 1024,
-            area: kind.areas.first,
-            mediaName: kind == .unusedMedia ? 'orphan.jpg' : null,
-          ),
-        ]),
+        kind: StorageCandidates(
+          files ??
+              [
+                StorageCandidate(
+                  path: kind == .cache
+                      ? '${root.path}/cache.bin'
+                      : '/candidate',
+                  bytes: 1024,
+                  area: kind.areas.first,
+                  mediaName: kind == .unusedMedia ? 'orphan.jpg' : null,
+                ),
+              ],
+        ),
     },
   );
 
@@ -52,6 +58,7 @@ void main() {
     StorageCleanupKind kind = .cache,
     bool loading = false,
     bool busy = false,
+    List<StorageCandidate>? files,
     Stream<StorageReport> Function()? reports,
   }) async {
     await tester.binding.setSurfaceSize(const Size(400, 1400));
@@ -63,7 +70,9 @@ void main() {
           storageReportProvider.overrideWith(
             (ref) =>
                 reports?.call() ??
-                Stream.value(report(kind: kind, loading: loading)),
+                Stream.value(
+                  report(kind: kind, loading: loading, files: files),
+                ),
           ),
           storageSyncBusyProvider.overrideWith((ref) => busy),
         ],
@@ -274,6 +283,86 @@ void main() {
     await tester.pumpAndSettle();
     expect(container.read(storageSelectionProvider).cleaning, isFalse);
     expect(find.text('清理 1 项？'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('safe rows offer no cleanup details', (tester) async {
+    await show(tester);
+    expect(find.byTooltip('详情'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('careful rows open a read-only list of every file to remove', (
+    tester,
+  ) async {
+    final container = await show(
+      tester,
+      kind: .unusedMedia,
+      files: [
+        StorageCandidate(
+          path: '${root.path}/image/orphan.jpg',
+          bytes: 1024,
+          area: .image,
+          mediaName: 'orphan.jpg',
+        ),
+        StorageCandidate(
+          path: '${root.path}/image/thumb/orphan_512.jpg',
+          bytes: 512,
+          area: .image,
+          imageStem: 'orphan',
+        ),
+        StorageCandidate(
+          path: '${root.path}/audio/orphan.m4a',
+          bytes: 256,
+          area: .audio,
+          mediaName: 'orphan.m4a',
+        ),
+      ],
+    );
+    await tester.tap(find.byTooltip('详情'));
+    await tester.pumpAndSettle();
+    final sheet = find.byType(MSheetScaffold<void>);
+    expect(sheet, findsOneWidget);
+    expect(
+      find.descendant(of: sheet, matching: find.text('未使用的媒体')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: sheet, matching: find.text('3 个文件 · 1.75 KB')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: sheet, matching: find.text('orphan.jpg')),
+      findsOneWidget,
+    );
+    // 图片派生物显示来源图片名，而不是缩略图文件名。
+    expect(
+      find.descendant(of: sheet, matching: find.text('orphan')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: sheet, matching: find.text('orphan.m4a')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: sheet,
+        matching: find.text('清理前会再次检查这些文件，仍被日记使用的会被保留。'),
+      ),
+      findsOneWidget,
+    );
+    // 明细只读：不提供清理动作，也不改变勾选状态。
+    expect(find.widgetWithText(FilledButton, '清理'), findsNothing);
+    expect(
+      container
+          .read(storageSelectionProvider)
+          .checked
+          .contains(StorageCleanupKind.unusedMedia),
+      isFalse,
+    );
+    await tester.tap(find.text('关闭'));
+    await tester.pumpAndSettle();
+    expect(find.text('orphan.jpg'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
