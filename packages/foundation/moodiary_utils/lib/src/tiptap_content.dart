@@ -47,7 +47,8 @@ class TiptapContent {
     null => null,
   };
 
-  late final String normalized = _doc == null || identical(_v2, _doc)
+  late final String normalized =
+      _doc == null || (_raw.isNotEmpty && identical(_v2, _doc))
       ? _raw
       : jsonEncode(_v2);
 

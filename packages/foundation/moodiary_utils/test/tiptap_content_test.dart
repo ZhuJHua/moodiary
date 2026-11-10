@@ -32,6 +32,7 @@ void main() {
       final parsed = TiptapContent.parse(source);
       expect(parsed.document, jsonDecode(parsed.normalized));
       final decoded = TiptapContent.fromDocument(parsed.document!);
+      expect(jsonDecode(decoded.normalized), parsed.document);
       expect(decoded.plainText, parsed.plainText);
       expect(decoded.headings, parsed.headings);
       expect(decoded.media.images, parsed.media.images);
