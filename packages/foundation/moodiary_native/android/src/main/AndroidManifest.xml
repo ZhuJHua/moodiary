@@ -11,7 +11,8 @@
         <service
             android:name="cn.yooss.moodiary_native.McpKeepAliveService"
             android:exported="false"
-            android:foregroundServiceType="specialUse">
+            android:foregroundServiceType="specialUse"
+            android:stopWithTask="true">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="local MCP server reachable for external AI clients" />

@@ -87,6 +87,22 @@ class McpService {
   StreamSubscription<CategoryEvent>? _categoryEvents;
   bool _busy = false;
 
+  /// Bumped by every [stop]; a [start] compares it after each of its awaits.
+  ///
+  /// A start that is still building a transport when the user locks the app or
+  /// switches the server off cannot be seen by [stop] yet (its transport is
+  /// still local), so it has to notice the bump itself: it closes what it built
+  /// and leaves [state] alone instead of publishing `running` after the stop.
+  int _generation = 0;
+
+  /// A [start] that arrived while another one was still coming up.
+  ///
+  /// It is replayed after the running one settles, never dropped: the lock
+  /// observer has no second chance to ask for the endpoint, and the replay is
+  /// free when the running start reaches `running` (that makes [start] return
+  /// immediately).
+  bool _startPending = false;
+
   String? get token => _token;
 
   bool get enabled => MoodiaryKVs.mcpEnabled.get() ?? false;
@@ -104,8 +120,9 @@ class McpService {
   static bool get requireToken =>
       allowLan || (MoodiaryKVs.mcpRequireToken.get() ?? true);
 
-  /// Starts the server when the user turned the switch on; called once from the
-  /// app bootstrap so a previously enabled server comes back after a restart.
+  /// Starts the server when the user turned the switch on; the app lock
+  /// observer calls this after the first frame and whenever the lock screen goes
+  /// away, so a previously enabled server comes back after a restart.
   Future<void> restore() async {
     if (!enabled) return;
     await start();
@@ -139,17 +156,28 @@ class McpService {
   }
 
   Future<void> start() async {
-    if (_busy || state.value.status == .running) return;
+    if (_busy) {
+      // Another start is still coming up; replay this request when it settles
+      // instead of dropping it (see [_startPending]).
+      _startPending = true;
+      return;
+    }
+    if (state.value.status == .running) return;
     _busy = true;
+    final generation = _generation;
     final needsToken = requireToken;
     state.value = const McpServerState(status: .starting);
+    McpServer? server;
+    IoMcpTransport? transport;
     try {
       // A loopback only server may run without a token; nothing is generated or
       // read in that case, so the stored token keeps existing for the moment the
       // user switches authentication back on.
       final token = needsToken ? await ensureToken() : '';
+      if (generation != _generation) return;
       final version = await _appVersion();
-      final server = McpServer(
+      if (generation != _generation) return;
+      final startingServer = McpServer(
         registry: buildMoodiaryRegistry(
           diaries: _diaries,
           categories: _categories,
@@ -159,35 +187,64 @@ class McpService {
         ),
         serverVersion: version,
       );
-      final transport = IoMcpTransport();
-      await transport.start(
+      server = startingServer;
+      final startingTransport = IoMcpTransport();
+      transport = startingTransport;
+      await startingTransport.start(
         McpTransportConfig(
           port: configuredPort,
           allowLan: allowLan,
           token: token,
           requireToken: needsToken,
         ),
-        server,
+        startingServer,
       );
-      _server = server;
-      _transport = transport;
-      _listenForChanges(server);
+      // A stop cannot see this transport yet: it is still local to this call, so
+      // a stop that landed while the socket was binding is honoured here.
+      if (generation != _generation) return;
+      _server = startingServer;
+      _transport = startingTransport;
+      // The fields own both objects from here, so a failure below tears down the
+      // published instance instead of this local pair.
+      server = null;
+      transport = null;
+      _listenForChanges(startingServer);
       state.value = McpServerState(
         status: .running,
-        port: transport.port,
-        endpoints: transport.endpoints,
+        port: startingTransport.port,
+        endpoints: startingTransport.endpoints,
       );
-      logger.i('MCP server listening on ${transport.endpoints.join(', ')}');
+      logger.i(
+        'MCP server listening on ${startingTransport.endpoints.join(', ')}',
+      );
     } catch (e, s) {
       logger.e('MCP server failed to start', error: e, stackTrace: s);
-      await _teardown();
-      state.value = McpServerState(status: .failed, error: '$e');
+      // A stop during the failed start owns the state; publishing `failed` would
+      // overwrite its `stopped`.
+      if (generation == _generation) {
+        await _teardown();
+        state.value = McpServerState(status: .failed, error: '$e');
+      }
     } finally {
+      // Anything still local was never published, because a stop invalidated
+      // this start (or it failed): close it without touching [state].
+      await _discard(transport, server);
       _busy = false;
+      if (_startPending) {
+        _startPending = false;
+        unawaited(start());
+      }
     }
   }
 
+  /// Stops the server and invalidates any [start] that is still coming up.
+  ///
+  /// The generation bump comes first, so a start that is already awaiting its
+  /// transport can no longer publish `running`: it notices the new generation,
+  /// closes the transport it built itself and leaves the state at `stopped`.
   Future<void> stop() async {
+    _generation++;
+    _startPending = false;
     if (state.value.status == .stopped) return;
     await _teardown();
     state.value = const McpServerState();
@@ -234,6 +291,14 @@ class McpService {
     final server = _server;
     _transport = null;
     _server = null;
+    await _discard(transport, server);
+  }
+
+  /// Stops a transport and disposes its server without touching [state].
+  ///
+  /// [stop] uses it for the published instance; a [start] that a [stop]
+  /// invalidated uses it for the one it built but never published.
+  Future<void> _discard(McpTransport? transport, McpServer? server) async {
     try {
       await transport?.stop();
     } catch (e, s) {

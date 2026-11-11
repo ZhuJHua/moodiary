@@ -156,7 +156,7 @@ const Map<String, dynamic> excerptSchema = {
   'description':
       'Preview of every entry: plain (default) is one line of plain text, '
       'markdown is the Markdown body so headings and lists survive, and none '
-      'drops the preview. Both forms are cut to $mcpExcerptChars characters.',
+      'drops the preview. Both forms are cut to $excerptChars characters.',
 };
 
 /// `mood` of the write tools.

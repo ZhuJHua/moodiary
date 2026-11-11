@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
 
 import 'package:moodiary_logging/moodiary_logging.dart';
 
@@ -28,14 +30,11 @@ class McpServer {
   final int maxSessions;
 
   final Map<String, McpSessionState> _sessions = {};
-  int _sessionSeq = 0;
+
+  static final Random _random = Random.secure();
 
   McpSessionState createSession([String? id]) {
-    final session = McpSessionState(
-      id:
-          id ??
-          'moodiary-${++_sessionSeq}-${DateTime.now().microsecondsSinceEpoch}',
-    );
+    final session = McpSessionState(id: id ?? _newSessionId());
     _sessions[session.id] = session;
     while (_sessions.length > maxSessions) {
       // Insertion order is creation order, so the first key is the oldest one.
@@ -44,6 +43,13 @@ class McpServer {
       disposeSession(oldest);
     }
     return session;
+  }
+
+  /// Random, unguessable session id. A sequential id lets any local process
+  /// with the port guess another client's session and hijack its stream.
+  static String _newSessionId() {
+    final bytes = List<int>.generate(32, (_) => _random.nextInt(256));
+    return 'moodiary-${base64Url.encode(bytes).replaceAll('=', '')}';
   }
 
   McpSessionState? session(String id) => _sessions[id];
@@ -98,16 +104,16 @@ class McpServer {
       final result = await _request(session, request);
       if (session.isCancelled(id)) {
         session.clearCancelled(id);
-        return jsonRpcFailure(
-          id,
-          const JsonRpcException(
-            JsonRpcCode.requestCancelled,
-            'request cancelled by the client',
-          ),
-        );
+        // MCP: a cancelled request gets no response at all; sending one makes
+        // strict SDK clients report an unknown request id.
+        return null;
       }
       return jsonRpcResult(id, result);
     } on JsonRpcException catch (e) {
+      if (session.isCancelled(id)) {
+        session.clearCancelled(id);
+        return null;
+      }
       session.clearCancelled(id);
       return jsonRpcFailure(id, e);
     } catch (e, s) {
@@ -135,6 +141,16 @@ class McpServer {
     'resources/list' => _listResources(),
     'resources/templates/list' => _listResourceTemplates(),
     'resources/read' => _readResource(session, request),
+    'resources/subscribe' => _subscribe(
+      session,
+      request.params,
+      subscribe: true,
+    ),
+    'resources/unsubscribe' => _subscribe(
+      session,
+      request.params,
+      subscribe: false,
+    ),
     'prompts/list' => _listPrompts(),
     'prompts/get' => _getPrompt(session, request),
     'logging/setLevel' => _setLevel(session, request.params),
@@ -185,7 +201,7 @@ class McpServer {
       'protocolVersion': session.protocolVersion,
       'capabilities': {
         'tools': {'listChanged': false},
-        'resources': {'subscribe': false, 'listChanged': false},
+        'resources': {'subscribe': true, 'listChanged': false},
         'prompts': {'listChanged': false},
         'logging': <String, dynamic>{},
         'completions': <String, dynamic>{},
@@ -283,6 +299,28 @@ class McpServer {
     return result.toJson();
   }
 
+  Map<String, dynamic> _subscribe(
+    McpSessionState session,
+    Map<String, dynamic> params, {
+    required bool subscribe,
+  }) {
+    final uri = params['uri'];
+    if (uri is! String || uri.isEmpty) {
+      throw const JsonRpcException(
+        JsonRpcCode.invalidParams,
+        'uri must be the resource uri',
+      );
+    }
+    if (subscribe) {
+      session.subscriptions.add(uri);
+    } else {
+      session.subscriptions.remove(uri);
+    }
+    // Unknown URIs are accepted: the client may subscribe before the resource
+    // is listed again, and the notification is simply never produced.
+    return const {};
+  }
+
   Future<Map<String, dynamic>> _getPrompt(
     McpSessionState session,
     JsonRpcRequest request,
@@ -315,7 +353,14 @@ class McpServer {
     McpSessionState session,
     Map<String, dynamic> params,
   ) {
-    session.logLevel = McpLogLevel.fromName(params['level']?.toString());
+    final level = McpLogLevel.tryParse(params['level']?.toString());
+    if (level == null) {
+      throw const JsonRpcException(
+        JsonRpcCode.invalidParams,
+        'level must be a valid MCP log level',
+      );
+    }
+    session.logLevel = level;
     return const {};
   }
 
@@ -373,6 +418,7 @@ class McpServer {
   void resourceUpdated(String uri) {
     for (final session in _sessions.values) {
       if (!session.initialized) continue;
+      if (!session.subscriptions.contains(uri)) continue;
       session.notify({
         'jsonrpc': '2.0',
         'method': 'notifications/resources/updated',

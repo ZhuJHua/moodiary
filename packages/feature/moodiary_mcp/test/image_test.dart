@@ -324,6 +324,20 @@ void main() {
       expect(text, contains('width'));
     });
 
+    test('a recycled diary is not rendered', () async {
+      final renderer = _FakeRenderer();
+      buildServer(renderer);
+      await diaries.insertADiary(makeDiary('bin', 'hidden body', show: false));
+
+      final response = await toolCall({'id': 'bin'});
+      expect(resultOf(response)['isError'], isTrue);
+      expect(
+        contentOf(response).single['text'],
+        contains('no diary with id="bin"'),
+      );
+      expect(renderer.calls, 0);
+    });
+
     test('an invalid theme is invalid params', () async {
       buildServer(_FakeRenderer());
       final response = await toolCall({'id': 'diary-1', 'theme': 'sepia'});

@@ -30,6 +30,10 @@ class McpSessionState {
   final StreamController<Map<String, dynamic>> _outgoing =
       StreamController<Map<String, dynamic>>.broadcast();
 
+  /// Resource URIs the client subscribed to with `resources/subscribe`; only
+  /// those receive `notifications/resources/updated`.
+  final Set<String> subscriptions = {};
+
   final Set<Object?> _cancelled = {};
 
   /// Notifications produced while a request runs; a transport may relay them to

@@ -136,7 +136,7 @@ Future<McpToolResult> _renderDiaryImage(
   final includeMeta = args.optionalBool('includeMeta') ?? true;
 
   final diary = await diaries.getDiaryByBusinessId(id);
-  if (diary == null) {
+  if (diary == null || !diary.show) {
     return McpToolResult.error('render_diary_image: no diary with id="$id".');
   }
   if (renderer == null) {

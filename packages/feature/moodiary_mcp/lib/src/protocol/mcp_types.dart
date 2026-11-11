@@ -56,7 +56,7 @@ enum McpLogLevel {
   alert,
   emergency;
 
-  static McpLogLevel fromName(String? name) => switch (name) {
+  static McpLogLevel? tryParse(String? name) => switch (name) {
     'debug' => .debug,
     'info' => .info,
     'notice' => .notice,
@@ -65,8 +65,10 @@ enum McpLogLevel {
     'critical' => .critical,
     'alert' => .alert,
     'emergency' => .emergency,
-    _ => .info,
+    _ => null,
   };
+
+  static McpLogLevel fromName(String? name) => tryParse(name) ?? .info;
 
   bool allows(McpLogLevel level) => level.index >= index;
 }

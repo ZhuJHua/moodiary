@@ -219,7 +219,7 @@
   "mcpPortInvalid": "Enter a number between 1024 and 65535",
   "mcpSaved": "Saved",
   "mcpKeepAliveTitle": "Keep running in the background",
-  "mcpKeepAliveSubtitle": "Android uses a foreground service with an ongoing notification, iOS an audio session",
+  "mcpKeepAliveSubtitle": "Android uses a foreground service with an ongoing notification; background keep-alive is Android only",
   "mcpKeepAliveNotificationTitle": "MCP server is running",
   "mcpKeepAliveNotificationText": "Reachable for external clients — open Moodiary to stop it",
   "mcpKeepAlivePermissionTitle": "Foreground service permissions",

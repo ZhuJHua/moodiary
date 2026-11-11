@@ -101,7 +101,7 @@ void registerDiaryResources(
     (call, uri, variables) async {
       final id = variables['id'] ?? '';
       final diary = await diaries.getDiaryByBusinessId(id);
-      if (diary == null) {
+      if (diary == null || !diary.show) {
         throw JsonRpcException(
           JsonRpcCode.resourceNotFound,
           'no diary with id="$id"',

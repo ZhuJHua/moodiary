@@ -616,7 +616,9 @@ abstract final class AssistantToolRegistry {
 
   static DiaryWrites _writes() => DiaryWrites(
     diaries: getIt<DiaryRepository>(),
-    categories: getIt<CategoryRepository>(),
+    categories: getIt.isRegistered<CategoryRepository>()
+        ? getIt<CategoryRepository>()
+        : null,
   );
 
   static CategoryOps _categoryOps() => CategoryOps(
@@ -627,7 +629,9 @@ abstract final class AssistantToolRegistry {
   static DiaryStatsOps _stats() => DiaryStatsOps(
     diaries: getIt<DiaryRepository>(),
     categories: getIt<CategoryRepository>(),
-    insights: getIt<MoodInsightsRepository>(),
+    insights: getIt.isRegistered<MoodInsightsRepository>()
+        ? getIt<MoodInsightsRepository>()
+        : null,
   );
 
   static Future<KeywordSearch> _keywordSearch(Map<String, dynamic> input) {
@@ -740,8 +744,8 @@ abstract final class AssistantToolRegistry {
       final text = MediaMarkup.forModel(diary.contentText).trim();
       if (text.isNotEmpty) {
         buffer.writeln(
-          text.length > mcpExcerptChars
-              ? '${text.substring(0, mcpExcerptChars)}… (excerpt; full text via getDiary)'
+          text.length > excerptChars
+              ? '${text.substring(0, excerptChars)}… (excerpt; full text via getDiary)'
               : text,
         );
       }

@@ -67,7 +67,9 @@ const String _corsMaxAge = '600';
 const String _corsExposeHeaders = 'Mcp-Session-Id';
 
 /// MCP clients send small JSON-RPC frames; anything bigger is not a client.
-const int _maxBodyBytes = 4 * 1024 * 1024;
+/// 16 MiB decoded import becomes ~22.4 MiB of base64 plus the JSON envelope;
+/// the transport cap must stay above the media tool's decoded limit.
+const int _maxBodyBytes = 24 * 1024 * 1024;
 
 const int _maxBindAttempts = 12;
 const int _maxLanEndpoints = 4;
@@ -747,7 +749,7 @@ class IoMcpTransport implements McpTransport {
         request,
         HttpStatus.requestEntityTooLarge,
         JsonRpcCode.invalidRequest,
-        'request body is larger than 4 MiB',
+        'request body is larger than ${_maxBodyBytes ~/ (1024 * 1024)} MiB',
       );
       return null;
     }
@@ -862,7 +864,7 @@ class IoMcpTransport implements McpTransport {
   }
 
   bool _isAllowedOrigin(HttpRequest request, String origin) =>
-      isAllowedOrigin(origin, host: _header(request, HttpHeaders.hostHeader));
+      isAllowedOrigin(origin);
 
   Future<void> _preflight(HttpRequest request, String? origin) async {
     if (origin != null) {

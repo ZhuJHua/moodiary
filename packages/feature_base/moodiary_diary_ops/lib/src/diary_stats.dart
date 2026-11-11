@@ -23,14 +23,18 @@ class DiaryStatsOps {
   DiaryStatsOps({
     required this.diaries,
     required this.categories,
-    required this.insights,
+    this.insights,
   });
 
   final DiaryRepository diaries;
   final CategoryRepository categories;
 
   /// The mood read model behind [statsPayload] and [visibleDiaryEntries].
-  final MoodInsightsRepository insights;
+  ///
+  /// Absent when the caller's object graph has no insights repository, which is
+  /// the in-app assistant; [overviewForModel] never reads it, so that caller
+  /// keeps working, while the stats payload fails as a programming error.
+  final MoodInsightsRepository? insights;
 
   /// Visible count, span, per-category counts and the mood distribution.
   Future<AssistantOverview> overviewForModel() async {
@@ -107,7 +111,7 @@ class DiaryStatsOps {
       for (final category in categoryList) category.id: category.categoryName,
     };
     final monthly = await diaries.diaryCountByMonth(sort: DiarySort.timeDesc);
-    final earliest = await insights.earliestEntry();
+    final earliest = await _requireInsights().earliestEntry();
 
     // A non-positive window would make the invariant meaningless, so one month
     // is the floor; the tool layer already clamps its own range.
@@ -130,7 +134,7 @@ class DiaryStatsOps {
       }
     }
 
-    final entries = await visibleDiaryEntries(insights);
+    final entries = await visibleDiaryEntries(_requireInsights());
     final mood = summarizeMood(entries);
     final recorded = mood.distribution.values.fold(0, (sum, n) => sum + n);
     final categorised = byCategory.byCategory.values.fold(
@@ -175,6 +179,13 @@ class DiaryStatsOps {
       'generatedAt': isoUtc(DateTime.now()),
     };
   }
+
+  /// The insights repository the payload cannot do without.
+  MoodInsightsRepository _requireInsights() =>
+      insights ??
+      (throw StateError(
+        'DiaryStatsOps.insights is required for the stats payload.',
+      ));
 
   String _monthKey(DateTime month) =>
       '${month.year}-${month.month.toString().padLeft(2, '0')}';

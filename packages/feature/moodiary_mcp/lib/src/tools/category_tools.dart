@@ -183,7 +183,7 @@ void registerCategoryTools(
       final args = Args('delete_category', arguments);
       final id = args.requireText('id');
       try {
-        final result = await ops.delete(id);
+        final result = await ops.delete(id, reparentChildren: true);
         if (!result.deleted) {
           return McpToolResult.json({
             'deleted': false,

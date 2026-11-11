@@ -219,7 +219,7 @@
   "mcpPortInvalid": "请输入 1024–65535 之间的数字",
   "mcpSaved": "已保存",
   "mcpKeepAliveTitle": "后台保持运行",
-  "mcpKeepAliveSubtitle": "安卓使用带常驻通知的前台服务，iOS 使用音频会话保持运行",
+  "mcpKeepAliveSubtitle": "安卓使用带常驻通知的前台服务，后台保活仅 Android 支持",
   "mcpKeepAliveNotificationTitle": "MCP 服务正在运行",
   "mcpKeepAliveNotificationText": "外部客户端可继续访问，打开 Moodiary 可停止服务",
   "mcpKeepAlivePermissionTitle": "前台服务权限",

@@ -69,9 +69,9 @@ class McpKeepAliveService : Service() {
         manager.createNotificationChannel(channel)
     }
 
-    // 小图标取自宿主应用；应用没有图标时退回系统图标，避免 setSmallIcon(0) 抛异常
-    private fun smallIcon(): Int =
-        applicationInfo.icon.takeIf { it != 0 } ?: android.R.drawable.stat_sys_download_done
+    // 通知栏只认单色 small icon：宿主应用的 applicationInfo.icon 在 API 26+ 是自适应图标，
+    // 拿来当 smallIcon 会渲染成一整块白色剪影，所以用插件自带的单色 vector。
+    private fun smallIcon(): Int = R.drawable.ic_mcp_keep_alive
 
     private fun launchIntent(): PendingIntent? {
         val launch = packageManager.getLaunchIntentForPackage(packageName) ?: return null

@@ -20,7 +20,7 @@ import 'package:moodiary_utils/moodiary_utils.dart';
 const int mcpResultChars = 100000;
 
 /// Length of the `excerpt` field of a diary summary.
-const int mcpExcerptChars = 200;
+const int excerptChars = 200;
 
 /// URI prefix of the single diary resource template.
 const String diaryUriPrefix = 'moodiary://diary/';
@@ -71,16 +71,16 @@ String diaryToText(
 /// One line preview of the diary body, used by every list shaped result.
 ///
 /// With [renderMarkdown] the preview is the Markdown body cut to
-/// [mcpExcerptChars] instead, so headings and lists survive the cut; the plain
+/// [excerptChars] instead, so headings and lists survive the cut; the plain
 /// form collapses every run of whitespace to a single space and drops link
 /// targets, because a preview is not a navigation surface.
 String excerptOf(Diary diary, {bool renderMarkdown = false}) {
-  if (renderMarkdown) return truncate(diaryToMarkdown(diary), mcpExcerptChars);
+  if (renderMarkdown) return truncate(diaryToMarkdown(diary), excerptChars);
   final text = diaryToText(
     diary,
     linkStyle: DiaryLinkStyle.label,
   ).replaceAll(RegExp(r'\s+'), ' ');
-  return truncate(text.trim(), mcpExcerptChars);
+  return truncate(text.trim(), excerptChars);
 }
 
 /// `#AARRGGBB`, or `null` when the category has no colour.
@@ -91,7 +91,7 @@ String? colorHex(int? argb) => argb == null
 /// The list shaped projection a client sees for one diary.
 ///
 /// [renderMarkdown] selects the `excerpt` projection: the one line plain
-/// preview by default, the Markdown body cut to [mcpExcerptChars] when true.
+/// preview by default, the Markdown body cut to [excerptChars] when true.
 Map<String, dynamic> diarySummary(
   Diary diary, {
   String? categoryName,

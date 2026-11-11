@@ -186,7 +186,6 @@ void main() {
         'categoryId',
         'mood',
         'tags',
-        'visible',
       ]);
       expect(propertiesOf(toolNamed(listed, 'update_diary')).keys, [
         'id',
@@ -210,7 +209,7 @@ void main() {
       ]);
       final mode = propertiesOf(toolNamed(listed, 'delete_diary'))['mode'];
       expect((mode as Map)['enum'], ['permanent', 'recycle']);
-      expect(mode['default'], 'permanent');
+      expect(mode['default'], 'recycle');
 
       expect(propertiesOf(toolNamed(listed, 'search_diaries')).keys, [
         'query',
@@ -299,16 +298,80 @@ void main() {
       expect(read, isNot(contains('links')));
     });
 
-    test('create_diary stores a hidden diary when visible is false', () async {
+    test('create_diary always stores a visible diary', () async {
       final created = structuredOf(
-        await toolCall('create_diary', {
-          'content': 'hidden body',
-          'visible': false,
-        }),
+        await toolCall('create_diary', {'content': 'new body'}),
       );
-      expect((created['diary'] as Map)['show'], isFalse);
+      expect((created['diary'] as Map)['show'], isTrue);
       final id = (created['diary'] as Map)['id'] as String;
-      expect((await diaries.getDiaryByBusinessId(id))!.show, isFalse);
+      expect((await diaries.getDiaryByBusinessId(id))!.show, isTrue);
+    });
+
+    test('create_diary refuses a body that names media', () async {
+      for (final arguments in <Map<String, dynamic>>[
+        {'content': '![cat](image-abc.png)', 'contentFormat': 'markdown'},
+        {
+          'content': jsonEncode({
+            'type': 'doc',
+            'attrs': {'v': 2},
+            'content': [
+              {
+                'type': 'image',
+                'attrs': {'src': 'image-abc.png'},
+              },
+            ],
+          }),
+          'contentFormat': 'document',
+        },
+      ]) {
+        final response = await toolCall('create_diary', arguments);
+        expect(errorCode(response), JsonRpcCode.invalidParams);
+        expect(errorMessage(response), contains('add_diary_image'));
+      }
+      expect(await diaries.countAllDiaries(), 0);
+    });
+
+    test('a recycled diary is hidden from every read and write tool', () async {
+      await diaries.insertADiary(
+        makeDiary('bin', 'hidden body', title: 'Hidden', show: false),
+      );
+
+      for (final response in [
+        await toolCall('get_diary', {'id': 'bin'}),
+        await toolCall('get_diary_links', {'id': 'bin'}),
+        await toolCall('update_diary', {'id': 'bin', 'title': 'changed'}),
+      ]) {
+        expect(resultOf(response)['isError'], isTrue);
+        expect(textOf(response), contains('no diary with id="bin"'));
+      }
+
+      final stored = (await diaries.getDiaryByBusinessId('bin'))!;
+      expect(stored.title, 'Hidden');
+      expect(stored.show, isFalse);
+    });
+
+    test('update_diary refuses media the diary does not own', () async {
+      await diaries.insertADiary(makeDiary('owner', 'body'));
+      final response = await toolCall('update_diary', {
+        'id': 'owner',
+        'contentFormat': 'document',
+        'content': jsonEncode({
+          'type': 'doc',
+          'attrs': {'v': 2},
+          'content': [
+            {
+              'type': 'image',
+              'attrs': {'src': 'image-someone-else.png'},
+            },
+          ],
+        }),
+      });
+      expect(errorCode(response), JsonRpcCode.invalidParams);
+      expect(errorMessage(response), contains('add_diary_image'));
+
+      final stored = (await diaries.getDiaryByBusinessId('owner'))!;
+      expect(stored.imageName, isEmpty);
+      expect(stored.contentText, 'body');
     });
 
     test(
@@ -427,36 +490,61 @@ void main() {
       },
     );
 
-    test('delete_diary reports the mode and the stored title', () async {
-      await diaries.insertDiaries([
-        makeDiary('recycle-me', 'recycle body', title: 'Recycle'),
-        makeDiary('delete-me', 'delete body', title: 'Delete'),
-      ]);
+    test(
+      'delete_diary recycles by default and purges only recycled rows',
+      () async {
+        await diaries.insertDiaries([
+          makeDiary('recycle-me', 'recycle body', title: 'Recycle'),
+          makeDiary('keep-me', 'visible body', title: 'Keep'),
+          makeDiary('purge-me', 'purged body', title: 'Purge', show: false),
+        ]);
 
-      final recycled = structuredOf(
-        await toolCall('delete_diary', {'id': 'recycle-me', 'mode': 'recycle'}),
-      );
-      expect(recycled, {
-        'deleted': true,
-        'id': 'recycle-me',
-        'title': 'Recycle',
-        'mode': 'recycle',
-      });
-      expect((await diaries.getDiaryByBusinessId('recycle-me'))!.show, isFalse);
+        final recycled = structuredOf(
+          await toolCall('delete_diary', {'id': 'recycle-me'}),
+        );
+        expect(recycled, {
+          'deleted': true,
+          'id': 'recycle-me',
+          'title': 'Recycle',
+          'mode': 'recycle',
+        });
+        final first = (await diaries.getDiaryByBusinessId('recycle-me'))!;
+        expect(first.show, isFalse);
 
-      final restored = structuredOf(
-        await toolCall('update_diary', {'id': 'recycle-me', 'visible': true}),
-      );
-      expect((restored['diary'] as Map)['show'], isTrue);
-      expect((await diaries.getDiaryByBusinessId('recycle-me'))!.show, isTrue);
+        // Recycling an already recycled diary does not write the row again.
+        final again = structuredOf(
+          await toolCall('delete_diary', {'id': 'recycle-me'}),
+        );
+        expect(again['alreadyRecycled'], isTrue);
+        expect(again['mode'], 'recycle');
+        final second = (await diaries.getDiaryByBusinessId('recycle-me'))!;
+        expect(second.lastModified, first.lastModified);
 
-      final deleted = structuredOf(
-        await toolCall('delete_diary', {'id': 'delete-me'}),
-      );
-      expect(deleted['mode'], 'permanent');
-      expect(deleted['deleted'], isTrue);
-      expect(await diaries.getDiaryByBusinessId('delete-me'), isNull);
-    });
+        // A visible diary cannot be removed for good.
+        final refused = await toolCall('delete_diary', {
+          'id': 'keep-me',
+          'mode': 'permanent',
+        });
+        expect(resultOf(refused)['isError'], isTrue);
+        expect(textOf(refused), contains('recycle'));
+        expect(await diaries.getDiaryByBusinessId('keep-me'), isNotNull);
+
+        // A recycled diary can be purged.
+        final purged = structuredOf(
+          await toolCall('delete_diary', {
+            'id': 'purge-me',
+            'mode': 'permanent',
+          }),
+        );
+        expect(purged['deleted'], isTrue);
+        expect(purged['mode'], 'permanent');
+        expect(await diaries.getDiaryByBusinessId('purge-me'), isNull);
+
+        final ghost = await toolCall('delete_diary', {'id': 'ghost'});
+        expect(resultOf(ghost)['isError'], isTrue);
+        expect(textOf(ghost), contains('no diary with id="ghost"'));
+      },
+    );
 
     test('search_diaries finds body words and handles no hits', () async {
       await diaries.insertDiaries([
@@ -1211,6 +1299,14 @@ void main() {
         'uri': 'moodiary://diary/ghost',
       });
       expect(errorCode(missing), JsonRpcCode.resourceNotFound);
+
+      await diaries.insertADiary(
+        makeDiary('hidden-resource', 'secret', show: false),
+      );
+      final hidden = await call('resources/read', {
+        'uri': 'moodiary://diary/hidden-resource',
+      });
+      expect(errorCode(hidden), JsonRpcCode.resourceNotFound);
     });
   });
 

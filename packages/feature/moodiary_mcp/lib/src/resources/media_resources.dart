@@ -46,7 +46,7 @@ void registerMediaResources(
       final id = variables['id'] ?? '';
       final name = variables['name'] ?? '';
       final diary = await diaries.getDiaryByBusinessId(id);
-      if (diary == null) {
+      if (diary == null || !diary.show) {
         throw JsonRpcException(
           JsonRpcCode.resourceNotFound,
           'no diary with id="$id"',

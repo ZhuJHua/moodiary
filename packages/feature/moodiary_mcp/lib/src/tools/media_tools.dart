@@ -246,7 +246,7 @@ Future<McpToolResult> _listDiaryMedia(
   final args = Args('list_diary_media', arguments);
   final id = args.requireText('id');
   final diary = await diaries.getDiaryByBusinessId(id);
-  if (diary == null) {
+  if (diary == null || !diary.show) {
     return McpToolResult.error('list_diary_media: no diary with id="$id".');
   }
   final images = await _mediaEntries(
@@ -288,7 +288,7 @@ Future<McpToolResult> _readDiaryMedia(
   final name = args.requireText('name');
   final kindName = args.optionalEnum('kind', _mediaKinds);
   final diary = await diaries.getDiaryByBusinessId(id);
-  if (diary == null) {
+  if (diary == null || !diary.show) {
     return McpToolResult.error('read_diary_media: no diary with id="$id".');
   }
   final kind = kindName == null
@@ -383,7 +383,7 @@ Future<McpToolResult> _addDiaryImage(
       : null;
 
   final diary = await diaries.getDiaryByBusinessId(id);
-  if (diary == null) {
+  if (diary == null || !diary.show) {
     return McpToolResult.error('$subject: no diary with id="$id".');
   }
   if (_documentError(subject, diary) case final error?) return error;
@@ -441,7 +441,7 @@ Future<McpToolResult> _addDiaryAttachment(
   }
 
   final diary = await diaries.getDiaryByBusinessId(id);
-  if (diary == null) {
+  if (diary == null || !diary.show) {
     return McpToolResult.error('$subject: no diary with id="$id".');
   }
   if (_documentError(subject, diary) case final error?) return error;
@@ -499,6 +499,7 @@ Future<McpToolResult> _persistNode(
       diary: diary,
       node: node,
       atStart: atStart,
+      newMediaName: saved.name,
     );
   } on DiaryMediaException catch (e) {
     return McpToolResult.error('$subject: ${e.message}');
@@ -531,6 +532,7 @@ Future<Diary> _insertNode(
   required Diary diary,
   required Map<String, dynamic> node,
   required bool atStart,
+  required String newMediaName,
 }) async {
   final parsed = TiptapContent.parse(diary.content);
   if (!parsed.isDoc) throw DiaryMediaException(_noDocumentMessage(diary));
@@ -547,6 +549,11 @@ Future<Diary> _insertNode(
     id: diary.id,
     patch: DiaryPatch(content: jsonEncode(document)),
     format: DiaryContentFormat.document,
+    requireVisible: true,
+    // The file was just written, so it is the one media name the body may add;
+    // every other name has to be media the diary already references.
+    enforceOwnMedia: true,
+    extraAllowedMedia: {newMediaName},
   );
 }
 
@@ -570,6 +577,8 @@ McpToolResult? _documentError(String subject, Diary diary) =>
 String _opsFailureMessage(DiaryOpsException e, String id) =>
     switch (e.failure) {
       DiaryOpsFailure.notFound => 'no diary with id="$id".',
+      DiaryOpsFailure.foreignMedia =>
+        'content references a media file this diary does not own.',
       final failure => 'the diary could not be updated (${failure.name}).',
     };
 

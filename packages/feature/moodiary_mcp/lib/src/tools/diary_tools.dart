@@ -106,10 +106,11 @@ void registerDiaryTools(
           'the editor document so headings, lists and emphasis survive, text '
           'stores literal paragraphs so Markdown syntax stays visible, and '
           'document expects a Tiptap document JSON object and refuses anything '
-          'else with invalid params. visible defaults to true (the summary '
-          'reports it as show); title may be empty. Media is not part of the '
-          'body here: attach it afterwards with add_diary_image or '
-          'add_diary_attachment.',
+          'else with invalid params. The new diary is visible (the summary '
+          'reports it as show); title may be empty. The body may not reference '
+          'media: a body with media nodes is invalid params, because media has '
+          'to be added to an existing diary with add_diary_image or '
+          'add_diary_attachment (which also creates its media index row).',
       inputSchema: {
         'type': 'object',
         'properties': {
@@ -132,7 +133,6 @@ void registerDiaryTools(
           'categoryId': categoryIdSchema,
           'mood': moodSchema,
           'tags': tagsSchema,
-          'visible': visibleSchema,
         },
         'required': ['content'],
       },
@@ -153,8 +153,11 @@ void registerDiaryTools(
           'not nullable, so an explicit null for them is ignored. content '
           'replaces the whole body and contentFormat selects how it is '
           'interpreted (markdown default, text, or document for a Tiptap '
-          'document JSON object). An unknown category id is invalid params; an '
-          'unknown diary id is a tool error.',
+          'document JSON object). Media nodes in the body may only reference '
+          'files this diary already owns (add new files with add_diary_image '
+          'or add_diary_attachment); another diary\'s media name is invalid '
+          'params. Recycled diaries are not found. An unknown category id is '
+          'invalid params; an unknown diary id is a tool error.',
       inputSchema: {
         'type': 'object',
         'properties': {
@@ -195,11 +198,14 @@ void registerDiaryTools(
       title: 'Delete a diary',
       description:
           'Deletes one diary and reports the mode that was applied. '
-          'mode=permanent (default) removes the row and its local media files '
-          'and leaves a sync tombstone so other devices delete it too; '
-          'mode=recycle is the app recycle bin, which hides the diary '
-          '(show=false) and can be undone in the app. title is the stored '
-          'title, empty when the diary had none. An unknown id is a tool error.',
+          'mode=recycle (default) is the app recycle bin: it hides the diary '
+          '(show=false), can be undone in the app and is the only mode allowed '
+          'on a visible diary. mode=permanent removes a diary that is already '
+          'in the recycle bin, together with its local media files, and leaves '
+          'a sync tombstone so other devices delete it too; it is refused for '
+          'a visible diary so an accidental call cannot destroy data the user '
+          'still sees. title is the stored title, empty when the diary had '
+          'none. An unknown id is a tool error.',
       inputSchema: {
         'type': 'object',
         'properties': {
@@ -207,10 +213,10 @@ void registerDiaryTools(
           'mode': {
             'type': 'string',
             'enum': deleteModeValues,
-            'default': 'permanent',
+            'default': 'recycle',
             'description':
-                'permanent removes the diary, recycle moves it to the recycle '
-                'bin.',
+                'recycle (default) moves a visible diary to the recycle bin; '
+                'permanent removes a recycled diary and its media files.',
           },
         },
         'required': ['id'],
@@ -446,6 +452,11 @@ McpToolResult _writeFailure(String subject, DiaryOpsException e, String id) =>
       DiaryOpsFailure.notFound => McpToolResult.error(
         '$subject: no diary with id="$id".',
       ),
+      DiaryOpsFailure.foreignMedia => throw JsonRpcException(
+        JsonRpcCode.invalidParams,
+        '$subject: the body references media this diary does not own; add new '
+        'files with add_diary_image or add_diary_attachment first',
+      ),
       final failure => McpToolResult.error(
         '$subject: the diary could not be written (${failure.name}).',
       ),
@@ -520,7 +531,7 @@ Future<McpToolResult> _getDiary(
   final includeLinks = args.optionalBool('includeLinks') ?? true;
 
   final diary = await diaries.getDiaryByBusinessId(id);
-  if (diary == null) {
+  if (diary == null || !diary.show) {
     return McpToolResult.error('get_diary: no diary with id="$id".');
   }
   if (contentFormat == 'document' && diary.content.length > mcpResultChars) {
@@ -594,7 +605,6 @@ Future<McpToolResult> _createDiary(
   final time = args.optionalDate('time');
   final mood = args.optionalMood('mood');
   final tags = args.optionalStringList('tags') ?? const <String>[];
-  final visible = args.optionalBool('visible') ?? true;
   final categoryId = args.optionalText('categoryId');
 
   final Diary diary;
@@ -607,7 +617,7 @@ Future<McpToolResult> _createDiary(
       categoryId: categoryId,
       time: time,
       tags: tags,
-      show: visible,
+      enforceOwnMedia: true,
     );
   } on DiaryOpsException catch (e) {
     return _writeFailure('create_diary', e, '');
@@ -655,6 +665,8 @@ Future<McpToolResult> _updateDiary(
           id: id,
           patch: patch,
           format: contentFormat,
+          requireVisible: true,
+          enforceOwnMedia: true,
           index: IndexMode.inline,
         );
     return await _mutation(diaries, categories, next, created: false);
@@ -670,20 +682,34 @@ Future<McpToolResult> _deleteDiary(
 }) async {
   final args = Args('delete_diary', arguments);
   final id = args.requireText('id');
-  final mode = args.optionalEnum('mode', deleteModeValues) ?? 'permanent';
+  final mode = args.optionalEnum('mode', deleteModeValues) ?? 'recycle';
   final recycle = mode == 'recycle';
+
+  final existing = await diaries.getDiaryByBusinessId(id);
+  if (existing == null) {
+    return McpToolResult.error('delete_diary: no diary with id="$id".');
+  }
+  if (!recycle && existing.show) {
+    return McpToolResult.error(
+      'delete_diary: diary id="$id" is still visible; recycle it first '
+      '(mode="recycle"), then permanently delete it from the recycle bin.',
+    );
+  }
 
   try {
     final result = await DiaryWrites(diaries: diaries, categories: categories)
         .delete(
           id: id,
           mode: recycle ? DiaryDeleteMode.recycle : DiaryDeleteMode.permanent,
+          reportAlreadyRecycled: true,
         );
     return McpToolResult.json({
       'deleted': true,
       'id': id,
       'title': result.diary.title.trim(),
       'mode': mode,
+      if (result.outcome == DiaryDeleteOutcome.alreadyRecycled)
+        'alreadyRecycled': true,
     });
   } on DiaryOpsException {
     return McpToolResult.error('delete_diary: no diary with id="$id".');
@@ -768,7 +794,7 @@ Future<McpToolResult> _getDiaryLinks(
   final args = Args('get_diary_links', arguments);
   final id = args.requireText('id');
   final diary = await diaries.getDiaryByBusinessId(id);
-  if (diary == null) {
+  if (diary == null || !diary.show) {
     return McpToolResult.error('get_diary_links: no diary with id="$id".');
   }
   final links = await DiaryQueries(diaries: diaries).linkSummary(diary);

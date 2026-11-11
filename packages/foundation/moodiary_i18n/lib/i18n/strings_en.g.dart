@@ -277,7 +277,7 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get mcpPortInvalid => 'Enter a number between 1024 and 65535';
 	@override String get mcpSaved => 'Saved';
 	@override String get mcpKeepAliveTitle => 'Keep running in the background';
-	@override String get mcpKeepAliveSubtitle => 'Android uses a foreground service with an ongoing notification, iOS an audio session';
+	@override String get mcpKeepAliveSubtitle => 'Android uses a foreground service with an ongoing notification; background keep-alive is Android only';
 	@override String get mcpKeepAliveNotificationTitle => 'MCP server is running';
 	@override String get mcpKeepAliveNotificationText => 'Reachable for external clients — open Moodiary to stop it';
 	@override String get mcpKeepAlivePermissionTitle => 'Foreground service permissions';

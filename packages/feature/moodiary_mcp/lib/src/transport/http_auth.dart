@@ -3,8 +3,7 @@
 /// The endpoint serves private diary data on a loopback (or LAN) socket, so
 /// both checks are treated as hostile input code: the bearer token is compared
 /// without early exit and the `Origin` header is only accepted for pages that
-/// are served from this machine or from the very authority the request
-/// addressed.
+/// are served from this machine.
 ///
 /// Package internal: not part of the package barrel.
 library;
@@ -54,11 +53,11 @@ bool hasValidBearerToken(HttpRequest request, String expected) {
 /// `true` when a page with this [origin] may call the endpoint.
 ///
 /// Allowed are the loopback origins (`http(s)://localhost`, `127.0.0.1`,
-/// `[::1]`, any port) and an origin whose authority is exactly the [host] the
-/// request was addressed to, which is what a page served by this very endpoint
-/// would send. Anything else, including a DNS name that resolves to loopback,
-/// is a rebinding attempt.
-bool isAllowedOrigin(String origin, {required String? host}) {
+/// `[::1]`, any port). Anything else is rejected, including an origin whose
+/// authority equals the request's `Host`: after a DNS rebinding attack that
+/// comparison is true for the attacker's page, so the page could read and write
+/// diaries whenever the bearer token is switched off.
+bool isAllowedOrigin(String origin) {
   if (origin.isEmpty || origin == 'null') return false;
   final parsed = Uri.tryParse(origin);
   if (parsed == null) return false;
@@ -66,9 +65,5 @@ bool isAllowedOrigin(String origin, {required String? host}) {
   if (scheme != 'http' && scheme != 'https') return false;
   final name = parsed.host.toLowerCase();
   if (name.isEmpty) return false;
-  if (_loopbackHosts.contains(name)) return true;
-  if (host == null) return false;
-  final target = host.trim().toLowerCase();
-  if (target.isEmpty) return false;
-  return parsed.authority.toLowerCase() == target;
+  return _loopbackHosts.contains(name);
 }

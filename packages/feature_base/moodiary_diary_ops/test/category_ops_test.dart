@@ -24,13 +24,27 @@ void main() {
       ops.create(name: name, parentId: parentId);
 
   group('delete', () {
+    test('keeps the children untouched unless asked to reparent', () async {
+      final parent = await newCategory('Parent');
+      final child = await newCategory('Child', parentId: parent.id);
+
+      final result = await ops.delete(parent.id);
+
+      expect(result.deleted, isTrue);
+      expect(result.category.id, parent.id);
+      expect(result.reparented, isEmpty);
+      final stored = (await categories.getCategoryById(child.id))!;
+      expect(stored.parentId, parent.id);
+      expect(stored.lastModified.isAtSameMomentAs(child.lastModified), isTrue);
+    });
+
     test('reparents children to the root and reports them', () async {
       final parent = await newCategory('Parent');
       final first = await newCategory('First', parentId: parent.id);
       final second = await newCategory('Second', parentId: parent.id);
       final grandchild = await newCategory('Grandchild', parentId: first.id);
 
-      final result = await ops.delete(parent.id);
+      final result = await ops.delete(parent.id, reparentChildren: true);
 
       expect(result.deleted, isTrue);
       expect(result.category.id, parent.id);
@@ -53,12 +67,18 @@ void main() {
       final parent = await newCategory('Parent');
       final child = await newCategory('Child', parentId: parent.id);
 
-      final result = await ops.delete(parent.id);
+      final result = await ops.delete(parent.id, reparentChildren: true);
 
       final stored = await categories.getCategoryById(child.id);
       expect(stored!.parentId, isNull);
       expect(stored.lastModified.isAfter(child.lastModified), isTrue);
-      expect(result.reparented.single.lastModified, stored.lastModified);
+      expect(
+        result.reparented.single.lastModified.isAtSameMomentAs(
+          stored.lastModified,
+        ),
+        isTrue,
+        reason: 'the report must carry the persisted row, not a copy',
+      );
     });
 
     test('a category holding diaries is refused, nothing changes', () async {

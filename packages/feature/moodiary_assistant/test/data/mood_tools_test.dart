@@ -14,7 +14,6 @@ void main() {
     repo = DiaryRepository(db);
     getIt.registerSingleton<DiaryRepository>(repo);
     getIt.registerSingleton<CategoryRepository>(CategoryRepository(db));
-    getIt.registerSingleton<MoodInsightsRepository>(MoodInsightsRepository(db));
   });
   tearDown(() async {
     await getIt.reset();

@@ -2,8 +2,8 @@
 ///
 /// A category only disappears while it holds no diary, and a reparent that
 /// would close a cycle is refused; both rules used to live in each client.
-/// Deleting a category also re-homes its children to the root, because a
-/// dangling `parentId` would silently hide them from the tree.
+/// Deleting a category re-homes its children to the root only when the caller
+/// asks for it, because that rewrite also bumps their `lastModified`.
 library;
 
 import 'package:moodiary_data/moodiary_data.dart';
@@ -88,22 +88,26 @@ class CategoryOps {
 
   /// Deletes an empty category; [deleted] is false when diaries still hold it.
   ///
-  /// A successful delete re-homes every former child to the root and returns
-  /// the categories as they were persisted, so the caller reports the real
-  /// reparenting instead of a pre-computed count. A refused delete changes
-  /// nothing, so [reparented] is empty.
+  /// With [reparentChildren] every former child moves to the root and comes
+  /// back in [reparented] as it was persisted, so the caller reports the real
+  /// reparenting instead of a pre-computed count. Without it the children are
+  /// left untouched and [reparented] is empty, which is what a delete that only
+  /// removes the node itself reports. A refused delete changes nothing either
+  /// way, so [reparented] is empty too.
   Future<({bool deleted, Category category, List<Category> reparented})> delete(
-    String id,
-  ) async {
+    String id, {
+    bool reparentChildren = false,
+  }) async {
     final existing = await categories.getCategoryById(id);
     if (existing == null) {
       throw DiaryOpsException(DiaryOpsFailure.notFound, id: id);
     }
-    final all = await categories.getAllCategories();
-    final children = [
-      for (final category in all)
-        if (category.parentId == id) category,
-    ];
+    final children = reparentChildren
+        ? [
+            for (final category in await categories.getAllCategories())
+              if (category.parentId == id) category,
+          ]
+        : const <Category>[];
     final removed = await categories.deleteACategory(id);
     if (!removed) {
       return (

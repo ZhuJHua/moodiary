@@ -7,6 +7,7 @@ import 'package:moodiary_mcp/src/protocol/json_rpc.dart';
 import 'package:moodiary_mcp/src/protocol/mcp_types.dart';
 import 'package:moodiary_mcp/src/registry/mcp_registry.dart';
 import 'package:moodiary_mcp/src/server/mcp_server.dart';
+import 'package:moodiary_mcp/src/transport/http_auth.dart';
 import 'package:moodiary_mcp/src/transport/io_mcp_transport.dart';
 import 'package:moodiary_mcp/src/transport/transport.dart';
 
@@ -181,6 +182,38 @@ class _SseLines {
   Future<void> close() => _lines.cancel();
 }
 
+/// Writes one raw HTTP/1.1 request and returns the response text.
+///
+/// `HttpClient` always sends the URI host in `Host`, and these tests need a
+/// spoofed authority to model a DNS-rebinding page, so the exchange goes over a
+/// plain socket. The request asks for `Connection: close`; the read also stops
+/// after a timeout, because the caller only needs what already arrived.
+Future<String> _rawExchange(IoMcpTransport transport, String request) async {
+  final socket = await Socket.connect(
+    InternetAddress.loopbackIPv4,
+    transport.port,
+  );
+  final buffer = StringBuffer();
+  final lines = StreamIterator(
+    utf8.decoder.bind(socket).transform(const LineSplitter()),
+  );
+  try {
+    socket.write(request);
+    await socket.flush();
+    await socket.shutdown(SocketDirection.send);
+    while (await lines.moveNext().timeout(
+      const Duration(seconds: 5),
+      onTimeout: () => false,
+    )) {
+      buffer.writeln(lines.current);
+    }
+  } finally {
+    await lines.cancel();
+    socket.destroy();
+  }
+  return buffer.toString();
+}
+
 void main() {
   group('authentication and origin checks', () {
     test('rejects a request without the bearer token', () async {
@@ -247,6 +280,62 @@ void main() {
         response.headers['access-control-allow-headers'],
         contains('Mcp-Session-Id'),
       );
+    });
+  });
+
+  group('origin policy', () {
+    test('allows loopback origins on any port', () {
+      expect(isAllowedOrigin('http://localhost:3000'), isTrue);
+      expect(isAllowedOrigin('https://127.0.0.1:8765'), isTrue);
+      expect(isAllowedOrigin('http://[::1]:9000'), isTrue);
+    });
+
+    test('rejects a non-loopback origin even when it matches the host', () {
+      // A DNS-rebinding page is served from the attacker's name, which is
+      // exactly the Host header it sends: the pair must not be accepted.
+      expect(isAllowedOrigin('http://rebind.example:8765'), isFalse);
+      expect(isAllowedOrigin('null'), isFalse);
+      expect(isAllowedOrigin(''), isFalse);
+      expect(isAllowedOrigin('ftp://localhost'), isFalse);
+    });
+
+    test('rejects a same-authority non-loopback origin over HTTP', () async {
+      final harness = await _start();
+      final authority = 'rebind.example:${harness.transport.port}';
+      final response = await _rawExchange(
+        harness.transport,
+        [
+          'POST /mcp HTTP/1.1',
+          'Host: $authority',
+          'Origin: http://$authority',
+          'Authorization: Bearer $_token',
+          'Content-Type: application/json',
+          'Content-Length: 2',
+          'Connection: close',
+          '',
+          '{}',
+        ].join('\r\n'),
+      );
+      expect(response, contains('403'));
+    });
+
+    test('refuses a declared body above the transport limit', () async {
+      final harness = await _start();
+      final response = await _rawExchange(
+        harness.transport,
+        [
+          'POST /mcp HTTP/1.1',
+          'Host: 127.0.0.1:${harness.transport.port}',
+          'Authorization: Bearer $_token',
+          'Content-Type: application/json',
+          'Content-Length: ${25 * 1024 * 1024}',
+          'Connection: close',
+          '',
+          '',
+        ].join('\r\n'),
+      );
+      expect(response, contains('413'));
+      expect(response, contains('24 MiB'));
     });
   });
 
@@ -444,7 +533,11 @@ void main() {
       expect(response.status, HttpStatus.ok);
       final sessionId = response.headers['mcp-session-id'];
       expect(sessionId, isNotNull);
-      expect(sessionId, isNotEmpty);
+      expect(sessionId, startsWith('moodiary-'));
+      expect(
+        RegExp(r'^moodiary-[A-Za-z0-9_-]{43}$').hasMatch(sessionId!),
+        isTrue,
+      );
       final frame = jsonDecode(response.body) as Map<String, dynamic>;
       final result = frame['result'] as Map<String, dynamic>;
       expect(result['protocolVersion'], mcpLatestProtocolVersion);

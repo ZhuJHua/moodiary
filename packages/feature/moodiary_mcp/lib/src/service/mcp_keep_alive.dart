@@ -43,7 +43,7 @@ final class KeepAlivePermissionStatus {
 
 /// Keeps the local MCP endpoint reachable while the app sits in the background.
 ///
-/// Both platforms need an OS-level reason to stay alive, and they differ:
+/// Only Android can do that, and it needs an OS-level reason to stay alive:
 ///
 /// * Android runs a `specialUse` foreground service with an ongoing
 ///   notification ([_apply] passes the notification copy through
@@ -53,12 +53,17 @@ final class KeepAlivePermissionStatus {
 ///   permission for the visible ongoing notification) and [request] asks for
 ///   them. [openAppSettings] is the fallback once Android stops showing its own
 ///   dialog.
-/// * iOS keeps the process alive through an active audio session, so the same
-///   [BackgroundKeepAliveApi.setKeepAlive] call starts a silent looping track.
+/// * iOS has no background keep-alive: the endpoint is reachable only while the
+///   app is in the foreground there, because holding an audio session open would
+///   take the audio session away from the app and from other apps. [supported]
+///   is therefore Android only, and the settings page hides the switch on iOS.
 ///
-/// The switch itself is persisted, [restore] re-applies it after a restart, and
-/// [_apply] only calls into native when the desired state actually changes, so
-/// ordinary server state churn does not restart the service.
+/// The switch itself is persisted: [restore] re-applies it when the lock
+/// observer brings the endpoint back after a restart, [setEnabled] persists a
+/// change, and the [McpService.state] listener applies it whenever the endpoint
+/// starts or stops. A cold start writes nothing to the platform until the
+/// endpoint actually runs, and [_apply] only calls into native when the desired
+/// state differs from the last one it handed over.
 @lazySingleton
 class McpKeepAlive {
   McpKeepAlive(this._server) {
@@ -72,10 +77,17 @@ class McpKeepAlive {
 
   bool get enabled => MoodiaryKVs.mcpBackgroundKeepAlive.get() ?? false;
 
-  /// Host platforms offer no background mode; tests then never touch native.
-  bool get supported => Platform.isAndroid || Platform.isIOS;
+  /// Whether this platform can keep the endpoint alive at all.
+  ///
+  /// Only Android: host platforms and iOS offer no background mode, so the
+  /// settings page hides the section there and [statuses] has nothing to report.
+  bool get supported => Platform.isAndroid;
 
-  /// Re-applies the persisted switch after a restart, called from the bootstrap.
+  /// Re-applies the persisted switch; the app lock observer calls this before it
+  /// brings the endpoint back, so the switch also survives a restart.
+  ///
+  /// This is safe on a cold start: asserting "off" before anything runs in this
+  /// process only sets the in-memory marker ([_apply]) and never reaches native.
   Future<void> restore() => _apply();
 
   /// The permissions the keep-alive needs on this platform, in display order.
@@ -171,6 +183,13 @@ class McpKeepAlive {
     try {
       final shouldRun = enabled && _server.state.value.running;
       if (shouldRun == _keepAliveRunning) return;
+      if (!shouldRun && _keepAliveRunning == null) {
+        // Nothing ran in this process yet, so there is nothing to stop: record
+        // "off" without a native call. A cold start that never enabled the
+        // endpoint must not touch the platform side at all.
+        _keepAliveRunning = false;
+        return;
+      }
       _keepAliveRunning = shouldRun;
       await BackgroundKeepAliveApi().setKeepAlive(
         shouldRun,

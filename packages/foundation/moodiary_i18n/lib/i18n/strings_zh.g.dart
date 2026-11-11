@@ -720,8 +720,8 @@ class Translations$app$zh {
 	/// zh: '后台保持运行'
 	String get mcpKeepAliveTitle => '后台保持运行';
 
-	/// zh: '安卓使用带常驻通知的前台服务，iOS 使用音频会话保持运行'
-	String get mcpKeepAliveSubtitle => '安卓使用带常驻通知的前台服务，iOS 使用音频会话保持运行';
+	/// zh: '安卓使用带常驻通知的前台服务，后台保活仅 Android 支持'
+	String get mcpKeepAliveSubtitle => '安卓使用带常驻通知的前台服务，后台保活仅 Android 支持';
 
 	/// zh: 'MCP 服务正在运行'
 	String get mcpKeepAliveNotificationTitle => 'MCP 服务正在运行';

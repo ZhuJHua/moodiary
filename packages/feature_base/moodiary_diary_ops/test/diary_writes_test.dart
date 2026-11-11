@@ -8,6 +8,22 @@ import 'package:moodiary_utils/moodiary_utils.dart';
 
 import 'support.dart';
 
+/// A Tiptap document holding one image node named [name].
+String imageDoc(String name) => jsonEncode(
+  TiptapContent.newDoc([
+    {
+      'type': 'paragraph',
+      'content': [
+        {'type': 'text', 'text': 'picture '},
+        {
+          'type': 'image',
+          'attrs': {'src': name, 'name': 'pic'},
+        },
+      ],
+    },
+  ]),
+);
+
 void main() {
   late MoodiaryDatabase db;
   late DiaryRepository diaries;
@@ -122,6 +138,19 @@ void main() {
       expect(diaryToMarkdown(stored), r'\*\*not bold\*\* \# not a heading');
     });
 
+    test('markdown media reaches the diary_media columns', () async {
+      final created = await writes.create(
+        title: 'Photo',
+        content: 'a picture ![pic](image-1.png)',
+      );
+
+      expect(created.imageName, ['image-1.png']);
+      // Reading the row back assembles the media lists from diary_media, so an
+      // empty list here means the new row was never indexed for the library.
+      final stored = (await diaries.getDiaryByBusinessId(created.id))!;
+      expect(stored.imageName, ['image-1.png']);
+    });
+
     test('a document patch replaces the body and its media', () async {
       final created = await writes.create(title: 'Media', content: 'no media');
       final document = jsonEncode(
@@ -148,6 +177,85 @@ void main() {
       final stored = (await diaries.getDiaryByBusinessId(created.id))!;
       expect(stored.imageName, ['image-1.png']);
       expect(stored.contentText, contains('with picture'));
+    });
+  });
+
+  group('media ownership', () {
+    Matcher foreignMedia() => throwsA(
+      isA<DiaryOpsException>().having(
+        (error) => error.failure,
+        'failure',
+        DiaryOpsFailure.foreignMedia,
+      ),
+    );
+
+    test('create refuses any media reference it cannot own', () async {
+      // A new diary owns no media, so any media reference is somebody else's.
+      final derived = await writes.create(
+        title: 'Attached',
+        content: imageDoc('image-1.png'),
+        format: DiaryContentFormat.document,
+      );
+      expect(derived.imageName, ['image-1.png']);
+
+      await expectLater(
+        writes.create(
+          title: 'Borrowed',
+          content: imageDoc('image-9.png'),
+          format: DiaryContentFormat.document,
+          enforceOwnMedia: true,
+        ),
+        foreignMedia(),
+      );
+      expect(await diaries.getAllDiaries(), hasLength(1));
+    });
+
+    test('update refuses media the diary does not own', () async {
+      final created = await writes.create(
+        title: 'Owned',
+        content: imageDoc('image-1.png'),
+        format: DiaryContentFormat.document,
+      );
+
+      await expectLater(
+        writes.update(
+          id: created.id,
+          patch: DiaryPatch(content: imageDoc('image-9.png')),
+          format: DiaryContentFormat.document,
+          enforceOwnMedia: true,
+        ),
+        foreignMedia(),
+      );
+
+      // The check runs before the body is stored, so the row is untouched.
+      final stored = (await diaries.getDiaryByBusinessId(created.id))!;
+      expect(stored.imageName, ['image-1.png']);
+      expect(stored.content, created.content);
+    });
+
+    test('update allows owned media and extraAllowedMedia', () async {
+      final created = await writes.create(
+        title: 'Owned',
+        content: imageDoc('image-1.png'),
+        format: DiaryContentFormat.document,
+      );
+
+      final kept = await writes.update(
+        id: created.id,
+        patch: DiaryPatch(content: imageDoc('image-1.png')),
+        format: DiaryContentFormat.document,
+        enforceOwnMedia: true,
+      );
+      expect(kept.imageName, ['image-1.png']);
+
+      final attached = await writes.update(
+        id: created.id,
+        patch: DiaryPatch(content: imageDoc('image-2.png')),
+        format: DiaryContentFormat.document,
+        enforceOwnMedia: true,
+        extraAllowedMedia: const {'image-2.png'},
+      );
+      expect(attached.imageName, ['image-2.png']);
     });
   });
 }

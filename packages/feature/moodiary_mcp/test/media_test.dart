@@ -668,6 +668,65 @@ void main() {
     });
   });
 
+  group('recycled diaries', () {
+    test('are hidden from every media tool', () async {
+      await diaries.insertADiary(
+        makeDiary(
+          'bin',
+          'hidden body',
+          show: false,
+          media: [imageNode('image-abc.png')],
+        ),
+      );
+      writeMedia('image', 'image-abc.png', pngBytes);
+      final filesBefore = root
+          .listSync(recursive: true)
+          .whereType<File>()
+          .length;
+
+      final calls = <(String, Map<String, dynamic>)>[
+        ('list_diary_media', {'id': 'bin'}),
+        ('read_diary_media', {'id': 'bin', 'name': 'image-abc.png'}),
+        ('add_diary_image', {'id': 'bin', 'data': base64Encode(pngBytes)}),
+        (
+          'add_diary_attachment',
+          {'id': 'bin', 'data': base64Encode(pdfBytes), 'fileName': 'doc.pdf'},
+        ),
+      ];
+      for (final (tool, arguments) in calls) {
+        final response = await toolCall(tool, arguments);
+        expect(resultOf(response)['isError'], isTrue, reason: tool);
+        expect(
+          textOf(response),
+          contains('no diary with id="bin"'),
+          reason: tool,
+        );
+      }
+      expect(
+        root.listSync(recursive: true).whereType<File>().length,
+        filesBefore,
+        reason: 'a hidden diary must not receive a media file',
+      );
+    });
+
+    test('their media resource is not found', () async {
+      await diaries.insertADiary(
+        makeDiary(
+          'bin',
+          'hidden body',
+          show: false,
+          media: [imageNode('image-abc.png')],
+        ),
+      );
+      writeMedia('image', 'image-abc.png', pngBytes);
+
+      final response = await call('resources/read', {
+        'uri': 'moodiary://diary/bin/media/image-abc.png',
+      });
+      expect(errorCode(response), JsonRpcCode.resourceNotFound);
+    });
+  });
+
   group('media resource', () {
     test('serves the bytes as a blob with the sniffed mime type', () async {
       writeMedia('image', 'image-abc.png', pngBytes);

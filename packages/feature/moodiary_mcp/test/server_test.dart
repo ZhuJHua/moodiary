@@ -153,7 +153,7 @@ void main() {
             'completions',
           ]),
         );
-        expect((capabilities['resources'] as Map)['subscribe'], isFalse);
+        expect((capabilities['resources'] as Map)['subscribe'], isTrue);
         expect(session.protocolVersion, '2025-03-26');
         expect(session.initialized, isTrue);
       },
@@ -172,7 +172,7 @@ void main() {
     });
 
     test('an unknown method is method not found', () async {
-      final response = await call('resources/subscribe');
+      final response = await call('resources/unknown');
       final error = response['error'] as Map;
       expect(error['code'], JsonRpcCode.methodNotFound);
       expect(response.containsKey('result'), isFalse);
@@ -260,7 +260,19 @@ void main() {
       expect(params['data'], {'e': 1});
     });
 
-    test('a cancelled request answers with the cancellation error', () async {
+    test('logging/setLevel rejects an unknown or missing level', () async {
+      for (final params in <Map<String, dynamic>>[
+        const <String, dynamic>{},
+        const <String, dynamic>{'level': 'verbose'},
+        const <String, dynamic>{'level': 3},
+      ]) {
+        final response = await call('logging/setLevel', params);
+        expect((response['error'] as Map)['code'], JsonRpcCode.invalidParams);
+      }
+      expect(session.logLevel, McpLogLevel.info);
+    });
+
+    test('a cancelled request is dropped instead of answered', () async {
       final pending = server.handle(session, {
         'jsonrpc': '2.0',
         'id': 'cancel-me',
@@ -274,8 +286,8 @@ void main() {
       });
       expect(session.isCancelled('cancel-me'), isTrue);
       slow.complete(McpToolResult.text('too late'));
-      final response = await pending;
-      expect((response!['error'] as Map)['code'], JsonRpcCode.requestCancelled);
+      // MCP: a cancelled request gets no response frame at all.
+      expect(await pending, isNull);
       expect(session.isCancelled('cancel-me'), isFalse);
     });
   });
@@ -330,20 +342,48 @@ void main() {
       expect((response['error'] as Map)['code'], JsonRpcCode.resourceNotFound);
     });
 
-    test('resourceUpdated reaches initialized sessions only', () async {
+    test('resourceUpdated only reaches subscribed sessions', () async {
       final notifications = <Map<String, dynamic>>[];
       final sub = session.outgoing.listen(notifications.add);
-      server.resourceUpdated('moodiary://stats/overview');
+      addTearDown(sub.cancel);
+
       await call('initialize', {'protocolVersion': mcpLatestProtocolVersion});
+      // Initialized but not subscribed: nothing is pushed.
       server.resourceUpdated('moodiary://categories');
       await Future<void>.delayed(Duration.zero);
-      await sub.cancel();
+      expect(notifications, isEmpty);
+
+      expect(
+        (await call('resources/subscribe', {
+          'uri': 'moodiary://categories',
+        }))['result'],
+        isEmpty,
+      );
+      server.resourceUpdated('moodiary://categories');
+      server.resourceUpdated('moodiary://stats/overview');
+      await Future<void>.delayed(Duration.zero);
       expect(notifications.length, 1);
       expect(notifications.single['method'], 'notifications/resources/updated');
       expect(
         (notifications.single['params'] as Map)['uri'],
         'moodiary://categories',
       );
+
+      await call('resources/unsubscribe', {'uri': 'moodiary://categories'});
+      server.resourceUpdated('moodiary://categories');
+      await Future<void>.delayed(Duration.zero);
+      expect(notifications.length, 1);
+    });
+
+    test('resources/subscribe and unsubscribe require a uri', () async {
+      for (final method in ['resources/subscribe', 'resources/unsubscribe']) {
+        final response = await call(method);
+        expect(
+          (response['error'] as Map)['code'],
+          JsonRpcCode.invalidParams,
+          reason: method,
+        );
+      }
     });
   });
 
@@ -416,6 +456,19 @@ void main() {
   });
 
   group('session lifecycle', () {
+    test('creates a unique, non-predictable session id', () {
+      final first = server.createSession();
+      final second = server.createSession();
+      expect(first.id, startsWith('moodiary-'));
+      expect(second.id, isNot(first.id));
+      // 32 random bytes, base64url without padding.
+      expect(
+        RegExp(r'^moodiary-[A-Za-z0-9_-]{43}$').hasMatch(first.id),
+        isTrue,
+        reason: first.id,
+      );
+    });
+
     test('notifications never get a response frame', () async {
       final response = await server.handle(session, {
         'jsonrpc': '2.0',
