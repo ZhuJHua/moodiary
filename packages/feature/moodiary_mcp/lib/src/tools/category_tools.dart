@@ -132,6 +132,14 @@ void registerCategoryTools(
         });
       } on DiaryOpsException catch (e) {
         return switch (e.failure) {
+          // `_require` reports an unknown parent through categoryId, so a
+          // notFound carrying one is a bad parameter, not a missing target.
+          DiaryOpsFailure.notFound when e.categoryId != null =>
+            throw JsonRpcException(
+              JsonRpcCode.invalidParams,
+              'update_category: no category with id="${e.categoryId}"; call '
+              'list_categories first',
+            ),
           DiaryOpsFailure.notFound => McpToolResult.error(
             'update_category: no category with id="$id".',
           ),

@@ -1125,6 +1125,31 @@ void main() {
       },
     );
 
+    test(
+      'update_category treats an unknown parent as invalid params and only a '
+      'missing target as a tool error',
+      () async {
+        final parent = await newCategory('Parent');
+        final child = await newCategory('Child', parentId: parent);
+
+        final badParent = await toolCall('update_category', {
+          'id': child,
+          'parentId': 'ghost',
+        });
+        expect(errorCode(badParent), JsonRpcCode.invalidParams);
+        expect(errorMessage(badParent), contains('ghost'));
+        expect(errorMessage(badParent), contains('list_categories'));
+        expect((await categories.getCategoryById(child))!.parentId, parent);
+
+        final missingTarget = await toolCall('update_category', {
+          'id': 'ghost',
+          'name': 'Renamed',
+        });
+        expect(resultOf(missingTarget)['isError'], isTrue);
+        expect(textOf(missingTarget), contains('no category with id="ghost"'));
+      },
+    );
+
     test('get_stats reports totals and per-category counts', () async {
       final work = await newCategory('Work');
       final life = await newCategory('Life');
