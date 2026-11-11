@@ -116,8 +116,10 @@ class BackgroundKeepAlive(private val context: Context) : BackgroundKeepAliveApi
             }
         } catch (e: Exception) {
             // 12 起在后台启动前台服务会抛 ForegroundServiceStartNotAllowedException，
-            // 其它系统限制也会拒绝：只记录，不让 Dart 侧崩溃
+            // 其它系统限制也会拒绝：记录后继续向上抛，让 Dart 侧重置“已启动”的缓存
+            // 并在下一次启动时重试，而不是把这次失败当成成功
             Log.w(TAG, "Failed to toggle the keep-alive foreground service", e)
+            throw e
         }
     }
 
