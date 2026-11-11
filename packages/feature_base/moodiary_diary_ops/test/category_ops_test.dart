@@ -110,6 +110,44 @@ void main() {
     });
   });
 
+  group('update', () {
+    test(
+      'serializes concurrent reparents so they cannot close a cycle',
+      () async {
+        final first = await newCategory('First');
+        final second = await newCategory('Second');
+
+        final results = await Future.wait([
+          ops
+              .update(id: first.id, parentId: second.id, parentSet: true)
+              .then<Object>(
+                (category) => category,
+                onError: (Object error) => error,
+              ),
+          ops
+              .update(id: second.id, parentId: first.id, parentSet: true)
+              .then<Object>(
+                (category) => category,
+                onError: (Object error) => error,
+              ),
+        ]);
+
+        final updated = results.whereType<Category>();
+        final refused = results.whereType<DiaryOpsException>();
+        expect(updated, hasLength(1));
+        expect(refused, hasLength(1));
+        expect(refused.single.failure, DiaryOpsFailure.categoryCycle);
+        final roots = (await categories.getAllCategories())
+            .where((category) => category.parentId == null);
+        expect(
+          roots,
+          hasLength(1),
+          reason: 'the accepted reparent still leaves exactly one root',
+        );
+      },
+    );
+  });
+
   group('tree', () {
     test(
       'keeps direct diaries and rolls descendants into diariesTotal',

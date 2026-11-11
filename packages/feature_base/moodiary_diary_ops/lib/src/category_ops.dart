@@ -64,26 +64,31 @@ class CategoryOps {
     if (!nameSet && !colorSet && !parentSet) {
       throw DiaryOpsException(DiaryOpsFailure.noChanges, id: id);
     }
-    final existing = await categories.getCategoryById(id);
-    if (existing == null) {
-      throw DiaryOpsException(DiaryOpsFailure.notFound, id: id);
-    }
-
-    var next = existing;
-    if (nameSet) {
-      next = next.copyWith(categoryName: name?.trim() ?? '');
-    }
-    if (colorSet) next = next.copyWith(color: color);
-    if (parentSet) {
-      if (parentId != null && parentId.isNotEmpty) {
-        await _require(parentId);
-        await _rejectCycle(id, parentId);
+    // The ancestry walk and the write must not interleave with another
+    // reparent, or two concurrent updates could each pass the cycle check and
+    // together persist a loop.
+    return categories.transaction(() async {
+      final existing = await categories.getCategoryById(id);
+      if (existing == null) {
+        throw DiaryOpsException(DiaryOpsFailure.notFound, id: id);
       }
-      next = next.copyWith(parentId: parentId);
-    }
-    next = next.copyWith(lastModified: DateTime.timestamp());
-    await categories.insertACategory(next);
-    return next;
+
+      var next = existing;
+      if (nameSet) {
+        next = next.copyWith(categoryName: name?.trim() ?? '');
+      }
+      if (colorSet) next = next.copyWith(color: color);
+      if (parentSet) {
+        if (parentId != null && parentId.isNotEmpty) {
+          await _require(parentId);
+          await _rejectCycle(id, parentId);
+        }
+        next = next.copyWith(parentId: parentId);
+      }
+      next = next.copyWith(lastModified: DateTime.timestamp());
+      await categories.insertACategory(next);
+      return next;
+    });
   }
 
   /// Deletes an empty category; [deleted] is false when diaries still hold it.
