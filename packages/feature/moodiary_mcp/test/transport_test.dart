@@ -819,6 +819,13 @@ void main() {
         'params': {'protocolVersion': mcpLatestProtocolVersion},
       });
       final sessionId = init.headers['mcp-session-id']!;
+      final subscribed = await harness.send('POST', harness.mcp, {
+        'jsonrpc': '2.0',
+        'id': 2,
+        'method': 'resources/subscribe',
+        'params': {'uri': 'moodiary://ping'},
+      }, sessionId: sessionId);
+      expect(subscribed.status, HttpStatus.ok);
       final request = await harness.client.getUrl(harness.mcp);
       request.headers.set('authorization', 'Bearer $_token');
       request.headers.set('mcp-session-id', sessionId);
