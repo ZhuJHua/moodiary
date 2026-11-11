@@ -541,7 +541,7 @@ void main() {
       final result = frame['result'] as Map<String, dynamic>;
       expect(result['protocolVersion'], mcpLatestProtocolVersion);
       expect((result['capabilities'] as Map).keys, contains('tools'));
-      expect(harness.server.session(sessionId!), isNotNull);
+      expect(harness.server.session(sessionId), isNotNull);
     });
 
     test('lists tools for a known session', () async {
