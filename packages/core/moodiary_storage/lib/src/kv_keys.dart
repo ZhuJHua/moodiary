@@ -13,6 +13,19 @@ enum MoodiaryKVs<T extends Object> {
 
   autoSync<bool>(defaultValue: false),
 
+  mcpEnabled<bool>(defaultValue: false),
+
+  // 网关端口的默认值：moodiary_mcp 的 McpService.configuredPort 直接读这个默认值
+  // （core 不能反向依赖 feature）。
+  mcpPort<int>(defaultValue: 8765),
+
+  mcpAllowLan<bool>(defaultValue: false),
+
+  // 只在本机监听（mcpAllowLan 为 false）时才能关掉；局域网访问必须带令牌。
+  mcpRequireToken<bool>(defaultValue: true),
+
+  mcpBackgroundKeepAlive<bool>(defaultValue: false),
+
   syncPollInterval<int>(defaultValue: 30),
 
   syncProvider<String>(defaultValue: 'webdav'),
@@ -167,7 +180,9 @@ enum MoodiarySecureKVs {
 
   qweatherKey,
 
-  tiandituKey;
+  tiandituKey,
+
+  mcpToken;
 
   Future<String?> get() => getIt<ISecureKVStorage>().get(name);
 

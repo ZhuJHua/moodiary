@@ -15,6 +15,7 @@ export 'src/data/impl/rig_assistant.dart';
 export 'src/presentation/assistant_page.dart';
 export 'src/presentation/assistant_summary_tile.dart';
 
+/// Routes of the assistant feature.
 List<RouteBase> assistantRoutes() => [
   GoRoute(
     path: AssistantSettingRoute.path,

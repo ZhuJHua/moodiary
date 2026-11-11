@@ -49,6 +49,13 @@ class CategoryRepository {
     return row == null ? null : _toCategory(row);
   }
 
+  /// Runs [action] as one serialized transaction. Category writes cannot
+  /// interleave with it, which is what a caller that validates the whole
+  /// category tree before writing needs: the check cannot be invalidated by a
+  /// competing write before it lands.
+  Future<T> transaction<T>(Future<T> Function() action) =>
+      _db.transaction(action);
+
   Future<SyncTombstone> tombstoneCategoryForSync(
     String id, {
     bool fromSync = false,

@@ -599,6 +599,189 @@ class Translations$app$zh {
 
 	/// zh: '返回首页'
 	String get routeErrorBackHome => '返回首页';
+
+	/// zh: 'MCP 服务'
+	String get sectionMcp => 'MCP 服务';
+
+	/// zh: '本地 MCP 服务'
+	String get mcpEnableTitle => '本地 MCP 服务';
+
+	/// zh: '已关闭，本机没有在监听'
+	String get mcpEnableSubtitleOff => '已关闭，本机没有在监听';
+
+	/// zh: 'MCP 服务'
+	String get mcpPageTitle => 'MCP 服务';
+
+	/// zh: '服务'
+	String get mcpGroupServer => '服务';
+
+	/// zh: '访问'
+	String get mcpGroupAccess => '访问';
+
+	/// zh: '网络'
+	String get mcpGroupNetwork => '网络';
+
+	/// zh: '后台'
+	String get mcpGroupKeepAlive => '后台';
+
+	/// zh: '状态'
+	String get mcpStatusTitle => '状态';
+
+	/// zh: '服务已关闭'
+	String get mcpStatusStopped => '服务已关闭';
+
+	/// zh: '正在启动服务…'
+	String get mcpStatusStarting => '正在启动服务…';
+
+	/// zh: '正在监听端口 {port}'
+	String mcpStatusRunning({required Object port}) => '正在监听端口 ${port}';
+
+	/// zh: '启动失败：{error}'
+	String mcpStatusFailed({required Object error}) => '启动失败：${error}';
+
+	/// zh: '端点地址'
+	String get mcpEndpointTitle => '端点地址';
+
+	/// zh: '开启服务后可查看端点地址'
+	String get mcpEndpointHint => '开启服务后可查看端点地址';
+
+	/// zh: '端点地址已复制'
+	String get mcpEndpointCopied => '端点地址已复制';
+
+	/// zh: '访问令牌'
+	String get mcpTokenTitle => '访问令牌';
+
+	/// zh: '正在准备…'
+	String get mcpTokenLoading => '正在准备…';
+
+	/// zh: '显示令牌'
+	String get mcpTokenShow => '显示令牌';
+
+	/// zh: '隐藏令牌'
+	String get mcpTokenHide => '隐藏令牌';
+
+	/// zh: '复制'
+	String get mcpCopy => '复制';
+
+	/// zh: '令牌已复制'
+	String get mcpTokenCopied => '令牌已复制';
+
+	/// zh: '重新生成令牌'
+	String get mcpTokenRegenerate => '重新生成令牌';
+
+	/// zh: '重新生成访问令牌？'
+	String get mcpTokenRegenerateTitle => '重新生成访问令牌？';
+
+	/// zh: '已连接的客户端仍在使用旧令牌，需要更新为新令牌后才能继续访问。运行中的服务会重启以使用新令牌。'
+	String get mcpTokenRegenerateMessage => '已连接的客户端仍在使用旧令牌，需要更新为新令牌后才能继续访问。运行中的服务会重启以使用新令牌。';
+
+	/// zh: '重新生成'
+	String get mcpTokenRegenerateConfirm => '重新生成';
+
+	/// zh: '已生成新令牌，请更新客户端'
+	String get mcpTokenRegenerated => '已生成新令牌，请更新客户端';
+
+	/// zh: '拿到这个令牌的人可以读取和修改你的日记'
+	String get mcpSecurityHint => '拿到这个令牌的人可以读取和修改你的日记';
+
+	/// zh: '需要访问令牌'
+	String get mcpRequireTokenTitle => '需要访问令牌';
+
+	/// zh: '关闭后本机请求无需携带请求头'
+	String get mcpRequireTokenSubtitle => '关闭后本机请求无需携带请求头';
+
+	/// zh: '开启局域网访问时必须使用令牌'
+	String get mcpRequireTokenForced => '开启局域网访问时必须使用令牌';
+
+	/// zh: '未启用令牌验证，只允许本机访问'
+	String get mcpTokenDisabled => '未启用令牌验证，只允许本机访问';
+
+	/// zh: '允许同一 Wi-Fi 下的设备访问'
+	String get mcpLanTitle => '允许同一 Wi-Fi 下的设备访问';
+
+	/// zh: '关闭时仅本机（127.0.0.1）可以访问'
+	String get mcpLanSubtitle => '关闭时仅本机（127.0.0.1）可以访问';
+
+	/// zh: '端口'
+	String get mcpPortTitle => '端口';
+
+	/// zh: '当前使用端口 {port}'
+	String mcpPortBound({required Object port}) => '当前使用端口 ${port}';
+
+	/// zh: '取值范围 1024–65535。若端口被占用，会自动改用其他端口。'
+	String get mcpPortHelp => '取值范围 1024–65535。若端口被占用，会自动改用其他端口。';
+
+	/// zh: '请输入 1024–65535 之间的数字'
+	String get mcpPortInvalid => '请输入 1024–65535 之间的数字';
+
+	/// zh: '已保存'
+	String get mcpSaved => '已保存';
+
+	/// zh: '后台保持运行'
+	String get mcpKeepAliveTitle => '后台保持运行';
+
+	/// zh: '安卓使用带常驻通知的前台服务，后台保活仅 Android 支持'
+	String get mcpKeepAliveSubtitle => '安卓使用带常驻通知的前台服务，后台保活仅 Android 支持';
+
+	/// zh: 'MCP 服务正在运行'
+	String get mcpKeepAliveNotificationTitle => 'MCP 服务正在运行';
+
+	/// zh: '外部客户端可继续访问，打开 Moodiary 可停止服务'
+	String get mcpKeepAliveNotificationText => '外部客户端可继续访问，打开 Moodiary 可停止服务';
+
+	/// zh: '前台服务权限'
+	String get mcpKeepAlivePermissionTitle => '前台服务权限';
+
+	/// zh: '点击查看前台服务需要的权限'
+	String get mcpKeepAlivePermissionSubtitle => '点击查看前台服务需要的权限';
+
+	/// zh: '已获得 {granted}/{total} 项权限'
+	String mcpKeepAlivePermissionSummary({required Object granted, required Object total}) => '已获得 ${granted}/${total} 项权限';
+
+	/// zh: '权限已齐备，服务可以保持运行'
+	String get mcpKeepAlivePermissionReady => '权限已齐备，服务可以保持运行';
+
+	/// zh: '已保存'
+	String get mcpKeepAliveSaved => '已保存';
+
+	/// zh: '前台服务所需权限'
+	String get mcpKeepAliveSheetTitle => '前台服务所需权限';
+
+	/// zh: '离开 App 后由前台服务保持服务可达，安卓会显示一条常驻通知'
+	String get mcpKeepAliveSheetSubtitle => '离开 App 后由前台服务保持服务可达，安卓会显示一条常驻通知';
+
+	/// zh: '忽略电池优化'
+	String get mcpKeepAliveBatteryTitle => '忽略电池优化';
+
+	/// zh: '让前台服务在 Doze 与厂商省电策略下继续运行'
+	String get mcpKeepAliveBatteryDesc => '让前台服务在 Doze 与厂商省电策略下继续运行';
+
+	/// zh: '通知权限'
+	String get mcpKeepAliveNotificationPermissionTitle => '通知权限';
+
+	/// zh: 'Android 13 起，未允许通知时前台服务的常驻通知不会显示'
+	String get mcpKeepAliveNotificationPermissionDesc => 'Android 13 起，未允许通知时前台服务的常驻通知不会显示';
+
+	/// zh: '已获得'
+	String get mcpKeepAliveGranted => '已获得';
+
+	/// zh: '未获得'
+	String get mcpKeepAliveNotGranted => '未获得';
+
+	/// zh: '去开启'
+	String get mcpKeepAliveGrant => '去开启';
+
+	/// zh: '打开应用信息页'
+	String get mcpKeepAliveOpenSettings => '打开应用信息页';
+
+	/// zh: '部分厂商系统还需要在应用信息页里允许自启动与后台活动'
+	String get mcpKeepAliveSettingsHint => '部分厂商系统还需要在应用信息页里允许自启动与后台活动';
+
+	/// zh: '完成'
+	String get mcpKeepAliveDone => '完成';
+
+	/// zh: '无法打开系统设置，请手动前往应用信息页开启'
+	String get mcpKeepAliveRequestFailed => '无法打开系统设置，请手动前往应用信息页开启';
 }
 
 // Path: assistant

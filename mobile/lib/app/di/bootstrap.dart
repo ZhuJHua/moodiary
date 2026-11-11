@@ -7,9 +7,11 @@ import 'package:moodiary_editor/moodiary_editor.dart'
     show EditorMigrationService, resolveEditorPage;
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
+import 'package:moodiary_mcp/moodiary_mcp.dart' show McpService;
 import 'package:moodiary_migration/moodiary_migration.dart'
     show EngineMigrationService;
 import 'package:moodiary_ml/moodiary_ml.dart' show EmbeddingModelManager;
+import 'package:moodiary_mobile/app/mcp/diary_image_renderer_impl.dart';
 import 'package:moodiary_platform/moodiary_platform.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_sync/moodiary_sync.dart';
@@ -26,6 +28,11 @@ Future<void> bootstrapPlatform() async {
 }
 
 void runStartupMaintenance() {
+  // The renderer needs both `moodiary_mcp` and `moodiary_export`, which only
+  // the composition root may import, so it is installed here instead of in the
+  // container. It has to be in place before the app lock observer restores the
+  // server on the first frame.
+  McpService.imageRenderer = const AppDiaryImageRenderer();
   unawaited(resolveEditorPage());
   unawaited(purgeExpiredTombstones());
   unawaited(purgeSyncMediaTemp());

@@ -15,6 +15,7 @@ dependencies:
 
   moodiary_components: 0.0.1
   moodiary_data: 0.0.1
+  moodiary_diary_ops: 0.0.1
   moodiary_di: 0.0.1
   moodiary_files: 0.0.1
   moodiary_http: 0.0.1

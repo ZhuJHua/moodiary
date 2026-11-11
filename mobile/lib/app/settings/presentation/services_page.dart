@@ -10,7 +10,10 @@ import 'package:moodiary_diary/moodiary_diary.dart';
 import 'package:moodiary_http/moodiary_http.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
+import 'package:moodiary_mcp/moodiary_mcp.dart';
 import 'package:moodiary_ml/moodiary_ml.dart';
+import 'package:moodiary_mobile/app/settings/setting_routes.dart';
+import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:mui/mui.dart';
 
@@ -26,6 +29,7 @@ class ServicesPage extends ConsumerWidget {
         child: CustomScrollView(
           slivers: [
             const _AiSection(),
+            const _McpSection(),
             const _ModelDownloadSection(),
             const _SemanticSection(),
             const _QweatherSection(),
@@ -439,6 +443,55 @@ class _MapSection extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+class _McpSection extends StatelessWidget {
+  const _McpSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final service = getIt<McpService>();
+    final scheme = context.theme.colors;
+    return ValueListenableBuilder<bool>(
+      valueListenable: MoodiaryKVs.mcpEnabled.getNotifier(),
+      builder: (context, enabled, _) => ValueListenableBuilder<McpServerState>(
+        valueListenable: service.state,
+        builder: (context, state, _) => MSliverSettingGroup(
+          title: context.l10n.app.sectionMcp,
+          children: [
+            SettingListTile(
+              leading: Icon(LucideIcons.server, color: scheme.onSurfaceVariant),
+              title: context.l10n.app.mcpEnableTitle,
+              subtitle: _summary(context, state, enabled: enabled),
+              trailing: Icon(
+                LucideIcons.chevronRight,
+                color: scheme.onSurfaceVariant,
+              ),
+              onTap: () => const McpRoute().push(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// One line summarising the endpoint, or why there is none.
+  String _summary(
+    BuildContext context,
+    McpServerState state, {
+    required bool enabled,
+  }) {
+    final l10n = context.l10n.app;
+    if (!enabled) return l10n.mcpEnableSubtitleOff;
+    return switch (state.status) {
+      .running =>
+        state.endpoints.firstOrNull?.toString() ??
+            l10n.mcpStatusRunning(port: state.port ?? 0),
+      .starting => l10n.mcpStatusStarting,
+      .failed => l10n.mcpStatusFailed(error: state.error ?? ''),
+      .stopped => l10n.mcpStatusStopped,
+    };
   }
 }
 
