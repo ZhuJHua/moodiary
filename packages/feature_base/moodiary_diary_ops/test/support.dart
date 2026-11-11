@@ -41,6 +41,7 @@ Diary makeDiary(
   DateTime? time,
   String? categoryId,
   bool show = true,
+  DiaryMood? mood,
   String type = 'tiptap',
 }) {
   final doc =
@@ -70,7 +71,7 @@ Diary makeDiary(
     time: stamp,
     lastModified: stamp,
     show: show,
-    mood: null,
+    mood: mood,
     imageName: const [],
     audioName: const [],
     videoName: const [],

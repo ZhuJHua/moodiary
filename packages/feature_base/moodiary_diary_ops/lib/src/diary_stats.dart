@@ -111,7 +111,8 @@ class DiaryStatsOps {
       for (final category in categoryList) category.id: category.categoryName,
     };
     final monthly = await diaries.diaryCountByMonth(sort: DiarySort.timeDesc);
-    final earliest = await _requireInsights().earliestEntry();
+    final insights = _requireInsights();
+    final earliest = await insights.earliestEntry();
 
     // A non-positive window would make the invariant meaningless, so one month
     // is the floor; the tool layer already clamps its own range.
@@ -134,7 +135,10 @@ class DiaryStatsOps {
       }
     }
 
-    final entries = await visibleDiaryEntries(_requireInsights());
+    // The mood counts describe the same population as the diary totals: every
+    // visible row, future-dated ones included, so `recordedDiaries +
+    // diariesWithoutMood` always equals `visibleDiaries`.
+    final entries = await insights.allVisibleEntries();
     final mood = summarizeMood(entries);
     final recorded = mood.distribution.values.fold(0, (sum, n) => sum + n);
     final categorised = byCategory.byCategory.values.fold(

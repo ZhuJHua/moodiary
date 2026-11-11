@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_diary_ops/moodiary_diary_ops.dart';
+import 'package:moodiary_models/moodiary_models.dart';
 
 import 'support.dart';
 
@@ -105,6 +106,40 @@ void main() {
       1 +
           (payload['olderDiaries']! as int) +
           (payload['futureDiaries']! as int),
+      payload['visibleDiaries'],
+    );
+  });
+
+  test('mood counts cover every visible diary, future dates included', () async {
+    final now = DateTime.now();
+    await diaries.insertDiaries([
+      makeDiary(
+        'past',
+        'past',
+        time: DateTime(now.year, now.month, 2),
+        mood: DiaryMood.good,
+      ),
+      makeDiary(
+        'future',
+        'future',
+        time: DateTime(now.year, now.month + 1, 6),
+        mood: DiaryMood.great,
+      ),
+      makeDiary('none', 'none', time: DateTime(now.year, now.month, 3)),
+    ]);
+
+    final payload = await stats.statsPayload(months: 1);
+    final moods = payload['moods']! as Map<String, dynamic>;
+    final distribution = moods['distribution']! as Map<String, dynamic>;
+
+    expect(payload['visibleDiaries'], 3);
+    expect(distribution['good'], 1);
+    expect(distribution['great'], 1);
+    expect(moods['recordedDiaries'], 2);
+    expect(moods['diariesWithoutMood'], 1);
+    expect(
+      (moods['recordedDiaries']! as int) +
+          (moods['diariesWithoutMood']! as int),
       payload['visibleDiaries'],
     );
   });
