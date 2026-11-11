@@ -200,7 +200,6 @@ Future<String> _rawExchange(IoMcpTransport transport, String request) async {
   try {
     socket.write(request);
     await socket.flush();
-    await socket.shutdown(SocketDirection.send);
     while (await lines.moveNext().timeout(
       const Duration(seconds: 5),
       onTimeout: () => false,
@@ -535,14 +534,14 @@ void main() {
       expect(sessionId, isNotNull);
       expect(sessionId, startsWith('moodiary-'));
       expect(
-        RegExp(r'^moodiary-[A-Za-z0-9_-]{43}$').hasMatch(sessionId!),
+        RegExp(r'^moodiary-[A-Za-z0-9_-]{43}$').hasMatch(sessionId),
         isTrue,
       );
       final frame = jsonDecode(response.body) as Map<String, dynamic>;
       final result = frame['result'] as Map<String, dynamic>;
       expect(result['protocolVersion'], mcpLatestProtocolVersion);
       expect((result['capabilities'] as Map).keys, contains('tools'));
-      expect(harness.server.session(sessionId!), isNotNull);
+      expect(harness.server.session(sessionId), isNotNull);
     });
 
     test('lists tools for a known session', () async {
