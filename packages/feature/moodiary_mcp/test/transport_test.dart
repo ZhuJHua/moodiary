@@ -318,23 +318,22 @@ void main() {
       expect(response, contains('403'));
     });
 
-    test('refuses a declared body above the transport limit', () async {
+    test('refuses a body above the transport limit', () async {
       final harness = await _start();
-      final response = await _rawExchange(
-        harness.transport,
-        [
-          'POST /mcp HTTP/1.1',
-          'Host: 127.0.0.1:${harness.transport.port}',
-          'Authorization: Bearer $_token',
-          'Content-Type: application/json',
-          'Content-Length: ${25 * 1024 * 1024}',
-          'Connection: close',
-          '',
-          '',
-        ].join('\r\n'),
+      final client = HttpClient();
+      addTearDown(() => client.close(force: true));
+      final request = await client.postUrl(
+        Uri.parse('http://127.0.0.1:${harness.transport.port}/mcp'),
       );
-      expect(response, contains('413'));
-      expect(response, contains('24 MiB'));
+      request.headers.contentType = ContentType.json;
+      request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $_token');
+      const size = 24 * 1024 * 1024 + 1;
+      request.contentLength = size;
+      request.add(List.filled(size, 0x20));
+      final response = await request.close();
+      final body = await utf8.decoder.bind(response).join();
+      expect(response.statusCode, HttpStatus.requestEntityTooLarge);
+      expect(body, contains('24 MiB'));
     });
   });
 
