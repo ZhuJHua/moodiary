@@ -49,11 +49,10 @@ class CategoryRepository {
     return row == null ? null : _toCategory(row);
   }
 
-  /// Runs [action] as one serialized transaction: while it is open no other
-  /// category write (or read) can interleave with it.
-  ///
-  /// Callers that validate the category tree as a whole before writing use
-  /// this so a check can't be invalidated by a competing write before it lands.
+  /// Runs [action] as one serialized transaction. Category writes cannot
+  /// interleave with it, which is what a caller that validates the whole
+  /// category tree before writing needs: the check cannot be invalidated by a
+  /// competing write before it lands.
   Future<T> transaction<T>(Future<T> Function() action) =>
       _db.transaction(action);
 
