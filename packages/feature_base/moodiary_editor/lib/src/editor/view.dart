@@ -191,6 +191,8 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
               widget.onOpenDiaryLink?.call(chip.attrs['id'] as String);
             },
           ),
+        if (details.cut case final cut?)
+          (LucideIcons.scissors, labels.cutButtonLabel, cut),
         if (details.copy case final copy?)
           (LucideIcons.copy, labels.copyButtonLabel, copy),
         if (details.paste case final paste?)

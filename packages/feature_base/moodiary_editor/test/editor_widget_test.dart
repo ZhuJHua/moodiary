@@ -227,8 +227,11 @@ void main() {
         of: find.byKey(const ValueKey('editor-title')),
         matching: find.byType(EditableText),
       );
-      await tester.enterText(field, 'One\nTwo');
-      expect(tester.widget<EditableText>(field).controller.text, 'OneTwo');
+      await tester.enterText(field, 'One\nTwo\r\nThree');
+      expect(
+        tester.widget<EditableText>(field).controller.text,
+        'One Two Three',
+      );
       expect(_editor(tester).controller.json, body);
       await tester.pumpWidget(const SizedBox());
     },

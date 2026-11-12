@@ -340,7 +340,7 @@ void main() {
   );
   for (final command in ['splitBlock', 'hardBreak']) {
     test(
-      'code $command preserves indentation and repeated blank lines stay code',
+      'code $command preserves indentation and exits on the third Enter',
       () {
         final c = _doc([
           _schema.node(
@@ -353,11 +353,20 @@ void main() {
         c.exec(command);
         expect(c.state.doc.textContent, '  foo\n  ');
         c.exec(command);
+        final beforeExit = c.state;
+        expect(c.state.doc.child(0).textContent, '  foo\n  \n  ');
         c.exec(command);
-        expect(c.state.doc.childCount, 2);
+        expect(c.state.doc.childCount, 3);
         expect(c.state.doc.child(0).type, 'codeBlock');
+        expect(c.state.doc.child(0).textContent, '  foo');
+        expect(c.state.doc.child(1).type, 'paragraph');
+        expect(c.state.selection, const ft.TextSelection(8));
+        c.exec('undo');
+        expect(c.state.doc.toJson(), beforeExit.doc.toJson());
+        expect(c.state.selection, beforeExit.selection);
         c.exec('exitCode');
         expect(c.state.doc.childCount, 2);
+        expect(c.state.doc.child(0).textContent, '  foo\n  \n  ');
         expect(c.state.doc.child(1).type, 'paragraph');
       },
     );

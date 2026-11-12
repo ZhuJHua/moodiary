@@ -1,6 +1,11 @@
 part of '../moodiary_editor.dart';
 
 const _asyncLoadThreshold = 64 * 1024;
+
+final _titleLineBreak = RegExp('\r\n|[\r\n\u2028\u2029]');
+
+String _singleLineTitle(String title) => title.replaceAll(_titleLineBreak, ' ');
+
 typedef _LoadedDocument = ({ft.Node doc, String? error, TiptapContent source});
 
 _LoadedDocument _loadDocument(String content) {
@@ -150,7 +155,7 @@ class MoodiaryEditorHost extends ChangeNotifier implements EditorHost {
               ];
       },
     );
-    title.text = configuration.initialTitle;
+    title.text = _singleLineTitle(configuration.initialTitle);
     editor.addListener(_changed);
     title.addListener(_titleChanged);
     bodyFocus.addListener(_focusChanged);
@@ -651,8 +656,8 @@ class MoodiaryEditorHost extends ChangeNotifier implements EditorHost {
     _protected = false;
     contentError.value = null;
     editor.clearSearch();
-    this.title.text = title;
-    _lastTitle = title;
+    this.title.text = _singleLineTitle(title);
+    _lastTitle = this.title.text;
     _largeDocument = content.length >= _asyncLoadThreshold;
     if (_largeDocument) {
       editor.replaceDocument(_loadDocument('').doc);

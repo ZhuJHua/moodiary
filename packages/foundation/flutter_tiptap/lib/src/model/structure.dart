@@ -585,7 +585,13 @@ extension _NestedCommands on EditorCommands {
   bool _codeEnter(Transaction tr, {bool exit = false}) {
     final pos = tr.doc.resolve(tr.selection.from);
     if (pos.parent.type != 'codeBlock') return false;
-    if (exit) {
+    final trailingLines =
+        !exit &&
+            tr.selection.empty &&
+            pos.parentOffset == pos.parent.content.size
+        ? RegExp(r'\n[ \t]*\n[ \t]*$').firstMatch(pos.parent.textContent)
+        : null;
+    if (exit || trailingLines != null) {
       final current = tr.doc.resolve(tr.selection.from),
           after = current.after();
       final parent = current.node(current.depth - 1),
@@ -597,7 +603,21 @@ extension _NestedCommands on EditorCommands {
       )) {
         return true;
       }
-      _paragraphAfter(after, tr);
+      if (trailingLines != null) {
+        final removed = trailingLines.end - trailingLines.start;
+        tr.replace(tr.selection.from - removed, tr.selection.from);
+        tr.step(
+          ReplaceStep(
+            after - removed,
+            after - removed,
+            Slice(Fragment([tr.doc.schema.node('paragraph')]), 0, 0),
+          ),
+        );
+        tr.setSelection(TextSelection(after - removed + 1));
+        tr.setMeta('closeHistory', true);
+      } else {
+        _paragraphAfter(after, tr);
+      }
     } else {
       final start = tr.selection.from;
       final prefix = pos.parent.textContent.substring(0, pos.parentOffset);

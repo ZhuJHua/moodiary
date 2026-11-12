@@ -514,6 +514,20 @@ void main() {
   );
 
   testWidgets(
+    'reversed long selection beside a surrogate pair replaces its entire range',
+    (tester) async {
+      final text = '😀${List.filled(2047, 'a').join()}';
+      final c = controller([paragraph(text)]);
+      final key = await mount(tester, c);
+      c.setSelection(ft.TextSelection(text.length + 1, 3));
+      await tester.pump();
+      await delta(tester, key, text: 'X');
+      expect(c.state.doc.child(0).textContent, '😀X');
+      expect(c.state.selection, const ft.TextSelection(4));
+    },
+  );
+
+  testWidgets(
     'long input is windowed and editing retains surrounding document text',
     (tester) async {
       final text = List.filled(10000, '中').join();
@@ -1431,6 +1445,38 @@ void main() {
       expect(calls, 0);
     },
   );
+  for (final (lineEndings, text) in [
+    ('LF', 'value\n\n\nnext'),
+    ('CRLF and CR', 'value\r\n\r\n\rnext'),
+  ]) {
+    testWidgets(
+      'IME clipboard $lineEndings stays literal in code with one undo',
+      (tester) async {
+        final c = controller([schema.node('codeBlock')]);
+        final key = await mount(tester, c);
+        final before = c.state;
+        await delta(tester, key, text: text);
+        expect(c.state.doc.child(0).type, 'codeBlock');
+        expect(c.state.doc.child(0).textContent, 'value\n\n\nnext');
+        expect(c.state.selection, const ft.TextSelection(13));
+        expect(c.state.doc.childCount, 2);
+        expect(c.state.doc.child(1).textContent, isEmpty);
+        final pasted = c.state;
+        c.exec('undo');
+        expect(c.state.doc.toJson(), before.doc.toJson());
+        expect(c.state.selection, before.selection);
+        expect(c.state.history.canUndo, isFalse);
+        c.exec('redo');
+        expect(c.state.doc.toJson(), pasted.doc.toJson());
+        expect(c.state.selection, pasted.selection);
+      },
+      variant: const TargetPlatformVariant({
+        TargetPlatform.android,
+        TargetPlatform.iOS,
+      }),
+    );
+  }
+
   testWidgets('iOS floating cursor retains its final caret on end', (
     tester,
   ) async {

@@ -27,7 +27,7 @@ abstract final class MediaMarkup {
 
   static final RegExp _reserved = RegExp('[\uFDD0-\uFDEF]');
   static final RegExp _lineBreaks = RegExp(r'\s*[\r\n]+\s*');
-  // 不用 String.trim()：它比 JS 的 trim 多剔 U+0085，两端纯文本会对不上
+  // 保留名称两端的空白规则：U+0085 不算要剔除的空白，所以不用 String.trim()
   static final RegExp _edgeSpace = RegExp(r'^\s+|\s+$');
 
   static String open(MediaKind kind) =>

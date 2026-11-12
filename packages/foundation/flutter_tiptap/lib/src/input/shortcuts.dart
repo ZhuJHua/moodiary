@@ -728,22 +728,26 @@ extension on TiptapEditorState {
     _scheduleGeometry(reveal: true);
   }
 
-  Future<void> _copy({bool cut = false}) async {
+  Future<bool> _copy({bool cut = false}) async {
     final controller = widget.controller;
-    if (controller.state.selection.empty) return;
+    if (controller.state.selection.empty) return false;
     final revision = controller.revision;
     await controller.copy(write: widget.onCopyClipboard);
-    if (!mounted) return;
+    if (!mounted) return false;
+    var didCut = false;
     if (cut &&
         !widget.readOnly &&
         identical(controller, widget.controller) &&
         revision == controller.revision) {
-      controller.apply(
-        controller.commands.execute(controller.state, 'deleteBackward')
-          ..setMeta('closeHistory', true),
-      );
+      final transaction = controller.commands.execute(
+        controller.state,
+        'deleteBackward',
+      )..setMeta('closeHistory', true);
+      controller.apply(transaction);
+      didCut = transaction.docChanged;
     }
     _hideContextMenu();
+    return didCut;
   }
 
   Future<void> _pastePlain() async {

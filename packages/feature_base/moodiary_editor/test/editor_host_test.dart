@@ -39,6 +39,30 @@ void main() {
     return h;
   }
 
+  testWidgets('stored multiline titles open as one line without saving', (
+    tester,
+  ) async {
+    final titles = <String>[];
+    final h = MoodiaryEditorHost(
+      MoodiaryEditor(
+        initialContent: _doc('body'),
+        initialTitle: 'Travel\nDay 1',
+        onTitleChanged: titles.add,
+      ),
+    );
+    addTearDown(h.dispose);
+    expect(h.title.text, 'Travel Day 1');
+    await h.swapDocument(
+      content: _doc('other'),
+      title: 'One\r\nTwo\u2028Three',
+    );
+    expect(h.title.text, 'One Two Three');
+    await tester.pump(const Duration(seconds: 1));
+    expect(titles, isEmpty);
+    h.title.text = 'One Two Three!';
+    expect(titles, ['One Two Three!']);
+  });
+
   test('image imports accept files and file URIs, reject non-images and survive unavailable files', () async {
     final directory = Directory.systemTemp.createTempSync('images-');
     addTearDown(() => directory.deleteSync(recursive: true));

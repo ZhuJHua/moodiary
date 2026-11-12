@@ -396,7 +396,10 @@ class _DiaryHeader extends StatelessWidget {
                 textInputAction: TextInputAction.next,
                 keyboardType: TextInputType.text,
                 inputFormatters: [
-                  FilteringTextInputFormatter.singleLineFormatter,
+                  FilteringTextInputFormatter.deny(
+                    _titleLineBreak,
+                    replacementString: ' ',
+                  ),
                 ],
                 style: _textStyle(
                   family: font,

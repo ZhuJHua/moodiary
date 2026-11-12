@@ -665,19 +665,36 @@ class TiptapController extends ChangeNotifier {
 
   /// Inserts literal text with line breaks grouped into one undo event.
   void insertPlainText(String text) {
-    final parts = text
-        .replaceAll('\r\n', '\n')
-        .replaceAll('\r', '\n')
-        .split('\n');
+    text = text.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
     final group = 'paste-${developer.Timeline.now}';
+    var started = false;
+    void applyPart(m.Transaction transaction) {
+      if (!started) transaction.setMeta('closeHistory', true);
+      apply(transaction);
+      started = true;
+    }
+
+    if (_state.doc.resolve(_state.selection.from).parent.type == 'codeBlock') {
+      if (text.isNotEmpty || !_state.selection.empty) {
+        applyPart(
+          commands.execute(_state, 'insertText', {
+            'text': text,
+            'committed': false,
+            'composition': group,
+          }),
+        );
+      }
+      return;
+    }
+    final parts = text.split('\n');
     for (var i = 0; i < parts.length; i++) {
       if (i > 0) {
-        apply(
+        applyPart(
           commands.execute(_state, 'splitBlock')..setMeta('composition', group),
         );
       }
       if (parts[i].isNotEmpty || !_state.selection.empty) {
-        apply(
+        applyPart(
           commands.execute(_state, 'insertText', {
             'text': parts[i],
             'committed': false,

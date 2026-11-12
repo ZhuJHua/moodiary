@@ -11,13 +11,14 @@ class TiptapContextMenuDetails {
   const TiptapContextMenuDetails({
     required this.anchorAbove,
     required this.anchorBelow,
+    this.cut,
     required this.copy,
     required this.paste,
     required this.selectAll,
     required this.hide,
   });
   final Offset anchorAbove, anchorBelow;
-  final VoidCallback? copy, paste, selectAll;
+  final VoidCallback? cut, copy, paste, selectAll;
   final VoidCallback hide;
 }
 
@@ -1095,6 +1096,8 @@ class TiptapEditorState extends State<TiptapEditor>
   }
 
   List<(String, VoidCallback)> _menuActions(WidgetsLocalizations strings) => [
+    if (!widget.controller.state.selection.empty && !widget.readOnly)
+      (strings.cutButtonLabel, () => unawaited(_copyFromMenu(cut: true))),
     if (!widget.controller.state.selection.empty)
       (strings.copyButtonLabel, () => unawaited(_copyFromMenu())),
     if (!widget.readOnly) (strings.pasteButtonLabel, () => unawaited(_paste())),
@@ -1103,17 +1106,22 @@ class TiptapEditorState extends State<TiptapEditor>
 
   // As in Flutter's text fields, a menu copy ends the selection on Android
   // and keeps it elsewhere.
-  Future<void> _copyFromMenu() async {
+  Future<void> _copyFromMenu({bool cut = false}) async {
     final controller = widget.controller;
-    final selection = controller.state.selection;
-    await _copy();
+    final revision = controller.revision;
+    final didCut = await _copy(cut: cut);
     if (!mounted ||
         defaultTargetPlatform != TargetPlatform.android ||
-        controller.state.selection != selection) {
+        !identical(controller, widget.controller) ||
+        (cut ? !didCut : controller.revision != revision)) {
       return;
     }
     controller.setSelection(
-      m.Selection.near(controller.state.doc, selection.to, bias: -1),
+      m.Selection.near(
+        controller.state.doc,
+        controller.state.selection.to,
+        bias: -1,
+      ),
     );
   }
 
@@ -1178,6 +1186,9 @@ class TiptapEditorState extends State<TiptapEditor>
     final details = TiptapContextMenuDetails(
       anchorAbove: above,
       anchorBelow: below,
+      cut: selection.empty || widget.readOnly
+          ? null
+          : () => unawaited(_copyFromMenu(cut: true)),
       copy: selection.empty ? null : () => unawaited(_copyFromMenu()),
       paste: widget.readOnly ? null : () => unawaited(_paste()),
       selectAll: _selectsAll ? null : _selectAllFromMenu,

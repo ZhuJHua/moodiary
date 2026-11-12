@@ -2,6 +2,7 @@ part of '../model.dart';
 
 extension _PasteCommands on EditorCommands {
   void _pasteText(Transaction tr, String text, {bool plain = false}) {
+    text = text.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
     final pos = tr.doc.resolve(tr.selection.from), schema = tr.doc.schema;
     if (pos.parent.type == 'codeBlock') {
       _insertText(
