@@ -20,12 +20,17 @@ class _MediaNode extends StatefulWidget {
 class _MediaNodeState extends State<_MediaNode> {
   late Future<({String path, String mime})?> _source;
   late Future<({String path, String mime})?> _poster;
-  MVideoPlaybackController? _video;
-  components.AudioPlaybackController? _audio;
+  late int _generation;
+  String? _imagePath;
+  ImageProvider? _imageProvider;
+  ImageStream? _imageStream;
+  ImageStreamListener? _imageListener;
+  _MediaPlayback? _playback;
+  MVideoPlaybackController? get _video => _playback?.video;
+  components.AudioPlaybackController? get _audio => _playback?.audio;
   String get _name => widget.view.node.attrs['src'] as String? ?? '';
   bool _controls = true;
   Timer? _hide;
-  int _resolveGeneration = 0;
   @override
   void initState() {
     super.initState();
@@ -33,79 +38,45 @@ class _MediaNodeState extends State<_MediaNode> {
   }
 
   void _resolve() {
-    widget.host._media[_name] = this;
-    Future<({String path, String mime})?> resolve(bool poster) async {
-      if (_name.startsWith('https://') ||
-          _name.startsWith('http://') ||
-          widget.view.node.type == 'image' && _name.startsWith('data:image/')) {
-        return poster ? null : (path: _name, mime: '');
-      }
-      if (!_isSafeMediaName(_name)) return null;
-      try {
-        return await widget.host._configuration.mediaResolver?.call(
-          _name,
-          poster: poster,
-        );
-      } catch (error, stack) {
-        _log(
-          'media resolve failed: $_name',
-          error: error,
-          stack: stack,
-          level: 1000,
-        );
-        return null;
-      }
+    _generation = widget.host._generation;
+    _detachImage();
+    if (widget.view.node.type == 'audio' || widget.view.node.type == 'video') {
+      _playback = widget.host._borrowMedia(widget.view);
+      _playback?.addListener(_updated);
     }
-
-    final generation = ++_resolveGeneration;
-    _source = resolve(false);
-    unawaited(
-      _source.then((source) {
-        if (mounted && generation == _resolveGeneration && source != null) {
-          if (widget.view.node.type == 'video') _initializeVideo(source.path);
-          if (widget.view.node.type == 'audio') {
-            final audio = _audio = components.AudioPlaybackController()
-              ..progress.addListener(_updated);
-            unawaited(
-              audio.prepare(source.path).catchError((
-                Object error,
-                StackTrace stack,
-              ) {
-                _log('audio metadata read failed', error: error, stack: stack);
-              }),
-            );
-          }
-        }
-      }),
-    );
-    _poster = resolve(true);
+    _source = _playback?.source ?? widget.host._resolveMedia(widget.view.node);
+    _poster = widget.host._resolveMedia(widget.view.node, poster: true);
   }
 
   @override
   void didUpdateWidget(_MediaNode oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.view.node.attrs['src'] != _name) {
-      oldWidget.host._media.remove(oldWidget.view.node.attrs['src']);
-      _video?.dispose();
-      _video = null;
-      _audio?.dispose();
-      _audio = null;
+    if (oldWidget.host != widget.host ||
+        _generation != widget.host._generation ||
+        oldWidget.view.node.attrs['src'] != _name ||
+        oldWidget.view.node.type != widget.view.node.type ||
+        _playback?.disposed == true ||
+        _playback != null &&
+            !identical(widget.host._media[widget.view.position], _playback)) {
+      _detachPlayback(oldWidget.host);
       _resolve();
     }
   }
 
+  void _detachPlayback(MoodiaryEditorHost host) {
+    _hide?.cancel();
+    _controls = true;
+    final playback = _playback;
+    _playback = null;
+    if (playback == null) return;
+    playback.removeListener(_updated);
+    host._returnMedia(playback);
+  }
+
   @override
   void dispose() {
-    _hide?.cancel();
-    if (identical(widget.host._media[_name], this)) {
-      widget.host._media.remove(_name);
-    }
-    _video?.state.removeListener(_updated);
-    _video?.geometry.removeListener(_updated);
-    _video?.progress.removeListener(_updated);
-    _audio?.progress.removeListener(_updated);
-    _video?.dispose();
-    _audio?.dispose();
+    _detachImage();
+    _detachPlayback(widget.host);
     super.dispose();
   }
 
@@ -129,34 +100,6 @@ class _MediaNodeState extends State<_MediaNode> {
     }
   }
 
-  void _initializeVideo(String path) {
-    if (_video != null) return;
-    _video = MVideoPlaybackController(
-      source: path.startsWith('http://') || path.startsWith('https://')
-          ? VideoSource.network(Uri.parse(path))
-          : VideoSource.file(path),
-      portFactory: components.videoPlayerPortFactory,
-      autoPlay: false,
-    );
-    _video!.state.addListener(_updated);
-    _video!.geometry.addListener(_updated);
-    _video!.progress.addListener(_updated);
-    final video = _video!;
-    unawaited(
-      () async {
-        await video.initialize();
-        // Mount the texture before seeking so paused AVPlayer/ExoPlayer decodes
-        // its initial picture without autoplay or an audible playback pulse.
-        await WidgetsBinding.instance.endOfFrame;
-        if (mounted && _video == video) {
-          await revealVideoFirstFrame(video);
-        }
-      }().catchError((Object error, StackTrace stack) {
-        _log('video preview frame failed', error: error, stack: stack);
-      }),
-    );
-  }
-
   void _updated() {
     if (mounted) setState(() {});
   }
@@ -171,58 +114,74 @@ class _MediaNodeState extends State<_MediaNode> {
     }
   }
 
-  Future<void> resumeAt(Duration position) async {
-    await _video?.seekTo(position);
-    await _video?.play();
+  Future<void> _fullscreen() async {
+    final playback = _playback;
+    if (playback == null) return;
     _keepControls();
+    await widget.host._openMediaFullscreen(playback);
+    if (mounted) _keepControls();
   }
 
-  Future<void> _fullscreen() async {
-    final video = _video;
-    if (video == null) return;
-    final position = video.progress.value.position;
-    await video.pause();
-    _keepControls();
-    final resume = await widget.host._configuration.onVideoFullscreen?.call(
-      _name,
-      position,
-    );
-    if (mounted && resume != null) await resumeAt(resume);
+  void _detachImage() {
+    if (_imageListener case final listener?) {
+      _imageStream?.removeListener(listener);
+    }
+    _imageListener = null;
+    _imageStream = null;
+    _imageProvider = null;
+    _imagePath = null;
   }
 
   Widget _image(String path, {BoxFit fit = BoxFit.contain}) {
-    if (path.startsWith('data:image/')) {
+    if (_imagePath != path) {
+      _detachImage();
       try {
-        return Image.memory(
-          UriData.parse(path).contentAsBytes(),
-          width: widget.view.width,
-          fit: fit,
-          errorBuilder: (_, _, _) => _missing(LucideIcons.image),
-        );
+        _imageProvider = path.startsWith('data:image/')
+            ? MemoryImage(UriData.parse(path).contentAsBytes())
+            : path.startsWith('http')
+            ? NetworkImage(path)
+            : FastImage(path);
       } on FormatException {
         return _missing(LucideIcons.image);
       }
+      _imagePath = path;
+      if (widget.view.node.type == 'image') {
+        final host = widget.host, generation = _generation, name = _name;
+        _imageStream = _imageProvider!.resolve(
+          createLocalImageConfiguration(context),
+        );
+        _imageListener = ImageStreamListener((info, synchronous) {
+          final ratio = info.image.width / info.image.height;
+          info.dispose();
+          if (!mounted || host._disposed || generation != host._generation) {
+            return;
+          }
+          final previous = host._imageRatios[name];
+          if (previous?.header == true) return;
+          host._imageRatios[name] = (ratio: ratio, header: false);
+          if (!synchronous && previous?.ratio != ratio) setState(() {});
+        }, onError: (Object error, StackTrace? stack) {});
+        _imageStream!.addListener(_imageListener!);
+      }
     }
-    return path.startsWith('http')
-        ? Image.network(
-            path,
-            width: widget.view.width,
-            fit: fit,
-            errorBuilder: (_, _, _) => _missing(LucideIcons.image),
-          )
-        : Image(
-            image: FastImage(path),
-            width: widget.view.width,
-            fit: fit,
-            frameBuilder: (context, child, frame, synchronous) =>
-                frame == null ? _missing(LucideIcons.image) : child,
-            errorBuilder: (_, _, _) => _missing(LucideIcons.image),
-          );
+    return Image(
+      image: _imageProvider!,
+      width: widget.view.width,
+      height: widget.view.node.type == 'image'
+          ? widget.host.estimateNodeHeight(widget.view.node, widget.view.width)
+          : null,
+      fit: fit,
+      frameBuilder: (context, child, frame, synchronous) =>
+          frame == null ? _missing(LucideIcons.image) : child,
+      errorBuilder: (_, _, _) => _missing(LucideIcons.image),
+    );
   }
 
   Widget _missing(IconData icon) => SizedBox(
     width: widget.view.width,
-    height: widget.view.width * 2 / 3,
+    height: widget.view.node.type == 'image'
+        ? widget.host.estimateNodeHeight(widget.view.node, widget.view.width)
+        : widget.view.width * 2 / 3,
     child: ColoredBox(
       color: context.theme.colors.surfaceContainer,
       child: Icon(icon, color: context.theme.colors.onSurfaceVariant),
@@ -232,7 +191,9 @@ class _MediaNodeState extends State<_MediaNode> {
   Widget build(
     BuildContext context,
   ) => FutureBuilder<({String path, String mime})?>(
+    key: ValueKey((widget.host, _generation, _name, widget.view.node.type)),
     future: _source,
+    initialData: widget.host._mediaSources[(_name, false)],
     builder: (context, snapshot) {
       final path = snapshot.data?.path;
       final type = widget.view.node.type;
@@ -254,6 +215,7 @@ class _MediaNodeState extends State<_MediaNode> {
             children: [
               FutureBuilder<({String path, String mime})?>(
                 future: _poster,
+                initialData: widget.host._mediaSources[(_name, true)],
                 builder: (context, poster) => poster.data == null
                     ? ColoredBox(
                         color: context.theme.colors.surfaceContainerHigh,

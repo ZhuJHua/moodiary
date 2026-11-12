@@ -122,6 +122,7 @@ extension on _MediaNodeState {
                                   : null,
                               label: context.l10n.editor.content.audioProgress,
                               description: time,
+                              duration: progress.duration,
                               color: colors.onSurface,
                               rail: colors.surfaceContainerHighest,
                             ),
@@ -216,6 +217,7 @@ extension on _MediaNodeState {
                 label: context.l10n.editor.content.videoProgress,
                 description:
                     '${_formatDuration(progress?.position ?? Duration.zero)} / ${_formatDuration(progress?.duration ?? Duration.zero)}',
+                duration: progress?.duration ?? Duration.zero,
                 color: context.theme.onMedia,
                 rail: context.theme.onMedia.withValues(alpha: .12),
                 video: true,
@@ -364,6 +366,7 @@ class _SeekBar extends StatefulWidget {
     required this.onChanged,
     required this.label,
     required this.description,
+    required this.duration,
     required this.color,
     required this.rail,
     this.video = false,
@@ -371,6 +374,7 @@ class _SeekBar extends StatefulWidget {
   final double value;
   final ValueChanged<double>? onChanged;
   final String label, description;
+  final Duration duration;
   final Color color, rail;
   final bool video;
   @override
@@ -392,16 +396,22 @@ class _SeekBarState extends State<_SeekBar> {
         }
       }
 
+      final increased = (widget.value + .05).clamp(0.0, 1.0),
+          decreased = (widget.value - .05).clamp(0.0, 1.0);
+      String describe(double value) =>
+          '${_formatDuration(widget.duration * value)} / ${_formatDuration(widget.duration)}';
       return Semantics(
         slider: true,
         label: widget.label,
         value: widget.description,
+        increasedValue: widget.onChanged == null ? null : describe(increased),
+        decreasedValue: widget.onChanged == null ? null : describe(decreased),
         onIncrease: widget.onChanged == null
             ? null
-            : () => widget.onChanged!((widget.value + .05).clamp(0, 1)),
+            : () => widget.onChanged!(increased),
         onDecrease: widget.onChanged == null
             ? null
-            : () => widget.onChanged!((widget.value - .05).clamp(0, 1)),
+            : () => widget.onChanged!(decreased),
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTapDown: widget.onChanged == null

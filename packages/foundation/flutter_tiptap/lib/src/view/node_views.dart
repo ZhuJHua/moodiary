@@ -1,5 +1,23 @@
 part of '../editor.dart';
 
+class _NodeSizeKey {
+  const _NodeSizeKey(this.node, this.width);
+
+  final m.Node node;
+  final double width;
+
+  @override
+  bool operator ==(Object other) =>
+      other is _NodeSizeKey && width == other.width && node.eq(other.node);
+
+  @override
+  int get hashCode => Object.hash(
+    node.type,
+    node.attrs['src'] is String ? node.attrs['src'] : null,
+    width,
+  );
+}
+
 class _NodeViewParentData extends ContainerBoxParentData<RenderBox> {
   int row = 0;
   int position = 0;
@@ -237,7 +255,8 @@ extension _NodeViewLayout on _RenderEditorViewport {
   }
 
   Offset _nodeOrigin(int index) {
-    final row = _row(index), width = _nodeWidths[row.node] ?? _nodeWidth(index);
+    final row = _row(index), available = _nodeWidth(index);
+    final width = _measuredSize(row.node, available)?.width ?? available;
     return _rowOrigin(index) +
         Offset(
           _style.centerMedia && const {'image', 'video'}.contains(row.node.type)
@@ -297,10 +316,13 @@ extension _NodeViewLayout on _RenderEditorViewport {
         parentUsesSize: true,
       );
       if (!code) {
-        _nodeWidths[target.node] = child.size.width;
         final height = child.size.height;
-        final changed = _nodeSizes[target.node] != height;
-        _nodeSizes[target.node] = height;
+        final changed =
+            _measuredSize(target.node, target.width)?.height != height;
+        final sizeKey = _NodeSizeKey(target.node, target.width);
+        _nodeSizes.remove(sizeKey);
+        _nodeSizes[sizeKey] = child.size;
+        if (_nodeSizes.length > 512) _nodeSizes.remove(_nodeSizes.keys.first);
         _layouts[target.node]?.height = height;
         if (target.table) {
           if (changed) {
@@ -318,15 +340,7 @@ extension _NodeViewLayout on _RenderEditorViewport {
             }
           }
         } else {
-          final heights = _heights!,
-              anchor = heights.indexAt(
-                math.max(0, _offset.pixels - _contentTop),
-              );
-          final before = heights.offsetOf(anchor);
-          heights.measure(target.row, height + _spacing(target.row));
-          if (target.row < anchor) {
-            _offset.correctBy(heights.offsetOf(anchor) - before);
-          }
+          _measureRow(target.row, height + _spacing(target.row));
         }
       }
       child = data.nextSibling;

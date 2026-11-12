@@ -1,7 +1,7 @@
 part of '../moodiary_editor.dart';
 
 class _MoodiaryEditorState extends State<MoodiaryEditor>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, RouteAware {
   late final MoodiaryEditorHost host;
   int? _dropTarget;
   int _dropGeneration = -1;
@@ -141,6 +141,16 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) moodiaryRouteObserver.subscribe(this, route);
+  }
+
+  @override
+  void didPushNext() => unawaited(host.pauseMedia());
+
+  @override
   void didUpdateWidget(MoodiaryEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.controller != widget.controller) {
@@ -160,6 +170,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
     _closeRestore();
     _clearDropTarget();
     WidgetsBinding.instance.removeObserver(this);
+    moodiaryRouteObserver.unsubscribe(this);
     unawaited(host.flush());
     widget.controller?._unbind(host);
     host.removeListener(_changed);
@@ -298,23 +309,8 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
                           ],
                         )
                       : null,
-                  nodeViews: {
-                    for (final type in [
-                      'image',
-                      'video',
-                      'audio',
-                      'attachment',
-                    ])
-                      type: (context, node) =>
-                          _MediaNode(host: host, view: node),
-                  },
-                  nodeHeightEstimator: (node, width) => switch (node.type) {
-                    'image' => width * 2 / 3,
-                    'video' => width * 9 / 16,
-                    'audio' => 76,
-                    'attachment' => 76,
-                    _ => null,
-                  },
+                  nodeViews: host.nodeViews,
+                  nodeHeightEstimator: host.estimateNodeHeight,
                   codeBlockHeader: (context, node) =>
                       _CodeHeader(node: node, readOnly: host.readOnly),
                   contextMenuBuilder: _contextMenu,

@@ -167,6 +167,16 @@ class AudioPlaybackController {
     }
   }
 
+  Future<void> pause() async {
+    if (_disposed || !_playing) return;
+    _emit(playing: false);
+    try {
+      await _player.pause();
+    } catch (e, s) {
+      logger.e('[audio] pause failed', error: e, stackTrace: s);
+    }
+  }
+
   Future<void> seek(double fraction, {Duration? fallbackTotal}) async {
     if (_disposed) return;
     final totalMs = _duration.inMilliseconds > 0

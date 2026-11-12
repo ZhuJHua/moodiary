@@ -13,10 +13,13 @@ import 'package:moodiary_components/moodiary_components.dart' as components;
 import 'package:moodiary_i18n/moodiary_i18n.dart';
 import 'package:moodiary_models/moodiary_models.dart' as models;
 import 'package:moodiary_native/moodiary_native.dart';
+import 'package:moodiary_router/moodiary_router.dart'
+    show moodiaryRouteObserver;
 import 'package:moodiary_theme/moodiary_theme.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
+import 'editor/media_cache.dart';
 import 'ime/ime_panel.dart';
 import 'media.dart';
 import 'toolbar/editor_command.dart';
@@ -30,6 +33,7 @@ part 'editor/host.dart';
 part 'editor/media_controls.dart';
 part 'editor/meta_options.dart';
 part 'editor/nodes.dart';
+part 'editor/playback.dart';
 part 'editor/style.dart';
 part 'editor/transfer.dart';
 part 'editor/view.dart';

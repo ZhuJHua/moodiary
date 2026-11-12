@@ -134,8 +134,17 @@ Future<TiptapMetadata> _metadataForContentText(
 
 /// Connects the document editor to the shared toolbar and host callbacks.
 class MoodiaryEditorHost extends ChangeNotifier implements EditorHost {
-  MoodiaryEditorHost(MoodiaryEditor configuration)
-    : _configuration = configuration {
+  MoodiaryEditorHost(
+    MoodiaryEditor configuration, {
+    components.AudioPlaybackController Function()? audioControllerFactory,
+    VideoPlaybackPortFactory? videoPortFactory,
+    Future<FastImageProbe> Function({required String filePath})? imageProbe,
+  }) : _configuration = configuration,
+       _audioControllerFactory =
+           audioControllerFactory ?? components.AudioPlaybackController.new,
+       _videoPortFactory =
+           videoPortFactory ?? components.videoPlayerPortFactory,
+       _imageProbe = imageProbe ?? FastImageCodec.probe {
     final content = configuration.initialContent;
     _largeDocument = content.length >= _asyncLoadThreshold;
     _loading = _largeDocument;
@@ -172,6 +181,7 @@ class MoodiaryEditorHost extends ChangeNotifier implements EditorHost {
         configuration.initialContentText,
       );
     } else {
+      _probeDocumentImages(initial.doc);
       _scheduleCount(
         initial: initial,
         contentText: configuration.initialContentText,
@@ -188,7 +198,38 @@ class MoodiaryEditorHost extends ChangeNotifier implements EditorHost {
       _focus = ValueNotifier<EditorFocusTarget>(EditorFocusTarget.none);
   final _search = ValueNotifier<EditorSearchState?>(null);
   final contentError = ValueNotifier<String?>(null);
-  final Map<String, _MediaNodeState> _media = {};
+  final components.AudioPlaybackController Function() _audioControllerFactory;
+  final VideoPlaybackPortFactory _videoPortFactory;
+  final Future<FastImageProbe> Function({required String filePath}) _imageProbe;
+  final Map<int, _MediaPlayback> _media = {};
+  final _mediaSources =
+      MediaCache<(String, bool), ({String path, String mime})>();
+  final _mediaRequests =
+      MediaCache<(String, bool), Future<({String path, String mime})?>>();
+  final _imageRatios = MediaCache<String, ({double ratio, bool header})>();
+  Iterator<ft.Node>? _pendingImageProbes;
+  int _activeImageProbes = 0, _imageProbeGeneration = 0;
+  _MediaPlayback? _fullscreenMedia;
+
+  double? estimateNodeHeight(ft.Node node, double width) => switch (node.type) {
+    'image' =>
+      width /
+          (_imageRatios[node.attrs['src'] as String? ?? '']?.ratio ?? 3 / 2),
+    'video' => width * 9 / 16,
+    'audio' || 'attachment' => 76,
+    _ => null,
+  };
+
+  void _recordImageHeader(String name, double ratio) {
+    final previous = _imageRatios[name];
+    _imageRatios[name] = (ratio: ratio, header: true);
+    if (previous?.ratio != ratio) notifyListeners();
+  }
+
+  Map<String, ft.TiptapNodeViewBuilder> get nodeViews => {
+    for (final type in ['image', 'video', 'audio', 'attachment'])
+      type: (context, view) => _MediaNode(host: this, view: view),
+  };
   ft.Selection? _held;
   ft.Node? _heldDocument, _lastDocument;
   TextSelection? _heldTitle;
@@ -297,6 +338,7 @@ class MoodiaryEditorHost extends ChangeNotifier implements EditorHost {
     editor.replaceDocument(result.doc);
     _lastDocument = editor.state.doc;
     _loading = false;
+    _probeDocumentImages(result.doc);
     _deriveState();
     _scheduleCount(initial: result, contentText: contentText);
   }
@@ -318,6 +360,7 @@ class MoodiaryEditorHost extends ChangeNotifier implements EditorHost {
     final replacePending =
         _loading && _loadingContent != configuration.initialContent;
     _configuration = configuration;
+    if (previous.readOnly != configuration.readOnly) _releaseAllMedia();
     if (replacePending) {
       unawaited(
         swapDocument(
@@ -362,6 +405,7 @@ class MoodiaryEditorHost extends ChangeNotifier implements EditorHost {
   void _changed() {
     final doc = editor.state.doc;
     if (!identical(doc, _lastDocument)) {
+      _syncMedia();
       _metadata = null;
       _metadataDocument = null;
       if (_lastDocument != null && !_loading && !readOnly) {
@@ -643,6 +687,11 @@ class MoodiaryEditorHost extends ChangeNotifier implements EditorHost {
     final generation = ++_generation;
     await flush();
     if (_disposed || generation != _generation) return;
+    _releaseAllMedia();
+    _mediaSources.clear();
+    _mediaRequests.clear();
+    _imageRatios.clear();
+    _pendingImageProbes = null;
     _lastHeading = -2;
     _save?.cancel();
     _countTimer?.cancel();
@@ -712,8 +761,21 @@ class MoodiaryEditorHost extends ChangeNotifier implements EditorHost {
   }
 
   @override
-  Future<void> resumeVideo(String name, Duration position) async =>
-      _media[name]?.resumeAt(position);
+  Future<void> resumeVideo(String name, Duration position) async {
+    final fullscreen = _fullscreenMedia;
+    final playback =
+        fullscreen != null && !fullscreen.disposed && fullscreen.name == name
+        ? fullscreen
+        : _media.values
+              .where((entry) => entry.type == 'video' && entry.name == name)
+              .lastOrNull;
+    await playback?.resumeAt(position);
+  }
+
+  /// Pauses every audio and video in the body, including offscreen ones.
+  Future<void> pauseMedia() =>
+      Future.wait([for (final entry in _media.values.toList()) entry.pause()]);
+
   void previewImage(int documentPosition) {
     final images = <String>[];
     final positions = <int>[];
@@ -984,6 +1046,11 @@ class MoodiaryEditorHost extends ChangeNotifier implements EditorHost {
   @override
   void dispose() {
     _disposed = true;
+    _releaseAllMedia();
+    _mediaSources.clear();
+    _mediaRequests.clear();
+    _imageRatios.clear();
+    _pendingImageProbes = null;
     _syncSystemPaste();
     _save?.cancel();
     _countTimer?.cancel();

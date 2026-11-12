@@ -106,8 +106,14 @@ class _RenderEditorViewport extends RenderBox
   _ViewportElement? _childManager;
   Map<String, TiptapNodeViewBuilder> _nodeViews = const {};
   TiptapNodeHeightEstimator? _nodeHeightEstimator;
-  final Expando<double> _nodeSizes = Expando<double>();
-  final Expando<double> _nodeWidths = Expando<double>();
+  final _nodeSizes = <_NodeSizeKey, Size>{};
+
+  Size? _measuredSize(m.Node node, double width) {
+    final key = _NodeSizeKey(node, width), size = _nodeSizes.remove(key);
+    if (size != null) _nodeSizes[key] = size;
+    return size;
+  }
+
   @override
   void setupParentData(RenderBox child) {
     if (child.parentData is! _NodeViewParentData) {
@@ -376,6 +382,7 @@ class _RenderEditorViewport extends RenderBox
   int _firstVisible = 0, _lastVisible = 0;
   bool _geometryScheduled = false;
   bool _inLayout = false;
+  bool _resizing = false;
   bool _cacheReady = false;
   // Keep the unrestricted (possibly negative or beyond max extent) offset of
   // the frame actually painted. Row lookup may clamp an index, never this
@@ -409,6 +416,7 @@ class _RenderEditorViewport extends RenderBox
     if (!identical(controller, _controller)) {
       if (attached) _controller.removeListener(_changed);
       _clearLayouts();
+      _nodeSizes.clear();
       _controller = controller;
       _doc = controller.state.doc;
       _heights = null;
@@ -424,6 +432,7 @@ class _RenderEditorViewport extends RenderBox
     }
     if (style != _style) {
       _clearLayouts();
+      _nodeSizes.clear();
       _style = style;
       _rows.clear();
       _highlights = Expando<TextSpan>();
@@ -464,6 +473,7 @@ class _RenderEditorViewport extends RenderBox
   @override
   void dispose() {
     _clearLayouts();
+    _nodeSizes.clear();
     _placeholderParagraph?.dispose();
     _placeholderParagraph = null;
     super.dispose();
@@ -471,6 +481,7 @@ class _RenderEditorViewport extends RenderBox
 
   void _fontsChanged() {
     _clearLayouts();
+    _nodeSizes.clear();
     _chrome = Expando<Map<String, ui.Paragraph>>();
     _placeholderParagraph = null;
     markNeedsLayout();
@@ -491,7 +502,10 @@ class _RenderEditorViewport extends RenderBox
       final transaction = _controller.lastTransaction;
       final mapsDocument =
           transaction != null && identical(transaction.before, _doc);
-      if (transaction == null) _cacheReady = false;
+      if (transaction == null) {
+        _cacheReady = false;
+        _nodeSizes.clear();
+      }
       if (transaction != null && identical(transaction.before, _doc)) {
         final documents = transaction.documents;
         for (var i = 1; i < documents.length; i++) {
@@ -655,7 +669,7 @@ class _RenderEditorViewport extends RenderBox
       layout.blockLayout = (node) => _useLayout(node, () => _BlockLayout(node));
       layout.highlighter = _highlighter;
       layout.nodeHeight = (node, width) => _nodeViews.containsKey(node.type)
-          ? _nodeSizes[node] ??
+          ? _measuredSize(node, _widthFor(node, width))?.height ??
                 _nodeHeightEstimator?.call(node, _widthFor(node, width)) ??
                 _style.opaqueBlockHeight
           : null;
@@ -698,7 +712,7 @@ class _RenderEditorViewport extends RenderBox
     }
     if (_nodeViews.containsKey(node.type)) {
       layout.height =
-          _nodeSizes[node] ??
+          _measuredSize(node, _nodeWidth(index))?.height ??
           _nodeHeightEstimator?.call(node, _nodeWidth(index)) ??
           _style.opaqueBlockHeight;
     }
@@ -706,20 +720,27 @@ class _RenderEditorViewport extends RenderBox
     // Geometry and paint may need an offscreen paragraph, but only layout may
     // update row measurements or correct the scroll position.
     if (!_inLayout) return layout;
-    final heights = _heights!;
-    final anchor = heights.indexAt(math.max(0, _offset.pixels - _contentTop));
-    final before = heights.offsetOf(anchor);
     final height =
         layout.height + row.codeTop + row.codeBottom + _spacing(index);
-    if ((heights.heightAt(index) - height).abs() > .01) {
-      heights.measure(index, height);
-      if (!_inLayout) markNeedsLayout();
-    }
-    if (index < anchor) {
-      final delta = heights.offsetOf(anchor) - before;
-      if (delta.abs() > .01) _offset.correctBy(delta);
-    }
+    _measureRow(index, height);
     return layout;
+  }
+
+  void _measureRow(int index, double height) {
+    final heights = _heights!;
+    final delta = height - heights.heightAt(index);
+    if (delta.abs() <= .01) return;
+    final top = _offset.pixels - _contentTop;
+    final anchor = heights.indexAt(math.max(0, top));
+    final correct =
+        heights.offsetOf(index) < top - .01 &&
+        (index < anchor ||
+            !_resizing &&
+                (_readOnly ||
+                    index !=
+                        _indexForPosition(_controller.state.selection.head)));
+    heights.measure(index, height);
+    if (correct) _offset.correctBy(delta);
   }
 
   @override
@@ -743,15 +764,16 @@ class _RenderEditorViewport extends RenderBox
         width: _contentWidth,
         estimateHeight: (node, width) {
           final percent = node.attrs['widthPercent'];
-          return _nodeHeightEstimator?.call(
-            node,
-            width * (percent is num ? percent.clamp(25, 100) / 100 : 1),
-          );
+          final available =
+              width * (percent is num ? percent.clamp(25, 100) / 100 : 1);
+          return _measuredSize(node, available)?.height ??
+              _nodeHeightEstimator?.call(node, available);
         },
       );
     }
     final heights = _heights!;
-    if (heights.width != _contentWidth) {
+    _resizing = heights.width != _contentWidth;
+    if (_resizing) {
       final anchor = heights.indexAt(math.max(0, _offset.pixels - _contentTop));
       final oldY = heights.offsetOf(anchor);
       heights.setWidth(_contentWidth);
@@ -817,6 +839,7 @@ class _RenderEditorViewport extends RenderBox
     _positionNodeViews();
     _layoutOffset = _offset.pixels;
     _inLayout = false;
+    _resizing = false;
     _rows.removeWhere(
       (index, _) =>
           (index < _firstVisible || index >= _lastVisible) &&
@@ -1079,7 +1102,9 @@ class _RenderEditorViewport extends RenderBox
         for (final block in cell.blocks) {
           if (row.position + block.$2 != position) continue;
           final node = block.$1.node, available = cell.rect.width - 20;
-          final width = _nodeWidths[node] ?? _widthFor(node, available);
+          final availableWidth = _widthFor(node, available);
+          final width =
+              _measuredSize(node, availableWidth)?.width ?? availableWidth;
           return _origin(i) +
                   layout._blockOrigin(cell, block.$3) +
                   Offset(
@@ -1098,7 +1123,7 @@ class _RenderEditorViewport extends RenderBox
             : _rowOrigin(i)) &
         Size(
           _nodeViews.containsKey(row.node.type)
-              ? (_nodeWidths[row.node] ?? _nodeWidth(i))
+              ? (_measuredSize(row.node, _nodeWidth(i))?.width ?? _nodeWidth(i))
               : math.max(1, _contentWidth - row.indent),
           layout.height + row.codeTop + row.codeBottom,
         );

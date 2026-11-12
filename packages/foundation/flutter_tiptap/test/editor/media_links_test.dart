@@ -212,9 +212,8 @@ void main() {
       await tester.pump();
       await tester.pump();
       expect(tester.takeException(), isNull);
-      // The first partially visible image remains pinned at the same top pixel.
-      expect(geometry.rowRect(imagePosition).top, closeTo(-100, 1));
-      expect(geometry.rowRect(anchor).top, greaterThanOrEqualTo(old - 1));
+      expect(geometry.rowRect(imagePosition).top, closeTo(-200, 1));
+      expect(geometry.rowRect(anchor).top, closeTo(old, 1));
       expect(
         find.byType(ValueListenableBuilder<double>).evaluate().length,
         lessThan(12),
