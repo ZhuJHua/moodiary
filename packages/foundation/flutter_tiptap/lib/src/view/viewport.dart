@@ -1067,18 +1067,6 @@ class _RenderEditorViewport extends RenderBox
     }
   }
 
-  List<Rect> _cellSelectionRects() {
-    final selection = _controller.state.selection;
-    if (selection is! m.CellSelection) return [];
-    return [
-      for (var i = _firstVisible; i < _lastVisible; i++)
-        if (_layoutBlock(i) case final _TableRowLayout table)
-          for (final cell in table.cells)
-            if (selection.cells.contains(_row(i).position + cell.position))
-              cell.rect.shift(_origin(i)),
-    ];
-  }
-
   List<Rect> _searchRects() => [
     for (var i = _firstVisible; i < _lastVisible; i++)
       for (final match in _controller._searchIndex.rowMatches(
@@ -1419,9 +1407,7 @@ class _RenderEditorViewport extends RenderBox
         }
       }
     }
-    if (!selection.empty &&
-        selection is! m.NodeSelection &&
-        selection is! m.CellSelection) {
+    if (!selection.empty && selection is! m.NodeSelection) {
       final paint = Paint()..color = _style.selectionColor;
       for (final rect in selectionRects(selection.from, selection.to)) {
         canvas.drawRect(rect, paint);
@@ -1440,8 +1426,6 @@ class _RenderEditorViewport extends RenderBox
           canvas,
           origin,
           _style,
-          selection,
-          _row(i).position,
           _controller._searchIndex,
         );
         canvas.restore();

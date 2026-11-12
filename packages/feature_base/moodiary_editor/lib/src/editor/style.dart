@@ -134,7 +134,7 @@ ft.TiptapEditorStyle buildEditorStyle({
     markerColor: variant,
     quoteBorderColor: outline,
     ruleColor: outline,
-    caretColor: onSurface,
+    caretColor: primary,
     selectionColor: primary.withValues(alpha: .28),
     handleColor: primary,
     magnifierBorderColor: colors?.surfaceBright ?? surface,

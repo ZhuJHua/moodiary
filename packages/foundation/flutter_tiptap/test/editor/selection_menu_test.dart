@@ -134,89 +134,43 @@ void main() {
     expect(find.text('Paste'), findsOneWidget);
   }, variant: platforms);
 
-  for (final cells in [
-    ['a', '', '01234567890123456789'],
-    ['keep', 'left', 'right'],
-  ]) {
-    for (final action in ['Cut', 'Copy']) {
-      testWidgets(
-        'Android menu $action collapses a partial cell selection safely: $cells',
-        (tester) async {
-          final doc = schema.node(
-            'doc',
-            content: [
-              schema.node(
-                'table',
-                content: [
-                  schema.node(
-                    'tableRow',
-                    content: [
-                      for (final text in cells)
-                        schema.node(
-                          'tableCell',
-                          content: [
-                            schema.node(
-                              'paragraph',
-                              content: [
-                                if (text.isNotEmpty)
-                                  schema.node('text', text: text),
-                              ],
-                            ),
-                          ],
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          );
-          final map = ft.TableMap.get(doc.child(0));
-          final selection = ft.CellSelection(
-            doc,
-            map.map[1] + 1,
-            map.map[2] + 1,
-          );
-          final controller = await openMenu(
-            tester,
-            doc: doc,
-            selection: selection,
-            menuPosition: selection.headCell + 2,
-          );
-          final before = controller.state;
-          expect(before.selection, isA<ft.CellSelection>());
-          await tester.tap(find.text(action));
-          await tester.pumpAndSettle();
-          expect(tester.takeException(), isNull);
-          expect(clipboard, '${cells[1]}\n\n${cells[2]}');
-          expect(controller.state.selection.empty, isTrue);
-          expect(
-            controller.state.selection.to,
-            lessThanOrEqualTo(controller.state.doc.content.size),
-          );
-          expect(find.byType(CupertinoTextSelectionToolbar), findsNothing);
-          if (action == 'Cut') {
-            final row = controller.state.doc.child(0).child(0);
-            expect(row.content.map((cell) => cell.textContent), [
-              cells[0],
-              '',
-              '',
-            ]);
-            expect(
-              selection.to,
-              greaterThan(controller.state.doc.content.size),
-            );
-            controller.exec('undo');
-            expect(controller.state.doc.toJson(), before.doc.toJson());
-            expect(controller.state.selection, before.selection);
-            expect(controller.state.history.canUndo, isFalse);
-          } else {
-            expect(controller.state.doc.toJson(), before.doc.toJson());
-            expect(controller.state.selection.to, selection.to - 1);
-          }
-        },
-        variant: const TargetPlatformVariant({TargetPlatform.android}),
+  for (final action in ['Cut', 'Copy']) {
+    testWidgets('Android menu $action works inside a single table cell', (
+      tester,
+    ) async {
+      final doc = ft.TiptapHtmlCodec(schema).parse(
+        '<table><tr><td><p>keep</p></td><td><p>selected</p></td>'
+        '<td><p>other</p></td></tr></table><p></p>',
       );
-    }
+      final cell = ft.TableMap.get(doc.child(0)).map[1] + 1;
+      final selection = ft.TextSelection(cell + 2, cell + 10);
+      final controller = await openMenu(
+        tester,
+        doc: doc,
+        selection: selection,
+        menuPosition: cell + 3,
+      );
+      final before = controller.state;
+      await tester.tap(find.text(action));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(clipboard, 'selected');
+      expect(controller.state.selection.empty, isTrue);
+      expect(find.byType(CupertinoTextSelectionToolbar), findsNothing);
+      expect(
+        controller.state.doc
+            .child(0)
+            .child(0)
+            .content
+            .map((cell) => cell.textContent),
+        ['keep', action == 'Cut' ? '' : 'selected', 'other'],
+      );
+      if (action == 'Cut') {
+        controller.exec('undo');
+        expect(controller.state.doc.toJson(), before.doc.toJson());
+        expect(controller.state.selection, before.selection);
+      }
+    }, variant: const TargetPlatformVariant({TargetPlatform.android}));
   }
 
   for (final action in ['Cut', 'Copy']) {

@@ -180,16 +180,6 @@ class TableMap {
   }
 
   int colCount(int pos) => findCell(pos).left;
-  CellRect rectBetween(int a, int b) {
-    final x = findCell(a), y = findCell(b);
-    return CellRect(
-      math.min(x.left, y.left),
-      math.min(x.top, y.top),
-      math.max(x.right, y.right),
-      math.max(x.bottom, y.bottom),
-    );
-  }
-
   List<int> cellsInRect(CellRect rect) {
     final seen = <int>{}, result = <int>[];
     for (var r = rect.top; r < rect.bottom; r++) {
@@ -276,172 +266,38 @@ TableContext? tableContext(Node doc, int position) {
   return null;
 }
 
-class CellSelection extends Selection {
-  CellSelection(Node doc, this.anchorCell, [int? headCell])
-    : headCell = headCell ?? anchorCell,
-      super(
-        (headCell ?? anchorCell) + 1,
-        (headCell ?? anchorCell) +
-            doc.nodeAt(headCell ?? anchorCell)!.nodeSize -
-            1,
-      ) {
-    final context = tableContext(doc, anchorCell)!;
-    tablePosition = context.tablePosition;
-    _table = context.table;
-    rect = context.map.rectBetween(
-      anchorCell - context.tableStart,
-      this.headCell - context.tableStart,
-    );
-    cells = List.unmodifiable(
-      context.map.cellsInRect(rect).map((p) => p + context.tableStart),
-    );
+Selection _clampTableSelection(Node doc, Selection selection) {
+  if (selection is! TextSelection || selection.empty) return selection;
+  final context = tableContext(doc, selection.anchor);
+  if (context == null) return selection;
+  final headCell = tableContext(doc, selection.head);
+  if (headCell?.cellPosition == context.cellPosition &&
+      doc.resolve(selection.head).parent.isTextblock) {
+    return selection;
   }
-  final int anchorCell, headCell;
-  late final int tablePosition;
-  late final Node _table;
-  bool get isRowSelection =>
-      rect.left == 0 && rect.right == TableMap.get(_table).width;
-  bool get isColumnSelection =>
-      rect.top == 0 && rect.bottom == TableMap.get(_table).height;
-  late final CellRect rect;
-  late final List<int> cells;
-  factory CellSelection.row(Node doc, int anchor, [int? head]) {
-    head ??= anchor;
-    final c = tableContext(doc, anchor)!,
-        map = c.map,
-        a = map.findCell(anchor - c.tableStart),
-        b = map.findCell(head - c.tableStart);
-    if (a.left <= b.left) {
-      if (a.left > 0) anchor = c.tableStart + map.map[a.top * map.width];
-      if (b.right < map.width) {
-        head = c.tableStart + map.map[map.width * (b.top + 1) - 1];
-      }
-    } else {
-      if (b.left > 0) head = c.tableStart + map.map[b.top * map.width];
-      if (a.right < map.width) {
-        anchor = c.tableStart + map.map[map.width * (a.top + 1) - 1];
-      }
+  int? textEdge(Node node, int position, {required bool end}) {
+    if (node.isTextblock) {
+      return position + 1 + (end ? node.content.size : 0);
     }
-    return CellSelection(doc, anchor, head);
-  }
-  factory CellSelection.column(Node doc, int anchor, [int? head]) {
-    head ??= anchor;
-    final c = tableContext(doc, anchor)!,
-        map = c.map,
-        a = map.findCell(anchor - c.tableStart),
-        b = map.findCell(head - c.tableStart);
-    if (a.top <= b.top) {
-      if (a.top > 0) anchor = c.tableStart + map.map[a.left];
-      if (b.bottom < map.height) {
-        head =
-            c.tableStart + map.map[map.width * (map.height - 1) + b.right - 1];
-      }
-    } else {
-      if (b.top > 0) head = c.tableStart + map.map[b.left];
-      if (a.bottom < map.height) {
-        anchor =
-            c.tableStart + map.map[map.width * (map.height - 1) + a.right - 1];
-      }
+    for (
+      var index = end ? node.childCount - 1 : 0;
+      index >= 0 && index < node.childCount;
+      index += end ? -1 : 1
+    ) {
+      final edge = textEdge(
+        node.child(index),
+        position + 1 + node.content.positionAt(index),
+        end: end,
+      );
+      if (edge != null) return edge;
     }
-    return CellSelection(doc, anchor, head);
-  }
-  Slice content(Node doc) {
-    final context = tableContext(doc, anchorCell)!,
-        table = context.table,
-        map = context.map,
-        seen = <int>{},
-        rows = <Node>[];
-    for (var row = rect.top; row < rect.bottom; row++) {
-      final cells = <Node>[];
-      for (var col = rect.left; col < rect.right; col++) {
-        final p = map.map[row * map.width + col];
-        if (!seen.add(p)) continue;
-        var cell = table.nodeAt(p)!;
-        final bounds = map.findCell(p);
-        final left = math.max(rect.left, bounds.left),
-            right = math.min(rect.right, bounds.right);
-        final top = math.max(rect.top, bounds.top),
-            bottom = math.min(rect.bottom, bounds.bottom);
-        final attrs = {
-          ...cell.attrs,
-          'colspan': right - left,
-          'rowspan': bottom - top,
-        };
-        if (cell.attrs['colwidth'] case final List widths) {
-          attrs['colwidth'] = widths
-              .skip(left - bounds.left)
-              .take(right - left)
-              .toList();
-        }
-        cell = cell.withAttrs(attrs);
-        if (bounds.left < rect.left || bounds.top < rect.top) {
-          cell = cell.copy(Fragment([doc.schema.node('paragraph')]));
-        }
-        cells.add(cell);
-      }
-      rows.add(table.child(row).copy(Fragment.blocks(cells)));
-    }
-    return Slice(
-      Fragment(
-        rect.left == 0 &&
-                rect.right == map.width &&
-                rect.top == 0 &&
-                rect.bottom == map.height
-            ? [table.copy(Fragment.blocks(rows))]
-            : rows,
-      ),
-      1,
-      1,
-    );
+    return null;
   }
 
-  @override
-  bool get empty => false;
-  @override
-  Selection map(Node doc, Mapping mapping) {
-    final a = mapping.map(anchorCell), b = mapping.map(headCell);
-    if (_isCell(doc.nodeAt(a) ?? doc) &&
-        _isCell(doc.nodeAt(b) ?? doc) &&
-        tableContext(doc, a)?.tablePosition ==
-            tableContext(doc, b)?.tablePosition) {
-      final table = tableContext(doc, a)!.table;
-      if (!identical(table, _table)) {
-        if (isRowSelection) return CellSelection.row(doc, a, b);
-        if (isColumnSelection) return CellSelection.column(doc, a, b);
-      }
-      return CellSelection(doc, a, b);
-    }
-    return Selection.near(doc, mapping.map(head).clamp(0, doc.content.size));
-  }
-
-  @override
-  bool operator ==(Object other) =>
-      other is CellSelection &&
-      anchorCell == other.anchorCell &&
-      headCell == other.headCell;
-  @override
-  int get hashCode => Object.hash(anchorCell, headCell);
-}
-
-Selection _normalizeTableSelection(Node doc, Selection selection) {
-  if (selection is NodeSelection) {
-    final node = doc.nodeAt(selection.from)!;
-    if (_isCell(node)) return CellSelection(doc, selection.from);
-    if (node.type == 'tableRow' && node.childCount > 0) {
-      return CellSelection.row(doc, selection.from + 1);
-    }
-    if (node.type == 'table') {
-      final map = TableMap.get(node);
-      if (map.map.isNotEmpty) {
-        return CellSelection(
-          doc,
-          selection.from + 1 + map.map.first,
-          selection.from + 1 + map.map.last,
-        );
-      }
-    }
-  }
-  return selection;
+  final start = textEdge(context.cell, context.cellPosition, end: false),
+      end = textEdge(context.cell, context.cellPosition, end: true);
+  if (start == null || end == null) return TextSelection(selection.anchor);
+  return TextSelection(selection.anchor, selection.head.clamp(start, end));
 }
 
 Node createTable(
@@ -622,76 +478,32 @@ extension on EditorCommands {
       return true;
     }
     if (!const {
-          'setCellSelection',
-          'selectTableRow',
-          'selectTableColumn',
-          'deleteTable',
-          'tab',
-          'shiftTab',
-          'goToNextCell',
-          'goToPreviousCell',
-          'addRowBefore',
-          'addRowAfter',
-          'addColumnBefore',
-          'addColumnAfter',
-          'deleteRow',
-          'deleteColumn',
-          'toggleHeaderRow',
-          'mergeCells',
-          'splitCell',
-          'arrowDown',
-          'arrowUp',
-          'arrowLeft',
-          'arrowRight',
-          'splitBlock',
-        }.contains(name) &&
-        !(tr.selection is CellSelection &&
-            (name == 'deleteBackward' || name == 'deleteForward'))) {
+      'deleteTable',
+      'tab',
+      'shiftTab',
+      'goToNextCell',
+      'goToPreviousCell',
+      'addRowBefore',
+      'addRowAfter',
+      'addColumnBefore',
+      'addColumnAfter',
+      'deleteRow',
+      'deleteColumn',
+      'toggleHeaderRow',
+      'arrowDown',
+      'arrowUp',
+      'arrowLeft',
+      'arrowRight',
+    }.contains(name)) {
       return false;
     }
     final context = tableContext(tr.doc, tr.selection.head);
     if (context == null) return false;
     final table = context.table, map = context.map, start = context.tableStart;
     final selection = tr.selection;
-    final rect = selection is CellSelection ? selection.rect : context.rect;
+    final rect = context.rect;
     void markup(int pos, Node cell) =>
         tr.step(_SetNodeStep(tr.mapping.map(start + pos), cell));
-    if (name == 'setCellSelection' ||
-        name == 'selectTableRow' ||
-        name == 'selectTableColumn') {
-      final cell = args['anchorCell'] as int? ?? context.cellPosition;
-      tr.setSelection(
-        name == 'selectTableRow'
-            ? CellSelection.row(tr.doc, cell)
-            : name == 'selectTableColumn'
-            ? CellSelection.column(tr.doc, cell)
-            : CellSelection(tr.doc, cell, args['headCell'] as int?),
-      );
-      return true;
-    }
-    if ((name == 'deleteBackward' || name == 'deleteForward') &&
-        selection is CellSelection) {
-      if (rect.left == 0 &&
-          rect.top == 0 &&
-          rect.right == map.width &&
-          rect.bottom == map.height) {
-        tr.replace(start - 1, start + table.nodeSize - 1);
-        tr.setSelection(
-          Selection.near(tr.doc, (start - 1).clamp(0, tr.doc.content.size)),
-        );
-        return true;
-      }
-
-      for (final cell in selection.cells.reversed) {
-        final node = tr.doc.nodeAt(cell)!;
-        tr.replace(
-          cell + 1,
-          cell + node.nodeSize - 1,
-          Slice(Fragment([schema.node('paragraph')]), 0, 0),
-        );
-      }
-      return true;
-    }
     if (const {
       'arrowDown',
       'arrowUp',
@@ -702,21 +514,16 @@ extension on EditorCommands {
           axis = name == 'arrowLeft' || name == 'arrowRight' ? 'horiz' : 'vert';
       final next = map.nextCell(context.cellPosition - start, axis, direction);
       if (args['extend'] == true) {
-        if (next != null) {
-          tr.setSelection(
-            CellSelection(
-              tr.doc,
-              selection is CellSelection
-                  ? selection.anchorCell
-                  : context.cellPosition,
-              start + next,
-            ),
-          );
-        }
-      } else if (selection is CellSelection) {
-        tr.setSelection(
-          Selection.near(tr.doc, selection.headCell, bias: direction),
-        );
+        final target = axis == 'horiz'
+            ? Selection.near(
+                tr.doc,
+                (selection.head + direction).clamp(0, tr.doc.content.size),
+                bias: direction,
+              ).head
+            : next == null
+            ? (direction > 0 ? start + table.nodeSize - 1 : start - 1)
+            : start + next + 1;
+        tr.setSelection(TextSelection(selection.anchor, target));
       } else if (direction < 0 &&
           context.tablePosition == 0 &&
           (axis == 'vert' && next == null ||
@@ -743,11 +550,6 @@ extension on EditorCommands {
           ),
         );
       }
-      return true;
-    }
-    if (name == 'splitBlock' && selection is CellSelection) {
-      tr.setSelection(Selection.near(tr.doc, selection.head, bias: -1));
-      this._split(EditorState(doc: tr.doc, selection: tr.selection), tr);
       return true;
     }
     if (name == 'deleteTable') {
@@ -783,101 +585,6 @@ extension on EditorCommands {
         tr.setSelection(TextSelection(p + 2));
         // Keep selection in the new row, not the table's trailing paragraph.
         assert(next.tablePosition == context.tablePosition);
-      }
-      return true;
-    }
-    if (name == 'mergeCells') {
-      if (selection is! CellSelection ||
-          selection.anchorCell == selection.headCell) {
-        return true;
-      }
-      final positions = map.cellsInRect(rect);
-      // A spanning cell crossing the rectangle makes merging invalid.
-      for (final p in map.map.toSet()) {
-        final cellRect = map.findCell(p);
-        if (cellRect.right > rect.left &&
-            cellRect.left < rect.right &&
-            cellRect.bottom > rect.top &&
-            cellRect.top < rect.bottom &&
-            (cellRect.left < rect.left ||
-                cellRect.right > rect.right ||
-                cellRect.top < rect.top ||
-                cellRect.bottom > rect.bottom)) {
-          return true;
-        }
-      }
-      if (positions.isEmpty) return true;
-      final first = positions.first, cell = table.nodeAt(first)!;
-      bool empty(Node cell) =>
-          cell.childCount == 1 &&
-          cell.child(0).isTextblock &&
-          cell.child(0).content.isEmpty;
-      var content = Fragment.empty;
-      for (final p in positions.skip(1)) {
-        final other = table.nodeAt(p)!;
-        if (!empty(other)) content = content.append(other.content);
-        final at = tr.mapping.map(start + p);
-        tr.replace(at, at + other.nodeSize);
-      }
-      final span = rect.right - rect.left, widths = cell.attrs['colwidth'];
-      final attrs = {
-        ...cell.attrs,
-        'colspan': span,
-        'rowspan': rect.bottom - rect.top,
-        if (widths is List)
-          'colwidth': [...widths, ...List.filled(span - widths.length, 0)],
-      };
-      tr.step(_SetNodeStep(start + first, cell.withAttrs(attrs)));
-      if (content.isNotEmpty) {
-        final end = start + first + 1 + cell.content.size;
-        tr.replace(
-          empty(cell) ? start + first + 1 : end,
-          end,
-          Slice(content, 0, 0),
-        );
-      }
-      tr.setSelection(CellSelection(tr.doc, start + first));
-      return true;
-    }
-    if (name == 'splitCell') {
-      if (selection is CellSelection &&
-          selection.anchorCell != selection.headCell) {
-        return true;
-      }
-      final cell = context.cell;
-      if (_span(cell, 'colspan') == 1 && _span(cell, 'rowspan') == 1) {
-        return true;
-      }
-      final widths = cell.attrs['colwidth'];
-      Map<String, Object?> attrs(int c) => {
-        ...cell.attrs,
-        'rowspan': 1,
-        'colspan': 1,
-        'colwidth': widths is List && widths[c] != 0 ? [widths[c]] : null,
-      };
-      int? last;
-      for (var r = rect.top; r < rect.bottom; r++) {
-        var pos = map.positionAt(r, rect.left, table);
-        if (r == rect.top) pos += cell.nodeSize;
-        for (var c = rect.left; c < rect.right; c++) {
-          if (r == rect.top && c == rect.left) continue;
-          last = tr.mapping.map(start + pos);
-          tr.replace(
-            last,
-            last,
-            Slice(
-              Fragment([
-                schema.createAndFill(cell.type, attrs: attrs(c - rect.left))!,
-              ]),
-              0,
-              0,
-            ),
-          );
-        }
-      }
-      tr.step(_SetNodeStep(context.cellPosition, cell.withAttrs(attrs(0))));
-      if (selection is CellSelection) {
-        tr.setSelection(CellSelection(tr.doc, context.cellPosition, last));
       }
       return true;
     }

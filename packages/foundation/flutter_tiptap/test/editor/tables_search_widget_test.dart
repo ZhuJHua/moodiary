@@ -1,7 +1,6 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
@@ -171,33 +170,23 @@ void main() {
     await tester.pump();
     expect(controller.cellPosition, first);
   }, variant: const TargetPlatformVariant({TargetPlatform.macOS}));
-  testWidgets(
-    'table hit testing targets painted cells and selection paints their boxes',
-    (tester) async {
-      final controller = ft.TiptapController(
-        doc: generateLargeTableDocument(rows: 3, columns: 3),
-      );
-      final key = await mount(tester, controller),
-          geometry = key.currentState!.geometry!;
-      final table = controller.state.doc.child(0),
-          map = ft.TableMap.get(table),
-          cell = map.map[1] + 1;
-      final caret = geometry.caretRect(cell + 2),
-          origin = tester.getTopLeft(find.byType(ft.TiptapEditor));
-      await tester.tapAt(origin + caret.center);
-      await tester.pump();
-      expect(controller.cellPosition, cell);
-      expect(controller.state.selection, isA<ft.TextSelection>());
-      controller.setSelection(ft.CellSelection.row(controller.state.doc, cell));
-      await tester.pump();
-      expect(controller.state.selection, isA<ft.CellSelection>());
-      expect(key.currentState!.debugCellSelectionRects, hasLength(3));
-      final rects = key.currentState!.debugCellSelectionRects;
-      expect(rects[0].top, rects[1].top);
-      expect(rects[0].right, closeTo(rects[1].left, .01));
-      expect(tester.takeException(), isNull);
-    },
-  );
+  testWidgets('table hit testing targets painted cells', (tester) async {
+    final controller = ft.TiptapController(
+      doc: generateLargeTableDocument(rows: 3, columns: 3),
+    );
+    final key = await mount(tester, controller),
+        geometry = key.currentState!.geometry!;
+    final table = controller.state.doc.child(0),
+        map = ft.TableMap.get(table),
+        cell = map.map[1] + 1;
+    final caret = geometry.caretRect(cell + 2),
+        origin = tester.getTopLeft(find.byType(ft.TiptapEditor));
+    await tester.tapAt(origin + caret.center);
+    await tester.pump();
+    expect(controller.cellPosition, cell);
+    expect(controller.state.selection, isA<ft.TextSelection>());
+    expect(tester.takeException(), isNull);
+  });
   testWidgets('2000-row table only lays out viewport rows and one edited row', (
     tester,
   ) async {
@@ -267,44 +256,6 @@ void main() {
     },
   );
   testWidgets(
-    'CellSelection highlight changes pixels only inside selected cells',
-    (tester) async {
-      final controller = ft.TiptapController(
-            doc: generateLargeTableDocument(rows: 3, columns: 3),
-          ),
-          boundary = GlobalKey();
-      final key = await mount(tester, controller, boundary: boundary);
-      final map = ft.TableMap.get(controller.state.doc.child(0)),
-          position = map.map[0] + 1,
-          rect = key.currentState!.geometry!.cellRect(position)!;
-      Future<List<int>> pixel() async {
-        final render =
-            boundary.currentContext!.findRenderObject()!
-                as RenderRepaintBoundary;
-        final bytes = await tester.runAsync(() async {
-          final image = await render.toImage();
-          final data = await image.toByteData(
-            format: ui.ImageByteFormat.rawRgba,
-          );
-          image.dispose();
-          return data!;
-        });
-        final index =
-            ((rect.bottom - 5).toInt() * render.size.width.toInt() +
-                (rect.right - 5).toInt()) *
-            4;
-        return List.generate(4, (i) => bytes!.getUint8(index + i));
-      }
-
-      final before = await pixel();
-      controller.setSelection(ft.CellSelection(controller.state.doc, position));
-      await tester.pump();
-      final after = await pixel();
-      expect(after, isNot(before));
-      expect(after[2], greaterThan(after[0]));
-    },
-  );
-  testWidgets(
     'merged cell continuation uses the same painted text and IME geometry',
     (tester) async {
       final schema = ft.Schema.standard();
@@ -331,7 +282,7 @@ void main() {
             content: [
               schema.node(
                 'tableCell',
-                attrs: {'rowspan': 2},
+                attrs: {'rowspan': 2, 'colspan': 2},
                 content: [paragraph],
               ),
               cell('a'),
@@ -372,31 +323,154 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+  testWidgets('mouse dragging between cells clamps to the anchor cell', (
+    tester,
+  ) async {
+    final controller = ft.TiptapController(
+      doc: generateLargeTableDocument(rows: 3, columns: 3),
+    );
+    final key = await mount(tester, controller),
+        geometry = key.currentState!.geometry!,
+        map = ft.TableMap.get(controller.state.doc.child(0));
+    final origin = tester.getTopLeft(find.byType(ft.TiptapEditor)),
+        from = geometry.caretRect(map.map.first + 3).center,
+        to = geometry.caretRect(map.map[4] + 3).center;
+    final gesture = await tester.startGesture(
+      origin + from,
+      kind: ui.PointerDeviceKind.mouse,
+    );
+    await gesture.moveTo(origin + to);
+    await gesture.up();
+    await tester.pump();
+    final cell = map.map.first + 1;
+    expect(
+      controller.state.selection,
+      ft.TextSelection(
+        cell + 2,
+        cell + controller.state.doc.nodeAt(cell)!.nodeSize - 2,
+      ),
+    );
+    expect(controller.toolbar.value.selectionKind, ft.SelectionKind.text);
+  });
+
+  for (final startHandle in [false, true]) {
+    testWidgets(
+      'touch ${startHandle ? 'start' : 'end'} handle clamps inside its anchor cell',
+      (tester) async {
+        final controller = ft.TiptapController(
+          doc: generateLargeTableDocument(rows: 3, columns: 3),
+        );
+        final key = await mount(tester, controller);
+        final origin = tester.getTopLeft(find.byType(ft.TiptapEditor));
+        final map = ft.TableMap.get(controller.state.doc.child(0));
+        final cell = map.map[4] + 1;
+        final start = cell + 2,
+            end = cell + controller.state.doc.nodeAt(cell)!.nodeSize - 2;
+        await tester.tapAt(
+          origin + key.currentState!.geometry!.caretRect(start).center,
+        );
+        await tester.pump();
+        controller.setSelection(ft.TextSelection(start + 1, start + 4));
+        await tester.pump();
+        final handle = find.byKey(
+          ValueKey('tiptap-handle-${startHandle ? 'start' : 'end'}'),
+        );
+        expect(handle, findsOneWidget);
+        final point = tester.getTopLeft(handle) + const Offset(22, 15);
+        final handlePosition = startHandle ? start + 1 : start + 4;
+        final target = key.currentState!.geometry!
+            .caretRect(map.map[startHandle ? 0 : 8] + 3)
+            .center;
+        final delta =
+            target -
+            key.currentState!.geometry!.caretRect(handlePosition).centerLeft;
+        final gesture = await tester.startGesture(point);
+        await gesture.moveTo(point + delta);
+        await tester.pump();
+        expect(
+          controller.state.selection,
+          startHandle
+              ? ft.TextSelection(start + 4, start)
+              : ft.TextSelection(start + 1, end),
+        );
+        await gesture.up();
+        await tester.pump(const Duration(milliseconds: 400));
+        expect(tester.takeException(), isNull);
+      },
+      variant: const TargetPlatformVariant({
+        TargetPlatform.android,
+        TargetPlatform.iOS,
+      }),
+    );
+  }
   testWidgets(
-    'mouse dragging between cells produces a rectangular CellSelection',
+    'Shift click and reverse mouse drag clamp to the anchor cell',
     (tester) async {
       final controller = ft.TiptapController(
         doc: generateLargeTableDocument(rows: 3, columns: 3),
       );
-      final key = await mount(tester, controller),
-          geometry = key.currentState!.geometry!,
-          map = ft.TableMap.get(controller.state.doc.child(0));
-      final origin = tester.getTopLeft(find.byType(ft.TiptapEditor)),
-          from = geometry.caretRect(map.map.first + 3).center,
-          to = geometry.caretRect(map.map[4] + 3).center;
+      final key = await mount(tester, controller);
+      final geometry = key.currentState!.geometry!;
+      final origin = tester.getTopLeft(find.byType(ft.TiptapEditor));
+      final map = ft.TableMap.get(controller.state.doc.child(0));
+      final cell = map.map[4] + 1, anchor = cell + 5;
+      final target = origin + geometry.caretRect(map.map.first + 3).center;
+      controller.setSelection(ft.TextSelection(anchor));
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.tapAt(target, kind: ui.PointerDeviceKind.mouse);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.pump();
+      expect(controller.state.selection, ft.TextSelection(anchor, cell + 2));
       final gesture = await tester.startGesture(
-        origin + from,
+        origin + geometry.caretRect(anchor).center,
         kind: ui.PointerDeviceKind.mouse,
       );
-      await gesture.moveTo(origin + to);
+      await gesture.moveTo(target);
       await gesture.up();
       await tester.pump();
-      expect(controller.state.selection, isA<ft.CellSelection>());
-      expect(
-        (controller.state.selection as ft.CellSelection).cells,
-        hasLength(4),
-      );
-      expect(controller.toolbar.value.selectionKind, ft.SelectionKind.cell);
+      expect(controller.state.selection, ft.TextSelection(anchor, cell + 2));
     },
+    variant: const TargetPlatformVariant({
+      TargetPlatform.macOS,
+      TargetPlatform.windows,
+      TargetPlatform.linux,
+    }),
+  );
+  testWidgets(
+    'Shift arrows stop at each cell edge and shrink within the cell',
+    (tester) async {
+      final controller = ft.TiptapController(
+        doc: generateLargeTableDocument(rows: 3, columns: 3),
+      );
+      await mount(tester, controller);
+      final map = ft.TableMap.get(controller.state.doc.child(0));
+      final cell = map.map[4] + 1, start = cell + 2;
+      final end = cell + controller.state.doc.nodeAt(cell)!.nodeSize - 2;
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      for (final (position, key) in [
+        (start, LogicalKeyboardKey.arrowLeft),
+        (start, LogicalKeyboardKey.arrowUp),
+        (end, LogicalKeyboardKey.arrowRight),
+        (end, LogicalKeyboardKey.arrowDown),
+      ]) {
+        controller.setSelection(ft.TextSelection(position));
+        await tester.sendKeyEvent(key);
+        expect(controller.state.selection, ft.TextSelection(position));
+      }
+      controller.setSelection(ft.TextSelection(start + 1));
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      expect(
+        controller.state.selection,
+        ft.TextSelection(start + 1, start + 2),
+      );
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+      expect(controller.state.selection, ft.TextSelection(start + 1));
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+    },
+    variant: const TargetPlatformVariant({
+      TargetPlatform.macOS,
+      TargetPlatform.windows,
+      TargetPlatform.linux,
+    }),
   );
 }

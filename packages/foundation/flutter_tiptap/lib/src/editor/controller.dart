@@ -253,7 +253,7 @@ class TiptapController extends ChangeNotifier {
     }
   }
 
-  /// Called by a host for an image clipboard/drop payload.
+  /// Called by a host for an image clipboard payload.
   Future<void> pasteImage(
     Object payload,
     FutureOr<void> Function(Object payload)? handler,
@@ -271,33 +271,13 @@ class TiptapController extends ChangeNotifier {
     if (state.selection.empty) return;
     final codec = m.TiptapHtmlCodec(state.doc.schema);
     final selection = state.selection;
-    String text;
-    if (selection is m.CellSelection) {
-      final context = m.tableContext(state.doc, selection.anchorCell)!,
-          seen = <int>{},
-          texts = <String>[];
-      for (var r = selection.rect.top; r < selection.rect.bottom; r++) {
-        for (var c = selection.rect.left; c < selection.rect.right; c++) {
-          final cell = context.map.map[r * context.map.width + c];
-          if (!seen.add(cell)) continue;
-          final start = context.tablePosition + cell + 2;
-          texts.add(
-            codec.plainText(
-              state.doc,
-              from: start,
-              to: start + context.table.nodeAt(cell)!.content.size,
-            ),
-          );
-        }
-      }
-      text = texts.join('\n\n');
-    } else {
-      text = codec.plainText(state.doc, from: selection.from, to: selection.to);
-    }
+    final text = codec.plainText(
+      state.doc,
+      from: selection.from,
+      to: selection.to,
+    );
     _clipboardText = text;
-    _clipboardSlice = state.selection is m.CellSelection
-        ? (state.selection as m.CellSelection).content(state.doc)
-        : state.doc.slice(state.selection.from, state.selection.to);
+    _clipboardSlice = state.doc.slice(selection.from, selection.to);
     final html = m.TiptapHtmlCodec(state.doc.schema)
         .serializeSlice(_clipboardSlice!);
     _clipboardHtml = html;
@@ -621,20 +601,6 @@ class TiptapController extends ChangeNotifier {
   String get selectedText {
     final doc = _state.doc, selection = _state.selection;
     if (selection.empty) return '';
-    if (selection is m.CellSelection) {
-      final context = m.tableContext(doc, selection.anchorCell)!,
-          map = context.map,
-          rect = selection.rect,
-          seen = <int>{};
-      return [
-        for (var r = rect.top; r < rect.bottom; r++)
-          [
-            for (var c = rect.left; c < rect.right; c++)
-              if (seen.add(map.map[r * map.width + c]))
-                context.table.nodeAt(map.map[r * map.width + c])!.textContent,
-          ].join('\t'),
-      ].join('\n');
-    }
     final from = doc.rowIndexAt(selection.from),
         to = doc.rowIndexAt(selection.to - 1);
     final result = <String>[];

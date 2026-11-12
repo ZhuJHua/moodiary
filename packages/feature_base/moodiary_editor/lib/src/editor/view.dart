@@ -3,57 +3,6 @@ part of '../moodiary_editor.dart';
 class _MoodiaryEditorState extends State<MoodiaryEditor>
     with WidgetsBindingObserver, RouteAware {
   late final MoodiaryEditorHost host;
-  int? _dropTarget;
-  int _dropGeneration = -1;
-  Rect? _dropBounds;
-  bool get _mobileDrop =>
-      defaultTargetPlatform == TargetPlatform.iOS ||
-      defaultTargetPlatform == TargetPlatform.android;
-
-  void _receivedDrop(ImageDrop drop) {
-    final box = context.findRenderObject();
-    if (box is! RenderBox || !box.hasSize || host.readOnly) return;
-    final point = box.globalToLocal(Offset(drop.x, drop.y));
-    if (!(Offset.zero & box.size).contains(point)) return;
-    unawaited(host.importDrop(drop, point));
-  }
-
-  void _syncDropTarget() {
-    if (!mounted || !_mobileDrop) return;
-    final box = context.findRenderObject();
-    if (box is! RenderBox || !box.hasSize) return;
-    if (host.readOnly) {
-      _clearDropTarget();
-      return;
-    }
-    _dropTarget ??= _ImageDrops.instance.register(_receivedDrop);
-    final rect = box.localToGlobal(Offset.zero) & box.size;
-    if (_dropBounds == rect) return;
-    _dropBounds = rect;
-    unawaited(
-      ImageTransferApi()
-          .setDropTarget(
-            _dropTarget!,
-            rect.left,
-            rect.top,
-            rect.width,
-            rect.height,
-          )
-          .catchError((Object error) {
-            _dropBounds = null;
-          }),
-    );
-  }
-
-  void _clearDropTarget() {
-    final id = _dropTarget;
-    if (id == null) return;
-    _ImageDrops.instance.unregister(id);
-    _dropTarget = null;
-    _dropBounds = null;
-    unawaited(ImageTransferApi().clearDropTarget(id).catchError((Object _) {}));
-  }
-
   // The toolbar host floats a 44 px link bar 8 px above the editor's bottom
   // while the caret is in a link; the caret has to clear it.
   bool _linkBar = false;
@@ -133,10 +82,6 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
   }
 
   void _changed() {
-    if (_dropGeneration != host._generation) {
-      _dropGeneration = host._generation;
-      _clearDropTarget();
-    }
     if (mounted) setState(() {});
   }
 
@@ -168,7 +113,6 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
   @override
   void dispose() {
     _closeRestore();
-    _clearDropTarget();
     WidgetsBinding.instance.removeObserver(this);
     moodiaryRouteObserver.unsubscribe(this);
     unawaited(host.flush());
@@ -220,7 +164,6 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) => _syncDropTarget());
     if (!widget.metaReady) return const SizedBox.expand();
     final colors = context.theme.colors, font = widget.fontResolver?.call();
     final styleKey = (

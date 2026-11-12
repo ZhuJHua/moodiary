@@ -37,10 +37,6 @@ private func wrapError(_ error: Any) -> [Any?] {
   ]
 }
 
-private func createConnectionError(withChannelName channelName: String) -> PigeonError {
-  return PigeonError(code: "channel-error", message: "Unable to establish connection on channel: '\(channelName)'.", details: "")
-}
-
 enum ImageTransferPigeonInternal {
   static func isNullish(_ value: Any?) -> Bool {
     guard let innerValue = value else {
@@ -215,63 +211,11 @@ struct TransferredImage: Hashable, CustomStringConvertible {
   }
 }
 
-/// Generated class from Pigeon that represents data sent in messages.
-struct ImageDrop: Hashable, CustomStringConvertible {
-  var target: Int64
-  var x: Double
-  var y: Double
-  var images: [TransferredImage]
-
-
-  // swift-format-ignore: AlwaysUseLowerCamelCase
-  static func fromList(_ pigeonVar_list: [Any?]) -> ImageDrop? {
-    let target = pigeonVar_list[0] as! Int64
-    let x = pigeonVar_list[1] as! Double
-    let y = pigeonVar_list[2] as! Double
-    let images = pigeonVar_list[3] as! [TransferredImage]
-
-    return ImageDrop(
-      target: target,
-      x: x,
-      y: y,
-      images: images
-    )
-  }
-  func toList() -> [Any?] {
-    return [
-      target,
-      x,
-      y,
-      images,
-    ]
-  }
-  static func == (lhs: ImageDrop, rhs: ImageDrop) -> Bool {
-    if Swift.type(of: lhs) != Swift.type(of: rhs) {
-      return false
-    }
-    return ImageTransferPigeonInternal.deepEquals(lhs.target, rhs.target) && ImageTransferPigeonInternal.deepEquals(lhs.x, rhs.x) && ImageTransferPigeonInternal.deepEquals(lhs.y, rhs.y) && ImageTransferPigeonInternal.deepEquals(lhs.images, rhs.images)
-  }
-
-  func hash(into hasher: inout Hasher) {
-    hasher.combine("ImageDrop")
-    ImageTransferPigeonInternal.deepHash(value: target, hasher: &hasher)
-    ImageTransferPigeonInternal.deepHash(value: x, hasher: &hasher)
-    ImageTransferPigeonInternal.deepHash(value: y, hasher: &hasher)
-    ImageTransferPigeonInternal.deepHash(value: images, hasher: &hasher)
-  }
-
-  public var description: String {
-    return "ImageDrop(target: \(String(describing: target)), x: \(String(describing: x)), y: \(String(describing: y)), images: \(String(describing: images)))"
-  }
-}
-
 private class ImageTransferPigeonCodecReader: FlutterStandardReader {
   override func readValue(ofType type: UInt8) -> Any? {
     switch type {
     case 129:
       return TransferredImage.fromList(self.readValue() as! [Any?])
-    case 130:
-      return ImageDrop.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
     }
@@ -282,9 +226,6 @@ private class ImageTransferPigeonCodecWriter: FlutterStandardWriter {
   override func writeValue(_ value: Any) {
     if let value = value as? TransferredImage {
       super.writeByte(129)
-      super.writeValue(value.toList())
-    } else if let value = value as? ImageDrop {
-      super.writeByte(130)
       super.writeValue(value.toList())
     } else {
       super.writeValue(value)
@@ -311,8 +252,6 @@ class ImageTransferPigeonCodec: FlutterStandardMessageCodec, @unchecked Sendable
 protocol ImageTransferApi {
   func readContentUri(uri: String) async throws -> FlutterStandardTypedData?
   func readClipboardImage() async throws -> TransferredImage?
-  func setDropTarget(target: Int64, left: Double, top: Double, width: Double, height: Double) throws
-  func clearDropTarget(target: Int64) throws
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -352,76 +291,6 @@ class ImageTransferApiSetup {
       }
     } else {
       readClipboardImageChannel.setMessageHandler(nil)
-    }
-    let setDropTargetChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.moodiary_native.ImageTransferApi.setDropTarget\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
-    if let api = api {
-      setDropTargetChannel.setMessageHandler { message, reply in
-        let args = message as! [Any?]
-        let targetArg = args[0] as! Int64
-        let leftArg = args[1] as! Double
-        let topArg = args[2] as! Double
-        let widthArg = args[3] as! Double
-        let heightArg = args[4] as! Double
-        do {
-          try api.setDropTarget(target: targetArg, left: leftArg, top: topArg, width: widthArg, height: heightArg)
-          reply(wrapResult(nil))
-        } catch {
-          reply(wrapError(error))
-        }
-      }
-    } else {
-      setDropTargetChannel.setMessageHandler(nil)
-    }
-    let clearDropTargetChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.moodiary_native.ImageTransferApi.clearDropTarget\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
-    if let api = api {
-      clearDropTargetChannel.setMessageHandler { message, reply in
-        let args = message as! [Any?]
-        let targetArg = args[0] as! Int64
-        do {
-          try api.clearDropTarget(target: targetArg)
-          reply(wrapResult(nil))
-        } catch {
-          reply(wrapError(error))
-        }
-      }
-    } else {
-      clearDropTargetChannel.setMessageHandler(nil)
-    }
-  }
-}
-
-/// Generated protocol from Pigeon that represents Flutter messages that can be called from Swift.
-protocol ImageTransferClientProtocol {
-  @MainActor func onDrop(drop dropArg: ImageDrop) async throws
-}
-class ImageTransferClient: ImageTransferClientProtocol {
-  private let binaryMessenger: FlutterBinaryMessenger
-  private let messageChannelSuffix: String
-  init(binaryMessenger: FlutterBinaryMessenger, messageChannelSuffix: String = "") {
-    self.binaryMessenger = binaryMessenger
-    self.messageChannelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
-  }
-  var codec: ImageTransferPigeonCodec {
-    return ImageTransferPigeonCodec.shared
-  }
-  @MainActor func onDrop(drop dropArg: ImageDrop) async throws {
-    return try await withCheckedThrowingContinuation { continuation in
-      let channelName: String = "dev.flutter.pigeon.moodiary_native.ImageTransferClient.onDrop\(messageChannelSuffix)"
-      let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
-      channel.sendMessage([dropArg] as [Any?]) { response in
-        guard let listResponse = response as? [Any?] else {
-          continuation.resume(throwing: createConnectionError(withChannelName: channelName))
-          return
-        }
-        if listResponse.count > 1 {
-          let code: String = listResponse[0] as! String
-          let message: String? = nilOrValue(listResponse[1])
-          let details: String? = nilOrValue(listResponse[2])
-          continuation.resume(throwing: PigeonError(code: code, message: message, details: details))
-        } else {
-          continuation.resume()
-        }
-      }
     }
   }
 }

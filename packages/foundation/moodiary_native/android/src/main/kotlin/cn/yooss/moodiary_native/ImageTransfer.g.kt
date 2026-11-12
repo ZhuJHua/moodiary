@@ -21,9 +21,6 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 private object ImageTransferPigeonUtils {
 
-  fun createConnectionError(channelName: String): FlutterError {
-    return FlutterError("channel-error",  "Unable to establish connection on channel: '$channelName'.", "")  }
-
   fun wrapResult(result: Any?): List<Any?> {
     return listOf(result)
   }
@@ -233,66 +230,12 @@ data class TransferredImage (
     return "TransferredImage(bytes=${bytes.contentToString()}, mime=$mime, name=$name)"
   }
 }
-
-/** Generated class from Pigeon that represents data sent in messages. */
-data class ImageDrop (
-  val target: Long,
-  val x: Double,
-  val y: Double,
-  val images: List<TransferredImage>
-)
- {
-  companion object {
-    fun fromList(pigeonVar_list: List<Any?>): ImageDrop {
-      val target = pigeonVar_list[0] as Long
-      val x = pigeonVar_list[1] as Double
-      val y = pigeonVar_list[2] as Double
-      val images = pigeonVar_list[3] as List<TransferredImage>
-      return ImageDrop(target, x, y, images)
-    }
-  }
-  fun toList(): List<Any?> {
-    return listOf(
-      target,
-      x,
-      y,
-      images,
-    )
-  }
-  override fun equals(other: Any?): Boolean {
-    if (other == null || other.javaClass != javaClass) {
-      return false
-    }
-    if (this === other) {
-      return true
-    }
-    val other = other as ImageDrop
-    return ImageTransferPigeonUtils.deepEquals(this.target, other.target) && ImageTransferPigeonUtils.deepEquals(this.x, other.x) && ImageTransferPigeonUtils.deepEquals(this.y, other.y) && ImageTransferPigeonUtils.deepEquals(this.images, other.images)
-  }
-
-  override fun hashCode(): Int {
-    var result = javaClass.hashCode()
-    result = 31 * result + ImageTransferPigeonUtils.deepHash(this.target)
-    result = 31 * result + ImageTransferPigeonUtils.deepHash(this.x)
-    result = 31 * result + ImageTransferPigeonUtils.deepHash(this.y)
-    result = 31 * result + ImageTransferPigeonUtils.deepHash(this.images)
-    return result
-  }
-  override fun toString(): String {
-    return "ImageDrop(target=$target, x=$x, y=$y, images=$images)"
-  }
-}
 private open class ImageTransferPigeonCodec : StandardMessageCodec() {
   override fun readValueOfType(type: Byte, buffer: ByteBuffer): Any? {
     return when (type) {
       129.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
           TransferredImage.fromList(it)
-        }
-      }
-      130.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let {
-          ImageDrop.fromList(it)
         }
       }
       else -> super.readValueOfType(type, buffer)
@@ -302,10 +245,6 @@ private open class ImageTransferPigeonCodec : StandardMessageCodec() {
     when (value) {
       is TransferredImage -> {
         stream.write(129)
-        writeValue(stream, value.toList())
-      }
-      is ImageDrop -> {
-        stream.write(130)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)
@@ -318,8 +257,6 @@ private open class ImageTransferPigeonCodec : StandardMessageCodec() {
 interface ImageTransferApi {
   suspend fun readContentUri(uri: String): ByteArray?
   suspend fun readClipboardImage(): TransferredImage?
-  fun setDropTarget(target: Long, left: Double, top: Double, width: Double, height: Double)
-  fun clearDropTarget(target: Long)
 
   companion object {
     /** The codec used by ImageTransferApi. */
@@ -365,74 +302,6 @@ interface ImageTransferApi {
         } else {
           channel.setMessageHandler(null)
         }
-      }
-      run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.moodiary_native.ImageTransferApi.setDropTarget$separatedMessageChannelSuffix", codec)
-        if (api != null) {
-          channel.setMessageHandler { message, reply ->
-            val args = message as List<Any?>
-            val targetArg = args[0] as Long
-            val leftArg = args[1] as Double
-            val topArg = args[2] as Double
-            val widthArg = args[3] as Double
-            val heightArg = args[4] as Double
-            val wrapped: List<Any?> = try {
-              api.setDropTarget(targetArg, leftArg, topArg, widthArg, heightArg)
-              listOf(null)
-            } catch (exception: Throwable) {
-              ImageTransferPigeonUtils.wrapError(exception)
-            }
-            reply.reply(wrapped)
-          }
-        } else {
-          channel.setMessageHandler(null)
-        }
-      }
-      run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.moodiary_native.ImageTransferApi.clearDropTarget$separatedMessageChannelSuffix", codec)
-        if (api != null) {
-          channel.setMessageHandler { message, reply ->
-            val args = message as List<Any?>
-            val targetArg = args[0] as Long
-            val wrapped: List<Any?> = try {
-              api.clearDropTarget(targetArg)
-              listOf(null)
-            } catch (exception: Throwable) {
-              ImageTransferPigeonUtils.wrapError(exception)
-            }
-            reply.reply(wrapped)
-          }
-        } else {
-          channel.setMessageHandler(null)
-        }
-      }
-    }
-  }
-}
-/** Generated class from Pigeon that represents Flutter messages that can be called from Kotlin. */
-class ImageTransferClient(private val binaryMessenger: BinaryMessenger, private val messageChannelSuffix: String = "") {
-  companion object {
-    /** The codec used by ImageTransferClient. */
-    val codec: MessageCodec<Any?> by lazy {
-      ImageTransferPigeonCodec()
-    }
-  }
-  suspend fun onDrop(dropArg: ImageDrop)
-{
-    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-    return suspendCancellableCoroutine { continuation ->
-      val channelName = "dev.flutter.pigeon.moodiary_native.ImageTransferClient.onDrop$separatedMessageChannelSuffix"
-      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-      channel.send(listOf(dropArg)) {
-        if (it is List<*>) {
-          if (it.size > 1) {
-            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
-          } else {
-            continuation.resume(Unit)
-          }
-        } else {
-          continuation.resumeWithException(ImageTransferPigeonUtils.createConnectionError(channelName))
-        } 
       }
     }
   }

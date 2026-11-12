@@ -34,20 +34,6 @@ Object? _extractReplyValueOrThrow(
   return replyList.firstOrNull;
 }
 
-List<Object?> wrapResponse({
-  Object? result,
-  PlatformException? error,
-  bool empty = false,
-}) {
-  if (empty) {
-    return <Object?>[];
-  }
-  if (error == null) {
-    return <Object?>[result];
-  }
-  return <Object?>[error.code, error.message, error.details];
-}
-
 bool _deepEquals(Object? a, Object? b) {
   if (identical(a, b)) {
     return true;
@@ -165,65 +151,6 @@ class TransferredImage {
   }
 }
 
-class ImageDrop {
-  ImageDrop({
-    required this.target,
-    required this.x,
-    required this.y,
-    required this.images,
-  });
-
-  int target;
-
-  double x;
-
-  double y;
-
-  List<TransferredImage> images;
-
-  List<Object?> _toList() {
-    return <Object?>[target, x, y, images];
-  }
-
-  Object encode() {
-    return _toList();
-  }
-
-  static ImageDrop decode(Object result) {
-    result as List<Object?>;
-    return ImageDrop(
-      target: result[0]! as int,
-      x: result[1]! as double,
-      y: result[2]! as double,
-      images: (result[3]! as List<Object?>).cast<TransferredImage>(),
-    );
-  }
-
-  @override
-  // ignore: avoid_equals_and_hash_code_on_mutable_classes
-  bool operator ==(Object other) {
-    if (other is! ImageDrop || other.runtimeType != runtimeType) {
-      return false;
-    }
-    if (identical(this, other)) {
-      return true;
-    }
-    return _deepEquals(target, other.target) &&
-        _deepEquals(x, other.x) &&
-        _deepEquals(y, other.y) &&
-        _deepEquals(images, other.images);
-  }
-
-  @override
-  // ignore: avoid_equals_and_hash_code_on_mutable_classes
-  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
-
-  @override
-  String toString() {
-    return 'ImageDrop(target: $target, x: $x, y: $y, images: $images)';
-  }
-}
-
 class _PigeonCodec extends StandardMessageCodec {
   const _PigeonCodec();
   @override
@@ -233,9 +160,6 @@ class _PigeonCodec extends StandardMessageCodec {
       buffer.putInt64(value);
     } else if (value is TransferredImage) {
       buffer.putUint8(129);
-      writeValue(buffer, value.encode());
-    } else if (value is ImageDrop) {
-      buffer.putUint8(130);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -247,8 +171,6 @@ class _PigeonCodec extends StandardMessageCodec {
     switch (type) {
       case 129:
         return TransferredImage.decode(readValue(buffer)!);
-      case 130:
-        return ImageDrop.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
     }
@@ -310,92 +232,5 @@ class ImageTransferApi {
       isNullValid: true,
     );
     return pigeonVar_replyValue as TransferredImage?;
-  }
-
-  Future<void> setDropTarget(
-    int target,
-    double left,
-    double top,
-    double width,
-    double height,
-  ) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.moodiary_native.ImageTransferApi.setDropTarget$pigeonVar_messageChannelSuffix';
-    final pigeonVar_channel = BasicMessageChannel<Object?>(
-      pigeonVar_channelName,
-      pigeonChannelCodec,
-      binaryMessenger: pigeonVar_binaryMessenger,
-    );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[target, left, top, width, height],
-    );
-    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
-
-    _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: true,
-    );
-  }
-
-  Future<void> clearDropTarget(int target) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.moodiary_native.ImageTransferApi.clearDropTarget$pigeonVar_messageChannelSuffix';
-    final pigeonVar_channel = BasicMessageChannel<Object?>(
-      pigeonVar_channelName,
-      pigeonChannelCodec,
-      binaryMessenger: pigeonVar_binaryMessenger,
-    );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[target],
-    );
-    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
-
-    _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: true,
-    );
-  }
-}
-
-abstract class ImageTransferClient {
-  static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
-
-  void onDrop(ImageDrop drop);
-
-  static void setUp(
-    ImageTransferClient? api, {
-    BinaryMessenger? binaryMessenger,
-    String messageChannelSuffix = '',
-  }) {
-    messageChannelSuffix = messageChannelSuffix.isNotEmpty
-        ? '.$messageChannelSuffix'
-        : '';
-    {
-      final pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.moodiary_native.ImageTransferClient.onDrop$messageChannelSuffix',
-        pigeonChannelCodec,
-        binaryMessenger: binaryMessenger,
-      );
-      if (api == null) {
-        pigeonVar_channel.setMessageHandler(null);
-      } else {
-        pigeonVar_channel.setMessageHandler((Object? message) async {
-          final List<Object?> args = message! as List<Object?>;
-          final ImageDrop arg_drop = args[0]! as ImageDrop;
-          try {
-            api.onDrop(arg_drop);
-            return wrapResponse(empty: true);
-          } on PlatformException catch (e) {
-            return wrapResponse(error: e);
-          } catch (e) {
-            return wrapResponse(
-              error: PlatformException(code: 'error', message: e.toString()),
-            );
-          }
-        });
-      }
-    }
   }
 }

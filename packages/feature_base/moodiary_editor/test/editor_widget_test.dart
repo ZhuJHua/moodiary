@@ -711,101 +711,43 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets(
-    'Pigeon clipboard and external drops save images at the drop point; swaps reject old targets',
-    (tester) async {
-      final messenger = binding.defaultBinaryMessenger;
-      const prefix = 'dev.flutter.pigeon.moodiary_native.ImageTransferApi.';
-      BasicMessageChannel<Object?> channel(String method) =>
-          BasicMessageChannel<Object?>(
-            '$prefix$method',
-            ImageTransferApi.pigeonChannelCodec,
-          );
-      var target = -1;
-      messenger.setMockDecodedMessageHandler(channel('setDropTarget'), (
-        message,
-      ) async {
-        target = (message as List).first as int;
-        return [null];
-      });
-      messenger.setMockDecodedMessageHandler(
-        channel('clearDropTarget'),
-        (_) async => [null],
-      );
-      final image = TransferredImage(
-        bytes: Uint8List.fromList([1, 2, 3]),
-        mime: 'image/jpeg',
-        name: 'photo.jpg',
-      );
-      messenger.setMockDecodedMessageHandler(
-        channel('readClipboardImage'),
-        (_) async => [image],
-      );
-      addTearDown(() {
-        for (final method in [
-          'setDropTarget',
-          'clearDropTarget',
-          'readClipboardImage',
-        ]) {
-          messenger.setMockDecodedMessageHandler(channel(method), null);
-        }
-      });
-      final controller = MoodiaryEditorController(), saved = <String>[];
-      await tester.pumpWidget(
-        _app(
-          MoodiaryEditor(
-            controller: controller,
-            initialContent: _json([_p('First'), _p('Second')]),
-            onSaveImage: (data, name) async {
-              saved.add('$name:$data');
-              return 'image-${saved.length}.jpg';
-            },
-          ),
+  testWidgets('Pigeon clipboard images are saved on paste', (tester) async {
+    final messenger = binding.defaultBinaryMessenger;
+    const channel = BasicMessageChannel<Object?>(
+      'dev.flutter.pigeon.moodiary_native.ImageTransferApi.readClipboardImage',
+      ImageTransferApi.pigeonChannelCodec,
+    );
+    final image = TransferredImage(
+      bytes: Uint8List.fromList([1, 2, 3]),
+      mime: 'image/jpeg',
+      name: 'photo.jpg',
+    );
+    messenger.setMockDecodedMessageHandler(channel, (_) async => [image]);
+    addTearDown(() => messenger.setMockDecodedMessageHandler(channel, null));
+    final controller = MoodiaryEditorController(), saved = <String>[];
+    await tester.pumpWidget(
+      _app(
+        MoodiaryEditor(
+          controller: controller,
+          initialContent: _json([_p('First')]),
+          onSaveImage: (data, name) async {
+            saved.add('$name:$data');
+            return 'image-${saved.length}.jpg';
+          },
         ),
-      );
-      await tester.pumpAndSettle();
-      expect(target, greaterThan(0));
-      final geometry = _geometry(tester),
-          bounds = tester.getRect(find.byType(ft.TiptapEditor));
-      final point = geometry.caretRect(9).center + bounds.topLeft;
-      Future<void> dropAt(int id) async {
-        final done = Completer<void>();
-        await messenger.handlePlatformMessage(
-          'dev.flutter.pigeon.moodiary_native.ImageTransferClient.onDrop',
-          ImageTransferClient.pigeonChannelCodec.encodeMessage([
-            ImageDrop(target: id, x: point.dx, y: point.dy, images: [image]),
-          ]),
-          (_) => done.complete(),
-        );
-        await done.future;
-        await tester.pumpAndSettle();
-      }
-
-      await dropAt(target);
-      expect(saved, ['photo.jpg:data:image/jpeg;base64,AQID']);
-      final nodes = _editor(tester).controller.state.doc.content;
-      expect(nodes.take(3).map((n) => n.type), [
-        'paragraph',
-        'paragraph',
-        'image',
-      ]);
-      expect(await _editor(tester).onPasteClipboard!(), true);
-      await tester.pumpAndSettle();
-      expect(saved, hasLength(2));
-      final oldTarget = target;
-      await controller.swapDocument(
-        content: _json([_p('Other')]),
-        title: 'Other',
-      );
-      await tester.pumpAndSettle();
-      expect(target, isNot(oldTarget));
-      await dropAt(oldTarget);
-      expect(saved, hasLength(2));
-      expect(_editor(tester).controller.state.doc.textContent, 'Other');
-      await controller.flush();
-      await tester.pumpWidget(const SizedBox());
-    },
-  );
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(await _editor(tester).onPasteClipboard!(), true);
+    await tester.pumpAndSettle();
+    expect(saved, ['photo.jpg:data:image/jpeg;base64,AQID']);
+    expect(
+      _editor(tester).controller.state.doc.content.map((n) => n.type),
+      contains('image'),
+    );
+    await controller.flush();
+    await tester.pumpWidget(const SizedBox());
+  });
 
   testWidgets(
     'metadata popovers stay anchored, update places live and dispatch every inline action',

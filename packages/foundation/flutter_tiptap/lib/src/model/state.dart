@@ -107,7 +107,7 @@ class Transaction {
     );
     RangeError.checkValueInInterval(value.head, 0, doc.content.size, 'head');
     selectionSet = true;
-    selection = _normalizeTableSelection(doc, value);
+    selection = _clampTableSelection(doc, value);
     storedMarks = null;
     return this;
   }
@@ -362,8 +362,6 @@ class EditorState {
           ? SelectionKind.all
           : selection is NodeSelection
           ? SelectionKind.node
-          : selection is CellSelection
-          ? SelectionKind.cell
           : selection is GapSelection
           ? SelectionKind.gap
           : SelectionKind.text,
@@ -384,7 +382,7 @@ class EditorState {
   }
 }
 
-enum SelectionKind { text, node, all, cell, gap }
+enum SelectionKind { text, node, all, gap }
 
 class ToolbarState {
   const ToolbarState(

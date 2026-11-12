@@ -50,24 +50,6 @@ class _SystemPaste implements SystemPasteClient {
   void onPaste() => _owner?.editorKey.currentState?.paste();
 }
 
-class _ImageDrops implements ImageTransferClient {
-  static final instance = _ImageDrops._();
-  _ImageDrops._() {
-    ImageTransferClient.setUp(this);
-  }
-  final _targets = <int, ValueChanged<ImageDrop>>{};
-  int _next = 0;
-  int register(ValueChanged<ImageDrop> callback) {
-    final id = ++_next;
-    _targets[id] = callback;
-    return id;
-  }
-
-  void unregister(int id) => _targets.remove(id);
-  @override
-  void onDrop(ImageDrop drop) => _targets[drop.target]?.call(drop);
-}
-
 extension _HostTransfer on MoodiaryEditorHost {
   Future<void> copyClipboard(String text, String html) async {
     try {
@@ -134,22 +116,6 @@ extension _HostTransfer on MoodiaryEditorHost {
         level: 1000,
       );
       return false;
-    }
-  }
-
-  Future<void> importDrop(ImageDrop drop, Offset local) async {
-    if (readOnly || _disposed || drop.images.isEmpty) return;
-    final geometry = editorKey.currentState?.geometry;
-    if (geometry == null) return;
-    final generation = _generation;
-    _held = null;
-    editorKey.currentState?.finishComposition();
-    editor.setSelection(
-      ft.Selection.near(editor.state.doc, geometry.positionForOffset(local)),
-    );
-    for (final image in drop.images) {
-      if (_disposed || readOnly || generation != _generation) break;
-      await importImage(image);
     }
   }
 

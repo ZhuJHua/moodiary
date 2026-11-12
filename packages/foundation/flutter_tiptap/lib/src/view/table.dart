@@ -252,7 +252,12 @@ final class _TableRowLayout extends _BlockLayout {
         break;
       }
     }
-    return block.$2 + block.$1.position(offset - _blockOrigin(cell, block.$3));
+    final node = block.$1.node;
+    if (node.isLeaf) return block.$2 - 1;
+    return block.$2 +
+        block.$1
+            .position(offset - _blockOrigin(cell, block.$3))
+            .clamp(0, node.content.size);
   }
 
   @override
@@ -284,8 +289,6 @@ final class _TableRowLayout extends _BlockLayout {
     Canvas canvas,
     Offset origin,
     TiptapEditorStyle style,
-    m.Selection selection,
-    int position,
     m.SearchIndex search,
   ) {
     canvas.save();
@@ -294,10 +297,6 @@ final class _TableRowLayout extends _BlockLayout {
       final rect = cell.rect.shift(origin);
       if (cell.node.type == 'tableHeader') {
         canvas.drawRect(rect, Paint()..color = style.codeBackground);
-      }
-      if (selection is m.CellSelection &&
-          selection.cells.contains(position + cell.position)) {
-        canvas.drawRect(rect, Paint()..color = style.selectionColor);
       }
       final border = Paint()
         ..color = style.opaqueBorder

@@ -362,15 +362,6 @@ extension on TiptapEditorState {
           m.Selection.beside(widget.controller.state.doc, selection.to),
         );
         requestKeyboard();
-      } else if (widget.controller.state.selection
-          case final m.CellSelection selection) {
-        widget.controller.setSelection(
-          m.Selection.beside(
-            widget.controller.state.doc,
-            selection.headCell + 1,
-          ),
-        );
-        requestKeyboard();
       }
       return;
     }
@@ -610,14 +601,13 @@ extension on TiptapEditorState {
           break;
         }
       }
-      if (selection is m.CellSelection ||
-          boundary &&
-              (extend ||
-                  !horizontal ||
-                  direction == 'left' &&
-                      cell.tablePosition == 0 &&
-                      cell.rect.top == 0 &&
-                      cell.rect.left == 0)) {
+      if (boundary &&
+          (extend ||
+              !horizontal ||
+              direction == 'left' &&
+                  cell.tablePosition == 0 &&
+                  cell.rect.top == 0 &&
+                  cell.rect.left == 0)) {
         final tr = controller.commands.execute(
           controller.state,
           'arrow${direction[0].toUpperCase()}${direction.substring(1)}',
@@ -646,12 +636,13 @@ extension on TiptapEditorState {
             target += text.substring(offset).characters.first.length;
           } else {
             if (m.tableContext(doc, target) != null) {
+              final next = m.Selection.near(
+                doc,
+                (target + (backward ? -1 : 1)).clamp(0, doc.content.size),
+                bias: backward ? -1 : 1,
+              );
               controller.setSelection(
-                m.Selection.near(
-                  doc,
-                  (target + (backward ? -1 : 1)).clamp(0, doc.content.size),
-                  bias: backward ? -1 : 1,
-                ),
+                extend ? m.TextSelection(selection.anchor, next.head) : next,
               );
               _scheduleGeometry(reveal: true);
               return;

@@ -26,36 +26,10 @@ class TransferredImage {
   String name;
 }
 
-class ImageDrop {
-  ImageDrop({
-    required this.target,
-    required this.x,
-    required this.y,
-    required this.images,
-  });
-  int target;
-  double x;
-  double y;
-  List<TransferredImage> images;
-}
-
 @HostApi()
 abstract class ImageTransferApi {
   @async
   Uint8List? readContentUri(String uri);
   @async
   TransferredImage? readClipboardImage();
-  void setDropTarget(
-    int target,
-    double left,
-    double top,
-    double width,
-    double height,
-  );
-  void clearDropTarget(int target);
-}
-
-@FlutterApi()
-abstract class ImageTransferClient {
-  void onDrop(ImageDrop drop);
 }

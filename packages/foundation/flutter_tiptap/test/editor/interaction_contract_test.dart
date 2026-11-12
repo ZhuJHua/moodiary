@@ -505,7 +505,7 @@ void main() {
   );
 
   testWidgets(
-    'cell atom arrows stay in its container; Escape collapses node and rectangular selection',
+    'cell atom arrows stay in its container; Escape collapses node selection',
     (tester) async {
       final c = _doc([
         _schema.node(
@@ -536,16 +536,6 @@ void main() {
       c.setSelection(ft.NodeSelection(c.state.doc, 3));
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       expect(c.state.selection, const ft.GapSelection(4));
-      c.setSelection(ft.CellSelection(c.state.doc, 2, 5));
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      expect(c.state.selection, isA<ft.TextSelection>());
-      expect(
-        ft.tableContext(c.state.doc, c.state.selection.head)!.cellPosition,
-        5,
-      );
-      c.setSelection(ft.CellSelection(c.state.doc, 5, 2));
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      expect(c.state.selection, const ft.GapSelection(3));
       await _unmount(tester);
     },
     variant: _mobile,

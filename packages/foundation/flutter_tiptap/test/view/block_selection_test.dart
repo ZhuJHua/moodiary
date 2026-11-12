@@ -47,6 +47,41 @@ void main() {
     return key;
   }
 
+  testWidgets('hits on table-cell images resolve to each image', (
+    tester,
+  ) async {
+    ft.Node image(String src) => schema.node('image', attrs: {'src': src});
+    final controller = ft.TiptapController(
+      doc: schema.node(
+        'doc',
+        content: [
+          schema.node(
+            'table',
+            content: [
+              schema.node(
+                'tableRow',
+                content: [
+                  schema.node('tableCell', content: [image('a'), image('b')]),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+    final key = await mount(tester, controller);
+    final geometry = key.currentState!.geometry!;
+    final cell = geometry.cellRect(3)!;
+    expect(
+      geometry.positionForOffset(Offset(cell.right - 8, cell.top + 20)),
+      3,
+    );
+    expect(
+      geometry.positionForOffset(Offset(cell.right - 8, cell.bottom - 20)),
+      4,
+    );
+  });
+
   testWidgets(
     'first tap after entering unmeasured atoms uses displayed geometry without scrolling',
     (tester) async {

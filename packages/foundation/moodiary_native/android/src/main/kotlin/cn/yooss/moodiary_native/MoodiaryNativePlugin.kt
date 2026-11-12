@@ -6,15 +6,12 @@ import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 
 class MoodiaryNativePlugin : FlutterPlugin, ActivityAware {
-    private var imageTransfer: ImageTransfer? = null
     private var keyboard: KeyboardHeight? = null
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         val messenger = binding.binaryMessenger
         HtmlClipboardApi.setUp(messenger, HtmlClipboard(binding.applicationContext))
-        imageTransfer = ImageTransfer(binding.applicationContext, messenger).also {
-            ImageTransferApi.setUp(messenger, it)
-        }
+        ImageTransferApi.setUp(messenger, ImageTransfer(binding.applicationContext))
         keyboard = KeyboardHeight().also { KeyboardHeightStreamHandler.register(messenger, it) }
     }
 
@@ -22,8 +19,6 @@ class MoodiaryNativePlugin : FlutterPlugin, ActivityAware {
         val messenger = binding.binaryMessenger
         HtmlClipboardApi.setUp(messenger, null)
         ImageTransferApi.setUp(messenger, null)
-        imageTransfer?.dispose()
-        imageTransfer = null
         keyboard?.activity = null
         keyboard = null
     }
@@ -38,7 +33,6 @@ class MoodiaryNativePlugin : FlutterPlugin, ActivityAware {
     override fun onDetachedFromActivity() = setActivity(null)
 
     private fun setActivity(activity: Activity?) {
-        imageTransfer?.activity = activity
         keyboard?.activity = activity
     }
 }

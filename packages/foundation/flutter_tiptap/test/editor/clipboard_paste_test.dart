@@ -205,6 +205,59 @@ void main() {
     expect(controller.state.doc.child(0).textContent.length, largeText.length);
   });
 
+  for (final cut in [false, true]) {
+    test(
+      'single cell ${cut ? 'cut' : 'copy'} and paste preserve formatting and neighbors',
+      () async {
+        final schema = ft.Schema.standard();
+        controller.replaceDocument(
+          ft.TiptapHtmlCodec(schema).parse(
+            '<table><tr><td><p>keep</p></td><td><p><strong>selected</strong></p></td>'
+            '<td><p>target</p></td></tr></table><p></p>',
+          ),
+        );
+        final before = controller.state.doc;
+        final source = ft.TableMap.get(before.child(0)).map[1] + 1;
+        controller.setSelection(ft.TextSelection(source + 2, source + 10));
+        late String copiedText, copiedHtml;
+        await controller.copy(
+          cut: cut,
+          write: (text, html) async {
+            copiedText = text;
+            copiedHtml = html;
+          },
+        );
+        expect(copiedText, 'selected');
+        expect(
+          copiedHtml,
+          matches(RegExp(r'<strong(?: [^>]*)?>selected</strong>')),
+        );
+        final current = controller.state.doc;
+        final target = ft.TableMap.get(current.child(0)).map[2] + 1;
+        controller.setSelection(ft.TextSelection(target + 2, target + 8));
+        await controller.pasteHtml(copiedHtml, text: copiedText);
+        final cells = controller.state.doc.child(0).child(0).content.toList();
+        expect(cells.map((cell) => cell.textContent), [
+          'keep',
+          cut ? '' : 'selected',
+          'selected',
+        ]);
+        expect(cells[2].child(0).child(0).marks.single.type, 'bold');
+        expect(controller.cellPosition, target);
+        controller.exec('undo');
+        expect(controller.state.doc.toJson(), current.toJson());
+        if (cut) {
+          controller.exec('undo');
+          expect(controller.state.doc.toJson(), before.toJson());
+          expect(
+            controller.state.selection,
+            ft.TextSelection(source + 2, source + 10),
+          );
+        }
+      },
+    );
+  }
+
   test('copied internal HTML and slice above 1M preserve formatting', () async {
     final schema = ft.Schema.standard();
     controller.replaceDocument(

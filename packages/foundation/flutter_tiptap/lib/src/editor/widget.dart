@@ -391,9 +391,6 @@ class TiptapEditorState extends State<TiptapEditor>
   }
 
   @visibleForTesting
-  List<Rect> get debugCellSelectionRects =>
-      _render?._cellSelectionRects() ?? [];
-  @visibleForTesting
   List<Rect> get debugSearchHighlightRects => _render?._searchRects() ?? [];
 
   /// Commits any active IME composition before a host editing action.
@@ -416,10 +413,6 @@ class TiptapEditorState extends State<TiptapEditor>
       widget.controller.setSelection(
         m.Selection.beside(widget.controller.state.doc, selection.to),
       );
-    } else if (selection is m.CellSelection) {
-      widget.controller.setSelection(
-        m.Selection.near(widget.controller.state.doc, selection.head),
-      );
     }
   }
 
@@ -441,8 +434,7 @@ class TiptapEditorState extends State<TiptapEditor>
     _snapCaret = true;
     if (!_focusNode.hasPrimaryFocus) _hideCaretHandle();
     if (_focusNode.hasPrimaryFocus &&
-        (widget.controller.state.selection is m.NodeSelection ||
-            widget.controller.state.selection is m.CellSelection)) {
+        widget.controller.state.selection is m.NodeSelection) {
       _nodeFocused = true;
     }
     if (_focusNode.hasPrimaryFocus &&
@@ -547,8 +539,7 @@ class TiptapEditorState extends State<TiptapEditor>
       if (_focusNode.hasPrimaryFocus && !widget.readOnly) _input.open();
     }
     _input.synchronize();
-    if ((widget.controller.state.selection is m.NodeSelection ||
-        widget.controller.state.selection is m.CellSelection)) {
+    if (widget.controller.state.selection is m.NodeSelection) {
       _reveal = false;
     }
     _scheduleGeometry(
@@ -596,7 +587,6 @@ class TiptapEditorState extends State<TiptapEditor>
     }
     _viewportHeight = height;
     if ((widget.controller.state.selection is m.NodeSelection ||
-        widget.controller.state.selection is m.CellSelection ||
         widget.controller.state.selection is m.AllSelection)) {
       _reveal = false;
     }
@@ -620,8 +610,7 @@ class TiptapEditorState extends State<TiptapEditor>
   double get _bottomReserve => math.max(widget.caretBottomMargin, _handleReach);
 
   bool _revealCaret() {
-    if ((widget.controller.state.selection is m.NodeSelection ||
-        widget.controller.state.selection is m.CellSelection)) {
+    if (widget.controller.state.selection is m.NodeSelection) {
       return false;
     }
     final render = _render;
@@ -898,35 +887,22 @@ class TiptapEditorState extends State<TiptapEditor>
     final position = geometry!.positionForOffset(
       _local(global - (_handleGrab ?? Offset.zero)),
     );
-    final doc = widget.controller.state.doc,
-        anchorCell = m.tableContext(doc, _dragAnchor!),
-        headCell = m.tableContext(doc, position);
-    if (!_dragCollapsed &&
-        anchorCell != null &&
-        headCell != null &&
-        anchorCell.tablePosition == headCell.tablePosition &&
-        anchorCell.cellPosition != headCell.cellPosition) {
-      widget.controller.setSelection(
-        m.CellSelection(doc, anchorCell.cellPosition, headCell.cellPosition),
-      );
-    } else {
-      var anchor = _dragAnchor!, head = position;
-      final unit = _dragUnit;
-      if (!_touch && unit != null && _dragGranularity > 1) {
-        final resolved = doc.resolve(position);
-        final range = _dragGranularity == 2
-            ? geometry!.wordBoundary(position)
-            : TextRange(start: resolved.start(), end: resolved.end());
-        final backward = position < unit.start;
-        anchor = backward ? unit.end : unit.start;
-        head = backward ? range.start : range.end;
-      }
-      widget.controller.setSelection(
-        _dragCollapsed
-            ? m.TextSelection(position)
-            : m.TextSelection(anchor, head),
-      );
+    var anchor = _dragAnchor!, head = position;
+    final unit = _dragUnit;
+    if (!_touch && unit != null && _dragGranularity > 1) {
+      final resolved = widget.controller.state.doc.resolve(position);
+      final range = _dragGranularity == 2
+          ? geometry!.wordBoundary(position)
+          : TextRange(start: resolved.start(), end: resolved.end());
+      final backward = position < unit.start;
+      anchor = backward ? unit.end : unit.start;
+      head = backward ? range.start : range.end;
     }
+    widget.controller.setSelection(
+      _dragCollapsed
+          ? m.TextSelection(position)
+          : m.TextSelection(anchor, head),
+    );
     if (_touch) {
       setState(
         () => _magnifier = _local(global - (_handleGrab ?? Offset.zero)),
@@ -983,8 +959,7 @@ class TiptapEditorState extends State<TiptapEditor>
             defaultTargetPlatform == TargetPlatform.macOS);
     _place(details.globalPosition, word: !appleCaret, activateControls: false);
     _dragCollapsed = appleCaret;
-    if ((widget.controller.state.selection is m.NodeSelection ||
-        widget.controller.state.selection is m.CellSelection)) {
+    if (widget.controller.state.selection is m.NodeSelection) {
       return;
     }
     _dragging = true;
@@ -1403,7 +1378,6 @@ class TiptapEditorState extends State<TiptapEditor>
                             ),
                             if (_touch &&
                                 selection is! m.NodeSelection &&
-                                selection is! m.CellSelection &&
                                 selection is! m.GapSelection &&
                                 _focusNode.hasPrimaryFocus &&
                                 geometry != null &&
