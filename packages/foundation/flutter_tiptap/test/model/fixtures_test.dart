@@ -6,11 +6,14 @@ import 'package:flutter_tiptap/flutter_tiptap.dart';
 import 'package:moodiary_lint/testing.dart';
 
 void main() {
-  final file = File(
-    '$repoRoot/packages/foundation/flutter_tiptap/test/fixtures/scenarios.json',
-  );
-  final scenarios = (jsonDecode(file.readAsStringSync()) as List)
-      .cast<Map<String, dynamic>>();
+  final scenarios = [
+    for (final name in ['scenarios', 'autolink'])
+      ...(jsonDecode(
+        File(
+          '$repoRoot/packages/foundation/flutter_tiptap/test/fixtures/$name.json',
+        ).readAsStringSync(),
+      ) as List).cast<Map<String, dynamic>>(),
+  ];
   final schema = Schema.standard();
   const commands = EditorCommands(trailingParagraph: true);
   for (final scenario in scenarios) {

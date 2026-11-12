@@ -1318,6 +1318,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.2.2"
+  linkifydart:
+    dependency: transitive
+    description:
+      name: linkifydart
+      sha256: fc7f95849e86e1b29fb383e1d2c05af688aff25a700b45246aede4cf252e3d07
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.0"
   lints:
     dependency: transitive
     description:

@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:characters/characters.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html;
+import 'package:linkifydart/linkifydart.dart' as linkify;
 
 part 'model/schema.dart';
 part 'model/html.dart';

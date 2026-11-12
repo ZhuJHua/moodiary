@@ -76,9 +76,16 @@ class EditorCommands {
       case 'pasteText':
         _pasteText(tr, args['text'] as String, plain: args['plain'] == true);
       case 'pasteSlice':
-        final slice = args['slice'] as Slice, to = tr.selection.to;
-        _replacePasteRange(tr, tr.selection.from, to, slice);
-        tr.setSelection(Selection.near(tr.doc, tr.mapping.map(to, 1)));
+        final slice = args['slice'] as Slice;
+        final from = tr.selection.from, to = tr.selection.to;
+        _replacePasteRange(tr, from, to, slice);
+        final start = tr.mapping.map(from, -1).clamp(0, tr.doc.content.size);
+        final end = tr.mapping.map(to, 1).clamp(0, tr.doc.content.size);
+        tr.setSelection(Selection.near(tr.doc, end));
+        if (args['applyPasteRules'] != false && start < end) {
+          _pasteLinks(tr, start, end, preserveLinks: true);
+        }
+        if (start < end) _unlinkTrailingWhitespace(tr, (from: start, to: end));
       case 'insertText':
         _insertText(
           state,
@@ -89,7 +96,21 @@ class EditorCommands {
         );
       case 'commitComposition':
         tr.setMeta('composition', args['composition']);
+        final mapFrom = tr.mapping.maps.length;
         _inputRules(tr);
+        final mapping = Mapping(tr.mapping.maps.skip(mapFrom));
+        final ranges =
+            [
+                for (final range in _composedRanges(state, args['composition']))
+                  (
+                    from: mapping.map(range.from, 1),
+                    to: mapping.map(range.to, -1),
+                  ),
+              ].where((range) => range.from < range.to).toList()
+              ..sort((a, b) => b.to.compareTo(a.to));
+        for (final range in ranges) {
+          _unlinkTrailingWhitespace(tr, range);
+        }
         _autolink(tr);
       case 'deleteBackward':
         if (state._inputRule != null) {
@@ -371,9 +392,43 @@ class EditorCommands {
     if (state.storedMarks != null) tr.setStoredMarks(marks);
     if (composition != null) tr.setMeta('composition', composition);
     if (committed) {
+      final insertedFrom = tr.selection.head - text.length;
+      final insertedTo = tr.selection.head;
+      final mapFrom = tr.mapping.maps.length;
       _inputRules(tr);
-      _autolink(tr);
+      final mapping = Mapping(tr.mapping.maps.skip(mapFrom));
+      final from = mapping.map(insertedFrom, 1);
+      final to = mapping.map(insertedTo, -1);
+      if (from < to) _autolink(tr, insertedRange: (from: from, to: to));
     }
+  }
+
+  // Text the composition inserted that still exists, in document order.
+  List<({int from, int to})> _composedRanges(
+    EditorState state,
+    Object? composition,
+  ) {
+    final event = state.history._done.lastOrNull;
+    if (composition == null || event?.composition != composition) return [];
+    // A typing burst can join the same history event; only recent edits matter.
+    final maps = event!.mapping.maps;
+    var ranges = <({int from, int to})>[];
+    for (final map in maps.skip(math.max(0, maps.length - 256))) {
+      ranges = [
+        for (final range in ranges)
+          if (map.map(range.from, 1) case final from
+              when from < map.map(range.to, -1))
+            (from: from, to: map.map(range.to, -1)),
+      ];
+      if (map._ranges == null && map.newSize > 0) {
+        ranges.add((from: map.from, to: map.from + map.newSize));
+      }
+    }
+    final size = state.doc.content.size;
+    return [
+      for (final range in ranges)
+        if (range.to <= size) range,
+    ];
   }
 
   void _inputRules(Transaction tr) {

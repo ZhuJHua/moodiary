@@ -1,5 +1,31 @@
 part of '../model.dart';
 
+final _linkDetector = linkify.Linkify();
+final _linkWhitespace = RegExp(
+  r'[\u0000-\u0020\u00a0\u1680\u180e\u2000-\u2029\u205f\u3000]',
+);
+final _linkWord = RegExp(
+  r'[^\u0000-\u0020\u00a0\u1680\u180e\u2000-\u2029\u205f\u3000]+',
+);
+final _allowedLinkUri = RegExp(
+  r'^(?:(?:http|https|ftp|ftps|mailto|tel|callto|sms|cid|xmpp):|[^a-z]|[a-z0-9+.\-]+(?:[^a-z+.\-:]|$))',
+  caseSensitive: false,
+);
+
+bool _shouldAutoLink(String value) {
+  if (RegExp(r'^[a-z][a-z0-9+.-]*://', caseSensitive: false).hasMatch(value) ||
+      (RegExp(r'^[a-z][a-z0-9+.-]*:', caseSensitive: false).hasMatch(value) &&
+          !value.contains('@'))) {
+    return true;
+  }
+  final hostname = value.split('@').last.split(RegExp(r'[/?#:]')).first;
+  return hostname.contains('.') &&
+      !RegExp(r'^\d{1,3}(\.\d{1,3}){3}$').hasMatch(hostname);
+}
+
+bool _isAllowedLink(String value) =>
+    _allowedLinkUri.hasMatch(value.replaceAll(_linkWhitespace, ''));
+
 String normalizeHref(String raw) {
   final href = raw.trim();
   if (href.isEmpty) return '';
@@ -192,7 +218,7 @@ extension _LinkCommands on EditorCommands {
     );
   }
 
-  void _autolink(Transaction tr) {
+  void _autolink(Transaction tr, {({int from, int to})? insertedRange}) {
     if (!tr.selection.empty) return;
     final pos = tr.doc.resolve(tr.selection.head);
     if (!pos.parent.isTextblock || pos.parent.type == 'codeBlock') return;
@@ -201,20 +227,57 @@ extension _LinkCommands on EditorCommands {
         .cut(pos.parentOffset - 1, pos.parentOffset)
         .first
         .text;
-    if (tail == null || !RegExp(r'\s').hasMatch(tail)) return;
+    if (tail == null || !_linkWhitespace.hasMatch(tail)) return;
     final offset = math.max(0, pos.parentOffset - 2048);
     final text = pos.parent.content
         .cut(offset, pos.parentOffset)
         .map((n) => n.text ?? '\ufffc')
         .join();
-    final match = RegExp(r'(\S+)\s+$').firstMatch(text);
-    if (match == null) return;
+    if (insertedRange != null) _unlinkTrailingWhitespace(tr, insertedRange);
+    final match = _linkWord
+        .allMatches(text.replaceAll('\ufffc', ' '))
+        .lastOrNull;
+    if (match == null || (offset > 0 && match.start == 0)) return;
     _linkify(
       tr,
-      match[1]!,
+      match[0]!,
       pos.start() + offset + match.start,
       wholeWord: true,
     );
+  }
+
+  // Whitespace inserted at the end of a link leaves the link.
+  void _unlinkTrailingWhitespace(Transaction tr, ({int from, int to}) range) {
+    final end = tr.doc.resolve(range.to);
+    if (!end.parent.isTextblock || end.nodeBefore?.isText != true) return;
+    final start = math.max(range.from, end.start());
+    if (start >= range.to) return;
+    final text = end.parent.content
+        .cut(start - end.start(), end.parentOffset)
+        .map((node) => node.text ?? '\ufffc')
+        .join();
+    final whitespace = RegExp('${_linkWhitespace.pattern}+\$').firstMatch(text);
+    if (whitespace == null) return;
+    final from = start + whitespace.start;
+    final links = tr.doc
+        .slice(from, range.to)
+        .content
+        .expand((node) => node.marks)
+        .where((mark) => mark.type == 'link')
+        .toSet();
+    if (links.isEmpty) return;
+    final after = end.nodeAfter;
+    if (after != null && after.marks.any(links.contains)) return;
+    for (final mark in links) {
+      tr.step(RemoveMarkStep(from, range.to, mark));
+    }
+    if (tr.selection.empty && tr.selection.head == range.to) {
+      tr.setStoredMarks(
+        (tr.storedMarks ?? end.marks)
+            .where((mark) => mark.type != 'link')
+            .toList(),
+      );
+    }
   }
 
   void _autolinkBeforeSplit(Transaction tr) {
@@ -222,10 +285,20 @@ extension _LinkCommands on EditorCommands {
     if (index == 0) return;
     final row = tr.doc.rowAt(index - 1);
     if (!row.node.isTextblock || row.node.type == 'codeBlock') return;
-    final text = row.node.content.map((n) => n.text ?? '\ufffc').join();
-    final match = RegExp(r'(\S+)\s*$').firstMatch(text);
-    if (match != null) {
-      _linkify(tr, match[1]!, row.position + 1 + match.start, wholeWord: true);
+    final offset = math.max(0, row.node.content.size - 2048);
+    final text = row.node.content
+        .cut(offset)
+        .map((node) => node.text ?? '\ufffc')
+        .join()
+        .replaceAll('\ufffc', ' ');
+    final match = _linkWord.allMatches(text).lastOrNull;
+    if (match != null && (offset == 0 || match.start > 0)) {
+      _linkify(
+        tr,
+        match[0]!,
+        row.position + 1 + offset + match.start,
+        wholeWord: true,
+      );
     }
   }
 
@@ -234,43 +307,35 @@ extension _LinkCommands on EditorCommands {
     String text,
     int start, {
     bool wholeWord = false,
-    String protocol = 'https',
+    bool preserveLinks = false,
   }) {
-    final pattern = RegExp(
-      r'''(?:https?://|www\.)[^\s<>]+|[\w.+-]+@[\w-]+(?:\.[\w-]+)+|(?:[a-zA-Z0-9-]+\.)+(?:com|org|net|io|dev|app|cn|co|uk|edu|gov|me|info)(?![a-zA-Z0-9-])(?:[/:?#][^\s<>]*)?''',
-      caseSensitive: false,
-    );
-    for (final match in pattern.allMatches(text)) {
-      var value = match[0]!.replaceFirst(RegExp(r'[.,!?;:]+$'), '');
-      for (final pair in [('(', ')'), ('[', ']'), ('{', '}')]) {
-        while (value.endsWith(pair.$2) &&
-            pair.$2.allMatches(value).length >
-                pair.$1.allMatches(value).length) {
-          value = value.substring(0, value.length - 1);
-        }
-      }
-      if (wholeWord &&
-          !(text == value || text == '($value)' || text == '[$value]')) {
+    final tokens = _linkDetector.tokenize(text);
+    if (wholeWord &&
+        !(tokens.length == 1 && tokens.first.isLink ||
+            tokens.length == 3 &&
+                tokens[1].isLink &&
+                const [
+                  '()',
+                  '[]',
+                ].contains(tokens.first.value + tokens.last.value))) {
+      return;
+    }
+    for (final token in tokens.where((token) => token.isLink)) {
+      if (!_isAllowedLink(token.value) || !_shouldAutoLink(token.value)) {
         continue;
       }
-      if (value.isEmpty) {
-        continue;
-      }
-      if (match.start > 0 && RegExp(r'[\w@]').hasMatch(text[match.start - 1])) {
-        continue;
-      }
-      final from = start + match.start, to = from + value.length;
+      final from = start + token.start, to = start + token.end;
       final nodes = tr.doc.slice(from, to).content;
       if (nodes.any(
-        (n) => n.marks.any((m) => m.type == 'code' || m.type == 'link'),
+        (n) => n.marks.any(
+          (m) =>
+              m.type == 'code' ||
+              (wholeWord || preserveLinks) && m.type == 'link',
+        ),
       )) {
         continue;
       }
-      final href = value.contains('@') && !value.contains('://')
-          ? 'mailto:$value'
-          : value.contains('://')
-          ? value
-          : '$protocol://$value';
+      final href = token.toHref(wholeWord ? 'https' : 'http');
       tr.step(
         AddMarkStep(from, to, tr.doc.schema.mark('link', {'href': href})),
       );

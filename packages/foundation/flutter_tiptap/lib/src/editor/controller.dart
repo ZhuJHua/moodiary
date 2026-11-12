@@ -339,6 +339,7 @@ class TiptapController extends ChangeNotifier {
       await paste(text: text);
     } else {
       final slice = m.TiptapHtmlCodec(state.doc.schema).parseSlice(html);
+      final applyPasteRules = !html.contains('data-pm-slice');
       final plain = slice.content.every(_isPlain);
       // Some sources wrap their plain text in HTML without any formatting.
       if (text != null && onPasteText != null && plain) {
@@ -346,14 +347,22 @@ class TiptapController extends ChangeNotifier {
         final json = await onPasteText(text);
         if (_disposed || revision != _revision) return;
         if (json != null) {
-          _pasteDocument(json, text);
+          _pasteDocument(json, text, applyPasteRules: applyPasteRules);
           return;
         }
       }
       if (text?.isNotEmpty == true && !plain) {
-        _pasteConverted(slice, text!, TiptapPasteConversion.richText);
+        _pasteConverted(
+          slice,
+          text!,
+          TiptapPasteConversion.richText,
+          applyPasteRules: applyPasteRules,
+        );
       } else {
-        exec('pasteSlice', {'slice': slice});
+        exec('pasteSlice', {
+          'slice': slice,
+          'applyPasteRules': applyPasteRules,
+        });
       }
     }
   }
@@ -371,7 +380,7 @@ class TiptapController extends ChangeNotifier {
       source.openStart,
       source.openEnd,
     );
-    exec('pasteSlice', {'slice': slice});
+    exec('pasteSlice', {'slice': slice, 'applyPasteRules': false});
     return true;
   }
 
@@ -381,7 +390,11 @@ class TiptapController extends ChangeNotifier {
       node.type == 'paragraph' && node.content.every(_isPlain);
 
   // A lone paragraph joins the text around the caret.
-  void _pasteDocument(Map<String, dynamic> json, String text) {
+  void _pasteDocument(
+    Map<String, dynamic> json,
+    String text, {
+    bool applyPasteRules = true,
+  }) {
     final doc = state.doc.schema.fromJson(json);
     final open = doc.childCount == 1 && doc.child(0).type == 'paragraph'
         ? 1
@@ -390,17 +403,21 @@ class TiptapController extends ChangeNotifier {
       m.Slice(doc.content, open, open),
       text,
       TiptapPasteConversion.markdown,
+      applyPasteRules: applyPasteRules,
     );
   }
 
   void _pasteConverted(
     m.Slice slice,
     String text,
-    TiptapPasteConversion conversion,
-  ) {
+    TiptapPasteConversion conversion, {
+    bool applyPasteRules = true,
+  }) {
     apply(
-      commands.execute(state, 'pasteSlice', {'slice': slice})
-        ..setMeta('closeHistory', true),
+      commands.execute(state, 'pasteSlice', {
+        'slice': slice,
+        'applyPasteRules': applyPasteRules,
+      })..setMeta('closeHistory', true),
     );
     _convertedText = text;
     onPasteConverted?.call(conversion);

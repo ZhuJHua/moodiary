@@ -9689,36 +9689,6 @@
         "anchor": 4,
         "head": 4
       }
-    },
-    "deviation": "D6: code indents lines, preserves indentation on newline, and exits only on Mod-Enter.",
-    "nativeExpected": {
-      "doc": {
-        "type": "doc",
-        "attrs": {
-          "v": 2
-        },
-        "content": [
-          {
-            "type": "codeBlock",
-            "attrs": {
-              "language": "dart"
-            },
-            "content": [
-              {
-                "type": "text",
-                "text": "x\n\n\n"
-              }
-            ]
-          },
-          {
-            "type": "paragraph"
-          }
-        ]
-      },
-      "selection": {
-        "anchor": 5,
-        "head": 5
-      }
     }
   },
   {
@@ -13832,41 +13802,6 @@
       "selection": {
         "anchor": 5,
         "head": 5
-      }
-    },
-    "deviation": "D6: code indents lines, preserves indentation on newline, and exits only on Mod-Enter.",
-    "nativeExpected": {
-      "doc": {
-        "type": "doc",
-        "attrs": {
-          "v": 2
-        },
-        "content": [
-          {
-            "type": "blockquote",
-            "content": [
-              {
-                "type": "codeBlock",
-                "attrs": {
-                  "language": "dart"
-                },
-                "content": [
-                  {
-                    "type": "text",
-                    "text": "x\n\n\n"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "type": "paragraph"
-          }
-        ]
-      },
-      "selection": {
-        "anchor": 6,
-        "head": 6
       }
     }
   },
@@ -18379,46 +18314,6 @@
       "selection": {
         "anchor": 6,
         "head": 6
-      }
-    },
-    "deviation": "D6: code indents lines, preserves indentation on newline, and exits only on Mod-Enter.",
-    "nativeExpected": {
-      "doc": {
-        "type": "doc",
-        "attrs": {
-          "v": 2
-        },
-        "content": [
-          {
-            "type": "blockquote",
-            "content": [
-              {
-                "type": "blockquote",
-                "content": [
-                  {
-                    "type": "codeBlock",
-                    "attrs": {
-                      "language": "dart"
-                    },
-                    "content": [
-                      {
-                        "type": "text",
-                        "text": "x\n\n\n"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "type": "paragraph"
-          }
-        ]
-      },
-      "selection": {
-        "anchor": 7,
-        "head": 7
       }
     }
   },

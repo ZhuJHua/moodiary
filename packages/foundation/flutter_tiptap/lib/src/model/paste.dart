@@ -13,16 +13,28 @@ extension _PasteCommands on EditorCommands {
       );
       return;
     }
-    if (!plain &&
-        !tr.selection.empty &&
-        RegExp(
-          r'^(?:https?://|www\.)[^\s]+$|^[\w.+-]+@[\w-]+(?:\.[\w-]+)+$|^(?:[a-zA-Z0-9-]+\.)+(?:com|org|net|io|dev|app|cn|co|uk|edu|gov|me|info)$',
-        ).hasMatch(text)) {
-      final href = text.contains('@') && !text.contains('://')
-          ? 'mailto:$text'
-          : text.contains('://')
-          ? text
-          : 'https://$text';
+    final parts = text.split(RegExp(r'\n+'));
+    final pastedContent = parts.join();
+    final link = !plain && !tr.selection.empty
+        ? _linkDetector
+              .tokenize(pastedContent)
+              .where(
+                (token) =>
+                    token.isLink &&
+                    token.value == pastedContent &&
+                    _isAllowedLink(token.toHref('https')) &&
+                    _shouldAutoLink(token.value),
+              )
+              .firstOrNull
+        : null;
+    var canApplyLink = false;
+    if (link != null) {
+      _visitSelected(EditorState(doc: tr.doc, selection: tr.selection), (node) {
+        if (!node.marks.any((mark) => mark.type == 'code')) canApplyLink = true;
+      });
+    }
+    if (link != null && canApplyLink) {
+      final href = link.toHref('https');
       tr.step(
         AddMarkStep(
           tr.selection.from,
@@ -32,10 +44,6 @@ extension _PasteCommands on EditorCommands {
       );
       return;
     }
-    final parts = text
-        .replaceAll('\r\n', '\n')
-        .replaceAll('\r', '\n')
-        .split(RegExp(r'\n+'));
     final marks = pos.marks;
     final content = Fragment(
       parts.map(
@@ -49,21 +57,50 @@ extension _PasteCommands on EditorCommands {
     );
     final from = tr.selection.from, to = tr.selection.to;
     _replacePasteRange(tr, from, to, Slice(content, 1, 1));
-    final end = tr.mapping.map(to, 1);
+    final start = tr.mapping.map(from, -1).clamp(0, tr.doc.content.size);
+    final end = tr.mapping.map(to, 1).clamp(0, tr.doc.content.size);
     tr.setSelection(Selection.near(tr.doc, end));
-    if (plain) return;
+    if (start >= end) return;
+    if (!plain) _pasteLinks(tr, start, end);
+    _unlinkTrailingWhitespace(tr, (from: start, to: end));
+  }
+
+  void _pasteLinks(
+    Transaction tr,
+    int from,
+    int end, {
+    bool preserveLinks = false,
+  }) {
+    void visit(Node node, int position) {
+      if (node.type == 'codeBlock') return;
+      if (node.isTextblock) {
+        final start = math.max(from, position + 1);
+        final stop = math.min(end, position + 1 + node.content.size);
+        if (start >= stop) return;
+        _linkify(
+          tr,
+          node.content
+              .cut(start - position - 1, stop - position - 1)
+              .map((node) => node.text ?? '\ufffc')
+              .join(),
+          start,
+          preserveLinks: preserveLinks,
+        );
+        return;
+      }
+      var offset = position + 1;
+      for (final child in node.content) {
+        if (offset >= end) break;
+        if (offset + child.nodeSize > from) visit(child, offset);
+        offset += child.nodeSize;
+      }
+    }
+
     for (final row in tr.doc.rows(
       from: tr.doc.rowIndexAt(from),
       to: tr.doc.rowIndexAt(end) + 1,
     )) {
-      if (row.node.isTextblock) {
-        _linkify(
-          tr,
-          row.node.content.map((n) => n.text ?? '\ufffc').join(),
-          row.position + 1,
-          protocol: 'http',
-        );
-      }
+      visit(row.node, row.position);
     }
   }
 }
