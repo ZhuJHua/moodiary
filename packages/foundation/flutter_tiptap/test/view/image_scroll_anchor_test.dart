@@ -163,13 +163,18 @@ void main() {
       controller.setSelection(ft.NodeSelection(controller.state.doc, position));
       final before = scroll.offset;
       final geometry = key.currentState!.geometry!;
-      final contentTop = geometry.rowRect(2).top;
+      final movedTop = geometry.rowRect(position).top;
       final calls = estimates;
       controller.exec(command);
       await tester.pump();
-      expect(scroll.offset, closeTo(before, .01));
-      expect(geometry.rowRect(2).top, closeTo(contentTop, .01));
+      expect(
+        scroll.offset,
+        closeTo(before + (command == 'moveBlockDown' ? 80 : -80), .01),
+      );
+      expect(geometry.rowRect(1 - position).top, closeTo(movedTop, .01));
       expect(estimates, calls);
+      final movedOffset = scroll.offset;
+      final contentTop = geometry.rowRect(2).top;
       final original = controller.state.doc.nodeAt(1 - position)!;
       final cloned = _schema.fromJson(original.toJson());
       expect(identical(original, cloned), isFalse);
@@ -182,7 +187,7 @@ void main() {
       transaction.setSelection(ft.NodeSelection(transaction.doc, 1 - position));
       controller.apply(transaction);
       await tester.pump();
-      expect(scroll.offset, closeTo(before, .01));
+      expect(scroll.offset, closeTo(movedOffset, .01));
       expect(geometry.rowRect(2).top, closeTo(contentTop, .01));
       expect(estimates, calls);
     }

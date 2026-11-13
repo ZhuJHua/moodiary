@@ -557,12 +557,15 @@ class TiptapEditorState extends State<TiptapEditor>
       if (_focusNode.hasPrimaryFocus && !widget.readOnly) _input.open();
     }
     _input.synchronize();
-    if (widget.controller.state.selection is m.NodeSelection) {
+    final moving = widget.controller.lastTransaction?.blockMove != null;
+    if (moving || widget.controller.state.selection is m.NodeSelection) {
       _reveal = false;
     }
     _scheduleGeometry(
       reveal:
-          !_dragging && widget.controller.state.selection is! m.NodeSelection,
+          !moving &&
+          !_dragging &&
+          widget.controller.state.selection is! m.NodeSelection,
     );
     if (mounted) setState(() {});
   }
@@ -604,7 +607,8 @@ class TiptapEditorState extends State<TiptapEditor>
       _scheduleGeometry(reveal: true);
     }
     _viewportHeight = height;
-    if ((widget.controller.state.selection is m.NodeSelection ||
+    if ((render._moveAnchorPosition != null ||
+        widget.controller.state.selection is m.NodeSelection ||
         widget.controller.state.selection is m.AllSelection)) {
       _reveal = false;
     }

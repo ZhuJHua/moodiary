@@ -140,6 +140,12 @@ Step? _mapHistoryStep(Step step, Mapping mapping, Node source, Node target) {
       event.composition,
       BlockRange(from, math.max(from, oldTo), math.max(from, newTo)),
       backward ? translation.invert() : translation,
+      blockMove: event.blockMove == null
+          ? null
+          : (
+              before: beforeMap.map(event.blockMove!.before),
+              after: afterMap.map(event.blockMove!.after),
+            ),
     ),
     mappedPatches,
   );

@@ -865,6 +865,7 @@ class EditorCommands {
     final event = source.last,
         snapshot = redo ? source.last.after : source.last.before;
     tr
+        .setSelection(const TextSelection(0))
         .step(
           _DocumentStep(
             snapshot.doc,
@@ -896,6 +897,9 @@ class EditorCommands {
         );
     }
     tr.mapping = redo ? event.mapping : event.mapping.invert();
+    if (event.blockMove case final move?) {
+      tr.blockMove = redo ? move : (before: move.after, after: move.before);
+    }
     tr._historyOverride = History._(
       h.depth,
       h.groupDelay,
@@ -1094,5 +1098,7 @@ extension _NodeCommands on EditorCommands {
           ? NodeSelection(tr.doc, start + shift)
           : TextSelection(sel.anchor + shift, sel.head + shift),
     );
+    tr.blockMove = (before: start, after: start + shift);
+    tr.setMeta('closeHistory', true);
   }
 }

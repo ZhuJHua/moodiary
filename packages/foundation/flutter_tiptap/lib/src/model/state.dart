@@ -37,6 +37,7 @@ class Transaction {
   BlockRange? get replacedBlocks => _replacedBlocks;
   BlockRange? _replacedBlocks;
   Mapping mapping = Mapping();
+  ({int before, int after})? blockMove;
   final Map<String, Object?> metadata = {};
   bool selectionSet = false;
   bool get docChanged => _steps.isNotEmpty;
@@ -141,6 +142,7 @@ class _HistoryEvent {
     this.blocks,
     this.mapping, {
     this.nested,
+    this.blockMove,
   });
   final _Snapshot before;
   final _Snapshot after;
@@ -151,6 +153,7 @@ class _HistoryEvent {
   final BlockRange blocks;
   final Mapping mapping;
   final NestedRange? nested;
+  final ({int before, int after})? blockMove;
 }
 
 class History {
@@ -244,6 +247,7 @@ class EditorState {
           previous != null && from <= previous.to && to >= previous.from;
       final group =
           previous != null &&
+          previous.blockMove == null &&
           transaction.metadata['closeHistory'] != true &&
           ((composition != null && composition == previous.composition) ||
               (now - previous.time < h.groupDelay && adjacent));
@@ -277,6 +281,7 @@ class EditorState {
           composition,
           combined,
           mapping,
+          blockMove: transaction.blockMove,
           nested: _combineNestedRanges([
             if (group && previous.nested != null) previous.nested!,
             ...transaction.nestedReplacements,

@@ -276,6 +276,8 @@ class _RenderEditorViewport extends RenderBox
 
   _Row _row(int index) => _rows[index] ??= _Row.at(_doc, index, _style);
   TiptapHeightIndex? _heights;
+  int? _moveAnchorPosition;
+  double _moveAnchorTop = 0, _moveAnchorOffset = 0;
   // 64 entries cover several 932px text screens; 32K text bounds long blocks.
   static const _layoutLimit = 64, _layoutTextLimit = 32768;
   final _layouts = HashMap<m.Node, _BlockLayout>.identity();
@@ -449,6 +451,7 @@ class _RenderEditorViewport extends RenderBox
       _clearLayouts();
       _nodeSizes.clear();
       _controller = controller;
+      _moveAnchorPosition = null;
       _doc = controller.state.doc;
       _heights = null;
       _rows.clear();
@@ -458,6 +461,7 @@ class _RenderEditorViewport extends RenderBox
     if (!identical(offset, _offset)) {
       if (attached) _offset.removeListener(_scrolled);
       _offset = offset;
+      _moveAnchorPosition = null;
       if (attached) _offset.addListener(_scrolled);
       markNeedsLayout();
     }
@@ -523,18 +527,32 @@ class _RenderEditorViewport extends RenderBox
   }
 
   void _scrolled() {
+    if (!_inLayout && (_offset.pixels - _moveAnchorOffset).abs() > .01) {
+      _moveAnchorPosition = null;
+    }
     markNeedsSemanticsUpdate();
     markNeedsLayout();
   }
 
   void _changed() {
     final next = _controller.state.doc;
+    final transaction = _controller.lastTransaction;
+    final move = transaction?.blockMove;
+    if (move != null &&
+        identical(transaction!.before, _doc) &&
+        _heights != null &&
+        hasSize) {
+      _moveAnchorTop = rowRect(move.before).top;
+      _moveAnchorPosition = move.after;
+      _moveAnchorOffset = _offset.pixels;
+    } else {
+      _moveAnchorPosition = null;
+    }
     _ensureCaretLayout =
         !identical(next, _doc) ||
         _controller.state.selection is! m.NodeSelection;
     if (!identical(next, _doc)) {
       final contentTop = _contentTop;
-      final transaction = _controller.lastTransaction;
       final mapsDocument =
           transaction != null && identical(transaction.before, _doc);
       if (mapsDocument) {
@@ -605,7 +623,9 @@ class _RenderEditorViewport extends RenderBox
       }
       _rows.clear();
       _doc = next;
-      if (_offset.pixels > 0) _offset.correctBy(_contentTop - contentTop);
+      if (_moveAnchorPosition == null && _offset.pixels > 0) {
+        _offset.correctBy(_contentTop - contentTop);
+      }
       markNeedsLayout();
       markNeedsSemanticsUpdate();
     }
@@ -669,7 +689,9 @@ class _RenderEditorViewport extends RenderBox
       }
       anchor = anchor.clamp(0, heights.length);
       final delta = heights.offsetOf(anchor) - oldY;
-      if (delta.abs() > .01) _offset.correctBy(delta);
+      if (_moveAnchorPosition == null && delta.abs() > .01) {
+        _offset.correctBy(delta);
+      }
     }
   }
 
@@ -770,6 +792,7 @@ class _RenderEditorViewport extends RenderBox
     final top = _offset.pixels - _contentTop;
     final anchor = heights.indexAt(math.max(0, top));
     final correct =
+        _moveAnchorPosition == null &&
         heights.offsetOf(index) < top - .01 &&
         (index < anchor ||
             !_resizing &&
@@ -778,6 +801,26 @@ class _RenderEditorViewport extends RenderBox
                         _indexForPosition(_controller.state.selection.head)));
     heights.measure(index, height);
     if (correct) _offset.correctBy(delta);
+  }
+
+  double get _maxScrollExtent => math.max(
+    0,
+    _style.padding.vertical +
+        _headerHeight +
+        _footerHeight +
+        _heights!.totalHeight +
+        _bottomMargin -
+        size.height,
+  );
+
+  void _restoreMoveAnchor() {
+    final position = _moveAnchorPosition;
+    if (position == null) return;
+    final top = rowRect(position).top + _offset.pixels;
+    final target = (top - _moveAnchorTop).clamp(0.0, _maxScrollExtent);
+    final delta = target - _offset.pixels;
+    if (delta.abs() > .01) _offset.correctBy(delta);
+    _moveAnchorOffset = _offset.pixels;
   }
 
   @override
@@ -814,16 +857,20 @@ class _RenderEditorViewport extends RenderBox
       final anchor = heights.indexAt(math.max(0, _offset.pixels - _contentTop));
       final oldY = heights.offsetOf(anchor);
       heights.setWidth(_contentWidth);
-      _offset.correctBy(heights.offsetOf(anchor) - oldY);
+      if (_moveAnchorPosition == null) {
+        _offset.correctBy(heights.offsetOf(anchor) - oldY);
+      }
       _placeholderParagraph = null;
     }
     _offset.applyViewportDimension(size.height);
+    _restoreMoveAnchor();
     _buildNodeViews(_visibleNodeRows());
     _measureChrome();
     if (_ensureCaretLayout && _doc.rowCount > 0) {
       _layoutBlock(_indexForPosition(_controller.state.selection.head));
       _ensureCaretLayout = false;
     }
+    _restoreMoveAnchor();
     for (var pass = 0; pass < 12; pass++) {
       if (heights.length == 0) break;
       final first = heights.indexAt(
@@ -842,18 +889,8 @@ class _RenderEditorViewport extends RenderBox
       _firstVisible = first;
       _lastVisible = last;
       final nodeViewsStable = _layoutNodeViews();
-      final accepted = _offset.applyContentDimensions(
-        0,
-        math.max(
-          0,
-          _style.padding.vertical +
-              _headerHeight +
-              _footerHeight +
-              heights.totalHeight +
-              _bottomMargin -
-              size.height,
-        ),
-      );
+      _restoreMoveAnchor();
+      final accepted = _offset.applyContentDimensions(0, _maxScrollExtent);
       final currentFirst = heights.indexAt(
         math.max(0, _offset.pixels - _contentTop - cacheExtent),
       );

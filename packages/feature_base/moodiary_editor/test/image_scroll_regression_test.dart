@@ -314,16 +314,15 @@ void main() {
             controller.state.tr.setSelection(ft.NodeSelection(doc, position)),
           );
           for (final command in ['moveBlockUp', 'moveBlockDown']) {
-            final anchor = _firstVisible(controller, editor.geometry!);
+            final anchor = controller.state.selection.from;
             final before = editor.geometry!.rowRect(anchor).top;
             final transaction = controller.exec(command);
             await tester.pumpAndSettle();
-            if (!withinViewport) {
-              expect(
-                editor.geometry!.rowRect(transaction.mapping.map(anchor)).top,
-                closeTo(before, .1),
-              );
-            }
+            expect(transaction.blockMove, isNotNull);
+            expect(
+              editor.geometry!.rowRect(transaction.blockMove!.after).top,
+              closeTo(before, .1),
+            );
             await _scroll(tester, controller, editor, -120);
             await _scroll(tester, controller, editor, 120);
           }
