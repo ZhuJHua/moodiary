@@ -449,13 +449,15 @@ class _CodeHeaderState extends State<_CodeHeader> {
         child: child,
       ),
     );
-    final current = Text(_label(language), style: style);
-    return Row(
-      children: [
-        if (widget.readOnly)
-          Padding(padding: const .symmetric(horizontal: 4), child: current)
-        else
-          MenuAnchor(
+    final current = Text(
+      _label(language),
+      style: style,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
+    final languagePicker = widget.readOnly
+        ? Padding(padding: const .symmetric(horizontal: 4), child: current)
+        : MenuAnchor(
             style: const MenuStyle(
               maximumSize: WidgetStatePropertyAll(Size(220, 320)),
             ),
@@ -475,9 +477,8 @@ class _CodeHeaderState extends State<_CodeHeader> {
             ],
             builder: (context, menu, _) => chip(
               Row(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  current,
+                  Expanded(child: current),
                   const SizedBox(width: 2),
                   Icon(
                     LucideIcons.chevronDown,
@@ -488,24 +489,39 @@ class _CodeHeaderState extends State<_CodeHeader> {
               ),
               () => menu.isOpen ? menu.close() : menu.open(),
             ),
-          ),
-        const Spacer(),
-        chip(
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                _copied ? LucideIcons.check : LucideIcons.copy,
-                size: 14,
-                color: context.theme.colors.onSurfaceVariant,
+          );
+    return LayoutBuilder(
+      builder: (context, constraints) => Row(
+        children: [
+          Expanded(child: languagePicker),
+          const SizedBox(width: 4),
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: constraints.maxWidth / 2),
+            child: chip(
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _copied ? LucideIcons.check : LucideIcons.copy,
+                    size: 14,
+                    color: context.theme.colors.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      _copied ? labels.codeCopied : labels.codeCopy,
+                      style: style,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 4),
-              Text(_copied ? labels.codeCopied : labels.codeCopy, style: style),
-            ],
+              () => unawaited(_copy()),
+            ),
           ),
-          () => unawaited(_copy()),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

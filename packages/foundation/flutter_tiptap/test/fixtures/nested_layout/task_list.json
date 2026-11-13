@@ -1,0 +1,337 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "taskList",
+      "content": [
+        {
+          "type": "taskItem",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "\u4e2d\u6587\u65e5\u8bb0 mixed text "
+                },
+                {
+                  "type": "text",
+                  "text": "bold",
+                  "marks": [
+                    {
+                      "type": "bold"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": " italic",
+                  "marks": [
+                    {
+                      "type": "italic"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": " strike",
+                  "marks": [
+                    {
+                      "type": "strike"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": " underline",
+                  "marks": [
+                    {
+                      "type": "underline"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": " highlight",
+                  "marks": [
+                    {
+                      "type": "highlight",
+                      "attrs": {
+                        "color": "#fbe7a1"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "hardBreak"
+                },
+                {
+                  "type": "text",
+                  "text": "inline_code_long_token_inline_code_long_token_inline_code_long_token_",
+                  "marks": [
+                    {
+                      "type": "code"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": " https://example.com/longpathlongpathlongpathlongpathlongpathlongpathlongpathlongpathlongpathlongpath",
+                  "marks": [
+                    {
+                      "type": "link",
+                      "attrs": {
+                        "href": "https://example.com/longpathlongpathlongpathlongpathlongpathlongpathlongpathlongpathlongpathlongpath"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "diaryLink",
+                  "attrs": {
+                    "id": "research-diary",
+                    "label": "\u65e5\u8bb0 reference chip"
+                  }
+                },
+                {
+                  "type": "text",
+                  "text": " Unbreakablewordwordwordwordwordwordwordwordwordwordwordwordwordwordwordwordwordwordwordwordwordwordwordword"
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Heading \u4e2d\u6587"
+                },
+                {
+                  "type": "hardBreak"
+                },
+                {
+                  "type": "diaryLink",
+                  "attrs": {
+                    "id": "heading-diary",
+                    "label": "Heading chip"
+                  }
+                }
+              ],
+              "attrs": {
+                "level": 1
+              }
+            },
+            {
+              "type": "codeBlock",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "final value = 1;\nvery_long_identifier_very_long_identifier_very_long_identifier_very_long_identifier_very_long_identifier_very_long_identifier_very_long_identifier_very_long_identifier_very_long_identifier_very_long_identifier_very_long_identifier_very_long_identifier_very_long_identifier_very_long_identifier_very_long_identifier_very_long_identifier_very_long_identifier_very_long_identifier_very_long_identifier_very_long_identifier_very_long_identifier_very_long_identifier_very_long_identifier_very_long_identifier_ = 2;"
+                }
+              ],
+              "attrs": {
+                "language": "dart"
+              }
+            },
+            {
+              "type": "bulletList",
+              "content": [
+                {
+                  "type": "listItem",
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "bullet child"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "orderedList",
+              "content": [
+                {
+                  "type": "listItem",
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "large start number"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "attrs": {
+                "start": 987654321
+              }
+            },
+            {
+              "type": "taskList",
+              "content": [
+                {
+                  "type": "taskItem",
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "unchecked task"
+                        }
+                      ]
+                    }
+                  ],
+                  "attrs": {
+                    "checked": false
+                  }
+                },
+                {
+                  "type": "taskItem",
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "checked task"
+                        }
+                      ]
+                    }
+                  ],
+                  "attrs": {
+                    "checked": true
+                  }
+                }
+              ]
+            },
+            {
+              "type": "blockquote",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "quoted \u4e2d\u6587 child"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "horizontalRule"
+            },
+            {
+              "type": "image",
+              "attrs": {
+                "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAABaCAIAAACwpMoFAAAB80lEQVR4nO3ZXWrCUBRF4ZvixDqUDqDPigOQODTH4KsDKfRACOmPNNYY1177SURE+LhnH3O71/e39pl+u68XhpRuAK7IDEt3upxba7vjYXhLYyBwRWY48MRYZiBwRWY4cMWJDQeuyMwEnkxps/L8dPZeFv8lZtEIDM9m3tm3mFeSq0068wT32/3gujseLGzmiB6fXZmZHTw+yjJjl6yvzP/ytWZdW7TFHPE3yYnN/x9sMUc86JA54kmW+1fEo0r3r4hn0U5s/mWDxRxxm2QxR1wXWswR98FObDiwxcwHrsgMB664f8GBK+5fcOCKExsObDHzgSsWMxy4YjHDgStObDiwxcwHrsgMB664f8GBK+5fcOCKExsObDHzgSsWMxy40lvMbOBK+MTmA7fsYo4ATmYOAs7cv+KA0/avUOBKwsSOBm4BxZwOjC9mgeHFLPA0sIktMLyYBYYzCwzfvwSG718C/yHPOLEFhhezwPBiFhhezALfmpVPbIHhxSwwnFlg+P4lMHz/EviOWcPEFhhezALDi1lgeDELvHQWntgCw4tZYDizwPD9S2D4/iXwinKPiS0wvJgFhhfz5uonHn4fYtoNCp5geASGpztdzo/+DWb+rB5X9bcR+OmZfzcWGM4sMHxiCwxnFhg+sQWGMwvceBlP7A+HG8VUJa42vAAAAABJRU5ErkJggg==",
+                "name": "landscape",
+                "widthPercent": 50
+              }
+            },
+            {
+              "type": "video",
+              "attrs": {
+                "src": "research-video",
+                "name": "Video",
+                "widthPercent": 100
+              }
+            },
+            {
+              "type": "audio",
+              "attrs": {
+                "src": "research-audio",
+                "name": "Audio recording"
+              }
+            },
+            {
+              "type": "attachment",
+              "attrs": {
+                "src": "research-file",
+                "name": "very-long-file-name-very-long-file-name-very-long-file-name-very-long-file-name-very-long-file-name-very-long-file-name-very-long-file-name-.pdf",
+                "mime": "application/pdf",
+                "size": 123456
+              }
+            },
+            {
+              "type": "table",
+              "content": [
+                {
+                  "type": "tableRow",
+                  "content": [
+                    {
+                      "type": "tableCell",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "column 1"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "tableCell",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "column 2"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "tableCell",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "column 3"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "attrs": {
+            "checked": true
+          }
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "Sentinel after container"
+        }
+      ]
+    }
+  ],
+  "attrs": {
+    "v": 2
+  }
+}

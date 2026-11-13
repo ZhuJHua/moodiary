@@ -1,9 +1,19 @@
 part of '../editor.dart';
 
 extension on _RenderEditorViewport {
-  ui.Paragraph _chromeText(m.Node node, String text, TextStyle style) {
+  ui.Paragraph _chromeText(
+    m.Node node,
+    String text,
+    TextStyle style, {
+    double width = 10000,
+    bool ellipsis = false,
+  }) {
     final cache = _chrome[node] ??= {};
-    final key = '$text:${style.hashCode}:${_style.textDirection}';
+    final key =
+        '$text:${style.hashCode}:${_style.textDirection}:$width:$ellipsis';
+    if (!cache.containsKey(key) && cache.length >= 8) {
+      cache.remove(cache.keys.first);
+    }
     return cache.putIfAbsent(
       key,
       () =>
@@ -11,19 +21,34 @@ extension on _RenderEditorViewport {
                   style.getParagraphStyle(
                     textDirection: _style.textDirection,
                     fontSize: style.fontSize,
+                    maxLines: ellipsis ? 1 : null,
+                    ellipsis: ellipsis ? '…' : null,
                   ),
                 )
                 ..pushStyle(style.getTextStyle())
                 ..addText(text))
               .build()
-            ..layout(const ui.ParagraphConstraints(width: 10000)),
+            ..layout(ui.ParagraphConstraints(width: width)),
     );
   }
 
-  _ListMarkerLayout? _markerLayout(int index) {
-    final row = _row(index), marker = row.marker;
+  _ListMarkerLayout? _markerLayout(int index, {int? position}) {
+    final layout = _layoutBlock(index);
+    if (layout is _TableRowLayout && position != null) {
+      final found = layout.contentAt(position - _row(index).position);
+      if (found == null) return null;
+      return _markerFor(
+        found.row,
+        found.layout,
+        _origin(index) + found.textOrigin,
+      );
+    }
+    return _markerFor(_row(index), _layoutBlock(index), _origin(index));
+  }
+
+  _ListMarkerLayout? _markerFor(_Row row, _BlockLayout layout, Offset origin) {
+    final marker = row.marker;
     if (marker == null) return null;
-    final layout = _layoutBlock(index), origin = _origin(index);
     final line = layout.chunks.first.paragraph!.computeLineMetrics().first;
     final baseline = origin.dy + line.baseline;
     final style = row.textStyle(_style).copyWith(color: _style.markerColor);
@@ -44,7 +69,18 @@ extension on _RenderEditorViewport {
         ['disc', 'circle', 'square'][shape % 3],
       );
     }
-    final paragraph = _chromeText(row.node, marker, style);
+    final full = _chromeText(row.node, marker, style);
+    final scale = math.min(
+      1.0,
+      math.max(1.0, row.markerGutter - 8) / full.maxIntrinsicWidth,
+    );
+    final paragraph = scale == 1
+        ? full
+        : _chromeText(
+            row.node,
+            marker,
+            style.copyWith(fontSize: (style.fontSize ?? 17) * scale),
+          );
     final markerBaseline = paragraph.computeLineMetrics().first.baseline;
     final bounds = Rect.fromLTWH(
       origin.dx - 8 - paragraph.maxIntrinsicWidth,
@@ -61,10 +97,26 @@ extension on _RenderEditorViewport {
     );
   }
 
-  void _paintRowChrome(Canvas canvas, int index) {
-    final row = _row(index), origin = _rowOrigin(index);
+  Rect? _checkboxFor(_Row row, Offset origin) {
+    if (row.taskPosition == null) return null;
+    final font = _style.paragraph.fontSize ?? 17;
+    return Rect.fromLTWH(
+      origin.dx - (_style.taskIndent ?? _style.listIndent),
+      origin.dy + font * .275,
+      font * 1.2,
+      font * 1.2,
+    );
+  }
+
+  void _paintRowChrome(
+    Canvas canvas,
+    _Row row,
+    _BlockLayout layout,
+    Offset origin,
+    Offset textOrigin,
+  ) {
     final base = _style.forBlock(row.node).copyWith(color: _style.markerColor);
-    final marker = _markerLayout(index);
+    final marker = _markerFor(row, layout, textOrigin);
     if (marker != null) {
       final paint = Paint()..color = _style.markerColor;
       switch (marker.kind) {
@@ -88,7 +140,7 @@ extension on _RenderEditorViewport {
           canvas.drawParagraph(marker.paragraph!, marker.bounds.topLeft);
       }
     }
-    final checkbox = taskCheckboxRect(row.position);
+    final checkbox = _checkboxFor(row, origin);
     if (checkbox != null) {
       final shape = RRect.fromRectAndRadius(checkbox, const Radius.circular(6));
       if (row.taskChecked) {
@@ -139,14 +191,118 @@ extension on _RenderEditorViewport {
           row.node,
           language,
           base.copyWith(fontSize: 12, height: 1.3),
+          width: math.max(
+            1,
+            (layout.width ?? 1) + row.codePadding.horizontal - 24,
+          ),
+          ellipsis: true,
         ),
         origin + const Offset(12, 6),
       );
     }
   }
 
-  void _paintRule(Canvas canvas, int index) {
-    final row = _row(index), rect = rowRect(row.position);
+  void _paintBlockBackground(
+    Canvas canvas,
+    _Row row,
+    Rect rect, {
+    required bool Function(int position) continues,
+    required double spacing,
+    double? quoteLeft,
+  }) {
+    if (row.node.type == 'codeBlock') {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(rect, const Radius.circular(12)),
+        Paint()..color = _style.codeBackground,
+      );
+      if (_style.codeHeaderDivider case final divider?
+          when _codeBlockHeader != null) {
+        final y = rect.top + row.codeTop - 6;
+        canvas.drawLine(
+          Offset(rect.left, y),
+          Offset(rect.right, y),
+          Paint()
+            ..color = divider
+            ..strokeWidth = .5,
+        );
+      }
+    }
+    for (final (x, position) in row.quotes) {
+      canvas.drawRect(
+        Rect.fromLTWH(
+          (quoteLeft ?? rect.left - row.indent) + x,
+          rect.top,
+          _style.quoteBorderWidth,
+          rect.height + (continues(position) ? spacing : 0),
+        ),
+        Paint()..color = _style.quoteBorderColor,
+      );
+    }
+  }
+
+  void _paintBlockContent(
+    Canvas canvas,
+    _Row row,
+    _BlockLayout layout,
+    Offset origin,
+    Rect rect,
+    int position,
+  ) {
+    final selection = _controller.state.selection;
+    _paintRowChrome(canvas, row, layout, rect.topLeft, origin);
+    if (layout.node.type == 'horizontalRule') {
+      _paintRule(canvas, row, rect, position);
+    } else if (_nodeViews.containsKey(layout.node.type)) {
+    } else if (!layout.node.isTextblock) {
+      final card = RRect.fromRectAndRadius(
+        origin & Size(rect.width, layout.height),
+        const Radius.circular(8),
+      );
+      final selected =
+          !_readOnly &&
+          selection is m.NodeSelection &&
+          selection.from == position;
+      canvas.drawRRect(card, Paint()..color = _style.opaqueBackground);
+      canvas.drawRRect(
+        card,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = selected ? 2 : 1
+          ..color = selected ? _style.caretColor : _style.opaqueBorder,
+      );
+      canvas.drawParagraph(
+        layout.chunks.first.paragraph!,
+        origin +
+            Offset(
+              12,
+              math.max(0, (layout.height - layout.chunks.first.height) / 2),
+            ),
+      );
+    } else {
+      if (layout.node.type == 'codeBlock') {
+        final card = rect;
+        canvas.save();
+        canvas.clipRect(
+          Rect.fromLTRB(
+            card.left + 12,
+            card.top + row.codeTop,
+            card.right - 12,
+            card.bottom - 12,
+          ),
+        );
+      }
+      var y = origin.dy;
+      for (final chunk in layout.chunks) {
+        if (y + chunk.height >= 0 && y <= size.height) {
+          _paintInlineChunk(canvas, chunk, Offset(origin.dx, y), _style);
+        }
+        y += chunk.height;
+      }
+      if (layout.node.type == 'codeBlock') canvas.restore();
+    }
+  }
+
+  void _paintRule(Canvas canvas, _Row row, Rect rect, int position) {
     final variant = row.node.attrs['variant'] as String? ?? 'solid';
     final paint = Paint()
       ..color = _style.ruleColor
@@ -218,7 +374,7 @@ extension on _RenderEditorViewport {
         line(left, right);
     }
     if (_controller.state.selection case final m.NodeSelection selection
-        when selection.from == row.position) {
+        when selection.from == position) {
       if (_readOnly) return;
       canvas.drawRRect(
         RRect.fromRectAndRadius(rect, const Radius.circular(8)),

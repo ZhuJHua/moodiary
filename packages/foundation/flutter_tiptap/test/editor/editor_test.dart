@@ -1226,12 +1226,7 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 400));
       await tester.pump();
-      final handle = find
-          .descendant(
-            of: find.byType(ft.TiptapEditor),
-            matching: find.byType(CustomPaint),
-          )
-          .last;
+      final handle = find.byKey(const ValueKey('tiptap-handle-caret'));
       final point = tester.getTopLeft(handle) + const Offset(22, 15);
       final touch = await tester.startGesture(point);
       await touch.moveBy(const Offset(90, 0));

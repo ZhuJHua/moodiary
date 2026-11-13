@@ -377,6 +377,45 @@ void main() {
     expect(controller.diagnostics.cachedLayouts, 0);
   });
 
+  testWidgets('rowspan geometry survives row layout eviction', (tester) async {
+    final table = schema.node(
+      'table',
+      content: [
+        for (var index = 0; index < 220; index++)
+          schema.node(
+            'tableRow',
+            content: [
+              if (index.isEven)
+                schema.node(
+                  'tableCell',
+                  attrs: {'rowspan': 2},
+                  content: [paragraph('merged $index')],
+                ),
+              schema.node('tableCell', content: [paragraph('cell $index')]),
+            ],
+          ),
+      ],
+    );
+    final controller = ft.TiptapController(doc: document([table]));
+    addTearDown(controller.dispose);
+    final key = await mount(tester, controller);
+    final scroll = key.currentState!.scrollController;
+    for (
+      var offset = 360.0;
+      offset < scroll.position.maxScrollExtent;
+      offset += 360
+    ) {
+      final before = controller.diagnostics.paragraphLayouts;
+      scroll.jumpTo(offset);
+      await tester.pump();
+      expect(
+        controller.diagnostics.paragraphLayouts - before,
+        lessThanOrEqualTo(24),
+      );
+    }
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('controller replacement clears layouts and old diagnostics', (
     tester,
   ) async {

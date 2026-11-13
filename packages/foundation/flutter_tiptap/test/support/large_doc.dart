@@ -118,3 +118,90 @@ Node generateLargeTableDocument({
     ],
   );
 }
+
+Node generateLargeMixedDocument({int groups = 1000, Schema? schema}) {
+  if (groups < 1) throw ArgumentError.value(groups, 'groups');
+  final documentSchema = schema ?? Schema.standard();
+  Node paragraph(String value) => documentSchema.node(
+    'paragraph',
+    content: [documentSchema.node('text', text: value)],
+  );
+  return documentSchema.node(
+    'doc',
+    content: [
+      for (var index = 0; index < groups; index++) ...[
+        documentSchema.node(
+          'blockquote',
+          content: [
+            documentSchema.node(
+              'orderedList',
+              attrs: {'start': 100000 + index},
+              content: [
+                documentSchema.node(
+                  'listItem',
+                  content: [
+                    paragraph('Mixed 中文 group $index'),
+                    documentSchema.node(
+                      'taskList',
+                      content: [
+                        documentSchema.node(
+                          'taskItem',
+                          attrs: {'checked': index.isEven},
+                          content: [paragraph('Nested task $index')],
+                        ),
+                      ],
+                    ),
+                    documentSchema.node(
+                      'codeBlock',
+                      attrs: {'language': 'dart'},
+                      content: [
+                        documentSchema.node(
+                          'text',
+                          text: 'final value$index = "${'unbreakable_' * 32}";',
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+        documentSchema.node(
+          'table',
+          content: [
+            documentSchema.node(
+              'tableRow',
+              content: [
+                for (var column = 0; column < 3; column++)
+                  documentSchema.node(
+                    column == 0 ? 'tableHeader' : 'tableCell',
+                    content: [
+                      paragraph('Cell $index / $column'),
+                      if (column == 1)
+                        documentSchema.node(
+                          'bulletList',
+                          content: [
+                            documentSchema.node(
+                              'listItem',
+                              content: [paragraph('Cell bullet $index')],
+                            ),
+                          ],
+                        ),
+                      if (column == 2)
+                        documentSchema.node(
+                          'image',
+                          attrs: {'src': 'image-$index', 'widthPercent': 50},
+                        ),
+                    ],
+                  ),
+              ],
+            ),
+          ],
+        ),
+        documentSchema.node('horizontalRule'),
+      ],
+      paragraph('Sentinel'),
+    ],
+  );
+}

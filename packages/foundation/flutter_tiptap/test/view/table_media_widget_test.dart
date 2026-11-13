@@ -8,63 +8,64 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 
 void main() {
-  testWidgets('fixed table columns ignore cell text length when sizing media', (
-    tester,
-  ) async {
-    final schema = ft.Schema.standard();
-    final table = schema.node(
-      'table',
-      content: [
-        schema.node(
-          'tableRow',
-          content: [
-            for (final text in ['short', 'a much longer cell label'])
-              schema.node(
-                'tableCell',
-                content: [
-                  schema.node(
-                    'paragraph',
-                    content: [schema.node('text', text: text)],
-                  ),
-                  schema.node(
-                    'image',
-                    attrs: {'src': text, 'widthPercent': 50},
-                  ),
-                ],
-              ),
-          ],
-        ),
-      ],
-    );
-    final controller = ft.TiptapController(
-      doc: schema.node('doc', content: [table]),
-    );
-    addTearDown(controller.dispose);
-    final widths = <String, double>{};
-    Future<void> render(bool fixed) async {
-      await tester.pumpWidget(
-        CupertinoApp(
-          home: ft.TiptapEditor(
-            controller: controller,
-            style: ft.TiptapEditorStyle(tableFixedLayout: fixed),
-            nodeViews: {
-              'image': (_, view) {
-                widths[view.node.attrs['src']! as String] = view.width;
-                return SizedBox(width: view.width, height: 30);
-              },
-            },
+  testWidgets(
+    'preferred table columns ignore cell text length when sizing media',
+    (tester) async {
+      final schema = ft.Schema.standard();
+      final table = schema.node(
+        'table',
+        content: [
+          schema.node(
+            'tableRow',
+            content: [
+              for (final text in ['short', 'a much longer cell label'])
+                schema.node(
+                  'tableCell',
+                  content: [
+                    schema.node(
+                      'paragraph',
+                      content: [schema.node('text', text: text)],
+                    ),
+                    schema.node(
+                      'image',
+                      attrs: {'src': text, 'widthPercent': 50},
+                    ),
+                  ],
+                ),
+            ],
           ),
-        ),
+        ],
       );
-      await tester.pump();
-    }
+      final controller = ft.TiptapController(
+        doc: schema.node('doc', content: [table]),
+      );
+      addTearDown(controller.dispose);
+      final widths = <String, double>{};
+      Future<void> render(bool fixed) async {
+        await tester.pumpWidget(
+          CupertinoApp(
+            home: ft.TiptapEditor(
+              controller: controller,
+              style: ft.TiptapEditorStyle(tableFixedLayout: fixed),
+              nodeViews: {
+                'image': (_, view) {
+                  widths[view.node.attrs['src']! as String] = view.width;
+                  return SizedBox(width: view.width, height: 30);
+                },
+              },
+            ),
+          ),
+        );
+        await tester.pump();
+      }
 
-    await render(false);
-    expect(widths.values.first, isNot(closeTo(widths.values.last, .01)));
-    await render(true);
-    expect(widths.values.first, closeTo(widths.values.last, .01));
-    expect(widths.values.first, closeTo(((800 - 32) / 2 - 20) / 2, .01));
-  });
+      await render(false);
+      expect(widths.values.first, closeTo(widths.values.last, .01));
+      await render(true);
+      expect(widths.values.first, closeTo(widths.values.last, .01));
+      expect(widths.values.first, closeTo(((800 - 32) / 2 - 20) / 2, .01));
+    },
+  );
 
   testWidgets('read-only media hides edit-only node-selection chrome', (
     tester,

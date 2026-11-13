@@ -563,6 +563,21 @@ extension on EditorCommands {
         name == 'shiftTab' ||
         name == 'goToNextCell' ||
         name == 'goToPreviousCell') {
+      if (name == 'tab' || name == 'shiftTab') {
+        final position = tr.doc.resolve(tr.selection.head);
+        for (var depth = position.depth; depth > 0; depth--) {
+          final type = position.node(depth).type;
+          if (type == 'tableCell' || type == 'tableHeader') break;
+          if (type == 'listItem' || type == 'taskItem') {
+            if (name == 'tab') {
+              _sink(tr);
+            } else {
+              _lift(tr, list: true);
+            }
+            return true;
+          }
+        }
+      }
       final direction = name == 'shiftTab' || name == 'goToPreviousCell'
           ? -1
           : args['direction'] as int? ?? 1;

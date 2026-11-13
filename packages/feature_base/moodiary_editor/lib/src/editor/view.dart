@@ -115,10 +115,10 @@ class _MoodiaryEditorState extends State<MoodiaryEditor>
     _closeRestore();
     WidgetsBinding.instance.removeObserver(this);
     moodiaryRouteObserver.unsubscribe(this);
-    unawaited(host.flush());
-    widget.controller?._unbind(host);
     host.removeListener(_changed);
     host.state.removeListener(_stateChanged);
+    unawaited(host.flush());
+    widget.controller?._unbind(host);
     host.dispose();
     super.dispose();
   }

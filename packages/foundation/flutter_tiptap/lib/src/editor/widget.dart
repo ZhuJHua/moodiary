@@ -165,13 +165,18 @@ class TiptapEditorState extends State<TiptapEditor>
   double? _revealTarget;
   int _lastRevealLayout = -1;
   String? _geometrySignature;
-  PointerDeviceKind _pointerKind = PointerDeviceKind.touch;
+  PointerDeviceKind _pointerKind =
+      defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS
+      ? PointerDeviceKind.touch
+      : PointerDeviceKind.mouse;
   Offset? _pointerDown, _dragGlobal, _magnifier, _handleGrab;
   int? _dragAnchor;
   TextRange? _dragUnit;
   int _dragGranularity = 1;
   MouseCursor _cursor = SystemMouseCursors.text;
   _PointerHit? _pointerHit;
+  PointerDownEvent? _pendingMouseSelection;
   final Map<int, ScrollHoldController> _scrollHolds = {};
   bool get _scrollInputBlocked =>
       _scroll.hasClients && _scroll.position.isScrollingNotifier.value;
@@ -211,14 +216,15 @@ class TiptapEditorState extends State<TiptapEditor>
     if (render == null || position == null) return;
     final index = render._horizontalRowAt(_local(details.globalPosition));
     if (index == null) return;
-    final row = render._row(index), block = row.table ?? row.node;
+    final (block, blockPosition, pixels) = render._horizontalTarget(
+      _local(details.globalPosition),
+      index,
+    );
     if (!identical(render._horizontalBlock, block)) {
       _unbindOverflow();
-      position.correctPixels(render._horizontalOffset(index));
+      position.correctPixels(pixels);
       render._horizontalBlock = block;
-      render._horizontalBlockPosition = row.table == null
-          ? row.position
-          : row.position - row.tableRowPosition - 1;
+      render._horizontalBlockPosition = blockPosition;
       render._horizontalPosition = position;
     }
     render._applyHorizontalDimensions();
@@ -227,6 +233,9 @@ class TiptapEditorState extends State<TiptapEditor>
 
   void _overflowStart(DragStartDetails details) {
     if (_render?._horizontalBlock == null) return;
+    _pendingMouseSelection = null;
+    _pointerHit = null;
+    _tapCount = 0;
     _overflowDrag = _overflowPosition!.drag(
       details,
       () => _overflowDrag = null,
@@ -258,7 +267,10 @@ class TiptapEditorState extends State<TiptapEditor>
   debugListMarker(int position) {
     final render = _render;
     if (render == null || !render.hasSize) return null;
-    final marker = render._markerLayout(render._indexForPosition(position));
+    final marker = render._markerLayout(
+      render._indexForPosition(position),
+      position: position,
+    );
     return marker == null
         ? null
         : (
@@ -287,7 +299,12 @@ class TiptapEditorState extends State<TiptapEditor>
   int get debugDocumentPaints => _render?._paintCount ?? 0;
 
   @visibleForTesting
+  int get debugDocumentLayouts => _render?.layoutGeneration ?? 0;
+
+  @visibleForTesting
   TextEditingValue get debugInputValue => _input.currentTextEditingValue;
+  @visibleForTesting
+  bool get debugInputAttached => _input.attached;
   @visibleForTesting
   void debugApplyDeltas(List<TextEditingDelta> deltas) =>
       _input.updateEditingValueWithDeltas(deltas);
@@ -398,6 +415,7 @@ class TiptapEditorState extends State<TiptapEditor>
 
   /// Focuses the editor and attaches its platform text input connection.
   void requestKeyboard() {
+    if (widget.readOnly) return;
     _focusNode.requestFocus();
     if (_focusNode.hasPrimaryFocus) _input.open();
   }
@@ -715,6 +733,7 @@ class TiptapEditorState extends State<TiptapEditor>
         hit?.position ?? geometry.positionForOffset(_local(global));
     final doc = widget.controller.state.doc;
     final row = doc.rowAt(doc.rowIndexAt(position));
+    if (row.node.type == 'tableRow') _snapCaret = true;
     if (activateControls && !word && !block && !extend) {
       final chip = hit != null
           ? hit.reference
@@ -852,6 +871,15 @@ class TiptapEditorState extends State<TiptapEditor>
     _lastTap = event.timeStamp;
     _lastTapPosition = event.position;
     if (_touch || event.buttons & kPrimaryMouseButton == 0) return;
+    if (ScrollConfiguration.of(context).dragDevices.contains(event.kind) &&
+        render?._horizontalRowAt(_local(event.position)) != null) {
+      _pendingMouseSelection = event;
+      return;
+    }
+    _startMouseSelection(event);
+  }
+
+  void _startMouseSelection(PointerDownEvent event) {
     _place(
       event.position,
       word: _tapCount == 2,
@@ -865,6 +893,13 @@ class TiptapEditorState extends State<TiptapEditor>
   }
 
   void _pointerMoved(PointerMoveEvent event) {
+    if (_pendingMouseSelection case final down?) {
+      final delta = event.position - down.position;
+      if (delta.dy.abs() > kTouchSlop && delta.dy.abs() > delta.dx.abs()) {
+        _pendingMouseSelection = null;
+        _startMouseSelection(down);
+      }
+    }
     if (_touch ||
         event.buttons & kPrimaryMouseButton == 0 ||
         _dragAnchor == null ||
@@ -877,6 +912,13 @@ class TiptapEditorState extends State<TiptapEditor>
   }
 
   void _pointerEnded(PointerEvent event) {
+    if (_pendingMouseSelection case final down?) {
+      _pendingMouseSelection = null;
+      if (event is PointerUpEvent &&
+          (event.position - down.position).distance <= kTouchSlop) {
+        _startMouseSelection(down);
+      }
+    }
     if (event is PointerCancelEvent) _pointerHit = null;
     if (!_touch) _endDrag(showMenu: false);
   }
@@ -1209,6 +1251,7 @@ class TiptapEditorState extends State<TiptapEditor>
           child: MouseRegion(
             cursor: _cursor,
             onHover: (event) {
+              _pointerKind = PointerDeviceKind.mouse;
               final point = _local(event.position), render = _render;
               if (render == null || !render.hasSize) return;
               final position = render.positionForOffset(point);
@@ -1296,6 +1339,7 @@ class TiptapEditorState extends State<TiptapEditor>
                       },
                       child: GestureDetector(
                         supportedDevices: const {
+                          PointerDeviceKind.mouse,
                           PointerDeviceKind.touch,
                           PointerDeviceKind.stylus,
                           PointerDeviceKind.invertedStylus,
@@ -1337,11 +1381,26 @@ class TiptapEditorState extends State<TiptapEditor>
                           }
                         },
                         onTapCancel: () => _pointerHit = null,
-                        onLongPressStart: _longPress,
-                        onLongPressMoveUpdate: (details) =>
-                            _longPressMoved(details.globalPosition),
-                        onLongPressEnd: (_) => _endDrag(showMenu: true),
-                        onLongPressCancel: () => _endDrag(showMenu: false),
+                        onLongPressStart: (details) {
+                          if (_pointerKind != PointerDeviceKind.mouse) {
+                            _longPress(details);
+                          }
+                        },
+                        onLongPressMoveUpdate: (details) {
+                          if (_pointerKind != PointerDeviceKind.mouse) {
+                            _longPressMoved(details.globalPosition);
+                          }
+                        },
+                        onLongPressEnd: (_) {
+                          if (_pointerKind != PointerDeviceKind.mouse) {
+                            _endDrag(showMenu: true);
+                          }
+                        },
+                        onLongPressCancel: () {
+                          if (_pointerKind != PointerDeviceKind.mouse) {
+                            _endDrag(showMenu: false);
+                          }
+                        },
                         child: Stack(
                           fit: StackFit.expand,
                           clipBehavior: Clip.hardEdge,
@@ -1363,6 +1422,7 @@ class TiptapEditorState extends State<TiptapEditor>
                                 bottomMargin: _bottomReserve,
                                 onReady: (render) => _render = render,
                                 onGeometry: _geometryChanged,
+                                onCaretLayout: _updateCaret,
                               ),
                             ),
                             IgnorePointer(
@@ -1494,7 +1554,6 @@ class _OverflowDragRecognizer extends HorizontalDragGestureRecognizer {
   bool Function(Offset point)? canStart;
   @override
   bool isPointerAllowed(PointerEvent event) =>
-      event.kind != PointerDeviceKind.mouse &&
       (canStart?.call(event.position) ?? false) &&
       super.isPointerAllowed(event);
 }

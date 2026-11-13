@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:moodiary_native/moodiary_native.dart';
 import 'package:mui/mui.dart';
 
@@ -22,6 +23,8 @@ abstract interface class ImeTarget {
 
 class ImePanelController<T> extends ChangeNotifier {
   _ImePanelContainerState<T>? _state;
+  bool _notificationPending = false;
+  bool _disposed = false;
 
   ImePanelType _type = .none;
   T? _panel;
@@ -45,7 +48,23 @@ class ImePanelController<T> extends ChangeNotifier {
     if (_type == type && _panel == panel) return;
     _type = type;
     _panel = panel;
-    notifyListeners();
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      if (_notificationPending) return;
+      _notificationPending = true;
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        _notificationPending = false;
+        if (!_disposed) notifyListeners();
+      });
+    } else {
+      notifyListeners();
+    }
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
   }
 
   void _attach(_ImePanelContainerState<T> state) => _state = state;

@@ -8,14 +8,12 @@ class _NodeSizeKey {
 
   @override
   bool operator ==(Object other) =>
-      other is _NodeSizeKey && width == other.width && node.eq(other.node);
+      other is _NodeSizeKey &&
+      width == other.width &&
+      identical(node, other.node);
 
   @override
-  int get hashCode => Object.hash(
-    node.type,
-    node.attrs['src'] is String ? node.attrs['src'] : null,
-    width,
-  );
+  int get hashCode => Object.hash(identityHashCode(node), width);
 }
 
 class _NodeViewParentData extends ContainerBoxParentData<RenderBox> {
@@ -199,35 +197,33 @@ extension _NodeViewLayout on _RenderEditorViewport {
     for (final index in visible) {
       final row = _row(index), layout = _layoutBlock(index);
       if (layout is _TableRowLayout) {
-        for (final cell in layout.cells) {
-          for (final block in cell.blocks) {
-            final node = block.$1.node;
-            if (!_nodeViews.containsKey(node.type) &&
-                !(node.type == 'codeBlock' && _codeBlockHeader != null)) {
-              continue;
-            }
-            final position = row.position + block.$2;
-            final available = cell.rect.width - 20;
-            final width = _widthFor(node, available);
-            final point =
-                _origin(index) +
-                layout._blockOrigin(cell, block.$3) +
-                Offset(
-                  _style.centerMedia &&
-                          const {'image', 'video'}.contains(node.type)
-                      ? (available - width) / 2
-                      : 0,
-                  0,
-                );
-            result[position] = _ViewTarget(
-              node,
-              position,
-              index,
-              width,
-              point,
-              table: true,
-            );
+        for (final (block, _) in layout.contentRows()) {
+          final node = block.layout.node;
+          if (!_nodeViews.containsKey(node.type) &&
+              !(node.type == 'codeBlock' && _codeBlockHeader != null)) {
+            continue;
           }
+          final position = row.position + block.position;
+          final available = block.width;
+          final width = _widthFor(node, available);
+          final point =
+              _origin(index) +
+              block.origin +
+              Offset(
+                _style.centerMedia &&
+                        const {'image', 'video'}.contains(node.type)
+                    ? (available - width) / 2
+                    : 0,
+                0,
+              );
+          result[position] = _ViewTarget(
+            node,
+            position,
+            index,
+            width,
+            point,
+            table: true,
+          );
         }
       } else if (_nodeViews.containsKey(row.node.type) ||
           row.node.type == 'codeBlock' && _codeBlockHeader != null) {
@@ -318,7 +314,8 @@ extension _NodeViewLayout on _RenderEditorViewport {
       if (!code) {
         final height = child.size.height;
         final changed =
-            _measuredSize(target.node, target.width)?.height != height;
+            _measuredSize(target.node, target.width)?.height != height ||
+            _layouts[target.node]?.height != height;
         final sizeKey = _NodeSizeKey(target.node, target.width);
         _nodeSizes.remove(sizeKey);
         _nodeSizes[sizeKey] = child.size;
@@ -326,16 +323,27 @@ extension _NodeViewLayout on _RenderEditorViewport {
         _layouts[target.node]?.height = height;
         if (target.table) {
           if (changed) {
+            final seen = <_TableRowLayout>{};
+            void invalidate(_BlockLayout layout) {
+              for (final table in layout.tableUsers) {
+                if (!seen.add(table)) continue;
+                table.invalidate();
+                invalidate(table);
+              }
+            }
+
+            final cached = _layouts[target.node];
+            if (cached != null) invalidate(cached);
             final row = _row(target.row),
                 layout = _layouts[_row(target.row).node] as _TableRowLayout;
-            for (final cell in layout.cells) {
-              if (!cell.blocks.any(
-                (block) => identical(block.$1.node, target.node),
-              )) {
-                continue;
-              }
-              for (var r = cell.grid.top; r < cell.grid.bottom; r++) {
-                tables.add(target.row - row.tableRow + r);
+            for (final (block, cell) in layout.contentRows()) {
+              if (!identical(block.layout.node, target.node)) continue;
+              for (
+                var rowIndex = cell.grid.top;
+                rowIndex < cell.grid.bottom;
+                rowIndex++
+              ) {
+                tables.add(target.row - row.tableRow + rowIndex);
               }
             }
           }
@@ -347,7 +355,7 @@ extension _NodeViewLayout on _RenderEditorViewport {
     }
     for (final index in tables) {
       // A row's height depends on all mounted media in its cells.
-      (_layouts[_row(index).node] as _TableRowLayout?)?.width = null;
+      (_layouts[_row(index).node] as _TableRowLayout?)?.invalidate();
       _layoutBlock(index);
     }
     return setEquals(visible, _visibleNodeRows());

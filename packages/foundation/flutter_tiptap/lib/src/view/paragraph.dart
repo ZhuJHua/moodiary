@@ -559,6 +559,58 @@ base class _BlockLayout extends LinkedListEntry<_BlockLayout> {
   }
 
   Rect caret(int offset, double caretWidth) {
+    var rect = _rawCaret(offset, caretWidth);
+    if (node.type == 'codeBlock' && !style!.wrapCodeBlocks) return rect;
+    if (_spaceAt(offset) || _spaceAt(offset - 1)) {
+      final (index, top) = chunkAt(offset);
+      final chunk = chunks[index];
+      var start = offset, end = offset;
+      while (start > chunk.start && _spaceAt(start - 1)) {
+        start--;
+      }
+      while (end < chunk.end && _spaceAt(end)) {
+        end++;
+      }
+      for (final box in chunk.paragraph!.getBoxesForRange(
+        chunk.paragraphOffset(start - chunk.start),
+        chunk.paragraphOffset(end - chunk.start),
+        boxHeightStyle: ui.BoxHeightStyle.strut,
+      )) {
+        if ((rect.top - top - box.top).abs() > 1 ||
+            box.right <= width! ||
+            box.right <= box.left) {
+          continue;
+        }
+        final right = math.max(0.0, width! - caretWidth / 2),
+            left = math.min(
+              box.left,
+              right - math.min((end - start).toDouble(), width! / 4),
+            );
+        final fraction = ((rect.left - box.left) / (box.right - box.left))
+            .clamp(0.0, 1.0);
+        rect = rect.shift(
+          Offset(left + fraction * (right - left) - rect.left, 0),
+        );
+        break;
+      }
+    }
+    final left = rect.left
+        .clamp(-caretWidth / 2, math.max(0.0, width! - caretWidth / 2))
+        .toDouble();
+    return Rect.fromLTRB(
+      left,
+      math.max(0.0, rect.top),
+      left + caretWidth,
+      math.min(height, rect.bottom),
+    );
+  }
+
+  bool _spaceAt(int offset) =>
+      offset >= 0 &&
+      offset < text.length &&
+      (text.codeUnitAt(offset) == 32 || text.codeUnitAt(offset) == 9);
+
+  Rect _rawCaret(int offset, double caretWidth) {
     final (index, y) = chunkAt(offset);
     final chunk = chunks[index], paragraph = chunk.paragraph!;
     final local = (offset - chunk.start).clamp(0, chunk.end - chunk.start);
@@ -616,13 +668,37 @@ base class _BlockLayout extends LinkedListEntry<_BlockLayout> {
     var y = 0.0;
     for (final chunk in chunks) {
       if (offset.dy < y + chunk.height || identical(chunk, chunks.last)) {
-        return (chunk.start +
-                chunk.documentOffset(
-                  chunk.paragraph!
-                      .getPositionForOffset(Offset(offset.dx, offset.dy - y))
-                      .offset,
-                ))
-            .clamp(chunk.start, chunk.end);
+        final found =
+            (chunk.start +
+                    chunk.documentOffset(
+                      chunk.paragraph!
+                          .getPositionForOffset(
+                            Offset(offset.dx, offset.dy - y),
+                          )
+                          .offset,
+                    ))
+                .clamp(chunk.start, chunk.end);
+        if (node.type == 'codeBlock' && !style!.wrapCodeBlocks) return found;
+        var closest = found, distance = double.infinity;
+        var first = math.max(chunk.start, found - 2),
+            last = math.min(chunk.end, found + 2);
+        while (first > chunk.start && _spaceAt(first - 1)) {
+          first--;
+        }
+        while (last < chunk.end && _spaceAt(last)) {
+          last++;
+        }
+        for (var candidate = first; candidate <= last; candidate++) {
+          final rect = caret(candidate, style!.caretWidth);
+          final delta = (rect.center - offset).distanceSquared;
+          if (delta < distance &&
+              (rect.center.dy - offset.dy).abs() < 1 &&
+              (rect.center.dx - offset.dx).abs() <= style!.caretWidth) {
+            closest = candidate;
+            distance = delta;
+          }
+        }
+        return closest;
       }
       y += chunk.height;
     }
@@ -643,7 +719,13 @@ base class _BlockLayout extends LinkedListEntry<_BlockLayout> {
                 chunk.paragraphOffset(b),
                 boxHeightStyle: ui.BoxHeightStyle.strut,
               )
-              .map((box) => box.toRect().shift(Offset(0, y))),
+              .map((box) => box.toRect().shift(Offset(0, y)))
+              .map(
+                (rect) => node.type == 'codeBlock' && !style!.wrapCodeBlocks
+                    ? rect
+                    : rect.intersect(Offset.zero & Size(width!, height)),
+              )
+              .where((rect) => !rect.isEmpty),
         );
       }
       y += chunk.height;

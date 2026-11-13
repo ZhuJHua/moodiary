@@ -1319,6 +1319,75 @@ void main() {
     },
   );
 
+  for (final readOnly in [false, true]) {
+    testWidgets(
+      'phone table code header ellipsizes and copies with readOnly=$readOnly',
+      (tester) async {
+        tester.view.physicalSize = const Size(390, 844);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final language = List.filled(20, 'long language').join(' ');
+        const source = 'const value = 21;';
+        await tester.pumpWidget(
+          _app(
+            MoodiaryEditor(
+              readOnly: readOnly,
+              initialContent: _json([
+                _schema.node(
+                  'table',
+                  content: [
+                    _schema.node(
+                      'tableRow',
+                      content: [
+                        _schema.node(
+                          'tableCell',
+                          content: [
+                            _schema.node(
+                              'codeBlock',
+                              attrs: {'language': language},
+                              content: [_schema.node('text', text: source)],
+                            ),
+                          ],
+                        ),
+                        _schema.node('tableCell', content: [_p('middle')]),
+                        _schema.node('tableCell', content: [_p('last')]),
+                      ],
+                    ),
+                  ],
+                ),
+              ]),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final editor = _editor(tester), geometry = _geometry(tester);
+        final cell = geometry.cellRect(4)!;
+        expect(
+          cell.width - editor.style.tableCellPadding.horizontal,
+          closeTo(240, .01),
+        );
+        final label = tester.widget<Text>(find.text(language));
+        expect(label.maxLines, 1);
+        expect(label.overflow, TextOverflow.ellipsis);
+        expect(
+          tester
+              .renderObject<RenderParagraph>(find.text(language))
+              .didExceedMaxLines,
+          isTrue,
+        );
+        final copy = find.text(l10n.editor.content.codeCopy);
+        expect(tester.getRect(copy).right, lessThanOrEqualTo(cell.right + 1));
+        await tester.tap(copy);
+        await tester.pump(const Duration(milliseconds: 350));
+        expect((await Clipboard.getData('text/plain'))?.text, source);
+        expect(find.text(l10n.editor.content.codeCopied), findsOneWidget);
+        await tester.pump(const Duration(milliseconds: 1500));
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   testWidgets(
     'media width preview changes box only, node selection, code copy header',
     (tester) async {
@@ -1413,7 +1482,7 @@ void main() {
       final g = key.currentState!.geometry!;
       expect(g.caretRect(1).left, closeTo(16 + 34, .01));
       final second = g.positionForOffset(
-        Offset(17, g.caretRect(1).bottom + 10),
+        Offset(25, g.caretRect(1).bottom + 10),
       );
       expect(g.caretRect(second).left, lessThan(40));
       expect(g.positionForOffset(g.caretRect(5).center), 5);

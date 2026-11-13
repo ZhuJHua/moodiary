@@ -23,6 +23,21 @@ double measure(void Function() work, {int repetitions = 101}) {
 Future<void> main() async {
   final schema = Schema.standard();
   const commands = EditorCommands();
+  final mixed = generateLargeMixedDocument(schema: schema);
+  final mixedState = EditorState(
+    doc: mixed,
+    selection: TextSelection(mixed.rowAt(0).position + 1),
+  );
+  stdout.writeln(
+    jsonEncode({
+      'mixedNestedGroups': 1000,
+      'mixedNestedRows': mixed.rowCount,
+      'mixedNestedEditMs': measure(
+        () => commands.execute(mixedState, 'insertText', {'text': '中'}),
+      ),
+      'mixedNestedRowLookupMs': measure(() => mixed.rowAt(mixed.rowCount ~/ 2)),
+    }),
+  );
   for (final size in [1000000, 3000000]) {
     final generated = generateLargeDocument(size, schema: schema);
     if (generated.blocks.summary.textLength != size) {

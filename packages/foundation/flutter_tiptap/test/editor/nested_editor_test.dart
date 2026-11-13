@@ -152,7 +152,14 @@ void main() {
       expect(geometry.rowCount, 4);
       final first = geometry.caretRect(root.rowAt(0).position + 1),
           inner = geometry.caretRect(root.rowAt(1).position + 1);
-      expect(first.left, closeTo(16 + 21.25 + 25.5, .01));
+      const style = ft.TiptapEditorStyle();
+      final marker = TextPainter(
+        text: TextSpan(text: '8.', style: style.paragraph),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      final gutter = marker.maxIntrinsicWidth + 8;
+      marker.dispose();
+      expect(first.left, closeTo(16 + 21.25 + gutter, .01));
       expect(inner.left, closeTo(first.left + 25.5, .01));
       expect(geometry.caretRect(root.rowAt(2).position + 1).left, first.left);
       for (var row = 0; row < root.rowCount; row++) {

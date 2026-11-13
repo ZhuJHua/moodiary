@@ -27,6 +27,8 @@ class TiptapEditorStyle {
     this.wrapCodeBlocks = false,
     this.tableMinRowHeight = 42,
     this.tableMinColumnWidth = 64,
+    this.tableCodeMinWidth = 240,
+    this.tableMediaMinWidth = 160,
     this.overflowFadeWidth = 18,
     this.overflowBackground = const Color(0xffffffff),
     this.overflowIndicatorColor = const Color(0x88687078),
@@ -149,6 +151,8 @@ class TiptapEditorStyle {
        assert(caretHeightFactor > 0),
        assert(caretRadius >= 0),
        assert(tableMinColumnWidth > 0),
+       assert(tableCodeMinWidth > 0),
+       assert(tableMediaMinWidth > 0),
        assert(overflowFadeWidth >= 0),
        assert(overflowIndicatorHeight >= 0),
        assert(blockSpacing >= 0),
@@ -156,6 +160,9 @@ class TiptapEditorStyle {
 
   /// Minimum table column width and horizontal overflow feedback dimensions.
   final double tableMinColumnWidth, overflowFadeWidth, overflowIndicatorHeight;
+
+  /// Minimum content widths for code and media inside table cells.
+  final double tableCodeMinWidth, tableMediaMinWidth;
 
   /// Colors for horizontal overflow fades and scroll indicators.
   final Color overflowBackground, overflowIndicatorColor;
@@ -298,6 +305,8 @@ class TiptapEditorStyle {
           wrapCodeBlocks == other.wrapCodeBlocks &&
           tableMinRowHeight == other.tableMinRowHeight &&
           tableMinColumnWidth == other.tableMinColumnWidth &&
+          tableCodeMinWidth == other.tableCodeMinWidth &&
+          tableMediaMinWidth == other.tableMediaMinWidth &&
           overflowFadeWidth == other.overflowFadeWidth &&
           overflowBackground == other.overflowBackground &&
           overflowIndicatorColor == other.overflowIndicatorColor &&
@@ -379,6 +388,8 @@ class TiptapEditorStyle {
     wrapCodeBlocks,
     tableMinRowHeight,
     tableMinColumnWidth,
+    tableCodeMinWidth,
+    tableMediaMinWidth,
     overflowFadeWidth,
     overflowBackground,
     overflowIndicatorColor,

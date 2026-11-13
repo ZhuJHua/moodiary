@@ -12,6 +12,7 @@ class _EditorViewport extends RenderObjectWidget {
     required this.readOnly,
     required this.onTaskToggle,
     required this.onGeometry,
+    required this.onCaretLayout,
     required this.nodeViews,
     this.nodeHeightEstimator,
     this.header,
@@ -34,6 +35,7 @@ class _EditorViewport extends RenderObjectWidget {
   final double bottomMargin;
   final ValueChanged<_RenderEditorViewport> onReady;
   final VoidCallback onGeometry;
+  final ValueChanged<_RenderEditorViewport> onCaretLayout;
   @override
   _RenderEditorViewport createRenderObject(BuildContext context) {
     final render = _RenderEditorViewport(
@@ -46,6 +48,7 @@ class _EditorViewport extends RenderObjectWidget {
       codeHighlighter,
       readOnly,
       onTaskToggle,
+      onCaretLayout,
     );
     render._header = header;
     render._footer = footer;
@@ -110,8 +113,18 @@ class _RenderEditorViewport extends RenderBox
 
   Size? _measuredSize(m.Node node, double width) {
     final key = _NodeSizeKey(node, width), size = _nodeSizes.remove(key);
-    if (size != null) _nodeSizes[key] = size;
-    return size;
+    if (size != null) {
+      _nodeSizes[key] = size;
+      return size;
+    }
+    if (!node.isLeaf) return null;
+    Size? equivalent;
+    for (final entry in _nodeSizes.entries) {
+      if (entry.key.width != width || !entry.key.node.eq(node)) continue;
+      if (equivalent != null && equivalent != entry.value) return null;
+      equivalent = entry.value;
+    }
+    return equivalent;
   }
 
   @override
@@ -144,12 +157,27 @@ class _RenderEditorViewport extends RenderBox
     if (data.row < 0 || _doc.rowCount == 0) return null;
     final index = _indexForPosition(data.position), row = _row(index);
     if (row.table == null) return null;
-    // Row-spanning media may extend across several virtual rows.
-    return Rect.fromLTWH(
-      _rowOrigin(index).dx,
-      0,
-      _contentWidth - row.indent,
-      size.height,
+    final cell = cellRect(data.position);
+    if (cell == null) return null;
+    final layout = _layoutBlock(index) as _TableRowLayout;
+    final clip = layout.contentAt(data.position - row.position)?.clip;
+    final visible = clip == null
+        ? cell
+        : cell.intersect(
+            Rect.fromLTWH(
+              _origin(index).dx + clip.left,
+              0,
+              clip.width,
+              size.height,
+            ),
+          );
+    return visible.intersect(
+      Rect.fromLTWH(
+        _rowOrigin(index).dx,
+        0,
+        _contentWidth - row.indent,
+        size.height,
+      ),
     );
   }
 
@@ -163,6 +191,7 @@ class _RenderEditorViewport extends RenderBox
     this._highlighter,
     this._readOnly,
     this._onTaskToggle,
+    this._onCaretLayout,
   ) : _doc = _controller.state.doc;
   TiptapController _controller;
   ViewportOffset _offset;
@@ -170,6 +199,7 @@ class _RenderEditorViewport extends RenderBox
   String _placeholder;
   double _bottomMargin;
   final VoidCallback _onGeometry;
+  final ValueChanged<_RenderEditorViewport> _onCaretLayout;
   m.Node _doc;
   TiptapCodeHighlighter? _highlighter;
   bool _readOnly;
@@ -249,6 +279,7 @@ class _RenderEditorViewport extends RenderBox
   // 64 entries cover several 932px text screens; 32K text bounds long blocks.
   static const _layoutLimit = 64, _layoutTextLimit = 32768;
   final _layouts = HashMap<m.Node, _BlockLayout>.identity();
+  var _tableGeometries = Expando<_TableGeometry>();
   final _layoutOrder = LinkedList<_BlockLayout>();
   final Set<_BlockLayout> _usedLayouts = {}, _retiredLayouts = {};
   int _cachedTextLength = 0;
@@ -271,7 +302,7 @@ class _RenderEditorViewport extends RenderBox
     if (layout is _TableRowLayout) {
       for (final cell in layout.cells) {
         for (final block in cell.blocks) {
-          _touchLayout(block.$1);
+          _touchLayout(block.layout);
         }
       }
     }
@@ -320,7 +351,7 @@ class _RenderEditorViewport extends RenderBox
       protected.add(layout);
       if (layout is _TableRowLayout) {
         for (final cell in layout.cells) {
-          protected.addAll(cell.blocks.map((block) => block.$1));
+          protected.addAll(cell.blocks.map((block) => block.layout));
         }
       }
     }
@@ -480,6 +511,9 @@ class _RenderEditorViewport extends RenderBox
   }
 
   void _fontsChanged() {
+    _orderedGutters = Expando();
+    _columnSizes = Expando();
+    _tableGeometries = Expando();
     _clearLayouts();
     _nodeSizes.clear();
     _chrome = Expando<Map<String, ui.Paragraph>>();
@@ -499,9 +533,37 @@ class _RenderEditorViewport extends RenderBox
         !identical(next, _doc) ||
         _controller.state.selection is! m.NodeSelection;
     if (!identical(next, _doc)) {
+      final contentTop = _contentTop;
       final transaction = _controller.lastTransaction;
       final mapsDocument =
           transaction != null && identical(transaction.before, _doc);
+      if (mapsDocument) {
+        for (final row in _rows.values) {
+          final layout = _layouts[row.node];
+          if (layout is! _TableRowLayout) continue;
+          for (final (block, _) in layout.contentRows(includeTables: true)) {
+            final before = block.row.table ?? block.row.node,
+                pixels = _codeOffsets[block.row.table ?? block.row.node];
+            if (!const {'codeBlock', 'table'}.contains(before.type) ||
+                pixels == null) {
+              continue;
+            }
+            final position = transaction.mapping.map(
+              row.position +
+                  block.position -
+                  (block.row.table == null
+                      ? 0
+                      : block.row.tableRowPosition + 1),
+            );
+            if (position < 0 || position >= next.content.size) continue;
+            final after = next.nodeAt(position);
+            if (after?.type != before.type) continue;
+            _codeOffsets[after!] = pixels;
+            if (identical(_horizontalBlock, before)) _horizontalBlock = after;
+            if (identical(_scrollingBlock, before)) _scrollingBlock = after;
+          }
+        }
+      }
       if (transaction == null) {
         _cacheReady = false;
         _nodeSizes.clear();
@@ -543,6 +605,7 @@ class _RenderEditorViewport extends RenderBox
       }
       _rows.clear();
       _doc = next;
+      if (_offset.pixels > 0) _offset.correctBy(_contentTop - contentTop);
       markNeedsLayout();
       markNeedsSemanticsUpdate();
     }
@@ -555,33 +618,22 @@ class _RenderEditorViewport extends RenderBox
     final heights = _heights;
     if (heights != null) {
       final range = beforeDoc.changedRows(nextDoc);
-      if (range.oldTo - range.from == 1 && range.newTo - range.from == 1) {
-        final before = beforeDoc.rowAt(range.from).node,
-            after = nextDoc.rowAt(range.from).node;
-        if (before.type == 'tableRow' &&
-            after.type == 'tableRow' &&
-            before.childCount == after.childCount &&
-            List.generate(
-              before.childCount,
-              (c) =>
-                  before.child(c).type == after.child(c).type &&
-                  mapEquals(before.child(c).attrs, after.child(c).attrs),
-            ).every((v) => v)) {
-          final oldTable = _Row.at(beforeDoc, range.from, _style).table!,
-              newTable = _Row.at(nextDoc, range.from, _style).table!;
-          _columnSizes[newTable] = (
-            _style.paragraph,
-            _style.tableFixedLayout,
-            _style.tableMinColumnWidth,
-            _tableColumns(oldTable, _style),
-          );
-        }
-      }
       var anchor = heights.indexAt(math.max(0, _offset.pixels - _contentTop));
       final oldY = heights.offsetOf(anchor);
       if (range.oldTo - range.from == range.newTo - range.from) {
         for (var i = range.from; i < range.newTo; i++) {
           final before = beforeDoc.rowAt(i).node, after = nextDoc.rowAt(i).node;
+          if (!identical(before, after) && before.isLeaf && before.eq(after)) {
+            final measurements = _nodeSizes.entries
+                .where((entry) => identical(entry.key.node, before))
+                .toList();
+            for (final entry in measurements) {
+              _nodeSizes[_NodeSizeKey(after, entry.key.width)] = entry.value;
+            }
+            while (_nodeSizes.length > 512) {
+              _nodeSizes.remove(_nodeSizes.keys.first);
+            }
+          }
           final cached = _layouts[before];
           if (_codeOffsets[before] case final offset?) {
             _codeOffsets[after] = offset;
@@ -638,15 +690,16 @@ class _RenderEditorViewport extends RenderBox
             y < _headerHeight + _heights!.totalHeight + _footerHeight;
   }
 
-  _BlockLayout _layoutBlock(int index) {
-    final row = _row(index), node = row.node;
+  _BlockLayout _layoutForRow(_Row row) {
+    final node = row.node;
     final cached = _layouts[node];
     if (cached is _TableRowLayout && cached.table != row.table) {
       if (cached.rowIndex != row.tableRow ||
+          cached.geometry.spans ||
           m.TableMap.get(row.table!).hasRowspan ||
           !listEquals(
-            _tableColumns(cached.table, _style),
-            _tableColumns(row.table!, _style),
+            _tableColumns(cached.table, _style, cached.width ?? _contentWidth),
+            _tableColumns(row.table!, _style, cached.width ?? _contentWidth),
           )) {
         _retireLayout(node);
       } else {
@@ -666,60 +719,44 @@ class _RenderEditorViewport extends RenderBox
           : _BlockLayout(node),
     );
     if (layout is _TableRowLayout) {
-      layout.blockLayout = (node) => _useLayout(node, () => _BlockLayout(node));
-      layout.highlighter = _highlighter;
-      layout.nodeHeight = (node, width) => _nodeViews.containsKey(node.type)
-          ? _measuredSize(node, _widthFor(node, width))?.height ??
-                _nodeHeightEstimator?.call(node, _widthFor(node, width)) ??
-                _style.opaqueBlockHeight
-          : null;
-      final tableFirst = index - row.tableRow;
-      layout.rowDistance = (from, to) =>
-          _heights!.offsetOf(tableFirst + to) -
-          _heights!.offsetOf(tableFirst + from);
-    }
-    TextSpan? highlight;
-    if (node.type == 'codeBlock' && _highlighter != null) {
-      highlight = _highlights[node];
-      if (highlight == null) {
-        final spans = _highlighter!(
-          node.attrs['language'] as String?,
-          layout.text,
-        );
-        highlight = spans.toPlainText() == layout.text
-            ? spans
-            : TextSpan(text: layout.text);
-        _highlights[node] = highlight;
+      if (m.TableMap.get(row.table!).hasRowspan) {
+        layout.geometry = _tableGeometries[row.table!] ??= _TableGeometry();
       }
+      layout.blockLayout = _layoutForRow;
+      layout.layoutRow = _layoutContentRow;
+      layout.releaseMeasurement = _usedLayouts.remove;
+      layout.codeOffset = (row) {
+        final extent = _cellOverflowExtent(row);
+        final node = row.row.table ?? row.row.node;
+        final pixels = _codeOffsets[node] ?? 0;
+        return identical(node, _horizontalBlock)
+            ? pixels
+            : pixels.clamp(0.0, extent);
+      };
     }
-    if (layout.layout(
-      math.max(
-        1,
-        _contentWidth -
-            row.indent -
-            row.codeInset * 2 -
-            (node.isTextblock || node.type == 'tableRow' ? 0 : 24),
-      ),
-      _style,
-      _controller.diagnostics,
-      baseStyle: row.textStyle(_style),
-      codeHighlight: highlight,
-      firstLineIndent: row.value.path.length == 1 && node.type == 'paragraph'
-          ? _style.firstLineIndent
-          : 0,
-    )) {
+    return layout;
+  }
+
+  _BlockLayout _layoutBlock(int index) {
+    final row = _row(index), node = row.node, layout = _layoutForRow(row);
+    if (_layoutContentRow(row, layout, _contentWidth)) {
       _controller.diagnostics._record(node, index);
     }
-    if (_nodeViews.containsKey(node.type)) {
-      layout.height =
-          _measuredSize(node, _nodeWidth(index))?.height ??
-          _nodeHeightEstimator?.call(node, _nodeWidth(index)) ??
-          _style.opaqueBlockHeight;
-    }
-    layout.height = math.max(layout.height, row.minHeight);
     // Geometry and paint may need an offscreen paragraph, but only layout may
     // update row measurements or correct the scroll position.
     if (!_inLayout) return layout;
+    if (layout is _TableRowLayout && layout.geometry.spans) {
+      final offsets = layout.geometry.offsets, first = index - row.tableRow;
+      for (var tableRow = 0; tableRow + 1 < offsets.length; tableRow++) {
+        _measureRow(
+          first + tableRow,
+          offsets[tableRow + 1] -
+              offsets[tableRow] +
+              _spacing(first + tableRow),
+        );
+      }
+      return layout;
+    }
     final height =
         layout.height + row.codeTop + row.codeBottom + _spacing(index);
     _measureRow(index, height);
@@ -839,6 +876,8 @@ class _RenderEditorViewport extends RenderBox
     _positionNodeViews();
     _layoutOffset = _offset.pixels;
     _inLayout = false;
+    _paintOffset = _layoutOffset;
+    _onCaretLayout(this);
     _resizing = false;
     _rows.removeWhere(
       (index, _) =>
@@ -850,39 +889,59 @@ class _RenderEditorViewport extends RenderBox
     _scheduleGeometry();
   }
 
-  double _spacing(int index) {
-    final row = _row(index);
-    if (row.node.type == 'tableRow' &&
-        row.tableRow + 1 < row.table!.childCount) {
-      return 0;
-    }
-    if (row.compact &&
-        index + 1 < _doc.rowCount &&
-        _doc.rowAt(index + 1).position < row.listEnd!) {
-      return 0;
-    }
-    if (_style.blockGap != null) {
-      final previous = _doc.child(row.value.path.first);
-      if (index + 1 == _doc.rowCount) return _style.blockGap!(previous, null);
-      final next = _row(index + 1);
-      if (row.value.path.first != next.value.path.first) {
-        return _style.blockGap!(previous, _doc.child(next.value.path.first));
+  double _spacing(int index) => _row(index).spacing(_doc, index, _style);
+
+  bool _layoutContentRow(
+    _Row row,
+    _BlockLayout layout,
+    double available, {
+    bool header = false,
+    TextAlign? textAlign,
+  }) {
+    row.fit(available, _style);
+    final node = row.node;
+    TextSpan? highlight;
+    if (node.type == 'codeBlock' && _highlighter != null) {
+      highlight = _highlights[node];
+      if (highlight == null) {
+        final spans = _highlighter!(
+          node.attrs['language'] as String?,
+          layout.text,
+        );
+        highlight = spans.toPlainText() == layout.text
+            ? spans
+            : TextSpan(text: layout.text);
+        _highlights[node] = highlight;
       }
     }
-    if (index + 1 < _doc.rowCount) {
-      final next = _row(index + 1);
-      if (next.node.type == 'heading' &&
-          next.value.path.length == 1 &&
-          _style.headingTopSpacing != null) {
-        return _style.headingTopSpacing![(next.node.attrs['level'] as int) - 1];
-      }
+    final changed = layout.layout(
+      math.max(
+        1,
+        available -
+            row.indent -
+            row.codePadding.horizontal * (node.type == 'codeBlock' ? 1 : 0) -
+            (node.isTextblock || node.type == 'tableRow' ? 0 : 24),
+      ),
+      _style,
+      _controller.diagnostics,
+      baseStyle: header
+          ? row.textStyle(_style).copyWith(fontWeight: FontWeight.w600)
+          : row.textStyle(_style),
+      textAlign: textAlign,
+      codeHighlight: highlight,
+      firstLineIndent: row.value.path.length == 1 && node.type == 'paragraph'
+          ? _style.firstLineIndent
+          : 0,
+    );
+    if (_nodeViews.containsKey(node.type)) {
+      final width = _widthFor(node, math.max(1, available - row.indent));
+      layout.height =
+          _measuredSize(node, width)?.height ??
+          _nodeHeightEstimator?.call(node, width) ??
+          _style.opaqueBlockHeight;
     }
-    if (row.node.type == 'heading' &&
-        row.value.path.length == 1 &&
-        _style.headingBottomSpacing != null) {
-      return _style.headingBottomSpacing!;
-    }
-    return _style.blockSpacing;
+    layout.height = math.max(layout.height, row.minHeight);
+    return changed;
   }
 
   Offset _rowOrigin(int index) => Offset(
@@ -929,12 +988,63 @@ class _RenderEditorViewport extends RenderBox
   int _indexForPosition(int position) =>
       _doc.rowIndexAt(position.clamp(0, _doc.content.size));
 
+  double _cellOverflowExtent(_CellRow row) {
+    if (row.layout is _TableRowLayout) {
+      return math.max(0, row.layout.intrinsicWidth - row.width);
+    }
+    return row.row.node.type != 'codeBlock' || _style.wrapCodeBlocks
+        ? 0
+        : math.max(
+            0,
+            row.layout.intrinsicWidth -
+                math.max(1, row.width - row.row.codePadding.horizontal) +
+                _style.caretWidth,
+          );
+  }
+
+  (_CellRow, _TableCellLayout)? _cellOverflowAt(Offset point, int index) {
+    final layout = _layoutBlock(index);
+    if (layout is! _TableRowLayout) return null;
+    final origin = _origin(index);
+    (_CellRow, _TableCellLayout)? found;
+    for (final (block, cell) in layout.contentRows(includeTables: true)) {
+      if ((block.clip ?? cell.rect).shift(origin).contains(point) &&
+          block.rect.shift(origin).contains(point) &&
+          _cellOverflowExtent(block) > .01) {
+        found = (block, cell);
+      }
+    }
+    return found;
+  }
+
+  (m.Node, int, double) _horizontalTarget(Offset point, int index) {
+    final row = _row(index), code = _cellOverflowAt(point, index);
+    if (code != null) {
+      final block = code.$1;
+      return (
+        block.row.table ?? block.row.node,
+        row.position +
+            block.position -
+            (block.row.table == null ? 0 : block.row.tableRowPosition + 1),
+        (_layoutBlock(index) as _TableRowLayout).codeOffset(block),
+      );
+    }
+    return (
+      row.table ?? row.node,
+      row.table == null
+          ? row.position
+          : row.position - row.tableRowPosition - 1,
+      _horizontalOffset(index),
+    );
+  }
+
   int? _horizontalRowAt(Offset point) {
     if (_heights == null || _doc.rowCount == 0 || _inChrome(point)) return null;
     final index = _heights!.indexAt(point.dy + _paintOffset - _contentTop),
         row = _row(index),
         layout = _layoutBlock(index),
         origin = _rowOrigin(index);
+    if (_cellOverflowAt(point, index) != null) return index;
     final rect = Rect.fromLTWH(
       origin.dx,
       origin.dy + row.codeTop,
@@ -949,10 +1059,9 @@ class _RenderEditorViewport extends RenderBox
   bool _scrollCode(Offset point, double delta) {
     final index = _horizontalRowAt(point);
     if (index == null) return false;
-    final row = _row(index),
-        block = row.table ?? row.node,
-        previous = _horizontalOffset(index),
-        next = (previous + delta).clamp(0.0, _horizontalExtent(index));
+    final (block, position, previous) = _horizontalTarget(point, index);
+    final metrics = horizontalScrollMetrics(position)!;
+    final next = (previous + delta).clamp(0.0, metrics.maxScrollExtent);
     if (identical(block, _horizontalBlock)) {
       _horizontalPosition!.jumpTo(next);
     } else {
@@ -973,6 +1082,19 @@ class _RenderEditorViewport extends RenderBox
     final index = _indexForPosition(position), row = _row(index);
     if (row.table == null && row.node.type != 'codeBlock') return null;
     final origin = _rowOrigin(index), layout = _layoutBlock(index);
+    if (layout is _TableRowLayout && position > row.position) {
+      for (final (block, _) in layout.contentRows(includeTables: true)) {
+        final tableStart =
+            row.position + block.position - block.row.tableRowPosition - 1;
+        final matches = block.row.node.type == 'codeBlock'
+            ? position >= row.position + block.position &&
+                  position <
+                      row.position + block.position + block.layout.node.nodeSize
+            : block.row.table != null && position == tableStart;
+        if (!matches) continue;
+        return _cellScrollMetrics(index, block);
+      }
+    }
     return (
       viewport: Rect.fromLTWH(
         origin.dx + row.codeInset,
@@ -988,15 +1110,94 @@ class _RenderEditorViewport extends RenderBox
     );
   }
 
+  ({
+    Rect viewport,
+    double offset,
+    double maxScrollExtent,
+    double indicatorOpacity,
+  })
+  _cellScrollMetrics(int index, _CellRow block) {
+    final layout = _layoutBlock(index) as _TableRowLayout;
+    final point = _origin(index) + block.origin;
+    final node = block.row.table ?? block.row.node;
+    return (
+      viewport: Rect.fromLTWH(
+        point.dx + block.row.codeInset,
+        point.dy + block.row.codeTop,
+        math.max(
+          1,
+          block.width -
+              (block.row.node.type == 'codeBlock'
+                  ? block.row.codePadding.horizontal
+                  : 0),
+        ),
+        block.layout.height + block.row.codeBottom,
+      ),
+      offset: layout.codeOffset(block),
+      maxScrollExtent: _cellOverflowExtent(block),
+      indicatorOpacity: identical(_scrollingBlock, node)
+          ? _indicatorOpacity
+          : 0,
+    );
+  }
+
   void _paintOverflow(Canvas canvas, int index) {
     final row = _row(index), metrics = horizontalScrollMetrics(row.position);
+    final layout = _layoutBlock(index);
+    if (layout is _TableRowLayout) {
+      canvas.save();
+      canvas.clipRect(
+        _rowOrigin(index) & Size(_contentWidth - row.indent, layout.height),
+      );
+      for (final (block, cell) in layout.contentRows(includeTables: true)) {
+        if (block.row.node.type != 'codeBlock' &&
+            block.layout is! _TableRowLayout) {
+          continue;
+        }
+        canvas.save();
+        canvas.clipRect((block.clip ?? cell.rect).shift(_origin(index)));
+        _paintOverflowMetrics(
+          canvas,
+          _cellScrollMetrics(index, block),
+          block.row.table == null ||
+                  block.row.tableRow == 0 &&
+                      block.row.table!.child(0).child(0).type == 'tableHeader'
+              ? _style.codeBackground
+              : _style.overflowBackground,
+          indicator:
+              block.row.table == null ||
+              block.row.tableRow == block.row.table!.childCount - 1,
+        );
+        canvas.restore();
+      }
+      canvas.restore();
+    }
     if (metrics == null || metrics.maxScrollExtent <= .01) return;
+    _paintOverflowMetrics(
+      canvas,
+      metrics,
+      row.table == null ||
+              row.tableRow == 0 && row.node.content.first.type == 'tableHeader'
+          ? _style.codeBackground
+          : _style.overflowBackground,
+      indicator: row.table == null || row.tableRow == row.table!.childCount - 1,
+    );
+  }
+
+  void _paintOverflowMetrics(
+    Canvas canvas,
+    ({
+      Rect viewport,
+      double offset,
+      double maxScrollExtent,
+      double indicatorOpacity,
+    })
+    metrics,
+    Color background, {
+    bool indicator = true,
+  }) {
+    if (metrics.maxScrollExtent <= .01) return;
     final rect = metrics.viewport;
-    final background =
-        row.table == null ||
-            row.tableRow == 0 && row.node.content.first.type == 'tableHeader'
-        ? _style.codeBackground
-        : _style.overflowBackground;
     final width = math.min(_style.overflowFadeWidth, rect.width / 2);
     void fade(bool left) {
       if (width <= 0) return;
@@ -1023,7 +1224,7 @@ class _RenderEditorViewport extends RenderBox
     if (metrics.offset < metrics.maxScrollExtent - .01) fade(false);
     if (metrics.indicatorOpacity <= 0 ||
         _style.overflowIndicatorHeight <= 0 ||
-        row.table != null && row.tableRow != row.table!.childCount - 1) {
+        !indicator) {
       return;
     }
     final contentWidth = rect.width + metrics.maxScrollExtent,
@@ -1054,6 +1255,58 @@ class _RenderEditorViewport extends RenderBox
     if (_heights == null || _doc.rowCount == 0) return;
     final index = _indexForPosition(position), row = _row(index);
     if (row.node.type != 'codeBlock' && row.table == null) return;
+    if (row.table != null) {
+      final layout = _layoutBlock(index) as _TableRowLayout;
+      final found = layout.contentAt(position - row.position);
+      if (found != null && found.row.node.type == 'codeBlock') {
+        final metrics = horizontalScrollMetrics(position)!;
+        final caret = caretRect(position);
+        final delta = caret.right > metrics.viewport.right
+            ? caret.right - metrics.viewport.right
+            : caret.left < metrics.viewport.left
+            ? caret.left - metrics.viewport.left
+            : 0.0;
+        if (delta != 0) {
+          final pixels = (metrics.offset + delta).clamp(
+            0.0,
+            metrics.maxScrollExtent,
+          );
+          if (identical(found.row.node, _horizontalBlock)) {
+            _horizontalPosition!.jumpTo(pixels);
+          } else {
+            _setHorizontalOffset(found.row.node, pixels);
+          }
+        }
+      }
+      for (final (block, _)
+          in layout.contentRows(includeTables: true).toList().reversed) {
+        if (block.layout is! _TableRowLayout ||
+            position < row.position + block.position ||
+            position >=
+                row.position + block.position + block.layout.node.nodeSize) {
+          continue;
+        }
+        final caret = caretRect(position),
+            point = _origin(index) + block.origin;
+        final left = point.dx + 12, right = point.dx + block.width - 12;
+        final delta = caret.right > right
+            ? caret.right - right
+            : caret.left < left
+            ? caret.left - left
+            : 0.0;
+        if (delta == 0) continue;
+        final table = block.row.table!;
+        final pixels = (layout.codeOffset(block) + delta).clamp(
+          0.0,
+          _cellOverflowExtent(block),
+        );
+        if (identical(table, _horizontalBlock)) {
+          _horizontalPosition!.jumpTo(pixels);
+        } else {
+          _setHorizontalOffset(table, pixels);
+        }
+      }
+    }
     final rect = caretRect(position),
         left = _rowOrigin(index).dx + 12,
         right = _rowOrigin(index).dx + _contentWidth - row.indent - 12;
@@ -1086,24 +1339,22 @@ class _RenderEditorViewport extends RenderBox
         row = _row(i),
         layout = _layoutBlock(i);
     if (layout is _TableRowLayout) {
-      for (final cell in layout.cells) {
-        for (final block in cell.blocks) {
-          if (row.position + block.$2 != position) continue;
-          final node = block.$1.node, available = cell.rect.width - 20;
-          final availableWidth = _widthFor(node, available);
-          final width =
-              _measuredSize(node, availableWidth)?.width ?? availableWidth;
-          return _origin(i) +
-                  layout._blockOrigin(cell, block.$3) +
-                  Offset(
-                    _style.centerMedia &&
-                            const {'image', 'video'}.contains(node.type)
-                        ? (available - width) / 2
-                        : 0,
-                    0,
-                  ) &
-              Size(width, block.$1.height);
-        }
+      final block = layout.contentAt(position - row.position);
+      if (block != null) {
+        final node = block.layout.node, available = block.width;
+        final availableWidth = _widthFor(node, available);
+        final width =
+            _measuredSize(node, availableWidth)?.width ?? availableWidth;
+        return _origin(i) +
+                block.origin +
+                Offset(
+                  _style.centerMedia &&
+                          const {'image', 'video'}.contains(node.type)
+                      ? (available - width) / 2
+                      : 0,
+                  0,
+                ) &
+            Size(width, block.height);
       }
     }
     return (_nodeViews.containsKey(row.node.type)
@@ -1129,31 +1380,52 @@ class _RenderEditorViewport extends RenderBox
         continue;
       }
       final h =
-          _heights!.offsetOf(index + cell.rowspan) - _heights!.offsetOf(index);
+          _heights!.offsetOf(index + cell.rowspan) -
+          _heights!.offsetOf(index) -
+          _spacing(index + cell.rowspan - 1);
       return _origin(index) + cell.rect.topLeft & Size(cell.rect.width, h);
     }
-    return null;
+    return layout
+        .nestedCellRect(context.cellPosition - _row(index).position)
+        ?.shift(_origin(index));
   }
 
   @override
   Rect? taskCheckboxRect(int position) {
     if (_doc.rowCount == 0 || _heights == null) return null;
     final i = _indexForPosition(position), row = _row(i);
-    if (row.taskPosition == null) return null;
-    final font = _style.paragraph.fontSize ?? 17;
-    return Rect.fromLTWH(
-      _rowOrigin(i).dx - (_style.taskIndent ?? _style.listIndent),
-      _rowOrigin(i).dy + font * .275,
-      font * 1.2,
-      font * 1.2,
-    );
+    final layout = _layoutBlock(i);
+    if (layout is _TableRowLayout) {
+      final block = layout.contentAt(position - row.position);
+      return block == null
+          ? null
+          : _checkboxFor(block.row, _origin(i) + block.origin);
+    }
+    return _checkboxFor(row, _rowOrigin(i));
   }
 
   int? _taskAt(Offset point) {
     if (_heights == null || _doc.rowCount == 0) return null;
-    final i = _heights!.indexAt(point.dy + _paintOffset - _contentTop);
-    final row = _row(i), rect = taskCheckboxRect(row.position);
-    return rect?.inflate(3).contains(point) == true ? row.taskPosition : null;
+    final index = _heights!.indexAt(point.dy + _paintOffset - _contentTop);
+    final row = _row(index), layout = _layoutBlock(index);
+    if (layout is _TableRowLayout) {
+      for (final (block, cell) in layout.contentRows()) {
+        if (!(block.clip ?? cell.rect).shift(_origin(index)).contains(point)) {
+          continue;
+        }
+        final rect = _checkboxFor(block.row, _origin(index) + block.origin);
+        if (rect?.inflate(3).contains(point) == true) {
+          return row.position +
+              block.position +
+              block.row.taskPosition! -
+              block.row.position;
+        }
+      }
+      return null;
+    }
+    return taskCheckboxRect(row.position)?.inflate(3).contains(point) == true
+        ? row.taskPosition
+        : null;
   }
 
   @override
@@ -1173,7 +1445,22 @@ class _RenderEditorViewport extends RenderBox
     if (_heights == null || _doc.rowCount == 0) return null;
     final index = _heights!.indexAt(point.dy + _paintOffset - _contentTop);
     final layout = _layoutBlock(index), origin = _origin(index);
-    if (layout is _TableRowLayout) return null;
+    if (layout is _TableRowLayout) {
+      for (final (block, cell) in layout.contentRows()) {
+        if (!(block.clip ?? cell.rect).shift(origin).contains(point)) continue;
+        final found = _referenceIn(
+          block.layout,
+          origin + block.textOrigin,
+          point,
+        );
+        if (found != null) return found;
+      }
+      return null;
+    }
+    return _referenceIn(layout, origin, point);
+  }
+
+  m.Node? _referenceIn(_BlockLayout layout, Offset origin, Offset point) {
     var y = origin.dy;
     for (final chunk in layout.chunks) {
       final boxes = chunk.paragraph!.getBoxesForPlaceholders();
@@ -1339,6 +1626,48 @@ class _RenderEditorViewport extends RenderBox
   TextRange lineBoundary(int position) => _boundary(position, false);
   @override
   bool hitTestSelf(Offset position) => true;
+  void _paintCellRows(
+    Canvas canvas,
+    int index,
+    _TableRowLayout layout, {
+    required bool background,
+  }) {
+    canvas.save();
+    canvas.clipRect(
+      _rowOrigin(index) &
+          Size(math.max(1, _contentWidth - _row(index).indent), layout.height),
+    );
+    layout.paint(
+      canvas,
+      _origin(index),
+      _style,
+      background: background,
+      paintRow: (block, card, text, next) {
+        final rect = card & Size(block.width, block.height);
+        if (background) {
+          _paintBlockBackground(
+            canvas,
+            block.row,
+            rect,
+            continues: (position) =>
+                next?.quotes.any((quote) => quote.$2 == position) ?? false,
+            spacing: block.spacing,
+          );
+        } else if (block.layout is! _TableRowLayout) {
+          _paintBlockContent(
+            canvas,
+            block.row,
+            block.layout,
+            text,
+            rect,
+            _row(index).position + block.position,
+          );
+        }
+      },
+    );
+    canvas.restore();
+  }
+
   int _paintCount = 0;
   @override
   void paint(PaintingContext context, Offset offset) {
@@ -1357,42 +1686,19 @@ class _RenderEditorViewport extends RenderBox
     canvas.clipRect(Offset.zero & size);
     final selection = _controller.state.selection;
     for (var i = _firstVisible; i < _lastVisible; i++) {
-      final row = _row(i);
-      _layoutBlock(i);
-      if (row.node.type == 'codeBlock') {
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(
-            rowRect(row.position),
-            const Radius.circular(12),
-          ),
-          Paint()..color = _style.codeBackground,
-        );
-        if (_style.codeHeaderDivider case final divider?
-            when _codeBlockHeader != null) {
-          final rect = rowRect(row.position),
-              y = rect.top + _style.codeBlockPadding.top - 6;
-          canvas.drawLine(
-            Offset(rect.left, y),
-            Offset(rect.right, y),
-            Paint()
-              ..color = divider
-              ..strokeWidth = .5,
-          );
-        }
-      }
-      for (final (x, quotePosition) in row.quotes) {
-        final continues =
+      final row = _row(i), layout = _layoutBlock(i);
+      _paintBlockBackground(
+        canvas,
+        row,
+        rowRect(row.position),
+        continues: (position) =>
             i + 1 < _doc.rowCount &&
-            _row(i + 1).quotes.any((q) => q.$2 == quotePosition);
-        canvas.drawRect(
-          Rect.fromLTWH(
-            _style.padding.left + x,
-            _rowOrigin(i).dy,
-            _style.quoteBorderWidth,
-            _heights!.heightAt(i) - (continues ? 0 : _spacing(i)),
-          ),
-          Paint()..color = _style.quoteBorderColor,
-        );
+            _row(i + 1).quotes.any((quote) => quote.$2 == position),
+        spacing: _spacing(i),
+        quoteLeft: _style.padding.left,
+      );
+      if (layout is _TableRowLayout) {
+        _paintCellRows(canvas, i, layout, background: true);
       }
     }
     // Visible rows are indexed before the background count reaches them.
@@ -1414,71 +1720,18 @@ class _RenderEditorViewport extends RenderBox
       }
     }
     for (var i = _firstVisible; i < _lastVisible; i++) {
-      final layout = _layoutBlock(i), origin = _origin(i);
-      _paintRowChrome(canvas, i);
+      final row = _row(i), layout = _layoutBlock(i);
       if (layout is _TableRowLayout) {
-        canvas.save();
-        canvas.clipRect(
-          _rowOrigin(i) &
-              Size(math.max(1, _contentWidth - _row(i).indent), layout.height),
-        );
-        layout.paint(
-          canvas,
-          origin,
-          _style,
-          _controller._searchIndex,
-        );
-        canvas.restore();
-      } else if (layout.node.type == 'horizontalRule') {
-        _paintRule(canvas, i);
-      } else if (_nodeViews.containsKey(layout.node.type)) {
-      } else if (!layout.node.isTextblock && layout is! _TableRowLayout) {
-        final card = RRect.fromRectAndRadius(
-          origin &
-              Size(math.max(1, _contentWidth - _row(i).indent), layout.height),
-          const Radius.circular(8),
-        );
-        final selected =
-            !_readOnly &&
-            selection is m.NodeSelection &&
-            selection.from == _row(i).position;
-        canvas.drawRRect(card, Paint()..color = _style.opaqueBackground);
-        canvas.drawRRect(
-          card,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = selected ? 2 : 1
-            ..color = selected ? _style.caretColor : _style.opaqueBorder,
-        );
-        canvas.drawParagraph(
-          layout.chunks.first.paragraph!,
-          origin +
-              Offset(
-                12,
-                math.max(0, (layout.height - layout.chunks.first.height) / 2),
-              ),
-        );
+        _paintCellRows(canvas, i, layout, background: false);
       } else {
-        if (layout.node.type == 'codeBlock') {
-          final card = rowRect(_row(i).position);
-          canvas.save();
-          canvas.clipRect(
-            Rect.fromLTRB(
-              card.left + 12,
-              card.top + _row(i).codeTop,
-              card.right - 12,
-              card.bottom - 12,
-            ),
-          );
-        }
-        var y = origin.dy;
-        for (final chunk in layout.chunks) {
-          if (y + chunk.height >= 0 && y <= size.height) {
-            _paintInlineChunk(canvas, chunk, Offset(origin.dx, y), _style);
-          }
-          y += chunk.height;
-        }
-        if (layout.node.type == 'codeBlock') canvas.restore();
+        _paintBlockContent(
+          canvas,
+          row,
+          layout,
+          _origin(i),
+          rowRect(row.position),
+          row.position,
+        );
       }
     }
     if (_placeholder.isNotEmpty &&
@@ -1561,6 +1814,36 @@ class _RenderEditorViewport extends RenderBox
     config.textDirection = _style.textDirection;
   }
 
+  Iterable<(int, _Row, Rect)> _visibleTasks() sync* {
+    for (var index = _firstVisible; index < _lastVisible; index++) {
+      final row = _row(index), layout = _layoutBlock(index);
+      if (layout is _TableRowLayout) {
+        for (final (block, cell) in layout.contentRows()) {
+          final rect = _checkboxFor(block.row, _origin(index) + block.origin);
+          if (rect == null) continue;
+          final clip = rect
+              .intersect((block.clip ?? cell.rect).shift(_origin(index)))
+              .intersect(Offset.zero & size);
+          if (!clip.isEmpty) {
+            yield (
+              row.position +
+                  block.position +
+                  block.row.taskPosition! -
+                  block.row.position,
+              block.row,
+              clip,
+            );
+          }
+        }
+      } else {
+        final rect = _checkboxFor(row, _rowOrigin(index));
+        if (rect != null && rect.overlaps(Offset.zero & size)) {
+          yield (row.taskPosition!, row, rect.intersect(Offset.zero & size));
+        }
+      }
+    }
+  }
+
   @override
   void assembleSemanticsNode(
     SemanticsNode node,
@@ -1569,15 +1852,14 @@ class _RenderEditorViewport extends RenderBox
   ) {
     final tasks = <SemanticsNode>[];
     final active = <int>{};
-    for (var i = _firstVisible; i < _lastVisible; i++) {
-      final row = _row(i), position = row.taskPosition;
-      if (position == null) continue;
-      final rect = taskCheckboxRect(row.position)!;
-      if (!rect.overlaps(Offset.zero & size)) continue;
-      active.add(position);
+    for (final (position, row, rect) in _visibleTasks()) {
+      if (!active.add(position)) {
+        final child = _taskSemantics[position]!;
+        child.rect = child.rect.expandToInclude(rect);
+        continue;
+      }
       final child = _taskSemantics.putIfAbsent(position, () => SemanticsNode());
-      child.rect = taskCheckboxRect(row.position)!
-          .intersect(Offset.zero & size);
+      child.rect = rect;
       final semantics = SemanticsConfiguration()
         ..isSemanticBoundary = true
         ..textDirection = _style.textDirection
