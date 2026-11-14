@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_editor/src/ime/ime_height.dart';
@@ -15,7 +14,6 @@ import 'package:moodiary_editor/src/toolbar/floating_bars.dart';
 import 'package:moodiary_editor/src/toolbar/toolbar_button.dart';
 import 'package:moodiary_editor/src/toolbar/toolbar_tools.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_native/moodiary_native.dart';
 import 'package:moodiary_storage/moodiary_storage.dart';
 import 'package:moodiary_storage/testing.dart';
 import 'package:mui/mui.dart';
@@ -39,15 +37,6 @@ class _FakeTarget implements ImeTarget {
     focusedNotifier.value = false;
   }
 }
-
-KeyboardEvent _event({required bool visible, required bool start}) =>
-    KeyboardEvent(
-      visible: visible,
-      height: visible ? 300 : 0,
-      durationMs: 250,
-      isStart: start,
-      floating: false,
-    );
 
 void main() {
   group('mergeOrder', () {
@@ -218,19 +207,6 @@ void main() {
       tester.view.devicePixelRatio = 3;
       tester.view.viewPadding = const FakeViewPadding(bottom: 60);
       addTearDown(tester.view.reset);
-      const channel =
-          'dev.flutter.pigeon.moodiary_native.EditorKeyboardEvents.keyboardEvents';
-      final messenger = tester.binding.defaultBinaryMessenger;
-      messenger.setMockMethodCallHandler(
-        const MethodChannel(channel, pigeonMethodCodec),
-        (_) async => null,
-      );
-      addTearDown(
-        () => messenger.setMockMethodCallHandler(
-          const MethodChannel(channel, pigeonMethodCodec),
-          null,
-        ),
-      );
       final controller = MoodiaryEditorController();
       final focus = controller.focusTarget as ValueNotifier<EditorFocusTarget>;
       final theme = buildMuiTheme(
@@ -256,6 +232,7 @@ void main() {
       ImePanelContainer<EditorPanel> container() =>
           tester.widget(find.byType(ImePanelContainer<EditorPanel>));
       expect(container().backgroundColor, theme.colorScheme.surface);
+      tester.view.viewInsets = const FakeViewPadding(bottom: 900);
       focus.value = .editor;
       await tester.pump();
       expect(controller.panel.type, ImePanelType.keyboard);
@@ -265,13 +242,7 @@ void main() {
       addTearDown(
         () => tester.binding.handleAppLifecycleStateChanged(.resumed),
       );
-      await messenger.handlePlatformMessage(
-        channel,
-        pigeonMethodCodec.encodeSuccessEnvelope(
-          _event(visible: false, start: true),
-        ),
-        (_) {},
-      );
+      tester.view.resetViewInsets();
       await tester.pumpAndSettle();
       expect(controller.panel.type, ImePanelType.none);
       expect(focus.value, EditorFocusTarget.editor);
@@ -298,6 +269,47 @@ void main() {
       await tester.pump();
     });
   }
+
+  testWidgets('打字时选中块保留键盘，键盘收起后才换成块面板', (tester) async {
+    getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
+    addTearDown(getIt.reset);
+    addTearDown(tester.view.reset);
+    final controller = MoodiaryEditorController();
+    final focus = controller.focusTarget as ValueNotifier<EditorFocusTarget>;
+    final state = controller.state as ValueNotifier<EditorState>;
+    await tester.pumpWidget(
+      TranslationProvider(
+        child: MaterialApp(
+          home: Scaffold(
+            resizeToAvoidBottomInset: false,
+            body: EditorToolbarHost(
+              controller: controller,
+              editable: true,
+              onInsertMedia: (_) async {},
+              child: const SizedBox.expand(),
+            ),
+          ),
+        ),
+      ),
+    );
+    tester.view.viewInsets = const FakeViewPadding(bottom: 900);
+    focus.value = .editor;
+    await tester.pump();
+    expect(controller.panel.type, ImePanelType.keyboard);
+
+    state.value = const EditorState(selection: .node);
+    await tester.pump();
+    expect(controller.panel.type, ImePanelType.keyboard);
+
+    state.value = const EditorState();
+    tester.view.resetViewInsets();
+    await tester.pumpAndSettle();
+    state.value = const EditorState(selection: .node);
+    await tester.pumpAndSettle();
+    expect(controller.panel.panel, EditorPanel.block);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump();
+  });
 
   testWidgets('宽度弹层：吸附 ±3 并预览，按住拖动只在松手提交一次，点轨道和读屏步进立即提交', (tester) async {
     tester.view.physicalSize = const Size(360, 640);
@@ -399,57 +411,6 @@ void main() {
     expect(picks, [50, 61, 75, 62, null, 99, 76]);
   });
 
-  group('EditorState.fromJson', () {
-    test('解析完整状态', () {
-      final state = EditorState.fromJson({
-        'marks': {'bold': true, 'italic': false, 'link': true},
-        'block': 'heading2',
-        'list': 'task',
-        'canIndent': true,
-        'canOutdent': false,
-        'canUndo': true,
-        'canRedo': false,
-        'selection': 'node',
-        'node': {
-          'type': 'image',
-          'attrs': {'src': 'image-1.png', 'widthPercent': 50},
-        },
-        'inTable': false,
-        'link': {'href': 'https://example.com', 'text': 'ex'},
-        'selectedText': '',
-      });
-      expect(state.marks, {EditorMark.bold, EditorMark.link});
-      expect(state.block, EditorBlock.heading2);
-      expect(state.block.headingLevel, 2);
-      expect(state.list, EditorList.task);
-      expect(state.nodeType, EditorNodeType.image);
-      expect(state.node?.attrs['widthPercent'], 50);
-      expect(state.link?.href, 'https://example.com');
-      expect(state.canUndo, isTrue);
-    });
-
-    test('缺字段或未知枚举值回落到默认', () {
-      final state = EditorState.fromJson({
-        'block': 'mystery',
-        'selection': 'node',
-        'node': {'type': 'mystery'},
-      });
-      expect(state.block, EditorBlock.paragraph);
-      expect(state.node, isNull);
-      expect(state.nodeType, isNull);
-      expect(state.list, isNull);
-      expect(state.marks, isEmpty);
-    });
-
-    test('非节点选区不报告选中节点类型', () {
-      final state = EditorState.fromJson({
-        'selection': 'caret',
-        'node': {'type': 'image', 'attrs': {}},
-      });
-      expect(state.nodeType, isNull);
-    });
-  });
-
   group('IME 高度', () {
     test('无效高度回落到默认值', () {
       expect(resolveImeHeight(null), defaultImeHeight);
@@ -467,17 +428,17 @@ void main() {
   group('ImePanelContainer', () {
     late _FakeTarget target;
     late ImePanelController<String> controller;
-    late StreamController<KeyboardEvent> events;
+    late StreamController<double> heights;
 
     setUp(() {
       getIt.registerSingleton<IKVStorage>(MemoryKVStorage());
       target = _FakeTarget();
       controller = ImePanelController<String>();
-      events = StreamController<KeyboardEvent>.broadcast();
+      heights = StreamController<double>.broadcast();
     });
 
     tearDown(() async {
-      await events.close();
+      await heights.close();
       await getIt.reset();
     });
 
@@ -496,9 +457,9 @@ void main() {
                 child: ImePanelContainer<String>(
                   controller: controller,
                   target: target,
-                  keyboardEvents: events.stream,
                   compact: (panel) => panel == 'block',
                   panelBuilder: (_, panel) => SizedBox(key: ValueKey(panel)),
+                  keyboardHeights: heights.stream,
                 ),
               ),
             ),
@@ -511,7 +472,7 @@ void main() {
     Future<void> keyboardUp(WidgetTester tester) async {
       await mount(tester, insets: 300);
       target.focusedNotifier.value = true;
-      events.add(_event(visible: true, start: true));
+      await mount(tester, insets: 300);
       await tester.pumpAndSettle();
     }
 
@@ -519,6 +480,96 @@ void main() {
       await keyboardUp(tester);
       expect(controller.type, ImePanelType.keyboard);
       expect(height(tester), 300);
+    });
+
+    testWidgets('键盘动画逐帧跟随，不叠加动画', (tester) async {
+      await keyboardUp(tester);
+      for (final insets in [220.0, 120.0, 40.0]) {
+        await mount(tester, insets: insets);
+        expect(height(tester), insets);
+      }
+      await mount(tester, insets: 150);
+      expect(height(tester), 150);
+    });
+
+    testWidgets('从面板切回键盘时先保持面板高度，键盘盖住后跟随', (tester) async {
+      await keyboardUp(tester);
+      controller.showPanel('format');
+      await tester.pumpAndSettle();
+      await mount(tester);
+      await tester.pumpAndSettle();
+      controller.showKeyboard();
+      await tester.pump();
+      await mount(tester, insets: 100);
+      await tester.pumpAndSettle();
+      expect(height(tester), 300);
+      await mount(tester, insets: 300);
+      await mount(tester, insets: 260);
+      expect(height(tester), 260);
+    });
+
+    testWidgets('原生高度一到就从面板切回键盘，占位直接取终态高度', (tester) async {
+      await keyboardUp(tester);
+      controller.showPanel('format');
+      await tester.pumpAndSettle();
+      await mount(tester);
+      heights.add(0);
+      await tester.pumpAndSettle();
+      expect(controller.type, ImePanelType.custom);
+
+      heights.add(280);
+      await tester.pump();
+      expect(controller.type, ImePanelType.keyboard);
+      await mount(tester, insets: 120);
+      await tester.pumpAndSettle();
+      expect(height(tester), 280);
+      await mount(tester, insets: 280);
+      await mount(tester, insets: 250);
+      expect(height(tester), 250);
+    });
+
+    testWidgets('原生收起事件立即退回 none，收起途中的 insets 不会切回键盘', (tester) async {
+      await keyboardUp(tester);
+      heights.add(0);
+      await tester.pump();
+      expect(controller.type, ImePanelType.none);
+      for (final insets in [200.0, 80.0]) {
+        await mount(tester, insets: insets);
+        expect(controller.type, ImePanelType.none);
+        expect(height(tester), insets);
+      }
+    });
+
+    testWidgets('回到前台时过时的收起事件不关键盘，键盘回来后收起才算用户操作', (tester) async {
+      await keyboardUp(tester);
+      tester.binding.handleAppLifecycleStateChanged(.paused);
+      await tester.pump();
+      tester.binding.handleAppLifecycleStateChanged(.resumed);
+      await tester.pump();
+
+      heights.add(0);
+      await tester.pump();
+      expect(controller.type, ImePanelType.none);
+      expect(target.calls, isNot(contains('dismiss')));
+      expect(target.focused.value, isTrue);
+
+      heights.add(300);
+      await tester.pump();
+      expect(controller.type, ImePanelType.keyboard);
+      heights.add(0);
+      await tester.pump();
+      expect(controller.type, ImePanelType.none);
+      expect(target.calls, contains('dismiss'));
+    });
+
+    testWidgets('键盘已在回来时，旧收起动画结束的 insets 不算收起', (tester) async {
+      await keyboardUp(tester);
+      heights.add(300);
+      await tester.pump();
+      await mount(tester);
+      await tester.pump();
+      expect(controller.type, ImePanelType.keyboard);
+      expect(target.calls, isNot(contains('dismiss')));
     });
 
     testWidgets('面板沿用量到的键盘高度并收起键盘', (tester) async {
@@ -535,12 +586,12 @@ void main() {
       await keyboardUp(tester);
       controller.showPanel('format');
       await tester.pumpAndSettle();
-      events.add(_event(visible: true, start: true));
+      await mount(tester, insets: 300);
       await tester.pumpAndSettle();
       expect(controller.type, ImePanelType.custom);
 
-      events.add(_event(visible: false, start: false));
-      events.add(_event(visible: true, start: true));
+      await mount(tester);
+      await mount(tester, insets: 300);
       await tester.pumpAndSettle();
       expect(controller.type, ImePanelType.keyboard);
       expect(target.calls.last, 'suppress:false');
@@ -582,15 +633,6 @@ void main() {
     testWidgets('悬浮键盘下面板照常可开', (tester) async {
       await mount(tester);
       target.focusedNotifier.value = true;
-      events.add(
-        KeyboardEvent(
-          visible: true,
-          height: 0,
-          durationMs: 0,
-          isStart: true,
-          floating: true,
-        ),
-      );
       await tester.pump();
       controller.showPanel('format');
       await tester.pumpAndSettle();
@@ -605,45 +647,23 @@ void main() {
       expect(target.calls, contains('dismiss'));
     });
 
-    testWidgets('安卓上用户收起键盘即失焦，iOS 交给 WebKit', (tester) async {
+    testWidgets('安卓上用户收起键盘即失焦，iOS 保留焦点', (tester) async {
       tester.binding.handleAppLifecycleStateChanged(.resumed);
       await keyboardUp(tester);
-      events.add(_event(visible: false, start: false));
+      await mount(tester);
       await tester.pumpAndSettle();
       expect(controller.type, ImePanelType.none);
       expect(target.calls, contains('dismiss'));
 
       debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
       target.calls.clear();
-      events.add(_event(visible: true, start: true));
+      await mount(tester, insets: 300);
       await tester.pumpAndSettle();
-      events.add(_event(visible: false, start: false));
+      await mount(tester);
       await tester.pumpAndSettle();
       debugDefaultTargetPlatformOverride = null;
       expect(controller.type, ImePanelType.none);
       expect(target.calls, isNot(contains('dismiss')));
-    });
-
-    testWidgets('安卓收起动画一开始就失焦，iOS 等动画结束', (tester) async {
-      tester.binding.handleAppLifecycleStateChanged(.resumed);
-      await keyboardUp(tester);
-      events.add(_event(visible: false, start: true));
-      await tester.pumpAndSettle();
-      expect(controller.type, ImePanelType.none);
-      expect(target.calls, contains('dismiss'));
-
-      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
-      target.focusedNotifier.value = true;
-      events.add(_event(visible: true, start: true));
-      await tester.pumpAndSettle();
-      events.add(_event(visible: false, start: true));
-      await tester.pumpAndSettle();
-      final typeAfterStart = controller.type;
-      events.add(_event(visible: false, start: false));
-      await tester.pumpAndSettle();
-      debugDefaultTargetPlatformOverride = null;
-      expect(typeAfterStart, ImePanelType.keyboard);
-      expect(controller.type, ImePanelType.none);
     });
 
     testWidgets('release 失焦并等键盘真正退场', (tester) async {

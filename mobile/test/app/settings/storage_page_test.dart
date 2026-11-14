@@ -19,7 +19,9 @@ void main() {
   setUpAll(() {
     setupPluralResolvers();
     root = Directory.systemTemp.createTempSync('storage-page-');
-    PlatformService.get().applicationCachePath = root.path;
+    PlatformService.get()
+      ..applicationCachePath = root.path
+      ..applicationSupportPath = '${root.path}/support';
   });
   tearDownAll(() => root.deleteSync(recursive: true));
   setUp(() => getIt.registerSingleton<SyncCancellation>(SyncCancellation()));

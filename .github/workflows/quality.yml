@@ -21,7 +21,6 @@ jobs:
     outputs:
       dart: ${{ steps.scope.outputs.dart }}
       rust: ${{ steps.scope.outputs.rust }}
-      editor: ${{ steps.scope.outputs.editor }}
     steps:
       - name: Scope
         id: scope
@@ -30,22 +29,21 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           if [ -z "$PR_NUMBER" ]; then
-            printf '%s\n' dart=true rust=true editor=true | tee -a "$GITHUB_OUTPUT"
+            printf '%s\n' dart=true rust=true | tee -a "$GITHUB_OUTPUT"
             exit 0
           fi
           files=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files" \
             --jq '.[] | .filename, (.previous_filename // empty)')
-          dart=false rust=false editor=false
+          dart=false rust=false
           while IFS= read -r f; do
             case $f in
-              .github/workflows/quality.yml) dart=true rust=true editor=true ;;
-              packages/feature_base/moodiary_editor/editor/* | i18n/web/*) editor=true ;;
+              .github/workflows/quality.yml) dart=true rust=true ;;
               packages/foundation/*/rust/*) dart=true rust=true ;;
               *.md | docs/* | res/* | .github/* | .vscode/* | LICENSE | .mcp.json) ;;
               *) dart=true ;;
             esac
           done <<<"$files"
-          printf '%s\n' "dart=$dart" "rust=$rust" "editor=$editor" | tee -a "$GITHUB_OUTPUT"
+          printf '%s\n' "dart=$dart" "rust=$rust" | tee -a "$GITHUB_OUTPUT"
 
   dart:
     name: Dart
@@ -119,32 +117,3 @@ jobs:
             echo "== $d"
             (cd "$d" && cargo clippy --all-targets -- -D warnings && cargo test)
           done
-
-  editor:
-    name: Editor
-    needs: changes
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.editor == 'true') }}
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/feature_base/moodiary_editor/editor
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Install
-        run: corepack pnpm install --frozen-lockfile
-
-      - name: Type-check
-        run: corepack pnpm type-check
-
-      - name: Test
-        run: corepack pnpm test

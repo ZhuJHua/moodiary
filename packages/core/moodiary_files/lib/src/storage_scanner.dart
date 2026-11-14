@@ -411,6 +411,9 @@ void _scan((SendPort, String, String, StorageScanInput) args) {
             );
           }
         }
+        for (final name in AppFiles.supportCacheEntries) {
+          walk(Directory(p.join(support, name)), area, kind: .cache);
+        }
       } else if (area == StorageArea.database) {
         final directory = Directory(p.join(support, 'database'));
         if (directory.existsSync()) {
@@ -441,6 +444,7 @@ void _scan((SendPort, String, String, StorageScanInput) args) {
             'video',
             'file',
             'migration_backup',
+            ...AppFiles.supportCacheEntries,
           };
           for (final child in directory.listSync(followLinks: false)) {
             final name = p.basename(child.path);

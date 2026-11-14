@@ -1,4 +1,3 @@
-// 枚举名即网页端 exec 的命令名，改名会断开桥接
 enum EditorCommand {
   toggleBold,
   toggleItalic,

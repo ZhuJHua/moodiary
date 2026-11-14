@@ -316,7 +316,6 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
   },
   'clean': (_) async {
     for (final path in [
-      'packages/feature_base/moodiary_editor/assets/editor',
       '.dart_tool/hooks_runner',
     ]) {
       final dir = Directory(path);

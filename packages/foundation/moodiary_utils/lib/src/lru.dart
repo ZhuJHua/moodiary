@@ -24,6 +24,8 @@ class LRUCache<K, V> {
     _map[key] = value;
   }
 
+  void remove(K key) => _map.remove(key);
+
   void clear() => _map.clear();
 
   int size() => _map.length;

@@ -50,6 +50,7 @@ final class EditorState {
   final bool inTable;
   final EditorLinkInfo? link;
   final String selectedText;
+  final bool contentError;
 
   const EditorState({
     this.marks = const {},
@@ -64,58 +65,56 @@ final class EditorState {
     this.inTable = false,
     this.link,
     this.selectedText = '',
+    this.contentError = false,
   });
 
   static const empty = EditorState();
 
-  factory EditorState.fromJson(Map<String, Object?> json) {
-    final marks = json['marks'];
-    final node = json['node'];
-    final link = json['link'];
-    final nodeType = node is Map
-        ? EditorNodeType.values.asNameMap()[node['type']]
-        : null;
-    return EditorState(
-      marks: {
-        if (marks is Map)
-          for (final mark in EditorMark.values)
-            if (marks[mark.name] == true) mark,
-      },
-      block: EditorBlock.values.asNameMap()[json['block']] ?? .paragraph,
-      list: EditorList.values.asNameMap()[json['list']],
-      canIndent: json['canIndent'] == true,
-      canOutdent: json['canOutdent'] == true,
-      canUndo: json['canUndo'] == true,
-      canRedo: json['canRedo'] == true,
-      selection:
-          EditorSelectionKind.values.asNameMap()[json['selection']] ?? .caret,
-      node: node is Map && nodeType != null
-          ? (
-              type: nodeType,
-              attrs: {
-                if (node['attrs'] case final Map attrs)
-                  for (final e in attrs.entries) '${e.key}': e.value,
-              },
-            )
-          : null,
-      inTable: json['inTable'] == true,
-      link: link is Map && link['href'] is String
-          ? (
-              href: link['href'] as String,
-              text: link['text'] is String ? link['text'] as String : '',
-            )
-          : null,
-      selectedText: json['selectedText'] is String
-          ? json['selectedText'] as String
-          : '',
-    );
-  }
-
+  @override
+  bool operator ==(Object other) =>
+      other is EditorState &&
+      block == other.block &&
+      list == other.list &&
+      canIndent == other.canIndent &&
+      canOutdent == other.canOutdent &&
+      canUndo == other.canUndo &&
+      canRedo == other.canRedo &&
+      selection == other.selection &&
+      inTable == other.inTable &&
+      link == other.link &&
+      contentError == other.contentError &&
+      selectedText == other.selectedText &&
+      marks.length == other.marks.length &&
+      marks.containsAll(other.marks) &&
+      node?.type == other.node?.type &&
+      (node == null ||
+          node!.attrs.length == other.node!.attrs.length &&
+              node!.attrs.entries.every(
+                (e) => other.node!.attrs[e.key] == e.value,
+              ));
+  @override
+  int get hashCode => Object.hash(
+    block,
+    list,
+    canIndent,
+    canOutdent,
+    canUndo,
+    canRedo,
+    selection,
+    inTable,
+    link,
+    selectedText,
+    Object.hashAllUnordered(marks),
+    node?.type,
+  );
   bool has(EditorMark mark) => marks.contains(mark);
 
   bool get textSelected => selection == .text;
 
   bool get inCodeBlock => block == .codeBlock;
 
-  EditorNodeType? get nodeType => selection == .node ? node?.type : null;
+  EditorNodeType? get nodeType =>
+      selection == .node || selection == .caret && node?.type == .horizontalRule
+      ? node?.type
+      : null;
 }

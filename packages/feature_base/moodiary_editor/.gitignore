@@ -2,10 +2,3 @@
 .dart_tool/
 build/
 doc/api/
-
-# TipTap/Vite editor web sources (editor/); the bundle is built by hook/build.dart
-assets/editor/
-editor/node_modules/
-editor/dist/
-editor/.vite/
-*.tsbuildinfo

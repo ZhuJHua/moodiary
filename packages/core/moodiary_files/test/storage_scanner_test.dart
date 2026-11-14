@@ -23,7 +23,7 @@ void main() {
       .audio: 5,
       .video: 13,
       .file: 7,
-      .cache: 19,
+      .cache: 24,
       .logs: 23,
       .legacyBackups: 31,
       .other: 37,
@@ -40,6 +40,7 @@ void main() {
     write('support/file/a.txt', 7);
     write('cache/tmp', 8);
     write('cache/sync-media/in-use', 11);
+    write('support/editor/index.html', 5);
     write('support/error.log', 13);
     write('support/error.log.1', 4);
     write('support/sync_logs/today', 6);
@@ -80,7 +81,7 @@ void main() {
     expect(events.last.complete, isTrue);
     expect(events.last.done, StorageArea.values.toSet());
     expect(events.last.bytes, expected);
-    expect(events.last.candidates[StorageCleanupKind.cache]!.bytes, 8);
+    expect(events.last.candidates[StorageCleanupKind.cache]!.bytes, 13);
     expect(events.last.total, expected.values.fold(0, (a, b) => a + b));
     expect(
       events[3].done,
@@ -256,6 +257,24 @@ void main() {
       expect(File('${root.path}/cache/export/keep').existsSync(), isTrue);
     },
   );
+
+  test('support cache entries are cleaned with the cache snapshot', () async {
+    write('support/editor/index.html', 5);
+    write('support/image/a.jpg', 3);
+    expect(
+      await AppFiles.clearCache(
+        cachePath: '${root.path}/cache',
+        supportPath: '${root.path}/support',
+        filePaths: {
+          '${root.path}/support/editor/index.html',
+          '${root.path}/support/image/a.jpg',
+        },
+      ),
+      5,
+    );
+    expect(Directory('${root.path}/support/editor').existsSync(), isFalse);
+    expect(File('${root.path}/support/image/a.jpg').existsSync(), isTrue);
+  });
 
   test(
     'cache root and in-use workspaces survive; idle children are removed',

@@ -9,6 +9,8 @@ import 'package:mui/mui.dart';
 class EditorBody extends StatefulWidget {
   final DiaryType type;
   final String initialContent;
+  final String? initialContentText;
+  final ValueChanged<TiptapMetadata>? onMetadataChanged;
 
   final String initialTitle;
   final ValueChanged<String>? onTitleChanged;
@@ -48,6 +50,8 @@ class EditorBody extends StatefulWidget {
     super.key,
     required this.type,
     required this.initialContent,
+    this.initialContentText,
+    this.onMetadataChanged,
     required this.onChanged,
     this.initialTitle = '',
     this.onTitleChanged,
@@ -107,12 +111,14 @@ class _EditorBodyState extends State<EditorBody> {
 
   @override
   Widget build(BuildContext context) {
-    // webview 的 Android textZoom 钉死为 100，系统字号缩放需在此显式算出下发
+    // 文档排版统一使用宿主提供的系统字号缩放
     final fontScale = MediaQuery.textScalerOf(context).scale(16) / 16;
     return ValueListenableBuilder<bool>(
       valueListenable: MoodiaryKVs.firstLineIndent.getNotifier(),
       builder: (context, firstLineIndent, _) => MoodiaryEditorView(
         initialContent: _content,
+        initialContentText: widget.initialContentText,
+        onMetadataChanged: widget.onMetadataChanged,
         initialTitle: widget.initialTitle,
         onTitleChanged: widget.onTitleChanged,
         controller: widget.editorController,
@@ -120,8 +126,7 @@ class _EditorBodyState extends State<EditorBody> {
         editable: widget.editable && widget.type.isEditable,
         firstLineIndent: firstLineIndent,
         fontScale: fontScale,
-        onChanged: (content) =>
-            widget.onChanged(content, TiptapContent.parse(content).plainText),
+        onChangedWithText: widget.onChanged,
         onOpenDiaryLink: widget.onOpenDiaryLink,
         metaJson: widget.metaJson,
         metaReady: widget.metaReady,

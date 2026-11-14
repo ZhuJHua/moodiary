@@ -2,12 +2,23 @@ sealed class VideoSource {
   const VideoSource();
 
   const factory VideoSource.file(String path) = VideoFileSource;
+  const factory VideoSource.network(Uri uri) = VideoNetworkSource;
+
+  factory VideoSource.fromPath(String path) =>
+      path.startsWith('http://') || path.startsWith('https://')
+      ? VideoSource.network(Uri.parse(path))
+      : VideoSource.file(path);
 }
 
 class VideoFileSource extends VideoSource {
   final String path;
 
   const VideoFileSource(this.path);
+}
+
+class VideoNetworkSource extends VideoSource {
+  final Uri uri;
+  const VideoNetworkSource(this.uri);
 }
 
 sealed class VideoPlaybackState {

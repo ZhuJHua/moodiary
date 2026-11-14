@@ -40,14 +40,6 @@ jobs:
         with:
           flutter-version: ${{ env.flutter-version }}
 
-      - name: Set Up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-
-      - name: Enable Corepack
-        run: corepack enable
-
       - name: Set Up Rust
         working-directory: packages/foundation/fast_image/rust
         run: rustup show active-toolchain

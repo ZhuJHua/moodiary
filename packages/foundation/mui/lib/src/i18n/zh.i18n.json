@@ -1,6 +1,7 @@
 {
   "ok": "确认",
   "cancel": "取消",
+  "close": "关闭",
   "back": "返回",
   "colorPickerTitle": "选择颜色",
   "toastLoading": "加载中",

@@ -1,7 +1,5 @@
 {
   "audioFileError": "音频文件错误",
-  "unsupportedPlatform": "当前平台暂不支持编辑器",
-  "loadFailed": "编辑器加载失败\n{error}",
   "pickCategory": "选择分类",
   "noCategory": "不分类",
   "migrationTitle": "升级数据迁移",
@@ -100,6 +98,10 @@
     "tableDelete": "删除表格",
     "copyCode": "复制代码",
     "exitCode": "跳出代码块",
+    "pasteFormatted": "已整理格式",
+    "restoreOriginal": "还原原文",
+    "pasteKeptFormat": "已保留格式",
+    "pasteUsePlain": "转为纯文本",
     "openLink": "打开链接",
     "copyLink": "复制链接",
     "editLink": "编辑链接",
@@ -132,5 +134,28 @@
     "attachmentFailed": "附件保存失败",
     "openFailed": "没有可以打开它的应用",
     "insertFailed": "插入失败"
+  },
+  "content": {
+    "audioProgress": "音频进度",
+    "videoProgress": "视频进度",
+    "codeCopy": "复制",
+    "codeCopied": "已复制",
+    "titlePlaceholder": "标题",
+    "bodyPlaceholder": "正文",
+    "codeAutoDetect": "自动识别",
+    "plainText": "纯文本",
+    "mute": "静音",
+    "fullscreen": "全屏播放"
+  },
+  "meta": {
+    "mood": "心情",
+    "weather": "天气",
+    "place": "位置",
+    "category": "分类",
+    "tag": "标签",
+    "addTag": "添加标签",
+    "removeTag": "删除标签",
+    "moodUnset": "未记录",
+    "moodClear": "不记录心情"
   }
 }

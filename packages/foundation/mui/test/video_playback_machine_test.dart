@@ -84,6 +84,20 @@ class FakePort implements VideoPlaybackPort {
 }
 
 void main() {
+  test('video source paths preserve local paths and network URIs', () {
+    for (final path in ['video.mp4', '/tmp/video.mp4', 'http-video.mp4']) {
+      expect((VideoSource.fromPath(path) as VideoFileSource).path, path);
+    }
+    for (final path in [
+      'http://example.com/video.mp4',
+      'https://example.com/video.mp4',
+    ]) {
+      expect(
+        (VideoSource.fromPath(path) as VideoNetworkSource).uri,
+        Uri.parse(path),
+      );
+    }
+  });
   late List<FakePort> ports;
   MVideoPlaybackController? c;
 

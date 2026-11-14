@@ -1,6 +1,7 @@
 {
   "ok": "OK",
   "cancel": "Cancel",
+  "close": "Close",
   "back": "Back",
   "colorPickerTitle": "Pick a color",
   "toastLoading": "Loading",

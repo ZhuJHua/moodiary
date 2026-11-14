@@ -3,8 +3,9 @@ import Flutter
 public class MoodiaryNativePlugin: NSObject, FlutterPlugin {
   public static func register(with registrar: FlutterPluginRegistrar) {
     let messenger = registrar.messenger()
-    let keyboard = EditorKeyboard(registrar: registrar)
-    EditorKeyboardApiSetup.setUp(binaryMessenger: messenger, api: keyboard)
-    KeyboardEventsStreamHandler.register(with: messenger, streamHandler: keyboard.events)
+    HtmlClipboardApiSetup.setUp(binaryMessenger: messenger, api: HtmlClipboard())
+    ImageTransferApiSetup.setUp(binaryMessenger: messenger, api: ImageTransfer())
+    KeyboardHeightStreamHandler.register(with: messenger, streamHandler: KeyboardHeight())
+    SystemPasteApiSetup.setUp(binaryMessenger: messenger, api: SystemPaste(messenger: messenger))
   }
 }
