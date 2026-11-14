@@ -46,6 +46,7 @@ void main() {
       for (final hero in tester.widgetList<Hero>(find.byType(Hero))) {
         expect(hero.flightShuttleBuilder, isNull);
       }
+      await tester.pumpAndSettle();
       await tester.drag(find.byType(PageView), const Offset(-800, 0));
       await tester.pumpAndSettle();
       expect(find.text('3 / 3'), findsOneWidget);

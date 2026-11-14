@@ -25,6 +25,7 @@ class _MediaNodeState extends State<_MediaNode> {
   ImageProvider? _imageProvider;
   ImageStream? _imageStream;
   ImageStreamListener? _imageListener;
+  ImageInfo? _imageFrame;
   _MediaPlayback? _playback;
   MVideoPlaybackController? get _video => _playback?.video;
   components.AudioPlaybackController? get _audio => _playback?.audio;
@@ -130,6 +131,8 @@ class _MediaNodeState extends State<_MediaNode> {
     _imageStream = null;
     _imageProvider = null;
     _imagePath = null;
+    _imageFrame?.dispose();
+    _imageFrame = null;
   }
 
   Widget _image(String path, {BoxFit fit = BoxFit.contain}) {
@@ -152,10 +155,12 @@ class _MediaNodeState extends State<_MediaNode> {
         );
         _imageListener = ImageStreamListener((info, synchronous) {
           final ratio = info.image.width / info.image.height;
-          info.dispose();
           if (!mounted || host._disposed || generation != host._generation) {
+            info.dispose();
             return;
           }
+          _imageFrame?.dispose();
+          _imageFrame = info;
           final changed = host._recordImageRatio(name, ratio, probed: false);
           if (!synchronous && changed) setState(() {});
         }, onError: (Object error, StackTrace? stack) {});
@@ -345,16 +350,93 @@ class _MediaNodeState extends State<_MediaNode> {
       }
       child = ClipRRect(borderRadius: BorderRadius.circular(12), child: child);
       if (type == 'image' && !_name.startsWith('data:')) {
-        child = Hero(tag: (widget.host, widget.view.position), child: child);
+        final card = child;
+        child = Hero(
+          tag: (widget.host, widget.view.position),
+          flightShuttleBuilder:
+              (context, animation, direction, fromContext, toContext) {
+                final gallery = direction == HeroFlightDirection.push
+                    ? toContext
+                    : fromContext;
+                final routeAnimation = ModalRoute.of(gallery)?.animation;
+                final frame = _imageFrame;
+                if (frame == null) return card;
+                final source = direction == HeroFlightDirection.push
+                    ? fromContext
+                    : toContext;
+                return _ImageFlight(
+                  frame: frame,
+                  cardSize: (source.findRenderObject()! as RenderBox).size,
+                  animation: routeAnimation ?? animation,
+                );
+              },
+          child: child,
+        );
       }
       return MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
           onTap: _select,
-          onDoubleTap: () => type == 'image'
-              ? widget.host.previewImage(widget.view.position)
-              : _select(),
+          onDoubleTap: type == 'image' && !widget.host.readOnly
+              ? () => widget.host.previewImage(widget.view.position)
+              : null,
           child: child,
+        ),
+      );
+    },
+  );
+}
+
+class _ImageFlight extends StatefulWidget {
+  const _ImageFlight({
+    required this.frame,
+    required this.cardSize,
+    required this.animation,
+  });
+
+  final ImageInfo frame;
+  final Size cardSize;
+  final Animation<double> animation;
+
+  @override
+  State<_ImageFlight> createState() => _ImageFlightState();
+}
+
+class _ImageFlightState extends State<_ImageFlight> {
+  late final ImageInfo _frame = widget.frame.clone();
+
+  @override
+  void dispose() {
+    _frame.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final size = applyBoxFit(
+        BoxFit.contain,
+        widget.cardSize,
+        constraints.biggest,
+      ).destination;
+      return Center(
+        child: SizedBox.fromSize(
+          size: size,
+          child: AnimatedBuilder(
+            animation: widget.animation,
+            builder: (context, child) => ClipRRect(
+              borderRadius: BorderRadius.circular(
+                12 * (1 - widget.animation.value),
+              ),
+              child: child,
+            ),
+            child: RawImage(
+              image: _frame.image,
+              scale: _frame.scale,
+              fit: BoxFit.contain,
+              filterQuality: FilterQuality.medium,
+            ),
+          ),
         ),
       );
     },

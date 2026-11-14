@@ -1191,7 +1191,7 @@ void main() {
       final heroes = tester.widgetList<Hero>(find.byType(Hero)).toList();
       for (final hero in heroes) {
         expect(hero.child, isA<ClipRRect>());
-        expect(hero.flightShuttleBuilder, isNull);
+        expect(hero.flightShuttleBuilder, isNotNull);
       }
       final tags = heroes.map((hero) => hero.tag).toList();
       expect(tags.toSet(), hasLength(positions.length));

@@ -14,6 +14,144 @@ import 'package:mui/mui.dart';
 import 'package:path/path.dart' as p;
 import 'package:photo_view/photo_view.dart';
 
+ImageProvider _previewProvider(
+  String image,
+  FastImageTier? tier,
+  ImageProvider Function(String, FastImageTier?)? builder,
+) {
+  if (isNetworkMedia(image)) {
+    return builder?.call(image, null) ?? CachedNetworkImageProvider(image);
+  }
+  final full = FastImage(image);
+  final cached = PaintingBinding.instance.imageCache.statusForKey(full);
+  final previewTier =
+      tier ?? (cached.live || cached.keepAlive ? null : FastImageTier.m);
+  return builder?.call(image, previewTier) ??
+      FastImage(image, tier: previewTier);
+}
+
+class _ImageBrowserPreparation extends ChangeNotifier {
+  _ImageBrowserPreparation({
+    required this.image,
+    required this.provider,
+    required ImageConfiguration configuration,
+    required Future<FastTileSource?> Function(String) regionResolver,
+  }) {
+    region = _resolve(regionResolver);
+    final decoded = Completer<void>();
+    ready = Future.wait<void>([decoded.future, region.then((_) {})])
+        .then<void>((_) {});
+    _listener = ImageStreamListener(
+      (info, _) {
+        if (_disposed || frame != null) {
+          info.dispose();
+          return;
+        }
+        frame = info;
+        if (!decoded.isCompleted) decoded.complete();
+        notifyListeners();
+      },
+      onError: (Object error, StackTrace? stack) {
+        if (!decoded.isCompleted) decoded.complete();
+      },
+    );
+    try {
+      _stream = provider.resolve(configuration)..addListener(_listener);
+    } catch (_) {
+      if (!decoded.isCompleted) decoded.complete();
+    }
+  }
+
+  final String image;
+  final ImageProvider provider;
+  late final Future<FastTileSource?> region;
+  late final Future<void> ready;
+  late final ImageStreamListener _listener;
+  ImageStream? _stream;
+  ImageInfo? frame;
+  bool _disposed = false;
+
+  Future<FastTileSource?> _resolve(
+    Future<FastTileSource?> Function(String) resolver,
+  ) async {
+    if (isNetworkMedia(image)) return null;
+    try {
+      return await resolver(image);
+    } catch (error) {
+      logger.d('probe failed: $image ($error)');
+      return null;
+    }
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _stream?.removeListener(_listener);
+    frame?.dispose();
+    super.dispose();
+  }
+}
+
+class _ImageBrowserRoute extends PageRouteBuilder<void> {
+  _ImageBrowserRoute({
+    required this.preparation,
+    required MImageBrowser browser,
+  }) : super(
+         opaque: false,
+         fullscreenDialog: true,
+         transitionDuration: const Duration(milliseconds: 250),
+         reverseTransitionDuration: const Duration(milliseconds: 250),
+         pageBuilder: (_, _, _) => browser,
+         transitionsBuilder: (_, animation, _, child) => Listener(
+           behavior: HitTestBehavior.opaque,
+           child: FadeTransition(opacity: animation, child: child),
+         ),
+       );
+
+  final _ImageBrowserPreparation preparation;
+
+  @override
+  Simulation? createSimulation({required bool forward}) => forward
+      ? _ImageBrowserPushSimulation(
+          WidgetsBinding.instance.disableAnimations
+              ? transitionDuration * .05
+              : transitionDuration,
+        )
+      : null;
+
+  @override
+  void dispose() {
+    preparation.dispose();
+    super.dispose();
+  }
+}
+
+class _ImageBrowserPushSimulation extends Simulation {
+  _ImageBrowserPushSimulation(Duration duration)
+    : _seconds = duration.inMicroseconds / Duration.microsecondsPerSecond {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _painted = true);
+    });
+  }
+
+  final double _seconds;
+  bool _painted = false;
+  double? _startedAt;
+
+  @override
+  double x(double time) {
+    if (!_painted) return 0;
+    _startedAt ??= time;
+    return ((time - _startedAt!) / _seconds).clamp(0, 1);
+  }
+
+  @override
+  double dx(double time) => _painted ? 1 / _seconds : 0;
+
+  @override
+  bool isDone(double time) => x(time) >= 1;
+}
+
 class MImageBrowser extends StatefulWidget {
   final List<String> images;
   final int initialIndex;
@@ -22,6 +160,12 @@ class MImageBrowser extends StatefulWidget {
 
   final FastImageTier? placeholderTier;
 
+  @visibleForTesting
+  final Future<FastTileSource?> Function(String)? regionResolver;
+
+  @visibleForTesting
+  final ImageProvider Function(String, FastImageTier?)? imageProviderBuilder;
+
   const MImageBrowser({
     super.key,
     required this.images,
@@ -29,6 +173,8 @@ class MImageBrowser extends StatefulWidget {
     this.heroPrefix,
     this.heroTags,
     this.placeholderTier,
+    this.regionResolver,
+    this.imageProviderBuilder,
   }) : assert(heroPrefix == null || heroTags == null);
 
   static Future<void> show(
@@ -38,14 +184,37 @@ class MImageBrowser extends StatefulWidget {
     String? heroPrefix,
     List<Object>? heroTags,
     FastImageTier? placeholderTier,
-  }) {
-    return context.pushTransparentRoute(
-      MImageBrowser(
-        images: images,
-        initialIndex: initialIndex,
-        heroPrefix: heroPrefix,
-        heroTags: heroTags,
-        placeholderTier: placeholderTier,
+    @visibleForTesting Future<FastTileSource?> Function(String)? regionResolver,
+    @visibleForTesting
+    ImageProvider Function(String, FastImageTier?)? imageProviderBuilder,
+  }) async {
+    final image = images[initialIndex];
+    final preparation = _ImageBrowserPreparation(
+      image: image,
+      provider: _previewProvider(image, placeholderTier, imageProviderBuilder),
+      configuration: createLocalImageConfiguration(context),
+      regionResolver: regionResolver ?? FastTileSource.resolve,
+    );
+    await preparation.ready.timeout(
+      const Duration(milliseconds: 150),
+      onTimeout: () {},
+    );
+    if (!context.mounted || ModalRoute.of(context)?.isCurrent == false) {
+      preparation.dispose();
+      return;
+    }
+    await Navigator.of(context).push<void>(
+      _ImageBrowserRoute(
+        preparation: preparation,
+        browser: MImageBrowser(
+          images: images,
+          initialIndex: initialIndex,
+          heroPrefix: heroPrefix,
+          heroTags: heroTags,
+          placeholderTier: placeholderTier,
+          regionResolver: regionResolver,
+          imageProviderBuilder: imageProviderBuilder,
+        ),
       ),
     );
   }
@@ -71,21 +240,90 @@ class _MImageBrowserState extends State<MImageBrowser> {
 
   final _probing = <String>{};
 
-  ImageProvider _providerOf(String image) => isNetworkMedia(image)
-      ? CachedNetworkImageProvider(image)
-      : FastImage(image) as ImageProvider;
+  _ImageBrowserPreparation? _preparation;
+  Animation<double>? _routeAnimation;
+  bool _interactive = false;
+  bool _closing = false;
+  bool _ownsPreparation = false;
+
+  ImageProvider _providerOf(String image) =>
+      widget.imageProviderBuilder?.call(image, null) ??
+      (isNetworkMedia(image)
+          ? CachedNetworkImageProvider(image)
+          : FastImage(image) as ImageProvider);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (_routeAnimation != route?.animation) {
+      _routeAnimation?.removeStatusListener(_routeChanged);
+      _routeAnimation = route?.animation;
+      _routeAnimation?.addStatusListener(_routeChanged);
+    }
+    if (route is _ImageBrowserRoute) _preparation = route.preparation;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _closing) return;
+      if (_preparation == null) {
+        _ownsPreparation = true;
+        _preparation = _ImageBrowserPreparation(
+          image: widget.images[_current],
+          provider: _previewProvider(
+            widget.images[_current],
+            widget.placeholderTier,
+            widget.imageProviderBuilder,
+          ),
+          configuration: createLocalImageConfiguration(context),
+          regionResolver: widget.regionResolver ?? FastTileSource.resolve,
+        );
+        setState(() {});
+      }
+      if (_routeAnimation == null || _routeAnimation!.isCompleted) {
+        _activate();
+      }
+    });
+  }
+
+  void _routeChanged(AnimationStatus status) {
+    if (status == .completed) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _activate());
+    }
+  }
+
+  void _activate() {
+    if (!mounted || _interactive || _closing) return;
+    setState(() => _interactive = true);
+    unawaited(_probe(widget.images[_current]));
+  }
+
+  void _dismiss() {
+    if (!mounted || _closing) return;
+    final route = ModalRoute.of(context);
+    if (route?.isCurrent == false) return;
+    _closing = true;
+    Navigator.of(context).pop();
+  }
 
   @override
   void dispose() {
+    _routeAnimation?.removeStatusListener(_routeChanged);
+    if (_ownsPreparation) _preparation?.dispose();
     _pageController.dispose();
     super.dispose();
   }
 
   Future<void> _probe(String image) async {
-    if (_regions.containsKey(image) || _probing.contains(image)) return;
+    if (isNetworkMedia(image) ||
+        _regions.containsKey(image) ||
+        _probing.contains(image)) {
+      return;
+    }
     _probing.add(image);
     try {
-      final source = await FastTileSource.resolve(image);
+      final preparation = _preparation;
+      final source = await (preparation?.image == image
+          ? preparation!.region
+          : (widget.regionResolver ?? FastTileSource.resolve)(image));
       if (!mounted) return;
       setState(() => _regions[image] = source);
     } catch (e) {
@@ -102,7 +340,7 @@ class _MImageBrowserState extends State<MImageBrowser> {
     return Stack(
       children: [
         DismissiblePage(
-          onDismissed: () => Navigator.of(context).pop(),
+          onDismissed: _dismiss,
           onDragUpdate: (details) => setState(() => _chrome = details.opacity),
           direction: .vertical,
           backgroundColor: Colors.black,
@@ -120,7 +358,7 @@ class _MImageBrowserState extends State<MImageBrowser> {
             child: IconButton(
               icon: const Icon(LucideIcons.x, color: Colors.white),
               style: IconButton.styleFrom(backgroundColor: Colors.black38),
-              onPressed: () => Navigator.of(context).maybePop(),
+              onPressed: _dismiss,
             ),
           ),
         ),
@@ -201,13 +439,16 @@ class _MImageBrowserState extends State<MImageBrowser> {
       'Gallery Hero tags must be unique',
     );
     final Widget gallery;
-    if (widget.images.length == 1) {
-      gallery = _buildPage(0, hero: hero);
+    if (!_interactive || widget.images.length == 1) {
+      gallery = _buildPage(_current, hero: hero);
     } else {
       gallery = PageView.builder(
         controller: _pageController,
         physics: _zoomed ? const NeverScrollableScrollPhysics() : null,
-        onPageChanged: (i) => setState(() => _current = i),
+        onPageChanged: (index) {
+          setState(() => _current = index);
+          unawaited(_probe(widget.images[index]));
+        },
         itemCount: widget.images.length,
         itemBuilder: (context, index) => HeroMode(
           enabled: hero && index == _current,
@@ -220,14 +461,30 @@ class _MImageBrowserState extends State<MImageBrowser> {
 
   Widget _buildPage(int index, {required bool hero}) {
     final image = widget.images[index];
-    final placeholder = _placeholderOf(image);
+    final placeholder = _interactive ? _placeholderOf(image) : null;
     final local = !isNetworkMedia(image);
-    if (local && !_regions.containsKey(image)) {
-      unawaited(_probe(image));
-    }
     final region = _regions[image];
     final Widget page;
-    if (region != null) {
+    if (!_interactive) {
+      final preparation = _preparation;
+      page = GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: _dismiss,
+        child: preparation == null || preparation.image != image
+            ? const SizedBox.expand()
+            : AnimatedBuilder(
+                animation: preparation,
+                builder: (context, _) => RawImage(
+                  image: preparation.frame?.image,
+                  scale: preparation.frame?.scale ?? 1,
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.medium,
+                  width: double.infinity,
+                  height: double.infinity,
+                ),
+              ),
+      );
+    } else if (region != null) {
       page = FastTileImageViewer(
         path: image,
         decodePath: region.decodePath,
@@ -235,16 +492,16 @@ class _MImageBrowserState extends State<MImageBrowser> {
         overview: placeholder ?? FastImage(image, tier: .m),
         active: index == _current,
         onScaleState: (state) => _onScaleState(index, state),
-        onTap: () => Navigator.of(context).maybePop(),
+        onTap: _dismiss,
       );
-    } else if (local && _probing.contains(image)) {
+    } else if (local && (_probing.contains(image) || index != _current)) {
       page = PhotoView(
         imageProvider: placeholder ?? FastImage(image, tier: .m),
         backgroundDecoration: const BoxDecoration(color: Colors.transparent),
         initialScale: PhotoViewComputedScale.contained,
         minScale: PhotoViewComputedScale.contained,
         maxScale: PhotoViewComputedScale.contained,
-        onTapUp: (_, _, _) => Navigator.of(context).maybePop(),
+        onTapUp: (_, _, _) => _dismiss(),
       );
     } else {
       page = PhotoView(
@@ -254,7 +511,7 @@ class _MImageBrowserState extends State<MImageBrowser> {
         minScale: PhotoViewComputedScale.contained,
         maxScale: PhotoViewComputedScale.covered * 3,
         scaleStateChangedCallback: (state) => _onScaleState(index, state),
-        onTapUp: (_, _, _) => Navigator.of(context).maybePop(),
+        onTapUp: (_, _, _) => _dismiss(),
         loadingBuilder: (_, _) => placeholder != null
             ? Image(
                 image: placeholder,
@@ -293,8 +550,11 @@ class _MImageBrowserState extends State<MImageBrowser> {
 
   ImageProvider? _placeholderOf(String image) {
     final tier = widget.placeholderTier;
-    if (tier == null || isNetworkMedia(image)) return null;
-    return FastImage(image, tier: tier);
+    if (tier == null || isNetworkMedia(image)) {
+      return _preparation?.image == image ? _preparation!.provider : null;
+    }
+    return widget.imageProviderBuilder?.call(image, tier) ??
+        FastImage(image, tier: tier);
   }
 
   Future<void> _save() async {
