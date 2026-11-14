@@ -1,7 +1,5 @@
 part of '../moodiary_editor.dart';
 
-const _maxParkedMedia = 2;
-
 class _MediaPlayback extends ChangeNotifier {
   _MediaPlayback(this.host, this.type, this.name, this.source) {
     unawaited(_initialize());
@@ -15,12 +13,6 @@ class _MediaPlayback extends ChangeNotifier {
   bool disposed = false;
   int views = 0;
   bool _retained = false;
-  int _parkedAt = 0;
-  static int _parkClock = 0;
-
-  bool get _playing =>
-      audio?.progress.value.playing == true ||
-      video?.state.value.isPlayIntent == true;
 
   Future<void> _initialize() async {
     final resolved = await source;
@@ -223,24 +215,11 @@ extension _HostMedia on MoodiaryEditorHost {
   void _returnMedia(_MediaPlayback entry) {
     if (entry.disposed) return;
     entry.views--;
-    if (entry.views > 0) return;
-    if (!entry._retained) {
-      _disposeMedia(entry);
-      return;
+    if (entry.views == 0 && !entry._retained) {
+      _media.removeWhere((_, value) => identical(value, entry));
+      entry.dispose();
+      if (identical(_fullscreenMedia, entry)) _fullscreenMedia = null;
     }
-    entry._parkedAt = ++_MediaPlayback._parkClock;
-    final parked =
-        _media.values
-            .where((media) => media.views == 0 && !media._playing)
-            .toList()
-          ..sort((a, b) => b._parkedAt.compareTo(a._parkedAt));
-    parked.skip(_maxParkedMedia).forEach(_disposeMedia);
-  }
-
-  void _disposeMedia(_MediaPlayback entry) {
-    _media.removeWhere((_, value) => identical(value, entry));
-    entry.dispose();
-    if (identical(_fullscreenMedia, entry)) _fullscreenMedia = null;
   }
 
   void _syncMedia() {

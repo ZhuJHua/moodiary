@@ -586,45 +586,6 @@ void main() {
     }
   }
 
-  testWidgets('only the latest paused offscreen players stay alive', (
-    tester,
-  ) async {
-    final harness = _Harness([
-      for (var index = 0; index < 5; index++) ...[
-        _media('audio', 'parked-$index'),
-        ..._tail().take(12),
-      ],
-      ..._tail(),
-    ]);
-    await harness.mount(tester);
-    final scroll = harness.host.scroll;
-    var ticked = 0;
-    for (
-      var offset = 0.0;
-      offset < scroll.position.maxScrollExtent;
-      offset += 200
-    ) {
-      scroll.jumpTo(offset);
-      await settleEditor(tester);
-      for (; ticked < harness.audios.length; ticked++) {
-        harness.audios[ticked].tick(
-          const Duration(seconds: 5),
-          playing: ticked == 0,
-        );
-      }
-    }
-    await harness.away(tester);
-    expect(harness.audios, hasLength(5));
-    expect([for (final audio in harness.audios) audio.disposals], [
-      0,
-      1,
-      1,
-      0,
-      0,
-    ]);
-    expect(harness.audios.first.progress.value.playing, true);
-  });
-
   testWidgets('a late preview frame does not retain an unplayed video', (
     tester,
   ) async {
