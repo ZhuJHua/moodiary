@@ -64,7 +64,6 @@ extension on _RenderEditorViewport {
   }
 
   _ListMarkerLayout _buildMarker(_Row row, _BlockLayout layout) {
-    _controller.diagnostics.markerLayouts++;
     final marker = row.marker!, baseline = layout.chunks.first.firstBaseline;
     const origin = Offset.zero;
     final style = row.textStyle(_style).copyWith(color: _style.markerColor);

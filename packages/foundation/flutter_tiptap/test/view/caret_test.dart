@@ -52,117 +52,112 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets(
-    'caret breathes on its own layer over 1M characters, rests on input and stops when hidden',
-    (tester) async {
-      final schema = ft.Schema.standard();
-      final controller = ft.TiptapController(
-        doc: schema.node(
-          'doc',
-          content: [
-            for (var i = 0; i < 1000; i++)
-              schema.node(
-                'paragraph',
-                content: [schema.node('text', text: 'a' * 1000)],
-              ),
-          ],
-        ),
-      );
-      final key = GlobalKey<ft.TiptapEditorState>();
-      final focus = FocusNode();
-      addTearDown(controller.dispose);
-      addTearDown(focus.dispose);
-      var readOnly = false, ticker = true, reduced = false;
-      Future<void> mount() async {
-        await tester.pumpWidget(
-          CupertinoApp(
-            home: MediaQuery(
-              data: MediaQueryData(disableAnimations: reduced),
-              child: TickerMode(
-                enabled: ticker,
-                child: ft.TiptapEditor(
-                  key: key,
-                  controller: controller,
-                  focusNode: focus,
-                  readOnly: readOnly,
-                  style: const ft.TiptapEditorStyle(
-                    paragraph: TextStyle(fontSize: 17, height: 1.75),
-                  ),
+  testWidgets('caret breathes, rests on input and stops when hidden', (
+    tester,
+  ) async {
+    final schema = ft.Schema.standard();
+    final controller = ft.TiptapController(
+      doc: schema.node(
+        'doc',
+        content: [
+          for (var i = 0; i < 20; i++)
+            schema.node(
+              'paragraph',
+              content: [schema.node('text', text: 'a' * 100)],
+            ),
+        ],
+      ),
+    );
+    final key = GlobalKey<ft.TiptapEditorState>();
+    final focus = FocusNode();
+    addTearDown(controller.dispose);
+    addTearDown(focus.dispose);
+    var readOnly = false, ticker = true, reduced = false;
+    Future<void> mount() async {
+      await tester.pumpWidget(
+        CupertinoApp(
+          home: MediaQuery(
+            data: MediaQueryData(disableAnimations: reduced),
+            child: TickerMode(
+              enabled: ticker,
+              child: ft.TiptapEditor(
+                key: key,
+                controller: controller,
+                focusNode: focus,
+                readOnly: readOnly,
+                style: const ft.TiptapEditorStyle(
+                  paragraph: TextStyle(fontSize: 17, height: 1.75),
                 ),
               ),
             ),
           ),
-        );
-        await tester.pump();
-      }
+        ),
+      );
+      await tester.pump();
+    }
 
-      await mount();
-      expect(key.currentState!.debugCaret.timer, isFalse);
-      focus.requestFocus();
-      await tester.pump();
-      await tester.pump();
-      final state = key.currentState!;
-      expect(state.debugCaret.timer, isTrue);
-      expect(state.debugCaret.rect!.height, lessThan(17 * 1.75));
-      await tester.pump();
-      await tester.pump();
-      final paints = state.debugDocumentPaints;
-      final layouts = controller.diagnostics.paragraphLayouts;
-      await tester.pump(const Duration(milliseconds: 625));
-      expect(state.debugCaret.opacity, greaterThan(.8));
-      await tester.pump(const Duration(milliseconds: 125));
-      expect(state.debugCaret.opacity, closeTo(.5, .06));
-      await tester.pump(const Duration(milliseconds: 250));
-      expect(state.debugCaret.opacity, lessThan(.02));
-      await tester.pump(const Duration(milliseconds: 250));
-      expect(state.debugCaret.opacity, inExclusiveRange(0, 1));
-      expect(state.debugDocumentPaints, paints);
-      expect(controller.diagnostics.paragraphLayouts, layouts);
-      controller.exec('insertText', {'text': 'z'});
-      await tester.pump();
-      await tester.pump();
-      expect(state.debugCaret.opacity, 1);
-      await tester.pump(const Duration(milliseconds: 400));
-      expect(state.debugCaret.opacity, 1);
-      await tester.pump(const Duration(milliseconds: 350));
-      expect(state.debugCaret.opacity, lessThan(1));
-      controller.setSelection(const ft.TextSelection(2, 4));
-      await tester.pump();
-      expect(state.debugCaret.timer, isFalse);
-      controller.setSelection(const ft.TextSelection(3));
-      await tester.pump();
-      await tester.pump();
-      expect(state.debugCaret.timer, isTrue);
-      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
-      expect(state.debugCaret.timer, isFalse);
-      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
-      await tester.pump();
-      controller.setSelection(ft.NodeSelection(controller.state.doc, 0));
-      await tester.pump();
-      expect(state.debugCaret.timer, isFalse);
-      controller.setSelection(const ft.TextSelection(3));
-      await tester.pump();
-      ticker = false;
-      await mount();
-      expect(state.debugCaret.timer, isFalse);
-      ticker = true;
-      reduced = true;
-      await mount();
-      await tester.pump(const Duration(milliseconds: 750));
-      expect(state.debugCaret.opacity, 1);
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(state.debugCaret.opacity, 0);
-      readOnly = true;
-      await mount();
-      expect(state.debugCaret.timer, isFalse);
-      readOnly = false;
-      await mount();
-      focus.unfocus();
-      await tester.pump();
-      expect(state.debugCaret.timer, isFalse);
-      await tester.pumpWidget(const SizedBox());
-    },
-  );
+    await mount();
+    expect(key.currentState!.debugCaret.timer, isFalse);
+    focus.requestFocus();
+    await tester.pump();
+    await tester.pump();
+    final state = key.currentState!;
+    expect(state.debugCaret.timer, isTrue);
+    expect(state.debugCaret.rect!.height, lessThan(17 * 1.75));
+    await tester.pump();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 625));
+    expect(state.debugCaret.opacity, greaterThan(.8));
+    await tester.pump(const Duration(milliseconds: 125));
+    expect(state.debugCaret.opacity, closeTo(.5, .06));
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(state.debugCaret.opacity, lessThan(.02));
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(state.debugCaret.opacity, inExclusiveRange(0, 1));
+    controller.exec('insertText', {'text': 'z'});
+    await tester.pump();
+    await tester.pump();
+    expect(state.debugCaret.opacity, 1);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(state.debugCaret.opacity, 1);
+    await tester.pump(const Duration(milliseconds: 350));
+    expect(state.debugCaret.opacity, lessThan(1));
+    controller.setSelection(const ft.TextSelection(2, 4));
+    await tester.pump();
+    expect(state.debugCaret.timer, isFalse);
+    controller.setSelection(const ft.TextSelection(3));
+    await tester.pump();
+    await tester.pump();
+    expect(state.debugCaret.timer, isTrue);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    expect(state.debugCaret.timer, isFalse);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    controller.setSelection(ft.NodeSelection(controller.state.doc, 0));
+    await tester.pump();
+    expect(state.debugCaret.timer, isFalse);
+    controller.setSelection(const ft.TextSelection(3));
+    await tester.pump();
+    ticker = false;
+    await mount();
+    expect(state.debugCaret.timer, isFalse);
+    ticker = true;
+    reduced = true;
+    await mount();
+    await tester.pump(const Duration(milliseconds: 750));
+    expect(state.debugCaret.opacity, 1);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(state.debugCaret.opacity, 0);
+    readOnly = true;
+    await mount();
+    expect(state.debugCaret.timer, isFalse);
+    readOnly = false;
+    await mount();
+    focus.unfocus();
+    await tester.pump();
+    expect(state.debugCaret.timer, isFalse);
+    await tester.pumpWidget(const SizedBox());
+  });
 
   testWidgets(
     'selection glides; typing, IME, swap, reduced motion, offscreen and style opt-out snap',

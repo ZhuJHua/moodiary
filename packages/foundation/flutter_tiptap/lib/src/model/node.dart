@@ -188,8 +188,6 @@ int _rawTextLength(Map raw) => raw['text'] is String
 
 /// An immutable document node with attributes, marks and persistent child content.
 class Node {
-  @visibleForTesting
-  static int debugRowLookups = 0;
   Node._(
     this.schema,
     this.type,
@@ -285,7 +283,6 @@ class Node {
       : content.blocks?.summary.rowCount ?? 0;
   int rowsBefore(int childIndex) => content.blocks?.rowsBefore(childIndex) ?? 0;
   DocumentRow rowAt(int row) {
-    debugRowLookups++;
     RangeError.checkValueInInterval(row, 0, rowCount - 1, 'row');
     var node = this, position = type == 'doc' ? -1 : 0;
     final path = <int>[];
@@ -602,8 +599,6 @@ class Slice {
 }
 
 class ResolvedPos {
-  @visibleForTesting
-  static int debugResolutions = 0;
   ResolvedPos._(
     this.doc,
     this.pos,
@@ -705,7 +700,6 @@ class ResolvedPos {
   }
 
   static ResolvedPos _resolve(Node doc, int pos) {
-    debugResolutions++;
     RangeError.checkValueInInterval(pos, 0, doc.content.size, 'pos');
     final bi = doc.content.indexAt(pos);
     final bs = doc.content.positionAt(bi);

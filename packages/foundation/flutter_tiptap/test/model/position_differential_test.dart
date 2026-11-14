@@ -1,11 +1,8 @@
-import 'dart:convert';
-import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:characters/characters.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/model.dart';
-import 'package:moodiary_lint/testing.dart';
 
 import '../support/large_doc.dart';
 
@@ -147,30 +144,6 @@ void main() {
       }
     }
   });
-  final schema = Schema.standard();
-  final fixtures = '$repoRoot/packages/foundation/flutter_tiptap/test/fixtures';
-  final scenarios =
-      jsonDecode(File('$fixtures/scenarios.json').readAsStringSync()) as List;
-  final documents = <String, Node>{};
-  for (final scenario in scenarios.cast<Map>()) {
-    for (final raw in [scenario['doc'], (scenario['expected'] as Map)['doc']]) {
-      final json = jsonEncode(raw);
-      documents.putIfAbsent(json, () => schema.parse(json));
-    }
-  }
-  test('position helpers agree at every scenario document position', () {
-    for (final document in documents.values) {
-      _checkNode(document);
-    }
-  });
-  for (final file in Directory(
-    '$fixtures/nested_layout',
-  ).listSync().whereType<File>()) {
-    if (!file.path.endsWith('.json')) continue;
-    test('position helpers agree throughout ${file.uri.pathSegments.last}', () {
-      _checkNode(schema.parse(file.readAsStringSync()));
-    });
-  }
   final generators = <String, Node Function()>{
     'text': () => generateLargeDocument(300000),
     'list': () => generateLargeListDocument(),

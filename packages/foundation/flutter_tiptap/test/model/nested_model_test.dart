@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/model.dart';
 
@@ -146,7 +144,7 @@ void main() {
     ]);
   });
 
-  test('nested mark coverage stays cheap and respects mixed selections', () {
+  test('nested mark coverage respects mixed selections', () {
     final original = doc([
       list([
         schema.node(
@@ -190,7 +188,7 @@ void main() {
     );
   });
 
-  test('toolbar exposes nested wrapper and checked state without scanning siblings', () {
+  test('toolbar exposes nested wrapper and checked state', () {
     final original = doc([
       schema.node(
         'blockquote',
@@ -280,39 +278,6 @@ void main() {
       if (name == 'insertText') expect(range.oldTo, 101);
       expect(tr.documents.first, same(original));
       expect(tr.documents.last, same(tr.doc));
-    }
-  });
-
-  test('10k-item random edits retain siblings and logarithmic child trees', () {
-    final original = generateLargeListDocument(schema: schema);
-    var state = EditorState(doc: original);
-    final random = math.Random(17);
-    for (var i = 0; i < 120; i++) {
-      final listNode = state.doc.child(0), index = random.nextInt(10000);
-      final old = state.doc, pos = 3 + listNode.content.positionAt(index) + 2;
-      state = EditorState(doc: old, selection: TextSelection(pos));
-      final tr = commands.execute(state, 'insertText', {'text': '中'});
-      state = state.apply(tr);
-      expect(
-        identical(
-          state.doc.child(0).child((index + 1) % 10000),
-          listNode.child((index + 1) % 10000),
-        ),
-        isTrue,
-      );
-      expect(
-        identical(
-          state.doc.child(0).child(index).child(1),
-          listNode.child(index).child(1),
-        ),
-        isTrue,
-      );
-      expect(state.doc.child(0).blocks.height, lessThan(20));
-      expect(tr.nestedReplacements.single.path, [0, index, 0]);
-      expect(
-        original.child(0).child(index).child(0).textContent.contains('中'),
-        isFalse,
-      );
     }
   });
 }

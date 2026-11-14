@@ -28,8 +28,6 @@ class SearchIndex {
   final bool caseSensitive;
   final Expando<List<SearchMatch>> _matches = Expando<List<SearchMatch>>();
   int scannedBlocks = 0;
-  @visibleForTesting
-  int documentScans = 0;
   List<SearchMatch> matches(Node node) => _matches[node] ??= _scan(node);
   List<SearchMatch> _scan(Node node) {
     if (query.isEmpty) return const [];
@@ -148,7 +146,6 @@ class SearchIndex {
           .map((m) => m.shift(row.position))
           .toList();
   List<SearchMatch> findAll(Node doc) {
-    documentScans++;
     final result = <SearchMatch>[];
     var end = 0;
     for (final row in doc.rows()) {

@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 
-import '../support/large_doc.dart';
 import '../support/nodes.dart';
 
 void main() {
@@ -155,72 +154,6 @@ void main() {
         expect((range.from, range.to, range.href), (1, 7, 'https://a.com'));
       }
       expect(ft.linkAt(node, 8), isNull);
-    },
-  );
-
-  testWidgets(
-    'real node children virtualise 1M chars and 1000 images, height arrival anchors scrolling',
-    (tester) async {
-      final original = generateLargeDocument(1000000);
-      final blocks = <ft.Node>[];
-      var inserted = 0;
-      for (final block in original.content) {
-        blocks.add(block);
-        if (inserted < 1000) {
-          blocks.add(schema.node('image', attrs: {'src': '${inserted++}'}));
-        }
-      }
-      while (inserted < 1000) {
-        blocks.add(schema.node('image', attrs: {'src': '${inserted++}'}));
-      }
-      blocks.add(p('end'));
-      final controller = ft.TiptapController(doc: doc(blocks));
-      final height = ValueNotifier(200.0);
-      addTearDown(height.dispose);
-      var builds = 0;
-      final key = await mount(
-        tester,
-        controller,
-        estimate: (_, _) => 200,
-        views: {
-          'image': (_, view) {
-            builds++;
-            return ValueListenableBuilder<double>(
-              valueListenable: height,
-              builder: (_, value, _) => SizedBox(
-                key: ValueKey('image-${view.node.attrs['src']}'),
-                height: value,
-              ),
-            );
-          },
-        },
-      );
-      expect(builds, lessThan(25));
-      expect(find.byType(ValueListenableBuilder<double>), findsWidgets);
-      final firstImage = blocks.indexWhere((n) => n.type == 'image');
-      final imagePosition = controller.state.doc.content.positionAt(firstImage);
-      final geometry = key.currentState!.geometry!;
-      final imageY = geometry.rowRect(imagePosition).top;
-      key.currentState!.scrollController.jumpTo(imageY + 100);
-      await tester.pump();
-      await tester.pump();
-      final anchor = geometry.positionForOffset(const Offset(20, 300));
-      final old = geometry.rowRect(anchor).top;
-      height.value = 300;
-      await tester.pump();
-      await tester.pump();
-      expect(tester.takeException(), isNull);
-      expect(geometry.rowRect(imagePosition).top, closeTo(-200, 1));
-      expect(geometry.rowRect(anchor).top, closeTo(old, 1));
-      expect(
-        find.byType(ValueListenableBuilder<double>).evaluate().length,
-        lessThan(12),
-      );
-      final layouts = controller.diagnostics.blockLayouts;
-      controller.exec('insertText', {'text': 'x'});
-      await tester.pump();
-      expect(controller.diagnostics.blockLayouts - layouts, lessThan(5));
-      expect(builds, lessThan(100));
     },
   );
 

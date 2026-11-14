@@ -40,7 +40,6 @@ class _MeasuredSizes {
         ? _media[_mediaKey(node, width)] ?? const <_NodeSizeKey>{}
         : _sizes.entries.map((entry) => entry.key).toList(growable: false);
     for (final key in candidates) {
-      diagnostics().measurementComparisons++;
       if (key.width != width || !key.node.eq(node)) continue;
       final size = _sizes[key]!;
       if (equivalent != null && equivalent != size) return null;

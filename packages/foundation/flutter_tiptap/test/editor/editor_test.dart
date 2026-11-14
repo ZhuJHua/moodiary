@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:math';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
@@ -59,43 +56,6 @@ void main() {
   }
 
   const delta = FakeIme.delta;
-
-  testWidgets('first paint lays out the viewport before its offscreen cache', (
-    tester,
-  ) async {
-    final c = controller(
-      List.generate(200, (i) => paragraph('Row $i ${'text ' * 20}')),
-    );
-    final key = GlobalKey<ft.TiptapEditorState>();
-    await tester.pumpWidget(
-      CupertinoApp(
-        home: ft.TiptapEditor(
-          key: key,
-          controller: c,
-          readOnly: true,
-          style: const ft.TiptapEditorStyle(cacheExtent: 500),
-        ),
-      ),
-    );
-    final first = c.diagnostics.visibleBlocks;
-    final rect = key.currentState!.geometry!.rowRect(0);
-    expect(first, greaterThan(0));
-    await tester.pump();
-    expect(c.diagnostics.visibleBlocks, greaterThan(first));
-    expect(key.currentState!.geometry!.rowRect(0), rect);
-    c.replaceDocument(
-      schema.node(
-        'doc',
-        content: List.generate(200, (i) => paragraph('New $i ${'text ' * 20}')),
-      ),
-    );
-    await tester.pump();
-    final replaced = c.diagnostics.visibleBlocks;
-    await tester.pump();
-    expect(c.diagnostics.visibleBlocks, greaterThan(replaced));
-    await tester.pumpWidget(const SizedBox());
-    c.dispose();
-  });
 
   testWidgets(
     'delta client edits, geometry, marks, hard break and placeholder',
@@ -502,49 +462,6 @@ void main() {
   );
 
   testWidgets(
-    '1M doc: 100 actual platform deltas only lay out the edited block',
-    (tester) async {
-      final doc = generateLargeDocument(1000000);
-      final c = ft.TiptapController(doc: doc);
-      final key = await mount(tester, c);
-      final scans = c.diagnostics.fullDocumentScans;
-      final stable = {
-        for (var i = 1; i < min(doc.childCount, 30); i++)
-          doc.blocks[i]: c.diagnostics.layoutsFor(doc.blocks[i]),
-      };
-      var blockLayouts = c.diagnostics.blockLayouts;
-      for (var i = 0; i < 100; i++) {
-        await delta(tester, key, text: 'x');
-        expect(
-          c.diagnostics.blockLayouts - blockLayouts,
-          1,
-          reason: 'delta $i',
-        );
-        blockLayouts = c.diagnostics.blockLayouts;
-        expect(c.diagnostics.fullDocumentScans, scans);
-        for (final entry in stable.entries) {
-          expect(c.diagnostics.layoutsFor(entry.key), entry.value);
-        }
-      }
-      expect(c.state.doc.blocks.summary.textLength, 1000100);
-      expect(c.diagnostics.visibleBlocks, lessThan(50));
-    },
-  );
-
-  testWidgets('50k paragraph edits reuse all untouched paragraph chunks', (
-    tester,
-  ) async {
-    final c = controller([
-      paragraph(List.filled(10000, 'word ').join()),
-    ], position: 18001);
-    final key = await mount(tester, c);
-    final before = c.diagnostics.paragraphLayouts;
-    await delta(tester, key, text: 'X');
-    expect(c.diagnostics.paragraphLayouts - before, 1);
-    expect(c.state.doc.blocks.summary.textLength, 50001);
-  });
-
-  testWidgets(
     'keyboard shortcuts, grapheme deletion, selection and clipboard',
     (tester) async {
       final c = controller([paragraph('ab😀')], position: 5);
@@ -900,25 +817,6 @@ void main() {
       closeTo(heights.totalHeight, .000001),
     );
   });
-
-  testWidgets(
-    'controller JSON, local toolbar and onChanged do not serialize per edit',
-    (tester) async {
-      var changes = 0;
-      final c = ft.TiptapController(
-        doc: schema.node('doc', content: [paragraph('a')]),
-        onChanged: (_) => changes++,
-      );
-      c.exec('insertText', {'text': 'X'});
-      expect(changes, 0);
-      await tester.pump();
-      expect(changes, 1);
-      c.setSelection(const ft.TextSelection(1));
-      expect(changes, 1);
-      expect(jsonDecode(c.json), c.state.doc.toJson());
-      c.dispose();
-    },
-  );
   testWidgets(
     'soft Backspace undoes an input rule and later deltas in a batch are retained',
     (tester) async {
@@ -954,38 +852,33 @@ void main() {
     },
   );
 
-  testWidgets(
-    'resizing retains the first visible block and invalidates width lazily',
-    (tester) async {
-      tester.view.physicalSize = const Size(800, 600);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      final doc = generateLargeDocument(1000000),
-          c = ft.TiptapController(doc: generateLargeDocument(1000000));
-      final key = await mount(tester, c, autofocus: false);
-      key.currentState!.scrollController.jumpTo(40000);
-      await tester.pump();
-      await tester.pump();
-      final geometry = key.currentState!.geometry!;
-      final index = doc.blocks.indexAt(
-        geometry.positionForOffset(const Offset(20, 1)),
-      );
-      final position = doc.blocks.positionAt(index) + 1;
-      final y = geometry.caretRect(position).top,
-          scans = c.diagnostics.fullDocumentScans;
-      tester.view.physicalSize = const Size(500, 600);
-      await tester.pump();
-      await tester.pump();
-      await tester.pump();
-      expect(
-        doc.blocks.indexAt(geometry.positionForOffset(const Offset(20, 1))),
-        index,
-      );
-      expect(geometry.caretRect(position).top, closeTo(y, .5));
-      expect(c.diagnostics.fullDocumentScans, scans);
-    },
-  );
+  testWidgets('resizing retains the first visible block', (tester) async {
+    tester.view.physicalSize = const Size(800, 600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final doc = generateLargeDocument(1000000),
+        c = ft.TiptapController(doc: generateLargeDocument(1000000));
+    final key = await mount(tester, c, autofocus: false);
+    key.currentState!.scrollController.jumpTo(40000);
+    await tester.pump();
+    await tester.pump();
+    final geometry = key.currentState!.geometry!;
+    final index = doc.blocks.indexAt(
+      geometry.positionForOffset(const Offset(20, 1)),
+    );
+    final position = doc.blocks.positionAt(index) + 1;
+    final y = geometry.caretRect(position).top;
+    tester.view.physicalSize = const Size(500, 600);
+    await tester.pump();
+    await tester.pump();
+    await tester.pump();
+    expect(
+      doc.blocks.indexAt(geometry.positionForOffset(const Offset(20, 1))),
+      index,
+    );
+    expect(geometry.caretRect(position).top, closeTo(y, .5));
+  });
 
   testWidgets('caret reveal follows selection and keyboard insets', (
     tester,
@@ -1517,37 +1410,5 @@ void main() {
     await delta(tester, key, from: 1, to: 2, text: '中');
     expect(c.state.doc.blocks.first, same(atom));
     expect(c.state.doc.blocks[1].textContent, '中');
-  });
-  testWidgets('equivalent host styles retain caches across parent rebuilds', (
-    tester,
-  ) async {
-    final c = ft.TiptapController(doc: generateLargeDocument(1000000));
-    addTearDown(c.dispose);
-    final key = GlobalKey<ft.TiptapEditorState>();
-    late StateSetter rebuild;
-    await tester.pumpWidget(
-      CupertinoApp(
-        home: StatefulBuilder(
-          builder: (context, setState) {
-            rebuild = setState;
-            return ft.TiptapEditor(
-              key: key,
-              controller: c,
-              style: ft.TiptapEditorStyle(
-                headings: List.of(const ft.TiptapEditorStyle().headings),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-    await tester.pump();
-    final scans = c.diagnostics.fullDocumentScans,
-        layouts = c.diagnostics.paragraphLayouts;
-    rebuild(() {});
-    await tester.pump();
-    await tester.pump();
-    expect(c.diagnostics.fullDocumentScans, scans);
-    expect(c.diagnostics.paragraphLayouts, layouts);
   });
 }

@@ -462,7 +462,6 @@ base class _BlockLayout extends LinkedListEntry<_BlockLayout> {
       chunk.base = base;
       chunk.alignment = textAlign ?? style.textAlign;
       _prepareInlineChunk(chunk, style);
-      diagnostics.decorationLayouts++;
       diagnostics.paragraphLayouts++;
       changed = true;
     }

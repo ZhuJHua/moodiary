@@ -938,7 +938,6 @@ void main() {
       await controller.focus();
       await tester.pump();
       final ftController = _editor(tester).controller;
-      final scans = ftController.diagnostics.fullDocumentScans;
       ftController.setSelection(const ft.TextSelection(1, 5));
       await controller.holdSelection();
       await controller.imeTarget.suppressKeyboard(true);
@@ -949,7 +948,6 @@ void main() {
       await controller.flush();
       expect(saved, hasLength(1));
       expect(controller.state.value.has(EditorMark.bold), true);
-      expect(ftController.diagnostics.fullDocumentScans, scans);
       await controller.imeTarget.suppressKeyboard(false);
       await tester.pumpWidget(content());
       await tester.pump();

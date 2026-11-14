@@ -409,7 +409,6 @@ class _RenderEditorViewport extends RenderBox
         return cached;
       }
     }
-    _controller.diagnostics.layoutQueries++;
     final row = _row(index), node = row.node, layout = _layoutForRow(row);
     if (_layoutContentRow(row, layout, _contentWidth)) {
       _controller.diagnostics._record(node, index);
@@ -460,7 +459,6 @@ class _RenderEditorViewport extends RenderBox
     );
     final cacheExtent = _cacheReady ? _style.cacheExtent : 0.0;
     _contentWidth = math.max(1, size.width - _style.padding.horizontal);
-    _controller.diagnostics.lastLaidOutBlocks.clear();
     if (_heights == null) {
       _controller.diagnostics.fullDocumentScans++;
       _heights = TiptapHeightIndex(
@@ -782,7 +780,6 @@ class _RenderEditorViewport extends RenderBox
     }
     final result = <Rect>[];
     for (var i = a; i <= b; i++) {
-      _controller.diagnostics.selectionRows++;
       if ((i < originalA || i > originalB) && _row(i).table == null) continue;
       final layout = _layoutBlock(i),
           origin = _origin(i),
@@ -859,10 +856,8 @@ class _RenderEditorViewport extends RenderBox
     canvas.restore();
   }
 
-  int _paintCount = 0;
   @override
   void paint(PaintingContext context, Offset offset) {
-    _paintCount++;
     if (!_cacheReady) {
       _cacheReady = true;
       // Shape the offscreen cache only after the document's first paint.

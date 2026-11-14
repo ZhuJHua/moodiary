@@ -1,25 +1,21 @@
 // ignore_for_file: deprecated_member_use
 
-import 'dart:io';
-
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 import 'package:moodiary_editor/moodiary_editor.dart';
 import 'package:moodiary_i18n/moodiary_i18n.dart';
-import 'package:moodiary_lint/testing.dart';
 import 'package:mui/mui.dart';
 
 import '../../../foundation/flutter_tiptap/test/support/ime.dart';
+import '../../../foundation/flutter_tiptap/test/support/reference_doc.dart';
 
 void main() {
   testWidgets('iOS host keeps autocorrection after entering edit mode', (
     tester,
   ) async {
     final ime = FakeIme(tester);
-    final content = File(
-      '$repoRoot/packages/foundation/flutter_tiptap/test/fixtures/nested_layout/document.json',
-    ).readAsStringSync();
+    final content = referenceDocument;
     final readOnly = ValueNotifier(true);
     addTearDown(readOnly.dispose);
     tester.view.physicalSize = const Size(393, 852);

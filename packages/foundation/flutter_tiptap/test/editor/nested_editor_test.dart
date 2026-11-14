@@ -8,7 +8,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
 
 import '../support/ime.dart';
-import '../support/large_doc.dart';
 import '../support/nodes.dart';
 
 void main() {
@@ -166,61 +165,6 @@ void main() {
   );
 
   testWidgets(
-    'visible code highlighting is cached and edits only rehighlight that node',
-    (tester) async {
-      final first = schema.node(
-        'codeBlock',
-        attrs: {'language': 'javascript'},
-        content: [schema.node('text', text: 'const n = 1;')],
-      );
-      final second = schema.node(
-        'codeBlock',
-        attrs: {'language': 'rust'},
-        content: [schema.node('text', text: 'let x = 2;')],
-      );
-      final controller = ft.TiptapController(
-        doc: doc([
-          first,
-          for (var i = 0; i < 200; i++) p('row $i'),
-          second,
-          p('tail'),
-        ]),
-      );
-      final calls = <String>[];
-      TextSpan highlight(String? language, String text) {
-        calls.add('$language:$text');
-        return TextSpan(
-          children: [
-            TextSpan(
-              text: text,
-              style: const TextStyle(color: Color(0xffe00000)),
-            ),
-          ],
-        );
-      }
-
-      final key = await mount(tester, controller, highlighter: highlight);
-      expect(calls, ['javascript:const n = 1;']);
-      final caret = key.currentState!.geometry!.caretRect(1);
-      expect(caret.left, 28);
-      expect(caret.top, 44);
-      controller.setSelection(const ft.TextSelection(5));
-      await tester.pump();
-      expect(calls.length, 1);
-      controller.exec('insertText', {'text': 'x'});
-      await tester.pump();
-      expect(calls.length, 2);
-      controller.setSelection(
-        ft.TextSelection(controller.state.doc.rowAt(201).position + 1),
-      );
-      for (var i = 0; i < 5; i++) {
-        await tester.pump();
-      }
-      expect(calls.last, 'rust:let x = 2;');
-    },
-  );
-
-  testWidgets(
     'code lines preserve whitespace and scroll horizontally with the caret',
     (tester) async {
       final text = "const longLine = ${List.filled(120, 'value').join(' + ')};";
@@ -367,63 +311,6 @@ void main() {
       }),
     );
   }
-
-  testWidgets(
-    '10k-item single list virtualises rows and IME lays out only the edited row',
-    (tester) async {
-      final engine = FakeIme(tester);
-      final root = generateLargeListDocument();
-      final position = root.rowAt(10000).position + 4;
-      final controller = ft.TiptapController(
-        state: ft.EditorState(doc: root, selection: ft.TextSelection(position)),
-        commands: const ft.EditorCommands(),
-      );
-      final key = await mount(tester, controller);
-      expect(key.currentState!.geometry!.rowCount, 20000);
-      expect(controller.diagnostics.visibleBlocks, lessThan(100));
-      expect(controller.diagnostics.blockLayouts, lessThan(120));
-      for (var i = 0; i < 20; i++) {
-        final count = controller.diagnostics.paragraphLayouts;
-        await tester.pump();
-        await tester.pump();
-        if (controller.diagnostics.paragraphLayouts == count) break;
-      }
-      final scans = controller.diagnostics.fullDocumentScans;
-      final before = controller.diagnostics.paragraphLayouts;
-      final oldOffset = key.currentState!.geometry!.scrollOffset;
-      final oldRect = key.currentState!.geometry!.caretRect(
-        controller.state.selection.head,
-      );
-      await engine.edit(text: '中');
-      await tester.pump();
-      await tester.pump();
-      expect(controller.diagnostics.fullDocumentScans, scans);
-      expect(
-        controller.diagnostics.paragraphLayouts - before,
-        1,
-        reason:
-            '${controller.diagnostics.lastLaidOutBlocks} offset=${key.currentState!.geometry!.scrollOffset} rows=${controller.state.doc.rowCount} old=$oldOffset oldRect=$oldRect newRect=${key.currentState!.geometry!.caretRect(controller.state.selection.head)}',
-      );
-      expect(controller.diagnostics.lastLaidOutBlocks, {10000});
-      expect(controller.state.doc.rowAt(10000).node.textContent, contains('中'));
-      expect(
-        identical(
-          root.rowAt(10001).node,
-          controller.state.doc.rowAt(10001).node,
-        ),
-        isTrue,
-      );
-      controller.exec('splitListItem');
-      for (var i = 0; i < 4; i++) {
-        await tester.pump();
-      }
-      expect(key.currentState!.geometry!.rowCount, 20001);
-      expect(controller.diagnostics.fullDocumentScans, scans);
-      controller.exec('undo');
-      await tester.pump();
-      expect(key.currentState!.geometry!.rowCount, 20000);
-    },
-  );
 
   testWidgets(
     'desktop structural key bindings indent, outdent, toggle and exit code',

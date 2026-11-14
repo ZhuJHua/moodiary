@@ -198,12 +198,6 @@ class MoodiaryEditorHost extends ChangeNotifier {
 
   (ft.Node, ft.Selection, bool)? _indentKey;
   (bool, bool) _indentCommands = (false, false);
-  @visibleForTesting
-  int debugIndentComputations = 0;
-  @visibleForTesting
-  int debugMetadataComputations = 0;
-  @visibleForTesting
-  List<int> get debugHeadingPositions => _headings;
   Future<void> _documentLoaded = Future.value();
   @visibleForTesting
   Future<void> get documentLoaded => _documentLoaded;

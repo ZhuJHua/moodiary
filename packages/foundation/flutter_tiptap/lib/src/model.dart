@@ -3,7 +3,7 @@ import 'dart:isolate';
 import 'dart:math' as math;
 
 import 'package:characters/characters.dart';
-import 'package:flutter/foundation.dart' show internal, visibleForTesting;
+import 'package:flutter/foundation.dart' show internal;
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html;
 import 'package:linkifydart/linkifydart.dart' as linkify;

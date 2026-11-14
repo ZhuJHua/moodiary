@@ -40,7 +40,6 @@ extension _HostDerivedState on MoodiaryEditorHost {
     };
     final indentKey = (s.doc, s.selection, _protected);
     if (_indentKey != indentKey) {
-      debugIndentComputations++;
       _indentKey = indentKey;
       _indentCommands = (
         !_protected &&

@@ -138,7 +138,6 @@ extension _HostLoading on MoodiaryEditorHost {
       return _countResult!;
     }
     _countDocument = doc;
-    debugMetadataComputations++;
     final FutureOr<TiptapMetadata> result =
         _largeDocument || doc.content.size >= _asyncLoadThreshold
         ? _documentMetadataAsync(doc, null, null, false)

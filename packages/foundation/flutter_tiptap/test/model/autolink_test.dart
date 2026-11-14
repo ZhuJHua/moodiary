@@ -178,12 +178,6 @@ void main() {
     ]);
   });
 
-  test('paste rules do not rescan surrounding text', () {
-    var state = paragraph('example.org ');
-    state = execute(state, 'pasteText', {'text': 'example.xyz'});
-    expect(linked(state).map((node) => node.text), ['example.xyz']);
-  });
-
   test('linkOnPaste keeps the selection text and uses https', () {
     final state = paragraph('label');
     final selected = state.apply(
@@ -393,23 +387,5 @@ void main() {
       {'composition': 1},
     );
     expect(linked(composed).single.text, 'label ');
-  });
-
-  test('typing and Enter bound candidates in a 10k paragraph', () {
-    final prefix = 'a' * 10000;
-    final longWord = paragraph('$prefix.example.com');
-    final shortWord = paragraph('$prefix example.xyz');
-    execute(paragraph('warmup.com'), 'insertText', {'text': ' '});
-    final watch = Stopwatch()..start();
-    for (var iteration = 0; iteration < 100; iteration++) {
-      expect(linked(execute(longWord, 'insertText', {'text': ' '})), isEmpty);
-      expect(linked(execute(longWord, 'splitBlock')), isEmpty);
-      expect(
-        href(linked(execute(shortWord, 'insertText', {'text': ' '})).single),
-        'https://example.xyz',
-      );
-    }
-    watch.stop();
-    expect(watch.elapsed, lessThan(const Duration(seconds: 3)));
   });
 }

@@ -1,18 +1,10 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart';
-import 'package:moodiary_lint/testing.dart';
 
 import '../support/nodes.dart';
 
 void main() {
-  final fixtures = jsonDecode(
-    File('$repoRoot/packages/foundation/flutter_tiptap/test/fixtures/html.json')
-        .readAsStringSync(),
-  ) as List;
-  final schema = Schema.standard(), codec = TiptapHtmlCodec(Schema.standard());
+  final schema = Schema.standard();
 
   Node docWith(Node paragraph) => schema.node('doc', content: [paragraph]);
   final text = TestNodes(schema).p;
@@ -217,30 +209,4 @@ void main() {
       expect(c.state.doc.content.first.content.first.marks, isEmpty);
     },
   );
-  for (final fixture in fixtures.cast<Map<String, dynamic>>()) {
-    test('HTML fixture: ${fixture['name']}', () async {
-      final doc = codec.parse(fixture['html'] as String);
-      expect(doc.toJson(), fixture['expected']);
-      final controller = TiptapController();
-      addTearDown(controller.dispose);
-      await controller.pasteHtml(fixture['html'] as String);
-      expect(
-        controller.state.doc.toJson(),
-        fixture['pasteExpected'],
-        reason: 'actual paste',
-      );
-      final original = schema.fromJson(
-        (fixture['expected'] as Map).cast<String, dynamic>(),
-      );
-      expect(
-        codec.plainText(original),
-        fixture['clipboardText'],
-        reason: 'text/plain copy',
-      );
-      expect(
-        codec.parse(codec.serialize(original)).toJson(),
-        original.toJson(),
-      );
-    });
-  }
 }

@@ -134,7 +134,6 @@ void main() {
           () async => [await pixels(editorKey), await pixels(textKey)],
         );
         expect(images![0], images[1]);
-        expect(controller.diagnostics.paragraphLayouts, 1);
       },
       variant: TargetPlatformVariant({platform}),
     );

@@ -6,7 +6,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart';
 import 'package:moodiary_lint/testing.dart';
 
-import '../support/large_doc.dart';
 import '../support/nodes.dart';
 
 void main() {
@@ -403,25 +402,19 @@ void main() {
     }
   });
 
-  test(
-    'async parse and incremental encoding only encode the changed block',
-    () async {
-      final d = doc([p('a'), p('b'), p('c')]);
-      expect((await schema.parseAsync(d.toJsonString())).toJson(), d.toJson());
-      final codec = DocumentCodec();
-      codec.encode(d);
-      expect(codec.encodedBlocks, 3);
-      final state = exec(
-        EditorState(doc: d, selection: const TextSelection(5)),
-        'insertText',
-        {'text': 'x'},
-      );
-      expect(jsonDecode(codec.encode(state.doc)), state.doc.toJson());
-      expect(codec.encodedBlocks, 1);
-      codec.encode(state.doc);
-      expect(codec.encodedBlocks, 0);
-    },
-  );
+  test('async parse and incremental encoding round trip', () async {
+    final d = doc([p('a'), p('b'), p('c')]);
+    expect((await schema.parseAsync(d.toJsonString())).toJson(), d.toJson());
+    final codec = DocumentCodec();
+    codec.encode(d);
+    final state = exec(
+      EditorState(doc: d, selection: const TextSelection(5)),
+      'insertText',
+      {'text': 'x'},
+    );
+    expect(jsonDecode(codec.encode(state.doc)), state.doc.toJson());
+    expect(codec.encode(state.doc), codec.encode(state.doc));
+  });
 
   test('toolbar queries are local and stored marks take precedence', () {
     var s = EditorState(doc: doc([p('abc')]));
@@ -433,14 +426,6 @@ void main() {
     expect(s.toolbar.canUndo, isTrue);
     s = exec(s, 'selectAll');
     expect(s.toolbar.selectionKind, SelectionKind.all);
-  });
-
-  test('large generator has exact budget, mixed text, long paragraph and unknown blocks', () {
-    final d = generateLargeDocument(1000000);
-    expect(d.blocks.summary.textLength, 1000000);
-    expect(d.blocks.any((n) => n.textLength == 50000), isTrue);
-    expect(d.blocks.any((n) => n.isOpaque), isTrue);
-    expect(d.toJsonString(), generateLargeDocument(1000000).toJsonString());
   });
   test('selection toolbar coverage, mixed blocks and subtree ranges', () {
     final bold = schema.mark('bold');

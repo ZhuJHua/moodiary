@@ -4,24 +4,15 @@ part of '../editor.dart';
 @visibleForTesting
 class TiptapDiagnostics {
   int blockLayouts = 0;
-  int layoutQueries = 0;
-  int measurementComparisons = 0;
-  int decorationLayouts = 0;
-  int markerLayouts = 0;
-  int cellRowMaterializations = 0;
-  int selectionRows = 0;
-  int selectedTextNodes = 0;
   int paragraphLayouts = 0;
   int fullDocumentScans = 0;
   int visibleBlocks = 0;
   int cachedLayouts = 0;
   int cachedTextLength = 0;
-  final Set<int> lastLaidOutBlocks = {};
   final Expando<int> _nodeLayouts = Expando<int>();
   int layoutsFor(m.Node node) => _nodeLayouts[node] ?? 0;
   void _record(m.Node node, int index) {
     blockLayouts++;
-    lastLaidOutBlocks.add(index);
     _nodeLayouts[node] = (_nodeLayouts[node] ?? 0) + 1;
   }
 }
@@ -77,8 +68,6 @@ class TiptapController extends ChangeNotifier {
 
   /// Completes when the current yielded search scan finishes.
   Future<void> get searchComplete => _searchDone;
-  @visibleForTesting
-  int get searchScannedBlocks => _searchIndex.scannedBlocks;
 
   /// Starts a literal search and selects its first match after scanning.
   void startSearch(String query, {bool caseSensitive = false}) {
@@ -607,7 +596,6 @@ class TiptapController extends ChangeNotifier {
         final start = row.position + 1;
         var offset = 0;
         for (final inline in block.content) {
-          diagnostics.selectedTextNodes++;
           final end = offset + inline.nodeSize;
           if (end > selection.from - start && offset < selection.to - start) {
             append(

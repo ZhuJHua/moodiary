@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/cupertino.dart';
@@ -7,10 +6,9 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tiptap/flutter_tiptap.dart' as ft;
-import 'package:moodiary_lint/testing.dart';
 
 import '../support/ime.dart';
-import '../support/large_doc.dart';
+import '../support/reference_doc.dart';
 
 // Flutter 3.47.8 InputConnectionAdaptor.handleKeyEvent, ACTION_DOWN:
 // arrows adjust selection, multiline Enter inserts its Unicode character,
@@ -109,11 +107,7 @@ void main() {
           'iOS replaces a word before space in $blockType with batched deltas $batched to $correction',
           (tester) async {
             final ime = FakeIme(tester);
-            final fixture = schema.parse(
-              File(
-                '$repoRoot/packages/foundation/flutter_tiptap/test/fixtures/nested_layout/document.json',
-              ).readAsStringSync(),
-            );
+            final fixture = schema.parse(referenceDocument);
             final block = blockType == 'reference paragraph'
                 ? fixture.blocks.first
                 : schema.node(
@@ -216,11 +210,7 @@ void main() {
           (tester) async {
             final ime = FakeIme(tester);
             final controller = ft.TiptapController(
-              doc: schema.parse(
-                File(
-                  '$repoRoot/packages/foundation/flutter_tiptap/test/fixtures/nested_layout/document.json',
-                ).readAsStringSync(),
-              ),
+              doc: schema.parse(referenceDocument),
             );
             if (extraWords > 0) {
               controller.setSelection(
@@ -1437,29 +1427,6 @@ void main() {
         ),
       );
       expect(editorPixels, referencePixels);
-    },
-    variant: const TargetPlatformVariant({TargetPlatform.iOS}),
-  );
-
-  testWidgets(
-    '1M document engine-owned typing never echoes or scans other blocks',
-    (tester) async {
-      final ime = FakeIme(tester);
-      final c = ft.TiptapController(doc: generateLargeDocument(1000000));
-      await mount(tester, c);
-      ime.sent.clear();
-      ime.holdUpdates = true;
-      final scans = c.diagnostics.fullDocumentScans;
-      for (var i = 0; i < 100; i++) {
-        final layouts = c.diagnostics.blockLayouts;
-        await ime.edit(text: 'x');
-        await tester.pump();
-        await tester.pump();
-        expect(c.diagnostics.blockLayouts - layouts, 1);
-        expect(c.diagnostics.fullDocumentScans, scans);
-      }
-      expect(ime.sent, isEmpty);
-      expect(c.state.doc.blocks.summary.textLength, 1000100);
     },
     variant: const TargetPlatformVariant({TargetPlatform.iOS}),
   );

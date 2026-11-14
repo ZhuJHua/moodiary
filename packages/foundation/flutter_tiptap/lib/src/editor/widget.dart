@@ -201,8 +201,6 @@ class TiptapEditorState extends State<TiptapEditor>
   }
 
   @visibleForTesting
-  int get debugDocumentPaints => _render?._paintCount ?? 0;
-  @visibleForTesting
   void debugMuteCaret(bool muted) => _caret._ticker.muted = muted;
   @visibleForTesting
   Size? debugMeasuredSize(m.Node node, double width) =>

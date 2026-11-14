@@ -325,7 +325,6 @@ final class _TableRowLayout extends _BlockLayout {
   int _generation = -1;
   (int, int)? _contentGeneration;
   final _contentRows = <bool, List<(_CellRow, _TableCellLayout)>>{};
-  TiptapDiagnostics? _diagnostics;
 
   void invalidate() {
     width = null;
@@ -360,7 +359,6 @@ final class _TableRowLayout extends _BlockLayout {
     TextAlign? textAlign,
     double firstLineIndent = 0,
   }) {
-    _diagnostics = diagnostics;
     geometry.layout(this, width, style);
     if (this.width == width &&
         identical(this.style, style) &&
@@ -442,7 +440,6 @@ final class _TableRowLayout extends _BlockLayout {
       _contentRows.clear();
     }
     return _contentRows.putIfAbsent(includeTables, () {
-      _diagnostics?.cellRowMaterializations++;
       return _collectContentRows(includeTables: includeTables)
           .toList(growable: false);
     });

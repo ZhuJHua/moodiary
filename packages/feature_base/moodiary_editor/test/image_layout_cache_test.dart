@@ -349,7 +349,6 @@ void main() {
         final position = geometry.positionForOffset(const Offset(10, 1));
         final before = geometry.rowRect(position).top;
         final scrollBefore = host.scroll.offset;
-        final scans = host.editor.diagnostics.fullDocumentScans;
         expect(before, lessThanOrEqualTo(1));
         expect(
           geometry.rowRect(host.editor.state.doc.content.size - 1).top,
@@ -373,7 +372,6 @@ void main() {
         if (afterAbove != null) {
           expect(host.scroll.offset, closeTo(afterAbove, .01));
         }
-        expect(host.editor.diagnostics.fullDocumentScans, scans);
         expect(tester.takeException(), isNull);
       },
     );

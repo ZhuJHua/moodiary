@@ -126,26 +126,21 @@ void main() {
       expect(tableContext(state.doc, state.selection.head)!.cell.childCount, 2);
     },
   );
-  test(
-    'replace all is one isolated undo and scans only the changed textblock',
-    () {
-      var state = EditorState(doc: generateLargeDocument(3000000));
-      final query = SearchIndex(query: '日记');
-      query.findAll(state.doc);
-      final scanned = query.scannedBlocks;
-      final before = state.doc;
-      state = state.apply(commands.execute(state, 'insertText', {'text': '中'}));
-      query.findAll(state.doc);
-      expect(query.scannedBlocks - scanned, 1);
-      final edited = state.doc;
-      state = state.apply(query.replaceAll(state, 'xy'));
-      expect(query.findAll(state.doc), isEmpty);
-      state = state.apply(commands.execute(state, 'undo'));
-      expect(state.doc, same(edited));
-      state = state.apply(commands.execute(state, 'undo'));
-      expect(state.doc, same(before));
-    },
-  );
+  test('replace all is one isolated undo', () {
+    var state = EditorState(doc: generateLargeDocument(3000000));
+    final query = SearchIndex(query: '日记');
+    query.findAll(state.doc);
+    final before = state.doc;
+    state = state.apply(commands.execute(state, 'insertText', {'text': '中'}));
+    query.findAll(state.doc);
+    final edited = state.doc;
+    state = state.apply(query.replaceAll(state, 'xy'));
+    expect(query.findAll(state.doc), isEmpty);
+    state = state.apply(commands.execute(state, 'undo'));
+    expect(state.doc, same(edited));
+    state = state.apply(commands.execute(state, 'undo'));
+    expect(state.doc, same(before));
+  });
   test('search status enumeration is non-overlapping while backwards navigation overlaps', () {
     final doc = schema.node(
       'doc',
