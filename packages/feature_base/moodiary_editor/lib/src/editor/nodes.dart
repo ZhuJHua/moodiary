@@ -1,7 +1,5 @@
 part of '../moodiary_editor.dart';
 
-String _formatDuration(Duration duration) =>
-    '${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
 String _formatFileSize(Object? size) {
   if (size is! num || size <= 0) return '';
   if (size < 1024) return '${size.round()} B';
@@ -141,9 +139,9 @@ class _MediaNodeState extends State<_MediaNode> {
       try {
         _imageProvider = path.startsWith('data:image/')
             ? MemoryImage(UriData.parse(path).contentAsBytes())
-            : path.startsWith('http')
+            : isNetworkMedia(path)
             ? NetworkImage(path)
-            : FastImage(path);
+            : FastImage(path, tier: FastImageTier.m);
       } on FormatException {
         return _missing(LucideIcons.image);
       }

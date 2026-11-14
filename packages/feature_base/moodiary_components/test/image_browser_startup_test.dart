@@ -382,4 +382,42 @@ void main() {
     expect(find.byType(MImageBrowser), findsNothing);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('a second show while preparing opens no second browser', (
+    tester,
+  ) async {
+    final image = await _image(tester);
+    final provider = _CountingImage(image, _Work());
+    final probe = Completer<FastTileSource?>();
+    late BuildContext origin;
+    await tester.pumpWidget(
+      muiTestApp(
+        Builder(
+          builder: (context) {
+            origin = context;
+            return const SizedBox.expand();
+          },
+        ),
+      ),
+    );
+    for (var tap = 0; tap < 2; tap++) {
+      unawaited(
+        MImageBrowser.show(
+          origin,
+          images: const ['/a.png'],
+          heroPrefix: 'page',
+          imageProviderBuilder: (_, _) => provider,
+          regionResolver: (_) => probe.future,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 60));
+    }
+    await tester.pump(const Duration(milliseconds: 200));
+    await tester.pumpAndSettle();
+    expect(find.byType(MImageBrowser), findsOneWidget);
+    probe.complete(null);
+    Navigator.of(origin).pop();
+    await tester.pumpAndSettle();
+    expect(find.byType(MImageBrowser), findsNothing);
+  });
 }

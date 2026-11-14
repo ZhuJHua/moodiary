@@ -41,7 +41,7 @@ extension on _MediaNodeState {
         line = 1.65;
     final colors = context.theme.colors;
     final time =
-        '${_formatDuration(progress.position)} / ${_formatDuration(progress.duration)}';
+        '${TimeFormat.mediaDuration(progress.position)} / ${TimeFormat.mediaDuration(progress.duration)}';
     final timeStyle = _textStyle(
       family: family,
       size: 12 * scale,
@@ -207,7 +207,7 @@ extension on _MediaNodeState {
                       },
                 label: context.l10n.editor.content.videoProgress,
                 description:
-                    '${_formatDuration(progress?.position ?? Duration.zero)} / ${_formatDuration(progress?.duration ?? Duration.zero)}',
+                    '${TimeFormat.mediaDuration(progress?.position ?? Duration.zero)} / ${TimeFormat.mediaDuration(progress?.duration ?? Duration.zero)}',
                 duration: progress?.duration ?? Duration.zero,
                 color: context.theme.onMedia,
                 rail: context.theme.onMedia.withValues(alpha: .12),
@@ -220,7 +220,9 @@ extension on _MediaNodeState {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    _formatDuration(progress?.position ?? Duration.zero),
+                    TimeFormat.mediaDuration(
+                      progress?.position ?? Duration.zero,
+                    ),
                     style: _videoTimeStyle(
                       FontWeight.w600,
                       context.theme.onMedia,
@@ -236,7 +238,9 @@ extension on _MediaNodeState {
                   ),
                   const SizedBox(width: 3),
                   Text(
-                    _formatDuration(progress?.duration ?? Duration.zero),
+                    TimeFormat.mediaDuration(
+                      progress?.duration ?? Duration.zero,
+                    ),
                     style: _videoTimeStyle(
                       FontWeight.w400,
                       context.theme.onMedia.withValues(alpha: .62),
@@ -390,7 +394,7 @@ class _SeekBarState extends State<_SeekBar> {
       final increased = (widget.value + .05).clamp(0.0, 1.0),
           decreased = (widget.value - .05).clamp(0.0, 1.0);
       String describe(double value) =>
-          '${_formatDuration(widget.duration * value)} / ${_formatDuration(widget.duration)}';
+          '${TimeFormat.mediaDuration(widget.duration * value)} / ${TimeFormat.mediaDuration(widget.duration)}';
       return Semantics(
         slider: true,
         label: widget.label,

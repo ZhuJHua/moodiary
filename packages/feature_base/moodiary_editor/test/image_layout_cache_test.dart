@@ -167,8 +167,10 @@ void main() {
     final portrait = await _portrait(tester);
     addTearDown(portrait.dispose);
     await tester.pumpWidget(_view(host, null));
-    PaintingBinding.instance.imageCache.evict(const FastImage('/header.jpg'));
-    _seed(const FastImage('/header.jpg'), portrait);
+    PaintingBinding.instance.imageCache.evict(
+      const FastImage('/header.jpg', tier: FastImageTier.m),
+    );
+    _seed(const FastImage('/header.jpg', tier: FastImageTier.m), portrait);
     await tester.pumpWidget(_view(host, node));
     await tester.pump();
     expect(host.estimateNodeHeight(node, 150), 600);
@@ -422,7 +424,10 @@ void main() {
       (tester) async {
         final portrait = await _portrait(tester);
         addTearDown(portrait.dispose);
-        _seed(const FastImage('/fallback.jpg'), portrait);
+        _seed(
+          const FastImage('/fallback.jpg', tier: FastImageTier.m),
+          portrait,
+        );
         final node = _image('image-fallback.jpg');
         final host = MoodiaryEditorHost(
           MoodiaryEditor(
@@ -626,7 +631,9 @@ void main() {
         PaintingBinding.instance.imageCache.clear();
         PaintingBinding.instance.imageCache.clearLiveImages();
       });
-      if (kind == 'file') _seed(FastImage(file.path), portrait);
+      if (kind == 'file') {
+        _seed(FastImage(file.path, tier: FastImageTier.m), portrait);
+      }
       if (kind == 'network') _seed(NetworkImage(name), portrait);
       expect(host.estimateNodeHeight(node, 150), 100);
       await tester.pumpWidget(_view(host, node));
@@ -651,8 +658,10 @@ void main() {
       await host.swapDocument(content: _document(node), title: 'Next diary');
       expect(host.estimateNodeHeight(node, 150), 100);
       if (kind == 'file') {
-        PaintingBinding.instance.imageCache.evict(FastImage(file.path));
-        _seed(FastImage(file.path), portrait);
+        PaintingBinding.instance.imageCache.evict(
+          FastImage(file.path, tier: FastImageTier.m),
+        );
+        _seed(FastImage(file.path, tier: FastImageTier.m), portrait);
       }
       if (kind == 'network') _seed(NetworkImage(name), portrait);
       await tester.pumpWidget(_view(host, node));
@@ -749,7 +758,7 @@ void main() {
   ) async {
     final portrait = await _portrait(tester);
     addTearDown(portrait.dispose);
-    _seed(const FastImage('/portrait.png'), portrait);
+    _seed(const FastImage('/portrait.png', tier: FastImageTier.m), portrait);
     final calls = <String>[];
     final host = MoodiaryEditorHost(
       MoodiaryEditor(

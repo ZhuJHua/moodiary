@@ -20,14 +20,12 @@ Future<ui.Image> _seedImage(WidgetTester tester, String path) async {
     picture.dispose();
     return image;
   }))!;
-  for (final tier in [null, FastImageTier.m]) {
-    PaintingBinding.instance.imageCache.putIfAbsent(
-      FastImage(path, tier: tier),
-      () => OneFrameImageStreamCompleter(
-        SynchronousFuture(ImageInfo(image: image.clone())),
-      ),
-    );
-  }
+  PaintingBinding.instance.imageCache.putIfAbsent(
+    FastImage(path, tier: FastImageTier.m),
+    () => OneFrameImageStreamCompleter(
+      SynchronousFuture(ImageInfo(image: image.clone())),
+    ),
+  );
   return image;
 }
 
