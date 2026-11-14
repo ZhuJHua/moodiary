@@ -1,5 +1,5 @@
 name: moodiary_editor
-description: "TipTap webview editor with autosave, toolbar, recording, category picker and geo/weather lookup."
+description: "Diary editor with autosave, toolbar, media and metadata chrome."
 version: 0.0.1
 publish_to: none
 
@@ -13,6 +13,7 @@ dependencies:
   flutter:
     sdk: flutter
 
+  flutter_tiptap: 0.0.1
   fast_image: 0.0.1
   moodiary_native: 0.0.1
   moodiary_files: 0.0.1
@@ -31,11 +32,6 @@ dependencies:
   moodiary_utils: 0.0.1
   mui: 0.0.1
 
-  webview_flutter: 4.14.1
-  webview_flutter_android: 4.14.1
-  webview_flutter_wkwebview: 3.26.1
-  flutter_inappwebview_windows: 0.7.0-beta.3
-  flutter_inappwebview_platform_interface: 1.4.0-beta.3
 
   flutter_riverpod: 3.4.3
   riverpod_annotation: 4.0.7
@@ -48,8 +44,6 @@ dependencies:
   open_file: 4.0.0
   latlong2: 0.10.1
   path: 1.9.1
-  code_assets: 1.2.1
-  hooks: 2.2.0
 
 
 dev_dependencies:
@@ -62,8 +56,3 @@ dev_dependencies:
   freezed: 4.0.1
   json_serializable: 6.14.1
   riverpod_generator: 4.0.9
-
-flutter:
-  assets:
-    # ignore: asset_directory_does_not_exist
-    - assets/editor/

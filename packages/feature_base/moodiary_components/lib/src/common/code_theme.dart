@@ -40,53 +40,64 @@ import 'package:re_highlight/re_highlight.dart';
 import 'package:re_highlight/styles/github-dark.dart';
 import 'package:re_highlight/styles/github.dart';
 
-final Map<String, Mode> _commonLanguages = {
-  'arduino': langArduino,
-  'bash': langBash,
-  'c': langC,
-  'cpp': langCpp,
-  'csharp': langCsharp,
-  'css': langCss,
-  'diff': langDiff,
-  'go': langGo,
-  'graphql': langGraphql,
-  'ini': langIni,
-  'java': langJava,
-  'javascript': langJavascript,
-  'json': langJson,
-  'kotlin': langKotlin,
-  'less': langLess,
-  'lua': langLua,
-  'makefile': langMakefile,
-  'markdown': langMarkdown,
-  'objectivec': langObjectivec,
-  'perl': langPerl,
-  'php': langPhp,
-  'php-template': langPhpTemplate,
-  'plaintext': langPlaintext,
-  'python': langPython,
-  'python-repl': langPythonRepl,
-  'r': langR,
-  'ruby': langRuby,
-  'rust': langRust,
-  'scss': langScss,
-  'shell': langShell,
-  'sql': langSql,
-  'swift': langSwift,
-  'typescript': langTypescript,
-  'vbnet': langVbnet,
-  'wasm': langWasm,
-  'xml': langXml,
-  'yaml': langYaml,
+final Map<String, (String, Mode)> _commonLanguages = {
+  'arduino': ('Arduino', langArduino),
+  'bash': ('Bash', langBash),
+  'c': ('C', langC),
+  'cpp': ('C++', langCpp),
+  'csharp': ('C#', langCsharp),
+  'css': ('CSS', langCss),
+  'diff': ('Diff', langDiff),
+  'go': ('Go', langGo),
+  'graphql': ('GraphQL', langGraphql),
+  'ini': ('INI', langIni),
+  'java': ('Java', langJava),
+  'javascript': ('JavaScript', langJavascript),
+  'json': ('JSON', langJson),
+  'kotlin': ('Kotlin', langKotlin),
+  'less': ('Less', langLess),
+  'lua': ('Lua', langLua),
+  'makefile': ('Makefile', langMakefile),
+  'markdown': ('Markdown', langMarkdown),
+  'objectivec': ('Objective-C', langObjectivec),
+  'perl': ('Perl', langPerl),
+  'php': ('PHP', langPhp),
+  'php-template': ('PHP template', langPhpTemplate),
+  'plaintext': ('Plain text', langPlaintext),
+  'python': ('Python', langPython),
+  'python-repl': ('Python REPL', langPythonRepl),
+  'r': ('R', langR),
+  'ruby': ('Ruby', langRuby),
+  'rust': ('Rust', langRust),
+  'scss': ('SCSS', langScss),
+  'shell': ('Shell', langShell),
+  'sql': ('SQL', langSql),
+  'swift': ('Swift', langSwift),
+  'typescript': ('TypeScript', langTypescript),
+  'vbnet': ('VB.NET', langVbnet),
+  'wasm': ('WebAssembly', langWasm),
+  'xml': ('HTML / XML', langXml),
+  'yaml': ('YAML', langYaml),
 };
 
+final Map<String, String> codeLanguageNames = Map.unmodifiable({
+  for (final entry in _commonLanguages.entries)
+    if (entry.key != 'plaintext') entry.key: entry.value.$1,
+});
+
 final Highlight codeHighlighter = Highlight()
-  ..registerLanguages(_commonLanguages);
+  ..registerLanguages(
+    _commonLanguages.map((id, entry) => MapEntry(id, entry.$2)),
+  );
 
 String? resolveCodeLanguage(String? language) {
   final name = language?.trim().toLowerCase();
   if (name == null || name.isEmpty) return null;
-  return codeHighlighter.getLanguage(name)?.name?.toLowerCase();
+  final mode = codeHighlighter.getLanguage(name);
+  if (mode == null) return null;
+  return codeHighlighter.listLanguages().firstWhere(
+    (key) => identical(codeHighlighter.getLanguage(key), mode),
+  );
 }
 
 const Map<String, TextStyle> lightCodeTheme = githubTheme;

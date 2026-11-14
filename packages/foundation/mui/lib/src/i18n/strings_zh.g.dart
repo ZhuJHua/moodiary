@@ -37,6 +37,9 @@ class MuiLocalizationsData with BaseTranslations<MuiLocale, MuiLocalizationsData
 	/// zh: '取消'
 	String get cancel => '取消';
 
+	/// zh: '关闭'
+	String get close => '关闭';
+
 	/// zh: '返回'
 	String get back => '返回';
 

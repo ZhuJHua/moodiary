@@ -15,7 +15,7 @@ Moodiary is a Flutter + Rust diary app. Shared packages under `packages/` form f
 ```bash
 # Setup
 fvm use
-fvm dart tool/task.dart setup          # flutter pub get (the editor bundle is built by moodiary_editor's build hook on run/build; needs corepack)
+fvm dart tool/task.dart setup          # flutter pub get
 
 # Run & Build (mobile app)
 fvm dart tool/task.dart run -- --flavor production # Android
@@ -28,7 +28,7 @@ fvm dart tool/task.dart build-apk -- --flavor alpha --release
 # Code Gen
 fvm dart tool/task.dart build-runner   # whole workspace
 fvm dart tool/task.dart gen-rust       # regenerate Rust FFI bindings after touching rust/src/api
-fvm dart tool/task.dart i18n           # slang codegen after editing i18n/flutter (i18n/web needs no codegen)
+fvm dart tool/task.dart i18n           # slang codegen after editing i18n/flutter
 fvm dart tool/task.dart pigeon         # moodiary_native bindings after editing its pigeons/*.dart
 fvm dart tool/task.dart migrations     # drift schema snapshot + step-by-step migration codegen, after bumping schemaVersion
 fvm dart tool/task.dart gen            # gen-rust + i18n + pigeon
@@ -38,13 +38,12 @@ fvm dart tool/task.dart analyze        # generated-binding checks + layer checks
 fvm dart tool/task.dart test           # affected packages only: changed vs --diff=<ref> (default: the merge-base with origin/develop, so the whole branch, plus uncommitted and untracked) plus transitive dependents; root pubspec change or --all runs everything (CI). Only the legacy-database migration tests need ISAR_TEST_DYLIB
 fvm dart tool/task.dart test-mobile    # mobile/ only
 for d in packages/foundation/*/rust; do (cd "$d" && cargo clippy --all-targets -- -D warnings && cargo test); done
-(cd packages/feature_base/moodiary_editor/editor && corepack pnpm install --frozen-lockfile && corepack pnpm type-check && corepack pnpm test)
 
 # Release (run on develop, clean tree, in sync with origin)
 fvm dart tool/release.dart --bump patch     # or an explicit X.Y.Z
 ```
 
-For full verification, use `test --all` alongside the analysis, Rust, and editor commands above. CI (`quality.yml`) groups these into Dart, Rust, and Editor jobs; its `changes` job skips jobs unaffected by the PR paths.
+For full verification, use `test --all` alongside the analysis and Rust commands above. CI (`quality.yml`) groups these into Dart and Rust jobs; its `changes` job skips jobs unaffected by the PR paths.
 
 **Tests are one process**: one `flutter test` at the repo root over the affected packages' `test/` dirs, so hooks and the frontend compiler run once, not once per package.
 
@@ -61,7 +60,7 @@ Keep dependency versions pinned; match shared native pins across packages.
 
 ### Layout notes
 
-Package roles are each pubspec's `description`; layer = directory. `i18n/flutter` (slang) and `i18n/web` (editor page) hold every translation json; a string both need is duplicated. `moodiary_ml` is the sole owner of `flutter_onnxruntime`. `moodiary_native` is the only home for our own Kotlin / Swift code: every Flutter-to-native call is a pigeon API there, never an ad-hoc MethodChannel or code in `mobile/android` / `mobile/ios`. One pigeon file per feature, generating only the platforms it needs, all into one Kotlin package and one Swift module; each platform's error class comes from the first file that targets it (Kotlin: `selection_handle.dart`, Swift: `editor_keyboard.dart`), and every later file sets `includeErrorClass: false` for that platform.
+Package roles are each pubspec's `description`; layer = directory. `i18n/flutter` (slang) holds app translations. `moodiary_ml` is the sole owner of `flutter_onnxruntime`. `moodiary_native` is the only home for our own Kotlin / Swift code: every Flutter-to-native call is a pigeon API there, never an ad-hoc MethodChannel or code in `mobile/android` / `mobile/ios`. One pigeon file per feature, generating only the platforms it needs, all into one Kotlin package and one Swift module; each platform's error class comes from the first file that targets it (Kotlin and Swift: `html_clipboard.dart`), and every later file sets `includeErrorClass: false` for that platform.
 
 Paths are relative to the repository root unless stated otherwise.
 
@@ -104,8 +103,8 @@ Routes carry no path or query parameters, because the app never targets the web.
 Two unrelated slang outputs: the App (default mode, `Translations` / top-level `l10n`) and mui (`locale_handling: false` + hand-written delegate, `context.muiL10n`). **i18n** is the mechanism, **l10n** the resolved strings, **Localizations** only Flutter's chain (mui alone).
 
 - Widgets use `context.l10n.xxx` (rebuilds on language change); services / export / callbacks use top-level `l10n.xxx`. Parameters are named. Write `l10n.xxx.yyy` in full.
-- One namespace file per feature, under `i18n/flutter` (Dart) or `i18n/web` (editor page); feature packages do not install slang (mui excepted).
-- After editing `i18n/flutter/*.i18n.json` run `fvm dart tool/task.dart i18n` (generated files are committed). `i18n/web/{zh,en}.json` is bundled into the editor page as-is, so it needs no codegen step.
+- One namespace file per feature, under `i18n/flutter` (Dart); feature packages do not install slang (mui excepted).
+- After editing `i18n/flutter/*.i18n.json` run `fvm dart tool/task.dart i18n` (generated files are committed).
 - Text for the model (prompts, tool descriptions, tool results) is hardcoded English and never enters i18n; text for the user goes through slang.
 - Some Chinese literals are kept on purpose (sync log lines, font family names, legal text); check moodiary_i18n's list before translating one.
 
@@ -133,7 +132,7 @@ Principle: split freely, never duplicate dependencies. http / sync / llm share o
 | fast_zip | moodiary_export / moodiary_sync (`_nativePkgOwners`) | first archive / extract |
 | fast_crypto | whole repo | facade self-initializes per call |
 
-- The editor-bundle and license-manifest hooks return early when the target OS is the host (`flutter test`). The Rust hooks build for the host too (desktop needs it, and hooks can't tell it from a test); CI's Dart job turns them off with `hooks.user_defines.<pkg>.build_assets: false`. Dart tests never load a Rust library, the editor bundle or the license manifest; Rust and the editor are tested by their own suites. **Three third-party code assets are needed by the tests** — `sqlite3_vec`, `sqlite3_simple` and `flutter_js` build for the host (`diary_fts` cannot even be created without the `simple` tokenizer, and the JS sandbox tests need quickjs), which is why the root pubspec dev-depends on their owners.
+- The license-manifest hook returns early when the target OS is the host (`flutter test`). The Rust hooks build for the host too (desktop needs it, and hooks can't tell it from a test); CI's Dart job turns them off with `hooks.user_defines.<pkg>.build_assets: false`. Dart tests never load a Rust library or the license manifest; Rust is tested by its own suites. **Three third-party code assets are needed by the tests** — `sqlite3_vec`, `sqlite3_simple` and `flutter_js` build for the host (`diary_fts` cannot even be created without the `simple` tokenizer, and the JS sandbox tests need quickjs), which is why the root pubspec dev-depends on their owners.
 - Initialize each native runtime before constructing its opaque handles (`CancelToken`); handles cannot cross native libraries. After touching `rust/src/api` run `fvm dart tool/task.dart gen-rust`.
 - Use FRB for the in-repo native libraries.
 - New iOS native frameworks need a required-reason check; `mobile/ios/scripts/embed_framework_privacy_manifests.sh` writes manifests from `mobile/ios/PrivacyManifests/` (`fast*` get `rust.xcprivacy` automatically; add any other framework to the script).

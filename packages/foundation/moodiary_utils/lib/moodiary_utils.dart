@@ -11,6 +11,7 @@ export 'src/lru.dart';
 export 'src/markdown_converter.dart';
 export 'src/markdown_to_tiptap.dart';
 export 'src/media_markup.dart';
+export 'src/network_media.dart';
 export 'src/password_generator.dart';
 export 'src/quill_delta.dart';
 export 'src/quill_to_tiptap.dart';

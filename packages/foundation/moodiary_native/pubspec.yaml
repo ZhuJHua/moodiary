@@ -13,8 +13,6 @@ dependencies:
   flutter:
     sdk: flutter
 
-  webview_flutter_android: 4.14.1
-  webview_flutter_wkwebview: 3.26.1
 
 dev_dependencies:
   moodiary_lint: 0.0.1

@@ -4,7 +4,7 @@ import 'package:fast_image/fast_image.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_di/moodiary_di.dart';
 import 'package:moodiary_editor/moodiary_editor.dart'
-    show EditorMigrationService, resolveEditorPage;
+    show EditorMigrationService;
 import 'package:moodiary_files/moodiary_files.dart';
 import 'package:moodiary_logging/moodiary_logging.dart';
 import 'package:moodiary_mcp/moodiary_mcp.dart' show McpService;
@@ -33,7 +33,6 @@ void runStartupMaintenance() {
   // container. It has to be in place before the app lock observer restores the
   // server on the first frame.
   McpService.imageRenderer = const AppDiaryImageRenderer();
-  unawaited(resolveEditorPage());
   unawaited(purgeExpiredTombstones());
   unawaited(purgeSyncMediaTemp());
   unawaited(getIt<EmbedIndexService>().drain());

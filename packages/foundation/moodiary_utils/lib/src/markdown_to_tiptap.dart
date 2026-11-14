@@ -14,6 +14,7 @@ class MarkdownToTiptap {
   static String? convert(
     String markdown, {
     AttachmentInfo? Function(String name)? attachmentInfo,
+    bool hardBreaks = false,
   }) {
     try {
       final nodes = md.Document(
@@ -21,7 +22,10 @@ class MarkdownToTiptap {
         encodeHtml: false,
         inlineSyntaxes: [_HighlightSyntax(), _UnderlineTagSyntax()],
       ).parse(markdown);
-      final content = _Converter(attachmentInfo)._blocks(nodes);
+      final content = _Converter(
+        attachmentInfo,
+        hardBreaks: hardBreaks,
+      )._blocks(nodes);
       if (content.isEmpty) content.add({'type': 'paragraph'});
       return jsonEncode(TiptapContent.newDoc(content));
     } catch (_) {
@@ -59,7 +63,10 @@ class _UnderlineTagSyntax extends md.InlineSyntax {
 }
 
 class _Converter {
-  _Converter(this._attachmentInfo);
+  _Converter(this._attachmentInfo, {this.hardBreaks = false});
+
+  /// Keeps single line breaks, which Markdown would fold into the paragraph.
+  final bool hardBreaks;
 
   final AttachmentInfo? Function(String name)? _attachmentInfo;
 
@@ -217,11 +224,16 @@ class _Converter {
   ) {
     if (node is md.Text) {
       if (node.text.isEmpty) return;
-      buf.add({
-        'type': 'text',
-        'text': node.text,
-        if (marks.isNotEmpty) 'marks': List.of(marks),
-      });
+      final lines = hardBreaks ? node.text.split('\n') : [node.text];
+      for (var i = 0; i < lines.length; i++) {
+        if (i > 0) buf.add({'type': 'hardBreak'});
+        if (lines[i].isEmpty) continue;
+        buf.add({
+          'type': 'text',
+          'text': lines[i],
+          if (marks.isNotEmpty) 'marks': List.of(marks),
+        });
+      }
       return;
     }
     if (node is! md.Element) return;

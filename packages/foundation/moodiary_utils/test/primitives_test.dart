@@ -2,6 +2,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 void main() {
+  test('network media uses HTTP and HTTPS URL prefixes', () {
+    expect(isNetworkMedia('http://example.com/image.png'), isTrue);
+    expect(isNetworkMedia('https://example.com/image.png'), isTrue);
+    for (final path in [
+      'image.png',
+      'file:///tmp/image.png',
+      'data:image/png;base64,AQID',
+      'http-image.png',
+    ]) {
+      expect(isNetworkMedia(path), isFalse);
+    }
+  });
+
   test('lru cache test', () {
     final lru = LRUCache<int, int>(maxSize: 3);
     lru.put(1, 1);
@@ -17,6 +30,23 @@ void main() {
     expect(lru.get(3), null);
     expect(lru.get(4), 4);
     expect(lru.get(5), 5);
+  });
+
+  test('LRU removal preserves capacity and access order', () {
+    final cache = LRUCache<String, int>(maxSize: 2);
+    cache.put('first', 1);
+    cache.put('second', 2);
+    cache.remove('missing');
+    expect(cache.size(), 2);
+    cache.remove('first');
+    expect(cache.get('first'), isNull);
+    expect(cache.size(), 1);
+    cache.put('third', 3);
+    expect(cache.get('second'), 2);
+    cache.put('fourth', 4);
+    expect(cache.get('third'), isNull);
+    expect(cache.get('second'), 2);
+    expect(cache.get('fourth'), 4);
   });
 
   test('uuidV7 前 48 位是毫秒时间戳（extractDateFromUUID 依赖此布局）', () {

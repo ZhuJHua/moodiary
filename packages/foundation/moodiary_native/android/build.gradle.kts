@@ -20,12 +20,11 @@ android {
 
     defaultConfig {
         minSdk = 28
-        consumerProguardFiles("consumer-rules.pro")
     }
 }
 
 dependencies {
-    implementation("androidx.core:core:1.18.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
 }
 
 kotlin {
